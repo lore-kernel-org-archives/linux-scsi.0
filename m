@@ -1,32 +1,100 @@
-From: Anton Blanchard <anton@samba.org>
-Subject: Re: [Emulex] Ready for next round...
-Date: Thu, 24 Jun 2004 01:31:46 +1000
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: [ANNOUNCE]: megaraid driver version 2.20.0.rc2
+Date: Wed, 23 Jun 2004 23:45:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040623153146.GD22495@krispykreme>
-References: <3356669BBE90C448AD4645C843E2BF28034F94D5@xbl.ma.emulex.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC7B5@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:39120 "EHLO ozlabs.org")
-	by vger.kernel.org with ESMTP id S262434AbUFWX57 (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:23206 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S263784AbUFXDpc (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Jun 2004 19:57:59 -0400
-Content-Disposition: inline
-In-Reply-To: <3356669BBE90C448AD4645C843E2BF28034F94D5@xbl.ma.emulex.com>
+	Wed, 23 Jun 2004 23:45:32 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Smart, James" <James.Smart@Emulex.Com>
-Cc: Linux SCSI Reflector <linux-scsi@vger.kernel.org>
+To: 'Christoph Hellwig' <hch@infradead.org>, "Mukker, Atul" <Atulm@lsil.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
- 
-Hi,
+>  - I don't think megaraid is widely enough used for the default y/m lines
 
-> [From 6/1]Re: Adam Blanchard's comment on page alloc fail on ppc64, thought
-> on using a mempool & Re: other queuecommand problems - too many allocations,
-> allocs under spinlock, etc.
+still needs fixing
 
-Anton :)
+AM> The statement is wrong. MegaRAID *is* a very widely used controller
 
-We tested this version and the error messages due to slave_alloc failing
-are gone now. Good stuff.
+>  - the macros in kdep.h should go away, and the include in there should
+>    got into the individual source files aswell
 
-Anton
+first is ok, the latter only moved to mega_common.h instead of the actual
+source files
+AM> IMO, these subset of original macros make the translation to mid-layer
+to LLD very convenient.
+
+Some of this seems to be done, thanks.  Please also remove the _t postfixes
+of the struct names.
+AM> That's next major rev goal.
+
+>  - MRAID_GET_DEVICE_MAP is far too large for a macro, please make it a
+>    function call or opencode it in the callers
+
+Still needs to be done.  There's only one caller anyway, so no need for
+the macro
+AM> This code base uses at only one place, but there is another low level
+driver if offing which uses the same definitions. So this should stay.
+
+>  - please kill mraid_driver_t in favour of individual global variables
+
+still there.
+
+AM> This will be fixed
+
+>  - any chance to rework megaraid_mbox.c to need less forward-declarations
+>    by reordering the function in their natural order?
+
+still quite a lot of those.
+AM> Again, this matches with our driver functions layout. If you observe
+closely, the driver functions (well mostly) are laid out in a breadth-first
+approach, with do-undo functions kept together. If this approach does not
+meet general driver guidelines, we will fix it, but next major rev
+
+>  - pci_id_table_g would be much more readable when not using C99
+initializers
+
+still there.
+
+AM> NO, foul! It has been corrected
+
+>  - please fix the MRAID_TEMPLATE/megaraid_template_g/megaraid_template_gp
+>    mess.  You need one struct scsi_host_template and can initialize it
+>    at calltime, no need for macros or additional pointers.
+
+done, thanks.  But you double-indented the megaraid_template_g members now.
+AM> Oversight, will fix it
+
+
+>  - alloc_adapter_f/init_mbox_f in megaraid_probe_one and use proper gotos
+>    as I did in the old megaraid driver
+
+still needs to be done.
+
+AM> I feel, this is a cleaner approach to up-wrap in case something goes
+bad. With goto 'many labels' the place you are going to jump from actually
+wants to undo (possibly unrelated) previous step
+
+>  - the detach path is bogus.  You need to do scshi_remove_host first
+before
+>    tearing down anything and scsi_host_put last
+
+still needs to be fixed.
+AM> I must be missing something here. Please elaborate again.
+
+>  - your locking looks far to fine-grained to me.  Did you benchmark it?
+>    Where was the bottleneck with a single per-host lock?
+
+sill applies.
+AM> If fact, the performance did improve on the enterprise kernels with
+fine-grain locks. So, this locking mechanism should stay
+
+Also a new quick observation:  mraid_driver_g.device_list is completely
+unused, you can just remove it
+AM> Will do
+
