@@ -1,63 +1,122 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: pci.ids patch re-issued inline rather than as an attachment.
-Date: Tue, 11 Jan 2005 11:24:46 -0500
-Message-ID: <60807403EABEB443939A5A7AA8A7458B9BA0CD@otce2k01.adaptec.com>
+From: James.Smart@Emulex.Com
+Subject: [PATCH 2/3]  FC Transport updates - additional fc host attributes
+Date: Tue, 11 Jan 2005 11:35:50 -0500
+Message-ID: <0B1E13B586976742A7599D71A6AC733C12E98A@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C4F7FB.9C34D569"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:43412 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262808AbVAKQYs convert rfc822-to-8bit
+Received: from emulex.emulex.com ([138.239.112.1]:14317 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S262837AbVAKQfw
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jan 2005 11:24:48 -0500
-content-class: urn:content-classes:message
+	Tue, 11 Jan 2005 11:35:52 -0500
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id j0BGZoni009842
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Jan 2005 08:35:51 -0800 (PST)
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: pci-ids@ucw.cz
-Cc: Mark Haverkamp <markh@osdl.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This patch synchronizes pci.ids with the new products in the aacraid
-driver.
+This is a multi-part message in MIME format.
 
-Signed-off-by: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
+------_=_NextPart_001_01C4F7FB.9C34D569
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-diff -u --recursive linux-2.6.10-rc3-bk14/drivers/pci/pci.ids
-linux-2.6.10-new/drivers/pci/pci.ids
---- linux-2.6.10-rc3-bk14/drivers/pci/pci.ids	Tue Nov 30 07:44:21 2004
-+++ linux-2.6.10-new/drivers/pci/pci.ids	Tue Jan 11 07:27:04 2005
-@@ -8630,6 +8630,8 @@
- 		0e11 0295  SATA 6Ch (Bearcat)
- 		1028 0287  PowerEdge Expandable RAID Controller 320/DC
- 		1028 0291  CERC SATA RAID 2 PCI SATA 6ch (DellCorsair)
-+		103C 3227  AAR-2610SA
-+		1014 02f2  ServeRAID 8i
- 		17aa 0286  Legend S220 (Legend Crusader)
- 		17aa 0287  Legend S230 (Legend Vulcan)
- 		9005 0285  2200S (Vulcan)
-@@ -8639,12 +8641,25 @@
- 		9005 0289  3240S (Tornado)
- 		9005 028a  ASR-2020S PCI-X ZCR (Skyhawk)
- 		9005 028b  ASR-2020S SO-DIMM PCI-X ZCR (Terminator)
-+		9005 028f  ASR-2025SA
- 		9005 0290  AAR-2410SA PCI SATA 4ch (Jaguar II)
- 		9005 0292  AAR-2810SA PCI SATA 8ch (Corsair-8)
- 		9005 0293  AAR-21610SA PCI SATA 16ch (Corsair-16)
- 		9005 0294  ESD SO-DIMM PCI-X SATA ZCR (Prowler)
-+		9005 0296  ASR-2240S
-+		9005 0297  ASR-4005SAS
-+		9005 0298  ASR-4000SAS
-+		9005 0299  ASR-4800SAS
-+		9005 029a  ASR-4805SAS
- 	0286  AAC-RAID (Rocket)
- 		9005 028c  ASR-2230S + ASR-2230SLP PCI-X (Lancer)
-+		9005 028d  ASR-2130S
-+		9005 029b  ASR-2820SA
-+		9005 029c  ASR-2620SA
-+		9005 029d  ASR-2420SA
-+		9005 029e  ICP9024R0
-+		9005 029f  ICP9014R0
-+		9005 0800  Callisto
- 	8000  ASC-29320A U320
- 	800f  AIC-7901 U320
- 	8010  ASC-39320 U320
+
+This patch adds 5 more FC transport host attributes in support of =
+HBAAPI.=20
+
+------_=_NextPart_001_01C4F7FB.9C34D569
+Content-Type: application/octet-stream;
+	name="p00002_fc_more_hattrs.patch"
+Content-Transfer-Encoding: base64
+Content-Description: p00002_fc_more_hattrs.patch
+Content-Disposition: attachment;
+	filename="p00002_fc_more_hattrs.patch"
+
+CgpUaGlzIHBhdGNoIGFkZHMgNSBtb3JlIEZDIHRyYW5zcG9ydCBob3N0IGF0dHJpYnV0ZXMgaW4g
+c3VwcG9ydCBvZiBIQkFBUEkuIAoKCi0tLQoKIGIvZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNwb3J0
+X2ZjLmMgfCAgIDIwICsrKysrKysrKysrKysrKysrCiBiL2luY2x1ZGUvc2NzaS9zY3NpX3RyYW5z
+cG9ydF9mYy5oIHwgICAyMiArKysrKysrKysrKysrKysrKysrCiAyIGZpbGVzIGNoYW5nZWQsIDQy
+IGluc2VydGlvbnMoKykKCmRpZmYgLXB1TiBhL2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9m
+Yy5jIGIvZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNwb3J0X2ZjLmMKLS0tIGEvZHJpdmVycy9zY3Np
+L3Njc2lfdHJhbnNwb3J0X2ZjLmMJMjAwNS0wMS0wNCAxMDo0NzoxNy4wNzQ3NDA1MjggLTA1MDAK
+KysrIGIvZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNwb3J0X2ZjLmMJMjAwNS0wMS0wNCAxMDo0Nzoz
+NC45MDQwMzAwNjQgLTA1MDAKQEAgLTI3MCw2ICsyNzAsMTYgQEAgc3RhdGljIGludCBmY19zZXR1
+cF9ob3N0X3RyYW5zcG9ydF9hdHRycwogCQlzaXplb2YoZmNfaG9zdF9zeW1ib2xpY19uYW1lKHNo
+b3N0KSkpOwogCWZjX2hvc3Rfc3VwcG9ydGVkX3NwZWVkcyhzaG9zdCkgPSBGQ19QT1JUU1BFRURf
+VU5LTk9XTjsKIAlmY19ob3N0X21heGZyYW1lX3NpemUoc2hvc3QpID0gLTE7CisJbWVtc2V0KGZj
+X2hvc3RfaGFyZHdhcmVfdmVyc2lvbihzaG9zdCksIDAsCisJCXNpemVvZihmY19ob3N0X2hhcmR3
+YXJlX3ZlcnNpb24oc2hvc3QpKSk7CisJbWVtc2V0KGZjX2hvc3RfZmlybXdhcmVfdmVyc2lvbihz
+aG9zdCksIDAsCisJCXNpemVvZihmY19ob3N0X2Zpcm13YXJlX3ZlcnNpb24oc2hvc3QpKSk7CisJ
+bWVtc2V0KGZjX2hvc3Rfc2VyaWFsX251bWJlcihzaG9zdCksIDAsCisJCXNpemVvZihmY19ob3N0
+X3NlcmlhbF9udW1iZXIoc2hvc3QpKSk7CisJbWVtc2V0KGZjX2hvc3Rfb3B0X3JvbV92ZXJzaW9u
+KHNob3N0KSwgMCwKKwkJc2l6ZW9mKGZjX2hvc3Rfb3B0X3JvbV92ZXJzaW9uKHNob3N0KSkpOwor
+CW1lbXNldChmY19ob3N0X2RyaXZlcl92ZXJzaW9uKHNob3N0KSwgMCwKKwkJc2l6ZW9mKGZjX2hv
+c3RfZHJpdmVyX3ZlcnNpb24oc2hvc3QpKSk7CiAKIAlmY19ob3N0X3BvcnRfaWQoc2hvc3QpID0g
+LTE7CiAJZmNfaG9zdF9wb3J0X3R5cGUoc2hvc3QpID0gRkNfUE9SVFRZUEVfVU5LTk9XTjsKQEAg
+LTUzNiw2ICs1NDYsMTEgQEAgZmNfcHJpdmF0ZV9ob3N0X3JkX2F0dHJfY2FzdChub2RlX25hbWUs
+IAogZmNfcHJpdmF0ZV9ob3N0X3JkX2F0dHJfY2FzdChwb3J0X25hbWUsICIweCVsbHhcbiIsIDIw
+LCB1bnNpZ25lZCBsb25nIGxvbmcpOwogZmNfcHJpdmF0ZV9ob3N0X3JkX2F0dHIoc3ltYm9saWNf
+bmFtZSwgIiVzXG4iLCAoRkNfU1lNQk9MSUNfTkFNRV9TSVpFICsxKSk7CiBmY19wcml2YXRlX2hv
+c3RfcmRfYXR0cihtYXhmcmFtZV9zaXplLCAiJXUgYnl0ZXNcbiIsIDIwKTsKK2ZjX3ByaXZhdGVf
+aG9zdF9yZF9hdHRyKGhhcmR3YXJlX3ZlcnNpb24sICIlc1xuIiwgKEZDX1ZFUlNJT05fU1RSSU5H
+X1NJWkUgKzEpKTsKK2ZjX3ByaXZhdGVfaG9zdF9yZF9hdHRyKGZpcm13YXJlX3ZlcnNpb24sICIl
+c1xuIiwgKEZDX1ZFUlNJT05fU1RSSU5HX1NJWkUgKzEpKTsKK2ZjX3ByaXZhdGVfaG9zdF9yZF9h
+dHRyKHNlcmlhbF9udW1iZXIsICIlc1xuIiwgKEZDX1NFUklBTF9OVU1CRVJfU0laRSArMSkpOwor
+ZmNfcHJpdmF0ZV9ob3N0X3JkX2F0dHIob3B0X3JvbV92ZXJzaW9uLCAiJXNcbiIsIChGQ19WRVJT
+SU9OX1NUUklOR19TSVpFICsxKSk7CitmY19wcml2YXRlX2hvc3RfcmRfYXR0cihkcml2ZXJfdmVy
+c2lvbiwgIiVzXG4iLCAoRkNfVkVSU0lPTl9TVFJJTkdfU0laRSArMSkpOwogCiAKIC8qIER5bmFt
+aWMgSG9zdCBBdHRyaWJ1dGVzICovCkBAIC03NzIsNiArNzg3LDExIEBAIGZjX2F0dGFjaF90cmFu
+c3BvcnQoc3RydWN0IGZjX2Z1bmN0aW9uX3QKIAlTRVRVUF9IT1NUX0FUVFJJQlVURV9SRChzeW1i
+b2xpY19uYW1lKTsKIAlTRVRVUF9IT1NUX0FUVFJJQlVURV9SRChzdXBwb3J0ZWRfc3BlZWRzKTsK
+IAlTRVRVUF9IT1NUX0FUVFJJQlVURV9SRChtYXhmcmFtZV9zaXplKTsKKwlTRVRVUF9IT1NUX0FU
+VFJJQlVURV9SRChoYXJkd2FyZV92ZXJzaW9uKTsKKwlTRVRVUF9IT1NUX0FUVFJJQlVURV9SRChm
+aXJtd2FyZV92ZXJzaW9uKTsKKwlTRVRVUF9IT1NUX0FUVFJJQlVURV9SRChzZXJpYWxfbnVtYmVy
+KTsKKwlTRVRVUF9IT1NUX0FUVFJJQlVURV9SRChvcHRfcm9tX3ZlcnNpb24pOworCVNFVFVQX0hP
+U1RfQVRUUklCVVRFX1JEKGRyaXZlcl92ZXJzaW9uKTsKIAogCVNFVFVQX0hPU1RfQVRUUklCVVRF
+X1JEKHBvcnRfaWQpOwogCVNFVFVQX0hPU1RfQVRUUklCVVRFX1JEKHBvcnRfdHlwZSk7CmRpZmYg
+LXB1TiBhL2luY2x1ZGUvc2NzaS9zY3NpX3RyYW5zcG9ydF9mYy5oIGIvaW5jbHVkZS9zY3NpL3Nj
+c2lfdHJhbnNwb3J0X2ZjLmgKLS0tIGEvaW5jbHVkZS9zY3NpL3Njc2lfdHJhbnNwb3J0X2ZjLmgJ
+MjAwNS0wMS0wNCAxMDo0NzoxNy4wOTk3MzY3MjggLTA1MDAKKysrIGIvaW5jbHVkZS9zY3NpL3Nj
+c2lfdHJhbnNwb3J0X2ZjLmgJMjAwNS0wMS0wNCAxMDo0NzozNC45MDUwMjk5MTIgLTA1MDAKQEAg
+LTE4NSw2ICsxODUsOCBAQCBzdHJ1Y3QgZmNfaG9zdF9zdGF0aXN0aWNzIHsKIAogI2RlZmluZSBG
+Q19GQzRfTElTVF9TSVpFCQkzMgogI2RlZmluZSBGQ19TWU1CT0xJQ19OQU1FX1NJWkUJCTI1Ngor
+I2RlZmluZSBGQ19WRVJTSU9OX1NUUklOR19TSVpFCQk2NAorI2RlZmluZSBGQ19TRVJJQUxfTlVN
+QkVSX1NJWkUJCTgwCiAKIHN0cnVjdCBmY19ob3N0X2F0dHJzIHsKIAkvKiBGaXhlZCBBdHRyaWJ1
+dGVzICovCkBAIC0xOTUsNiArMTk3LDExIEBAIHN0cnVjdCBmY19ob3N0X2F0dHJzIHsKIAljaGFy
+IHN5bWJvbGljX25hbWVbRkNfU1lNQk9MSUNfTkFNRV9TSVpFXTsKIAl1MzIgc3VwcG9ydGVkX3Nw
+ZWVkczsKIAl1MzIgbWF4ZnJhbWVfc2l6ZTsKKwljaGFyIGhhcmR3YXJlX3ZlcnNpb25bRkNfVkVS
+U0lPTl9TVFJJTkdfU0laRV07CisJY2hhciBmaXJtd2FyZV92ZXJzaW9uW0ZDX1ZFUlNJT05fU1RS
+SU5HX1NJWkVdOworCWNoYXIgc2VyaWFsX251bWJlcltGQ19TRVJJQUxfTlVNQkVSX1NJWkVdOwor
+CWNoYXIgb3B0X3JvbV92ZXJzaW9uW0ZDX1ZFUlNJT05fU1RSSU5HX1NJWkVdOworCWNoYXIgZHJp
+dmVyX3ZlcnNpb25bRkNfVkVSU0lPTl9TVFJJTkdfU0laRV07CiAKIAkvKiBEeW5hbWljIEF0dHJp
+YnV0ZXMgKi8KIAl1MzIgcG9ydF9pZDsKQEAgLTIyNiw2ICsyMzMsMTYgQEAgc3RydWN0IGZjX2hv
+c3RfYXR0cnMgewogCSgoKHN0cnVjdCBmY19ob3N0X2F0dHJzICopKHgpLT5zaG9zdF9kYXRhKS0+
+c3VwcG9ydGVkX3NwZWVkcykKICNkZWZpbmUgZmNfaG9zdF9tYXhmcmFtZV9zaXplKHgpCVwKIAko
+KChzdHJ1Y3QgZmNfaG9zdF9hdHRycyAqKSh4KS0+c2hvc3RfZGF0YSktPm1heGZyYW1lX3NpemUp
+CisjZGVmaW5lIGZjX2hvc3RfaGFyZHdhcmVfdmVyc2lvbih4KQlcCisJKCgoc3RydWN0IGZjX2hv
+c3RfYXR0cnMgKikoeCktPnNob3N0X2RhdGEpLT5oYXJkd2FyZV92ZXJzaW9uKQorI2RlZmluZSBm
+Y19ob3N0X2Zpcm13YXJlX3ZlcnNpb24oeCkJXAorCSgoKHN0cnVjdCBmY19ob3N0X2F0dHJzICop
+KHgpLT5zaG9zdF9kYXRhKS0+ZmlybXdhcmVfdmVyc2lvbikKKyNkZWZpbmUgZmNfaG9zdF9zZXJp
+YWxfbnVtYmVyKHgpCVwKKwkoKChzdHJ1Y3QgZmNfaG9zdF9hdHRycyAqKSh4KS0+c2hvc3RfZGF0
+YSktPnNlcmlhbF9udW1iZXIpCisjZGVmaW5lIGZjX2hvc3Rfb3B0X3JvbV92ZXJzaW9uKHgpCVwK
+KwkoKChzdHJ1Y3QgZmNfaG9zdF9hdHRycyAqKSh4KS0+c2hvc3RfZGF0YSktPm9wdF9yb21fdmVy
+c2lvbikKKyNkZWZpbmUgZmNfaG9zdF9kcml2ZXJfdmVyc2lvbih4KQlcCisJKCgoc3RydWN0IGZj
+X2hvc3RfYXR0cnMgKikoeCktPnNob3N0X2RhdGEpLT5kcml2ZXJfdmVyc2lvbikKICNkZWZpbmUg
+ZmNfaG9zdF9wb3J0X2lkKHgpCVwKIAkoKChzdHJ1Y3QgZmNfaG9zdF9hdHRycyAqKSh4KS0+c2hv
+c3RfZGF0YSktPnBvcnRfaWQpCiAjZGVmaW5lIGZjX2hvc3RfcG9ydF90eXBlKHgpCVwKQEAgLTI4
+NSw2ICszMDIsMTEgQEAgc3RydWN0IGZjX2Z1bmN0aW9uX3RlbXBsYXRlIHsKIAl1bnNpZ25lZCBs
+b25nCXNob3dfaG9zdF9zeW1ib2xpY19uYW1lOjE7CiAJdW5zaWduZWQgbG9uZwlzaG93X2hvc3Rf
+c3VwcG9ydGVkX3NwZWVkczoxOwogCXVuc2lnbmVkIGxvbmcJc2hvd19ob3N0X21heGZyYW1lX3Np
+emU6MTsKKwl1bnNpZ25lZCBsb25nCXNob3dfaG9zdF9oYXJkd2FyZV92ZXJzaW9uOjE7CisJdW5z
+aWduZWQgbG9uZwlzaG93X2hvc3RfZmlybXdhcmVfdmVyc2lvbjoxOworCXVuc2lnbmVkIGxvbmcJ
+c2hvd19ob3N0X3NlcmlhbF9udW1iZXI6MTsKKwl1bnNpZ25lZCBsb25nCXNob3dfaG9zdF9vcHRf
+cm9tX3ZlcnNpb246MTsKKwl1bnNpZ25lZCBsb25nCXNob3dfaG9zdF9kcml2ZXJfdmVyc2lvbjox
+OwogCS8qIGhvc3QgZHluYW1pYyBhdHRyaWJ1dGVzICovCiAJdW5zaWduZWQgbG9uZwlzaG93X2hv
+c3RfcG9ydF9pZDoxOwogCXVuc2lnbmVkIGxvbmcJc2hvd19ob3N0X3BvcnRfdHlwZToxOwpfCg==
+
+------_=_NextPart_001_01C4F7FB.9C34D569--
