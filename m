@@ -1,54 +1,123 @@
-From: Arjan van de Ven <arjanv@redhat.com>
-Subject: Re: pulling failover out of qla2xxx
-Date: Sat, 17 Jan 2004 00:33:28 +0100
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [RFC] IBM Power RAID driver (ipr)
+Date: Fri, 16 Jan 2004 17:46:37 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040116233328.GB24093@devserv.devel.redhat.com>
-References: <B179AE41C1147041AA1121F44614F0B0598E34@AVEXCH02.qlogic.org>
+Message-ID: <400877DD.1020408@us.ibm.com>
+References: <40085EDA.4010802@us.ibm.com> <20040116230118.GP734@actcom.co.il>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Bn2rw/3z4jIqBvZU"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:64467 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S265837AbUAPXdr (ORCPT
+Received: from e3.ny.us.ibm.com ([32.97.182.103]:61910 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S265794AbUAPXql (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jan 2004 18:33:47 -0500
-Content-Disposition: inline
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0598E34@AVEXCH02.qlogic.org>
+	Fri, 16 Jan 2004 18:46:41 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI <linux-scsi@vger.kernel.org>
+To: Muli Ben-Yehuda <mulix@mulix.org>
+Cc: linux-scsi@vger.kernel.org
+
+Muli Ben-Yehuda wrote:
+> Hi, I took a look and I have some comments / questions. I will try to
+> go over all of it in the next few days, but here's what I went over so
+> far: 
+
+Thanks!
+
+>>+static int ipr_unsafe = 1;		/* xxx set to 0 for ship */
+> 
+> 
+> Should it be set to 0 or to 1 for inclusion in the kernel? any driver
+> that is first included is considered experimental, so just how unsafe
+> is ipr_unsafe?
+
+Perhaps this is poorly named. If you take a look at ipr_invalid_adapter,
+you will see how ipr_unsafe is used. If set to 1, then it will allow 
+certain adapters to run in systems which have known problems.
+
+>>+static void ipr_sleep_no_lock(signed long delay)
+>>+{
+>>+	DECLARE_WAIT_QUEUE_HEAD(internal_wait);
+>>+
+>>+	sleep_on_timeout(&internal_wait, (delay * HZ) / 1000);
+>>+	return;
+> 
+> 
+> just a nitpick, but the Linux coding style says no 'return' from void
+> functions. 
+
+Done.
+
+>>+static void ipr_sleep(struct ipr_ioa_cfg *ioa_cfg, signed long delay)
+>>+{
+>>+	spin_unlock_irq(ioa_cfg->host->host_lock);
+>>+	ipr_sleep_no_lock(delay);
+>>+	spin_lock_irq(ioa_cfg->host->host_lock);
+> 
+> 
+> Hmpf... it's called from ipr_diagnostic_ioctl(), which does
+> spin_lock_irqsave()
+> ipr_sleep()
+> spin_unlock_irqrestore()
+> 
+> So I guess you really do intend to enable interrupts before going to
+> sleep? it's somewhat fragile... also, is the dropping and
+> reacquisition of the lock safe here (in the sense that none of the
+> data the lock is protecting that we care about can change while the
+> lock is not held?)
+
+I certainly don't want to go to sleep with interrupts masked. I need to 
+wait a second and then check to see if some shared data has changed, so 
+I am actually counting on the data protected by the spinlock being able 
+to change. I can certainly remove ipr_sleep since it is only used in the 
+one spot now and
+
+> Same questions wrt ipr_interruptible_sleep_on(), which does the same
+> thing. By the way, ipr_dump_ioctl does not check the return value from
+> ipr_interruptible_sleep_on(). If this is intentional, perhaps call it
+> using (void)ipr_interruptible_sleep_on()?
+
+Yes. It checks the sdt_state, which is sufficient. I will add the (void).
 
 
---Bn2rw/3z4jIqBvZU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+>>+static void ipr_block_requests(struct ipr_ioa_cfg *ioa_cfg)
+>>+{
+>>+	ENTER;
+>>+
+>>+	if (0 == ioa_cfg->block_host_ops++) {
+>>+	   ioa_cfg->allow_cmds = 0;
+> 
+> 
+> This is racy unless a lock is held. I think a lock is held here in all
+> callers of this function, but a comment to that effect would be nice
+> before the function. This also applies to every other function which
+> either must be called with a lock taken, or modifies the "locking
+> status" - takes a lock which is released elsewhere, enables interrupts
+> unconditionally, etc. 
 
-On Fri, Jan 16, 2004 at 12:02:50PM -0800, Andrew Vasquez wrote:
-> I'll open up a request-for-response from the rest of the listers in
-> asking if parceling out qlaAB00.ko modules based on firmware types is
-> both practical and sensible from a user standpoint.  Especially
-> considering that many users aren't really concerned with the ISP chip
-> type on their QLAXXXX or OEM-BRANDED ABC host bus adapter.
-
-that is what operating system installers are for (and udev/hotplug), modules
-load automatically based on the PCI table nowadays ;)
-
-Another approach could be separate modules which ONLY have firmware, one
-module per firmware file (but that gets you really close to
-request_firmare() api)
+Yes, the host lock must be held by the caller. I can certainly add the 
+comments you suggest as well.
 
 
+> +static void ipr_unblock_requests(struct ipr_ioa_cfg *ioa_cfg)
+> +{
+> +	ENTER;
+> +
+> +	if (0 == --ioa_cfg->block_host_ops) {
+> +	   ioa_cfg->allow_cmds = 1;
+> +	   spin_unlock_irq(ioa_cfg->host->host_lock);
+> +	   scsi_unblock_requests(ioa_cfg->host);
+> +	   spin_lock_irq(ioa_cfg->host->host_lock);
+> 
+> Eeek! What happens if on another CPU a call comes in that does
+> ipr_block_requests() after the lock is released and before it is taken
+> again?
 
---Bn2rw/3z4jIqBvZU
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+Looks like I have other issues with the block/unblock interfaces as 
+well. I'll clean this up.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
 
-iD8DBQFACHTHxULwo51rQBIRAlNoAKCXUAS00aAOyj4PRLW9GinFWw5FIwCeJbIQ
-QY1jAkMhGUGmbNasjrDMKUU=
-=KQM7
------END PGP SIGNATURE-----
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
 
---Bn2rw/3z4jIqBvZU--
