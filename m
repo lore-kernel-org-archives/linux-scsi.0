@@ -1,55 +1,38 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: bug 2400
-Date: 02 Apr 2004 13:13:01 -0500
+From: Daniel Patton <djp101@ecs.soton.ac.uk>
+Subject: Re: Newbie: multiple initiator contention resolution?
+Date: Fri, 02 Apr 2004 21:00:12 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1080929583.1804.122.camel@mulgrave>
-References: <20040401131502.41136788.akpm@osdl.org>
-	<1080862354.2118.78.camel@mulgrave> <20040402084338.GA3547@us.ibm.com>
-	<1080921450.1804.66.camel@mulgrave> <20040402164531.GB3880@us.ibm.com>
-	<1080925518.1830.93.camel@mulgrave>  <20040402174442.GE3880@us.ibm.com>
+Message-ID: <406DC64C.4030405@ecs.soton.ac.uk>
+References: <406C63F7.3060009@ecs.soton.ac.uk> <1080853086.9534.104.camel@persist.az.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:38300 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264112AbUDBSNW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Apr 2004 13:13:22 -0500
-In-Reply-To: <20040402174442.GE3880@us.ibm.com>
+Received: from mta3.sucs.soton.ac.uk ([152.78.128.142]:36320 "EHLO
+	mta3.sucs.soton.ac.uk") by vger.kernel.org with ESMTP
+	id S264069AbUDBUBH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Apr 2004 15:01:07 -0500
+In-Reply-To: <1080853086.9534.104.camel@persist.az.mvista.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>, stern@rowland.harvard.edu
+To: linux-scsi@vger.kernel.org
+Cc: sdake@mvista.com
 
-On Fri, 2004-04-02 at 12:44, Mike Anderson wrote:
-> Where does the last put come from? How do you close the open race or
-> know when the final put_disk has been called? SCSI cannot do this alone
-> as we have created and registered an object in another subsystem
-> (alloc_disk and add_disk) and we have no indication when that objects
-> ref count has reached zero. 
+Steven Dake wrote:
+
+> You have to use some form of external locking mechanism, most often. 
+> Most filesystems do not support such a thing.  Check out opengfs (use
+> google) for an example of one that does.
 > 
-> Or
-> 
-> As I previous stated in the thread below I have the gendisk /
-> block layer locking mis-understood and there is something that SCSI can
-> do.
 
-well, sr has elected to merge these, so it takes a reference to
-sdev_gendev on first open and releases it on last close of the block
-device.  This is what ties the SCSI model into the final put_disk().
+Many thanks, I will look into this.  I don't understand why SCSI 
+RESERVE/RELEASE can't be used as the locking mechanism though.  Call me 
+stupid, but I'm only a student.
 
-We founder on calling driver ->remove before the final put of
-sdev_gendev.
+As an aside, can you (or anyone) see even the *vaguest* possible use for 
+my project?  It basically allows you to construct a "virtual" switching 
+fabric with an arbitrary topology, attach a few fake disks to it, then 
+load an LLD on various hosts and they all see all the fake disks.
 
-Anything with objects in more than one refcounted subsystem is
-responsible for tying the refcounts together uniformly.
-
-There should be no open race as long as we error out correctly if a
-reference to the underlying sdev_gendev cannot be obtained (because the
-object is being destroyed).  sr seems to do this correctly.  The
-indication when the non-scsi object's refcount reaches zero is given to
-us because at that point the sr code does a put of the sdev_gendev (and
-if this is the last put, that should trigger cleanup).
-
-James
-
+Dan Patton
+djp101@ecs.soton.ac.uk
 
