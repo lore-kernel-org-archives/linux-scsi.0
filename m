@@ -1,33 +1,33 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Scott Merritt <Scsi@PragmaSoft.com>
 Subject: Re: [PATCH] SCSI hotplug support
-Date: Tue, 15 Oct 2002 12:45:24 -0700
+Date: Tue, 15 Oct 2002 15:50:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200210151945.g9FJjOs03736@localhost.localdomain>
+Message-ID: <20021015155038.6cd64b6a.Scsi@PragmaSoft.com>
 References: <andersen@codepoet.org>
+	<20021014203749.GA24904@codepoet.org>
+	<200210142107.g9EL7IX04354@localhost.localdomain>
+	<20021014215416.GB25941@codepoet.org>
+	<20021014222515.GD1274@redhat.com>
+	<20021015052521.GA1967@codepoet.org>
+	<20021015182247.GA4391@redhat.com>
+	<20021015184535.GA16401@codepoet.org>
+	<20021015191330.GC4391@redhat.com>
+	<20021015193216.GE15778@codepoet.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id MAA30103
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Oct 2002 12:45:28 -0700
-In-Reply-To: Message from Erik Andersen <andersen@codepoet.org>
-   of "Tue, 15 Oct 2002 13:32:16 MDT." <20021015193216.GE15778@codepoet.org>
+In-Reply-To: <20021015193216.GE15778@codepoet.org>
 List-Id: linux-scsi@vger.kernel.org
 To: andersen@codepoet.org
 Cc: linux-scsi@vger.kernel.org
 
-andersen@codepoet.org said:
-> I suspect the 1394 maintainers would reject patches that infect the
-> nodemgr with SBP-2 and/or SCSI specific stuff.  Sigh.  We seem to be
-> at an impasse.  We either screw up SCSI or we screw up 1394... 
+On Tue, 15 Oct 2002 13:32:16 -0600
+Erik Andersen <andersen@codepoet.org> wrote:
 
-Not necessarily.  We're back around to my original though which was that the 
-hotplug event isn't carrying enough information.  Since 1394 can have may 
-different types of device attaching, it stands to reason that some of them 
-will need to pass extra information through the hotplug event.
+> The main reason why I'd prefer to put this stuff into the sbp2
+> driver is to avoid 1394 layering violations.
 
-Driverfs can be used for this in 2.5, but in 2.4 I suspect you need to enhance the 1394 nodemgr to allow customisable information.  Note, this doesn't require nodemgr to know about sbp-2, but it does require nodemgr to know "this device wants to add this information to the hotplug event", which does sound generic enough to be acceptable without layering violations.
+I don't know much about this at all, but could the sbp2 driver "trigger" a second scsi-hotplug event ?  Hope I'm not make a truly silly suggestion ...
 
-James
-
-
+Regards, Scott.
