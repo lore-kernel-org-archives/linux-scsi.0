@@ -1,36 +1,54 @@
-From: Rask Ingemann Lambertsen <rask@sygehus.dk>
-Subject: Re: State of NCR53c7xx based drivers
-Date: Sun, 23 Nov 2003 23:21:30 +0100
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: TMSCSIM [2.6]
+Date: Mon, 24 Nov 2003 00:29:16 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031123232126.B1657@sygehus.dk>
-References: <20031123175041.A1461@sygehus.dk> <Pine.GSO.4.21.0311231806320.14450-100000@waterleaf.sonytel.be>
+Message-ID: <20031123232916.GH24247@tpkurt.garloff.de>
+References: <Pine.LNX.4.44.0311230024300.1354-100000@poirot.grange> <m365haomqt.fsf@merlin.emma.line.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="9jHkwA2TBA/ec6v+"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 0x50a144f4.albnxx15.adsl-dhcp.tele.dk ([80.161.68.244]:3332
-	"EHLO 0x50a144f4.albnxx15.adsl-dhcp.tele.dk") by vger.kernel.org
-	with ESMTP id S263488AbTKWWVc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Nov 2003 17:21:32 -0500
+Received: from ns.suse.de ([195.135.220.2]:8910 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S263528AbTKWXaQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 23 Nov 2003 18:30:16 -0500
 Content-Disposition: inline
-In-Reply-To: <Pine.GSO.4.21.0311231806320.14450-100000@waterleaf.sonytel.be>; from geert@linux-m68k.org on Sun, Nov 23, 2003 at 06:07:22PM +0100
+In-Reply-To: <m365haomqt.fsf@merlin.emma.line.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Christoph Hellwig <hch@lst.de>, Linux/m68k <linux-m68k@lists.linux-m68k.org>, linux-scsi@vger.kernel.org
+To: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
+Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, linux-scsi@vger.kernel.org
 
-On Sun, Nov 23, 2003 at 06:07:22PM +0100, Geert Uytterhoeven wrote:
-> On Sun, 23 Nov 2003, Rask Ingemann Lambertsen wrote:
 
-> > And while we are at amiga7xx and 53c770: There are Amiga SCSI host adapters
-> > with the 53c770 (CyberStorm PPC/MkIII), although amiga7xx doesn't support
-> > them. Why?
-> 
-> The usual answer: because no one who has the hardware wrote the support and
-> submitted it?
+--9jHkwA2TBA/ec6v+
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I don't know, that's why I asked. ;-)
-I have an Amiga with a CyberStorm PPC board and wouldn't mind having Linux
-running on it. What would be a good name for the driver?
+Hi Matthias,
 
--- 
+On Sun, Nov 23, 2003 at 09:26:02PM +0100, Matthias Andree wrote:
+> Out if interest: Why "try_sync_nego =3D 0"?
+
+It's just the default for this variable.
+It's later set to 1 if we're issueing an INQUIRY or if we're talking to
+LUN0, the target did report to support SyncTransfers and the Sync=20
+Negotiation has not beend done yet and we're issueing a REQUEST_SENSE.
+
 Regards,
-Rask Ingemann Lambertsen
+--=20
+Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
+SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
+
+--9jHkwA2TBA/ec6v+
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
+
+iD8DBQE/wULLxmLh6hyYd04RAiN6AJ9cpwvs/0o/BybBDqpmagRUdVLwBwCgtQy6
+dP92ASEtBgPQm45h1ciWpdw=
+=vLDl
+-----END PGP SIGNATURE-----
+
+--9jHkwA2TBA/ec6v+--
