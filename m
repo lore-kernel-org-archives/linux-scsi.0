@@ -1,37 +1,67 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH] CDC_MMC_WR
-Date: 27 Oct 2003 13:40:54 -0700
+From: Mark Bellon <mbellon@mvista.com>
+Subject: ANNOUNCE: User-space System Device Enumation (uSDE)
+Date: Mon, 27 Oct 2003 13:40:29 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1067287253.2868.1.camel@patehci2>
-References: <1065832684.2877.37.camel@patehci2>
-	 <20031011082144.GK10614@suse.de>  <1066057325.2253.1.camel@patehci2>
-	 <1066690691.2814.21.camel@patehci2>
+Message-ID: <3F9D82BD.4080609@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:38331 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S263463AbTJ0TlR
+Received: from gateway-1237.mvista.com ([12.44.186.158]:38640 "EHLO
+	av.mvista.com") by vger.kernel.org with ESMTP id S263513AbTJ0Ukb
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Oct 2003 14:41:17 -0500
-In-Reply-To: <1066690691.2814.21.camel@patehci2>
+	Mon, 27 Oct 2003 15:40:31 -0500
+Received: from mvista.com (av [127.0.0.1])
+	by av.mvista.com (8.9.3/8.9.3) with ESMTP id MAA24396
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2003 12:40:29 -0800
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@suse.de
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-My 2003-10-13 -test7 patch, with the q=raw suffix included to help ask
-for hard tabs etc. intact, appears archived as:
+Initial availability of User-Space System Device Enumeration (uSDE) 
+package, version 0.74, can be found at http://sourceforge.net/projects/usde
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=106669072008705&q=raw
+The uSDE provides an open framework for the enumeration (specification) 
+of system devices in a dynamic environment. Device handling is 
+implemented via plug-in programs known as policy methods. Policy methods 
+are free to handle their devices in any way, from trivial to complex - 
+anything from providing LSB device nodes to persistent device name 
+handling with
+replacement and relocation strategies.
 
-Just now I triple-checked at my desk.  To -test9, that same patch
-applies without complaint, produces precisely the same diff, and works.
+The uSDE depends on /sbin/hotplug (for dynamic insertions and removals), 
+sysfs (for device information) and /proc (various pieces of 
+information). It is not dependent on initrd - it explicitly scans sysfs 
+upon system startup to determine the initial device ensemble.
 
-I think that patch teaches Linux that standard mmc writable profile
-devices are writable, in the least disruptive way possible.  I'm
-delighted to see that patch shrunk and shrunk again as we tutored me
-here.
+Part of the uSDE release is a collection of sample polices:
 
-Pat LaVarre
+disk-ide-policy - handles IDE, EIDE, SATA and USB-EIDE disks. Implements 
+persistent device naming, automatic device replacement and automatic 
+device relocation features.
+
+disk-scsi-policy - handles SCSI, IEEE-1394, FibreChannel and USB-SCSI 
+disks including multiported devices. Iplements persistent device naming, 
+automatic device replacement and automatic device relocation features.
+
+multipath-policy - handles the automatic provisioning of multipathing 
+for multiported storage devices.
+
+ethernet-policy - handles ethernet interefaces. Implements persistent 
+interface naming, interface anchoring, automatic device replacement and 
+automatic device relocation features.
+
+floppy-policy - handles internal floppy disks.
+
+simple-device-policy - a "catch all" policy for block and character devices.
+
+devfs-policy - provides devfs device names.
+
+lsb-policy - provides LSB device names.
+
+
+Location:       http://sourceforge.net/projects/usde
+Mailing list:   usde-general@lists.sourceforge.net
+
+mark
 
 
