@@ -1,45 +1,32 @@
-From: A <ahmedcali@yahoo.com>
-Subject: Question about SCSI Mid-Layer, getting list of scsi drives
-Date: Fri, 18 Feb 2005 14:25:50 -0800 (PST)
-Message-ID: <20050218222550.54304.qmail@web40422.mail.yahoo.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: cciss CSMI via sysfs for 2.6
+Date: Fri, 18 Feb 2005 16:42:57 -0600
+Message-ID: <1108766577.5764.29.camel@mulgrave>
+References: <20050216164512.GA5734@beardog.cca.cpqcorp.net>
+	 <20050218194628.GA24583@infradead.org>  <20050218200552.GC20171@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from web40422.mail.yahoo.com ([66.218.92.33]:4441 "HELO
-	web40422.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S261536AbVBRWZv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Feb 2005 17:25:51 -0500
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from stat16.steeleye.com ([209.192.50.48]:55211 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261543AbVBRWnR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Feb 2005 17:43:17 -0500
+In-Reply-To: <20050218200552.GC20171@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Christoph Hellwig <hch@infradead.org>, mike.miller@hp.com, Linux Kernel <linux-kernel@vger.kernel.org>, mochel@osdl.org, Andrew Morton <akpm@osdl.org>, eric.moore@lsil.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hello,
+On Fri, 2005-02-18 at 12:05 -0800, Greg KH wrote:
+> For a device?  It seems a huge overkill to add this attribute for
+> _every_ device in the system, when only a small minority can actually
+> use it.  Just put it as a default scsi or transport class attribute
+> instead.
 
-In kernel 2.4, I have a driver that interfaces to the
-SCSI mid-layer using API - scsi_register_module. 
-Through this API the (character) driver registers a
-"struct scsi_Device_Template" that would contain
-function pointers (specifically detect) that would be
-called for each SCSI device in the system.  That way
-my driver would have a knowledge and pointer to all
-SCSI devices in the system.
+Actually, we might be able to do this as a simple attribute container
+rather than a transport class, but I agree, it's not a generic property
+of every device.
 
-I don't see the API - scsi_register_module in 2.6 (or
-similar one) to which I an pass an object of the above
-type.  Can someone please tell me how I can do the
-same thing in 2.6.  I have looked into the function -
-scsi_host_alloc(), but from my reading of code, I
-don't think it does the same functionality as what I
-was doing in 2.4.  Any pointer to any docs explaining
-the changes from 2.4 to 2.6, or how to accomplish what
-I am trying to do would be very appreciated.
-
-Thank you,
-A.
+James
 
 
-
-		
-__________________________________ 
-Do you Yahoo!? 
-Yahoo! Mail - now with 250MB free storage. Learn more.
-http://info.mail.yahoo.com/mail_250
