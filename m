@@ -1,71 +1,32 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] 2.6 aacraid: rx check health function update
-Date: Fri, 5 Nov 2004 08:25:24 +0100
-Message-ID: <20041105072524.GD16649@suse.de>
-References: <1099613392.6249.16.camel@markh1.pdx.osdl.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: CSMI [was: Re: [ANNOUNCE] MPT Fusion driver 3.02.06 update]
+Date: Fri, 5 Nov 2004 08:23:38 +0000
+Message-ID: <20041105082338.GA11738@infradead.org>
+References: <0E3FA95632D6D047BA649F95DAB60E57053AF031@exa-atlanta> <20041026103828.GC12026@infradead.org> <418ACF7F.3060809@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:64190 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262653AbUKEHZ6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Nov 2004 02:25:58 -0500
+Received: from phoenix.infradead.org ([81.187.226.98]:38920 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S262417AbUKEIXt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Nov 2004 03:23:49 -0500
 Content-Disposition: inline
-In-Reply-To: <1099613392.6249.16.camel@markh1.pdx.osdl.net>
+In-Reply-To: <418ACF7F.3060809@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: Douglas Gilbert <dougg@torque.net>
+Cc: Christoph Hellwig <hch@infradead.org>, "Moore, Eric Dean" <Emoore@lsil.com>, linux-scsi@vger.kernel.org
 
-On Thu, Nov 04 2004, Mark Haverkamp wrote:
-> This patch updates the rx check health function.  My previous only
-> updated the rkt check health code.  This and the previous patch should
-> fix the kmalloc return checking bug:
-> 
-> http://bugme.osdl.org/show_bug.cgi?id=3699 
-> 
-> Signed-off-by: Mark Haverkamp <markh@osdl.org>
-> 
-> 
-> ===== drivers/scsi/aacraid/rx.c 1.12 vs edited =====
-> --- 1.12/drivers/scsi/aacraid/rx.c	2004-11-04 09:32:56 -08:00
-> +++ edited/drivers/scsi/aacraid/rx.c	2004-11-04 09:37:33 -08:00
-> @@ -274,7 +274,7 @@
->   */
->  static int aac_rx_check_health(struct aac_dev *dev)
->  {
-> -	long status = rx_readl(dev, IndexRegs.Mailbox[7]);
-> +	u32 status = le32_to_cpu(rx_readl(dev, MUnit.OMRx[0]));
->  
->  	/*
->  	 *	Check to see if the board failed any self tests.
-> @@ -285,29 +285,39 @@
->  	 *	Check to see if the board panic'd.
->  	 */
->  	if (status & KERNEL_PANIC) {
-> -		char * buffer = kmalloc(512, GFP_KERNEL);
-> +		char * buffer;
->  		struct POSTSTATUS {
->  			u32 Post_Command;
->  			u32 Post_Address;
-> -		} * post = kmalloc(sizeof(struct POSTSTATUS), GFP_KERNEL);
-> -		dma_addr_t paddr = pci_map_single(dev->pdev, post, sizeof(struct POSTSTATUS), 2);
-> -		dma_addr_t baddr = pci_map_single(dev->pdev, buffer, 512, 1);
-> -		u32 status = -1;
-> -		int ret = -2;
-> +		} * post;
-> +		dma_addr_t paddr, baddr;
-> +		int ret;
-> +
-> +		if ((status & 0xFF000000L) == 0xBC000000L)
-> +			return (status >> 16) & 0xFF;
-> +		buffer = pci_alloc_consistent(dev->pdev, 512, &baddr);
-> +		ret = -2;
-> +		if (buffer == NULL)
-> +			return ret;
+On Fri, Nov 05, 2004 at 10:55:27AM +1000, Douglas Gilbert wrote:
+> Christoph,
+> I'm not so sure why you want to reject this ioctl
+> at this stage when our existing infrastructure to handle
+> the 4 protocols that go through this SAS HBA is weak.
 
-I don't think it's a good idea to return bad adapter health, because you
-have an allocation failure.
+Rationale:
 
--- 
-Jens Axboe
+ a) we're not gonna add another ioctl interface at this stage, especially
+    not a that clumsy one
+ b) things that are common for all SAS HBAs should not be in the LLDD but
+    in a transport class
 
