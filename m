@@ -1,43 +1,82 @@
-From: mike.miller@hp.com
-Subject: [patch 2/2] cciss: cleans up warnings in the pass thru ioctl
-Date: Thu, 21 Oct 2004 16:20:58 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20041021212058.GB10462@beardog.cca.cpqcorp.net>
-Reply-To: mikem@beardog.cca.cpqcorp.net
+From: Nishanth Aravamudan <nacc@us.ibm.com>
+Subject: Re: [PATCH] scsi_debug [was: scsi_debug issues]
+Date: Thu, 21 Oct 2004 14:36:49 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20041021213648.GA3125@us.ibm.com>
+References: <20041015190154.GA3073@us.ibm.com> <4170C505.3000805@torque.net> <1097932370.1962.4.camel@mulgrave> <4173C8DB.8030009@torque.net> <20041018183747.GA3530@us.ibm.com> <41743E41.8020707@torque.net> <20041018232352.GA4747@us.ibm.com> <4174BAE8.50103@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S270991AbUJUViF@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e33.co.us.ibm.com ([32.97.110.131]:5784 "EHLO e33.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S271004AbUJUVgU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Oct 2004 17:36:20 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e33.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id i9LLaJL4502482
+	for <linux-scsi@vger.kernel.org>; Thu, 21 Oct 2004 17:36:19 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id i9LLaJSE312838
+	for <linux-scsi@vger.kernel.org>; Thu, 21 Oct 2004 15:36:19 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id i9LLaI0Y004390
+	for <linux-scsi@vger.kernel.org>; Thu, 21 Oct 2004 15:36:18 -0600
 Content-Disposition: inline
-To: marcelo.tosatti@cyclades.com, axboe@suse.de
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <4174BAE8.50103@torque.net>
 List-Id: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, hch@infradead.org
 
-Patch 2 of 2 for 20041021.
-This patch cleans up a warning with some versions of gcc.
-Under gcc version 3.3.3 a warning is generated that the comparsion will always
-be false due to the limits of the data type. buf_size is declared as a WORD
-which limits it to 64k. If the app needs to transfer larger amounts of data
-it should use the CCISS_BIG_PASSTHRU.
-Please consider this for inclusion. Built against 2.4.28-pre4.
-Please apply in order.
+On Tue, Oct 19, 2004 at 04:57:44PM +1000, Douglas Gilbert wrote:
+> Nishanth Aravamudan wrote:
+> >On Tue, Oct 19, 2004 at 08:05:53AM +1000, Douglas Gilbert wrote:
+> >
+> >>Nishanth Aravamudan wrote:
+> >>
+> >>>On Mon, Oct 18, 2004 at 11:44:59PM +1000, Douglas Gilbert wrote:
+> >>>
+> >>>
+> >>>>James Bottomley wrote:
+> >>>>
+> >>>>
+> >>>>>On Sat, 2004-10-16 at 01:51, Douglas Gilbert wrote:
+> >>>>>
+> >>>>>
+> >>>>>
+> >>>>>>So this problem seems related to highmem.
+> >>>
+> >>>
+> >>><snip>
+> >>>
+> >>>>The above required a fair few changes to scsi_debug.
+> >>>>Attached is a patch that rolls "kmap" changes with
+> >>>>patches I have sent recently for scsi_debug.
+> >>>>Attachment is gzipped (due to size) and applies against
+> >>>>lk 2.6.8.1 -> lk 2.6.9-rc4 .
+> >>>>
+> >>>>Nishanth, could you test this with highmem?
+> >>>
+> >>>
+> >>>Doug,
+> >>>
+> >>>I ran 2.6.9-rc4 with your patch applied and had several dump_stack()s
+> >>>occur (complaining about sleeping in an invalid context) and a final
+> >>>panic during mkfs :) I think something is still wrong... ;) Output is
+> >>>below and attached.
+> >>
+> >>Ok, it looks like kmap_atomic() is needed.
+> >>Could you try this additional patch.
+> >
+> >
+> >Great! That patch seems to have fixed it. I am able to vi files, sync
+> >the scsi_debug 'disks' and not have any hangs. It is noticeably slower,
+> >though, it seems. Might that just be a side effect of the atomic calls?
+> 
+> One would expect it to be pretty fast since only a
+> ram copy is involved.
 
- cciss.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletion(-)
+I agree, and in fact I'm not seeing any perf. related problems anymore.
+Now it's on to debug udev's relation to thousands of disks :)
 
-Signed off by Mike Miller.
--------------------------------------------------------------------------------
-diff -burNp lx2428-pre4-p001/drivers/block/cciss.c lx2428-pre4/drivers/block/cciss.c
---- lx2428-pre4-p001/drivers/block/cciss.c	2004-10-21 15:59:09.881439840 -0500
-+++ lx2428-pre4/drivers/block/cciss.c	2004-10-21 13:24:26.616710592 -0500
-@@ -958,8 +958,10 @@ static int cciss_ioctl(struct inode *ino
- 			return -EINVAL;
- 		} 
- 		/* Check kmalloc limits */
--		if (iocommand.buf_size > 128000)
-+		if (iocommand.buf_size > 64000) {
-+			printk(KERN_WARNING "cciss: use CCISS_BIG_PASSTHRU\n");
- 			return -EINVAL;
-+		}
- 		if (iocommand.buf_size > 0) {
- 			buff =  kmalloc(iocommand.buf_size, GFP_KERNEL);
- 			if (buff == NULL) 
+Thanks for all your help!
+
+-Nish
