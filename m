@@ -1,43 +1,55 @@
-From: S Iremonger <exxsi@bath.ac.uk>
-Subject: IP/ethernet/networking-over-SCSI.
-Date: Tue, 25 Jan 2005 16:19:12 +0000 (GMT)
-Message-ID: <Pine.GSO.4.53.0501251546570.25246@amos.bath.ac.uk>
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: How to add/drop SCSI drives from within the driver?
+Date: Tue, 25 Jan 2005 11:27:36 -0500
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BCCC6@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-net-owner@vger.kernel.org>
-Sender: linux-net-owner@vger.kernel.org
-To: linux-net@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:38907 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S262004AbVAYQ1w (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jan 2005 11:27:52 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+> 
+> > After the new logical drives are created with "- - -" written to the
+> > scsi_host scan attribute, there is a highly noticeable delay before
+> device
+> > names (e.g., sda) appears in the /dev directory. If the management
+> > application tried to access the device immediately after creating new,
+> the
+> > access fails. Putting a 1 second delay helped, but of course this is not
+> a
+> > deterministic solution.
+> >
+> > What are the other possibilities?
+> 
+> Well, how about hotplug.  The device addition actually triggers a hot
+> plug event already (there's no need to add anything, it's done by the
+> mid-layer), so if you just listen for that, you'll know when the scan
+> has detected a device.
 
 
-For some purposes at the moment, working IP-over-SCSI could be rather
-  handy... ;-).
+After writing the "- - -" to the scan attribute, the management applications
+assume the udev has created the relevant entries in the /dev directly and
+try to use the devices _immediately_ and fail to see the devices
 
-I can see some project(s) for this but I am not sure which actaully
-  work.  Many seem to want to have a particular SCSI board....
-In short, I am stuck with a particular SCSI board in some machine(s)
-  (e.g. 'pizzabox' small machines with onboard SCSI).
+Is there a hotplug event which would tell the management applications that
+the device nodes have actually been created now and ready to be used?
 
-Is there any implementation that just works over SG (scsi generic)
-  interface etc. and hence controller independant?
+I tried this simple script to re-create the failure. Assume there is one
+scsi disk, which is the installation disk. Now load the megaraid driver,
+with a few logical drive already created.
 
-This would need to be happy to work cross-architectures (MIPS, PPC,
-  i386, etc.).
+# insmod megaraid_mm.ko; insmod megaraid_mbox.ko; ls -l /dev/sd*
+<driver loads>
+<not all scsi devices are available>
 
-I would like any comments or pointers to working mechanisms/projects
-  for this...  Even just a 'manual tunnel' would be good -- i.e. a
-  userspace program that listens for a TCP connection from localhost,
-  carries that over SG, to listening/replying version at the other
-  end, that carries the data to a TCP-connection TO localhost at the
-  other end.
+<try again after a brief delay>
+# ls -l /dev/sd*	# all devices show up now
 
-In fact, at least so far as X11 goes, something similar that works
-  at the UNIX socket layer would be nice, but then the 'reliability'
-  needs to be implemented too, which is sortof reinventing the wheel,
-  TCP does this anyway ;-), unless the SCSI connection with 'sg' can
-  be considered truly reliable??
-
-Comments welcome, please ;-).
-
-
---S Iremonger <exxsi@bath.ac.uk>
+Thanks
+-Atul
