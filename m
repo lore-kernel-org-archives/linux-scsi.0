@@ -1,90 +1,48 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: How to add/drop SCSI drives from within the driver?
-Date: Wed, 15 Dec 2004 15:30:01 -0600
-Message-ID: <20041215213001.GA9284@lists.us.dell.com>
-References: <60807403EABEB443939A5A7AA8A7458B7F5071@otce2k01.adaptec.com> <1102536081.4218.0.camel@localhost.localdomain> <20041215072453.GB17274@lists.us.dell.com> <1103136559.5232.1.camel@mulgrave>
+From: Emiliano Garcia <emi@vinyltribe.com>
+Subject: Problem with SCSI in 2.6.9
+Date: Wed, 15 Dec 2004 13:57:30 -0800
+Message-ID: <41C0B34A.7030701@vinyltribe.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from linux.us.dell.com ([143.166.224.162]:28504 "EHLO
-	lists.us.dell.com") by vger.kernel.org with ESMTP id S262493AbULOVb0
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Dec 2004 16:31:26 -0500
-Content-Disposition: inline
-In-Reply-To: <1103136559.5232.1.camel@mulgrave>
+Received: from mail.tierzero.net ([66.6.216.70]:2464 "HELO mail.tierzero.net")
+	by vger.kernel.org with SMTP id S262507AbULOV5b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Dec 2004 16:57:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, brking@us.ibm.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, bunk@fs.tum.de, Andrew Morton <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
+To: linux-scsi@vger.kernel.org
 
-On Wed, Dec 15, 2004 at 01:49:18PM -0500, James Bottomley wrote:
-> On Wed, 2004-12-15 at 01:24 -0600, Matt Domsch wrote:
-> > James, I've been thinking about this a little more, and you may be on
-> > to something here. Let each driver add files as such:
-> > 
-> > /sys/class/scsi_host
-> >  |-- host0
-> >  |   |-- add_logical_drive
-> >  |   |-- remove_logical_drive
-> >  |   `-- rescan_logical_drive
-> > 
-> > Then we can go 2 ways with this.
-> > 1) driver functions directly call scsi_add_device(),
-> > scsi_remove_device(), and something for rescan (option 2 handles this
-> > one cleanly for us).  ATM, megaraid_mbox doesn't implement a rescan
-> > function, so this point may be moot. 
-> > 
-> > 2) driver functions call a midlayer library function, which invokes
-> >    /sbin/hotplug with appropriate data, and add a new /etc/hotplug.d
-> >    helper app which would then write to these files:
-> > to do likewise.
-> 
-> I'll buy this (option 2).. it seems like a good way to export the
-> megaraid specific information and at the same time integrate it more
-> fully into the evolving hotplug infrastructure.
+Hello,
 
-Great, I think that's the right long-term solution.  Can we consider
-other paths for the short term, while we evolve the hotplug
-infrastructure?  I don't know all the details involved in jumping
-straight to option 2 today.
+    I have twice now run into a bug where the scsi layer tries to 
+synchronize the scsi cache on a device that is no longer plugged into 
+the system. After this, a cat /proc/scsi/scsi hangs my terminal, and the 
+load average on the machine won't drop below 1.0. It takes roughly a 
+month for this bug to show up, I back up my system to a firewire drive 
+every week, and today on the 28th day of uptime I have this in dmesg:
 
-Do you plan to apply LSI's driver patch which adds the driver-private
-ioctl to provide the mapping from logical drive address to HCTL value?
-Both Dell and LSI have products which are lined up to use this new
-ioctl because it's the most expedient thing to do, maintains internal
-project schedules, etc, which delaying until this sysfs mechanism hits
-will greatly impact those schedules. (I know, many folks on this list
-don't care about business-side impacts of choices made on-list.)
-
-If you were to apply LSI's ioctl patch, then that patch becomes stage
-0.
-
-Stage 1 is what I posted last night, once tested, and the mgmt apps
-convert to use that.
-
-The above can happen pretty quickly I think, i.e. before the holidays.
-
-Stage 2 is option 2 above, which removes the driver calling
-scsi_add_device() and friends directly.  Userspace apps converted for
-stage 1 are none-the-wiser, as their interface hasn't changed.
-
-This is a Jan-Feb kind of thing, to give proper time for all concerns
-to be voiced and included in the kernel-internal APIs, /sbin/hotplug
-environment, and userspace helper.
-
-Stage 3, convert all other drivers who need a similar mechanism over
-to the new helper functions added in stage 2.
-
-This would be ongoing.
+ieee1394: Node changed: 0-01:1023 -> 0-00:1023
+ieee1394: Node suspended: ID:BUS[0-00:1023]  GUID[0010100500000689]
+Synchronizing SCSI cache for disk sda:
 
 
-Thoughts?
+Clearly you can see that the scsi layer tries to sync after the fw 
+device has been unplugged. All this and I even did this before unplugging:
 
-Thanks,
-Matt
+sync;sync;sync;umount /mnt/backup;
 
--- 
-Matt Domsch
-Sr. Software Engineer, Lead Engineer
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+This is the second time I have run into this and I belive is related to 
+post on the LKM:
+
+Aug. 5th 2004:
+
+Re: BUG: SCSI SYNCHRONIZE_CACHE on driver unload
+
+Please refer to this email (google it) because I believe it is very related.
+
+Regards,
+
+Emiliano Garcia
+Senior Systems Admin
