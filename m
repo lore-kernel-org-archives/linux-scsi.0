@@ -1,49 +1,45 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Fix for aic7xxx problems in BK latest
-Date: 23 Nov 2003 23:53:20 -0600
+From: "Surekha.PC" <surekhap@cisco.com>
+Subject: RE: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Mon, 24 Nov 2003 11:39:48 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1069653204.2066.25.camel@mulgrave>
+Message-ID: <00c901c3b251$91016a30$a0074d0a@apac.cisco.com>
+References: <20031027153932.A16679@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:16390 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262425AbTKXFxZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2003 00:53:25 -0500
+Received: from india-ironport-1.cisco.com ([64.104.129.195]:60819 "EHLO
+	india-ironport-1.cisco.com") by vger.kernel.org with ESMTP
+	id S263574AbTKXGJz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2003 01:09:55 -0500
+In-Reply-To: <20031027153932.A16679@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>, Pete Clements <clem@clem.clem-digital.net>, Fabio Coatti <cova@ferrara.linux.it>, Zwane Mwaikambo <zwane@arm.linux.org.uk>
-Cc: Christoph Hellwig <hch@lst.de>
+To: 'Christoph Hellwig' <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-It turns out the scsi_device refcounting and list lockdown altered the
-conditions under which scsi_report_bus_reset() works, since it calls
-shost_for_each_device, which now takes the host lock, that lock cannot
-be held while calling the report functions.  However, the assumption by
-aic is that it can.
 
-I fixed the problem by using the no lock version of the iterator.
+Hi,
 
-James
+>>  	- this comment indicates you don't want normal EH:
 
-===== drivers/scsi/scsi_error.c 1.65 vs edited =====
---- 1.65/drivers/scsi/scsi_error.c	Sun Sep 21 12:49:36 2003
-+++ edited/drivers/scsi/scsi_error.c	Sun Nov 23 23:39:09 2003
-@@ -1622,7 +1622,7 @@
- {
- 	struct scsi_device *sdev;
- 
--	shost_for_each_device(sdev, shost) {
-+	__shost_for_each_device(sdev, shost) {
- 		if (channel == sdev->channel) {
- 			sdev->was_reset = 1;
- 			sdev->expecting_cc_ua = 1;
-@@ -1656,7 +1656,7 @@
- {
- 	struct scsi_device *sdev;
- 
--	shost_for_each_device(sdev, shost) {
-+	__shost_for_each_device(sdev, shost) {
- 		if (channel == sdev->channel &&
- 		    target == sdev->id) {
- 			sdev->was_reset = 1;
+>> * check condition with no sense.  We need to avoid this, 
+>> * since the Linux SCSI code could put the command in 
+>> * SCSI_STATE_FAILED, which it's error recovery doesn't appear 
+>> * to handle correctly, and even if it does, we're trying to 
+>> * bypass all of the Linux error recovery code
+>> * to avoid blocking all I/O to the HBA.  Fake some sense 
+>> * data that gets a retry from Linux.
+
+>	so don't use scsi_error.c and define your own
+eh_strategy_handler method.
+
+By implementing the iSCSI driver specific strategy_handler we will need
+to duplicate most of the mid layer strategy handler logic only to
+accommodate the above condition.
+
+Is that justified ? Or is it ok, to fix the above case in scsi_error.c ?
+
+Thanks,
+surekha
 
