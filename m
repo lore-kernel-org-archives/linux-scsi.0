@@ -1,62 +1,42 @@
-From: Naveen Burmi <naveenb@cisco.com>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Thu, 20 Nov 2003 20:23:52 +0530
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] Re: Unaligned scatter-gather buffers and
+ usb-storage
+Date: Thu, 20 Nov 2003 10:20:15 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <03112020235202.16789@naveenb-lnx.cisco.com>
-References: <200310231734.10263.krmurthy@cisco.com> <03112019020601.16789@naveenb-lnx.cisco.com> <20031120133433.A31298@infradead.org>
-Reply-To: naveenb@cisco.com
+Message-ID: <Pine.LNX.4.44L0.0311201015030.878-100000@ida.rowland.org>
+References: <20031120065353.GW1106@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-3-in.cisco.com ([171.71.176.72]:18572 "EHLO
-	sj-iport-3.cisco.com") by vger.kernel.org with ESMTP
-	id S261882AbTKTOuq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Nov 2003 09:50:46 -0500
-In-Reply-To: <20031120133433.A31298@infradead.org>
+Received: from ida.rowland.org ([192.131.102.52]:3332 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S261898AbTKTPUQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Nov 2003 10:20:16 -0500
+In-Reply-To: <20031120065353.GW1106@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org, davmyers@cisco.com
+To: Jens Axboe <axboe@suse.de>
+Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, James Bottomley <James.Bottomley@steeleye.com>, Oliver Neukum <oliver@neukum.org>, Patrick Mansfield <patmans@us.ibm.com>, Douglas Gilbert <dougg@torque.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
 
-On Thursday 20 November 2003 07:04 pm, Christoph Hellwig wrote:
-> On Thu, Nov 20, 2003 at 07:02:06PM +0530, Naveen Burmi wrote:
-> > Lun masking feature is provided by the linux-iscsi driver. In the
-> > linux-iscsi driver configuration file user can specify the luns of a
-> > target that needs to be activated upon the detection of that target.
-> >
-> > > If you already have the LUN specified, why do you need to issue a
-> > > REPORT LUN command?
-> >
-> > User has specified the LUNs that needs to be activated upon the detection
-> > of a target. Once that target gets detected then to find out weather the
-> > LUNs specified by the user are actually present, we need to issue REPORT
-> > LUN command.
-> >
-> > > I don't know iSCSI specification details, but I would want to specify a
-> > > target, not a LUN, in a configuration file and have all LUNs on the
-> > > target be automatically configured.
-> >
-> > User might not want to configure all the LUNs of a target.
->
-> I'm not sure I agree with that.  Users might also want whatever but it's
-> not sensible to do that.  Ignore the user request now, if we see real-world
-> use for that we'll implement it in the midlayer.  And if you think it's
-> really important implement it in the midlayer now and keep the patch around
-> for users that want it.
+On Thu, 20 Nov 2003, Jens Axboe wrote:
 
-we are actually trying to do  optimization by sending REPORT LUN command 
-before actually configuring the target in the mid layer and configure only 
-the devices that are actually present.
-Agreed its not sensible to do it right now. Let's the need of it should be 
-felt in the real-world, after that it can be implemented in the mid-layer.
+> Then you just cannot do zero-copy dma, if the buffer isn't aligned
+> properly. It's as simple as that. And surely that wont kill you
+> performance wise.
+> 
+> Doing bounce buffering to just maintain the use of mapping user pages
+> into the kernel ls out right silly.
+> 
+> So no, I still don't think we have to add anything. Just don't do_dio if
+> the alignment doesn't allow it. Ditto for sg.
 
-We will remove iscsi_do_cmnd as pointed out by you from iscsi LLD.
+The answer seems very simple.  There should be a host template entry for
+dma buffer alignment (there's already a dma_boundary member).  It would be
+copied into the device's request queue stucture if it is nonzero,
+overriding the default value of 512.  sg and st should check the user
+buffer against the request queue's dma_alignment mask and avoid doing
+direct I/O if the alignment is wrong -- just fall back to normal I/O.
 
-Thanks,
-Naveen. 
+Any objections to this scheme?
 
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alan Stern
+
