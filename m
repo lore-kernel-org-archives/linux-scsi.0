@@ -1,36 +1,32 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] scsi-misc-2.5 remove scsi_scan.c EVPD code
-Date: Mon, 5 May 2003 10:46:02 -0700
+From: William Chow <lilbilchow@yahoo.com>
+Subject: is it ok to receive SIGIO in the same context calling SG code?
+Date: Mon, 5 May 2003 12:44:08 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030505174602.GA3433@beaverton.ibm.com>
-References: <UTC200304250047.h3P0lhl03517.aeb@smtp.cwi.nl> <3EB619A4.5090407@torque.net> <20030505093834.B7831@beaverton.ibm.com>
+Message-ID: <20030505194408.31127.qmail@web13808.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.132]:22153 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S261182AbTEER5K
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 May 2003 13:57:10 -0400
-Content-Disposition: inline
-In-Reply-To: <20030505093834.B7831@beaverton.ibm.com>
+Received: from web13808.mail.yahoo.com ([216.136.175.18]:49167 "HELO
+	web13808.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S261247AbTEETbh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 May 2003 15:31:37 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Douglas Gilbert <dougg@torque.net>, Andries.Brouwer@cwi.nl, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-scsi@one-eyed-alien.net
+To: linux-scsi@vger.kernel.org
 
-Patrick Mansfield [patmans@us.ibm.com] wrote:
-> An sgid user program that does the same thing as the code removed from the
-> kernel would be very usefull. This could likely be incorporated into other
-> schemes (udev), independent of other details.
-> 
-> Right now, we could have an sgid that runs whenever an sg is found (sg
-> hotplug generated via device_register), and stores a sysfs path and the id
-> returned into a flat file.
+The documentation associated with the UNH target
+emulator project indicates that the thread which
+receives the SIGIO cannot also be the context which
+calls SG, e.g. for submitting the async I/O. It states
+that "there are certain sections of the SCSI generic
+code that do not expect to receive signals". Does
+anyone have any information, implementational or even
+empirical, that would confirm/refute this?
 
-I believe devlabel's scsi_unique_id.c file does some of this, though I
-have not looked at it closely.
+Thanks for any assistance.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+ps: please CC me directly in the response.
 
+__________________________________
+Do you Yahoo!?
+The New Yahoo! Search - Faster. Easier. Bingo.
+http://search.yahoo.com
