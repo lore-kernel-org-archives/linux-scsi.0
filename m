@@ -1,35 +1,36 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Race in removal of host class device attribute file
-Date: Fri, 17 Oct 2003 13:30:07 +0100
+Subject: Re: 2.6.0 stability and the BK scsi trees
+Date: Fri, 17 Oct 2003 13:31:29 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031017133007.A27304@infradead.org>
-References: <20030709144410.GA3544@beaverton.ibm.com> <Pine.LNX.4.44L0.0310161656400.890-100000@ida.rowland.org>
+Message-ID: <20031017133129.A27349@infradead.org>
+References: <1066265974.16761.426.camel@fuzzy> <3F8E8786.2020502@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:42759 "EHLO
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:44807 "EHLO
 	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263425AbTJQMaN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Oct 2003 08:30:13 -0400
+	id S263430AbTJQMbf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Oct 2003 08:31:35 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0310161656400.890-100000@ida.rowland.org>; from stern@rowland.harvard.edu on Thu, Oct 16, 2003 at 05:09:04PM -0400
+In-Reply-To: <3F8E8786.2020502@torque.net>; from dougg@torque.net on Thu, Oct 16, 2003 at 09:56:54PM +1000
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Mike Anderson <andmike@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Douglas Gilbert <dougg@torque.net>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, Oct 16, 2003 at 05:09:04PM -0400, Alan Stern wrote:
-> I've created a class device attribute file for the hosts supported by the
-> usb-storage driver, using the shost_attrs member of the host template.  
-> It seems to contain an intractable race condition when unregistering the
-> host.  There's no way for the driver to know when the scsi host's class
-> device is released, so there's no way to know when it's safe to deallocate
-> the host's driver-specific data structure.  Waiting until
-> scsi_remove_host() returns isn't good enough, because a user process might
-> keep the attribute file open and thus prevent release of the class device
-> indefinitely.
+On Thu, Oct 16, 2003 at 09:56:54PM +1000, Douglas Gilbert wrote:
+> What was the point of putting 32 dev_t's into the
+> kernel? Many people who were advocating it used
+> the increased number of scsi disks (> 256) and
+> partitions (from 15 to 63 [to match the ide subsystem])
+> as a major reason.
+> 
+> The sd driver is still littered with hacks to distribute
+> its 256 (max) disks over 8 majors. Shouldn't this be
+> fixed?
+> 
+> Comments?
 
-What's the problem with that?  Yes, that means a user process can lock
-the memory into core, but we do this in many places.  General rule
-of the thumb is that a driver may only release data after scsi_remove_host()
-returns for per-host data or in ->slave_destroy() for per-device data.
-
+I agree with you that there's some late features that need
+to be addresses, and the larger dev_t probably is number
+one on that list.  But with Linus' policy having two trees
+is the best thing James can do.
