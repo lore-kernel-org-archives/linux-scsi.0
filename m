@@ -1,62 +1,65 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: BUG: SCSI INQUIRY thru SCSI_IOCTL_SEND_COMMAND returns no errno for disconnected device
-Date: Sat, 9 Oct 2004 08:35:38 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] merge scsiiom.c into tmscsim.c
+Date: Sat, 9 Oct 2004 14:29:47 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041009063538.GA12179@suse.de>
-References: <ac71172a04093012437c353f83@mail.gmail.com> <20041001163131.GA23156@beaverton.ibm.com> <ac71172a04100816436c59c5c3@mail.gmail.com>
+Message-ID: <20041009122946.GA19272@lst.de>
+References: <20041003134714.GA1623@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:37086 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S266547AbUJIGft (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Oct 2004 02:35:49 -0400
+Received: from verein.lst.de ([213.95.11.210]:8338 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S266749AbUJIM3v (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Oct 2004 08:29:51 -0400
 Content-Disposition: inline
-In-Reply-To: <ac71172a04100816436c59c5c3@mail.gmail.com>
+In-Reply-To: <20041003134714.GA1623@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Lan Tran <transter@gmail.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org, johntsai@us.ibm.com, tranlan@us.ibm.com
+To: g.liakhovetski@gmx.de, jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Oct 08 2004, Lan Tran wrote:
-> Thanks Patrick for the tip! After trying out SG_IO, it works, as long
-> as we use Mike C's patch.
-> 
-> Lan
-> 
-> On Fri, 1 Oct 2004 09:31:31 -0700, Patrick Mansfield <patmans@us.ibm.com> wrote:
-> > On Thu, Sep 30, 2004 at 12:43:47PM -0700, Lan Tran wrote:
-> > > We have a SAN system set up, where our host is connected to IBM ESS
-> > > storage and SVC storage. When we disconnect ALL FC cables between the
-> > > host and storage devices, and then send a SCSI INQUIRY using the
-> > > SCSI_IOCTL_SEND_COMMAND ioctl to the
-> > > sd devices, the ioctl does not return with a failure code. Instead, it
-> > > returns with a zero-length buffer.
-> > >
-> > > Is there a reason why we would get a zeroed-length buffer instead of
-> > > an error return code?
-> > 
-> > SCSI_IOCTL_SEND_COMMAND is deprecated, you should be using SG_IO instead.
-> > 
-> > There was a bug with SG_IO, it does not correctly set all of the status
-> > bytes, a patch has been submitted a few times, Mike C's patch
-> > fixed problems compared to ones I posted earlier, this patch:
-> > 
-> >         http://marc.theaimsgroup.com/?l=linux-scsi&m=108617935710955&w=2
-> > 
-> > It looks like SCSI_IOCTL_SEND_COMMAND has a similiar issue, in that it
-> > only checks the low byte of the results, so for example a DID_NO_CONNECT
-> > returned by the qlogic or emulex driver would be ignored.
-> > 
-> > See drivers/block/scsi_ioctl.c near the end of sg_scsi_ioctl, this:
-> > 
-> >         err = rq->errors & 0xff;        /* only 8 bit SCSI status */
-> > 
-> > Compare that to code in drivers/scsi/scsi_ioctl.c near the end of
-> > scsi_ioctl_send_command, where the entire result is checked, not just the
-> > SCSI byte.
+On Sun, Oct 03, 2004 at 03:47:14PM +0200, Christoph Hellwig wrote:
+> might be a good time to get rid of that clumsy include .c file into
+> another one thing.  (Also please bk rm scsiiom.c afterwards)
 
-I'll make sure to get that patch finally in. It made it to the bsg tree,
-and never further. Thanks for the reminder.
+And here's a patch ontop that restores's Al's sparse fixes done in
+scsiiom.c (the old patch still applies and works without this one,
+but without it you get a few more sparse warnings):
 
--- 
-Jens Axboe
 
+--- linux/drivers/scsi/tmscsim.c~	2004-10-09 14:29:45.772931256 +0200
++++ linux/drivers/scsi/tmscsim.c	2004-10-09 14:30:45.486905632 +0200
+@@ -1624,7 +1624,7 @@
+      }
+     DC390_write8 (ScsiCmd, EN_SEL_RESEL);
+     pSRB = pDCB->pActiveSRB;
+-    pACB->pActiveDCB = 0;
++    pACB->pActiveDCB = NULL;
+     pSRB->ScsiPhase = SCSI_NOP0;
+     if( pSRB->SRBState & SRB_UNEXPECT_RESEL )
+ 	pSRB->SRBState = 0;
+@@ -1641,7 +1641,7 @@
+ 	    dc390_Free_insert (pACB, pSRB);
+ 	    pSRB = psrb;
+ 	}
+-	pDCB->pGoingSRB = 0;
++	pDCB->pGoingSRB = NULL;
+     }
+     else
+     {
+@@ -1655,7 +1655,7 @@
+ 	{
+ disc1:
+ 	    dc390_freetag (pDCB, pSRB);
+-	    pDCB->pActiveSRB = 0;
++	    pDCB->pActiveSRB = NULL;
+ 	    pSRB->SRBState = SRB_FREE;
+ 	    dc390_SRBdone( pACB, pDCB, pSRB);
+ 	}
+@@ -1967,7 +1967,7 @@
+ 	pACB->ACBFlag |= RESET_DETECT;
+ 
+ 	dc390_ResetDevParam( pACB );
+-	dc390_DoingSRB_Done( pACB, 0 );
++	dc390_DoingSRB_Done( pACB, NULL);
+ 	//dc390_RecoverSRB( pACB );
+ 	pACB->pActiveDCB = NULL;
+ 	pACB->ACBFlag = 0;
