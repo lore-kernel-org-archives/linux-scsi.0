@@ -1,37 +1,42 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: mpt sets 64bit consistent mask yet requires mapping in same 4 GB chunk?!?
-Date: Thu, 19 Feb 2004 22:30:30 -0800
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Fw: [Bugme-new] [Bug 2147] New: my scsi emulated cdrom is locked
+Date: Fri, 20 Feb 2004 08:25:08 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040220063030.GB530179@sgi.com>
-References: <0E3FA95632D6D047BA649F95DAB60E5703EF9453@exa-atlanta.se.lsil.com>
+Message-ID: <20040220072508.GC27190@suse.de>
+References: <20040219122414.73fd7c6c.akpm@osdl.org> <20040220005223.GW4957@serve.riede.org> <20040219171332.08ea4011.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.SGI.COM ([192.48.171.6]:8333 "EHLO rj.sgi.com")
-	by vger.kernel.org with ESMTP id S267773AbUBTGam (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:40345 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S267700AbUBTHZR (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Feb 2004 01:30:42 -0500
+	Fri, 20 Feb 2004 02:25:17 -0500
 Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703EF9453@exa-atlanta.se.lsil.com>
+In-Reply-To: <20040219171332.08ea4011.akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: Alex Williamson <alex.williamson@hp.com>, jbarnes@sgi.com, bjorn.helgaas@hp.com, willy@debian.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: wrlk@riede.org, linux-scsi@vger.kernel.org
 
-On Thu, Feb 19, 2004 at 12:18:07PM -0500, Moore, Eric Dean wrote:
-> My comments <EDM> are embedded below.
-> 
-> > I don't think so, for two reasons.
+On Thu, Feb 19 2004, Andrew Morton wrote:
+> Willem Riede <wrlk@riede.org> wrote:
+> >
+> > I have had a proposed update to 
+> > ide-scsi's error handling out for review for some time, see
+> > http://marc.theaimsgroup.com/?l=linux-kernel&m=107246268217888&w=2
+> > http://marc.theaimsgroup.com/?l=linux-scsi&m=107443923827330&w=2
+> > http://marc.theaimsgroup.com/?l=linux-kernel&m=107558923328533&w=2
 > > 
-> > The first is that we require 64 bit PCI addresses for all 
-> > PCI-X devices.
+> > If there are no comments on it, perhaps it can be given some exposure (e.g. in
+> > -mm patches) to get user feedback?
 > 
-> <EDM> 
-> I'm not sure what you mean? 
-> For PCI-X devices - are you saying passing something other than
-> 0xFFFFFFFFFFFFFFFF for the mask in pci_set_consistent_dma_mask()
-> fails? 
+> I think Jens was digging himself in the ribs over this.
+> 
+> If you have a patch you want tested then sure, sling it across.
 
-Correct.  We require PCI-X devices to use the entire 64 address
-bits.
+Yeah... William, send the last patch you had without any style cleanups
+to Andrew. There's no reason it can't sit in -mm for a little while,
+while getting reviewed.
 
-jeremy
+-- 
+Jens Axboe
+
