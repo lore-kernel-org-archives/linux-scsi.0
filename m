@@ -1,63 +1,44 @@
 From: James.Smart@Emulex.Com
-Subject: RE: [PATCH 1/3] MidLayer updates - extending transport/attributecontainer changes
-Date: Sat, 5 Feb 2005 09:56:31 -0500
-Message-ID: <0B1E13B586976742A7599D71A6AC733C1FD1C6@xbl3.ma.emulex.com>
+Subject: RE: [PATCH 3/3] MidLayer updates - extending scsi_target support
+Date: Sat, 5 Feb 2005 10:04:22 -0500
+Message-ID: <0B1E13B586976742A7599D71A6AC733C12EB22@xbl3.ma.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Received: from emulex.emulex.com ([138.239.112.1]:8665 "EHLO emulex.emulex.com")
-	by vger.kernel.org with ESMTP id S273261AbVBEO4f convert rfc822-to-8bit
+Received: from emulex.emulex.com ([138.239.112.1]:48601 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S261653AbVBEPEZ convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 5 Feb 2005 09:56:35 -0500
+	Sat, 5 Feb 2005 10:04:25 -0500
 content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org
 
-> On Sat, 2005-01-29 at 09:03 -0500, James.Smart@Emulex.Com wrote:
-> >   Updates the recent transport container patch for :
-> >   - allow device driver-specific attributes to be added to 
-> class objects
-> >   - exposes classdev to transport via setup function
+
+> the idea behind this is fine, I just don't like the interface.
 > 
-> I'm not very keen on this for two reasons:
-> 
-> 1) The driver should be tampering with class attributes.  A class and
-> its attributes are the presentation of an interface.  If the 
-> driver has
-> something more to add then surely that's an indication that 
-> the original
-> interface is missing pieces (i.e. every driver should have 
-> this) or that
-> the driver is trying to export a different interface (and so, 
-> logically
-> should use a new class.  i.e. just add a transport_class to the driver
-> and everything will work nicely).
+> Really a target device is nothing more than a container to SCSI.  We
+> already do the transport add/remove calls for targets, I don't see we
+> need other calls duplicating this.  So, I think the 
+> implementation would
+> look a whole lot better if the fc transport class just exported an
+> interface to get the extra storage for the driver and tacked it on to
+> its allocation.  Then you can use the existing mid-layer transport
+> target triggers to do everything you want.
 
-Well the only we part we disagree on is the "surely that's an indication"
-statement. It may not be. What if the hardware implementation has several
-device-specific steps/states that must be traversed in order to meet the
-more general state of the transport. These things obviously aren't
-applicable to all other adapters. If I (the driver) wanted to report these
-potential interim states - how could I ?  In the case of FC and remote
-ports, the difficulty is that the only place where the relevant object is
-valid is in the transport. I either define an awful adapter-global attribute
-that must report for all devices (or something worse), or just give up
-exposing this information.
+This can certainly be transport-specific. However, I assumed the better
+solution was to make it more generic as there's nothing about this
+problem that's transport-centric. If a driver only tracks things by 
+target (not lun), it makes a whole lotta sense to allow for per-target
+data.
 
-> 2) classdevs are sysfs's representation of the interface.  I'd rather
-> they weren't exposed any more than necessary internally to avoid the
-> urge to hack the interface.
+Please note however, that I recommend the changes for calling sequence
+be taken in regardless. The issue is that the sdev transport setup and
+slave alloc calls are made prior to the existence of the starget (thus
+any starget transport setup call). The starget really needs to be in
+place beforehand.
 
-Understood. However, the class dev is the transport's presentation point
-to the system - and you're dictating how that interface can look and/or
-behave. Obviously that's the intent - it's a bunch of sysfs attributes
-only, and everything's either fully present or not present. That is a
-pretty restrictive definition though. As the transport, given that it's
-my presentation point, I'd like to be able to manipulate my presentation
-if necessary.  I'm also assuming that eventually the transport is as
-trusted as other parts of the midlayer, so it's allowed, under specific
-constraints, to access the classdev.
+Let me know - I can revise the patch accordingly.
 
 -- James S
