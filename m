@@ -1,33 +1,56 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [SAS ANNOUNCEMENT] MPT Fusion driver 3.02.07 update
-Date: Wed, 10 Nov 2004 17:03:50 +0000
-Message-ID: <20041110170350.GB18907@infradead.org>
-References: <91888D455306F94EBD4D168954A9457C2D1EB5@nacos172.co.lsil.com> <20041109142004.GA5565@infradead.org> <20041109161859.GS24690@parcelfarce.linux.theplanet.co.uk>
+From: Chris Adams <cmadams@hiwaay.net>
+Subject: Why are MegaRAID drivers mutually exclusive?
+Date: Wed, 10 Nov 2004 11:04:52 -0600
+Message-ID: <20041110170451.GA1061425@hiwaay.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([81.187.226.98]:6924 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S262010AbUKJRD4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Nov 2004 12:03:56 -0500
+Received: from bee.hiwaay.net ([216.180.54.11]:19828 "EHLO bee.hiwaay.net")
+	by vger.kernel.org with ESMTP id S262016AbUKJRE5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Nov 2004 12:04:57 -0500
+Received: from bee.hiwaay.net (bee.hiwaay.net [216.180.54.11])
+	by bee.hiwaay.net (8.13.0/8.13.0) with ESMTP id iAAH4qFv1068940
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Nov 2004 11:04:54 -0600 (CST)
+Received: (from cmadams@localhost)
+	by bee.hiwaay.net (8.13.0/8.13.0/DefSubmit) id iAAH4qmP1063159
+	for linux-scsi@vger.kernel.org; Wed, 10 Nov 2004 11:04:52 -0600 (CST)
 Content-Disposition: inline
-In-Reply-To: <20041109161859.GS24690@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Christoph Hellwig <hch@infradead.org>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, linux-scsi@vger.kernel.org, "Stephens, Larry" <larry.stephens@lsil.com>
+To: linux-scsi@vger.kernel.org
 
-On Tue, Nov 09, 2004 at 04:18:59PM +0000, Matthew Wilcox wrote:
-> On Tue, Nov 09, 2004 at 02:20:04PM +0000, Christoph Hellwig wrote:
-> > Well, you're disallowing one of the existant syntaxes anyway, right?
-> > 
-> > At least add a separate one for each of the parameters (and only
-> > add those for the new parameter) so the old ones can spit a warning
-> > and be removed after a longer timeframe.
-> 
-> This may not be possible.  It wasn't with sym2 -- the module code said
-> "Oh, I found both old and new style parameters, I'm going to disable
-> the new ones".  Rusty refused to fix it, claiming he was going to remove
-> the old code within a couple of minor releases.
+I've got some systems that need the old megaraid driver with Fedora Core
+3, however it isn't being built.  Looking at Kconfig.megaraid, I see
+that the new and old drivers are mutually exclusive?  Is there a reason
+for that?  It means that packagers can't build both as modules.
 
-Well, both could be module_param.
+Is there a good reason not to do:
+
+diff -urN linux-2.6.9-dist/drivers/scsi/megaraid/Kconfig.megaraid linux-2.6.9/drivers/scsi/megaraid/Kconfig.megaraid
+--- linux-2.6.9-dist/drivers/scsi/megaraid/Kconfig.megaraid	2004-10-18 16:53:22.000000000 -0500
++++ linux-2.6.9/drivers/scsi/megaraid/Kconfig.megaraid	2004-11-10 10:33:26.748570929 -0600
+@@ -63,7 +63,6 @@
+ 	To compile this driver as a module, choose M here: the
+ 	module will be called megaraid_mbox
+ 
+-if MEGARAID_NEWGEN=n
+ config MEGARAID_LEGACY
+ 	tristate "LSI Logic Legacy MegaRAID Driver"
+ 	depends on PCI && SCSI
+@@ -74,4 +73,3 @@
+ 
+ 	To compile this driver as a module, choose M here: the
+ 	module will be called megaraid
+-endif
+
+
+I looked in MAINTAINERS, CREDITS, megaraid.txt, and ChangeLog.megaraid,
+but I didn't see that there was any more specific list to use for the
+megaraid driver (other than three author addresses listed in
+megaraid_mbox.c).
+
+-- 
+Chris Adams <cmadams@hiwaay.net>
+Systems and Network Administrator - HiWAAY Internet Services
+I don't speak for anybody but myself - that's enough trouble.
