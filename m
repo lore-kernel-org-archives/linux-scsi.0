@@ -1,54 +1,39 @@
-From: "Ujval Lodha" <ujval@gdc-tech.com>
-Subject: Writing to tape from C system calls
-Date: Fri, 12 Dec 2003 20:39:06 +0800
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Fri, 12 Dec 2003 12:48:54 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <035701c3c0ac$f1ccbae0$aa00a8c0@ASTERIX>
-References: <033701c3c0ac$97659270$aa00a8c0@ASTERIX>
+Message-ID: <20031212124854.GH27116@parcelfarce.linux.theplanet.co.uk>
+References: <200312112117.46216.krmurthy@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [203.132.205.66] ([203.132.205.66]:56544 "EHLO
-	helium.gdc-tech.com") by vger.kernel.org with ESMTP id S264556AbTLLMjR
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:42414 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S264549AbTLLMs6
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Dec 2003 07:39:17 -0500
-Received: from ASTERIX ([192.168.0.170])
-	(authenticated)
-	by helium.gdc-tech.com (8.11.6/8.11.0) with ESMTP id hBCCZSa15989
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Dec 2003 20:35:29 +0800
+	Fri, 12 Dec 2003 07:48:58 -0500
+Content-Disposition: inline
+In-Reply-To: <200312112117.46216.krmurthy@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "N.C.Krishna Murthy" <krmurthy@cisco.com>
+Cc: Christoph Hellwig <hch@infradead.org>, SCSI -DEVEL <linux-scsi@vger.kernel.org>, davmyers@cisco.com
 
+On Thu, Dec 11, 2003 at 09:17:46PM +0530, N.C.Krishna Murthy wrote:
+> Hi,
+> 	One of your comments was
+> "having multiple kmap() in the same process at the same time can deadlock(),
+> you redesign iscsi_xmit_task/iscsi_xmit_data/iscsi_recv_data not to do that.
+> for the tx path use ->sendpage to avoid a data copy and kmapping altogether".
+> 
+> I did try using sendpage in iscsi_xmit_data. 
+> Whenever the scatterlist->length was 4096 sendpage did succeed.
+> When it was 8192 I did see a panic 
 
-Hi
+could you post the code for that?
 
-I'm new to tape devices.
-
-My application requires me to seek to a certain block on the tape device and
-write data on it (besides being able to retrieve data by reading).
-
-So far, I have no trouble reading from the tape.
-
-When I write to it at any block that block becomes the last block on the
-device. I am unable to seek to any block after that on the tape. I have
-tried :
-
-    a. Using mt to seek and dd to write
-    b. Using open / ioctl / write from C
-
-Both with the same results. I am using a Tandberg SDLT for my tests with the
-linux kernel st drivers.
-
-Is this normal? Is it not possible to use the tape device - and modify data
-at any block by seeking to it and writing?
-
-Is there some source of information where I can read about programming tape
-devices from C? So far, I havent been able to find one.
-
-Please advise.
-Regards,
-Ujval Lodha
-
-
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
