@@ -1,94 +1,36 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [usb-storage] Re: PATCH: exclude certain commands from emulated SCSI hosts
-Date: Mon, 21 Apr 2003 18:17:56 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] fixes compile errors in cpqfcTS driver
+Date: Tue, 22 Apr 2003 07:44:15 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030421181755.A19118@one-eyed-alien.net>
-References: <UTC200304220109.h3M19NX09680.aeb@smtp.cwi.nl>
+Message-ID: <20030422074414.A26090@infradead.org>
+References: <3EA48555.8020600@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="d6Gm4EdcadzBjdND"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:6664 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S262739AbTDVBF5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Apr 2003 21:05:57 -0400
-Content-Disposition: inline
-In-Reply-To: <UTC200304220109.h3M19NX09680.aeb@smtp.cwi.nl>; from Andries.Brouwer@cwi.nl on Tue, Apr 22, 2003 at 03:09:23AM +0200
-List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl
-Cc: James.Bottomley@SteelEye.com, greg@kroah.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, torvalds@transmeta.com, usb-storage@one-eyed-alien.net
-
-
---d6Gm4EdcadzBjdND
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from carisma.slowglass.com ([195.224.96.167]:34574 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S262563AbTDVGcN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Apr 2003 02:32:13 -0400
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <3EA48555.8020600@us.ibm.com>; from mikenc@us.ibm.com on Mon, Apr 21, 2003 at 04:57:09PM -0700
+List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <mikenc@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-First, we're talking about 2.5.
+On Mon, Apr 21, 2003 at 04:57:09PM -0700, Mike Christie wrote:
+> +  Scsi_Device DumSdev;
 
-As for what fails... start by looking at bugzilla for bugs assigned to me.
-There are about 4-5 which are all devices that choke on a command (or it's
-variant) that the 'popular OSes' don't send.  There is a constant stream of
-reports of similar problems on linux-usb-users and -devel.
+Please use struct scsi_device in any new code.
 
-The basic failure mode is this:  The host sends a command that the device
-doesn't like (for the aforementioned reason), and the device firmware
-crashes or otherwise enters an unrecoverable state.  Some of the evil
-commands include various forms of INQUIRY, MODE_SENSE (to disks), READ_6,
-WRITE_6, etc.
+>    int Chan, Targ, i;
+>    struct info_str info;
+>    CPQFCHBA *cpqfcHBA;
+> @@ -963,11 +964,12 @@ int cpqfcTS_proc_info (char *buffer, cha
+>  
+>  #define DISPLAY_WWN_INFO
+>  #ifdef DISPLAY_WWN_INFO
+> +  DumCmnd.device = &DumSdev;
 
-Your patches went a long way to improving things.  But, then people added
-EVPD and further changed MODE_SENSE and other things.   It's pretty clear
-to me that trying to change the SCSI core to not use these commands isn't
-going to happen -- so I want a way to filter them.  I originally wanted a
-centralized filter (i.e. usb-storage could indicate to the mid-layer not to
-send the 'unwelcome' commands), but that got shot down in favor of a
-centralized filter-framework which could be applied by any LLDD that wanted
-to.
+I don't think the onstack command/device will work anymore.
+You'll have to use scsi_get_command/scsi_put_command I guess
 
-Or, at least, that's how I recap the situation.  I think we're at the point
-where we're trying to decide what to merge.  At least I hope that's where
-we are -- and I still stand by my patch (based on James' work).
-
-The idea of a centralized framework was to allow multiple sections of code
-to use this (sbp2, usb-storage, ide-scsi perhaps, and other LLDDs).
-
-Matt
-
-On Tue, Apr 22, 2003 at 03:09:23AM +0200, Andries.Brouwer@cwi.nl wrote:
-> I have not been following this USB and SCSI stuff very carefully,
-> but some time ago I tried a large number of strange USB devices,
-> and of course some failed, and I changed the SCSI stuff a little
-> so that everything worked. I think Linus took these patches,
-> which means that on my sample of devices 2.5 works.
->=20
-> Is the present discussion about 2.4, or is it about 2.5,
-> and in case it is the latter, can anybody describe what
-> devices fail, and in what way?
->=20
-> Andries
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-But where are the THEMES?!  How do you expect me to use an OS without=20
-themes?!
-					-- Stef
-User Friendly, 10/9/1998
-
---d6Gm4EdcadzBjdND
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE+pJhDIjReC7bSPZARAh4YAJ9X7SUq1qhMmiwkJdp/qqXnG8xp9wCeIaCO
-+tD9quBSdqhxRvL+gAqPTQ8=
-=5zAz
------END PGP SIGNATURE-----
-
---d6Gm4EdcadzBjdND--
