@@ -1,53 +1,49 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: iomapping a big endian area
-Date: Sun, 3 Apr 2005 02:37:57 +0100
-Message-ID: <20050403013757.GB24234@parcelfarce.linux.theplanet.co.uk>
-References: <1112475134.5786.29.camel@mulgrave>
+From: Dan Dennedy <dan@dennedy.org>
+Subject: Re: Usage question
+Date: Sat, 02 Apr 2005 20:38:22 -0500
+Message-ID: <1112492302.20936.12.camel@kino.dennedy.org>
+References: <1112394885.6487.9.camel@localhost.localdomain>
+	 <424DFE79.4080003@s5r6.in-berlin.de>  <1112450118.5518.3.camel@defiant>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:63382 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261418AbVDCBiA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 2 Apr 2005 20:38:00 -0500
-Content-Disposition: inline
-In-Reply-To: <1112475134.5786.29.camel@mulgrave>
+Received: from smtp.nuvox.net ([64.89.70.9]:59848 "EHLO
+	smtp05.gnvlscdb.sys.nuvox.net") by vger.kernel.org with ESMTP
+	id S261419AbVDCBjE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 2 Apr 2005 20:39:04 -0500
+In-Reply-To: <1112450118.5518.3.camel@defiant>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
+To: Matthias =?ISO-8859-1?Q?Bl=E4sing?= <mblaesing@gmx.de>
+Cc: linux-scsi@vger.kernel.org, linux1394-user@lists.sourceforge.net
 
-On Sat, Apr 02, 2005 at 02:52:14PM -0600, James Bottomley wrote:
-> This driver has had it's own different infrastructure for doing this for
-> ages, but it's time it used the common one.
+On Sat, 2005-04-02 at 15:55 +0200, Matthias Bl=E4sing wrote:
+> Am Sa, den 02.04.2005 schrieb Stefan Richter um 4:07:
+> > ...CD/DVD-ROMs, because there are problems with device and host=20
+> > structures management if sr_mod of Linux 2.6 is involved. It is an =
+old=20
+> > known bug whose cause has not yet been figured out.
+>=20
+> There was a patch for the kernel on this list, which work quite good =
+for
+> me (sr.c and sr_ioctl.c have to be modified - Olaf Hering on
+> 24.10.2004). I couldn't find any bad side effects of this.
 
-Thanks.  I'd been looking at this for a while but hadn't got round tuit yet.
+Thanks, I located the message on the linux1394-devel list:
+http://marc.theaimsgroup.com/?l=3Dlinux1394-devel&m=3D109862922621832&w=
+=3D2
 
->  #ifdef CONFIG_53C700_LE_ON_BE
->  #define bE	(hostdata->force_le_on_be ? 0 : 3)
->  #define	bSWAP	(hostdata->force_le_on_be)
-> +/* This is terrible, but there's no raw version of ioread32.  That means
-> + * that on a be board we swap twice (once in ioread32 and once again to 
-> + * get the value correct) */
-> +#define bS_to_io(x)	((hostdata->force_le_on_be) ? (x) : cpu_to_le32(x))
+There is a very good report response to Olaf's little patch.
+http://marc.theaimsgroup.com/?l=3Dlinux1394-devel&m=3D109925711513542&w=
+=3D2
 
-I raised this with Linus back when he did the original iomap() stuff.
-Unfortunately, I think he ignored the question ;-)
+Please, others, try it as well. I'm going to....
 
-My thought on this is that we should encode the endianness of the
-registers in the ioremap cookie.  Some architectures (sparc, I think?) can
-do this in their PTEs.  The rest of us can do it in our ioread/writeN
-methods.  I've planned for this in the parisc iomap implementation but
-not actually implemented it.
 
-It doesn't look too hard so I'll commit something to the parisc tree
-later that'll let you iomap a BE area.  Do we have any cards that need to be
-accessed in a BE way on a LE machine?  (ie x86)
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
