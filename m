@@ -1,49 +1,43 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: sd_read_cache_type
-Date: Fri, 10 Jan 2003 10:14:11 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200301101514.h0AFEBc03067@localhost.localdomain>
-References: <UTC200301101308.h0AD8r021919.aeb@smtp.cwi.nl>
+Subject: Re: [PATCH] SCSI Core patches
+Date: Fri, 10 Jan 2003 12:06:52 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <200301101706.h0AH6rr03943@localhost.localdomain>
+References: <andmike@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: Message from Andries.Brouwer@cwi.nl
-   of "Fri, 10 Jan 2003 14:08:53 +0100." <UTC200301101308.h0AD8r021919.aeb@smtp.cwi.nl>
-To: Andries.Brouwer@cwi.nl
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id JAA20354
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Jan 2003 09:06:57 -0800
+In-Reply-To: Message from Mike Anderson <andmike@us.ibm.com>
+   of "Wed, 08 Jan 2003 13:13:06 PST." <20030108211306.GG1112@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Luben Tuikov <luben@splentec.com>, linux-scsi@vger.kernel.org
 
-Andries.Brouwer@cwi.nl said:
-> Will look a bit more at the details later. For now a question: this
-> call does a MODE_SENSE with the DBD (disable block descriptors) bit
-> set. Is there a reason for that? Wouldn't the same code work in the
-> same way without that bit? 
+I got around to looking at the patch.
 
-The reason was just least line of resistance.  The code doesn't use the block 
-descriptors, so there's no need to ask for them.  The code is written to skip 
-over the block descriptors, just in case the device returns them, so setting 
-DBD to zero should have no practical effect.
+I think the idea of slab allocation for Scsi_Cmnds is generally worth the 
+effort.  There are several issues with the current patch, though:
 
-Andries.Brouwer@cwi.nl said:
-> And the reason I ask is that we already have sd_do_mode_sense6(), so
-> part of sd_read_cache_type() can be simply replaced by a call of
-> sd_do_mode_sense6(), but the latter needs an extra parameter if DBD is
-> really needed.
+1) The command for the device has to be allocated in space that respects the 
+dma_mask for the device (on a non MMIO bus).  Pretty much for scsi, this 
+translates to using GFP_DMA as the allocation flag if unchecked_isa_dma is 
+set.  GFP_DMA has to be passed in at kmem_cache_create time.  We therefore 
+probably need the capacity to use a different kmem_cache on a per Scsi_Host 
+basis and the ability to set up a GFP_DMA kmem_cache if a host with 
+unchecked_isa_dma appears.
 
-I agree with replacing the functionality with this call.  On general 
-principle, the DBD bit (and any other missing pieces) should be added to 
-mode_sense6 just to make it as useful as possible (and, I suppose, the call 
-should be moved into scsi_lib since more than just sd could make use of it).
+2) scsi_get_command takes the host lock when obtaining a command from it's 
+free_list.  Unfortunately, scsi_get_command looks to be called from places 
+(like the prep_fn) where the lock is already held => deadlock.
 
-> And a second question: sd_read_cache_type() is called also when no
-> medium is present. Objections against only calling when media are
-> present?
-
-Well, the cache is pretty often part of the permanent assembly, not part of 
-the removable medium, so I think it should still be called for removable 
-media. That begs the question, of course, what should the cache type be---it 
-strikes me as rather unsafe to have a removable RW medium with a write back 
-cache?  I suppose at the very least we should to a SYNCHRONIZE on ejection if 
-it's write back?
+3) The free_list employs all the list machinery for potentially storing 
+multiple commands, but in practice it looks like it only ever stores one of 
+them.  Is there a plan to make this free_list size tuneable (probably tuneable 
+per device)?
 
 James
+
+
