@@ -1,41 +1,73 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Vanilla 2.4.27 fails to compile on amd64
-Date: 12 Sep 2004 14:23:22 -0400
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: 2.4.28-pre3: broken ips update
+Date: Mon, 13 Sep 2004 09:03:35 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1095013408.1714.14.camel@mulgrave>
-References: <1095009093.30166.632.camel@lh2.linush.net>
+Message-ID: <20040913070334.GD1937@fs.tum.de>
+References: <20040911220117.GA4669@logos.cnet>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:51159 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S268767AbUILSXk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 12 Sep 2004 14:23:40 -0400
-In-Reply-To: <1095009093.30166.632.camel@lh2.linush.net>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:42501 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S266223AbUIMHEH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Sep 2004 03:04:07 -0400
+Content-Disposition: inline
+In-Reply-To: <20040911220117.GA4669@logos.cnet>
 List-Id: linux-scsi@vger.kernel.org
-To: "C. Linus Hicks" <lhicks@nc.rr.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, ipslinux@adaptec.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sun, 2004-09-12 at 13:11, C. Linus Hicks wrote:
-> Is there a patch for this problem, and can the fix be included
-> permanently in 2.4?
+On Sat, Sep 11, 2004 at 07:01:17PM -0300, Marcelo Tosatti wrote:
+>...
+> Summary of changes from v2.4.28-pre2 to v2.4.28-pre3
+> ============================================
+>...
+> Jack Hammer:
+>   o ServeRAID driver (ips) Version 7.10.18
+>...
 
-That's a known annoyance of the aic7xxx driver on non-x86 platforms. 
-The attached patch should make it at least compile.
+<--  snip  -->
 
-James
+...
+gcc-3.4 -D__KERNEL__ 
+-I/home/bunk/linux/kernel-2.4/linux-2.4.28-pre3-full/include -Wall 
+-Wstrict-prototypes -Wno-trigraphs -O2 -fno-strict-aliasing -fno-common 
+-fomit-frame-pointer -pipe -mpreferred-stack-boundary=2 -march=athlon 
+-fno-unit-at-a-time   -nostdinc -iwithprefix include 
+-DKBUILD_BASENAME=ips  -c -o ips.o ips.c
+In file included from ips.c:190:
+ips.h:101: error: redefinition of typedef 'irqreturn_t'
+/home/bunk/linux/kernel-2.4/linux-2.4.28-pre3-full/include/linux/interrupt.h:16: 
+error: previous declaration of 'irqreturn_t' was here
+make[3]: *** [ips.o] Error 1
+make[3]: Leaving directory `/home/bunk/linux/kernel-2.4/linux-2.4.28-pre3-full/drivers/scsi'
 
-===== drivers/scsi/aic7xxx/Makefile 1.16 vs edited =====
---- 1.16/drivers/scsi/aic7xxx/Makefile	2003-05-30 16:56:17 -04:00
-+++ edited/drivers/scsi/aic7xxx/Makefile	2004-09-12 14:21:38 -04:00
-@@ -13,7 +13,7 @@
- obj-$(CONFIG_SCSI_AIC79XX)	+= aic79xx.o
- endif
- 
--EXTRA_CFLAGS += -I$(TOPDIR)/drivers/scsi -Werror
-+EXTRA_CFLAGS += -I$(TOPDIR)/drivers/scsi
- #EXTRA_CFLAGS += -g
- 
- # Platform Specific Files
+<--  snip  -->
+
+
+This update was obviously submitted without even testing the compilation 
+of the driver (not to mention testing whether it actually works).
+
+
+Even worse:
+
+We had _exactly the same problem_ with the 7.00.15 driver in 
+2.4.27-pre3, but 7.10.18 now simply reverts my (trivial) fix for this 
+compile error.
+
+
+Marcelo, can you please refuse patches from people who don't bother to 
+do even the simplest compile testing when blindly submitting the latest 
+version of a driver?
+
+
+TIA
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
