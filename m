@@ -1,42 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [patch 08/10]  scsi/dpt_i2o:
-	replace	schedule_timeout()withmsleep_interruptible()
-Date: 25 Oct 2004 10:19:01 -0400
+From: Bjarne Thomsen <bjarne.thomsen@get2net.dk>
+Subject: Re: cp from SATA to SCSI freeze
+Date: Mon, 25 Oct 2004 18:08:22 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1098713947.2023.13.camel@mulgrave>
-References: <60807403EABEB443939A5A7AA8A7458B40B9B3@otce2k01.adaptec.com>
+Message-ID: <1098720502.2547.31.camel@tycho.astronomy.dk>
+References: <1098612795.11032.20.camel@tycho.astronomy.dk>
+	 <417C90CB.6070909@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:14248 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261748AbUJYOTS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Oct 2004 10:19:18 -0400
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458B40B9B3@otce2k01.adaptec.com>
+Received: from fitch3.uni2.net ([130.227.52.106]:58074 "EHLO fitch3.uni2.net")
+	by vger.kernel.org with ESMTP id S262068AbUJYQIY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Oct 2004 12:08:24 -0400
+Received: from [192.168.1.102] (83.72.33.52.ip.tele2adsl.dk [83.72.33.52])
+	by fitch3.uni2.net (8.12.6/8.11.6) with ESMTP id i9PG8KtJ030328
+	for <linux-scsi@vger.kernel.org>; Mon, 25 Oct 2004 18:08:20 +0200
+In-Reply-To: <417C90CB.6070909@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: maximilian attems <janitor@sternwelten.at>, Nishanth Aravamudan <nacc@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2004-10-25 at 07:30, Salyzyn, Mark wrote:
-> Not quite ... The value of 0 is meant to trigger never timing out on the
-> request (#define FOREVER (0) in dpti.h). The code change you have will
-> mean that the code will immediately timeout, not the intent.
+On Mon, 2004-10-25 at 07:36, Jeff Garzik wrote:
+> Have the latest BIOS?  BIOS update seems to fix most of the system 
+> freeze issues, and replacing cables / power often fixes the rest.
 > 
-> There is a wakeup to the thread issued by the interrupt via a WAIT
-> QUEUE, if the sequence of TASK_INTERRUPTIBLE/schedule() did not work, it
-> would not explain the successful operation of the driver during
-> initialization time.
+Yes, I have the latest BIOS (beta), but I didn't use it.
+This morning I had an idea: could it be hyper transport?
+The CPU2, PCI-X0, and AGP HT Link speeds were set to
+600MHz or 800MHz by default.
+After having changed all 3 values to 200MHz I
+have not had a single freeze. I am still testing.
 
-So this is basically an open coded interruptible_sleep_on_timeout()? 
-Why not replace it with this? (although this will excite the janitors
-since sleep_on is deprecated in all its forms).
+ -- Bjarne
 
-Also, if you define your FOREVER to be MAX_SCHEDULE_TIMEOUT, you don't
-need to special case this.
-
-James
-
-
-
+-- 
+Bjarne Thomsen <bjarne.thomsen@get2net.dk>
+Institute of Physics & Astronomy
 
