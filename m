@@ -1,59 +1,47 @@
 From: Rusty Trivial Russell <rusty@rustcorp.com.au>
-Subject: [TRIVIAL] warning cleanup for drivers_scsi_qla1280.c
-Date: Thu, 06 Feb 2003 14:00:37 +1100
+Subject: [TRIVIAL] Missing ';' in drivers_scsi_aic7xxx_aicasm_aicasm_gram.y
+Date: Thu, 06 Feb 2003 14:16:57 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030206053820.80C872C070@lists.samba.org>
+Message-ID: <20030206053821.D7B0E2C3A8@lists.samba.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Marcelo Tosatti <marcelo@conectiva.com.br>
-Cc: Jes Sorensen <jes@wildopensource.com>, linux-scsi@vger.kernel.org
+To: Justin Gibbs <gibbs@btc.adaptec.com>, linux-scsi@vger.kernel.org
 
-From:  Eric Sandeen <sandeen@sgi.com>
+[ No idea if this is correct - is it? --RR ]
+From:  Thibaut VARENE <varenet@parisc-linux.org>
 
+  I tested 2.4.20 on my ppc box and got 2 error messages on the file
+  drivers/scsi/aic7xxx/aicasm/aicasm_gram.y, complaining about expected ';'.
+  
+  I corrected these with the attached patch.
+  
+  HTH,
+  
+  
+  Thibaut VARENE
+  The PA/Linux ESIEE Team
+  http://pateam.esiee.fr/
+  
+  
 
---- trivial-2.4.21-pre4/drivers/scsi/qla1280.c.orig	2003-02-06 13:53:42.000000000 +1100
-+++ trivial-2.4.21-pre4/drivers/scsi/qla1280.c	2003-02-06 13:53:42.000000000 +1100
-@@ -312,7 +312,9 @@
- STATIC int qla1280_return_status( sts_entry_t *sts, Scsi_Cmnd       *cp);
- STATIC void qla1280_removeq(scsi_lu_t *q, srb_t *sp);
- STATIC void qla1280_mem_free(scsi_qla_host_t *ha);
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,1,95)
- static void qla1280_do_dpc(void *p);
-+#endif
- #ifdef  QLA1280_UNUSED 
- static void qla1280_set_flags(char * s);
- #endif
-@@ -1611,17 +1613,12 @@
-  * "host->can_queue". This can cause a panic if we were in our interrupt
-  * code .
-  **************************************************************************/
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,1,95)
- static void qla1280_do_dpc(void *p)
- {
-     scsi_qla_host_t *ha = (scsi_qla_host_t *) p;
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,1,95)
--    unsigned long cpu_flags = 0;
--#endif
+--- trivial-2.4.21-pre4/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y.orig	2003-02-06 13:53:52.000000000 +1100
++++ trivial-2.4.21-pre4/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y	2003-02-06 13:53:52.000000000 +1100
+@@ -917,6 +917,7 @@
+ 		cs->begin_addr = instruction_ptr;
+ 		in_critical_section = TRUE;
+ 	}
++;
  
-     COMTRACE('p')  
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,1,95)
--    spin_lock_irqsave(&io_request_lock, cpu_flags);
--#endif
-     if (ha->flags.isp_abort_needed)
-         qla1280_abort_isp(ha);
+ critical_section_end:
+ 	T_END_CS ';'
+@@ -931,6 +932,7 @@
+ 		cs->end_addr = instruction_ptr;
+ 		in_critical_section = FALSE;
+ 	}
++;
  
-@@ -1631,10 +1628,8 @@
-     if (ha->done_q_first)
-         qla1280_done(ha, (srb_t **)&ha->done_q_first, (srb_t **)&ha->done_q_last);
-     ha->flags.dpc_sched = FALSE;
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,1,95)
--    spin_unlock_irqrestore(&io_request_lock, cpu_flags);
--#endif
- }
-+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,1,95) */
- 
- /**************************************************************************
-  *   qla1280_device_queue_depth
+ export:
+ 	{ $$ = 0; }
 -- 
   Don't blame me: the Monkey is driving
-  File: Eric Sandeen <sandeen@sgi.com>: warning cleanup for drivers_scsi_qla1280.c
+  File: Thibaut VARENE <varenet@parisc-linux.org>: [PATCH] Missing ';' in drivers_scsi_aic7xxx_aicasm_aicasm_gram.y
