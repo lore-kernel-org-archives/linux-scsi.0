@@ -1,44 +1,26 @@
-From: Joel Becker <Joel.Becker@oracle.com>
-Subject: Re: [patch for playing] Patch to support 4000 disks and maintain
-Date: Fri, 11 Apr 2003 11:35:43 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030411183543.GA31739@ca-server1.us.oracle.com>
-References: <200304101339.49895.pbadari@us.ibm.com> <XFMail.20030411100430.pochini@shiny.it> <20030411154450.GW31739@ca-server1.us.oracle.com> <200304110928.32978.pbadari@us.ibm.com> <20030411175736.GY31739@ca-server1.us.oracle.com> <20030411111232.A7756@beaverton.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from inet-mail1.oracle.com ([148.87.2.201]:5791 "EHLO
-	inet-mail1.oracle.com") by vger.kernel.org with ESMTP
-	id S261528AbTDKTGT (for <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Apr 2003 15:06:19 -0400
-Content-Disposition: inline
-In-Reply-To: <20030411111232.A7756@beaverton.ibm.com>
+From: Andries.Brouwer@cwi.nl
+Subject: Re: [patch for playing] Patch to support 4000 disks and maintain backward compatibility
+Date: Fri, 11 Apr 2003 21:45:30 +0200 (MEST)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <UTC200304111945.h3BJjU409008.aeb@smtp.cwi.nl>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: Andries.Brouwer@cwi.nl, James.Bottomley@steeleye.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, pbadari@us.ibm.com
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Badari Pulavarty <pbadari@us.ibm.com>, Giuliano Pochini <pochini@shiny.it>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Mike Anderson <andmike@us.ibm.com>
 
-On Fri, Apr 11, 2003 at 11:12:32AM -0700, Patrick Mansfield wrote:
-> I'm trying to pull the current multi-path patch up to 2.5.66 (ouch). 
+    From James.Bottomley@SteelEye.com  Fri Apr 11 21:12:28 2003
 
-	I wasn't aware of this work.  This is very interesting.  Two
-questions:
+    > It is me who wants compatibility as far as 8+8 device numbers are
+    > concerned, while I can see lots of ways to use new number space.
 
-1) When does it failover?  Meaning, if I I/O to a disk, but someone
-yanks the fibrechannel plug.  Does your multipath wait for a SCSI
-timeout to redirect the I/O?
+    This, I'm not too sure about.  I see the value to kernel developers who
+    boot between different versions of the kernel, but I think when 2.6 goes
+    live and ships to end users, it's better not to have such numeric
+    equivalency crufting up the SCSI interfaces.
 
-2) If so, have you considered trapping loop up/down events to handle
-such a case?  Real users of multipath tech do not want to wait 90s for
-failover.
+I think compatibility is very important.
+Linux does not arbitrarily break old systems. The aim must be
+to have all combinations of (old/new) kernel with (old/new) glibc
+to work well in all situations where old kernel + old glibc worked.
 
-Joel
-
--- 
-
-"Win95 file and print sharing are for relatively friendly nets."
-        - Paul Leach, Microsoft
-
-Joel Becker
-Senior Member of Technical Staff
-Oracle Corporation
-E-mail: joel.becker@oracle.com
-Phone: (650) 506-8127
+Andries
