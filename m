@@ -1,96 +1,64 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: 2.6.0 stability and the BK scsi trees
-Date: Thu, 16 Oct 2003 14:28:04 +0100
+From: Roman Zippel <roman@ardistech.com>
+Subject: [ANNOUNCE] iSCSI target implementation
+Date: Thu, 16 Oct 2003 15:31:16 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031016132804.GA18370@parcelfarce.linux.theplanet.co.uk>
-References: <1066265974.16761.426.camel@fuzzy> <3F8E8786.2020502@torque.net>
+Message-ID: <3F8E9DA4.11ED60DA@ardistech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:31894 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262914AbTJPN2K
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Oct 2003 09:28:10 -0400
-Content-Disposition: inline
-In-Reply-To: <3F8E8786.2020502@torque.net>
+Received: from smtpzilla2.xs4all.nl ([194.109.127.138]:15888 "EHLO
+	smtpzilla2.xs4all.nl") by vger.kernel.org with ESMTP
+	id S262954AbTJPNmi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Oct 2003 09:42:38 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, Oct 16, 2003 at 09:56:54PM +1000, Douglas Gilbert wrote:
-> What was the point of putting 32 dev_t's into the
-> kernel? Many people who were advocating it used
-> the increased number of scsi disks (> 256) and
-> partitions (from 15 to 63 [to match the ide subsystem])
-> as a major reason.
-> 
-> The sd driver is still littered with hacks to distribute
-> its 256 (max) disks over 8 majors. Shouldn't this be
-> fixed?
+Hi,
 
-Well, let's see some fixes and then decide whether it's worth merging
-before 2.6.0 or after 2.6.0.  We can be sure that vendors will integrate
-this patch even if it's not in mainline kernel.org ... and i'd rather
-see one variant of the patch which everybody uses than a different one
-in RH, SuSE and Linux 2.7.
+I'm proud to announce the first public release of this iSCSI target
+implementation. It's already usable, but it doesn't implement everything
+yet what is required by the iSCSI spec. The missing parts shouldn't be
+that difficult to add (I just didn't need them so far). Other more
+interesting parts of the spec (e.g. session recovery) are not
+implemented because I had no client to test it with (although recent UNH
+releases seem to support this now). It was mostly tested with Cisco
+iSCSI initiator driver, but also with with the MS initiator driver. You
+can download the driver from http://www.ardistech.com/iscsi/ , the
+README should have all the information to configure and build the
+driver.
 
-Here's some things that need to be done ...
+This target driver is partly implemented in the kernel, the user space
+daemon takes care of session startup, cleanup and discovery and the
+kernel module takes care of the iSCSI requests and disk IO. There are a
+few reasons to put part of it into the kernel, the main reason is to
+have direct access to the page cache, this is also a main difference to
+other available target implementations, which don't use the page cache
+directly. User space has not that fine grained control (yet) and had to
+use a lot of threads (the kernel module currently uses 2 threads per
+target and 1 per device). Part of the problem could be solved with async
+IO, another part is to be able to control what is in the cache (this is
+somewhat related to the recent direct IO discussion). So this also an
+experiment of what is needed if it should be ever moved to user space.
 
- * Maintain backward compatibility for NFS's purposes and on-disc
-   representations of /dev.  ie we still need to keep the major numbers
-   the same, no question.
- * Come up with a sensible naming scheme.  Is everybody happy with
-   /dev/sdabc for discs after #702?  And /dev/sdabcd for discs after #18954?
- * Decide whether we want to sacrifice two bits for increasing the number
-   of partitions beyond 15.  I've never personally seen more than 11
-   partitions on a single device, and that was a very strange partitioning
-   scheme involving mixed BSD disclabels and FAT.
- * If we're seriously considering allocating thousands of scsi discs, I
-   guess we'll want a custom slab for them rather than just using kmalloc.
- * Need to get rid of that index bitmap.
+Anyway, while it's in the kernel, there are also some interesting issues
+for the kernel-user space communication. Right now it's a proc only
+interface (no sysfs as it's 2.4 only, no evil ioctl, but someone will
+kill me for the macro abuse :) ), but it should be rather easy to
+replace it with something else. Perfomance isn't not that important at
+the moment (but not completely unimportant, if a lot of information has
+to be read from the kernel, e.g. at startup). More important issues are
+error reporting and event handling, which could benefit from a better
+integrated interface. So this driver is also intended to experiment with
+a few things, if anyone is interested I can explain it further.
 
-We have 16 majors for SCSI currently (and, as discussed above, they need
-to be kept the same).  We have 20 bits of minor per major, so in total
-we have 16 million minor numbers available to use for discs & their
-partitions.  Staying at 15 partitions gives us up to 1 million scsi discs.
-At 8 Watts/drive, that's 8 megawatts which would practically require your
-own power plant to operate.  So if there's need, I suppose we can grow the
-number of partitions which would limit us to a quarter-million discs
-(and a mere 2MW of power ;-).
+Further development will depend a bit on the feed back. This is an older
+project and we thought about for a while and since we have no immediate
+need and not the resources to develop it alone, we decided it would be a
+good idea to release it completely under the GPL. So I updated it to the
+latest spec and fixed some of the worst embarrasments. If there is
+enough interest, the development will continue, but without some help it
+will be rather slow. :-)
 
-    major     p2    disc2   disc  p1
-|............|..|..........|....|....| <- dev_t
- 31        20    17       8 7  4 3  0
+bye, Roman
 
-This layout makes sense to me, let me explain it ;-)
-
-partitions 0-15 fit in p1.  Overflow into p2 (bits 18 & 19) for partitions
-16-63.
-
-discs are allocated as:
-
-0-15 in sd_major(0), 16-31 in sd_major(1), ... , 240-255 in sd_major(15)
-256-16639 in sd_major(0), 16640-33023 in sd_major(1), ...
-
-Stop explaining and give us the code, I hear you cry.  I guess it's ...
-
-unsigned int dev_to_sd_nr(unsigned int dev) {
-	return	((dev >> 4) & 15) | (inv_sd_major(dev >> 20) << 4) |
-		(dev & 0x3ff00);
-}
-
-unsigned int dev_to_sd_part(unsigned int dev) {
-	return	(dev & 15) | ((dev >> 14) & 0x30);
-}
-
-unsigned int make_sd_dev(unsigned int sd_nr, unsigned int part) {
-	return	(part & 0xf) | ((part & 0x30) << 14) | ((dev & 0xf) << 4) |
-		(sd_major(dev & 0xf0) << 20) | (dev & 0x3ff00);
-}
-
-Everybody happy with this?  Didn't think so.
-
--- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
