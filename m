@@ -1,46 +1,55 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: sg3_utils-1.07 released
-Date: Thu, 08 Jul 2004 10:12:23 -0400
+From: Yann Dupont <Yann.Dupont@univ-nantes.fr>
+Subject: Re: puzzling scsi return code 20000
+Date: Fri, 09 Jul 2004 11:21:20 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40ED5647.7060707@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <40EE6390.1030603@univ-nantes.fr>
+References: <40E9448F.1090700@univ-nantes.fr> <20040706184626.GA30970@praka.san.rr.com> <40EBCA9B.90402@univ-nantes.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tomts36.bellnexxia.net ([209.226.175.93]:36828 "EHLO
-	tomts36-srv.bellnexxia.net") by vger.kernel.org with ESMTP
-	id S261378AbUGHOMT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jul 2004 10:12:19 -0400
-Received: from torque.net ([67.68.52.9]) by tomts36-srv.bellnexxia.net
-          (InterMail vM.5.01.06.10 201-253-122-130-110-20040306) with ESMTP
-          id <20040708141218.FRCD13900.tomts36-srv.bellnexxia.net@torque.net>
-          for <linux-scsi@vger.kernel.org>; Thu, 8 Jul 2004 10:12:18 -0400
+Received: from feyd.cri.univ-nantes.fr ([193.52.125.55]:62923 "EHLO
+	smtp.cri.univ-nantes.fr") by vger.kernel.org with ESMTP
+	id S264584AbUGIJVW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Jul 2004 05:21:22 -0400
+In-Reply-To: <40EBCA9B.90402@univ-nantes.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <praka@users.sourceforge.net>
+Cc: linux-scsi@vger.kernel.org
 
-Tarball and rpms can be found on http://www.torque.net/sg .
-Summary of sg3_utils, sg_utils and other packages are on
-this page: http://www.torque.net/sg/u_index.html
-A release announcement will be sent to freshmeat.net
-shortly.
+Yann Dupont wrote:
 
-Changelog for sg3_utils-1.07 [20040708]
-   - sginfo: clean up inquiry vendor,product,revision strings
-       - '-Fhead': sort defect list by head
-	Tom Steudten <steudten at mx dot ch>
-   - rework sg_err for better command name coverage: service actions,
-     variable length and peripheral device type
-       - update asc,ascq codes to SPC-3 revision 19
-   - move scsi_devfs_scan to archive directory
-   - add sg_opcodes utility to list supported operation codes
-   - add sg_persist utility to support persistent reservations
-   - add '-i' option to sg_inq to decode device identification VPD
-     page (0x83)
-   - sg_inq tries an ATA IDENTITY if SCSI INQUIRY fails
-   - sg_dd, sgm_dd and sgp_dd calculate block device sizes (if count
-     not given)
-   - drop SG_GET_VERSION_NUM ioctl guard in most utilities
+>
+>
+> 2.4.27-rc3 + dm 0.19 + qla 7.00.03 =3D No errors !!!
+>
 
+just to say that 2.4.27-rc3 + dm 0.19 + qla 6.06.64 is ok too.
 
-Doug Gilbert
+So maybe it's time to suscribe to dm-devel list :) As it really seems=20
+the problem was here.
+
+Anyway last thing on this subject - Maybe this list is not the good=20
+place for this ,
+and I should directly try qlogic support ...
+
+The 7.00.03 qlogic driver seems okay when you read , but when you write=
+=20
+large chunks of data,
+the server hangs unless all data is flushed to disks. Is there someone=20
+else seing this behaviour ??
+
+Going back to 6.06.64 fixed the problem.
+
+Any thoughts ?
+
+--=20
+Yann Dupont, Cri de l'universit=E9 de Nantes
+Tel: 02.51.12.53.91 - Fax: 02.51.12.58.60 - Yann.Dupont@univ-nantes.fr
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
