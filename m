@@ -1,30 +1,38 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: 2.6.0-test9: scsi_dev_flags
-Date: Sat, 1 Nov 2003 09:11:03 -0800
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+Subject: Re: SCSI kobject unregistration ordering problem
+Date: Sun, 2 Nov 2003 12:08:10 +0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031101091103.A19827@beaverton.ibm.com>
-References: <20031026144741.A4326@flint.arm.linux.org.uk> <20031026083850.A15515@beaverton.ibm.com> <20031101131309.A31429@flint.arm.linux.org.uk>
+Message-ID: <200311021208.10641.arvidjaar@mail.ru>
+References: <20031013151254.521d882e.akpm@osdl.org> <20031017155008.GA1298@beaverton.ibm.com> <20031020170711.GA5183@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.106]:15602 "EHLO e6.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S263178AbTKARLy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Nov 2003 12:11:54 -0500
+Received: from hueytecuilhuitl.mtu.ru ([195.34.32.123]:50957 "EHLO
+	hueymiccailhuitl.mtu.ru") by vger.kernel.org with ESMTP
+	id S261585AbTKBJJi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 2 Nov 2003 04:09:38 -0500
+In-Reply-To: <20031020170711.GA5183@beaverton.ibm.com>
 Content-Disposition: inline
-In-Reply-To: <20031101131309.A31429@flint.arm.linux.org.uk>; from rmk@arm.linux.org.uk on Sat, Nov 01, 2003 at 01:13:09PM +0000
 List-Id: linux-scsi@vger.kernel.org
-To: Russell King <rmk@arm.linux.org.uk>
-Cc: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, Patrick Mochel <mochel@osdl.org>, Greg KH <greg@kroah.com>
 
-On Sat, Nov 01, 2003 at 01:13:09PM +0000, Russell King wrote:
-> Ok, I've tried scsi_mod.scsi_dev_flags= and the kernel whinges:
-> 
-> Unknown boot option `scsi_mod.scsi_dev_flags=SyQuest:SQ3270S:4096': ignoring
+On Monday 20 October 2003 21:07, Mike Anderson wrote:
+[...]
+>
+> I posted Friday adding a release call to the scsi_disk structure and
+> removing the delay call to device_del. On test8 this corrected the
+> problem I was seeing of surprise removal with a mounted device. A pointer
+> to the patch in the archive is below.
+>
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=106646263401437&w=2
+>
 
-Russel -
+sorry for late answer, I did not realize patch was already in kernel till I 
+attempted to apply it.
 
-Sorry I got that wrong, it is scsi_mod.dev_flags.
+This fixed the problem just fine, thank you.
 
-Does the drive work fine with 2.4?
+-andrey
 
--- Patrick Mansfield
