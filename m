@@ -1,32 +1,41 @@
-From: Shanker Balan <shanu@exocore.com>
-Subject: Re: Seagate Cheetah: Firmware, Bugs, Compatibility?
-Date: Thu, 16 Jan 2003 11:02:10 +0530
+From: devnetfs <devnetfs@yahoo.com>
+Subject: what does RECOVERED ERROR sense key mean?
+Date: Wed, 15 Jan 2003 23:43:16 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030116053210.GB817@exocore.com>
-References: <A5974D8E5F98D511BB910002A50A66470580D4F1@hdsmsx103.hd.intel.com> <Pine.LNX.4.44.0301072238580.3021-100000@uplift.swm.pp.se> <20030108081513.GA1217@exocore.com>
+Message-ID: <20030116074316.35203.qmail@web20421.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030108081513.GA1217@exocore.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Hello:
+Hello,
 
-Shanker Balan wrote,
-> I am having problems flashing the drive. I get an "-2" error with
-> sgdskfl.
-> 
-> Error -2 is a "-2 means that the SCSI request returned a check condition
-> (sense error)" from the UserGuide.
+I am trying to reserve a disk using SCSI_IOCTL_SEND_COMMAND ioctl.
 
-Ok, I tracked down the problem - the firmware image was corrupted! :-D
+Sometimes I get SCSI error code=0x2 (ioctl returns this value). From 
+the "Linux SCSI Generic HOWTO", above code is a 4-byte compacted error 
+code. Here for 0x2 it means: status_byte == CHECK_CONDITION. The Sense
+Key I get is 0x1 i.e. "RECOVERED ERROR".
 
--- Shanu
-http://shankerbalan.com/
+>From the "SCSI Programming HOWTO", "RECOVERED ERROR" means:
+---
+"Indicates that the last command completed successfully with some
+recovery action performed by the target. Details may be determinable 
+by examining the additional sense bytes and the information field.
+When multiple recovered errors occur during one command, the choice of
+which error to report (first, last, most severe, etc.) is device 
+specific."
+---
 
--- 
-Coincidence, n.:
-	You weren't paying attention to the other half of what was
-going on.
+So my question is: can I ASSUME that when I get this error(0x2) and
+sensekey (0x1) my RESERVER was successful? or should I again retry?
+
+Thanks in Advance,
+A.
+
+
+__________________________________________________
+Do you Yahoo!?
+Yahoo! Mail Plus - Powerful. Affordable. Sign up now.
+http://mailplus.yahoo.com
