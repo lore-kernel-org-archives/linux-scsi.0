@@ -1,53 +1,56 @@
-From: Clay Haapala <chaapala@cisco.com>
+From: "Scott M. Ferris" <sferris@acm.org>
 Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Wed, 03 Dec 2003 16:32:14 -0600
+Date: Wed, 3 Dec 2003 16:57:58 -0600 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <yqujbrqp1qj5.fsf@chaapala-lnx2.cisco.com>
-References: <20031203221508.51C9B5DC7E@bambi.visi.com>
+Message-ID: <20031203225758.947145DC7E@bambi.visi.com>
+References: <yqujiskx3apj.fsf@chaapala-lnx2.cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-5.cisco.com ([171.68.10.87]:44814 "EHLO
-	sj-iport-5.cisco.com") by vger.kernel.org with ESMTP
-	id S262074AbTLCWcT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Dec 2003 17:32:19 -0500
-In-Reply-To: <20031203221508.51C9B5DC7E@bambi.visi.com> (Scott M. Ferris's
- message of "Wed, 3 Dec 2003 16:15:08 -0600 (CST)")
+Received: from corb.mc.mpls.visi.com ([208.42.156.1]:10200 "EHLO
+	corb.mc.mpls.visi.com") by vger.kernel.org with ESMTP
+	id S262074AbTLCW6F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Dec 2003 17:58:05 -0500
+In-Reply-To: <yqujiskx3apj.fsf@chaapala-lnx2.cisco.com> from Clay Haapala at
+ "Dec 3, 2003 02:38:48 pm"
 List-Id: linux-scsi@vger.kernel.org
-To: "Scott M. Ferris" <sferris@acm.org>
+To: Clay Haapala <chaapala@cisco.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>, naveenb@cisco.com, Roman Zippel <zippel@linux-m68k.org>, hch@infradead.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, davmyers@cisco.com
 
-Thanks, Scott!
+Clay Haapala wrote:
+> 
+> In discussions around here it was pointed out that the driver should
+> *not* retry on COMMAND ABORT situations, rather let the upper layers
+> handle it.  A retry at the driver level might be outright incorrect in
+> the case of tape devices, for instance.
 
-On Wed, 3 Dec 2003, Scott M. Ferris uttered the following:
-> Clay Haapala wrote:
->> 
->> A couple of related SCSI (not necessarily iSCSI) questions:
->> 
->> "If the allowed count has not been exceeded" - The first two
->> commands after a connection has been estabilished will fail with
->> Unit_Attention. What if that first command then also gets a crc
->> error (Aborted_command)?  Will the retry count be large enough?
-> 
-> The high-level driver picks the allowed count for each command,
-> which indicates how many times that command will be issued to the
-> low-level driver before being failed back to the high-level driver.
-> For disks, that's been 5 at least as far back as 2.2 kernels.
-> 
->> Does the retry also apply to tape?  Without proper tape error
->> recovery, retrying the command could result in duplicate records
->> written to tape.
-> 
-> The tape driver sets the allowed count to 0 for commands that change
-> the media, in order to disable any retries that would cause tape
-> positioning problems.  Only commands like test unit ready and read
-> block limits get retries for tape.
-> 
-> It would be a serious bug for the iSCSI driver to retry a command
-> with an allowed count of zero.
+Note that if you let the upper layers handle it, you'll get data loss
+from the page cache if you ever reach the point where a buffer write
+from the cache runs out of retries.  On a write failure, the block I/O
+layer just marks the unwritten buffer !uptodate, making it look like
+the disk has the most recent data for that buffer, when it fact that
+memory page contains the most recent data which was never written out
+to disk.
+
+Somebody really needs to come up with a cache design that doesn't
+silently discard unwritten data when block writes start failing.  All
+of that gross retry logic in the iSCSI driver came about because it
+was so easy to get hundreds of megabytes of data lost forever, and at
+the time Cisco wanted a driver work-around instead of a kernel fix.
+
+Linus argued there was nothing else the cache could do, and that the
+layers below the cache should do more retries.  I'm still not
+convinced that the cache design is good enough, since it can block
+badly when the lower layers are changed to do lots of retries, but in
+any case, the layers below the cache still aren't doing very many
+retries.  This is especially problematic on network SCSI transports
+like Fibre Channel and iSCSI, where network problems can cause all
+sorts of failures not commonly seen with parallel SCSI, USB, or any
+other direct-attached storage.  NFS gets around these issues by being
+a filesystem instead of a block device, and having it's own caching
+logic.
 
 -- 
-Clay Haapala (chaapala@cisco.com) Cisco Systems SRBU +1 763-398-1056
-   6450 Wedgwood Rd, Suite 130 Maple Grove MN 55311 PGP: C89240AD
-   Active dissent has been part of American government since the
-         Boston Tea Party, and will be until its end.
+Scott M. Ferris,
+sferris@acm.org 
