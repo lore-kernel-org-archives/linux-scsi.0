@@ -1,56 +1,57 @@
-From: Yann Dupont <Yann.Dupont@univ-nantes.fr>
-Subject: Re: puzzling scsi return code 20000
-Date: Thu, 29 Jul 2004 18:11:11 +0200
+From: "Floramir P." <mirpadz888@india.com>
+Subject: Let Me Know
+Date: Fri, 30 Jul 2004 20:32:36 +0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4109219F.1040007@univ-nantes.fr>
-References: <40E9448F.1090700@univ-nantes.fr> <20040706184626.GA30970@praka.san.rr.com>
+Message-ID: <200407301232.i6UCVthQ029708@zeus.kernel.org>
+Reply-To: "Floramir P." <mirpadz888@india.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from feyd.cri.univ-nantes.fr ([193.52.125.55]:14769 "EHLO
-	smtp.cri.univ-nantes.fr") by vger.kernel.org with ESMTP
-	id S268518AbUG2QLK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Jul 2004 12:11:10 -0400
-In-Reply-To: <20040706184626.GA30970@praka.san.rr.com>
+Received: from zeus.kernel.org ([204.152.189.113]:59062 "EHLO zeus.kernel.org")
+	by vger.kernel.org with ESMTP id S267678AbUG3Mcj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Jul 2004 08:32:39 -0400
+Received: from india.com (76-56k-access.virtual.com.ph [202.147.59.76])
+	by zeus.kernel.org (8.12.11/8.11.6) with SMTP id i6UCVthQ029708
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Jul 2004 05:32:37 -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <praka@users.sourceforge.net>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Andrew Vasquez wrote:
+My name is Flor,
 
->On Mon, 05 Jul 2004, Yann Dupont wrote:
->
-> =20
->
->>hello. I have some problems with a SAN here. Don't know if the proble=
-ms=20
->>lies in scsi code/driver or other thing...
->>   =20
->>
-Ok, final words .
-My problem is solved. In fact my problemS ARE solved:
+Greetings from the other side of the World!
 
-Thanks a lot to andrew vasquez who took time to explain me lots of=20
-things, and the invaluable tips he gave me to put
-the driver in debug mode. It has explained lots, lots of things.
+I have to be Honest with you. This is a business
+proposal that you might get interested. Believe me,
+this is Totally Different from what you have heard
+or tried already!
 
-So . In fact, I had 2 distincts problems.
-1 FC HBA wich was dying (lots of underrun status when the driver is in=20
-debug mode)
-1 SFP (Gbic) which was making problems on the 2nd channel of a Raid.
+This is phenominal and revolutionary. If Bill Gates
+once dream of proving a PC in everyhome, this one,
+is providing Tech Support in every PC. This is a
+giant company in the making!
 
-That's why I was seeing SCSI errors on 2 hosts. In fact , the problems=20
-were not related at all :-(. Took me time
-to figure that !
+The system is unique and fair. Everybody is benefited
+from everybody's effort. This is awesome! The company
+pays out generously.
+
+And most of all, the timing is right. Believe me, you
+will not be waisting your time asking what it is.
+
+Hurry! If you would like to know what it is for free,
+please send an email to mira888@wowmail.com, with,
+
+"Let Me Know" as the subject line. 
+Kindly include your full name in the body of the letter
+and country
+
+Time is of the essence, don't wait for another second! 
 
 
---=20
-Yann Dupont, Cri de l'universit=E9 de Nantes
-Tel: 02.51.12.53.91 - Fax: 02.51.12.58.60 - Yann.Dupont@univ-nantes.fr
+Respectfully Yours,
+Flor P.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-------
+P.S. Please reply Remove if you want no more inputs from me
