@@ -1,36 +1,57 @@
-From: "David S. Miller" <davem@redhat.com>
-Subject: Re: [PATCH] aacraid 32/64 ioctl support (update)
-Date: Wed, 16 Jun 2004 10:52:31 -0700
+From: "Smart, James" <James.Smart@Emulex.Com>
+Subject: RE: [PATCH]: Flexible timeout infrastructure
+Date: Wed, 16 Jun 2004 14:05:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040616105231.74bb78c9.davem@redhat.com>
-References: <1087401137.13488.61.camel@markh1.pdx.osdl.net>
-	<20040616160107.GA14144@infradead.org>
-	<20040616160232.GB14144@infradead.org>
-	<1087405920.13488.82.camel@markh1.pdx.osdl.net>
-	<20040616171924.GA15925@infradead.org>
-	<1087408316.13488.93.camel@markh1.pdx.osdl.net>
-	<20040616175325.GA16751@infradead.org>
+Message-ID: <3356669BBE90C448AD4645C843E2BF28034F94F8@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:951 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S264371AbUFPR6v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Jun 2004 13:58:51 -0400
-In-Reply-To: <20040616175325.GA16751@infradead.org>
+Received: from emulex.emulex.com ([138.239.112.1]:22262 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S264397AbUFPSG2
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Jun 2004 14:06:28 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: markh@osdl.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, mark_salyzyn@adaptec.com, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Mike Anderson <andmike@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 16 Jun 2004 18:53:25 +0100
-Christoph Hellwig <hch@infradead.org> wrote:
+So the jist isn't to get the command to survive the LLDD event, even if it
+could. Rather, the user has set aside X amount of time (where X = #retries *
+timeout length), and you want to return the command to the user as close to
+X as possible. And there are 2 further expectations: you are willing to
+suffer the failure of non-retryable commands that may be forced to fail; and
+you expect the LLDDs to call the midlayer to block further commands if the
+LLDD event persists. (Note: this is where I think more granularity could be
+used - instead of host-global events, there may be target-specific events as
+well).
 
-> > I just noticed this.  Can we use memset on a user pointer?  If not, what
-> > would be the best way to handle this?
+Ok.  Just trying to get on the same page...
+
+-- james
+
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
+> Sent: Wednesday, June 16, 2004 1:38 PM
+> To: Smart, James
+> Cc: Luben Tuikov; Mike Anderson; SCSI Mailing List
+> Subject: RE: [PATCH]: Flexible timeout infrastructure
 > 
 > 
-> Good question.  Maybe the architecture-folks know an answer?
-
-Use clear_user()
-
+> On Wed, 2004-06-16 at 12:33, Smart, James wrote:
+> > I'll try to restate. The patch proposed to allow only 1 
+> restart of the timer
+> > for a command. My comment was - why not 2, or 3?  I would 
+> think - the number
+> > of restarts needed is a function of how long the timeout 
+> value is vs when
+> > the LLDD event occurs and what the duration of the LLDD 
+> event is. I can see
+> > capping the number of timer restarts, but am not sure 1 is 
+> the best choice. 
+> 
+> It does.  But the number of allowed restarts is linked to the command
+> retries (actually allowed retries + 1).
+> 
+> James
+> 
+> 
