@@ -1,60 +1,63 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: PROBLEM: SYM53C8XX errors while reading tape
-Date: Sat, 23 Nov 2002 12:57:43 -0500 (EST)
+From: Zwane Mwaikambo <zwane@holomorphy.com>
+Subject: [PATCH][2.5] SCSI hosts.c missing device_register
+Date: Sat, 23 Nov 2002 13:35:29 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0211231231290.26253-100000@filesrv1.baby-dragons.com>
-References: <86k7j43gh7.fsf@coulee.tdb.com>
+Message-ID: <Pine.LNX.4.50.0211231330110.1462-100000@montezuma.mastecende.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <86k7j43gh7.fsf@coulee.tdb.com>
+Received: from localhost.localdomain (localhost.localdomain [127.0.0.1])
+	by montezuma.mastecende.com (8.12.5/8.12.5) with ESMTP id gANIZUIN031537
+	for <linux-scsi@vger.kernel.org>; Sat, 23 Nov 2002 13:35:33 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Russell Senior <seniorr@aracnet.com>
-Cc: Linux Scsi maillist <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
+Does this patch look correct? Please CC as i am not subscribed.
 
-	Hello Russell ,  Sorry about taking the original reply off list
-	I should know better .  According to the dmesg & the log dumps
-	you sent you were (were they edited?) .  Please make sure that
-	SYM53C8XX_2 driver was the only driver in the 53c8* series that
-	was selected or That modules were not being selected anyway .
+SCSI subsystem driver Revision: 1.00
+Unable to handle kernel NULL pointer dereference at virtual address 00000004
+ printing eip:
+c0256725
+*pde = 00000000
+Oops: 0002
+CPU:    0
+EIP:    0060:[<c0256725>]    Not tainted
+EFLAGS: 00010246
+EIP is at device_del+0x35/0xa0
+eax: c0662cac   ebx: c0514230   ecx: 00000000   edx: 00000000
+esi: c0662ca4   edi: 00000000   ebp: 00000000   esp: c15b9f1c
+ds: 0068   es: 0068   ss: 0068
+Process swapper (pid: 1, threadinfo=c15b8000 task=cff86040)
+Stack: c0662ca4 c0662c00 c0662c00 c025679b c0662ca4 c15b9f40 c02cfbbf c0662ca4
+       c0662c00 00000000 00000000 00000001 dead4ead c15b9f50 c15b9f50 c0144ed1
+       cffeb080 00000286 00000000 00000000 00000330 c05edbc6 c0662c00 cfd58424
+Call Trace:
+ [<c025679b>] device_unregister+0xb/0x16
+ [<c02cfbbf>] scsi_unregister+0xbf/0x140
+ [<c0144ed1>] kfree+0x61/0xe0
+ [<c02cffd8>] scsi_register_host+0x28/0xb0
+ [<c01050b0>] init+0x80/0x1a0
+ [<c0105030>] init+0x0/0x1a0
+ [<c0105030>] init+0x0/0x1a0
+ [<c0105030>] init+0x0/0x1a0
+ [<c0108e05>] kernel_thread_helper+0x5/0x10
 
-	I for one KNOW that if the SYM53C8XX driver is compiled in OR
-	listed first in the module.conf file IT will be loaded in front of
-	the SYM53C8XX_2 and this will keep the sym2 from loading at all .
-	And I have seen (at least three times) a condition where the
-	SYM53C8XX_2 WAS compiled IN (just like you) and the SYM53C8XX was
-	a module and it was -still- loaded & began conflicting with the
-	SYM53C8XX_2 during use .  Hth ,  JimL
+Code: 89 4a 04 89 40 04 89 11 89 d9 8b 56 04 89 46 08 8b 06 89 02
 
-ps:	On my systems I have had at onetime or another almost every
-	(older) scsi tape drive manufactured .  And damn near everytime I
-	have had a problem it has been some mistake on my end .  A bus a
-	tad to long ,  the terminator I bought was just a little to good
-	to beleive price wise ...
+Index: linux-2.5.49/drivers/scsi/hosts.c
+===================================================================
+RCS file: /build/cvsroot/linux-2.5.49/drivers/scsi/hosts.c,v
+retrieving revision 1.1.1.1
+diff -u -r1.1.1.1 hosts.c
+--- linux-2.5.49/drivers/scsi/hosts.c	23 Nov 2002 02:56:36 -0000	1.1.1.1
++++ linux-2.5.49/drivers/scsi/hosts.c	23 Nov 2002 08:50:22 -0000
+@@ -467,6 +467,7 @@
+ 		DEVICE_NAME_SIZE-1);
+ 	sprintf(shost->host_driverfs_dev.bus_id, "scsi%d",
+ 		shost->host_no);
++	device_register(&shost->host_driverfs_dev);
 
-On 22 Nov 2002, Russell Senior wrote:
-
-> >>>>> "James" == James W Laferriere <babydr@baby-dragons.com> writes:
->
-> James> 	Hello Russell , Could you try the SYM53C8XX_2 driver ?  I
-> James> beleive that this may help .  JimL
->
-> I _was_ using the SYM53C8XX_2 driver.  Here's the relevant portion of
-> my .config for 2.4.18:
->
->   # CONFIG_SCSI_NCR53C7xx is not set
->   CONFIG_SCSI_SYM53C8XX_2=y
->   CONFIG_SCSI_SYM53C8XX_DMA_ADDRESSING_MODE=1
->   CONFIG_SCSI_SYM53C8XX_DEFAULT_TAGS=16
->   CONFIG_SCSI_SYM53C8XX_MAX_TAGS=64
->   # CONFIG_SCSI_SYM53C8XX_IOMAPPED is not set
-
---
-       +------------------------------------------------------------------+
-       | James   W.   Laferriere | System    Techniques | Give me VMS     |
-       | Network        Engineer |     P.O. Box 854     |  Give me Linux  |
-       | babydr@baby-dragons.com | Coudersport PA 16915 |   only  on  AXP |
-       +------------------------------------------------------------------+
-
-
+ 	shost->eh_notify = &sem;
+ 	kernel_thread((int (*)(void *)) scsi_error_handler, (void *) shost, 0);
+-- 
+function.linuxpower.ca
