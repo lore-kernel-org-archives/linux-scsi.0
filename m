@@ -1,52 +1,124 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [linux-usb-devel] USB Storage oops in 2.5.69-bk8
-Date: Sat, 17 May 2003 11:38:48 -0700
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH] scsi_mid_low_api.txt in lk 2.5.69
+Date: Sun, 18 May 2003 11:29:06 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030517113848.A26713@beaverton.ibm.com>
-References: <20030516222900.GA3236@beaverton.ibm.com> <Pine.LNX.4.44L0.0305171108050.26146-100000@netrider.rowland.org>
+Message-ID: <3EC6E1E2.90801@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------040701030600030501060409"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:14555 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S261754AbTEQSaV
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:55825 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S261916AbTERBPg
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 May 2003 14:30:21 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0305171108050.26146-100000@netrider.rowland.org>; from stern@rowland.harvard.edu on Sat, May 17, 2003 at 11:29:30AM -0400
+	Sat, 17 May 2003 21:15:36 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Mike Anderson <andmike@us.ibm.com>, Florin Iucha <florin@iucha.net>, David Brownell <david-b@pacbell.net>, USB development list <linux-usb-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com
 
-On Sat, May 17, 2003 at 11:29:30AM -0400, Alan Stern wrote:
-> On Fri, 16 May 2003, Mike Anderson wrote:
+This is a multi-part message in MIME format.
+--------------040701030600030501060409
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> What happens is that the device crashes because of the 3-byte 
-> MODE-SENSE(6) request.  The scsi error handler tries various levels of 
-> fault recovery, all the way up to a bus reset.  Usb-storage implements the 
-> bus reset as a USB port reset, which requires usbcore to re-enumerate 
-> the device.  The line
-> 
->    drivers/usb/core/message.c: usb_control/bulk_msg: timeout
-> 
-> refers to a failure during the re-enumeration.  Apparently even the port
-> reset was not enough to revive the device.  I don't know the reason for
-> the line
-> 
->    Error handler scsi_eh_1 waking up
+This is a catch up, applying the patch that Andries
+Brouwer sent a while back. It will apply to lk 2.5.69
+and 2.5.69-bk10 .
 
-The above is the first thing output when the eh wakes up, so the
-re-enumeration could not have started yet (at least it could not have been
-initiated via scsi eh calling the bus reset or other abort/reset related
-functions), and the USB timeout message could not be part of the scsi eh,
-though we did not see the scsi_times_out log message (since it's wrapped
-in SCSI_LOG_TIMEOUT, not SCSI_LOG_ERROR_RECOVERY).
+Other people who change this interface feel free to send
+patches to James :-)
 
-Turning on timeout (or even all) logging might give a bit more data:
+Doug Gilbert
 
-	echo "scsi log timeout 4" > /proc/scsi/scsi
+--------------040701030600030501060409
+Content-Type: text/plain;
+ name="scsi_mid_low_api_2569.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi_mid_low_api_2569.diff"
 
-Or (warning - logs the logging messages if logging to a scsi disk):
+--- scsi_mid_low_api.txt	2003-05-05 14:03:22.000000000 +1000
++++ scsi_mid_low_api.txt030429	2003-04-29 09:34:05.000000000 +1000
+@@ -22,7 +22,10 @@
+ a SCSI host and a PCI device is common but not required (e.g. with
+ ISA or MCA adapters).]
+ 
+-This version of the document roughly matches linux kernel version 2.5.67 .
++This version of the document roughly matches linux kernel version 2.5.68 .
++This document can be found in the Linux kernel source Documentation/scsi
++directory and is called scsi_mid_low_api.txt . A more recent copy may
++be found at http://www.torque.net/scsi/scsi_mid_low_api.txt.gz .
+ 
+ Documentation
+ =============
+@@ -142,13 +145,14 @@
+                     slave_configure() -->  scsi_adjust_queue_depth()
+ 			 |
+ 		    slave_alloc()
+-                    slave_configure() -->  scsi_adjust_queue_depth()
++                    slave_configure()
+ 			 |
+ 		    slave_alloc()   **
+                     slave_destroy() **
+ 
+-The invocation of scsi_adjust_queue_depth() by the LLD is required
+-if slave_configure() is supplied.
++If the LLD wants to adjust the default queue settings, it can invoke
++scsi_adjust_queue_depth() in its slave_configure() routine.
++
+ ** For scsi devices that the mid level tries to scan but do not
+    respond, a slave_alloc(), slave_destroy() pair is called.
+ 
+@@ -179,7 +183,7 @@
+ scsi_add_device()  ------+
+                          |
+ 		    slave_alloc()
+-                    slave_configure() -->  scsi_adjust_queue_depth()
++                    slave_configure()   [--> scsi_adjust_queue_depth()]
+ 
+ [DEVICE unplug]
+ LLD                      mid level                 LLD
+@@ -228,13 +232,14 @@
+ 		      slave_destroy() **
+                             |
+ 		      slave_alloc()
+-                      slave_configure()  -->  scsi_adjust_queue_depth()
++                      slave_configure()
+ 		      slave_alloc()   **
+ 		      slave_destroy() **
+ 
+-If the LLD does not supply a slave_configure() then the mid level invokes
+-scsi_adjust_queue_depth() itself with tagged queuing off and "cmd_per_lun"
+-for that host as the queue length.
++The mid level invokes scsi_adjust_queue_depth() with tagged queuing off and
++"cmd_per_lun" for that host as the queue length. These settings can be
++overridden by a slave_configure() supplied by the LLD.
++
+ ** For scsi devices that the mid level tries to scan but do not
+    respond, a slave_alloc(), slave_destroy() pair is called.
+ 
+@@ -1093,11 +1098,6 @@
+  *      Notes: Allows the driver to inspect the response to the initial
+  *	INQUIRY done by the scanning code and take appropriate action.
+  *	For more details see the hosts.h file.
+- *	If this function is not supplied, the mid level will call
+- *	scsi_adjust_queue_depth() with the struct Scsi_Host::cmd_per_lun
+- *	value on behalf of the given device. If this function is
+- *	supplied then its implementation must call
+- *	scsi_adjust_queue_depth(). 	
+  *
+  *	Defined in: LLD
+  **/
+@@ -1277,8 +1277,9 @@
+         Patrick Mansfield <patmans@us.ibm.com> 
+ 	Christoph Hellwig <hch@infradead.org>
+ 	Doug Ledford <dledford@redhat.com>
++        Andries Brouwer <Andries.Brouwer@cwi.nl>
+ 
+ 
+ Douglas Gilbert
+ dgilbert@interlog.com
+-19th April 2003
++29th April 2003
 
-	echo "scsi log all" > /proc/scsi/scsi
+--------------040701030600030501060409--
 
--- Patrick Mansfield
