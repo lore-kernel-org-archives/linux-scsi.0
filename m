@@ -1,38 +1,34 @@
-From: "John Huttley" <john@mwk.co.nz>
-Subject: BUG:  2.5.6X and later Lsilogic2
-Date: Tue, 24 Jun 2003 19:59:49 +1200
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] remove a bogus check in sym2 driver
+Date: 24 Jun 2003 09:02:50 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <001f01c33a26$9618c5c0$ca5fa8c0@castleanthrax>
+Message-ID: <1056441769.14611.4.camel@dhcp22.swansea.linux.org.uk>
+References: <20030624033422.GB927@krispykreme>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mta201-rme.xtra.co.nz ([210.86.15.144]:25525 "EHLO
-	mta201-rme.xtra.co.nz") by vger.kernel.org with ESMTP
-	id S264043AbTFXHoe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jun 2003 03:44:34 -0400
-Received: from mta2-rme.xtra.co.nz ([210.86.15.142])
-          by mta201-rme.xtra.co.nz with ESMTP
-          id <20030624075840.KNHG8888.mta201-rme.xtra.co.nz@mta2-rme.xtra.co.nz>
-          for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2003 19:58:40 +1200
-Received: from castleanthrax ([210.86.51.51]) by mta2-rme.xtra.co.nz
-          with SMTP
-          id <20030624075839.BAAB4263.mta2-rme.xtra.co.nz@castleanthrax>
-          for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2003 19:58:39 +1200
+Received: from pc2-cwma1-4-cust86.swan.cable.ntl.com ([213.105.254.86]:58834
+	"EHLO lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S263921AbTFXHuq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jun 2003 03:50:46 -0400
+In-Reply-To: <20030624033422.GB927@krispykreme>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Anton Blanchard <anton@samba.org>
+Cc: linux-scsi@vger.kernel.org, akpm@digeo.com
 
-This driver schedules while atomic.
+On Maw, 2003-06-24 at 04:34, Anton Blanchard wrote:
+> Hi,
+> 
+> The sym2 driver has a check for a very broken bios where it seems 
+> devices appear twice. This test is broken on a machine with PCI domains
+> since busnumber:devfn is not a unique identifier.
+> 
+> When we move to the scsi hotplug interface all this code will go away
+> but in the short term we need the following fix.
 
-I've mailed the driver owner without response.
+Hardly. When you move to scsi hotplug you'll still have to work around
+the boxes where the same device pops up multiple times.
 
-Regards
-
-
--------------------------
-I wish I was a glow worm,
-I'd never be glum,
-How can I be grumpy?
-When the sun shines out my bum?
+Just check the domain is 0 ?
 
