@@ -1,22 +1,38 @@
-From: Lukas Hejtmanek <xhejtman@mail.muni.cz>
-Subject: Re: 2.6.9 aacraid hangup
-Date: Fri, 22 Oct 2004 14:34:38 +0200
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: 2.6.9 aacraid hangup
+Date: Fri, 22 Oct 2004 08:33:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041022123438.GD12619@mail.muni.cz>
-References: <60807403EABEB443939A5A7AA8A7458B40B78D@otce2k01.adaptec.com>
+Message-ID: <60807403EABEB443939A5A7AA8A7458B40B79B@otce2k01.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-2
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hell.sks3.muni.cz ([147.251.210.30]:53900 "EHLO
-	hell.sks3.muni.cz") by vger.kernel.org with ESMTP id S271290AbUJVMen
+Received: from magic.adaptec.com ([216.52.22.17]:5289 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S271286AbUJVMeH convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Oct 2004 08:34:43 -0400
-Content-Disposition: inline
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458B40B78D@otce2k01.adaptec.com>
+	Fri, 22 Oct 2004 08:34:07 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+To: Lukas Hejtmanek <xhejtman@mail.muni.cz>
 Cc: linux-scsi@vger.kernel.org
+
+Those series of messages come from the Firmware and are just blindly pr=
+inted by the driver. You have some `real' SCSI bus problems as the card=
+ needs to take corrective actions, I would suggest inspecting terminati=
+on, cables and drives (see if one of them gets a LED stuck on before th=
+e problem crops up, stuff like that). One of those corrective actions i=
+s a controller cache flush which may have tipped the scales on the scsi=
+ layer regarding timing out on the devices and taking them offline ...
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+=46rom: Lukas Hejtmanek [mailto:xhejtman@hell.sks3.muni.cz] On Behalf O=
+f Lukas Hejtmanek
+Sent: Friday, October 22, 2004 8:26 AM
+To: Salyzyn, Mark
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: 2.6.9 aacraid hangup
 
 On Fri, Oct 22, 2004 at 08:20:20AM -0400, Salyzyn, Mark wrote:
 > Contact Adaptec technical support, you may have a bad card, bad Mothe=
@@ -38,39 +54,15 @@ ake sure
  turn off
 > the card's cache (both read and write).
 
-Well it hangs with 2.6.6 also. Only it takes some more time before it h=
-angs :(
+However I tested it today and with 2.6.6-bk4 it is OK.=20
 
-This is from dmesg:
-aacraid:ID(1:02:0) Abort Time-out. Resetting bus.
-aacraid:SCSI bus reset issued on channel 1
-aacraid:Drive 1:0:0 online on container 0:
-aacraid:Drive 1:1:0 online on container 0:
-aacraid:Drive 1:2:0 online on container 0:
-aacraid:Drive 1:3:0 online on container 0:
-aacraid:ID(1:02:0) Abort Time-out. Resetting bus.
-aacraid:SCSI bus reset issued on channel 1
-aacraid: Host adapter reset request. SCSI hang ?
-aacraid:Drive 1:2:0 online on container 0:
-aacraid:Drive 1:3:0 online on container 0:
-aacraid:Drive 1:0:0 online on container 0:
-aacraid:Drive 1:1:0 online on container 0:
-aacraid: SCSI bus appears hung
-scsi: Device offlined - not ready after error recovery: host 0 channel =
-0 id
-0 lun 0
-scsi: Device offlined - not ready after error recovery: host 0 channel =
-0 id
-0 lun 0
-scsi: Device offlined - not ready after error recovery: host 0 channel =
-0 id
-0 lun 0
-scsi: Device offlined - not ready after error recovery: host 0 channel =
-0 id
-0 lun 0
-scsi: Device offlined - not ready after error recovery: host 0 channel =
-0 id
-0 lun 0
+Anyway with F/W 5770 it sometimes resulted with message:
+kernel: aacraid:ID(1:02:0) Abort Time-out. Resetting bus.
+kernel: aacraid:SCSI bus reset issued on channel 1
+kernel: aacraid:Drive 1:0:0 online on container 0:
+kernel: aacraid:Drive 1:1:0 online on container 0:
+kernel: aacraid:Drive 1:2:0 online on container 0:
+kernel: aacraid:Drive 1:3:0 online on container 0:
 
 --=20
 Luk=E1=B9 Hejtm=E1nek
