@@ -1,64 +1,53 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: SCSI Command scatter-gather number
-Date: Wed, 31 Jul 2002 09:36:44 -0400
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Autosense requirement
+Date: Wed, 31 Jul 2002 11:04:13 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020731093644.B28154@redhat.com>
-References: <F6A3AFC9BCD92E48B79C14E4AAAEA20F45A678@nonamea.ptu.promise.com> <20020730144326.A26330@beaverton.ibm.com> <3D4757FF.9F91971F@torque.net> <20020731011159.B27756@redhat.com> <dledford@redhat.com> <10207310044.ZM1319430@classic.engr.sgi.com>
+Message-ID: <200207311604.g6VG4Dn02203@localhost.localdomain>
+References: <patmans@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <10207310044.ZM1319430@classic.engr.sgi.com>; from jeremy@classic.engr.sgi.com on Wed, Jul 31, 2002 at 12:44:42AM -0700
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id JAA01720
+	for <linux-scsi@vger.kernel.org>; Wed, 31 Jul 2002 09:04:21 -0700
+In-Reply-To: Message from Patrick Mansfield <patmans@us.ibm.com>
+   of "Mon, 29 Jul 2002 16:18:46 PDT." <20020729161846.A4342@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@classic.engr.sgi.com>
-Cc: Douglas Gilbert <dougg@torque.net>, Mike Anderson <andmike@us.ibm.com>, Haofeng Kou <haofengk@ptu.promise.com>, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Jul 31, 2002 at 12:44:42AM -0700, Jeremy Higdon wrote:
-> On Jul 31,  1:11am, Doug Ledford wrote:
-> > 
-> > Most LLDD don't want to use too large of a number because to be truly safe
-> > you must preallocate enough memory for these sg structs at init time and
-> > hold it forever.  You obviously can't allocate memory for a sg struct when
-> > you are out of mem, it's a deadlock scenario.  So, 256 elements per
-> > command is 2048 bytes of permanently allocated DMAable memory per command 
-> > the host controller can queue (given the typical 8 byte, 32bit DMA 
-> > address hardware sg struct, gets worse when you support 64bit 
-> > addressing).  Support something like 256 commands on the card total and 
-> > that's now 512K of memory just for sg structs and doesn't count the actual 
-> > scsi command blocks that the cards also need dma memory for...
-> 
-> Why not allocate 1 (or a small number) of giant s/g lists, and N
-> medium lists (where N is the max # of outstanding commands).  Then,
-> when you get a request that needs more s/g entries than the medium,
-> you allocate a new list.  If that fails, you use the preallocated
-> giant list when it's available, leaving the request on the lld's
-> internal queue?
+patmans@us.ibm.com said:
+> I have some patches from the multi-path that I could break out,
+> especially some list iterators -  multi-path needs the Scsi_Device
+> separated from Scsi_Host. Iterators were added so the underlying
+> structures are not visible - that is, so host_queue is not directly
+> referenced, and I can put any type of data structure in its place.
+> This is one of the broadest changes (potentially affects all adapter
+> drivers) in the multi-path patch.
 
-For random use patterns it might be sufficient, but under lots of load 
-scenarios that I've seen this wouldn't work too well.  It depends on 
-whether or not you want your driver to be able to do the full streaming 
-stuff that tends to blow up this type of allocation.
+I was planning to introduce the Scsi_[Host,Device,Cmnd] structures to the 
+concept of struct list_head as part of the error handler re-write.  The error 
+handler needs lists for the concept of reset locality (i.e. dump all commands 
+for all LUNS of this target, dump all commands for all devices on this bus), 
+although its a non time critical section, so it wouldn't necessarily matter 
+having to have it loop over every device to find only the ones it's interested 
+in.
 
-> I found that a good tradeoff between maximum request size and reasonable
-> memory usage.
-> 
-> Similary for the Qlogic example, you don't have to worry about throttling
-> to the lld, since it can just leave commands on its internal queue if
-> there isn't enough space in the request queue.  You can then issue the
-> queued commands when the next command completes, or you can set a timer
-> to check to see if there is new space in the request queue.
+> Having Scsi_Device on its own list could also help in hot-replacement
+> of single pathed devices (Scsi_Host can be removed without having to
+> remove a Scsi_Device off of its host_queue).
 
-This is exactly what I want to avoid.  There should not be any reason that 
-all the low level drivers implement their own queues and timers.  That 
-code most definitely *is* perfectly generic enough that I would like to 
-see the mid layer get it right and I would like to see low level drivers 
-yanking out queue code left and right, and instead the low level drivers 
-should not be required to do any more than tell the mid layer yes I can 
-take this or no I'm too busy right now, hold on to this until I'm ready.
+Isn't this going to cause serious problems for the driverfs stuff?  
+Effectively you're changing the parent pointer under the device which alters 
+the layout of the device tree.
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+> If you make changes in the host/device list(s) please consider that I
+> need to have the Scsi_Devices on their own list separate from the
+> Scsi_host list. 
+
+Could you post some of the details of this (separated from the multi-path 
+patch if possible)?  Thanks,
+
+James
+ 
+
