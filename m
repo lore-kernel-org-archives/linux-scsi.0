@@ -1,63 +1,50 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: [PATCH] SCSI Core patches
-Date: Tue, 14 Jan 2003 10:49:45 -0800
+Date: Tue, 14 Jan 2003 10:56:17 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030114104945.A24400@beaverton.ibm.com>
-References: <3E1ADC9A.6090800@splentec.com> <20030107102127.B15528@beaverton.ibm.com> <3E1B2934.8060805@splentec.com> <20030107123301.A16378@beaverton.ibm.com> <3E1B513B.2090409@splentec.com> <20030107173633.A17825@beaverton.ibm.com> <20030111181224.B3178@infradead.org> <20030113123306.A16718@beaverton.ibm.com> <3E232FDD.5000906@splentec.com>
+Message-ID: <20030114105617.B24400@beaverton.ibm.com>
+References: <OF17AF196C.AE6043CD-ONC1256CAE.00549A53@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3E232FDD.5000906@splentec.com>; from luben@splentec.com on Mon, Jan 13, 2003 at 04:30:05PM -0500
+In-Reply-To: <OF17AF196C.AE6043CD-ONC1256CAE.00549A53@de.ibm.com>; from MPESCHKE@de.ibm.com on Tue, Jan 14, 2003 at 05:19:30PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
-Cc: linux-scsi@vger.kernel.org
+To: Martin Peschke3 <MPESCHKE@de.ibm.com>
+Cc: Luben Tuikov <luben@splentec.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Mon, Jan 13, 2003 at 04:30:05PM -0500, Luben Tuikov wrote:
-
+On Tue, Jan 14, 2003 at 05:19:30PM +0100, Martin Peschke3 wrote:
 > 
-> I brought this up last year sometime, either privately or here (search
-> the archives if anyone is interested) and the idea of using a 64-bit LUN
-> was shot down as in ``we don't need so many bits''.
+> I've been pleading for 64 bit values, too.
+> The FCP driver for zSeries I am maintaining for 2.4 uses a mapping
+> between 64 bit and 32 bit values. This is ugly and I'd like to get
+> rid of it in its 2.5 port if possible.
 > 
+> Such a change would raise an issue related to device discovery.
+> A sparsely populated name space for SCSI ID and LUN makes SCSI
+> device detection harder. For LUN, this should be fixed by the usage
+> of REPORT_LUNS. Additionally, lldd's could specify the size or
+> range of SCSI IDs and LUNs which apply to them in order to reduce
+> discovery overhead.
 
-Luben - 
+Martin -
 
-I didn't mean we should never change to 64-bits, more along the lines of I
-didn't find the effort of coding the change worth supporting more than
-(our current) 32 bit lun. 
+The current 2.5 scsi code uses REPORT LUNS, and has a 64 bit to 32 bit
+converter (scsi 64 bit lun to linux sdev->lun, the sdev->lun is host byte
+ordered), look at scsi_scan.c::scsilun_to_int. scsilun_to_int (it doesn't
+handle the address method in the first two bits of the LUN, probably a bug
+for some targets).
 
-IMO a 64-bit lun and the hierarchy stuff (see the SAM spec, page 49 of
-ftp://ftp.t10.org/t10/drafts/sam3/sam3r04.pdf) is a waste, but my opinion
-won't change the spec. (BTW has anyone ever seen a target that supports
-such a hierarchy, and is visible from the host, much like a switch?). IP
-addresses are _still_ primarily 32 bits, can you imagine anyone with a
-_single_ target (like a disk array) with 2^62 LUNs?  If there was no
-target ID, a 64-bit lun might be sensible.
+You can set the shost->max_id and shost->max_lun, and as an ugly hack set
+them before the scsi scan occurrs (after scsi_register, before returning
+from the detect or before calling the new for 2.5 scsi_add_host).
 
-(And, it is a bit odd that the SCSI specs have a 64-bit LUN for interfaces
-that only support 5 bit LUNs.)
+> I think, the SCSI ID for FCP should also be 64 bit in size and
+> ought to be comprised of the World-Wide Port Name (WWPN) rather
+> than the more volatile 24 bit Destination ID (D_ID).
 
-With the current scsi code, going to a 64-bit lun means changing sdev->lun
-and conditionally changing references to it to use a 64-bit struct
-scsilun, or (mainly in the lldd) to call a conversion function if you must
-use less than 64-bits. (Currently, no open source FCP adapters use an 8
-byte lun to talk to the host adapter hardware, not even the qlogic
-adapter.)
-
-We could change scsilun_to_int to be a:
-
-	scsilun_convert(biglun, size, &smaller_lun).
-
-SPI could use something like: scsilun_convert(biglun, 1, &one_byte_lun)
-
-The qlogic drivers would use: scislun_convert(biglun, 2, &two_byte_lun)
-
-Then, there is an issue with shost->max_lun, it's currently an int.
-max_lun or some other method (a shost function and/or flag) is needed so
-the scsi scan code can figure out when to stop a serial scan, or when to
-skip a LUN value via REPORT LUNS scanning if it exceeds the size supported
-by the adapter. Then, always checking max_lun is wrong (for lldd with
-64-bit LUN support), and a 64-bit max_lun seems wrong.
+I would rather the SCSI target ID be like an address rather than an
+identifier (such as might be in a scsi_nexus), right now we have a
+sdev->name that currently holds a device id.
 
 -- Patrick Mansfield
