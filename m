@@ -1,86 +1,79 @@
-From: "Aleks Sheynkman" <aleks@Narus.com>
-Subject: RE: quitestion about megraid-2.10.3
-Date: Fri, 11 Jun 2004 11:16:52 -0700
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: Plug-n-Play & H/W RAID cards
+Date: Fri, 11 Jun 2004 15:14:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <FA6D803197D0E14C88E1B74C5A021B822DDD6D@snitch.narus.com>
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189FD23BD1@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.narus.com ([66.236.101.211]:41353 "EHLO mx2.narus.com")
-	by vger.kernel.org with ESMTP id S264307AbUFKSRC convert rfc822-to-8bit
+Received: from magic.adaptec.com ([216.52.22.17]:10475 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S264129AbUFKTOU convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Jun 2004 14:17:02 -0400
+	Fri, 11 Jun 2004 15:14:20 -0400
+Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id i5BJEKX06115
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Jun 2004 12:14:20 -0700
+Received: from otce2k03.adaptec.com (otce2k03.adaptec.com [10.12.1.72])
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id i5BJEJo30400
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Jun 2004 12:14:19 -0700
 content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Atulm@lsil.com, Matt Domsch <Matt_Domsch@dell.com>
-Cc: linux-scsi@vger.kernel.org, mailman-owner@us.dell.com
+To: linux-scsi@vger.kernel.org
 
-Sorry for asking , can someone please advice me which version megaraid driver from 2.x is more stable ?
-is it 2.10.3 or other ?
-
-Thanks you !!!
-
--Aleks
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org
-> [mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Aleks Sheynkman
-> Sent: Friday, June 11, 2004 11:08 AM
-> To: Matt Domsch
-> Cc: linux-scsi@vger.kernel.org; mailman-owner@us.dell.com
-> Subject: RE: quite ion about megraid-2.10.3
-> 
-> 
-> Wheee.... It working sorry for disturbance, and thank you for 
-> your help.
-> Problem was in host_lock vs. io_request_lock.
-> 
-> Thanks again !!!
-> 
-> -Aleks
-> 
-> 
-> > -----Original Message-----
-> > From: Aleks Sheynkman 
-> > Sent: Friday, June 11, 2004 10:28 AM
-> > To: 'Matt Domsch'
-> > Cc: linux-scsi@vger.kernel.org; mailman-owner@us.dell.com
-> > Subject: quite ion about megraid-2.10.3
-> > 
-> > 
-> > Hi Matt,
-> >   I have a 6650 that running RH 7.3 2.4.18-17.7xbigmem kernel 
-> > with 1.8f version of megraid driver, I am trying to upgrade 
-> > it to megraid-2.10.3. As Atul suggested I change it 
-> > .can_do_varyio =1 and also my kernel was not patch so I had 
-> > to change host_lock to use io_request_lock in adapter 
-> > unitization. So I compile the driver and create a new initrd 
-> > image ,every time my system boot up I see following , drivers 
-> > seems to load find I see first message which was produced by 
-> > mega_find_card() routine
-> > 
-> >  scsi0:SI Logic MegaRAID 1.72.25 commands 16 targs 5 chans 7 luns
-> > 
-> >  then I see second message
-> > 
-> >  scsi1LSI Logic MegaRAID 1.72.25 commands 16 targs 5 chans 7luns, 
-> > 
-> > and it hangs after that. One interpreting thing is 
-> > that it kind of sitting and waiting for something , because I 
-> > can input from keyboard. Also If I press  Cntrl -Alt -Delete 
-> > it start a shutdown process, it trying to 
-> > flush a raid cache etc.
-> > 
-> > Did anyone ever see or experience this problem before.
-> > 
-> > Thanks a lot for you help !!!
-> > 
-> > -Aleks
-> > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+We have met with considerable resistance trying to add features to the =
+2.6 tree drivers for various features we have grown used to in the 2.4 =
+tree. These same features of plug-n-play activities are supported by ot=
+her operating systems (Solaris, UnixWare, SCO, Windoze, Notware etc), b=
+ut have been engineered out in the 2.6 SCSI tree.
+=A0
+The problem is the concept of the controller knowing more about the dev=
+ice status than the device layers appears foreign. For instance, when a=
+n array is created with `zero' initialization selected, the (array) dev=
+ice comes online asynchronously at a later time. Also, when a (array) d=
+evice goes offline, we know it *before* the failed reads or writes. The=
+ controller also knows when a (array) device is degraded and should be =
+attended to. Arrays go online and offline through management control, a=
+nd we need the operating system to adjust to the current status of that=
+ device.
+=A0
+Also, the current usage status of a device can be metered in most of th=
+e other operating system SCSI layers, knowing if a device is busy will =
+be used to warn the user when they try to perform array management func=
+tions that could be detrimental to the operating system. It is full of =
+race conditions, but this is acceptable at this level (ie, we all know =
+that a user could click on a device to add to an array, then he could m=
+ount the device, then he could actually commit the array creation). For=
+merly we had a driver ioctl that could report the busy status for a sel=
+ected target.
+=A0
+Detecting device busy status is now impossible in the 2.6 SCSI tree. Pa=
+rt of the problem is that the entire device may have several partitions=
+, some active some not, and knowing if any of those partitions are curr=
+ently mounted or with active I/O would be `nice'. Probing *all* the ass=
+ociated device nodes predicted for a specific logical device from user =
+space takes several seconds, far too much time to perform the check whe=
+n a mouse clicks. Especially problematic under various test scenarios w=
+here this check is done when the machine is at or near 100% utilization=
+=2E
+=A0
+As for devices going on-line or off-line, I have come to the conclusion=
+ that the interfaces in the SCSI layer are not forthcoming, and are not=
+ being exported. Previously we would perform a kernel space call to the=
+ proc file system node /proc/scsi/scsi to notify the OS that the device=
+ was to be added or removed. Maybe a different tactic should be taken. =
+What if the Driver emulated a SAFTE device on the virtual bus created f=
+or the Arrays, what user daemons are available currently that manage SA=
+=46TE devices and properly notify the operating system of the managed d=
+evice status? If not, no doubt I could create such an application; but =
+what interfaces should it use to the OS to notify it of change of devic=
+e status?
+=A0
+I look forward to any comments that can help us resolve these issues.
+=A0
+Sincerely - Mark Salyzyn
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
