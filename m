@@ -1,68 +1,53 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Patches for SCSI scanning
-Date: 20 Apr 2004 09:38:00 -0500
+From: Markus Lidel <Markus.Lidel@shadowconnect.com>
+Subject: kernel oops in del_gendisk with one queue for many disks under 2.6.x
+Date: Tue, 20 Apr 2004 16:46:42 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1082471881.1804.34.camel@mulgrave>
-References: <20040418185751.GC4868@tpkurt.garloff.de>
-	<1082330192.1969.37.camel@mulgrave>
-	<20040420115419.GG4356@tpkurt.garloff.de>
+Message-ID: <408537D2.7010902@shadowconnect.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:37323 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263019AbUDTOiH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Apr 2004 10:38:07 -0400
-In-Reply-To: <20040420115419.GG4356@tpkurt.garloff.de>
+Received: from [213.133.118.2] ([213.133.118.2]:55204 "EHLO
+	mail.shadowconnect.com") by vger.kernel.org with ESMTP
+	id S262990AbUDTOnv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Apr 2004 10:43:51 -0400
+Received: from p50807ae9.dip.t-dialin.net ([80.128.122.233] helo=shadowconnect.com)
+	by mail.shadowconnect.com with asmtp (TLSv1:AES256-SHA:256)
+	(Exim 4.21)
+	id 1BFwTV-0000IH-Li
+	for linux-scsi@vger.kernel.org; Tue, 20 Apr 2004 16:43:49 +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>
-Cc: Andrew Morton <akpm@osdl.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-04-20 at 06:54, Kurt Garloff wrote:
-> What about the others:
-> * Patch 2: Drop REPORT_LUN config option and introduce 
->   noreportlun and reportlun2 parameters (the latter allowing SCSI-2
->   devs to be scanned with REPORT_LUNS).
+Hello,
 
-Agree, but should be a blacklist flag to force the use of report luns in
-the scan.
+the i2o_block driver uses one queue per controller. If there are more
+then one disk attached to the controller, the kernel oopses, if the 
+module is removed, while deleting the second disk:
 
-> * Patch 3: Allow host adapters to avoid REPORT_LUNS.
+Call Trace:
+<ffffffff801da37e>{kobject_del+27}
+<ffffffff801da390>{kobject_unregister+9}
+<ffffffff8022c344>{elv_unregister_queue+21}
+<ffffffff8022fe47>{blk_unregister_queue+33}
+<ffffffff80230c21>{unlink_gendisk+9}
+<ffffffff801ae60b>{del_gendisk+77}
+<ffffffffa0037ef2>{:i2o_block:i2o_block_exit+262}
+<ffffffff8014c516>{sys_delete_module+321}
+<ffffffff80166c1c>{sys_munmap+70}
+<ffffffff801112ba>{system_call+126}
 
-This should be a black list flag too, but first explain why we need it. 
-The only devices we do REPORT_LUNS for are SCSI 3 ones.  Which SCSI 3
-device is so badly implemented as to respond incorrectly?  I mean these
-are recent devices, so the implementors should have learned from past
-mistakes, right ?
+My question is, what is the best solution to the problem?
 
-> * Patch 4: allow_ghost_devices parameter
+a) use one queue per disk?
+b) set the queue to NULL for the other disks, that are on the same 
+controller?
+c) ???
 
-Blacklist flag again (oh and "Yuk!!!" by the way).
+Any help is highly appreciated.
 
-> * Patch 5: inq_timeout parameter
+Best regards,
 
-OK, just remove the arch gating of the default (ppc64 will have to have
-a permanent boot/module flag).
 
-> If we introduce two more BLIST flags (BLIST_NOREPORTLUN and
-> BLIST_REPORTLUN2), we can get rid of patch 2 and 3, if we add another one
-> (BLIST_LUN0ONLINE), we can get rid off 4.
-> 
-> We have 16 bits left, so it should be possible.
-> 
-> If there's consensus to go that way, I can code it up, no problem.
-> Only patch 5 will remain then ...
-
-Yes, I'm fine with that (as long as the arch specific code from patch 5
-goes).
-
-> Sidenote: We should drop SCSI_FORCELUN and CONFIG_SCSI_MULTI_LUN, otherwise 
-> people will misconfigure their kernel (such as the HP guy) and start to want 
-> every multi-lun device listed.
-
-Yes, sounds reasonable.  We can do it all with the boot flags now.
-
-James
-
+Markus Lidel
 
