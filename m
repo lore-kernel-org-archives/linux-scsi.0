@@ -1,16 +1,16 @@
 From: Tobias Klauser <tklauser@nuerscht.ch>
-Subject: [UPDATE PATCH 15/19] drivers/scsi/megaraid: Use the DMA_{64, 32}BIT_MASK constants
-Date: Sun, 20 Mar 2005 14:14:18 +0100
-Message-ID: <20050320131418.GO3491@localhost.localdomain>
-References: <20050220171028.GP14375@helium.tklauser.home>
+Subject: [UPDATE PATCH 18/19] drivers/scsi/qlogicfc: Use the DMA_{64, 32}BIT_MASK constants
+Date: Sun, 20 Mar 2005 14:22:21 +0100
+Message-ID: <20050320132221.GR3491@localhost.localdomain>
+References: <20050220171244.GS14375@helium.tklauser.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from server3.hostpoint.ch ([217.26.52.13]:23052 "EHLO
+Received: from server3.hostpoint.ch ([217.26.52.13]:41733 "EHLO
 	server3.hostpoint.ch") by vger.kernel.org with ESMTP
-	id S261208AbVCTNOV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Mar 2005 08:14:21 -0500
+	id S262165AbVCTNWY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Mar 2005 08:22:24 -0500
 Content-Disposition: inline
-In-Reply-To: <20050220171028.GP14375@helium.tklauser.home>
+In-Reply-To: <20050220171244.GS14375@helium.tklauser.home>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: kernel-janitors@lists.osdl.org
@@ -27,35 +27,24 @@ See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 for details
 
 Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
 
---- linux-2.6.11.orig/drivers/scsi/megaraid.c	2005-03-02 12:50:36.000000000 +0100
-+++ linux-2.6.11/drivers/scsi/megaraid.c	2005-03-20 13:27:54.000000000 +0100
-@@ -43,6 +43,7 @@
+--- linux-2.6.11.orig/drivers/scsi/qlogicfc.c	2005-03-02 12:50:38.000000000 +0100
++++ linux-2.6.11/drivers/scsi/qlogicfc.c	2005-03-20 13:27:54.000000000 +0100
+@@ -61,6 +61,7 @@
+ #include <linux/unistd.h>
+ #include <linux/spinlock.h>
  #include <linux/interrupt.h>
- #include <linux/pci.h>
- #include <linux/init.h>
 +#include <linux/dma-mapping.h>
- #include <scsi/scsicam.h>
- 
+ #include <asm/io.h>
+ #include <asm/irq.h>
  #include "scsi.h"
-@@ -2060,7 +2061,7 @@ make_local_pdev(adapter_t *adapter, stru
+@@ -719,8 +720,8 @@ int isp2x00_detect(Scsi_Host_Template * 
+ 				continue;
  
- 	memcpy(*pdev, adapter->dev, sizeof(struct pci_dev));
+ 			/* Try to configure DMA attributes. */
+-			if (pci_set_dma_mask(pdev, 0xffffffffffffffffULL) &&
+-			    pci_set_dma_mask(pdev, 0xffffffffULL))
++			if (pci_set_dma_mask(pdev, DMA_64BIT_MASK) &&
++			    pci_set_dma_mask(pdev, DMA_32BIT_MASK))
+ 					continue;
  
--	if( pci_set_dma_mask(*pdev, 0xffffffff) != 0 ) {
-+	if( pci_set_dma_mask(*pdev, DMA_32BIT_MASK) != 0 ) {
- 		kfree(*pdev);
- 		return -1;
- 	}
-@@ -4854,10 +4855,10 @@ megaraid_probe_one(struct pci_dev *pdev,
- 
- 	/* Set the Mode of addressing to 64 bit if we can */
- 	if ((adapter->flag & BOARD_64BIT) && (sizeof(dma_addr_t) == 8)) {
--		pci_set_dma_mask(pdev, 0xffffffffffffffffULL);
-+		pci_set_dma_mask(pdev, DMA_64BIT_MASK);
- 		adapter->has_64bit_addr = 1;
- 	} else  {
--		pci_set_dma_mask(pdev, 0xffffffff);
-+		pci_set_dma_mask(pdev, DMA_32BIT_MASK);
- 		adapter->has_64bit_addr = 0;
- 	}
- 		
+ 		        host = scsi_register(tmpt, sizeof(struct isp2x00_hostdata));
