@@ -1,23 +1,20 @@
-From: Mark Haverkamp <markh@osdl.org>
+From: Steven Cole <elenstev@mesatop.com>
 Subject: Re: [PATCH 2.5] fix megaraid driver compile error
-Date: 06 Feb 2003 12:39:22 -0800
+Date: 06 Feb 2003 14:00:16 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1044563962.4858.59.camel@markh1.pdx.osdl.net>
+Message-ID: <1044565217.14310.253.camel@spc9.esa.lanl.gov>
 References: <Pine.LNX.4.44.0302061202430.3545-100000@home.transmeta.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-XcPf8iw+vAKEM6RsPDTv"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 In-Reply-To: <Pine.LNX.4.44.0302061202430.3545-100000@home.transmeta.com>
 List-Id: linux-scsi@vger.kernel.org
 To: Linus Torvalds <torvalds@transmeta.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Mark Haverkamp <markh@osdl.org>, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 
-
---=-XcPf8iw+vAKEM6RsPDTv
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-
-On Thu, 2003-02-06 at 12:04, Linus Torvalds wrote:
+On Thu, 2003-02-06 at 13:04, Linus Torvalds wrote:
+> 
 > On 6 Feb 2003, Mark Haverkamp wrote:
 > >
 > > This moves access of the host element to device since host has been
@@ -32,20 +29,23 @@ On Thu, 2003-02-06 at 12:04, Linus Torvalds wrote:
 > 
 > 		Linus
 
-Sorry about the bad patch.   Is an attached text file OK?
+In this case the issue is not a broken mailer, but rather the improper
+use of a good one.  Mark is using Evolution and so am I.  It appears
+that he did a cut and paste from an xterm (or something similar) which
+converted the tabs to spaces.
 
+For other Evolution users out there, a better way to send patches with
+undamaged whitespace and not line-wrapped is to choose Insert and then
+Inline Text File.  This will send a Linus-compatible inlined (not
+attached) patch.  
 
--- 
-Mark Haverkamp <markh@osdl.org>
+Here is Mark's patch again, sent from Evolution, and not
+whitespace-damaged:
 
---=-XcPf8iw+vAKEM6RsPDTv
-Content-Disposition: attachment; filename=megaraid.patch
-Content-Type: text/plain; name=megaraid.patch; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Steven
 
-===== drivers/scsi/megaraid.c 1.32 vs edited =====
---- 1.32/drivers/scsi/megaraid.c	Fri Jan  3 10:58:49 2003
-+++ edited/drivers/scsi/megaraid.c	Thu Feb  6 10:18:43 2003
+--- linux-2.5.59/drivers/scsi/megaraid.c.orig	Thu Feb  6 13:31:24 2003
++++ linux-2.5.59/drivers/scsi/megaraid.c	Thu Feb  6 13:33:06 2003
 @@ -4515,7 +4515,7 @@
  		if(scsicmd == NULL) return -ENOMEM;
  
@@ -65,5 +65,4 @@ Content-Transfer-Encoding: 7bit
  		if (outlen || inlen) {
  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 
---=-XcPf8iw+vAKEM6RsPDTv--
 
