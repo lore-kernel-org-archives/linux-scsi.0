@@ -1,110 +1,84 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch] add scsi changer driver
-Date: Tue, 15 Feb 2005 17:54:31 +0000
-Message-ID: <20050215175431.GA2896@infradead.org>
-References: <20050215164245.GA13352@bytesex>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] cpnvert scsi_debug to use virtual host bus
+Date: Tue, 15 Feb 2005 10:48:34 -0800
+Message-ID: <42124402.1060300@cs.wisc.edu>
+References: <420D5E03.2020409@cs.wisc.edu> <421184DC.8010900@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from pentafluge.infradead.org ([213.146.154.40]:15072 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261799AbVBORyi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Feb 2005 12:54:38 -0500
-Content-Disposition: inline
-In-Reply-To: <20050215164245.GA13352@bytesex>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:63400 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S261815AbVBOSsv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Feb 2005 13:48:51 -0500
+In-Reply-To: <421184DC.8010900@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gerd Knorr <kraxel@bytesex.org>
-Cc: Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-[this should go to linux-scsi]
+Douglas Gilbert wrote:
+> Mike Christie wrote:
+> 
+>> The attach patch converts scsi_debug to use the virtual scsi bus.
+>> It was built against scsi-rc-fixes-2.6.
+>>
+>> The interface has changed a little. Here is an
+>> example of adding and removing a single host:
+>>
+>> cd /sys/bus/scsi_host/drivers/scsi_debug
+>> [root@mina scsi_debug]# ls
+>> add_host  dev_size_mb  every_nth  module     num_parts  opts   scsi_level
+>> delay     dsense       max_luns   num_hosts  num_tgts   ptype
+>> [root@mina scsi_debug]# echo 1 > add_host
+>> [root@mina scsi_debug]# ls
+>> add_host  dev_size_mb  every_nth  module     num_parts  opts   scsi_level
+>> delay     dsense       max_luns   num_hosts  num_tgts   ptype  virt_host4
+>> [root@mina scsi_debug]# cd virt_host4/
+>> [root@mina virt_host4]# ls
+>> detach_state  driver  host4  power  remove_host
+>> [root@mina virt_host4]# echo 1 > remove_host
+> 
+> 
+> Mike,
+> I have noticed a few differences in the scsi_debug
+> driver with this patch applied.
+> 
+> Firstly, when loaded the scsi_debug driver has no hosts
+> and thus no devices. Previously it defaulted to 1 host,
+> 1 target and 1 lun (hence 1 device). Now a user needs
+> to do something like:
+> $ modprobe scsi_debug
+> $ cd /sys/bus/scsi_host/drivers/scsi_debug
+> $ echo 42 > add_host
+> 
 
-> +#include <linux/version.h>
+This is just a result of me trying to emulate
+normal HW drivers. For example I did not see
+any that would add the bus's device (the device
+equivalent to a pci_dev for example), so this
+is why I was always just doing the additions
+from userspace.
 
-not needed.
+I can break out part of scsi_host_driver_add_host
+and export it so LLDs can call it and
+add hosts from the kernel for scsi_debug.
 
-> +#include <asm/system.h>
+> The next issue is the number passed to "add_host".
+> It doesn't matter, one host is added. When add_host
+> belonged to scsi_debug the number and sign of the
+> value sent to add_host was significant (and a negative
+> number tried to remove that number of hosts).
+> Perhaps we could get that capability back by making
+> "num_hosts" writeable.
+> 
 
-I doubt you'll need this one.
+I can easily add both behaviors back to the "add_host"
+attr.
 
-> +#include <asm/uaccess.h>
-> +
-> +#include <linux/chio.h>			/* here are all the ioctls */
-
-<linux/*.h> should always go before <asm/*.h>
-
-> +#define MAJOR_NR	SCSI_CHANGER_MAJOR
-
-please kill this one
-
-> +#include "scsi.h"
-
-never use this header but always the <scsi/*.h>
-
-> +MODULE_SUPPORTED_DEVICE("sch");
-
-no needed thsese days
-
-> +static int dt_id[CH_DT_MAX] = { [ 0 ... (CH_DT_MAX-1) ] = -1 };
-> +static int dt_lun[CH_DT_MAX];
-> +module_param_array(dt_id,  int, NULL, 0444);
-> +module_param_array(dt_lun, int, NULL, 0444);
-> +
-> +/* tell the driver about vendor-specific slots */
-> +static int vendor_firsts[CH_TYPES-4];
-> +static int vendor_counts[CH_TYPES-4];
-> +module_param_array(vendor_firsts, int, NULL, 0444);
-> +module_param_array(vendor_counts, int, NULL, 0444);
-> +
-> +static char *vendor_labels[CH_TYPES-4] = {
-> +	"v0", "v1", "v2", "v3"
-> +};
-> +// module_param_string_array(vendor_labels, NULL, 0444);
-> +
-> +#define dprintk(fmt, arg...)    if (debug) \
-> +        printk(KERN_DEBUG "%s: " fmt, ch->name, ##arg)
-> +#define vprintk(fmt, arg...)    if (verbose) \
-> +        printk(KERN_INFO "%s: " fmt, ch->name, ##arg)
-> +
-> +/* ------------------------------------------------------------------- */
-
-> +static int ioctl32_register(void)
-> +{
-> +	unsigned int i;
-> +	int err;
-> +
-> +	for (i = 0; i < ARRAY_SIZE(ioctl32_cmds); i++) {
-> +		err = register_ioctl32_conversion(ioctl32_cmds[i].cmd,NULL);
-> +		if (err >= 0)
-> +			ioctl32_cmds[i].reg++;
-> +	}
-> +	return 0;
-> +}
-
-please implement ->compat_ioctl instead.
-
-> +	int errno, retries = 0, timeout;
-> +	DECLARE_COMPLETION(wait);
-> +	Scsi_Request *sr;
-> +	
-> +	sr = scsi_allocate_request(ch->device, GFP_ATOMIC);
-
-wouldn't a GFP_KERNEL do just fine?
-
-> +	if (NULL == sr)
-> +		return -ENOMEM;
-
-normal kernel style would be
-
-	if (!s)
-		return -ENOMEM;
-
-> +	list_for_each(item,&ch_devlist) {
-> +		tmp = list_entry(item, scsi_changer, list);
-
-list_for_each_entry
-
-> +	list_for_each(item,&ch_devlist) {
-> +		tmp = list_entry(item, scsi_changer, list);
-
-dito
+> Otherwise it looks good and fixes the "pseudo" bus
+> problem which prevented two or more drivers using
+> the "pseudo" bus at the same time.
+> 
+> Doug Gilbert
+> 
 
