@@ -1,26 +1,41 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Feral Qlogic ISP driver up for testing
-Date: Thu, 15 May 2003 19:05:49 +0100
+From: Andries.Brouwer@cwi.nl
+Subject: [patch] NCR5380.c fix
+Date: Fri, 16 May 2003 00:45:10 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030515190548.A883@infradead.org>
-References: <1053017923.2267.76.camel@mulgrave> <20030515102158.A12807@wonky.in0.lcl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <UTC200305152245.h4FMjAj26766.aeb@smtp.cwi.nl>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from carisma.slowglass.com ([195.224.96.167]:37901 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S264000AbTEORxC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 May 2003 13:53:02 -0400
-Content-Disposition: inline
-In-Reply-To: <20030515102158.A12807@wonky.in0.lcl>; from mjacob@feral.com on Thu, May 15, 2003 at 10:23:44AM -0700
+Received: from hera.cwi.nl ([192.16.191.8]:51105 "EHLO hera.cwi.nl")
+	by vger.kernel.org with ESMTP id S264041AbTEOWcW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 May 2003 18:32:22 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Jacob <mjacob@feral.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@digeo.com>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: torvalds@transmeta.com
 
-On Thu, May 15, 2003 at 10:23:44AM -0700, Matthew Jacob wrote:
-> If it's all the same to you, I'd like to make 2.5 a cleaned out branch
-> separate from the 2.4 and earlier branches so it can be a lot cleaner.
+Several SCSI drivers confuse CHECK_CONDITION and CHECK_CONDITION << 1.
+One of them is NCR5380.c. Below a patch adding status_byte() twice.
 
-That would be really cool.  Please drop me a note when you have the 2.5-only
-code ready for review.
+(On the other hand, sun3_NCR5380.c does this right, and generally
+looks better. Maybe they can be merged eventually.)
 
+Andries
+
+(This was for 2.5.68. I think 2.5.69 will differ by 1 line.)
+
+diff -u --recursive --new-file -X /linux/dontdiff a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+--- a/drivers/scsi/NCR5380.c	Wed Mar  5 04:29:03 2003
++++ b/drivers/scsi/NCR5380.c	Fri May 16 01:42:51 2003
+@@ -2466,11 +2466,11 @@
+ 
+ 					if (cmd->cmnd[0] != REQUEST_SENSE)
+ 						cmd->result = cmd->SCp.Status | (cmd->SCp.Message << 8);
+-					else if (cmd->SCp.Status != GOOD)
++					else if (status_byte(cmd->SCp.Status) != GOOD)
+ 						cmd->result = (cmd->result & 0x00ffff) | (DID_ERROR << 16);
+ 
+ #ifdef AUTOSENSE
+-					if ((cmd->cmnd[0] != REQUEST_SENSE) && (cmd->SCp.Status == CHECK_CONDITION)) {
++					if ((cmd->cmnd[0] != REQUEST_SENSE) && (status_byte(cmd->SCp.Status) == CHECK_CONDITION)) {
+ 						dprintk(NDEBUG_AUTOSENSE, ("scsi%d : performing request sense\n", instance->host_no));
+ 						cmd->cmnd[0] = REQUEST_SENSE;
+ 						cmd->cmnd[1] &= 0xe0;
