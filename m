@@ -1,67 +1,69 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [PATCH/RFT] libata "DMA timeout" fix
-Date: Sat, 28 Feb 2004 14:10:45 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4040E7B5.4020709@pobox.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH/RFT] libata "DMA timeout" fix
+Date: 28 Feb 2004 14:49:15 -0600
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <1078001357.2020.90.camel@mulgrave>
+References: <4040E7B5.4020709@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070400050706040108030905"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:38302 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261901AbUB1TK5
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 Feb 2004 14:10:57 -0500
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4040E7B5.4020709@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------070400050706040108030905
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+On Sat, 2004-02-28 at 13:10, Jeff Garzik wrote:
+> ===== drivers/scsi/libata-core.c 1.19 vs edited =====
+> --- 1.19/drivers/scsi/libata-core.c	Wed Feb 25 22:41:13 2004
+> +++ edited/drivers/scsi/libata-core.c	Sat Feb 28 14:03:18 2004
+> @@ -2130,6 +2130,14 @@
+>  				cmd->result = SAM_STAT_CHECK_CONDITION;
+>  			else
+>  				ata_to_sense_error(qc);
+> +
+> +			/* hack alert! we need this to get past the
+> +			 * first check in scsi_done().  libata is the
+> +			 * -only- user of ->eh_strategy_handler() in
+> +			 * any kernel tree, which exposes some incorrect
+> +			 * assumptions in the SCSI layer.
+> +			 */
+> +			scsi_add_timer(cmd, 2000 * HZ, NULL);
+>  		} else {
+>  			cmd->result = SAM_STAT_GOOD;
+>  		}
 
+You can't do this.  Supposing there command's delayed, the timer fires
+and then the command returns with a sense error?  The done will go
+through automatically completing the command, but your strategy handler
+will still think it has a failed command to handle.
 
-The desired effect of a DMA timeout should be to throw an I/O error, but 
-that doesn't appear to be happening.
+The correct fix is this, I think (uncompiled, but you get the idea):
 
-Those seeing DMA timeout messages, please test this patch.
-
-Kernel hacker note:  James B recommended that I implement my own 
-scsi_done() function, which duplicates the real scsi_done() but omits 
-the scsi_delete_timer() call.  This is probably the best long term fix, 
-but doing so involves exporting several currently-private bits of SCSI 
-mid-layer, which I would rather not do.  Probably best to create a 
-__scsi_done() inside the SCSI mid-layer, and call that.
-
-	Jeff, the only user of ->eh_strategy_handler() in any kernel
-
-
-
-
---------------070400050706040108030905
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
-
-===== drivers/scsi/libata-core.c 1.19 vs edited =====
---- 1.19/drivers/scsi/libata-core.c	Wed Feb 25 22:41:13 2004
-+++ edited/drivers/scsi/libata-core.c	Sat Feb 28 14:03:18 2004
-@@ -2130,6 +2130,14 @@
- 				cmd->result = SAM_STAT_CHECK_CONDITION;
- 			else
- 				ata_to_sense_error(qc);
+===== libata-core.c 1.19 vs edited =====
+--- 1.19/drivers/scsi/libata-core.c	Wed Feb 25 21:41:13 2004
++++ edited/libata-core.c	Sat Feb 28 14:46:17 2004
+@@ -1972,6 +1972,11 @@
+ 	/* FIXME */
+ }
+ 
++static void ata_eng_timeout_done(struct scsi_cmnd *cmnd)
++{
++	scsi_finish_command(cmnd);
++}
 +
-+			/* hack alert! we need this to get past the
-+			 * first check in scsi_done().  libata is the
-+			 * -only- user of ->eh_strategy_handler() in
-+			 * any kernel tree, which exposes some incorrect
-+			 * assumptions in the SCSI layer.
-+			 */
-+			scsi_add_timer(cmd, 2000 * HZ, NULL);
- 		} else {
- 			cmd->result = SAM_STAT_GOOD;
- 		}
+ /**
+  *	ata_eng_timeout - Handle timeout of queued command
+  *	@ap: Port on which timed-out command is active
+@@ -2005,6 +2010,7 @@
+ 		goto out;
+ 	}
+ 
++	qc->scsidone = ata_eng_timeout_done;
+ 	switch (qc->tf.protocol) {
+ 	case ATA_PROT_DMA_READ:
+ 	case ATA_PROT_DMA_WRITE:
 
---------------070400050706040108030905--
+James
+
 
