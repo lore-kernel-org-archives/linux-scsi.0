@@ -1,42 +1,36 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Subject: Re: [PATCH] sd.c fixes applied incorectly to 2.4.19-preXX
-Date: Tue, 16 Apr 2002 09:03:03 -0500
+Date: Tue, 16 Apr 2002 08:08:00 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200204161403.g3GE33B01706@localhost.localdomain>
-References: <gibbs@scsiguy.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <200204161408.g3GE80990144@aslan.scsiguy.com>
+References: <20020416055820.GF12608@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: Message from "Justin T. Gibbs" <gibbs@scsiguy.com>
-   of "Mon, 15 Apr 2002 15:13:37 MDT." <200204152113.g3FLDb982996@aslan.scsiguy.com>
+In-Reply-To: Your message of "Tue, 16 Apr 2002 07:58:20 +0200."
+             <20020416055820.GF12608@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Marcelo Tosatti <marcelo@conectiva.com.br>, linux-scsi@vger.kernel.org, Alan Cox <alan@redhat.com>
+To: Jens Axboe <axboe@suse.de>
+Cc: Marcelo Tosatti <marcelo@conectiva.com.br>, linux-scsi@vger.kernel.org, Alan Cox <alan@redhat.com>
 
-gibbs@scsiguy.com said:
-> Well, if we really wanted to fix it correctly:
-[...]
-> The check against 0xF0 is currently "correct" because the code in
-> sd.c's rw_intr doesn't know how to deal with anything other than a
-> current error (0x70 + valid bit). 
+>On Mon, Apr 15 2002, Justin T. Gibbs wrote:
+>> Marcelo,
+>> 
+>> Looking at the latest version of your tree via bitkeeper, it
+>> seems that the wrong patch has been applied to sd.c.  In its
+>> current state, the disk driver will fail to act upon any sense
+>> data returned by the low level controller.  The following patch
+>> restores correct behavior.
+>
+>Justin,
+>
+>Noticed this myself the other day... I don't think they were applied
+>incorrectly, your 2.4.18 patch is buggy while your 2.4.17 version is
+>quite ok.
 
-I'm not advocating that you fix it correctly.  However, if you use the 
-provided scsi_sense_valid() function it will show up in an easy to recognise 
-form for someone who later does all of this fixing.  We can't go on adding 
-these band aid fixes to the scsi subsystem with the justification that it's 
-currently broken in a lot of cases so we don't need to consider them.  All 
-that does is cause the subsystem to diverge further and make the eventual fix 
-even more difficult and daunting.
+There were two patches posted to the list about this issue.  The first
+had this bug.  The second did not.  It does look like the merge of this
+correction didn't make it into my 2.4.18 tree at the time I generated
+the 2.4.18 patch set for the 6.2.5 release.  I have corrected that
+patch set.
 
-What is wrong with:
-
-	    if (scsi_sense_valid(SCpnt)) {	/* Sense data is valid */
-		/* FIXME: this probably won't work for deferred errors
-
-That way you've used the supplied function and noted the potential problem 
-case.
-
-James
-
-
-
+--
+Justin
