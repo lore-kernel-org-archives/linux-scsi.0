@@ -1,74 +1,42 @@
-From: "Martin J. Bligh" <mbligh@aracnet.com>
-Subject: Re: 2.5.73-mm1 falling over in SDET
-Date: Sat, 28 Jun 2003 22:35:45 -0700
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: use_10_for_ms revisited?
+Date: Sun, 29 Jun 2003 02:30:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <6620000.1056864944@[10.10.2.4]>
-References: <45120000.1056810681@[10.10.2.4]><49400000.1056814561@[10.10.2.4]>  <20030628170235.51ee2f69.akpm@digeo.com> <1056857338.2514.4.camel@mulgrave>
+Message-ID: <3EFE8784.4000101@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from franka.aracnet.com ([216.99.193.44]:5766 "EHLO
-	franka.aracnet.com") by vger.kernel.org with ESMTP id S265577AbTF2FVq
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:48773 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S265585AbTF2GQc
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 Jun 2003 01:21:46 -0400
-In-Reply-To: <1056857338.2514.4.camel@mulgrave>
-Content-Disposition: inline
+	Sun, 29 Jun 2003 02:16:32 -0400
+Received: from rdu26-227-011.nc.rr.com ([66.26.227.11] helo=pobox.com)
+	by www.linux.org.uk with esmtp (Exim 4.14)
+	id 19WVi5-0005IN-UT
+	for linux-scsi@vger.kernel.org; Sun, 29 Jun 2003 07:30:50 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@digeo.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
---James Bottomley <James.Bottomley@SteelEye.com> wrote (on Saturday, June 28, 2003 22:28:57 -0500):
+I was reading the specs just now, and I see that the inquiry page 
+defines how ATAPI and USB devices indicate they are compliant with MMC-4.
 
-> On Sat, 2003-06-28 at 19:02, Andrew Morton wrote:
->> Yes, isplinux_queuecommand() returns non-zero and the scsi generic layer
->> cheerfully goes infinitely recursive.
-> 
-> Sigh, certain persons need to be more careful when doing logic
-> alterations.
-> 
-> Try the attached.
+And, MMC-4 does not define read/write/modesen/modesel 6-byte commands at 
+all.
 
-OK, that gets rather further, and I strongly suspect fixes the SCSI
-problem. Thanks very much.
+My conclusion is that we should notice up front when MMC-4 is supported, 
+and simply adhere to the spec by always sending 10-byte commands for 
+that device.  I do not think that translation of 6-to-10 byte commands 
+is answer, which is what happens now.  Our SCSI layer (sr.c, etc.) 
+should, IMO, be compliant with MMC-4 and simply send the right commands.
 
-But now it just OOMs instead, which seems to be slab failing 
-dismally to shrink it's fat ass enough to fit in that lazy-boy.
-Ext2 doesn't look desparately happy either. Maybe it's really
-that one's fault?
+This also implies that use_10_for_ms simply need not exist -- "first try 
+10 byte commands for this device" is false...  for some devices we 
+should be unconditionally sending 10 byte commands, no ifs, ands, or buts :)
 
- EXT2-fs error (device sda2): ext2_new_inode: Free inodes count corrupted in group 30
-Remounting filesystem read-only
-Out of Memory: Killed process 215 (portmap).
-Out of Memory: Killed process 338 (sshd).
+I'll see if I can work up a patch, if noone objects...
 
-larry:~# cat /proc/meminfo
-MemTotal:     16076324 kB
-MemFree:      15068968 kB
-Buffers:           476 kB
-Cached:         260824 kB
-SwapCached:          0 kB
-Active:         241972 kB
-Inactive:        23196 kB
-HighTotal:    15335424 kB
-HighFree:     15047680 kB
-LowTotal:       740900 kB
-LowFree:         21288 kB
-SwapTotal:           0 kB
-SwapFree:            0 kB
-Dirty:               0 kB
-Writeback:           0 kB
-Mapped:           5396 kB
-Slab:           697856 kB
-Committed_AS:     9688 kB
-PageTables:        264 kB
-VmallocTotal:   114680 kB
-VmallocUsed:      3156 kB
-VmallocChunk:   111524 kB
+	Jeff, debugging atapi support in his ata-scsi driver
 
-slabinfo:
 
-dentry_cache      3999781 4011624    160   24    1 : tunables  120   60    8 : slabdata 167151 167151      0
-
-Bad dentries. no no.
 
