@@ -1,17 +1,37 @@
-From: devnetfs <devnetfs@yahoo.com>
-Subject: fast detection of  loss of FC connectivity?
-Date: Thu, 3 Apr 2003 09:15:58 -0800 (PST)
+From: "Ravi Anand" <ravi.anand@qlogic.com>
+Subject: RE: fast detection of  loss of FC connectivity?
+Date: Thu, 3 Apr 2003 11:33:58 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030403171558.37579.qmail@web20414.mail.yahoo.com>
+Message-ID: <3679966B84813344B908D418BA3F6A4AA84114@AVEXCH01.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web20402.mail.yahoo.com ([66.163.169.90]:12043 "HELO
-	web20414.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S261386AbTDCREb
-	(for <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Apr 2003 12:04:31 -0500
+Received: from [198.70.193.2] ([198.70.193.2]:41360 "EHLO AVEXCH01.qlogic.org")
+	by vger.kernel.org with ESMTP id S263515AbTDCTWI convert rfc822-to-8bit
+	(for <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Apr 2003 14:22:08 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
+To: devnetfs <devnetfs@yahoo.com>, linux-scsi@vger.kernel.org
+
+Hi,
+
+ I dont know which driver version you are using,but in v6.x driver there is a command line parm  qlport_down_retry parm which you can pass to the driver at load time.Set this param to one, for ex:
+
+# insmod qla2300.o qlport_down_retry=1  
+
+The net effect of this will be that as soon as the LOOP goes DOWN on any HBA your tur command will be returned immediately with error instaed of waiting for long.
+
+Hope this helps.
+
+Ravi
+
+-----Original Message-----
+From: devnetfs [mailto:devnetfs@yahoo.com]
+Sent: Thursday, April 03, 2003 9:16 AM
 To: linux-scsi@vger.kernel.org
+Subject: fast detection of loss of FC connectivity?
+
 
 Hi,
 
@@ -42,3 +62,7 @@ Thanks
 A.
 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
