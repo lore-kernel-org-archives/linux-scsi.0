@@ -1,40 +1,41 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 1/3] MidLayer updates - extending transport/attribute
-	container changes
-Date: Fri, 04 Feb 2005 16:57:32 -0600
-Message-ID: <1107557853.5557.82.camel@mulgrave>
-References: <0B1E13B586976742A7599D71A6AC733C12EAB1@xbl3.ma.emulex.com>
+Subject: Re: [PATCH 3/3] MidLayer updates - extending scsi_target support
+Date: Fri, 04 Feb 2005 17:00:56 -0600
+Message-ID: <1107558056.5557.86.camel@mulgrave>
+References: <0B1E13B586976742A7599D71A6AC733C12EAB3@xbl3.ma.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Received: from stat16.steeleye.com ([209.192.50.48]:40407 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:44503 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S266192AbVBDW5l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Feb 2005 17:57:41 -0500
-In-Reply-To: <0B1E13B586976742A7599D71A6AC733C12EAB1@xbl3.ma.emulex.com>
+	id S264164AbVBDXBL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Feb 2005 18:01:11 -0500
+In-Reply-To: <0B1E13B586976742A7599D71A6AC733C12EAB3@xbl3.ma.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Smart@Emulex.Com
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 On Sat, 2005-01-29 at 09:03 -0500, James.Smart@Emulex.Com wrote:
->   Updates the recent transport container patch for :
->   - allow device driver-specific attributes to be added to class objects
->   - exposes classdev to transport via setup function
+>   This patch extends scsi_target support:
+>   - Allows for driver-specific data to be allocated along with the
+>     target structure and accessible via the starget->hostdata pointer.
+>   - Adds scsi target alloc/configure/destory callbacks to the
+>     scsi host template.
+>   - Rearranges the calling sequences for scsi targets so that the
+>     target and slave alloc/configure/destory callbacks are in
+>     order (target before slave on alloc/configure).
 
-I'm not very keen on this for two reasons:
 
-1) The driver should be tampering with class attributes.  A class and
-its attributes are the presentation of an interface.  If the driver has
-something more to add then surely that's an indication that the original
-interface is missing pieces (i.e. every driver should have this) or that
-the driver is trying to export a different interface (and so, logically
-should use a new class.  i.e. just add a transport_class to the driver
-and everything will work nicely).
+the idea behind this is fine, I just don't like the interface.
 
-2) classdevs are sysfs's representation of the interface.  I'd rather
-they weren't exposed any more than necessary internally to avoid the
-urge to hack the interface.
+Really a target device is nothing more than a container to SCSI.  We
+already do the transport add/remove calls for targets, I don't see we
+need other calls duplicating this.  So, I think the implementation would
+look a whole lot better if the fc transport class just exported an
+interface to get the extra storage for the driver and tacked it on to
+its allocation.  Then you can use the existing mid-layer transport
+target triggers to do everything you want.
 
 James
 
