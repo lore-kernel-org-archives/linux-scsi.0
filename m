@@ -1,61 +1,62 @@
-From: Thomas Beutin <tyrone@laokoon.IN-Berlin.DE>
-Subject: Re: AIC7902 lockups
-Date: Wed, 13 Aug 2003 21:39:15 +0200
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: advansys driver vs 2.6 breakage
+Date: Wed, 13 Aug 2003 13:25:26 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030813213915.A20993@laokoon.bug.net>
-References: <20030811143610.A19365@laokoon.bug.net> <2429712704.1060622870@aslan.btc.adaptec.com> <20030811204139.A26663@laokoon.bug.net> <3244592704.1060799839@aslan.btc.adaptec.com>
+Message-ID: <20030813132526.465b646e.rddunlap@osdl.org>
+References: <20030810224402.5c7fa063.rddunlap@osdl.org>
+	<200308111729.04184.gene.heskett@verizon.net>
+	<20030811143402.1df9184c.rddunlap@osdl.org>
+	<200308120328.38835.gene.heskett@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hirsch.in-berlin.de ([192.109.42.6]:19145 "EHLO
-	hirsch.in-berlin.de") by vger.kernel.org with ESMTP id S275352AbTHMTpK
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Aug 2003 15:45:10 -0400
-Content-Disposition: inline
-In-Reply-To: <3244592704.1060799839@aslan.btc.adaptec.com>; from gibbs@scsiguy.com on Wed, Aug 13, 2003 at 12:37:19PM -0600
+Received: from fw.osdl.org ([65.172.181.6]:28841 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S275501AbTHMU2o (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Aug 2003 16:28:44 -0400
+In-Reply-To: <200308120328.38835.gene.heskett@verizon.net>
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-scsi@vger.kernel.org
+To: gene.heskett@verizon.net
+Cc: linux-scsi@vger.kernel.org, willy@debian.org
 
-Hi Justin,
+On Tue, 12 Aug 2003 03:28:38 -0400 Gene Heskett <gene.heskett@verizon.net> wrote:
 
-thanks for Your answer!
+| On Monday 11 August 2003 17:34, Randy.Dunlap wrote:
+| >On Mon, 11 Aug 2003 17:29:04 -0400 Gene Heskett 
+| <gene.heskett@verizon.net> wrote:
+| >| On Monday 11 August 2003 01:44, Randy.Dunlap wrote:
+| >| >Gene,
+| >| >
+| >| >This patch should make the advansys driver build on 2.6.0-test3
+| >| >after you #define ADVANSYS_DEBUG so that run-time debug output
+| >| >can be generated.
+| >| >
+| >| >--
+| >|
+| >| Ok Randy, I have some logs, stripped down to about 1650 lines from
+| >| just under half a million.
+| >|
+| >| Should I send them privately?
+| >
+| >How many bytes?  If <= roughly 60 KB, I'd say just post them here.
+| 
+| I've done some more trimming, taking it down to a single bootup as a 
+| module, and its now 58k, so its attached.
 
-On Wed, Aug 13, 2003 at 12:37:19PM -0600, Justin T. Gibbs wrote:
-> >> The messages are not complete... the top is clipped.  Were you
-> >> using a serial console to capture this log?
-> > No, i did a "dmesg > file", but it seems the buffer is full after
-> > booting so the first parts are lost. I've put syslog files on the web:
-> 
-> ...
-> 
-> The logs are still not complete.  As best I can tell, the controller
-> is seeing CRC errors when talking to the Fujitsu drives, but these
-> drives are hanging up the bus instead of responding to our ATN condition.
-> I believe that these drives have newer firmware available that might
-> aid in CRC error recovery, but you should also double check your
-> cable, termination, etc.
-I've put another syslog file on the web. IMHO it shows all the errors
-with the scsi system. It's on
-http://laokoon.in-berlin.de/~beutin/syslog.gz
-If i can increase the debug level i will do it if it helps!
+Gene,
 
-I cannot imagine a cabling problem, because the drives are in a hot
-swap backplane and i changed the places of the drives (but having
-the IBM drive every time as the first drive).
-Or is it possible to have a bad cable from the board to the backplane,
-beeing ok for the U160 IBM drive but not for a U360 drive? I'm using
-the SCSI cable coming with the board, but i will try another next
-time i've access to the machine.
-Do You think, it could help to set the controller maximum to U160 on
-the expected SCSI-IDs for the fujitsu drives?
+Both the 2.4 and 2.6 logs show lots of successful IOs and a few
+IO errors.  The IO errors look like this in both of them:
 
-Do You have any idea where to find the firmware an an update tool
-for fujitsu drives?
+Aug 11 13:48:28 coyote kernel: asc_isr_callback: QD_WITH_ERROR
+Aug 11 13:48:28 coyote kernel: asc_isr_callback: host_stat 0x11
 
-Any hints or help welcome!
+This is a timeout as I read the source file.
+Maybe I'm misreading the logs, but I don't see any other errors
+being reported.  What are the symptoms of the errors that you are
+seeing on 2.6.0-test?
 
-Thanks for reading!
--tb
--- 
-Thomas Beutin                             tb@laokoon.IN-Berlin.DE
-Beam me up, Scotty. There is no intelligent live down in Redmond.
+--
+~Randy				For Linux-2.6, see:
+http://www.kernel.org/pub/linux/kernel/people/davej/misc/post-halloween-2.5.txt
