@@ -1,69 +1,139 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] [Update #2] suspending I/Os to a device
-Date: 30 Sep 2004 17:40:46 -0400
+From: "Tony Battersby" <tonyb@cybernetics.com>
+Subject: RE: [patch] 2.4 fix for sg driver cmd_done oops
+Date: Thu, 30 Sep 2004 17:53:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1096580453.1764.128.camel@mulgrave>
-References: <0B1E13B586976742A7599D71A6AC733C086618@xbl3.ma.emulex.com>
+Message-ID: <04Sep30.175341edt.332209@cyborg.cybernetics.com>
+References: <1096573241.5631.3697.camel@bianchi.boston.redhat.com>
+Reply-To: <tonyb@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_004D_01C4A716.6E64DEC0"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:42920 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S269558AbUI3Vk5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Sep 2004 17:40:57 -0400
-In-Reply-To: <0B1E13B586976742A7599D71A6AC733C086618@xbl3.ma.emulex.com>
+Received: from host02.cybernetics.com ([206.246.200.18]:2320 "EHLO
+	cybernetics.com") by vger.kernel.org with ESMTP id S269535AbUI3Vxo
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Sep 2004 17:53:44 -0400
+In-Reply-To: <1096573241.5631.3697.camel@bianchi.boston.redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, hch@infradead.org, Mike Anderson <andmike@us.ibm.com>, Martin Hicks <mort@wildopensource.com>, andrew.vasquez@qlogic.com
+To: 'Tom Coughlan' <coughlan@redhat.com>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
+Cc: petrides@redhat.com, dougg@torque.net
 
-On Thu, 2004-09-30 at 16:57, James.Smart@Emulex.Com wrote:
-> Folks,
-> 
-> Here is the suspend i/o patch, updated to run with host and target attributes for obtaining the timeout values. As a matter of course - this adds host and target attribute use to the FC transport.
-> 
-> This patch depends on the bitkeeper scsi-target-2.6 tree.
+This is a multi-part message in MIME format.
 
-Well, it's getting better, but I'm slightly confused by the attribute
-levels.
+------=_NextPart_000_004D_01C4A716.6E64DEC0
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 
-Surely node_name, port_name and port_id are target attributes only?
+> This problem has also been seen on 2.4.  The attached patch is a
+> straight-forward port of Brian's patch to 2.4.28-pre3. Are there any
+> 2.4-specific issues that this does not address?
 
-Also, since disconnection by cable pull can only happen at the host or
-target level, there's surely no need for a device dev_loss_tmo
-parameter?
+Try this patch instead, which deletes one line containing "srp->done =
+1;" compared to your patch.  The 2.6 sg.c moved this line down to fix a
+race condition and then later added the locks around it; your patch adds
+the line after it was moved but doesn't delete the original line.
 
->  struct scsi_target {
->  	struct scsi_device	*starget_sdev_user;
-> +	struct Scsi_Host	*shost;
->  	struct device		dev;
->  	unsigned int		channel;
->  	unsigned int		id; /* target id ... replace
+Anthony J. Battersby
+Cybernetics
 
-This is unnecessary.  You can deduce the scsi host from the device's
-parent.  If you look at the sym2 updates, you see things like:
+------=_NextPart_000_004D_01C4A716.6E64DEC0
+Content-Type: application/octet-stream;
+	name="sg_cmd_done_race_2.4.28-pre3.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="sg_cmd_done_race_2.4.28-pre3.patch"
 
-struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+--- linux-2.4.28-pre3/drivers/scsi/sg.c.orig	Thu Sep 30 17:39:10 2004=0A=
++++ linux-2.4.28-pre3/drivers/scsi/sg.c	Thu Sep 30 17:39:37 2004=0A=
+@@ -752,6 +752,18 @@=0A=
+     }=0A=
+ }=0A=
+ =0A=
++static int=0A=
++sg_srp_done(Sg_request *srp, Sg_fd *sfp)=0A=
++{=0A=
++	unsigned long iflags;=0A=
++	int done;=0A=
++=0A=
++	read_lock_irqsave(&sfp->rq_list_lock, iflags);=0A=
++	done =3D srp->done;=0A=
++	read_unlock_irqrestore(&sfp->rq_list_lock, iflags);=0A=
++	return done;=0A=
++}=0A=
++=0A=
+ static int sg_ioctl(struct inode * inode, struct file * filp,=0A=
+                     unsigned int cmd_in, unsigned long arg)=0A=
+ {=0A=
+@@ -786,7 +798,8 @@=0A=
+ 	    while (1) {=0A=
+ 		result =3D 0;  /* following macro to beat race condition */=0A=
+ 		__wait_event_interruptible(sfp->read_wait,=0A=
+-		       (sdp->detached || sfp->closed || srp->done), result);=0A=
++		       (sdp->detached || sfp->closed || sg_srp_done(srp, sfp)),=0A=
++					   result);=0A=
+ 		if (sdp->detached)=0A=
+ 		    return -ENODEV;=0A=
+ 		if (sfp->closed)=0A=
+@@ -796,7 +809,9 @@=0A=
+ 		srp->orphan =3D 1;=0A=
+ 		return result; /* -ERESTARTSYS because signal hit process */=0A=
+ 	    }=0A=
++	    write_lock_irqsave(&sfp->rq_list_lock, iflags);=0A=
+ 	    srp->done =3D 2;=0A=
++	    write_unlock_irqrestore(&sfp->rq_list_lock, iflags);=0A=
+ 	    result =3D sg_new_read(sfp, (char *)arg, SZ_SG_IO_HDR, srp);=0A=
+ 	    return (result < 0) ? result : 0;=0A=
+ 	}=0A=
+@@ -1207,6 +1222,7 @@=0A=
+     Sg_device * sdp =3D NULL;=0A=
+     Sg_fd * sfp;=0A=
+     Sg_request * srp =3D NULL;=0A=
++    unsigned long iflags;=0A=
+ =0A=
+     read_lock(&sg_dev_arr_lock);=0A=
+     if (sg_dev_arr && (dev >=3D 0)) {=0A=
+@@ -1253,7 +1269,6 @@=0A=
+     SRpnt->sr_request.rq_dev =3D MKDEV(0, 0);  /* "sg" _disowns_ =
+request blk */=0A=
+ =0A=
+     srp->my_cmdp =3D NULL;=0A=
+-    srp->done =3D 1;=0A=
+     read_unlock(&sg_dev_arr_lock);=0A=
+ =0A=
+     SCSI_LOG_TIMEOUT(4, printk("sg...bh: dev=3D%d, pack_id=3D%d, =
+res=3D0x%x\n",=0A=
+@@ -1316,8 +1331,11 @@=0A=
+     }=0A=
+     if (sfp && srp) {=0A=
+ 	/* Now wake up any sg_read() that is waiting for this packet. */=0A=
+-	wake_up_interruptible(&sfp->read_wait);=0A=
+ 	kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);=0A=
++	write_lock_irqsave(&sfp->rq_list_lock, iflags);=0A=
++	srp->done =3D 1;=0A=
++	wake_up_interruptible(&sfp->read_wait);=0A=
++	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);=0A=
+     }=0A=
+ }=0A=
+ =0A=
+@@ -1507,7 +1525,7 @@=0A=
+ 	    	tsfp =3D sfp->nextfp;=0A=
+ 		for (srp =3D sfp->headrp; srp; srp =3D tsrp) {=0A=
+ 		    tsrp =3D srp->nextrp;=0A=
+-		    if (sfp->closed || (0 =3D=3D srp->done))=0A=
++		    if (sfp->closed || (0 =3D=3D sg_srp_done(srp, sfp)))=0A=
+ 			sg_finish_rem_req(srp);=0A=
+ 		}=0A=
+ 		if (sfp->closed) {=0A=
+@@ -2425,7 +2443,7 @@=0A=
+ =0A=
+     for (srp =3D sfp->headrp; srp; srp =3D tsrp) {=0A=
+ 	tsrp =3D srp->nextrp;=0A=
+-	if (srp->done)=0A=
++	if (sg_srp_done(srp, sfp))=0A=
+ 	    sg_finish_rem_req(srp);=0A=
+ 	else=0A=
+ 	    ++dirty;=0A=
 
- +fc_target_unblock(struct scsi_target *starget)
-> +{
-> +	struct scsi_device *sdev;
-> +
-> +	/* 
-> +	 * Stop the target timer first. Take no action on the del_timer
-> +	 * failure as the state machine state change will validate the
-> +	 * transaction. 
-> +	 */
-> +	del_timer_sync(&fc_starget_dev_loss_timer(starget));
-> +
-> +	shost_for_each_device(sdev, starget->shost) {
-> +		if (sdev->id == starget->id)
-> +			scsi_internal_device_unblock(sdev);
-> +	}
-
-This is wrong, See how iteration over host is done in
-scsi_lib.c:scsi_target_resume
-
-James
-
+------=_NextPart_000_004D_01C4A716.6E64DEC0--
 
