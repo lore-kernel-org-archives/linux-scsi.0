@@ -1,33 +1,32 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: Pb between an UltraTrak SX8000 and an Adaptec 29160
-Date: Fri, 15 Nov 2002 19:53:04 +0000
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [PATCH] scsi_debug 1.64 for lk2.5.47 mark II
+Date: Sun, 17 Nov 2002 14:02:38 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <47810000.1037389984@localhost>
-References: <004601c28c1f$66cde6c0$13e2cf82@darkwolf>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Message-ID: <20021117190238.GB3280@redhat.com>
+References: <3DD7A1AA.6040009@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <004601c28c1f$66cde6c0$13e2cf82@darkwolf>
 Content-Disposition: inline
+In-Reply-To: <3DD7A1AA.6040009@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: didier@ece.gatech.edu, linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: linux-scsi@vger.kernel.org
 
-> I have just connected a brand new UltraTrak SX8000
-> (from Promise with 8 x 200GB IDE drives) to an
-> adaptec 29160. The UltraTrak SX8000 is connected
-> via a brand new LVD cable (1meter).
->
-> While everything seems fine, I am getting a bunch of
->
-> (scsi0:A:0:0): parity error detected in Data-out phase. SEQADDR(0x56)
-> SCSIRATE(0xc2)
->         No terminal CRC packet recevied
+On Mon, Nov 18, 2002 at 01:03:22AM +1100, Douglas Gilbert wrote:
+> 
+> cleans up BIOS geometry code (parts copied from the aic7xxx
+> driver).
 
-I've never seen false positives from this diagnostic.  It looks like
-your Promise device is not properly implementing DT transfers.  Is
-there a firmware update for the device?
 
---
-Justin
+My opinion is that the aic7xxx bios geometry code is broken for really 
+large devices, so you might want to think about that ;-)
+
+
+
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
