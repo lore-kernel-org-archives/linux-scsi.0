@@ -1,78 +1,71 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] ibmvscsi driver - fourth version
-Date: 11 Mar 2004 17:07:40 -0500
+From: Mike Christie <mikenc@us.ibm.com>
+Subject: [PATCH] fix leftover bytes calculation
+Date: Thu, 11 Mar 2004 15:54:53 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1079042865.2820.88.camel@mulgrave>
-References: <opr3u0ffo7l6e53g@us.ibm.com>
-	<20040225134518.A4238@infradead.org>  <opr3xta6gbl6e53g@us.ibm.com>
-	<1079027038.2820.57.camel@mulgrave>  <opr4pu5kazl6e53g@us.ibm.com>
+Message-ID: <4050FC4D.4060002@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------040000050600070907030603"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:23425 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261772AbUCKWIZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Mar 2004 17:08:25 -0500
-In-Reply-To: <opr4pu5kazl6e53g@us.ibm.com>
+Received: from e1.ny.us.ibm.com ([32.97.182.101]:1009 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261844AbUCKXy4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Mar 2004 18:54:56 -0500
+Received: from northrelay02.pok.ibm.com (northrelay02.pok.ibm.com [9.56.224.150])
+	by e1.ny.us.ibm.com (8.12.10/NS PXFA) with ESMTP id i2BNstjs447954
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Mar 2004 18:54:55 -0500
+Received: from us.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by northrelay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id i2BNsrfp119874
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Mar 2004 18:54:54 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Boutcher <sleddog@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, 2004-03-11 at 16:25, Dave Boutcher wrote:
-> On 11 Mar 2004 12:43:57 -0500, James Bottomley 
-> <James.Bottomley@steeleye.com> wrote:
-> > dma_map_single() has no error return currently, what is this trying to
-> > do?
-> Well, actually in in arch/ppc64/pci_iommu.c it can return 0xFFFFFFFF 
-> (actually, it returns NO_TCE, which is ((dma_addr_t)-1)).
+This is a multi-part message in MIME format.
+--------------040000050600070907030603
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Well, OK, put a fixme in there, since eventually there will be a
-standard for dma_map_single errors, and it may not be -1.
+If there are leftovers __end_that_request_first will call
+blk_recalc_rq_sector to set req->hard_nr_sectors correctly.
+For failfast, by subtracting bytes from the updated
+req->hard_nr_sectors and then calling end_that_request_chunk
+and end_that_request_last, you can end up with a bio that
+never gets completed.
 
-> 
-> > +
-> > +	/* Block requests until we get the SRP login back */
-> > +	scsi_block_requests(host);
-> > +
-> > +	if (!scsi_add_host(hostdata->host, hostdata->dev)) {
-> > +
-> > +		scsi_scan_host(host);
-> > +		return hostdata;
-> > +	}
-> >
-> > Er, have you actually tried this ... the block requests will block all
-> > requests including the attempt to scan. I assume the unblock is coming
-> > from the schedule_work, but you're still hanging the rest of the system
-> > waiting for this on a bootup.
-> 
-> Yes, this works fine, but I don't like it.  The scenario is that until we 
-> get the SRP_LOGIN response back from the adapter, we don't know what the 
-> queue_limit is (can_queue).  If the mid-layer starts scanning and sending 
-> SCSI cmnds, we have to hold them up until we get that response back.  I've 
-> tried a number of approaches....originally I kicked off scsi_scan from the 
-> bottom half that gets the SRP_LOGIN_RSP.  However:
-> - The bottom half is executing in a work queue.  Calling scsi_scan() 
-> causes more requests to be sent and responses returned, which would like 
-> to execute in the bottom_half workqueue, except that the workqueue is busy 
-> because it is executing scsi_scan().
-> - I created a second workqueue just to handle scsi_scan(), but that was 
-> getting byzantine and Christoph threw up on it.
-> 
-> The only other approach I have considered is not doing the 
-> scsi_block_requests(), but waiting on a completion before issuing 
-> scsi_scan() and posting the completion when the SRP_LOGIN_RSP is received.
+The attached patch built against 2.6.4 does not subtract
+bytes for non-blk_pc_requests.
 
-I don't quite follow this.  SCSI uses a softirq in 2.6, so there are no
-bottom half scheduling issues for us at all.
 
-Hanging the boot sequence like this waiting for a login isn't
-acceptable.
+On a related note I was wondering if the following is a
+bug or feature. At the bottom of scsi_io_completion, it calls
+scsi_end_request on the bytes for the current buffer.
+The comments indicate this is to handle improperly reported
+medium errors, but commands scsi_decide_disposition
+determined should not be retried end up getting
+requeued minus the current buffer.
 
-As I see it, the preferred option would be simply to trigger a scan of
-the device from user land using the scsi_host class, so dispense with
-the scsi_scan_host() altogether.
+Thanks
 
-James
+Mike Christie
 
+--------------040000050600070907030603
+Content-Type: text/plain;
+ name="calc-leftover.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="calc-leftover.patch"
+
+--- linux-2.6.4-work/drivers/scsi/scsi_lib.c	2004-03-10 18:55:27.000000000 -0800
++++ linux-2.6.4-scsi/drivers/scsi/scsi_lib.c	2004-03-11 15:25:11.722261524 -0800
+@@ -504,7 +504,7 @@ static struct scsi_cmnd *scsi_end_reques
+ 	 * to queue the remainder of them.
+ 	 */
+ 	if (end_that_request_chunk(req, uptodate, bytes)) {
+-		int leftover = (req->hard_nr_sectors << 9) - bytes;
++		int leftover = req->hard_nr_sectors << 9;
+ 
+ 		if (blk_pc_request(req))
+ 			leftover = req->data_len - bytes;
+
+--------------040000050600070907030603--
 
