@@ -1,67 +1,59 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: sense visible despite ide-floppy in 2.6 maybe
-Date: Sun, 13 Jun 2004 22:00:48 +0200
+From: Mike Christie <mikenc@us.ibm.com>
+Subject: Re: [PATCH RFC 1/3] add fc transport events
+Date: Sun, 13 Jun 2004 13:44:58 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040613200048.GB2566@suse.de>
-References: <1086710016.3647.4.camel@patibmrh9> <40C8FB79.1050706@torque.net>
+Message-ID: <40CCBCCA.1040302@us.ibm.com>
+References: <40B597F5.2030501@cs.wisc.edu> <1087088793.1730.19.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:28362 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S265258AbUFMUAx (ORCPT
+Received: from e2.ny.us.ibm.com ([32.97.182.102]:45288 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261156AbUFMUq7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Jun 2004 16:00:53 -0400
-Content-Disposition: inline
-In-Reply-To: <40C8FB79.1050706@torque.net>
+	Sun, 13 Jun 2004 16:46:59 -0400
+In-Reply-To: <1087088793.1730.19.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Pat LaVarre <p.lavarre@ieee.org>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, Jun 11 2004, Douglas Gilbert wrote:
-> Pat LaVarre wrote:
-> >Doug G:
-> >
-> >Did I do something wrong, or does "everyone know" already,
-> >
-> >SCSI pass thru in 2.6 omits ide-floppy, except if we do resort to the
-> >ide-scsi deprecated there?
+James Bottomley wrote:
+> On Thu, 2004-05-27 at 03:25, Mike Christie wrote:
 > 
-> Pat,
-> In lk 2.6 the ide-scsi driver is "deprecated" for cd/dvd device types
-> but not other device types that use the ATAPI protocol. The ide-scsi
-
-Direct-device is still clearly superior. ide-scsi is deprecated for any
-ATAPI type device using SG_IO, other uses may vary.
-
-> Anyway ide-scsi probably needs some repair work in lk 2.6. Both
-> Willem Riede and I have tried. IMO the ide-scsi driver looks ok
-> from the scsi subsystem side ....
-
-Should work since months.
-
-> >Or more specifically,
-> >
-> >Can ioctl SG_IO fetch the offset 7 Additional Length field of op x03
-> >"REQUEST SENSE" data?
-> >
-> >Naively I thought yes of course, I know that works with /dev/scd$n.
-> >
-> >But then I tried a /dev/hd$v ide-floppy.  No joy.  perror tells me ioctl
-> >SG_IO fails via "Invalid argument", dmesg has no comment.  sg_scan you
-> >know.  ~/bin/sgio source is the trivial exercise quoted in source far
-> >below, specifically with an O_NONBLOCK|O_RDWR open as you can see.
+>>01-add-host-transport-classdev.patch - adds the transport class_device to
+>>the scsi_host structure.
 > 
-> My method with the SG_IO ioctl was to yield errnos
-> if the SCSI command could not be sent (or was rejected
-> at the point of transmission). So if there is an errno
-> there will be no sense buffer (or any other valid
-> response data). It is only when a response to the SCSI
-> command is received that errno will be clear (and the
-> various status variables should be checked).
+> 
+> I've been thinking about this quite a bit, and I like the general idea,
+> I just have a quibble with the implementation.
+> 
+> The main problem is the adding of a kobject to complement your host
+> transport class (and the device transport class).  I don't think we need
 
-The issue here is that ide-floppy doesn't grok REQ_BLOCK_PC requests
-correctly, so when SG_IO generates them they are failed.
+I am not adding a host and a device transport class. I am structuring 
+things so there is a single fc transport class.
 
--- 
-Jens Axboe
+> to do this since, like the transport classes fall into either host or
+> device objects, so the events are similarly divided; thus, we should be
+> able to trigger the hotplug events through the host or device kobject
+> (that come with the embedded struct device) rather than adding another
+> kobject for the purpose.
 
+The kobject I added to the scsi_device replaced the class_device (and 
+its kobject) we were previously using for the device oriented transport 
+class. I did this only because I wanted the scsi device's parent to be 
+the host. In my patch, I then added a class_device to the host becuase 
+the host's parent was the "FC Class".
+
+There is no technical argument why they couldn't be coded the way you 
+described. My patch just has the FC Class, where under it the device, 
+host and whatever objects arise are set up as parent/children to reflect 
+how SCSI/FC and the kernel structures really were.
+
+It does not make a difference to me. It is easier to code just having a 
+fc_host_transport_class and a fc_device_transport_class. It seemed like 
+a waste to add more classes and doing the symlinks when you can just 
+restructure things though.
+
+
+Mike
