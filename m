@@ -1,120 +1,66 @@
-From: Jason Harrop <jharrop@speedlegal.com>
-Subject: Dell/Adaptec PERC3/Di crashes, even with kernel 2.4.25 and aacraid
- 1.1.5
-Date: Mon, 12 Apr 2004 14:47:52 +1000
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: tmscsim broken on amd64 with 2.6.5?
+Date: Mon, 12 Apr 2004 13:11:10 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <407A1F78.7040603@speedlegal.com>
-References: <407755DB.8000800@speedlegal.com>
+Message-ID: <Pine.LNX.4.44.0404121301110.2267-200000@poirot.grange>
+References: <200404111120.17574.info@roessner-net.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-1228362866-1081768169=:2267"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.xn.com.au ([203.89.254.34]:54463 "HELO ns.xn.com.au")
-	by vger.kernel.org with SMTP id S262754AbUDLExJ (ORCPT
+Received: from pop.gmx.net ([213.165.64.20]:14055 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S262862AbUDLLMP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Apr 2004 00:53:09 -0400
-In-Reply-To: <407755DB.8000800@speedlegal.com>
+	Mon, 12 Apr 2004 07:12:15 -0400
+In-Reply-To: <200404111120.17574.info@roessner-net.com>
+Content-ID: <Pine.LNX.4.44.0404121310070.2267@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-poweredge@dell.com
+To: Christian Roessner <info@roessner-net.com>
+Cc: linux-scsi@vger.kernel.org
 
-Crashed again :(
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
 
-It seems that the problem occurs when the cron daily jobs run.  It looks 
-like the system survived the cron daily job on April 11, but not April 12.
+---1463811839-1228362866-1081768169=:2267
+Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+Content-ID: <Pine.LNX.4.44.0404121310071.2267@poirot.grange>
 
-Its only since i upgraded to kernel 2.4.25 and aacraid 1.1.5 that i've 
-started to get anything like this in the logs.
+Hi
 
-Apr 11 04:02:01 promo syslogd 1.4.1: restart.
-Apr 12 04:03:02 promo kernel: aacraid: Host adapter reset request. SCSI 
-hang ?
-Apr 12 04:04:02 promo kernel: aacraid: SCSI bus appears hung
-Apr 12 04:04:12 promo kernel: scsi: device set offline - command error 
-recover failed: host 0 channel 0 id 0 lun 0
-Apr 12 04:04:12 promo kernel:  I/O error: dev 08:03, sector 20185272
-Apr 12 04:04:12 promo kernel:  I/O error: dev 08:03, sector 20185288
-Apr 12 04:04:12 promo kernel:  I/O error: dev 08:03, sector 20185304
-Apr 12 04:04:12 promo kernel:  I/O error: dev 08:03, sector 20185320
-Apr 12 04:04:12 promo kernel:  I/O error: dev 08:03, sector 20447272
+Can you try the attached patch, please. If it still doesn't work, could
+you add something like
+kern.*                          -/var/log/tmscsim.log
+to your /etc/syslog.conf, do killall -HUP syslogd, and send me the log
+starting from insertion of the module. Also a
+lspci -vvxxx -s 0000:01:07.0
+(I hope the syntax is correct for your platform).
 
-# ls /etc/cron.daily/
-00-logwatch  0anacron  inn-cron-expire  logrotate  makewhatis.cron  rpm 
-  slocate.cron  tmpwatch
-
-
-
-Any ideas what I should try next?
-
-thanks,
-
-Jason
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
 
+---1463811839-1228362866-1081768169=:2267
+Content-Type: TEXT/PLAIN; CHARSET=US-ASCII; NAME="tmscsim-ulong-io_port.patch"
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.LNX.4.44.0404121309290.2267@poirot.grange>
+Content-Description: 
+Content-Disposition: ATTACHMENT; FILENAME="tmscsim-ulong-io_port.patch"
 
+LS0tIGxpbnV4LTIuNi4zLmhhcmRsaW5rL2RyaXZlcnMvc2NzaS90bXNjc2lt
 
+LmN+CVNhdCBBcHIgMTAgMjM6MDg6MTUgMjAwNA0KKysrIGxpbnV4LTIuNi4z
 
-Jason Harrop wrote:
-> Dell 2650 BIOS A15
-> PERC3/Di firmware 3170
-> ext3 filesystem
-> 
-> It crashed less than 2 days after rebooting, which is less uptime than 
-> with RedHat kernel 2.4.18-14smp
-> 
-> See below for contents of log.
-> 
-> cheers,
-> 
-> Jason
-> 
-> --------------
-> 
-> Apr 10 04:03:51 promo kernel: aacraid: Host adapter reset request. SCSI 
-> hang ?
-> Apr 10 04:04:51 promo kernel: aacraid: SCSI bus appears hung
-> Apr 10 04:05:01 promo kernel: aacraid: Host adapter reset request. SCSI 
-> hang ?
-> Apr 10 04:06:01 promo kernel: aacraid: SCSI bus appears hung
-> Apr 10 04:06:11 promo kernel: aacraid: Host adapter reset request. SCSI 
-> hang ?
-> Apr 10 04:07:11 promo kernel: aacraid: SCSI bus appears hung
-> Apr 10 04:07:21 promo kernel: aacraid: Host adapter reset request. SCSI 
-> hang ?
-> Apr 10 04:08:21 promo kernel: aacraid: SCSI bus appears hung
-> Apr 10 04:08:31 promo kernel: aacraid: Host adapter reset request. SCSI 
-> hang ?
-> Apr 10 04:09:31 promo kernel: aacraid: SCSI bus appears hung
-> Apr 10 04:09:41 promo kernel: aacraid: Host adapter reset request. SCSI 
-> hang ?
-> Apr 10 04:10:41 promo kernel: aacraid: SCSI bus appears hung
-> Apr 10 04:10:51 promo kernel: aacraid: Host adapter reset request. SCSI 
-> hang ?
-> Apr 10 04:15:31 promo kernel: aacraid: SCSI bus appears hung
-> Apr 10 04:15:31 promo kernel: aacraid: Host adapter reset request. SCSI 
-> hang ?
-> Apr 10 04:15:31 promo kernel: aacraid: SCSI bus appears hung
-> Apr 10 04:15:31 promo kernel: aacraid: Host adapter reset request. SCSI 
-> hang ?
-> Apr 10 04:15:31 promo kernel: aacraid: SCSI bus appears hung
-> :
-> Apr 10 04:15:31 promo kernel: aacraid: Host adapter reset request. SCSI 
-> hang ?
-> Apr 10 04:15:31 promo kernel: aacraid: SCSI bus appears hung
-> Apr 10 04:15:31 promo kernel: scsi: device set offline - command error 
-> recover failed: host 0 channel 0 id 0 lun 0
-> Apr 10 04:15:31 promo kernel: SCSI disk error : host 0 channel 0 id 0 
-> lun 0 return code = 6000000
-> Apr 10 04:15:31 promo kernel:  I/O error: dev 08:03, sector 11014520
-> Apr 10 04:15:31 promo kernel:  I/O error: dev 08:03, sector 12058624
-> Apr 10 04:15:31 promo kernel:  I/O error: dev 08:03, sector 12058856
-> :
-> Apr 10 04:15:31 promo kernel:  I/O error: dev 08:03, sector 39846008
-> Apr 10 04:15:31 promo kernel:  I/O errev 08:03, sector 262368
-> :
-> Apr 10 04:15:31 promo kernel:  I/O error: dev 08:03, sector 19398840
-> Apr 10 04:15:31 promo kernel:  I/O error: dev 08:03, sector 19398856
-> Apr 10 04:15:31 promo kernel:  I/O error: dev 0 sector 9464
-> Apr 10 04:15:31 promo kernel:  I/O error: dev 08:03, sector 74856
-> 
-> 
+LmhhcmRsaW5rL2RyaXZlcnMvc2NzaS90bXNjc2ltLmMJTW9uIEFwciAxMiAx
 
+MzowMDowOCAyMDA0DQpAQCAtMjIyOCw3ICsyMjI4LDcgQEANCiB7DQogICAg
+
+IFBERVZERUNMMDsNCiAgICAgVUNIQVIgICBpcnE7DQotICAgIFVJTlQgICAg
+
+aW9fcG9ydDsNCisgICAgVUxPTkcgICBpb19wb3J0Ow0KIA0KICAgICAvL2Rj
+
+MzkwX3BTSFRfc3RhcnQgPSBwc2h0Ow0KICAgICBkYzM5MF9wQUNCX3N0YXJ0
+
+ID0gTlVMTDsNCg==
+---1463811839-1228362866-1081768169=:2267--
