@@ -1,112 +1,158 @@
-From: "Siddha, Suresh B" <suresh.b.siddha@intel.com>
-Subject: Re: [PATCH 2.4.30-pre3] x86_64: pci_alloc_consistent() match 2.6 implementation
-Date: Tue, 22 Mar 2005 13:51:32 -0800
-Message-ID: <20050322135132.A18592@unix-os.sc.intel.com>
-References: <20050318212344.GC26112@lists.us.dell.com> <20050319192645.GA3937@wotan.suse.de> <20050319221751.GA27863@lists.us.dell.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20050319221751.GA27863@lists.us.dell.com>; from Matt_Domsch@dell.com on Sat, Mar 19, 2005 at 04:17:51PM -0600
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@dell.com>
-Cc: Andi Kleen <ak@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH scsi-misc-2.6 00/08] scsi: small fixes & cleanups
+Date: Wed, 23 Mar 2005 11:14:19 +0900 (KST)
+Message-ID: <20050323021335.960F95F8@htj.dyndns.org>
+Content-Type: text/plain; charset=US-ASCII
+Received: from rproxy.gmail.com ([64.233.170.203]:8336 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262705AbVCWCOY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Mar 2005 21:14:24 -0500
+Received: by rproxy.gmail.com with SMTP id 40so186699rnz
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2005 18:14:24 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com, axboe@suse.de
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, Mar 19, 2005 at 04:17:51PM -0600, Matt Domsch wrote:
-> OK, then how's this for review?  Compiles clean, can't test it myself
-> for a few days.
-> 
-> -		int high = 0, mmu;
-> -		if (((unsigned long)virt_to_bus(memory) + size) > 0xffffffffUL)
-> -			high = 1;
-> -		mmu = high;
-> +		int high = (((unsigned long)virt_to_bus(memory) + size) & ~dma_mask) != 0;
-> +		int mmu = high;
+ Hello, James.
+ Hello, Jens.
 
-Documentation/DMA-mapping.txt says consistent DMA mapping interface will always 
-return SAC addressable DMA address. Your patch breaks this behavior.
-(Though I don't know the reason why this behavior is expected!)
+ These are series of small fixes & cleanups.  The last two patches
+deal with reference counting and hot unplugging oops.  Patches are
+against scsi-misc-2.6 tree (this is the devel tree, right?).
 
-Appended is a simple 2.4 patch which will sync the behavior with 2.6
+ Jens, please try #08 and tell me if you still get oops.  AFAICT,
+reference counting isn't the issue here.  We're over-counting not
+under-counting (see description of #07).
 
-thanks,
-suresh
+ All compile cleanly and I haven't found any problem yet.  USB
+hot-unplugging doesn't create oops or offline device anymore for me.
+
+[ Start of patch descriptions ]
+
+01_scsi_remove_scsi_release_buffers.patch
+	: remove unused bounce-buffer release path
+
+	Buffer bouncing hasn't been done inside the scsi midlayer for
+	quite sometime now, but bounce-buffer release paths are still
+	around.  This patch removes these unused paths.	
+
+02_scsi_no_special_on_requeue.patch
+	: don't use blk_insert_request() for requeueing
+
+	blk_insert_request() has 'reinsert' argument, which, when set,
+	turns on REQ_SPECIAL and REQ_SOFTBARRIER and requeues the
+	request.  SCSI midlayer was the only user of this feature and
+	all requeued requests become special requests defeating
+	quiesce state.  This patch makes scsi midlayer use
+	blk_requeue_request() for requeueing and removes 'reinsert'
+	feature from blk_insert_request().
+
+	Note: In drivers/scsi/scsi_lib.c, scsi_single_lun_run() and
+	scsi_run_queue() are moved upward unchanged.
+
+03_scsi_remove_internal_timeout.patch
+	: remove unused scsi_cmnd->internal_timeout field
+
+	scsi_cmnd->internal_timeout field doesn't have any meaning
+	anymore.  Kill the field.
+
+04_scsi_remove_volatile.patch
+	: remove meaningless volatile qualifiers from structure definitions
+
+	scsi_device->device_busy, Scsi_Host->host_busy and
+	->host_failed have volatile qualifiers, but the qualifiers
+	don't serve any purpose.  Kill them.  While at it, protect
+	->host_failed update in scsi_error for consistency and clarity.
+
+05_scsi_timer_cleanup.patch
+	: remove a timer race from scsi_queue_insert() and cleanup timer
+
+	scsi_queue_insert() has four callers.  Three callers call with
+	timer disabled and one (the second invocation in
+	scsi_dispatch_cmd()) calls with timer activated.
+	scsi_queue_insert() used to always call scsi_delete_timer()
+	and ignore the return value.  This results in race with timer
+	expiration.  Remove scsi_delete_timer() call from
+	scsi_queue_insert() and make the caller delete timer and check
+	the return value.
+
+	While at it, as, once a scsi timer is added, it should expire
+	or be deleted before reused, make scsi_add_timer() strict
+	about timer reuses.  Now timer expiration function clears
+	->function and all timer deletion should go through
+	scsi_delete_timer().  Also, remove bogus ->eh_action tests
+	from scsi_eh_{done|times_out} functions.  The condition is
+	always true and the test is somewhat misleading.
+
+06_scsi_remove_serial_number_at_timeout.patch
+	: remove meaningless scsi_cmnd->serial_number_at_timeout field
+
+	scsi_cmnd->serial_number_at_timeout doesn't serve any purpose
+	anymore.  All serial_number == serial_number_at_timeout tests
+	are always true in abort callbacks.  Kill the field.  Also, as
+	->pid always equals ->serial_number and ->serial_number
+	doesn't have any special meaning anymore, update comments
+	above ->serial_number accordingly.  Once we remove all uses of
+	this field from all lldd's, this field should go.
+
+07_scsi_refcnt_cleanup.patch
+	: remove bogus {get|put}_device() calls
+
+	SCSI request submission paths can be categorized like the
+	following.
+
+	* through high-level driver (sd, st, sg...)
+		+ requests (fs / pc)
+		+ ioctls
+		+ flushes (issue_flush / barrier rqs)
+		+ backing dev (unplug fn / field referencing)
+		+ high-level specific (init / revalidation...)
+	* through scsi-midlayer
+		+ midlevel specific (init...)
+		+ transport specific (domain validations...)
+
+	All accesses either
+
+	* open high-level driver before submitting requests and
+	  closes with no request left.
+	* get_device() before submitting requests and put_device()
+          with no request left.
+
+	So, basically, SCSI high-level object (scsi_disk) and
+	mid-level object (scsi_device) are reference counted by users,
+	not the requests they submit.  Reference count cannot go zero
+	with active users and users cannot access the object once the
+	reference count reaches zero.
+
+	So, the {get/put}_device() calls in scsi_get_command() and
+	scsi_request_fn() are bogus and misleading.  In addition,
+	get_device() cannot synchronize 1->0 and 0->1 transitions and
+	always returns the device pointer given as the argument.  The
+	== NULL tests are just misleading.
+
+08_scsi_hot_unplug_fix.patch
+	: fix hot unplug sequence
+
+	When hot-unplugging using scsi_remove_host() function (as usb
+	does), scsi_forget_host() used to be called before
+	scsi_host_cancel().  So, the device gets removed first without
+	request cleanup and scsi_host_cancel() never gets to call
+	scsi_device_cancel() on the removed devices.  This results in
+	premature completion of hot-unplugging process with active
+	requests left in queue, eventually leading to hang/offlined
+	device or oops when the active command times out.
+
+	This patch makes scsi_remove_host() call scsi_host_cancel()
+	first such that the host is first transited into cancel state
+	and all requests of all devices are killed, and then, the
+	devices are removed.  This patch fixes the oops in eh after
+	hot-unplugging bug.
+
+[ End of patch descriptions ]
+
+ Thanks a lot.
+
 --
+tejun
 
-Sync 2.4 pci_alloc_consistent behavior with 2.6
-
-Signed-off-by: Suresh Siddha <suresh.b.siddha@intel.com>
-
-
-diff -Nru linux-2.4.29/arch/ia64/lib/swiotlb.c linux-2.4.29-swiotlb/arch/ia64/lib/swiotlb.c
---- linux-2.4.29/arch/ia64/lib/swiotlb.c	2003-08-25 04:44:39.000000000 -0700
-+++ linux-2.4.29-swiotlb/arch/ia64/lib/swiotlb.c	2005-03-22 10:51:21.968565920 -0800
-@@ -50,13 +50,13 @@
-  * Used to do a quick range check in swiotlb_unmap_single and swiotlb_sync_single, to see
-  * if the memory was in fact allocated by this API.
-  */
--static char *io_tlb_start, *io_tlb_end;
-+char *io_tlb_start, *io_tlb_end;
- 
- /*
-  * The number of IO TLB blocks (in groups of 64) betweeen io_tlb_start and io_tlb_end.
-  * This is command line adjustable via setup_io_tlb_npages.
-  */
--static unsigned long io_tlb_nslabs = 1024;
-+static unsigned long io_tlb_nslabs = 32768;
- 
- /*
-  * This is a free list describing the number of free entries available from each index
-diff -Nru linux-2.4.29/arch/x86_64/kernel/pci-gart.c linux-2.4.29-swiotlb/arch/x86_64/kernel/pci-gart.c
---- linux-2.4.29/arch/x86_64/kernel/pci-gart.c	2004-08-07 16:26:04.000000000 -0700
-+++ linux-2.4.29-swiotlb/arch/x86_64/kernel/pci-gart.c	2005-03-22 10:38:45.211610464 -0800
-@@ -155,7 +155,7 @@
- 	int i;
- 	unsigned long iommu_page;
- 
--	if (hwdev == NULL || hwdev->dma_mask < 0xffffffff || no_iommu)
-+	if (hwdev == NULL || hwdev->dma_mask < 0xffffffff || (no_iommu && !swiotlb))
- 		gfp |= GFP_DMA;
- 
- 	/* 
-@@ -174,6 +174,22 @@
- 		if (force_mmu && !(gfp & GFP_DMA)) 
- 			mmu = 1;
- 		if (no_iommu) { 
-+#ifdef CONFIG_SWIOTLB
-+			if (swiotlb && high && hwdev) {
-+				unsigned long dma_mask = 0;
-+				if (hwdev->dma_mask == ~0UL) {
-+					hwdev->dma_mask = 0xffffffff;
-+					dma_mask = ~0UL;
-+				}
-+				*dma_handle = swiotlb_map_single(hwdev, memory, size,
-+						   		 PCI_DMA_FROMDEVICE);
-+				if (dma_mask)
-+					hwdev->dma_mask = dma_mask;
-+				memset(phys_to_virt(*dma_handle), 0, size); 
-+				free_pages((unsigned long)memory, get_order(size));
-+				return phys_to_virt(*dma_handle);
-+			}
-+#endif
- 			if (high) goto error;
- 			mmu = 0; 
- 		} 	
-@@ -218,8 +234,16 @@
- 			 void *vaddr, dma_addr_t bus)
- {
- 	unsigned long iommu_page;
--
-+ 	extern  char *io_tlb_start, *io_tlb_end;
-+ 
- 	size = round_up(size, PAGE_SIZE); 
-+#ifdef CONFIG_SWIOTLB
-+ 	if (swiotlb && vaddr >= (void *)io_tlb_start &&
-+ 	    vaddr < (void *)io_tlb_end) {
-+ 		swiotlb_unmap_single (hwdev, bus, size, PCI_DMA_TODEVICE);
-+ 		return;
-+ 	}
-+#endif
- 	if (bus >= iommu_bus_base && bus < iommu_bus_base + iommu_size) { 
- 		unsigned pages = size >> PAGE_SHIFT;
- 		iommu_page = (bus - iommu_bus_base) >> PAGE_SHIFT;
