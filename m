@@ -1,33 +1,62 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Mark Haverkamp <markh@osdl.org>
 Subject: Re: Problem with aacraid driver in 2.5.63-bk-latest
-Date: 13 Mar 2003 00:18:02 +0000
+Date: 12 Mar 2003 15:06:21 -0800
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1047514681.23725.35.camel@irongate.swansea.linux.org.uk>
+Message-ID: <1047510381.12193.28.camel@markh1.pdx.osdl.net>
 References: <20030228133037.GB7473@jiffies.dk>
-	 <1047510381.12193.28.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <1047510381.12193.28.camel@markh1.pdx.osdl.net>
-To: Mark Haverkamp <markh@osdl.org>
-Cc: Christoffer Hall-Frederiksen <hall@jiffies.dk>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux aacraid devel <linux-aacraid-devel@dell.com>
+In-Reply-To: <20030228133037.GB7473@jiffies.dk>
+To: Christoffer Hall-Frederiksen <hall@jiffies.dk>
+Cc: linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux aacraid devel <linux-aacraid-devel@dell.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2003-03-12 at 23:06, Mark Haverkamp wrote:
-> During probe, scsi_alloc_sdev is called.  It calls
-> scsi_adjust_queue_depth with the cmd_per_lun value. 
-> scsi_adjust_queue_depth returns without doing anything if the tags value
-> is greater than 256.  This leaves the Scsi_Device queue_depth at zero. 
-> Later when an I/O is queued, scsi_request_fn checks for device_busy >=
-> queue_depth.  If so, the function does a break and exits.  This is where
-> it hangs.
+On Fri, 2003-02-28 at 05:30, Christoffer Hall-Frederiksen wrote:
+> I have a dell poweredge 1650 with a perc3/DI controller. When the
+> AACRAID driver loads it stops with the following lines:
 > 
-> To get things to load I set cmd_per_lun to 256.  I don't know if the is
-> the correct way to deal with the problem.  Maybe someone else can say
-> something about that.
+> AAC0: kernel 2.7.4 build 3170
+> AAC0: monitor 2.7.4 build 3170
+> AAC0: bios 2.7.0 build 3170
+> AAC0: serial 0b9c810d3
+> scsi0 : percraid
+> 
 
-If the SCSI layer is trying to be clever by ignoring the requested 512
-then thats the actual problem. 512 is the right value because its not
-really a disk you are talking to on the main channel. So the scsi layer
-ought to honour it.
+We just ran into this too at osdl.  I have something that gets the
+driver to load, but I'm not sure what the right thing is to do.
+
+The cmd_per_lun element of the driver_template is set to
+AAC_NUM_IO_FIB.  This is 512. 
+
+During probe, scsi_alloc_sdev is called.  It calls
+scsi_adjust_queue_depth with the cmd_per_lun value. 
+scsi_adjust_queue_depth returns without doing anything if the tags value
+is greater than 256.  This leaves the Scsi_Device queue_depth at zero. 
+Later when an I/O is queued, scsi_request_fn checks for device_busy >=
+queue_depth.  If so, the function does a break and exits.  This is where
+it hangs.
+
+To get things to load I set cmd_per_lun to 256.  I don't know if the is
+the correct way to deal with the problem.  Maybe someone else can say
+something about that.
+
+
+
+===== drivers/scsi/aacraid/linit.c 1.12 vs edited =====
+--- 1.12/drivers/scsi/aacraid/linit.c	Mon Feb 24 13:03:30 2003
++++ edited/drivers/scsi/aacraid/linit.c	Wed Mar 12 14:32:18 2003
+@@ -693,7 +693,7 @@
+ 	this_id:        	16,
+ 	sg_tablesize:   	16,
+ 	max_sectors:    	128,
+-	cmd_per_lun:    	AAC_NUM_IO_FIB,
++	cmd_per_lun:    	256,
+ 	eh_abort_handler:       aac_eh_abort,
+ 	eh_device_reset_handler:aac_eh_device_reset,
+ 	eh_bus_reset_handler:	aac_eh_bus_reset,
+
+
+-- 
+Mark Haverkamp <markh@osdl.org>
