@@ -1,62 +1,49 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Is there a grand plan for FC failover?
-Date: 28 Jan 2004 10:57:29 -0600
+From: Willem Riede <wrlk@riede.org>
+Subject: Re: Badness in scsi_single_lun_run at /root/scsi/scsi_lib.c:344
+Date: Wed, 28 Jan 2004 12:36:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1075309052.2254.6.camel@mulgrave>
-References: <401521A7.5030808@thekelleys.org.uk>
-	<1075131446.2290.29.camel@mulgrave>
-	<20040128100236.D11527@vienna.EGENERA.COM>
+Message-ID: <20040128173609.GE23308@serve.riede.org>
+References: <20040127003244.GM23308@serve.riede.org> <20040128033041.GY23308@serve.riede.org> <20040128084142.A4835@beaverton.ibm.com>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:63630 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S266090AbUA1Q5j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Jan 2004 11:57:39 -0500
-In-Reply-To: <20040128100236.D11527@vienna.EGENERA.COM>
+Received: from rwcrmhc11.comcast.net ([204.127.198.35]:17853 "EHLO
+	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
+	id S266022AbUA1RgM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Jan 2004 12:36:12 -0500
+Content-Disposition: inline
+In-Reply-To: <20040128084142.A4835@beaverton.ibm.com> (from patmans@us.ibm.com on Wed, Jan 28, 2004 at 11:41:43 -0500)
 List-Id: linux-scsi@vger.kernel.org
-To: "Philip R. Auld" <pauld@egenera.com>
-Cc: Simon Kelley <simon@thekelleys.org.uk>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2004-01-28 at 09:02, Philip R. Auld wrote:
-> 	1) load balancing when possible: it's not enough to be just a 
-> 		failover mechanism.
+On 2004.01.28 11:41, Patrick Mansfield wrote:
+> On Tue, Jan 27, 2004 at 10:30:41PM -0500, Willem Riede wrote:
+> > On 2004.01.26 19:32, Willem Riede wrote:
+> > > Jan 26 17:13:23 fallguy kernel: Badness in scsi_single_lun_run at /root/scsi/scsi_lib.c:344
+> 
+> I was trying to figure out what happened, apparently I missed a check when
+> splitting the locks up and removing a lock hiearchy.
+> 
+> We should only clear starget_sdev_user when the sdev has no more IO. We
+> want to run (a bunch of) IO for a given starget_sdev_user, and when there is
+> no more IO, clear starget_sdev_user so someone else has a chance to run.
+> 
+> I'm trying to figure out a fix without adding any lock hiearchy. queue_lock
+> protects device_busy, but host_lock protects starget_sdev_user.
 
-For first out, a failover target supplies most of the needs.  Nothing
-prevents an aggregation target being added later, but failover is
-essential.
+Anything I can do to help (if only to test when you have an idea)?
 
->         2) requiring a userspace program to execute for failover is 
-> 	problematic when it could be the root disk that needs 
-> 	failing over.
+> The single lun devices and code are annoying :-(
+> 
+> Do you know if the single lun code is for performance, or because of
+> hardware limitations - that is we don't want a disc change between IO, or
+> does the device just fail?
 
-Userspace is required for *configuration* not failover.  The path
-targets failover automatically as they see I/O down particular paths
-timing out or failing.  That being said, nothing prevents async
-notifications via hotplug also triggering a failover (rather than having
-to wait for timeout etc) but it's not required.
+In the case of the NEC PD/CD, it is a hardware limitation. You can only
+have one disc inserted at a time, either CD or PD. Mixing IO will fail
+for the absent media type.
 
->  	3) Handling partitions is a problem.
-
-It is? How? The block approach can sit either above or below partitions
-(assuming a slightly more flexible handling of partitions that dm
-provides).
-
-> I see multipath and md/RAID as two different animals. Multipathing is 
-> multiple ways to reach the same physical block. That is it's under 
-> the logical layer. While RAID is multiple ways to reach the same 
-> logical block. It's basically many-to-one vs one-to-many. Having 
-> multiple physical paths to a logical partition is a little 
-> counter-intuitive.
-
-Nothing in the discussion assumed them to be similar.  The notes were
-that md already had a multi-path target, and that translated error
-indications would be useful to software raid.  Thus designing the
-fastfail to cater to both looks like a good idea, but that's just good
-design.  Robust multi-pathing and raid will be built on top of
-scsi/block fastfail.
-
-James
-
-
+Regards, Willem Riede.
