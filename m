@@ -1,31 +1,42 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 'modprobe mptctl' fails after 'modprobe aic79xx'
-Date: Mon, 25 Oct 2004 13:50:46 +0100
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [patch 08/10]  scsi/dpt_i2o:
+	replace	schedule_timeout()withmsleep_interruptible()
+Date: 25 Oct 2004 10:19:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041025125046.GA32554@infradead.org>
-References: <20041025105112.GQ7803@orion.czech.sun.com>
+Message-ID: <1098713947.2023.13.camel@mulgrave>
+References: <60807403EABEB443939A5A7AA8A7458B40B9B3@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([81.187.226.98]:50700 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S261790AbUJYMur (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Oct 2004 08:50:47 -0400
-Content-Disposition: inline
-In-Reply-To: <20041025105112.GQ7803@orion.czech.sun.com>
+Received: from stat16.steeleye.com ([209.192.50.48]:14248 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261748AbUJYOTS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Oct 2004 10:19:18 -0400
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458B40B9B3@otce2k01.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Lana <jan.lana@Sun.COM>
-Cc: linux-scsi@vger.kernel.org, Tomas Vesely <Tomas.Vesely@Sun.COM>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: maximilian attems <janitor@sternwelten.at>, Nishanth Aravamudan <nacc@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Oct 25, 2004 at 12:51:12PM +0200, Jan Lana wrote:
-> Hi,
+On Mon, 2004-10-25 at 07:30, Salyzyn, Mark wrote:
+> Not quite ... The value of 0 is meant to trigger never timing out on the
+> request (#define FOREVER (0) in dpti.h). The code change you have will
+> mean that the code will immediately timeout, not the intent.
 > 
-> I have found a strange behavior of module mptbase (Fusion MPT (base + ScsiHost) drivers).
-> There is a bugreport:
-> 
-> 
-> [1.] One line summary of the problem:    
->      'modprobe mptbase' after 'modprobe aic79xx' fails.
+> There is a wakeup to the thread issued by the interrupt via a WAIT
+> QUEUE, if the sequence of TASK_INTERRUPTIBLE/schedule() did not work, it
+> would not explain the successful operation of the driver during
+> initialization time.
 
-This should be fixed in 2.6.10-rc1.
+So this is basically an open coded interruptible_sleep_on_timeout()? 
+Why not replace it with this? (although this will excite the janitors
+since sleep_on is deprecated in all its forms).
+
+Also, if you define your FOREVER to be MAX_SCHEDULE_TIMEOUT, you don't
+need to special case this.
+
+James
+
+
+
 
