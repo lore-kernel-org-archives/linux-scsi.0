@@ -1,31 +1,34 @@
-From: "Dee-Ann LeBlanc" <dee@renaissoft.com>
-Subject: Linux SCSI subsystem interview
-Date: Wed, 21 Aug 2002 22:39:24 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] 2.5.31 scsi_error.c cleanup
+Date: Thu, 22 Aug 2002 10:05:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <NDEGLAOMLHFCMKFOMBEPEEDJDPAA.dee@renaissoft.com>
+Message-ID: <200208221405.g7ME5XE02754@localhost.localdomain>
+References: <andmike@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from catherine (h24-78-231-159.vn.shawcable.net [24.78.231.159])
-	by michelangelo.renaissoft.com (8.12.2/8.12.2) with SMTP id g7M5a7xP007555
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2002 22:36:07 -0700
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA26329
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Aug 2002 07:05:36 -0700
+In-Reply-To: Message from Mike Anderson <andmike@us.ibm.com>
+   of "Mon, 12 Aug 2002 16:38:16 PDT." <20020812233815.GA1334@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi there. I thought I'd lurk on this list a bit before posting but it
-seems that the traffic isn't high, so that's a good thing. I'm working
-on an article about the Linux SCSI subsystem, about the perceived
-problems with it, the real problems with it, what's being done to
-address them, and so on. Is anyone here interested in talking about
-this with me? I'm happy to do it on the list, or privately through
-email: dee@renaissoft.com
+andmike@us.ibm.com said:
+> I did not change any of the current error policy. I would like to do
+> that in the future. 
 
+Looking through the patch, it seems you've changed the offline behaviour.  Now 
+if all error recovery fails, the machine will panic instead of just offlining 
+the failed device.  I know offlining has never worked correctly, because it 
+always seems to leave the system hanging, but it is a useful feature for large 
+machines with many SCSI attachements, could you look at trying to get it to 
+work corectly?
 
----
-Dee-Ann LeBlanc
-Computer Writer, Linux Specialist
-LinuxPlanet Reporter
-All new web site at http://www.Dee-AnnLeBlanc.com/
+Thanks,
+
+James
+
 
