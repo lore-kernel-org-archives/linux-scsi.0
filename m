@@ -1,94 +1,37 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: SCSI passthrough ioctl calls vs. sd/sg devices
-Date: Sun, 25 Apr 2004 16:49:45 +1000
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: [PATCH] sym53c500_cs PCMCIA SCSI driver (round 3 - the charm?)
+Date: Sun, 25 Apr 2004 08:36:11 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <408B5F89.1030403@torque.net>
-References: <519672568F040C41B6FAC21ADF51B18FEFBE@mailnode1.commstor.crossroads.com> <4089E7B2.5060803@torque.net> <Pine.LNX.4.58.0404240950330.7758@kai.makisara.local> <20040424124205.GW13443@serve.riede.org>
-Reply-To: dougg@torque.net
+Message-ID: <20040425083611.B18033@flint.arm.linux.org.uk>
+References: <20040420172447.A27454@infradead.org> <20040425030154.52120DBDB@gherkin.frus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:13841 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S261915AbUDYGtv
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 Apr 2004 02:49:51 -0400
-In-Reply-To: <20040424124205.GW13443@serve.riede.org>
+Received: from caramon.arm.linux.org.uk ([212.18.232.186]:52489 "EHLO
+	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
+	id S262864AbUDYHgT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 25 Apr 2004 03:36:19 -0400
+Content-Disposition: inline
+In-Reply-To: <20040425030154.52120DBDB@gherkin.frus.com>; from rct@gherkin.frus.com on Sat, Apr 24, 2004 at 10:01:54PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: osst@riede.org
-Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, Lee Xing <lxing@Crossroads.com>, linux-scsi@vger.kernel.org
+To: Bob Tracy <rct@gherkin.frus.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Willem Riede wrote:
-> On 2004.04.24 02:58, Kai Makisara wrote:
-> 
->>On Sat, 24 Apr 2004, Douglas Gilbert wrote:
->>
->>...
->>
->>>In the lk 2.6 series the SG_IO ioctl is available for block
->>>devices which include SCSI disks and ATAPI dvd/cd drives.
->>>The SG_IO ioctl is currently not available for SCSI char
->>>device drivers (e.g. st and osst) other than sg itself.
->>
->>SG_IO is available for st in current 2.6 (Patrick Mansfield added a few 
->>lines of code to st.c). Similar changes could be probably done to osst.
-> 
-> 
-> I'll be happy to do that (make the equivalent change to osst) if that's 
-> the best way to complete the SG_IO support.
+On Sat, Apr 24, 2004 at 10:01:54PM -0500, Bob Tracy wrote:
+> In addition to all the concerns Christoph raised in response to the
+> previous two submissions, there was an issue with the code for handling
+> a CS_EVENT_CARD_RESET event: the event handler was calling the bus_reset
+> function with a NULL scsi_cmnd argument.
 
-Willem,
-The st mods for SG_IO seem to be working fine in lk 2.6.6-rc2.
-See st's call to scsi_cmd_ioctl(). [As well as calling the SG_IO
-ioctl, CDROM_SEND_PACKET is also available?! ]
+Hmm, so what happens if you're in the middle of a transaction, and
+you receive a CS_EVENT_CARD_RESET.  What happens to the command in
+progress ?
 
-So a recent version of sg3_utils (like version 1.06 beta on
-http://www.torque.net/sg ) can know use /dev/st* device
-names. For example:
+Sure, the hardware is reset to a sane state, but what about the
+software state in the driver?
 
-# sg_modes -6 /dev/st0
-     SONY      SDT-7000          0192   peripheral_type: tape [0x1]
-Mode parameter header from 6 byte MODE SENSE:
-   Mode data length=72, medium type=0x00, specific param=0x10, longlba=0
-   Block descriptor length=8
- > General mode parameter block descriptors:
-    Density code=0x13
-  00     13 00 00 00 00 00 02 00
-
- >> page_code: Disconnect-Reconnect, page_control: current
-  00     02 0e 00 00 00 00 00 00  00 00 01 ee 00 00 00 00
- >> page_code: Data Compression, page_control: current
-  00     0f 0e c0 80 00 00 00 20  00 00 00 20 00 00 00 00
- >> page_code: Device config, page_control: current
-  00     10 0e 08 00 00 00 00 32  60 00 18 00 00 00 00 00
- >> page_code: Medium Partition [1], page_control: current
-  00     11 0a 01 00 10 03 00 00  0e 73 00 00
-
-Also on that site is a beta of lsscsi version 0.12 for
-lk 2.6.6 :
-
-# lsscsi
-[3:0:6:0]    tape    SONY     SDT-7000         0192  /dev/st0
-[root@dink devices]# lsscsi -g
-[3:0:6:0]    tape    SONY     SDT-7000         0192  /dev/st0  /dev/sg0
-# lsscsi -l
-[3:0:6:0]    tape    SONY     SDT-7000         0192  /dev/st0
-   state=running queue_depth=1 scsi_level=3 type=1 device_blocked=0
-
-# lsscsi -H
-[3]    aha152x
-# lsscsi -Hv
-  sysfsroot: /sys
-[3]    aha152x
-   dir: /sys/class/scsi_host/host3
-   device dir:/sys/devices/platform/host3
-# lsscsi -Hl
-[3]    aha152x
-   cmd_per_lun=1    host_busy=0    sg_tablesize=255  unchecked_isa_dma=0
-
-
-
-Doug Gilbert
-
-
-
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 PCMCIA      - http://pcmcia.arm.linux.org.uk/
+                 2.6 Serial core
