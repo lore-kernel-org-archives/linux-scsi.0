@@ -1,67 +1,148 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: lots and lots of disks again
-Date: Tue, 10 Feb 2004 22:34:38 +0100
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] dpt_i2o changes for 2.6.2 kernel in support of 64 bit and bitrot (part 1)
+Date: Tue, 10 Feb 2004 16:47:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040210213438.GV4010@tpkurt.garloff.de>
-References: <20040204024512.5bf68428.akpm@osdl.org> <20040210110417.GB4010@tpkurt.garloff.de> <20040210112658.GC4010@tpkurt.garloff.de> <20040210133932.A3870@infradead.org> <20040210154751.GH4010@tpkurt.garloff.de> <20040210155203.A5238@infradead.org> <20040210160803.GL4010@tpkurt.garloff.de> <20040210211002.A1534@pclin040.win.tue.nl> <20040210205833.GT4010@tpkurt.garloff.de> <20040210212113.GG21151@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F255028@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="pDtNmxPr5KTxcQ6Z"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:17582 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S262078AbUBJVem (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Feb 2004 16:34:42 -0500
-Content-Disposition: inline
-In-Reply-To: <20040210212113.GG21151@parcelfarce.linux.theplanet.co.uk>
+Received: from magic.adaptec.com ([216.52.22.17]:46530 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261506AbUBJVr7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Feb 2004 16:47:59 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: viro@parcelfarce.linux.theplanet.co.uk
-Cc: Andries Brouwer <aebr@win.tue.nl>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, Badari Pulavarty <pbadari@us.ibm.com>, Matthew Wilcox <willy@debian.org>, James Bottomley <James.Bottomley@steeleye.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
+
+Responses embedded with [MS]
+
+Thanks!
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: Christoph Hellwig [mailto:hch@infradead.org] 
+Sent: Tuesday, February 10, 2004 4:22 PM
+To: Salyzyn, Mark
+Cc: linux-scsi
+Subject: Re: [PATCH] dpt_i2o changes for 2.6.2 kernel in support of 64
+bit and bitrot (part 1)
+
++#if (defined(__x86_64__))
++# include <asm-x86_64/ioctl32.h>
++#endif
+
+	This is broken.  Please use the generic ioctl32 facilities.
+
+[MS] baby steps perhaps. This *worked* with the 32 bit configuration
+utilities under an AMD-64 machine using a 2.4 based kernel and we are
+merely seeing me poluting code coming in from the 2.4 tree. I had a ToDo
+in order to investigate IA64 support and application function under the
+2.6 kernel.
+
+-static struct i2o_sys_tbl *sys_tbl = NULL;
++static struct i2o_sys_tbl *sys_tbl_va = NULL;
+
+	No need to NULL-initialize this..
+[MS] no disagreement here!
+
++// If this is driver is embedded in the kernel this define
++// should be moved to include/linux/proc_fs.h as an emumerated type
++#define PROC_SCSI_DPT_I2O  0
++struct proc_dir_entry proc_scsi_dptI2O = {
++	PROC_SCSI_DPT_I2O, 7, DPT_DRIVER,
++	S_IFDIR | S_IRUGO | S_IXUGO, 2,
++	0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL
++};
+
+	This seems unused, and if it wasn't it would be a bug.
+
+ 	PINFO("Detecting Adaptec I2O RAID controllers...\n");
+
+[MS] I am unsure of the origin of this change, could be dropped I am
+sure.
 
 
---pDtNmxPr5KTxcQ6Z
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+-        /* search for all Adatpec I2O RAID cards */
+-	while ((pDev = pci_find_device( PCI_DPT_VENDOR_ID, PCI_ANY_ID,
+pDev))) {
+-		if(pDev->device == PCI_DPT_DEVICE_ID ||
+-		   pDev->device == PCI_DPT_RAPTOR_DEVICE_ID){
++        /* search for all Adaptec I2O RAID cards */
++	while ((pDev = pci_find_device( dptids[0].vendor, PCI_ANY_ID,
+pDev))) {
++		if(pDev->device == dptids[0].device ||
++		   pDev->device == dptids[1].device){
 
-Hi,
+	This screams for using a proper pci_driver interface..
+[MS] on the to-do list. This patch is already big enough just to '64bit'
+enable the driver.
 
-On Tue, Feb 10, 2004 at 09:21:13PM +0000, viro@parcelfarce.linux.theplanet.=
-co.uk wrote:
-> On Tue, Feb 10, 2004 at 09:58:33PM +0100, Kurt Garloff wrote:
-> > We maintain backwards compatibility.
-> > We need some bit shuffling and the rest is straightforward.
->=20
-> Bit shuffling where?  Since partitioning does *not* reach the driver (nor
-> should it), I really wonder where exactly do you expect that turd to land.
++		/*
++		 *	We are called before the host & host lock has
+been
++		 * assigned, and may be called with, or without, the
+host lock
++		 * held. We need to free the lock, if held, before going
++		 * to sleep.
++		 */
++		if ((pHba->host != NULL) /* Sad */
++		 && (spin_is_locked(pHba->host->host_lock))) {
 
-We always needed to tell the gendisk code what part of the minor refers
-to disks and which one to partitions. The knowledge is there, like it or
-not.
+	This is bogus as hell.  Who said you took the lock?
+[MS] without this code (under the 2.4 tree) I had a lockup. I did not
+check that this problem existed under the 2.6 tree, simply mimicking the
+innocuous 2.4ism. This would need to be tested when removed
 
-> > I don't see what's crappy with the suggestion. Tell us!
->=20
-> Putting partitioning crap back into driver.
++	case DPT_TARGET_BUSY & 0xFFFF:
++	case DPT_TARGET_BUSY:
++	{
++		TARGET_BUSY_T busy;
++		struct adpt_device* d;
++
++		if (copy_from_user((void*)&busy, (void*)arg,
+sizeof(TARGET_BUSY_T))) {
++			return -EFAULT;
++		}
++
++		d = adpt_find_device(pHba, busy.channel, busy.id,
+busy.lun);
++		if(d == NULL){
++			return -ENODEV;
++		}
++		busy.isBusy = ((d->pScsi_dev)
++		 && (d->pScsi_dev->device_busy /* Imperfect */
++		  || test_bit(SHOST_RECOVERY,
+&pHba->host->shost_state)));
++		if (copy_to_user ((char*)arg, &busy, sizeof(busy))) {
++			return -EFAULT;
++		}
++		break;
++	}
 
-Oh well, are you happier if we declare the two bits reserved instead
-of having the hope of using them to extend the number of partitions per=20
-disk to 64 per disk some day?
+	This ioctl was removed because it's broken.  Don't readd it.
+[MS] the applications need this ... without this the user is *not*
+warned when they perform dangerous raid manipulations when the device is
+in use, or for that matter currently in error recovery. Suggestions to
+re-enable this support in the 2.6 tree?
 
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
++		shost_for_each_device(d, pHba->host) {
++			unsigned long flags;
++			spin_lock_irqsave(&d->list_lock, flags);
++			list_for_each_entry(cmd, &d->cmd_list, list) {
++				if (((u32)cmd->serial_number == context)
++				 || ((u32)cmd->serial_number_at_timeout
+== context)) {
++
+spin_unlock_irqrestore(&d->list_lock, flags);
++					return cmd;
 
---pDtNmxPr5KTxcQ6Z
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+	Where do release the reference to the scsi_device again?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
+[MS] Eeek. I may need some 'splaining here. Am I using the
+shost_for_each_device interface incorrectly? We are using
+__shost_for_each_device in the aacraid driver ...
 
-iD8DBQFAKU5txmLh6hyYd04RApR2AKCMHR5Fi6Qf0DcAxDaaVJN5RsLj9QCeP0hv
-zQTimLjkccK+3qvCQiFmCs0=
-=M5VD
------END PGP SIGNATURE-----
-
---pDtNmxPr5KTxcQ6Z--
