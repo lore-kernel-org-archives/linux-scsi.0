@@ -1,9 +1,9 @@
 From: Luben Tuikov <luben@splentec.com>
-Subject: Re: [PATCH] 7/7 fix single_lun code for per-scsi_device queue_lock
-Date: Tue, 25 Mar 2003 16:23:41 -0500
+Subject: Re: [PATCH] 4/7 cleanup/consolidate code in scsi_request_fn
+Date: Tue, 25 Mar 2003 16:32:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E80C8DD.4060803@splentec.com>
-References: <20030324175337.A14957@beaverton.ibm.com> <20030324175422.A14996@beaverton.ibm.com> <20030324180227.A15047@beaverton.ibm.com> <20030324180247.B15047@beaverton.ibm.com> <20030324180304.C15047@beaverton.ibm.com> <20030324180325.D15047@beaverton.ibm.com> <20030324180341.E15047@beaverton.ibm.com> <20030324180404.F15047@beaverton.ibm.com>
+Message-ID: <3E80CB02.8010909@splentec.com>
+References: <20030324175337.A14957@beaverton.ibm.com> <20030324175422.A14996@beaverton.ibm.com> <20030324180227.A15047@beaverton.ibm.com> <20030324180247.B15047@beaverton.ibm.com> <20030324180304.C15047@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -13,290 +13,205 @@ To: Patrick Mansfield <patmans@us.ibm.com>
 Cc: linux-scsi@vger.kernel.org
 
 Patrick Mansfield wrote:
-> Fix single_lun code for per-scsi_device queue_lock
+> Cleanup and consolidate scsi_device and scsi_host checks in
+> scsi_request_fn.
 > 
-> diff -purN -X /home/patman/dontdiff lksplit-25/drivers/scsi/scsi.h sl_lksplit-25/drivers/scsi/scsi.h
-> --- lksplit-25/drivers/scsi/scsi.h	Mon Mar 24 12:15:10 2003
-> +++ sl_lksplit-25/drivers/scsi/scsi.h	Mon Mar 24 12:15:26 2003
-> @@ -531,6 +531,15 @@ extern struct list_head scsi_dev_info_li
->  extern int scsi_dev_info_list_add_str(char *);
+> diff -purN -X /home/patman/dontdiff lun-single-25/drivers/scsi/scsi_lib.c req_fn-cleanup-25/drivers/scsi/scsi_lib.c
+> --- lun-single-25/drivers/scsi/scsi_lib.c	Mon Mar 24 12:14:55 2003
+> +++ req_fn-cleanup-25/drivers/scsi/scsi_lib.c	Mon Mar 24 12:15:01 2003
+> @@ -1043,6 +1043,79 @@ static int scsi_prep_fn(struct request_q
+>  }
 >  
 >  /*
-> + * scsi_target: representation of a scsi target, for now, this is only
-> + * used for single_lun devices.
+> + * scsi_check_sdev: if we can send requests to sdev, return 0 else return 1.
+> + *
+> + * Called with the queue_lock held.
 > + */
-> +struct scsi_target {
-> +	unsigned int starget_busy;
-> +	unsigned int starget_refcnt;
-> +};
+> +static inline int scsi_check_sdev(struct request_queue *q,
+> +				  struct scsi_device *sdev)
 
-Yes ok, but let's do it right.
-First, I abhore all this letter playing to devise
-names like: starget_busy and starget_refcnt.
+scsi_check_sdev: clearly every function is C does a check, or a computation,
+or a modificaiton, or some permutation of those.  So this name is too trivial
+and doesn't mean what the function does.
 
-starget_busy could be an atomic_t which is equal
-to the sum of all LU's pending_q_counts, i.e.
-it better, else we're losing commands, and also
-with a different name (more descriptive).
-Something like active_cmds, or active_cmd_count,
-but NOT ``..._cnt''!
+Further more since the function outcome is logical in nature, i.e. it does
+NOT return an error code, you can can return 1 on success, and 0 on fault.
 
-Also, moving all the necessary variables into scsi_target, like
-say single_lun to be renamed single_lu.
+How about this:
+/**
+  * scsi_dev_ok2queue:  Return non-zero if we can queue to the
+  * device, else 0.
+  */
+static inline int scsi_dev_ok2queue(struct scsi_device *sdev)
+{
+	...
+}
 
-Also having a list of devices:
+So that statments like this are logical:
 
-	struct list_head lu_list;
+	if (scsi_dev_ok2queue(dev)) {
+		/* let's queue */
+	} else {
+		/* no, will have to defer */
+	}
 
-etc, etc.
+and the negation:
+	if (!scsi_dev_ok2queue(dev)) {
+		...
+	}
 
-
+> +{
+> +	if (sdev->device_busy >= sdev->queue_depth)
+> +		return 1;
+> +	if (sdev->device_busy == 0 && sdev->device_blocked) {
+> +		/*
+> +		 * unblock after device_blocked iterates to zero
+> +		 */
+> +		if (--sdev->device_blocked == 0) {
+> +			SCSI_LOG_MLQUEUE(3,
+> +				printk("scsi%d (%d:%d) unblocking device at"
+> +				       " zero depth\n", sdev->host->host_no,
+> +				       sdev->id, sdev->lun));
+> +		} else {
+> +			blk_plug_device(q);
+> +			return 1;
+> +		}
+> +	}
+> +	if (sdev->device_blocked)
+> +		return 1;
+> +
+> +	return 0;
+> +}
 > +
 > +/*
->   *  The scsi_device struct contains what we know about each given scsi
->   *  device.
->   *
-> @@ -588,6 +597,7 @@ struct scsi_device {
->  	unsigned char current_tag;	/* current tag */
->  //	unsigned char sync_min_period;	/* Not less than this period */
->  //	unsigned char sync_max_offset;	/* Not greater than this offset */
-> +	struct scsi_target      *sdev_target;   /* used only for single_lun */
+> + * scsi_check_shost: if we can send requests to shost, return 0 else return 1.
+> + *
+> + * Called with the queue_lock held.
+> + */
+> +static inline int scsi_check_shost(struct request_queue *q,
+> +				   struct Scsi_Host *shost,
+> +				   struct scsi_device *sdev)
 
+Abosulutely the same story here, as above.
 
-Should probably be used for all devices.  Let's do it right.
+scsi_host_ok2queue() -- please do not use ``shost'' in function names,
+``host'' I think is descriptive enough.
 
-
->  	unsigned online:1;
->  	unsigned writeable:1;
-> diff -purN -X /home/patman/dontdiff lksplit-25/drivers/scsi/scsi_lib.c sl_lksplit-25/drivers/scsi/scsi_lib.c
-> --- lksplit-25/drivers/scsi/scsi_lib.c	Mon Mar 24 12:15:10 2003
-> +++ sl_lksplit-25/drivers/scsi/scsi_lib.c	Mon Mar 24 12:15:26 2003
-> @@ -327,46 +327,36 @@ void scsi_setup_cmd_retry(struct scsi_cm
->  }
->  
->  /*
-> - * Called for single_lun devices. The target associated with current_sdev can
-> - * only handle one active command at a time. Scan through all of the luns
-> - * on the same target as current_sdev, return 1 if any are active.
-> - */
-> -static int scsi_single_lun_check(struct scsi_device *current_sdev)
-> -{
-> -	struct scsi_device *sdev;
-> -
-> -	list_for_each_entry(sdev, &current_sdev->same_target_siblings,
-> -			    same_target_siblings)
-> -		if (sdev->device_busy)
-> -			return 1;
-> -	return 0;
-> -}
-> -
-> -/*
-> - * Called for single_lun devices on IO completion. If no requests
-> - * outstanding for current_sdev, call __blk_run_queue for the next
-> - * scsi_device on the same target that has requests.
-> + * Called for single_lun devices on IO completion. Clear starget_busy, and
-> + * Call __blk_run_queue for all the scsi_devices on the target - including
-> + * current_sdev first.
->   *
->   * Called with *no* scsi locks held.
->   */
-> -static void scsi_single_lun_run(struct scsi_device *current_sdev,
-> -				 struct request_queue *q)
-> +static void scsi_single_lun_run(struct scsi_device *current_sdev)
->  {
->  	struct scsi_device *sdev;
-> -	struct Scsi_Host *shost;
-> +	unsigned int flags, flags2;
->  
-> -	shost = current_sdev->host;
-> -	if (blk_queue_empty(q) && current_sdev->device_busy == 0 &&
-> -	    !shost->host_blocked && !shost->host_self_blocked &&
-> -	    !((shost->can_queue > 0) &&
-> -	      (shost->host_busy >= shost->can_queue)))
-> -		list_for_each_entry(sdev, &current_sdev->same_target_siblings,
-> -				    same_target_siblings)
-> -			if (!sdev->device_blocked &&
-> -			    !blk_queue_empty(sdev->request_queue)) {
-> -				__blk_run_queue(sdev->request_queue);
-> -				break;
-> -			}
-> +	spin_lock_irqsave(current_sdev->request_queue->queue_lock, flags2);
-> +	spin_lock_irqsave(current_sdev->host->host_lock, flags);
-
-No, you do NOT need flags and flags2.  Look at other kernel code
-to see how this is done.  scsi_put_command() gives
-an example of doing double locks and irq state -- it's a nice one.
-
-So, things to remember:
-
-1. spin_lock_irqsave(...., flags);
-    spin_lock(...);
-
-    critical section;
-
-    spin_unlock(...);
-    spin_unlock_irqrestore(..., flags);
-
-2. If you're obtaining locks sequentially like this,
-    e.g:
-
-	grab L1
-	glab L2
-
-	critical section
-
-	release L2
-	release L1
-
-you MUST absolutely mention this somewhere with boldface red
-letters comment that the queue lock is always obtained FIRST
-and the host lock SECOND (and, trivially, released in opposite
-order).
-
-Else someone trying to obtain both locks in opposite order, L2 and
-then L1, will lock up the system.
-
-
-> +	WARN_ON(!current_sdev->sdev_target->starget_busy);
-> +	if (current_sdev->device_busy == 0)
-> +		current_sdev->sdev_target->starget_busy = 0;
-> +	spin_unlock_irqrestore(current_sdev->host->host_lock, flags);
-
-Do not need flags here as mentioned above.
-
-> +
-> +	/*
-> +	 * Call __blk_run_queue for all LUNs on the target, starting with
-> +	 * current_sdev.
-> +	 */
-> +	__blk_run_queue(current_sdev->request_queue);
-> +	spin_unlock_irqrestore(current_sdev->request_queue->queue_lock, flags2);
-
-Now if you make device_busy an atomic_t type, then you DO not
-need these double locking acrobatics.
-
-> +	list_for_each_entry(sdev, &current_sdev->same_target_siblings,
-> +			    same_target_siblings) {
-> +		spin_lock_irqsave(sdev->request_queue->queue_lock, flags2);
-> +		__blk_run_queue(sdev->request_queue);
-> +		spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags2);
+> +{
+> +	if (shost->in_recovery)
+> +		return 1;
+> +	if (shost->host_busy == 0 && shost->host_blocked) {
+> +		/*
+> +		 * unblock after host_blocked iterates to zero
+> +		 */
+> +		if (--shost->host_blocked == 0) {
+> +			SCSI_LOG_MLQUEUE(3,
+> +				printk("scsi%d unblocking host at zero depth\n",
+> +					shost->host_no));
+> +		} else {
+> +			blk_plug_device(q);
+> +			return 1;
+> +		}
 > +	}
->  }
->  
->  /*
-> @@ -438,7 +428,7 @@ void scsi_queue_next_request(request_que
->  	sdev = q->queuedata;
->  
->  	if (sdev->single_lun)
-> -		scsi_single_lun_run(sdev, q);
-> +		scsi_single_lun_run(sdev);
->  
->  	shost = sdev->host;
->  	spin_lock_irqsave(shost->host_lock, flags);
-> @@ -1166,7 +1156,8 @@ static void scsi_request_fn(request_queu
->  		if (scsi_check_shost(q, shost, sdev))
->  			goto after_host_lock;
->  
-> -		if (sdev->single_lun && scsi_single_lun_check(sdev))
-> +		if (sdev->single_lun && !sdev->device_busy &&
-> +		    sdev->sdev_target->starget_busy)
->  			goto after_host_lock;
+> +	if (!list_empty(&sdev->starved_entry))
+> +		return 1;
+> +	if ((shost->can_queue > 0 && shost->host_busy >= shost->can_queue) ||
+> +	    shost->host_blocked || shost->host_self_blocked) {
+> +		SCSI_LOG_MLQUEUE(3,
+> +			printk("add starved dev <%d,%d,%d,%d>; host "
+> +			       "limit %d, busy %d, blocked %d selfblocked %d\n",
+> +			       sdev->host->host_no, sdev->channel,
+> +			       sdev->id, sdev->lun,
+> +			       shost->can_queue, shost->host_busy,
+> +			       shost->host_blocked, shost->host_self_blocked));
+> +		list_add_tail(&sdev->starved_entry,
+> +			      &shost->starved_list);
+> +		return 1;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +/*
+>   * Function:    scsi_request_fn()
+>   *
+>   * Purpose:     Main strategy routine for SCSI.
+> @@ -1067,13 +1140,8 @@ static void scsi_request_fn(request_queu
+>  	 * the host is no longer able to accept any more requests.
+>  	 */
+>  	for (;;) {
+> -		/*
+> -		 * Check this again - each time we loop through we will have
+> -		 * released the lock and grabbed it again, so each time
+> -		 * we need to check to see if the queue is plugged or not.
+> -		 */
+> -		if (shost->in_recovery || blk_queue_plugged(q))
+> -			return;
+> +		if (blk_queue_plugged(q))
+> +			break;
 >  
 >  		/*
-> @@ -1204,6 +1195,9 @@ static void scsi_request_fn(request_queu
->  		if (!(blk_queue_tagged(q) && (blk_queue_start_tag(q, req) == 0)))
->  			blkdev_dequeue_request(req);
->  	
-> +		if (sdev->single_lun)
-> +			sdev->sdev_target->starget_busy = 1;
-> +
->  		shost->host_busy++;
->  		spin_unlock_irqrestore(shost->host_lock, flags);
+>  		 * get next queueable request.  We do this early to make sure
+> @@ -1083,48 +1151,11 @@ static void scsi_request_fn(request_queu
+>  		 */
+>  		req = elv_next_request(q);
 >  
-> diff -purN -X /home/patman/dontdiff lksplit-25/drivers/scsi/scsi_scan.c sl_lksplit-25/drivers/scsi/scsi_scan.c
-> --- lksplit-25/drivers/scsi/scsi_scan.c	Mon Mar 24 12:15:10 2003
-> +++ sl_lksplit-25/drivers/scsi/scsi_scan.c	Mon Mar 24 12:15:26 2003
-> @@ -478,6 +478,8 @@ out:
->   **/
->  static void scsi_free_sdev(struct scsi_device *sdev)
->  {
-> +	unsigned int flags;
-> +
->  	list_del(&sdev->siblings);
->  	list_del(&sdev->same_target_siblings);
+> -		if (sdev->device_busy >= sdev->queue_depth)
+> -			break;
+> -
+> -		if (shost->host_busy == 0 && shost->host_blocked) {
+> -			/* unblock after host_blocked iterates to zero */
+> -			if (--shost->host_blocked == 0) {
+> -				SCSI_LOG_MLQUEUE(3,
+> -					printk("scsi%d unblocking host at zero depth\n",
+> -						shost->host_no));
+> -			} else {
+> -				blk_plug_device(q);
+> -				break;
+> -			}
+> -		}
+> -
+> -		if (sdev->device_busy == 0 && sdev->device_blocked) {
+> -			/* unblock after device_blocked iterates to zero */
+> -			if (--sdev->device_blocked == 0) {
+> -				SCSI_LOG_MLQUEUE(3,
+> -					printk("scsi%d (%d:%d) unblocking device at zero depth\n",
+> -						shost->host_no, sdev->id, sdev->lun));
+> -			} else {
+> -				blk_plug_device(q);
+> -				break;
+> -			}
+> -		}
+> -
+> -		/*
+> -		 * If the device cannot accept another request, then quit.
+> -		 */
+> -		if (sdev->device_blocked)
+> -			break;
+> -
+> -		if (!list_empty(&sdev->starved_entry))
+> +		if (scsi_check_sdev(q, sdev))
+>  			break;
 >  
-> @@ -487,6 +489,14 @@ static void scsi_free_sdev(struct scsi_d
->  		sdev->host->hostt->slave_destroy(sdev);
->  	if (sdev->inquiry)
->  		kfree(sdev->inquiry);
-> +	if (sdev->single_lun) {
-> +		spin_lock_irqsave(sdev->host->host_lock, flags);
-> +		sdev->sdev_target->starget_refcnt--;
-> +		if (sdev->sdev_target->starget_refcnt == 0)
-> +			kfree(sdev->sdev_target);
-
-
-Have you seen ``atomic_dec_and_test()''?
-
-
-> +		spin_unlock_irqrestore(sdev->host->host_lock, flags);
-> +	}
-> +
->  	kfree(sdev);
->  }
+> -		if ((shost->can_queue > 0 && shost->host_busy >= shost->can_queue) ||
+> -		    shost->host_blocked || shost->host_self_blocked) {
+> -			list_add_tail(&sdev->starved_entry,
+> -				      &shost->starved_list);
+> +		if (scsi_check_shost(q, shost, sdev))
+>  			break;
+> -		}
 >  
-> @@ -1122,6 +1132,10 @@ static void scsi_probe_lun(Scsi_Request 
->  static int scsi_add_lun(Scsi_Device *sdev, Scsi_Request *sreq,
->  		char *inq_result, int *bflags)
->  {
-> +	struct scsi_device *sdev_sibling;
-> +	struct scsi_target *starget;
-> +	unsigned int flags;
-> +
->  	/*
->  	 * XXX do not save the inquiry, since it can change underneath us,
->  	 * save just vendor/model/rev.
-> @@ -1243,10 +1257,38 @@ static int scsi_add_lun(Scsi_Device *sde
->  
->  	/*
->  	 * If we need to allow I/O to only one of the luns attached to
-> -	 * this target id at a time, then we set this flag.
-> +	 * this target id at a time set single_lun, and allocate or modify
-> +	 * sdev_target.
->  	 */
-> -	if (*bflags & BLIST_SINGLELUN)
-> +	if (*bflags & BLIST_SINGLELUN) {
->  		sdev->single_lun = 1;
-> +		spin_lock_irqsave(sdev->host->host_lock, flags);
-> +		starget = NULL;
-> +		/*
-> +		 * Search for an existing target for this sdev.
-> +		 */
-> +		list_for_each_entry(sdev_sibling, &sdev->same_target_siblings,
-> +				    same_target_siblings) {
-> +			if (sdev_sibling->sdev_target != NULL) {
-> +				starget = sdev_sibling->sdev_target;
-> +				break;
-> +			}
-> +		}
-> +		if (!starget) {
-> +			starget = kmalloc(sizeof(*starget), GFP_KERNEL);
-> +			if (!starget) {
-> +				printk(ALLOC_FAILURE_MSG, __FUNCTION__);
-> +				spin_unlock_irqrestore(sdev->host->host_lock,
-> +						       flags);
-> +				return SCSI_SCAN_NO_RESPONSE;
-> +			}
-> +			starget->starget_refcnt = 0;
-> +			starget->starget_busy = 0;
-> +		}
-> +		starget->starget_refcnt++;
-> +		sdev->sdev_target = starget;
-> +		spin_unlock_irqrestore(sdev->host->host_lock, flags);
-> +	}
->  
->  	/* if the device needs this changing, it may do so in the detect
->  	 * function */
+>  		if (sdev->single_lun && scsi_single_lun_check(sdev))
+>  			break;
+> @@ -1140,7 +1171,7 @@ static void scsi_request_fn(request_queu
+>  			/* If the device is busy, a returning I/O
+>  			 * will restart the queue.  Otherwise, we have
+>  			 * to plug the queue */
+> -			if(sdev->device_busy == 0)
+> +			if (sdev->device_busy == 0)
+>  				blk_plug_device(q);
+>  			break;
+>  		}
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
