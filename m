@@ -1,17 +1,17 @@
 From: Lukas Hejtmanek <xhejtman@mail.muni.cz>
 Subject: Re: 2.6.9 aacraid hangup
-Date: Fri, 22 Oct 2004 14:26:25 +0200
+Date: Fri, 22 Oct 2004 14:34:38 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041022122625.GC12619@mail.muni.cz>
+Message-ID: <20041022123438.GD12619@mail.muni.cz>
 References: <60807403EABEB443939A5A7AA8A7458B40B78D@otce2k01.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-2
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hell.sks3.muni.cz ([147.251.210.30]:48780 "EHLO
-	hell.sks3.muni.cz") by vger.kernel.org with ESMTP id S271278AbUJVM0e
+Received: from hell.sks3.muni.cz ([147.251.210.30]:53900 "EHLO
+	hell.sks3.muni.cz") by vger.kernel.org with ESMTP id S271290AbUJVMen
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Oct 2004 08:26:34 -0400
+	Fri, 22 Oct 2004 08:34:43 -0400
 Content-Disposition: inline
 In-Reply-To: <60807403EABEB443939A5A7AA8A7458B40B78D@otce2k01.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
@@ -38,15 +38,39 @@ ake sure
  turn off
 > the card's cache (both read and write).
 
-However I tested it today and with 2.6.6-bk4 it is OK.=20
+Well it hangs with 2.6.6 also. Only it takes some more time before it h=
+angs :(
 
-Anyway with F/W 5770 it sometimes resulted with message:
-kernel: aacraid:ID(1:02:0) Abort Time-out. Resetting bus.
-kernel: aacraid:SCSI bus reset issued on channel 1
-kernel: aacraid:Drive 1:0:0 online on container 0:
-kernel: aacraid:Drive 1:1:0 online on container 0:
-kernel: aacraid:Drive 1:2:0 online on container 0:
-kernel: aacraid:Drive 1:3:0 online on container 0:
+This is from dmesg:
+aacraid:ID(1:02:0) Abort Time-out. Resetting bus.
+aacraid:SCSI bus reset issued on channel 1
+aacraid:Drive 1:0:0 online on container 0:
+aacraid:Drive 1:1:0 online on container 0:
+aacraid:Drive 1:2:0 online on container 0:
+aacraid:Drive 1:3:0 online on container 0:
+aacraid:ID(1:02:0) Abort Time-out. Resetting bus.
+aacraid:SCSI bus reset issued on channel 1
+aacraid: Host adapter reset request. SCSI hang ?
+aacraid:Drive 1:2:0 online on container 0:
+aacraid:Drive 1:3:0 online on container 0:
+aacraid:Drive 1:0:0 online on container 0:
+aacraid:Drive 1:1:0 online on container 0:
+aacraid: SCSI bus appears hung
+scsi: Device offlined - not ready after error recovery: host 0 channel =
+0 id
+0 lun 0
+scsi: Device offlined - not ready after error recovery: host 0 channel =
+0 id
+0 lun 0
+scsi: Device offlined - not ready after error recovery: host 0 channel =
+0 id
+0 lun 0
+scsi: Device offlined - not ready after error recovery: host 0 channel =
+0 id
+0 lun 0
+scsi: Device offlined - not ready after error recovery: host 0 channel =
+0 id
+0 lun 0
 
 --=20
 Luk=E1=B9 Hejtm=E1nek
