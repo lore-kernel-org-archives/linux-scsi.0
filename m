@@ -1,50 +1,37 @@
-From: john@grabjohn.com
+From: Russell King <rmk@arm.linux.org.uk>
 Subject: Re: [RFR] a new SCSI driver
-Date: Sun, 25 May 2003 11:32:09 +0100
+Date: Sun, 25 May 2003 10:35:53 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200305251032.h4PAW9hK000616@81-2-122-30.bradfords.org.uk>
+Message-ID: <20030525103553.A26555@flint.arm.linux.org.uk>
+References: <200305250944.h4P9i5Ct000456@81-2-122-30.bradfords.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 81-2-122-30.bradfords.org.uk ([81.2.122.30]:38528 "EHLO
-	81-2-122-30.bradfords.org.uk") by vger.kernel.org with ESMTP
-	id S261564AbTEYJM5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 May 2003 05:12:57 -0400
+Received: from caramon.arm.linux.org.uk ([212.18.232.186]:6411 "EHLO
+	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
+	id S261566AbTEYJWr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 25 May 2003 05:22:47 -0400
+Content-Disposition: inline
+In-Reply-To: <200305250944.h4P9i5Ct000456@81-2-122-30.bradfords.org.uk>; from john@grabjohn.com on Sun, May 25, 2003 at 10:44:05AM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: john@grabjohn.com, zwane@linuxpower.ca
-Cc: jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: john@grabjohn.com
+Cc: linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-scsi@vger.kernel.org
 
-> > Thinking ahead, by the 2.8 timescale, PATA could well be legacy hardware 
-> > which could be supported only by an 'old' IDE driver, much like we already
-> > have at the moment - I.E. we could remove the current 'old' IDE driver
-> > sometime during the 2.7 timescale, and support SATA only via the SCSI layer.
-> >
-> > This would save having any more than the minimum SATA code going in to the
-> > existing IDE driver, and consolidate work in the future.        
+On Sun, May 25, 2003 at 10:44:05AM +0100, john@grabjohn.com wrote:
+> Thinking ahead, by the 2.8 timescale, PATA could well be legacy hardware 
+> which could be supported only by an 'old' IDE driver, much like we already
+> have at the moment - I.E. we could remove the current 'old' IDE driver
+> sometime during the 2.7 timescale, and support SATA only via the SCSI layer.
 
-> PATA is in _way_ too many current boxes, those computers will continue to 
-> run for a very long time from now.
+Rubbish.  PIO mode ATA will be around for some years to come - there
+is just too much invested there (especially in the embedded world) for
+it to vanish this quickly.  For example, think about compact flash cards,
+many of which are still driven using PIO mode accesses in todays PDAs.
 
-That would be the reason for the old IDE driver.  PATA will still be in use, but
-it won't be mainstream.                   
+(and in some PDAs, there isn't the hardware facilities to even think
+about trying any type of DMA transfer.)
 
-> In 10 years what is technologically obselete will still be very capable.
+-- 
+Russell King (rmk@arm.linux.org.uk)                The developer of ARM Linux
+             http://www.arm.linux.org.uk/personal/aboutme.html
 
-Of course it will - the same is true today.  That doesn't mean it will be in      
-mainstream use.  The systems that do use PATA will benefit from having it
-supported in a smaller footprint driver.  It will be analogous to using the 
-current 'old' IDE driver on a 4 MB 386 today.  
-
-> > The bloat of the SCSI layer in embedded machines might be a concern, but
-> > then again, maybe it won't - how many embedded machines are going to be
-> > using SATA, anyway?  Once we move away from spinning disks towards solid
-> > state storage, (which is going to happen first in the embedded market),
-> > will we want to use *ATA or SCSI at all?
-
-> You're confusing media and transport.
-
-No, I'm not.       
-
-20-40 GB of RAM will be very cheap in a few years time.  A lot of the devices
-using disks today will be using direct memory mapped RAM as their main storage
-in the near future.  You don't need *ATA for that...
-
-John.
