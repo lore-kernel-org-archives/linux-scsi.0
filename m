@@ -1,60 +1,39 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Joel Becker <Joel.Becker@oracle.com>
 Subject: Re: [patch for playing] Patch to support 4000 disks and maintain
-	backward compatibility
-Date: 11 Apr 2003 09:33:27 -0500
+Date: Fri, 11 Apr 2003 08:44:51 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1050071610.2078.69.camel@mulgrave>
-References: <UTC200304111142.h3BBgDS11628.aeb@smtp.cwi.nl>
+Message-ID: <20030411154450.GW31739@ca-server1.us.oracle.com>
+References: <200304101339.49895.pbadari@us.ibm.com> <XFMail.20030411100430.pochini@shiny.it>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:19463 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264364AbTDKOV6 (for <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Apr 2003 10:21:58 -0400
-In-Reply-To: <UTC200304111142.h3BBgDS11628.aeb@smtp.cwi.nl>
+Received: from inet-mail2.oracle.com ([148.87.2.202]:25239 "EHLO
+	inet-mail2.oracle.com") by vger.kernel.org with ESMTP
+	id S264386AbTDKPeN (for <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Apr 2003 11:34:13 -0400
+Content-Disposition: inline
+In-Reply-To: <XFMail.20030411100430.pochini@shiny.it>
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, pbadari@us.ibm.com
+To: Giuliano Pochini <pochini@shiny.it>
+Cc: Badari Pulavarty <pbadari@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 2003-04-11 at 06:42, Andries.Brouwer@cwi.nl wrote:
->     Here is my problem..
-> 
->     #insmod ips.o
->       < found 10 disks>
->     #insmod qla2300.o
->       < found 10 disks>
->     #rmmod ips.o
->        <removed 10 disks>
->     #insmod ips.o
->       <found 10 disks - but new names>
-> 
-> OK, I see what you mean. I agree.
+On Fri, Apr 11, 2003 at 10:04:30AM +0200, Giuliano Pochini wrote:
+> 4000 discs should be enough for anyone :)
+> Are >16 partitions/disc possible ?
 
-Could you elaborate on the reason you want to keep the minor space
-compact?  I don't regard the insmod/rmmod problem as valid because if
-you do:
+	>16 partitions/disc is possible once you remove Linux's
+arbitrary limit.
+	4000 disks is today.  8000 disks is next year at the latest.
+Just imagine multipathing today's 4000 disks.
 
-rmmod ips.o
-rmmod qla2300.o
-insmod qla2300.o
-insmod ips.o
+Joel
 
-All bets are off again. For small kernel dev_t it was essential to keep
-a compact minor space because otherwise we coulde run out of minors. 
-Sparse minors cause no inefficiency in the mid-layer, or in sd.  There
-are problems in sg which could be solved by encoding the device type in
-the minor.
+-- 
 
-> [I see that dougg wants to solve such things by properly naming,
-> but that is a higher level. Given a large number space an
-> easier solution is to give each module its own part of the
-> number space.]
+"Well-timed silence hath more eloquence than speech."  
+         - Martin Fraquhar Tupper
 
-Please, no.  Dividing up the minor space like this would be a step
-backwards (adding more policy to the kernel).  Someone would also have
-to manage this scheme.
-
-James
-
-
+Joel Becker
+Senior Member of Technical Staff
+Oracle Corporation
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
