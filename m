@@ -1,70 +1,61 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH] qla2xxx -- Properly schedule mailbox command timeouts.
-Date: Tue, 10 Feb 2004 15:17:22 -0800
+Subject: [PATCH] qla2xxx -- FCP_RSP IU check during command completion.
+Date: Tue, 10 Feb 2004 15:17:18 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1076455042.6070.64.camel@dieplab1>
+Message-ID: <1076455038.6072.62.camel@dieplab1>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-OtSpx/rKVc7utHHutYcR"
+Content-Type: multipart/mixed; boundary="=-+r15v76lDdnOhSkxLkx6"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:38584 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S262228AbUBJXQr (ORCPT
+Received: from pat.qlogic.com ([198.70.193.2]:26552 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S262153AbUBJXQn (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Feb 2004 18:16:47 -0500
+	Tue, 10 Feb 2004 18:16:43 -0500
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: linux-scsi@vger.kernel.org
 
 
---=-OtSpx/rKVc7utHHutYcR
+--=-+r15v76lDdnOhSkxLkx6
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 
 James,
 
-For mailbox commands which the firmware internally times-out in 
-2 * R_A_TOV, the driver should timeout no sooner than 2.5 * R_A_TOV so
-we do not inappropriately schedule an ISP abort.
+While processing command completions in qla2x00_status_entry()
+interrogate the FCP_RSP IU in case of any FCP protocol errors (FCP-3,
+9.4.11) during command execution.  If there were any failures, schedule
+a retry of the command via DID_BUS_BUSY.
 
 Please apply.
 
 Regards,
 Andrew Vasquez
 
---=-OtSpx/rKVc7utHHutYcR
-Content-Disposition: attachment; filename=QL2_mbx_timeout_fix.diff
+--=-+r15v76lDdnOhSkxLkx6
+Content-Description: 
+Content-Disposition: inline; filename=QL1_fcp_protocol_errors.diff
 Content-Transfer-Encoding: base64
-Content-Type: text/plain; name=QL2_mbx_timeout_fix.diff; charset=
+Content-Type: text/plain; charset=
 
-LS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX21ieC5jCTIwMDQtMDItMDIgMDg6Mjk6MzUu
-MDAwMDAwMDAwIC0wODAwDQorKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbWJ4LmMJMjAw
-NC0wMi0wNSAyMjowMzo0NS4wMDAwMDAwMDAgLTA4MDANCkBAIC0xNDIxLDcgKzE0MjEsNyBAQA0K
-IAltY3AtPmluX21iID0gTUJYXzA7DQogCW1jcC0+YnVmX3NpemUgPSBQT1JUX0RBVEFCQVNFX1NJ
-WkU7DQogCW1jcC0+ZmxhZ3MgPSBNQlhfRE1BX0lOOw0KLQltY3AtPnRvdiA9ICBoYS0+bG9naW5f
-dGltZW91dCAqIDI7DQorCW1jcC0+dG92ID0gKGhhLT5sb2dpbl90aW1lb3V0ICogMikgKyAoaGEt
-PmxvZ2luX3RpbWVvdXQgLyAyKTsNCiAJcnZhbCA9IHFsYTJ4MDBfbWFpbGJveF9jb21tYW5kKGhh
-LCBtY3ApOw0KIA0KIAlpZiAocnZhbCA9PSBRTEFfU1VDQ0VTUykgew0KQEAgLTE3NzQsOCArMTc3
-NCw3IEBADQogCW1jcC0+aW5fbWIgPSBNQlhfMHxNQlhfMTsNCiAJbWNwLT5idWZfc2l6ZSA9IGJ1
-Zl9zaXplOw0KIAltY3AtPmZsYWdzID0gTUJYX0RNQV9PVVR8TUJYX0RNQV9JTjsNCi0JLyptY3At
-PnRvdiA9IGhhLT5yZXRyeV9jb3VudCAqIGhhLT5sb2dpbl90aW1lb3V0ICogMjsqLw0KLQltY3At
-PnRvdiA9ICBoYS0+bG9naW5fdGltZW91dCAqIDI7DQorCW1jcC0+dG92ID0gKGhhLT5sb2dpbl90
-aW1lb3V0ICogMikgKyAoaGEtPmxvZ2luX3RpbWVvdXQgLyAyKTsNCiAJcnZhbCA9IHFsYTJ4MDBf
-bWFpbGJveF9jb21tYW5kKGhhLCBtY3ApOw0KIA0KIAlpZiAocnZhbCAhPSBRTEFfU1VDQ0VTUykg
-ew0KQEAgLTE4MzYsOCArMTgzNSw3IEBADQogCW1jcC0+bWJbM10gPSBhcmVhIDw8IDggfCBhbF9w
-YTsNCiANCiAJbWNwLT5pbl9tYiA9IE1CWF83fE1CWF82fE1CWF8yfE1CWF8xfE1CWF8wOw0KLQkv
-Km1jcC0+dG92ID0gaGEtPnJldHJ5X2NvdW50ICogaGEtPmxvZ2luX3RpbWVvdXQgKiAyOyovDQot
-CW1jcC0+dG92ID0gaGEtPmxvZ2luX3RpbWVvdXQgKiAyOw0KKwltY3AtPnRvdiA9IChoYS0+bG9n
-aW5fdGltZW91dCAqIDIpICsgKGhhLT5sb2dpbl90aW1lb3V0IC8gMik7DQogCW1jcC0+ZmxhZ3Mg
-PSAwOw0KIAlydmFsID0gcWxhMngwMF9tYWlsYm94X2NvbW1hbmQoaGEsIG1jcCk7DQogDQpAQCAt
-MTkwOSw3ICsxOTA3LDcgQEANCiAJbWNwLT5tYlsyXSA9IG9wdDsNCiAJbWNwLT5vdXRfbWIgPSBN
-QlhfMnxNQlhfMXxNQlhfMDsNCiAgCW1jcC0+aW5fbWIgPSBNQlhfN3xNQlhfNnxNQlhfMXxNQlhf
-MDsNCi0JbWNwLT50b3YgPSAgaGEtPmxvZ2luX3RpbWVvdXQgKiAyOw0KKwltY3AtPnRvdiA9ICho
-YS0+bG9naW5fdGltZW91dCAqIDIpICsgKGhhLT5sb2dpbl90aW1lb3V0IC8gMik7DQogCW1jcC0+
-ZmxhZ3MgPSAwOw0KIAlydmFsID0gcWxhMngwMF9tYWlsYm94X2NvbW1hbmQoaGEsIG1jcCk7DQog
-DQpAQCAtMjQxMiw3ICsyNDEwLDcgQEANCiAJbWNwLT5pbl9tYiA9IE1CWF8xfE1CWF8wOw0KIAlt
-Y3AtPmJ1Zl9zaXplID0gRkNBTF9NQVBfU0laRTsNCiAJbWNwLT5mbGFncyA9IE1CWF9ETUFfSU47
-DQotCW1jcC0+dG92ID0gIGhhLT5sb2dpbl90aW1lb3V0ICogMjsNCisJbWNwLT50b3YgPSAoaGEt
-PmxvZ2luX3RpbWVvdXQgKiAyKSArIChoYS0+bG9naW5fdGltZW91dCAvIDIpOw0KIAlydmFsID0g
-cWxhMngwMF9tYWlsYm94X2NvbW1hbmQoaGEsIG1jcCk7DQogDQogCWlmIChydmFsID09IFFMQV9T
-VUNDRVNTKSB7DQo=
+LS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jCTIwMDQtMDItMDIgMDk6Mzg6Mjku
+MDAwMDAwMDAwIC0wODAwDQorKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMJMjAw
+NC0wMi0xMCAxMzo1MTozMC40NzQyOTI3MzYgLTA4MDANCkBAIC04MjgsNiArODI4LDcgQEANCiAJ
+dWludDhfdAkJbHNjc2lfc3RhdHVzOw0KIAl1aW50MzJfdAlyZXNpZDsNCiAJdWludDhfdAkJc2Vu
+c2Vfc3ogPSAwOw0KKwl1aW50MTZfdAlyc3BfaW5mb19sZW47DQogDQogCS8qIEZhc3QgcGF0aCBj
+b21wbGV0aW9uLiAqLw0KIAlpZiAobGUxNl90b19jcHUocGt0LT5jb21wX3N0YXR1cykgPT0gQ1Nf
+Q09NUExFVEUgJiYNCkBAIC05MTksNiArOTIwLDIzIEBADQogCQl9DQogCX0NCiANCisJLyogQ2hl
+Y2sgZm9yIGFueSBGQ1AgdHJhbnNwb3J0IGVycm9ycy4gKi8NCisJaWYgKHNjc2lfc3RhdHVzICYg
+U1NfUkVTUE9OU0VfSU5GT19MRU5fVkFMSUQpIHsNCisJCXJzcF9pbmZvX2xlbiA9IGxlMTZfdG9f
+Y3B1KHBrdC0+cnNwX2luZm9fbGVuKTsNCisJCWlmIChyc3BfaW5mb19sZW4gPiAzICYmIHBrdC0+
+cnNwX2luZm9bM10pIHsNCisJCQlERUJVRzIocHJpbnRrKCJzY3NpKCVsZDolZDolZDolZCkgRkNQ
+IEkvTyBwcm90b2NvbCAiDQorCQkJICAgICJmYWlsdXJlICgleC8lMDJ4JTAyeCUwMnglMDJ4JTAy
+eCUwMnglMDJ4JTAyeCkuLi4iDQorCQkJICAgICJyZXRyeWluZyBjb21tYW5kXG4iLCBoYS0+aG9z
+dF9ubywgYiwgdCwgbCwNCisJCQkgICAgcnNwX2luZm9fbGVuLCBwa3QtPnJzcF9pbmZvWzBdLCBw
+a3QtPnJzcF9pbmZvWzFdLA0KKwkJCSAgICBwa3QtPnJzcF9pbmZvWzJdLCBwa3QtPnJzcF9pbmZv
+WzNdLA0KKwkJCSAgICBwa3QtPnJzcF9pbmZvWzRdLCBwa3QtPnJzcF9pbmZvWzVdLA0KKwkJCSAg
+ICBwa3QtPnJzcF9pbmZvWzZdLCBwa3QtPnJzcF9pbmZvWzddKSk7DQorDQorCQkJY3AtPnJlc3Vs
+dCA9IERJRF9CVVNfQlVTWSA8PCAxNjsNCisJCQlyZXR1cm47DQorCQl9DQorCX0NCisNCiAJLyoN
+CiAJICogQmFzZWQgb24gSG9zdCBhbmQgc2NzaSBzdGF0dXMgZ2VuZXJhdGUgc3RhdHVzIGNvZGUg
+Zm9yIExpbnV4DQogCSAqLw0K
 
---=-OtSpx/rKVc7utHHutYcR--
+--=-+r15v76lDdnOhSkxLkx6--
