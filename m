@@ -1,52 +1,68 @@
-From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
-Subject: Re: sym53c8xx_2 funkiness...
-Date: Mon, 26 Jul 2004 10:54:12 +0200
+From: christophe.varoqui@free.fr
+Subject: [ANNOUNCE] multipath-tools-0.2.7
+Date: Mon, 26 Jul 2004 12:02:48 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m3zn5nxi6j.fsf@merlin.emma.line.org>
-References: <20040718030514.GJ1105@eriador.mirkwood.net>
-	<20040724165625.GA1105@eriador.mirkwood.net>
+Message-ID: <1090836168.4104d6c8a2b22@imp6-q.free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from krusty.dt.e-technik.Uni-Dortmund.DE ([129.217.163.1]:63388 "EHLO
-	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
-	id S265060AbUGZIyP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jul 2004 04:54:15 -0400
-In-Reply-To: <20040724165625.GA1105@eriador.mirkwood.net>
-	(pf-linux-scsi-20040717@mirkwood.net's message of "Sat, 24 Jul 2004
-	12:56:25 -0400")
+Received: from postfix3-2.free.fr ([213.228.0.169]:32708 "EHLO
+	postfix3-2.free.fr") by vger.kernel.org with ESMTP id S265055AbUGZKCu
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jul 2004 06:02:50 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: PinkFreud <pf-linux-scsi-20040717@mirkwood.net>
-Cc: linux-scsi@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Jan Kunigk <jan.kunigk@de.ibm.com>
 
-PinkFreud <pf-linux-scsi-20040717@mirkwood.net> writes:
+Hello,
 
-> Any ideas on why this is happening?  This system has become quite
-> unstable...
->> I have a box with an old NCR 53c810 scsi card.  It was running fine
->> with Slackware and a vanilla 2.4.19 kernel for the past year or so.
->> I recently decided to install Debian on it, and started out with the
->> Debian 2.4.26 package.  It wasn't long before I started noticing
->> messages like
->> sym0: SCSI BUS reset detected.
->> sym0: SCSI BUS has been reset.
->> in dmesg.  This also seems to hose the box more often than not...
+here goes multipath-tools version 0.2.7
 
-Try booting with ACPI switched off
-and also check if you have devices on the bus that misbehave.
+Jan,
+the ULUA framework I got implemented is rather simple :
+1) the path struct gets a new ->priority member
+2) before path grouping, sort the path list by priority
 
-I've found it necessary to prohibit SCSI disconnect by module option for
-an elderly Tandberg TDC3800 tape drive after switching from 2.4's
-ncr53c8xx driver to the only official 2.6 driver, sym53c8xx_2; the
-controller in question was a Tekram DC-310U (SYM53C860) that was
-accompanied by a Plextor PX-40TSi (that also provides the active
-termination).
+The missing link is the priority fetcher.
+Does that framework fit your needs ?
 
-I haven't bothered to check if there's a driver bug or a bug of the
-drive, a TDC4222 and an SLR6 work fine with a both a Tekram DC-390U and
-a Tekram DC-390F (both SYM53C875).
+2004-07-24 multipath-tools-0.2.7
+        * [multipath] args parser moved to getopt
+          <genanr@emsphone.com>
+        * [multipath] zero conf->hotplugdev at allocation
+          <genanr@emsphone.com>
+        * [multipath] clean up failed devmap creation attempt
+        * [libs] update to libdevmapper 1.00.19
+        * [multipath] framework for claimed device skipping
+          still lacks a reliable way to know if the device is
+          claimed and by who (fs, swap, md, dm, ...). If you
+          think it is valid to let libdevmapper hit the wall,
+          please speak up and tell so.
+        * [multipath] shut down stderr when calling into libdm
+        * [multipath] reformat the verbose output
+        * [multipath] framework for path priority handling (ULUA)
+        * [multipath] kill all reference to group_by_tur
+        * [multipath] integrate path state logic into multibus &
+          failover pgpolicies. This obsoletes the group_by_tur one
+          which is now the same as multibus.
+        * [multipath] zalloc mp structs to avoid garbage in ->size
+        * bump version requisite for scsi_id to 0.6 to support the new
+          '-u' flag (s/ /_/ for proper JBOD device map naming)
+        * [multipath] correct the for(;;) limits to accept 1-slot
+          pathvecs
+        * [multipath] push WWID_SIZE to 64 char (scsi_id w/ JBODs)
+        * [multipath] add a exit_tool() wrapper fn for runfile unlink
+        * [multipath] add a "default_path_grouping_policy" keyword in the
+        * "defaults" block.
+        * [multipath] add a "default_getuid_callout" keyword in the
+          "defaults" block. Now multipath is going to work with JBODs
+        * [multipath] fix segfault when pathvec is empty after
+          get_pathvec()
+        * move to template based specfile to avoid regular version skew
 
--- 
-Matthias Andree
+Downloads and docs at http://christophe.varoqui.free.fr
 
-Encrypted mail welcome: my GnuPG key ID is 0x052E7D95 (PGP/MIME preferred)
+regards,
+cvaroqui
+--
