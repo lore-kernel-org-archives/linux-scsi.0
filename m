@@ -1,102 +1,71 @@
 From: Jesper Juhl <juhl-lkml@dif.dk>
-Subject: [PATCH] fix inlining errors in drivers/scsi/aic7xxx/aic79xx_osm.c
-Date: Sun, 1 Aug 2004 13:45:20 +0200 (CEST)
+Subject: [PATCH] fix gcc 3.4 inlining errors in drivers/scsi/dc395x.c
+Date: Sun, 1 Aug 2004 14:02:50 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60.0408011338560.2535@dragon.hygekrogen.localhost>
+Message-ID: <Pine.LNX.4.60.0408011355080.2535@dragon.hygekrogen.localhost>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dif.dk ([193.138.115.101]:26554 "EHLO mail.dif.dk")
-	by vger.kernel.org with ESMTP id S265823AbUHALks (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Aug 2004 07:40:48 -0400
+Received: from mail.dif.dk ([193.138.115.101]:6079 "EHLO mail.dif.dk")
+	by vger.kernel.org with ESMTP id S265893AbUHAL64 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Aug 2004 07:58:56 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@fs.tum.de>
+Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Oliver Neukum <oliver@neukum.name>, Ali Akcaagac <aliakc@web.de>, Jamie Lenehan <lenehan@twibble.org>, Adrian Bunk <bunk@fs.tum.de>
 
 
-This patch fixes the following build error (in 2.6.8-rc2-mm1) when using 
-gcc 3.4.0
+drivers/scsi/dc395x.c fails to build in 2.6.8-rc2-mm1 with gcc 3.4.0 with 
+the following errors :
 
-drivers/scsi/aic7xxx/aic79xx_osm.c: In function `ahd_linux_dv_transition':
-drivers/scsi/aic7xxx/aic79xx_osm.c:522: sorry, unimplemented: inlining failed in call to 'ahd_linux_dv_fallback': function body not available
-drivers/scsi/aic7xxx/aic79xx_osm.c:3070: sorry, unimplemented: called from here
-drivers/scsi/aic7xxx/aic79xx_osm.c:522: sorry, unimplemented: inlining failed in call to 'ahd_linux_dv_fallback': function body not available
-drivers/scsi/aic7xxx/aic79xx_osm.c:3093: sorry, unimplemented: called from here
-drivers/scsi/aic7xxx/aic79xx_osm.c:522: sorry, unimplemented: inlining failed in call to 'ahd_linux_dv_fallback': function body not available
-drivers/scsi/aic7xxx/aic79xx_osm.c:3144: sorry, unimplemented: called from here
-drivers/scsi/aic7xxx/aic79xx_osm.c:522: sorry, unimplemented: inlining failed in call to 'ahd_linux_dv_fallback': function body not available
-drivers/scsi/aic7xxx/aic79xx_osm.c:3257: sorry, unimplemented: called from here
-drivers/scsi/aic7xxx/aic79xx_osm.c:522: sorry, unimplemented: inlining failed in call to 'ahd_linux_dv_fallback': function body not available
-drivers/scsi/aic7xxx/aic79xx_osm.c:3288: sorry, unimplemented: called from here
-drivers/scsi/aic7xxx/aic79xx_osm.c:522: sorry, unimplemented: inlining failed in call to 'ahd_linux_dv_fallback': function body not available
-drivers/scsi/aic7xxx/aic79xx_osm.c:3317: sorry, unimplemented: called from here
+drivers/scsi/dc395x.c: In function `dc395x_handle_interrupt':
+drivers/scsi/dc395x.c:388: sorry, unimplemented: inlining failed in call to 'enable_msgout_abort': function body not available
+drivers/scsi/dc395x.c:1740: sorry, unimplemented: called from here
 
-It first removes a duplicate forward declaration of ahd_linux_dv_fallback 
-and then moves the function before its first use so inlining can succeed.
+drivers/scsi/dc395x.c: In function `msgin_set_async':
+drivers/scsi/dc395x.c:394: sorry, unimplemented: inlining failed in call to 'set_xfer_rate': function body not available
+drivers/scsi/dc395x.c:2677: sorry, unimplemented: called from here
 
-Patch is against 2.6.8-rc2-mm1
+The patch below fixes the build by un-inlining the functions (an 
+alternative would be to rework the file so the functions move before their 
+first use). As for 'set_xfer_rate' the function itself was not declared 
+inline, only the prototype.
+
+Patch against 2.6.8-rc2-mm1
 
 Signed-off-by: Jesper Juhl <juhl-lkml@dif.dk>
 
-diff -up linux-2.6.8-rc2-mm1-orig/drivers/scsi/aic7xxx/aic79xx_osm.c linux-2.6.8-rc2-mm1/drivers/scsi/aic7xxx/aic79xx_osm.c
---- linux-2.6.8-rc2-mm1-orig/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-06-16 07:19:36.000000000 +0200
-+++ linux-2.6.8-rc2-mm1/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-07-31 22:40:57.000000000 +0200
-@@ -513,9 +513,6 @@ static void ahd_linux_dv_su(struct ahd_s
- 			    struct scsi_cmnd *cmd,
- 			    struct ahd_devinfo *devinfo,
- 			    struct ahd_linux_target *targ);
--static __inline int
--	   ahd_linux_dv_fallback(struct ahd_softc *ahd,
--				 struct ahd_devinfo *devinfo);
- static int ahd_linux_fallback(struct ahd_softc *ahd,
- 			      struct ahd_devinfo *devinfo);
- static __inline int ahd_linux_dv_fallback(struct ahd_softc *ahd,
-@@ -2915,6 +2912,19 @@ out:
- 	ahd_unlock(ahd, &s);
- }
+
+diff -up linux-2.6.8-rc2-mm1-orig/drivers/scsi/dc395x.c linux-2.6.8-rc2-mm1/drivers/scsi/dc395x.c
+--- linux-2.6.8-rc2-mm1-orig/drivers/scsi/dc395x.c	2004-07-31 13:09:46.000000000 +0200
++++ linux-2.6.8-rc2-mm1/drivers/scsi/dc395x.c	2004-07-31 23:22:47.000000000 +0200
+@@ -384,13 +384,13 @@ static void scsi_reset_detect(struct Ada
+ static void pci_unmap_srb(struct AdapterCtlBlk *acb, struct ScsiReqBlk *srb);
+ static void pci_unmap_srb_sense(struct AdapterCtlBlk *acb,
+ 		struct ScsiReqBlk *srb);
+-static inline void enable_msgout_abort(struct AdapterCtlBlk *acb,
++static void enable_msgout_abort(struct AdapterCtlBlk *acb,
+ 		struct ScsiReqBlk *srb);
+ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ 		struct ScsiReqBlk *srb);
+ static void request_sense(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ 		struct ScsiReqBlk *srb);
+-static inline void set_xfer_rate(struct AdapterCtlBlk *acb,
++static void set_xfer_rate(struct AdapterCtlBlk *acb,
+ 		struct DeviceCtlBlk *dcb);
+ static void waiting_timeout(unsigned long ptr);
  
-+static __inline int
-+ahd_linux_dv_fallback(struct ahd_softc *ahd, struct ahd_devinfo *devinfo)
-+{
-+	u_long s;
-+	int retval;
-+
-+	ahd_lock(ahd, &s);
-+	retval = ahd_linux_fallback(ahd, devinfo);
-+	ahd_unlock(ahd, &s);
-+
-+	return (retval);
-+}
-+
- static void
- ahd_linux_dv_transition(struct ahd_softc *ahd, struct scsi_cmnd *cmd,
- 			struct ahd_devinfo *devinfo,
-@@ -3551,19 +3561,6 @@ ahd_linux_dv_su(struct ahd_softc *ahd, s
- 	cmd->cmnd[4] = le | SSS_START;
- }
+@@ -2604,7 +2604,7 @@ static inline void msgin_reject(struct A
  
--static __inline int
--ahd_linux_dv_fallback(struct ahd_softc *ahd, struct ahd_devinfo *devinfo)
--{
--	u_long s;
--	int retval;
--
--	ahd_lock(ahd, &s);
--	retval = ahd_linux_fallback(ahd, devinfo);
--	ahd_unlock(ahd, &s);
--
--	return (retval);
--}
--
- static int
- ahd_linux_fallback(struct ahd_softc *ahd, struct ahd_devinfo *devinfo)
+ 
+ /* abort command */
+-static inline void enable_msgout_abort(struct AdapterCtlBlk *acb,
++static void enable_msgout_abort(struct AdapterCtlBlk *acb,
+ 		struct ScsiReqBlk *srb)
  {
+ 	srb->msgout_buf[0] = ABORT;
 
-
-Please CC me on replies from linux-scsi since I'm not subscribed to that 
-list - not nessesary if linux-kernel is kept in the CC since I am 
-subscribed there.
 
 --
 Jesper Juhl <juhl-lkml@dif.dk>
+
 
