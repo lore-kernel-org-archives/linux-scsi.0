@@ -1,36 +1,42 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Handling erroneous READ CAPACITY response in sd.c
-Date: Fri, 5 Nov 2004 13:34:34 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0411051333440.1015-100000@ida.rowland.org>
-References: <20041105180611.GA23104@one-eyed-alien.net>
+From: Andries Brouwer <Andries.Brouwer@cwi.nl>
+Subject: Re: [usb-storage] Re: Handling erroneous READ CAPACITY response in sd.c
+Date: Fri, 5 Nov 2004 19:44:02 +0100
+Message-ID: <20041105184402.GB10912@apps.cwi.nl>
+References: <41765CD1.8060108@adaptec.com> <Pine.LNX.4.44L0.0411051059540.834-100000@ida.rowland.org> <20041105180611.GA23104@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:15364 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S261154AbUKESef (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Nov 2004 13:34:35 -0500
+Received: from hera.cwi.nl ([192.16.191.8]:16620 "EHLO hera.cwi.nl")
+	by vger.kernel.org with ESMTP id S261155AbUKESoM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Nov 2004 13:44:12 -0500
+Content-Disposition: inline
 In-Reply-To: <20041105180611.GA23104@one-eyed-alien.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
+To: Alan Stern <stern@rowland.harvard.edu>, Luben Tuikov <luben_tuikov@adaptec.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-On Fri, 5 Nov 2004, Matthew Dharm wrote:
 
-> On Fri, Nov 05, 2004 at 11:18:34AM -0500, Alan Stern wrote:
-> > On the other hand, the adjustment of the READ CAPACITY value should still 
-> > be moved to sd.c from usb-storage.  This can be implemented easily enough 
-> > by adding a bitflag to the scsi_device structure; the flag could be set 
-> > either by a SCSI blist entry or by usb-storage in its slave_configure 
-> > routine.  The flag would tell sd_read_capacity to decrement the number of 
-> > sectors it receives from the device.
-> 
-> If I read this right, you're saying we should flag the device, but not
-> actually tweak the READ_CAPACITY data?  In other words we get rid of the
-> code which tries to munge the data in-flight?
+> On the other hand, the adjustment of the READ CAPACITY value should still 
+> be moved to sd.c from usb-storage.  This can be implemented easily enough 
+> by adding a bitflag to the scsi_device structure; the flag could be set 
+> either by a SCSI blist entry or by usb-storage in its slave_configure 
+> routine.  The flag would tell sd_read_capacity to decrement the number of 
+> sectors it receives from the device.
 
-Right.  Let usb-storage transport the data unchanged, and let the user of 
-the data (sd.c in this case) decide what to do about it.
+I have not been following the discussion but happen to see this
+fragment. Probably the below is irrelevant.
 
-Alan Stern
+We used to have entries in unusual_devices - the above sounds
+as if it is proposed to move such entries to a SCSI blist.
+I don't see why that is progress.
 
+Concerning the size of a disk: if one claims that the disk is one
+sector shorter than it really is, in most cases no great harm is done.
+However, certain partition tables and RAID configuration info
+lives on the last sector or the last cylinder of a disk.
+Even worse, sometimes this information is read or written by
+the hardware.
+Thus, there exist situations where it is really bad when
+the last sector of a disk disappears from sight.
+
+Andries
