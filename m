@@ -1,174 +1,113 @@
-From: "Moore, Eric Dean" <Emoore@lsil.com>
-Subject: RE: [RFC PATCH 2.6.9-rc2] add ability to set device queue depth t
-	o mptfusion
-Date: Wed, 29 Sep 2004 18:58:26 -0400
+From: Andrew Morton <akpm@osdl.org>
+Subject: Fw: [Bug 3482] New: plugging/unplugging usb devices causes
+ mm/slab.c kernel bug
+Date: Wed, 29 Sep 2004 21:02:41 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E5705261D95@exa-atlanta>
+Message-ID: <20040929210241.55cf3d09.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:65446 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S269096AbUI2XBc (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:44497 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S268045AbUI3BMY (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Sep 2004 19:01:32 -0400
+	Wed, 29 Sep 2004 21:12:24 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 
-This patch is fine. Please apply.
 
-Eric Moore
-LSI Logic
+Is anyone else getting a bit bored of this bug?
 
-On Tuesday, September 28, 2004 1:59 AM, Jeremy Higdon wrote:
-> 
-> 
-> This patch lets you override the default queue depth for SCSI devices
-> attached through the mptfusion driver.
-> 
-> I moved some common code that I needed out of mpt_slave_configure()
-> into its own function.
-> 
-> signed-off-by: Jeremy Higdon <jeremy@sgi.com>
-> 
-> 
-> ===== drivers/message/fusion/mptscsih.c 1.47 vs edited =====
-> --- 1.47/drivers/message/fusion/mptscsih.c	2004-09-03 
-> 02:08:35 -07:00
-> +++ edited/drivers/message/fusion/mptscsih.c	2004-09-28 
-> 00:51:07 -07:00
-> @@ -2887,6 +2887,40 @@
->  	return;
->  }
->  
-> +static void
-> +mptscsih_set_queue_depth(struct scsi_device *device, 
-> MPT_SCSI_HOST *hd, VirtDevice *pTarget, int qdepth)
-> +{
-> +	int	max_depth;
-> +	int	tagged;
-> +
-> +	if ( hd->is_spi ) {
-> +		if (pTarget->tflags & MPT_TARGET_FLAGS_VALID_INQUIRY) {
-> +			if (!(pTarget->tflags & MPT_TARGET_FLAGS_Q_YES))
-> +				max_depth = 1;
-> +			else if (((pTarget->inq_data[0] & 0x1f) == 0x00)
-> +			  && (pTarget->minSyncFactor <= MPT_ULTRA160 ))
-> +				max_depth = MPT_SCSI_CMD_PER_DEV_HIGH;
-> +			else
-> +				max_depth = MPT_SCSI_CMD_PER_DEV_LOW;
-> +		} else {
-> +			/* error case - No Inq. Data */
-> +			max_depth = 1;
-> +		}
-> +	}
-> +	else
-> +		max_depth = MPT_SCSI_CMD_PER_DEV_HIGH;
-> +
-> +	if (qdepth > max_depth)
-> +		qdepth = max_depth;
-> +	if (qdepth == 1)
-> +		tagged = 0;
-> +	else
-> +		tagged = MSG_SIMPLE_TAG;
-> +
-> +	scsi_adjust_queue_depth(device, tagged, qdepth);
-> +}
-> +
-> +
->  /*
->   *	OS entry point to adjust the queue_depths on a per-device basis.
->   *	Called once per device the bus scan. Use it to force 
-> the queue_depth
-> @@ -2936,24 +2970,7 @@
->  
->  	mptscsih_initTarget(hd, device->channel, device->id, 
-> device->lun,
->  		device->inquiry, device->inquiry_len );
-> -	scsi_adjust_queue_depth(device, MSG_SIMPLE_TAG,
-> -		MPT_SCSI_CMD_PER_DEV_HIGH);
-> -	if ( hd->is_spi ) {
-> -		if (pTarget->tflags & MPT_TARGET_FLAGS_VALID_INQUIRY) {
-> -			if (!(pTarget->tflags & MPT_TARGET_FLAGS_Q_YES))
-> -				scsi_adjust_queue_depth(device, 0, 1);
-> -			else if (((pTarget->inq_data[0] & 0x1f) == 0x00)
-> -			  && (pTarget->minSyncFactor <= MPT_ULTRA160 ))
-> -				scsi_adjust_queue_depth(device, 
-> MSG_SIMPLE_TAG,
-> -					MPT_SCSI_CMD_PER_DEV_HIGH);
-> -			else
-> -				scsi_adjust_queue_depth(device, 
-> MSG_SIMPLE_TAG,
-> -					MPT_SCSI_CMD_PER_DEV_LOW);
-> -		} else {
-> -			/* error case - No Inq. Data */
-> -			scsi_adjust_queue_depth(device, 0, 1);
-> -		}
-> -	}
-> +	mptscsih_set_queue_depth(device, hd, pTarget, 
-> MPT_SCSI_CMD_PER_DEV_HIGH);
->  
->  	dsprintk((MYIOC_s_INFO_FMT
->  		"Queue depth=%d, tflags=%x\n",
-> @@ -2973,6 +2990,25 @@
->  	return 0;
->  }
->  
-> +static ssize_t
-> +mptscsih_store_queue_depth(struct device *dev, const char 
-> *buf, size_t count)
-> +{
-> +	int			 depth;
-> +	struct scsi_device	*sdev = to_scsi_device(dev);
-> +	MPT_SCSI_HOST		*hd = (MPT_SCSI_HOST *) 
-> sdev->host->hostdata;
-> +	VirtDevice		*pTarget;
-> +
-> +	depth = simple_strtoul(buf, NULL, 0);
-> +	if (depth == 0)
-> +		return -EINVAL;
-> +	pTarget = hd->Targets[sdev->id];
-> +	if (pTarget == NULL)
-> +		return -EINVAL;
-> +	mptscsih_set_queue_depth(sdev, (MPT_SCSI_HOST *) 
-> sdev->host->hostdata,
-> +		pTarget, depth);
-> +	return count;
-> +}
-> +
->  
->  
-> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-> =-=-=-=-=-=-=-=*/
->  /*
-> @@ -3302,6 +3338,19 @@
->  	return 1;		/* currently means nothing really */
->  }
->  
-> +static struct device_attribute mptscsih_queue_depth_attr = {
-> +	.attr = {
-> +		.name = 	"queue_depth",
-> +		.mode =		S_IWUSR,
-> +	},
-> +	.store = mptscsih_store_queue_depth,
-> +};
-> +
-> +static struct device_attribute *mptscsih_dev_attrs[] = {
-> +	&mptscsih_queue_depth_attr,
-> +	NULL,
-> +};
-> +
->  static struct scsi_host_template driver_template = {
->  	.proc_name			= "mptscsih",
->  	.proc_info			= mptscsih_proc_info,
-> @@ -3322,6 +3371,7 @@
->  	.max_sectors			= 8192,
->  	.cmd_per_lun			= 7,
->  	.use_clustering			= ENABLE_CLUSTERING,
-> +	.sdev_attrs			= mptscsih_dev_attrs,
->  };
->  
->  
-> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-> =-=-=-=-=-=-=-=*/
-> 
+
+
+Begin forwarded message:
+
+Date: Tue, 28 Sep 2004 03:20:08 -0700
+From: bugme-daemon@osdl.org
+To: akpm@digeo.com
+Subject: [Bug 3482] New: plugging/unplugging usb devices causes mm/slab.c kernel bug
+
+
+http://bugme.osdl.org/show_bug.cgi?id=3482
+
+           Summary: plugging/unplugging usb devices causes mm/slab.c kernel
+                    bug
+    Kernel Version: 2.6.8.x
+            Status: NEW
+          Severity: normal
+             Owner: akpm@digeo.com
+         Submitter: andrea@yu.net
+
+
+Distribution: Linux Slackware 10
+Hardware Environment: nForce2 MB, 256MB RAM, Nvidia VGA
+Software Environment: X+KDE, console
+Problem Description:
+My external usb drive is working mostly only using ohci_hcd on usb2 controller,
+using ehci crashes transfer after less than a minute.
+Also, sometimes it crashes using ohci hub as well, for example when doing md5sum
+of a large file on the usb disk itself.
+
+Usually, solution is to unplug the disk, shut it down if necessary,
+unload/reload usb_storage module and plug it in again, although most of the time
+it crashes with a kernel bug like this:
+
+Initializing USB Mass Storage driver...
+usbcore: registered new driver usb-storage
+USB Mass Storage support registered.
+ohci_hcd 0000:00:02.1: wakeup
+usb 3-1: new full speed USB device using address 4
+kmem_cache_create: duplicate cache scsi_cmd_cache
+------------[ cut here ]------------
+kernel BUG at mm/slab.c:1382!
+invalid operand: 0000 [#1]
+PREEMPT
+Modules linked in: usb_storage nvidia snd_pcm_oss snd_mixer_oss ohci_hcd
+forcedeth snd_intel8x0 snd_ac97_codec snd_pcm snd_timer snd_page_alloc
+snd_mpu401_uart snd_rawmidi snd_seq_device snd evdev ntfs sd_mod scsi_mod usbcore
+CPU:    0
+EIP:    0060:[<c013d209>]    Tainted: P
+EFLAGS: 00010202   (2.6.8)
+EIP is at kmem_cache_create+0x3b9/0x550
+eax: 00000032   ebx: cdd56a50   ecx: c03c4258   edx: c0303538
+esi: cecb26a7   edi: cecb26a7   ebp: cdd56960   esp: cda89d30
+ds: 007b   es: 007b   ss: 0068
+Process khubd (pid: 318, threadinfo=cda88000 task=cda20660)
+Stack: c02cb8c0 cecb2698 00000020 00002000 cda89d50 cdd5699c c0000000 ffffffe0
+       000000a0 cdca9a00 cecbda00 cdca9a0c cecbda28 ceca8384 cecb2698 00000160
+       00000020 00002000 00000000 00000000 000001d8 cdca9a00 cdca9bd8 cec91680
+Call Trace:
+ [<ceca8384>] scsi_setup_command_freelist+0x74/0x100 [scsi_mod]
+ [<ceca975b>] scsi_host_alloc+0x1ab/0x2b0 [scsi_mod]
+ [<cec8ca17>] usb_stor_Bulk_max_lun+0x57/0xa0 [usb_storage]
+ [<cec8d9c3>] usb_stor_acquire_resources+0x73/0x120 [usb_storage]
+ [<cec8dd01>] storage_probe+0x101/0x190 [usb_storage]
+ [<cec6d07a>] usb_probe_interface+0x5a/0x60 [usbcore]
+ [<c020404f>] bus_match+0x3f/0x70
+ [<c02040c1>] device_attach+0x41/0xa0
+ [<c020439b>] bus_add_device+0x5b/0xb0
+ [<c0203151>] device_add+0xa1/0x130
+ [<cec7453e>] usb_set_configuration+0x2de/0x460 [usbcore]
+ [<cec6f424>] usb_new_device+0xb4/0x170 [usbcore]
+ [<cec70112>] hub_port_connect_change+0x212/0x400 [usbcore]
+ [<cec6dfd8>] clear_port_feature+0x58/0x60 [usbcore]
+ [<cec70575>] hub_events+0x275/0x3c0 [usbcore]
+ [<cec706f5>] hub_thread+0x35/0x110 [usbcore]
+ [<c0119f20>] autoremove_wake_function+0x0/0x60
+ [<c0105fde>] ret_from_fork+0x6/0x14
+ [<c0119f20>] autoremove_wake_function+0x0/0x60
+ [<cec706c0>] hub_thread+0x0/0x110 [usbcore]
+ [<c0104291>] kernel_thread_helper+0x5/0x14
+Code: 0f 0b 66 05 4e b0 2c c0 8b 0b e9 63 ff ff ff 8b 47 34 c7 04
+
+Steps to reproduce:
+
+It is not reproducible easy on different hardware platforms (on my home nForce2
+MB it never happened, although file transfer sometimes blocks, but very rarely,
+and is working with ehci root hub).
+But when it happens, it is always after unplugging the disk,after the operation
+fails and the disk keeps on showing activity even if it is not doing anything
+(goes dumb).
+
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
