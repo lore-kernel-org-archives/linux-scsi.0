@@ -1,101 +1,157 @@
 From: Kurt Garloff <garloff@suse.de>
-Subject: [PATCH] 1/6: scsi_largelun and scsi_sparselun
-Date: Sun, 18 Apr 2004 20:58:20 +0200
+Subject: [PATCH] 2/6: scsi_noreportlun and scsi_reportlun2
+Date: Sun, 18 Apr 2004 20:58:36 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040418185820.GD4868@tpkurt.garloff.de>
+Message-ID: <20040418185836.GE4868@tpkurt.garloff.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="rz+pwK2yUstbofK6"
+	protocol="application/pgp-signature"; boundary="a+b56+3nqLzpiR9O"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:32933 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S263645AbUDRTAG (ORCPT
+Received: from ns.suse.de ([195.135.220.2]:37541 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S263762AbUDRTAH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Apr 2004 15:00:06 -0400
+	Sun, 18 Apr 2004 15:00:07 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: Linux SCSI list <linux-scsi@vger.kernel.org>
 Cc: James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>
 
 
---rz+pwK2yUstbofK6
+--a+b56+3nqLzpiR9O
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
+
 Feature.
 
-Three new kernel/module parameters that affect SCSI scanning, all relevant
-for SCSI-2 only, as for SCSI-3, REPORT_LUNS is normally used:
-* scsi_sparselun allows the user to disable the Linux scanning optimization
-  that assumes that LUNs are consecutive. Equivalent to setting BLIST_SPARS=
-ELUN
-  blacklist entry for all devices.
-* scsi_largelun alloes the user to disable the check to need SCSI-3 to allow
-  LUNs >=3D 8. Equivalent to a global BLIST_LARGELUN.
-* max_scsi_sparseluns: Allows to set a different limit for targets with=20
-  sparse LUN numbering.
+Remove CONFIG_SCSI_REPORT_LUNS config option.
+Instead provide two boot/module parameters that affect SCSI scanning:
 
---- linux-2.6.5/drivers/scsi/scsi_scan.c.orig	2004-04-04 05:37:41.000000000=
- +0200
-+++ linux-2.6.5/drivers/scsi/scsi_scan.c	2004-04-15 21:47:12.859160471 +0200
-@@ -80,6 +80,21 @@ module_param_named(max_luns, max_scsi_lu
- MODULE_PARM_DESC(max_luns,
- 		 "last scsi LUN (should be between 1 and 2^32-1)");
+* scsi_noreportlun:
+  Allows the user to disable the use of REPORT_LUNS during SCSI scanning.
+* scsi_reportlun2:
+  Tell the kernel to try REPORT_LUNS for scanning also for SCSI-2 devices,
+  if the host adapter supports more than 8 LUNs.
+
+ Kconfig     |   11 -----------
+ scsi_scan.c |   29 ++++++++++++++++++++---------
+ 2 files changed, 20 insertions(+), 20 deletions(-)
+
+diff -uNrp linux-2.6.5/drivers/scsi/Kconfig linux-2.6.5.replun2/drivers/scs=
+i/Kconfig
+--- linux-2.6.5/drivers/scsi/Kconfig	2004-04-14 20:20:19.000000000 +0200
++++ linux-2.6.5.replun2/drivers/scsi/Kconfig	2004-04-15 21:54:17.000000000 =
++0200
+@@ -170,17 +170,6 @@ config SCSI_MULTI_LUN
+ 	  so most people can say N here and should in fact do so, because it
+ 	  is safer.
 =20
-+static int scsi_sparselun;
-+module_param_named(scsi_sparselun, scsi_sparselun, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(scsi_sparselun,
-+		 "Assume sparse LUNs for all SCSI devices");
-+
-+static int scsi_largelun;
-+module_param_named(scsi_largelun, scsi_largelun, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(scsi_largelun,
-+		 "Assume all SCSI-2 devs support more than 8 LUNs");
-+
-+static unsigned int max_scsi_sparseluns;
-+module_param_named(max_scsi_sparseluns, max_scsi_sparseluns, int, S_IRUGO|=
-S_IWUSR);
-+MODULE_PARM_DESC(max_scsi_sparseluns,
-+		 "Limit LUNs for scanning sparse LUN devices");
-+
- #ifdef CONFIG_SCSI_REPORT_LUNS
+-config SCSI_REPORT_LUNS
+-	bool "Build with SCSI REPORT LUNS support"
+-	depends on SCSI
+-	default y
+-	help
+-	  If you want support for SCSI REPORT LUNS, say Y here.
+-	  The REPORT LUNS command is useful for devices (such as disk arrays)
+-	  with large numbers of LUNs where the LUN values are not contiguous
+-	  (sparse LUN).  REPORT LUNS scanning is done only for SCSI-3 devices.
+-	  Most users can safely answer N here.
+-
+ config SCSI_CONSTANTS
+ 	bool "Verbose SCSI error reporting (kernel size +=3D12K)"
+ 	depends on SCSI
+diff -uNrp linux-2.6.5/drivers/scsi/scsi_scan.c linux-2.6.5.replun2/drivers=
+/scsi/scsi_scan.c
+--- linux-2.6.5/drivers/scsi/scsi_scan.c	2004-04-15 21:47:12.000000000 +0200
++++ linux-2.6.5.replun2/drivers/scsi/scsi_scan.c	2004-04-15 22:33:51.940951=
+876 +0200
+@@ -95,7 +95,6 @@ module_param_named(max_scsi_sparseluns,=20
+ MODULE_PARM_DESC(max_scsi_sparseluns,
+ 		 "Limit LUNs for scanning sparse LUN devices");
+=20
+-#ifdef CONFIG_SCSI_REPORT_LUNS
  /*
   * max_scsi_report_luns: the maximum number of LUNS that will be
-@@ -800,8 +815,9 @@ static void scsi_sequential_lun_scan(str
- 	 * override the other settings, and scan all of them. Normally,
- 	 * SCSI-3 devices should be scanned via the REPORT LUNS.
- 	 */
--	if (bflags & BLIST_SPARSELUN) {
--		max_dev_lun =3D shost->max_lun;
-+	if (bflags & BLIST_SPARSELUN || scsi_sparselun) {
-+		max_dev_lun =3D min(shost->max_lun, max_scsi_sparseluns?=20
-+				  max_scsi_sparseluns: max_scsi_luns);
- 		sparse_lun =3D 1;
- 	} else
- 		sparse_lun =3D 0;
-@@ -845,7 +861,7 @@ static void scsi_sequential_lun_scan(str
- 	 * Do not scan SCSI-2 or lower device past LUN 7, unless
- 	 * BLIST_LARGELUN.
- 	 */
--	if (scsi_level < SCSI_3 && !(bflags & BLIST_LARGELUN))
-+	if (scsi_level < SCSI_3 && !(bflags & BLIST_LARGELUN) && !scsi_largelun)
- 		max_dev_lun =3D min(8U, max_dev_lun);
+  * returned from the REPORT LUNS command. 8 times this value must
+@@ -103,13 +102,23 @@ MODULE_PARM_DESC(max_scsi_sparseluns,
+  * in practice, the maximum number of LUNs suppored by any device
+  * is about 16k.
+  */
+-static unsigned int max_scsi_report_luns =3D 128;
++static unsigned int max_scsi_report_luns =3D 511;
+=20
+ module_param_named(max_report_luns, max_scsi_report_luns, int, S_IRUGO|S_I=
+WUSR);
+ MODULE_PARM_DESC(max_report_luns,
+ 		 "REPORT LUNS maximum number of LUNS received (should be"
+ 		 " between 1 and 16384)");
+-#endif
++
++static int scsi_noreportlun;
++module_param_named(scsi_noreportlun, scsi_noreportlun, int, S_IRUGO|S_IWUS=
+R);
++MODULE_PARM_DESC(scsi_noreportlun,
++		 "Don't use REPORT_LUNs for scanning SCSI-3 devs");
++
++static int scsi_reportlun2;
++module_param_named(scsi_reportlun2, scsi_reportlun2, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(scsi_reportlun2,
++		 "Use REPORT_LUNs for scanning SCSI-2 devs as well");
++
+=20
+ /**
+  * scsi_unlock_floptical - unlock device via a special MODE SENSE command
+@@ -876,7 +885,6 @@ static void scsi_sequential_lun_scan(str
+ 			return;
+ }
+=20
+-#ifdef CONFIG_SCSI_REPORT_LUNS
+ /**
+  * scsilun_to_int: convert a scsi_lun to an int
+  * @scsilun:	struct scsi_lun to be converted.
+@@ -937,9 +945,15 @@ static int scsi_report_lun_scan(struct s
+ 	u8 *data;
 =20
  	/*
+-	 * Only support SCSI-3 and up devices.
++	 * Only support SCSI-3 devices unless scsi_noreportlun is set.
++	 * SCSI-2 is supported is scsi_reportlun2 is set and the host
++	 * adapter claims to support more than 8 LUNS (likely FC).=20
+ 	 */
+-	if (sdev->scsi_level < SCSI_3)
++=09
++	if ( scsi_noreportlun ||
++	     sdev->scsi_level < SCSI_2 ||=20
++	    (sdev->scsi_level < SCSI_3 &&
++	     (!scsi_reportlun2 || sdev->host->max_lun <=3D 8)))
+ 		return 1;
+ 	if (bflags & BLIST_NOLUN)
+ 		return 0;
+@@ -1103,9 +1117,6 @@ static int scsi_report_lun_scan(struct s
+ 	printk(ALLOC_FAILURE_MSG, __FUNCTION__);
+ 	return 0;
+ }
+-#else
+-# define scsi_report_lun_scan(sdev, blags, rescan)	(1)
+-#endif	/* CONFIG_SCSI_REPORT_LUNS */
+=20
+ struct scsi_device *scsi_add_device(struct Scsi_Host *shost,
+ 				    uint channel, uint id, uint lun)
 --=20
 Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
 SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
 
---rz+pwK2yUstbofK6
+--a+b56+3nqLzpiR9O
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.4 (GNU/Linux)
 
-iD8DBQFAgs/MxmLh6hyYd04RAkgQAJ9eylbfS+2J11EQ39izhAm30d8G4gCfW6Q0
-i2F2B1Iv2NrhiOj06Mx8/e0=
-=2qWP
+iD8DBQFAgs/bxmLh6hyYd04RAtpkAKDBJfrRD85xWs7Qgqf2VCUaNqlNQgCgohhD
+YBDPFq4kfn1aAzuy01b01GE=
+=KYPL
 -----END PGP SIGNATURE-----
 
---rz+pwK2yUstbofK6--
+--a+b56+3nqLzpiR9O--
