@@ -1,39 +1,38 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [PATCH] SCSI and FibreChannel Hotswap for linux 2.5.44-bk2
-Date: Wed, 30 Oct 2002 20:18:34 +0000
+Date: Wed, 30 Oct 2002 15:42:21 -0500
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20021030201834.A4815@infradead.org>
-References: <3DC02AF7.6020209@mvista.com>
+Message-ID: <200210302042.g9UKgLS02419@localhost.localdomain>
+References: <sdake@mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3DC02AF7.6020209@mvista.com>; from sdake@mvista.com on Wed, Oct 30, 2002 at 11:54:47AM -0700
+In-Reply-To: Message from Steven Dake <sdake@mvista.com>
+   of "Wed, 30 Oct 2002 11:54:47 MST." <3DC02AF7.6020209@mvista.com>
 To: Steven Dake <sdake@mvista.com>
 Cc: torvalds@transmeta.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Umm, stop.
+sdake@mvista.com said:
+>  This patch has been reviewed by Alan Cox, Greg KH, Christoph Hellwig,
+>  Patrick Mansfield, Rob Landly, Jeff Garzik, Scott Murray, James
+> Bottomley, Mike Anderson, Randy Dunlap and Patrick Mochel. 
 
-Scsi midlayer patches don't go directly to Linus, but through the linux-scsi
-list and James into the linux-scsi bk repository first.
+Well, I reviewed it but my though was that it should be built on the emerging 
+hotplug infrastructure.
 
-The patch still has a bunch of problem not solved, and contains two things
-that should be independant patches.
+I'm currently trying to move things like this into the user layer, so from a 
+design principle I don't want to have 90% using the user space stuff and 10% 
+using its in-kernel equivalent because that means we have two mechanisms to 
+maintain, thus doubling the work.
 
-The first patch should be the host_queue locking you added, this one currently
-has the following issues:
+The problem you had with this was the 10ms requirement from removal 
+notification to removal completion.  Several people have already suggested 
+that if that really is a hard and fast requirement, then you could simply 
+treat the removal as a surprise removal rather than a planned one and work on 
+fixing our surprise removal problems instead.
 
-* you call spin_lock on a semaphore once!
-* you take semaphores inside spinlocks and with interrupts disabled
-* the coding style needs some imnprovements (you adds lots of empty lines,
-  and there's a space before the opening brakes of function calls).
+The bottom line is that I'm not convinced this can't be done using the 
+existing infrastructure or a generic enhancement to it.
 
-the actual driver still has other issues:
-
-* you still duplicated lots of code from scsi.c
-* your header is still in include/linux instead of include/scsi,
-  but imho it should be merged into scsi.h anyway
-* you still havent explain why wwn -> host id translation can't
-  be done in userspace
-* you still have useage information in the driverfs files.
+James
