@@ -1,32 +1,51 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 04/19] drivers/scsi/ahci: Use the DMA_{64,32}BIT_MASK constants
-Date: Sun, 20 Feb 2005 12:39:16 -0500
-Message-ID: <20050220173916.GB5495@havoc.gtf.org>
-References: <20050220165530.GD14375@helium.tklauser.home>
+From: Ingo Korb <nospam@akana.de>
+Subject: Re: sym53c8xx_2 hangs on 53c810 rev 02
+Date: Sun, 20 Feb 2005 20:09:01 +0100
+Message-ID: <uekfbm4ky.fsf@dragon.akana.de>
+References: <41992BE8.22985.49329380@localhost>
+	<20050218204840.GB29917@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from atlmail.prod.rxgsys.com ([64.74.124.160]:54921 "EHLO
-	bastet.signetmail.com") by vger.kernel.org with ESMTP
-	id S261495AbVBTRjZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Feb 2005 12:39:25 -0500
-Content-Disposition: inline
-In-Reply-To: <20050220165530.GD14375@helium.tklauser.home>
+Received: from snowcat.de ([213.146.167.7]:33284 "EHLO snowcat.de")
+	by vger.kernel.org with ESMTP id S261738AbVBTTJU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Feb 2005 14:09:20 -0500
+In-Reply-To: <20050218204840.GB29917@parcelfarce.linux.theplanet.co.uk> (Matthew
+ Wilcox's message of "Fri, 18 Feb 2005 20:48:40 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tobias Klauser <tklauser@nuerscht.ch>
-Cc: kernel-janitors@lists.osdl.org, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, Feb 20, 2005 at 05:55:30PM +0100, Tobias Klauser wrote:
-> Hello,
-> 
-> Description: Use the DMA_{64,32}BIT_MASK constants from dma-mapping.h
-> when calling pci_set_dma_mask() or pci_set_consistent_dma_mask()
-> See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 for details
+Matthew Wilcox <matthew@wil.cx> writes:
 
-Please CC libata patches to (1) the person that maintains libata [me]
-and (2) linux-ide@vger.kernel.org.
+> To be honest, this looks like the sym2 driver never received any interrupts.
 
-	Jeff
+I guess so - I'm not sure why I reported problems with the 2.4 version
+of the driver, when I just retested it with 2.4.29 everything was
+working fine.
 
+> Could you boot with sym53c8xx.debug=0xffff on the command line?  That should
+> report any interrupts that come in.
 
+2.6.10, just the part after the hexdumps:
+
+=== Cut ===
+new BADLUNTBL [ 256] @fffffc0005ea5200.
+sym0: SCSI BUS has been reset.
+scsi0 : sym-2.1.18m
+sym0:0:0:ccb @fffffc0005ea5800 using tag 256.
+sym0: queuepos=2.
+sym0:0:0: ABORT operation started.
+sym0:0:0: ABORT operation timed-out.
+sym0:0:0: DEVICE RESET operation started.
+sym0:0:0: DEVICE RESET operation timed-out.
+sym0:0:0: BUS RESET operation started.
+sym0:0:0: BUS RESET operation timed-out.
+sym0:0:0: HOST RESET operation started.
+sym0:0:0:ccb @fffffc0005ea5800 freeing tag 256.
+sym0: SCSI BUS has been reset.
+=== Cut ===
+
+-ik
 
