@@ -1,42 +1,32 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: 2.5.20-dj2 : "Duplicate initializer" in drivers/scsi/aic7xxx/aic7xxx_linux.c
-Date: Tue, 4 Jun 2002 17:30:30 -0700
+From: sullivan <sullivan@austin.ibm.com>
+Subject: [RFC] Persistent naming of scsi devices
+Date: Wed, 5 Jun 2002 15:13:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020604173030.A18317@eng2.beaverton.ibm.com>
-References: <3CFD25B7.2090108@fuse.net> <20020604225201.X4751@suse.de>
+Message-ID: <20020605151336.A1139@austin.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020604225201.X4751@suse.de>; from davej@suse.de on Tue, Jun 04, 2002 at 10:52:01PM +0200
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Jones <davej@suse.de>, Nathan <wfilardo@fuse.net>, linux-kernel@vger.kernel.org
-Cc: gibbs@scsiguy.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: mochel@osdl.org
 
-On Tue, Jun 04, 2002 at 10:52:01PM +0200, Dave Jones wrote:
-> On Tue, Jun 04, 2002 at 04:40:23PM -0400, Nathan wrote:
->  > gcc -D__KERNEL__ -I/home/wes/src/kernel/linux-2.5.20/include -Wall 
->  > -Wstrict-prototypes -Wno-trigraphs -O2 -fno-strict-aliasing -fno-common 
->  > -fomit-frame-pointer -pipe -mpreferred-stack-boundary=2 -march=i686 
->  > -malign-functions=4     -DKBUILD_BASENAME=aic7xxx_linux  -c -o 
->  > aic7xxx_linux.o aic7xxx_linux.c
->  > aic7xxx_linux.c:2829: unknown field `abort' specified in initializer
->  > aic7xxx_linux.c:2829: unknown field `reset' specified in initializer
->  > 
->  > Erhm, what's that mean? ^_^  And more importantly, how does one fix that?
-> 
-> It means the scsi driver has no error handling. Either a, add
-> appropriate error handling routines, or b, enable the option in
-> the scsi menu labelled "Use SCSI drivers with broken error handling [DANGEROUS]"
-> 
-> This is the fallout of a patch from Christoph Hellwig to make it more
-> obvious which drivers are still in need of attention.  This patch is
-> missing from Linus' tree, so things compile fine there. As there's been
-> little to no progress at fixing these, I'll push the same patch to Linus
-> in the next round, so things will break there too.
-> 
->     Dave.
+Thanks for your postings to the original RFC submitted under this subject. Based on your feedback two utilities are now available at http://oss.software.ibm.com/devreg/
+a. scsiname utility
+	- Makes sg calls to collect device info used to make naming decisions
+	- Hooked into the hotplug interface using Doug Gilbert's scsimon patch
+	- Targeted specifically to scsi devices
+	- Implemented completely in userspace
 
-The aic driver already uses the new error handler, it just references the
-removed fields when initializing them to NULL.
+b. devnaming utility
+	- Utilizes Patrick Mochel's driverfs fs to collect device info
+	- Can easily be extended to support other device types (non scsi)
+	- Includes a kernel patch to create/publish device info in driverfs
+	- Hooked into hotplug interface using scsimon patch
 
--- Patrick Mansfield
+Why two utilities? I see scsiname providing an immediate fix for providing a persistent set of /dev scsi names across boots. The devnaming utility is more long term in that it anticipates that driverfs will evolve into providing the device information necessary, removing the need for interfacing through sg. The config and hotplug portions of the utilities are consistent and should (hopefully) provide a smooth migration path.
+
+I'd appreciate feedback from anyone that has the interest and the time to take a further look.
+
+
+
