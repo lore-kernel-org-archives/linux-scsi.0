@@ -1,57 +1,43 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: SCSI QLA not working on latest *-mm SN2
-Date: Tue, 21 Sep 2004 22:11:08 +0100
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: RE: SCSI QLA not working on latest *-mm SN2
+Date: Tue, 21 Sep 2004 14:22:48 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040921211108.GA16153@parcelfarce.linux.theplanet.co.uk>
-References: <20040917183029.GW642@parcelfarce.linux.theplanet.co.uk> <200409211346.58267.jbarnes@engr.sgi.com> <1095789421.2467.414.camel@mulgrave> <200409211409.11095.jbarnes@engr.sgi.com> <20040921190625.GB11708@colo.lackof.org> <20040921210341.GC146363@sgi.com>
+Message-ID: <B179AE41C1147041AA1121F44614F0B0DD04E5@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:37099 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S267985AbUIUVLJ
+Received: from avexch01.qlogic.com ([198.70.193.200]:31559 "EHLO
+	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S268072AbUIUV1U convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Sep 2004 17:11:09 -0400
-Content-Disposition: inline
-In-Reply-To: <20040921210341.GC146363@sgi.com>
+	Tue, 21 Sep 2004 17:27:20 -0400
+Content-Class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
 To: Jeremy Higdon <jeremy@sgi.com>
-Cc: Grant Grundler <grundler@parisc-linux.org>, Jesse Barnes <jbarnes@engr.sgi.com>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <willy@debian.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@SteelEye.com>, Jesse Barnes <jbarnes@engr.sgi.com>, Grant Grundler <grundler@parisc-linux.org>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
 
-On Tue, Sep 21, 2004 at 02:03:42PM -0700, Jeremy Higdon wrote:
-> On Altix, we do have the sn_mmiob() option.  I don't think that
-> we want to Linux API to require that
+On Tuesday, September 21, 2004 2:06 PM, Jeremy Higdon wrote:
+> On Tue, Sep 21, 2004 at 01:50:02PM -0700, Andrew Vasquez wrote:
+> > The only requirement after reception of a soft-reset request (by PIO
+> > or MMIO) by the RISC is for the driver to wait 16 PCI clocks before
+> > issuing another request.  The problem of course is determining when
+> > to start timing within the driver.
 > 
-> CPUA:	writel(value_X, common_register)
-> 	spin_unlock(common_lock)
-> 
-> CPUB:	spin_lock(common_lock)
-> 	writel(value_Y, common_register)
-> 
-> be strongly ordered, because it places a performance penalty
-> on all writes.
+> So I think that we just wait for some reasonable worst case time for
+> the write to complete.  We can't really do anything else.
+>
 
-I disagree with you.  If this were memory, then you would expect
-common_register to be set to value_Y after this sequence.  Why should
-IO be different?
-
-> On Altix, we have the "sn_mmiob()" function to do
-> that.  I.e.
+That seems to be the case.
+ 
+> Are these resets done as part of error recovery?  I.e., do we have
+> to be concerned about long the write will take on a busy system?
 > 
-> CPUA:	writel(value_X, common_register)
-> 	sn_mmiob()
-> 	spin_unlock(common_lock)
-> 
-> CPUB:	spin_lock(common_lock)
-> 	writel(value_Y, common_register)
-> 
-> would strongly order the writes.
 
-I think your _raw_spin_unlock() should include an sn_mmiob().
+Just during initialization (qla2x00_chip_diag() and qla2x00_setup_chip())
+and after a firmware dump (qla_dbg.c -- which requires a full 
+re-initialization to recover).  If the driver is in the process of
+performing a firmware-dump, the RISC has already been paused and nothing
+is executing within the firmware.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+--
+Andrew
