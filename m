@@ -1,60 +1,50 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Unaligned scatter-gather buffers and usb-storage
-Date: Wed, 19 Nov 2003 16:49:11 +0100
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: [PATCH] Re: AMD 53c974 SCSI driver in 2.6
+Date: Wed, 19 Nov 2003 16:34:38 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031119154911.GM1106@suse.de>
-References: <20031119084729.GA1106@suse.de> <Pine.LNX.4.44L0.0311191033300.957-100000@ida.rowland.org>
+Message-ID: <20031119153437.GA2115@tpkurt.garloff.de>
+References: <20031118092844.GA2995@tpkurt.garloff.de> <Pine.LNX.4.44.0311182339460.3405-100000@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="W/nzBZO5zC0uMSeA"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:41903 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S264126AbTKSPt0 (ORCPT
+Received: from ns.suse.de ([195.135.220.2]:23173 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S263891AbTKSQIa (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Nov 2003 10:49:26 -0500
+	Wed, 19 Nov 2003 11:08:30 -0500
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0311191033300.957-100000@ida.rowland.org>
+In-Reply-To: <Pine.LNX.4.44.0311182339460.3405-100000@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@steeleye.com>, Oliver Neukum <oliver@neukum.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: "Randy.Dunlap" <rddunlap@osdl.org>, hch@infradead.org, linux-scsi@vger.kernel.org, gl@dsa-ac.de
 
-On Wed, Nov 19 2003, Alan Stern wrote:
-> On Wed, 19 Nov 2003, Jens Axboe wrote:
-> 
-> > The queue already has such a restriction embedded, see bio_map_user()
-> > and queue_dma_alignment().
-> 
-> Searching through the 2.6 kernel source gave some interesting results.
-> 
-> queue_dma_alignment() does nothing but set the dma_alignment field of the
-> request queue structure.  The _only_ place this field is used is in
-> fs/bio.c by __bio_map_user(), called from bio_map_user().  In turn, the
-> _only_ place bio_map_user() is called is from drivers/block/scsi_ioctl.c,
-> and that's only for a certain specific type of SCSI ioctl.  It's not on
 
-It's for SG_IO.
+--W/nzBZO5zC0uMSeA
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> any main code path, and it wouldn't get invoked by anything using the st
-> or sg drivers.  In fact, it looks like scsi_ioctl.c:scsi_cmd_ioctl() is
-> only called from within the sd driver.
+On Wed, Nov 19, 2003 at 12:07:06AM +0100, Guennadi Liakhovetski wrote:
+> Yes, I presume, in your patch, Kurt, you meant
+> -       if (pSRB->SRBFlag | AUTO_REQSENSE) {
+> +       if (pSRB->SRBFlag & AUTO_REQSENSE) {
+> right?
 
-It's invoked from user space. Don't mix block and scsi scsi_ioctl() up.
-bio_map_user() would be used by a block layer sg driver too, for
-instance.
+Yes, of course.
+--=20
+Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
+SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
 
-> So something needs to be fixed up.  Is there some spot in the block layer 
-> that's supposed to be checking dma alignments but isn't doing so?
+--W/nzBZO5zC0uMSeA
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-The queue dma alignment was added to better cater to cdrecord, for
-instance. We need better than 512b granularity there, or you cannot use
-DMA on certain types of burns (lots of sector types are non-2kb aligned
-there).
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
 
-If you can 512-byte align the data and transfer from user space, _that
-is enough_. The program just needs to be aware of this, it's not an odd
-restriction. There are just scenarious where you cannot do this, and
-that is why I added the queue dma alignment attribute. To me, it doesn't
-sound like your case applies.
+iD8DBQE/u42NxmLh6hyYd04RAmNtAJ9k1ZOUVpYlMkr86jPQ9Z1TZ3tifACffZx+
+ka3hmKqx9E7fg+OO+ppIrPk=
+=y5Pj
+-----END PGP SIGNATURE-----
 
--- 
-Jens Axboe
-
+--W/nzBZO5zC0uMSeA--
