@@ -1,175 +1,201 @@
 From: Andries.Brouwer@cwi.nl
-Subject: Feiya 5-in-1 Card Reader
-Date: Sun, 1 Sep 2002 01:29:58 +0200 (MEST)
+Subject: [PATCH] MODE SENSE in sd.c; sddr09.c
+Date: Mon, 2 Sep 2002 02:41:16 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <15118.4736555026$1030836724@news.gmane.org>
+Message-ID: <UTC200209020041.g820fGS22828.aeb@smtp.cwi.nl>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-usb@one-eyed-alien.net
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, torvalds@transmeta.com
+Cc: mdharm-usb@one-eyed-alien.net
 
-I have a USB 5-in-1 Card Reader, that will read CF and SM and SD/MMC.
-Under Linux it appears as three SCSI devices.
-For today, the report is on the CF part.
+In sd.c we call MODE SENSE (6) in order to find out whether the
+device is write protected. The info we need is in byte 2, the
+header of the MODE SENSE answer, but in the request we have to
+specify (i) what page(s) we want, and (ii) how many bytes we want.
 
-The CF part works fine under ordinary usb-storage SCSI simulation,
-with one small problem: 8 and 32 MB cards, that are detected as
-having 15872 and 63488 sectors by other readers, are detected as
-having 15873 and 63489 sectors by this Feiya reader
-(0x090c / 0x1132).
-In the good old days probably nobody would have noticed, but these
-days the partition reading code also wants to read the last sector.
-This results in the SCSI code taking the device off line:
+Long ago we asked for 12 bytes from page 1 (Daniel Roche, 1.3.35).
+Matthew Dharm made this 8 bytes from page 3F (all pages), patch-2.4.0-test8.
+In patch-2.4.10 the 8 was increased to 255.
 
-[USB storage does a READ_10, which fails since the sector is past
-the end of the disk. Then it tries a READ_6 and nothing ever happens,
-probably because the device does not support READ_6. Then the
-error handler does an abort which triggers some bugs in scsiglue.c
-and transport.c, then the error handler does a device reset, then
-a host reset, then a bus reset, and finally the device is taken offline.]
+I found on the one hand devices that only react to page 0
+(the vendor page), and return an error for page 3F.
+And on the other hand devices that are unable to handle requests
+for more bytes than they actually have.
 
-The patch below does not address any bugs in the SCSI error code
-(a big improvement would be just to rip it all out - this error code
-never achieves anything useful but has crashed many a machine)
-and does not fix the USB code either.
-It just adds a flag to the unusual_devices section mentioning that
-this device (my revision is 1.00) has this bug.
+So, it seems that the cautious way to ask for MODE SENSE data is
+to first ask for the header only, see how much is available,
+and then ask for everything.
 
-Without the patch the kernel crashes, or insmod usb-storage hangs.
-With the patch the CF part of the device works perfectly.
+The patch below first separates out the MODE SENSE call,
+and then tries it three times: on all pages (3F), only the first
+four bytes; on the vendor page (0), only the first four bytes;
+on all pages (3F), 255 bytes.
 
-(Another change is to only print "Fixing INQUIRY data" when
-really something is changed, not when the data was OK already.)
+This should be at least as robust as our current code.
+I tried it on 8 SCSI devices (of which 2 fail under 2.5.33)
+and found no problems.
+
+Below - maybe I should have sent it in a separate mail -
+a diff of usb/storage/sddr09.c teaching the code there
+how to return less than a full page.
 
 Andries
 
 
-diff -u --recursive --new-file -X /linux/dontdiff a/drivers/usb/storage/protocol.c b/drivers/usb/storage/protocol.c
---- a/drivers/usb/storage/protocol.c	Sun Jun  9 07:26:30 2002
-+++ b/drivers/usb/storage/protocol.c	Sun Sep  1 00:23:37 2002
-@@ -54,10 +54,27 @@
-  * Helper routines
-  ***********************************************************************/
- 
--/* Fix-up the return data from an INQUIRY command to show 
-+static void *
-+find_data_location(Scsi_Cmnd *srb) {
-+	if (srb->use_sg) {
-+		/*
-+		 * This piece of code only works if the first page is
-+		 * big enough to hold more than 3 bytes -- which is
-+		 * _very_ likely.
-+		 */
-+		struct scatterlist *sg;
-+
-+		sg = (struct scatterlist *) srb->request_buffer;
-+		return (void *) page_address(sg[0].page) + sg[0].offset;
-+	} else
-+		return (void *) srb->request_buffer;
-+}
-+
-+/*
-+ * Fix-up the return data from an INQUIRY command to show 
-  * ANSI SCSI rev 2 so we don't confuse the SCSI layers above us
-  */
--void fix_inquiry_data(Scsi_Cmnd *srb)
-+static void fix_inquiry_data(Scsi_Cmnd *srb)
- {
- 	unsigned char *data_ptr;
- 
-@@ -65,24 +82,43 @@
- 	if (srb->cmnd[0] != INQUIRY)
- 		return;
- 
--	US_DEBUGP("Fixing INQUIRY data to show SCSI rev 2\n");
-+	data_ptr = find_data_location(srb);
- 
--	/* find the location of the data */
--	if (srb->use_sg) {
--		/* this piece of code only works if the first page is big enough to
--		 * hold more than 3 bytes -- which is _very_ likely
--		 */
--		struct scatterlist *sg;
-+	if ((data_ptr[2] & 7) == 2)
-+		return;
- 
--		sg = (struct scatterlist *) srb->request_buffer;
--		data_ptr = (unsigned char *) page_address(sg[0].page) + sg[0].offset;
--	} else
--		data_ptr = (unsigned char *)srb->request_buffer;
-+	US_DEBUGP("Fixing INQUIRY data to show SCSI rev 2 - was %d\n",
-+		  data_ptr[2] & 7);
- 
- 	/* Change the SCSI revision number */
- 	data_ptr[2] = (data_ptr[2] & ~7) | 2;
+--- linux-2.5.33/linux/drivers/scsi/sd.c	Sun Sep  1 09:47:13 2002
++++ linux-2.5.33a/linux/drivers/scsi/sd.c	Mon Sep  2 01:49:28 2002
+@@ -1007,6 +1007,28 @@
+ 	sdkp->device->sector_size = sector_size;
  }
  
-+/*
-+ * Fix-up the return data from a READ CAPACITY command. My Feiya reader
-+ * returns a value that is 1 too large.
-+ */
-+static void fix_read_capacity(Scsi_Cmnd *srb)
-+{
-+	unsigned char *dp;
-+	unsigned long capacity;
++static int
++sd_do_mode_sense6(Scsi_Device *sdp, Scsi_Request *SRpnt,
++		  int modepage, unsigned char *buffer, int len) {
++	unsigned char cmd[8];
 +
-+	/* verify that it's a READ CAPACITY command */
-+	if (srb->cmnd[0] != READ_CAPACITY)
-+		return;
++	memset((void *) &cmd[0], 0, 8);
++	cmd[0] = MODE_SENSE;
++	cmd[1] = (sdp->scsi_level <= SCSI_2) ? ((sdp->lun << 5) & 0xe0) : 0;
++	cmd[2] = modepage;
++	cmd[4] = len;
 +
-+	dp = find_data_location(srb);
++	SRpnt->sr_cmd_len = 0;
++	SRpnt->sr_sense_buffer[0] = 0;
++	SRpnt->sr_sense_buffer[2] = 0;
++	SRpnt->sr_data_direction = SCSI_DATA_READ;
 +
-+	capacity = (dp[0]<<24) + (dp[1]<<16) + (dp[2]<<8) + (dp[3]);
-+	US_DEBUGP("US: Fixing capacity: from %ld to %ld\n",
-+	       capacity+1, capacity);
-+	capacity--;
-+	dp[0] = (capacity >> 24);
-+	dp[1] = (capacity >> 16);
-+	dp[2] = (capacity >> 8);
-+	dp[3] = (capacity);
++	scsi_wait_req(SRpnt, (void *) cmd, (void *) buffer,
++		      len, SD_TIMEOUT, MAX_RETRIES);
++
++	return SRpnt->sr_result;
 +}
 +
- /***********************************************************************
-  * Protocol routines
-  ***********************************************************************/
-@@ -346,8 +382,11 @@
- 		if ((us->flags & US_FL_MODE_XLATE) && (old_cmnd == MODE_SENSE))
- 			usb_stor_scsiSense10to6(srb);
+ /*
+  * read write protect setting, if possible - called only in sd_init_onedisk()
+  */
+@@ -1014,50 +1036,38 @@
+ sd_read_write_protect_flag(Scsi_Disk *sdkp, char *diskname,
+ 			   Scsi_Request *SRpnt, unsigned char *buffer) {
+ 	Scsi_Device *sdp = sdkp->device;
+-	unsigned char cmd[8];
+-	int the_result;
++	int res;
  
--		/* fix the INQUIRY data if necessary */
-+		/* Fix the INQUIRY data if necessary */
- 		fix_inquiry_data(srb);
-+
-+		/* Fix the READ CAPACITY result if necessary */
-+		if (us->flags & US_FL_FIX_CAPACITY)
-+			fix_read_capacity(srb);
+ 	/*
+-	 * For removable scsi disks we have to recognise the
+-	 * Write Protect Flag. This flag is kept in the Scsi_Disk
+-	 * struct and tested at open !
+-	 * Daniel Roche ( dan@lectra.fr )
+-	 *
+-	 * Changed to get all pages (0x3f) rather than page 1 to
+-	 * get around devices which do not have a page 1.  Since
+-	 * we're only interested in the header anyway, this should
+-	 * be fine.
+-	 *   -- Matthew Dharm (mdharm-scsi@one-eyed-alien.net)
+-	 *
+-	 * As it turns out, some devices return an error for
+-	 * every MODE_SENSE request except one for page 0.
+-	 * So, we should also try that. --aeb
++	 * First attempt: ask for all pages (0x3F), but only 4 bytes.
++	 * We have to start carefully: some devices hang if we ask
++	 * for more than is available.
+ 	 */
++	res = sd_do_mode_sense6(sdp, SRpnt, 0x3F, buffer, 4);
+ 
+-	memset((void *) &cmd[0], 0, 8);
+-	cmd[0] = MODE_SENSE;
+-	cmd[1] = (sdp->scsi_level <= SCSI_2) ?
+-		((sdp->lun << 5) & 0xe0) : 0;
+-	cmd[2] = 0x3f;	/* Get all pages */
+-	cmd[4] = 255;   /* Ask for 255 bytes, even tho we want just the first 8 */
+-	SRpnt->sr_cmd_len = 0;
+-	SRpnt->sr_sense_buffer[0] = 0;
+-	SRpnt->sr_sense_buffer[2] = 0;
+-	SRpnt->sr_data_direction = SCSI_DATA_READ;
+-
+-	scsi_wait_req(SRpnt, (void *) cmd, (void *) buffer,
+-		      255, SD_TIMEOUT, MAX_RETRIES);
++	/*
++	 * Second attempt: ask for page 0
++	 * When only page 0 is implemented, a request for page 3F may return
++	 * Sense Key 5: Illegal Request, Sense Code 24: Invalid field in CDB.
++	 */
++	if (res)
++		res = sd_do_mode_sense6(sdp, SRpnt, 0, buffer, 4);
+ 
+-	the_result = SRpnt->sr_result;
++	/*
++	 * Third attempt: ask 255 bytes, as we did earlier.
++	 */
++	if (res)
++		res = sd_do_mode_sense6(sdp, SRpnt, 0x3F, buffer, 255);
+ 
+-	if (the_result) {
+-		printk("%s: test WP failed, assume Write Enabled\n",
+-		       diskname);
+-		/* alternatively, try page 0 */
++	if (res) {
++		printk(KERN_WARNING
++		       "%s: test WP failed, assume Write Enabled\n", diskname);
+ 	} else {
+ 		sdkp->write_prot = ((buffer[2] & 0x80) != 0);
+ 		printk(KERN_NOTICE "%s: Write Protect is %s\n", diskname,
+ 		       sdkp->write_prot ? "on" : "off");
++		printk(KERN_DEBUG "%s: Mode Sense: %02x %02x %02x %02x\n",
++		       diskname, buffer[0], buffer[1], buffer[2], buffer[3]);
  	}
  }
+ 
+
+--- linux-2.5.33/linux/drivers/usb/storage/sddr09.c	Sun Jun  9 07:31:18 2002
++++ linux-2.5.33a/linux/drivers/usb/storage/sddr09.c	Mon Sep  2 01:33:40 2002
+@@ -1443,36 +1443,27 @@
+ 	}
+ 
+ 	if (srb->cmnd[0] == MODE_SENSE) {
++		int modepage = (srb->cmnd[2] & 0x3F);
++		int len;
+ 
+-		// Read-write error recovery page: there needs to
+-		// be a check for write-protect here
++		/* They ask for the Read/Write error recovery page,
++		   or for all pages. Give as much as they have room for. */
++		if (modepage == 0x01 || modepage == 0x3F) {
+ 
+-		if ( (srb->cmnd[2] & 0x3F) == 0x01 ) {
 -
-diff -u --recursive --new-file -X /linux/dontdiff a/drivers/usb/storage/unusual_devs.h b/drivers/usb/storage/unusual_devs.h
---- a/drivers/usb/storage/unusual_devs.h	Tue Aug 27 23:58:37 2002
-+++ b/drivers/usb/storage/unusual_devs.h	Sun Sep  1 00:30:30 2002
-@@ -507,6 +507,13 @@
- 		US_SC_8070, US_PR_CB, NULL,
- 		US_FL_FIX_INQUIRY ),
+-			US_DEBUGP(
+-				"SDDR09: Dummy up request for mode page 1\n");
++			US_DEBUGP("SDDR09: Dummy up request for "
++				  "mode page 0x%x\n", modepage);
  
-+/* aeb */
-+UNUSUAL_DEV( 0x090c, 0x1132, 0x0000, 0xffff,
-+	        "Feiya",
-+	        "5-in-1 Card Reader",
-+	        US_SC_SCSI, US_PR_BULK, NULL,
-+	        US_FL_FIX_CAPACITY ),
+-			if (ptr == NULL || 
+-			    srb->request_bufflen<sizeof(mode_page_01))
++			if (ptr == NULL)
+ 				return USB_STOR_TRANSPORT_ERROR;
+ 
++			len = srb->request_bufflen;
++			if (len > sizeof(mode_page_01))
++				len = sizeof(mode_page_01);
 +
- UNUSUAL_DEV(  0x097a, 0x0001, 0x0000, 0x0001,
- 		"Minds@Work",
- 		"Digital Wallet",
-diff -u --recursive --new-file -X /linux/dontdiff a/drivers/usb/storage/usb.h b/drivers/usb/storage/usb.h
---- a/drivers/usb/storage/usb.h	Tue Aug 27 23:58:37 2002
-+++ b/drivers/usb/storage/usb.h	Sun Sep  1 00:18:31 2002
-@@ -102,6 +102,7 @@
- #define US_FL_IGNORE_SER      0x00000010 /* Ignore the serial number given  */
- #define US_FL_SCM_MULT_TARG   0x00000020 /* supports multiple targets	    */
- #define US_FL_FIX_INQUIRY     0x00000040 /* INQUIRY response needs fixing   */
-+#define US_FL_FIX_CAPACITY    0x00000080 /* READ CAPACITY response too big  */
+ 			mode_page_01[0] = sizeof(mode_page_01) - 1;
+ 			mode_page_01[2] = (info->flags & SDDR09_WP) ? 0x80 : 0;
+-			memcpy(ptr, mode_page_01, sizeof(mode_page_01));
++			memcpy(ptr, mode_page_01, len);
+ 			return USB_STOR_TRANSPORT_GOOD;
+-
+-		} else if ( (srb->cmnd[2] & 0x3F) == 0x3F ) {
+-
+-			US_DEBUGP("SDDR09: Dummy up request for "
+-				  "all mode pages\n");
+-
+-			if (ptr == NULL || 
+-			    srb->request_bufflen<sizeof(mode_page_01))
+-				return USB_STOR_TRANSPORT_ERROR;
+-
+-			memcpy(ptr, mode_page_01, sizeof(mode_page_01));
+-			return USB_STOR_TRANSPORT_GOOD;
+-
+ 		}
  
- #define US_FL_DEV_ATTACHED    0x00010000 /* is the device attached?	    */
- #define US_FLIDX_IP_WANTED   17  /* 0x00020000	is an IRQ expected?	    */
+ 		return USB_STOR_TRANSPORT_ERROR;
