@@ -1,103 +1,121 @@
-From: "Mukker, Atul" <Atulm@lsil.com>
-Subject: RE: blocked mailbox error!!
-Date: Wed, 9 Jun 2004 18:03:00 -0400
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH 1/3] ipr abort hang fix - resend
+Date: Wed, 09 Jun 2004 17:10:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC73A@exa-atlanta>
+Message-ID: <40C78ACA.1040603@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: multipart/mixed;
+ boundary="------------010100020106050402060604"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:42652 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S266008AbUFIWDF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jun 2004 18:03:05 -0400
+Received: from e5.ny.us.ibm.com ([32.97.182.105]:25330 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S266007AbUFIWKU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jun 2004 18:10:20 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: 'Aleks Sheynkman' <aleks@Narus.com>, "Mukker, Atul" <Atulm@lsil.com>
+To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-Yes
+This is a multi-part message in MIME format.
+--------------010100020106050402060604
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
--Atul
+This one didn't seem to come through, so here it is again.
+Apologies if you've already seen it.
 
-> -----Original Message-----
-> From: Aleks Sheynkman [mailto:aleks@Narus.com]
-> Sent: Wednesday, June 09, 2004 5:55 PM
-> To: Mukker, Atul
-> Cc: linux-scsi@vger.kernel.org
-> Subject: RE: blocked mailbox error!!
-> 
-> 
-> Does 2.x drivers supports PERC 3DC ?
-> 
-> thanks!
-> 
-> -Aleks
-> 
-> > -----Original Message-----
-> > From: Mukker, Atul [mailto:Atulm@lsil.com]
-> > Sent: Wednesday, June 09, 2004 1:24 PM
-> > To: Aleks Sheynkman; Mukker, Atul
-> > Cc: linux-scsi@vger.kernel.org
-> > Subject: RE: blocked mailbox error!!
-> > 
-> > 
-> > The latest public driver is 2.10.6 and should be available on 
-> > mailing list
-> > achieve.
-> > 
-> > -Atul Mukker
-> > 
-> > > -----Original Message-----
-> > > From: Aleks Sheynkman [mailto:aleks@Narus.com]
-> > > Sent: Wednesday, June 09, 2004 4:22 PM
-> > > To: Mukker, Atul
-> > > Cc: linux-scsi@vger.kernel.org
-> > > Subject: RE: blocked mailbox error!!
-> > > 
-> > > 
-> > > I'm sorry to ask which version of megaraid driver?
-> > > 
-> > > Thanks a lot in advance !
-> > > 
-> > > -Aleks
-> > > 
-> > > > -----Original Message-----
-> > > > From: Mukker, Atul [mailto:Atulm@lsil.com]
-> > > > Sent: Wednesday, June 09, 2004 1:21 PM
-> > > > To: Aleks Sheynkman; Pat LaVarre; Jens Axboe
-> > > > Cc: dougg@torque.net; linux-scsi@vger.kernel.org
-> > > > Subject: RE: blocked mailbox error!!
-> > > > 
-> > > > 
-> > > > All you would need to do is to replace ".vary_io = 1" by 
-> > > > ".can_do_varyio =1"
-> > > > in megaraid2.h
-> > > > 
-> > > > -Atul Mukker
-> > > > 
-> > > > > -----Original Message-----
-> > > > > From: Aleks Sheynkman [mailto:aleks@Narus.com]
-> > > > > Sent: Wednesday, June 09, 2004 2:56 PM
-> > > > > To: Pat LaVarre; Jens Axboe
-> > > > > Cc: dougg@torque.net; linux-scsi@vger.kernel.org
-> > > > > Subject: blocked mailbox error!!
-> > > > > 
-> > > > > 
-> > > > > Hello,
-> > > > >  I was wondering to ask if someone had any luck running 
-> > > > > megraid 2.x drivers on RH 7.3.
-> > > > >  
-> > > > > Please advice ,
-> > > > >  
-> > > > >  Thanks!!
-> > > > >  
-> > > > > -
-> > > > > To unsubscribe from this list: send the line "unsubscribe 
-> > > > > linux-scsi" in
-> > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > More majordomo info at  
-> > http://vger.kernel.org/majordomo-info.html
-> > > > > 
-> > > > 
-> > > 
-> > 
-> 
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
+
+--------------010100020106050402060604
+Content-Type: text/plain;
+ name="ipr_abort_hang.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ipr_abort_hang.patch"
+
+
+The following patch fixes a hang that occurs when an abort
+is issued by the midlayer. The hang is the result of overriding
+a field in the union of the ipr_cmd struct. It is fixed by moving
+this pointer outside of the union, since it is not mutually exclusive
+with the other fields in the union.
+
+
+---
+
+ linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.c |   15 ++++++++-------
+ linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.h |    2 +-
+ 2 files changed, 9 insertions(+), 8 deletions(-)
+
+diff -puN drivers/scsi/ipr.c~ipr_abort_hang drivers/scsi/ipr.c
+--- linux-2.6.7-rc2/drivers/scsi/ipr.c~ipr_abort_hang	2004-06-07 11:21:15.000000000 -0500
++++ linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.c	2004-06-07 11:21:15.000000000 -0500
+@@ -448,6 +448,7 @@ static void ipr_init_ipr_cmnd(struct ipr
+ {
+ 	ipr_reinit_ipr_cmnd(ipr_cmd);
+ 	ipr_cmd->u.scratch = 0;
++	ipr_cmd->sibling = NULL;
+ 	init_timer(&ipr_cmd->timer);
+ }
+ 
+@@ -676,8 +677,8 @@ static void ipr_do_req(struct ipr_cmnd *
+  **/
+ static void ipr_internal_cmd_done(struct ipr_cmnd *ipr_cmd)
+ {
+-	if (ipr_cmd->u.sibling)
+-		ipr_cmd->u.sibling = NULL;
++	if (ipr_cmd->sibling)
++		ipr_cmd->sibling = NULL;
+ 	else
+ 		complete(&ipr_cmd->completion);
+ }
+@@ -3015,10 +3016,10 @@ static void ipr_bus_reset_done(struct ip
+ 	 * If abort has not completed, indicate the reset has, else call the
+ 	 * abort's done function to wake the sleeping eh thread
+ 	 */
+-	if (ipr_cmd->u.sibling->u.sibling)
+-		ipr_cmd->u.sibling->u.sibling = NULL;
++	if (ipr_cmd->sibling->sibling)
++		ipr_cmd->sibling->sibling = NULL;
+ 	else
+-		ipr_cmd->u.sibling->done(ipr_cmd->u.sibling);
++		ipr_cmd->sibling->done(ipr_cmd->sibling);
+ 
+ 	list_add_tail(&ipr_cmd->queue, &ioa_cfg->free_q);
+ 	LEAVE;
+@@ -3051,8 +3052,8 @@ static void ipr_abort_timeout(struct ipr
+ 
+ 	ipr_sdev_err(ipr_cmd->u.sdev, "Abort timed out. Resetting bus\n");
+ 	reset_cmd = ipr_get_free_ipr_cmnd(ioa_cfg);
+-	ipr_cmd->u.sibling = reset_cmd;
+-	reset_cmd->u.sibling = ipr_cmd;
++	ipr_cmd->sibling = reset_cmd;
++	reset_cmd->sibling = ipr_cmd;
+ 	reset_cmd->ioarcb.res_handle = ipr_cmd->ioarcb.res_handle;
+ 	cmd_pkt = &reset_cmd->ioarcb.cmd_pkt;
+ 	cmd_pkt->request_type = IPR_RQTYPE_IOACMD;
+diff -puN drivers/scsi/ipr.h~ipr_abort_hang drivers/scsi/ipr.h
+--- linux-2.6.7-rc2/drivers/scsi/ipr.h~ipr_abort_hang	2004-06-07 11:21:15.000000000 -0500
++++ linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.h	2004-06-07 11:21:15.000000000 -0500
+@@ -932,13 +932,13 @@ struct ipr_cmnd {
+ 	dma_addr_t sense_buffer_dma;
+ 	unsigned short dma_use_sg;
+ 	dma_addr_t dma_handle;
++	struct ipr_cmnd *sibling;
+ 	union {
+ 		enum ipr_shutdown_type shutdown_type;
+ 		struct ipr_hostrcb *hostrcb;
+ 		unsigned long time_left;
+ 		unsigned long scratch;
+ 		struct ipr_resource_entry *res;
+-		struct ipr_cmnd *sibling;
+ 		struct scsi_device *sdev;
+ 	} u;
+ 
+
+_
+
+--------------010100020106050402060604--
+
