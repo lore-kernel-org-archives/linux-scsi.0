@@ -1,36 +1,31 @@
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: TMSCSIM [2.6]
-Date: Thu, 27 Nov 2003 23:05:40 +0100 (CET)
+Subject: Re: TMSCSIM [2.6] (cards)
+Date: Thu, 27 Nov 2003 23:43:03 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0311272106290.11508-100000@poirot.grange>
+Message-ID: <Pine.LNX.4.44.0311272338560.12446-100000@poirot.grange>
 References: <3FC64CD9.8040505@yk.rim.or.jp>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imap.gmx.net ([213.165.64.20]:58035 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S261276AbTK0WGa (ORCPT
+Received: from pop.gmx.net ([213.165.64.20]:45234 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261406AbTK0Wo4 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Nov 2003 17:06:30 -0500
+	Thu, 27 Nov 2003 17:44:56 -0500
+Received: from lyakh (helo=localhost)
+	by poirot.grange with local-esmtp (Exim 3.35 #1 (Debian))
+	id 1APUql-0003Mj-00
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Nov 2003 23:43:03 +0100
 In-Reply-To: <3FC64CD9.8040505@yk.rim.or.jp>
 List-Id: linux-scsi@vger.kernel.org
-To: Chiaki <ishikawa@yk.rim.or.jp>
-Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, linux-scsi@vger.kernel.org, Thorsten Leemhuis <Thorsten_Leemhuis@gmx.de>
+To: linux-scsi@vger.kernel.org
 
-Please, try this:
+Hi
 
-diff -u linux-2.6.0-test10/drivers/scsi/scsiiom.c~ linux-2.6.0-test10/drivers/scsi/scsiiom.c
---- linux-2.6.0-test10/drivers/scsi/scsiiom.c~  Mon Nov 24 23:47:29 2003
-+++ linux-2.6.0-test10/drivers/scsi/scsiiom.c   Thu Nov 27 23:02:35 2003
-@@ -1749,7 +1749,7 @@
-     pSRB->AdaptStatus = 0;
-     pSRB->TargetStatus = 0; /* CHECK_CONDITION<<1; */
+What are the best (for testing) tmscsim-supported cards (tekram (t) /
+dawicontrol / ...)? My on-board am53c974 is way too simple... Or does the
+probability of getting bugs depend of what devices hang on it?
 
--    pcmd = pSRB->pcmd;
-+//    pcmd = pSRB->pcmd;
-
-     /* We are called from SRBdone, original PCI mapping has been removed
-      * already, new one is set up from StartSCSI */
-
+Thanks
 Guennadi
 ---
 Guennadi Liakhovetski
