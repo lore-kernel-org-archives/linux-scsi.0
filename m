@@ -1,61 +1,108 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 08/08] scsi: fix hot unplug sequence
-Date: Wed, 23 Mar 2005 13:50:49 +0900
-Message-ID: <4240F5A9.80205@gmail.com>
-References: <20050323021335.960F95F8@htj.dyndns.org>	 <20050323021335.4682C732@htj.dyndns.org> <1111550882.5520.93.camel@mulgrave>
+Subject: Re: [PATCH scsi-misc-2.6 04/08] scsi: remove meaningless volatile qualifiers from structure definitions
+Date: Wed, 23 Mar 2005 14:28:38 +0900
+Message-ID: <20050323052838.GA31878@htj.dyndns.org>
+References: <20050323021335.960F95F8@htj.dyndns.org> <20050323021335.2655518E@htj.dyndns.org> <1111551327.5520.99.camel@mulgrave> <4240EEFF.8030703@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from wproxy.gmail.com ([64.233.184.194]:15224 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262671AbVCWEu4 (ORCPT
+Content-Type: text/plain; charset=us-ascii
+Received: from wproxy.gmail.com ([64.233.184.201]:36815 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262798AbVCWF2o (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Mar 2005 23:50:56 -0500
-Received: by wproxy.gmail.com with SMTP id 71so53097wri
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2005 20:50:54 -0800 (PST)
-In-Reply-To: <1111550882.5520.93.camel@mulgrave>
+	Wed, 23 Mar 2005 00:28:44 -0500
+Received: by wproxy.gmail.com with SMTP id 69so99636wri
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2005 21:28:43 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <4240EEFF.8030703@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-  Hi,
+ Hello, guys.
 
-James Bottomley wrote:
-> On Wed, 2005-03-23 at 11:14 +0900, Tejun Heo wrote:
+On Tue, Mar 22, 2005 at 11:22:23PM -0500, Jeff Garzik wrote:
+> James Bottomley wrote:
+> >On Wed, 2005-03-23 at 11:14 +0900, Tejun Heo wrote:
+> >
+> >>	scsi_device->device_busy, Scsi_Host->host_busy and
+> >>	->host_failed have volatile qualifiers, but the qualifiers
+> >>	don't serve any purpose.  Kill them.  While at it, protect
+> >>	->host_failed update in scsi_error for consistency and clarity.
+> >
+> >
+> >Well ... the data here is volatile so what you're advocating is a move
+> >away from a volatile variable model to a protected variable one ... did
+> >you audit all users of both of these to make sure we have protection on
+> >all of them?  It looks like the sata strategy handlers would still rely
+> >on the volatile data.
+
+ Yes, I did (well, tried :-).  Adding locking/unlocking was just for
+clarity.  We have synchronization w/ implied memory barrier before and
+after eh processing, so we don't really need to acquire the lock
+there.  And while adding it, I forgot about libata strategy function.
+Sorry about that.  I removed the locking from scsi_error and added
+comments to data structure definition that those fields can be
+accessed without acquiring the host lock.  I think it's clearer this
+way.
+
+> volatile is almost always (a) buggy, or (b) hiding bugs.  At the very 
+> least, barriers are usually needed.
 > 
->>	When hot-unplugging using scsi_remove_host() function (as usb
->>	does), scsi_forget_host() used to be called before
->>	scsi_host_cancel().  So, the device gets removed first without
->>	request cleanup and scsi_host_cancel() never gets to call
->>	scsi_device_cancel() on the removed devices.  This results in
->>	premature completion of hot-unplugging process with active
->>	requests left in queue, eventually leading to hang/offlined
->>	device or oops when the active command times out.
->>
->>	This patch makes scsi_remove_host() call scsi_host_cancel()
->>	first such that the host is first transited into cancel state
->>	and all requests of all devices are killed, and then, the
->>	devices are removed.  This patch fixes the oops in eh after
->>	hot-unplugging bug.
+> Almost every case really wants to be inside a spinlock, or atomic_t, or 
+> similarly protected.
 > 
-> 
-> This is actually simply reversing this patch:
-> 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=109268755500248
-> 
-> And all it does is give us the previous consequences back.
-> 
-> The oops isn't in the eh it's in the usb-storage eh routine.
+> Specifically for SATA, I am making the presumption that SCSI is smart 
+> enough not to mess with host_failed until my error handler completes.
 
-  Well, but it's because scsi midlayer calls back into usb-storage eh 
-after the detaching process is complete.
+ Yes, volatile only instructs the compiler to not cache the variable
+in the register and not move around accesses to the variable.  The
+only valid usage would be raw synchronization with variables (busy
+checking, two flag variable synchronization, etc...), but even those
+usages are better off with explicit barriers and cpu relaxations to
+clarify what's going on.
 
-> However, the current host code does need fixing, but the fix is to move
-> it over to a proper state model rather than the current bit twiddling we
-> do.
+ Currently all accesses outside eh are properly protected with locks
+except for the following two cases.
 
-  I agree & am working on it.  This patch was mainly to verify Jens' oops.
+ * sg_proc_seq_show_dev(): read access, informational.  doesn't matter.
+ * check looping in scsi_device_quiesce(): we have proper barrier.
 
--- 
-tejun
 
+ Signed-off-by: Tejun Heo <htejun@gmail.com>
+
+
+Index: scsi-export/include/scsi/scsi_device.h
+===================================================================
+--- scsi-export.orig/include/scsi/scsi_device.h	2005-03-23 09:40:12.000000000 +0900
++++ scsi-export/include/scsi/scsi_device.h	2005-03-23 14:04:59.000000000 +0900
+@@ -43,7 +43,8 @@ struct scsi_device {
+ 	struct list_head    siblings;   /* list of all devices on this host */
+ 	struct list_head    same_target_siblings; /* just the devices sharing same target id */
+ 
+-	volatile unsigned short device_busy;	/* commands actually active on low-level */
++	unsigned short device_busy;	/* commands actually active on
++					 * low-level. protected by sdev_lock. */
+ 	spinlock_t sdev_lock;           /* also the request queue_lock */
+ 	spinlock_t list_lock;
+ 	struct list_head cmd_list;	/* queue of in use SCSI Command structures */
+Index: scsi-export/include/scsi/scsi_host.h
+===================================================================
+--- scsi-export.orig/include/scsi/scsi_host.h	2005-03-23 09:40:12.000000000 +0900
++++ scsi-export/include/scsi/scsi_host.h	2005-03-23 14:04:59.000000000 +0900
+@@ -448,8 +448,14 @@ struct Scsi_Host {
+ 	wait_queue_head_t       host_wait;
+ 	struct scsi_host_template *hostt;
+ 	struct scsi_transport_template *transportt;
+-	volatile unsigned short host_busy;   /* commands actually active on low-level */
+-	volatile unsigned short host_failed; /* commands that failed. */
++
++	/*
++	 * The following two fields are protected with host_lock;
++	 * however, eh routines can safely access during eh processing
++	 * without acquiring the lock.
++	 */
++	unsigned short host_busy;	   /* commands actually active on low-level */
++	unsigned short host_failed;	   /* commands that failed. */
+     
+ 	unsigned short host_no;  /* Used for IOCTL_GET_IDLUN, /proc/scsi et al. */
+ 	int resetting; /* if set, it means that last_reset is a valid value */
