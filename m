@@ -1,39 +1,25 @@
-From: "shankar krishna" <kshan01@hotmail.com>
-Subject: Re: Interpreting SCSI CDB response over FC(FCP-2)
-Date: Thu, 14 Nov 2002 10:49:09 -0700
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: SCSI enclosure black list
+Date: 14 Nov 2002 18:29:45 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <F1071bgxXMa4we8dSwm0000c5ee@hotmail.com>
+Message-ID: <1037298585.16000.45.camel@irongate.swansea.linux.org.uk>
+References: <1037225713.16638.85.camel@dell_ss3.pdx.osdl.net>
+	<1037227816.11996.203.camel@irongate.swansea.linux.org.uk>
+	<1037289000.30355.6.camel@markh1.pdx.osdl.net>
+	<1037291446.16000.37.camel@irongate.swansea.linux.org.uk>
+	<1037290824.30367.11.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1037290824.30367.11.camel@markh1.pdx.osdl.net>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: Mark Haverkamp <markh@osdl.org>
+Cc: Stephen Hemminger <shemminger@osdl.org>, Linus Torvalds <torvalds@transmeta.com>, linux-scsi@vger.kernel.org
 
-1.
-"if ((res = ioctl(sd_fd,SCSI_IOCTL_SEND_COMMAND,&cdb_buf))) {
-    scsi_status = res & 0xff;
-    .....
-}"
+On Thu, 2002-11-14 at 16:20, Mark Haverkamp wrote:
+> Wouldn't it still be reasonable to have the enclosure in the blacklist
+> since it doesn't seem to handle the report luns command?
 
-Thanks. Atleast able to get Status Byte.
-Question out of curiosity: if I declare
-'res' as int, the return value from ioctl
-was 0x28000002 which obviously give 02(Check
-condition) if "&" with "ff". But I want to know
-what are all the other Octets?? Any meaning
-attached to them?
-
-2.
-" The only way that I can see to get the
-whole FCP response payload would be via an ioctl in the
-lower level driver."
-
-Where can I consult or get doc to see there is
-any way I can send probe below Mid-level driver
-(or even below?)
-
-_________________________________________________________________
-Protect your PC - get McAfee.com VirusScan Online 
-http://clinic.mcafee.com/clinic/ibuy/campaign.asp?cid=3963
+I wasnt aware it was required to
 
