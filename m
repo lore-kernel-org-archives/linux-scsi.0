@@ -1,35 +1,41 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: TMSCSIM [2.6]
-Date: Fri, 28 Nov 2003 21:25:35 +0100 (CET)
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: Re: LUN resizing
+Date: Fri, 28 Nov 2003 23:29:19 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0311282118550.528-100000@poirot.grange>
-References: <3FC6A7B0.3050401@yk.rim.or.jp>
+Message-ID: <1070058559.7265.79.camel@zezette>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.de ([213.165.64.20]:45217 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S263435AbTK1Ucu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Nov 2003 15:32:50 -0500
-In-Reply-To: <3FC6A7B0.3050401@yk.rim.or.jp>
+Received: from smtp8.wanadoo.fr ([193.252.22.23]:48321 "EHLO
+	mwinf0803.wanadoo.fr") by vger.kernel.org with ESMTP
+	id S263510AbTK1W3X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Nov 2003 17:29:23 -0500
+Received: from AAmiens-106-1-30-29.w81-248.abo.wanadoo.fr (AAmiens-106-1-30-29.w81-248.abo.wanadoo.fr [81.248.163.29])
+	by mwinf0803.wanadoo.fr (SMTP Server) with ESMTP id EE2C718000E8
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2003 23:29:21 +0100 (CET)
 List-Id: linux-scsi@vger.kernel.org
-To: Chiaki <ishikawa@yk.rim.or.jp>
-Cc: linux-scsi@vger.kernel.org, Thorsten Leemhuis <Thorsten_Leemhuis@gmx.de>
+To: linux-scsi@vger.kernel.org
 
-Further to your tests, Thorsten: just tried cdecord v. 2.00.3 under 2.4.21
-and (the same command) under 2.6.0-test7. Worked under 2.4, failed under
-2.6. However, I tried it with an ATAPI CDRW, but still, it indicates, that
-cdrecord is still not quite functional under 2.6. I did get some error
-messages under 2.4:
 
-Error: Illegal request -- (Sense key=0x05)
 
-which, presumably, means some unsupported command, but still it worked. I
-should look through LKML archives regarding cdrecord under 2.6, or anybody
-can give a short info?
+> The problem you are trying to solve has three components:
+> 
+> 1. Filesystem resize
+> 2. parition resize
+> 3. SCSI device resize
+> 
+> 1 and 3 are solved (for a subset of fs).  A solution to 2 is to use the
+> Linux device mapper (a mini volume manager) to replace the use of
+> gendisk partitions.  Then your entire stack constructed this way will be
+> resizable.
 
-Guennadi
----
-Guennadi Liakhovetski
+Yes, this idea is floating around :
+See the dmpartx post covered at http://lwn.net/Articles/13958/
 
+May be someone (Andries B) will get something like that in initramfs for
+2.7 ...
+
+regards,
+cvaroqui
 
