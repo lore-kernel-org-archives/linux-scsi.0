@@ -1,33 +1,34 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: RE: Recovered disk error caused disk to go offline.
-Date: 01 Feb 2004 11:23:07 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1075652588.1756.18.camel@mulgrave>
-References: <200402011610.i11GAXi12108@dns1.watkins-home.com>
+From: Robert Gadsdon <robert@gadsdon.giointernet.co.uk>
+Subject: Re: [RFC] killing the AMD53C974 and mac_NCR5380 drivers
+Date: Sun, 01 Feb 2004 16:39:58 +0000
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <401D2BDE.4020807@gadsdon.giointernet.co.uk>
+References: <fa.e2hfjs3.q3e2i3@ifi.uio.no>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:26531 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S265351AbUBAQXQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 Feb 2004 11:23:16 -0500
-In-Reply-To: <200402011610.i11GAXi12108@dns1.watkins-home.com>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <fa.e2hfjs3.q3e2i3@ifi.uio.no>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
 
-On Sun, 2004-02-01 at 11:10, Guy wrote:
-> RedHat 9.0
-> >From uname -a:
-> Linux watkins 2.4.20-8smp #1 SMP Thu Mar 13 17:45:54 EST 2003 i686 i686 i386
-> GNU/Linux
+I always had problems with the AMD53C974 driver even back in 2.2.x days. 
+  On several old HP XU/90 and XU/120 Vectras I had to specify the 
+TMSCSIM driver to get SCSI to work.....
 
-Aha, for a vendor kernel you need to file a bugzilla with redhat.
+Robert Gadsdon.
 
-Alternatively, if you can reproduce it with the latest kernel.org 2.4 or
-2.6 kernel, we can diagnose it.
-
-James
-
-
+Christoph Hellwig wrote:
+> Anyone screaming loudly if we remove them?
+> 
+>  - AMD53C974 is broken and doesn't even compile, all supported hardware is
+>    handled by the mainted tmscsim driver.
+>  - mac_NCR5380 isn't even referenced in the build and hasn't been at
+>    least since 2.4
+>                            
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
