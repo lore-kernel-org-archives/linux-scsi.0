@@ -1,38 +1,46 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [PATCH][BUGFIX] : megaraid patch for 2.10.1 (irq disable bug fix)
-Date: Tue, 24 Feb 2004 14:58:56 +0000
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Transport Attributes -- attempt#4
+Date: 24 Feb 2004 09:02:56 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040224145856.GL25779@parcelfarce.linux.theplanet.co.uk>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC3D9@exa-atlanta.se.lsil.com>
+Message-ID: <1077634979.1827.7.camel@mulgrave>
+References: <20040120215645.GG15871@localhost>
+	<1077581832.1833.21.camel@mulgrave>  <20040224055828.GA503530@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:44465 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262253AbUBXO67
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2004 09:58:59 -0500
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC3D9@exa-atlanta.se.lsil.com>
+Received: from stat1.steeleye.com ([65.114.3.130]:11960 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262264AbUBXPDV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Feb 2004 10:03:21 -0500
+In-Reply-To: <20040224055828.GA503530@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: Martin Hicks <mort@wildopensource.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, Feb 24, 2004 at 09:47:06AM -0500, Mukker, Atul wrote:
-> > > Could we have a later version than 2.00.3 in 2.6 please?
-> We are in process of releasing a unified driver, which will natively support
-> the 2.4.x and 2.6.x kernels. 
+On Mon, 2004-02-23 at 23:58, Jeremy Higdon wrote:
+> James, was scsi/scsi_transport.h supposed to be patched also?
+> There is a new "size" member of the scsi_transport_template
+> structure, but no patch to the data structure itself.  Did you
+> replace attributes with size?
 
-In the past, this has generally been a very bad idea.  It's led to some
-excessively ugly drivers (see aic7xxx for one) and generally doesn't work
-terribly well.  If you insist on going down this road, could you at least
-make sure it's written to the newest 2.6 APIs and every other supported
-kernel version emulates the 2.6 APIs?  The awful "kernel neutral API"s
-used in some drivers really suck.
+Well, not really.  The patch I provided is a sketch only of what I want
+done.  It compiles and works on the 53c700 which is where I tested it.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Really, I just want transport and core separated and transport
+attributes to be fixed (so there's some way of defining a transport
+private API for updating them).
+
+Even with just offset and period as the transport attributes for SPI,
+that gives enough to move domain validation out of all the drivers into
+the SPI transport layer.
+
+> Also, Martin is on vacation this week, I believe, so he probably
+> won't respond until next week.
+
+Yes, I know, It's just that I've been promising to look at this for
+weeks, so I didn't want to delay any further.
+
+James
+
+
