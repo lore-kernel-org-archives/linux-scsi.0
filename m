@@ -1,72 +1,58 @@
 From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: 2.6.0-test9 kernel oops
-Date: Sun, 23 Nov 2003 23:10:37 -0800
+Subject: aic7xxx deadlock in 2.6.0-test10
+Date: Sun, 23 Nov 2003 23:08:53 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031123231037.44115c6f.akpm@osdl.org>
+Message-ID: <20031123230853.0bc8defb.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:13550 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S263619AbTKXHEP (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:5870 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S263596AbTKXHCh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2003 02:04:15 -0500
+	Mon, 24 Nov 2003 02:02:37 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: Tomas Kostrian <kostrian@deepblue.sk>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-scsi@vger.kernel.org
 
 
-Can anyone else with an aic7xxx reproduce (and hence fix) this?
-/proc/scsi/aic7xxx/0 works happily on my test box.
+One of my less-used boxes if taking an NMI watchdog hit on boot in test10:
+
+(gdb) bt
+#0  0xc02dc427 in .text.lock.scsi () at drivers/scsi/scsi.c:1049
+#1  0xf70e5df8 in ?? ()
+#2  0xc02df24a in scsi_report_bus_reset (shost=0xf70f6e48, channel=-150053384) at drivers/scsi/scsi_error.c:1625
+#3  0xc02fbc96 in ahc_send_async (ahc=0xf70e5df8, channel=65 'A', target=4294967295, lun=4144983544, code=-134635520, arg=0x0) at drivers/scsi/aic7xxx/aic7xxx_osm.c:4075
+#4  0xc02ee031 in ahc_reset_channel (ahc=0xf70f7df8, channel=65 'A', initiate_reset=1) at drivers/scsi/aic7xxx/aic7xxx_core.c:6077
+#5  0xc02f7040 in ahc_linux_initialize_scsi_bus (ahc=0xf70f7df8) at drivers/scsi/aic7xxx/aic7xxx_osm.c:1846
+#6  0xc02f6dc3 in ahc_linux_register_host (ahc=0xf70f7df8, template=0xf70f6df8) at drivers/scsi/aic7xxx/aic7xxx_osm.c:1737
+#7  0xc02f5cc8 in ahc_linux_detect (template=0xc04a4ea0) at drivers/scsi/aic7xxx/aic7xxx_osm.c:908
+#8  0xc05c47d5 in ahc_linux_init () at drivers/scsi/aic7xxx/aic7xxx_osm.c:5054
+#9  0xc05ac865 in do_initcalls () at init/main.c:497
+#10 0xc05ac8dc in do_basic_setup () at init/main.c:537
+#11 0xc010512d in init (unused=0x0) at init/main.c:579
+
+ahc_linux_register_host() is calling ahc_linux_initialize_scsi_bus() under
+ahc_lock(ahc, &s).  But scsi_report_bus_reset() is taking host->host_lock
+inside shost_for_each_device(), and that is the same (already held) lock.
 
 
-Begin forwarded message:
+This patch gets things going again of course.  Could someone please take a
+look at fixing this for real?
 
-Date: Mon, 24 Nov 2003 06:36:32 +0100
-From: Tomas Kostrian <kostrian@deepblue.sk>
-To: akpm@osdl.org
-Subject: 2.6.0-test9 kernel oops
+I'm not sure why this has suddenly started happening actually.
 
+--- 25/drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7xxx-deadlock-fix	2003-11-23 23:03:52.000000000 -0800
++++ 25-akpm/drivers/scsi/aic7xxx/aic7xxx_osm.c	2003-11-23 23:03:59.000000000 -0800
+@@ -1734,8 +1734,8 @@ ahc_linux_register_host(struct ahc_softc
+     LINUX_VERSION_CODE  < KERNEL_VERSION(2,5,0)
+ 	scsi_set_pci_device(host, ahc->dev_softc);
+ #endif
+-	ahc_linux_initialize_scsi_bus(ahc);
+ 	ahc_unlock(ahc, &s);
++	ahc_linux_initialize_scsi_bus(ahc);
+ 	ahc->platform_data->dv_pid = kernel_thread(ahc_linux_dv_thread, ahc, 0);
+ 	ahc_lock(ahc, &s);
+ 	if (ahc->platform_data->dv_pid < 0) {
 
-kostrian@test:~$ uname -a
-Linux test.[SNIFF].sk 2.6.0-test9 #1 Sun Nov 9 01:35:44 CET 2003 i686
-unknown
-kostrian@test:~$ ls -la /proc/scsi/aic7xxx/
-total 0
-dr-xr-xr-x    2 root     root            0 Nov 24 00:06 .
-dr-xr-xr-x    4 root     root            0 Nov 24 00:06 ..
--rw-r--r--    1 root     root            0 Nov 24 00:06 0
-kostrian@test:~$ cat /proc/scsi/aic7xxx/0
-Segmentation fault
-kostrian@test:~$ dmesg
-.
-.
-[SNIFF]
-.
-.
-Unable to handle kernel NULL pointer dereference at virtual address
-00000120
- printing eip:
-c02624d8
-*pde = 00000000
-Oops: 0000 [#1]
-CPU:    0
-EIP:    0060:[<c02624d8>]    Not tainted
-EFLAGS: 00010286
-EIP is at aic7xxx_proc_info+0x1c/0xab4
-eax: c02624bc   ebx: c3a63f78   ecx: 00000000   edx: 00000000
-esi: 00000400   edi: c3aca000   ebp: c3a63f74   esp: c3a63ef4
-s: 007b   es: 007b   ss: 0068
-Process cat (pid: 657, threadinfo=c3a62000 task=c5e37350)
-Stack: c3a63f78 00000400 c3aca000 c3a63f74 00000000 c03a8054 c012d24b c025139b
-       c1187000 c3aca000 c3a63f78 00000000 00000400 00000000 00000000 c6332400
-       00000400 c3aca000 c016a508 c3aca000 c3a63f78 00000000 00000400 c3a63f74
-Call Trace:
- [<c012d24b>] __alloc_pages+0xa3/0x2dc
- [<c025139b>] proc_scsi_read+0x2b/0x44
- [<c016a508>] proc_file_read+0x10c/0x238
- [<c013fdb5>] vfs_read+0xb5/0xe4
- [<c013ffb5>] sys_read+0x31/0x4c
- [<c0108a53>] syscall_call+0x7/0xb
+_
 
-Code: 83 b9 20 01 00 00 00 75 f1 85 c9 75 2f 0f b7 05 58 00 00 00
