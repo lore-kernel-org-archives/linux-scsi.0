@@ -1,56 +1,337 @@
-From: Russell King <rmk@arm.linux.org.uk>
-Subject: Re: 2.4.19 SCSI error handing, door locking, etc
-Date: Fri, 4 Oct 2002 20:49:25 +0100
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: [PATCH] scsi error update 3/3 (door lck)
+Date: Fri, 4 Oct 2002 13:03:06 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021004204925.D31015@flint.arm.linux.org.uk>
-References: <20020926012357.B8733@flint.arm.linux.org.uk> <20021004194136.GC9544@beaverton.ibm.com>
+Message-ID: <20021004200306.GB14788@beaverton.ibm.com>
+References: <20021004194427.GD9544@beaverton.ibm.com> <20021004195644.GA14788@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from flint.arm.linux.org.uk ([3ffe:8260:2002:1:201:2ff:fe14:8fad])
-	by caramon.arm.linux.org.uk with asmtp (TLSv1:DES-CBC3-SHA:168)
-	(Exim 4.04)
-	id 17xYRy-0002mO-00
-	for linux-scsi@vger.kernel.org; Fri, 04 Oct 2002 20:49:26 +0100
-Received: from rmk by flint.arm.linux.org.uk with local (Exim 4.04)
-	id 17xYRx-0007J6-00
-	for linux-scsi@vger.kernel.org; Fri, 04 Oct 2002 20:49:25 +0100
 Content-Disposition: inline
-In-Reply-To: <20021004194136.GC9544@beaverton.ibm.com>; from andmike@us.ibm.com on Fri, Oct 04, 2002 at 12:41:36PM -0700
+In-Reply-To: <20021004195644.GA14788@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Oct 04, 2002 at 12:41:36PM -0700, Mike Anderson wrote:
-> 01-scsi-cmd-retry-3.diff
-> 	- I need to think on this. I currently have 1 retry for TUR and
-> 	  non for REQ sense. If a device is not responding the way we want the
-> 	  probability of sending multiple commands in a short time period
-> 	  especially TURs is most likely not going to result in what we
-> 	  want. Though your delay mentioned below is something I
-> 	  currently do not have. 
 
-With the current behaviour, I've seen this situation:
+This series of patches is an update to scsi error handling.
 
-- bus reset
-- tape drive responds to bus reset by positioning at the start of tape
-- while tape drive is repositioning, it returns "drive not ready"
-- we mark the tape drive off line despite there being absolutely
-  nothing wrong with it.
+00_scsi-error-base-1.diff:
+	- Fix bug on incorrect check of scsi_eh_tur return value.
+	- Fix debug printk format problems.
+	- Removed ref to arch specific semaphore value in debug printk
 
-> 02-scsi-cmd-report.diff
-> 	- I brought this forward, but it bothers me that the data in a
-> 	  cmd is incorrect as the command should be restored after it has
-> 	  been touched by error handling.
+01_scsi-error-enh-1.diff:
+	- Forward port of Russell King's retry scsi cmd restore.
+	- Adjustment of BUS_RESET_SETTLE_TIME from 5 seconds to 10 seconds
+	  to provide increase time post bus_reset to allow door lock
+	  command to succeed. This should be exported to driverfs so that
+	  it can be adjusted if needed.
+	- Error Policy change: Error recovery command retry is now not
+	  based on failed command retry value.
+	- Error Policy change: Failed command is not retried if retry
+	  count is expired.
 
-It goes wrong when HBA drivers use the Scsi_Cmnd to perform the
-request sense, and don't restore the command structure.  I've seen
-no documentation that says "HBA drivers must restore the Scsi_Cmnd
-structure to pristine state before handing it back to the scsi core."
+02_scsi-error-dr-lck-1.diff:
+	- Forward port of Russell King's door lock changes.
 
-Ok, I'll update my 2.4 version with your comments to keep things
-consistent.  The bits people are happy with I'm again submit to Alan.
+Testing:
+	- Current patches where tested on a SPI interconnect using both in
+	  kernel and new versions of the aic driver. A Plextor SCSI cd-rom
+	  was used for a door lock device. Cable pulls where done during dd's
+	  to generates errors and verify recover / door re-lock.
 
--- 
-Russell King (rmk@arm.linux.org.uk)                The developer of ARM Linux
-             http://www.arm.linux.org.uk/personal/aboutme.html
+The full patch is available at:
+http://www-124.ibm.com/storageio/patches/2.5/scsi-error
 
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
+ drivers/scsi/scsi.h       |    1 
+ drivers/scsi/scsi_error.c |   80 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_ioctl.c |   42 ++++++++++++++----------
+ drivers/scsi/scsi_lib.c   |   27 ---------------
+ drivers/scsi/scsi_syms.c  |    1 
+ drivers/scsi/sd.c         |    4 +-
+ drivers/scsi/sr_ioctl.c   |    4 +-
+ include/scsi/scsi_ioctl.h |    8 ++--
+ 8 files changed, 115 insertions(+), 52 deletions(-)
+------
+
+diff -Nru a/drivers/scsi/scsi.h b/drivers/scsi/scsi.h
+--- a/drivers/scsi/scsi.h	Fri Oct  4 08:59:02 2002
++++ b/drivers/scsi/scsi.h	Fri Oct  4 08:59:02 2002
+@@ -597,6 +597,7 @@
+ 	unsigned changed:1;	/* Data invalid due to media change */
+ 	unsigned busy:1;	/* Used to prevent races */
+ 	unsigned lockable:1;	/* Able to prevent media removal */
++	unsigned locked:1;      /* Media removal disabled */
+ 	unsigned borken:1;	/* Tell the Seagate driver to be 
+ 				 * painfully slow on this device */
+ 	unsigned tagged_supported:1;	/* Supports SCSI-II tagged queuing */
+diff -Nru a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+--- a/drivers/scsi/scsi_error.c	Fri Oct  4 08:59:02 2002
++++ b/drivers/scsi/scsi_error.c	Fri Oct  4 08:59:02 2002
+@@ -39,6 +39,8 @@
+ #include "scsi.h"
+ #include "hosts.h"
+ 
++#include <scsi/scsi_ioctl.h> /* grr */
++
+ /*
+  * We must always allow SHUTDOWN_SIGS.  Even if we are not a module,
+  * the host drivers that we are using may be loaded as modules, and
+@@ -1361,6 +1363,75 @@
+ }
+ 
+ /**
++ * scsi_eh_lock_done - done function for eh door lock request
++ * @scmd:	SCSI command block for the door lock request
++ *
++ * Notes:
++ * 	We completed the asynchronous door lock request, and it has either
++ * 	locked the door or failed.  We must free the command structures
++ * 	associated with this request.
++ **/
++static void scsi_eh_lock_done(struct scsi_cmnd *scmd)
++{
++	struct scsi_request *sreq = scmd->sc_request;
++
++	scmd->sc_request = NULL;
++	sreq->sr_command = NULL;
++
++	scsi_release_command(scmd);
++	scsi_release_request(sreq);
++}
++
++
++/**
++ * scsi_eh_lock_door - Prevent medium removal for the specified device
++ * @sdev:	SCSI device to prevent medium removal
++ *
++ * Locking:
++ * 	We must be called from process context; scsi_allocate_request()
++ * 	may sleep.
++ *
++ * Notes:
++ * 	We queue up an asynchronous "ALLOW MEDIUM REMOVAL" request on the
++ * 	head of the devices request queue, and continue.
++ *
++ * Bugs:
++ * 	scsi_allocate_request() may sleep waiting for existing requests to
++ * 	be processed.  However, since we haven't kicked off any request
++ * 	processing for this host, this may deadlock.
++ *
++ *	If scsi_allocate_request() fails for what ever reason, we
++ *	completely forget to lock the door.
++ **/
++static void scsi_eh_lock_door(struct scsi_device *sdev)
++{
++	struct scsi_request *sreq = scsi_allocate_request(sdev);
++
++	if (sreq == NULL) {
++		printk(KERN_ERR "%s: request allocate failed,"
++		       "prevent media removal cmd not sent", __FUNCTION__);
++		return;
++	}
++
++	sreq->sr_cmnd[0] = ALLOW_MEDIUM_REMOVAL;
++	sreq->sr_cmnd[1] = (sdev->scsi_level <= SCSI_2) ? (sdev->lun << 5) : 0;
++	sreq->sr_cmnd[2] = 0;
++	sreq->sr_cmnd[3] = 0;
++	sreq->sr_cmnd[4] = SCSI_REMOVAL_PREVENT;
++	sreq->sr_cmnd[5] = 0;
++	sreq->sr_data_direction = SCSI_DATA_NONE;
++	sreq->sr_bufflen = 0;
++	sreq->sr_buffer = NULL;
++	sreq->sr_allowed = 5;
++	sreq->sr_done = scsi_eh_lock_done;
++	sreq->sr_timeout_per_command = 10 * HZ;
++	sreq->sr_cmd_len = COMMAND_SIZE(sreq->sr_cmnd[0]);
++
++	scsi_insert_special_req(sreq, 1);
++}
++
++
++/**
+  * scsi_restart_operations - restart io operations to the specified host.
+  * @shost:	Host we are restarting.
+  *
+@@ -1374,6 +1445,15 @@
+ 	unsigned long flags;
+ 
+ 	ASSERT_LOCK(shost->host_lock, 0);
++
++	/*
++	 * If the door was locked, we need to insert a door lock request
++	 * onto the head of the SCSI request queue for the device.  There
++	 * is no point trying to lock the door of an off-line device.
++	 */
++	for (sdev = shost->host_queue; sdev; sdev = sdev->next)
++		if (sdev->online && sdev->locked)
++			scsi_eh_lock_door(sdev);
+ 
+ 	/*
+ 	 * next free up anything directly waiting upon the host.  this
+diff -Nru a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
+--- a/drivers/scsi/scsi_ioctl.c	Fri Oct  4 08:59:02 2002
++++ b/drivers/scsi/scsi_ioctl.c	Fri Oct  4 08:59:02 2002
+@@ -151,6 +151,29 @@
+ 	return result;
+ }
+ 
++int scsi_set_medium_removal(Scsi_Device *dev, char state)
++{
++	char scsi_cmd[MAX_COMMAND_SIZE];
++	int ret;
++
++	if (!dev->removable || !dev->lockable)
++	       return 0;
++
++	scsi_cmd[0] = ALLOW_MEDIUM_REMOVAL;
++	scsi_cmd[1] = (dev->scsi_level <= SCSI_2) ? (dev->lun << 5) : 0;
++	scsi_cmd[2] = 0;
++	scsi_cmd[3] = 0;
++	scsi_cmd[4] = state;
++	scsi_cmd[5] = 0;
++
++	ret = ioctl_internal_command(dev, scsi_cmd, IOCTL_NORMAL_TIMEOUT, NORMAL_RETRIES);
++
++	if (ret == 0)
++		dev->locked = state == SCSI_REMOVAL_PREVENT;
++
++	return ret;
++}
++
+ /*
+  * This interface is deprecated - users should use the scsi generic (sg)
+  * interface instead, as this is a more flexible approach to performing
+@@ -448,24 +471,9 @@
+ 		return scsi_ioctl_send_command((Scsi_Device *) dev,
+ 					     (Scsi_Ioctl_Command *) arg);
+ 	case SCSI_IOCTL_DOORLOCK:
+-		if (!dev->removable || !dev->lockable)
+-			return 0;
+-		scsi_cmd[0] = ALLOW_MEDIUM_REMOVAL;
+-		scsi_cmd[1] = cmd_byte1;
+-		scsi_cmd[2] = scsi_cmd[3] = scsi_cmd[5] = 0;
+-		scsi_cmd[4] = SCSI_REMOVAL_PREVENT;
+-		return ioctl_internal_command((Scsi_Device *) dev, scsi_cmd,
+-				   IOCTL_NORMAL_TIMEOUT, NORMAL_RETRIES);
+-		break;
++		return scsi_set_medium_removal(dev, SCSI_REMOVAL_PREVENT);
+ 	case SCSI_IOCTL_DOORUNLOCK:
+-		if (!dev->removable || !dev->lockable)
+-			return 0;
+-		scsi_cmd[0] = ALLOW_MEDIUM_REMOVAL;
+-		scsi_cmd[1] = cmd_byte1;
+-		scsi_cmd[2] = scsi_cmd[3] = scsi_cmd[5] = 0;
+-		scsi_cmd[4] = SCSI_REMOVAL_ALLOW;
+-		return ioctl_internal_command((Scsi_Device *) dev, scsi_cmd,
+-				   IOCTL_NORMAL_TIMEOUT, NORMAL_RETRIES);
++		return scsi_set_medium_removal(dev, SCSI_REMOVAL_ALLOW);
+ 	case SCSI_IOCTL_TEST_UNIT_READY:
+ 		scsi_cmd[0] = TEST_UNIT_READY;
+ 		scsi_cmd[1] = cmd_byte1;
+diff -Nru a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c	Fri Oct  4 08:59:02 2002
++++ b/drivers/scsi/scsi_lib.c	Fri Oct  4 08:59:02 2002
+@@ -804,33 +804,6 @@
+ 			SDpnt->starved = 0;
+ 		}
+ 
+- 		/*
+-		 * FIXME(eric)
+-		 * I am not sure where the best place to do this is.  We need
+-		 * to hook in a place where we are likely to come if in user
+-		 * space.   Technically the error handling thread should be
+-		 * doing this crap, but the error handler isn't used by
+-		 * most hosts.
+-		 */
+-		if (SDpnt->was_reset) {
+-			/*
+-			 * We need to relock the door, but we might
+-			 * be in an interrupt handler.  Only do this
+-			 * from user space, since we do not want to
+-			 * sleep from an interrupt.
+-			 *
+-			 * FIXME(eric) - have the error handler thread do
+-			 * this work.
+-			 */
+-			SDpnt->was_reset = 0;
+-			if (SDpnt->removable && !in_interrupt()) {
+-				spin_unlock_irq(q->queue_lock);
+-				scsi_ioctl(SDpnt, SCSI_IOCTL_DOORLOCK, 0);
+-				spin_lock_irq(q->queue_lock);
+-				continue;
+-			}
+-		}
+-
+ 		/*
+ 		 * If we couldn't find a request that could be queued, then we
+ 		 * can also quit.
+diff -Nru a/drivers/scsi/scsi_syms.c b/drivers/scsi/scsi_syms.c
+--- a/drivers/scsi/scsi_syms.c	Fri Oct  4 08:59:02 2002
++++ b/drivers/scsi/scsi_syms.c	Fri Oct  4 08:59:02 2002
+@@ -54,6 +54,7 @@
+ EXPORT_SYMBOL(print_Scsi_Cmnd);
+ EXPORT_SYMBOL(scsi_block_when_processing_errors);
+ EXPORT_SYMBOL(scsi_ioctl_send_command);
++EXPORT_SYMBOL(scsi_set_medium_removal);
+ #if defined(CONFIG_SCSI_LOGGING)	/* { */
+ EXPORT_SYMBOL(scsi_logging_level);
+ #endif
+diff -Nru a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+--- a/drivers/scsi/sd.c	Fri Oct  4 08:59:02 2002
++++ b/drivers/scsi/sd.c	Fri Oct  4 08:59:02 2002
+@@ -524,7 +524,7 @@
+ 	if (sdp->removable)
+ 		if (sdp->access_count==1)
+ 			if (scsi_block_when_processing_errors(sdp))
+-				scsi_ioctl(sdp, SCSI_IOCTL_DOORLOCK, NULL);
++				scsi_set_medium_removal(sdp, SCSI_REMOVAL_PREVENT);
+ 
+ 	return 0;
+ 
+@@ -568,7 +568,7 @@
+ 	if (sdp->removable) {
+ 		if (!sdp->access_count)
+ 			if (scsi_block_when_processing_errors(sdp))
+-				scsi_ioctl(sdp, SCSI_IOCTL_DOORUNLOCK, NULL);
++				scsi_set_medium_removal(sdp, SCSI_REMOVAL_ALLOW);
+ 	}
+ 	if (sdp->host->hostt->module)
+ 		__MOD_DEC_USE_COUNT(sdp->host->hostt->module);
+diff -Nru a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
+--- a/drivers/scsi/sr_ioctl.c	Fri Oct  4 08:59:02 2002
++++ b/drivers/scsi/sr_ioctl.c	Fri Oct  4 08:59:02 2002
+@@ -218,8 +218,8 @@
+ {
+ 	Scsi_CD *cd = cdi->handle;
+ 
+-	return scsi_ioctl(cd->device, lock ? SCSI_IOCTL_DOORLOCK :
+-			SCSI_IOCTL_DOORUNLOCK, 0);
++	return scsi_set_medium_removal(cd->device, lock ?
++		       SCSI_REMOVAL_PREVENT : SCSI_REMOVAL_ALLOW);
+ }
+ 
+ int sr_drive_status(struct cdrom_device_info *cdi, int slot)
+diff -Nru a/include/scsi/scsi_ioctl.h b/include/scsi/scsi_ioctl.h
+--- a/include/scsi/scsi_ioctl.h	Fri Oct  4 08:59:02 2002
++++ b/include/scsi/scsi_ioctl.h	Fri Oct  4 08:59:02 2002
+@@ -39,10 +39,10 @@
+ 	unsigned char host_wwn[8]; // include NULL term.
+ } Scsi_FCTargAddress;
+ 
+-extern int scsi_ioctl (Scsi_Device *dev, int cmd, void *arg);
+-extern int kernel_scsi_ioctl (Scsi_Device *dev, int cmd, void *arg);
+-extern int scsi_ioctl_send_command(Scsi_Device *dev,
+-				   Scsi_Ioctl_Command *arg);
++extern int scsi_ioctl (Scsi_Device *, int , void *);
++extern int kernel_scsi_ioctl (Scsi_Device *, int, void *);
++extern int scsi_ioctl_send_command(Scsi_Device *, Scsi_Ioctl_Command *);
++extern int scsi_set_medium_removal(Scsi_Device *, char);
+ 
+ #endif
+ 
