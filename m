@@ -1,59 +1,50 @@
-From: Ying Li <hellbunni@yahoo.com>
-Subject: slow write speed
-Date: Tue, 5 Apr 2005 12:12:21 -0700 (PDT)
-Message-ID: <20050405191222.79349.qmail@web51310.mail.yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Magnus Damm <damm@opensource.se>
+Subject: [PATCH] mptscsih: MODULE_PARM() -> module_param()
+Date: Tue,  5 Apr 2005 21:18:16 +0200 (CEST)
+Message-ID: <20050405184646.16808.10810.53122@clementine.local>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web51310.mail.yahoo.com ([206.190.38.176]:14478 "HELO
-	web51310.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S261910AbVDETMW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Apr 2005 15:12:22 -0400
+Received: from ns3.dataphone.se ([212.37.0.170]:43227 "EHLO
+	mail-slave.dataphone.se") by vger.kernel.org with ESMTP
+	id S261977AbVDETSS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Apr 2005 15:18:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Magnus Damm <damm@opensource.se>, sjralston1@netscape.net, mpt_linux_developer@lsil.com
 
-hi,
+Convert obsolete MODULE_PARM() to module_param(). This also fixes "mpt_factor"
+that currently is a short parameter ("h") but the actual variable is an int.
 
-I recently got a seagate cheetah (ST336753FC, 15k.3
-RPM 37GB) harddrive that sits in my JMR Fortra 2G6
-array.
-I'm running Linux 2.6, using sg3_util.1.13
+Signed-off-by: Magnus Damm <damm@opensource.se>
 
-My seagate is mapped to /dev/sdb
-I run the following:
-
-1.)time sg_dd if=/dev/zero of=/dev/sdb bpt=256
-count=1200000
-  a.) it finishes on average around 10 seconds
-
-2.)time sg_dd if=/dev/zero of=/dev/sdb bpt=255
-count=1200000
-  a.) this finishes on average around 18 seconds
-
-Why is there such a big difference?
-
-In a program that I wrote, 
- --one pc reads data from one hd
- --transfers it over a closed network
- --another pc writes the data received to another hd
-
-When I had both the hd being as seagate cheetah
-(ST318453FC, 15k RPM 17GB), I was getting good overall
-  (transfer + read/write) speed around 300Mb/s.  The
-drives sit in the JMR Fortra 2G6 array.  But when I
-replaced one of these with my new 37GB hd, i get weird
-resuls.
-  --if the 37GB replaced the one data is written to,
-my overall speed drops by a factor of 100Mb/s
-  --if the 37GB replaced the one data is read off of,
-my overall speed remains at 300Mb/s.
-
-Any help would be greatly appreciated.  THANKS!!!
-
--Ying
-
-__________________________________________________
-Do You Yahoo!?
-Tired of spam?  Yahoo! Mail has the best spam protection around 
-http://mail.yahoo.com 
+--- linux-2.6.12-rc2/drivers/message/fusion/mptscsih.c	2005-04-05 16:59:53.000000000 +0200
++++ linux-2.6.12-rc2-autoparam/drivers/message/fusion/mptscsih.c	2005-04-05 20:28:11.459725880 +0200
+@@ -98,23 +98,23 @@
+ 
+ /* Command line args */
+ static int mpt_dv = MPTSCSIH_DOMAIN_VALIDATION;
+-MODULE_PARM(mpt_dv, "i");
++module_param(mpt_dv, int, 0);
+ MODULE_PARM_DESC(mpt_dv, " DV Algorithm: enhanced=1, basic=0 (default=MPTSCSIH_DOMAIN_VALIDATION=1)");
+ 
+ static int mpt_width = MPTSCSIH_MAX_WIDTH;
+-MODULE_PARM(mpt_width, "i");
++module_param(mpt_width, int, 0);
+ MODULE_PARM_DESC(mpt_width, " Max Bus Width: wide=1, narrow=0 (default=MPTSCSIH_MAX_WIDTH=1)");
+ 
+ static int mpt_factor = MPTSCSIH_MIN_SYNC;
+-MODULE_PARM(mpt_factor, "h");
++module_param(mpt_factor, int, 0);
+ MODULE_PARM_DESC(mpt_factor, " Min Sync Factor (default=MPTSCSIH_MIN_SYNC=0x08)");
+ 
+ static int mpt_saf_te = MPTSCSIH_SAF_TE;
+-MODULE_PARM(mpt_saf_te, "i");
++module_param(mpt_saf_te, int, 0);
+ MODULE_PARM_DESC(mpt_saf_te, " Force enabling SEP Processor: enable=1  (default=MPTSCSIH_SAF_TE=0)");
+ 
+ static int mpt_pq_filter = 0;
+-MODULE_PARM(mpt_pq_filter, "i");
++module_param(mpt_pq_filter, int, 0);
+ MODULE_PARM_DESC(mpt_pq_filter, " Enable peripheral qualifier filter: enable=1  (default=0)");
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
