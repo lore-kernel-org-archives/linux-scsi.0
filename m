@@ -1,72 +1,84 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] sg descriptor sense cleanup lk 2.6.11-rc1-bk1
-Date: Fri, 21 Jan 2005 09:35:03 +1000
-Message-ID: <41F04027.9040606@torque.net>
-References: <41EBA3F9.8030305@torque.net> <20050120111526.GD32550@infradead.org>
-Reply-To: dougg@torque.net
+From: Nishanth Aravamudan <nacc@us.ibm.com>
+Subject: [PATCH 24/39] scsi/atari_scsi: use wait_event()
+Date: Thu, 20 Jan 2005 16:11:36 -0800
+Message-ID: <20050121001136.GM2600@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from borg.st.net.au ([65.23.158.22]:61901 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S261427AbVATXe5 (ORCPT
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:11712 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261546AbVAUA2y (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Jan 2005 18:34:57 -0500
-In-Reply-To: <20050120111526.GD32550@infradead.org>
+	Thu, 20 Jan 2005 19:28:54 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e5.ny.us.ibm.com (8.12.10/8.12.10) with ESMTP id j0L0SrJX021613
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Jan 2005 19:28:53 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j0L0SrXM266370
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Jan 2005 19:28:53 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j0L0SqXD005365
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Jan 2005 19:28:52 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, James.Bottomley@SteelEye.com
+To: Roman.Hodek@informatik.uni-erlangen.de, James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, kernel-janitors@lists.osdl.org
 
-Christoph Hellwig wrote:
-> On Mon, Jan 17, 2005 at 09:39:37PM +1000, Douglas Gilbert wrote:
-> 
->>Continuation of descriptor sense data expansion to
->>sg driver.
->>
->>Next will be the sd driver which awaits a
->>new utility function in constants.c to read the
->>sense data information field for medium/hardware
->>errors.
->>
->>Changelog:
->>  - expand sense data handling to descriptor format
->>  - make module parameters visible in
->>      /sys/modules/sg/parameters
->>  - add "readable" SCSI commands: READ(16), REPORT LUNS,
->>    SERVICE_ACTION_IN, RECEIVE_DIAGNOSTIC, READ_LONG
->>    and MAINTENANCE_IN_CMD to list
->>
->>Signed-off-by: Douglas Gilbert <dougg@torque.net>
-> 
-> 
-> +#ifndef MAINTENANCE_IN_CMD
-> +#define MAINTENANCE_IN_CMD 0xa3
-> +#endif
-> 
-> Shouldn't we put it into <scsi/scsi.h> ?
+Hi,
 
-Yes it should. For a larger list of missing "byte 0"
-opcodes see the top of constants.c
+Please consider applying.
 
-The opcodes with a "in" suffix retrieve data from the
-device so are generally safe to use when the device
-is opened O_RDONLY.
+Description: Use wait_event() instead of the deprecated sleep_on() function. The
+second replacement is more difficult, as there are various conditions which may
+cause the while-loop to break, each resulting in a different effect.
 
-So the various SCSI command sets are not limited
-in number to 256, more use is being made of
-service actions. Maintanance In contains these
-commands (or at least they are documented separately
-in SPC-3):
-   Report device identifier [a3/5]
-   Report target port groups [a3/a]
-   Report aliases [a3/b]
-   Report supported operation codes [a3/c]
-   Report supported task management functions [a3/d]
-   Report priority [a3/e]
+Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
 
-And sooner or later we will need to support variable
-length commands.
-
-Doug Gilbert
-
+--- 2.6.11-rc1-kj-v/drivers/scsi/atari_scsi.c	2005-01-15 16:55:43.000000000 -0800
++++ 2.6.11-rc1-kj/drivers/scsi/atari_scsi.c	2005-01-20 16:08:25.000000000 -0800
+@@ -67,6 +67,7 @@
+ 
+ #include <linux/config.h>
+ #include <linux/module.h>
++#include <linux/wait.h>
+ 
+ #define NDEBUG (0)
+ 
+@@ -559,24 +560,20 @@ static void falcon_get_lock( void )
+ 
+ 	local_irq_save(flags);
+ 
+-	while( !in_interrupt() && falcon_got_lock && stdma_others_waiting() )
+-		sleep_on( &falcon_fairness_wait );
+-
+-	while (!falcon_got_lock) {
+-		if (in_interrupt())
+-			panic( "Falcon SCSI hasn't ST-DMA lock in interrupt" );
+-		if (!falcon_trying_lock) {
+-			falcon_trying_lock = 1;
+-			stdma_lock(scsi_falcon_intr, NULL);
+-			falcon_got_lock = 1;
+-			falcon_trying_lock = 0;
+-			wake_up( &falcon_try_wait );
+-		}
+-		else {
+-			sleep_on( &falcon_try_wait );
+-		}
+-	}	
++	wait_event(falcon_fairness_wait, (in_interrupt() ||
++			falcon_got_lock || stdma_others_waiting()));
+ 
++	wait_event(falcon_try_wait, (in_interrupt() ||
++				falcon_got_lock || !falcon_trying_lock));
++	if (in_interrupt())
++		panic( "Falcon SCSI hasn't ST-DMA lock in interrupt" );
++	if (!falcon_trying_lock) {
++		falcon_trying_lock = 1;
++		stdma_lock(scsi_falcon_intr, NULL);
++		falcon_got_lock = 1;
++		falcon_trying_lock = 0;
++		wake_up(&falcon_try_wait);
++	}
+ 	local_irq_restore(flags);
+ 	if (!falcon_got_lock)
+ 		panic("Falcon SCSI: someone stole the lock :-(\n");
