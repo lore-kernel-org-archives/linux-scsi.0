@@ -1,39 +1,51 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [announce] scsi_id 0.1 - generate unique scsi id
-Date: Wed, 22 Oct 2003 09:15:19 -0700
+From: David Brownell <david-b@pacbell.net>
+Subject: Re: Usb storage mounting was broken somewhere	between	2.6.0-test5-bk10
+ and 2.6.0-test6-bk1
+Date: Wed, 22 Oct 2003 09:20:52 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031022091519.A11995@beaverton.ibm.com>
-References: <20031021165857.A8240@beaverton.ibm.com> <20031022153140.A22298@infradead.org> <1066808536.27285.19.camel@w-stekloff.beaverton.ibm.com> <20031022154638.A22952@infradead.org> <1066809889.27285.36.camel@w-stekloff.beaverton.ibm.com> <20031022155231.GQ18370@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <3F96AE64.5020305@pacbell.net>
+References: <1066775616.3458.8.camel@m70.net81-64-235.noos.fr>	 <20031021175556.A8670@beaverton.ibm.com>	 <1066808944.3699.9.camel@ulysse.olympe.o2t>  <3F969E04.6060801@pacbell.net> <1066837537.6960.3.camel@ulysse.olympe.o2t>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.103]:40852 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S263692AbTJVQQj (ORCPT
+Received: from mtaw6.prodigy.net ([64.164.98.56]:50599 "EHLO mtaw6.prodigy.net")
+	by vger.kernel.org with ESMTP id S263486AbTJVQPe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Oct 2003 12:16:39 -0400
-Content-Disposition: inline
-In-Reply-To: <20031022155231.GQ18370@parcelfarce.linux.theplanet.co.uk>; from willy@debian.org on Wed, Oct 22, 2003 at 04:52:31PM +0100
+	Wed, 22 Oct 2003 12:15:34 -0400
+In-Reply-To: <1066837537.6960.3.camel@ulysse.olympe.o2t>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: Daniel Stekloff <dsteklof@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: Nicolas Mailhot <Nicolas.Mailhot@laPoste.net>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
 
-On Wed, Oct 22, 2003 at 04:52:31PM +0100, Matthew Wilcox wrote:
-> On Wed, Oct 22, 2003 at 01:05:21AM -0700, Daniel Stekloff wrote:
-> > The headers are being installed into /usr/local/include, I believe this
-> > can be configured differently using autoconf tools. If they should be
-> > installed elsewhere by default, please let us know.
-> > 
-> > Patrick told us that we weren't even installing headers. Don't mind me,
-> > need more tea. 
+Nicolas Mailhot wrote:
+
+>>So I closed that bug report.  If you come up with any
+>>evidence to support a real bug report, file a new bug
+>>report with it.  But having this one sitting around
+>>in such a state does nobody any good.
 > 
-> You shouldn't be installing them into the <sys/> namespace, that's
-> basically owned by POSIX.  How about <sysfs/> instead?
+> 
+> Rhaa. There is no evidence of a failure. The reader is plugged like in
+> previous kernels, logs show it's detected as a usb-storage device, then
+> *nothing*.
 
-I incorrectly suggested we should use <sys/>. 
+Not according to any information you included in the bug report,
+after several weeks of waiting for clarifications...
 
-Should we use <linux/>, rather than another new directory?
+Maybe you thought you'd included that information, but it's
+not there.  The only "logs show ..." information you included
+was for cases where everything worked (test5).
 
-And sorry for getting the hogplug list address wrong.
 
--- Patrick Mansfield
-wrong.
+
+> I can't give you any error because no error is outputed. If I could make
+> up an error message believe me I would .
+
+No, please don't make up error messages.
+
+If you file a new bug report, just include dmesg output
+demonstrating the problem you're describing -- on a
+current kernel.
+
+
