@@ -1,42 +1,95 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Aic7xxx v6.2.23 and Aic79xx v1.3.0Alpha3 in bitkeeper
-Date: Mon, 16 Dec 2002 18:56:59 +0000
+From: Andrew Morton <akpm@digeo.com>
+Subject: Re: aic7xxx woes in 2.5
+Date: Mon, 16 Dec 2002 11:08:46 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021216185659.A10346@infradead.org>
-References: <200212161746.gBGHkjE03623@localhost.localdomain>
+Message-ID: <3DFE24BE.A8E3755F@digeo.com>
+References: <3DFD9F89.4B994586@digeo.com> <32310000.1040064745@aslan.btc.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200212161746.gBGHkjE03623@localhost.localdomain>; from James.Bottomley@steeleye.com on Mon, Dec 16, 2002 at 11:46:45AM -0600
+Received: from digeo-nav01.digeo.com (digeo-nav01.digeo.com [192.168.1.233])
+	by packet.digeo.com (8.9.3+Sun/8.9.3) with SMTP id LAA25371
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Dec 2002 11:08:48 -0800 (PST)
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org, "Justin T. Gibbs" <gibbs@scsiguy.com>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Dec 16, 2002 at 11:46:45AM -0600, James Bottomley wrote:
-> I've moved the previous aic7xxx repository to scsi-aic7xxx-old-2.5 and set up 
-> a brand new one in its place.  This one should have the import of Justin's 
-> actual patch sets, so should be easier for us all to manage.
+"Justin T. Gibbs" wrote:
 > 
-> The new repository is at
+> > The driver still has a serious bug in ahc_linux_queue_recovery_cmd().
+> > It does
+> >
+> >       ahc_unlock(ahc, &s);
 > 
-> http://linux-scsi.bkbits.net/scsi-aic7xxx-2.5
+> The sole ahc_unlock() in that routine looks like this:
+> 
+> #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+>                 ahc_unlock(ahc, &s);
+> #else
+>                 spin_unlock_irq(ahc->platform_data->host->host_lock);
+> #endif
+> 
+> Since you are running 2.5.X, the ahc_unlock never occurs.
+> In 2.4.X, ahd_midlayer_entrypoint_lock() saves the cpu flags
+> for us, so the variable is never uninitialized in the case
+> where it actually is compiled in.
 
->From a first look it seems almost fine.  There's a small problem in
-the ->biosparam implementations, and at least a part of that is
-probably my fault.
+In 2.5.52 uniprocessor a
 
-In aic7xxx there is a ahd_linux_biosparam prototype instead of
-ahc_linux_biosparam and the actual implementation doesn't use the
-sector_div wrapper I sent justing yet, so it probably fails on system
-that are configured with 64bit block numbers.  Also my cleanups to
-get the ifdef mess down in ->biosparam don't seem to be there, maybe
-my style doesn't match Justins (?).
+	make drivers/scsi/aic7xxx/aic7xxx_linux.i
 
-I've seen Justin moved aic_sector_div into the common aiclib.c file,
-which seems to be a good idea to me, and I think there's more in the
-*_osm.c headers that should go this way.  I think it should become
-an module of it's own at least for the kernel tree, even if Adaptec
-wants to keep it included in their tarballs.
+gives:
 
-Now I'll actually try to compile it..
+static __inline void
+ahc_unlock(struct ahc_softc *ahc, unsigned long *flags)
+{
+        do { do { (void)(  &ahc->platform_data->spin_lock  ); } while(0) ; __asm__ __volatile__("pushl %0 ; popfl":   :"g" (   *flags  ):"memory", "cc") ; do { } while (0) ; } while (0) ;
+}
+
+Which is loading *flags into the CPU's interrupt status register.
+
+On 2.5.52 SMP:
+
+static __inline void
+ahc_unlock(struct ahc_softc *ahc, unsigned long *flags)
+{
+        do { _raw_spin_unlock( &ahc->platform_data->spin_lock ); __asm__ __volatile__("pushl %0 ; popfl":   :"g" (   *flags  ):"memory", "cc") ; do { } while (0) ; } while (0) ;
+}
+
+ditto.
+
+
+And it is being called from ahc_linux_queue_recovery_cmd:
+
+        if (wait) {
+                struct timer_list timer;
+                int ret;
+
+                ahc_unlock(ahc, &s);
+                init_timer(&timer);
+
+So I think the problem is still there.
+
+> ..
+> >
+> > 1571                    while (slabp->inuse < cachep->num && batchcount--)
+> > 1572                            ac_entry(ac)[ac->avail++] =
+> > 1573                                    cache_alloc_one_tail(cachep,
+> > slabp);
+> >
+> > Presumably due to errors in use of slab-allocated memory.
+> 
+> I'll look into this today.
+
+Thanks.
+ 
+> > I can debug further if you like, but would really appreciate unified
+> > diffs, thanks.
+> 
+> Against???
+
+The current devel kernel.  Nobody uses anything else, and if they
+do, integration of diffs is much easier than a wholesale overwrite.
+
+This is why everyone uses them.
