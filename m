@@ -1,281 +1,33 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [(re)Announce] Emulex LightPulse Device Driver
-Date: Sun, 9 May 2004 09:51:34 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040509095134.A22975@infradead.org>
-References: <3356669BBE90C448AD4645C843E2BF28034F92F0@xbl.ma.emulex.com> <20040509092045.A22643@infradead.org>
+From: christophe.varoqui@free.fr
+Subject: [ANNOUNCE] multipath-tools-0.1.7
+Date: Mon, 10 May 2004 10:08:28 +0200
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <1084176508.409f387c1e110@imp5-q.free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:33040 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S264159AbUEIIvj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 May 2004 04:51:39 -0400
-Content-Disposition: inline
-In-Reply-To: <20040509092045.A22643@infradead.org>; from hch@infradead.org on Sun, May 09, 2004 at 09:20:45AM +0100
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org
+Cc: nickyin@hotmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Smart, James" <James.Smart@Emulex.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 
-On Sun, May 09, 2004 at 09:20:45AM +0100, Christoph Hellwig wrote:
-> A bunch of comments from looking over the headers and itnerface to
-> upper layers a little:  (next I'll try to understand what's going on
-> in the I/O submission path - it's just to freakin complicated..):
+Hello,
 
-One more thing I forgot - you're missing lots of static.  Output of
-Tridge's findstatic script:
+here goes multipath-tools-0.1.7
 
-Checking lpfc_els.o
-  'lpfc_cmpl_els_acc' is unique to lpfc_els.o  (function)
-  'lpfc_cmpl_els_logo_acc' is unique to lpfc_els.o  (function)
-  'lpfc_els_chk_latt' is unique to lpfc_els.o  (function)
-  'lpfc_els_rcv_fan' is unique to lpfc_els.o  (function)
-  'lpfc_els_rcv_farp' is unique to lpfc_els.o  (function)
-  'lpfc_els_rcv_farpr' is unique to lpfc_els.o  (function)
-  'lpfc_els_rcv_flogi' is unique to lpfc_els.o  (function)
-  'lpfc_els_rcv_rnid' is unique to lpfc_els.o  (function)
-  'lpfc_els_rcv_rrq' is unique to lpfc_els.o  (function)
-  'lpfc_els_rcv_rscn' is unique to lpfc_els.o  (function)
-  'lpfc_els_retry' is unique to lpfc_els.o  (function)
-  'lpfc_els_rsp_rnid_acc' is unique to lpfc_els.o  (function)
-  'lpfc_issue_els_farp' is unique to lpfc_els.o  (function)
-  'lpfc_issue_els_farpr' is unique to lpfc_els.o  (function)
-  'lpfc_issue_els_flogi' is unique to lpfc_els.o  (function)
-  'lpfc_more_adisc' is unique to lpfc_els.o  (function)
-  'lpfc_more_plogi' is unique to lpfc_els.o  (function)
-Checking lpfc_ct.o
-  'lpfc_alloc_ct_rsp' is unique to lpfc_ct.o  (function)
-  'lpfc_cmpl_ct_cmd_fdmi' is unique to lpfc_ct.o  (function)
-  'lpfc_cmpl_ct_cmd_gid_ft' is unique to lpfc_ct.o  (function)
-  'lpfc_cmpl_ct_cmd_rft_id' is unique to lpfc_ct.o  (function)
-  'lpfc_cmpl_ct_cmd_rnn_id' is unique to lpfc_ct.o  (function)
-  'lpfc_cmpl_ct_cmd_rsnn_nn' is unique to lpfc_ct.o  (function)
-  'lpfc_ct_cmd' is unique to lpfc_ct.o  (function)
-  'lpfc_free_ct_rsp' is unique to lpfc_ct.o  (function)
-  'lpfc_gen_req' is unique to lpfc_ct.o  (function)
-  'lpfc_get_os_nameversion' is unique to lpfc_ct.o  (function)
-  'lpfc_ns_rsp' is unique to lpfc_ct.o  (function)
-Checking lpfc_mem.o
-  'lpfc_mbuf_saftey_pool_create' is unique to lpfc_mem.o  (function)
-  'lpfc_mbuf_saftey_pool_destroy' is unique to lpfc_mem.o  (function)
-  'lpfc_mem_saftey_pool_create' is unique to lpfc_mem.o  (function)
-  'lpfc_mem_saftey_pool_destroy' is unique to lpfc_mem.o  (function)
-  'lpfc_page_saftey_pool_create' is unique to lpfc_mem.o  (function)
-  'lpfc_page_saftey_pool_destroy' is unique to lpfc_mem.o  (function)
-Checking lpfc_clock.o
-Checking lpfc_init.o
-  'lpfc_challenge_key' is unique to lpfc_init.o  (function)
-  'lpfc_establish_link_tmo' is unique to lpfc_init.o  (function)
-  'lpfc_parse_vpd' is unique to lpfc_init.o  (function)
-  'lpfc_post_rcv_buf' is unique to lpfc_init.o  (function)
-  'lpfc_sha_init' is unique to lpfc_init.o  (function)
-  'lpfc_sha_iterate' is unique to lpfc_init.o  (function)
-  'lpfc_swap_bcopy' is unique to lpfc_init.o  (function)
-Checking lpfc_sysfs.o
-Checking lpfc_mbox.o
-  'lpfc_config_farp' is unique to lpfc_mbox.o  (function)
-  'lpfc_config_pcb_setup' is unique to lpfc_mbox.o  (function)
-  'lpfc_read_rpi' is unique to lpfc_mbox.o  (function)
-Checking lpfc_sli.o
-  'lpfc_mbox_abort' is unique to lpfc_sli.o  (function)
-  'lpfc_mbox_timeout' is unique to lpfc_sli.o  (function)
-  'lpfc_search_txcmpl' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_abort_cmpl' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_abort_elsreq_cmpl' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_abort_iocb_hba' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_abort_iocb_ring' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_chk_mbx_command' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_handle_mb_event' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_handle_ring_event' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_iocb_cmd_type' is unique to lpfc_sli.o  (initialised variable)
-  'lpfc_sli_process_sol_iocb' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_process_unsol_iocb' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_resume_iocb' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_ring_map' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_ringpostbuf_search' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_ringtx_get' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_ringtx_put' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_ringtxcmpl_get' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_ringtxcmpl_put' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_wake_iocb_wait' is unique to lpfc_sli.o  (function)
-  'lpfc_sli_wake_mbox_wait' is unique to lpfc_sli.o  (function)
-Checking lpfc_fcp.o
-  '__mod_pci_device_table' is unique to lpfc_fcp.o  (initialised variable)
-  'dev_attr_info' is unique to lpfc_fcp.o  (initialised variable)
-  'driver_attr_params' is unique to lpfc_fcp.o  (initialised variable)
-  'driver_attr_set' is unique to lpfc_fcp.o  (initialised variable)
-  'driver_attr_version' is unique to lpfc_fcp.o  (initialised variable)
-  'fc_get_cfg_param' is unique to lpfc_fcp.o  (function)
-  'lpfc_bind_did' is unique to lpfc_fcp.o  (function)
-  'lpfc_bind_setup' is unique to lpfc_fcp.o  (function)
-  'lpfc_bind_wwnn' is unique to lpfc_fcp.o  (function)
-  'lpfc_bind_wwpn' is unique to lpfc_fcp.o  (function)
-  'lpfc_biosparam' is unique to lpfc_fcp.o  (function)
-  'lpfc_check_valid_phba' is unique to lpfc_fcp.o  (function)
-  'lpfc_config_setup' is unique to lpfc_fcp.o  (function)
-  'lpfc_device_queue_depth' is unique to lpfc_fcp.o  (function)
-  'lpfc_discq_tasklet' is unique to lpfc_fcp.o  (function)
-  'lpfc_get_bind_type' is unique to lpfc_fcp.o  (function)
-  'lpfc_get_inst_by_phba' is unique to lpfc_fcp.o  (function)
-  'lpfc_icfgparam' is unique to lpfc_fcp.o  (initialised variable)
-  'lpfc_info' is unique to lpfc_fcp.o  (function)
-  'lpfc_linux_attach' is unique to lpfc_fcp.o  (function)
-  'lpfc_linux_detach' is unique to lpfc_fcp.o  (function)
-  'lpfc_memmap' is unique to lpfc_fcp.o  (function)
-  'lpfc_nodev_unsol_event' is unique to lpfc_fcp.o  (function)
-  'lpfc_pcimap' is unique to lpfc_fcp.o  (function)
-  'lpfc_reset_bus_handler' is unique to lpfc_fcp.o  (function)
-  'lpfc_sleep' is unique to lpfc_fcp.o  (function)
-  'lpfc_sli_setup' is unique to lpfc_fcp.o  (function)
-  'lpfc_tran_find_lun' is unique to lpfc_fcp.o  (function)
-  'lpfc_unmemmap' is unique to lpfc_fcp.o  (function)
-  'lpfc_utsname_nodename_check' is unique to lpfc_fcp.o  (function)
-  'lpfc_wakeup_event' is unique to lpfc_fcp.o  (function)
-Checking lpfc_hbadisc.o
-  'lpfc_check_sli_ndlp' is unique to lpfc_hbadisc.o  (function)
-  'lpfc_disc_cmpl_rptlun' is unique to lpfc_hbadisc.o  (function)
-  'lpfc_disc_retry_rptlun' is unique to lpfc_hbadisc.o  (function)
-  'lpfc_disc_timeout' is unique to lpfc_hbadisc.o  (function)
-  'lpfc_free_tx' is unique to lpfc_hbadisc.o  (function)
-  'lpfc_linkup' is unique to lpfc_hbadisc.o  (function)
-  'lpfc_matchdid' is unique to lpfc_hbadisc.o  (function)
-  'lpfc_mbx_cmpl_config_link' is unique to lpfc_hbadisc.o  (function)
-  'lpfc_mbx_cmpl_read_sparam' is unique to lpfc_hbadisc.o  (function)
-  'lpfc_put_buf' is unique to lpfc_hbadisc.o  (function)
-  'lpfc_removenode_rpihash' is unique to lpfc_hbadisc.o  (function)
-Checking lpfc_scsiport.o
-  'free_lun' is unique to lpfc_scsiport.o  (function)
-  'lpfc_delay_done' is unique to lpfc_scsiport.o  (function)
-  'lpfc_find_lun_device' is unique to lpfc_scsiport.o  (function)
-  'lpfc_iodone' is unique to lpfc_scsiport.o  (function)
-  'lpfc_ioerr_tbl' is unique to lpfc_scsiport.o  (initialised variable)
-  'lpfc_iostat_tbl' is unique to lpfc_scsiport.o  (initialised variable)
-  'lpfc_os_fcp_err_handle' is unique to lpfc_scsiport.o  (function)
-  'lpfc_os_prep_io' is unique to lpfc_scsiport.o  (function)
-  'lpfc_os_return_scsi_cmd' is unique to lpfc_scsiport.o  (function)
-  'lpfc_qthrottle_up' is unique to lpfc_scsiport.o  (function)
-  'lpfc_scsi_add_timer' is unique to lpfc_scsiport.o  (function)
-  'lpfc_scsi_cmd_abort' is unique to lpfc_scsiport.o  (function)
-  'lpfc_scsi_cmd_iocb_cmpl' is unique to lpfc_scsiport.o  (function)
-  'lpfc_scsi_cmd_start' is unique to lpfc_scsiport.o  (function)
-  'lpfc_scsi_delay_iodone' is unique to lpfc_scsiport.o  (function)
-  'lpfc_scsi_delete_timer' is unique to lpfc_scsiport.o  (function)
-  'lpfc_scsi_done' is unique to lpfc_scsiport.o  (function)
-  'lpfc_scsi_prep_task_mgmt_cmd' is unique to lpfc_scsiport.o  (function)
-Checking lpfc.mod.o
-Checking lpfc_nportdisc.o
-  'lpfc_assign_scsid' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_binding_found' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_binding_useid' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_check_adisc' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_adisc_mapped_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_adisc_plogi_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_adisc_prli_compl' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_adisc_prli_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_adisc_reglogin_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_els_unused_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_logo_mapped_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_logo_plogi_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_logo_prli_compl' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_logo_prli_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_logo_reglogin_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_plogi_plogi_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_prli_plogi_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_prli_prli_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_reglogin_mapped_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_reglogin_plogi_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_reglogin_prli_compl' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_reglogin_prli_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_reglogin_reglogin_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_cmpl_reglogin_unused_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_create_binding' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_device_add_mapped_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_device_add_prli_compl' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_device_add_prli_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_device_add_unused_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_device_rm_mapped_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_device_rm_plogi_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_device_rm_prli_compl' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_device_rm_prli_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_device_rm_reglogin_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_device_rm_unused_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_device_unk_mapped_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_device_unk_plogi_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_device_unk_prli_compl' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_device_unk_prli_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_device_unk_reglogin_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_device_unk_unused_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_disc_action' is unique to lpfc_nportdisc.o  (initialised variable)
-  'lpfc_disc_neverdev' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_disc_nodev' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_mapping_useid' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_els_plogi_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_els_unused_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_logo_mapped_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_logo_plogi_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_logo_prli_compl' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_logo_prli_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_logo_reglogin_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_logo_unused_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_padisc_mapped_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_padisc_prli_compl' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_padisc_prli_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_padisc_reglogin_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_plogi_mapped_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_plogi_plogi_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_plogi_prli_compl' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_plogi_prli_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_plogi_reglogin_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_plogi_unused_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_prli_mapped_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_prli_plogi_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_prli_prli_compl' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_prli_prli_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_prli_reglogin_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_prlo_mapped_node' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_prlo_prli_compl' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_prlo_prli_issue' is unique to lpfc_nportdisc.o  (function)
-  'lpfc_rcv_prlo_reglogin_issue' is unique to lpfc_nportdisc.o  (function)
-Checking lpfc_logmsg.o
-  'lpfc_log_chk_msg_disabled' is unique to lpfc_logmsg.o  (function)
-  'lpfc_mes0449' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes0450' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes0602' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes0603' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes0604' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes0605' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes0606' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes0607' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes0608' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes0609' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes0738' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes1208' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes1600' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes1601' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes1602' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes1603' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes1604' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes1605' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes1606' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_mes1607' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk0449' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk0450' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk0602' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk0603' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk0604' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk0605' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk0606' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk0607' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk0608' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk0609' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk0738' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk1208' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk1600' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk1601' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk1602' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk1603' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk1604' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk1605' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk1606' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_msgBlk1607' is unique to lpfc_logmsg.o  (initialised variable)
-  'lpfc_printf_log_msgblk' is unique to lpfc_logmsg.o  (function)
+Changelog for this release :
 
+        * bugfixes from Andy <genanr@emsphone.com> :
+                * read the last line of the config file
+                * add an entry for the 3PARData storage ctlrs
+                * read the last char of vendor and model strings
+        * dmadm exits cleanly when it has nothing to do
+
+Downloads and docs at http://christophe.varoqui.free.fr
+
+[Nick, you were certainly hit by the bugs Andy spotted.
+Please try this release.]
+
+regards,
+cvaroqui
+-- 
