@@ -1,52 +1,40 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Subject: Re: Aic7x_x_x 6.3.4 && Aic79xx 2.0.5 Updates
-Date: 27 Dec 2003 09:54:08 -0600
+Date: Sat, 27 Dec 2003 09:02:12 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1072540449.2030.45.camel@mulgrave>
-References: <1051920000.1054684267@aslan.btc.adaptec.com>
-	<3637050000.1054690456@aslan.s csiguy.com>
-	<2113050000.1072285128@aslan.scsiguy.com>
-	<1072288242.1906.35.camel@mulgrave >
-	<2148850000.1072292121@aslan.scsiguy.com>
-	<1072292714.2415.39.camel@mulgrave>
-	<2304040000.1072326693@aslan.scsiguy.com>
-	<1072463795.1873.127.camel@mulgrave>
-	<1072538231.5494.12.camel@dhcp23.swansea.linux.org.uk>
+Message-ID: <3334920000.1072540932@aslan.btc.adaptec.com>
+References: <1051920000.1054684267@aslan.btc.adaptec.com>	 <3637050000.1054690456@aslan.s csiguy.com>	 <2113050000.1072285128@aslan.scsiguy.com>	 <1072288242.1906.35.camel@mulgrave >	 <2148850000.1072292121@aslan.scsiguy.com>	 <1072292714.2415.39.camel@mulgrave>	 <2304040000.1072326693@aslan.scsiguy.com>	 <1072463795.1873.127.camel@mulgrave> <1072538231.5494.12.camel@dhcp23.swansea.linux.org.uk>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:64656 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264484AbTL0PyM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Dec 2003 10:54:12 -0500
+Received: from magic-mail.adaptec.com ([216.52.22.10]:48817 "EHLO
+	magic.adaptec.com") by vger.kernel.org with ESMTP id S264488AbTL0P4m
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Dec 2003 10:56:42 -0500
 In-Reply-To: <1072538231.5494.12.camel@dhcp23.swansea.linux.org.uk>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>, Marcelo Tosatti <marcelo@conectiva.com.br>, Andrew Morton <akpm@osdl.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>, Marcelo Tosatti <marcelo@conectiva.com.br>, Andrew Morton <akpm@osdl.org>
 
-On Sat, 2003-12-27 at 09:17, Alan Cox wrote:
-> Or install your own EH handler. You don't have to use the kernel eh at
-> all, you can just opt out of it and for some cards like smart raid
-> devices its precisely the right thing to do. I can believe the argument
-> that for fast failover you want to do EH differently, and nothing in the
-> architecture seems to make that hard providing a driver is willing to
-> opt cleanly out of the scsi_eh handler.
+> Or install your own EH handler.
 
-Well, that's what the eh_strategy_handler hook is for.
+This was something I considered, but is sadly not enough.  You need
+at least two other changes to make it work:
 
-It certainly makes sense to do this for pseudo-scsi devices, like RAID
-cards.  But, for standard transports, like parallel SCSI and Fibre, I'd
-much rather see a standardised error handling library as part of the
-stack, with the mid-layer providing standard transport recovery
-functions on a per-transport basis, and the Upper Layer Drivers
-providing device specific handling.
+1) scsi_done needs to complete commands regardless of the timer
+   state.  The implied race condition commented about in scsi_done()
+   doesn't exist.  The HBA driver knows whether a command is in flight
+   or not.  Attempting to abort a command that is not active can just
+   return immediately with whatever status is agreed upon for the API.
+   Without this change, a driver must reschedule bogus timers to get
+   a completion to take effect.
 
-> Similarly it would be nice to be able to revector the actual scsi eh
-> timeouts via an optional handler. Something of the form
+2) The driver's must be notified of timeouts immediately.  Your idea
+   of re-vectoring the timeout handler would do this just fine.
 
-That's a good idea...do you want to send in the patches?
-
-James
-
+--
+Justin
 
