@@ -1,79 +1,58 @@
 From: Andi Kleen <ak@muc.de>
-Subject: [PATCH] Add compat_ioctl to SD
-Date: 18 Jan 2005 12:12:02 +0100
-Message-ID: <20050118111202.GF43344@muc.de>
+Subject: [PATCH] Add compat_ioctl to osst
+Date: 18 Jan 2005 12:13:18 +0100
+Message-ID: <20050118111318.GG43344@muc.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from colin2.muc.de ([193.149.48.15]:44806 "HELO colin2.muc.de")
-	by vger.kernel.org with SMTP id S261269AbVARLMD (ORCPT
+Received: from colin2.muc.de ([193.149.48.15]:38414 "HELO colin2.muc.de")
+	by vger.kernel.org with SMTP id S261263AbVARLNT (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Jan 2005 06:12:03 -0500
-Date: Tue, 18 Jan 2005 12:12:02 +0100
+	Tue, 18 Jan 2005 06:13:19 -0500
+Date: Tue, 18 Jan 2005 12:13:18 +0100
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, osst@riede.org
 
-
-Add compat_ioctl entry point to SD
-
-Requires the compat_ioctl for block devices patch I sent earlier
-to linux-kernel.
+Add compat_ioctl to osst
 
 Signed-off-by: Andi Kleen <ak@muc.de>
 
-diff -u linux-2.6.11-rc1-bk4/drivers/scsi/sd.c-o linux-2.6.11-rc1-bk4/drivers/scsi/sd.c
---- linux-2.6.11-rc1-bk4/drivers/scsi/sd.c-o	2005-01-17 10:39:40.000000000 +0100
-+++ linux-2.6.11-rc1-bk4/drivers/scsi/sd.c	2005-01-18 04:55:17.000000000 +0100
-@@ -738,11 +738,50 @@
- 	sd_revalidate_disk(sdkp->disk);
+diff -u linux-2.6.11-rc1-bk4/drivers/scsi/osst.c-o linux-2.6.11-rc1-bk4/drivers/scsi/osst.c
+--- linux-2.6.11-rc1-bk4/drivers/scsi/osst.c-o	2005-01-17 10:39:40.000000000 +0100
++++ linux-2.6.11-rc1-bk4/drivers/scsi/osst.c	2005-01-18 05:14:59.000000000 +0100
+@@ -5117,6 +5117,22 @@
+ 	return retval;
  }
  
-+
 +#ifdef CONFIG_COMPAT
-+/* 
-+ * This gets directly called from VFS. When the ioctl 
-+ * is not recognized we go back to the other translation paths. 
-+ */
-+static long sd_compat_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
++static long osst_compat_ioctl(struct file * file, unsigned int cmd_in, unsigned long arg)
 +{
-+	struct block_device *bdev = file->f_dentry->d_inode->i_bdev;
-+	struct gendisk *disk = bdev->bd_disk;
-+	struct scsi_device *sdev = scsi_disk(disk)->device;
-+
-+	/*
-+	 * If we are in the middle of error recovery, don't let anyone
-+	 * else try and use this device.  Also, if error recovery fails, it
-+	 * may try and take the device offline, in which case all further
-+	 * access to the device is prohibited.
-+	 */
-+	if (!scsi_block_when_processing_errors(sdev))
-+		return -ENODEV;
-+	       
++	struct osst_tape *STp = file->private_data;
++	struct scsi_device *sdev = STp->device;
++	int ret = -ENOIOCTLCMD;
 +	if (sdev->host->hostt->compat_ioctl) {
-+		int ret;
 +
-+		ret = sdev->host->hostt->compat_ioctl(sdev, cmd, (void __user *)arg);
++		ret = sdev->host->hostt->compat_ioctl(sdev, cmd_in, arg);
 +
-+		return ret;
 +	}
-+
-+	/* 
-+	 * Let the static ioctl translation table take care of it.
-+	 */
-+	return -ENOIOCTLCMD; 
++	return ret;
 +}
 +#endif
 +
- static struct block_device_operations sd_fops = {
- 	.owner			= THIS_MODULE,
- 	.open			= sd_open,
- 	.release		= sd_release,
- 	.ioctl			= sd_ioctl,
++
+ 
+
+ /* Memory handling routines */
+ 
+@@ -5452,6 +5468,9 @@
+ 	.read =         osst_read,
+ 	.write =        osst_write,
+ 	.ioctl =        osst_ioctl,
 +#ifdef CONFIG_COMPAT
-+	.compat_ioctl		= sd_compat_ioctl,
++	.compat_ioctl = osst_compat_ioctl,
 +#endif
- 	.media_changed		= sd_media_changed,
- 	.revalidate_disk	= sd_revalidate_disk,
- };
+ 	.open =         os_scsi_tape_open,
+ 	.flush =        os_scsi_tape_flush,
+ 	.release =      os_scsi_tape_close,
