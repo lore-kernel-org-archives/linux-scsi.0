@@ -1,78 +1,43 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: ide-scsi oops with ide tape drive
-Date: Wed, 9 Mar 2005 09:34:28 +0100
-Message-ID: <20050309083428.GE28855@suse.de>
-References: <7A8F92187EF7A249BF847F1BF4903C04010EE993@ausx2kmpc103.aus.amer.dell.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from ns.virtualhost.dk ([195.184.98.160]:37056 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261577AbVCIIef (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2005 03:34:35 -0500
-Content-Disposition: inline
-In-Reply-To: <7A8F92187EF7A249BF847F1BF4903C04010EE993@ausx2kmpc103.aus.amer.dell.com>
+From: akpm@osdl.org
+Subject: [patch 1/1] Whitelist-Entry (FORCELUN) for SGS Thomson Microelectronics Cytronix 6in1 card reader in scsi_devinfo.c
+Date: Wed, 09 Mar 2005 01:03:32 -0800
+Message-ID: <200503090903.j2993vjp022052@shell0.pdx.osdl.net>
+Received: from fire.osdl.org ([65.172.181.4]:51845 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S261651AbVCIJEH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2005 04:04:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stuart_Hayes@Dell.com
-Cc: linux-scsi@vger.kernel.org, Joshua_Giles@Dell.com
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, mail@hboeck.de
 
-On Tue, Mar 08 2005, Stuart_Hayes@Dell.com wrote:
-> 
-> Hello!
-> 
-> We're seeing a null pointer dereference with certain IDE tape drives on
-> 2.6.11 when we use it with ide-scsi (i686 architecture).  The problem is
-> that the scatter-gather pages aren't mapped to kernel virtual address
-> space in idescsi_output_buffers()/idescsi_input_buffers(), so, if these
-> pages are in high memory, page_address() returns a null pointer.
-> 
-> This patch fixes the problem.  I'll attach it as a file, too, just in
-> case it gets mangled.  Please let me know if there are any problems with
-> or questions regarding this patch.
-> 
-> Again, this patch is against 2.6.11.
-> 
-> Thanks!
-> Stuart Hayes
-> stuart_hayes@dell.com
-> 
-> 
-> 
-> --- ide-scsi.c.orig	2005-03-08 13:44:38.000000000 -0500
-> +++ ide-scsi.c	2005-03-08 14:02:43.000000000 -0500
-> @@ -151,8 +151,9 @@ static void idescsi_input_buffers (ide_d
->  			return;
->  		}
->  		count = min(pc->sg->length - pc->b_count, bcount);
-> -		buf = page_address(pc->sg->page) + pc->sg->offset;
-> +		buf = kmap_atomic(pc->sg->page, KM_USER0) +
-> pc->sg->offset;
->  		drive->hwif->atapi_input_bytes(drive, buf + pc->b_count,
-> count);
-> +		kunmap_atomic(buf - pc->sg->offset, KM_USER0);
->  		bcount -= count; pc->b_count += count;
->  		if (pc->b_count == pc->sg->length) {
->  			pc->sg++;
 
-You need a local_irq_save(flags); ... local_irq_restore(flags); around
-the kmap(atomic), transfer, and kunmap_atomic() for this to be safe.
-Interrupts may not be disabled at this point, depends on drive settings.
+From: Hanno Boeck <mail@hboeck.de>
 
-> @@ -173,8 +174,9 @@ static void idescsi_output_buffers (ide_
->  			return;
->  		}
->  		count = min(pc->sg->length - pc->b_count, bcount);
-> -		buf = page_address(pc->sg->page) + pc->sg->offset;
-> +		buf = kmap_atomic(pc->sg->page, KM_USER0) +
-> pc->sg->offset;
->  		drive->hwif->atapi_output_bytes(drive, buf +
-> pc->b_count, count);
-> +		kunmap_atomic(buf - pc->sg->offset, KM_USER0);
->  		bcount -= count; pc->b_count += count;
->  		if (pc->b_count == pc->sg->length) {
->  			pc->sg++;
+I have a usb-cardreader here that needs some FORCELUN-entries in
+scsi_devinfo.c.
 
-Ditto.
+lsusb says about the device:
 
--- 
-Jens Axboe
+Bus 001 Device 003: ID 0483:1307 SGS Thomson Microelectronics Cytronix 6in1 card reader
 
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+---
+
+ 25-akpm/drivers/scsi/scsi_devinfo.c |    4 ++++
+ 1 files changed, 4 insertions(+)
+
+diff -puN drivers/scsi/scsi_devinfo.c~whitelist-entry-forcelun-for-sgs-thomson-microelectronics-cytronix-6in1-card-reader-in-scsi_devinfoc drivers/scsi/scsi_devinfo.c
+--- 25/drivers/scsi/scsi_devinfo.c~whitelist-entry-forcelun-for-sgs-thomson-microelectronics-cytronix-6in1-card-reader-in-scsi_devinfoc	2005-03-09 01:03:19.000000000 -0800
++++ 25-akpm/drivers/scsi/scsi_devinfo.c	2005-03-09 01:03:19.000000000 -0800
+@@ -149,6 +149,10 @@ static struct {
+ 	{"Generic", "USB SD Reader", "1.00", BLIST_FORCELUN | BLIST_INQUIRY_36},
+ 	{"Generic", "USB Storage-SMC", "0180", BLIST_FORCELUN | BLIST_INQUIRY_36},
+ 	{"Generic", "USB Storage-SMC", "0207", BLIST_FORCELUN | BLIST_INQUIRY_36},
++	{"Generic", "USB Reader-SMC", NULL, BLIST_FORCELUN | BLIST_INQUIRY_36},
++	{"Generic", "USB Reader-CF", NULL, BLIST_FORCELUN | BLIST_INQUIRY_36},
++	{"Generic", "USB Reader-SD", NULL, BLIST_FORCELUN | BLIST_INQUIRY_36},
++	{"Generic", "USB Reader-MS", NULL, BLIST_FORCELUN | BLIST_INQUIRY_36},
+ 	{"HITACHI", "DF400", "*", BLIST_SPARSELUN},
+ 	{"HITACHI", "DF500", "*", BLIST_SPARSELUN},
+ 	{"HITACHI", "DF600", "*", BLIST_SPARSELUN},
+_
