@@ -1,51 +1,52 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Can someone explain "Data Phase Error"
-Date: Fri, 17 Dec 2004 16:23:24 -0500
-Message-ID: <87f94c3704121713233f8499d8@mail.gmail.com>
-Reply-To: Greg Freemyer <greg.freemyer@gmail.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [2.6 patch] SCSI aic7xxx: kill kernel 2.2 #ifdef's (fwd)
+Date: Sat, 18 Dec 2004 03:06:35 +0100
+Message-ID: <20041218020635.GJ21288@stusta.de>
+References: <20041216221802.GT12937@stusta.de> <41C2147D.1090603@osdl.org> <1103239700.21806.40.camel@localhost.localdomain> <41C23458.1080404@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.197]:29606 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262132AbULQVXZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Dec 2004 16:23:25 -0500
-Received: by wproxy.gmail.com with SMTP id 36so131891wra
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Dec 2004 13:23:24 -0800 (PST)
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:33031 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S262814AbULRCGj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Dec 2004 21:06:39 -0500
+Content-Disposition: inline
+In-Reply-To: <41C23458.1080404@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Randy.Dunlap" <rddunlap@osdl.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-All,
+On Thu, Dec 16, 2004 at 05:20:24PM -0800, Randy.Dunlap wrote:
+> Alan Cox wrote:
+> >>I would really appreciate it if you could limit patches for major
+> >>subsystems to only the mailing list for those subsystems.
+> >
+> >
+> >And then I'd have missed the lapb error for example. At least for less
+> >maintained stuff do use this list
+> 
+> netdev is _the_ mailing list for network-related development...
+> 
+> scsi should happen on linux-scsi
+> 
+> If we take your argument to an extreme, we only need
+> one mailing list.  :(
 
-Environment:
-kernel - 2.6.8-24  (from SUSE 9.2)
-tape drive - IBM LTO-1 (scsi-wide)
-scsi controller - Adaptec 2940
+It does make sense:
 
-Issue:
-I am trying to build a pair of new Linux based tape servers.
+If you are _only_ interested in SCSI related development, linux-scsi is 
+a good choice and a relatively low-volume list.
 
-I have written exactly one tape on each, I then swapped the tapes
-beween the units and tried to do a restore.  One seems to be working
-fine on this first test, but with the other I get:
+> ~Randy
 
-Dec 17 08:52:04 linux kernel: st0: Error with sense data: Info
-fld=0x40000, ILI Current st0: sense = f0 2b
-Dec 17 08:52:04 linux kernel: Additional sense: Data phase error
+cu
+Adrian
 
-I would suspect a bad tape, but a simple "dd if=/dev/st0 of=/dev/null
-bs=256k" fails at a different number of blocks each time.
-
-i.e. I have 130 GB of data on the tape, but I have not yet read back
-more than 6 GB of it.  The data itself is unimportant, I'm just
-testing the process.
-
-I am continueing to test and am now trying another tape, but I want to
-understand this initial failure if I can.
-
-Thanks for any help.
-Greg
 -- 
-Greg Freemyer
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
