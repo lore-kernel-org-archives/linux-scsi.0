@@ -1,75 +1,45 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [patch 06/11] drivers/scsi/aacraid/*: convert to pci_register_driver
-Date: Tue, 15 Mar 2005 08:38:07 -0500
-Message-ID: <60807403EABEB443939A5A7AA8A7458BE5AF5F@otce2k01.adaptec.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.11-mm3: megaraid_sas.c: stack usage
+Date: Tue, 15 Mar 2005 16:06:42 +0100
+Message-ID: <20050315150641.GO3189@stusta.de>
+References: <20050312034222.12a264c4.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Received: from magic.adaptec.com ([216.52.22.17]:51651 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261237AbVCONiK convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Mar 2005 08:38:10 -0500
-content-class: urn:content-classes:message
+Content-Type: text/plain; charset=us-ascii
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:272 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S261315AbVCOPGo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Mar 2005 10:06:44 -0500
+Content-Disposition: inline
+In-Reply-To: <20050312034222.12a264c4.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: domen@coderock.org, James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, c.lucas@ifrance.com
+To: Andrew Morton <akpm@osdl.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I have to reject this change since pci_module_init() has a different
-return code than pci_register_driver().
+On Sat, Mar 12, 2005 at 03:42:22AM -0800, Andrew Morton wrote:
+>...
+> All 606 patches:
+>...
+> megaraid_sas-announcing-new-module-for.patch
+>   megaraid_sas: Announcing new module for LSI Logic's SAS based MegaRAID controllers
+>...
 
-The patch should look like:
+Enormous stack usage:
+- megasas_init_mfi (due to ctrl_info)
 
--	error = pci_module_init(&aac_pci_driver);
-+	error = pci_register_driver(&aac_pci_driver);
--	if (error)
-+	if (error < 0)
- 		return error;
+Big stack usage:
+- megasas_mgmt_ioctl (due to uioc and dv)
+- megasas_mgmt_fw_ioctl (due to uioc)
 
-Sincerely -- Mark Salyzyn
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of
-domen@coderock.org
-Sent: Sunday, March 06, 2005 5:27 PM
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org; domen@coderock.org; c.lucas@ifrance.com
-Subject: [patch 06/11] drivers/scsi/aacraid/*: convert to
-pci_register_driver
-
-
-convert from pci_module_init to pci_register_driver
-(from:http://kerneljanitors.org/TODO).
-
-Signed-off-by: Christophe Lucas <c.lucas@ifrance.com>
-Signed-off-by: Domen Puncer <domen@coderock.org>
----
-
-
- kj-domen/drivers/scsi/aacraid/linit.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
-
-diff -puN
-drivers/scsi/aacraid/linit.c~pci_register_driver-drivers_scsi_aacraid
-drivers/scsi/aacraid/linit.c
----
-kj/drivers/scsi/aacraid/linit.c~pci_register_driver-drivers_scsi_aacraid
-2005-03-05 16:12:51.000000000 +0100
-+++ kj-domen/drivers/scsi/aacraid/linit.c	2005-03-05
-16:12:51.000000000 +0100
-@@ -690,7 +690,7 @@ static int __init aac_init(void)
- 	printk(KERN_INFO "Red Hat/Adaptec aacraid driver (%s %s)\n",
- 			AAC_DRIVER_VERSION, AAC_DRIVER_BUILD_DATE);
+Please fix this.
  
--	error = pci_module_init(&aac_pci_driver);
-+	error = pci_register_driver(&aac_pci_driver);
- 	if (error)
- 		return error;
- 
-_
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
