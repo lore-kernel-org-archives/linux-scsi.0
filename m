@@ -1,66 +1,53 @@
-From: "Nikhil Dharashivkar" <dharashivkar.nikhil@spsoftindia.com>
-Subject: Re: scsi Target card and scsi Initiator card
-Date: Mon, 11 Oct 2004 11:07:45 +0530
+From: Markus Lidel <Markus.Lidel@shadowconnect.com>
+Subject: Re: what to do with dpt_i2o
+Date: Mon, 11 Oct 2004 10:30:06 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <01c601c4af54$7054dd20$1610a8c0@spsoft.com>
-References: <017e01c4ab91$510a3e90$1610a8c0@spsoft.com> <4163DDC6.3030102@vlnb.net> <017901c4ac30$cde21510$1610a8c0@spsoft.com> <4164F258.9090508@vlnb.net>
+Message-ID: <416A448E.7080405@shadowconnect.com>
+References: <20040925134622.GA19871@lst.de> <20041009150114.GA21229@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 134-215-187-203.cable-client.iqara.net ([203.187.215.134]:20626
-	"EHLO mailserver.spsoftindia.com") by vger.kernel.org with ESMTP
-	id S268698AbUJKFkb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Oct 2004 01:40:31 -0400
+Received: from s0003.shadowconnect.net ([213.239.201.226]:61877 "EHLO
+	mail.shadowconnect.com") by vger.kernel.org with ESMTP
+	id S267994AbUJKI0T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Oct 2004 04:26:19 -0400
+In-Reply-To: <20041009150114.GA21229@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Mark_Salyzyn@adaptec.com, linux-scsi@vger.kernel.org
 
-Hi ....
-     I have gone thr' documents that discribe Target Emulator or that type
-of software layer.
-     I have LSI22320-R with LSI1030 and LSI1030T (Two Cards). I also have
-driver Tekram (Initiator Card).
-   Now I joind Tekram and LSI card with external scsi cable. Connection was
-done and disk also exposed from LSI Card to Tekram.
-Basically LSI card that i have contains Inititator/Target mode firmware.
-    So What i want to do , to make LSI card to run in only Target Mode. For
-that , Can i write a kernel module that can read incomming scsi
-commands from any initiator card (here Tekram) to the LSI card. and that
-module will invoke the firware on the LSI card intead directly by commnads ?
-What i think here that i have to do low level i..e card level programming to
-get these scsi commands , is it possible / feasible ?
+Hello,
 
+Christoph Hellwig wrote:
+>>Marcus, you'd been doing a lot of testing with the DPT/Adaptec cards for
+>>the new i2o layer, right?  IIRC we now have both support for the Adaptec
+>>managment utils and the optimizes sglist format, so there's probably no
+>>reason anymore to keep dpt_i2o.
 
-Regrads,
-Nikhil.
+Maybe i should list some remaining issues:
 
------ Original Message -----
-From: "Vladislav Bolkhovitin" <vst@vlnb.net>
-To: "Nikhil Dharashivkar" <dharashivkar.nikhil@spsoftindia.com>
-Cc: <linux-scsi@vger.kernel.org>
-Sent: Thursday, October 07, 2004 1:08 PM
-Subject: Re: scsi Target card and scsi Initiator card
+- 64 bit Scatter Gather elements
+- supports hot-changing of devices, and array changes without a reboot.
+
+The second one is implemented, but didn't work on my system. I didn't 
+have the time to verify if the dpt_i2o driver recognize it if a drive fails.
 
 
-> Nikhil Dharashivkar wrote:
-> > Hi,
-> >      Actually our setup of hardware is : There is one board . On that we
-> > have one target mode card (LSI) and more than one initiator cards.
-> >        First thing I have to do is I should able to export all LUNS or
-> > target devices connected to initiator card through this target mode
-card.
-> >       For that how should i think to develop software layer . Is there
-> > already implemeted code ?
->
-> Take a look on SCSI target mid-level (SCST) on
-> http://scst.sourceforge.net. You just need to develop small target
-> add-on to the LSI's initiator driver as it was done for Qlogic cards.
->
-> Vlad
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Best regards,
 
+
+Markus Lidel
+------------------------------------------
+Markus Lidel (Senior IT Consultant)
+
+Shadow Connect GmbH
+Carl-Reisch-Weg 12
+D-86381 Krumbach
+Germany
+
+Phone:  +49 82 82/99 51-0
+Fax:    +49 82 82/99 51-11
+
+E-Mail: Markus.Lidel@shadowconnect.com
+URL:    http://www.shadowconnect.com
