@@ -1,51 +1,39 @@
-From: Denis Zaitsev <zzz@anda.ru>
-Subject: [PATCH][TRIVIAL] (2.4.22) Allow aic7xxx_osm.c to be compiled without CONFIG_PCI
-Date: Fri, 3 Oct 2003 00:50:16 +0600
+From: Tim Pepper <tpepper@vato.org>
+Subject: Re: Qlogic driver hang
+Date: Thu, 2 Oct 2003 12:24:39 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031003005016.A8496@natasha.ward.six>
+Message-ID: <20031002122439.A17312@jose.vato.org>
+References: <B179AE41C1147041AA1121F44614F0B060ED34@AVEXCH02.qlogic.org> <1065109530.24236.6127.camel@localhost.localdomain> <1065118590.4779.158.camel@persist.az.mvista.com> <3F7C6D9C.2000205@mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 72.dom-sp.ru ([212.57.164.72]:36616 "EHLO mail.ward.six")
-	by vger.kernel.org with ESMTP id S262130AbTJBSu1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2003 14:50:27 -0400
+Received: from adsl-64-142-13-48.sonic.net ([64.142.13.48]:38156 "HELO
+	jose.vato.org") by vger.kernel.org with SMTP id S263365AbTJBTYX
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Oct 2003 15:24:23 -0400
 Content-Disposition: inline
+In-Reply-To: <3F7C6D9C.2000205@mvista.com>; from mbellon@mvista.com on Thu, Oct 02, 2003 at 11:25:32AM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, gibbs@scsiguy.com, dledford@redhat.com, marcelo@conectiva.com.br
+To: Mark Bellon <mbellon@mvista.com>
+Cc: sdake@mvista.com, Chris Worley <cworley@lnxi.com>, linux-scsi@vger.kernel.org
 
-This is the trivial #ifdef patch for CONFIG_PCI/EISA.  In my case it
-allows the Adaptec SCSI driver (the "new" one) to be compiled for
-non-PCI (EISA) system.  Else there are an <undefined symbol> errors.
-The 2.6 branch needs the same patch, as I understand.
+On Thu 02 Oct at 11:25:32 -0700 mbellon@mvista.com done said:
+> >
+> >
+> >At one point some code was added to enable parity on the chip.  This may
+> >be the cause of the hang.  Try disabling parity checking in the driver.
 
-Please, apply it.  (I don't know who is the maintainer for now!)
+I think too that different bios flash version have different settings for
+enabling/disabling parity (and other things) that can make a difference.
+The latest on their webpage is 1.34.  I understand the firmware which the
+driver downloads at load time still uses certain bits from the version
+flashed to the card.  Somewhere around bios 1.2x (where x was something
+high..it's been a while) I had some hangs go away.  All the new cards
+I've gotten appear to ship with ancient BIOS's and sorely need flashing.
 
-
---- drivers/scsi/aic7xxx/aic7xxx_osm.c.orig	2003-09-15 01:56:14.000000000 +0600
-+++ drivers/scsi/aic7xxx/aic7xxx_osm.c	2003-09-16 22:57:11.000000000 +0600
-@@ -1552,6 +1552,7 @@ ahc_softc_comp(struct ahc_softc *lahc, s
- 
- 	/* Still equal.  Sort by BIOS address, ioport, or bus/slot/func. */
- 	switch (rvalue) {
-+#ifdef CONFIG_PCI
- 	case AHC_PCI:
- 	{
- 		char primary_channel;
-@@ -1584,6 +1585,8 @@ ahc_softc_comp(struct ahc_softc *lahc, s
- 			value = 1;
- 		break;
- 	}
-+#endif
-+#ifdef CONFIG_EISA
- 	case AHC_EISA:
- 		if ((rahc->flags & AHC_BIOS_ENABLED) != 0) {
- 			value = rahc->platform_data->bios_address
-@@ -1593,6 +1596,7 @@ ahc_softc_comp(struct ahc_softc *lahc, s
- 			      - lahc->bsh.ioport; 
- 		}
- 		break;
-+#endif
- 	default:
- 		panic("ahc_softc_sort: invalid bus type");
- 	}
+Tim
+-- 
+*********************************************************
+*  tpepper@vato dot org             * Venimus, Vidimus, *
+*  http://www.vato.org/~tpepper     * Dolavimus         *
+*********************************************************
