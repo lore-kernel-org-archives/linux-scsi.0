@@ -1,94 +1,165 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH as468] Retry supposedly "unrecoverable" hardware errors
-Date: Wed, 16 Feb 2005 11:53:48 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0502161144170.6418-100000@ida.rowland.org>
-References: <20050216143714.GA11363@kassiopeia.juls.savba.sk>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [Fwd: Re: libata oops 2.6.11-rc4 yesterdays BK]
+Date: Wed, 16 Feb 2005 12:26:29 -0500
+Message-ID: <42138245.8080806@pobox.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from ida.rowland.org ([192.131.102.52]:11780 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S262076AbVBPQxt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Feb 2005 11:53:49 -0500
-In-Reply-To: <20050216143714.GA11363@kassiopeia.juls.savba.sk>
+Content-Type: multipart/mixed;
+ boundary="------------010508020905020205090309"
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:16340 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S262010AbVBPR0o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Feb 2005 12:26:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Martin Peschke <mpeschke@de.ibm.com>, Radovan Garabik <garabik@kassiopeia.juls.savba.sk>, SCSI development list <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 
-James:
+This is a multi-part message in MIME format.
+--------------010508020905020205090309
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-This is an updated and unmangled version of the patch sent in by Martin 
-Peschke.  Apparently some drives report Hardware Error sense for 
-problems which do improve after retrying, so the patch retries these 
-supposedly "unrecoverable" errors for such devices.
+Did anything in SCSI change recently that could be associated with this 
+oops?
 
-In addition to the IBM ESS drive it adds a blacklist entry for the drive
-inside the MPIO HS200 Gigabox.
+--------------010508020905020205090309
+Content-Type: message/rfc822;
+ name="Re: libata oops 2.6.11-rc4 yesterdays BK"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="Re: libata oops 2.6.11-rc4 yesterdays BK"
 
-Alan Stern
+Return-Path: <SRS0=46ll=Q6=vger.kernel.org=linux-ide-owner@bounce2.pobox.com>
+X-Original-To: garzik@gtf.org
+Delivered-To: garzik@gtf.org
+Received: from integer.pobox.com (integer.pobox.com [208.58.1.194])
+	by havoc.gtf.org (Postfix) with ESMTP id E8F821C0A815
+	for <garzik@gtf.org>; Wed, 16 Feb 2005 06:01:49 -0500 (EST)
+Received: from integer.pobox.com (localhost [127.0.0.1])
+	by integer.pobox.com (Postfix) with ESMTP id B05E4FC82C
+	for <garzik@gtf.org>; Wed, 16 Feb 2005 06:01:47 -0500 (EST)
+Delivered-To: jgarzik@pobox.com
+Received: from vger.kernel.org (vger.kernel.org [12.107.209.244])
+	by integer.pobox.com (Postfix) with ESMTP id 0F0E5FC7FA;
+	Wed, 16 Feb 2005 06:01:46 -0500 (EST)
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S262003AbVBPLBl (ORCPT <rfc822;andyw@pobox.com> + 1 other);
+	Wed, 16 Feb 2005 06:01:41 -0500
+Received: (majordomo@vger.kernel.org) by vger.kernel.org id S262004AbVBPLBl
+	(ORCPT <rfc822;linux-ide-outgoing>); Wed, 16 Feb 2005 06:01:41 -0500
+Received: from wasp.net.au ([203.190.192.17]:34228 "EHLO wasp.net.au")
+	by vger.kernel.org with ESMTP id S262003AbVBPLBd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Feb 2005 06:01:33 -0500
+Received: from [127.0.0.1] (softdnserr [::ffff:127.0.0.1])
+  by wasp.net.au with esmtp; Wed, 16 Feb 2005 19:01:28 +0800
+  id 00045C37.42132809.00003A7C
+Message-ID: <42132803.2080701@wasp.net.au>
+Date: Wed, 16 Feb 2005 15:01:23 +0400
+From: Brad Campbell <brad@wasp.net.au>
+User-Agent: Mozilla Thunderbird 1.0 (X11/20050115)
+X-Accept-Language: en-us, en
+MIME-Version: 1.0
+To: linux-ide@vger.kernel.org
+Subject: Re: libata oops 2.6.11-rc4 yesterdays BK
+References: <4212CBD6.7020703@wasp.net.au>
+In-Reply-To: <4212CBD6.7020703@wasp.net.au>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Sender: linux-ide-owner@vger.kernel.org
+Precedence: bulk
+X-Mailing-List: linux-ide@vger.kernel.org
+X-Spam-Checker-Version: SpamAssassin 3.0.1 (2004-10-22) on havoc.gtf.org
+X-Spam-Level: 
+X-Spam-Status: No, score=-3.7 required=7.0 tests=AWL,BAYES_00,SPF_HELO_PASS,
+	SPF_PASS autolearn=ham version=3.0.1
+X-IMAPbase: 1107904907 3161
+X-UID: 3160
+X-Keywords: 
+
+Brad Campbell wrote:
+> Woke up to this, this morning.
+> This is yesterdays 2.6.11-rc4 BK + libata BK + libata-dev BK
+> It was in the middle of a RAID-6 rebuild (scheduled to take about 740 
+> minutes)
+> 
+
+Oh well, it appears to be reproducible anyway!
+
+Regards,
+Brad
+
+ata15: status=0x51 { DriveReady SeekComplete Error }
+ata15: called with no error (51)!
+------------[ cut here ]------------
+kernel BUG at drivers/scsi/scsi.c:299!
+invalid operand: 0000 [#1]
+CPU:    0
+EIP:    0060:[<c0257a0b>]    Not tainted VLI
+EFLAGS: 00010046   (2.6.11-rc4)
+EIP is at scsi_put_command+0x8b/0xa0
+eax: ddaf85c0   ebx: ddaf85c0   ecx: ddaf85d0   edx: ddaf85d0
+esi: dfc70000   edi: 00000292   ebp: dfc66400   esp: dfcabe7c
+ds: 007b   es: 007b   ss: 0068
+Process scsi_eh_14 (pid: 799, threadinfo=dfcaa000 task=dfc73a20)
+Stack: df945f58 dfcc6200 dfc65a28 ddaf85c0 00000296 dfc65a28 c025c859 ddaf85c0
+        df945f58 c025c97f ddaf85c0 00000001 00000000 ddaf85c0 ddaf85c0 00000004
+        ddaf867c c025ccfe ddaf85c0 00000001 00000000 00000000 000057a8 000057a8
+Call Trace:
+  [<c025c859>] scsi_next_command+0x19/0x30
+  [<c025c97f>] scsi_end_request+0xbf/0xe0
+  [<c025ccfe>] scsi_io_completion+0x1ae/0x490
+  [<c026927b>] sd_rw_intr+0xcb/0x280
+  [<c02580ea>] scsi_finish_command+0x7a/0xc0
+  [<c0266ad9>] ata_scsi_qc_complete+0x39/0x70
+  [<c026460a>] ata_qc_complete+0x3a/0xc0
+  [<c0267e30>] pdc_eng_timeout+0x90/0x120
+  [<c026663a>] ata_scsi_error+0x1a/0x30
+  [<c025bd4e>] scsi_error_handler+0x9e/0xe0
+  [<c025bcb0>] scsi_error_handler+0x0/0xe0
+  [<c0100831>] kernel_thread_helper+0x5/0x14
+Code: 5c 24 08 8b 74 24 0c 89 44 24 1c 8b 7c 24 10 8b 6c 24 14 83 c4 18 e9 e5 15
+  fd ff 89 43 10 89 48 04 31 db 89 51 04 89 4e 0c eb b7 <0f> 0b 2b 01 e7 1a 32 c0
+  eb 95 8d 74 26 00 8d bc 27 00 00 00 00
+  <1>Unable to handle kernel NULL pointer dereference at virtual address 00000004
+  printing eip:
+c01333c3
+*pde = 00000000
+Oops: 0000 [#2]
+CPU:    0
+EIP:    0060:[<c01333c3>]    Not tainted VLI
+EFLAGS: 00010016   (2.6.11-rc4)
+EIP is at free_block+0x43/0xd0
+eax: 00800000   ebx: 00000000   ecx: 00000000   edx: c1000000
+esi: c1506d60   edi: 00000000   ebp: c1506d6c   esp: c14e9ef0
+ds: 007b   es: 007b   ss: 0068
+Process events/0 (pid: 3, threadinfo=c14e8000 task=c14da020)
+Stack: c14da020 dffe69f0 c1506d7c dff08b70 dff08b60 00000001 c1506d60 c0133a0a
+        c1506d60 dff08b70 00000001 c1506d60 00000001 c1506dd0 c1506a7c c0133aaa
+        c1506d60 dff08b60 00000000 c14da170 00000293 00000000 c051fca4 c0133a50
+Call Trace:
+  [<c0133a0a>] drain_array_locked+0x7a/0xc0
+  [<c0133aaa>] cache_reap+0x5a/0x150
+  [<c0133a50>] cache_reap+0x0/0x150
+  [<c012326e>] worker_thread+0x19e/0x240
+  [<c0111b50>] default_wake_function+0x0/0x20
+  [<c0111b50>] default_wake_function+0x0/0x20
+  [<c01230d0>] worker_thread+0x0/0x240
+  [<c0126ae5>] kthread+0xa5/0xb0
+  [<c0126a40>] kthread+0x0/0xb0
+  [<c0100831>] kernel_thread_helper+0x5/0x14
+Code: 83 00 00 00 8d 46 1c 8d 6e 0c 89 44 24 08 8b 44 24 24 8b 15 b0 fd 51 c0 8b
+  0c b8 8d 81 00 00 00 40 c1 e8 0c c1 e0 05 8b 5c 02 1c <8b> 53 04 8b 03 89 50 04
+  89 02 c7 43 04 00 02 20 00 2b 4b 0c c7
 
 
 
-Signed-off-by: Martin Peschke <mpeschke@de.ibm.com>
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
+-
+To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-===== include/scsi/scsi_devinfo.h 1.7 vs edited =====
---- 1.7/include/scsi/scsi_devinfo.h	2004-10-05 11:25:13 -04:00
-+++ edited/include/scsi/scsi_devinfo.h	2005-02-11 13:21:51 -05:00
-@@ -27,4 +27,5 @@
- #define BLIST_NOT_LOCKABLE	0x80000	/* don't use PREVENT-ALLOW commands */
- #define BLIST_NO_ULD_ATTACH	0x100000 /* device is actually for RAID config */
- #define BLIST_SELECT_NO_ATN	0x200000 /* select without ATN */
-+#define BLIST_RETRY_HWERROR	0x400000 /* retry HARDWARE_ERROR */
- #endif
-===== drivers/scsi/scsi_devinfo.c 1.14 vs edited =====
---- 1.14/drivers/scsi/scsi_devinfo.c	2004-12-10 11:54:56 -05:00
-+++ edited/drivers/scsi/scsi_devinfo.c	2005-02-11 13:25:41 -05:00
-@@ -159,6 +159,7 @@
- 	{"HP", "C3323-300", "4269", BLIST_NOTQ},
- 	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
- 	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"IBM", "2105", NULL, BLIST_RETRY_HWERROR},
- 	{"iomega", "jaz 1GB", "J.86", BLIST_NOTQ | BLIST_NOLUN},
- 	{"IOMEGA", "Io20S         *F", NULL, BLIST_KEY},
- 	{"INSITE", "Floptical   F*8I", NULL, BLIST_KEY},
-@@ -192,6 +193,7 @@
- 	{"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN | BLIST_INQUIRY_36},
- 	{"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
- 	{"SONY", "TSL", NULL, BLIST_FORCELUN},		/* DDS3 & DDS4 autoloaders */
-+	{"ST650211", "CF", NULL, BLIST_RETRY_HWERROR},
- 	{"SUN", "T300", "*", BLIST_SPARSELUN},
- 	{"SUN", "T4", "*", BLIST_SPARSELUN},
- 	{"TEXEL", "CD-ROM", "1.06", BLIST_BORKEN},
-===== drivers/scsi/scsi_error.c 1.47 vs edited =====
---- 1.47/drivers/scsi/scsi_error.c	2005-02-02 21:56:01 -05:00
-+++ edited/drivers/scsi/scsi_error.c	2005-02-11 13:23:45 -05:00
-@@ -31,6 +31,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_ioctl.h>
- #include <scsi/scsi_request.h>
-+#include <scsi/scsi_devinfo.h>
- 
- #include "scsi_priv.h"
- #include "scsi_logging.h"
-@@ -350,10 +351,18 @@
- 	case MEDIUM_ERROR:
- 		return NEEDS_RETRY;
- 
-+	case HARDWARE_ERROR:
-+		if (scsi_get_device_flags(scmd->device,
-+					scmd->device->vendor,
-+					scmd->device->model)
-+				& BLIST_RETRY_HWERROR)
-+			return NEEDS_RETRY;
-+		else
-+			return SUCCESS;
-+
- 	case ILLEGAL_REQUEST:
- 	case BLANK_CHECK:
- 	case DATA_PROTECT:
--	case HARDWARE_ERROR:
- 	default:
- 		return SUCCESS;
- 	}
 
+--------------010508020905020205090309--
