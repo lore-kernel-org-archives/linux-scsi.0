@@ -1,25 +1,35 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Fw: 2.6.11-rc4-mm1 and dpt_i2o Adaptec I2O RAID controller
-Date: Thu, 24 Feb 2005 02:41:20 +0000
-Message-ID: <20050224024120.GA24848@infradead.org>
-References: <20050223165138.475f5220.akpm@osdl.org>
+From: Anil Kumar <anilsr@gmail.com>
+Subject: module insert question
+Date: Wed, 23 Feb 2005 21:03:24 -0800
+Message-ID: <d3a6bba0050223210312d93aee@mail.gmail.com>
+Reply-To: Anil Kumar <anilsr@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from pentafluge.infradead.org ([213.146.154.40]:8086 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261769AbVBXClV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Feb 2005 21:41:21 -0500
-Content-Disposition: inline
-In-Reply-To: <20050223165138.475f5220.akpm@osdl.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Received: from rproxy.gmail.com ([64.233.170.207]:42082 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261825AbVBXFDZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Feb 2005 00:03:25 -0500
+Received: by rproxy.gmail.com with SMTP id a41so225650rng
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2005 21:03:25 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, go@turbolinux.co.jp, sebastian.faerber@web.de
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: anilsr@gmail.com
 
-On Wed, Feb 23, 2005 at 04:51:38PM -0800, Andrew Morton wrote:
-> 
-> 
-> Begin forwarded message:
+Hi,
 
-Never use the dpt_i2o driver but rather i2o_block/i2o_scsi
+Can you please let me know, what all files does the OS look into to
+load modules?
+I see the following messages during boot rather installation:
+======
+Finished bus probing
+modules to insert tg3 aic79xx
+======
 
+which files does the OS look into to load tg3 and aic79xx after
+finishing bus probing. I guess modprobe.conf, modules.alias,
+modules.pcimap.
+
+with regards,
+    Anil
