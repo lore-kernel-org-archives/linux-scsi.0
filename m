@@ -1,28 +1,28 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Fw: Kernel 2.6.7-mm4 -bk11
-Date: 29 Jun 2004 15:52:06 -0500
+From: Alan Cox <alan@redhat.com>
+Subject: Re: PATCH: Further aacraid work
+Date: Tue, 29 Jun 2004 16:42:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1088542328.1861.41.camel@mulgrave>
-References: <20040629133906.28af7568.akpm@osdl.org>
+Message-ID: <20040629204207.GA22990@devserv.devel.redhat.com>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189FF1D6D0@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:52152 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S266017AbUF2UwW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jun 2004 16:52:22 -0400
-In-Reply-To: <20040629133906.28af7568.akpm@osdl.org>
+Received: from mx1.redhat.com ([66.187.233.31]:58524 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S266038AbUF2Umg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jun 2004 16:42:36 -0400
+Content-Disposition: inline
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189FF1D6D0@otce2k03.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Byron Stanoszek <gandalf@winds.org>, Mark Haverkamp <markh@osdl.org>, Alan Cox <alan@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-06-29 at 15:39, Andrew Morton wrote:
-> i missing in Kernel 2.6.7-mm4 and -bk11 the config for driver
+On Tue, Jun 29, 2004 at 03:27:54PM -0400, Salyzyn, Mark wrote:
+> Although I am gratified that 1.1.5-2345 works, and works well (*many*
+> performance improvements have occurred in this driver, but some of those
+> have reached Alan's patch), I am at a loss because I was sure that the
 
-It's currently listed as BROKEN because it's emitting a #warning
-reminding us that the conversion to the DMA API still isn't completed.
-
-James
-
+I'll have a look what from my tree isnt in Linus tree and what from 2345
+isn't in my tree if you give me a pointer to the current tree you have
+and see if I can spot anything
 
