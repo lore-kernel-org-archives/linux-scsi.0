@@ -1,45 +1,69 @@
-From: greg kh <gregkh@us.ibm.com>
-Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Thu, 16 Jan 2003 12:43:47 -0800
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: [PATCH] 2.5 ips.c pci_module_init
+Date: Thu, 16 Jan 2003 15:09:37 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <b075fh$phv$1@main.gmane.org>
-References: <10426732153816@kroah.com> <20030116173539.GA31235@kroah.com> <20030116114323.C29001@one-eyed-alien.net> <20030116195306.GA32697@kroah.com> <b073ja$12i$1@penguin.transmeta.com>
+Message-ID: <20030116230937.GA5561@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from root by main.gmane.org with local (Exim 3.35 #1 (Debian))
-	id 18ZIq8-0007Kk-00
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2003 23:50:24 +0100
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-usb-devel@lists.sourceforge.net
+Cc: David_Jeffery@adaptec.com
 
-Copied to linux-usb-devel, as they should also see this...
+This patch is against 2.5.58 but also applies to scsi-misc-2.5 with a
+offset 1 line warning.
 
-On Thu, 16 Jan 2003 12:10:18 -0800, Linus Torvalds wrote:
+This error started near 2.5.56 with badness warnings when the driver
+loaded and has progressed to the driver probe routine not being called
+at all as sysfs error propagation patches have been added. Since my
+ServeRAID card is old it is the last pci_module_init to be called.
 
-> In article <20030116195306.GA32697@kroah.com>, Greg KH  <greg@kroah.com>
-> wrote:
->>On Thu, Jan 16, 2003 at 11:43:23AM -0800, Matthew Dharm wrote:
->>> Well, we only create the host when the device is first attached. After
->>> that, if it goes away and comes back, we re-connect it to the old SCSI
->>> host.
->>
->>Ick, so when the device is gone, where does the SCSI host go?  Is it
->>still represented in sysfs and in the SCSI core properly?
-> 
-> This is pure and utter USB storage stupidity, and nothing else.
-> 
-> When the USB storage device is unplugged, the device should be
-> unregistered.  It should be _gone_.  It isn't sleeping, it's dead.  It's
-> an ex-device.
+The patch just changes the name field in the ips pci_driver struct as
+the three pci_driver names where not unique and cause EEXIST errors.
 
-Agreed, I thought most of that logic had been removed from the
-usb-storage driver as the SCSI layer can now handle removing devices just
-fine (or so Mike Anderson tells me :)
+I have cc'd David Jeffery the driver maintainer.
 
-thanks,
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
-greg k-h
+ ips.c |    8 +++-----
+ 1 files changed, 3 insertions(+), 5 deletions(-)
+------
+
+--- 1.38/drivers/scsi/ips.c	Fri Jan 10 11:40:07 2003
++++ edited/drivers/scsi/ips.c	Thu Jan 16 11:42:00 2003
+@@ -271,27 +271,25 @@
+ 
+    MODULE_DEVICE_TABLE( pci, ips_pci_table );
+ 
+-   static char ips_hot_plug_name[] = "ips";
+-   
+    static int __devinit  ips_insert_device(struct pci_dev *pci_dev, const struct pci_device_id *ent);
+    static void __devexit ips_remove_device(struct pci_dev *pci_dev);
+    
+    struct pci_driver ips_pci_driver = {
+-       .name		= ips_hot_plug_name,
++       .name		= "ips",
+        .id_table	= ips_pci_table,
+        .probe		= ips_insert_device,
+        .remove		= __devexit_p(ips_remove_device),
+    }; 
+            
+    struct pci_driver ips_pci_driver_5i = {
+-       .name		= ips_hot_plug_name,
++       .name		= "ips_5i",
+        .id_table	= ips_pci_table_5i,
+        .probe		= ips_insert_device,
+        .remove		= __devexit_p(ips_remove_device),
+    };
+ 
+    struct pci_driver ips_pci_driver_i960 = {
+-       .name		= ips_hot_plug_name,
++       .name		= "ips_i960",
+        .id_table	= ips_pci_table_i960,
+        .probe		= ips_insert_device,
+        .remove		= __devexit_p(ips_remove_device),
 
