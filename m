@@ -1,1914 +1,305 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [patch 16/28] Sync up drivers/scsi/aic7xxx
-Date: Tue, 28 Sep 2004 09:06:24 -0400
+Subject: [patch 17/28] Sync up drivers/scsi/aic7xxx
+Date: Tue, 28 Sep 2004 09:06:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <415961D0.4020409@adaptec.com>
+Message-ID: <415961D8.7000208@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------020208060403020405030509"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:5579 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S267751AbUI1NGc (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:10699 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S267760AbUI1NGk (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Sep 2004 09:06:32 -0400
+	Tue, 28 Sep 2004 09:06:40 -0400
 Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id i8SD6VW02999
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2004 06:06:31 -0700
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id i8SD6dW03062
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2004 06:06:39 -0700
 Received: from rtpe2k01.adaptec.com (rtpe2k01.adaptec.com [10.110.12.40])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id i8SD6Um31191
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2004 06:06:31 -0700
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id i8SD6dm31219
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2004 06:06:39 -0700
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Sync up drivers/scsi/aic7xxx/. (2603-2643)
+This is a multi-part message in MIME format.
+--------------020208060403020405030509
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Sync up drivers/scsi/aic7xxx/. (2643-2646)
 
 Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
 
-==== //depot/aic7xxx/aic7xxx/aic79xx.reg#70 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx.reg ====
---- /tmp/tmp.26963.0	2004-09-27 13:31:39.261144880 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx.reg	2004-01-23 14:37:51.000000000 -0500
-@@ -39,7 +39,7 @@
-   *
-   * $FreeBSD$
-   */
--VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#70 $"
-+VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#72 $"
-
-  /*
-   * This file is processed by the aic7xxx_asm utility for use in assembling
-@@ -65,13 +65,6 @@
-  		mvi	MODE_PTR, MK_MODE(src, dst);			\
-  	}
-
--#define TOGGLE_DFF_MODE							\
--	if ((ahd->bugs & AHD_SET_MODE_BUG) != 0) {			\
--		call	toggle_dff_mode_work_around;			\
--	} else {							\
--		xor	MODE_PTR, MK_MODE(M_DFF1, M_DFF1);		\
--	}
--	
-  #define RESTORE_MODE(mode)						\
-  	if ((ahd->bugs & AHD_SET_MODE_BUG) != 0) {			\
-  		mov	mode call set_mode_work_around;			\
-@@ -3542,6 +3535,15 @@
-  	COMPLETE_DMA_SCB_HEAD {
-  		size		2
-  	}
-+	/*
-+	 * head of list of SCBs that have
-+	 * been uploaded to the host, but cannot
-+	 * be completed until the QFREEZE is in
-+	 * full effect (i.e. no selections pending).
-+	 */
-+	COMPLETE_ON_QFREEZE_HEAD {
-+		size		2
-+	}
-  	/* Counting semaphore to prevent new select-outs */
-  	QFREEZE_COUNT {
-  		size		2
-@@ -3625,6 +3627,17 @@
-  		size		1
-  	}
-  	/*
-+	 * Kernel and sequencer offsets into the queue of
-+	 * incoming target mode command descriptors.  The
-+	 * queue is full when the KERNEL_TQINPOS == TQINPOS.
-+	 */
-+	KERNEL_TQINPOS {
-+		size		1
-+	}
-+	TQINPOS {
-+		size		1
-+	}
-+	/*
-  	 * Base address of our shared data with the kernel driver in host
-  	 * memory.  This includes the qoutfifo and target mode
-  	 * incoming command queue.
-@@ -3639,17 +3652,6 @@
-  	QOUTFIFO_NEXT_ADDR {
-  		size		4
-  	}
--	/*
--	 * Kernel and sequencer offsets into the queue of
--	 * incoming target mode command descriptors.  The
--	 * queue is full when the KERNEL_TQINPOS == TQINPOS.
--	 */
--	KERNEL_TQINPOS {
--		size		1
--	}
--	TQINPOS {
--		size		1
--	}
-  	ARG_1 {
-  		size		1
-  		mask	SEND_MSG		0x80
-==== //depot/aic7xxx/aic7xxx/aic79xx.seq#107 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx.seq ====
---- /tmp/tmp.26963.1	2004-09-27 13:31:39.613091376 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx.seq	2004-01-23 14:32:29.000000000 -0500
-@@ -40,7 +40,7 @@
-   * $FreeBSD$
-   */
-
--VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#107 $"
-+VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#110 $"
-  PATCH_ARG_LIST = "struct ahd_softc *ahd"
-  PREFIX = "ahd_"
-
-@@ -68,13 +68,36 @@
-  	}
-  	SET_MODE(M_SCSI, M_SCSI)
-  	test	SCSISEQ0, ENSELO|ENARBO jnz idle_loop_checkbus;
--	test	SEQ_FLAGS2, SELECTOUT_QFROZEN jnz idle_loop_checkbus;
-+	test	SEQ_FLAGS2, SELECTOUT_QFROZEN jz check_waiting_list;
-+	test	SSTAT0, SELDO|SELINGO jnz idle_loop_checkbus;
-+BEGIN_CRITICAL;
-+	/*
-+	 * If we have completions stalled waiting for the qfreeze
-+	 * to take effect, move them over to the complete_scb list
-+	 * now that no selections are pending.
-+	 */
-+	cmp	COMPLETE_ON_QFREEZE_HEAD[1],SCB_LIST_NULL je idle_loop_checkbus;
-+	/*
-+	 * Find the end of the qfreeze list.  The first element has
-+	 * to be treated specially.
-+	 */
-+	bmov	SCBPTR, COMPLETE_ON_QFREEZE_HEAD, 2;
-+	cmp 	SCB_NEXT_COMPLETE[1], SCB_LIST_NULL je join_lists;
-+	/*
-+	 * Now the normal loop.
-+	 */
-+	bmov	SCBPTR, SCB_NEXT_COMPLETE, 2;
-+	cmp 	SCB_NEXT_COMPLETE[1], SCB_LIST_NULL jne . - 1;
-+join_lists:
-+	bmov	SCB_NEXT_COMPLETE, COMPLETE_SCB_HEAD, 2;
-+	bmov	COMPLETE_SCB_HEAD, COMPLETE_ON_QFREEZE_HEAD, 2;
-+	jmp	idle_loop_checkbus;
-+check_waiting_list:
-  	cmp	WAITING_TID_HEAD[1], SCB_LIST_NULL je idle_loop_checkbus;
-  	/*
-  	 * ENSELO is cleared by a SELDO, so we must test for SELDO
-  	 * one last time.
-  	 */
--BEGIN_CRITICAL;
-  	test	SSTAT0, SELDO jnz select_out;
-  END_CRITICAL;
-  	call	start_selection;
-@@ -184,6 +207,7 @@
-  	/* FALLTHROUGH */
-  scbdma_tohost_done:
-  	test	CCSCBCTL, CCARREN jz fill_qoutfifo_dmadone;
-+	and	CCSCBCTL, ~(CCARREN|CCSCBEN);
-  	/*
-  	 * An SCB has been succesfully uploaded to the host.
-  	 * If the SCB was uploaded for some reason other than
-@@ -193,13 +217,9 @@
-  	 * then queue the completion.
-  	 */
-  	test	SCB_SCSI_STATUS, 0xff jz scbdma_queue_completion;
--	SET_MODE(M_SCSI, M_SCSI)
--	test	SCSISEQ0, ENSELO jnz return;
--	test	SSTAT0, (SELDO|SELINGO) jnz return;
--	SET_MODE(M_CCHAN, M_CCHAN)
-+	bmov	SCB_NEXT_COMPLETE, COMPLETE_ON_QFREEZE_HEAD, 2;
-+	bmov	COMPLETE_ON_QFREEZE_HEAD, SCB_NEXT_COMPLETE, 2 ret;
-  scbdma_queue_completion:
--	and	CCSCBCTL, ~(CCARREN|CCSCBEN);
--	bmov	COMPLETE_DMA_SCB_HEAD, SCB_NEXT_COMPLETE, 2;
-  	bmov	SCB_NEXT_COMPLETE, COMPLETE_SCB_HEAD, 2;
-  	bmov	COMPLETE_SCB_HEAD, SCBPTR, 2 ret;
-  fill_qoutfifo_dmadone:
-@@ -355,9 +375,9 @@
-  	mvi	CCARREN|CCSCBEN|CCSCBDIR|CCSCBRESET jmp dma_scb;
-  dma_complete_scb:
-  	bmov	SCBPTR, COMPLETE_DMA_SCB_HEAD, 2;
-+	bmov	COMPLETE_DMA_SCB_HEAD, SCB_NEXT_COMPLETE, 2;
-  	bmov	SCBHADDR, SCB_BUSADDR, 4;
-  	mvi	CCARREN|CCSCBEN|CCSCBRESET jmp dma_scb;
--END_CRITICAL;
-
-  /*
-   * Either post or fetch an SCB from host memory.  The caller
-@@ -373,6 +393,7 @@
-  dma_scb:
-  	mvi	SCBHCNT, SCB_TRANSFER_SIZE;
-  	mov	CCSCBCTL, SINDEX ret;
-+END_CRITICAL;
-
-  BEGIN_CRITICAL;
-  setjmp:
-@@ -395,11 +416,6 @@
-  	mvi	SEQINTCTL, INTVEC1DSL;
-  	mov	MODE_PTR, SINDEX;
-  	clr	SEQINTCTL ret;
--
--toggle_dff_mode_work_around:
--	mvi	SEQINTCTL, INTVEC1DSL;
--	xor	MODE_PTR, MK_MODE(M_DFF1, M_DFF1);
--	clr	SEQINTCTL ret;
-  }
 
 
-@@ -1033,15 +1049,9 @@
-  /*
-   * We received a "command complete" message.  Put the SCB on the complete
-   * queue and trigger a completion interrupt via the idle loop.  Before doing
-- * so, check to see if there
-- * is a residual or the status byte is something other than STATUS_GOOD (0).
-- * In either of these conditions, we upload the SCB back to the host so it can
-- * process this information.  In the case of a non zero status byte, we
-- * additionally interrupt the kernel driver synchronously, allowing it to
-- * decide if sense should be retrieved.  If the kernel driver wishes to request
-- * sense, it will fill the kernel SCB with a request sense command, requeue
-- * it to the QINFIFO and tell us not to post to the QOUTFIFO by setting
-- * RETURN_1 to SEND_SENSE.
-+ * so, check to see if there is a residual or the status byte is something
-+ * other than STATUS_GOOD (0).  In either of these conditions, we upload the
-+ * SCB back to the host so it can process this information.
-   */
-  mesgin_complete:
+--------------020208060403020405030509
+Content-Type: application/x-bzip2;
+ name="2643-2646.diff.bz2"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="2643-2646.diff.bz2"
 
-@@ -1086,6 +1096,7 @@
-  	call	queue_scb_completion;
-  	jmp	await_busfree;
-
-+BEGIN_CRITICAL;
-  freeze_queue:
-  	/* Cancel any pending select-out. */
-  	test	SSTAT0, SELDO|SELINGO jnz . + 2;
-@@ -1096,6 +1107,7 @@
-  	adc	QFREEZE_COUNT[1], A;
-  	or	SEQ_FLAGS2, SELECTOUT_QFROZEN;
-  	mov	A, ACCUM_SAVE ret;
-+END_CRITICAL;
-
-  /*
-   * Complete the current FIFO's SCB if data for this same
-@@ -1340,6 +1352,47 @@
-  	test	CCSGCTL, CCSGENACK jnz return;
-
-  	/*
-+	 * Should the other FIFO get the S/G cache first?  If
-+	 * both FIFOs have been allocated since we last checked
-+	 * any FIFO, it is important that we service a FIFO
-+	 * that is not actively on the bus first.  This guarantees
-+	 * that a FIFO will be freed to handle snapshot requests for
-+	 * any FIFO that is still on the bus.  Chips with RTI do not
-+	 * perform snapshots, so don't bother with this test there.
-+	 */
-+	if ((ahd->features & AHD_RTI) == 0) {
-+		/*
-+		 * If we're not still receiving SCSI data,
-+		 * it is safe to allocate the S/G cache to
-+		 * this FIFO.
-+		 */
-+		test	DFCNTRL, SCSIEN jz idle_sgfetch_start;
-+
-+		/*
-+		 * Switch to the other FIFO.  Non-RTI chips
-+		 * also have the "set mode" bug, so we must
-+		 * disable interrupts during the switch.
-+		 */
-+		mvi	SEQINTCTL, INTVEC1DSL;
-+		xor	MODE_PTR, MK_MODE(M_DFF1, M_DFF1);
-+
-+		/*
-+		 * If the other FIFO needs loading, then it
-+		 * must not have claimed the S/G cache yet
-+		 * (SG_CACHE_AVAIL would have been cleared in
-+		 * the orginal FIFO mode and we test this above).
-+		 * Return to the idle loop so we can process the
-+		 * FIFO not currently on the bus first.
-+		 */
-+		test	SG_STATE, LOADING_NEEDED jz idle_sgfetch_okay;
-+		clr	SEQINTCTL ret;
-+idle_sgfetch_okay:
-+		xor	MODE_PTR, MK_MODE(M_DFF1, M_DFF1);
-+		clr	SEQINTCTL;
-+	}
-+
-+idle_sgfetch_start:
-+	/*
-  	 * We fetch a "cacheline aligned" and sized amount of data
-  	 * so we don't end up referencing a non-existant page.
-  	 * Cacheline aligned is in quotes because the kernel will
-@@ -1350,7 +1403,7 @@
-  	mvi	SGHCNT, SG_PREFETCH_CNT;
-  	if ((ahd->bugs & AHD_REG_SLOW_SETTLE_BUG) != 0) {
-  		/*
--		 * Need two instruction between "touches" of SGHADDR.
-+		 * Need two instructions between "touches" of SGHADDR.
-  		 */
-  		nop;
-  	}
-==== //depot/aic7xxx/aic7xxx/aic79xx.c#225 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_core.c ====
---- /tmp/tmp.26963.2	2004-09-27 13:31:40.829906392 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_core.c	2004-01-20 05:16:39.000000000 -0500
-@@ -37,7 +37,7 @@
-   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-   * POSSIBILITY OF SUCH DAMAGES.
-   *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.c#225 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.c#226 $
-   */
-
-  #ifdef __linux__
-@@ -8011,6 +8011,7 @@
-  	} else {
-  		paused = 0;
-  		ahd_pause(ahd);
-+		ahd_clear_critical_section(ahd);
-  	}
-
-  	/* Freeze the queue until the client sees the error. */
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.c#195 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.c ====
---- /tmp/tmp.26963.3	2004-09-27 13:31:41.337829176 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-01-23 13:15:14.000000000 -0500
-@@ -1,7 +1,7 @@
-  /*
-   * Adaptec AIC79xx device driver for Linux.
-   *
-- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.c#195 $
-+ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.c#198 $
-   *
-   * --------------------------------------------------------------------------
-   * Copyright (c) 1994-2000 Justin T. Gibbs.
-@@ -52,9 +52,7 @@
-   */
-  #include "aiclib.c"
-
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
-  #include <linux/init.h>		/* __setup */
--#endif
-
-  #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-  #include "sd.h"			/* For geometry detection */
-@@ -77,14 +75,6 @@
-   */
-  spinlock_t ahd_list_spinlock;
-
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0)
--struct proc_dir_entry proc_scsi_aic79xx = {
--	PROC_SCSI_AIC79XX, 7, "aic79xx",
--	S_IFDIR | S_IRUGO | S_IXUGO, 2,
--	0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL
--};
--#endif
--
-  #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-  /* For dynamic sglist size calculation. */
-  u_int ahd_linux_nseg;
-@@ -958,11 +948,7 @@
-  "aic79xx: insmod or else it might trash certain memory areas.\n");
-  #endif
-
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,3,0)
-  	template->proc_name = "aic79xx";
--#else
--	template->proc_dir = &proc_scsi_aic79xx;
--#endif
-
-  	/*
-  	 * Initialize our softc list lock prior to
-@@ -1972,9 +1958,7 @@
-  	return 1;
-  }
-
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,3,0)
-  __setup("aic79xx=", aic79xx_setup);
--#endif
-
-  uint32_t aic79xx_verbose;
-
-@@ -2001,16 +1985,8 @@
-
-  	*((struct ahd_softc **)host->hostdata) = ahd;
-  	ahd_lock(ahd, &s);
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
--	scsi_assign_lock(host, &ahd->platform_data->spin_lock);
--#elif AHD_SCSI_HAS_HOST_LOCK != 0
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,21)
--	host->host_lock = &ahd->platform_data->spin_lock;
--#else
--	host->lock = &ahd->platform_data->spin_lock;
--#endif
--#endif
-  	ahd->platform_data->host = host;
-+	aic_assign_host_lock(ahd);
-  	host->can_queue = AHD_MAX_QUEUE;
-  	host->cmd_per_lun = 2;
-  	host->sg_tablesize = AHD_NSEG;
-@@ -2182,19 +2158,11 @@
-  	ahd->platform_data->completeq_timer.data = (u_long)ahd;
-  	ahd->platform_data->completeq_timer.function =
-  	    (aic_linux_callback_t *)ahd_linux_thread_run_complete_queue;
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
-  	init_MUTEX_LOCKED(&ahd->platform_data->eh_sem);
-  	init_MUTEX_LOCKED(&ahd->platform_data->dv_sem);
-  	init_MUTEX_LOCKED(&ahd->platform_data->dv_cmd_sem);
-  	init_MUTEX_LOCKED(&ahd->platform_data->recovery_sem);
-  	init_MUTEX_LOCKED(&ahd->platform_data->recovery_ending_sem);
--#else
--	ahd->platform_data->eh_sem = MUTEX_LOCKED;
--	ahd->platform_data->dv_sem = MUTEX_LOCKED;
--	ahd->platform_data->dv_cmd_sem = MUTEX_LOCKED;
--	ahd->platform_data->recovery_sem = MUTEX_LOCKED;
--	ahd->platform_data->recovery_ending_sem = MUTEX_LOCKED;
--#endif
-  	aic_setup_tasklets(ahd);
-  	ahd->seltime = (aic79xx_seltime & 0x3) << 4;
-  	return (0);
-@@ -2258,10 +2226,8 @@
-  			base_addr = (u_long)ahd->bshs[0].maddr;
-  			base_addr &= PAGE_MASK;
-  			iounmap((void *)base_addr);
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-  			release_mem_region(ahd->platform_data->mem_busaddr,
-  					   0x1000);
--#endif
-  		}
-  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0) && \
-      LINUX_VERSION_CODE  < KERNEL_VERSION(2,5,0)
-@@ -2796,13 +2762,13 @@
-  		 * ahd host lock held.  For other kernels, the
-  		 * io_request_lock must be held.
-  		 */
--#if AHD_SCSI_HAS_HOST_LOCK != 0
-+#if AIC_SCSI_HAS_HOST_LOCK != 0
-  		ahd_lock(ahd, &s);
-  #else
-  		spin_lock_irqsave(&io_request_lock, s);
-  #endif
-  		ahd_linux_queue(cmd, ahd_linux_dv_complete);
--#if AHD_SCSI_HAS_HOST_LOCK != 0
-+#if AIC_SCSI_HAS_HOST_LOCK != 0
-  		ahd_unlock(ahd, &s);
-  #else
-  		spin_unlock_irqrestore(&io_request_lock, s);
-@@ -4039,6 +4005,30 @@
-  		if ((tstate->auto_negotiate & mask) != 0) {
-  			scb->flags |= SCB_AUTO_NEGOTIATE;
-  			scb->hscb->control |= MK_MESSAGE;
-+		} else if (cmd->cmnd[0] == INQUIRY
-+			&& (tinfo->curr.offset != 0
-+			 || tinfo->curr.width != MSG_EXT_WDTR_BUS_8_BIT
-+			 || tinfo->curr.ppr_options != 0)
-+			&& (tinfo->curr.ppr_options & MSG_EXT_PPR_IU_REQ)==0) {
-+			/*
-+			 * The SCSI spec requires inquiry
-+			 * commands to complete without
-+			 * reporting unit attention conditions.
-+			 * Because of this, an inquiry command
-+			 * that occurs just after a device is
-+			 * reset will result in a data phase
-+			 * with mismatched negotiated rates.
-+			 * The core already forces a renegotiation
-+			 * for reset events that are visible to
-+			 * our controller or that we initiate,
-+			 * but a third party device reset or a
-+			 * hot-plug insertion can still cause this
-+			 * issue.  Therefore, we force a re-negotiation
-+			 * for every inquiry command unless we
-+			 * are async.
-+			 */
-+			scb->flags |= SCB_NEGOTIATE;
-+			scb->hscb->control |= MK_MESSAGE;
-  		}
-
-  		if ((dev->flags & (AIC_DEV_Q_TAGGED|AIC_DEV_Q_BASIC)) != 0) {
-@@ -4324,7 +4314,7 @@
-  		WARN_ON(lun != CAM_LUN_WILDCARD);
-  		scsi_report_device_reset(ahd->platform_data->host,
-  					 channel - 'A', target);
--#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
-+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-  		Scsi_Device *scsi_dev;
-
-  		/*
-@@ -4345,12 +4335,10 @@
-  		break;
-  	}
-          case AC_BUS_RESET:
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
-  		if (ahd->platform_data->host != NULL) {
-  			scsi_report_bus_reset(ahd->platform_data->host,
-  					      channel - 'A');
-  		}
--#endif
-  		/*
-  		 * Add a minimal bus settle delay for devices that are slow to
-  		 * respond after bus resets.
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_reg.h#77 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_reg.h_shipped ====
---- /tmp/tmp.26963.4	2004-09-27 13:31:41.833753784 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_reg.h_shipped	2004-01-20 16:07:15.000000000 -0500
-@@ -2,8 +2,8 @@
-   * DO NOT EDIT - This file is automatically generated
-   *		 from the following source files:
-   *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#107 $
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#70 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#109 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#71 $
-   */
-  typedef int (ahd_reg_print_t)(u_int, u_int *, u_int);
-  typedef struct ahd_reg_parse_entry {
-@@ -3772,5 +3772,5 @@
-
-
-  /* Exported Labels */
--#define	LABEL_seq_isr 	0x269
--#define	LABEL_timer_isr	0x265
-+#define	LABEL_seq_isr 	0x26d
-+#define	LABEL_timer_isr	0x269
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_reg_print.c#58 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped ====
---- /tmp/tmp.26963.5	2004-09-27 13:31:42.203697544 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped	2004-01-20 16:07:15.000000000 -0500
-@@ -2,8 +2,8 @@
-   * DO NOT EDIT - This file is automatically generated
-   *		 from the following source files:
-   *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#107 $
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#70 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#109 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#71 $
-   */
-
-  #include "aic79xx_osm.h"
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_seq.h#78 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped ====
---- /tmp/tmp.26963.6	2004-09-27 13:31:42.295683560 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped	2004-01-20 16:07:15.000000000 -0500
-@@ -2,30 +2,30 @@
-   * DO NOT EDIT - This file is automatically generated
-   *		 from the following source files:
-   *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#107 $
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#70 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#109 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#71 $
-   */
-  static uint8_t seqprog[] = {
-  	0xff, 0x02, 0x06, 0x78,
--	0x00, 0xea, 0x46, 0x59,
-+	0x00, 0xea, 0x40, 0x59,
-  	0x01, 0xea, 0x04, 0x30,
-  	0xff, 0x04, 0x0c, 0x78,
--	0x19, 0xea, 0x46, 0x59,
-+	0x19, 0xea, 0x40, 0x59,
-  	0x19, 0xea, 0x04, 0x00,
-  	0x33, 0xea, 0x3a, 0x59,
-  	0x33, 0xea, 0x00, 0x00,
-  	0x60, 0x3a, 0x1a, 0x68,
-  	0x04, 0x47, 0x1b, 0x68,
-  	0xff, 0x21, 0x1b, 0x70,
--	0x40, 0x4b, 0x8c, 0x69,
--	0x00, 0xe2, 0x4a, 0x59,
--	0x40, 0x4b, 0x8c, 0x69,
--	0x20, 0x4b, 0x78, 0x69,
-+	0x40, 0x4b, 0x86, 0x69,
-+	0x00, 0xe2, 0x44, 0x59,
-+	0x40, 0x4b, 0x86, 0x69,
-+	0x20, 0x4b, 0x72, 0x69,
-  	0xfc, 0x42, 0x24, 0x78,
-  	0x10, 0x40, 0x24, 0x78,
--	0x00, 0xe2, 0xc4, 0x5d,
-+	0x00, 0xe2, 0xcc, 0x5d,
-  	0x20, 0x4d, 0x28, 0x78,
--	0x00, 0xe2, 0xc4, 0x5d,
-+	0x00, 0xe2, 0xcc, 0x5d,
-  	0x30, 0x3f, 0xc0, 0x09,
-  	0x30, 0xe0, 0x30, 0x60,
-  	0x7f, 0x4a, 0x94, 0x08,
-@@ -43,11 +43,11 @@
-  	0xff, 0x97, 0x4f, 0x78,
-  	0x50, 0x4b, 0x4a, 0x68,
-  	0xbf, 0x3a, 0x74, 0x08,
--	0x14, 0xea, 0x46, 0x59,
-+	0x14, 0xea, 0x40, 0x59,
-  	0x14, 0xea, 0x04, 0x00,
-  	0x08, 0x92, 0x25, 0x03,
-  	0xff, 0x90, 0x3f, 0x68,
--	0x00, 0xe2, 0x58, 0x5b,
-+	0x00, 0xe2, 0x52, 0x5b,
-  	0x00, 0xe2, 0x3e, 0x40,
-  	0x00, 0xea, 0x3a, 0x59,
-  	0x01, 0xea, 0x00, 0x30,
-@@ -166,16 +166,13 @@
-  	0x80, 0xea, 0xb2, 0x01,
-  	0x01, 0xe2, 0x00, 0x30,
-  	0xff, 0xea, 0xb2, 0x0d,
--	0x80, 0xea, 0xb2, 0x01,
--	0x11, 0x00, 0x00, 0x10,
--	0xff, 0xea, 0xb2, 0x0d,
-  	0x01, 0xe2, 0x04, 0x30,
-  	0x01, 0xea, 0x04, 0x34,
-  	0x02, 0x20, 0xbd, 0x30,
-  	0x02, 0x20, 0xb9, 0x30,
-  	0x02, 0x20, 0x51, 0x31,
-  	0x4c, 0x93, 0xd7, 0x28,
--	0x10, 0x92, 0x59, 0x79,
-+	0x10, 0x92, 0x53, 0x79,
-  	0x01, 0x6b, 0xc0, 0x30,
-  	0x02, 0x64, 0xc8, 0x00,
-  	0x40, 0x3a, 0x74, 0x04,
-@@ -183,9 +180,9 @@
-  	0x33, 0xea, 0x3a, 0x59,
-  	0x33, 0xea, 0x00, 0x00,
-  	0x30, 0x3f, 0xc0, 0x09,
--	0x30, 0xe0, 0x5a, 0x61,
--	0x20, 0x3f, 0x70, 0x69,
--	0x10, 0x3f, 0x5a, 0x79,
-+	0x30, 0xe0, 0x54, 0x61,
-+	0x20, 0x3f, 0x6a, 0x69,
-+	0x10, 0x3f, 0x54, 0x79,
-  	0x02, 0xea, 0x7e, 0x00,
-  	0x00, 0xea, 0x3a, 0x59,
-  	0x01, 0xea, 0x00, 0x30,
-@@ -195,7 +192,7 @@
-  	0x11, 0xea, 0x00, 0x00,
-  	0x02, 0x48, 0x51, 0x35,
-  	0xc0, 0x4a, 0x94, 0x00,
--	0x04, 0x41, 0x7e, 0x79,
-+	0x04, 0x41, 0x78, 0x79,
-  	0x08, 0xea, 0x98, 0x00,
-  	0x08, 0x57, 0xae, 0x00,
-  	0x08, 0x3c, 0x78, 0x00,
-@@ -203,12 +200,12 @@
-  	0x0f, 0x67, 0xc0, 0x09,
-  	0x00, 0x34, 0x69, 0x02,
-  	0x20, 0xea, 0x96, 0x00,
--	0x00, 0xe2, 0xf6, 0x41,
-+	0x00, 0xe2, 0xf0, 0x41,
-  	0xc0, 0x4a, 0x94, 0x00,
--	0x40, 0x3a, 0xaa, 0x69,
-+	0x40, 0x3a, 0xa4, 0x69,
-  	0x02, 0x55, 0x06, 0x68,
--	0x02, 0x56, 0xaa, 0x69,
--	0xff, 0x5b, 0xaa, 0x61,
-+	0x02, 0x56, 0xa4, 0x69,
-+	0xff, 0x5b, 0xa4, 0x61,
-  	0x02, 0x20, 0x51, 0x31,
-  	0x80, 0xea, 0xb2, 0x01,
-  	0x44, 0xea, 0x00, 0x00,
-@@ -216,40 +213,40 @@
-  	0x33, 0xea, 0x00, 0x00,
-  	0xff, 0xea, 0xb2, 0x09,
-  	0xff, 0xe0, 0xc0, 0x19,
--	0xff, 0xe0, 0xac, 0x79,
-+	0xff, 0xe0, 0xa6, 0x79,
-  	0x02, 0xac, 0x51, 0x31,
--	0x00, 0xe2, 0xa2, 0x41,
-+	0x00, 0xe2, 0x9c, 0x41,
-  	0x02, 0x5e, 0x50, 0x31,
-  	0x02, 0xa8, 0xb8, 0x30,
-  	0x02, 0x5c, 0x50, 0x31,
--	0xff, 0xad, 0xbd, 0x71,
-+	0xff, 0xad, 0xb7, 0x71,
-  	0x02, 0xac, 0x41, 0x31,
-  	0x02, 0x22, 0x51, 0x31,
-  	0x02, 0xa0, 0x5c, 0x33,
-  	0x02, 0xa0, 0x44, 0x32,
--	0x00, 0xe2, 0xc6, 0x41,
--	0x10, 0x92, 0xc7, 0x69,
-+	0x00, 0xe2, 0xc0, 0x41,
-+	0x10, 0x92, 0xc1, 0x69,
-  	0x3d, 0x93, 0xc9, 0x29,
-  	0x01, 0xe4, 0xc8, 0x01,
-  	0x01, 0xea, 0xca, 0x01,
-  	0xff, 0xea, 0xda, 0x01,
-  	0x02, 0x20, 0x51, 0x31,
-  	0x02, 0xae, 0x41, 0x32,
--	0xff, 0x21, 0xcf, 0x61,
-+	0xff, 0x21, 0xc9, 0x61,
-  	0xff, 0xea, 0x46, 0x02,
-  	0x02, 0x5c, 0x50, 0x31,
-  	0x40, 0xea, 0x96, 0x00,
--	0x02, 0x56, 0xcc, 0x6d,
--	0x01, 0x55, 0xcc, 0x6d,
--	0x10, 0x92, 0xdb, 0x79,
--	0x10, 0x40, 0xe4, 0x69,
--	0x01, 0x56, 0xe4, 0x79,
-+	0x02, 0x56, 0xd4, 0x6d,
-+	0x01, 0x55, 0xd4, 0x6d,
-+	0x10, 0x92, 0xd5, 0x79,
-+	0x10, 0x40, 0xde, 0x69,
-+	0x01, 0x56, 0xde, 0x79,
-  	0xff, 0x97, 0x07, 0x78,
--	0x13, 0xea, 0x46, 0x59,
-+	0x13, 0xea, 0x40, 0x59,
-  	0x13, 0xea, 0x04, 0x00,
-  	0x00, 0xe2, 0x06, 0x40,
-  	0xbf, 0x3a, 0x74, 0x08,
--	0x04, 0x41, 0xea, 0x79,
-+	0x04, 0x41, 0xe4, 0x79,
-  	0x08, 0xea, 0x98, 0x00,
-  	0x08, 0x57, 0xae, 0x00,
-  	0x01, 0x93, 0x69, 0x32,
-@@ -257,87 +254,87 @@
-  	0x40, 0xea, 0x66, 0x02,
-  	0x08, 0x3c, 0x78, 0x00,
-  	0x80, 0xea, 0x62, 0x02,
--	0x00, 0xe2, 0xb8, 0x5b,
-+	0x00, 0xe2, 0xb2, 0x5b,
-  	0x01, 0x36, 0xc1, 0x31,
--	0x9f, 0xe0, 0x4c, 0x7c,
--	0x80, 0xe0, 0x0a, 0x72,
--	0xa0, 0xe0, 0x46, 0x72,
--	0xc0, 0xe0, 0x3c, 0x72,
--	0xe0, 0xe0, 0x76, 0x72,
--	0x01, 0xea, 0x46, 0x59,
-+	0x9f, 0xe0, 0x54, 0x7c,
-+	0x80, 0xe0, 0x04, 0x72,
-+	0xa0, 0xe0, 0x40, 0x72,
-+	0xc0, 0xe0, 0x36, 0x72,
-+	0xe0, 0xe0, 0x70, 0x72,
-+	0x01, 0xea, 0x40, 0x59,
-  	0x01, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xf6, 0x41,
--	0x80, 0x33, 0x11, 0x7a,
--	0x03, 0xea, 0x46, 0x59,
-+	0x00, 0xe2, 0xf0, 0x41,
-+	0x80, 0x33, 0x0b, 0x7a,
-+	0x03, 0xea, 0x40, 0x59,
-  	0x03, 0xea, 0x04, 0x00,
--	0xee, 0x00, 0x18, 0x6a,
-+	0xee, 0x00, 0x12, 0x6a,
-  	0x05, 0xea, 0xb4, 0x00,
-  	0x33, 0xea, 0x3a, 0x59,
-  	0x33, 0xea, 0x00, 0x00,
-  	0x02, 0xa8, 0x90, 0x32,
--	0x00, 0xe2, 0x60, 0x59,
-+	0x00, 0xe2, 0x5a, 0x59,
-  	0xef, 0x96, 0xd5, 0x19,
--	0x00, 0xe2, 0x28, 0x52,
-+	0x00, 0xe2, 0x22, 0x52,
-  	0x09, 0x80, 0xe1, 0x30,
-  	0x02, 0xea, 0x36, 0x00,
-  	0xa8, 0xea, 0x32, 0x00,
--	0x00, 0xe2, 0x2e, 0x42,
-+	0x00, 0xe2, 0x28, 0x42,
-  	0x01, 0x96, 0xd1, 0x30,
-  	0x10, 0x80, 0x89, 0x31,
-  	0x20, 0xea, 0x32, 0x00,
-  	0xbf, 0x33, 0x67, 0x0a,
--	0x10, 0x4c, 0x38, 0x6a,
--	0x20, 0x19, 0x30, 0x6a,
--	0x20, 0x19, 0x34, 0x6a,
--	0x02, 0x4d, 0xf6, 0x69,
-+	0x10, 0x4c, 0x32, 0x6a,
-+	0x20, 0x19, 0x2a, 0x6a,
-+	0x20, 0x19, 0x2e, 0x6a,
-+	0x02, 0x4d, 0xf0, 0x69,
-  	0x40, 0x33, 0x67, 0x02,
--	0x00, 0xe2, 0xf6, 0x41,
--	0x80, 0x33, 0xb7, 0x6a,
-+	0x00, 0xe2, 0xf0, 0x41,
-+	0x80, 0x33, 0xb1, 0x6a,
-  	0x01, 0x44, 0x10, 0x33,
-  	0x08, 0x92, 0x25, 0x03,
--	0x00, 0xe2, 0xf6, 0x41,
-+	0x00, 0xe2, 0xf0, 0x41,
-  	0x10, 0xea, 0x80, 0x00,
-  	0x01, 0x31, 0xc5, 0x31,
--	0x80, 0xe2, 0x62, 0x62,
--	0x10, 0x92, 0x87, 0x6a,
-+	0x80, 0xe2, 0x5c, 0x62,
-+	0x10, 0x92, 0x81, 0x6a,
-  	0xc0, 0x94, 0xc5, 0x01,
--	0x40, 0x92, 0x53, 0x6a,
-+	0x40, 0x92, 0x4d, 0x6a,
-  	0xbf, 0xe2, 0xc4, 0x09,
--	0x20, 0x92, 0x67, 0x7a,
-+	0x20, 0x92, 0x61, 0x7a,
-  	0x01, 0xe2, 0x88, 0x30,
--	0x00, 0xe2, 0xb8, 0x5b,
--	0xa0, 0x36, 0x6f, 0x62,
-+	0x00, 0xe2, 0xb2, 0x5b,
-+	0xa0, 0x36, 0x69, 0x62,
-  	0x23, 0x92, 0x89, 0x08,
--	0x00, 0xe2, 0xb8, 0x5b,
--	0xa0, 0x36, 0x6f, 0x62,
--	0x00, 0xa8, 0x66, 0x42,
--	0xff, 0xe2, 0x66, 0x62,
--	0x00, 0xe2, 0x86, 0x42,
-+	0x00, 0xe2, 0xb2, 0x5b,
-+	0xa0, 0x36, 0x69, 0x62,
-+	0x00, 0xa8, 0x60, 0x42,
-+	0xff, 0xe2, 0x60, 0x62,
-+	0x00, 0xe2, 0x80, 0x42,
-  	0x40, 0xea, 0x98, 0x00,
-  	0x01, 0xe2, 0x88, 0x30,
--	0x00, 0xe2, 0xb8, 0x5b,
--	0xa0, 0x36, 0x45, 0x72,
-+	0x00, 0xe2, 0xb2, 0x5b,
-+	0xa0, 0x36, 0x3f, 0x72,
-  	0x40, 0xea, 0x98, 0x00,
-  	0x01, 0x31, 0x89, 0x32,
-  	0x08, 0xea, 0x62, 0x02,
--	0x00, 0xe2, 0xf6, 0x41,
--	0xe0, 0xea, 0xd4, 0x5b,
--	0x80, 0xe0, 0xc2, 0x6a,
--	0x04, 0xe0, 0x68, 0x73,
--	0x02, 0xe0, 0x9a, 0x73,
--	0x00, 0xea, 0x20, 0x73,
--	0x03, 0xe0, 0xaa, 0x73,
--	0x23, 0xe0, 0x98, 0x72,
--	0x08, 0xe0, 0xbe, 0x72,
--	0x00, 0xe2, 0xb8, 0x5b,
--	0x07, 0xea, 0x46, 0x59,
-+	0x00, 0xe2, 0xf0, 0x41,
-+	0xe0, 0xea, 0xce, 0x5b,
-+	0x80, 0xe0, 0xbc, 0x6a,
-+	0x04, 0xe0, 0x62, 0x73,
-+	0x02, 0xe0, 0x94, 0x73,
-+	0x00, 0xea, 0x1a, 0x73,
-+	0x03, 0xe0, 0xa4, 0x73,
-+	0x23, 0xe0, 0x92, 0x72,
-+	0x08, 0xe0, 0xb8, 0x72,
-+	0x00, 0xe2, 0xb2, 0x5b,
-+	0x07, 0xea, 0x40, 0x59,
-  	0x07, 0xea, 0x04, 0x00,
--	0x08, 0x42, 0xf7, 0x71,
--	0x04, 0x42, 0x95, 0x62,
-+	0x08, 0x42, 0xf1, 0x71,
-+	0x04, 0x42, 0x8f, 0x62,
-  	0x01, 0x43, 0x89, 0x30,
--	0x00, 0xe2, 0x86, 0x42,
-+	0x00, 0xe2, 0x80, 0x42,
-  	0x01, 0x44, 0xd4, 0x31,
--	0x00, 0xe2, 0x86, 0x42,
-+	0x00, 0xe2, 0x80, 0x42,
-  	0x01, 0x00, 0x60, 0x32,
-  	0x33, 0xea, 0x3a, 0x59,
-  	0x33, 0xea, 0x00, 0x00,
-@@ -345,20 +342,20 @@
-  	0x01, 0x64, 0xc0, 0x31,
-  	0x00, 0x30, 0x3b, 0x59,
-  	0x01, 0x30, 0x01, 0x30,
--	0x01, 0xe0, 0xbc, 0x7a,
--	0xa0, 0xea, 0xca, 0x5b,
--	0x01, 0xa0, 0xbc, 0x62,
--	0x01, 0x84, 0xb1, 0x7a,
--	0x01, 0x95, 0xbf, 0x6a,
--	0x05, 0xea, 0x46, 0x59,
-+	0x01, 0xe0, 0xb6, 0x7a,
-+	0xa0, 0xea, 0xc4, 0x5b,
-+	0x01, 0xa0, 0xb6, 0x62,
-+	0x01, 0x84, 0xab, 0x7a,
-+	0x01, 0x95, 0xb9, 0x6a,
-+	0x05, 0xea, 0x40, 0x59,
-  	0x05, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xbe, 0x42,
--	0x03, 0xea, 0x46, 0x59,
-+	0x00, 0xe2, 0xb8, 0x42,
-+	0x03, 0xea, 0x40, 0x59,
-  	0x03, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xbe, 0x42,
--	0x07, 0xea, 0xdc, 0x5b,
-+	0x00, 0xe2, 0xb8, 0x42,
-+	0x07, 0xea, 0xd6, 0x5b,
-  	0x01, 0x44, 0xd4, 0x31,
--	0x00, 0xe2, 0xf6, 0x41,
-+	0x00, 0xe2, 0xf0, 0x41,
-  	0x3f, 0xe0, 0x6a, 0x0a,
-  	0xc0, 0x34, 0xc1, 0x09,
-  	0x00, 0x35, 0x51, 0x01,
-@@ -369,54 +366,54 @@
-  	0x01, 0xea, 0xc6, 0x01,
-  	0x02, 0xe2, 0xc8, 0x31,
-  	0x02, 0xec, 0x40, 0x31,
--	0xff, 0xa1, 0xde, 0x72,
-+	0xff, 0xa1, 0xd8, 0x72,
-  	0x02, 0xe8, 0xda, 0x31,
-  	0x02, 0xa0, 0x50, 0x31,
--	0x00, 0xe2, 0x00, 0x43,
-+	0x00, 0xe2, 0xfa, 0x42,
-  	0x80, 0x33, 0x67, 0x02,
-  	0x01, 0x44, 0xd4, 0x31,
--	0x00, 0xe2, 0xb8, 0x5b,
-+	0x00, 0xe2, 0xb2, 0x5b,
-  	0x01, 0x33, 0x67, 0x02,
--	0xe0, 0x36, 0x1b, 0x63,
-+	0xe0, 0x36, 0x15, 0x63,
-  	0x02, 0x33, 0x67, 0x02,
--	0x20, 0x46, 0x14, 0x63,
-+	0x20, 0x46, 0x0e, 0x63,
-  	0xff, 0xea, 0x52, 0x09,
--	0xa8, 0xea, 0xca, 0x5b,
--	0x04, 0x92, 0xfb, 0x7a,
-+	0xa8, 0xea, 0xc4, 0x5b,
-+	0x04, 0x92, 0xf5, 0x7a,
-  	0x01, 0x34, 0xc1, 0x31,
--	0x00, 0x93, 0xfb, 0x62,
-+	0x00, 0x93, 0xf5, 0x62,
-  	0x01, 0x35, 0xc1, 0x31,
--	0x00, 0x94, 0x05, 0x73,
-+	0x00, 0x94, 0xff, 0x72,
-  	0x01, 0xa9, 0x52, 0x11,
--	0xff, 0xa9, 0xf0, 0x6a,
--	0x00, 0xe2, 0x14, 0x43,
-+	0xff, 0xa9, 0xea, 0x6a,
-+	0x00, 0xe2, 0x0e, 0x43,
-  	0x10, 0x33, 0x67, 0x02,
--	0x04, 0x92, 0x15, 0x7b,
-+	0x04, 0x92, 0x0f, 0x7b,
-  	0xfb, 0x92, 0x25, 0x0b,
-  	0xff, 0xea, 0x66, 0x0a,
--	0x01, 0xa4, 0x0f, 0x6b,
-+	0x01, 0xa4, 0x09, 0x6b,
-  	0x02, 0xa8, 0x90, 0x32,
--	0x00, 0xe2, 0x60, 0x59,
--	0x10, 0x92, 0xbf, 0x7a,
--	0xff, 0xea, 0xdc, 0x5b,
--	0x00, 0xe2, 0xbe, 0x42,
--	0x04, 0xea, 0x46, 0x59,
-+	0x00, 0xe2, 0x5a, 0x59,
-+	0x10, 0x92, 0xb9, 0x7a,
-+	0xff, 0xea, 0xd6, 0x5b,
-+	0x00, 0xe2, 0xb8, 0x42,
-+	0x04, 0xea, 0x40, 0x59,
-  	0x04, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xbe, 0x42,
--	0x04, 0xea, 0x46, 0x59,
-+	0x00, 0xe2, 0xb8, 0x42,
-+	0x04, 0xea, 0x40, 0x59,
-  	0x04, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xf6, 0x41,
--	0x08, 0x92, 0xb7, 0x7a,
--	0xc0, 0x33, 0x2b, 0x7b,
--	0x80, 0x33, 0xb7, 0x6a,
--	0xff, 0x88, 0x2b, 0x6b,
--	0x40, 0x33, 0xb7, 0x6a,
--	0x10, 0x92, 0x31, 0x7b,
--	0x0a, 0xea, 0x46, 0x59,
-+	0x00, 0xe2, 0xf0, 0x41,
-+	0x08, 0x92, 0xb1, 0x7a,
-+	0xc0, 0x33, 0x25, 0x7b,
-+	0x80, 0x33, 0xb1, 0x6a,
-+	0xff, 0x88, 0x25, 0x6b,
-+	0x40, 0x33, 0xb1, 0x6a,
-+	0x10, 0x92, 0x2b, 0x7b,
-+	0x0a, 0xea, 0x40, 0x59,
-  	0x0a, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x50, 0x5b,
--	0x00, 0xe2, 0x84, 0x43,
--	0x50, 0x4b, 0x38, 0x6b,
-+	0x00, 0xe2, 0x4a, 0x5b,
-+	0x00, 0xe2, 0x7e, 0x43,
-+	0x50, 0x4b, 0x32, 0x6b,
-  	0xbf, 0x3a, 0x74, 0x08,
-  	0x01, 0xe0, 0xf4, 0x31,
-  	0xff, 0xea, 0xc0, 0x09,
-@@ -430,21 +427,21 @@
-  	0x33, 0xea, 0x00, 0x00,
-  	0x02, 0x42, 0x51, 0x31,
-  	0xff, 0x90, 0x65, 0x68,
--	0xff, 0x88, 0x5d, 0x6b,
--	0x01, 0xa4, 0x59, 0x6b,
--	0x02, 0xa4, 0x61, 0x6b,
--	0x01, 0x84, 0x61, 0x7b,
-+	0xff, 0x88, 0x57, 0x6b,
-+	0x01, 0xa4, 0x53, 0x6b,
-+	0x02, 0xa4, 0x5b, 0x6b,
-+	0x01, 0x84, 0x5b, 0x7b,
-  	0x02, 0x28, 0x19, 0x33,
-  	0x02, 0xa8, 0x50, 0x36,
--	0xff, 0x88, 0x61, 0x73,
--	0x00, 0xe2, 0x34, 0x5b,
-+	0xff, 0x88, 0x5b, 0x73,
-+	0x00, 0xe2, 0x2e, 0x5b,
-  	0x02, 0xa8, 0x20, 0x33,
-  	0x02, 0x2c, 0x19, 0x33,
-  	0x02, 0xa8, 0x58, 0x32,
-  	0x04, 0xa4, 0x49, 0x07,
--	0xc0, 0x33, 0xb7, 0x6a,
-+	0xc0, 0x33, 0xb1, 0x6a,
-  	0x04, 0x92, 0x25, 0x03,
--	0x20, 0x92, 0x85, 0x6b,
-+	0x20, 0x92, 0x7f, 0x6b,
-  	0x02, 0xa8, 0x40, 0x31,
-  	0xc0, 0x34, 0xc1, 0x09,
-  	0x00, 0x35, 0x51, 0x01,
-@@ -459,56 +456,63 @@
-  	0xf7, 0x57, 0xae, 0x08,
-  	0x08, 0xea, 0x98, 0x00,
-  	0x01, 0x44, 0xd4, 0x31,
--	0xee, 0x00, 0x8e, 0x6b,
-+	0xee, 0x00, 0x88, 0x6b,
-  	0x02, 0xea, 0xb4, 0x00,
-  	0xc0, 0xea, 0x66, 0x02,
--	0x09, 0x4c, 0x90, 0x7b,
-+	0x09, 0x4c, 0x8a, 0x7b,
-  	0x01, 0xea, 0x6c, 0x02,
-  	0x08, 0x4c, 0x06, 0x68,
--	0x0b, 0xea, 0x46, 0x59,
-+	0x0b, 0xea, 0x40, 0x59,
-  	0x0b, 0xea, 0x04, 0x00,
-  	0x01, 0x44, 0xd4, 0x31,
--	0x20, 0x33, 0xf7, 0x79,
--	0x00, 0xe2, 0xa2, 0x5b,
--	0x00, 0xe2, 0xf6, 0x41,
--	0x01, 0x84, 0xa7, 0x7b,
-+	0x20, 0x33, 0xf1, 0x79,
-+	0x00, 0xe2, 0x9c, 0x5b,
-+	0x00, 0xe2, 0xf0, 0x41,
-+	0x01, 0x84, 0xa1, 0x7b,
-  	0x01, 0xa4, 0x49, 0x07,
-  	0x08, 0x60, 0x30, 0x33,
-  	0x08, 0x80, 0x41, 0x37,
-  	0xdf, 0x33, 0x67, 0x0a,
--	0xee, 0x00, 0xb4, 0x6b,
-+	0xee, 0x00, 0xae, 0x6b,
-  	0x05, 0xea, 0xb4, 0x00,
-  	0x33, 0xea, 0x3a, 0x59,
-  	0x33, 0xea, 0x00, 0x00,
--	0x00, 0xe2, 0x60, 0x59,
--	0x00, 0xe2, 0xbe, 0x42,
--	0xff, 0x42, 0xc4, 0x6b,
--	0x01, 0x41, 0xb8, 0x6b,
--	0x02, 0x41, 0xb8, 0x7b,
--	0xff, 0x42, 0xc4, 0x6b,
--	0x01, 0x41, 0xb8, 0x6b,
--	0x02, 0x41, 0xb8, 0x7b,
--	0xff, 0x42, 0xc4, 0x7b,
--	0x04, 0x4c, 0xb8, 0x6b,
-+	0x00, 0xe2, 0x5a, 0x59,
-+	0x00, 0xe2, 0xb8, 0x42,
-+	0xff, 0x42, 0xbe, 0x6b,
-+	0x01, 0x41, 0xb2, 0x6b,
-+	0x02, 0x41, 0xb2, 0x7b,
-+	0xff, 0x42, 0xbe, 0x6b,
-+	0x01, 0x41, 0xb2, 0x6b,
-+	0x02, 0x41, 0xb2, 0x7b,
-+	0xff, 0x42, 0xbe, 0x7b,
-+	0x04, 0x4c, 0xb2, 0x6b,
-  	0xe0, 0x41, 0x6c, 0x0e,
-  	0x01, 0x44, 0xd4, 0x31,
--	0xff, 0x42, 0xcc, 0x7b,
--	0x04, 0x4c, 0xcc, 0x6b,
-+	0xff, 0x42, 0xc6, 0x7b,
-+	0x04, 0x4c, 0xc6, 0x6b,
-  	0xe0, 0x41, 0x6c, 0x0a,
--	0xe0, 0x36, 0xf7, 0x61,
-+	0xe0, 0x36, 0xf1, 0x61,
-  	0xff, 0xea, 0xca, 0x09,
-  	0x01, 0xe2, 0xc8, 0x31,
-  	0x01, 0x46, 0xda, 0x35,
-  	0x01, 0x44, 0xd4, 0x35,
-  	0x10, 0xea, 0x80, 0x00,
-  	0x01, 0xe2, 0x62, 0x36,
--	0x04, 0xa6, 0xe4, 0x7b,
-+	0x04, 0xa6, 0xde, 0x7b,
-  	0xff, 0xea, 0x5a, 0x09,
-  	0xff, 0xea, 0x4c, 0x0d,
--	0x01, 0xa6, 0x02, 0x6c,
-+	0x01, 0xa6, 0x0a, 0x6c,
-  	0x10, 0xad, 0x64, 0x78,
--	0x80, 0xad, 0xfa, 0x6b,
-+	0x80, 0xad, 0x02, 0x6c,
-  	0x08, 0xad, 0x64, 0x68,
-+	0x20, 0x19, 0xf6, 0x7b,
-+	0x80, 0xea, 0xb2, 0x01,
-+	0x11, 0x00, 0x00, 0x10,
-+	0x02, 0xa6, 0xf2, 0x7b,
-+	0xff, 0xea, 0xb2, 0x0d,
-+	0x11, 0x00, 0x00, 0x10,
-+	0xff, 0xea, 0xb2, 0x09,
-  	0x04, 0x84, 0xf9, 0x30,
-  	0x00, 0xea, 0x08, 0x81,
-  	0xff, 0xea, 0xd4, 0x09,
-@@ -533,7 +537,7 @@
-  	0x00, 0x86, 0x0d, 0x23,
-  	0x00, 0x87, 0x0f, 0x23,
-  	0x01, 0x84, 0xc5, 0x31,
--	0x80, 0x83, 0x25, 0x7c,
-+	0x80, 0x83, 0x2d, 0x7c,
-  	0x02, 0xe2, 0xc4, 0x01,
-  	0xff, 0xea, 0x4c, 0x09,
-  	0x01, 0xe2, 0x36, 0x30,
-@@ -544,75 +548,75 @@
-  	0xfe, 0xa6, 0x4c, 0x0d,
-  	0x0b, 0x98, 0xe1, 0x30,
-  	0xfd, 0xa4, 0x49, 0x09,
--	0x80, 0xa3, 0x39, 0x7c,
-+	0x80, 0xa3, 0x41, 0x7c,
-  	0x02, 0xa4, 0x48, 0x01,
-  	0x01, 0xa4, 0x36, 0x30,
-  	0xa8, 0xea, 0x32, 0x00,
-  	0xfd, 0xa4, 0x49, 0x0b,
-  	0x05, 0xa3, 0x07, 0x33,
--	0x80, 0x83, 0x45, 0x6c,
-+	0x80, 0x83, 0x4d, 0x6c,
-  	0x02, 0xea, 0x4c, 0x05,
-  	0xff, 0xea, 0x4c, 0x0d,
-  	0x00, 0xe2, 0x34, 0x59,
--	0x02, 0xa6, 0xe6, 0x6b,
-+	0x02, 0xa6, 0xe0, 0x6b,
-  	0x80, 0xf9, 0xf2, 0x05,
--	0xc0, 0x33, 0x53, 0x7c,
--	0x03, 0xea, 0x46, 0x59,
-+	0xc0, 0x33, 0x5b, 0x7c,
-+	0x03, 0xea, 0x40, 0x59,
-  	0x03, 0xea, 0x04, 0x00,
--	0x20, 0x33, 0x77, 0x7c,
--	0x01, 0x84, 0x5d, 0x6c,
--	0x06, 0xea, 0x46, 0x59,
-+	0x20, 0x33, 0x7f, 0x7c,
-+	0x01, 0x84, 0x65, 0x6c,
-+	0x06, 0xea, 0x40, 0x59,
-  	0x06, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x7a, 0x44,
-+	0x00, 0xe2, 0x82, 0x44,
-  	0x01, 0x00, 0x60, 0x32,
--	0xee, 0x00, 0x66, 0x6c,
-+	0xee, 0x00, 0x6e, 0x6c,
-  	0x05, 0xea, 0xb4, 0x00,
-  	0x33, 0xea, 0x3a, 0x59,
-  	0x33, 0xea, 0x00, 0x00,
-  	0x80, 0x3d, 0x7a, 0x00,
--	0xfc, 0x42, 0x68, 0x7c,
-+	0xfc, 0x42, 0x70, 0x7c,
-  	0x7f, 0x3d, 0x7a, 0x08,
-  	0x00, 0x30, 0x3b, 0x59,
-  	0x01, 0x30, 0x01, 0x30,
--	0x09, 0xea, 0x46, 0x59,
-+	0x09, 0xea, 0x40, 0x59,
-  	0x09, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xf6, 0x41,
--	0x01, 0xa4, 0x5d, 0x6c,
--	0x00, 0xe2, 0x30, 0x5c,
-+	0x00, 0xe2, 0xf0, 0x41,
-+	0x01, 0xa4, 0x65, 0x6c,
-+	0x00, 0xe2, 0x38, 0x5c,
-  	0x20, 0x33, 0x67, 0x02,
-  	0x01, 0x00, 0x60, 0x32,
--	0x02, 0xa6, 0x82, 0x7c,
--	0x00, 0xe2, 0x46, 0x5c,
-+	0x02, 0xa6, 0x8a, 0x7c,
-+	0x00, 0xe2, 0x4e, 0x5c,
-  	0x00, 0xe2, 0x56, 0x58,
-  	0x00, 0xe2, 0x66, 0x58,
-  	0x00, 0xe2, 0x3a, 0x58,
-  	0x00, 0x30, 0x3b, 0x59,
-  	0x01, 0x30, 0x01, 0x30,
--	0x20, 0x19, 0x82, 0x6c,
--	0x00, 0xe2, 0xb2, 0x5c,
--	0x04, 0x19, 0x9c, 0x6c,
-+	0x20, 0x19, 0x8a, 0x6c,
-+	0x00, 0xe2, 0xba, 0x5c,
-+	0x04, 0x19, 0xa4, 0x6c,
-  	0x02, 0x19, 0x32, 0x00,
--	0x01, 0x84, 0x9d, 0x7c,
--	0x01, 0x1b, 0x96, 0x7c,
--	0x01, 0x1a, 0x9c, 0x6c,
--	0x00, 0xe2, 0x4c, 0x44,
--	0x80, 0x4b, 0xa2, 0x6c,
--	0x01, 0x4c, 0x9e, 0x7c,
--	0x03, 0x42, 0x4c, 0x6c,
--	0x00, 0xe2, 0xe0, 0x5b,
-+	0x01, 0x84, 0xa5, 0x7c,
-+	0x01, 0x1b, 0x9e, 0x7c,
-+	0x01, 0x1a, 0xa4, 0x6c,
-+	0x00, 0xe2, 0x54, 0x44,
-+	0x80, 0x4b, 0xaa, 0x6c,
-+	0x01, 0x4c, 0xa6, 0x7c,
-+	0x03, 0x42, 0x54, 0x6c,
-+	0x00, 0xe2, 0xda, 0x5b,
-  	0x80, 0xf9, 0xf2, 0x01,
--	0x04, 0x33, 0xf7, 0x79,
--	0x00, 0xe2, 0xf6, 0x41,
--	0x08, 0x5d, 0xba, 0x6c,
-+	0x04, 0x33, 0xf1, 0x79,
-+	0x00, 0xe2, 0xf0, 0x41,
-+	0x08, 0x5d, 0xc2, 0x6c,
-  	0x00, 0xe2, 0x56, 0x58,
-  	0x00, 0x30, 0x3b, 0x59,
-  	0x01, 0x30, 0x01, 0x30,
--	0x02, 0x1b, 0xaa, 0x7c,
--	0x08, 0x5d, 0xb8, 0x7c,
-+	0x02, 0x1b, 0xb2, 0x7c,
-+	0x08, 0x5d, 0xc0, 0x7c,
-  	0x03, 0x68, 0x00, 0x37,
-  	0x01, 0x84, 0x09, 0x07,
--	0x80, 0x1b, 0xc4, 0x7c,
--	0x80, 0x84, 0xc5, 0x6c,
-+	0x80, 0x1b, 0xcc, 0x7c,
-+	0x80, 0x84, 0xcd, 0x6c,
-  	0xff, 0x85, 0x0b, 0x1b,
-  	0xff, 0x86, 0x0d, 0x23,
-  	0xff, 0x87, 0x0f, 0x23,
-@@ -624,161 +628,161 @@
-  	0xf9, 0xd9, 0xb2, 0x0d,
-  	0x01, 0xd9, 0xb2, 0x05,
-  	0x01, 0x52, 0x48, 0x31,
--	0x20, 0xa4, 0xee, 0x7c,
--	0x20, 0x5b, 0xee, 0x7c,
--	0x80, 0xf9, 0xfc, 0x7c,
-+	0x20, 0xa4, 0xf6, 0x7c,
-+	0x20, 0x5b, 0xf6, 0x7c,
-+	0x80, 0xf9, 0x04, 0x7d,
-  	0x02, 0xea, 0xb4, 0x00,
-  	0x11, 0x00, 0x00, 0x10,
--	0x04, 0x19, 0x08, 0x7d,
-+	0x04, 0x19, 0x10, 0x7d,
-  	0xdf, 0x19, 0x32, 0x08,
--	0x60, 0x5b, 0x08, 0x6d,
--	0x01, 0x4c, 0xe2, 0x7c,
-+	0x60, 0x5b, 0x10, 0x6d,
-+	0x01, 0x4c, 0xea, 0x7c,
-  	0x20, 0x19, 0x32, 0x00,
-  	0x01, 0xd9, 0xb2, 0x05,
-  	0x02, 0xea, 0xb4, 0x00,
-  	0x01, 0xd9, 0xb2, 0x05,
--	0x10, 0x5b, 0x00, 0x6d,
--	0x08, 0x5b, 0x0a, 0x6d,
--	0x20, 0x5b, 0xfa, 0x6c,
--	0x02, 0x5b, 0x2a, 0x6d,
--	0x0e, 0xea, 0x46, 0x59,
-+	0x10, 0x5b, 0x08, 0x6d,
-+	0x08, 0x5b, 0x12, 0x6d,
-+	0x20, 0x5b, 0x02, 0x6d,
-+	0x02, 0x5b, 0x32, 0x6d,
-+	0x0e, 0xea, 0x40, 0x59,
-  	0x0e, 0xea, 0x04, 0x00,
--	0x80, 0xf9, 0xea, 0x6c,
-+	0x80, 0xf9, 0xf2, 0x6c,
-  	0xdf, 0x5c, 0xb8, 0x08,
-  	0x01, 0xd9, 0xb2, 0x05,
--	0x01, 0xa4, 0xe5, 0x6d,
--	0x00, 0xe2, 0x30, 0x5c,
--	0x00, 0xe2, 0x34, 0x5d,
-+	0x01, 0xa4, 0xed, 0x6d,
-+	0x00, 0xe2, 0x38, 0x5c,
-+	0x00, 0xe2, 0x3c, 0x5d,
-  	0x01, 0x90, 0x21, 0x1b,
-  	0x01, 0xd9, 0xb2, 0x05,
--	0x00, 0xe2, 0x34, 0x5b,
-+	0x00, 0xe2, 0x2e, 0x5b,
-  	0xf3, 0x96, 0xd5, 0x19,
--	0x00, 0xe2, 0x18, 0x55,
--	0x80, 0x96, 0x19, 0x6d,
--	0x0f, 0xea, 0x46, 0x59,
-+	0x00, 0xe2, 0x20, 0x55,
-+	0x80, 0x96, 0x21, 0x6d,
-+	0x0f, 0xea, 0x40, 0x59,
-  	0x0f, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x20, 0x45,
-+	0x00, 0xe2, 0x28, 0x45,
-  	0x04, 0x8c, 0xe1, 0x30,
-  	0x01, 0xea, 0xf2, 0x00,
-  	0x02, 0xea, 0x36, 0x00,
-  	0xa8, 0xea, 0x32, 0x00,
--	0xff, 0x97, 0x27, 0x7d,
--	0x14, 0xea, 0x46, 0x59,
-+	0xff, 0x97, 0x2f, 0x7d,
-+	0x14, 0xea, 0x40, 0x59,
-  	0x14, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x96, 0x5d,
-+	0x00, 0xe2, 0x9e, 0x5d,
-  	0x01, 0xd9, 0xb2, 0x05,
-  	0x09, 0x80, 0xe1, 0x30,
-  	0x02, 0xea, 0x36, 0x00,
-  	0xa8, 0xea, 0x32, 0x00,
--	0x00, 0xe2, 0x8e, 0x5d,
-+	0x00, 0xe2, 0x96, 0x5d,
-  	0x01, 0xd9, 0xb2, 0x05,
--	0x02, 0xa6, 0x44, 0x7d,
-+	0x02, 0xa6, 0x4c, 0x7d,
-  	0x00, 0xe2, 0x34, 0x59,
--	0x20, 0x5b, 0x52, 0x6d,
--	0xfc, 0x42, 0x3e, 0x7d,
--	0x10, 0x40, 0x40, 0x6d,
--	0x20, 0x4d, 0x42, 0x7d,
--	0x08, 0x5d, 0x52, 0x6d,
--	0x02, 0xa6, 0xe6, 0x6b,
-+	0x20, 0x5b, 0x5a, 0x6d,
-+	0xfc, 0x42, 0x46, 0x7d,
-+	0x10, 0x40, 0x48, 0x6d,
-+	0x20, 0x4d, 0x4a, 0x7d,
-+	0x08, 0x5d, 0x5a, 0x6d,
-+	0x02, 0xa6, 0xe0, 0x6b,
-  	0x00, 0xe2, 0x34, 0x59,
--	0x20, 0x5b, 0x52, 0x6d,
--	0x01, 0x1b, 0x72, 0x6d,
--	0xfc, 0x42, 0x4e, 0x7d,
--	0x10, 0x40, 0x50, 0x6d,
-+	0x20, 0x5b, 0x5a, 0x6d,
-+	0x01, 0x1b, 0x7a, 0x6d,
-+	0xfc, 0x42, 0x56, 0x7d,
-+	0x10, 0x40, 0x58, 0x6d,
-  	0x20, 0x4d, 0x64, 0x78,
-  	0x08, 0x5d, 0x64, 0x78,
-  	0x02, 0x19, 0x32, 0x00,
-  	0x01, 0x5b, 0x40, 0x31,
--	0x00, 0xe2, 0xb2, 0x5c,
--	0x00, 0xe2, 0xa2, 0x5b,
-+	0x00, 0xe2, 0xba, 0x5c,
-+	0x00, 0xe2, 0x9c, 0x5b,
-  	0x20, 0xea, 0xb6, 0x00,
--	0x00, 0xe2, 0xe0, 0x5b,
-+	0x00, 0xe2, 0xda, 0x5b,
-  	0x20, 0x5c, 0xb8, 0x00,
--	0x04, 0x19, 0x68, 0x6d,
--	0x01, 0x1a, 0x68, 0x6d,
-+	0x04, 0x19, 0x70, 0x6d,
-+	0x01, 0x1a, 0x70, 0x6d,
-  	0x00, 0xe2, 0x34, 0x59,
-  	0x01, 0x1a, 0x64, 0x78,
-  	0x80, 0xf9, 0xf2, 0x01,
--	0x20, 0xa0, 0xcc, 0x7d,
-+	0x20, 0xa0, 0xd4, 0x7d,
-  	0xff, 0x90, 0x21, 0x1b,
--	0x08, 0x92, 0x45, 0x6b,
-+	0x08, 0x92, 0x3f, 0x6b,
-  	0x02, 0xea, 0xb4, 0x04,
-  	0x01, 0xa4, 0x49, 0x03,
--	0x40, 0x5b, 0x82, 0x6d,
-+	0x40, 0x5b, 0x8a, 0x6d,
-  	0x00, 0xe2, 0x34, 0x59,
--	0x40, 0x5b, 0x82, 0x6d,
--	0x04, 0x5d, 0xe6, 0x7d,
--	0x01, 0x1a, 0xe6, 0x7d,
-+	0x40, 0x5b, 0x8a, 0x6d,
-+	0x04, 0x5d, 0xee, 0x7d,
-+	0x01, 0x1a, 0xee, 0x7d,
-  	0x20, 0x4d, 0x64, 0x78,
--	0x40, 0x5b, 0xcc, 0x7d,
--	0x04, 0x5d, 0xe6, 0x7d,
--	0x01, 0x1a, 0xe6, 0x7d,
-+	0x40, 0x5b, 0xd4, 0x7d,
-+	0x04, 0x5d, 0xee, 0x7d,
-+	0x01, 0x1a, 0xee, 0x7d,
-  	0x80, 0xf9, 0xf2, 0x01,
-  	0xff, 0x90, 0x21, 0x1b,
--	0x08, 0x92, 0x45, 0x6b,
-+	0x08, 0x92, 0x3f, 0x6b,
-  	0x02, 0xea, 0xb4, 0x04,
-  	0x00, 0xe2, 0x34, 0x59,
-  	0x01, 0x1b, 0x64, 0x78,
-  	0x80, 0xf9, 0xf2, 0x01,
-  	0x02, 0xea, 0xb4, 0x04,
-  	0x00, 0xe2, 0x34, 0x59,
--	0x01, 0x1b, 0xaa, 0x6d,
--	0x40, 0x5b, 0xb8, 0x7d,
--	0x01, 0x1b, 0xaa, 0x6d,
-+	0x01, 0x1b, 0xb2, 0x6d,
-+	0x40, 0x5b, 0xc0, 0x7d,
-+	0x01, 0x1b, 0xb2, 0x6d,
-  	0x02, 0x19, 0x32, 0x00,
-  	0x01, 0x1a, 0x64, 0x78,
-  	0x80, 0xf9, 0xf2, 0x01,
-  	0xff, 0xea, 0x10, 0x03,
-  	0x08, 0x92, 0x25, 0x03,
--	0x00, 0xe2, 0x44, 0x43,
--	0x01, 0x1a, 0xb4, 0x7d,
--	0x40, 0x5b, 0xb0, 0x7d,
--	0x01, 0x1a, 0x9e, 0x6d,
-+	0x00, 0xe2, 0x3e, 0x43,
-+	0x01, 0x1a, 0xbc, 0x7d,
-+	0x40, 0x5b, 0xb8, 0x7d,
-+	0x01, 0x1a, 0xa6, 0x6d,
-  	0xfc, 0x42, 0x64, 0x78,
--	0x01, 0x1a, 0xb8, 0x6d,
--	0x10, 0xea, 0x46, 0x59,
-+	0x01, 0x1a, 0xc0, 0x6d,
-+	0x10, 0xea, 0x40, 0x59,
-  	0x10, 0xea, 0x04, 0x00,
-  	0xfc, 0x42, 0x64, 0x78,
--	0x10, 0x40, 0xbe, 0x6d,
-+	0x10, 0x40, 0xc6, 0x6d,
-  	0x20, 0x4d, 0x64, 0x78,
--	0x40, 0x5b, 0x9e, 0x6d,
-+	0x40, 0x5b, 0xa6, 0x6d,
-  	0x01, 0x1a, 0x64, 0x78,
-  	0x01, 0x90, 0x21, 0x1b,
-  	0x30, 0x3f, 0xc0, 0x09,
-  	0x30, 0xe0, 0x64, 0x60,
-  	0x40, 0x4b, 0x64, 0x68,
-  	0xff, 0xea, 0x52, 0x01,
--	0xee, 0x00, 0xd4, 0x6d,
-+	0xee, 0x00, 0xdc, 0x6d,
-  	0x80, 0xf9, 0xf2, 0x01,
-  	0xff, 0x90, 0x21, 0x1b,
-  	0x02, 0xea, 0xb4, 0x00,
-  	0x20, 0xea, 0x9a, 0x00,
--	0xf3, 0x42, 0xde, 0x6d,
--	0x12, 0xea, 0x46, 0x59,
-+	0xf3, 0x42, 0xe6, 0x6d,
-+	0x12, 0xea, 0x40, 0x59,
-  	0x12, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xf6, 0x41,
--	0x0d, 0xea, 0x46, 0x59,
-+	0x00, 0xe2, 0xf0, 0x41,
-+	0x0d, 0xea, 0x40, 0x59,
-  	0x0d, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xf6, 0x41,
-+	0x00, 0xe2, 0xf0, 0x41,
-  	0x01, 0x90, 0x21, 0x1b,
--	0x11, 0xea, 0x46, 0x59,
-+	0x11, 0xea, 0x40, 0x59,
-  	0x11, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x34, 0x5b,
-+	0x00, 0xe2, 0x2e, 0x5b,
-  	0x08, 0x5a, 0xb4, 0x00,
--	0x00, 0xe2, 0x0c, 0x5e,
-+	0x00, 0xe2, 0x14, 0x5e,
-  	0xa8, 0xea, 0x32, 0x00,
-  	0x00, 0xe2, 0x34, 0x59,
--	0x80, 0x1a, 0xfa, 0x7d,
--	0x00, 0xe2, 0x0c, 0x5e,
-+	0x80, 0x1a, 0x02, 0x7e,
-+	0x00, 0xe2, 0x14, 0x5e,
-  	0x80, 0x19, 0x32, 0x00,
--	0x40, 0x5b, 0x00, 0x6e,
--	0x08, 0x5a, 0x00, 0x7e,
-+	0x40, 0x5b, 0x08, 0x6e,
-+	0x08, 0x5a, 0x08, 0x7e,
-  	0x20, 0x4d, 0x64, 0x78,
-  	0x02, 0x84, 0x09, 0x03,
--	0x40, 0x5b, 0xcc, 0x7d,
-+	0x40, 0x5b, 0xd4, 0x7d,
-  	0xff, 0x90, 0x21, 0x1b,
-  	0x80, 0xf9, 0xf2, 0x01,
--	0x08, 0x92, 0x45, 0x6b,
-+	0x08, 0x92, 0x3f, 0x6b,
-  	0x02, 0xea, 0xb4, 0x04,
-  	0x01, 0x38, 0xe1, 0x30,
-  	0x05, 0x39, 0xe3, 0x98,
-@@ -815,7 +819,7 @@
-  static int
-  ahd_patch21_func(struct ahd_softc *ahd)
-  {
--	return ((ahd->features & AHD_RTI) == 0);
-+	return ((ahd->flags & AHD_INITIATORROLE) != 0);
-  }
-
-  static ahd_patch_func_t ahd_patch20_func;
-@@ -823,7 +827,7 @@
-  static int
-  ahd_patch20_func(struct ahd_softc *ahd)
-  {
--	return ((ahd->flags & AHD_INITIATORROLE) != 0);
-+	return ((ahd->flags & AHD_TARGETROLE) != 0);
-  }
-
-  static ahd_patch_func_t ahd_patch19_func;
-@@ -831,7 +835,7 @@
-  static int
-  ahd_patch19_func(struct ahd_softc *ahd)
-  {
--	return ((ahd->flags & AHD_TARGETROLE) != 0);
-+	return ((ahd->bugs & AHD_AUTOFLUSH_BUG) != 0);
-  }
-
-  static ahd_patch_func_t ahd_patch18_func;
-@@ -839,7 +843,7 @@
-  static int
-  ahd_patch18_func(struct ahd_softc *ahd)
-  {
--	return ((ahd->bugs & AHD_AUTOFLUSH_BUG) != 0);
-+	return ((ahd->features & AHD_NEW_DFCNTRL_OPTS) != 0);
-  }
-
-  static ahd_patch_func_t ahd_patch17_func;
-@@ -847,7 +851,7 @@
-  static int
-  ahd_patch17_func(struct ahd_softc *ahd)
-  {
--	return ((ahd->features & AHD_NEW_DFCNTRL_OPTS) != 0);
-+	return ((ahd->flags & AHD_39BIT_ADDRESSING) != 0);
-  }
-
-  static ahd_patch_func_t ahd_patch16_func;
-@@ -855,7 +859,7 @@
-  static int
-  ahd_patch16_func(struct ahd_softc *ahd)
-  {
--	return ((ahd->flags & AHD_39BIT_ADDRESSING) != 0);
-+	return ((ahd->flags & AHD_64BIT_ADDRESSING) != 0);
-  }
-
-  static ahd_patch_func_t ahd_patch15_func;
-@@ -863,7 +867,7 @@
-  static int
-  ahd_patch15_func(struct ahd_softc *ahd)
-  {
--	return ((ahd->flags & AHD_64BIT_ADDRESSING) != 0);
-+	return ((ahd->features & AHD_NEW_DFCNTRL_OPTS) == 0);
-  }
-
-  static ahd_patch_func_t ahd_patch14_func;
-@@ -871,7 +875,7 @@
-  static int
-  ahd_patch14_func(struct ahd_softc *ahd)
-  {
--	return ((ahd->features & AHD_NEW_DFCNTRL_OPTS) == 0);
-+	return ((ahd->bugs & AHD_REG_SLOW_SETTLE_BUG) != 0);
-  }
-
-  static ahd_patch_func_t ahd_patch13_func;
-@@ -879,7 +883,7 @@
-  static int
-  ahd_patch13_func(struct ahd_softc *ahd)
-  {
--	return ((ahd->bugs & AHD_REG_SLOW_SETTLE_BUG) != 0);
-+	return ((ahd->features & AHD_RTI) == 0);
-  }
-
-  static ahd_patch_func_t ahd_patch12_func;
-@@ -1016,136 +1020,138 @@
-  	{ ahd_patch2_func, 65, 1, 2 },
-  	{ ahd_patch0_func, 66, 1, 1 },
-  	{ ahd_patch4_func, 102, 1, 1 },
--	{ ahd_patch2_func, 157, 6, 1 },
--	{ ahd_patch1_func, 163, 2, 1 },
--	{ ahd_patch5_func, 165, 1, 1 },
--	{ ahd_patch2_func, 174, 1, 2 },
--	{ ahd_patch0_func, 175, 1, 1 },
--	{ ahd_patch6_func, 176, 2, 2 },
--	{ ahd_patch0_func, 178, 6, 3 },
--	{ ahd_patch2_func, 181, 1, 2 },
--	{ ahd_patch0_func, 182, 1, 1 },
--	{ ahd_patch2_func, 185, 1, 2 },
--	{ ahd_patch0_func, 186, 1, 1 },
--	{ ahd_patch3_func, 188, 1, 1 },
--	{ ahd_patch7_func, 189, 3, 1 },
--	{ ahd_patch3_func, 198, 1, 1 },
--	{ ahd_patch5_func, 199, 16, 2 },
--	{ ahd_patch0_func, 215, 1, 1 },
--	{ ahd_patch8_func, 235, 2, 1 },
--	{ ahd_patch1_func, 239, 1, 2 },
--	{ ahd_patch0_func, 240, 1, 1 },
--	{ ahd_patch7_func, 243, 3, 1 },
--	{ ahd_patch1_func, 258, 1, 2 },
--	{ ahd_patch0_func, 259, 1, 1 },
--	{ ahd_patch1_func, 262, 1, 2 },
--	{ ahd_patch0_func, 263, 1, 1 },
--	{ ahd_patch2_func, 266, 1, 2 },
--	{ ahd_patch0_func, 267, 1, 1 },
--	{ ahd_patch9_func, 280, 2, 2 },
--	{ ahd_patch0_func, 282, 1, 1 },
--	{ ahd_patch1_func, 324, 1, 2 },
--	{ ahd_patch0_func, 325, 1, 1 },
--	{ ahd_patch2_func, 333, 1, 2 },
--	{ ahd_patch0_func, 334, 1, 1 },
--	{ ahd_patch2_func, 337, 1, 2 },
--	{ ahd_patch0_func, 338, 1, 1 },
-+	{ ahd_patch2_func, 157, 3, 1 },
-+	{ ahd_patch1_func, 160, 2, 1 },
-+	{ ahd_patch5_func, 162, 1, 1 },
-+	{ ahd_patch2_func, 171, 1, 2 },
-+	{ ahd_patch0_func, 172, 1, 1 },
-+	{ ahd_patch6_func, 173, 2, 2 },
-+	{ ahd_patch0_func, 175, 6, 3 },
-+	{ ahd_patch2_func, 178, 1, 2 },
-+	{ ahd_patch0_func, 179, 1, 1 },
-+	{ ahd_patch2_func, 182, 1, 2 },
-+	{ ahd_patch0_func, 183, 1, 1 },
-+	{ ahd_patch3_func, 185, 1, 1 },
-+	{ ahd_patch7_func, 186, 3, 1 },
-+	{ ahd_patch3_func, 195, 1, 1 },
-+	{ ahd_patch5_func, 196, 16, 2 },
-+	{ ahd_patch0_func, 212, 1, 1 },
-+	{ ahd_patch8_func, 232, 2, 1 },
-+	{ ahd_patch1_func, 236, 1, 2 },
-+	{ ahd_patch0_func, 237, 1, 1 },
-+	{ ahd_patch7_func, 240, 3, 1 },
-+	{ ahd_patch1_func, 255, 1, 2 },
-+	{ ahd_patch0_func, 256, 1, 1 },
-+	{ ahd_patch1_func, 259, 1, 2 },
-+	{ ahd_patch0_func, 260, 1, 1 },
-+	{ ahd_patch2_func, 263, 1, 2 },
-+	{ ahd_patch0_func, 264, 1, 1 },
-+	{ ahd_patch9_func, 277, 2, 2 },
-+	{ ahd_patch0_func, 279, 1, 1 },
-+	{ ahd_patch1_func, 321, 1, 2 },
-+	{ ahd_patch0_func, 322, 1, 1 },
-+	{ ahd_patch2_func, 330, 1, 2 },
-+	{ ahd_patch0_func, 331, 1, 1 },
-+	{ ahd_patch2_func, 334, 1, 2 },
-+	{ ahd_patch0_func, 335, 1, 1 },
-+	{ ahd_patch1_func, 341, 1, 2 },
-+	{ ahd_patch0_func, 342, 1, 1 },
-  	{ ahd_patch1_func, 344, 1, 2 },
-  	{ ahd_patch0_func, 345, 1, 1 },
--	{ ahd_patch1_func, 347, 1, 2 },
--	{ ahd_patch0_func, 348, 1, 1 },
-+	{ ahd_patch10_func, 364, 1, 1 },
-  	{ ahd_patch10_func, 367, 1, 1 },
--	{ ahd_patch10_func, 370, 1, 1 },
--	{ ahd_patch10_func, 372, 1, 1 },
--	{ ahd_patch10_func, 384, 1, 1 },
-+	{ ahd_patch10_func, 369, 1, 1 },
-+	{ ahd_patch10_func, 381, 1, 1 },
-+	{ ahd_patch1_func, 391, 1, 2 },
-+	{ ahd_patch0_func, 392, 1, 1 },
-  	{ ahd_patch1_func, 394, 1, 2 },
-  	{ ahd_patch0_func, 395, 1, 1 },
--	{ ahd_patch1_func, 397, 1, 2 },
--	{ ahd_patch0_func, 398, 1, 1 },
--	{ ahd_patch1_func, 406, 1, 2 },
--	{ ahd_patch0_func, 407, 1, 1 },
--	{ ahd_patch2_func, 420, 1, 2 },
--	{ ahd_patch0_func, 421, 1, 1 },
--	{ ahd_patch11_func, 451, 1, 1 },
--	{ ahd_patch1_func, 459, 1, 2 },
--	{ ahd_patch0_func, 460, 1, 1 },
--	{ ahd_patch2_func, 472, 1, 2 },
--	{ ahd_patch0_func, 473, 1, 1 },
--	{ ahd_patch12_func, 476, 6, 2 },
--	{ ahd_patch0_func, 482, 1, 1 },
--	{ ahd_patch13_func, 505, 1, 1 },
--	{ ahd_patch14_func, 514, 1, 1 },
--	{ ahd_patch15_func, 515, 1, 2 },
--	{ ahd_patch0_func, 516, 1, 1 },
--	{ ahd_patch16_func, 519, 1, 1 },
--	{ ahd_patch15_func, 520, 1, 1 },
--	{ ahd_patch17_func, 531, 1, 2 },
--	{ ahd_patch0_func, 532, 1, 1 },
--	{ ahd_patch1_func, 551, 1, 2 },
--	{ ahd_patch0_func, 552, 1, 1 },
-+	{ ahd_patch1_func, 403, 1, 2 },
-+	{ ahd_patch0_func, 404, 1, 1 },
-+	{ ahd_patch2_func, 417, 1, 2 },
-+	{ ahd_patch0_func, 418, 1, 1 },
-+	{ ahd_patch11_func, 448, 1, 1 },
-+	{ ahd_patch1_func, 456, 1, 2 },
-+	{ ahd_patch0_func, 457, 1, 1 },
-+	{ ahd_patch2_func, 469, 1, 2 },
-+	{ ahd_patch0_func, 470, 1, 1 },
-+	{ ahd_patch12_func, 473, 6, 2 },
-+	{ ahd_patch0_func, 479, 1, 1 },
-+	{ ahd_patch13_func, 500, 7, 1 },
-+	{ ahd_patch14_func, 509, 1, 1 },
-+	{ ahd_patch15_func, 518, 1, 1 },
-+	{ ahd_patch16_func, 519, 1, 2 },
-+	{ ahd_patch0_func, 520, 1, 1 },
-+	{ ahd_patch17_func, 523, 1, 1 },
-+	{ ahd_patch16_func, 524, 1, 1 },
-+	{ ahd_patch18_func, 535, 1, 2 },
-+	{ ahd_patch0_func, 536, 1, 1 },
-  	{ ahd_patch1_func, 555, 1, 2 },
-  	{ ahd_patch0_func, 556, 1, 1 },
--	{ ahd_patch2_func, 561, 1, 2 },
--	{ ahd_patch0_func, 562, 1, 1 },
--	{ ahd_patch2_func, 566, 1, 2 },
--	{ ahd_patch0_func, 567, 1, 1 },
--	{ ahd_patch1_func, 568, 1, 2 },
--	{ ahd_patch0_func, 569, 1, 1 },
--	{ ahd_patch2_func, 580, 1, 2 },
--	{ ahd_patch0_func, 581, 1, 1 },
--	{ ahd_patch18_func, 585, 1, 1 },
--	{ ahd_patch19_func, 590, 1, 1 },
--	{ ahd_patch20_func, 591, 2, 1 },
--	{ ahd_patch19_func, 595, 1, 2 },
--	{ ahd_patch0_func, 596, 1, 1 },
--	{ ahd_patch2_func, 599, 1, 2 },
-+	{ ahd_patch1_func, 559, 1, 2 },
-+	{ ahd_patch0_func, 560, 1, 1 },
-+	{ ahd_patch2_func, 565, 1, 2 },
-+	{ ahd_patch0_func, 566, 1, 1 },
-+	{ ahd_patch2_func, 570, 1, 2 },
-+	{ ahd_patch0_func, 571, 1, 1 },
-+	{ ahd_patch1_func, 572, 1, 2 },
-+	{ ahd_patch0_func, 573, 1, 1 },
-+	{ ahd_patch2_func, 584, 1, 2 },
-+	{ ahd_patch0_func, 585, 1, 1 },
-+	{ ahd_patch19_func, 589, 1, 1 },
-+	{ ahd_patch20_func, 594, 1, 1 },
-+	{ ahd_patch21_func, 595, 2, 1 },
-+	{ ahd_patch20_func, 599, 1, 2 },
-  	{ ahd_patch0_func, 600, 1, 1 },
--	{ ahd_patch2_func, 615, 1, 2 },
--	{ ahd_patch0_func, 616, 1, 1 },
--	{ ahd_patch21_func, 617, 14, 1 },
--	{ ahd_patch1_func, 635, 1, 2 },
--	{ ahd_patch0_func, 636, 1, 1 },
--	{ ahd_patch21_func, 637, 1, 1 },
--	{ ahd_patch1_func, 649, 1, 2 },
--	{ ahd_patch0_func, 650, 1, 1 },
--	{ ahd_patch1_func, 657, 1, 2 },
--	{ ahd_patch0_func, 658, 1, 1 },
--	{ ahd_patch18_func, 681, 1, 1 },
--	{ ahd_patch18_func, 719, 1, 1 },
--	{ ahd_patch1_func, 730, 1, 2 },
--	{ ahd_patch0_func, 731, 1, 1 },
--	{ ahd_patch1_func, 748, 1, 2 },
--	{ ahd_patch0_func, 749, 1, 1 },
--	{ ahd_patch1_func, 751, 1, 2 },
--	{ ahd_patch0_func, 752, 1, 1 },
-+	{ ahd_patch2_func, 603, 1, 2 },
-+	{ ahd_patch0_func, 604, 1, 1 },
-+	{ ahd_patch2_func, 619, 1, 2 },
-+	{ ahd_patch0_func, 620, 1, 1 },
-+	{ ahd_patch13_func, 621, 14, 1 },
-+	{ ahd_patch1_func, 639, 1, 2 },
-+	{ ahd_patch0_func, 640, 1, 1 },
-+	{ ahd_patch13_func, 641, 1, 1 },
-+	{ ahd_patch1_func, 653, 1, 2 },
-+	{ ahd_patch0_func, 654, 1, 1 },
-+	{ ahd_patch1_func, 661, 1, 2 },
-+	{ ahd_patch0_func, 662, 1, 1 },
-+	{ ahd_patch19_func, 685, 1, 1 },
-+	{ ahd_patch19_func, 723, 1, 1 },
-+	{ ahd_patch1_func, 734, 1, 2 },
-+	{ ahd_patch0_func, 735, 1, 1 },
-+	{ ahd_patch1_func, 752, 1, 2 },
-+	{ ahd_patch0_func, 753, 1, 1 },
-  	{ ahd_patch1_func, 755, 1, 2 },
-  	{ ahd_patch0_func, 756, 1, 1 },
--	{ ahd_patch22_func, 758, 1, 2 },
--	{ ahd_patch0_func, 759, 2, 1 },
--	{ ahd_patch23_func, 762, 4, 2 },
--	{ ahd_patch0_func, 766, 1, 1 },
--	{ ahd_patch23_func, 774, 11, 1 }
-+	{ ahd_patch1_func, 759, 1, 2 },
-+	{ ahd_patch0_func, 760, 1, 1 },
-+	{ ahd_patch22_func, 762, 1, 2 },
-+	{ ahd_patch0_func, 763, 2, 1 },
-+	{ ahd_patch23_func, 766, 4, 2 },
-+	{ ahd_patch0_func, 770, 1, 1 },
-+	{ ahd_patch23_func, 778, 11, 1 }
-  };
-
-  static struct cs {
-  	uint16_t	begin;
-  	uint16_t	end;
-  } critical_sections[] = {
--	{ 11, 12 },
-+	{ 10, 12 },
-  	{ 13, 14 },
-  	{ 31, 42 },
-  	{ 45, 47 },
-  	{ 49, 50 },
-  	{ 56, 78 },
-  	{ 96, 123 },
--	{ 124, 152 },
-+	{ 124, 154 },
-  	{ 154, 157 },
--	{ 165, 173 },
--	{ 198, 249 },
--	{ 428, 430 },
--	{ 433, 436 },
--	{ 681, 711 },
--	{ 721, 725 }
-+	{ 162, 170 },
-+	{ 195, 246 },
-+	{ 407, 415 },
-+	{ 425, 427 },
-+	{ 430, 433 },
-+	{ 685, 715 },
-+	{ 725, 729 }
-  };
-
-  static const int num_critical_sections = sizeof(critical_sections)
-==== //depot/aic7xxx/aic7xxx/aic7xxx.c#147 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_core.c ====
---- /tmp/tmp.26963.7	2004-09-27 13:31:43.736464528 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_core.c	2004-01-16 17:59:19.000000000 -0500
-@@ -37,7 +37,7 @@
-   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-   * POSSIBILITY OF SUCH DAMAGES.
-   *
-- * $Id: //depot/aic7xxx/aic7xxx/aic7xxx.c#147 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic7xxx.c#148 $
-   */
-
-  #ifdef __linux__
-@@ -5525,7 +5525,7 @@
-  				if (cstat != CAM_REQ_CMP)
-  					aic_freeze_scb(scb);
-  				if ((scb->flags & SCB_ACTIVE) == 0)
--					printf("Inactive SCB in Waiting List\n");
-+					printf("Inactive SCB in Wait List\n");
-  				ahc_done(ahc, scb);
-  				/* FALLTHROUGH */
-  			}
-@@ -5631,8 +5631,6 @@
-  				cstat = aic_get_transaction_status(scb);
-  				if (cstat != CAM_REQ_CMP)
-  					aic_freeze_scb(scb);
--				if ((scb->flags & SCB_ACTIVE) == 0)
--					printf("Inactive SCB in untaggedQ\n");
-  				ahc_done(ahc, scb);
-  				break;
-  			}
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#259 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.c ====
---- /tmp/tmp.26963.8	2004-09-27 13:31:44.410362080 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-01-23 13:16:04.000000000 -0500
-@@ -1,7 +1,7 @@
-  /*
-   * Adaptec AIC7xxx device driver for Linux.
-   *
-- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#259 $
-+ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#262 $
-   *
-   * Copyright (c) 1994 John Aycock
-   *   The University of Calgary Department of Computer Science.
-@@ -1635,16 +1635,8 @@
-
-  	*((struct ahc_softc **)host->hostdata) = ahc;
-  	ahc_lock(ahc, &s);
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
--	scsi_assign_lock(host, &ahc->platform_data->spin_lock);
--#elif AHC_SCSI_HAS_HOST_LOCK != 0
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,21)
--	host->host_lock = &ahc->platform_data->spin_lock;
--#else
--	host->lock = &ahc->platform_data->spin_lock;
--#endif
--#endif
-  	ahc->platform_data->host = host;
-+	aic_assign_host_lock(ahc);
-  	host->can_queue = AHC_MAX_QUEUE;
-  	host->cmd_per_lun = 2;
-  	/* XXX No way to communicate the ID for multiple channels */
-@@ -2450,13 +2442,13 @@
-  		 * ahc host lock held.  For other kernels, the
-  		 * io_request_lock must be held.
-  		 */
--#if AHC_SCSI_HAS_HOST_LOCK != 0
-+#if AIC_SCSI_HAS_HOST_LOCK != 0
-  		ahc_lock(ahc, &s);
-  #else
-  		spin_lock_irqsave(&io_request_lock, s);
-  #endif
-  		ahc_linux_queue(cmd, ahc_linux_dv_complete);
--#if AHC_SCSI_HAS_HOST_LOCK != 0
-+#if AIC_SCSI_HAS_HOST_LOCK != 0
-  		ahc_unlock(ahc, &s);
-  #else
-  		spin_unlock_irqrestore(&io_request_lock, s);
-@@ -3643,6 +3635,28 @@
-  		if ((tstate->auto_negotiate & mask) != 0) {
-  			scb->flags |= SCB_AUTO_NEGOTIATE;
-  			scb->hscb->control |= MK_MESSAGE;
-+		} else if (cmd->cmnd[0] == INQUIRY
-+			&& (tinfo->curr.offset != 0
-+			 || tinfo->curr.width != MSG_EXT_WDTR_BUS_8_BIT)) {
-+			/*
-+			 * The SCSI spec requires inquiry
-+			 * commands to complete without
-+			 * reporting unit attention conditions.
-+			 * Because of this, an inquiry command
-+			 * that occurs just after a device is
-+			 * reset will result in a data phase
-+			 * with mismatched negotiated rates.
-+			 * The core already forces a renegotiation
-+			 * for reset events that are visible to
-+			 * our controller or that we initiate,
-+			 * but a third party device reset or a
-+			 * hot-plug insertion can still cause this
-+			 * issue.  Therefore, we force a re-negotiation
-+			 * for every inquiry command unless we
-+			 * are async.
-+			 */
-+			scb->flags |= SCB_NEGOTIATE;
-+			scb->hscb->control |= MK_MESSAGE;
-  		}
-
-  		if ((dev->flags & (AIC_DEV_Q_TAGGED|AIC_DEV_Q_BASIC)) != 0) {
-@@ -4068,13 +4082,17 @@
-  		untagged_q = &(ahc->untagged_queues[target_offset]);
-  		TAILQ_REMOVE(untagged_q, scb, links.tqe);
-  		ahc_run_untagged_queue(ahc, untagged_q);
--	}
--
--	if ((scb->flags & SCB_ACTIVE) == 0) {
-+	} else if ((scb->flags & SCB_ACTIVE) == 0) {
-+		/*
-+		 * Transactions aborted from the untagged queue may
-+		 * not have been dispatched to the controller, so
-+		 * only check the SCB_ACTIVE flag for tagged transactions.
-+		 */
-  		printf("SCB %d done'd twice\n", scb->hscb->tag);
-  		ahc_dump_card_state(ahc);
-  		panic("Stopping for safety");
-  	}
-+
-  	cmd = scb->io_ctx;
-  	dev = scb->platform_data->dev;
-  	dev->active--;
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aiclib.h#31 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aiclib.h ====
---- /tmp/tmp.26963.9	2004-09-27 13:31:44.733312984 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aiclib.h	2004-01-23 13:30:13.000000000 -0500
-@@ -357,13 +357,14 @@
-  #define AIC_SCSI_HAS_HOST_LOCK 1
-
-  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
--#define aic_assign_host_lock(aic)	\
--	scsi_assign_lock((aic)->host, &(aic)->spin_lock);
-+#define aic_assign_host_lock(aic)			\
-+    scsi_assign_lock((aic)->platform_data->host,	\
-+		     &(aic)->platform_data->spin_lock);
-  #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,21) \
-     && defined(RED_HAT_LINUX_KERNEL)
--#define aic_assign_host_lock(aic)			\
--do {							\
--        (aic)->host->host_lock = &(aic)->spin_lock;	\
-+#define aic_assign_host_lock(aic)					\
-+do {									\
-+        (aic)->host->host_lock = &(aic)->platform_data->spin_lock;	\
-  } while (0)
-  #else
-  #define aic_assign_host_lock(aic)		\
-
-
+QlpoOTFBWSZTWdJC1O0AaXdfgH/wfX//+3////6////6YFDebPe9nTvbdu1apm+299hlQDfP
+Du+bbvM973bO7mPBM8sZs+LfTyvg3wB9YeD0A0aF8tAo20uzDoGqVQJBbDTsMtgsLqZ1XZok
+Xd19QPhDyqIc3y77TrRvVmsj110I2VJgmWju0iujI1lW3XFD2ynnQBV5bsVkpWRlDbJEVUEK
+VbRW92b3cFegiPevt3vEqxts+3fHwj3q7ffefbrg993uPMjRrQHoGrYbYd2b53rwQCU0EBNE
+iARJ4jUmnlBoGTTRkGgHqAAAAGmIIgiQQ00CNQNqA0yepozRAaGgAAAA09qqlJD1AAaA0GgA
+ABo0NA0GgAA0DQSeqUpEnqnsmlM1Gj9TUaekANAAaYgAAAAAAiSEEATTTQImTSDKeRlNT9Gm
+pqaabJlNkwoZPUemoeQKiSFMmQE00ASTQNDQGmgGgAAA0A0BtFf2H3QKFV3RUQkBSQAGQVPQ
+JUVSK9T+jY7Pkqm2xRwg2h9BctecKg7IJH3T+JXThL1ewkgk/dUratGPsjgn8f8BtHVeDfCa
+kNUSvoO4mBIeA5EiVrMz2LumPhh0hEfR2vxkkjOKK+rzgT4Cw6uplndnWjfnqenb2erX9O22
+19/7b6PsSQAAoVVVVWq1WtVnUo7QB3ZVFVStVSVVBxCcJ3MhdMJGMIQtRLuk4uuTKZSambKx
+ESKMjJs00ssqljaSSEDIGQkybPit1H8j996tGnwia8qXUKVJtvj3v17sZAoN556XV1JJJAJN
+EogAknVc7kJ01U2ZrrmxCFOKqndgAkgAkkkAOPhC59h7fQ/F1Jch18m6pL1IJpefN7/fJJJJ
+SXr3v9/VFNxIa6hQbq0m7FVa1NxazY7jMfZe0zAO7s7Oz44u/h/MV6pc8mJUz+/2eCSkNPd7
+g9ncADMCR3d3d0kSgkkkEEF4bYSUBK/3Afs5+LMwnoeg+yn5FepiSZ/jy534hCSEb3od3Z3d
+3SSQh2FCgklJEqElCSCSCT4JMTMplv2eyhFCqct18vrJ+B8nHORq9RxmlKN7SSSSSSSSS7uB
+IA7d3X15bzebu703nnnlteXhBDMByIjZ8LVSVO8Hfa9zrnrGEhGHHS7NXbzAApoSejgnV8nc
+vO7v9YS+/6+1ixTO6STszoTA4EYCQmdx5z3+LoK+Mx7RD17e+Y+7nOIQqTwDuhCSSEJIQgQS
+SSwHENtgJkkqIaZLEDnhQPluNz4BVSOZEpJdjVccJIkkgEAlJaiEiSSSAAPLuDqu7yvFVeed
+duwuozNI0rWtGRkYZlujVLrWbdmzZQQSTQFQQ2SSSS6DcwlLEE9oIzJJLN18svqL09AAJSlK
+O3clWrNihVWtVBu2KbZLzOPA/a/v9v0/V/b8FTSMIESMYhGMGEAILSSpLEkzWTKGVaTQtmbY
+ozQzAS0aabNLKWjRJCktmlKmkaU1EkpA3z/a3f73t93yAAqYpgVVUzKqqFOxThinFVVVVVVV
+TiqpndbuAAAAAOu4AqqqqoU7YFOG4qqYnd0hIQIAQgYECEIkkJAkJ3XQkd3QmQE7uQIXdcAA
+EgABISZBJAAhAAAkMwwndznERIAAP5/u30pSU2FKMUlGjaqNsaqo1bG35q2pa3sVyUNSkPGn
+7WhvPtqTlPy3+/zmH9+Jp3aH1AKfb3f1FORJJIRUJhISSSGEP/JrR9Dn8vtHt7eYn2XALPDr
+23MWMer0ax1M3xnf+z/bjzOTCMrMY3qtw7zbrytT4DNZ4Ps+H5Y/fhx+ON56S78ui6fkWKBF
+JV7Hcon2ttTjDAZuqfrtezhDDntps+m9PCjXLZaAHsdMIz6/EiejftUnj4PDN/JI+TGG/CTS
+J2k0UEiitFNE9zTokFoIgkY/GTM1MSNn7nVkUPX6vp1a/W+FWp7VtfHqTJtBASMZATAintLQ
+JFkT3gJGmedzZBO2mWEXMuMZlXMrK+jt5gUOUWqti0tInY+Zq2yPq2hSpKSLb68spRtyNB0u
+bpk0WRJGRhJGRJLREWRXt8R28/Hx8euecnlDs7Rz16o13SXx8asiqKtLZVpVsIJIIgH5xHjf
+ye9+fe3XyuTKon5nIaOVJ7QEmH/CG9j8F91ln4OWTfEn5DuQfP75i3t57bxnHn01unO109W9
+x3T9+VVy6F58Qa6ZCEkCASZI+X0IxHcjg+jUqlpKWNifWyqtpRbLWI1XHHNZK+HyjNVjRm6O
+xGpPrbVbb1W2mTRY0YyGNJIgdN/ccZVWsdO6uuVd2xfNCG5eSAHo/Y7dfP4X57br3uTKon43
+IaOMV34cUZXy+k++q4fXxCODCPr1yJ3emR30dbkI9kPfD7IfU+YPoBIj43Q0UMkM0PJeGzTG
+vpNkhIawtYiQQP2Jly0Sgu45oj5qcG/iQdwKMibYqV8FD1YGZBJJ9a94MC8XGyeSlpIK5bTE
+REAV9ttm1ZllNWyzaqKk2osiWSoVR95Qz72Iz8vCSRMQIGhEPxM+UmJ9MCxD8Bp+qT/S8z/F
+YVQDMNC5Y5HyY+GL2O0P16mph0f08EzZy02ScsX0n4RV32PsyEAAAIYEIQACQIQgQAISQhJJ
+Ier479nva+Jedvnr5r7b1fefVeeywuYRB8CwUtv+36T75S/zR8Y+Jj7WXuasFrJfQv8W8bw2
+da05nx0+9LoNC5BRd26svo6qPaZdoaL3Pbuynq8nK+XXS6n9v9202Pt9r+GhdnXo4WKVNx2e
+7kTr0hK5w/aL5/Cvt2TkOcP5oo27uk213bqzfH0lXdHqDJBGsSe/v+z8D3Bl/X/SB+oQyQyR
+JaSlspaUlbSmzVTWkqkqVmS2zaW0qVJUQIEgwgQYBjCoK8Xa8n63QHU/O6H8QRfouO94MY02
+j/v1sqL/Z9fycfsq9HKxa15LhSJlhCVLX1T6x+qJDJublkMt26mWSTbGkk61eru6WWmdKces
+lvWjd+ylRK1Uu7JfxdbW2f9Q+1QXl2/uB/GHf1kkkTzQAFA+tKIHy12+pnjGjG1yty1bFFWi
+1oxGxJGLUaqNiqK2i0FiNan+e/A/v2tvtb8n1e74z8fwfE479/lkk+4zlyYv41m9xVSaUrYG
+CSnQ2ydZLO6iyBoRRILCJhEgoY9auRcCyTF/7lEfUB977Ge+14vP5GkHxfyiK/D23lXTu7u6
+SSSSSSXddJAkk7u7uJJJAkkCStAAAVrGaAFa1rVVQrWtaGt8Dbd3czXgGtW+923d423bxeAG
+tVrQA1rWpJCSQkl3XSTfDen3PT8K2tk/WZ5OY/kf6N1F46YZoiqwBXl/s5CmW7/eadgSTXcx
+InICgVJFhYVUV/k65IO+hQoEIjCDN1Ugp6bfSR821Wbey17VDfHBKjRMm/pAhAhGxWVgl86l
+JmSWwU2ZEiQrn59r6L+c5K+i91QiIFREQLIAhh8MJUpSZklsFNmRIkLi6vjFa7L4mMr64AHV
+VLxRpNAm0Q+98fv+L8m78p8jNUmW/wBx+AwZRX3xr8P1pKPrZ+8kmKA+scj6xKSU6H2dlz+y
+1M1kFdOO7jqBIS0/wEjXQkfxGCv7VjHlyj6CIHB9TXwHYnEkGsGLZ+tVFM6rV3S0ahtClJXL
+kYRxWL+0/HJRjE0noojHq3Nmaz3Vdasw6wlDohdPL7fp6HZG9qXpxO9OmpoSx0rOnyls2ZBG
+iti1KWyCjINxYwF2pOGUmoaFGWRKDwVRT+Y9vd8ot5PsfUd2Kqm7iqqm3FCmBVVVVVUw4cOG
+7h3YbYYpincBwHcJpBQ0jpqtDSOGHYppTWVTgMNHCaqqaaoVSU7R0oNhpVMUKrTujgUlDSOG
+2KcMVVVVVTFMyqYpincU2KdihTDYDiqoUKqpzVrrS1xMZDGLVbrXau6NLNy4pYXVzXat3bt9
+LW9S764dPxf3igsiNkRbv2/5n8NQ+b6gBX8nN7df5ijIqJUQR+qAI+MQM4KrkBvtoKrwH9MV
+kRV+YQBHqEFFIEClBYAIfpUVyir9Xu3cfwWt/l8D9WR9v9uUtpr+LZ7L5wD9/lWd4TOJobp9
+MRvlRVCbz4Kog/tcJ8net1JcvLFuzGtYbiQzJFq4M8casxhIm3eEDuutaOZglrStybskVriH
+0LF8LR5Io8FYiqu1NADnmd06dzMgDRh3YIQw78JzmwdgmosjYanS403rd9ne+sRhm3O9A2JQ
+6pDmswS9K0ZHoLKP42A9MzcrCWXLE3aRP2VLb55HXBQIxrvk7k2i0d4UzVsWqmsvlzO7gPRJ
+GtPJYb1CUwzYxYWPR73S0clCTJWGB1wWtYg8ynWSbvhXGkS7WjRQ0dhx0J1rjenrWbzJbVcG
+Vu8YO9DYebGCW58ncjS3c0e9h1u4KuNTxWDOZTBXBJ0bqtlTBINUyFNjeXvMehwYCGrYfBGz
+wDA0dkYaBNY0oOjhGjPCsrdHed1HZrAretkS5jXBIoiWJLQTaas0FGZzok13W9i3sG0pqgaR
+l5jGLzI4KvFUEiIVjRwGkvczlX44Kd/HTx5B7IuV5Rm60ZognOpNUMc9EGsLchCyLNR6XmYL
+Z2dHRGHAqYyRti+Bs5iEmShFDfe09oPJzOG3dVVk6ometWLpcoKOdFXxWMRNSqxpXzFC1pQ7
+qvWDRA+prNGHzearvJF8YCFkZNVYnnqpBXHRe51Z4p7rhyDlM49BzpUK1g5ICFnmwp1LELNC
+FZniQERanA1fesqgiMvwbO1p6471OxOnwzCcb7ylrlZdSpwKqSksZ1CHF6ub8VsVmwbSs31e
+tIDVOcegZhjCDr05SHzmZEBZMDbEXEeCLlSqSqm7GRI60bqqxpVVsrFhNKOKcq61VRuqdinY
+qPjJANkizO7+zkNTiJy0PBLoSHToJSQV7TdhSoszYUoQjSElsh+EWJURHEKLDFiRoN38gaQZ
+r2LmTLpjFiEQ6ObeyDAJgbXJvXtz2q6X3u91paslSSKti0eafptiXbMxMjMYW4p26TJEovDx
+Lc68YbW7PZF9dahyxCpGyn8ILuKEKqIbDkBdVjN30/nVsPBOrP0c4YJ83zr3Dy6RPDETEc9D
+eFSw2TEav1Fpa2y6GYo1eAGft2bvrTBkQ+LwYyZdBBAIryigsY8H0kKybYQOho+gJfJcFeGj
+DPiAJTZXpAaQrNXWM0dzmbhk2YrDFM3ZnDh4kIpocV7T2mMXwbx32cwzTOTnAqazCQc7s2un
+KGi2J773y9iagQusD8q1SOmUDnFaXGsKyO5dXWTVaXTLtml4XE50RhkokxUiZkJWQhKoXJNj
+CDq3xSuQk63iOS9nDYJkOD2aQ7sO5LObc5DQgtfkNEAnmQAsI1SHCNqHEC1gTgMzorpU8gto
+QSNYFAPSjwwhQjlA5IY6XhjgYYiHONxwJ67OG9L0F87yzEMJvHYFaI16qNbVWTeqRdKqZRxi
+7YYQIJWdJlym82EIIYjq0wEUmAitATiUJsR6HOwBQwB8Rxa3M7hjiBBmYjGSApoMOoUpASoj
+E4NzDUzMLqvE2/B2DpMzlzvTujNCjs4dCQigKy4ag0CKhT6UNnFtd+LmHcptZVaPRaxLXMac
+lRosWNCq1B3uFSFmHQld/OzEVrBRUh2mJFXiPFG34r6cjLy67TRVxXLMBVSowxWWZeJ4GZrG
+2b6jZqSzMq0Ut6BPdxxNkThHbiHwFoUXRbSfJmKqMu49D2TPmamC4qTXZroTnICpXIDxJDFq
+od76HokNvfdQ5fbodS2VhA4SIzJf0+YT8jXRjoxssywbva8Xnk1jHmbnM8V+nfyZ8sYsa7vj
+umsC54sp0PMPtzqJ3UVKDD48bGH1hiweg8A4vOb6jud9Tf1163iFgytud5PPA1i88T44nfL8
+WNmVfCsYhwNeFXPN5WX6YN1z1nd3TpudT5Z00Vez1J5ixvmmN6rDwdebMc68lwPH8b1z0u5Z
+wkNrwNba8otodcjzrur11cs9Yxa8mrUKmsOT1mIU2g7fc1ahUWHPLTVj0HKblo3tZ35d6PHW
++aq0aI89Wwnz6qI16Fbx99a5rd1S1ws4DA5rnPNGTkyH1WlMyQMyoEkRu0ivHcS25dNCF548
+K23hMkxXac7Xeqbo3vt6k8rA3rfSfXA8vWMTxOpQyvPQ8qtdrU8+OPHjNXnPXehda3q+h/Ld
+Lb9a5OV1fvrvu1PfNudvrjy56Md6ctiSd1dzungm7xqqIm9jdXMmLDnrLNBVU06ImTPdgh6w
+7cQFFcOoVDvfTliE4SiY7zWZlNWDe5A70GvPVbpJlwdtC7MkiU9jjIY0h0kzSUHMFbOXLHgP
+Ra+hyb9uYJMEHNT1y4JhDl2NcHwGfQ71gwFqYDYtEDVjPSxUHCMIzkJg4lXXhPRJrSGN9IBO
+1figyCYgZItxEzPQFb5di7GMvsCT03p2SYvdKCgpr667z1D5qI5OvTGbGGZCTjcL5HFXcWYa
+cvoq5rLEl16gZBl2aHLUOLFNx28a9RtWncO9dli8xHPUaOu7d1zKAXXVeUB2IxgRIvKbG1eK
+HbSb0Yw5YlVuGd7y2c21mrBSCdxgxiie4wIt1mdAeP3nWRx+iOGZUQPTAlwlYacc2SWTzxTb
+aHaDRQDVEWptmFsmZgqhOO7bd3t3HBxgI7gkv1afAz3VdluMk2U6Z+0RF5xWLz4r85GserV2
+/K62iBJK2vAhaaJwVioGeIjqsVPXMxPO++qxruZ5RkkiQOomGo5feedc51vrnOGniwEYtAX7
+SQ9OPwqV6w9gukIuITS3kEmA3BmgG2V5KKPRq4a89A4CagQz0eyuDEyXuTz0YtmterD7oWWz
+3UAkMZYa2yu3t4dd38Y8trDDZQEwnBpTNCEmbKYJREFxALWlA4i2hImILeFoPIA3YNmM8lEF
+dPrODxieyq1YoPVGcnQvUtOdveldN62jiq9rLRBWnNYd4nW09WJGaozqdDQaWTraVaNyXWty
+WquhdamtXraLSW8mw8Cea1OrQVzVUtXrNa2b3tHaVM5bpYCdY8pB6iain1wvve1UxrRe8TGU
+GU20zBTQikDphnTDF1CIQOhmdDMRlrazvC3MzFabKJIAzEIA4GxVXmXkRAGCm4FEPEMOBKAS
+CZgbb2qNQU2xE2wcMrbjO4ISqqnHd2BtqzNKZmGZjFY6wdTi/ea6OusU8bcz2vXlbnvy8d5T
+8gtFbnJJmqv4srHeL4nPRjzzNPubtptCTts7nlt9eYt5xd9TjnOYz3bnVcTV5rzrdvK15brO
+uzfd5vunc7tiqpcFqM266zm215p+Y5SXmlorN3iu+/M9qOtq9uYy9/Mdda5jdVVVXne++uuu
+r1bLjnWzfputls35aZ2z3a6nTVUX+aov98FFTfjx2D6i59J7m12vANS1T9W6VXRq06zbsbZO
+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
+--------------020208060403020405030509--
 
