@@ -1,37 +1,83 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Problem with aacraid driver in 2.5.63-bk-latest
-Date: 14 Mar 2003 16:48:23 +0000
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1047660502.29544.43.camel@irongate.swansea.linux.org.uk>
-References: <20030228133037.GB7473@jiffies.dk>
-	 <1047510381.12193.28.camel@markh1.pdx.osdl.net>
-	 <1047514681.23725.35.camel@irongate.swansea.linux.org.uk>
-	 <3E6FC8D6.7090005@torque.net>
-	 <1047517604.23902.39.camel@irongate.swansea.linux.org.uk>
-	 <1047570132.30105.7.camel@markh1.pdx.osdl.net>
-	 <3E711194.9010505@redhat.com>
-	 <1047597729.30103.386.camel@markh1.pdx.osdl.net>
-	 <3E71134F.5060404@redhat.com>
-	 <1047653879.29544.9.camel@irongate.swansea.linux.org.uk>
-	 <1047656071.7556.12.camel@markh1.pdx.osdl.net>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [Patch] aacraid driver for 2.5
+Date: 14 Mar 2003 08:11:35 -0800
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1047658294.7714.18.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="=-8xoHcM7z080lWW5ZjjM0"
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: Linus Torvalds <torvalds@transmeta.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
+
+
+--=-8xoHcM7z080lWW5ZjjM0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1047656071.7556.12.camel@markh1.pdx.osdl.net>
-List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: Doug Ledford <dledford@redhat.com>, dougg@torque.net, Christoffer Hall-Frederiksen <hall@jiffies.dk>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux aacraid devel <linux-aacraid-devel@dell.com>
 
-On Fri, 2003-03-14 at 15:34, Mark Haverkamp wrote:
-> Is aac_slave_configure only called for disk devices?  If its called for
-> all scsi devices, then the queue depth will always be set to something a
-> lot less than 512.  I did some searching through the scsi code and I see
-> only two places that cmd_per_lun is used. It is used to set the queue
-> depth in scsi_track_queue_full and scsi_alloc_sdev. So it seems that, if
-> aac_slave_configure gets called for all scsi devices, that setting
-> cmd_per_lun in the aacraid scsi host template to 1 would be OK.  Does
-> that make sense or did I miss something?
+This changes the cmd_per_lun element of the aacraid Scsi_Host_Template
+to 1.  The larger number is not needed and exceeds the depth limit for
+scsi_adjust_queue_depth.  Also updated struct initializers.
 
-I think you are right
 
+-- 
+Mark Haverkamp <markh@osdl.org>
+
+--=-8xoHcM7z080lWW5ZjjM0
+Content-Disposition: attachment; filename=aacraid-2.5.64.diff
+Content-Type: text/plain; name=aacraid-2.5.64.diff; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+===== drivers/scsi/aacraid/linit.c 1.12 vs edited =====
+--- 1.12/drivers/scsi/aacraid/linit.c	Mon Feb 24 13:03:30 2003
++++ edited/drivers/scsi/aacraid/linit.c	Fri Mar 14 08:04:51 2003
+@@ -679,27 +679,26 @@
+  */
+  
+ static Scsi_Host_Template driver_template = {
+-	module:			THIS_MODULE,
+-	name:           	"AAC",
+-	proc_info:      	aac_procinfo,
+-	detect:         	aac_detect,
+-	release:        	aac_release,
+-	info:           	aac_driverinfo,
+-	ioctl:          	aac_ioctl,
+-	queuecommand:   	aac_queuecommand,
+-	bios_param:     	aac_biosparm,	
+-	slave_configure:	aac_slave_configure,
+-	can_queue:      	AAC_NUM_IO_FIB,	
+-	this_id:        	16,
+-	sg_tablesize:   	16,
+-	max_sectors:    	128,
+-	cmd_per_lun:    	AAC_NUM_IO_FIB,
+-	eh_abort_handler:       aac_eh_abort,
+-	eh_device_reset_handler:aac_eh_device_reset,
+-	eh_bus_reset_handler:	aac_eh_bus_reset,
+-	eh_host_reset_handler:	aac_eh_reset,
+-
+-	use_clustering:		ENABLE_CLUSTERING,
++	.module				= THIS_MODULE,
++	.name           		= "AAC",
++	.proc_info      		= aac_procinfo,
++	.detect         		= aac_detect,
++	.release        		= aac_release,
++	.info           		= aac_driverinfo,
++	.ioctl          		= aac_ioctl,
++	.queuecommand   		= aac_queuecommand,
++	.bios_param     		= aac_biosparm,	
++	.slave_configure		= aac_slave_configure,
++	.can_queue      		= AAC_NUM_IO_FIB,	
++	.this_id        		= 16,
++	.sg_tablesize   		= 16,
++	.max_sectors    		= 128,
++	.cmd_per_lun    		= 1,
++	.eh_abort_handler       	= aac_eh_abort,
++	.eh_device_reset_handler 	= aac_eh_device_reset,
++	.eh_bus_reset_handler		= aac_eh_bus_reset,
++	.eh_host_reset_handler		= aac_eh_reset,
++	.use_clustering			= ENABLE_CLUSTERING,
+ };
+ 
+ #include "scsi_module.c"
+
+--=-8xoHcM7z080lWW5ZjjM0--
