@@ -1,101 +1,72 @@
-From: Patrick Mochel <mochel@osdl.org>
-Subject: Re: [PATCH] declare and export scsi_bus_type
-Date: Thu, 12 Dec 2002 10:16:40 -0600 (CST)
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Subject: Re: Aic7xxx v6.2.22 and Aic79xx v1.3.0Alpha2 Released
+Date: Thu, 12 Dec 2002 10:20:24 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0212121006520.976-100000@localhost.localdomain>
-References: <200212121358.gBCDw2b01977@localhost.localdomain>
+Message-ID: <261670000.1039713623@aslan.btc.adaptec.com>
+References: <hch@infradead.org>
+ <200212101602.gBAG2Hi02930@localhost.localdomain>
+ <20021211135855.A19325@infradead.org>
+ <1266570000.1039619906@aslan.scsiguy.com>
+ <20021211153935.A23704@infradead.org>
+ <1313340000.1039622906@aslan.scsiguy.com>
+ <20021211162318.A24958@infradead.org> <20021212071636.GA4318@suse.de>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200212121358.gBCDw2b01977@localhost.localdomain>
+In-Reply-To: <20021212071636.GA4318@suse.de>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Matt Domsch <Matt_Domsch@Dell.com>, linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>, Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-
-Didn't see this before I replied.. 
-
-On Thu, 12 Dec 2002, James Bottomley wrote:
-
-> hch@infradead.org said:
-> > I'm very unhappy with exporting random parts of the scsi midlayer.  In
-> > what way do you need it?  How does your code work with modular scsi? 
+> On Wed, Dec 11 2002, Christoph Hellwig wrote:
+>> > I have no problem with interfaces changing for good reason, but, for
+>> > example,
+>> > a driver that alread sets unchecked_isa_dma to 0 and uses the PCI dma
+>> > mask shouldn't have to set addition flags (with different names in
+>> > different vendor's trees) to enable HIGHIO.  It's yet-another *stupid*
+>> > interface change.
+>> 
+>> Maybe you could have complained about that more than one year ago when
+>> the patch came up first?
 > 
-> Convention tends to be that these bus types are exported.  That's certainly 
-> true for pci and mca.
-> 
-> However, perhaps we should have a better way of finding them than by direct 
-> export of the symbol.  Since each bus is required to have a unique name, and 
-> the sysfs system has an internal list of bus_types, we could have a function 
-> which takes the name and returns a pointer to the bus_type if it exists?
+> And I still dont see a better way to do it. Remember that this is 2.4
+> and we must be able to toggle the highmem io capability on a per-driver
+> basis easily and default to off until a given piece of hardware (and
+> driver) has been verified.
 
-Yes, the following patch should work. There are two caveats, AFAICT
+>From the perspective of a driver that already meets the requirements
+for highio, it is simply frustrating that:
 
-- Making sure that we have a consistent name. This could resolved by adding 
-  something like
+1) You have to set a flag when you've already told the system you
+   dma capabilities.
 
-  #define SCSI_BUS_NAME "scsi"
+2) That flag is not documented in hosts.h or in the Documentation directory.
 
-  to include/scsi.h/scsi.h..
+3) No warning is given if you use pci_set_dma_mask without setting
+highmem_io
+   so that you know that your driver needs to be updated.
 
-- Accessing a bus type is O(n) rather that O(1). OTOH, it's not peformance 
-  critical code, and there can't be very many bus types registered at once, 
-  so it shouldn't be noticable. 
-
-
-	-pat
-
-===== drivers/base/bus.c 1.27 vs edited =====
---- 1.27/drivers/base/bus.c	Thu Dec  5 22:33:28 2002
-+++ edited/drivers/base/bus.c	Thu Dec 12 10:09:32 2002
-@@ -466,6 +466,29 @@
- 	}
- }
+4) highio requires that all SCSI drivers support single length S/G lists,
+   but since single buffers are still allowed by the interfaces, even
+   compliant SCSI drivers cannot strip out this code.
  
-+
-+/**
-+ *	find_bus - search for a bus type by name.
-+ *	@name:	name of the bus.
-+ */
-+
-+struct bus_type * find_bus(const char * name)
-+{
-+	struct list_head * entry;
-+	struct bus_type * ret = NULL;
-+
-+	down_read(&bus_subsys.rwsem);
-+	list_for_each(entry,&bus_subsys.list) {
-+		struct bus_type * b = list_entry(entry,struct bus_type,subsys.kobj.entry);
-+		if (!strncmp(b->subsys.kobj.name,name,KOBJ_NAME_LEN)) {
-+			ret = b;
-+			break;
-+		}
-+	}
-+	up_read(&bus_subsys.rwsem);
-+	return ret;
-+}
-+
- struct bus_type * get_bus(struct bus_type * bus)
- {
- 	return bus ? container_of(subsys_get(&bus->subsys),struct bus_type,subsys) : NULL;
-@@ -537,6 +560,7 @@
- EXPORT_SYMBOL(bus_remove_device);
- EXPORT_SYMBOL(bus_register);
- EXPORT_SYMBOL(bus_unregister);
-+EXPORT_SYMBOL(find_bus);
- EXPORT_SYMBOL(get_bus);
- EXPORT_SYMBOL(put_bus);
- 
-===== include/linux/device.h 1.68 vs edited =====
---- 1.68/include/linux/device.h	Tue Dec  3 12:40:21 2002
-+++ edited/include/linux/device.h	Thu Dec 12 10:09:23 2002
-@@ -81,6 +81,8 @@
- extern int bus_register(struct bus_type * bus);
- extern void bus_unregister(struct bus_type * bus);
- 
-+extern struct bus_type * find_bus(const char * name);
-+
- extern struct bus_type * get_bus(struct bus_type * bus);
- extern void put_bus(struct bus_type * bus);
- 
+> Saying the high io stuff could have been done with zero impact to
+> drivers just shows that you have no idea what you are talking about
+> here and are living in your Justin world again. Tons of drivers needed
+> to be changed to be able to deal with highmem pages sanely.
 
+I'm not doubting that "lots of drivers needed to be updated", but since you
+had to touch these drivers anyway, you could have deprecated all of these
+older stupid interfaces and effected a real cleanup without needing a
+positive "highmem enabled" flag.  The subset of devices that used
+pci_set_dma_mask() and were not compliant was probably small.  Fixing
+them with your initial patch set would have made the proper use of the
+PCI dma API the "marker" for a highmem enabled device. Instead, drivers
+that already were compliant to the PCI dma spec silently started bouncing
+pages again unless you knew about this poorly documented flag.  <ARGGGGHHHH>
+
+--
+Justin
