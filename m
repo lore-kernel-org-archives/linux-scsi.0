@@ -1,51 +1,40 @@
-From: Willem Riede <wrlk@riede.org>
-Subject: Re: [PATCH] instrument ide-scsi in 2.5.68
-Date: Thu, 1 May 2003 19:44:55 -0400
+From: Willy Tarreau <willy@w.ods.org>
+Subject: Re: Aic7xxx and Aic79xx Driver Updates
+Date: Fri, 2 May 2003 02:17:58 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030501234455.GA8163@linnie.riede.org>
-References: <3EB11AD3.2070503@torque.net> <20030501155225.7df14e51.rddunlap@osdl.org> <3EB1ADF3.5080008@torque.net>
-Reply-To: wrlk@riede.org
+Message-ID: <20030502001758.GA20977@alpha.home.local>
+References: <1866260000.1051828092@aslan.btc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pcp02781107pcs.eatntn01.nj.comcast.net ([68.85.61.149]:44528
-	"EHLO linnie.riede.org") by vger.kernel.org with ESMTP
-	id S262776AbTEAXar (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 May 2003 19:30:47 -0400
-Received: from linnie.riede.org (localhost.localdomain [127.0.0.1])
-	by linnie.riede.org (8.12.8/8.12.8) with ESMTP id h41Nit3x012411
-	for <linux-scsi@vger.kernel.org>; Thu, 1 May 2003 19:44:55 -0400
+Received: from willy.net1.nerim.net ([62.212.114.60]:55057 "EHLO
+	www.home.local") by vger.kernel.org with ESMTP id S262831AbTEBAFz
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 May 2003 20:05:55 -0400
 Content-Disposition: inline
-In-Reply-To: <3EB1ADF3.5080008@torque.net>; from dougg@torque.net on Thu, May 01, 2003 at 19:29:55 -0400
+In-Reply-To: <1866260000.1051828092@aslan.btc.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Justin T. Gibbs" <gibbs@btc.adaptec.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@transmeta.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Marcelo Tosatti <marcelo@conectiva.com.br>
 
-On 2003.05.01 19:29 Douglas Gilbert wrote:
-> Randy.Dunlap wrote:
-> <snip/>
+On Thu, May 01, 2003 at 04:28:12PM -0600, Justin T. Gibbs wrote:
+> Folks,
 > 
->> Hi Doug,
->> 
->> I have ATAPI CD-ROM as hdc and CD-RW as hdd.  I boot with
->> "hdd=icd-scsi ide-scsi.debug=3".  Is that right/OK so far?
->> If not, what should it be?
+> I've just uploaded version 1.3.8 of the aic79xx driver and version 
+> 6.2.33 of the aic7xxx driver.  Both are available for 2.4.X and
+> 2.5.X kernels in either bk send format or as a tarball from here:
 > 
-> Randy,
-> I thought so but it's not picking "ide-scsi.debug=3" up:
-> 
-> > Kernel command line: auto BOOT_IMAGE=lin2568isc ro root=304
->   >  devfs=nomount hdd=ide-scsi ide-scsi.debug=3 console=tty0
->   >  console=ttyS0,38400n8 debug
-> > ide_setup: hdd=ide-scsi
-> > ide_setup: ide-scsi.debug=3 -- BAD OPTION
-> 
-> The code uses Rusty's moduleparam.h and it worked
-> for me with scsi_debug. [It is some time since I checked
-> scsi_debug built-in.] Could you try "idescsi.debug=3"
-> (i.e. drop the hyphen).
+> http://people.FreeBSD.org/~gibbs/linux/SRC/
 
-I have on occasion noticed that the kernel thinks ide-scsi is
-called ide_scsi (i.e. with an underscore). You could try that too.
+Hi Justin,
 
-Success, Willem Riede.
+I've just tested it and I still have the deadlock on SMP. I also tried with
+noapic, but it didn't change. I have reduced the TCQ from 253 to 32, and I
+had the impression that it was more difficult to trigger, although I cannot
+be certain. With 32, I could boot and go to about half the 'make -j 8 dep',
+while it hanged during init script with 253. I may retest by the week-end, but
+now I'm going to sleep. Now I'm back to 6.2.28 and everything's OK.
+
+Regards,
+Willy
+
