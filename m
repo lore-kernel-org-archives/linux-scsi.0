@@ -1,37 +1,49 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] Re: [BUG] 2.6.9-rc2 scsi and elevator oops
- when I/O error
-Date: Mon, 11 Oct 2004 15:07:51 -0400 (EDT)
+Subject: Re: BUG: CD driver sends command during host removal
+Date: Mon, 11 Oct 2004 15:20:37 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0410111506250.21084-100000@netrider.rowland.org>
-References: <1097503418.2031.14.camel@mulgrave>
+Message-ID: <Pine.LNX.4.44L0.0410111513400.21084-100000@netrider.rowland.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:2835 "HELO
-	netrider.rowland.org") by vger.kernel.org with SMTP id S269175AbUJKTHw
+Received: from netrider.rowland.org ([192.131.102.5]:4371 "HELO
+	netrider.rowland.org") by vger.kernel.org with SMTP id S269184AbUJKTUh
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Oct 2004 15:07:52 -0400
-In-Reply-To: <1097503418.2031.14.camel@mulgrave>
+	Mon, 11 Oct 2004 15:20:37 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jens Axboe <axboe@suse.de>, Nick Piggin <nickpiggin@yahoo.com.au>, Pedro Larroy <piotr@larroy.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net
+Cc: Mike Anderson <andmike@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On 11 Oct 2004, James Bottomley wrote:
+James Bottomley [James.Bottomley@SteelEye.com] wrote:
 
-> On Mon, 2004-10-11 at 04:50, Jens Axboe wrote:
-> > It's not, it clearly looks like SCSI trying to kill off the queue
-> > with pending commands.
+> On Wed, 2004-09-29 at 16:31, Mike Anderson wrote:
+> > James Bottomley [James.Bottomley@SteelEye.com] wrote:
+> > > Once you've called scsi_remove_host() the mid-layer will take control of
+> > > your in-flight commands (if there are any) and error them back to the
+> > > user.  You need to take any actions to clean up internal structures
+> > > belonging to the commands *before* you do a scsi_remove_host.
+> > > 
+> > 
+> > How do we address the problem we get into with the reordering in
+> > scsi_remove_host (i.e. the call to scsi_forget_host prior to
+> > scsi_host_cancel) if we possibly generate new io from sd_sync_cache
+> > that will cause the error handler to fire up if the LLDD just lets the
+> > command fall on the floor with no response.
 > 
-> That's what it looks like to me too ... there should be a fix for this
-> in the scsi-misc-2.6 tree.
+> That's why LLD's are responsible for erroring all commands issued at
+> this time if the removal is a surprise ejection.  The commands have to
+> be errored in a way (like DID_NO_CONNECT) that won't excite the error
+> handler.
 
-There also was a fix for usb-storage just submitted for the gregkh-2.6 
-tree:
+This raises a question for the case where the host removal is not a
+surprise ejection.  The LLD knows to clean up commands from _before_ doing
+scsi_remove_host, and it knows that it should handle commands from _after_
+calling scsi_remove_host.
 
-http://marc.theaimsgroup.com/?l=linux-usb-devel&m=109744234829347&w=2
-
-It should help prevent the condition that triggers this situation.
+But scsi_remove_host isn't synchronized at all with queuecommand, so what
+about commands that arrive at just about _the same time_ as when
+scsi_remove_host is called?  The LLD has no way to tell which class such a
+command belongs to.  What then?
 
 Alan Stern
 
