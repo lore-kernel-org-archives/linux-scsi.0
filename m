@@ -1,83 +1,157 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: [PATCH] sym53c8xx 2.1.18b
-Date: Thu, 11 Sep 2003 03:33:46 +0100
+From: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Subject: RE: usb-strage not working in the latest kernel 2.4
+Date: Thu, 11 Sep 2003 14:06:20 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030911023346.GF21596@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <200309110507.OAA06907@toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=shift_jis
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:9604 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263485AbTIKCdr
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Sep 2003 22:33:47 -0400
-Received: from willy by www.linux.org.uk with local (Exim 4.22)
-	id 19xHHG-0006gU-TT
-	for linux-scsi@vger.kernel.org; Thu, 11 Sep 2003 03:33:46 +0100
-Content-Disposition: inline
+Received: from inet-tsb.toshiba.co.jp ([202.33.96.40]:55182 "EHLO
+	inet-tsb.toshiba.co.jp") by vger.kernel.org with ESMTP
+	id S265724AbTIKFK7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Sep 2003 01:10:59 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, David Brownell <david-b@pacbell.net>, "Tomita, Haruo" <htomita@pcs.pc.ome.toshiba.co.jp>
 
+Hi Alan,
 
-This patch fixes two bugs in sym 2.1.18.  James, could you apply to your
-scsi-misc tree?
+Haruo> Using ioctl (fd, USBDEVFS_RESET, 0), I tested reset.=20
+Haruo> usb-storage of USB2.0 was successful.
+Haruo> When FDD was used in the case of USB1.1,=20
+Haruo> mount became impossible after reset.
+=20
+Alan> What do you mean?  What does the log show?
 
- - 40-bit addressing doesn't fit into 32-bits, so PciDmaMask needs
-   to be an ULL.
- - Add terminating entries to pci_device_id tables.  Bug spotted by
-   Matt Domsch.
+I'm sorry. I wrote the following programs.
+The execution result is as follows.
 
-Index: drivers/scsi/sym53c8xx_2/sym_glue.c
-===================================================================
-RCS file: /var/cvs/linux-2.6/drivers/scsi/sym53c8xx_2/sym_glue.c,v
-retrieving revision 1.30
-retrieving revision 1.32
-diff -u -p -r1.30 -r1.32
---- drivers/scsi/sym53c8xx_2/sym_glue.c	8 Sep 2003 22:00:25 -0000	1.30
-+++ drivers/scsi/sym53c8xx_2/sym_glue.c	11 Sep 2003 00:33:22 -0000	1.32
-@@ -1617,7 +1617,7 @@ static int sym_setup_bus_dma_mask(struct
- 		goto out_err32;
- #else
- #if   SYM_CONF_DMA_ADDRESSING_MODE == 1
--#define	PciDmaMask	0xffffffffff
-+#define	PciDmaMask	0xffffffffffULL
- #elif SYM_CONF_DMA_ADDRESSING_MODE == 2
- #define	PciDmaMask	0xffffffffffffffffULL
- #endif
-@@ -2316,6 +2316,7 @@ static void pqs_remove()
- 
- static struct pci_device_id pqs_id_table[] __devinitdata = {
- 	{ 0x101a, 0x0009, },
-+	{ 0, }
- };
- 
- MODULE_DEVICE_TABLE(pci, pqs_id_table);
-@@ -2411,6 +2412,7 @@ static struct pci_device_id sym2_id_tabl
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C875J,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
-+	{ 0, }
- };
- 
- MODULE_DEVICE_TABLE(pci, sym2_id_table);
-Index: drivers/scsi/sym53c8xx_2/sym_hipd.c
-===================================================================
-RCS file: /var/cvs/linux-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.c,v
-retrieving revision 1.12
-retrieving revision 1.14
-diff -u -p -r1.12 -r1.14
---- drivers/scsi/sym53c8xx_2/sym_hipd.c	9 Sep 2003 01:44:37 -0000	1.12
-+++ drivers/scsi/sym53c8xx_2/sym_hipd.c	11 Sep 2003 00:33:22 -0000	1.14
-@@ -50,7 +50,7 @@
-  * SUCH DAMAGE.
-  */
- 
--#define SYM_DRIVER_NAME	"sym-2.1.18"
-+#define SYM_DRIVER_NAME	"sym-2.1.18b"
- 
- #ifdef __FreeBSD__
- #include <dev/sym/sym_glue.h>
+[root@Andromeda root]# cd ~tomita/usbreset
+[root@Andromeda usbreset]# ./usbreset=20
+bus =3D /proc/bus/usb/001/002
+=8D=87=8Cv 864
+-rwxr-xr-x    1 root     root        46481  8=8C=8E 28 12:05 1.18j1.wks
+-rwxr-xr-x    1 root     root        46481  8=8C=8E 28 12:05 1.18j2.wks
+-rwxr-xr-x    1 root     root        46481  8=8C=8E 28 12:05 1.18j3.wks
+-rwxr-xr-x    1 root     root        11829  9=8C=8E 10 17:30 15.50s.tar=
+=2Egz
+-rwxr-xr-x    1 root     root           16  3=8C=8E  6  2003 S99zzz
+-rwxr-xr-x    1 root     root          914  4=8C=8E 10 08:58 abort-test=
+=2Epatch
+-rwxr-xr-x    1 root     root          938  4=8C=8E 23  2002 autoftp.ba=
+t
+-rwxr-xr-x    1 root     root         1412  9=8C=8E 11 13:28 fdd.txt
+-rwxr-xr-x    1 root     root         3703  3=8C=8E  6  2003 halt
+-rwxr-xr-x    1 root     root          378  8=8C=8E 27 17:57 iozone_tes=
+t.sh
+-rwxr-xr-x    1 root     root        46481  9=8C=8E  9 08:51 mr518_128M=
+B_1.wks
+-rwxr-xr-x    1 root     root        46481  9=8C=8E  9 08:51 mr518_128M=
+B_2.wks
+-rwxr-xr-x    1 root     root        46481  9=8C=8E  9 08:51 mr518_128M=
+B_3.wks
+-rwxr-xr-x    1 root     root        46481  9=8C=8E  9 14:32 mr518_256M=
+B_1.wks
+-rwxr-xr-x    1 root     root        46481  9=8C=8E  9 14:32 mr518_256M=
+B_2.wks
+-rwxr-xr-x    1 root     root        46481  9=8C=8E  9 14:32 mr518_256M=
+B_3.wks
+-rwxr-xr-x    1 root     root        46481  9=8C=8E  8 16:38 mr518_64MB=
+_1.wks
+-rwxr-xr-x    1 root     root        46481  9=8C=8E  8 16:38 mr518_64MB=
+_2.wks
+-rwxr-xr-x    1 root     root        46481  9=8C=8E  8 16:38 mr518_64MB=
+_3.wks
+-rwxr-xr-x    1 root     root       104118  8=8C=8E 26 02:10 patch-0825
+-rwxr-xr-x    1 root     root          759  5=8C=8E 30 11:38 profile
+-rwxr-xr-x    1 root     root        17081  9=8C=8E  8 20:12 rhn_err1.j=
+pg
+-rwxr-xr-x    1 root     root        37151  9=8C=8E  8 20:12 rhn_err2.j=
+pg
+-rwxr-xr-x    1 root     root         1369  9=8C=8E  8 20:16 rpm.txt
+-rwxr-xr-x    1 root     root          345  4=8C=8E  3 20:15 script_cp.=
+sh
+-rwxr-xr-x    1 root     root          859  4=8C=8E  3 20:16 script_cp_=
+hdd.sh
+-rwxr-xr-x    1 root     root          539  4=8C=8E  5 14:41 script_cp_=
+scsi.sh
+-rwxr-xr-x    1 root     root        46481  8=8C=8E 28 12:06 v2.00.71.w=
+ks
+-rwxr-xr-x    1 root     root        46481  8=8C=8E 28 12:06 v2.00.72.w=
+ks
+-rwxr-xr-x    1 root     root        46481  8=8C=8E 28 12:06 v2.00.73.w=
+ks
+usb reset success 1
+error: usbdevfs not opend
+[root@Andromeda usbreset]#=20
 
--- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
+[root@Andromeda root]# mount /dev/sda /mnt/floppy/
+/dev/sda: Input/output error
+mount: you must specify the filesystem type
+
+---- sample program=20
+
+int main(int argc, char **argv);
+static int open_usbdevfs(char *bus);
+
+int main(int argc, char **argv)
+{
+    char bus[22];
+    int fd, ret=3D1, count=3D0;
+
+    /* make bus name */=20
+    snprintf(bus,22,"/proc/bus/usb/001/002");
+#ifdef DEBUG
+    printf("bus =3D %s\n", bus);=09
+#endif /* DEBUG */
+
+    while (1) {
+        /* device open */
+        if ((fd=3Dopen_usbdevfs(bus)) < 0) {
+    	    printf("error: usbdevfs not opend\n");
+            ret=3D0;
+	    break;=20
+        }
+=09
+        system("mount /dev/sda /mnt/floppy");
+        system("ls -l /mnt/floppy");
+        system("umount /dev/sda");
+=09
+        /* device reset */
+        ret=3Dioctl(fd, USBDEVFS_RESET, 0);
+        if (ret =3D=3D -1) {
+            printf("error: usbdevfs_reset error %d\n", ret);
+            ret =3D 0;	   =20
+            break;
+	}
+	/* device close */
+	close (fd);
+        =81@=81@sleep(10);
+        =81@=81@count++;
+	printf("usb reset success %d\n", count);	=09
+    }
+
+    if (fd)
+        close(fd);
+   =20
+    return 1;
+}
+
+static int open_usbdevfs(char *bus) {
+    int fd;
+
+    fd =3D open(bus, O_RDWR);
+    if (fd < 0)
+        return -1;
+
+    return fd;
+}
+
+--
+Haruo
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
