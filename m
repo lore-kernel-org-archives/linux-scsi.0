@@ -1,49 +1,110 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH scsi-misc-2.6 08/08] scsi: fix hot unplug sequence
-Date: Fri, 25 Mar 2005 13:19:48 -0600
-Message-ID: <1111778388.5692.38.camel@mulgrave>
-References: <20050323021335.960F95F8@htj.dyndns.org>
-	 <20050323021335.4682C732@htj.dyndns.org>
-	 <1111550882.5520.93.camel@mulgrave> <4240F5A9.80205@gmail.com>
-	 <20050323071920.GJ24105@suse.de> <1111591213.5441.19.camel@mulgrave>
-	 <20050323152550.GB16149@suse.de> <1111711558.5612.52.camel@mulgrave>
-	 <20050325031511.GA22114@htj.dyndns.org> <1111726965.5612.62.camel@mulgrave>
-	 <20050325053842.GA24499@htj.dyndns.org>
+From: Bruno Cornec <Bruno.Cornec@hp.com>
+Subject: Re: megaraid driver (proposed patch)
+Date: Fri, 25 Mar 2005 20:59:22 +0100
+Message-ID: <20050325195922.GG8591@morley.grenoble.hp.com>
+References: <20050325182252.GA4268@morley.grenoble.hp.com> <1111775992.5692.25.camel@mulgrave> <20050325184718.GA15215@infradead.org> <1111777477.5692.29.camel@mulgrave> <20050325190732.GA15497@infradead.org> <1111778657.5692.40.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Received: from stat16.steeleye.com ([209.192.50.48]:46502 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261749AbVCYTTx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Mar 2005 14:19:53 -0500
-In-Reply-To: <20050325053842.GA24499@htj.dyndns.org>
+Content-Type: text/plain; charset=us-ascii
+Received: from grerelbul01.net.external.hp.com ([155.208.255.36]:15295 "EHLO
+	grerelbul01.net.external.hp.com") by vger.kernel.org with ESMTP
+	id S261771AbVCYUAG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Mar 2005 15:00:06 -0500
+Content-Disposition: inline
+In-Reply-To: <1111778657.5692.40.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: James Bottomley <jejb@steeleye.com>, linux-megaraid-devel@dell.com, linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, Bruno Cornec <Bruno.Cornec@hp.com>, Linux Kernel <linux-kernel@vger.kernel.org>, tvignaud@mandrakesoft.com
 
-On Fri, 2005-03-25 at 14:38 +0900, Tejun Heo wrote:
->  We have users of scsi_do_req() other than scsi_wait_req() and they
-> use different done() functions to do different things.  I've checked
-> other done functions and none uses contents inside the passed
-> scsi_cmnd, so using a dummy command should be okay with them.  Am I
-> missing something here?
+Hello,
 
-Well ... the other users are supposed to be going away.  They're
-actually all coded wrongly in some way or other ... perhaps I should
-speed up the process.
+After a first attempt of discussion on lkml, I'd like to get your
+feedback on the following points.
 
->  Oh, and I would really appreciate if you can fill me in / give a
-> pointer about the scsi_request/scsi_cmnd distinction.
+I've noticed that since recent kernel versions, it's not possible
+anymore to use simultaneously new and old megaraid driver.
 
-The block layer speaks in terms of requests and the scsi layers in terms
-of commands.  The scsi_request_fn() actually associates a request with a
-command.  However, since SCSI uses the block layer for queueing, all the
-internal scsi command submit paths have to use requests.  This is what a
-scsi_request is.  The reason for the special casing is that we can't use
-the normal REQ_CMD or REQ_BLOCK_PC paths because they need ULD
-initialisation and back end processing.
+It seems to have been introduced by that changeset:
+http://linux.bkbits.net:8080/linux-2.5/diffs/drivers/scsi/megaraid/Kconfig.megar
+aid@1.1??nav=index.html|src/.|src/drivers|src/drivers/scsi|src/drivers/scsi/mega
+raid|hist/drivers/scsi/megaraid/Kconfig.megaraid
 
-James
+It particularly makes life of people developing kernel for distro
+difficult as it forces them to drop support for legacy hardware which is
+working just fine with 2.6, or to patch their own kernel build.
+As well it prevents simultaneous usage of new and old cards in the same
+system.
 
+As notes by James Bottomley and Christoph Hellwig the best thing to do
+is probably to remove support for cards in the old driver that are still
+supported by the new driver.
 
+I'd like to propose a patch but looking at the code I have the following
+question: the card id 101E:1960 seems to be supported by the new driver
+as per the header of megaraid_mbox.c but in reality I was unable to boot
+my system which uses that precise card with the new driver.
+
+Are they mistakes in the header file ? Should they be removed from the
+new driver (if they don't work) or from the old if they work ?
+
+My current status is the following (just for discussion)
+
+diff -Nru drivers/scsi/megaraid/Kconfig.megaraid
+drivers.new/scsi/megaraid/Kconfig.megaraid
+--- drivers/scsi/megaraid/Kconfig.megaraid      Fri Mar 25 20:34:06 2005
++++ drivers.new/scsi/megaraid/Kconfig.megaraid  Fri Mar 25 20:53:37 2005
+@@ -64,15 +64,12 @@
+        To compile this driver as a module, choose M here: the
+        module will be called megaraid_mbox
+ 
+-if MEGARAID_NEWGEN=n
+ config MEGARAID_LEGACY
+        tristate "LSI Logic Legacy MegaRAID Driver"
+        depends on PCI && SCSI
+        help
+        This driver supports the LSI MegaRAID 418, 428, 438, 466, 762,
+490
+-       and 467 SCSI host adapters. This driver also support the all
+        U320
+-       RAID controllers
++       and 467 SCSI host adapters.
+ 
+        To compile this driver as a module, choose M here: the
+        module will be called megaraid
+-endif
+diff -Nru drivers/scsi/megaraid.c drivers.new/scsi/megaraid.c
+--- drivers/scsi/megaraid.c     Fri Mar 25 20:28:29 2005
++++ drivers.new/scsi/megaraid.c Fri Mar 25 20:57:25 2005
+@@ -5033,12 +5033,6 @@
+ }
+ 
+ static struct pci_device_id megaraid_pci_tbl[] = {
+-       {PCI_VENDOR_ID_DELL, PCI_DEVICE_ID_DISCOVERY,
+-               PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-       {PCI_VENDOR_ID_DELL, PCI_DEVICE_ID_PERC4_DI,
+-               PCI_ANY_ID, PCI_ANY_ID, 0, 0, BOARD_64BIT},
+-       {PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_PERC4_QC_VERDE,
+-               PCI_ANY_ID, PCI_ANY_ID, 0, 0, BOARD_64BIT},
+        {PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID,
+                PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+        {PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID2,
+diff -Nru drivers/scsi/megaraid.h drivers.new/scsi/megaraid.h
+--- drivers/scsi/megaraid.h     Fri Mar 25 20:28:25 2005
++++ drivers.new/scsi/megaraid.h Fri Mar 25 20:57:03 2005
+@@ -73,10 +73,6 @@
+ #define PCI_DEVICE_ID_AMI_MEGARAID3    0x1960
+ #endif
+ 
+-#define PCI_DEVICE_ID_DISCOVERY                0x000E
+-#define PCI_DEVICE_ID_PERC4_DI         0x000F
+-#define PCI_DEVICE_ID_PERC4_QC_VERDE   0x0407
+-
+ /* Sub-System Vendor IDs */
+ #define        AMI_SUBSYS_VID                  0x101E
+ #define DELL_SUBSYS_VID                        0x1028
+
+-- 
+Linux Solution Consultant   /   Open Source Evangelist   \    HP C&I EMEA ISG
+HP/Intel Solution Center http://hpintelco.net Hewlett-Packard Grenoble/France
+Des infos sur Linux?  http://www.HyPer-Linux.org      http://www.hp.com/linux
+La musique ancienne?  http://www.musique-ancienne.org http://www.medieval.org
