@@ -1,36 +1,63 @@
-From: Rusty Trivial Russell <rusty@rustcorp.com.au>
-Subject: [TRIVIAL] drivers_scsi_sym53c8xx.c, typo: the the
-Date: Tue, 20 Aug 2002 19:00:10 +1000
+From: Daryl Zero <daryl0@nwlink.com>
+Subject: 2nd try: sym53c8xx message d sent on bad reselection
+Date: Tue, 20 Aug 2002 14:49:48 -0700 (Pacific Daylight Time)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020820041035.CAEB62C4A9@lists.samba.org>
+Message-ID: <Pine.WNT.4.44.0208201448270.-1756579-100000@dbradfor.nwlink.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from MERCURY (ip48.usw4.rb1.pdx.nwlink.com [207.202.183.48])
+	by smtp001.nwlink.com (8.12.2/8.12.2) with ESMTP id g7KLnxHW004969
+	for <linux-scsi@vger.kernel.org>; Tue, 20 Aug 2002 14:49:59 -0700
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Gerard Roudier <groudier@free.fr>
+To: linux-scsi@vger.kernel.org
 
-[ Hi Gerard, please push to Marcelo.  Thanks ]
-From:  James Mayer <james@cobaltmountain.com>
+I got no response the first time, so...
 
+Hi.. I'm new to this list and somewhat new to linux. I tend to be
+technical in nature but I do not have a lot of experience with linux. I
+have recently upgraded my home firewall box to Redhat 7.3. Everything
+seems to work fine, except I am now having one problem with the SCSI disk
+system.
 
---- trivial-2.4.20-pre4/drivers/scsi/sym53c8xx.c.orig	2002-08-20 18:00:46.000000000 +1000
-+++ trivial-2.4.20-pre4/drivers/scsi/sym53c8xx.c	2002-08-20 18:00:46.000000000 +1000
-@@ -2651,7 +2651,7 @@
- 	**	The below GETJOB_BEGIN to GETJOB_END section of SCRIPTS 
- 	**	is a critical path. If it is partially executed, it then 
- 	**	may happen that the job address is not yet in the DSA 
--	**	and the the next queue position points to the next JOB.
-+	**	and the next queue position points to the next JOB.
- 	*/
- 	SCR_LOAD_ABS (dsa, 4),
- 		PADDRH (startpos),
-@@ -12880,7 +12880,7 @@
- **    differ and attach them using the order in the NVRAM.
- **
- **    If no NVRAM is found or data appears invalid attach boards in 
--**    the the order they are detected.
-+**    the order they are detected.
- **===================================================================
- */
- int __init sym53c8xx_detect(Scsi_Host_Template *tpnt)
--- 
-  Don't blame me: the Monkey is driving
-  File: James Mayer <james@cobaltmountain.com>: drivers_scsi_sym53c8xx.c, typo: the the
+The computer is a Compaq Professional Workstation 7000 with dual Pentium
+Pro 200 processors (overclocked to 233). It has a sym53c875 SCSI
+controller in the motherboard, and the factory Western Digital WDE2170W
+2GB SCSI drive install internally. I have externally attached 4 Seagate
+ST410800N 10GB SCSI drives, mounted on /disk1 thru /disk4 under linux. The
+internal drive and the /disk4 external drive are terminated via jumper
+settings on the drives.
+
+The problem I'm having is that now it seems that if I start to copy or
+write things to /disk2, it will work for awhile but then hang, and the
+following message appears on the console:
+
+> sym53c875-0:2: message d sent on bad reselection.
+> scsi: aborting command due to timeout : pid 4125, scsi0, channel 0, id 2, lun 0
+> Write (10) 00 00 0a 12 10 00 01 10 00
+> sym53c8xx_abort: pid=4125 serial_number 4126
+> serial_number_at_timeout=4126
+> sym53c875-0:2: message d sent on bad reselection.
+> scsi: aborting command due to timeout : pid 4199, scsi0, channel 0, id 2, lun 0
+> Write (10) 00 00 0a 12 10 00 01 10 00
+> sym53c8xx_abort: pid=4199 serial_number 4200
+> serial_number_at_timeout=4200
+> sym53c875-0:2: message d sent on bad reselection.
+> SCSI host 0 abort (pid 4213) timed out - resetting
+> SCSI bus is being reset for host 0 channel 0.
+> sym53c8xx_reset: pid=4213 reset_flags=2 serial_number=4214
+> serial_number_at_timeout=4214
+
+Then the write operation finishes (I think). So I do something else on
+that drive, and I get a similar set of console messages again. Then, the
+console starts spitting out:
+
+> sym53c875-0: SCSI phase error fixup: CCB already dequeued.
+
+This message repeats about once ever second or two and just keeps on
+repeating.
+
+Can anyone tell me what might be wrong and what I ought to try?
+
+Dave
+
