@@ -1,51 +1,67 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: aic7xxx sets CDR offline, how to reset?
-Date: 03 Sep 2002 22:54:38 +0100
+Date: Tue, 03 Sep 2002 17:02:48 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1031090078.21439.37.camel@irongate.swansea.linux.org.uk>
-References: <200209032132.g83LWdD09043@localhost.localdomain>
+Message-ID: <200209032202.g83M2mC09323@localhost.localdomain>
+References: <patmans@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200209032132.g83LWdD09043@localhost.localdomain>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id PAA31958
+	for <linux-scsi@vger.kernel.org>; Tue, 3 Sep 2002 15:02:56 -0700
+In-Reply-To: Message from Patrick Mansfield <patmans@us.ibm.com>
+   of "Tue, 03 Sep 2002 14:24:34 PDT." <20020903142434.A2538@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 2002-09-03 at 22:32, James Bottomley wrote:
-> I think the block layer, which already knows about the barrier ordering, is 
-> the appropriate place for this.  If you think the scsi error handler is a 
-> hairy wart now, just watch it grow into a stonking great carbuncle as I try to 
-> introduce it to the concept of command queue ordering and appropriate recovery.
+patmans@us.ibm.com said:
+> If we only send an abort or reset after a quiesce I don't see why one
+> is better than the other.
 
-Point taken
+Quiesce means from the top (no more commands go from the block layer to the 
+device) not from the bottom (commands can still be completed for the device).
 
-> I agree with your reasoning.  However, errors occur infrequently enough (I 
-> hope) so that its just not worth the extra code complexity to make the error 
-> handler look for that case.
+> Not specific to reset or abort - if a single command gets an error, we
+> wait for oustanding commands to complete before starting up the error
+> handler thread. If all the commands (error one and outstanding) have
+> barriers, those that do not error out will complete out of order from
+> the errored command. 
 
-When you ar ehandling CD-ROM problems then they can be quite a lot. Not
-helped by the fact some ancient CD's seem to like to take a long walk in
-the park when told to reset.
+We don't wait.  The commands may possibly be completing in parallel with 
+recovery.  To address your point, though, that's why the device needs to be 
+reset as fast as possible: to preserve what's left of the command order.  I 
+accept that for a misbehaving device, this may be a race.
 
-> cancellation implementations, it's potentially full of holes.  The only uses 
-> it might have---like oops I didn't mean to fixate that CD, give it back to me 
-> now---aren't clearly defined in the SPEC to produce the desired effect (stop 
-> the fixation so the drive door can be opened).
+> And what happens if one command gets some sort of check condition
+> (like medium error, or aborted command) that causes a retry? Will IO's
+> still be correctly ordered? 
 
-Yes but does windows assume it. There are two specs 8)
+Retries get eliminated.  It should be up to the upper layers (sd or beyond) to 
+say whether a retry is done.  Since, as you point out, retries automatically 
+violate any barrier, it is probably up to the block layer to judge what should 
+be done about the problem.
 
-> The pain of coming back from a reset (and I grant, it isn't trivial) is well 
-> known and well implemented in SCSI.  It also, from error handlings point of 
-> view, sets the device back to a known point in the state model.
-> 
+> I would like to see error handling occur without quiescing the entire
+> adapter before taking any action. Stopping all adapter IO for a
+> timeout can be a bit expensive - imagine a tape drive and multiple
+> disks on an adapter, any IO disk timeout or failure will wait for the
+> tape IO to complete before allowing any other IO, if the tape
+> operation is long or is going to timeout this could be minutes or
+> hours. 
 
-Resetting the bus is antisocial to say the least. We had lots of hangs
-with the old eh handler that went away when the new one didnt keep
-resetting the bus. If we do reset the bus then we have to handle "Sorry
-can't reset the bus" (we have cards that can't or won't) as well as
-being conservative about timings, making sure we don't reset the bus
-during the seconds while a device rattles back into online state and so
-on.
+Actually, I do think that quiescing has an important role to play.  A lot of 
+drive errors can be self inflicted indigestion by accepting more tags into the 
+queue than it can process.  Quiescing the queue lets us see if the drive can 
+digest what it currently has or whether we need to apply a strong emetic.
+
+I'd actually like to add tag starvation recovery to the error handler's list 
+of things to do.  In that case, all you do on entry to the error handler is 
+quiesce the upper queue and wait a while to see if the commands continue 
+returning.  You only begin more drastic measures if nothing comes back in the 
+designated time period.
+
+James
+
 
