@@ -1,652 +1,176 @@
 From: Yokota Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
-Subject: [PATCH 10/13] nsp32, nsp_cs driver update
-Date: Tue, 22 Feb 2005 16:12:55 +0900 (JST)
-Message-ID: <20050222.161255.115972998.yokota@netlab.is.tsukuba.ac.jp>
+Subject: [PATCH 11/13] nsp32, nsp_cs driver update
+Date: Tue, 22 Feb 2005 16:13:18 +0900 (JST)
+Message-ID: <20050222.161318.48465403.yokota@netlab.is.tsukuba.ac.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Received: from pixy-gw.netlab.cs.tsukuba.ac.jp ([130.158.83.98]:54286 "HELO
+Received: from pixy-gw.netlab.cs.tsukuba.ac.jp ([130.158.83.98]:54798 "HELO
 	pixy.netlab.cs.tsukuba.ac.jp") by vger.kernel.org with SMTP
-	id S262233AbVBVHM6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Feb 2005 02:12:58 -0500
+	id S262234AbVBVHNV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Feb 2005 02:13:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
---- linux-2.6.10/drivers/scsi/pcmcia/nsp_cs.h	2004-10-19 06:53:51.000000000 +0900
-+++ linux-2.6.10-nsp/drivers/scsi/pcmcia/nsp_cs.h	2004-11-20 17:17:42.000000000 +0900
-@@ -1,6 +1,6 @@
- /*=======================================================/
-   Header file for nsp_cs.c
+--- linux-2.6.10/drivers/scsi/pcmcia/nsp_debug.c	2004-10-19 06:53:51.000000000 +0900
++++ linux-2.6.10-nsp/drivers/scsi/pcmcia/nsp_debug.c	2004-11-20 17:17:42.000000000 +0900
+@@ -1,12 +1,12 @@
+ /*========================================================================
+     Debug routines for nsp_cs
 -      By: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
 +      By: YOKOTA Hiroshi <yokota (at) netlab (dot) is (dot) tsukuba (dot) ac (dot) jp>
  
-     Ver.1.0 : Cut unused lines.
-     Ver 0.1 : Initial version.
-@@ -10,7 +10,7 @@
+     This software may be used and distributed according to the terms of
+     the GNU General Public License.
+ =========================================================================*/
  
- =========================================================*/
- 
--/* $Id: nsp_cs.h,v 1.19 2003/08/18 11:09:19 elca Exp $ */
-+/* $Id: nsp_cs.h,v 1.40 2004/11/20 08:17:42 elca Exp $ */
- 
- #ifndef  __nsp_cs__
- #define  __nsp_cs__
-@@ -26,13 +26,15 @@
- /************************************
-  * Some useful macros...
-  */
--#define BIT(x)      (1L << (x))
-+#define BIT(x)  (1UL << (x))
- 
- /* SCSI initiator must be ID 7 */
- #define NSP_INITIATOR_ID  7
- 
- #define NSP_SELTIMEOUT 200
- 
-+#define EXTENDED_SDTR_LEN 3
-+
- /***************************************************************************
-  * register definitions
-  ***************************************************************************/
-@@ -40,16 +42,24 @@
-  * base register
-  ========================================================================*/
- #define	IRQCONTROL	0x00  /* R */
--#  define IRQCONTROL_RESELECT_CLEAR     BIT(0)
-+#  define IRQCONTROL_RESELECT_CLEAR	BIT(0)
- #  define IRQCONTROL_PHASE_CHANGE_CLEAR BIT(1)
--#  define IRQCONTROL_TIMER_CLEAR        BIT(2)
--#  define IRQCONTROL_FIFO_CLEAR         BIT(3)
--#  define IRQCONTROL_ALLMASK            0xff
--#  define IRQCONTROL_ALLCLEAR           (IRQCONTROL_RESELECT_CLEAR     | \
-+#  define IRQCONTROL_TIMER_CLEAR	BIT(2)
-+#  define IRQCONTROL_FIFO_CLEAR		BIT(3)
-+#  define IRQCONTROL_SCSI_IRQ_MASK	BIT(4)
-+#  define IRQCONTROL_EXT_IRQ_MASK	BIT(5)
-+#  define IRQCONTROL_TIMER_IRQ_MASK	BIT(6)
-+#  define IRQCONTROL_FIFO_IRQ_MASK	BIT(7)
-+#  define IRQCONTROL_ALL_MASK		(IRQCONTROL_SCSI_IRQ_MASK  | \
-+					 IRQCONTROL_EXT_IRQ_MASK   | \
-+					 IRQCONTROL_TIMER_IRQ_MASK | \
-+					 IRQCONTROL_FIFO_IRQ_MASK  )
-+#  define IRQCONTROL_ALL_CLEAR		(IRQCONTROL_RESELECT_CLEAR     | \
- 					 IRQCONTROL_PHASE_CHANGE_CLEAR | \
--					 IRQCONTROL_TIMER_CLEAR        | \
--					 IRQCONTROL_FIFO_CLEAR          )
--#  define IRQCONTROL_IRQDISABLE         0xf0
-+					 IRQCONTROL_TIMER_CLEAR	       | \
-+					 IRQCONTROL_FIFO_CLEAR	       )
-+#  define IRQCONTROL_ALL_CLEAR_AND_MASK	 (IRQCONTROL_ALL_MASK | \
-+					  IRQCONTROL_ALL_CLEAR)
- 
- #define	IRQSTATUS	0x00  /* W */
- #  define IRQSTATUS_SCSI  BIT(0)
-@@ -63,8 +73,8 @@
- 
- #define	FIFOSTATUS	0x01 /* R */
- #  define FIFOSTATUS_CHIP_REVISION_MASK 0x0f
--#  define FIFOSTATUS_CHIP_ID_MASK       0x70
--#  define FIFOSTATUS_FULL_EMPTY         BIT(7)
-+#  define FIFOSTATUS_CHIP_ID_MASK	0x70
-+#  define FIFOSTATUS_FULL_EMPTY		BIT(7)
- 
- #define	INDEXREG	0x02 /* R/W */
- #define	DATAREG		0x03 /* R/W */
-@@ -88,62 +98,62 @@
- 
- #define SCSIIRQMODE	0x15 /* R/W */
- #  define SCSI_PHASE_CHANGE_EI BIT(0)
--#  define RESELECT_EI          BIT(4)
--#  define FIFO_IRQ_EI          BIT(5)
-+#  define RESELECT_EI	       BIT(4)
-+#  define FIFO_IRQ_EI	       BIT(5)
- #  define SCSI_RESET_IRQ_EI    BIT(6)
- 
- #define IRQPHASESENCE	0x16 /* R */
--#  define LATCHED_MSG      BIT(0)
--#  define LATCHED_IO       BIT(1)
--#  define LATCHED_CD       BIT(2)
-+#  define LATCHED_MSG	   BIT(0)
-+#  define LATCHED_IO	   BIT(1)
-+#  define LATCHED_CD	   BIT(2)
- #  define LATCHED_BUS_FREE BIT(3)
- #  define PHASE_CHANGE_IRQ BIT(4)
--#  define RESELECT_IRQ     BIT(5)
--#  define FIFO_IRQ         BIT(6)
-+#  define RESELECT_IRQ	   BIT(5)
-+#  define FIFO_IRQ	   BIT(6)
- #  define SCSI_RESET_IRQ   BIT(7)
- 
- #define TIMERCOUNT	0x17 /* R/W */
- 
- #define SCSIBUSCTRL	0x18 /* R/W */
--#  define SCSI_SEL         BIT(0)
--#  define SCSI_RST         BIT(1)
-+#  define SCSI_SEL	   BIT(0)
-+#  define SCSI_RST	   BIT(1)
- #  define SCSI_DATAOUT_ENB BIT(2)
--#  define SCSI_ATN         BIT(3)
--#  define SCSI_ACK         BIT(4)
--#  define SCSI_BSY         BIT(5)
--#  define AUTODIRECTION    BIT(6)
--#  define ACKENB           BIT(7)
-+#  define SCSI_ATN	   BIT(3)
-+#  define SCSI_ACK	   BIT(4)
-+#  define SCSI_BSY	   BIT(5)
-+#  define AUTODIRECTION	   BIT(6)
-+#  define ACKENB	   BIT(7)
- 
- #define SCSIBUSMON	0x19 /* R */
- 
- #define SETARBIT	0x1A /* W */
--#  define ARBIT_GO         BIT(0)
-+#  define ARBIT_GO	   BIT(0)
- #  define ARBIT_FLAG_CLEAR BIT(1)
- 
- #define ARBITSTATUS	0x1A /* R */
--/*#  define ARBIT_GO        BIT(0)*/
--#  define ARBIT_WIN        BIT(1)
--#  define ARBIT_FAIL       BIT(2)
--#  define RESELECT_FLAG    BIT(3)
-+/*#  define ARBIT_GO	    BIT(0)*/
-+#  define ARBIT_WIN	   BIT(1)
-+#  define ARBIT_FAIL	   BIT(2)
-+#  define RESELECT_FLAG	   BIT(3)
- 
- #define PARITYCTRL	0x1B  /* W */
- #define PARITYSTATUS	0x1B  /* R */
- 
- #define COMMANDCTRL	0x1C  /* W */
- #  define CLEAR_COMMAND_POINTER BIT(0)
--#  define AUTO_COMMAND_GO       BIT(1)
-+#  define AUTO_COMMAND_GO	BIT(1)
- 
- #define RESELECTID	0x1C  /* R   */
- #define COMMANDDATA	0x1D  /* R/W */
- 
- #define POINTERCLR	0x1E  /*   W */
--#  define POINTER_CLEAR      BIT(0)
-+#  define POINTER_CLEAR	     BIT(0)
- #  define ACK_COUNTER_CLEAR  BIT(1)
- #  define REQ_COUNTER_CLEAR  BIT(2)
- #  define HOST_COUNTER_CLEAR BIT(3)
--#  define READ_SOURCE        (BIT(4) | BIT(5))
--#    define ACK_COUNTER        (0)
--#    define REQ_COUNTER        (BIT(4))
-+#  define READ_SOURCE	     (BIT(4) | BIT(5))
-+#    define ACK_COUNTER	       (0)
-+#    define REQ_COUNTER	       (BIT(4))
- #    define HOST_COUNTER       (BIT(5))
- 
- #define TRANSFERCOUNT	0x1E  /* R   */
-@@ -163,87 +173,87 @@
- #  define SYNCREG_PERIOD_MASK  0xf0
- #  define SYNCREG_PERIOD_SHIFT 4
- 
--#define SCSIDATALATCH	0x22 /*   W */
-+#define SCSIDATALATCH	0x22 /*	  W */
- #define SCSIDATAIN	0x22 /* R   */
- #define SCSIDATAWITHACK	0x23 /* R/W */
--#define SCAMCONTROL	0x24 /*   W */
-+#define SCAMCONTROL	0x24 /*	  W */
- #define SCAMSTATUS	0x24 /* R   */
- #define SCAMDATA	0x25 /* R/W */
- 
- #define OTHERCONTROL	0x26 /* R/W */
- #  define TPL_ROM_WRITE_EN BIT(0)
--#  define TPWR_OUT         BIT(1)
--#  define TPWR_SENSE       BIT(2)
--#  define RA8_CONTROL      BIT(3)
-+#  define TPWR_OUT	   BIT(1)
-+#  define TPWR_SENSE	   BIT(2)
-+#  define RA8_CONTROL	   BIT(3)
- 
- #define ACKWIDTH	0x27 /* R/W */
--#define CLRTESTPNT	0x28 /*   W */
--#define ACKCNTLD	0x29 /*   W */
--#define REQCNTLD	0x2A /*   W */
--#define HSTCNTLD	0x2B /*   W */
-+#define CLRTESTPNT	0x28 /*	  W */
-+#define ACKCNTLD	0x29 /*	  W */
-+#define REQCNTLD	0x2A /*	  W */
-+#define HSTCNTLD	0x2B /*	  W */
- #define CHECKSUM	0x2C /* R/W */
- 
- /************************************************************************
-  * Input status bit definitions.
-  ************************************************************************/
--#define S_MESSAGE	BIT(0)    /* Message line from SCSI bus      */
--#define S_IO		BIT(1)    /* Input/Output line from SCSI bus */
--#define S_CD		BIT(2)    /* Command/Data line from SCSI bus */
--#define S_BUSY		BIT(3)    /* Busy line from SCSI bus         */
--#define S_ACK		BIT(4)    /* Acknowlege line from SCSI bus   */
--#define S_REQUEST	BIT(5)    /* Request line from SCSI bus      */
--#define S_SELECT	BIT(6)	  /*                                 */
--#define S_ATN		BIT(7)	  /*                                 */
-+#define S_MESSAGE	BIT(0)	  /* Message line from SCSI bus	     */
-+#define S_IO		BIT(1)	  /* Input/Output line from SCSI bus */
-+#define S_CD		BIT(2)	  /* Command/Data line from SCSI bus */
-+#define S_BUSY		BIT(3)	  /* Busy line from SCSI bus	     */
-+#define S_ACK		BIT(4)	  /* Acknowlege line from SCSI bus   */
-+#define S_REQUEST	BIT(5)	  /* Request line from SCSI bus	     */
-+#define S_SELECT	BIT(6)	  /*				     */
-+#define S_ATN		BIT(7)	  /*				     */
- 
- /***********************************************************************
-  * Useful Bus Monitor status combinations.
-  ***********************************************************************/
--#define BUSMON_SEL         S_SELECT
--#define BUSMON_BSY         S_BUSY
--#define BUSMON_REQ         S_REQUEST
--#define BUSMON_IO          S_IO
--#define BUSMON_ACK         S_ACK
--#define BUSMON_BUS_FREE    0
--#define BUSMON_COMMAND     ( S_BUSY | S_CD |                    S_REQUEST )
-+#define BUSMON_SEL	   S_SELECT
-+#define BUSMON_BSY	   S_BUSY
-+#define BUSMON_REQ	   S_REQUEST
-+#define BUSMON_IO	   S_IO
-+#define BUSMON_ACK	   S_ACK
-+#define BUSMON_BUS_FREE	   0
-+#define BUSMON_COMMAND	   ( S_BUSY | S_CD |			S_REQUEST )
- #define BUSMON_MESSAGE_IN  ( S_BUSY | S_CD | S_IO | S_MESSAGE | S_REQUEST )
--#define BUSMON_MESSAGE_OUT ( S_BUSY | S_CD |        S_MESSAGE | S_REQUEST )
--#define BUSMON_DATA_IN     ( S_BUSY |        S_IO |             S_REQUEST )
--#define BUSMON_DATA_OUT    ( S_BUSY |                           S_REQUEST )
--#define BUSMON_STATUS      ( S_BUSY | S_CD | S_IO |             S_REQUEST )
--#define BUSMON_SELECT      (                 S_IO |                        S_SELECT )
--#define BUSMON_RESELECT    (                 S_IO |                        S_SELECT )
--#define BUSMON_PHASE_MASK  (          S_CD | S_IO | S_MESSAGE |            S_SELECT )
-+#define BUSMON_MESSAGE_OUT ( S_BUSY | S_CD |	    S_MESSAGE | S_REQUEST )
-+#define BUSMON_DATA_IN	   ( S_BUSY |	     S_IO |		S_REQUEST )
-+#define BUSMON_DATA_OUT	   ( S_BUSY |				S_REQUEST )
-+#define BUSMON_STATUS	   ( S_BUSY | S_CD | S_IO |		S_REQUEST )
-+#define BUSMON_SELECT	   (		     S_IO |			   S_SELECT )
-+#define BUSMON_RESELECT	   (		     S_IO |			   S_SELECT )
-+#define BUSMON_PHASE_MASK  (	      S_CD | S_IO | S_MESSAGE |		   S_SELECT )
- 
--#define BUSPHASE_SELECT      ( BUSMON_SELECT      & BUSMON_PHASE_MASK )
--#define BUSPHASE_COMMAND     ( BUSMON_COMMAND     & BUSMON_PHASE_MASK )
-+#define BUSPHASE_SELECT	     ( BUSMON_SELECT	  & BUSMON_PHASE_MASK )
-+#define BUSPHASE_COMMAND     ( BUSMON_COMMAND	  & BUSMON_PHASE_MASK )
- #define BUSPHASE_MESSAGE_IN  ( BUSMON_MESSAGE_IN  & BUSMON_PHASE_MASK )
- #define BUSPHASE_MESSAGE_OUT ( BUSMON_MESSAGE_OUT & BUSMON_PHASE_MASK )
--#define BUSPHASE_DATA_IN     ( BUSMON_DATA_IN     & BUSMON_PHASE_MASK )
--#define BUSPHASE_DATA_OUT    ( BUSMON_DATA_OUT    & BUSMON_PHASE_MASK )
--#define BUSPHASE_STATUS      ( BUSMON_STATUS      & BUSMON_PHASE_MASK )
-+#define BUSPHASE_DATA_IN     ( BUSMON_DATA_IN	  & BUSMON_PHASE_MASK )
-+#define BUSPHASE_DATA_OUT    ( BUSMON_DATA_OUT	  & BUSMON_PHASE_MASK )
-+#define BUSPHASE_STATUS	     ( BUSMON_STATUS	  & BUSMON_PHASE_MASK )
- 
- /*====================================================================*/
- 
- typedef struct scsi_info_t {
--	dev_link_t             link;
-+	dev_link_t	       link;
- 	struct Scsi_Host      *host;
- #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,74))
--	dev_node_t             node;
-+	dev_node_t	       node;
- #else
--	int	               ndev;
--	dev_node_t             node[8];
-+	int		       ndev;
-+	dev_node_t	       node[8];
- 	struct bus_operations *bus;
- #endif
--	int                    stop;
-+	int		       stop;
- } scsi_info_t;
- 
- 
- /* synchronous transfer negotiation data */
- typedef struct _sync_data {
--	unsigned int SyncNegotiation;
-+	unsigned int  SyncNegotiation;
- #define SYNC_NOT_YET 0
--#define SYNC_OK      1
--#define SYNC_NG      2
-+#define SYNC_OK	     1
-+#define SYNC_NG	     2
- 
- 	unsigned int  SyncPeriod;
- 	unsigned int  SyncOffset;
-@@ -252,103 +262,104 @@
- } sync_data;
- 
- typedef struct _nsp_hw_data {
--	unsigned int  BaseAddress;
--	unsigned int  NumAddress;
--	unsigned int  IrqNumber;
-+	unsigned int  BaseAddress; /* I/O base address		    */
-+	size_t	      NumAddress;  /* number of allocated I/O ports */
-+	int	      IrqNumber;   /* allocated IRQ number	    */
- 
--	unsigned long MmioAddress;
-+	unsigned long MmioAddress; /* memory mapped I/O address (virtual address) */
- #define NSP_MMIO_OFFSET 0x0800
--	unsigned long MmioLength;
-+	unsigned long MmioLength;  /* number of allocated MMIO addresses */
- 
- 	unsigned char ScsiClockDiv;
-+	unsigned char TransferMode; /* Current transfer mode	    */
-+	unsigned char ChipRev;
- 
--	unsigned char TransferMode;
--
--	int           TimerCount;
--	int           SelectionTimeOut;
--	Scsi_Cmnd    *CurrentSC;
--	//int           CurrnetTarget;
-+	int	      TimerCount;
-+	int	      SelectionTimeOut;
-+	struct scsi_cmnd    *CurrentSC;
-+	//int		CurrnetTarget;
- 
--	int           FifoCount;
-+	int	      FifoCount;
- 
- #define MSGBUF_SIZE 20
--	unsigned char MsgBuffer[MSGBUF_SIZE];
--	int MsgLen;
-+	unsigned char MsgInBuffer[MSGBUF_SIZE]; /* SCSI message buffer */
-+	size_t	      MsgInLen;
-+	unsigned char MsgOutBuffer[MSGBUF_SIZE]; /* SCSI message buffer */
-+	size_t	      MsgOutLen;
- 
- #define N_TARGET 8
- 	sync_data     Sync[N_TARGET];
- 
--	char nspinfo[110];     /* description */
--	spinlock_t Lock;
--
--	scsi_info_t   *ScsiInfo; /* attach <-> detect glue */
-+	char	      nspinfo[110];  /* description string     */
-+	spinlock_t    Lock;
- 
-+	scsi_info_t  *ScsiInfo;	     /* attach <-> detect glue */
- 
- #ifdef NSP_DEBUG
--	int CmdId; /* Accepted command serial number.
--		      Used for debugging.             */
-+	int CmdId;	/* Accepted command serial number.
-+			   Used for debugging.		   */
- #endif
- } nsp_hw_data;
- 
- 
- /****************************************************************************
-- *
-+ * functions
-  */
- 
- /* Card service functions */
- static dev_link_t *nsp_cs_attach (void);
--static void        nsp_cs_detach (dev_link_t *link);
--static void        nsp_cs_release(dev_link_t *link);
--static void        nsp_cs_config (dev_link_t *link);
--static int         nsp_cs_event  (event_t event, int priority, event_callback_args_t *args);
-+static void	   nsp_cs_detach (dev_link_t *link);
-+static void	   nsp_cs_release(dev_link_t *link);
-+static void	   nsp_cs_config (dev_link_t *link);
-+static int	   nsp_cs_event	 (event_t event, int priority, event_callback_args_t *args);
- 
- /* Linux SCSI subsystem specific functions */
--static struct Scsi_Host *nsp_detect     (Scsi_Host_Template *sht);
-+static struct Scsi_Host *nsp_detect	(Scsi_Host_Template *sht);
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0))
--static        int        nsp_detect_old (Scsi_Host_Template *sht);
--static        int        nsp_release_old(struct Scsi_Host *shpnt);
-+static	      int	 nsp_detect_old (Scsi_Host_Template *sht);
-+static	      int	 nsp_release_old(struct Scsi_Host *shpnt);
- #endif
--static const  char      *nsp_info       (struct Scsi_Host *shpnt);
--static        int        nsp_proc_info  (
-+static const  char	*nsp_info	(struct Scsi_Host *shpnt);
-+static	      int	 nsp_proc_info	(
- #if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
--	                                 struct Scsi_Host *host,
-+					 struct Scsi_Host *host,
- #endif
--					 char   *buffer,
-+					 char	*buffer,
- 					 char  **start,
--					 off_t   offset,
--					 int     length,
-+					 off_t	 offset,
-+					 int	 length,
- #if !(LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
--					 int     hostno,
-+					 int	 hostno,
- #endif
--					 int     inout);
--static        int        nsp_queuecommand(Scsi_Cmnd *SCpnt, void (* done)(Scsi_Cmnd *SCpnt));
-+					 int	 inout);
-+static	      int	 nsp_queuecommand(struct scsi_cmnd *SCpnt, void (* done)(struct scsi_cmnd *SCpnt));
- 
- /* Error handler */
--/*static int nsp_eh_abort       (Scsi_Cmnd *SCpnt);*/
--/*static int nsp_eh_device_reset(Scsi_Cmnd *SCpnt);*/
--static int nsp_eh_bus_reset    (Scsi_Cmnd *SCpnt);
--static int nsp_eh_host_reset   (Scsi_Cmnd *SCpnt);
-+/*static int nsp_eh_abort	(struct scsi_cmnd *SCpnt);*/
-+/*static int nsp_eh_device_reset(struct scsi_cmnd *SCpnt);*/
-+static int nsp_eh_bus_reset    (struct scsi_cmnd *SCpnt);
-+static int nsp_eh_host_reset   (struct scsi_cmnd *SCpnt);
- static int nsp_bus_reset       (nsp_hw_data *data);
- 
- /* */
--static int  nsphw_init           (nsp_hw_data *data);
--static int  nsphw_start_selection(Scsi_Cmnd *SCpnt);
--static void nsp_start_timer      (Scsi_Cmnd *SCpnt, int time);
--static int  nsp_fifo_count       (Scsi_Cmnd *SCpnt);
--static void nsp_pio_read         (Scsi_Cmnd *SCpnt);
--static void nsp_pio_write        (Scsi_Cmnd *SCpnt);
--static int  nsp_nexus            (Scsi_Cmnd *SCpnt);
--static void nsp_scsi_done        (Scsi_Cmnd *SCpnt);
--static int  nsp_analyze_sdtr     (Scsi_Cmnd *SCpnt);
--static int  nsp_negate_signal    (Scsi_Cmnd *SCpnt, unsigned char mask, char *str);
--static int  nsp_expect_signal    (Scsi_Cmnd *SCpnt, unsigned char current_phase, unsigned char  mask);
--static int  nsp_xfer             (Scsi_Cmnd *SCpnt, int phase);
--static int  nsp_dataphase_bypass (Scsi_Cmnd *SCpnt);
--static int  nsp_reselected       (Scsi_Cmnd *SCpnt);
-+static int  nsphw_init		 (	nsp_hw_data *data);
-+static int  nsphw_start_selection(	struct scsi_cmnd *SCpnt);
-+static void nsp_start_timer	 (const struct scsi_cmnd *SCpnt, int time);
-+static int  nsp_fifo_count	 (const struct scsi_cmnd *SCpnt);
-+static void nsp_pio_read	 (	struct scsi_cmnd *SCpnt);
-+static void nsp_pio_write	 (	struct scsi_cmnd *SCpnt);
-+static int  nsp_nexus		 (const struct scsi_cmnd *SCpnt);
-+static void nsp_scsi_done	 (	struct scsi_cmnd *SCpnt);
-+static int  nsp_analyze_sdtr	 (const struct scsi_cmnd *SCpnt);
-+static int  nsp_negate_signal	 (const struct scsi_cmnd *SCpnt, unsigned char mask, char *str);
-+static int  nsp_expect_signal	 (const struct scsi_cmnd *SCpnt, unsigned char current_phase, unsigned char mask);
-+static int  nsp_xfer		 (const struct scsi_cmnd *SCpnt, int phase);
-+static int  nsp_dataphase_bypass (	struct scsi_cmnd *SCpnt);
-+static int  nsp_reselected	 (const struct scsi_cmnd *SCpnt);
- static struct Scsi_Host *nsp_detect(Scsi_Host_Template *sht);
- 
- /* Interrupt handler */
--//static irqreturn_t nspintr(int irq, void *dev_id, struct pt_regs *regs);
-+static irqreturn_t nspintr(int irq, void *dev_id, struct pt_regs *regs);
- 
- /* Module entry point*/
- static int  __init nsp_cs_init(void);
-@@ -357,15 +368,15 @@
- 
- /* Debug */
- #ifdef NSP_DEBUG
--static void show_command (Scsi_Cmnd *SCpnt);
--static void show_phase   (Scsi_Cmnd *SCpnt);
-+static void show_command (const struct scsi_cmnd *SCpnt);
-+static void show_phase	 (const struct scsi_cmnd *SCpnt);
- static void show_busphase(unsigned char stat);
--static void show_message (nsp_hw_data *data);
-+static void show_message (const nsp_hw_data *data);
- #else
--# define show_command(ptr)   /* */
--# define show_phase(SCpnt)   /* */
--# define show_busphase(stat) /* */
--# define show_message(data)  /* */
-+# define show_command(ptr)   do {} while(0)
-+# define show_phase(SCpnt)   do {} while(0)
-+# define show_busphase(stat) do {} while(0)
-+# define show_message(data)  do {} while(0)
- #endif
+-/* $Id: nsp_debug.c,v 1.3 2003/07/26 14:21:09 elca Exp $ */
++/* $Id: nsp_debug.c,v 1.8 2004/11/20 08:17:42 elca Exp $ */
  
  /*
-@@ -373,17 +384,17 @@
-  */
- enum _scsi_phase {
- 	PH_UNDETERMINED ,
--	PH_ARBSTART     ,
--	PH_SELSTART     ,
--	PH_SELECTED     ,
--	PH_COMMAND      ,
--	PH_DATA         ,
--	PH_STATUS       ,
--	PH_MSG_IN       ,
--	PH_MSG_OUT      ,
--	PH_DISCONNECT   ,
--	PH_RESELECT     ,
--	PH_ABORT        ,
-+	PH_ARBSTART	,
-+	PH_SELSTART	,
-+	PH_SELECTED	,
-+	PH_COMMAND	,
-+	PH_DATA		,
-+	PH_STATUS	,
-+	PH_MSG_IN	,
-+	PH_MSG_OUT	,
-+	PH_DISCONNECT	,
-+	PH_RESELECT	,
-+	PH_ABORT	,
- 	PH_RESET
+  * Show the command data of a command
+@@ -17,10 +17,10 @@
+ /* 00-03 */ "Test Unit Ready", "Rezero Unit", unknown, "Request Sense",
+ /* 04-07 */ "Format Unit", "Read Block Limits", unknown, "Reasssign Blocks",
+ /* 08-0d */ "Read (6)", unknown, "Write (6)", "Seek (6)", unknown, unknown,
+-/* 0e-12 */ unknown, "Read Reverse", "Write Filemarks", "Space", "Inquiry",  
++/* 0e-12 */ unknown, "Read Reverse", "Write Filemarks", "Space", "Inquiry",
+ /* 13-16 */ unknown, "Recover Buffered Data", "Mode Select", "Reserve",
+ /* 17-1b */ "Release", "Copy", "Erase", "Mode Sense", "Start/Stop Unit",
+-/* 1c-1d */ "Receive Diagnostic", "Send Diagnostic", 
++/* 1c-1d */ "Receive Diagnostic", "Send Diagnostic",
+ /* 1e-1f */ "Prevent/Allow Medium Removal", unknown,
  };
  
-@@ -401,34 +412,18 @@
+@@ -30,7 +30,7 @@
+ /* 23-28 */ unknown, unknown, "Read Capacity", unknown, unknown, "Read (10)",
+ /* 29-2d */ unknown, "Write (10)", "Seek (10)", unknown, unknown,
+ /* 2e-31 */ "Write Verify","Verify", "Search High", "Search Equal",
+-/* 32-34 */ "Search Low", "Set Limits", "Prefetch or Read Position", 
++/* 32-34 */ "Search Low", "Set Limits", "Prefetch or Read Position",
+ /* 35-37 */ "Synchronize Cache","Lock/Unlock Cache", "Read Defect Data",
+ /* 38-3c */ "Medium Scan", "Compare","Copy Verify", "Write Buffer", "Read Buffer",
+ /* 3d-3f */ "Update Block", "Read Long",  "Write Long",
+@@ -38,8 +38,8 @@
  
  
- /**************************************************************************
-- * SCSI messaage
-- */
--#define MSG_COMMAND_COMPLETE 0x00
--#define MSG_EXTENDED         0x01
--#define MSG_ABORT            0x06
--#define MSG_NO_OPERATION     0x08
--#define MSG_BUS_DEVICE_RESET 0x0c
--
--#define MSG_EXT_SDTR         0x01
--
--
--/**************************************************************************
-  * Compatibility functions
-  */
+ static const char *group_2_commands[] = {
+-/* 40-41 */ "Change Definition", "Write Same", 
+-/* 42-48 */ "Read Sub-Ch(cd)", "Read TOC", "Read Header(cd)", "Play Audio(cd)", unknown, "Play Audio MSF(cd)", "Play Audio Track/Index(cd)", 
++/* 40-41 */ "Change Definition", "Write Same",
++/* 42-48 */ "Read Sub-Ch(cd)", "Read TOC", "Read Header(cd)", "Play Audio(cd)", unknown, "Play Audio MSF(cd)", "Play Audio Track/Index(cd)",
+ /* 49-4f */ "Play Track Relative(10)(cd)", unknown, "Pause/Resume(cd)", "Log Select", "Log Sense", unknown, unknown,
+ /* 50-55 */ unknown, unknown, unknown, unknown, unknown, "Mode Select (10)",
+ /* 56-5b */ unknown, unknown, unknown, unknown, "Mode Sense (10)", unknown,
+@@ -53,9 +53,9 @@
+ #define NOTEXT_GROUP    2
  
- /* for Kernel 2.4 */
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
--#  define scsi_register_host(template)   scsi_register_module(MODULE_SCSI_HA, template)
--#  define scsi_unregister_host(template) scsi_unregister_module(MODULE_SCSI_HA, template)
--#  define scsi_host_put(host)            scsi_unregister(host)
--
--typedef void irqreturn_t;
--#  define IRQ_NONE      /* */
--#  define IRQ_HANDLED   /* */
--#  define IRQ_RETVAL(x) /* */
-+# define scsi_register_host(template)	scsi_register_module(MODULE_SCSI_HA, template)
-+# define scsi_unregister_host(template) scsi_unregister_module(MODULE_SCSI_HA, template)
-+# define scsi_host_put(host)		scsi_unregister(host)
-+
+ static const char **commands[] = {
+-    group_0_commands, group_1_commands, group_2_commands, 
+-    (const char **) RESERVED_GROUP, (const char **) RESERVED_GROUP, 
+-    (const char **) NOTEXT_GROUP, (const char **) VENDOR_GROUP, 
++    group_0_commands, group_1_commands, group_2_commands,
++    (const char **) RESERVED_GROUP, (const char **) RESERVED_GROUP,
++    (const char **) NOTEXT_GROUP, (const char **) VENDOR_GROUP,
+     (const char **) VENDOR_GROUP
+ };
  
- /* This is ad-hoc version of scsi_host_get_next() */
--static inline struct Scsi_Host *scsi_host_get_next(struct Scsi_Host *host)
-+inline static struct Scsi_Host *scsi_host_get_next(const struct Scsi_Host *host)
- {
- 	if (host == NULL) {
- 		return scsi_hostlist;
-@@ -438,7 +433,7 @@
+@@ -68,13 +68,13 @@
+ 
+ 	switch ((unsigned long) table) {
+ 	case RESERVED_GROUP:
+-		printk("%s[%02x] ", reserved, opcode); 
++		printk("%s[%02x] ", reserved, opcode);
+ 		break;
+ 	case NOTEXT_GROUP:
+-		printk("%s(notext)[%02x] ", unknown, opcode); 
++		printk("%s(notext)[%02x] ", unknown, opcode);
+ 		break;
+ 	case VENDOR_GROUP:
+-		printk("%s[%02x] ", vendor, opcode); 
++		printk("%s[%02x] ", vendor, opcode);
+ 		break;
+ 	default:
+ 		if (table[opcode & 0x1f] != unknown)
+@@ -85,23 +85,23 @@
+ 	}
  }
  
- /* This is ad-hoc version of scsi_host_hn_get() */
--static inline struct Scsi_Host *scsi_host_hn_get(unsigned short hostno)
-+inline static struct Scsi_Host *scsi_host_hn_get(const unsigned short hostno)
+-static void print_commandk (unsigned char *command)
++static void print_commandk (const unsigned char *command)
  {
- 	struct Scsi_Host *host;
+-	int i, s;
++	int i, size;
+ 	printk(KERN_DEBUG);
+ 	print_opcodek(command[0]);
+-	/*printk(KERN_DEBUG "%s ", __FUNCTION__);*/
++	/*printk(KERN_DEBUG __FUNCTION__ " ");*/
+ 	if ((command[0] >> 5) == 6 ||
+ 	    (command[0] >> 5) == 7 ) {
+-		s = 12; /* vender specific */
++		size = 12; /* vender specific */
+ 	} else {
+-		s = COMMAND_SIZE(command[0]);
++		size = COMMAND_SIZE(command[0]);
+ 	}
+-	for ( i = 1; i < s; ++i) {
++	for ( i = 1; i < size; ++i) {
+ 		printk("%02x ", command[i]);
+ 	}
  
-@@ -452,21 +447,71 @@
- 	return host;
+-	switch (s) {
++	switch (size) {
+ 	case 6:
+ 		printk("LBA=%d len=%d",
+ 		       (((unsigned int)command[1] & 0x0f) << 16) |
+@@ -138,12 +138,12 @@
+ 	printk("\n");
  }
  
-+/* Kernel 2.4 lacks this function */
- static void cs_error(client_handle_t handle, int func, int ret)
+-static void show_command(Scsi_Cmnd *SCpnt)
++static void show_command(const struct scsi_cmnd *SCpnt)
  {
--	error_info_t err = { func, ret };
-+	error_info_t err = {
-+		func:	 func,
-+		retcode: ret
-+	};
- 	pcmcia_report_error(handle, &err);
+ 	print_commandk(SCpnt->cmnd);
  }
  
-+#ifndef SAM_STAT_CHECK_CONDITION
-+# define SAM_STAT_CHECK_CONDITION (CHECK_CONDITION << 1)
-+#endif
-+
- /* scatter-gather table */
--#  define BUFFER_ADDR (SCpnt->SCp.buffer->address)
-+# define SG_ADDRESS(buffer) ((buffer)->address)
-+
-+/* host spin lock */
-+# define HOST_LOCK	    (&io_request_lock)
-+
-+/* module parameter API */
-+# define module_param(a,b,c)	     /* */
-+# define module_param_array(a,b,c,d) /* */
- #endif
+-static void show_phase(Scsi_Cmnd *SCpnt)
++static void show_phase(const struct scsi_cmnd *SCpnt)
+ {
+ 	int i = SCpnt->SCp.phase;
  
- /* for Kernel 2.6 */
- #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
- /* scatter-gather table */
--#  define BUFFER_ADDR ((char *)((unsigned int)(SCpnt->SCp.buffer->page) + SCpnt->SCp.buffer->offset))
-+# define SG_ADDRESS(buffer) ((char *) (page_address((buffer)->page) + (buffer)->offset))
-+
-+/* host spin lock */
-+# define HOST_LOCK	    (((scsi_info_t *)dev_id)->host->host_lock)
-+
- #endif
+@@ -201,14 +201,30 @@
+ 	}
+ }
  
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,9))
-+/**
-+ * kcalloc - allocate memory for an array. The memory is set to zero.
-+ * @n: number of elements.
-+ * @size: element size.
-+ * @flags: the type of memory to allocate.
-+ */
-+static void *kcalloc(size_t n, size_t size, int flags)
-+{
-+	void *ret = NULL;
+-static void show_message(nsp_hw_data *data)
++static void show_message(const nsp_hw_data *data)
+ {
+ 	int i;
+ 
+ 	printk(KERN_DEBUG "msg:");
+-	for(i=0; i < data->MsgLen; i++) {
+-		printk(" %02x", data->MsgBuffer[i]);
 +
-+	if (n != 0 && size > INT_MAX / n)
-+		return ret;
-+
-+	ret = kmalloc(n * size, flags);
-+	if (ret)
-+		memset(ret, 0, n * size);
-+	return ret;
-+}
-+#else
-+# include <linux/slab.h>
-+#endif
-+
-+/* bad hack for module_param_array() */
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,10))
-+# define _nsp_ptr /* */
-+#else
-+# define _nsp_ptr &
-+#endif
++	switch (data->CurrentSC->SCp.phase) {
++	case PH_MSG_IN:
++		for(i=0; i < data->MsgInLen; i++) {
++			printk(" %02x", data->MsgInBuffer[i]);
++		}
++		break;
++	case PH_MSG_OUT:
++		for(i=0; i < data->MsgOutLen; i++) {
++			printk(" %02x", data->MsgOutBuffer[i]);
++		}
++		break;
++	default:
++		printk("???\n");
++		return;
++		break;
+ 	}
 +
 +
- #endif  /*__nsp_cs__*/
- /* end */
+ 	printk("\n");
+ }
+ 
