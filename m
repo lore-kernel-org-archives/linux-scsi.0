@@ -1,35 +1,42 @@
-From: Michael Heinz <mheinz@infiniconsys.com>
-Subject: Re: HBA switching devices online status...
-Date: Tue, 16 Apr 2002 09:22:41 -0400
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] sd.c fixes applied incorectly to 2.4.19-preXX
+Date: Tue, 16 Apr 2002 09:03:03 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3CBC25A1.9020302@infiniconsys.com>
-References: <08628CA53C6CBA4ABAFB9E808A5214CB0C4D1F@mercury.infiniconsys.com> <3CBC225F.D75E55B4@torque.net>
+Message-ID: <200204161403.g3GE33B01706@localhost.localdomain>
+References: <gibbs@scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: Message from "Justin T. Gibbs" <gibbs@scsiguy.com>
+   of "Mon, 15 Apr 2002 15:13:37 MDT." <200204152113.g3FLDb982996@aslan.scsiguy.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: linux-scsi@vger.kernel.org
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Marcelo Tosatti <marcelo@conectiva.com.br>, linux-scsi@vger.kernel.org, Alan Cox <alan@redhat.com>
 
-Douglas Gilbert wrote:
+gibbs@scsiguy.com said:
+> Well, if we really wanted to fix it correctly:
+[...]
+> The check against 0xF0 is currently "correct" because the code in
+> sd.c's rw_intr doesn't know how to deal with anything other than a
+> current error (0x70 + valid bit). 
 
->
->There is nothing stopping your HBA driver from setting the
->online flag in the Scsi_device structure.
->
->Doug Gilbert
->
-Doug,
+I'm not advocating that you fix it correctly.  However, if you use the 
+provided scsi_sense_valid() function it will show up in an easy to recognise 
+form for someone who later does all of this fixing.  We can't go on adding 
+these band aid fixes to the scsi subsystem with the justification that it's 
+currently broken in a lot of cases so we don't need to consider them.  All 
+that does is cause the subsystem to diverge further and make the eventual fix 
+even more difficult and daunting.
 
-Thanks - my main concern was that non of the drivers in drivers/scsi 
-actually do that - I was worried that that meant setting the flag was a 
-Bad Thing. :-P
+What is wrong with:
 
--- 
-knock knock.
+	    if (scsi_sense_valid(SCpnt)) {	/* Sense data is valid */
+		/* FIXME: this probably won't work for deferred errors
 
-Michael Heinz <mheinz@infiniconsys.com>
+That way you've used the supplied function and noted the potential problem 
+case.
+
+James
 
 
 
