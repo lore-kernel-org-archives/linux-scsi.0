@@ -1,109 +1,57 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] convert 53c700 driver to use change_queue_depth API
-Date: Mon, 20 Dec 2004 16:42:02 +0100 (CET)
-Message-ID: <Pine.LNX.4.60.0412201605360.15046@poirot.grange>
-References: <1102812847.5232.6.camel@mulgrave>
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: [ANNOUNCE] multipath-tools-0.4.1
+Date: Mon, 20 Dec 2004 17:01:23 +0100
+Message-ID: <1103558483.11345.17.camel@zezette>
+References: <1096071849.4466.31.camel@zezette>
+	 <1097054573.4163b96d1262c@imp5-q.free.fr>
+	 <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette>
+	 <1098269169.417641f18a234@imp1-q.free.fr>
+	 <1098656088.9350.88.camel@zezette>
+	 <1098785191.417e21a7a7c28@imp1-q.free.fr>
+	 <1099328918.5525.10.camel@zezette> <1100214617.10251.92.camel@zezette>
+	 <1101394541.5820.71.camel@zezette>  <1102261392.29843.2.camel@zezette>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:55758 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S261576AbULTPoM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Dec 2004 10:44:12 -0500
-In-Reply-To: <1102812847.5232.6.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1102261392.29843.2.camel@zezette>
+Sender: linux-raid-owner@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-In the comment to the method declaration:
+Hello,
 
-On Sat, 11 Dec 2004, James Bottomley wrote:
+here goes multipath-tools-0.4.1
 
-> 	/*
-> +	 * fill in this function to allow the queue depth of this host
-> +	 * to be changeable (on a per device basis).  returns either
-> +	 * the current queue depth setting (may be different from what
-> +	 * was passed in) or an error.  An error should only be
-> +	 * returned if the requested depth is legal but the driver was
-> +	 * unable to set it.  If the requested depth is illegal, the
-> +	 * driver should set and return the closest legal queue depth.
-> +	 *
-> +	 */
-> +	int (* change_queue_depth)(struct scsi_device *, int);
+Another round of bugfixes.
+People are starting to report sane behaviour.
 
-And then you implement it for the 53c700 as follows:
+If someone at IBM (or knowledgeable enough) is listening, we need a
+method to check a path status on a T200 that don't trigger a controler
+bounce. Is it possible at all ?
 
-> ===== drivers/scsi/53c700.c 1.58 vs edited =====
-> --- 1.58/drivers/scsi/53c700.c	2004-10-20 19:41:52 -05:00
-> +++ edited/drivers/scsi/53c700.c	2004-12-11 17:48:57 -06:00
+Full ChangeLog for the release :
 
-...
+        * [multipath] bump SERIAL_SIZE to 19
+        * [multipath] add a new group_by_node_name pgpolicy
+        * [multipath] move getopt policy parser to
+          get_policy_id()
+        * [multipath] remove get_evpd_wwid()
+        * [checkers] fix the wwn_set test in emc checker
+          (Hergen Lange)
+        * [checkers] treat the emc checker in the name to
+          index translator function (Hergen Lange)
+        * [multipath] print to stderr DM unmet requirement
+          (Guido Guenther)
+        * [multipath] fix realloc return value store not
+          propagated to caller by merge_word() (Nicola Ranaldo)
 
-> @@ -2102,18 +2104,14 @@
->  	/* to do here: deallocate memory */
->  }
->  
-> -static ssize_t
-> -NCR_700_store_queue_depth(struct device *dev, const char *buf, size_t count)
-> +static int
-> +NCR_700_change_queue_depth(struct scsi_device *SDp, int depth)
->  {
-> -	int depth;
-> -
-> -	struct scsi_device *SDp = to_scsi_device(dev);
-> -	depth = simple_strtoul(buf, NULL, 0);
->  	if(depth > NCR_700_MAX_TAGS)
-> -		return -EINVAL;
-> +		depth = NCR_700_MAX_TAGS;
->  	scsi_adjust_queue_depth(SDp, MSG_ORDERED_TAG, depth);
->  
-> -	return count;
-> +	return depth;
->  }
->  
->  static ssize_t
+As usual, doc and download at :
+http://christophe.varoqui.free.fr/
 
-Shouldn't it really be something like
+regards,
+-- 
+christophe varoqui <christophe.varoqui@free.fr>
 
- 	if(depth > NCR_700_MAX_TAGS)
--		return -EINVAL;
-+		depth = NCR_700_MAX_TAGS;
-+	if (depth < 0)
-+		depth = 0;
- 	scsi_adjust_queue_depth(SDp, MSG_ORDERED_TAG, depth);
- 
--	return count;
-+	return SDp->queue_depth == depth ? depth : -EFAIL;
- }
-
-And, actually (nitpicking), shouldn't the comment rather be
-
---- include/scsi/scsi_host.h~	Tue Dec 14 22:14:07 2004
-+++ include/scsi/scsi_host.h	Mon Dec 20 16:21:08 2004
-@@ -219,11 +219,10 @@
- 	 * fill in this function to allow the queue depth of this host
- 	 * to be changeable (on a per device basis).  returns either
- 	 * the current queue depth setting (may be different from what
--	 * was passed in) or an error.  An error should only be
--	 * returned if the requested depth is legal but the driver was
--	 * unable to set it.  If the requested depth is illegal, the
--	 * driver should set and return the closest legal queue depth.
--	 *
-+	 * was passed in) or an error.  If the requested depth is illegal,
-+	 * the driver should set and return the closest legal queue depth.
-+	 * An error should only be returned if the driver was unable to
-+	 * set the new depth.
- 	 */
- 	int (* change_queue_depth)(struct scsi_device *, int);
- 
-? And one more (unrelated) question (possibly, known / discussed before): 
-simple_strtoul converts "-1" to 0, whereas, glibc strtoul would return 
-(unsigned long)-1. It is the intended behaviour, isn't it? Perhaps, worth 
-documenting in vsprintf.c...
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
 
