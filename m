@@ -1,47 +1,37 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: dc395x: can't write to tape
-Date: Thu, 27 Jan 2005 21:45:36 +0100 (CET)
-Message-ID: <Pine.LNX.4.60.0501272144270.5812@poirot.grange>
-References: <200501060518.25782.andrex@alumni.utexas.net>
- <20050109125116.GA6293@twibble.org> <Pine.LNX.4.60.0501222356400.5769@poirot.grange>
- <200501262013.20664.andrex@alumni.utexas.net>
+From: Doug Maxey <dwm@maxeymade.com>
+Subject: Re: [PATCH] scsi/sata write barrier support
+Date: Thu, 27 Jan 2005 16:42:50 -0600
+Message-ID: <200501272242.j0RMgoP5016154@falcon30.maxeymade.com>
+References: <20050127120244.GO2751@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.net ([213.165.64.20]:44443 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S261251AbVA0Wgh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Jan 2005 17:36:37 -0500
-In-Reply-To: <200501262013.20664.andrex@alumni.utexas.net>
+Received: from falcon30.maxeymade.com ([24.173.215.190]:33453 "EHLO
+	falcon30.maxeymade.com") by vger.kernel.org with ESMTP
+	id S261256AbVA0WnF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Jan 2005 17:43:05 -0500
+In-reply-to: <20050127120244.GO2751@suse.de> 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Schulman <andrex@alumni.utexas.net>
-Cc: Jamie Lenehan <lenehan@twibble.org>, linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org
 
-On Wed, 26 Jan 2005, Andrew Schulman wrote:
 
-> > > > I could try to improve the highmem situation / sg-handling. Or do you
-> > > > plan to do it, Jamie?
-> > >
-> > > It's on my list of things to do, but I doubt I'll have any time to do
-> > > anything about in the next few months. So if you have the time and
-> > > desire please go ahead! I'll can test any changes you make (with a
-> > > CD-R/W, tape-drive and HDD), although it may take me a week or two to
-> > > get around to it.
-> >
-> > Ok, less than 2 weeks and here comes the first attempt. It removes
-> > page_to_virt and maps sg lists dynamically. Please, review, test. Slightly
-> > tested here - without highmem.
-> 
-> Guennadi and Jamie, thanks for your help on this.  However, I'm afraid I have 
-> to bail out at this point.  My tape drive was the only reason I was keeping 
-> my old DC395UW controller going, and it has now gone bad.  So I've had to 
-> yank both the card and tape drive and install a different backup solution.  
-> So, I can't test any patches.
+On Thu, 27 Jan 2005 13:02:48 +0100, Jens Axboe wrote:
+>Hi,
+>
+>For the longest time, only the old PATA drivers supported barrier writes
+>with journalled file systems. This patch adds support for the same type
+>of cache flushing barriers that PATA uses for SCSI, to be utilized with
+>libata. 
 
-Thanks for your help.
+What, if any mechanism supports changing the underlying write cache?  
 
-Guennadi
----
-Guennadi Liakhovetski
+That is, assuming this is common across PATA and SCSI drives, and it is 
+possible to turn the cache off on the IDE drives, would switching the 
+cache underneath require completing the inflight IO?
+
+++doug
+
+
 
