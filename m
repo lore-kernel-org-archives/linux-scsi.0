@@ -1,23 +1,33 @@
-From: Matthew Jacob <mjacob@feral.com>
-Subject: Re: Warning - running *really* short on DMA buffers while doing file
- transfers
-Date: Fri, 27 Sep 2002 00:18:50 -0700 (PDT)
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Warning - running *really* short on DMA buffers while doing file transfers
+Date: Fri, 27 Sep 2002 09:24:41 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.BSF.4.21.0209270018360.18029-100000@beppo>
-References: <20020927065610.GQ5646@suse.de>
-Reply-To: mjacob@feral.com
+Message-ID: <20020927072441.GT5646@suse.de>
+References: <20020927065610.GQ5646@suse.de> <Pine.BSF.4.21.0209270018360.18029-100000@beppo>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020927065610.GQ5646@suse.de>
+Content-Disposition: inline
+In-Reply-To: <Pine.BSF.4.21.0209270018360.18029-100000@beppo>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
+To: Matthew Jacob <mjacob@feral.com>
 Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, "Pedro M. Rodrigues" <pmanuel@myrealbox.com>, Mathieu Chouquet-Stringer <mathieu@newview.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Fri, Sep 27 2002, Matthew Jacob wrote:
+> > 
+> > So I think the 'more tags the better!' belief is very much bogus, at
+> > least for the common case.
 > 
-> So I think the 'more tags the better!' belief is very much bogus, at
-> least for the common case.
+> Well, that's one theory.
 
-Well, that's one theory.
+Numbers talk, theory spinning walks
 
+Both Andrew and I did latency numbers for even small depths of tagging,
+and the result was not pretty. Sure this is just your regular plaino
+SCSI drives, however that's also what I care most about. People with
+big-ass hardware tend to find a way to tweak them as well, I'd like the
+typical systems to run fine out of the box though.
+
+-- 
+Jens Axboe
 
