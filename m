@@ -1,61 +1,38 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] QStor SATA/RAID driver for 2.6.9-rc3
-Date: Wed, 20 Oct 2004 16:44:32 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20041020154432.GE21985@infradead.org>
-References: <20041007150709.B12688@infradead.org> <4165624C.5060405@rtr.ca> <416565DB.4050006@pobox.com> <4165A45D.2090200@rtr.ca> <4165A766.1040104@pobox.com> <4165A85D.7080704@rtr.ca> <4165AB1B.8000204@pobox.com> <4165ACF8.8060208@rtr.ca> <20041007221537.A17712@infradead.org> <4165BD38.4020403@rtr.ca>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] fix for Incorrect number of segments after building
+	list problem
+Date: 20 Oct 2004 11:07:36 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1098288465.2008.13.camel@mulgrave>
+References: <1097790683.1717.47.camel@mulgrave>
+	<20041020143940.GK10531@suse.de> <20041020150708.GN10531@suse.de>
+	<1098287481.2008.6.camel@mulgrave>  <20041020155825.GP10531@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S268312AbUJTPxP@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4165BD38.4020403@rtr.ca>
-To: Mark Lord <lkml@rtr.ca>
-Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lsml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:35732 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S268404AbUJTQH5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Oct 2004 12:07:57 -0400
+In-Reply-To: <20041020155825.GP10531@suse.de>
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: 'Dave Olien' <dmo@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, Oct 07, 2004 at 06:03:36PM -0400, Mark Lord wrote:
-> (Christoph Hellwig wrote:
->  >
-> >  - the !dev case in qs_scsi_queuecomman can't happen
-> 
-> Are you sure?
-> I have seen it occur immediately after hot-removal
-> of a drive.  There have been other structural changes
-> since then, so perhaps it is no longer possible,
-> but I'd rather have the test there than have the
-> kernel ooops again.  If you feel strongly about it,
-> then away it goes.
+On Wed, 2004-10-20 at 10:58, Jens Axboe wrote:
+> Ah yes, now I remember. How is the fix for that coming along, btw?
 
-Hmm.  It's freed in ->slave_destroy and the scsi state model shouldn't
-allow new command submission long before.  If you still see it happen
-please send a bugreport to linux-scsi.
+Erm, it didn't cross my mind until I realised what this problem was
+about.  All SCSI drivers are setting 65536 (the default) for the max
+segment length.  However, this is being violated wholesale by all the
+IOMMUs and it all works because their length descriptors are 32 bit
+anyway ...
 
-> >  - never mess with eh_timeout from inside a driver
-> 
-> Give us an interface for it, please.
-> In the meanwhile, gone!
+However, I'll add it to the list and see if I can get something out.  My
+slight problem is testing.  Only SATA and IDE have this short descriptor
+problem, so I've nothing really to test the actual fix with.
 
-set scsi_device->timeout in ->slave_alloc to the value you want.
+James
 
-> >  - please don't implemente the HDIO_ ioctls, Jeff said this can
-> >    be done via SG_IO
-> 
-> SG_IO is incompatible with current user-mode toolsets.
-> Once that interface becomes more mature, and the distributions
-> gradually get updated with newer versions of the tools,
-> then the HDIO_ stuff can go (as per the comments in the source).
-> For now, it is essential for hdparm and smartmontools, among others.
-> 
-> Alternatively, as Jeff has suggested, we may be able to implement
-> a generic HDIO_ mechanism in libata that re-issues the commands
-> through SG_IO (perhaps that is what you meant).  Is that there now?
 
-So please fixup userspace.  New hardware will require new system tools
-once in a while.
-
-> >  - if ->info return a static string you can just store it into ->name
-> 
-> So just nuke the _info() proc, and use .name = QS_DESC ?
-> Okay, done.
-
-Yes.
