@@ -1,44 +1,56 @@
-From: Greg KH <greg@kroah.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: [BK PATCH] SCSI update for 2.6.3
-Date: Tue, 24 Feb 2004 09:55:17 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040224175515.GA31715@kroah.com>
-References: <Pine.LNX.4.58.0402240919490.1129@spektro.metla.fi> <20040224170412.GA31268@kroah.com> <1077642529.1804.170.camel@mulgrave> <20040224171629.GA31369@kroah.com> <Pine.LNX.4.58.0402241937450.3713@kai.makisara.local>
+Date: Tue, 24 Feb 2004 10:15:12 -0800
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040224101512.A19617@beaverton.ibm.com>
+References: <Pine.LNX.4.58.0402240919490.1129@spektro.metla.fi> <20040224170412.GA31268@kroah.com> <1077642529.1804.170.camel@mulgrave> <20040224171629.GA31369@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kroah.org ([65.200.24.183]:60841 "EHLO perch.kroah.org")
-	by vger.kernel.org with ESMTP id S262354AbUBXSHA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2004 13:07:00 -0500
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58.0402241937450.3713@kai.makisara.local>
+In-Reply-To: <20040224171629.GA31369@kroah.com>; from greg@kroah.com on Tue, Feb 24, 2004 at 09:16:29AM -0800
+To: Greg KH <greg@kroah.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Kai Makisara <Kai.Makisara@metla.fi>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, kai.makisara@kolumbus.fi
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Tue, Feb 24, 2004 at 07:51:42PM +0200, Kai Makisara wrote:
-> On Tue, 24 Feb 2004, Greg KH wrote:
+On Tue, Feb 24, 2004 at 09:16:29AM -0800, Greg KH wrote:
+
 > 
-> > On Tue, Feb 24, 2004 at 11:08:48AM -0600, James Bottomley wrote:
-> > > On Tue, 2004-02-24 at 11:04, Greg KH wrote:
-> > > > Can you post it here so we can review it?
-> > > > 
-> > > > And yes, using class_simple should relieve you of Al flamage :)
-> > > 
-> > > The one in the tree is attached.  I did verify it myself, and tried it
-> > > out on some old QIC tapes I had lying around.
-> > 
-> > Can you print out the sysfs tree this patch creates?
-> > 
-> Here is a partial tree for the first tree (nearly identical entries from 
-> the middle trimmed):
+> Can you print out the sysfs tree this patch creates?
+> 
+> What's that "tape" symlink for?  Does it go from the scsi device in
+> /sys/devices/... to the class device?  Or the other way around?
+> 
+> Other than that question, the patch looks sane to me.
 
-<snip>
+Current 2.6 kernel default names are of the form: st[0-9]m[0-3][n]
 
-Ah, very nice.  And thanks for adding those symlinks back to the class
-entries, that should be helpful for people.
+Current /dev naming is of the form: [n]st[0-9][alm]
 
-Looks good.
+Should the st kernel names be changed to map to current /dev names?
 
-greg k-h
+For udev, even with that we need differing pre and postfix values wrapped
+around a peristent name.
+
+Here's /dev and /udev (for a dlt tape drive):
+
+[elm3a49 Documentation]$ ls -l /udev/*st0* | sort -k 5
+crw-------    1 root     root       9,   0 Feb 24 17:47 /udev/st0m0
+crw-------    1 root     root       9,  32 Feb 24 17:47 /udev/st0m1
+crw-------    1 root     root       9,  64 Feb 24 17:47 /udev/st0m2
+crw-------    1 root     root       9,  96 Feb 24 17:47 /udev/st0m3
+crw-------    1 root     root       9, 128 Feb 24 17:47 /udev/st0m0n
+crw-------    1 root     root       9, 160 Feb 24 17:47 /udev/st0m1n
+crw-------    1 root     root       9, 192 Feb 24 17:47 /udev/st0m2n
+crw-------    1 root     root       9, 224 Feb 24 17:47 /udev/st0m3n
+[elm3a49 Documentation]$ ls -l /dev/*st0* | sort -k 5
+crw-rw----    1 root     tape       9,   0 Nov 14 14:34 /dev/st0
+crw-rw----    1 root     tape       9,  32 Nov 14 14:34 /dev/st0l
+crw-rw----    1 root     tape       9,  64 Nov 14 14:34 /dev/st0m
+crw-rw----    1 root     tape       9,  96 Nov 14 14:34 /dev/st0a
+crw-rw----    1 root     tape       9, 128 Nov 14 14:34 /dev/nst0
+crw-rw----    1 root     tape       9, 160 Nov 14 14:34 /dev/nst0l
+crw-rw----    1 root     tape       9, 192 Nov 14 14:34 /dev/nst0m
+crw-rw----    1 root     tape       9, 224 Nov 14 14:34 /dev/nst0a
+
+-- Patrick Mansfield
