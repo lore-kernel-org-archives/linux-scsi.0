@@ -1,37 +1,40 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Addressing when lun spans disks
-Date: Mon, 21 Oct 2002 12:31:38 -0400
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20021021163138.GD28914@redhat.com>
-References: <3DB42408.60E2C71D@patni.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [patch 2.5] ips queue depths
+Date: Mon, 21 Oct 2002 11:29:52 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <200210211629.g9LGTqY02713@localhost.localdomain>
+References: <dledford@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3DB42408.60E2C71D@patni.com>
-To: MShetty <mranalini.shetty@patni.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id JAA24855
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Oct 2002 09:29:55 -0700
+Received: from localhost.localdomain (sshppp-200.mtv1.steeleye.com [172.16.1.200])
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) with ESMTP id JAA24766
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Oct 2002 09:29:53 -0700
+Received: from mulgrave (jejb@localhost)
+	by localhost.localdomain (8.11.6/linuxconf) with ESMTP id g9LGTqY02713
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Oct 2002 11:29:52 -0500
+In-Reply-To: Message from Doug Ledford <dledford@redhat.com>
+   of "Mon, 21 Oct 2002 12:16:18 EDT." <20021021161617.GA28914@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
+To: Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Oct 21, 2002 at 09:28:00PM +0530, MShetty wrote:
-> Hi,
-> 
-> What exactly is the value of 'target id' when my lun spans multiple
-> disks ?? I am not able to understand how the physical disk address would
-> be obtained when a lun spans multiple disks
+dledford@redhat.com said:
+> Yeah, David Jeffery of Adaptec (the current maintainer of the ips
+> driver)  already sent a fix for this to Linus, so it should be in
+> 2.5.44 I think.   If not, let me know and I'll add it to my queue I'm
+> preparing for when  Linus comes back. 
 
-If you are using an external drive chassis that turns multiple disks into 
-a single lun, then the target id is whatever the target id for the lun is.  
-The drives that are actually behind the logical lun are *never* exposed to 
-the scsi layer.  If you are talking about using the md raid code to map 
-several disks into a single md device, then it's the job of the md code to 
-remap all incoming requests to point to the proper hard disk, and in the 
-process of doing so it rewrites the target id, the lun, and the block 
-address to the correct values for the underlying physical disk.
+The last change to ips was you on 16 October, so it's probably still AWOL.
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+I'm keeping the trivial miscellaneous changes in linux-scsi.bkbits.net/scsi-mis
+c-2.5 you can look at the change logs (even if you don't run bitkeeper) to see 
+what's in there.
+
+James
+
+
+
+
