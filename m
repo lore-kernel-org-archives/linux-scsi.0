@@ -1,88 +1,64 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: RE: ISCSI
-Date: Sun, 12 Dec 2004 16:12:39 -0500
-Message-ID: <1102885959.3012.104.camel@localhost.localdomain>
-References: <200412122107.iBCL7T902320@www.watkins-home.com>
-Reply-To: mingz@ele.uri.edu
+From: Brian King <brking@charter.net>
+Subject: [PATCH] Add AMI Megaraid card to new driver
+Date: Sun, 12 Dec 2004 23:08:32 -0600
+Message-ID: <41BD23D0.9060105@charter.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------080609060001000401070601"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from leviathan.ele.uri.edu ([131.128.51.64]:54702 "EHLO
-	leviathan.ele.uri.edu") by vger.kernel.org with ESMTP
-	id S262129AbULLVMn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 12 Dec 2004 16:12:43 -0500
-In-Reply-To: <200412122107.iBCL7T902320@www.watkins-home.com>
+Received: from mxsf26.cluster1.charter.net ([209.225.28.226]:29142 "EHLO
+	mxsf26.cluster1.charter.net") by vger.kernel.org with ESMTP
+	id S262026AbULMFIe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Dec 2004 00:08:34 -0500
+Received: from mxip07.cluster1.charter.net (mxip07a.cluster1.charter.net [209.225.28.137])
+	by mxsf26.cluster1.charter.net (8.12.11/8.12.11) with ESMTP id iBD58XdY031573
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Dec 2004 00:08:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: 'linux-scsi' <linux-scsi@vger.kernel.org>
+To: Atul.Mukker@lsil.com
+Cc: linux-scsi@vger.kernel.org
 
-for scst, go http://scst.sourceforge.net/
+This is a multi-part message in MIME format.
+--------------080609060001000401070601
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-for questions about unh iscsi, pls go and ask at
-http://sourceforge.net/forum/forum.php?forum_id=265256
 
-ming
+--------------080609060001000401070601
+Content-Type: text/x-patch;
+ name="megaraid_ami_perc3dc.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="megaraid_ami_perc3dc.patch"
 
-On Sun, 2004-12-12 at 16:07, Guy wrote:
-> As suggested, I am attempting to install UNH iSCSI, but having some
-> problems.
-> 
-> Readme says:
-> - The appropriate way to install this package is :
->    1. mkdir <name> ; tar -zxf <tarball>
->    2. cd <name>/unh_iscsi/src/
->    3. ./Configure
->    4. make rpm
->    5. rpm -ivh  /usr/src/redhat/RPMS/i386/unh_iscsi-1.5-0X.i386.rpm
-> 
-> When I do "make rpm" I get this error:
-> tar cf /usr/src/redhat/SOURCES/unh_iscsi.tar  .
-> tar: /usr/src/redhat/SOURCES/unh_iscsi.tar: Cannot open: No such file or
-> directory
-> tar: Error is not recoverable: exiting now
-> make: *** [rpm] Error 2
-> 
-> Are there some prerequisites that are needed?
-> Or am I just doing something wrong.
-> 
-> Also, could you give me a link to SCST?  Or is this included in UNH iSCSI?
-> 
-> Thanks,
-> Guy
-> 
-> 
-> -----Original Message-----
-> From: Ming Zhang [mailto:mingz@ele.uri.edu] 
-> Sent: Sunday, December 12, 2004 1:55 PM
-> To: Guy
-> Cc: linux-scsi
-> Subject: Re: ISCSI
-> 
-> i suggest u to use UNH iSCSI + SCST. it provides a bypass mode which fit
-> you needs. IET will support a bypass interface later.
-> 
-> Ming
-> 
-> On Sun, 2004-12-12 at 13:08, Guy wrote:
-> > I have a SCSI tape drive on my Linux system.  I want to use the tape drive
-> > from another system with another (evil) OS.  I have found more than 1
-> source
-> > forge project related to ISCSI.  These projects seem to only talk about
-> disk
-> > access (SAN), not tape access.  I can't determine which I should use, if
-> > any.
-> > 
-> > Does anyone know which is best?
-> > I have kernel 2.4.28, but would be willing to attempt an upgrade if
-> needed.
-> > 
-> > Thanks,
-> > Guy
-> > 
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+Adds AMI Megaraid Elite 1600 to the list of supported
+adapters. I encountered some issues running with the old
+megaraid driver with this card, so I wrote this patch and
+have been running without problems for several days now.
+Please apply.
+
+
+---
+
+
+diff -puN drivers/scsi/megaraid/megaraid_mbox.c~megaraid_ami_perc3dc drivers/scsi/megaraid/megaraid_mbox.c
+--- linux-2.6.10-rc3-bk6/drivers/scsi/megaraid/megaraid_mbox.c~megaraid_ami_perc3dc	2004-12-12 22:58:17.235599413 -0600
++++ linux-2.6.10-rc3-bk6-brking/drivers/scsi/megaraid/megaraid_mbox.c	2004-12-12 22:59:49.594673649 -0600
+@@ -301,6 +301,12 @@ static struct pci_device_id pci_id_table
+ 		PCI_SUBSYS_ID_PERC3_SC,
+ 	},
+ 	{
++		PCI_VENDOR_ID_AMI,
++		PCI_DEVICE_ID_AMI_MEGARAID3,
++		PCI_VENDOR_ID_AMI,
++		PCI_SUBSYS_ID_PERC3_DC,
++	},
++	{
+ 		PCI_VENDOR_ID_LSI_LOGIC,
+ 		PCI_DEVICE_ID_MEGARAID_SCSI_320_0,
+ 		PCI_VENDOR_ID_LSI_LOGIC,
+
+_
+
+--------------080609060001000401070601--
