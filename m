@@ -1,66 +1,52 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [linux-usb-devel] Re: /proc/scsi/map
-Date: Mon, 17 Jun 2002 09:09:58 -0700
+Date: Mon, 17 Jun 2002 11:42:05 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020617090958.A19843@eng2.beaverton.ibm.com>
-References: <oliver@neukum.name> <200206171454.g5HEsu802593@localhost.localdomain>
+Message-ID: <200206171642.g5HGg5b03044@localhost.localdomain>
+References: <patmans@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200206171454.g5HEsu802593@localhost.localdomain>; from James.Bottomley@SteelEye.com on Mon, Jun 17, 2002 at 09:54:56AM -0500
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id JAA18362
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Jun 2002 09:42:18 -0700
+In-Reply-To: Message from Patrick Mansfield <patmans@us.ibm.com>
+   of "Mon, 17 Jun 2002 09:09:58 PDT." <20020617090958.A19843@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Oliver Neukum <oliver@neukum.name>, David Brownell <david-b@pacbell.net>, Andries.Brouwer@cwi.nl, garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sancho@dauskardt.de, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dougg@torque.net
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Oliver Neukum <oliver@neukum.name>, David Brownell <david-b@pacbell.net>, Andries.Brouwer@cwi.nl, garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sancho@dauskardt.de, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dougg@torque.net
 
-On Mon, Jun 17, 2002 at 09:54:56AM -0500, James Bottomley wrote:
-> 
-> But, in SCSI, you can't.  Just for a simple device showing up as a SCSI disc 
-> (that's a real SCSI disc, attached say by parallel connectors), there are 
-> several potential ways to get a unique ID.  No one way works for all such 
-> disks, that is the nub of the problem.
+patmans@us.ibm.com said:
+> I agree it would be nice to get the ID via user space, but it is not
+> that hard to get the ID, and trying the various SCSI INQUIRY pages
+> that supply  the ID is not complicated.
 
-I agree it would be nice to get the ID via user space, but it is not that
-hard to get the ID, and trying the various SCSI INQUIRY pages that supply 
-the ID is not complicated. Putting ID code (including hotplug hooks) into
-user space is probably more complex. I would also like the ID at scan time
-for multi-path use so we don't have to allocate extraneous Scsi_Devices,
-and later coalesce them.
+OK, how about some hardware scenarios:
 
-Mike Sullivan's driverfs patch for SCSI (without any device naming) includes
-code to look up an ID, and store the ID in driverfs; he was working on
-a patch for 2.5.21.
+I've a scsi array (an LSI 6298) which has no WWN page (0x83) but does have a 
+serial number in the VPD page.  However, the VPD serial number is an 
+identifier for the array *controller* and thus is the *same* for all the LUNs. 
+ For this beast I have to add in the LUN number to the VPD serial number to 
+get a unique identifier per device.  Worse, the LSI 6298 is multi path.  Now I 
+get a different "unique" identifier depending on path (because different 
+controllers give different VPD serial numbers), so if I want to identify it 
+uniquely, I have to use some property of the LUN, like partion UUID.
 
-FYI the various SCSI ID pages and such are described in the SCSI primaray
-command for example the following:
+Or, what about an old 8 bit EMC symmetrix.  They have no WWN page and they 
+embed both a LUN and a *path* identifier in the VPD serial number.  To get the 
+globally unique ID for this one, I have to strip off the path part.
 
-ftp://ftp.t10.org/t10/drafts/spc3/spc3r07.pdf
+> FYI the various SCSI ID pages and such are described in the SCSI
+> primaray command for example the following:
 
-Near page 316 (section 8.6) are descriptions for INQUIRY VPD page 0x80
-and 0x83.
+> ftp://ftp.t10.org/t10/drafts/spc3/spc3r07.pdf 
 
-> but the only piece that has disc specific logic is sd.  The lld is specific to 
-> the host adapter card (not shown), not the real device, so it is not the right 
-> element to probe for an ID.
+Ah, but that's the scsi-3 spec which (finally) cleaned up this unique name 
+business.  However, for SCSI-2 and before, it was an unholy mess, as the two 
+examples above illustrate.  I agree that for all modern devices which are 
+SCSI-3 SPC compliant, then just asking for the WWN page probably works.  The 
+question is what to do about all the legacy hardware out there?
 
-Any SCSI device can return an ID (i.e. INQUIRY VPD page 0x80 or 0x83),
-so the logic need not be in sd. I don't know how removable media should
-be handled (not a SCSI device being added/removed from the system), for
-tape this is probably not an issue.
+James
 
-> 
-> Here, the usb-storage driver does know about the real device (and already has 
-> a huge exception table), so it has enough knowledge to probe for an identifier.
 
-> 
-> The thing I think is a bad idea is having to code the logic to look up a 
-> unique identifier (plus all the exceptions) in sd.  But for the pure SCSI 
-> stack, there's nowhere else to place it.  Even if you get usb-storage to 
-> supply an API for providing the id, it will be one of the few llds that can 
-> retrieve this, so it will become just another exception sd has to cope with.
-> 
-> James
-
-usb-storage could emulate VPD page 0x83 to return the GID, and that could
-then be used by the mid-layer or a user level program to extract an ID.
-
--- Patrick Mansfield
