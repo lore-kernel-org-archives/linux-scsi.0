@@ -1,45 +1,71 @@
-From: =?iso-8859-1?Q?J=F6rn?= Engel <joern@wohnheim.fh-wedel.de>
-Subject: Re: [RFR] a new SCSI driver
-Date: Wed, 28 May 2003 20:25:00 +0200
+From: Andrew Vasquez <praka@san.rr.com>
+Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b2).
+Date: Wed, 28 May 2003 23:19:13 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030528182500.GB25188@wohnheim.fh-wedel.de>
-References: <200305251119.h4PBJOal000678@81-2-122-30.bradfords.org.uk> <Pine.LNX.4.50.0305250617440.19617-100000@montezuma.mastecende.com>
+Message-ID: <20030529061913.GA27199@praka.local.home>
+References: <20030519225728.GA17279@praka.local.home> <20030521173215.GA25137@praka.local.home> <20030521222635.GB21124@krispykreme>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wohnheim.fh-wedel.de ([195.37.86.122]:9344 "EHLO
-	wohnheim.fh-wedel.de") by vger.kernel.org with ESMTP
-	id S264812AbTE1SM0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 May 2003 14:12:26 -0400
+Received: from orngca-mls01.socal.rr.com ([66.75.160.16]:62198 "EHLO
+	orngca-mls01.socal.rr.com") by vger.kernel.org with ESMTP
+	id S261923AbTE2GMj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 May 2003 02:12:39 -0400
+Received: from san.rr.com (66-75-128-22.san.rr.com [66.75.128.22])
+	by orngca-mls01.socal.rr.com (8.11.4/8.11.3) with ESMTP id h4T6NGV25394
+	for <linux-scsi@vger.kernel.org>; Wed, 28 May 2003 23:23:17 -0700 (PDT)
+Received: from san.rr.com (localhost [127.0.0.1])
+	by san.rr.com (8.12.3/8.12.3/SuSE Linux 0.6) with ESMTP id h4T6JDjW027340
+	for <linux-scsi@vger.kernel.org>; Wed, 28 May 2003 23:19:13 -0700
+Received: (from praka@localhost)
+	by san.rr.com (8.12.3/8.12.3/Submit) id h4T6JDHJ027339
+	for linux-scsi@vger.kernel.org; Wed, 28 May 2003 23:19:13 -0700
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.50.0305250617440.19617-100000@montezuma.mastecende.com>
+In-Reply-To: <20030521222635.GB21124@krispykreme>
 List-Id: linux-scsi@vger.kernel.org
-To: Zwane Mwaikambo <zwane@linuxpower.ca>
-Cc: john@grabjohn.com, rmk@arm.linux.org.uk, jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sun, 25 May 2003 06:18:34 -0400, Zwane Mwaikambo wrote:
-> On Sun, 25 May 2003 john@grabjohn.com wrote:
->=20
-> > Also embedded world !=3D PDAs.=20
->=20
-> I don't mean to troll, but could you elaborate on that.
+On Thu, 22 May 2003, Anton Blanchard wrote:
 
-There are two common definitions for embedded.  One means something
-very small, low power consumption etc.  The other is no
-user-interface.  PDA fits one definition, but not the other.
+> > +#if MEMORY_MAPPED_IO
+> > +	/* Get memory mapped I/O address */
+> > +	pci_read_config_dword(ha->pdev, PCI_BASE_ADDRESS_1, &mmapbase);
+> 
+> You really want to be using pci_resource_start(ha->pdev, 1) so it will
+> work on architectures like ppc64 and sparc64.
+> 
 
-Everyone knows what embedded is, but not everyone agrees with the
-others definition. ;)
+You're correct -- code updated in my tree.
 
-J=F6rn
+> > +	mmapbase &= PCI_BASE_ADDRESS_MEM_MASK;
+> > +
+> > +	/* Find proper memory chunk for memory map I/O reg */
+> > +	base = mmapbase & PAGE_MASK;
+> > +	page_offset = mmapbase - base;
+> 
+> Is that correct?
+> 
 
---=20
-Measure. Don't tune for speed until you've measured, and even then
-don't unless one part of the code overwhelms the rest.
--- Rob Pike
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The 'mmapbase &= PCI_BASE_ADDRESS_MEM_MASK' does appear to be
+incorrect, yet, I just have one question.  it seems several drivers
+(i.e. sym53c8xx_2, aic7xxx) ensure the memory-mapped resource begins
+on a page boundary before passing it onto ioremap().  Yet, in the code
+for __ioremap(), (arch/i386/mm/ioremap.c) there is this small comment:
+
+	/*
+	 * NOTE! We need to allow non-page-aligned mappings too: we
+	 * will obviously have to convert them into an offset in a
+	 * page-aligned mapping, but the caller shouldn't need to know
+	 * that small detail.
+	 *
+	 */
+
+Is it safe to assume *all* platforms will handle this case internally,
+or should drivers perform the pre-process?
+
+BTW: appearantly none of my emails sent via my QLogic account have
+made it to linux-[kernel|scsi] in the past week -- I'm working with IT
+to solve the problem - please be patient with the response time lags.
+
+Thanks,
+Andrew Vasquez
