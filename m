@@ -1,92 +1,84 @@
-From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
-Subject: RE: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
-Date: Mon, 24 Nov 2003 09:37:08 -0800
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: Fw: 2.6.0-test9 kernel oops
+Date: Mon, 24 Nov 2003 10:56:17 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <B179AE41C1147041AA1121F44614F0B0598D30@AVEXCH02.qlogic.org>
+Message-ID: <20031124105617.3d600b74.rddunlap@osdl.org>
+References: <20031123231037.44115c6f.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [198.70.193.2] ([198.70.193.2]:46484 "EHLO AVEXCH01.qlogic.org")
-	by vger.kernel.org with ESMTP id S263806AbTKXRhC convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2003 12:37:02 -0500
-content-class: urn:content-classes:message
+Received: from fw.osdl.org ([65.172.181.6]:48365 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S263822AbTKXTCP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2003 14:02:15 -0500
+In-Reply-To: <20031123231037.44115c6f.akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>, Jes Sorensen <jes@wildopensource.com>
-Cc: Linux-SCSI <linux-scsi@vger.kernel.org>, jbarnes@sgi.com, mdr@sgi.com
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org, gibbs@scsiguy.com, kostrian@deepblue.sk
 
-Jeremy,
+On Sun, 23 Nov 2003 23:10:37 -0800 Andrew Morton <akpm@osdl.org> wrote:
 
-> > Andrew> Manufacturing writes a pre-canned NVRAM image along with a
-> > Andrew> rolling serial number (unique to each HBA) to each card that
-> > Andrew> leaves QLogic.  One obvious example of a potential problem in
-> > Andrew> the case of using the (driver) doctored NVRAM data is how to
-> > Andrew> assign a unique serial number to the ISP that is being
-> > Andrew> initialized.  BTW: The serial number is actually encoded in
-> > Andrew> bytes 5, 6, and 7 of the WWPN (portname); coupled with the
-> > Andrew> hardcoded port number (33) and the QLogic copany code of (224
-> > Andrew> and 139), code from qla2x00_nvram_config():
-> > 
-> > Ok this one is more tricky. There's a couple of options though, we
-> > could generate a unique serial number based on the random driver
-> > output, or maybe it's worth coming up with an infrastructure for this,
-> > other FC card drivers will run into the same problem.
-> 
-> We should be able to read the WWPN out of the NVRAM, since there is
-> no reason for that to be reset.  There are various utilities/firmware
-> out there that actually look at an adapter's WWPN and decide whether
-> or not to talk to that adapter.
-> 
-> I think the WWPN is the only thing that we read from firmware in our
-> Irix driver.  We also verify the checksum, so that we can tell if the
-> portname is valid.
-> 
-> My recommendation is that the driver get the WWPN from nvram and go
-> with sane defaults for everything else.
->
+| 
+| Can anyone else with an aic7xxx reproduce (and hence fix) this?
+| /proc/scsi/aic7xxx/0 works happily on my test box.
+| 
+| 
+| Begin forwarded message:
+| 
+| Date: Mon, 24 Nov 2003 06:36:32 +0100
+| From: Tomas Kostrian <kostrian@deepblue.sk>
+| To: akpm@osdl.org
+| Subject: 2.6.0-test9 kernel oops
+| 
+| 
+| kostrian@test:~$ uname -a
+| Linux test.[SNIFF].sk 2.6.0-test9 #1 Sun Nov 9 01:35:44 CET 2003 i686
+| unknown
+| kostrian@test:~$ ls -la /proc/scsi/aic7xxx/
+| total 0
+| dr-xr-xr-x    2 root     root            0 Nov 24 00:06 .
+| dr-xr-xr-x    4 root     root            0 Nov 24 00:06 ..
+| -rw-r--r--    1 root     root            0 Nov 24 00:06 0
+| kostrian@test:~$ cat /proc/scsi/aic7xxx/0
+| Segmentation fault
+| kostrian@test:~$ dmesg
+| .
+| .
+| [SNIFF]
+| .
+| .
+| Unable to handle kernel NULL pointer dereference at virtual address
+| 00000120
+|  printing eip:
+| c02624d8
+| *pde = 00000000
+| Oops: 0000 [#1]
+| CPU:    0
+| EIP:    0060:[<c02624d8>]    Not tainted
+| EFLAGS: 00010286
+| EIP is at aic7xxx_proc_info+0x1c/0xab4
+| eax: c02624bc   ebx: c3a63f78   ecx: 00000000   edx: 00000000
+| esi: 00000400   edi: c3aca000   ebp: c3a63f74   esp: c3a63ef4
+| s: 007b   es: 007b   ss: 0068
+| Process cat (pid: 657, threadinfo=c3a62000 task=c5e37350)
+| Stack: c3a63f78 00000400 c3aca000 c3a63f74 00000000 c03a8054 c012d24b c025139b
+|        c1187000 c3aca000 c3a63f78 00000000 00000400 00000000 00000000 c6332400
+|        00000400 c3aca000 c016a508 c3aca000 c3a63f78 00000000 00000400 c3a63f74
+| Call Trace:
+|  [<c012d24b>] __alloc_pages+0xa3/0x2dc
+|  [<c025139b>] proc_scsi_read+0x2b/0x44
+|  [<c016a508>] proc_file_read+0x10c/0x238
+|  [<c013fdb5>] vfs_read+0xb5/0xe4
+|  [<c013ffb5>] sys_read+0x31/0x4c
+|  [<c0108a53>] syscall_call+0x7/0xb
+| 
+| Code: 83 b9 20 01 00 00 00 75 f1 85 c9 75 2f 0f b7 05 58 00 00 00
+| -
 
-Ok, then what groups of parameters would you suggest have sane
-defaults.  With the patch that was provided, the following
-(additional)-firmware options are set for the ISP23xx by invalidating
-the checksum (SN2 behaviour):
+I can reproduce it (note, this is with aic7xyx_old, not Justin's driver).
+I'll see if I can produce a fix or something...
 
-	o Full duplex
-	o Fairness
-	o Full login after LIP
-	o use extended firmware control block
-	o Loop prefered, else point-to-point
-	o Tape enabled
-	o FC Confirm
-
-Along with a large number of numeric defaults for retries, delays, a
-timer counts.
-
-> Perhaps make it a config option to read other settings from the
-> NVRAM, but also provide command line or config options for other
-> settings that might need adjustment, for those systems that cannot
-> change nvram values.  
->
-
-The (additional-)firmware options, perhaps a subset, seem like a
-(possibily) reasonable thing to force at the driver level.  But, on
-the otherhand, the retry, delay and timer counts tend to be very
-customer specific based on topology and storage.  Additionally, the
-driver already exports via module parameters several of the more
-important driver retry and timer counts, i.e. port_down_try_count,
-link_down_timeout, retry_count (try modinfo for a full list).  A user
-can use these facilities to perform any fine-tuning.
-
-> Our experience is that we really don't need to mess with them,
-> however.  The only two things that we allow adjustment to are frame
-> size and data rate.
-> 
-
-The driver still depend on the NVRAM to provide these values.  In many
-cases, the standard NVRAM values programmed at manufacturing time
-satisfy the majority of users.  Do you have boards that have 'bogus'
-NVRAM settings, or are you just being cautious and not depending on
-the end-user to not mess things up?
-
-Regards,
-Andrew Vasquez
+--
+~Randy
+MOTD:  Always include version info.
