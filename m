@@ -1,64 +1,26 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] refactor tmscsim inititalization code
-Date: Tue, 7 Sep 2004 18:29:41 +0200 (CEST)
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: clustering and 2.6
+Date: Tue, 7 Sep 2004 17:34:27 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60.0409071812550.21209@poirot.grange>
-References: <20040904130235.GA20552@lst.de>
+Message-ID: <20040907173427.A17284@infradead.org>
+References: <20040907161254.GA23325@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.net ([213.165.64.20]:21950 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S268248AbUIGQaU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2004 12:30:20 -0400
-In-Reply-To: <20040904130235.GA20552@lst.de>
+Received: from imladris.demon.co.uk ([193.237.130.41]:29703 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S268200AbUIGQec (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Sep 2004 12:34:32 -0400
+Content-Disposition: inline
+In-Reply-To: <20040907161254.GA23325@beardog.cca.cpqcorp.net>; from mikem@beardog.cca.cpqcorp.net on Tue, Sep 07, 2004 at 11:12:54AM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org
+To: mikem <mikem@beardog.cca.cpqcorp.net>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de
 
-A couple more things:
+On Tue, Sep 07, 2004 at 11:12:54AM -0500, mikem wrote:
+> The SCSI mid-layer sets a bogus size on a device when read capacity fails.
+> Is this the preferred way to get around this issue? Seems like there
+> should be a better way.
 
-Your note on possible problems when using several AM53C974A-based HBA in
-one machine - how do other drivers resolve this problem, if those 
-adapters need different configuration?
-
-And one thing I didn't understand in your code:
-
-On Sat, 4 Sep 2004, Christoph Hellwig wrote:
-
-> +static void __devinit dc390_eeprom_prepare_read(struct pci_dev *pdev, u8 cd)
-> {
-> +	u8 carryFlag = 1, j = 0x80, i, bval, regval;
->
-> +	for (i = 0; i < 9; i++) {
-> +		if (carryFlag) {
-> +			bval = 0x40;
-> +			regval = 0x80;
-> +
-> +			pci_write_config_byte(pdev, regval, bval);
-> +		} else {
-> +			bval = 0;
-> +			regval = 0xc0;
-
- 			^^^^^^^^^^^^^^
-
-Where does this come from? The old code seems to always write to 0x80, 
-IIUC. I'll look further.
-
-> +		}
->
-> +		udelay(160);
-> +		pci_write_config_byte(pdev, regval, bval | 0x80);
-> +		udelay(160);
-> +		pci_write_config_byte(pdev, regval, 0);
-> +		udelay(160);
->
-> +		carryFlag = (cmd & j) ? 1 : 0;
-> +		j >>= 1;
-> +	}
-> +}
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
-
+you need to write something (anything works) to the rescan attribute of
+each lun.
