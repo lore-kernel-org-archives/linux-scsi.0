@@ -1,68 +1,74 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [ANNOUNCE] iSCSI enterprise target software
-Date: Wed, 02 Mar 2005 12:30:29 +0900
-Message-ID: <20050302123029Z.fujita.tomonori@lab.ntt.co.jp>
-References: <1109702911.2878.16.camel@localhost.localdomain>
-	<OF961A122F.772A6491-ON88256FB7.0072D359-88256FB7.0073C3F8@us.ibm.com>
+From: "Rajat  Jain, Noida" <rajatj@noida.hcltech.com>
+Subject: RE: One question about SCSI device hotplug
+Date: Wed, 2 Mar 2005 09:10:36 +0530
+Message-ID: <267988DEACEC5A4D86D5FCD780313FBB051E6CDB@exch-03.noida.hcltech.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:19639 "EHLO
-	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S262155AbVCBDa3
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2005 22:30:29 -0500
-In-Reply-To: <OF961A122F.772A6491-ON88256FB7.0072D359-88256FB7.0073C3F8@us.ibm.com>
+Content-Type: text/plain
+Received: from ngate.noida.hcltech.com ([202.54.110.230]:26300 "EHLO
+	ngate.noida.hcltech.com") by vger.kernel.org with ESMTP
+	id S262136AbVCBDnt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Mar 2005 22:43:49 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: iscsitarget-devel@lists.sourceforge.net
+To: Matthew Wilcox <matthew@wil.cx>, "Zhao, Forrest" <forrest.zhao@intel.com>
+Cc: linux-scsi@vger.kernel.org, "Caushik, Ramesh" <ramesh.caushik@intel.com>
 
-From: Bryan Henderson <hbryan@us.ibm.com>
-Subject: Re: [ANNOUNCE] iSCSI enterprise target software
-Date: Tue, 1 Mar 2005 13:04:58 -0800
 
-> >it is hard to beat linux kernel [page] cache performance though.
+
+What surprises me is that if the LLDD *can't* get to know about the hot
+plugging / unplugging of device, what is the use of the functions
+scsi_add_device() and scsi_remove_device()??
+
+Please note that these functions are provided by scsi mid-level driver to
+LLDD to add / remove devices (Refer to
+Documentation/scsi/scsi_mid_low_api.txt).
+
+Thanks & Regards,
+
+Rajat Jain
+HCL Technologies,
+A-11, Sector 16, Noida-201301.
+Ph: +91-120-2510701/702/813 Extn.3159
+rajatj@noida.hcltech.com
+http://www.hcltech.com/ 
+
+	"...one of the main causes of the fall of the Roman Empire was that,
+lacking zero, they had no way to indicate successful termination of their C
+programs."
+	Robert Firth 
+
+
+
+
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Matthew Wilcox
+Sent: Tuesday, March 01, 2005 8:16 PM
+To: Zhao, Forrest
+Cc: linux-scsi@vger.kernel.org; Caushik, Ramesh
+Subject: Re: One question about SCSI device hotplug
+
+On Tue, Mar 01, 2005 at 05:06:55PM +0800, Zhao, Forrest wrote:
+> If I surprisingly hot-remove a SCSI disk from HBA manually without 
+> executing "echo "scsi remove-single-device  <h> <b> <t <l>" > 
+> /proc/scsi/scsi", can the "hotplug"
+> event be notified to SCSI mid-layer or user space?
 > 
-> It's quite easy to beat it for particular applications.  You can use 
-> special knowledge about the workload to drop pages that won't be accessed 
-> soon in favor of pages that will, not clean a page that's just going to 
-> get discarded or overwritten soon, allocate less space to less important 
-> data, and on and on.
+> I briefly browse some code of LLDD, it seems that LLDD never report 
+> "hotplug" event to upper-level layer. Am I right?
 
-Yes. The page-cache replacement policy has a big impact on the
-performance. And a smart storage system tries to know how initiators
-use its disk volume and adjust the replacement policy. For example, if
-a initiator uses a file system, page cache keeping data used as
-meta-data blocks can be important than page cache keeping data for
-file-data blocks. mlock and madvise may helps, however, storage people
-need more functionality for this issue, I guess.
+I don't think it *can* ... the SCSI protocols don't tell the host "hey, this
+device has disappeared".
 
-As Arjan said, all page cache are not identical on some
-architectures. So, target software need to control the way to
-allocate page cache to get the best performance out of such
-architectures. Can user-mode target software do it? (sorry, I've not
-used such architectures.)
-
-Another possible reason why kernel-space target software is preferable
-is handling hardware. For example, NVRAM is very useful and widely
-used for storage systems. I have no experience with NVRAM cards,
-however, after a scan of drivers/block/umem.c (Micro Memory's NVRAM
-card driver), I think that you need to modify the interrupt handler or
-using bio to get the best performance out of it (although user-mode
-target software can write, read, and mmap it like normal block
-devices). And user-mode target software cannot handle this issue well.
-
-Note that I'm not trying to push highly-specialized functionality,
-such as new page-cache replacement policy, for storage systems into
-the mainline kernel. As I said before, our code doesn't touch other
-parts of the kernel.
-
-I consider our project as a kind of a plat-home for building iSCSI
-storage systems. I think that basic iSCSI functionality that our code
-provides satisfies the majority. In addition, industry and academic
-people can modify our code and the linux kernel to add what they
-want. They can build remote mirroring systems, failover storage
-systems, etc possibly by using their own hardware. We may benefit from
-some of them. Thus, I think that kernel-mode iSCSI target
-functionality, which can control all the system-resources and provide
-the maximum flexibility and performance, is a better approach.
+--
+"Next the statesmen will invent cheap lies, putting the blame upon the
+nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse to
+examine any refutations of them; and thus he will by and by convince himself
+that the war is just, and will thank God for the better sleep he enjoys
+after this process of grotesque self-deception." -- Mark Twain
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in the
+body of a message to majordomo@vger.kernel.org More majordomo info at
+http://vger.kernel.org/majordomo-info.html
