@@ -1,49 +1,38 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: udf folders pointing to self and above
-Date: 29 Sep 2003 16:47:48 -0600
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: [PATCH] fix access_count check in scsi_remove_device
+Date: Mon, 29 Sep 2003 16:38:04 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1064875668.3175.9.camel@patehci2>
-References: <1064864262.4262.49.camel@patehci2>
-	 <1064870151.5458.20.camel@patehci2>
-	 <20030929143457.3def59f4.rddunlap@osdl.org>
-	 <1064872992.5458.50.camel@patehci2>
+Message-ID: <20030929163804.A27526@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:42149 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S263046AbTI2Wra
+Received: from e32.co.us.ibm.com ([32.97.110.130]:51371 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S262989AbTI2XiJ
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Sep 2003 18:47:30 -0400
-In-Reply-To: <1064872992.5458.50.camel@patehci2>
+	Mon, 29 Sep 2003 19:38:09 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: rddunlap@osdl.org
+To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: linux-scsi@vger.kernel.org
 
-> > Linux filesystems ... in the kernel tree)
-> > should be discussed on open mailing lists [such as]
-> > linux-fsdevel@vger.kernel.org ...
+Patch against 2.6.0-test6.
 
-usb-storage kindly reminds me in part I may have got the idea that we
-maintain udf.ko outside of linux-fsdevel by way of kernel.org releasing
-2.6.0-test6 Without benefit of the perhaps incorrect patch:
+Add a missing '!' to the check of access_count in scsi_remove_device.
 
---- linux-2.6.0-test6/MAINTAINERS	2003-09-27 18:50:29.000000000 -0600
-+++ linux/MAINTAINERS	2003-09-29 16:44:27.250110640 -0600
-@@ -1973,12 +1973,12 @@
- UDF FILESYSTEM
- P:	Ben Fennema
- M:	bfennema@falcon.csc.calpoly.edu
- P:	Dave Boynton
- M:	dave@trylinux.com
--L:	linux_udf@hpesjro.fc.hp.com
--W:	http://linux-udf.sourceforge.net
-+L:	linux-fsdevel@vger.kernel.org
-+W:	http://www.kernel.org
- S:	Maintained
- 
- UMSDOS FILESYSTEM
- P:	Matija Nalis
- M:	Matija Nalis <mnalis-umsdos@voyager.hr>
+Hit this while trying to delete a scsi_device via sysfs, the first delete
+had no affect, and left the sysfs scsi_device in place, a second delete
+oopsed.
 
+--- bleed-2.5/drivers/scsi/scsi_sysfs.c-orig	Mon Sep 29 12:21:09 2003
++++ bleed-2.5/drivers/scsi/scsi_sysfs.c	Mon Sep 29 16:19:22 2003
+@@ -412,7 +412,7 @@
+ 		set_bit(SDEV_DEL, &sdev->sdev_state);
+ 		if (sdev->host->hostt->slave_destroy)
+ 			sdev->host->hostt->slave_destroy(sdev);
+-		if (atomic_read(&sdev->access_count))
++		if (!atomic_read(&sdev->access_count))
+ 			device_del(&sdev->sdev_gendev);
+ 		up_write(&class->subsys.rwsem);
+ 	}
 
+-- Patrick Mansfield
