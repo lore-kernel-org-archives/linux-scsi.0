@@ -1,74 +1,38 @@
-From: Valdis.Kletnieks@vt.edu
-Subject: Re: POSSIVEL SPAM-- Re: Binary-only firmware covered by the GPL?
-Date: Wed, 31 Mar 2004 00:47:34 -0500
-Message-ID: <200403310547.i2V5lYae027457@turing-police.cc.vt.edu>
-References: <YBtoCC.A.e-C.5maaAB@murphy>
-            <4069B200.8010309@almg.gov.br>
+From: Andrew Schulman <andrex@alumni.utexas.net>
+Subject: Re: dc395x: CD writer causes endless "sg_to_virt failed" loop
+Date: Wed, 31 Mar 2004 03:29:17 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <200403310329.17654.andrex@alumni.utexas.net>
+References: <20040327161034.GA9963@twibble.org> <200403282303.02146.andrex@alumni.utexas.net> <20040330035115.GA3680@twibble.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_887855632P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <bounce-debian-legal=debian-legal=m.gmane.org@lists.debian.org>
-In-Reply-To: Your message of "Tue, 30 Mar 2004 14:44:32 -0300."
-             <4069B200.8010309@almg.gov.br>
-Resent-Message-ID: <ep_dYD.A.4CC.HulaAB@murphy>
-List-Post: <mailto:debian-legal@lists.debian.org>
-List-Help: <mailto:debian-legal-request@lists.debian.org?subject=help>
-List-Subscribe: <mailto:debian-legal-request@lists.debian.org?subject=subscribe>
-List-Unsubscribe: <mailto:debian-legal-request@lists.debian.org?subject=unsubscribe>
-List-Archive: <http://lists.debian.org/debian-legal/>
-To: Humberto Massa <humberto.massa@almg.gov.br>
-Cc: debian-devel@lists.debian.org, debian-legal@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sccrmhc13.comcast.net ([204.127.202.64]:17040 "EHLO
+	sccrmhc13.comcast.net") by vger.kernel.org with ESMTP
+	id S261832AbUCaI3S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Mar 2004 03:29:18 -0500
+In-Reply-To: <20040330035115.GA3680@twibble.org>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
+To: Jamie Lenehan <lenehan@twibble.org>
+Cc: linux-scsi@vger.kernel.org, dc395x@twibble.org
 
---==_Exmh_887855632P
-Content-Type: text/plain; charset=us-ascii
+> So you could wait for 2.6.5-rc3/2.6.5 to be released, upgrade to
+> 2.6.5-rc3-bkx (where bkx is a bk snapshot with x >=2), or go back to the
+> kernel you were using previously but copy the drivers/scsi/dc395x.c and
+> drivers/scsi/dc395x.h from the 2.6.5-rc2 kernel into it.
 
-On Tue, 30 Mar 2004 14:44:32 -0300, Humberto Massa said:
+Good news: my drive works properly now in 2.6.5-rc3.  "sg_to_virt failed" 
+messages are gone and the drive operates normally.  Unfortunately, my nvidia 
+driver won't compile in that kernel...
 
-> There is another fail in your reasons here: as I said before, it just 
-> _happens_ to happen that fw[] = {} *is* the source code. What we must 
-> decide is what to do in the cases where *we don't know*.
-> 
-> After all, what happens is somebody *actually* prefers the binary blob 
-> for modification? And, what happens if _the copyright holder_ actually 
-> prefers the binary blob for modification? No inconsistency here.
+FYI, copying dc395x.{c,h} from 2.6.5-rc3 into 2.6.3 source didn't work.  The 
+driver built okay, but at insertion time I got error messages about 
+unresolved symbols.
 
-In fact, I was going to suggest that quite possibly, there really *is* no other
-option for source, because the target hardware doesn't have a functional enough
-toolchain, so hand-assembly really *is* the most reasonable thing.
+Anyway, it looks like you've corrected the CD drive problem.  Thanks.  Now I 
+just hope the nvidia problem gets resolved by the time 2.6.5 is released.
 
-That file isn't any worse than my early '80s Compiler Design class project
-(done the last year before lex/yacc became available for the class) - one file
-was a large 247x139x3 (or thereabouts) array of integers, encoding all the
-shift/reduce productions for a compiler for a Pascal subset that actually
-generated working (though painfully ugly) code for the IBM S/370 architecture.
-(The assignment was "Pascal subset plus your choice of one extension" - my
-teammate and I made the mistake of choosing "Fortran-style mixed-mode
-arithmetic", that array was literally 1/4 the size before we started that.)
-
-"You are lost in a maze of tiny little shift/reduce productions, all nearly
-alike"
-
-And yes, the two of us generated the whole table by hand.  I admit we did
-finally break down and write some tools to verify that each line of the table
-did in fact have the right number of entries, and to add a column of zeros when
-the number of productions went up.
-
-*Preferred* source format?  lex/yacc input files.  Did the source ever actually
-*exist* in that format?  Nope... :)
-
-
---==_Exmh_887855632P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
-
-iD8DBQFAalt2cC3lWbTT17ARAngbAKD1rHOWsuRC1AX080achgALrIXSnACgpBrO
-yacVOCZP7G1idpYk06cctgg=
-=hqEX
------END PGP SIGNATURE-----
-
---==_Exmh_887855632P--
+Andrew.
