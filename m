@@ -1,16 +1,16 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: bug 2400
-Date: 05 Apr 2004 16:07:12 -0500
+Date: 05 Apr 2004 16:08:26 -0500
 Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <1081199233.2105.45.camel@mulgrave>
+Message-ID: <1081199307.2107.50.camel@mulgrave>
 References: <20040401131502.41136788.akpm@osdl.org>
 	<1080862354.2118.78.camel@mulgrave> <1080949016.1804.161.camel@mulgrave>
-	<20040404213307.A29446@beaverton.ibm.com>
+	<20040405140309.GF9422@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-In-Reply-To: <20040404213307.A29446@beaverton.ibm.com>
+In-Reply-To: <20040405140309.GF9422@suse.de>
 Errors-To: linux-usb-devel-admin@lists.sourceforge.net
 List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
 	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
@@ -19,175 +19,18 @@ List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
 List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
 	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: Andrew Morton <akpm@osdl.org>, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 2004-04-04 at 23:33, Patrick Mansfield wrote:
-> How is unregister_cdrom(&cd->cdi) called if the device is not open?
+On Mon, 2004-04-05 at 09:03, Jens Axboe wrote:
+> Doesn't quite work, how about something like this as a work-around?
 
-OK, the attached does everything correctly (as I should have done at
-first) by using a kobject to hold the compound references.
-
-I've stressed this one nicely.  Unfortunately, it's showing up a bug in
-scsi_sysfs (hold device open, remove it and re-add it at the same HCTL
-and you'll see an "error 1").
+I'm not sure we want to be introducing yet another refcount.  What was
+the problem?
 
 James
 
-===== drivers/scsi/sr.c 1.103 vs edited =====
---- 1.103/drivers/scsi/sr.c	Fri Apr  2 11:30:44 2004
-+++ edited/drivers/scsi/sr.c	Mon Apr  5 15:59:34 2004
-@@ -113,6 +113,28 @@
- 	.generic_packet		= sr_packet,
- };
- 
-+static void sr_kobject_release(struct kobject *kobj);
-+
-+static struct kobj_type scsi_cdrom_kobj_type = {
-+	.release = sr_kobject_release,
-+};
-+
-+/*
-+ * The get and put routines for the struct scsi_cd.  Note this entity
-+ * has a scsi_device pointer and owns a reference to this.
-+ */
-+static inline int scsi_cd_get(struct scsi_cd *cd)
-+{
-+	if (!kobject_get(&cd->kobj))
-+		return -ENODEV;
-+	return 0;
-+}
-+
-+static inline void scsi_cd_put(struct scsi_cd *cd)
-+{
-+	kobject_put(&cd->kobj);
-+}
-+
- /*
-  * This function checks to see if the media has been changed in the
-  * CDROM drive.  It is possible that we have already sensed a change,
-@@ -424,8 +446,15 @@
- 
- static int sr_block_release(struct inode *inode, struct file *file)
- {
-+	int ret;
- 	struct scsi_cd *cd = scsi_cd(inode->i_bdev->bd_disk);
--	return cdrom_release(&cd->cdi, file);
-+	ret = cdrom_release(&cd->cdi, file);
-+	if(ret)
-+		return ret;
-+	
-+	scsi_cd_put(cd);
-+
-+	return 0;
- }
- 
- static int sr_block_ioctl(struct inode *inode, struct file *file, unsigned cmd,
-@@ -467,7 +496,7 @@
- 	struct scsi_device *sdev = cd->device;
- 	int retval;
- 
--	retval = scsi_device_get(sdev);
-+	retval = scsi_cd_get(cd);
- 	if (retval)
- 		return retval;
- 	
-@@ -489,7 +518,7 @@
- 	return 0;
- 
- error_out:
--	scsi_device_put(sdev);
-+	scsi_cd_put(cd);
- 	return retval;	
- }
- 
-@@ -500,7 +529,6 @@
- 	if (cd->device->sector_size > 2048)
- 		sr_set_blocklength(cd, 2048);
- 
--	scsi_device_put(cd->device);
- }
- 
- static int sr_probe(struct device *dev)
-@@ -514,12 +542,18 @@
- 	if (sdev->type != TYPE_ROM && sdev->type != TYPE_WORM)
- 		goto fail;
- 
-+	if ((err = scsi_device_get(sdev)) != 0)
-+		goto fail_put_sdev;
-+
- 	error = -ENOMEM;
- 	cd = kmalloc(sizeof(*cd), GFP_KERNEL);
- 	if (!cd)
- 		goto fail;
- 	memset(cd, 0, sizeof(*cd));
- 
-+	kobject_init(&cd->kobj);
-+	cd->kobj.ktype = &scsi_cdrom_kobj_type;
-+
- 	disk = alloc_disk(1);
- 	if (!disk)
- 		goto fail_free;
-@@ -588,6 +622,8 @@
- 	put_disk(disk);
- fail_free:
- 	kfree(cd);
-+fail_put_sdev:
-+	scsi_device_put(sdev);
- fail:
- 	return error;
- }
-@@ -863,19 +899,31 @@
- 	return cgc->stat;
- }
- 
--static int sr_remove(struct device *dev)
-+static void sr_kobject_release(struct kobject *kobj)
- {
--	struct scsi_cd *cd = dev_get_drvdata(dev);
--
--	del_gendisk(cd->disk);
-+	struct scsi_cd *cd = container_of(kobj, struct scsi_cd, kobj);
-+	struct scsi_device *sdev = cd->device;
- 
- 	spin_lock(&sr_index_lock);
- 	clear_bit(cd->disk->first_minor, sr_index_bits);
- 	spin_unlock(&sr_index_lock);
- 
--	put_disk(cd->disk);
- 	unregister_cdrom(&cd->cdi);
-+
-+	put_disk(cd->disk);
-+
- 	kfree(cd);
-+
-+	scsi_device_put(sdev);
-+}
-+
-+static int sr_remove(struct device *dev)
-+{
-+	struct scsi_cd *cd = dev_get_drvdata(dev);
-+
-+	del_gendisk(cd->disk);
-+
-+	scsi_cd_put(cd);
- 
- 	return 0;
- }
-===== drivers/scsi/sr.h 1.10 vs edited =====
---- 1.10/drivers/scsi/sr.h	Mon May 26 04:50:43 2003
-+++ edited/drivers/scsi/sr.h	Mon Apr  5 15:51:37 2004
-@@ -36,6 +36,9 @@
- 	unsigned readcd_known:1;	/* drive supports READ_CD (0xbe) */
- 	unsigned readcd_cdda:1;	/* reading audio data using READ_CD */
- 	struct cdrom_device_info cdi;
-+	/* We hold gendisk and scsi_device references on probe and use
-+	 * the refs on this kobj to decide when to release them */
-+	struct kobject kobj;
- 	struct gendisk *disk;
- } Scsi_CD;
- 
 
 
 
