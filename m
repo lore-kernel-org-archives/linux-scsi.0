@@ -1,74 +1,83 @@
-From: Peter Jones <pjones@redhat.com>
-Subject: Re: BSG question
-Date: Thu, 16 Sep 2004 11:11:51 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1095347511.4852.38.camel@localhost.localdomain>
-References: <4148FC12.1010205@torque.net> <20040916060508.GF2300@suse.de>
-	 <41493D5C.9000700@torque.net>
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: CONFIG_SCSI_SYM53C8XX_IOMAPPED
+Date: Thu, 16 Sep 2004 16:31:42 +0100
+Sender: <willy@www.linux.org.uk>
+Message-ID: <20040916153142.GM642@parcelfarce.linux.theplanet.co.uk>
+References: <hhsm9iv8ws.fsf@alsvidh.mathematik.uni-muenchen.de> <20040916141323.GL642@parcelfarce.linux.theplanet.co.uk> <hh656el2dd.fsf@alsvidh.mathematik.uni-muenchen.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:32669 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S268271AbUIPPMJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Sep 2004 11:12:09 -0400
-In-Reply-To: <41493D5C.9000700@torque.net>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <bounce-debian-kernel=glddk-debian-kernel=m.gmane.org@lists.debian.org>
+Content-Disposition: inline
+In-Reply-To: <hh656el2dd.fsf@alsvidh.mathematik.uni-muenchen.de>
+Resent-Message-ID: <6X-F_.A.3CC.hHbSBB@murphy>
+List-Post: <mailto:debian-kernel@lists.debian.org>
+List-Help: <mailto:debian-kernel-request@lists.debian.org?subject=help>
+List-Subscribe: <mailto:debian-kernel-request@lists.debian.org?subject=subscribe>
+List-Unsubscribe: <mailto:debian-kernel-request@lists.debian.org?subject=unsubscribe>
+List-Archive: <http://lists.debian.org/debian-kernel/>
+To: Jens Schmalzing <j.s@lmu.de>
+Cc: Matthew Wilcox <willy@debian.org>, debian-kernel@lists.debian.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, 2004-09-16 at 17:14 +1000, Douglas Gilbert wrote:
-
-> > (you should cc the author when you ask questions about the patch :-)
->
-> I have cc-ed Peter Jones now.
-
-It's really Jens's project, but thanks for including me as well ;)
-
-> > I'll try and set up a tree that gets regularly updated, if people are
-> > interested in it. Last time I basically came to the conclusion that bsg
-> > wasn't 'interesting enough'. SG_IO might not be a pretty interface (I
-> > mean the ioctl, not the sg_io_hdr structure), but as long as you don't
-> > require queueing or async io it works well enough. And that covers just
-> > about 99.5% of the use of sg.
+On Thu, Sep 16, 2004 at 04:22:54PM +0200, Jens Schmalzing wrote:
+> > As upstream maintainer, I'd like more information about it please ...
 > 
-> It has another advantage. It allows device policy
-> (including error processing) to be decoupled from
-> the primary device interface. For example cdrecord
-> does not want to see EROFS (when it opens O_RDWR)
-> and does want to see all sense data back from the device **.
+> >  - How does it "not work properly"?  Does it hang on first access to
+> >    the chip, or does it suffer data corruption?
+> 
+> It outputs a "can't map PCI MMIO region" and does nothing at all.
 
-And, excuse me for sounding like a broken record, it's traceable with
-strace.  I still count this as a big win, even though it horribly abuses
-some API for that.
+Interesting.  This can only happen if ioremap() returns NULL.  That can
+happen for a number of reasons ...
 
-> On the other hand there does seem to be a security issue
-> with bsg. Perhaps there could be a "non_root" sysfs attribute
-> (default 0, root only writable) on devices that bsg can
-> bind to. Then a bsg bind to a specific device needs
-> a user with CAP_SYS_RAWIO (or CAP_SYS_ADMIN) or the
-> device with non_root=1.
+ - Requesting a size of 0.  This isn't happening because the driver
+   requests either 128 or 256.
+ - Wrap-around.  If the address is right at the top of io space, this
+   could happen, but is very unlikely.
+ - If the page involved is normal RAM.  Seems unlikely, but if the system
+   is misconfigured, it's possible.
+ - If we can't get_vm_area().  Possible, but unlikely.
+ - If remap_area_pages() fails.  Again, possible but unlikely.
 
-Or, rather, the filtering stuff that's been discussed on l-k...  It's an
-idea suitable for a really grungy dumpster, but it works ok.  It'd be
-simple enough to add in.
+> >  - Are the io memory resources on this Thinkpad properly programmed?
+> 
+> Most likely they aren't.  Any idea how I could find out?
 
-> >>bsg has one device node (i.e. "/dev/bsg") which users can
-> >>open and then bind/attach to an existing block device
-> >>node (e.g. /dev/sda). Extending this to bind to sysfs
-> >>device paths might be handy as well for
-> >>   - (SCSI) devices that have an unsupported peripheral device
-> >>      type (e.g. SES)
-> >>   - other devices (e.g. SMP port of an SAS expander)
+lspci -v of that device would be interesting to see.
 
-It'd be better to get rid of the binding all together, as it's pretty
-ugly to begin with.  It's fairly straightforward to make a file in
-sysfs, "/sys/block/hda/rawio" or whatnot, and hang it off of a gendisk.
-That way there'd be no binding to do whatsoever; you'd just open the
-right device to begin with.  Jens and I discussed that earlier, but
-didn't really work on it in light of the biarch problems.
+> >  - What kernel were you trying, 2.4 or 2.6?
+> 
+> I was using the official Debian kernel, version 2.6.8, from the
+> installation CD, built with:
+> 
+> CONFIG_SCSI_SYM53C8XX_2=m
+> CONFIG_SCSI_SYM53C8XX_DMA_ADDRESSING_MODE=1
+> CONFIG_SCSI_SYM53C8XX_DEFAULT_TAGS=16
+> CONFIG_SCSI_SYM53C8XX_MAX_TAGS=64
+> # CONFIG_SCSI_SYM53C8XX_IOMAPPED is not set
+
+Those are good config options.
+
+I think we need to do a little debugging... could you add the following
+patch and let me know the outcome?
+
+--- drivers/scsi/sym53c8xx_2/sym_glue.c 16 Sep 2004 01:54:44 -0000      1.60
++++ drivers/scsi/sym53c8xx_2/sym_glue.c 16 Sep 2004 15:30:38 -0000
+@@ -1674,6 +1674,8 @@ static struct Scsi_Host * __devinit sym_
+ 
+ #ifndef SYM_CONF_IOMAPPED
+        np->s.mmio_va = ioremap(dev->s.base_c, np->s.io_ws);
++       printk(KERN_DEBUG "map 0x%lx length %d returned 0x%p\n", dev->s.base_c,
++                       np->s.io_ws, np->s.mmio_va);
+        if (!np->s.mmio_va) {
+                printf_err("%s: can't map PCI MMIO region\n", sym_name(np));
+                goto attach_failed;
+
 
 -- 
-        Peter
-
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
