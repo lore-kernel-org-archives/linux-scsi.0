@@ -1,558 +1,62 @@
-From: "veeresh" <vanami@india.hp.com>
-Subject: RE: Kernel panic on Redhat Linux AS2.1 with QLogic 2342 HBA
-Date: Wed, 11 Feb 2004 18:51:56 +0530
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: lots and lots of disks again
+Date: Wed, 11 Feb 2004 15:56:14 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <00de01c3f0a2$073c8200$3bda4c0f@nt21859>
-References: <20040210182513.GA114@praka.local.home>
-Reply-To: <vanami@india.hp.com>
+Message-ID: <20040211145614.GA4010@tpkurt.garloff.de>
+References: <20040204024512.5bf68428.akpm@osdl.org> <20040210110417.GB4010@tpkurt.garloff.de> <20040210112658.GC4010@tpkurt.garloff.de> <20040210133932.A3870@infradead.org> <20040210154751.GH4010@tpkurt.garloff.de> <20040210102603.0c835212.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_00DF_01C3F0D0.20F707F0"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="dvv5THrRrdqidt0E"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palrel10.hp.com ([156.153.255.245]:7844 "EHLO palrel10.hp.com")
-	by vger.kernel.org with ESMTP id S263661AbUBKNWQ (ORCPT
+Received: from ns.suse.de ([195.135.220.2]:61656 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S265289AbUBKO7I (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Feb 2004 08:22:16 -0500
-In-Reply-To: <20040210182513.GA114@praka.local.home>
+	Wed, 11 Feb 2004 09:59:08 -0500
+Content-Disposition: inline
+In-Reply-To: <20040210102603.0c835212.akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Andrew Vasquez' <praka@users.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: "SAIDU BUHARI (HP-India,ex2) (E-mail)" <saidu.buhari@hp.com>
+To: Andrew Morton <akpm@osdl.org>
+Cc: hch@infradead.org, linux-scsi@vger.kernel.org, pbadari@us.ibm.com, willy@debian.org, James.Bottomley@steeleye.com
 
-This is a multi-part message in MIME format.
 
-------=_NextPart_000_00DF_01C3F0D0.20F707F0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+--dvv5THrRrdqidt0E
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
 Hi Andrew,
 
-Thanks for your quick response..
+On Tue, Feb 10, 2004 at 10:26:03AM -0800, Andrew Morton wrote:
+> Kurt Garloff <garloff@suse.de> wrote:
+> >
+> > Since when is 4k huge?
+> >  Sorry, I don't see any benefit in adding complexity to avoid a 4k arra=
+y.
+>=20
+> Well yes, but we do have lib/idr.c which I believe does what you need.  It
+> is simple to use.
 
-Yes, the software prepares SCSI commands and sends them down via generic
-device driver SG. In our case the device file for related to device
-connected(LTO-2 FC interface tape drive) is "/dev/sg0".
-I have logged list of CDB the software sends to a device using SG driver and
-the attached the same. The log shows that the last CDB was Receive
-diagnostic command. I ran multiple times the software, but the SCSI command
-that failed was the same.
+It can store a pointer per ID. One that I don't need, unless I overlook
+some possibility to put an already existing pointer in there.
 
-Please let me know if you need any information.
-
-Best regards,
-Veeresh
-
------Original Message-----
-From: linux-kernel-owner@vger.kernel.org
-[mailto:linux-kernel-owner@vger.kernel.org]On Behalf Of Andrew Vasquez
-Sent: Tuesday, February 10, 2004 11:55 PM
-To: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
-Cc: veeresh
-Subject: Re: Kernel panic on Redhat Linux AS2.1 with QLogic 2342 HBA
-
-
-On Tue, 10 Feb 2004, veeresh wrote:
-
-> Kernel panic information:
-> kernel BUG at /usr/src/linux-2.4/include/asm/pci.h:145!
-> invalid operand: 0000
-> Kernel 2.4.9-e.25smp
-> CPU: 2
-> EIP: 0010:[<f8891658>] Tainted: P
-> EFLAGS: 00010086
-> EIP is at qla2x00_64bit_start_scsi [qla2300] 0x498
-
-One of the scatter-gather entries of a SCSI command was NULL.  Is any
-of the software you are running preparing SCSI commands and sending
-them down via SG perhaps?  What type of I/O is occuring when the
-failure occurs?
+If we really allocate thousands of disks, the overhead of this solution
+will be higher than the bitmap, I'm afraid.
 
 Regards,
-Andrew Vasquez
-QLogic Corporation
--
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
+--=20
+Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
+SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
 
-------=_NextPart_000_00DF_01C3F0D0.20F707F0
-Content-Type: application/octet-stream;
-	name="CDB.log"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="CDB.log"
+--dvv5THrRrdqidt0E
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-Data Direction:SG_DXFER_NONE
-Data buffer address:0
-CDB[0]-->#0
-CDB[1]-->#0
-CDB[2]-->#0
-CDB[3]-->#0
-CDB[4]-->#0
-CDB[5]-->#0
-Before third ioctl
-Third ioctl is successful
-sensebuf[0]-->70
-sensebuf[1]-->0
-sensebuf[2]-->6
-sensebuf[3]-->0
-sensebuf[4]-->0
-sensebuf[5]-->0
-sensebuf[6]-->0
-sensebuf[7]-->e
-sensebuf[8]-->0
-sensebuf[9]-->0
-sensebuf[10]-->0
-sensebuf[11]-->0
-sensebuf[12]-->29
-sensebuf[13]-->3
-sensebuf[14]-->0
-sensebuf[15]-->0
-sensebuf[16]-->2c
-sensebuf[17]-->e5
-sensebuf[18]-->0
-sensebuf[19]-->0
-sensebuf[20]-->0
-sensebuf[21]-->0
-Before calling first ioctl
-First ioctl is successful
-Data Direction:SG_DXFER_NONE
-Data buffer address:0
-CDB[0]-->#0
-CDB[1]-->#0
-CDB[2]-->#0
-CDB[3]-->#0
-CDB[4]-->#0
-CDB[5]-->#0
-Before third ioctl
-Third ioctl is successful
-sensebuf[0]-->70
-sensebuf[1]-->0
-sensebuf[2]-->2
-sensebuf[3]-->0
-sensebuf[4]-->0
-sensebuf[5]-->0
-sensebuf[6]-->0
-sensebuf[7]-->e
-sensebuf[8]-->0
-sensebuf[9]-->0
-sensebuf[10]-->0
-sensebuf[11]-->0
-sensebuf[12]-->3a
-sensebuf[13]-->0
-sensebuf[14]-->0
-sensebuf[15]-->0
-sensebuf[16]-->2c
-sensebuf[17]-->6b
-sensebuf[18]-->0
-sensebuf[19]-->0
-sensebuf[20]-->0
-sensebuf[21]-->0
-UnSuccessful TUR Cmd
-Before calling first ioctl
-First ioctl is successful
-Data Direction:SG_DXFER_FROM_DEV
-Data buffer address:3221137512
-CDB[0]-->#12
-CDB[1]-->#0
-CDB[2]-->#0
-CDB[3]-->#0
-CDB[4]-->#40
-CDB[5]-->#0
-Data Direction:SG_DXFER_NONE
-Data buffer address:0
-CDB[0]-->#0
-CDB[1]-->#0
-CDB[2]-->#0
-CDB[3]-->#0
-CDB[4]-->#0
-CDB[5]-->#0
-sensebuf[0]-->70
-sensebuf[1]-->0
-sensebuf[2]-->6
-sensebuf[3]-->0
-sensebuf[4]-->0
-sensebuf[5]-->0
-sensebuf[6]-->0
-sensebuf[7]-->e
-sensebuf[8]-->0
-sensebuf[9]-->0
-sensebuf[10]-->0
-sensebuf[11]-->0
-sensebuf[12]-->29
-sensebuf[13]-->3
-sensebuf[14]-->0
-sensebuf[15]-->0
-sensebuf[16]-->2c
-sensebuf[17]-->e5
-sensebuf[18]-->0
-sensebuf[19]-->0
-sensebuf[20]-->0
-sensebuf[21]-->0
-Data Direction:SG_DXFER_NONE
-Data buffer address:0
-CDB[0]-->#0
-CDB[1]-->#0
-CDB[2]-->#0
-CDB[3]-->#0
-CDB[4]-->#0
-CDB[5]-->#0
-sensebuf[0]-->70
-sensebuf[1]-->0
-sensebuf[2]-->2
-sensebuf[3]-->0
-sensebuf[4]-->0
-sensebuf[5]-->0
-sensebuf[6]-->0
-sensebuf[7]-->e
-sensebuf[8]-->0
-sensebuf[9]-->0
-sensebuf[10]-->0
-sensebuf[11]-->0
-sensebuf[12]-->3a
-sensebuf[13]-->0
-sensebuf[14]-->0
-sensebuf[15]-->0
-sensebuf[16]-->2c
-sensebuf[17]-->6b
-sensebuf[18]-->0
-sensebuf[19]-->0
-sensebuf[20]-->0
-sensebuf[21]-->0
-Data Direction:SG_DXFER_FROM_DEV
-Data buffer address:3221137944
-CDB[0]-->#12
-CDB[1]-->#0
-CDB[2]-->#0
-CDB[3]-->#0
-CDB[4]-->#40
-CDB[5]-->#0
-Data Direction:SG_DXFER_NONE
-Data buffer address:0
-CDB[0]-->#0
-CDB[1]-->#0
-CDB[2]-->#0
-CDB[3]-->#0
-CDB[4]-->#0
-CDB[5]-->#0
-Before third ioctl
-Third ioctl is successful
-sensebuf[0]-->70
-sensebuf[1]-->0
-sensebuf[2]-->2
-sensebuf[3]-->0
-sensebuf[4]-->0
-sensebuf[5]-->0
-sensebuf[6]-->0
-sensebuf[7]-->e
-sensebuf[8]-->0
-sensebuf[9]-->0
-sensebuf[10]-->0
-sensebuf[11]-->0
-sensebuf[12]-->3a
-sensebuf[13]-->0
-sensebuf[14]-->0
-sensebuf[15]-->0
-sensebuf[16]-->2c
-sensebuf[17]-->6b
-sensebuf[18]-->0
-sensebuf[19]-->0
-sensebuf[20]-->0
-sensebuf[21]-->0
-Data Direction:SG_DXFER_NONE
-Data buffer address:0
-CDB[0]-->#0
-CDB[1]-->#0
-CDB[2]-->#0
-CDB[3]-->#0
-CDB[4]-->#0
-CDB[5]-->#0
-Before third ioctl
-Third ioctl is successful
-sensebuf[0]-->70
-sensebuf[1]-->0
-sensebuf[2]-->2
-sensebuf[3]-->0
-sensebuf[4]-->0
-sensebuf[5]-->0
-sensebuf[6]-->0
-sensebuf[7]-->e
-sensebuf[8]-->0
-sensebuf[9]-->0
-sensebuf[10]-->0
-sensebuf[11]-->0
-sensebuf[12]-->3a
-sensebuf[13]-->0
-sensebuf[14]-->0
-sensebuf[15]-->0
-sensebuf[16]-->2c
-sensebuf[17]-->6b
-sensebuf[18]-->0
-sensebuf[19]-->0
-sensebuf[20]-->0
-sensebuf[21]-->0
-Data Direction:SG_DXFER_FROM_DEV
-Data buffer address:3221132156
-CDB[0]-->#12
-CDB[1]-->#0
-CDB[2]-->#0
-CDB[3]-->#0
-CDB[4]-->#40
-CDB[5]-->#0
-Data Direction:SG_DXFER_NONE
-Data buffer address:0
-CDB[0]-->#0
-CDB[1]-->#0
-CDB[2]-->#0
-CDB[3]-->#0
-CDB[4]-->#0
-CDB[5]-->#0
-sensebuf[0]-->70
-sensebuf[1]-->0
-sensebuf[2]-->2
-sensebuf[3]-->0
-sensebuf[4]-->0
-sensebuf[5]-->0
-sensebuf[6]-->0
-sensebuf[7]-->e
-sensebuf[8]-->0
-sensebuf[9]-->0
-sensebuf[10]-->0
-sensebuf[11]-->0
-sensebuf[12]-->3a
-sensebuf[13]-->0
-sensebuf[14]-->0
-sensebuf[15]-->0
-sensebuf[16]-->2c
-sensebuf[17]-->6b
-sensebuf[18]-->0
-sensebuf[19]-->0
-sensebuf[20]-->0
-sensebuf[21]-->0
-Data Direction:SG_DXFER_NONE
-Data buffer address:0
-CDB[0]-->#0
-CDB[1]-->#0
-CDB[2]-->#0
-CDB[3]-->#0
-CDB[4]-->#0
-CDB[5]-->#0
-sensebuf[0]-->70
-sensebuf[1]-->0
-sensebuf[2]-->2
-sensebuf[3]-->0
-sensebuf[4]-->0
-sensebuf[5]-->0
-sensebuf[6]-->0
-sensebuf[7]-->e
-sensebuf[8]-->0
-sensebuf[9]-->0
-sensebuf[10]-->0
-sensebuf[11]-->0
-sensebuf[12]-->3a
-sensebuf[13]-->0
-sensebuf[14]-->0
-sensebuf[15]-->0
-sensebuf[16]-->2c
-sensebuf[17]-->6b
-sensebuf[18]-->0
-sensebuf[19]-->0
-sensebuf[20]-->0
-sensebuf[21]-->0
-Data Direction:SG_DXFER_FROM_DEV
-Data buffer address:3221128232
-CDB[0]-->#12
-CDB[1]-->#1
-CDB[2]-->#80
-CDB[3]-->#0
-CDB[4]-->#4
-CDB[5]-->#0
-Data Direction:SG_DXFER_FROM_DEV
-Data buffer address:3221128508
-CDB[0]-->#12
-CDB[1]-->#1
-CDB[2]-->#c0
-CDB[3]-->#0
-CDB[4]-->#4
-CDB[5]-->#0
-Data Direction:SG_DXFER_FROM_DEV
-Data buffer address:3221128508
-CDB[0]-->#12
-CDB[1]-->#1
-CDB[2]-->#c1
-CDB[3]-->#0
-CDB[4]-->#4
-CDB[5]-->#0
-Data Direction:SG_DXFER_FROM_DEV
-Data buffer address:151844088
-CDB[0]-->#12
-CDB[1]-->#0
-CDB[2]-->#0
-CDB[3]-->#0
-CDB[4]-->#5c
-CDB[5]-->#0
-Data Direction:SG_DXFER_FROM_DEV
-Data buffer address:152317528
-CDB[0]-->#12
-CDB[1]-->#1
-CDB[2]-->#80
-CDB[3]-->#0
-CDB[4]-->#e
-CDB[5]-->#0
-Data Direction:SG_DXFER_FROM_DEV
-Data buffer address:152500248
-CDB[0]-->#12
-CDB[1]-->#1
-CDB[2]-->#c0
-CDB[3]-->#0
-CDB[4]-->#60
-CDB[5]-->#0
-Data Direction:SG_DXFER_FROM_DEV
-Data buffer address:151813688
-CDB[0]-->#12
-CDB[1]-->#1
-CDB[2]-->#c1
-CDB[3]-->#0
-CDB[4]-->#60
-CDB[5]-->#0
-Data Direction:SG_DXFER_NONE
-Data buffer address:0
-CDB[0]-->#0
-CDB[1]-->#0
-CDB[2]-->#0
-CDB[3]-->#0
-CDB[4]-->#0
-CDB[5]-->#0
-sensebuf[0]-->70
-sensebuf[1]-->0
-sensebuf[2]-->2
-sensebuf[3]-->0
-sensebuf[4]-->0
-sensebuf[5]-->0
-sensebuf[6]-->0
-sensebuf[7]-->e
-sensebuf[8]-->0
-sensebuf[9]-->0
-sensebuf[10]-->0
-sensebuf[11]-->0
-sensebuf[12]-->3a
-sensebuf[13]-->0
-sensebuf[14]-->0
-sensebuf[15]-->0
-sensebuf[16]-->2c
-sensebuf[17]-->6b
-sensebuf[18]-->0
-sensebuf[19]-->0
-sensebuf[20]-->0
-sensebuf[21]-->0
-Data Direction:SG_DXFER_NONE
-Data buffer address:0
-CDB[0]-->#0
-CDB[1]-->#0
-CDB[2]-->#0
-CDB[3]-->#0
-CDB[4]-->#0
-CDB[5]-->#0
-sensebuf[0]-->70
-sensebuf[1]-->0
-sensebuf[2]-->2
-sensebuf[3]-->0
-sensebuf[4]-->0
-sensebuf[5]-->0
-sensebuf[6]-->0
-sensebuf[7]-->e
-sensebuf[8]-->0
-sensebuf[9]-->0
-sensebuf[10]-->0
-sensebuf[11]-->0
-sensebuf[12]-->3a
-sensebuf[13]-->0
-sensebuf[14]-->0
-sensebuf[15]-->0
-sensebuf[16]-->2c
-sensebuf[17]-->6b
-sensebuf[18]-->0
-sensebuf[19]-->0
-sensebuf[20]-->0
-sensebuf[21]-->0
-Data Direction:SG_DXFER_FROM_DEV
-Data buffer address:3221127360
-CDB[0]-->#3c
-CDB[1]-->#3
-CDB[2]-->#11
-CDB[3]-->#0
-CDB[4]-->#0
-CDB[5]-->#0
-CDB[6]-->#0
-CDB[7]-->#0
-CDB[8]-->#4
-CDB[9]-->#0
-Data Direction:SG_DXFER_FROM_DEV
-Data buffer address:3221127360
-CDB[0]-->#3c
-CDB[1]-->#3
-CDB[2]-->#12
-CDB[3]-->#0
-CDB[4]-->#0
-CDB[5]-->#0
-CDB[6]-->#0
-CDB[7]-->#0
-CDB[8]-->#4
-CDB[9]-->#0
-Data Direction:SG_DXFER_FROM_DEV
-Data buffer address:3221127360
-CDB[0]-->#3c
-CDB[1]-->#3
-CDB[2]-->#13
-CDB[3]-->#0
-CDB[4]-->#0
-CDB[5]-->#0
-CDB[6]-->#0
-CDB[7]-->#0
-CDB[8]-->#4
-CDB[9]-->#0
-Data Direction:SG_DXFER_TO_DEV
-Data buffer address:142959164
-CDB[0]-->#1d
-CDB[1]-->#1
-CDB[2]-->#0
-CDB[3]-->#0
-CDB[4]-->#8
-CDB[5]-->#0
-Data Direction:SG_DXFER_FROM_DEV
-Data buffer address:151416608
-CDB[0]-->#1c
-CDB[1]-->#0
-CDB[2]-->#93
-CDB[3]-->#0
-CDB[4]-->#90
-CDB[5]-->#0
-Data Direction:SG_DXFER_FROM_DEV
-Data buffer address:3221127980
-CDB[0]-->#1c
-CDB[1]-->#1
-CDB[2]-->#a5
-CDB[3]-->#0
-CDB[4]-->#4
-CDB[5]-->#0
-Data Direction:SG_DXFER_FROM_DEV
-Data buffer address:3221127968
-CDB[0]-->#1c
-CDB[1]-->#1
-CDB[2]-->#a5
-CDB[3]-->#0
-CDB[4]-->#4
-CDB[5]-->#0
-Data Direction:SG_DXFER_FROM_DEV
-Data buffer address:3221127980
-CDB[0]-->#1c
-CDB[1]-->#1
-CDB[2]-->#84
-CDB[3]-->#0
-CDB[4]-->#4
-CDB[5]-->#0
-Before third ioctl
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
 
-------=_NextPart_000_00DF_01C3F0D0.20F707F0--
+iD8DBQFAKkKOxmLh6hyYd04RAuVDAKCCy2DzR5P3RqiKsekQQi1LUVlp5wCg2ev1
+5K1Dzf0/cU7MlyiBZt7sKk4=
+=mOTH
+-----END PGP SIGNATURE-----
 
+--dvv5THrRrdqidt0E--
