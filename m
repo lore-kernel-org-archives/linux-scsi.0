@@ -1,44 +1,48 @@
-From: "cedric" <kisseugene@backtomyplace.com>
-Subject: Save a ton on Microsoft Office!
-Date: Mon, 07 Jun 2004 18:18:51 GMT
+From: Philippe Troin <phil@fifi.org>
+Subject: Re: iRiver H100 series and usb-storage issues
+Date: 07 Jun 2004 12:43:02 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1086632331-14647__7795.82461477748$1086632394@excite.com>
-Content-Type: text/plain;
+Message-ID: <87brjvw3w9.fsf@ceramic.fifi.org>
+References: <Pine.LNX.4.44L0.0406071040310.1800-100000@ida.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [207.8.131.172] ([207.8.131.172]:33542 "HELO
-	vermont.starway.net.au") by vger.kernel.org with SMTP
-	id S264975AbUFGSSq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Jun 2004 14:18:46 -0400
+Received: from tantale.fifi.org ([216.27.190.146]:15516 "EHLO tantale.fifi.org")
+	by vger.kernel.org with ESMTP id S265015AbUFGTnK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2004 15:43:10 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0406071040310.1800-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Need software but not the price that comes with it?
-We sell OEM software at major discounts.
-Don't pay the department store markups, buy on the internet.
+Alan Stern <stern@rowland.harvard.edu> writes:
 
-Free Delivery and Extra Discounts on orders over $200!
+> I just noticed this thread on linux-kernel:
+> 
+> http://marc.theaimsgroup.com/?l=linux-kernel&m=108372064000188&w=2
+> 
+> Apparently under some circumstances the iRiver H100 returns 0 bytes 
+> transferred with GOOD status and residue=512 for a READ(10) command 
+> asking for 1 sector.  As far as I know this is legal, and it indicates the 
+> command should simply be retried.
 
-Save yourself or your company thousands of dollars, reap the rewards!
+That's correct.  However, the iRiver H1xx will also commit a USB
+protocol violation by not returning a CSW (Command Status
+Wrapper).  That's what screws up the transfer.
+ 
+> But apparently the sd driver doesn't realize what has happened and assumes 
+> the transfer was successful.  If I'm right then the sd driver should be 
+> fixed, but I'm not sure what is the best thing to do.
 
-Q:  How can you sell this software as OEM ? It seems too good to be true - is there a catch?
+I am not sure the SCSI layer can recover given that the USB layer is
+confused...
 
-A:  There is no catch - the software versions that we sell are OEM (Original Equipment Manufacturer) which means you will receive the installation CDs only (they do not come in their original retail packing and do not include the manual). We do guarantee that all programs are the 100% full working retail versions - no demos or academic versions! When you order, you will receive all materials required for a complete installation - or your money back! Why pay hundreds of dollars more when you can get exactly the same but OEM-CD? You don't have to pay that much for the fancy box and manuals. 
+Please note that:
 
+ 1. I am just repeating what I have been told by various people and
+    claim no knowledge of the USB or SCSI layers.  In other words, I
+    could be all wrong :-)
 
-
-Click here!!
-http://allpackages.com/index.php?s=7555
-
-
-
-
-
-
-
-
-
-bullet softballgenius shit politics bigmac horizon barry 
-gambit reznorscuba1 tequila gordon
-hanna warriors timber 
-
-REMOV3: http://mycomp.biz/soft/chair.php
+ 2. I do not own a H1xx anymore, having returned mine.
+ 
+Phil.
