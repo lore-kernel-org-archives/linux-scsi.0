@@ -1,28 +1,47 @@
-From: Matt_Domsch@Dell.com
+From: Les Niles <lniles@Narus.com>
 Subject: RE: ANNOUNCE: saftemon - SCSI Enclosure monitor for linux
-Date: Wed, 17 Apr 2002 11:00:07 -0500
+Date: Wed, 17 Apr 2002 09:21:27 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <71714C04806CD51193520090272892170452B66C@ausxmrr502.us.dell.com>
+Message-ID: <580E532D9F7A9B4BAE8A130848E0DDA701E6D9DA@franklin.narus.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: mjacob@feral.com
-Cc: michael@metaparadigm.com, linux-scsi@vger.kernel.org
+To: 'Michael Clark' <michael@metaparadigm.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-> will it also drive SES?
+A README.install would be useful:
 
-Some Dell SCSI backplanes are SES capable, I believe that some aren't.  I'm
-not sure off-hand of the matrix which is which.  Once we get some time to
-investigate further I'll report back our findings.
+On a stock RH7.2 system, after a ./configure, make all, and 
+make install, the /var/run/saftemon and /var/log/saftemon 
+directories ended up with permissions 0755, user root and group 
+root.  This caused saftemon to die because it couldn't open the 
+pid file in /var/run/saftemon after setuid(daemon).  I changed 
+the ownership of those directories to daemon and now it seems 
+to work.  (The saftemon startup script did not get installed in 
+/etc/rc.d/init.d; I don't know if this is intentional.)  Nice!  
+This is all on a PowerEdge 6450. 
 
-Thanks,
-Matt
+It also does the right thing on a Tyan SCSI motherboard: "No 
+SAF-TE devices present"
 
---
-Matt Domsch
-Sr. Software Engineer
-Dell Linux Solutions www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
-#1 US Linux Server provider for 2001!
+  -les
+
+> -----Original Message-----
+> From: Michael Clark [mailto:michael@metaparadigm.com]
+> Sent: Wednesday, April 17, 2002 4:01 AM
+> To: linux-scsi@vger.kernel.org
+> Subject: ANNOUNCE: saftemon - SCSI Enclosure monitor for linux
+> 
+> 
+> saftemon - SCSI Enclosure monitor for SAFTE enclosures
+> 
+>    http://gort.metaparadigm.com/saftemon/
+> 
+> saftemon reads disk enclosure status information from SAF-TE
+> capable enclosures (SCSI Accessible Fault Tolerant Enclosures).
+> SAF-TE is a component of SES (SCSI Enclosure Services) which
+> is common on most SCSI disk enclosures these days. saftemon
+> can monitor multiple SAF-TE devices and will automatically probe
+> and detect them.
