@@ -1,16 +1,15 @@
-From: Jan-Benedict Glaw <jbglaw@lug-owl.de>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: Can anyone be part of Linux kernel development team.
-Date: Sun, 31 Oct 2004 18:00:10 +0100
-Message-ID: <20041031170010.GH11105@lug-owl.de>
+Date: Sun, 31 Oct 2004 17:27:50 +0000
+Message-ID: <20041031172750.GC8958@parcelfarce.linux.theplanet.co.uk>
 References: <374639AB1012AA4C840022842AA95BC20334FCA7@ruby.patni.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="i6ZTfQE1Row3TVml"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lug-owl.de ([195.71.106.12]:29404 "EHLO lug-owl.de")
-	by vger.kernel.org with ESMTP id S261318AbUJaRAM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 31 Oct 2004 12:00:12 -0500
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:3223 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261326AbUJaR1w
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 31 Oct 2004 12:27:52 -0500
 Content-Disposition: inline
 In-Reply-To: <374639AB1012AA4C840022842AA95BC20334FCA7@ruby.patni.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,57 +17,22 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Kotian, Deepak ( JBU  Mumbai )" <Deepak.Kotian@patni.com>
 Cc: linux-scsi@vger.kernel.org
 
-
---i6ZTfQE1Row3TVml
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Sun, 2004-10-31 22:21:39 +0530, Kotian, Deepak ( JBU  Mumbai ) <Deepak.K=
-otian@patni.com>
-wrote in message <374639AB1012AA4C840022842AA95BC20334FCA7@ruby.patni.com>:
+On Sun, Oct 31, 2004 at 10:21:39PM +0530, Kotian, Deepak ( JBU  Mumbai ) wrote:
 > Can anyone be part of Linux kernel development team.
 
-Even better: there isn't a real "team".
+Anyone with the requisite skill, interest and time, yes.
 
-> Basically, if I would be interested. What is the pre-requisite.
-
-Sending patches that are *that* good that several people think they need
-your patch in their kernel tree.
-
-> I would be interested in SCSI layer/block devices and large Storage Devic=
-es like SAN or new development in this area.
-
-Send patches:-)
-
+> I would be interested in SCSI layer/block devices and large Storage Devices like SAN or new development in this area.
+> The reason for joining the kernel team is gain indepth knowledge
+> of kernel on the job and at the same time contribute to the development.
 > Where do I start, please let me know.
 
-Find something that works suboptimal and present a patch for a better
-implementation.
+Start by finding something that doesn't work and fix it ;-)
 
-MfG, JBG
-
---=20
-Jan-Benedict Glaw       jbglaw@lug-owl.de    . +49-172-7608481             =
-_ O _
-"Eine Freie Meinung in  einem Freien Kopf    | Gegen Zensur | Gegen Krieg  =
-_ _ O
- fuer einen Freien Staat voll Freier B=FCrger" | im Internet! |   im Irak! =
-  O O O
-ret =3D do_actions((curr | FREE_SPEECH) & ~(NEW_COPYRIGHT_LAW | DRM | TCPA)=
-);
-
---i6ZTfQE1Row3TVml
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.5 (GNU/Linux)
-
-iD8DBQFBhRoaHb1edYOZ4bsRAu6QAJ47TX8L7P8geQEKC4TJg5tiD8IdLACeN3s7
-hcwmH3OjJhbnvkKI6RNtkw8=
-=vijt
------END PGP SIGNATURE-----
-
---i6ZTfQE1Row3TVml--
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
