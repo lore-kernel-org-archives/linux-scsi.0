@@ -1,108 +1,91 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] Add 192 byte MODE SENSE flag
-Date: Sat, 13 Mar 2004 17:50:44 -0800
+From: William Lee Irwin III <wli@holomorphy.com>
+Subject: 2.6.3-mm4 scsi_delete_timer() oops
+Date: Sat, 13 Mar 2004 20:10:48 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040313175044.B3101@beaverton.ibm.com>
-References: <20040313174651.A3054@beaverton.ibm.com> <20040313174906.A3101@beaverton.ibm.com>
+Message-ID: <20040314041047.GK655@holomorphy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.103]:46769 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S263249AbUCNBvB (ORCPT
+Received: from holomorphy.com ([207.189.100.168]:9484 "EHLO holomorphy.com")
+	by vger.kernel.org with ESMTP id S263271AbUCNEKv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 Mar 2004 20:51:01 -0500
+	Sat, 13 Mar 2004 23:10:51 -0500
 Content-Disposition: inline
-In-Reply-To: <20040313174906.A3101@beaverton.ibm.com>; from patmans@us.ibm.com on Sat, Mar 13, 2004 at 05:49:06PM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: stern@rowland.harvard.edu, mdharm-usb@one-eyed-alien.net, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Add a BLIST_MS_192_BYTES_FOR_3F flag. If it is set, sends a 192 byte MODE
-SENSE in sd.c.
-
-diff -uprN -X /home/patman/dontdiff add_sdev_bflags-2.6/drivers/scsi/scsi_scan.c 192_byte_ms-2.6/drivers/scsi/scsi_scan.c
---- add_sdev_bflags-2.6/drivers/scsi/scsi_scan.c	Fri Mar 12 16:07:10 2004
-+++ 192_byte_ms-2.6/drivers/scsi/scsi_scan.c	Fri Mar 12 16:17:55 2004
-@@ -643,6 +643,9 @@ static int scsi_add_lun(struct scsi_devi
- 	if (*bflags & BLIST_USE_10_BYTE_MS)
- 		sdev->use_10_for_ms = 1;
- 
-+	if (*bflags & BLIST_MS_192_BYTES_FOR_3F)
-+		sdev->use_192_bytes_for_3f = 1;
-+
- 	if(sdev->host->hostt->slave_configure)
- 		sdev->host->hostt->slave_configure(sdev);
- 
-diff -uprN -X /home/patman/dontdiff add_sdev_bflags-2.6/drivers/scsi/sd.c 192_byte_ms-2.6/drivers/scsi/sd.c
---- add_sdev_bflags-2.6/drivers/scsi/sd.c	Fri Mar 12 16:07:10 2004
-+++ 192_byte_ms-2.6/drivers/scsi/sd.c	Fri Mar 12 16:17:55 2004
-@@ -1122,26 +1122,32 @@ sd_read_write_protect_flag(struct scsi_d
- 		return;
- 	}
- 
--	/*
--	 * First attempt: ask for all pages (0x3F), but only 4 bytes.
--	 * We have to start carefully: some devices hang if we ask
--	 * for more than is available.
--	 */
--	res = sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 4, &data);
-+	if (sdkp->device->use_192_bytes_for_3f) {
-+		res = sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 192, &data);
-+	} else {
-+		/*
-+		 * First attempt: ask for all pages (0x3F), but only 4 bytes.
-+		 * We have to start carefully: some devices hang if we ask
-+		 * for more than is available.
-+		 */
-+		res = sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 4, &data);
- 
--	/*
--	 * Second attempt: ask for page 0
--	 * When only page 0 is implemented, a request for page 3F may return
--	 * Sense Key 5: Illegal Request, Sense Code 24: Invalid field in CDB.
--	 */
--	if (!scsi_status_is_good(res))
--		res = sd_do_mode_sense(SRpnt, 0, 0, buffer, 4, &data);
-+		/*
-+		 * Second attempt: ask for page 0 When only page 0 is
-+		 * implemented, a request for page 3F may return Sense Key
-+		 * 5: Illegal Request, Sense Code 24: Invalid field in
-+		 * CDB.
-+		 */
-+		if (!scsi_status_is_good(res))
-+			res = sd_do_mode_sense(SRpnt, 0, 0, buffer, 4, &data);
- 
--	/*
--	 * Third attempt: ask 255 bytes, as we did earlier.
--	 */
--	if (!scsi_status_is_good(res))
--		res = sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 255, &data);
-+		/*
-+		 * Third attempt: ask 255 bytes, as we did earlier.
-+		 */
-+		if (!scsi_status_is_good(res))
-+			res = sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 255,
-+					       &data);
-+	}
- 
- 	if (!scsi_status_is_good(res)) {
- 		printk(KERN_WARNING
-diff -uprN -X /home/patman/dontdiff add_sdev_bflags-2.6/include/scsi/scsi_device.h 192_byte_ms-2.6/include/scsi/scsi_device.h
---- add_sdev_bflags-2.6/include/scsi/scsi_device.h	Fri Mar 12 16:16:47 2004
-+++ 192_byte_ms-2.6/include/scsi/scsi_device.h	Fri Mar 12 16:17:55 2004
-@@ -97,6 +97,7 @@ struct scsi_device {
- 	unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
- 	unsigned skip_ms_page_8:1;	/* do not use MODE SENSE page 0x08 */
- 	unsigned skip_ms_page_3f:1;	/* do not use MODE SENSE page 0x3f */
-+	unsigned use_192_bytes_for_3f:1; /* ask for 192 bytes from page 0x3f */
- 	unsigned no_start_on_add:1;	/* do not issue start on add */
- 	unsigned allow_restart:1; /* issue START_UNIT in error handler */
- 
-diff -uprN -X /home/patman/dontdiff add_sdev_bflags-2.6/include/scsi/scsi_devinfo.h 192_byte_ms-2.6/include/scsi/scsi_devinfo.h
---- add_sdev_bflags-2.6/include/scsi/scsi_devinfo.h	Thu Mar 11 11:23:27 2004
-+++ 192_byte_ms-2.6/include/scsi/scsi_devinfo.h	Fri Mar 12 16:17:55 2004
-@@ -19,4 +19,5 @@
- #define BLIST_MS_SKIP_PAGE_08	0x2000	/* do not send ms page 0x08 */
- #define BLIST_MS_SKIP_PAGE_3F	0x4000	/* do not send ms page 0x3f */
- #define BLIST_USE_10_BYTE_MS	0x8000	/* use 10 byte ms before 6 byte ms */
-+#define BLIST_MS_192_BYTES_FOR_3F	0x10000	/*  192 byte ms page 0x3f request */
- #endif
+Mar 13 19:41:59 holomorphy kernel: Unable to handle kernel NULL pointer dereference at virtual address 00000000
+Mar 13 19:41:59 holomorphy kernel:  printing eip:
+Mar 13 19:41:59 holomorphy kernel: 00000000
+Mar 13 19:41:59 holomorphy kernel: *pde = 00000000
+Mar 13 19:41:59 holomorphy kernel: Oops: 0000 [#1]
+Mar 13 19:41:59 holomorphy kernel: CPU:    0
+Mar 13 19:41:59 holomorphy kernel: EIP:    0060:[<00000000>]    Not tainted VLI
+Mar 13 19:41:59 holomorphy kernel: EFLAGS: 00010286
+Mar 13 19:41:59 holomorphy kernel: EIP is at 0x0
+Mar 13 19:41:59 holomorphy kernel: eax: 00000000   ebx: d5fbff64   ecx: c061e000   edx: ed1ad040
+Mar 13 19:41:59 holomorphy kernel: esi: 5015a947   edi: 0000000c   ebp: 00000000   esp: d5fbec58
+Mar 13 19:41:59 holomorphy kernel: ds: 007b   es: 007b   ss: 0068
+Mar 13 19:41:59 holomorphy kernel: Process xmms (pid: 12324, threadinfo=d5fbe000 task=c0e74180)
+Mar 13 19:41:59 holomorphy kernel: Stack: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+Mar 13 19:41:59 holomorphy kernel:        00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+Mar 13 19:41:59 holomorphy kernel:        00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+Mar 13 19:41:59 holomorphy kernel: Call Trace:
+Mar 13 19:41:59 holomorphy kernel:  [<c0358076>] scsi_delete_timer+0x16/0x30
+Mar 13 19:41:59 holomorphy kernel:  [<c0373de9>] ahc_linux_run_complete_queue+0x69/0xd0
+Mar 13 19:41:59 holomorphy kernel:  [<c011872d>] scheduler_tick+0x1d/0x520
+Mar 13 19:41:59 holomorphy kernel:  [<c01238c6>] update_process_times+0x46/0x60
+Mar 13 19:41:59 holomorphy kernel:  [<c012372b>] update_wall_time+0xb/0x40
+Mar 13 19:41:59 holomorphy kernel:  [<c0123b7f>] do_timer+0xdf/0xf0
+Mar 13 19:41:59 holomorphy kernel:  [<c01119d9>] timer_interrupt+0x29/0x110
+Mar 13 19:41:59 holomorphy kernel:  [<c03e4274>] kfree_skbmem+0x24/0x30
+Mar 13 19:41:59 holomorphy kernel:  [<c03e4308>] __kfree_skb+0x88/0x100
+Mar 13 19:41:59 holomorphy kernel:  [<c03131b9>] ei_start_xmit+0x179/0x2d0
+Mar 13 19:41:59 holomorphy kernel:  [<c03f31df>] qdisc_restart+0x1f/0xf0
+Mar 13 19:41:59 holomorphy kernel:  [<c03e4274>] kfree_skbmem+0x24/0x30
+Mar 13 19:41:59 holomorphy kernel:  [<c03e4308>] __kfree_skb+0x88/0x100
+Mar 13 19:41:59 holomorphy kernel:  [<c04588ed>] packet_rcv_spkt+0x13d/0x220
+Mar 13 19:41:59 holomorphy kernel:  [<c03e84d7>] dev_queue_xmit_nit+0xa7/0xf0
+Mar 13 19:41:59 holomorphy kernel:  [<c03f31df>] qdisc_restart+0x1f/0xf0
+Mar 13 19:41:59 holomorphy kernel:  [<c03e883c>] dev_queue_xmit+0x16c/0x1f0
+Mar 13 19:41:59 holomorphy kernel:  [<c0414ebc>] ip_finish_output2+0x9c/0x1e0
+Mar 13 19:41:59 holomorphy kernel:  [<c0414e20>] ip_finish_output2+0x0/0x1e0
+Mar 13 19:41:59 holomorphy kernel:  [<c03f25f2>] nf_hook_slow+0xd2/0x120
+Mar 13 19:41:59 holomorphy kernel:  [<c0414e20>] ip_finish_output2+0x0/0x1e0
+Mar 13 19:41:59 holomorphy kernel:  [<c0412b58>] ip_finish_output+0x1f8/0x200
+Mar 13 19:41:59 holomorphy kernel:  [<c0414e20>] ip_finish_output2+0x0/0x1e0
+Mar 13 19:41:59 holomorphy kernel:  [<c0414e04>] dst_output+0x14/0x30
+Mar 13 19:41:59 holomorphy kernel:  [<c03f25f2>] nf_hook_slow+0xd2/0x120
+Mar 13 19:41:59 holomorphy kernel:  [<c0414df0>] dst_output+0x0/0x30
+Mar 13 19:41:59 holomorphy kernel:  [<c01359ef>] mempool_alloc+0x6f/0x120
+Mar 13 19:41:59 holomorphy kernel:  [<c011a620>] autoremove_wake_function+0x0/0x50
+Mar 13 19:41:59 holomorphy kernel:  [<c011a620>] autoremove_wake_function+0x0/0x50
+Mar 13 19:41:59 holomorphy kernel:  [<c01359ef>] mempool_alloc+0x6f/0x120
+Mar 13 19:41:59 holomorphy kernel:  [<c02ec91e>] cfq_add_crq_rb+0x7e/0x90
+Mar 13 19:41:59 holomorphy kernel:  [<c01359ef>] mempool_alloc+0x6f/0x120
+Mar 13 19:41:59 holomorphy kernel:  [<c011a620>] autoremove_wake_function+0x0/0x50
+Mar 13 19:41:59 holomorphy kernel:  [<c0377a38>] ahc_linux_run_device_queue+0x468/0x900
+Mar 13 19:41:59 holomorphy kernel:  [<c03741b1>] ahc_linux_queue+0x1c1/0x290
+Mar 13 19:41:59 holomorphy kernel:  [<c02ecdbd>] cfq_next_request+0x5d/0x70
+Mar 13 19:41:59 holomorphy kernel:  [<c0118f63>] schedule+0x323/0x530
+Mar 13 19:41:59 holomorphy kernel:  [<c035a65b>] scsi_request_fn+0x1ab/0x270
+Mar 13 19:41:59 holomorphy kernel:  [<c0132e77>] wait_on_page_bit+0xa7/0xc0
+Mar 13 19:41:59 holomorphy kernel:  [<c011a620>] autoremove_wake_function+0x0/0x50
+Mar 13 19:41:59 holomorphy kernel:  [<c0132cf0>] add_to_page_cache+0x60/0xc0
+Mar 13 19:41:59 holomorphy kernel:  [<c01337c9>] file_read_actor+0xd9/0xf0
+Mar 13 19:41:59 holomorphy kernel:  [<c0133445>] do_generic_mapping_read+0x105/0x3b0
+Mar 13 19:41:59 holomorphy kernel:  [<c01336f0>] file_read_actor+0x0/0xf0
+Mar 13 19:41:59 holomorphy kernel:  [<c013398e>] __generic_file_aio_read+0x1ae/0x1e0
+Mar 13 19:41:59 holomorphy kernel:  [<c01336f0>] file_read_actor+0x0/0xf0
+Mar 13 19:41:59 holomorphy kernel:  [<c0133a1a>] generic_file_aio_read+0x5a/0x80
+Mar 13 19:41:59 holomorphy kernel:  [<c014c71b>] do_sync_read+0x8b/0xc0
+Mar 13 19:41:59 holomorphy kernel:  [<c011815e>] recalc_task_prio+0x8e/0x1b0
+Mar 13 19:41:59 holomorphy kernel:  [<c0118f63>] schedule+0x323/0x530
+Mar 13 19:41:59 holomorphy kernel:  [<c0118ac9>] scheduler_tick+0x3b9/0x520
+Mar 13 19:41:59 holomorphy kernel:  [<c0123d0c>] schedule_timeout+0x6c/0xc0
+Mar 13 19:41:59 holomorphy kernel:  [<c0123c60>] process_timeout+0x0/0x10
+Mar 13 19:41:59 holomorphy kernel:  [<c0123f1e>] sys_nanosleep+0xfe/0x1b0
+Mar 13 19:41:59 holomorphy kernel:  [<c046d173>] syscall_call+0x7/0xb
+Mar 13 19:41:59 holomorphy kernel: 
+Mar 13 19:41:59 holomorphy kernel: Code:  Bad EIP value.
