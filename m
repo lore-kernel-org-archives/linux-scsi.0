@@ -1,59 +1,64 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: phase change messages cusing slowdown with sym53c8xx_2 driver
-Date: 01 Dec 2004 12:16:33 -0500
-Message-ID: <1101921398.1930.24.camel@mulgrave>
-References: <20041130030212.GB22916@austin.ibm.com>
-	<20041201165654.GA32687@rx8.austin.ibm.com>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: [patch 6/8] mptfusion: fc transport
+Date: Wed, 1 Dec 2004 12:46:06 -0700
+Message-ID: <91888D455306F94EBD4D168954A9457C667C7D@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:9644 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261361AbULARQl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Dec 2004 12:16:41 -0500
-In-Reply-To: <20041201165654.GA32687@rx8.austin.ibm.com>
+Received: from mail0.lsil.com ([147.145.40.20]:4791 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261425AbULATqP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Dec 2004 14:46:15 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Jose R. Santos" <jrsantos@austin.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Matthew Wilcox <matthew@wil.cx>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 2004-12-01 at 11:56, Jose R. Santos wrote:
-> > Nov 28 23:05:12 orb kernel: sym0: <896> rev 0x5 at pci 0000:00:0c.0 irq 20
-> > Nov 28 23:05:12 orb kernel: sym0: No NVRAM, ID 7, Fast-40, SE, parity checking
-> > Nov 28 23:05:12 orb kernel: sym0: SCSI BUS has been reset.
-> > Nov 28 23:05:12 orb kernel: scsi0 : sym-2.1.18m
-> > Nov 28 23:05:12 orb kernel: sym0:1: FAST-20 WIDE SCSI 40.0 MB/s ST (50.0 ns, offset 15)
-> > Nov 28 23:05:12 orb kernel:   Vendor: IBM       Model: DGHS09U	Rev: 03E0
-> > Nov 28 23:05:12 orb kernel:   Type:   Direct-Access		ANSI SCSI revision: 03
-> > Nov 28 23:05:12 orb kernel:  target0:0:1: Beginning Domain Validation
-> > Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@10050390 resid=6.
-> > Nov 28 23:05:12 orb last message repeated 10 times
-> > Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@1005039c resid=6.
-> > Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@10050390 resid=6.
-> > Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@10050390 resid=6.
-> > Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@1005039c resid=6.
-> > Nov 28 23:05:12 orb kernel:  target0:0:1: Domain Validation skipping write tests
-> > Nov 28 23:05:12 orb kernel:  target0:0:1: Ending Domain Validation
-> > Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@10050390 resid=6.
-> > 
-> > When these errors show up, the maximum performance I can get out of the disk is
-> > about 1.3MB/s.  After several hours, the adapters seems to receive some ABORT 
-> > operations and the messages stop showing.  Once this happens, performance for 
-> > the disk goes back to 15MB/s.
+On Thursday, November 25, 2004 1:55 PM, James Bottomley wrote:
+> On Fri, 2004-11-19 at 09:39, Moore, Eric Dean wrote:
+> > This provides fc_transport support, exporting
+> > port_id, port_name, node_name.
 > 
-> I manage to get access to another PPC64 box that has uses this same
-> driver and was unable to reproduce this problem here, but I was able to
-> reproduce it on another same model machine.  Seem like there could be
-> something at initialization that only affects this revision of the SCSI
-> adapter.  Since the problem seems to disappear after a BUS RESET I assume
-> that something was left out when the driver was initializing the adapter.
+> This:
+> 
+> @@ -4,6 +4,7 @@
+>  config FUSION
+>         tristate "Fusion MPT (base + ScsiHost) drivers"
+>         depends on PCI && SCSI
+> +        select SCSI_FC_ATTRS
+>         ---help---
+> 
+> Doesn't look correct.  It will force the FC attrs to be built even if
+> you're only building for a purely SPI device.  Worse, module
+> dependencies will force the FC transport to load even if you're only
+> attaching to a SCSI device.  This isn't really optimal, especially as
+> the FC transport class is growing in size now.
+> 
+> How difficult would it be to separate out the scsi and FC 
+> pieces of the
+> fusion driver, so we could allow more fined grained control of this?
+> 
 
-Matthew,
+ 
+This driver is four separate driver modules { mptbase, mptscsih, mptlan,
+mptctl },
+with FC and SCSI spread through out, and SAS waiting in the wings.
+In this current design, separating FC is not going to be an easy task,
+as well as dealing with SAS because I'm sure people would want that
+separated as well.  
+Device recognization done from mptbase, as well as unique
+configuration/initialization
+for respective bus type, and messaging interface from the other drivers
+(mptscsih,
+mptlan, and mptctl) to the firmware.  The scsi interface layer is in
+mptscsih, 
+and is where this fc transports and our spi domain validation is done
+currently. 
 
-does this look like the "drive won't respond properly to PPR if the bus
-is SE" problem again?
+What do you have in mind in seperating this code for each (3) different bus
+classes from 
+each these (4) drivers?  
 
-James
+Eric
 
 
