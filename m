@@ -1,425 +1,309 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] rationalize scsi_queue_next & friends
-Date: Wed, 30 Apr 2003 23:55:24 +0200
+Subject: [PATCH] remove scsi_slave_attach/scsi_slave_detach
+Date: Thu, 1 May 2003 00:20:32 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030430235524.A8264@lst.de>
+Message-ID: <20030501002032.A8444@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.181.86]:23312 "EHLO verein.lst.de")
-	by vger.kernel.org with ESMTP id S262473AbTD3VnG (ORCPT
+Received: from verein.lst.de ([212.34.181.86]:32016 "EHLO verein.lst.de")
+	by vger.kernel.org with ESMTP id S262459AbTD3WIN (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Apr 2003 17:43:06 -0400
+	Wed, 30 Apr 2003 18:08:13 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-(1)  second arg to scsi_queue_next_request() is only ever non-NULL
-     inside scsi_lib.c and only used in the first conditional inside
-     that function - ripped out of scsi_queue_next_request() and
-     put into a new helper scsi_requeue_command().
-(2)  Most remaining callers of are in the form 
-	scsi_put_command(cmd);
-	scsi_queue_next_request(q, NULL);
-     add a new helper, scsi_next_command() for them.
-(2b) many callers of that still contain a repeated codepath, namely
-     everything from scsi_release_request except the final kfree.
-     New helper __scsi_release_request() for those.
-(3)  All remaining callers loop over the devices of a host and call
-     scsi_queue_next_request() on them - new helper
-     scsi_run_host_queues().
-(4)  scsi_queue_next_request() renamed to scsi_run_queue(), second
-     arg is gone and it's static to scsi_lib.c now.
+I added those two to factor out common code from the upper drivers
+a long time ago, but after Doug & Lubens nice work there's nothing
+left but incrementing/decrementing a counter in struct scsi_device
+that's never used except in the case were we not it must be NULL
+because we just walked the chain of drivers to detach every single
+one..
 
 
+--- 1.42/drivers/scsi/osst.c	Fri Apr 18 11:58:31 2003
++++ edited/drivers/scsi/osst.c	Wed Apr 30 22:09:21 2003
+@@ -5397,15 +5397,10 @@
+ 	if (SDp->type != TYPE_TAPE || !osst_supports(SDp))
+ 		return 1;
+ 
+-	if (scsi_slave_attach(SDp)) {
+-		printk(KERN_ERR "osst :E: Failed to attach scsi slave.\n");
+-		return 1;
+-	}
+-
+ 	drive = alloc_disk(1);
+ 	if (!drive) {
+ 		printk(KERN_ERR "osst :E: Out of memory. Device not attached.\n");
+-		goto out_slave_detach;
++		return 1;
+ 	}
+ 
+ 	/* if this is the first attach, build the infrastructure */
+@@ -5581,8 +5576,6 @@
+ 
+ out_put_disk:
+         put_disk(drive);
+-out_slave_detach:
+-        scsi_slave_detach(SDp);
+         return 1;
+ };
+ 
+@@ -5605,7 +5598,6 @@
+ 		devfs_unregister_tape(tpnt->drive->number);
+ 		put_disk(tpnt->drive);
+ 		os_scsi_tapes[i] = NULL;
+-		scsi_slave_detach(SDp);
+ 		osst_nr_dev--;
+ 		write_unlock(&os_scsi_tapes_lock);
+ 		for (mode = 0; mode < ST_NBR_MODES; ++mode) {
 --- 1.109/drivers/scsi/scsi.c	Tue Apr 29 13:40:45 2003
 +++ edited/drivers/scsi/scsi.c	Wed Apr 30 22:09:21 2003
-@@ -176,6 +176,16 @@
- 	return sreq;
- }
- 
-+void __scsi_release_request(struct scsi_request *sreq)
-+{
-+	if (likely(sreq->sr_command != NULL)) {
-+		struct scsi_cmnd *cmd = sreq->sr_command;
-+
-+		sreq->sr_command = NULL;
-+		scsi_next_command(cmd);
-+	}
-+}
-+
- /*
-  * Function:    scsi_release_request
-  *
-@@ -187,14 +197,7 @@
-  */
- void scsi_release_request(struct scsi_request *sreq)
- {
--	if (likely(sreq->sr_command != NULL)) {
--    		struct request_queue *q = sreq->sr_device->request_queue;
--
--		scsi_put_command(sreq->sr_command);
--		sreq->sr_command = NULL;
--		scsi_queue_next_request(q, NULL);
--	}
--
-+	__scsi_release_request(sreq);
- 	kfree(sreq);
- }
- 
---- 1.51/drivers/scsi/scsi_error.c	Sun Apr 27 06:46:14 2003
-+++ edited/drivers/scsi/scsi_error.c	Wed Apr 30 22:09:21 2003
-@@ -1412,8 +1412,7 @@
- 	 * now that error recovery is done, we will need to ensure that these
- 	 * requests are started.
- 	 */
--	list_for_each_entry(sdev, &shost->my_devices, siblings)
--		blk_run_queue(sdev->request_queue);
-+	scsi_run_host_queues(shost);
- }
- 
- /**
-@@ -1649,7 +1648,6 @@
- 	struct scsi_cmnd *scmd = scsi_get_command(dev, GFP_KERNEL);
- 	struct request req;
- 	int rtn;
--	struct request_queue *q;
- 
- 	scmd->request = &req;
- 	memset(&scmd->eh_timeout, 0, sizeof(scmd->eh_timeout));
-@@ -1701,8 +1699,6 @@
+@@ -1274,39 +1277,6 @@
+ 	} else {
+ 		/* FIXME: Send online state change hotplug event */
  	}
- 
- 	scsi_delete_timer(scmd);
--	q = scmd->device->request_queue;
--	scsi_put_command(scmd);
--	scsi_queue_next_request(q, NULL);
-+	scsi_next_command(scmd);
- 	return rtn;
- }
---- 1.88/drivers/scsi/scsi_lib.c	Sun Apr 27 10:19:35 2003
-+++ edited/drivers/scsi/scsi_lib.c	Wed Apr 30 22:09:21 2003
-@@ -181,19 +181,12 @@
- 		 void (*done)(struct scsi_cmnd *),
- 		 int timeout, int retries)
- {
--	struct request_queue *q;
+-}
 -
- 	/*
- 	 * If the upper level driver is reusing these things, then
- 	 * we should release the low-level block now.  Another one will
- 	 * be allocated later when this request is getting queued.
- 	 */
--	if (sreq->sr_command) {
--		q = sreq->sr_command->device->request_queue;
--		scsi_put_command(sreq->sr_command);
--		sreq->sr_command = NULL;
--		scsi_queue_next_request(q, NULL);
--	}
-+	__scsi_release_request(sreq);
- 
- 	/*
- 	 * Our own function scsi_done (which marks the host as not busy,
-@@ -239,7 +232,6 @@
- void scsi_wait_req(struct scsi_request *sreq, const void *cmnd, void *buffer,
- 		   unsigned bufflen, int timeout, int retries)
- {
--	struct request_queue *q;
- 	DECLARE_COMPLETION(wait);
- 	
- 	sreq->sr_request->waiting = &wait;
-@@ -250,12 +242,7 @@
- 	wait_for_completion(&wait);
- 	sreq->sr_request->waiting = NULL;
- 
--	if (sreq->sr_command) {
--		q = sreq->sr_command->device->request_queue;
--		scsi_put_command(sreq->sr_command);
--		scsi_queue_next_request(q, NULL);
--		sreq->sr_command = NULL;
--	}
-+	__scsi_release_request(sreq);
+-/*
+- * Function:	scsi_slave_attach()
+- *
+- * Purpose:	Called from the upper level driver attach to handle common
+- * 		attach code.
+- *
+- * Arguments:	sdev - scsi_device to attach
+- *
+- * Returns:	1 on error, 0 on succes
+- *
+- * Lock Status:	Protected via scsi_devicelist_mutex.
+- */
+-int scsi_slave_attach(struct scsi_device *sdev)
+-{
+-	sdev->attached++;
+-	return 0;
+-}
+-
+-/*
+- * Function:	scsi_slave_detach()
+- *
+- * Purpose:	Called from the upper level driver attach to handle common
+- * 		detach code.
+- *
+- * Arguments:	sdev - struct scsi_device to detach
+- *
+- * Lock Status:	Protected via scsi_devicelist_mutex.
+- */
+-void scsi_slave_detach(struct scsi_device *sdev)
+-{
+-	sdev->attached--;
  }
  
  /*
-@@ -370,77 +357,26 @@
- }
+--- 1.78/drivers/scsi/scsi.h	Sun Apr 27 06:45:24 2003
++++ edited/drivers/scsi/scsi.h	Wed Apr 30 22:47:43 2003
+@@ -261,8 +261,6 @@
+ extern void scsi_put_command(struct scsi_cmnd *cmd);
+ extern void scsi_adjust_queue_depth(Scsi_Device *, int, int);
+ extern int scsi_track_queue_full(Scsi_Device *, int);
+-extern int scsi_slave_attach(struct scsi_device *);
+-extern void scsi_slave_detach(struct scsi_device *);
+ extern int scsi_device_get(struct scsi_device *);
+ extern void scsi_device_put(struct scsi_device *);
+ extern void scsi_set_device_offline(struct scsi_device *);
+@@ -344,8 +342,6 @@
+ 					 * vendor-specific cmd's */
+ 	unsigned sector_size;	/* size in bytes */
  
- /*
-- * Function:    scsi_queue_next_request()
-+ * Function:	scsi_run_queue()
-  *
-- * Purpose:     Handle post-processing of completed commands.
-+ * Purpose:	Select a proper request queue to serve next
-  *
-- * Arguments:   cmd	- command that may need to be requeued.
-+ * Arguments:	q	- last request's queue
-  *
-  * Returns:     Nothing
-  *
-- * Notes:       After command completion, there may be blocks left
-- *              over which weren't finished by the previous command
-- *              this can be for a number of reasons - the main one is
-- *              that a medium error occurred, and the sectors after
-- *              the bad block need to be re-read.
-- *
-- *              If cmd is NULL, it means that the previous command
-- *              was completely finished, and we should simply start
-- *              a new command, if possible.
-- *
-- *		This is where a lot of special case code has begun to
-- *		accumulate.  It doesn't really affect readability or
-- *		anything, but it might be considered architecturally
-- *		inelegant.  If more of these special cases start to
-- *		accumulate, I am thinking along the lines of implementing
-- *		an atexit() like technology that gets run when commands
-- *		complete.  I am not convinced that it is worth the
-- *		added overhead, however.  Right now as things stand,
-- *		there are simple conditional checks, and most hosts
-- *		would skip past.
-- *
-- *		Another possible solution would be to tailor different
-- *		handler functions, sort of like what we did in scsi_merge.c.
-- *		This is probably a better solution, but the number of different
-- *		permutations grows as 2**N, and if too many more special cases
-- *		get added, we start to get screwed.
-+ * Notes:	The previous command was completely finished, start
-+ *		a new one if possible.
-  */
--void scsi_queue_next_request(request_queue_t *q, struct scsi_cmnd *cmd)
-+static void scsi_run_queue(struct request_queue *q)
+-	int attached;		/* # of high level drivers attached to 
+-				 * this */
+ 	int access_count;	/* Count of open channels/mounts */
+ 
+ 	void *hostdata;		/* available to low-level driver */
+--- 1.82/drivers/scsi/scsi_scan.c	Sun Apr 27 05:12:47 2003
++++ edited/drivers/scsi/scsi_scan.c	Wed Apr 30 22:09:21 2003
+@@ -1269,11 +1269,7 @@
+ int scsi_remove_device(struct scsi_device *sdev)
  {
--	struct scsi_device *sdev;
--	struct Scsi_Host *shost;
-+	struct scsi_device *sdev = q->queuedata;
-+	struct Scsi_Host *shost = sdev->host;
- 	unsigned long flags;
- 
--	if (cmd != NULL) {
+ 	scsi_detach_device(sdev);
+-	if (sdev->attached)
+-		return -EINVAL;
 -
--		/*
--		 * For some reason, we are not done with this request.
--		 * This happens for I/O errors in the middle of the request,
--		 * in which case we need to request the blocks that come after
--		 * the bad sector.
--		 */
--		spin_lock_irqsave(q->queue_lock, flags);
--		cmd->request->special = cmd;
--		if (blk_rq_tagged(cmd->request))
--			blk_queue_end_tag(q, cmd->request);
+ 	scsi_device_unregister(sdev);
 -
--		/*
--		 * set REQ_SPECIAL - we have a command
--		 * clear REQ_DONTPREP - we assume the sg table has been 
--		 *	nuked so we need to set it up again.
--		 */
--		cmd->request->flags |= REQ_SPECIAL;
--		cmd->request->flags &= ~REQ_DONTPREP;
--		__elv_add_request(q, cmd->request, 0, 0);
--		spin_unlock_irqrestore(q->queue_lock, flags);
--	}
--
--	sdev = q->queuedata;
--
- 	if (sdev->single_lun)
- 		scsi_single_lun_run(sdev);
- 
--	shost = sdev->host;
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	while (!list_empty(&shost->starved_list) &&
- 	       !shost->host_blocked && !shost->host_self_blocked &&
-@@ -478,6 +414,61 @@
+ 	scsi_free_sdev(sdev);
+ 	return 0;
  }
+--- 1.34/drivers/scsi/scsi_syms.c	Tue Apr 29 13:40:45 2003
++++ edited/drivers/scsi/scsi_syms.c	Wed Apr 30 22:09:21 2003
+@@ -77,8 +78,6 @@
  
- /*
-+ * Function:	scsi_requeue_command()
-+ *
-+ * Purpose:	Handle post-processing of completed commands.
-+ *
-+ * Arguments:	q	- queue to operate on
-+ *		cmd	- command that may need to be requeued.
-+ *
-+ * Returns:	Nothing
-+ *
-+ * Notes:	After command completion, there may be blocks left
-+ *		over which weren't finished by the previous command
-+ *		this can be for a number of reasons - the main one is
-+ *		I/O errors in the middle of the request, in which case
-+ *		we need to request the blocks that come after the bad
-+ *		sector.
-+ */
-+static void scsi_requeue_command(struct request_queue *q, struct scsi_cmnd *cmd)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	cmd->request->special = cmd;
-+	if (blk_rq_tagged(cmd->request))
-+		blk_queue_end_tag(q, cmd->request);
-+
-+	/*
-+	 * set REQ_SPECIAL - we have a command
-+	 * clear REQ_DONTPREP - we assume the sg table has been 
-+	 *	nuked so we need to set it up again.
-+	 */
-+	cmd->request->flags |= REQ_SPECIAL;
-+	cmd->request->flags &= ~REQ_DONTPREP;
-+	__elv_add_request(q, cmd->request, 0, 0);
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+
-+	scsi_run_queue(q);
-+}
-+
-+void scsi_next_command(struct scsi_cmnd *cmd)
-+{
-+	struct request_queue *q = cmd->device->request_queue;
-+
-+	scsi_put_command(cmd);
-+	scsi_run_queue(q);
-+}
-+
-+void scsi_run_host_queues(struct Scsi_Host *shost)
-+{
-+	struct scsi_device *sdev;
-+
-+	list_for_each_entry(sdev, &shost->my_devices, siblings)
-+		scsi_run_queue(sdev->request_queue);
-+}
-+
-+/*
-  * Function:    scsi_end_request()
-  *
-  * Purpose:     Post-processing of completed commands called from interrupt
-@@ -517,7 +506,7 @@
- 			 * Bleah.  Leftovers again.  Stick the leftovers in
- 			 * the front of the queue, and goose the queue again.
- 			 */
--			scsi_queue_next_request(q, cmd);
-+			scsi_requeue_command(q, cmd);
+ EXPORT_SYMBOL(scsi_io_completion);
+ 
+-EXPORT_SYMBOL(scsi_slave_attach);
+-EXPORT_SYMBOL(scsi_slave_detach);
+ EXPORT_SYMBOL(scsi_device_get);
+ EXPORT_SYMBOL(scsi_device_put);
+ EXPORT_SYMBOL(scsi_add_device);
+--- 1.110/drivers/scsi/sd.c	Fri Apr 25 08:51:41 2003
++++ edited/drivers/scsi/sd.c	Wed Apr 30 22:09:22 2003
+@@ -1302,14 +1302,10 @@
+ 	SCSI_LOG_HLQUEUE(3, printk("sd_attach: scsi device: <%d,%d,%d,%d>\n", 
+ 			 sdp->host->host_no, sdp->channel, sdp->id, sdp->lun));
+ 
+-	error = scsi_slave_attach(sdp);
+-	if (error)
+-		goto out;
+-
+ 	error = -ENOMEM;
+ 	sdkp = kmalloc(sizeof(*sdkp), GFP_KERNEL);
+ 	if (!sdkp)
+-		goto out_detach;
++		goto out;
+ 
+ 	gd = alloc_disk(16);
+ 	if (!gd)
+@@ -1368,8 +1364,6 @@
+ 	put_disk(gd);
+ out_free:
+ 	kfree(sdkp);
+-out_detach:
+-	scsi_slave_detach(sdp);
+ out:
+ 	return error;
+ }
+@@ -1406,7 +1400,6 @@
+ 
+ 	sd_devlist_remove(sdkp);
+ 	del_gendisk(sdkp->disk);
+-	scsi_slave_detach(sdp);
+ 
+ 	spin_lock(&sd_index_lock);
+ 	clear_bit(sdkp->index, sd_index_bits);
+--- 1.53/drivers/scsi/sg.c	Sat Apr 26 16:04:25 2003
++++ edited/drivers/scsi/sg.c	Wed Apr 30 22:09:22 2003
+@@ -1359,10 +1359,6 @@
+ 	if (!disk)
+ 		return -ENOMEM;
+ 
+-	error = scsi_slave_attach(scsidp);
+-	if (error)
+-		goto out_put;
+-		
+ 	write_lock_irqsave(&sg_dev_arr_lock, iflags);
+ 	if (sg_nr_dev >= sg_dev_max) {	/* try to resize */
+ 		Sg_device **tmp_da;
+@@ -1375,7 +1371,7 @@
+ 			printk(KERN_ERR
+ 			       "sg_attach: device array cannot be resized\n");
+ 			error = -ENOMEM;
+-			goto out_detach;
++			goto out;
  		}
- 		return cmd;
+ 		write_lock_irqsave(&sg_dev_arr_lock, iflags);
+ 		memset(tmp_da, 0, tmp_dev_max * sizeof (Sg_device *));
+@@ -1400,7 +1396,7 @@
+ 		if (NULL != sdp)
+ 			vfree((char *) sdp);
+ 		error = -ENODEV;
+-		goto out_detach;
++		goto out;
  	}
-@@ -534,8 +523,7 @@
- 	 * This will goose the queue request function at the end, so we don't
- 	 * need to worry about launching another command.
- 	 */
--	scsi_put_command(cmd);
--	scsi_queue_next_request(q, NULL);
-+	scsi_next_command(cmd);
- 	return NULL;
+ 	if (k < sg_dev_max) {
+ 		if (NULL == sdp) {
+@@ -1416,7 +1412,7 @@
+ 		write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+ 		printk(KERN_ERR "sg_attach: Sg_device cannot be allocated\n");
+ 		error = -ENOMEM;
+-		goto out_detach;
++		goto out;
+ 	}
+ 
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_attach: dev=%d \n", k));
+@@ -1473,9 +1469,7 @@
+ 	}
+ 	return 0;
+ 
+-out_detach:
+-	scsi_slave_detach(scsidp);
+-out_put:
++out:
+ 	put_disk(disk);
+ 	return error;
+ }
+@@ -1526,7 +1520,6 @@
+ 			SCSI_LOG_TIMEOUT(3, printk("sg_detach: dev=%d\n", k));
+ 			sg_dev_arr[k] = NULL;
+ 		}
+-		scsi_slave_detach(scsidp);
+ 		sg_nr_dev--;
+ 		break;
+ 	}
+--- 1.77/drivers/scsi/sr.c	Sat Apr 26 16:04:25 2003
++++ edited/drivers/scsi/sr.c	Wed Apr 30 22:09:22 2003
+@@ -515,10 +515,6 @@
+ 	if (sdev->type != TYPE_ROM && sdev->type != TYPE_WORM)
+ 		return 1;
+ 
+-	error = scsi_slave_attach(sdev);
+-	if (error)
+-		return error;
+-
+ 	error = -ENOMEM;
+ 	cd = kmalloc(sizeof(*cd), GFP_KERNEL);
+ 	if (!cd)
+@@ -592,7 +588,6 @@
+ fail_free:
+ 	kfree(cd);
+ fail:
+-	scsi_slave_detach(sdev);
+ 	return error;
  }
  
-@@ -661,6 +649,18 @@
-  *              In other words, if there are no bounce buffers
-  *              (the normal case for most drivers), we don't need
-  *              the logic to deal with cleaning up afterwards.
-+ *
-+ *		We must do one of several things here:
-+ *
-+ *		a) Call scsi_end_request.  This will finish off the
-+ *		   specified number of sectors.  If we are done, the
-+ *		   command block will be released, and the queue
-+ *		   function will be goosed.  If we are not done, then
-+ *		   scsi_end_request will directly goose the queue.
-+ *
-+ *		b) We can just use scsi_requeue_command() here.  This would
-+ *		   be used if we just wanted to retry, for example.
-+ *
-  */
- void scsi_io_completion(struct scsi_cmnd *cmd, int good_sectors,
- 			int block_sectors)
-@@ -672,19 +672,6 @@
- 	int clear_errors = 1;
- 
- 	/*
--	 * We must do one of several things here:
--	 *
--	 *	Call scsi_end_request.  This will finish off the specified
--	 *	number of sectors.  If we are done, the command block will
--	 *	be released, and the queue function will be goosed.  If we
--	 *	are not done, then scsi_end_request will directly goose
--	 *	the queue.
--	 *
--	 *	We can just use scsi_queue_next_request() here.  This
--	 *	would be used if we just wanted to retry, for example.
--	 *
--	 */
--	/*
- 	 * Free up any indirection buffers we allocated for DMA purposes. 
- 	 * For the case of a READ, we need to copy the data out of the
- 	 * bounce buffer and into the real buffer.
-@@ -783,7 +770,7 @@
- 			 */
- 			if (cmd->sense_buffer[12] == 0x04 &&
- 			    cmd->sense_buffer[13] == 0x01) {
--				scsi_queue_next_request(q, cmd);
-+				scsi_requeue_command(q, cmd);
- 				return;
- 			}
- 			if ((cmd->sense_buffer[2] & 0xf) == UNIT_ATTENTION) {
-@@ -802,7 +789,7 @@
- 				 	* media change, so we just retry the
- 				 	* request and see what happens.  
- 				 	*/
--					scsi_queue_next_request(q, cmd);
-+					scsi_requeue_command(q, cmd);
- 					return;
- 				}
- 			}
-@@ -822,7 +809,7 @@
- 				 * This will cause a retry with a 6-byte
- 				 * command.
- 				 */
--				scsi_queue_next_request(q, cmd);
-+				scsi_requeue_command(q, cmd);
- 				result = 0;
- 			} else {
- 				cmd = scsi_end_request(cmd, 0, this_count, 1);
-@@ -854,7 +841,7 @@
- 		 * recovery reasons.  Just retry the request
- 		 * and see what happens.  
- 		 */
--		scsi_queue_next_request(q, cmd);
-+		scsi_requeue_command(q, cmd);
+@@ -820,7 +815,6 @@
  		return;
+ 
+ 	sr_devlist_remove(cd);
+-	scsi_slave_detach(SDp);
+ 	del_gendisk(cd->disk);
+ 
+ 	spin_lock(&sr_index_lock);
+--- 1.60/drivers/scsi/st.c	Fri Apr 18 11:58:31 2003
++++ edited/drivers/scsi/st.c	Wed Apr 30 22:09:22 2003
+@@ -3725,16 +3725,13 @@
+ 		return 1;
  	}
- 	if (result) {
-@@ -1320,15 +1307,8 @@
-  */
- void scsi_unblock_requests(struct Scsi_Host *shost)
- {
--	struct scsi_device *sdev;
--
- 	shost->host_self_blocked = 0;
--
--	/*
--	 * Now that we are unblocked, try to start the queues.
--	 */
--	list_for_each_entry(sdev, &shost->my_devices, siblings)
--		scsi_queue_next_request(sdev->request_queue, NULL);
-+	scsi_run_host_queues(shost);
- }
  
- /*
---- 1.1/drivers/scsi/scsi_priv.h	Sat Apr 26 20:40:32 2003
-+++ edited/drivers/scsi/scsi_priv.h	Wed Apr 30 22:09:21 2003
-@@ -73,6 +73,7 @@
- extern int scsi_insert_special_req(struct scsi_request *sreq, int);
- extern void scsi_init_cmd_from_req(struct scsi_cmnd *cmd,
- 		struct scsi_request *sreq);
-+extern void __scsi_release_request(struct scsi_request *sreq);
+-	if (scsi_slave_attach(SDp))
+-		return 1;
+-
+ 	i = SDp->host->sg_tablesize;
+ 	if (st_max_sg_segs < i)
+ 		i = st_max_sg_segs;
+ 	buffer = new_tape_buffer(TRUE, (SDp->host)->unchecked_isa_dma, i);
+ 	if (buffer == NULL) {
+ 		printk(KERN_ERR "st: Can't allocate new tape buffer. Device not attached.\n");
+-		goto out_slave_detach;
++		goto out;
+ 	}
  
- /* scsi_error.c */
- extern void scsi_times_out(struct scsi_cmnd *cmd);
-@@ -84,8 +85,8 @@
- extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
- extern void scsi_setup_cmd_retry(struct scsi_cmnd *cmd);
- extern int scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
--extern void scsi_queue_next_request(struct request_queue *q,
--			struct scsi_cmnd *cmd);
-+extern void scsi_next_command(struct scsi_cmnd *cmd);
-+extern void scsi_run_host_queues(struct Scsi_Host *shost);
- extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
- extern void scsi_free_queue(struct request_queue *q);
- extern int scsi_init_queue(void);
+ 	disk = alloc_disk(1);
+@@ -3923,8 +3920,7 @@
+ 	put_disk(disk);
+ out_buffer_free:
+ 	kfree(buffer);
+-out_slave_detach:
+-	scsi_slave_detach(SDp);
++out:
+ 	return 1;
+ };
+ 
+@@ -3962,7 +3958,6 @@
+ 				normalize_buffer(tpnt->buffer);
+ 				kfree(tpnt->buffer);
+ 			}
+-			scsi_slave_detach(SDp);
+ 			put_disk(tpnt->disk);
+ 			kfree(tpnt);
+ 			return;
