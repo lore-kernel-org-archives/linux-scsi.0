@@ -1,42 +1,43 @@
-From: Jamie Lenehan <lenehan@twibble.org>
-Subject: Re: dc395 with a scanner, failing.
-Date: Thu, 3 Jun 2004 19:08:49 +1000
+From: "grady" <hornetguess@antihunt.com>
+Subject: Save a ton on Microsoft Office!
+Date: Thu, 03 Jun 2004 09:44:40 GMT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040603090849.GA6148@twibble.org>
-References: <40B4CA83.8020700@nosomos.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <1086255880-17764__21883.9168701836$1086256006@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tuon.twibble.org ([202.173.155.197]:65241 "EHLO
-	tuon.twibble.org") by vger.kernel.org with ESMTP id S261932AbUFCJIx
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jun 2004 05:08:53 -0400
-Content-Disposition: inline
-In-Reply-To: <40B4CA83.8020700@nosomos.org>
+Received: from [200.71.61.6] ([200.71.61.6]:52075 "HELO vetaque.com")
+	by vger.kernel.org with SMTP id S262006AbUFCJog (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jun 2004 05:44:36 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Quercus <quercus@nosomos.org>
-Cc: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
 
-On Wed, May 26, 2004 at 06:49:07PM +0200, Quercus wrote:
-> Hi there... I own a dc395 scsi card "working" on a Debian GNU/Linux 3.0, 
-> with kernels 2.4.22 and 2.6.5.
+Need software but not the price that comes with it?
+We sell OEM software at major discounts.
+Don't pay the department store markups, buy on the internet.
 
-So it works fine in 2.6.5 and not 2.6.6? I'll have to look at what
-other changes went in between those versions.
+Free Delivery and Extra Discounts on orders over $200!
 
-[...]
-> What other tests should I do to send some feedback to the list and try 
-> to find a solution? Anyone had this same problem?
+Save yourself or your company thousands of dollars, reap the rewards!
 
-Edit the top of drivers/scsi/dc395x.c and uncomment the first
-"#define DEBUG_MASK" line, rebuild the dc395x module, reload the
-module and then the operation that failes again. You should then gets
-lots of debugging output in one of your log file which you can then
-gzip or bzip2 and then send directly to me and I'll take a look at
-it.
+Q:  How can you sell this software as OEM ? It seems too good to be true - is there a catch?
 
-Thanks.
-Jamie.
+A:  There is no catch - the software versions that we sell are OEM (Original Equipment Manufacturer) which means you will receive the installation CDs only (they do not come in their original retail packing and do not include the manual). We do guarantee that all programs are the 100% full working retail versions - no demos or academic versions! When you order, you will receive all materials required for a complete installation - or your money back! Why pay hundreds of dollars more when you can get exactly the same but OEM-CD? You don't have to pay that much for the fancy box and manuals. 
 
--- 
- Jamie Lenehan <lenehan@twibble.org>
+
+
+Click here!!
+http://magicisland.biz/index.php?s=7555
+
+
+
+
+
+
+
+
+
+bird cancedroman reznor pearl wanker megan vermont 
+fiona promethecorwin first mortimer
+garnet rambo1 trek 
+
+REMOV3: http://mycomp.biz/soft/chair.php
