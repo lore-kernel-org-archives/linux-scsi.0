@@ -1,48 +1,88 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: QLA2300, Infortrand and LBD?
-Date: 28 Jul 2004 10:17:50 -0400
+From: "David Peterson \(Eng\)" <david_peterson@cnt.com>
+Subject: RE: WWN on FC LUN targets
+Date: Wed, 28 Jul 2004 09:22:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1091024272.2225.32.camel@mulgrave>
-References: <47F3C2BE74738E4683574107469DFA204CC855@XYUSEX01.xyus.xyratex.com>
+Message-ID: <82C736F456CA3E4EA3D0DC6CC31AA5CB011B05D3@esply09.cnt.ad.cnt.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:37312 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S267164AbUG1OR6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Jul 2004 10:17:58 -0400
-In-Reply-To: <47F3C2BE74738E4683574107469DFA204CC855@XYUSEX01.xyus.xyratex.com>
+Received: from gatehider.cnt.com ([139.93.128.13]:5037 "EHLO esply07.cnt.com")
+	by vger.kernel.org with ESMTP id S267168AbUG1OWj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Jul 2004 10:22:39 -0400
+Content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Frank Borich <Frank_Borich@us.xyratex.com>
-Cc: "tester7 A." <benew666@hotmail.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, tech@storageone.co.kr
+To: Bryan Henderson <hbryan@us.ibm.com>, Rock Gordon <rockgordon@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2004-07-28 at 09:46, Frank Borich wrote:
-> Looking at an FC trace on an Infortrend controller I have, shows that
-> for a LUN 3586680 MB in size, the LBA is B5D3BFFF in the "RETURNED
-> LOGICAL BLOCK ADDRESS FIELD" 
-> and with in the "BLOCK LENGTH IN BYTES FIELD" field is 200h , ( B5D3BFFF
-> * 200h =  approx. 1.6 TB). Seems that infortrend does NOT respond
-> properly to READ_CAPACITY_10, at least in my case. 
+If supported by the device, use the Device Identification VPD page
+(0x83) to identify the Logical Unit. See SPC-3.
+The preferred identifier type is NAA (which is a Worldwide_Name). Annex
+D in FCP-2/FCP-3 may also be of assistance to you.
 
-Well 3586680 MB == 0x1b5d3bfff * 0x200
+...Dave 
 
-so I think you can see where the returned figure is coming from...
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Bryan Henderson
+Sent: Tuesday, July 27, 2004 7:54 PM
+To: Rock Gordon
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: WWN on FC LUN targets
 
-Infortrends should be made aware of the problem so they can do a bios
-upgrade.  I suspect that even if the array returned the correct capacity
-it would be unable to process the READ/WRITE(16) commands necessary to
-reach it anyway, so their "fix" may be to tell you that no individual
-luns can be configured beyond 2TB.
+>I am looking at ways to find out particular WWN (world wide names) for 
+>SCSI target LUNs
 
-> James, this may be a dumb question, please excuse my ignorance of the
-> internals of the scsi subsystem, 
-> but is there a plan to implement LBD support in the 2.4 tree ?
+LUNS don't actually have fibre channel WWNs.  And neither do SCSI
+logical units, which is probably what you meant (a LUN is a logical unit
+number). 
+WWNs come in two flavors - World Wide Node Name (WWNN), which identifies
+a SCSI target, and World Wide Port Name (WWPN), which identifies a port
+on a target.  Neither of those is what you want, since you probably have
+multiple logical units per target.
 
-The problem is not just in SCSI, it permeates the block layer.  I don't
-think there's much point backporting LBD to 2.4, although many vendor
-trees have it.
+If you're like most FC users, your LUNs aren't stable even within a
+target, so you can't use a combination of WWNN and LUN either.
 
-James
+So what people use is either SCSI device serial number or SCSI device
+ID. 
+The latter is newer and better.  There are device IDs for targets,
+ports, and logical units.  There are device IDs in each of various name
+spaces, some defined by public standards.  You can read all about that
+in SCSI specifications.  Device IDs are part of the Vital Product Data
+(VPD).
 
+The basic programming interface to get that information is the SCSI
+INQUIRY command.
 
+People have written programs to do the INQUIRY and give you the results
+in usable form and even create the device special files named after the
+device IDs.  I'm afraid I can't name one at the moment, but I hope
+someone else on the list chimes in with the specifics.
+
+You could do this with devfs, but you'd be happier doing it with a user
+space program that just queries the devices at all the relevant
+major/minor number combinations and creates the /dev files you want.
+And the same for responding to hotplug events.  In Linux 2.6, that
+process is even formalized in 'udev'.
+
+This is, by the way, something people have been doing for years.  It's
+only starting to become standard so that everyone doesn't have to write
+his own.
+
+>I can mount particular [logical units] from any server without worrying
+
+>about changes in the device naming conventions.
+
+Of course, naming conventions are the least of your problems.  When you
+try to use the /dev/sda etc. names, they will change every time the
+slightest thing in your system changes -- recabling, adding adapter
+cards, changing adapter card brand, creating new LUs, and on and on.
+And they will be different on every system.
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org More majordomo info
+at  http://vger.kernel.org/majordomo-info.html
