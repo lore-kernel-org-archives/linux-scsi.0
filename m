@@ -1,30 +1,45 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [2.6 patch] SCSI: possible cleanups
-Date: Tue, 1 Mar 2005 07:36:15 -0500
-Message-ID: <60807403EABEB443939A5A7AA8A7458BD63E10@otce2k01.adaptec.com>
+From: Manu <nobody@guzu.net>
+Subject: Re: [BUG] Fusion MPT 2.6.8 driver and multi LUN device
+Date: Tue, 01 Mar 2005 14:04:25 +0100
+Message-ID: <42246859.8090006@guzu.net>
+References: <42243E15.5070502@guzu.net> <4224484D.5090900@torque.net>
+Reply-To: linux-kernel@guzu.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Received: from magic.adaptec.com ([216.52.22.17]:7104 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261887AbVCAMgT convert rfc822-to-8bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from 26.mail-out.ovh.net ([213.186.42.179]:34225 "EHLO
+	26.mail-out.ovh.net") by vger.kernel.org with ESMTP id S261892AbVCANEf
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2005 07:36:19 -0500
-content-class: urn:content-classes:message
+	Tue, 1 Mar 2005 08:04:35 -0500
+In-Reply-To: <4224484D.5090900@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Adrian Bunk <bunk@stusta.de>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Haverkamp <markh@osdl.org>
+To: linux-scsi@vger.kernel.org
+Cc: dougg@torque.net
 
-Christoph Hellwig writes:
->>   - scsi_scan.c: scsi_rescan_device
->aacraid was going to use that one, Mark, any chance to get a patch
-anytime soon?
->>   - scsi_scan.c: scsi_scan_single_target
->as mentioned above we'll need this one soon.
+Douglas Gilbert wrote:
+> 
+> Perhaps you could try the sg_luns utility from the
+> sg3_utils package ( http://www.torque.net/sg )
+> with either the 2.4 or 2.6 kernel. It should be sent
+> to lun 0 (i.e. the tape drive), for example:
+>   sg_luns /dev/st0
+> 
+> [I'm not sure whether st devices support the SG_IO
+> ioctl in lk 2.6.8; they do now. If that fails use the
+> sg_map utility to find the corresponding sg device and
+> apply sg_luns to that sg device.]
 
-Yup, we use both of them in our branch of the driver. I submit a patch
-to MarkH for the Hot-Add calls soon.
+It doesn't work with /dev/st0 or /dev/nst0 but either work with /dev/sg1 
+and /dev/sg2 which are respectively the drive and the changer. But it 
+reports the same things that I reported.
 
-Sincerely -- Mark Salyzyn
+> If the sg_luns response shows an offset result for the
+> tape changer (lun 1), then you should be looking to see
+> if HP has new firmware for that tape autoloader.
 
+OK.
+I tried to force the kernel to register the LUN 1 (by modifying the 
+scsi_scan.c code) but the kernel crashes...
+
+See you.
