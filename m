@@ -1,102 +1,95 @@
-From: "Sergey S. Kostyliov" <rathamahata@ehouse.ru>
-Subject: Re: 2.6.10 devfs oops without devfs mounted at all
-Date: Tue, 22 Mar 2005 15:40:24 +0300
-Message-ID: <200503221540.25308.rathamahata@ehouse.ru>
-References: <200502082013.50959.rathamahata@ehouse.ru> <200502101312.03026.rathamahata@ehouse.ru> <20050321140809.2612121d.akpm@osdl.org>
-Reply-To: "Sergey S. Kostyliov" <rathamahata@ehouse.ru>
+From: "Ju, Seokmann" <sju@lsil.com>
+Subject: RE: [UPDATE PATCH 15/19] drivers/scsi/megaraid: Use the DMA_{64,
+	32}BIT_MASK constants
+Date: Tue, 22 Mar 2005 08:13:01 -0500
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570366277D@exa-atlanta>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Received: from village.ehouse.ru ([193.111.92.18]:52997 "EHLO mail.ehouse.ru")
-	by vger.kernel.org with ESMTP id S261189AbVCVMkh (ORCPT
+	charset="iso-8859-1"
+Received: from mail0.lsil.com ([147.145.40.20]:53672 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261193AbVCVNNU (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Mar 2005 07:40:37 -0500
-In-Reply-To: <20050321140809.2612121d.akpm@osdl.org>
-Content-Disposition: inline
+	Tue, 22 Mar 2005 08:13:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: admin@list.net.ru
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
+To: 'Tobias Klauser' <tklauser@nuerscht.ch>, kernel-janitors@lists.osdl.org
+Cc: linux-scsi@vger.kernel.org
 
-On Tuesday 22 March 2005 01:08, Andrew Morton wrote:
+On Sunday, March 20, 2005 8:14 AM, Tobias wrote:
+> The previous patch did not compile cleanly on all architectures so
+> here's a fixed one.
 > 
-> Sergey, I'm assuming this is a bug in the megaraid driver.
-Sorry for a slow response.
+> Use the DMA_{64,32}BIT_MASK constants from dma-mapping.h when calling
+> pci_set_dma_mask() or pci_set_consistent_dma_mask()
+> This patch includes dma-mapping.h explicitly because it caused errors
+> on some architectures otherwise.
+> See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 
+> for details
+Thank you for the patch. 
+However, exact same change is already included on the patch which I'm
+submitting.
+For the above reason, I'm rejecting the patch.
+
+Thank you for the correction, again.
+
+> -----Original Message-----
+> From: Tobias Klauser [mailto:tklauser@nuerscht.ch] 
+> Sent: Sunday, March 20, 2005 8:14 AM
+> To: kernel-janitors@lists.osdl.org
+> Cc: linux-scsi@vger.kernel.org
+> Subject: [UPDATE PATCH 15/19] drivers/scsi/megaraid: Use the 
+> DMA_{64, 32}BIT_MASK constants
 > 
-> Can you confirm that it's still happening in 2.6.12-rc1?
-Unfortunately I'm not shure I remember well the exact sequence
-of operations I performed in ncurses based megaraid utility
-(megamgr) to reproduce oops two a month ago.
-
-If my memory (about the exact sequence) is correct I could not
-reproduce this problem with 2.6.11. Will try 2.6.12-rc*
-at the end of the week (this is a production server).
-
-Thank you!
-
+> The previous patch did not compile cleanly on all architectures so
+> here's a fixed one.
 > 
-> "Sergey S. Kostyliov" <rathamahata@ehouse.ru> wrote:
-> >
-> > On Thursday 10 February 2005 12:49, Sergey S. Kostyliov wrote:
-> > > On Thursday 10 February 2005 03:36, Andrew Morton wrote:
-> > > > "Sergey S. Kostyliov" <rathamahata@ehouse.ru> wrote:
-> > > > >
-> > > > > Here is an oops I've just get on my smp system:
-> > > > > 
-> > > > > Unable to handle kernel NULL pointer dereference at virtual address 0000001c
-> > > > >  printing eip:
-> > > > > c01afe5b
-> > > > > *pde = 00000000
-> > > > > Oops: 0000 [#1]
-> > > > > PREEMPT SMP
-> > > > > Modules linked in: ipt_REJECT ipt_state ip_conntrack iptable_filter
-> > > > > CPU:    2
-> > > > > EIP:    0060:[<c01afe5b>]    Not tainted VLI
-> > > > > EFLAGS: 00010286   (2.6.10)
-> > > > > EIP is at devfsd_close+0x1b/0xc8
-> > > > > eax: f7440a00   ebx: 00000000   ecx: c01afe40   edx: ed395280
-> > > > > esi: 00000000   edi: f7f17800   ebp: f74f96c8   esp: cdc70f84
-> > > > > ds: 007b   es: 007b   ss: 0068
-> > > > > Process megamgr.bin (pid: 12844, threadinfo=cdc70000 task=dd81e520)
-> > > > > Stack: ed395280 ed395280 00000000 f7f17800 c0150c76 ee9e87f8 ed395280 00000000
-> > > > >        f1985c80 cdc70000 c014f50f 00000003 00000003 080caa60 00000000 c01024df
-> > > > >        00000003 080cc700 bfffe4f8 080caa60 00000000 bfffe4fc 00000006 0000007b
-> > > > > Call Trace:
-> > > > >  [<c0150c76>] __fput+0x106/0x120
-> > > > >  [<c014f50f>] filp_close+0x4f/0x80
-> > > > >  [<c01024df>] syscall_call+0x7/0xb
-> > > > 
-> > > > Can you work out what file is being closed?  One way of doing that would be
-> > > > to work out how megamgr.bin is being invoked and to then run it by hand:
-> > > > 
-> > > >  strace -f -o log megamgr.bin <args>
-> > > > 
-> > > > and we can then use the strace output to work out the pathname of the
-> > > > offending file.
-> > > 
-> > > rathamahata@terror rathamahata $ grep 'open(' mg.log
-> > > 5255  open("/usr/share/terminfo/l/linux", O_RDONLY) = 3
-> > > 5255  open("/dev/megadev0", O_RDONLY)   = 3
-> > > rathamahata@terror rathamahata $
-> > Sorry, I forgot this part:
-> > rathamahata@terror rathamahata $ grep 'close(' mg.log
-> > 5255  close(3)                          = 0
-> > rathamahata@terror rathamahata $
-> > 
-> > > 
-> > > I guess it's /dev/megadev0 (manually created character device)
-> > > 
-> > > rathamahata@terror rathamahata $ ls -la /dev/megadev0
-> > > crw-r--r--  1 root root 253, 0 Feb  8 16:26 /dev/megadev0
-> > > rathamahata@terror rathamahata 
-> > > 
-> > 
-> > -- 
-> > Sergey S. Kostyliov <rathamahata@ehouse.ru>
-> > Jabber ID: rathamahata@jabber.org
+> Use the DMA_{64,32}BIT_MASK constants from dma-mapping.h when calling
+> pci_set_dma_mask() or pci_set_consistent_dma_mask()
+> This patch includes dma-mapping.h explicitly because it caused errors
+> on some architectures otherwise.
+> See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 
+> for details
 > 
-
--- 
-Sergey S. Kostyliov <rathamahata@ehouse.ru>
-Jabber ID: rathamahata@jabber.org
+> Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
+> 
+> --- linux-2.6.11.orig/drivers/scsi/megaraid.c	2005-03-02 
+> 12:50:36.000000000 +0100
+> +++ linux-2.6.11/drivers/scsi/megaraid.c	2005-03-20 
+> 13:27:54.000000000 +0100
+> @@ -43,6 +43,7 @@
+>  #include <linux/interrupt.h>
+>  #include <linux/pci.h>
+>  #include <linux/init.h>
+> +#include <linux/dma-mapping.h>
+>  #include <scsi/scsicam.h>
+>  
+>  #include "scsi.h"
+> @@ -2060,7 +2061,7 @@ make_local_pdev(adapter_t *adapter, stru
+>  
+>  	memcpy(*pdev, adapter->dev, sizeof(struct pci_dev));
+>  
+> -	if( pci_set_dma_mask(*pdev, 0xffffffff) != 0 ) {
+> +	if( pci_set_dma_mask(*pdev, DMA_32BIT_MASK) != 0 ) {
+>  		kfree(*pdev);
+>  		return -1;
+>  	}
+> @@ -4854,10 +4855,10 @@ megaraid_probe_one(struct pci_dev *pdev,
+>  
+>  	/* Set the Mode of addressing to 64 bit if we can */
+>  	if ((adapter->flag & BOARD_64BIT) && 
+> (sizeof(dma_addr_t) == 8)) {
+> -		pci_set_dma_mask(pdev, 0xffffffffffffffffULL);
+> +		pci_set_dma_mask(pdev, DMA_64BIT_MASK);
+>  		adapter->has_64bit_addr = 1;
+>  	} else  {
+> -		pci_set_dma_mask(pdev, 0xffffffff);
+> +		pci_set_dma_mask(pdev, DMA_32BIT_MASK);
+>  		adapter->has_64bit_addr = 0;
+>  	}
+>  		
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
