@@ -1,73 +1,42 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: TMSCSIM [2.6]
-Date: Fri, 28 Nov 2003 08:33:58 +0100 (CET)
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: cdrom sr ide-cd - CDC_WR, 1999 op x46 GPCMD_GET_CONFIGURATION
+Date: 28 Nov 2003 13:05:03 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0311280831330.1470-100000@poirot.grange>
-References: <3FC6A7B0.3050401@yk.rim.or.jp>
+Message-ID: <1070049902.11739.3.camel@patrh9>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:25747 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S263378AbTK1Sqb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Nov 2003 13:46:31 -0500
-In-Reply-To: <3FC6A7B0.3050401@yk.rim.or.jp>
+Received: from email-out1.iomega.com ([147.178.1.82]:21758 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S263364AbTK1UFf
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Nov 2003 15:05:35 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Chiaki <ishikawa@yk.rim.or.jp>
-Cc: linux-scsi@vger.kernel.org, Thorsten Leemhuis <Thorsten_Leemhuis@gmx.de>, gl@dsa-ac.de
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 28 Nov 2003, Chiaki wrote:
+Jens A:
 
-> I am afraid that it didn't solve the problem.
-> I got the same kernel bug triggered at the same place.
+Am I correct to think we/you have no interest in going ahead and merging
+into 2.6.1 a purely restructuring patch that supposedly changes no
+results?  That is,
 
-Ok, then, please, try this one (on the top of yesterday's):
+1) I should Not construct a patch that does no more than add op x46
+GPCMD_GET_CONFIGURATION.
 
-diff -u linux/drivers/scsi/scsiiom.c~ linux/drivers/scsi/scsiiom.c
---- linux/drivers/scsi/scsiiom.c~	Thu Nov 27 23:02:35 2003
-+++ linux/drivers/scsi/scsiiom.c	Fri Nov 28 08:29:40 2003
-@@ -1439,7 +1439,7 @@
- 		goto ckc_e;
- 	    }
- 	    SET_RES_DRV(pcmd->result,DRIVER_SENSE);
--//	    pcmd->use_sg	 = pSRB->SavedSGCount;
-+	    pcmd->use_sg	 = pSRB->SavedSGCount;
- 	    //pSRB->ScsiCmdLen	 = (UCHAR) (pSRB->Segment1[0] >> 8);
- 	    DEBUG0 (printk ("DC390: RETRY pid %li (%02x), target %02i-%02i\n", pcmd->pid, pcmd->cmnd[0], pcmd->device->id, pcmd->device->lun));
- 	    pSRB->SGIndex = 0;
-@@ -1734,22 +1734,22 @@
- static void __inline__
- dc390_RequestSense( PACB pACB, PDCB pDCB, PSRB pSRB )
- {
--//    PSCSICMD  pcmd;
-+    PSCSICMD  pcmd;
-+
-+    pcmd = pSRB->pcmd;
+2) Nor should I construct a patch that does no more than add a new
+CDC_WR flag to control pass thru of writes without overloading
+CDC_DVD_RAM.
 
-     REMOVABLEDEBUG(printk (KERN_INFO "DC390: RequestSense (Cmd %02x, Id %02x, LUN %02x)\n",\
--	    pSRB->pcmd->cmnd[0], pDCB->TargetID, pDCB->TargetLUN));
-+	    pcmd->cmnd[0], pDCB->TargetID, pDCB->TargetLUN));
+Instead I should wait to write such code until After we actually do
+dream up a good way to discover, without waiting for the disc to arrive,
+that some PDT x05 DVD/CD devices besides DVD-RAM are randomly rewritable
+in place.
 
-     pSRB->SRBFlag |= AUTO_REQSENSE;
-     //pSRB->Segment0[0] = (UINT) pSRB->CmdBlock[0];
-     //pSRB->Segment0[1] = (UINT) pSRB->CmdBlock[4];
--    //pSRB->Segment1[0] = ((UINT)(pSRB->pcmd->cmd_len) << 8) + pSRB->SGcount;
-+    //pSRB->Segment1[0] = ((UINT)(pcmd->cmd_len) << 8) + pSRB->SGcount;
-     //pSRB->Segment1[1] = pSRB->TotalXferredLen;
--    pSRB->SavedSGCount = pSRB->SGcount;
-+    pSRB->SavedSGCount = pcmd->use_sg;
-     pSRB->SavedTotXLen = pSRB->TotalXferredLen;
-     pSRB->AdaptStatus = 0;
-     pSRB->TargetStatus = 0; /* CHECK_CONDITION<<1; */
--
--//    pcmd = pSRB->pcmd;
+Right?  That's what I've been doing, without anyone's explicit
+agreement, but then suddenly I thought perhaps I should ask Someone With
+Change Authority, hi.
 
-     /* We are called from SRBdone, original PCI mapping has been removed
-      * already, new one is set up from StartSCSI */
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+Pat LaVarre
 
 
