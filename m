@@ -1,50 +1,69 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: usb storage traces
-Date: 05 Dec 2003 13:27:17 -0700
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b7).
+Date: Fri, 5 Dec 2003 12:52:31 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1070656037.12411.542.camel@patibmrh9>
-References: <Pine.LNX.4.44L0.0312051421160.645-100000@ida.rowland.org>
+Message-ID: <B179AE41C1147041AA1121F44614F0B0598D7F@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:23963 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264368AbTLEU13
+Received: from [198.70.193.2] ([198.70.193.2]:65357 "EHLO AVEXCH01.qlogic.org")
+	by vger.kernel.org with ESMTP id S264400AbTLEUwY convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Dec 2003 15:27:29 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0312051421160.645-100000@ida.rowland.org>
+	Fri, 5 Dec 2003 15:52:24 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-scsi@vger.kernel.org
+To: Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
 
-> > If so, then we can say msft turns write-behind etc. on when the drive is
-> > hot-pluggable, but turns write-behind etc. off when the disk is fully
-> > hot-pluggable or even only hot-pluggable while not prevented.  Not good
-> > policy, though too late now I suppose.
-> 
-> Be careful with your nomenclature.  Hot-pluggable and removable-media are 
-> two different things.
+All,
 
-Sorry I was unclear.  I mean to say Four things:
+A new version of the 8.x series driver for Linux 2.6.x kernels has
+been uploaded to SourceForge:
 
-a) Write-behind risks more if people commonly do yank the device cable
-or the disk itself while an fs of the disk is mounted.
+	http://sourceforge.net/projects/linux-qla2xxx/
 
-b) Here we may be seeing msft choose to reduce thruput by turning off
-write-behind while still shattering streams into just a few bytes/cdb.
+Changes from previous release (8.00.00b6) include:
 
-c) Here we may be seeing msft making this choice whenever the device
-sets op x12 Inquiry bytes[1] & x80 RMB to say the disk can unplug
-without the drive unplugging.
+	o Merge several large patches from Christoph Hellwig:
+	  - split driver into a common qla2xxx.ko lib with light-weight
+	    ISP driver modules (qla2?xx.ko).
+	  - Failover code optional and split from main code.
+	o Merge several patches from Jes Sorensen:
+	  - IA64 allocations
+	  - PCI posting issues. 
+	o Clean-up slab-cache allocations (-> mempool).
+	o Fix GA_NXT portid preparation problem.
+	o NVRAM interface tool for all hardware platforms.
+	o Tar-ball extracts to qla2xxx-<version>/
 
-d) Massively distributing host silliness like that provokes silliness in
-device design.  Give an advantage to devices that don't say the disk can
-unplug without the drive unplugging, and more devices will learn to
-electronically unplug the drive when the disk unplugs.
+Review the revision notes for further details of the changes in
+8.00.00b7.
 
-Is my jargon still wrong?  Am I still unclear?  If I have failed again
-might you tell me?
+Some words regarding the NVRAM tool:
 
-Pat LaVarre
+	WARNINGS
+		EXTREME CARE MUST TO BE TAKEN WHEN CHANGING 
+		NVRAM CONTENTS, INCORRECT DATA MAY RENDER THE ADAPTER 
+		UNUSABLE TO THE POINT THAT THE OPERATING SYSTEM MAY 
+		NO LONGER FUNCTION.
 
+	NOTES
+		Each NVRAM is has a unique port name for every adapter 
+		so the same data file generated from the NVRAM tool
+		cannot be used to load multiple adapters. Each adapter 
+		must have its NVRAM dumped then modified before loading. 
+		In the case of adapters that contain multiple ports each 
+		port has its own unique NVRAM and must be programmed 
+		separately.
 
+	Use of this tool is *STRONGLY* discouraged.  Most if not all 
+	useful NVRAM parameters have module_param overrides.  This tool
+	is meant only to assist users who use QLogic HBAs on platforms
+	with no GUI/CLI support.
+
+Finally, a large thanks goes out to Christoph for his persistence and
+efforts.
+
+Regards,
+Andrew Vasquez
+QLogic Corporation
