@@ -1,48 +1,49 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] fix wrong argument to pci_dma_sync_sg in megaraid driver
-Date: 01 Feb 2004 11:16:27 -0500
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Recovered disk error caused disk to go offline.
+Date: Sun, 1 Feb 2004 11:10:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1075652188.1818.15.camel@mulgrave>
-References: <20040201160032.GA14959@lst.de>
+Message-ID: <200402011610.i11GAXi12108@dns1.watkins-home.com>
+References: <1075649122.2036.0.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:60834 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S265367AbUBAQQi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 Feb 2004 11:16:38 -0500
-In-Reply-To: <20040201160032.GA14959@lst.de>
+Received: from sccrmhc13.comcast.net ([204.127.202.64]:1475 "EHLO
+	sccrmhc13.comcast.net") by vger.kernel.org with ESMTP
+	id S265359AbUBAQKf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 Feb 2004 11:10:35 -0500
+In-Reply-To: <1075649122.2036.0.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Atulm@lsil.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: 'James Bottomley' <James.Bottomley@steeleye.com>
+Cc: 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
 
-On Sun, 2004-02-01 at 11:00, Christoph Hellwig wrote:
-> sgl is incremented for each element in the routine, but pci_dma_sync_sg
-> needs the original buffer.
-> 
-> 
-> --- 1.59/drivers/scsi/megaraid.c	Fri Jan 23 06:37:03 2004
-> +++ edited/drivers/scsi/megaraid.c	Sat Jan 31 07:09:25 2004
-> @@ -1805,7 +1805,7 @@
->  	*len = (u32)cmd->request_bufflen;
->  
->  	if( scb->dma_direction == PCI_DMA_TODEVICE ) {
-> -		pci_dma_sync_sg(adapter->dev, sgl, cmd->use_sg,
-> +		pci_dma_sync_sg(adapter->dev, cmd->request_buffer, cmd->use_sg,
->  				PCI_DMA_TODEVICE);
->  	}
+RedHat 9.0
+>From uname -a:
+Linux watkins 2.4.20-8smp #1 SMP Thu Mar 13 17:45:54 EST 2003 i686 i686 i386
+GNU/Linux
 
-Hang on a minute, none of these syncs (including all the other syncs to
-and from the device) looks to be necessary.
+Guy
 
-Once the buffers are mapped, their cache line ownership is transferred
-automatically to the device.  Once they are unmapped, it is transferred
-back.  There's no need to do additional syncs after mapping and
-unmapping *unless* the driver needs to touch the actual data in between
-the mapping and the unmapping.  I didn't notice the megaraid actually
-doing this (but even if it does, the sync would be in the wrong place).
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of James Bottomley
+Sent: Sunday, February 01, 2004 10:25 AM
+To: Guy
+Cc: SCSI Mailing List
+Subject: RE: Recovered disk error caused disk to go offline.
+
+On Fri, 2004-01-30 at 14:02, Guy wrote:
+> Sorry about the re-post, but no comments after almost 2 days.
+
+Recovered disc error processing has been in the sd driver for nearly two
+years now.  What kernel version was this?
 
 James
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
