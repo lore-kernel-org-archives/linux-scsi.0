@@ -1,16 +1,16 @@
 From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: [3/3] add MODULE_VERSION to drivers/scsi
-Date: Wed, 21 Jul 2004 17:02:58 -0500
+Subject: Re: [2/3] add MODULE_VERSION to drivers/scsi
+Date: Wed, 21 Jul 2004 17:02:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040721220258.GD16608@lists.us.dell.com>
+Message-ID: <20040721220231.GC16608@lists.us.dell.com>
 References: <20040721220111.GA16608@lists.us.dell.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lists.us.dell.com ([143.166.224.162]:50265 "EHLO
-	lists.us.dell.com") by vger.kernel.org with ESMTP id S266743AbUGUWEP
+Received: from linux.us.dell.com ([143.166.224.162]:51033 "EHLO
+	lists.us.dell.com") by vger.kernel.org with ESMTP id S266757AbUGUWE1
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Jul 2004 18:04:15 -0400
+	Wed, 21 Jul 2004 18:04:27 -0400
 Content-Disposition: inline
 In-Reply-To: <20040721220111.GA16608@lists.us.dell.com>
 List-Id: linux-scsi@vger.kernel.org
@@ -22,164 +22,237 @@ You can import this changeset into BK by piping this whole message to
 ===================================================================
 
 
-ChangeSet@1.1842.1.3, 2004-07-19 18:06:39-04:00, Matt_Domsch@dell.com
-  Set MODULE_VERSION
+ChangeSet@1.1842.1.2, 2004-07-19 18:00:35-04:00, Matt_Domsch@dell.com
+  Set MODULE_VERSION for drivers/scsi
   
-  Move SYM_VERSION and SYM_DRIVER_NAME to new sym_version.h file
+  for Adaptec SCSI, megaraid qla1280, qla2x00
 
 
- sym_glue.c    |    2 ++
- sym_hipd.c    |    5 +----
- sym_version.h |   53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 56 insertions, 4 deletions
+ aacraid/linit.c       |    1 +
+ aic7xxx/aic79xx_osm.c |    5 +----
+ aic7xxx/aic7xxx_osm.c |    5 +----
+ aic7xxx_old.c         |    1 +
+ megaraid.c            |    3 +++
+ qla1280.c             |    1 +
+ qla2xxx/ql2100.c      |    1 +
+ qla2xxx/ql2200.c      |    1 +
+ qla2xxx/ql2300.c      |    1 +
+ qla2xxx/ql2322.c      |    1 +
+ qla2xxx/ql6312.c      |    1 +
+ qla2xxx/ql6322.c      |    1 +
+ qla2xxx/qla_os.c      |    1 +
+ 13 files changed, 15 insertions, 8 deletions
 
 
-diff -Nru a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c	2004-07-21 16:57:58 -05:00
-+++ b/drivers/scsi/sym53c8xx_2/sym_glue.c	2004-07-21 16:57:58 -05:00
-@@ -64,6 +64,7 @@
+diff -Nru a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+--- a/drivers/scsi/aacraid/linit.c	2004-07-21 16:57:31 -05:00
++++ b/drivers/scsi/aacraid/linit.c	2004-07-21 16:57:31 -05:00
+@@ -62,6 +62,7 @@
+ 		   "Adaptec Advanced Raid Products, "
+ 		   "and HP NetRAID-4M SCSI driver");
+ MODULE_LICENSE("GPL");
++MODULE_VERSION(AAC_DRIVER_VERSION);
  
- #include "sym_glue.h"
- #include "sym_nvram.h"
-+#include "sym_version.h"
  
- #define NAME53C		"sym53c"
- #define NAME53C8XX	"sym53c8xx"
-@@ -2283,6 +2284,7 @@
- }
+ int nondasd = -1;
+diff -Nru a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-07-21 16:57:31 -05:00
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-07-21 16:57:31 -05:00
+@@ -415,7 +415,6 @@
+ /*
+  * Module information and settable options.
+  */
+-#ifdef MODULE
+ static char *aic79xx = NULL;
+ /*
+  * Just in case someone uses commas to separate items on the insmod
+@@ -426,9 +425,8 @@
+ 
+ MODULE_AUTHOR("Maintainer: Justin T. Gibbs <gibbs@scsiguy.com>");
+ MODULE_DESCRIPTION("Adaptec Aic790X U320 SCSI Host Bus Adapter driver");
+-#ifdef MODULE_LICENSE
+ MODULE_LICENSE("Dual BSD/GPL");
+-#endif
++MODULE_VERSION(AIC79XX_DRIVER_VERSION);
+ MODULE_PARM(aic79xx, "s");
+ MODULE_PARM_DESC(aic79xx,
+ "period delimited, options string.\n"
+@@ -463,7 +461,6 @@
+ "		Change Read Streaming for Controller's 2 and 3\n"
+ "\n"
+ "	options aic79xx 'aic79xx=rd_strm:{..0xFFF0.0xC0F0}'");
+-#endif
+ 
+ static void ahd_linux_handle_scsi_status(struct ahd_softc *,
+ 					 struct ahd_linux_device *,
+diff -Nru a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-07-21 16:57:31 -05:00
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-07-21 16:57:31 -05:00
+@@ -436,7 +436,6 @@
+ /*
+  * Module information and settable options.
+  */
+-#ifdef MODULE
+ static char *aic7xxx = NULL;
+ /*
+  * Just in case someone uses commas to separate items on the insmod
+@@ -447,9 +446,8 @@
+ 
+ MODULE_AUTHOR("Maintainer: Justin T. Gibbs <gibbs@scsiguy.com>");
+ MODULE_DESCRIPTION("Adaptec Aic77XX/78XX SCSI Host Bus Adapter driver");
+-#ifdef MODULE_LICENSE
+ MODULE_LICENSE("Dual BSD/GPL");
+-#endif
++MODULE_VERSION(AIC7XXX_DRIVER_VERSION);
+ MODULE_PARM(aic7xxx, "s");
+ MODULE_PARM_DESC(aic7xxx,
+ "period delimited, options string.\n"
+@@ -479,7 +477,6 @@
+ "\n"
+ "	options aic7xxx 'aic7xxx=probe_eisa_vl.tag_info:{{}.{.10}}.seltime:1'\n"
+ );
+-#endif
+ 
+ static void ahc_linux_handle_scsi_status(struct ahc_softc *,
+ 					 struct ahc_linux_device *,
+diff -Nru a/drivers/scsi/aic7xxx_old.c b/drivers/scsi/aic7xxx_old.c
+--- a/drivers/scsi/aic7xxx_old.c	2004-07-21 16:57:31 -05:00
++++ b/drivers/scsi/aic7xxx_old.c	2004-07-21 16:57:31 -05:00
+@@ -11139,6 +11139,7 @@
+ #include "aic7xxx_old/aic7xxx_proc.c"
  
  MODULE_LICENSE("Dual BSD/GPL");
-+MODULE_VERSION(SYM_VERSION);
++MODULE_VERSION(AIC7XXX_H_VERSION);
+ 
+ 
+ static Scsi_Host_Template driver_template = {
+diff -Nru a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+--- a/drivers/scsi/megaraid.c	2004-07-21 16:57:31 -05:00
++++ b/drivers/scsi/megaraid.c	2004-07-21 16:57:31 -05:00
+@@ -53,9 +53,12 @@
+ 
+ #include "megaraid.h"
+ 
++#define MEGARAID_MODULE_VERSION "2.00.3"
++
+ MODULE_AUTHOR ("LSI Logic Corporation");
+ MODULE_DESCRIPTION ("LSI Logic MegaRAID driver");
+ MODULE_LICENSE ("GPL");
++MODULE_VERSION(MEGARAID_MODULE_VERSION);
+ 
+ static unsigned int max_cmd_per_lun = DEF_CMD_PER_LUN;
+ MODULE_PARM(max_cmd_per_lun, "i");
+diff -Nru a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+--- a/drivers/scsi/qla1280.c	2004-07-21 16:57:31 -05:00
++++ b/drivers/scsi/qla1280.c	2004-07-21 16:57:31 -05:00
+@@ -4936,6 +4936,7 @@
+ MODULE_AUTHOR("Qlogic & Jes Sorensen");
+ MODULE_DESCRIPTION("Qlogic ISP SCSI (qla1x80/qla1x160) driver");
+ MODULE_LICENSE("GPL");
++MODULE_VERSION(QLA1280_VERSION);
  
  /*
-  * Driver host template.
-diff -Nru a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
---- a/drivers/scsi/sym53c8xx_2/sym_hipd.c	2004-07-21 16:57:58 -05:00
-+++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c	2004-07-21 16:57:58 -05:00
-@@ -49,12 +49,9 @@
-  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-  * SUCH DAMAGE.
-  */
--
--#define SYM_VERSION "2.1.18j"
--#define SYM_DRIVER_NAME	"sym-" SYM_VERSION
--
- #include "sym_glue.h"
- #include "sym_nvram.h"
-+#include "sym_version.h"
- 
- #if 0
- #define SYM_DEBUG_GENERIC_SUPPORT
-diff -Nru a/drivers/scsi/sym53c8xx_2/sym_version.h b/drivers/scsi/sym53c8xx_2/sym_version.h
---- /dev/null	Wed Dec 31 16:00:00 196900
-+++ b/drivers/scsi/sym53c8xx_2/sym_version.h	2004-07-21 16:57:58 -05:00
-@@ -0,0 +1,53 @@
-+/*
-+ * Device driver for the SYMBIOS/LSILOGIC 53C8XX and 53C1010 family 
-+ * of PCI-SCSI IO processors.
-+ *
-+ * Copyright (C) 1999-2001  Gerard Roudier <groudier@free.fr>
-+ *
-+ * This driver is derived from the Linux sym53c8xx driver.
-+ * Copyright (C) 1998-2000  Gerard Roudier
-+ *
-+ * The sym53c8xx driver is derived from the ncr53c8xx driver that had been 
-+ * a port of the FreeBSD ncr driver to Linux-1.2.13.
-+ *
-+ * The original ncr driver has been written for 386bsd and FreeBSD by
-+ *         Wolfgang Stanglmeier        <wolf@cologne.de>
-+ *         Stefan Esser                <se@mi.Uni-Koeln.de>
-+ * Copyright (C) 1994  Wolfgang Stanglmeier
-+ *
-+ * Other major contributions:
-+ *
-+ * NVRAM detection and reading.
-+ * Copyright (C) 1997 Richard Waltham <dormouse@farsrobt.demon.co.uk>
-+ *
-+ *-----------------------------------------------------------------------------
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ * 1. Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ * 2. The name of the author may not be used to endorse or promote products
-+ *    derived from this software without specific prior written permission.
-+ *
-+ * Where this Software is combined with software released under the terms of 
-+ * the GNU Public License ("GPL") and the terms of the GPL would require the 
-+ * combined work to also be released under the terms of the GPL, the terms
-+ * and conditions of this License will apply in addition to those of the
-+ * GPL with the exception of any terms or conditions of this License that
-+ * conflict with, or are expressly prohibited by, the GPL.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE AUTHORS AND CONTRIBUTORS ``AS IS'' AND
-+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
-+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-+ * SUCH DAMAGE.
-+ */
-+#define SYM_VERSION "2.1.18j"
-+#define SYM_DRIVER_NAME	"sym-" SYM_VERSION
+  * Overrides for Emacs so that we almost follow Linus's tabbing style.
+diff -Nru a/drivers/scsi/qla2xxx/ql2100.c b/drivers/scsi/qla2xxx/ql2100.c
+--- a/drivers/scsi/qla2xxx/ql2100.c	2004-07-21 16:57:31 -05:00
++++ b/drivers/scsi/qla2xxx/ql2100.c	2004-07-21 16:57:31 -05:00
+@@ -89,3 +89,4 @@
+ MODULE_AUTHOR("QLogic Corporation");
+ MODULE_DESCRIPTION("QLogic ISP21xx FC-SCSI Host Bus Adapter driver");
+ MODULE_LICENSE("GPL");
++MODULE_VERSION(QLA2XXX_VERSION);
+diff -Nru a/drivers/scsi/qla2xxx/ql2200.c b/drivers/scsi/qla2xxx/ql2200.c
+--- a/drivers/scsi/qla2xxx/ql2200.c	2004-07-21 16:57:31 -05:00
++++ b/drivers/scsi/qla2xxx/ql2200.c	2004-07-21 16:57:31 -05:00
+@@ -89,3 +89,4 @@
+ MODULE_AUTHOR("QLogic Corporation");
+ MODULE_DESCRIPTION("QLogic ISP22xx FC-SCSI Host Bus Adapter driver");
+ MODULE_LICENSE("GPL");
++MODULE_VERSION(QLA2XXX_VERSION);
+diff -Nru a/drivers/scsi/qla2xxx/ql2300.c b/drivers/scsi/qla2xxx/ql2300.c
+--- a/drivers/scsi/qla2xxx/ql2300.c	2004-07-21 16:57:31 -05:00
++++ b/drivers/scsi/qla2xxx/ql2300.c	2004-07-21 16:57:31 -05:00
+@@ -100,3 +100,4 @@
+ MODULE_AUTHOR("QLogic Corporation");
+ MODULE_DESCRIPTION("QLogic ISP2300 FC-SCSI Host Bus Adapter driver");
+ MODULE_LICENSE("GPL");
++MODULE_VERSION(QLA2XXX_VERSION);
+diff -Nru a/drivers/scsi/qla2xxx/ql2322.c b/drivers/scsi/qla2xxx/ql2322.c
+--- a/drivers/scsi/qla2xxx/ql2322.c	2004-07-21 16:57:31 -05:00
++++ b/drivers/scsi/qla2xxx/ql2322.c	2004-07-21 16:57:31 -05:00
+@@ -105,3 +105,4 @@
+ MODULE_AUTHOR("QLogic Corporation");
+ MODULE_DESCRIPTION("QLogic ISP2322 FC-SCSI Host Bus Adapter driver");
+ MODULE_LICENSE("GPL");
++MODULE_VERSION(QLA2XXX_VERSION);
+diff -Nru a/drivers/scsi/qla2xxx/ql6312.c b/drivers/scsi/qla2xxx/ql6312.c
+--- a/drivers/scsi/qla2xxx/ql6312.c	2004-07-21 16:57:31 -05:00
++++ b/drivers/scsi/qla2xxx/ql6312.c	2004-07-21 16:57:31 -05:00
+@@ -87,3 +87,4 @@
+ MODULE_AUTHOR("QLogic Corporation");
+ MODULE_DESCRIPTION("QLogic ISP6312 FC-SCSI Host Bus Adapter driver");
+ MODULE_LICENSE("GPL");
++MODULE_VERSION(QLA2XXX_VERSION);
+diff -Nru a/drivers/scsi/qla2xxx/ql6322.c b/drivers/scsi/qla2xxx/ql6322.c
+--- a/drivers/scsi/qla2xxx/ql6322.c	2004-07-21 16:57:31 -05:00
++++ b/drivers/scsi/qla2xxx/ql6322.c	2004-07-21 16:57:31 -05:00
+@@ -105,3 +105,4 @@
+ MODULE_AUTHOR("QLogic Corporation");
+ MODULE_DESCRIPTION("QLogic ISP6322 FC-SCSI Host Bus Adapter driver");
+ MODULE_LICENSE("GPL");
++MODULE_VERSION(QLA2XXX_VERSION);
+diff -Nru a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+--- a/drivers/scsi/qla2xxx/qla_os.c	2004-07-21 16:57:31 -05:00
++++ b/drivers/scsi/qla2xxx/qla_os.c	2004-07-21 16:57:31 -05:00
+@@ -4517,3 +4517,4 @@
+ MODULE_AUTHOR("QLogic Corporation");
+ MODULE_DESCRIPTION("QLogic Fibre Channel HBA Driver");
+ MODULE_LICENSE("GPL");
++MODULE_VERSION(QLA2XXX_VERSION);
 
 ===================================================================
 
 
 This BitKeeper patch contains the following changesets:
-1.1842.1.3
+1.1842.1.2
 ## Wrapped with gzip_uu ##
 
 
-M'XL( .;F_D   [U8:W.;R!+];'Y%E_-AXUT]> D]-DX9(6Q3D806D!]UZY87
-MP<@B0: +R(\J_?C;/4*RG+@<VWG83CP>>DZ?/MW38N8=C'.6=?8&?E%<]=)Y
-M'LR$=W":YD5G+V1Q7 O2.4XX:8H3]5DZ9_5YR,WJDR_U>1K>L"ROQU&RO*O*
-M-:U:SD1ID@NX;N07P0QHIK,GU93M3'&_8)T]QSP9]W5'$ X/P9CYR35S60&'
-MAT*19C=^'.9'?C&+TZ169'Z2SUGA$YW5UG0EBZ*,WPVIJ8@-;25IHMI<!5(H
-M2;XJL5"4U9:F"CNQ'6UB>@RBBDVI+>- ::S$9D-4A1Y(-:FERC5D#:):%YMU
-MJ0U2JR-J':5=%=6.*,)3P/"7 E51Z,+/C<$0 B!Q!G9OW#>OSDS'M>PA3N+/
-M(+UAX%X.-K/@)R'_N^=8.'4UU <FTH&$W4)^/[\J$U2;P32*F? )9%G6%&'T
-MD .A^LHO01!]4?@("\KNTQ&'6<1K)0_RJ(XT&DK0NKN[DFE\-8L682W8:B&+
-MBB*I*U%NR=HJ5-FDK3*FBN%$4X(G57\I^B;1&N(VFFKK1SA?QTOV%&=955:^
-MI+4FS8G?;FB!KVIOX/R OLM9:6F:C)Q?C[=-^@.D*"N-]DI6-2P[I-]H*\U0
-M\T4MF$X:/\N#*HHK46GCCJ)-_K+UU &&6*M4G9T7KA&FP$ 5SO#?T_O]9XK#
-MNX.XTQ:TCJQT&L^W!?%7M(4 NE'QB;$%R[A<L.G.\DY[IF:\;=&-^@L%Q;9 
-MP6-;>.$"![[1Z0+$NY8LO:&=_*8D2J],8N,7-?=CD%!POD]LJ&:W_ =U>+'X
-MKU?8$J&A"/4_!?@3>NPF"ECI"Z9I!L6,?Z1T+=NM]UVK;Y]8!MH;K8L+_O&"
-M0TF41)CZ\RB^!P))IS RK*IKN!98-BRR-&!YGF9Y#9^2@9$N[K/H>E; >^, 
-MI':[745])( 3EOE9B"\9RS!"_Q^NL_7H:)HQ5IMF'TL ;Q;E&Y(T8C0,89IA
-M:HAPGVH<MB*5IK4G?;?(M_BU[ZTC]@W,DQZ3('ML5,S\ F9^"!/&$BZ+#XLT
-M*T@=6G",$77='BW<+DG7Q*M2#5\WE-H.AQ0I1XD?[YK/_'P-?IM%18&_*5WX
-MN3#)0YZ9C8?)/:%LOL[3>'J-50EN@?_'<T9"EU\?;O'A49#&Z77":B'[N+O0
-M+=C43\#,\X<%VX4Y.YI'M7$253^E+$XV:[\16WV:0!FIC<)D,/<_8R!!FA19
-M-%D6U+0ZI<'PS-$'*'[! IKG86;,#Z/D^NGD-L&)@AGE]=R/,25S^!"FV3Q=
-M(N&IG^59.BF0[!RW3I#6EE_* GOM)GI^AZVY.RR,\FU(G#JR@"B!/%UFN.EH
-M9H))SNXID_.\ K=1,</4\]_ILB 4[.31- I\PJB GS' CC^G_(>TT6ZB$ >\
-M]JC(IFD<I[>H#LD91EQ+7HJX#IL4R8J][RMJ.95HR2E(0[1<Y@7*7/C(E5#]
-M";UG!ANMRR))T@);1P4M<'_$B$<P#VYY>(\YH=,@]J-YN3/E&B_UQ)^SS2;Q
-MEQ@X5<0]P6.UDV0A;1268!YSVA@4]CPM&/T.ET&1EWR^VJ)(*D^GQ2V%7NH)
-M^8(%I"8NC4CF<A]Q17/>3\O<G6-=LC6(NP'!,;9X3!CZX(G:PF<L9C[Q7"8A
-M6W?0 B&YKH1&$R?#,8R6DQB=]U&V!$-YOW\RZN\?;(7:KN'VHS[<ILN8ZOU_
-MRXBS81SM@42:?2%I_#A/2:KG:)20E8=97A;H>2=CW [#W!"\C>(8_,4"VSQ6
-M@A^N[<@ERIEODD9 G"UI0O#L+F +;HD&?G*_89$]YXM*>!U=,D61"@Y7H46D
-M,+M;9/B1@D0PZ;-H$E'Y3^XKF[BVK?/4<L&UC[USW3$!QR/'/K-Z9@^ZE_C0
-M!'WLG=J."_JP!X8]]!RK._9HXM]_=1<7_/$'/2(H?7@)YL7(,5T7; >LP:AO
-M(0X"._K0LTRW M;0Z(][UO"D H@"0]N#OC6P/#3S[ KY(Z!O5X)]# /3,4[Q
-M3[UK]2WODA,ZMKPAN3M&?SJ,=,>S##HFPVCLC&R7HU%</<LU^KHU,'LUY(!^
-MP3PSAQZXIWJ_OQ,F\7X49-=$@GJW;Y*+39 ]RS$-CZ)Y&!FH&7+#>G%'IF'1
-MP+PP,1#=N:R4L*[YSQB-\"%_D= '^@F&]OX[HF!"C+%C#H@ORN".NZYG>6//
-MA!/;[KG\4\$!UW3.+,-T_X:^[7*]QJY902>>SMTC"HJ%CW'<';L6E\T:>J;C
-MC$<>GH0/".C4/D=AD*R.JWM<8CPC4\RHD>U<$B[IP3-0@?-3$^<=DI2KII,6
-M+JIG>(2V8XE>44]O)U@8FB=]Z\0<&B8]M0GHW'+- TR8Y9*!M?9\KE_R&,<\
-M?,H5<EL/=TJWPC,*UC'HO3.+R)?&6 :N59:,?4Q([M@X+=6G75 7WH5LBOWA
-MT;W /EUG2*W/^X^>[MP2[.WC6T]U?W?1]\]MZY,J'=I^PTE:H&YTCV_DD\A/
-M:FEV_9_/[//DOR\_2^.WI$F***\456Z*_!2@JE]?\<C:L\< ^3=>\7R"]:'_
-M->>"=<!O.11H&IY$WD5)$"_Q%6#_T2%C7[!DN=5 @\<4W^^4R\'?WR^8]77,
-MCQ3,*ZZ+WE0PNQ=&#P6CB9HLEC>#KRP8":KJ+RF8'[[[6]^"O::XUN*\H;AZ
-D#1E4P6HTGRNQ[15Q,&/!EWPY/U0T29NTFI+P?UKA.D:L%@  
+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
  
