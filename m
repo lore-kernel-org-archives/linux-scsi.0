@@ -1,56 +1,48 @@
-From: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] fix 2.5 scsi queue depth setting
-Date: Wed, 06 Nov 2002 16:19:14 -0500
+From: Doug Ledford <dledford@redhat.com>
+Subject: Update to aic7xxx_old driver
+Date: Wed, 6 Nov 2002 17:05:14 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200211062119.gA6LJFN04461@localhost.localdomain>
-References: <dledford@redhat.com>
+Message-ID: <20021106220514.GJ22177@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id NAA27578
-	for <linux-scsi@vger.kernel.org>; Wed, 6 Nov 2002 13:19:19 -0800
-In-Reply-To: Message from Doug Ledford <dledford@redhat.com>
-   of "Wed, 06 Nov 2002 15:45:42 EST." <20021106204542.GF22177@redhat.com>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>, "J.E.J. Bottomley" <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
 
-dledford@redhat.com said:
-> Actually, I've been planning a slight API change to the slave_attach()
->  lldd stuff.  Basically, if a host implements slave_attach(), then it
-> *must* call adjust_queue_depth() on all devices passed to it, whether
-> they  are going to use tagged queueing or not.
+bk pull bk://linux-scsi.bkbits.net/scsi-dledford
 
-I agree.
+ChangeSet
+  1.926 02/11/06 16:40:20 dledford@aladin.rdu.redhat.com +3 -0
+  aic7xxx_old: multiple updates and fixes, driver ported to scsi
+        mid-layer new error handling scheme
 
-dledford@redhat.com said:
-> I  would rather we did this:
-> if(host->hostt->slave_attach)
->   blah; else
->   scsi_adjust_queue_depth(sdev, 0, cmd_per_lun); 
+  drivers/scsi/aic7xxx_old/aic7xxx_proc.c
+    1.6 02/11/06 16:39:49 dledford@aladin.rdu.redhat.com +17 -20
+    Clean ups, remove dead code, add code for new TCQ scheme
 
-I agree.  (That's what patrick just put in the patch for me).
+  drivers/scsi/aic7xxx_old/aic7xxx.h
+    1.10 02/11/06 16:39:49 dledford@aladin.rdu.redhat.com +6 -0
+    Add proper template entries for new eh initialization
 
-> I want to make the queuecommand() interface optional, with the ability
-> to  replace it with a combo of prepare_command() and send_command()
-> instead.   A driver can only define queuecommand() or the
-> prepare,send_command()  pair.  The obvious benefit is that a prepare
-> then send routine is needed  to make sequential untagged commands fast
-> without having to implement a  driver internal queue, and this is
-> necessary for streaming devices that  can't tolerate long delays
-> between commands without falling out of their  current stream (tapes,
-> early CD-Rs and current very cheap CD-Rs, etc).   Obviously, this new
-> interface would require that driver authors actually  think about
-> things like sendable commands vs. just prepped commands, etc.   Making
-> them always call adjust queue depth is one way of forcing them to
-> think about these issues, hence why I like requiring it in all
-> slave_attach calls.  Thoughts? 
+  drivers/scsi/aic7xxx_old.c
+    1.30 02/11/06 16:39:49 dledford@aladin.rdu.redhat.com +410 -614
+    Multiple updates:
+      new eh code update
+      fix oops on reset problem
+      fix several slave_attach problems
+      correct usage of struct list_head stuff
 
-Quite like the idea.  It should be possible to make it complement the 
-request_prep_fn I'm doing for SCSI (this will force the upper level drivers to 
-do early prepares on commands, so we can have the whole thing just waiting to 
-shoot off as the completed command returns).
+Linus, please apply this change.  There will be more coming as well that
+makes changes to the aic7xxx_old that apply on top of this, but they
+require other mid layer changes and so I wanted to split them out into
+separate changesets.  Once I've got them finalized, they'll appear in this
+same tree and I'll drop you another note.
 
-James
-
-
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
