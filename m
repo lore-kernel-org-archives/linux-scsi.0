@@ -1,51 +1,47 @@
-From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
-Subject: Re: TMSCSIM [2.6]
-Date: Sat, 29 Nov 2003 14:06:02 +0100
+From: Xose Vazquez Perez <xose@wanadoo.es>
+Subject: Re: problem with megaraid2 driver
+Date: Sat, 29 Nov 2003 16:38:57 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m3r7zr1g05.fsf@merlin.emma.line.org>
-References: <Pine.LNX.4.44.0311291030500.1672-100000@poirot.grange>
+Message-ID: <3FC8BD91.6060201@wanadoo.es>
+References: <3FC7696C.2030004@wanadoo.es> <20031128155020.GB18860@odin.sis.hu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dt.E-Technik.Uni-Dortmund.DE ([129.217.163.1]:35048 "EHLO
-	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
-	id S263205AbTK2NGF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Nov 2003 08:06:05 -0500
-Received: from m2a2.dyndns.org (krusty.dt.e-technik.uni-dortmund.de [129.217.163.1])
-	by mail.dt.e-technik.uni-dortmund.de (Postfix) with ESMTP id 1AB9615D5C
-	for <linux-scsi@vger.kernel.org>; Sat, 29 Nov 2003 14:06:04 +0100 (CET)
-In-Reply-To: <Pine.LNX.4.44.0311291030500.1672-100000@poirot.grange> (Guennadi
- Liakhovetski's message of "Sat, 29 Nov 2003 10:46:24 +0100 (CET)")
+Received: from smtp13.eresmas.com ([62.81.235.113]:50381 "EHLO
+	smtp13.eresmas.com") by vger.kernel.org with ESMTP id S263777AbTK2Pji
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Nov 2003 10:39:38 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Chiaki <ishikawa@yk.rim.or.jp>, linux-scsi@vger.kernel.org, Thorsten Leemhuis <Thorsten_Leemhuis@gmx.de>, gl@dsa-ac.de
+To: Gabor Burjan <buga@buvoshetes.hu>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Guennadi Liakhovetski <g.liakhovetski@gmx.de> writes:
+Gabor Burjan wrote:
 
->> PS: now that the driver seems to be in better shape, you might want to
->> bump the driver version number  reported in the banner,
->> "Tekram DC390/AM53C974 PCI SCSI Host Adapter, Driver Version 2.0f
->> 2000-12-20".
->
-> Yep. Kurt, Christian, shall I increment the version number (2.0g / 2.1a?),
-> adding a Changelog entry? Also, how shall it be maintained now, until it
-> is included in the stock 2.6 (hopefully)? Is there a linux-scsi tree,
-> where this driver could be merged in, or just an ftp site, where the patch
-> could be uploaded? I am not using BK (don't think it would make much sense
-> with a 56K modem dial-up:-)).
+> Is that possible that only the new driver triggers the problem which is
+> "built-in" in the firmware, while using the old driver everything seems
+> to be OK?
 
-Guennadi,
+1.18k and 2.00.9 are very different drivers.
 
-Please bump the version, I'd choose 2.0f-gl1 (where gl are your initials
-and 1 is the first "release" you deem stable).
+It looks like the firmware of the board is unable to
+complete some commands of the pending list.
 
-If some maintainer (Kurt? 2.6-SCSI-bugfixes maintainer?) wants a
-different version, he shall have the last word and can still choose a
-different version string.
+megaraid: aborting-4027815 cmd=2a <c=0 t=0 l=0>
+megarid: Waiting for 11 commands to flush: iter:0
+megarid: Waiting for 11 commands to flush: iter:1000
+megarid: Waiting for 11 commands to flush: iter:2000
+megaraid: aborted cmd 3d75a7[76] complete.
+megarid: Waiting for 8 commands to flush: iter:3000
+[... 4000, 5000, 6000, ... 59000]
+megarid: Waiting for 8 commands to flush: iter:60000
+megaraid: critical hardware error!
 
-Thanks,
+If those command were completed you would see the message:
+"megaraid: abort sequence successfully complete".
+
+So, try latest firmware.
 
 -- 
-Matthias Andree
+There are 10 kinds of people.
+Those that know to count in binary and those that no.
 
-Encrypt your mail: my GnuPG key ID is 0x052E7D95
