@@ -1,42 +1,81 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: BusLogic error handling in kernel 2.6
-Date: Thu, 4 Sep 2003 13:22:50 +0100
+From: Arnaldo Carvalho de Melo <acme@conectiva.com.br>
+Subject: Re: 2.6.0-test4-mm5: SCSI imm driver doesn't compile
+Date: Thu, 4 Sep 2003 10:30:56 -0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030904132250.A30578@infradead.org>
-References: <20030904115709.GA29956@mooch.dyndns.org>
+Message-ID: <20030904133056.GA2411@conectiva.com.br>
+References: <20030902231812.03fae13f.akpm@osdl.org> <20030903170256.GA18025@fs.tum.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:25866 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S264942AbTIDMWy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Sep 2003 08:22:54 -0400
+Received: from orion.netbank.com.br ([200.203.199.90]:55053 "EHLO
+	orion.netbank.com.br") by vger.kernel.org with ESMTP
+	id S264997AbTIDNbL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Sep 2003 09:31:11 -0400
 Content-Disposition: inline
-In-Reply-To: <20030904115709.GA29956@mooch.dyndns.org>; from glove@earthling.net on Thu, Sep 04, 2003 at 01:57:09PM +0200
+In-Reply-To: <20030903170256.GA18025@fs.tum.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Christian Grigis <glove@earthling.net>
-Cc: linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@fs.tum.de>
+Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, campbell@torque.net, linux-scsi@vger.kernel.org
 
-On Thu, Sep 04, 2003 at 01:57:09PM +0200, Christian Grigis wrote:
-> My understanding is that the SCSI error handling functions have changed
-> in 2.6, and that the BusLogic driver has not yet been converted to use
-> the new approach. Is that correct?
+Em Wed, Sep 03, 2003 at 07:02:56PM +0200, Adrian Bunk escreveu:
+> The following compile error (tested with gcc 2.95) seems to come from 
+> Linus' tree:
+> 
+> <--  snip  -->
+> 
+> ...
+>   CC [M]  drivers/scsi/imm.o
+> In file included from drivers/scsi/imm.c:55:
+> drivers/scsi/imm.h:105: duplicate array index in initializer
+> drivers/scsi/imm.h:105: (near initialization for `IMM_MODE_STRING')
+> make[2]: *** [drivers/scsi/imm.o] Error 1
+> 
+> <--  snip  -->
+> 
+> The problem is the following code in imm.h (with 
+> CONFIG_SCSI_IZIP_EPP16 enabled):
+> 
+> <--  snip  -->
+> 
+> ...
+> static char *IMM_MODE_STRING[] =
+> {
+>         [IMM_AUTODETECT] = "Autodetect",
+>         [IMM_NIBBLE]     = "SPP",
+>         [IMM_PS2]        = "PS/2",
+>         [IMM_EPP_8]      = "EPP 8 bit",
+>         [IMM_EPP_16]     = "EPP 16 bit",
+> #ifdef CONFIG_SCSI_IZIP_EPP16
+>         [IMM_EPP_16]     = "EPP 16 bit",
+> #else
+>         [IMM_EPP_32]     = "EPP 32 bit",
+> #endif
+>         [IMM_UNKNOWN]    = "Unknown",
+> };
+> ...
+> 
+> <--  snip  -->
 
-Actually the new error handling was introduced in 2.2, but 2.2 and 2.5
-kept glue around to support the old EH aswell.  But in principle you're right.
+Original code was:
 
-> Is anyone currently working, or planning to work, on this, for this adapter?
+ static char *IMM_MODE_STRING[] =
+ {
+    "Autodetect",
+    "SPP",
+    "PS/2",
+    "EPP 8 bit",
+    "EPP 16 bit",
+ #ifdef CONFIG_SCSI_IZIP_EPP16
+    "EPP 16 bit",
+ #else
+    "EPP 32 bit",
+ #endif
+    "Unknown"};
 
-I don't think so.
+I just converted it to the more safe c99 init style, but haven't noticed
+the original bug, that is "EPP 16 bit" was duplicated... But this is already
+fixed by Andrew Morton on current Linus bk tree.
 
-> If not, I would be glad to contribute my help, within the realm of
-> possibilities; could anyone give me some pointers as to where I should
-> start?
+Thanks Andrew for fixing, Adrian for noticing.
 
-http://www.andante.org/scsi_eh.html has a description of the new error
-handling.  The document has been updated the last time three years ago
-but the API hasn't really changed.  The biggest difference is that in
-2.6 host->host_lock is held on entry now instead of the global
-io_request_lock.  Also there are some new helper not yet described in
-the text.
-
+- Arnaldo
