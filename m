@@ -1,51 +1,35 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [usb-storage] Re: MPIO HS200 Gigabox weird behaviour again
-Date: Fri, 11 Feb 2005 11:00:34 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0502111054040.937-100000@ida.rowland.org>
-References: <20050210134432.GA12229@kassiopeia.juls.savba.sk>
+Date: Fri, 11 Feb 2005 11:18:01 -0500
+Message-ID: <1108138682.5773.23.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0502111054040.937-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from ida.rowland.org ([192.131.102.52]:5892 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S262262AbVBKQAg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Feb 2005 11:00:36 -0500
-In-Reply-To: <20050210134432.GA12229@kassiopeia.juls.savba.sk>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from stat16.steeleye.com ([209.192.50.48]:31925 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262266AbVBKQSK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Feb 2005 11:18:10 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0502111054040.937-100000@ida.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Radovan Garabik <garabik@kassiopeia.juls.savba.sk>
-Cc: USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Radovan Garabik <garabik@kassiopeia.juls.savba.sk>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, 10 Feb 2005, Radovan Garabik wrote:
+On Fri, 2005-02-11 at 11:00 -0500, Alan Stern wrote:
+> SCSI developers: Is there any hope of this?
 
-> I put the dmesg output to:
-> http://kassiopeia.juls.savba.sk/~garabik/junk/gigabox.txt
-> 
-> the exact sequence to reproduce the behaviour is:
-> 1) modprobe ehci-hcd
-> 2) plug in gigabox, wait a second till the message about a new usb
->    device appears
-> 3) modprobe usb-storage delay_use=10
+Well, IBM also has some old buggy piece of hardware that apparently
+gives fatal errors but actually wants them retried:
 
-I see.  The drive reports a failure with Sense Key = 0x04.  According to 
-the SCSI specification, this indicates a _nonrecoverable_ hardware 
-failure.  So you can't blame the SCSI drivers for not retrying the 
-request, even though a later attempt to read the partition did end up 
-succeeding.
+http://marc.theaimsgroup.com/?t=110088696100005
 
-Maybe the SCSI midlayer could be changed to retry anyway, just as an
-optimistic workaround for buggy devices like yours.
+After a bit of argument, they agreed to do it as a blacklist flag, so
+you should be able to add the same flag to your gigabox.
 
-SCSI developers: Is there any hope of this?
+I planned to put the patch in just as soon as they managed to send the
+patch unmangled by a mailer, but they went very quiet.
 
-> > What patch did you apply to the driver, to treat the Gigabox the same as a
-> > Genesys drive?  And what's in your /proc/bus/usb/devices entry for the Gigabox?
-> 
-> see
-> https://lists.one-eyed-alien.net/pipermail/usb-storage/2004-November/001154.html
-> you responded to that mail :-)
+James
 
-Ah yes.  That contains your original bug report.  I didn't remember that
-was from you, because the message was resent by Matt Dharm.
-
-Alan Stern
 
