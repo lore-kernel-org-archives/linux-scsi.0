@@ -1,236 +1,272 @@
-From: "Aleks Sheynkman" <aleks@Narus.com>
+From: "Mukker, Atul" <Atulm@lsil.com>
 Subject: RE: megaraid megaraid2-2.10.7 causing kernel panic
-Date: Fri, 3 Sep 2004 12:29:47 -0700
+Date: Fri, 3 Sep 2004 15:50:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <FA6D803197D0E14C88E1B74C5A021B822DDFA3@snitch.narus.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC9EE@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.narus.com ([66.236.101.211]:6861 "EHLO mx2.narus.com")
-	by vger.kernel.org with ESMTP id S269759AbUICT3w convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Sep 2004 15:29:52 -0400
-content-class: urn:content-classes:message
+Received: from mail0.lsil.com ([147.145.40.20]:1212 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S269764AbUICTvA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Sep 2004 15:51:00 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+To: 'Aleks Sheynkman' <aleks@Narus.com>, "Mukker, Atul" <Atulm@lsil.com>, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I have quick a question, even though I don't set uioctl.inlen to 1024  , because I just 
-want to get status from the driver it seems like ioctl still does not report correct value
-in case of failures.
+The mailbox structure has the data transfer field "xferaddr" as well.
 
-Thanks !
-
-Aleks
 
 > -----Original Message-----
-> From: Aleks Sheynkman 
-> Sent: Friday, September 03, 2004 12:25 PM
-> To: 'Mukker, Atul'; linux-raid@vger.kernel.org;
+> From: Aleks Sheynkman [mailto:aleks@Narus.com]
+> Sent: Friday, September 03, 2004 3:36 PM
+> To: Mukker, Atul; linux-raid@vger.kernel.org; 
 > linux-scsi@vger.kernel.org
 > Subject: RE: megaraid megaraid2-2.10.7 causing kernel panic
 > 
 > 
-> Isn't the same as was before in version megraid1.8f ?
+> I'm sorry for asking, but looking at ioctl structure I only 
+> see single data field in both
+> version. Is there are anyway you can explain about both fields ?
 > 
-> Thanks !
+> Thank you ,
 > 
 > Aleks
 > 
 > > -----Original Message-----
 > > From: Mukker, Atul [mailto:Atulm@lsil.com]
-> > Sent: Friday, September 03, 2004 12:20 PM
-> > To: Aleks Sheynkman; linux-raid@vger.kernel.org;
+> > Sent: Friday, September 03, 2004 12:32 PM
+> > To: Aleks Sheynkman; Mukker, Atul; linux-raid@vger.kernel.org;
 > > linux-scsi@vger.kernel.org
 > > Subject: RE: megaraid megaraid2-2.10.7 causing kernel panic
 > > 
 > > 
-> > Aleks,
-> > 
-> > What you are using are undocumented interfaces to issue 
-> > commands to the
-> > driver. We do not provide support for these. But you could easily
-> > reverse-engineer the driver code to see what you are doing wrong :-)
-> > 
-> > This driver version expects the data transfer address to be 
-> > available in the
-> > FW packet transfer address field, which you are not 
-> > providing. That mean the
-> > HBA is doing DMA to a junk address causing the bizzare 
-> > behaviors observed by
-> > you.
+> > 1.18f reads the user address from the data field, but the new 
+> > interface
+> > packet has one data transfer field. So your best bet is to 
+> > provide addresses
+> > in both fields.
 > > 
 > > Thanks
-> > -Atul Mukker
+> > -Atul
 > > 
-> > -----Original Message-----
-> > From: Aleks Sheynkman [mailto:aleks@Narus.com]
-> > Sent: Friday, September 03, 2004 1:06 PM
-> > To: linux-raid@vger.kernel.org; linux-scsi@vger.kernel.org
-> > Subject: megaraid megaraid2-2.10.7 causing kernel panic
-> > 
-> > 
-> > Greetings,
-> >   I'm really sorry to bother you ,and I hope this is a 
-> > correct list to post
-> > these kind of messages. I did post a similar message a day 
-> ago. We are
-> > currently experiencing problem with a new version of megaraid driver
-> > (megaraid2-2.10.7). All our severs in the past were running 
-> > RH 7.3 and now
-> > we started migration process AS 2.1 specifically to update 
-> > 2.4.9-e.49smp and
-> > dkms megaraid version 2.10.7. After upgrade, all our systems 
-> > were stable
-> > until we started to run our hardware monitoring software. 
-> > What it does, it
-> > polls the status of all physical and logical driver through 
-> > ioctl call.
-> > Please see sample code below that would cause a kernel panic. 
-> >  The code was
-> > working just fine until version 1.8f version of megaraid 
-> drivers, with
-> > introduction of new driver it started to fail and cause 
-> > kernel panics, which
-> > kind of inconstant, sometimes it kills kernel swapper 
-> > sometimes wait queues.
-> > It seems like ioctl "M_RD_IOCTL_CMD " is totally broken, we 
-> > can retrieve
-> > correct number of adapters!
-> >   by issuing ioctl suboption MEGAIOC_QNADAP.
-> > 
-> > Did any one ever seen this before, can you please advice ?
-> > 
-> > Thank you !
-> > 
-> > Code that will panic the kernel, run it few times:
-> > 
-> > #include "megaraid.h"
-> > 
-> > int main()
-> > {
-> >         int         fd;
-> >        struct uioctl_t uioctl;
-> > 
-> >        if ( (fd = open("/dev/megadev0", O_RDWR)) < 0 && (fd =
-> > open("/dev/megadev", O_RDWR)) < 0)
-> >                 return -1;
-> > 
-> >         uioctl.inlen =  1024;
-> >         uioctl.outlen = 1024;
-> > 
-> >         if(!(uioctl.data = malloc(1024))){
-> >                 return 0;
-> >         }
-> >         memset(uioctl.data, 0, 1024);
-> > 
-> >         uioctl.ui.fcs.opcode     = M_RD_IOCTL_CMD;
-> >         uioctl.ui.fcs.subopcode  = 0;
-> >         uioctl.ui.fcs.adapno     = MKADAP(0);
-> > 
-> >         uioctl.mbox[0]           = FC_NEW_CONFIG;
-> >         uioctl.mbox[2]           = NC_SUBOP_ENQUIRY3;
-> >         uioctl.mbox[3]           = ENQ3_GET_SOLICITED_FULL;
-> > 
-> >         if(ioctl(fd, MEGAIOCCMD, &uioctl) == -1){
-> >                 fprintf(stderr,"Error %d \n\n", 
-> uioctl.ui.fcs.adapno);
-> >                 fflush(stderr);
-> >                 free(uioctl.data);
-> >                 close(fd);
-> >                 return 0;
-> >         }
-> > 
-> >      close(fd);
-> >  return 0;
-> > }
-> > 
-> > 
-> > Panic:
-> > 1) 
-> > ug 31 20:54:03 Analyzer kernel: EIP is at iput_free [kernel] 0x1e
-> > Aug 31 20:54:03 Analyzer kernel: eax: 2e0001e3   ebx: 
-> f6880e40   ecx:
-> > f6880e50   edx: f6880e50
-> > Aug 31 20:54:03 Analyzer kernel: esi: f6880e40   edi: 
-> 00000000   ebp:
-> > 0008e000   esp: f7383f60
-> > Aug 31 20:54:03 Analyzer kernel: ds: 0018   es: 0018   ss: 0018
-> > Aug 31 20:54:03 Analyzer kernel: Process kswapd (pid: 10,
-> > stackpage=f7383000)
-> > Aug 31 20:54:03 Analyzer kernel: Stack: f587cb40 f5753b60 
-> > c015a45c f587cb40
-> > f393c3e0 f6880e40 00000006 c015a41b
-> > Aug 31 20:54:03 Analyzer kernel:        f6880e40 f393c3f8 
-> > f393c3e0 c015a806
-> > f393c3e0 c02fa190 00000286 00000286
-> > Aug 31 20:54:03 Analyzer kernel:        00000000 f7382000 
-> > 00000000 00000000
-> > 00000000 00000000 00000000 00000000
-> > Aug 31 20:54:03 Analyzer kernel: Call Trace: [dput+28/304] 
-> > dput [kernel]
-> > 0x1c (0xf7383f68)
-> > Aug 31 20:54:03 Analyzer kernel: Call Trace: [<c015a45c>] 
-> > dput [kernel] 0x1c
-> > (0xf7383f68)
-> > Aug 31 20:54:03 Analyzer kernel: [dentry_iput+75/112] 
-> > dentry_iput [kernel]
-> > 0x4b (0xf7383f7c)
-> > Aug 31 20:54:03 Analyzer kernel: [<c015a41b>] dentry_iput 
-> > [kernel] 0x4b
-> > (0xf7383f7c)
-> > Aug 31 20:54:03 Analyzer kernel: [prune_dcache+182/336] prune_dcache
-> > [kernel] 0xb6 (0xf7383f8c)
-> >  
-> > 2)p  1 18:41:36 Analyzer kernel: Oops: 0000
-> > Sep  1 18:41:36 Analyzer kernel: Kernel 2.4.9-e.49smp
-> > Sep  1 18:41:36 Analyzer kernel: CPU:    1
-> > Sep  1 18:41:36 Analyzer kernel: EIP:    
-> > 0010:[__wake_up+51/144]    Tainted:
-> > P
-> > Sep  1 18:41:36 Analyzer kernel: EIP:    0010:[<c01198a3>]    
-> > Tainted: P
-> > Sep  1 18:41:36 Analyzer kernel: EFLAGS: 00010046
-> > Sep  1 18:41:36 Analyzer kernel: EIP is at __wake_up [kernel] 0x33
-> > Sep  1 18:41:36 Analyzer kernel: eax: f688800c   ebx: 
-> f6888014   ecx:
-> > 00000001   edx: 00000000
-> > Sep  1 18:41:36 Analyzer kernel: esi: 00000001   edi: 
-> f4c8a880   ebp:
-> > f4f25a94   esp: f4f25a7c
-> > Sep  1 18:41:36 Analyzer kernel: ds: 0018   es: 0018   ss: 0018
-> > Sep  1 18:41:36 Analyzer kernel: Process snmpd (pid: 626,
-> > stackpage=f4f25000)
-> > Sep  1 18:41:36 Analyzer kernel: Stack: 00000000 00000282 
-> > 00000001 f4c8a880
-> > f4c7f040 00000000 f4ec28c0 c01daad9
-> > Sep  1 18:41:36 Analyzer kernel:        00000002 00000026 
-> > f4c7f178 00001060
-> > 00007fff f4c7f178 c01ff422 f4c7f040
-> > Sep  1 18:41:36 Analyzer kernel:        00000000 c01fe2f4 
-> > f4c7f040 f4c7f178
-> > ffffffff f4a8f0c0 3a6ade00 00000000
-> > Sep  1 18:41:36 Analyzer kernel: Call Trace: 
-> > [sock_def_readable+57/112]
-> > sock_def_readable [kernel] 0x39 (0xf4f25a98)
-> > Sep  1 18:41:36 Analyzer kernel: Call Trace: [<c01daad9>] 
-> > sock_def_readable
-> > [kernel] 0x39 (0xf4f25a98)
-> > Sep  1 18:41:36 Analyzer kernel: [tcp_data_queue+898/2688] 
-> > tcp_data_queue
-> > [kernel] 0x382 (0xf4f25ab4)
-> > Sep  1 18:41:36 Analyzer kernel: [<c01ff422>] tcp_data_queue 
-> > [kernel] 0x382
-> > (0xf4f25ab4)
-> > Sep  1 18:41:36 Analyzer kernel: [tcp_ack+180/784] tcp_ack 
+> > > -----Original Message-----
+> > > From: Aleks Sheynkman [mailto:aleks@Narus.com]
+> > > Sent: Friday, September 03, 2004 3:25 PM
+> > > To: Mukker, Atul; linux-raid@vger.kernel.org; 
+> > > linux-scsi@vger.kernel.org
+> > > Subject: RE: megaraid megaraid2-2.10.7 causing kernel panic
+> > > 
+> > > 
+> > > Isn't the same as was before in version megraid1.8f ?
+> > > 
+> > > Thanks !
+> > > 
+> > > Aleks
+> > > 
+> > > > -----Original Message-----
+> > > > From: Mukker, Atul [mailto:Atulm@lsil.com]
+> > > > Sent: Friday, September 03, 2004 12:20 PM
+> > > > To: Aleks Sheynkman; linux-raid@vger.kernel.org;
+> > > > linux-scsi@vger.kernel.org
+> > > > Subject: RE: megaraid megaraid2-2.10.7 causing kernel panic
+> > > > 
+> > > > 
+> > > > Aleks,
+> > > > 
+> > > > What you are using are undocumented interfaces to issue 
+> > > > commands to the
+> > > > driver. We do not provide support for these. But you 
+> could easily
+> > > > reverse-engineer the driver code to see what you are 
+> > doing wrong :-)
+> > > > 
+> > > > This driver version expects the data transfer address to be 
+> > > > available in the
+> > > > FW packet transfer address field, which you are not 
+> > > > providing. That mean the
+> > > > HBA is doing DMA to a junk address causing the bizzare 
+> > > > behaviors observed by
+> > > > you.
+> > > > 
+> > > > Thanks
+> > > > -Atul Mukker
+> > > > 
+> > > > -----Original Message-----
+> > > > From: Aleks Sheynkman [mailto:aleks@Narus.com]
+> > > > Sent: Friday, September 03, 2004 1:06 PM
+> > > > To: linux-raid@vger.kernel.org; linux-scsi@vger.kernel.org
+> > > > Subject: megaraid megaraid2-2.10.7 causing kernel panic
+> > > > 
+> > > > 
+> > > > Greetings,
+> > > >   I'm really sorry to bother you ,and I hope this is a 
+> > > > correct list to post
+> > > > these kind of messages. I did post a similar message a day 
+> > > ago. We are
+> > > > currently experiencing problem with a new version of 
+> > megaraid driver
+> > > > (megaraid2-2.10.7). All our severs in the past were running 
+> > > > RH 7.3 and now
+> > > > we started migration process AS 2.1 specifically to update 
+> > > > 2.4.9-e.49smp and
+> > > > dkms megaraid version 2.10.7. After upgrade, all our systems 
+> > > > were stable
+> > > > until we started to run our hardware monitoring software. 
+> > > > What it does, it
+> > > > polls the status of all physical and logical driver through 
+> > > > ioctl call.
+> > > > Please see sample code below that would cause a kernel panic. 
+> > > >  The code was
+> > > > working just fine until version 1.8f version of megaraid 
+> > > drivers, with
+> > > > introduction of new driver it started to fail and cause 
+> > > > kernel panics, which
+> > > > kind of inconstant, sometimes it kills kernel swapper 
+> > > > sometimes wait queues.
+> > > > It seems like ioctl "M_RD_IOCTL_CMD " is totally broken, we 
+> > > > can retrieve
+> > > > correct number of adapters!
+> > > >   by issuing ioctl suboption MEGAIOC_QNADAP.
+> > > > 
+> > > > Did any one ever seen this before, can you please advice ?
+> > > > 
+> > > > Thank you !
+> > > > 
+> > > > Code that will panic the kernel, run it few times:
+> > > > 
+> > > > #include "megaraid.h"
+> > > > 
+> > > > int main()
+> > > > {
+> > > >         int         fd;
+> > > >        struct uioctl_t uioctl;
+> > > > 
+> > > >        if ( (fd = open("/dev/megadev0", O_RDWR)) < 0 && (fd =
+> > > > open("/dev/megadev", O_RDWR)) < 0)
+> > > >                 return -1;
+> > > > 
+> > > >         uioctl.inlen =  1024;
+> > > >         uioctl.outlen = 1024;
+> > > > 
+> > > >         if(!(uioctl.data = malloc(1024))){
+> > > >                 return 0;
+> > > >         }
+> > > >         memset(uioctl.data, 0, 1024);
+> > > > 
+> > > >         uioctl.ui.fcs.opcode     = M_RD_IOCTL_CMD;
+> > > >         uioctl.ui.fcs.subopcode  = 0;
+> > > >         uioctl.ui.fcs.adapno     = MKADAP(0);
+> > > > 
+> > > >         uioctl.mbox[0]           = FC_NEW_CONFIG;
+> > > >         uioctl.mbox[2]           = NC_SUBOP_ENQUIRY3;
+> > > >         uioctl.mbox[3]           = ENQ3_GET_SOLICITED_FULL;
+> > > > 
+> > > >         if(ioctl(fd, MEGAIOCCMD, &uioctl) == -1){
+> > > >                 fprintf(stderr,"Error %d \n\n", 
+> > > uioctl.ui.fcs.adapno);
+> > > >                 fflush(stderr);
+> > > >                 free(uioctl.data);
+> > > >                 close(fd);
+> > > >                 return 0;
+> > > >         }
+> > > > 
+> > > >      close(fd);
+> > > >  return 0;
+> > > > }
+> > > > 
+> > > > 
+> > > > Panic:
+> > > > 1) 
+> > > > ug 31 20:54:03 Analyzer kernel: EIP is at iput_free 
+> [kernel] 0x1e
+> > > > Aug 31 20:54:03 Analyzer kernel: eax: 2e0001e3   ebx: 
+> > > f6880e40   ecx:
+> > > > f6880e50   edx: f6880e50
+> > > > Aug 31 20:54:03 Analyzer kernel: esi: f6880e40   edi: 
+> > > 00000000   ebp:
+> > > > 0008e000   esp: f7383f60
+> > > > Aug 31 20:54:03 Analyzer kernel: ds: 0018   es: 0018   ss: 0018
+> > > > Aug 31 20:54:03 Analyzer kernel: Process kswapd (pid: 10,
+> > > > stackpage=f7383000)
+> > > > Aug 31 20:54:03 Analyzer kernel: Stack: f587cb40 f5753b60 
+> > > > c015a45c f587cb40
+> > > > f393c3e0 f6880e40 00000006 c015a41b
+> > > > Aug 31 20:54:03 Analyzer kernel:        f6880e40 f393c3f8 
+> > > > f393c3e0 c015a806
+> > > > f393c3e0 c02fa190 00000286 00000286
+> > > > Aug 31 20:54:03 Analyzer kernel:        00000000 f7382000 
+> > > > 00000000 00000000
+> > > > 00000000 00000000 00000000 00000000
+> > > > Aug 31 20:54:03 Analyzer kernel: Call Trace: [dput+28/304] 
+> > > > dput [kernel]
+> > > > 0x1c (0xf7383f68)
+> > > > Aug 31 20:54:03 Analyzer kernel: Call Trace: [<c015a45c>] 
+> > > > dput [kernel] 0x1c
+> > > > (0xf7383f68)
+> > > > Aug 31 20:54:03 Analyzer kernel: [dentry_iput+75/112] 
+> > > > dentry_iput [kernel]
+> > > > 0x4b (0xf7383f7c)
+> > > > Aug 31 20:54:03 Analyzer kernel: [<c015a41b>] dentry_iput 
+> > > > [kernel] 0x4b
+> > > > (0xf7383f7c)
+> > > > Aug 31 20:54:03 Analyzer kernel: [prune_dcache+182/336] 
+> > prune_dcache
+> > > > [kernel] 0xb6 (0xf7383f8c)
+> > > >  
+> > > > 2)p  1 18:41:36 Analyzer kernel: Oops: 0000
+> > > > Sep  1 18:41:36 Analyzer kernel: Kernel 2.4.9-e.49smp
+> > > > Sep  1 18:41:36 Analyzer kernel: CPU:    1
+> > > > Sep  1 18:41:36 Analyzer kernel: EIP:    
+> > > > 0010:[__wake_up+51/144]    Tainted:
+> > > > P
+> > > > Sep  1 18:41:36 Analyzer kernel: EIP:    0010:[<c01198a3>]    
+> > > > Tainted: P
+> > > > Sep  1 18:41:36 Analyzer kernel: EFLAGS: 00010046
+> > > > Sep  1 18:41:36 Analyzer kernel: EIP is at __wake_up 
+> [kernel] 0x33
+> > > > Sep  1 18:41:36 Analyzer kernel: eax: f688800c   ebx: 
+> > > f6888014   ecx:
+> > > > 00000001   edx: 00000000
+> > > > Sep  1 18:41:36 Analyzer kernel: esi: 00000001   edi: 
+> > > f4c8a880   ebp:
+> > > > f4f25a94   esp: f4f25a7c
+> > > > Sep  1 18:41:36 Analyzer kernel: ds: 0018   es: 0018   ss: 0018
+> > > > Sep  1 18:41:36 Analyzer kernel: Process snmpd (pid: 626,
+> > > > stackpage=f4f25000)
+> > > > Sep  1 18:41:36 Analyzer kernel: Stack: 00000000 00000282 
+> > > > 00000001 f4c8a880
+> > > > f4c7f040 00000000 f4ec28c0 c01daad9
+> > > > Sep  1 18:41:36 Analyzer kernel:        00000002 00000026 
+> > > > f4c7f178 00001060
+> > > > 00007fff f4c7f178 c01ff422 f4c7f040
+> > > > Sep  1 18:41:36 Analyzer kernel:        00000000 c01fe2f4 
+> > > > f4c7f040 f4c7f178
+> > > > ffffffff f4a8f0c0 3a6ade00 00000000
+> > > > Sep  1 18:41:36 Analyzer kernel: Call Trace: 
+> > > > [sock_def_readable+57/112]
+> > > > sock_def_readable [kernel] 0x39 (0xf4f25a98)
+> > > > Sep  1 18:41:36 Analyzer kernel: Call Trace: [<c01daad9>] 
+> > > > sock_def_readable
+> > > > [kernel] 0x39 (0xf4f25a98)
+> > > > Sep  1 18:41:36 Analyzer kernel: [tcp_data_queue+898/2688] 
+> > > > tcp_data_queue
+> > > > [kernel] 0x382 (0xf4f25ab4)
+> > > > Sep  1 18:41:36 Analyzer kernel: [<c01ff422>] tcp_data_queue 
+> > > > [kernel] 0x382
+> > > > (0xf4f25ab4)
+> > > > Sep  1 18:41:36 Analyzer kernel: [tcp_ack+180/784] tcp_ack 
+> > > > [kernel] 0xb4
+> > > > (0xf4f25ac0)
+> > > > Sep  1 18:41:36 Analyzer kernel: [<c01fe2f4>] tcp_ack 
 > > [kernel] 0xb4
-> > (0xf4f25ac0)
-> > Sep  1 18:41:36 Analyzer kernel: [<c01fe2f4>] tcp_ack [kernel] 0xb4
-> > (0xf4f25ac0)
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe 
-> > linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > > (0xf4f25ac0)
+> > > > -
+> > > > To unsubscribe from this list: send the line "unsubscribe 
+> > > > linux-scsi" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  
+> http://vger.kernel.org/majordomo-info.html
+> > > > 
+> > > 
 > > 
 > 
