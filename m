@@ -1,98 +1,40 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [PATCH] sym53c500_cs PCMCIA SCSI driver (new)
-Date: Thu, 22 Apr 2004 15:38:03 -0400
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: PATCH 4/5: scsi-scan-dont-att-pq-notcon
+Date: Thu, 22 Apr 2004 13:39:12 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40881F1B.8060909@tmr.com>
-References: <20040416130548.B5080@infradead.org> "from Christoph Hellwig at Apr 16, 2004 01:05:48 pm" <20040416141720.746ABDBEE@gherkin.frus.com>
+Message-ID: <20040422133912.A31488@beaverton.ibm.com>
+References: <20040420160334.GO4356@tpkurt.garloff.de> <20040421134511.GP28633@tpkurt.garloff.de> <20040421141417.GV28633@tpkurt.garloff.de> <20040421160257.A6793@infradead.org> <20040421152436.GD29699@tpkurt.garloff.de> <20040421163336.A7382@infradead.org> <20040421160823.GK29699@tpkurt.garloff.de> <1082564314.1932.22.camel@mulgrave> <20040421095500.A17447@beaverton.ibm.com> <20040421225137.GE643@tpkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from prgy-npn1.prodigy.com ([207.115.54.37]:6538 "EHLO
-	oddball.prodigy.com") by vger.kernel.org with ESMTP id S264596AbUDVThQ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Apr 2004 15:37:16 -0400
-In-Reply-To: <20040416141720.746ABDBEE@gherkin.frus.com>
+Received: from e1.ny.us.ibm.com ([32.97.182.101]:14268 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S264667AbUDVUjw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Apr 2004 16:39:52 -0400
+Content-Disposition: inline
+In-Reply-To: <20040421225137.GE643@tpkurt.garloff.de>; from garloff@suse.de on Thu, Apr 22, 2004 at 12:51:37AM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Bob Tracy <rct@gherkin.frus.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Kurt Garloff <garloff@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Linux SCSI list <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Bob Tracy wrote:
-> Christoph Hellwig wrote:
+On Thu, Apr 22, 2004 at 12:51:37AM +0200, Kurt Garloff wrote:
+> On Wed, Apr 21, 2004 at 09:55:01AM -0700, Patrick Mansfield wrote:
+> > On Wed, Apr 21, 2004 at 11:18:30AM -0500, James Bottomley wrote:
+> > > There's logic to parsing data where it's needed, but it makes it
+> > > difficult to locate all the places when it changes...
+> > 
+> > So add a macro or inline function to parse the data, like a sdev_pq(sdev),
+> > then we have one location for the parsing, and don't have to duplicate the
+> > data. And if sdev->inquiry changes or goes away we need only change
+> > sdev_pq().
 > 
->>I've given it a short spin and here's a bunch of comments:
+> #define sdev_pg(sdev) ((sdev->inquiry[0] >> 5) & 7)
 > 
-> 
-> Thank you for taking the time and trouble to review it.
-> 
-> 
->> - the split into three source files is supserflous, one file should do it
-> 
-> 
-> Given that the driver currently supports only PCMCIA implementations,
-> I agree.  My thinking was if someone comes up with a host adapter that
-> isn't PCMCIA, the SYM53C500.c file is to the sym53c500_cs driver what
-> the qlogicfas.c file is to the qlogic_cs driver, that is, core functions
-> that could support multiple types of host adapters.  The logic to
-> handle the different types of adapters isn't there, and I don't know
-> that it ever will be (else, it's probable that someone would have
-> written the Linux driver long before now).  However, after baring my
-> ignorance to the world and saying I was unaware of non-PCMCIA
-> implementations, I found a FreeBSD driver for the NCR 53c500.  Never
-> say "never," I guess...  Your opinion counts for much, but you're the
-> only person I've heard from.  Is there a consensus I should forget
-> about the non-PCMCIA cases?
-> 
-> 
->> - please don't use host.h or scsi.h from drivers/scsi/.  The defintions
->>   not present in include/scsi/ are deprecated and shall not be used (the
->>   most prominent example in your driver are the Scsi_<Foo> typedefs that
->>   have been replaced by struct scsi_foo
-> 
-> 
-> I caught that in the coding style guidelines (and in the mentioned
-> include files), and will fix for the next submission.
-> 
-> 
->> - the driver doesn't even try to deal with multiple HBAs
-> 
-> 
-> Guilty as charged.  Functionally, there's nothing in the driver I
-> submitted that wasn't in the original.  Suggestions welcome...  Which
-> of the existing PCMCIA SCSI drivers do a proper job of handling
-> multiple host adapters in your opinion?  I'll try to adapt that code to
-> fit this driver.  If I have to "roll my own" from scratch, I'm probably
-> in over my head.
-> 
-> 
->> - your detection logic could be streamlined a little, e.g. the request/release
->>   resource mess
-> 
-> 
-> I'll see what I can do.
-> 
-> Although I touched on it above, by way of apology/explanation, the goal
-> for the initial port was to replicate the functionality I already had in
-> older kernel versions.  It appears I faithfully replicated the
-> deficiencies of the old driver as well :-).  Again, thank you for the
-> feedback.
-> 
-> Anyone else have input before I act on the recommendations I've been
-> given?  Unless I hear otherwise, I'll start work on the code
-> consolidation and removal of dependencies on deprecated include files.
-> The detection logic and handling multiple HBAs will take a bit more
-> effort...
-> 
-WRT the split of code... if there is some reason why there will never be 
-another type of card then the split is unnessessary. But otherwise, 
-you've done the work, and it matches the way other drivers were split, 
-so why scrap it?
+> Just there is no scsi_scan.h where we could stick this.
+> So either we have it at some non-obvious place or just once in
+> scsi_sysfs.c. Or in scsi_scan.c and add one char to struct scsi_dev.
+> I believe it's a very minor issue.
 
-As you guessed I don't feel strongly one way or the other, just thought 
-you could use a little support for having made the effort to design for 
-the future.
+Yes, it's minor; James hasn't replied, and there aren't any other macros
+like I'm suggesting, so go with the extra char.
 
--- 
-    -bill davidsen (davidsen@tmr.com)
-"The secret to procrastination is to put things off until the
-  last possible moment - but no longer"  -me
+-- Patrick Mansfield
