@@ -1,34 +1,29 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: About ARECA RAID driver for Linux i386/x86-64
-Date: Thu, 03 Feb 2005 22:10:28 -0600
-Message-ID: <1107490229.5502.52.camel@mulgrave>
-References: <003f01c509a9$87913290$9300a8c0@erich2003>
-	 <20050202205141.0c28faf4.akpm@osdl.org>
+From: "Emory Gore" <mhvoxmjzgo@mindspring.com>
+Subject: Finally the door yielded
+Date: Fri, 04 Feb 2005 11:16:31 +0600
+Message-ID: <TvWE78VXVORhxv.S08ZuJkw__49178.7522485994$1107499263$gmane$org@QHIIZ>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="iso-8859-2";
 Content-Transfer-Encoding: 7bit
-Received: from stat16.steeleye.com ([209.192.50.48]:8384 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S270810AbVBDELD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Feb 2005 23:11:03 -0500
-In-Reply-To: <20050202205141.0c28faf4.akpm@osdl.org>
+Received: from user-0c6s1vu.cable.mindspring.com ([24.110.7.254]:16650 "HELO
+	user-0c6s1vu.cable.mindspring.com") by vger.kernel.org with SMTP
+	id S263413AbVBDGhL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Feb 2005 01:37:11 -0500
+Content-Class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: erich <erich@areca.com.tw>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Hope <linux-scsi-owner@vger.kernel.org>
 
-On Wed, 2005-02-02 at 20:51 -0800, Andrew Morton wrote:
-> Well that's a decision which the scsi maintainers will need to make.  Lots
-> of current drivers use LINUX_VERSION_CODE, even though we'd prefer they not
-> do so.  I don't know what the scsi policy is for new submissions.
+How have you been? I have very exciting news!
+We FINALLY were able to save an extra $450 a month
+We refinatnced our mortgeage with a 3.75
+and closing was fast and we got several low offers within
+day. You can apply also at
+http://www.ldrim.com/
 
-Hey ... I have to have a policy now?
+Hope you do good with money over the coming year
 
-The policy generally is that new submissions need to use the latest
-versions of the API.  If the driver needs to work on 2.4, it should use
-the 2.4 compat layer for 2.6 drivers (and if there's a problem or
-something missing, we can update 2.4).
 
-James
-
+Emory Gore
 
