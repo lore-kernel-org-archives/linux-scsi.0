@@ -1,46 +1,67 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Suspending SCSI devices and buses
-Date: Thu, 19 Aug 2004 17:05:55 -0400 (EDT)
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] get the kernel to warn about deprecated SCSI ioctls
+Date: 19 Aug 2004 17:06:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0408191647170.2106-100000@ida.rowland.org>
-References: <4123C0E4.6010906@optonline.net>
+Message-ID: <1092949566.1728.1314.camel@mulgrave>
+References: <1092932342.2378.430.camel@mulgrave>
+	<20040819172109.A10853@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:54276 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S267398AbUHSVFz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Aug 2004 17:05:55 -0400
-In-Reply-To: <4123C0E4.6010906@optonline.net>
+Received: from stat16.steeleye.com ([209.192.50.48]:2714 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S267407AbUHSVGL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Aug 2004 17:06:11 -0400
+In-Reply-To: <20040819172109.A10853@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Nathan Bryant <nbryant@optonline.net>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 18 Aug 2004, Nathan Bryant wrote:
+On Thu, 2004-08-19 at 12:21, Christoph Hellwig wrote:
+> drivers/block/scsi_ioctl.c also implements SCSI_IOCTL_SEND_COMMAND, so
+> you'll have to warn there aswell.
 
-> Alan Stern wrote:
-> > How does a host driver tell the SCSI core that an adapter is being 
-> > suspended (and hence the core needs to suspend all the devices attached to 
-> > that adapter)?  Ditto for resume.
-> 
-> For devices, this should be handled by the applicable scsi_driver - 
-> sd.c, etc. I posted a patch for this to the mailing list a week or two 
-> ago, check the list archives.
-> 
-> > 
-> > There doesn't appear to be any way to do it.  The scsi_bus_type and 
-> > various driver structures don't contain a "suspend" entry.
-> 
-> Correct, the midlayer doesn't quite support this yet, but my patch 
-> should do the most important bits if somebody would be kind enough to 
-> merge it... As a quick summary, first we need to quiesce the child 
-> devices and synchronize their caches, then the LLD just needs to handle 
-> flushing any remaining in-flight DMA transactions.
+Done.
 
-Thanks.  Looking at your patch, I have a question.  It doesn't look like
-the resume path is careful to check for Unit Attention with Power On or
-Medium May Have Changed sense.  What happens if somebody changes the
-medium while the drive is suspended?  Or am I missing something?
+No other places I've missed?
 
-Alan Stern
+James
+
+===== drivers/block/scsi_ioctl.c 1.53 vs edited =====
+--- 1.53/drivers/block/scsi_ioctl.c	2004-08-14 05:24:49 -05:00
++++ edited/drivers/block/scsi_ioctl.c	2004-08-19 15:51:44 -05:00
+@@ -510,6 +510,7 @@
+ 		 * old junk scsi send command ioctl
+ 		 */
+ 		case SCSI_IOCTL_SEND_COMMAND:
++			printk(KERN_WARNING "program %s is using a deprecated SCSI ioctl, please convert it to SG_IO\n", current->comm);
+ 			err = -EINVAL;
+ 			if (!arg)
+ 				break;
+===== drivers/scsi/scsi_ioctl.c 1.28 vs edited =====
+--- 1.28/drivers/scsi/scsi_ioctl.c	2004-06-26 17:40:24 -05:00
++++ edited/drivers/scsi/scsi_ioctl.c	2004-08-19 09:45:22 -05:00
+@@ -391,6 +391,21 @@
+ 	if (!scsi_block_when_processing_errors(sdev))
+ 		return -ENODEV;
+ 
++	/* Check for deprecated ioctls ... all the ioctls which don't
++	 * follow the new unique numbering scheme are deprecated */
++	switch (cmd) {
++	case SCSI_IOCTL_SEND_COMMAND:
++	case SCSI_IOCTL_TEST_UNIT_READY:
++	case SCSI_IOCTL_BENCHMARK_COMMAND:
++	case SCSI_IOCTL_SYNC:
++	case SCSI_IOCTL_START_UNIT:
++	case SCSI_IOCTL_STOP_UNIT:
++		printk(KERN_WARNING "program %s is using a deprecated SCSI ioctl, please convert it to SG_IO\n", current->comm);
++		break;
++	default:
++		break;
++	}
++
+ 	switch (cmd) {
+ 	case SCSI_IOCTL_GET_IDLUN:
+ 		if (verify_area(VERIFY_WRITE, arg, sizeof(struct scsi_idlun)))
 
