@@ -1,45 +1,40 @@
-From: Craig Tierney <ctierney@hpti.com>
-Subject: Re: Performance
-Date: Fri, 2 Aug 2002 08:16:55 -0600
+From: Viktor Rosenfeld <rosenfel@informatik.hu-berlin.de>
+Subject: root on LVM on RAID?
+Date: Fri, 2 Aug 2002 19:01:58 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020802081655.B15152@hpti.com>
-References: <20020802065548.87405.qmail@web14006.mail.yahoo.com> <20020802075037.66373.qmail@web14001.mail.yahoo.com>
+Message-ID: <20020802190158.C1725@mitte.informatik.hu-berlin.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mitte.informatik.hu-berlin.de (root@mitte [141.20.21.141])
+	by sigma.informatik.hu-berlin.de (8.11.3/8.11.3/INF-2.0-MA-SOLARIS-2.8) with ESMTP id g72H1xB28447
+	for <linux-scsi@vger.kernel.org>; Fri, 2 Aug 2002 19:01:59 +0200 (MEST)
+Received: (from rosenfel@localhost)
+	by mitte.informatik.hu-berlin.de (8.11.6/8.11.6/SuSE Linux 0.5) id g72H1x001762
+	for linux-scsi@vger.kernel.org; Fri, 2 Aug 2002 19:01:59 +0200
 Content-Disposition: inline
-In-Reply-To: <20020802075037.66373.qmail@web14001.mail.yahoo.com>; from mkotwani@yahoo.com on Fri, Aug 02, 2002 at 12:50:37AM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Mukul Kotwani <mkotwani@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-For the Qlogic 2200F I am able to push 100 MB/s for
-reads and writes using multiple threads to a filesystem
-that is striped across mutliple host ports on the SAN.  Backend RAID is a 
-Data Direct Networks SAN.  For a single thread to a ext3 filesystem
-and 2.4.18, I get about 70 MB/s for reads and writes.
+Hi,
 
-I have no Iops/sec numbers.
+I tried to install a root partition on a LVM device that sits on a
+RAID-1 device and failed.
 
-Craig
+The partition type of the RAID-1 partitions is fd, and the RAID-1 device
+is automatically detected at boot time.  However, the LVM device is not
+automatically detected, since the partition type is not 8e.  Therefore I
+get a kernel panic with the message: I have no root and I want to
+scream.
 
+So, in my very uninformed imponion, wouldn't it be possible to add
+support for this kind of functionality?  When a RAID device is
+autodetected at boot up, couldn't the md driver simply look for a LVM
+signature and queue this device for autodetection of the LFM device at
+bootup?
 
-> Hello!
-> Does anyone have any performace numbers of a Qlogic
-> HBA? No of IOps/sec Max MBs /sec?
-> 
-> Thanks!
-> M
-> 
-> 
-> __________________________________________________
-> Do You Yahoo!?
-> Yahoo! Health - Feel better, live better
-> http://health.yahoo.com
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Also, is there any documentation of the Linux LVM and RAID drivers,
+besides the source?
 
--- 
-Craig Tierney (ctierney@hpti.com)
+Thanks in advance,
+Viktor
