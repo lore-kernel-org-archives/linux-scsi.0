@@ -1,43 +1,93 @@
-From: Linus Torvalds <torvalds@transmeta.com>
-Subject: Re: Aic7xxx and Aic79xx Driver Updates
-Date: Fri, 2 May 2003 11:19:50 -0700 (PDT)
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: bkbits.net problems and work arounds
+Date: 02 May 2003 14:34:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0305021117270.1667-100000@home.transmeta.com>
-References: <1051898880.1819.63.camel@mulgrave>
+Message-ID: <1051904100.1819.70.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from neon-gw-l3.transmeta.com ([63.209.4.196]:11529 "EHLO
-	neon-gw.transmeta.com") by vger.kernel.org with ESMTP
-	id S263050AbTEBSGi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 May 2003 14:06:38 -0400
-In-Reply-To: <1051898880.1819.63.camel@mulgrave>
+Received: from nat9.steeleye.com ([65.114.3.137]:23813 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263126AbTEBTWk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 May 2003 15:22:40 -0400
+Received: from mulgrave-w.il.steeleye.com (il-ppp.sc.steeleye.com [172.17.6.240])
+	by hancock.sc.steeleye.com (8.11.6/linuxconf) with ESMTP id h42JZ0I19917
+	for <linux-scsi@vger.kernel.org>; Fri, 2 May 2003 15:35:00 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Marcelo Tosatti <marcelo@conectiva.com.br>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 
-On 2 May 2003, James Bottomley wrote:
-> 
-> I'm not asking for any changes to the way you do 2.4, just for 2.5 where
-> we have no vendor versions to support and there should only be a single
-> tree.
+For those of you tracking the scsi-misc-2.5 repository, there seems to
+be a bkbits.net problem that prevents me from updating it.
 
-The way the backwards-compatibility is _meant_ to work is that a driver 
-can just do this:
+Temporarily, I've pushed the latest tree up to
 
-	#ifndef IRQ_RETVAL
-	  typedef void irqreturn_t;
-	  #define IRQ_NONE
-	  #define IRQ_HANDLED
-	  #define IRQ_RETVAL(x)
-	#endif
+http://linux-scsi.bkbits.net/scsi-misc1-2.5
 
-and after that you can just use the 2.5.x semantics even with a 2.4.x 
-kernel.
+Please use this for the time being to get the current tree.  I'm hoping
+scsi-misc-2.5 will be back online shortly.
 
-Which is nice and clean, and allows you to support old kernels _without_ 
-having any translation layer.
+The changes in this are:
 
-		Linus
+
+<heiko.carstens:de.ibm.com>:
+  o set data direction in sd_synchronize_cache in sd.c
+
+Anton Blanchard:
+  o Re: Make sym2 driver use pci_enable_device
+
+Christoph Hellwig:
+  o remove scsi_device proc printing from drivers
+  o update NCR_D700 for new-style probing
+  o nuke some superflous externs
+  o Re: unchecked_isa_dma on sparcv9
+  o move max_sectors intitalization fully to scsi_register
+  o scsi_requeuest_fn
+  o remove dead scsi_cmnd members
+  o remove dead struct scsi_device members
+  o fix scsi_debug compile warning
+  o use scsi_report_bus_reset() in scsi_erroc.c
+  o kill pcmcia driver bind_info horror
+  o kill scsi_dump_status
+  o split private and public scsi headers
+
+Douglas Gilbert:
+  o blk SCSI_IOCTL_SEND_COMMAND
+
+James Bottomley:
+  o Fix NCR_D700 driver
+
+Justin T. Gibbs:
+  o fix aci7xxx locking problem
+  o Aic7xxx Driver Update (6.2.33)
+  o Update Aic79xx and Aic7xxx Documenation
+  o Aic79xx Driver Update (version 1.3.8)
+  o Aic7xxx and Aic79xx Driver Updates
+  o Aic79xx and Aic7xxx driver Update
+  o aic7xxx_osm.h, aic7xxx_osm.c, aic79xx_osm.h, aic79xx_osm.c
+  o Aic79xx Driver Upate
+  o Aic79xx Driver Update
+  o Aic79xx Driver Update
+  o Aic79xx Driver Update
+  o Aic7xxx Driver Update
+  o Aic7xxx and Aic79xx Driver Updates
+  o Aic7xxx and Aic79xx driver Update
+  o Aic7xxx and Aic79xx driver updates
+  o Aic7xxx and Aic79xx driver updates
+  o Aic7xxx and Aic79xx Driver Update
+  o Aic7xxx and Aic79xx driver Update
+  o Aic79xx Driver Update
+  o Aic7xxx Driver Update (version 6.2.32)
+  o Aic79xx Driver Update (version 1.3.6)
+  o Change the callback argument for aic brace option parsing to u_long
+to avoid casting problems with different architectures.
+
+Patrick Mansfield:
+  o Compile fix for scsi_syms.c
+
+Paul Mackerras:
+  o Update mesh.c and mac53c94.c drivers
+
+
 
