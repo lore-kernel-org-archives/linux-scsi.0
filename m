@@ -1,34 +1,43 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] remove iph5526 driver
-Date: Mon, 6 Sep 2004 19:22:55 +0200
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [linux-iscsi-devel] Re: [PATCH RFC] replace ioctl for sysfs take
+ 2
+Date: Mon, 06 Sep 2004 11:15:00 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040906172255.GA24194@lst.de>
-References: <20040906101014.GA17597@lst.de>
+Message-ID: <413CA924.8030904@cs.wisc.edu>
+References: <413557CB.8010008@cs.wisc.edu> <20040901162042.GC26753@null.msp.redhat.com> <20040906143251.GB21646@lst.de> <20040906163336.GE642@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:37767 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S268335AbUIFRW7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2004 13:22:59 -0400
-Content-Disposition: inline
-In-Reply-To: <20040906101014.GA17597@lst.de>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:21394 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S268435AbUIFSPX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2004 14:15:23 -0400
+In-Reply-To: <20040906163336.GE642@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: netdev@oss.sgi.com, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: Christoph Hellwig <hch@lst.de>, iscsi -devel <linux-iscsi-devel@lists.sourceforge.net>, David Wysochanski <davidw@netapp.com>, "Surekha.PC" <surekhap@cisco.com>, linux-scsi@vger.kernel.org
 
-On Mon, Sep 06, 2004 at 12:10:14PM +0200, Christoph Hellwig wrote:
-> This driver is for totally obsolete early fibrechannel hardware and
-> doesn't compile anymore since early 2.5.x.  In addition it'll require
-> a major rewrite to fit into the current framework for fc drivers.
+Matthew Wilcox wrote:
+> On Mon, Sep 06, 2004 at 04:32:51PM +0200, Christoph Hellwig wrote:
+> 
+>>On Wed, Sep 01, 2004 at 11:20:42AM -0500, AJ Lewis wrote:
+>>
+>>>Do we want all these attributes in the scsi_host class, or should we put them
+>>>in the iscsi devices directory?  So in /sys/bus/iscsi-sfnet/devices/iscsi1 -
+> 
+> 
+> Woah, woah, woah.  What's this "iscsi-sfnet" directory in sysfs?  That's
+> just wrong. 
 
-In addition this makefile fixup is needed to build with CONFIG_NET_FC:
+It is only a pseudo bus for the driver from Christoph's suggestion,
+that's just to make probing and removing of the driver's devices easier (it
+looks like a normal scsi driver now).
 
---- 1.86/drivers/net/Makefile	2004-08-22 22:57:31 +02:00
-+++ edited/drivers/net/Makefile	2004-09-06 19:06:10 +02:00
-@@ -184,7 +184,6 @@
- obj-$(CONFIG_FEC_8XX) += fec_8xx/
- 
- obj-$(CONFIG_ARM) += arm/
--obj-$(CONFIG_NET_FC) += fc/
- obj-$(CONFIG_DEV_APPLETALK) += appletalk/
- obj-$(CONFIG_TR) += tokenring/
- obj-$(CONFIG_WAN) += wan/
+  No way is that crap going into the kernel.  We have to have
+> *one* iscsi infrastructure, not a dozen.
+> 
+
+Don't worry, there is no way we are going to put transport, scsi or
+anything like that there. This driver will use the scsi-ml infrastucture
+for sysfs and this includes using the transport classes. I think this comment
+from AJ, was just in error when he was unaware of scsi-ml's transport classes.
