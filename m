@@ -1,34 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] aha1740 update, take #2
-Date: Fri, 25 Apr 2003 14:40:26 +0100
+From: Luben Tuikov <tluben@rogers.com>
+Subject: Re: [PATCH] scsi-misc-2.5 remove scsi_device list_lock
+Date: Fri, 25 Apr 2003 10:00:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030425144026.A747@infradead.org>
-References: <wrpk7dkt84r.fsf@hina.wild-wind.fr.eu.org> <20030424133641.A29770@infradead.org> <wrp1xzqsoas.fsf_-_@hina.wild-wind.fr.eu.org>
+Message-ID: <3EA93F64.3020205@rogers.com>
+References: <20030424100229.A32098@beaverton.ibm.com> <20030425111212.A28577@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.mvhi.com ([195.224.96.167]:9995 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263075AbTDYN2R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Apr 2003 09:28:17 -0400
-Content-Disposition: inline
-In-Reply-To: <wrp1xzqsoas.fsf_-_@hina.wild-wind.fr.eu.org>; from mzyngier@freesurf.fr on Fri, Apr 25, 2003 at 03:24:11PM +0200
+Received: from fep01-mail.bloor.is.net.cable.rogers.com ([66.185.86.71]:25353
+	"EHLO fep01-mail.bloor.is.net.cable.rogers.com") by vger.kernel.org
+	with ESMTP id S263165AbTDYNsG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Apr 2003 09:48:06 -0400
+In-Reply-To: <20030425111212.A28577@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Marc Zyngier <mzyngier@freesurf.fr>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Fri, Apr 25, 2003 at 03:24:11PM +0200, Marc Zyngier wrote:
-> Alan, Christoph,
+Christoph Hellwig wrote:
+>>-		spin_lock_irqsave(&d->list_lock, flags);
+>>+		spin_lock_irqsave(&d->sdev_lock, flags);
+>> 		list_for_each_entry(cmd, &d->cmd_list, list) {
+>> 			if(cmd->serial_number == 0){
 > 
-> Here is the updated aha1740 driver. All remarks have been taken into
-> account (patch is quite huge because of the re-indentation).
 > 
-> I removed the the scsi_to_dma_dir part, and sent it over to James (you
-> still need it though, see my previous mail to LKML for the patch).
+> <snip>
+> 
+>>-	spin_lock_irqsave(&sdev->list_lock, flags);
+>>+	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
+>> 	list_for_each_entry(scmd, &sdev->cmd_list, list) {
+> 
+> 
+> 
+> Oh, please, please use the lock consistantly.  Yes, I know that the
+> two are the same currently, but it might not be obvious to every reader
+> and queue_lock might change to something else in the future.
 
-Btw, scsi driver updates usually go to linux-scsi@vger, James then picks
-them up into the scsi BK tree that Linus pulls from time to time.
+I concur.
 
-And well, the indentation is Alan-stule not Linux-style but the driver
-looks fine.
+-- 
+Luben
+
+P.S. This same thing was discussed before at the intro of starved
+devs's code, seems it didn't get through then, maybe it will now...
+
 
