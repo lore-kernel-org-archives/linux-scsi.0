@@ -1,65 +1,55 @@
-From: "Sujeet Kumar" <sujeet.kumar@patni.com>
-Subject: Which scsi protocol is followed by scsi mid layer in kernel 2.6 ?
-Date: Fri, 14 Jan 2005 14:12:15 +0530
-Message-ID: <007501c4fa14$f3a037f0$7861a8c0@pcp40702>
-Reply-To: <sujeet.kumar@patni.com>
+From: Guido Guenther <agx@sigxcpu.org>
+Subject: Re: [PATCH] REPORT LUN scan even if no storage is available on LUN 0
+Date: Fri, 14 Jan 2005 10:32:00 +0100
+Message-ID: <20050114093200.GB5724@bogon.ms20.nix>
+References: <20041210123333.GD685@bogon.ms20.nix> <20041213222206.GA18893@us.ibm.com> <20050110164200.GA8655@bogon.ms20.nix> <20050111181500.GA9046@us.ibm.com> <20050113124032.GB5701@bogon.ms20.nix> <20050114000115.GA13676@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="----------=_1105691764-4811-103"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pcsbom.patni.com ([203.124.139.208]:31146 "EHLO
-	pcsbom.patni.com") by vger.kernel.org with ESMTP id S261722AbVANIh0
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Jan 2005 03:37:26 -0500
-Received: from rakshak.patni.com (rakshak.patni.com [203.124.139.54])
-	by pcsbom.patni.com (8.12.11/8.12.11) with SMTP id j0E8ZwvS020825
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Jan 2005 14:06:04 +0530
-Received: from spzha1.patni.com ([192.168.0.6])
- by rakshak.patni.com (SMSSMTP 4.0.0.59) with SMTP id M2005011414061501637
- for <linux-scsi@vger.kernel.org>; Fri, 14 Jan 2005 14:06:15 +0530
-Received: from pcp40702 ([192.168.97.120])
-	(authenticated bits=0)
-	by spzha1.patni.com (8.12.11/8.12.9) with ESMTP id j0E8a1hx017895
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Jan 2005 14:06:04 +0530
+Received: from honk1.physik.uni-konstanz.de ([134.34.140.224]:24505 "EHLO
+	honk1.physik.uni-konstanz.de") by vger.kernel.org with ESMTP
+	id S261929AbVANJgX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Jan 2005 04:36:23 -0500
+Content-Disposition: inline
+In-Reply-To: <20050114000115.GA13676@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format...
+On Thu, Jan 13, 2005 at 04:01:15PM -0800, Patrick Mansfield wrote:
+> On Thu, Jan 13, 2005 at 01:40:32PM +0100, Guido Guenther wrote:
+> 
+> > > Can you turn on some scsi logging, and send that?
+> > Sure. I tried scsi_logging_level=... on the kernel command line but it
+> > didn't show anything, did I miss something obvious?
+> > /proc/sys/dev/scsi/logging_level was still zero afterwards.
+> 
+> It is a sysctl variable, so you can set it after you are booted, per my
+> other email (and still below), and man sysctl.
+Yes I saw that, I was just wondering why scsi_logging_level doesn't work
+also it's a module option in scsi.c.
 
-------------=_1105691764-4811-103
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> If you are building the qlogic driver into the kernel you can still rescan
+> the LUNs via:
+> 
+> 	echo "- - -" > /sys/class/scsi_host/hostN/scan
+O.k. Thanks.
+ -- Guido
 
-
-
-Which scsi protocol is followed by scsi mid layer in kernel 2.6 ?
-
-
-Linux Kernel 2.4 used scsi primary standard 3 for scsi.
-Is  spc-3 still used in linux kernel 2.6 for scsi standard ?
-
-
-Thanks & regards ,
-sujeet kumar
-
-
-
-
-http://www.patni.com
-World-Wide Partnerships. World-Class Solutions.
-_____________________________________________________________________
-
-This e-mail message may contain proprietary, confidential or legally
-privileged information for the sole use of the person or entity to
-whom this message was originally addressed. Any review, e-transmission
-dissemination or other use of or taking of any action in reliance upon
-this information by persons or entities other than the intended
-recipient is prohibited. If you have received this e-mail in error
-kindly delete  this e-mail from your records. If it appears that this
-mail has been forwarded to you without proper authority, please notify
-us immediately at netadmin@patni.com and delete this mail. 
-_____________________________________________________________________
-
-------------=_1105691764-4811-103--
+> > > If you have root on scsi, you should shutdown syslogd (though this should
+> > > not generate lots of logging for small amounts of IO it generates some,
+> > > and if you screw up you'll be able to disable the logging), and then 
+> > > capture the console/serial output.
+> > > 
+> > > If root on ide, just leave syslog on and get /var/log/messages output.
+> > > 
+> > > Turn on per-command and scan logging (0x2400 | 0x01c0):
+> > > 
+> > > 	sysctl -w dev.scsi.logging_level=0x25c0
+> > > 
+> > > Set back off afterwards with:
+> > > 
+> > > 	sysctl -w dev.scsi.logging_level=0
+> > > 
+> > > -- Patrick Mansfield
