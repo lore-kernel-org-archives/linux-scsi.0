@@ -1,60 +1,56 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [RFC][PATCH] scsi-misc-2.5 software enqueue when can_queue reached
-Date: Sun, 2 Mar 2003 10:15:31 -0800
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: 2.4.x end of tape handling error
+Date: Sun, 2 Mar 2003 21:26:51 +0200 (EET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030302101530.A21052@beaverton.ibm.com>
-References: <20030228111924.A32018@beaverton.ibm.com> <20030302085728.A11407@infradead.org>
+Message-ID: <Pine.LNX.4.52.0303022118510.2029@kai.makisara.local>
+References: <mailman.1044901620.21591.linux-kernel2news@redhat.com>
+ <200302101904.h1AJ4US05141@devserv.devel.redhat.com> <20030218021039.28335.qmail@scrye.com>
+ <20030224235355.30878.qmail@scrye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030302085728.A11407@infradead.org>; from hch@infradead.org on Sun, Mar 02, 2003 at 08:57:28AM +0000
+In-Reply-To: <20030224235355.30878.qmail@scrye.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
+To: Kevin Fenzi <kevin-linux-kernel@scrye.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Sun, Mar 02, 2003 at 08:57:28AM +0000, Christoph Hellwig wrote:
-> The patch looks fine to me in principle, a few nitpicks are below.
-> (btw, any chance you could post a current scsi midlayer multipathing
-> patch?  I see there is BK activity.. :))
+On Mon, 24 Feb 2003, Kevin Fenzi wrote:
 
-The last multi-path patch is available here:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+>
+>
+> Some more information on this problem discovered by Tim Jones
+> <tjones@tolisgroup.com>:
+>
+> Tim> Additional news.
+>
+> Tim> This is actually related to the check sense bit not being
+> Tim> propagated up to the ST driver.  A simpler test (beats writing
+> Tim> 40GB to a tape ...):
+>
+...
+> Tim> This is caused by the check sense not being set and the ST driver
+> Tim> sending up a EIO instead of the ENOMEDIUM.
+>
+> So, it looks like this problem is _not_ in the st driver itself, but
+> somewhere in the SCSI layer.
+>
+> Anyone have any ideas how to better track it down?
+>
+> Happy to run debug code/test cases here.
+>
+If you enable debugging in the st driver, it prints on the
+console(dmesg)/system log the sense data it gets. (To enable debugging,
+edit the st source to '#define DEBUG 1' and recompile the kernel/module).
 
-http://www-124.ibm.com/storageio/multipath/scsi-multipath/releases/2.5.59-mpath-1.patch.gz
+The st driver does in some cases behave too conservatively when the EOT
+early warning is found. This happens when operating in fixed block mode
+and only with some drives. The drives I use for testing behave in a
+different way and that is why I have not seen this problem (tracked
+down with debugging output from one kind user). I have a fix ready but
+testing will still take some time. This problem is not seen when
+asynchronous writes and driver buffering are disabled (as suggested in
+README.st when trying to rely on EOT detection).
 
-Did you want to see something newer?
-
-Mike was talking about pulling it forward to 2.5.latest, maybe he has
-started.
-
-> > +++ edited/drivers/scsi/hosts.c	Thu Feb 27 16:21:09 2003
-> > @@ -383,6 +383,7 @@
-> >  	scsi_assign_lock(shost, &shost->default_lock);
-> >  	INIT_LIST_HEAD(&shost->my_devices);
-> >  	INIT_LIST_HEAD(&shost->eh_cmd_q);
-> > +	INIT_LIST_HEAD(&shost->pending_queue);
-> 
-> This isn't consistant, either ew use _q in all new code or _queue.
-> (peronally I prefer the latter)
-
-Yes, I also prefer _queue, maybe I should make it pending_cmd, then the
-name is not an issue, and the type is not embeded in the name (the _q
-implies that it is a queue or list_head)?
-
-> > +void scsi_host_send_pending (struct Scsi_Host *shost)
-> 
-> codingstyle issue:  no space between function name and opening brace.
-> 
-> > +{
-> > +	struct scsi_cmnd *scmd;
-> > +	unsigned long flags;
-> > +
-> > +	spin_lock_irqsave(shost->host_lock, flags);
-> > +	while (!shost->host_self_blocked
-> > +	       && !list_empty(&shost->pending_queue)) {
-> 
-> Linux codingstyle sais the && should be before the line break.
-
-OK thanks.
-
--- Patrick Mansfield
+	Kai
