@@ -1,29 +1,46 @@
-From: Anton Blanchard <anton@samba.org>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: PATCH [5/15] qla2xxx:  SG tablesize update
-Date: Mon, 15 Mar 2004 03:01:33 +1100
+Date: Sun, 14 Mar 2004 15:36:49 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040314160133.GI19737@krispykreme>
-References: <20040314082444.GA3416@linux.local.home> <1079275768.2022.1.camel@mulgrave> <20040314145142.GL6955@suse.de> <1079276396.2022.8.camel@mulgrave> <20040314151809.GG19737@krispykreme> <1079278279.2022.34.camel@mulgrave> <20040314154713.GH19737@krispykreme> <1079279732.2108.40.camel@mulgrave>
+Message-ID: <20040314203649.GA1463@havoc.gtf.org>
+References: <20040314082444.GA3416@linux.local.home> <1079275768.2022.1.camel@mulgrave> <20040314145142.GL6955@suse.de> <1079276396.2022.8.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dp.samba.org ([66.70.73.150]:39393 "EHLO lists.samba.org")
-	by vger.kernel.org with ESMTP id S263384AbUCNQC6 (ORCPT
+Received: from havoc.gtf.org ([216.162.42.101]:1230 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S261537AbUCNUgv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Mar 2004 11:02:58 -0500
+	Sun, 14 Mar 2004 15:36:51 -0500
 Content-Disposition: inline
-In-Reply-To: <1079279732.2108.40.camel@mulgrave>
+In-Reply-To: <1079276396.2022.8.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: Jens Axboe <axboe@suse.de>, Andrew Vasquez <andrew.vasquez@qlogic.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
- 
-> Because on this type of failure, the driver will return
-> SCSI_MLQUEUE_HOST_BUSY from its queuecommand routine.  This will tell
-> the mid layer not to try any more commands for the entire host until an
-> outstanding one returns (thus hopefully freeing up enough resources).
+On Sun, Mar 14, 2004 at 09:59:55AM -0500, James Bottomley wrote:
+> On Sun, 2004-03-14 at 09:51, Jens Axboe wrote:
+> > The explanation of why this was done (request queue limitations, huh?)
+> > sounded pretty bogus as well.
+> 
+> Actually, to be fair, I think he means the qlogic request queue, not the
+> block one.
+> 
+> The Qla chips are rather weird in that they have a single issue queue
+> (whose size you can vary) but whose entry formats are fixed.  If I
+> remember correctly, an initial command can have 4 SG elements, but a
+> follow on entry can have 7 (not sure of the figures).  But anyway, large
+> SG commands end up having to find multiple entries in this queue (and
+> being a single issue queue for the entire card, it has to be mutexed
+> while you search).  The more resources you need, the more difficult the
+> search and the more contention you generate on the resource mutex.
 
-That makes sense, it sounds like the qlogic could do that and remove
-the SG limit.
+The block layer can handle this type of hardware just fine ;-)
 
-Anton
+In my SATA hacking I am finding several devices that one must constrain
+based on hardware-global resources, rather than just TCQ (or lack
+thereof).
+
+	Jeff
+
+
+
