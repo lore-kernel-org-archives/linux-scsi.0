@@ -1,29 +1,31 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Change in Maintainer [aic7xxx and aic79xx drivers]
-Date: Thu, 03 Jun 2004 19:04:21 -0600
+From: Danny Leong <danny@trek2000.com.sg>
+Subject: Advice on getting the scsi device name.
+Date: 04 Jun 2004 10:48:16 +0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <728200816.1086311061@aslan.scsiguy.com>
+Message-ID: <1086317300.1023.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aslan.scsiguy.com ([63.229.232.106]:25875 "EHLO
-	aslan.scsiguy.com") by vger.kernel.org with ESMTP id S265104AbUFDBEd
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jun 2004 21:04:33 -0400
-Content-Disposition: inline
+Received: from rhea.webvis.net ([202.157.145.2]:19674 "EHLO trek2000.com.sg")
+	by vger.kernel.org with ESMTP id S263740AbUFDCrm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jun 2004 22:47:42 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Luben Tuikov <luben_tuikov@adaptec.com>
+To: linux-scsi@vger.kernel.org
 
-Folks,
+Hi, 
 
-After almost four years of working on the Linux aic7xxx and aic79xx
-drivers, I've decided to move on to other things.  Luben Tuikov
-<luben_tuikov@adaptec.com> is taking over further development and
-maintenance of both drivers.  Please direct any future questions you
-have about the aic7xxx and aic79xx drivers to him.
+ I am writing a program that needs to safely and correctly identify and
+mount a dev/sda ... dev/sda1 or dev/sdb etc.As far my knowledge fits me,
+i have to manually check the entry on proc/scsi/scsi to determine.
+Please advice me on a better method that could be included in a C
+program. Any help is greatly appreciated. 
 
-Thanks,
-Justin
+- Thanks :) 
+Danny
+
+
+  
+
+
 
