@@ -1,45 +1,66 @@
-From: Jason Van Patten <jvp@lateapex.net>
-Subject: Adaptec DPT_I2O Driver in 2.6
-Date: Sat, 20 Dec 2003 10:45:15 -0500 (EST)
+From: "G R E E N C A R D" <info@neomails.com>
+Subject: !!! AMERIKA ICIN SON 10 GUN !!!
+Date: Sat, 20 Dec 2003 18:11:54 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200312201545.hBKFjFQn010471@localhost.localdomain>
-Reply-To: jvp@lateapex.net
+Message-ID: <200312201616.hBKGG2K30437@zeus.kernel.org>
+Reply-To: info@neomails.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from corvette.lateapex.net ([64.236.104.2]:53952 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S264531AbTLTPpU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 Dec 2003 10:45:20 -0500
-Received: from localhost.localdomain (corvette [127.0.0.1])
-	by localhost.localdomain (8.12.8/8.12.8) with ESMTP id hBKFjF39010473
-	for <linux-scsi@vger.kernel.org>; Sat, 20 Dec 2003 10:45:15 -0500
-Received: (from jvp@localhost)
-	by localhost.localdomain (8.12.8/8.12.8/Submit) id hBKFjFQn010471
-	for linux-scsi@vger.kernel.org; Sat, 20 Dec 2003 10:45:15 -0500
+Received: from zeus.kernel.org ([204.152.189.113]:55499 "EHLO zeus.kernel.org")
+	by vger.kernel.org with ESMTP id S264602AbTLTQQI convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 20 Dec 2003 11:16:08 -0500
+Received: from ommo.net ([213.153.137.86])
+	by zeus.kernel.org (8.11.6/8.11.6) with SMTP id hBKGG2K30437
+	for <linux-scsi@vger.kernel.org>; Sat, 20 Dec 2003 08:16:03 -0800
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hey folks -
 
-I asked this question on the main kernel mailing list and got redirected
-here.  In the 2.6 tree, the driver drivers/scsi/dpt_i2o.c has a #error in it
-that prevents it from being compiled.  The note in the file is:
+-------- !!! GREEN CARD BASVURU SISTEMI TAMAMEN DEGISTI !!! -------
 
-#error Please convert me to Documentation/DMA-mapping.txt
+ABD Gocmenlik Burosu'nun tum dunyaya yaptigi resmi aciklamaya gore, 
 
-Is anyone actively working on converting this driver to 2.6?  I've
-tried contacting the author, Deanna Bonds at Adaptec, but her email stopped
-working.  I'm not sure if she's no longer with Adaptec, or changed her email
-address so as to stop getting kernel questions. :-)
+bu yil DV-2005 basvurulari sadece internet uzerinden yapilabilecek, 
 
-In either case, I have two boxen at home with the Adaptec SCSI RAID
-controllers, and I'd like to move them from 2.4 to 2.6.  Can anyone help?
+kesinlikle mektupla basvuru kabul edilmeyecek. 
 
-Thanks!
 
-jas
--- 
-Jason Van Patten
-AOL IM: Jason VP 
+  Bu sene Turkiye'den yaklasik 4,000 kisi Green Card kazanacak !!! 
+
+
+------ YENI BASVURU SISTEMI DANISMANLIK HIZMETI GEREKTIRIYOR ! ------
+
+*** Cunku basvurular sadece internetten yapilacak ! 
+
+*** Cunku basvuru yapilacak olan resmi site Ingilizce !
+
+*** Cunku hizli ve kesintisiz internet baglantisina ihtiyaciniz var !
+
+*** Cunku basvuruda sadece dijital fotograf kullanmaniz gerekiyor !
+
+*** Cunku fotograflarin istenen teknik ozelliklere uygun olmasi gerekiyor !
+
+*** Ve basvurunuzu bir kerede hatasiz olarak yapmaniz gerekiyor !
+
+
+
+------ !!! TUM BUNLARI SIZIN ADINIZA YAPMAMIZI ISTERSENIZ !!! --------
+
+
+>>> Daha detayli bilgi icin hemen 212-325 4136 nolu danisma hattimizi arayin ! 
+
+
+>>> Ya da hic vakit kaybetmeden http://www.neomails.com/gc adresini ziyaret edin ve basvuru formunu doldurun!
+
+
+--------------- SON BASVURU SURESI 25 ARALIK !!! ------------
+
+
+----------- HEMEN BASVURUN, FIRSATI KACIRMAYIN ! ------------
+
+
+
+
