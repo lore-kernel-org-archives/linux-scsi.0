@@ -1,41 +1,57 @@
-From: christophe.varoqui@free.fr
-Subject: Re: [lvm] [christophe.varoqui@free.fr: dm multipath target]
-Date: Fri, 22 Aug 2003 18:07:33 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] 2.6.0 aacraid driver update
+Date: Fri, 22 Aug 2003 17:16:00 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1061568453.3f463fc592678@impt1-2.free.fr>
-References: <1061290087.3f4200678f811@impt2-2.free.fr> <20030819143552.K8420@sistina.com> <1061299572.3f4225742287c@impt1-2.free.fr> <20030819182347.O8420@sistina.com> <20030820012204.449c2b34.christophe.varoqui@free.fr> <20030820150253.X8420@sistina.com> <1061389164.3f43836ccaf56@impt1-1.free.fr> <20030821144716.Y8420@sistina.com> <1061483692.3f44f4ac24e07@impt1-2.free.fr> <20030822105146.B8420@sistina.com> <20030822075953.A28851@beaverton.ibm.com>
+Message-ID: <20030822171600.A19262@infradead.org>
+References: <1061567229.2067.15.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from postfix4-1.free.fr ([213.228.0.62]:44960 "EHLO
-	postfix4-1.free.fr") by vger.kernel.org with ESMTP id S263405AbTHVQHj
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Aug 2003 12:07:39 -0400
-In-Reply-To: <20030822075953.A28851@beaverton.ibm.com>
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:32018 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S263557AbTHVQQC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Aug 2003 12:16:02 -0400
+Content-Disposition: inline
+In-Reply-To: <1061567229.2067.15.camel@markh1.pdx.osdl.net>; from markh@osdl.org on Fri, Aug 22, 2003 at 08:47:09AM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: mauelshagen@sistina.com, linux-scsi@vger.kernel.org
+To: Mark Haverkamp <markh@osdl.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
->From "Working Draft SCSI Block Commands - 2 (SBC-2)"
+On Fri, Aug 22, 2003 at 08:47:09AM -0700, Mark Haverkamp wrote:
+> --- 1.22/drivers/scsi/scsi_priv.h	Thu Aug  7 05:25:43 2003
+> +++ edited/drivers/scsi/scsi_priv.h	Tue Aug 19 14:51:39 2003
+> @@ -115,8 +115,6 @@
+>  #endif /* CONFIG_PROC_FS */
+>  
+>  /* scsi_scan.c */
+> -int scsi_scan_host_selected(struct Scsi_Host *, unsigned int, unsigned int,
+> -			    unsigned int, int);
 
-4.2.1.4 Ready state
-A direct-access block device is ready when medium access commands can be
-executed. A block device using removable media is not ready until a volume is
-mounted. Such a block device, with a volume not mounted, shall terminate medium
-access commands with CHECK CONDITION status and the sense key shall be set to
-NOT READY with the appropriate additional sense code for the condition.
-Some direct-access block devices may be switched from being ready to being not
-ready by using the START STOP UNIT command. An application client may need to
-issue a START STOP UNIT command with a START bit set to bring a block device ready.
----
+I'm not very happy with exporting this to drivers.  Can you explain the
+code using it a bit?
 
-It seems a ghost LUN on HSV controlers is not doing the right thing as "sg_turs"
-reports NOT READY the first time then hang on D-state on consecutive try.
+> -	u32 			SavedIrql;     	/* Previous IRQL when the spin lock is taken */
+> +	unsigned long		SavedIrql;     	/* Previous IRQL when the spin lock is taken */
 
-Can the linux kernel be in cause or is it HP ? May the kernel should trap this
-NOT READY sense on the fly and disconnect the path.
-If it is HP, is there a way to bring them in conformance ?
+This is still broken.  you must not store irq flags in structures but
+have to restore them in the same function you take them in, otherwise things
+like the irq window on sparc32 can fuck up.  Also it's really confusing.
 
-regards,
-cvaroqui
+> +#define CONTAINER_TO_BUS(cont)		(0)
+> +#define CONTAINER_TO_TARGET(cont)	((cont))
+> +#define CONTAINER_TO_LUN(cont)		(0)
+
+why this obsfucation?
+
+> -			pci_set_dma_mask(dev, 0xFFFFFFFFULL);
+> +
+> +			if (aac_drivers[index].quirks & AAC_QUIRK_31BIT)
+> +				pci_set_dma_mask(dev, 0x7FFFFFFFULL);
+> +			else
+> +				pci_set_dma_mask(dev, 0xFFFFFFFFULL);
+
+Please check the return value.
+
+
+Also please convert the driver to be hotplug capable while you're
+at it.
