@@ -1,33 +1,31 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] SCSI midlayer power management
-Date: 11 Aug 2004 08:39:01 -0500
+Date: Wed, 11 Aug 2004 16:21:08 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1092231542.2087.7.camel@mulgrave>
-References: <411960C3.5090107@optonline.net>
-	<1092218000.18968.2.camel@localhost.localdomain>
+Message-ID: <1092237664.19009.23.camel@localhost.localdomain>
+References: <4119611D.60401@optonline.net>
+	 <20040811080935.GA26098@elf.ucw.cz>  <411A1B72.1010302@optonline.net>
+	 <1092231462.2087.3.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:62861 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S268060AbUHKNjH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Aug 2004 09:39:07 -0400
-In-Reply-To: <1092218000.18968.2.camel@localhost.localdomain>
+Received: from the-village.bc.nu ([81.2.110.252]:54993 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S268108AbUHKQXt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Aug 2004 12:23:49 -0400
+In-Reply-To: <1092231462.2087.3.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Nathan Bryant <nbryant@optonline.net>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Pavel Machek <pavel@ucw.cz>, Jeff Garzik <jgarzik@pobox.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Nathan Bryant <nbryant@optonline.net>, Pavel Machek <pavel@ucw.cz>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-On Wed, 2004-08-11 at 04:53, Alan Cox wrote:
-> That was something Mark Lord reported higher level I suspect - which is
-> that the scsi path is disabled before the sync cache command is sent so
-> the command is always errored before it hits the drive
+On Mer, 2004-08-11 at 14:37, James Bottomley wrote:
+> Actually, the answer is to most intents and purposes "yes".  You are
+> technically correct: there's no way to disable DMA in SCSI.  However,
+> once a device is quiesced, it has no outstanding commands, so there will
+> be no outstanding DMA to that device. 
 
-Yes, this one's my fault.  I have patches to fix this, I never got
-around to merging them.  Randy was on at me yesterday about this too. 
-I'll dig them out.  (The problem is that last sync is sent in SDEV_DEL
-state, so it gets rejected).
-
-James
-
+In addition we are not doing SCSI target so multi-initiator is ok.
+One question James - what are the rules for power management with
+SCSI when we provide termpwr to a shared bus ?
 
