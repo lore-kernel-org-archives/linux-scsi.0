@@ -1,38 +1,44 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: aic7xxx sets CDR offline, how to reset?
-Date: Wed, 04 Sep 2002 11:13:54 -0500
+Date: Wed, 04 Sep 2002 11:24:19 -0500
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200209041613.g84GDtv02639@localhost.localdomain>
-References: <dledford@redhat.com>
+Message-ID: <200209041624.g84GOJC02683@localhost.localdomain>
+References: <jeremy@classic.engr.sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: Message from Doug Ledford <dledford@redhat.com>
-   of "Tue, 03 Sep 2002 18:50:36 EDT." <20020903185036.G12201@redhat.com>
-To: James Bottomley <James.Bottomley@SteelEye.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: Message from Jeremy Higdon <jeremy@classic.engr.sgi.com>
+   of "Wed, 04 Sep 2002 00:40:26 PDT." <10209040040.ZM49716@classic.engr.sgi.com>
+To: Jeremy Higdon <jeremy@classic.engr.sgi.com>
+Cc: Doug Ledford <dledford@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-dledford@redhat.com said:
-> Now, granted, that is more complex than going straight to a BDR, but I
->  have to argue that it *isn't* that complex.  It certainly isn't the
-> nightmare you make it sound like ;-) 
+jeremy@classic.engr.sgi.com said:
+> For example, in Fibrechannel using class 3 (the usual)
 
-It's three times longer even in pseudocode...
+> 	send command (command frame corrupted; device does not receive)
+> 	send barrier (completes normally)
+> 	... (lots of time goes by, many more commands are processed)
+> 	timeout original command whose command frame was corrupted 
 
-However, assume we do this (because we must for barrier preservation).  The 
-chances are that for a failing device we're aborting a significant number of 
-the tags.  This is quite a big increase in the message load over what we do 
-now---Particularly for the AIC driver which can have hundreds of tags 
-outstanding (murphys law says it's usually the earilest tag which times out).  
-I'm not convinced that a BDR, which is a single message and has roughly the 
-same effect, isn't preferable.
+This doesn't look right to me from the SCSI angle  I don't see how you can get 
+a successful disconnect on a command the device doesn't receive (I take it 
+this is some type of Fibre magic?).  Of course, if the device (or its proxy) 
+does receive the command then the ordered queue tag implementation requires 
+that the corrupted frame command be processed prior to the barrier,  this 
+isn't optional if you obey the spec.  Thus, assuming the processor does no 
+integrity checking of the command until it does processing (this should be a 
+big if), then we still must get notification of the failed command before the 
+barrier tag is begun.  Obviously, from that notification we do then race to 
+eliminate the overtaking tags.
 
-However, what about a compromise?  We can count outstanding commands, so what 
-about doing abort *if* the number of outstanding commands is exactly one (the 
-one we're trying to abort).  This means for devices that don't do TCQ (like 
-old CD-ROMs) we'll always try abort first.  For large numbers of outstanding 
-tags, we skip over abort and move straight to BDR.  The code to implement this 
-will be clean and simple because abort no longer has to pay attention to the 
-barrier.
+> There was also the problem of the queue full to the barrier command,
+> etc. 
+
+The queue full problem still exists.  I've used this argument against the 
+filesystem people many times at the various fora where it has been discussed.  
+The situation is that everyone agrees that it's a theoretical problem, but 
+no-one is convinced that it will actually occur in practice (I think it falls 
+into the "risk we're willing to take" category).
 
 James
