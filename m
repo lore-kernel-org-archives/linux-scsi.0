@@ -1,69 +1,35 @@
-From: Eric Kerin <eric@bootseg.com>
-Subject: Re: 2.6.3 oops at kobject_unregister, alsa & aic7xxx
-Date: Tue, 24 Feb 2004 02:07:43 -0500
+From: Joachim Feise <jfeise@ics.uci.edu>
+Subject: Re: PROBLEM: 2.6.3 hangs when writing to scsi-dvd
+Date: Mon, 23 Feb 2004 23:18:36 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1077606462.3172.38.camel@opiate>
-References: <1077546633.362.28.camel@boxen>
-	 <20040223160716.799195d0.akpm@osdl.org> <1077602725.3172.19.camel@opiate>
-	 <20040223221740.5786b0b3.akpm@osdl.org>
+Message-ID: <Pine.LNX.4.58L0.0402232309220.1571@pv105234.reshsg.uci.edu>
+References: <403512B8.2060403@ics.uci.edu> <4036867C.60803@ics.uci.edu>
+ <Pine.LNX.4.58.0402231329480.1749@kai.makisara.local> <20040223132634.GD32010@suse.de>
+ <Pine.LNX.4.58.0402231615270.1749@kai.makisara.local> <20040223142531.GF32010@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mxsf04.cluster1.charter.net ([209.225.28.204]:46343 "EHLO
-	mxsf04.cluster1.charter.net") by vger.kernel.org with ESMTP
-	id S262191AbUBXHLn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2004 02:11:43 -0500
-In-Reply-To: <20040223221740.5786b0b3.akpm@osdl.org>
+Received: from pv105234.reshsg.uci.edu ([128.195.105.234]:18948 "HELO
+	pv105234.reshsg.uci.edu") by vger.kernel.org with SMTP
+	id S262194AbUBXHSp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Feb 2004 02:18:45 -0500
+In-Reply-To: <20040223142531.GF32010@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: alexn@telia.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org, Michael Guntsche <mike@it-loops.com>, Andrew Morton <akpm@osdl.org>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Frank Pieczynski <pieczy@web.de>
 
-On Tue, 2004-02-24 at 01:17, Andrew Morton wrote:
-> Eric Kerin <eric@bootseg.com> wrote:
-> >
-> > On Mon, 2004-02-23 at 19:07, Andrew Morton wrote:
-> > > Alexander Nyberg <alexn@telia.com> wrote:
-> > > >
-> > > > This happens at shutdown when alsa is to close down. I'm running debian
-> > > > sid. NOTE: I recently removed my aic7xxx out of the motherboard, so the
-> > > > driver obviously can't find it. But if I remove aic7xxx from the modules
-> > > > list, this oops does _not_ happen.
-> > > 
-> > > That's useful infomation.  It indicates that the aic7xxx driver is screwing
-> > > up the kobject lists.
-> > > 
-> > > Just to confirm: are you saying that the aic7xxx driver is loaded at the
-> > > tie of the oops, but there is no aic7xxx hardware present in the machine?
-> > 
-> > 
-> > I stumbled up this in early January.  I posted a patch to linux-scsi,
-> > but it dosn't seem to be merged at this point.  This problem will also
-> > occur with the aic79xx driver.
-> > 
-> > Here's the location of the original thread:
-> > http://marc.theaimsgroup.com/?l=linux-scsi&m=107307695430108&w=2
-> > 
-> > I just tried the patch on 2.6.3, and it still applies cleanly.
-> 
-> hm, I was looking at that code but it seemed OK.  You said "left a stale
-> entry in the pci_device list".  Is that correct, or was the entry in the
-> PCI driver list?  The latter, surely?
-> 
-> If so, why is that a problem?  ahc_linux_pci_exit() takes it out again?
+On Mon, 23 Feb 2004, Jens Axboe wrote:
 
-You are correct it's the PCI driver list, I misspoke in my original
-mail. 
+> On Mon, Feb 23 2004, Kai Makisara wrote:
+> > Now it is slightly tested: it works with my SCSI tape test program. Since
+> > the program only does an inquiry, I tried it with the SCSI system disk
+> > without problems. Unfortunately, I don't have access to a SCSI CDROM now.
+>
+> Great, that's promising (code like this tends to either break at first
+> access, or work :-). Thanks for testing.
 
-The AIC drivers are currently coded to unload (by returning -ENODEV from
-the init function) if no devices are found, so the exit function never
-gets called, leaving the stale entries.
+I tried it with my SCSI DVD. Writing to and reading from DVD+RW
+works fine.
+Thanks for the fix.
 
-There's a 2nd patch in the above thread that changes those modules to
-stay loaded even if no devices are found, which Arjan V pointed out was
-the preferred way for drivers to work.
-
-Eric Kerin
-
-
-
+-Joe
