@@ -1,40 +1,65 @@
-From: "Zhao, Forrest" <forrest.zhao@intel.com>
-Subject: One question about SCSI device hotplug
-Date: Tue, 1 Mar 2005 17:06:55 +0800
-Message-ID: <8126E4F969BA254AB43EA03C59F44E840184FB09@pdsmsx404>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [ANNOUNCE] iSCSI enterprise target software
+Date: Tue, 01 Mar 2005 18:35:49 +0900
+Message-ID: <20050301183549J.fujita.tomonori@lab.ntt.co.jp>
+References: <20050301161951K.fujita.tomonori@lab.ntt.co.jp>
+	<1109666441.6293.62.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Received: from fmr19.intel.com ([134.134.136.18]:6067 "EHLO
-	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
-	id S261836AbVCAJIW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 04:08:22 -0500
-Received: from orsfmr100.jf.intel.com (orsfmr100.jf.intel.com [10.7.209.16])
-	by orsfmr004.jf.intel.com (8.12.10/8.12.10/d: major-outer.mc,v 1.1 2004/09/17 17:50:56 root Exp $) with ESMTP id j2198Lt4014774
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Mar 2005 09:08:21 GMT
-Received: from pdsmsxvs01.pd.intel.com (pdsmsxvs01.pd.intel.com [172.16.12.122])
-	by orsfmr100.jf.intel.com (8.12.10/8.12.10/d: major-inner.mc,v 1.2 2004/09/17 18:05:01 root Exp $) with SMTP id j2198Ek1032039
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Mar 2005 09:08:21 GMT
-Received: from pdsmsx331.ccr.corp.intel.com ([172.16.12.58])
- by pdsmsxvs01.pd.intel.com (SAVSMTP 3.1.7.47) with SMTP id M2005030117082004621
- for <linux-scsi@vger.kernel.org>; Tue, 01 Mar 2005 17:08:20 +0800
-Content-class: urn:content-classes:message
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:4559 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S261841AbVCAJgJ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Mar 2005 04:36:09 -0500
+In-Reply-To: <1109666441.6293.62.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: "Caushik, Ramesh" <ramesh.caushik@intel.com>
+Cc: arjan@infradead.org, iscsitarget-devel@lists.sourceforge.net
 
-Hi, list
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [ANNOUNCE] iSCSI enterprise target software
+Date: Tue, 01 Mar 2005 09:40:38 +0100
 
-If I surprisingly hot-remove a SCSI disk from HBA manually 
-without executing "echo "scsi remove-single-device
- <h> <b> <t <l>" > /proc/scsi/scsi", can the "hotplug"
-event be notified to SCSI mid-layer or user space?
+> > Could you please review the code? Any comments are greatly
+> > appreciated.
+> > -
+> 
+> can you explain why the target has to be inside the kernel and can't be
+> a pure userspace daemon ?
 
-I briefly browse some code of LLDD, it seems that LLDD never
-report "hotplug" event to upper-level layer. Am I right?
+o synchronization
+
+Suppose that an target runs in the user space and an initiator sends
+two WRITE commands (A and B) with the simple attribute.
+
+The target can write A and B simultaneously. Before the target sends
+the response of A, A must be committed to disk (that is, some dirty
+page cache must be committed). So the target calls fsync(). It commits
+A to disk. Moreover, it also commits B to disk unnecessarily. This
+really hurts performance.
+
+The current code uses the sync_page_range function.
+
+o disk drive cache
+
+When the target calls fsync(), dirty page cache is supposed to be
+committed to disk. However, the disk drive uses write-back policy, it
+is not. The data is still in disk drive cache. There is no system call
+to control disk drive cache. So the target (in the user space) cannot
+make good use of it.
+
+The current code also assumes the disk drive uses write-through
+policy. This is because no handy vfs interface for controlling disk
+drive cache. I think that there is some room for further improvement
+in the Linux kernel for storage systems.
+
+If the kernel maintainers add new system calls to do the above jobs
+for storage systems, We can implement good iSCSI target software
+running in the user space.
 
 
-Thanks,
-Forrest
+The last reason is that user-space cost like memory copy. With 1Gbs
+Ethernet, is is not critical. However, with 10G, it is critical, I
+expect. I've been setting up 10G experimental infrastructure to
+evaluate iSCSI performance.
