@@ -1,35 +1,60 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Tony Spinillo <tspinillo@yahoo.com>
 Subject: Re: [PATCH] aic7xxx bouncing over 4G
-Date: Sat, 28 Dec 2002 09:00:51 -0600
+Date: Sat, 28 Dec 2002 08:23:43 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200212281500.gBSF0pc01929@localhost.localdomain>
-References: <riel@conectiva.com.br>
+Message-ID: <20021228162343.90846.qmail@web14004.mail.yahoo.com>
+References: <20021228134058.GC13814@louise.pinerecords.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA22755
-	for <linux-scsi@vger.kernel.org>; Sat, 28 Dec 2002 07:00:58 -0800
-In-Reply-To: Message from Rik van Riel <riel@conectiva.com.br>
-   of "Sat, 28 Dec 2002 11:33:02 -0200." <Pine.LNX.4.50L.0212281131580.26879-100000@imladris.surriel.com>
+In-Reply-To: <20021228134058.GC13814@louise.pinerecords.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Rik van Riel <riel@conectiva.com.br>
-Cc: Tomas Szepe <szepe@pinerecords.com>, Marcelo Tosatti <marcelo@conectiva.com.br>, Samuel Flory <sflory@rackable.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Janet Morgan <janetmor@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: linux-scsi@vger.kernel.org
 
-riel@conectiva.com.br said:
-> If it's the new driver, it's breaking on WAY too many machines and I
-> have no idea why it got ever merged... 
+I've been using 6.2.23 on my two home machines, 29160 and 39160
+cards. So far things seem okay.  When I get some down time I will
+get the new driver on a few servers at work and see what shakes loose.
 
-It got merged because no-one was testing it when supplied in its current form 
-outside the 2.5 tree and because no-one was fixing the older incarnation of 
-this driver that was in the tree.  Including it was a caclulated risk 
-mitigated significantly because we still have a maintained aic7xxx_old driver.
+TS
+Kernel 2.4.21pre1
+Intel 845PESVL Motherboards
 
-So far, the only bug report I have is from Andrew Morton proving that it still 
-doesn't get it's bounce buffers right.
 
-I assume all your bug reports are on their way to linux-scsi?
-
-James
-
+--- Tomas Szepe <szepe@pinerecords.com> wrote:
+> [riel@conectiva.com.br]
+> > 
+> > On Sat, 28 Dec 2002, Tomas Szepe wrote:
+> > 
+> > > Marcelo, you've been overlooking these updates for a bit too long
+> now
+> > > for your "let's throw them at -ac" to sound fair.  IMHO of
+> course.  Also
+> > > remember those are both production drivers tested thoroughly in
+> FreeBSD,
+> > 
+> > Are we talking about the old or the new aic7xxx driver ?
+> 
+> The new one.
+> 
+> > If it's the new driver, it's breaking on WAY too many
+> > machines and I have no idea why it got ever merged...
+> > 
+> > I have yet to see a machine where the new aic7xxx driver
+> > works. I'm sure they exist, but it doesn't work on any
+> > of the machines I have access to.
+> 
+> Oh?  I'm surprised to hear that, because the Gibbs driver
+> 	1) works well for all the Adaptecs I've got. :)
+> 	2) can drive certain chips the original driver can't
+> 		(2940U's for instance).
+> 
+> -- 
+> Tomas Szepe <szepe@pinerecords.com>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
