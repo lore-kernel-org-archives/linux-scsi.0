@@ -1,37 +1,82 @@
-From: Jin Suh <jinssuh@yahoo.com>
-Subject: [2.4.25] framebuffer with ATI Rage XL desktop and ATI Rage latpop screen not readable
-Date: Thu, 1 Apr 2004 12:24:40 -0800 (PST)
+From: Brian Auld <bauld@lefthandnetworks.com>
+Subject: Question about the use of PERSISTENT RESERVATION IN/OUT
+Date: Thu, 01 Apr 2004 13:41:06 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040401202440.8351.qmail@web41210.mail.yahoo.com>
+Message-ID: <406C7E62.7020109@lefthandnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web41210.mail.yahoo.com ([66.218.93.43]:20332 "HELO
-	web41210.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S263146AbUDAUYl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Apr 2004 15:24:41 -0500
+Received: from mail.lefthandnetworks.com ([207.174.0.250]:34955 "EHLO
+	mail.lefthandnetworks.com") by vger.kernel.org with ESMTP
+	id S263158AbUDAUmB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Apr 2004 15:42:01 -0500
+Received: from lefthandnetworks.com (unknown [10.0.11.117])
+	by mail.lefthandnetworks.com (Postfix) with ESMTP id A29A637E58
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Apr 2004 13:42:11 -0700 (MST)
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-I am using 2.4.25 (same thing happened with 2.4.26-rc1) with framebuffer. I
-enabled the followings:
-
-ATI Mach64 display support
-Mach64 GX support
-Mach64 CT/VT/GT/LT support 
-Mach64 generic LCD support 
-ATI Radeon display support 
-ATI Rage128 display support 
-
-With those, my screen gets blank (ATI Rage XL) and my laptop (ATI Rage mobility
-P/M AGP 2X) get not readable. I had no problems with 2.4.20. Do you have any
-idea?
-
+I was able to acquire some level of understanding of the use of "persistent
+reservation in/out" commands after having read some SCSI specs and browsing
+this mailing list's archives. I have made some presumptions and wanted 
+to run
+them by this list to make sure I wasn't too far out in left field.
+                                                                               
+I'm designing a linux-based application that is going to use LUNs for 
+storage
+from a backend FC SAN. It's not very sexy, but there is a one to one
+relationship for i) boxes running my appl and ii) LUNs. One of the 
+requirements
+that has been imposed on the appl is that once a given backend LUN has been
+assigned to my application, any other physical entity (i.e. a different
+initiator on a different box, which could be running my appl) is to be
+prevented from accessing this LUN using some kind of protection mechanism.
+                                                                               
+Once a LUN is assigned to a specific box running my appl, this protection
+should exist until I explicitly deassign this LUN in my user interface. In
+other words, the protection should persist across host reboots and target
+reset/reboots.
+                                                                               
+I have made the following assumptions and decisions about how this will be
+handled:
+                                                                               
+1) As I understand it, there is no reserve/release (persistent or old)
+mechanism in the scsi subsystem itself.
+                                                                               
+2) WRT (1), there are however 2 mechanisms for sending pass-through commands
+through the scsi subsystem directly to a target device: namely, (i) using an
+sg device or (ii) sd ioctls.
+                                                                               
+3) What I would like to do is setup my application so the following 
+occurs when
+a LUN is assigned/deassigned to my appl:
+                                                                               
+assigned:
+-------------
+In my appl, send an appropriate combination of PERSISTENT RESERVE 
+OUT(service
+action: reserve ...) commands to effectivly lock this device so that any
+initiator not included in the list I provide will be prevented from 
+accessing
+my LUN. I would use the sg mechanism or sd ioctls to do this.
+                                                                               
+deassigned:
+---------------
+In my appl, send an appropriate combination of PERSISTENT RESERVE OUT 
+(service
+action: release) commands to free up this LUN. Again, I would use sd ioctls
+or the sg mechanism to do this.
+                                                                               
+Is this basic approach flawed? It would seem to be doable based on what 
+I have
+read so far, but I don't know for sure.
+                                                                               
+Any feedback would be appreciated.
+                                                                               
 Thanks,
-Jin
+Brian
 
 
-__________________________________
-Do you Yahoo!?
-Yahoo! Small Business $15K Web Design Giveaway 
-http://promotions.yahoo.com/design_giveaway/
+
+
