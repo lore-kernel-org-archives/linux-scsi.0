@@ -1,38 +1,34 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Retry scsi_mode_sense if UNIT ATTENTION occurs
-Date: Mon, 28 Jul 2003 11:31:12 -0400 (EDT)
+From: Andrew Ryan <genanr@emsphone.com>
+Subject: 2.6.0-test1 and qlogic 8.00.00b4 driver
+Date: Mon, 28 Jul 2003 17:08:37 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0307281129500.609-100000@ida.rowland.org>
-References: <20030728150823.GC1399@gtf.org>
+Message-ID: <20030728220836.GA10845@thumper2.emsphone.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:1540 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S269981AbTG1PP5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Jul 2003 11:15:57 -0400
-In-Reply-To: <20030728150823.GC1399@gtf.org>
+Received: from thumper2.emsphone.com ([199.67.51.102]:52690 "EHLO
+	thumper2.emsphone.com") by vger.kernel.org with ESMTP
+	id S271146AbTG1WIp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Jul 2003 18:08:45 -0400
+Received: from thumper2.emsphone.com (genanr@localhost [127.0.0.1])
+	by thumper2.emsphone.com (8.12.9/8.12.9/Debian-3) with ESMTP id h6SM8biR010859
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Jul 2003 17:08:37 -0500
+Received: (from genanr@localhost)
+	by thumper2.emsphone.com (8.12.9/8.12.9/Debian-3) id h6SM8bAK010857
+	for linux-scsi@vger.kernel.org; Mon, 28 Jul 2003 17:08:37 -0500
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Jens Axboe <axboe@suse.de>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Mon, 28 Jul 2003, Jeff Garzik wrote:
+Linux is not seeing any devices attached to a CMD CRA-7280 san connected
+raid unit using kernel 2.6.0-test[12] and qlogic drive 8.00.00b4.  It works
+in 2.5.69 with qlogic 8.00.00b3 drivers and the b4 drivers (kernel
+2.6.0-test1) were able to see devices on a Hitachi eval unit we had.  I
+can't tell if it is the kernel or drives since the b4 drivers are needed for
+the 2.6 kernels and I cannot use the b4 drivers in the 2.5.69 kernel. 
+2.5.75 gives me oops problems.   I haven't tried the others.  Any ideas.
 
-> On Mon, Jul 28, 2003 at 10:10:33AM -0400, Alan Stern wrote:
-> > Jens:
-> > 
-> > This patch changes the scsi_mode_sense() routine to retry up to a total of 
-> > 3 times if a command fails with a UNIT ATTENTION sense key value.
-> > 
-> > Without this change, sr.c does not properly read the capabilities mode 
-> > page for a just-powered-up cdrom drive -- it gives up upon receiving a 
-> > Device Reset Occurred code.
-> 
-> I'm curious, are you testing against a real SCSI device, or a faked one
-> as via ide-scsi.c?
+Andy
 
-Sort of in-between.  It's a USB CD-RW drive.  So it's not attached to a 
-real SCSI bus, but it does use the genuine SCSI command set.
-
-Alan Stern
+genanr@allantgroup.com
 
