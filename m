@@ -1,41 +1,37 @@
-From: berthiaume_wayne@emc.com
-Subject: RE: QLA2200 driver
-Date: Thu, 25 Apr 2002 12:28:06 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <93F527C91A6ED411AFE10050040665D0049BF949@corpusmx1.us.dg.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
-To: jes@wildopensource.com
-Cc: ttonino@corp.home.nl, linux-scsi@vger.kernel.org
-
-	No. I'll admit it is quite a hack but it does work.
-
------Original Message-----
-From: Jes Sorensen [mailto:jes@wildopensource.com]
-Sent: Thursday, April 25, 2002 11:53 AM
-To: berthiaume_wayne@emc.com
-Cc: ttonino@corp.home.nl; linux-scsi@vger.kernel.org
+From: Mike Anderson <andmike@us.ibm.com>
 Subject: Re: QLA2200 driver
+Date: Thu, 25 Apr 2002 09:30:37 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20020425093037.A13358@beaverton.ibm.com>
+References: <3CC7E9E0.5050107@corp.home.nl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3CC7E9E0.5050107@corp.home.nl>; from ttonino@corp.home.nl on Thu, Apr 25, 2002 at 01:34:56PM +0200
+List-Id: linux-scsi@vger.kernel.org
+To: Thomas Tonino <ttonino@corp.home.nl>
+Cc: linux-scsi@vger.kernel.org
 
+Thomas Tonino [ttonino@corp.home.nl] wrote:
+> We're setting up a server with a 14 Seagate Cheetah fibre JBOD attached 
+> to a single QLA2200 controller.
+> 
+> The Qlogic fibre driver in 2.4.18 crashes very quickly in this setup, 
+> with the message "qlogicfc0 : no handle slots, this should not happen". 
+> This crash happens after writing less than 100GB of data to the JBODs.
 
->>>>> ">" == berthiaume wayne <berthiaume_wayne@emc.com> writes:
+I believe this is old issues previously discussed on this list and
+documented by the GFS people.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=99203965930711&w=2
 
->> 	Actually, we have been using the latest off the QLogic site
->> and referencing EMC customers to that driver as the one of
->> choice. They are referred to the EMC approved driver link. The
->> Rawhide is way out of date, thus one of the reasons to use what is
->> on the Qlogic site. The only modification we've had to make is to
->> the qlavendor.c to contain the definitions for EMC's unique SCSI
->> command set.
+I believe the problem results for recalculations made in the drivers
+queuecommand that adjust the can_queue and sg_tablesize. If I remember
+correctly the work around was to increase QLOGICFC_REQ_QUEUE_LEN to a
+larger value qlogicfc.h. Which will mask this problem.
 
-Sorry, but thats really scary to hear, unless of course you have a
-special version thats totally rewamped compared to the one that Red
-Hat has been shipping.
+-Mike
+-- 
+Michael Anderson
+andmike@us.ibm.com
 
-Please note that I am referring to Arjan's work on qla2200.c not
-qla2x00.c!
-
-Jes
