@@ -1,51 +1,47 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] kill obsolete typedefs and wrappers from tmscsim
-Date: Sat, 26 Jun 2004 13:17:01 +0200
+From: Mark Overmeer <Mark@Overmeer.net>
+Subject: Re: Adaptec 2810SA problems
+Date: Sat, 26 Jun 2004 13:23:28 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040626111701.GA15170@lst.de>
-References: <20040624081510.GA7950@lst.de> <Pine.LNX.4.60.0406242247500.4258@poirot.grange> <20040625095022.GA28822@lst.de> <Pine.LNX.4.60.0406252022400.3953@poirot.grange>
+Message-ID: <20040626132327.B31119@speeltuin.ATComputing.nl>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189FF1D40D@otce2k03.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:12773 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S267163AbUFZLRE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 26 Jun 2004 07:17:04 -0400
+Received: from speeltuin.ATComputing.nl ([195.108.229.26]:11024 "EHLO
+	speeltuin.ATComputing.nl") by vger.kernel.org with ESMTP
+	id S266256AbUFZLae (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 26 Jun 2004 07:30:34 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.60.0406252022400.3953@poirot.grange>
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189FF1D40D@otce2k03.adaptec.com>; from mark_salyzyn@adaptec.com on Fri, Jun 25, 2004 at 08:59:06AM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
 Cc: linux-scsi@vger.kernel.org
 
-> >That'll happen sooner or later :)
-> 
-> So, why not now?:-)
+* Salyzyn, Mark (mark_salyzyn@adaptec.com) [040625 14:52]:
+> Your best bet to hone in on the problem is to contact Adaptec Technical
+> support, make sure you have your products TSID handy.
 
-Okay, okay - you've won :)
+I will try that, (but usually as last resort)
 
-> Sure, that's easy!:-) I kept capitals initially, because all functions are 
-> called like FindDCB, DoingSRB_Done, etc. But if we rename dc390_dcb into 
-> dc390_lun, we would have to rename all respective functions, but that's 
-> a bit too much, I think. So, is it ok to just "smallify" the types, going 
-> the Middle Way?:-)
+> The appears dead message is a result of a failure in the adapter
+> identified by performing a sequence of health checks. Finer resolution
+> of this failure mode is available in the Adaptec release for this
+> driver.
 
-Yes.
+Is there a 2.6.7 driver of Adaptec itself?  I thought they only had their
+own 2.4.* versions...
 
-> Do you want to rediff your 3rd patch yourself or should I do it? 
+> The card's firmware can be updated by using the native Linux cli tool
+> supplied with the card.
 
-I can rediff it.
+It's not in the description of the driver software.  That always worries
+me a little....  The docs are rather unsatisfactory...
+-- 
+Thanks for the answer,
 
-> Essentially, as you know, up to now the "old" EH code was used by tmscsim. 
-> Switching to the "new" one seems a pretty essential change.
+               MarkOv
 
-No.  Old EH is completely gone in 2.6.  The tmscsim driver claims to
-implement new EH but gets it wrong currently..
-
-> Is there a way 
-> I could test it a bit? I can now boot and run from IDE, loading tmscsim as 
-> a module, to which I have a disk and a CD-ROM connected. How can I 
-> exercise eh-paths a bit without destroying the hardware?:-)
-
-A good way to test EH is to improperly terminate the bus and wait for
-failures to happen or similar things.
-
+------------------------------------------------------------------------
+drs Mark A.C.J. Overmeer                                MARKOV Solutions
+       Mark@Overmeer.net                          solutions@overmeer.net
+http://Mark.Overmeer.net                   http://solutions.overmeer.net
