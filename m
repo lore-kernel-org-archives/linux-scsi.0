@@ -1,86 +1,31 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: RE: adaptec 2120S software under RedHat 8.0 and FC2
-Date: Wed, 16 Mar 2005 13:52:51 -0800
-Message-ID: <1111009971.17676.33.camel@markh1.pdx.osdl.net>
-References: <60807403EABEB443939A5A7AA8A7458BE5B303@otce2k01.adaptec.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [BK PATCH] SCSI updates for 2.6.11
+Date: Wed, 16 Mar 2005 17:21:33 -0500
+Message-ID: <1111011693.6544.5.camel@mulgrave>
+References: <1110934411.5685.39.camel@mulgrave> <42387C7C.9040407@pobox.com>
+	 <1111003679.5635.3.camel@mulgrave>  <42389797.7000004@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Received: from fire.osdl.org ([65.172.181.4]:3268 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261532AbVCPVxF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Mar 2005 16:53:05 -0500
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458BE5B303@otce2k01.adaptec.com>
+Received: from stat16.steeleye.com ([209.192.50.48]:55006 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262836AbVCPWVu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Mar 2005 17:21:50 -0500
+In-Reply-To: <42389797.7000004@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Salyzyn <mark_salyzyn@adaptec.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Ross Macintyre <raz@macs.hw.ac.uk>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Wed, 2005-03-16 at 08:02 -0500, Salyzyn, Mark wrote:
-> The applications require the Adaptec Branch of the driver in order to
-> function (mainly because the kernel.org branch drops the
-> /proc/scsi/aacraid entry). I have submitted a patch to Mark Haverkamp
-> for consideration where we add the information back to the /sys
-> filesystem, and the /proc filesystem (with CONFIG_PROC_FS defined) that
-> will help re-enable the applications.
+On Wed, 2005-03-16 at 15:31 -0500, Jeff Garzik wrote:
+> More info?  Were they dropped on purpose, or just never arrived?
+> If dropped on purpose, what was the reason?
 
-The proc info code was removed almost two years ago.  I assume that it
-was removed because of the move away from using /proc and towards
-using /sys.  Christoph, is that the reason for its removal?
+You posted substantive updates to a maintained driver.  Adam Radford is
+the maintainer, but I haven't heard anything from him (neither ACK, NAK
+or "this is my latest set of updates containing these patches") so could
+you poke him, please.
 
-Mark.
+James
 
-> 
-> There is also a Public GPL daemon, aeventd, that provides event services
-> that you may consider.
-> 
-> I will provide the sources for both under separate cover.
-> 
-> Sincerely -- Mark Salyzyn
-> 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Ross Macintyre
-> Sent: Wednesday, March 16, 2005 6:20 AM
-> To: linux-scsi@vger.kernel.org
-> Subject: adaptec 2120S software under RedHat 8.0 and FC2
-> 
-> Could someone possibly help?
-> 
-> I have upgraded a machine from RedHat 8.0 to FC2 and the
-> adaptec-browser1 and adaptec-smbe software that I installed is not
-> working
-> properly. It looks ok at first glance but if I pull a disk out I only
-> get
-> informed of the 'informational' type messages.
-> (Also the browser interface to the RAID doesn't notice that the disk has
-> been pulled)
-> 
-> These are the RPMs that I installed from adaptec:
->   adaptec-browser-1.2b-2
->   adaptec-smbe-1.01.005-0
-> 
-> and I am running this kernel: 2.6.8-1.521smp
-> 
-> Note the mail part works ok and I do get informational messages when I
-> use
-> the browser interface and I tell it to rescan, (the array is rebuilt
-> ok),
-> but after the disk is pulled, from the browser interface it still shows
-> the disk as being there, and it is only when I tell it to rescan that it
-> starts sending out the informational messages and rebuilds.
-> The messages are logged to /var/log/messages but it seems that anotifyd
-> is
-> not picking them up.
-> 
-> Maybe I just need to upgrade the firmware and put on the latest RPMs?
-> I think I am at firmware revision 7244.
-> 
-> I have attached the anotify.conf file.
-> 
-> Thanks in advance,
-> Ross
-> 
--- 
-Mark Haverkamp <markh@osdl.org>
 
