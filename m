@@ -1,94 +1,36 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: PATCH: (as355) Fix test for valid sense data present
-Date: Tue, 3 Aug 2004 15:25:43 -0400 (EDT)
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [2.6 patch] let AIC7{9,X}XX_BUILD_FIRMWARE depend
+	on!PREVENT_FIRMWARE_BUILD
+Date: 03 Aug 2004 12:31:55 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0408031517480.6693-100000@ida.rowland.org>
-References: <1088721250.40e4916212bed@wwws.torque.net>
+Message-ID: <1091561517.1942.0.camel@mulgrave>
+References: <20040801185543.GB2746@fs.tum.de>
+	<20040801191118.GA7402@mars.ravnborg.org> <410FA577.4040602@adaptec.com>
+	<410FBDAA.4070907@optonline.net>
+	<1091550985.2816.10.camel@laptop.fenrus.com>  <410FD035.6080905@adaptec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:20228 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S266807AbUHCTZn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Aug 2004 15:25:43 -0400
-In-Reply-To: <1088721250.40e4916212bed@wwws.torque.net>
+Received: from adsl-64-109-89-108.dsl.chcgil.ameritech.net ([64.109.89.108]:45514
+	"EHLO redscar") by vger.kernel.org with ESMTP id S266807AbUHCTb7
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Aug 2004 15:31:59 -0400
+In-Reply-To: <410FD035.6080905@adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, dougg@triode.net.au
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Arjan van de Ven <arjanv@redhat.com>, Nathan Bryant <nbryant@optonline.net>, Sam Ravnborg <sam@ravnborg.org>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Adrian Bunk <bunk@fs.tum.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-James:
+On Tue, 2004-08-03 at 10:49, Luben Tuikov wrote:
+> Yes, no problem.  Whatever you guys want.
+> I can provide small incremental patches (right out of
+> perforce), and generate incremantal BKs (will have to look into
+> that).
 
-This patch fixes a bug in several upper-level SCSI drivers.  According to 
-Douglas Gilbert, masking with 0x7f is wrong.  Note that in several other 
-places we already have code that masks the first sense_buffer byte with 
-0x70.
+Actually, small incremental patches across the scsi list is what I'd
+prefer.  I can take care of doing the BK stuff to pull the patches
+straight off the list.
 
-Alan Stern
+James
 
-
-On Thu, 1 Jul 2004 dougg@torque.net wrote:
-
-> > 	The test given for valid data in the sense_buffer isn't correct.
-> > 	The actual test used is ((cmd->sense_buffer[0] & 0x7f) == 0x70).
-> > 	This is mentioned in a couple of places in the document.
-> 
-> If that comparison is in linux code then the comparison
-> is wrong! The comparison that is correct is bits 4, 5 and 6
-> all being set. So we don't care about bit 7 and the bottom
-> two bits can be 0x0, 0x1, 0x2 or 0x3. The fact that linux
-> can't handle sense buffer "descriptor" format is an issue
-> that needs to be addressed soon (but is unlikely to be an
-> issue for usb-storage devices for some time).
-
-
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-
-===== drivers/scsi/scsi_lib.c 1.56 vs edited =====
---- 1.56/drivers/scsi/scsi_lib.c	Mon Jun 28 07:54:28 2004
-+++ edited/drivers/scsi/scsi_lib.c	Tue Aug  3 15:15:40 2004
-@@ -774,7 +774,7 @@
- 	 * can choose a block to remap, etc.
- 	 */
- 	if (driver_byte(result) != 0) {
--		if ((cmd->sense_buffer[0] & 0x7f) == 0x70) {
-+		if ((cmd->sense_buffer[0] & 0x70) == 0x70) {
- 			/*
- 			 * If the device is in the process of becoming ready,
- 			 * retry.
-===== drivers/scsi/sd.c 1.68 vs edited =====
---- 1.68/drivers/scsi/sd.c	Wed Jul 21 02:09:17 2004
-+++ edited/drivers/scsi/sd.c	Tue Aug  3 15:15:48 2004
-@@ -723,7 +723,7 @@
- 
- 	/* An error occurred */
- 	if (driver_byte(result) != 0 && 	/* An error occurred */
--	    (SCpnt->sense_buffer[0] & 0x7f) == 0x70) { /* Sense current */
-+	    (SCpnt->sense_buffer[0] & 0x70) == 0x70) { /* Sense current */
- 		switch (SCpnt->sense_buffer[2]) {
- 		case MEDIUM_ERROR:
- 			if (!(SCpnt->sense_buffer[0] & 0x80))
-===== drivers/scsi/sg.c 1.66 vs edited =====
---- 1.66/drivers/scsi/sg.c	Sun Jul 18 07:46:31 2004
-+++ edited/drivers/scsi/sg.c	Tue Aug  3 15:15:57 2004
-@@ -1280,7 +1280,7 @@
- 
- 		/* Following if statement is a patch supplied by Eric Youngdale */
- 		if (driver_byte(SRpnt->sr_result) != 0
--		    && (SRpnt->sr_sense_buffer[0] & 0x7f) == 0x70
-+		    && (SRpnt->sr_sense_buffer[0] & 0x70) == 0x70
- 		    && (SRpnt->sr_sense_buffer[2] & 0xf) == UNIT_ATTENTION
- 		    && sdp->device->removable) {
- 			/* Detected disc change. Set the bit - this may be used if */
-===== drivers/scsi/sr.c 1.72 vs edited =====
---- 1.72/drivers/scsi/sr.c	Wed Jul 21 02:09:17 2004
-+++ edited/drivers/scsi/sr.c	Tue Aug  3 15:16:05 2004
-@@ -241,7 +241,7 @@
- 	 * memcpy's that could be avoided.
- 	 */
- 	if (driver_byte(result) != 0 &&		/* An error occurred */
--	    (SCpnt->sense_buffer[0] & 0x7f) == 0x70) { /* Sense current */
-+	    (SCpnt->sense_buffer[0] & 0x70) == 0x70) { /* Sense current */
- 		switch (SCpnt->sense_buffer[2]) {
- 		case MEDIUM_ERROR:
- 		case VOLUME_OVERFLOW:
 
