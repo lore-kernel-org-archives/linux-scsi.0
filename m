@@ -1,39 +1,171 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: bus:id:lun to device name
-Date: Thu, 17 Jul 2003 11:29:51 +0100
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] as i/o hang with aacraid driver 2.6.0-test1
+Date: Thu, 17 Jul 2003 12:29:26 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030717112951.A18620@infradead.org>
-References: <OF19C5DBC5.6CF569E6-ON87256D64.005C1908-88256D64.005DBB45@us.ibm.com> <1058344192.3983.98.camel@lt-sv>
+Message-ID: <20030717102926.GE833@suse.de>
+References: <1058310172.981.7.camel@markh1.pdx.osdl.net> <1058359278.1856.8.camel@mulgrave> <20030716124549.GX833@suse.de> <1058360162.1850.15.camel@mulgrave> <20030716132036.GB833@suse.de> <1058364455.1856.28.camel@mulgrave> <20030716170456.GK833@suse.de> <20030717015756.135a3f5a.akpm@osdl.org> <20030717085952.GX833@suse.de> <3F1672D9.7070309@cyberone.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:526 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S271387AbTGQKPA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jul 2003 06:15:00 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:37786 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S271385AbTGQKOh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Jul 2003 06:14:37 -0400
 Content-Disposition: inline
-In-Reply-To: <1058344192.3983.98.camel@lt-sv>; from Stefan.Voelkel@millenux.com on Wed, Jul 16, 2003 at 10:29:52AM +0200
+In-Reply-To: <3F1672D9.7070309@cyberone.com.au>
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Voelkel <Stefan.Voelkel@millenux.com>
-Cc: Bryan Henderson <hbryan@us.ibm.com>, Kurt Garloff <garloff@suse.de>, linux-scsi@vger.kernel.org
+To: Nick Piggin <piggin@cyberone.com.au>
+Cc: Andrew Morton <akpm@osdl.org>, James.Bottomley@steeleye.com, markh@osdl.org, cliffw@osdl.org, linux-scsi@vger.kernel.org
 
-On Wed, Jul 16, 2003 at 10:29:52AM +0200, Stefan Voelkel wrote:
-> Yes, basically. I have this information: host_id:bus:target:lun, and now
-> I'd like the "device file name with which one normally access' this
-> specific lun".
+On Thu, Jul 17 2003, Nick Piggin wrote:
+> 
+> 
+> Jens Axboe wrote:
+> 
+> >On Thu, Jul 17 2003, Andrew Morton wrote:
+> >
+> >>So this is what I ended up with.  Could we please have confirmation that 
+> >>it
+> >>fixes the aacraid hang?
+> >>
+> >
+> >It doesn't, it's just a pre-requisite to fixing the bug :-)
+> >
+> >Nick should chime in with how we wants it to be handled from
+> >blk_requeue_request(), he needs to decrease dispatched from there. We
+> >could always add some hook for it of course, but...
+> >
+> 
+> Well you could just put an elv_completed_request in there, but
 
-This is not possible in Linux as it's a userspace policy decision.
-E.g. scsi cdrom devices at least have three commonly used naming schemes.
+Yeah, I told Andrew to add that for now.
 
-> Let me give you some details (hope that will make it clearer). I am
-> implementing FC-HBA (ftp://ftp.t11.org/t11/pub/fc/hba/03-108v2.pdf). The
-> problem occures with HBA_GetFcpTargetMapping() on page 73 (7.4.4), the
-> parameters are describerd on page 31 (6.6.1) and the specific struct is
-> HBA_ScsiId (6.6.1.5), actually the member OSDeviceName (6.6.2.11).
+> I suppose it really wants an elv_requeue_request - which would
+> just default to elv_add_request for other schedulers.
 
-This doesn't make any sense in a linux enviroment.  I'd rather try to
-get that draft fixed before it's ratified instead of working around
-it especially as they already mention Linux in some examples.
+I'd rather keep it seperate, ie just a requeue notifier. How's this?
 
-OTOH it's probably totally irrelevant for real life anyway.
+===== drivers/block/elevator.c 1.46 vs edited =====
+--- 1.46/drivers/block/elevator.c	Sat Jul  5 08:52:45 2003
++++ edited/drivers/block/elevator.c	Thu Jul 17 12:27:19 2003
+@@ -214,6 +214,12 @@
+ 		e->elevator_merge_req_fn(q, rq, next);
+ }
+ 
++void elv_requeue_request(request_queue_t *q, struct request *rq)
++{
++	if (q->elevator.elevator_requeue_req_fn)
++		q->elevator.elevator_requeue_req_fn(q, rq);
++}
++
+ void __elv_add_request(request_queue_t *q, struct request *rq, int at_end,
+ 		       int plug)
+ {
+===== drivers/block/ll_rw_blk.c 1.192 vs edited =====
+--- 1.192/drivers/block/ll_rw_blk.c	Sun Jul 13 14:15:43 2003
++++ edited/drivers/block/ll_rw_blk.c	Thu Jul 17 12:23:09 2003
+@@ -1494,6 +1494,24 @@
+ 
+ 	return rq;
+ }
++/**
++ * blk_requeue_request - put a request back on queue
++ * @q:		request queue where request should be inserted
++ * @rq:		request to be inserted
++ *
++ * Description:
++ *    Drivers often keep queueing requests until the hardware cannot accept
++ *    more, when that condition happens we need to put the request back
++ *    on the queue. Must be called with queue lock held.
++ */
++void blk_requeue_request(request_queue_t *q, struct request *rq)
++{
++	if (blk_rq_tagged(rq))
++		blk_queue_end_tag(q, rq);
++
++	elv_requeue_request(q, rq);
++	__elv_add_request(q, rq, 0, 0);
++}
+ 
+ /**
+  * blk_insert_request - insert a special request in to a request queue
+===== drivers/scsi/scsi_lib.c 1.99 vs edited =====
+--- 1.99/drivers/scsi/scsi_lib.c	Mon Jun 30 03:14:44 2003
++++ edited/drivers/scsi/scsi_lib.c	Thu Jul 17 12:22:46 2003
+@@ -444,22 +444,8 @@
+  */
+ static void scsi_requeue_command(struct request_queue *q, struct scsi_cmnd *cmd)
+ {
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(q->queue_lock, flags);
+-	cmd->request->special = cmd;
+-	if (blk_rq_tagged(cmd->request))
+-		blk_queue_end_tag(q, cmd->request);
+-
+-	/*
+-	 * set REQ_SPECIAL - we have a command
+-	 * clear REQ_DONTPREP - we assume the sg table has been 
+-	 *	nuked so we need to set it up again.
+-	 */
+-	cmd->request->flags |= REQ_SPECIAL;
+ 	cmd->request->flags &= ~REQ_DONTPREP;
+-	__elv_add_request(q, cmd->request, 0, 0);
+-	spin_unlock_irqrestore(q->queue_lock, flags);
++	blk_insert_request(q, cmd->request, 1, cmd);
+ 
+ 	scsi_run_queue(q);
+ }
+@@ -1213,9 +1199,7 @@
+ 	 * later time.
+ 	 */
+ 	spin_lock_irq(q->queue_lock);
+-	if (blk_rq_tagged(req))
+-		blk_queue_end_tag(q, req);
+-	__elv_add_request(q, req, 0, 0);
++	blk_requeue_request(q, req);
+ 	sdev->device_busy--;
+ 	if(sdev->device_busy == 0)
+ 		blk_plug_device(q);
+===== include/linux/blkdev.h 1.116 vs edited =====
+--- 1.116/include/linux/blkdev.h	Sat Jul  5 08:52:51 2003
++++ edited/include/linux/blkdev.h	Wed Jul 16 15:18:06 2003
+@@ -491,6 +491,7 @@
+ extern struct request *blk_get_request(request_queue_t *, int, int);
+ extern void blk_put_request(struct request *);
+ extern void blk_insert_request(request_queue_t *, struct request *, int, void *);
++extern void blk_requeue_request(request_queue_t *, struct request *);
+ extern void blk_plug_device(request_queue_t *);
+ extern int blk_remove_plug(request_queue_t *);
+ extern void blk_recount_segments(request_queue_t *, struct bio *);
+===== include/linux/elevator.h 1.25 vs edited =====
+--- 1.25/include/linux/elevator.h	Sat Jul  5 08:52:40 2003
++++ edited/include/linux/elevator.h	Thu Jul 17 12:24:29 2003
+@@ -13,6 +13,7 @@
+ typedef void (elevator_add_req_fn) (request_queue_t *, struct request *, struct list_head *);
+ typedef int (elevator_queue_empty_fn) (request_queue_t *);
+ typedef void (elevator_remove_req_fn) (request_queue_t *, struct request *);
++typedef void (elevator_requeue_req_fn) (request_queue_t *, struct request *);
+ typedef struct request *(elevator_request_list_fn) (request_queue_t *, struct request *);
+ typedef struct list_head *(elevator_get_sort_head_fn) (request_queue_t *, struct request *);
+ typedef void (elevator_completed_req_fn) (request_queue_t *, struct request *);
+@@ -33,6 +34,7 @@
+ 	elevator_next_req_fn *elevator_next_req_fn;
+ 	elevator_add_req_fn *elevator_add_req_fn;
+ 	elevator_remove_req_fn *elevator_remove_req_fn;
++	elevator_requeue_req_fn *elevator_requeue_req_fn;
+ 
+ 	elevator_queue_empty_fn *elevator_queue_empty_fn;
+ 	elevator_completed_req_fn *elevator_completed_req_fn;
+@@ -64,6 +66,7 @@
+ 			       struct request *);
+ extern void elv_merged_request(request_queue_t *, struct request *);
+ extern void elv_remove_request(request_queue_t *, struct request *);
++extern void elv_requeue_request(request_queue_t *, struct request *);
+ extern int elv_queue_empty(request_queue_t *);
+ extern struct request *elv_next_request(struct request_queue *q);
+ extern struct request *elv_former_request(request_queue_t *, struct request *);
+
+-- 
+Jens Axboe
 
