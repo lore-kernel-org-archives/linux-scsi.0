@@ -1,61 +1,38 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Re: USB storage problems on OHCI..
-Date: Mon, 22 Sep 2003 15:14:15 -0400 (EDT)
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <Pine.LNX.4.44L0.0309221511300.2840-100000@ida.rowland.org>
-References: <Pine.LNX.4.44.0309221133220.2153-100000@home.osdl.org>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
+Date: 22 Sep 2003 14:28:56 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1064258938.15409.63.camel@mulgrave>
+References: <UTC200309221855.h8MItM216884.aeb@smtp.cwi.nl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-In-Reply-To: <Pine.LNX.4.44.0309221133220.2153-100000@home.osdl.org>
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: David Brownell <david-b@pacbell.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nat9.steeleye.com ([65.114.3.137]:49926 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261808AbTIVT3s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Sep 2003 15:29:48 -0400
+In-Reply-To: <UTC200309221855.h8MItM216884.aeb@smtp.cwi.nl>
 List-Id: linux-scsi@vger.kernel.org
+To: Andries.Brouwer@cwi.nl
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Linus Torvalds <torvalds@osdl.org>, david-b@pacbell.net, greg@kroah.com, hch@infradead.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, mdharm-usb@one-eyed-alien.net, stern@rowland.harvard.edu
 
-On Mon, 22 Sep 2003, Linus Torvalds wrote:
-
-> Yes. Additional testing (making the code just increase the size of the 
-> transfer until it fails) shows that a size of 63 still works, but a size 
-> of 64 bytes fails.
+On Mon, 2003-09-22 at 13:55, Andries.Brouwer@cwi.nl wrote:
+>         if (sdkp->media_present) {
+>                 sd_read_capacity(sdkp, disk->disk_name, sreq, buffer);
+>                 if (sdp->removable)
+>                         sd_read_write_protect_flag(sdkp, disk->disk_name,
+>                                         sreq, buffer);
+>                 sd_read_cache_type(sdkp, disk->disk_name, sreq, buffer);
+>         }
 > 
-> Actually - with a 64-byte transfer, we appear to get the 64 bytes ok, but 
-> the subsequent CSW status word read fails, so the 64-byte case seems to be 
-> the one that starts confusing the device.
-> 
-> If I remember right, USB-1 "big packets" are 64 bytes in size, and a 
-> 64-byte bulk transfer would be two packets (one full-sized one, one 
-> zero-sized one).
+> and I suppose we could skip sd_read_cache_type() in the
+> hot-pluggable case - a flag that USB storage could set.
 
-It's not quite that simple.  If the host requested a transfer that was 
-larger than 64 bytes and the device only had 64 bytes of data available, 
-then yes, it would send a 64-byte packet followed by a short 0-byte packet 
-to indicate an early termination.  But if (as in this case) the host 
-requested a 64-byte transfer, the device would send exactly those 64 bytes 
-in a single packet and nothing else -- there being no need to indicate an 
-early termination.
+what about just having a conservative mode for sd?  This could still
+internally be a set of flags, just one single way of clearing them all
+from slave configure.  For the most conservative setting, we could
+probably dump spin up, read write protect, and read cache type.
 
->  So this seems to support the notion that the device is 
-> fine as long as it can fit the whole bulk transfer in just one packet.
-> 
-> Which cleanly explains why EHCI "just worked". 
+James
 
-Alan Stern
-
-
-
--------------------------------------------------------
-This sf.net email is sponsored by:ThinkGeek
-Welcome to geek heaven.
-http://thinkgeek.com/sf
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
