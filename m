@@ -1,28 +1,41 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 19/19] drivers/scsi/sata_vsc: Use the DMA_{64,32}BIT_MASK
- constants
-Date: Thu, 24 Feb 2005 00:34:28 -0500
-Message-ID: <421D6764.9030701@pobox.com>
-References: <20050220171331.GT14375@helium.tklauser.home>
+From: "Lazaro Hairston" <chihak@rateznow.com>
+Subject: Re-finance at 3.25 fixed
+Date: Mon, 14 Feb 2005 06:36:10 -0700
+Message-ID: <200410031471.i93CnhTw003164__10653.8034779534$1109225278$gmane$org@www7.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:42638 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261820AbVBXFeo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Feb 2005 00:34:44 -0500
-In-Reply-To: <20050220171331.GT14375@helium.tklauser.home>
+Content-Type: text/plain;
+Received: from d53-97-132.nap.wideopenwest.com ([64.53.132.97]:20490 "HELO
+	d53-97-132.nap.wideopenwest.com") by vger.kernel.org with SMTP
+	id S261834AbVBXGJY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Feb 2005 01:09:24 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tobias Klauser <tklauser@nuerscht.ch>
-Cc: kernel-janitors@lists.osdl.org, linux-scsi@vger.kernel.org
+To: linux-net-owner@vger.kernel.org
+Cc: linux-newbie@vger.kernel.org, linux-perf@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-raid-owner@vger.kernel.org, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-serial@vger.kernel.org, linux-smp@vger.kernel.org, linux-sound@vger.kernel.org, linux-tape@vger.kernel.org, linux-x25@vger.kernel.org
 
-Applied patch #4 and #19 to libata.
+Hello,
 
-Please do not include "Hello," or "Description:" in your patch 
-description, as I must hand-edit these out manually.
+ We tried contacting you awhile ago about your low interest morta(ge rate.
 
-	Jeff
+ You have qualified for the lowest rate in years...
+
+ You could get over $380,000 for as little as $500 a month!
+
+ Ba(d credit? Doesn't matter, low rates are fixed no matter what!
+
+ 
+ To get a free, no obli,gation consultation click below:
+
+ http://www.rateznow.com/x/loan.php?id=nu
 
 
 
+ Best Regards,
+
+ Benjamin Kenny
+ 
+ to be remov(ed:	http://www.rateznow.com/x/st.html
+
+ this process takes one week, so please be patient. we do our 
+ best to take your email/s off but you have to fill out a rem/ove
+ or else you will continue to recieve email/s.
