@@ -1,48 +1,49 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
+From: Arjan van de Ven <arjanv@redhat.com>
 Subject: Re: Why are MegaRAID drivers mutually exclusive?
-Date: Wed, 10 Nov 2004 13:42:21 -0600
-Message-ID: <20041110194221.GA28524@lists.us.dell.com>
-References: <0E3FA95632D6D047BA649F95DAB60E570562C128@exa-atlanta>
+Date: Thu, 11 Nov 2004 09:01:20 +0100
+Message-ID: <1100160080.2646.10.camel@laptop.fenrus.org>
+References: <0E3FA95632D6D047BA649F95DAB60E570562C174@exa-atlanta>
+	 <20041110220854.GB28524@lists.us.dell.com>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yiloRAIiMIUQ7c+ABpL6"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from linux.us.dell.com ([143.166.224.162]:31101 "EHLO
-	lists.us.dell.com") by vger.kernel.org with ESMTP id S262049AbUKJTmt
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Nov 2004 14:42:49 -0500
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570562C128@exa-atlanta>
+Received: from mx1.redhat.com ([66.187.233.31]:22659 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S262188AbUKKICq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Nov 2004 03:02:46 -0500
+In-Reply-To: <20041110220854.GB28524@lists.us.dell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Cc: 'Chris Adams' <cmadams@hiwaay.net>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-
-On Wed, Nov 10, 2004 at 02:24:06PM -0500, Bagalkote, Sreenivas wrote:
-> The new and old drivers are mutually exclusive to the extent that
-> both cannot be loaded simultaneously as they both work on same
-> hardware. It only seems logical that this exclusivity is represented
-> in Kconfig as well.
-
-There are three issues here that need to be addressed.
-1) megaraid_mbox doesn't currently handle all of Chris's hardware.
-   It's missing some PCI IDs which it should be able to handle.
-   101e:1960 101e:0475, aka PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID3
-			    PCI_DEVICE_ID_AMI, PCI_SUBSYS_ID_PERC3_SC 
-
-2) megaraid_mbox doesn't handle other sets of hardware it should be
-   able to handle (Dell PERC2/{SC,DC}).  I am not sure why.
-
-3) no megaraid_ioport driver has ever been produced, which was the
-   original reason for splitting megaraid_mm and megaraid_mbox.  This
-   driver is necessary for Chris's other older hardware.
-   PCI 101e:9010, aka PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_MEGARAID
+To: Matt Domsch <Matt_Domsch@dell.com>
+Cc: "Mukker, Atul" <Atulm@lsil.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, 'Chris Adams' <cmadams@hiwaay.net>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
 
-Thanks,
-Matt
+--=-yiloRAIiMIUQ7c+ABpL6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Matt Domsch
-Sr. Software Engineer, Lead Engineer
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+On Wed, 2004-11-10 at 16:08 -0600, Matt Domsch wrote:
+
+> How about you remove all the PCI IDs from the 2.00.3 driver that the
+> 2.20 driver handles, so that they're mutually exclusive again?
+
+Are they mutually exclusive in other places too? (eg in the /proc stuff
+it creates... well I guess the new driver only does (or should do) sysfs
+of course)
+
+
+--=-yiloRAIiMIUQ7c+ABpL6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQBBkxxQpv2rCoFn+CIRAjOLAKCF304pSa7LxICdzzfbu2NlzBfslACdGzA0
+kd7XTBzkAFKSTDOJDdT0Hpk=
+=+S9Q
+-----END PGP SIGNATURE-----
+
+--=-yiloRAIiMIUQ7c+ABpL6--
+
