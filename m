@@ -1,72 +1,71 @@
-From: Arjan van de Ven <arjanv@redhat.com>
-Subject: Re: [PATCH][RELEASE] megaraid 2.10.2 Driver
-Date: Tue, 23 Mar 2004 09:12:36 +0100
+From: James Pearson <james-p@moving-picture.com>
+Subject: Re: Write Performance double Read Performance
+Date: Tue, 23 Mar 2004 11:28:16 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1080029556.5296.2.camel@laptop.fenrus.com>
-References: <0E3FA95632D6D047BA649F95DAB60E570230C77A@exa-atlanta.se.lsil.com>
-	 <405F71CB.7000902@pobox.com>
-Reply-To: arjanv@redhat.com
+Message-ID: <40601F50.F7A85DF0@moving-picture.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QZuH8Ey5KHL0ZnSoGFsi"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:32912 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S262378AbUCWIMn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Mar 2004 03:12:43 -0500
-In-Reply-To: <405F71CB.7000902@pobox.com>
+Received: from mpc-26.sohonet.co.uk ([193.203.82.251]:18305 "EHLO
+	moving-picture.com") by vger.kernel.org with ESMTP id S262465AbUCWL2W
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Mar 2004 06:28:22 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Terrence Martin <tmartin@physics.ucsd.edu>
 
+Terrence Martin <tmartin@physics.ucsd.edu> wrote:
+>
+> I have the following system(s)
+> 
+> Dual 2.8 Ghz Xeon 2U Supermicro Server with 2GB RAM
+> Qlogic QLA2310f Controller
+> 
+> attached to an...
+> 
+> Infortrend A16F with 16 300GB WD IDE PATA Drives
+> The array as a RAID 5 Array with 3 partitions of 1.4TB each. I have 
+> mounted one of the partitions to test.
+> 
+> The OS is....
+> 
+> Fedora Core 1 with the latest Fedora 2.4 Kernel (2.4.22-1.2174.nptlsmp)
+> I have compiled the QLA drivers from the Qlogic site and am using v6.06.10.
+> 
+> The problem I am noticing is that while doing an IOZone performance test 
+> I get nice write performance when the test gets to large files. However 
+> my read performance seems to be a little over half my write.   I thought 
+> the read should always be faster than the write?
 
---=-QZuH8Ey5KHL0ZnSoGFsi
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Unfortunately I don't know why, but this is something I've been thinking
+of asking as well.
 
-On Tue, 2004-03-23 at 00:07, Jeff Garzik wrote:
-> Bagalkote, Sreenivas wrote:
-> > Hello,
-> > @@ -45,6 +46,10 @@
-> > =20
-> >  #include "megaraid2.h"
-> > =20
-> > +#ifdef LSI_CONFIG_COMPAT
-> > +#include <asm/ioctl32.h>
-> > +#endif
-> > +
->=20
-> For upstream, this should just be CONFIG_COMPAT I presume.
+I've seen similar behaviour on a 2.6.3 kernel machine (dual 2.4 Xeons,
+2GB RAM) using an external U160 SCSI Chaparral hardware RAID 5 on a
+aic79xx controller. I'm using XFS on the RAID.
 
-well we should fix all arch's to provide a dummy header I guess so that
-we don't need fugly ifdefs.
-> > =20
-> > +#ifdef LSI_CONFIG_COMPAT
-> > +		/*
-> > +		 * Register the 32-bit ioctl conversion
-> > +		 */
-> > +		register_ioctl32_conversion(MEGAIOCCMD,
-> > megadev_compat_ioctl);
-> > +#endif
-> > +
->=20
-> ditto
+I've just been using 'lmdd' to/from a 2Gb file - I also see writes about
+twice the speed of reads (I'm using the fsync or sync option to lmdd
+with the writes).
 
-ditto about providing a stub register_ioctl32_conversion().
+However, if I increase the readahead on the disk using blockdev from the
+default of 256 to 4096, I can get read speeds to be about the same as
+the writes.
 
+However, increasing the readahead seems to help this simple streaming
+case, but as yet I don't know if it will work in a general file serving
+(NFS) situation.
 
+> Before I went down the road of compiling various kernels etc I thought I 
+> would post this to linux-scsi to see if it is just some configuration 
+> setting to a driver or kernel parameter that needs to be tweaked.  Of 
+> course I could be completely reading this wrong but bonnie++ also 
+> appears to give similar results and vmstat is similarly low on the read 
+> side.
 
+I would also like to know of any optimizations that can be made.
 
---=-QZuH8Ey5KHL0ZnSoGFsi
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Thanks
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
-
-iD8DBQBAX/F0xULwo51rQBIRAtsKAKCVMezlJEz8SKL2kkK+Yx7bTNtP/wCfd++j
-rnLTi2xp20KsKgG5vj/Vdi4=
-=4Sh7
------END PGP SIGNATURE-----
-
---=-QZuH8Ey5KHL0ZnSoGFsi--
-
+James Pearson
