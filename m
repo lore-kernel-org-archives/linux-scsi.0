@@ -1,54 +1,49 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: TMSCSIM [2.6]
-Date: Mon, 24 Nov 2003 00:29:16 +0100
+From: Ken Tyler <kent@werple.net.au>
+Subject: Re: State of NCR53c7xx based drivers
+Date: Mon, 24 Nov 2003 16:12:02 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031123232916.GH24247@tpkurt.garloff.de>
-References: <Pine.LNX.4.44.0311230024300.1354-100000@poirot.grange> <m365haomqt.fsf@merlin.emma.line.org>
+Message-ID: <Pine.LNX.4.44.0311241553080.17702-100000@leo.crm114.net>
+References: <20031123232126.B1657@sygehus.dk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="9jHkwA2TBA/ec6v+"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:8910 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S263528AbTKWXaQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Nov 2003 18:30:16 -0500
-Content-Disposition: inline
-In-Reply-To: <m365haomqt.fsf@merlin.emma.line.org>
+Received: from gizmo09bw.bigpond.com ([144.140.70.19]:31463 "HELO
+	gizmo09bw.bigpond.com") by vger.kernel.org with SMTP
+	id S263618AbTKXFMG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2003 00:12:06 -0500
+In-Reply-To: <20031123232126.B1657@sygehus.dk>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
-Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, linux-scsi@vger.kernel.org
+To: Rask Ingemann Lambertsen <rask@sygehus.dk>
+Cc: Linux/m68k <linux-m68k@lists.linux-m68k.org>, linux-scsi@vger.kernel.org
+
+On Sun, 23 Nov 2003, Rask Ingemann Lambertsen wrote:
+
+> I have an Amiga with a CyberStorm PPC board and wouldn't mind having Linux
+> running on it. What would be a good name for the driver?
+
+Which Amiga and which PPC board?
+
+SCSI works on ppc 1200s but not reliably on ppc 4000s.  I tried many, many 
+times to fix 53c710.c (with endless help from Richard Hirst) all to no 
+avail.
+
+It will work for a variable amount of time and then machine locks up,
+CDROMS and ZIPs seem to run longer than HDs.
+
+A hacked together sim710.c behaved exactly the same.  This is with Quantum 
+drives.
+
+An odd as it might seem when I bought a Seagate drive for the PPC on board
+SCSI it did the same thing too.
+
+At this point I decided the driver was probably OK all along and the 
+problem is else where, either in the logic that connects ZORRO to PPC or a 
+deadlock in interrupt code but this is stabbing in the dark.
+
+Good luck,
+
+Ken.   
 
 
---9jHkwA2TBA/ec6v+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-Hi Matthias,
 
-On Sun, Nov 23, 2003 at 09:26:02PM +0100, Matthias Andree wrote:
-> Out if interest: Why "try_sync_nego =3D 0"?
-
-It's just the default for this variable.
-It's later set to 1 if we're issueing an INQUIRY or if we're talking to
-LUN0, the target did report to support SyncTransfers and the Sync=20
-Negotiation has not beend done yet and we're issueing a REQUEST_SENSE.
-
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
-
---9jHkwA2TBA/ec6v+
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (GNU/Linux)
-
-iD8DBQE/wULLxmLh6hyYd04RAiN6AJ9cpwvs/0o/BybBDqpmagRUdVLwBwCgtQy6
-dP92ASEtBgPQm45h1ciWpdw=
-=vLDl
------END PGP SIGNATURE-----
-
---9jHkwA2TBA/ec6v+--
