@@ -1,353 +1,424 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] scsi-misc-2.5 remove scsi_device list_lock (take 2)
-Date: Tue, 6 May 2003 17:59:18 -0700
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH][RESEND] rationalize scsi_queue_next & friends
+Date: Wed, 7 May 2003 14:57:28 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030506175918.A22717@beaverton.ibm.com>
+Message-ID: <20030507145728.A10284@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bi01p1.co.us.ibm.com ([32.97.110.142]:50660 "EHLO laptop")
-	by vger.kernel.org with ESMTP id S262440AbTEGAwb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 May 2003 20:52:31 -0400
+Received: from verein.lst.de ([212.34.181.86]:37124 "EHLO verein.lst.de")
+	by vger.kernel.org with ESMTP id S263152AbTEGMpD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 May 2003 08:45:03 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-Revised patch (against scsi-misc-2.5) based on comments to use the
-sdev->sdev_lock instead of the sdev->list_lock.
+(1)  second arg to scsi_queue_next_request() is only ever non-NULL
+     inside scsi_lib.c and only used in the first conditional inside
+     that function - ripped out of scsi_queue_next_request() and
+     put into a new helper scsi_requeue_command().
+(2)  Most remaining callers of are in the form 
+	scsi_put_command(cmd);
+	scsi_queue_next_request(q, NULL);
+     add a new helper, scsi_next_command() for them.
+(2b) many callers of that still contain a repeated codepath, namely
+     everything from scsi_release_request except the final kfree.
+     New helper __scsi_release_request() for those.
+(3)  All remaining callers loop over the devices of a host and call
+     scsi_queue_next_request() on them - new helper
+     scsi_run_host_queues().
+(4)  scsi_queue_next_request() renamed to scsi_run_queue(), second
+     arg is gone and it's static to scsi_lib.c now.
 
-diff -purN -X /home/patman/dontdiff 2.5-cur/drivers/scsi/dpt_i2o.c rmcmd_lock-2.5-cur/drivers/scsi/dpt_i2o.c
---- 2.5-cur/drivers/scsi/dpt_i2o.c	Tue May  6 16:22:34 2003
-+++ rmcmd_lock-2.5-cur/drivers/scsi/dpt_i2o.c	Tue May  6 17:23:14 2003
-@@ -2510,7 +2510,7 @@ static void adpt_fail_posted_scbs(adpt_h
- 
- 	list_for_each_entry(d, &pHba->host->my_devices, siblings) {
- 		unsigned long flags;
--		spin_lock_irqsave(&d->list_lock, flags);
-+		spin_lock_irqsave(&d->sdev_lock, flags);
- 		list_for_each_entry(cmd, &d->cmd_list, list) {
- 			if(cmd->serial_number == 0){
- 				continue;
-@@ -2518,7 +2518,7 @@ static void adpt_fail_posted_scbs(adpt_h
- 			cmd->result = (DID_OK << 16) | (QUEUE_FULL <<1);
- 			cmd->scsi_done(cmd);
- 		}
--		spin_unlock_irqrestore(&d->list_lock, flags);
-+		spin_unlock_irqrestore(&d->sdev_lock, flags);
- 	}
+
+--- 1.109/drivers/scsi/scsi.c	Tue Apr 29 13:40:45 2003
++++ edited/drivers/scsi/scsi.c	Wed Apr 30 22:09:21 2003
+@@ -176,6 +176,16 @@
+ 	return sreq;
  }
  
-diff -purN -X /home/patman/dontdiff 2.5-cur/drivers/scsi/hosts.c rmcmd_lock-2.5-cur/drivers/scsi/hosts.c
---- 2.5-cur/drivers/scsi/hosts.c	Tue May  6 16:22:34 2003
-+++ rmcmd_lock-2.5-cur/drivers/scsi/hosts.c	Tue May  6 17:23:14 2003
-@@ -204,7 +204,7 @@ static int scsi_check_device_busy(struct
- 	 * device.  If any of them are busy, then set the state
- 	 * back to inactive and bail.
- 	 */
--	spin_lock_irqsave(&sdev->list_lock, flags);
-+	spin_lock_irqsave(&sdev->sdev_lock, flags);
- 	list_for_each_entry(scmd, &sdev->cmd_list, list) {
- 		if (scmd->request && scmd->request->rq_status != RQ_INACTIVE)
- 			goto active;
-@@ -217,7 +217,7 @@ static int scsi_check_device_busy(struct
- 		if (scmd->request)
- 			scmd->request->rq_status = RQ_SCSI_DISCONNECTING;
- 	}
--	spin_unlock_irqrestore(&sdev->list_lock, flags);
-+	spin_unlock_irqrestore(&sdev->sdev_lock, flags);
- 
- 	return 0;
- 
-@@ -234,7 +234,7 @@ active:
- 		}
- 	}
- 
--	spin_unlock_irqrestore(&sdev->list_lock, flags);
-+	spin_unlock_irqrestore(&sdev->sdev_lock, flags);
- 	printk(KERN_ERR "Device busy???\n");
- 	return 1;
- }
-diff -purN -X /home/patman/dontdiff 2.5-cur/drivers/scsi/scsi.c rmcmd_lock-2.5-cur/drivers/scsi/scsi.c
---- 2.5-cur/drivers/scsi/scsi.c	Tue Apr 29 12:24:04 2003
-+++ rmcmd_lock-2.5-cur/drivers/scsi/scsi.c	Tue May  6 17:23:14 2003
-@@ -219,8 +219,8 @@ static struct scsi_host_cmd_pool scsi_cm
- 
- static DECLARE_MUTEX(host_cmd_pool_mutex);
- 
--static struct scsi_cmnd *__scsi_get_command(struct Scsi_Host *shost,
--					    int gfp_mask)
-+static struct scsi_cmnd *scsi_alloc_cmd(struct Scsi_Host *shost,
-+					       int gfp_mask)
- {
- 	struct scsi_cmnd *cmd;
- 
-@@ -242,71 +242,114 @@ static struct scsi_cmnd *__scsi_get_comm
- 	return cmd;
- }
- 
--/*
-- * Function:	scsi_get_command()
-- *
-- * Purpose:	Allocate and setup a scsi command block
-- *
-- * Arguments:	dev	- parent scsi device
-- *		gfp_mask- allocator flags
-- *
-- * Returns:	The allocated scsi command structure.
-- */
--struct scsi_cmnd *scsi_get_command(struct scsi_device *dev, int gfp_mask)
-+static void scsi_init_cmd(struct scsi_device *dev, struct scsi_cmnd *cmd)
- {
--	struct scsi_cmnd *cmd = __scsi_get_command(dev->host, gfp_mask);
--
- 	if (likely(cmd != NULL)) {
--		unsigned long flags;
--
- 		memset(cmd, 0, sizeof(*cmd));
- 		cmd->device = dev;
- 		cmd->state = SCSI_STATE_UNUSED;
- 		cmd->owner = SCSI_OWNER_NOBODY;
- 		init_timer(&cmd->eh_timeout);
- 		INIT_LIST_HEAD(&cmd->list);
--		spin_lock_irqsave(&dev->list_lock, flags);
- 		list_add_tail(&cmd->list, &dev->cmd_list);
--		spin_unlock_irqrestore(&dev->list_lock, flags);
- 	}
++void __scsi_release_request(struct scsi_request *sreq)
++{
++	if (likely(sreq->sr_command != NULL)) {
++		struct scsi_cmnd *cmd = sreq->sr_command;
++
++		sreq->sr_command = NULL;
++		scsi_next_command(cmd);
++	}
 +}
 +
-+/*
-+ * Function:	__scsi_get_command()
-+ *
-+ * Purpose:	Allocate and setup a scsi command block. This function is
-+ * 		extern but not exported outside of scsi.
-+ *
-+ * Arguments:	dev	- parent scsi device
-+ *		gfp_mask- allocator flags
-+ *
-+ * Locks:	Called with sdev_lock held.
-+ *
-+ * Returns:	The allocated scsi command structure.
-+ */
-+struct scsi_cmnd *__scsi_get_command(struct scsi_device *dev, int gfp_mask)
-+{
-+	struct scsi_cmnd *cmd = scsi_alloc_cmd(dev->host, gfp_mask);
- 
-+	scsi_init_cmd(dev, cmd);
- 	return cmd;
- }				
- 
  /*
-- * Function:	scsi_put_command()
-+ * Function:	scsi_get_command()
-+ *
-+ * Purpose:	Allocate and setup a scsi command block. This function is
-+ * 		exported.
-+ *
-+ * Arguments:	dev	- parent scsi device
-+ *		gfp_mask- allocator flags
-+ *
-+ * Returns:	Nothing.
-+ */
-+struct scsi_cmnd *scsi_get_command(struct scsi_device *dev, int gfp_mask)
-+{
-+	struct scsi_cmnd *cmd = scsi_alloc_cmd(dev->host, gfp_mask);
-+	unsigned long flags;
-+	
-+	spin_lock_irqsave(&dev->sdev_lock, flags);
-+	scsi_init_cmd(dev, cmd);
-+	spin_unlock_irqrestore(&dev->sdev_lock, flags);
-+	return cmd;
-+}
-+
-+/*
-+ * Function:	__scsi_put_command()
+  * Function:    scsi_release_request
   *
-- * Purpose:	Free a scsi command block
-+ * Purpose:	Free a scsi command block. This function is extern but not
-+ * 		exported outside of scsi.
-  *
-  * Arguments:	cmd	- command block to free
-  *
-  * Returns:	Nothing.
-  *
-+ * Locks:	Called with sdev_lock held.
-+ *
-  * Notes:	The command must not belong to any lists.
+@@ -187,14 +197,7 @@
   */
--void scsi_put_command(struct scsi_cmnd *cmd)
-+void __scsi_put_command(struct scsi_cmnd *cmd)
+ void scsi_release_request(struct scsi_request *sreq)
  {
- 	struct Scsi_Host *shost = cmd->device->host;
--	unsigned long flags;
- 	
- 	/* serious error if the command hasn't come from a device list */
--	spin_lock_irqsave(&cmd->device->list_lock, flags);
- 	BUG_ON(list_empty(&cmd->list));
- 	list_del_init(&cmd->list);
--	spin_unlock(&cmd->device->list_lock);
--	/* changing locks here, don't need to restore the irq state */
- 	spin_lock(&shost->free_list_lock);
- 	if (unlikely(list_empty(&shost->free_list))) {
- 		list_add(&cmd->list, &shost->free_list);
- 		cmd = NULL;
- 	}
--	spin_unlock_irqrestore(&shost->free_list_lock, flags);
-+	spin_unlock(&shost->free_list_lock);
- 
- 	if (likely(cmd != NULL))
- 		kmem_cache_free(shost->cmd_pool->slab, cmd);
+-	if (likely(sreq->sr_command != NULL)) {
+-    		struct request_queue *q = sreq->sr_device->request_queue;
+-
+-		scsi_put_command(sreq->sr_command);
+-		sreq->sr_command = NULL;
+-		scsi_queue_next_request(q, NULL);
+-	}
+-
++	__scsi_release_request(sreq);
+ 	kfree(sreq);
  }
  
- /*
-+ * Function:	scsi_put_command()
-+ *
-+ * Purpose:	Free a scsi command block. This function is exported.
-+ *
-+ * Arguments:	cmd	- command block to free
-+ *
-+ * Returns:	Nothing.
-+ */
-+void scsi_put_command(struct scsi_cmnd *cmd)
-+{
-+	struct scsi_device *sdev = cmd->device;
-+	unsigned long flags;
-+	
-+	spin_lock_irqsave(&sdev->sdev_lock, flags);
-+	__scsi_put_command(cmd);
-+	spin_unlock_irqrestore(&sdev->sdev_lock, flags);
-+}
-+
-+/*
-  * Function:	scsi_setup_command_freelist()
-  *
-  * Purpose:	Setup the command freelist for a scsi host.
-@@ -1240,7 +1283,7 @@ void scsi_device_put(struct scsi_device 
-  * scsi_set_device_offline - set scsi_device offline
-  * @sdev:	pointer to struct scsi_device to offline. 
-  *
-- * Locks:	host_lock held on entry.
-+ * Locks:	No scsi locks should be held on entry.
-  **/
- void scsi_set_device_offline(struct scsi_device *sdev)
- {
-@@ -1251,7 +1294,7 @@ void scsi_set_device_offline(struct scsi
+--- 1.51/drivers/scsi/scsi_error.c	Sun Apr 27 06:46:14 2003
++++ edited/drivers/scsi/scsi_error.c	Wed Apr 30 22:09:21 2003
+@@ -1412,8 +1412,7 @@
+ 	 * now that error recovery is done, we will need to ensure that these
+ 	 * requests are started.
+ 	 */
+-	list_for_each_entry(sdev, &shost->my_devices, siblings)
+-		blk_run_queue(sdev->request_queue);
++	scsi_run_host_queues(shost);
+ }
  
- 	sdev->online = 0;
+ /**
+@@ -1649,7 +1648,6 @@
+ 	struct scsi_cmnd *scmd = scsi_get_command(dev, GFP_KERNEL);
+ 	struct request req;
+ 	int rtn;
+-	struct request_queue *q;
  
--	spin_lock_irqsave(&sdev->list_lock, flags);
-+	spin_lock_irqsave(&sdev->sdev_lock, flags);
- 	list_for_each_entry(scmd, &sdev->cmd_list, list) {
- 		if (scmd->request && scmd->request->rq_status != RQ_INACTIVE) {
- 			/*
-@@ -1264,7 +1307,7 @@ void scsi_set_device_offline(struct scsi
- 			list_add_tail(&scmd->eh_entry, &active_list);
- 		}
+ 	scmd->request = &req;
+ 	memset(&scmd->eh_timeout, 0, sizeof(scmd->eh_timeout));
+@@ -1701,8 +1699,6 @@
  	}
--	spin_unlock_irqrestore(&sdev->list_lock, flags);
-+	spin_unlock_irqrestore(&sdev->sdev_lock, flags);
  
- 	if (!list_empty(&active_list)) {
- 		list_for_each_safe(lh, lh_sf, &active_list) {
-diff -purN -X /home/patman/dontdiff 2.5-cur/drivers/scsi/scsi.h rmcmd_lock-2.5-cur/drivers/scsi/scsi.h
---- 2.5-cur/drivers/scsi/scsi.h	Tue Apr 29 11:14:15 2003
-+++ rmcmd_lock-2.5-cur/drivers/scsi/scsi.h	Tue May  6 17:23:14 2003
-@@ -327,7 +327,6 @@ struct scsi_device {
- 	request_queue_t *request_queue;
- 	volatile unsigned short device_busy;	/* commands actually active on low-level */
- 	spinlock_t sdev_lock;           /* also the request queue_lock */
--	spinlock_t list_lock;
- 	struct list_head cmd_list;	/* queue of in use SCSI Command structures */
- 	struct list_head starved_entry;
-         Scsi_Cmnd *current_cmnd;	/* currently active command */
-diff -purN -X /home/patman/dontdiff 2.5-cur/drivers/scsi/scsi_lib.c rmcmd_lock-2.5-cur/drivers/scsi/scsi_lib.c
---- 2.5-cur/drivers/scsi/scsi_lib.c	Tue Apr 29 11:14:15 2003
-+++ rmcmd_lock-2.5-cur/drivers/scsi/scsi_lib.c	Tue May  6 17:23:14 2003
-@@ -528,13 +528,13 @@ static struct scsi_cmnd *scsi_end_reques
- 	if (blk_rq_tagged(req))
- 		blk_queue_end_tag(q, req);
- 	end_that_request_last(req);
-+	__scsi_put_command(cmd);
- 	spin_unlock_irqrestore(q->queue_lock, flags);
+ 	scsi_delete_timer(scmd);
+-	q = scmd->device->request_queue;
+-	scsi_put_command(scmd);
+-	scsi_queue_next_request(q, NULL);
++	scsi_next_command(scmd);
+ 	return rtn;
+ }
+--- 1.88/drivers/scsi/scsi_lib.c	Sun Apr 27 10:19:35 2003
++++ edited/drivers/scsi/scsi_lib.c	Wed Apr 30 22:09:21 2003
+@@ -181,19 +181,12 @@
+ 		 void (*done)(struct scsi_cmnd *),
+ 		 int timeout, int retries)
+ {
+-	struct request_queue *q;
+-
+ 	/*
+ 	 * If the upper level driver is reusing these things, then
+ 	 * we should release the low-level block now.  Another one will
+ 	 * be allocated later when this request is getting queued.
+ 	 */
+-	if (sreq->sr_command) {
+-		q = sreq->sr_command->device->request_queue;
+-		scsi_put_command(sreq->sr_command);
+-		sreq->sr_command = NULL;
+-		scsi_queue_next_request(q, NULL);
+-	}
++	__scsi_release_request(sreq);
  
  	/*
+ 	 * Our own function scsi_done (which marks the host as not busy,
+@@ -239,7 +232,6 @@
+ void scsi_wait_req(struct scsi_request *sreq, const void *cmnd, void *buffer,
+ 		   unsigned bufflen, int timeout, int retries)
+ {
+-	struct request_queue *q;
+ 	DECLARE_COMPLETION(wait);
+ 	
+ 	sreq->sr_request->waiting = &wait;
+@@ -250,12 +242,7 @@
+ 	wait_for_completion(&wait);
+ 	sreq->sr_request->waiting = NULL;
+ 
+-	if (sreq->sr_command) {
+-		q = sreq->sr_command->device->request_queue;
+-		scsi_put_command(sreq->sr_command);
+-		scsi_queue_next_request(q, NULL);
+-		sreq->sr_command = NULL;
+-	}
++	__scsi_release_request(sreq);
+ }
+ 
+ /*
+@@ -370,77 +357,26 @@
+ }
+ 
+ /*
+- * Function:    scsi_queue_next_request()
++ * Function:	scsi_run_queue()
+  *
+- * Purpose:     Handle post-processing of completed commands.
++ * Purpose:	Select a proper request queue to serve next
+  *
+- * Arguments:   cmd	- command that may need to be requeued.
++ * Arguments:	q	- last request's queue
+  *
+  * Returns:     Nothing
+  *
+- * Notes:       After command completion, there may be blocks left
+- *              over which weren't finished by the previous command
+- *              this can be for a number of reasons - the main one is
+- *              that a medium error occurred, and the sectors after
+- *              the bad block need to be re-read.
+- *
+- *              If cmd is NULL, it means that the previous command
+- *              was completely finished, and we should simply start
+- *              a new command, if possible.
+- *
+- *		This is where a lot of special case code has begun to
+- *		accumulate.  It doesn't really affect readability or
+- *		anything, but it might be considered architecturally
+- *		inelegant.  If more of these special cases start to
+- *		accumulate, I am thinking along the lines of implementing
+- *		an atexit() like technology that gets run when commands
+- *		complete.  I am not convinced that it is worth the
+- *		added overhead, however.  Right now as things stand,
+- *		there are simple conditional checks, and most hosts
+- *		would skip past.
+- *
+- *		Another possible solution would be to tailor different
+- *		handler functions, sort of like what we did in scsi_merge.c.
+- *		This is probably a better solution, but the number of different
+- *		permutations grows as 2**N, and if too many more special cases
+- *		get added, we start to get screwed.
++ * Notes:	The previous command was completely finished, start
++ *		a new one if possible.
+  */
+-void scsi_queue_next_request(request_queue_t *q, struct scsi_cmnd *cmd)
++static void scsi_run_queue(struct request_queue *q)
+ {
+-	struct scsi_device *sdev;
+-	struct Scsi_Host *shost;
++	struct scsi_device *sdev = q->queuedata;
++	struct Scsi_Host *shost = sdev->host;
+ 	unsigned long flags;
+ 
+-	if (cmd != NULL) {
+-
+-		/*
+-		 * For some reason, we are not done with this request.
+-		 * This happens for I/O errors in the middle of the request,
+-		 * in which case we need to request the blocks that come after
+-		 * the bad sector.
+-		 */
+-		spin_lock_irqsave(q->queue_lock, flags);
+-		cmd->request->special = cmd;
+-		if (blk_rq_tagged(cmd->request))
+-			blk_queue_end_tag(q, cmd->request);
+-
+-		/*
+-		 * set REQ_SPECIAL - we have a command
+-		 * clear REQ_DONTPREP - we assume the sg table has been 
+-		 *	nuked so we need to set it up again.
+-		 */
+-		cmd->request->flags |= REQ_SPECIAL;
+-		cmd->request->flags &= ~REQ_DONTPREP;
+-		__elv_add_request(q, cmd->request, 0, 0);
+-		spin_unlock_irqrestore(q->queue_lock, flags);
+-	}
+-
+-	sdev = q->queuedata;
+-
+ 	if (sdev->single_lun)
+ 		scsi_single_lun_run(sdev);
+ 
+-	shost = sdev->host;
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	while (!list_empty(&shost->starved_list) &&
+ 	       !shost->host_blocked && !shost->host_self_blocked &&
+@@ -478,6 +414,61 @@
+ }
+ 
+ /*
++ * Function:	scsi_requeue_command()
++ *
++ * Purpose:	Handle post-processing of completed commands.
++ *
++ * Arguments:	q	- queue to operate on
++ *		cmd	- command that may need to be requeued.
++ *
++ * Returns:	Nothing
++ *
++ * Notes:	After command completion, there may be blocks left
++ *		over which weren't finished by the previous command
++ *		this can be for a number of reasons - the main one is
++ *		I/O errors in the middle of the request, in which case
++ *		we need to request the blocks that come after the bad
++ *		sector.
++ */
++static void scsi_requeue_command(struct request_queue *q, struct scsi_cmnd *cmd)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(q->queue_lock, flags);
++	cmd->request->special = cmd;
++	if (blk_rq_tagged(cmd->request))
++		blk_queue_end_tag(q, cmd->request);
++
++	/*
++	 * set REQ_SPECIAL - we have a command
++	 * clear REQ_DONTPREP - we assume the sg table has been 
++	 *	nuked so we need to set it up again.
++	 */
++	cmd->request->flags |= REQ_SPECIAL;
++	cmd->request->flags &= ~REQ_DONTPREP;
++	__elv_add_request(q, cmd->request, 0, 0);
++	spin_unlock_irqrestore(q->queue_lock, flags);
++
++	scsi_run_queue(q);
++}
++
++void scsi_next_command(struct scsi_cmnd *cmd)
++{
++	struct request_queue *q = cmd->device->request_queue;
++
++	scsi_put_command(cmd);
++	scsi_run_queue(q);
++}
++
++void scsi_run_host_queues(struct Scsi_Host *shost)
++{
++	struct scsi_device *sdev;
++
++	list_for_each_entry(sdev, &shost->my_devices, siblings)
++		scsi_run_queue(sdev->request_queue);
++}
++
++/*
+  * Function:    scsi_end_request()
+  *
+  * Purpose:     Post-processing of completed commands called from interrupt
+@@ -517,7 +506,7 @@
+ 			 * Bleah.  Leftovers again.  Stick the leftovers in
+ 			 * the front of the queue, and goose the queue again.
+ 			 */
+-			scsi_queue_next_request(q, cmd);
++			scsi_requeue_command(q, cmd);
+ 		}
+ 		return cmd;
+ 	}
+@@ -534,8 +523,7 @@
  	 * This will goose the queue request function at the end, so we don't
  	 * need to worry about launching another command.
  	 */
 -	scsi_put_command(cmd);
- 	scsi_queue_next_request(q, NULL);
+-	scsi_queue_next_request(q, NULL);
++	scsi_next_command(cmd);
  	return NULL;
  }
-@@ -950,7 +950,7 @@ static int scsi_init_io(struct scsi_cmnd
- 			req->current_nr_sectors);
  
- 	/* release the command and kill it */
--	scsi_put_command(cmd);
-+	__scsi_put_command(cmd);
- 	return BLKPREP_KILL;
+@@ -661,6 +649,18 @@
+  *              In other words, if there are no bounce buffers
+  *              (the normal case for most drivers), we don't need
+  *              the logic to deal with cleaning up afterwards.
++ *
++ *		We must do one of several things here:
++ *
++ *		a) Call scsi_end_request.  This will finish off the
++ *		   specified number of sectors.  If we are done, the
++ *		   command block will be released, and the queue
++ *		   function will be goosed.  If we are not done, then
++ *		   scsi_end_request will directly goose the queue.
++ *
++ *		b) We can just use scsi_requeue_command() here.  This would
++ *		   be used if we just wanted to retry, for example.
++ *
+  */
+ void scsi_io_completion(struct scsi_cmnd *cmd, int good_sectors,
+ 			int block_sectors)
+@@ -672,19 +672,6 @@
+ 	int clear_errors = 1;
+ 
+ 	/*
+-	 * We must do one of several things here:
+-	 *
+-	 *	Call scsi_end_request.  This will finish off the specified
+-	 *	number of sectors.  If we are done, the command block will
+-	 *	be released, and the queue function will be goosed.  If we
+-	 *	are not done, then scsi_end_request will directly goose
+-	 *	the queue.
+-	 *
+-	 *	We can just use scsi_queue_next_request() here.  This
+-	 *	would be used if we just wanted to retry, for example.
+-	 *
+-	 */
+-	/*
+ 	 * Free up any indirection buffers we allocated for DMA purposes. 
+ 	 * For the case of a READ, we need to copy the data out of the
+ 	 * bounce buffer and into the real buffer.
+@@ -783,7 +770,7 @@
+ 			 */
+ 			if (cmd->sense_buffer[12] == 0x04 &&
+ 			    cmd->sense_buffer[13] == 0x01) {
+-				scsi_queue_next_request(q, cmd);
++				scsi_requeue_command(q, cmd);
+ 				return;
+ 			}
+ 			if ((cmd->sense_buffer[2] & 0xf) == UNIT_ATTENTION) {
+@@ -802,7 +789,7 @@
+ 				 	* media change, so we just retry the
+ 				 	* request and see what happens.  
+ 				 	*/
+-					scsi_queue_next_request(q, cmd);
++					scsi_requeue_command(q, cmd);
+ 					return;
+ 				}
+ 			}
+@@ -822,7 +809,7 @@
+ 				 * This will cause a retry with a 6-byte
+ 				 * command.
+ 				 */
+-				scsi_queue_next_request(q, cmd);
++				scsi_requeue_command(q, cmd);
+ 				result = 0;
+ 			} else {
+ 				cmd = scsi_end_request(cmd, 0, this_count, 1);
+@@ -854,7 +841,7 @@
+ 		 * recovery reasons.  Just retry the request
+ 		 * and see what happens.  
+ 		 */
+-		scsi_queue_next_request(q, cmd);
++		scsi_requeue_command(q, cmd);
+ 		return;
+ 	}
+ 	if (result) {
+@@ -1320,15 +1307,8 @@
+  */
+ void scsi_unblock_requests(struct Scsi_Host *shost)
+ {
+-	struct scsi_device *sdev;
+-
+ 	shost->host_self_blocked = 0;
+-
+-	/*
+-	 * Now that we are unblocked, try to start the queues.
+-	 */
+-	list_for_each_entry(sdev, &shost->my_devices, siblings)
+-		scsi_queue_next_request(sdev->request_queue, NULL);
++	scsi_run_host_queues(shost);
  }
  
-@@ -974,7 +974,7 @@ static int scsi_prep_fn(struct request_q
- 		struct scsi_request *sreq = req->special;
+ /*
+--- 1.1/drivers/scsi/scsi_priv.h	Sat Apr 26 20:40:32 2003
++++ edited/drivers/scsi/scsi_priv.h	Wed Apr 30 22:09:21 2003
+@@ -73,6 +73,7 @@
+ extern int scsi_insert_special_req(struct scsi_request *sreq, int);
+ extern void scsi_init_cmd_from_req(struct scsi_cmnd *cmd,
+ 		struct scsi_request *sreq);
++extern void __scsi_release_request(struct scsi_request *sreq);
  
- 		if (sreq->sr_magic == SCSI_REQ_MAGIC) {
--			cmd = scsi_get_command(sreq->sr_device, GFP_ATOMIC);
-+			cmd = __scsi_get_command(sreq->sr_device, GFP_ATOMIC);
- 			if (unlikely(!cmd))
- 				goto defer;
- 			scsi_init_cmd_from_req(cmd, sreq);
-@@ -985,7 +985,7 @@ static int scsi_prep_fn(struct request_q
- 		 * Now try and find a command block that we can use.
- 		 */
- 		if (!req->special) {
--			cmd = scsi_get_command(sdev, GFP_ATOMIC);
-+			cmd = __scsi_get_command(sdev, GFP_ATOMIC);
- 			if (unlikely(!cmd))
- 				goto defer;
- 		} else
-@@ -1006,10 +1006,10 @@ static int scsi_prep_fn(struct request_q
- 	
- 	/*
- 	 * FIXME: drop the lock here because the functions below
--	 * expect to be called without the queue lock held.  Also,
--	 * previously, we dequeued the request before dropping the
--	 * lock.  We hope REQ_STARTED prevents anything untoward from
--	 * happening now.
-+	 * expect to be called without the queue lock held (except
-+	 * __scsi_put_command). Also, previously, we dequeued the request
-+	 * before dropping the lock. We hope REQ_STARTED prevents
-+	 * anything untoward from happening now.
- 	 */
- 	if (req->flags & (REQ_CMD | REQ_BLOCK_PC)) {
- 		int ret;
-@@ -1042,7 +1042,7 @@ static int scsi_prep_fn(struct request_q
- 		 */
- 		if (unlikely(!sdt->init_command(cmd))) {
- 			scsi_release_buffers(cmd);
--			scsi_put_command(cmd);
-+			__scsi_put_command(cmd);
- 			return BLKPREP_KILL;
- 		}
- 	}
-diff -purN -X /home/patman/dontdiff 2.5-cur/drivers/scsi/scsi_priv.h rmcmd_lock-2.5-cur/drivers/scsi/scsi_priv.h
---- 2.5-cur/drivers/scsi/scsi_priv.h	Tue Apr 29 12:24:04 2003
-+++ rmcmd_lock-2.5-cur/drivers/scsi/scsi_priv.h	Tue May  6 17:23:14 2003
-@@ -61,6 +61,8 @@ extern void scsi_host_init(void);
- 
- /* scsi.c */
- extern int scsi_dispatch_cmd(struct scsi_cmnd *cmd);
-+extern struct scsi_cmnd *__scsi_get_command(struct scsi_device *dev, int flags);
-+extern void __scsi_put_command(struct scsi_cmnd *cmd);
- extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
- extern void scsi_destroy_command_freelist(struct Scsi_Host *shost);
- extern void scsi_done(struct scsi_cmnd *cmd);
-diff -purN -X /home/patman/dontdiff 2.5-cur/drivers/scsi/scsi_scan.c rmcmd_lock-2.5-cur/drivers/scsi/scsi_scan.c
---- 2.5-cur/drivers/scsi/scsi_scan.c	Tue May  6 16:22:34 2003
-+++ rmcmd_lock-2.5-cur/drivers/scsi/scsi_scan.c	Tue May  6 17:23:14 2003
-@@ -408,7 +408,6 @@ static struct scsi_device *scsi_alloc_sd
- 	INIT_LIST_HEAD(&sdev->same_target_siblings);
- 	INIT_LIST_HEAD(&sdev->cmd_list);
- 	INIT_LIST_HEAD(&sdev->starved_entry);
--	spin_lock_init(&sdev->list_lock);
- 
- 	/*
- 	 * Some low level driver could use device->type
+ /* scsi_error.c */
+ extern void scsi_times_out(struct scsi_cmnd *cmd);
+@@ -84,8 +85,8 @@
+ extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
+ extern void scsi_setup_cmd_retry(struct scsi_cmnd *cmd);
+ extern int scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
+-extern void scsi_queue_next_request(struct request_queue *q,
+-			struct scsi_cmnd *cmd);
++extern void scsi_next_command(struct scsi_cmnd *cmd);
++extern void scsi_run_host_queues(struct Scsi_Host *shost);
+ extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
+ extern void scsi_free_queue(struct request_queue *q);
+ extern int scsi_init_queue(void);
