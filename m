@@ -1,46 +1,24 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] fix scsi add-single-device
-Date: 27 Jan 2003 10:07:40 -0600
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Fwd: 32bit dev_t
+Date: Mon, 27 Jan 2003 22:51:25 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1043683662.2292.15.camel@mulgrave>
-References: <1043604061.12324.59.camel@mulgrave>
-	<20030127081535.GA7780@beaverton.ibm.com>
+Message-ID: <20030127225125.A13617@infradead.org>
+References: <3E2DC21D.9010204@torque.net> <20030123183131.GA2126@nbkurt.garloff.de> <20030123221805.A2468@infradead.org> <20030124182952.GF20972@ca-server1.us.oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id IAA14971
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Jan 2003 08:07:45 -0800
-In-Reply-To: <20030127081535.GA7780@beaverton.ibm.com>
+Content-Disposition: inline
+In-Reply-To: <20030124182952.GF20972@ca-server1.us.oracle.com>; from Joel.Becker@oracle.com on Fri, Jan 24, 2003 at 10:29:53AM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: Joel Becker <Joel.Becker@oracle.com>
+Cc: Kurt Garloff <kurt@garloff.de>, Douglas Gilbert <dougg@torque.net>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-On Mon, 2003-01-27 at 02:15, Mike Anderson wrote:
-> James Bottomley [James.Bottomley@steeleye.com] wrote:
-> > diff -Nru a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> > --- a/drivers/scsi/scsi_scan.c	Sun Jan 26 11:58:46 2003
-> > +++ b/drivers/scsi/scsi_scan.c	Sun Jan 26 11:58:46 2003
-> > @@ -1758,7 +1758,7 @@
-> >  	shost = scsi_host_hn_get(host);
-> >  	if (!shost)
-> >  		return -ENODEV;
-> > -	if(scsi_find_device(shost, channel, id, lun) != NULL)
-> > +	if(scsi_find_device(shost, channel, id, lun) == NULL)
-> >  		goto out;
-> 
-> The previous condition seemed to be correct as you want to exit if
-> scsi_find_device finds a scsi_device at the nexus you are trying to add.
-> 
-> The patch below fixed the interface for me.  Though I only tested in
-> with scsi_debug under UML YMMV.
+On Fri, Jan 24, 2003 at 10:29:53AM -0800, Joel Becker wrote:
+> 	How are they allocated?  Is this dynamic, or compiled in?  In
+> addition, what is the maximum amount?  If it's less than 1000 disks,
+> it's too small for today.  If it's less than 2000 disks, it's probably
+> too small for 2.6's lifetime.
 
-Yes, sorry (long week last week).  It is indeed the semantics of
-scsi_find_device() that are broken.
-
-Thanks,
-
-James
-
-
+Currently it's compiled in, and the trivial change to make it use
+register_blkdev with a 0 major argument until all globally unused majors
+are gone is left to the reader..
