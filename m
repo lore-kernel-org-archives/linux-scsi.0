@@ -1,81 +1,78 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: [PATCH / RFC] scsi_get_host_dev
-Date: Tue, 28 Jan 2003 10:39:33 -0800
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] fix for memory leak in scsi_prep_fn
+Date: 28 Jan 2003 12:52:28 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030128183933.GB1188@beaverton.ibm.com>
+Message-ID: <1043779950.2991.101.camel@mulgrave>
+References: <1043778768.2991.74.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="=-EYfexEwJWTWwhbl0uz1I"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from westrelay01.boulder.ibm.com (westrelay01.boulder.ibm.com [9.17.194.22])
-	by e34.co.us.ibm.com (8.12.2/8.12.2) with ESMTP id h0SIbuZU076282
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Jan 2003 13:37:56 -0500
-Received: from dyn9-47-17-195 (dyn9-47-17-67.beaverton.ibm.com [9.47.17.67])
-	by westrelay01.boulder.ibm.com (8.12.3/NCO/VER6.4) with ESMTP id h0SIbuYe094876
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Jan 2003 11:37:56 -0700
-Content-Disposition: inline
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id KAA03662
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Jan 2003 10:52:32 -0800
+In-Reply-To: <1043778768.2991.74.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>, Russell King <rmk@arm.linux.org.uk>
 
 
-Patch against: 2.5.59
+--=-EYfexEwJWTWwhbl0uz1I
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-This problem was noticed in a driver that was being ported from 2.4 to
-2.5.xx.
+On Tue, 2003-01-28 at 12:32, James Bottomley wrote:
+> This should fix the memory leak Russell King spotted if command
+> initialisation fails in the request prep function.
+> 
+> The patch is against the scsi-combined-2.5 bkbits.net repository.
 
-The error signature was an oops in sg_attach do to sdev_driverfs_dev not
-being registered. This is because the common scsi_alloc_sdev code puts
-the scsi_device on the my_devices list that will later be iterated for
-attach calls. Adding to the my_devices is probably a good side effect in
-case this host scsi_device ever has a timeout and scsi_error fires up.
+Well, OK, I had a closer look at what scsi_init_io is doing.  I
+obviously don't want to release the command for a defer.  However,
+there's also a bug in scsi_init_io which can cause
+end_that_request_first to be called twice for the request.
 
-The failure mode can be inconsistent if you use the newer scsi_add_host
-interface.
+This hopefully corrects that problem as well as the command leakage.
 
-An alternate solution could have been to honor the comment in
-scsi_get_host_dev to not have upper levels attach to the scsi_device by
-setting the type to 0x1f (Unknown or no device type) and have sg not
-attach to this type.
+James
 
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+--=-EYfexEwJWTWwhbl0uz1I
+Content-Disposition: attachment; filename=tmp.diff
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; name=tmp.diff; charset=ISO-8859-1
 
- scsi_scan.c |   10 +++++++++-
- 1 files changed, 9 insertions(+), 1 deletion(-)
-------
-
---- 1.52/drivers/scsi/scsi_scan.c	Sun Jan  5 06:22:21 2003
-+++ edited/drivers/scsi/scsi_scan.c	Thu Jan 16 00:00:51 2003
-@@ -1937,6 +1937,11 @@
- 	if (sdev) {
- 		sdev->borken = 0;
+=3D=3D=3D=3D=3D drivers/scsi/scsi_lib.c 1.63 vs edited =3D=3D=3D=3D=3D
+--- 1.63/drivers/scsi/scsi_lib.c	Tue Jan 28 10:19:35 2003
++++ edited/drivers/scsi/scsi_lib.c	Tue Jan 28 12:43:38 2003
+@@ -781,11 +781,8 @@
+ 	printk(KERN_ERR "req nr_sec %lu, cur_nr_sec %u\n", req->nr_sectors,
+ 			req->current_nr_sectors);
+=20
+-	/*
+-	 * kill it. there should be no leftover blocks in this request
+-	 */
+-	SCpnt =3D scsi_end_request(SCpnt, 0, req->nr_sectors, 1);
+-	BUG_ON(SCpnt);
++	/* release the command and kill it */
++	scsi_put_command(SCpnt);
+ 	ret =3D BLKPREP_KILL;
+ out:
+ 	return ret;
+@@ -884,6 +881,7 @@
+ 		 * required).
+ 		 */
+ 		if ((ret =3D scsi_init_io(SCpnt)))
++			/* BLKPREP_KILL return also releases the command */
+ 			return ret;
+ 	=09
+ 		/*
+@@ -891,6 +889,7 @@
+ 		 */
+ 		if (!STpnt->init_command(SCpnt)) {
+ 			scsi_release_buffers(SCpnt);
++			scsi_put_command(SCpnt);
+ 			return BLKPREP_KILL;
+ 		}
  	}
-+
-+	scsi_device_register(sdev);
-+
-+	scsi_attach_device(sdev);
-+
- 	return sdev;
- }
- 
-@@ -1945,7 +1950,7 @@
-  *
-  * Purpose:     Free a scsi_device that points to the host adapter itself.
-  *
-- * Arguments:   SHpnt   - Host that needs a Scsi_Device
-+ * Arguments:   sdev   - Host Scsi_Device
-  *
-  * Lock status: None assumed.
-  *
-@@ -1956,5 +1961,8 @@
- void scsi_free_host_dev(struct scsi_device *sdev)
- {
- 	BUG_ON(sdev->id != sdev->host->this_id);
-+
-+	scsi_detach_device(sdev);
-+	scsi_device_unregister(sdev);
- 	scsi_free_sdev(sdev);
- }
+
+--=-EYfexEwJWTWwhbl0uz1I--
 
