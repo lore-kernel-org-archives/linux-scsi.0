@@ -1,70 +1,37 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+From: Willem Riede <wriede@riede.org>
 Subject: Re: [PATCH] switch scsi upper driver probing to the driver model
-Date: Sat, 17 May 2003 12:59:59 +0300 (EEST)
+Date: Sat, 17 May 2003 08:52:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.52.0305171248460.4436@kai.makisara.local>
-References: <20030516182039.A7369@lst.de> <20030516235718.GA3260@beaverton.ibm.com>
+Message-ID: <20030517125242.GG1480@linnie.riede.org>
+References: <20030516182039.A7369@lst.de> <3EC5B3B8.9020308@torque.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII;
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep02-0.kolumbus.fi ([193.229.0.44]:28669 "EHLO
-	fep02-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S261326AbTEQJrS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 May 2003 05:47:18 -0400
-In-Reply-To: <20030516235718.GA3260@beaverton.ibm.com>
+Received: from pcp02781107pcs.eatntn01.nj.comcast.net ([68.85.61.149]:15600
+	"EHLO linnie.riede.org") by vger.kernel.org with ESMTP
+	id S261437AbTEQMhg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 May 2003 08:37:36 -0400
+Received: from linnie.riede.org (localhost.localdomain [127.0.0.1])
+	by linnie.riede.org (8.12.8/8.12.8) with ESMTP id h4HCqgY8003961
+	for <linux-scsi@vger.kernel.org>; Sat, 17 May 2003 08:52:42 -0400
+Content-Disposition: inline
+In-Reply-To: <3EC5B3B8.9020308@torque.net>; from dougg@torque.net on Fri, May 16, 2003 at 23:59:52 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Christoph Hellwig <hch@lst.de>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, 16 May 2003, Mike Anderson wrote:
+On 2003.05.16 23:59, Douglas Gilbert wrote:
+> Christoph,
+> This patch would have some interesting side effects:
+>   - no generic interface (apart from SCSI_IOCTL_SEND_COMMAND)
+>     for tape devices (st and osst). While the maintainers of
+>     st and osst might like this, not all the user apps would :-)
 
-> Christoph Hellwig [hch@lst.de] wrote:
-> > Upper drivers now use the LDM ->probe/->remove callbacks and the
-...
-> I ran your patch and I dead locked on st_probe. This is due to the code
-> in st_probe and osst_probe that do device registers on the
-> sdev_driverfs_dev.bus which is the bus that the probe is being called
-> from already. I had an old patch that removed these before due the driver
-> model requirement that objects on the device list must be of one type.
-> At the time I did not have a place to move these attributes.
->
-> We now have /bus/scsi/drivers/{uld} for driver attributes. We also could
-> create a class for other attributes if needed. We can also use udev for
-> the creation of special nodes.
->
-> ftp://ftp.kernel.org/pub/linux/utils/kernel/hotplug/
->
-> In the short term is the st and osst maintainers are ok with it we could
-> remove them and then create them in there proper home.
->
-I don't mind removal of the mt* files. I tested in 2.5.69-bk11 a
-modification to st that was essentially what Christoph has just
-posted. No problems there (i.e., tape found and works ok, sysfs shows
-the tape as SCSI device).
+I would certainly like that sg access could not "interfere" with
+osst while it is in control, but there would obviously have to be
+a way to assign individual devices to specific drivers (as in tape1
+is handled by st and tape2 by sg). And that would have to be dynamic
+(as in I did a backup on tape1 with osst and now I want to tinker
+with another tape using sg). Such mechanism doesn't exist, I think.
 
-However, when I add to this Christoph's patch to change probing, I don't
-find any tapes any more. What I did was to first modprobe aic7xxx.
-According to dmesg, the device was found:
-
-(scsi2:A:5): 10.000MB/s transfers (10.000MHz, offset 8)
-  Vendor: HP        Model: C1533A            Rev: 9608
-  Type:   Sequential-Access                  ANSI SCSI revision: 02
-Attached scsi generic sg0 at scsi2, channel 0, id 5, lun 0,  type 1
-
-It did not appear in /sysfs/bus/scsi/devices (the system disk and the
-cdrom were there):
-
-# tree /sysfs/bus/scsi/devices/
-/sysfs/bus/scsi/devices/
-|-- 0:0:0:0 -> ../../../devices/pci0/00:1e.0/02:02.0/host0/0:0:0:0
-`-- 1:0:0:0 -> ../../../devices/ide-scsi/host1/1:0:0:0
-
-Modprobing st did not result in any messages (each attached tape causes
-one line to be printed). The tape device does not exist:
-
-# mt status
-/dev/nst0: No such device or address
-
--- 
-Kai
-
+Thanks, Willem Riede.
