@@ -1,52 +1,29 @@
-From: Olaf Hering <olh@suse.de>
-Subject: Re: [PACH] mesh is ppc32-only
-Date: Mon, 6 Sep 2004 15:32:32 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [linux-iscsi-devel] Re: [PATCH RFC] replace ioctl for sysfs take 2
+Date: Mon, 6 Sep 2004 16:32:51 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040906133232.GA9133@suse.de>
-References: <20040825164043.GB12679@lst.de>
+Message-ID: <20040906143251.GB21646@lst.de>
+References: <413557CB.8010008@cs.wisc.edu> <20040901162042.GC26753@null.msp.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:50592 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S267393AbUIFNce (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2004 09:32:34 -0400
+Received: from verein.lst.de ([213.95.11.210]:39556 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S268070AbUIFOdA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2004 10:33:00 -0400
 Content-Disposition: inline
-In-Reply-To: <20040825164043.GB12679@lst.de>
+In-Reply-To: <20040901162042.GC26753@null.msp.redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>, iscsi -devel <linux-iscsi-devel@lists.sourceforge.net>, David Wysochanski <davidw@netapp.com>, "Surekha.PC" <surekhap@cisco.com>, linux-scsi@vger.kernel.org
 
- On Wed, Aug 25, Christoph Hellwig wrote:
+On Wed, Sep 01, 2004 at 11:20:42AM -0500, AJ Lewis wrote:
+> Do we want all these attributes in the scsi_host class, or should we put them
+> in the iscsi devices directory?  So in /sys/bus/iscsi-sfnet/devices/iscsi1 -
+> it seems to me these attributes are specific to the iscsi target, and don't
+> need to be in the scsi_host class.
 
-> mesh is only present on older 32bit pmac boards and doesn't compile
-> on ppc64.
+I think all attributes that are common over software- and hardware based
+iscsi implementations should go into a iscsi transport class.  Of course
+it's hard to without a hardware driver to work with.  I remember Qlogic
+said they wanted to submit their driver some time in the future, maybe
+one of their developers is listening on linux-scsi.
 
-This applies also to the other pmac-only scsi driver:
-
-
-diff -purN linux-2.6.9-rc1-bk13.orig/drivers/scsi/Kconfig linux-2.6.9-r=
-c1-bk13/drivers/scsi/Kconfig
---- linux-2.6.9-rc1-bk13.orig/drivers/scsi/Kconfig	2004-09-06 15:23:36.=
-000000000 +0200
-+++ linux-2.6.9-rc1-bk13/drivers/scsi/Kconfig	2004-09-06 15:26:43.14805=
-2174 +0200
-@@ -1494,7 +1494,7 @@ config SCSI_MESH_RESET_DELAY_MS
-=20
- config SCSI_MAC53C94
- 	tristate "53C94 (Power Mac external SCSI) support"
--	depends on PPC_PMAC && SCSI
-+	depends on PPC32 && PPC_PMAC && SCSI
- 	help
- 	  On Power Macintoshes (and clones) with two SCSI buses, the external
- 	  SCSI bus is usually controlled by a 53C94 SCSI bus adaptor. Older
-
---=20
-USB is for mice, FireWire is for men!
-
-sUse lINUX ag, n=C3=9CRNBERG
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
