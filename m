@@ -1,62 +1,55 @@
-From: "Martin Peschke3" <MPESCHKE@DE.IBM.COM>
+From: Mike Anderson <andmike@us.ibm.com>
 Subject: Re: [RFC] Persistent naming of scsi devices
-Date: Wed, 10 Apr 2002 17:52:45 +0200
+Date: Wed, 10 Apr 2002 10:45:50 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OFDDCB335C.1A38AFF1-ONC1256B97.00555052@de.ibm.com>
+Message-ID: <20020410104550.A9957@beaverton.ibm.com>
+References: <OF8B2F3581.590066BE-ONC1256B95.0068B28C@de.ibm.com> <yq18z7w1awn.fsf@austin.mkp.net> <20020410091918.C546@thunk.org> <200204101405.KAA09838@hancock.sc.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200204101405.KAA09838@hancock.sc.steeleye.com>; from Eddie.Williams@steeleye.com on Wed, Apr 10, 2002 at 10:04:01AM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: mjacob@feral.com
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Oliver Neukum <oliver@neukum.org>, Christoph Hellwig <hch@infradead.org>, sullivan <sullivan@austin.ibm.com>, linux-scsi@vger.kernel.org
+To: Eddie Williams <Eddie.Williams@steeleye.com>
+Cc: Theodore Tso <tytso@mit.edu>, "Martin K. Petersen" <mkp@mkp.net>, linux-scsi@vger.kernel.org
 
-Matt,
+Eddie Williams [Eddie.Williams@steeleye.com] wrote:
+> On Wednesday 10 April 2002 09:19 am, Theodore Tso wrote:
+> 
+> > That is indeed a hard problem, and ultimately, the thing that will
+> > make this easier is if there's some way we can read out a
+> > drive-specific serial number out of the ATAPI or SCSI interfaces.  I
+> > don't know if disk serial numbers are commonly supported by disk
+> > manufacturers, but hopefully the newer disks have something like that
+> > we can use.  Without it, though, the problem is very, very hard if you
+> > want to make it 100% foolproof --- and hence, something which
+> > civilians (i.e., stupid users) can use.
+> 
+> While I enjoy bashing stupid users I would like to point out that persistent 
+> naming, while it makes life easier for stupid users, it has tremendous 
+> benefits for all of us.  
+> 
+> We (the product I work on) have used serial numbers for a long time to 
+> uniquely identify devices and this improves the ease of use tremendously.  In 
+> a cluster this is really critical or one can easily try to bring an 
+> application in-service on a wrong device with catestrophic results.
 
-> > > It's more than just a WWN- it really has to be
-> > > the pair of WWNN/WWPN (node && port name) as you
-> > > can have, e.g., a dual ported disk with the same WWNN but
-> > > different WWPNs.
-> >
-> > Ok, I thought of WWPN and that it would be sufficient to identify t=
-he
-> > target side of a link, isn't it? Do you really need a pair of
-WWNN/WWPN,
-> > i.e. identical WWPNs might exist considering different WWNNs?
->
-> If the numbering is NAA=3D2 (2 in the top nibble), you can always der=
-ive
-the
-> WWNN from the WWPN. But that's only true for NAA=3D2.
->
-> In *practice*, WWPN might be enough,  but if we're doing things that
-formally
-> and fully ID a device, and considering that iSCSI identifiers are 255
-bytes or
-> better, two 64 bit ids for Fibre Channel devices is not unreasonable =
-to
-allow
-> for.
->
-> -matt
+Agreed,
 
-If there are cases which require WWNN+WWPN to identify a
-=46C port then a you would need this pair to query a FC ports
-D_ID. I wonder why this is not reflected in the FC name server
-specification, FC-GS-3, (see GID_PN for example).
+While the immutablity / uniqueness of uuids across different name spaces
+may vary depending on device capability there are still useful. Many have
+been obtaining IDs from devices for years using a method of obtaining the
+most unique ID the device can provide and then ensuring that names spaces
+do not collide (i.e go for page 0x83, then 0x80, vendor-product-serial,
+vendor unique).
 
-
-Mit freundlichen Gr=FC=DFen / with kind regards
-
-Martin Peschke
-
-IBM Deutschland Entwicklung GmbH
-Linux for eServer Development
-Phone: +49-(0)7031-16-2349
+We have also found in the past that when users make complete copies of
+there volumes (for the purpose of hot-backup) that a uuid is one of the
+few methods that can be used to differ the clone from the original.
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Mike
+-- 
+Michael Anderson
+andmike@us.ibm.com
+
