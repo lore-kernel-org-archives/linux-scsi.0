@@ -1,129 +1,328 @@
-From: Eddie Williams <Eddie.Williams@steeleye.com>
-Subject: Re: Patch:  allow devices to restrict start on add
-Date: Fri, 23 May 2003 11:00:21 -0400
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Round II on sysfs attributes
+Date: 23 May 2003 12:38:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200305231100.21287.Eddie.Williams@Steeleye.com>
-References: <200305221140.59633.Eddie.Williams@Steeleye.com> <20030522110522.A7240@beaverton.ibm.com> <200305221610.07839.Eddie.Williams@Steeleye.com>
+Message-ID: <1053707904.1810.4.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="------------Boundary-00=_LOHCZAP8HLIYDJD1YLYW"
+Content-Type: multipart/mixed; boundary="=-scwF9tRwYxVdbLNV9QEH"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:28165 "EHLO
+Received: from nat9.steeleye.com ([65.114.3.137]:43015 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264072AbTEWOz7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 May 2003 10:55:59 -0400
-Received: from aslan (aslan.sc.steeleye.com [172.17.6.51])
-	by hancock.sc.steeleye.com (8.11.6/linuxconf) with ESMTP id h4NF95I03705
-	for <linux-scsi@vger.kernel.org>; Fri, 23 May 2003 11:09:05 -0400
-In-Reply-To: <200305221610.07839.Eddie.Williams@Steeleye.com>
+	id S264092AbTEWQZT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 May 2003 12:25:19 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Mike Anderson <andmike@us.ibm.com>
 
 
---------------Boundary-00=_LOHCZAP8HLIYDJD1YLYW
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-
-> On Thursday 22 May 2003 04:10 pm, Eddie Williams wrote:
-> > On Thursday 22 May 2003 02:05 pm, Patrick Mansfield wrote:
-
-> > Also you should patch against scsi-misc-2.5, or a recent bk, since hc=
-h
-> > moved all of the devinfo code into scsi_devinfo.c
->
-> Yes.  I had taken a snapshot of the kernel a couple of weeks ago but it
-> took a while for me to test it out but did not go back and remerge.  I =
-will
-> have that out tomorrow.
-
-I updated to bk16.
-
-Eddie
---------------Boundary-00=_LOHCZAP8HLIYDJD1YLYW
-Content-Type: text/x-diff;
-  charset="iso-8859-1";
-  name="noadd.bk16.diff"
+--=-scwF9tRwYxVdbLNV9QEH
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="noadd.bk16.diff"
 
-diff -Nru linux-2.5.69/drivers/scsi.orig/scsi.h linux-2.5.69/drivers/scsi/scsi.h
---- linux-2.5.69/drivers/scsi.orig/scsi.h	Fri May 23 10:38:43 2003
-+++ linux-2.5.69/drivers/scsi/scsi.h	Fri May 23 11:01:50 2003
-@@ -389,6 +389,7 @@
- 	unsigned remap:1;	/* support remapping  */
- //	unsigned sync:1;	/* Sync transfer state, managed by host */
- //	unsigned wide:1;	/* WIDE transfer state, managed by host */
-+	unsigned no_start_on_add:1;	/* do not issue start on add */
- 
- 	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
- 
-diff -Nru linux-2.5.69/drivers/scsi.orig/scsi_devinfo.c linux-2.5.69/drivers/scsi/scsi_devinfo.c
---- linux-2.5.69/drivers/scsi.orig/scsi_devinfo.c	Fri May 23 10:29:20 2003
-+++ linux-2.5.69/drivers/scsi/scsi_devinfo.c	Fri May 23 11:01:50 2003
-@@ -131,7 +131,7 @@
- 	{"EMULEX", "MD21/S2     ESDI", NULL, BLIST_SINGLELUN},
- 	{"CANON", "IPUBJD", NULL, BLIST_SPARSELUN},
- 	{"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
--	{"DEC", "HSG80", NULL, BLIST_FORCELUN},
-+	{"DEC", "HSG80", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
- 	{"COMPAQ", "LOGICAL VOLUME", NULL, BLIST_FORCELUN},
- 	{"COMPAQ", "CR3500", NULL, BLIST_FORCELUN},
- 	{"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
-@@ -159,7 +159,10 @@
- 	{"HP", "NetRAID-4M", NULL, BLIST_FORCELUN},
- 	{"ADAPTEC", "AACRAID", NULL, BLIST_FORCELUN},
- 	{"ADAPTEC", "Adaptec 5400S", NULL, BLIST_FORCELUN},
--	{"COMPAQ", "MSA1000", NULL, BLIST_FORCELUN},
-+	{"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
-+	{"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
-+	{"COMPAQ", "HSV110", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
-+	{"HP", "HSV100", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
- 	{"HP", "C1557A", NULL, BLIST_FORCELUN},
- 	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
- 	{"FSC", "CentricStor", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-diff -Nru linux-2.5.69/drivers/scsi.orig/scsi_devinfo.h linux-2.5.69/drivers/scsi/scsi_devinfo.h
---- linux-2.5.69/drivers/scsi.orig/scsi_devinfo.h	Fri May 23 10:32:57 2003
-+++ linux-2.5.69/drivers/scsi/scsi_devinfo.h	Fri May 23 11:01:50 2003
-@@ -14,3 +14,4 @@
- #define BLIST_LARGELUN		0x200	/* LUNs past 7 on a SCSI-2 device */
- #define BLIST_INQUIRY_36	0x400	/* override additional length field */
- #define BLIST_INQUIRY_58	0x800	/* ... for broken inquiry responses */
-+#define BLIST_NOSTARTONADD      0x1000  /* do not do automatic start on add */
-diff -Nru linux-2.5.69/drivers/scsi.orig/scsi_scan.c linux-2.5.69/drivers/scsi/scsi_scan.c
---- linux-2.5.69/drivers/scsi.orig/scsi_scan.c	Fri May 23 10:37:35 2003
-+++ linux-2.5.69/drivers/scsi/scsi_scan.c	Fri May 23 11:01:50 2003
-@@ -641,6 +641,13 @@
- 		sdev->borken = 0;
- 
- 	/*
-+	 * Some devices may not want to have a start command automatically
-+	 * issued when a device is added.
-+	 */
-+	if (*bflags & BLIST_NOSTARTONADD)
-+		sdev->no_start_on_add = 1;
+
+The attached patch makes the sysfs attributes a property of the host
+template (I can't really see a reason why the actual attributes need to
+change per host, so I think the template is the better place for them).
+
+I've also provided helper functions to modify the attributes in the LLD
+init routines.
+
+An illustration of how this works for the 53c700 will follow.
+
+James
+
+
+--=-scwF9tRwYxVdbLNV9QEH
+Content-Disposition: inline; filename=tmp.diff
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; name=tmp.diff; charset=ISO-8859-1
+
+# This is a BitKeeper generated patch for the following project:
+# Project Name: Linux kernel tree
+# This patch format is intended for GNU patch command version 2.5 or higher=
+.
+# This patch includes the following deltas:
+#	           ChangeSet	1.1185  -> 1.1189=20
+#	drivers/scsi/hosts.c	1.65    -> 1.66  =20
+#	drivers/scsi/scsi_sysfs.c	1.16    -> 1.19  =20
+#	 drivers/scsi/scsi.h	1.79    -> 1.80  =20
+#	drivers/scsi/hosts.h	1.64    -> 1.65  =20
+#	drivers/scsi/scsi_priv.h	1.7     -> 1.10  =20
+#
+# The following is the BitKeeper ChangeSet Log
+# --------------------------------------------
+# 03/05/21	jejb@mulgrave.(none)	1.1186
+# SCSI: Move shost_attrs and sdev_attrs into the host template
+#=20
+# This would allow the LLD to clone or modify them at slave_configure time.=
+=20
+#=20
+# Also expose routines to facilitate this
+# --------------------------------------------
+# 03/05/22	jejb@mulgrave.(none)	1.1187
+# Update modify functions to take the template not the host
+# --------------------------------------------
+# 03/05/23	jejb@mulgrave.(none)	1.1188
+# More sysfs attribute updates
+# --------------------------------------------
+# 03/05/23	jejb@mulgrave.(none)	1.1189
+# do a bit more adjusting of what should be in scsi.h and what in scsi_priv=
+.h
+# --------------------------------------------
+#
+diff -Nru a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+--- a/drivers/scsi/hosts.c	Fri May 23 12:35:11 2003
++++ b/drivers/scsi/hosts.c	Fri May 23 12:35:11 2003
+@@ -321,7 +321,12 @@
+            shost_tp->eh_host_reset_handler =3D=3D NULL) {
+ 		printk(KERN_ERR "ERROR: SCSI host `%s' has no error handling\nERROR: Thi=
+s is not a safe way to run your SCSI host\nERROR: The error handling must b=
+e added to this driver\n", shost_tp->proc_name);
+ 		dump_stack();
+-        }=20
++        }
++	if(shost_tp->shost_attrs =3D=3D NULL)
++		/* if its not set in the template, use the default */
++		 shost_tp->shost_attrs =3D scsi_sysfs_shost_attrs;
++	if(shost_tp->sdev_attrs =3D=3D NULL)
++		 shost_tp->sdev_attrs =3D scsi_sysfs_sdev_attrs;
+ 	gfp_mask =3D GFP_KERNEL;
+ 	if (shost_tp->unchecked_isa_dma && xtr_bytes)
+ 		gfp_mask |=3D __GFP_DMA;
+diff -Nru a/drivers/scsi/hosts.h b/drivers/scsi/hosts.h
+--- a/drivers/scsi/hosts.h	Fri May 23 12:35:11 2003
++++ b/drivers/scsi/hosts.h	Fri May 23 12:35:11 2003
+@@ -356,6 +356,16 @@
+      * FIXME: This should probably be a value in the template */
+     #define SCSI_DEFAULT_HOST_BLOCKED	7
+=20
++    /*
++     * pointer to the sysfs class properties for this host
++     */
++    struct class_device_attribute **shost_attrs;
 +
-+	/*
- 	 * If we need to allow I/O to only one of the luns attached to
- 	 * this target id at a time set single_lun, and allocate or modify
- 	 * sdev_target.
-diff -Nru linux-2.5.69/drivers/scsi.orig/sd.c linux-2.5.69/drivers/scsi/sd.c
---- linux-2.5.69/drivers/scsi.orig/sd.c	Fri May 23 10:39:39 2003
-+++ linux-2.5.69/drivers/scsi/sd.c	Fri May 23 11:01:50 2003
-@@ -855,7 +855,12 @@
- 			break;
- 		}
- 					
--					
-+		/*
-+		 * The device does not want the automatic start to be issued.
-+		 */
-+		if (sdkp->device->no_start_on_add) {
-+			break;
-+		}
- 
- 		/*
- 		 * If manual intervention is required, or this is an
++    /*
++     * Pointer to the SCSI device properties for this host
++     */
++    struct device_attribute **sdev_attrs;
++
+ } Scsi_Host_Template;
+=20
+ /*
+diff -Nru a/drivers/scsi/scsi.h b/drivers/scsi/scsi.h
+--- a/drivers/scsi/scsi.h	Fri May 23 12:35:11 2003
++++ b/drivers/scsi/scsi.h	Fri May 23 12:35:11 2003
+@@ -683,4 +683,9 @@
+=20
+ int scsi_set_medium_removal(Scsi_Device *dev, char state);
+=20
++extern int scsi_sysfs_modify_sdev_attribute(struct device_attribute ***dev=
+_attrs,
++					    struct device_attribute *attr);
++extern int scsi_sysfs_modify_shost_attribute(struct class_device_attribute=
+ ***class_attrs,
++					     struct class_device_attribute *attr);
++
+ #endif /* _SCSI_H */
+diff -Nru a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+--- a/drivers/scsi/scsi_priv.h	Fri May 23 12:35:11 2003
++++ b/drivers/scsi/scsi_priv.h	Fri May 23 12:35:11 2003
+@@ -131,4 +131,9 @@
+ extern int scsi_sysfs_register(void);
+ extern void scsi_sysfs_unregister(void);
+=20
++/* definitions for the linker default sections covering the host
++ * class and device attributes */
++extern struct class_device_attribute *scsi_sysfs_shost_attrs[];
++extern struct device_attribute *scsi_sysfs_sdev_attrs[];
++
+ #endif /* _SCSI_PRIV_H */
+diff -Nru a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+--- a/drivers/scsi/scsi_sysfs.c	Fri May 23 12:35:11 2003
++++ b/drivers/scsi/scsi_sysfs.c	Fri May 23 12:35:11 2003
+@@ -45,12 +45,13 @@
+ shost_rd_attr(sg_tablesize, "%hu\n");
+ shost_rd_attr(unchecked_isa_dma, "%d\n");
+=20
+-static struct class_device_attribute *const shost_attrs[] =3D {
++struct class_device_attribute *scsi_sysfs_shost_attrs[] =3D {
+ 	&class_device_attr_unique_id,
+ 	&class_device_attr_host_busy,
+ 	&class_device_attr_cmd_per_lun,
+ 	&class_device_attr_sg_tablesize,
+ 	&class_device_attr_unchecked_isa_dma,
++	NULL
+ };
+=20
+ static struct class shost_class =3D {
+@@ -243,7 +244,8 @@
+=20
+ static DEVICE_ATTR(rescan, S_IRUGO | S_IWUSR, show_rescan_field, store_res=
+can_field)
+=20
+-static struct device_attribute * const sdev_attrs[] =3D {
++/* Default template for device attributes.  May NOT be modified */
++struct device_attribute *scsi_sysfs_sdev_attrs[] =3D {
+ 	&dev_attr_device_blocked,
+ 	&dev_attr_queue_depth,
+ 	&dev_attr_type,
+@@ -254,6 +256,7 @@
+ 	&dev_attr_rev,
+ 	&dev_attr_online,
+ 	&dev_attr_rescan,
++	NULL
+ };
+=20
+ static void scsi_device_release(struct device *dev)
+@@ -287,9 +290,9 @@
+ 	if (error)
+ 		return error;
+=20
+-	for (i =3D 0; !error && i < ARRAY_SIZE(sdev_attrs); i++)
++	for (i =3D 0; !error && sdev->host->hostt->sdev_attrs[i] !=3D NULL; i++)
+ 		error =3D device_create_file(&sdev->sdev_driverfs_dev,
+-					   sdev_attrs[i]);
++					   sdev->host->hostt->sdev_attrs[i]);
+=20
+ 	if (error)
+ 		scsi_device_unregister(sdev);
+@@ -305,8 +308,8 @@
+ {
+ 	int i;
+=20
+-	for (i =3D 0; i < ARRAY_SIZE(sdev_attrs); i++)
+-		device_remove_file(&sdev->sdev_driverfs_dev, sdev_attrs[i]);
++	for (i =3D 0; sdev->host->hostt->sdev_attrs[i] !=3D NULL; i++)
++		device_remove_file(&sdev->sdev_driverfs_dev, sdev->host->hostt->sdev_att=
+rs[i]);
+ 	device_unregister(&sdev->sdev_driverfs_dev);
+ }
+=20
+@@ -357,9 +360,9 @@
+ 	if (error)
+ 		goto clean_device;
+=20
+-	for (i =3D 0; !error && i < ARRAY_SIZE(shost_attrs); i++)
++	for (i =3D 0; !error && shost->hostt->shost_attrs[i] !=3D NULL; i++)
+ 		error =3D class_device_create_file(&shost->class_dev,
+-					   shost_attrs[i]);
++					   shost->hostt->shost_attrs[i]);
+ 	if (error)
+ 		goto clean_class;
+=20
+@@ -383,3 +386,104 @@
+ 	device_del(&shost->host_gendev);
+ }
+=20
++/** scsi_sysfs_modify_shost_attribute - modify or add a host class attribu=
+te
++ *
++ * @class_attrs:host class attribute list to be added to or modified
++ * @attr:	individual attribute to change or added
++ *
++ * returns zero if successful or error if not
++ **/
++int scsi_sysfs_modify_shost_attribute(struct class_device_attribute ***cla=
+ss_attrs,
++				      struct class_device_attribute *attr)
++{
++	int modify =3D 0;
++	int num_attrs;
++
++	if(*class_attrs =3D=3D NULL)
++		*class_attrs =3D scsi_sysfs_shost_attrs;
++
++	for(num_attrs=3D0; (*class_attrs)[num_attrs] !=3D NULL; num_attrs++)
++		if(strcmp((*class_attrs)[num_attrs]->attr.name, attr->attr.name) =3D=3D =
+0)
++			modify =3D num_attrs;
++
++	if(*class_attrs =3D=3D scsi_sysfs_shost_attrs || !modify) {
++		struct class_device_attribute **tmp_attrs =3D kmalloc(sizeof(struct clas=
+s_device_attribute)*(num_attrs + (modify ? 0 : 1)), GFP_KERNEL);
++		if(tmp_attrs =3D=3D NULL)
++			return -ENOMEM;
++		memcpy(tmp_attrs, *class_attrs, sizeof(struct class_device_attribute)*nu=
+m_attrs);
++		if(*class_attrs !=3D scsi_sysfs_shost_attrs)
++			kfree(*class_attrs);
++		*class_attrs =3D tmp_attrs;
++	}
++	if(modify) {
++		/* spare the caller from having to copy things it's
++		 * not interested in */
++		struct class_device_attribute *old_attr =3D
++			(*class_attrs)[modify];
++		/* extend permissions */
++		attr->attr.mode |=3D old_attr->attr.mode;
++
++		/* override null show/store with default */
++		if(attr->show =3D=3D NULL)
++			attr->show =3D old_attr->show;
++		if(attr->store =3D=3D NULL)
++			attr->store =3D old_attr->store;
++		(*class_attrs)[modify] =3D attr;
++	} else {
++		(*class_attrs)[num_attrs] =3D attr;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL(scsi_sysfs_modify_shost_attribute);
++
++/** scsi_sysfs_modify_sdev_attribute - modify or add a host device attribu=
+te
++ *
++ * @dev_attrs:	pointer to the attribute list to be added to or modified
++ * @attr:	individual attribute to change or added
++ *
++ * returns zero if successful or error if not
++ **/
++int scsi_sysfs_modify_sdev_attribute(struct device_attribute ***dev_attrs,
++				     struct device_attribute *attr)
++{
++	int modify =3D 0;
++	int num_attrs;
++
++	if(*dev_attrs =3D=3D NULL)
++		*dev_attrs =3D scsi_sysfs_sdev_attrs;
++
++	for(num_attrs=3D0; (*dev_attrs)[num_attrs] !=3D NULL; num_attrs++)
++		if(strcmp((*dev_attrs)[num_attrs]->attr.name, attr->attr.name) =3D=3D 0)
++			modify =3D num_attrs;
++
++	if(*dev_attrs =3D=3D scsi_sysfs_sdev_attrs || !modify) {
++		struct device_attribute **tmp_attrs =3D kmalloc(sizeof(struct device_att=
+ribute)*(num_attrs + (modify ? 0 : 1)), GFP_KERNEL);
++		if(tmp_attrs =3D=3D NULL)
++			return -ENOMEM;
++		memcpy(tmp_attrs, *dev_attrs, sizeof(struct device_attribute)*num_attrs)=
+;
++		if(*dev_attrs !=3D scsi_sysfs_sdev_attrs)
++			kfree(*dev_attrs);
++		*dev_attrs =3D tmp_attrs;
++	}
++	if(modify) {
++		/* spare the caller from having to copy things it's
++		 * not interested in */
++		struct device_attribute *old_attr =3D
++			(*dev_attrs)[modify];
++		/* extend permissions */
++		attr->attr.mode |=3D old_attr->attr.mode;
++
++		/* override null show/store with default */
++		if(attr->show =3D=3D NULL)
++			attr->show =3D old_attr->show;
++		if(attr->store =3D=3D NULL)
++			attr->store =3D old_attr->store;
++		(*dev_attrs)[modify] =3D attr;
++	} else {
++		(*dev_attrs)[num_attrs] =3D attr;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL(scsi_sysfs_modify_sdev_attribute);
 
---------------Boundary-00=_LOHCZAP8HLIYDJD1YLYW--
+--=-scwF9tRwYxVdbLNV9QEH--
 
