@@ -1,188 +1,171 @@
-From: Hannes Reinecke <hare@suse.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [Patch] Fix oops on rmmod usb-storage
-Date: Wed, 29 Sep 2004 16:44:28 +0200
+Date: 29 Sep 2004 11:15:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <415ACA4C.807@suse.de>
-References: <415A67B8.2080003@suse.de>  <1096466196.2028.8.camel@mulgrave> 	<1096463876.15905.23.camel@localhost.localdomain> <1096467874.1762.15.camel@mulgrave>
+Message-ID: <1096470919.1762.21.camel@mulgrave>
+References: <415A67B8.2080003@suse.de>  <1096466196.2028.8.camel@mulgrave>
+		<1096463876.15905.23.camel@localhost.localdomain>
+	<1096467874.1762.15.camel@mulgrave>  <415ACA4C.807@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040804040003040509090409"
+Content-Type: multipart/mixed; boundary="=-0kG4j03+Ywu4VousXTKc"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:49051 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S268541AbUI2Oo3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Sep 2004 10:44:29 -0400
-In-Reply-To: <1096467874.1762.15.camel@mulgrave>
+Received: from stat16.steeleye.com ([209.192.50.48]:60327 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S268670AbUI2PPb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Sep 2004 11:15:31 -0400
+In-Reply-To: <415ACA4C.807@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Hannes Reinecke <hare@suse.de>
 Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------040804040003040509090409
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
 
-James Bottomley wrote:
-> On Wed, 2004-09-29 at 09:17, Alan Cox wrote:
+--=-0kG4j03+Ywu4VousXTKc
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+
+On Wed, 2004-09-29 at 10:44, Hannes Reinecke wrote:
+> Oh, that can be fixed. Attached is the full trace (including USB 
+> debugging output).
+> It does crash. Hard.
+
+OK, looks like a refcounting problem again.
+
+Try the attached and see if it goes away.
+
+Thanks,
+
+James
+
+
+--=-0kG4j03+Ywu4VousXTKc
+Content-Disposition: inline
+Content-Type: message/rfc822
+
+Return-Path: <linux-scsi-owner@vger.kernel.org>
+Received: from hancock.sc.steeleye.com (hancock.sc.steeleye.com
+	[172.17.4.1]) by pogo.mtv1.steeleye.com (8.12.8/8.12.8) with ESMTP id
+	i8SGfJcY011993 for <jejb@pogo.mtv1.steeleye.com>; Tue, 28 Sep 2004 09:41:19
+	-0700
+Received: from localhost.localdomain (orville.steeleye.com [209.192.50.34])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id i8SGfIm19476; Tue,
+	28 Sep 2004 12:41:18 -0400
+Received: from vger.kernel.org (vger.kernel.org [12.107.209.244]) by
+	localhost.localdomain (8.12.8/8.12.8) with ESMTP id i8SHjsBP013576; Tue, 28
+	Sep 2004 13:45:55 -0400
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand id
+	S267974AbUI1Qkt (ORCPT <rfc822;Eddie.Williams@steeleye.com> + 1 other);
+	Tue, 28 Sep 2004 12:40:49 -0400
+Received: (majordomo@vger.kernel.org) by vger.kernel.org id S267979AbUI1Qkt
+	(ORCPT <rfc822;linux-scsi-outgoing>); Tue, 28 Sep 2004 12:40:49 -0400
+Received: from stat16.steeleye.com ([209.192.50.48]:32187 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP id S267974AbUI1Qko
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Sep 2004 12:40:44 -0400
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com
+	[172.17.6.40]) by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id
+	i8SGehm19459; Tue, 28 Sep 2004 12:40:43 -0400
+Subject: Re: [linux-usb-devel] Fw: [Bug 3466] New: Bug while connecting
+	USB-HDD (fwd)
+From: James Bottomley <James.Bottomley@steeleye.com>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Andrew Morton <akpm@osdl.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
+In-Reply-To: <1096236347.10924.97.camel@mulgrave>
+References: 
+	<Pine.LNX.4.44L0.0409261704460.32350-100000@netrider.rowland.org>
+	<1096236347.10924.97.camel@mulgrave>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+X-Mailer: Ximian Evolution 1.0.8 (1.0.8-9) 
+Date: 28 Sep 2004 12:40:37 -0400
+Message-Id: <1096389644.1717.45.camel@mulgrave>
+Mime-Version: 1.0
+Sender: linux-scsi-owner@vger.kernel.org
+Precedence: bulk
+X-Mailing-List: linux-scsi@vger.kernel.org
+X-Spam-Status: No, hits=-8.9 required=5.0
+	tests=AWL,BAYES_01,EMAIL_ATTRIBUTION,IN_REP_TO,
+	PATCH_UNIFIED_DIFF,QUOTED_EMAIL_TEXT,REFERENCES,
+	REPLY_WITH_QUOTES,USER_AGENT_XIMIAN,X_MAILING_LIST autolearn=ham
+	version=2.55
+X-Spam-Level: 
+X-Spam-Checker-Version: SpamAssassin 2.55 (1.174.2.19-2003-05-19-exp)
+X-Evolution-Source: imap://jejb@172.16.1.1/
+
+On Sun, 2004-09-26 at 18:05, James Bottomley wrote:
+> There's not enough information to say why it happened.  However, all the
+> SCSI code checks out (it's dated ... open coded reference counting
+> instead of kref, but it looks sound).  The scenario described could be
+> seen if there's a problem in the host reference counting.
 > 
->>On Mer, 2004-09-29 at 14:56, James Bottomley wrote:
->>
->>>The key to the solution of this problem is to know what USB is trying to
->>>do with the dead device.  SCSI is trying to be polite and explicitly
->>>kill the outstanding commands before it removes the HBA.  Presumably USB
->>>is returning something that says this can't be done so the EH gets all
->>>the way up to offlining.
->>
->>Its nothing to do with USB, rmmod with eh running crashes all the other
->>SCSI drivers I've tested too. After the state transition fails you get
->>kobject related errors and a crash. 
+> In that case, there should have been a slab error earlier on in the logs
+> at the point the error occurred saying something like "slab error in
+> kmem_cache_destory(): can't free all objects"
 > 
-> 
-> There is no crash in the log ... there was only a state transition
-> complaint.
-> 
-Oh, that can be fixed. Attached is the full trace (including USB 
-debugging output).
-It does crash. Hard.
+> It's possible this could be caused by a refcounting race on the
+> commands.
 
-Cheers,
+OK, I have a definite theory about this, but it hinges on finding the
+above message in the logs.
 
-Hannes
--- 
-Dr. Hannes Reinecke			hare@suse.de
-SuSE Linux AG				S390 & zSeries
-Maxfeldstraße 5				+49 911 74053 688
-90409 Nürnberg				http://www.suse.de
+I think we tried to destroy the command slab while some commands were
+still active.  The refcounting only applies to in-flight commands, but
+commands can also be allocated and queued in the block layer.
 
---------------040804040003040509090409
-Content-Type: text/plain;
- name="usb-scsi-remove.oops"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="usb-scsi-remove.oops"
+If I'm right, the attached will close this refcounting hole.
 
-ZWhjaV9oY2QgMDAwMDowMDoxZC43OiBHZXRTdGF0dXMgcG9ydCA1IHN0YXR1cyAwMDEwMDIg
-UE9XRVIgc2lnPXNlMApDU0MKaHViIDQtMDoxLjA6IHBvcnQgNSwgc3RhdHVzIDAxMDAsIGNo
-YW5nZSAwMDAxLCAxMiBNYi9zCnVzYiA0LTU6IFVTQiBkaXNjb25uZWN0LCBhZGRyZXNzIDQK
-dXNiIDQtNTogdXNiX2Rpc2FibGVfZGV2aWNlIG51a2luZyBhbGwgVVJCcwp1c2IgNC01OiB1
-bnJlZ2lzdGVyaW5nIGludGVyZmFjZSA0LTU6MS4wCmJ1cyB1c2I6IHJlbW92ZSBkZXZpY2Ug
-NC01OjEuMAp1c2Itc3RvcmFnZTogc3RvcmFnZV9kaXNjb25uZWN0KCkgY2FsbGVkCnVzYi1z
-dG9yYWdlOiB1c2Jfc3Rvcl9zdG9wX3RyYW5zcG9ydCBjYWxsZWQKQ0xBU1M6IFVucmVnaXN0
-ZXJpbmcgY2xhc3MgZGV2aWNlLiBJRCA9ICcwOjA6MDowJwpDTEFTUzogVW5yZWdpc3Rlcmlu
-ZyBjbGFzcyBkZXZpY2UuIElEID0gJ3NnMCcKY2xhc3NfaG90cGx1ZyAtIG5hbWUgPSBzZzAK
-ZGV2aWNlIGNsYXNzICdzZzAnOiByZWxlYXNlLgpjbGFzc19ob3RwbHVnIC0gbmFtZSA9IDA6
-MDowOjAKZGV2aWNlIGNsYXNzICcwOjA6MDowJzogcmVsZWFzZS4KYnVzIHNjc2k6IHJlbW92
-ZSBkZXZpY2UgMDowOjA6MAp1c2Itc3RvcmFnZTogcXVldWVjb21tYW5kIGNhbGxlZAp1c2It
-c3RvcmFnZTogKioqIHRocmVhZCBhd2FrZW5lZC4KdXNiLXN0b3JhZ2U6IE5vIGNvbW1hbmQg
-ZHVyaW5nIGRpc2Nvbm5lY3QKdXNiLXN0b3JhZ2U6ICoqKiB0aHJlYWQgc2xlZXBpbmcuCnVz
-Yi1zdG9yYWdlOiBjb21tYW5kX2Fib3J0IGNhbGxlZAp1c2Itc3RvcmFnZTogLS0gbm90aGlu
-ZyB0byBhYm9ydAp1c2Itc3RvcmFnZTogZGV2aWNlX3Jlc2V0IGNhbGxlZAp1c2Itc3RvcmFn
-ZTogTm8gcmVzZXQgZHVyaW5nIGRpc2Nvbm5lY3QKdXNiLXN0b3JhZ2U6IGJ1c19yZXNldCBj
-YWxsZWQKdXNiLXN0b3JhZ2U6IE5vIHJlc2V0IGR1cmluZyBkaXNjb25uZWN0CnNjc2k6IERl
-dmljZSBvZmZsaW5lZCAtIG5vdCByZWFkeSBhZnRlciBlcnJvciByZWNvdmVyeTogaG9zdCAw
-IGNoYW5uZWwKMCBpZCAwIGx1biAwCnNyIDA6MDowOjA6IElsbGVnYWwgc3RhdGUgdHJhbnNp
-dGlvbiBjYW5jZWwtPm9mZmxpbmUKQmFkbmVzcyBpbiBzY3NpX2RldmljZV9zZXRfc3RhdGUg
-YXQgZHJpdmVycy9zY3NpL3Njc2lfbGliLmM6MTY4OAogWzxjMDEwNzIzNT5dIGR1bXBfc3Rh
-Y2srMHgxNS8weDIwCiBbPGUwZWY4ZTQ2Pl0gc2NzaV9kZXZpY2Vfc2V0X3N0YXRlKzB4YTYv
-MHhlMCBbc2NzaV9tb2RdCiBbPGUwZWY2YzYyPl0gc2NzaV9laF9vZmZsaW5lX3NkZXZzKzB4
-NTIvMHg3MCBbc2NzaV9tb2RdCiBbPGUwZWY3MTI4Pl0gc2NzaV91bmphbV9ob3N0KzB4OTgv
-MHgxYjAgW3Njc2lfbW9kXQogWzxlMGVmNzMwNT5dIHNjc2lfZXJyb3JfaGFuZGxlcisweGM1
-LzB4MTYwIFtzY3NpX21vZF0KIFs8YzAxMDQyNjk+XSBrZXJuZWxfdGhyZWFkX2hlbHBlcisw
-eDUvMHhjCkJhZG5lc3MgaW4ga3JlZl9nZXQgYXQgbGliL2tyZWYuYzozMgogWzxjMDEwNzIz
-NT5dIGR1bXBfc3RhY2srMHgxNS8weDIwCiBbPGMwMWQ1NzVlPl0ga3JlZl9nZXQrMHgyZS8w
-eDQwCiBbPGMwMWQ1M2UyPl0ga29iamVjdF9nZXQrMHgxMi8weDIwCiBbPGMwMjQ2ZDQxPl0g
-Z2V0X2RldmljZSsweDExLzB4MjAKIFs8ZTBlZjg1YzE+XSBzY3NpX3JlcXVlc3RfZm4rMHgy
-MS8weDM5MCBbc2NzaV9tb2RdCiBbPGMwMjRkMjRlPl0gYmxrX2luc2VydF9yZXF1ZXN0KzB4
-N2UvMHhhMAogWzxlMGVmNzY3Mz5dIHNjc2lfcXVldWVfaW5zZXJ0KzB4NjMvMHhhMCBbc2Nz
-aV9tb2RdCiBbPGUwZWY2ZmU4Pl0gc2NzaV9laF9mbHVzaF9kb25lX3ErMHg1OC8weDEwMCBb
-c2NzaV9tb2RdCiBbPGUwZWY3MTAzPl0gc2NzaV91bmphbV9ob3N0KzB4NzMvMHgxYjAgW3Nj
-c2lfbW9kXQogWzxlMGVmNzMwNT5dIHNjc2lfZXJyb3JfaGFuZGxlcisweGM1LzB4MTYwIFtz
-Y3NpX21vZF0KIFs8YzAxMDQyNjk+XSBrZXJuZWxfdGhyZWFkX2hlbHBlcisweDUvMHhjClVu
-YWJsZSB0byBoYW5kbGUga2VybmVsIHBhZ2luZyByZXF1ZXN0IGF0IHZpcnR1YWwgYWRkcmVz
-cyAwMDEwMDEwNAogcHJpbnRpbmcgZWlwOgplMGVmYTczNQoqcGRlID0gMDAwMDAwMDAKT29w
-czogMDAwMiBbIzFdCk1vZHVsZXMgbGlua2VkIGluOiB1c2Jfc3RvcmFnZSByZmNvbW0gaGlk
-cCBsMmNhcCBoY2lfdXNiIGJsdWV0b290aApzbmRfc2VxX29zcyBzbmRfc2VxX21pZGlfZXZl
-bnQgc25kX3NlcSBzbmRfc2VxX2RldmljZSB1c2JoaWQgam95ZGV2IHNnCnN0IHNkX21vZCBz
-cl9tb2Qgc2NzaV9tb2QgaWRlX2NkIGNkcm9tIG52cmFtIHVzYnNlcmlhbCBwYXJwb3J0X3Bj
-IGxwCnBhcnBvcnQgYXV0b2ZzIGNwdWZyZXFfdXNlcnNwYWNlIGVkZCBzcGVlZHN0ZXBfY2Vu
-dHJpbm8gZnJlcV90YWJsZQp0aGVybWFsIHByb2Nlc3NvciBmYW4gYnV0dG9uIGJhdHRlcnkg
-YWMgc25kX3BjbV9vc3Mgc25kX21peGVyX29zcwpzbmRfaW50ZWw4eDAgc25kX2FjOTdfY29k
-ZWMgc25kX3BjbSBzbmRfdGltZXIgc25kIHNvdW5kY29yZQpzbmRfcGFnZV9hbGxvYyBpcHY2
-IGFmX3BhY2tldCBkcyBvaGNpX2hjZCBlMTAwIG1paSBlaGNpX2hjZCBpbnRlbF9hZ3AKYWdw
-Z2FydCBvaGNpMTM5NCB1aGNpX2hjZCB5ZW50YV9zb2NrZXQgaWVlZTEzOTQgcGNtY2lhX2Nv
-cmUgZXZkZXYKZG1fbW9kIHVzYmNvcmUgcmVpc2VyZnMKQ1BVOiAgICAwCkVJUDogICAgMDA2
-MDpbPGUwZWZhNzM1Pl0gICAgVGFpbnRlZDogIEcgIFUgVkxJCkVGTEFHUzogMDAwMTAwODIg
-ICAoMi42LjgtMC1kZWZhdWx0YnQgKSAKRUlQIGlzIGF0IHNjc2lfZGV2aWNlX2Rldl9yZWxl
-YXNlKzB4MjUvMHgxMDAgW3Njc2lfbW9kXQplYXg6IGQyZTgyMTg0ICAgZWJ4OiBkMmU4MjAw
-OCAgIGVjeDogMDAyMDAyMDAgICBlZHg6IDAwMTAwMTAwCmVzaTogZDJlODIwMDAgICBlZGk6
-IDAwMDAwMjgyICAgZWJwOiBkMjVmM2VmYyAgIGVzcDogZDI1ZjNlZWMKZHM6IDAwN2IgICBl
-czogMDA3YiAgIHNzOiAwMDY4ClByb2Nlc3Mgc2NzaV9laF8wIChwaWQ6IDcwNjMsIHRocmVh
-ZGluZm89ZDI1ZjIwMDAgdGFzaz1kN2E4NDAwMCkKU3RhY2s6IGMxNTdkY2I0IGQyZTgyMWE4
-IGMwMzhhZDA4IGMwMzhhZDIwIGQyNWYzZjA0IGMwMjQ2YTgzIGQyNWYzZjFjCmMwMWQ1NDZh
-IAogICAgICAgYzE1N2RjZDggZDJlODIxYzAgYzAxZDU0NzAgYzE1N2RjMDAgZDI1ZjNmMmMg
-YzAxZDU3OTkgYzE1N2RlYjAKICAgICAgIGQyZTgyMDAwIAogICAgICAgZDI1ZjNmNDggZTBl
-Zjg4MjkgZDJlODIxODQgY2RjYTAwZTggYzE1N2RlYjAgMDAwMDAwMDEgY2RjYTAwZTgKICAg
-ICAgIGQyNWYzZjYwIApDYWxsIFRyYWNlOgogWzxjMDEwNzIwYj5dIHNob3dfc3RhY2srMHg5
-Yi8weGIwCiAgWzxjMDEwNzM1YT5dIHNob3dfcmVnaXN0ZXJzKzB4MTFhLzB4MTkwCiBbPGMw
-MTA3NTE3Pl0gZGllKzB4YjcvMHgxMzAKIFs8YzAxMThkZGU+XSBkb19wYWdlX2ZhdWx0KzB4
-MzhlLzB4NWNhCiBbPGMwMTA2ZGZkPl0gZXJyb3JfY29kZSsweDJkLzB4NDAKIFs8YzAyNDZh
-ODM+XSBkZXZpY2VfcmVsZWFzZSsweDQzLzB4NTAKIFs8YzAxZDU0NmE+XSBrb2JqZWN0X2Ns
-ZWFudXArMHg3YS8weDgwCiBbPGMwMWQ1Nzk5Pl0ga3JlZl9wdXQrMHgyOS8weDcwCiBbPGUw
-ZWY4ODI5Pl0gc2NzaV9yZXF1ZXN0X2ZuKzB4Mjg5LzB4MzkwIFtzY3NpX21vZF0KIFs8YzAy
-NGQyNGU+XSBibGtfaW5zZXJ0X3JlcXVlc3QrMHg3ZS8weGEwCiBbPGUwZWY3NjczPl0gc2Nz
-aV9xdWV1ZV9pbnNlcnQrMHg2My8weGEwIFtzY3NpX21vZF0KIFs8ZTBlZjZmZTg+XSBzY3Np
-X2VoX2ZsdXNoX2RvbmVfcSsweDU4LzB4MTAwIFtzY3NpX21vZF0KIFs8ZTBlZjcxMDM+XSBz
-Y3NpX3VuamFtX2hvc3QrMHg3My8weDFiMCBbc2NzaV9tb2RdCiBbPGUwZWY3MzA1Pl0gc2Nz
-aV9lcnJvcl9oYW5kbGVyKzB4YzUvMHgxNjAgW3Njc2lfbW9kXQogWzxjMDEwNDI2OT5dIGtl
-cm5lbF90aHJlYWRfaGVscGVyKzB4NS8weGMKQ29kZTogNDIgYzYgMzQgZGYgODkgZjYgNTUg
-ODkgZTUgNTcgNTYgNTMgNTEgOGQgYjAgN2MgZmUgZmYgZmYgOGIgNTAKMjAgODkgNTUgZjAg
-OWMgNWYgZmEgOGQgOTggODQgZmUgZmYgZmYgOGIgOTAgODQgZmUgZmYgZmYgOGIgNGIgMDQg
-PDg5Pgo0YSAwNCBjNyA0MyAwNCAwMCAwMiAyMCAwMCA4OSAxMSA4ZCA5OCA4YyBmZSBmZiBm
-ZiA4YiA5MCA4YyAKIEJhZG5lc3MgaW4ga3JlZl9nZXQgYXQgbGliL2tyZWYuYzozMgogWzxj
-MDEwNzIzNT5dIGR1bXBfc3RhY2srMHgxNS8weDIwCiBbPGMwMWQ1NzVlPl0ga3JlZl9nZXQr
-MHgyZS8weDQwCiBbPGMwMWQ1M2UyPl0ga29iamVjdF9nZXQrMHgxMi8weDIwCiBbPGMwMjQ2
-ZDQxPl0gZ2V0X2RldmljZSsweDExLzB4MjAKIFs8ZTBlZjg1YzE+XSBzY3NpX3JlcXVlc3Rf
-Zm4rMHgyMS8weDM5MCBbc2NzaV9tb2RdCiBbPGMwMjRjYTAxPl0gX19nZW5lcmljX3VucGx1
-Z19kZXZpY2UrMHgzMS8weDQwCiBbPGMwMjRjYTQ5Pl0gYmxrX3VucGx1Z193b3JrKzB4OS8w
-eDEwCiBbPGMwMTJiMTI1Pl0gd29ya2VyX3RocmVhZCsweDE1NS8weDFmMAogWzxjMDEyZTkw
-NT5dIGt0aHJlYWQrMHg4NS8weGIwCiBbPGMwMTA0MjY5Pl0ga2VybmVsX3RocmVhZF9oZWxw
-ZXIrMHg1LzB4YwpVbmFibGUgdG8gaGFuZGxlIGtlcm5lbCBwYWdpbmcgcmVxdWVzdCBhdCB2
-aXJ0dWFsIGFkZHJlc3MgMDAxMDAxMDQKIHByaW50aW5nIGVpcDoKZTBlZmE3MzUKKnBkZSA9
-IDAwMDAwMDAwCk9vcHM6IDAwMDIgWyMyXQpNb2R1bGVzIGxpbmtlZCBpbjogdXNiX3N0b3Jh
-Z2UgcmZjb21tIGhpZHAgbDJjYXAgaGNpX3VzYiBibHVldG9vdGgKc25kX3NlcV9vc3Mgc25k
-X3NlcV9taWRpX2V2ZW50IHNuZF9zZXEgc25kX3NlcV9kZXZpY2UgdXNiaGlkIGpveWRldiBz
-ZwpzdCBzZF9tb2Qgc3JfbW9kIHNjc2lfbW9kIGlkZV9jZCBjZHJvbSBudnJhbSB1c2JzZXJp
-YWwgcGFycG9ydF9wYyBscApwYXJwb3J0IGF1dG9mcyBjcHVmcmVxX3VzZXJzcGFjZSBlZGQg
-c3BlZWRzdGVwX2NlbnRyaW5vIGZyZXFfdGFibGUKdGhlcm1hbCBwcm9jZXNzb3IgZmFuIGJ1
-dHRvbiBiYXR0ZXJ5IGFjIHNuZF9wY21fb3NzIHNuZF9taXhlcl9vc3MKc25kX2ludGVsOHgw
-IHNuZF9hYzk3X2NvZGVjIHNuZF9wY20gc25kX3RpbWVyIHNuZCBzb3VuZGNvcmUKc25kX3Bh
-Z2VfYWxsb2MgaXB2NiBhZl9wYWNrZXQgZHMgb2hjaV9oY2QgZTEwMCBtaWkgZWhjaV9oY2Qg
-aW50ZWxfYWdwCmFncGdhcnQgb2hjaTEzOTQgdWhjaV9oY2QgeWVudGFfc29ja2V0IGllZWUx
-Mzk0IHBjbWNpYV9jb3JlIGV2ZGV2CmRtX21vZCB1c2Jjb3JlIHJlaXNlcmZzCkNQVTogICAg
-MApFSVA6ICAgIDAwNjA6WzxlMGVmYTczNT5dICAgIFRhaW50ZWQ6ICBHICBVIFZMSQpFRkxB
-R1M6IDAwMDEwMDgyICAgKDIuNi44LTAtZGVmYXVsdGJ0ICkgCkVJUCBpcyBhdCBzY3NpX2Rl
-dmljZV9kZXZfcmVsZWFzZSsweDI1LzB4MTAwIFtzY3NpX21vZF0KZWF4OiBkMmU4MjE4NCAg
-IGVieDogZDJlODIwMDggICBlY3g6IDAwMjAwMjAwICAgZWR4OiAwMDEwMDEwMAplc2k6IGQy
-ZTgyMDAwICAgZWRpOiAwMDAwMDI4MiAgIGVicDogYzE1NTFlZjAgICBlc3A6IGMxNTUxZWUw
-CmRzOiAwMDdiICAgZXM6IDAwN2IgICBzczogMDA2OApQcm9jZXNzIGtibG9ja2QvMCAocGlk
-OiAzMiwgdGhyZWFkaW5mbz1jMTU1MDAwMCB0YXNrPWNkZjhiYWEwKQpTdGFjazogYzE1N2Rj
-YjQgZDJlODIxYTggYzAzOGFkMDggYzAzOGFkMjAgYzE1NTFlZjggYzAyNDZhODMgYzE1NTFm
-MTAKYzAxZDU0NmEgCiAgICAgICBjMTU3ZGNkOCBkMmU4MjFjMCBjMDFkNTQ3MCBjMTU3ZGMw
-MCBjMTU1MWYyMCBjMDFkNTc5OSBjMTU3ZGViMAogICAgICAgZDJlODIwMDAgCiAgICAgICBj
-MTU1MWYzYyBlMGVmODgyOSBkMmU4MjE4NCBjZGNhMDBlOCBjZGNhMDBlOCBjMTRkNmU4MCBj
-ZGNhMDFlMAogICAgICAgYzE1NTFmNDggCkNhbGwgVHJhY2U6CiBbPGMwMTA3MjBiPl0gc2hv
-d19zdGFjaysweDliLzB4YjAKIFs8YzAxMDczNWE+XSBzaG93X3JlZ2lzdGVycysweDExYS8w
-eDE5MAogWzxjMDEwNzUxNz5dIGRpZSsweGI3LzB4MTMwCiBbPGMwMTE4ZGRlPl0gZG9fcGFn
-ZV9mYXVsdCsweDM4ZS8weDVjYQogWzxjMDEwNmRmZD5dIGVycm9yX2NvZGUrMHgyZC8weDQw
-CiBbPGMwMjQ2YTgzPl0gZGV2aWNlX3JlbGVhc2UrMHg0My8weDUwCiBbPGMwMWQ1NDZhPl0g
-a29iamVjdF9jbGVhbnVwKzB4N2EvMHg4MAogWzxlMGVmODgyOT5dIHNjc2lfcmVxdWVzdF9m
-bisweDI4OS8weDM5MCBbc2NzaV9tb2RdCiBbPGMwMjRjYTAxPl0gX19nZW5lcmljX3VucGx1
-Z19kZXZpY2UrMHgzMS8weDQwCiBbPGMwMjRjYTE5Pl0gZ2VuZXJpY191bnBsdWdfZGV2aWNl
-KzB4OS8weDEwCiBbPGMwMjRjYTQ5Pl0gYmxrX3VucGx1Z193b3JrKzB4OS8weDEwCiBbPGMw
-MTJiMTI1Pl0gd29ya2VyX3RocmVhZCsweDE1NS8weDFmMAogWzxjMDEyZTkwNT5dIGt0aHJl
-YWQrMHg4NS8weGIwCiBbPGMwMTA0MjY5Pl0ga2VybmVsX3RocmVhZF9oZWxwZXIrMHg1LzB4
-YwpDb2RlOiA0MiBjNiAzNCBkZiA4OSBmNiA1NSA4OSBlNSA1NyA1NiA1MyA1MSA4ZCBiMCA3
-YyBmZSBmZiBmZiA4YiA1MAoyMCA4OSA1NSBmMCA5YyA1ZiBmYSA4ZCA5OCA4NCBmZSBmZiBm
-ZiA4YiA5MCA4NCBmZSBmZiBmZiA4YiA0YiAwNCA8ODk+CjRhIDA0IGM3IDQzIDA0IDAwIDAy
-IDIwIDAwIDg5IDExIDhkIDk4IDhjIGZlIGZmIGZmIDhiIDkwIDhjIAogCg==
---------------040804040003040509090409--
+James
+
+===== drivers/scsi/scsi.c 1.146 vs edited =====
+--- 1.146/drivers/scsi/scsi.c	2004-08-09 12:55:05 -05:00
++++ edited/drivers/scsi/scsi.c	2004-09-28 11:23:31 -05:00
+@@ -244,7 +244,13 @@
+  */
+ struct scsi_cmnd *scsi_get_command(struct scsi_device *dev, int gfp_mask)
+ {
+-	struct scsi_cmnd *cmd = __scsi_get_command(dev->host, gfp_mask);
++	struct scsi_cmnd *cmd;
++
++	/* Bail if we can't get a reference to the device */
++	if (!get_device(&dev->sdev_gendev))
++		return NULL;
++
++	cmd = __scsi_get_command(dev->host, gfp_mask);
+ 
+ 	if (likely(cmd != NULL)) {
+ 		unsigned long flags;
+@@ -258,7 +264,8 @@
+ 		spin_lock_irqsave(&dev->list_lock, flags);
+ 		list_add_tail(&cmd->list, &dev->cmd_list);
+ 		spin_unlock_irqrestore(&dev->list_lock, flags);
+-	}
++	} else
++		put_device(&dev->sdev_gendev);
+ 
+ 	return cmd;
+ }				
+@@ -276,7 +283,8 @@
+  */
+ void scsi_put_command(struct scsi_cmnd *cmd)
+ {
+-	struct Scsi_Host *shost = cmd->device->host;
++	struct scsi_device *sdev = cmd->device;
++	struct Scsi_Host *shost = sdev->host;
+ 	unsigned long flags;
+ 	
+ 	/* serious error if the command hasn't come from a device list */
+@@ -294,6 +302,8 @@
+ 
+ 	if (likely(cmd != NULL))
+ 		kmem_cache_free(shost->cmd_pool->slab, cmd);
++
++	put_device(&sdev->sdev_gendev);
+ }
+ 
+ /*
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=-0kG4j03+Ywu4VousXTKc--
+
