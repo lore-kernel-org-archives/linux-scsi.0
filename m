@@ -1,42 +1,51 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: PATCH: Further aacraid work
-Date: Thu, 17 Jun 2004 10:02:29 -0400
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Proposal for new generic device API: dma_get_required_mask()
+Date: 17 Jun 2004 09:08:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040617140229.GB10138@devserv.devel.redhat.com>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189FD23FF9@otce2k03.adaptec.com>
+Message-ID: <1087481331.2210.27.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:22716 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S266497AbUFQOCw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2004 10:02:52 -0400
-Content-Disposition: inline
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189FD23FF9@otce2k03.adaptec.com>
+Received: from stat1.steeleye.com ([65.114.3.130]:26569 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S266506AbUFQOIw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Jun 2004 10:08:52 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Alan Cox <alan@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, Jun 17, 2004 at 08:53:36AM -0400, Salyzyn, Mark wrote:
-> available. Since the scsi layer has a propensity to provide sequentially
-> decreasing pages (sequentially increasing would permit coalescing of SG
-> elements) for the SG elements, we find that there is an average SG
-> element size of 4K.
+Background:
 
-That ought to be a case of flipping the way the kernel hands out pages.
-I've always wondered why we get them often in reverse order but never
-sat down and worked it out
+We have a large number of devices in scsi: aacraid, aic7xxx, qla1280,
+qla2xxx which can all do full 64 bit DMA, but which pay a performance
+penalty for using the larger descriptors (aic7xxx is stranger in that it
+has three modes of operation: 32 bit, 39 bit and 64 bit each with an
+increasing performance penalty).
 
-> more than 4G of memory; however we *are* having troubles specifically
-> with AMD64 systems with more than 4G of memory in 2.6 kernels (the issue
-> does not occur on 2.4 kernels). I have yet to investigate why this
-> specific problem exists.
+What all these devices would like to do is instead of simply trying the
+64 bit mask first and having the platform accept it, even if it only has
+< 4GB of memory, they'd like to be able to have the platform tell them,
+given my current dma mask setting, what's the actual number of bits you
+need me to DMA to.
 
-The AMD64 is a little unusual in that it has an IO MMU, so requests for
-mappings that are physically high memory, not easy to merge, etc can
-be made to appear in a convenient order lower down in memory. Thus
-asking to map memory at virtual addresses above 4Gb probably hands back
-a PCI address around 3.5Gb. That mapping will also vanish (gone forever
-and the PCI address will show other data instead) when you unmap it.
+This is precisely what the API would do.  It would return a bit mask
+(never over the current dma_mask) that the platform considers optimal. 
+The platform has complete freedom in this: it may return a mask covering
+the total physical memory, or a mask covering all the bits it needs
+setting for some weird numa scheme.
+
+If the driver decides to use the mask, it would do another
+dma_set_mask() to confirm it (this gives the platform the opportunity if
+it so chooses to return a mask that doesn't quite cover memory, but
+would be more optimal...say for platforms that have all memory under 4GB
+bar one small chunk at 64GB or something).
+
+Once the driver has the platform's optimal mask, it can use this to
+decide on the correct descriptor size.
+
+Comments?
+
+James
+
 
 
