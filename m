@@ -1,35 +1,37 @@
-From: "Parthiban M" <parthi_m@hotmail.com>
-Subject: Memory leak trace utility for kernel module !
-Date: Fri, 29 Nov 2002 16:44:58 +0530
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <F136CASlDxzcIZChJhX0001c50a@hotmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: pamanick@npd.hcltech.com
+From: Lyle Seaman <lwseaman@excite.com>
+Subject: suspicious code in hosts.c
+Date: Fri, 29 Nov 2002 10:44:55 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20021129154455Z267086-22911+3959@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from SOLO.o-o.yi.org (065-93-189-66.wo.cpe.charter-ne.com [66.189.93.65])
+	by o-o.yi.org (Postfix) with ESMTP id 2F8201480A
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Nov 2002 10:52:15 -0500 (EST)
 List-Id: linux-scsi@vger.kernel.org
-
-Hello all,
-
-      I've implemented linux kernel modules "for IP storage " using 
-kernel(2.4.18-3)
-socket's and sending/receiving data of size more than MBs. I'm iteratively 
-doing
-copy operation to remote machine after 15 hours my machine running out of 
-memory, seems to be memory leak in my driver.
-
-plz let me know any memory trace utility available for linux 
-kernel(2.4.18-3) or any
-info. regarding my problem.
-
-Thx,
-Parthi.
-
-Note : haven't enabled kernel preemption patch in my running kernel.
+To: linux-scsi@vger.kernel.org
 
 
+Message-Id: <20021129155215.2F8201480A@o-o.yi.org>
+Date: Fri, 29 Nov 2002 10:52:15 -0500 (EST)
 
-_________________________________________________________________
-STOP MORE SPAM with the new MSN 8 and get 2 months FREE* 
-http://join.msn.com/?page=features/junkmail
+I sent this to the list earlier, but I never saw it come back, so I'm
+assuming it got lost.  
+
+scsi_tp_for_each_host drops the scsi_host_list_lock, does some work,
+then picks up the lock and continues traversing the list.  It naively
+uses list_for_each_safe, but that is only safe for non-preemptive,
+non-yielding, single-processor applications.  Is there some other lock
+that prevents the scsi_host_list from being altered behind my back
+while I'm in scsi_tp_for_each_host ?  I don't see it.  It sure looks
+like it could race with scsi_unregister, for instance.
+
+Also, scsi_register_host runs without locking the list?
+
+And scsi_unregister_host uses the BKL but not the scsi_host_list_lock?
+
+I don't know enough about the scsi subsystem to be certain that these are
+wrong, or that I know how to fix them, but they seem awfully
+suspicious and are at best confusing.   What am I missing?
+
+
+
