@@ -1,34 +1,33 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: SSC-2 support in Linux
-Date: Wed, 15 Sep 2004 09:25:59 -0400
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [RFC] [PATCH 2.6.9-rc1] add blacklist attribute indicating no
+	ULD attach
+Date: 15 Sep 2004 09:25:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <414842E7.2020800@adaptec.com>
-References: <82C736F456CA3E4EA3D0DC6CC31AA5CB01651157@esply09.cnt.ad.cnt.com>
+Message-ID: <1095254765.1717.0.camel@mulgrave>
+References: <20040914063237.GA97486@sgi.com>
+	<20040914144023.GA9524@beaverton.ibm.com> <20040914182203.GA100433@sgi.com>
+	<20040915031834.GA102988@sgi.com>  <20040915074744.A17264@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:6044 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S266006AbUION0G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2004 09:26:06 -0400
-In-Reply-To: <82C736F456CA3E4EA3D0DC6CC31AA5CB01651157@esply09.cnt.ad.cnt.com>
+Received: from stat16.steeleye.com ([209.192.50.48]:55744 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265999AbUION0d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Sep 2004 09:26:33 -0400
+In-Reply-To: <20040915074744.A17264@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "David Peterson (Eng)" <david_peterson@cnt.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jeremy Higdon <jeremy@sgi.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Patrick Mansfield <patmans@us.ibm.com>, Jens Axboe <axboe@suse.de>
 
-David Peterson (Eng) wrote:
-> I'd like to hear from anyone interested, or has looked into, adding
-> support for SSC-2 (SCSI Stream Commands -2, i.e., tape devices) explicit
-> address mode into the Linux OS.
-> 
-> In summary, SSC-2 explicit address mode enables for tape devices:
-> - robust tagged command queuing
-> - multi-path I/O
-> - enhanced error detection and recovery
+On Wed, 2004-09-15 at 02:47, Christoph Hellwig wrote:
+> don't we already carry around the blacklist flags in the scsi dev so
+> they could be checked laer?  If not maybe we should instead of adding
+> more and more flags?
 
-Looks like those should all be part of a larger effort,
-as they are needed across SCSI Core.
+Not in this case ... I'm planning a wider use of this flag for a lazy
+attachment idea I'm hatching.
 
-	Luben
+James
+
 
