@@ -1,141 +1,36 @@
-From: Marc Zyngier <mzyngier@freesurf.fr>
-Subject: [PATCH] aha1740 update
-Date: Tue, 01 Jul 2003 20:09:19 +0200
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: advansys problems
+Date: 01 Jul 2003 20:05:32 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <wrp7k72ktkg.fsf@hina.wild-wind.fr.eu.org>
-Reply-To: mzyngier@freesurf.fr
+Message-ID: <1057086331.18956.23.camel@dhcp22.swansea.linux.org.uk>
+References: <200306301731.02662.nehal@canada.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lopsy-lu.misterjones.org ([62.4.18.26]:15627 "EHLO
-	young-lust.wild-wind.fr.eu.org") by vger.kernel.org with ESMTP
-	id S263187AbTGAR5J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Jul 2003 13:57:09 -0400
+Received: from pc2-cwma1-4-cust86.swan.cable.ntl.com ([213.105.254.86]:14483
+	"EHLO lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S263818AbTGASyF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Jul 2003 14:54:05 -0400
+In-Reply-To: <200306301731.02662.nehal@canada.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
+To: nehal@canada.com
 Cc: linux-scsi@vger.kernel.org
 
-James,
+On Maw, 2003-07-01 at 01:31, nehal@canada.com wrote:
+> i get this error with 2.4.21-ac4
+> 
+> advansys: advansys_reset: board 0: SCSI bus reset started...
+> advansys: advansys_reset: board 0: SCSI bus reset successful...
+> scsi: device set offline - not ready or command retry failed after bus reset: 
+> host 0 channel 0 id 0 lun 0
+> 
+> then it displays the 2 'advansys_reset' messages again and freezes...
+> i never used to get any of these problems or messages in 
+> kernel version 2.4.21, 
+> 
+> is this bug known already?
 
-The included patch fixes a few bits that were missing when you merged
-my aha1740 patch (mainly errors handling, and a release method).
+Can you try a kernel with ACPI disabled as a first guess (-ac and base
+are the same for the advansys driver)
 
-Tested on Alpha and x86.
-
-Thanks,
-
-        M.
-
-# This is a BitKeeper generated patch for the following project:
-# Project Name: Linux kernel tree
-# This patch format is intended for GNU patch command version 2.5 or higher.
-# This patch includes the following deltas:
-#	           ChangeSet	1.1262  -> 1.1263 
-#	drivers/scsi/aha1740.c	1.25    -> 1.26   
-#
-# The following is the BitKeeper ChangeSet Log
-# --------------------------------------------
-# 03/07/01	maz@hina.wild-wind.fr.eu.org	1.1263
-# aha1740 : Merge back missing bits after merge with jebe.
-# --------------------------------------------
-#
-diff -Nru a/drivers/scsi/aha1740.c b/drivers/scsi/aha1740.c
---- a/drivers/scsi/aha1740.c	Tue Jul  1 20:05:20 2003
-+++ b/drivers/scsi/aha1740.c	Tue Jul  1 20:05:20 2003
-@@ -565,11 +565,26 @@
- 	return 0;
- }
- 
-+static int aha1740_release(struct Scsi_Host *shost)
-+{
-+	struct aha1740_hostdata *host = HOSTDATA (shost);
-+
-+        free_irq (shost->irq, shost);
-+        dma_unmap_single (&host->edev->dev, host->ecb_dma_addr,
-+                          sizeof (host->ecb), DMA_BIDIRECTIONAL);
-+        release_region (shost->io_port, SLOTSIZE);
-+
-+        scsi_host_put (shost);
-+
-+	return 0;
-+}
-+
- static Scsi_Host_Template aha1740_template = {
- 	.module           = THIS_MODULE,
- 	.proc_name        = "aha1740",
- 	.proc_info        = aha1740_proc_info,
- 	.name             = "Adaptec 174x (EISA)",
-+	.release          = aha1740_release,
- 	.queuecommand     = aha1740_queuecommand,
- 	.bios_param       = aha1740_biosparam,
- 	.can_queue        = AHA1740_ECBS,
-@@ -594,7 +609,7 @@
- 	if (!request_region(slotbase, SLOTSIZE, "aha1740")) /* See if in use */
- 		return -EBUSY;
- 	if (!aha1740_test_port(slotbase))
--		goto err_release;
-+		goto err_release_region;
- 	aha1740_getconfig(slotbase,&irq_level,&translation);
- 	if ((inb(G2STAT(slotbase)) &
- 	     (G2STAT_MBXOUT|G2STAT_BUSY)) != G2STAT_MBXOUT) {
-@@ -609,7 +624,7 @@
- 	shpnt = scsi_host_alloc(&aha1740_template,
- 			      sizeof(struct aha1740_hostdata));
- 	if(shpnt == NULL)
--		goto err_release;
-+		goto err_release_region;
- 
- 	shpnt->base = 0;
- 	shpnt->io_port = slotbase;
-@@ -625,21 +640,26 @@
- 	if (!host->ecb_dma_addr) {
- 		printk (KERN_ERR "aha1740_probe: Couldn't map ECB, giving up\n");
- 		scsi_unregister (shpnt);
--		goto err_release;
-+		goto err_host_put;
- 	}
- 	
- 	DEB(printk("aha1740_probe: enable interrupt channel %d\n",irq_level));
- 	if (request_irq(irq_level,aha1740_intr_handle,0,"aha1740",shpnt)) {
- 		printk(KERN_ERR "aha1740_probe: Unable to allocate IRQ %d.\n",
- 		       irq_level);
--		goto err_release;
-+		goto err_unmap;
- 	}
- 
- 	eisa_set_drvdata (edev, shpnt);
- 	scsi_add_host (shpnt, dev);
- 	return 0;
- 
-- err_release:
-+ err_unmap:
-+	dma_unmap_single (&edev->dev, host->ecb_dma_addr,
-+			  sizeof (host->ecb), DMA_BIDIRECTIONAL);
-+ err_host_put:
-+	scsi_host_put (shpnt);
-+ err_release_region:
- 	release_region(slotbase, SLOTSIZE);
- 
- 	return -ENODEV;
-@@ -648,17 +668,11 @@
- static __devexit int aha1740_remove (struct device *dev)
- {
- 	struct Scsi_Host *shpnt = dev->driver_data;
--	struct aha1740_hostdata *host = HOSTDATA (shpnt);
- 
- 	if (scsi_remove_host (shpnt))
- 		return -EBUSY;
- 	
--	free_irq (shpnt->irq, shpnt);
--	dma_unmap_single (dev, host->ecb_dma_addr,
--			  sizeof (host->ecb), DMA_BIDIRECTIONAL);
--	release_region (shpnt->io_port, SLOTSIZE);
--
--	scsi_host_put (shpnt);
-+	aha1740_release (shpnt);
- 	
- 	return 0;
- }
-
--- 
-Places change, faces change. Life is so very strange.
