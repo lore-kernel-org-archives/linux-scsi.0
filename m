@@ -1,99 +1,37 @@
-From: Matthew Wilcox <willy@debian.org>
+From: Brian King <brking@us.ibm.com>
 Subject: Re: sym2 probs in bk-scsi tree
-Date: Thu, 8 Apr 2004 15:57:00 +0100
+Date: Thu, 08 Apr 2004 10:16:03 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040408145700.GB18329@parcelfarce.linux.theplanet.co.uk>
-References: <20040407231820.66dd76cd.akpm@osdl.org>
+Message-ID: <40756CB3.5010902@us.ibm.com>
+References: <20040407231820.66dd76cd.akpm@osdl.org> <20040408145700.GB18329@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:49604 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261885AbUDHO5E
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Apr 2004 10:57:04 -0400
-Content-Disposition: inline
-In-Reply-To: <20040407231820.66dd76cd.akpm@osdl.org>
+Received: from e5.ny.us.ibm.com ([32.97.182.105]:64147 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261802AbUDHPQZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2004 11:16:25 -0400
+In-Reply-To: <20040408145700.GB18329@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <willy@debian.org>
+To: Matthew Wilcox <willy@debian.org>
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
-On Wed, Apr 07, 2004 at 11:18:20PM -0700, Andrew Morton wrote:
-> This is on the power4 machine, which has previously worked quite happily.
+Matthew Wilcox wrote:
+> On Wed, Apr 07, 2004 at 11:18:20PM -0700, Andrew Morton wrote:
 > 
-> During boot the system spends maybe one minute dicking with the SCSI
-> controller and emitting scary new reset and abort messages.
+>>This is on the power4 machine, which has previously worked quite happily.
+>>
+>>During boot the system spends maybe one minute dicking with the SCSI
+>>controller and emitting scary new reset and abort messages.
+> 
+> 
+> They certainly are scary.  What is device 15 on this scsi bus?  This
+> looks like domain validation being applied to a device that can't do it
+> to me.  Did I get that right, James?
 
-They certainly are scary.  What is device 15 on this scsi bus?  This
-looks like domain validation being applied to a device that can't do it
-to me.  Did I get that right, James?
+Looks like a SES to me. Would it make sense to not log errors during 
+domain validation?
 
-> scsi(0:0:10:0): Beginning Domain Validation                       
-> sym0:10: wide asynchronous.                
-> sym0:10: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
-> scsi(0:0:10:0): Ending Domain Validation                     
->   Vendor: IBM       Model: IC35L036UCD210-0  Rev: S5BS
->   Type:   Direct-Access                      ANSI SCSI revision: 03
-> sym0:11:0: tagged command queuing enabled, command queue depth 16. 
-> scsi(0:0:11:0): Beginning Domain Validation                       
-> sym0:11: wide asynchronous.                
-> sym0:11: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
-> scsi(0:0:11:0): Ending Domain Validation                     
->   Vendor: IBM       Model: HSBPD4E  PU3SCSI  Rev: 0013
->   Type:   Enclosure                          ANSI SCSI revision: 02
-> scsi(0:0:15:0): Beginning Domain Validation                        
-> sym0:15:0:phase change 6-7 6@28050390 resid=4.
-> sym0:15:0:phase change 6-7 5@28050390 resid=3.
-> sym0:15:0:phase change 6-7 9@28050390 resid=7.
-> sym0:15:0:phase change 6-7 6@28050390 resid=4.
-> sym0:15:0: DEVICE RESET operation started.    
-> sym0:15:0: DEVICE RESET operation complete.
-> sym0:15:control msgout: c.                 
-> sym0: TARGET 15 has been reset.
-> sym0:15:0: ABORT operation started.
-> sym0:15:0: ABORT operation complete.
-> sym0:15:0: BUS RESET operation started.
-> sym0:15:0: BUS RESET operation complete.
-> sym0: SCSI BUS reset detected.          
-> sym0: SCSI BUS has been reset.
-> sym0:15:0: DEVICE RESET operation started.
-> sym0:15:0: DEVICE RESET operation complete.
-> sym0:15:control msgout: c.                 
-> sym0: TARGET 15 has been reset.
-> sym0:15:0: ABORT operation started.
-> sym0:15:0: ABORT operation complete.
-> sym0:15:0: BUS RESET operation started.
-> sym0:15:0: BUS RESET operation complete.
-> sym0: SCSI BUS reset detected.          
-> sym0: SCSI BUS has been reset.
-> sym0:15:0: DEVICE RESET operation started.
-> sym0:15:0: DEVICE RESET operation complete.
-> sym0:15:control msgout: c.                 
-> sym0: TARGET 15 has been reset.
-> sym0:15:0: ABORT operation started.
-> sym0:15:0: ABORT operation complete.
-> sym0:15:0: BUS RESET operation started.
-> sym0:15:0: BUS RESET operation complete.
-> sym0: SCSI BUS reset detected.          
-> sym0: SCSI BUS has been reset.
-> scsi(0:0:15:0): Domain Validation skipping write tests
-> scsi(0:0:15:0): Ending Domain Validation              
-> sym1: <1010-66> rev 0x1 at pci 0000:41:01.1 irq 104
-> sym1: No NVRAM, ID 7, Fast-80, LVD, parity checking
-> sym1: SCSI BUS has been reset.                     
-> scsi1 : sym-2.1.18j           
-> sym2: <875> rev 0x3 at pci 0001:21:01.0 irq 117
-> sym2: No NVRAM, ID 7, Fast-20, SE, parity checking
-> sym2: SCSI BUS has been reset.                    
-> scsi2 : sym-2.1.18j           
-> st: Version 20040318, fixed bufsize 32768, s/g segs 256
-> SCSI device sda: 71096640 512-byte hdwr sectors (36401 MB)
-> SCSI device sda: drive cache: write through               
->  sda: sda1 sda2 sda3 sda4 < sda5 >         
+-Brian
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+
