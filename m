@@ -1,69 +1,75 @@
-From: Oliver Neukum <oliver@neukum.name>
-Subject: Re: [PATCH / RFC] scsi_set_host_offline
-Date: Wed, 5 Mar 2003 20:49:16 +0100
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: 2.5.63-mm2
+Date: Wed, 5 Mar 2003 13:33:05 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200303052049.16538.oliver@neukum.name>
-References: <20030303221532.GB1587@beaverton.ibm.com> <200303050012.35309.oliver@neukum.name> <1046883135.1784.23.camel@mulgrave>
+Message-ID: <20030305133305.A16075@beaverton.ibm.com>
+References: <20030302180959.3c9c437a.akpm@digeo.com> <1046815078.12931.79.camel@ibm-b> <20030304234042.2553deed.akpm@digeo.com> <20030305173854.GA1090@beaverton.ibm.com> <20030305185231.GE1090@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1046883135.1784.23.camel@mulgrave>
+Content-Disposition: inline
+In-Reply-To: <20030305185231.GE1090@beaverton.ibm.com>; from andmike@us.ibm.com on Wed, Mar 05, 2003 at 10:52:31AM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Mike Anderson <andmike@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+To: Andrew Morton <akpm@digeo.com>, Mark Wong <markw@osdl.org>, linux-scsi@vger.kernel.org
 
-Am Mittwoch, 5. M=E4rz 2003 17:52 schrieben Sie:
-> On Tue, 2003-03-04 at 17:12, Oliver Neukum wrote:
-> > It seems to me that there's a race with scan_scsis() and
-> > scan_scsis_single() which cannot be closed with failing queuecomman=
-d, as
-> > there's a window where the INQUIRY has succeeded but has not yet be=
-en
-> > evaluated by the SCSI layer.
->
-> Consider the offline function as a work in progress.  I think the mod=
-el
+On Wed, Mar 05, 2003 at 10:52:31AM -0800, Mike Anderson wrote:
+> The patch below fixed the problem on my system. I had my list empty
+> checks reversed if aborting and bus device reset failed. The condition
+> that causes the error handler to run is still unknown. I will look at it
+> when I get a chance.
 
-I do. But problems have to be pointed out and fixes proposed.
+Mike -
 
-> we'll ultimately move to is to use the sysfs refcounting, so we could
-> call the offline function, have the device refuse all incoming reques=
-ts,
-> but still process pending ones (which, if this is a forced remove sho=
-uld
-> fail).  Then call a remove hook when the outstanding command count dr=
-ops
-> to zero.
+With your patch, I am able to boot again using the feral driver with an
+isp1020 (on a NUMAQ system).
 
-What exactly is a refcount supposed to do? It doesn't help the main pro=
-blem.
-You must prevent new references arising. This requires locking and flag=
-s.
+Though I still do not know why the feral gets a time out but qlogicisp
+does not. It is apparently a read that times out while mounting root for
+the first time (readonly), so this is not the first read sent to the drive
+(partition code should have sent a read). It could be the queue_depth
+settings (qlogicisp sets to 1, I have feral setting them to 16).
 
-> > I am not quite sure how slave_alloc() is involved into this, but IM=
-HO
-> > it's wrong to force LLDDs to know about devices if they are hotplug=
-gable.
-> > Could you clarify?
->
-> By design LLDs need to know about configured devices because they may
-> (although not all do) need to allocate resources to process them.  Th=
-e
-> slave configure/alloc/destroy is the interface for communicating this
-> information:
+On boot with (SCSI error logging on) I see:
 
-Very well, but that system should not be overloaded with hotplugging is=
-sues.
-IMHO we must not require drivers to support this interface just because=
- they
-are hotpluggable.
+[ ... ]
 
-	Regards
-		Oliver
+TCP: Hash tables configured (established 524288 bind 65536)
+NET4: Unix domain sockets 1.0/SMP for Linux NET4.0.
+isp6: Loop ID 125, AL_PA 0x1, Port ID 0x1, Loop State 0x2, Topology
+'Private Loop'
+Error handler scsi_eh_0 waking up
+Error handler scsi_eh_0 waking up
+scsi_eh_prt_fail_stats: 0:0:0:0 cmds failed: 0, cancel: 1
+Total of 1 commands on 1 devices require eh work
+scsi_eh_0: aborting cmd:0xc3f4e600
+scsi_eh_0: aborting cmd failed:0xc3f4e600
+scsi_eh_0: Sending BDR sdev: 0xc3fba600
+isp0: Interrupting Mailbox Command (0x17) Timeout
+isp0: Mailbox Command 'ABORT TARGET' failed (TIMEOUT)
+scsi_eh_0: BDR failed sdev:0xc3fba600
+scsi_eh_0: Sending BRST chan: 0
+scsi_try_bus_reset: Snd Bus RST
+isp0: Interrupting Mailbox Command (0x18) Timeout
+isp0: Mailbox Command 'BUS RESET' failed (TIMEOUT)
+scsi_eh_0: BRST failed chan: 0
+scsi_eh_0: Sending HRST
+scsi_try_host_reset: Snd Host RST
+isp0: Differential Mode
+isp0: Ultra Mode Capable
+isp0: Board Type 1040B, Chip Revision 0x5, loaded F/W Revision 4.66.0
+isp0: Last F/W revision was 4.40.0
+scsi_eh_done scmd: c3f4e600 result: 2
+scsi_send_eh_cmnd: scmd: c3f4e600, rtn:2002
+scsi_send_eh_cmnd: scsi_eh_completed_normally 2001
+scsi_eh_tur: scmd c3f4e600 rtn 2002
+scsi_eh_0: flush retry cmd: c3f4e600
+scsi_restart_operations: waking up host to restart
+kjournald starting.  Commit interval 5 seconds
+EXT3-fs: mounted filesystem with ordered data mode.
+VFS: Mounted root (ext3 filesystem) readonly.
+Freeing unused kernel memory: 112k freed
+INIT: version 2.78 booting
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[ ... ]
+
+-- Patrick Mansfield
