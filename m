@@ -1,36 +1,27 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH] pull scsi_scan_host out of scsi_add_host
-Date: Tue, 8 Jul 2003 01:03:35 -0700
+Date: Tue, 8 Jul 2003 10:23:16 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030708080334.GA2451@beaverton.ibm.com>
-References: <20030707143056.GA1177@lst.de>
+Message-ID: <20030708082316.GA13384@lst.de>
+References: <20030707143056.GA1177@lst.de> <20030708080334.GA2451@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:26278 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S266913AbTGHHqt
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Jul 2003 03:46:49 -0400
+Received: from verein.lst.de ([212.34.189.10]:52406 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S265525AbTGHIIt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jul 2003 04:08:49 -0400
 Content-Disposition: inline
-In-Reply-To: <20030707143056.GA1177@lst.de>
+In-Reply-To: <20030708080334.GA2451@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-Christoph Hellwig [hch@lst.de] wrote:
-> As Douglas mentioned on this list a while ago there's hardware these
-> days where we don't want to automatically perform an initial bus scan
-> in scsi_add_host.  Currently we only have ieee1394 in the tree but
-> I can imagine more uses like iscsi or certain fc setups.
-> 
-> This patch removes the call to scsi_scan_host from scsi_add_host
-> and moves it into the drivers that want in.
+On Tue, Jul 08, 2003 at 01:03:35AM -0700, Mike Anderson wrote:
+> Would we want to make a symmetric interface and pull the
+> unscan out of scsi_remove_host also?
 
-Would we want to make a symmetric interface and pull the
-unscan out of scsi_remove_host also?
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+It would make sense if we something like an unscan.  But the closest
+thing to an unscan is scsi_forget_host which just releases the
+scsi_device structures.  Given that we can't free a host without
+releasing the devices first and scsi_forget_host is a noop if
+shost->my_devices is empty I don't this makes gains anything.
 
