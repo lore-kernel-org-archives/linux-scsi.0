@@ -1,57 +1,37 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH/RFT] mode sense madness always use page 8
-Date: Fri, 07 Nov 2003 09:11:46 +1000
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Ultra 160 - what HA works well with 2.4 and 2.6?
+Date: Fri, 7 Nov 2003 11:24:08 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FAAD532.2060300@torque.net>
-References: <Pine.LNX.4.44L0.0310301004010.852-100000@ida.rowland.org> <1067531731.4250.11.camel@pathost1.iomegacorp.com> <20031030091808.A6781@beaverton.ibm.com> <1067535485.6411.42.camel@pathost1.iomegacorp.com> <20031030100501.A7250@beaverton.ibm.com> <1067541899.1141.4.camel@ronald.kuetemeier.com> <20031030134850.A9076@beaverton.ibm.com> <1067551081.1138.7.camel@ronald.kuetemeier.com> <1067558384.14409.50.camel@patrh9> <20031031101645.A14729@beaverton.ibm.com>
-Reply-To: dougg@torque.net
+Message-ID: <20031107112408.B3302@infradead.org>
+References: <20031104103929.GA9585@merlin.emma.line.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:16651 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263960AbTKGJRU
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Nov 2003 04:17:20 -0500
-In-Reply-To: <20031031101645.A14729@beaverton.ibm.com>
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:61202 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S264084AbTKGLYJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Nov 2003 06:24:09 -0500
+Content-Disposition: inline
+In-Reply-To: <20031104103929.GA9585@merlin.emma.line.org>; from ma+lscsi@dt.e-technik.uni-dortmund.de on Tue, Nov 04, 2003 at 11:39:29AM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Pat LaVarre <p.lavarre@ieee.org>, ronald@kuetemeier.com, stern@rowland.harvard.edu, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, james.bottomley@steeleye.com
+To: Matthias Andree <ma+lscsi@dt.e-technik.uni-dortmund.de>
+Cc: linux-scsi@vger.kernel.org
 
-Patrick Mansfield wrote:
-> On Thu, Oct 30, 2003 at 04:59:45PM -0700, Pat LaVarre wrote:
-> 
->>Can we cycle more quickly thru compile-test-edit up in user land, rather
->>than patching the kernel?
-> 
-> 
-> Good idea.
-> 
-> 
->>sudo ./plscsi /dev/sg1 -v -i x1C -x "5A 00 08:00:00:00 00 00:1C 00"
->>sudo ./plscsi /dev/sg1 -v -i 4   -x "5A 00 3F:00:00:00 00 00:04 00"
->>sudo ./plscsi /dev/sg1 -v -i 4   -x "5A 00 00:00:00:00 00 00:04 00"
->>sudo ./plscsi /dev/sg1 -v -i xFF -x "5A 00 3F:00:00:00 00 00:FF 00"
+On Tue, Nov 04, 2003 at 11:39:29AM +0100, Matthias Andree wrote:
+> Are there concerns that I should be aware of, for instance Dave Jones'
+> post-halloween-2003 doc (http://www.codemonkey.org.uk/post-halloween-2.5.txt)
+> mentions error handling, are there non-obvious concerns affecting the
+> qla1280 and sym53c8xx_2 drivers? Which works better? Anything else I
+> should consider?
 
-Patrick + Pat,
-plscsi is starting to look remarkably like FreeBSD's
-camcontrol utility. Perhaps we should be looking at
-implementing camcontrol in Linux.
+I'd say both are fine, look for the price :) for the qlogic one make sure
+you're using the recent driver from Jes as included in 2.6 or 2.4.23pre,
+not the one from qlogic.
 
-> Nice. Does sg_utils have an equivalent tool?
-> 
-> You can use /dev/sdN with 2.6.
-> 
-> 
->>Also personally I find the source for that plscsi app impenetrably awful
->>to read.
-> 
-> 
-> Maybe you can rewrite it in c and get it into sg_utils.
+> Does it make a difference which brand the card will be? I have good
+> experience with the 53C875 based Tekram cards so far, but U160 is a
+> different League than UWSCSI.
 
-I have no objection to putting utilities written in
-C++ in sg3_utils.
-
-Doug Gilbert
-
+I don't think the vendor matters that much these days, there's not a lot
+to wire left on the boards and the driver is the same anyway.
 
