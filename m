@@ -1,50 +1,41 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Handling ordered tags
-Date: Mon, 28 Mar 2005 15:45:13 -0600
-Message-ID: <42487AE9.4000904@us.ibm.com>
-Reply-To: brking@us.ibm.com
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: adaptec 2120S software under RedHat 8.0 and FC2
+Date: Mon, 28 Mar 2005 22:57:43 +0100
+Message-ID: <20050328215743.GA14148@infradead.org>
+References: <60807403EABEB443939A5A7AA8A7458BED3211@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:49614 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262087AbVC1VpP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Mar 2005 16:45:15 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j2SLjEPO017347
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Mar 2005 16:45:14 -0500
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j2SLjEW5234718
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Mar 2005 16:45:14 -0500
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j2SLjE2s001886
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Mar 2005 16:45:14 -0500
-Received: from [9.10.86.27] (kaled.rchland.ibm.com [9.10.86.27])
-	by d01av01.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j2SLjDwB001825
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Mar 2005 16:45:14 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:4759 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S262083AbVC1V5r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Mar 2005 16:57:47 -0500
+Content-Disposition: inline
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458BED3211@otce2k01.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Ross Macintyre <raz@macs.hw.ac.uk>, Mark Haverkamp <markh@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, matt_domsch@dell.com
 
-I'm trying to understand all the implications of allowing ordered tags
-for a SCSI LLD, especially when running QERR=0 with autosense and no ACA.
+> > note that if adaptec simply opensourced their managment tools we
+> wouldn't
+> > have this problem at all. I wonder why Adaptec did that for the old
+> > i2o-based controllers but not aacraid.  
+> 
+> Oh yes, that, worked hard on the powers-that-be to permit this. Could
+> not release a substantial majority of it because it would violate
+> licensed libraries (Zinc, being one of them, I am sorry to admit). So we
+> release the engine and the raidutil. No logger, no remote communication
+> engine, no GUI and no browser engine either. It was the best we could
+> do.
 
-Are any of these problems a concern given how ordered tags are used in Linux?
+Which is more than enough.
 
-1. If an ordered tag is sent and a previously sent simple tagged op completes
-   with a failure, the ordered tag will still execute.
-2. If an ordered tag is sent and completes with a failure, any simple tags sent
-   after it will execute.
+> Once released, and under a BSD license, the open source community failed
+> to contribute one change to the sources. All it did was permit the tools
+> to be packaged, archived and to continue in-perpetuity when
+> compatibility libraries failed to work on newer installations.
 
-I guess my bigger question is, are there any additional requirements on an LLD
-in order for it to support ordered tags? Can the LLD send back responses in any
-order?
+Which is exactly what we need.  We don't need gazillions of new features
+but code that can be carried forward easily and fixed where nessecary.
 
-Thanks
-
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
