@@ -1,95 +1,64 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Recovered disk error caused disk to go offline.
-Date: Fri, 30 Jan 2004 14:02:10 -0500
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: RE: [BKPATCH] Updated qla2xxx driver against scsi-misc-2.6.
+Date: Fri, 30 Jan 2004 11:25:44 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200401301902.i0UJ2Ai30922@dns1.watkins-home.com>
-References: <200401290521.i0T5L6i22093@dns1.watkins-home.com>
+Message-ID: <B179AE41C1147041AA1121F44614F0B060EE01@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rwcrmhc13.comcast.net ([204.127.198.39]:63154 "EHLO
-	rwcrmhc13.comcast.net") by vger.kernel.org with ESMTP
-	id S263082AbUA3TCM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jan 2004 14:02:12 -0500
-Received: from astroboy (astroboy.watkins-home.com [192.168.0.8])
-	by dns1.watkins-home.com (8.11.6/8.11.6) with ESMTP id i0UJ2Ai30922
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Jan 2004 14:02:10 -0500
-In-Reply-To: <200401290521.i0T5L6i22093@dns1.watkins-home.com>
+Received: from [198.70.193.2] ([198.70.193.2]:51247 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S263561AbUA3TZ1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Jan 2004 14:25:27 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Sorry about the re-post, but no comments after almost 2 days.
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Guy
-Sent: Thursday, January 29, 2004 12:21 AM
-To: linux-scsi@vger.kernel.org
-Subject: Recovered disk error caused disk to go offline.
-
-Neil Brown said to send this message to linux-scsi, so here it is.
-
-Please help.
-Thanks,
-Guy
-
-On Thursday January 29, bugzilla@watkins-home.com wrote:
-> As you can see in the log, the write error recovered with auto
-reallocation!
-> As I understand it, this is a normal event with today's disks.
-> I don't think the disk should have been considered failed.
+On Friday, January 30, 2004 10:11 AM, James Bottomley wrote:
+> On Fri, 2004-01-30 at 11:59, Andrew Vasquez wrote:
+> > I'm still trying to get the hang of using BK, so I hope sending
+> > updates in this way will be suitable.
 > 
-> Comments please?
-
-You need to talk to linux-scsi about this.
-The scsi subsystem told the raid subsystem that there was an error, so
-the raid subsystem stopped using the device.
-
-If the write error was recovered, scsi shouldn't have reported an
-error to raid.
-
-NeilBrown
-
+> Actually, not against my scsi-misc-2.6 tree, no.  The reason is that I
+> frequently take apart and rebuild that tree as the patch composition
+> changes (I did it only a day ago to pull out your initial SNS
+> patch and
+> put the new one in).
 > 
-> Thanks,
-> Guy
+> BK is very fussy about having all changesets in a tree to do a bk
+> receive on.  However, as I pull apart the tree BK cannot import it
+> because the bkpatch now depends on missing changesets.
 > 
-> The spare disk resynced just fine.,A  I never knew for over 24 hours!
-> This is cool stuff!
+> Using the tree internally to generate a real patch is fine, but I
+> frequently can't import bk patches against it.
 > 
-> Jan 27 12:44:06 watkins kernel: SCSI disk error : host 2 channel 0 id 4
-lun
-> 0 return code = 8000002
-> Jan 27 12:44:06 watkins kernel: Info fld=0x7e5c81, Deferred sd08:71: sense
-> key Recovered Error
-> Jan 27 12:44:06 watkins kernel: Additional sense indicates Write error -
-> recovered with auto reallocation
-> Jan 27 12:44:06 watkins kernel:,A  I/O error: dev 08:71, sector 8280704
-> Jan 27 12:44:06 watkins kernel: raid5: Disk failure on sdh1, disabling
-> device. Operation continuing on 13 devices
-> Jan 27 12:44:06 watkins kernel: md: updating md2 RAID superblock on device
-> Jan 27 12:44:06 watkins kernel: md: sdc1 [events: 00000009]<6>(write)
-sdc1's
-> sb offset: 17767744
-> Jan 27 12:44:06 watkins kernel: md: recovery thread got woken up ...
-> Jan 27 12:44:06 watkins kernel: md2: resyncing spare disk sdc1 to replace
-> failed disk
-> Jan 27 12:44:06 watkins kernel: RAID5 conf printout:
-> Jan 27 12:44:06 watkins kernel:,A  --- rd:14 wd:13 fd:1
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ok, thanks for clearing that up.  I'll stick to patches against 
+scsi-misc-2.6.
 
+> > Here's the list of changes (1.1533 -> 1.1539) and a patch (1.1534 ->
+> > 1.1539 -- minus the firmware file diffs [to reduce the noise]) for
+> > review. 
+> 
+> I've successfully applied the diff in your email and added the history
+> to the single change set comment, thanks.
+>
+
+Good.  Then could you add the final piece (firmware updates) to your
+tree?  I've uploaded a bzip'd diff to add the 3.02.21 firmware for the
+ISPs at SF.net:
+
+	http://osdn.dl.sourceforge.net/sourceforge/linux-qla2xxx/qla2xxx_fw_update-v2.6.diff.bz2
+
+Here's the changelog once more:
+
+	# The following is the BitKeeper ChangeSet Log
+	# --------------------------------------------
+	# 04/01/30	andrew.vasquez@apc.qlogic.com	1.1534
+	# Resync with latest released firmware 3.02.21.
+	# --------------------------------------------
+
+Thanks again,
+Andrew Vasquez
