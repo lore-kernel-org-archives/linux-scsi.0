@@ -1,38 +1,54 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: writable mmc profiles actually are writable
-Date: Tue, 7 Oct 2003 07:38:58 +0200
+From: Dag Nygren <dag@newtech.fi>
+Subject: Re: Bug in the sg driver
+Date: Tue, 07 Oct 2003 08:47:00 +0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031007053858.GL972@suse.de>
-References: <1064865746.4262.63.camel@patehci2> <1065460336.10804.1.camel@patehci2> <1065463946.5185.8.camel@patehci2> <20031006182223.GF972@suse.de> <20031006182510.GG972@suse.de> <1065469831.5185.44.camel@patehci2> <20031006203816.GJ972@suse.de> <1065473899.6835.41.camel@patehci2> <1065478448.2361.1.camel@patehci2> <1065484607.2899.7.camel@patehci2>
+Message-ID: <20031007054700.4302.qmail@dag.newtech.fi>
+References: <rddunlap@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:49362 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261802AbTJGFjD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2003 01:39:03 -0400
-Content-Disposition: inline
-In-Reply-To: <1065484607.2899.7.camel@patehci2>
+Received: from ip213-185-39-113.laajakaista.mtv3.fi ([213.185.39.113]:25729
+	"HELO dag.newtech.fi") by vger.kernel.org with SMTP id S261799AbTJGFrC
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Oct 2003 01:47:02 -0400
+In-Reply-To: Message from "Randy.Dunlap" <rddunlap@osdl.org>
+   of "Mon, 06 Oct 2003 15:18:12 PDT." <20031006151812.57a641d1.rddunlap@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-scsi@vger.kernel.org
+To: "Randy.Dunlap" <rddunlap@osdl.org>
+Cc: Dag Nygren <dag@newtech.fi>, linux-scsi@vger.kernel.orgdag@newtech.fi
 
-On Mon, Oct 06 2003, Pat LaVarre wrote:
-> Yep, still happy, same in -test6 as in -test5 e.g.
+> On Mon, 06 Oct 2003 22:11:35 +0300 Dag Nygren <dag@newtech.fi> wrote:
 > 
-> $ dmesg | grep ^sr
-> sr0: scsi3-mmc drive: 125x/125x caddy
-> sr0: scsi3-mmc maybe not writeable
-> sr0: scsi3-mmc writable profile: 0x0002
-> $
-> $ grep MMC /proc/sys/dev/cdrom/info
-> Can write other MMC-RW: 1 ...
+> 
+> Is your oops/panic like this one?
 
-I don't quite agree with this patch. Please add the GET_CONFIGURATION
-stuff to cdrom.c instead so it works with ide-cd as well (ide-scsi is
-basically dead, and the number of scsi drives out there isn't exactly
-big and increasing). GPCMD_GET_CONFIGURATION already exists. Also, make
-DVD-RAM drives set CDC_MMC_RW as well and only check for that at open.
+Yep, at least from sg_ioctl down.
 
--- 
-Jens Axboe
+> mptscsih_qcmd is in the Fusion MPT driver.
+> Looks like it is having problems with a scatter-gather list
+> (actually with PCI mapping of it).
+> I can't tell if the Fusion driver begins the problem or if
+> sg begins it and passes it along.
+
+Our driver is the aic7xxx, the board is an Adaptec 19160.
+
+> Can you try a current 2.4.22 kernel?  This driver has been updated
+> some since 2.4.20.  I don't know that this bug is fixed, however.
+
+Not until Redhat compiles one, as we don't want to use anything
+not Redhat for this installation.
+
+> If you get this bug again, please run the logged text thru ksymoops
+> so that it is more usable.
+
+Yes, and we will also try to capture "our" oops this time.
+Coming to think about it, it is probably logged somewhere...
+Not the successive Panic, but the oops should be there. I will investigate
+a bit..
+
+> What makes the kernel "Tainted"?
+
+Our kernel is a stock Redhat 9.0 kernel and shouldn't be tainted.
+
+-- Dag
 
