@@ -1,78 +1,65 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: strange ide-cd MODE_SENSE response [2.6.8.1]
-Date: Tue, 17 Aug 2004 16:35:26 -0600
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: libata & scsi error handling
+Date: Tue, 17 Aug 2004 22:08:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <BC28D5D0-F09D-11D8-81F9-00039398BB5E@ieee.org>
-Mime-Version: 1.0 (Apple Message framework v619)
-Content-Type: text/plain;
-	charset=US-ASCII;
-	format=flowed
+Message-ID: <4122BA04.3070705@pobox.com>
+References: <4122771A.4070203@wasp.net.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:44745 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S266819AbUHQWe7
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:19628 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S268576AbUHRCIU
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Aug 2004 18:34:59 -0400
-Received: from royntex01.iomegacorp.com (edison [10.1.1.82])
-	by email.iomega.com (Postfix) with ESMTP id 225D72230
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Aug 2004 16:34:58 -0600 (MDT)
+	Tue, 17 Aug 2004 22:08:20 -0400
+In-Reply-To: <4122771A.4070203@wasp.net.au>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Brad Campbell <brad@wasp.net.au>
+Cc: linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-// In short:
+Brad Campbell wrote:
+> I think I have this timeout error issue pegged now.
+> 
+> I know this is both wrong, ugly and likely to cause internal kernel 
+> damage, but for the purpose of pegging what I think may be the culprit 
+> it works around the error nicely here
+> 
+> brad@srv:/usr/src$ diff -u temp/linux-2.6.8.1/drivers/scsi/libata-scsi.c 
+> linux-2.6.8.1/drivers/scsi/libata-scsi.c
+> --- temp/linux-2.6.8.1/drivers/scsi/libata-scsi.c       2004-08-14 
+> 14:55:19.000000000 +0400
+> +++ linux-2.6.8.1/drivers/scsi/libata-scsi.c    2004-08-18 
+> 01:04:11.000000000 +0400
+> @@ -213,6 +213,7 @@
+> 
+>         ap = (struct ata_port *) &host->hostdata[0];
+>         ap->ops->eng_timeout(ap);
+> +       host->host_failed--;
+> 
+>         DPRINTK("EXIT\n");
+>         return 0;
+> 
+> The issue is that the libata installed eh_strategy_handler does not 
+> complete the error as
+> scsi_unjam_host -> scsi_eh_abort_cmds -> scsi_eh_finish_cmd does.
 
-Me too.
 
-I find PATAPI in Linux opaque here, not transparent.
+Well, well, well.  If I had a libata Honorary Hacker merit badge, I 
+would give it to you.
 
-// At length ...
+It is highly likely that your patch is doing the right thing.  Doug 
+Ledford, 2.4.x SCSI maintainer, pointed out to me recently that my 2.4.x 
+error handling code MUST update a couple variables, otherwise error 
+handling would hang as you see.  The reason is that scsi_unjam_host(), 
+on both 2.4.x and 2.6.x, is the only ->eh_strategy_handler until libata 
+came along.
 
- > Subject: strange ide-cd MODE_SENSE response [2.6.8.1]
+So, it is likely that there are a few details the scsi_unjam_host() 
+performs, that needs to do too.
 
-Yes a device that fails without providing auto sense has spoken rudely 
-to the host.
+Thanks much for your excellent detective work, I'll see where to best 
+put this change...
 
- > a MODE_SENSE (6 byte variant) ...
- > sent to an "ide-cd" device (e.g. /dev/hdc)
- > "CONDITION MET" SCSI status and no sense buffer.
 
-Analogously, my more naive parse of ioctl SG_IO results yielded ...
-
-... a check condition without intelligible sense and also a complaint 
-of positive residue i.e. less data bytes copied than requested for the 
-CDB.
-
-Like you, I have devices that identify themselves as implementing SFF 
-SCSI = MMC yet also in fact for compatibility choosing to implement the 
-option of ANSI SCSI.  My devices are Iomega REV drives.  Contrasting 
-what I get from the same device via USB or via ATAPI, I see:
-
-  $ # usb-storage USB copies in data and good status
-  $ uname -msr
-  Linux 2.6.8.1 i686
-  $
-  $ sudo plscsi /dev/scd0 --please -i 4 -x "1A 3F:00:00 04 00" -v
-  x 00000000 1A 3F:00:00 04 00 .. .. .. .. .. .. .. .. .. .. "Z?@@D@"
-  x 00000000 07:70:00:00 .. .. .. .. .. .. .. .. .. .. .. .. "Gp@@"
-  // 0 = plscsi.main exit int
-  $
-
-  $ # ide-cd PATAPI loses the data, and provides no auto sense, but 
-reports the data loss as positive residue
-  $ sudo plscsi /dev/hdc --please -i 4 -x "1A 3F:00:00 04 00" -v
-  x 00000000 1A 3F:00:00 04 00 .. .. .. .. .. .. .. .. .. .. "Z?@@D@"
-  x 00000000 00:00:00:00 .. .. .. .. .. .. .. .. .. .. .. .. "@@@@"
-  // -x0102 = -258 = plscsi.main exit int
-  $
-
-  $ # ide-cd PATAPI can provide auto sense data when it likes
-  $ sudo plscsi /dev/hdc -x "00 00:00:00 00 00" -v
-  x 00000000 00 00:00:00 00 00 .. .. .. .. .. .. .. .. .. .. "@@@@@@"
-  x 00000000 70:00:02:00 00:00:00:18 00:00:00:00 3A:00 .. .. 
-"p@B@@@@X@@@@:@"
-  // x 2 3A sense
-  // -x0002 = -2 = plscsi.main exit int
-  $
-
-Pat LaVarre
+	Jeff
 
