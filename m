@@ -1,28 +1,25 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [ANNOUNCE] iSCSI enterprise target software
-Date: Tue, 1 Mar 2005 22:19:14 +0000
-Message-ID: <20050301221914.GB5742@infradead.org>
-References: <OF00F39C19.AE2C12A8-ON88256FB7.00641755-88256FB7.0065149B@us.ibm.com> <1109702227.6293.137.camel@laptopd505.fenrus.org> <m1d5ujp0dx.fsf@muc.de>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [2.6 patch] SCSI: possible cleanups
+Date: Tue, 01 Mar 2005 17:32:06 -0500
+Message-ID: <4224ED66.2020200@adaptec.com>
+References: <20050228213159.GO4021@stusta.de> <4224245E.6090503@torque.net> <42247EF0.9000404@adaptec.com> <20050301221753.GA5742@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from pentafluge.infradead.org ([213.146.154.40]:22165 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S262099AbVCAWTS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2005 17:19:18 -0500
-Content-Disposition: inline
-In-Reply-To: <m1d5ujp0dx.fsf@muc.de>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from magic.adaptec.com ([216.52.22.17]:54719 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262110AbVCAWcS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 17:32:18 -0500
+In-Reply-To: <20050301221753.GA5742@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@muc.de>
-Cc: Arjan van de Ven <arjan@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, iscsitarget-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: dougg@torque.net, Adrian Bunk <bunk@stusta.de>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Mar 01, 2005 at 09:38:34PM +0100, Andi Kleen wrote:
-> Arjan van de Ven <arjan@infradead.org> writes:
-> >
-> > You want to *use* the kernel pagecache as much as you can. You do so by
-> > using mmap and such, and msync to force content to disk. That uses the
-> 
-> Last time I checked you couldn't mmap block devices. Has this changed
-> now?  Could be a problem for an iSCSI target.
+On 03/01/05 17:17, Christoph Hellwig wrote:
+> Doing it in the core means less duplication and avoiding updating
+> all drivers.
 
-Since 2.4.10 you can mmap block devices.
+I agree.
+
+	Luben
+
