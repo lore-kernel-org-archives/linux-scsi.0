@@ -1,84 +1,85 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: 1st  REVIEW : UNH iSCSI for 2.6-test5
-Date: Wed, 24 Sep 2003 12:09:46 -0400
+From: "Sachin Mhatre \(smhatre\)" <smhatre@cisco.com>
+Subject: RE: [iscsi 2/2] iscsi-probe.c
+Date: Wed, 24 Sep 2003 21:50:02 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F71C1CA.5030004@pobox.com>
-References: <20030924151228.8206.qmail@web60208.mail.yahoo.com>
+Message-ID: <018b01c382b7$b7f81220$8f074d0a@apac.cisco.com>
+References: <20030924144817.A16189@infradead.org>
+Reply-To: <smhatre@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:30138 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261459AbTIXQKA
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2003 12:10:00 -0400
-In-Reply-To: <20030924151228.8206.qmail@web60208.mail.yahoo.com>
+Received: from sj-iport-2-in.cisco.com ([171.71.176.71]:33351 "EHLO
+	sj-iport-2.cisco.com") by vger.kernel.org with ESMTP
+	id S261448AbTIXQUK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Sep 2003 12:20:10 -0400
+In-Reply-To: <20030924144817.A16189@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, jpd_hp_linux_scsi@yahoo.com
+To: 'Christoph Hellwig' <hch@infradead.org>
+Cc: 'Jeff Garzik' <jgarzik@pobox.com>, linux-scsi@vger.kernel.org
 
-jd wrote:
+Hi,
+
+1. We are using the following options in the indent command for handling
+the 80 character limit:-
+indent -kr -i8 -ts8 -sob -l80 -ss -bs -psl <filename>.c
+However, this does not handle the log messages in double quotes. We will
+manually take care of such messages.
+2. The opening of files from kernel space is important for the iscsi
+probing mechanism.
+We read/write into the "/proc/scsi/scsi" file for
+configuration/deconfiguration of iSCSI devices.
+3. typedefs in our code will be removed. Kernel functions will be used
+wherever available.
+We will update you once the above mentioned changes are done.
+
+Thanks,
+Sachin 
+
+
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of 'Christoph
+Hellwig'
+Sent: Wednesday, September 24, 2003 7:18 PM
+To: Sachin Mhatre (smhatre)
+Cc: 'Jeff Garzik'; linux-scsi@vger.kernel.org
+Subject: Re: [iscsi 2/2] iscsi-probe.c
+
+
+On Wed, Sep 24, 2003 at 07:12:12PM +0530, Sachin Mhatre (smhatre) wrote:
 > Hi,
+> 	The linux-iscsi source code submitted for review is for
+inclusion 
+> into the 2.4 linux kernel tree. You can get this source code from the 
+> linux-iscsi sourceforge branch with the tag "linux-iscsi-3-5-branch". 
+> Just for convenience here is the cvs command for anonymous checkout of
+
+> this code:- cvs 
+> -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/linux-iscsi co -r 
+> linux-iscsi-3-5-branch linux-iscsi .
 > 
-> Available for first Review & Comments.
+> We have tested this code on the Redhat Linux 9.0 platform, kernel 
+> version 2.4.22.
 > 
-> The UNH iSCSI Project, a collaborative effort between the
-> UNH IOL and Hewlett Packard Company in Austin, Texas,
-> ( hosted at http://sourceforge.net/projects/unh-iscsi )
-> to produce a full feature, generic iSCSI implementation ,
-> has ported the 2.4.18/20 version of the iSCSI initiator to
-> Linux 2.6.test5 Kernel for consideration of inclusion for
-> future distribution.
-> 
-> A patch file is available for review at:
-> 
-> http://www.parisc-linux.org/~jpd/
-> 
-> Files included in the patch :
-> 
->  drivers/scsi/Makefile
->  drivers/scsi/Kconfig
->  drivers/scsi/unh_iscsi
->  drivers/scsi/unh_iscsi/initiator     # HBA & Data mover
->  drivers/scsi/unh_iscsi/common        # Login and shared files
->  drivers/scsi/unh_iscsi/security       $ SRP and CHAP login
-> 
-> Please submit comments to :
-> 
-> linux-scsi@vger.kernel.org
+> Please let your valuable feedback pour in.
 
-Please don't mangle or otherwise use non-RFC email addresses.  When you 
-use your normal email address somewhere in the email _anyway_, you're 
-annoying valid users while doing nothing to defeat spammers.
+It looks like all comments I posted on linux-scsi apply to the
+inux-iscsi-3-5-branch version of iscsi-probe.c, too.  So please stop
+messing randomly with the namespace and opening files from kernelspace,
+respect Documentation/CodingStyle (avoid typedefs, linebreaks after 80
+chars, etc..) and try to use kernel functionality where available.
 
+Note that I can't help you with redhat inclusion, but for mainline
+inclusion we'd like to see a 2.6 version before a 2.4 one.  So my advice
+would be to concentrate on 2.6 first, the scsi layer is much nicer
+anyway there.  If that's done backport it to 2.4 which might require a
+few bad workarounds and/or small changes to the scsi core.
 
-comments:
-
-* use generic facility for crc32
-
-* most of the formatting looks good, but some of it looks crazy, like
-
-> +	add_length = scan_table_and_process(sock,
-> +										p_param_tbl,
-> +										SECURITY_PARAM | INFORMATIONAL_PARAM,
-> +										INITIATOR,
-> +										inputpdu,
-> +										outputpdu,
-> +										connection_flags, login_flags);
-
-* indeed, this needs to be legible to people w/ 80-column screens
-
-* I disagree with the need for "my_kmalloc" and "my_kfree".  Ditch the 
-allocator and directly use the kernel counterparts.
-
-* function prototypes should use "u32" not "__u32" forms.  Ditto for 
-other kernel-internal structures.
-
-* string_llx is not needed.  use sprintf.
-
-* verbosely dumping scsi ops is something that should be more generic 
-(or removed)
-
-* authentication should be offloaded to a daemon, as NFSv4 did
-
-* I got tired of scrolling right to read code, at this point
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org More majordomo info
+at  http://vger.kernel.org/majordomo-info.html
 
