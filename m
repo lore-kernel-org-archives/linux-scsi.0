@@ -1,31 +1,50 @@
-From: Jamie Lokier <jamie@shareable.org>
-Subject: Re: [PATCH 2.6.1 -- take two] Add CRC32C chksums to crypto and lib routines
-Date: Fri, 6 Feb 2004 23:54:21 +0000
+From: "Michael W. Shaffer" <mwshaffer@yahoo.com>
+Subject: Re: No volumes detected by cciss driver
+Date: Fri, 6 Feb 2004 16:56:46 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040206235421.GD12503@mail.shareable.org>
-References: <yquj4qu8je1m.fsf@chaapala-lnx2.cisco.com> <Xine.LNX.4.44.0402031213120.939-100000@thoron.boston.redhat.com> <20040203175006.GA19751@chaapala-lnx2.cisco.com> <20040203185111.GA31138@waste.org> <yqujad40j7rn.fsf@chaapala-lnx2.cisco.com> <20040203172508.B26222@lists.us.dell.com> <20040203233737.GD31138@waste.org> <yquj4qu6g6ui.fsf@chaapala-lnx2.cisco.com>
+Message-ID: <20040207005646.2433.qmail@web10406.mail.yahoo.com>
+References: <20040206232419.42563.qmail@web10402.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.shareable.org ([81.29.64.88]:17616 "EHLO
-	mail.shareable.org") by vger.kernel.org with ESMTP id S266720AbUBFXyx
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Feb 2004 18:54:53 -0500
-Content-Disposition: inline
-In-Reply-To: <yquj4qu6g6ui.fsf@chaapala-lnx2.cisco.com>
+Received: from web10406.mail.yahoo.com ([216.136.130.98]:4613 "HELO
+	web10406.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S265662AbUBGA4r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Feb 2004 19:56:47 -0500
+In-Reply-To: <20040206232419.42563.qmail@web10402.mail.yahoo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Clay Haapala <chaapala@cisco.com>
-Cc: Matt Mackall <mpm@selenic.com>, Matt Domsch <Matt_Domsch@dell.com>, James Morris <jmorris@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "David S. Miller" <davem@redhat.com>
+To: linux-scsi@vger.kernel.org
 
-Clay Haapala wrote:
-> licensing public-domain code and placing restrictions on it,
-> something only a copyright holder should be able to do,
+> When I boot the system from the Debian CD, choosing the
+> bf24 kernel, I see only one line of output from the
+> cciss driver, just saying "device detected at 0x...".
+> No further messages are printed, and no disk devices of
+> any sort appear to be available to the installation
+> system. I am aware that the devices files would be in
+> the directory /dev/cciss, and there are device nodes
+> in there, but none of them are useable.
 
-Public domain means it doesn't have a copyright holder.
+Some clarification on this:
 
-> and not the intent of the author, in this case.
+Upon closer inspection, it appears that the controller which
+is detected is the onboard or integrated SmartArray 5i, which
+does not in fact have any disks connected to it, making the
+failure to detect any disk volumes less than surprising. Also,
+the exact kernel version is 2.4.18. The information in the
+/proc/driver/cciss/cciss0 file confirms the model and details
+of the integrated card which is detected.
 
-But I agree, the intent of the author is important (not legally, but
-morally).
+So, the real question is if anyone can help me figure why
+the SmartArray 6400 controller is not detected at all by
+the kernel, or if there is some minimum version of the 2.4
+kernel which I need to be running in order to use this
+controller. Looking at the Documentation/cciss.txt file in
+the kernel source for 2.4.21, it explicitly mentions the
+SmartArray 6400 as supported, but I don't have the 2.4.18
+source around anywhere to check that specific version.
 
--- Jamie
+
+__________________________________
+Do you Yahoo!?
+Yahoo! Finance: Get your refund fast by filing online.
+http://taxes.yahoo.com/filing.html
