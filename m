@@ -1,83 +1,52 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: [patch] 2.6: modular scsi/mca_53c9x doesn't work (fwd)
-Date: Mon, 14 Jun 2004 20:52:56 +0200
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: noisy reservation conflicts
+Date: Mon, 14 Jun 2004 12:18:32 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040614185256.GJ13951@fs.tum.de>
+Message-ID: <20040614191832.GA1298@us.ibm.com>
+References: <40CD3F44.4080004@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:6388 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S263790AbUFNSxD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jun 2004 14:53:03 -0400
+Received: from e5.ny.us.ibm.com ([32.97.182.105]:6624 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S263799AbUFNTTY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Jun 2004 15:19:24 -0400
 Content-Disposition: inline
+In-Reply-To: <40CD3F44.4080004@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-The issue described in the mail forwarded below is still present in 
-2.6.7-rc3-mm2 (but not specific to -mm).
+Douglas Gilbert [dougg@torque.net] wrote:
+> While testing persistent reservations it is quite common
+> to get a status of "reservation conflict". When using
+> the SG_IO ioctl this status is returned via the
+> sg_io_hdr::status field and is simple to process.
+> 
+> However this lk 2.6.7-rc3 code fragment in
+> scsi_decide_disposition() [scsi_error.c] makes it very
+> noisy (on the console and in the log):
+> 
+>         case RESERVATION_CONFLICT:
+>                 printk("scsi%d (%d,%d,%d) : reservation conflict\n",
+>                        scmd->device->host->host_no,
+>                        scmd->device->channel,
+>                        scmd->device->id, scmd->device->lun);
+>                 return SUCCESS; /* causes immediate i/o error */
+> 
 
-I'd suggest the following workaround:
+If we think it is important enough to leave we should wrap it with
+either a SCSI_LOG_MLCOMPLETE or SCSI_LOG_ERROR_RECOVERY to stay
+consistent with the scsi_decide_disposition function. Though I think the
+use of SCSI_LOG_ERROR_RECOVERY maybe should be replaced with
+SCSI_LOG_MLCOMPLETE in scsi_decide_disposition.
 
---- linux-2.6.7-rc3-mm2-modular-no-smp/drivers/scsi/Kconfig.old	2004-06-14 20:45:20.000000000 +0200
-+++ linux-2.6.7-rc3-mm2-modular-no-smp/drivers/scsi/Kconfig	2004-06-14 20:51:40.000000000 +0200
-@@ -1136,7 +1136,7 @@
- 	  than 1 device on a SCSI bus. The normal answer therefore is N.
- 
- config SCSI_MCA_53C9X
--	tristate "NCR MCA 53C9x SCSI support"
-+	bool "NCR MCA 53C9x SCSI support"
- 	depends on MCA_LEGACY && SCSI && BROKEN_ON_SMP
- 	help
- 	  Some MicroChannel machines, notably the NCR 35xx line, use a SCSI
+The upper level drivers could also report similar info if this was
+removed as sd has SCSI_LOG_HLCOMPLETE that should cover sg_io ios
+through sd and sg_cmd_done has SCSI_LOG_TIMEOUT (correct?).
 
-
-
-
------ Forwarded message from Adrian Bunk <bunk@fs.tum.de> -----
-
-Date:	Sat, 20 Dec 2003 00:17:12 +0100
-From: Adrian Bunk <bunk@fs.tum.de>
-To: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: 2.6: modular scsi/mca_53c9x doesn't work
-
-I got the following mesage when trying to build modular a mca_53c9x in 
-2.6.0-test11-mm1:
-
-<--  snip  -->
-
-...
-*** Warning: "esp_reset" [drivers/scsi/mca_53c9x.ko] undefined!
-*** Warning: "esp_abort" [drivers/scsi/mca_53c9x.ko] undefined!
-*** Warning: "esp_queue" [drivers/scsi/mca_53c9x.ko] undefined!
-*** Warning: "esps_in_use" [drivers/scsi/mca_53c9x.ko] undefined!
-*** Warning: "esp_initialize" [drivers/scsi/mca_53c9x.ko] undefined!
-*** Warning: "esp_allocate" [drivers/scsi/mca_53c9x.ko] undefined!
-*** Warning: "esp_intr" [drivers/scsi/mca_53c9x.ko] undefined!
-*** Warning: "esp_deallocate" [drivers/scsi/mca_53c9x.ko] undefined!
-...
-
-<--  snip  -->
-
-It seems there are some EXPORT_SYMBOL's needed in NCR53C9x.c?
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
-
------ End forwarded message -----
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
