@@ -1,65 +1,67 @@
-From: David Brownell <david-b@pacbell.net>
+From: Oliver Neukum <oliver@neukum.name>
 Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Wed, 22 Jan 2003 13:30:12 -0800
+Date: Wed, 22 Jan 2003 23:46:30 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E2F0D64.3070609@pacbell.net>
-References: <10426732153816@kroah.com> <200301210000.24705.oliver@neukum.name>
- <3E2C97D7.1070406@pacbell.net> <200301210150.55286.oliver@neukum.name>
- <3E2D8E78.4050405@splentec.com>
+Message-ID: <200301222346.30329.oliver@neukum.name>
+References: <Pine.LNX.4.44L0.0301211546410.6926-100000@ida.rowland.org> <3E2F1213.8090400@splentec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pacbell.net ([67.118.247.16])
- by mta6.snfc21.pbi.net (iPlanet Messaging Server 5.1 HotFix 1.6 (built Oct 18
- 2002)) with ESMTP id <0H94008JCYYIED@mta6.snfc21.pbi.net> for
- linux-scsi@vger.kernel.org; Wed, 22 Jan 2003 14:11:11 -0800 (PST)
+In-Reply-To: <3E2F1213.8090400@splentec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
-Cc: Oliver Neukum <oliver@neukum.name>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
-
-Luben Tuikov wrote:
-> 
-> When the Low Level Device Driver (LLDD), being the transport portal,
-> notices that the device is going away or has gone away from the
-> ``fabric'' (wlg), it will fire a device-gone event with the kernel.
-> *Not* necessarily with SCSI Core, in fact I'd rather it didn't,
-> but with a well defined kernel entry for device-gone events.
-> 
-> At the same time the LLDD will start returning TARGET gone, or
-> whatever is appropriate to newly queued commands, and error out
-> all internally queued commands (if it does it's own queuing).
-> (I've seen this work nicely on mount and read/write(2) and fsck.)
-> 
-> I.e. the ``synchronization'' has started already by the LLDD erroring
-> out commands, new and queued.
-
-This model I like, though FWIW the USB code has pretty messy
-handling of the (a) cancel queued requests and (b) reject new
-requests parts of that model.  All the updates to handle that
-would be transparent to device drivers (other than HCDs); we've
-discussed it a bit.
+To: Luben Tuikov <luben@splentec.com>, Alan Stern <stern@rowland.harvard.edu>
+Cc: David Brownell <david-b@pacbell.net>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
-> All the while the kernel has started higher level cleaning up,
-> decrementing ref counts, etc, 
+> > Whose responsibility is it to fail these interactions?
+>
+> The transport.
+>
+> When a device is plugged to the SAN/fabric (wlg) it may not be the case
+> that all initiators will know about it.  For this reason the transport
+> itself, not SCSI Core, not LLDD*, will decide if the CDB is deliverable.
+>
+> * An LLDD may keep a table of seen devices (depending on the transport
+> it provides a portal to), and thus the decision may be made there, but
+> this doesn't have to be the case.
+>
+> (Just think of SANs/IP SANs.)
 
-... Invoking some hotplug event that might unmount filesystems,
-so _all_ relevant kernel state can be cleaned up ...
+Not all the world is a SAN. USB has no possibility to even try an interaction
+after the device is gone. We have to handle this flexibly. In fact, if a device
+can vanish without a LLDD knowing about it, this is purely a problem of the
+SCSI layer.
 
+> > For something simple, like a USB serial port, it might turn out that the
+> > low-level device driver gets all these requests and then fails them. 
+> > That means the driver has to keep track of the fact that the device is no
+> > longer connected until some reference count goes to 0.
+>
+> A LLDD doesn't have to keep reference counts.  In the simple case
+> you mention above, it will check that the device is no longer reachable
+> and will return TARGET error, which will bubble up the layers, or the
 
-> But there's no such thing as ``waiting around indefinitely'' or
-> ``blocking wait'' as you've suggested in some of your emails.
+That is something that is impossible to some LLDDs. We have to keep
+a record about devices and busses we can reach and can delete these
+records only after we positively know that no more commands will come
+down to the LLDD.
 
-Right.  Though I can wish the driver model core actually used
-its "enum device_state" and had an instance variable of that
-type in "struct device".  That'd help the bus level driver
-(for SCSI, an LLDD or LLD; for USB, an HCD) with (a) and (b).
+The alternative would be to check a table of available devices for every
+command.
 
-The "no waiting indefinitely" is in part that because knowing
-both (a) and (b) happen means you know the device quiesces.
+That means that we have to have a way to ensure that no more commands
+will reach the LLDD which can be triggered without any commands to be
+executed at all. This functionality has to come from the scsi mid layer.
 
-- Dave
+> Newer drivers will make use of Service Response code, and be able to
+> address only by (target, lun) rather than (bus, target, lun), and
+> target may not be an int anymore.  But this is 2.7 stuff, or maybe
+> a separately distributed SCSI Core and LLDDs subsystem...
 
+Yes, but we need a solution for 2.6.
+And it has to be reasonably simple.
 
+	Regards
+		Oliver
 
