@@ -1,49 +1,65 @@
-From: Bryan Henderson <hbryan@us.ibm.com>
-Subject: Re: Fusion-MPT much faster as module - ifdef MODULE considered harmful
-Date: Tue, 22 Mar 2005 11:36:35 -0800
-Message-ID: <OF1B4228CB.88311E5C-ON88256FCC.00696D64-88256FCC.006B947E@us.ibm.com>
-References: <20050322122801.GI3982@stusta.de>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH] - Fusion-MPT much faster as module
+Date: Tue, 22 Mar 2005 13:35:20 -0700
+Message-ID: <91888D455306F94EBD4D168954A9457C01AEB1F7@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:50905 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261733AbVCVTgj (ORCPT
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Received: from mail0.lsil.com ([147.145.40.20]:28117 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261844AbVCVUfr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Mar 2005 14:36:39 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j2MJaYEO024490
-	for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2005 14:36:34 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j2MJaY27084626
-	for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2005 14:36:34 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j2MJaXoe002556
-	for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2005 14:36:34 -0500
-In-Reply-To: <20050322122801.GI3982@stusta.de>
+	Tue, 22 Mar 2005 15:35:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Andrew Morton <akpm@osdl.org>, Arjan van de Ven <arjan@infradead.org>, "Moore, Eric Dean" <emoore@lsil.com>, 'Holger Kiehl' <Holger.Kiehl@dwd.de>, "Chen, Kenneth W" <kenneth.w.chen@intel.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, kenneth.w.chen@intel.com
 
->  #if defined(CONFIG_FOO) || (defined(MODULE) && 
-defined(CONFIG_FOO_MODULE))
->
->is a good way to express that driver bar can use functionality of driver 
->foo if it's available.
+On Tuesday, March 22, 2005 12:05 PM, James Bottomley wrote:
+> On Tue, 2005-03-22 at 11:40 -0700, Moore, Eric Dean wrote:
+> > History on this:
+> > Between the 3.01.16 and 3.01.18, we introduced new method
+> > to passing command line options to the driver.  Some of the
+> > command line options are used for fine tuning dv(domain
+> > validation) in the driver.  By accident, these command line 
+> options were
+> > wrapped around #ifdef MODULE in the 3.01.18 version of the driver.
+> > What this meant is when the driver is compiled built-in the kernel,
+> > the optimal settings for dv were ignored, thus poor performance.  
+> 
+> OK, I'll add this to the queue.
+> 
+> Could I just point out that if your driver actually printed 
+> the results
+> of negotiation, this would have been an awful lot easier to debug.
+> 
+> Additionally, if you used the SPI transport class domain 
+> validation, the
+> issue wouldn't have arisen in the first place.
+> 
+> James
+> 
 
-We need a way for a module to dynamically link itself, to whatever other 
-modules it wants to use, and to be able to do that conditionally based on 
-whether those other modules are loaded at the time it wants to use them.
+Yes, I agree with you.
 
-Then we would not only get rid of one of the remaining distinctions 
-between binding a module into the base kernel and loading it dynamically, 
-but also this possibly last excuse for defined(MODULE).
+I'm actively working in the background to split the mptscish driver into
+separate bus type drivers.  One for fiber channel, one for SCSI, and
+one for eventually SAS.  This was a request from you long time back, at
+a time when I tried to submitting a patch having FC transport attributes
+support.
+I think once I submit that, then we can start taking a looking at supporting
+the SPI transport layer.  
 
-As far as I know, we still don't have any kind of a generic registration 
-service like this in the kernel.  I've had to resort to faking ioctls and 
-proc file reads inside the kernel in order to get an address from another 
-dynamically loaded module.
+I still wonder if the SPI transport layer will work for RAID volumes.  
+Do you know if the spi transport layer supports dv on hidden devices in a
+raid volume? 
+Meaning these hidden physical disks will not been seen by the block layer,
+however 
+spi transport layer would be aware so dv can be performed those hidden disk?
 
---
-Bryan Henderson                          IBM Almaden Research Center
-San Jose CA                              Filesystems
+Eric 
+
+
+
+
+
 
