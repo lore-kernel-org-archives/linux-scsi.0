@@ -1,45 +1,74 @@
-From: "Sanders, Richard" <Richard.Sanders@stratus.com>
-Subject: megaraid port to alpha
-Date: Mon, 15 Dec 2003 13:51:37 -0500
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] Problem with external USB2.0 case and LG GSA
+ 4040-B
+Date: Mon, 15 Dec 2003 15:49:42 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <CAC3BCBB443DEC439198F230B4BCC7E905A70F7B@exna6-ftsaa.mis.stratus.com>
+Message-ID: <Pine.LNX.4.44L0.0312151529160.895-100000@ida.rowland.org>
+References: <200312132137.18128.cornelius.claussen@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.stratus.com ([134.111.1.16]:26250 "EHLO
-	mailhub2.stratus.com") by vger.kernel.org with ESMTP
-	id S263851AbTLOSv5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Dec 2003 13:51:57 -0500
-Received: from EXNA4.stratus.com (exna4.stratus.com [134.111.200.134])
-	by mailhub2.stratus.com (8.9.3/8.9.3) with ESMTP id NAA08302
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Dec 2003 13:43:54 -0500 (EST)
+Received: from ida.rowland.org ([192.131.102.52]:28932 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S263904AbTLOUtn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Dec 2003 15:49:43 -0500
+In-Reply-To: <200312132137.18128.cornelius.claussen@gmx.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Cornelius Claussen <cornelius.claussen@gmx.de>, Patrick Mansfield <patmans@us.ibm.com>
+Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-I am working on bringing up a 493 series megaraid card on an Alpha 264DP.  I
-have made some mostly minor changes to the driver to get things working but
-I have a few questions to the holders of the NDA docs.
+Patrick:
 
-The signature word from A0h PCI space is showing up as 0xBBBB... is this
-another special case value like the 471 series being 0xCCCC?
+Cornelius Claussen reported the following problem with error recovery in
+2.6.0-test11.  His device is one of those problem-prone Genesys Logic
+units, a USB DVD drive.  The complete message and log can be found at
 
-On Alpha, the option rom code does not execute as it does on x86... this
-means that the i960 firmware has not been started on the adapter at the
-point where the driver loads.  I think I have performed a correct adapter
-reset and firmware init sequence but the status byte I keep getting back is
-1Ch which I cannot decode.  Is this init sequence something that can be
-exposed in a GPL driver?  If so I would love some more detailed instructions
-on how to correctly do it than my vague recollections.
+http://marc.theaimsgroup.com/?l=linux-usb-devel&m=107134787817252&w=2
 
-And if this whole thing is a fool's errand that info would be appreciated
-also.
+Here's a condensed and annotated version of his log:
 
-I am working with driver 1.18f and LSI firmware 1.70.
+usb-storage: Command READ_10 (10 bytes)
+usb-storage:  28 00 00 00 b6 91 00 00 2e 00
+usb-storage: Status code -75; transferred 68096/94208
+usb-storage: -- babble
+usb-storage: -- transport indicates error, resetting
+usb-storage: Soft reset done
+usb-storage: scsi cmd done, result=0x70000
+
+The device messed up; to recover we had to send it a soft reset command.
+The scmd->result code was DID_ERROR << 16.  The SCSI layer retried the 
+command:
+
+usb-storage: Command READ_10 (10 bytes)
+usb-storage:  28 00 00 00 b6 91 00 00 2e 00
+usb-storage: -- transport indicates command failure
+usb-storage: -- unexpectedly short transfer
+usb-storage: Issuing auto-REQUEST_SENSE
+usb-storage: -- code: 0x70, key: 0x6, ASC: 0x29, ASCQ: 0x0
+usb-storage: Unit Attention: Power on, reset, or bus device reset occurred
+usb-storage: scsi cmd done, result=0x2
+
+The device reported the reset via Unit Attention.  The scmd->result code
+was SAM_STAT_CHECK_CONDITION.  Presumably another retry at this point
+would have worked.  Instead he got...
+
+end_request: I/O error, dev sr1, sector 186948
+Buffer I/O error on device sr1, logical block 46737
+Buffer I/O error on device sr1, logical block 46738
+etc.
+
+In fact, another READ command queued shortly afterward,
+
+usb-storage: Command READ_10 (10 bytes)
+usb-storage:  28 00 00 00 b6 bf 00 00 3c 00
+usb-storage: Bulk Status S 0x53425355 T 0xec9 R 2048 Stat 0x0
+usb-storage: scsi cmd done, result=0x0
+
+succeeded, albeit with a residue of 2048.  But by then it was too late, 
+the original request had failed.
+
+What's the right way to fix this?
+
+Alan Stern
 
 
-Thanks.
-Richard Sanders
-
-
-This project is my own personal work and is neither endorsed nor funded by
-my employer.
