@@ -1,39 +1,35 @@
-From: Jes Sorensen <jes@wildopensource.com>
-Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
-Date: 25 Nov 2003 03:21:22 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] buslogic: use EH, remove some dup. docs
+Date: Tue, 25 Nov 2003 08:25:05 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <yq0ptfgj1tp.fsf@wildopensource.com>
-References: <B179AE41C1147041AA1121F44614F0B0598D30@AVEXCH02.qlogic.org>
+Message-ID: <20031125082505.B15604@infradead.org>
+References: <20031124134628.7e827bcb.rddunlap@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:2231 "EHLO jaguar.mkp.net")
-	by vger.kernel.org with ESMTP id S262110AbTKYIYw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Nov 2003 03:24:52 -0500
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0598D30@AVEXCH02.qlogic.org>
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:34821 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S262127AbTKYIZH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Nov 2003 03:25:07 -0500
+Content-Disposition: inline
+In-Reply-To: <20031124134628.7e827bcb.rddunlap@osdl.org>; from rddunlap@osdl.org on Mon, Nov 24, 2003 at 01:46:28PM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Jeremy Higdon <jeremy@sgi.com>, Linux-SCSI <linux-scsi@vger.kernel.org>, jbarnes@sgi.com, mdr@sgi.com
+To: "Randy.Dunlap" <rddunlap@osdl.org>
+Cc: linux-scsi@vger.kernel.org, jejb <james.bottomley@steeleye.com>
 
->>>>> "Andrew" == Andrew Vasquez <andrew.vasquez@qlogic.com> writes:
+On Mon, Nov 24, 2003 at 01:46:28PM -0800, Randy.Dunlap wrote:
+> 
+> [resending this one]
+> 
+> Hi,
+> 
+> I think that this is ready to merge.
+> Please apply to 2.6.0-testX-current.
 
-Andrew> The (additional-)firmware options, perhaps a subset, seem like
-Andrew> a (possibily) reasonable thing to force at the driver level.
-Andrew> But, on the otherhand, the retry, delay and timer counts tend
-Andrew> to be very customer specific based on topology and storage.
-Andrew> Additionally, the driver already exports via module parameters
-Andrew> several of the more important driver retry and timer counts,
-Andrew> i.e. port_down_try_count, link_down_timeout, retry_count (try
-Andrew> modinfo for a full list).  A user can use these facilities to
-Andrew> perform any fine-tuning.
+You also need to kill the remants of the old error handling code,
+which also hat a abort method which you probably should implement
+aswell.  Without removing that it won't compile once we remove
+scsi_obsolete.h (try compiling with that include commented out
+in scsi.h).  Also why do you remove that big comment?  There doesn't
+seem to be any relation to the new error handling code.
 
-Andrew,
-
-I would be a nice feature if all these tuning parameters were exported
-via sysfs in 2.6 allowing users to modify them at runtime without
-having to reload the module every time. It would be very useful to
-test tuning parameters etc.
-
-Cheers,
-Jes
