@@ -1,120 +1,147 @@
-From: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
-Subject: RE: The latest megaraid_mbox 2.20.4.5 is hung
-Date: Wed, 23 Mar 2005 18:23:29 +0900
-Message-ID: <BF571719A4041A478005EF3F08EA6DF0CE3C4F@pcsmail03.pcs.pc.ome.toshiba.co.jp>
+From: "lk" <linux_kernel@patni.com>
+Subject: Re: When & how is the SCSI strategy routine called?
+Date: Wed, 23 Mar 2005 02:01:53 -0800
+Message-ID: <040801c52f8f$5ad38e90$5e91a8c0@patni.com>
+References: <267988DEACEC5A4D86D5FCD780313FBB06043621@exch-03.noida.hcltech.com>
+Reply-To: "lk" <linux_kernel@patni.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C52F8A.52E829F4"
-Received: from inet-tsb5.toshiba.co.jp ([202.33.96.24]:451 "EHLO
-	inet-tsb5.toshiba.co.jp") by vger.kernel.org with ESMTP
-	id S261313AbVCWJ1R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Mar 2005 04:27:17 -0500
-Content-class: urn:content-classes:message
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Received: from pcsmail.patni.com ([203.124.139.197]:6090 "EHLO
+	pcsmail.patni.com") by vger.kernel.org with ESMTP id S261482AbVCWKCd
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Mar 2005 05:02:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ju, Seokmann" <sju@lsil.com>
-Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, linux-scsi@vger.kernel.org, "Mukker, Atul" <Atulm@lsil.com>, "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+To: "Rajat  Jain, Noida" <rajatj@noida.hcltech.com>, linux-scsi@vger.kernel.org, linux-newbie@vger.kernel.org
 
-This is a multi-part message in MIME format.
+There would be a single work queue (kblockd) for all block
+devices on which deffered work of different block
+device queues will be queued after the unplug_timer.
 
-------_=_NextPart_001_01C52F8A.52E829F4
-Content-Type: text/plain;
-	charset="iso-2022-jp"
-Content-Transfer-Encoding: 7bit
 
-Hi Seokmann
+----- Original Message ----- 
+From: "Rajat Jain, Noida" <rajatj@noida.hcltech.com>
+To: "lk" <linux_kernel@patni.com>; <linux-scsi@vger.kernel.org>;
+<rajatj@noida.hcltech.com>; <linux-newbie@vger.kernel.org>
+Sent: Wednesday, March 23, 2005 12:49 AM
+Subject: RE: When & how is the SCSI strategy routine called?
 
-Haruo> The race issue seem to be in latest megaraid_mbox 2.20.4.5.
-Haruo> I think that I make adapter->quiescent illegal by megaraid_isr() and 
-Haruo> megaraid_mbox_mm_done(). 
 
-I think that patch is almost OK. 
-It works with  Express5800(4way) without trouble. 
-Strictly, it is necessary to be likely to lock to adapter->quiescent.
-In addition, I have changed access of outstanding_cmds to atomic access.
-(See attached file : linux-2.6.12-rc1-megaraid-outstanding_cmds-atomic.patch)
+>
+>
+> Thanks lk.
+>
+> It cleared a lot of things.
+>
+> How ever, what I am wondering is:
+>
+> - Does each device queue have a corresponding thread that is woken up when
+> it is time to call the request function? And the request function is
+called
+> in the context of this thread?
+>
+> - I explored and found that there is some "worker thread" kblockd that
+does
+> this task of monitoring the queue and calling the request function. I want
+> to know whether there is a separate thread for each queue (device) , or
+just
+> one for all the block devices?
+>
+> TIA,
+>
+> Rajat
+>
+>
+> -----Original Message-----
+> From: lk [mailto:linux_kernel@patni.com]
+> Sent: Wednesday, March 23, 2005 1:29 PM
+> To: linux-scsi@vger.kernel.org; rajatj@noida.hcltech.com;
+> linux-newbie@vger.kernel.org
+> Subject: Re:When & how is the SCSI strategy routine called?
+>
+> This is my understanding.
+> scsi_request_fn is the scsi's request function which performs the actual
+> data transfer. clean up the queue and loop back to fetch next request.
+>
+> About the Question:WHEN and HOW is the strategy routine
+"scsi_request_fn()"
+> called ?
+>
+> Every request queue have a few members to decide whether to call
+> scsi_request_fn() or not. scsi_request_fn is called after the queue is
+> unplugged.
+>
+>   request_queue_t->unplug_thresh
+>   Whenever request queue is about to get full. which is the number of
+>   requests after which the queue should be unplugged. unplugging of
+request
+>   will in turn call scsi_request_fn().
+>
+>   request_queue_t->unplug_timer
+>   After this much time the queue will be unplugged to rip the IO in turn
+>   it will call scsi_request_fn().
+>
+>   Also in case of Async Direct IO the block layer will unplug the queue
+> after
+>   submission of  bios to queue by calling blk_run_address_space function.
+>
+>   scsi_request_fn will be called whenever the block layer calls queue
+unplug
+> or
+>   queue is about to get full or after a certain unplug timer value.
+>
+>    Hope it helps.
+>
+>
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org
+> [mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Rajat Jain, Noida
+> Sent: Tuesday, March 22, 2005 8:31 AM
+> To: linux-scsi@vger.kernel.org; linux-newbie@vger.kernel.org
+> Cc: Rajat Jain, Noida
+> Subject: When & how is the SCSI strategy routine called?
+>
+>
+> Hi list,
+>
+> Tracing the kernel 2.6.8 code I found that scsi_mod maintains separate
+> request queues for each SCSI device. It uses the block layer queuing
+> facility to do this. What I could not find out was that once a request is
+> queued into a queue (for a particular device), WHEN and HOW is the
+strategy
+> routine "scsi_request_fn()" called ?
+>
+> All I could find on the net was that "The kernel calls the strategy
+routine
+> when ever it believes that it is appropriate to invoke it."
+>
+> Please help ... Any pointers will be highly appreciated.
+>
+> TIA,
+>
+> Rajat
+>
+>
+>
+>
+> Disclaimer:
+>
+> This message and any attachment(s) contained here are information that is
+> confidential,proprietary to HCL Technologies and its customers, privileged
+> or otherwise protected by law.The information is solely intended for the
+> individual or the entity it is addressed to. If you are not the intended
+> recipient of this message, you are not authorized to read, forward,
+> print,retain, copy or disseminate this message or any part of it. If you
+> have received this e-mail in error, please notify the sender immediately
+by
+> return e-mail and delete it from your computer.
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-The patching order is:
-  - linux-2.6.12-rc1-megaraid-isr-quiescent-race-fix.patch
-  - linux-2.6.12-rc1-megaraid-outstanding_cmds-atomic.patch
 
-Seokmann> Can you please provide where the driver hung?
-
-Interrupt doesn't enter. I think that it repeatedly executes megaraid_isr().
-I am using KDB, it can specify driver's place with the NMI switch when hang up. 
-I continue the driver's debugging further. 
-
-Thanks
---
-Haruo
-
-------_=_NextPart_001_01C52F8A.52E829F4
-Content-Type: application/octet-stream;
-	name="linux-2.6.12-rc1-megaraid-outstanding_cmds-atomic.patch"
-Content-Transfer-Encoding: base64
-Content-Description: linux-2.6.12-rc1-megaraid-outstanding_cmds-atomic.patch
-Content-Disposition: attachment;
-	filename="linux-2.6.12-rc1-megaraid-outstanding_cmds-atomic.patch"
-
-ZGlmZiAtdXJOIGxpbnV4LTIuNi4xMi1yYzEub3JpZy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVn
-YV9jb21tb24uaCBsaW51eC0yLjYuMTItcmMxL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhX2Nv
-bW1vbi5oCi0tLSBsaW51eC0yLjYuMTItcmMxLm9yaWcvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21l
-Z2FfY29tbW9uLmgJMjAwNS0wMy0yMSAwOTozMjo0Ni44MDk0ODA0NDAgKzA5MDAKKysrIGxpbnV4
-LTIuNi4xMi1yYzEvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FfY29tbW9uLmgJMjAwNS0wMy0y
-MCAxMTo0NTo0MS4wMDAwMDAwMDAgKzA5MDAKQEAgLTE1NCw3ICsxNTQsNyBAQAogCXNwaW5sb2Nr
-X3QJCSpob3N0X2xvY2s7CiAJc3BpbmxvY2tfdAkJbG9jazsKIAlhdG9taWNfdAkJcXVpZXNjZW50
-OwotCWludAkJCW91dHN0YW5kaW5nX2NtZHM7CisJYXRvbWljX3QJCW91dHN0YW5kaW5nX2NtZHM7
-CiAJc2NiX3QJCQkqa3NjYl9saXN0OwogCXN0cnVjdCBsaXN0X2hlYWQJa3NjYl9wb29sOwogCXNw
-aW5sb2NrX3QJCWtzY2JfcG9vbF9sb2NrOwpkaWZmIC11ck4gbGludXgtMi42LjEyLXJjMS5vcmln
-L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9tYm94LmMgbGludXgtMi42LjEyLXJjMS9k
-cml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfbWJveC5jCi0tLSBsaW51eC0yLjYuMTItcmMx
-Lm9yaWcvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX21ib3guYwkyMDA1LTAzLTIxIDA5
-OjMyOjQ2Ljg0MjQ3NTQyNCArMDkwMAorKysgbGludXgtMi42LjEyLXJjMS9kcml2ZXJzL3Njc2kv
-bWVnYXJhaWQvbWVnYXJhaWRfbWJveC5jCTIwMDUtMDMtMjAgMTI6MDA6MzkuMDAwMDAwMDAwICsw
-OTAwCkBAIC0xNjExLDcgKzE2MTEsNyBAQAogCW1lbWNweSgoY2FkZHJfdCltYm94NjQsIChjYWRk
-cl90KWNjYi0+bWJveDY0LCAyMik7CiAJbWJveC0+Y21kaWQgPSBzY2ItPnNubzsKIAotCWFkYXB0
-ZXItPm91dHN0YW5kaW5nX2NtZHMrKzsKKwlhdG9taWNfaW5jKCZhZGFwdGVyLT5vdXRzdGFuZGlu
-Z19jbWRzKTsKIAogCWlmIChzY2ItPmRtYV9kaXJlY3Rpb24gPT0gUENJX0RNQV9UT0RFVklDRSkg
-ewogCQlpZiAoIXNjYi0+c2NwLT51c2Vfc2cpIHsJLy8gc2cgbGlzdCBub3QgdXNlZApAQCAtMjI5
-NSw3ICsyMjk1LDcgQEAKIAkJfQogCQltYm94LT5udW1zdGF0dXMgPSAweEZGOwogCi0JCWFkYXB0
-ZXItPm91dHN0YW5kaW5nX2NtZHMgLT0gbnN0YXR1czsKKwkJYXRvbWljX3N1Yihuc3RhdHVzLCAm
-YWRhcHRlci0+b3V0c3RhbmRpbmdfY21kcyk7CiAKIAkJZm9yIChpID0gMDsgaSA8IG5zdGF0dXM7
-IGkrKykgewogCkBAIC0yODU2LDE5ICsyODU2LDIxIEBACiAJfQogCXNwaW5fdW5sb2NrX2lycXJl
-c3RvcmUoUEVORElOR19MSVNUX0xPQ0soYWRhcHRlciksIGZsYWdzKTsKIAotCWlmIChhZGFwdGVy
-LT5vdXRzdGFuZGluZ19jbWRzKSB7CisJaWYgKGF0b21pY19yZWFkKCZhZGFwdGVyLT5vdXRzdGFu
-ZGluZ19jbWRzKSkgewogCQljb25fbG9nKENMX0FOTiwgKEtFUk5fTk9USUNFCiAJCQkibWVnYXJh
-aWQ6ICVkIG91dHN0YW5kaW5nIGNvbW1hbmRzLiBNYXggd2FpdCAlZCBzZWNcbiIsCi0JCQlhZGFw
-dGVyLT5vdXRzdGFuZGluZ19jbWRzLCBNQk9YX1JFU0VUX1dBSVQpKTsKKwkJCWF0b21pY19yZWFk
-KCZhZGFwdGVyLT5vdXRzdGFuZGluZ19jbWRzKSwgCisJCQlNQk9YX1JFU0VUX1dBSVQpKTsKIAl9
-CiAKIAlzcGluX3VubG9jayhhZGFwdGVyLT5ob3N0X2xvY2spOwogCiAJcmVjb3Zlcnlfd2luZG93
-ID0gTUJPWF9SRVNFVF9XQUlUICsgTUJPWF9SRVNFVF9FWFRfV0FJVDsKIAotCXJlY292ZXJpbmcg
-PSBhZGFwdGVyLT5vdXRzdGFuZGluZ19jbWRzOworCXJlY292ZXJpbmcgPSBhdG9taWNfcmVhZCgm
-YWRhcHRlci0+b3V0c3RhbmRpbmdfY21kcyk7CiAKLQlmb3IgKGkgPSAwOyBpIDwgcmVjb3Zlcnlf
-d2luZG93ICYmIGFkYXB0ZXItPm91dHN0YW5kaW5nX2NtZHM7IGkrKykgeworCWZvciAoaSA9IDA7
-IGkgPCByZWNvdmVyeV93aW5kb3cgJiYKKwkJYXRvbWljX3JlYWQoJmFkYXB0ZXItPm91dHN0YW5k
-aW5nX2NtZHMpOyBpKyspIHsKIAogCQltZWdhcmFpZF9hY2tfc2VxdWVuY2UoYWRhcHRlcik7CiAK
-QEAgLTI4NzYsMTMgKzI4NzgsMTMgQEAKIAkJaWYgKCEoaSAlIDUpKSB7CiAJCQljb25fbG9nKENM
-X0FOTiwgKAogCQkJIm1lZ2FyYWlkIG1ib3g6IFdhaXQgZm9yICVkIGNvbW1hbmRzIHRvIGNvbXBs
-ZXRlOiVkXG4iLAotCQkJCWFkYXB0ZXItPm91dHN0YW5kaW5nX2NtZHMsCisJCQkJYXRvbWljX3Jl
-YWQoJmFkYXB0ZXItPm91dHN0YW5kaW5nX2NtZHMpLAogCQkJCU1CT1hfUkVTRVRfV0FJVCAtIGkp
-KTsKIAkJfQogCiAJCS8vIGJhaWxvdXQgaWYgbm8gcmVjb3ZlcnkgaGFwcGVuZGVkIGluIHJlc2V0
-IHRpbWUKIAkJaWYgKChpID09IE1CT1hfUkVTRVRfV0FJVCkgJiYKLQkJCShyZWNvdmVyaW5nID09
-IGFkYXB0ZXItPm91dHN0YW5kaW5nX2NtZHMpKSB7CisJCQkocmVjb3ZlcmluZyA9PSBhdG9taWNf
-cmVhZCgmYWRhcHRlci0+b3V0c3RhbmRpbmdfY21kcykpKSB7CiAJCQlicmVhazsKIAkJfQogCkBA
-IC0yODkyLDcgKzI4OTQsNyBAQAogCXNwaW5fbG9jayhhZGFwdGVyLT5ob3N0X2xvY2spOwogCiAJ
-Ly8gSWYgc3RpbGwgb3V0c3RhbmRpbmcgY29tbWFuZHMsIGJhaWwgb3V0Ci0JaWYgKGFkYXB0ZXIt
-Pm91dHN0YW5kaW5nX2NtZHMpIHsKKwlpZiAoYXRvbWljX3JlYWQoJmFkYXB0ZXItPm91dHN0YW5k
-aW5nX2NtZHMpKSB7CiAJCWNvbl9sb2coQ0xfQU5OLCAoS0VSTl9XQVJOSU5HCiAJCQkibWVnYXJh
-aWQgbWJveDogY3JpdGljYWwgaGFyZHdhcmUgZXJyb3IhXG4iKSk7CiAKQEAgLTM4NTIsMTUgKzM4
-NTQsMTUgQEAKIAkgKiBXYWl0IHRpbGwgdGhlcmUgYXJlIG5vIG1vcmUgY21kcyBvdXRzdGFuZGlu
-ZyBhdCBGVy4gVHJ5IGZvciBhdCBtb3N0CiAJICogNjAgc2Vjb25kcwogCSAqLwotCWZvciAoaSA9
-IDA7IGkgPCA2MCAmJiBhZGFwdGVyLT5vdXRzdGFuZGluZ19jbWRzOyBpKyspIHsKKwlmb3IgKGkg
-PSAwOyBpIDwgNjAgJiYgYXRvbWljX3JlYWQoJmFkYXB0ZXItPm91dHN0YW5kaW5nX2NtZHMpOyBp
-KyspIHsKIAkJY29uX2xvZyhDTF9ETEVWRUwxLCAoS0VSTl9JTkZPCiAJCQkibWVnYXJhaWQ6IEZX
-IGhhcyAlZCBwZW5kaW5nIGNvbW1hbmRzXG4iLAotCQkJYWRhcHRlci0+b3V0c3RhbmRpbmdfY21k
-cykpOworCQkJYXRvbWljX3JlYWQoJmFkYXB0ZXItPm91dHN0YW5kaW5nX2NtZHMpKSk7CiAKIAkJ
-bXNsZWVwKDEwMDApOwogCX0KIAotCXJldHVybiBhZGFwdGVyLT5vdXRzdGFuZGluZ19jbWRzOwor
-CXJldHVybiAoYXRvbWljX3JlYWQoJmFkYXB0ZXItPm91dHN0YW5kaW5nX2NtZHMpKTsKIH0KIAog
-Cg==
-
-------_=_NextPart_001_01C52F8A.52E829F4--
