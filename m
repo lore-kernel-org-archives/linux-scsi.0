@@ -1,54 +1,33 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH]:Amended:Allow random write for PDT 5 profile 2
-	Removabl e Disk
-Date: 08 Mar 2004 13:01:21 -0700
+From: Andries Brouwer <Andries.Brouwer@cwi.nl>
+Subject: Re: [usb-storage] Time to allow MODE SENSE for USB disk-type storage devices?
+Date: Mon, 8 Mar 2004 21:13:29 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1078776081.2341.168.camel@patibmrh9>
-References: <1078769250.7104.15.camel@lintest.iomegacorp.com>
-	 <20040308192011.GG23525@suse.de>
+Message-ID: <20040308201328.GA13708@apps.cwi.nl>
+References: <Pine.LNX.4.44L0.0403081046190.1187-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:54662 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S261169AbUCHUD1
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Mar 2004 15:03:27 -0500
-In-Reply-To: <20040308192011.GG23525@suse.de>
+Received: from hera.cwi.nl ([192.16.191.8]:16854 "EHLO hera.cwi.nl")
+	by vger.kernel.org with ESMTP id S261184AbUCHUOa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Mar 2004 15:14:30 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0403081046190.1187-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: John McKell <mckellj@iomega.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Patrick Mansfield <patmans@us.ibm.com>, USB Storage List <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-// Jens A et al.:
+On Mon, Mar 08, 2004 at 11:05:38AM -0500, Alan Stern wrote:
 
-Cogent, thank you, I now have new guesses of how I can help here.
+> Maybe it's time to think about improving the situation with MODE SENSE for 
+> USB devices.  I don't know that page 0x08 is particularly crucial for USB 
+> devices, but page 0x3f (for the write-protect setting) certainly would be 
+> good to have.
 
-// John M:
+Just to be sure: 0x3f is not the code for some particular page,
+but for all available pages.
 
-> > Feel free to resend.
+The write-protect setting is found (if it is found) in the header,
+so it does not matter what page(s) we ask for, as long as we get
+at least one header.
 
-If you choose to resend when kernel.org releases 2.6.4 ...
-
-> +++ linux/include/linux/cdrom.h
-> ...
-> -#define CDF_MRW 0x28
-> +#define CDF_RWRT 0x0020
-> +#define CDF_HWDM 0x0024
-> +#define CDF_MRW 0x0028
-
-Then please consider linking this t10.org hex with the t10.org English:
-
--#define CDF_MRW 0x28
-+#define CDF_RWRT 0x0020 /* "Random Writable" */
-+#define CDF_HWDM 0x0024 /* "Hardware Defect Management" */
-+#define CDF_MRW 0x0028
-
-With those two comments added, I no longer trip at first glance over the
-inscrutable RT of R W RT in the source (run time? real time? rather
-'tochastic?) instead I see the R Wrt that I now imagine we intend.
-
-Pat LaVarre
-
-P.S. MRW I left unelaborated because MRW appears as "MRW" at t10.org
-
-
+Andries
