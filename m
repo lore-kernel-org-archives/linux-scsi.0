@@ -1,153 +1,122 @@
 From: "Kit Gerrits" <kit@gerritsacc.nl>
-Subject: RE: Disk errors
-Date: Mon, 31 Jan 2005 16:22:23 +0100
-Message-ID: <20050131151806.A3DD4869@frisbee.gerritsacc.nl>
-References: <74A9A71929931E40967CA9F27B1D7396DC00E2@hdsmsx401.amr.corp.intel.com>
+Subject: RE: PERC2/Si won't failover
+Date: Mon, 31 Jan 2005 17:32:51 +0100
+Message-ID: <20050131162835.93AB9C4@frisbee.gerritsacc.nl>
+References: <20050131134506.34A3AC4@frisbee.gerritsacc.nl>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.gerritsaa.nl ([82.168.101.83]:9543 "EHLO
+Received: from www.gerritsaa.nl ([82.168.101.83]:38217 "EHLO
 	frisbee.gerritsacc.nl") by vger.kernel.org with ESMTP
-	id S261235AbVAaPWG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Jan 2005 10:22:06 -0500
-In-Reply-To: <74A9A71929931E40967CA9F27B1D7396DC00E2@hdsmsx401.amr.corp.intel.com>
+	id S261259AbVAaQcb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 Jan 2005 11:32:31 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by frisbee.gerritsacc.nl (Postfix) with ESMTP id A0C2386A
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Jan 2005 17:28:45 +0100 (CET)
+Received: from frisbee.gerritsacc.nl ([127.0.0.1])
+ by localhost (Frisbee [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+ id 51614-05 for <linux-scsi@vger.kernel.org>;
+ Mon, 31 Jan 2005 17:28:35 +0100 (CET)
+Received: from kaglapxp (unknown [10.2.2.121])
+	by frisbee.gerritsacc.nl (Postfix) with ESMTP id 93AB9C4
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Jan 2005 17:28:35 +0100 (CET)
+In-Reply-To: <20050131134506.34A3AC4@frisbee.gerritsacc.nl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'Cress, Andrew R'" <andrew.r.cress@intel.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Andrew,
+I found this in a diagnostic dump, maybe someone can make any sense of it?
 
-Thanks for explaining the initial vs grown error list.
- 
-Unfortunately, the tool itself monitors softwareRAID and SCSI devices.
-This means that sgmode itself sees only the containers on the PERC.
-
-
-Would you happen to know how to accomplish this in afacli?
-
-
-AFA0> disk set ?
-disk set default - Sets the various disk defaults for all subsequent CLI
-commands.
-disk set smart - Change a device's SMART configuration.
-
-AFA0> disk show ?
-disk show default - Shows the various defaults set for the CLI commands.
-disk show defects - Shows the number of defects and/or defect list on a
-particular disk drive.
-disk show partition - Shows the partitions on the disks attached to this
-controller.
-disk show smart - Displays SMART values and settings for SMART enabled
-devices.
-disk show space - Shows space usage on the disks attached to the controller.
-
-AFA0> disk show default
-Executing: disk show default
-No Default
-
-AFA0>disk show smart
-Executing: disk show smart
-        Smart    Method of         Enable
-        Capable  Informational     Exception  Performance  Error
-B:ID:L  Device   Exceptions(MRIE)  Control    Enabled      Count
-------  -------  ----------------  ---------  -----------  ------
-0:00:0     Y            6             Y           N             0
-0:01:0     Y            6             Y           N             0
-0:02:0     Y            6             Y           N             0
-0:03:0     Y            6             Y           N             0
-0:06:0     N
-
-
-Thanks for the info
+[76]: CT_FindMissingEntry: dev = 3
+[77]: CT_SwitchFillPrimary: recover missing entry, container Inde
+[78]: x 1, dev 3, signature 0xf7b74944
+[79]: CT_CONFIG_WARNING: at Line 8983 - CFG_MISSING_PARTITION: ar
+[80]: g1 = 0x2 arg2 = 0x0
 
 Kit
 
-
 > -----Oorspronkelijk bericht-----
-> Van: Cress, Andrew R [mailto:andrew.r.cress@intel.com] 
-> Verzonden: maandag 31 januari 2005 15:46
-> Aan: Kit Gerrits; linux-scsi@vger.kernel.org
-> Onderwerp: RE: Disk errors
+> Van: Kit Gerrits [mailto:kit@gerritsacc.nl] 
+> Verzonden: maandag 31 januari 2005 14:49
+> Aan: linux-scsi@vger.kernel.org
+> Onderwerp: PERC2/Si won't failover
 > 
-> Kit,
+> Hey all!
 > 
-> With the growing size of disk drives, and a more sectors 
-> allocated to reserve sectors, the number of defects alone is 
-> not a big concern, expecially if they are PRIMARY defects 
-> (found at manufacture-time).
-> What would be of concern, is an increase in the number of 
-> GROWN defects over a short period of time.  Unfortunately, it 
-> is quite common for one defect to cause a disk to be 
-> replaced, when it could be remapped without the expense and 
-> trouble of a field replacement.
+> I have a PowerEDGE 2400 with  PERC2/Si with 4x9GB Drives with 
+> RedHat EL 3.0 Container 0: plain 9GB drive (O/S) Container 1: 
+> 3x9GB in RAID5 (data)
 > 
-> The automatic remapping of grown defects is a feature of SCSI 
-> disks, but may not be configured in the disk's mode pages.  
-> The mode pages can be changed without affecting the content 
-> of the disk (with the exception of size & sector mapping 
-> parameters).  There are several Linux tools to read/set mode 
-> pages, among which is 'sgmode' from http://scsirastools.sf.net.
+> After getting I/O Errors (and gettinge a strange noise from 
+> drive 0:3:0), I did the unthinkable: I pulled the drive from 
+> the chassis without shutting it down. (oops) I have now 
+> verified the drive, cleaned off the partition and rescanned the bus.
+> ...but the drive won't failover
 > 
-> As a guess, it appears that you had a grown defect occur on 
-> one of your disks, but the remapping was not set to occur 
-> automatically on that disk, so a write never finished.
+> I have set it to failover, but the PERC won't failover the 
+> drive, even after a (warm) reboot.
 > 
-> Andy
-> 
-> 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Kit Gerrits
-> Sent: Monday, January 31, 2005 9:28 AM
-> To: linux-scsi@vger.kernel.org
-> Subject: Disk errors
-> 
-> 
-> Exactly how many errors is a SCSI disk allowed to have?
-> 
-> I have a PE2400 with a PERC2/Si with 4x9GB
-> 
-> My disks show:
-> AFA0> disk show defects 0
-> Executing: disk show defects (ID=0)
-> Number of PRIMARY defects on drive: 1912 Number of GROWN 
-> defects on drive: 0
-> 
-> AFA0> disk show defects 1
-> Executing: disk show defects (ID=1)
-> Number of PRIMARY defects on drive: 952
-> Number of GROWN defects on drive: 1
-> 
-> AFA0> disk show defects 2
-> Executing: disk show defects (ID=2)
-> Number of PRIMARY defects on drive: 2457 Number of GROWN 
-> defects on drive: 0
-> 
-> AFA0> disk show defects 3
-> Executing: disk show defects (ID=3)
-> Number of PRIMARY defects on drive: 2794 Number of GROWN 
-> defects on drive: 0
-> 
-> The reason I ask is tha tmy O/S (RedHat Enterprise Linux 3.0) 
-> has recently hung with the error:
-> 
-> I/O Error Dev 08:05 Sector 529712
-> 
-> I would assume that this error is generated by the harddrive, 
-> but shouldn't the controller catch SCSI errors (and relocate 
-> sectors automagically)?
+> Did I forget anything?
 > 
 > Thanks in advance,
 > 
 > Kit Gerrits
-> 
 > kit@gerritsaa.nl
 > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in the body of a message to 
-> majordomo@vger.kernel.org More majordomo info at  
-> http://vger.kernel.org/majordomo-info.html
+> 
+> ---------------
+> Debugging info:
+> ---------------
+> 
+> AFA0> disk list
+> Executing: disk list
+> 
+> B:ID:L  Device Type     Blocks    Bytes/Block Usage           
+>  Shared Rate
+> ------  --------------  --------- ----------- 
+> ---------------- ------ ----
+> 0:00:0   Disk            17783240  512         Initialized    
+>   NO     80
+> 0:01:0   Disk            17783240  512         Initialized    
+>   NO     80
+> 0:02:0   Disk            17783240  512         Initialized    
+>   NO     80
+> 0:03:0   Disk            17783240  512         Initialized    
+>   NO     80
+> 
+> AFA0> container show failover
+> Executing: container show failover
+> 
+> Container Scsi B:ID:L
+> --------- ----------------------------------
+>   0       --- No Devices Assigned ---
+>   1       0:03:0
+> 
+> AFA0> container list
+> Executing: container list
+> Num          Total  Oth Chunk          Scsi   Partition
+> Label Type   Size   Ctr Size   Usage   B:ID:L Offset:Size
+> ----- ------ ------ --- ------ ------- ------ -------------
+>  0    Volume 8.47GB            Open    0:00:0 64.0KB:8.47GB
+>  /dev/sda             NT
+> 
+>  1    RAID-5 16.9GB       32KB Open    0:01:0 64.0KB:8.47GB
+>  /dev/sdb             DATA             0:02:0 64.0KB:8.47GB
+>                                        ?:??:?  - Missing -
+> 
+> AFA0> controller show au
+> Executing: controller show automatic_failover Automatic 
+> failover ENABLED
+> 
+> AFA0> container scrub 1
+> Executing: container scrub 1
+> Command Error: <The controller was unable to perform a scrub 
+> (consistency
+> check)
+>  operation on the container because one or more of the 
+> container's partitions fa iled.  >
+> 
+> 
 
