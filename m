@@ -1,127 +1,69 @@
-From: =?iso-8859-1?q?Liong=20Hoong?= <liongshliongsh@yahoo.com>
-Subject: Re: sg_io_hrd_t - host_status error (0x05)
-Date: Fri, 30 Apr 2004 15:12:34 +0800 (CST)
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [patch 3/3] aic7...: Fix bad __exit reference
+Date: Sat, 1 May 2004 21:04:25 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040430071234.67120.qmail@web40005.mail.yahoo.com>
-References: <20040427034308.89924.qmail@web40004.mail.yahoo.com>
+Message-ID: <20040501110425.GA29776@gondor.apana.org.au>
+References: <200404270501.i3R51h207741@mail.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed; boundary="ew6BAiZeqk4r7MaW"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web40005.mail.yahoo.com ([66.218.78.23]:37270 "HELO
-	web40005.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S265100AbUD3HMg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Apr 2004 03:12:36 -0400
-In-Reply-To: <20040427034308.89924.qmail@web40004.mail.yahoo.com>
+Received: from arnor.apana.org.au ([203.14.152.115]:3084 "EHLO
+	arnor.apana.org.au") by vger.kernel.org with ESMTP id S261248AbUEALFA
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 1 May 2004 07:05:00 -0400
+Content-Disposition: inline
+In-Reply-To: <200404270501.i3R51h207741@mail.osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Liong Hoong <liongshliongsh@yahoo.com>, dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: akpm@osdl.org
+Cc: James.Bottomley@steeleye.com, gibbs@scsiguy.com, linux-scsi@vger.kernel.org
 
-Hi,
 
-Sorry if there is any misunderstanding in my previous
-questions.
-I would like to ask, 
-I am using Linux Red Hat 8.0, kernel 2.4.18. I used
-the SG driver version 3 without any modification of
-the kernel. I encountered host_status error (0x05)
-ONLY on sending opcodes from 0x80 to 0x9f. Can anyone
-give me hints on why or which part of the kernel codes
-that might failed this specific range of opcodes? Or
-is there any work around or patches? Anyone out there
-did experience similar problems and like to share with
-me?
+--ew6BAiZeqk4r7MaW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Mon, Apr 26, 2004 at 10:01:28PM -0700, akpm@osdl.org wrote:
+> 
+> From: Herbert Xu <herbert@gondor.apana.org.au>
+> 
+> >
+> > Error: ./drivers/scsi/aic7xxx/aic7xxx_osm.o .init.text refers to
+> > 0000000000000040 ELF_LITERAL       .exit.text
+> > Error: ./drivers/scsi/aic7xxx/aic7xxx_osm.o .init.text refers to
+> > 0000000000000044 HINT              .exit.text
+> > Error: ./drivers/scsi/aic7xxx/aic7xxx_osm.o .eh_frame refers to
+> > 0000000000000941 SREL32            .exit.text
+> 
+> That was my fault.  This patch should fix it.
+
+Here is a follow-up patch to delete the now-unused exit prototype.
 
 Thanks,
-Sean
- --- Liong Hoong <liongshliongsh@yahoo.com> wrote: >
-Hi Douglas Gilbert,
-> 
-> Thanks for commenting on the problem I am facing. I
-> have few other question,
-> 
-> 1) Is it a common error on kernel 2.4.18 where the
-> host_status error, SG_ERR_DID_ABORT occured whenever
-> pass through opcodes from 0x80 to 0x9f?
-> 
-> 2) Is there any patch to work around this error?
-> 
-> 3) Can you point me to any links or codes that have
-> caused the error?
-> 
-> Thanks for spending time on my doubts.
-> 
-> Best Regards,
-> Sean
-> 
-> --- Douglas Gilbert <dougg@torque.net> wrote: >
-> Liong
-> Hoong wrote:
-> > > Hi all,
-> > > 
-> > > I have set up the main control structure for the
-> > > version 3 SCSI generic driver. I am trying to
-> send
-> > > down some opcodes (vendor specific) to a usb
-> mass
-> > > storage device. Found that I encountered
-> > host_status
-> > > error, SG_ERR_DID_ABORT whenever I send opcodes
-> > from
-> > > 0x80 to 0x9f, but encountered no errors with
-> other
-> > > opcodes. 
-> > > 
-> > > The errors occured even without the device
-> plugged
-> > in,
-> > > which seem the sg driver has exclusively blocked
-> > the
-> > > opcodes from 0x80 to 0x9f. Is it true?? Is there
-> > any
-> > > work around for this??
-> > > 
-> > > Is it because of Group 4 (0x80 to 0x9f) need 16
-> > bytes
-> > > of cdb length? But even I prepare the cdb of 16
-> > bytes,
-> > > it also failed. 
-> > > 
-> > > I am using red hat 8.0, 2.4.18. 
-> > 
-> > The scsi subsystem mid level allowed 16 byte cdbs
-> > through
-> > from and including lk 2.4.15 . The sg driver
-> allows
-> > them
-> > through. That leaves the usb-storage driver (and
-> > drivers
-> > further down the USB stack) and the device itself
-> as
-> > the
-> > cause of your problem.
-> > 
-> > Doug Gilbert
-> > 
-> > -
-> > To unsubscribe from this list: send the line
-> > "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at 
-> http://vger.kernel.org/majordomo-info.html 
-> 
-> __________________________________________________
-> Do You Yahoo!?
-> Log on to Messenger with your mobile phone!
-> http://sg.messenger.yahoo.com
-> -
-> To unsubscribe from this list: send the line
-> "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at 
-http://vger.kernel.org/majordomo-info.html 
+-- 
+Debian GNU/Linux 3.0 is out! ( http://www.debian.org/ )
+Email:  Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
 
-__________________________________________________
-Do You Yahoo!?
-Log on to Messenger with your mobile phone!
-http://sg.messenger.yahoo.com
+--ew6BAiZeqk4r7MaW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename=p
+
+Index: drivers/scsi/aic7xxx/aic7xxx_osm.c
+===================================================================
+RCS file: /home/gondolin/herbert/src/CVS/debian/kernel-source-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.c,v
+retrieving revision 1.6
+diff -u -r1.6 aic7xxx_osm.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c	23 Apr 2004 10:19:47 -0000	1.6
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c	1 May 2004 11:02:40 -0000
+@@ -5083,8 +5083,6 @@
+ 	}
+ }
+ 
+-static void __exit ahc_linux_exit(void);
+-
+ static int __init
+ ahc_linux_init(void)
+ {
+
+--ew6BAiZeqk4r7MaW--
