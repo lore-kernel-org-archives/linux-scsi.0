@@ -1,34 +1,34 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [SAS ANNOUNCEMENT] MPT Fusion driver 3.02.07.02 update
-Date: Tue, 16 Nov 2004 10:12:33 -0500
-Message-ID: <419A18E1.4070207@adaptec.com>
-References: <91888D455306F94EBD4D168954A9457C3FFE19@nacos172.co.lsil.com> <41994CED.4080204@pobox.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: ugliness with USB hot-unplug
+Date: 16 Nov 2004 09:17:11 -0600
+Message-ID: <1100618237.2279.11.camel@mulgrave>
+References: <20041115212858.29d3c73d.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:61643 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261999AbUKPPMy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Nov 2004 10:12:54 -0500
-In-Reply-To: <41994CED.4080204@pobox.com>
+Received: from stat16.steeleye.com ([209.192.50.48]:57519 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262010AbUKPPRg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Nov 2004 10:17:36 -0500
+In-Reply-To: <20041115212858.29d3c73d.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Jeff Garzik wrote:
-> 
-> Overall, what is needed is 'host control', which can include device
-> topology manipulation.
-> 
+On Mon, 2004-11-15 at 23:28, Andrew Morton wrote:
+> So I made the mistake of forgetting to unmount the fat filesytem before
+> unplugging the USB cable from the digital camera.  I then tried to unmount
+> the old mountpoint.  khubd is sitting there chewing 100% CPU and I have a
+> reboot in my near future.
 
-Yes, I agree.
+Yes, this is a known issue.  Mike Christie provided the fix, and I was
+just about to put it in the rc-fixes tree last night when BK threw a
+wobbly and corrupted its ChangeSet in my local tree.  I'm just going
+back now and trying to work out which patches I need to rescue from my
+email and put into a rebuilt tree.
 
-So would it be wise to conclude that an "extension" to the LLDD
-methods would be needed.  I think this is what SDI would end up being.
-Host/Bus/target/lun woulnd't merely be enough, albeit only in the
-core of the OS.  HBTL translation is one of the points SDI addresses.
+James
 
-	Luben
 
