@@ -1,55 +1,104 @@
-From: "Duane Grigsby" <duane.grigsby@qlogic.com>
-Subject: RE: [PATCH] mark qlogicfc broken
-Date: Fri, 11 Feb 2005 10:08:08 -0800
-Message-ID: <41EBA11203419D4CA8EB4C6140D8B40101401B65@AVEXCH01.qlogic.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [usb-storage] Re: MPIO HS200 Gigabox weird behaviour again
+Date: Fri, 11 Feb 2005 13:31:30 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0502111326540.937-100000@ida.rowland.org>
+References: <1108138682.5773.23.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Received: from avexch01.qlogic.com ([198.70.193.200]:3137 "EHLO
-	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S262157AbVBKSIJ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Feb 2005 13:08:09 -0500
-content-class: urn:content-classes:message
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from ida.rowland.org ([192.131.102.52]:15876 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S261387AbVBKSbb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Feb 2005 13:31:31 -0500
+In-Reply-To: <1108138682.5773.23.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ricky Beam <jfbeam@bluetronic.net>, Christoph Hellwig <hch@lst.de>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>
+To: Radovan Garabik <garabik@kassiopeia.juls.savba.sk>
+Cc: USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-If you could run the qla2xxx driver with debug enabled and send me the message file after the failure then maybe I can determine whats wrong with it and fix for good.
--- Duane
+On Fri, 11 Feb 2005, James Bottomley wrote:
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org
-> [mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Ricky Beam
-> Sent: Friday, February 11, 2005 6:30 AM
-> To: Christoph Hellwig
-> Cc: Linux SCSI List
-> Subject: Re: [PATCH] mark qlogicfc broken
+> On Fri, 2005-02-11 at 11:00 -0500, Alan Stern wrote:
+> > SCSI developers: Is there any hope of this?
 > 
+> Well, IBM also has some old buggy piece of hardware that apparently
+> gives fatal errors but actually wants them retried:
 > 
-> On Fri, 11 Feb 2005, Christoph Hellwig wrote:
-> >Arjan tested it on the 2100 a while ago and it worked just 
-> fine.  Have
-> >you tested it recently?
+> http://marc.theaimsgroup.com/?t=110088696100005
 > 
-> Yes.  If you sling enough traffic at it, it hangs, times out, 
-> and eventually
-> restarts the card goes on about it's business for a few more 
-> seconds before
-> hanging again.
+> After a bit of argument, they agreed to do it as a blacklist flag, so
+> you should be able to add the same flag to your gigabox.
 > 
-> >It _is_ broken.  See the url in my initial post.
-> 
-> No, it is not.  I'm using it right now -- and have been for ~5 years.
-> Tridge's message doesn't say anything -- 4000 4 can happen with either
-> driver.
-> 
-> --Ricky
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> I planned to put the patch in just as soon as they managed to send the
+> patch unmangled by a mailer, but they went very quiet.
+
+Thanks, James.
+
+Radovan: Below is an updated version of the patch James mentioned, with an
+entry included for your Gigabox drive.  It's meant to apply to
+2.6.11-rc3-bk5, but it will probably go with older kernels too.  Try it
+out and let me know how it works.  If it solves your problem, I'll submit
+it for inclusion in the official kernel.
+
+Alan Stern
+
+
+===== include/scsi/scsi_devinfo.h 1.7 vs edited =====
+--- 1.7/include/scsi/scsi_devinfo.h	2004-10-05 11:25:13 -04:00
++++ edited/include/scsi/scsi_devinfo.h	2005-02-11 13:21:51 -05:00
+@@ -27,4 +27,5 @@
+ #define BLIST_NOT_LOCKABLE	0x80000	/* don't use PREVENT-ALLOW commands */
+ #define BLIST_NO_ULD_ATTACH	0x100000 /* device is actually for RAID config */
+ #define BLIST_SELECT_NO_ATN	0x200000 /* select without ATN */
++#define BLIST_RETRY_HWERROR	0x400000 /* retry HARDWARE_ERROR */
+ #endif
+===== drivers/scsi/scsi_devinfo.c 1.14 vs edited =====
+--- 1.14/drivers/scsi/scsi_devinfo.c	2004-12-10 11:54:56 -05:00
++++ edited/drivers/scsi/scsi_devinfo.c	2005-02-11 13:25:41 -05:00
+@@ -159,6 +159,7 @@
+ 	{"HP", "C3323-300", "4269", BLIST_NOTQ},
+ 	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
+ 	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
++	{"IBM", "2105", NULL, BLIST_RETRY_HWERROR},
+ 	{"iomega", "jaz 1GB", "J.86", BLIST_NOTQ | BLIST_NOLUN},
+ 	{"IOMEGA", "Io20S         *F", NULL, BLIST_KEY},
+ 	{"INSITE", "Floptical   F*8I", NULL, BLIST_KEY},
+@@ -192,6 +193,7 @@
+ 	{"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN | BLIST_INQUIRY_36},
+ 	{"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
+ 	{"SONY", "TSL", NULL, BLIST_FORCELUN},		/* DDS3 & DDS4 autoloaders */
++	{"ST650211", "CF", NULL, BLIST_RETRY_HWERROR},
+ 	{"SUN", "T300", "*", BLIST_SPARSELUN},
+ 	{"SUN", "T4", "*", BLIST_SPARSELUN},
+ 	{"TEXEL", "CD-ROM", "1.06", BLIST_BORKEN},
+===== drivers/scsi/scsi_error.c 1.47 vs edited =====
+--- 1.47/drivers/scsi/scsi_error.c	2005-02-02 21:56:01 -05:00
++++ edited/drivers/scsi/scsi_error.c	2005-02-11 13:23:45 -05:00
+@@ -31,6 +31,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_ioctl.h>
+ #include <scsi/scsi_request.h>
++#include <scsi/scsi_devinfo.h>
+ 
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
+@@ -350,10 +351,18 @@
+ 	case MEDIUM_ERROR:
+ 		return NEEDS_RETRY;
+ 
++	case HARDWARE_ERROR:
++		if (scsi_get_device_flags(scmd->device,
++					scmd->device->vendor,
++					scmd->device->model)
++				& BLIST_RETRY_HWERROR)
++			return NEEDS_RETRY;
++		else
++			return SUCCESS;
++
+ 	case ILLEGAL_REQUEST:
+ 	case BLANK_CHECK:
+ 	case DATA_PROTECT:
+-	case HARDWARE_ERROR:
+ 	default:
+ 		return SUCCESS;
+ 	}
+
