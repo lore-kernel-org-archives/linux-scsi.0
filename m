@@ -1,52 +1,28 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: RE: suspending I/Os to a device
-Date: 23 Apr 2004 19:28:30 -0400
+From: Return daemon S7KW8 <dev-null@axis.com>
+Subject: Invalid address: simon.kagstrom
+Date: Sat, 24 Apr 2004 02:42:42 UT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1082762917.1615.17.camel@mulgrave>
-References: <8D43EFD7CCBDB24980134BE078C227E704E37A82@xcm.emulex.com>
+Message-ID: <200404240242.i3O2ggIl012874@miranda.se.axis.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:30920 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261704AbUDWX3d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Apr 2004 19:29:33 -0400
-In-Reply-To: <8D43EFD7CCBDB24980134BE078C227E704E37A82@xcm.emulex.com>
+Received: from miranda.se.axis.com ([193.13.178.2]:15799 "EHLO
+	miranda.se.axis.com") by vger.kernel.org with ESMTP id S261865AbUDXCmo convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Apr 2004 22:42:44 -0400
+Received: from miranda.se.axis.com (localhost [127.0.0.1])
+	by miranda.se.axis.com (8.12.9/8.12.9/Debian-5local0.1) with ESMTP id i3O2ggUm012879
+	for <linux-scsi@vger.kernel.org>; Sat, 24 Apr 2004 04:42:42 +0200
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: "Infante, Jon" <Jon.Infante@Emulex.Com>
-Cc: Linux SCSI Reflector <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2004-04-23 at 18:12, Infante, Jon wrote:
-> Here is the senerio I am trying to handle within our Fibre Channel driver.
-> In Fibre Channel, it is possible for the Target, or HBA, to be disconnected
-> from one port on a switch and plugged into another port on the same (or even
-> a different) switch. This transitition can happen with live traffic and the
-> scsi subsystem / driver is supposed to recover gracefully, without failing
-> all I/Os back up to applications that are running. In order to accomplish
-> this, there is a configurable timer, that tells the driver how long to wait
-> (at the Fibre Channel level), when a device disappears, to give it a chance
-> to come back. Some OEMs / environments set this to a couple seconds, some a
-> to couple of minutes.
-
-Actually, there is no interface because no-one has had any prior
-requirements for this.
-
-This is effectively a FC specific thing, and I believe you know because
-you get a lip event telling you the target has gone, so it sounds like
-the ideal thing to handle in the FC transport class (since it would
-apply to all FC HBAs) The target reconnect timeout would then be a
-transport class property and we'd start failing I/Os when it expired.  I
-would guess there needs to be an additional state in the device state
-model like SUSPEND (QUIESCE doesn't quite fit because it allows the
-pending queue to drain and the error handler to operate), but we can
-accomodate that.
-
-By default, I would think the reconnect timeout should be zero because
-most FC operates in a multi-path environment and you want path failure
-notifications as fast as possible, so users requiring this feature would
-need to set the timeout.
-
-James
-
-
+The addresses <simonk@axis.com> and <simon.kagstrom@axis.com> are not v=
+alid.
+Simon K=E5gstr=F6m has no known new address.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
