@@ -1,57 +1,34 @@
-From: "SRINATH,VIJAY (HP-India,ex2)" <vijay.srinath@hp.com>
-Subject: scsi disk driver behaviour
-Date: Fri, 14 Feb 2003 16:05:46 +0530
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH / RFC] scsi_error handler update. (1/4)
+Date: Fri, 14 Feb 2003 08:38:57 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A11077E28200D51182EA00D0B775525303798AF5@xin02.india.hp.com>
+Message-ID: <20030214083857.A25020@beaverton.ibm.com>
+References: <3E495862.3050709@splentec.com> <20030211212048.GC1114@beaverton.ibm.com> <3E49698D.3030402@splentec.com> <20030211224119.A23149@infradead.org> <3E4AAA3F.8040002@splentec.com> <20030212204634.A17425@infradead.org> <3E4AC0B5.9030208@splentec.com> <20030213154748.A1965@infradead.org> <3E4BEA13.50402@splentec.com> <20030213192440.A6660@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20030213192440.A6660@redhat.com>; from dledford@redhat.com on Thu, Feb 13, 2003 at 07:24:40PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-Cc: "'eric@andante.org'" <eric@andante.org>
+To: Luben Tuikov <luben@splentec.com>, Christoph Hellwig <hch@infradead.org>, Mike Anderson <andmike@us.ibm.com>, linux-scsi@vger.kernel.org
 
-hello all,
+On Thu, Feb 13, 2003 at 07:24:40PM -0500, Doug Ledford wrote:
+> On Thu, Feb 13, 2003 at 01:55:15PM -0500, Luben Tuikov wrote:
+> > 	::same_target_siblings -- this shouldn't exist by design.
+> 
+> Yes!  That one most certainly should exist!  There are lots of operations 
+> in the scsi protocol that are target specific instead of lun specific and 
 
-	Iam running Linux Kernel 2.4.9. I have a disk array with a more than
-128 luns. Since the maximum number of disk luns that sd driver can see is
-128, i expected to see atleast 128. But i noticed that i was not able to
-access any lun at all.
-	I investigated further and saw that sd_init() in sd.c was returning
-a failure. This was because the code where memory is alloc'd for 'hd_struct'
-structures was failing. The code snippet is below
+And it would be nice if each scsi_device pointed to a parent struct
+scsi_target that grouped all per-target information - like (as you
+mentioned) active_cmd_count_target, *lld_target_data, and other target
+specific data that is now stored in scsi_device.
 
-<snip>
-/*
-* FIXME: should unregister blksize_size, hardsect_size and max_sectors
-when
-* the module is unloaded.
-*/
-   sd = kmalloc((sd_template.dev_max << 4) *
-                 sizeof(struct hd_struct),
-                 GFP_ATOMIC);
-   if (!sd)
-        goto cleanup_sd;
-<snip>
-   
-	The reason is if dev_max is 128, then the total mem size being
-malloc'd becomes 139264. The highest value in the cache_size table is 131072
-and apparently this seems to be causing the kmalloc to fail. In fact the
-kmalloc fails for any dev_max value greater than 120
-	
-	Also, the SD_EXTRA_DEVS by default is 2 but if i rebuild my kernel
-with CONFIG_SD_EXTRA_DEVS set to 128, then no matter how many devices i have
-connected to my host, sd_init() will always fail.
+This might aid in probe/scanning for transports (like FCP) that can figure
+out a target is there without scanning: a representation of the target can
+show up without any scsi_device, and then we scan those targets.
 
-	I did not have this problem with kernel 2.4.2-2, where in i notice
-that the check to see if 'sd' kmalloc was successful, was absent.
-		
-	Iam not sure what the fix needs to be (whether to include the next
-size 262144 in the cache_sizes table or whether to remove the check like in
-2.4.2-2).
+It also gives a better representation (under sysfs) of the physical layout
+of the devices.
 
-	Appreciate any response on this...
-
-thanks
-vijay
-
+-- Patrick Mansfield
