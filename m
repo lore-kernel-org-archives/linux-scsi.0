@@ -1,37 +1,34 @@
-From: Andries.Brouwer@cwi.nl
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: IDs
-Date: Tue, 7 Jan 2003 03:19:45 +0100 (MET)
+Date: Mon, 6 Jan 2003 19:15:22 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <UTC200301070219.h072JjD19965.aeb@smtp.cwi.nl>
+Message-ID: <20030106191522.A11624@beaverton.ibm.com>
+References: <UTC200301070219.h072JjD19965.aeb@smtp.cwi.nl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <UTC200301070219.h072JjD19965.aeb@smtp.cwi.nl>; from Andries.Brouwer@cwi.nl on Tue, Jan 07, 2003 at 03:19:45AM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl, patmans@us.ibm.com
+To: Andries.Brouwer@cwi.nl
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-kernel@one-eyed-alien.net, zwane@holomorphy.com
 
-> We can tell if the id sdev->name should be unique by looking at
-> the first byte (it is not unique if the value is 'Z'),
-> SCSI_UID_UNKNOWN.
+On Tue, Jan 07, 2003 at 03:19:45AM +0100, Andries.Brouwer@cwi.nl wrote:
+> > We can tell if the id sdev->name should be unique by looking at
+> > the first byte (it is not unique if the value is 'Z'),
+> > SCSI_UID_UNKNOWN.
+> 
+> Such things are nontrivial.
 
-Such things are nontrivial.
+Yes ...
 
-% cat /sysfs/devices/ide-scsi/0:0:0:0/0:0:0:0/name
-SHP      CD-Writer+ 8200 [
+> And where we have heuristics only, it cannot be "wrong"
+> to truncate at 50 positions or so. The heuristic does
+> not become appreciably weaker.
 
-Here the serial number consists of the '[' only.
-(And this is not because of truncation.)
+But, we don't have to truncate, we should just allocate as many bytes as
+we need, and store the information.
 
-I can see your intentions, but view these names/ids more
-like heuristics than like reliable data.
-More or less like mount, which will usually figure out the
-filesystem type for you, but no guarantees are given.
+And, the sysfs name should not store the id.
 
-And where we have heuristics only, it cannot be "wrong"
-to truncate at 50 positions or so. The heuristic does
-not become appreciably weaker.
-
-(And, in case of heuristics, I like 98% heuristics better
-than 99.98% heuristics. They keep you honest. No important
-things will depend upon them. With 99.98% one may forget
-that it is a heuristic.)
-
-Andries
+-- Patrick Mansfield
