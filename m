@@ -1,54 +1,39 @@
-From: Rabeeh Khoury <rabeeh@il.marvell.com>
-Subject: Re: Linux limitation of amount of SCSI buses
-Date: Tue, 29 Jul 2003 20:34:27 +0300
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: Retry scsi_mode_sense if UNIT ATTENTION occurs
+Date: Tue, 29 Jul 2003 23:28:19 +0300 (EEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F26B023.7090503@il.marvell.com>
-References: <3F266F60.5070501@il.marvell.com> <20030729155841.GE8407@beaverton.ibm.com>
+Message-ID: <Pine.LNX.4.56.0307292319140.3939@kai.makisara.local>
+References: <Pine.LNX.4.44L0.0307281005590.797-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop3.galileo.co.il ([199.203.130.130]:20665 "EHLO
-	mail.galileo.co.il") by vger.kernel.org with ESMTP id S271938AbTG2RfH
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jul 2003 13:35:07 -0400
-In-Reply-To: <20030729155841.GE8407@beaverton.ibm.com>
+Received: from fep02-0.kolumbus.fi ([193.229.0.44]:53653 "EHLO
+	fep02-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S272059AbTG2U2V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jul 2003 16:28:21 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0307281005590.797-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Jens Axboe <axboe@suse.de>, SCSI development list <linux-scsi@vger.kernel.org>
 
->
->
->>I'm connecting few cards with 24 buses and Linux gives me only 15 buses.
->>Is there any limitation in Linux SCSI subsystem within kernel 2.4.x of 
->>the number of SCSI buses ?
->>Each bus has a single target and a single LUN.
->>    
->>
->
->Does each card have multiple channels (i.e., 24)? If so you may need to
->set max_channel to a higher value.
->
-Each card has 8 buses ; total 3 cards. On each bus I have a single 
-target that has single LUN.
-If I work with a single adapter I can see 8 buses.
+On Mon, 28 Jul 2003, Alan Stern wrote:
 
+> Jens:
 >
->If each card has a single bus there may be a instance limit that the
->driver you are using will support.
+> This patch changes the scsi_mode_sense() routine to retry up to a total of
+> 3 times if a command fails with a UNIT ATTENTION sense key value.
 >
->What driver are you using?
->
-Internal driver that is under development.
+This is dangerous or makes __scsi_mode_sense usable only in special cases.
+Some high-level drivers need to process the UNIT ATTENTION sense data.
 
+> Without this change, sr.c does not properly read the capabilities mode
+> page for a just-powered-up cdrom drive -- it gives up upon receiving a
+> Device Reset Occurred code.
 >
->-andmike
->--
->Michael Anderson
->andmike@us.ibm.com
->
->
->.
->  
->
+One alternative is to move the retry code upwards to scsi_mode_sense and
+document that it may discard UNIT ATTENTION. Those drivers that can't
+tolerate this can then use __scsi_mode_sense. This would solve the sr
+problem.
 
+-- 
+Kai
