@@ -1,43 +1,54 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: How to resurrect offlined SCSI devices?
-Date: Wed, 26 May 2004 10:48:58 -0700
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: ahc1542 fun
+Date: Wed, 26 May 2004 18:52:17 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040526174858.GA1561@us.ibm.com>
-References: <8D43EFD7CCBDB24980134BE078C227E704E37B0A@xcm.emulex.com> <1085590517.2116.439.camel@mulgrave> <20040526171514.GA1332@us.ibm.com> <40B4D362.1080901@us.ibm.com>
+Message-ID: <20040526175217.GU29154@parcelfarce.linux.theplanet.co.uk>
+References: <40B401AE.9060707@pobox.com> <20040526064430.GA21531@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.101]:8895 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S265750AbUEZRtB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 May 2004 13:49:01 -0400
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:33412 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S265755AbUEZRwT
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 May 2004 13:52:19 -0400
 Content-Disposition: inline
-In-Reply-To: <40B4D362.1080901@us.ibm.com>
+In-Reply-To: <20040526064430.GA21531@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <mikenc@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, "Infante, Jon" <Jon.Infante@Emulex.Com>, Martin Peschke3 <MPESCHKE@de.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: hch@infradead.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Mike Christie [mikenc@us.ibm.com] wrote:
-> Mike Anderson wrote:
-> >James Bottomley [James.Bottomley@steeleye.com] wrote:
-> >
-> >>I'd really like to see all fibre events (like loop up/down, device
-> >>add/remove) handled inside the FC transport class.  From there, it
-> >>probably still make sense to use hotplug as the mechanism for importing
-> >>user policy.
-> >
-> >
-> >Currently there are no hotplug events generated from SCSI except those
-> >from add / remove of sysfs related structures. Are you suggesting that
-> >SCSI should call call_usermodehelper and generate events?
-> 
-> What about kobject_hotplug()?
+On Wed, May 26, 2004 at 02:44:30AM -0400, hch@infradead.org wrote:
+> This needs fixing in mca.h and mca-legacy.h.  The debian kernel package
+> has a fix that I don't quite like.  I'll rework it in the next days and
+> submit it.
 
-Thanks, my mistake I did not look close enough and was still thinking
-that interfaces where not exported and we would need to roll our own.
+What I have in the PA tree is:
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Index: include/linux/mca.h
+===================================================================
+RCS file: /var/cvs/linux-2.6/include/linux/mca.h,v
+retrieving revision 1.4.46.1
+retrieving revision 1.4
+diff -u -p -r1.4.46.1 -r1.4
+--- include/linux/mca.h 23 May 2004 23:31:15 -0000      1.4.46.1
++++ include/linux/mca.h 8 Oct 2003 20:53:03 -0000       1.4
+@@ -12,7 +12,9 @@
+ #include <linux/device.h>
+ 
+ /* get the platform specific defines */
++#ifdef CONFIG_MCA
+ #include <asm/mca.h>
++#endif
+ 
+ /* The detection of MCA bus is done in the real mode (using BIOS).
+  * The information is exported to the protected code, where this
 
+Any use?
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
