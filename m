@@ -1,45 +1,52 @@
-From: "N.C.Krishna Murthy" <krmurthy@cisco.com>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Thu, 11 Dec 2003 20:18:34 +0530
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Suggestion for aiding debugging of host removal
+Date: Thu, 11 Dec 2003 10:14:51 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200312112018.34753.krmurthy@cisco.com>
-References: <200310231734.10263.krmurthy@cisco.com> <200312041800.55663.krmurthy@cisco.com> <1070594036.1603.34.camel@mulgrave>
+Message-ID: <Pine.LNX.4.44L0.0312111012510.1227-100000@ida.rowland.org>
+References: <20031211074827.GA3076@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from india-ironport-1.cisco.com ([64.104.129.195]:59718 "EHLO
-	india-ironport-1.cisco.com") by vger.kernel.org with ESMTP
-	id S265056AbTLKOsp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Dec 2003 09:48:45 -0500
-In-Reply-To: <1070594036.1603.34.camel@mulgrave>
+Received: from ida.rowland.org ([192.131.102.52]:3588 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S265113AbTLKPOz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Dec 2003 10:14:55 -0500
+In-Reply-To: <20031211074827.GA3076@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, hotplug <linux-hotplug-devel@lists.sourceforge.net>, davmyers@cisco.com, "Scott M. Ferris" <sferris@acm.org>
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Hi,
-	Thanks for the clarification. As you pointed out, 
-upon establishing a session with iSCSI target 
-OR
-upon getting notified of Lun(s) additio/deletion.
-we will inform hotplug and let it initiate a scan(re) of that target thru 
-sysfs.  Please provide the wrapper in SCSI layer.
+On Wed, 10 Dec 2003, Mike Anderson wrote:
 
-Thanx
-N.C.Krishna Murthy
+> > > Would it help flush out such illegal accesses if at some appropriate point 
+> > > shost->hostt was set to NULL, maybe near the end of scsi_remove_host()?
+> 
+> If we wanted to set this to something to catch illegal access it might
+> be good to set hostt to a fake hostt that did a WARN_ON so that it would
+> not take the system down.
+> 
+> > 
+> > In fact that's a bug in the current scsi_host lifetime handling - before
+> > the driver can leave it's upper layer ->remove function we need to wait
+> > to the host refcount to become zero, similar to what free_netdev does.
+> > 
+> > I'll see whether I can come up with a fix.
+> 
+> Unless I missing something I do not see any interlock / wait in free_netdev
+> (in looking at test11).
+> 
+> Currently the host refcount will not go to zero until the scsi_host_put
+> is made from the LLDD post the return of the scsi_remove_host call.
+> While it is valid to sleep in the remove call and we could reorder the
+> scsi_host_put, I thought the previous goal was to not have an unbounded
+> time in scsi_remove_host. I thought we where trying to allow the host to
+> cleanup fast and if user space wanted to take time we would allow that
+> to happen, but just not send any commands to the LLDD.
 
-On Friday 05 Dec 2003 9:03 pm, James Bottomley wrote:
->
-> Well, a hotplug event feeds certain information into the environment
-> when it triggers the call.  All we really need is a wrapper in SCSI to
-> add the SCSI information to the environment and trigger the event in a
-> generic fashion.
->
-> James
->
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Remember that it's not enough to avoid sending any commands to the LLDD.  
+You must avoid accessing the host template at all, since it may no longer 
+be present in memory.  Putting in a fake entry would be a good way to 
+insure that never happens.
+
+Alan Stern
+
