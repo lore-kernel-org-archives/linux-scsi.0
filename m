@@ -1,62 +1,63 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: 2.6test10: Annoying "CDROM not ready" messages once a second
-Date: Mon, 1 Dec 2003 15:17:07 -0800
+From: Jeremy Higdon <jeremy@SGI.com>
+Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
+Date: Mon, 1 Dec 2003 18:02:03 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031201151707.0f5d4eca.rddunlap@osdl.org>
-References: <20031126134041.25698.qmail@mailshell.com>
+Message-ID: <20031202020203.GA174948@sgi.com>
+References: <B179AE41C1147041AA1121F44614F0B060ED86@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:33673 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S264144AbTLAXYC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Dec 2003 18:24:02 -0500
-In-Reply-To: <20031126134041.25698.qmail@mailshell.com>
+Received: from mtvcafw.sgi.com ([192.48.171.6]:13275 "EHLO zok.sgi.com")
+	by vger.kernel.org with ESMTP id S264272AbTLBCD1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Dec 2003 21:03:27 -0500
+Content-Disposition: inline
+In-Reply-To: <B179AE41C1147041AA1121F44614F0B060ED86@AVEXCH02.qlogic.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi-031126@amos.mailshell.com
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Jes Sorensen <jes@wildopensource.com>, Linux-SCSI <linux-scsi@vger.kernel.org>, jbarnes@SGI.com, mdr@SGI.com
 
-On Wed, 26 Nov 2003 15:41:38 +0200 linux-scsi-031126@amos.mailshell.com wrote:
+On Mon, Dec 01, 2003 at 03:21:44PM -0800, Andrew Vasquez wrote:
+> On Wednesday, November 26, 2003 5:20 PM, Jeremy Higdon wrote:
+> 
+> > I've found a problem with the driver on our SN2 system.  There needs
+> > to be a register read after updating the Request Queue In index,
+> > prior to releasing the host spin lock.
+> > 
+> > The calls to sn_mmiob() will need to be replaced by reading an
+> > appropriate register on the chip.  sn_mmiob() is a lightweight way
+> > of doing the same thing without having to go to the chip, but only
+> > on SGI SN platforms. 
+> > 
 
-| Hello,
-| 
-| I've just moved to 2.6test10 from test9 and startted getting messages
-| like:
-| 
-| sr0: CDROM not ready.  Make sure there is a disc in the drive.
-| 
-| Once a second.  From googling around I see that it's a very old problem
-| but I haven't found a solution for it.
-| 
-| It seems to come from drivers/scsi/sr_ioctl.c line 139, where there
-| is:
-| 
-|       138                         if (!cgc->quiet)
-|       139                                 printk(KERN_INFO "%s: CDROM not
-| ready.
-|       139 Make sure there is a disc in the drive.\n", cd->cdi.name);
-|       140 #ifdef DEBUG
-|       141                         print_req_sense("sr", SRpnt);
-|       142 #endif
-|       143                         err = -ENOMEDIUM;
-| 
-| But I don't see where can I set cgc->quiet to be non-zero.
+Jesse pointed out that my patch was screwed up, by the way, having
+been done in reverse -- I don't know why I didn't see that.
+Is it okay to read back from the request queue in register?
+I'm planning to generate a new patch that includes the previous
+changes, and I may as well generate something without the sn_mmiob.
 
-Most of the calls to sr_do_ioctl() declare a local 'cgc' and
-set cgc.quiet to 0 or 1 before calling sr_do_ioctl().
+> I'm curious, what types of symptoms were exibited without the
+> sn_mmiob() call?  Did I/O stall?
 
-| For now I stick some CD in the drive to keep this quite, but I'd rather
-| not do this because if the machine reboots it delays on trying to boot
-| from the CD.
-| 
-| My system is an AMD Athlon, no SCSI devices (I need generic SCSI only
-| for cd burning software and USB access, I'm aware that it's supposed to
-| be gone in 2.6 but the software I use is still not aware of this).
-| Preemption enabled (no problems from that part).
-| 
-| Please CC me with replys, I'm not on the list.
+No.  What happens is that writes from two different CPUs make
+it to the chip out of order.  So if CPU A writes a 4 to request
+queue in, and then releases the spinlock and CPU B acquires the
+spinlock and writes a 5, the two writes can make it to the
+chip out of order, causing the chip to think that a bunch of
+new commands have been issued.  The driver detects lots of
+invalid I/O completions after that (stale handles and such).
+
+> BTW: The CACHE_FLUSH() call:
+> 
+> 	/* Set chip new ring index. */
+> 	reg_flushed = CACHE_FLUSH(ISP_REQ_Q_IN(reg));
+> 
+> preceeding the WRT_REG_WORD() has been removed from my working tree
+> (remnants of an ancient motherboard problem with an on-board ISP while
+> using PIO).
+
+What about setting the consistent DMA mask to -1UL?
 
 
---
-~Randy
-MOTD:  Always include version info.
+thanks
+
+jeremy
