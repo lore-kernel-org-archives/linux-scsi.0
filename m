@@ -1,32 +1,58 @@
-From: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
+From: Arnd Bergmann <arndb@de.ibm.com>
 Subject: Re: [RFC][PATCH] move dma_mask into struct device
-Date: Sat, 16 Nov 2002 12:01:59 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200211161701.gAGH1xF03711@localhost.localdomain>
-References: <arndb@de.ibm.com>
+Date: Sat, 16 Nov 2002 20:56:54 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <200211162056.54008.arndb@de.ibm.com>
+References: <200211161701.gAGH1xF03711@localhost.localdomain>
+Reply-To: Arnd Bergmann <ibm.com@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: Message from Arnd Bergmann <arndb@de.ibm.com>
-   of "Sat, 16 Nov 2002 19:26:52 +0100." <200211161926.52092.arndb@de.ibm.com>
-To: Arnd Bergmann <ibm.com@arndb.de>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Linux Scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200211161701.gAGH1xF03711@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
+To: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>Linux Kernel <linux-kernel@vger.kernel.org>, Linux Scsi <linux-scsi@vger.kernel.org>Linux Kernel <linux-kernel@vger.kernel.org>Linux Scsi <linux-scsi@vger.kernel.org>, Mike Anderson <andmike@us.ibm.com>
 
-arndb@de.ibm.com said:
-> On my s390 system, I can have many thousand devices and none of them
-> is doing DMA, so I would indeed call it architecture specific. Note
-> that  even in a normal PC system, most devices (e.g. CPUs, input
-> devices or the disks attached to the host adapter) don't have any
-> concept of DMA. 
+On Saturday 16 November 2002 18:01, J.E.J. Bottomley wrote:
 
-DMA itself is pervasive to almost every architecture, that's why we have the 
-DMA API.  That some devices don't do DMA, I agree with (the struct scsi_device 
-is another example).  However, in order to divorce DMA from the PCI bus, it 
-has to be obtainable from the generic device, without requiring knowledge of 
-the bus.  In OO terms, it would be in a dmaable_device which inherits from 
-device, but for expediency in layering all this into the kernel means I'd have 
-to break almost every driver and introduce them to the concept of 
-dmaable_device, so it's just easier to expand device by a pointer.
+> However, in order to divorce DMA from the
+> PCI bus, it has to be obtainable from the generic device, without requiring
+> knowledge of the bus.  In OO terms, it would be in a dmaable_device which
+> inherits from device, but for expediency in layering all this into the
+> kernel means I'd have to break almost every driver and introduce them to
+> the concept of
+> dmaable_device, so it's just easier to expand device by a pointer.
 
-James
+The Scsi_Host is already derived from struct device and since you need the 
+dma_mask only for Scsi_Host, there is no need to expand the base class.
+
+You can easily keep out the pci stuff if you do something like
+this:
+
+static inline void scsi_set_device(struct Scsi_Host *shost,
+                                   struct device *dev)
+{
+        shost->dev = dev;
+        shost->host_driverfs_dev.parent = dev;
+}
+
+static inline void scsi_set_pci_device(struct Scsi_Host *shost,
+                                       struct pci_dev *pdev)
+{
+	scsi_set_device(shost, &pdev->dev);
+	shost->dma_mask = pdev->dma_mask;
+}
+
+static inline void scsi_set_foobus_device(struct Scsi_Host *shost,
+					  struct foo_dev *fdev)
+{
+	scsi_set_device(shost, fdev->dev);
+	shost->dma_mask = fdev->foo_dma_mask;
+}
+
+You can even avoid Scsi_Host::dev completely if you make its only
+remaining user (scsi_ioctl_get_pci) use host_sysfs_dev->parent.bus_id
+instead.
+
+	Arnd <><
