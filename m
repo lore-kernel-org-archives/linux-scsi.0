@@ -1,43 +1,41 @@
-From: "'Dave Olien'" <dmo@osdl.org>
-Subject: Re: Question about Request Sense case in scsi_lib.c
-Date: Wed, 13 Oct 2004 14:46:29 -0700
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] tmscsim: use block-layer tags
+Date: 13 Oct 2004 16:49:22 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041013214629.GA30273@osdl.org>
-References: <53CF1076699CD711B7DD0002A51363F1072A6E3A@exw-ks.ks.lsil.com>
+Message-ID: <1097704168.1714.262.camel@mulgrave>
+References: <Pine.LNX.4.60.0410122307180.4565@poirot.grange>
+	<Pine.LNX.4.60.0410132131040.3426@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:40850 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S269862AbUJMVqk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Oct 2004 17:46:40 -0400
-Content-Disposition: inline
-In-Reply-To: <53CF1076699CD711B7DD0002A51363F1072A6E3A@exw-ks.ks.lsil.com>
+Received: from stat16.steeleye.com ([209.192.50.48]:15022 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S269870AbUJMVta (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Oct 2004 17:49:30 -0400
+In-Reply-To: <Pine.LNX.4.60.0410132131040.3426@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: "Qi, Yanling" <yanling.qi@engenio.com>
-Cc: Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@SteelEye.com>, Tim Pepper <tpepper@gmail.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-
-Yanling,
-
-Your reply makes sense.  So, the controller fails SCSI commands
-with this sense key while it is transferring a volume.
-
-Are the failed commands only for the volume that is being
-transferred, or will it fail any command queued to that
-controller while it is doing a transfer.
-
-Now, on to figuring out why some of these requeued commands
-fail the requeue.
-
-Thanks!
-Dave
-
-On Wed, Oct 13, 2004 at 01:15:40PM -0500, Qi, Yanling wrote:
-> The check-condition (06h/8Bh/02h) is Engenio's vendor specific UA. It means
-> "Quiescence Is In Progress" while transferring a volume from one controller
-> to the other. When the volume transfer (cache sync and bookkeeping) is
-> completed, the device server will start accept IO requests.
+On Wed, 2004-10-13 at 14:35, Guennadi Liakhovetski wrote:
+> On Tue, 12 Oct 2004, Guennadi Liakhovetski wrote:
 > 
-> Yanling
+> > Slightly tested. Applies on the top of all up to date tmscsim patches (if 
+> > I didn't miss any). Reviews, tests highly welcome. Inline patch should be 
+> > fine now. Will re-send if still not...
 > 
+> I think, there was (at least) one missing chunk in the first version of 
+> the patch. Here's an updated version. Patch inlining seems to work indeed 
+> now.
+
+This doesn't want to apply to scsi-misc-2.6 ...
+
+Patch failed.  **** patch log follows ****
+Patching file drivers/scsi/tmscsim.c
+11 out of 13 hunks FAILED -- saving rejects to file
+drivers/scsi/tmscsim.c.rej
+
+James
+
+
