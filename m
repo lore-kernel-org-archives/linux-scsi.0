@@ -1,47 +1,71 @@
-From: Xose Vazquez Perez <xose@wanadoo.es>
-Subject: Re: problem with megaraid2 driver
-Date: Sat, 29 Nov 2003 16:38:57 +0100
+From: Kurt Garloff <kurt@garloff.de>
+Subject: Re: TMSCSIM [2.6]
+Date: Sat, 29 Nov 2003 19:11:31 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FC8BD91.6060201@wanadoo.es>
-References: <3FC7696C.2030004@wanadoo.es> <20031128155020.GB18860@odin.sis.hu>
+Message-ID: <20031129181131.GL3049@tpkurt.garloff.de>
+References: <3FC7FC89.4060601@yk.rim.or.jp> <Pine.LNX.4.44.0311291030500.1672-100000@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="HLsZ5Z1opAQvdr2J"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp13.eresmas.com ([62.81.235.113]:50381 "EHLO
-	smtp13.eresmas.com") by vger.kernel.org with ESMTP id S263777AbTK2Pji
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Nov 2003 10:39:38 -0500
+Received: from ns.suse.de ([195.135.220.2]:134 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S263855AbTK2SLj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Nov 2003 13:11:39 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0311291030500.1672-100000@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: Gabor Burjan <buga@buvoshetes.hu>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: Chiaki <ishikawa@yk.rim.or.jp>, Linux SCSI list <linux-scsi@vger.kernel.org>, Thorsten Leemhuis <Thorsten_Leemhuis@gmx.de>, gl@dsa-ac.de
 
-Gabor Burjan wrote:
 
-> Is that possible that only the new driver triggers the problem which is
-> "built-in" in the firmware, while using the old driver everything seems
-> to be OK?
+--HLsZ5Z1opAQvdr2J
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-1.18k and 2.00.9 are very different drivers.
+On Sat, Nov 29, 2003 at 10:46:24AM +0100, Guennadi Liakhovetski wrote:
+> > PS: now that the driver seems to be in better shape, you might want to
+> > bump the driver version number  reported in the banner,
+> > "Tekram DC390/AM53C974 PCI SCSI Host Adapter, Driver Version 2.0f
+> > 2000-12-20".
+>=20
+> Yep. Kurt, Christian, shall I increment the version number (2.0g / 2.1a?),
+> adding a Changelog entry? Also, how shall it be maintained now, until it
+> is included in the stock 2.6 (hopefully)? Is there a linux-scsi tree,
+> where this driver could be merged in, or just an ftp site, where the patch
+> could be uploaded? I am not using BK (don't think it would make much sense
+> with a 56K modem dial-up:-)).
 
-It looks like the firmware of the board is unable to
-complete some commands of the pending list.
+Well, 2.1a seems a reasonable version number.
+Please add a changelog entry. You should get the credits for doing all
+the work for porting the driver! Thanks again!
 
-megaraid: aborting-4027815 cmd=2a <c=0 t=0 l=0>
-megarid: Waiting for 11 commands to flush: iter:0
-megarid: Waiting for 11 commands to flush: iter:1000
-megarid: Waiting for 11 commands to flush: iter:2000
-megaraid: aborted cmd 3d75a7[76] complete.
-megarid: Waiting for 8 commands to flush: iter:3000
-[... 4000, 5000, 6000, ... 59000]
-megarid: Waiting for 8 commands to flush: iter:60000
-megaraid: critical hardware error!
+I can put it for download on my site;=20
+we should try to push it into 2.6.0/1, of course.
 
-If those command were completed you would see the message:
-"megaraid: abort sequence successfully complete".
+> No, wouldn't do that. It would unnecessarily blow the patch up...
 
-So, try latest firmware.
+I wouldn't do it either.
+Then better have two patches, one doing only functional changes, one
+only changing formatting.
 
--- 
-There are 10 kinds of people.
-Those that know to count in binary and those that no.
+Regards,
+--=20
+Kurt Garloff                   <kurt@garloff.de>             [Koeln, DE]
+Physics:Plasma modeling <garloff@plasimo.phys.tue.nl> [TU Eindhoven, NL]
+Linux:SCSI, Security           <garloff@suse.de>    [SUSE Nuernberg, DE]
 
+--HLsZ5Z1opAQvdr2J
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
+
+iD8DBQE/yOFTxmLh6hyYd04RAkMqAJ0dF4NDnwi5JO87jHbHZSdNgL/3CgCfavLT
+vH3UNtpxMpn5ToV5S9vIFGs=
+=tm56
+-----END PGP SIGNATURE-----
+
+--HLsZ5Z1opAQvdr2J--
