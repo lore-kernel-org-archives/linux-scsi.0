@@ -1,35 +1,53 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: scsi timeout questions
-Date: Mon, 23 Sep 2002 08:43:01 -0700
+From: Matt Domsch <Matt_Domsch@Dell.com>
+Subject: Re: megaraid v2.00rc5
+Date: Mon, 23 Sep 2002 10:19:23 -0500 (CDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020923154301.GA1359@beaverton.ibm.com>
-References: <0E3FA95632D6D047BA649F95DAB60E57A8B499@EXA-ATLANTA.se.lsil.com>
+Message-ID: <Pine.LNX.4.44.0209231008450.28253-100000@humbolt.us.dell.com>
+References: <Pine.LNX.4.44.0209230937050.27515-100000@humbolt.us.dell.com>
+Reply-To: Matt Domsch <Matt_Domsch@Dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from westrelay01.boulder.ibm.com (westrelay01.boulder.ibm.com [9.17.194.22])
-	by e31.co.us.ibm.com (8.12.2/8.12.2) with ESMTP id g8NIalsH019116
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Sep 2002 14:36:47 -0400
-Received: from dyn9-47-17-195 (dyn9-47-17-67.beaverton.ibm.com [9.47.17.67])
-	by westrelay01.boulder.ibm.com (8.12.3/NCO/VER6.4) with ESMTP id g8NIaks2053628
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Sep 2002 12:36:47 -0600
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57A8B499@EXA-ATLANTA.se.lsil.com>
+Received: from smtp2.us.dell.com (smtp2.us.dell.com [143.166.85.133])
+	by zeus.kernel.org (8.11.6/8.11.6) with ESMTP id g8NGJoA19676
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Sep 2002 09:19:50 -0700
+Received: from tux.us.dell.com (tux.us.dell.com [143.166.152.29])
+	by smtp2.us.dell.com (8.12.1/8.12.5) with ESMTP id g8NFI2re021526
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Sep 2002 10:18:02 -0500
+Received: from humbolt.us.dell.com ([10.180.92.254])
+	by tux.us.dell.com (8.11.0/8.11.0) with ESMTP id g8NFJNj10221
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Sep 2002 10:19:23 -0500
+In-Reply-To: <Pine.LNX.4.44.0209230937050.27515-100000@humbolt.us.dell.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <atulm@lsil.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Mukker, Atul [atulm@lsil.com] wrote:
-> new error handling?
-> 
-Unless I am looking at older versions of megaraid.[ch] in 2.4.20-pre5 this driver is
-using the older error handler interfaces. The newer version of the error
-handler (which is not that new anymore) is described at Eric Youngdale's
-site http://www.andante.org/scsi_error.html. In 2.5 only the new version
-of the error handler is supported.
+> Posted at http://domsch.com/linux/megaraid/megaraid-v2.00rc5.tar.gz is
+> a new Release Candidate version of the megaraid driver.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Against 2.4.20-pre7 kernel, the driver can be found:
+
+Patch:
+ megaraid.c | 8538 +++++++++++++++++++++++++++++++------------------------------
+ megaraid.h | 1730 ++++++------
+ 2 files changed, 5383 insertions, 4885 deletions
+
+ http://domsch.com/linux/megaraid/linux-2.4.20-pre7-megaraid-2.00rc5.patch
+ http://domsch.com/linux/megaraid/linux-2.4.20-pre7-megaraid-2.00rc5.patch.sign
+
+Tarball:
+ http://domsch.com/linux/megaraid/megaraid-v2.00rc5-stock-2.4.x.tar.gz
+ http://domsch.com/linux/megaraid/megaraid-v2.00rc5-stock-2.4.x.tar.gz.sign
+
+BK:
+ http://mdomsch.bkbits.net/linux-2.4-megaraid
+
+
+Thanks,
+Matt
+
+-- 
+Matt Domsch
+Sr. Software Engineer, Lead Engineer, Architect
+Dell Linux Solutions www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
 
