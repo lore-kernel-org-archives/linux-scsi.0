@@ -1,56 +1,47 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH / RFC] osst, st, sg sysfs removes
-Date: Sat, 11 Jan 2003 14:25:25 +0200 (EET)
+From: Willem Riede <wrlk@riede.org>
+Subject: Re: [PATCH] Eliminate signals entirely from the mid-layer
+Date: Sat, 11 Jan 2003 09:23:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.50.0301111416510.2294-100000@kai.makisara.local>
-References: <20030109222107.GA5041@beaverton.ibm.com>
+Message-ID: <20030111142311.GQ1378@linnie.riede.org>
+References: <200301102119.h0ALJUf05888@localhost.localdomain>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20030109222107.GA5041@beaverton.ibm.com>
+Content-Disposition: inline
+In-Reply-To: <200301102119.h0ALJUf05888@localhost.localdomain>; from James.Bottomley@steeleye.com on Fri, Jan 10, 2003 at 16:19:30 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Matt_Domsch@Dell.com, wrlk@riede.org, Douglas Gilbert <dougg@torque.net>, mochel@osdl.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 9 Jan 2003, Mike Anderson wrote:
+On 2003.01.10 16:19 James Bottomley wrote:
+> the attached patch removes SCSI's use of signals for killing the error handler 
+> thread.  It also:
+> 
+> - changes the eh_notify semaphore to a completion
+> - adds complete_and_exit() to the thread
+> - uses a host structure flag to signal thread death instead of the signal
+> 
+> I'm currently travelling, so could someone test it out for me?  Thanks,
+> 
+Sorry, James,
 
-> This patch is against 2.5.55
->
-> This patch is in response to the mail I sent the other day on the use of
-> to_scsi_device with our sysfs bus/scsi/devices directory containing more
-> than struct scsi_device objects. A link to the thread is below.
->
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=104198504307087&w=2
->
-> This patch is just a removal of osst, st, and sg's sysfs nodes in the
-> devices directory. Current I do not have a place to replicate this
-> capability. It was unclear if osst and st entries where being used. The
-> correct place for osst and st is to have a char tree like the block tree
-> and have a pointer from the scsi device to the char entry. I do not know
+When I apply your patch, rmmod ide-scsi hangs. This is my log:
 
-Looks OK to me (at least the st part). I have been planning to export some
-settings in the directories this patch removes but it has to wait until
-corresponding entries can be created into the (currently non-existent)
-char tree.
+Jan 11 09:08:06 fallguy kernel: Error handler scsi_eh_2 waking up
+Jan 11 09:08:06 fallguy kernel: Total of 0 commands on 0 devices require eh work
+Jan 11 09:08:06 fallguy kernel: scsi_eh_get_sense: checking to see if we need to request sense
+Jan 11 09:08:06 fallguy kernel: scsi_restart_operations: waking up host to restart
+Jan 11 09:08:06 fallguy kernel: Error handler scsi_eh_2 sleeping
 
-While looking at the sysfs/bus/scsi tree after this patch, I noticed that
-all devices currently get linked to the sd driver:
+and ps shows:
 
-14:20:59> ll /devices/bus/scsi/drivers/sd
-total 0
-lrwxrwxrwx    1 root     root           40 2003-01-11 00:14 0:0:0:0 ->
-../../../../devices/pci0/00:0e.1/0:0:0:0/
-lrwxrwxrwx    1 root     root           40 2003-01-11 00:14 1:0:5:0 ->
-../../../../devices/pci0/00:0e.0/1:0:5:0/
-lrwxrwxrwx    1 root     root           40 2003-01-11 00:14 1:0:5:1 ->
-../../../../devices/pci0/00:0e.0/1:0:5:1/
-lrwxrwxrwx    1 root     root           36 2003-01-11 00:14 2:0:0:0 ->
-../../../../devices/ide-scsi/2:0:0:0/
+...
+040     0   236     1  15   0     0    0 down_i SW   ?          0:00 [scsi_eh_2]
+...
+100     0   946   887  16   0  1324  380 scsi_u D    pts/0      0:00 rmmod ide-scsi
+044     0   947   946  16   0     0    0 do_exi Z    pts/0      0:00 [kmodule0? <defunct>]
+...
 
-(0:0:0:0 is a disk, 1:0:5:0 a tape, 1:0:5:1 a changer (not attached to any
-high-level driver!), 2:0:0:0 a cdrom)
-
-The entries for sr and st do exist but are empty. sg is populated.
-
--- 
-Kai
+Regards, Willem Riede.
