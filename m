@@ -1,61 +1,62 @@
-From: Karl Hammar <karl@kalle.csb.ki.se>
+From: Kaushik Datta <kdatta@npd.hcltech.com>
 Subject: Re: Hot plugging a disk in runtime
-Date: Mon, 20 May 2002 13:41:40 +0200
+Date: Mon, 20 May 2002 17:11:50 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200205201141.g4KBfeI3022515@opal.aspo.lcl>
-References: <3CE8CDC9.7070200@galileo.co.il>
+Message-ID: <3CE8E0FE.EF3FA868@npd.hcltech.com>
+References: <E179lnL-0005Re-00@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from opal.aspo.lcl (localhost [127.0.0.1])
-	by opal.aspo.lcl (8.12.3/8.12.3/Debian -4) with ESMTP id g4KBfeI3022515
-	for <linux-scsi@vger.kernel.org>; Mon, 20 May 2002 13:41:40 +0200
-In-Reply-To: Message from Rabeeh Khoury <rabeeh@galileo.co.il>
-   of "Mon, 20 May 2002 13:19:53 +0300." <3CE8CDC9.7070200@galileo.co.il>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: rabeeh@galileo.co.il
+Cc: linux-scsi@vger.kernel.org, kdatta@npd.hcltech.com
+
+A small cut'n paste from man proc !
 
 
-  I use this script:
+          scsi   This is a listing of all SCSI devices known to the kernel. The
+                     listing is similar to the one seen during bootup.  scsi currently
+                     supports only the add-single-device command which allows root to
+                     add a hotplugged device to the list of known devices.
 
-# cat `which sdon`
-#!/bin/sh
+                     An echo 'scsi add-single-device 1 0 5 0' > /proc/scsi/scsi will
+                     cause host scsi1 to scan on SCSI channel 0 for a device on ID 5 LUN
+                     0. If there is already a device known on this address or the
+                     address is invalid an error will be returned.
 
-dev=3D/dev/sdc
-num=3D4
+Alan Cox wrote:
 
-case $0 in
-*off)
-        umount ${dev}1
-        scsi-spin --down $dev
-        echo "scsi remove-single-device 0 0 $num 0" > /proc/scsi/scsi
-        ;;
-*on)
-        echo scsi add-single-device 0 0 $num 0 > /proc/scsi/scsi
-        mount ${dev}1
-        ;;
-esac
+> > 1.. How is it possible to signal SCSI mid-layer (or other layers) of a
+> > presence of a newly hot-plugged disk ?
+>
+> aacraid is one example that does this, but via its config tools.
+>
+> > 2.. Can an adapter's device driver trigger SCSI subsystem to scan
+> > channels for new LUNs / Targets ?
+>
+> It is designed so user space can do so - so yes
+>
+> > 3.. Is this can be handled in a kernel level ? is there a user space
+> > application that can be triggered to start scanning adapters (obviously
+> > through SCSI subsystem) and registering new LUNs / Targets etc... ?
+>
+> echo "scsi-add-single-device a b c d" /proc/scsi/scsi
+>
 
-  for a disk which happens to have scsi-id 4 and shows up as /dev/sdc.
-Used like, sdoff, remove disk; insert disk, let it spin up, sdon.
+To be precise  :
 
-Regards,
-/Karl
+  echo 'scsi  add-single-device a b c d ' > /proc/scsi/scsi
 
------------------------------------------------------------------------
-Karl Hammar                    Asp=F6 Data           karl@kalle.csb.ki.=
-se
-Lilla Asp=F6 2340             +46  173 140 57                    Networ=
-ks
-S-742 94 =D6sthammar         +46  10 270 26 67                  Compute=
-rs
-Sweden                                                       Consulting
------------------------------------------------------------------------
+Thanks,
+Kaushik
 
+>
+> if I remember it right
+>
+> Alan
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
