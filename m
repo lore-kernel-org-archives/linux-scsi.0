@@ -1,62 +1,58 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: sg driver and Fedora Core 2
-Date: Sat, 29 May 2004 00:05:25 +1000
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: sg driver and Fedora Core 2
+Date: Fri, 28 May 2004 16:18:54 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40B74725.90403@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <20040528141854.GJ20657@suse.de>
+References: <40B74725.90403@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:58629 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263121AbUE1OGA
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 May 2004 10:06:00 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:61896 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S263182AbUE1OTD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 May 2004 10:19:03 -0400
+Content-Disposition: inline
+In-Reply-To: <40B74725.90403@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: alan@redhat.com
+To: Douglas Gilbert <dougg@torque.net>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, alan@redhat.com
 
-This is slightly off topic (discussing a particular
-distribution).
+On Sat, May 29 2004, Douglas Gilbert wrote:
+> Recently I have had a query about how a specialist application
+> (that worked in the lk 2.4 series) sends 16 MB data through a
+> single SCSI command in Fedora Core 2. The simple answer to that
+> one is the block layer imposes a 128 KB limit on single
+> transfers and that's it. [Counter-intuitively that limit also
+> applies to st and osst when they use the SG_IO ioctl.] Around a
+> year ago I tried to move Jens Axboe on this issue and failed.
+> Evidentally there are good reasons why the block layer imposes
+> that limit. There are other issues with this change.
 
-The recently released Fedora Core 2 distribution contains
-a patch that allocates sg device names (e.g. /dev/sg0)
-only to those SCSI devices _not_ "claimed" by other upper
-level drivers (i.e. sd, sr, st and osst). There is no
-kernel (or module) load time parameter to alter this
-behaviour. There is no way to bind a sg device name to
-a SCSI device after it has been attached by the SCSI mid
-level (but perhaps there should be ...).
+The block layer does not impose any 128KB limitation. In fact there
+should be no real limitations (*). The block layer honors whatever
+restrictions that the drivers sets, 128KB is the maximum transfer size
+for an ATAPI drive for instance.
 
-It seems that the intention of this change is to force cdrecord
-users to use the /dev/scd or /dev/hd device names (rather than
-the /dev/sg devices names that were used in the lk 2.0, 2.2
-and 2.4 series). While I agree that encouraging the use
-of the more natural /dev/scd or /dev/hd devices make sense for
-cdrecord, there are some lesser used applications
-that are broken by the "forcing" nature of this change (e.g.
-mtx).
+You could flag queue capability to handle requests > max_sectors like
+SCSI has always been able to. Then you could change this check
 
-Recently I have had a query about how a specialist application
-(that worked in the lk 2.4 series) sends 16 MB data through a
-single SCSI command in Fedora Core 2. The simple answer to that
-one is the block layer imposes a 128 KB limit on single
-transfers and that's it. [Counter-intuitively that limit also
-applies to st and osst when they use the SG_IO ioctl.] Around a
-year ago I tried to move Jens Axboe on this issue and failed.
-Evidentally there are good reasons why the block layer imposes
-that limit. There are other issues with this change.
+        if (hdr->dxfer_len > (q->max_sectors << 9))
+                return -EIO;
 
-There seems to be mixed signals coming from the Fedora camp
-on this change. A "policy" change was one response and this
-url ( http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=123876 )
-has Alan Cox stating that this change is a bug.
+to only fail for drivers that can't partially complete requests
+correctly. This would allow such applications to continue working.
 
-I am not aware of any such change (or pending change) in the
-"mainline" linux kernel (i.e. the lk 2.6 source tree controlled
-by Linus Torvalds).
+(*) Not quite true, since the max size of a bio is 1MB on 4KB page sized
+    hardware. You can string them for bigger total size, though.
+> 
+> There seems to be mixed signals coming from the Fedora camp
+> on this change. A "policy" change was one response and this
+> url ( http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=123876 )
+> has Alan Cox stating that this change is a bug.
 
-Doug Gilbert
+That's not the identical issue, it's due to usb storage setting 120KB as
+the max size causing sg_set_reserved_size() to fail.
 
-
+-- 
+Jens Axboe
 
