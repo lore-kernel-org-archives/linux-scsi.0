@@ -1,39 +1,54 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] 2.6 aacraid: endian cleanup
-Date: Mon, 28 Mar 2005 16:17:14 -0600
-Message-ID: <1112048239.5531.83.camel@mulgrave>
-References: <1111430484.9918.9.camel@markh1.pdx.osdl.net>
-	 <1112047128.5531.78.camel@mulgrave>
-	 <1112047471.5560.26.camel@markh1.pdx.osdl.net>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] 2.6 aacraid: endian cleanup
+Date: Mon, 28 Mar 2005 18:02:10 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458BF698DE@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:22230 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261903AbVC1WRp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Mar 2005 17:17:45 -0500
-In-Reply-To: <1112047471.5560.26.camel@markh1.pdx.osdl.net>
+Received: from magic.adaptec.com ([216.52.22.17]:12525 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262108AbVC1XCS convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Mar 2005 18:02:18 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: Christoph Hellwig <hch@infradead.org>, Mark Haverkamp <markh@osdl.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 2005-03-28 at 14:04 -0800, Mark Haverkamp wrote:
-> On Mon, 2005-03-28 at 15:58 -0600, James Bottomley wrote:
-> > What exactly is this for?  I know of no platforms that implement readl
-> > and friends incorrectly, so all of this should be unnecessary.
-> 
-> I wondered about this.  Mark S. thought that there were some.  If there
-> aren't, I can remove all that code.
+The new cardtype was a documentation. Could have been handled separately
+I agree.
 
-Thanks.
+*I* have to support the broken port for reasons of expediency. Dropping
+this behavior from the kernel.org patch is perfectly fine by me. I was
+not sure how extensive this problem was.
 
-Please, the next time, ask first before patching ....  it should be
-fairly clear that if every driver did this, we'd have a huge mess and
-great impetus to fix whichever embedded platform was causing
-problems ...
+Sincerely -- Mark Salyzyn
 
-James
+-----Original Message-----
+From: Christoph Hellwig [mailto:hch@infradead.org] 
+Sent: Monday, March 28, 2005 5:00 PM
+To: Mark Haverkamp
+Cc: James Bottomley; linux-scsi; Salyzyn, Mark
+Subject: Re: [PATCH] 2.6 aacraid: endian cleanup
 
+On Mon, Mar 21, 2005 at 10:41:23AM -0800, Mark Haverkamp wrote:
+> A patch from Adaptec with byte order changes:
+>  - drop byte swapping on all 0's and all 1's content
+>  - fix up missing swapping directives
+>  - ensure swapping on 16 bit values does not use 32 bit swap
+>  - reconcile the readl/writel auto-swapping in only most of the
+> configurations.
+
+that last bit is bogus.  readl/writel are defined to swap bytes on
+big endian systems.  Whatever broken Mvista/Windriver or whatever port
+doesn't do that should be fixed.
+
+Also please remove unrelated changes like the new cardtypes from the
+patch,
+follow normal kernel codingstyle (e.g. ||, && at the end of the line)
+and
+switch to __le* types for harware structures and make sure it's passing
+sparse -Wbitwise.
 
