@@ -1,34 +1,42 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Prototype SATA -> SCSI error mapper
-Date: Wed, 18 Aug 2004 01:56:05 -0400
+From: "niemand keiner" <coldfirev3@hotmail.com>
+Subject: Need Info
+Date: Wed, 18 Aug 2004 08:08:06 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4122EF75.7000109@pobox.com>
-References: <20040816141243.GA3898@devserv.devel.redhat.com>
+Message-ID: <BAY18-F173DjFbUcOV100001d82@hotmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:65462 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S268651AbUHRF4T
+Received: from bay18-f17.bay18.hotmail.com ([65.54.187.67]:44812 "EHLO
+	hotmail.com") by vger.kernel.org with ESMTP id S268655AbUHRGII
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Aug 2004 01:56:19 -0400
-In-Reply-To: <20040816141243.GA3898@devserv.devel.redhat.com>
+	Wed, 18 Aug 2004 02:08:08 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-I went ahead and applied this patch to my libata 2.4 and 2.6 queues, to 
-be sent upstream as soon as Marcelo/Linus take more stuff.
+Dear Maintainers,
 
-James mentioned some of the sense code translations may need work, but I 
-filed this under "it's better than what's there now" category.
+i grabbed this email-address from the maintainers-list in Kernel 2.6.8-rc4 
+and hope that you can give me a little Information.
 
-Update patches (from anyone) are welcome, scrutinizing and correcting 
-any silly sense code translations.  For all I know, some SCSI expert may 
-realize that an ATA UDMA CRC error is getting translated to the 'duck on 
-fire' additional sense code.
+This is NO Bug-Report.
 
-	Jeff
+I got a bunch of SCSI-Controler-Chips from Adaptec and wish to applicate it 
+in some
+embedded Systems, planned to run with linux.
+Unfortunately i can´t get information about hardware/timing/registers what 
+is needed to
+Develop the Board and Firmware.
+Because the Device-Naming i suppose that this Part is authentic or similar 
+to a NCR/Symbios Chip.
 
+The Name of this Devices is AIC 33 C 95 AZ and they are build in a quad flat 
+pach for SMT.
 
+Please, if you have any information about this parts, send me a mail.
+
+Best Regards from Germany.
+
+_________________________________________________________________
+MSN Toolbar – kostenloser Pop-Up Blocker – Jetzt herunterladen 
+http://toolbar.msn.de Jetzt kostenlos downloaden!
 
