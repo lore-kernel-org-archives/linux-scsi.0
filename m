@@ -1,66 +1,70 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: what does RECOVERED ERROR sense key mean?
-Date: Thu, 16 Jan 2003 06:18:53 -0800
+From: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
+Date: Thu, 16 Jan 2003 11:43:23 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A5974D8E5F98D511BB910002A50A66470580D554@hdsmsx103.hd.intel.com>
+Message-ID: <20030116114323.C29001@one-eyed-alien.net>
+References: <10426732153816@kroah.com> <10426732212871@kroah.com> <20030116093112.B29001@one-eyed-alien.net> <20030116173539.GA31235@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-md5;
+	protocol="application/pgp-signature"; boundary="pAwQNkOnpTn9IO2O"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from talaria.jf.intel.com (talaria.jf.intel.com [10.7.209.7])
-	by caduceus.jf.intel.com (8.11.6/8.11.6/d: outer.mc,v 1.51 2002/09/23 20:43:23 dmccart Exp $) with ESMTP id h0GECZq03128
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2003 14:12:35 GMT
-Received: from orsmsxvs040.jf.intel.com (orsmsxvs040.jf.intel.com [192.168.65.206])
-	by talaria.jf.intel.com (8.11.6/8.11.6/d: inner.mc,v 1.28 2003/01/13 19:44:39 dmccart Exp $) with SMTP id h0GDvbF20689
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jan 2003 13:57:37 GMT
+Content-Disposition: inline
+In-Reply-To: <20030116173539.GA31235@kroah.com>; from greg@kroah.com on Thu, Jan 16, 2003 at 09:35:39AM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: 'devnetfs' <devnetfs@yahoo.com>, linux-scsi@vger.kernel.org
-
-Yes, if you get the 01 sense key (recovered error), it has already
-recovered, so you should not retry.  The mode pages of the device can be set
-to report recovered errors or not, but usually it is desirable to report
-them so that the information can be used to predict when you need to do
-maintenance on the device, etc.
-
-Andy Cress
-
------Original Message-----
-From: devnetfs [mailto:devnetfs@yahoo.com] 
-Sent: Thursday, January 16, 2003 2:43 AM
-To: linux-scsi@vger.kernel.org
-Subject: what does RECOVERED ERROR sense key mean?
+To: Greg KH <greg@kroah.com>
+Cc: linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
-Hello,
+--pAwQNkOnpTn9IO2O
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I am trying to reserve a disk using SCSI_IOCTL_SEND_COMMAND ioctl.
+Well, we only create the host when the device is first attached.  After
+that, if it goes away and comes back, we re-connect it to the old SCSI
+host.
 
-Sometimes I get SCSI error code=0x2 (ioctl returns this value). From 
-the "Linux SCSI Generic HOWTO", above code is a 4-byte compacted error 
-code. Here for 0x2 it means: status_byte == CHECK_CONDITION. The Sense
-Key I get is 0x1 i.e. "RECOVERED ERROR".
+But, while the device is gone, you've created an association between a SCSI
+node that exists and a non-existant USB device.  Basically, you've got a
+pointer that is no longer valid.  And when the device is re-attached, there
+isn't code to re-establish the correct SCSI<->USB association.
 
->From the "SCSI Programming HOWTO", "RECOVERED ERROR" means:
----
-"Indicates that the last command completed successfully with some
-recovery action performed by the target. Details may be determinable 
-by examining the additional sense bytes and the information field.
-When multiple recovered errors occur during one command, the choice of
-which error to report (first, last, most severe, etc.) is device 
-specific."
----
+Something like this would proabably make sense if the hot-unplugging code
+for SCSI hosts was really stable -- then we could unregister the host when
+the device went away, and this relation would be disconnected
+automatically.
 
-So my question is: can I ASSUME that when I get this error(0x2) and
-sensekey (0x1) my RESERVER was successful? or should I again retry?
+Matt
 
-Thanks in Advance,
-A.
+On Thu, Jan 16, 2003 at 09:35:39AM -0800, Greg KH wrote:
+> On Thu, Jan 16, 2003 at 09:31:12AM -0800, Matthew Dharm wrote:
+> > Hrm... doesn't this all fall to pot when the device is unplugged and
+> > repluged?
+>=20
+> Um, how?  This seems to work for me, but I don't have a lot of devices
+> here.  And if there is a problem, you might want to tell the scsi
+> people, as they are the ones advocating this call be added.
 
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
 
-__________________________________________________
-Do you Yahoo!?
-Yahoo! Mail Plus - Powerful. Affordable. Sign up now.
-http://mailplus.yahoo.com
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You are needink to look more evil.  You likink very strong coffee?
+					-- Pitr to Dust Puppy
+User Friendly, 10/16/1998
+
+--pAwQNkOnpTn9IO2O
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
+
+iD8DBQE+JwtbIjReC7bSPZARAgdpAJ90AFne+T9QdHx2fizKY0bAdA7PwACgpCBj
+DQh4Udp0nHnBNTYAaoE3sxQ=
+=tDeA
+-----END PGP SIGNATURE-----
+
+--pAwQNkOnpTn9IO2O--
