@@ -1,39 +1,45 @@
-From: "Patrick" <taffy21khan@hotmail.com>
-Subject: Soma, Prozac, Valium. Discreet. No one needs to know.
-Date: Wed, 01 Sep 2004 18:08:02 GMT
+From: Erik Mouw <erik@harddisk-recovery.com>
+Subject: Re: Kernel build problem
+Date: Wed, 1 Sep 2004 20:45:57 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1094062082-24200@excite.com>
-Content-Type: text/plain;
+Message-ID: <20040901184557.GG7005@harddisk-recovery.com>
+References: <2A9AA9C52024F94A96634E39B9858FF166B969@empwilex1.empirix.com> <200409011623.i81GNtSC011621@bach.leonora.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.wan-wan.co.jp ([210.236.161.202]:21491 "HELO vger.kernel.org")
-	by vger.kernel.org with SMTP id S267359AbUIASJh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Sep 2004 14:09:37 -0400
+Received: from users.linvision.com ([62.58.92.114]:45262 "HELO bitwizard.nl")
+	by vger.kernel.org with SMTP id S267408AbUIASp7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Sep 2004 14:45:59 -0400
+Content-Disposition: inline
+In-Reply-To: <200409011623.i81GNtSC011621@bach.leonora.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
+To: "Vladimir G. Ivanovic" <vladimir@acm.org>
+Cc: "Dunn, Charles" <CDunn@empirix.com>, linux-scsi@vger.kernel.org
 
-Save up to 80% on popular meds!
+On Wed, Sep 01, 2004 at 09:23:55AM -0700, Vladimir G. Ivanovic wrote:
+> To be fair, it's not really a Red Hat issue, but rather Linus's belief
+> that debuggers lead to patching symptoms rather than fixing the
+> underlying problem.
 
-*** GREAT SPECIALS ***
+FYI, here is the complete quote:
 
-Check it out: http://www.cpppo2.com/_85924943b9db73ac62baa654773c6a8e/41
+"The debugger is akin to giving the _rabbits_ a bazooka. The poor wolf
+ doesn't get any sharper teeth.  Yeah, it sure helps against wolves. 
+ They explode in pretty patterns of red drops flying _everywhere_. Cool.
+ But it doesn't help against a rabbit gene pool that is slowly
+ deteriorating because there is nothing to keep them from breeding, and no
+ darwin to make sure that it's the fastest and strongest that breeds.
+ You mentioned how NT has the nicest debugger out there. 
+ Contemplate it."
 
-- No doctor visits or hassles
-- Quick delivery to your front door
+        - Linus Torvalds
 
-Visit us here: http://www.cpppo2.com/_85924943b9db73ac62baa654773c6a8e/41
-
-
-On medication long term?  
-Buy bulk through us and LITERALLY SAVE THOUSANDS!
+Feel free to start a discussion about this on linux-kernel, but be
+forewarned that it usually ends in a flamewar.
 
 
+Erik
 
-doug metallicasdfghjk moroni barry
-sherry memorynew e-mail moroni oranges new blowfish 
-denali angus angus 
-moomoo lulusupra jazz kathy
-blowfish hanna happyday 
-jared nimrodsuzuki frederic quest
-
-sundance milesresearch sally justin1 gibson jan rux 
-
+-- 
++-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
+| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
