@@ -1,143 +1,144 @@
-From: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
-Subject: RE: The latest megaraid_mbox 2.20.4.5 is hung
-Date: Tue, 5 Apr 2005 18:12:03 +0900
-Message-ID: <BF571719A4041A478005EF3F08EA6DF0D96F08@pcsmail03.pcs.pc.ome.toshiba.co.jp>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Convert i2o to compat_ioctl
+Date: Tue, 5 Apr 2005 13:24:39 +0100
+Message-ID: <20050405122439.GA31778@infradead.org>
+References: <20050118112455.GK43344@muc.de> <20050331194118.GA24242@infradead.org> <424D2082.4010209@shadowconnect.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C539BF.772BC089"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from inet-tsb5.toshiba.co.jp ([202.33.96.24]:12417 "EHLO
-	inet-tsb5.toshiba.co.jp") by vger.kernel.org with ESMTP
-	id S261640AbVDEJMW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Apr 2005 05:12:22 -0400
-Content-class: urn:content-classes:message
+Received: from pentafluge.infradead.org ([213.146.154.40]:8674 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261710AbVDEMZV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Apr 2005 08:25:21 -0400
+Content-Disposition: inline
+In-Reply-To: <424D2082.4010209@shadowconnect.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ju, Seokmann" <sju@lsil.com>
-Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, linux-scsi@vger.kernel.org, "Mukker, Atul" <Atulm@lsil.com>, "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+To: Markus Lidel <Markus.Lidel@shadowconnect.com>
+Cc: Andi Kleen <ak@muc.de>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+On Fri, Apr 01, 2005 at 12:20:50PM +0200, Markus Lidel wrote:
+> Hello,
+> 
+> Christoph Hellwig wrote:
+> >Markus, is this patch actually okay?  I just talked to Andi about the
+> >ioctl32 issues and he told me about this patch.
+> 
+> OK, i don't own a 64-bit system, so i couldn't test it out :-(
+> 
+> The only thing i would change is rename compat_i2o_cfg_ioctl() into 
+> i2o_cfg_compat_ioctl() because all I2O specific functions begin with 
+> "i2o_<osm-name>_"...
 
-------_=_NextPart_001_01C539BF.772BC089
-Content-Type: text/plain;
-	charset="iso-2022-jp"
-Content-Transfer-Encoding: 7bit
+Okay, here's Andi's patch with that trivial change applied:
 
-Hi Seokmann,
+---- snip ----
 
-I thought about the race issue of megaraid_isr() and 
-megaraid_queue_command().
+Convert I2O to new compat_ioctl entry points
 
-fuinction : lock name
-----------------------
-megaraid_mbox_runpendq () : pending_list_lock
-megaraid_isr() : no lock
-wait_till_fw_ready(): host_lock
-megaraid_mbox_mm_done(): no lock
+Also broken design in its compat handlers - CONFIG_COMPAT doesn't 
+mean that there should be no native ioctls.
 
-When  quiescent was accessed, the pending_list_lock is used.
-(See attached file: linux-2.6.12-rc1-megaraid-isr-quiescent-race-more-fix.patch)
+Signed-off-by: Andi Kleen <ak@muc.de>
 
-The patching order is:
-    - linux-2.6.12-rc1-megaraid-isr-quiescent-race-fix.patch
-    - linux-2.6.12-rc1-megaraid-outstanding_cmds-atomic.patch
-    - linux-2.6.12-rc1-megaraid-queuecommand-error-midlayer-retry-fix.patch            
-    - linux-2.6.12-rc1-megaraid-isr-quiescent-race-more-fix.patch
-
-Please check the source. 
-Now, the verification is being executed with the server of Toshiba.
-
-It is sure to relate to FW about outstanding_cmds. 
-I want to hear your opinion. 
---
-Haruo
-
-------_=_NextPart_001_01C539BF.772BC089
-Content-Type: application/octet-stream;
-	name="linux-2.6.12-rc1-megaraid-isr-quiescent-race-more-fix.patch"
-Content-Transfer-Encoding: base64
-Content-Description: linux-2.6.12-rc1-megaraid-isr-quiescent-race-more-fix.patch
-Content-Disposition: attachment;
-	filename="linux-2.6.12-rc1-megaraid-isr-quiescent-race-more-fix.patch"
-
-ZGlmZiAtdXJOIGxpbnV4LTIuNi4xMi1yYzEub3JpZy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVn
-YXJhaWRfbWJveC5jIGxpbnV4LTIuNi4xMi1yYzEvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2Fy
-YWlkX21ib3guYwotLS0gbGludXgtMi42LjEyLXJjMS5vcmlnL2RyaXZlcnMvc2NzaS9tZWdhcmFp
-ZC9tZWdhcmFpZF9tYm94LmMJMjAwNS0wNC0wNCAxMjoyNTowOS4wMDAwMDAwMDAgKzA5MDAKKysr
-IGxpbnV4LTIuNi4xMi1yYzEvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX21ib3guYwky
-MDA1LTA0LTA0IDE1OjI2OjE2Ljc4MTUzMjM5MiArMDkwMApAQCAtMTEzLDcgKzExMyw4IEBACiBz
-dGF0aWMgaW50IG1lZ2FyYWlkX3F1ZXVlX2NvbW1hbmQoc3RydWN0IHNjc2lfY21uZCAqLAogCQl2
-b2lkICgqKShzdHJ1Y3Qgc2NzaV9jbW5kICopKTsKIHN0YXRpYyBzY2JfdCAqbWVnYXJhaWRfbWJv
-eF9idWlsZF9jbWQoYWRhcHRlcl90ICosIHN0cnVjdCBzY3NpX2NtbmQgKiwgaW50ICopOwotc3Rh
-dGljIHZvaWQgbWVnYXJhaWRfbWJveF9ydW5wZW5kcShhZGFwdGVyX3QgKiwgc2NiX3QgKiwgaW50
-ICopOworc3RhdGljIHZvaWQgbWVnYXJhaWRfbWJveF9ydW5wZW5kcShhZGFwdGVyX3QgKiwgc2Ni
-X3QgKiwgaW50ICosCisJCXVuc2lnbmVkIGxvbmcgKik7CiBzdGF0aWMgdm9pZCBtZWdhcmFpZF9t
-Ym94X3ByZXBhcmVfcHRocnUoYWRhcHRlcl90ICosIHNjYl90ICosCiAJCXN0cnVjdCBzY3NpX2Nt
-bmQgKik7CiBzdGF0aWMgdm9pZCBtZWdhcmFpZF9tYm94X3ByZXBhcmVfZXB0aHJ1KGFkYXB0ZXJf
-dCAqLCBzY2JfdCAqLApAQCAtMTY1Myw2ICsxNjU0LDcgQEAKIAlhZGFwdGVyX3QJKmFkYXB0ZXI7
-CiAJc2NiX3QJCSpzY2I7CiAJaW50CQlpZl9idXN5OworCXVuc2lnbmVkIGxvbmcJZmxhZ3M7CiAK
-IAlhZGFwdGVyCQk9IFNDUDJBREFQVEVSKHNjcCk7CiAJc2NwLT5zY3NpX2RvbmUJPSBkb25lOwpA
-QCAtMTY3NCw4ICsxNjc2LDEwIEBACiAJc2NiCT0gbWVnYXJhaWRfbWJveF9idWlsZF9jbWQoYWRh
-cHRlciwgc2NwLCAmaWZfYnVzeSk7CiAJaWYgKCFzY2IpCiAJCWdvdG8gZXJyX291dDsKLQotCW1l
-Z2FyYWlkX21ib3hfcnVucGVuZHEoYWRhcHRlciwgc2NiLCAmaWZfYnVzeSk7CisJCQorCXNwaW5f
-bG9ja19pcnFzYXZlKFBFTkRJTkdfTElTVF9MT0NLKGFkYXB0ZXIpLCBmbGFncyk7CisJbWVnYXJh
-aWRfbWJveF9ydW5wZW5kcShhZGFwdGVyLCBzY2IsICZpZl9idXN5LCAmZmxhZ3MpOworCXNwaW5f
-dW5sb2NrX2lycXJlc3RvcmUoUEVORElOR19MSVNUX0xPQ0soYWRhcHRlciksIGZsYWdzKTsKIAlp
-ZiAoaWZfYnVzeSkKIAkJZ290byBlcnJfb3V0OwogCkBAIC0yMDkwLDEyICsyMDk0LDEwIEBACiAg
-KiBuZXh0IFNDQiBpcyBhdCB0aGUgaGVhZCBub3cuCiAgKi8KIHN0YXRpYyB2b2lkCi1tZWdhcmFp
-ZF9tYm94X3J1bnBlbmRxKGFkYXB0ZXJfdCAqYWRhcHRlciwgc2NiX3QgKnNjYl9xLCBpbnQgKmJ1
-c3kpCittZWdhcmFpZF9tYm94X3J1bnBlbmRxKGFkYXB0ZXJfdCAqYWRhcHRlciwgc2NiX3QgKnNj
-Yl9xLCBpbnQgKmJ1c3ksCisJdW5zaWduZWQgbG9uZyAqZmxhZ3MpCiB7CiAJc2NiX3QJCQkqc2Ni
-OwotCXVuc2lnbmVkIGxvbmcJCWZsYWdzOwotCi0Jc3Bpbl9sb2NrX2lycXNhdmUoUEVORElOR19M
-SVNUX0xPQ0soYWRhcHRlciksIGZsYWdzKTsKIAogCWlmIChzY2JfcSkgewogCQlzY2JfcS0+c3Rh
-dGUgPSBTQ0JfUEVORFE7CkBAIC0yMTA0LDcgKzIxMDYsNiBAQAogCiAJLy8gaWYgdGhlIGFkYXB0
-ZXIgaW4gbm90IGluIHF1aWVzY2VudCBtb2RlLCBwb3N0IHRoZSBjb21tYW5kcyB0byBGVwogCWlm
-IChhdG9taWNfcmVhZCgmYWRhcHRlci0+cXVpZXNjZW50KSkgewotCQlzcGluX3VubG9ja19pcnFy
-ZXN0b3JlKFBFTkRJTkdfTElTVF9MT0NLKGFkYXB0ZXIpLCBmbGFncyk7CiAKIAkJLy8gcmV0cnkg
-c2NzaSBtaWRsYXllcgogCQlpZiAoc2NiX3EpCkBAIC0yMTI3LDcgKzIxMjgsNyBAQAogCiAJCWxp
-c3RfZGVsX2luaXQoJnNjYi0+bGlzdCk7CiAKLQkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZShQRU5E
-SU5HX0xJU1RfTE9DSyhhZGFwdGVyKSwgZmxhZ3MpOworCQlzcGluX3VubG9ja19pcnFyZXN0b3Jl
-KFBFTkRJTkdfTElTVF9MT0NLKGFkYXB0ZXIpLCAqZmxhZ3MpOwogCiAJCS8vIGlmIG1haWxib3gg
-d2FzIGJ1c3ksIHJldHVybiBTQ0IgYmFjayB0byBwZW5kaW5nCiAJCS8vIGxpc3QuIE1ha2Ugc3Vy
-ZSB0byBhZGQgYXQgdGhlIGhlYWQsIHNpbmNlIHRoYXQncwpAQCAtMjEzNywyNCArMjEzOCwxOCBA
-QAogCiAJCWlmIChtYm94X3Bvc3RfY21kKGFkYXB0ZXIsIHNjYikgIT0gMCkgewogCi0JCQlzcGlu
-X2xvY2tfaXJxc2F2ZShQRU5ESU5HX0xJU1RfTE9DSyhhZGFwdGVyKSwgZmxhZ3MpOworCQkJc3Bp
-bl9sb2NrX2lycXNhdmUoUEVORElOR19MSVNUX0xPQ0soYWRhcHRlciksICpmbGFncyk7CiAKIAkJ
-CXNjYi0+c3RhdGUgPSBTQ0JfUEVORFE7CiAKIAkJCWxpc3RfYWRkKCZzY2ItPmxpc3QsICZhZGFw
-dGVyLT5wZW5kX2xpc3QpOwogCi0JCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKFBFTkRJTkdfTElT
-VF9MT0NLKGFkYXB0ZXIpLAotCQkJCWZsYWdzKTsKLQogCQkJcmV0dXJuOwogCQl9CiAKLQkJc3Bp
-bl9sb2NrX2lycXNhdmUoUEVORElOR19MSVNUX0xPQ0soYWRhcHRlciksIGZsYWdzKTsKKwkJc3Bp
-bl9sb2NrX2lycXNhdmUoUEVORElOR19MSVNUX0xPQ0soYWRhcHRlciksICpmbGFncyk7CiAJfQog
-Ci0Jc3Bpbl91bmxvY2tfaXJxcmVzdG9yZShQRU5ESU5HX0xJU1RfTE9DSyhhZGFwdGVyKSwgZmxh
-Z3MpOwotCi0KIAlyZXR1cm47CiB9CiAKQEAgLTIzODUsMTMgKzIzODAsMTYgQEAKIAlhZGFwdGVy
-X3QJKmFkYXB0ZXIgPSBkZXZwOwogCWludAkJaGFuZGxlZDsKIAlpbnQJCWlmX2J1c3kgPSAwOwkK
-Kwl1bnNpZ25lZCBsb25nCWZsYWdzOwogCiAJaGFuZGxlZCA9IG1lZ2FyYWlkX2Fja19zZXF1ZW5j
-ZShhZGFwdGVyKTsKIAogCS8qIExvb3AgdGhyb3VnaCBhbnkgcGVuZGluZyByZXF1ZXN0cyAqLwor
-CXNwaW5fbG9ja19pcnFzYXZlKFBFTkRJTkdfTElTVF9MT0NLKGFkYXB0ZXIpLCBmbGFncyk7CiAJ
-aWYgKCFhdG9taWNfcmVhZCgmYWRhcHRlci0+cXVpZXNjZW50KSkgewotCQltZWdhcmFpZF9tYm94
-X3J1bnBlbmRxKGFkYXB0ZXIsIE5VTEwsICZpZl9idXN5KTsKKwkJbWVnYXJhaWRfbWJveF9ydW5w
-ZW5kcShhZGFwdGVyLCBOVUxMLCAmaWZfYnVzeSwgJmZsYWdzKTsKIAl9CisJc3Bpbl91bmxvY2tf
-aXJxcmVzdG9yZShQRU5ESU5HX0xJU1RfTE9DSyhhZGFwdGVyKSwgZmxhZ3MpOwogCiAJcmV0dXJu
-IElSUV9SRVRWQUwoaGFuZGxlZCk7CiB9CkBAIC0zODUxLDcgKzM4NDksOSBAQAogCX0KIAogCS8v
-IHB1dCB0aGUgY29tbWFuZCBvbiB0aGUgcGVuZGluZyBsaXN0IGFuZCBleGVjdXRlCi0JbWVnYXJh
-aWRfbWJveF9ydW5wZW5kcShhZGFwdGVyLCBzY2IsICZpZl9idXN5KTsKKwlzcGluX2xvY2tfaXJx
-c2F2ZShQRU5ESU5HX0xJU1RfTE9DSyhhZGFwdGVyKSwgZmxhZ3MpOworCW1lZ2FyYWlkX21ib3hf
-cnVucGVuZHEoYWRhcHRlciwgc2NiLCAmaWZfYnVzeSwgJmZsYWdzKTsKKwlzcGluX3VubG9ja19p
-cnFyZXN0b3JlKFBFTkRJTkdfTElTVF9MT0NLKGFkYXB0ZXIpLCBmbGFncyk7CiAKIAkvLyBYWFg6
-IHN1Y2Nlc3MgPwogCXJldHVybiAwOwpAQCAtMzg2MiwxMiArMzg2MiwxNCBAQAogd2FpdF90aWxs
-X2Z3X2VtcHR5KGFkYXB0ZXJfdCAqYWRhcHRlcikKIHsKIAlpbnQJCWk7Ci0KKwl1bnNpZ25lZCBs
-b25nCWZsYWdzOwogCiAJLyoKIAkgKiBTZXQgdGhlIHF1aWVzY2VudCBmbGFnIHRvIHN0b3AgaXNz
-dWluZyBjbWRzIHRvIEZXLgogCSAqLworCXNwaW5fbG9ja19pcnFzYXZlKFBFTkRJTkdfTElTVF9M
-T0NLKGFkYXB0ZXIpLCBmbGFncyk7CSAKIAlhdG9taWNfaW5jKCZhZGFwdGVyLT5xdWllc2NlbnQp
-OworCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoUEVORElOR19MSVNUX0xPQ0soYWRhcHRlciksIGZs
-YWdzKTsKIAogCS8qCiAJICogV2FpdCB0aWxsIHRoZXJlIGFyZSBubyBtb3JlIGNtZHMgb3V0c3Rh
-bmRpbmcgYXQgRlcuIFRyeSBmb3IgYXQgbW9zdApAQCAtMzkyMyw5ICszOTI1LDEwIEBACiAJLy8g
-Y29udHJvbGxlcgogCWlmIChyYXdfbWJveFswXSA9PSBGQ19ERUxfTE9HRFJWICYmIHJhd19tYm94
-WzJdID09IE9QX0RFTF9MT0dEUlYpIHsKIAorCQlzcGluX2xvY2tfaXJxc2F2ZShQRU5ESU5HX0xJ
-U1RfTE9DSyhhZGFwdGVyKSwgZmxhZ3MpOwogCQlhdG9taWNfZGVjKCZhZGFwdGVyLT5xdWllc2Nl
-bnQpOwotCi0JCW1lZ2FyYWlkX21ib3hfcnVucGVuZHEoYWRhcHRlciwgTlVMTCwgJmlmX2J1c3kp
-OworCQltZWdhcmFpZF9tYm94X3J1bnBlbmRxKGFkYXB0ZXIsIE5VTEwsICZpZl9idXN5LCAmZmxh
-Z3MpOworCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKFBFTkRJTkdfTElTVF9MT0NLKGFkYXB0ZXIp
-LCBmbGFncyk7CiAJfQogCiAJa2lvYy0+ZG9uZShraW9jKTsK
-
-------_=_NextPart_001_01C539BF.772BC089--
+diff -u linux-2.6.11-rc1-bk4/drivers/message/i2o/i2o_config.c-o linux-2.6.11-rc1-bk4/drivers/message/i2o/i2o_config.c
+--- linux-2.6.11-rc1-bk4/drivers/message/i2o/i2o_config.c-o	2005-01-17 10:39:40.000000000 +0100
++++ linux-2.6.11-rc1-bk4/drivers/message/i2o/i2o_config.c	2005-01-18 06:27:24.000000000 +0100
+@@ -54,6 +54,9 @@
+ 
+ extern int i2o_parm_issue(struct i2o_device *, int, void *, int, void *, int);
+ 
++static int i2o_cfg_ioctl(struct inode *inode, struct file *fp, unsigned int cmd,
++			 unsigned long arg);
++
+ static spinlock_t i2o_config_lock;::::::::::::::::::::::::::::::::::;
+ 
+ #define MODINC(x,y) ((x) = ((x) + 1) % (y))
+@@ -538,8 +541,7 @@
+ }
+ 
+ #ifdef CONFIG_COMPAT
+-static int i2o_cfg_passthru32(unsigned fd, unsigned cmnd, unsigned long arg,
+-			      struct file *file)
++static int i2o_cfg_passthru32(struct file *file, unsigned cmnd, unsigned long arg)
+ {
+ 	struct i2o_cmd_passthru32 __user *cmd;
+ 	struct i2o_controller *c;
+@@ -752,7 +754,26 @@
+ 	return rcode;
+ }
+ 
+-#else
++static long i2o_cfg_compat_ioctl(struct file *file, unsigned cmd, unsigned long arg)
++{
++	int ret;
++	lock_kernel();		
++	switch (cmd) { 
++	case I2OGETIOPS:
++		ret = i2o_cfg_ioctl(NULL, file, cmd, arg);
++		break;
++	case I2OPASSTHRU32:
++		ret = i2o_cfg_passthru32(file, cmd, arg);
++		break;
++	default:
++		ret = -ENOIOCTLCMD;
++		break;
++	}
++	unlock_kernel();
++	return ret;
++}
++
++#endif
+ 
+ static int i2o_cfg_passthru(unsigned long arg)
+ {
+@@ -958,7 +979,6 @@
+ 	kfree(reply);
+ 	return rcode;
+ }
+-#endif
+ 
+ /*
+  * IOCTL Handler
+@@ -1013,11 +1033,9 @@
+ 		ret = i2o_cfg_evt_get(arg, fp);
+ 		break;
+ 
+-#ifndef CONFIG_COMPAT
+ 	case I2OPASSTHRU:
+ 		ret = i2o_cfg_passthru(arg);
+ 		break;
+-#endif
+ 
+ 	default:
+ 		osm_debug("unknown ioctl called!\n");
+@@ -1105,6 +1123,9 @@
+ 	.owner = THIS_MODULE,
+ 	.llseek = no_llseek,
+ 	.ioctl = i2o_cfg_ioctl,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl = i2o_cfg_compat_ioctl,
++#endif
+ 	.open = cfg_open,
+ 	.release = cfg_release,
+ 	.fasync = cfg_fasync,
+@@ -1134,19 +1155,11 @@
+ 		misc_deregister(&i2o_miscdev);
+ 		return -EBUSY;
+ 	}
+-#ifdef CONFIG_COMPAT
+-	register_ioctl32_conversion(I2OPASSTHRU32, i2o_cfg_passthru32);
+-	register_ioctl32_conversion(I2OGETIOPS, (void *)sys_ioctl);
+-#endif
+ 	return 0;
+ }
+ 
+ static void i2o_config_exit(void)
+ {
+-#ifdef CONFIG_COMPAT
+-	unregister_ioctl32_conversion(I2OPASSTHRU32);
+-	unregister_ioctl32_conversion(I2OGETIOPS);
+-#endif
+ 	misc_deregister(&i2o_miscdev);
+ 	i2o_driver_unregister(&i2o_config_driver);
+ }
