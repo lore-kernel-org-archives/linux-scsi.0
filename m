@@ -1,125 +1,72 @@
-From: Lincoln Dale <ltd@cisco.com>
-Subject: RE: What's the "right" qla2100 driver?
-Date: Thu, 22 Jan 2004 16:06:09 +1100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <5.1.0.14.2.20040122145815.02a6fe48@171.71.163.14>
-References: <47F3C2BE74738E4683574107469DFA201DF5BF@XYUSEX01.xyus.xyrat
- ex.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: AIC7xxx kernel problem with 2.4.2[234] kernels
+Date: 22 Jan 2004 00:14:09 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1074748451.2124.78.camel@mulgrave>
+References: <400BDC85.8040907@wanadoo.es>	<1074532919.1895.32.camel@mulgrave>		<37477754
+	 08.1074537497@aslan.btc.adaptec.com>	<1074559838.2078.1.camel@mulgrave>
+	<3942145408.1074564149@aslan.btc.adaptec.com>
+	<1074573912.2081.81.camel@mulgrave>
+	<4022195408.1074577421@aslan.btc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-5.cisco.com ([171.68.10.87]:17162 "EHLO
-	sj-iport-5.cisco.com") by vger.kernel.org with ESMTP
-	id S264267AbUAVFGR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jan 2004 00:06:17 -0500
-In-Reply-To: <47F3C2BE74738E4683574107469DFA201DF5BF@XYUSEX01.xyus.xyrat
- ex.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <4022195408.1074577421@aslan.btc.adaptec.com>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: Xose Vazquez Perez <xose@wanadoo.es>, Linux Kernel <linux-kernel@vger.kernel.org>, Tosatti <marcelo.tosatti@cyclades.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Frank Borich <Frank_Borich@us.xyratex.com>
-Cc: Poul Petersen <petersp@roguewave.com>, linux-scsi@vger.kernel.org
 
-At 12:39 PM 22/01/2004, Frank Borich wrote:
->I heard the fc driver is bad.
->Has anyone experienced very poor performance when using MD- SCSI 
->mid-layer, and FC HBA?
->I create a 3 drive raid 5 array using MD, during initialization I get 50 + 
->MB/sec
->When I  write 00's using dd I get 3 MB/sec.  I can tell by using a fc 
->analyzer that my write commands
->are being chopped up into pieces.  Just wondering if anyone else has seen 
->this or knows of any issues using MD, and SCSI mid-layer, so I can shift 
->focus to FC side?  I lost all of my SCSI arrays! argh......
+On Tue, 2004-01-20 at 00:43, Justin T. Gibbs wrote: 
+> As for control, the type of control "I seek" does exist.  You have it.
+> You can also delegate some of that control if it suits you.
 
-<shrug>
+Well, as you have heard from the horse's mouth: I don't. 
 
-works ok here.  i wonder if you're realizing exactly how RAID5 works ...?:
+> I provided all of the information required for you to make a reasoned
+> decision of which change sets to integrate.  I had no idea that you
+> would completely disregard the wealth of information in the change sets
+> and change set comments when coming up with an integration point.  Your
+> actions show that you didn't review or understand the changes well enough
+> to submit them into the tree.  You probably didn't even test the resulting
+> driver on real hardware before you submitted the changes.
 
-Linux 2.6.2-rc1, using the QLogic driver that is integrated into the kernel 
-with a QLA2300 attached to a Cisco MDS FC switch in turn connected to a FC 
-JBOD with 8 x 15K RPM disks:
+Actually, I would have done nothing but for some 2.6 migration reports
+of total lockups with the then in tree aic79xx driver.  The patch that
+went into the tree was tested by the people reporting the lockups. 
 
-[root@mel-stglab-host31 linux]# head -2 /proc/scsi/qla2xxx/0
-QLogic PCI to Fibre Channel Host Adapter for QLA2310:
-         Firmware version 3.02.18 TPX, Driver version 8.00.00b8
+> > The recovery code does work.  You may want it to work differently, and
+> > that may make it work better, but that's an enhancement not a bug fix.
+> 
+> No.  The recovery code doesn't work.  Many of the people that know this
+> don't bother complaining to you about it.  They complain to the HBA driver
+> authors and the tech support departments of the companies that make the HBAs.
+> The HBA driver authors then do what they have to ensure that the system
+> remains viable after recovery.  
 
-constructing a 3-drive raid5 array (2 active 1 spare) using MD, i get 
-~31MB/sec:
-to 'create' a 3-disk RAID5 array requires reading the data off 2 disks to 
-write the parity to the 3rd disk -- the overall speed of constructing a 
-RAID5 array is limited by the performance of a single disk spindle.
+You haven't outlined any incorrect cases in your emails, just could do
+better cases.  If you have all these bug reports that you haven't been
+passing on, could you at least distil them to the mid layer failure
+scenario that we can discuss fixing? 
 
-         (output from mdstat)
-         [root@mel-stglab-host31 root]# cat /proc/mdstat
-         Personalities : [linear] [raid0] [raid1] [raid5] [multipath]
-         md0 : active raid5 sdg1[2] sdd1[1] sdb1[0]
-               17498880 blocks level 5, 256k chunk, algorithm 2 [2/2] [UU]
-               [==>..................]  resync = 10.5% (1852292/17498880) 
-finish=8.5min speed=30369K/sec
-         unused devices: <none>
+> I mean honestly.  Do you think I would have gone to all of the trouble
+> I did in doing my own watchdog recovery if the recovery code worked
+> correctly?  Or that I would stand so firm in my position if these issues
+> didn't have real customer impact?
 
-         (output from my FC switch connected to this HBA showing the true 
-i/o that is going on - both reads & writes):
-         mel-stglab-mds9509-1# show interface fc2/9 | include rate
-             5 minutes input rate 137039200 bits/sec, 17129900 bytes/sec, 
-8709 frames/sec
-             5 minutes output rate 347203424 bits/sec, 43400428 bytes/sec, 
-21507 frames/sec
+Well, in coming up with the mid layer changes from 2.4 to 2.6 I did look
+at what issues the main drivers had work arounds for. I used these work
+arounds and an email you sent in September 2002 as the basis for a lot
+of the mid-layer changes in 2.6.  None of the other drivers does this
+timer interception and the issue wasn't mentioned in your email, so I am
+dubious about the seriousness of the impact.
 
-once the RAID5 array is built, i get ~44 MB/sec on a 'dd' -- once again, 
-about the speed limit of a single disk spindle:
+The way fixes get into linux is either lots of people complain, or one
+person sends a fix, neither has happened in this case, which again leads
+me to suspect that it's not a huge problem.
 
-         [root@mel-stglab-host31 root]# time dd if=/dev/md0 of=/dev/null 
-bs=256K count=4000
-         4000+0 records in
-         4000+0 records out
+The still outstanding question is, now that you have a clearer idea what
+being a Maintainer entails, do you wish to be the maintainer for
+aic7xxx?
 
-         real    0m22.639s
-         user    0m0.020s
-         sys     0m4.235s
-
-if i do a 'dd' on one of the disk spindles that makes up the raid5 array, i 
-get around the same number (actually, its a bit better: i get 57MB/sec - 
-that is probably because ALL I/O is guaranteed to be sequential now):
-
-         [root@mel-stglab-host31 root]# time dd if=/dev/sdg1 of=/dev/null 
-bs=256K count=4000
-         4000+0 records in
-         4000+0 records out
-
-         real    0m17.538s
-         user    0m0.013s
-         sys     0m2.698s
-
-
-.... now, if i convert the RAID5 array to be a RAID0 array instead, its 
-performance is much much better -- 105MB/sec:
-
-         [root@mel-stglab-host31 root]# !mkraid
-         mkraid --really-force /dev/md0
-         DESTROYING the contents of /dev/md0 in 5 seconds, Ctrl-C if unsure!
-         handling MD device /dev/md0
-         analyzing super-block
-         disk 0: /dev/sdb1, 17499120kB, raid superblock at 17499008kB
-         disk 1: /dev/sdd1, 17499120kB, raid superblock at 17499008kB
-         disk 2: /dev/sdf1, 17775891kB, raid superblock at 17775808kB
-         disk 3: /dev/sdg1, 17775891kB, raid superblock at 17775808kB
-         [root@mel-stglab-host31 root]# cat /proc/mdstat
-         Personalities : [linear] [raid0] [raid1] [raid5] [multipath]
-         md0 : active raid0 sdg1[3] sdf1[2] sdd1[1] sdb1[0]
-               70548992 blocks 256k chunks
-
-         unused devices: <none>
-         [root@mel-stglab-host31 root]# time dd if=/dev/md0 of=/dev/null 
-bs=256K count=4000
-         4000+0 records in
-         4000+0 records out
-
-         real    0m9.557s
-         user    0m0.013s
-         sys     0m2.357s
-
-
-cheers,
-
-lincoln.
-
+James
