@@ -1,60 +1,38 @@
 From: Badari Pulavarty <pbadari@us.ibm.com>
-Subject: Re: [patch for playing] Patch to support 4000 disks and maintain backward compatibility
-Date: Fri, 11 Apr 2003 08:21:46 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200304110921.46848.pbadari@us.ibm.com>
-References: <UTC200304111142.h3BBgDS11628.aeb@smtp.cwi.nl> <1050071610.2078.69.camel@mulgrave>
+Subject: Re: [patch for playing] Patch to support 4000 disks and maintain
+Date: Fri, 11 Apr 2003 08:28:32 -0800
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200304110928.32978.pbadari@us.ibm.com>
+References: <200304101339.49895.pbadari@us.ibm.com> <XFMail.20030411100430.pochini@shiny.it> <20030411154450.GW31739@ca-server1.us.oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.102]:58290 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S263022AbTDKQNx convert rfc822-to-8bit (for <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Apr 2003 12:13:53 -0400
-In-Reply-To: <1050071610.2078.69.camel@mulgrave>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20030411154450.GW31739@ca-server1.us.oracle.com>
+To: Joel Becker <Joel.Becker@oracle.com>, Giuliano Pochini <pochini@shiny.it>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Andries.Brouwer@cwi.nl
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Friday 11 April 2003 07:33 am, James Bottomley wrote:
-> On Fri, 2003-04-11 at 06:42, Andries.Brouwer@cwi.nl wrote:
-> >     Here is my problem..
+On Friday 11 April 2003 08:44 am, Joel Becker wrote:
+> On Fri, Apr 11, 2003 at 10:04:30AM +0200, Giuliano Pochini wrote:
+> > 4000 discs should be enough for anyone :)
+> > Are >16 partitions/disc possible ?
 > >
-> >     #insmod ips.o
-> >       < found 10 disks>
-> >     #insmod qla2300.o
-> >       < found 10 disks>
-> >     #rmmod ips.o
-> >        <removed 10 disks>
-> >     #insmod ips.o
-> >       <found 10 disks - but new names>
-> >
-> > OK, I see what you mean. I agree.
+> 	>16 partitions/disc is possible once you remove Linux's
 >
-> Could you elaborate on the reason you want to keep the minor space
-> compact?  I don't regard the insmod/rmmod problem as valid because if
-> you do:
->
-> rmmod ips.o
-> rmmod qla2300.o
-> insmod qla2300.o
-> insmod ips.o
->
-> All bets are off again. For small kernel dev_t it was essential to keep
-> a compact minor space because otherwise we coulde run out of minors.
-> Sparse minors cause no inefficiency in the mid-layer, or in sd.  There
-> are problems in sg which could be solved by encoding the device type in
-> the minor.
+> arbitrary limit.
+> 	4000 disks is today.  8000 disks is next year at the latest.
 
-Here user/admin atleast knows what he is doing. So they have to deal
-with it. (Proper device naming solution would be great here).
+Well !! My patch does not have anything hardcoded to 4000.
+Depends on how many minor bits. But we have to put a hardlimit
+somewhere ..
 
-But just by doing rmmod/insmod if my device names change, it will
-be a pain. For example, in my case, i have to re-do all my raw device
-bindings to just start the database. This will be a problem with 
-dynamic <major, minor> assignments also. (Again, i will need a proper
-device naming solution here).
+> Just imagine multipathing today's 4000 disks.
+
+Fortunately, the multipath solution Mike Anderson & Patrick Mansfield
+working on, colapses all the disks you see thro multiple paths into 
+number of  realdisks (4000). So you don't really need extra devices 
+to support multipathing.
 
 Thanks,
 Badari
-
