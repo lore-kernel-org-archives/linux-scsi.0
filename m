@@ -1,77 +1,74 @@
-From: <news@globaltt.com>
-Subject: =?iso-8859-1?Q?Internet_High-speed_connection_by_satellite_//_connexion_h?=
-	=?iso-8859-1?Q?aut-d=E9bit_par_satellite?=
-Date: Tue, 31 Aug 2004 11:15:47 +0200
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: What "tarnsport attributes" are really for?
+Date: 31 Aug 2004 07:49:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1a8c01c48f3b$19f97dc0$0542a8c0@DevsoftThree>
+Message-ID: <1093953002.2211.8.camel@mulgrave>
+References: <1093842055.9886.57.camel@sipan.org>
+	<1093874370.2036.12.camel@mulgrave>  <1093927615.32024.119.camel@sipan.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.globaltt.com ([217.30.16.2]:35011 "EHLO mx2.globaltt.com")
-	by vger.kernel.org with ESMTP id S267612AbUHaJOt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Aug 2004 05:14:49 -0400
-Received: from globaltt.com (imail.globaltt.com [217.30.16.4])
-	by mx2.globaltt.com (8.12.11/8.12.11) with ESMTP id i7V9BxN6003742
-	for <linux-scsi@vger.kernel.org>; Tue, 31 Aug 2004 11:11:59 +0200 (CEST)
-Content-Class: urn:content-classes:message
+Received: from stat16.steeleye.com ([209.192.50.48]:37267 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S267961AbUHaLuL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 Aug 2004 07:50:11 -0400
+In-Reply-To: <1093927615.32024.119.camel@sipan.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Sergey Panov <sipan@sipan.org>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Dear Sir,
+On Tue, 2004-08-31 at 00:46, Sergey Panov wrote:
+> If I am not mistaken, mid-layer is responsible only for adding extra
+> storage space in every new SCSI device and for initializing it 
+> by calling shost->transportt->setup(). The second tasks is trivial
+> enough to be delegated to LLD.
 
->From now, you can get anywhere in Africa, a broadband shared high-spee=
-d satellite access :
-        - 24h/24
-        - From 99 Euro by month (without equipment)
-        - 1 to 13 users/PC can share the same connection or the same su=
-bscription.
-        - Speed from 64Kbps to 2Mbps
+But it would be another thing for LLD writers to forget.  Having it
+where it is is the correct place for it.
 
-=46or more information I invite you on our web site on the following ad=
-dress:
-http://www.globaltt.com
+> As for the extra space in every SCSI
+> device, it might be a bit excessive -- an array with 256 LUNs is just
+> one target device (FC or iSCSI device) and there is no need to replicate
+> its properties 256 times. 
 
-The GT&T team and myself are free to be in touch with you for any infor=
-mation.
-Yours faithfully,
+There is if the property is different.
 
-Sales account manager
-news@globaltt.com
+> > The FC transport class is pretty vestigial at the moment, if you want to
+> > see the capabilities of doing this, look at the SPI one.here we've been
+> > moving the fairly complex DV code out of the drivers and into the
+> > transport class.
+> 
+> I can see a set of functions common to SPI LLDs. But those functions are
+> not aware of any SPI specific data (e.g. SPI transport attributes). I
+> also do not see there any support for keeping track of HBA transport
+> attributes.
 
-------------------------------------------------------------------
+They are in my copy ... you probably need a more up to date kernel.
 
-Cher Monsieur,
+> When I asked my original question, I meant to ask if that transport
+> module would ever stop being a transport specific extension of the
+> mid-layer(extra attributes in every scsi_device) and turn into transport
+> specific extension of the LLD?
 
-Il est d=E9sormais possible, partout en Afrique, d'avoir un acc=E8s Int=
-ernet par satellite :
-        - A haut-d=E9bit (type adsl)=20
-        - 24h/24
-        - A partir de 99 euro par mois (hors =E9quipement)
-        - 1 =E0 13 utilisateurs/PC peuvent partager la m=EAme connexion=
- et le m=EAme abonnement.
-        - vitesse de 64 Kbps =E0 2 Mbps
+It's not a transport extension of the mid-layer, it's a library of
+transport services to the LLD, so in that sense it *is* a transport
+specific extension for a class of LLDs
 
-Pour plus d'informations, je vous invite =E0 visiter notre site =E0 l'a=
-dresse suivante :
-http://www.globaltt.com
+> E.g. it looks like both iSCSI and FC LLDs are aware of the target device
+> way before mid-layer queries its LUNs. It seems logical to replace
+> current "extra attributes per device" scheme with some primitive data
+> base of transport endpoints. It might even have common, transport
+> neutral API (add_node, remove_node, for_each). Mid-layer SCSI device
+> will lose its transport extension, but might get a pointer to a generic
+> node/port/target. Transport module then would extend nodes to store
+> transport specific attributes and may add function calls to search that
+> DB by some of of the attributes.
 
-Mon =E9quipe et moi-m=EAme sommes =E0 votre disposition pour toutes inf=
-ormations.
-Je vous prie de croire, Cher Monsieur, en l'expression de mes sentiment=
-s distingu=E9s,
+This was a perennial debate when sysfs and the generic driver model were
+first proposed.  To cope with this, SCSI actually has the ability to set
+arbitrary sysfs (not transport) attributes for LLDs.
 
-Responsable client
-news@globaltt.com
+James
 
 
-*Si cet e-mail ne devait par r=E9pondre =E0 vos besoins vous pouvez ren=
-voyer ce mail avec le sujet "no needs"
-*If this email doesn't match with your need you can return this mail wi=
-th the subject "no needs"
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
