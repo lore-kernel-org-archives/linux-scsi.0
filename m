@@ -1,69 +1,29 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: smp dead lock of io_request_lock/queue_lock patch
-Date: Mon, 12 Jan 2004 10:08:31 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [patch] qla1280 compile fix for CONFIG_HOTPLUG in 2.6
+Date: Mon, 12 Jan 2004 15:10:18 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1073920110.3114.268.camel@compaq.xsintricity.com>
-References: <OF2581AA2D.BFD408D2-ONC1256E19.004BE052-C1256E19.004E1561@de.ibm.com>
-	 <20040112141330.GH24638@suse.de>
+Message-ID: <20040112151018.A3222@infradead.org>
+References: <16386.38762.670634.620111@gargle.gargle.HOWL>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:60291 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S266144AbUALPMc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jan 2004 10:12:32 -0500
-In-Reply-To: <20040112141330.GH24638@suse.de>
+Received: from phoenix.infradead.org ([213.86.99.234]:28173 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S266101AbUALPKX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jan 2004 10:10:23 -0500
+Content-Disposition: inline
+In-Reply-To: <16386.38762.670634.620111@gargle.gargle.HOWL>; from jes@trained-monkey.org on Mon, Jan 12, 2004 at 07:47:38AM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Martin Peschke3 <MPESCHKE@de.ibm.com>, Arjan Van de Ven <arjanv@redhat.com>, Peter Yao <peter@exavio.com.cn>, linux-kernel@vger.kernel.org, linux-scsi mailing list <linux-scsi@vger.kernel.org>
+To: Jes Sorensen <jes@trained-monkey.org>
+Cc: akpm@osdl.org, linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com
 
-On Mon, 2004-01-12 at 09:13, Jens Axboe wrote:
-> On Mon, Jan 12 2004, Martin Peschke3 wrote:
-> > Hi,
-> > 
-> > is there a way to merge all (or at least the common denominator) of
-> > Redhat's and SuSE's changes into the vanilla 2.4 SCSI stack?
-> > The SCSI part of Marcelo's kernel seems to be rather backlevel,
-> > considering all those fixes and enhancements added by the mentioned
-> > distributors and their SCSI experts. As this discussion underlines,
-> > there are a lot of common problems and sometimes even common
-> > approaches.  I am convinced that a number of patches ought to be
-> > incorporated into the mainline kernel. Though, I must admit
-> > that I am at a loss with how this could be achieved given the
-> > unresolved question of 2.4 SCSI maintenance
-> > (which has certainly played a part in building up those piles
-> > of SCSI patches).
+On Mon, Jan 12, 2004 at 07:47:38AM -0500, Jes Sorensen wrote:
+> Hi Andrew,
 > 
-> I have mixed feelings about that. One on side, I'd love to merge the
-> scalability patches in mainline. We've had a significant number of bugs
-> in this area in the past, and it seems a shame that we all have to fix
-> them independently because we deviate from mainline.
+> Would you mind adding this patch on top of 2.6.1-mmX. It fixes a compile
+> problem with the 1280 driver when compiling it statically into the
+> kernel when CONFIG_HOTPLUG is enabled in 2.6.
 
-Agreed (I've had to fix the iorl patch 3 or 4 times for things that
-weren't bugs in the iorl patch until mainline got updated with a new
-lock somewhere or things like that).
-
->  On the other hand,
-> 2.4 is pretty much closed. There wont be a big number of new distro 2.4
-> kernels.
-> 
-> Had you asked me 6 months ago I probably would have advocated merging
-> them, but right now I think it's a waste of time.
-
->From my standpoint, we are going to be maintaining our 2.4 kernel RPMs
-for a long time, so my preference is to have it in mainline.  On top of
-the performance stuff I have also been building some actual bug fix
-patches.  They depend on the behavior of the patched kernels, and in
-some cases would be difficult to put on top of a non-iorl patched scsi
-stack.  In any case, my current plans include putting my 2.4 scsi stack
-stuff up for perusal on linux-scsi.bkbits.net/scsi-dledford-2.4 as soon
-as I can sort through the patches and break them into small pieces.
-
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc.
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-
+That patch is crap.  The ifdefs are gone in -mm and that's the way to go.
+We have __devexit and __devexitp to take care of that.
 
