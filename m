@@ -1,59 +1,48 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Proposed changes to generic blk tag for use in SCSI (1/3)
-Date: Thu, 13 Jun 2002 18:09:46 -0400
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: how to change sector size on fibrechannel drives
+Date: Thu, 13 Jun 2002 19:56:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200206132209.g5DM9kF25073@localhost.localdomain>
-References: <dledford@redhat.com>
+Message-ID: <3D093147.3C64CB43@torque.net>
+References: <20020613093514.B25071@nuvox.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id PAA19017
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Jun 2002 15:09:52 -0700
-In-Reply-To: Message from Doug Ledford <dledford@redhat.com>
-   of "Thu, 13 Jun 2002 17:50:19 EDT." <20020613175019.A4515@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, axboe@suse.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: David Nedved <dnedved@nuvox.net>
+Cc: linux-scsi@vger.kernel.org
 
-dledford@redhat.com said:
-> This I'm not following.  If you get a QUEUE_FULL from the adaptec
-> driver,  then the commands you are pushing back should still be tagged
-> and no stall  should be required beyond just waiting for any
-> outstanding command on the  drive to complete or for a timeout to
-> pass.  It should not require any  untagged type stall where you have
-> to drain the entire pipeline... 
+David Nedved wrote:
+> 
+> Hi All,
+> 
+> I've salvaged some drives from a MTI fibre channel RAID device, and I'm
+> trying to use them in linux 2.4.18.  When the scsi module loads, it sees
+> the drives, but reports them all as having the dreaded
+> "unsupported sector size 528" message.  All the searches I've done seem
+> to indicate a low-level format of the drives.   The FC card I'm using,
+> however (Emulex LP8000), doesn't seem to have an option for low-level
+> formatting in the BIOS.  I've also tried the lputil command that comes with
+> the driver, but it seems to have trouble finding the adapter, and it doesn't
+> seem to have any utilities that would help me anyway.
+> 
+> My fibre channel toys are rather limited, in other words, I don't have
+> any other controllers with which to low-level these drives.  In a pinch
+> I could probably find a wintel machine to throw the card into if I had to
+> in order to low-level format the drives, but this would be rather hard
+> since I don't have any windows machines.
+> 
+> Am I out of luck?  I wouldn't mind the inefficiency of only using 512
+> of the 528 bytes in each block if there's some way to override the
+> default setting... although I would much rather reformat them...
+> 
+> Oh, the drives are all ST136403FC drives if that matters.
 
-Ah, but that was the problem in the blk generic tagging.  only requests of 
-type REQ_CMD get tagged, so say the SD driver gets a block read request as a 
-REQ_CMD, translates it into a SCSI READ, sends it through the mid-layer to the 
-low layer driver which requests a block layer tag but eventually responds 
-QUEUE_FULL.  Now the command gets pushed back to the blk queue head as a 
-REQ_SPECIAL (and as part of the push back, we have to finish the tag since 
-command moves from the tag queue to the blk queue), which to the scsi mid 
-layer means request with already formulated SCSI command so don't go back 
-through the upper layer driver again.  The problem is that when this command 
-comes back again into the scsi mid layer for execution it would now do so as 
-an untagged command because the blk_queue_start_tag() code will only tag 
-REQ_CMD requests, and hence we get a queue stall every time the low level 
-driver responds QUEUE_FULL.
+David,
+Have a look at the scu utility at this url:
+http://www.bit-net.com/~rmiller/scu.html
 
-This was the behaviour (in the blk layer) I was objecting to---on the second 
-go around, we request a tag using blk_queue_start_tag() but get denied because 
-the request isn't of the correct type---and why I think the 
-blk_generic_start_tag() needs to allow REQ_SPECIAL requests to be tagged.
+You should be able to use the format to resize your sectors.
 
-> I would think that, eventually, the bio layer will support I/O fencing
-> via  tagged commands (aka, ext3 needs an I/O fence and the bio layer
-> does as  needed to enforce that, which on scsi may mean an ordered
-> queue tag is  generated instead of a regular tag and on IDE it may
-> mean something else).   It will have to be able to tell that some of
-> these conditions have been  satisfied in those cases, so I see no
-> reason why it shouldn't be made  aware of them now.  Just my $.02 
-
-I've actually already put this code into the mid layer patch (the 
-scsi_populate_tag_msg() function in scsi.h) to generate an ordered tag for the 
-case where the request is marked REQ_BARRIER.
-
-James
-
+Doug Gilbert
 
