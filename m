@@ -1,53 +1,77 @@
-From: Nigel Cunningham <ncunningham@linuxmail.org>
+From: Nathan Bryant <nbryant@optonline.net>
 Subject: Re: [PATCH] SCSI midlayer power management
-Date: Thu, 12 Aug 2004 08:16:42 +1000
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1092262602.3553.14.camel@laptop.cunninghams>
-References: <4119611D.60401@optonline.net>
-	 <20040811080935.GA26098@elf.ucw.cz>  <411A1B72.1010302@optonline.net>
-Reply-To: ncunningham@linuxmail.org
+Date: Wed, 11 Aug 2004 18:48:44 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <411AA24C.6050303@optonline.net>
+References: <4119611D.60401@optonline.net> <20040811080935.GA26098@elf.ucw.cz>
+ <411A1B72.1010302@optonline.net> <1092262602.3553.14.camel@laptop.cunninghams>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tpgi.com.au ([203.12.160.113]:15302 "EHLO mail.tpgi.com.au")
-	by vger.kernel.org with ESMTP id S268274AbUHKWUK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Aug 2004 18:20:10 -0400
-In-Reply-To: <411A1B72.1010302@optonline.net>
-List-Id: linux-scsi@vger.kernel.org
-To: Nathan Bryant <nbryant@optonline.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S268307AbUHKWyE@vger.kernel.org>
+In-reply-to: <1092262602.3553.14.camel@laptop.cunninghams>
+To: ncunningham@linuxmail.org
 Cc: Pavel Machek <pavel@ucw.cz>, 'James Bottomley' <James.Bottomley@steeleye.com>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, jgarzik@pobox.com
+List-Id: linux-scsi@vger.kernel.org
 
-Hi.
+Nigel Cunningham wrote:
 
-On Wed, 2004-08-11 at 23:13, Nathan Bryant wrote:
-> >>ACPI S1 and S4/swsusp are untested, but I think there should be no
-> >>regressions with S1. To do S1 properly, we probably need to tell the
-> >>drive to spin down, and I don't know what the SCSI command is for
-> >>that... For S4, the call to scsi_device_quiesce might pose a problem for
-> >>the subsequent state dump to disk. But I'm not sure swsusp ever worked
-> >>for SCSI.
+>Hi.
+>
+>On Wed, 2004-08-11 at 23:13, Nathan Bryant wrote:
+>  
+>
+>>>>ACPI S1 and S4/swsusp are untested, but I think there should be no
+>>>>regressions with S1. To do S1 properly, we probably need to tell the
+>>>>drive to spin down, and I don't know what the SCSI command is for
+>>>>that... For S4, the call to scsi_device_quiesce might pose a problem for
+>>>>the subsequent state dump to disk. But I'm not sure swsusp ever worked
+>>>>for SCSI.
+>>>>        
+>>>>
+>
+>I tried it on an OSDL machine and could suspend (suspend 2), but only
+>resume as far as copying back the original kernel. The problem then
+>looked to me like it was request ids not matching what the drive was
+>expecting (but I'm ignorant of scsi, so might be completely wrong
+>there).
+>  
+>
+I saw "no match for command buffer" interrupt storms when I was fixing 
+up aic7xxx for S3. The problem was due to not reprogramming the address 
+of our SCB's on resume. Needed to tell the card the base address for all 
+the DMA structures.
 
-I tried it on an OSDL machine and could suspend (suspend 2), but only
-resume as far as copying back the original kernel. The problem then
-looked to me like it was request ids not matching what the drive was
-expecting (but I'm ignorant of scsi, so might be completely wrong
-there).
+Just to speculate about what would be required for swsusp: you probably 
+need to be using a SCSI LLD that properly implements pci suspend/resume, 
+which implies you need to make sure the card's DMA state machine is 
+flushed and idle before suspend completes. I've got a patch that fixes 
+this much up for aic7xxx. And my other midlayer-level patch may also 
+help... What happens during resume is interesting. I think maybe the 
+problem is not what the drive is expecting, but what the card's state 
+engine is expecting when it tries to map commands to command buffers in 
+DMA space.  Maybe you need to suspend the LLD from the context of the 
+kernel that is doing the image load, and then resume from the context of 
+the kernel that was just loaded.
 
-> answer is NO. For purposes of not suspending the drivers, I haven't 
-> looked into how swsusp would see which host adapter owns which drive, 
-> but some of the required information seems to be present in sysfs.
+Sounds like this is why Pavel is asking about DMA. So he'll need to 
+manage calling the host adapter's suspend callbacks, not just 
+generic_scsi_suspend. DMA base addresses are likely to change when you 
+load the new kernel image
 
-With my 'device tree' code, I'm getting the struct dev of the device
-we're using via the struct block_device in the swap_info struct.
+>>answer is NO. For purposes of not suspending the drivers, I haven't 
+>>looked into how swsusp would see which host adapter owns which drive, 
+>>but some of the required information seems to be present in sysfs.
+>>    
+>>
+>
+>With my 'device tree' code, I'm getting the struct dev of the device
+>we're using via the struct block_device in the swap_info struct.
+>  
+>
+Right, though you also need to get the host adapter's struct device, if 
+you're not already doing so, that is. Many IDE host drivers don't bother 
+with suspend/resume callbacks at the pci_driver level, but SCSI needs 
+callbacks because the BIOS usually doesn't handle things for us.
 
-Nigel
--- 
-Nigel Cunningham
-Christian Reformed Church of Tuggeranong
-PO Box 1004, Tuggeranong, ACT 2901
-
-Many today claim to be tolerant. But true tolerance can cope with others
-being intolerant.
-
+Nathan
