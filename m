@@ -1,41 +1,44 @@
-From: Jan-Frode Myklebust <janfrode@parallab.uib.no>
-Subject: Re: qla2300 at only 1 GBit on kernel 2.6.5
-Date: Thu, 6 May 2004 07:57:18 +0200
+From: Mogens Valentin <monz@danbbs.dk>
+Subject: Ultra160 controller on 32bit pci
+Date: Thu, 06 May 2004 10:15:04 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040506055718.GA27915@ii.uib.no>
-References: <B179AE41C1147041AA1121F44614F0B0DD011A@AVEXCH02.qlogic.org>
+Message-ID: <4099F408.E424C26A@danbbs.dk>
+Reply-To: monz@danbbs.dk
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from noralf.uib.no ([129.177.30.12]:11212 "EHLO noralf.uib.no")
-	by vger.kernel.org with ESMTP id S261358AbUEFF5V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 May 2004 01:57:21 -0400
-Content-Disposition: inline
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0DD011A@AVEXCH02.qlogic.org>
+Received: from pfepa.post.tele.dk ([195.41.46.235]:41563 "EHLO
+	pfepa.post.tele.dk") by vger.kernel.org with ESMTP id S261611AbUEFIMu
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 May 2004 04:12:50 -0400
+Received: from danbbs.dk (0xc2ef15a4.bynxx4.adsl-dhcp.tele.dk [194.239.21.164])
+	by pfepa.post.tele.dk (Postfix) with ESMTP id 73C6647FE13
+	for <linux-scsi@vger.kernel.org>; Thu,  6 May 2004 10:12:49 +0200 (CEST)
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-scsi@vger.kernel.org
+To: Linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, May 05, 2004 at 03:12:03PM -0700, Andrew Vasquez wrote:
-> 
-> Ok, the problem is that the NVRAM setting for the data_rate is set to
-> 1GB on your HBA (note the value of 0):
-> 
-> 	scsi(1): Configure NVRAM parameters...
-> 	**** scsi(1): Original data_rate setting (0).
-> 
-> The 2.4 drivers are forcing the data rate to (auto-negociate (2)).
-> 
-> 	**** scsi(1): Updated data_rate setting (2).
-> 
-> The 8.x series driver honours the NVRAM setting (which in this case is
-> 1GB).
-> 
-> You'll need to go into the BIOS utility and change the Data Rate
-> setting to 'Auto'
-> 
+Currently using Adaptec 29160, works fine, but it's only 160/2, after
+all.
+I'm curious if other controllers can provide better performance when
+used on a 32bit pci bus?
 
-Yes, that seems to solve it! I now get 2 Ghz on 2.6.6-c3. Thanks!
+In a few month I might switch to a pci-express/opteron setup, so I'd
+like some indication about controllers for that bus.
+
+I'm using two u320 10K disks + one fast10 device on a development
+server/workstation, so I don't need an interprise-level ctrl.; but both
+the pci32 and pci-express thingy should preferebly provide a narrow
+connector as well.
 
 
-  -jf
+I'm not currently on the scsi list, so if anyone would care to shed some
+lights, please address me directly.
+Thanks.
+
+-- 
+Kind regards,
+Mogens Valentin
+Networking, Security
+www.danbbs.dk/~monz
+Phone +45 32 525 878
