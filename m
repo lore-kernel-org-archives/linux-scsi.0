@@ -1,123 +1,162 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [patch] 1/5 scsi-locking-2.5 single_lun store scsi_device pointer
-Date: Wed, 9 Apr 2003 16:46:12 -0700
+Subject: [patch] 2/5 scsi-locking-2.5 remove lock hierarchy
+Date: Wed, 9 Apr 2003 16:47:01 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030409164612.A23701@beaverton.ibm.com>
+Message-ID: <20030409164701.B23701@beaverton.ibm.com>
+References: <20030409164612.A23701@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:15498 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S263938AbTDIXiT (for <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Apr 2003 19:38:19 -0400
+Received: from e31.co.us.ibm.com ([32.97.110.129]:32218 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S263952AbTDIXjI (for <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Apr 2003 19:39:08 -0400
 Content-Disposition: inline
+In-Reply-To: <20030409164612.A23701@beaverton.ibm.com>; from patmans@us.ibm.com on Wed, Apr 09, 2003 at 04:46:12PM -0700
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-Change single_lun code to use a struct scsi_device *, so that we do not
-need an sdev (or queue_lock) while checking if a single_lun target is in
-use by a particular scsi_device.
+Get rid of the lock hierarchy for queue_lock and host_lock (even for the
+single_lun case).
 
-diff -purN -X /home/patman/dontdiff sl-base-2.5/drivers/scsi/scsi.h 01_slun_mod/drivers/scsi/scsi.h
---- sl-base-2.5/drivers/scsi/scsi.h	Wed Apr  9 11:34:36 2003
-+++ 01_slun_mod/drivers/scsi/scsi.h	Wed Apr  9 12:39:15 2003
-@@ -532,10 +532,11 @@ extern int scsi_dev_info_list_add_str(ch
+diff -purN -X /home/patman/dontdiff 01_slun_mod/drivers/scsi/scsi_lib.c 02_no_hier/drivers/scsi/scsi_lib.c
+--- 01_slun_mod/drivers/scsi/scsi_lib.c	Wed Apr  9 12:39:15 2003
++++ 02_no_hier/drivers/scsi/scsi_lib.c	Wed Apr  9 12:39:20 2003
+@@ -1088,9 +1088,10 @@ static inline int scsi_dev_queue_ready(s
  
  /*
-  * scsi_target: representation of a scsi target, for now, this is only
-- * used for single_lun devices.
-+ * used for single_lun devices. If no one has active IO to the target,
-+ * starget_sdev_user is NULL, else it points to the active sdev.
-  */
- struct scsi_target {
--	unsigned int starget_busy;
-+	struct scsi_device *starget_sdev_user;
- 	unsigned int starget_refcnt;
- };
- 
-diff -purN -X /home/patman/dontdiff sl-base-2.5/drivers/scsi/scsi_lib.c 01_slun_mod/drivers/scsi/scsi_lib.c
---- sl-base-2.5/drivers/scsi/scsi_lib.c	Wed Apr  9 11:34:37 2003
-+++ 01_slun_mod/drivers/scsi/scsi_lib.c	Wed Apr  9 12:39:15 2003
-@@ -327,9 +327,9 @@ void scsi_setup_cmd_retry(struct scsi_cm
- }
- 
- /*
-- * Called for single_lun devices on IO completion. Clear starget_busy, and
-- * Call __blk_run_queue for all the scsi_devices on the target - including
-- * current_sdev first.
-+ * Called for single_lun devices on IO completion. Clear starget_sdev_user,
-+ * and call __blk_run_queue for all the scsi_devices on the target -
-+ * including current_sdev first.
+  * scsi_host_queue_ready: if we can send requests to shost, return 1 else
+- * return 0.
++ * return 0. We must end up running the queue again whenever 0 is
++ * returned, else IO can hang.
   *
-  * Called with *no* scsi locks held.
+- * Called with queue_lock and host_lock held.
++ * Called with host_lock held.
   */
-@@ -338,19 +338,33 @@ static void scsi_single_lun_run(struct s
- 	struct scsi_device *sdev;
- 	unsigned int flags, flags2;
+ static inline int scsi_host_queue_ready(struct request_queue *q,
+ 				   struct Scsi_Host *shost,
+@@ -1157,41 +1158,54 @@ static void scsi_request_fn(request_queu
+ 		if (blk_queue_plugged(q))
+ 			goto completed;
  
--	spin_lock_irqsave(current_sdev->request_queue->queue_lock, flags2);
- 	spin_lock_irqsave(current_sdev->host->host_lock, flags);
--	WARN_ON(!current_sdev->sdev_target->starget_busy);
--	if (current_sdev->device_busy == 0)
--		current_sdev->sdev_target->starget_busy = 0;
-+	WARN_ON(!current_sdev->sdev_target->starget_sdev_user);
-+	current_sdev->sdev_target->starget_sdev_user = NULL;
- 	spin_unlock_irqrestore(current_sdev->host->host_lock, flags);
- 
- 	/*
- 	 * Call __blk_run_queue for all LUNs on the target, starting with
--	 * current_sdev.
-+	 * current_sdev. We race with others (to set starget_sdev_user),
-+	 * but in most cases, we will be first. Ideally, each LU on the
-+	 * target would get some limited time or requests on the target.
- 	 */
-+	spin_lock_irqsave(current_sdev->request_queue->queue_lock, flags2);
- 	__blk_run_queue(current_sdev->request_queue);
- 	spin_unlock_irqrestore(current_sdev->request_queue->queue_lock, flags2);
++		if (blk_queue_empty(q))
++			goto completed;
 +
-+	spin_lock_irqsave(current_sdev->host->host_lock, flags);
-+	if (current_sdev->sdev_target->starget_sdev_user) {
-+		/*
-+		 * After unlock, this races with anyone clearing
-+		 * starget_sdev_user, but we (should) always enter this
-+		 * function again, avoiding any problems.
-+		 */
-+		spin_unlock_irqrestore(current_sdev->host->host_lock, flags);
-+		return;
-+	}
-+	spin_unlock_irqrestore(current_sdev->host->host_lock, flags);
-+
- 	list_for_each_entry(sdev, &current_sdev->same_target_siblings,
- 			    same_target_siblings) {
- 		spin_lock_irqsave(sdev->request_queue->queue_lock, flags2);
-@@ -1158,8 +1172,8 @@ static void scsi_request_fn(request_queu
- 		if (!scsi_host_queue_ready(q, shost, sdev))
- 			goto after_host_lock;
+ 		/*
+ 		 * get next queueable request.  We do this early to make sure
+ 		 * that the request is fully prepared even if we cannot 
+-		 * accept it.  If there is no request, we'll detect this
+-		 * lower down.
++		 * accept it.
+ 		 */
+ 		req = elv_next_request(q);
  
--		if (sdev->single_lun && !sdev->device_busy &&
--		    sdev->sdev_target->starget_busy)
-+		if (sdev->single_lun && sdev->sdev_target->starget_sdev_user &&
-+		    (sdev->sdev_target->starget_sdev_user != sdev))
- 			goto after_host_lock;
+-		if (!scsi_dev_queue_ready(q, sdev))
++		if (!req) {
++			/*
++			 * If the device is busy, a returning I/O will
++			 * restart the queue. Otherwise, we have to plug
++			 * the queue
++			 */
++			if (sdev->device_busy == 0)
++				blk_plug_device(q);
+ 			goto completed;
++		}
+ 
+-		spin_lock_irqsave(shost->host_lock, flags);
+-		if (!scsi_host_queue_ready(q, shost, sdev))
+-			goto after_host_lock;
+-
+-		if (sdev->single_lun && sdev->sdev_target->starget_sdev_user &&
+-		    (sdev->sdev_target->starget_sdev_user != sdev))
+-			goto after_host_lock;
++		if (!scsi_dev_queue_ready(q, sdev))
++			goto completed;
  
  		/*
-@@ -1198,7 +1212,7 @@ static void scsi_request_fn(request_queu
- 			blkdev_dequeue_request(req);
- 	
- 		if (sdev->single_lun)
--			sdev->sdev_target->starget_busy = 1;
-+			sdev->sdev_target->starget_sdev_user = sdev;
+-		 * If we couldn't find a request that could be queued, then we
+-		 * can also quit.
++		 * Remove the request from the request list.
+ 		 */
+-		if (blk_queue_empty(q))
+-			goto after_host_lock;
++		if (!(blk_queue_tagged(q) && (blk_queue_start_tag(q, req) == 0)))
++			blkdev_dequeue_request(req);
  
- 		shost->host_busy++;
- 		spin_unlock_irqrestore(shost->host_lock, flags);
-diff -purN -X /home/patman/dontdiff sl-base-2.5/drivers/scsi/scsi_scan.c 01_slun_mod/drivers/scsi/scsi_scan.c
---- sl-base-2.5/drivers/scsi/scsi_scan.c	Wed Apr  9 11:34:37 2003
-+++ 01_slun_mod/drivers/scsi/scsi_scan.c	Wed Apr  9 12:39:15 2003
-@@ -1283,7 +1283,7 @@ static int scsi_add_lun(Scsi_Device *sde
- 				return SCSI_SCAN_NO_RESPONSE;
- 			}
- 			starget->starget_refcnt = 0;
--			starget->starget_busy = 0;
-+			starget->starget_sdev_user = NULL;
+-		if (!req) {
+-			/* If the device is busy, a returning I/O
+-			 * will restart the queue.  Otherwise, we have
+-			 * to plug the queue */
+-			if (sdev->device_busy == 1)
+-				blk_plug_device(q);
+-			goto after_host_lock;
++		sdev->device_busy++;
++		spin_unlock_irq(q->queue_lock);
++
++		spin_lock_irqsave(shost->host_lock, flags);
++		if (!scsi_host_queue_ready(q, shost, sdev))
++			goto host_lock_held;
++
++		if (sdev->single_lun) {
++			if (sdev->sdev_target->starget_sdev_user &&
++			    (sdev->sdev_target->starget_sdev_user != sdev))
++				goto host_lock_held;
++			else
++				sdev->sdev_target->starget_sdev_user = sdev;
  		}
- 		starget->starget_refcnt++;
- 		sdev->sdev_target = starget;
+ 
++		shost->host_busy++;
++		spin_unlock_irqrestore(shost->host_lock, flags);
++
+ 		cmd = req->special;
+ 
+ 		/*
+@@ -1201,26 +1215,6 @@ static void scsi_request_fn(request_queu
+ 		BUG_ON(!cmd);
+ 
+ 		/*
+-		 * Finally, before we release the lock, we copy the
+-		 * request to the command block, and remove the
+-		 * request from the request list.  Note that we always
+-		 * operate on the queue head - there is absolutely no
+-		 * reason to search the list, because all of the
+-		 * commands in this queue are for the same device.
+-		 */
+-		if (!(blk_queue_tagged(q) && (blk_queue_start_tag(q, req) == 0)))
+-			blkdev_dequeue_request(req);
+-	
+-		if (sdev->single_lun)
+-			sdev->sdev_target->starget_sdev_user = sdev;
+-
+-		shost->host_busy++;
+-		spin_unlock_irqrestore(shost->host_lock, flags);
+-
+-		sdev->device_busy++;
+-		spin_unlock_irq(q->queue_lock);
+-
+-		/*
+ 		 * Finally, initialize any error handling parameters, and set up
+ 		 * the timers for timeouts.
+ 		 */
+@@ -1240,8 +1234,21 @@ static void scsi_request_fn(request_queu
+ completed:
+ 	return;
+ 
+-after_host_lock:
++host_lock_held:
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
++	/*
++	 * lock q, handle tag, requeue req, and decrement device_busy. We
++	 * must return with queue_lock held.
++	 *
++	 * Decrementing device_busy without checking it is OK, as all such
++	 * cases (host limits or settings) should run the queue at some
++	 * later time.
++	 */
++	spin_lock_irq(q->queue_lock);
++	if (blk_rq_tagged(req))
++		blk_queue_end_tag(q, req);
++	__elv_add_request(q, req, 0, 0);
++	sdev->device_busy--;
+ }
+ 
+ u64 scsi_calculate_bounce_limit(struct Scsi_Host *shost)
