@@ -1,8 +1,8 @@
 From: service@artofservice.com.au
 Subject: ITIL in Government and Major Corporations - Has it worked?  -  BREAKFAST SEMINAR Thu 28/11/02
-Date: Fri, 18 Oct 2002 20:24:53 +1000
+Date: Fri, 18 Oct 2002 20:24:55 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <37547.850622731479200.504630@localhost>
+Message-ID: <37547.850637013885700.505799@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 8bit
