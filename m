@@ -1,67 +1,43 @@
-From: Tom Oehser <tom@toms.net>
-Subject: RE: megaraid doesn't detect when bios jumper is off...
-Date: Thu, 22 Jul 2004 11:40:51 -0400 (EDT)
+From: Rodrigo Holden <kdhii310@wuv.de>
+Subject: 6 Windows XP + 2 Office XP = $80 u bcry ae tsesn ziekk
+Date: Thu, 22 Jul 2004 13:37:41 +0000 (GMT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0407221140260.558@jupiter.toms.net>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC8A3@EXA-ATLANTA.se.lsil.com>
+Message-ID: <8$-qo3egps7jryi14$2b3140m8x6@6ebz.1pgni8v>
+Reply-To: Rodrigo Holden <kdhii310@wuv.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/alternative;
+ boundary="Boundary_(ID_NeJyzti30dHOpz6Or5zlSA)"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from Jupiter.Toms.NET ([64.32.223.162]:49547 "EHLO jupiter.toms.net")
-	by vger.kernel.org with ESMTP id S266658AbUGVPlA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jul 2004 11:41:00 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC8A3@EXA-ATLANTA.se.lsil.com>
+Received: from S140093.selcuk.edu.tr ([193.140.140.93]:18849 "EHLO
+	posta2.selcuk.edu.tr") by vger.kernel.org with ESMTP
+	id S266880AbUGVSlE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Jul 2004 14:41:04 -0400
+Received: from 200-161-3-230.insite.com.br ([200.161.3.230])
+ by posta2.selcuk.edu.tr
+ (Sun Java System Messaging Server 6.1 (built Apr 28 2004))
+ with SMTP id <0I12005TQ3HK0I00@posta2.selcuk.edu.tr> for
+ linux-scsi@vger.kernel.org; Sun, 18 Jul 2004 14:37:16 -0200 (GMT)
+Received: from [175.63.218.33] by 200-161-3-230.insite.com.br for
+ <linux-scsi@vger.kernel.org>; Thu, 22 Jul 2004 13:37:41 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
 
-2.6.7 stock megaraid.c driver. -Tom
+--Boundary_(ID_NeJyzti30dHOpz6Or5zlSA)
+Content-type: text/plain
+Content-transfer-encoding: 7BIT
 
-On Thu, 22 Jul 2004, Mukker, Atul wrote:
+Loads of cool soft at incredibly low prices
+Windows XP Professional + Office XP Professional for as low as $80
+Order here:
+http://contrition.loveland.chicago.cmkfidf.biz/?uJ0zwL._2y5nguumalihomeostasis
+The stock is limited
+The offer is valid till next 24 hours
+Hurry!
 
-> Date: Thu, 22 Jul 2004 10:24:35 -0400
-> From: "Mukker, Atul" <Atulm@lsil.com>
-> To: 'Tom Oehser' <tom@toms.net>, linux-scsi@vger.kernel.org
-> Subject: RE: megaraid doesn't detect when bios jumper is off...
->
-> It would be helpful to know the driver and kernel version as well.
->
-> -Atul Mukker
->
-> > -----Original Message-----
-> > From: Tom Oehser [mailto:tom@toms.net]
-> > Sent: Wednesday, July 21, 2004 10:36 PM
-> > To: linux-scsi@vger.kernel.org
-> > Subject: megaraid doesn't detect when bios jumper is off...
-> >
-> >
-> >
-> > Hi, I have a MegaRAID SATA 150-6, which is in the same box as a
-> > Mylex AcceleRaid-250 which is the boot drive.  The motherboard
-> > doesn't give a way to control boot priority between scsi cards,
-> > so I set the bios-disable jumper on the MegaRAID card, so that
-> > it will boot the Mylex, which works fine...
-> >
-> > BUT, the MegaRAID driver isn't detecting the MegaRAID when its
-> > boot bios is disabled!  I can't find a way to get the driver to
-> > find it and enable it...  And the BIOS setup of the MegaRAID is
-> > not seeming to have a way to tell it not to try to boot...
-> >
-> > So, if I enable the bios jumper on the MegaRAID, it tries to boot
-> > from it (which fails miserably, as it isn't a boot drive), and if
-> > I disable the bios jumper on the MegaRAID, it doesn't try to boot
-> > it, but then the Linux driver doesn't enable it, either!
-> >
-> > Help?
-> >
-> > -Tom
-> >
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe
-> > linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
->
+
+
+roeld hdk ri hucchf jfrt ehuxsj ufg
+ggk  dsdp
+
+--Boundary_(ID_NeJyzti30dHOpz6Or5zlSA)--
