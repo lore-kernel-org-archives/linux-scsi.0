@@ -1,29 +1,37 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] fix dma mapping leak in fusion
-Date: Thu, 19 Aug 2004 12:14:34 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: can_queue modification within select_queue_depths
+Date: Thu, 19 Aug 2004 12:19:02 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040819101433.GA20353@lst.de>
-References: <20040817161642.GA16509@lst.de> <200408190301.AA03490@fukuchi.jp.fujitsu.com>
+Message-ID: <20040819121902.A8273@infradead.org>
+References: <41233AB1.7030605@il.marvell.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:24740 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S264954AbUHSKOq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Aug 2004 06:14:46 -0400
+Received: from imladris.demon.co.uk ([193.237.130.41]:18695 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S265492AbUHSLTE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Aug 2004 07:19:04 -0400
 Content-Disposition: inline
-In-Reply-To: <200408190301.AA03490@fukuchi.jp.fujitsu.com>
+In-Reply-To: <41233AB1.7030605@il.marvell.com>; from Saeed.Bishara@il.marvell.com on Wed, Aug 18, 2004 at 02:17:05PM +0300
 List-Id: linux-scsi@vger.kernel.org
-To: Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
-Cc: Christoph Hellwig <hch@lst.de>, moore@lsil.com, linux-scsi@vger.kernel.org
+To: Saeed Bishara <Saeed.Bishara@il.marvell.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Aug 19, 2004 at 12:01:11PM +0900, Masao Fukuchi wrote:
-> Hi Christoph,
-> 
-> I applyed attached patch into latest fusion MPT driver(3.01.15) and
-> tested it, but I still met Oops.
-> Then I also applyed your latest patch(it gets rid of the fusion pendingQ
-> in favour of using the scsi midlayer queuing), but I met Oops again.
+On Wed, Aug 18, 2004 at 02:17:05PM +0300, Saeed Bishara wrote:
+> Hi,
+>     is it allowed to modify the host can_queue with select_queue_depths 
+> function?
 
-Can you try the patch Eric posted instead?
+Yes.
+
+>     if yes, is it needed to lock/unlock io_request_lock ?
+> thanks  
+
+Dunno about 2.4 locking, but given this is at init time and thus implicitly
+serialized I wouldn't care too much about locking.
+
+
+BTW, if you happen to work on a driver for the marvell SATA part please
+talk to Jeff Garzik who is doing a libata driver for it.  Also note that
+we're not going to accept pure SCSI LLDDs for (S)ATA hardware.
 
