@@ -1,71 +1,120 @@
-From: "Vladimir G. Ivanovic" <vladimir@acm.org>
-Subject: Re: syslog message
-Date: Mon, 30 Aug 2004 10:16:36 -0700
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [PATCH] normalize fixed and descriptor sense data
+Date: Mon, 30 Aug 2004 11:30:07 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200408301716.i7UHGagO008392@bach.leonora.org>
-Reply-To: "Vladimir G. Ivanovic" <vladimir@acm.org>
+Message-ID: <3CC78EDC-FAAA-11D8-85F1-00039398BB5E@ieee.org>
+References: <3DD91260-F839-11D8-A52F-00039398BB5E@ieee.org> <41300511.206030
+	 3@torque.net> <Pine.LNX.4.58.0408280922540.7958@kai.makisara.local>
+Mime-Version: 1.0 (Apple Message framework v619)
+Content-Type: text/plain; charset=ISO-8859-1;
+	delsp=yes	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl081-052-249.sfo1.dsl.speakeasy.net ([64.81.52.249]:40178
-	"EHLO bach.leonora.org") by vger.kernel.org with ESMTP
-	id S268577AbUH3RQi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Aug 2004 13:16:38 -0400
-Received: from bach.leonora.org (localhost.localdomain [127.0.0.1])
-	by bach.leonora.org (8.12.11/8.12.11) with ESMTP id i7UHGbRw008396
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Aug 2004 10:16:37 -0700
-Received: from bach.leonora.org (vladimir@localhost)
-	by bach.leonora.org (8.12.11/8.12.11/Submit) with ESMTP id i7UHGagO008392
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Aug 2004 10:16:37 -0700
-In-Reply-To: Your message of "Mon, 30 Aug 2004 10:07:13 PDT."
+Received: from email-out2.iomega.com ([147.178.1.83]:20457 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S268646AbUH3RaO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Aug 2004 13:30:14 -0400
+In-Reply-To: <Pine.LNX.4.58.0408280922540.7958@kai.makisara.local>
 List-Id: linux-scsi@vger.kernel.org
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org
 
-[Apologies for the previous incomplete message.]
+Kai M:
 
-This message:
+>>> A deferred error, in the context of sense data ((bytes[0] & x7F) !=3D=
+ =20
+>>> x70)
+>>> is usually a purportedly rare and therefore interesting catastrophe=
+ =20
+>>> of
+>>> some kind, yes?  A failure to write seen while flushing cache.  A
+>>> failure to eject after obediently faking "immediate"ly good status.=
+  =20
+>>> Etc.
+> ...
+> The severity of deferred errors depends on the device.
+> ...
+> Streaming tape drives have to
+> use largish internal buffers. This means that, for instance, write =20
+> errors
+> often are deferred errors. The possibilities to report this error to =
+=20
+> the
+> user are limited but that is another thing (basically the driver can =
+=20
+> only
+> suggest to the user that the tape head is in an uknown position).
 
-   kernel: Badness in sym_complete_error at drivers/scsi/sym53c8xx_2/sym_hipd.c:5513
-   kernel:  [<82886a76>] sym_complete_error+0x96/0x233 [sym53c8xx]
-   kernel:  [<8288021f>] sym53c8xx_intr+0x59/0xc5 [sym53c8xx]
-   kernel:  [<021073f1>] handle_IRQ_event+0x21/0x43
-   kernel:  [<02107884>] do_IRQ+0x15f/0x22e
-   kernel:  =======================
-   kernel:  [<021168b6>] smp_apic_timer_interrupt+0x122/0x127
-   kernel:  [<02104018>] default_idle+0x0/0x2c
-   kernel:  [<022d007b>] unix_stream_data_wait+0x28/0x10c
-   kernel:  [<02104041>] default_idle+0x29/0x2c
-   kernel:  [<0210409d>] cpu_idle+0x26/0x3b
-   kernel:  [<0238d78c>] start_kernel+0x1d0/0x1d5
+Thanks for the tape perspective, most of my time I've spent with =20
+removable discs.
 
-was in my syslog. 
+> The tapes seem to again be an exception from the mainstream.
 
-I have a ASUS CUV4X-DLS motherboard (2xPIII) running Fedora Core 2
-kernel (2.6.8-1.525smp)
+I'm not sure I understand why?
 
+Are we saying, for tape, a failure to write seen while flushing cache =20
+inside the device is normal and not catastrophic?  Are we saying tape =20
+buffers are commonly significantly larger than DVD-RAM buffers?  Help?
 
-   kernel: SCSI subsystem initialized
-   kernel: sym0: <1010-33> rev 0x1 at pci 0000:00:08.0 irq 177
-   kernel: sym0: using 64 bit DMA addressing
-   kernel: sym0: Symbios NVRAM, ID 7, Fast-80, LVD, parity checking
-   kernel: sym0: open drain IRQ line driver, using on-chip SRAM
-   kernel: sym0: using LOAD/STORE-based firmware.
-   kernel: sym0: handling phase mismatch from SCRIPTS.
-   kernel: sym0: SCSI BUS has been reset.
-   kernel: scsi0 : sym-2.1.18j
-   kernel:   Vendor: QUANTUM   Model: ATLAS10K3_18_WLS  Rev: 020K
-   kernel:   Type:   Direct-Access                      ANSI SCSI revision: 03
-   kernel: sym0:6:0: tagged command queuing enabled, command queue depth 16.
-   kernel: scsi(0:0:6:0): Beginning Domain Validation
-   kernel: sym0:6: wide asynchronous.
-   kernel: sym0:6: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 62)
-   kernel: scsi(0:0:6:0): Ending Domain Validation
-   kernel: SCSI device sda: 35916548 512-byte hdwr sectors (18389 MB)
-   kernel: SCSI device sda: drive cache: write back
-   kernel:  sda: sda1 sda2 sda3 sda4
-   kernel: Attached scsi disk sda at scsi0, channel 0, id 6, lun 0
+Pat LaVarre
 
---- Vladimir
+P.S.
 
--- 
-Vladimir G. Ivanovic                        http://leonora.org/~vladimir
-Palo Alto, CA 94306                                      +1 650 678 8014
+> Block SG_IO seems to be a collection of serious bugs and/or
+> misfeatures ;-)
+
+http://www.google.com/search?q=3Dscsi+pass+thru+caveat
+yields Doug G dated "04/09/2003":
+
+---
+The sg policy is basically "you want, you got it" **. Andre Hedrick =20
+found out that in some dark corner of the ATA instruction set it was =20
+possible to overspeed an ATA disk.  He proposed filtering out that =20
+instruction but the linux-kernel list consensus was not to do that.
+---
+
+grepping my own blogs for "caveat" yields:
+
+--- Subject:  scsi pass thru en fran=E7ais, en espa=F1ol
+--- http://plavarre.blog-city.com/read/618280.htm
+=2E..
+Learning to use a tool like [SCSI pass thru] will probably remind you =20
+of the need to backup often. If you won't enjoy that lesson, then =20
+please don't pick up the tool. Potential side effects include kernel =20
+panics, destroyed discs, destroyed devices, and even imperceptibly =20
+subtle forms of data corruption. Storage devices differ from modems =20
+first by being designed to record your mistakes permanently, and second=
+ =20
+by defining some commands or sequences of commands to mean =20
+self-destruct.
+=2E..
+---
+--- Subject:  tools that demo the need to backup often
+--- http://linux-pel.blog-city.com/read/546745.htm
+=2E.. Solaris
+=2E.. man uscsi
+=2E.. http://www.google.com/search?q=3Dsolaris+man+uscsi
+=2E.. http://www.sunspot.noao.edu/cgi-bin-local/man-cgi?uscsi+7I
+=2E.. http://www.google.com/search?q=3Dsys%2Fscsi%2Fimpl%2Fuscsi.h
+=2E.. =20
+http://developers.sun.com/solaris/developer/support/driver/wps/uscsi/=20
+uscsi.html
+=2E..
+An unsupported, undocumented feature of Sun SCSI device drivers allows =
+=20
+users to issue SCSI requests directly to SCSI devices. This capability =
+=20
+is intended for driver prototyping and diagnostics; it allows the =20
+developer to try out sequences of SCSI commands without recompiling and=
+ =20
+reloading a device driver. Users of this feature must be forewarned =20
+that potential side effects include system panics and putting devices =20
+into unusable states.
+=2E..
+---
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
