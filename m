@@ -1,30 +1,50 @@
-From: "Chandrasekaran, Karthik" <karthik.chandrasekaran@hp.com>
-Subject: Linux iSCSI Implementations
-Date: Tue, 22 Oct 2002 16:56:47 -0500
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] get rid of ->finish method for highlevel drivers
+Date: Tue, 22 Oct 2002 16:17:14 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <72A87F7160C0994D8C5A36E2FDC227F50127820D@txnexc01.americas.cpqcorp.net>
+Message-ID: <20021022231714.GA4070@beaverton.ibm.com>
+References: <James.Bottomley@SteelEye.com> <200210221548.g9MFmJx02529@localhost.localdomain> <20021022114354.A3993@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cacexg11.americas.cpqcorp.net (cacexg11.americas.cpqcorp.net [16.105.250.94])
-	by zcamail05.zca.compaq.com (Postfix) with ESMTP id 5A23E3DD8
-	for <linux-scsi@vger.kernel.org>; Tue, 22 Oct 2002 14:56:49 -0700 (PDT)
-content-class: urn:content-classes:message
+Content-Disposition: inline
+In-Reply-To: <20021022114354.A3993@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
+Patrick Mansfield [patmans@us.ibm.com] wrote:
+> On Tue, Oct 22, 2002 at 10:48:19AM -0500, James Bottomley wrote:
+> > 
+> > I tracked down the essential problem: the CD rom finish method expects to have 
+> > allocated command blocks to do a mode sense.  I also fixed a trivial 
+> > initialisation problem (the device pointer in Scsi_CD was being used before it 
+> > was initialised).
+> > 
+> > The attached patch fixes the problem for me.
+> > 
+> > I still can't detach and add a CD-ROM, but the panic is in sr_init, so doesn't 
+> > look to be affected by these changes, but I'll continue debugging.
+> > 
+> > James
+> > 
+> 
+> James -
+> 
+> How do we end up with no command blocks if the slave_attach is
+> calling scsi_build_commandblocks via scsi_adjust_queue_depth?
 
-Hi,
+It appears after looking at this with Patrick that in drivers where
+slave_attach is is not calling scsi_adjust_queue_depth the
+scsi_build_commandblocks will not be called. In my case ips.c and in
+James case 53c700.c.
 
-Are there any Linux iSCSI Initiator implementations out there
-(open/closed-source) apart from the one in RH 7.3/8.0 kernel ? Any
-info/pointers greatly appreicated.
+If post calling slave_attach the new_queue_depth is 0 and the device is
+not offline we should ensure there is at least a new_queue_depth of
+1 which is what your patch does by later on calling
+scsi_build_commandblocks directly.
 
-Thanks,
-Karthik
-
-(PS: Please remove nospam from my e-mail id to reply to this mail)
-
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
