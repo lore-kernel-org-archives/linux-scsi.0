@@ -1,75 +1,62 @@
 From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: Proposal for new generic device API: dma_get_required_mask()
-Date: Thu, 17 Jun 2004 22:59:09 -0700
+Subject: [PATCH] drivers/scsi/scsi_devinfo.c
+Date: Thu, 17 Jun 2004 23:14:51 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040618055909.GA13007@sgi.com>
-References: <1087481331.2210.27.camel@mulgrave>
+Message-ID: <20040618061451.GA13139@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.sgi.com ([192.48.171.6]:30745 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S264994AbUFRF7e (ORCPT
+Received: from mtvcafw.sgi.com ([192.48.171.6]:50513 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S264218AbUFRGOv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jun 2004 01:59:34 -0400
+	Fri, 18 Jun 2004 02:14:51 -0400
+Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [192.26.80.2])
+	by omx3.sgi.com (8.12.11/8.12.9/linux-outbound_gateway-1.1) with ESMTP id i5I6TcTt029218
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Jun 2004 23:29:38 -0700
+Received: from classic.engr.sgi.com (classic.engr.sgi.com [163.154.5.111])
+	by cthulhu.engr.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id i5I6EoCd17554679
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Jun 2004 23:14:50 -0700 (PDT)
+Received: from classic.engr.sgi.com (localhost [127.0.0.1])
+	by classic.engr.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id i5I6Ep7M013237
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Jun 2004 23:14:52 -0700 (PDT)
+Received: (from jeremy@localhost)
+	by classic.engr.sgi.com (SGI-8.12.5/8.12.5/Submit) id i5I6EpXK013236
+	for linux-scsi@vger.kernel.org; Thu, 17 Jun 2004 23:14:51 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <1087481331.2210.27.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Thu, Jun 17, 2004 at 09:08:51AM -0500, James Bottomley wrote:
-> Background:
-> 
-> We have a large number of devices in scsi: aacraid, aic7xxx, qla1280,
-> qla2xxx which can all do full 64 bit DMA, but which pay a performance
-> penalty for using the larger descriptors (aic7xxx is stranger in that it
-> has three modes of operation: 32 bit, 39 bit and 64 bit each with an
-> increasing performance penalty).
-> 
-> What all these devices would like to do is instead of simply trying the
-> 64 bit mask first and having the platform accept it, even if it only has
-> < 4GB of memory, they'd like to be able to have the platform tell them,
-> given my current dma mask setting, what's the actual number of bits you
-> need me to DMA to.
-> 
-> This is precisely what the API would do.  It would return a bit mask
-> (never over the current dma_mask) that the platform considers optimal. 
-> The platform has complete freedom in this: it may return a mask covering
-> the total physical memory, or a mask covering all the bits it needs
-> setting for some weird numa scheme.
-> 
-> If the driver decides to use the mask, it would do another
-> dma_set_mask() to confirm it (this gives the platform the opportunity if
-> it so chooses to return a mask that doesn't quite cover memory, but
-> would be more optimal...say for platforms that have all memory under 4GB
-> bar one small chunk at 64GB or something).
-> 
-> Once the driver has the platform's optimal mask, it can use this to
-> decide on the correct descriptor size.
-> 
-> Comments?
-> 
-> James
+The BLIST_REPORTLUN2 blacklist item has exactly the behavior that
+the MYLEX DACARMRB (and SGI TP9100, which is really a 2Gb upgrade
+to the DACARMRB) need.
 
+These devices use a PQ of 1 instead of 3 for unconfigured luns,
+which means that every RAID has 32 luns, many or most of which
+are just phantoms.
 
-Sounds good.  But I'm curious why you make the driver call dma_set_mask()
-twice.
-
-I.e., why not
-
-	mask = dma_get_required_mask(...)
-	
-	if (mask < (1ull << 32)) {
-		dma_set_mask(... 32bit)
-		use_dac = 0;
-	}
-	else {
-		dma_set_mask(... 64 bit)
-		use_dac = 1;
-	}
-
-
-Are there cases you're thinking of where the platform's required mask
-would vary depending on the current mask?
+However, it does support Report Luns, and it returns the correct
+data.
 
 jeremy
+
+===== drivers/scsi/scsi_devinfo.c 1.14 vs edited =====
+--- 1.14/drivers/scsi/scsi_devinfo.c	Sat May 29 10:09:05 2004
++++ edited/drivers/scsi/scsi_devinfo.c	Thu Jun 17 22:22:09 2004
+@@ -160,7 +160,7 @@
+ 	{"Medion", "Flash XL  MMC/SD", "2.6D", BLIST_FORCELUN},
+ 	{"MegaRAID", "LD", NULL, BLIST_FORCELUN},
+ 	{"MICROP", "4110", NULL, BLIST_NOTQ},
+-	{"MYLEX", "DACARMRB", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
++	{"MYLEX", "DACARMRB", "*", BLIST_REPORTLUN2},
+ 	{"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
+ 	{"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"NAKAMICH", "MJ-5.16S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+@@ -173,7 +173,7 @@
+ 	{"REGAL", "CDC-4X", NULL, BLIST_MAX5LUN | BLIST_SINGLELUN},
+ 	{"SGI", "RAID3", "*", BLIST_SPARSELUN},
+ 	{"SGI", "RAID5", "*", BLIST_SPARSELUN},
+-	{"SGI", "TP9100", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
++	{"SGI", "TP9100", "*", BLIST_REPORTLUN2},
+ 	{"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN},
+ 	{"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
+ 	{"SONY", "TSL", NULL, BLIST_FORCELUN},		/* DDS3 & DDS4 autoloaders */
