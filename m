@@ -1,48 +1,63 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Comments about the __scsi_mode_sense() routine
-Date: Thu, 17 Jul 2003 10:50:46 -0400 (EDT)
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] as i/o hang with aacraid driver 2.6.0-test1
+Date: 17 Jul 2003 11:43:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0307171037470.750-100000@ida.rowland.org>
-References: <1056301585.1979.58.camel@mulgrave>
+Message-ID: <1058456628.2647.52.camel@mulgrave>
+References: <20030716132036.GB833@suse.de>
+	<1058364455.1856.28.camel@mulgrave> <20030716170456.GK833@suse.de>
+	<20030717015756.135a3f5a.akpm@osdl.org> <20030717085952.GX833@suse.de>
+	<3F1672D9.7070309@cyberone.com.au> <20030717102926.GE833@suse.de>
+	<3F167F98.60006@cyberone.com.au> <20030717105641.GF833@suse.de>
+	<3F1683F5.4030107@cyberone.com.au> <20030717111059.GI833@suse.de>
+	<3F168846.90902@cyberone.com.au>
+	<1058453043.4638.2.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:3332 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S271468AbTGQOfw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jul 2003 10:35:52 -0400
-In-Reply-To: <1056301585.1979.58.camel@mulgrave>
+Received: from nat9.steeleye.com ([65.114.3.137]:10501 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S271497AbTGQP3L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Jul 2003 11:29:11 -0400
+In-Reply-To: <1058453043.4638.2.camel@markh1.pdx.osdl.net>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Mark Haverkamp <markh@osdl.org>
+Cc: Nick Piggin <piggin@cyberone.com.au>, Jens Axboe <axboe@suse.de>, Andrew Morton <akpm@osdl.org>, Cliff White <cliffw@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-James:
+On Thu, 2003-07-17 at 10:44, Mark Haverkamp wrote:
+> I added Jens' and your patch and got this when I did a mkfs on an
+> aacraid disk:
 
-I've got some comments about your __scsi_mode_sense() routine in
-scsi_lib.c.  Some of these may be wrong, and I'd like to get the straight 
-story.
+I don't get the crash, but it still hangs for me.
 
-	1.  The kerneldoc at the start describes the return value wrongly.  
-The actual return value is the request's result code; it has nothing to do 
-with header offsets.
+Just as a matter of interest, you should be able to simulate the problem
+with almost any SCSI driver by adding artificial HOST/DEVICE busy
+returns in queuecommand.
 
-	2.  According to my outdated SCSI documentation, the DBD bit
-should be set to 0 to allow block descriptors and 1 to forbid them.  This
-is contrary to the kerneldoc and also contrary to the use in
-sd_read_cache_type() in sd.c.
+This is what I did in 53c700.c:
 
-The exact text from the documentation (8.2.10 MODE SENSE(6) command) is: 
+	static int host_busy_cnt = 0;
+	static int device_busy_cnt = 0;
 
-A disable block descriptors (DBD) bit of zero indicates that the target 
-may return zero or more block descriptors in the returned MODE SENSE data 
-(see 8.3.3), at the target s discretion. A DBD bit of one specifies that 
-the target shall not return any block descriptors in the returned MODE 
-SENSE data.
+	if((host_busy_cnt++)%1000 == 434) {
+		printk("53c700 RETURNING HOST BUSY, depth %d\n",
+		       NCR_700_get_depth(SCp->device));
+		return SCSI_MLQUEUE_HOST_BUSY;
+	}
 
-	3.  Again according to my SCSI spec, the data->length value value
-in the mode parameter header does not include the length value itself.  
-So the correct value should be computed as (block[0]*256 + block[1]) + 2
-for 10-byte commands and block[0] + 1 for 6-byte commands.
+	if((device_busy_cnt++) % 544 == 232) {
+		printk("53c700 RETURNING DEVICE BUSY, depth %d\n",
+		       NCR_700_get_depth(SCp->device));
+		return SCSI_MLQUEUE_DEVICE_BUSY;
+	}
 
-Alan Stern
+This is my usual method of testing our requeuing code (the depth is
+important, because we take different actions depending on whether the
+depth is zero or not---exercises the starvation code).
+
+I believe this should work with scsi_debug even if you don't actually
+have a SCSI setup.
+
+James
+
 
