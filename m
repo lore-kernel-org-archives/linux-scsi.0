@@ -1,254 +1,129 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] ibmvscsi driver - next version
-Date: Mon, 23 Feb 2004 14:45:42 +0000
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Fw: PROBLEM: Linux V. 2.6.3 panics with "Buffers at physical address >16Mb used for aha1542" at boot time
+Date: Mon, 23 Feb 2004 17:48:11 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040223144542.A9624@infradead.org>
-References: <opr3s2iefyl6e53g@us.ibm.com>
+Message-ID: <20040223164811.GK32010@suse.de>
+References: <20040218171212.0eb6618a.akpm@osdl.org> <1077243517.2164.61.camel@mulgrave> <1077265837.1297.9.camel@felicia> <20040220083808.GA11822@suse.de> <1077300620.1937.11.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:6670 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S261898AbUBWOpq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Feb 2004 09:45:46 -0500
+Received: from ns.virtualhost.dk ([195.184.98.160]:27881 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261956AbUBWQsg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Feb 2004 11:48:36 -0500
 Content-Disposition: inline
-In-Reply-To: <opr3s2iefyl6e53g@us.ibm.com>; from sleddog@us.ibm.com on Sun, Feb 22, 2004 at 10:24:04PM -0600
+In-Reply-To: <1077300620.1937.11.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Boutcher <sleddog@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: "Dr. Ernst Molitor" <molitor@uni-bonn.de>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sun, Feb 22, 2004 at 10:24:04PM -0600, Dave Boutcher wrote:
-> This is the next version of the SCSI driver to support the adapter 
-> implemented by the IBM Power5 firmware.  I have incorporated all comments 
->  from the first submission, which has resulted in a much cleaner, leaner, 
-> meaner version.
+On Fri, Feb 20 2004, James Bottomley wrote:
+> On Fri, 2004-02-20 at 00:38, Jens Axboe wrote:
+> > Hmm... James, sr_do_ioctl() used to do bouncing for private commands,
+> > any reason it doesn't do that anymore?
+> 
+> OK, I've looked through the file history, I can't find anywhere that it
+> used to do this.
+> 
+> However, the true solution is to see if we can get scsi_wait_req to go
+> through the sg_io code path...that way the block layer will bounce for
+> us and we can kill the use_sg == 0 code path in all the drivers.
 
-Okay, this looks much better.  A few more comments:
+The SCSI code is still pretty fucked up wrt clean use of struct
+request... REQ_SPECIAL should just mean that ->special is assigned (and
+holds a struct scsi_request), not be a request type on its own. That
+fact alone makes it impossible to cleanly do REQ_BLOCK_PC conversions.
+Add to that, that gendisk are inside the drivers and it's even worse.
 
-+#include <linux/module.h>
-+#include <scsi/scsi_device.h>
-+#include "ibmvscsi.h"
+Something half-assed like this should work as an immediate fix...
 
-	any reason you hid all headers in ibmvscsi.h?  normally we include
-	them in the source files directly.
-
-+MODULE_PARM(max_id, "i");
-+MODULE_PARM_DESC(max_id, "Largest ID value for each channel");
-+MODULE_PARM(max_channel, "i");
-+MODULE_PARM_DESC(max_channel, "Largest channel value");
-
-	please use module_param{_named,} to make the options also
-	available at the boot-time command line
-
-+static int initialize_event_pool(struct event_pool *pool, int size, struct ibmvscsi_host_data *hostdata)
-
-	please wraper after 80chars according to Documentation/CodingStyle
-
-+	if(!pool->events)
-
-	another nitpick, above document says this should be
-
-	if (!pool->events)
-
-	dito in a few other places
-
-+static int ibmvscsi_send_srp_event(struct srp_event_struct *evt_struct, struct ibmvscsi_host_data *hostdata)
-+{
-+	struct scsi_cmnd *cmnd;
-+	unsigned long flags;
-+	u64 *crq_as_u64 = (u64*)&evt_struct->crq;
+===== drivers/scsi/scsi_lib.c 1.118 vs edited =====
+--- 1.118/drivers/scsi/scsi_lib.c	Mon Feb  2 17:14:22 2004
++++ edited/drivers/scsi/scsi_lib.c	Mon Feb 23 17:44:09 2004
+@@ -954,7 +960,8 @@
+ 			cmd = scsi_get_command(sreq->sr_device, GFP_ATOMIC);
+ 			if (unlikely(!cmd))
+ 				goto defer;
+-			scsi_init_cmd_from_req(cmd, sreq);
++			if (!blk_pc_request(req))
++				scsi_init_cmd_from_req(cmd, sreq);
+ 		} else
+ 			cmd = req->special;
+ 	} else if (req->flags & (REQ_CMD | REQ_BLOCK_PC)) {
+===== drivers/scsi/sr.c 1.98 vs edited =====
+--- 1.98/drivers/scsi/sr.c	Mon Feb  9 21:59:10 2004
++++ edited/drivers/scsi/sr.c	Mon Feb 23 15:03:57 2004
+@@ -557,20 +559,22 @@
+ 
+ 	sdev->sector_size = 2048;	/* A guess, just in case */
+ 
+-	/* FIXME: need to handle a get_capabilities failure properly ?? */
+-	get_capabilities(cd);
+-	sr_vendor_init(cd);
+-
+ 	snprintf(disk->devfs_name, sizeof(disk->devfs_name),
+ 			"%s/cd", sdev->devfs_name);
+ 	disk->driverfs_dev = &sdev->sdev_gendev;
+-	register_cdrom(&cd->cdi);
+ 	set_capacity(disk, cd->capacity);
+ 	disk->private_data = &cd->driver;
+ 	disk->queue = sdev->request_queue;
+ 
+ 	dev_set_drvdata(dev, cd);
+ 	add_disk(disk);
 +
-+	/* If we have exhausted our request limit, just queue this request */
-+	if (atomic_dec_if_positive(&hostdata->request_limit)< 0) {
-+		printk("ibmvscsi: Warning, request_limit exceeded\n");
-+		return SCSI_MLQUEUE_HOST_BUSY;
-
-	Is there a specific reason host_busy / can_queue can don't the
-	request limit checking for you?
-
-+	} else {
-
-	Why the else if we just returned?
-
-+		/* Add this to the sent list.  We need to do this before we actually send 
-+		 * in case it comes back REALLY fast
-+		 */
-+		spin_lock_irqsave(&hostdata->lock, flags);
-+		list_add_tail(&evt_struct->list, &hostdata->sent);
-+		spin_unlock_irqrestore(&hostdata->lock, flags);
-
-	Do you really need the hostdata lock in addition to the scsi
-	host_lock?
-
-		
-+			cmnd->result = DID_ERROR << 16;
-+			evt_struct->cmnd_done(cmnd);
-+			return SCSI_MLQUEUE_HOST_BUSY;
-
-	This is wrong - either you set an error in cmnd->result and
-	return 0 or your return non-zero from queuecommand, but not both.
-
-+	/* Check if we are in a dead state before we go any farther */
-+	if (atomic_read(&hostdata->request_limit) < 0) {
-+		printk("ibmvscsi: rejecting SCSI command on failed adapter\n");
-+		return FAILED;
-+	}
-
-	What about just setting can_queue to 0 when the adapter fails?
-	Also the return value is wrong, valid return values are 0 or
-	SCSI_MLQUEUE_{DEVICE,HOST}_BUSY.
-
-
-+/* ------------------------------------------------------------
-+ * Routines for driver initialization
-+ */
-+static void error_cleanup(struct ibmvscsi_host_data *hostdata) {
-+	struct Scsi_Host *host = hostdata->host;
-+	release_event_pool(&hostdata->pool, hostdata);
-+	ibmvscsi_release_crq_queue(&hostdata->queue, hostdata);
-+	memset(hostdata, 0xff, sizeof(*hostdata));
-
-	You can't poison the hostdata as it's only freed on ->release
-	which might be much later, e.g. if a sysfs file is opened.
-
-+	scsi_host_put(host);
-+}
-
-	This routine needs rreformating, btw - and as you use it only
-	from login_rsp it might better be placed in there after an error
-	goto.
-
-+	found_evt = NULL;
-+	spin_lock_irqsave(&hostdata->lock, flags);
-+	if(!list_empty(&hostdata->sent)) {
-+		list_for_each_safe(pos, next, &hostdata->sent) {
-+			tmp_evt = list_entry(pos, struct srp_event_struct, list);
-+			
-+			if (tmp_evt->cmnd == cmd) {
-+				found_evt = tmp_evt;
-+				break;
-+			}
-+		}
-+	}
-+	spin_unlock_irqrestore(&hostdata->lock, flags);
-+	
-+	/* If we can't find this event, just return false */
-+	if (found_evt == NULL) {
-+		printk(KERN_ERR "ibmvscsi: failed to abort command\n");
-+		return FAILED;
-+	}
-
-	This can't ever happen.  You will only get called for commands
-	that you have accepted in queuecommand and not called the completion
-	routine for.
-
-+static void purge_requests(struct ibmvscsi_host_data *hostdata) {
-+	struct srp_event_struct *tmp_evt;
-+	struct list_head	*pos, *next;
-+	unsigned long flags;
++	/* FIXME: need to handle a get_capabilities failure properly ?? */
++	get_capabilities(cd);
++	sr_vendor_init(cd);
 +
-+	spin_lock_irqsave(&hostdata->lock, flags);
-+	if(!list_empty(&hostdata->sent)) {
-+		list_for_each_safe(pos, next, &hostdata->sent) {
-+			tmp_evt = list_entry(pos, struct srp_event_struct, list);
-
-	The list_for_each* macros are safe against empty lists.
-	What about using list_for_each_entry_safe, btw?
-
-+	/* Now remove the event from the sent queue.  If it is not there, we have a REALLY
-+	 * wierd race condition, probably involving an abort.  Don't call the "done" 
-+	 * method in that case.
++	if (register_cdrom(&cd->cdi))
++		goto fail_put;
+ 
+ 	printk(KERN_DEBUG
+ 	    "Attached scsi CD-ROM %s at scsi%d, channel %d, id %d, lun %d\n",
+===== drivers/scsi/sr_ioctl.c 1.31 vs edited =====
+--- 1.31/drivers/scsi/sr_ioctl.c	Mon Aug 25 15:37:40 2003
++++ edited/drivers/scsi/sr_ioctl.c	Mon Feb 23 17:44:44 2004
+@@ -90,14 +90,35 @@
+         }
+ 	SRpnt->sr_data_direction = cgc->data_direction;
+ 
++	/* map cgc to a REQ_BLOCK_PC command. in the future cgc will
++	 * disappear, the uniform layer can place REQ_BLOCK_PC commands
++	 * directly on ide-cd/sr target queues
 +	 */
-+	if (list_empty(&evt_struct->list)) {
-+		printk(KERN_ERR "ibmvscsi: unexpected SRP response received!\n");
-+		return;
-+	} else {
-+		list_del(&evt_struct->list);
-+	}
-
-	list_del on empty lists is okay..
-
-+int ibmvscsi_remove(struct ibmvscsi_host_data *hostdata)
-+{
-+	/* send an SRP_I_LOGOUT */
-+	printk(KERN_INFO "ibmvscsi: remove called\n");
-
-	this looks overly verbose, I don't remember any other LLDD do this.
-
-	-> here you need a scsi_remove_host <-
-
-+	
-+	release_event_pool(&hostdata->pool, hostdata);
-+	ibmvscsi_release_crq_queue(&hostdata->queue, hostdata);
++	req = SRpnt->sr_request;
 +
-+	scsi_host_put(hostdata->host);
-+	return 0;
-
-	I think it should just return void
-
-+int __init ibmvscsi_module_init(void)
-+{
-+	return ibmvscsi_register_driver();
-+}
++	req->cmd_len = COMMAND_SIZE(cgc->cmd[0]);
++	memcpy(req->cmd, cgc->cmd, req->cmd_len);
++	req->data = cgc->buffer;
++	req->data_len = cgc->buflen;
++	req->timeout = cgc->timeout;
++	req->sense = SRpnt->sr_sense_buffer;
++	req->sense_len = 0;
++	if (cgc->quiet)
++		req->flags |= REQ_QUIET;
++	if (cgc->data_direction == CGC_DATA_WRITE)
++		req->flags |= REQ_RW;
++	req->flags |= REQ_BLOCK_PC;
++	req->rq_disk = cd->disk;
 +
-+void __exit ibmvscsi_module_exit(void)
-+{
-+	ibmvscsi_unregister_driver();
-+}	
-+module_init(ibmvscsi_module_init);
-+module_exit(ibmvscsi_module_exit);
+       retry:
+ 	if (!scsi_block_when_processing_errors(SDev)) {
+ 		err = -ENODEV;
+ 		goto out_free;
+ 	}
+ 
+-	scsi_wait_req(SRpnt, cgc->cmd, cgc->buffer, cgc->buflen,
+-		      cgc->timeout, IOCTL_RETRIES);
++	/* we have no real use of the passed in data pointers... */
++	scsi_wait_req(SRpnt, req->cmd, req->data, req->data_len,
++		      req->timeout, IOCTL_RETRIES);
+ 
+ 	req = SRpnt->sr_request;
+ 	if (SRpnt->sr_buffer && req->buffer && SRpnt->sr_buffer != req->buffer) {
 
-	useless layering - just put the module_init/exit into the
-	iseris/rpa subdrivers.
 
-+/* global variables */
-+extern struct device *iSeries_vio_dev;
-+static struct ibmvscsi_host_data *single_host_data = NULL; 
-
-	You don't need  to inialize static variables to zero.
-
-+/* ------------------------------------------------------------
-+ * Routines for managing the command/response queue
-+ */
-
-	Stale comment?
-
-+/**
-+ * This stub is needed by ibmvscsi
-+ */
-+void ibmvscsi_task(unsigned long data) 
-+{
-+}
-
-	I think you should just set up the task in the rpa subdriver
-	when it's not needed by the iseries one.
-
-+#include <asm/vio.h>
-+#include <asm/pci_dma.h>
-+#include <asm/hvcall.h>
-+#include "ibmvscsi.h"
-+#include <linux/interrupt.h> 
-
-	linux/*.h before asm/*.h before your own headers, please.
-
-+/**
-+ * ibmvscsi_task: - Process srps asynchronously
-+ * @data:	ibmvscsi_host_data of host
-+ */
-+void ibmvscsi_task(unsigned long data) 
-
-	Isn't this a workqueue handler?  Last time I checked they took
-	void * and not unsigned long
-
-+	struct ibmvscsi_host_data *hostdata = ibmvscsi_probe(&vdev->dev);
-+	if (hostdata) {
-+		vdev->driver_data = hostdata;
-
-	Please alwasy use dev_set_drvdata/dev_get_drvdata.
-
-+char rpa_driver_name[] = "ibmvscsi";                                                                            
-+static struct vio_driver ibmvscsi_driver = {
-+	.name		= rpa_driver_name,
-
-	Why not put the name directly in here?
+-- 
+Jens Axboe
 
