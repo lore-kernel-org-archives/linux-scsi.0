@@ -1,84 +1,63 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [TRIVIAL] Patch for linux 2.5.32
-Date: Tue, 10 Sep 2002 13:01:43 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [RFC] Multi-path IO in 2.5/2.6 ?
+Date: Wed, 11 Sep 2002 09:20:38 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020910130143.A15963@eng2.beaverton.ibm.com>
-References: <20020910092648.4A4AB2C2A2@lists.samba.org>
+Message-ID: <200209111420.g8BEKdx01979@localhost.localdomain>
+References: <patmans@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020910092648.4A4AB2C2A2@lists.samba.org>; from rusty@rustcorp.com.au on Tue, Sep 10, 2002 at 07:18:53PM +1000
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA11096
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Sep 2002 07:20:49 -0700
+In-Reply-To: Message from Patrick Mansfield <patmans@us.ibm.com>
+   of "Tue, 10 Sep 2002 12:26:50 PDT." <20020910122650.A13738@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Rusty Trivial Russell <rusty@rustcorp.com.au>, Josef <josef.moellers@fujitsu-siemens.com>
-Cc: linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Lars Marowsky-Bree <lmb@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-It is sane, but Josef -
+patmans@us.ibm.com said:
+> The scsi multi-path code is not in 2.5.x, and I doubt it will be
+> accepted without the support of James and others. 
 
-Do devices that are adding BLIST_LARGELUN have a way to configure their
-scsi level? Most disk arrays built in the last 3 years (or more) can
-modify the scsi level they report. Changing the scsi level to 3 or high=
-er
-is preferable to adding a BLIST_LARGELUN.
+I haven't said "no" yet (and Doug and Jens haven't said anything).  I did say 
+when the patches first surfaced that I didn't like the idea of replacing 
+Scsi_Device with Scsi_Path at the bottom and the concomitant changes to all 
+the Low Level Drivers which want to support multi-pathing.  If this is to go 
+in the SCSI subsystem it has to be self contained, transparent and easily 
+isolated.  That means the LLDs shouldn't have to be multipath aware.
 
-Do devices that are adding BLIST_SPARSELUN or BLIST_FORCELUN have
-SCSI REPORT LUNS support? If so SCSI REPORT LUN probing/scanning is
-preferable and neither flag is needed; also, a SCSI REPORT LUN will
-only be used if the scsi level is greater than 2.
+I think we all agree:
 
--- Patrick Mansfield
+1) that multi-path in SCSI isn't the way to go in the long term because other 
+devices may have a use for the infrastructure.
 
-On Tue, Sep 10, 2002 at 07:18:53PM +1000, Rusty Trivial Russell wrote:
-> [ This patch had no attached comment: is it sane? --RR ]
-> From:  Josef <josef.moellers@fujitsu-siemens.com>
->=20
->   --=20
->   Josef M=F6llers (Pinguinpfleger bei FSC)
->   	If failure had no penalty success would not be a prize
->   						-- T.  Pratchett--- linux-2.5.32/drivers/scsi/scsi_scan.c	Thu=
- Aug 29 10:37:55 2002
->=20
-> --- trivial-2.5.34/drivers/scsi/scsi_scan.c.orig	2002-09-10 19:10:54.=
-000000000 +1000
-> +++ trivial-2.5.34/drivers/scsi/scsi_scan.c	2002-09-10 19:10:54.00000=
-0000 +1000
-> @@ -162,8 +162,8 @@
->  	{"TOSHIBA", "CDROM", NULL, BLIST_ISROM},
->  	{"TOSHIBA", "CD-ROM", NULL, BLIST_ISROM},
->  	{"MegaRAID", "LD", NULL, BLIST_FORCELUN},
-> -	{"DGC", "RAID", NULL, BLIST_SPARSELUN},	/* Dell PV 650F, storage on=
- LUN 0 */
-> -	{"DGC", "DISK", NULL, BLIST_SPARSELUN},	/* Dell PV 650F, no storage=
- on LUN 0 */
-> +        {"DGC", "DISK", NULL, BLIST_SPARSELUN | BLIST_LARGELUN | BLI=
-ST_FORCELUN },
-> +        {"DGC", "RAID ", NULL, BLIST_SPARSELUN | BLIST_LARGELUN | BL=
-IST_FORCELUN },
->  	{"DELL", "PV660F", NULL, BLIST_SPARSELUN},
->  	{"DELL", "PV660F   PSEUDO", NULL, BLIST_SPARSELUN},
->  	{"DELL", "PSEUDO DEVICE .", NULL, BLIST_SPARSELUN},	/* Dell PV 530F=
- */
-> @@ -183,6 +183,10 @@
->  	{"COMPAQ", "MSA1000", NULL, BLIST_FORCELUN},
->  	{"HP", "C1557A", NULL, BLIST_FORCELUN},
->  	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
-> +        {"EUROLOGC", "FC2502", NULL, BLIST_SPARSELUN | BLIST_LARGELU=
-N | BLIST_FORCELUN },
-> +        {"FSC FC47", "DISK", NULL, BLIST_SPARSELUN | BLIST_LARGELUN =
-| BLIST_FORCELUN },
-> +        {"FSC FC47", "RAID ", NULL, BLIST_SPARSELUN | BLIST_LARGELUN=
- | BLIST_FORCELUN },
-> +        {"MYLEX", "DACARMRB", NULL, BLIST_SPARSELUN | BLIST_LARGELUN=
- | BLIST_FORCELUN },
->  };
-> =20
->  #define ALLOC_FAILURE_MSG	KERN_ERR "%s: Allocation failure during" \
-> --=20
->   Don't blame me: the Monkey is driving
->   File: Josef =3D?iso-8859-1?Q?M=3DF6llers?=3D <josef.moellers@fujits=
-u-siemens.com>: Patch for linux 2.5.32
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+2) that the scsi-error handler is the big problem
+
+3) that errors (both medium and transport) may need to be propagated 
+immediately up the block layer in order for multi-path to be handled 
+efficiently.
+
+Although I outlined my ideas for a rework of the error handler, they got lost 
+in the noise of the abort vs reset debate.  These are some of the salient 
+features that will help in this case
+
+- no retries from the tasklet.
+
+- Quiesce from above, not below (commands return while eh processes, so we 
+begin with the first error and don't have to wait for all commands to return 
+or error out)
+
+- It's the object of the error handler to return all commands to the block 
+layer for requeue and reorder as quickly as possible.  They have to be 
+returned with an indication from the error handler that it would like them 
+retried.  This indication can be propagated up (although I haven't given 
+thought how to do that).  Any commands that are sent down to probe the device 
+are generated from within the error handler thread (no device probing with 
+live commands).
+
+What other features do you need on the eh wishlist?
+
+James
+
+
