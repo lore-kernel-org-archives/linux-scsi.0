@@ -1,63 +1,35 @@
-From: Mike Christie <mikenc@us.ibm.com>
-Subject: Re: SCSI API generics (was Re: [PATCH] add block/unblock to iscsi
- class)
-Date: Wed, 23 Feb 2005 11:55:26 -0800
-Message-ID: <421CDFAE.4090108@us.ibm.com>
-References: <421C3CA4.8070009@cs.wisc.edu> <20050223181705.GA8694@plap.qlogic.org>
+From: Grant Grundler <grundler@parisc-linux.org>
+Subject: Re: PATCH 2.6.11-rc4 rename IOMAPPED config option
+Date: Wed, 23 Feb 2005 13:55:20 -0700
+Message-ID: <20050223205520.GB26124@colo.lackof.org>
+References: <20050221010758.GC30800@colo.lackof.org> <4219355E.1000807@pobox.com> <20050221020221.GA28741@parcelfarce.linux.theplanet.co.uk> <20050221020936.GA22713@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from e33.co.us.ibm.com ([32.97.110.131]:24971 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S261553AbVBWTzY
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Feb 2005 14:55:24 -0500
-Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
-	by e33.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j1NJtL0D165238
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2005 14:55:21 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay05.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j1NJtLIv137008
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2005 12:55:21 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id j1NJtLpW009067
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2005 12:55:21 -0700
-In-Reply-To: <20050223181705.GA8694@plap.qlogic.org>
+Content-Type: text/plain; charset=us-ascii
+Received: from colo.lackof.org ([198.49.126.79]:39586 "EHLO colo.lackof.org")
+	by vger.kernel.org with ESMTP id S261579AbVBWUyZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Feb 2005 15:54:25 -0500
+Content-Disposition: inline
+In-Reply-To: <20050221020936.GA22713@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Grant Grundler <grundler@parisc-linux.org>, linux-scsi@vger.kernel.org
 
-Andrew Vasquez wrote:
-> On Wed, 23 Feb 2005, Mike Christie wrote:
-> 
-> 
->>The attached patch copies the code from the fc transport
->>class which allows a LLD to block and unblock a device.
->>The block/unblock code is used by the iscsi-sfnet
->>driver in replacement of a internal timer doing the
->>same thing.
->>
->>I understand that the target code is under construction
->>and our group as well as the HW iSCSI guys are trying to move
->>to something closer to the fc's rport model, so I was not
->>sure if it is better to wait or get this basic functionality in
->>first so we (and other SW and HW iSCSI drivers) can kill some
->>of our duplicated code sooner and then incrementally update
->>the class.
->>
-> 
-> 
-> Speaking of which, are there any major objections to the patches
-> proposed here:
-> 
-> Add scsi_target_[un]block() and scsi_target_remove() generics
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=110867050306738&w=2
-> 
-> [RFC] adding per scsi-host workqueues for defered processing
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=110903148407438&w=2
-> 
+On Sun, Feb 20, 2005 at 09:09:36PM -0500, Jeff Garzik wrote:
+> Irrelevant.  It matters to automated patch snarfers, lkml.org users, etc.
 
-When using single_threaded_workqueues do all single threaded ones
-in the system use the same cpu_workqueue_struct? Will this be
-a potential bottleneck if we end up using the workqueue for more
-operations in the future?
+Jeff,
+I just cut the patch using standard cvs diff.
+I know SubmittingPatches wants -p0 but I also knew
+that willy doesn't mind -p1 and he's the maintainer.
 
+> Incorrect.  <linux/config.h> is not a standard include; you need to
+> include linux/config.h in each file that uses a CONFIG_xxx define.
+
+ok - I prefer files directly include the headers they depend on.
+I'll add that and resubmit next week. Then willy can reject that
+if he wants. :^)
+
+thanks,
+grant
