@@ -1,82 +1,73 @@
-From: Erik Mouw <erik@harddisk-recovery.com>
-Subject: Re: Help - looking for a Linux SCSI testing utility
-Date: Thu, 27 May 2004 16:40:20 +0200
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH/RFC 1/2] 3ware 9000 SATA-RAID driver v2.26.00.009
+Date: Thu, 27 May 2004 13:20:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040527144020.GE10466@harddisk-recovery.com>
-References: <1F6D1D1660975A4887628A011443A1BC0305E3CF@uswaumsx13medge.med.ge.com>
+Message-ID: <40B6235B.1080507@pobox.com>
+References: <HYCD4000.31K@hadar.amcc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from users.linvision.com ([62.58.92.114]:38603 "HELO bitwizard.nl")
-	by vger.kernel.org with SMTP id S264584AbUE0OkV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 May 2004 10:40:21 -0400
-Content-Disposition: inline
-In-Reply-To: <1F6D1D1660975A4887628A011443A1BC0305E3CF@uswaumsx13medge.med.ge.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:20700 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S264659AbUE0RUn
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 May 2004 13:20:43 -0400
+In-Reply-To: <HYCD4000.31K@hadar.amcc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Edwards, Scott (MED, Kelly IT Resouces)" <James.Edwards@med.ge.com>
-Cc: linux-scsi@vger.kernel.org
+To: Adam Radford <aradford@amcc.com>
+Cc: akpm@osdl.org, james.bottomley@steeleye.com, hch@lst.de, linux-scsi@vger.kernel.org
 
-On Wed, May 26, 2004 at 03:24:49PM -0500, Edwards, Scott (MED, Kelly IT Resouces) wrote:
-> I have written (mostly copied from other stuff) a little program to just
-> turn off the write cache.  (I have included the source below.)  But
-> without being able to read the results of the identify I can't tell if
-> it actually works or not.  I have tried writing a program myself that
-> just sends the (0xEC) command, but all I get back is 70 00 05 00 00 00
-> 00 06 00 00 00 00 20 00 00 00 which I'm guessing are the sense bytes?
-> (Excuse my ignorance the last time I messed with this stuff it was
-> called SASI instead of SCSI.)
+Adam Radford wrote:
+> Jeff,
+> 
+> Thanks for the useful feedback.
+> 
+> - The card can take up to 256 io's at a time, but 2 are marked off
+>   for internal use.  There are no 'per device' limits.  The firmware queue
+>   depth is 256 total for all devices.
 
-FWIW, scsiinfo can be used to turn off the write cache.
+Ok.
 
-Human readable format:
+I would therefore recommend not setting device queue depth in 
+->slave_configure(), but rather setting the Scsi_Host_Template's 
+->can_queue to 256.
 
-  dagobert:~# scsiinfo -c /dev/sda 
-
-  Data from Caching Page
-  ----------------------
-  Write Cache                        1
-  Read Cache                         1
-  Prefetch units                     0
-  Demand Read Retention Priority     0
-  Demand Write Retention Priority    0
-  Disable Pre-fetch Transfer Length  65535
-  Minimum Pre-fetch                  0
-  Maximum Pre-fetch                  65535
-  Maximum Pre-fetch Ceiling          65535
+This more accurately reflects the hardware.
 
 
-Compressed format:
+> - We are not calling do_gettimeofday() on every command sent to hardware.  It is
+>   only sent when firmware requests an AEN_SYNC_TIME, which happens at startup, and
+>   probably once a day thereafter.  This is so we can have scheduled events in the
+>   firmware, such as rebuild events, scrub events, etc, _without_ an annoying daemon
+>   running.  There is clock drift so we periodically sync the time.
 
-  dagobert:~# scsiinfo -cX /dev/sda
-  1 1 0 0 0 65535 0 65535 65535 
-
-Now paste that line and change the first 1 into a 0:
-
-  dagobert:~# scsiinfo -cXR /dev/sda 0 1 0 0 0 65535 0 65535 65535 
-
-Read back the information in human readable format:
-
-  dagobert:~# scsiinfo -c /dev/sda
-
-  Data from Caching Page
-  ----------------------
-  Write Cache                        0
-  Read Cache                         1
-  Prefetch units                     0
-  Demand Read Retention Priority     0
-  Demand Write Retention Priority    0
-  Disable Pre-fetch Transfer Length  65535
-  Minimum Pre-fetch                  0
-  Maximum Pre-fetch                  65535
-  Maximum Pre-fetch Ceiling          65535
-
-The scsiinfo utility can be found in the "scsitools" package (on Debian
-systems, but I suppose it's called the same in other distros).
+I see the AEN_SYNC_TIME usage of do_gettimeofday(), but there are other 
+uses of this function as well.
 
 
-Erik
+> - The ioctl routine _does_ copy down data buffers.  This isn't in the main IO path.
 
--- 
-+-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
-| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
+Still, you shouldn't need to copy all those buffers, just make sure they 
+are present and mapped, then pass them to hardware.
+
+
+> - twa_poll_status_gone() is called to prevent return from a function until the
+>   hardware is ready.  How else do you propose delaying when the scsi midlayer called
+>   your entrypoint with spin_lock_irqsave(host->host_lock, flags) ?
+
+It's a problem with your model.  The ->queuecommand should 
+asynchronously submit commands to hardware, up to the hardware limit.
+
+twa_poll_status_done() AFAICS is being used during initialization and 
+such, where ideally you should have code that issues a SCSI command, 
+then calls scsi_wait_req or similar to wait for the command's completion.
+
+
+> I will fix some of the issues you mention and re-send.  Thanks!
+
+Thanks!
+
+	Jeff
+
+
+
