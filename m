@@ -1,59 +1,66 @@
-From: willy@parisc-linux.org (Matthew Wilcox)
-Subject: [PATCH] Reformat comments in scsi_cmnd.h
-Date: Sat, 19 Mar 2005 20:41:41 -0700 (MST)
-Message-ID: <20050320034141.D0AE1496109@palinux.hppa>
-Received: from palinux.external.hp.com ([192.25.206.14]:58776 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S261495AbVCTDln
+From: "julliets fish" <jullietfish@tsamail.co.za>
+Subject: proposal
+Date: Sun, 20 Mar 2005 06:16:12 +0200
+Message-ID: <web-681782323__710.107808891003$1111292111$gmane$org@mail01.infosat.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Received: from mailout06.infosat.net ([66.18.69.6]:13211 "EHLO
+	mail02.infosat.net") by vger.kernel.org with ESMTP id S261520AbVCTEQR
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Mar 2005 22:41:43 -0500
+	Sat, 19 Mar 2005 23:16:17 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
 
-
-Reformat the comments to make them easy to read in 80 columns.
-
-Signed-off-by: Matthew Wilcox <willy@parisc-linux.org>
-
-Index: ./include/scsi/scsi_cmnd.h
-===================================================================
-RCS file: /var/lib/cvs/linux-2.6/include/scsi/scsi_cmnd.h,v
-retrieving revision 1.6
-diff -u -p -r1.6 scsi_cmnd.h
---- ./include/scsi/scsi_cmnd.h	18 Mar 2005 13:17:53 -0000	1.6
-+++ ./include/scsi/scsi_cmnd.h	18 Mar 2005 13:21:29 -0000
-@@ -114,10 +114,10 @@ struct scsi_cmnd {
- 				   	   working on */
- 
- #define SCSI_SENSE_BUFFERSIZE 	96
--	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];		/* obtained by REQUEST SENSE
--						 * when CHECK CONDITION is
--						 * received on original command 
--						 * (auto-sense) */
-+	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];
-+				/* obtained by REQUEST SENSE when
-+				 * CHECK CONDITION is received on original
-+				 * command (auto-sense) */
- 
- 	/* Low-level done function - can be used by low-level driver to point
- 	 *        to completion function.  Not used by mid/upper level code. */
-@@ -130,12 +130,12 @@ struct scsi_cmnd {
- 	struct scsi_pointer SCp;	/* Scratchpad used by some host adapters */
- 
- 	unsigned char *host_scribble;	/* The host adapter is allowed to
--					   * call scsi_malloc and get some memory
--					   * and hang it here.     The host adapter
--					   * is also expected to call scsi_free
--					   * to release this memory.  (The memory
--					   * obtained by scsi_malloc is guaranteed
--					   * to be at an address < 16Mb). */
-+					 * call scsi_malloc and get some memory
-+					 * and hang it here.  The host adapter
-+					 * is also expected to call scsi_free
-+					 * to release this memory.  (The memory
-+					 * obtained by scsi_malloc is guaranteed
-+					 * to be at an address < 16Mb). */
- 
- 	int result;		/* Status code from lower level driver */
- 
+Dear friend,
+I am lady of the Anglican communion Knight Hood.Am lady
+julliet fish.I am the PRO and in charge of a trust fund
+ put
+together by a group of very wealthy christian business
+ men
+who over the years have donnated bountifully to
+ orphanages,
+less privilledged and victims of war.This group of
+ friends
+who operates as gospel philanthropic fund, wants thier
+names to remain behind the scene, i am the public
+ relation
+officer.this organisation has been able to dinstinguish
+itselves as remakable philanthropist in Africa, Asia
+,america,and European countries.This is why am
+ contacting
+you, because i believe you  will understand and 
+ be
+interested in  the business.
+I am going to add your name to the list as one of the
+selected owners of private orphanage homes  so that you
+shall from hence forth receive fund on monthly basis
+ from
+the Gospel philanthropic fund.from hence forth you shall
+receive $10,000 on monthly basis,you shall take $2,000
+ and
+credit my a/c with $8,000.you must keep this between
+ us.You
+know you are going to be the ownner of a non existing
+orphanage home. And am a respected lady internationally.
+ I
+must protect my good name. On your agreement to involve
+ in
+this monthly benefit,get back to me so that i add your
+ name
+to the selected owners of orphanage home,which will
+ benefit
+ from this monthly charity.And our new office in canada
+ is
+charge with the responsibility of disseminating cashier
+checks to the selected owners of orphanage homes will
+ make
+sure you receive one to the tone of $10,000 monthly to
+ run
+your supposed orphanage homes. $2,000 for you and you
+credit my a/c with $8,000.IS IT A DEAL?
+Get back to me
+lady julliet fish P.R.O
+GOSPEL PHILANTHROPIC
+FUND
+LONDON, ENGLAND
