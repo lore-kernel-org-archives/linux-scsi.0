@@ -1,80 +1,64 @@
-From: "christophe.varoqui" <christophe.varoqui@free.fr>
-Subject: Re: Removing the qlogicfc driver
-Date: Sun, 18 Jan 2004 22:14:45 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200401182214.45510.christophe.varoqui@free.fr>
-References: <B179AE41C1147041AA1121F44614F0B0598E38@AVEXCH02.qlogic.org>
+From: Jonathan McDowell <noodles@earth.li>
+Subject: Re: Patch for reset in ini9100u [Initio 9100U(W)]
+Date: Sun, 18 Jan 2004 21:30:15 +0000
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040118213015.GV1845@earth.li>
+References: <20040106231426.GR1845@earth.li> <1073523364.1883.12.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.wanadoo.fr ([193.252.22.30]:45020 "EHLO
-	mwinf0102.wanadoo.fr") by vger.kernel.org with ESMTP
-	id S263823AbUARVPw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Jan 2004 16:15:52 -0500
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0598E38@AVEXCH02.qlogic.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <1073523364.1883.12.camel@mulgrave>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-scsi@vger.kernel.org
 
-2 independant switches,
-each HBA connected to a different switch.
+On Wed, Jan 07, 2004 at 06:56:04PM -0600, James Bottomley wrote:
+> On Tue, 2004-01-06 at 17:14, Jonathan McDowell wrote:
+> > I have an IWill 2935UW SCSI controller which uses the ini9100u driver.
+> > This has been working fine under 2.4 but I've recently built up a box of
+> > spare bits including the controller and installed 2.6 on it. The driver
+> > is marked broken in 2.6, apparently because of a lack of reset/abort
+> > functionality as it compiles and runs ok. So I've taken a stab at
+> > getting reset support back. Patch is below and it's received minimal
+> > testing - it boots, removes the callback trace and error message and
+> > doesn't seem to cause problems (the only disk in the machine is on this
+> > card).
+> I think it's a good beginning.  However, there are some things that
+> could be done to improve it.
+> 
+> > +int i91u_bus_reset(Scsi_Cmnd * SCpnt)
+> > +{
+> > +	HCS *pHCB;
+> > +
+> > +	pHCB = (HCS *) SCpnt->device->host->base;
+> > +	tul_reset_scsi_bus(pHCB);
+> 
+> This won't quite do beacuse tul_reset_scsi_bus() has some really nasty
+> properties
+> 
+> Under the old error handler, the reset routine was responsible for
+> resetting the bus, waiting the timeout (which tul_reset_scsi_bus() does
+> with a busy wait) and flushing the queue.
+> 
+> In the new scheme, the eh thread takes care of all of this (including a
+> nice thread based wait).
+> 
+> I think this may all work correctly if you change this call to:
+> 
+> tul_reset_scsi(pHCB, 0);
+> 
+> instead.  That should simply reset the bus and not busy wait at all,
+> which is really what the error handler is expecting.
+ 
+Ahhh, cunning. I've changed this over and it seems to work ok. I'm not
+sure what sort of testing needs done though. As before it compiles and
+boots without problems and I haven't seen any issues in basic use.
 
-Here are the required info on one of them (QLA2200 in port 3) :
+J.
 
-swtest20:admin> switchshow
-switchName:     swtest20
-switchType:     16.2
-switchState:    Online
-switchMode:     Native
-switchRole:     Principal
-switchDomain:   20
-switchId:       fffc14
-switchWwn:      10:00:00:60:69:c0:4e:51
-switchBeacon:   OFF
-Zoning:         OFF
-port  0: id N1 In_Sync        Disabled
-port  1: id N2 Online         F-Port 50:00:1f:e1:50:00:ae:19
-port  2: id N1 Online         F-Port 10:00:00:00:c9:2a:35:26
-port  3: id N1 Online         F-Port 21:00:00:e0:8b:03:8a:6a
-port  4: id N2 Online         F-Port 10:00:00:00:c9:33:4d:60
-port  5: id N2 Online         F-Port 50:00:1f:e1:50:00:ae:1c
-port  6: id N1 Online         F-Port 10:00:00:00:c9:25:97:5e
-port  7: -- N2 No_Module
-
-swtest20:admin> nsshow
-{
- Type Pid    COS     PortName                NodeName                 TTL(sec)
- N    141100;      3;50:00:1f:e1:50:00:ae:19;50:00:1f:e1:50:00:ae:10; na
-    FC4s: FCP
-    PortSymb: [39] "HSV110 (C)COMPAQ - EVA_TEST - ENT-V2005"
-    Fabric Port Name: 20:01:00:60:69:c0:4e:51
- N    141200;    2,3;10:00:00:00:c9:2a:35:26;20:00:00:00:c9:2a:35:26; na
-    FC4s: FCIP FCP
-    Fabric Port Name: 20:02:00:60:69:c0:4e:51
- N    141300;      3;21:00:00:e0:8b:03:8a:6a;20:00:00:e0:8b:03:8a:6a; na
-    Fabric Port Name: 20:03:00:60:69:c0:4e:51
- N    141400;    2,3;10:00:00:00:c9:33:4d:60;20:00:00:00:c9:33:4d:60; na
-    FC4s: FCP
-    PortSymb: [49] "UNIX (emx0) FCA-2354 S/W Rev 2.07: F/W Rev 3.81a4"
-    Fabric Port Name: 20:04:00:60:69:c0:4e:51
- N    141500;      3;50:00:1f:e1:50:00:ae:1c;50:00:1f:e1:50:00:ae:10; na
-    FC4s: FCP
-    PortSymb: [39] "HSV110 (C)COMPAQ - EVA_TEST - ENT-V2005"
-    Fabric Port Name: 20:05:00:60:69:c0:4e:51
- N    141600;    2,3;10:00:00:00:c9:25:97:5e;20:00:00:00:c9:25:97:5e; na
-    NodeSymb: [35] "Emulex LP8000 FV3.81A1  DV5-4.81A9 "
-    Fabric Port Name: 20:06:00:60:69:c0:4e:51
-
-The Local Name Server has 6 entries }
-
-swtest20:admin> nsallshow
-{
-  141100 141200 141300 141400 141500 141600
-6 Nx_Ports in the Fabric }
-
-
-regards,
-cvaroqui
+-- 
+ OK, if we can't have a tour, can  |  .''`.  Debian GNU/Linux Developer
+  we at least have a look around?  | : :' :  Happy to accept PGP signed
+                                   | `. `'   or encrypted mail - RSA +
+                                   |   `-    DSA keys on the keyservers.
