@@ -1,31 +1,54 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: s390 patches for 2.6.5.
-Date: Thu, 8 Apr 2004 09:27:58 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: sym2 probs in bk-scsi tree
+Date: 08 Apr 2004 11:59:19 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040408162758.GB9702@kroah.com>
-References: <20040408142659.GA1793@mschwid3.boeblingen.de.ibm.com>
+Message-ID: <1081443560.2165.329.camel@mulgrave>
+References: <20040407231820.66dd76cd.akpm@osdl.org>
+	<20040408145700.GB18329@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kroah.org ([65.200.24.183]:13207 "EHLO perch.kroah.org")
-	by vger.kernel.org with ESMTP id S262014AbUDHQ2l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2004 12:28:41 -0400
-Content-Disposition: inline
-In-Reply-To: <20040408142659.GA1793@mschwid3.boeblingen.de.ibm.com>
+Received: from stat1.steeleye.com ([65.114.3.130]:24266 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262005AbUDHQ7X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Apr 2004 12:59:23 -0400
+In-Reply-To: <20040408145700.GB18329@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Schwidefsky <schwidefsky@de.ibm.com>
-Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, Apr 08, 2004 at 04:26:59PM +0200, Martin Schwidefsky wrote:
-> I've included the zfcp patches in this patch set as well after I "fixed"
-> the kfree problem. To get the other bug fixes into mainline I side-stepped
-> the kfree issue. There are now release functions for the zfcp_unit and
-> zfcp_port objects but I removed the module_exit function as well. Without
-> the kfree trick we KNOW module unloading to be racy. So far we know of no
-> other feasible solution for this problem. Therefore we removed the support
-> for unloading of the zfcp module.
+On Thu, 2004-04-08 at 09:57, Matthew Wilcox wrote:
+> They certainly are scary.  What is device 15 on this scsi bus?  This
+> looks like domain validation being applied to a device that can't do it
+> to me.  Did I get that right, James?
 
-Thank you for fixing this.  I don't have a problem with this patch
-anymore :)
+OK, try the attached, it should predicate DV on what we already know
+from the inquiry data.
 
-greg k-h
+James
+
+===== drivers/scsi/scsi_transport_spi.c 1.9 vs edited =====
+--- 1.9/drivers/scsi/scsi_transport_spi.c	Thu Apr  8 08:39:09 2004
++++ edited/drivers/scsi/scsi_transport_spi.c	Thu Apr  8 12:35:07 2004
+@@ -490,7 +490,7 @@
+ 	}
+ 
+ 	/* test width */
+-	if (i->f->set_width) {
++	if (i->f->set_width && sdev->wdtr) {
+ 		i->f->set_width(sdev, 1);
+ 
+ 		if (!spi_dv_device_compare_inquiry(sreq, buffer,
+@@ -502,6 +502,10 @@
+ 	}
+ 
+ 	if (!i->f->set_period)
++		return;
++
++	/* device can't handle synchronous */
++	if(!sdev->ppr && !sdev->sdtr)
+ 		return;
+ 
+ 	/* now set up to the maximum */
+
