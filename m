@@ -1,292 +1,507 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] consistant names for device model related struct members
-Date: Mon, 7 Jul 2003 08:20:21 +0200
+Subject: [PATCH] rework shost/sdev attribute handling
+Date: Mon, 7 Jul 2003 08:21:13 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030707062021.GA27465@lst.de>
+Message-ID: <20030707062113.GB27465@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:35743 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S266818AbTGGGGG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jul 2003 02:06:06 -0400
+Received: from verein.lst.de ([212.34.189.10]:37023 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S266821AbTGGGGn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jul 2003 02:06:43 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-currently the embedded struct devices and class devices have totally
-irregular and sometimes confusing (sdev_driverfs_dev) names.  Name
-them consistanly s{dev,host}_{class,gen}dev.
+Hi James,
+
+I've finally found some time to look over the per-driver sdev/shost attribute
+handling and I'm not so happy with it.  First it adds new writeable
+variables to the host templates which is otherwise almost readonly,
+the other thing is that it needs per-template procedure calls in the
+drivers wheras we have moved away from that.  Also it looks a bit
+coplicated :)
+
+I've attached a patch below that makes the attributes handling a lot
+simpler.  Details:
+
+ - the shost_attrs and sdev_attrs in the host template are now used
+   to store the attributes overriden or added by the LLDD.
+ - the midlayer creates those first and then the generic attributes
+   that haven't been overridded and the other way around.
+ - the host attributes are properly unregistered now and don't leak
+   anymore.
+
+Unlike the first patch the attribute inheritance is back.
 
 
+diff -Nru a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+--- a/drivers/scsi/53c700.c	Sat Jul  5 22:53:43 2003
++++ b/drivers/scsi/53c700.c	Sat Jul  5 22:53:43 2003
+@@ -172,7 +172,7 @@
+ STATIC int NCR_700_slave_configure(Scsi_Device *SDpnt);
+ STATIC void NCR_700_slave_destroy(Scsi_Device *SDpnt);
+ 
+-static struct device_attribute **NCR_700_dev_attrs = NULL;
++STATIC struct device_attribute *NCR_700_dev_attrs[];
+ 
+ static char *NCR_700_phase[] = {
+ 	"",
+@@ -2027,25 +2027,12 @@
+ 	.show = NCR_700_show_active_tags,
+ };
+ 
+-STATIC int __init
+-NCR_700_init(void)
+-{
+-	scsi_sysfs_modify_sdev_attribute(&NCR_700_dev_attrs,
+-					 &NCR_700_queue_depth_attr);
+-	scsi_sysfs_modify_sdev_attribute(&NCR_700_dev_attrs,
+-					 &NCR_700_active_tags_attr);
+-	return 0;
+-}
+-
+-/* NULL exit routine to keep modutils happy */
+-STATIC void __exit
+-NCR_700_exit(void)
+-{
+-}
++STATIC struct device_attribute *NCR_700_dev_attrs[] = {
++	&NCR_700_queue_depth_attr,
++	&NCR_700_active_tags_attr,
++	NULL,
++};
+ 
+ EXPORT_SYMBOL(NCR_700_detect);
+ EXPORT_SYMBOL(NCR_700_release);
+ EXPORT_SYMBOL(NCR_700_intr);
+-
+-module_init(NCR_700_init);
+-module_exit(NCR_700_exit);
+diff -Nru a/drivers/scsi/NCR_D700.c b/drivers/scsi/NCR_D700.c
+--- a/drivers/scsi/NCR_D700.c	Sat Jul  5 22:53:43 2003
++++ b/drivers/scsi/NCR_D700.c	Sat Jul  5 22:53:43 2003
+@@ -387,7 +387,6 @@
+ static void __exit NCR_D700_exit(void)
+ {
+ 	mca_unregister_driver(&NCR_D700_driver);
+-	scsi_sysfs_release_attributes(&NCR_D700_driver_template);
+ }
+ 
+ module_init(NCR_D700_init);
+diff -Nru a/drivers/scsi/NCR_Q720.c b/drivers/scsi/NCR_Q720.c
+--- a/drivers/scsi/NCR_Q720.c	Sat Jul  5 22:53:43 2003
++++ b/drivers/scsi/NCR_Q720.c	Sat Jul  5 22:53:43 2003
+@@ -347,7 +347,6 @@
+ NCR_Q720_exit(void)
+ {
+ 	mca_unregister_driver(&NCR_Q720_driver);
+-	//scsi_sysfs_release_attributes(&NCR_Q720_driver_template);
+ }
+ 
+ module_init(NCR_Q720_init);
 diff -Nru a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
---- a/drivers/scsi/hosts.c	Sat Jul  5 22:53:01 2003
-+++ b/drivers/scsi/hosts.c	Sat Jul  5 22:53:01 2003
-@@ -283,8 +283,8 @@
-  **/
- void scsi_host_get(struct Scsi_Host *shost)
+--- a/drivers/scsi/hosts.c	Sat Jul  5 22:53:43 2003
++++ b/drivers/scsi/hosts.c	Sat Jul  5 22:53:43 2003
+@@ -151,12 +151,6 @@
+ 		dump_stack();
+         }
+ 
+-	/* if its not set in the template, use the default */
+-	if (!sht->shost_attrs)
+-		 sht->shost_attrs = scsi_sysfs_shost_attrs;
+-	if (!sht->sdev_attrs)
+-		 sht->sdev_attrs = scsi_sysfs_sdev_attrs;
+-
+ 	shost = kmalloc(sizeof(struct Scsi_Host) + privsize, gfp_mask);
+ 	if (!shost)
+ 		return NULL;
+diff -Nru a/drivers/scsi/lasi700.c b/drivers/scsi/lasi700.c
+--- a/drivers/scsi/lasi700.c	Sat Jul  5 22:53:43 2003
++++ b/drivers/scsi/lasi700.c	Sat Jul  5 22:53:43 2003
+@@ -165,7 +165,6 @@
+ lasi700_exit(void)
  {
--	get_device(&shost->host_gendev);
--	class_device_get(&shost->class_dev);
-+	get_device(&shost->shost_gendev);
-+	class_device_get(&shost->shost_classdev);
+ 	unregister_parisc_driver(&lasi700_driver);
+-	scsi_sysfs_release_attributes(&lasi700_template);
  }
  
- /**
-@@ -293,6 +293,6 @@
-  **/
- void scsi_host_put(struct Scsi_Host *shost)
- {
--	class_device_put(&shost->class_dev);
--	put_device(&shost->host_gendev);
-+	class_device_put(&shost->shost_classdev);
-+	put_device(&shost->shost_gendev);
- }
-diff -Nru a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c	Sat Jul  5 22:53:01 2003
-+++ b/drivers/scsi/scsi_scan.c	Sat Jul  5 22:53:01 2003
-@@ -464,8 +464,7 @@
- 	while (i >= 0 && type[i] == ' ')
- 		type[i--] = '\0';
+ module_init(lasi700_init);
+diff -Nru a/drivers/scsi/scsi.h b/drivers/scsi/scsi.h
+--- a/drivers/scsi/scsi.h	Sat Jul  5 22:53:43 2003
++++ b/drivers/scsi/scsi.h	Sat Jul  5 22:53:43 2003
+@@ -174,11 +174,6 @@
+ #define SCSI_MLQUEUE_DEVICE_BUSY 0x1056
+ #define SCSI_MLQUEUE_EH_RETRY    0x1057
  
--	snprintf(sdev->sdev_driverfs_dev.name, DEVICE_NAME_SIZE, "SCSI %s",
--		 type);
-+	snprintf(sdev->sdev_gendev.name, DEVICE_NAME_SIZE, "SCSI %s", type);
- }
+-extern int scsi_sysfs_modify_sdev_attribute(struct device_attribute ***dev_attrs,
+-					    struct device_attribute *attr);
+-extern int scsi_sysfs_modify_shost_attribute(struct class_device_attribute ***class_attrs,
+-					     struct class_device_attribute *attr);
+-
+ /*
+  * Legacy dma direction interfaces.
+  *
+diff -Nru a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+--- a/drivers/scsi/scsi_priv.h	Sat Jul  5 22:53:43 2003
++++ b/drivers/scsi/scsi_priv.h	Sat Jul  5 22:53:43 2003
+@@ -117,11 +117,6 @@
+ extern int scsi_sysfs_register(void);
+ extern void scsi_sysfs_unregister(void);
  
- /**
+-/* definitions for the linker default sections covering the host
+- * class and device attributes */
+-extern struct class_device_attribute *scsi_sysfs_shost_attrs[];
+-extern struct device_attribute *scsi_sysfs_sdev_attrs[];
+-
+ extern struct class shost_class;
+ extern struct bus_type scsi_bus_type;
+ 
 diff -Nru a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
---- a/drivers/scsi/scsi_sysfs.c	Sat Jul  5 22:53:01 2003
-+++ b/drivers/scsi/scsi_sysfs.c	Sat Jul  5 22:53:01 2003
-@@ -239,20 +239,20 @@
- {
- 	int error = 0, i;
+--- a/drivers/scsi/scsi_sysfs.c	Sat Jul  5 22:53:43 2003
++++ b/drivers/scsi/scsi_sysfs.c	Sat Jul  5 22:53:43 2003
+@@ -45,7 +45,7 @@
+ shost_rd_attr(sg_tablesize, "%hu\n");
+ shost_rd_attr(unchecked_isa_dma, "%d\n");
  
--	device_initialize(&sdev->sdev_driverfs_dev);
--	sprintf(sdev->sdev_driverfs_dev.bus_id,"%d:%d:%d:%d",
-+	device_initialize(&sdev->sdev_gendev);
-+	sprintf(sdev->sdev_gendev.bus_id,"%d:%d:%d:%d",
- 		sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
--	sdev->sdev_driverfs_dev.parent = &sdev->host->host_gendev;
--	sdev->sdev_driverfs_dev.bus = &scsi_bus_type;
--	sdev->sdev_driverfs_dev.release = scsi_device_release;
-+	sdev->sdev_gendev.parent = &sdev->host->shost_gendev;
-+	sdev->sdev_gendev.bus = &scsi_bus_type;
-+	sdev->sdev_gendev.release = scsi_device_release;
+-struct class_device_attribute *scsi_sysfs_shost_attrs[] = {
++static struct class_device_attribute *scsi_sysfs_shost_attrs[] = {
+ 	&class_device_attr_unique_id,
+ 	&class_device_attr_host_busy,
+ 	&class_device_attr_cmd_per_lun,
+@@ -204,7 +204,7 @@
+ static DEVICE_ATTR(rescan, S_IWUSR, NULL, store_rescan_field)
  
- 	class_device_initialize(&sdev->sdev_classdev);
--	sdev->sdev_classdev.dev = &sdev->sdev_driverfs_dev;
-+	sdev->sdev_classdev.dev = &sdev->sdev_gendev;
- 	sdev->sdev_classdev.class = &sdev_class;
- 	snprintf(sdev->sdev_classdev.class_id, BUS_ID_SIZE, "%d:%d:%d:%d",
- 		sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
+ /* Default template for device attributes.  May NOT be modified */
+-struct device_attribute *scsi_sysfs_sdev_attrs[] = {
++static struct device_attribute *scsi_sysfs_sdev_attrs[] = {
+ 	&dev_attr_device_blocked,
+ 	&dev_attr_queue_depth,
+ 	&dev_attr_type,
+@@ -228,6 +228,42 @@
+ 	scsi_free_sdev(sdev);
+ }
  
--	error = device_add(&sdev->sdev_driverfs_dev);
-+	error = device_add(&sdev->sdev_gendev);
- 	if (error) {
- 		printk(KERN_INFO "error 1\n");
- 		return error;
-@@ -260,12 +260,12 @@
- 	error = class_device_add(&sdev->sdev_classdev);
- 	if (error) {
- 		printk(KERN_INFO "error 2\n");
--		device_unregister(&sdev->sdev_driverfs_dev);
-+		device_unregister(&sdev->sdev_gendev);
++static struct device_attribute *attr_overridden(
++		struct device_attribute **attrs,
++		struct device_attribute *attr)
++{
++	int i;
++
++	if (!attrs)
++		return NULL;
++	for (i = 0; attrs[i]; i++)
++		if (!strcmp(attrs[i]->attr.name, attr->attr.name))
++			return attrs[i];
++	return NULL;
++}
++
++static int attr_add(struct device *dev, struct device_attribute *attr)
++{
++	struct device_attribute *base_attr;
++
++	/*
++	 * Spare the caller from having to copy things it's not interested in.
++	 */
++	base_attr = attr_overridden(scsi_sysfs_sdev_attrs, attr);
++	if (base_attr) {
++		/* extend permissions */
++		attr->attr.mode |= base_attr->attr.mode;
++
++		/* override null show/store with default */
++		if (!attr->show)
++			attr->show = base_attr->show;
++		if (!attr->store)
++			attr->store = base_attr->store;
++	}
++
++	return device_create_file(dev, attr);
++}
++
+ /**
+  * scsi_device_register - register a scsi device with the scsi bus
+  * @sdev:	scsi_device to register
+@@ -264,12 +300,24 @@
  		return error;
  	}
  
- 	for (i = 0; !error && sdev->host->hostt->sdev_attrs[i] != NULL; i++)
--		error = device_create_file(&sdev->sdev_driverfs_dev,
-+		error = device_create_file(&sdev->sdev_gendev,
- 					   sdev->host->hostt->sdev_attrs[i]);
+-	for (i = 0; !error && sdev->host->hostt->sdev_attrs[i] != NULL; i++)
+-		error = device_create_file(&sdev->sdev_gendev,
+-					   sdev->host->hostt->sdev_attrs[i]);
+-
+-	if (error)
+-		scsi_device_unregister(sdev);
++	if (sdev->host->hostt->sdev_attrs) {
++		for (i = 0; sdev->host->hostt->sdev_attrs[i]; i++) {
++			error = attr_add(&sdev->sdev_gendev,
++					sdev->host->hostt->sdev_attrs[i]);
++			if (error)
++				scsi_device_unregister(sdev);
++		}
++	}
++	
++	for (i = 0; scsi_sysfs_sdev_attrs[i]; i++) {
++		if (!attr_overridden(sdev->host->hostt->sdev_attrs,
++					scsi_sysfs_sdev_attrs[i])) {
++			error = device_create_file(&sdev->sdev_gendev,
++					scsi_sysfs_sdev_attrs[i]);
++			if (error)
++				scsi_device_unregister(sdev);
++		}
++	}
  
- 	if (error)
-@@ -283,9 +283,9 @@
- 	int i;
- 
- 	for (i = 0; sdev->host->hostt->sdev_attrs[i] != NULL; i++)
--		device_remove_file(&sdev->sdev_driverfs_dev, sdev->host->hostt->sdev_attrs[i]);
-+		device_remove_file(&sdev->sdev_gendev, sdev->host->hostt->sdev_attrs[i]);
- 	class_device_unregister(&sdev->sdev_classdev);
--	device_unregister(&sdev->sdev_driverfs_dev);
-+	device_unregister(&sdev->sdev_gendev);
+ 	return error;
  }
- 
- int scsi_register_driver(struct device_driver *drv)
-@@ -315,17 +315,17 @@
- 
- void scsi_sysfs_init_host(struct Scsi_Host *shost)
+@@ -280,10 +328,6 @@
+  **/
+ void scsi_device_unregister(struct scsi_device *sdev)
  {
--	device_initialize(&shost->host_gendev);
--	snprintf(shost->host_gendev.bus_id, BUS_ID_SIZE, "host%d",
-+	device_initialize(&shost->shost_gendev);
-+	snprintf(shost->shost_gendev.bus_id, BUS_ID_SIZE, "host%d",
- 		shost->host_no);
--	snprintf(shost->host_gendev.name, DEVICE_NAME_SIZE, "%s",
-+	snprintf(shost->shost_gendev.name, DEVICE_NAME_SIZE, "%s",
- 		shost->hostt->proc_name);
--	shost->host_gendev.release = scsi_host_release;
-+	shost->shost_gendev.release = scsi_host_release;
- 
--	class_device_initialize(&shost->class_dev);
--	shost->class_dev.dev = &shost->host_gendev;
--	shost->class_dev.class = &shost_class;
--	snprintf(shost->class_dev.class_id, BUS_ID_SIZE, "host%d",
-+	class_device_initialize(&shost->shost_classdev);
-+	shost->shost_classdev.dev = &shost->shost_gendev;
-+	shost->shost_classdev.class = &shost_class;
-+	snprintf(shost->shost_classdev.class_id, BUS_ID_SIZE, "host%d",
+-	int i;
+-
+-	for (i = 0; sdev->host->hostt->sdev_attrs[i] != NULL; i++)
+-		device_remove_file(&sdev->sdev_gendev, sdev->host->hostt->sdev_attrs[i]);
+ 	class_device_unregister(&sdev->sdev_classdev);
+ 	device_unregister(&sdev->sdev_gendev);
+ }
+@@ -329,6 +373,43 @@
  		  shost->host_no);
  }
  
-@@ -338,19 +338,19 @@
++static struct class_device_attribute *class_attr_overridden(
++		struct class_device_attribute **attrs,
++		struct class_device_attribute *attr)
++{
++	int i;
++
++	if (!attrs)
++		return NULL;
++	for (i = 0; attrs[i]; i++)
++		if (!strcmp(attrs[i]->attr.name, attr->attr.name))
++			return attrs[i];
++	return NULL;
++}
++
++static int class_attr_add(struct class_device *classdev,
++		struct class_device_attribute *attr)
++{
++	struct class_device_attribute *base_attr;
++
++	/*
++	 * Spare the caller from having to copy things it's not interested in.
++	 */
++	base_attr = class_attr_overridden(scsi_sysfs_shost_attrs, attr);
++	if (base_attr) {
++		/* extend permissions */
++		attr->attr.mode |= base_attr->attr.mode;
++
++		/* override null show/store with default */
++		if (!attr->show)
++			attr->show = base_attr->show;
++		if (!attr->store)
++			attr->store = base_attr->store;
++	}
++
++	return class_device_create_file(classdev, attr);
++}
++
+ /**
+  * scsi_sysfs_add_host - add scsi host to subsystem
+  * @shost:     scsi host struct to add to subsystem
+@@ -336,7 +417,7 @@
+  **/
+ int scsi_sysfs_add_host(struct Scsi_Host *shost, struct device *dev)
  {
- 	int i, error;
+-	int i, error;
++	int error, i;
  
--	if (!shost->host_gendev.parent)
--		shost->host_gendev.parent = dev ? dev : &legacy_bus;
-+	if (!shost->shost_gendev.parent)
-+		shost->shost_gendev.parent = dev ? dev : &legacy_bus;
- 
--	error = device_add(&shost->host_gendev);
-+	error = device_add(&shost->shost_gendev);
- 	if (error)
- 		return error;
- 
--	error = class_device_add(&shost->class_dev);
-+	error = class_device_add(&shost->shost_classdev);
+ 	if (!shost->shost_gendev.parent)
+ 		shost->shost_gendev.parent = dev ? dev : &legacy_bus;
+@@ -349,11 +430,24 @@
  	if (error)
  		goto clean_device;
  
- 	for (i = 0; !error && shost->hostt->shost_attrs[i] != NULL; i++)
--		error = class_device_create_file(&shost->class_dev,
-+		error = class_device_create_file(&shost->shost_classdev,
- 					   shost->hostt->shost_attrs[i]);
- 	if (error)
- 		goto clean_class;
-@@ -358,9 +358,9 @@
+-	for (i = 0; !error && shost->hostt->shost_attrs[i] != NULL; i++)
+-		error = class_device_create_file(&shost->shost_classdev,
+-					   shost->hostt->shost_attrs[i]);
+-	if (error)
+-		goto clean_class;
++	if (shost->hostt->shost_attrs) {
++		for (i = 0; shost->hostt->shost_attrs[i]; i++) {
++			error = class_attr_add(&shost->shost_classdev,
++					shost->hostt->shost_attrs[i]);
++			if (error)
++				goto clean_class;
++		}
++	}
++
++	for (i = 0; scsi_sysfs_shost_attrs[i]; i++) {
++		if (!class_attr_overridden(shost->hostt->shost_attrs,
++					scsi_sysfs_shost_attrs[i])) {
++			error = class_device_create_file(&shost->shost_classdev,
++					scsi_sysfs_shost_attrs[i]);
++			if (error)
++				goto clean_class;
++		}
++	}
+ 
  	return error;
  
- clean_class:
--	class_device_del(&shost->class_dev);
-+	class_device_del(&shost->shost_classdev);
- clean_device:
--	device_del(&shost->host_gendev);
-+	device_del(&shost->shost_gendev);
- 
- 	return error;
+@@ -374,130 +468,3 @@
+ 	class_device_del(&shost->shost_classdev);
+ 	device_del(&shost->shost_gendev);
  }
-@@ -371,8 +371,8 @@
-  **/
- void scsi_sysfs_remove_host(struct Scsi_Host *shost)
- {
--	class_device_del(&shost->class_dev);
--	device_del(&shost->host_gendev);
-+	class_device_del(&shost->shost_classdev);
-+	device_del(&shost->shost_gendev);
- }
- 
- /** scsi_sysfs_modify_shost_attribute - modify or add a host class attribute
-diff -Nru a/drivers/scsi/sd.c b/drivers/scsi/sd.c
---- a/drivers/scsi/sd.c	Sat Jul  5 22:53:01 2003
-+++ b/drivers/scsi/sd.c	Sat Jul  5 22:53:01 2003
-@@ -1318,7 +1318,7 @@
- 
- 	sd_revalidate_disk(gd);
- 
--	gd->driverfs_dev = &sdp->sdev_driverfs_dev;
-+	gd->driverfs_dev = &sdp->sdev_gendev;
- 	gd->flags = GENHD_FL_DRIVERFS;
- 	if (sdp->removable)
- 		gd->flags |= GENHD_FL_REMOVABLE;
-diff -Nru a/drivers/scsi/sr.c b/drivers/scsi/sr.c
---- a/drivers/scsi/sr.c	Sat Jul  5 22:53:01 2003
-+++ b/drivers/scsi/sr.c	Sat Jul  5 22:53:01 2003
-@@ -533,7 +533,7 @@
- 
- 	snprintf(disk->devfs_name, sizeof(disk->devfs_name),
- 			"%s/cd", sdev->devfs_name);
--	disk->driverfs_dev = &sdev->sdev_driverfs_dev;
-+	disk->driverfs_dev = &sdev->sdev_gendev;
- 	register_cdrom(&cd->cdi);
- 	set_capacity(disk, cd->capacity);
- 	disk->private_data = &cd->driver;
-diff -Nru a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
---- a/include/scsi/scsi_device.h	Sat Jul  5 22:53:01 2003
-+++ b/include/scsi/scsi_device.h	Sat Jul  5 22:53:01 2003
-@@ -11,8 +11,6 @@
- 
- 
- struct scsi_device {
--	struct class_device	sdev_classdev;
 -
- 	struct list_head    siblings;   /* list of all devices on this host */
- 	struct list_head    same_target_siblings; /* just the devices sharing same target id */
- 	struct Scsi_Host *host;
-@@ -86,10 +84,11 @@
- 	unsigned int max_device_blocked; /* what device_blocked counts down from  */
- #define SCSI_DEFAULT_DEVICE_BLOCKED	3
- 
--	struct device sdev_driverfs_dev;
-+	struct device		sdev_gendev;
-+	struct class_device	sdev_classdev;
- };
- #define	to_scsi_device(d)	\
--	container_of(d, struct scsi_device, sdev_driverfs_dev)
-+	container_of(d, struct scsi_device, sdev_gendev)
- 
- extern struct scsi_device *scsi_add_device(struct Scsi_Host *,
- 		uint, uint, uint);
+-/** scsi_sysfs_modify_shost_attribute - modify or add a host class attribute
+- *
+- * @class_attrs:host class attribute list to be added to or modified
+- * @attr:	individual attribute to change or added
+- *
+- * returns zero if successful or error if not
+- **/
+-int scsi_sysfs_modify_shost_attribute(
+-			struct class_device_attribute ***class_attrs,
+-			struct class_device_attribute *attr)
+-{
+-	int modify = -1;
+-	int num_attrs;
+-
+-	if(*class_attrs == NULL)
+-		*class_attrs = scsi_sysfs_shost_attrs;
+-
+-	for(num_attrs=0; (*class_attrs)[num_attrs] != NULL; num_attrs++)
+-		if(strcmp((*class_attrs)[num_attrs]->attr.name,
+-				attr->attr.name) == 0)
+-			modify = num_attrs;
+-
+-	if(*class_attrs == scsi_sysfs_shost_attrs || modify < 0) {
+-		/* note: need space for null at the end as well */
+-		struct class_device_attribute **tmp_attrs =
+-				kmalloc(sizeof(*tmp_attrs) *
+-					  (num_attrs + (modify >= 0 ? 1 : 2)),
+-					GFP_KERNEL);
+-		if(tmp_attrs == NULL)
+-			return -ENOMEM;
+-		memcpy(tmp_attrs, *class_attrs, sizeof(*tmp_attrs) *
+-				(num_attrs + 1));
+-		if(*class_attrs != scsi_sysfs_shost_attrs)
+-			kfree(*class_attrs);
+-		*class_attrs = tmp_attrs;
+-	}
+-	if(modify >= 0) {
+-		/* spare the caller from having to copy things it's
+-		 * not interested in */
+-		struct class_device_attribute *old_attr =
+-			(*class_attrs)[modify];
+-		/* extend permissions */
+-		attr->attr.mode |= old_attr->attr.mode;
+-
+-		/* override null show/store with default */
+-		if(attr->show == NULL)
+-			attr->show = old_attr->show;
+-		if(attr->store == NULL)
+-			attr->store = old_attr->store;
+-		(*class_attrs)[modify] = attr;
+-	} else {
+-		(*class_attrs)[num_attrs++] = attr;
+-		(*class_attrs)[num_attrs] = NULL;
+-	}
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL(scsi_sysfs_modify_shost_attribute);
+-
+-/** scsi_sysfs_modify_sdev_attribute - modify or add a host device attribute
+- *
+- * @dev_attrs:	pointer to the attribute list to be added to or modified
+- * @attr:	individual attribute to change or added
+- *
+- * returns zero if successful or error if not
+- **/
+-int scsi_sysfs_modify_sdev_attribute(struct device_attribute ***dev_attrs,
+-				     struct device_attribute *attr)
+-{
+-	int modify = -1;
+-	int num_attrs;
+-
+-	if(*dev_attrs == NULL)
+-		*dev_attrs = scsi_sysfs_sdev_attrs;
+-
+-	for(num_attrs=0; (*dev_attrs)[num_attrs] != NULL; num_attrs++)
+-		if(strcmp((*dev_attrs)[num_attrs]->attr.name,
+-				attr->attr.name) == 0)
+-			modify = num_attrs;
+-
+-	if(*dev_attrs == scsi_sysfs_sdev_attrs || modify < 0) {
+-		/* note: need space for null at the end as well */
+-		struct device_attribute **tmp_attrs =
+-				kmalloc(sizeof(*tmp_attrs) *
+-					  (num_attrs + (modify >= 0 ? 1 : 2)),
+-					GFP_KERNEL);
+-		if(tmp_attrs == NULL)
+-			return -ENOMEM;
+-		memcpy(tmp_attrs, *dev_attrs, sizeof(*tmp_attrs) *
+-				(num_attrs + 1));
+-		if(*dev_attrs != scsi_sysfs_sdev_attrs)
+-			kfree(*dev_attrs);
+-		*dev_attrs = tmp_attrs;
+-	}
+-	if(modify >= 0) {
+-		/* spare the caller from having to copy things it's
+-		 * not interested in */
+-		struct device_attribute *old_attr =
+-			(*dev_attrs)[modify];
+-		/* extend permissions */
+-		attr->attr.mode |= old_attr->attr.mode;
+-
+-		/* override null show/store with default */
+-		if(attr->show == NULL)
+-			attr->show = old_attr->show;
+-		if(attr->store == NULL)
+-			attr->store = old_attr->store;
+-		(*dev_attrs)[modify] = attr;
+-	} else {
+-		(*dev_attrs)[num_attrs++] = attr;
+-		(*dev_attrs)[num_attrs] = NULL;
+-	}
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL(scsi_sysfs_modify_sdev_attribute);
+-
+-void scsi_sysfs_release_attributes(struct scsi_host_template *hostt)
+-{
+-	if(hostt->sdev_attrs != scsi_sysfs_sdev_attrs)
+-		kfree(hostt->sdev_attrs);
+-
+-	if(hostt->shost_attrs != scsi_sysfs_shost_attrs)
+-		kfree(hostt->shost_attrs);
+-}
+-EXPORT_SYMBOL(scsi_sysfs_release_attributes);
 diff -Nru a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
---- a/include/scsi/scsi_host.h	Sat Jul  5 22:53:01 2003
-+++ b/include/scsi/scsi_host.h	Sat Jul  5 22:53:01 2003
-@@ -442,12 +442,6 @@
- 	 */
- 	unsigned int max_host_blocked;
- 
--	/* 
--	 * Support for sysfs
--	 */
--	struct device host_gendev;
--	struct class_device class_dev;
--
- 	/* legacy crap */
- 	unsigned long base;
- 	unsigned long io_port;
-@@ -455,6 +449,9 @@
- 	unsigned char dma_channel;
- 	unsigned int  irq;
- 
-+	/* ldm bits */
-+	struct device		shost_gendev;
-+	struct class_device	shost_classdev;
+--- a/include/scsi/scsi_host.h	Sat Jul  5 22:53:43 2003
++++ b/include/scsi/scsi_host.h	Sat Jul  5 22:53:43 2003
+@@ -329,12 +329,12 @@
+ #define SCSI_DEFAULT_HOST_BLOCKED	7
  
  	/*
- 	 * List of hosts per template.
-@@ -474,9 +471,9 @@
- 		__attribute__ ((aligned (sizeof(unsigned long))));
- };
- #define		dev_to_shost(d)		\
--	container_of(d, struct Scsi_Host, host_gendev)
-+	container_of(d, struct Scsi_Host, shost_gendev)
- #define		class_to_shost(d)	\
--	container_of(d, struct Scsi_Host, class_dev)
-+	container_of(d, struct Scsi_Host, shost_classdev)
+-	 * Pointer to the sysfs class properties for this host
++	 * Pointer to the sysfs class properties for this host, NULL terminated.
+ 	 */
+ 	struct class_device_attribute **shost_attrs;
  
- extern struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *, int);
- extern int scsi_add_host(struct Scsi_Host *, struct device *);
-@@ -495,12 +492,12 @@
- static inline void scsi_set_device(struct Scsi_Host *shost,
-                                    struct device *dev)
+ 	/*
+-	 * Pointer to the SCSI device properties for this host
++	 * Pointer to the SCSI device properties for this host, NULL terminated.
+ 	 */
+ 	struct device_attribute **sdev_attrs;
+ 
+@@ -499,8 +499,6 @@
  {
--        shost->host_gendev.parent = dev;
-+        shost->shost_gendev.parent = dev;
+         return shost->shost_gendev.parent;
  }
+-
+-extern void scsi_sysfs_release_attributes(struct scsi_host_template *);
  
- static inline struct device *scsi_get_device(struct Scsi_Host *shost)
- {
--        return shost->host_gendev.parent;
-+        return shost->shost_gendev.parent;
- }
- 
- extern void scsi_sysfs_release_attributes(struct scsi_host_template *);
+ extern void scsi_unblock_requests(struct Scsi_Host *);
+ extern void scsi_block_requests(struct Scsi_Host *);
