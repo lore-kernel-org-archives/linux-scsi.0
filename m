@@ -1,45 +1,45 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/1] build modular usb isd200 with modular ide
-Date: Sun, 24 Oct 2004 12:03:19 +0200
+From: Bjarne Thomsen <bjarne.thomsen@get2net.dk>
+Subject: cp from SATA to SCSI freeze
+Date: Sun, 24 Oct 2004 12:13:15 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041024100319.GA17183@lst.de>
-References: <200410240055.i9O0taCf006206@falcon10.austin.ibm.com>
+Message-ID: <1098612795.11032.20.camel@tycho.astronomy.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:35234 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S261416AbUJXKDv (ORCPT
+Received: from fitch1.uni2.net ([130.227.52.104]:63438 "EHLO fitch1.uni2.net")
+	by vger.kernel.org with ESMTP id S261427AbUJXKNV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Oct 2004 06:03:51 -0400
-Content-Disposition: inline
-In-Reply-To: <200410240055.i9O0taCf006206@falcon10.austin.ibm.com>
+	Sun, 24 Oct 2004 06:13:21 -0400
+Received: from [192.168.1.102] (83.72.33.52.ip.tele2adsl.dk [83.72.33.52])
+	by fitch1.uni2.net (8.12.6/8.11.6) with ESMTP id i9OADE3J019753
+	for <linux-scsi@vger.kernel.org>; Sun, 24 Oct 2004 12:13:14 +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Maxey <dwm@austin.ibm.com>
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Paul Mackerras <paulus@samba.org>, Greg Kroah-Hartman <greg@kroah.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux IDE Mailing List <linux-ide@vger.kernel.org>, linuxppc64-dev@ozlabs.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, Oct 23, 2004 at 07:55:36PM -0500, Doug Maxey wrote:
-> 
-> Name: inline ide_fix_driveid()
-> 
-> Rationale:
-> 	This is a fix for bugme.osdl 3819.
+When I copy a directory containing about 6Gb of files
+from a SATA disk to my SCSI system disk the system freezes
+so I have to press the reset button. This happens with
+cp -r, but is does not happen with mv. cp -r works fine
+from the SCSI to the SATA disk. The problem reproduces
+every time I try to cp from SATA to SCSI.
 
-bugme.osdl.org doesn't know of a bug #3819.
+Is this a known issue?
 
-> 	With any of the 2.6.9 release flavors (vanilla, mm1, ac3), one
-> 	cannot build the usb isd200 module due to the dependency on
-> 	ide_fix_driveid() being exported from ide-iops.
-> 
-> Description:
-> 	When building IDE modular, the current ide_fix_driveid() is
-> 	exported from ide-iops.c.  This patch makes the function an inline.
+OS: Mandrake 2.6.8.1-12.5mdksmp x86_64 2 AMD Opteron(tm) Processors
+MB: Tyan S2885 Thunder K8W
+SCSI IF: Adaptec 29160
+Advanced Micro Devices|AMD-8131 PCI-X
+Advanced Micro Devices|K8 [Athlon64/Opteron]
+sata_sil: Silicon Image|Sil3114A Serial ATA
+aic7xxx : Adaptec|7892A
 
-Still doesn't make any sense. ide_fix_driveid is properly exported from
-ide-iops.c, so you use it from other modules.  The only case that
-doesn't work is modular ide and builtin usb-storage, and the BLK_DEV_IDE 
-depency should fix that one.
+Is there something that I can to to locate the
+problem?
 
-If you think that depency is ugly (I do) just copy the routine to
-isd200.c, it's a) too large to inline but b) just a trivial byteswap
-that should need much changes over time.
+ -- Bjarne
+
+-- 
+Bjarne Thomsen <bjarne.thomsen@get2net.dk>
+Institute of Physics & Astronomy
 
