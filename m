@@ -1,87 +1,71 @@
-From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
-Subject: RE: [PATCH] Add attributes to FC transport
-Date: Tue, 10 Aug 2004 09:25:20 -0700
+From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Subject: Re: [PATCH] 2.4.27 add device to scsi_scan.c's blacklist
+Date: Wed, 11 Aug 2004 18:40:04 -0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <B179AE41C1147041AA1121F44614F0B060EEFB@AVEXCH02.qlogic.org>
+Message-ID: <20040811214004.GA4856@dmt.cyclades>
+References: <47F3C2BE74738E4683574107469DFA204CCC5F@XYUSEX01.xyus.xyratex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:18616 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S267503AbUHJQ2t convert rfc822-to-8bit
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:39366 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S268244AbUHKVg6
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Aug 2004 12:28:49 -0400
-Content-Class: urn:content-classes:message
+	Wed, 11 Aug 2004 17:36:58 -0400
+Content-Disposition: inline
+In-Reply-To: <47F3C2BE74738E4683574107469DFA204CCC5F@XYUSEX01.xyus.xyratex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Rajan, Mukesh" <Mukesh.Rajan@Emulex.Com>
-Cc: brking@us.ibm.com, linux-scsi@vger.kernel.org, James.Smart@Emulex.Com
+To: Frank Borich <Frank_Borich@us.xyratex.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, David Lethe <David_Lethe@us.xyratex.com>
 
+Frank,
 
-On Friday, August 06, 2004 1:47 PM, Rajan, Mukesh wrote:
+This patch has never reached me -- I've seen it on 
+linux-scsi yesterday, and I was going to apply. 
+
+If you need to get patches accepted in v2.4, please mail them to me 
+directly.
+
+To make sure 2.6.x patches get accepted, mail them directly
+to James (the current SCSI maintainer on v2.6).
+
+Thanks for the patch - I'll apply it later today!
+
+On Wed, Aug 11, 2004 at 12:57:07PM -0700, Frank Borich wrote:
 > 
-> We would like to export certain HBA attributes such as Port Type,
-> Port Speed etc via sysfs in the lpfc driver. These attributes are
-> more representative of the transport layer and it will benefit from
-> including them as generic FC transport attributes. Also the patch
-> corrects the illegal values of node_name, port_name and port_id to
-> zero, which are the accepted NULL values as per the FC-GS-4
-> standards.
+> Hi,
 > 
-
-Quick comment: your mailer appears to have mangled the patch.
-
-Overall, ooks good.  If we are going to model the transport attributes
-upon the FC-HBA spec., then perhaps the following changes should be
-made:
-
-> ...
-> +	if (tp->port_supported_classes & FCHBA_COS_CLASS1)
-> +		len += sprintf(buf, "o Class 1\n");
-> +	if (tp->port_supported_classes & FCHBA_COS_CLASS2)
-> +		len += sprintf(buf+len, "o Class 2\n");
-> +	if (tp->port_supported_classes & FCHBA_COS_CLASS3)
-> +		len += sprintf(buf+len, "o Class 3\n");
-> +
-
-Add support for Class F, 4 and 6.
-
-> ...
-> +	for (j = 0; j < 32; j++)
-> +		len += sprintf(buf+len , "%x ", tp->port_active_fc4types[j]);
-> +
-
-	len += sprintf(buf+len , "%02x ", tp->port_active_fc4types[j]);
-
-would be clearer.
-
-> ...
->
-> +#define FCHBA_COS_CLASS1	1   /* CLASS 1 */
-> +#define FCHBA_COS_CLASS2	2   /* CLASS 2 */
-> +#define FCHBA_COS_CLASS3	4   /* CLASS 3 */
-> +
-
-The following would more closely model the COS format as defined in
-FC-GS-4:
-
-	#define FCHBA_COS_CLASSF	1   /* CLASS F */
-	#define FCHBA_COS_CLASS1	2   /* CLASS 1 */
-	#define FCHBA_COS_CLASS2	4   /* CLASS 2 */
-	#define FCHBA_COS_CLASS3	8   /* CLASS 3 */
-	#define FCHBA_COS_CLASS4	0x10   /* CLASS 4 */
-	#define FCHBA_COS_CLASS6	0x40   /* CLASS 6 */
-
-and save the drivers from having to convert GCS_ID data to
-fc_transport values.
-
-> +#define FCHBA_PORTSPEED_4GBIT		8   /* 4 GBit/sec */
-> +#define FCHBA_PORTSPEED_NOT_NEGOTIATED	5   /* Speed
-> not established */
-
-FC-HBA defines this not-negotiated state as:
-
-	#define FCHBA_PORTSPEED_NOT_NEGOTIATED	(1 << 15)
-
-
---
-Andrew
+> I have submitted this patch several times to the 2.4.x tree.  It keeps
+> getting dropped silently.  This is my first time submitting a patch,
+> so can someone kindly let me know if I am doing something wrong? I have
+> followed the instructions at
+> http://www.kernel.org/pub/linux/docs/lkml/#s4-1.  
+> Any advice would be greatly appreciated.  The patch simply adds our
+> FC-SATA 
+> RAID to scsi_scan.c's blacklist.  
+> 
+> 
+> --- linux-2.4.27/drivers/scsi/scsi_scan.c       2004-08-11
+> 14:42:12.000000000 -0500
+> +++ linux-2.4.27.changed/drivers/scsi/scsi_scan.c       2004-08-11
+> 14:43:34.000000000 -0500
+> @@ -208,6 +208,7 @@
+>         {"SMSC", "USB 2 HS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+>         {"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+>         {"NEC", "iStorage", "*", BLIST_SPARSELUN | BLIST_LARGELUN |
+> BLIST_FORCELUN},
+> +       {"Xyratex", "4200", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+> 
+>         /*
+>          * Must be at end of list...
+> 
+> 
+> Thanks in Advance,
+> 
+> Frank Borich
+> ------------------------------------------------------------------
+> Xyratex Inc.
+> Systems Engineer
+> Direct 630 654 6089
+> Fax 630 325 2513
+> e-mail frank_borich@us.xyratex.com
+>  
