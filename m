@@ -1,105 +1,74 @@
-From: Mike Christie <mikenc@us.ibm.com>
-Subject: Re: [PATCH] improvement of fastfail operation
-Date: Tue, 30 Mar 2004 21:14:37 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0403302108550.7851-200000@dyn319701.beaverton.ibm.com>
-References: <1080696593.2075.120.camel@mulgrave>
+From: Valdis.Kletnieks@vt.edu
+Subject: Re: POSSIVEL SPAM-- Re: Binary-only firmware covered by the GPL?
+Date: Wed, 31 Mar 2004 00:47:34 -0500
+Message-ID: <200403310547.i2V5lYae027457@turing-police.cc.vt.edu>
+References: <YBtoCC.A.e-C.5maaAB@murphy>
+            <4069B200.8010309@almg.gov.br>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="789163286-913007327-1080710077=:7851"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.106]:36856 "EHLO e6.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261455AbUCaFSj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Mar 2004 00:18:39 -0500
-In-Reply-To: <1080696593.2075.120.camel@mulgrave>
+Content-Type: multipart/signed; boundary="==_Exmh_887855632P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 7bit
+Return-path: <bounce-debian-legal=debian-legal=m.gmane.org@lists.debian.org>
+In-Reply-To: Your message of "Tue, 30 Mar 2004 14:44:32 -0300."
+             <4069B200.8010309@almg.gov.br>
+Resent-Message-ID: <ep_dYD.A.4CC.HulaAB@murphy>
+List-Post: <mailto:debian-legal@lists.debian.org>
+List-Help: <mailto:debian-legal-request@lists.debian.org?subject=help>
+List-Subscribe: <mailto:debian-legal-request@lists.debian.org?subject=subscribe>
+List-Unsubscribe: <mailto:debian-legal-request@lists.debian.org?subject=unsubscribe>
+List-Archive: <http://lists.debian.org/debian-legal/>
+To: Humberto Massa <humberto.massa@almg.gov.br>
+Cc: debian-devel@lists.debian.org, debian-legal@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: axboe@suse.de, Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-  Send mail to mime@docserver.cac.washington.edu for more info.
+--==_Exmh_887855632P
+Content-Type: text/plain; charset=us-ascii
 
---789163286-913007327-1080710077=:7851
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+On Tue, 30 Mar 2004 14:44:32 -0300, Humberto Massa said:
 
-On 30 Mar 2004, James Bottomley wrote:
-
-> On Mon, 2004-03-29 at 07:17, Masao Fukuchi wrote:
-> > By the way, how about item 1.
-> > I think this is bug and we need to validate fastfail for command timeout.
-> > If you agree with this, please put it into official patch.
-> > (See attached patch)
+> There is another fail in your reasons here: as I said before, it just 
+> _happens_ to happen that fw[] = {} *is* the source code. What we must 
+> decide is what to do in the cases where *we don't know*.
 > 
-> Well, the patch doesn't apply, but I put an equivalent in the tree.
-> 
-> > Next, I tested the fastfail recovery using Kernel 2.6.4.
-> > But the command didn't complete forever.
-> > Then I installed following Mike Christie's patch and it worked fine.
-> >  http://marc.theaimsgroup.com/?l=linux-scsi&m=107904932710899&w=2
-> > Please put it into official patch.
-> 
-> This patch is obviously wrong on its face.  It completes the request
-> without regard to any leftovers.
-> 
-> There's clearly a problem somewhere in the completion path for commands
-> that run out of retries, but whatever it is, this patch only covers it
-> up it doesn't solve the root problem.
-> 
+> After all, what happens is somebody *actually* prefers the binary blob 
+> for modification? And, what happens if _the copyright holder_ actually 
+> prefers the binary blob for modification? No inconsistency here.
 
-This patch
-http://marc.theaimsgroup.com/?l=linux-scsi&m=107904932710899&w=2
-is correct wrt how the block layer uses hard_nr_sectors ;)
+In fact, I was going to suggest that quite possibly, there really *is* no other
+option for source, because the target hardware doesn't have a functional enough
+toolchain, so hand-assembly really *is* the most reasonable thing.
 
-The blkdev.h comments state that hard_nr_sectors is the number
-of sectors left to be completed. This is managed by the block layer
-for drivers like SCSI when end_that_request_* calls
-__end_that_request_first which for partial completions calls
-blk_recalc_rq_sectors. This function updates hard_nr_sectors
-by the completed number of bytes, so by scsi_end_request doing this:
+That file isn't any worse than my early '80s Compiler Design class project
+(done the last year before lex/yacc became available for the class) - one file
+was a large 247x139x3 (or thereabouts) array of integers, encoding all the
+shift/reduce productions for a compiler for a Pascal subset that actually
+generated working (though painfully ugly) code for the IBM S/370 architecture.
+(The assignment was "Pascal subset plus your choice of one extension" - my
+teammate and I made the mistake of choosing "Fortran-style mixed-mode
+arithmetic", that array was literally 1/4 the size before we started that.)
 
- if (end_that_request_chunk(req, uptodate, bytes)) {
-        int leftover = (req->hard_nr_sectors << 9) - bytes;
+"You are lost in a maze of tiny little shift/reduce productions, all nearly
+alike"
 
-we end up with "bytes" getting subtracted twice and the final
-bio not getting completed.
+And yes, the two of us generated the whole table by hand.  I admit we did
+finally break down and write some tools to verify that each line of the table
+did in fact have the right number of entries, and to add a column of zeros when
+the number of productions went up.
 
-I know we went through that already. It is just to update
-Masao/linux-scsi.
+*Preferred* source format?  lex/yacc input files.  Did the source ever actually
+*exist* in that format?  Nope... :)
 
-I had sent the attached patch to Jens (cc'd him)
-that modifies how blk_recalc_rq_sectors uses hard_nr_sectors,
-but I think it might break some other drivers that expect the
-hard_nr_sectors to be updated as the request is completed.
 
-Mike
-~
+--==_Exmh_887855632P
+Content-Type: application/pgp-signature
 
---789163286-913007327-1080710077=:7851
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name="hard_nr_sectors.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.44.0403302114370.7851@dyn319701.beaverton.ibm.com>
-Content-Description: fix blk_recalc_rq_sectors
-Content-Disposition: attachment; filename="hard_nr_sectors.patch"
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
 
-LS0tIGxpbnV4LTIuNi41LXJjMy1vcmlnL2RyaXZlcnMvYmxvY2svbGxfcndf
-YmxrLmMJMjAwNC0wMy0zMCAxOTowODoxNi44NjIyMjE1MzYgLTA4MDANCisr
-KyBsaW51eC0yLjYuNS1yYzMvZHJpdmVycy9ibG9jay9sbF9yd19ibGsuYwky
-MDA0LTAzLTMwIDE5OjA5OjQ3LjYyNDI3MDMxNiAtMDgwMA0KQEAgLTI1Nzks
-MTYgKzI1NzksMTQgQEAgdm9pZCBibGtfcmVjYWxjX3JxX3NlY3RvcnMoc3Ry
-dWN0IHJlcXVlcw0KIHsNCiAJaWYgKGJsa19mc19yZXF1ZXN0KHJxKSkgew0K
-IAkJcnEtPmhhcmRfc2VjdG9yICs9IG5zZWN0Ow0KLQkJcnEtPmhhcmRfbnJf
-c2VjdG9ycyAtPSBuc2VjdDsNCiANCiAJCS8qDQogCQkgKiBNb3ZlIHRoZSBJ
-L08gc3VibWlzc2lvbiBwb2ludGVycyBhaGVhZCBpZiByZXF1aXJlZCwNCiAJ
-CSAqIGkuZS4gZm9yIGRyaXZlcnMgbm90IGF3YXJlIG9mIHJxLT5jYmlvLg0K
-IAkJICovDQotCQlpZiAoKHJxLT5ucl9zZWN0b3JzID49IHJxLT5oYXJkX25y
-X3NlY3RvcnMpICYmDQotCQkgICAgKHJxLT5zZWN0b3IgPD0gcnEtPmhhcmRf
-c2VjdG9yKSkgew0KKwkJaWYgKHJxLT5zZWN0b3IgPD0gcnEtPmhhcmRfc2Vj
-dG9yKSB7DQogCQkJcnEtPnNlY3RvciA9IHJxLT5oYXJkX3NlY3RvcjsNCi0J
-CQlycS0+bnJfc2VjdG9ycyA9IHJxLT5oYXJkX25yX3NlY3RvcnM7DQorCQkJ
-cnEtPm5yX3NlY3RvcnMgLT0gbnNlY3Q7DQogCQkJcnEtPmhhcmRfY3VyX3Nl
-Y3RvcnMgPSBiaW9fY3VyX3NlY3RvcnMocnEtPmJpbyk7DQogCQkJcnEtPmN1
-cnJlbnRfbnJfc2VjdG9ycyA9IHJxLT5oYXJkX2N1cl9zZWN0b3JzOw0KIAkJ
-CXJxLT5ucl9jYmlvX3NlZ21lbnRzID0gYmlvX3NlZ21lbnRzKHJxLT5iaW8p
-Ow0K
---789163286-913007327-1080710077=:7851--
+iD8DBQFAalt2cC3lWbTT17ARAngbAKD1rHOWsuRC1AX080achgALrIXSnACgpBrO
+yacVOCZP7G1idpYk06cctgg=
+=hqEX
+-----END PGP SIGNATURE-----
+
+--==_Exmh_887855632P--
