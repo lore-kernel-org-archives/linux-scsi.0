@@ -1,130 +1,107 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] REPORT LUN scan even if no storage is available on LUN 0
-Date: Mon, 13 Dec 2004 14:22:06 -0800
-Message-ID: <20041213222206.GA18893@us.ibm.com>
-References: <20041210123333.GD685@bogon.ms20.nix>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] scsi/aic7xxx/ : remove two useless variables (fwd)
+Date: Tue, 14 Dec 2004 02:10:17 +0100
+Message-ID: <20041214011017.GS23151@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:34961 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261210AbULMWXj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Dec 2004 17:23:39 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e4.ny.us.ibm.com (8.12.10/8.12.10) with ESMTP id iBDMNYGM014362
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Dec 2004 17:23:34 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id iBDMMTPY087636
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Dec 2004 17:22:29 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id iBDMMTqR017625
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Dec 2004 17:22:29 -0500
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:53008 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S261373AbULNBKY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Dec 2004 20:10:24 -0500
 Content-Disposition: inline
-In-Reply-To: <20041210123333.GD685@bogon.ms20.nix>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guido Guenther <agx@sigxcpu.org>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Patch looks okay, but we should always be trying the report lun scan, and
-then failing back to the sequential scan even if there is no storage on
-LUN 0.
+The patch forwarded below still applies and compiles against 
+2.6.10-rc3-mm1.
 
-Can you test this? I don't have hardware readily available that supports
-sparse luns and report lun. Patch is against current bk. I built and
-ran with regular disks (lun 0 only).
-
-This is a bit hacky, improvements welcomed. Ideally we should create and
-then use a scsi_target to scan, rather than having the scsi_device
-allocation trigger creation of the scsi_target, and pass a scsi_target to
-other scan functions.
+Please apply.
 
 
-Support REPORT LUN scan even if no storage is available on LUN 0.
+----- Forwarded message from Adrian Bunk <bunk@stusta.de> -----
 
-Signed-off-by: Patrick Mansfield <patmans@us.ibm.com>
+Date:	Wed, 8 Dec 2004 02:14:50 +0100
+From: Adrian Bunk <bunk@stusta.de>
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [2.6 patch] scsi/aic7xxx/ : remove two useless variables
 
---- 1.134/drivers/scsi/scsi_scan.c	Sun Oct 24 04:09:48 2004
-+++ edited/drivers/scsi/scsi_scan.c	Mon Dec 13 13:23:37 2004
-@@ -647,6 +647,9 @@
-  *     Call scsi_probe_lun, if a LUN with an attached device is found,
-  *     allocate and set it up by calling scsi_add_lun.
-  *
-+ * Note: LUN 0 is special cased, the sdev is not released if we are
-+ *     returning SCSI_SCAN_TARGET_PRESENT.
-+ *
-  * Return:
-  *     SCSI_SCAN_NO_RESPONSE: could not allocate or setup a Scsi_Device
-  *     SCSI_SCAN_TARGET_PRESENT: target responded, but no device is
-@@ -735,7 +738,12 @@
-  out_free_sreq:
- 	scsi_release_request(sreq);
-  out_free_sdev:
--	if (res == SCSI_SCAN_LUN_PRESENT) {
-+	if ((res == SCSI_SCAN_LUN_PRESENT) ||
-+	    ((lun == 0) && res == SCSI_SCAN_TARGET_PRESENT)) {
-+		/*
-+		 * The LUN 0 check is for support of report lun scanning
-+		 * when no storage is configured on LUN 0.
-+		 */
- 		if (sdevp)
- 			*sdevp = sdev;
- 	} else {
-@@ -1076,6 +1084,8 @@
- 	down(&shost->scan_mutex);
- 	res = scsi_probe_and_add_lun(shost, channel, id, lun, NULL,
- 				     &sdev, 1, hostdata);
-+	if ((lun == 0) && (res == SCSI_SCAN_TARGET_PRESENT))
-+		put_device(&sdev->sdev_gendev);
- 	if (res != SCSI_SCAN_LUN_PRESENT)
- 		sdev = ERR_PTR(-ENODEV);
- 	up(&shost->scan_mutex);
-@@ -1134,18 +1144,19 @@
- 		/*
- 		 * Scan for a specific host/chan/id/lun.
- 		 */
--		scsi_probe_and_add_lun(shost, channel, id, lun, NULL, NULL,
--				       rescan, NULL);
--		return;
-+		res = scsi_probe_and_add_lun(shost, channel, id, lun, NULL,
-+					     &sdev, rescan, NULL);
-+		goto completed;
- 	}
+The patch below removes two useless variables.
+
+
+diffstat output:
+ drivers/scsi/aic7xxx/aic79xx_osm.c |   12 ------------
+ drivers/scsi/aic7xxx/aic7xxx_osm.c |   12 ------------
+ 2 files changed, 24 deletions(-)
+
+
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+--- linux-2.6.10-rc2-mm4-full/drivers/scsi/aic7xxx/aic7xxx_osm.c.old	2004-12-08 01:06:02.000000000 +0100
++++ linux-2.6.10-rc2-mm4-full/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-12-08 01:06:15.000000000 +0100
+@@ -427,12 +427,6 @@
+  * Module information and settable options.
+  */
+ static char *aic7xxx = NULL;
+-/*
+- * Just in case someone uses commas to separate items on the insmod
+- * command line, we define a dummy buffer here to avoid having insmod
+- * write wild stuff into our code segment
+- */
+-static char dummy_buffer[60] = "Please don't trounce on me insmod!!\n";
  
- 	/*
- 	 * Scan LUN 0, if there is some response, scan further. Ideally, we
- 	 * would not configure LUN 0 until all LUNs are scanned.
+ MODULE_AUTHOR("Maintainer: Justin T. Gibbs <gibbs@scsiguy.com>");
+ MODULE_DESCRIPTION("Adaptec Aic77XX/78XX SCSI Host Bus Adapter driver");
+@@ -850,12 +844,6 @@
  	 */
--	res = scsi_probe_and_add_lun(shost, channel, id, 0, &bflags, &sdev,
-+	lun = 0;
-+	res = scsi_probe_and_add_lun(shost, channel, id, lun, &bflags, &sdev,
- 				     rescan, NULL);
--	if (res == SCSI_SCAN_LUN_PRESENT) {
-+	if (res != SCSI_SCAN_NO_RESPONSE) {
- 		if (scsi_report_lun_scan(sdev, bflags, rescan) != 0)
- 			/*
- 			 * The REPORT LUN did not scan the target,
-@@ -1153,16 +1164,15 @@
- 			 */
- 			scsi_sequential_lun_scan(shost, channel, id, bflags,
- 				       	res, sdev->scsi_level, rescan);
--	} else if (res == SCSI_SCAN_TARGET_PRESENT) {
-+	}
-+
-+ completed:
-+	if ((lun == 0) && (res == SCSI_SCAN_TARGET_PRESENT))
- 		/*
--		 * There's a target here, but lun 0 is offline so we
--		 * can't use the report_lun scan.  Fall back to a
--		 * sequential lun scan with a bflags of SPARSELUN and
--		 * a default scsi level of SCSI_2
-+		 * LUN 0 is handled specially so the sdev can be
-+		 * used with the REPORT LUN scan, release it now.
- 		 */
--		scsi_sequential_lun_scan(shost, channel, id, BLIST_SPARSELUN,
--				SCSI_SCAN_TARGET_PRESENT, SCSI_2, rescan);
--	}
-+		put_device(&sdev->sdev_gendev);
- }
+ 	if (aic7xxx)
+ 		aic7xxx_setup(aic7xxx);
+-	if (dummy_buffer[0] != 'P')
+-		printk(KERN_WARNING
+-"aic7xxx: Please read the file /usr/src/linux/drivers/scsi/README.aic7xxx\n"
+-"aic7xxx: to see the proper way to specify options to the aic7xxx module\n"
+-"aic7xxx: Specifically, don't use any commas when passing arguments to\n"
+-"aic7xxx: insmod or else it might trash certain memory areas.\n");
  
- static void scsi_scan_channel(struct Scsi_Host *shost, unsigned int channel,
+ 	template->proc_name = "aic7xxx";
+ 
+--- linux-2.6.10-rc2-mm4-full/drivers/scsi/aic7xxx/aic79xx_osm.c.old	2004-12-08 01:06:25.000000000 +0100
++++ linux-2.6.10-rc2-mm4-full/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-12-08 01:06:42.000000000 +0100
+@@ -407,12 +407,6 @@
+  * Module information and settable options.
+  */
+ static char *aic79xx = NULL;
+-/*
+- * Just in case someone uses commas to separate items on the insmod
+- * command line, we define a dummy buffer here to avoid having insmod
+- * write wild stuff into our code segment
+- */
+-static char dummy_buffer[60] = "Please don't trounce on me insmod!!\n";
+ 
+ MODULE_AUTHOR("Maintainer: Justin T. Gibbs <gibbs@scsiguy.com>");
+ MODULE_DESCRIPTION("Adaptec Aic790X U320 SCSI Host Bus Adapter driver");
+@@ -835,12 +829,6 @@
+ 	 */
+ 	if (aic79xx)
+ 		aic79xx_setup(aic79xx);
+-	if (dummy_buffer[0] != 'P')
+-		printk(KERN_WARNING
+-"aic79xx: Please read the file /usr/src/linux/drivers/scsi/README.aic79xx\n"
+-"aic79xx: to see the proper way to specify options to the aic79xx module\n"
+-"aic79xx: Specifically, don't use any commas when passing arguments to\n"
+-"aic79xx: insmod or else it might trash certain memory areas.\n");
+ #endif
+ 
+ 	template->proc_name = "aic79xx";
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
+
+----- End forwarded message -----
+
