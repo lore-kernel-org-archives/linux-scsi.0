@@ -1,38 +1,30 @@
-From: Andrew Vasquez <praka@users.sourceforge.net>
-Subject: Re: Kernel panic on Redhat Linux AS2.1 with QLogic 2342 HBA
-Date: Tue, 10 Feb 2004 10:25:13 -0800
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: lots and lots of disks again
+Date: Tue, 10 Feb 2004 10:26:03 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040210182513.GA114@praka.local.home>
-References: <005601c3ef94$f8c9d140$3bda4c0f@nt21859>
+Message-ID: <20040210102603.0c835212.akpm@osdl.org>
+References: <20040204024512.5bf68428.akpm@osdl.org>
+	<20040210110417.GB4010@tpkurt.garloff.de>
+	<20040210112658.GC4010@tpkurt.garloff.de>
+	<20040210133932.A3870@infradead.org>
+	<20040210154751.GH4010@tpkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:1447 "EHLO
-	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S266173AbUBJSmV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Feb 2004 13:42:21 -0500
-Content-Disposition: inline
-In-Reply-To: <005601c3ef94$f8c9d140$3bda4c0f@nt21859>
+Received: from fw.osdl.org ([65.172.181.6]:40172 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S266187AbUBJSXY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Feb 2004 13:23:24 -0500
+In-Reply-To: <20040210154751.GH4010@tpkurt.garloff.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: veeresh <vanami@india.hp.com>
+To: Kurt Garloff <garloff@suse.de>
+Cc: hch@infradead.org, linux-scsi@vger.kernel.org, pbadari@us.ibm.com, willy@debian.org, James.Bottomley@steeleye.com
 
-On Tue, 10 Feb 2004, veeresh wrote:
+Kurt Garloff <garloff@suse.de> wrote:
+>
+> Since when is 4k huge?
+>  Sorry, I don't see any benefit in adding complexity to avoid a 4k array.
 
-> Kernel panic information:
-> kernel BUG at /usr/src/linux-2.4/include/asm/pci.h:145!
-> invalid operand: 0000
-> Kernel 2.4.9-e.25smp
-> CPU: 2
-> EIP: 0010:[<f8891658>] Tainted: P
-> EFLAGS: 00010086
-> EIP is at qla2x00_64bit_start_scsi [qla2300] 0x498
-
-One of the scatter-gather entries of a SCSI command was NULL.  Is any
-of the software you are running preparing SCSI commands and sending
-them down via SG perhaps?  What type of I/O is occuring when the
-failure occurs?
-
-Regards,
-Andrew Vasquez
-QLogic Corporation
+Well yes, but we do have lib/idr.c which I believe does what you need.  It
+is simple to use.
