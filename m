@@ -1,333 +1,406 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] wd7000 updates
-Date: Mon, 21 Jun 2004 16:25:15 +0200
+Subject: [PATCH] wd33c93 update
+Date: Mon, 21 Jun 2004 16:26:11 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040621142515.GA32007@lst.de>
+Message-ID: <20040621142611.GA32068@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:35536 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S264165AbUFUOZj (ORCPT
+Received: from verein.lst.de ([212.34.189.10]:38096 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S266248AbUFUO0e (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Jun 2004 10:25:39 -0400
+	Mon, 21 Jun 2004 10:26:34 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-Avoid old APIs and fix a bad bug were the irq handler argument was
-derefenced as struct Scsi_Host * instead of Adpater * which made the
-driver instantly crash on SMP.
+avoid obsolete APIs
 
 
---- 1.31/drivers/scsi/wd7000.c	2004-06-15 17:49:13 +02:00
-+++ edited/drivers/scsi/wd7000.c	2004-06-20 18:20:06 +02:00
-@@ -183,7 +183,9 @@
- #include <asm/dma.h>
- #include <asm/io.h>
+--- 1.18/drivers/scsi/wd33c93.c	2004-05-12 17:46:23 +02:00
++++ edited/drivers/scsi/wd33c93.c	2004-06-20 18:02:36 +02:00
+@@ -82,7 +82,9 @@
+ #include <linux/blkdev.h>
+ #include <asm/irq.h>
  
 -#include "scsi.h"
 +#include <scsi/scsi.h>
 +#include <scsi/scsi_cmnd.h>
 +#include <scsi/scsi_device.h>
  #include <scsi/scsi_host.h>
- #include <scsi/scsicam.h>
  
-@@ -218,7 +220,7 @@
-  *  In this version, sg_tablesize now defaults to WD7000_SG, and will
-  *  be set to SG_NONE for older boards.  This is the reverse of the
-  *  previous default, and was changed so that the driver-level
-- *  Scsi_Host_Template would reflect the driver's support for scatter/
-+ *  scsi_host_template would reflect the driver's support for scatter/
-  *  gather.
-  *
-  *  Also, it has been reported that boards at Revision 6 support scatter/
-@@ -435,8 +437,8 @@
-  *  carrying SCB addresses to/from the 7000-FASST2.
-  *
-  *  Note also since SCBs are not "permanently" associated with mailboxes,
-- *  there is no need to keep a global list of Scsi_Cmnd pointers indexed
-- *  by OGMB.   Again, SCBs reference their Scsi_Cmnds directly, so mailbox
-+ *  there is no need to keep a global list of scsi_cmnd pointers indexed
-+ *  by OGMB.   Again, SCBs reference their scsi_cmnds directly, so mailbox
-  *  indices need not be involved.
-  */
- 
-@@ -463,7 +465,7 @@
- 	unchar direc;		/* Transfer Direction                        */
- 	unchar reserved2[6];	/* SCSI Command Descriptor Block             */
- 	/* end of hardware SCB                       */
--	Scsi_Cmnd *SCpnt;	/* Scsi_Cmnd using this SCB                  */
-+	struct scsi_cmnd *SCpnt;/* scsi_cmnd using this SCB                  */
- 	Sgb sgb[WD7000_SG];	/* Scatter/gather list for this SCB          */
- 	Adapter *host;		/* host adapter                              */
- 	struct scb *next;	/* for lists of scbs                         */
-@@ -799,8 +801,8 @@
- 
- static inline short WAIT(unsigned port, unsigned mask, unsigned allof, unsigned noneof)
- {
--	register unsigned WAITbits;
--	register unsigned long WAITtimeout = jiffies + WAITnexttimeout;
-+	unsigned WAITbits;
-+	unsigned long WAITtimeout = jiffies + WAITnexttimeout;
- 
- 	while (time_before_eq(jiffies, WAITtimeout)) {
- 		WAITbits = inb(port) & mask;
-@@ -846,10 +848,10 @@
-  */
- static inline Scb *alloc_scbs(struct Scsi_Host *host, int needed)
- {
--	register Scb *scb, *p = NULL;
-+	Scb *scb, *p = NULL;
- 	unsigned long flags;
--	register unsigned long timeout = jiffies + WAITnexttimeout;
--	register unsigned long now;
-+	unsigned long timeout = jiffies + WAITnexttimeout;
-+	unsigned long now;
- 	int i;
- 
- 	if (needed <= 0)
-@@ -936,7 +938,7 @@
-  *  Note: this can also be used for ICBs; just cast to the parm type.
-  */
- {
--	register int i, ogmb;
-+	int i, ogmb;
- 	unsigned long flags;
- 	unchar start_ogmb;
- 	Mailbox *ogmbs = host->mb.ogmb;
-@@ -1034,23 +1036,26 @@
- 
- #define wd7000_intr_ack(host)   outb (0, host->iobase + ASC_INTR_ACK)
- 
--static void wd7000_intr_handle(int irq, void *dev_id, struct pt_regs *regs)
-+
-+static irqreturn_t wd7000_intr(int irq, void *dev_id, struct pt_regs *regs)
- {
--	register int flag, icmb, errstatus, icmb_status;
--	register int host_error, scsi_error;
--	register Scb *scb;	/* for SCSI commands */
--	register IcbAny *icb;	/* for host commands */
--	register Scsi_Cmnd *SCpnt;
- 	Adapter *host = (Adapter *) dev_id;
-+	int flag, icmb, errstatus, icmb_status;
-+	int host_error, scsi_error;
-+	Scb *scb;	/* for SCSI commands */
-+	IcbAny *icb;	/* for host commands */
-+	struct scsi_cmnd *SCpnt;
- 	Mailbox *icmbs = host->mb.icmb;
-+	unsigned long flags;
- 
-+	spin_lock_irqsave(host->sh->host_lock, flags);
- 	host->int_counter++;
- 
--	dprintk("wd7000_intr_handle: irq = %d, host = 0x%06lx\n", irq, (long) host);
-+	dprintk("wd7000_intr: irq = %d, host = 0x%06lx\n", irq, (long) host);
- 
- 	flag = inb(host->iobase + ASC_INTR_STAT);
- 
--	dprintk("wd7000_intr_handle: intr stat = 0x%02x\n", flag);
-+	dprintk("wd7000_intr: intr stat = 0x%02x\n", flag);
- 
- 	if (!(inb(host->iobase + ASC_STAT) & INT_IM)) {
- 		/* NB: these are _very_ possible if IRQ 15 is being used, since
-@@ -1061,79 +1066,70 @@
- 		 * can sort these out.  Otherwise, electrical noise and other such
- 		 * problems would be indistinguishable from valid interrupts...
- 		 */
--		dprintk("wd7000_intr_handle: phantom interrupt...\n");
--		wd7000_intr_ack(host);
--		return;
-+		dprintk("wd7000_intr: phantom interrupt...\n");
-+		goto ack;
- 	}
- 
--	if (flag & MB_INTR) {
--		/* The interrupt is for a mailbox */
--		if (!(flag & IMB_INTR)) {
--			dprintk("wd7000_intr_handle: free outgoing mailbox\n");
--			/*
--			 * If sleep_on() and the "interrupt on free OGMB" command are
--			 * used in mail_out(), wake_up() should correspondingly be called
--			 * here.  For now, we don't need to do anything special.
--			 */
--			wd7000_intr_ack(host);
--			return;
--		} else {
--			/* The interrupt is for an incoming mailbox */
--			icmb = flag & MB_MASK;
--			icmb_status = icmbs[icmb].status;
--			if (icmb_status & 0x80) {	/* unsolicited - result in ICMB */
--				dprintk("wd7000_intr_handle: unsolicited interrupt 0x%02x\n", icmb_status);
--				wd7000_intr_ack(host);
--				return;
--			}
--			/* Aaaargh! (Zaga) */
--			scb = isa_bus_to_virt(scsi2int((unchar *) icmbs[icmb].scbptr));
--			icmbs[icmb].status = 0;
--			if (!(scb->op & ICB_OP_MASK)) {	/* an SCB is done */
--				SCpnt = scb->SCpnt;
--				if (--(SCpnt->SCp.phase) <= 0) {	/* all scbs are done */
--					host_error = scb->vue | (icmb_status << 8);
--					scsi_error = scb->status;
--					errstatus = make_code(host_error, scsi_error);
--					SCpnt->result = errstatus;
-+	if (!(flag & MB_INTR))
-+		goto ack;
- 
--					free_scb(scb);
-+	/* The interrupt is for a mailbox */
-+	if (!(flag & IMB_INTR)) {
-+		dprintk("wd7000_intr: free outgoing mailbox\n");
-+		/*
-+		 * If sleep_on() and the "interrupt on free OGMB" command are
-+		 * used in mail_out(), wake_up() should correspondingly be called
-+		 * here.  For now, we don't need to do anything special.
-+		 */
-+		goto ack;
-+	}
- 
--					SCpnt->scsi_done(SCpnt);
--				}
--			} else {	/* an ICB is done */
--				icb = (IcbAny *) scb;
--				icb->status = icmb_status;
--				icb->phase = 0;
--			}
--		}		/* incoming mailbox */
-+	/* The interrupt is for an incoming mailbox */
-+	icmb = flag & MB_MASK;
-+	icmb_status = icmbs[icmb].status;
-+	if (icmb_status & 0x80) {	/* unsolicited - result in ICMB */
-+		dprintk("wd7000_intr: unsolicited interrupt 0x%02x\n", icmb_status);
-+		goto ack;
- 	}
- 
--	wd7000_intr_ack(host);
-+	/* Aaaargh! (Zaga) */
-+	scb = isa_bus_to_virt(scsi2int((unchar *) icmbs[icmb].scbptr));
-+	icmbs[icmb].status = 0;
-+	if (scb->op & ICB_OP_MASK) {	/* an SCB is done */
-+		icb = (IcbAny *) scb;
-+		icb->status = icmb_status;
-+		icb->phase = 0;
-+		goto ack;
-+	}
- 
--	dprintk("wd7000_intr_handle: return from interrupt handler\n");
--}
-+	SCpnt = scb->SCpnt;
-+	if (--(SCpnt->SCp.phase) <= 0) {	/* all scbs are done */
-+		host_error = scb->vue | (icmb_status << 8);
-+		scsi_error = scb->status;
-+		errstatus = make_code(host_error, scsi_error);
-+		SCpnt->result = errstatus;
- 
--static irqreturn_t do_wd7000_intr_handle(int irq, void *dev_id,
--					struct pt_regs *regs)
--{
--	unsigned long flags;
--	struct Scsi_Host *host = dev_id;
-+		free_scb(scb);
- 
--	spin_lock_irqsave(host->host_lock, flags);
--	wd7000_intr_handle(irq, dev_id, regs);
--	spin_unlock_irqrestore(host->host_lock, flags);
-+		SCpnt->scsi_done(SCpnt);
-+	}
-+
-+ ack:
-+	dprintk("wd7000_intr: return from interrupt handler\n");
-+	wd7000_intr_ack(host);
-+
-+	spin_unlock_irqrestore(host->sh->host_lock, flags);
- 	return IRQ_HANDLED;
+ #include "wd33c93.h"
+@@ -299,17 +301,6 @@
+ 	return x;
  }
  
+-/* The 33c93 needs to be told which direction a command transfers its
+- * data; we use this function to figure it out. Returns true if there
+- * will be a DATA_OUT phase with this command, false otherwise.
+- * (Thanks to Joerg Dorchain for the research and suggestion.)
+- */
+-static inline int
+-is_dir_out(Scsi_Cmnd * cmd)
+-{
+-	return cmd->sc_data_direction == SCSI_DATA_WRITE;
+-}
 -
--static int wd7000_queuecommand(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
-+static int wd7000_queuecommand(struct scsi_cmnd *SCpnt,
+ static struct sx_period sx_table[] = {
+ 	{1, 0x20},
+ 	{252, 0x20},
+@@ -348,17 +339,18 @@
+ }
+ 
+ int
+-wd33c93_queuecommand(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *))
++wd33c93_queuecommand(struct scsi_cmnd *cmd,
 +		void (*done)(struct scsi_cmnd *))
  {
--	register Scb *scb;
--	register Sgb *sgb;
--	register unchar *cdb = (unchar *) SCpnt->cmnd;
--	register unchar idlun;
--	register short cdblen;
-+	Scb *scb;
-+	Sgb *sgb;
-+	unchar *cdb = (unchar *) SCpnt->cmnd;
-+	unchar idlun;
-+	short cdblen;
- 	Adapter *host = (Adapter *) SCpnt->device->host->hostdata;
+ 	struct WD33C93_hostdata *hostdata;
+-	Scsi_Cmnd *tmp;
++	struct scsi_cmnd *tmp;
  
- 	cdblen = SCpnt->cmd_len;
-@@ -1293,7 +1289,7 @@
- 		return 0;
+ 	hostdata = (struct WD33C93_hostdata *) cmd->device->host->hostdata;
  
+ 	DB(DB_QUEUE_COMMAND,
+ 	   printk("Q-%d-%02x-%ld( ", cmd->device->id, cmd->cmnd[0], cmd->pid))
  
--	if (request_irq(host->irq, do_wd7000_intr_handle, SA_INTERRUPT, "wd7000", host)) {
-+	if (request_irq(host->irq, wd7000_intr, SA_INTERRUPT, "wd7000", host)) {
- 		printk("wd7000_init: can't get IRQ %d.\n", host->irq);
- 		return (0);
+-/* Set up a few fields in the Scsi_Cmnd structure for our own use:
++/* Set up a few fields in the scsi_cmnd structure for our own use:
+  *  - host_scribble is the pointer to the next cmd in the input queue
+  *  - scsi_done points to the routine we call when a cmd is finished
+  *  - result is what you'd expect
+@@ -426,8 +418,9 @@
+ 		cmd->host_scribble = (uchar *) hostdata->input_Q;
+ 		hostdata->input_Q = cmd;
+ 	} else {		/* find the end of the queue */
+-		for (tmp = (Scsi_Cmnd *) hostdata->input_Q; tmp->host_scribble;
+-		     tmp = (Scsi_Cmnd *) tmp->host_scribble) ;
++		for (tmp = (struct scsi_cmnd *) hostdata->input_Q;
++		     tmp->host_scribble;
++		     tmp = (struct scsi_cmnd *) tmp->host_scribble) ;
+ 		tmp->host_scribble = (uchar *) cmd;
  	}
-@@ -1434,7 +1430,7 @@
-  *
-  */
  
--static int wd7000_detect(Scsi_Host_Template * tpnt)
-+static int wd7000_detect(struct scsi_host_template *tpnt)
- {
- 	short present = 0, biosaddr_ptr, sig_ptr, i, pass;
- 	short biosptr[NUM_CONFIGS];
-@@ -1623,24 +1619,10 @@
- #endif
+@@ -459,7 +452,7 @@
+ 	struct WD33C93_hostdata *hostdata =
+ 	    (struct WD33C93_hostdata *) instance->hostdata;
+ 	const wd33c93_regs regs = hostdata->regs;
+-	Scsi_Cmnd *cmd, *prev;
++	struct scsi_cmnd *cmd, *prev;
  
- /*
-- *  I also have no idea how to do a reset...
-- */
--
--static int wd7000_bus_reset(Scsi_Cmnd * SCpnt)
--{
--	return FAILED;
--}
--
--static int wd7000_device_reset(Scsi_Cmnd * SCpnt)
--{
--	return FAILED;
--}
--
--/*
-  *  Last resort. Reinitialize the board.
-  */
+ 	DB(DB_EXECUTE, printk("EX("))
+ 	if (hostdata->selecting || hostdata->connected) {
+@@ -472,13 +465,13 @@
+ 	 * for an idle target/lun.
+ 	 */
  
--static int wd7000_host_reset(Scsi_Cmnd * SCpnt)
-+static int wd7000_host_reset(struct scsi_cmnd *SCpnt)
- {
- 	Adapter *host = (Adapter *) SCpnt->device->host->hostdata;
+-	cmd = (Scsi_Cmnd *) hostdata->input_Q;
++	cmd = (struct scsi_cmnd *) hostdata->input_Q;
+ 	prev = 0;
+ 	while (cmd) {
+ 		if (!(hostdata->busy[cmd->device->id] & (1 << cmd->device->lun)))
+ 			break;
+ 		prev = cmd;
+-		cmd = (Scsi_Cmnd *) cmd->host_scribble;
++		cmd = (struct scsi_cmnd *) cmd->host_scribble;
+ 	}
  
-@@ -1650,7 +1632,6 @@
- 	return SUCCESS;
+ 	/* quit if queue empty or all possible targets are busy */
+@@ -493,7 +486,7 @@
+ 	if (prev)
+ 		prev->host_scribble = cmd->host_scribble;
+ 	else
+-		hostdata->input_Q = (Scsi_Cmnd *) cmd->host_scribble;
++		hostdata->input_Q = (struct scsi_cmnd *) cmd->host_scribble;
+ 
+ #ifdef PROC_STATISTICS
+ 	hostdata->cmd_cnt[cmd->device->id]++;
+@@ -503,7 +496,7 @@
+ 	 * Start the selection process
+ 	 */
+ 
+-	if (is_dir_out(cmd))
++	if (cmd->sc_data_direction == DMA_TO_DEVICE)
+ 		write_wd33c93(regs, WD_DESTINATION_ID, cmd->device->id);
+ 	else
+ 		write_wd33c93(regs, WD_DESTINATION_ID, cmd->device->id | DSTID_DPD);
+@@ -542,12 +535,12 @@
+ 		goto yes;
+ 	if (!(hostdata->input_Q))	/* input_Q empty? */
+ 		goto no;
+-	for (prev = (Scsi_Cmnd *) hostdata->input_Q; prev;
+-	     prev = (Scsi_Cmnd *) prev->host_scribble) {
++	for (prev = (struct scsi_cmnd *) hostdata->input_Q; prev;
++	     prev = (struct scsi_cmnd *) prev->host_scribble) {
+ 		if ((prev->device->id != cmd->device->id) ||
+ 		    (prev->device->lun != cmd->device->lun)) {
+-			for (prev = (Scsi_Cmnd *) hostdata->input_Q; prev;
+-			     prev = (Scsi_Cmnd *) prev->host_scribble)
++			for (prev = (struct scsi_cmnd *) hostdata->input_Q; prev;
++			     prev = (struct scsi_cmnd *) prev->host_scribble)
+ 				prev->SCp.phase = 1;
+ 			goto yes;
+ 		}
+@@ -635,8 +628,8 @@
+ 
+ 		if ((cmd->SCp.phase == 0) && (hostdata->no_dma == 0)) {
+ 			if (hostdata->dma_setup(cmd,
+-						(is_dir_out(cmd)) ? DATA_OUT_DIR
+-						: DATA_IN_DIR))
++			    (cmd->sc_data_direction == DMA_TO_DEVICE) ?
++			     DATA_OUT_DIR : DATA_IN_DIR))
+ 				write_wd33c93_count(regs, 0);	/* guarantee a DATA_PHASE interrupt */
+ 			else {
+ 				write_wd33c93_count(regs,
+@@ -699,7 +692,8 @@
  }
  
--
- /*
-  *  This was borrowed directly from aha1542.c. (Zaga)
-  */
-@@ -1706,15 +1687,13 @@
- MODULE_DESCRIPTION("Driver for the WD7000 series ISA controllers");
- MODULE_LICENSE("GPL");
+ static void
+-transfer_bytes(const wd33c93_regs regs, Scsi_Cmnd * cmd, int data_in_dir)
++transfer_bytes(const wd33c93_regs regs, struct scsi_cmnd *cmd,
++		int data_in_dir)
+ {
+ 	struct WD33C93_hostdata *hostdata;
+ 	unsigned long length;
+@@ -774,7 +768,7 @@
+ 	struct WD33C93_hostdata *hostdata =
+ 	    (struct WD33C93_hostdata *) instance->hostdata;
+ 	const wd33c93_regs regs = hostdata->regs;
+-	Scsi_Cmnd *patch, *cmd;
++	struct scsi_cmnd *patch, *cmd;
+ 	uchar asr, sr, phs, id, lun, *ucp, msg;
+ 	unsigned long length, flags;
  
--static Scsi_Host_Template driver_template = {
-+static struct scsi_host_template driver_template = {
- 	.proc_name		= "wd7000",
- 	.proc_info		= wd7000_proc_info,
- 	.name			= "Western Digital WD-7000",
- 	.detect			= wd7000_detect,
- 	.release		= wd7000_release,
- 	.queuecommand		= wd7000_queuecommand,
--	.eh_bus_reset_handler	= wd7000_bus_reset,
--	.eh_device_reset_handler = wd7000_device_reset,
- 	.eh_host_reset_handler	= wd7000_host_reset,
- 	.bios_param		= wd7000_biosparam,
- 	.can_queue		= WD7000_Q,
+@@ -788,7 +782,7 @@
+ 	hostdata->int_cnt++;
+ #endif
+ 
+-	cmd = (Scsi_Cmnd *) hostdata->connected;	/* assume we're connected */
++	cmd = (struct scsi_cmnd *) hostdata->connected;	/* assume we're connected */
+ 	sr = read_wd33c93(regs, WD_SCSI_STATUS);	/* clear the interrupt */
+ 	phs = read_wd33c93(regs, WD_COMMAND_PHASE);
+ 
+@@ -828,7 +822,7 @@
+ 		    if (hostdata->state == S_RUNNING_LEVEL2)
+ 			hostdata->connected = NULL;
+ 		else {
+-			cmd = (Scsi_Cmnd *) hostdata->selecting;	/* get a valid cmd */
++			cmd = (struct scsi_cmnd *) hostdata->selecting;	/* get a valid cmd */
+ 			hostdata->selecting = NULL;
+ 		}
+ 
+@@ -861,7 +855,7 @@
+ 	case CSR_SELECT:
+ 		DB(DB_INTR, printk("SELECT"))
+ 		    hostdata->connected = cmd =
+-		    (Scsi_Cmnd *) hostdata->selecting;
++		    (struct scsi_cmnd *) hostdata->selecting;
+ 		hostdata->selecting = NULL;
+ 
+ 		/* construct an IDENTIFY message with correct disconnect bit */
+@@ -1307,7 +1301,7 @@
+ 		    if (hostdata->level2 <= L2_NONE) {
+ 
+ 			if (hostdata->selecting) {
+-				cmd = (Scsi_Cmnd *) hostdata->selecting;
++				cmd = (struct scsi_cmnd *) hostdata->selecting;
+ 				hostdata->selecting = NULL;
+ 				hostdata->busy[cmd->device->id] &= ~(1 << cmd->device->lun);
+ 				cmd->host_scribble =
+@@ -1399,13 +1393,13 @@
+ 
+ 		/* Now we look for the command that's reconnecting. */
+ 
+-		cmd = (Scsi_Cmnd *) hostdata->disconnected_Q;
++		cmd = (struct scsi_cmnd *) hostdata->disconnected_Q;
+ 		patch = NULL;
+ 		while (cmd) {
+ 			if (id == cmd->device->id && lun == cmd->device->lun)
+ 				break;
+ 			patch = cmd;
+-			cmd = (Scsi_Cmnd *) cmd->host_scribble;
++			cmd = (struct scsi_cmnd *) cmd->host_scribble;
+ 		}
+ 
+ 		/* Hmm. Couldn't find a valid command.... What to do? */
+@@ -1424,7 +1418,7 @@
+ 			patch->host_scribble = cmd->host_scribble;
+ 		else
+ 			hostdata->disconnected_Q =
+-			    (Scsi_Cmnd *) cmd->host_scribble;
++			    (struct scsi_cmnd *) cmd->host_scribble;
+ 		hostdata->connected = cmd;
+ 
+ 		/* We don't need to worry about 'initialize_SCp()' or 'hostdata->busy[]'
+@@ -1432,7 +1426,7 @@
+ 		 * But we DO need to fix the DPD bit so it's correct for this command.
+ 		 */
+ 
+-		if (is_dir_out(cmd))
++		if (cmd->sc_data_direction == DMA_TO_DEVICE)
+ 			write_wd33c93(regs, WD_DESTINATION_ID, cmd->device->id);
+ 		else
+ 			write_wd33c93(regs, WD_DESTINATION_ID,
+@@ -1522,7 +1516,7 @@
+ }
+ 
+ int
+-wd33c93_host_reset(Scsi_Cmnd * SCpnt)
++wd33c93_host_reset(struct scsi_cmnd * SCpnt)
+ {
+ 	struct Scsi_Host *instance;
+ 	struct WD33C93_hostdata *hostdata;
+@@ -1557,12 +1551,12 @@
+ }
+ 
+ int
+-wd33c93_abort(Scsi_Cmnd * cmd)
++wd33c93_abort(struct scsi_cmnd * cmd)
+ {
+ 	struct Scsi_Host *instance;
+ 	struct WD33C93_hostdata *hostdata;
+ 	wd33c93_regs regs;
+-	Scsi_Cmnd *tmp, *prev;
++	struct scsi_cmnd *tmp, *prev;
+ 
+ 	disable_irq(cmd->device->host->irq);
+ 
+@@ -1575,7 +1569,7 @@
+  *     from the input_Q.
+  */
+ 
+-	tmp = (Scsi_Cmnd *) hostdata->input_Q;
++	tmp = (struct scsi_cmnd *) hostdata->input_Q;
+ 	prev = 0;
+ 	while (tmp) {
+ 		if (tmp == cmd) {
+@@ -1583,7 +1577,7 @@
+ 				prev->host_scribble = cmd->host_scribble;
+ 			else
+ 				hostdata->input_Q =
+-				    (Scsi_Cmnd *) cmd->host_scribble;
++				    (struct scsi_cmnd *) cmd->host_scribble;
+ 			cmd->host_scribble = NULL;
+ 			cmd->result = DID_ABORT << 16;
+ 			printk
+@@ -1594,7 +1588,7 @@
+ 			return SUCCESS;
+ 		}
+ 		prev = tmp;
+-		tmp = (Scsi_Cmnd *) tmp->host_scribble;
++		tmp = (struct scsi_cmnd *) tmp->host_scribble;
+ 	}
+ 
+ /*
+@@ -1675,7 +1669,7 @@
+  * an ABORT_SNOOZE and hope for the best...
+  */
+ 
+-	tmp = (Scsi_Cmnd *) hostdata->disconnected_Q;
++	tmp = (struct scsi_cmnd *) hostdata->disconnected_Q;
+ 	while (tmp) {
+ 		if (tmp == cmd) {
+ 			printk
+@@ -1685,7 +1679,7 @@
+ 			enable_irq(cmd->device->host->irq);
+ 			return FAILED;
+ 		}
+-		tmp = (Scsi_Cmnd *) tmp->host_scribble;
++		tmp = (struct scsi_cmnd *) tmp->host_scribble;
+ 	}
+ 
+ /*
+@@ -1921,7 +1915,7 @@
+ 	char *bp;
+ 	char tbuf[128];
+ 	struct WD33C93_hostdata *hd;
+-	Scsi_Cmnd *cmd;
++	struct scsi_cmnd *cmd;
+ 	int x, i;
+ 	static int stop = 0;
+ 
+@@ -2022,7 +2016,7 @@
+ 	if (hd->proc & PR_CONNECTED) {
+ 		strcat(bp, "\nconnected:     ");
+ 		if (hd->connected) {
+-			cmd = (Scsi_Cmnd *) hd->connected;
++			cmd = (struct scsi_cmnd *) hd->connected;
+ 			sprintf(tbuf, " %ld-%d:%d(%02x)",
+ 				cmd->pid, cmd->device->id, cmd->device->lun, cmd->cmnd[0]);
+ 			strcat(bp, tbuf);
+@@ -2030,22 +2024,22 @@
+ 	}
+ 	if (hd->proc & PR_INPUTQ) {
+ 		strcat(bp, "\ninput_Q:       ");
+-		cmd = (Scsi_Cmnd *) hd->input_Q;
++		cmd = (struct scsi_cmnd *) hd->input_Q;
+ 		while (cmd) {
+ 			sprintf(tbuf, " %ld-%d:%d(%02x)",
+ 				cmd->pid, cmd->device->id, cmd->device->lun, cmd->cmnd[0]);
+ 			strcat(bp, tbuf);
+-			cmd = (Scsi_Cmnd *) cmd->host_scribble;
++			cmd = (struct scsi_cmnd *) cmd->host_scribble;
+ 		}
+ 	}
+ 	if (hd->proc & PR_DISCQ) {
+ 		strcat(bp, "\ndisconnected_Q:");
+-		cmd = (Scsi_Cmnd *) hd->disconnected_Q;
++		cmd = (struct scsi_cmnd *) hd->disconnected_Q;
+ 		while (cmd) {
+ 			sprintf(tbuf, " %ld-%d:%d(%02x)",
+ 				cmd->pid, cmd->device->id, cmd->device->lun, cmd->cmnd[0]);
+ 			strcat(bp, tbuf);
+-			cmd = (Scsi_Cmnd *) cmd->host_scribble;
++			cmd = (struct scsi_cmnd *) cmd->host_scribble;
+ 		}
+ 	}
+ 	strcat(bp, "\n");
+===== drivers/scsi/wd33c93.h 1.6 vs edited =====
+--- 1.6/drivers/scsi/wd33c93.h	2003-05-12 16:26:16 +02:00
++++ edited/drivers/scsi/wd33c93.h	2004-06-20 18:01:32 +02:00
+@@ -196,9 +196,9 @@
+ } wd33c93_regs;
+ 
+ 
+-typedef int (*dma_setup_t) (Scsi_Cmnd *SCpnt, int dir_in);
+-typedef void (*dma_stop_t) (struct Scsi_Host *instance, Scsi_Cmnd *SCpnt,
+-             int status);
++typedef int (*dma_setup_t) (struct scsi_cmnd *SCpnt, int dir_in);
++typedef void (*dma_stop_t) (struct Scsi_Host *instance,
++		struct scsi_cmnd *SCpnt, int status);
+ 
+ 
+ #define ILLEGAL_STATUS_BYTE   0xff
+@@ -234,10 +234,10 @@
+     uchar            *dma_bounce_buffer;
+     unsigned int     dma_bounce_len;
+     volatile uchar   busy[8];          /* index = target, bit = lun */
+-    volatile Scsi_Cmnd *input_Q;       /* commands waiting to be started */
+-    volatile Scsi_Cmnd *selecting;     /* trying to select this command */
+-    volatile Scsi_Cmnd *connected;     /* currently connected command */
+-    volatile Scsi_Cmnd *disconnected_Q;/* commands waiting for reconnect */
++    volatile struct scsi_cmnd *input_Q;       /* commands waiting to be started */
++    volatile struct scsi_cmnd *selecting;     /* trying to select this command */
++    volatile struct scsi_cmnd *connected;     /* currently connected command */
++    volatile struct scsi_cmnd *disconnected_Q;/* commands waiting for reconnect */
+     uchar            state;            /* what we are currently doing */
+     uchar            dma;              /* current state of DMA (on/off) */
+     uchar            level2;           /* extent to which Level-2 commands are used */
+@@ -335,11 +335,12 @@
+ 
+ void wd33c93_init (struct Scsi_Host *instance, const wd33c93_regs regs,
+          dma_setup_t setup, dma_stop_t stop, int clock_freq);
+-int wd33c93_abort (Scsi_Cmnd *cmd);
+-int wd33c93_queuecommand (Scsi_Cmnd *cmd, void (*done)(Scsi_Cmnd *));
++int wd33c93_abort (struct scsi_cmnd *cmd);
++int wd33c93_queuecommand (struct scsi_cmnd *cmd,
++		void (*done)(struct scsi_cmnd *));
+ void wd33c93_intr (struct Scsi_Host *instance);
+ int wd33c93_proc_info(struct Scsi_Host *, char *, char **, off_t, int, int);
+-int wd33c93_host_reset (Scsi_Cmnd *);
++int wd33c93_host_reset (struct scsi_cmnd *);
+ void wd33c93_release(void);
+ 
+ #endif /* WD33C93_H */
