@@ -1,8 +1,8 @@
 From: =?ISO-8859-1?Q?Gustavo_Mart=EDn?= <gmartin@filmayer.es>
 Subject: Re: Problems with SCSI device
-Date: Wed, 26 Mar 2003 18:55:53 +0100
+Date: Wed, 26 Mar 2003 18:58:24 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E81E9A9.5040502@filmayer.es>
+Message-ID: <3E81EA40.7050809@filmayer.es>
 References: <200303261713.h2QHDXLr090443@mail5.mx.voyager.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
@@ -12,16 +12,11 @@ List-Id: linux-scsi@vger.kernel.org
 To: David Horton <dhorton@megsinet.net>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi again,
+I have forgotten, it also says:
 
-I made some changes on my .def file. The manufacturer, model, etc seems 
-to be correct. I changed the modes and now I recive errno 5, can't open 
-tape device /dev/nst0.
-
-I'm getting crazy with this stuff. Any other idea?
+    Definition for /dev/st0 failed
 
 Cheers,
-GUSTAVO
 
 David Horton wrote:
 
