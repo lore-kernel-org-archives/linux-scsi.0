@@ -1,53 +1,49 @@
 From: Arjan van de Ven <arjanv@redhat.com>
-Subject: RE: [PATCH] gdth driver for 2.4.23-pre4
-Date: Thu, 08 Jan 2004 20:32:48 +0100
+Subject: Re: [PATCH] ips driver for 2.4.23-pre4
+Date: Thu, 8 Jan 2004 20:36:17 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1073590368.4429.8.camel@laptop.fenrus.com>
-References: <C2CB6D8BA015124783C0EB9B33D24FFD048036@otcexc01.otc.adaptec.com>
-Reply-To: arjanv@redhat.com
+Message-ID: <20040108193617.GA5244@devserv.devel.redhat.com>
+References: <3FFC5B2C.6000302@wanadoo.es> <20040108171531.B12595@infradead.org> <3FFD9F0E.4060604@wanadoo.es> <20040108182135.A13623@infradead.org> <3FFDA639.7090005@wanadoo.es> <1073588778.4429.5.camel@laptop.fenrus.com> <3FFDAFCF.3000908@wanadoo.es>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mjtqOvwWqrCvsP6XI0ps"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="W/nzBZO5zC0uMSeA"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from node-d-1fcf.a2000.nl ([62.195.31.207]:27271 "EHLO
-	laptop.fenrus.com") by vger.kernel.org with ESMTP id S266272AbUAHThM
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jan 2004 14:37:12 -0500
-In-Reply-To: <C2CB6D8BA015124783C0EB9B33D24FFD048036@otcexc01.otc.adaptec.com>
+Received: from mx1.redhat.com ([66.187.233.31]:21155 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S266266AbUAHTgk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jan 2004 14:36:40 -0500
+Content-Disposition: inline
+In-Reply-To: <3FFDAFCF.3000908@wanadoo.es>
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: 'Xose Vazquez Perez' <xose@wanadoo.es>, 'Christoph Hellwig' <hch@infradead.org>, 'linux-scsi' <linux-scsi@vger.kernel.org>, 'Tosatti' <marcelo.tosatti@cyclades.com>
+To: Xose Vazquez Perez <xose@wanadoo.es>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Tosatti <marcelo.tosatti@cyclades.com>
 
 
---=-mjtqOvwWqrCvsP6XI0ps
-Content-Type: text/plain
+--W/nzBZO5zC0uMSeA
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2004-01-08 at 20:19, Salyzyn, Mark wrote:
-> Time and priority is the enemy ... not the maintainers, gatekeepers,
-> volunteeers or the vendors.
+On Thu, Jan 08, 2004 at 08:30:23PM +0100, Xose Vazquez Perez wrote:
+> Arjan van de Ven wrote:
 >=20
-> There are currently three effective code bases a vendor driver maintainer=
- is
-> to submit to Distribution, 2.4.* and 2.6.*. OEMs and Channel, the vendor'=
-s
-> customers, only concern themselves about Distributions.
+> > who (at least in the RH case) often say "get it in upstream kernel
+> > first".
+>=20
+> that is a recent policy for _Fedora_. Or tell me why RHEL kernel
+> patches are so big=20
 
-As someone who maintains a kernel tree for a distribution I urge you to
-care more about upstream kernels. Lets make it easier: I will reject any
-patch to this driver that is not in 2.4 and/or 2.6. And the way to get
-things into 2.4 and/or 2.6 is via linux-scsi.
+no it is not recent policy. RHEL has basically the same policy for drivers.
 
-
---=-mjtqOvwWqrCvsP6XI0ps
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--W/nzBZO5zC0uMSeA
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
+Version: GnuPG v1.2.1 (GNU/Linux)
 
-iD8DBQA//bBgxULwo51rQBIRAjurAJwKQcszo8tBrkYKRdmIvf4DKokcJQCdGC20
-E5JfSllq+0yA0RdSv7W/28g=
-=7Iw4
+iD8DBQE//bExxULwo51rQBIRAh/9AKCS5YJe/aIqOPSaBvlhQ/vY8hCDOACgphHU
+hdz7C4Z4mp44VsrF6NkOBGw=
+=Jz8d
 -----END PGP SIGNATURE-----
 
---=-mjtqOvwWqrCvsP6XI0ps--
+--W/nzBZO5zC0uMSeA--
