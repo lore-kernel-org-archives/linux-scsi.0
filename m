@@ -1,18 +1,18 @@
 From: Jens Axboe <axboe@suse.de>
-Subject: Re: bytes/CDB of SCSI pass thru grossly limited maybe
-Date: Mon, 23 Aug 2004 17:46:49 +0200
+Subject: Re: [PATCH 2.4] rewritable USB DVD-RAM vs. mode sense op choice
+Date: Mon, 23 Aug 2004 17:48:51 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040823154648.GB2301@suse.de>
-References: <20040731141240.GE23697@suse.de> <1092678938.4235.37.camel@patlinux.iomegacorp.com>
+Message-ID: <20040823154850.GC2301@suse.de>
+References: <1092673789.4297.7.camel@patlinux.iomegacorp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:17027 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S265722AbUHWPsQ (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:57731 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S265784AbUHWPuP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Aug 2004 11:48:16 -0400
+	Mon, 23 Aug 2004 11:50:15 -0400
 Content-Disposition: inline
-In-Reply-To: <1092678938.4235.37.camel@patlinux.iomegacorp.com>
+In-Reply-To: <1092673789.4297.7.camel@patlinux.iomegacorp.com>
 List-Id: linux-scsi@vger.kernel.org
 To: Pat LaVarre <p.lavarre@ieee.org>
 Cc: linux-scsi@vger.kernel.org
@@ -20,41 +20,53 @@ Cc: linux-scsi@vger.kernel.org
 On Mon, Aug 16 2004, Pat LaVarre wrote:
 > Jens A:
 > 
-> > in short, please try again :-)
+> 2.4.26 and 2.4.27 strace of dd of=, mount -w, etc. chokes via EROFS for
+> USB DVD-RAM.  2.4.25 I have not tried.
 > 
-> I much appreciate your patient encouragement.  I now know I can ask:
+> This small patch substitutes the MMC op x5A "MODE SENSE (10)" for the op
+> x1A that in t10.org PDT x05 is vendor-specific.  Such consideration
+> persuades a standard DVD-RAM drive to admit it rewrites DVD-RAM discs.
 > 
-> Is there an ide-cd option to allow more bytes/CDB?
+> Revising the CDB alone of course does not suffice: we also have to step
+> past a different size of data in header.
 > 
-> That is, an option analogous to the /sys/block/sr*/device/max_sectors
-> setting of usb-storage, allowing up to the xFF:FF LBA's/CDB standard at
-> t10.org?  Else can I help create such an option?
+> Pat LaVarre
 > 
-> I see ioctl SG_IO chokes via EIO if bytes/CDB goes much above zero.
-> 
-> I ask for a workaround because a friend of mine cares.
-> 
-> I see EIO at 130 KiB/CDB, though happy at 128 KiB/CDB, when I try
-> ide-cd.  I see usb-storage defaults to choke thruput off at 120 KiB/CDB,
-> but thru /sys lets us reach a little farther above zero i.e. 512
-> KiB/CDB.
-> 
-> How coordinated is our 2.6 effort to choke off thruput near zero across
-> PATAPI, USB, FireWire, SPI, SATAPI, etc.?
-> 
-> Is there an ide-cd option to allow more bytes/CDB?
+> diff -urp linux-2.4.27/drivers/scsi/sr.c linux-2.4.27-pel/drivers/scsi/sr.c
+> --- linux-2.4.27/drivers/scsi/sr.c	2003-06-13 08:51:36.000000000 -0600
+> +++ linux-2.4.27-pel/drivers/scsi/sr.c	2004-08-16 10:08:37.000000000 -0600
+> @@ -691,7 +691,7 @@ void get_sectorsize(int i)
+>  
+>  void get_capabilities(int i)
+>  {
+> -	unsigned char cmd[6];
+> +	unsigned char cmd[16];
+>  	unsigned char *buffer;
+>  	int rc, n;
+>  
+> @@ -713,12 +713,12 @@ void get_capabilities(int i)
+>  		printk(KERN_ERR "sr: out of memory.\n");
+>  		return;
+>  	}
+> -	cmd[0] = MODE_SENSE;
+> +	memset(cmd, '\0', sizeof cmd);
 
-Ok, makes more sense to me now. The reason why I get confused is that I
-don't consider the cdb more than the actual 10-16 bytes of command data
-bytes, not the full structure of it.
+	memset(cmd, 0, sizeof(cmd));
 
-But yes, different devices will have different max transfer values. As
-I'm sure you know, ATAPI cannot do more than 128KiB per command. And
-that is what q->max_sectors is set to, if you try and submit more than
-this through SG_IO, bio_add_user() will complain and command will be
-failed as you experienced.
+> +	cmd[0] = MODE_SENSE_10;
+>  	cmd[1] = (scsi_CDs[i].device->scsi_level <= SCSI_2) ?
+>  		 ((scsi_CDs[i].device->lun << 5) & 0xe0) : 0;
+>  	cmd[2] = 0x2a;
+> -	cmd[4] = 128;
+> -	cmd[3] = cmd[5] = 0;
+> +	cmd[8] = 128;
+>  	rc = sr_do_ioctl(i, cmd, buffer, 128, 1, SCSI_DATA_READ, NULL);
 
-max_sectors should be fully exposed so you don't have to guess.
+This gives me a bad vibe - I'm assuming your device is failing the
+6-byte mode sense? This has to work with devices that don't support
+MODE_SENSE_10, if you want it to work for you as well, then make the
+MODE_SENSE_10 a fall back when MODE_SENSE fails. You cannot rely on the
+change you made.
 
 -- 
 Jens Axboe
