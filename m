@@ -1,55 +1,46 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [PATCH] get rid of ->finish method for highlevel drivers
-Date: Tue, 22 Oct 2002 19:30:05 -0400
+From: SL Baur <steve@kbuxd.necst.nec.co.jp>
+Subject: aic7xxx driver in 2.5.44 is older than 2.4.20pre11 (and doesn't work)
+Date: Wed, 23 Oct 2002 11:51:57 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021022233005.GD31295@redhat.com>
-References: <James.Bottomley@SteelEye.com> <200210221548.g9MFmJx02529@localhost.localdomain> <20021022114354.A3993@eng2.beaverton.ibm.com> <20021022231714.GA4070@beaverton.ibm.com>
+Message-ID: <15798.3789.10763.181120@sofia.bsd2.kbnes.nec.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021022231714.GA4070@beaverton.ibm.com>
+Received: from mailgate4.nec.co.jp ([10.7.69.197])
+	by TYO201.gate.nec.co.jp (8.11.6/3.7W01080315) with ESMTP id g9N2mxl24541
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2002 11:48:59 +0900 (JST)
+Received: from mailsv4.nec.co.jp (mailgate51.nec.co.jp [10.7.69.196]) by mailgate4.nec.co.jp (8.11.6/3.7W-MAILGATE-NEC) with ESMTP
+	id g9N2mx808489 for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2002 11:48:59 +0900 (JST)
+Received: from sv6l.kb.necst.nec.co.jp (ns1.kb.necst.nec.co.jp [10.108.80.236]) by mailsv4.nec.co.jp (8.11.6/3.7W-MAILSV4-NEC) with ESMTP
+	id g9N2mv216336 for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2002 11:48:57 +0900 (JST)
+Received: from mailgw1 (mailgw1.kb.necst.nec.co.jp [172.16.1.207])
+	by sv6l.kb.necst.nec.co.jp (8.11.6/8.11.6) with SMTP id g9N2mv005246
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2002 11:48:57 +0900 (JST)
+	(envelope-from steve@kbuxd.necst.nec.co.jp)
+Received: from ews-sv.kbuxd.necst.nec.co.jp (ews-sv.kbuxd.necst.nec.co.jp [172.16.28.93])
+	by sv1.kbuxd.necst.nec.co.jp (8.11.6/3.7W) with ESMTP id g9N2mv195617
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2002 11:48:57 +0900 (JST)
+Received: from sofia.bsd2.kbnes.nec.co.jp ([172.16.28.191])
+	by ews-sv.kbuxd.necst.nec.co.jp (8.9.3/3.7W-02090510) with ESMTP id LAA20567
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2002 11:48:56 +0900 (JST)
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Oct 22, 2002 at 04:17:14PM -0700, Mike Anderson wrote:
-> Patrick Mansfield [patmans@us.ibm.com] wrote:
-> > On Tue, Oct 22, 2002 at 10:48:19AM -0500, James Bottomley wrote:
-> > > 
-> > > I tracked down the essential problem: the CD rom finish method expects to have 
-> > > allocated command blocks to do a mode sense.  I also fixed a trivial 
-> > > initialisation problem (the device pointer in Scsi_CD was being used before it 
-> > > was initialised).
-> > > 
-> > > The attached patch fixes the problem for me.
-> > > 
-> > > I still can't detach and add a CD-ROM, but the panic is in sr_init, so doesn't 
-> > > look to be affected by these changes, but I'll continue debugging.
-> > > 
-> > > James
-> > > 
-> > 
-> > James -
-> > 
-> > How do we end up with no command blocks if the slave_attach is
-> > calling scsi_build_commandblocks via scsi_adjust_queue_depth?
-> 
-> It appears after looking at this with Patrick that in drivers where
-> slave_attach is is not calling scsi_adjust_queue_depth the
-> scsi_build_commandblocks will not be called. In my case ips.c and in
-> James case 53c700.c.
-> 
-> If post calling slave_attach the new_queue_depth is 0 and the device is
-> not offline we should ensure there is at least a new_queue_depth of
-> 1 which is what your patch does by later on calling
-> scsi_build_commandblocks directly.
+Hi,
 
-Actually, prior to the scsi_scan changes, the code always made sure that 
-it was at least 1 after the scan.  Maybe that got lost somehow...
+I have been unable to boot 2.5.44 because it does not see my disk
+controller (output is from vanilla 2.4.20pre11, which works fine).
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.8
+        <Adaptec aic7899 Ultra160 SCSI adapter>
+        aic7899: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+
+scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.8
+        <Adaptec aic7899 Ultra160 SCSI adapter>
+        aic7899: Ultra160 Wide Channel B, SCSI Id=7, 32/253 SCBs
+
+I notice that the driver version in 2.5.44 is 6.2.5 and the one in
+2.4.20pre11 is 6.2.8.  Are there patches around to update the 2.5
+aic7xxx driver to the working version?
+
