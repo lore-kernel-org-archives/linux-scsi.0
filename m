@@ -1,36 +1,37 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [ANNOUNCE] iSCSI enterprise target software
-Date: Tue, 01 Mar 2005 09:40:38 +0100
-Message-ID: <1109666441.6293.62.camel@laptopd505.fenrus.org>
-References: <20050301161951K.fujita.tomonori@lab.ntt.co.jp>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] scsi/sata write barrier support
+Date: Tue, 1 Mar 2005 09:47:42 +0100
+Message-ID: <20050301084741.GD12295@suse.de>
+References: <20050127120244.GO2751@suse.de> <87acpxurwf.fsf@stark.xeocode.com> <20050222071340.GC2835@suse.de> <874qg4v81q.fsf@stark.xeocode.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Received: from pentafluge.infradead.org ([213.146.154.40]:2439 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261600AbVCAIkp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2005 03:40:45 -0500
-In-Reply-To: <20050301161951K.fujita.tomonori@lab.ntt.co.jp>
+Content-Type: text/plain; charset=us-ascii
+Received: from ns.virtualhost.dk ([195.184.98.160]:30672 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261804AbVCAIrv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 03:47:51 -0500
+Content-Disposition: inline
+In-Reply-To: <874qg4v81q.fsf@stark.xeocode.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net
+To: Greg Stark <gsstark@mit.edu>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org
 
-On Tue, 2005-03-01 at 16:19 +0900, FUJITA Tomonori wrote:
+On Tue, Feb 22 2005, Greg Stark wrote:
+> 
+> Jens Axboe <axboe@suse.de> writes:
+> 
+> > fsync has been working all along, since the initial barrier support for
+> > ide. only ext3 and reiserfs support it.
+> 
+> Really? That's huge news. Since what kernel version(s) is that?
 
-> The user-space daemon handles authentication and the kernel threads
-> take care of network and disk I/O requests from initiators by using
-> the VFS interface. The kernel-space code is not intrusive. It doesn't
-> touch other parts of the kernel. The code is already stable and
-> usable. More than 130 people currently subscribe to the project's
-> mailing list. The developers aim for inclusion into the mainline
-> kernel.
+Since 2.6.9.
 
-> Could you please review the code? Any comments are greatly
-> appreciated.
-> -
+> What about a non-journaled fs, or at least a meta-data-only-journaled fs?
+> Journaled FS's don't mix well with transaction based databases since they're
+> basically doing their own journaling anyways.
 
-can you explain why the target has to be inside the kernel and can't be
-a pure userspace daemon ?
+Only works on ext3 and reiserfs currently.
 
+-- 
+Jens Axboe
 
