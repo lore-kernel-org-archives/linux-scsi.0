@@ -1,37 +1,37 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: RE: usb-strage not working in the latest kernel 2.4
-Date: Thu, 11 Sep 2003 10:39:45 -0400 (EDT)
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: [TRIVIAL] Re: Remove modules.txt drivers_scsi_pcmcia_Kconfig
+Date: Thu, 11 Sep 2003 08:08:53 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0309111038210.841-100000@ida.rowland.org>
-References: <200309110507.OAA06907@toshiba.co.jp>
+Message-ID: <20030911080853.41949176.rddunlap@osdl.org>
+References: <20030911064500.349942C4C0@lists.samba.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:5124 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S261288AbTIKOjs (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:2239 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S261364AbTIKPOq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Sep 2003 10:39:48 -0400
-In-Reply-To: <200309110507.OAA06907@toshiba.co.jp>
+	Thu, 11 Sep 2003 11:14:46 -0400
+In-Reply-To: <20030911064500.349942C4C0@lists.samba.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
-Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, David Brownell <david-b@pacbell.net>, "Tomita, Haruo" <htomita@pcs.pc.ome.toshiba.co.jp>
+To: Rusty Trivial Russell <trivial@rustcorp.com.au>
+Cc: torvalds@osdl.org, linux-scsi@vger.kernel.org, axboe@suse.de
 
-On Thu, 11 Sep 2003, Tomita, Haruo wrote:
+On Thu, 11 Sep 2003 16:40:01 +1000 Rusty Trivial Russell <trivial@rustcorp.com.au> wrote:
 
-> Hi Alan,
-> 
-> Haruo> Using ioctl (fd, USBDEVFS_RESET, 0), I tested reset. 
-> Haruo> usb-storage of USB2.0 was successful.
-> Haruo> When FDD was used in the case of USB1.1, 
-> Haruo> mount became impossible after reset.
->  
-> Alan> What do you mean?  What does the log show?
-> 
-> I'm sorry. I wrote the following programs.
-> The execution result is as follows.
+| From:  Nicolas Kaiser <nikai@nikai.net>
+| 
+|   Cheers, n.
+| 
+| -	  This driver is also available as a module called aha152x_cs ( =
+| -	  code which can be inserted in and removed from the running kernel
+| -	  whenever you want). If you want to compile it as a module, say M
+| -	  here and read <file:Documentation/modules.txt>.
+| +	  To compile this driver as a module, say M here: the
+| +	  module will be called aha152x_cs.
 
-What did the system log show?  Try turning on verbose usb debugging and 
-run your test again.  This time post a copy of the system log.
+This is trivial, but I would prefer to see   "select M here:"
+instead of "say M here:" in all of these.
 
-Alan Stern
-
+--
+~Randy
