@@ -1,86 +1,101 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: PATCH [3/5]  qla2xxx: TCQ fixes
-Date: Mon, 12 Jul 2004 07:05:58 -0700
+Subject: PATCH [4/5]  qla2xxx: Command queueing fixes
+Date: Mon, 12 Jul 2004 07:06:28 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040712140558.GA6961@praka.san.rr.com>
+Message-ID: <20040712140628.GA6968@praka.san.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-02-qfe0.socal.rr.com ([66.75.162.134]:408 "EHLO
+Received: from ms-smtp-02-qfe0.socal.rr.com ([66.75.162.134]:19353 "EHLO
 	ms-smtp-02-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S263467AbUGLVR3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jul 2004 17:17:29 -0400
+	id S263540AbUGLVR7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jul 2004 17:17:59 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 ChangeSet
-  1.1867 04/07/12 09:38:28 andrew.vasquez@apc.qlogic.com +2 -0
-  Correct usage of tag-command-queueing methods:
-  
-  o Properly call scsi_activate_tcq() rather than
-    scsi_adjust_queue_depth().
-  o Properly retrieve tag message from command via
-    scsi_populate_tag_msg().
+  1.1868 04/07/12 09:42:23 andrew.vasquez@apc.qlogic.com +1 -0
+  Fix issue where a single command could inadvertently get 
+  'stuck' in the pending queue during resource availability
+  failures.
 
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
- drivers/scsi/qla2xxx/qla_iocb.c |   16 +++++++++++-----
- drivers/scsi/qla2xxx/qla_os.c   |    2 +-
- 2 files changed, 12 insertions(+), 6 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c |   25 +++++++++++--------------
+ 1 files changed, 11 insertions(+), 14 deletions(-)
 
-diff -Nru a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
---- a/drivers/scsi/qla2xxx/qla_iocb.c	2004-07-12 09:54:49 -07:00
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c	2004-07-12 09:54:49 -07:00
-@@ -22,6 +22,8 @@
- #include <linux/blkdev.h>
- #include <linux/delay.h>
- 
-+#include <scsi/scsi_tcq.h>
-+
- static inline uint16_t qla2x00_get_cmd_direction(struct scsi_cmnd *cmd);
- static inline cont_entry_t *qla2x00_prep_cont_type0_iocb(scsi_qla_host_t *);
- static inline cont_a64_entry_t *qla2x00_prep_cont_type1_iocb(scsi_qla_host_t *);
-@@ -337,6 +339,7 @@
- 	uint16_t	req_cnt;
- 	uint16_t	tot_dsds;
- 	device_reg_t	*reg;
-+	char		tag[2];
- 
- 	/* Setup device pointers. */
- 	ret = 0;
-@@ -415,14 +418,17 @@
- 	cmd_pkt->lun = cpu_to_le16(fclun->lun);
- 
- 	/* Update tagged queuing modifier */
--	cmd_pkt->control_flags = __constant_cpu_to_le16(CF_SIMPLE_TAG);
--	if (cmd->device->tagged_supported) {
--		switch (cmd->tag) {
--		case HEAD_OF_QUEUE_TAG:
-+	if (scsi_populate_tag_msg(cmd, tag)) {
-+		switch (tag[0]) {
-+		case MSG_SIMPLE_TAG:
-+			cmd_pkt->control_flags =
-+			    __constant_cpu_to_le16(CF_SIMPLE_TAG);
-+			break;
-+		case MSG_HEAD_TAG:
- 			cmd_pkt->control_flags =
- 			    __constant_cpu_to_le16(CF_HEAD_TAG);
- 			break;
--		case ORDERED_QUEUE_TAG:
-+		case MSG_ORDERED_TAG:
- 			cmd_pkt->control_flags =
- 			    __constant_cpu_to_le16(CF_ORDERED_TAG);
- 			break;
 diff -Nru a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
---- a/drivers/scsi/qla2xxx/qla_os.c	2004-07-12 09:54:49 -07:00
-+++ b/drivers/scsi/qla2xxx/qla_os.c	2004-07-12 09:54:49 -07:00
-@@ -1784,7 +1784,7 @@
+--- a/drivers/scsi/qla2xxx/qla_os.c	2004-07-12 09:55:05 -07:00
++++ b/drivers/scsi/qla2xxx/qla_os.c	2004-07-12 09:55:05 -07:00
+@@ -4175,19 +4175,15 @@
+ 	unsigned long   flags;
+ 	scsi_qla_host_t *dest_ha;
+ 	fc_port_t	*fcport;
+-	srb_t           *sp, *sptemp;
+-	LIST_HEAD(local_sp_list);
++	srb_t           *sp;
  
- 		ql2xmaxqdepth = queue_depth;
+ 	dest_ha = NULL;
  
--		scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, queue_depth);
-+		scsi_activate_tcq(sdev, queue_depth);
+ 	spin_lock_irqsave(&vis_ha->list_lock, flags);
+-	list_splice_init(&vis_ha->pending_queue, &local_sp_list);
+-	vis_ha->qthreads = 0;
+-	spin_unlock_irqrestore(&vis_ha->list_lock, flags);
++	while (!list_empty(&vis_ha->pending_queue)) {
++		sp = list_entry(vis_ha->pending_queue.next, srb_t, list);
  
- 		qla_printk(KERN_INFO, ha,
- 		    "scsi(%d:%d:%d:%d): Enabled tagged queuing, queue "
+-	list_for_each_entry_safe(sp, sptemp, &local_sp_list, list) {
+-		list_del_init(&sp->list);
+-        	sp->state = SRB_NO_QUEUE_STATE;
++		__del_from_pending_queue(vis_ha, sp);
+ 
+ 		fcport = sp->fclun->fcport;
+ 		dest_ha = fcport->ha;
+@@ -4208,7 +4204,7 @@
+ 			/* 
+ 			 * Initiate a failover - done routine will initiate.
+ 			 */
+-			add_to_done_queue(vis_ha, sp);
++			__add_to_done_queue(vis_ha, sp);
+ 
+ 			continue;
+ 		}
+@@ -4243,8 +4239,7 @@
+ 			    dest_ha->dpc_flags));
+ 
+ 			qla2x00_extend_timeout(sp->cmd, EXTEND_CMD_TIMEOUT);
+-			add_to_retry_queue(vis_ha, sp);
+-
++			__add_to_retry_queue(vis_ha, sp);
+ 			continue;
+ 		} 
+ 
+@@ -4262,22 +4257,24 @@
+ 			    sp->cmd->allowed,
+ 			    sp->cmd->retries));
+ 				
+-			add_to_scsi_retry_queue(vis_ha, sp);
+-
++			__add_to_scsi_retry_queue(vis_ha, sp);
+ 			continue;
+ 		}
+ 
+ 		sp->lun_queue->io_cnt++;
+ 
++		spin_unlock_irqrestore(&vis_ha->list_lock, flags);
+ 		rval = qla2x00_start_scsi(sp);
++		spin_lock_irqsave(&vis_ha->list_lock, flags);
+ 		if (rval != QLA_SUCCESS) {
+ 			/* Place request back on top of device queue */
+ 			/* add to the top of queue */
+-			add_to_pending_queue_head(vis_ha, sp);
++			__add_to_pending_queue_head(vis_ha, sp);
+ 
+ 			sp->lun_queue->io_cnt--;
+ 		}
+ 	}
++	spin_unlock_irqrestore(&vis_ha->list_lock, flags);
+ 
+ 	if (!IS_QLA2100(vis_ha) && !IS_QLA2200(vis_ha)) {
+ 		/* Process response_queue if ZIO support is enabled*/ 
