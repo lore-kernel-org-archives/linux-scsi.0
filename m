@@ -1,58 +1,28 @@
-From: Philippe Troin <phil@fifi.org>
-Subject: Re: more aic7xxx boot failure
-Date: 24 Oct 2002 16:20:38 -0700
+From: Willem Riede <wrlk@riede.org>
+Subject: Re: [PATCH] get rid of ->finish method for highlevel drivers
+Date: Thu, 24 Oct 2002 19:20:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <87hefbxw3d.fsf@ceramic.fifi.org>
-References: <8800000.1035498319@w-hlinder> <87lm4nxxnj.fsf@ceramic.fifi.org>
-	<16660000.1035501142@w-hlinder>
+Message-ID: <20021024232026.GF17575@linnie.riede.org>
+References: <dledford@redhat.com> <200210231416.g9NEGoI01976@localhost.localdomain> <20021023171335.B17312@lst.de>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII;
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <16660000.1035501142@w-hlinder>
+Received: from linnie.riede.org (localhost.localdomain [127.0.0.1])
+	by linnie.riede.org (8.11.6/8.11.6) with ESMTP id g9ONKQC20541
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Oct 2002 19:20:26 -0400
+Content-Disposition: inline
+In-Reply-To: <20021023171335.B17312@lst.de>; from hch@lst.de on Wed, Oct 23, 2002 at 11:13:35 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Hanna Linder <hannal@us.ibm.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, tmolina@cox.net, haveblue@us.ibm.com
+To: linux-scsi@vger.kernel.org
 
-Hanna Linder <hannal@us.ibm.com> writes:
+On 2002.10.23 11:13 Christoph Hellwig wrote:
+> 
+> Well, I'm working on removing ->init.  With the patch posted yersterday
+> only sg.c and osst.c are left implementing it.
+> 
+Ermm, osst (which I maintain) works the same as st in this respect.
+I didn't notice any changes to st.c in that patch. What am I missing?
 
-> --On Thursday, October 24, 2002 15:46:56 -0700 Philippe Troin <phil@fifi.org> wrote:
-> 
-> > 
-> > Have you tried booting with "noapic"?
-> 
-> 	Just did, That solves the problem too.
-> 
->  
-> > What error do you get on boot?
-> 
-> a kernel panic and scsi_abort error 0x2 (from what
-> I remember flying by)
-> 
-> Would have to hookup with a serial cable to get all
-> the data. Here is what I can see on the screen:
-> 
-> LASTPHASE = 0x1, SCSISIGI = 0x0, SXFRCTL0 = 0x0
-> SSTAT0 = 0x0, SSTAT1 = 0x8
-> STACK == 0x17, 0x0, 0x0, 0x0
-> SCB count = 4
-> Kernel NEXQSCB = 3
-> Card NEXTQSCB = 0
-> QINFIFO entries: 3 2
-> a list of Waiting Queue entries 
-> and a list of Disconnected Queue entries.
-> QUOTFIFI entries:
-> Sequencer Free SCB List: 0 to 31
-> Pending list: 2
-> Kernel Free SCB list: 1 0
-> Untagged Q(0): 2
-> DevQ(0:0:0):0 waiting
-> qinpos = 0, SCB index = 3
-> Kernel panic: Loop 1
-
-Had the same problem.
-
-Booted noapic, problem solved...
-
-Now, if the driver could be fixed, that would be nicer...
-
-Phil.
+Thanks, Willem Riede.
