@@ -1,42 +1,80 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: build error with aic79xx on 2.4
-Date: Thu, 05 Jun 2003 12:08:46 -0600
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] introduce scsi_host_alloc
+Date: Thu, 5 Jun 2003 13:50:10 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1636000000.1054836526@aslan.btc.adaptec.com>
-References: <1054835575.22202.2.camel@heat>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Message-ID: <20030605205010.GD2154@beaverton.ibm.com>
+References: <20030603203243.GA9018@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic-mail.adaptec.com ([208.236.45.100]:63111 "EHLO
-	magic.adaptec.com") by vger.kernel.org with ESMTP id S264784AbTFERyb
+Received: from e31.co.us.ibm.com ([32.97.110.129]:35824 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S265110AbTFEUeK
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Jun 2003 13:54:31 -0400
-In-Reply-To: <1054835575.22202.2.camel@heat>
+	Thu, 5 Jun 2003 16:34:10 -0400
 Content-Disposition: inline
+In-Reply-To: <20030603203243.GA9018@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: "Jeffrey W. Baker" <jwb@gghcwest.com>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-> The latest aic79xx doesn't build in 2.4.21-rc3 because of Werror and
-> this warning:
+I ran your series of patches. The ips driver was missed in your updates I
+attached the patch below. David Jeffery may want a wrapper for 2.4/2.5
+compatibility.
+
+Christoph Hellwig [hch@lst.de] wrote:
+> Currently this is juist a new name for scsi_register, but we make
+> sure new-style drivers never call scsi_register/scsi_unregister
+> but always scsi_host_alloc/scsi_host_put in this patch so the
+> next patch can introduce code specific to legacy drivers in
+> the former.  Also cleanup scsi_register/scsi_host_alloc a bit.
 > 
-> aic79xx_osm_pci.c:278: warning: `ahd_linux_pci_reserve_mem_region'
-> defined but not used
 > 
-> That seemed harmless, so I removed Werror.  I'd try -rc7 but the
-> x86-64.org patches don't work against that kernel.
+> +
+> +	shost->host_no = scsi_host_next_hn++; /* XXX(hch): still racy */
+>
 
-It points to a bug in that memory mapped I/O is not enabled for ia64,
-alpha, or mips, even though these platforms should support it.  I
-don't believe that the MMAPIO define is required for 2.4.X or 2.5.X
-kernels now since the PCI support files are only compiled in if
-CONFIG_PCI is enabled and any PCI device should be able to attempt
-to do memio if the appropriate BAR is setup.
+We could move the host_no to scsi_sysfs_init_host and use the
+class->subsys.rwsem to protect this.
 
-I've removed the MMAPIO ifdefs locally and will submit an updated
-driver soon.
 
+-andmike
 --
-Justin
+Michael Anderson
+andmike@us.ibm.com
+
+ drivers/scsi/ips.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff -puN drivers/scsi/ips.c~ips_scsi_alloc_fix drivers/scsi/ips.c
+--- hch-scsi-misc-2.5/drivers/scsi/ips.c~ips_scsi_alloc_fix	Thu Jun  5 00:12:53 2003
++++ hch-scsi-misc-2.5-andmike/drivers/scsi/ips.c	Thu Jun  5 00:14:28 2003
+@@ -725,7 +725,7 @@ ips_release(struct Scsi_Host *sh) {
+    free_irq(ha->irq, ha);
+ 
+    IPS_REMOVE_HOST(sh);
+-   scsi_unregister(sh);
++   scsi_host_put(sh);
+ 
+    ips_released_controllers++;
+ 
+@@ -6732,7 +6732,7 @@ static int
+ ips_register_scsi( int index){
+ 	struct Scsi_Host *sh;
+ 	ips_ha_t *ha, *oldha = ips_ha[index];
+-	sh = scsi_register(&ips_driver_template, sizeof(ips_ha_t));
++	sh = scsi_host_alloc(&ips_driver_template, sizeof(ips_ha_t));
+ 	if(!sh) {
+ 		IPS_PRINTK(KERN_WARNING, oldha->pcidev, "Unable to register controller with SCSI subsystem\n");
+ 		return -1;
+@@ -6743,7 +6743,7 @@ ips_register_scsi( int index){
+ 	/* Install the interrupt handler with the new ha */
+ 	if (request_irq(ha->irq, do_ipsintr, SA_SHIRQ, ips_name, ha)) {
+ 		IPS_PRINTK(KERN_WARNING, ha->pcidev, "Unable to install interrupt handler\n" );
+-		scsi_unregister(sh);
++		scsi_host_put(sh);
+ 		return -1;
+ 	}
+ 
+
+_
 
