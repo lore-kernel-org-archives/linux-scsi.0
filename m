@@ -1,55 +1,46 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: 05 Dec 2003 10:33:09 -0500
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Informational Exception mpage [was: usb storage traces]
+Date: Fri, 5 Dec 2003 10:32:34 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1070594036.1603.34.camel@mulgrave>
-References: <200310231734.10263.krmurthy@cisco.com>
-	<200312011740.09693.krmurthy@cisco.com> <1070292174.2007.14.camel@mulgrave>
-	<200312041800.55663.krmurthy@cisco.com>
+Message-ID: <Pine.LNX.4.44L0.0312051025560.850-100000@ida.rowland.org>
+References: <3FD001D4.9010404@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:28422 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264591AbTLEPeC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Dec 2003 10:34:02 -0500
-In-Reply-To: <200312041800.55663.krmurthy@cisco.com>
+Received: from ida.rowland.org ([192.131.102.52]:6660 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S264405AbTLEPce (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2003 10:32:34 -0500
+In-Reply-To: <3FD001D4.9010404@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: "N.C.Krishna Murthy" <krmurthy@cisco.com>
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, davmyers@cisco.com
+To: Douglas Gilbert <dougg@torque.net>
+Cc: Pat LaVarre <p.lavarre@ieee.org>, linux-scsi@vger.kernel.org, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>, David Brownell <david-b@pacbell.net>
 
-On Thu, 2003-12-04 at 07:30, N.C.Krishna Murthy wrote:
-> Having user level utility trigger the rescan thru sysfs interfaces will call
-> scsi_scan() which will inturn call scsi_scan_host_selected().
-> Instead wouldn't it be preferable to call scsi_scan_host_selected()
-> from the iSCSI driver itself?
+On Fri, 5 Dec 2003, Douglas Gilbert wrote:
 
-Well, consider all the ramifications: what happens if the
-reconfiguration is deleting an existing LUN with a mounted filesystem? 
-What happens if the user wants to do something with the new LUN as soon
-as it appears (like fold it into a VM volume, or format it).  The
-hotplug system is designed to propagate events that others might be
-interested in, which it strikes me this is.  So, if you have to trigger
-a hotplug event anyway, you may as well go the whole hog and do the
-reconfiguration as part of the hotplug subsystem.
+> The latest drafts of MMC-3 and MMC-4 call this mode page:
+> "Fault/Failure Reporting Control Page". Looking at the
+> definition in MMC-4 it is basically the same as the
+> Informational Exceptions mode page defined in SPC-3 with
+> a few fields reserved.
 
-> > We could do with a generic infrastructure within SCSI for generating
-> > these events, anyway, if you want to go that route...
-> >
-> I am not much familiar with SCSI hotplug. 
+According to the USB Mass Storage Class - UFI Command Specification, which 
+might be more applicable in this circumstance, page x1c is defined as the 
+Timer and Protect page.
+
+> Just to confuse things further there is an Informational
+> Exceptions _log_ page that started life as the SMART log page.
+> Seems as though someone in t10 is keen on the term
+> "Informational Exceptions" but other groups are not so
+> enthusiastic.
 > 
-> If the generic infrastructure which you mentioned does not exist now and in 
-> case there is a plan to do one such thing is there any framework for that?
-> Wouldn't that require a kernel API which is capable of both 
-> "adding new luns" and "deleting luns which no longer exist"?
+> Various command sets (e.g. SSC (tapes) and MMC (cd/dvd)) "fine
+> tune" the defintion of mode pages. Mode page 0x1c is the
+> only one in which the name changes that I have noticed.
+> SSC also overloads this mode page but keeps the SPC-3 name.
 
-Well, a hotplug event feeds certain information into the environment
-when it triggers the call.  All we really need is a wrapper in SCSI to
-add the SCSI information to the environment and trigger the event in a
-generic fashion.
+So it's hard to say whether Windows uses this page to control SMART 
+logging, disk spin-down times, or something else.  I guess it's just as 
+well that the devices I've looked at don't support it.
 
-James
-
-
+Alan Stern
 
