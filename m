@@ -1,46 +1,46 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Fri, 05 Dec 2003 11:03:32 -0600
+From: David Brownell <david-b@pacbell.net>
+Subject: Re: usb storage traces
+Date: Fri, 05 Dec 2003 09:14:21 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FD0BA64.5080807@us.ibm.com>
-References: <200310231734.10263.krmurthy@cisco.com>	<200312011740.09693.krmurthy@cisco.com> <1070292174.2007.14.camel@mulgrave>	<200312041800.55663.krmurthy@cisco.com> <1070594036.1603.34.camel@mulgrave>
+Message-ID: <3FD0BCED.2070205@pacbell.net>
+References: <Pine.LNX.4.44L0.0312051049040.850-100000@ida.rowland.org> <1070640667.12411.32.camel@patibmrh9>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:60803 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S264245AbTLEREV
+Received: from mta7.pltn13.pbi.net ([64.164.98.8]:45053 "EHLO
+	mta7.pltn13.pbi.net") by vger.kernel.org with ESMTP id S264299AbTLERGU
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Dec 2003 12:04:21 -0500
+	Fri, 5 Dec 2003 12:06:20 -0500
+In-Reply-To: <1070640667.12411.32.camel@patibmrh9>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: "N.C.Krishna Murthy" <krmurthy@cisco.com>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, davmyers@cisco.com
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org, Patrick Mansfield <patmans@us.ibm.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>
 
-James Bottomley wrote:
->>If the generic infrastructure which you mentioned does not exist now and in 
->>case there is a plan to do one such thing is there any framework for that?
->>Wouldn't that require a kernel API which is capable of both 
->>"adding new luns" and "deleting luns which no longer exist"?
+Pat LaVarre wrote:
+>>>What is FSG?
+>>
+>>...
+>>... File-backed Storage Gadget.  
+>>It's a driver for a Linux-based USB _device_ (as opposed to _host_) that 
+>>emulates a USB Mass Storage device, using a file or block device as 
+>>backing storage in somewhat the same manner as the loop driver.
+>>... Unfortunately, ...
 > 
 > 
-> Well, a hotplug event feeds certain information into the environment
-> when it triggers the call.  All we really need is a wrapper in SCSI to
-> add the SCSI information to the environment and trigger the event in a
-> generic fashion.
-> 
+> Wow, our lead FSG developer has no Linux USB _device_.
+
+Well, he does have the "dummy_hcd" which lets him test
+on the same machine running the USB host ... I'll leave
+it to experts to contrast that with CONFIG_SCSI_DEBUG.
+
+The driver was basically working before it hit real
+hardware.
 
 
-This would be wonderful. I am currently writing a LLD and was going to 
-use the scsi_add_device and scsi_remove_device interfaces to add/remove 
-devices as the devices show up and disappear at runtime, but this was 
-going to require me to go through a bit of complexity using a workqueue 
-to do it at task level. If a LLD had interfaces to do this that could be 
-called at interrupt context these interfaces would be much easier to use.
+> Ouch.  Some sponsor with money should fix that.
 
+Or Santa Claus ... ;)
 
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+- Dave
 
