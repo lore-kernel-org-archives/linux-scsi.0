@@ -1,38 +1,60 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: [iscsi 2/2] iscsi-probe.c
-Date: Wed, 24 Sep 2003 17:40:46 +0100
+From: Ruud Linders <rkmp@xs4all.nl>
+Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
+Date: Wed, 24 Sep 2003 18:40:29 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030924174046.A20362@infradead.org>
-References: <20030924144817.A16189@infradead.org> <018b01c382b7$b7f81220$8f074d0a@apac.cisco.com>
+Message-ID: <3F71C8FD.2050109@xs4all.nl>
+References: <Pine.LNX.4.44.0309231114050.15373-100000@home.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:34828 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S261487AbTIXQkt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2003 12:40:49 -0400
-Content-Disposition: inline
-In-Reply-To: <018b01c382b7$b7f81220$8f074d0a@apac.cisco.com>; from smhatre@cisco.com on Wed, Sep 24, 2003 at 09:50:02PM +0530
+Received: from node-c-7b4b.a2000.nl ([62.194.123.75]:10624 "EHLO
+	wsprwl.xs4all.nl") by vger.kernel.org with ESMTP id S261447AbTIXQka
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Sep 2003 12:40:30 -0400
+In-Reply-To: <Pine.LNX.4.44.0309231114050.15373-100000@home.osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Sachin Mhatre (smhatre)" <smhatre@cisco.com>
-Cc: 'Jeff Garzik' <jgarzik@pobox.com>, linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Patrick Mansfield <patmans@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, Andries.Brouwer@cwi.nl
 
-On Wed, Sep 24, 2003 at 09:50:02PM +0530, Sachin Mhatre (smhatre) wrote:
-> indent -kr -i8 -ts8 -sob -l80 -ss -bs -psl <filename>.c
-> However, this does not handle the log messages in double quotes. We will
-> manually take care of such messages.
 
-Please do.
 
-> 2. The opening of files from kernel space is important for the iscsi
-> probing mechanism.
+Linus Torvalds wrote:
+> On Tue, 23 Sep 2003, Ruud Linders wrote:
+> 
+>>I tried the patch but it doesn't work for me using an USB-2 Memory stick
+>>"DiskonKey" on an USB-2 port (with uhci_hcd & ehci_hcd loaded).
+>>
+>>After a 3 minute time-out I get
+>>     "SCSI device sda: drive cache: write through"
+>>and the device starts working just fine.
+> 
+> 
+> Is this different from a plain kernel _without_ the patch?
+> 
 
-It's not.  Opening files from kernelspaced is utter crap.  Creating
-directories and special files from kernelspace is even worse.
+No difference.
 
-> We read/write into the "/proc/scsi/scsi" file for
-> configuration/deconfiguration of iSCSI devices.
+> 
+>>Unloading the ehci_hcd module doesn't make any difference.
+>>Only when ripping out the whole mode-sense call it works immediately :-)
+>>so it appears the device is just unhappy about the sd_do_mode_sense.
+> 
+> 
+> Yes, I think we might want to mark USB devices as being write-through by 
+> default. That said, I think the patch is still better than what we have 
+> now (which just doesn't make any sense at all).
+> 
 
-I see.  And that's exactly wrong.  Take a look at the usb-storage or sbp2
-drivers on how to handle it.
+Fully agree here, 2.4.2x doesn't appear to do this mode_sense checking
+and works with all the usb-mass-storage devices I tried.
+
+
+> 		Linus
+> 
+> 
+
+
+_
+Ruud
 
