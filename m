@@ -1,79 +1,126 @@
 From: Linus Torvalds <torvalds@transmeta.com>
 Subject: Re: [PATCH] /proc/scsi/map
-Date: Thu, 20 Jun 2002 08:13:22 -0700 (PDT)
+Date: Thu, 20 Jun 2002 08:34:40 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0206200800260.8012-100000@home.transmeta.com>
-References: <200206200711.RAA10165@thucydides.inspired.net.au>
+Message-ID: <Pine.LNX.4.44.0206200816380.8012-100000@home.transmeta.com>
+References: <20020620112543.GD26376@gum01m.etpnet.phys.tue.nl>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200206200711.RAA10165@thucydides.inspired.net.au>
+In-Reply-To: <20020620112543.GD26376@gum01m.etpnet.phys.tue.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Schwenke <martin@meltin.net>
-Cc: Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>
+To: Kurt Garloff <garloff@suse.de>
+Cc: Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
 
-On Thu, 20 Jun 2002, Martin Schwenke wrote:
+On Thu, 20 Jun 2002, Kurt Garloff wrote:
+> >
+> > I really despise this.
 >
-> Do you mean the /devices tree or the Open Firmware (OF) device-tree
-> (as in IEEE Std 1275).  I suspect that you mean the former, but...
+> Thanks for your feedback.
 
-The "struct device" tree that is already built up by
+You're too polite for your own good ;)
 
+> Actually, I think you want to address a different problem than I want to.
 >
->     Linus> [...]
+> I do believe that the scsi subsystem does not expose enough information for
+> many things.
 >
->     Linus> All fixed at least to _some_ degree by giving the most
->     Linus> complete address we can, ie something like
+> Look at /proc/scsi/scsi: The information is useful for the reader who wants
+> to know what devices he has and were found by the SCSI subsystem.
+
+I would rephrase that as "the information is only useful to find devices
+found by the SCSI midlayer".
+
+And my point is that you don't make it any better. Your patch perpetuates
+this lopsided world-view that people should care. THAT is the fundamental
+part that I don't like, because it drags us down for the future.
+
+And in the end, if that is the case, it doesn't _help_ if it is "useful"
+or not from a maintenance standpoint. From a maintenance standpoint, a
+SCSI-only interface is a total horror.
+
+I will bet you that there are more IDE CD-RW's out there than there are
+SCSI devices. The fact that people use ide-scsi to write to them is a
+hopefully very temporary situation, and the command interface is going
+to move to a higher layer.
+
+At which point your SCSI-centric world-view now became a total failure, as
+it no longer shows up most of the devices that can write CD's or DVD's any
+more.
+
+Sure, it will still continue to show "what devices were found by the SCSI
+midlayer". But user applications will have to scan other stuff, and find
+the IDE-specific stuff, and then whatever else is out there.
+
+See the problem?
+
+If, on the other hand, you try to take the bull by the horns and realize
+that the notion of "searching for devices" has nothing to do with SCSI at
+_all_, you may find yourself with more work on your hands, but on the
+other hand, wouldn't it be just so _nice_ to be able to do
+
+	find /devices -name cd-rw
+
+to find all cd-rw's in the system? Does it work that way now? Absolutely
+not. But most of the infrastructure is actually there today. Wouldn't it
+be _nice_ if after the CD-writing app has found all cd-rw's, it just opens
+them, and the kernel will automatically open the right device (whether it
+is a scsi-generic one or a IDE one)?
+
+(No, I'm not serious about the "cd-rw" name itself, I'm just making a
+simple example).
+
+> And completely useless for any program that wants to find a scanner,
+> CD-Writer, ... as there is no connection to the high-level drivers attached
+> to them.
+
+I'm not disputing that.
+
+However, I _am_ disputing that this should be done in some SCSI-centric
+way that works for SCSI but nothing else.
+
+When I want to find a CD-ROM, I don't want to worry about whether it is
+IDE or SCSI. I would
+
+> But I still think the SCSI subsystem should report which SCSI (low-level)
+> device is mapped to what high-level driver.
+> Would you accept a patch that adds a line like
 >
->     Linus> 	/devices/root/pci0/00:02.0/02:1f.0/03:07.0
+> Host: scsi3 Channel: 00 Id: 12 Lun: 00
+>   Vendor: IBM      Model: DPSS-336950N     Rev: S84D
+>   Type:   Direct-Access                    ANSI SCSI revision: 03
+>   Attached drivers: sg12(c:15:0c) sdf(b:08:50)
+>   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> to /proc/scsi/scsi ?
+
+That would be less offensive to me if only because it doesn't introduce a
+_new_ interface that is SCSI-only, it only extends on an old one. It makes
+no _technical_ difference, but I'd rather extend an old broken interface
+than introduce a totally new broken interface.
+
+> >  - is limited to a (arbitrary) subset of the disks in your system
 >
-> That looks similar, but not identical to an Open Firmware node for a
-> SCSI device:
+> You mean all disks driven by the SCSI subsystem, right?
+
+Yes. In particular, you miss the great majority of disks that way (IDE),
+and you even miss SCSI disks that are behind controllers where the driver
+writer refused to use the mid-layer.
+
+For CD burning, you may be of the opinion that everything - including IDE
+- _has_ to be SCSI layer anyway (because that is how it is right now), but
+that is not going to be the case all that much longer, I hope.
+
+> >  - has completely bogus information about "location" that has nothing to
+> >    do with real life, yet pruports to be an "address" even though it
+> >    obviously isn't.
 >
->   device-tree/pci@3fff5e09000/pci@b,6/scsi@1,1/sd/...
+> The CBTU tuple uniquely addresses a SCSI device in a running system.
 
-Try it out yourself. Just do
-
-	mount -t driverfs /devices /devices
-
-and then look at the whole glory in some graphical file manager to get a
-view of the tree (actually, most file managers are somewhat confused about
-the fact that the directory counts don't reflect sub-directories, so you
-may have to open the subdirectories by hand, whatever. That's a bug.
-Should be fixed. I'm cc'ing Pat)
-
-> Why not use the structure of, and a subset of the capabilities of, an
-> OF device-tree for building /devices?  It's a little more verbose, but
-> it's a standard and it fits the current problem pretty well.
-
-Because an OF devices tree has nothing to do with Linux?
-
-Open Firmware is dead, dead, dead. It's not sleeping. It's an ex-standard.
-Intel and the PC market never bought into it, so it doesn't exist.
-
-End result: Linux has a notion of a "struct device", and it's an internal
-kernel representation of the whole bus structure as far as Linux can tell.
-It's then exported as a filesystem, but that's not the important part: the
-device tree is valid (and important) even when it's not exported to user
-space, simply because things like power-management events etc have to
-honor the tree and traverse it in the right order.
-
-If you like OF, you can actually use OF to _populate_ the Linux device
-tree. The people who like ACPI (yet, they exist) do that with ACPI. The
-Linux device tree is _completely_ agnostic, and absolutely does _not_ want
-to know or depend on firmware issues, since firmware is not portable.
-
-(Right now ACPI does this, so all the strange ACPI nodes will show up in
-/devices/root/ACPI if you have ACPI enabled).
-
-Right now you cannot do a lot with it, but it does already give you a
-global view of the system - at least for those buses that use "struct
-device", namely USB and PCI.
-
-It should be possible to export _any_ bus using this. Most definitely
-including SCSI.
+Yes, but that's not enough. Other people are still asking for physical
+location, so let's try to fix two things with _one_ generic interface that
+is at least agnostic to how a device is connected to the kernel..
 
 		Linus
 
