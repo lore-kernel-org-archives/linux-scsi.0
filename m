@@ -1,90 +1,64 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] kill blk_nohighio boot parameter
-Date: Tue, 3 Jun 2003 23:23:04 +0200
+From: "Deas, Jim" <James.Deas@warnerbros.com>
+Subject: RE: 3ware and scsi ids
+Date: Tue, 3 Jun 2003 15:16:42 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030603212303.GA9562@lst.de>
+Message-ID: <12C3C1794982613-01@MMS__ad.corp.aoltw.net_>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:26537 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S261322AbTFCVJj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2003 17:09:39 -0400
-Content-Disposition: inline
+Received: from h-64-236-243-31.twi.com ([64.236.243.31]:12849 "HELO
+	atwburmw02.twi.com") by vger.kernel.org with SMTP id S261352AbTFCWGD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Jun 2003 18:06:03 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: linux-scsi@vger.kernel.org
 
-It was useful in 2.4 to debug the blockhighmem stuff but in 2.5
-it's b0rked because doesn't have any implication except propagation
-of the highmem_io flags from the scsi host template to the scsi
-host structure.  It also only worked on i386..
+I have never seen labels in the raidtab.
+fstab yes. raidtab no. Is it possible?
+Is this a better solution than LVM?
+LVM seem to insert yet another layer.
+I would like to avoid that if possible.
+
+JD
 
 
-diff -Nru a/arch/i386/kernel/setup.c b/arch/i386/kernel/setup.c
---- a/arch/i386/kernel/setup.c	Tue Jun  3 01:32:46 2003
-+++ b/arch/i386/kernel/setup.c	Tue Jun  3 01:32:46 2003
-@@ -96,7 +96,6 @@
- extern void generic_apic_probe(char *);
- extern int root_mountflags;
- extern char _text, _etext, _edata, _end;
--extern int blk_nohighio;
- 
- unsigned long saved_videomode;
- 
-@@ -991,15 +990,6 @@
- #endif
- #endif
- }
--
--static int __init highio_setup(char *str)
--{
--	printk("i386: disabling HIGHMEM block I/O\n");
--	blk_nohighio = 1;
--	return 1;
--}
--__setup("nohighio", highio_setup);
-- 
- 
- #include "setup_arch_post.h"
- /*
-diff -Nru a/drivers/block/ll_rw_blk.c b/drivers/block/ll_rw_blk.c
---- a/drivers/block/ll_rw_blk.c	Tue Jun  3 01:32:46 2003
-+++ b/drivers/block/ll_rw_blk.c	Tue Jun  3 01:32:46 2003
-@@ -49,8 +49,6 @@
- static int queue_nr_requests;
- 
- unsigned long blk_max_low_pfn, blk_max_pfn;
--int blk_nohighio = 0;
--
- static wait_queue_head_t congestion_wqh[2];
- 
- /*
-@@ -2361,7 +2359,6 @@
- EXPORT_SYMBOL(blk_queue_segment_boundary);
- EXPORT_SYMBOL(blk_queue_dma_alignment);
- EXPORT_SYMBOL(blk_rq_map_sg);
--EXPORT_SYMBOL(blk_nohighio);
- EXPORT_SYMBOL(blk_dump_rq_flags);
- EXPORT_SYMBOL(submit_bio);
- EXPORT_SYMBOL(blk_queue_assign_lock);
-diff -Nru a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
---- a/drivers/scsi/hosts.c	Tue Jun  3 01:32:46 2003
-+++ b/drivers/scsi/hosts.c	Tue Jun  3 01:32:46 2003
-@@ -125,7 +125,6 @@
-  **/
- struct Scsi_Host *scsi_host_alloc(Scsi_Host_Template *sht, int privsize)
- {
--	extern int blk_nohighio;
- 	struct Scsi_Host *shost;
- 	int gfp_mask = GFP_KERNEL, rval;
- 	DECLARE_COMPLETION(complete);
-@@ -186,8 +185,7 @@
- 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
- 	shost->use_clustering = sht->use_clustering;
- 	shost->use_blk_tcq = sht->use_blk_tcq;
--	if (!blk_nohighio)
--		shost->highmem_io = sht->highmem_io;
-+	shost->highmem_io = sht->highmem_io;
- 
- 	if (!sht->max_host_blocked)
- 		shost->max_host_blocked = sht->max_host_blocked;
+-----Original Message-----
+From: Alan Cox [mailto:alan@lxorguk.ukuu.org.uk]
+Sent: Tuesday, June 03, 2003 12:58 PM
+To: Deas, Jim
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: 3ware and scsi ids
+
+
+On Maw, 2003-06-03 at 19:05, Deas, Jim wrote:
+> In short, if /dev/sdb dies, all raids become bad as all scsi ids
+> shift down making my raidtab file now point at the wrong drives.
+> (I assume this will also be a possible problem when I use
+> my USB dongle to update software.)
+
+Yes that sometimes comes up, along with a wonderful variant where 
+USB cameras beat the PCI sound card to being first sound device
+> 
+>  Is there a way to hard assign logical /dev/sd(x) in the driver
+> so they will always map the same ide port on the 3ware controllers?
+> 3ware is no help on this. They say it is the bios/system and they
+> have no control over this.
+
+Correct.
+
+The vendor Linux systems mostly support mount by label so you can
+avoid using anything but the file system label to find a disk if
+something vanishes.
+
+So you'll see lines like this in /etc/fstab
+
+LABEL=/boot             /boot                   ext3    defaults       1
+2
+
+
+
+
+
