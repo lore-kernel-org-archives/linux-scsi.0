@@ -1,186 +1,74 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH] dpt_i2o changes for 2.6.2 kernel in support of 64 bit and bitrot (CHANGELOG)
-Date: Tue, 10 Feb 2004 15:54:13 -0500
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: lots and lots of disks again
+Date: Tue, 10 Feb 2004 21:58:33 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F255015@otce2k03.adaptec.com>
+Message-ID: <20040210205833.GT4010@tpkurt.garloff.de>
+References: <20040204024512.5bf68428.akpm@osdl.org> <20040210110417.GB4010@tpkurt.garloff.de> <20040210112658.GC4010@tpkurt.garloff.de> <20040210133932.A3870@infradead.org> <20040210154751.GH4010@tpkurt.garloff.de> <20040210155203.A5238@infradead.org> <20040210160803.GL4010@tpkurt.garloff.de> <20040210211002.A1534@pclin040.win.tue.nl>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C3F018.0A2BB376"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="js+/jT5SQQin5+Fm"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:58003 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S266128AbUBJUyQ (ORCPT
+Received: from ns.suse.de ([195.135.220.2]:25751 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S266181AbUBJU7u (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Feb 2004 15:54:16 -0500
-Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id i1AKsFJ06202
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Feb 2004 12:54:15 -0800
-Received: from otce2k03.adaptec.com (otce2k03.adaptec.com [10.12.1.72])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id i1AKsF822308
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Feb 2004 12:54:15 -0800
-content-class: urn:content-classes:message
+	Tue, 10 Feb 2004 15:59:50 -0500
+Content-Disposition: inline
+In-Reply-To: <20040210211002.A1534@pclin040.win.tue.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Andries Brouwer <aebr@win.tue.nl>
+Cc: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, Badari Pulavarty <pbadari@us.ibm.com>, Matthew Wilcox <willy@debian.org>, James Bottomley <James.Bottomley@steeleye.com>
 
-This is a multi-part message in MIME format.
 
-------_=_NextPart_001_01C3F018.0A2BB376
-Content-Type: text/plain;
-	charset="us-ascii"
+--js+/jT5SQQin5+Fm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-CHANGELOG as referenced previously
+Hi Andries,
 
------Original Message-----
-From: Salyzyn, Mark=20
-Sent: Tuesday, February 10, 2004 3:53 PM
-To: 'linux-scsi'
-Subject: [PATCH] dpt_i2o changes for 2.6.2 kernel in support of 64 bit
-and bitrot (part 1)
+On Tue, Feb 10, 2004 at 09:10:02PM +0100, Andries Brouwer wrote:
+> + *       major     p2    disc2   disc  p1
+> + *   |............|..|..........|....|....| <- dev_t
+> + *    31        20    17       8 7  4 3  0
+[...]
+>=20
+> It is true that the first step needed is some agreement on
+> how to assign device numbers to disks and their partitions.
+>=20
+> The above suggestion is really ugly, however.
 
-Read the CHANGELOG in set of patches for complete description of all the
-history and modifications to the driver.
+Nice! Ask two people and you'll get three opinions.
 
-This is a whole scale synchronization of the driver in the 2.6.2 tree to
-the Adaptec source code. I know the drill, this is just too big to be
-accepted ;-> but it will be very difficult to separate out such a
-fundamental set of changes in the driver.
+> I can hardly imagine that we would like to start such crap
+> while still in the design phase.
 
-This patch is broken into 5 parts, one for CHANGELOG, README.dpti and
-dpt_sig.h each, plus a two part for the main source code.
+We maintain backwards compatibility.
+We need some bit shuffling and the rest is straightforward.
+As we are pretty sure to not need beyong 256k disks, we reserve two
+extra bits for the partition (though we can't currently use it).
 
-Sincerely -- Mark Salyzyn
+The only alternative that I see is leaving the old majors alone
+and starting a new scheme with new majors. Not really nice either;
+if you think about supporting > 16 partitions, it's even very
+inconsistent.
 
-------_=_NextPart_001_01C3F018.0A2BB376
-Content-Type: application/octet-stream;
-	name="dpt_i2o.CHANGELOG.2.6.patch"
-Content-Transfer-Encoding: base64
-Content-Description: dpt_i2o.CHANGELOG.2.6.patch
-Content-Disposition: attachment;
-	filename="dpt_i2o.CHANGELOG.2.6.patch"
+I don't see what's crappy with the suggestion. Tell us!
 
-ZGlmZiAtdSAtUCAtLXJlY3Vyc2l2ZSBsaW51eC0yLjYuMi5nZW5lcmljL2RyaXZlcnMvc2NzaS9D
-SEFOR0VMT0cgbGludXgtMi42LjItMjMyMi9kcml2ZXJzL3Njc2kvQ0hBTkdFTE9HCi0tLSBsaW51
-eC0yLjYuMi5nZW5lcmljL2RyaXZlcnMvc2NzaS9DSEFOR0VMT0cJV2VkIERlYyAzMSAxNjowMDow
-MCAxOTY5CisrKyBsaW51eC0yLjYuMi0yMzIyL2RyaXZlcnMvc2NzaS9DSEFOR0VMT0cJVGh1IEph
-biAyOSAwODoyMzozNyAyMDA0CkBAIC0wLDAgKzEsMTkxIEBACitWZXJzaW9uOiAyLjQuNQorCisJ
-LSBWYXJpb3VzIHRpbWVvdXRzIG5lY2Vzc2FyaWx5IG5lZWRlZCB0byBhbGxvdyBtZW1vcnkgYWxs
-b2NhdGlvbnMgdG8KKwkgIGxlYWsgcmF0aGVyIHRoYW4gZ2VuZXJhdGUgYSBwb3NzaWJsZSB0aW1l
-Ym9tYiBjb3JydXB0aW9uLgorCitWZXJzaW9uOiAyLjQuNworCisJLSBCdW1wIHZlcnNpb24sIG5l
-dyBwYWNrYWdpbmcgYXMgYSByZXN1bHQgb2YgbWFueSBjaGFuZ2VzIGluIHRoZQorCSAgYWFjcmFp
-ZCBkcml2ZXIuCisKK1ZlcnNpb246IDIuNC45CisKK1JFQURNRS5kcHRpOgorCS0gQWRkZWQgY29t
-bWVudHMgYWJvdXQgNjQgYml0CisKK2RwdGlfaW9jdGwuaDoKKwktIEFkZGVkIGF1dGhvciBjb21t
-ZW50CisKK2RwdF9pMm8uYzoKKwktIEFkZGVkIGF1dGhvciBjb21tZW50CisJLSBSZW1vdmVkIEFE
-RFIzMiBjb25zdHJ1Y3QKKwktIE1lcmdlZCAyLjYuMCBjb25jZXB0IGNoYW5nZXMgYXMgZGlzY292
-ZXJkIGluIGFhY3JhaWQgZHJpdmVyIChtYW55CisJICBjb3NtZXRpYyBjaGFuZ2VzIGFuZCBhZGRp
-dGlvbmFsIGlmZGVmcykuCisJLSBBZGRlZCBwYWVfc3VwcG9ydCAoNjQgYml0KSBhbmQgcGVyZm9y
-bWVkIGZpcnN0IHBhc3MgNjQgYml0CisJICBjbGFyaXR5IHRvIGRyaXZlci4KKwktIENoYW5nZWQg
-dG8gdXRpbGl6ZSBwY2lfYWxsb2NfY29uc2lzdGVudCBhcyBuZWNlc3NhcnkuCisJLSBSZW1vdmUg
-dmlydF90b19idXMgcm91dGluZXMuCisJLSB1dGlsaXplZCBjcHVfdG9fbGUjIyBhbmQgbGUjI190
-b19jcHUgaGFuZGxlcnMuCisJLSB1c2VkIHNlY3Rvcl9kaXYgZnVuY3Rpb24gdG8gcHJldmVudCBt
-YXRoIG92ZXJmbG93LgorCS0gZm9ydGlmaWVkIHByb2NfaW50byB0byByZWZsZWN0IG1vcmUgYWNj
-dXJhdGUgZGV0YWlscyBhYm91dCB0aGUgZHJpdmVyCisJLSBzZWdyZWdhdGUgdmEgKHZpcnR1YWwg
-YWRkcmVzcykgYW5kIHBhIChwaHlzaWNhbCBhZGRyZXNzKS4KKwktIGNvbW1udCB1bmxvY2sgYXJv
-dW5kIHdhaXQgZm9yIGNvbW1hbmQgY29tcGxldGlvbiBiZWNhdXNlIG9mIGZhdWx0CisJICBpbiBw
-cmUtZW1wdGl2ZSBrZXJuZWwuCisJLSBpcnEgcm91dGluZXMgcmV0dXJuIGEgdmFsdWUgaW4gbGF0
-ZXIga2VybmVscy4KKworZHB0aS5oOgorCS0gQWRkZWQgYXV0aG9yIGNvbW1lbnQKKwktIE1lcmdl
-ZCAyLjYuMCBjb25jZXB0IGNoYW5nZXMgYXMgZGlzY292ZXJkIGluIGFhY3JhaWQgZHJpdmVyICht
-YW55CisJICBjb3NtZXRpYyBjaGFuZ2VzIGFuZCBhZGRpdGlvbmFsIGlmZGVmcykuCisKK1ZlcnNp
-b246IDIuNS4wLTIxNTkKKworZHB0X2kyby5jOgorCS0gcmVwbGFjZSBkZXByZWNhdGVkIGNtZC0+
-Y2hhbm5lbCB3aXRoIGNtZC0+ZGV2aWNlLT5jaGFubmVsCisJLSByZXBsYWNlIGRlcHJlY2F0ZWQg
-Y21kLT50YXJnZXQgd2l0aCBjbWQtPmRldmljZS0+aWQKKwktIHJlcGxhY2UgZGVwcmVjYXRlZCBj
-bWQtPmx1biB3aXRoIGNtZC0+ZGV2aWNlLT5sdW4KKworVmVyc2lvbjogMi41LjAtMjE4MglTZXAg
-MTIgMjAwMworVmVyc2lvbjogMi41LjAtMjE4OAlTZXAgMTggMjAwMworVmVyc2lvbjogMi41LjAt
-MjIwMQlTZXAgMjkgMjAwMworVmVyc2lvbjogMi41LjAtMjIwNworVmVyc2lvbjogMi41LjAtMjIx
-NwlPY3QgIDcgMjAwMworCitkcHRfaTJvLmM6CisJLSBBZGRlZCBwY2lfc2V0X2RtYV9tYXNrIGlu
-IHN1cHBvcnQgb2Ygb2xkZXIgKDIuNC4yKSBrZXJuZWxzCisKK1ZlcnNpb246IDIuNS4wLTIyMjYK
-KworZHB0X2kyby5jOgorCS0gUmVtb3ZlZCBlcnJvciBpZmRlZiBhc2tpbmcgZm9yIGRyaXZlciB0
-byBiZSBjb252ZXJ0ZWQgdG8gRE1BLW1hcHBpbmcKKwktIEFkZGVkIF9feDg2XzY0X18gaWZkZWYg
-Zm9yIHNpZ25hdHVyZSwgcmVwb3J0aW5nIFBST0NfU0VYSVVNIGZvcgorCSAgcHJvY2Vzc29yIHR5
-cGUuCisJLSBwY2kgdGFibGUgY2FuIHJlbWFpbiBpbiBhbGwgdmVyc2lvbnMgb2YgdGhlIGRyaXZl
-ci4KKwktIEFkZGVkIHN1cHBvcnQgZm9yIGFzbS14ODZfNjQvaW9jdGwzMi5oIGluIG9yZGVyIHRv
-IHN1cHBvcnQgdGhlIDMyCisJICBiaXQgbWFuYWdlbWVudCBhcHBsaWNhdGlvbnMgaW4gdGhlIEFN
-RDY0IGVudmlyb25tZW50LiBBZGRlZCBjYWxscworCSAgdG8gYm90aCByZWdpc3Rlcl9pb2N0bDMy
-X2NvbnZlcnNpb24gb24gbG9hZCwgYW5kCisJICB1bnJlZ2lzdGVyX2lvY3RsX2NvbnZlcnNpb24g
-dXBvbiB1bmxvYWQgZm9yIHRoZSBrbm93biBzZXQgb2YgdXNlZAorCSAgaW9jdGxzLgorCS0gTW92
-ZWQgaW5pdGlhbGl6YXRpb24gb2YgcHJvY19kaXIgdG8gdGVtcGxhdGUuCisJLSBVc2UgY21kLT5k
-ZXZpY2UtPmhvc3QgcmF0aGVyIHRoYW4gdGhlIGRlcHJlY2F0ZWQgY21kLT5ob3N0IHJlZmVyZW5j
-ZS4KKwktIFVzZSBjbWQtPmRldmljZS0+Y2hhbm5lbCByYXRoZXIgdGhhbiB0aGUgZGVwcmVjYXRl
-ZCBjbWQtPmNoYW5uZWwKKwkgIHJlZmVyZW5jZS4KKwktIEZvciA2NCBiaXQgZW52aXJvbm1lbnRz
-LCBjaGFuZ2UgdGhlIHUzMiBjb21tYW5kIHRhZyBmcm9tIHRoZSBjb21tYW5kCisJICBwb2ludGVy
-IHRvIHRoZSBjb21tYW5kIHNlcmlhbF9udW1iZXIsIHdpdGggcmV2ZXJzZSByZWZlcmVuY2luZyB3
-aGVuCisJICB0aGUgaW50ZXJydXB0IG9jY3Vycy4gQWRkZWQgYSBhZHB0X2NtZF9mcm9tX2NvbnRl
-eHQgcm91dGluZSB0bworCSAgcGVyZm9ybSB0aGUgcmV2ZXJzZSByZWZlcmVuY2luZy4KKwktIGJh
-c2VfYWRkcl92aXJ0LCBtc2dfYWRkcl92aXJ0IGFuZCBmcmllbmRzIGNoYW5nZSBmcm9tIHVuc2ln
-bmVkIGxvbmcKKwkgIHR5cGUgdG8gY2hhciAqIHR5cGUgaW4gc3VwcG9ydCBvZiA2NCBiaXQgZW52
-aXJvbm1lbnRzLiBUaGlzIGluY2x1ZGVzCisJICBlZmZlY3RzIG9uIHJldHVybnMgZnJvbSBpb3Jl
-bWFwIGFuZCB1dGlsaXphdGlvbnMgb2YgaW8gaGVscGVyCisJICBmdW5jdGlvbnMgbGlrZSByZWFk
-YiBldGMuIFRoaXMgYWxzbyBzcGlsbHMgaW50byBpcnFfbWFzaywgcG9zdF9wb3J0CisJICBhbmQg
-cmVwbHlfcG9ydCBkZWZpbml0aW9ucy4KKwktIHVubG9jayBpb19yZXF1ZXN0X2xvY2ssIG9yIGhv
-c3QtPmhvc3RfbG9jayBzdXJyb3VuZGluZyB3YWl0IGZvcgorCSAgY29tbWFuZCBjb21wbGV0aW9u
-LgorCS0gaW50ZXJuYWwgcGFzc3Rocm91Z2ggc2dfbGlzdCBjaGFuZ2VzIGZyb20gdWxvbmcgdG8g
-dm9pZCAqLgorCS0gU3dpdGNoIHRvIGltaW5vciwgaW5zdGVhZCBvZiBib3RoIHRoZSBkZXByZWNh
-dGVkIG1pbm9yIGFuZCBNSU5PUgorCSAgZnVuY3Rpb25zLgorCS0gdXNlIGRlZmluZWQgX19zcGFy
-Y19fIHJhdGhlciB0aGFuIHByZXByb2Nlc3NvciBzeW50YWN0aWNhbGx5CisJICBpbmNvcnJlY3Qg
-ZGVmaW5lIF9fc3BhcmNfXworCitkcHRpLmg6CisJLSBiYXNlX2FkZHJfdmlydCwgbXNnX2FkZHJf
-dmlydCBhbmQgZnJpZW5kcyBjaGFuZ2UgZnJvbSB1bnNpZ25lZCBsb25nCisJICB0eXBlIHRvIGNo
-YXIgKiB0eXBlIGluIHN1cHBvcnQgb2YgNjQgYml0IGVudmlyb25tZW50cy4gVGhpcyBpbmNsdWRl
-cworCSAgZWZmZWN0cyBvbiByZXR1cm5zIGZyb20gaW9yZW1hcCBhbmQgdXRpbGl6YXRpb25zIG9m
-IGlvIGhlbHBlcgorCSAgZnVuY3Rpb25zIGxpa2UgcmVhZGIgZXRjLiBUaGlzIGFsc28gc3BpbGxz
-IGludG8gaXJxX21hc2ssIHBvc3RfcG9ydAorCSAgYW5kIHJlcGx5X3BvcnQgZGVmaW5pdGlvbnMu
-CisJLSBTd2l0Y2ggdG8gaW1pbm9yLCBpbnN0ZWFkIG9mIGJvdGggdGhlIGRlcHJlY2F0ZWQgbWlu
-b3IgYW5kIE1JTk9SCisJICBmdW5jdGlvbnMuIE1ha2UgYSBkZWZpbml0aW9uIGZvciBpbWlub3Ig
-YXMgbmVjZXNzYXJ5IGZvciBvbGRlcgorCSAga2VybmVscy4KKwktIERlZmluZSBzZXRfY3VycmVu
-dF9zdGF0ZSBmb3Igb2xkZXIga2VybmVscy4KKwktIFN3aXRjaCB0byB3aG9sZXNhbGUgaWZkZWYg
-b2YgcHJvdG90eXBlcyBmcm9tIG1pZC1wcm90b3R5cGUgaWZkZWZzLgorCitWZXJzaW9uOiAyLjUu
-MC0yMjUzCU9jdCAxNyAyMDAzCitWZXJzaW9uOiAyLjUuMC0yMjU0CU9jdCAxNyAyMDAzCisKK2Rw
-dF9pMm8uYzoKKwktIENvcnJlY3RlZCBzaWduYXR1cmVzIHRvIG1hdGNoIGxhdGVzdCBkcHRzaWcu
-aCBkZWZpbml0aW9ucy4KKworZHB0L2RwdHNpZy5oOgorCS0gVXBkYXRlZCB0byBsYXRlc3Qgc25h
-cHNob3QKKwktIE5vdGFibGUgc2lkZSBlZmZlY3Qgd2FzIGFkZGl0aW9uIG9mIElUQU5JVU0gYW5k
-IFNFWElVTSBkZWZpbml0aW9ucy4KKworVmVyc2lvbjogMi41LjAtMjI1NglPY3QgMjAgMjAwMwor
-VmVyc2lvbjogMi41LjAtMjI1NwlPY3QgMjAgMjAwMworVmVyc2lvbjogMi41LjAtMjI2MQlPY3Qg
-MjEgMjAwMyAoRGVidWcpCitWZXJzaW9uOiAyLjUuMC0yMjY2CU9jdCAyMSAyMDAzIChEZWJ1ZykK
-KworZHB0X2kyby5jOgorCS0gTW92ZWQgaW5pdGlhbGl6YXRpb24gb2YgdXNlX25ld19laF9jb2Rl
-IHRvIHRlbXBsYXRlLgorCS0gQWRkZWQgY29kZSB0byBpbml0aWFsaXplIHRoZSB0ZW1wbGF0ZSBw
-cmVzZW50IG1lbWJlciB0byBtYXRjaAorCSAgYWFjcmFpZCBjb2RlLgorCitWZXJzaW9uOiAyLjUu
-MC0yMjY3CU9jdCAyMiAyMDAzCisKK2RwdF9pMm8uYzoKKwktIFVubG9jayBpb19yZXF1ZXN0X2xv
-Y2sgb3IgaG9zdC0+aG9zdF9sb2NrIGJlZm9yZSBnb2luZyB0byBzbGVlcAorCSAgd2FpdGluZyBv
-biBjb21tYW5kIGNvbXBsZXRpb24uIERvIHNvICpvbmx5KiBpZiB0aGUgbG9jayBpcyBoZWxkLAor
-CSAgYW5kIHJlLWxvY2sgb25seSBpZiBpdCB3YXMgaGVsZC4gRm9ybWVybHkgdGhpcyBjb2RlIHdv
-dWxkIHBpbmctcG9uZworCSAgaGFyZCBjb2RlZCBlbmFibGVkIGFuZCBkaXNhYmxlZCwgaGlkaW5n
-IHRoZSBmYWN0IHRoYXQgdGhpcyBjb2RlIHBhdGgKKwkgIGlzIGNhbGxlZCBhdCBpbml0aWFsaXph
-dGlvbiB0aW1lIGFuZCBhdCBydW50aW1lIHdpdGggZGlmZmVyaW5nCisJICBsb2NraW5nIGNvbmRp
-dGlvbnMuCisKK1ZlcnNpb246IDIuNS4wLTIyNjgJT2N0IDIyIDIwMDMKK1ZlcnNpb246IDIuNS4w
-LTIyNjkJT2N0IDIyIDIwMDMKKworZHB0X2kyby5jOgorCS0gUmVtb3ZlZCBpbml0aWFsaXphdGlv
-biBvZiBwcmVzZW50IGluIHRlbXBsYXRlIGFzIGFsbCBjdXJyZW50CisJICBrZXJuZWxzIHVwZGF0
-ZSB0aGUgdmFsdWUgYmFzZWQgb24gdGhlIHJldHVybiB2YWx1ZSBmcm9tIHRoZSBkZXRlY3QKKwkg
-IHJvdXRpbmUuCisKK1ZlcnNpb246IDIuNS4wLTIyNzAJT2N0IDI0IDIwMDMKK1ZlcnNpb246IDIu
-NS4wLTIyNzEJT2N0IDI0IDIwMDMKK1ZlcnNpb246IDIuNS4wLTIyNzIJT2N0IDI0IDIwMDMKK1Zl
-cnNpb246IDIuNS4wLTIyNzMJT2N0IDI0IDIwMDMKK1ZlcnNpb246IDIuNS4wLTIyNzUJT2N0IDI3
-IDIwMDMKK1ZlcnNpb246IDIuNS4wLTIyNzYJT2N0IDI3IDIwMDMKKworZHB0X2kyby5jOgorCS0g
-QmFjayByZWZlcmVuY2UgdG8gbGFzdCBzZyBlbGVtZW50J3MgZmxhZ3Mgd2FzIGZsYXdlZCBpbiBw
-YWVfc3VwcG9ydCdkCisJICBjYXNlLgorCitWZXJzaW9uOiAyLjUuMC0yMjgyCisKK2RwdF9pMm8u
-YzoKKwktIHJlcWxlbiB3YXMgZmxhd2VkIGluIHBhZV9zdXBwb3J0J2QgY2FzZS4KKworVmVyc2lv
-bjogMi41LjAtMjMwMgorCitkcHRfaTJvLmM6CisJLSBzZXQgbWF4X3NlY3RvciB0byA0MDk2ICgy
-TUIpIGluc3RlYWQgb2YgbGV0dGluZyBpdCBiZSB0aGUgZGVmYXVsdAorCSAgb2YgMjU1ICgxIGJs
-b2NrIGxlc3MgdGhhbiAxMjhLQikuCisJLSBDYWxjdWxhdGUgdGhlIHNjYXR0ZXIgZ2F0aGVyIGxp
-bWl0IGZvciB0aGUgNjQgYml0IFNHIGNhc2UgYXMgd2VsbAorCSAgd2hlbiBlbmFibGVkLgorCS0g
-c2luZ2xlIHJlcXVlc3RzIGRvIG5vdCBnZXQgdW5tYXBwZWQgcHJvcGVybHksIHVzaW5nIHRoZSA2
-NCBiaXQKKwkgIGRtYV9oYW5kbGUgaW5zdGVhZCBvZiBwdHIuCisJLSBTY2F0dGVyIGdhdGhlciBm
-aXh1cHMgZm9yIGxhc3QgU0cgZWxlbWVudCBhcmUgaW5jb3JyZWN0IGluIHRoZQorCSAgNjQgYml0
-IFNHIGNhc2UuCisKK1ZlcnNpb246IDIuNS4wLTIzMTQKKworZHB0X2kyby5jICYgZHB0aS5oOgor
-CS0gaW1pbm9yIHRha2VzIGlub2RlLCBub3QgaW5vZGUtPmlfcmRldiBhcmd1bWVudC4KKworZHB0
-X2kyby5jOgorCS0gdXNlIGluX3JlY292ZXJ5LCBzaG9zdF9zdGF0ZSwgZGV2aWNlX2J1c3kgb3Ig
-YWNjZXNzX2NvdW50IHdoZXJlCisJICBhcHByb3ByaWF0ZS4gUmVwbGFjZXMgc2ltcGxlIHVzZSBv
-ZiBhY2Nlc3NfY291bnQgZm9yIGFsbCB2ZXJzaW9ucworCSAgb2YgdGhlIG9wZXJhdGluZyBzeXN0
-ZW0uCisJLSBpZiB0aGUgZGV2aWNlIGlzIG5vbmUgREFTRCwgdGhlbiBkbyBub3Qgb3ZlcnJpZGUg
-dGhlIGluY29taW5nCisJICB0aW1lb3V0IHRvIDUgbWludXRlcy4gVGhlIDUgbWludXRlIHRpbWVv
-dXQgaXMgdG8gZGVhbCB3aXRoIHRoZQorCSAgd29yc3QgY2FzZSBjb21tYW5kIG9wZXJhdGlvbiB1
-bmRlciBoZWF2eSBsb2FkIGFzIGEgcmVzdWx0IG9mCisJICB0aGUgY29udHJvbGxlcnMgZGlzayBv
-cGVyYXRpb24gb3B0aW1pemF0aW9uIGhhbmRsaW5nLgorCitWZXJzaW9uOiAyLjUuMC0yMzE1CisK
-K2RwdF9pMm8uYzogS2VuIEJlYXR5IDxrZW5Abm92YS5vcmc+CisJLSBBZGp1c3RlZCBpZmRlZnMg
-Zm9yIGtlcm5lbCB2ZXJzaW9uIHRvIG1ha2UgbW9yZSBzZW5zZS4KKworZHB0X2kyby5jOiBNYXJr
-X1NhbHl6eW5AYWRhcHRlYy5jb20KKwktIFdoZW4gd2UgdGltZSBvdXQsIGJlZm9yZSB3ZSBleGl0
-LCB3ZSBtdXN0IG51bGwgb3V0IHRoZSB3YWtlX3VwCisJICByZWZlcmVuY2UgdG8gcHJldmVudCBh
-IGtlcm5lbCBwYW5pYy4KKworVmVyc2lvbjogMi41LjAtMjMxOQo=
+Regards,
+--=20
+Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
+SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
 
-------_=_NextPart_001_01C3F018.0A2BB376--
+--js+/jT5SQQin5+Fm
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+
+iD8DBQFAKUX5xmLh6hyYd04RAmxtAKCP7tszrbQlc8Kpc9hI+Ax7Z/BTogCgnAVd
+pg6QWUb5rjmoWUZ/fDq2ngE=
+=V2In
+-----END PGP SIGNATURE-----
+
+--js+/jT5SQQin5+Fm--
