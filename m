@@ -1,117 +1,354 @@
-From: jd <jpd_hp_linux_scsi@yahoo.com>
-Subject: Re: 1st  REVIEW : UNH iSCSI for 2.6-test5
-Date: Wed, 1 Oct 2003 12:34:38 -0700 (PDT)
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: [PATCH] BusLogic: add error handling, fix queuecommand, docs.
+Date: Wed, 1 Oct 2003 12:23:16 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031001193438.5021.qmail@web60210.mail.yahoo.com>
-References: <3F71C1CA.5030004@pobox.com>
+Message-ID: <20031001122316.6f33af9b.rddunlap@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web60210.mail.yahoo.com ([216.109.118.105]:33107 "HELO
-	web60210.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S262353AbTJATej (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Oct 2003 15:34:39 -0400
-In-Reply-To: <3F71C1CA.5030004@pobox.com>
+Received: from fw.osdl.org ([65.172.181.6]:59277 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S262133AbTJATbb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Oct 2003 15:31:31 -0400
+Received: from dragon.pdx.osdl.net (dragon.pdx.osdl.net [172.20.1.27])
+	by mail.osdl.org (8.11.6/8.11.6) with SMTP id h91JVP126043
+	for <linux-scsi@vger.kernel.org>; Wed, 1 Oct 2003 12:31:25 -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Comments /questions below.
---- Jeff Garzik <jgarzik@pobox.com> wrote:
-> jd wrote:
-> > Hi,
-> > 
-> > Available for first Review & Comments.
-> > 
-> > The UNH iSCSI Project, a collaborative effort between the
-> > UNH IOL and Hewlett Packard Company in Austin, Texas,
-> > ( hosted at http://sourceforge.net/projects/unh-iscsi )
-> > to produce a full feature, generic iSCSI implementation ,
-> > has ported the 2.4.18/20 version of the iSCSI initiator to
-> > Linux 2.6.test5 Kernel for consideration of inclusion for
-> > future distribution.
-> > 
-> > A patch file is available for review at:
-> > 
-> > http://www.parisc-linux.org/~jpd/
-> > 
-> > Files included in the patch :
-> > 
-> >  drivers/scsi/Makefile
-> >  drivers/scsi/Kconfig
-> >  drivers/scsi/unh_iscsi
-> >  drivers/scsi/unh_iscsi/initiator     # HBA & Data mover
-> >  drivers/scsi/unh_iscsi/common        # Login and shared files
-> >  drivers/scsi/unh_iscsi/security       $ SRP and CHAP login
-> > 
-> > Please submit comments to :
-> > 
-> > linux-scsi@vger.kernel.org
-> 
-> Please don't mangle or otherwise use non-RFC email addresses.  When
-> you 
-> use your normal email address somewhere in the email _anyway_, you're
-> 
-> annoying valid users while doing nothing to defeat spammers.
-  
- Yes, there seems to be no way to avoid their trash. It took
- them no time to spam this account after a couple of posts.
-> 
-> 
-> comments:
-> 
-> * use generic facility for crc32
+Hi,
 
-   We will.
-> 
-> * most of the formatting looks good, but some of it looks crazy, like
-> 
-> > +	add_length = scan_table_and_process(sock,
-> > +										p_param_tbl,
-> > +										SECURITY_PARAM | INFORMATIONAL_PARAM,
-> > +										INITIATOR,
-> > +										inputpdu,
-> > +										outputpdu,
-> > +										connection_flags, login_flags);
-> 
-> * indeed, this needs to be legible to people w/ 80-column screens
+Bugzilla Bug 1086: BusLogic SCSI Driver Lacks Error Handling
+  <URL:http://bugme.osdl.org/show_bug.cgi?id=1086>
 
-    We're working that. Eventually it will be a much cleaner file.
-> 
-> * I disagree with the need for "my_kmalloc" and "my_kfree".  Ditch
-> the 
-> allocator and directly use the kernel counterparts.
-   We use it for debug to find memory leaks and fix them,
-   not as a generally garbage collector. We're likely
-   wrap it them in a DEBUG phrase or something better it 
-   certainly has helped. 
-> 
-> * function prototypes should use "u32" not "__u32" forms.  Ditto for 
-> other kernel-internal structures.
+Here's a patch to add error handling to BusLogic, as well as
+fix its queuecommand to return 0/1 as required, and remove
+some duplicate documentation.
 
-  I'm not quite sure about this one. I see 
-  the majority of scsi code uses int,uint .
-  Are you recommending just a more consistent usage ?
+I didn't address the use of 'check_region' (deprecated).
 
-  
-> 
-> * string_llx is not needed.  use sprintf.
-   Yes.
-> 
-> * verbosely dumping scsi ops is something that should be more generic
-> 
-> (or removed)
-> 
-> * authentication should be offloaded to a daemon, as NFSv4 did
-> 
-   It will be .
-> * I got tired of scrolling right to read code, at this point
-> 
+Comments?
+
+Thanks.
+--
+~Randy
 
 
- Thanks.
+patch_name:	buslogic_ehupdate_t6.patch
+patch_version:	2003-10-01.12:24:50
+author:		Randy.Dunlap <rddunlap@osdl.org>
+description:	update BusLogic driver to use current SCSI
+		  error handling model;
+		modify queuecommand to return 0 or 1 depending for
+		  success or failure respectively;
+		remove duplicate doc comments -- use
+		  Documentation/scsi/BusLogic.txt only;
+product:	Linux
+product_versions: 2.6.0-test6
+diffstat:	=
+ Documentation/scsi/BusLogic.txt |    2
+ drivers/scsi/BusLogic.c         |  250 +++++-----------------------------------
+ 2 files changed, 36 insertions(+), 216 deletions(-)
 
 
-__________________________________
-Do you Yahoo!?
-The New Yahoo! Shopping - with improved product search
-http://shopping.yahoo.com
+diff -Naurp ./drivers/scsi/BusLogic.c~ehupdate ./drivers/scsi/BusLogic.c
+--- ./drivers/scsi/BusLogic.c~ehupdate	2003-09-27 17:51:04.000000000 -0700
++++ ./drivers/scsi/BusLogic.c	2003-10-01 12:18:22.000000000 -0700
+@@ -3462,6 +3462,33 @@ static boolean BusLogic_WriteOutgoingMai
+   return false;
+ }
+ 
++/* Error Handling (EH) support */
++
++static int BusLogic_abort(Scsi_Cmnd *SCpnt)
++{
++	return FAILED;
++}
++
++static int BusLogic_bus_reset(Scsi_Cmnd *SCpnt)
++{
++	return FAILED;
++}
++
++static int BusLogic_device_reset(Scsi_Cmnd *SCpnt)
++{
++	return FAILED;
++}
++
++static int BusLogic_host_reset(Scsi_Cmnd *SCpnt)
++{
++	BusLogic_HostAdapter_T *HostAdapter =
++		(BusLogic_HostAdapter_T *) SCpnt->device->host->hostdata;
++
++	/* printk("BusLogic_host_reset\n"); */
++	HostAdapter->HostAdapterExternalReset = 1;
++	BusLogic_ResetHostAdapter(HostAdapter, NULL, 0);
++	return SUCCESS;
++}
+ 
+ /*
+   BusLogic_QueueCommand creates a CCB for Command and places it into an
+@@ -3513,7 +3540,7 @@ int BusLogic_QueueCommand(SCSI_Command_T
+ 	{
+ 	  Command->result = DID_ERROR << 16;
+ 	  CompletionRoutine(Command);
+-	  return 0;
++	  return 1;
+ 	}
+     }
+   /*
+@@ -3679,6 +3706,7 @@ int BusLogic_QueueCommand(SCSI_Command_T
+ 	      BusLogic_DeallocateCCB(CCB);
+ 	      Command->result = DID_ERROR << 16;
+ 	      Command->scsi_done(Command);
++	      return 1;
+ 	    }
+ 	}
+     }
+@@ -4589,220 +4617,8 @@ static boolean BusLogic_ParseKeyword(cha
+   adapters whereas the remaining options apply individually only to the
+   selected host adapter.
+ 
+-  The BusLogic Driver Probing Options comprise the following:
+-
+-  IO:<integer>
+-
+-    The "IO:" option specifies an ISA I/O Address to be probed for a non-PCI
+-    MultiMaster Host Adapter.  If neither "IO:" nor "NoProbeISA" options are
+-    specified, then the standard list of BusLogic MultiMaster ISA I/O Addresses
+-    will be probed (0x330, 0x334, 0x230, 0x234, 0x130, and 0x134).  Multiple
+-    "IO:" options may be specified to precisely determine the I/O Addresses to
+-    be probed, but the probe order will always follow the standard list.
+-
+-  NoProbe
+-
+-    The "NoProbe" option disables all probing and therefore no BusLogic Host
+-    Adapters will be detected.
+-
+-  NoProbeISA
+-
+-    The "NoProbeISA" option disables probing of the standard BusLogic ISA I/O
+-    Addresses and therefore only PCI MultiMaster and FlashPoint Host Adapters
+-    will be detected.
+-
+-  NoProbePCI
+-
+-    The "NoProbePCI" options disables the interrogation of PCI Configuration
+-    Space and therefore only ISA Multimaster Host Adapters will be detected, as
+-    well as PCI Multimaster Host Adapters that have their ISA Compatible I/O
+-    Port set to "Primary" or "Alternate".
+-
+-  NoSortPCI
+-
+-    The "NoSortPCI" option forces PCI MultiMaster Host Adapters to be
+-    enumerated in the order provided by the PCI BIOS, ignoring any setting of
+-    the AutoSCSI "Use Bus And Device # For PCI Scanning Seq." option.
+-
+-  MultiMasterFirst
+-
+-    The "MultiMasterFirst" option forces MultiMaster Host Adapters to be probed
+-    before FlashPoint Host Adapters.  By default, if both FlashPoint and PCI
+-    MultiMaster Host Adapters are present, this driver will probe for
+-    FlashPoint Host Adapters first unless the BIOS primary disk is controlled
+-    by the first PCI MultiMaster Host Adapter, in which case MultiMaster Host
+-    Adapters will be probed first.
+-
+-  FlashPointFirst
+-
+-    The "FlashPointFirst" option forces FlashPoint Host Adapters to be probed
+-    before MultiMaster Host Adapters.
+-
+-  The BusLogic Driver Tagged Queuing Options allow for explicitly specifying
+-  the Queue Depth and whether Tagged Queuing is permitted for each Target
+-  Device (assuming that the Target Device supports Tagged Queuing).  The Queue
+-  Depth is the number of SCSI Commands that are allowed to be concurrently
+-  presented for execution (either to the Host Adapter or Target Device).  Note
+-  that explicitly enabling Tagged Queuing may lead to problems; the option to
+-  enable or disable Tagged Queuing is provided primarily to allow disabling
+-  Tagged Queuing on Target Devices that do not implement it correctly.  The
+-  following options are available:
+-
+-  QueueDepth:<integer>
+-
+-    The "QueueDepth:" or QD:" option specifies the Queue Depth to use for all
+-    Target Devices that support Tagged Queuing, as well as the maximum Queue
+-    Depth for devices that do not support Tagged Queuing.  If no Queue Depth
+-    option is provided, the Queue Depth will be determined automatically based
+-    on the Host Adapter's Total Queue Depth and the number, type, speed, and
+-    capabilities of the detected Target Devices.  For Host Adapters that
+-    require ISA Bounce Buffers, the Queue Depth is automatically set by default
+-    to BusLogic_TaggedQueueDepthBB or BusLogic_UntaggedQueueDepthBB to avoid
+-    excessive preallocation of DMA Bounce Buffer memory.  Target Devices that
+-    do not support Tagged Queuing always have their Queue Depth set to
+-    BusLogic_UntaggedQueueDepth or BusLogic_UntaggedQueueDepthBB, unless a
+-    lower Queue Depth option is provided.  A Queue Depth of 1 automatically
+-    disables Tagged Queuing.
+-
+-  QueueDepth:[<integer>,<integer>...]
+-
+-    The "QueueDepth:[...]" or "QD:[...]" option specifies the Queue Depth
+-    individually for each Target Device.  If an <integer> is omitted, the
+-    associated Target Device will have its Queue Depth selected automatically.
+-
+-  TaggedQueuing:Default
+-
+-    The "TaggedQueuing:Default" or "TQ:Default" option permits Tagged Queuing
+-    based on the firmware version of the BusLogic Host Adapter and based on
+-    whether the Queue Depth allows queuing multiple commands.
+-
+-  TaggedQueuing:Enable
+-
+-    The "TaggedQueuing:Enable" or "TQ:Enable" option enables Tagged Queuing for
+-    all Target Devices on this Host Adapter, overriding any limitation that
+-    would otherwise be imposed based on the Host Adapter firmware version.
+-
+-  TaggedQueuing:Disable
+-
+-    The "TaggedQueuing:Disable" or "TQ:Disable" option disables Tagged Queuing
+-    for all Target Devices on this Host Adapter.
+-
+-  TaggedQueuing:<Target-Spec>
+-
+-    The "TaggedQueuing:<Target-Spec>" or "TQ:<Target-Spec>" option controls
+-    Tagged Queuing individually for each Target Device.  <Target-Spec> is a
+-    sequence of "Y", "N", and "X" characters.  "Y" enables Tagged Queuing, "N"
+-    disables Tagged Queuing, and "X" accepts the default based on the firmware
+-    version.  The first character refers to Target Device 0, the second to
+-    Target Device 1, and so on; if the sequence of "Y", "N", and "X" characters
+-    does not cover all the Target Devices, unspecified characters are assumed
+-    to be "X".
+-
+-  The BusLogic Driver Error Recovery Option allows for explicitly specifying
+-  the Error Recovery action to be performed when BusLogic_ResetCommand is
+-  called due to a SCSI Command failing to complete successfully.  The following
+-  options are available:
+-
+-  ErrorRecovery:Default
+-
+-    The "ErrorRecovery:Default" or "ER:Default" option selects between the Hard
+-    Reset and Bus Device Reset options based on the recommendation of the SCSI
+-    Subsystem.
+-
+-  ErrorRecovery:HardReset
+-
+-    The "ErrorRecovery:HardReset" or "ER:HardReset" option will initiate a Host
+-    Adapter Hard Reset which also causes a SCSI Bus Reset.
+-
+-  ErrorRecovery:BusDeviceReset
+-
+-    The "ErrorRecovery:BusDeviceReset" or "ER:BusDeviceReset" option will send
+-    a Bus Device Reset message to the individual Target Device causing the
+-    error.  If Error Recovery is again initiated for this Target Device and no
+-    SCSI Command to this Target Device has completed successfully since the Bus
+-    Device Reset message was sent, then a Hard Reset will be attempted.
+-
+-  ErrorRecovery:None
+-
+-    The "ErrorRecovery:None" or "ER:None" option suppresses Error Recovery.
+-    This option should only be selected if a SCSI Bus Reset or Bus Device Reset
+-    will cause the Target Device or a critical operation to suffer a complete
+-    and unrecoverable failure.
+-
+-  ErrorRecovery:<Target-Spec>
+-
+-    The "ErrorRecovery:<Target-Spec>" or "ER:<Target-Spec>" option controls
+-    Error Recovery individually for each Target Device.  <Target-Spec> is a
+-    sequence of "D", "H", "B", and "N" characters.  "D" selects Default, "H"
+-    selects Hard Reset, "B" selects Bus Device Reset, and "N" selects None.
+-    The first character refers to Target Device 0, the second to Target Device
+-    1, and so on; if the sequence of "D", "H", "B", and "N" characters does not
+-    cover all the possible Target Devices, unspecified characters are assumed
+-    to be "D".
+-
+-  The BusLogic Driver Miscellaneous Options comprise the following:
+-
+-  BusSettleTime:<seconds>
+-
+-    The "BusSettleTime:" or "BST:" option specifies the Bus Settle Time in
+-    seconds.  The Bus Settle Time is the amount of time to wait between a Host
+-    Adapter Hard Reset which initiates a SCSI Bus Reset and issuing any SCSI
+-    Commands.  If unspecified, it defaults to BusLogic_DefaultBusSettleTime.
+-
+-  InhibitTargetInquiry
+-
+-    The "InhibitTargetInquiry" option inhibits the execution of an Inquire
+-    Target Devices or Inquire Installed Devices command on MultiMaster Host
+-    Adapters.  This may be necessary with some older Target Devices that do not
+-    respond correctly when Logical Units above 0 are addressed.
+-
+-  The BusLogic Driver Debugging Options comprise the following:
+-
+-  TraceProbe
+-
+-    The "TraceProbe" option enables tracing of Host Adapter Probing.
+-
+-  TraceHardwareReset
+-
+-    The "TraceHardwareReset" option enables tracing of Host Adapter Hardware
+-    Reset.
+-
+-  TraceConfiguration
+-
+-    The "TraceConfiguration" option enables tracing of Host Adapter
+-    Configuration.
+-
+-  TraceErrors
+-
+-    The "TraceErrors" option enables tracing of SCSI Commands that return an
+-    error from the Target Device.  The CDB and Sense Data will be printed for
+-    each SCSI Command that fails.
+-
+-  Debug
+-
+-    The "Debug" option enables all debugging options.
+-
+-  The following examples demonstrate setting the Queue Depth for Target Devices
+-  1 and 2 on the first host adapter to 7 and 15, the Queue Depth for all Target
+-  Devices on the second host adapter to 31, and the Bus Settle Time on the
+-  second host adapter to 30 seconds.
+-
+-  Linux Kernel Command Line:
+-
+-    linux BusLogic=QueueDepth:[,7,15];QueueDepth:31,BusSettleTime:30
+-
+-  LILO Linux Boot Loader (in /etc/lilo.conf):
+-
+-    append = "BusLogic=QueueDepth:[,7,15];QueueDepth:31,BusSettleTime:30"
+-
+-  INSMOD Loadable Kernel Module Installation Facility:
+-
+-    insmod BusLogic.o \
+-	'BusLogic="QueueDepth:[,7,15];QueueDepth:31,BusSettleTime:30"'
+-
+-  NOTE: Module Utilities 2.1.71 or later is required for correct parsing
+-	of driver options containing commas.
+-
++  The BusLogic Driver Probing Options are described in
++  <file:Documentation/scsi/BusLogic.txt>.
+ */
+ 
+ static int __init BusLogic_ParseDriverOptions(char *OptionsString)
+@@ -5126,6 +4942,10 @@ static SCSI_Host_Template_T driver_templ
+ 	.queuecommand		= BusLogic_QueueCommand,
+ 	.slave_configure	= BusLogic_SlaveConfigure,
+ 	.bios_param		= BusLogic_BIOSDiskParameters,
++	.eh_abort_handler	= BusLogic_abort,
++	.eh_host_reset_handler	= BusLogic_host_reset,
++	.eh_bus_reset_handler	= BusLogic_bus_reset,
++	.eh_device_reset_handler = BusLogic_device_reset,
+ 	.unchecked_isa_dma	= 1,
+ 	.max_sectors		= 128,
+ 	.use_clustering		= ENABLE_CLUSTERING,
+diff -Naurp ./drivers/scsi/BusLogic.h~ehupdate ./drivers/scsi/BusLogic.h
+diff -Naurp ./Documentation/scsi/BusLogic.txt~ehupdate ./Documentation/scsi/BusLogic.txt
+--- ./Documentation/scsi/BusLogic.txt~ehupdate	2003-09-27 17:50:15.000000000 -0700
++++ ./Documentation/scsi/BusLogic.txt	2003-10-01 12:15:33.000000000 -0700
+@@ -577,7 +577,7 @@ LILO Linux Boot Loader (in /etc/lilo.con
+ INSMOD Loadable Kernel Module Installation Facility:
+ 
+   insmod BusLogic.o \
+-      'BusLogic_Options="QueueDepth:[,7,15];QueueDepth:31,BusSettleTime:30"'
++      'BusLogic="QueueDepth:[,7,15];QueueDepth:31,BusSettleTime:30"'
+ 
+ NOTE: Module Utilities 2.1.71 or later is required for correct parsing
+       of driver options containing commas.
