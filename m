@@ -1,32 +1,33 @@
-From: "David S. Miller" <davem@redhat.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: PATCH] dma_get_required_mask()
-Date: Mon, 28 Jun 2004 15:28:39 -0700
+Date: 28 Jun 2004 17:40:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040628152839.23178136.davem@redhat.com>
+Message-ID: <1088462407.2003.54.camel@mulgrave>
 References: <1088457050.2004.40.camel@mulgrave>
+	<20040628152839.23178136.davem@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36768 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S262085AbUF1WaK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Jun 2004 18:30:10 -0400
-In-Reply-To: <1088457050.2004.40.camel@mulgrave>
+Received: from stat1.steeleye.com ([65.114.3.130]:13028 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265144AbUF1WkS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Jun 2004 18:40:18 -0400
+In-Reply-To: <20040628152839.23178136.davem@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "David S. Miller" <davem@redhat.com>
+Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On 28 Jun 2004 16:10:43 -0500
-James Bottomley <James.Bottomley@steeleye.com> wrote:
+On Mon, 2004-06-28 at 17:28, David S. Miller wrote:
+> Maybe you should tweak the default implementation such that
+> something reasonable happens on 64-bit platforms that
+> define dma_addr_t as a 32-bit quantity. :-)
 
-> This patch implements dma_get_required_mask() which may be used by
-> drivers to probe the optimal DMA descriptor type they should be
-> implementing on the platform.
+Actually, the default implementation should work on these platforms
+too.  Since it's impossible to set a mask over 32 bits, then the best
+dma_get_required_mask() will do is return a full spread of 32 bits,
+since the memory mask is anded with the current dma mask.
 
-Maybe you should tweak the default implementation such that
-something reasonable happens on 64-bit platforms that
-define dma_addr_t as a 32-bit quantity. :-)
+James
 
-Of course, you've provided ARCH_HAS_DMA_GET_REQUIRED_MASK
-in order to deal with these cases, so it's not mandatory.
+
