@@ -1,46 +1,53 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: many-disk support
-Date: Mon, 29 Dec 2003 14:27:07 +0000
+From: Naveen Burmi <naveenb@cisco.com>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.3
+Date: Mon, 29 Dec 2003 20:41:27 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031229142707.GI12479@parcelfarce.linux.theplanet.co.uk>
-References: <20031229022549.50bae6d7.akpm@osdl.org> <20031229110603.A27408@infradead.org>
+Message-ID: <03122920412702.20911@naveenb-lnx.cisco.com>
+References: <03121719101402.28899@naveenb-lnx.cisco.com> <20031228202519.A22856@infradead.org>
+Reply-To: naveenb@cisco.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:14816 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263447AbTL2O1K
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Dec 2003 09:27:10 -0500
-Content-Disposition: inline
-In-Reply-To: <20031229110603.A27408@infradead.org>
+Received: from sj-iport-3-in.cisco.com ([171.71.176.72]:61462 "EHLO
+	sj-iport-3.cisco.com") by vger.kernel.org with ESMTP
+	id S263488AbTL2PKR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Dec 2003 10:10:17 -0500
+In-Reply-To: <20031228202519.A22856@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, Badari Pulavarty <pbadari@us.ibm.com>, "viro@parcelfarce.linux.theplanet.co.uk" <viro@parcelfarce.linux.theplanet.co.uk>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Dec 29, 2003 at 11:06:04AM +0000, Christoph Hellwig wrote:
-> On Mon, Dec 29, 2003 at 02:25:49AM -0800, Andrew Morton wrote:
-> > Guys, I've had this patch for ages.  Badari seemed to say that it wasn't
-> > the "right" way to do it.
-> > 
-> > Can we get this nailed down please?
-> 
->  - I think the bitmap overhead was killing us on big x86 machines, right?
->    so that might need some swork.
->  - a config option definitly is the wrong way to go.
->  - I don't think assigning more numbers to the last major is a bad idea,
->    better assign them to the first one, maybe with a hole for what we're
->    using the other majors currently for, so when udev gets more mature
->    we can kill the additional majors.
+On Monday 29 December 2003 01:55 am, Christoph Hellwig wrote:
+> On Wed, Dec 17, 2003 at 07:10:14PM +0530, Naveen Burmi wrote:
+> > Folks,
+> >
+> > Thanks to all of you for the review of linux-iscsi driver 4.0.0.2. As on
+> > today all the review comments have been incorporated into 4.0.0.3
+> > release.
+>
+> I'm not sure whether this is true, there's still a lot of items missing.
+>
+> Additional notes:
+>
+>   - lun_reset_occured references shost->__device, _please_ read the comment
+>     above that struct member in scsi_host.h and act accordingly, okay?
 
-LWN were kind enough to archive my previous thoughts on this at
-http://lwn.net/Articles/54840/
+This will be taken care in next release of linux-iscsi driver.
 
-I'd've worked on some code for this if anyone had been interested ...
+>   - as Mike Christie you're doing multipathing in your driver.  We don't
+>     want vendor-specific multipathing code in scsi-drivers but instead
+>     encurage using md or dm multipathing.
+>
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+linux-iscsi driver 4.0.0.2 is not doing multipathing instead it provides 
+infrastructure to do multipathing and encourages other applications/drivers 
+like md  to do multipathing.
+
+> Note that all this wasn't really an indepth-review but rather looking over
+> the code a tiny bit.  If you have fixed the list I have you on the first
+> review we can look at doing a more in-depth review.
+>
+> -
+
+Naveen.
