@@ -1,71 +1,38 @@
-From: Andrew Vasquez <praka@san.rr.com>
-Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b2).
-Date: Wed, 28 May 2003 23:19:13 -0700
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCH] driver model for scsi upper drivers, take 2
+Date: Thu, 29 May 2003 12:23:26 +0300 (EEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030529061913.GA27199@praka.local.home>
-References: <20030519225728.GA17279@praka.local.home> <20030521173215.GA25137@praka.local.home> <20030521222635.GB21124@krispykreme>
+Message-ID: <Pine.LNX.4.52.0305291217110.2142@kai.makisara.local>
+References: <20030527073218.GA11467@lst.de> <20030527094310.GA12853@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from orngca-mls01.socal.rr.com ([66.75.160.16]:62198 "EHLO
-	orngca-mls01.socal.rr.com") by vger.kernel.org with ESMTP
-	id S261923AbTE2GMj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 May 2003 02:12:39 -0400
-Received: from san.rr.com (66-75-128-22.san.rr.com [66.75.128.22])
-	by orngca-mls01.socal.rr.com (8.11.4/8.11.3) with ESMTP id h4T6NGV25394
-	for <linux-scsi@vger.kernel.org>; Wed, 28 May 2003 23:23:17 -0700 (PDT)
-Received: from san.rr.com (localhost [127.0.0.1])
-	by san.rr.com (8.12.3/8.12.3/SuSE Linux 0.6) with ESMTP id h4T6JDjW027340
-	for <linux-scsi@vger.kernel.org>; Wed, 28 May 2003 23:19:13 -0700
-Received: (from praka@localhost)
-	by san.rr.com (8.12.3/8.12.3/Submit) id h4T6JDHJ027339
-	for linux-scsi@vger.kernel.org; Wed, 28 May 2003 23:19:13 -0700
-Content-Disposition: inline
-In-Reply-To: <20030521222635.GB21124@krispykreme>
+Received: from fep02-0.kolumbus.fi ([193.229.0.44]:62280 "EHLO
+	fep02-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S262017AbTE2JJ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 May 2003 05:09:59 -0400
+In-Reply-To: <20030527094310.GA12853@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-On Thu, 22 May 2003, Anton Blanchard wrote:
+On Tue, 27 May 2003, Christoph Hellwig wrote:
 
-> > +#if MEMORY_MAPPED_IO
-> > +	/* Get memory mapped I/O address */
-> > +	pci_read_config_dword(ha->pdev, PCI_BASE_ADDRESS_1, &mmapbase);
-> 
-> You really want to be using pci_resource_start(ha->pdev, 1) so it will
-> work on architectures like ppc64 and sparc64.
-> 
+> On Tue, May 27, 2003 at 09:32:18AM +0200, Christoph Hellwig wrote:
+> >  - removed the tape sysfs pseudodevice crap that caused hangs
+> >  - switched sg to a class_interface.  This means sg can be used
+> >    on devices already claimed be an upper driver again.  This
+> >    also means I had to remove the sg sysfs attributes temporarily
+> >    because the old mechanism is gone, but I'll restore them
+> >    differently in a followon patch.
+>
+> Yikes, this was the old patch again.  Here's the right one:
+>
+I have done some tests with a disk, a tape, and different combinations
+(in kernel/module) of the sd, st, sg, aic7xxx, and sym53c8xx_2
+drivers. Looks good: devices are found and seem to work, no oopses
+when loading/unloading modules. sysfs contents look correct (except
+for the missing sg entries you said will re-appear in future).
 
-You're correct -- code updated in my tree.
-
-> > +	mmapbase &= PCI_BASE_ADDRESS_MEM_MASK;
-> > +
-> > +	/* Find proper memory chunk for memory map I/O reg */
-> > +	base = mmapbase & PAGE_MASK;
-> > +	page_offset = mmapbase - base;
-> 
-> Is that correct?
-> 
-
-The 'mmapbase &= PCI_BASE_ADDRESS_MEM_MASK' does appear to be
-incorrect, yet, I just have one question.  it seems several drivers
-(i.e. sym53c8xx_2, aic7xxx) ensure the memory-mapped resource begins
-on a page boundary before passing it onto ioremap().  Yet, in the code
-for __ioremap(), (arch/i386/mm/ioremap.c) there is this small comment:
-
-	/*
-	 * NOTE! We need to allow non-page-aligned mappings too: we
-	 * will obviously have to convert them into an offset in a
-	 * page-aligned mapping, but the caller shouldn't need to know
-	 * that small detail.
-	 *
-	 */
-
-Is it safe to assume *all* platforms will handle this case internally,
-or should drivers perform the pre-process?
-
-BTW: appearantly none of my emails sent via my QLogic account have
-made it to linux-[kernel|scsi] in the past week -- I'm working with IT
-to solve the problem - please be patient with the response time lags.
-
-Thanks,
-Andrew Vasquez
+-- 
+Kai
