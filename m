@@ -1,49 +1,77 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] QStor SATA/RAID driver for 2.6.9-rc3
-Date: 08 Oct 2004 08:19:38 -0500
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: New-style module parameters in SCSI drivers
+Date: Fri, 8 Oct 2004 15:39:23 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1097241583.2412.15.camel@mulgrave>
-References: <4161A06D.8010601@rtr.ca> <416547B6.5080505@rtr.ca>
-	<20041007150709.B12688@infradead.org> <4165624C.5060405@rtr.ca>
-	<416565DB.4050006@pobox.com> <4165A45D.2090200@rtr.ca>
-	<4165A766.1040104@pobox.com> <4165A85D.7080704@rtr.ca>
-	<4165AB1B.8000204@pobox.com> <4165ACF8.8060208@rtr.ca>
-	<20041007221537.A17712@infradead.org>
+Message-ID: <20041008143923.GQ16153@parcelfarce.linux.theplanet.co.uk>
+References: <7AAD212492598A4A92463C3F5D34C54F194EDC@ccd3.CC.de> <20041001162939.A4215@infradead.org> <20041001165555.GF16153@parcelfarce.linux.theplanet.co.uk> <20041008013029.GM16153@parcelfarce.linux.theplanet.co.uk> <1097202556.9363.16.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:14516 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S269968AbUJHNTz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Oct 2004 09:19:55 -0400
-In-Reply-To: <20041007221537.A17712@infradead.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:58821 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S269993AbUJHOjY
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Oct 2004 10:39:24 -0400
+Content-Disposition: inline
+In-Reply-To: <1097202556.9363.16.camel@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Mark Lord <lkml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lsml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, 2004-10-07 at 16:15, Christoph Hellwig wrote:
->  - please use the kernel/kthread.c interface for your kernel thread
+On Fri, Oct 08, 2004 at 12:29:16PM +1000, Rusty Russell wrote:
+> Well, it'd never be neat.  I'd rather encourage migration: in 2.6.10 I
+> will start my jihad on MODULE_PARM, ideally finished before 2.6.11. 
 
-Actually, the driver has no need for a thread at all.  Since you're
-simply using it to fire hotplug events, use schedule_work instead.
+OK.  As long as the barrage of complaints is omnidirectional and it's
+not just me who sucks.
 
-I also noticed the following in a lightening review:
+> It's usually better that someone who knows the code does the transition
+> (you can often do better than a naive substitution), so my first step
+> might be to clean up Linus' compile, then make MODULE_PARM warn, to
+> encourage people to help.
 
-- Kill these constructs:
-+	/* scsi_done expects to be called while locked */
-+	if (!in_interrupt())
-+		spin_lock_irqsave(uhba->lock, flags);
+While we're breaking the world, we should probably take this opportunity
+to Do Things Right.  Here are all the ways I've noticed with a quick
+grep of doing two common tasks in SCSI drivers.
 
-scsi_done() doesn't require a lock
+First, the maximum number of commands that may be in flight to any
+given device simultaneously:
 
-- Your emulated commands assume they're non-sg and issued through the
-kernel (i.e. you don't kmap and you don't do SG).  This will blow up on
-the first inquiry submitted via SG_IO for instance.
+drivers/scsi/3w-xxxx.c:                 cmds_per_lun
+drivers/scsi/atari_scsi.c:              setup_cmd_per_lun
+drivers/scsi/sun3_scsi.c:               setup_cmd_per_lun
+drivers/scsi/sun3_scsi_vme.c:           setup_cmd_per_lun
+drivers/scsi/dc395x.c:                  tags
+drivers/scsi/megaraid.c:                max_cmd_per_lun
+drivers/scsi/megaraid/megaraid_mbox.c:  cmd_per_lun
+drivers/scsi/qla2xxx/qla_os.c:          ql2xmaxqdepth
+drivers/scsi/sym53c8xx_2/sym_glue.c:    max_tag
 
-I'm sure there are others, but I don't have time to do a thorough review
-at the moment.
+Second, what host ID to use:
 
-James
+drivers/scsi/aha152x.c:                 scsiid
+drivers/scsi/dc395x.c:                  adapter_id
+drivers/scsi/ibmmca.c:                  scsi_id
+drivers/scsi/sun3_scsi.c:               setup_hostid
+drivers/scsi/sun3_scsi_vme.c:           setup_hostid
+drivers/scsi/pcmcia/aha152x_stub.c:     host_id
+drivers/scsi/sym53c8xx_2/sym_glue.c:    hostid
 
+I honestly don't think any more variants _could_ exist, for either
+of these oh-so-common things to do.  Not to mention that using these
+parameters is a small-system thing to do -- what if you have 25 scsi
+adapters and some of them should be different host IDs from each other?
+What if you need to send only two tagged commands at once to your crappy
+cd-rom, but your raid array needs 256 tags to be in use in order to get
+any kind of performance?
 
+Admittedly, there are hacks for the second case in many drivers (see the
+sym2 driver -- puke!)  But before we break the world, let's discuss how
+to do this right so we can at least have a model to work towards.
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
