@@ -1,54 +1,73 @@
-From: Olaf Hering <olh@suse.de>
-Subject: Re: [RFC] exposing the sdev_target in sysfs
-Date: Sat, 4 Sep 2004 09:24:27 +0200
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: 3ware queue depth [was: Re: HIGHMEM4G config for 1GB RAM on desktop?]
+Date: Sat, 4 Sep 2004 12:10:08 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040904072427.GA19656@suse.de>
-References: <1094254851.1712.28.camel@mulgrave>
+Message-ID: <20040904101008.GC1610@suse.de>
+References: <200408021602.34320.swsnyder@insightbb.com> <1094030083l.3189l.2l@traveler> <1094030194l.3189l.3l@traveler> <200409010233.31643.lkml@lpbproductions.com> <1094032735l.3189l.7l@traveler> <20040901110944.A10160@infradead.org> <1094036919l.3189l.11l@traveler> <20040901194325.GA11762@beaverton.ibm.com> <1094077436l.22433l.3l@drinkel.cistron.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:5545 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S266838AbUIDHY2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Sep 2004 03:24:28 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:9152 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S269865AbUIDKLe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Sep 2004 06:11:34 -0400
 Content-Disposition: inline
-In-Reply-To: <1094254851.1712.28.camel@mulgrave>
+In-Reply-To: <1094077436l.22433l.3l@drinkel.cistron.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Miquel van Smoorenburg <miquels@cistron.nl>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, lkml@lpbproductions.com, Timothy Miller <miller@techsource.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
- On Fri, Sep 03, James Bottomley wrote:
+On Wed, Sep 01 2004, Miquel van Smoorenburg wrote:
+> On Wed, 01 Sep 2004 21:43:25, Patrick Mansfield wrote:
+> >On Wed, Sep 01, 2004 at 11:08:39AM +0000, Miquel van Smoorenburg wrote:
+> >
+> >> +	/* make sure blockdev queue depth is at least 2 * scsi depth */
+> >> +	if (SDptr->request_queue->nr_requests < 2 * max_cmds)
+> >> +		SDptr->request_queue->nr_requests = 2 * max_cmds;
+> >
+> >Why would you want nr_requests different (and larger) only for this
+> >driver?
+> 
+> Because for the Linux I/O scheduler to work, nr_requests needs to
+> be at least twice as big as the scsi queue depth.
 
-> The aim of this patch is to give us somewhere to hang the per target
-> timer that emulex needs.
->=20
-> However, it will break the current sysfs layout.  devices will now
-> appear something like this:
->=20
-> lrwxrwxrwx  1 root root 0 Sep  3 18:31
-> /sys/class/scsi_device/0:0:5:0/device ->
-> ../../../devices/parisc8/parisc8:0/pci0000:00/0000:00:13.0/host0/targ=
-et0:0:5/0:0:5:0
->=20
-> (note the extra target0:0:5 in there).
->=20
-> which may break some of the user land tools (although you're all usin=
-g
-> the scsi class interface to access your devices, aren't you? in which
-> case you won't notice any problems).
+Well, basically if you want to have a chance to do any io scheduling
+anywhere, you need to have more than 1 request to play with really. And
+if the drive is swallowing all your requests all the time, you are
+screwed. I do think the best option (as some people mentioned in this
+thread) is to limit the 3ware queue depth, not increase the io scheduler
+depth. At least for most of the current io schedulers, this will kill
+your latency quite a bit.
 
-I do something like this to get to the controller.
-cd /sys/block/sda/device
-cd `pwd -P`
-cd ../..
-But if target* will be a stable interface, its easy to change.
+> >Is modifying nr_requests allowed?
+> 
+> Well we need to do the same things that ll_rw_blk::queue_requests_store()
+> does, only we don't need to worry about locking or existing queue
+> contents since the queue has been instantiated but the scsi device
+> is not active yet.
+> 
+> I do notice now however, that between 2.6.4 and 2.6.9-rc1
+> blk_queue_congestion_threshold() has been added which we should
+> probably call after adjusting nr_requests. Unfortunately it's
+> a static function in ll_rw_blk.c ..
+> 
+> Perhaps we should export the functionality of queue_requests_store()
+> as, say, queue_adjust_nr_requests() (like scsi_adjust_queue_depth) ?
+> Jens ?
 
---=20
-USB is for mice, FireWire is for men!
+Yes, if you want to do this, we need to export a function to do it that
+takes care of updating the block layer congestion (etc) data.
 
-sUse lINUX ag, n=C3=9CRNBERG
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Anyway, for now, perhaps the mucking with nr_requests should be
+> taken out and a change like the above should be sent to the
+> people at 3ware.
+
+Indeed.
+
+> I'll submit the sysfs code for inclusion in -mm and the nr_requests
+> stuff to 3ware.
+
+Great!
+
+-- 
+Jens Axboe
+
