@@ -1,28 +1,22 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [ANNOUNCE] megaraid 2.00.6 patch for kernels without hostlock
-Date: Thu, 31 Jul 2003 11:05:34 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030731090534.GF22104@suse.de>
-References: <0E3FA95632D6D047BA649F95DAB60E570230C551@EXA-ATLANTA.se.lsil.com>
+From: bpachanga32@gte.net
+Subject: quick q
+Date: Thu, 31 Jul 2003 07:30:00 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <S273000AbTGaL2Z/20030731112825Z+1536@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570230C551@EXA-ATLANTA.se.lsil.com>
-To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-megaraid-devel@dell.com'" <linux-megaraid-devel@dell.com>
+Content-Type: text/plain; charset="iso-8859-1"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from modemcable046.164-200-24.mtl.mc.videotron.ca ([24.200.164.46]:5896
+	"HELO loby-81cf80deca") by vger.kernel.org with SMTP
+	id S273000AbTGaL2Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jul 2003 07:28:25 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, Jul 30 2003, Bagalkote, Sreenivas wrote:
-> Please apply this patch to megaraid 2.00.6 driver for kernels that don't
-> support per host lock. This can be found at :
-> 
-> ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-2.00.6/
+hey its me again.. did you see this site?
 
-It's easily possible to keep the impact of maintaining a driver across
-such kernels a lot smaller, by simply using the same lock in the
-spin_lock calls and just assign that lock to adapter->lock or
-io_request_lock depending on the kernel.
+not only that but you just owe it to yourself and your family,
 
--- 
-Jens Axboe
+With the money you save, put it towards a new car!
+
+http://srd.yahoo.com/drst/4325435/*http://cheapermortgage.cn/4/index.asp?RefID=198478
