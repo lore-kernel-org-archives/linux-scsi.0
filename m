@@ -1,67 +1,25 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: requeuing a Scsi_Cmnd?
-Date: Mon, 12 May 2003 20:20:57 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: unique entry points for all driver hosts
+Date: Tue, 13 May 2003 06:37:26 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EC03A69.1060302@pobox.com>
-References: <3EBEB1D5.3040300@pobox.com> <1052750688.1769.27.camel@mulgrave> <3EBFE408.4010607@rogers.com>
+Message-ID: <20030513063726.A2799@infradead.org>
+References: <0E3FA95632D6D047BA649F95DAB60E570185F192@EXA-ATLANTA.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:13492 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263011AbTEMAI0
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 May 2003 20:08:26 -0400
-In-Reply-To: <3EBFE408.4010607@rogers.com>
+Received: from phoenix.infradead.org ([195.224.96.167]:12549 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S262883AbTEMFY4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 May 2003 01:24:56 -0400
+Content-Disposition: inline
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570185F192@EXA-ATLANTA.se.lsil.com>; from atulm@lsil.com on Mon, May 12, 2003 at 06:41:50PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <tluben@rogers.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Mukker, Atul" <atulm@lsil.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Luben Tuikov wrote:
-> James Bottomley wrote:
-> 
->> On Sun, 2003-05-11 at 15:25, Jeff Garzik wrote:
->>
->>> This question applies to 2.4 as well as 2.5 (I believe the strategies 
->>> are different for the two?)
->>>
->>> Suppose I am passed several Scsi_Cmnd structures via ->queuecommand. 
->>> TCQ depth is >1.  An event causes the entire queue to be aborted, but 
->>> I know that the majority of the queue was actually ok.  So, my LLD 
->>> would need to requeue and resend most of the recently-aborted 
->>> Scsi_Cmnds.
->>
->>
->>
->> You keep finding these unhandled condidions, sigh.  The correct thing to
->> do (since this is a situation identical to QErr set) is to return a
->> check condition to the failing command and to return a status of TASK
->> ABORTED for all the others (SPC3).  Of course, the SCSI-2 behaviour was
->> just to expect all tasks to be silently aborted on QErr=1.  Neither of
->> these, of course, is coded into the mid-layer.
-> 
-> 
-> Iff TAS is set and if TST is 001, and there is more than one initiator
-> whose task are being nuked, then this is correct.
-> 
-> Jeff didn't give much information, but it sounds like ABORT/CLEAR TASK SET.
-> Anyway, no point in speculating.
+On Mon, May 12, 2003 at 06:41:50PM -0400, Mukker, Atul wrote:
+> Why doesn't mid-layer allow LLDs to specify separate entry points to various
+> hosts attached to the same driver. 
 
-
-I'm working on a SCSI low-level driver that drives SATA host 
-controllers.  For ATAPI, it's mainly a passthru.  The headache comes in 
-the translation of SCSI->ATA, and in the error handling.  The SCSI->ATA 
-translator can be effectively considered a SCSI simulator (or at least 
-that's how I look at it), so like iSCSI I'm creating a software target, 
-and I want my target to be compliant to spec.  (Which spec, you ask? 
-Well, initially SCSI-2, but long term James has convinced me SCSI-3)
-
-So for my specific example, I'm passed a bunch of Scsi_Cmnds.  I queue 
-them.  And then according to spec, an error on the active command will 
-cause the entire queue to abort.  Clearly, I do not want to error-out 
-the other probably-valid commands, only the specific one that caused the 
-error.  So, the remaining ones need to be retried.
-
-	Jeff
-
-
+Just declare multiple host templates.  If you use sccsi_add_host instead
+of the crufty obsolete interfaces it'll work out nicely.
