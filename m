@@ -1,14 +1,14 @@
 From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: [PATCH] fusion/mptscsih init/exit sections
-Date: Tue, 9 Mar 2004 22:01:45 -0800
+Subject: [PATCH] buslogic init. section fix
+Date: Tue, 9 Mar 2004 22:00:43 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040309220145.6a778804.rddunlap@osdl.org>
+Message-ID: <20040309220043.68ad2f5c.rddunlap@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:42385 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S262266AbUCJGML (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:41873 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S262259AbUCJGML (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 10 Mar 2004 01:12:11 -0500
 List-Id: linux-scsi@vger.kernel.org
@@ -17,43 +17,25 @@ Cc: jejb <james.bottomley@steeleye.com>
 
 
 V: linux-264-rc2
-D: mptscsih_remove() can be called during init, for error handling;
+D: BusLogic_AnnounceDriver() can be called after init;
 
 diffstat:=
- drivers/message/fusion/mptscsih.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/BusLogic.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
 
-diff -Naurp ./drivers/message/fusion/mptscsih.c~mptscsi_init ./drivers/message/fusion/mptscsih.c
---- ./drivers/message/fusion/mptscsih.c~mptscsi_init	2004-03-06 20:57:05.000000000 -0800
-+++ ./drivers/message/fusion/mptscsih.c	2004-03-07 16:16:54.000000000 -0800
-@@ -201,7 +201,7 @@ static int  __init   mptscsih_init  (voi
- static void __exit   mptscsih_exit  (void);
+diff -Naurp ./drivers/scsi/BusLogic.c~buslog_init ./drivers/scsi/BusLogic.c
+--- ./drivers/scsi/BusLogic.c~buslog_init	2004-03-06 20:57:07.000000000 -0800
++++ ./drivers/scsi/BusLogic.c	2004-03-07 15:29:40.000000000 -0800
+@@ -140,7 +140,7 @@ static char *BusLogic_CommandFailureReas
+   Name, Copyright Notice, and Electronic Mail Address.
+ */
  
- static int  __devinit mptscsih_probe (struct pci_dev *, const struct pci_device_id *);
--static void __devexit mptscsih_remove(struct pci_dev *);
-+static void mptscsih_remove(struct pci_dev *);
- static void mptscsih_shutdown(struct device *);
- #ifdef CONFIG_PM
- static int mptscsih_suspend(struct pci_dev *pdev, u32 state);
-@@ -1718,7 +1718,7 @@ mptscsih_probe_failed:
-  *
-  *
-  */
--static void __devexit
-+static void
- mptscsih_remove(struct pci_dev *pdev)
+-static void __init BusLogic_AnnounceDriver(struct BusLogic_HostAdapter *HostAdapter)
++static void BusLogic_AnnounceDriver(struct BusLogic_HostAdapter *HostAdapter)
  {
- 	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
-@@ -1920,7 +1920,7 @@ mptscsih_resume(struct pci_dev *pdev)
- 
- static struct mpt_pci_driver mptscsih_driver = {
- 	.probe		= mptscsih_probe,
--	.remove		= __devexit_p(mptscsih_remove),
-+	.remove		= mptscsih_remove,
- 	.shutdown	= mptscsih_shutdown,
- #ifdef CONFIG_PM
- 	.suspend	= mptscsih_suspend,
+   BusLogic_Announce("***** BusLogic SCSI Driver Version "
+ 		    BusLogic_DriverVersion " of "
 
 
 --
