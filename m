@@ -1,60 +1,63 @@
-From: Nish Aravamudan <nish.aravamudan@gmail.com>
-Subject: Re: [PATCH 2/3] osst upgrade to 0.99.3
-Date: Wed, 5 Jan 2005 09:31:55 -0800
-Message-ID: <29495f1d0501050931379525d1@mail.gmail.com>
-References: <1104627573l.3427l.3l@serve.riede.org>
-Reply-To: Nish Aravamudan <nish.aravamudan@gmail.com>
+From: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
+Subject: [PATCH] Re: Oops on megaraid.
+Date: Wed, 5 Jan 2005 18:04:57 +0000
+Message-ID: <20050105180457.GK26051@parcelfarce.linux.theplanet.co.uk>
+References: <20050105174752.GA6859@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.192]:39639 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262486AbVAERyc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2005 12:54:32 -0500
-Received: by rproxy.gmail.com with SMTP id r35so396665rna
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Jan 2005 09:54:31 -0800 (PST)
-In-Reply-To: <1104627573l.3427l.3l@serve.riede.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:49078 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262519AbVAESE6
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Jan 2005 13:04:58 -0500
+Content-Disposition: inline
+In-Reply-To: <20050105174752.GA6859@animx.eu.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Willem Riede <osst@riede.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@osdl.org>, linux-scsi@vger.kernel.org
 
-On Sun, 02 Jan 2005 00:59:33 +0000, Willem Riede <osst@riede.org> wrote:
-> Here is patch 2 (see previous mail for context), providing osst error
-> handling improvements.
+On Wed, Jan 05, 2005 at 12:47:52PM -0500, Wakko Warner wrote:
+> Kernel: 2.6.8.1 vanilla
+> Card: Dell PERC DC/2 (megaraid)
+> 
+> The oops happened when I attempted to unload the megaraid module.  Before
+> doing this, I ran the dellmgr program to reconfigure the raid.
+> 
+> Before the "oops" text, I saw:
+> Badness in remove_proc_entry at fs/proc/generic.c:688
+>  [<c017c3fa>] remove_proc_entry+0x10a/0x150
+>  [<d88f6e3e>] megaraid_exit+0x2e/0x3e [megaraid]
+>  [<c012c690>] sys_delete_module+0x150/0x1a0
+>  [<c0142a00>] do_munmap+0x140/0x190
+>  [<c010513b>] syscall_call+0x7/0xb
 
-<snip>
+Someone's removing non-empty directory in procfs.  Let's see...
+Indeed.
+#ifdef CONFIG_PROC_FS
+        remove_proc_entry("megaraid", &proc_root);
+#endif
 
-> +               while (retval && time_before (jiffies, startwait + 5*60*HZ)) {
-> +
-> +                       if (STp->buffer->syscall_result && (SRpnt->sr_sense_buffer[2] & 0x0f) != 2) {
-> +
-> +                               /* some failure - not just not-ready */
-> +                               retval = osst_write_error_recovery(STp, aSRpnt, 0);
-> +                               break;
-> +                       }
-> +                       set_current_state(TASK_INTERRUPTIBLE);
-> +                       schedule_timeout (HZ / OSST_POLL_PER_SEC);
+        pci_unregister_driver(&megaraid_pci_driver);
+so we remove /proc/megaraid and then procees to remove controllers found
+by driver.  Each of those has a subdirectory in /proc/megaraid...
 
-Are you sure you want to use TASK_INTERRUPTIBLE here? If you are sure,
-then you probably should add code which checks if schedule_timeout()
-returns early because of signals (signals_pending(current) will be
-true). Additionally, you may as well use msleep_interruptible(1000 /
-OSST_POLL_PER_SEC), since you are requesting a 10th of a second sleep
-(with OSST_POLL_PER_SEC #define'd to 10) (which is long & measurable
-in milliseconds), you are not checking the return value (so you don't
-seem to care how much time was left in the sleep) and
-msleep_interruptible() will return on the same conditions as the
-current code does. Seems like it should do what you want (still need
-some means of checking for signals, though, I think).
+Fix is trivial:
 
-If, in fact, you did not intend to use TASK_INTERRUPTIBLE, but
-TASK_UNINTERRUPTIBLE, then you may want to consider using msleep(1000
-/ OSST_POLL_PER_SEC) [ignoring signals in addition to waitqueue
-events].
-
-If, though, you want to keep the code as is, then please ignore the
-noise and I apologize :)
-
-Thanks,
-Nish
+diff -urN RC10-bk6-base/drivers/scsi/megaraid.c RC10-bk6-current/drivers/scsi/megaraid.c
+--- RC10-bk6-base/drivers/scsi/megaraid.c	2004-12-25 01:04:29.000000000 -0500
++++ RC10-bk6-current/drivers/scsi/megaraid.c	2005-01-05 13:03:51.609698587 -0500
+@@ -5109,11 +5109,11 @@
+ 	 */
+ 	unregister_chrdev(major, "megadev");
+ 
++	pci_unregister_driver(&megaraid_pci_driver);
++
+ #ifdef CONFIG_PROC_FS
+ 	remove_proc_entry("megaraid", &proc_root);
+ #endif
+-
+-	pci_unregister_driver(&megaraid_pci_driver);
+ }
+ 
+ module_init(megaraid_init);
