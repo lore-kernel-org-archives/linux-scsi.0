@@ -1,40 +1,41 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Core scsi layer crashes in 2.6.8.1
-Date: 29 Sep 2004 10:34:25 -0400
+Subject: Re: [Patch] Fix oops on rmmod usb-storage
+Date: 29 Sep 2004 10:24:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1096468472.2123.17.camel@mulgrave>
-References: <1096401785.13936.5.camel@localhost.localdomain>
-	<1096467125.2028.11.camel@mulgrave>
-	<1096464245.15907.27.camel@localhost.localdomain>
+Message-ID: <1096467874.1762.15.camel@mulgrave>
+References: <415A67B8.2080003@suse.de>  <1096466196.2028.8.camel@mulgrave>
+	<1096463876.15905.23.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:51936 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:22486 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S268582AbUI2Oee (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Sep 2004 10:34:34 -0400
-In-Reply-To: <1096464245.15907.27.camel@localhost.localdomain>
+	id S268490AbUI2OYj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Sep 2004 10:24:39 -0400
+In-Reply-To: <1096463876.15905.23.camel@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Hannes Reinecke <hare@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 2004-09-29 at 09:24, Alan Cox wrote:
->         badness in kref_get
->                 kobject_get, get_device, scsi_request_fn
->                 blk_insert_request, scsi_queue_insert
->                 scsi_eh_flush_done_q, scsi_unjam_host
->                 scsi_error_handler
+On Wed, 2004-09-29 at 09:17, Alan Cox wrote:
+> On Mer, 2004-09-29 at 14:56, James Bottomley wrote:
+> > The key to the solution of this problem is to know what USB is trying to
+> > do with the dead device.  SCSI is trying to be polite and explicitly
+> > kill the outstanding commands before it removes the HBA.  Presumably USB
+> > is returning something that says this can't be done so the EH gets all
+> > the way up to offlining.
+> 
+> Its nothing to do with USB, rmmod with eh running crashes all the other
+> SCSI drivers I've tested too. After the state transition fails you get
+> kobject related errors and a crash. 
 
-Yes .. this is the significant one ... we're trying to get a reference
-to a device that has already been released
+There is no crash in the log ... there was only a state transition
+complaint.
 
->         OOPS scsi_device_dev_release
->                 device_release
->                 kobject_cleanup
->                 kobject_release
->                 kref_put
->                 scsi_request_fn
+I think the solution is in the eh and its simply not to try to ready the
+device on SDEV_CANCEL (no point readying a device you're being asked to
+kill).
 
 James
 
