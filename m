@@ -1,41 +1,64 @@
-From: "Mukker, Atul" <Atulm@lsil.com>
-Subject: RE: [ANNOUNCE]: megaraid driver version 2.20.0.1
-Date: Wed, 21 Jul 2004 09:48:16 -0400
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: [ANNOUNCE] [RFC] Generic SCSI Target Middle Level for Linux (SCST)
+ version 0.9.2 released
+Date: Wed, 21 Jul 2004 20:02:24 +0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC89C@exa-atlanta>
+Message-ID: <40FE9390.9060609@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:29112 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S266327AbUGUNve (ORCPT
+Received: from smtp.rol.ru ([194.67.21.9]:33482 "EHLO smtp.rol.ru")
+	by vger.kernel.org with ESMTP id S266526AbUGUP7w (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Jul 2004 09:51:34 -0400
+	Wed, 21 Jul 2004 11:59:52 -0400
+Received: from [83.149.228.1] ([83.149.228.1]:45151 "EHLO vlnb.net" smtp-auth:
+	"vlnb@online.ru" TLS-CIPHER: "DHE-RSA-AES256-SHA keybits 256/256 version
+	TLSv1/SSLv3" TLS-PEER-CN1: <none>) by gnome06.net.rol.ru with ESMTP
+	id S25627AbUGUP7u (ORCPT <rfc822;linux-scsi@vger.kernel.org>
+	+ 1 other); Wed, 21 Jul 2004 19:59:50 +0400
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@SteelEye.com>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> The philosophy for scsi drivers for a while has been to 
-> remove internal
-> queueing, which is why yours attracted my attention, so the question I
-> was asking is can you use these APIs instead of having to 
-> maintain this
-> internal queue?
-The internal pending queue is fed not only from the mid-layer packets but
-also the packets from the management module and (forthcoming) sysfs module.
-Both of these modules rely on the fact that the commands issued by them
-would be issued sooner or later.
+I would like to announce that Generic SCSI Target Middle Level for Linux
+(SCST) version 0.9.2 released.
 
-In addition, in certain situations (logical drive deletion) driver has to
-stop sending commands to the FW before these operations can be initiated.
-This is also implemented using the pending queue mechanism. Although would
-be minor change to move over to scsi_block_requests and scsi_unblock_request
-to achieve this.
+SCST is a new subsystem of the Linux kernel that provides a standard
+framework for SCSI target drivers development. SCST is designed to
+provide unified, consistent interface between SCSI target drivers and
+Linux kernel and simplify target drivers development as much as
+possible. A system with a SCSI target device is able to share its local
+or virtual devices with other systems on the network with SCSI protocol
+support, e.g. SCSI bus, Fibre Channel, TCP/IP with iSCSI. A system with
+a SCSI target device is able to share its local or virtual devices with
+other systems on a network with SCSI protocol support, e.g. SCSI bus,
+Fibre Channel, TCP/IP with iSCSI. This is commonly used for data storage
+virtualization. Full list of SCST's features, the source code and
+detailed documentation could be found on its Internet page
+http://scst.sourceforge.net.
 
-This is not to say that I am reluctant to implement SCSI_MLQUEUE_HOST_BUSY,
-but just a precursor where additional impacts would be so that reviewers can
-focus on those areas as well.
+The major changes from version 0.9.1 are
 
-Thanks
--Atul Mukker
- 
+- 2.6 kernels support
+
+- FILEIO/BLKDEV device handler that works over files on file system and
+makes from them virtual remotely available SCSI disks. In addition, it
+allows to work directly over a block device, e.g. local IDE or SCSI disk
+or ever disk partition, where there is no file systems overhead. Using
+block devices comparing to sending SCSI commands directly to SCSI
+mid-level via scsi_do_req() has advantage that data are get or put via
+system cache, so it can fully benefit from caching and read ahead,
+performed by Linux's VM subsystem.
+
+The Qlogic target driver is coming soon.
+
+The next coming features are complete BLKDEV device handler, which will 
+not copy data from the page cache, but instead use the pages directly, 
+and device access control.
+
+Comments, suggestions, patches, drivers and testers are welcome. 
+Especially interesting comments (reviews) from inclusion in the mainline
+kernel point of view.
+
+Vlad
+
