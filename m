@@ -1,157 +1,97 @@
-From: Xose Vazquez Perez <xose@wanadoo.es>
-Subject: [scsi drivers summary]
-Date: Fri, 01 Aug 2003 21:35:41 +0200
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: [PATCH] Correct removal of procfs host enteries [2/2]
+Date: Fri, 1 Aug 2003 13:11:49 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F2AC10D.9000600@wanadoo.es>
+Message-ID: <20030801201149.GC3868@beaverton.ibm.com>
+References: <20030801201020.GB3868@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp14.eresmas.com ([62.81.235.114]:58583 "EHLO
-	smtp14.eresmas.com") by vger.kernel.org with ESMTP id S270678AbTHATfz
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Aug 2003 15:35:55 -0400
+Received: from e35.co.us.ibm.com ([32.97.110.133]:3069 "EHLO e35.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S270652AbTHAUH7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Aug 2003 16:07:59 -0400
+Received: from westrelay01.boulder.ibm.com (westrelay01.boulder.ibm.com [9.17.195.10])
+	by e35.co.us.ibm.com (8.12.9/8.12.2) with ESMTP id h71K7wc8267580
+	for <linux-scsi@vger.kernel.org>; Fri, 1 Aug 2003 16:07:58 -0400
+Received: from dyn9-47-17-195 (DYN318028BLD.beaverton.ibm.com [9.47.17.91] (may be forged))
+	by westrelay01.boulder.ibm.com (8.12.9/NCO/VER6.5) with ESMTP id h71K7vAp087324
+	for <linux-scsi@vger.kernel.org>; Fri, 1 Aug 2003 14:07:57 -0600
+Content-Disposition: inline
+In-Reply-To: <20030801201020.GB3868@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-        * LiNUX kernel SCSI/RAID drivers *
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
-                <xose_AT_wanadoo.es>
-                    2.4.22-pre8
-            Fri Aug  1 19:16:38 CEST 2003
+
+DESC
+This patch reduces the user of scsi_host present.
+
+aic79xx_osm and aic7xxx_osm are 2.4 code. ioctl_probe has side effect of
+needing present value.
+EDESC
 
 
-x features:
- - 1 hot-plug
- - 2 vary_io
- - 3 highmem_io
- - 4 block device driver
- - more ?
+ drivers/scsi/NCR53c406a.c    |    5 +++--
+ drivers/scsi/aacraid/linit.c |    1 -
+ drivers/scsi/scsi_module.c   |    2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-o aacraid
- - manufacturer: ADAPTEC
- - kernel: 1.1.2
- - latest: 1.1.2
- - arch: i386
- - features:
- - maintainer: <alan_AT_redhat.com> <aacraid_AT_adaptec.com> <linux-aacraid-devel_AT_dell.com>
- - url: http://www.domsch.com/linux/aacraid/
+diff -puN drivers/scsi/NCR53c406a.c~shost_present drivers/scsi/NCR53c406a.c
+--- patched-scsi-misc-2.5/drivers/scsi/NCR53c406a.c~shost_present	Thu Jul 31 14:32:16 2003
++++ patched-scsi-misc-2.5-andmike/drivers/scsi/NCR53c406a.c	Thu Jul 31 14:32:16 2003
+@@ -450,6 +450,7 @@ static __inline__ int NCR53c406a_pio_wri
+ 
+ static int __init NCR53c406a_detect(Scsi_Host_Template * tpnt)
+ {
++	int present = 0;
+ 	struct Scsi_Host *shpnt = NULL;
+ #ifndef PORT_BASE
+ 	int i;
+@@ -522,7 +523,7 @@ static int __init NCR53c406a_detect(Scsi
+ 
+ 	DEB(printk("NCR53c406a: using port_base 0x%x\n", port_base));
+ 
+-	tpnt->present = 1;
++	present = 1;
+ 	tpnt->proc_name = "NCR53c406a";
+ 
+ 	shpnt = scsi_register(tpnt, 0);
+@@ -576,7 +577,7 @@ static int __init NCR53c406a_detect(Scsi
+ 	sprintf(info_msg, "NCR53c406a at 0x%x, IRQ %d, %s PIO mode.", port_base, irq_level, fast_pio ? "fast" : "slow");
+ #endif
+ 
+-	return (tpnt->present);
++	return (present);
+ 
+ #if USE_DMA
+       err_free_irq:
+diff -puN drivers/scsi/aacraid/linit.c~shost_present drivers/scsi/aacraid/linit.c
+--- patched-scsi-misc-2.5/drivers/scsi/aacraid/linit.c~shost_present	Thu Jul 31 14:32:16 2003
++++ patched-scsi-misc-2.5-andmike/drivers/scsi/aacraid/linit.c	Thu Jul 31 14:32:16 2003
+@@ -295,7 +295,6 @@ static int aac_detect(Scsi_Host_Template
+ 			printk(KERN_WARNING "aacraid: unable to register \"aac\" device.\n");
+ 	}
+ 
+-	template->present = aac_count; /* # of cards of this type found */
+ 	return aac_count;
+ }
+ 
+diff -puN drivers/scsi/scsi_module.c~shost_present drivers/scsi/scsi_module.c
+--- patched-scsi-misc-2.5/drivers/scsi/scsi_module.c~shost_present	Thu Jul 31 14:32:16 2003
++++ patched-scsi-misc-2.5-andmike/drivers/scsi/scsi_module.c	Thu Jul 31 14:32:16 2003
+@@ -33,7 +33,7 @@ static int __init init_this_scsi_driver(
+ 	INIT_LIST_HEAD(&sht->legacy_hosts);
+ 
+ 	sht->detect(sht);
+-	if (!sht->present)
++	if (list_empty(&sht->legacy_hosts))
+ 		return -ENODEV;
+ 
+ 	list_for_each_entry(shost, &sht->legacy_hosts, sht_legacy_list) {
 
-o aic7xxx/aic79xx
- - manufacturer: ADAPTEC
- - kernel: 6.2.36/1.3.10
- - latest: 6.2.36/1.3.10
- - arch: i386 ia64 powerpc
- - features:
- - maintainer: <gibbs_AT_scsiguy.com>
- - url: http://people.freebsd.org/~gibbs/linux/SRC/
-
-o cciss
- - manufacturer: HP
- - kernel: 2.4.47
- - latest: 2.4.47
- - arch: i386
- - features: 4
- - maintainer: <arrays_AT_hp.com> <steve.cameron_AT_hp.com>
- - url: http://sf.net/projects/cciss/
-
-o DAC960
- - manufacturer: LSI Logic
- - kernel: 2.4.11 (11 Oct 2001)
- - latest: 2.4.20  (1 May 2003)
- - arch: i386 ia64 alpha
- - features: 4
- - maintainer: <dmo_AT_osdl.org>
- - url: http://www.osdl.org/archive/dmo/DAC960/
-        http://www.dandelion.com/Linux/DAC960.html
-
-o dpt_i2o
- - manufacturer: ADAPTEC
- - kernel: 2.4.5
- - latest: 2.4.5
- - arch: i386 ia64 alpha sparc
- - features:
- - maintainer: <deanna_bonds_AT_adaptec.com>
- - url: http://linux.adaptec.com/linux_raid_unsupported.html
-        http://linux.adaptec.com/Linux_drivers.html
-
-o feral_isp
- - manufacturer: QLOGIC
- - kernel: not in kernel
- - latest: Linux Platform 2.1 - Common Core Code 2.7, 14 Jun 2003
- - arch: i386 alpha sparc powerpc
- - features: alternative driver for all qlogic products
- - maintainer: <mjacob_AT_feral.com>
- - url: http://www.feral.com/isp.html
-
-o fusion
- - manufacturer: LSI Logic
- - kernel: 2.05.05+
- - latest: 2.05.05+
- - arch: i386 alpha sparc ia64 x86_64
- - features:
- - maintainer: <lstephen_AT_lsil.com> <sjralston1_AT_netscape.net>
- - url: ftp://ftp.lsil.com/HostAdapterDrivers/linux/
-
-o gdth
- - manufacturer: ADAPTEC
- - kernel: 2.05
- - latest: 2.05
- - arch: i386 alpha ia64
- - features:
- - maintainer: <achim.leubner_AT_intel.com> <boji.t.kannanthanam_AT_intel.com>
- - url: http://www.icp-vortex.com/english/download/rdrnrsrz/linux/linux_e.htm
-
-o ips
- - manufacturer: ADAPTEC
- - kernel: 6.00.26
- - latest: 6.00.26
- - arch: i386 ia64
- - features:
- - maintainer: <ipslinux_AT_adaptec.com>
- - url: unknow ?
-
-o megaraid
- - manufacturer: LSI Logic
- - kernel: v1.18f (Dec 10 2002)
- - latest: v1.18i (Jun 20 2003) / v2.00.6 (Jul 30 2003)
- - arch: i386
- - features:
- - maintainer: <atulm_AT_lsil.com> <linux-megaraid-devel_AT_dell.com>
- - url: ftp://ftp.lsil.com/pub/linux-megaraid/
-        http://domsch.com/linux/megaraid/
-
-o qla1280
- - manufacturer: QLOGIC
- - kernel: 3.00 (Jan 17, 1999)-> DANGER !! very outdated
- - latest: 3.12 (Aug 17, 2000)
- - beta:   3.23 (Jan 12, 2001)
- - arch: i386 alpha powerpc sparc
- - features:
- - maintainer: same peple than qla2x00 :-? or <linux-scsi_AT_vger.kernel.org>
- - url: http://download.qlogic.com/drivers/2206/qla1x160src-3.12.tgz
-        http://download.qlogic.com/drivers/2209/qla1x160src-3.23Beta.tgz
-
-o qla2x00
- - manufacturer: QLOGIC
- - kernel: not in kernel
- - latest: 6.05.00   (Apr 30, 2003)
- - alpha:  8.00.00b5 (Jul 30, 2003)
- - arch: i386
- - features:
- - maintainer: <andrew.vasquez_AT_qlogic.com> <duane.grigsby_AT_qlogic.com> <raj.gandhi_AT_qlogic.com>
-               <sdake_AT_mvista.com> <arun.mittal_AT_qlogic.com> <ryan.klein_AT_qlogic.com>
- - url: http://sf.net/projects/linux-qla2xxx/
-        http://download.qlogic.com/drivers/11631/qla2x00src-v6.05.00.tgz
-
-o sym53c8xx_2
- - manufacturer: LSI Logic
- - kernel: 2.1.17a     (Dec 01 2001)
- - latest: 2.1.19-pre3 (Nov 23 2002)
- - arch: i386 alpha sparc powerpc ia64
- - features:
- - maintainer: <groudier_AT_free.fr>
- - url: http://www.tux.org/pub/tux/roudier/drivers/linux/stable/
-
-#EOT
+_
 
