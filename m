@@ -1,56 +1,73 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [RFC][PATCH]SCSI signal(I/O) failure causes no response
-Date: 14 Apr 2004 10:28:25 -0500
+From: Paul Wagland <paul@wagland.net>
+Subject: Re: reiser4 and megaraid problems with debian 2.6.5
+Date: Wed, 14 Apr 2004 17:37:18 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1081956506.10872.41.camel@mulgrave>
-References: <200404140107.AA03169@fukuchi.jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+Message-ID: <9D26AED2-8E29-11D8-A41D-000A95CD704C@wagland.net>
+References: <36927C82-8DE0-11D8-A41D-000A95CD704C@wagland.net> <407D550D.5030003@namesys.com>
+Mime-Version: 1.0 (Apple Message framework v613)
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-44-570623825"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:9874 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264265AbUDNP2e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Apr 2004 11:28:34 -0400
-In-Reply-To: <200404140107.AA03169@fukuchi.jp.fujitsu.com>
+Received: from smtp-out4.xs4all.nl ([194.109.24.5]:23303 "EHLO
+	smtp-out4.xs4all.nl") by vger.kernel.org with ESMTP id S263716AbUDNPh0
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Apr 2004 11:37:26 -0400
+In-Reply-To: <407D550D.5030003@namesys.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Eric Dean Moore <Emoore@lsil.com>
+To: Hans Reiser <reiser@namesys.com>
+Cc: Linux mailing list SCSI <linux-scsi@vger.kernel.org>, Linux mailing list kernel <linux-kernel@vger.kernel.org>
 
-On Tue, 2004-04-13 at 20:07, Masao Fukuchi wrote:
-> 1.Fusion MPT driver issues read command to its firmware.
->   (our server has LSI53C1030 as SCSI adapter)
->   Then the firmware returns protocol error for the command.
->   Fusion MPT driver makes DID_RESET status by protocol error 
->   and sends it to SCSI midlayer.
-> 
-> 2.SCSI midlayer analyzes the status from LLD.
->   SCSI midlayer schedules command retry because the status is just
->   DID_RESET status.
->   (When the status has DID_RESET plus some sense code, the retry
->    sequence depends on the sense code. But when the status has only
->    DID_RESET, SCSI midlayer schedules command retry)
-> 
-> Sequence 1. and 2. are repeated infinitely and it causes no response.
-> 
-> To prevent this problem, I proposed Eric Moore to change the DID_RESET
-> status to DID_SOFT_ERROR in fusion MPT driver.
-> But he suggested me to change SCSI midlayer to prevent infinite loop.
 
-Well, there clearly is a problem, because we can't retry no-rety
-commands that return DID_RESET (like tape commands or fastfail).
+--Apple-Mail-44-570623825
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 
-However, DID_RESET is supposed to be returned for events where it was
-determined that the command was lost because the bus or device was reset
-(either as part of error handling or because an external entity issued
-the reset).  Since these events, if they originate externally, can be
-beyond the control of the device, making retryable commands subject to
-the retry limit would be asking for unnecessary I/O errors because of
-something we couldn't do anything about.
+Hi,
 
-Why is the LSI driver returning DID_RESET for the problem (i.e. is it
-some type of external bus reset, or is something else going on)?
+On Apr 14, 2004, at 17:13, Hans Reiser wrote:
 
-James
+> Paul Wagland wrote:
+>
+>> I am using the debian prepared kernel with the debian reiser4 patch. 
+>> I made a cursory examination of the patch, and it appears to 
+>> correlate fairly closely with the patch from the namesys site.
+>
+> In what way does it not correlate?
 
+As was mentioned by Domenico Andreoli the changes are just those 
+required to get reiser4 to work under 2.6.5. Other differences are line 
+offsets due to the fact that the debian kernel also has patches 
+applied.
+
+>> If I can help debug this situation (I am probably the only person 
+>> trying this combination :-) please let me know how I should go about 
+>> it.
+>
+> I don't have the hardware to test it, can you get the error without 
+> your hardware?
+
+Unfortunately, not easily, since this is the only box that I can 
+currently test this out on. However, there a couple of tests that I can 
+still perform (as mentioned elsewhere in this thread) and I will report 
+back on the results of those later tonight.
+
+Cheers,
+Paul
+
+--Apple-Mail-44-570623825
+content-type: application/pgp-signature; x-mac-type=70674453;
+	name=PGP.sig
+content-description: This is a digitally signed message part
+content-disposition: inline; filename=PGP.sig
+content-transfer-encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (Darwin)
+
+iD8DBQFAfVqxtch0EvEFvxURAunMAJwJMw+cQmxTIkFW6yTHB+mic3UdCQCeKQnQ
+xJg4mdKAcNVwCc9EGggNLEs=
+=5+Ui
+-----END PGP SIGNATURE-----
+
+--Apple-Mail-44-570623825--
 
