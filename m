@@ -1,24 +1,38 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Andre Hedrick <andre@linux-ide.org>
 Subject: Re: ide-scsi with ide-hd?
-Date: 06 Dec 2002 14:54:18 +0000
+Date: Sat, 7 Dec 2002 10:37:04 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1039186458.22971.6.camel@irongate.swansea.linux.org.uk>
-References: <3DF06AD0.5070507@rzg.mpg.de> <3DF07BDF.8070907@torque.net>
-	<20021206134519.GF3664@linnie.riede.org>
+Message-ID: <Pine.LNX.4.10.10212071036340.397-100000@master.linux-ide.org>
+References: <1039179795.22971.1.camel@irongate.swansea.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20021206134519.GF3664@linnie.riede.org>
+In-Reply-To: <1039179795.22971.1.camel@irongate.swansea.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: wrlk@riede.org
-Cc: linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Thomas Soddemann <Thomas.Soddemann@rzg.mpg.de>, linux-scsi@vger.kernel.org
 
-On Fri, 2002-12-06 at 13:45, Willem Riede wrote:
-> On 2002.12.06 05:28 Douglas Gilbert wrote:
+
+Yes they do, but only ones with special firmware.
+
+IE Tivo modified drives.
+
+On 6 Dec 2002, Alan Cox wrote:
+
+> On Fri, 2002-12-06 at 09:16, Thomas Soddemann wrote:
+> > Hi,
 > > 
-> > The ide-scsi driver looks like it is going away in the
-> > 2.5 series **.  
+> > does anybody know whether there is there a possibility to use ide-scsi 
+> > in connection with an IDE HD?
+> 
+> Basically no - IDE disks don't support ATAPI.
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-IDE-SCSI isnt going anywhere.
+Andre Hedrick
+LAD Storage Consulting Group
 
