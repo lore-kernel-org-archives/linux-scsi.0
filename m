@@ -1,71 +1,39 @@
-From: "Martin Peschke3" <MPESCHKE@de.ibm.com>
-Subject: Re: Asynchronous Event Reporting
-Date: Tue, 16 Apr 2002 14:59:57 +0200
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: HBA switching devices online status...
+Date: Tue, 16 Apr 2002 09:08:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OFDAF02D4B.E9D44720-ONC1256B9D.004734BC@de.ibm.com>
+Message-ID: <3CBC225F.D75E55B4@torque.net>
+References: <08628CA53C6CBA4ABAFB9E808A5214CB0C4D1F@mercury.infiniconsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Heinz <mheinz@infiniconsys.com>
+To: "Heinz, Michael" <mheinz@infiniconsys.com>
 Cc: linux-scsi@vger.kernel.org
 
-Hi,
+"Heinz, Michael" wrote:
+> 
+> If the SCSI midlayer flags a device as offline due to errors, is there
+> any way to restore the device once the errors have been resolved?
+> 
+> I'm interested in either manual or automatic (i.e., in the driver)
+> solutions. Looking through the source for different HBAs I didn't see
+> any obvious hints.
 
-is there any transfer mechanism which allows an HBA driver to push
-its AER data to the mid layer?
+Michael,
+It has been suggested that the following sequence will work:
 
-Mit freundlichen Gr=FC=DFen / with kind regards
+  echo "scsi remove-single-device <h> <b> <t> <l>" > /proc/scsi/scsi
+  echo "scsi add-single-device <h> <b> <t> <l>" > /proc/scsi/scsi
 
-Martin Peschke
+where the host, bus, target, lun (parameters above respectively)
+are obtained from "cat /proc/scsi/scsi". BTW you can see the state
+of the online flag with "cat /proc/scsi/sg/devices" (last column).
 
-IBM Deutschland Entwicklung GmbH
-Linux for eServer Development
-Phone: +49-(0)7031-16-2349
+My scsimon driver has an ioctl to turn it back on.
 
+There is nothing stopping your HBA driver from setting the
+online flag in the Scsi_device structure.
 
-Michael Heinz <mheinz@infiniconsys.com>@vger.kernel.org on 04/16/2002
-02:30:34 PM
-
-Please respond to Michael Heinz <mheinz@infiniconsys.com>
-
-Sent by:    linux-scsi-owner@vger.kernel.org
-
-
-To:    linux-scsi@vger.kernel.org
-cc:
-Subject:    Asynchronous Event Reporting
-
-
-
-I'd like to do a quick sanity check here...
-
-I've been asked to make sure I support async event reporting in the
-driver I'm working on (which will eventually be GPL! Honest! :-P).
-
- From reviewing the code in 2.4 scsi/drivers it appears that the best I
-can do is log that I got the event, but then ignore it - sd.c does not
-support AER.
-
-Is this correct?
-
---
-knock knock.
-
-Michael Heinz <mheinz@infiniconsys.com>
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Doug Gilbert
