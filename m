@@ -1,37 +1,30 @@
-From: Reinhold Fischer <news4reini123@aon.at>
-Subject: Re: Unable to set hostid in sym53c8xx module
-Date: Wed, 20 Oct 2004 10:37:24 +0200
+From: "Heinzmann, Robert" <Heinzmann@cc-dresden.de>
+Subject: RE: Unable to set hostid in sym53c8xx module
+Date: Wed, 20 Oct 2004 11:01:00 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200410201037.24558.news4reini123@aon.at>
-References: <7AAD212492598A4A92463C3F5D34C54F195127@ccd3.CC.de>
+Message-ID: <7AAD212492598A4A92463C3F5D34C54F19512B@ccd3.CC.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from webhosting2.datakom.at ([195.3.109.36]:27806 "EHLO
-	email.datakom.at") by vger.kernel.org with ESMTP id S270309AbUJTIhd convert rfc822-to-8bit
+Received: from mxs.tiscali.de ([62.27.59.134]:51977 "EHLO mxs.tiscali.de")
+	by vger.kernel.org with ESMTP id S270151AbUJTJBD convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Oct 2004 04:37:33 -0400
-In-Reply-To: <7AAD212492598A4A92463C3F5D34C54F195127@ccd3.CC.de>
-Content-Disposition: inline
+	Wed, 20 Oct 2004 05:01:03 -0400
+Content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Reinhold Fischer <news4reini123@aon.at>
+Cc: linux-scsi@vger.kernel.org
 
-Hi!
+Reinhold, 
 
-> It's a known problem and Matthew Wilcox is currently working on this
-> issue.
+> Do you know, if it is fixed in 2.6.9?
+I'm not shure, probably not (there where some other fixes too). Afaik
+2.6.10 will include a fixed sym2 driver
+(http://marc.theaimsgroup.com/?l=linux-scsi&m=109742499223501&w=2).
+Maybe the fix in the thread mentioned in the last mail helps (just as a
+workaround). It worked for me.
 
-Do you know, if it is fixed in 2.6.9?
+Bye, Robert
 
-The changelog says something from changes in sym_glue.c, but I think=20
-it's not this problem.
-
---=20
-Mit freundlichen Gr=FC=DFen,
-Ing. Reinhold Fischer
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
