@@ -1,59 +1,36 @@
-From: Saeed Bishara <Saeed.Bishara@il.marvell.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: IO buffer alignment for block devices
-Date: Mon, 13 Sep 2004 18:16:47 +0300
+Date: 13 Sep 2004 11:28:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4145B9DF.7020408@il.marvell.com>
-References: <41459729.5060106@il.marvell.com> <1095084876.1762.8.camel@mulgrave>
+Message-ID: <1095089305.1762.73.camel@mulgrave>
+References: <41459729.5060106@il.marvell.com>
+	<1095084876.1762.8.camel@mulgrave>  <4145B9DF.7020408@il.marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shosh.galileo.co.il ([199.203.130.250]:20702 "EHLO
-	il.marvell.com") by vger.kernel.org with ESMTP id S268670AbUIMPQ5
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Sep 2004 11:16:57 -0400
-In-Reply-To: <1095084876.1762.8.camel@mulgrave>
+Received: from stat16.steeleye.com ([209.192.50.48]:44765 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S267841AbUIMP23 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Sep 2004 11:28:29 -0400
+In-Reply-To: <4145B9DF.7020408@il.marvell.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Saeed Bishara <Saeed.Bishara@il.marvell.com>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+On Mon, 2004-09-13 at 11:16, Saeed Bishara wrote:
+>     isn't the default 512, this is what I see in blk_queue_make_request.
+> 
+> <http://lxr.linux.no/ident?v=2.6.8.1;i=blk_queue_make_request>
 
+In the block layer, yes.  In SCSI we tune that down to be 8 for backward
+compatibility with 2.4, I think, but LLDs can tune it up again.
 
-James Bottomley wrote:
+> any Ideas about lk 2.4?
 
->On Mon, 2004-09-13 at 08:48, Saeed Bishara wrote:
->  
->
->>    Is there any minimal alignment for the IO buffers (sg and single) 
->>sent to a scsi LLD?
->>    I found that buffers that come from buffer cache, page cache and sg 
->>are page aligned , and the raw driver send sector aligned     buffers.
->>    so can I assume that the minimal alignment of the buffer is 512 bytes?
->>    
->>
->
->You can assume it will be whatever you set blk_queue_dma_alignment() to
->in your slave configure routines.  If the LLD doesn't set this, then it
->will be 8 bytes.  However, beware, setting this higher can cause user
->  
->
-    isn't the default 512, this is what I see in blk_queue_make_request.
+Not really; since it's end of life, you could probably get away with not
+back porting to 2.4
 
-<http://lxr.linux.no/ident?v=2.6.8.1;i=blk_queue_make_request>
+James
 
->generated commands to be errored if they fail the alignment checks.
->
->James
->
->  
->
-any Ideas about lk 2.4?
-
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->  
->
 
