@@ -1,46 +1,64 @@
-From: Andries Brouwer <aebr@win.tue.nl>
-Subject: Re: [linux-usb-devel] RE: A different look at block device hotswap in the Linux kernel
-Date: Sun, 26 Jan 2003 12:26:11 +0100
+From: Daniel Brahneborg <basic@chello.se>
+Subject: ATAPI errors when using cdrecord
+Date: Sun, 26 Jan 2003 18:46:44 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030126112611.GA2814@win.tue.nl>
-References: <OF73A095F7.76CA02FF-ON87256CB8.0060AF6A-88256CB8.006323FB@us.ibm.com> <20030124100832.Y1605-100000@wonky.in0.lcl>
+Message-ID: <20030126184644.A10278@nettis.grimsta>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20030124100832.Y1605-100000@wonky.in0.lcl>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Jacob <mjacob@feral.com>
-Cc: Bryan Henderson <hbryan@us.ibm.com>, "Cress, Andrew R" <andrew.r.cress@intel.com>, andmike@us.ibm.com, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, Luben Tuikov <luben@splentec.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Oliver Neukum <oliver@neukum.name>, Steven Dake <sdake@mvista.com>, Alan Stern <stern@rowland.harvard.edu>
+To: linux-scsi@vger.kernel.org
+Cc: Daniel Brahneborg <basic@chello.se>
 
-On Fri, Jan 24, 2003 at 10:09:32AM -0800, Matthew Jacob wrote:
+Hi,
 
-> > It's like when I pull the power plug because my system is totally hosed and
-> > I want to start over.  I know I can cause damage by doing that, but I would
-> > be upset if the new system booted back to the broken state it was in when I
-> > unplugged it.
-> 
-> You may want your device to reattach as totally new. You may, on the other
-> hand, want your device to resume where you left off. I can see valid
-> reasons for wanting either behaviour (but it can't/shouldn't be deduced
-> by the OS).
+I'm using cdrecord to burn CD's with a Philips CDRW48A burner,
+and sometimes I get all kinds of errors with it.
 
-The kernel does not remember this device once it is gone.
-If user space thinks it recognizes it, it must have a means to
-tell the kernel what it should do. What kind of info?
-The only thing that I can think of right now is the name.
-User space may tell the kernel under what name a device should
-be accessible.
+ 1. When interrupting a burn, the cd tray is locked and the
+    machine must be rebooted.
 
-[Today user space can tell the kernel the numbering of the partitions.]
+ 2. When burning a CD in disk-at-once mode, the computer froze
+    and the CapsLock and ScrollLock leds started blinking.
 
-More generally, the question of what "same device" means
-depends on the application. Is /dev/fd0 the same device
-as /dev/fd0 also when the floppy is different?
-Yes, the name is the same. The contents not.
+A sample from my kernel log follows.  I'm currently using 
+kernel 2.4.20, completely unpatched.
 
-In all cases user space does not tell the kernel "it is the same as ..."
-since the kernel does not remember anyway. User space just instructs
-the kernel to do certain definite things.
+Is there anything I can do to make these errors go away?
 
-Andries
+Yours,
+
+/Basic
+
+Jan 26 15:27:37 nettis kernel: scsi : aborting command due to timeout :
+pid 56000, scsi0, channel 0, id 0, lun
+ 0 0x2a 00 00 05 b1 11 00 00 1f 00
+Jan 26 15:27:37 nettis kernel: hdd: irq timeout: status=0xd0 { Busy }
+Jan 26 15:27:37 nettis kernel: hdd: ATAPI reset complete
+Jan 26 15:27:37 nettis kernel: hdd: irq timeout: status=0xd0 { Busy }
+Jan 26 15:27:37 nettis kernel: hdd: ATAPI reset complete
+Jan 26 15:27:37 nettis kernel: hdd: status timeout: status=0xc0 { Busy }
+Jan 26 15:27:37 nettis kernel: ide-scsi: Strange, packet command
+initiated yet DRQ isn't asserted
+Jan 26 15:27:42 nettis kernel: hdd: status timeout: status=0xd0 { Busy }
+Jan 26 15:27:42 nettis kernel: ide-scsi: Strange, packet command
+initiated yet DRQ isn't asserted
+Jan 26 15:27:42 nettis kernel: hdd: ATAPI reset complete
+Jan 26 15:27:42 nettis kernel: hdd: status timeout: status=0xd0 { Busy }
+Jan 26 15:27:42 nettis kernel: ide-scsi: Strange, packet command
+initiated yet DRQ isn't asserted
+Jan 26 15:27:42 nettis kernel: hdd: ATAPI reset complete
+Jan 26 15:27:42 nettis kernel: hdd: status timeout: status=0xd0 { Busy }
+Jan 26 15:27:42 nettis kernel: ide-scsi: Strange, packet command
+initiated yet DRQ isn't asserted
+Jan 26 15:27:42 nettis kernel: hdd: status timeout: status=0xd0 { Busy }
+Jan 26 15:27:42 nettis kernel: ide-scsi: Strange, packet command
+initiated yet DRQ isn't asserted
+Jan 26 15:27:42 nettis kernel: hdd: ATAPI reset complete
+Jan 26 15:27:42 nettis kernel: hdd: status timeout: status=0xd1 { Busy }
+Jan 26 15:27:42 nettis kernel: ide-scsi: Strange, packet command
+initiated yet DRQ isn't asserted
+Jan 26 15:27:43 nettis kernel: hdd: ATAPI reset complete
+Jan 26 15:27:43 nettis kernel: hdd: status timeout: status=0xd0 { Busy }
+
