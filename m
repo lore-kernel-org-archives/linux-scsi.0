@@ -1,63 +1,118 @@
-From: Aaron Traas <atraas@syncsort.com>
-Subject: st ioctl documentation error (MT_ST_SYSV)
-Date: Sun, 13 Apr 2003 10:05:10 -0400
+From: Paul McKenney <Paul.McKenney@us.ibm.com>
+Subject: Re: [patch for playing] Patch to support 4000 disks and maintain	backward
+ compatibility
+Date: Sun, 13 Apr 2003 06:59:25 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E996E96.3040502@syncsort.com>
+Message-ID: <OF85D814FD.F3C3D932-ON88256D07.004CD13F@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pool-141-153-194-157.mad.east.verizon.net ([141.153.194.157]:60290
-	"EHLO claymore.tyrfing.org") by vger.kernel.org with ESMTP
-	id S263517AbTDMN4x (for <rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Apr 2003 09:56:53 -0400
-Received: from rapier.tyrfing.org ([10.1.1.166] helo=syncsort.com)
-	by claymore.tyrfing.org with esmtp (Exim 3.35 #1 (Debian))
-	id 194i9o-0004Rm-00
-	for <linux-scsi@vger.kernel.org>; Sun, 13 Apr 2003 10:08:33 -0400
+Received: from e33.co.us.ibm.com ([32.97.110.131]:17809 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S263520AbTDMOHx (for <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 13 Apr 2003 10:07:53 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-Hello. I'm trying to fix some bugs in a port of my company's proprietar=
-y=20
-tape backup software. Our software works flawlessly on most commercial=20
-UNIX platforms. When handling tape reads, we use one of two different=20
-subroutines for handling the positioning of the read-head after a read.=
-=20
-On BSD-flavored systems (such as *BSD), we do more-or-less nothing, as=20
-after a read, the tape is spaced forward to the next filemark. On SysV=20
-flavored systems (like Solaris 8), we advance the filemark manually.
-
-We have a problem on Linux, as it states in the st(4) manpage:
-
-MT_ST_SYSV (Default: false)
-    When  this  option  is  enabled,  the  tape
-    devices use the SystemV  semantics.  Other=AD
-    wise  the  BSD semantics are used. The most
-    important difference between the  semantics
-    is  what  happens  when  a  device used for
-    reading is closed: in  SYSV  semantics  the
-    tape  is spaced forward past the next file=AD
-    mark if this has not happened  while  using
-    the device. In BSD semantics the tape posi=AD
-    tion is not changed.
-
-Which switches what we have defined as BSD and SYSV semantics. It state=
-s=20
-that Linux uses BSD semantics by default, and then says SYSV semantics=20
-are what we know are BSD semantics, and that BSD semantics are what we=20
-know as SYSV semantics. How do we know? BSD and Solaris' man pages on=20
-the subject contradict Linux's, and our software properly works on thos=
-e=20
-  systems.
-
-So, going by the description in the page on what the semantics are, we=20
-have defined Linux in our build system as using non-BSD style tape read=
-=20
-semantics. This results in fsf errors.
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andries.Brouwer@cwi.nl, Linux Kernel <linux-kernel@vger.kernel.org>, linux-kernel-owner@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, pbadari@us.ibm.com
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+> On Fri, 2003-04-11 at 20:13, Paul McKenney wrote:
+> > Some compatibility needs more code than other compatibility.
+> > The desired compatibility includes the following, much of which
+> > has been noted earlier in this thread, and some of which may
+> > need to wait for multipath I/O and other of which might be best
+> > provided by a volume manager:
+>
+> We're talking about two types of compatibility.  The first (which
+> everyone agrees on) is that /dev names don't change between 2.4 and
+> 2.5.  The second is direct numerical compatibility so that a /dev still
+> using the old 8:8 scheme works.
+>
+> What you're asking for is more a wish list of enhancements:
+
+True, and the more disks one has, the more one would be wishing
+for them.
+
+> > o     It must be possible to switch between 2.4 and 2.5/6
+> >       kernels without a given disk's name changing.
+>
+> By and large, this is true.  There will be problems where probe order
+> has altered because of changes to bus enumeration schemes or for other
+> reasons.
+
+Exactly.
+
+> > o     New 2.5/6 installations should se a clean disk naming
+> >       scheme without historical cruft.
+>
+> They'll all see /dev/sd<A>[n] as in 2.4
+>
+> > o     Removing or adding one disk should not affect the
+> >       names of other disks.  Ideally, moving a given disk
+> >       from one place to another should not change its
+> >       name.  "The good news is that we repaired your
+> >       disk.  The bad news is that, due to the resulting
+> >       name changes, your application thoroughly
+> >       corrupted all of its data."
+>
+> True until a reboot, as in 2.4
+
+Again, exactly.  The current state requires the sysadm to
+disable the application automatically running on reboot so
+that the application's pathnames could be changed -- after
+the sysadm works out what the names have changed to.  Ouch.
+
+This does not necessarily need to be done in the kernel,
+one could use a volume manager as noted above, or udev
+with appropriate plugins, as you noted below.
+
+> > o     Adding or removing a FC or SCSI adapter should not
+> >       affect the names of disks hanging off of other
+> >       FC or SCSI controllers.  Ideally, the name of
+> >       a disk should not change when its FC or SCSI
+> >       controller is moved from one slot to another.
+>
+> That's not a 2.4 guarantee, it won't be a 2.5 one.
+
+Again, one really does not want to have to figure out
+which disk changed to what name, then hand-edit all
+mount commands, application config files, etc. to change
+all the disk and partition names.
+
+And again, something like udev or a volume manager might
+be appropriate if this functionality is not to be provided
+by the base kernel itself.
+
+> > o     Failures of or repairs to the FC fabric should
+> >       not change the names of any of the disks (though
+> >       a sufficiently thorough failure might make some
+> >       of the disks unreachable).
+>
+> True until reboot, as in 2.4
+
+See above...
+
+> > o     Cluster nodes should ideally have the same name
+> >       for a given disk.  Extra credit, though greatly
+> >       appreciated by anyone who has ever had to deal
+> >       with a cluster where different nodes have different
+> >       names for the same disk.  ;-)
+>
+> That has never been true in Linux, and not in most commerical unixes,
+> either.  Cluster tools are used to do this mapping and most commercially
+> available linux cluster tools solve this problem, so there's no need for
+> the kernel to do it.
+>
+> A lot of these enhancements will be covered (or at least a solution will
+> be facilitated) by udev.  See
+>
+> http://marc.theaimsgroup.com/?t=105003184600001&r=1&w=2
+>
+> (unfortunately, the announcement thread has grown rather big).
+
+Yes, given a plugin that used SCSI's UUID, this could work quite well.
+
+                                    Thanx, Paul
+
