@@ -1,23 +1,39 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Disk Errors
-Date: Tue, 01 Feb 2005 22:43:42 +1000
-Message-ID: <41FF797E.7020009@torque.net>
-References: <20050201084926.21CC986F@frisbee.gerritsacc.nl>
-Reply-To: dougg@torque.net
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: Disk Errors
+Date: Tue, 1 Feb 2005 07:50:54 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458BB521CE@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from borg.st.net.au ([65.23.158.22]:36248 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S262007AbVBAMnS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Feb 2005 07:43:18 -0500
-In-Reply-To: <20050201084926.21CC986F@frisbee.gerritsacc.nl>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Received: from magic.adaptec.com ([216.52.22.17]:46789 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262009AbVBAMu4 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Feb 2005 07:50:56 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kit Gerrits <kit@gerritsacc.nl>
+To: dougg@torque.net, Kit Gerrits <kit@gerritsacc.nl>
 Cc: linux-scsi@vger.kernel.org
 
+Good information for a single drive on a simple SCSI card. This will not
+work for drives that are part of an array (volume) as /dev/sda
+references a pseudo device. Besides, the firmware in the RAID controller
+takes the actions necessary to perform recoverable bad block remaps.
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Douglas Gilbert
+Sent: Tuesday, February 01, 2005 7:44 AM
+To: Kit Gerrits
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: Disk Errors
+
 Kit Gerrits wrote:
-> I have found 08:05 to correspond to /dev/sda5, mounted as /usr(Thanks for
+> I have found 08:05 to correspond to /dev/sda5, mounted as /usr(Thanks
+for
 > the pointer!).
 > 
 > Sda is the single-drive volume
@@ -25,7 +41,8 @@ Kit Gerrits wrote:
 > which needs to be speedy and can be pulled from tape easily).
 > 
 > This explains several things:
-> A/ Why a single error can take an entire volume offline B/ Why the error is
+> A/ Why a single error can take an entire volume offline B/ Why the
+error is
 > not logged
 > 	If it only took the partition offline, 
 > 	it would still have been logged, 
@@ -93,7 +110,8 @@ Doug Gilbert
 > ---------------
 > 
 > Executing: disk show defects (ID=0)
-> Number of PRIMARY defects on drive: 1912 Number of GROWN defects on drive: 0
+> Number of PRIMARY defects on drive: 1912 Number of GROWN defects on
+drive: 0
 > 
 > Executing: container list
 > Num          Total  Oth Chunk          Scsi   Partition    
@@ -103,7 +121,8 @@ Doug Gilbert
 >  /dev/sda             NT
 >  1    RAID-5 16.9GB       32KB Open    0:01:0 64.0KB:8.47GB
 >  /dev/sdb             DATA             0:02:0 64.0KB:8.47GB
->                                        ?:??:?  - Missing - Mount points it
+>                                        ?:??:?  - Missing - Mount
+points it
 > to:
 > # /dev/sda5             5.3G  1.5G  3.6G  30% /usr
 >  
@@ -123,7 +142,8 @@ Doug Gilbert
 >>A single drive failure in a Volume gives you an offline array.
 >>
 >>You need to find who is 08:05, look through /dev for the major/minor 
->>number and relate it to the 'device'. Look through /proc/scsi/scsi and 
+>>number and relate it to the 'device'. Look through /proc/scsi/scsi and
+
 >>/var/messages to help correlate it.
 >>
 >>Sincerely -- Mark Salyzyn
@@ -131,8 +151,13 @@ Doug Gilbert
 > 
 > 
 > -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
