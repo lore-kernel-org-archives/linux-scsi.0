@@ -1,154 +1,270 @@
-From: "Edwards, Scott (MED, Kelly IT Resouces)" <James.Edwards@med.ge.com>
-Subject: How to fix serial ATA write cache? (was RE: Formatting scsi ioctl
-	 command (was RE: Help - looking for a Linux SCSI testing utility))
-Date: Sun, 6 Jun 2004 20:16:45 -0500
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] sg_cmd_done - another oops
+Date: Mon, 07 Jun 2004 12:57:12 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1F6D1D1660975A4887628A011443A1BC0305E3F7@uswaumsx13medge.med.ge.com>
+Message-ID: <40C3D988.3090709@torque.net>
+References: <40C0968E.4090309@us.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/mixed;
+ boundary="------------070702020208000305030403"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ext-nj2gw-2.online-age.net ([216.35.73.164]:57746 "EHLO
-	ext-nj2gw-2.online-age.net") by vger.kernel.org with ESMTP
-	id S264247AbUFGBQw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 6 Jun 2004 21:16:52 -0400
-Received: from int-nj2gw-2.online-age.net (int-nj2gw-2 [3.159.236.66])
-	by ext-nj2gw-2.online-age.net (8.12.9/8.12.9/990426-RLH) with ESMTP id i571Gowj006458
-	for <linux-scsi@vger.kernel.org>; Sun, 6 Jun 2004 21:16:50 -0400 (EDT)
-Received: from uswaumsxb1medge.med.ge.com (localhost [127.0.0.1])
-	by int-nj2gw-2.online-age.net (8.12.9/8.12.8/990426-RLH) with ESMTP id i571Gmhf005312
-	for <linux-scsi@vger.kernel.org>; Sun, 6 Jun 2004 21:16:50 -0400 (EDT)
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:48392 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S264329AbUFGHCj
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Jun 2004 03:02:39 -0400
+In-Reply-To: <40C0968E.4090309@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Brian King <brking@us.ibm.com>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+
+This is a multi-part message in MIME format.
+--------------070702020208000305030403
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Brian King wrote:
+> The following patch fixes a race condition in sg 
+ > of sg_cmd_done racing with sg_release. I've seen this
+ > bug hit several times on test machines and the following
+ > patch fixes it. The race is that if srp->done is set
+ > and the waiting thread gets a spurious wakeup immediately
+ > afterwards, then the waiting thread can end up executing
+ > and completing, then getting closed, freeing sfp before
+ > the wake_up_interruptible is called, which then will result
+ > in an oops. The oops is fixed by locking around the
+> setting srp->done to 1 and the wake_up, and also locking 
+ > around the checking of srp->done, which guarantees that
+ > the wake_up_interruptible will always occur before the
+ > sleeping thread gets a chance to run.
+
+Brian,
+Thanks for this analysis; I'm still trying to get my head
+around it :-) These "spurious wakeups" are a worry. Does
+your testing produce them or do they occur randomly?
+
+The critical part of your patch seems to be the write
+lock in sg_cmd_done() making sure srp->done is set _and_
+wake_up_interruptible() gets executed before the
+__wait_event_interruptible macro in sg_read() or
+sg_remove(_sfp) can proceed.
+
+I thought about making srp->done atomic (of type atomic_t)
+but that does not seem to be sufficient. So I'm happy for
+James to apply this patch.
 
 
-I have discovered what the problem is with setting the write cache on a
-Serial ATA drive.  It is apparent to me now that my sending ATA commands to
-the ioctl was completely wrong.  I will have to send real scsi commands.
+An attempt to consolidate... Almost all of the changes to
+sg that were discussed in the "2.6.6-rc3 ia64
+smp_call_function() called with interrupts disabled" thread
+(about a month ago) are now in lk 2.6.7-rc2. The janitors
+have also been at work with "__user" type modifiers.
+Some changes that Patrick Mansfield proposed are not in
+rc2:
+   - up max number of devices to 32K
+   - revert vmalloc()s to kmalloc()s since the former are
+     problematic in big configurations
 
-The bad news is that I finally dug down deep enough to find out that the
-necessary code is not even implemented in libata-scsi.  The SCSI write cache
-disable would need to be sent using a MODE SELECT which doesn't look like
-it's implemented to me.
+The attached patch merges Brian patches with those proposed
+by Patrick. The patch is against lk 2.6.7-rc2 (and sg hasn't
+changed between rc2 and rc2-bk5).
 
-I am going to attempt to implement the write cache part of it.  I hope
-someone can lend advice if I get in too far over my head ;-)
-
-But it seems to me that the way the MODE SENSE is implemented isn't too good
-for this either.  It seems that you would want the mode sense to be updated
-dynamically when it happens instead of using data from when the driver was
-initialized??  So it seems to me that both the MODE SELECT and MODE SENSE
-should be implemented as translated commands instead of simulated commands?
-
-Also could anyone explain the sense bytes in the ata_msense_caching routine?
-They are:
-
- u8 page[7] = { 0xf, 0, 0x10, 0, 0x8, 0xa, 0 };
-
-in that routine.  But I can't figure out what the first 4 bytes are for.  In
-the section 9.3.3.1 Caching Page it says that the return values start with
-the 0x8, 0xa, { WCE, MF, RCD bits }, and so on and that it is 11 bytes long
-instead of 7.  I deleted the first four bytes and added 7 afterward and then
-the scsiinfo program could at least read them.  But then I don't know, it's
-so old maybe it is wrong???
-
-Any advice would be most appreciated.
-
-Thanks
-  -Scott
-
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Edwards, Scott
-(MED, Kelly IT Resouces)
-Sent: Thursday, June 03, 2004 4:23 PM
-To: 'Matthew Dharm'
-Cc: linux-scsi@vger.kernel.org
-Subject: Formatting scsi ioctl command (was RE: Help - looking for a
-Linux SCSI testing utility)
-
-
-
-I am still having trouble getting this command down to the drive.  So I was
-wondering two things:
-
-1) Can anybody tell me how the scsi ioctl command needs to be formatted?  
-
-I have tried many combinations and none of them seem to work.  The command
-is EF and the subcommand is 82.  Assuming this data structure:
-
-struct sdata {
-   unsigned int inlen;
-   unsigned int outlen;
-   unsigned char cmd[16];
-}
-
-how would I put in the command and sub-command?:
-
-struct sdata x = { 0, 0, { 0xEF, 0x00, 0x82, 0x00 } };
-struct sdata x = { 0, 0, { 0xEF, 0x82, 0x00, 0x00 } };
-
-I have tried several other variations.  I even tried changing the cmdlen in
-drivers/block/scsi_ioctl.c to 2 or 4 if the opcode is 0xEF, just in case it
-didn't like getting the 10 bytes from the scsi_command_size table.
-
-2) Is there anyway to see what is actually being sent to the drive?  I have
-chased it down through scsi/sd.c, block/scsi_ioctl.c, block/ll_rw_blk.c, and
-block.elevator.c.  But after it gets put in the request queue I don't know
-how it gets out of the request queue and if there is any way to view what
-the command looks like.
-
-Thanks,
-  -Scott
+Doug Gilbert
 
 
 
------Original Message-----
-From: Matthew Dharm [mailto:mdharm-scsi@one-eyed-alien.net]
-Sent: Wednesday, May 26, 2004 3:11 PM
-To: Edwards, Scott (MED, Kelly IT Resouces)
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: Help - looking for a Linux SCSI testing utility
+--------------070702020208000305030403
+Content-Type: text/x-patch;
+ name="sg267rc2.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sg267rc2.diff"
 
-
-On Wed, May 26, 2004 at 03:24:49PM -0500, Edwards, Scott (MED, Kelly IT
-Resouces) wrote:
-> 
-> I know this is slightly off topic for this list, but I have been
-> fighting with this for about a month now and I feel like I'm getting
-> nowhere.  I tried the plscsi and scu utilities.  One of them I couldn't
-> make heads or tails of.  The other one would read the "inquiry" command
-> ok, but I couldn't figure out how to make it give me the output of the
-> "IDENTIFY" command (0xEC).  This is what I really need to read.
-> 
-> I have written (mostly copied from other stuff) a little program to just
-> turn off the write cache.  (I have included the source below.)  But
-> without being able to read the results of the identify I can't tell if
-> it actually works or not.  I have tried writing a program myself that
-> just sends the (0xEC) command, but all I get back is 70 00 05 00 00 00
-> 00 06 00 00 00 00 20 00 00 00 which I'm guessing are the sense bytes?
-> (Excuse my ignorance the last time I messed with this stuff it was
-> called SASI instead of SCSI.)
-
-Those do look like sense bytes.  I decode them to mean:
-	Illegal Request: invalid command operation code
-
-So it sounds to me like the device got your command, but didn't understand
-it.
-
-Matt
-
--- 
-Matthew Dharm                              Home:
-mdharm-usb@one-eyed-alien.net 
-Maintainer, Linux USB Mass Storage Driver
-
-A:  The most ironic oxymoron wins ...
-DP: "Microsoft Works"
-A:  Uh, okay, you win.
-					-- A.J. & Dust Puppy
-User Friendly, 1/18/1998
+--- linux/drivers/scsi/sg.c	2004-06-03 12:45:12.000000000 +1000
++++ linux/drivers/scsi/sg.c267rc2bk1pl	2004-06-07 12:29:52.879588688 +1000
+@@ -42,7 +42,6 @@
+ #include <linux/fcntl.h>
+ #include <linux/init.h>
+ #include <linux/poll.h>
+-#include <linux/vmalloc.h>
+ #include <linux/smp_lock.h>
+ #include <linux/moduleparam.h>
+ #include <linux/devfs_fs_kernel.h>
+@@ -60,7 +59,7 @@
+ 
+ #ifdef CONFIG_SCSI_PROC_FS
+ #include <linux/proc_fs.h>
+-static char *sg_version_date = "20040513";
++static char *sg_version_date = "20040607";
+ 
+ static int sg_proc_init(void);
+ static void sg_proc_cleanup(void);
+@@ -73,7 +72,7 @@
+ #define SG_ALLOW_DIO_DEF 0
+ #define SG_ALLOW_DIO_CODE /* compile out by commenting this define */
+ 
+-#define SG_MAX_DEVS 8192
++#define SG_MAX_DEVS 32768
+ 
+ /*
+  * Suppose you want to calculate the formula muldiv(x,m,d)=int(x * m / d)
+@@ -723,6 +722,18 @@
+ }
+ 
+ static int
++sg_srp_done(Sg_request *srp, Sg_fd *sfp)
++{
++	unsigned long iflags;
++	int done;
++
++	read_lock_irqsave(&sfp->rq_list_lock, iflags);
++	done = srp->done;
++	read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
++	return done;
++}
++
++static int
+ sg_ioctl(struct inode *inode, struct file *filp,
+ 	 unsigned int cmd_in, unsigned long arg)
+ {
+@@ -761,7 +772,7 @@
+ 			while (1) {
+ 				result = 0;	/* following macro to beat race condition */
+ 				__wait_event_interruptible(sfp->read_wait,
+-					(sdp->detached || sfp->closed || srp->done),
++					(sdp->detached || sfp->closed || sg_srp_done(srp, sfp)),
+ 							   result);
+ 				if (sdp->detached)
+ 					return -ENODEV;
+@@ -772,7 +783,9 @@
+ 				srp->orphan = 1;
+ 				return result;	/* -ERESTARTSYS because signal hit process */
+ 			}
++			write_lock_irqsave(&sfp->rq_list_lock, iflags);
+ 			srp->done = 2;
++			write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+ 			result = sg_new_read(sfp, p, SZ_SG_IO_HDR, srp);
+ 			return (result < 0) ? result : 0;
+ 		}
+@@ -1215,6 +1228,7 @@
+ 	Sg_device *sdp = NULL;
+ 	Sg_fd *sfp;
+ 	Sg_request *srp = NULL;
++	unsigned long iflags;
+ 
+ 	if (SCpnt && (SRpnt = SCpnt->sc_request))
+ 		srp = (Sg_request *) SRpnt->upper_private_data;
+@@ -1303,8 +1317,10 @@
+ 	if (sfp && srp) {
+ 		/* Now wake up any sg_read() that is waiting for this packet. */
+ 		kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
++		write_lock_irqsave(&sfp->rq_list_lock, iflags);
+ 		srp->done = 1;
+ 		wake_up_interruptible(&sfp->read_wait);
++		write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+ 	}
+ }
+ 
+@@ -1331,17 +1347,18 @@
+ 	void *old_sg_dev_arr = NULL;
+ 	int k, error;
+ 
+-	sdp = vmalloc(sizeof(Sg_device));
+-	if (!sdp)
++	sdp = kmalloc(sizeof(Sg_device), GFP_KERNEL);
++	if (!sdp) {
++		printk(KERN_WARNING "sg_alloc: kmalloc Sg_device failure\n");
+ 		return -ENOMEM;
 -
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
++	}
+ 	write_lock_irqsave(&sg_dev_arr_lock, iflags);
+ 	if (unlikely(sg_nr_dev >= sg_dev_max)) {	/* try to resize */
+ 		Sg_device **tmp_da;
+ 		int tmp_dev_max = sg_nr_dev + SG_DEV_ARR_LUMP;
+ 		write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+ 
+-		tmp_da = vmalloc(tmp_dev_max * sizeof(Sg_device *));
++		tmp_da = kmalloc(tmp_dev_max * sizeof(Sg_device *), GFP_KERNEL);
+ 		if (unlikely(!tmp_da))
+ 			goto expand_failed;
+ 
+@@ -1375,8 +1392,8 @@
+ 
+  out:
+ 	if (error < 0)
+-		vfree(sdp);
+-	vfree(old_sg_dev_arr);
++		kfree(sdp);
++	kfree(old_sg_dev_arr);
+ 	return error;
+ 
+  expand_failed:
+@@ -1404,14 +1421,18 @@
+ 	int error, k;
+ 
+ 	disk = alloc_disk(1);
+-	if (!disk)
++	if (!disk) {
++		printk(KERN_WARNING "alloc_disk failed\n");
+ 		return -ENOMEM;
++	}
+ 	disk->major = SCSI_GENERIC_MAJOR;
+ 
+ 	error = -ENOMEM;
+ 	cdev = cdev_alloc();
+-	if (!cdev)
++	if (!cdev) {
++		printk(KERN_WARNING "cdev_alloc failed\n");
+ 		goto out;
++	}
+ 	cdev->owner = THIS_MODULE;
+ 	cdev->ops = &sg_fops;
+ 
+@@ -1490,7 +1511,7 @@
+ 				tsfp = sfp->nextfp;
+ 				for (srp = sfp->headrp; srp; srp = tsrp) {
+ 					tsrp = srp->nextrp;
+-					if (sfp->closed || (0 == srp->done))
++					if (sfp->closed || (0 == sg_srp_done(srp, sfp)))
+ 						sg_finish_rem_req(srp);
+ 				}
+ 				if (sfp->closed) {
+@@ -1525,7 +1546,7 @@
+ 		put_disk(sdp->disk);
+ 		sdp->disk = NULL;
+ 		if (NULL == sdp->headfp)
+-			vfree((char *) sdp);
++			kfree((char *) sdp);
+ 	}
+ 
+ 	if (delay)
+@@ -1590,7 +1611,7 @@
+ 	unregister_chrdev_region(MKDEV(SCSI_GENERIC_MAJOR, 0),
+ 				 SG_MAX_DEVS);
+ 	if (sg_dev_arr != NULL) {
+-		vfree((char *) sg_dev_arr);
++		kfree((char *) sg_dev_arr);
+ 		sg_dev_arr = NULL;
+ 	}
+ 	sg_dev_max = 0;
+@@ -2472,7 +2493,7 @@
+ 
+ 	for (srp = sfp->headrp; srp; srp = tsrp) {
+ 		tsrp = srp->nextrp;
+-		if (srp->done)
++		if (sg_srp_done(srp, sfp))
+ 			sg_finish_rem_req(srp);
+ 		else
+ 			++dirty;
+@@ -2492,7 +2513,7 @@
+ 			}
+ 			if (k < maxd)
+ 				sg_dev_arr[k] = NULL;
+-			vfree((char *) sdp);
++			kfree((char *) sdp);
+ 			res = 1;
+ 		}
+ 		write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+
+--------------070702020208000305030403--
+
