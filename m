@@ -1,59 +1,71 @@
-From: Paul Mackerras <paulus@samba.org>
-Subject: oops when removing sbp2 module
-Date: Sun, 5 Oct 2003 23:12:18 +1000
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: oops when removing sbp2 module
+Date: Sun, 5 Oct 2003 07:49:02 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <16256.6322.388402.857084@cargo.ozlabs.ibm.com>
+Message-ID: <20031005074902.A26284@beaverton.ibm.com>
+References: <16256.6322.388402.857084@cargo.ozlabs.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:16070 "EHLO ozlabs.org")
-	by vger.kernel.org with ESMTP id S263106AbTJENMw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Oct 2003 09:12:52 -0400
+Received: from e4.ny.us.ibm.com ([32.97.182.104]:33158 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S263126AbTJEOuH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Oct 2003 10:50:07 -0400
+Content-Disposition: inline
+In-Reply-To: <16256.6322.388402.857084@cargo.ozlabs.ibm.com>; from paulus@samba.org on Sun, Oct 05, 2003 at 11:12:18PM +1000
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+To: Paul Mackerras <paulus@samba.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
 
-I'm getting an oops inside the sysfs stuff when I try to remove the
-sbp2 (firewire disk) module.  I am running Linus' current BK tree as
-of yesterday, i.e. 2.6.0-test6 (plus).  I'm not sure whether the
-problem is in sysfs, kobject, scsi or ieee1394 stuff, which is why I'm
-posting this to 3 lists.
+On Sun, Oct 05, 2003 at 11:12:18PM +1000, Paul Mackerras wrote:
 
-I have a 40GB disk in a firewire enclosure.  To use it, I insert the
-ohci1394 and sbp2 modules, and the disk appears as a SCSI disk.
-If I then remove the sbp2 module I get an oops from a null pointer
-dereference in sysfs_hash_and_remove.  At that point dir->d_inode is
-NULL.  It turns out that sysfs_remove_dir has already been called for
-the directory and that is why dir->d_inode is NULL.
+> In fact what is happening is that class_device_unregister gets called
+> twice for the same classdev.  This is because scsi_remove_device gets
+> called twice for the same device.  The first time, the call chain
+> looks like this:
+>
+> scsi_remove_device
+> sbp2_remove_device
+> sbp2_remove
+> device_release_driver
+> driver_detach
+> bus_remove_driver
+> driver_unregister
+> hpsb_unregister_protocol
+> sbp2_module_exit
+> 
+> and the second time it looks like this:
+> 
+> scsi_remove_device
+> scsi_forget_host
+> scsi_remove_host
+> sbp2_remove_host
+> hpsb_unregister_highlevel
+> sbp2_module_exit
+> 
+> So, is this a reference counting problem on the classdev, a problem
+> where the scsi layer doesn't remove the scsi device from its internal
+> lists properly in scsi_remove_device, or a problem in the sbp2 code?
+> Anyone got a fix?
+> 
+> Thanks,
+> Paul.
 
-In fact what is happening is that class_device_unregister gets called
-twice for the same classdev.  This is because scsi_remove_device gets
-called twice for the same device.  The first time, the call chain
-looks like this:
+Paul -
 
-scsi_remove_device
-sbp2_remove_device
-sbp2_remove
-device_release_driver
-driver_detach
-bus_remove_driver
-driver_unregister
-hpsb_unregister_protocol
-sbp2_module_exit
+There is a typo on a change to the access_count check. 
 
-and the second time it looks like this:
+Try this patch:
 
-scsi_remove_device
-scsi_forget_host
-scsi_remove_host
-sbp2_remove_host
-hpsb_unregister_highlevel
-sbp2_module_exit
+--- bleed-2.5/drivers/scsi/scsi_sysfs.c-orig	Mon Sep 29 12:21:09 2003
++++ bleed-2.5/drivers/scsi/scsi_sysfs.c	Mon Sep 29 16:19:22 2003
+@@ -412,7 +412,7 @@
+ 		set_bit(SDEV_DEL, &sdev->sdev_state);
+ 		if (sdev->host->hostt->slave_destroy)
+ 			sdev->host->hostt->slave_destroy(sdev);
+-		if (atomic_read(&sdev->access_count))
++		if (!atomic_read(&sdev->access_count))
+ 			device_del(&sdev->sdev_gendev);
+ 		up_write(&class->subsys.rwsem);
+ 	}
 
-So, is this a reference counting problem on the classdev, a problem
-where the scsi layer doesn't remove the scsi device from its internal
-lists properly in scsi_remove_device, or a problem in the sbp2 code?
-Anyone got a fix?
-
-Thanks,
-Paul.
+-- Patrick Mansfield
