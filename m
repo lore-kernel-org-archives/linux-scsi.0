@@ -1,41 +1,21 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
+From: "Bryan Henderson" <hbryan@us.ibm.com>
 Subject: Re: Question on SMP
-Date: Thu, 11 Jul 2002 08:44:59 -0700 (PDT)
+Date: Thu, 11 Jul 2002 09:01:58 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33L2.0207110840050.19486-100000@dragon.pdx.osdl.net>
-References: <3D2D51A6.6461FD4C@npd.hcltech.com>
+Message-ID: <OF17661460.710343AA-ON87256BF3.0057EBA5@boulder.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3D2D51A6.6461FD4C@npd.hcltech.com>
 List-Id: linux-scsi@vger.kernel.org
 To: Subrahmanya Sastry K V <skotra@npd.hcltech.com>
-Cc: linux-scsi@vger.kernel.org, ilugc@aero.iitm.ernet.in
+Cc: ilugc@aero.iitm.ernet.in, linux-scsi@vger.kernel.org
 
-On Thu, 11 Jul 2002, Subrahmanya Sastry K V wrote:
 
-| I would like to run my iSCSI pseudo-HBA driver program on a
-| SMP machine. But my driver doesn't support SMP. Is there any
-| way by which I can disable all the processors but one in the
-| SMP machine dynamically and run my program, as if it is running
-| on a UP machine?
-|
-| ( Statically disabling the SMP support in the kernel config file
-|    and recompiling the kernel is one way. Any clues on
-|     how to achieve it dynamically?)
+>( Statically disabling the SMP support in the kernel config file
+>   and recompiling the kernel is one way. Any clues on
+>    how to achieve it dynamically?)
 
-For what kernel version?
+A slightly more dynamic way is the kernel boot parameter maxcpus=1 .
 
-There are some patches to enable CPU hotswap on/off,
-but they aren't integrated into any released kernel yet.
-They are being changed very much, but should end up in Linux 2.5
-fairly soon, but I don't really recommend using this just yet.
-  http://sourceforge.net/projects/lhcs/
 
-I don't know of any other dynamic CPU on/off tools.
-For now, I think that you are better off with static
-CPU control.
-
--- 
-~Randy
 
