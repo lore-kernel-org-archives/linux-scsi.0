@@ -1,59 +1,36 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: [Patch] dont block device on QUEUE_FULL for last command
-Date: Mon, 11 Aug 2003 10:45:17 +0200
+From: christophe.varoqui@free.fr
+Subject: Re: scsidev-2.30 released
+Date: Mon, 11 Aug 2003 12:39:15 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030811084517.GP2543@nbkurt.garloff.de>
-References: <OF122C5E1B.D9D616EB-ONC1256D78.0050C1BC@de.ibm.com> <20030804154844.GB26775@gtf.org> <20030805060745.GU854@suse.de>
+Message-ID: <1060598355.3f3772538d3e3@impt3-2.free.fr>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="XG0jWBK27HhJN4nS"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.suse.de ([213.95.15.193]:21002 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S272381AbTHKIpT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Aug 2003 04:45:19 -0400
-Received: from Hermes.suse.de (Hermes.suse.de [213.95.15.136])
-	by Cantor.suse.de (Postfix) with ESMTP id C26FA145F0
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Aug 2003 10:45:18 +0200 (MEST)
-Content-Disposition: inline
-In-Reply-To: <20030805060745.GU854@suse.de>
+Received: from postfix3-1.free.fr ([213.228.0.44]:14798 "EHLO
+	postfix3-1.free.fr") by vger.kernel.org with ESMTP id S272485AbTHKKjQ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Aug 2003 06:39:16 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>
+To: hch@infradead.org
+Cc: linux-scsi@vger.kernel.org
 
+>On Mon, Aug 11, 2003 at 02:50:50AM +0200, Kurt Garloff wrote:
+>> New in 2.30:
+>> * HSV devices are detected and HSV_OS_IDs retrieved. They can be used 
+>>   to build aliases (Contributed by Evans Felix, PNL).
+>
+>What's HSV devices and HSV_OS_IDs?
 
---XG0jWBK27HhJN4nS
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It's a FC Raid controler from HPQ StorageWorks high end product line.
+With a sort of a Volume Manager embeded : when a lun is created you can choose
+to assign an ID (number) that hosts can use to assign a devname ...
 
-On Tue, Aug 05, 2003 at 08:07:45AM +0200, Jens Axboe wrote:
-> On Mon, Aug 04 2003, Jeff Garzik wrote:
-> > For most cases you _should_ block until another command is completed, at
-> > the very least.  Retrying the command immediately is _exactly_ the
-> > situation one wishes to avoid, when returning a QUEUE_FULL result!
->=20
-> Depends very much on who you ask :-)
+the manual says :
 
-If there's no more commands, you would wait forever.
-The patch is correct and needed IMVHO.
+"Some operating systems require a unique ID in order to assign the virtual disk
+a device name; therefor each virtual disk may be assigned an operating
+system-specific unit ID.
+OS unit ID is the same as a LUN ID alias"
 
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-GPG key: See mail header, key servers                 SuSE Labs (Head)
-SuSE Linux AG, Nuernberg, DE                            SCSI, Security
-
---XG0jWBK27HhJN4nS
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (GNU/Linux)
-
-iD8DBQE/N1edxmLh6hyYd04RAoyUAKCT+NVeGy/vnWYS8Wt+2tLmzqxezwCfbMpJ
-PKg1un+t0Nw9jOOpgGr98uo=
-=mZUs
------END PGP SIGNATURE-----
-
---XG0jWBK27HhJN4nS--
+-- 
