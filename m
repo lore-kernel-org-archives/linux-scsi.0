@@ -1,56 +1,101 @@
-From: Goswin von Brederlow <brederlo@informatik.uni-tuebingen.de>
-Subject: Re: Binary-only firmware covered by the GPL?
-Date: 30 Mar 2004 20:11:14 +0200
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH][RFC] iSCSI transport class
+Date: Tue, 30 Mar 2004 13:02:04 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <874qs6nr25.fsf@mrvn.homelinux.org>
-References: <20040325225423.GT9248@cheney.cx>
-	<MDEHLPKNGKAHNMBLJOLKCEEOLEAA.davids@webmaster.com>
-	<20040326131629.GB26910@zombie.inka.de> <40643BFA.1000302@stesmi.com>
-	<20040330113915.GB3084@openzaurus.ucw.cz>
+Message-ID: <4069E04C.2010102@cs.wisc.edu>
+References: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAANoIxZIFzbEaqwjJgytz2AeKAAAAQAAAA2gVe7Un3YUak/sHlj1pNxAEAAAAA@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx5.Informatik.Uni-Tuebingen.De ([134.2.12.32]:58521 "EHLO
-	mx5.informatik.uni-tuebingen.de") by vger.kernel.org with ESMTP
-	id S263797AbUC3SLV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Mar 2004 13:11:21 -0500
-In-Reply-To: <20040330113915.GB3084@openzaurus.ucw.cz>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:7690 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S261204AbUC3VCY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Mar 2004 16:02:24 -0500
+In-Reply-To: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAANoIxZIFzbEaqwjJgytz2AeKAAAAQAAAA2gVe7Un3YUak/sHlj1pNxAEAAAAA@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Pavel Machek <pavel@suse.cz>
-Cc: Stefan Smietanowski <stesmi@stesmi.com>, Eduard Bloch <edi@gmx.de>, David Schwartz <davids@webmaster.com>, debian-devel@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Surekha.PC" <surekhap@cisco.com>
+Cc: 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, linux-iscsi-devel@lists.sourceforge.net
 
-Pavel Machek <pavel@suse.cz> writes:
+Hey Surekha,
 
-> Hi!
+Thanks for the comments.
+
+Surekha.PC wrote:
+>  Hi Mike,
 > 
-> If my code contains picture of human, do I have to provide his DNA, too?
-> 				Pavel
+>  I have reviewed your changes for iSCSI transport class. The changes look
+> fine.
+>  I have few suggestions on further improvements. The attributes can be
+> organised
+>  under iSCSI transport class in the following structure.
 > 
-> (runs away)
+> # ls /sys/class/iscsi_transport/*
+> 
+>   /* iSCSI host specific attributes */
+>   |-- shutdown
+>   |-- host_id
+>   |-- ....
 
-If the picture was made with gimp and you keep an xcf of it around for
-changing it (because it keeps the layers) but only ship a png (no more
-layers) then your violating the GPL.
+The examples you placed here are not tranport specific. They are
+just HBA values, and should stay under the host attributes.
 
-Prefered form for you would be the xcf file and not the png.
+Also, the host layout here does not look right. What happens when I
+have multiple HBAs?
 
-Of cause its hard to show that you do use an xcf as prefered form
-without spying at you working on it so you can get away with an png.
+>   /* iSCSI target specific attributes */
+>   |-- 1:0:1/
+>            |-- target_addr
+>            |-- target_name
+>            |-- target_port
+>            |-- ....
+
+I agree these would be nice under a target attribute. Did
+you have something to post since the last time we talked,
+or did you write the example by hand?
 
 
-With binary firmware is way easier to argue that the prefered form is
-some kind of asm, C , forth or whatever source and not the binary.
-That someone is prefering a hex editor is very unlikely.
+>   /* lun specific attributes */
+>   |-- 1:0:1:0/
+>              |-- device -> ../../../devices/platform/iscsi/1:0:0:0
+>              |-- driver -> ../../../bus/scsi/drivers/sd
+>              |-- lun_status
+>              |-- ....
 
-If the driver+firmware is released as GPL (say as binary driver
-containing the firmware) then the _firmware_ would be in violation of
-the GPL unless source is provided or a note confirming the 3 years on
-request thing is there. Either way the source of the firmware has to
-be made available.
+I don't think anything in lun_status is iscsi specific.
 
-So please do get firms to release GPLed drivers with firmware included
-as GPL bcause then we can sue them for the firmware source. :)
+>  This way the relevant attributes can be used from respective paths.
+> 
 
-MfG
-        Goswin
+I get your point (you just chose the above attributes based on
+name to accentuate this right). However, in your example it seems
+like you would want to show the parent-children relationships like
+here:
+
+/sys/class/iscsi_transport_host
+|-- host1
+|   |-- a_host_attribute
+|   |-- 1:0:1
+|   |   |-- target_name
+|   |   |-- 1:0:1:0
+|   |   |   |- some_lun_attribute
+
+Or you could also do something like
+
+/sys/class/iscsi_transport_host
+|-- host1
+|   |- a_host_attribute
+|   |- 1:0:1 -> ../iscsi_transport_target/1:0:1
+|   `- 1:0:2 -> ../iscsi_transport_target/1:0:2
+/sys/class/iscsi_transport_target
+|-- 1:0:1
+|   |- target_name
+|   |- ../iscsi_transport_lun/1:0:1:0
+........
+
+Making /sys/class/iscsi_transport the parent for everything just
+does not look right.
+
+
+Mike
 
