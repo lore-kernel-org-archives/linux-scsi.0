@@ -1,86 +1,85 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: writable mmc profiles actually are writable
-Date: Tue, 7 Oct 2003 23:00:20 +0200
+From: Mark Haverkamp <markh@osdl.org>
+Subject: Re: [PATCH 1/3] 2.6.0 aacraid driver update
+Date: Tue, 07 Oct 2003 14:18:12 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031007210020.GJ1704@suse.de>
-References: <1065463946.5185.8.camel@patehci2> <20031006182223.GF972@suse.de> <20031006182510.GG972@suse.de> <1065469831.5185.44.camel@patehci2> <20031006203816.GJ972@suse.de> <1065473899.6835.41.camel@patehci2> <1065478448.2361.1.camel@patehci2> <1065484607.2899.7.camel@patehci2> <20031007053858.GL972@suse.de> <1065559619.2875.63.camel@patehci2>
+Message-ID: <1065561492.29117.46.camel@markh1.pdx.osdl.net>
+References: <1065475266.17021.75.camel@markh1.pdx.osdl.net>
+	 <3F81E4D8.20904@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:47830 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262887AbTJGVAf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2003 17:00:35 -0400
-Content-Disposition: inline
-In-Reply-To: <1065559619.2875.63.camel@patehci2>
+Received: from fw.osdl.org ([65.172.181.6]:50878 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S262881AbTJGVSU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2003 17:18:20 -0400
+In-Reply-To: <3F81E4D8.20904@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: mdharm-scsi@one-eyed-alien.net, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-On Tue, Oct 07 2003, Pat LaVarre wrote:
-> > Please add ...
-> > to cdrom.c instead ... GPCMD_GET_CONFIGURATION
-> 
-> Happily will do.  I'll continue to reply as I progress or not.
+On Mon, 2003-10-06 at 14:55, Jeff Garzik wrote:
+> Mark Haverkamp wrote:
 
-Great, thanks.
+....
 
-> Before now, I did not know I could find any one place in the kernel
-> source to tweak CDC decisions.  To my confused newbie eye, ide-cd.c and
-> sr.c appeared coded independently to fetch mode page x2A Capabilities
-> and neglect op x46 Get Configuration in slightly different ways.  I
-> erroneously had planned to develop an ide-cd.c patch after the sr.c
-> patch.
+> 
+> > @@ -559,7 +686,7 @@
+> >  			scsicmd->use_sg,
+> >  			scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
+> >  	else if(scsicmd->request_bufflen)
+> > -		pci_unmap_single(dev->pdev, (dma_addr_t)(ulong)scsicmd->SCp.ptr,
+> > +		pci_unmap_single(dev->pdev, (dma_addr_t)(unsigned long)scsicmd->SCp.ptr,
+> >  				 scsicmd->request_bufflen,
+> >  				 scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
+> >  	readreply = (struct aac_read_reply *)fib_data(fibptr);
+> 
+> do you really need all that casting?  :)
 
-You'd end up adding about the same code in both places. The
-->generic_packet() hook and cdrom_generic_command was invented to solve
-this code duplication. So in cdrom.c you just setup the cgc as needed,
-and pass it down to ide-cd or sr. See cdrom_mode_sense() for one of the
-many examples.
+I checked out this casting today.  The function takes a dma_addr_t as
+the argument.  You can't just pass the pointer in as is because:
 
-> Already I have one reaction to share ...
-> 
-> I'm now vague on how we want /proc/sys/dev/cdrom/info to change?
-> 
-> I see:
-> 
-> In -test6 for dvd_ram we have:
-> 
-> Can write CD-R:         0
-> Can write CD-RW:        0
-> Can read DVD:           0
-> Can write DVD-R:        0
-> Can write DVD-RAM:      1
-> 
-> I ask:
-> 
-> What do we want the new CDC_MMC_RW line to look like?
-> 
-> Should our new line be a CDC_MMC_RW &~ CDC_DVD_RAM line?  That would
+drivers/scsi/aacraid/aachba.c:690: warning: passing arg 2 of `pci_unmap_single'
+makes integer from pointer without a cast
 
-I think CDC_MMC_RW should be independent of that. The idea was to make
-CDC_DVD_RAM really be the hardware type indication and not the pseudo
-randomly writable flag that it is now.
+If you just cast the pointer to dma_addr_t you get:
 
-> give us the same appearance as the last patch I posted i.e. commonly
-> different devices would provoke only the two exclusive combinations: 
-> 
-> Can write DVD-RAM:      1
-> Can write other MMC-RW: 0
-> 
-> Can write DVD-RAM:      0
-> Can write other MMC-RW: 1
-> 
-> Or should our new line look very different, and appear explicitly set
-> for any CDC_MMC_RW, perhaps:
-> 
-> Tolerates random write: 1
-> 
-> Or do we prefer some other alternative?
+drivers/scsi/aacraid/aachba.c:688: warning: cast from pointer to integer of different size
 
-No that is what I had in mind as well, although I would probably have
-worded it a bit differently :). But that's detail, please proceed, I
-think you are on the right track.
+If you just cast to unsigned long, as in the code below, there aren't any warnings, but
+the wrong type is being passed to the function.  So, I think that both the casts are
+needed.
 
+
+> 
+> 
+> 
+> > @@ -603,7 +734,7 @@
+> >  			scsicmd->use_sg,
+> >  			scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
+> >  	else if(scsicmd->request_bufflen)
+> > -		pci_unmap_single(dev->pdev, (dma_addr_t)(ulong)scsicmd->SCp.ptr,
+> > +		pci_unmap_single(dev->pdev, (dma_addr_t)(unsigned long)scsicmd->SCp.ptr,
+> >  				 scsicmd->request_bufflen,
+> >  				 scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
+> >  
+> 
+> likewise
+> 
+> 
+> 
+> 
+> > @@ -1235,7 +1511,7 @@
+> >  			scsicmd->use_sg,
+> >  			scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
+> >  	else if(scsicmd->request_bufflen)
+> > -		pci_unmap_single(dev->pdev, (ulong)scsicmd->SCp.ptr, scsicmd->request_bufflen,
+> > +		pci_unmap_single(dev->pdev, (unsigned long)scsicmd->SCp.ptr, scsicmd->request_bufflen,
+> >  			scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
+> >  
+> 
+> ah-hah, you choose another casting style, differing from the above 
+> examples I pointed out...
+> 
 -- 
-Jens Axboe
+Mark Haverkamp <markh@osdl.org>
 
