@@ -1,64 +1,39 @@
-From: Andries Brouwer <aebr@win.tue.nl>
-Subject: Re: [PATCH] sanitize ->bios_param prototype
-Date: Sat, 26 Oct 2002 00:50:52 +0200
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: possible use-after-free in 2.5.44 scsi changes
+Date: Fri, 25 Oct 2002 17:18:54 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021025225052.GA27927@win.tue.nl>
-References: <20021025041735.A28857@lst.de> <200210251718.g9PHIpP03406@localhost.localdomain>
+Message-ID: <20021026001854.GG1514@beaverton.ibm.com>
+References: <200210252223.g9PMN9a17551@eng2.beaverton.ibm.com> <200210260013.g9Q0DP105454@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200210251718.g9PHIpP03406@localhost.localdomain>
+In-Reply-To: <200210260013.g9Q0DP105454@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Badari Pulavarty <pbadari@us.ibm.com>, Andrew Morton <akpm@digeo.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin J. Bligh" <Martin.Bligh@us.ibm.com>, Jens Axboe <axboe@suse.de>, Doug Ledford <dledford@redhat.com>
 
-On Fri, Oct 25, 2002 at 12:18:51PM -0500, James Bottomley wrote:
-
-> Loading scsi_mod module
-> /lib/scsi_mod.o: unresolved symbol __udivdi3
+James Bottomley [James.Bottomley@SteelEye.com] wrote:
+> pbadari@us.ibm.com said:
+> > I Just tried the patch. No Luck. I get same panic as before... I am
+> > using qla2x00src-v6.03.00b6 driver on qla2200 fc controllers. 
 > 
-> The problem seems to be the definition of sector_t for the division.  If I 
-> make this fix:
+> Well, yours may be a qla bug.
 > 
-> ===== drivers/scsi/scsicam.c 1.10 vs edited =====
-> --- 1.10/drivers/scsi/scsicam.c Thu Oct 24 19:29:22 2002
-> +++ edited/drivers/scsi/scsicam.c       Fri Oct 25 12:10:40 2002
-> @@ -80,11 +80,11 @@
->         if (ret || ip[0] > 255 || ip[1] > 63) {
->                 ip[0] = 64;
->                 ip[1] = 32;
-> -               if ((capacity / (ip[0] * ip[1])) > 65534) {
-> +               if (((unsigned long)capacity / (ip[0] * ip[1])) > 65534) {
->                         ip[0] = 255;
->                         ip[1] = 63;
->                 }
-> -               ip[2] = capacity / (ip[0] * ip[1]);
-> +               ip[2] = (unsigned long)capacity / (ip[0] * ip[1]);
->         }
->  
->         return 0;
+> However, I've tracked down my hang problem:  If a command is pushed back into 
+> the block queue as a REQ_SPECIAL using the blk_insert_request() API, it never 
+> has REQ_CMD cleared.  Eventually it comes back into scsi_request_fn() with 
+> both REQ_CMD and REQ_SPECIAL set.  This causes the I/O to be initialised again.
 > 
-> Then everything works fine.  This is obviously not the correct fix, but it's 
-> as good as the previous code, so it should be OK.
+> The fix is to clear REQ_CMD in blk_insert_request().
+> 
+> This may also be the cause of Patrick's Incorrect number of segments error.
 
-I didn't see hch's patch, but you can always write
+Once we kicked the console log level up Badari's system also showed
+segment errors prior to the panic, but there still maybe other issues here.
 
-	if (ret || ip[0] > 255 || ip[1] > 63) {
-		ip[0] = 64;
-		ip[1] = 32;
-		if ((capacity >> 11) > 65534) {
-			ip[0] = 255;
-			ip[1] = 63;
-		}
-		if (capacity > 65535*63*255)
-			ip[2] = 65535;
-		else
-			ip[2] = (unsigned long)capacity / (ip[0] * ip[1]);
-	}
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
-Andries
-
-
-(ip[2] is returned in a short, so returning larger values is meaningless;
-moreover, the current specification says that ip[2] is ignored)
