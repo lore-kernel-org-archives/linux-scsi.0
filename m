@@ -1,36 +1,39 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: adaptec 2120S software under RedHat 8.0 and FC2
-Date: Sun, 20 Mar 2005 09:12:51 +0000
-Message-ID: <20050320091251.GB12000@infradead.org>
-References: <60807403EABEB443939A5A7AA8A7458BED25F7@otce2k01.adaptec.com>
+Subject: Re: [PATCH] dc395x: Fix support for highmem
+Date: Sun, 20 Mar 2005 09:14:17 +0000
+Message-ID: <20050320091417.GC12000@infradead.org>
+References: <200503160209.j2G29cAf010870@hera.kernel.org> <20050316075839.GC7842@suse.de> <1110986016.5771.3.camel@mulgrave> <20050316160447.GU7842@suse.de> <20050316164806.GO21986@parcelfarce.linux.theplanet.co.uk> <20050316165338.GX7842@suse.de> <20050316170259.GA25056@infradead.org> <20050316170417.GY7842@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from pentafluge.infradead.org ([213.146.154.40]:4575 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:14559 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261666AbVCTJMz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Mar 2005 04:12:55 -0500
+	id S262038AbVCTJOV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Mar 2005 04:14:21 -0500
 Content-Disposition: inline
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458BED25F7@otce2k01.adaptec.com>
+In-Reply-To: <20050316170417.GY7842@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Mark Haverkamp <markh@osdl.org>, Ross Macintyre <raz@macs.hw.ac.uk>, linux-scsi <linux-scsi@vger.kernel.org>, Matt_Domsch@dell.com
+To: Jens Axboe <axboe@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, g.liakhovetski@gmx.de
 
-On Thu, Mar 17, 2005 at 08:41:18AM -0500, Salyzyn, Mark wrote:
-> We are pressuring our management application folks to switch to /sys as
-> well, has not happened yet. In part because changes have to work for all
-> tested releases and operating systems, our testing department only test
-> distributions in the requirement documents, fixes are only approved if
-> they affect current testing, certification testing requires a driver
-> that can be fixed and not errata'd and thus typically can not be in-box,
-> CONFIG_PROC_FS being on in all distributions and the need to keep the
-> /proc interface alive to permit the current and legacy applications in
-> test the ability to continue to function.
+On Wed, Mar 16, 2005 at 06:04:17PM +0100, Jens Axboe wrote:
+> On Wed, Mar 16 2005, Christoph Hellwig wrote:
+> > On Wed, Mar 16, 2005 at 05:53:39PM +0100, Jens Axboe wrote:
+> > > The list doesn't really need dma mapping at that point, the problem here
+> > > is that the driver needs to punt to pio mode because of foo. So calling
+> > > pci/dma_map_* is pointless, since the CPU will have to do the transfer
+> > > anyways. What the driver is really looking for at this point, is a way
+> > > to map the pages in the sglist to a virtual address.
+> > 
+> > Given that there's quite a few cases of this "problem" it would be nice
+> > to have common helpers for it.  Especially as it's really difficult when
+> > we allow merging of sg list entries
+> 
+> I thought about that when writing the above, but is there really more
+> than one case for SCSI drivers? If there is, sure lets add the helpers.
+> But I would consider it a quite rare occurence, I've never seen it
+> before.
 
-We're not going to add new procfs handler for scsi HBA drivers.
-
-Unfortunately this problems shows once more that Adaptec managment doesn't
-care the slightest bit for Linux and has the worst support of all RAID /
-Storage vendors.  I can only advise OEMs and customers to stay far away
-from Adaptec equipment if they want to use Linux.
+There's lots of pio only drivers, aswell as raid drivers that need to
+look into the non I/O-path command and things like iscsi.
 
