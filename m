@@ -1,41 +1,62 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Fw: [Bugme-new] [Bug 4166] New: BUG: using smp_processor_id()
- in preemptible [00000001] code: nfsd/2783
-Date: Mon, 7 Feb 2005 16:21:17 -0800
-Message-ID: <20050207162117.2f791fca.akpm@osdl.org>
-References: <20050204134809.2d341367.akpm@osdl.org>
-	<20050207234119.GA13400@plap.qlogic.org>
-	<20050207160056.0c50305e.akpm@osdl.org>
-	<20050208000830.GA13631@plap.qlogic.org>
+From: claplant@pubnix.org
+Subject: Problem with LF-D100 / LF-D101N Reading CD's
+Date: Tue, 8 Feb 2005 00:38:20 -0600 (CST)
+Message-ID: <Pine.GSO.4.05.10502080018410.18327-100000@emdub.pubnix.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Received: from fw.osdl.org ([65.172.181.6]:43931 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S261352AbVBHAQW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2005 19:16:22 -0500
-In-Reply-To: <20050208000830.GA13631@plap.qlogic.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from pubnix.org ([169.207.167.57]:7153 "EHLO pubnix.org")
+	by vger.kernel.org with ESMTP id S261475AbVBHGm5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2005 01:42:57 -0500
+Received: from localhost (claplant@localhost)
+	by pubnix.org (8.9.1/8.12.2) with ESMTP id AAA09763
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Feb 2005 00:38:20 -0600 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: linux-scsi@vger.kernel.org
 
-Andrew Vasquez <andrew.vasquez@qlogic.com> wrote:
->
-> On Mon, 07 Feb 2005, Andrew Morton wrote:
-> 
-> > Andrew Vasquez <andrew.vasquez@qlogic.com> wrote:
-> > >
-> > > -	if (smp_processor_id() == ha->last_irq_cpu || was_empty)
-> > > +	if (_smp_processor_id() == ha->last_irq_cpu || was_empty)
-> > 
-> > Am I correct in assuming that if we are preempted, and if
-> > _smp_processor_id() returns the wrong number, the driver will continue to
-> > function correctly?  And that we simply missed a little optimisation
-> > opportunity?
-> 
-> Yes, the driver will continue to operate correctly.  Another
-> suggestion made was to explicitly disable/enable preemption around the
-> 'if' statement.  The s/smp_processor_id/_smp_processor_id/ seemed like
-> the least intrusive option in the interim...
+Hello,
 
-It makes perfect sense.  James, I'll add this to this evening's patchbatch.
+I am having a problem with an LF-D101N DVD-RAM drive. 
+
+Host: scsi0 Channel: 00 Id: 02 Lun: 00
+  Vendor: MATSHITA Model: PD-2 LF-D100     Rev: A123
+  Type:   CD-ROM                           ANSI SCSI revision: 02
+
+LF-D101N written on the drive.
+
+If it is empty or has any media except dvd-ram media, I get the following:
+
+Feb  7 19:46:33 music kernel: sr2: CDROM (ioctl) error, command: Test Unit
+Ready 00 00 00 00 00 Feb  7 19:46:33 music kernel: Current sr: sense key
+Hardware Error
+Feb  7 19:46:33 music kernel: Additional sense: Tracking servo failure Feb
+7 19:46:33 music kernel: sr2: CDROM (ioctl) error, command: Test Unit
+Ready 00 00 00 00 00 Feb  7 19:46:33 music kernel: Current sr: sense key
+Hardware Error
+Feb  7 19:46:33 music kernel: Additional sense: Tracking servo failure 
+ 
+sr0: CDROM (ioctl) error, command: Test Unit Ready 00 00 00 00 00
+Current sr: sense key Hardware Error
+Additional sense: Id CRC or ECC error
+
+This repeats about once a second.
+
+Once I put in a DVD-RAM:
+
+Feb  7 22:09:13 music kernel: UDF-fs INFO UDF 0.9.8.1 (2004/29/09)
+Mounting volume 'OSSTORAGE4254B', timestamp 2004/10/22 11:49 (1e20)
+
+It mounts fine.
+
+I have six of these drives that all act the same, so I am quite sure they
+are not all bad.
+
+I am running 2.6.10-1.760_FC3smp though the results were the same w/ a 2.4
+kernel under RHEL3. 
+
+Any help or ideas would be apreciated.
+
+Thanks,
+
+-chris
+
