@@ -1,70 +1,41 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [RFC PATCH 2.6.9-rc2] Add sysfs queue depth override to qla2xxx
-Date: Wed, 29 Sep 2004 15:12:08 -0700
+From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Subject: Re: patch so cciss stats are collected in /proc/stat
+Date: Wed, 29 Sep 2004 17:35:48 -0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040929221208.GA199641@sgi.com>
-References: <B179AE41C1147041AA1121F44614F0B0012AD92B@AVEXCH02.qlogic.org> <20040928193614.GB192475@sgi.com> <1096401196.2008.97.camel@mulgrave> <20040929003611.GK192475@sgi.com> <1096476093.10859.73.camel@praka>
+Message-ID: <20040929203548.GA19037@logos.cnet>
+References: <D4CFB69C345C394284E4B78B876C1CF107DBFE0B@cceexc23.americas.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:20710 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S269079AbUI2WMV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Sep 2004 18:12:21 -0400
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:20924 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S269162AbUI2Wgt
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Sep 2004 18:36:49 -0400
 Content-Disposition: inline
-In-Reply-To: <1096476093.10859.73.camel@praka>
+In-Reply-To: <D4CFB69C345C394284E4B78B876C1CF107DBFE0B@cceexc23.americas.cpqcorp.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Miller, Mike (OS Dev)" <mike.miller@hp.com>
+Cc: Christoph Hellwig <hch@infradead.org>, mikem@beardog.cca.cpqcorp.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Baker, Brian (ISS - Houston)" <brian.b@hp.com>
 
-On Wed, Sep 29, 2004 at 09:41:33AM -0700, Andrew Vasquez wrote:
-> On Tue, 2004-09-28 at 17:36, Jeremy Higdon wrote:
-> > So do we have a consensus on what the driver should limit queue
-> > depth to?  Currently, it's 32 or ql2xmaxqdepth, if that was specified.
-> > From what I can see, ql2xmaxqdepth is effectively limited to 65535.
+On Wed, Sep 29, 2004 at 11:29:59AM -0500, Miller, Mike (OS Dev) wrote:
+> 
+> > On Wed, Sep 29, 2004 at 11:13:45AM -0500, mike.miller@hp.com wrote:
+> > > Currently cciss statistics are not collected in /proc/stat. 
+> > This patch
+> > > bumps DK_MAX_MAJOR to 111 to fix that. This has been a 
+> > common complaint
+> > > by customers wishing to gather info about cciss devices.
+> > > Please consider this for inclusion. Applies to 2.4.28-pre3.
 > > 
-> > We don't want one lun to use host driver or host adapter resources
-> > to the point that it starves other luns.  Ideally, the max would
-> > depend on what else was attached, but I don't think we want to
-> > make this too complicated.
+> > This patch has been reject about half a million times, why are people
+> > submitting it again and again?
 > 
-> I agree.
-> 
-> >   Anyone changing the queue depth should
-> > have a clue about what they're doing.
-> > 
-> > Andrew, how many command slots are there in the various adapters,
-> > and do the continuation entries each eat a command slot?
-> > 
-> 
-> Well, determining that can be complicated...
-> 
-> The request-queue size is based on the amount of SRAM available to the
-> ISP.   For most HBAs (qla2100, qla2200, qla2300, qla2310, qla2342) which
-> have an 128KB memory chip (per-port), the 8.x driver will allocate
-> 2048-entry queue for requests.  
-> 
-> Many new(-er) boards (qla235x, qla236x) and embedded implementations
-> (fibre-down) have a 512KB or 1MB chip.  Not wanting to digress into
-> another layer of firmware resource-usage details, let's just say that
-> the extra memory allows for the firmware to manage a larger number of
-> requests.  The driver in these cases will allocate a 4096-entry
-> request-queue.
+> As I said in my mail, it's a customer driven issue. As long as customers rely on /proc/stat we'll keep trying. You can't tell a customer how he/she should be doing things on their systems.
 
-I thought that there was not a one to one mapping between the request
-queue size and the number of commands the chip/board could hold.
+Mike, 
 
-Anyway, this is probably far enough down that rathole.
+I dont like the patch either.
 
-> I'm not sure if it brings us any closer to answering the question of
-> 'what's the max queue-depth we support?'  Is it even possible, since as
-> you mentioned earlier, the admin will have to possess some outside
-> knowledge (backend-storage, I/O type, I/O patterns) while tuning the
-> queue-depth value.
+If you can have the same statistics through /proc/partitions 
+(do I get this right?) just tell that to users.
 
-Since there's no obvious answer, let's not try to out think the admin.
-Andrew, I think you can just choose a maximum.  I would suggest that
-the maximum be the same as the maximum for ql2xmaxqdepth, just to be
-consistent.  Is that indeed 65535?
-
-jeremy
