@@ -1,45 +1,29 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: 2.5.70-mm2: NCR_D700.c doesn't compile
-Date: Thu, 29 May 2003 22:57:42 +0200
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: 2.5.70-mm2: NCR_D700.c doesn't compile
+Date: 29 May 2003 17:01:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030529205742.GI5643@fs.tum.de>
+Message-ID: <1054242118.1819.465.camel@mulgrave>
 References: <20030529012914.2c315dad.akpm@digeo.com>
+	<20030529205742.GI5643@fs.tum.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:41165 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S262687AbTE2Uoc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 May 2003 16:44:32 -0400
-Content-Disposition: inline
-In-Reply-To: <20030529012914.2c315dad.akpm@digeo.com>
+Received: from nat9.steeleye.com ([65.114.3.137]:31495 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262776AbTE2Uv5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 May 2003 16:51:57 -0400
+In-Reply-To: <20030529205742.GI5643@fs.tum.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@digeo.com>, jejb@steeleye.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@fs.tum.de>
+Cc: Andrew Morton <akpm@digeo.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-It seems the following compile error comes from Linus' tree:
+On Thu, 2003-05-29 at 16:57, Adrian Bunk wrote:
+> It seems the following compile error comes from Linus' tree:
 
-<--  snip  -->
+Yes, I already have the fix (which is to add the correct argument to the
+function).
 
-...
-  CC      drivers/scsi/NCR_D700.o
-In file included from include/linux/mca.h:132,
-                 from drivers/scsi/NCR_D700.c:99:
-include/linux/mca-legacy.h:10:2: warning: #warning "MCA legacy - please 
-move your driver to the new sysfs api"
-drivers/scsi/NCR_D700.c: In function `NCR_D700_exit':
-drivers/scsi/NCR_D700.c:388: too few arguments to function `scsi_sysfs_release_attributes'
-make[2]: *** [drivers/scsi/NCR_D700.o] Error 1
+James
 
-<--  snip  -->
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
 
