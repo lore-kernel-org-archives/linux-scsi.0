@@ -1,33 +1,26 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] remove a bogus check in sym2 driver
-Date: 24 Jun 2003 12:22:23 +0100
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: increasing host numbers
+Date: Tue, 24 Jun 2003 12:43:27 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1056453742.14612.27.camel@dhcp22.swansea.linux.org.uk>
-References: <20030624033422.GB927@krispykreme>
-	 <1056441769.14611.4.camel@dhcp22.swansea.linux.org.uk>
-	 <20030624011723.0d13bbb1.akpm@digeo.com>
+Message-ID: <20030624124327.A8155@infradead.org>
+References: <3EF808FA.5020503@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pc2-cwma1-4-cust86.swan.cable.ntl.com ([213.105.254.86]:24787
-	"EHLO lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S261939AbTFXLKS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jun 2003 07:10:18 -0400
-In-Reply-To: <20030624011723.0d13bbb1.akpm@digeo.com>
+Received: from phoenix.infradead.org ([195.224.96.167]:5387 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S261970AbTFXL3U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jun 2003 07:29:20 -0400
+Content-Disposition: inline
+In-Reply-To: <3EF808FA.5020503@torque.net>; from dougg@torque.net on Tue, Jun 24, 2003 at 06:16:58PM +1000
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@digeo.com>
-Cc: anton@samba.org, linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Maw, 2003-06-24 at 09:17, Andrew Morton wrote:
-> Is this a bug in the adapter's BIOS or in the main BIOS?
-> 
-> If the latter then shouldn't this workaround live somewhere other than
-> $RANDOM_DRIVER?
+On Tue, Jun 24, 2003 at 06:16:58PM +1000, Douglas Gilbert wrote:
+> It seems as though host numbers are no longer re-used.
+> This pattern started in lk 2.5.73:
 
-Who knows. The NCR/SYM stuff on some mainboards is deeply strange. As to
-it being in a random driver - its not, its in the specific afflicted case.
-
-That doesn't mean I disagree about the idea of filtering the problem in
-the x86 pci code
+So far this was intentional, so I'd call it a feature.  If you think
+this is not good we can add some kind of bitmap to get free host number.
 
