@@ -1,39 +1,30 @@
-From: Douglas Gilbert <dougg@torque.net>
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: usb storage traces
-Date: Fri, 05 Dec 2003 14:31:25 +1000
+Date: Thu, 4 Dec 2003 21:08:32 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FD00A1D.2070200@torque.net>
-References: <Pine.LNX.4.44L0.0312041329450.994-100000@ida.rowland.org>
-Reply-To: dougg@torque.net
+Message-ID: <20031204210832.A1757@beaverton.ibm.com>
+References: <20031204184428.GA17116@one-eyed-alien.net> <Pine.LNX.4.44L0.0312041509380.994-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:54788 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S262327AbTLEEbu
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Dec 2003 23:31:50 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0312041329450.994-100000@ida.rowland.org>
+Received: from e4.ny.us.ibm.com ([32.97.182.104]:45460 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S263857AbTLEFJH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2003 00:09:07 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0312041509380.994-100000@ida.rowland.org>; from stern@rowland.harvard.edu on Thu, Dec 04, 2003 at 03:59:58PM -0500
 List-Id: linux-scsi@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Pat LaVarre <p.lavarre@ieee.org>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>, David Brownell <david-b@pacbell.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Alan Stern wrote:
+On Thu, Dec 04, 2003 at 03:59:58PM -0500, Alan Stern wrote:
 
-<snip/>
+> It was generic (transparent) scsi.
+> 
+> Perhaps I'll try implementing some of the other protocol codes in FSG,
+> maybe also the "removeable media" flag.  This would also require
+> implementing the PREVENT-ALLOW-MEDIUM-REMOVAL, READ-FORMAT-CAPACITIES, and
+> START-STOP, possibly also REZERO-UNIT, SEEK, READ(12), and WRITE(12).
 
-> Does anybody know what command x23 
+What is FSG?
 
-READ FORMAT CAPACITIES (found in MMC-3 and MMC-4)
-
-> and mode page x1c do?  Although 
-> nominally vendor-specific, 
-
-Vendor specific mode pages start at 0x20 so mode
-page 0x1c (Informational Exceptions) is not vendor
-specific.
-
-<snip/>
-
-Doug Gilbert
-
+-- Patrick Mansfield
