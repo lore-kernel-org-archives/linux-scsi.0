@@ -1,8 +1,8 @@
 From: Rusty Trivial Russell <rusty@rustcorp.com.au>
-Subject: [TRIVIAL] 16) request_region check, 11-20
-Date: Mon, 16 Dec 2002 21:49:39 +1100
+Subject: [TRIVIAL] 15) request_region check, 11-20
+Date: Mon, 16 Dec 2002 21:49:31 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021216210038.8339A2C2CC@lists.samba.org>
+Message-ID: <20021216210038.C77222C2EB@lists.samba.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk
@@ -17,18 +17,24 @@ From:  johnpol@2ka.mipt.ru
   	Evgeniy Polyakov ( s0mbre )
   
 
---- trivial-2.4.21-pre1/drivers/acorn/scsi/oak.c.orig	2002-12-16 17:22:38.000000000 +1100
-+++ trivial-2.4.21-pre1/drivers/acorn/scsi/oak.c	2002-12-16 17:22:38.000000000 +1100
-@@ -134,7 +134,8 @@
- 	ecard_claim(ecs[count]);
+--- trivial-2.4.21-pre1/drivers/acorn/scsi/cumana_2.c.orig	2002-12-16 17:22:38.000000000 +1100
++++ trivial-2.4.21-pre1/drivers/acorn/scsi/cumana_2.c	2002-12-16 17:22:38.000000000 +1100
+@@ -382,8 +382,13 @@
+ 		ecs[count]->irq_data	= (void *)info->alatch;
+ 		ecs[count]->ops		= (expansioncard_ops_t *)&cumanascsi_2_ops;
  
- 	instance->n_io_port = 255;
--	request_region (instance->io_port, instance->n_io_port, "Oak SCSI");
-+	if (!request_region (instance->io_port, instance->n_io_port, "Oak SCSI"))
-+		break;
+-		request_region(host->io_port + CUMANASCSI2_FAS216_OFFSET,
+-			       16 << CUMANASCSI2_FAS216_SHIFT, "cumanascsi2-fas");
++		if (!request_region(host->io_port + CUMANASCSI2_FAS216_OFFSET,
++			       16 << CUMANASCSI2_FAS216_SHIFT, "cumanascsi2-fas")) {
++			scsi_unregister(host);
++			ecard_release(ecs[count]);
++			break;
++		}
++			
  
- 	if (instance->irq != IRQ_NONE)
- 	    if (request_irq(instance->irq, do_oakscsi_intr, SA_INTERRUPT, "Oak SCSI", NULL)) {
+ 		if (host->irq != NO_IRQ &&
+ 		    request_irq(host->irq, cumanascsi_2_intr,
 -- 
   Don't blame me: the Monkey is driving
-  File: johnpol@2ka.mipt.ru: 16) request_region check, 11-20
+  File: johnpol@2ka.mipt.ru: 15) request_region check, 11-20
