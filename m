@@ -1,66 +1,82 @@
-From: Linus Torvalds <torvalds@osdl.org>
-Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
-Date: Mon, 22 Sep 2003 09:09:47 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0309220900440.1753-100000@home.osdl.org>
-References: <20030922084930.A679@beaverton.ibm.com>
+From: David Brownell <david-b@pacbell.net>
+Subject: Re: Re: USB storage problems on OHCI..
+Date: Mon, 22 Sep 2003 09:22:22 -0700
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <3F6F21BE.9090109@pacbell.net>
+References: <Pine.LNX.4.44.0309220801330.1696-100000@home.osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:54476 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S263263AbTIVQKx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Sep 2003 12:10:53 -0400
-In-Reply-To: <20030922084930.A679@beaverton.ibm.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+In-Reply-To: <Pine.LNX.4.44.0309220801330.1696-100000@home.osdl.org>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, Andries.Brouwer@cwi.nl
 
-
-[ Andries added to the cc ]
-
-On Mon, 22 Sep 2003, Patrick Mansfield wrote:
+Linus Torvalds wrote:
+> On Mon, 22 Sep 2003, Alan Stern wrote:
 > 
-> I can modify the patch for that.
+>>This problem has been cropping up with many, many USB storage devices.  
+> 
+> 
+> Interesting data-point: the device is a happy EHCI camper, and is totally 
+> able to read codepage 8 on EHCI.
+> 
+> However, if I put it behind a USB-1 hub on the EHCI port, I see the same 
+> problems I saw with OHCI.
 
-How about just making the sd.c layer more robust? That has worked well in 
-the past, and it seems wrong to have to add more and more flags.
+Can you be more clear?  Is that
 
-In particular, while hunting down the usb-1/usb-2 differences, it became
-clear that all the mode sense transfers that _worked_ under usb-1 were
-short. With 64 bytes than with 128 bytes it no longer babbled, and the
-whole thing worked fine with 11 bytes (the minimum required to get the
-caching status).
+    (EHCI/OHCI) root port --> USB 2.0 hub --> USB 1.1 hub --> storage device
 
-Adding some printk's showed that the initial (successful) 4-byte page read
-resulted in:
+Or instead
 
- - page len=1538 (pretty obviously crap)
- - header len=8 (correct)
- - block descriptor len=0 (correct)
+    (EHCI/OHCI) root port --> USB 1.1 hub --> storage device
 
-and the thing is, we were using the "pretty obviously crap" value for 
-judging the size of the thing.
+The former is certainly using EHCI, and the transaction translator in
+that USB 2.0 hub ... but I'd expect it to give a different failure mode.
+Maybe the same net result, but a different fault code (not -EOVERFLOW),
+and likely different recovery procedure in usb-storage/scsi.
 
-So my suggestion would be to just replace that usage (in sd.c):
+The latter is identical with the OHCI-only case, the only involvement
+of EHCI being to hand that port over to the (OHCI) companion.
 
-	len = data.length;
-	if (len > 128)
-		len = 128;
 
-with something like this instead:
+> So it is somehow related to USB-1 vs USB-2. I don't understand why the 
+> device would make a difference for something like mode page 8, but it 
+> looks like it transfers data fine for _small_ mode page requests under 
+> USB-1, and under USB-2 it works even for big ones.
 
-	/* We need three bytes past the block descriptor length */
-	len = data.header_length + data.block_descriptor_length + 3;
+It could be some kind of logic in the device forgetting that to use
+the right maxpacket setting in that specific case.
 
-	/* Sanity check */
-	if (len > data.len || len < 11 || len > 128)
-		.. fail ..
+I'm a bit more used to seeing failures the other way around, where
+the storage adapter doesn't quite respond correctly at high speed.
 
-Basically, Andries Brouwer's strategy of making sd.c more conservative has
-been a very successful one in the past. Why not continue on that?
+- Dave
 
-(Btw, where are the different mode sense pages documented?)
 
-		Linus
+> 
+> 		Linus
+> 
+> 
 
+
+
+
+-------------------------------------------------------
+This sf.net email is sponsored by:ThinkGeek
+Welcome to geek heaven.
+http://thinkgeek.com/sf
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
