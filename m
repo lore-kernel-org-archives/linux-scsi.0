@@ -1,45 +1,44 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: 2.5.56-mm1 fails to detect cd burner
-Date: Mon, 17 Mar 2003 08:27:23 -0700
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] fix rescan warning
+Date: Mon, 17 Mar 2003 16:53:02 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3196100000.1047914843@aslan.scsiguy.com>
-References: <20030311063627.GJ1399@holomorphy.com> <20030311160358.GN465@holomorphy.com>
+Message-ID: <20030317165301.B29420@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20030311160358.GN465@holomorphy.com>
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: William Lee Irwin III <wli@holomorphy.com>
+To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-> On Mon, Mar 10, 2003 at 10:36:27PM -0800, William Lee Irwin III wrote:
->>  scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA
->>  DRIVER, Rev 6.2.26
->>          <Adaptec 3960D Ultra160 SCSI adapter>
->>          aic7899: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
->>  
->>  (scsi0:A:0:0): Completed command without status.
->>  (scsi0:A:0:0): Protocol violation in Message-in phase.  Attempting to abort.
->>  (scsi0:A:0:0): Abort Message Sent
->>  (scsi0:A:0:0): SCB 3 - Abort Completed.
->>  scsi0:A:0:0: DV failed to configure device. Please file a bug report against this driver.
->> 
->> It's had other problems burning CD's in 2.5.x
-> 
-> jejb referred me to you (gibbs) for this after guiding me through a
-> cable check.
+The prototype for scsi_rescan_device was missing and once added it's
+caller doesn't compile anymore because it expects a return value..
 
-Can you try the latest driver 6.2.30, from here:
 
-http://people.FreeBSD.org/~gibbs/linux/SRC/
-
-Just untar the 2.5.X tarball into your source tree and recompile.
-If you still are having problems with the driver at that point, I'll
-guide you through other steps to enable debugging and get additional
-information.
-
---
-Justin
-
+--- 1.67/drivers/scsi/scsi.h	Sat Mar 15 01:35:26 2003
++++ edited/drivers/scsi/scsi.h	Mon Mar 17 16:04:49 2003
+@@ -442,6 +442,7 @@
+ extern int scsi_retry_command(Scsi_Cmnd *);
+ extern int scsi_attach_device(struct scsi_device *);
+ extern void scsi_detach_device(struct scsi_device *);
++extern void scsi_rescan_device(struct scsi_device *);
+ extern int scsi_get_device_flags(unsigned char *vendor, unsigned char *model);
+ 
+ /*
+--- 1.8/drivers/scsi/scsi_sysfs.c	Tue Mar  4 10:15:42 2003
++++ edited/drivers/scsi/scsi_sysfs.c	Mon Mar 17 16:30:31 2003
+@@ -275,12 +275,8 @@
+ static ssize_t
+ store_rescan_field (struct device *dev, const char *buf, size_t count) 
+ {
+-	int ret = ENODEV;
+-	struct scsi_device *sdev;
+-	sdev = to_scsi_device(dev);
+-	if (sdev)
+-		ret = scsi_rescan_device(sdev);
+-	return ret;
++	scsi_rescan_device(to_scsi_device(dev));
++	return 0;
+ }
+ 
+ static DEVICE_ATTR(rescan, S_IRUGO | S_IWUSR, show_rescan_field, store_rescan_field)
