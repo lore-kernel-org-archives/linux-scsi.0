@@ -1,87 +1,63 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [RFC] adding per scsi-host workqueues for defered processing
-Date: Wed, 09 Mar 2005 08:25:13 -0600
-Message-ID: <422F0749.6050404@us.ibm.com>
-References: <0B1E13B586976742A7599D71A6AC733C12ED0C@xbl3.ma.emulex.com>
-Reply-To: brking@us.ibm.com
+From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Subject: RE: [ANNOUNCE][PATCH 2.6.11 1/3] megaraid_sas: Announcing new mod
+	 ule  for LSI Logic's SAS based MegaRAID controllers
+Date: Wed, 9 Mar 2005 09:30:22 -0500
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230CC1B@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:62093 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261632AbVCIOZP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2005 09:25:15 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e3.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j29EPFYf023822
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Mar 2005 09:25:15 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j29EPEnA067336
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Mar 2005 09:25:14 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j29EPEHf022978
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Mar 2005 09:25:14 -0500
-In-Reply-To: <0B1E13B586976742A7599D71A6AC733C12ED0C@xbl3.ma.emulex.com>
+Content-Type: text/plain
+Received: from mail0.lsil.com ([147.145.40.20]:46224 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261648AbVCIOiu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2005 09:38:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: luben_tuikov@adaptec.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+To: 'Adrian Bunk' <bunk@stusta.de>
+Cc: 'Arjan van de Ven' <arjan@infradead.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'Matt_Domsch@Dell.com'" <Matt_Domsch@Dell.com>, Andrew Morton <akpm@osdl.org>, 'Christoph Hellwig' <hch@infradead.org>
 
-James.Smart@Emulex.Com wrote:
-> So, is there a reason we aren't just starting the workq thread
-> upon the first call to queue something to it ?
+>> >
+>> >>  source "drivers/scsi/megaraid/Kconfig.megaraid"
+>> >> +source "drivers/scsi/megaraid/Kconfig.megaraid_sas"
+>> >>  
+>> >
+>> >why a fully separate file and not add your ONE config option to
+>> >Kconfig.megaraid instead ??
+>> >
+>> 
+>> Arjan, I didn't want to needlessly couple megaraid and megaraid_sas.
+>> Since they are in the same directory, I couldn't avoid having single
+>> Makefile. I thought at least these two should be separate to 
+>be consistent
+>> with their independent nature.
+>> 
+>> If this is not a good enough reason, I will merge these two files.
+>
+>Please merge them.
+>
+>Whether they are in the same Kconfig file or not does not in any way 
+>imply any relation between them.
+>
+>E.g. drivers/scsi/Kconfig contains many drivers that are not 
+>in any way 
+>coupled to each other.
+>
 
-Don't you need to be at task level to create a workq thread?
+Understood. I will merge them.
 
--Brian
+>
+>BTW: Why does the text say "(New Driver)"?
+>
 
+I thought I saw some new modules being labeled as such. I will remove
+it in the next update if it not correct.
 
-> -- james s
-> 
-> 
->>-----Original Message-----
->>From: Luben Tuikov [mailto:luben_tuikov@adaptec.com]
->>Sent: Tuesday, March 08, 2005 8:12 AM
->>To: Andrew Vasquez
->>Cc: Smart, James; linux-scsi@vger.kernel.org
->>Subject: Re: [RFC] adding per scsi-host workqueues for defered
->>processing
->>
->>
->>On 03/08/05 02:00, Andrew Vasquez wrote:
->>
->>>There were some background tasks I shelved until the remote-ports
->>>stuff settled down which I thought could use the deferred processing
->>>thread:
->>>
->>>* Initiate LIP -- several customers have asked for this ability as
->>>  several topological configurations isolate disruptive FC events.
->>>* Initiate LLDD rescan (i.e. ports (fibre channel), devices (iSCSI),
->>>  etc.)
->>>
->>>I had originally envisioned these functions residing in the 
->>
->>transport.
->>
->>Yes, I agree.  Domain (target, topology, etc) discovery should be
->>"part" of the transport class.
->>
->>What I'm thinking of is that the LLDD would register a known
->>trasport class with the SCSI Core at/after registering a host
->>template and then would call something with a name like
->>"start_scsi" which would do whatever necessary for the domain
->>(SAS, FC, iSCSI, etc) before scanning for targets.  Of course
->>for some domains no additional work is needed.
->>
->>	Luben
->>
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+>-- 
+>
+>       "Is there not promise of rain?" Ling Tan asked suddenly out
+>        of the darkness. There had been need of rain for many days.
+>       "Only a promise," Lao Er said.
+>                                       Pearl S. Buck - Dragon Seed
+>
+There is a 30% chance of rain here today.
 
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+Thanks,
+Sreenivas
+LSI Logic Corporation
