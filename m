@@ -1,38 +1,45 @@
-From: Xose Vazquez Perez <xose@wanadoo.es>
-Subject: Re: differences in megaraid2 v2.00.9 source from LSIL FTP and 2.4.24
- tree
-Date: Tue, 13 Jan 2004 14:25:47 +0100
+From: Rask Ingemann Lambertsen <rask@sygehus.dk>
+Subject: Using ncr53c8xx.c for a 53c770 chip (Was: State of NCR53c7xx based drivers)
+Date: Tue, 13 Jan 2004 14:55:57 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4003F1DB.7050802@wanadoo.es>
-References: <20040113101507.6cad6e13@philou.gramoulle.local>
+Message-ID: <20040113145553.A1738@sygehus.dk>
+References: <20031122113834.GA8098@lst.de> <20031123175041.A1461@sygehus.dk> <1069606797.2066.2.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp13.eresmas.com ([62.81.235.113]:31720 "EHLO
-	smtp13.eresmas.com") by vger.kernel.org with ESMTP id S264285AbUAMNeh
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Jan 2004 08:34:37 -0500
+Received: from 0x50a17253.albnxx15.adsl-dhcp.tele.dk ([80.161.114.83]:38148
+	"EHLO 0x50a17253.albnxx15.adsl-dhcp.tele.dk") by vger.kernel.org
+	with ESMTP id S264300AbUAMN4D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jan 2004 08:56:03 -0500
+Content-Disposition: inline
+In-Reply-To: <1069606797.2066.2.camel@mulgrave>; from James.Bottomley@steeleye.com on Sun, Nov 23, 2003 at 10:59:55AM -0600
 List-Id: linux-scsi@vger.kernel.org
-To: =?ISO-8859-1?Q?Philippe_Gramoull=E9?= <philippe.gramoulle@mmania.com>
-Cc: MegaRaid-Devel <linux-megaraid-devel@dell.com>, linux-scsi <linux-scsi@vger.kernel.org>, atulm <atulm@lsil.com>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Philippe Gramoull=E9 wrote:
+On Sun, Nov 23, 2003 at 10:59:55AM -0600, James Bottomley wrote:
 
-> I just compared the original source code from ftp.lsil.com and 2.4.24=
-=2E
-> v2.00.9 megaraid driver and i'd like to know what are the differences=
- and which one i should use.
->=20
-> I assume that the one in the 2.4.24 is the one to be used but i just =
-wanted to be sure.
+> The driver for the 53c720 and 53c770 is the ncr53c8xx---I know, wrong
+> name, but it's had all the 8xx PCI guts removed.  It now handles the
+> 53c720 chips in both the zalon (parisc based) and NCRQ720 (MCA based)
+> boards.  It should be fairly easy to use this for amiga stuff.
 
-The FTP driver is _only_ for Red Hat Enterprise LiNUX.
-You have to clean the code to run on a standard kernel.
+That's only for the 2.6.x kernels, isn't it?
 
+I need some help filling in the ncr_chip structure. Where do I find the
+device_id, revision_id, burst_max, nr_divisor and features settings? I can
+figure some of it out:
+.offset_max = 15 (the maximum allowed by the AmigaOS driver).
+.features = FE_ULTRA | FE_WIDE | FE_RAM (but maybe more flags are needed?)
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I also need some help filling in the ncr_slot structure. The registers are
+memory mapped at bus address 0xf40000 and the script RAM is memory mapped at
+bus address 0xf41000. So I guess base is for the registers, base2 is for
+the script RAM and that *_v is for the virtual memory addresses of the above.
+That still leaves me with io_port, base_c, base2_c and base_io.
+
+Where do I tell the driver about the SCSI clock (50 MHz)?
+
+-- 
+Regards,
+Rask Ingemann Lambertsen
