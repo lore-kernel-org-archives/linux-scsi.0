@@ -1,48 +1,48 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 3/10][RFC] linux-iscsi driver
-Date: Mon, 10 Jan 2005 14:57:12 -0800
-Message-ID: <41E30848.2010103@cs.wisc.edu>
+Subject: [PATCH 10/10][RFC] linux-iscsi driver
+Date: Mon, 10 Jan 2005 15:04:08 -0800
+Message-ID: <41E309E8.80105@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------030100020507090306050703"
+ boundary="------------060900090500060104060407"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:62683 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S262592AbVAJW5T (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:2268 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S262613AbVAJXEO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jan 2005 17:57:19 -0500
+	Mon, 10 Jan 2005 18:04:14 -0500
 Received: from [192.168.1.7] ([199.108.226.254])
 	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id j0AMvHV2024967
+	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id j0AN4DoB025004
 	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Jan 2005 16:57:18 -0600
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Jan 2005 17:04:14 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------030100020507090306050703
+--------------060900090500060104060407
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Driver file implementing the SCSI template functions
-and module initialization.
+functions to copy iscsi portal info and
+a misc iscsi-protocol.h file which holds
+defintitions using iscsi.h or will some
+day be moved to iscsi.h.
 
---------------030100020507090306050703
+--------------060900090500060104060407
 Content-Type: text/x-patch;
- name="03-scsi-tmpl.patch"
+ name="10-portal-helpers.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="03-scsi-tmpl.patch"
+ filename="10-portal-helpers.patch"
 
-diff -Naurp scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-initiator.c scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-initiator.c
---- scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-initiator.c	1969-12-31 16:00:00.000000000 -0800
-+++ scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-initiator.c	2005-01-10 12:19:58.490683743 -0800
-@@ -0,0 +1,581 @@
+diff -Naurp scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-portal.c scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-portal.c
+--- scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-portal.c	1969-12-31 16:00:00.000000000 -0800
++++ scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-portal.c	2005-01-10 12:35:57.790300833 -0800
+@@ -0,0 +1,104 @@
 +/*
 + * iSCSI driver for Linux
 + * Copyright (C) 2001 Cisco Systems, Inc.
-+ * Copyright (C) 2004 Mike Christie
-+ * Copyright (C) 2004 IBM Corporation
 + * maintained by linux-iscsi-devel@lists.sourceforge.net
 + *
 + * This program is free software; you can redistribute it and/or modify
@@ -57,572 +57,97 @@ diff -Naurp scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-initiator.c scsi-m
 + *
 + * See the file COPYING included with this distribution for more details.
 + *
-+ * This file contains interfaces required by SCSI mid layer, module
-+ * initialization and shutdown routines.
++ * Portal setup functions
 + */
-+#include <linux/version.h>
-+#include <linux/moduleparam.h>
-+#include <linux/notifier.h>
-+#include <linux/reboot.h>
++#include <linux/kernel.h>
++#include <linux/inet.h>
 +#include <linux/in.h>
-+#include <scsi/scsi_tcq.h>
-+#include <scsi/scsi_transport.h>
-+#include <scsi/scsi_transport_iscsi.h>
 +
-+#include "iscsi-sfnet.h"
 +#include "iscsi-session.h"
-+#include "iscsi-protocol.h"
-+#include "iscsi-task.h"
++#include "iscsi-ioctl.h"
++#include "iscsi-sfnet.h"
++
++/* caller must hold the session's portal_lock */
++void
++iscsi_set_portal_info(struct iscsi_session *session)
++{
++	/*
++	 * Set the session timeouts and iSCSI op params based on the portal's
++	 * settings. Don't change the address, since a termporary redirect may
++	 * have already changed the address, and we want to use the redirected
++	 * address rather than the portal's address.
++	 */
++	session->login_timeout = session->portal.login_timeout;
++	session->active_timeout = session->portal.active_timeout;
++	session->idle_timeout = session->portal.idle_timeout;
++	session->ping_timeout = session->portal.ping_timeout;
++	session->abort_timeout = session->portal.abort_timeout;
++	session->reset_timeout = session->portal.reset_timeout;
++	session->replacement_timeout = session->portal.replacement_timeout;
++
++	session->initial_r2t = session->portal.initial_r2t;
++	session->immediate_data = session->portal.immediate_data;
++	session->max_recv_data_segment_len =
++		session->portal.max_recv_data_segment_len;
++	session->first_burst_len = session->portal.first_burst_len;
++	session->max_burst_len = session->portal.max_burst_len;
++	session->def_time2wait = session->portal.def_time2wait;
++	session->def_time2retain = session->portal.def_time2retain;
++
++	session->header_digest = session->portal.header_digest;
++	session->data_digest = session->portal.data_digest;
++
++	session->portal_group_tag = session->portal.tag;
++
++	/* TCP options */
++	session->tcp_window_size = session->portal.tcp_window_size;
++	/* FIXME: type_of_service */
++}
++
++/* caller must hold the session's portal_lock */
++void
++iscsi_set_portal(struct iscsi_session *session)
++{
++	/* address */
++	memcpy(&session->addr, &session->portal.addr, sizeof(struct sockaddr));
++	/* timeouts, operational params, other settings */
++	iscsi_set_portal_info(session);
++}
 +
 +/*
-+ *  IMPORTANT NOTE: to prevent deadlock, when holding multiple locks,
-+ *  the following locking order must be followed at all times:
-+ *
-+ *  session->portal_lock      - access to a session's portal info
-+ *  session->task_lock        - access to a session's collections of tasks
-+ *  host_lock                 - mid-layer acquires before calling queuecommand,
-+ * 				and eh_*.
-+ *
-+ *  Note for grabbing task_lock: queuecommand and eh_timed_out are invoked in
-+ *  soft_irq context. The former can be invoked in process context as well. 
-+ *  Every other function where we grab task_lock, we have process context.
-+ *  Hence we use spin_lock in eh_timed_out and spin_lock_bh every where else to
-+ *  grab the task lock.
++ * returns 1 if a relogin is required.
++ * caller must hold the session's portal_lock
 + */
-+
-+MODULE_AUTHOR("Cisco Systems, Inc.");
-+MODULE_DESCRIPTION("iSCSI initiator");
-+MODULE_LICENSE("GPL");
-+MODULE_VERSION(ISCSI_DRIVER_VERSION);
-+
-+kmem_cache_t *iscsi_task_cache;
-+static struct scsi_transport_template *iscsi_transportt;
-+
-+/* Serial Number Arithmetic, 32 bits, less than, RFC1982 */
-+#define SNA32_CHECK 2147483648UL
-+
 +int
-+iscsi_sna_lt(u32 n1, u32 n2)
++iscsi_update_portal_info(struct iscsi_portal_info *old,
++			 struct iscsi_portal_info *new)
 +{
-+	return n1 != n2 && ((n1 < n2 && (n2 - n1 < SNA32_CHECK)) ||
-+			    (n1 > n2 && (n2 - n1 < SNA32_CHECK)));
-+}
-+
-+/* Serial Number Arithmetic, 32 bits, less than, RFC1982 */
-+int
-+iscsi_sna_lte(u32 n1, u32 n2)
-+{
-+	return n1 == n2 || ((n1 < n2 && (n2 - n1 < SNA32_CHECK)) ||
-+			    (n1 > n2 && (n2 - n1 < SNA32_CHECK)));
-+}
-+
-+/* mark a scsi_cmnd as having a LUN communication failure */
-+static inline void
-+set_lun_comm_failure(struct scsi_cmnd *sc)
-+{
-+	sc->sense_buffer[0] = 0x70;
-+	sc->sense_buffer[2] = NOT_READY;
-+	sc->sense_buffer[7] = 0x6;
-+	sc->sense_buffer[12] = 0x08;
-+	sc->sense_buffer[13] = 0x00;
-+}
-+
-+u32
-+iscsi_command_attr(struct scsi_cmnd *cmd)
-+{
-+	unsigned int attr = ISCSI_ATTR_UNTAGGED;
-+	char msg[2];
-+
-+	if (scsi_populate_tag_msg(cmd, msg) == 2) {
-+		switch (msg[0]) {
-+		case MSG_SIMPLE_TAG:
-+			attr = ISCSI_ATTR_SIMPLE;
-+			break;
-+		case MSG_HEAD_TAG:
-+			attr = ISCSI_ATTR_HEAD_OF_QUEUE;
-+			break;
-+		case MSG_ORDERED_TAG:
-+			attr = ISCSI_ATTR_ORDERED;
-+			break;
-+		};
-+	}
-+
-+	return attr;
-+}
-+
-+static int
-+iscsi_slave_configure(struct scsi_device *sdev)
-+{
-+	int depth = 1, tag = 0;
-+
-+        /*
-+	 * TODO (one day) - when tcq is not supported we should
-+	 * internally queue a command to have one ready to go right
-+	 * away when the outstanding one completes.
-+         */
-+	if (sdev->tagged_supported) {
-+		scsi_activate_tcq(sdev, ISCSI_CMDS_PER_LUN);
-+		depth = ISCSI_CMDS_PER_LUN;
-+		tag = MSG_ORDERED_TAG;
-+	}
-+
-+	scsi_adjust_queue_depth(sdev, tag, depth);
-+	return 0;
-+}
-+
-+/**
-+ * iscsi_eh_timed_out - handle scsi command timeouts
-+ * sc: scsi command
-+ *
-+ * Note:
-+ *    In the normal case where the session is ok or the command was queued
-+ *    when the session was down (and it never came up but did not yet timeout
-+ *    - TODO use device block/unblock), we will fail the command here if
-+ *    we can. For all other race cases where for example the session changed
-+ *    state at the same time the command timed out but we had the task lock
-+ *    we just ask for more time since those events will clean themselves up.
-+ **/
-+static enum scsi_eh_timer_return
-+iscsi_eh_timed_out(struct scsi_cmnd *sc)
-+{
-+	struct Scsi_Host *shost = sc->device->host;
-+	struct iscsi_session *session = (struct iscsi_session *)shost->hostdata;
-+	struct iscsi_task *task;
-+	enum scsi_eh_timer_return ret = EH_RESET_TIMER;
-+	int result = DID_BUS_BUSY << 16;
-+
-+	spin_lock(&session->task_lock);
-+
-+	task = (struct iscsi_task *)sc->SCp.ptr;
-+	if (!task) {
-+		/*
-+		 * completed while timer was firing
-+		 */
-+		ret = EH_HANDLED;
-+		goto done;
-+	}
-+
-+	if (test_bit(SESSION_ESTABLISHED, &session->control_bits))
-+		ret = EH_NOT_HANDLED;
-+	else if (test_bit(SESSION_REPLACEMENT_TIMEDOUT, &session->control_bits))
-+		result = DID_NO_CONNECT << 16;
-+
-+	if (task->itt == ISCSI_RSVD_TASK_TAG) {
-+		sc->result = result;
-+		__iscsi_complete_task(task);
-+		ret = EH_HANDLED;
-+	}
-+
-+ done:
-+	spin_unlock(&session->task_lock);
-+
-+	return ret;
-+}
-+
-+static int
-+iscsi_eh_abort(struct scsi_cmnd *sc)
-+{
-+	struct Scsi_Host *shost = sc->device->host;
-+	struct iscsi_session *session = (struct iscsi_session *)shost->hostdata;
-+	struct iscsi_task *task, *tmf_task;
-+	int ret = FAILED;
-+
-+	spin_unlock_irq(shost->host_lock);
-+	spin_lock_bh(&session->task_lock);
-+
-+	/*
-+	 * TODO must fix these type of tests
-+	 */
-+	if (!test_bit(SESSION_ESTABLISHED, &session->control_bits))
-+		goto done;
-+
-+	task = (struct iscsi_task *)sc->SCp.ptr;
-+	if (!task) {
-+		iscsi_host_err(session, "eh_abort cmnd already done\n");
-+		ret = SUCCESS;
-+		goto done;
-+	}
-+
-+	if (task->itt == ISCSI_RSVD_TASK_TAG) {
-+		__iscsi_complete_task(task);
-+		ret = SUCCESS;
-+		goto done;
-+	}
-+
-+	/*
-+	 * TODO need a iscsi_dev_info
-+	 */
-+	iscsi_host_info(session, "Sending ABORT TASK for task itt %u\n",
-+			task->itt);
-+
-+	tmf_task = session->mgmt_task;
-+	memset(tmf_task, 0, sizeof(*tmf_task));
-+	iscsi_init_task(tmf_task);
-+	tmf_task->session = session;
-+	tmf_task->lun = task->lun;
-+	/*
-+	 * this will become the refcmdsn
-+	 */
-+	tmf_task->cmdsn = task->cmdsn;
-+	tmf_task->rtt = task->itt;
-+	set_bit(ISCSI_TASK_ABORT, &tmf_task->flags);
-+
-+	if (!iscsi_exec_task_mgmt(tmf_task, session->abort_timeout)) {
-+		ret = SUCCESS;
-+		goto done;
-+	}
-+	/*
-+	 * TMF may have failed if the task completed first (check here)
-+	 */
-+	if (!sc->SCp.ptr)
-+		ret = SUCCESS;
-+ done:
-+	spin_unlock_bh(&session->task_lock);
-+	spin_lock_irq(shost->host_lock);
-+
-+	return ret;
-+}
-+
-+static int
-+iscsi_eh_device_reset(struct scsi_cmnd *sc)
-+{
-+	struct Scsi_Host *shost = sc->device->host;
-+	struct iscsi_session *session = (struct iscsi_session *)shost->hostdata;
-+	struct iscsi_task *task;
-+	int ret = FAILED;
-+
-+	spin_unlock_irq(shost->host_lock);
-+	spin_lock_bh(&session->task_lock);
-+
-+	if (!test_bit(SESSION_ESTABLISHED, &session->control_bits))
-+		goto done;
-+
-+	task = session->mgmt_task;
-+	memset(task, 0, sizeof(*task));
-+	iscsi_init_task(task);
-+	task->session = session;
-+	task->lun = sc->device->lun;
-+	__set_bit(ISCSI_TASK_ABORT_TASK_SET, &task->flags);
-+
-+	/*
-+	 * need a iscsi_dev_info
-+	 */
-+	iscsi_host_info(session, "Sending ABORT TASK SET\n");
-+	if (!iscsi_exec_task_mgmt(task, session->abort_timeout)) {
-+		ret = SUCCESS;
-+		goto done;
-+	}
-+
-+	iscsi_init_task(task);
-+	__set_bit(ISCSI_TASK_LU_RESET, &task->flags);
-+
-+	iscsi_host_info(session, "Sending LU RESET\n");
-+ 	if (!iscsi_exec_task_mgmt(task, session->reset_timeout))
-+		ret = SUCCESS;
-+ done:
-+	spin_unlock_bh(&session->task_lock);
-+	spin_lock_irq(shost->host_lock);
-+
-+	return ret;
-+}
-+
-+static int
-+iscsi_eh_host_reset(struct scsi_cmnd *sc)
-+{
-+	struct Scsi_Host *shost = sc->device->host;
-+	struct iscsi_session *session = (struct iscsi_session *)shost->hostdata;
-+	struct iscsi_task *task;
-+	int ret = FAILED;
-+
-+	spin_unlock_irq(shost->host_lock);
-+	spin_lock_bh(&session->task_lock);
-+
-+	if (!test_bit(SESSION_ESTABLISHED, &session->control_bits))
-+		goto done;
-+
-+	task = session->mgmt_task;
-+	memset(task, 0, sizeof(*task));
-+	iscsi_init_task(task);
-+	task->session = session;
-+	__set_bit(ISCSI_TASK_TGT_WARM_RESET, &task->flags);
-+
-+	iscsi_host_info(session, "Sending TARGET WARM RESET\n");
-+	if (iscsi_exec_task_mgmt(task, session->reset_timeout))
-+		/*
-+		 * no other options
-+		 */
-+		iscsi_drop_session(session);
-+
-+ done:
-+	/*
-+	 * if we failed, scsi-ml will put us offline
-+	 * and if we were successful it will redrive the
-+	 * commands, so we clean everything up from our side
-+	 * so scsi-ml can retake ownership of the commands.
-+	 * (At this point the tx and rx threads will not be
-+	 * touching the commands since either the session
-+	 * was dropped or we just did a target reset)
-+	 */
-+	iscsi_flush_queues(session, ISCSI_MAX_LUNS, DID_BUS_BUSY);
-+
-+	spin_unlock_bh(&session->task_lock);
-+	if (iscsi_wait_for_session(session, 0))
-+		ret = SUCCESS;
-+	spin_lock_irq(shost->host_lock);
-+
-+	return ret;
-+}
-+
-+void
-+iscsi_complete_command(struct scsi_cmnd *sc)
-+{
-+	sc->SCp.ptr = NULL;
-+	sc->scsi_done(sc);
-+}
-+
-+/**
-+ * iscsi_queuecommand - queuecommand interface for the iSCSI driver.
-+ * @sc: scsi command from the midlayer
-+ * @done: Call back function to be called once the command is executed.
-+ **/
-+static int
-+iscsi_queuecommand(struct scsi_cmnd *sc, void (*done) (struct scsi_cmnd *))
-+{
-+	struct Scsi_Host *host = sc->device->host;
-+	struct iscsi_session *session = (struct iscsi_session *)host->hostdata;
-+	struct iscsi_task *task;
 +	int ret = 0;
 +
-+	spin_unlock_irq(host->host_lock);
-+
 +	/*
-+	 * record whether I/O commands have been ever been sent on this
-+	 * session, to help us decide when we need the  session and should
-+	 * retry logins regardless of the login status. Ignore all the
-+	 * commands sent by default as part of the LUN being scanned or a
-+	 * device being opened, so that sessions that have always been idle
-+	 * can be dropped.  Of course, this  is always true for disks, since
-+	 * Linux will do reads  looking for a partition table.
++	 * ping_timeout change requires a relogin because we ask the target to
++	 * use it as well with com.cisco.PingTimeout
 +	 */
-+	switch (sc->cmnd[0]) {
-+	case INQUIRY:
-+	case REPORT_LUNS:
-+	case TEST_UNIT_READY:
-+	case READ_CAPACITY:
-+	case START_STOP:
-+	case MODE_SENSE:
-+		break;
-+	default:
-+		session->commands_queued = 1;
-+		break;
-+	}
++	if (new->ping_timeout != old->ping_timeout ||
++	    new->initial_r2t != old->initial_r2t ||
++	    new->immediate_data != old->immediate_data ||
++	    new->max_recv_data_segment_len != old->max_recv_data_segment_len ||
++	    new->first_burst_len != old->first_burst_len ||
++	    new->max_burst_len != old->max_burst_len ||
++	    new->def_time2wait != old->def_time2wait ||
++	    new->def_time2retain != old->def_time2retain ||
++	    new->header_digest != old->header_digest ||
++	    new->data_digest != old->data_digest ||
++	    new->tcp_window_size != old->tcp_window_size)
++                ret = 1;
 +
-+	if (test_bit(SESSION_REPLACEMENT_TIMEDOUT, &session->control_bits)) {
-+		if (printk_ratelimit())
-+			iscsi_host_warn(session, "lun%u: Session terminating, "
-+					"failing to queue cdb 0x%x and any "
-+					"following commands\n", sc->device->lun,					sc->cmnd[0]);
-+		goto fail;
-+	}
-+
-+	/* make sure we can complete it properly later */
-+	sc->scsi_done = done;
-+	sc->result = 0;
-+	memset(&sc->SCp, 0, sizeof(sc->SCp));
-+
-+	spin_lock_bh(&session->task_lock);
-+
-+	/*
-+	 * alloc a task and add it to the pending queue so
-+	 * the tx-thread will run it
-+	 */ 
-+	task = iscsi_alloc_task(session);
-+	if (!task) {
-+		ret = SCSI_MLQUEUE_HOST_BUSY;
-+		goto done;
-+	}
-+
-+	task->lun = sc->device->lun;
-+	task->scsi_cmnd = sc;
-+	sc->SCp.ptr = (char *)task;
-+	list_add_tail(&task->queue, &session->pending_queue);
-+
-+	iscsi_wake_tx_thread(TX_SCSI_COMMAND, session);
-+ done:
-+	spin_unlock_bh(&session->task_lock);
-+	spin_lock_irq(host->host_lock);
++	memcpy(old, new, sizeof(*old));
 +	return ret;
-+
-+ fail:
-+	spin_lock_irq(host->host_lock);
-+	sc->result = DID_NO_CONNECT << 16;
-+	sc->resid = sc->request_bufflen;
-+	set_lun_comm_failure(sc);
-+
-+	done(sc);
-+	return 0;
 +}
-+
-+int
-+iscsi_destroy_host(struct Scsi_Host *shost)
-+{
-+	struct iscsi_session *session = (struct iscsi_session *)shost->hostdata;
-+
-+	if (!test_bit(SESSION_CREATED, &session->control_bits))
-+		return -EINVAL;
-+
-+	if (test_and_set_bit(SESSION_RELEASING, &session->control_bits))
-+		return -EINVAL;
-+
-+	scsi_remove_host(shost);
-+	iscsi_destroy_session(session);
-+	scsi_host_put(shost);
-+	return 0;
-+}
-+
-+static struct scsi_host_template iscsi_driver_template = {
-+	.name = "SFNet iSCSI driver",
-+	.proc_name = ISCSI_PROC_NAME,
-+	.module = THIS_MODULE,
-+	.queuecommand = iscsi_queuecommand,
-+	.eh_timed_out = iscsi_eh_timed_out,
-+	.eh_abort_handler = iscsi_eh_abort,
-+	.eh_device_reset_handler = iscsi_eh_device_reset,
-+	.eh_host_reset_handler = iscsi_eh_host_reset,
-+	.skip_settle_delay = 1,
-+	.slave_configure = iscsi_slave_configure,
-+	.this_id = -1,
-+	.can_queue = ISCSI_CANQUEUE,
-+	.sg_tablesize = ISCSI_MAX_SG,
-+	.cmd_per_lun = ISCSI_CMDS_PER_LUN,
-+	.use_clustering = ENABLE_CLUSTERING,
-+	.max_sectors = 256,
-+	.emulated = 1,
-+	.shost_attrs = iscsi_host_attrs,
-+};
-+
-+int
-+iscsi_create_host(struct iscsi_session_ioctl *ioctld)
-+{
-+	struct Scsi_Host *shost;
-+	struct iscsi_session *session;
-+	int rc;
-+
-+	shost = scsi_host_alloc(&iscsi_driver_template, sizeof(*session));
-+	if (!shost) 
-+		return -ENOMEM;
-+
-+	shost->max_id = ISCSI_MAX_TARGETS;
-+	shost->max_lun = ISCSI_MAX_LUNS;
-+	shost->max_channel = ISCSI_MAX_CHANNELS;
-+	shost->max_cmd_len = ISCSI_MAX_CMD_LEN;
-+	shost->transportt = iscsi_transportt;
-+
-+	session = (struct iscsi_session *)shost->hostdata;
-+	memset(session, 0, sizeof(*session));
-+	session->shost = shost;
-+
-+	rc = iscsi_create_session(session, ioctld);
-+	if (rc) {
-+		scsi_host_put(shost);
-+		return rc;
-+	}
-+
-+	rc = scsi_add_host(shost, NULL);
-+	if (rc) {
-+		iscsi_destroy_session(session);
-+		scsi_host_put(shost);
-+		return rc;
-+	}
-+
-+	scsi_scan_host(shost);
-+	set_bit(SESSION_CREATED, &session->control_bits);
-+
-+	return 0;
-+}
-+
-+/*
-+ * This function must only be called when the sysfs and
-+ * ioctl interfaces are inaccessible. For example when
-+ * the module_exit function is executed the driver's sysfs
-+ * and ioctl entry points will return "no device".
-+ */
-+static void
-+iscsi_destroy_all_hosts(void)
-+{
-+	struct iscsi_session *session, *tmp;
-+
-+	list_for_each_entry_safe(session, tmp, &iscsi_sessions, list)
-+		iscsi_destroy_host(session->shost);
-+}
-+
-+static int
-+iscsi_reboot_notifier_function(struct notifier_block *this,
-+			       unsigned long code, void *unused)
-+{
-+	iscsi_destroy_all_hosts();
-+	iscsi_notice("Driver shutdown completed\n");
-+	return NOTIFY_DONE;
-+}
-+
-+/* XXX move this to driver model shutdown */
-+static struct notifier_block iscsi_reboot_notifier = {
-+	.notifier_call = iscsi_reboot_notifier_function,
-+	.next = NULL,
-+	.priority = 255, /* priority, might need to have a
-+			  * relook at the value
-+			  */
-+};
-+
-+static int
-+__init iscsi_init(void)
-+{
-+	iscsi_notice("%s (%s) built for Linux %s\n", ISCSI_DRIVER_VERSION,
-+		     ISCSI_DATE, UTS_RELEASE);
-+
-+	/* pool of iscsi tasks */
-+	iscsi_task_cache = kmem_cache_create("iscsi_task_cache",
-+					     sizeof(struct iscsi_task), 0,
-+					     SLAB_NO_REAP, NULL, NULL);
-+
-+	if (!iscsi_task_cache) {
-+		iscsi_err("kmem_cache_create failed\n");
-+		return -ENOMEM;
-+	}
-+
-+	iscsi_transportt = iscsi_attach_transport(&iscsi_fnt);
-+	if (!iscsi_transportt)
-+		goto free_cache;
-+
-+	if (iscsi_register_interface())
-+		goto release_transport;
-+
-+	register_reboot_notifier(&iscsi_reboot_notifier);
-+	return 0;
-+
-+ release_transport:
-+	iscsi_release_transport(iscsi_transportt);
-+ free_cache:
-+	kmem_cache_destroy(iscsi_task_cache);
-+	iscsi_err("Failed to init driver\n");
-+	return -ENODEV;
-+}
-+
-+static void
-+__exit iscsi_cleanup(void)
-+{
-+	unregister_reboot_notifier(&iscsi_reboot_notifier);
-+	iscsi_unregister_interface();
-+	iscsi_destroy_all_hosts();
-+	iscsi_release_transport(iscsi_transportt);
-+	kmem_cache_destroy(iscsi_task_cache);
-+}
-+module_init(iscsi_init);
-+module_exit(iscsi_cleanup);
-diff -Naurp scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-sfnet.h scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-sfnet.h
---- scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-sfnet.h	1969-12-31 16:00:00.000000000 -0800
-+++ scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-sfnet.h	2005-01-10 12:20:05.306809612 -0800
-@@ -0,0 +1,130 @@
+diff -Naurp scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-portal.h scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-portal.h
+--- scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-portal.h	1969-12-31 16:00:00.000000000 -0800
++++ scsi-misc-2.6.patch/drivers/scsi/iscsi-sfnet/iscsi-portal.h	2005-01-10 12:35:57.791300704 -0800
+@@ -0,0 +1,62 @@
 +/*
 + * iSCSI driver for Linux
 + * Copyright (C) 2001 Cisco Systems, Inc.
@@ -642,116 +167,48 @@ diff -Naurp scsi-misc-2.6.orig/drivers/scsi/iscsi-sfnet/iscsi-sfnet.h scsi-misc-
 + *
 + * See the file COPYING included with this distribution for more details.
 + *
-+ * Misc definitions for the iSCSI kernel module
++ * portal info structure used in ioctls and the kernel module
 + */
-+#ifndef ISCSI_SFNET_H_
-+#define ISCSI_SFNET_H_
++#ifndef ISCSI_PORTAL_H_
++#define ISCSI_PORTAL_H_
 +
 +#include <linux/socket.h>
-+#include <linux/random.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_host.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_transport_iscsi.h>
 +
 +struct iscsi_session;
-+struct iscsi_session_ioctl;
-+struct iscsi_task;
-+struct iscsi_hdr;
-+
-+#define ISCSI_DRIVER_VERSION	"4:0.1.10.1"
-+#define ISCSI_DATE		"3-Jan-2005"
-+
-+/* TODO (one day): compeltely test 16 byte cmd len support */
-+#define ISCSI_MAX_CMD_LEN	12
-+#define ISCSI_CMDS_PER_LUN	32
-+#define ISCSI_MAX_CMDS_PER_LUN	128
-+#define ISCSI_CANQUEUE		8192
-+#define ISCSI_MAX_SG		64
-+#define ISCSI_MAX_LUNS		256
-+#define ISCSI_MAX_TARGETS	1
-+#define ISCSI_MAX_CHANNELS	0
-+
-+#define ISCSI_PROC_NAME 	"iscsi-sfnet"
-+
-+#define iscsi_host_err(s, fmt, args...) \
-+	printk(KERN_ERR "iscsi-sfnet:host%d: "fmt, s->shost->host_no, ##args)
-+#define iscsi_err(fmt, args...) \
-+	printk(KERN_ERR "iscsi-sfnet: "fmt, ##args)
-+
-+#define iscsi_host_warn(s, fmt, args...) \
-+	printk(KERN_WARNING "iscsi-sfnet:host%d: "fmt, s->shost->host_no, \
-+	       ##args)
-+#define iscsi_warn(fmt, args...) \
-+	printk(KERN_WARNING "iscsi-sfnet: "fmt, ##args)
-+
-+#define iscsi_host_notice(s, fmt, args...) \
-+	printk(KERN_NOTICE "iscsi-sfnet:host%d: "fmt, s->shost->host_no, ##args)
-+#define iscsi_notice(fmt, args...) \
-+	printk(KERN_NOTICE "iscsi-sfnet: "fmt, ##args)
-+
-+#define iscsi_host_info(s, fmt, args...) \
-+	printk(KERN_INFO "iscsi-sfnet:host%d: "fmt, s->shost->host_no, ##args)
-+#define iscsi_info(fmt, args...) \
-+	printk(KERN_INFO "iscsi-sfnet: "fmt, ##args)
-+
-+/* miscalleneous routines */
-+extern unsigned int iscsi_command_attr(struct scsi_cmnd *sc);
-+extern void iscsi_complete_command(struct scsi_cmnd *sc);
-+
-+/* Routines related to Serial Number Arithmetic */
-+extern int iscsi_sna_lt(u32 n1, u32 n2);
-+extern int iscsi_sna_lte(u32 n1, u32 n2);
 +
 +/*
-+ * IO return values the driver uses in the send, recv
-+ * and network code. 
++ * iscsi_portal_info - contains the values userspace had
++ * requested. This differs from the session duplicates
++ * as those are the values we negotiated with the target
 + */
-+enum {
-+	ISCSI_IO_SUCCESS,
-+	ISCSI_IO_ERR,
-+	ISCSI_IO_CRC32C_ERR,
-+	ISCSI_IO_INTR,
-+	ISCSI_IO_INVALID_OP,
++struct iscsi_portal_info {
++	int	login_timeout;
++	int	active_timeout;
++	int	idle_timeout;
++	int	ping_timeout;
++	int	abort_timeout;
++	int	reset_timeout;
++	int	replacement_timeout;
++	int	initial_r2t;
++	int	immediate_data;
++	int	max_recv_data_segment_len;
++	int	first_burst_len;
++	int	max_burst_len;
++	int	def_time2wait;
++	int	def_time2retain;
++	int	header_digest;
++	int	data_digest;
++	int	tag;
++	int	tcp_window_size;
++	int	type_of_service;
++	/* support ipv4 when we finish the interface */
++	struct sockaddr addr;
 +};
 +
-+/* Routines to build and transmit iSCSI PDUs and/or data */
-+extern void iscsi_send_scsi_cmnd(struct iscsi_task *task);
-+extern void iscsi_send_task_mgmt(struct iscsi_session *session);
-+extern void iscsi_send_r2t_data(struct iscsi_session *session);
-+extern void iscsi_send_nop_replys(struct iscsi_session *session);
-+extern void iscsi_send_logout(struct iscsi_session *session);
-+extern void iscsi_send_nop_out(struct iscsi_session *session);
-+extern void iscsi_queue_unsolicited_data(struct iscsi_task *task);
-+extern int iscsi_send_pdu(struct iscsi_session *session, struct iscsi_hdr *hdr,
-+			  int hdr_digest, char *data, int data_digest);
-+extern int iscsi_recv_pdu(struct iscsi_session *session, struct iscsi_hdr *hdr,
-+			  int hdr_digest, char *data, int data_len,
-+			  int data_digest);
-+
-+/* Routines to send and receive data on TCP/IP sockets */
-+extern int iscsi_recvmsg(struct iscsi_session *session, struct kvec *iov,
-+			 size_t iovn, size_t size);
-+extern int iscsi_sendmsg(struct iscsi_session *session, struct kvec *iov,
-+			 size_t iovn, size_t size);
-+extern int iscsi_sendpage(struct iscsi_session *session, int flags,
-+			  struct page *pg, unsigned int pg_offset,
-+			  unsigned int len);
-+extern int iscsi_connect(struct iscsi_session *session);
-+extern void iscsi_disconnect(struct iscsi_session *session);
-+
-+/* Register a driver interface */
-+extern int iscsi_register_interface(void);
-+extern void iscsi_unregister_interface(void);
-+
-+/* ioctl and sysfs uses these routines to interact with the initiator */
-+extern int iscsi_destroy_host(struct Scsi_Host *shost);
-+extern int iscsi_create_host(struct iscsi_session_ioctl *ioctld);
-+
-+/* Global variables */
-+extern struct class_device_attribute *iscsi_host_attrs[];
-+extern struct iscsi_function_template iscsi_fnt;
-+
++extern void iscsi_set_portal_info(struct iscsi_session *session);
++extern void iscsi_set_portal(struct iscsi_session *session);
++extern int iscsi_update_portal_info(struct iscsi_portal_info *old,
++				    struct iscsi_portal_info *new);
 +#endif
 
---------------030100020507090306050703--
+--------------060900090500060104060407--
