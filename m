@@ -1,63 +1,88 @@
 From: Rusty Russell <rusty@rustcorp.com.au>
 Subject: Re: Why /dev/sdc1 doesn't show up...
-Date: Wed, 20 Nov 2002 08:29:52 +1100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021120072654.3EE7A2C08B@lists.samba.org>
-References: <Pine.GSO.4.21.0211190116420.27757-100000@steklov.math.psu.edu>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-reply-to: Your message of "Tue, 19 Nov 2002 02:12:54 CDT."
-             <Pine.GSO.4.21.0211190116420.27757-100000@steklov.math.psu.edu>
+Date: Wed, 20 Nov 2002 07:54:07 +1100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20021120072653.BC52C2C055@lists.samba.org>
+References: <Pine.LNX.4.44.0211181607120.13381-100000@home.transmeta.com>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-reply-to: Your message of "Mon, 18 Nov 2002 16:08:49 -0800."
+             <Pine.LNX.4.44.0211181607120.13381-100000@home.transmeta.com>
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: Alexander Viro <viro@math.psu.edu>, Doug Ledford <dledford@redhat.com>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alexander Viro <viro@math.psu.edu>
-Cc: Doug Ledford <dledford@redhat.com>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>
 
-In message <Pine.GSO.4.21.0211190116420.27757-100000@steklov.math.psu.edu> you 
-write:
-> Wrong granularity.  "module had finished initialization" is _not_ a natural
-> event wrt stuff exported by that module.
+In message <Pine.LNX.4.44.0211181607120.13381-100000@home.transmeta.com> you write:
+> On Tue, 19 Nov 2002, Rusty Russell wrote:
+> > 
+> > See other posting.  This is a fundamental design decision, and it's
+> > not changing.  Sorry.
+> 
+> Rusty, you take that approach, and the module code flies out of the 
+> kernel. 
 
-Well, I have to disagree here.  "I have successfully finished my
-initialization" is the same logic you're trying to beat into module
-author's heads before they commit their interfaces.
+Linus,
 
-> And that's one of the main problems I have with your approach - you
-> are trying to make module loader do the stuff that has nothing
-> whatsoever with modules.
+	Sorry, you're right of course.  I should at least have done
+something like the "unsafe" wedge which was used for the other
+interfaces.  Under the circumstances, I agree with your fix.
 
-Or, put another way, I'm trying to ensure that correct code in the
-kernel is correct code in a module, by having the module code simulate
-the conditions in which the original occurred.
+> you seem to say that drivers should be broken een if they are perfectly 
+> fine and do not have any races as is.
 
-> Moreover, if driver is built into the kernel, you get (at the very least)
-> a different mechanism for triggering the same events, if not the outright
-> different sequence of events.  Which is a Bad Thing(tm) since it leads to
-> a shitload of extra problems with debugging.
+	Linus, I would like an answer: how does one register two /proc
+entries?  The following has a race when modular:
 
-Speaking of which, what's the long-term plan for hotplug events at
-boot?  Will you get a shitload of "add" events, or rely on userspace
-to scan?
+	if (!create_proc_entry("foo"...))
+		goto fail;
+	if (!create_proc_entry("bar"...))
+		goto fail_free_foo;
+	return 0;
 
-> Double freeing.  Forgetting to free.  Dereference after freeing.  Leaving
-> timers active.  Leaving pointers to local structures in global arrays.
+	I sympathize with Al's "we have worse problems, just BUG()
+when it happens" approach, but I don't agree with Doug's "that's
+clearly broken code!" assertion.  Al wants to split such code into:
 
-Hmm, my audit of copy_to/from_user uncovered similar bogosities, and
-I've dropped more than one Trivial Patch Monkey patches because they
-cleaned up one case in an incurable sewer of problems 8(
+	if (!reserve_proc_entry("foo"...))
+		goto fail;
+	if (!reserve_proc_entry("bar"...))
+		goto fail_free_foo;
 
-The "better to have a bad driver than no driver" becomes less true as
-people start copying from it, too.  This is where meta-maintainers
-like Jeff Garzik make a definite difference as chief shit-kicker.
+	/* Now we're safe! */
+	activate_proc_entry("foo");
+	activate_proc_entry("bar");
+	return 0;
 
-> On that background all shite you are so concerned about is a noise.
+Note that this code change is *only* required because the code is
+modular.  The code has works perfectly fine in the kernel, and has for
+years, and very few people have ever noticed any problem with it.
 
-Perhaps.  But I can't change the world: that's your job.
+Now, let's imagine one simple implementation of reserve_proc_entry and
+activate_proc_entry: a proc entry gets a flag (call it "live") which
+it can use to tell the difference between reserved and activated
+entries, and it ignores !live ones.
 
-> What we _can_ do (and that will be on per-subsystem basis) is providing
-> APIs that would cut down on the amount of glue needed in driver init.
+Now, if you substitute the "live" flag in the proc entry for a "live"
+flag in the proc->owner entry, you have the previous module code,
+except:
 
-Fervently agree: it's hard to get one line wrong, *and* almost any
-scheme can be implemented on top of it.
+1) You don't need to change all the modules to do two-stage init.
+2) You don't need to change all the interfaces to two-stage init.
+3) You *do* have problems with complex interfaces which need to do
+   something more than just flip the flag to make it "live".
 
+Now do you see why I like this scheme?  For most interfaces, it "just
+works": I shall endevour to fix the remaining cases in a way which is
+no less clear than current code, and if I fail, hey, we leave your
+change in and we're no worse than 2.4.
+
+> If so, then bye bye new module loader.
+
+Fair enough.  Frankly, I just wanted to neaten the module code to
+allow other improvements without breaking userspace every time.  But I
+felt it wrong to re-implement the same module races: let this be a
+valuable lesson to me not to bite off more than I can chew 8(
+
+Thanks for your patience,
 Rusty.
 --
   Anyone who quotes me in their sig is an idiot. -- Rusty Russell.
