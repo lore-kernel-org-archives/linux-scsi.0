@@ -1,40 +1,77 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: 2.6.0-test9: scsi_dev_flags
-Date: Sun, 26 Oct 2003 08:38:50 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031026083850.A15515@beaverton.ibm.com>
-References: <20031026144741.A4326@flint.arm.linux.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:52689 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S263280AbTJZQjl
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Oct 2003 11:39:41 -0500
-Content-Disposition: inline
-In-Reply-To: <20031026144741.A4326@flint.arm.linux.org.uk>; from rmk@arm.linux.org.uk on Sun, Oct 26, 2003 at 02:47:41PM +0000
-List-Id: linux-scsi@vger.kernel.org
-To: Russell King <rmk@arm.linux.org.uk>
+From: Andries.Brouwer@cwi.nl
+Subject: Re: [2.6.0-test9] Strange SCSI messages
+Date: Sun, 26 Oct 2003 20:33:45 +0100 (MET)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <UTC200310261933.h9QJXjN04379.aeb@smtp.cwi.nl>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: fw@deneb.enyo.de, linux-kernel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Oct 26, 2003 at 02:47:41PM +0000, Russell King wrote:
+    From: Florian Weimer <fw@deneb.enyo.de>
 
-> So, I then tried doing exactly that:
-> 
-> 	scsi_dev_flags=SyQuest:SQ3270S:4096
+    | Info fld=0x440b6b, Current sdsdd: sense key Recovered Error
+    | Additional sense: Address mark not found for data field
 
-If that is the kernel boot line, you need to prefix the argument with
-scsi_mod., i.e. scsi_mod.scsi_dev_flags=, per the module_param
-interface(s).
+    According to the sources, these are SCSI messages (matbe this should be
+    noted in the message?) -- but what do they mean?
 
-> An additional question comes out from this - if quirk information is now
-> to be passed on the kernel command line, how are users supposed to work
-> out the correct command line argument to give for their quirky hardware
-> given that it doesn't appear to be as trivial as the code suggests?
-> (IOW, the scsi_dev_flags option appears to be rather undocumented!)
+No doubt you are asking something else, but your sdsdd should have been sdd.
+That is, these days error printing is a bit broken.
 
-There is a bit in Documentation/kernel-parameters.txt, but there should be
-more documentation added somewhere. Also the integer value can be hex
-(0x1000).
+Something like the patch below might help.
 
--- Patrick Mansfield
+Andries
+
+
+diff -u --recursive --new-file -X /linux/dontdiff a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+--- a/drivers/scsi/constants.c	Sun Oct 26 00:00:11 2003
++++ b/drivers/scsi/constants.c	Sun Oct 26 20:11:07 2003
+@@ -915,15 +915,15 @@
+ 
+ /* Print sense information */
+ static void
+-print_sense_internal(const char * devclass, 
+-		     const unsigned char * sense_buffer,
++print_sense_internal(const char *devclass, 
++		     const unsigned char *sense_buffer,
+ 		     struct request *req)
+ {
+ 	int s, sense_class, valid, code, info;
+-	const char * error = NULL;
++	const char *error = NULL;
+ 	unsigned char asc, ascq;
+ 	const char *sense_txt;
+-	char *name = req->rq_disk ? req->rq_disk->disk_name : "?";
++	const char *name = req->rq_disk ? req->rq_disk->disk_name : devclass;
+     
+ 	sense_class = (sense_buffer[0] >> 4) & 0x07;
+ 	code = sense_buffer[0] & 0xf;
+@@ -966,11 +966,9 @@
+ 
+ 		sense_txt = scsi_sense_key_string(sense_buffer[2]);
+ 		if (sense_txt)
+-			printk("%s%s: sense key %s\n",
+-			       devclass, name, sense_txt);
++			printk("%s: sense key %s\n", name, sense_txt);
+ 		else
+-			printk("%s%s: sense = %2x %2x\n",
+-			       devclass, name,
++			printk("%s: sense = %2x %2x\n", name,
+ 			       sense_buffer[0], sense_buffer[2]);
+ 
+ 		asc = ascq = 0;
+@@ -993,11 +991,9 @@
+ 
+ 		sense_txt = scsi_sense_key_string(sense_buffer[0]);
+ 		if (sense_txt)
+-			printk("%s%s: old sense key %s\n",
+-			       devclass, name, sense_txt);
++			printk("%s: old sense key %s\n", name, sense_txt);
+ 		else
+-			printk("%s%s: sense = %2x %2x\n",
+-			       devclass, name,
++			printk("%s: sense = %2x %2x\n", name,
+ 			       sense_buffer[0], sense_buffer[2]);
+ 
+ 		printk("Non-extended sense class %d code 0x%0x\n",
