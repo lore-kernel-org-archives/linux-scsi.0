@@ -1,37 +1,109 @@
-From: wb <dead_email@nospam.com>
-Subject: Monitoring FileSystem cache
-Date: Wed, 06 Aug 2003 08:32:37 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F310375.2040207@nospam.com>
+From: Paul Blazejowski <paulb@blazebox.homeip.net>
+Subject: Re: Badness in device_release at drivers/base/core.c:84
+Date: Wed, 06 Aug 2003 12:55:55 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1060188955.887.3.camel@blaze.homeip.net>
+References: <20030801182207.GA3759@blazebox.homeip.net>
+	 <20030801144455.450d8e52.akpm@osdl.org>
+	 <20030803015510.GB4696@blazebox.homeip.net>
+	 <20030802190737.3c41d4d8.akpm@osdl.org>
+	 <20030803214755.GA1010@blazebox.homeip.net>
+	 <20030803145211.29eb5e7c.akpm@osdl.org>
+	 <20030803222313.GA1090@blazebox.homeip.net>
+	 <20030803223115.GA1132@blazebox.homeip.net>
+	 <20030804093035.A24860@beaverton.ibm.com>
+	 <1060021614.889.6.camel@blaze.homeip.net>
+	 <1352160000.1060025773@aslan.btc.adaptec.com>
+	 <5793.199.181.174.146.1060050091.squirrel@www.blazebox.homeip.net>
+	 <3F2F84D2.8000202@nospam.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ztxmail04.ztx.compaq.com ([161.114.1.208]:40204 "EHLO
-	ztxmail04.ztx.compaq.com") by vger.kernel.org with ESMTP
-	id S270759AbTHFNZ3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Aug 2003 09:25:29 -0400
-Received: from cceexg13.americas.cpqcorp.net (cceexg13.americas.cpqcorp.net [16.110.250.119])
-	by ztxmail04.ztx.compaq.com (Postfix) with ESMTP id 625ECACBC
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Aug 2003 08:25:25 -0500 (CDT)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TK340b1uLg/3LuHCo1Ra"
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <3F2F84D2.8000202@nospam.com>
+To: wb <dead_email@nospam.com>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, Patrick Mansfield <patmans@us.ibm.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi,
 
-Are there tools available to monitor
-the size of the filesystem buffer/cache ?
+--=-TK340b1uLg/3LuHCo1Ra
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Are there hi water marks that limit the
-size of the buffer cache or does it consume
-as such memory VM as possible ?
+On Tue, 2003-08-05 at 06:20, wb wrote:
+> >=20
+> > I'll look into serial console and try to set it up.Do i need extra
+> > hardware or cables to run serial console? any poniters or setup
+> > suggestions would be welcome as i never used serial consoles before.
+> > Regards,
+> >=20
+> > Paul
+> > -
+>=20
+>   Your need a NULL modem serial cable available
+>   from any computer store.
+>=20
+> Install uucp - I use on the HOST :
+>=20
+> uucp-1.06.1-33.7.2.
+>=20
+> Also , LILO is broken on some machines and ignores
+> serial input so make sure you use at least
+>=20
+> lilo-21.6-71
+>=20
+> On the TARGET
+>=20
+> 1. Connect the serial ports together ( COM1->COM1 ) with
+>     the serial cable .
+>=20
+> 2. Modify LILO to use serial line on the TARGET
+>     add to lilo.conf:
+>        append=3D"console=3DttyS0,9600n8  console=3Dtty0 "
+>        serial=3D0,9600N8
+>=20
+>     Run lilo
+>=20
+> 3. Add to /etc/inittab on the HOST
+>=20
+>        S0:s12345:respawn:/sbin/agetty 9600 ttyS0
+>=20
+> 4. To see ALL THE CONSOLE MESSAGES during boot on the TARGET
+>=20
+>     mv /dev/console /dev/console.org
+>     ln  /dev/ttyS0 /dev/console
+>=20
+> 5. Start uucp on the HOST:
+>=20
+>      cu -l /dev/ttyS0 -s 9600
+>=20
+> 6. Boot your target
+>=20
+> ///
+>=20
+> John Donnelly AT HP DOT com
+>=20
 
-I looked through /proc ( 2.4.20 kernel )
-and I don't see anything of interest.
+John,
 
-Curious.
+I appreciate your writing short and sweet howto :-).
 
-Thanks.
+I was able to get it going from FreeBSD 5.1 box with cu -l /dev/ttyd0
+2&<1 > log to my Linux machine.
 
-J. Donnelly.
+Thank you for helping.
 
+Paul B.
+
+--=-TK340b1uLg/3LuHCo1Ra
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
+
+iD8DBQA/MTMbIymMQsXoRDARAqycAJ9AnaoHxwqVzQN7UHdEs1gom4kfVgCfTeqA
+lCRHDXnINmQK4Yn99dCV1cg=
+=bPyK
+-----END PGP SIGNATURE-----
+
+--=-TK340b1uLg/3LuHCo1Ra--
