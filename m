@@ -1,44 +1,47 @@
-From: "David S. Miller" <davem@redhat.com>
-Subject: Re: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple
- map/unmaps
-Date: Mon, 5 Jan 2004 13:01:18 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040105130118.0cb404b8.davem@redhat.com>
-References: <200401051929.i05JTsM0000014248@mudpuddle.cs.wustl.edu.suse.lists.linux.kernel>
-	<20040105112800.7a9f240b.davem@redhat.com.suse.lists.linux.kernel>
-	<p73brpi1544.fsf@verdi.suse.de>
+From: Andi Kleen <ak@colin2.muc.de>
+Subject: Re: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple map/unmaps
+Date: 5 Jan 2004 22:10:16 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040105211016.GA52683@colin2.muc.de>
+References: <2938942704.1073325455@aslan.btc.adaptec.com> <m3brpi41q0.fsf@averell.firstfloor.org> <20040105123509.4bacf670.davem@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pizda.ninka.net ([216.101.162.242]:61581 "EHLO pizda.ninka.net")
-	by vger.kernel.org with ESMTP id S265697AbUAEVG4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2004 16:06:56 -0500
-In-Reply-To: <p73brpi1544.fsf@verdi.suse.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Date: Mon, 5 Jan 2004 22:10:16 +0100
+Content-Disposition: inline
+In-Reply-To: <20040105123509.4bacf670.davem@redhat.com>
+To: "David S. Miller" <davem@redhat.com>
+Cc: Andi Kleen <ak@muc.de>, gibbs@scsiguy.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, gibbs@scsiguy.com
 
-On 05 Jan 2004 22:02:19 +0100
-Andi Kleen <ak@suse.de> wrote:
+On Mon, Jan 05, 2004 at 12:35:09PM -0800, David S. Miller wrote:
+> On Mon, 05 Jan 2004 20:47:19 +0100
+> Andi Kleen <ak@muc.de> wrote:
+> 
+> > Actually I disabled merging by default in the latest x86-64 code,
+> > but it can be still enabled by the user using options (it makes some
+> > adapters run several percent faster). I would appreciate if you could
+> > fix the problem anyways.
+> > 
+> > I was actually planning to add a BUG() for this. Should do that.
+> > There is already one that triggers often when the problem occurs.
+> 
+> Andi, you must not modify sg->length in any way shape or form.
+> 
+> The following is legal:
+> 
+> 	pci_map_sg(..&sg);
+> 	pci_unmap_sg(...&sg);
+> 	pci_map_sg(..&sg);
 
-> It sets length to zero to terminate the list when entries were merged.
-> It doesn't have a dma_length.
+Well, on x86-64 it is not legal.
 
-I understand, and you are defining dma_length to just use the
-normal sg->length field, and I'm trying to explain to you that this
-is not allowed.  If you want to modify the length field to zero terminate
-the DMA chunks, you must have a seperate dma_length field in your
-platforms scatterlist structure.
+> If you must modify the length field for DMA, you must have a seperate
+> dma_length member of the scatterlist structure on your platform, see what
+> sparc64 does here.
+> 
+> If the documentation states this wrongly, it's a doc bug.
 
-Again, for the 3rd time, see what sparc64 is doing here.
+The documentation doesn't allow it so I didn't implement it.
 
-> It tripping over remapped lists is an side effect, but an useful one 
-> because remapping is not supported (merging destroys information that
-> cannot be reconstructed). If the bug didn't exist you would get data
-> corruption.
-
-You should not be modifying any portion of the non-DMA fields.
-Therefore, if the SG is unmapped, then passed into your IOMMU code for
-a future map call, it should just work.
-
+-Andi
