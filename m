@@ -1,29 +1,88 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Fw: advansys.c problems in 2.6.0-test2
-Date: 03 Aug 2003 22:12:56 +0100
+From: Diffie <diffie@blazebox.homeip.net>
+Subject: Re: Badness in device_release at drivers/base/core.c:84
+Date: Sun, 3 Aug 2003 17:47:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1059945176.31901.15.camel@dhcp22.swansea.linux.org.uk>
-References: <20030802130522.0b517fa9.akpm@osdl.org>
-	 <1059857308.20306.2.camel@dhcp22.swansea.linux.org.uk>
-	 <200308022109.31991.gene.heskett@verizon.net>
+Message-ID: <20030803214755.GA1010@blazebox.homeip.net>
+References: <20030801182207.GA3759@blazebox.homeip.net> <20030801144455.450d8e52.akpm@osdl.org> <20030803015510.GB4696@blazebox.homeip.net> <20030802190737.3c41d4d8.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="CE+1k2dSO48ffgeK"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pc1-cwma1-5-cust4.swan.cable.ntl.com ([80.5.120.4]:51609 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S271311AbTHCVQt
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 3 Aug 2003 17:16:49 -0400
-In-Reply-To: <200308022109.31991.gene.heskett@verizon.net>
+Received: from pool-141-155-151-209.ny5030.east.verizon.net ([141.155.151.209]:55498
+	"EHLO mail.blazebox.homeip.net") by vger.kernel.org with ESMTP
+	id S271255AbTHCVqA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 3 Aug 2003 17:46:00 -0400
+Content-Disposition: inline
+In-Reply-To: <20030802190737.3c41d4d8.akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: gene.heskett@verizon.net
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
-> Unforch Alan, this is the body of the message I just got from who they 
-> have turned into (initio).  I found it in my junquemail folder, which 
-> means one of my 100 or so spam filter rules was triggered.
+--CE+1k2dSO48ffgeK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thats a shame, they were good solid little cards.
+On Sat, Aug 02, 2003 at 07:07:37PM -0700, Andrew Morton wrote:
+> Diffie <diffie@blazebox.homeip.net> wrote:
+> >
+> > After applaying the above patch and testing it still oopses the kernel.
+> >=20
+> > I noticed same patch in today's mm3 which i compiled and use right now.
+> >=20
+> > When using cat /proc/scsi/aic7xxx/0 i get segmentation fault and oops
+> > which i'll attach to this email.
+> >
+> > ...
+> >
+> >  EIP is at aic7xxx_proc_info+0xc28/0xc80
+>=20
+> This is crashing in a different place.  Probably the same bug, showing up
+> later on.
+>=20
+> I don't know if anyone is maintaining aic7xxx_old in 2.7.  It looks like =
+it
+> was subject to some random untested change a couple of months back.
+>=20
+>=20
+>=20
+
+Hi Andrew,
+
+I think this bug is due to me using the aic7xxx_old code ver 5.x.x.
+
+Under kernel 2.4.21 the aic7xxx (new) is ver 6.2.8 and it works great
+with Adaptec AHA-2940U2W controller i have.
+
+On 2.6.0-test2-mm3 (tried Linus test1,test2,mm1 and mm2) the NEW aic7xxx
+uses ver 6.2.35 and will not scan my IBM drive even though it
+initializes the correct SCSI ID,LUN etc...
+
+I would like to contact and report this issue to the aic7xxx maintaner
+and perhaps get it resolved.Where would be the best place to report this
+kind of problem?
+
+I have taken few screen captures which are available at:
+http://www.blazebox.homeip.net:81/diffie/images/2.6.0-test2/ and show
+the aic7xxx (new) failure.
 
 
+Regards,
+
+Paul B.
+
+
+--CE+1k2dSO48ffgeK
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
+
+iD8DBQE/LYMLIymMQsXoRDARAlmkAKCWH1i6Cbyd10rPhXoJGDmhZO2S+QCZAUJy
+gnkyiWxkIdhWtIlcXrZ87o0=
+=X0OR
+-----END PGP SIGNATURE-----
+
+--CE+1k2dSO48ffgeK--
