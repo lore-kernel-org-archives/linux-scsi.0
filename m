@@ -1,32 +1,32 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC] [PATCH 2.6.9-rc1] add blacklist attribute indicating no ULD attach
-Date: Wed, 15 Sep 2004 07:47:44 +0100
+Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
+Date: Wed, 15 Sep 2004 08:02:35 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040915074744.A17264@infradead.org>
-References: <20040914063237.GA97486@sgi.com> <20040914144023.GA9524@beaverton.ibm.com> <20040914182203.GA100433@sgi.com> <20040915031834.GA102988@sgi.com>
+Message-ID: <20040915080235.A17394@infradead.org>
+References: <414711AC.5030200@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imladris.demon.co.uk ([193.237.130.41]:43531 "EHLO
+Received: from imladris.demon.co.uk ([193.237.130.41]:45067 "EHLO
 	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S261711AbUIOGru (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2004 02:47:50 -0400
+	id S261602AbUIOHCj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Sep 2004 03:02:39 -0400
 Content-Disposition: inline
-In-Reply-To: <20040915031834.GA102988@sgi.com>; from jeremy@sgi.com on Tue, Sep 14, 2004 at 08:18:34PM -0700
+In-Reply-To: <414711AC.5030200@rtr.ca>; from lsml@rtr.ca on Tue, Sep 14, 2004 at 11:43:40AM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: linux-scsi@vger.kernel.org, patmans@us.ibm.com, axboe@suse.de, james.bottomley@steeleye.com
+To: Mark Lord <lsml@rtr.ca>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Sep 14, 2004 at 08:18:34PM -0700, Jeremy Higdon wrote:
->  	}
-> +	else if (*bflags & BLIST_NO_ULD_ATTACH) {
+Please fix all the style issues in here, aka
 
-Please put the else if on the same line as the closing brace
+ - linebreaks after 80 characters
+ - don't typedef structs unless they're used opaqueuely
+ - please avoid C++-style comments even if C99 allows them
+ - don't use "scsi.h", only headers from <scsi/*.h>, that also
+   means getting rid of the Scsi_Foo typedefs
+ - please don't include headers in other headers unless nessecary
 
-> +		sdev->no_uld_attach = 1;
-> +	}
+I also don't want another SCSI->ATA translator in drivers/scsi, please find
+some way to share codce with an existing one.
 
-don't we already carry around the blacklist flags in the scsi dev so
-they could be checked laer?  If not maybe we should instead of adding
-more and more flags?
-
+I'll do a real review once the driver is readable.
