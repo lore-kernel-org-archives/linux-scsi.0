@@ -1,64 +1,78 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2.6 ] MPT Fusion driver 3.01.02 update
-Date: Wed, 17 Mar 2004 17:15:05 -0500
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: 2.6.5-rc1 SCSI + st regressions (was: Linux 2.6.5-rc1)
+Date: Thu, 18 Mar 2004 00:25:08 +0200 (EET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4058CDE9.3020902@pobox.com>
-References: <0E3FA95632D6D047BA649F95DAB60E57040DB2A7@exa-atlanta.se.lsil.com>
+Message-ID: <Pine.LNX.4.58.0403180022420.1090@kai.makisara.local>
+References: <Pine.LNX.4.58.0403152154070.19853@ppc970.osdl.org>
+ <20040316211203.GA3679@merlin.emma.line.org> <20040316211700.GA25059@parcelfarce.linux.theplanet.co.uk>
+ <20040316215659.GA3861@merlin.emma.line.org> <Pine.LNX.4.58.0403172145420.1093@kai.makisara.local>
+ <Pine.LNX.4.58.0403172312410.1093@kai.makisara.local> <20040317214434.GF949@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:21444 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262112AbUCQWPV
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Mar 2004 17:15:21 -0500
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57040DB2A7@exa-atlanta.se.lsil.com>
+Received: from fep20-0.kolumbus.fi ([193.229.0.47]:37545 "EHLO
+	fep20-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S261440AbUCQWZL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Mar 2004 17:25:11 -0500
+In-Reply-To: <20040317214434.GF949@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, ak@suse.de, Alexander.Stohr@gmx.de, rddunlap@osdl.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, Matthias Andree <ma+lscsi@dt.e-technik.uni-dortmund.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Greg KH <greg@kroah.com>
 
-Moore, Eric Dean wrote:
-> The wrappers are there because the system
-> interface registers could be memory or IO mapped
-> registers depending on the pci device.  The PIO 
+On Wed, 17 Mar 2004, Mike Anderson wrote:
 
-Yes, I understand what the wrappers are doing :)  That's why I said it 
-was mainly a style issue I was bringing up.  Depending on the hardware 
-requirements and installed userbase, it may be better to make PortIO a 
-compile-time option.  In general MMIO is preferred.
+> Kai Makisara [Kai.Makisara@kolumbus.fi] wrote:
+> >  		if (!st_class_member) {
+> >  			printk(KERN_WARNING "st%d: class_simple_device_add failed\n",
+> >  			       dev_num);
+> 
+> Could you change the if check to use IS_ERR(st_class_member) so in the
+> future if do_create_class_files return -E* we will not get a oops.
+> 
+A revised patch is at the end of this message. Thanks for pointing out 
+this bug.
 
-
-> wrappers could be removed, but I think its there 
-> to be uniform with the other wrappers.  The PIO 
-> wrappers there for firmware download which 
-
-If it's directly wrapping a Linux API call, then the Linux API call 
-should be used directly in the code.  Wrappers in general inhibit 
-compiler optimization opportunities, and occasionally hide bugs.  They 
-hinder long term maintainance, and slow down code reviews.
-
-With every vendor-written driver inventing its own wrappers, the problem 
-gets unscalable real quick.
-
-
-> always using IO registers. Id would rather not
-> remove the volatile since the registers could
-> be memory mapped, and may break things when
-> driver compiled with optimized kernel.
-
-No, all that is needed is included in the read[bwl] and write[bwl] 
-definitions.  'volatile' occasionally hides bugs, and good code is 
-completely volatile-free:  always explicitly flush MMIO writes, and 
-employ memory barriers, rather than depending on the compiler to do so.
-
-The compiler does not have 100% of the knowledge necessary -- 
-particularly for MMIO writes -- to presume whether a flush is needed or 
-not.  Portable code _must_ follow a writel() call with the readl(), to 
-guarantee that all PCI- and CPU-posted/delayed writes are flushed 
-completely to the PCI device.
-
-	Jeff
-
-
-
-
+-- 
+Kai
+--------------------------------8<----------------------------------------------
+--- linux-2.6.5-rc1-bk2/drivers/scsi/st.c	2004-03-17 22:37:11.000000000 +0200
++++ linux-2.6.5-rc1-bk2-k1/drivers/scsi/st.c	2004-03-18 00:09:07.000000000 +0200
+@@ -17,7 +17,7 @@
+    Last modified: 18-JAN-1998 Richard Gooch <rgooch@atnf.csiro.au> Devfs support
+  */
+ 
+-static char *verstr = "20040226";
++static char *verstr = "20040318";
+ 
+ #include <linux/module.h>
+ 
+@@ -4193,20 +4193,25 @@
+ 
+ static void do_create_class_files(Scsi_Tape *STp, int dev_num, int mode)
+ {
+-	int rew, error;
++	int i, rew, error;
++	char name[10];
+ 	struct class_device *st_class_member;
+ 
+ 	if (!st_sysfs_class)
+ 		return;
+ 
+ 	for (rew=0; rew < 2; rew++) {
++		/* Make sure that the minor numbers corresponding to the four
++		   first modes always get the same names */
++		i = mode << (4 - ST_NBR_MODE_BITS);
++		snprintf(name, 10, "%s%s%s", rew ? "n" : "",
++			 STp->disk->disk_name, st_formats[i]);
+ 		st_class_member =
+ 			class_simple_device_add(st_sysfs_class,
+ 						MKDEV(SCSI_TAPE_MAJOR,
+ 						      TAPE_MINOR(dev_num, mode, rew)),
+-						&STp->device->sdev_gendev, "%s",
+-						STp->modes[mode].cdevs[rew]->kobj.name);
+-		if (!st_class_member) {
++						&STp->device->sdev_gendev, "%s", name);
++		if (IS_ERR(st_class_member)) {
+ 			printk(KERN_WARNING "st%d: class_simple_device_add failed\n",
+ 			       dev_num);
+ 			goto out;
