@@ -1,37 +1,41 @@
-From: Jurgen Kramer <gtm.kramer@inter.nl.net>
-Subject: 3w-9xxx no read cache?
-Date: Fri, 02 Jul 2004 20:39:41 +0200
+From: Ricky Beam <jfbeam@bluetronic.net>
+Subject: Re: [BK-PATCH] 3w-9xxx: proc interface
+Date: Fri, 2 Jul 2004 14:42:14 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1088793581.11320.10.camel@paragon.slim>
+Message-ID: <Pine.GSO.4.33.0407021430120.25702-100000@sweetums.bluetronic.net>
+References: <20040702183506.GA30810@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from slimnet.xs4all.nl ([194.109.194.192]:43981 "EHLO slimnas.slim")
-	by vger.kernel.org with ESMTP id S264900AbUGBSiB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jul 2004 14:38:01 -0400
-Received: from [192.168.100.26] (paragon.slim [192.168.100.26])
-	by slimnas.slim (8.12.8/8.12.8) with ESMTP id i62I8Xug031950
-	for <linux-scsi@vger.kernel.org>; Fri, 2 Jul 2004 20:08:33 +0200
+Received: from sweetums.bluetronic.net ([24.199.150.42]:51419 "EHLO
+	sweetums.bluetronic.net") by vger.kernel.org with ESMTP
+	id S264795AbUGBSsj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Jul 2004 14:48:39 -0400
+In-Reply-To: <20040702183506.GA30810@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI List <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Adam Radford <aradford@amcc.com>, Linux SCSI List <linux-scsi@vger.kernel.org>
 
-When inserting the 3ware 9000 kernel module the
-output messages suggest there's now read cache. Is this correct?
+On Fri, 2 Jul 2004, Christoph Hellwig wrote:
+>On Fri, Jul 02, 2004 at 12:08:23PM -0400, Ricky Beam wrote:
+>> 3dm2 (the currently available one anyway) needs /proc/scsi/3w-9xxx to
+>> discover any controllers.  The current in-kernel driver doesn't contain any
+>> /proc/scsi support.  The attached patch restores the interface.
+>
+>I'd rather wait for a new 3dm2 release instead of adding deprecated interfaces.
+>Adam, any schedule for a new release?
 
-3ware 9000 Storage Controller device driver for Linux v2.26.00.009fw.
-3w-9xxx: scsi5: Found a 3ware 9000 Storage Controller at 0xfeaff400,
-IRQ: 22.
-3w-9xxx: scsi5: Firmware FE9X 2.02.00.011, BIOS BE9X 2.02.01.037, Ports:
-4.
-scsi5 : 3ware 9000 Storage Controller
-  Vendor: 3ware     Model: Logical Disk 00   Rev: 1.00
-  Type:   Direct-Access                      ANSI SCSI revision: 00
-SCSI device sdf: 937433088 512-byte hdwr sectors (479966 MB)
-SCSI device sdf: drive cache: write back, no read (daft)
- sdf: sdf1
-Attached scsi disk sdf at scsi5, channel 0, id 0, lun 0
+Well, I'm not the only one who cannot monitor/control their array with the
+current in-kernel driver.  I don't care if the proc interface makes it
+back into the kernel; the systems I assemble with a 9500 will have the
+proc interface restored until I have a 3dm2 in hand that doesn't need it.
 
-Jurgen
+Having a non-functioning 3dm2 is a major problem in my book. (technically,
+not have a firmware update interface in the kernel's driver is also a
+concern.)
+
+Locking the door before you have a key to get back in is a bad idea.
+
+--Ricky
 
 
