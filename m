@@ -1,38 +1,35 @@
-From: Stephen Hemminger <shemminger@osdl.org>
-Subject: Re: [PATCH] aic7xxx: fix compiler warning from dma mask assignement
-Date: Mon, 22 Nov 2004 13:02:55 -0800
-Message-ID: <20041122130255.3dde4fed@zqx3.pdx.osdl.net>
-References: <20041118122415.539351f9@zqx3.pdx.osdl.net>
-	<1100809690.1574.8.camel@mulgrave>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Kernel 2.6.x hangs with Symbios Logic 53c1010 Ultra3 SCSI	Adapter
+Date: Tue, 23 Nov 2004 01:40:49 +0000
+Message-ID: <20041123014049.GH25636@parcelfarce.linux.theplanet.co.uk>
+References: <04Nov8.094419est.332239@cyborg.cybernetics.com> <1099928314.10944.81.camel@compaq-rhel4.xsintricity.com> <41A294C5.8040702@babut.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:35558 "EHLO fire-1.osdl.org")
-	by vger.kernel.org with ESMTP id S262406AbUKVU7i (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Nov 2004 15:59:38 -0500
-In-Reply-To: <1100809690.1574.8.camel@mulgrave>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:43920 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262535AbUKWBkv
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Nov 2004 20:40:51 -0500
+Content-Disposition: inline
+In-Reply-To: <41A294C5.8040702@babut.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Thomas Babut <thomas@babut.net>
+Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
 
-On 18 Nov 2004 14:28:04 -0600
-James Bottomley <James.Bottomley@SteelEye.com> wrote:
+On Tue, Nov 23, 2004 at 02:39:17AM +0100, Thomas Babut wrote:
+> Would it be possible to integrate the sym53c8xx (1, not sym53c8xx_2) 
+> driver from Kernel 2.4.28 in 2.6? For me it would be the working 
+> solution to use my SCSI-Controller with Kernel 2.6.
+> 
+> Perhaps someone could make a patch for Kernel 2.6 which adds the old driver.
 
-> On Thu, 2004-11-18 at 14:24, Stephen Hemminger wrote:
-> > Get rid of a compiler warning because assignment truncating a 64 bit constant
-> > and use existing definitions.
-> > 
-> > Signed-off-by: Stephen Hemminger <shemminger@osdl.org>
-> 
-> Actually, I floated a slightly more comprehensive version of the patch
-> here:
-> 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=110064141503088
-> 
-> Could you check that this works for you?
+No.  Don't do this.  Help make sym2 work for your system.
 
-It builds and the adapter is there, but don't have a disk attached yet
-(waiting for new drive from IT).
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
