@@ -1,76 +1,43 @@
-From: Andries.Brouwer@cwi.nl
-Subject: Re: Re: USB storage problems on OHCI..
-Date: Mon, 22 Sep 2003 20:55:22 +0200 (MEST)
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <UTC200309221855.h8MItM216884.aeb@smtp.cwi.nl>
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: patmans@us.ibm.com, torvalds@osdl.org
-Cc: Andries.Brouwer@cwi.nl, david-b@pacbell.net, greg@kroah.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-usb@one-eyed-alien.net, stern@rowland.harvard.edu
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
+Date: Mon, 22 Sep 2003 15:01:17 -0400 (EDT)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.44L0.0309221455280.2524-100000@ida.rowland.org>
+References: <20030922182142.A26720@infradead.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ida.rowland.org ([192.131.102.52]:54788 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S263271AbTIVTBS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Sep 2003 15:01:18 -0400
+In-Reply-To: <20030922182142.A26720@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Linus Torvalds <torvalds@osdl.org>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-> Basically, Andries Brouwer's strategy of making sd.c more conservative has
-> been a very successful one in the past. Why not continue on that?
+On Mon, 22 Sep 2003, Christoph Hellwig wrote:
 
-% I would be interested in hearing what Andries has to say. ...
-% The variety of ways in which these things fail is truly amazing.
+> If we want drivers to mess with blist flags that's the more general
+> solution, yes.  But the blist flags really are a target thing and
+> I'd prefer to keep host drivers a bit away from this.  Of course
+> this doesn't really work for the usb case where the host driver only
+> deals with emulated targets that are all completly hosed.
+> 
+> Maybe sdev->scsi_level should recognize a new level, SCSI_TOTALLY_B0RKED
+> for those usb-storage devices where the vendor somehow heard of the
+> spec but nothing that isn't excercised by the windows drivers has
+> the slightest chance of working..
 
-Yes.
+Please be careful when setting this up.  The mode-sense pages are vitally
+important for USB CD devices, and they all seem to work fine.  It's just
+the disk-type devices that have been causing trouble.
 
-We have just seen this for keyboards: keypresses work, modifier key
-releases work, and as soon as one assumes anything more there turn
-out to be keyboards that fail.
+Many of them seem to share the failure mode observed by Linus: when asked
+to send 128 bytes of m-s page 8 they apparently forget that the connection
+is only full-speed with a 64-byte packet maximum, and they try to send all
+128 bytes in a single packet.  But other failure modes have cropped up as
+well.
 
-Similarly, USB storage devices tend to fail whatever one tries,
-and only systematically work if one does precisely what Windows
-does. For SCSI disks things are not nearly as bad - there are
-only a few manufacturers and they mostly produce quality stuff.
+Alan Stern
 
-This means that carefully reading the SCSI standard is a useful
-activity if one writes for SCSI disks. But for USB storage it
-is more productive to trace the commands the various flavours
-of Windows send.
-
-(Yes, I am willing to collect whatever people send me, and put up
-a web page describing the Windows way of addressing USB storage.)
-
-So, I agree with Linus (and with myself :-)) - in the absence of
-precise knowledge about the device and about its Windows drivers
-all that is left is being as conservative as possible.
-And I agree with Alan - even though being careful is a very good idea,
-it does not help in all cases.
-
-There are some general things we can do - for CF cards and the like
-we probably do not want to read the cache type - USB is hot pluggable,
-so it should not be necessary to send a flush cache command at shutdown.
-Today I see
-
-        if (sdkp->media_present) {
-                sd_read_capacity(sdkp, disk->disk_name, sreq, buffer);
-                if (sdp->removable)
-                        sd_read_write_protect_flag(sdkp, disk->disk_name,
-                                        sreq, buffer);
-                sd_read_cache_type(sdkp, disk->disk_name, sreq, buffer);
-        }
-
-and I suppose we could skip sd_read_cache_type() in the
-hot-pluggable case - a flag that USB storage could set.
-
-Andries
-
-
--------------------------------------------------------
-This sf.net email is sponsored by:ThinkGeek
-Welcome to geek heaven.
-http://thinkgeek.com/sf
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
