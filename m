@@ -1,28 +1,42 @@
-From: viro@parcelfarce.linux.theplanet.co.uk
-Subject: Re: [PATCH] proper replacements for ->proc_info
-Date: Fri, 25 Apr 2003 11:41:37 +0100
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] scsi-misc-2.5 remove scsi_device list_lock
+Date: Fri, 25 Apr 2003 12:47:46 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030425104137.GE10374@parcelfarce.linux.theplanet.co.uk>
-References: <20030423212157.A18850@lst.de> <1051126145.1970.7.camel@mulgrave> <20030425122754.A5030@lst.de>
+Message-ID: <20030425104745.GK1012@suse.de>
+References: <20030424100229.A32098@beaverton.ibm.com> <20030425111212.A28577@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:17109 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263854AbTDYK31
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Apr 2003 06:29:27 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:13734 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S263870AbTDYKfy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Apr 2003 06:35:54 -0400
 Content-Disposition: inline
-In-Reply-To: <20030425122754.A5030@lst.de>
+In-Reply-To: <20030425111212.A28577@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Fri, Apr 25, 2003 at 12:27:54PM +0200, Christoph Hellwig wrote:
+On Fri, Apr 25 2003, Christoph Hellwig wrote:
+> > -		spin_lock_irqsave(&d->list_lock, flags);
+> > +		spin_lock_irqsave(&d->sdev_lock, flags);
+> >  		list_for_each_entry(cmd, &d->cmd_list, list) {
+> >  			if(cmd->serial_number == 0){
+> 
+> <snip>
+> 
+> > -	spin_lock_irqsave(&sdev->list_lock, flags);
+> > +	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
+> >  	list_for_each_entry(scmd, &sdev->cmd_list, list) {
+> 
+> 
+> Oh, please, please use the lock consistantly.  Yes, I know that the
+> two are the same currently, but it might not be obvious to every reader
+> and queue_lock might change to something else in the future.
 
-> +	list_for_each_entry(sdev, &host->my_devices, siblings) {
-> +		seq_printf(s, " %2d:%2d   %4d      %4d\n",
-> +				sdev->id, sdev->lun,
-> +				NCR_700_get_depth(sdev),
-> +				sdev->current_tag);
+Again... Besides, this alias _must_ only be used by the block layer.
+Every other driver should use the real one.
 
-And that loop is protected by ...?
+-- 
+Jens Axboe
+
