@@ -1,38 +1,36 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] fixes compile errors in cpqfcTS driver
-Date: 22 Apr 2003 08:54:50 -0500
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [usb-storage] Re: PATCH: exclude certain commands from
+	emulated SCSI hosts
+Date: 22 Apr 2003 15:31:52 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1051019692.1768.7.camel@mulgrave>
-References: <3EA48555.8020600@us.ibm.com>
-	<20030422074414.A26090@infradead.org>
+Message-ID: <1051021911.14880.25.camel@dhcp22.swansea.linux.org.uk>
+References: <UTC200304220109.h3M19NX09680.aeb@smtp.cwi.nl>
+	 <20030421181755.A19118@one-eyed-alien.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:25350 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263169AbTDVNna (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Apr 2003 09:43:30 -0400
-In-Reply-To: <20030422074414.A26090@infradead.org>
+Received: from pc2-cwma1-4-cust86.swan.cable.ntl.com ([213.105.254.86]:22494
+	"EHLO lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S263233AbTDVPSV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Apr 2003 11:18:21 -0400
+In-Reply-To: <20030421181755.A19118@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Mike Christie <mikenc@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Cc: Andries.Brouwer@cwi.nl, James Bottomley <James.Bottomley@SteelEye.com>, greg@kroah.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, Linus Torvalds <torvalds@transmeta.com>, usb-storage@one-eyed-alien.net
 
-On Tue, 2003-04-22 at 01:44, Christoph Hellwig wrote:
-> I don't think the onstack command/device will work anymore.
-> You'll have to use scsi_get_command/scsi_put_command I guess
+On Maw, 2003-04-22 at 02:17, Matthew Dharm wrote:
+> Your patches went a long way to improving things.  But, then people added
+> EVPD and further changed MODE_SENSE and other things.   It's pretty clear
+> to me that trying to change the SCSI core to not use these commands isn't
+> going to happen -- so I want a way to filter them.  I originally wanted a
+> centralized filter (i.e. usb-storage could indicate to the mid-layer not to
+> send the 'unwelcome' commands), but that got shot down in favor of a
+> centralized filter-framework which could be applied by any LLDD that wanted
+> to.
 
-Actually on stack command allocation never was legal, although we seem
-to have quite a few drivers that do it.  The reason (aside from the fact
-that the stack is a precious resource in the kernel) is that struct
-scsi_cmnds can be used by the driver to DMA to the device and DMAable
-memory should never be allocated on the stack (mainly because of
-alignment and flushing issues that can cause memory corruption).
-
-Unfortunately, the bugs stack allocation causes don't show up on the x86
-architecture giving a driver that seems to work for the majority of
-users but which can cause weird hangs and crashes on non-x86 platforms.
-
-James
+You already can do this. You just need to write yourself a library
+routine which converts/blocks according to the filter rules (ie
+read6->read10, returns errors to fancy stuff etc).
 
 
