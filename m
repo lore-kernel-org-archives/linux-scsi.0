@@ -1,45 +1,43 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH] CDC_WR
-Date: 11 Nov 2003 15:24:00 -0700
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: Re: [2.4 patch] fix link error with both megaraid drivers
+Date: Tue, 11 Nov 2003 23:53:11 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1068589440.5909.33.camel@patrh9>
-References: <1068479926.2313.7.camel@patrh9>
-	 <1068485442.4495.25.camel@patrh9>
+Message-ID: <20031111225310.GC13643@fs.tum.de>
+References: <20031110174455.GN22185@fs.tum.de> <Pine.LNX.4.44.0311101617530.2001-100000@logos.cnet>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:47759 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S263770AbTKKWYa
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Nov 2003 17:24:30 -0500
-Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
-	by email.iomega.com (Postfix) with ESMTP id F0D8F24D6
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2003 15:24:29 -0700 (MST)
-In-Reply-To: <1068485442.4495.25.camel@patrh9>
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:38337 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S263794AbTKKWxT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Nov 2003 17:53:19 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0311101617530.2001-100000@logos.cnet>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Cc: Matt Domsch <Matt_Domsch@dell.com>, linux-scsi@vger.kernel.org
 
-> Slanderous or not, also I hear:
+On Mon, Nov 10, 2003 at 04:18:16PM -0200, Marcelo Tosatti wrote:
+> 
+> Just dont compile both drivers at the same time?
 
-6) We may have good precedent for our idea of (a) fetch header, (b)
-interpret additional length, then (c) fetch all available op x46 Get
-Configuration data.
+IMHO, ideally every valid .config you get through a "make *config" 
+should compile.
 
-Specifically we have one sample of Windows XP SP1 starting life after
-plug in with that politically correct speech:
+Compile errors with valid .config's give a wrong impression of the 
+stability of the Linux kernel.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=106858800007411
+I know it's impossible to make configuring the kernel 100% idiot proof, 
+but when it's easy to avoid a pitfall many users might observe I think 
+it really should be expressed in the Config.in files.
 
-List: linux-scsi
-Subject: Re: usb storage traces
-Date: 2003-11-11 21:59:22
+cu
+Adrian
 
-7) Fetching all the device configuration this way lets us see the
-"profile list".  Testing whetrher the profile list contains one or more
-writable profiles, none of which are DVD+RW, might be our best mmc way
-of guessing if open of device should fail via EROFS or no.
+-- 
 
-Pat LaVarre
-
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
