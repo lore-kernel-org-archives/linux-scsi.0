@@ -1,48 +1,72 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] SCSI Core cmd allocation 3/3
-Date: Mon, 13 Jan 2003 12:11:29 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030113121129.A16510@beaverton.ibm.com>
-References: <3E1A2140.3000408@splentec.com> <20030111180355.B2225@infradead.org> <3E22F369.5080209@splentec.com> <20030113175948.A27650@infradead.org> <3E2310A0.8080308@splentec.com>
+Subject: Re: [PATCH 2.5.56] Scsi not compiling without /proc support
+Date: Mon, 13 Jan 2003 12:16:57 -0800
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030113121657.A16667@beaverton.ibm.com>
+References: <009001c2ba32$3b4bcdf0$2101a8c0@witbe>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3E2310A0.8080308@splentec.com>; from luben@splentec.com on Mon, Jan 13, 2003 at 02:16:48PM -0500
+In-Reply-To: <009001c2ba32$3b4bcdf0$2101a8c0@witbe>; from rol@witbe.net on Sun, Jan 12, 2003 at 01:00:42PM +0100
+To: Paul Rolland <rol@witbe.net>
+Cc: linux-kernel@vger.kernel.org, axboe@suse.de, rol@as2917.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Mon, Jan 13, 2003 at 02:16:48PM -0500, Luben Tuikov wrote:
-> Christoph Hellwig wrote:
-> > 
-> > Well, where do you actually _need_ scsi_get_command(), that's the question.
-> > 
-> > I see the purpose, but I don't see it actually used.
+On Sun, Jan 12, 2003 at 01:00:42PM +0100, Paul Rolland wrote:
+> Hello,
 > 
-> The scsi devices discovery code *may* use it.
-
-Then do so in another patch.
-
-> If a global variable is used in a couple of files, belonging
-> to the same functionality, providing a unified service, and if
-> there's more than one of them, then they are better organized
-> as such as I've outlined.
-
-Then move all the scsi globals into it. But, that should be a separate
-patch.
-
-> > and stuff like:
-> > 
-> > +       if (!dev) return NULL;
-> > +       if (!dev->host) return NULL;
-> > 
-> > doesn't even seem to be K&R to me :)
+> This quick patch is used to remove calls to functions in charge of
+> registering/unregistering within /proc when /proc support is not
+> enabled.
 > 
-> Christoph, please, this is an *inline* function -- it doesn't have to be
-> 20 lines if it can be 10.
+> Paul Rolland, rol@as2917.net
+> 
+> diff -uN linux-2.5.56/drivers/scsi/hosts.c
+> linux-2.5.56-work/drivers/scsi/hosts.c
+> --- linux-2.5.56/drivers/scsi/hosts.c   2003-01-10 21:11:20.000000000
+> +0100
+> +++ linux-2.5.56-work/drivers/scsi/hosts.c      2003-01-12
+> 12:42:59.000000000 +0100
+> @@ -345,7 +345,9 @@
+>         shost->hostt->present--;
+>  
+>         /* Cleanup proc */
+> +#ifdef CONFIG_PROC_FS
+>         scsi_proc_host_rm(shost);
+> +#endif
+>  
+>         kfree(shost);
+>  }
+> @@ -456,7 +458,9 @@
+>  found:
+>         spin_unlock(&scsi_host_list_lock);
+>  
+> +#ifdef CONFIG_PROC_FS
+>         scsi_proc_host_add(shost);
+> +#endif
+>  
+>         shost->eh_notify = &sem;
+>         kernel_thread((int (*)(void *)) scsi_error_handler, (void *)
+> shost, 0);
+> 
 
-You should match the other kernel code as much as possible, it makes it
-easier for other kernel developers to read it.
+Paul -
+
+This should really be:
+
+--- 1.54/drivers/scsi/scsi.h	Sat Dec 21 08:54:22 2002
++++ edited/drivers/scsi/scsi.h	Mon Jan 13 11:35:11 2003
+@@ -502,8 +502,8 @@
+ static inline void scsi_exit_procfs(void) { ; }
+ static inline void proc_print_scsidevice(Scsi_Device * sdev, char *buffer, int *size, int len) { ; }
+ 
+-static inline void scsi_proc_host_add(struct Scsi_Host *);
+-static inline void scsi_proc_host_rm(struct Scsi_Host *);
++static inline void scsi_proc_host_add(struct Scsi_Host *shost) { ; }
++static inline void scsi_proc_host_rm(struct Scsi_Host *shost) { ; }
+ #endif /* CONFIG_PROC_FS */
+ 
+ /*
 
 -- Patrick Mansfield
