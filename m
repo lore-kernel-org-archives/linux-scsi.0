@@ -1,52 +1,44 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [Iscsitarget-devel] Re: [ANNOUNCE] iSCSI enterprise target
- software
-Date: Wed, 02 Mar 2005 14:04:13 +0900
-Message-ID: <20050302140413R.fujita.tomonori@lab.ntt.co.jp>
-References: <20050301161951K.fujita.tomonori@lab.ntt.co.jp>
-	<1109666441.6293.62.camel@laptopd505.fenrus.org>
-	<20050301183549J.fujita.tomonori@lab.ntt.co.jp>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: cciss CSMI via sysfs for 2.6
+Date: Wed, 2 Mar 2005 05:15:03 +0000
+Message-ID: <20050302051503.GA11194@infradead.org>
+References: <20050216164512.GA5734@beardog.cca.cpqcorp.net> <20050218194628.GA24583@infradead.org> <20050218200552.GC20171@kroah.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:18419 "EHLO
-	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S262176AbVCBFEY
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Mar 2005 00:04:24 -0500
-In-Reply-To: <20050301183549J.fujita.tomonori@lab.ntt.co.jp>
+Content-Type: text/plain; charset=us-ascii
+Received: from pentafluge.infradead.org ([213.146.154.40]:23194 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S262178AbVCBFPN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Mar 2005 00:15:13 -0500
+Content-Disposition: inline
+In-Reply-To: <20050218200552.GC20171@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: arjan@infradead.org
-Cc: linux-scsi@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net
+To: Greg KH <greg@kroah.com>
+Cc: Christoph Hellwig <hch@infradead.org>, mike.miller@hp.com, linux-kernel@vger.kernel.org, mochel@osdl.org, akpm@osdl.org, eric.moore@lsil.com, linux-scsi@vger.kernel.org
 
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [Iscsitarget-devel] Re: [ANNOUNCE] iSCSI enterprise target software
-Date: Tue, 01 Mar 2005 18:35:49 +0900
+On Fri, Feb 18, 2005 at 12:05:52PM -0800, Greg KH wrote:
+> On Fri, Feb 18, 2005 at 07:46:28PM +0000, Christoph Hellwig wrote:
+> > >  /*
+> > > + * sysfs stuff
+> > > + * this should be moved to it's own file, maybe cciss_sysfs.h
+> > > + */
+> > > +
+> > > +static ssize_t cciss_firmver_show(struct device *dev, char *buf)
+> > > +{
+> > > +	ctlr_info_t *h = dev->driver_data;
+> > > +        return sprintf(buf,"%c%c%c%c\n", h->firm_ver[0], h->firm_ver[1],
+> > > +                                h->firm_ver[2], h->firm_ver[3]);
+> > > +}
+> > 
+> > I really wish we had a common firmver release attribut in the driver
+> > core, as mentioned in the fc transport class thread.  Greg?
+> 
+> For a device?  It seems a huge overkill to add this attribute for
+> _every_ device in the system, when only a small minority can actually
+> use it.  Just put it as a default scsi or transport class attribute
+> instead.
 
-> The last reason is that user-space cost like memory copy. With 1Gbs
-> Ethernet, is is not critical. However, with 10G, it is critical, I
-> expect. I've been setting up 10G experimental infrastructure to
-> evaluate iSCSI performance.
+it's not related to scsi or a transport at all.  I'd rather have the
+notation of optional generic attributes so that every driver that
+wantsa to publish it does so in the same way.
 
-If we try to build high-performance iSCSI target software on 10Gbs
-Ethernet, I think that we need to implement it in the kernel
-space, although this topic is still in the research stage.
-
-IICR, Intel provides open-source iSCSI target software, which uses
-mmap() in the user space, as you suggested. However, they chose a
-different approach to implement iSCSI target software for 10Gbs. They
-modified the Linux kernel TCP stack to fully integrate iSCSI
-functionality with it. It is still not clear how to get the best
-performance out of 10GBs Ethernet, however, it seems that using just
-the socket interface is not good enough. So I think that we need to
-control all the system-resources to do it.
-
-We've not optimized our code yet. The current code simply uses the
-socket interface, however, moving some functionality to the TCP stack
-can improve the performance, although I don't plan to modify the TCP
-stack. A possible approach to do it is exploiting sk_data_ready().
-
-In addition, you can find several papers (e.g., Chelsio technical
-papers) saying that UP kernel can achieve better throughput than SMP
-kernels with 10Gbs. There is some room for further improvement in the
-Linux kernel.
