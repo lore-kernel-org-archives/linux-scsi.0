@@ -1,53 +1,108 @@
-From: Don Jessup <donj@asaca.com>
-Subject: SCSI memeory warnings
-Date: Sun, 21 Sep 2003 10:11:59 -0700 (PDT)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] small lasi700 update
+Date: Mon, 22 Sep 2003 11:50:10 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030921171159.81052.qmail@web14504.mail.yahoo.com>
-Reply-To: donj@asaca.com
+Message-ID: <20030922095010.GA20291@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web14504.mail.yahoo.com ([216.136.224.67]:4658 "HELO
-	web14504.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S262465AbTIURMA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 Sep 2003 13:12:00 -0400
+Received: from verein.lst.de ([212.34.189.10]:21915 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S262738AbTIVJuP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Sep 2003 05:50:15 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org
+
+ - move the struct parisc_driver down like in most drivers, avoids
+   two forward-declarations
+ - give lasi700_scsi_tbl and lasi700_driver_callback sensible names
+ - properly return -ENOMEM instead of 1 on kmalloc failure
+ - check scsi_add_host return value
 
 
-  I'm using the 2.4.22 linux kernel and I have a system that trys to bring
-  48 SATA drives online.   For some reason it will only register the first
-  41 devices with scsi subsystem.  In other words I get devices sda - sdz, 
-  sdaa - sdao.  When it gets to the 42nd device, I see the following warning
-  in /var/log/messages.
 
-
-scsi::resize_dma_pool: WARNING, dma_sectors=26992, wanted=36736, scaling
-scsi::resize_dma_pool: WARNING, dma_sectors=26992, wanted=27552, scaling
-       WARNING, not enough memory, pool not expanded
-
-
-  Oh, by the way this system has 2G of ram  and all 48 devices are seen when
-   doing "cat" on /proc/scsi/scsi but as I wrote above only 41 devices get 
-  assigned a name.  
-
-
-    I read this might be a issue with kernel when compiling in support for 
-  ISA.   I have recompiled kernel and removed support for ISA or at least I
-  think I have.   
-
-   Does anybody know why I would get these warnings and why not all 48 SATA
-disk
-   show up?
-
-
-   
-
-=====
-Don Jessup
-Asaca/Shibasoku Corp. of America
-400 Corporate Circle, Unit G
-Golden, CO  80401
-303-278-1111 X232
-donj@asaca.com
-http://www.asaca.com
+--- 1.15/drivers/scsi/lasi700.c	Sun Aug 17 04:43:48 2003
++++ edited/drivers/scsi/lasi700.c	Sun Sep 21 22:17:38 2003
+@@ -59,7 +59,7 @@
+ MODULE_DESCRIPTION("lasi700 SCSI Driver");
+ MODULE_LICENSE("GPL");
+ 
+-static struct parisc_device_id lasi700_scsi_tbl[] = {
++static struct parisc_device_id lasi700_ids[] = {
+ 	LASI700_ID_TABLE,
+ 	LASI710_ID_TABLE,
+ 	{ 0 }
+@@ -72,15 +72,8 @@
+ };
+ MODULE_DEVICE_TABLE(parisc, lasi700_scsi_tbl);
+ 
+-static struct parisc_driver lasi700_driver = {
+-	.name =		"Lasi SCSI",
+-	.id_table =	lasi700_scsi_tbl,
+-	.probe =	lasi700_driver_callback,
+-	.remove =	__devexit_p(lasi700_driver_remove),
+-};
+-
+ static int __init
+-lasi700_driver_callback(struct parisc_device *dev)
++lasi700_probe(struct parisc_device *dev)
+ {
+ 	unsigned long base = dev->hpa + LASI_SCSI_CORE_OFFSET;
+ 	struct NCR_700_Host_Parameters *hostdata;
+@@ -90,7 +83,7 @@
+ 	if (!hostdata) {
+ 		printk(KERN_ERR "%s: Failed to allocate host data\n",
+ 		       dev->dev.bus_id);
+-		return 1;
++		return -ENOMEM;
+ 	}
+ 	memset(hostdata, 0, sizeof(struct NCR_700_Host_Parameters));
+ 
+@@ -123,15 +116,17 @@
+ 		goto out_put_host;
+ 	}
+ 
++	if (scsi_add_host(host, &dev->dev))
++		goto out_free_irq;
+ 	dev_set_drvdata(&dev->dev, host);
+-	scsi_add_host(host, &dev->dev); /* XXX handle failure */
+ 	scsi_scan_host(host);
+ 
+ 	return 0;
+ 
++ out_free_irq:
++	free_irq(host->irq, host);
+  out_put_host:
+ 	scsi_host_put(host);
+-
+  out_kfree:
+ 	kfree(hostdata);
+ 	return -ENODEV;
+@@ -151,6 +146,13 @@
+ 
+ 	return 0;
+ }
++
++static struct parisc_driver lasi700_driver = {
++	.name =		"Lasi SCSI",
++	.id_table =	lasi700_ids,
++	.probe =	lasi700_probe,
++	.remove =	__devexit_p(lasi700_driver_remove),
++};
+ 
+ static int __init
+ lasi700_init(void)
+--- 1.6/drivers/scsi/lasi700.h	Thu Jun 26 04:41:10 2003
++++ edited/drivers/scsi/lasi700.h	Sun Sep 21 22:14:43 2003
+@@ -25,9 +25,6 @@
+ #ifndef _LASI700_H
+ #define _LASI700_H
+ 
+-static int lasi700_driver_callback(struct parisc_device *dev);
+-static int lasi700_driver_remove(struct parisc_device *dev);
+-
+ #define LASI_710_SVERSION	0x082
+ #define LASI_700_SVERSION	0x071
+ 
