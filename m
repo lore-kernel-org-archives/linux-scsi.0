@@ -1,55 +1,109 @@
-From: Olaf Hering <olh@suse.de>
-Subject: Re: [PATCH] SCSI device/adapter/bus address correlation?
-Date: Fri, 3 Sep 2004 23:42:52 +0200
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: [PATCH] tmscsim: INQUIRY always only untagged
+Date: Sat, 4 Sep 2004 00:41:00 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040903214252.GA32452@suse.de>
-References: <200409021719.15267.bjorn.helgaas@hp.com> <200409030844.41174.bjorn.helgaas@hp.com> <20040903180942.GA28970@beaverton.ibm.com> <200409031413.49104.bjorn.helgaas@hp.com>
+Message-ID: <Pine.LNX.4.60.0409040033310.5266@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-2002539166-1094251260=:5266"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:16050 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S269691AbUICVpz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Sep 2004 17:45:55 -0400
-Content-Disposition: inline
-In-Reply-To: <200409031413.49104.bjorn.helgaas@hp.com>
+Received: from mail.gmx.de ([213.165.64.20]:32685 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S269933AbUICWsm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Sep 2004 18:48:42 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org
 
- On Fri, Sep 03, Bjorn Helgaas wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-> On Friday 03 September 2004 12:09 pm, Patrick Mansfield wrote:
-> > > Thanks, I knew there must be a cool way.  That doesn't help if yo=
-u're
-> > > trying to figure out the correct "root=3D" to boot your box, of c=
-ourse...
-> >=20
-> > What exactly is the "root=3D" problem? You mean device names changi=
-ng?
->=20
-> Walk up to a box with a number of data disks already attached.  Plug
-> in a new disk with a root filesystem on it.  Now try to boot the box,
-> using the new root filesystem.  What do you specify?  It's difficult
-> in general to figure it out. =20
+---1463811839-2002539166-1094251260=:5266
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 
-In this case the filesystem UUID or a string returned by an external
-udev helper like scsi_id will help. udev will create a /dev/foo and you=
-r
-initrd will mount that. We have predefined names (symlink to the kernel
-device node) like /dev/disk/by-id/SIBM_ST336753LC_3HX1AJJX00007407HDF3p=
-1
-in initramfs.
-You can use them, or specify your own in udev.rules. Since the disk
-content will not change and there will (hopefully) not another one with
-the same VPD, everything will work as expected.
+Hello
 
---=20
-USB is for mice, FireWire is for men!
+The attached patch makes sure, all INQUIRY commands are only sent 
+untagged. This way drives, affected by bug 2139, also survive further 
+INQUIRYs, sent after the initial scan, e.g., by scsiinfo.
 
-sUse lINUX ag, n=C3=9CRNBERG
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hopefully, will be superseeded, when switching to tcq.
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
+
+---1463811839-2002539166-1094251260=:5266
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name="tmscsim-bug2139-general.patch"
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.LNX.4.60.0409040041000.5266@poirot.grange>
+Content-Description: 
+Content-Disposition: attachment; filename="tmscsim-bug2139-general.patch"
+
+SU5RVUlSWSBhbHdheXMgc2VuZCBvbmx5IHVudGFnZ2VkLg0KDQpTaWduZWQt
+b2ZmLWJ5OiBHdWVubmFkaSBMaWFraG92ZXRza2kgPGcubGlha2hvdmV0c2tp
+QGdteC5kZT4NCg0KZGlmZiAtdXIgLS1leGNsdWRlPUNWUyBhL2RyaXZlcnMv
+c2NzaS9zY3NpaW9tLmMgYi9kcml2ZXJzL3Njc2kvc2NzaWlvbS5jDQotLS0g
+YS9kcml2ZXJzL3Njc2kvc2NzaWlvbS5jCVR1ZSBBdWcgMTcgMjM6MTY6NTMg
+MjAwNA0KKysrIGIvZHJpdmVycy9zY3NpL3Njc2lpb20uYwlTYXQgQXVnIDIx
+IDIzOjQyOjExIDIwMDQNCkBAIC04LDkgKzgsOSBAQA0KIHN0YXRpYyB2b2lk
+IF9faW5saW5lX18NCiBkYzM5MF9mcmVldGFnIChzdHJ1Y3QgZGMzOTBfZGNi
+KiBwRENCLCBzdHJ1Y3QgZGMzOTBfc3JiKiBwU1JCKQ0KIHsNCi0JaWYgKHBT
+UkItPlRhZ051bWJlciA8IDI1NSkgew0KKwlpZiAocFNSQi0+VGFnTnVtYmVy
+ICE9ICh1OClTQ1NJX05PX1RBRykgew0KIAkJcERDQi0+VGFnTWFzayAmPSB+
+KDEgPDwgcFNSQi0+VGFnTnVtYmVyKTsgICAvKiBmcmVlIHRhZyBtYXNrICov
+DQotCQlwU1JCLT5UYWdOdW1iZXIgPSAyNTU7DQorCQlwU1JCLT5UYWdOdW1i
+ZXIgPSAodTgpU0NTSV9OT19UQUc7DQogCX0NCiB9DQogDQpAQCAtNjcsNyAr
+NjcsNyBAQA0KICAgICBwU1JCLT5Nc2dDbnQgPSAwOyBjbWQgPSBTRUxfV19B
+VE47DQogICAgIERDMzkwX3dyaXRlOCAoU2NzaUZpZm8sIElERU5USUZZKGRp
+c2NfYWxsb3dlZCwgcERDQi0+VGFyZ2V0TFVOKSk7DQogICAgIC8qIENoYW5n
+ZSA5OS8wNS8zMTogRG9uJ3QgdXNlIHRhZ3Mgd2hlbiBub3QgZGlzY29ubmVj
+dGluZyAoQlVTWSkgKi8NCi0gICAgaWYgKChwRENCLT5TeW5jTW9kZSAmIEVO
+X1RBR19RVUVVRUlORykgJiYgZGlzY19hbGxvd2VkKQ0KKyAgICBpZiAoKHBE
+Q0ItPlN5bmNNb2RlICYgRU5fVEFHX1FVRVVFSU5HKSAmJiBkaXNjX2FsbG93
+ZWQgJiYgcFNSQi0+cGNtZC0+Y21uZFswXSAhPSBJTlFVSVJZKQ0KICAgICAg
+IHsNCiAJdTggdGFnX25vID0gMDsNCiAJd2hpbGUgKCgxIDw8IHRhZ19ubykg
+JiBwRENCLT5UYWdNYXNrKSB0YWdfbm8rKzsNCkBAIC05MDMsMTggKzkwMywx
+MSBAQA0KIAkJcHJpbnRrKEtFUk5fRVJSICJEQzM5MDogcFNSQiA9PSBwVG1w
+U1JCISAoVGFnUSBFcnJvcj8pICglMDJpLSVpKVxuIiwgcERDQi0+VGFyZ2V0
+SUQsIHBEQ0ItPlRhcmdldExVTik7DQogCWVsc2UNCiAJCXByaW50ayhLRVJO
+X0VSUiAiREMzOTA6IHBTUkIgPT0gcFRtcFNSQiEgKFRhZ1EgRXJyb3I/KSAo
+RENCIDAhKVxuIik7DQotDQotCS8qIFRyeSB0byByZWNvdmVyIC0gc29tZSBi
+cm9rZW4gZGlza3MgcmVhY3QgYmFkbHkgdG8gdGFnZ2VkIElOUVVJUlkgKi8N
+Ci0JaWYgKHBEQ0IgJiYgcEFDQi0+c2Nhbl9kZXZpY2VzICYmIHBEQ0ItPkdv
+aW5nU1JCQ250ID09IDEpIHsNCi0JCXBTUkIgPSBwRENCLT5wR29pbmdTUkI7
+DQotCQlwRENCLT5wQWN0aXZlU1JCID0gcFNSQjsNCi0JfSBlbHNlIHsNCi0J
+CXBTUkItPnBTUkJEQ0IgPSBwRENCOw0KLQkJZGMzOTBfRW5hYmxlTXNnT3V0
+X0Fib3J0KHBBQ0IsIHBTUkIpOw0KLQkJaWYgKHBEQ0IpDQotCQkJcERDQi0+
+RENCRmxhZyB8PSBBQk9SVF9ERVY7DQotCQlyZXR1cm47DQotCX0NCisJcFNS
+Qi0+cFNSQkRDQiA9IHBEQ0I7DQorCWRjMzkwX0VuYWJsZU1zZ091dF9BYm9y
+dChwQUNCLCBwU1JCKTsNCisJaWYgKHBEQ0IpDQorCQlwRENCLT5EQ0JGbGFn
+IHw9IEFCT1JUX0RFVjsNCisJcmV0dXJuOw0KICAgICB9DQogDQogICAgIGlm
+KCBwU1JCLT5TR0luZGV4IDwgcFNSQi0+U0djb3VudCApDQpAQCAtMTI1Nyw3
+ICsxMjUwLDcgQEANCiAgICAgfQ0KICAgICBwQUNCLT5wQWN0aXZlRENCID0g
+cERDQjsNCiAgICAgLyogVGFnUTogV2UgZXhwZWN0IGEgbWVzc2FnZSBzb29u
+LCBzbyBuZXZlciBtaW5kIHRoZSBleGFjdCBTUkIgKi8NCi0gICAgaWYoIHBE
+Q0ItPlN5bmNNb2RlICYgRU5fVEFHX1FVRVVFSU5HICkNCisgICAgaWYgKChw
+RENCLT5TeW5jTW9kZSAmIEVOX1RBR19RVUVVRUlORykgJiYgKCFwRENCLT5w
+QWN0aXZlU1JCIHx8IHBEQ0ItPnBBY3RpdmVTUkItPlRhZ051bWJlciAhPSAo
+dTgpU0NTSV9OT19UQUcpKQ0KICAgICB7DQogCXBTUkIgPSBwQUNCLT5wVG1w
+U1JCOw0KIAlwRENCLT5wQWN0aXZlU1JCID0gcFNSQjsNCmRpZmYgLXVyIC0t
+ZXhjbHVkZT1DVlMgYS9kcml2ZXJzL3Njc2kvdG1zY3NpbS5jIGIvZHJpdmVy
+cy9zY3NpL3Rtc2NzaW0uYw0KLS0tIGEvZHJpdmVycy9zY3NpL3Rtc2NzaW0u
+YwlTYXQgQXVnIDIxIDIzOjA3OjQyIDIwMDQNCisrKyBiL2RyaXZlcnMvc2Nz
+aS90bXNjc2ltLmMJU2F0IEF1ZyAyMSAyMzozNzo0MiAyMDA0DQpAQCAtMjQ1
+LDYgKzI0NSw3IEBADQogI2luY2x1ZGUgPHNjc2kvc2NzaV9kZXZpY2UuaD4N
+CiAjaW5jbHVkZSA8c2NzaS9zY3NpX2hvc3QuaD4NCiAjaW5jbHVkZSA8c2Nz
+aS9zY3NpY2FtLmg+DQorI2luY2x1ZGUgPHNjc2kvc2NzaV90Y3EuaD4NCiAN
+CiANCiAjZGVmaW5lIERDMzkwX0JBTk5FUiAiVGVrcmFtIERDMzkwL0FNNTND
+OTc0Ig0KQEAgLTg2MSw2ICs4NjIsMTAgQEANCiAJCWdvdG8gaG9zdF9idXN5
+Ow0KIAlpZiAoYWNiLT5BQ0JGbGFnICYgKFJFU0VUX0RFVEVDVHxSRVNFVF9E
+T05FfFJFU0VUX0RFVikpDQogCQlnb3RvIGhvc3RfYnVzeTsNCisJLyogSU5R
+VUlSWSBvbmx5IHVudGFnZ2VkLCBkbyBub3QgYWNjZXB0IG1vcmUgY29tbWFu
+ZHMgaWYgdGhlIGdvaW5nIG9uZSBpcyB1bnRhZ2dlZCwgZS5nLiwgSU5RVUlS
+WSAqLw0KKwlpZiAodW5saWtlbHkoKGNtZC0+Y21uZFswXSA9PSBJTlFVSVJZ
+ICYmIGRjYi0+cEdvaW5nU1JCKSB8fA0KKwkJICAgICAoZGNiLT5wR29pbmdT
+UkIgJiYgZGNiLT5wR29pbmdTUkItPlRhZ051bWJlciA9PSAodTgpU0NTSV9O
+T19UQUcpKSkNCisJCWdvdG8gZGV2aWNlX2J1c3k7DQogDQogCXNyYiA9IGFj
+Yi0+cEZyZWVTUkI7DQogCWlmICh1bmxpa2VseShzcmIgPT0gTlVMTCkpDQo=
+
+---1463811839-2002539166-1094251260=:5266--
