@@ -1,79 +1,92 @@
-From: Ricky Beam <jfbeam@bluetronic.net>
-Subject: RE: qla2xxx (2100) vs. qlogicfc [again]
-Date: Mon, 10 May 2004 21:43:23 -0400 (EDT)
+From: Kurt Garloff <garloff@suse.de>
+Subject: qlogicisp
+Date: Tue, 11 May 2004 13:47:59 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.33.0405102054400.14297-100000@sweetums.bluetronic.net>
-References: <B179AE41C1147041AA1121F44614F0B0DD0145@AVEXCH02.qlogic.org>
+Message-ID: <20040511114759.GH4828@tpkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="D6z0c4W1rkZNF4Vu"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sweetums.bluetronic.net ([24.199.150.42]:60570 "EHLO
-	sweetums.bluetronic.net") by vger.kernel.org with ESMTP
-	id S263000AbUEKBsB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 May 2004 21:48:01 -0400
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0DD0145@AVEXCH02.qlogic.org>
-Content-ID: <Pine.GSO.4.33.0405102054402.14297@sweetums.bluetronic.net>
+Received: from ns.suse.de ([195.135.220.2]:15056 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S262972AbUEKLsD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 May 2004 07:48:03 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>
-
-On Mon, 10 May 2004, Andrew Vasquez wrote:
->Ok, well there aren't too many folks using an QLA2100 in a fabric
->topology
-
-And technically, neither was I :-) (TL-port mode)
-
-I've switched to Fabric mode for the HBA facing ports (TL for the
-shelves or WWN zoning won't work... hard drives will not login to the
-fabric :-()  AND, I removed the p.o.s. gadzoox hubs -- they try to be
-too smart and don't bring ports into the loop correctly. (Plus, they
-are, in fact, slow. Directly to the switch, I'm moving ~90+MB/s to
-that 7 year old qla2100... addressing 14 drives in 2 sw raid 5 arrays.)
-
-[http://sweetums.bluetronic.net/~jfbeam/private/san/webgui.jpg]
-
-(Note: that's with the qlogicfc driver.  qla2100 locks up.)
-
-BIOS: 1.37 (fw) 1.15.37
-
-That version does not have fabric support, but I don't boot from it. So,
-that's not a problem.
-
->since it seems the driver is never receiving a LOOP_UP event from the
->firmware indicating that we have successfully negotiated with the
->fabric and may begin discovery.
-
-I'm thinking this is 100% "translated loop" related.  The switch is logging
-devices in (see above w.r.t. drives.)  Disclaimer: I'm not even going to
-pretend I understand what TL mode is doing.
-
-At this point, the thing does come up and see the devices in it's zone
-with the HBA port in "Fabric" mode.  But now I'm back to the same problems
-from a month or so back... qla2100 fails immediately under load.
-
-See also: [http://sweetums.bluetronic.net/~jfbeam/private/san/debug/]
-  qlogic_20040510.log
-  qlogicfc_20040510.log
-
-The first is several invocations of qla2100... skip to the bottom to see
-the problem:
-	May 10 20:48:49 master kernel: cmd_timeout: Found in ISP
-	...
-md10 and md20 are started.  I then fire up zcav (from
-bonnie++) to read test the array.  md10 first, and then a bit later, md20.
-The instant I hit enter on the md20 test (two zcav's running), a timeout
-shows up and then the game is over.
-
-The second log is the kernel log from boot to (basically) right now using
-qlogicfc (compiled without optimization and "-g" ... so I could debug it.)
-That's where the traffic in webgui.jpg is coming from.
-
---Ricky
-
-BTW...
-  PID USER     PRI  NI  SIZE  RSS SHARE STAT %CPU %MEM   TIME CPU COMMAND
- 4128 root      15   0     0    0     0 SW   12.9  0.0   4:11   0 md20_raid5
- 3154 root      15   0     0    0     0 SW   12.3  0.0   4:21   1 md10_raid5
-(single P4 Xeon 2.8GHz w/HT)
+To: Linux SCSI list <linux-scsi@vger.kernel.org>
+Cc: Linux kernel list <linux-kernel@vger.kernel.org>
 
 
+--D6z0c4W1rkZNF4Vu
+Content-Type: multipart/mixed; boundary="Yia77v5a8fyVHJSl"
+Content-Disposition: inline
+
+
+--Yia77v5a8fyVHJSl
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi,
+
+minimal fix for qlogicisp error handling ...
+
+Regards,
+--=20
+Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
+SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
+
+--Yia77v5a8fyVHJSl
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="qlogicisp-eh.diff"
+Content-Transfer-Encoding: quoted-printable
+
+--- linux-2.6.5/drivers/scsi/qlogicisp.h.orig	2004-04-04 05:36:13.000000000=
+ +0200
++++ linux-2.6.5/drivers/scsi/qlogicisp.h	2004-05-11 08:49:17.339970940 +0200
+@@ -63,7 +63,7 @@ int isp1020_release(struct Scsi_Host *);
+ const char * isp1020_info(struct Scsi_Host *);
+ int isp1020_queuecommand(Scsi_Cmnd *, void (* done)(Scsi_Cmnd *));
+ int isp1020_abort(Scsi_Cmnd *);
+-int isp1020_reset(Scsi_Cmnd *, unsigned int);
++int isp1020_reset(Scsi_Cmnd *);
+ int isp1020_biosparam(struct scsi_device *, struct block_device *,
+ 		sector_t, int[]);
+ #endif /* _QLOGICISP_H */
+--- linux-2.6.5/drivers/scsi/qlogicisp.c.orig	2004-04-04 05:38:22.000000000=
+ +0200
++++ linux-2.6.5/drivers/scsi/qlogicisp.c	2004-05-11 08:54:50.501143895 +0200
+@@ -1202,7 +1202,7 @@ int isp1020_abort(Scsi_Cmnd *Cmnd)
+ }
+=20
+=20
+-int isp1020_reset(Scsi_Cmnd *Cmnd, unsigned int reset_flags)
++int isp1020_reset(Scsi_Cmnd *Cmnd)
+ {
+ 	u_short param[6];
+ 	struct Scsi_Host *host;
+@@ -1985,6 +1985,8 @@ static Scsi_Host_Template driver_templat
+ 	.release		=3D isp1020_release,
+ 	.info			=3D isp1020_info,=09
+ 	.queuecommand		=3D isp1020_queuecommand,
++	.eh_abort_handler	=3D isp1020_abort,
++	.eh_bus_reset_handler	=3D isp1020_reset,
+ 	.bios_param		=3D isp1020_biosparam,
+ 	.can_queue		=3D QLOGICISP_REQ_QUEUE_LEN,
+ 	.this_id		=3D -1,
+
+--Yia77v5a8fyVHJSl--
+
+--D6z0c4W1rkZNF4Vu
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFAoL1vxmLh6hyYd04RAtZmAKDSWy2uQeLVKDJq2UzP9ddy5A6Q5QCfV+ky
+9yc6/V2jOXEIvXRwC3nCOco=
+=KUKp
+-----END PGP SIGNATURE-----
+
+--D6z0c4W1rkZNF4Vu--
