@@ -1,54 +1,41 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: Brian King <brking@us.ibm.com>
 Subject: Re: [PATCH] allow drivers to hook into watchdog timeout
-Date: Tue, 20 Jan 2004 08:47:11 -0800
+Date: Tue, 20 Jan 2004 11:00:15 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040120164711.GA1628@beaverton.ibm.com>
-References: <20040120132052.GA6740@lst.de> <20040120155320.GA1478@beaverton.ibm.com> <20040120160058.GA8924@lst.de>
+Message-ID: <400D5E9F.8030802@us.ibm.com>
+References: <20040120132052.GA6740@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:63205 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S265598AbUATQoX
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jan 2004 11:44:23 -0500
-Content-Disposition: inline
-In-Reply-To: <20040120160058.GA8924@lst.de>
+Received: from e3.ny.us.ibm.com ([32.97.182.103]:51156 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S265572AbUATRAd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jan 2004 12:00:33 -0500
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: James.Bottomley@steeleye.com, gibbs@scsiguy.com, linux-scsi@vger.kernel.org
 
-Christoph Hellwig [hch@lst.de] wrote:
-> On Tue, Jan 20, 2004 at 07:53:20AM -0800, Mike Anderson wrote:
-> > Christoph Hellwig [hch@lst.de] wrote:
-> > > to get control first after a command timeout.  Justin, does this look
-> > > okay for you?  BTW, your drivers are the last ones using scsi_add_timer
-> > > from outside the midlayer, if we could get rid of that we'd be able to
-> > > keep the interface private.
-> > > 
-> > 
-> > If a LLDD uses this interface how does the scsi_cmnd get returned back
-> > to the mid-layer?
-> 
-> My thoughts about this interface would be that the driver performs
-> internals actions of whatever means and then calls scsi_eh_scmd_add
-> anyway - that's why it moved out of scsi_priv.h
-> 
+Christoph Hellwig wrote:
+> We all know talk is cheap, so here's a first draft patch to allow LLDDs
+> to get control first after a command timeout.  Justin, does this look
+> okay for you?  BTW, your drivers are the last ones using scsi_add_timer
+> from outside the midlayer, if we could get rid of that we'd be able to
+> keep the interface private.
 
-Sorry I read the patch to fast and missed the move.
+If we get rid of scsi_add_timer, could we have a scsi_mod_timer? In the 
+ipr driver I submitted, I would like to be able to simply double the 
+timeout value, I don't necessarily want to change the timeout policy. 
+The adapter firmware is already timing each command, so I would like to 
+use that as the primary timing mechanism if possible.
 
-> > If one uses scsi_done without a timer set it will
-> > believe that the error handler is running and not pass it on to
-> > scsi_softirq.
-> 
-> We could change that by moving the guts of scsi_done to a new
-> __scsi_done and then make scsi_done a tiny wrapper around it, e.g:
-> 
+For normal SCSI devices under this adapter I could change the philosophy 
+and not let the adapter time the commands, but for disk array devices, 
+the timeout value for reads/writes is too short.
 
-I assume the wrapper would only help if we went the direction of having
-the LLDD call __scsi_done directly under some recovery case?
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
 
