@@ -1,31 +1,29 @@
-From: Rolf Eike Beer <eike@bilbo.math.uni-mannheim.de>
-Subject: Re: [PATCH 0/2] clean up scsi documentation
-Date: Mon, 11 Nov 2002 17:07:30 +0100
+From: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH 1/2] clean up scsi documentation
+Date: Mon, 11 Nov 2002 11:09:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200211111707.30305@bilbo.math.uni-mannheim.de>
-References: <200211111558.gABFwsh17828@localhost.localdomain>
+Message-ID: <200211111609.gABG9VN18445@localhost.localdomain>
+References: <eike@bilbo.math.uni-mannheim.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200211111558.gABFwsh17828@localhost.localdomain>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id IAA10538
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Nov 2002 08:09:35 -0800
+In-Reply-To: Message from Rolf Eike Beer <eike@bilbo.math.uni-mannheim.de>
+   of "Mon, 11 Nov 2002 16:45:55 +0100." <200211111645.55685@bilbo.math.uni-mannheim.de>
 List-Id: linux-scsi@vger.kernel.org
-To: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+To: Rolf Eike Beer <eike@bilbo.math.uni-mannheim.de>
+Cc: linux-scsi@vger.kernel.org
 
-Am Montag, 11. November 2002 16:58 schrieb J.E.J. Bottomley:
-> eike@bilbo.math.uni-mannheim.de said:
-> > Ok. What would be the best way of doing this? Move the files one by
-> > one? One  patch per file? Or a better script?
->
-> I've already converted this to a BK script and applied it.
->
-> Except for the removal of ChangeLog.serverraid (I renamed this
-> ChangeLog.ips).
+eike@bilbo.math.uni-mannheim.de said:
+> I asked someone from Adaptec some time ago and he said this one is
+> obsolete.  Can you explain me the idea behind this? 
 
-I asked someone from Adaptec some time ago and he said this one is obsolete. 
-Can you explain me the idea behind this?
+I diffed the two and found more than just additions.  However, on closer 
+inspection they all look to be simple formatting changes.  I've thrown away 
+the serverraid file again.
 
-Thanks,
+James
 
-Eike
+
