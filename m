@@ -1,114 +1,128 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: sense visible despite ide-floppy in 2.6 maybe
-Date: 09 Jun 2004 17:30:57 -0600
+From: Chuck Ebbert <76306.1226@compuserve.com>
+Subject: [Patch 2.6] sd.c spinup messages
+Date: Wed, 9 Jun 2004 19:48:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1086823857.5997.124.camel@patibmrh9>
-References: <1086710016.3647.4.camel@patibmrh9><20040609080013.GS13836@suse
-	.de>  <20040609082045.GT13836@suse.de><1086798154.7074.24.camel@patibmrh9>
-	 <1086805796.3741.5.camel@patibmrh9><1086807083.3741.21.camel@patibmrh9>
+Message-ID: <200406091950_MC3-1-8463-F129@compuserve.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	 charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:4835 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S265996AbUFIXbJ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Jun 2004 19:31:09 -0400
-In-Reply-To: <1086807083.3741.21.camel@patibmrh9>
+Received: from siaag2ac.compuserve.com ([149.174.40.133]:54217 "EHLO
+	siaag2ac.compuserve.com") by vger.kernel.org with ESMTP
+	id S266195AbUFIXvb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Jun 2004 19:51:31 -0400
+Received: (from mailgate@localhost)
+	by siaag2ac.compuserve.com (8.12.11/8.12.7/SUN-2.15) id i59NpVPv012215
+	for linux-scsi@vger.kernel.org; Wed, 9 Jun 2004 19:51:31 -0400 (EDT)
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: dougg@torque.net, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Jens A:
+With an empty Iomega USB Powered Zip 250 drive and kernel 2.6.6,
+I get this in the syslog on bootup:
 
-> > a) ...
-> > ...
-> > e) ...
-> ...
-> f) issue some command that transfers data as well.
+Jun  9 14:38:42 d2 kernel: usb 1-1: new full speed USB device using address 2
+Jun  9 14:38:42 d2 kernel: scsi1 : SCSI emulation for USB Mass Storage devices
+Jun  9 14:38:42 d2 kernel:   Vendor: IOMEGA    Model: ZIP 250           Rev: 61.T
+Jun  9 14:38:42 d2 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 02
+Jun  9 14:38:42 d2 kernel: sda: Spinning up disk....<6>EXT3 FS on hde3, internal journal
+Jun  9 14:38:42 d2 kernel: Adding 524152k swap on /dev/hdg2.  Priority:-1 extents:1
+Jun  9 14:38:42 d2 kernel: Adding 524152k swap on /dev/hde2.  Priority:-2 extents:1
+Jun  9 14:38:42 d2 kernel: .<5>Attached scsi removable disk sda at scsi1, channel 0, id 0, lun 0
+Jun  9 14:38:42 d2 kernel: Attached scsi generic sg1 at scsi1, channel 0, id 0, lun 0,  type 0
+Jun  9 14:38:42 d2 kernel: kjournald starting.  Commit interval 5 seconds
 
-I tried an op x12 (18) Inquiry for up to x24 (36) bytes.
+Code in sd.c:sd_spinup_disk is looping and calling printk(".") while
+waiting for the disk to spin up.  Then it detects media not present
+and the function just exits, leaving an incomplete line in the buffer.
+Meanwhile other messages get mixed in.
 
-I got back zeroes even when I memset my data originally to equal
-catenated copies of "\xAE" (174).
+I fixed it so it prints only whole-line messages and emits a
+media-not-present message if it printed a spinup message earlier:
 
-Under such provocations, dmesg then consistently reports:
+Jun  9 16:42:06 d2 kernel: usb 1-1: new full speed USB device using address 2
+Jun  9 16:42:06 d2 kernel: scsi1 : SCSI emulation for USB Mass Storage devices
+Jun  9 16:42:06 d2 kernel:   Vendor: IOMEGA    Model: ZIP 250           Rev: 61.T
+Jun  9 16:42:06 d2 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 02
+Jun  9 16:42:06 d2 kernel: sda: Spinning up disk...
+Jun  9 16:42:06 d2 kernel: EXT3 FS on hde3, internal journal
+Jun  9 16:42:06 d2 kernel: Adding 524152k swap on /dev/hdg2.  Priority:-1 extents:1
+Jun  9 16:42:06 d2 kernel: Adding 524152k swap on /dev/hde2.  Priority:-2 extents:1
+Jun  9 16:42:06 d2 kernel: sda: No media present
+Jun  9 16:42:06 d2 kernel: Attached scsi removable disk sda at scsi1, channel 0, id 0, lun 0
+Jun  9 16:42:06 d2 kernel: Attached scsi generic sg1 at scsi1, channel 0, id 0, lun 0,  type 0
+Jun  9 16:42:06 d2 kernel: kjournald starting.  Commit interval 5 seconds
 
-hdd: The disk reports a capacity of 250640384 bytes, but the drive only handles 250609664
-hdd: unknown partition table
-hdd: leftover data in idefloppy_input_buffers, bcount == 36
+And with media present:
 
-Also I saw:
+Jun  9 17:52:46 d2 kernel: usb 1-1: new full speed USB device using address 2
+Jun  9 17:52:46 d2 kernel: scsi1 : SCSI emulation for USB Mass Storage devices
+Jun  9 17:52:46 d2 kernel:   Vendor: IOMEGA    Model: ZIP 250           Rev: 61.T
+Jun  9 17:52:46 d2 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 02
+Jun  9 17:52:46 d2 kernel: sda: Spinning up disk...
+Jun  9 17:52:46 d2 kernel: EXT3 FS on hde3, internal journal
+Jun  9 17:52:46 d2 kernel: Adding 524152k swap on /dev/hdg2.  Priority:-1 extents:1
+Jun  9 17:52:46 d2 kernel: Adding 524152k swap on /dev/hde2.  Priority:-2 extents:1
+Jun  9 17:52:46 d2 kernel: kjournald starting.  Commit interval 5 seconds
+((( Snip 15 lines of ext3 mount messages )))
+Jun  9 17:52:46 d2 kernel: sda: Drive ready
+Jun  9 17:52:46 d2 kernel: SCSI device sda: 196608 512-byte hdwr sectors (101 MB)
+Jun  9 17:52:46 d2 kernel: sda: assuming Write Enabled
+Jun  9 17:52:46 d2 kernel: sda: assuming drive cache: write through
+Jun  9 17:52:46 d2 kernel:  sda: sda4
+Jun  9 17:52:46 d2 kernel: Attached scsi removable disk sda at scsi1, channel 0, id 0, lun 0
+Jun  9 17:52:46 d2 kernel: Attached scsi generic sg1 at scsi1, channel 0, id 0, lun 0,  type 0
 
-$ sudo /sbin/hdparm /dev/hdd
+Patch:
+
+--- 266.0/drivers/scsi/sd.c     2004-06-09 15:26:49.000000000 -0400
++++ 266.1/drivers/scsi/sd.c     2004-06-09 16:37:21.000000000 -0400
+@@ -847,8 +847,11 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
+                 * any media in it, don't bother with any of the rest of
+                 * this crap.
+                 */
+-               if (media_not_present(sdkp, SRpnt))
++               if (media_not_present(sdkp, SRpnt)) {
++                       if (spintime)
++                               printk(KERN_NOTICE "%s: No media present\n", diskname);
+                        return;
++               }
  
-/dev/hdd:
- HDIO_GET_MULTCOUNT failed: Invalid argument
- IO_support   =  0 (default 16-bit)
- unmaskirq    =  0 (off)
- using_dma    =  1 (on)
- keepsettings =  0 (off)
- readonly     =  0 (off)
- readahead    = 256 (on)
- geometry     = 239/64/32, sectors = 489472, start = 0
-$
-
-Also the open-ioctl-close spins up the disk, despite O_NONBLOCK.
-
-> if you use the 2nd patch I posted.
-
-I tried the only patch I have yet found.  It applied clean.  Below I
-quote the resulting diff.
-
-Pat LaVarre
-
-diff -urp linux-2.6.7-rc3/drivers/ide/ide-floppy.c linux-2.6.7-rc3-pel/drivers/ide/ide-floppy.c
---- linux-2.6.7-rc3/drivers/ide/ide-floppy.c	2004-06-09 11:01:25.000000000 -0600
-+++ linux-2.6.7-rc3-pel/drivers/ide/ide-floppy.c	2004-06-09 12:04:24.000000000 -0600
-@@ -1210,19 +1210,23 @@ static void idefloppy_create_rw_cmd (ide
- 	set_bit(PC_DMA_RECOMMENDED, &pc->flags);
- }
+                if ((driver_byte(the_result) & DRIVER_SENSE) == 0) {
+                        /* no sense, TUR either succeeded or failed
+@@ -880,7 +883,7 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
+                } else if (SRpnt->sr_sense_buffer[2] == NOT_READY) {
+                        unsigned long time1;
+                        if (!spintime) {
+-                               printk(KERN_NOTICE "%s: Spinning up disk...",
++                               printk(KERN_NOTICE "%s: Spinning up disk...\n",
+                                       diskname);
+                                cmd[0] = START_STOP;
+                                cmd[1] = 1;     /* Return immediately */
+@@ -903,7 +906,6 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
+                                current->state = TASK_UNINTERRUPTIBLE;
+                                time1 = schedule_timeout(time1);
+                        } while(time1);
+-                       printk(".");
+                } else {
+                        /* we don't understand the sense code, so it's
+                         * probably pointless to loop */
+@@ -917,12 +919,10 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
+        } while (spintime &&
+                 time_after(spintime_value + 100 * HZ, jiffies));
  
--static int
-+static void
- idefloppy_blockpc_cmd(idefloppy_floppy_t *floppy, idefloppy_pc_t *pc, struct request *rq)
- {
--	/*
--	 * just support eject for now, it would not be hard to make the
--	 * REQ_BLOCK_PC support fully-featured
--	 */
--	if (rq->cmd[0] != IDEFLOPPY_START_STOP_CMD)
--		return 1;
--
- 	idefloppy_init_pc(pc);
-+	pc->callback = &idefloppy_rw_callback;
- 	memcpy(pc->c, rq->cmd, sizeof(pc->c));
--	return 0;
-+	pc->rq = rq;
-+	pc->b_count = rq->data_len;
-+	if (rq_data_dir(rq) == WRITE)
-+		set_bit(PC_WRITING, &pc->flags);
-+	pc->buffer = NULL;
-+	/*
-+	 * possibly problematic, doesn't look like ide-floppy correctly
-+	 * handled scattered requests if dma fails...
-+	 */
-+	pc->request_transfer = pc->buffer_size = rq->data_len;
-+	set_bit(PC_DMA_RECOMMENDED, &pc->flags);
+-       if (spintime) {
+-               if (scsi_status_is_good(the_result))
+-                       printk("ready\n");
+-               else
+-                       printk("not responding...\n");
+-       }
++       if (spintime)
++               printk(KERN_NOTICE "%s: Drive %s\n", diskname,
++                      scsi_status_is_good(the_result) ? "ready" : "not responding!");
++
  }
  
  /*
-@@ -1267,10 +1271,7 @@ static ide_startstop_t idefloppy_do_requ
- 		pc = (idefloppy_pc_t *) rq->buffer;
- 	} else if (rq->flags & REQ_BLOCK_PC) {
- 		pc = idefloppy_next_pc_storage(drive);
--		if (idefloppy_blockpc_cmd(floppy, pc, rq)) {
--			idefloppy_do_end_request(drive, 0, 0);
--			return ide_stopped;
--		}
-+		idefloppy_blockpc_cmd(floppy, pc, rq);
- 	} else {
- 		blk_dump_rq_flags(rq,
- 			"ide-floppy: unsupported command in queue");
-
 
