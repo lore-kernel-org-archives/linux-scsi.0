@@ -1,121 +1,103 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH] until blockdev --setrw /dev/scd$n works
-Date: 05 Dec 2003 18:32:18 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1070674338.2939.31.camel@patibmrh9>
-References: <1070673881.2939.20.camel@patibmrh9>
+From: Andre Hedrick <andre@linux-ide.org>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Sat, 6 Dec 2003 11:37:00 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.10.10312061111220.18839-100000@master.linux-ide.org>
+References: <1070383028.2345.8.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <1070673881.2939.20.camel@patibmrh9>
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, axboe@suse.de, patmans@us.ibm.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from astound-64-85-224-253.ca.astound.net ([64.85.224.253]:23818
+	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
+	id S265137AbTLFTmL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 6 Dec 2003 14:42:11 -0500
+In-Reply-To: <1070383028.2345.8.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: naveenb@cisco.com, Roman Zippel <zippel@linux-m68k.org>, hch@infradead.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-> -	if (CDROM_CONFIG_FLAGS(drive)->dvd_ram)
-> -		set_disk_ro(drive->disk, 0);
-> +	set_disk_ro(drive->disk, 0);
-> +	if (!CDROM_CONFIG_FLAGS(drive)->dvd_ram)
-> +		printk("lk 2.5 ide-cd.c would refuse write\n");
-> ...
-> -			return 0;
-> +			printk("lk 2.5 sr.c would refuse write\n");
-> ...
-> -			return -EROFS;
-> +			printk("lk 2.5 cdrom.c would refuse write\n");
 
-Want details?  I've got Six:
+James:
 
-1) This three-line kluge works for me.
+Thank you for explaining to Roman and company the obvious nature of
+BLOCK on top of SCSI.  This is only a point of proof that I was correct in
+my statements earlier.
 
-2) I have two pre-production samples of the same device: one ATAPI, one
-USB.  Without my patch my ATAPI device never writes, and for my USB
-device I have to volunteer `blockdev --setrw` or `blockdev --setro`
-again after each disc insertion.
+iSCSI(MC) will corrupt randomly.
 
-My patch makes both devices write, but I guess my patch somehow breaks
-the devices other people have, else the kernel wouldn't include this
-seemingly useless feature of filtering out writes on demand.
+iSCSI(ZC) will fail data digests and invoke the retry.
 
-3) I think growing to three lines my kluge of a two-line patch deepens,
-and thus clarifies the shock we first saw non-newbies express as:
+Also iSCSI ERL = 0 is in the class of functional (waste) transport,
+period.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=106546474421692
+Retrying entire commands because one PDU data digest fails is lame.
 
-> From: Jens Axboe (axboe@suse.de)
-> Subject: Re: writable mmc profiles actually are writable
-> Date: 2003-10-06 11:40:27 PST
->
-> This is obviously wrong. What are you trying to
-> do?  The uniform layer uses CDC_DVD_RAM as
-> meaning randomly writable media, the only
-> thing the kernel supports out of the box.
+If a single command had for example 20 PDU's, and one failed a data
+digest, iSCSI(ERL = 0) will have to dump all PDU's on the floor and retry
+all of the command (oh and hope there are no other failure, or will retry
+again).  Thus network transaction overhead of the original 20 PDU's is now
+doubled to 40 PDU's.  This is just laughable and a joke if you are serious
+about your data.
 
-4) At least while I remain a newbie I believe the unanswered non-newbie
-explanation:
+Same example with iSCSI(ERL = 1), the original 19 good PDU's are buffered
+and an in-connection recovery is executed for the one failed.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=106323818918929
+Translation:
 
-> Newsgroups: mlist.linux.scsi
-> Date: 2003-09-10 16:00:27 PST
-> Subject: Re: [PATCH] mount -w of dvd+rw etc. in vanilla 2.6
-> From: Patrick Mansfield (patmans@us.ibm.com)
->
-> Should sd.c and sr.c be calling set_device_ro?
-> (after adding a read only block device, or
-> changing back to read/write)?
+iSCSI(ERL = 0) 20 * (m + 1), m = I(all postive integers)
 
-5) With my patch in place, dmesg reports:
+iSCSI(ERL = 1) 20 + n, n = I(all postive integers)
 
-hdc: ATAPI 48X DVD-ROM CD-R/RW drive, 2048kB Cache, UDMA(33)
-lk 2.5 ide-cd.c would refuse write
+m == the number of entire commands retired.
+n == the number of PDU's retried.
 
-Uniform CD-ROM driver Revision: 3.12
-hdd: ATAPI 126X CD-ROM drive, 2048kB Cache, UDMA(33)
-lk 2.5 ide-cd.c would refuse write
-cdrom: This disc doesn't have any tracks I recognize!
-cdrom: This disc doesn't have any tracks I recognize!
-lk 2.5 cdrom.c would refuse write
-lk 2.5 cdrom.c would refuse write
-lk 2.5 cdrom.c would refuse write
+For ease, make m == n = 1;
 
-sr0: scsi3-mmc drive: 125x/125x caddy
-Attached scsi CD-ROM sr0 at scsi0, channel 0, id 0, lun 0
-lk 2.5 cdrom.c would refuse write
-lk 2.5 sr.c would refuse write
-lk 2.5 cdrom.c would refuse write
-lk 2.5 sr.c would refuse write
-lk 2.5 cdrom.c would refuse write
-lk 2.5 sr.c would refuse write
+iSCSI(ERL = 0) == 40 PDU's
 
-in reply to such stimuli as:
+iSCSI(ERL = 1) == 21 PDU's
 
-dd of=/dev/hdd bs=2K if=/dev/zero count=1
-dd of=/dev/hdd bs=2K if=/dev/zero count=1
-dd of=/dev/hdd bs=2K if=/dev/zero count=1
+The only case where they are equal is if all PDU's in iSCSI(ERL = 1) had
+to be retried.
 
-dd of=/dev/scd0 bs=2K if=/dev/zero count=1
-dd of=/dev/scd0 bs=2K if=/dev/zero count=1
-dd of=/dev/scd0 bs=2K if=/dev/zero count=1
+The goal of the exercise is to show that both Roman's and Cisco's
+iSCSI(ERL = 0) initaitors are not in a data integrity class acceptable for
+anyone.
 
-See the message pairing?  As yet we have ide-cd pointlessly redundant
-with cdrom and sr pointlessly redundant with cdrom.
+Should either of these parties have an iSCSI(ERL = 1) product then it
+becomes more useful.
 
-6) I guessed the to/cc list here after reviewing:
+Cheers,
 
-grep -i sr MAINTAINERS
-grep @ drivers/scsi/sr.c
+Andre Hedrick
+LAD Storage Consulting Group
 
-Pat LaVarre
+On 2 Dec 2003, James Bottomley wrote:
 
-P.S. Me digesting those six details produced my initial summary post:
+> On Tue, 2003-12-02 at 05:56, Naveen Burmi wrote:
+> > Our assumption so far was that if a buffer is given to SCSI HBA driver, then 
+> > nobody can touch the buffer until the HBA says that he is done with the 
+> > buffer. It seems that this assumption isn't true. Can you give an instance 
+> > where somebody (probably buffer cache) will modify the buffer which is handed
+> > over to an HBA driver?
+> 
+> This is an incorrect assumption.  The Linux SCSI subsystem is
+> architected for zero copy, meaning that if the user maps a copy of the
+> data, they can alter it at will, even if it is in flight within the
+> driver.  The only thing you can guarantee is that you will get another
+> write request for any page the user dirtied.
+> 
+> Also note that glibc uses mmaping to handle file descriptors in linux,
+> so almost every application can alter in-flight data depending on how it
+> works.
+> 
+> James
+> 
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-"I say, as yet, `blockdev --setrw /dev/scd$n` does not work as well as
-`blockdev --setrw /dev/hd$v`."
-
-"Do you agree?"
-
-"Do you agree we (e.g. I) should fix that?"
-
-"...
