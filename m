@@ -1,36 +1,29 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
-Date: 14 Sep 2004 14:51:19 -0400
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <1095187885.2007.33.camel@mulgrave>
-References: <41471163.10709@rtr.ca> <414723B0.1090600@pobox.com>
-	<1095186343.2008.29.camel@mulgrave>  <20040914183502.GA23277@havoc.gtf.org>
+Date: Tue, 14 Sep 2004 14:35:02 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040914183502.GA23277@havoc.gtf.org>
+References: <41471163.10709@rtr.ca> <414723B0.1090600@pobox.com> <1095186343.2008.29.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20040914183502.GA23277@havoc.gtf.org>
-To: Jeff Garzik <jgarzik@pobox.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S269184AbUINSnJ@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1095186343.2008.29.camel@mulgrave>
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: Mark Lord <lkml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2004-09-14 at 14:35, Jeff Garzik wrote:
-> The lock is taken in the SCSI layer with spin_lock_irqsave(), but the
-> low-level driver cannot perform the exact opposite,
-> spin_unlock_irqrestore().  The best they can do is spin_lock_irq(),
-> which isnt 100% the same.
+On Tue, Sep 14, 2004 at 02:25:35PM -0400, James Bottomley wrote:
+> Sleeping in the eh paths is fine (as long as you drop the locks that the
+> EH thread has uselessly taken for you).  Indeed it's often required
+> since the return is supposed to tell the eh thread whether the action
+> was successful or not.
 
-That's what they do if you look.
+I'm not sure this true for all arches?
 
-The eh_ stubs are only called from the eh_ thread, so it's safe to
-enable interrupts as well.
+The lock is taken in the SCSI layer with spin_lock_irqsave(), but the
+low-level driver cannot perform the exact opposite,
+spin_unlock_irqrestore().  The best they can do is spin_lock_irq(),
+which isnt 100% the same.
 
-The business of the mid-layer taking the locks is an annoying holdover
-from the "drivers don't need to do locking" mentality.  Unfortunately
-most drivers now simply drop the locks immediately they begin an eh_
-entry point and reacquire them just prior to returning ... which makes
-all the eh code look messy.
-
-James
-
-
+	Jeff
