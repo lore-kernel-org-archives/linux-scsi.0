@@ -1,41 +1,44 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: PATCH: BLIST flag for non-lockable devices
-Date: Mon, 28 Jun 2004 11:54:16 -0400 (EDT)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0406281150180.1598-100000@ida.rowland.org>
-References: <20040627231007.GA12853@marcet.info>
+From: christophe.varoqui@free.fr
+Subject: [ANNOUNCE] multipath-tools-0.2.4
+Date: Mon, 28 Jun 2004 18:58:54 +0200
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <1088441934.40e04e4ebe7e8@imp1-q.free.fr>
+References: <1084519750.40a47546dd0e6@imp1-q.free.fr> <1086256342.40bef4d61b3e9@imp3-q.free.fr> <1086619426.40c47f220de01@imp5-q.free.fr> <1087209011.40cd7e338ca44@imp5-q.free.fr>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:12292 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S265044AbUF1PyS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Jun 2004 11:54:18 -0400
-In-Reply-To: <20040627231007.GA12853@marcet.info>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1087209011.40cd7e338ca44@imp5-q.free.fr>
+To: device-mapper development <dm-devel@redhat.com>, linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Javier Marcet <javier@marcet.info>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Matthew Wheeler <matt@yurisko.net>, Mike Anderson <andmike@us.ibm.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, 28 Jun 2004, Javier Marcet wrote:
+Hello,
 
-> For me, as you probably guessed, this is fine. It works very well with
-> my iRiver.
+here goes multipath-tools-0.2.4
 
-Good.
+Changelog for this release :
+ 
+2004-06-28 multipath-tools-0.2.4
+        * [multipathd] break free from system's libsysfs for now
+          as it is not that common these days
+        * [multipath] introduce per LUN policies in the config
+          file : path_grouping_policy, path_selector and
+          path_selector_args are supported.
+          See updated sample config file.
+        * [multipath] move ->iopolicy to multipath struct (from
+          path struct)
+        * [multipath] fill the voids left in the config file with
+          defaults
+        * [multipath] group config & flags in a global struct *
+        * [multipath] fix segfault when no config file (was a 
+          regression since hwtable vectorisation in 0.2.2)
+        * [multipath] default path selector override in config file
+        * [multipath] don't play with strings in pgpolicies, leave
+          that to a new assemble_map fn. policies now use vectors
+        * [multipathd] compilation fix for gentoo (Franck Denis)
+        * [multipath] strcmp fix (Franck Denis)
 
-> Yet I wonder why the INQUIRY_36 flag? Isn't it the default? Or you just
-> try to skip the try & failure over longer inquiries since you already
-> know these devices' length?
+Downloads and docs at http://christophe.varoqui.free.fr
 
-It's true that using a 36-byte INQUIRY command is the default.  However
-the BLIST_INQUIRY_36 flag means more than that: It means also that there 
-should _not_ be an INQUIRY command longer than 36 bytes, even if the 
-device says it has extra data available.
-
-I've been adding this flag to all the blacklist entries for USB devices,
-just for safety.  With most of them it's not needed.  But I have seen an
-example of a device which said that it had 37 bytes of INQUIRY data and
-then crashed when it received a command asking for all 37 bytes.
-
-Alan Stern
-
+regards,
+cvaroqui
