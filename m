@@ -1,18 +1,52 @@
 From: "Suresh Kr N" <suresh@veritas.com>
 Subject: RE: Adding a new FC disk to a linux host
-Date: Thu, 13 Feb 2003 23:01:08 +0530
+Date: Fri, 14 Feb 2003 00:31:26 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <JOEEIMDPCNOOJCHLMKHMAEGLCKAA.suresh@veritas.com>
-References: <3E4ADA14.1080301@mvista.com>
+Message-ID: <JOEEIMDPCNOOJCHLMKHMCEGMCKAA.suresh@veritas.com>
+References: <JOEEIMDPCNOOJCHLMKHMAEGLCKAA.suresh@veritas.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3E4ADA14.1080301@mvista.com>
+Received: from vxindia.veritas.com (unverified) by mtvmime03.VERITAS.COM
+ (Content Technologies SMTPRS 4.2.10) with ESMTP id <T60632b38320a891155930@mtvmime03.VERITAS.COM> for <linux-scsi@vger.kernel.org>;
+ Thu, 13 Feb 2003 10:37:17 -0800
+Received: from floyd (floyd.vxindia.veritas.com [10.212.96.111])
+	by vxindia.veritas.com (8.11.6+Sun/8.9.3) with SMTP id h1DIb4T15854
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Feb 2003 00:07:04 +0530 (IST)
+In-Reply-To: <JOEEIMDPCNOOJCHLMKHMAEGLCKAA.suresh@veritas.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Steven Dake <sdake@mvista.com>
+To: linux-scsi@vger.kernel.org
+
+ok , i see this in scsi.c .
+Is this safe in a Fibre channel SAN scenario ? could it corrupt an ongoing
+data tranfer in a fibre channel SAN scenario ?
+and also are there are easier ways to achieve this ( without you supplying a
+scsi id etc ).
+
+suresh
+
+  /*
+         * Usage: echo "scsi add-single-device 0 1 2 3" >/proc/scsi/scsi
+         * with  "0 1 2 3" replaced by your "Host Channel Id Lun".
+         * Consider this feature BETA.
+         *     CAUTION: This is not for hotplugging your peripherals. As
+         *     SCSI was not designed for this you could damage your
+         *     hardware !
+         * However perhaps it is legal to switch on an
+         * already connected device. It is perhaps not
+         * guaranteed this device doesn't corrupt an ongoing data transfer.
+         */
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Suresh Kr N
+Sent: Thursday, February 13, 2003 11:01 PM
+To: Steven Dake
 Cc: linux-scsi@vger.kernel.org
+Subject: RE: Adding a new FC disk to a linux host
+
 
 This works for me ( by the way is this still BETA ? i dont see this comment
 in the kernel scsi sources anymore ).
@@ -153,6 +187,11 @@ m
 >
 >
 >
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
