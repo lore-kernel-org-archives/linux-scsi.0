@@ -1,65 +1,88 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] REPORT LUN scan even if no storage is available on LUN 0
-Date: Tue, 11 Jan 2005 10:15:00 -0800
-Message-ID: <20050111181500.GA9046@us.ibm.com>
-References: <20041210123333.GD685@bogon.ms20.nix> <20041213222206.GA18893@us.ibm.com> <20050110164200.GA8655@bogon.ms20.nix>
+From: James.Smart@Emulex.Com
+Subject: [Announce] Emulex lpfcdriver v8.0.20 available
+Date: Tue, 11 Jan 2005 13:34:37 -0500
+Message-ID: <0B1E13B586976742A7599D71A6AC733C12E98D@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:8586 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261352AbVAKSeA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jan 2005 13:34:00 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e2.ny.us.ibm.com (8.12.10/8.12.10) with ESMTP id j0BIXsBW019238
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Jan 2005 13:33:54 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j0BIXmvh253154
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Jan 2005 13:33:48 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j0BIXlAi000322
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Jan 2005 13:33:48 -0500
-Content-Disposition: inline
-In-Reply-To: <20050110164200.GA8655@bogon.ms20.nix>
+Received: from emulex.emulex.com ([138.239.112.1]:19331 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S261354AbVAKSek convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Jan 2005 13:34:40 -0500
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id j0BIYcni015515
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Jan 2005 10:34:39 -0800 (PST)
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guido Guenther <agx@sigxcpu.org>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Smart@Emulex.Com
 
-On Mon, Jan 10, 2005 at 05:42:00PM +0100, Guido Guenther wrote:
-> Sorry it took me so long to test this, first time I'm near this hardware
-> again.
-> On Mon, Dec 13, 2004 at 02:22:06PM -0800, Patrick Mansfield wrote:
-> > Patch looks okay, but we should always be trying the report lun scan, and
-> > then failing back to the sequential scan even if there is no storage on
-> > LUN 0.
-> 
-> > Can you test this? I don't have hardware readily available that supports
-> > sparse luns and report lun. Patch is against current bk. I built and
-> > ran with regular disks (lun 0 only).
-> Doesn't work here. I doen't see any devices in /proc/scsi/scsi now.
->  -- Guido
+Christoph and Community,
 
-So it worked some without the patch (I think you only saw some of the LUNs
-before)?
+The 8.0.20 release of the Emulex driver has been recently posted
+to SourceForge:
+http://prdownloads.sourceforge.net/lpfcxxxx/lpfcdriver-2.6-8.0.20.tar.gz?download
 
-What is output during the scan?
 
-Can you turn on some scsi logging, and send that?
+Emulex has been working hard to complete the outstanding items for upstream
+acceptance:
 
-If you have root on scsi, you should shutdown syslogd (though this should
-not generate lots of logging for small amounts of IO it generates some,
-and if you screw up you'll be able to disable the logging), and then 
-capture the console/serial output.
+- Streamline I/O submission path.
+- Removal of GFP_ATOMIC allocations in I/O path. Consider locations
+  as well.
+- Movement of Consistent Bindings to the FC Transport.
+- Discovery changes:
+   Target discovery via scsi_scan_single_target. Reduce bookkeeping
+     in lpfc_find_target().
+   Cleanse target removal. Ensure no more __devices references.
+- Removal of ifdefs for older kernel support and different patches
 
-If root on ide, just leave syslog on and get /var/log/messages output.
+And from our point of view :
+- Add management interfaces in support of HBAAPI.
 
-Turn on per-command and scan logging (0x2400 | 0x01c0):
 
-	sysctl -w dev.scsi.logging_level=0x25c0
+The 8.0.20 release addresses all of the above per the following comments:
 
-Set back off afterwards with:
+- We have significantly streamlined our i/o path, removing all
+    GFP_ATOMIC allocations in this path and in most eh_xxxx paths.
+    Atomic allocations still exist in our discovery thread, but
+    we are looking into removing them as well.
+- With the proposed Remote Port additions to the FC transport, we've
+    integrated remote ports (rport's) into our node state machine.
+    This has reduced much of the target-level housekeeping, moved
+    all consistent (semi-persistent) target id bindings into the
+    fc transport, and coordinated device discovery/removal with the
+    transport.
+- Discovery has been reworked such that:
+    There is no initial host-level scan.
+    Driver registers FC remote ports with FC transport. FC transport
+      assigns SCSI target ids for the ports (and implements any
+      persistence).
+    Driver invokes SCSI bus scans on a per-target level, after
+      noticing target id assignments and preparing proper calling
+      context.
+    If cable pull/device loss, driver calls transport with port-level
+      block call (which in turn makes the scsi target block call).
+      transport starts target block timer.
+    If port returns prior to timeout - driver calls transport
+      port-level unblock call, which restarts i/o to devices.
+    If port does not return prior to timeout - in timeout handler,
+      transport will remove all attached scsi devices.
+    When driver decides to release all knowledge of remote port, it
+      notifies transport. Transport will remove any attached scsi
+      devices.
+- We've posted FC Transport patches for host attributes/statistics,
+  and remote port attributes, sufficient for HBAAPI.  We've added
+  support for these attributes in the driver.
+- The ifdefs for older-kernel support and to select kernel patches
+  has been removed. The driver expects the latest and greatest
+  kernel and patches.
 
-	sysctl -w dev.scsi.logging_level=0
 
--- Patrick Mansfield
+We believe this driver is ready for final reviews for upstream acceptance.
+Please return any review comments.
+
+-- James S
+
