@@ -1,77 +1,48 @@
-From: "Randy.Dunlap" <randy.dunlap@verizon.net>
-Subject: [PATCH] advansys build with ADVANSYS_DEBUG defined
-Date: Tue, 19 Aug 2003 21:31:10 -0700
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: [PATCH] imm driver needs scsi_unregister()
+Date: Tue, 19 Aug 2003 21:31:07 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030819213110.0d9733aa.randy.dunlap@verizon.net>
+Message-ID: <20030819213107.515016f6.rddunlap@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out003pub.verizon.net ([206.46.170.103]:30389 "EHLO
-	out003.verizon.net") by vger.kernel.org with ESMTP id S261700AbTHTEcw
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Aug 2003 00:32:52 -0400
+Received: from fw.osdl.org ([65.172.181.6]:18632 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S261625AbTHTEcv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Aug 2003 00:32:51 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
 
-This patch enables the advansys driver to build when
-ADVANSYS_DEBUG is #defined.
+Same as the ppa driver, keeping them in sync.
 
-Please consider applying to 2.6.0-test3.
+Please apply.
 
-Thanks,
 --
 ~Randy
 
 
-patch_name:	scsi_advan_260t3.patch
-patch_version:	2003-08-10.22:37:15
+patch_name:	scsi_imm_unreg.patch
+patch_version:	2003-08-19.21:14:54
 author:		Randy.Dunlap <rddunlap@osdl.org>
-description:	enable compile with ADVANSYS_DEBUG #defined
+description:	scsi imm driver needs to call scsi_unregister();
 product:	Linux
 product_versions: 260-test3
-URL:		_
-maintainer:	unknown
 diffstat:	=
- drivers/scsi/advansys.c |   13 +++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/imm.c |    1 +
+ 1 files changed, 1 insertion(+)
 
 
-diff -Naur ./drivers/scsi/advansys.c~advan ./drivers/scsi/advansys.c
---- ./drivers/scsi/advansys.c~advan	2003-08-08 21:34:08.000000000 -0700
-+++ ./drivers/scsi/advansys.c	2003-08-10 22:34:51.000000000 -0700
-@@ -6360,8 +6361,8 @@
-     } else {
- 	scsi_adjust_queue_depth(device, 0, device->host->cmd_per_lun);
-     }
--    ASC_DBG3(1, "advansys_slave_configure: shp 0x%lx, id %d, depth %d\n",
--            (ulong) shp, device->id, device->queue_depth);
-+    ASC_DBG4(1, "advansys_slave_configure: device 0x%lx, boardp 0x%lx, id %d, depth %d\n",
-+            (ulong) device, (ulong) boardp, device->id, device->queue_depth);
+diff -Naur ./drivers/scsi/imm.c~unreg ./drivers/scsi/imm.c
+--- ./drivers/scsi/imm.c~unreg	2003-08-08 21:42:20.000000000 -0700
++++ ./drivers/scsi/imm.c	2003-08-19 21:07:35.000000000 -0700
+@@ -86,6 +86,7 @@
+     int host_no = host->unique_id;
+ 
+     printk("Releasing imm%i\n", host_no);
++    scsi_unregister(host);
+     parport_unregister_device(imm_hosts[host_no].dev);
      return 0;
  }
- 
-@@ -9352,8 +9353,8 @@
- 
-     printk("Scsi_Host at addr 0x%lx\n", (ulong) s);
-     printk(
--" next 0x%lx, host_busy %u, host_no %d, last_reset %d,\n",
--        (ulong) s->next, s->host_busy, s->host_no,
-+" host_busy %u, host_no %d, last_reset %d,\n",
-+        s->host_busy, s->host_no,
-         (unsigned) s->last_reset);
- 
- #if ASC_LINUX_KERNEL24
-@@ -9397,8 +9398,8 @@
- 
-     printk(
- " host 0x%lx, device 0x%lx, target %u, lun %u, channel %u,\n",
--        (ulong) s->host, (ulong) s->device, s->target, s->lun,
--        s->channel);
-+        (ulong) s->device->host, (ulong) s->device, s->device->id, s->device->lun,
-+        s->device->channel);
- 
-     asc_prt_hex(" CDB", s->cmnd, s->cmd_len);
- 
