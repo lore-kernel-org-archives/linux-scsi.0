@@ -1,73 +1,79 @@
-From: "Adam Radford" <aradford@amcc.com>
-Subject: RE: [PATCH] 3ware 9000 driver update for 2.6.7-rc2-mm2
-Date: Wed, 2 Jun 2004 16:21:03 -0700
+From: Mike Christie <mikenc@us.ibm.com>
+Subject: Re: [PATCH] return all status bytes for sg io.
+Date: Wed, 02 Jun 2004 16:42:01 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <HYPFK001.25G@hadar.amcc.com>
+Message-ID: <40BE65C9.7020301@us.ibm.com>
+References: <40BDC726.7070004@cs.wisc.edu> <20040602193158.GB2401@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hadar.amcc.com ([192.195.69.168]:2540 "EHLO hadar.amcc.com")
-	by vger.kernel.org with ESMTP id S265376AbUFBXVi convert rfc822-to-8bit
+Received: from e34.co.us.ibm.com ([32.97.110.132]:47289 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S261862AbUFBXmo
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Jun 2004 19:21:38 -0400
+	Wed, 2 Jun 2004 19:42:44 -0400
+In-Reply-To: <20040602193158.GB2401@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: akpm@osdl.org, james.bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Jeff,
-
-Thanks for the feedback.
-
-I will send a patch for the msleep() fix shortly.
-
-As for your 'major' fix, I'm not sure what you mean.  The only thing
-the driver does is set sht->can_queue to 254, then if the sht->queuecommand()
-function sees the hardware is busy, it returns SCSI_MLQUEUE_HOST_BUSY.
-The slave_configure() setting was removed.  Controller-wide queue count
-is set from sht->can_queue to 254.
-
-The 'pending' queue is only used for internal driver AEN posts and ioctls
-in the case of 'queue busy', and I would like to leave it that way since 
-I don't want to return -EBUSY for the ioctl routine or have the internal
-AEN post 'not complete' due to the hardware being busy.  For these 2 cases,
-I use the hardware's 'command interrupt' method for posting pending commands.
-
-
---
-Adam Radford
-Staff Software Engineer
-AMCC
-
------Original Message-----
-From: Jeff Garzik [mailto:jgarzik@pobox.com]
-Sent: Wednesday, June 02, 2004 3:54 PM
-To: Adam Radford
-Cc: akpm@osdl.org; james.bottomley@steeleye.com;
-linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] 3ware 9000 driver update for 2.6.7-rc2-mm2
-
-
-Adam Radford wrote:
-> Andrew, James, 
+Jens Axboe wrote:
+> On Wed, Jun 02 2004, Mike Christie wrote:
 > 
-> This patch updates the 3w-9xxx driver in 2.6.7-rc2-mm1 to v2.26.02.000 to cleanup several things pointed out by Chris Hellwig / Jeff Garzik.
+>>Hi Jens,
+>>
+>>For block/scsi_ioctl.c only the status_byte is returned. However, when sg 
+>>io is performed through a sg device the host, msg and driver bytes are 
+>>passed back. I was not sure if this is a bug on the block layers part 
+>>(becuase as you see in the patch, after the msg, host and driver bytes are 
+>>zerod out they are tested), or is the bug in the app and it should be 
+>>modifed to access sg devices instead of block devs. The attached patch was 
+>>built against 2.6.7-rc2.
+>>
+>>Thanks,
+>>
+>>Mike
+> 
+> 
+>>diff -arup linux-2.6.7-rc2/drivers/block/scsi_ioctl.c linux-2.6.7-rc2-work/drivers/block/scsi_ioctl.c
+>>--- linux-2.6.7-rc2/drivers/block/scsi_ioctl.c	2004-05-29 23:26:48.000000000 -0700
+>>+++ linux-2.6.7-rc2-work/drivers/block/scsi_ioctl.c	2004-06-02 04:32:27.000000000 -0700
+>>@@ -185,11 +185,11 @@ static int sg_io(request_queue_t *q, str
+>> 	blk_execute_rq(q, bd_disk, rq);
+>> 
+>> 	/* write to all output members */
+>>-	hdr->status = rq->errors;	
+>>-	hdr->masked_status = (hdr->status >> 1) & 0x1f;
+>>-	hdr->msg_status = 0;
+>>-	hdr->host_status = 0;
+>>-	hdr->driver_status = 0;
+>>+	hdr->status = 0xff & rq->errors;
+>>+	hdr->masked_status = status_byte(rq->errors);
+>>+	hdr->msg_status = msg_byte(rq->errors);
+>>+	hdr->host_status = host_byte(rq->errors);
+>>+	hdr->driver_status = driver_byte(rq->errors);
+> 
+> 
+> For SCSI, this looks good. I need to look at ide-cd to be sure it's ok,
+> did you verify this?
+> 
+
+For ide-cd I mostly executed sg commands while doing things like pulling
+cables and or running on bad CD's to get SCSI stats like Busy and Check
+Condidtion to verify that it worked like before my patch. As far as verifing the 
+code it looked like ide-cd was just using the scsi status bits like ERROR_MAX 
+mapped to SAMS_STAT_BUSY and for sense SAM_STAT_CHECK_CONDITION was set. I would 
+occasionaly get Unknown status (0xb) with and without my patch when unplugging 
+and replugging in the drive mulitple times. I was thinking this was due to the 
+sense value ABORTED_COMMAND getting set to rq->errors similar to how ide-cd.c's 
+ide_cdrom_prep_pc() sets rq->errors to ILLEGAL_REQUEST. Are those type of things 
+bugs, or a result of not having a request_sense structure available and now 
+other apps rely on this behavior?
 
 
-Looks good, one major and one minor grumble remain:
-
-Minor:  Your schedule_timeout() usage is incorrect without also 
-set_current_state() and a loop in certain situations.  However, the fix 
-is quite easy:  just use the new msleep() function.  In your code, it 
-should be a straight replacement from the mdelay() calls.
-
-
-Major:  code still wastes time caring about queue depth when it need 
-not.  Don't emulate this feature, export the feature as the hardware 
-does -- using a controller-wide queue count, not per-device.  This would 
-involve deleting the queue depth code and setting ->use_sg to 253, IIRC.
-
-	Jeff
+-- 
+Mike Christie
+mikenc@us.ibm.com
 
 
 
