@@ -1,38 +1,65 @@
-From: Fabien Penso <penso@linuxfr.org>
-Subject: megaraid problem
-Date: Sun, 28 Mar 2004 01:27:25 +0100
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: BUG() in 2.4: sg direct IO + exit()
+Date: Sat, 27 Mar 2004 20:38:29 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <87vfkp24uq.fsf@linuxfr>
+Message-ID: <406559A5.6080301@torque.net>
+References: <04Mar23.100431est.332209@cyborg.cybernetics.com> <406185C6.6050705@torque.net> <20040324130208.GQ3377@suse.de>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.uucpssh.org ([212.27.33.224]:42625 "EHLO main.uucpssh.org")
-	by vger.kernel.org with ESMTP id S262000AbUC1Abt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Mar 2004 19:31:49 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by main.uucpssh.org (Postfix) with ESMTP id 7CD982A841
-	for <linux-scsi@vger.kernel.org>; Sun, 28 Mar 2004 01:31:44 +0100 (CET)
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:25873 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S262076AbUC1DNJ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Mar 2004 22:13:09 -0500
+In-Reply-To: <20040324130208.GQ3377@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@"@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: tonyb@cybernetics.com, linux-scsi@vger.kernel.org
 
-Hi to everyone.
+Jens Axboe wrote:
+> On Wed, Mar 24 2004, Douglas Gilbert wrote:
+> 
+>>Tony Battersby wrote:
+>>
+>>>The following BUG() is triggered in 2.4.x when a program calls exit()
+>>>immediately after sending a SCSI command that uses direct IO:
+<snip>
+>>>Call Trace:
+>>>[<c0127cb0>] unmap_kiobuf+0x30/0x50 [kernel]
+>>>[<d0885db6>] sg_unmap_and+0x26/0x50 [sg]
+>>>[<d0885cc9>] sg_finish_rem_req+0x39/0x70 [sg]
+>>>[<d0885451>] sg_cmd_done_bh+0x281/0x380 [sg]
+>>>[<c01ab65a>] scsi_finish_command+0xda/0xe0 [kernel]
+>>>[<c01ab380>] scsi_bottom_half_handler+0xc0/0x230 [kernel]
+>>>[<c011dacb>] bh_action+0x4b/0x90 [kernel]
+<snip>
 
-I have a megaraid raid card :
+>>Tony,
+>>It is not causing an oops when I try with scsi_debug and lk 2.6.5-rc2.
+>>Neither is there a problem with a Suse 9 stock SMP kernel
+>>(2.4.21-99-smp4G) on an old dual celeron (A-bit mb) box with a
+>>Sony SDT-7000 tape drive on /dev/sg0.
+>>
+>>I'll keep looking. The oops suggests that the memory is not being
+>>locked down (as you are probably aware).
+> 
+> 
+> Looks like an sg bug, you are doing direct io cleanup from interrupt
+> context if the fd has been closed (SCSI -> sg_cmd_done_bh ->
+> sg_finish_rem_req -> sg_unmap_and -> unmap_kiobuf).
 
-  Vendor: MegaRAID  Model: LD0 RAID5 52095R  Rev:   E 
-  Type:   Direct-Access                      ANSI SCSI revision: 02
+It is my understanding the unmap_kiobuf() can be safely called
+from an interrupt context. If that is not the case then the
+user task needs to be held in the sg_release() until the
+SCSI command finishes or a cleanup kernel thread is needed.
+Neither option seems particularly pretty.
 
-We used to run 2.4.23 very well for a long time, but we need to upgrade
-because of all the security problems (never too late :) to 2.4.25. I've
-tried for days with no luck; booting gives us :
+kiobufs are gone in lk 2.6 in which both the sg and st
+drivers call page_cache_release() in the same context.
 
-megarid: Waiting for 3 commands to flush: iter:1000
-megarid: Waiting for 3 commands to flush: iter:2000
+Doug Gilbert
 
-and so on. I tried to copy the megaraid2.c/megaraid2.h from 2.4.23 (who
-knows...) but it doesn't work better.
 
-I am out of ideas here, so I just wonder if someone has a solution.
 
-Thanks.
