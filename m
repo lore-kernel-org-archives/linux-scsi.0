@@ -1,17 +1,36 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Hot plugging a disk in runtime
-Date: Mon, 20 May 2002 13:58:08 -0400
+From: berthiaume_wayne@emc.com
+Subject: RE: Hot plugging a disk in runtime
+Date: Mon, 20 May 2002 14:11:17 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020520135808.A1648@redhat.com>
-References: <93F527C91A6ED411AFE10050040665D0049BFA5A@corpusmx1.us.dg.com>
+Message-ID: <93F527C91A6ED411AFE10050040665D0049BFA62@corpusmx1.us.dg.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <93F527C91A6ED411AFE10050040665D0049BFA5A@corpusmx1.us.dg.com>; from berthiaume_wayne@emc.com on Mon, May 20, 2002 at 12:34:46PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: berthiaume_wayne@emc.com
+To: dledford@redhat.com
 Cc: alan@lxorguk.ukuu.org.uk, linux-scsi@vger.kernel.org, rabeeh@galileo.co.il
+
+	Excellent. I assume that reboot will still have its usual discovery
+methodology so if you were to hot plug in a new device and its placed at the
+end of the chain, it could very well end up somewhere else after the reboot?
+In other words, you have two Adaptec adapters (A & B) with two drives each.
+Adapter A has sda and sdb; and adapter B has sdc and sdd. You add a new
+drive to adapter A and now adapter A has sda, sdb, and sde. However, on a
+system reboot adapter A would now have sda, sdb, and sdc; and adapter B
+would have sdd and sde. True? Therefore, the sysadmin needs to be wise to
+this modality or he's hosed at the next boot.
+
+Wayne.
+
+-----Original Message-----
+From: Doug Ledford [mailto:dledford@redhat.com]
+Sent: Monday, May 20, 2002 1:58 PM
+To: berthiaume_wayne@emc.com
+Cc: alan@lxorguk.ukuu.org.uk; linux-scsi@vger.kernel.org;
+rabeeh@galileo.co.il
+Subject: Re: Hot plugging a disk in runtime
+
 
 On Mon, May 20, 2002 at 12:34:46PM -0400, berthiaume_wayne@emc.com wrote:
 > 	Will it, possibly, cause a reordering of other sd<xx> devices
@@ -30,3 +49,7 @@ the perfect behaviour.
          1801 Varsity Dr.
          Raleigh, NC 27606
   
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
