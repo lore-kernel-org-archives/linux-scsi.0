@@ -1,79 +1,53 @@
-From: Fabien Salvi <fabien@cri74.org>
-Subject: Re: Status of qlogic tcp/ip (fc0) support
-Date: Mon, 15 Dec 2003 17:15:05 +0100
+From: Don Jessup <donj@asaca.com>
+Subject: scsi::resize_dma_pool: WARNING,
+Date: Mon, 15 Dec 2003 08:21:43 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FDDDE09.2040602@cri74.org>
-References: <1071483139.1433.3.camel@cala> <3FDD9D52.2060405@cri74.org> <3FDDC8FF.2090403@leosandbox.org> <3FDDC867.9040500@cri74.org> <3FDDCE2F.4030401@leosandbox.org>
+Message-ID: <20031215162143.33772.qmail@web14525.mail.yahoo.com>
+Reply-To: donj@asaca.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aravis.cur-archamps.fr ([195.202.0.99]:23506 "EHLO
-	aravis.cur-archamps.fr") by vger.kernel.org with ESMTP
-	id S263702AbTLOQPI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Dec 2003 11:15:08 -0500
+Received: from web14525.mail.yahoo.com ([216.136.224.54]:45755 "HELO
+	web14525.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S263698AbTLOQVo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Dec 2003 11:21:44 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: r35157anc3 <leo@leosandbox.org>
-Cc: linux-scsi@vger.kernel.org
-
-You can communicate with other servers on the same SAN network also=20
-using FC-IP.
-I don't understand what you mean with "mount" ?
-You have nothing to mount, it's a network interface like any other one=20
-to use classic IP protocol.
-
-It has nothing to do with iSCSI or something like that...
+To: linux-scsi@vger.kernel.org
 
 
-r35157anc3 a =E9crit:
-> Thanks very much. I've made it as far as setting up the network devic=
-es.=20
-> I now have fc0 network device and with an internal ip, but I can't=20
-> figure out how I am supposed to mount it? I can mount it over scsi? =20
-> What if I am trying to access the fc remotely? I guess I just don't=20
-> understand, but beyond setting up the qla2xip kernel drivers, the=20
-> documentation doesn't say much.
->=20
-> &Leo();
->=20
->=20
-> Fabien Salvi wrote:
->=20
->> Hello, I've CC the email to the list, other people could be interest=
-ed...
->>
->> Well, it wasn't very difficult.
->> After building qla2?00.o with IP option and building qlaip, you just=
-=20
->> have to load these 2 modules.
->> Then, you can see a new network interface (see ifconfig -a).
->> You can use it like any ethernet devices...
->>
->> You may also encounter difficulties related to FC connection between=
-=20
->> your servers. In my test, I was using Qlogic Sanbox2 switch with=20
->> broadcasting activated.
->>
->>
->> r35157anc3 a =E9crit:
->>
->>> Hello,
->>>
->>> Do you know where I can get instructions on setting up ip for qla? =
-I=20
->>> configured the qla ip drivers. I just can't figure out how to mount=
-=20
->>> after setting it up.
->>>
->>> &Leo();
+
+  I was wondering why following message is happening and how I might be able
+  to keep it from happening?    We do have a large number of scsi disk online,
+  upto 48 disk online at once.     Is this problem with HBA?
+  
+  This is from linux kernel 2.4.22.
 
 
---=20
-=46abien SALVI
+Dec 14 04:54:03 ITV_791477 kernel: scsi singledevice 2 0 11 0
+Dec 14 04:54:03 ITV_791477 kernel: blk: queue cf21d8b4, I/O limit 4095Mb (mask
+0xffffffff)
+Dec 14 04:54:03 ITV_791477 kernel:   Vendor: 3ware     Model: Logical Disk 11  
+Rev: 1.0
+Dec 14 04:54:03 ITV_791477 kernel:   Type:   Direct-Access                     
+ANSI SCSI revision: 00
+Dec 14 04:54:03 ITV_791477 kernel: blk: queue cf21deb4, I/O limit 4095Mb (mask
+0xffffffff)
+Dec 14 04:54:03 ITV_791477 kernel: Attached scsi disk sdao at scsi2, channel 0,
+id 11, lun 0
+Dec 14 04:54:03 ITV_791477 kernel: scsi::resize_dma_pool: WARNING,
+dma_sectors=27584, wanted=36720, scaling
+Dec 14 04:54:03 ITV_791477 kernel:       WARNING, not enough memory, pool not
+expanded
+Dec 14 04:54:03 ITV_791477 kernel: SCSI device sdao: 488397168 512-byte hdwr
+sectors (250059 MB)
+Dec 14 04:54:03 ITV_791477 kernel:  sdao: sdao1
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+=====
+Don Jessup
+Asaca/Shibasoku Corp. of America
+400 Corporate Circle, Unit G
+Golden, CO  80401
+303-278-1111 X232
+donj@asaca.com
+http://www.asaca.com
