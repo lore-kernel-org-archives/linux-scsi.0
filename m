@@ -1,43 +1,93 @@
-From: "Florian G. Pflug" <fgp@phlo.org>
-Subject: Which Version of the aacraid driver shall I use?
-Date: Mon, 20 Dec 2004 18:48:23 +0100
-Message-ID: <41C71067.6000209@phlo.org>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Can someone explain "Data Phase Error"
+Date: Mon, 20 Dec 2004 13:06:16 -0500
+Message-ID: <87f94c3704122010064805a533@mail.gmail.com>
+References: <87f94c3704121713233f8499d8@mail.gmail.com>
+	 <311601c904121920015071cfac@mail.gmail.com>
+Reply-To: Greg Freemyer <greg.freemyer@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rivendell.solution-x.com ([213.147.174.20]:51386 "EHLO
-	rivendell.solution-x.com") by vger.kernel.org with ESMTP
-	id S261585AbULTRpQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Dec 2004 12:45:16 -0500
-Received: from v213-187.vps.tuwien.ac.at (HELO [10.100.7.48]) (fgp@[128.131.213.187])
-          (envelope-sender <fgp@phlo.org>)
-          by rivendell.solution-x.com (qmail-ldap-1.03) with AES256-SHA encrypted SMTP
-          for <linux-scsi@vger.kernel.org>; 20 Dec 2004 17:53:07 -0000
+Received: from wproxy.gmail.com ([64.233.184.193]:38017 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261602AbULTSGT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Dec 2004 13:06:19 -0500
+Received: by wproxy.gmail.com with SMTP id 58so49170wri
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2004 10:06:16 -0800 (PST)
+In-Reply-To: <311601c904121920015071cfac@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi
+I believe I found the problem.
 
-I have a few questions regarding the aacraid driver. Sorry if this is 
-explained in some FAQ somewhere - I googled for an hour or so, and did't 
-find the information I need.
+Somehow one of the servers was built with a Adaptec 2940 controller,
+and the other with a Adaptec 29160.
 
-.) Which Version of the aacraid driver is recommended for a production 
-system? I'm running a (vanilla) linux 2.6.9 kernel, and am wondering if 
-I should go with the included aacraid driver, or use the aacraid 1.1.5 
-driver available on www.adaptec.com? My controller is an Adaptec 2200S.
+Since the 2940 does not support LVD (only SE), I'm pretty sure that is
+the issue.
 
-.) How does one upgrade the firmware, if there is no windows 
-installation on the machine? (The archive with firmware version 7349 
-contains 4 .ufi files, and an afu.exe - probably AdapctedFlashUtility, 
-or something :-( ).
+I'm actually surprised that the 2940 based system worked so well.  I
+successfully wrote out 300+GB of data and those tapes were restorable
+by the 29160-based system.
 
-.) There seems to be a cli app for configuring aacraid controllers 
-called afacli, but I can't find a way to download it anywhere? Does 
-anyone have a link to either source or binary of this program?
+It was only the restores that were unreliable, and that was true
+regardless of where the tapes were written.
 
-greetings, Florian Pflug
+Is there a LINUX - SCSI troubleshooting guide that provides advice for
+the various SCSI kernel error mesages?  Does it cover this situation?
 
-PS: Please reply to me directly, as I am not on this list.
+Greg
+-- 
+Greg Freemyer
+
+
+On Sun, 19 Dec 2004 21:01:20 -0700, Eric Mudama <edmudama@gmail.com> wrote:
+> are these tapes new?
+> 
+> I've been told you have to write them 3-4 times before they can be
+> written to reliably, since the heads remove particle contamination or
+> something like that in those initial passes.
+> 
+> 
+> On Fri, 17 Dec 2004 16:23:24 -0500, Greg Freemyer
+> <greg.freemyer@gmail.com> wrote:
+> > All,
+> >
+> > Environment:
+> > kernel - 2.6.8-24  (from SUSE 9.2)
+> > tape drive - IBM LTO-1 (scsi-wide)
+> > scsi controller - Adaptec 2940
+> >
+> > Issue:
+> > I am trying to build a pair of new Linux based tape servers.
+> >
+> > I have written exactly one tape on each, I then swapped the tapes
+> > beween the units and tried to do a restore.  One seems to be working
+> > fine on this first test, but with the other I get:
+> >
+> > Dec 17 08:52:04 linux kernel: st0: Error with sense data: Info
+> > fld=0x40000, ILI Current st0: sense = f0 2b
+> > Dec 17 08:52:04 linux kernel: Additional sense: Data phase error
+> >
+> > I would suspect a bad tape, but a simple "dd if=/dev/st0 of=/dev/null
+> > bs=256k" fails at a different number of blocks each time.
+> >
+> > i.e. I have 130 GB of data on the tape, but I have not yet read back
+> > more than 6 GB of it.  The data itself is unimportant, I'm just
+> > testing the process.
+> >
+> > I am continueing to test and am now trying another tape, but I want to
+> > understand this initial failure if I can.
+> >
+> > Thanks for any help.
+> > Greg
+> > --
+> > Greg Freemyer
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+>
