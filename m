@@ -1,28 +1,44 @@
-From: denebeim@deepthot.org (Jay Denebeim)
-Subject: Porting high level device drivers to 2.6
-Date: Tue, 24 Feb 2004 21:38:34 +0000 (UTC)
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [BK PATCH] SCSI update for 2.6.3
+Date: Wed, 25 Feb 2004 00:32:54 +0200 (EET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <c1gg8q$84t$1@dent.deepthot.org>
+Message-ID: <Pine.LNX.4.58.0402250024450.3713@kai.makisara.local>
+References: <Pine.LNX.4.58.0402240919490.1129@spektro.metla.fi>
+ <20040224170412.GA31268@kroah.com> <1077642529.1804.170.camel@mulgrave>
+ <20040224171629.GA31369@kroah.com> <20040224101512.A19617@beaverton.ibm.com>
+ <Pine.LNX.4.58.0402242028370.3713@kai.makisara.local> <20040224220946.GA2389@kroah.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from deepthot.org ([68.14.232.127]:36249 "EHLO dent.deepthot.org")
-	by vger.kernel.org with ESMTP id S262497AbUBXW1p (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2004 17:27:45 -0500
-Received: from news by dent.deepthot.org with local (Exim 4.30)
-	id 1AvkGA-0002Ag-Oj
-	for linux-scsi@vger.kernel.org; Tue, 24 Feb 2004 14:38:34 -0700
+Received: from fep01-0.kolumbus.fi ([193.229.0.41]:2536 "EHLO
+	fep01-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S262506AbUBXWc5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Feb 2004 17:32:57 -0500
+In-Reply-To: <20040224220946.GA2389@kroah.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linuxscsi@deepthot.org
+To: Greg KH <greg@kroah.com>
+Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-I was wondering if there is any documentation on porting high level
-device drivers from 2.4 to 2.6.  I've looked at the changes in st.c
-and there seems to be more changes than are documented in either the
-2.6 docbook or the lwn articles.
+On Tue, 24 Feb 2004, Greg KH wrote:
 
-Thanks
-Jay
+> On Tue, Feb 24, 2004 at 11:48:32PM +0200, Kai Makisara wrote:
+...
+> > convenient. Parsing the st names should really be able to extract at 
+> > least two fields. With an external program, anything can be done. Maybe 
+> > udev can some day do this internally.
+> 
+> Well, udev didn't think that anyone would do such a looney thing in
+> nameing devices :)
+> 
+However the SCSI tape names are formed, there are three variables. But 
+I see your smiley :-)
+
+> But yes, I'll be glad to fix up udev if you all fix up the tape sysfs
+> names to match device.txt.
+> 
+OK. Unless anyone provides strong arguments for the "new" naming or 
+some other naming, I will make tomorrow (or actually later today) a patch 
+that changes the sysfs file naming to the one in device.txt.
+
 -- 
-* Jay Denebeim  Moderator       rec.arts.sf.tv.babylon5.moderated *
-* newsgroup submission address: b5mod@deepthot.org                *
-* moderator contact address:    b5mod-request@deepthot.org        *
-* personal contact address:     denebeim@deepthot.org             *
+Kai
