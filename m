@@ -1,40 +1,44 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [PATCH] SCSI hotplug support
-Date: Tue, 15 Oct 2002 15:55:16 -0400
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [patch 2.5] ips queue depths
+Date: Tue, 15 Oct 2002 13:04:45 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021015195516.GE4391@redhat.com>
-References: <andersen@codepoet.org> <20021014203749.GA24904@codepoet.org> <200210142107.g9EL7IX04354@localhost.localdomain> <20021014215416.GB25941@codepoet.org> <20021014222515.GD1274@redhat.com> <20021015052521.GA1967@codepoet.org> <20021015182247.GA4391@redhat.com> <20021015184535.GA16401@codepoet.org> <20021015191330.GC4391@redhat.com> <20021015193216.GE15778@codepoet.org>
+Message-ID: <20021015130445.A829@eng2.beaverton.ibm.com>
+References: <A3B9245C291EEF4785A24A1DBE8D852B0376BC@rtpexc01.adaptec.com> <20021015194705.GD4391@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021015193216.GE15778@codepoet.org>
+In-Reply-To: <20021015194705.GD4391@redhat.com>; from dledford@redhat.com on Tue, Oct 15, 2002 at 03:47:06PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Erik Andersen <andersen@codepoet.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: "Jeffery, David" <David_Jeffery@adaptec.com>, 'Dave Hansen' <haveblue@us.ibm.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On Tue, Oct 15, 2002 at 01:32:16PM -0600, Erik Andersen wrote:
-> > about the scenario I asked about in my last email regarding a second disc 
-> > and the situation where no module needs loaded?  How is that handled?
-> 
-> Same deal.  The 1394 nodemgr invokes /sbin/hotplug.
+On Tue, Oct 15, 2002 at 03:47:06PM -0400, Doug Ledford wrote:
 
-That doesn't answer the question.  Your patch provided a kernel interface
-to be called by other kernel code (during module init time if I'm
-correct).  As such, hotplug itself is *not* attaching the disk, it is
-letting the module init take care of it.  If /sbin/hotplug isn't attaching
-the disk, but instead it is being done by the kernel driver during insmod
-(using the facilities provided by your patch), THEN HOW DOES IT HAPPEN
-WHEN THE MODULE IS ALREADY LOADED?  Are you loading *another* copy of the
-same module to handle the additional disk?  Do you have a facility by
-which the hotplug manager can tell an existing module about a new disk?  
-Or does it just not get added?  Or does the 1394 node manager notice that
-the module for the new disk is already loaded and tell the module about
-the new disk without even invoking hotplug?  Please answer this for me.
+> The scsi mid layer will never send you more than host->can_queue commands 
+> at one time, so why do all the scsi driver authors feel it is necessary to 
+> split their queue depth up amongst devices?  Justin Gibbs is the only one 
+> that gets it right IMHO.  Set the depth on each device as deep as that 
+> device can take (if that happens to be host->can_queue - 1 or such, then 
+> so be it).  Then, let the mid layer and the request function worry about 
+> fairness across devices.  That's its job after all.  If everyone is going 
+> to moderate their queue depths like that, then we might as well yank 
+> can_queue out of the host struct entirely because *it serves no purpose*.
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+> Now, simple scsi controllers like the aic7xxx and intelligent raid 
+> controllers are two different beasts.  On simple controllers, the max 
+> queue depth on a target is typically whatever that target can handle.  On 
+> raid controllers, it's all up to what the firmware can handle (for all I 
+> know, the ServeRAID firmware may have one queue depth limit for total 
+> commands and a separate queue depth limit on each logical device).  So, I 
+> can't say for sure what the ips driver can and can't do, but I'm 
+> relatively sure that you are artificially limiting your own performance by 
+> handling queue depths the way you are.
+
+I totally agree the queue depth should not be limited based on the number of
+devices, but there should be a maximum limit - as Justin noted with the
+aic driver, using a large default queue depth (he had 253 or so) is not
+good with linux.
+
+The queue depth should be as small as possible without limiting the
+performance.
+
+-- Patrick Mansfield
