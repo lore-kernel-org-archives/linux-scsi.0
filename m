@@ -1,38 +1,56 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [RFC] put symbolic links between drivers and modules in the sysfs tree
-Date: Sat, 25 Sep 2004 18:05:03 +1000
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: Re: [RFC] put symbolic links between drivers and modules in the
+	sysfs tree
+Date: Sat, 25 Sep 2004 10:21:33 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <E1CB7YE-0004cA-00@gondolin.me.apana.org.au>
-References: <20040925073819.GT23987@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <1096100492.17155.3.camel@laptop.fenrus.com>
+References: <E1CB7YE-0004cA-00@gondolin.me.apana.org.au>
+Reply-To: arjanv@redhat.com
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-iBxiXwrs1lVnFT8XtWjP"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from arnor.apana.org.au ([203.14.152.115]:28173 "EHLO
-	arnor.apana.org.au") by vger.kernel.org with ESMTP id S269276AbUIYIFt
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Sep 2004 04:05:49 -0400
-In-Reply-To: <20040925073819.GT23987@parcelfarce.linux.theplanet.co.uk>
+Received: from mx1.redhat.com ([66.187.233.31]:27787 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S269283AbUIYIWI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 25 Sep 2004 04:22:08 -0400
+In-Reply-To: <E1CB7YE-0004cA-00@gondolin.me.apana.org.au>
 List-Id: linux-scsi@vger.kernel.org
-To: viro@parcelfarce.linux.theplanet.co.uk
-Cc: James.Bottomley@steeleye.com, greg@kroah.com, rusty@rustcorp.com.au, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: viro@parcelfarce.linux.theplanet.co.uk, James.Bottomley@steeleye.com, greg@kroah.com, rusty@rustcorp.com.au, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-viro@parcelfarce.linux.theplanet.co.uk wrote:
-> On Mon, Sep 20, 2004 at 01:29:44PM -0400, James Bottomley wrote:
->> This functionality is essential for us to work out which drivers are
->> supplied by which modules.  We use this in turn to work out which
->> modules are necessary to find the root device (and hence what
->> initrd/initramfs needs to insert).
-> 
-> So what will your userland code do when you run it on a system with
-> non-modular kernel currently running?
 
-Totally agreed.  If we didn't care about built-in drivers, then we might
-as well do cat /proc/modules.
+--=-iBxiXwrs1lVnFT8XtWjP
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-BTW, I'm very glad that this is being worked on and that table in Debian's
-mkinitrd can finally die.
+On Sat, 2004-09-25 at 10:05, Herbert Xu wrote:
 
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+> BTW, I'm very glad that this is being worked on and that table in Debian'=
+s
+> mkinitrd can finally die.
+
+btw does that mkinitrd already use=20
+readlink /sys/block/sda/device/block/device
+
+(which gives
+../../devices/pci0000:00/0000:00:06.0/0000:03:0b.0/host1/1:0:0:0
+as output)
+
+the pci path that gives can easily be matched to modules.pcimap to find
+the information in case of a PCI device, so at least the table in your
+mkinitrd doesn't need to contain PCI devices.....
+
+--=-iBxiXwrs1lVnFT8XtWjP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQBBVSqMxULwo51rQBIRAm1qAJ9ohY+2Vr7pGxNLH8AEwX6WZqJK3QCeLTgk
+UiAR1b61gZQBgVlpHVWbdU4=
+=89pR
+-----END PGP SIGNATURE-----
+
+--=-iBxiXwrs1lVnFT8XtWjP--
+
