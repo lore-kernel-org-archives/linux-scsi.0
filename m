@@ -1,139 +1,196 @@
-From: David Ramirez Joya <dramirez@citi.com.mx>
-Subject: Good afternoon to everyone. Question about PERC 4Di on Dell poweredge
- 1750
-Date: Thu, 10 Jun 2004 19:38:17 -0500
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: sense visible despite ide-floppy in 2.6 maybe
+Date: Fri, 11 Jun 2004 10:23:21 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40C8FEF9.5090106@citi.com.mx>
+Message-ID: <40C8FB79.1050706@torque.net>
+References: <1086710016.3647.4.camel@patibmrh9>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=_IS_MIME_Boundary"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from correo.citi.com.mx ([200.34.113.57]:6901 "EHLO
-	correo.citi.com.mx") by vger.kernel.org with ESMTP id S263645AbUFKAiS
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:41989 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263448AbUFKBaE
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jun 2004 20:38:18 -0400
+	Thu, 10 Jun 2004 21:30:04 -0400
+In-Reply-To: <1086710016.3647.4.camel@patibmrh9>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, mailman-owner@us.dell.com, Juan Antonio Garza Garza <jgarza@citi.com.mx>
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: linux-scsi@vger.kernel.org
 
---=_IS_MIME_Boundary
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
+Pat LaVarre wrote:
+> Doug G:
+> 
+> Did I do something wrong, or does "everyone know" already,
+> 
+> SCSI pass thru in 2.6 omits ide-floppy, except if we do resort to the
+> ide-scsi deprecated there?
 
-***************************
-Dell Moderator: I Subscribed to the linux-scsi mailing list in order to 
-send this message maybe it should be sent to another list _please_ help 
-me and send it to the porper list if this is not the one.
-***************************
+Pat,
+In lk 2.6 the ide-scsi driver is "deprecated" for cd/dvd device types
+but not other device types that use the ATAPI protocol. The ide-scsi
+driver is in the same group as the usb-storage and sbp2 drivers which
+bridge between the SCSI stack and other subsystem stacks. The
+ongoing problems we have with this group of drivers is as much to
+do with their technical complexity (spanning two different driver
+architectures) as it is to do with the politics of kernel
+development.
 
-Good afternoon to everyone. As in the info on the http://linux.dell.com 
-says: Ask questions to the mailing list, I have a question to you.
+Anyway ide-scsi probably needs some repair work in lk 2.6. Both
+Willem Riede and I have tried. IMO the ide-scsi driver looks ok
+from the scsi subsystem side ....
 
-I hope someone can help me!
+> Or more specifically,
+> 
+> Can ioctl SG_IO fetch the offset 7 Additional Length field of op x03
+> "REQUEST SENSE" data?
+> 
+> Naively I thought yes of course, I know that works with /dev/scd$n.
+> 
+> But then I tried a /dev/hd$v ide-floppy.  No joy.  perror tells me ioctl
+> SG_IO fails via "Invalid argument", dmesg has no comment.  sg_scan you
+> know.  ~/bin/sgio source is the trivial exercise quoted in source far
+> below, specifically with an O_NONBLOCK|O_RDWR open as you can see.
 
-Please bear with me, this is a quite looong message.
+My method with the SG_IO ioctl was to yield errnos
+if the SCSI command could not be sent (or was rejected
+at the point of transmission). So if there is an errno
+there will be no sense buffer (or any other valid
+response data). It is only when a response to the SCSI
+command is received that errno will be clear (and the
+various status variables should be checked).
 
-If you just want to help me please see the "The scenario" and "The 
-Questions" parts.
+> $ sudo sg3_utils-1.06/sg_scan /dev/hdd /dev/scd0
+> sg_scan: device /dev/hdd failed on scsi ioctl, skip: Input/output error
+> /dev/scd0: scsi0 channel=0 id=0 lun=0 [em]
+> $
+> $ sudo ~/bin/sgio /dev/hdd /dev/scd0 | strings
+> ioctl SG_IO: Invalid argument
+> Iomega  RRD             74.B
+> $
+> 
+> $ uname -srm
+> Linux 2.6.7-rc2 i686
+> $ lsmod | grep ide
+> ide_floppy             17664  0
+> $ sudo mount /dev/hdd /mnt/hdd
+> $ sudo umount /dev/hdd
+> $ alias xstrings="tr -d ' \r\n' | perl -wpe 's/(..)/chr hex \$1/eg' |
+> strings"
+> $ sudo cat /proc/ide/hdd/identify | xstrings
+> 803048B34F460C1E
+> 25.Q    IOMEGA  ZIP 250       ATAPI
+> (c) Copyright IOMEGA 2002
+> 601//320
+> $
 
-*******************************
-The scenario.
-*******************************
-I have a Dell Poweredge 1750 with the PERC 4Di SCSI controller.
+Perhaps you could sent me the "strace" of this failure so
+I can have a closer look at what is going on.
 
-I HAVE to install redhat 7.3 on this platform.
-Now, for now I have no option but to install Redhat 7.3 o 7.2 on this 
-server. This is because a software product requires the kernel version 
-included in this distribution version. So, until I have the proof that 
-it is not possible to install the product on this platform I cannot go 
-to the vendor to upgrade its product to work in another kernel version.
+> Pat LaVarre
+> 
+> P.S. I fell into trying all this when a friend not yet living in Linux
+> noticed my recent linux-ide report of a SATAPI host choking over an
+> available sense length rudely not aligned to four bytes.
 
-******************************
-What I have done:
-******************************
-I have downloaded the DKMS megaraid2-2.10.1 driver. I have managed to 
-compile it with the kernel version 2.4.18-3.
-Now I am not a programmer :-( just a sysadmin so what I did in order to 
-the driver to compile, was to apply the patch for the RH 8 Kernel (I 
-guess it was 2.4.18-20 or something). I apply this patch because by 
-trying to generate the driver just with the 2.10.1 source code as 
-included on the megaraid2-2.10.1 package the build just breaks.
+The underlying serial protocols used by sATA and SAS do
+seem to be in units of "dwords" (i.e. 4 byte quantities).
+I have noticed several SCSI standards changing the maximum
+allocation length of a one byte field (e.g. in an INQUIRY
+and MODE SENSE(6) ) from 255 to 252. The intent seems to be
+to have lengths that are multiples of 4.
 
-So after I managed for the driver to compile, I mkdriverdisk with dkms, 
-created the driver disk and I tried to make the driver to work with 
-"linux dd". The driver diskette was "incompatible with this version of 
-RedHat". I found out that there was missing the "- rh73" at the end of 
-the modinfo an disk-info line which state the driver name... With this 
-modification I managed to make RedHat 7.3 to "accept" the driver disk. 
-But the module is not accepted.
+> ----- ~/bin/sgio.c
+> 
+> #include <fcntl.h>
+> #include <scsi/sg.h>
+> #include <stdio.h>
+> #include <sys/ioctl.h>
+> #include <string.h>
+> #include <unistd.h>
+> 
+> static unsigned char static_cdb[0x100];
+> static unsigned char static_data[0x1000];
+> static unsigned char static_sense[0x100];
+> 
+> static void populate(sg_io_hdr_t * sih)
+> {
+> 	memset(sih, '\0', sizeof *sih);
+> 	sih->interface_id = 'S';
+> 
+> 	memset(&static_cdb, '\0', sizeof static_cdb);
+> 	sih->cmdp = static_cdb;
+> 	sih->cmd_len = 6;
+> 	memcpy(sih->cmdp, "\x12\0\0\0\x24\0", sih->cmd_len);
+> 
+> 	memset(&static_data, '\0', sizeof static_data);
+> 	sih->dxferp = static_data;
+> 	sih->dxfer_len = 0x24;
+> 	sih->dxfer_direction = SG_DXFER_NONE;
+> 	sih->dxfer_direction = SG_DXFER_TO_DEV;
+> 	sih->dxfer_direction = SG_DXFER_FROM_DEV;
 
-I looked on the logs, the problem is RedHat knows that the Megaraid 
-Driver needs a "Hardware SCSI" driver (I do not know how to call this) 
-which is one of aacraid, aic7xxx then it looks for the megaraid2.o !!! 
-driver on the BOOT Image of the redhat 7.3 Installation... Or so I 
-think. (please correct me if I am wrong but I guess this is what happens 
-on the boot sequence). Obviouly this driver will never be found because 
-the megaraid driver included in RH7.3 is the 1.18a version which is 
-named just as megaraid.o. So I  cannot go any further :-(. Just to be 
-sure, I tried to insmod the bare megaraid2.o driver to the kernel on the 
-RH7.3 install image I mean when the Installation drops a shell. But I 
-get a lot of Unresolved Symbols. I gues this is because the aacraid nor 
-the aic7xxx driver does not work so It cannot resolve the symbols it needs.
+The three above lines look a bit strange :-)
 
-Now what I have is this.
-I have to make a Dell poweredge 1750 to work with the stock kernel of 
-RH7.3. I have a driver diskette with the Megaraid2.o (Ver 2.10.1) 
-compiled (I don't know if it's safe to use it with the patch of the 
-2.4.18-20 Or something) But the driver cannot load because nor the 
-aacraid nor the aic7xxx driver cannot see the PERC 4Di device.
+> 	memset(&static_sense, '\0', sizeof static_sense);
+> 	sih->sbp = static_sense;
+> 	sih->mx_sb_len = 0x12; /* SATAPI may need 4 byte alignment */
+> 	sih->timeout = 30 * 1000; /* ms */
+> 
+> 	; /* sih->iovec_count sih->flags sih->pack_id sih->usr_ptr */
+> 	; /* sih->status sih->masked_status sih->msg_status */
+> 	; /* sih->sb_len_wr sih->host_status sih->drive_status */
+> 	; /* sih->resid sih->duration sih->info */
+> }
+> 
+> static void talk(int fd)
+> {
+> 	static sg_io_hdr_t static_sih;
+> 	sg_io_hdr_t * sih = &static_sih;
+> 	int ii;
+> 	populate(sih);
+> 	ii = ioctl(fd, SG_IO, sih);
+> 	if (ii < 0) {
+> 		perror("ioctl SG_IO");
+> 	} else {
+> 		fwrite(sih->dxferp, sih->dxfer_len, 1, stdout);
+> 		if ((sih->info & SG_INFO_OK_MASK) != SG_INFO_OK) {
+> 			fprintf(stderr, "x %X %X %X\n",
+> 				sih->info, sih->resid, sih->sb_len_wr);
+> 		}
+> 	}
+> }
+> 
+> int main(int argc, char * argv[])
+> {
+> 	int ix = 0;
+> 	--argc; ++argv;
+> 	for (ix = 0; ix < argc; ++ix)
+> 	{
+> 		int fd = open(argv[ix], O_NONBLOCK|O_RDWR);
+> 		if (fd < 0) {
+> 			perror("open");
+> 		} else {
+> 			int vn = 0;
+> 			if (0 <= ioctl(fd, SG_GET_VERSION_NUM, &vn)) {
+> 				if (vn < 30000) {
+> 					perror("ioctl SG_GET_VERSION_NUM");
+> 					continue;
+> 				}
 
+Note: I have started to drop this SG_GET_VERSION_NUM ioctl()
+check. It is still needed in the special case where the sg
+driver is working asynchronously (i.e. sending commands with
+write() and receiving the response with read() ).
 
-So what do I need? I have to do another aacraid or aic7xxx driver? 
-(which by the way I wouldn't know how to do it because I haven't seen a 
-method to make this driver using DKMS Nor that I have searched a lot ;-))
+> 			}
+> 			talk(fd);
+> 			close(fd);
+> 		}
+> 	}
+> 	return 0;
+> }
 
-By the way I just notied today that there is a 1.18f megaraid driver 
-version which I haven't tested (because the server is in another 
-physical location). Maybe that could be my answer but Again, I haven't 
-tested it on the Server. (I do not know if the aacraid or the aic7xxx 
-driver will now work but i have to test it to know).
-
-so after all of this information here are my questions PLEASE HELP!!!
-
-****************************************
-The questions
-****************************************
-I KNOW that RH7.3 IS NOT SUPPORTED for the Dell 1750 but I REALLY need 
-to know if it is possible to get it to work.
-
-Please tell me. A sysadmin without any programming ability has the 
-option to get it to work?
-
-If yes, please send me a clue on how to do it!!! Do I need to recompile 
-the megaraid2 driver with special options? Do I have to recreate the 
-accraid driver? aic7xxx driver??? A special patch not publicy 
-disclosed??? :-S
-
-If not. Please tell me. Is it not possible to get  RH7.3 to work with 
-the Dell poweredge 1750 because there is no driver for "..." and It is 
-not possible to create it.
-So I can go to the vendor and ASK him to make his product to work in 
-another kernel version.
-
-ANY help would be REALLY appreciated!!!
-
-Thanks in advance to all of you for the answer.
-
-Best regards,
-
-David Ramírez Joya.
-
--- 
-Ing. David Ramírez Joya	
-Security Consultant
-C I T I
-Tel. (52) 81 82 89 32 00 x 135
-Fax. 82 89 32 01
-e-mail: dramirez@citi.com.mx
-web: http://www.citi.com.mx
+Doug Gilbert
 
 
---=_IS_MIME_Boundary--
