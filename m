@@ -1,13 +1,13 @@
 From: janitor@sternwelten.at
-Subject: [patch 04/10]  scsi/osst: replace 	schedule_timeout() with msleep_interruptible()
-Date: Thu, 21 Oct 2004 10:47:03 +0200
+Subject: [patch 03/10]  scsi/imm: replace 	schedule_timeout() with msleep()
+Date: Thu, 21 Oct 2004 10:47:00 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <E1CKYb9-0004E0-Rw@sputnik>
+Message-ID: <E1CKYb6-0004BN-RD@sputnik>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:64232 "EHLO
-	baikonur.stro.at") by vger.kernel.org with ESMTP id S270706AbUJUIrH
+Received: from baikonur.stro.at ([213.239.196.228]:31142 "EHLO
+	baikonur.stro.at") by vger.kernel.org with ESMTP id S270699AbUJUIrE
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Oct 2004 04:47:07 -0400
+	Thu, 21 Oct 2004 04:47:04 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org, janitor@sternwelten.at, nacc@us.ibm.com
@@ -17,36 +17,26 @@ Cc: linux-scsi@vger.kernel.org, janitor@sternwelten.at, nacc@us.ibm.com
 
 Any comments would be appreciated.
 
-Description: Use msleep_interruptible() instead of
-schedule_timeout() to guarantee the task delays as expected.
+Description: Use msleep() instead of schedule_timeout()
+to guarantee the task delays as expected.
 
 Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
 Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
 ---
 
- linux-2.6.9-max/drivers/scsi/osst.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+ linux-2.6.9-max/drivers/scsi/imm.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/osst.c~msleep-drivers_scsi_osst drivers/scsi/osst.c
---- linux-2.6.9/drivers/scsi/osst.c~msleep-drivers_scsi_osst	2004-10-21 02:41:29.000000000 +0200
-+++ linux-2.6.9-max/drivers/scsi/osst.c	2004-10-21 02:41:29.000000000 +0200
-@@ -1488,8 +1488,7 @@ static int osst_reposition_and_retry(OS_
- 			osst_set_frame_position(STp, aSRpnt, frame + skip, 1);
- 			flag = 0;
- 			attempts--;
--			set_current_state(TASK_INTERRUPTIBLE);
--			schedule_timeout(HZ / 10);
-+			msleep_interruptible(100);
- 		}
- 		if (osst_get_frame_position(STp, aSRpnt) < 0) {		/* additional write error */
- #if DEBUG
-@@ -1550,7 +1549,7 @@ static int osst_reposition_and_retry(OS_
- 			debugging = 0;
- 		}
- #endif
--		schedule_timeout(HZ / 10);
-+		msleep_interruptible(100);
- 	}
- 	printk(KERN_ERR "%s:E: Failed to find valid tape media\n", name);
- #if DEBUG
+diff -puN drivers/scsi/imm.c~msleep-drivers_scsi_imm drivers/scsi/imm.c
+--- linux-2.6.9/drivers/scsi/imm.c~msleep-drivers_scsi_imm	2004-10-21 02:41:27.000000000 +0200
++++ linux-2.6.9-max/drivers/scsi/imm.c	2004-10-21 02:41:27.000000000 +0200
+@@ -1184,7 +1184,7 @@ static int __imm_attach(struct parport *
+ 	dev->waiting = &waiting;
+ 	prepare_to_wait(&waiting, &wait, TASK_UNINTERRUPTIBLE);
+ 	if (imm_pb_claim(dev))
+-		schedule_timeout(3 * HZ);
++		msleep(3000);
+ 	if (dev->wanted) {
+ 		printk(KERN_ERR "imm%d: failed to claim parport because "
+ 			"a pardevice is owning the port for too long "
 _
