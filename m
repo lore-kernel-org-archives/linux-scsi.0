@@ -1,67 +1,146 @@
-From: Mark Bellon <mbellon@mvista.com>
-Subject: ANNOUNCE: User-space System Device Enumation (uSDE)
-Date: Mon, 27 Oct 2003 13:40:29 -0700
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: /dev/hd* in sg_scan
+Date: 27 Oct 2003 17:09:23 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F9D82BD.4080609@mvista.com>
+Message-ID: <1067299763.3469.6.camel@patehci2>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([12.44.186.158]:38640 "EHLO
-	av.mvista.com") by vger.kernel.org with ESMTP id S263513AbTJ0Ukb
+Received: from email-out2.iomega.com ([147.178.1.83]:56529 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S263675AbTJ0XJp
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Oct 2003 15:40:31 -0500
-Received: from mvista.com (av [127.0.0.1])
-	by av.mvista.com (8.9.3/8.9.3) with ESMTP id MAA24396
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2003 12:40:29 -0800
+	Mon, 27 Oct 2003 18:09:45 -0500
+Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
+	by email.iomega.com (Postfix) with ESMTP id 4499C1E19
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2003 16:09:44 -0700 (MST)
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Initial availability of User-Space System Device Enumeration (uSDE) 
-package, version 0.74, can be found at http://sourceforge.net/projects/usde
+> http://tldp.org/HOWTO/SCSI-Generic-HOWTO/open.html
+> ... O_NONBLOCK ... ignored by ioctl(SG_IO)
 
-The uSDE provides an open framework for the enumeration (specification) 
-of system devices in a dynamic environment. Device handling is 
-implemented via plug-in programs known as policy methods. Policy methods 
-are free to handle their devices in any way, from trivial to complex - 
-anything from providing LSB device nodes to persistent device name 
-handling with
-replacement and relocation strategies.
+As of 2.6, in fact we now need O_NONBLOCK if we want open O_RDONLY to
+let us talk SG_IO to a DVD/CD with no disk present?  Also we discard the
+history of passing thru less commands for O_RDONLY than for O_RDWR?
 
-The uSDE depends on /sbin/hotplug (for dynamic insertions and removals), 
-sysfs (for device information) and /proc (various pieces of 
-information). It is not dependent on initrd - it explicitly scans sysfs 
-upon system startup to determine the initial device ensemble.
+Reaching those conclusions inspired me to try the following trivial
+inline patch for sg3_utils-1.05/sg_scan.c.  I see this patch brings much
+of /dev/hd* to the notice of sg utils sg_scan.  However, this patch may
+not be ready for prime-time, some of the code I flowed around I do not
+understand.
 
-Part of the uSDE release is a collection of sample polices:
+Do we intend to make /dev/hd[a-z] available for passing ioctl SG_IO thru
+to ATAPI DVD/CD, in 2.6?  Or for 2.6 do we recommend ab/using some other
+device name?
 
-disk-ide-policy - handles IDE, EIDE, SATA and USB-EIDE disks. Implements 
-persistent device naming, automatic device replacement and automatic 
-device relocation features.
+Patched sg_scan success here looks like:
 
-disk-scsi-policy - handles SCSI, IEEE-1394, FibreChannel and USB-SCSI 
-disks including multiported devices. Iplements persistent device naming, 
-automatic device replacement and automatic device relocation features.
+$ sudo sg_scan -i
+/dev/hda: scsi0 channel=0 id=0 lun=0
+/dev/hdc: scsi0 channel=0 id=0 lun=0 [em]
+    LITE-ON   COMBO LTC-48161H  KH0K [wide=0 sync=0 cmdq=0 sftre=0 pq=0x0]
+/dev/sg0: scsi0 channel=0 id=0 lun=0 [em]  type=5
+    Iomega    RRD               01.U [wide=0 sync=0 cmdq=0 sftre=0 pq=0x0]
+$
 
-multipath-policy - handles the automatic provisioning of multipathing 
-for multiported storage devices.
+Perhaps the soft bridge from SCSI to ATA HDD in Linux, like some
+FireWire HDD, is an apparently SCSI device that does not support op x12
+Inquiry.
 
-ethernet-policy - handles ethernet interefaces. Implements persistent 
-interface naming, interface anchoring, automatic device replacement and 
-automatic device relocation features.
+Pat LaVarre
 
-floppy-policy - handles internal floppy disks.
+P.S. Before now I see no hits in:
 
-simple-device-policy - a "catch all" policy for block and character devices.
+http://groups.google.com/groups?q=sg_scan+dev+hdc
 
-devfs-policy - provides devfs device names.
-
-lsb-policy - provides LSB device names.
-
-
-Location:       http://sourceforge.net/projects/usde
-Mailing list:   usde-general@lists.sourceforge.net
-
-mark
+diff -Nur sg3_utils-1.05/sg_scan.c sg3_utils/sg_scan.c
+--- sg3_utils-1.05/sg_scan.c	2003-05-29 02:55:48.000000000 -0600
++++ sg3_utils/sg_scan.c	2003-10-27 16:55:09.085283256 -0700
+@@ -43,6 +43,8 @@
+ 
+ #define NUMERIC_SCAN_DEF 1   /* change to 0 to make alpha scan default */
+ 
++#define DEV_HD_SCAN 26 /* change to 4 to scan only /dev/hd[abcd] */
++
+ #define OFF sizeof(struct sg_header)
+ #define INQ_REPLY_LEN 96        /* logic assumes >= sizeof(inqCmdBlk) */
+ #define INQ_CMD_LEN 6
+@@ -101,6 +103,14 @@
+     char buff[64];
+     int  big,little;
+ 
++    if (0 <= k) {
++            if (k < DEV_HD_SCAN) {
++                sprintf(fname, "/dev/hd%c", ('a' + k));
++                return;
++            }
++            k -= DEV_HD_SCAN;
++    }
++
+     strcpy(fname, "/dev/sg");
+     if (do_numeric) {
+         sprintf(buff, "%d", k);
+@@ -202,8 +212,10 @@
+             }
+             else if ((ENODEV == errno) || (ENOENT == errno) ||
+                      (ENXIO == errno)) {
+-                ++num_errors;
+-                ++num_silent;
++                if (DEV_HD_SCAN <= k) {
++                    ++num_errors;
++                    ++num_silent;
++                }
+                 continue;
+             }
+             else {
+@@ -216,7 +228,7 @@
+             }
+         }
+         res = ioctl(sg_fd, SCSI_IOCTL_GET_IDLUN, &my_idlun);
+-        if (res < 0) {
++        if ((res < 0) && (DEV_HD_SCAN <= k)) {
+             snprintf(ebuff, EBUFF_SZ,
+                      ME "device %s failed on scsi ioctl, skip", fname);
+             perror(ebuff);
+@@ -224,7 +236,7 @@
+             continue;
+         }
+         res = ioctl(sg_fd, SCSI_IOCTL_GET_BUS_NUMBER, &host_no);
+-        if (res < 0) {
++        if ((res < 0) && (DEV_HD_SCAN <= k)) {
+             snprintf(ebuff, EBUFF_SZ, ME "device %s failed on scsi "
+                      "ioctl(2), skip", fname);
+             perror(ebuff);
+@@ -233,7 +245,7 @@
+         }
+ #ifdef SG_EMULATED_HOST
+         res = ioctl(sg_fd, SG_EMULATED_HOST, &emul);
+-        if (res < 0) {
++        if ((res < 0) && (DEV_HD_SCAN <= k)) {
+             snprintf(ebuff, EBUFF_SZ, 
+                      ME "device %s failed on sg ioctl(3), skip", fname);
+             perror(ebuff);
+@@ -252,7 +264,9 @@
+         printf(", huid=%d", my_idlun.host_unique_id);
+ #endif
+ #ifdef SG_GET_RESERVED_SIZE
+-        {
++        if (k < DEV_HD_SCAN) {
++            printf("\n");
++        } else {
+             My_sg_scsi_id m_id; /* compatible with sg_scsi_id_t in sg.h */
+ 
+             res = ioctl(sg_fd, SG_GET_SCSI_ID, &m_id);
+@@ -282,6 +296,9 @@
+             continue;
+         }
+ #endif
++        if (k < DEV_HD_SCAN) {
++            continue;
++        }
+         memset(isghp, 0, sizeof(struct sg_header));
+         isghp->reply_len = inqOutLen;
+         memcpy(inqBuff + OFF, inqCmdBlk, INQ_CMD_LEN);
 
 
