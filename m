@@ -1,62 +1,121 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [linux-usb-devel] Re: Unaligned scatter-gather buffers and usb-storage
-Date: Thu, 20 Nov 2003 07:53:53 +0100
+From: Jes Sorensen <jes@wildopensource.com>
+Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
+Date: 20 Nov 2003 04:19:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031120065353.GW1106@suse.de>
-References: <20031119084729.GA1106@suse.de> <200311191401.34540.oliver@neukum.org> <20031119130400.GG1106@suse.de> <1069252642.10768.7.camel@mulgrave> <20031119143901.GI1106@suse.de> <1069253904.10768.13.camel@mulgrave> <20031119150011.GJ1106@suse.de> <Pine.LNX.4.58.0311191854560.2166@kai.makisara.local> <20031119201952.GT1106@suse.de> <Pine.LNX.4.58.0311192331370.2166@kai.makisara.local>
+Message-ID: <yq0islf5rdm.fsf@wildopensource.com>
+References: <B179AE41C1147041AA1121F44614F0B060ED75@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:59356 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261538AbTKTGyU (ORCPT
+Received: from jaguar.mkp.net ([192.139.46.146]:44776 "EHLO jaguar.mkp.net")
+	by vger.kernel.org with ESMTP id S264275AbTKTJTx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Nov 2003 01:54:20 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58.0311192331370.2166@kai.makisara.local>
+	Thu, 20 Nov 2003 04:19:53 -0500
+In-Reply-To: <B179AE41C1147041AA1121F44614F0B060ED75@AVEXCH02.qlogic.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Oliver Neukum <oliver@neukum.org>, Patrick Mansfield <patmans@us.ibm.com>, Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dougg@torque.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Linux-SCSI <linux-scsi@vger.kernel.org>, jeremy@sgi.com, jbarnes@sgi.com
 
-On Thu, Nov 20 2003, Kai Makisara wrote:
-> On Wed, 19 Nov 2003, Jens Axboe wrote:
-> 
-> > On Wed, Nov 19 2003, Kai Makisara wrote:
-> ..
-> > > As usual, I am against this 512-byte alignment (thinking as st
-> > > maintainer). Don't default to more strict aligment requirements than is
-> > > necessary. It creates hidden performance problems for character device
-> > > drivers.
-> >
-> > But you have to honor hardware restrictions, though. Where is the
-> > performance impact?
-> >
-> Yes, I agree that we must not try to do things the hardware does not
-> allow. On i386, most SCSI adapter accept any alignment. It is a waste to
-> require 512-byte alignment with these adapters just because USB requires
-> that. I think there should be a way for the high-level drivers to know
-> about the absolutely necessary alignment requirements for the actual
-> adapter being used with a device.
-> 
-> If the user buffer is not aligned according to the required rules, the
-> driver must copy the data into a temporary buffer for i/o. This consumes
-> bandwidth and with the current faster tape drives this leads to
-> significant waste of cpu cycles (according to measurements).
-> 
-> The software using tapes tends to malloc() the buffers and then the
-> alignment is not guaranteed to 512 byte boundaries. Other Unices don't
-> have alignment requirements for tape buffers and I think we should avoid
-> requiring this in Linux if possible.
+>>>>> "Andrew" == Andrew Vasquez <andrew.vasquez@qlogic.com> writes:
 
-Then you just cannot do zero-copy dma, if the buffer isn't aligned
-properly. It's as simple as that. And surely that wont kill you
-performance wise.
+>> - Call pci_set_consistent_dma_mask() to allow for 64 bit consistent
+>> allocations, required on some platforms such as the SN2.
 
-Doing bounce buffering to just maintain the use of mapping user pages
-into the kernel ls out right silly.
+Andrew> Yes, I believe Jeremy forwarded a patchset for the 6.x driver.
 
-So no, I still don't think we have to add anything. Just don't do_dio if
-the alignment doesn't allow it. Ditto for sg.
+Andrew,
 
--- 
-Jens Axboe
+Yep, my patch is basically a consolidation of Jeremy's changes and a
+few extras of my own.
 
+>> - Wait 20 usecs (not sure how long is really necessary, but this
+>> seems safe) after setting CSR_ISP_SOFT_RESET in the ctrl_status
+>> register as the card doesn't respond to PCI reads while in reset
+>> state. This causes a machine check on some architectures.  - Flush
+>> PCI writes before calling udelay() to ensure the write is not
+>> sitting idle in-flight for a while before hitting the hardware.
+
+Andrew> Yes, we also need to look at some PCI posting issues with our
+Andrew> move to MMIO.
+
+I went through the init code and I didn't notice any other posting
+issues, but that doesn't mean there aren't any ;-) Some of the higher
+end ia64 McKinley boxees such as hte HP and SGI ones are good for
+triggering these.
+
+>> - Use auto-negotiate link speed when using default parameters
+>> rather than NVRAM settings. Disable NVRAM reading on SN2 since it's
+>> not possible to execute the HBA's BIOS on an SN2.
+
+Andrew> Internally, we've been talking about taking a more defensive
+Andrew> route within the driver if the NVRAM data is not valid --
+Andrew> failing the initialization process completely, and therefore,
+Andrew> removing this code completely from the driver.
+
+I would really like to discourage this approach. Instead I think it
+would be better to sit down with a manual and plug in safe defaults
+for all the entries. I have run into the problem several times in
+particular with the qla1280 based cards that the NVRAM settings were
+bogus and I couldn't get to them. I don't know if this can happen with
+the FC cards, but I have seen cases where machines have OEM'd SCSI
+parts without and NVRAM and QL HBAs in their PCI slots, in this case
+you end up with a situation where some of the devices have to be
+mangled via a BIOS mangling tool and otheres require command line
+parameters.
+
+The Linux model is quite different here, we normally rely on sane
+defaults in the driver and then allow users to tweek these settings in
+/etc/modules.conf or through /proc at runtime.
+
+Then there's the problems non-x86 platforms not having tools
+available, and even if they are out there, they might not match the
+version of glibc you are running or your distribution of choice. I
+checked out your web page and I only see references to Red Hat Linux
+and SuSE Linux both in 32 and 64 bit (presuming that by 32 bit you
+mean x86 and by 64 bit you mean ia64 - just that naming doesn't make
+any sense in the Linux space since we support a lot of different 32
+and 64 bit architectures).
+
+If the tools were open source that would make it slightly easier, but
+even then you have the problem that you need to be able to boot the
+system to get to the settings. If I have say an PPC64 box with my root
+file system on a QL2344, I lose.
+
+Andrew> Manufacturing writes a pre-canned NVRAM image along with a
+Andrew> rolling serial number (unique to each HBA) to each card that
+Andrew> leaves QLogic.  One obvious example of a potential problem in
+Andrew> the case of using the (driver) doctored NVRAM data is how to
+Andrew> assign a unique serial number to the ISP that is being
+Andrew> initialized.  BTW: The serial number is actually encoded in
+Andrew> bytes 5, 6, and 7 of the WWPN (portname); coupled with the
+Andrew> hardcoded port number (33) and the QLogic copany code of (224
+Andrew> and 139), code from qla2x00_nvram_config():
+
+Ok this one is more tricky. There's a couple of options though, we
+could generate a unique serial number based on the random driver
+output, or maybe it's worth coming up with an infrastructure for this,
+other FC card drivers will run into the same problem.
+
+Andrew> I don't believe this is going to be a safe route.  QLogic does
+Andrew> offer other methods to modify NVRAM parameters besides the
+Andrew> BIOS utility, a GUI (SANsurfer) as well as a command-line tool
+Andrew> (SANblade CLI) - the 64bit versions are available here:
+
+I didn't actually know these existed, I never noticed a reference to
+them in the driver. However as Matthew pointed out, they don't really
+solve the problem for non-x86 and non-ia64 users.
+
+>> /* Bad NVRAM data, set defaults parameters. */ if (chksum ||
+
+Andrew> How about we keep the current byte array definition and add
+Andrew> the following code:
+
+Andrew> nv->special_options[1] = BIT_7;
+
+Andrew> Same effect, less BE/LE structure overhead.
+
+I prefer the other way, it's a lot more readable for outsiders who do
+not have a copy of the firmware programming guide (such as myself).
+
+Thanks,
+Jes
