@@ -1,41 +1,35 @@
-From: Linus Torvalds <torvalds@osdl.org>
-Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
-Date: Wed, 24 Sep 2003 09:53:02 -0700 (PDT)
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [iscsi 2/2] iscsi-probe.c
+Date: Wed, 24 Sep 2003 10:11:52 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0309240948550.3178-100000@home.osdl.org>
-References: <3F71C8FD.2050109@xs4all.nl>
+Message-ID: <20030924101152.A17901@beaverton.ibm.com>
+References: <20030924144817.A16189@infradead.org> <018b01c382b7$b7f81220$8f074d0a@apac.cisco.com> <20030924174046.A20362@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:38820 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S261508AbTIXQyu (ORCPT
+Received: from e3.ny.us.ibm.com ([32.97.182.103]:2024 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261535AbTIXRNR (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2003 12:54:50 -0400
-In-Reply-To: <3F71C8FD.2050109@xs4all.nl>
+	Wed, 24 Sep 2003 13:13:17 -0400
+Content-Disposition: inline
+In-Reply-To: <20030924174046.A20362@infradead.org>; from hch@infradead.org on Wed, Sep 24, 2003 at 05:40:46PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Ruud Linders <rkmp@xs4all.nl>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Patrick Mansfield <patmans@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, Andries.Brouwer@cwi.nl
+To: 'Christoph Hellwig' <hch@infradead.org>
+Cc: "Sachin Mhatre (smhatre)" <smhatre@cisco.com>, 'Jeff Garzik' <jgarzik@pobox.com>, linux-scsi@vger.kernel.org
 
+On Wed, Sep 24, 2003 at 05:40:46PM +0100, 'Christoph Hellwig' wrote:
 
-On Wed, 24 Sep 2003, Ruud Linders wrote:
-> > 
-> > Is this different from a plain kernel _without_ the patch?
+> > We read/write into the "/proc/scsi/scsi" file for
+> > configuration/deconfiguration of iSCSI devices.
 > 
-> No difference.
+> I see.  And that's exactly wrong.  Take a look at the usb-storage or sbp2
+> drivers on how to handle it.
 
-Ok. I committed my version as "better than what is there now", but clearly
-it's not good enough.
+They could use scsi_scan_host_selected(host, chan, target, SCAN_WILD_CARD,
+0) or a scan target function, though their current lun scanning looks odd.
 
-So we should really add code to sd_read_cache_type() to default to 
-write-through for USB devices. The question is, what kind of flag do we 
-want to use?
+What was wrong with exporting scsi_scan_host_selected?
 
-We already have the combination "removable && !lockable", which would make
-a lot of sense. But I don't think USB even touches those flags, and
-"removable" wrt USB is actually a bit ambiguous (in the USB unplug case,
-it's actually the _controller_ that is removed, not the medium).
+We don't have a scsi_remove_target().
 
-Suggestions? Just add a new flag like the "use_10_for_ms" flag?
-
-		Linus
-
+-- Patrick Mansfield
