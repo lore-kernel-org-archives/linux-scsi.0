@@ -1,66 +1,52 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: PATCH: scsi device queue depth adjustability patch
-Date: Thu, 3 Oct 2002 12:41:31 -0400
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: 2.4.39 "Sleeping function called from illegal context at slab.c:1374"
+Date: Thu, 3 Oct 2002 10:17:38 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021003164131.GF30853@redhat.com>
-References: <dledford@redhat.com> <20021002002854.GF28265@redhat.com> <200210031425.g93EPiF02579@localhost.localdomain>
+Message-ID: <20021003171738.GA1106@beaverton.ibm.com>
+References: <3D99885B.533C320D@aitel.hist.no> <3D99EF62.3A3E6932@digeo.com> <20021001215907.GA8273@midgaard.us> <3D9A207A.14BFF440@digeo.com> <20021002162443.GA1317@beaverton.ibm.com> <20021002184437.GA17474@midgaard.us> <20021002212122.GF1317@beaverton.ibm.com> <20021002235349.GA20442@midgaard.us>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200210031425.g93EPiF02579@localhost.localdomain>
+In-Reply-To: <20021002235349.GA20442@midgaard.us>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
+To: akpm@digeo.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dougg@gear.torque.net
 
-On Thu, Oct 03, 2002 at 10:25:44AM -0400, James Bottomley wrote:
-> dledford@redhat.com said:
-> > What I need, people to test this with the old aic7xxx driver (which
-> > implements the new code paths, no other drivers do) and people to test
-> >  with other drivers to make sure it doesn't break them.  If I don't
-> > hear  complaints then I'll move on to my next change which is far more
-> > intrusive  on drivers in general. 
+Andreas,
+	I noticed a problem with the scsi_error.c update the I made to
+	2.5.40. There is a typo in the the tur check on error handling.
+	I tested the patch yesterday and it is recovering better on
+	faults. 
+
+	I do not know if it will fix your problem, but it might be worth
+	a try.
+	
+	I will send it to you in bit I am in the process of
+	rolling it and other patches that depend on it up.
+
+
+Andreas Boman [aboman@nerdfest.org] wrote:
+> * Mike Anderson (andmike@us.ibm.com) wrote:
+> > Andreas,
+> > 	Here is the updated patch.
+> > 
 > 
-> After fixing up the 53c700 to use the new adjust queue depths stuff, I can 
-> confirm it's working fine for me here (well, actually I fixed the generic scsi 
-> tcq code to use it, but only the 53c700 driver uses this).
+> Yep, no more warnings on modprobe sg. Unfortenuately the box still hangs after 
+> modprobe ide-scsi:
+> 
+>  scsi1 : SCSI host adapter emulation for IDE ATAPI devices
+>  scsi_eh_offline_sdevs: Device set offline - notready or command retry failedafter error recovery: host1 channel 0 id 0 lun 0
+>    Vendor:           Model:                   Rev:     
+>    Type:   Direct-Access                      ANSI SCSI revision: 00
+>  hda: lost interrupt
+>  ide-scsi: CoD != 0 in idescsi_pc_intr
+>  hda: DMA disabled
+>  hda: ATAPI reset complete
+> 
+> 
+> andreas
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
-Excellent ;-)  However, a couple questions.
-
-1)  When/How is the lldd notified that tagged queueing has been enabled 
-and the depth to which it is enabled?
-
-2)  How does the lldd tell the midlayer (and hence the block layer) to 
-reduce the queue depth?
-
-
-Content-Description: tmp.diff
-> ===== scsi.h 1.22 vs edited =====
-> --- 1.22/drivers/scsi/scsi.h	Thu Aug 15 16:01:28 2002
-> +++ edited/scsi.h	Thu Aug 15 16:18:53 2002
-> @@ -882,7 +882,7 @@
->  
->          if(SDpnt->tagged_supported && !blk_queue_tagged(q)) {
->                  blk_queue_init_tags(q, depth);
-> -                SDpnt->tagged_queue = 1;
-> +		scsi_adjust_queue_depth(SDpnt, 1, depth);
->          }
->  }
->  
-> @@ -892,7 +892,7 @@
->   **/
->  static inline void scsi_deactivate_tcq(Scsi_Device *SDpnt) {
->          blk_queue_free_tags(&SDpnt->request_queue);
-> -        SDpnt->tagged_queue = 0;
-> +	scsi_adjust_queue_depth(SDpnt, 0, 2);
->  }
->  #define MSG_SIMPLE_TAG	0x20
->  #define MSG_HEAD_TAG	0x21
-
-
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
