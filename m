@@ -1,36 +1,38 @@
-From: Burn Alting <burn@comptex.com.au>
-Subject: SCSI Persistent Reservations
-Date: Thu, 22 Jan 2004 12:56:10 +1100
+From: Bob Doyle <doyle@primenet.com>
+Subject: Re: BusLogic update - take 2
+Date: Wed, 21 Jan 2004 20:45:19 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1074736570.26607.304.camel@swtf.comptex.com.au>
+Message-ID: <400F474F.917B0AC0@primenet.com>
+References: <40062183.D31421D7@primenet.com> <20040121134732.B29605@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from GOL139579-1.gw.connect.com.au ([203.63.118.157]:51609 "EHLO
-	goldweb.com.au") by vger.kernel.org with ESMTP id S264303AbUAVB71
+Received: from smtp1.roc2.gblx.net ([64.215.96.100]:16041 "EHLO
+	smtp1.roc2.gblx.net") by vger.kernel.org with ESMTP id S261872AbUAVDpa
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Jan 2004 20:59:27 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by goldweb.com.au (Postfix) with ESMTP id C5171390F04
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2004 12:56:15 +1100 (EST)
-Received: from goldweb.com.au ([127.0.0.1])
-	by localhost (kermit [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 23042-02 for <linux-scsi@vger.kernel.org>;
-	Thu, 22 Jan 2004 12:56:15 +1100 (EST)
-Received: from mail.comptex.com.au (dsl-186.195.240.220.lns02-nort-cbr.dsl.comindico.com.au [220.240.195.186])
-	by goldweb.com.au (Postfix) with ESMTP id 2BA7C39043E
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2004 12:56:11 +1100 (EST)
+	Wed, 21 Jan 2004 22:45:30 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+Christoph Hellwig wrote:
+ 
+> What's this:?
+> 
+> +#ifndef FAILURE
+> +#define FAILURE (-1)
+> +#endif
+> 
+> else the patch looks okay to me
 
-Can anyone point me towards GPL or OpenSource code that uses SCSI-3
-Persistent Reservations. I've looked at Doug Ledford's scsires (version
-0.7-2) code but it mainly deals with SCSI-2 Reserve/Release commands.
+The BusLogic.c code does a #include "FlashPoint.c" which conditionally defines
+FAILURE when CONFIG_SCSI_OMIT_FLASHPOINT is not defined...
 
-Thanks in advance
--- 
-Burn Alting <burn@comptex.com.au>
+Eventually I'd like to get rid of that stupid include, compile the BusLogic
+and FlashPoint drivers separately, and have the BusLogic module conditionally
+load FlashPoint module - or something.
 
+I'm not sure I have the stomach to touch the FlashPoint code.
+
+Bob.
