@@ -1,100 +1,57 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: PATCH: (as141) Unaligned scatter-gather buffers and usb-storage
-Date: Fri, 21 Nov 2003 13:03:05 -0500 (EST)
+From: Clay Haapala <chaapala@cisco.com>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Fri, 21 Nov 2003 12:18:17 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0311211249230.1381-100000@ida.rowland.org>
-References: <20031120191859.GA3569@kai.makisara.local>
+Message-ID: <yqujn0apwpp2.fsf@chaapala-lnx2.cisco.com>
+References: <200310231734.10263.krmurthy@cisco.com>
+	<20031027153932.A16679@infradead.org>
+	<yqujvfpdwu4f.fsf@chaapala-lnx2.cisco.com>
+	<20031121173236.GX30485@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:2308 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S264394AbTKUSDG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Nov 2003 13:03:06 -0500
-In-Reply-To: <20031120191859.GA3569@kai.makisara.local>
+Received: from sj-iport-5.cisco.com ([171.68.10.87]:13404 "EHLO
+	sj-iport-5.cisco.com") by vger.kernel.org with ESMTP
+	id S264405AbTKUSSW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2003 13:18:22 -0500
+In-Reply-To: <20031121173236.GX30485@parcelfarce.linux.theplanet.co.uk> (Matthew
+ Wilcox's message of "Fri, 21 Nov 2003 17:32:36 +0000")
 List-Id: linux-scsi@vger.kernel.org
-To: Kai =?iso-8859-1?Q?M=E4kisara?= <kai.makisara@kolumbus.fi>, Douglas Gilbert <dougg@torque.net>
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, James Bottomley <James.Bottomley@steeleye.com>, Patrick Mansfield <patmans@us.ibm.com>, Jens Axboe <axboe@suse.de>, Oliver Neukum <oliver@neukum.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
+To: Matthew Wilcox <willy@debian.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Krishna Murthy <krmurthy@cisco.com>, linux-scsi@vger.kernel.org, davmyers@cisco.com
 
-I'm not sure whether Jens is objecting to adding the extra member to the
-host template or to making the default alignment something other than 512.  
-Here's my attempt at a compromise patch, which boils the area of
-disagreement between Kai and Jens down to a single line of code (plus a
-comment).  It doesn't change the host template and it shouldn't slow down
-any tape I/O programs when using a non-USB device.
+On Fri, 21 Nov 2003, Matthew Wilcox spake thusly:
+> On Fri, Nov 21, 2003 at 10:42:40AM -0600, Clay Haapala wrote:
+>> On Mon, 27 Oct 2003, Christoph Hellwig said:
+>> > 
+>> > highlevel:
+>> > 	- kill md5.c and iscsi-crc.c and use common cryptoapi
+>> > 	md5 / common crc code instead.
+>> 
+>> md5: That appears straight-forward, and has been implemented,
+>> subject to testing.  SELECT CRYPTO and SELECT MD5 makes it
+>> available in the kernel.
+>> 
+>> crc32: Ah, the iSCSI crc32 uses a different polynomial (stronger)
+>> than Ethernet and the rest.  We argued during the RFC process for
+>> just using Ethernet's as good enough, but were voted down.  So we
+>> are stuck with a separate implementation in this case.
+> 
+> OK, but please convert it to live in the crypto/ directory and use
+> the crypto interfaces.  That way if some unrelated project decides
+> to implement the same algorithm, we don't end up with two copies of
+> it.
 
-If there aren't any more objections to this, I urge James to apply the
-SCSI parts to a post-2.6.0-final tree, and likewise for Matt and the USB 
-part.
+I'm happy to do that.  Having established that it is not a redundant
+implementation, though, I would like to have it not be a factor with
+respect to driver inclusion, as there are bigger fish to fry.
 
-Alan Stern
+That being said, I'll probably jump on it, anyway.
 
-
-===== scsiglue.c 1.60 vs edited =====
---- 1.60/drivers/usb/storage/scsiglue.c	Fri Oct 24 14:53:38 2003
-+++ edited/drivers/usb/storage/scsiglue.c	Fri Nov 21 12:45:21 2003
-@@ -65,6 +65,16 @@
- 
- static int slave_configure (struct scsi_device *sdev)
- {
-+	/* Scatter-gather buffers (all but the last) must have a length
-+	 * divisible by the bulk maxpacket size.  Otherwise a data packet
-+	 * would end up being short, causing a premature end to the data
-+	 * transfer.  Since high-speed bulk pipes have a maxpacket size
-+	 * of 512, we'll use that as the scsi device queue's DMA alignment
-+	 * mask.  Guaranteeing proper alignment of the first buffer will
-+	 * have the desired effect because, except at the beginning and
-+	 * the end, scatter-gather buffers follow page boundaries. */
-+	blk_queue_dma_alignment(sdev->request_queue, (512 - 1));
-+
- 	/* this is to satisify the compiler, tho I don't think the 
- 	 * return code is ever checked anywhere. */
- 	return 0;
-===== sg.c 1.48 vs edited =====
---- 1.48/drivers/scsi/sg.c	Fri Oct 24 14:53:37 2003
-+++ edited/drivers/scsi/sg.c	Fri Nov 21 12:28:52 2003
-@@ -1741,7 +1741,11 @@
- 	int sg_tablesize = sfp->parentdp->sg_tablesize;
- 	struct scatterlist *sgl;
- 	int mx_sc_elems, res;
-+	struct scsi_device *sdev = sfp->parentdp->device;
- 
-+	if (((unsigned long)hp->dxferp &
-+			queue_dma_alignment(sdev->request_queue)) != 0)
-+		return 1;
- 	mx_sc_elems = sg_build_sgat(schp, sfp, sg_tablesize);
-         if (mx_sc_elems <= 0) {
-                 return 1;
-===== st.c 1.45 vs edited =====
---- 1.45/drivers/scsi/st.c	Fri Sep  5 12:16:40 2003
-+++ edited/drivers/scsi/st.c	Fri Nov 21 12:30:34 2003
-@@ -1267,7 +1267,8 @@
- 		i = STp->try_dio && try_rdio;
- 	else
- 		i = STp->try_dio && try_wdio;
--	if (i) {
-+	if (i && ((unsigned int)buf & queue_dma_alignment(
-+					STp->device->request_queue)) == 0) {
- 		i = st_map_user_pages(&(STbp->sg[0]), STbp->use_sg,
- 				      (unsigned long)buf, count, (is_read ? READ : WRITE),
- 				      STp->max_pfn);
-===== scsi_scan.c 1.52 vs edited =====
---- 1.52/drivers/scsi/scsi_scan.c	Fri Oct 24 14:53:37 2003
-+++ edited/drivers/scsi/scsi_scan.c	Fri Nov 21 12:34:00 2003
-@@ -231,6 +231,15 @@
- 	sdev->request_queue->queuedata = sdev;
- 	scsi_adjust_queue_depth(sdev, 0, sdev->host->cmd_per_lun);
- 
-+	/*
-+	 * Set the queue's mask to require a mere 8-byte alignment for
-+	 * DMA buffers, rather than the default 512.  This shouldn't
-+	 * inconvenience any user programs and should be okay for most
-+	 * host adapters.  A host driver can alter this mask in its
-+	 * slave_alloc() or slave_configure() callback if necessary.
-+	 */
-+	blk_queue_dma_alignment(sdev->request_queue, (8 - 1));
-+
- 	if (shost->hostt->slave_alloc) {
- 		if (shost->hostt->slave_alloc(sdev))
- 			goto out_free_queue;
-
+Question:  Should the implementation use the crypto api
+or be added to the lib/crc32 code?
+-- 
+Clay Haapala (chaapala@cisco.com) Cisco Systems SRBU +1 763-398-1056
+   6450 Wedgwood Rd, Suite 130 Maple Grove MN 55311 PGP: C89240AD
+     Well, looks like hypocrisy is back on the airwaves.
+       C'mon, Rush!  Do the crime, do the time, right?
