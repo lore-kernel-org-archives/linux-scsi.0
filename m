@@ -1,55 +1,36 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: growisofs stopped working with 2.6.8
-Date: Mon, 16 Aug 2004 17:01:05 +0100
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [usb-storage] 2.4.27rc2, DVD-RW support broke DVD-RAM writes
+Date: 16 Aug 2004 11:07:26 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1092672062.20838.29.camel@localhost.localdomain>
-References: <1092674287.3021.19.camel@bony>
+Message-ID: <1092676046.4235.11.camel@patlinux.iomegacorp.com>
+References: <20040730153657.GB2748@logos.cnet><20040731163334.GH23697@suse.
+	de><76A380F2-E3C5-11D8-B01E-00039398BB5E@ieee.org><06E9D950-E3EF-11D8-B976-
+	00039398BB5E@ieee.org><70B2077E-E401-11D8-B976-00039398BB5E@ieee.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-/EGprgmmfR379dvl8ul/"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from the-village.bc.nu ([81.2.110.252]:485 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S267799AbUHPRDU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Aug 2004 13:03:20 -0400
-In-Reply-To: <1092674287.3021.19.camel@bony>
-List-Id: linux-scsi@vger.kernel.org
-To: "Tony A. Lambley" <tal@vextech.net>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
-
-
---=-/EGprgmmfR379dvl8ul/
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from email-out2.iomega.com ([147.178.1.83]:33756 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S267798AbUHPRIg
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Aug 2004 13:08:36 -0400
+In-Reply-To: <70B2077E-E401-11D8-B976-00039398BB5E@ieee.org>
+List-Id: linux-scsi@vger.kernel.org
+To: usb-storage@lists.one-eyed-alien.net
+Cc: linux-scsi@vger.kernel.org
 
-On Llu, 2004-08-16 at 17:38, Tony A. Lambley wrote:
-> Hi, burning a dvd iso now fails :(
-> 
-> $ growisofs -Z /dev/hdc=file.iso
-> :-( unable to GET CONFIGURATION: Operation not permitted
-> :-( non-MMC unit?
+> drivers/scsi/sr.c ... vendor-specific op x1A 
+> reaching the drive, by analogy with SPC op x1A "MODE SENSE (6)", in 
+> place of the standard MMC op x5A "MODE SENSE (10)" ...
 
-We fixed some security holes. In doing so we tightened up so a few apps
-that worked before no longer work except as root. Thanks for the error
-message. Thats helpful as it suggests the following patch.
+I've now concretely proposed fixing this in drivers/scsi/.
 
-(and does it help K3B ?)
+Subject: [PATCH 2.4] rewritable USB DVD-RAM vs. mode sense op choice
+http://marc.theaimsgroup.com/?l=linux-scsi&m=109267404822826
 
+Of course I'll return to drivers/usb/storage/ if the drivers/scsi/ folk
+say I should.
 
-
+Pat LaVarre
 
 
-
---=-/EGprgmmfR379dvl8ul/
-Content-Disposition: inline; filename=a1
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; name=a1; charset=UTF-8
-
-LS0tIGRyaXZlcnMvYmxvY2svc2NzaV9pb2N0bC5jfgkyMDA0LTA4LTE2IDE4OjAxOjM2LjYyNzMw
-MTYyNCArMDEwMA0KKysrIGRyaXZlcnMvYmxvY2svc2NzaV9pb2N0bC5jCTIwMDQtMDgtMTYgMTg6
-MDE6MzYuNjI3MzAxNjI0ICswMTAwDQpAQCAtMTQ2LDYgKzE0Niw3IEBADQogCQlzYWZlX2Zvcl9y
-ZWFkKEdQQ01EX1JFQURfVE9DX1BNQV9BVElQKSwNCiAJCXNhZmVfZm9yX3JlYWQoR1BDTURfUkVQ
-T1JUX0tFWSksDQogCQlzYWZlX2Zvcl9yZWFkKEdQQ01EX1NDQU4pLA0KKwkJc2FmZV9mb3JfcmVh
-ZChHUENNRF9HRVRfQ09ORklHVVJBVElPTiksDQogDQogCQkvKiBCYXNpYyB3cml0aW5nIGNvbW1h
-bmRzICovDQogCQlzYWZlX2Zvcl93cml0ZShXUklURV82KSwNCg==
-
---=-/EGprgmmfR379dvl8ul/--
