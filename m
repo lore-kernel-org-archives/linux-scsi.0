@@ -1,80 +1,54 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Andrew Vasquez <praka@san.rr.com>
 Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b2).
-Date: Thu, 29 May 2003 10:26:16 -0400
+Date: Thu, 29 May 2003 08:17:26 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3ED61888.6040407@pobox.com>
-References: <20030519225728.GA17279@praka.local.home> <20030521173215.GA25137@praka.local.home> <20030521222635.GB21124@krispykreme> <20030529061913.GA27199@praka.local.home>
+Message-ID: <20030529151726.GA29206@praka.local.home>
+References: <20030519225728.GA17279@praka.local.home> <20030521173215.GA25137@praka.local.home> <20030521222635.GB21124@krispykreme> <20030529061913.GA27199@praka.local.home> <3ED61888.6040407@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:14002 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262257AbTE2ONL
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 May 2003 10:13:11 -0400
-In-Reply-To: <20030529061913.GA27199@praka.local.home>
+Received: from orngca-mls02.socal.rr.com ([66.75.160.17]:59274 "EHLO
+	orngca-mls02.socal.rr.com") by vger.kernel.org with ESMTP
+	id S262289AbTE2PK4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 May 2003 11:10:56 -0400
+Received: from san.rr.com (66-75-128-22.san.rr.com [66.75.128.22])
+	by orngca-mls02.socal.rr.com (8.11.4/8.11.3) with ESMTP id h4TFKwL12178
+	for <linux-scsi@vger.kernel.org>; Thu, 29 May 2003 08:20:58 -0700 (PDT)
+Received: from san.rr.com (localhost [127.0.0.1])
+	by san.rr.com (8.12.3/8.12.3/SuSE Linux 0.6) with ESMTP id h4TFHQjW029232
+	for <linux-scsi@vger.kernel.org>; Thu, 29 May 2003 08:17:26 -0700
+Received: (from praka@localhost)
+	by san.rr.com (8.12.3/8.12.3/Submit) id h4TFHQCd029231
+	for linux-scsi@vger.kernel.org; Thu, 29 May 2003 08:17:26 -0700
+Content-Disposition: inline
+In-Reply-To: <3ED61888.6040407@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <praka@san.rr.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Andrew Vasquez wrote:
-> On Thu, 22 May 2003, Anton Blanchard wrote:
-> 
-> 
->>>+#if MEMORY_MAPPED_IO
->>>+	/* Get memory mapped I/O address */
->>>+	pci_read_config_dword(ha->pdev, PCI_BASE_ADDRESS_1, &mmapbase);
->>
->>You really want to be using pci_resource_start(ha->pdev, 1) so it will
->>work on architectures like ppc64 and sparc64.
->>
-> 
-> 
-> You're correct -- code updated in my tree.
-> 
-> 
->>>+	mmapbase &= PCI_BASE_ADDRESS_MEM_MASK;
->>>+
->>>+	/* Find proper memory chunk for memory map I/O reg */
->>>+	base = mmapbase & PAGE_MASK;
->>>+	page_offset = mmapbase - base;
->>
->>Is that correct?
->>
-> 
-> 
-> The 'mmapbase &= PCI_BASE_ADDRESS_MEM_MASK' does appear to be
-> incorrect, yet, I just have one question.
+On Thu, 29 May 2003, Jeff Garzik wrote:
 
-s/incorrect/obsolete/
-
-This masking is a harmless remnant of ancient 2.2.x days, when we read 
-the PCI information straight out of the PCI config registers.  This 
-masking is no longer needed when a driver is converted to using 
-pci_resource_start (as it should be :))
-
-
-   it seems several drivers
-> (i.e. sym53c8xx_2, aic7xxx) ensure the memory-mapped resource begins
-> on a page boundary before passing it onto ioremap().  Yet, in the code
-> for __ioremap(), (arch/i386/mm/ioremap.c) there is this small comment:
+> >  it seems several drivers
+> >(i.e. sym53c8xx_2, aic7xxx) ensure the memory-mapped resource begins
+> >on a page boundary before passing it onto ioremap().  Yet, in the code
+> >for __ioremap(), (arch/i386/mm/ioremap.c) there is this small comment:
+> >
+> >	/*
+> >	 * NOTE! We need to allow non-page-aligned mappings too: we
+> >	 * will obviously have to convert them into an offset in a
+> >	 * page-aligned mapping, but the caller shouldn't need to know
+> >	 * that small detail.
+> >	 *
+> >	 */
+> >
+> >Is it safe to assume *all* platforms will handle this case internally,
+> >or should drivers perform the pre-process?
 > 
-> 	/*
-> 	 * NOTE! We need to allow non-page-aligned mappings too: we
-> 	 * will obviously have to convert them into an offset in a
-> 	 * page-aligned mapping, but the caller shouldn't need to know
-> 	 * that small detail.
-> 	 *
-> 	 */
+> They better.  It is expected that you can pass the bus address returned 
+> from pci_resource_start directly to ioremap (after ensuring availability 
+> by calling pci_request_regions).
 > 
-> Is it safe to assume *all* platforms will handle this case internally,
-> or should drivers perform the pre-process?
 
-They better.  It is expected that you can pass the bus address returned 
-from pci_resource_start directly to ioremap (after ensuring availability 
-by calling pci_request_regions).
+Thanks for the clarification.
 
-	Jeff
-
-
-
+--
+Andrew Vasquez
