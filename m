@@ -1,48 +1,52 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH][RFC] get rid of global array and ->init in sd.c and sr.c
-Date: Wed, 23 Oct 2002 17:11:31 +0200
+Subject: Re: [PATCH] get rid of ->finish method for highlevel drivers
+Date: Wed, 23 Oct 2002 17:13:35 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021023171131.A17312@lst.de>
-References: <20021022210739.A10079@lst.de> <20021023082853.GA9341@beaverton.ibm.com>
+Message-ID: <20021023171335.B17312@lst.de>
+References: <dledford@redhat.com> <200210231416.g9NEGoI01976@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20021023082853.GA9341@beaverton.ibm.com>; from andmike@us.ibm.com on Wed, Oct 23, 2002 at 01:28:53AM -0700
+In-Reply-To: <200210231416.g9NEGoI01976@localhost.localdomain>; from James.Bottomley@steeleye.com on Wed, Oct 23, 2002 at 09:16:49AM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, axboe@suse.dk, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Oct 23, 2002 at 01:28:53AM -0700, Mike Anderson wrote:
-> Looks good. I ran it on a system with ips, aic, scsi_debug and qla2x00
-> as a module. 
+On Wed, Oct 23, 2002 at 09:16:49AM -0500, James Bottomley wrote:
+> This is really exposing our whole detect init attach finish slave_attach mess 
+> which Christoph was trying to clean up.
 > 
-> When I applied the patch I got a quite a few rejects on sd.c and sr.c. I
-> fixed up sd.c, but did not run sr.c. My view is based off James
-> scsi-misc-2.5.
+> What happens now (after Christoph's removal of finish) is:
 > 
-> I noticed the patch seems to include some of your driver_register
-> removals (preiously posted) in init_sd and exit_sd, but there are no
-> adds to scsi_register_device or scsi_unregister_device.
+> 1) call detect to see if anyone will attach.  If yes, call slave attach (we 
+> adjust the queue depth here if wanted)
+> 2) call init (if not inited---done once per upper level driver) --- init is 
+> supposed to be for first init of the SCSI upper level device driver to 
+> allocate inital resources, so we already have detect called befor init.
 
-The patch is again 2.5.44 + my previous two patch (devicefs stuff
-and ->finish removal).
+Well, I'm working on removing ->init.  With the patch posted yersterday
+only sg.c and osst.c are left implementing it.
 
+> 3) call attach but release the commandblocks if sdev->attached comes back zero.
 > 
-> Christoph Hellwig [hch@lst.de] wrote:
-> > +	list_for_each(p, &sd_devlist) {
-> > +		sdkp = list_entry(p, struct scsi_disk, list);
-> >  		sdp = sdkp->device;
-> >  		if (sdp && (sdp->host == shp) && (sdp->id == scsi_id)) {
-> >  			retval = MKDEV_SD(dsk_nr);
-> >  			break;
+> -> attached, by the way is a semaphore because we can have more than one upper 
+> level attachment.  This exposes nicely in the rather icky algorithm of 
+> scsi_get_request_dev() which is used to find which upper level driver should 
+> process the request in the request function.
 > 
-> Might consider using list_for_each_entry since you always do both.
+> It looks like what we want to have happen is:
+> 
+> 1) init first
+>
+> 
+> 2) detect is currently superfluous (there will probably be a future time when 
+> we need a separate detect for lazy attachment---devices don't attach and 
+> consume resources until the operator so instructs)
+> 4) call build commandblocks to get a single working command
+> 5) attach
+> 6) if anything attached do the slave attach or cmd_per_lun adjustment.  If 
+> not, release the command blocks.
 
-Yupp.
-
-> I received a compile failures on sector_t until I put back the scsi.h
-> include.
-
-Umm, rhigh.  There are far to many users of sd.h to do such a change.
-I'll submt a patch to get rid of all those sd.h users in some time.
+Completly agreed with that.
 
