@@ -1,31 +1,38 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] fix gcc warning on 64 bit compile of gdth
-Date: Wed, 5 Jan 2005 11:19:18 +0000
-Message-ID: <20050105111918.GB30954@infradead.org>
-References: <B51CDBDEB98C094BB6E1985861F53AF302DE45@nkse2k01.adaptec.com> <1104831161.4215.17.camel@laptopd505.fenrus.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Fw: [BUG] USB Storage OOPS and a D state process in 2.6.10
+Date: Wed, 05 Jan 2005 08:17:45 -0600
+Message-ID: <1104934665.3852.7.camel@mulgrave>
+References: <20050105001420.5f4c8623.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.146.154.40] ([213.146.154.40]:38032 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S262329AbVAELTV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Jan 2005 06:19:21 -0500
-Content-Disposition: inline
-In-Reply-To: <1104831161.4215.17.camel@laptopd505.fenrus.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:24964 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262435AbVAEOSJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Jan 2005 09:18:09 -0500
+In-Reply-To: <20050105001420.5f4c8623.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: "Leubner, Achim" <Achim_Leubner@adaptec.com>, Christoph Hellwig <hch@infradead.org>, Al Viro <viro@parcelfarce.linux.theplanet.co.uk>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, Jan 04, 2005 at 10:32:41AM +0100, Arjan van de Ven wrote:
-> On Tue, 2005-01-04 at 10:29 +0100, Leubner, Achim wrote:
-> > You are right, in gdth_fill_raw_command() the driver is doing two
-> > different dma mappings, one for the data buffer stored in
-> > SCp.dma_handle, and the second for the sense buffer stored in SCp.buffer
-> > and host_scribble. So reuse of dma_handle does not work here.
-> 
-> Is there a way the driver can get rid of looking at the sense buffer at
-> all and let the midlayer do this ?
+On Wed, 2005-01-05 at 00:14 -0800, Andrew Morton wrote:
+> Looks like the scsi-vs-usb-storage bunfight isn't yet settled...
 
-The driver needs to fill the sense buffer ;-)
+Actually, this one looks pretty clear cut:
+
+According to the trace, we get into error handling for a removed device.
+This:
+
+> RIP <ffffffffa0108252>{:usb_storage:bus_reset+66} RSP <000001002f9a7e68>
+
+says that the usb_storage bus_reset routine never returns.
+
+So the system is hung in error handling and the kernel is waiting for
+everything to return to normal.  The fix is to work out why usb_storage
+hung there instead of returning success or fail.
+
+James
+
 
