@@ -1,35 +1,29 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: Thomas Babut <thomas@babut.net>
 Subject: Re: Kernel 2.6.x hangs with Symbios Logic 53c1010 Ultra3 SCSI	Adapter
-Date: Tue, 23 Nov 2004 01:40:49 +0000
-Message-ID: <20041123014049.GH25636@parcelfarce.linux.theplanet.co.uk>
-References: <04Nov8.094419est.332239@cyborg.cybernetics.com> <1099928314.10944.81.camel@compaq-rhel4.xsintricity.com> <41A294C5.8040702@babut.net>
+Date: Tue, 23 Nov 2004 02:39:17 +0100
+Message-ID: <41A294C5.8040702@babut.net>
+References: <04Nov8.094419est.332239@cyborg.cybernetics.com> <1099928314.10944.81.camel@compaq-rhel4.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:43920 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262535AbUKWBkv
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Nov 2004 20:40:51 -0500
-Content-Disposition: inline
-In-Reply-To: <41A294C5.8040702@babut.net>
+Received: from tueddeln.de ([213.202.245.13]:46037 "EHLO srv.specialhosting.de")
+	by vger.kernel.org with ESMTP id S262523AbUKWBjT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Nov 2004 20:39:19 -0500
+In-Reply-To: <1099928314.10944.81.camel@compaq-rhel4.xsintricity.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Babut <thomas@babut.net>
-Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
+To: linux-scsi@vger.kernel.org
+Cc: Matthew Wilcox <matthew@wil.cx>
 
-On Tue, Nov 23, 2004 at 02:39:17AM +0100, Thomas Babut wrote:
-> Would it be possible to integrate the sym53c8xx (1, not sym53c8xx_2) 
-> driver from Kernel 2.4.28 in 2.6? For me it would be the working 
-> solution to use my SCSI-Controller with Kernel 2.6.
-> 
-> Perhaps someone could make a patch for Kernel 2.6 which adds the old driver.
+Would it be possible to integrate the sym53c8xx (1, not sym53c8xx_2) 
+driver from Kernel 2.4.28 in 2.6? For me it would be the working 
+solution to use my SCSI-Controller with Kernel 2.6.
 
-No.  Don't do this.  Help make sym2 work for your system.
+Perhaps someone could make a patch for Kernel 2.6 which adds the old driver.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Thanks.
+
+Regards,
+Thomas Babut
