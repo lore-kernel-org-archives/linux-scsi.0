@@ -1,50 +1,57 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] remove outdated comment from scsi.c
-Date: Sat, 23 Nov 2002 04:03:31 +0100
+From: Douglas Gilbert <dougg@torque.net>
+Subject: lk 2.5.49 module frustration
+Date: Sat, 23 Nov 2002 14:14:42 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021123040331.B11428@lst.de>
+Message-ID: <3DDEF2A2.8050701@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
+Received: from torque.net (dm1-78.triode.net.au [202.147.125.78])
+	by iggy.triode.net.au (8.11.6/8.11.6) with ESMTP id gAN3EWA04484
+	for <linux-scsi@vger.kernel.org>; Sat, 23 Nov 2002 14:14:33 +1100
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-In 2.5 there's just one request_fn left.
+Hopefully others are having more success with the new
+module loader than I am. My system is basically RH8.0
+with the new module-init-tools (version 0.7) loaded
+and the recent 2.5.49 kernel.
+
+During system load there is noise (failure?) on calls
+to modprobe since the new command doesn't support the same
+switches as the old. [harmless?]
+
+My lsmod looks like this:
+# lsmod
+Module                  Size  Used by
+scsi_debug             29423  0 [unsafe]
+ohci1394               21561  0
+ieee1394               41773  1 ohci1394 [unsafe]
+parport_pc             18883  0 [unsafe]
+parport                30228  1 parport_pc [unsafe]
+ehci_hcd               32801  0
+usbcore                90237  3 ehci_hcd
+
+Those "unsafe" dependencies wedge in a module, making
+it hard to remove them. In the case of scsi_debug about
+30 seconds after it is loaded I get this on my console:
+# Module scsi_debug cannot be unloaded due to unsafe
+# usage in fs/proc/inode.c:204
+That is procfs calling __MOD_INC_USE_COUNT. Is that our
+problem (i.e. shouldn't RR fix that before he lets this
+stuff loose on us)?
+
+Are all the MODULE_* macros now dead? I can no longer
+get any load time options/parameters through to the
+scsi_debug. Nothing useful comes out of modinfo.
+
+Where is the ..... documentation?
+$ ls -l modules.txt
+-rw-r--r--    1 1046     101          9441 Feb 17  2001 modules.txt
+
+Doug Gilbert
 
 
---- 1.73/drivers/scsi/scsi.c	Fri Nov 22 12:59:03 2002
-+++ edited/drivers/scsi/scsi.c	Sat Nov 23 02:58:22 2002
-@@ -169,30 +169,13 @@
- /*
-  * Function:    scsi_initialize_queue()
-  *
-- * Purpose:     Selects queue handler function for a device.
-+ * Purpose:     Sets up the block queue for a device.
-  *
-  * Arguments:   SDpnt   - device for which we need a handler function.
-  *
-  * Returns:     Nothing
-  *
-  * Lock status: No locking assumed or required.
-- *
-- * Notes:       Most devices will end up using scsi_request_fn for the
-- *              handler function (at least as things are done now).
-- *              The "block" feature basically ensures that only one of
-- *              the blocked hosts is active at one time, mainly to work around
-- *              buggy DMA chipsets where the memory gets starved.
-- *              For this case, we have a special handler function, which
-- *              does some checks and ultimately calls scsi_request_fn.
-- *
-- *              The single_lun feature is a similar special case.
-- *
-- *              We handle these things by stacking the handlers.  The
-- *              special case handlers simply check a few conditions,
-- *              and return if they are not supposed to do anything.
-- *              In the event that things are OK, then they call the next
-- *              handler in the list - ultimately they call scsi_request_fn
-- *              to do the dirty deed.
-  */
- void  scsi_initialize_queue(Scsi_Device * SDpnt, struct Scsi_Host * SHpnt)
- {
+
