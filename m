@@ -1,42 +1,102 @@
-From: Olaf Hering <olh@suse.de>
-Subject: Re: [PATCH] SCSI device/adapter/bus address correlation?
-Date: Fri, 3 Sep 2004 16:49:40 +0200
+From: "Aleks Sheynkman" <aleks@Narus.com>
+Subject: megaraid megaraid2-2.10.7 causing kernel panic
+Date: Fri, 3 Sep 2004 10:06:20 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040903144940.GA4941@suse.de>
-References: <200409021719.15267.bjorn.helgaas@hp.com> <1094168177.2097.154.camel@mulgrave> <200409030844.41174.bjorn.helgaas@hp.com>
+Message-ID: <FA6D803197D0E14C88E1B74C5A021B822DDF9B@snitch.narus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:34688 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S269032AbUICOu3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Sep 2004 10:50:29 -0400
-Content-Disposition: inline
-In-Reply-To: <200409030844.41174.bjorn.helgaas@hp.com>
+Received: from mx2.narus.com ([66.236.101.211]:21964 "EHLO mx2.narus.com")
+	by vger.kernel.org with ESMTP id S269524AbUICRGW convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Sep 2004 13:06:22 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
 
- On Fri, Sep 03, Bjorn Helgaas wrote:
+Greetings,
+  I'm really sorry to bother you ,and I hope this is a correct list to post these kind of messages. I did post a similar message a day ago. We are currently experiencing problem with a new version of megaraid driver (megaraid2-2.10.7). All our severs in the past were running RH 7.3 and now we started migration process AS 2.1 specifically to update 2.4.9-e.49smp and dkms megaraid version 2.10.7. After upgrade, all our systems were stable until we started to run our hardware monitoring software. What it does, it polls the status of all physical and logical driver through ioctl call. Please see sample code below that would cause a kernel panic.  The code was working just fine until version 1.8f version of megaraid drivers, with introduction of new driver it started to fail and cause kernel panics, which kind of inconstant, sometimes it kills kernel swapper sometimes wait queues.  It seems l
+ ike ioctl "M_RD_IOCTL_CMD " is totally broken, we can retrieve correct number of adapters by issuing ioctl suboption MEGAIOC_QNADAP.
 
-> > jejb@gsyprf11> ls -l /sys/block/sda/device
-> > lrwxrwxrwx =C2=A01 root root 0 Aug 22 10:57 /sys/block/sda/device -=
->
-> > ../../devices/parisc0/parisc0:0/pci0000:00/0000:00:01.1/host1/1:0:1=
-5:0/
->=20
-> Thanks, I knew there must be a cool way.  That doesn't help if you're
-> trying to figure out the correct "root=3D" to boot your box, of cours=
-e...
+Did any one ever seen this before, can you please advice ?
 
-initrd, udev, done.
+Thank you !
 
---=20
-USB is for mice, FireWire is for men!
+Code that will panic the kernel, run it few times:
 
-sUse lINUX ag, n=C3=9CRNBERG
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+#include "megaraid.h"
+
+int main()
+{
+        int         fd;
+       struct uioctl_t uioctl;
+
+       if ( (fd = open("/dev/megadev0", O_RDWR)) < 0 && (fd = open("/dev/megadev", O_RDWR)) < 0)
+                return -1;
+
+        uioctl.inlen =  1024;
+        uioctl.outlen = 1024;
+
+        if(!(uioctl.data = malloc(1024))){
+                return 0;
+        }
+        memset(uioctl.data, 0, 1024);
+
+        uioctl.ui.fcs.opcode     = M_RD_IOCTL_CMD;
+        uioctl.ui.fcs.subopcode  = 0;
+        uioctl.ui.fcs.adapno     = MKADAP(0);
+
+        uioctl.mbox[0]           = FC_NEW_CONFIG;
+        uioctl.mbox[2]           = NC_SUBOP_ENQUIRY3;
+        uioctl.mbox[3]           = ENQ3_GET_SOLICITED_FULL;
+
+        if(ioctl(fd, MEGAIOCCMD, &uioctl) == -1){
+                fprintf(stderr,"Error %d \n\n", uioctl.ui.fcs.adapno);
+                fflush(stderr);
+                free(uioctl.data);
+                close(fd);
+                return 0;
+        }
+
+     close(fd);
+ return 0;
+}
+
+
+Panic:
+1) 
+ug 31 20:54:03 Analyzer kernel: EIP is at iput_free [kernel] 0x1e
+Aug 31 20:54:03 Analyzer kernel: eax: 2e0001e3   ebx: f6880e40   ecx: f6880e50   edx: f6880e50
+Aug 31 20:54:03 Analyzer kernel: esi: f6880e40   edi: 00000000   ebp: 0008e000   esp: f7383f60
+Aug 31 20:54:03 Analyzer kernel: ds: 0018   es: 0018   ss: 0018
+Aug 31 20:54:03 Analyzer kernel: Process kswapd (pid: 10, stackpage=f7383000)
+Aug 31 20:54:03 Analyzer kernel: Stack: f587cb40 f5753b60 c015a45c f587cb40 f393c3e0 f6880e40 00000006 c015a41b
+Aug 31 20:54:03 Analyzer kernel:        f6880e40 f393c3f8 f393c3e0 c015a806 f393c3e0 c02fa190 00000286 00000286
+Aug 31 20:54:03 Analyzer kernel:        00000000 f7382000 00000000 00000000 00000000 00000000 00000000 00000000
+Aug 31 20:54:03 Analyzer kernel: Call Trace: [dput+28/304] dput [kernel] 0x1c (0xf7383f68)
+Aug 31 20:54:03 Analyzer kernel: Call Trace: [<c015a45c>] dput [kernel] 0x1c (0xf7383f68)
+Aug 31 20:54:03 Analyzer kernel: [dentry_iput+75/112] dentry_iput [kernel] 0x4b (0xf7383f7c)
+Aug 31 20:54:03 Analyzer kernel: [<c015a41b>] dentry_iput [kernel] 0x4b (0xf7383f7c)
+Aug 31 20:54:03 Analyzer kernel: [prune_dcache+182/336] prune_dcache [kernel] 0xb6 (0xf7383f8c)
+ 
+2)p  1 18:41:36 Analyzer kernel: Oops: 0000
+Sep  1 18:41:36 Analyzer kernel: Kernel 2.4.9-e.49smp
+Sep  1 18:41:36 Analyzer kernel: CPU:    1
+Sep  1 18:41:36 Analyzer kernel: EIP:    0010:[__wake_up+51/144]    Tainted: P
+Sep  1 18:41:36 Analyzer kernel: EIP:    0010:[<c01198a3>]    Tainted: P
+Sep  1 18:41:36 Analyzer kernel: EFLAGS: 00010046
+Sep  1 18:41:36 Analyzer kernel: EIP is at __wake_up [kernel] 0x33
+Sep  1 18:41:36 Analyzer kernel: eax: f688800c   ebx: f6888014   ecx: 00000001   edx: 00000000
+Sep  1 18:41:36 Analyzer kernel: esi: 00000001   edi: f4c8a880   ebp: f4f25a94   esp: f4f25a7c
+Sep  1 18:41:36 Analyzer kernel: ds: 0018   es: 0018   ss: 0018
+Sep  1 18:41:36 Analyzer kernel: Process snmpd (pid: 626, stackpage=f4f25000)
+Sep  1 18:41:36 Analyzer kernel: Stack: 00000000 00000282 00000001 f4c8a880 f4c7f040 00000000 f4ec28c0 c01daad9
+Sep  1 18:41:36 Analyzer kernel:        00000002 00000026 f4c7f178 00001060 00007fff f4c7f178 c01ff422 f4c7f040
+Sep  1 18:41:36 Analyzer kernel:        00000000 c01fe2f4 f4c7f040 f4c7f178 ffffffff f4a8f0c0 3a6ade00 00000000
+Sep  1 18:41:36 Analyzer kernel: Call Trace: [sock_def_readable+57/112] sock_def_readable [kernel] 0x39 (0xf4f25a98)
+Sep  1 18:41:36 Analyzer kernel: Call Trace: [<c01daad9>] sock_def_readable [kernel] 0x39 (0xf4f25a98)
+Sep  1 18:41:36 Analyzer kernel: [tcp_data_queue+898/2688] tcp_data_queue [kernel] 0x382 (0xf4f25ab4)
+Sep  1 18:41:36 Analyzer kernel: [<c01ff422>] tcp_data_queue [kernel] 0x382 (0xf4f25ab4)
+Sep  1 18:41:36 Analyzer kernel: [tcp_ack+180/784] tcp_ack [kernel] 0xb4 (0xf4f25ac0)
+Sep  1 18:41:36 Analyzer kernel: [<c01fe2f4>] tcp_ack [kernel] 0xb4 (0xf4f25ac0)
