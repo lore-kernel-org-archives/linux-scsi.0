@@ -1,66 +1,69 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH] 2.6.10 include/scsi/scsi.h and drivers/scsi/constants.h
-Date: Mon, 31 Jan 2005 09:43:03 -0800
-Message-ID: <1107193383.11517.12.camel@localhost.localdomain>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: Disk errors
+Date: Mon, 31 Jan 2005 13:21:49 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458BB5203F@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from DSL022.labridge.com ([206.117.136.22]:10247 "EHLO Perches.com")
-	by vger.kernel.org with ESMTP id S261287AbVAaRnq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Jan 2005 12:43:46 -0500
+Received: from magic.adaptec.com ([216.52.22.17]:13989 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261296AbVAaSVy convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 Jan 2005 13:21:54 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
+To: Kit Gerrits <kit@gerritsacc.nl>
 Cc: linux-scsi@vger.kernel.org
 
-Remove unnecessary ";" from #define and use sense_ macros
+The PERC controller looks after bad block reassignment.
 
---- include/scsi/scsi.h~	2004-12-29 18:58:36.000000000 -0800
-+++ include/scsi/scsi.h	2005-01-31 09:07:16.000000000 -0800
-@@ -356,7 +356,7 @@
- 
- #define sense_class(sense)  (((sense) >> 4) & 0x7)
- #define sense_error(sense)  ((sense) & 0xf)
--#define sense_valid(sense)  ((sense) & 0x80);
-+#define sense_valid(sense)  ((sense) & 0x80)
- 
- 
- #define IDENTIFY_BASE       0x80
---- drivers/scsi/constants.c~	2004-10-18 14:54:39.000000000 -0700
-+++ drivers/scsi/constants.c	2005-01-31 09:06:51.000000000 -0800
-@@ -924,17 +924,17 @@
- 		     const unsigned char *sense_buffer,
- 		     struct request *req)
- {
--	int s, sense_class, valid, code, info;
-+	int s, class, valid, code, info;
- 	const char *error = NULL;
- 	unsigned char asc, ascq;
- 	const char *sense_txt;
- 	const char *name = req->rq_disk ? req->rq_disk->disk_name : devclass;
-     
--	sense_class = (sense_buffer[0] >> 4) & 0x07;
--	code = sense_buffer[0] & 0xf;
--	valid = sense_buffer[0] & 0x80;
-+	class = sense_class(sense_buffer[0]);
-+	code = sense_error(sense_buffer[0]);
-+	valid = sense_valid(sense_buffer[0]);
-     
--	if (sense_class == 7) {	/* extended sense data */
-+	if (class == 7) {	/* extended sense data */
- 		s = sense_buffer[7] + 8;
- 		if (s > SCSI_SENSE_BUFFERSIZE)
- 			s = SCSI_SENSE_BUFFERSIZE;
-@@ -1002,7 +1002,7 @@
- 			       sense_buffer[0], sense_buffer[2]);
- 
- 		printk("Non-extended sense class %d code 0x%0x\n",
--		       sense_class, code);
-+		       class, code);
- 		s = 4;
- 	}
-     
+Sincerely -- Mark Salyzyn
 
+-----Original Message-----
+From: Kit Gerrits [mailto:kit@gerritsacc.nl] 
+Sent: Monday, January 31, 2005 11:44 AM
+To: Salyzyn, Mark
+Cc: linux-scsi@vger.kernel.org
+Subject: RE: Disk errors
+
+Indeed, I had an entire screenful of errors (a few each second) when I
+came
+in in the morning...
+The strange thing is, that the drive with the grown error is part of the
+DATA container (/home and /data), whilst the disk with the rest ( / )
+was
+fine.
+
+You'd expect the error to show  up in /var/log/messages, but it didn't. 
+I think the entire controller gave up as soon as the error popped up.
+
+-----
+Is there a way of having the controller detect / handle grown errors?
+Will setting automatic remapping handle this?
+
+Does Anyone know how to read / write mode pages?
+----
+
+Thanks all!
+
+Kit
+
+> -----Oorspronkelijk bericht-----
+> Van: Salyzyn, Mark [mailto:mark_salyzyn@adaptec.com] 
+> Verzonden: maandag 31 januari 2005 17:03
+> Aan: Kit Gerrits
+> Onderwerp: RE: Disk errors
+> 
+> You get tones of I/O error messages from the filesystem 
+> driver once the device goes offline. You can check 
+> /var/log/messages to find the root cause.
+> 
+> You will need to run the RAID management tools (afacli) to 
+> display the underlying components (container list). Dell has 
+> their own customized tools for this, I can not comment on their usage.
+> 
+> Sincerely -- Mark Salyzyn
+> 
 
