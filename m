@@ -1,41 +1,34 @@
-From: David Mosberger <davidm@napali.hpl.hp.com>
-Subject: small patch for sym53c8xx_2
-Date: Wed, 18 Jun 2003 13:46:42 -0700
+From: Grant Grundler <iod00d@hp.com>
+Subject: Re: convert 520 byte sector disk to 512 byte sector?
+Date: Wed, 18 Jun 2003 13:52:42 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <16112.53170.851207.542028@napali.hpl.hp.com>
-Reply-To: davidm@hpl.hp.com
+Message-ID: <20030618205242.GH23761@cup.hp.com>
+References: <A5974D8E5F98D511BB910002A50A66470580D91A@hdsmsx103.hd.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palrel10.hp.com ([156.153.255.245]:40863 "EHLO palrel10.hp.com")
-	by vger.kernel.org with ESMTP id S265491AbTFRUcr (ORCPT
+Received: from palrel13.hp.com ([156.153.255.238]:34488 "EHLO palrel13.hp.com")
+	by vger.kernel.org with ESMTP id S265526AbTFRUiq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Jun 2003 16:32:47 -0400
+	Wed, 18 Jun 2003 16:38:46 -0400
+Content-Disposition: inline
+In-Reply-To: <A5974D8E5F98D511BB910002A50A66470580D91A@hdsmsx103.hd.intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: groudier@free.fr
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Cc: Douglas Gilbert <dougg@torque.net>, Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
 
-I thought we had an agreement for a long time already that the use of
-dma64_addr_t in the sym53c8xx_2 driver was wrong, but it's still
-there.
+On Tue, Jun 10, 2003 at 11:32:33AM -0700, Cress, Andrew R wrote:
+> You can set the block descriptor as part of the mode page file using sgmode
+> from
+>   http://scsirastools.sourceforge.net
 
-Thanks,
+Andrew,
+no - this won't work for many of the Seagate drives.
+The "mask" for format mode page is mostly zeros.
+See my blk512-linux.c at:
+	ftp://gsyprf10.external.hp.com/pub/scsi/blk512
 
-	--david
+(older code is at .../blk512_old)
 
-diff -Nru a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c	Wed Jun 18 13:32:51 2003
-+++ b/drivers/scsi/sym53c8xx_2/sym_glue.c	Wed Jun 18 13:32:51 2003
-@@ -295,11 +295,7 @@
- #ifndef SYM_LINUX_DYNAMIC_DMA_MAPPING
- typedef u_long		bus_addr_t;
- #else
--#if	SYM_CONF_DMA_ADDRESSING_MODE > 0
--typedef dma64_addr_t	bus_addr_t;
--#else
- typedef dma_addr_t	bus_addr_t;
--#endif
- #endif
- 
- /*
+thanks,
+grant
