@@ -1,304 +1,818 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [RFC][RFT] scsi_scan.c cleanup/rewrite
-Date: Wed, 19 Jun 2002 16:42:35 -0700
+From: Kurt Garloff <garloff@suse.de>
+Subject: [PATCH] /proc/scsi/map
+Date: Thu, 20 Jun 2002 02:44:42 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020619164235.A15034@eng2.beaverton.ibm.com>
+Message-ID: <20020620004442.GA19824@gum01m.etpnet.phys.tue.nl>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="tThc/1wpZn/ma/RB"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
+
+Hi Linus,
+
+find attached a patch (against 2.5.23-dj2) to the SCSI subsystem which=20
+adds a file /proc/scsi/map, which provides a listing of SCSI devices,
+enumerated by the CBTU/HCIL tuple and the high-level devices attached t=
+o
+them.=20
+
+This information is useful for=20
+* the user who wants to find out to what high-level interfaces the SCSI=
+=20
+  devices in /proc/scsi/scsi list
+* userspace tools that want to collect information about the SCSI devic=
+es
+  in order to provide persistent device naming and need to use the=20
+  corresponding sg devices for this.
+  In case the admin ensures the stability of the CBTU nexus, the includ=
+ed
+  script is even enough to provide persistent naming.
+* allowing boot=3D/dev/scsi/sdcXbXtXuXpX parameter (even without devfs)=
+,
+  extra patch required, will be send by separate mail
+* reporting major:minor pairs to userspace for dynamic device allocatio=
+n
+  that's needed to support > 128 disks.
+
+garloff@pckurt:~ $ cat /proc/scsi/map
+0,0,00,00       0x05    1       sg0     c:15:00 sr0     b:0b:00
+1,0,01,00       0x05    1       sg1     c:15:01 sr1     b:0b:01
+1,0,02,00       0x01    1       sg2     c:15:02 osst0   c:ce:00
+1,0,03,00       0x05    1       sg3     c:15:03 sr2     b:0b:02
+1,0,05,00       0x00    1       sg4     c:15:04 sda     b:08:00
+1,0,09,00       0x00    1       sg5     c:15:05 sdb     b:08:10
+2,0,01,00       0x05    1       sg6     c:15:06 sr3     b:0b:03
+2,0,02,00       0x01    1       sg7     c:15:07 osst1   c:ce:01
+2,0,03,00       0x05    1       sg8     c:15:08 sr4     b:0b:04
+2,0,05,00       0x00    1       sg9     c:15:09 sdc     b:08:20
+2,0,09,00       0x00    1       sg10    c:15:0a sdd     b:08:30
+3,0,10,00       0x00    1       sg11    c:15:0b sde     b:08:40
+3,0,12,00       0x00    1       sg12    c:15:0c sdf     b:08:50
+
+Compared to the patch against 2.4.19-pre10, which has been discussed on
+LKML, I removed the header line from the map file and added a text file
+documenting the format of /proc/scsi/map.
+
+The patch has been ported to 2.5 by Andries Brouwer. I have removed mos=
+t=20
+of his formatting cleanups (to unrelated code in the same files) that h=
+e
+has done. Doug Gilbert has given a lot of useful feedback. Thx!
+
+Please apply!
+
+diff -uNr linux-2.5.23-dj2/Documentation/scsi-devs.sh linux-2.5.23-dj2-=
+scsimap/Documentation/scsi-devs.sh
+--- linux-2.5.23-dj2/Documentation/scsi-devs.sh	Thu Jan  1 01:00:00 197=
+0
++++ linux-2.5.23-dj2-scsimap/Documentation/scsi-devs.sh	Fri Jun 14 22:3=
+7:11 2002
+@@ -0,0 +1,154 @@
++#!/bin/bash
++# Script to create SCSI device nodes according to their physical
++# address (host controller no,bus/channel,target SCSI ID,unit SCSI LUN=
+)
++# using the /proc/scsi/map introduced in Linux 2.4.20pre/2.5.2x
++# (c) Kurt Garloff <garloff@suse.de>, 2002-06-13
++# License: GNU GPL v2
++
++# Settings
++
++# Target directory for device nodes/links
++TDIR=3D/dev/scsi
++
++# Make symbolic links or create fresh nodes in $TDIR
++# For link mode, the dev nodes will still be made if needed
++MODE=3D
++
++# In link mode, where is the real /dev dir ?
++DEVDIR=3D..
++
++# Ownership and permissions of newly created device nodes
++OWNER=3D"root.disk"
++PERM=3D"0660"
++SDIRPERM=3D"0755"
++
++# Make scsi disk partitions (0 =3D off)
++SDPART=3D15
++
++# End of settings
++
++# Options
++# -f: Remove all old devs
++if test "$1" =3D "-f"; then
++  rm -f $TDIR/*
++  shift
++fi
++# -l: Make links=20
++if test "$1" =3D "-l"; then
++  MODE=3DLINK
++  shift
++fi
++
++# Sanitize environment
++export LANG=3Dposix
++unset IFS
++#umask `printf %o $[0777-$PERM]`
++PATH=3D/bin:/usr/bin:/sbin:/usr/sbin
++
++# Functions
++function exit_fail=20
++{
++  echo $1
++  exit $2
++}
++
++# Build new scsi name based on oldname (prefix) and=20
++# append host,channel,id,lun numbers that are unique
++# and persistent identifiers for the device.
++function builddevnm
++{=20
++  if test "${5:0:2}" =3D "sd"; then
++    NM=3D"sdc$1b$2t${3#0}u${4#0}"
++  else
++    NM=3D"${5%%[0-9]*}c$1b$2t${3#0}u${4#0}"
++  fi
++}
++
++# Make device node
++# Parameters filename type maj(hex) min(hex) minadd(dec)
++function mk_nod
++{
++  rm -f $1
++  mknod -m $PERM $1 $2 $[0x$3] $[0x$4+$5]
++  chown $OWNER $1
++}
++
++# Make device by creating node or symlinking
++# Parameters oldname device(tp:maj:min) newname minadd
++function mk_dev=20
++{
++  IFS=3D":"
++  if test "$MODE" =3D "LINK"; then
++    if test ! -e $TDIR/$DEVDIR/$1; then
++      mk_nod $TDIR/$DEVDIR/$1 $2 $4
++    fi
++    ln -sf $DEVDIR/$1 $TDIR/$3
++  else
++    mk_nod $TDIR/$3 $2 $4
++  fi
++  unset IFS
++}
++
++# Make multiple devices in case we do have sd partitions
++# Parameters oldname device(tp:maj:min) newname
++function mk_devs
++{
++  mk_dev $1 $2 $3 0
++  # Handle partitions
++  if test "${1:0:2}" =3D "sd" -a "$SDPART" !=3D "0"; then
++    #unset IFS
++    for no in `seq 1 $SDPART`; do
++      mk_dev $1$no $2 $3p$no $no
++    done
++  fi
++  # Handle nst/nosst
++  if test "${1:0:2}" =3D "st" -o "${1:0:4}" =3D "osst"; then
++    mk_dev n$1 $2 n$3 128
++  fi
++}
++
++# Main() Script
++if ! test -e /proc/scsi/map; then
++  exit_fail "/proc/scsi/map does not exist" 1
++fi
++if ! test -d $TDIR; then
++  mkdir -m $SDIRMODE $TDIR || exit_fail "Failed to create $TDIR" 2
++  chown $OWNER $TDIR
++fi
++
++# We might have been called by some sort of hotplug event
++# and are only support to add a single device
++# Syntax for this is [-l] add host channel id lun
++if test "$1" =3D "add"; then
++  CMPAGAINST=3D"$2,$3,`printf %02i $4`,`printf %02i $5`"
++else
++  unset CMPAGAINST
++fi
++# The main processing loop
++while read cbtu tp onl sgnm sgdev othnm othdev oothnm oothdev rest; do
++  # Skip comment line(s)
++  if test "${cbtu:0:1}" =3D "#"; then continue; fi
++  # If we're just dealing with one device, do skip the others
++  if test ! -z "$CMPAGAINST" -a "$CMPAGAINST" !=3D "$cbtu"; then conti=
+nue; fi
++  # now parse line
++  IFS=3D","
++  # Test for validity of sg device
++  if test "$sgnm" !=3D "sg?"; then
++    builddevnm $cbtu $sgnm
++    mk_dev $sgnm $sgdev $NM 0
++  fi
++  # There is possibly a second device
++  if test ! -z "$othnm" -a ! "$othnm" =3D "none"; then
++    IFS=3D","
++    builddevnm $cbtu $othnm
++    mk_devs $othnm $othdev $NM
++    # Maybe even a third one
++    if test ! -z "$oothnm" -a ! "$oothnm" =3D "none"; then
++      IFS=3D","
++      builddevnm $cbtu $oothnm
++      mk_devs $oothnm $oothdev $NM
++    fi
++  fi
++  unset IFS
++done < /proc/scsi/map
++
+diff -uNr linux-2.5.23-dj2/Documentation/scsi-map.txt linux-2.5.23-dj2-=
+scsimap/Documentation/scsi-map.txt
+--- linux-2.5.23-dj2/Documentation/scsi-map.txt	Thu Jan  1 01:00:00 197=
+0
++++ linux-2.5.23-dj2-scsimap/Documentation/scsi-map.txt	Wed Jun 19 18:5=
+8:30 2002
+@@ -0,0 +1,61 @@
++/proc/scsi/map file format
++=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D
++The file /proc/scsi/map reports the mapping of SCSI devices to high-le=
+vel
++drivers (sg,sr,sd,st,osst) in Linux. The SCSI devices are identified b=
+y
++Controller/host number, bus/channel number, SCSI Target ID and SCSI Un=
+it/LUN
++number.
++
++The output looks as following:
++
++garloff@pckurt:/raid5/Kernel $ head -18 /proc/scsi/map=20
++0,0,00,00       0x05    1       sg0     c:15:00 sr0     b:0b:00
++1,0,01,00       0x05    1       sg1     c:15:01 sr1     b:0b:01
++1,0,02,00       0x01    1       sg2     c:15:02 osst0   c:ce:00
++1,0,03,00       0x05    1       sg3     c:15:03 sr2     b:0b:02
++1,0,05,00       0x00    1       sg4     c:15:04 sda     b:08:00
++1,0,09,00       0x00    1       sg5     c:15:05 sdb     b:08:10
++2,0,01,00       0x05    1       sg6     c:15:06 sr3     b:0b:03
++2,0,02,00       0x01    1       sg7     c:15:07 osst1   c:ce:01
++2,0,03,00       0x05    1       sg8     c:15:08 sr4     b:0b:04
++2,0,05,00       0x00    1       sg9     c:15:09 sdc     b:08:20
++2,0,09,00       0x00    1       sg10    c:15:0a sdd     b:08:30
++3,0,10,00       0x00    1       sg11    c:15:0b sde     b:08:40
++3,0,12,00       0x00    1       sg12    c:15:0c sdf     b:08:50
++
++The format contains a variable number of columns, separated by a TAB '=
+\t'
++character.
++
++1st column: The Controller, Bus, Target, Unit (or call it Host, Channe=
+l, ID,
++            LUN) tuple that identifies a SCSI device. The numbers are =
+all
++	    in decimal format and separated by commas.
++2nd column: Device type as reported in the peripheral device type fiel=
+d
++	    as reported by SCSI INQUIRY. Hexadecimal.
++3rd column: Flag whether the device is online.
++
++These columns are followed by pairs of columns, depending on how many
++high-level drivers are attached to the device:
++
++Nth column: Driver name with an index attached. This co=EFncides with =
+the old
++	    style device naming used on SCSI distributions and documented
++	    in devices.txt. For disks, therefore the index is composed of
++	    characters to produce the names sda ... sdz, sdaa ... sdaz,
++	    sdba ... etc.
++(N+1)th c.: Device node that belongs to this device. First character i=
+s
++	    identifying whether we deal with a character device (c) or a=20
++	    block device(b). The major and minor numbers follow in hexa-
++	    decimal formast, separated with colons (:).
++
++The sg devices are reported first.
++If there is no sg device, sg? c:NN:NN will be reported.
++For the other devices the columns are just left empty.
++
++The reason for this special ahndling of sg is that sg is special in
++that it can drive all devices and can be used by userspace tools=20
++to inquire extra information (by sending SCSI commands or doing ioctls=
+)=20
++in order to provide persistent device naming.
++
++Note that only loaded drivers (modules) can attach to the devices, so
++you e.g. won't see "sr" output, unless you have the sr driver compiled=
+=20
++into your kernel or loaded as module.
++
++				Kurt Garloff <garloff@suse.de>, 2002-06-19
+diff -uNr linux-2.5.23-dj2/drivers/scsi/hosts.h linux-2.5.23-dj2-scsima=
+p/drivers/scsi/hosts.h
+--- linux-2.5.23-dj2/drivers/scsi/hosts.h	Thu Jun 20 01:44:47 2002
++++ linux-2.5.23-dj2-scsimap/drivers/scsi/hosts.h	Thu Jun 20 02:03:21 2=
+002
+@@ -486,6 +486,7 @@
+     void (*detach)(Scsi_Device *);
+     int (*init_command)(Scsi_Cmnd *);     /* Used by new queueing code=
+=2E=20
+                                            Selects command for blkdevs=
+ */
++    int (*find_kdev)(Scsi_Device *, char*, kdev_t*);  /* find back dev=
+=2E */
+ };
+=20
+ void  scsi_initialize_queue(Scsi_Device * SDpnt, struct Scsi_Host * SH=
+pnt);
+diff -uNr linux-2.5.23-dj2/drivers/scsi/osst.c linux-2.5.23-dj2-scsimap=
+/drivers/scsi/osst.c
+--- linux-2.5.23-dj2/drivers/scsi/osst.c	Wed Jun 19 04:11:54 2002
++++ linux-2.5.23-dj2-scsimap/drivers/scsi/osst.c	Thu Jun 20 02:03:21 20=
+02
+@@ -155,6 +155,7 @@
+ static int osst_attach(Scsi_Device *);
+ static int osst_detect(Scsi_Device *);
+ static void osst_detach(Scsi_Device *);
++static int osst_find_kdev(Scsi_Device *, char*, kdev_t*);
+=20
+ struct Scsi_Device_Template osst_template =3D
+ {
+@@ -166,7 +167,8 @@
+        detect:		osst_detect,
+        init:		osst_init,
+        attach:		osst_attach,
+-       detach:		osst_detach
++       detach:		osst_detach,
++       find_kdev:	osst_find_kdev,
+ };
+=20
+ static int osst_int_ioctl(OS_Scsi_Tape *STp, Scsi_Request ** aSRpnt, u=
+nsigned int cmd_in,unsigned long arg);
+@@ -5417,6 +5419,24 @@
+ 	return 0;
+ }
+=20
++static int osst_find_kdev(Scsi_Device *sdp, char* nm, kdev_t *dev)
++{
++	int i;
++	OS_Scsi_Tape *ostp;
++=09
++	if (sdp && sdp->type =3D=3D TYPE_TAPE && osst_supports(sdp)) {
++		for (ostp =3D os_scsi_tapes[i =3D 0]; i < osst_template.dev_max;
++		     ostp =3D os_scsi_tapes[++i]) {
++			if (ostp && ostp->device =3D=3D sdp) {
++				sprintf (nm, "osst%i", i);
++				*dev =3D mk_kdev(OSST_MAJOR, i);
++				return 0;
++			}
++		}
++	}
++	return 1;
++}
++
+ static int osst_attach(Scsi_Device * SDp)
+ {
+ 	OS_Scsi_Tape * tpnt;
+diff -uNr linux-2.5.23-dj2/drivers/scsi/scsi.c linux-2.5.23-dj2-scsimap=
+/drivers/scsi/scsi.c
+--- linux-2.5.23-dj2/drivers/scsi/scsi.c	Wed Jun 19 04:11:55 2002
++++ linux-2.5.23-dj2-scsimap/drivers/scsi/scsi.c	Thu Jun 20 02:06:34 20=
+02
+@@ -78,6 +78,7 @@
+=20
+ #ifdef CONFIG_PROC_FS
+ static int scsi_proc_info(char *buffer, char **start, off_t offset, in=
+t length);
++static int scsi_proc_map (char *buffer, char **start, off_t offset, in=
+t length);
+ static void scsi_dump_status(int level);
+ #endif
+=20
+@@ -1545,6 +1546,71 @@
+ }
+=20
+ #ifdef CONFIG_PROC_FS
++/*=20
++ * Output the mapping of physical devices (contorller,channel.id,lun)
++ * to devices (sg and other highlevel drivers) to /proc/scsi/map.
++ * Caveat: No locking is done, so if your scsi config changes during
++ * reading this file, you may read garbled data.	KG, 2002-06-14
++ */
++static int scsi_proc_map(char *buffer, char **start, off_t offset, int=
+ length)
++{
++	Scsi_Device *scd;
++	struct Scsi_Host *HBA_ptr;
++	int size =3D 0, len =3D 0;
++	off_t begin =3D 0;
++	off_t pos =3D 0;
++#ifdef CONFIG_KMOD
++	int repeat =3D 0;
++#endif
++
++	struct Scsi_Device_Template *sg_t;
++	do {
++		sg_t =3D scsi_devicelist;
++		while (sg_t && !(sg_t->tag && !strcmp(sg_t->tag, "sg")))
++			sg_t =3D sg_t->next;
++#ifdef CONFIG_KMOD
++		if (!repeat && !sg_t)
++			request_module("sg");
++	} while (!repeat++);
++#else
++	} while (0);
++#endif=09
++	/*
++	 * First, see if there are any attached devices or not.
++	 */
++	for (HBA_ptr =3D scsi_hostlist; HBA_ptr; HBA_ptr =3D HBA_ptr->next) {
++		if (HBA_ptr->host_queue !=3D NULL) {
++			break;
++		}
++	}
++	if (!HBA_ptr)
++		goto stop_map_output;
++=09
++	pos =3D begin;
++
++	for (HBA_ptr =3D scsi_hostlist; HBA_ptr; HBA_ptr =3D HBA_ptr->next) {
++		for (scd =3D HBA_ptr->host_queue; scd; scd =3D scd->next) {
++			proc_print_scsimap(scd, buffer, &size, len, sg_t);
++			len +=3D size;
++			pos =3D begin + len;
++
++			if (pos < offset) {
++				len =3D 0;
++				begin =3D pos;
++			}
++			if (pos > offset + length)
++				goto stop_map_output;
++		}
++	}
++
++ stop_map_output:
++	*start =3D buffer + (offset - begin);	/* Start of wanted data */
++	len -=3D (offset - begin);	/* Start slop */
++	if (len > length)
++		len =3D length;	/* Ending slop */
++	return (len);
++}
++
+ static int scsi_proc_info(char *buffer, char **start, off_t offset, in=
+t length)
+ {
+ 	Scsi_Device *scd;
+@@ -2505,6 +2571,7 @@
+ static int __init init_scsi(void)
+ {
+ 	struct proc_dir_entry *generic;
++	struct proc_dir_entry *map;
+ 	int i;
+=20
+ 	printk(KERN_INFO "SCSI subsystem driver " REVISION "\n");
+@@ -2541,6 +2608,13 @@
+ 		return -ENOMEM;
+ 	}
+ 	generic->write_proc =3D proc_scsi_gen_write;
++=09
++	map =3D create_proc_info_entry ("scsi/map", 0, 0, scsi_proc_map);
++	if (!map) {
++		printk (KERN_ERR "cannot init /proc/scsi/map\n");
++		remove_proc_entry("scsi", 0);
++		return -ENOMEM;
++	}
+ #endif
+=20
+         scsi_devfs_handle =3D devfs_mk_dir (NULL, "scsi", NULL);
+@@ -2571,6 +2645,7 @@
+=20
+ #ifdef CONFIG_PROC_FS
+ 	/* No, we're not here anymore. Don't show the /proc/scsi files. */
++	remove_proc_entry ("scsi/map", 0);
+ 	remove_proc_entry ("scsi/scsi", 0);
+ 	remove_proc_entry ("scsi", 0);
+ #endif
+diff -uNr linux-2.5.23-dj2/drivers/scsi/scsi.h linux-2.5.23-dj2-scsimap=
+/drivers/scsi/scsi.h
+--- linux-2.5.23-dj2/drivers/scsi/scsi.h	Thu Jun 20 01:44:48 2002
++++ linux-2.5.23-dj2-scsimap/drivers/scsi/scsi.h	Thu Jun 20 02:03:21 20=
+02
+@@ -523,6 +523,8 @@
+  * Prototypes for functions in scsi_proc.c
+  */
+ extern void proc_print_scsidevice(Scsi_Device *, char *, int *, int);
++extern void proc_print_scsimap(Scsi_Device *, char *, int *, int,=20
++			       struct Scsi_Device_Template *);
+ extern struct proc_dir_entry *proc_scsi;
+=20
+ /*
+diff -uNr linux-2.5.23-dj2/drivers/scsi/scsi_proc.c linux-2.5.23-dj2-sc=
+simap/drivers/scsi/scsi_proc.c
+--- linux-2.5.23-dj2/drivers/scsi/scsi_proc.c	Wed Jun 19 04:11:47 2002
++++ linux-2.5.23-dj2-scsimap/drivers/scsi/scsi_proc.c	Thu Jun 20 02:03:=
+21 2002
+@@ -300,29 +301,54 @@
+ 	return;
+ }
+=20
++
++void proc_print_scsimap(Scsi_Device *scd, char *buffer, int *size, int=
+ len,
++			struct Scsi_Device_Template *sg_t)
++{
++	int y, err;
++	char nm[16];
++	kdev_t kdev;=20
++	int att =3D scd->attached;
++	struct Scsi_Device_Template *sd_t =3D scsi_devicelist;
++
++	y =3D sprintf(buffer + len,
++	     "%i,%i,%02i,%02i\t0x%02x\t%i",
++		    scd->host->host_no, scd->channel, scd->id, scd->lun,
++		    scd->type, scd->online);
++	if (sg_t && sg_t->find_kdev && !(sg_t->find_kdev(scd, nm, &kdev))) {
++		y +=3D sprintf(buffer + len + y,
++			     "\t%s\tc:%02x:%02x",
++			     nm, major(kdev), minor(kdev));
++		--att;
++	} else {
++		y +=3D sprintf(buffer + len + y,
++			     "\tsg?\tc:NN:NN");
++	}
++	while (att && sd_t) {
++		if (sd_t->scsi_type !=3D 0xff && sd_t->find_kdev) {
++			err =3D sd_t->find_kdev(scd, nm, &kdev);
++			if (!err) {
++				y +=3D sprintf(buffer + len + y,
++					     "\t%s\t%c:%02x:%02x",
++					     nm, (sd_t->blk? 'b': 'c'),
++					     major(kdev), minor(kdev));
++				--att;
++			}
++		}
++		sd_t =3D sd_t->next;
++	}
++
++	y +=3D sprintf(buffer + len + y, "\n");
++	*size =3D y;
++}
++
+ #else				/* if !CONFIG_PROC_FS */
+=20
+ void proc_print_scsidevice(Scsi_Device * scd, char *buffer, int *size,=
+ int len)
+ {
+ }
++void proc_print_scsimap(Scsi_Device *scd, char *buffer, int *size, int=
+ len)
++{
++}
+=20
+ #endif				/* CONFIG_PROC_FS */
+-
+-/*
+- * Overrides for Emacs so that we get a uniform tabbing style.
+- * Emacs will notice this stuff at the end of the file and automatical=
+ly
+- * adjust the settings for this buffer only.  This must remain at the =
+end
+- * of the file.
+- * -------------------------------------------------------------------=
+--------
+- * Local variables:
+- * c-indent-level: 4
+- * c-brace-imaginary-offset: 0
+- * c-brace-offset: -4
+- * c-argdecl-indent: 4
+- * c-label-offset: -4
+- * c-continued-statement-offset: 4
+- * c-continued-brace-offset: 0
+- * indent-tabs-mode: nil
+- * tab-width: 8
+- * End:
+- */
+diff -uNr linux-2.5.23-dj2/drivers/scsi/sd.c linux-2.5.23-dj2-scsimap/d=
+rivers/scsi/sd.c
+--- linux-2.5.23-dj2/drivers/scsi/sd.c	Thu Jun 20 01:44:48 2002
++++ linux-2.5.23-dj2-scsimap/drivers/scsi/sd.c	Thu Jun 20 02:03:21 2002
+@@ -103,6 +103,7 @@
+ static int sd_detect(Scsi_Device *);
+ static void sd_detach(Scsi_Device *);
+ static int sd_init_command(Scsi_Cmnd *);
++static int sd_find_kdev(Scsi_Device*, char*, kdev_t*);
+=20
+ static struct Scsi_Device_Template sd_template =3D {
+ 	module:THIS_MODULE,
+@@ -122,6 +123,7 @@
+ 	attach:sd_attach,
+ 	detach:sd_detach,
+ 	init_command:sd_init_command,
++	find_kdev:sd_find_kdev,
+ };
+=20
+ static void sd_rw_intr(Scsi_Cmnd * SCpnt);
+@@ -285,6 +287,24 @@
+ 	}
+ }
+=20
++static int sd_find_kdev(Scsi_Device *sdp, char* nm, kdev_t *dev)
++{
++	Scsi_Disk *sdkp;
++	int dsk_nr;
++
++	if (sdp && (sdp->type =3D=3D TYPE_DISK || sdp->type =3D=3D TYPE_MOD))=
+ {
++		for (dsk_nr =3D 0; dsk_nr < sd_template.dev_max; ++dsk_nr) {
++			sdkp =3D sd_dsk_arr[dsk_nr];
++			if (sdkp->device =3D=3D sdp) {
++				sd_dskname(dsk_nr, nm);
++				*dev =3D MKDEV_SD(dsk_nr);
++				return 0;
++			}
++		}
++	}
++	return 1;
++}
++
+ /**
+  *	sd_find_queue - yields queue associated with device
+  *	@dev: kernel device descriptor (kdev_t)
+diff -uNr linux-2.5.23-dj2/drivers/scsi/sg.c linux-2.5.23-dj2-scsimap/d=
+rivers/scsi/sg.c
+--- linux-2.5.23-dj2/drivers/scsi/sg.c	Wed Jun 19 04:11:54 2002
++++ linux-2.5.23-dj2-scsimap/drivers/scsi/sg.c	Thu Jun 20 02:03:21 2002
+@@ -111,6 +111,7 @@
+ static void sg_finish(void);
+ static int sg_detect(Scsi_Device *);
+ static void sg_detach(Scsi_Device *);
++static int sg_find_kdev(Scsi_Device *, char*, kdev_t*);
+=20
+ static Scsi_Request * dummy_cmdp;	/* only used for sizeof */
+=20
+@@ -120,6 +121,7 @@
+ static struct Scsi_Device_Template sg_template =3D
+ {
+       module:THIS_MODULE,
++      name:"generic",
+       tag:"sg",
+       scsi_type:0xff,
+       major:SCSI_GENERIC_MAJOR,
+@@ -127,7 +129,8 @@
+       init:sg_init,
+       finish:sg_finish,
+       attach:sg_attach,
+-      detach:sg_detach
++      detach:sg_detach,
++      find_kdev:sg_find_kdev
+ };
+=20
+=20
+@@ -2632,6 +2635,37 @@
+ }
+=20
+ #ifdef CONFIG_PROC_FS
++static int sg_find_kdev(Scsi_Device* sdp, char *nm, kdev_t *dev)
++{
++    unsigned long iflags;
++    int err =3D 1;=20
++
++    if (sdp && sg_dev_arr) {
++	int k;
++	read_lock_irqsave(&sg_dev_arr_lock, iflags);
++	for (k =3D 0; k < sg_template.dev_max; ++k) {
++	    if (sg_dev_arr[k] && sg_dev_arr[k]->device =3D=3D sdp) {
++		sprintf (nm, "sg%i", k);
++	        *dev =3D sg_dev_arr[k]->i_rdev;
++		err =3D 0;
++		break;
++	    }
++	}
++	read_unlock_irqrestore(&sg_dev_arr_lock, iflags);
++    }
++    return err;
++}
++#else
++/* Not needed without procfs support */
++static int sg_find_kdev(Scsi_Device* sdp, char *nm, kdev_t *dev)
++{
++    *nm =3D 0;
++    *kdev =3D NODEV;
++    return 1;
++}
++#endif
++
++#ifdef CONFIG_PROC_FS
+=20
+ static struct proc_dir_entry * sg_proc_sgp =3D NULL;
+=20
+diff -uNr linux-2.5.23-dj2/drivers/scsi/sr.c linux-2.5.23-dj2-scsimap/d=
+rivers/scsi/sr.c
+--- linux-2.5.23-dj2/drivers/scsi/sr.c	Wed Jun 19 04:11:50 2002
++++ linux-2.5.23-dj2-scsimap/drivers/scsi/sr.c	Thu Jun 20 02:03:21 2002
+@@ -71,6 +71,8 @@
+=20
+ static int sr_init_command(Scsi_Cmnd *);
+=20
++static int sr_find_kdev(Scsi_Device*, char*, kdev_t*);
++
+ static struct Scsi_Device_Template sr_template =3D
+ {
+ 	module:THIS_MODULE,
+@@ -84,7 +86,8 @@
+ 	finish:sr_finish,
+ 	attach:sr_attach,
+ 	detach:sr_detach,
+-	init_command:sr_init_command
++	init_command:sr_init_command,
++	find_kdev:sr_find_kdev,
+ };
+=20
+ Scsi_CD *scsi_CDs;
+@@ -471,6 +474,23 @@
+ 	return 0;
+ }
+=20
++static int sr_find_kdev(Scsi_Device *sdp, char* nm, kdev_t *dev)
++{
++	Scsi_CD *srp;
++	int i;
++=09
++	if (sdp && (sdp->type =3D=3D TYPE_ROM || sdp->type =3D=3D TYPE_WORM))=
+ {
++		for (srp =3D scsi_CDs, i =3D 0; i < sr_template.dev_max;
++		     ++i, ++srp) {
++			if (srp->device =3D=3D sdp) {
++				sprintf(nm, "sr%i", i);
++				*dev =3D mk_kdev(SCSI_CDROM_MAJOR,i);
++				return 0;
++			}
++		}
++	}
++	return 1;
++}
+=20
+ void get_sectorsize(int i)
+ {
+diff -uNr linux-2.5.23-dj2/drivers/scsi/st.c linux-2.5.23-dj2-scsimap/d=
+rivers/scsi/st.c
+--- linux-2.5.23-dj2/drivers/scsi/st.c	Wed Jun 19 04:11:56 2002
++++ linux-2.5.23-dj2-scsimap/drivers/scsi/st.c	Thu Jun 20 02:03:21 2002
+@@ -148,6 +148,7 @@
+ static int st_attach(Scsi_Device *);
+ static int st_detect(Scsi_Device *);
+ static void st_detach(Scsi_Device *);
++static int st_find_kdev(Scsi_Device*, char*, kdev_t*);
+=20
+ static struct Scsi_Device_Template st_template =3D {
+ 	module:		THIS_MODULE,
+@@ -157,7 +158,8 @@
+ 	major:		SCSI_TAPE_MAJOR,=20
+ 	detect:		st_detect,=20
+ 	attach:		st_attach,=20
+-	detach:		st_detach
++	detach:		st_detach,
++	find_kdev:	st_find_kdev
+ };
+=20
+ static int st_compression(Scsi_Tape *, int);
+@@ -3760,6 +3762,24 @@
+ 	return;
+ }
+=20
++static int st_find_kdev(Scsi_Device * sdp, char* nm, kdev_t *dev)
++{
++	int i;
++	Scsi_Tape *stp;
++
++	if (sdp && sdp->type =3D=3D TYPE_TAPE && !st_incompatible(sdp)) {
++		for (stp =3D scsi_tapes[0], i =3D 0; i < st_template.dev_max;
++		     stp =3D scsi_tapes[++i]) {
++			if (stp && stp->device =3D=3D sdp) {
++				sprintf(nm, "st%i", i);
++				*dev =3D mk_kdev(SCSI_TAPE_MAJOR, i);
++				return 0;
++			}
++		}
++	}
++	return 1;
++}
++
+ static int __init init_st(void)
+ {
+ 	validate_options();
 
 
---tThc/1wpZn/ma/RB
-Content-Type: text/plain; charset=us-ascii
-
-Hi -
-
-I cleaned up scsi_scan.c, pretty much a rewrite of the code.
-
-Any comments or flames?
-
-Do you think the style changes moves us to far away from current
-linux scsi style?
-
-Should we keep the naming styles, such as SDpnt, SRpnt, SHpnt, etc?
-
-The diffs are larger than the file itself, but let me know if I should
-post the diffs. Changes were tested with 2.5.22 (the changes are also
-compatible with 2.5.23, but I haven't tried running 2.5.23).
-
-The only functional change (should be) adding support for BFLAGS_LARGELUN,
-it was defined before, but not used, otherwise it should be the complete
-functional equivalent of the current 2.5.x code.
-
-I also removed the unused BFLAGS_NODISK.
-
-I did not fully cleanup the device_list[] table initialization (not sure
-how to make that table ever look clean), plus James Bottomley was talking
-about moving it into user space.
-
-Tested with IBM 3542 (multi-LUN FC disk array) and SEAGATE ST118273 FC
-drives on qla2200 and qla2300 with qla v6 beta drivers (modified for 
-2.5.x), both with and without REPORT LUN built into the kernel.
-
-Plus, the boot disk is a IBM-PSG ST318203LC on an AIC Adaptec 7896.
-
-If you have any of the odd-ball devices in device_list or any SCSI devices
-currently working under 2.5.x, I would appreciate further testing of the code.
-
-Thanks.
-
--- Patrick Mansfield
-
---tThc/1wpZn/ma/RB
-Content-Type: application/octet-stream
-Content-Disposition: attachment; filename="scsi_scan.c.gz"
-Content-Transfer-Encoding: base64
-
-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
-r9v/BvqYVVeOqgAA
-
---tThc/1wpZn/ma/RB--
+--=20
+Kurt Garloff                   <kurt@garloff.de>         [Eindhoven, NL=
+]
+Physics: Plasma simulations    <K.Garloff@TUE.NL>     [TU Eindhoven, NL=
+]
+Linux: SCSI, Security          <garloff@suse.de>    [SuSE Nuernberg, DE=
+]
+ (See mail header or public key servers for PGP2 and GPG public keys.)
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
