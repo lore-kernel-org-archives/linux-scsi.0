@@ -1,44 +1,59 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [linux-iscsi-devel] [question] deferred sense
-Date: Thu, 6 Jan 2005 09:57:05 -0500
-Message-ID: <60807403EABEB443939A5A7AA8A7458B9B96C3@otce2k01.adaptec.com>
+From: Tom Coughlan <coughlan@redhat.com>
+Subject: Re: [linux-iscsi-devel] [question] deferred sense
+Date: Thu, 06 Jan 2005 11:37:57 -0500
+Message-ID: <1105029477.20393.187.camel@bianchi.boston.redhat.com>
+References: <41DB21D7.5080904@us.ibm.com> <20050104234700.GA18343@visi.com>
+	 <20050105092144.GB26793@lst.de> <20050105152112.GA8472@visi.com>
+	 <20050105152333.GA1453@lst.de>  <1104943469.3997.8.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:33001 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262849AbVAFO5I convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Jan 2005 09:57:08 -0500
-content-class: urn:content-classes:message
+Received: from mx1.redhat.com ([66.187.233.31]:39869 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S262914AbVAFQnY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jan 2005 11:43:24 -0500
+In-Reply-To: <1104943469.3997.8.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, "Scott M. Ferris" <sferris@acm.org>, Mike Christie <mikenc@us.ibm.com>, linux-iscsi-devel <linux-iscsi-devel@lists.sourceforge.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley sez: 
-> If you're thinking of having a writeback
-> cache in a raid card on a host, then you'll find all the documentation
-> for clustering will explicitly warn you to switch it to write through
-(I
-> know ours does).
+On Wed, 2005-01-05 at 11:44, James Bottomley wrote:
+> On Wed, 2005-01-05 at 16:23 +0100, Christoph Hellwig wrote:
+> > On Wed, Jan 05, 2005 at 09:21:12AM -0600, Scott M. Ferris wrote:
+> > > To be more specific, there were some devices that would fail a command
+> > > and return deferred sense.  The command didn't complete at the target,
+> > > and the kernel wasn't retrying it because the sense was deferred
+> > > rather than current.  For those devices, the translation produced the
+> > > desired retry.
+> > 
+> > Do you remember these devices?  Might be worth adding a midlayer
+> > blacklist entry for them.
+> 
+> That's certainly possible ... although we'd need a lot more details.
+> Any device that returns deferred sense for a current error is pretty
+> badly broken according to the spec.
 
-The key to higher performance is a cluster solution that permits cache
-on, and in doing so, the issues of deferred failure is similar. I am not
-talking pie in the sky here; there are proprietary solutions (from low
-end all the way up to the `world scale cache' of the Yotta-Yotta's of
-the world)
+If a current command returns deferred sense, the SCSI spec. requires
+that the current command shall not have been executed [1]. So, if at
+some point in the past the kernel did not retry a current command that
+returned deferred sense, the iscsi folks would have forced the retry by
+converting deferred sense to current sense. The scenario does not
+require a device that is working incorrectly.
 
-The point is deferred failure is not the only user of these changes to
-the file-system layer. In the low end, this kind of technology is being
-added to Windoze and has been part of Netware (including complete system
-memory synchronization between failover machines) for years; there are
-customers of redundant solutions that require this.
+The big flaw in what iscsi did is the case where the deferred sense
+indicates a non-fatal error. In that case, iscsi converts it to current,
+the mitlayer examines it and determines that it does not require a
+retry. This causes the current command to complete to the application
+even though it was not executed by the device. 
 
-In the Public Domain, simplicity usually drives adoption (just measure
-the pain Sistina had asking for a new atomic SCSI command). I am not
-sure the General Purpose customer wants to 'pay' for unused complexity
-and the accompanying doubt of stability ...
+It looks to me as though the 2.4 iscsi driver is susceptible to this. It
+is probably not seen in practice because disk devices that return
+non-fatal deferred sense are rare (it probably requires the PER bit set
+in the error recovery mode page?). Anyone know for sure?
 
-Sincerely -- Mark Salyzyn
+[1] If the task terminates with CHECK CONDITION status and the sense
+data describes a deferred error the command for the terminated task
+shall not have been processed. (SPC-3) 
+
+
