@@ -1,60 +1,83 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: [PATCH] sym53c8xx_2 pci_device_id list terminators
-Date: Wed, 10 Sep 2003 16:40:31 -0500 (CDT)
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Re: [usb-storage] unsolicited sense in 2.6.0-test5 usb-storage.ko
+Date: Wed, 10 Sep 2003 14:52:52 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0309101635060.27316-100000@humbolt.us.dell.com>
+Message-ID: <20030910145252.F13649@one-eyed-alien.net>
+References: <Pine.LNX.4.44L0.0309101700230.1579-100000@ida.rowland.org> <1063229049.6245.12.camel@patehci2>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-md5;
+	protocol="application/pgp-signature"; boundary="4VrXvz3cwkc87Wze"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp9.us.dell.com ([143.166.148.136]:47540 "EHLO
-	smtp9.us.dell.com") by vger.kernel.org with ESMTP id S265811AbTIJVkv
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Sep 2003 17:40:51 -0400
+Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:16396 "EHLO
+	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
+	id S265807AbTIJVxF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Sep 2003 17:53:05 -0400
+Content-Disposition: inline
+In-Reply-To: <1063229049.6245.12.camel@patehci2>; from p.lavarre@ieee.org on Wed, Sep 10, 2003 at 03:24:09PM -0600
 List-Id: linux-scsi@vger.kernel.org
-To: groudier@free.fr
-Cc: linux-scsi@vger.kernel.org
-
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-Gerard, I found that the sym53c8xx_2 driver has two pci_device_id lists, 
-neither of which are 0-terminated.  This causes the pci detection routine 
-to walk off the end of the list into space and causes an oops.  Often this 
-isn't a problem, as the things after those lists are zeros, but we can't 
-count on it, and it just bit me. :-)
-
-Patch below against 2.6.0-test5 + recent BK.  Please apply ASAP.
-
-- -- 
-Matt Domsch
-Sr. Software Engineer, Lead Engineer
-Dell Linux Solutions www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: stern@rowland.harvard.edu, usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org
 
 
-- --- linux-2.5/drivers/scsi/sym53c8xx_2/sym_glue.c	Sat Sep  6 21:58:13 2003
-+++ linux-2.5-devinit/drivers/scsi/sym53c8xx_2/sym_glue.c	Wed Sep 10 16:25:35 2003
-@@ -2445,6 +2445,7 @@ static void pqs_remove()
- 
- static struct pci_device_id pqs_id_table[] __devinitdata = {
- 	{ 0x101a, 0x0009, },
-+	{ 0, },
- };
- 
- MODULE_DEVICE_TABLE(pci, pqs_id_table);
-@@ -2526,6 +2527,7 @@ static struct pci_device_id sym2_id_tabl
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C875J,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
-+	{ 0, },
- };
- 
- MODULE_DEVICE_TABLE(pci, sym2_id_table);
+--4VrXvz3cwkc87Wze
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, Sep 10, 2003 at 03:24:09PM -0600, Pat LaVarre wrote:
+>=20
+> > The reason for the unsolicited REQUEST-SENSE ...
+>=20
+> Help, lost me.
+>=20
+> I'm thinking usb-storage auto sense should always and only follow
+> bCSWStatus =3D x01 Failed.  I'm thinking unsolicited auto sense should
+> occur only if the layers above request such an abuse - never
+> automagically.
+>=20
+> I'm thinking not injecting unsolicited auto sense is a part of the
+> unwritten specification that "everyone knows" helps hosts get along with
+> devices.
+>=20
+> No?  Where have I gone wrong?
+
+Experience tells us that this is a flawed algorithm.
+
+> > Since sgp_dd asked for a 64-byte
+> > READ-CAPACITY, it gets what it deserves.
+>=20
+> Ah, here we educate me.
+>=20
+> I should prepare and forward a patch to correct sgp_dd?
+>=20
+> We the community now broadly accept this rule?  We say apps own the job
+> of keeping the bus "on the thin diagonal" i.e. asking for precisely the
+> expected count of data bytes?
+
+Yes.
+
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+Somebody call an exorcist!
+					-- Dust Puppy
+User Friendly, 5/16/1998
+
+--4VrXvz3cwkc87Wze
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.7 (GNU/Linux)
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
 
-iD8DBQE/X5pUIavu95Lw/AkRAtNTAJ0T6lq1JCJP0pBDV6bTcYCkqb+D2ACdEjxl
-vEfgFnKx5uOLyQdjzG/iFjw=
-=Uoyn
+iD8DBQE/X500IjReC7bSPZARAmEXAJsEiJ/nTTHZ0AE2qs+ewtFgs2X22ACfeXqY
+EFT0Ozb4ZGFy66Rcr3CcyIw=
+=x7cM
 -----END PGP SIGNATURE-----
 
+--4VrXvz3cwkc87Wze--
