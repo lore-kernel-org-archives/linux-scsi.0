@@ -1,34 +1,42 @@
-From: Grant Grundler <iod00d@hp.com>
-Subject: Re: convert 520 byte sector disk to 512 byte sector?
-Date: Wed, 18 Jun 2003 13:52:42 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: qla2xxx and feral ISP updates in their respective BK trees
+Date: 18 Jun 2003 16:29:38 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030618205242.GH23761@cup.hp.com>
-References: <A5974D8E5F98D511BB910002A50A66470580D91A@hdsmsx103.hd.intel.com>
+Message-ID: <1055971780.2075.484.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palrel13.hp.com ([156.153.255.238]:34488 "EHLO palrel13.hp.com")
-	by vger.kernel.org with ESMTP id S265526AbTFRUiq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Jun 2003 16:38:46 -0400
-Content-Disposition: inline
-In-Reply-To: <A5974D8E5F98D511BB910002A50A66470580D91A@hdsmsx103.hd.intel.com>
+Received: from nat9.steeleye.com ([65.114.3.137]:29956 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265540AbTFRVPn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Jun 2003 17:15:43 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Cc: Douglas Gilbert <dougg@torque.net>, Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: mjacob@feral.com, Andrew Vasquez <praka@san.rr.com>, Andrew Morton <akpm@digeo.com>
 
-On Tue, Jun 10, 2003 at 11:32:33AM -0700, Cress, Andrew R wrote:
-> You can set the block descriptor as part of the mode page file using sgmode
-> from
->   http://scsirastools.sourceforge.net
+I've updated both these trees
 
-Andrew,
-no - this won't work for many of the Seagate drives.
-The "mask" for format mode page is mostly zeros.
-See my blk512-linux.c at:
-	ftp://gsyprf10.external.hp.com/pub/scsi/blk512
+bk://linux-scsi.bkbits.net/scsi-isp-2.5
+bk://linux-scsi.bkbits.net/scsi-qla2xxx-2.5
 
-(older code is at .../blk512_old)
+To their latest respective versions.
 
-thanks,
-grant
+I've tried building these:
+
+Qlogic:
+
+qla2100 still refuses to build, which is the only FC card I have.  Also,
+I could do with the directory tree being laid out in a standard fashion
+(i.e. with the docs under Documentation/scsi like I've done in the BK
+tree).
+
+Feral:
+
+Still giving me a HPMC on parisc in isp_reset.
+
+James
+
+
+
+
