@@ -1,42 +1,44 @@
-From: Jes Sorensen <jes@wildopensource.com>
-Subject: Re: [announce] scsi_id 0.1 - generate unique scsi id
-Date: 23 Oct 2003 03:33:32 -0400
+From: Krishna Murthy <krmurthy@cisco.com>
+Subject: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Thu, 23 Oct 2003 17:34:10 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <yq04qy0be7n.fsf@wildopensource.com>
-References: <20031021165857.A8240@beaverton.ibm.com>
-	<20031022153140.A22298@infradead.org>
-	<1066808536.27285.19.camel@w-stekloff.beaverton.ibm.com>
-	<20031022154638.A22952@infradead.org>
-	<1066809889.27285.36.camel@w-stekloff.beaverton.ibm.com>
-	<20031022155231.GQ18370@parcelfarce.linux.theplanet.co.uk>
-	<20031022091519.A11995@beaverton.ibm.com>
+Message-ID: <200310231734.10263.krmurthy@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:6604 "EHLO jaguar.mkp.net")
-	by vger.kernel.org with ESMTP id S261305AbTJWHiM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Oct 2003 03:38:12 -0400
-In-Reply-To: <20031022091519.A11995@beaverton.ibm.com>
+Received: from india-ironport-1.cisco.com ([64.104.129.195]:23864 "EHLO
+	india-ironport-1.cisco.com") by vger.kernel.org with ESMTP
+	id S263561AbTJWMEe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Oct 2003 08:04:34 -0400
+Received: from krmurthy1-lnx.cisco.com (krmurthy1-lnx.cisco.com [10.77.7.60])
+	by india-msg-core-1.cisco.com (8.12.9/8.12.6) with ESMTP id h9NHWCGX005896
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Oct 2003 17:32:14 GMT
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Matthew Wilcox <willy@debian.org>, Daniel Stekloff <dsteklof@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: davmyers@cisco.com
 
->>>>> "Patrick" == Patrick Mansfield <patmans@us.ibm.com> writes:
+Hi,
+	Linux iSCSI driver 4.0.0.1 (linux-iscsi-4.0.0.1.tgz) is available at
 
-Patrick> On Wed, Oct 22, 2003 at 04:52:31PM +0100, Matthew Wilcox
-Patrick> wrote:
->> You shouldn't be installing them into the <sys/> namespace, that's
->> basically owned by POSIX.  How about <sysfs/> instead?
+http://sf.net/projects/linux-iscsi/
 
-Patrick> I incorrectly suggested we should use <sys/>.
+	 Could you please review the same and let us know whether it is OK for 
+inclusion into the linux 2-6 kernel?
 
-Patrick> Should we use <linux/>, rather than another new directory?
+The following are the changes w.r.t  version 3.4 of our driver which we 
+had earlier sent for review:
+ 1)Compatible with linux -2.6.0 kernel. 
+ 2)Review comments from linux-scsi have been incorporated:
+     - Indentation /Coding style has been taken care of.
+     - Device probing and /dev/iscsi links creation have been moved from
+	kernel to user mode.
+     - linked list macros from list.h is being used now.
+     -few of our kernel files were including <endian.h>. This has been 
+rectified.
 
-Rule of thumb: any existing hierachy is reserved, either you want to
-drop it in header root, ie. /usr/include or /usr/loca/include or you
-want to create your own hierachy, <sysfs/> as Matthew suggested looks
-like a good candidate to me.
 
-Cheers,
-Jes
+
+Thanx
+N.C.Krishna Murthy
