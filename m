@@ -1,39 +1,51 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Tue, 21 Jan 2003 16:02:54 -0500 (EST)
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Fwd: 32bit dev_t
+Date: Wed, 22 Jan 2003 08:56:45 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0301211546410.6926-100000@ida.rowland.org>
-References: <3E2DA75C.3000800@splentec.com>
+Message-ID: <3E2DC21D.9010204@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3E2DA75C.3000800@splentec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
-Cc: Oliver Neukum <oliver@neukum.name>, David Brownell <david-b@pacbell.net>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: sdake@mvista.com, Joel.Becker@oracle.com
 
-Here's another question to add to your discussion.
+This post appeared recently on the linux kernel list.
+What is the maximum number of disks that can be attached
+in lk 2.5? Is it 256 (double the number of SCSI disk majors)
+or larger. I remember Richard Gooch's "sd-many" patch
+was rejected for 2.5 because it was said there was a
+better mechanism around the corner.
 
-When a device is unplugged, the system's representation of that device
-can't be removed immediately; there may be open fd's, mounts, pointers,
-and so on.  Until the time comes when all these handles are released, all
-interaction with the device has to fail, one way or another.
+BTW when I tested 129 (1 real + 128 dummies) disks with
+scsi_debug there was a problem the last one. Has anyone
+tested > 128 disks in lk 2.5?
 
-Whose responsibility is it to fail these interactions?
+Doug Gilbert
 
-For something simple, like a USB serial port, it might turn out that the 
-low-level device driver gets all these requests and then fails them.  That 
-means the driver has to keep track of the fact that the device is no 
-longer connected until some reference count goes to 0.
 
-For SCSI and emulated SCSI devices, it might be the one of the SCSI layers 
-that keeps track of the fact that the device has disconnected.  Or it 
-might be somewhere else in the kernel.
-
-It would nice to have some sort of coherent plan for how to handle this.  
-In fact, it ought to be part of the device-driver model that underlies 
-sysfs.  But so far as I am aware, there is currently nothing in the sysfs 
-documentation to address the problem.
-
-Alan Stern
+Steven Dake wrote:
+ >
+ > Joel,
+ >
+ > Linux doesn't really need a 32 bit kdev_t structure to support 1000
+ > disks.  There is plenty of device space available to support over 1500
+ > disks by modifying the linux scsi layer.
+ >
+ > Thanks
+ > -steve
+ >
+ > Joel Becker wrote:
+ >
+ > >Folks,
+ > >	Who is tracking the 32bit dev_t effort for 2.5?  There are
+ > >already existing installations with 500 to 1000 disks attached to a
+ > >system, and I don't know that Linux really wants to wait four
+ > >years to get there!
+ > >	If someone could point me to a current patch or any current
+ > >information about the issues, I'd really appreciate it.
+ > >
+ > >Joel
 
