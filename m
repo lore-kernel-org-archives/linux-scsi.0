@@ -1,106 +1,37 @@
-From: Linus Torvalds <torvalds@transmeta.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [PATCH] /proc/scsi/map
-Date: Thu, 20 Jun 2002 11:53:19 -0700 (PDT)
+Date: Thu, 20 Jun 2002 14:52:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0206201137060.8225-100000@home.transmeta.com>
-References: <20020620183209.GF28800@gum01m.etpnet.phys.tue.nl>
+Message-ID: <200206201852.g5KIqoJ06342@localhost.localdomain>
+References: <torvalds@transmeta.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020620183209.GF28800@gum01m.etpnet.phys.tue.nl>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id LAA18982
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Jun 2002 11:52:56 -0700
+In-Reply-To: Message from Linus Torvalds <torvalds@transmeta.com>
+   of "Thu, 20 Jun 2002 11:36:25 PDT." <Pine.LNX.4.44.0206201133180.8225-100000@home.transmeta.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>
-Cc: Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Andries Brouwer <aebr@win.tue.nl>, Martin Schwenke <martin@meltin.net>, Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>
 
+torvalds@transmeta.com said:
+> SCSI people, how does that patch look to you? Apparently it does
+> everything the scsimap thing does, in a way that is certainly
+> acceptable to me. 
 
+It looks OK to me.  It doesn't quite do everything you want in terms of doing 
+your bus1/id2/lun0 piece, but it's a good start.
 
-On Thu, 20 Jun 2002, Kurt Garloff wrote:
->
-> Actually, with the important exception of IDE disks, most devices are SCSI
-> in some way
+We should probably have some more discussion about the layout of the device 
+tree, particularly if it's going to be consistent with other devices like ide 
+discs and cds.
 
-Don't be silly.
+I'd like to see the "name" field become mutable from user level somehow just 
+so we can fix the enterprise name on broken devices without having to have a 
+huge kernel exception table, but that's my only current concern.
 
-You appear to have a very disk-centric world view, and you seem to ignore
-that even in disks, the large majority is IDE, and with SCSI prices not
-coming down, that's going to be only more and more true.
+James
 
-Also, most disk devices are using SCSI _command_sets_. But that does not
-translate to "using the SCSI mid-layer".
-
-> So our consolidated driver structure will IMHO look like this
-
-The way it seems to be going right now is:
-
- - stage 1: minor/major -> "queue + index" mapping
-   (only done at "open()" time, the internal kernel is trying to get rid
-   of most of the major/minor stuff)
-
- - stage 2: ll_rw_block.c, ioctl.c: insert command on queue.
-
-   Yes, this layer builds up SCSI commands, but it doesn't actually have
-   anything to do with the SCSI midlayer.
-
- - stage 3: driver takes it off the queue and executes the thing.
-
-In short, what is happening is that the SCSI mid-layer to some degree
-becomes _less_ relevant, exactly because the SCSI _command_ structure has
-gotten so universal that that part is moved up one layer into the generic
-part.
-
-Which means that things like ide-scsi etc just don't make any sense any
-more. Your assumption that SCSI-cd would take over the IDE layer is just
-_wrong_. It's going the other way. There shouldn't be any real difference
-between "disk" and "cdrom", you just send commands down the queue.
-
-> Now, userspace should really not care what sort of device is hiding behind a
-> "disk" device, except that we
-> (1) want to be able to identify and find back a device
->    (a) by a path to it                  and/or
->    (b) by a unique hardware identifier  and/or
->    (c) by its content (a label on it)
-
-Absolutely.
-
-> (2) may want to be able to send low-level (SCSI mostly) commands for
->     configuration  to inquire speical information, or to do things where no
->     kernel driver support exists, such as scanning or writing CDs.
->     For SCSI-like devices, we always want to use sg for this, IMHO,
->     as open() on a sg device is without side-effects and works reliably.
-
-I think we should get _away_ from those silly "sg" devices. The whole
-notion that there are "sg" vs "sr" vs "sd" devices is a total bogosity,
-and should just go away. What's the point of having those things? It only
-confuses people.
-
-We should open a disk device, and access it. Nothing else. The fact that
-SCSI got the notion that sd/sr/sg are somehow different is just one of the
-_problems_ in the SCSI layer. It's just a queue to send commands to
-together with the data and the result, that's all it ever was.
-
-(In other words, I kind of agree with your characterization that "we
-should always use 'sg'" because clearly that's the closest of the SCSI
-devices to the notion of a command queue. However, I think you've stared
-at SCSI so long that you think that that split-up makes sense, when it
-really doesn't).
-
-> > I will bet you that there are more IDE CD-RW's out there than there are
-> > SCSI devices. The fact that people use ide-scsi to write to them is a
-> > hopefully very temporary situation, and the command interface is going
-> > to move to a higher layer.
->
-> They use SCSI commands, so you will want to offer an interface for
-> applications to send SCSI commands, unless you want somebody to write a
-> kernel driver to support CD writing.
-
-SCSI commands != "SCSI midlayer".
-
-The IDE driver is already moving into the direction that it just accepts a
-command off the request queue.
-
-That does _not_ mean that it has anything to do with the SCSI layer, quite
-the reverse. It means that we're going _away_ from the SCSI layer, and
-that ide-scsi becomes nothing but an embarrassing remnant of history.
-
-		Linus
 
