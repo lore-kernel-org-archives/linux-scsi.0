@@ -1,34 +1,35 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [PATCH][BUGFIX] : megaraid patch for 2.10.1 (irq disable bug fix)
-Date: Mon, 23 Feb 2004 17:29:21 +0000
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Fw: PROBLEM: Linux V. 2.6.3 panics with "Buffers at physical
+	address >16Mb used for aha1542" at boot time
+Date: 23 Feb 2004 11:34:15 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040223172921.GD25779@parcelfarce.linux.theplanet.co.uk>
-References: <0E3FA95632D6D047BA649F95DAB60E570230C730@exa-atlanta.se.lsil.com>
+Message-ID: <1077557656.1759.58.camel@mulgrave>
+References: <20040218171212.0eb6618a.akpm@osdl.org>
+	<1077243517.2164.61.camel@mulgrave> <1077265837.1297.9.camel@felicia>
+	<20040220083808.GA11822@suse.de> <1077300620.1937.11.camel@mulgrave>
+	<20040223164811.GK32010@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:49812 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261935AbUBWR30
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Feb 2004 12:29:26 -0500
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570230C730@exa-atlanta.se.lsil.com>
+Received: from stat1.steeleye.com ([65.114.3.130]:5085 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261972AbUBWReX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Feb 2004 12:34:23 -0500
+In-Reply-To: <20040223164811.GK32010@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: "Dr. Ernst Molitor" <molitor@uni-bonn.de>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Feb 23, 2004 at 12:24:31PM -0500, Bagalkote, Sreenivas wrote:
-> Hello all,
-> 
-> The following patch fixes a bug in megaraid driver version 2.10.1
-> where irq was erroneously being disabled.
+On Mon, 2004-02-23 at 10:48, Jens Axboe wrote:
+> Something half-assed like this should work as an immediate fix...
 
-Could we have a later version than 2.00.3 in 2.6 please?
+But I don't see how this bounces the buffer?  Without a bio, this simply
+passes req->data (which is cgc->buffer) into cmd->request_buffer in
+scsi_init_io(); but the problem was that this buffer is outside the
+dma_mask.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+
+James
+
+
