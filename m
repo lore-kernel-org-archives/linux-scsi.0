@@ -1,46 +1,56 @@
-From: gl@dsa-ac.de
-Subject: Re: [PATCH] dc395x: Fix support for highmem
-Date: Thu, 31 Mar 2005 10:58:47 +0200 (CEST)
-Message-ID: <Pine.LNX.4.56.0503311051290.20956@pcgl.dsa-ac.de>
-References: <20050321075531.GC23911@suse.de> <7044.1111398919@www16.gmx.net>
-  <Pine.LNX.4.56.0503211111290.20956@pcgl.dsa-ac.de>  <20050321104419.GH23911@suse.de>
-  <Pine.LNX.4.56.0503211147420.20956@pcgl.dsa-ac.de>
- <Pine.LNX.4.60.0503302318250.9431@poirot.grange> <1112220802.9435.1.camel@mulgrave>
+From: "Rajat  Jain, Noida" <rajatj@noida.hcltech.com>
+Subject: How to find which (physical) SCSI HBA corresponds to which host n
+	umber?
+Date: Thu, 31 Mar 2005 14:32:31 +0530
+Message-ID: <267988DEACEC5A4D86D5FCD780313FBB065448B3@exch-03.noida.hcltech.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dsa-ac.de ([62.112.80.99]:7692 "EHLO mail.dsa-ac.de")
-	by vger.kernel.org with ESMTP id S261200AbVCaJB5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Mar 2005 04:01:57 -0500
-In-Reply-To: <1112220802.9435.1.camel@mulgrave>
+Received: from ngate.noida.hcltech.com ([202.54.110.230]:48080 "EHLO
+	ngate.noida.hcltech.com") by vger.kernel.org with ESMTP
+	id S261202AbVCaJC4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Mar 2005 04:02:56 -0500
+Received: from noida.hcltech.com (exch-01.noida.hcltech.com [204.160.254.79] (may be forged))
+	by ngate.noida.hcltech.com (8.12.5/8.12.5) with ESMTP id j2V96TrU015997
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2005 14:36:56 +0530
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Jens Axboe <axboe@suse.de>, Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <matthew@wil.cx>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Wed, 30 Mar 2005, James Bottomley wrote:
+2
+Hi List,
 
-> On Wed, 2005-03-30 at 23:22 +0200, Guennadi Liakhovetski wrote:
-> > What is going to happen to this stuff? The current Linus' tree contains a
-> > broken (by me:-() dc395x, other drivers (including tmscsim) would benefit
-> > from a generic API. I understand, the drivers are not top importance, but
-> > still.
->
-> I'd propose fixing the driver first and then using that fix as the basis
-> for a generic API.  Is the patch you sent on the 17th of March what
-> you'd consider to be your final fix for this?
+I would appreciate if some one can help me out on these.
 
-Well, it could be. But I'd use Jens' suggestion and actually test it for
-highmem. And, since we are at it, I'd try to organise this code in
-separate API, so, that we just have to replace dc395x_* with scsi_* in
-function names. Makes sense?
+1) Suppose my machine has two similar SCSI HBAs. And my Linux box shows them
+to me as Hosts 0 and 1 respectively. When I open the chassis, is a there a
+way to figure out that physically which of the HBAs I am seeing correspond
+to hosts 0 and 1 respectively? The HBAs are similar in every sense (Model /
+Make etc). 
 
-Thanks
-Guennadi
----------------------------------
-Guennadi Liakhovetski, Ph.D.
-DSA Daten- und Systemtechnik GmbH
-Pascalstr. 28
-D-52076 Aachen
-Germany
+2) When I boot up the machine, is it fixed that the same HBA will get host
+number 0 every time, or does it depend on some thing?
+
+3) I want to add a new SCSI device at run time. I know when I'll have to use
+"scsi add-single-device" command, but I have to supply Host number, channel,
+ID and lun to it. I know that ID is set on the device it self, and hence
+I'll be knowing it. But how do I know the host no of the HBA that I've added
+the device to. Is it just trial and error?
+
+TIA,
+
+Rajat Jain
+
+
+Disclaimer: 
+
+This message and any attachment(s) contained here are information that is
+confidential,proprietary to HCL Technologies and its customers, privileged
+or otherwise protected by law.The information is solely intended for the
+individual or the entity it is addressed to. If you are not the intended
+recipient of this message, you are not authorized to read, forward,
+print,retain, copy or disseminate this message or any part of it. If you
+have received this e-mail in error, please notify the sender immediately by
+return e-mail and delete it from your computer.
+
+
