@@ -1,51 +1,74 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: How to add/drop SCSI drives from within the driver?
-Date: Wed, 08 Dec 2004 14:01:21 -0600
-Message-ID: <1102536081.4218.0.camel@localhost.localdomain>
-References: <60807403EABEB443939A5A7AA8A7458B7F5071@otce2k01.adaptec.com>
+From: webster@lexmark.com
+Subject: PERC4/DC (LSI Megaraid) on PowerEdge 2850
+Date: Wed, 8 Dec 2004 20:42:08 -0500
+Message-ID: <OF23E563E1.76C3D391-ON85256F65.0008ED88-85256F65.000985D1@lexmark.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:53148 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261419AbULIBMw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Dec 2004 20:12:52 -0500
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458B7F5071@otce2k01.adaptec.com>
+Received: from sw1.lexmark.com ([192.146.101.70]:55308 "EHLO sw1.lexmark.com")
+	by vger.kernel.org with ESMTP id S261397AbULIBir (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Dec 2004 20:38:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, Matt Domsch <Matt_Domsch@Dell.com>, brking@us.ibm.com, linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, bunk@fs.tum.de, Andrew Morton <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
+To: linux-poweredge@dell.com
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2004-12-08 at 13:42 -0500, Salyzyn, Mark wrote:
-> James Bottomley writes:
-> >The real way I'd like to handle this is via hotplug.  The hotplug event
-> >would transmit the HCTL in the environment.  Whether the drive actually
-> >gets incorporated into the system and where is user policy, so it's
-> >appropriate that it should be in userland.
-> 
-> The problem is the aac based cards generate events (AIFs) that are
-> picked up by the driver. To go all the way to userland to interpret
-> these events and back to the driver is a waste and a source of failures.
-> Only the Firmware knows when an array zeroing has completed in order to
-> bring the device online.
+This issue turned out to be a faulty PERC4/DC .
 
-Hotplug is the standard way of handling configuration changes (whether
-requested or forced).  There's value to handling things in a standard
-manner.  If the current implementation needs improving, then you're free
-to do it (and it would benefit far more than just SCSI...).
 
-So the firmware calls the SCSI API which triggers the hotplug event and
-adds the device ... there's no problem.
+________________________________________________________________________________________________
 
-> >This same infrastructure could be used by fibre channel login, scsi
-> >enclosure events etc.
-> 
-> I would need to emulate an SES to propagate array changes?
+Hello.
+I am trying to use a Dell PERC4/DC RAID controller in a Dell PowerEdge 
+2850 with SUSE Linux .
 
-No.  Merely that the hotplug API would also be usable by SES (and other
-things).
+Every time I try to copy files to a partition on this controller, after 
+~10GB, I start receiving this in syslog:
 
-James
+Dec  6 20:25:14 tasker0 kernel: megaraid: aborting-484304 cmd=2a <c=2 t=1 
+l=0>
+Dec  6 20:25:14 tasker0 kernel: megaraid abort: 484304:115[255:1], fw 
+owner
+Dec  6 20:25:14 tasker0 kernel: megaraid: aborting-484307 cmd=2a <c=2 t=0 
+l=0>
+Dec  6 20:25:14 tasker0 kernel: megaraid abort: 484307:46[255:0], fw owner
+.
+.
+.
+Dec  6 20:28:14 tasker0 kernel: megaraid: aborting-484438 cmd=2a <c=2 t=1 
+l=0>
+Dec  6 20:28:14 tasker0 kernel: megaraid abort: 484438[255:1], driver 
+owner
+Dec  6 20:28:14 tasker0 kernel: megaraid: reseting the host...
+Dec  6 20:28:14 tasker0 kernel: megaraid: 71 outstanding commands. Max 
+wait 180 sec
+Dec  6 20:28:14 tasker0 kernel: megaraid mbox: Wait for 71 commands to 
+complete:180
+Dec  6 20:28:14 tasker0 kernel: 3>scsi2 (1:0): rejecting I/O to offline 
+device
+Dec  6 20:28:14 tasker0 kernel: scsi2 (0:0): rejecting I/O to offline 
+device
+Dec  6 20:28:14 tasker0 kernel: scsi2 (1:0): rejecting I/O to offline 
+device
+Dec  6 20:28:14 tasker0 kernel: scsi2 (1:0): rejecting I/O to offline 
+device
+Dec  6 20:28:14 tasker0 kernel: SCSI error : <2 2 0 0> return code = 
+0x6000000
+Dec  6 20:28:14 tasker0 kernel: end_request: I/O error, dev sdf, sector 
+1064044038
+Dec  6 20:28:14 tasker0 kernel: scsi2 (0:0): rejecting I/O to offline 
+device
+Dec  6 20:28:14 tasker0 kernel: SCSI error : <2 2 0 0> return code = 
+0x6000000
+Dec  6 20:28:14 tasker0 kernel: end_request: I/O error, dev sdf, sector 
+1064043910
+.
+.
+.
 
+
+
+Any advice?
+
+Thanks.
 
