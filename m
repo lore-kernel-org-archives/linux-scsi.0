@@ -1,46 +1,27 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Changes to the SCSI sysfs tree
-Date: 10 Sep 2004 17:39:57 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Fix up scsi_test_unit_ready() to work correctly with CD-ROMs
+Date: Sat, 11 Sep 2004 11:35:50 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1094852403.2553.257.camel@mulgrave>
+Message-ID: <20040911113550.A1053@infradead.org>
+References: <1094738299.1837.2.camel@mulgrave> <41412790.70705@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:4786 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S267920AbUIJVkN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Sep 2004 17:40:13 -0400
+Received: from imladris.demon.co.uk ([193.237.130.41]:48905 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S268082AbUIKKf6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 11 Sep 2004 06:35:58 -0400
+Content-Disposition: inline
+In-Reply-To: <41412790.70705@torque.net>; from dougg@torque.net on Fri, Sep 10, 2004 at 02:03:28PM +1000
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Douglas Gilbert <dougg@torque.net>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-The patches effecting the changes listed below are at
+On Fri, Sep 10, 2004 at 02:03:28PM +1000, Douglas Gilbert wrote:
+> James,
+> Is the "descriptor" sense data patch which Christoph and I
+> worked on likely to be accepted?
 
-bk://linux-scsi.bkbits.net/scsi-target-2.6
-
-Andrew, could you add this to the -mm tree so it gets some wide testing
-before I submit it for inclusion in the kernel proper?  Thanks...
-
-What I'm actually doing is:
-
-I'd like to change the layout of the SCSI sysfs tree to add a target
-generic device.  This is essential because we need to hang certainl
-device class attributes off the target not replicate them throughout the
-LUNs of the individual device.
-
-This means that a current SCSI sysfs device like:
-
-lrwxrwxrwx  1 root root 0 Sep 10 09:44 /sys/block/sda/device ->
-../../devices/parisc8/parisc8:0/pci0000:00/0000:00:13.0/host0/0:0:5:0/
-
-will instead become:
-
-lrwxrwxrwx  1 root root 0 Sep 10 09:44 /sys/block/sda/device ->
-../../devices/parisc8/parisc8:0/pci0000:00/0000:00:13.0/host0/target0:0:5/0:0:5:0/
-
-(note the extra target).
-
-James
-
+That patch (and I'd rather say it's yours because you did the hard work :))
+is in now.
 
