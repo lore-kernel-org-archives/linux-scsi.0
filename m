@@ -1,28 +1,74 @@
-From: "Kotian, Deepak \( JBU  Mumbai \)" <Deepak.Kotian@patni.com>
-Subject: Can anyone be part of Linux kernel development team.
-Date: Sun, 31 Oct 2004 22:21:39 +0530
-Message-ID: <374639AB1012AA4C840022842AA95BC20334FCA7@ruby.patni.com>
+From: Jan-Benedict Glaw <jbglaw@lug-owl.de>
+Subject: Re: Can anyone be part of Linux kernel development team.
+Date: Sun, 31 Oct 2004 18:00:10 +0100
+Message-ID: <20041031170010.GH11105@lug-owl.de>
+References: <374639AB1012AA4C840022842AA95BC20334FCA7@ruby.patni.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="i6ZTfQE1Row3TVml"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pcsmail.patni.com ([203.124.139.197]:10248 "EHLO
-	pcsmail.patni.com") by vger.kernel.org with ESMTP id S261186AbUJaQvm convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 31 Oct 2004 11:51:42 -0500
-Received: from ruby.patni.com (ruby [204.165.186.9])
-	by pcsmail.patni.com (8.11.6/8.9.3) with ESMTP id i9VGulU10680
-	for <linux-scsi@vger.kernel.org>; Sun, 31 Oct 2004 22:26:47 +0530
-Content-class: urn:content-classes:message
+Received: from lug-owl.de ([195.71.106.12]:29404 "EHLO lug-owl.de")
+	by vger.kernel.org with ESMTP id S261318AbUJaRAM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 31 Oct 2004 12:00:12 -0500
+Content-Disposition: inline
+In-Reply-To: <374639AB1012AA4C840022842AA95BC20334FCA7@ruby.patni.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Kotian, Deepak ( JBU  Mumbai )" <Deepak.Kotian@patni.com>
+Cc: linux-scsi@vger.kernel.org
 
-Can anyone be part of Linux kernel development team.
-Basically, if I would be interested. What is the pre-requisite.
-I would be interested in SCSI layer/block devices and large Storage Devices like SAN or new development in this area.
-The reason for joining the kernel team is gain indepth knowledge
-of kernel on the job and at the same time contribute to the development.
-Where do I start, please let me know.
 
- 
+--i6ZTfQE1Row3TVml
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Sun, 2004-10-31 22:21:39 +0530, Kotian, Deepak ( JBU  Mumbai ) <Deepak.K=
+otian@patni.com>
+wrote in message <374639AB1012AA4C840022842AA95BC20334FCA7@ruby.patni.com>:
+> Can anyone be part of Linux kernel development team.
+
+Even better: there isn't a real "team".
+
+> Basically, if I would be interested. What is the pre-requisite.
+
+Sending patches that are *that* good that several people think they need
+your patch in their kernel tree.
+
+> I would be interested in SCSI layer/block devices and large Storage Devic=
+es like SAN or new development in this area.
+
+Send patches:-)
+
+> Where do I start, please let me know.
+
+Find something that works suboptimal and present a patch for a better
+implementation.
+
+MfG, JBG
+
+--=20
+Jan-Benedict Glaw       jbglaw@lug-owl.de    . +49-172-7608481             =
+_ O _
+"Eine Freie Meinung in  einem Freien Kopf    | Gegen Zensur | Gegen Krieg  =
+_ _ O
+ fuer einen Freien Staat voll Freier B=FCrger" | im Internet! |   im Irak! =
+  O O O
+ret =3D do_actions((curr | FREE_SPEECH) & ~(NEW_COPYRIGHT_LAW | DRM | TCPA)=
+);
+
+--i6ZTfQE1Row3TVml
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.5 (GNU/Linux)
+
+iD8DBQFBhRoaHb1edYOZ4bsRAu6QAJ47TX8L7P8geQEKC4TJg5tiD8IdLACeN3s7
+hcwmH3OjJhbnvkKI6RNtkw8=
+=vijt
+-----END PGP SIGNATURE-----
+
+--i6ZTfQE1Row3TVml--
