@@ -1,729 +1,329 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] add target and host to transport classes
-Date: 10 Sep 2004 11:03:44 -0400
+Subject: [PATCH] add bus signalling host attributes to spi transport class
+Date: 10 Sep 2004 11:39:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1094828630.1974.2.camel@mulgrave>
-References: <1094577840.2069.118.camel@mulgrave>
+Message-ID: <1094830789.1762.37.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:18898 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:2975 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S267433AbUIJPDw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Sep 2004 11:03:52 -0400
+	id S267516AbUIJPjw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Sep 2004 11:39:52 -0400
 Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id i8AF3oJ20881
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Sep 2004 11:03:50 -0400
-In-Reply-To: <1094577840.2069.118.camel@mulgrave>
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id i8AFdnJ23942
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Sep 2004 11:39:49 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-09-07 at 13:23, James Bottomley wrote:
-> OK, I've polished this up quite a bit, and actually got the
-> implementation to work in the SPI transport classes.  It still needs to
-> be commented and have all the failure cases sorted out, but this should
-> be ready to play with. (Obviously, you need the target patch before this
-> will apply.)
+This is really a simple example, but it's designed to be illustrative of
+how host attributes could be added to the transport class.
 
-When I tried to use the host part, several problems turned up in it, so
-this is an updated version with (hopefully) all the host issues fixed.
+The new attribute is a 'signalling' one; all it does is identify the bus
+signalling protocol: SE,LVD or HVD.
 
 James
+
 
 # This is a BitKeeper generated diff -Nru style patch.
 #
 # ChangeSet
-#   2004/09/09 16:17:17-05:00 jejb@raven.il.steeleye.com 
-#   Add host and target transport class abstractions
+#   2004/09/09 23:24:33-05:00 jejb@raven.il.steeleye.com 
+#   Add bus signalling host attribute to spi transport class
 #   
-#   This patch makes a transport class be composed of up to three individual
-#   device classes representing potential interfaces on the scsi_device,
-#   scsi_target and Scsi_Host.  A class only has to implement at least one
-#   of these, but may optionally implement more.
+#   This is just a simple illustration of host parameters:
+#   it adds a bus signalling type for LVD/SE/HVD
 #   
 #   Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
 # 
-# drivers/scsi/scsi_scan.c
-#   2004/09/09 16:16:26-05:00 jejb@raven.il.steeleye.com +15 -40
-#   Add host and target transport class abstractions
+# include/scsi/scsi_transport_spi.h
+#   2004/09/09 23:23:45-05:00 jejb@raven.il.steeleye.com +14 -0
+#   Add bus signalling host attribute to spi transport class
 # 
-# drivers/scsi/scsi_priv.h
-#   2004/09/09 16:16:26-05:00 jejb@raven.il.steeleye.com +0 -16
-#   Add host and target transport class abstractions
-# 
-# drivers/scsi/hosts.c
-#   2004/09/09 16:16:26-05:00 jejb@raven.il.steeleye.com +15 -1
-#   Add host and target transport class abstractions
-# 
-# include/scsi/scsi_device.h
-#   2004/09/09 16:16:25-05:00 jejb@raven.il.steeleye.com +26 -1
-#   Add host and target transport class abstractions
+# drivers/scsi/sym53c8xx_2/sym_glue.c
+#   2004/09/09 23:23:45-05:00 jejb@raven.il.steeleye.com +23 -0
+#   Add bus signalling host attribute to spi transport class
 # 
 # drivers/scsi/scsi_transport_spi.c
-#   2004/09/09 16:16:25-05:00 jejb@raven.il.steeleye.com +8 -8
-#   Add host and target transport class abstractions
+#   2004/09/09 23:23:45-05:00 jejb@raven.il.steeleye.com +107 -0
+#   Add bus signalling host attribute to spi transport class
 # 
-# drivers/scsi/scsi_transport_fc.c
-#   2004/09/09 16:16:25-05:00 jejb@raven.il.steeleye.com +5 -5
-#   Add host and target transport class abstractions
+# drivers/scsi/53c700.c
+#   2004/09/09 23:23:45-05:00 jejb@raven.il.steeleye.com +2 -0
+#   Add bus signalling host attribute to spi transport class
 # 
-# drivers/scsi/scsi_sysfs.c
-#   2004/09/09 16:16:25-05:00 jejb@raven.il.steeleye.com +112 -25
-#   Add host and target transport class abstractions
-# 
-# include/scsi/scsi_transport_spi.h
-#   2004/09/09 16:16:24-05:00 jejb@raven.il.steeleye.com +10 -10
-#   Add host and target transport class abstractions
-# 
-# include/scsi/scsi_transport_fc.h
-#   2004/09/09 16:16:24-05:00 jejb@raven.il.steeleye.com +3 -3
-#   Add host and target transport class abstractions
-# 
-# include/scsi/scsi_transport.h
-#   2004/09/09 16:16:24-05:00 jejb@raven.il.steeleye.com +16 -7
-#   Add host and target transport class abstractions
-# 
-# include/scsi/scsi_host.h
-#   2004/09/09 16:16:24-05:00 jejb@raven.il.steeleye.com +10 -0
-#   Add host and target transport class abstractions
-# 
-diff -Nru a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
---- a/drivers/scsi/hosts.c	2004-09-10 07:44:30 +00:00
-+++ b/drivers/scsi/hosts.c	2004-09-10 07:44:30 +00:00
-@@ -82,6 +82,8 @@
- 	set_bit(SHOST_DEL, &shost->shost_state);
+diff -Nru a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+--- a/drivers/scsi/53c700.c	2004-09-10 07:50:06 +00:00
++++ b/drivers/scsi/53c700.c	2004-09-10 07:50:06 +00:00
+@@ -404,6 +404,8 @@
+ 	       (hostdata->fast ? "53c700-66" : "53c700"),
+ 	       hostdata->rev, hostdata->differential ?
+ 	       "(Differential)" : "");
++	spi_signalling(host) = hostdata->differential ? SPI_SIGNAL_HVD :
++		SPI_SIGNAL_SE;
+ 	/* reset the chip */
+ 	NCR_700_chip_reset(host);
  
- 	class_device_unregister(&shost->shost_classdev);
-+	if (shost->transport_classdev.class)
-+		class_device_unregister(&shost->transport_classdev);
- 	device_del(&shost->shost_gendev);
- }
- 
-@@ -154,6 +156,7 @@
- 
- 	scsi_proc_hostdir_rm(shost->hostt);
- 	scsi_destroy_command_freelist(shost);
-+	kfree(shost->shost_data);
- 
- 	/*
- 	 * Some drivers (eg aha1542) do scsi_register()/scsi_unregister()
-@@ -278,15 +281,26 @@
- 	snprintf(shost->shost_classdev.class_id, BUS_ID_SIZE, "host%d",
- 		  shost->host_no);
- 
-+	if (shost->transportt->host_size &&
-+	    (shost->shost_data = kmalloc(shost->transportt->host_size,
-+					 GFP_KERNEL)) == NULL)
-+		goto fail_destroy_freelist;
-+
-+	if (shost->transportt->host_setup)
-+		shost->transportt->host_setup(shost);
-+
- 	shost->eh_notify = &complete;
- 	rval = kernel_thread(scsi_error_handler, shost, 0);
- 	if (rval < 0)
--		goto fail_destroy_freelist;
-+		goto fail_free_shost_data;
- 	wait_for_completion(&complete);
- 	shost->eh_notify = NULL;
-+
- 	scsi_proc_hostdir_add(shost->hostt);
- 	return shost;
- 
-+ fail_free_shost_data:
-+	kfree(shost->shost_data);
-  fail_destroy_freelist:
- 	scsi_destroy_command_freelist(shost);
-  fail_kfree:
-diff -Nru a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
---- a/drivers/scsi/scsi_priv.h	2004-09-10 07:44:30 +00:00
-+++ b/drivers/scsi/scsi_priv.h	2004-09-10 07:44:30 +00:00
-@@ -58,22 +58,6 @@
-  */
- #define SCAN_WILD_CARD	~0
- 
--/*
-- * scsi_target: representation of a scsi target, for now, this is only
-- * used for single_lun devices. If no one has active IO to the target,
-- * starget_sdev_user is NULL, else it points to the active sdev.
-- */
--struct scsi_target {
--	struct scsi_device	*starget_sdev_user;
--	struct device		dev;
--};
--
--#define to_scsi_target(d)	container_of(d, struct scsi_target, dev)
--static inline struct scsi_target *scsi_target(struct scsi_device *sdev)
--{
--	return to_scsi_target(sdev->sdev_gendev.parent);
--}
--
- /* hosts.c */
- extern int scsi_init_hosts(void);
- extern void scsi_exit_hosts(void);
-diff -Nru a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c	2004-09-10 07:44:30 +00:00
-+++ b/drivers/scsi/scsi_scan.c	2004-09-10 07:44:30 +00:00
-@@ -202,10 +202,11 @@
- static struct scsi_device *scsi_alloc_sdev(struct Scsi_Host *shost,
- 	       	uint channel, uint id, uint lun, void *hostdata)
- {
--	struct scsi_device *sdev, *device;
-+	struct scsi_device *sdev;
- 	unsigned long flags;
- 
--	sdev = kmalloc(sizeof(*sdev) + shost->transportt->size, GFP_ATOMIC);
-+	sdev = kmalloc(sizeof(*sdev) + shost->transportt->device_size,
-+		       GFP_ATOMIC);
- 	if (!sdev)
- 		goto out;
- 
-@@ -256,45 +257,28 @@
- 			goto out_free_queue;
- 	}
- 
--	if (shost->transportt->setup) {
--		if (shost->transportt->setup(sdev))
-+	if (shost->transportt->device_setup) {
-+		if (shost->transportt->device_setup(sdev))
- 			goto out_cleanup_slave;
- 	}
- 
- 	if (get_device(&sdev->host->shost_gendev) == NULL ||
- 	    scsi_sysfs_device_initialize(sdev) != 0)
--		goto out_cleanup_transport;
-+		goto out_cleanup_slave;
- 
--	/*
--	 * If there are any same target siblings, add this to the
--	 * sibling list
--	 */
--	spin_lock_irqsave(shost->host_lock, flags);
--	list_for_each_entry(device, &shost->__devices, siblings) {
--		if (device->id == sdev->id &&
--		    device->channel == sdev->channel) {
--			list_add_tail(&sdev->same_target_siblings,
--				      &device->same_target_siblings);
--			sdev->scsi_level = device->scsi_level;
--			break;
--		}
--	}
- 
--	/*
--	 * If there wasn't another lun already configured at this
--	 * target, then default this device to SCSI_2 until we
--	 * know better
--	 */
--	if (!sdev->scsi_level)
--		sdev->scsi_level = SCSI_2;
-+	/* NOTE: this target initialisation code depends critically on
-+	 * lun scanning being sequential. */
-+	if (scsi_sysfs_target_initialize(sdev))
-+		goto out_remove_siblings;
- 
--	list_add_tail(&sdev->siblings, &shost->__devices);
--	spin_unlock_irqrestore(shost->host_lock, flags);
- 	return sdev;
- 
--out_cleanup_transport:
--	if (shost->transportt->cleanup)
--		shost->transportt->cleanup(sdev);
-+out_remove_siblings:
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	list_del(&sdev->siblings);
-+	list_del(&sdev->same_target_siblings);
-+	spin_unlock_irqrestore(shost->host_lock, flags);
- out_cleanup_slave:
- 	if (shost->hostt->slave_destroy)
- 		shost->hostt->slave_destroy(sdev);
-@@ -586,11 +570,6 @@
- 	if (*bflags & BLIST_NOSTARTONADD)
- 		sdev->no_start_on_add = 1;
- 
--	/* NOTE: this target initialisation code depends critically on
--	 * lun scanning being sequential. */
--	if(scsi_sysfs_target_initialize(sdev))
--		return SCSI_SCAN_NO_RESPONSE;
--
- 	if (*bflags & BLIST_SINGLELUN)
- 		sdev->single_lun = 1;
- 
-@@ -733,8 +712,6 @@
- 	} else {
- 		if (sdev->host->hostt->slave_destroy)
- 			sdev->host->hostt->slave_destroy(sdev);
--		if (sdev->host->transportt->cleanup)
--			sdev->host->transportt->cleanup(sdev);
- 		put_device(&sdev->sdev_gendev);
- 	}
-  out:
-@@ -1293,7 +1270,5 @@
- 
- 	if (sdev->host->hostt->slave_destroy)
- 		sdev->host->hostt->slave_destroy(sdev);
--	if (sdev->host->transportt->cleanup)
--		sdev->host->transportt->cleanup(sdev);
- 	put_device(&sdev->sdev_gendev);
- }
-diff -Nru a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
---- a/drivers/scsi/scsi_sysfs.c	2004-09-10 07:44:30 +00:00
-+++ b/drivers/scsi/scsi_sysfs.c	2004-09-10 07:44:30 +00:00
-@@ -160,14 +160,19 @@
- 
- 	spin_lock_irqsave(sdev->host->host_lock, flags);
- 	/* If we're the last LUN on the target, destroy the target */
--	delete = (list_empty(&sdev->same_target_siblings) && parent);
-+	delete = list_empty(&sdev->same_target_siblings);
- 	list_del(&sdev->siblings);
- 	list_del(&sdev->same_target_siblings);
- 	list_del(&sdev->starved_entry);
- 	spin_unlock_irqrestore(sdev->host->host_lock, flags);
- 
- 	if (delete) {
--		device_del(parent);
-+		struct scsi_target *starget = to_scsi_target(parent);
-+		if (!starget->create) {
-+			device_del(parent);
-+			if (starget->transport_classdev.class)
-+				class_device_unregister(&starget->transport_classdev);
-+		}
- 		put_device(parent);
- 	}
- 	if (sdev->request_queue)
-@@ -454,7 +459,48 @@
- int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- {
- 	struct class_device_attribute **attrs;
--	int error, i;
-+	struct scsi_target *starget = sdev->sdev_target;
-+	struct Scsi_Host *shost = sdev->host;
-+	int error, i, create;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	create = starget->create;
-+	starget->create = 0;
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+	if (create) {
-+		error = device_add(&starget->dev);
-+		if (error) {
-+			printk(KERN_ERR "Target device_add failed\n");
-+			return error;
-+		}
-+		if (starget->transport_classdev.class) {
-+			int i;
-+			struct class_device_attribute **attrs =
-+				sdev->host->transportt->target_attrs;
-+
-+			error = class_device_add(&starget->transport_classdev);
-+			if (error) {
-+				dev_printk(KERN_ERR, &starget->dev,
-+					   "Target transport add failed\n");
-+				return error;
-+			}
-+
-+			/* take a reference for the transport_classdev; this
-+			 * is released by the transport_class .release */
-+			get_device(&starget->dev);
-+			for (i = 0; attrs[i]; i++) {
-+				error = class_device_create_file(&starget->transport_classdev,
-+								 attrs[i]);
-+				if (error) {
-+					dev_printk(KERN_ERR, &starget->dev,
-+						   "Target transport attr add failed\n");
-+					return error;
-+				}
-+			}
-+		}
-+	}
- 
- 	if ((error = scsi_device_set_state(sdev, SDEV_RUNNING)) != 0)
- 		return error;
-@@ -474,7 +520,6 @@
- 	/* take a reference for the sdev_classdev; this is
- 	 * released by the sdev_class .release */
- 	get_device(&sdev->sdev_gendev);
--
- 	if (sdev->transport_classdev.class) {
- 		error = class_device_add(&sdev->transport_classdev);
- 		if (error)
-@@ -509,7 +554,7 @@
- 	}
- 
-  	if (sdev->transport_classdev.class) {
-- 		attrs = sdev->host->transportt->attrs;
-+ 		attrs = sdev->host->transportt->device_attrs;
-  		for (i = 0; attrs[i]; i++) {
-  			error = class_device_create_file(&sdev->transport_classdev,
-  							 attrs[i]);
-@@ -553,8 +598,6 @@
- 	scsi_device_set_state(sdev, SDEV_DEL);
- 	if (sdev->host->hostt->slave_destroy)
- 		sdev->host->hostt->slave_destroy(sdev);
--	if (sdev->host->transportt->cleanup)
--		sdev->host->transportt->cleanup(sdev);
- 	put_device(&sdev->sdev_gendev);
- 
- out:
-@@ -641,6 +684,29 @@
- 		}
- 	}
- 
-+	class_device_initialize(&shost->transport_classdev);
-+	shost->transport_classdev.class = shost->transportt->host_class;
-+	shost->transport_classdev.dev = &shost->shost_gendev;
-+	snprintf(shost->transport_classdev.class_id, BUS_ID_SIZE,
-+		 "host%d", shost->host_no);
-+
-+	if (shost->transport_classdev.class) {
-+		struct class_device_attribute **attrs =
-+			shost->transportt->host_attrs;
-+		error = class_device_add(&shost->transport_classdev);
-+		if (error)
-+			return error;
-+		/* take a reference for the transport_classdev; this
-+		 * is released by the transport_class .release */
-+		get_device(&shost->shost_gendev);
-+		for (i = 0; attrs[i]; i++) {
-+ 			error = class_device_create_file(&shost->transport_classdev,
-+ 							 attrs[i]);
-+ 			if (error)
-+				return error;
-+ 		}
-+ 	}
-+
- 	return 0;
- }
- 
-@@ -662,7 +728,7 @@
- 
- 	class_device_initialize(&sdev->transport_classdev);
- 	sdev->transport_classdev.dev = &sdev->sdev_gendev;
--	sdev->transport_classdev.class = sdev->host->transportt->class;
-+	sdev->transport_classdev.class = sdev->host->transportt->device_class;
- 	snprintf(sdev->transport_classdev.class_id, BUS_ID_SIZE,
- 		 "%d:%d:%d:%d", sdev->host->host_no,
- 		 sdev->channel, sdev->id, sdev->lun);
-@@ -672,45 +738,66 @@
- int scsi_sysfs_target_initialize(struct scsi_device *sdev)
- {
- 	struct scsi_target *starget = NULL;
--	struct scsi_device *sdev_sibling;
-+	struct Scsi_Host *shost = sdev->host;
-+	struct scsi_device *device;
- 	struct device *dev = NULL;
--	int error;
- 	unsigned long flags;
-+	int create = 0;
- 
--	spin_lock_irqsave(sdev->host->host_lock, flags);
-+	spin_lock_irqsave(shost->host_lock, flags);
- 	/*
- 	 * Search for an existing target for this sdev.
- 	 */
--	list_for_each_entry(sdev_sibling, &sdev->same_target_siblings,
--			    same_target_siblings) {
--		if (sdev_sibling->sdev_gendev.parent != NULL) {
--			starget = scsi_target(sdev_sibling);
-+	list_for_each_entry(device, &shost->__devices, siblings) {
-+		if (device->id == sdev->id &&
-+		    device->channel == sdev->channel) {
-+			list_add_tail(&sdev->same_target_siblings,
-+				      &device->same_target_siblings);
-+			sdev->scsi_level = device->scsi_level;
-+			starget = device->sdev_target;
- 			break;
- 		}
- 	}
-+			
- 	if (!starget) {
--		starget = kmalloc(sizeof(*starget), GFP_ATOMIC);
-+		const int size = sizeof(*starget) +
-+			shost->transportt->target_size;
-+		starget = kmalloc(size, GFP_ATOMIC);
- 		if (!starget) {
- 			printk(KERN_ERR "%s: allocation failure\n", __FUNCTION__);
--			spin_unlock_irqrestore(sdev->host->host_lock,
-+			spin_unlock_irqrestore(shost->host_lock,
- 					       flags);
- 			return -ENOMEM;
- 		}
--		memset(starget, 0, sizeof(*starget));
-+		memset(starget, 0, size);
- 		dev = &starget->dev;
- 		device_initialize(dev);
--		dev->parent = &sdev->host->shost_gendev;
-+		dev->parent = &shost->shost_gendev;
- 		dev->release = scsi_target_dev_release;
- 		sprintf(dev->bus_id, "target%d:%d:%d",
--			sdev->host->host_no, sdev->channel, sdev->id);
-+			shost->host_no, sdev->channel, sdev->id);
-+		class_device_initialize(&starget->transport_classdev);
-+		starget->transport_classdev.dev = &starget->dev;
-+		starget->transport_classdev.class = shost->transportt->target_class;
-+		snprintf(starget->transport_classdev.class_id, BUS_ID_SIZE,
-+			 "target%d:%d:%d",
-+			 shost->host_no, sdev->channel, sdev->id);
-+		starget->id = sdev->id;
-+		create = starget->create = 1;
-+		/*
-+		 * If there wasn't another lun already configured at
-+		 * this target, then default this device to SCSI_2
-+		 * until we know better
-+		 */
-+		sdev->scsi_level = SCSI_2;
- 	}
- 	get_device(&starget->dev);
- 	sdev->sdev_gendev.parent = &starget->dev;
--	spin_unlock_irqrestore(sdev->host->host_lock, flags);
--	if (dev && (error = device_add(dev))) {
--		printk(KERN_ERR "Target device_add failed\n");
--		return error;
--	}
-+	sdev->sdev_target = starget;
-+	list_add_tail(&sdev->siblings, &shost->__devices);
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+	if (create && shost->transportt->target_setup)
-+		shost->transportt->target_setup(starget);
- 	return 0;
- }
- 
-diff -Nru a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
---- a/drivers/scsi/scsi_transport_fc.c	2004-09-10 07:44:30 +00:00
-+++ b/drivers/scsi/scsi_transport_fc.c	2004-09-10 07:44:30 +00:00
-@@ -84,7 +84,7 @@
- 	struct scsi_device *sdev = transport_class_to_sdev(cdev);	\
- 	struct fc_transport_attrs *tp;					\
- 	struct fc_internal *i = to_fc_internal(sdev->host->transportt);	\
--	tp = (struct fc_transport_attrs *)&sdev->transport_data;	\
-+	tp = (struct fc_transport_attrs *)&sdev->sdev_data;		\
- 	if (i->f->get_##field)						\
- 		i->f->get_##field(sdev);				\
- 	return snprintf(buf, 20, format_string, cast tp->field);	\
-@@ -156,10 +156,10 @@
- 
- 	memset(i, 0, sizeof(struct fc_internal));
- 
--	i->t.attrs = &i->attrs[0];
--	i->t.class = &fc_transport_class;
--	i->t.setup = &fc_setup_transport_attrs;
--	i->t.size = sizeof(struct fc_transport_attrs);
-+	i->t.device_attrs = &i->attrs[0];
-+	i->t.device_class = &fc_transport_class;
-+	i->t.device_setup = &fc_setup_transport_attrs;
-+	i->t.device_size = sizeof(struct fc_transport_attrs);
- 	i->f = ft;
- 
- 	SETUP_ATTRIBUTE_RD(port_id);
 diff -Nru a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
---- a/drivers/scsi/scsi_transport_spi.c	2004-09-10 07:44:30 +00:00
-+++ b/drivers/scsi/scsi_transport_spi.c	2004-09-10 07:44:30 +00:00
-@@ -44,8 +44,8 @@
+--- a/drivers/scsi/scsi_transport_spi.c	2004-09-10 07:50:06 +00:00
++++ b/drivers/scsi/scsi_transport_spi.c	2004-09-10 07:50:06 +00:00
+@@ -37,10 +37,12 @@
+ #define SPI_PRINTK(x, l, f, a...)	dev_printk(l, &(x)->dev, f , ##a)
+ 
+ static void transport_class_release(struct class_device *class_dev);
++static void host_class_release(struct class_device *class_dev);
+ 
+ #define SPI_NUM_ATTRS 10	/* increase this if you add attributes */
+ #define SPI_OTHER_ATTRS 1	/* Increase this if you add "always
+ 				 * on" attributes */
++#define SPI_HOST_ATTRS	1
+ 
  #define SPI_MAX_ECHO_BUFFER_SIZE	4096
  
- /* Private data accessors (keep these out of the header file) */
--#define spi_dv_pending(x) (((struct spi_transport_attrs *)&(x)->transport_data)->dv_pending)
--#define spi_dv_sem(x) (((struct spi_transport_attrs *)&(x)->transport_data)->dv_sem)
-+#define spi_dv_pending(x) (((struct spi_transport_attrs *)&(x)->sdev_data)->dv_pending)
-+#define spi_dv_sem(x) (((struct spi_transport_attrs *)&(x)->sdev_data)->dv_sem)
+@@ -56,6 +58,8 @@
+ 	/* The array of null terminated pointers to attributes 
+ 	 * needed by scsi_sysfs.c */
+ 	struct class_device_attribute *attrs[SPI_NUM_ATTRS + SPI_OTHER_ATTRS + 1];
++	struct class_device_attribute private_host_attrs[SPI_HOST_ATTRS];
++	struct class_device_attribute *host_attrs[SPI_HOST_ATTRS + 1];
+ };
  
- struct spi_internal {
- 	struct scsi_transport_template t;
-@@ -127,7 +127,7 @@
- 	struct scsi_device *sdev = transport_class_to_sdev(cdev);	\
- 	struct spi_transport_attrs *tp;					\
- 	struct spi_internal *i = to_spi_internal(sdev->host->transportt); \
--	tp = (struct spi_transport_attrs *)&sdev->transport_data;	\
-+	tp = (struct spi_transport_attrs *)&sdev->sdev_data;		\
- 	if (i->f->get_##field)						\
- 		i->f->get_##field(sdev);				\
- 	return snprintf(buf, 20, format_string, tp->field);		\
-@@ -185,7 +185,7 @@
- 	const char *str;
- 	struct spi_internal *i = to_spi_internal(sdev->host->transportt);
+ #define to_spi_internal(tmpl)	container_of(tmpl, struct spi_internal, t)
+@@ -81,19 +85,69 @@
+  * by 4 */
+ #define SPI_STATIC_PPR	0x0c
  
--	tp = (struct spi_transport_attrs *)&sdev->transport_data;
-+	tp = (struct spi_transport_attrs *)&sdev->sdev_data;
++static struct {
++	enum spi_signal_type	value;
++	char			*name;
++} signal_types[] = {
++	{ SPI_SIGNAL_UNKNOWN, "unknown" },
++	{ SPI_SIGNAL_SE, "SE" },
++	{ SPI_SIGNAL_LVD, "LVD" },
++	{ SPI_SIGNAL_HVD, "HVD" },
++};
++
++static inline const char *spi_signal_to_string(enum spi_signal_type type)
++{
++	int i;
++
++	for (i = 0; i < sizeof(signal_types)/sizeof(signal_types[0]); i++) {
++		if (type == signal_types[i].value)
++			return signal_types[i].name;
++	}
++	return NULL;
++}
++static inline enum spi_signal_type spi_signal_to_value(const char *name)
++{
++	int i, len;
++
++	for (i = 0; i < sizeof(signal_types)/sizeof(signal_types[0]); i++) {
++		len =  strlen(signal_types[i].name);
++		if (strncmp(name, signal_types[i].name, len) == 0 &&
++		    (name[len] == '\n' || name[len] == '\0'))
++			return signal_types[i].value;
++	}
++	return SPI_SIGNAL_UNKNOWN;
++}
++
++
+ struct class spi_transport_class = {
+ 	.name = "spi_transport",
+ 	.release = transport_class_release,
+ };
  
- 	if (i->f->get_period)
- 		i->f->get_period(sdev);
-@@ -666,10 +666,10 @@
- 	memset(i, 0, sizeof(struct spi_internal));
++struct class spi_host_class = {
++	.name = "spi_host",
++	.release = host_class_release,
++};
++
+ static __init int spi_transport_init(void)
+ {
++	int error = class_register(&spi_host_class);
++	if (error)
++		return error;
+ 	return class_register(&spi_transport_class);
+ }
  
-
--	i->t.attrs = &i->attrs[0];
--	i->t.class = &spi_transport_class;
--	i->t.setup = &spi_setup_transport_attrs;
--	i->t.size = sizeof(struct spi_transport_attrs);
-+	i->t.device_attrs = &i->attrs[0];
-+	i->t.device_class = &spi_transport_class;
-+	i->t.device_setup = &spi_setup_transport_attrs;
-+	i->t.device_size = sizeof(struct spi_transport_attrs);
+ static void __exit spi_transport_exit(void)
+ {
+ 	class_unregister(&spi_transport_class);
++	class_unregister(&spi_host_class);
++}
++
++static int spi_setup_host_attrs(struct Scsi_Host *shost)
++{
++	spi_signalling(shost) = SPI_SIGNAL_UNKNOWN;
++
++	return 0;
+ }
+ 
+ static int spi_setup_transport_attrs(struct scsi_target *starget)
+@@ -121,6 +175,12 @@
+ 	put_device(&starget->dev);
+ }
+ 
++static void host_class_release(struct class_device *class_dev)
++{
++	struct Scsi_Host *shost = transport_class_to_shost(class_dev);
++	put_device(&shost->shost_gendev);
++}
++
+ #define spi_transport_show_function(field, format_string)		\
+ 									\
+ static ssize_t								\
+@@ -266,6 +326,33 @@
+ 			 show_spi_transport_period,
+ 			 store_spi_transport_period);
+ 
++static ssize_t show_spi_host_signalling(struct class_device *cdev, char *buf)
++{
++	struct Scsi_Host *shost = transport_class_to_shost(cdev);
++	struct spi_internal *i = to_spi_internal(shost->transportt);
++
++	if (i->f->get_signalling)
++		i->f->get_signalling(shost);
++
++	return sprintf(buf, "%s\n", spi_signal_to_string(spi_signalling(shost)));
++}
++static ssize_t store_spi_host_signalling(struct class_device *cdev,
++					 const char *buf, size_t count)
++{
++	struct Scsi_Host *shost = transport_class_to_shost(cdev);
++	struct spi_internal *i = to_spi_internal(shost->transportt);
++	enum spi_signal_type type = spi_signal_to_value(buf);
++
++	if (type != SPI_SIGNAL_UNKNOWN)
++		return count;
++
++	i->f->set_signalling(shost, type);
++	return count;
++}
++static CLASS_DEVICE_ATTR(signalling, S_IRUGO | S_IWUSR,
++			 show_spi_host_signalling,
++			 store_spi_host_signalling);
++
+ #define DV_SET(x, y)			\
+ 	if(i->f->set_##x)		\
+ 		i->f->set_##x(sdev->sdev_target, y)
+@@ -672,6 +759,15 @@
+ 	if (i->f->show_##field)						\
+ 		count++
+ 
++#define SETUP_HOST_ATTRIBUTE(field)					\
++	i->private_host_attrs[count] = class_device_attr_##field;	\
++	if (!i->f->set_##field) {					\
++		i->private_host_attrs[count].attr.mode = S_IRUGO;	\
++		i->private_host_attrs[count].store = NULL;		\
++	}								\
++	i->host_attrs[count] = &i->private_host_attrs[count];		\
++	count++
++
+ struct scsi_transport_template *
+ spi_attach_transport(struct spi_function_template *ft)
+ {
+@@ -688,6 +784,10 @@
+ 	i->t.target_class = &spi_transport_class;
+ 	i->t.target_setup = &spi_setup_transport_attrs;
+ 	i->t.target_size = sizeof(struct spi_transport_attrs);
++	i->t.host_attrs = &i->host_attrs[0];
++	i->t.host_class = &spi_host_class;
++	i->t.host_setup = &spi_setup_host_attrs;
++	i->t.host_size = sizeof(struct spi_host_attrs);
  	i->f = ft;
  
  	SETUP_ATTRIBUTE(period);
-diff -Nru a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
---- a/include/scsi/scsi_device.h	2004-09-10 07:44:30 +00:00
-+++ b/include/scsi/scsi_device.h	2004-09-10 07:44:30 +00:00
-@@ -120,7 +120,7 @@
- 	struct class_device	transport_classdev;
+@@ -706,6 +806,13 @@
+ 	BUG_ON(count > SPI_NUM_ATTRS);
  
- 	enum scsi_device_state sdev_state;
--	unsigned long		transport_data[0];
-+	unsigned long		sdev_data[0];
- } __attribute__((aligned(sizeof(unsigned long))));
- #define	to_scsi_device(d)	\
- 	container_of(d, struct scsi_device, sdev_gendev)
-@@ -129,6 +129,29 @@
- #define transport_class_to_sdev(class_dev) \
- 	container_of(class_dev, struct scsi_device, transport_classdev)
- 
-+/*
-+ * scsi_target: representation of a scsi target, for now, this is only
-+ * used for single_lun devices. If no one has active IO to the target,
-+ * starget_sdev_user is NULL, else it points to the active sdev.
-+ */
-+struct scsi_target {
-+	struct scsi_device	*starget_sdev_user;
-+	struct device		dev;
-+	unsigned int		id; /* target id ... replace
-+				     * scsi_device.id eventually */
-+	struct class_device	transport_classdev;
-+	unsigned long		create:1; /* signal that it needs to be added */
-+	unsigned long		starget_data[0];
-+} __attribute__((aligned(sizeof(unsigned long))));
+ 	i->attrs[count++] = &class_device_attr_revalidate;
 +
-+#define to_scsi_target(d)	container_of(d, struct scsi_target, dev)
-+static inline struct scsi_target *scsi_target(struct scsi_device *sdev)
++	i->attrs[count] = NULL;
++
++	count = 0;
++	SETUP_HOST_ATTRIBUTE(signalling);
++
++	BUG_ON(count > SPI_HOST_ATTRS);
+ 
+ 	i->attrs[count] = NULL;
+ 
+diff -Nru a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c	2004-09-10 07:50:06 +00:00
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c	2004-09-10 07:50:06 +00:00
+@@ -2305,6 +2305,28 @@
+ 	attach_count--;
+ }
+ 
++static void sym2_get_signalling(struct Scsi_Host *shost)
 +{
-+	return to_scsi_target(sdev->sdev_gendev.parent);
++	struct sym_hcb *np = ((struct host_data *)shost->hostdata)->ncb;
++	enum spi_signal_type type;
++
++	switch (np->scsi_mode) {
++	case SMODE_SE:
++		type =  SPI_SIGNAL_SE;
++		break;
++	case SMODE_LVD:
++		type = SPI_SIGNAL_LVD;
++		break;
++	case SMODE_HVD:
++		type = SPI_SIGNAL_HVD;
++		break;
++	default:
++		type = SPI_SIGNAL_UNKNOWN;
++		break;
++	}
++	spi_signalling(shost) = type;
 +}
-+#define transport_class_to_starget(class_dev) \
-+	container_of(class_dev, struct scsi_target, transport_classdev)
 +
- extern struct scsi_device *__scsi_add_device(struct Scsi_Host *,
- 		uint, uint, uint, void *hostdata);
- #define scsi_add_device(host, channel, target, lun) \
-@@ -191,6 +214,8 @@
- 				 enum scsi_device_state state);
- extern int scsi_device_quiesce(struct scsi_device *sdev);
- extern void scsi_device_resume(struct scsi_device *sdev);
-+extern void scsi_target_quiesce(struct scsi_target *);
-+extern void scsi_target_resume(struct scsi_target *);
- extern const char *scsi_device_state_name(enum scsi_device_state);
- static inline int scsi_device_online(struct scsi_device *sdev)
+ static void sym2_get_offset(struct scsi_target *starget)
  {
-diff -Nru a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
---- a/include/scsi/scsi_host.h	2004-09-10 07:44:30 +00:00
-+++ b/include/scsi/scsi_host.h	2004-09-10 07:44:30 +00:00
-@@ -511,6 +511,13 @@
- 	struct list_head sht_legacy_list;
- 
- 	/*
-+	 * Points to the transport data (if any) which is allocated
-+	 * separately
-+	 */
-+	void *shost_data;
-+	struct class_device transport_classdev;
-+
-+	/*
- 	 * We should ensure that this is aligned, both for better performance
- 	 * and also because some compilers (m68k) don't automatically force
- 	 * alignment to a long boundary.
-@@ -522,6 +529,9 @@
- 	container_of(d, struct Scsi_Host, shost_gendev)
- #define		class_to_shost(d)	\
- 	container_of(d, struct Scsi_Host, shost_classdev)
-+#define		transport_class_to_shost(class_dev) \
-+	container_of(class_dev, struct Scsi_Host, transport_classdev)
-+
- 
- extern struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *, int);
- extern int scsi_add_host(struct Scsi_Host *, struct device *);
-diff -Nru a/include/scsi/scsi_transport.h b/include/scsi/scsi_transport.h
---- a/include/scsi/scsi_transport.h	2004-09-10 07:44:30 +00:00
-+++ b/include/scsi/scsi_transport.h	2004-09-10 07:44:30 +00:00
-@@ -24,18 +24,27 @@
- 	/* The NULL terminated list of transport attributes
- 	 * that should be exported.
- 	 */
--	struct class_device_attribute **attrs;
-+	struct class_device_attribute **device_attrs;
-+	struct class_device_attribute **target_attrs;
-+	struct class_device_attribute **host_attrs;
-+
- 
- 	/* The transport class that the device is in */
--	struct class *class;
-+	struct class *device_class;
-+	struct class *target_class;
-+	struct class *host_class;
-+
-+	/* Constructor functions */
-+	int (*device_setup)(struct scsi_device *);
-+	int (*target_setup)(struct scsi_target *);
-+	int (*host_setup)(struct Scsi_Host *);
- 
--	/* Constructor/Destructor functions */
--	int (* setup)(struct scsi_device *);
--	void (* cleanup)(struct scsi_device *);
- 	/* The size of the specific transport attribute structure (a
- 	 * space of this size will be left at the end of the
--	 * scsi_device structure */
--	int	size;
-+	 * scsi_* structure */
-+	int	device_size;
-+	int	target_size;
-+	int	host_size;
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+@@ -2403,6 +2425,7 @@
+ 	.get_dt		= sym2_get_dt,
+ 	.set_dt		= sym2_set_dt,
+ 	.show_dt	= 1,
++	.get_signalling	= sym2_get_signalling,
  };
  
- #endif /* SCSI_TRANSPORT_H */
-diff -Nru a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
---- a/include/scsi/scsi_transport_fc.h	2004-09-10 07:44:30 +00:00
-+++ b/include/scsi/scsi_transport_fc.h	2004-09-10 07:44:30 +00:00
-@@ -31,9 +31,9 @@
- };
- 
- /* accessor functions */
--#define fc_port_id(x)	(((struct fc_transport_attrs *)&(x)->transport_data)->port_id)
--#define fc_node_name(x)	(((struct fc_transport_attrs *)&(x)->transport_data)->node_name)
--#define fc_port_name(x)	(((struct fc_transport_attrs *)&(x)->transport_data)->port_name)
-+#define fc_port_id(x)	(((struct fc_transport_attrs *)&(x)->sdev_data)->port_id)
-+#define fc_node_name(x)	(((struct fc_transport_attrs *)&(x)->sdev_data)->node_name)
-+#define fc_port_name(x)	(((struct fc_transport_attrs *)&(x)->sdev_data)->port_name)
- 
- /* The functions by which the transport class and the driver communicate */
- struct fc_function_template {
+ static struct pci_device_id sym2_id_table[] __devinitdata = {
 diff -Nru a/include/scsi/scsi_transport_spi.h b/include/scsi/scsi_transport_spi.h
---- a/include/scsi/scsi_transport_spi.h	2004-09-10 07:44:30 +00:00
-+++ b/include/scsi/scsi_transport_spi.h	2004-09-10 07:44:30 +00:00
-@@ -41,16 +41,16 @@
+--- a/include/scsi/scsi_transport_spi.h	2004-09-10 07:50:06 +00:00
++++ b/include/scsi/scsi_transport_spi.h	2004-09-10 07:50:06 +00:00
+@@ -42,6 +42,17 @@
+ 	struct semaphore dv_sem; /* semaphore to serialise dv */
  };
  
++enum spi_signal_type {
++	SPI_SIGNAL_UNKNOWN = 1,
++	SPI_SIGNAL_SE,
++	SPI_SIGNAL_LVD,
++	SPI_SIGNAL_HVD,
++};
++
++struct spi_host_attrs {
++	enum spi_signal_type signalling;
++};
++
  /* accessor functions */
--#define spi_period(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->period)
--#define spi_offset(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->offset)
--#define spi_width(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->width)
--#define spi_iu(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->iu)
--#define spi_dt(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->dt)
--#define spi_qas(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->qas)
--#define spi_wr_flow(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->wr_flow)
--#define spi_rd_strm(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->rd_strm)
--#define spi_rti(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->rti)
--#define spi_pcomp_en(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->pcomp_en)
-+#define spi_period(x)	(((struct spi_transport_attrs *)&(x)->sdev_data)->period)
-+#define spi_offset(x)	(((struct spi_transport_attrs *)&(x)->sdev_data)->offset)
-+#define spi_width(x)	(((struct spi_transport_attrs *)&(x)->sdev_data)->width)
-+#define spi_iu(x)	(((struct spi_transport_attrs *)&(x)->sdev_data)->iu)
-+#define spi_dt(x)	(((struct spi_transport_attrs *)&(x)->sdev_data)->dt)
-+#define spi_qas(x)	(((struct spi_transport_attrs *)&(x)->sdev_data)->qas)
-+#define spi_wr_flow(x)	(((struct spi_transport_attrs *)&(x)->sdev_data)->wr_flow)
-+#define spi_rd_strm(x)	(((struct spi_transport_attrs *)&(x)->sdev_data)->rd_strm)
-+#define spi_rti(x)	(((struct spi_transport_attrs *)&(x)->sdev_data)->rti)
-+#define spi_pcomp_en(x)	(((struct spi_transport_attrs *)&(x)->sdev_data)->pcomp_en)
+ #define spi_period(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->period)
+ #define spi_offset(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->offset)
+@@ -55,6 +66,7 @@
+ #define spi_pcomp_en(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->pcomp_en)
+ #define spi_initial_dv(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->initial_dv)
+ #define spi_flags(x)	(((struct spi_transport_attrs *)&(x)->starget_data)->flags)
++#define spi_signalling(h)	(((struct spi_host_attrs *)&(h)->shost_data)->signalling)
  
  /* The functions by which the transport class and the driver communicate */
  struct spi_function_template {
+@@ -78,6 +90,8 @@
+ 	void	(*set_rti)(struct scsi_target *, int);
+ 	void	(*get_pcomp_en)(struct scsi_target *);
+ 	void	(*set_pcomp_en)(struct scsi_target *, int);
++	void	(*get_signalling)(struct Scsi_Host *);
++	void	(*set_signalling)(struct Scsi_Host *, enum spi_signal_type);
+ 	/* The driver sets these to tell the transport class it
+ 	 * wants the attributes displayed in sysfs.  If the show_ flag
+ 	 * is not set, the attribute will be private to the transport
 
