@@ -1,39 +1,61 @@
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
-Subject: Re: [Bug]+[Patch] kernel oops after removing lld
-Date: Fri, 16 May 2003 08:55:56 +0200
+From: Andries.Brouwer@cwi.nl
+Subject: Re: [PATCH] scsi_status() macro
+Date: Fri, 16 May 2003 14:12:38 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200305160855.56748.heiko.carstens@de.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Message-ID: <UTC200305161212.h4GCCcI13287.aeb@smtp.cwi.nl>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from d12lmsgate-5.de.ibm.com ([194.196.100.238]:54438 "EHLO
-	d12lmsgate-5.de.ibm.com") by vger.kernel.org with ESMTP
-	id S264325AbTEPGvR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 May 2003 02:51:17 -0400
-Received: from d12relay01.de.ibm.com (d12relay01.de.ibm.com [9.165.215.22])
-	by d12lmsgate-5.de.ibm.com (8.12.9/8.12.8) with ESMTP id h4G742lr052582
-	for <linux-scsi@vger.kernel.org>; Fri, 16 May 2003 09:04:02 +0200
-Received: from osiris (osiris.boeblingen.de.ibm.com [9.152.242.25])
-	by d12relay01.de.ibm.com (8.12.9/NCO/VER6.5) with ESMTP id h4G742Ew071744
-	for <linux-scsi@vger.kernel.org>; Fri, 16 May 2003 09:04:02 +0200
+Received: from hera.cwi.nl ([192.16.191.8]:52651 "EHLO hera.cwi.nl")
+	by vger.kernel.org with ESMTP id S264420AbTEPL7s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 May 2003 07:59:48 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com, dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-Hi all again, 
+    > If you're doing this:
+    > 
+    >>+#define scsi_status(result) ((result) & 0x7e)
+    > 
+    > because bit0 is reserved in SCSI-2, then it should be 0x3e because bits
+    > 6 and 7 are also reserved.  Of course, this would clash with the SCSI-3
+    > definition of TASK ABORTED, sigh.
+    > 
+    > Perhaps it's better just not to bother with the mask?
 
->I got a kernel oops when doing the following:
-> 
->modprobe <lowleveldriver>
->rmmod <lowleveldriver>
->ls -al /proc/scsi
- 
-actually I got the kernel oops with kernel 2.4.20 and ported 
-my patch (which doesn't work anyway) to 2.4.21-rc2 without 
-thinking too much. But it looks like this bug has been fixed. 
-Maybe I should read the code more carefully next time :) 
+    James,
+    The macro still gets rid of the upper bytes in
+    scsi_cmnd::result so in needs to be at least
+    a mask of 0xff.
 
-duh..., 
-Heiko 
+    With a mask of 0x7e it is correct for SCSI-3,
+    bit 6 is reserved in SCSI-2  and "vendor unique"
+    in SCSI-1 and SCSI_1_CCS. I dug up a SCSI 1 draft and
+    the Status byte table is attached. So as far as I
+    can see our only exposure is to SCSI 1 and CCS
+    devices.
 
+Yes, SCSI-1 has RVVSSSSV with R=reserved, V=vendor unique, S=status.
+Originally this was a bitmap, and it is still the case that codes
+are not randomly assigned. (We have several places in the
+kernel source that test (status & CHECK_CONDITION).)
+
+I think it can be said that universally 0 means good status,
+and good status is represented by 0.
+
+The old bits 0,5,6 had a vendor-unique meaning,
+and bit 5 now has a new meaning.
+
+So, my version would have
+
+#define scsi_status_byte(result)	((result) & 0xff)
+
+Change all occurrences of status_byte() into scsi_status_byte()
+and adapt the values tested against.
+
+(Not that I think we should do this right now.
+The patch would be very large, while the gain is very low.
+This is the sort of minor cleanup better done at the start
+of 2.7. For now I only plan to come with minimal fixes for
+the places I noticed where X and X<<1 are confused.)
+
+Andries
