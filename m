@@ -1,55 +1,52 @@
-From: Peter Yao <peter@exavio.com.cn>
-Subject: [patch]scsi_error.c@2.4.22, device starved forever
-Date: Tue, 26 Aug 2003 14:43:44 +0000
+From: "Dr. Ernst Molitor" <molitor@uni-bonn.de>
+Subject: Re: Linux-2.6.0-test4: Kernel Panic in scsi_host_dev_release
+Date: Tue, 26 Aug 2003 09:20:55 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F4B7220.5070008@exavio.com.cn>
+Message-ID: <1061882454.491.4.camel@felicia>
+References: <1061844849.486.12.camel@felicia>
+	 <20030825234232.GA2470@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050107030101080309090901"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [211.101.246.248] ([211.101.246.248]:60896 "HELO
-	capitalnet.com.cn") by vger.kernel.org with SMTP id S263821AbTHZGfV
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Aug 2003 02:35:21 -0400
+Received: from mailout06.sul.t-online.com ([194.25.134.19]:61589 "EHLO
+	mailout06.sul.t-online.com") by vger.kernel.org with ESMTP
+	id S262481AbTHZHVO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Aug 2003 03:21:14 -0400
+In-Reply-To: <20030825234232.GA2470@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org, "Dr. Ernst Molitor" <molitor@uni-bonn.de>
 
-This is a multi-part message in MIME format.
---------------050107030101080309090901
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Dear Michael Anderson, 
 
-Hi,
-When the error handler finish and call scsi_restart_operations, may 
-forget to mark some devices starved. Patch atached.
+thank you very much for your kind e-mail message and the patch you've
+written. 
 
-Thanks,
+On Tue, 2003-08-26 at 01:42, Mike Anderson wrote:
+> I believe the problem you are hitting is a bug in the code I added for a
+> doing a put on the parent in the release function. If a driver calls
+> scsi_register, but then has a problem in there detect where they need to
+> call scsi_unregister the parent pointer of the struct device may never
+> be set.
+> 
+> I you have time could you please try the patch below. I have compiled it
+> only. I will try to run it with a modified driver that will fail in
+> detect shortly.
+> 
 
-Peter Yao
+My pleasure. Your patch fixes the problem I have seen - thank you very
+much! Linux-2.6.3-test4 is up and running on the box I'm writing this
+message on.
+ 
+> 
+> We need to kfree the shost as the struct device is contained inside the
+> scsi_host structure.
 
---------------050107030101080309090901
-Content-Type: text/plain;
- name="patch_2.4.22"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch_2.4.22"
+I see, thank you very much for your kind explanation.
 
---- linux-2.4.22/drivers/scsi/scsi_error.c	Thu Nov 28 23:53:14 2002
-+++ /home/peter/scsi_error.c	Tue Aug 26 14:35:14 2003
-@@ -1262,7 +1262,12 @@
- 		    || (host->host_blocked)
- 		    || (host->host_self_blocked)
- 		    || (SDpnt->device_blocked)) {
--			break;
-+			if (atomic_read(&SDpnt->device_busy) == 0) {
-+				SDpnt->starved = 1;
-+				host->some_device_starved = 1;
-+				
-+			}
-+			continue;
- 		}
- 		q = &SDpnt->request_queue;
- 		q->request_fn(q);
+Best wishes and regards, 
 
---------------050107030101080309090901--
+Ernst
+
 
