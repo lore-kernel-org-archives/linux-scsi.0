@@ -1,52 +1,46 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Suggestion for aiding debugging of host removal
-Date: Thu, 11 Dec 2003 10:14:51 -0500 (EST)
+From: "N.C.Krishna Murthy" <krmurthy@cisco.com>
+Subject: Re:Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Thu, 11 Dec 2003 21:17:46 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0312111012510.1227-100000@ida.rowland.org>
-References: <20031211074827.GA3076@beaverton.ibm.com>
+Message-ID: <200312112117.46216.krmurthy@cisco.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:3588 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S265113AbTLKPOz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Dec 2003 10:14:55 -0500
-In-Reply-To: <20031211074827.GA3076@beaverton.ibm.com>
+Received: from india-ironport-1.cisco.com ([64.104.129.195]:65356 "EHLO
+	india-ironport-1.cisco.com") by vger.kernel.org with ESMTP
+	id S265133AbTLKPry convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Dec 2003 10:47:54 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: SCSI -DEVEL <linux-scsi@vger.kernel.org>, davmyers@cisco.com
 
-On Wed, 10 Dec 2003, Mike Anderson wrote:
+Hi,
+	One of your comments was
+"having multiple kmap() in the same process at the same time can deadlock(),
+you redesign iscsi_xmit_task/iscsi_xmit_data/iscsi_recv_data not to do that.
+for the tx path use ->sendpage to avoid a data copy and kmapping altogether".
 
-> > > Would it help flush out such illegal accesses if at some appropriate point 
-> > > shost->hostt was set to NULL, maybe near the end of scsi_remove_host()?
-> 
-> If we wanted to set this to something to catch illegal access it might
-> be good to set hostt to a fake hostt that did a WARN_ON so that it would
-> not take the system down.
-> 
-> > 
-> > In fact that's a bug in the current scsi_host lifetime handling - before
-> > the driver can leave it's upper layer ->remove function we need to wait
-> > to the host refcount to become zero, similar to what free_netdev does.
-> > 
-> > I'll see whether I can come up with a fix.
-> 
-> Unless I missing something I do not see any interlock / wait in free_netdev
-> (in looking at test11).
-> 
-> Currently the host refcount will not go to zero until the scsi_host_put
-> is made from the LLDD post the return of the scsi_remove_host call.
-> While it is valid to sleep in the remove call and we could reorder the
-> scsi_host_put, I thought the previous goal was to not have an unbounded
-> time in scsi_remove_host. I thought we where trying to allow the host to
-> cleanup fast and if user space wanted to take time we would allow that
-> to happen, but just not send any commands to the LLDD.
+I did try using sendpage in iscsi_xmit_data. 
+Whenever the scatterlist->length was 4096 sendpage did succeed.
+When it was 8192 I did see a panic 
+------------------------------------------------------------------------------------------
+Unable to handle kernel NULL pointer dereference
+ at virtual address 00000004
+Dec 11 08:55:22 linux-3 kernel:  printing eip:
+Dec 11 08:55:22 linux-3 kernel: c03e24ec
+Dec 11 08:55:22 linux-3 kernel: *pde = 00000000
+Dec 11 08:55:22 linux-3 kernel: Oops: 0002 [#1]
+Dec 11 08:55:22 linux-3 kernel: CPU:    0
+Dec 11 08:55:22 linux-3 kernel: EIP:    0060:[__func__.4+49981/364885]    Not 
+ta
+inted
+Dec 11 08:55:22 linux-3 kernel: EIP:    0060:[<c03e24ec>]    Not tainted
+Dec 11 08:55:22 linux-3 kernel: EFLAGS: 00010287
+Dec 11 08:55:22 linux-3 kernel: EIP is at do_tcp_sendpages+0x62e/0xb8a
+------------------------------------------------------------------------------------------
+Has this been seen earlier? 
 
-Remember that it's not enough to avoid sending any commands to the LLDD.  
-You must avoid accessing the host template at all, since it may no longer 
-be present in memory.  Putting in a fake entry would be a good way to 
-insure that never happens.
-
-Alan Stern
-
+Thanx
+N.C.Krishna Murthy
