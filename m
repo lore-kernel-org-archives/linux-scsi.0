@@ -1,60 +1,98 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [linux-iscsi-devel] Re: [PATCH RFC] replace
-	ioctl	for	sysfs	take 2
-Date: 08 Sep 2004 10:53:50 -0400
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: [linux-iscsi-devel] Re: [PATCH RFC] replace ioctl for sysfs
+ take 2
+Date: Wed, 8 Sep 2004 07:38:43 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1094655232.7222.69.camel@mulgrave>
-References: <20040907210520.0251476C56@isis.visi.com>		<413E2440.8080509@cs.wisc.edu>	<1
-	094592818.1716.159.camel@mulgrave>
-		<413E2A17.80107@us.ibm.com>	<1094594715.1716.169.camel@mulgrave>
-	<413E38DB.6040408@us.ibm.com> <1094600074.2401.234.camel@mulgrave>
-	<413ECEAD.3050409@us.ibm.com>
+Message-ID: <20040908073843.7dbcddb6.rddunlap@osdl.org>
+References: <20040907210520.0251476C56@isis.visi.com>
+	<413E6F8F.3020008@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:26499 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S268227AbUIHO4b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Sep 2004 10:56:31 -0400
-In-Reply-To: <413ECEAD.3050409@us.ibm.com>
+Received: from fw.osdl.org ([65.172.181.6]:43174 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S268227AbUIHOod (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Sep 2004 10:44:33 -0400
+In-Reply-To: <413E6F8F.3020008@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <mikenc@us.ibm.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, "Scott M. Ferris" <sferris@acm.org>, Matthew Wilcox <willy@debian.org>, Christoph Hellwig <hch@lst.de>, iscsi -devel <linux-iscsi-devel@lists.sourceforge.net>, David Wysochanski <davidw@netapp.com>, "Surekha.PC" <surekhap@cisco.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: dougg@torque.net
+Cc: sferris@acm.org, James.Bottomley@SteelEye.com, mikenc@us.ibm.com, michaelc@cs.wisc.edu, willy@debian.org, hch@lst.de, surekhap@cisco.com, linux-scsi@vger.kernel.org
 
-On Wed, 2004-09-08 at 05:19, Mike Christie wrote:
-> I just meant that I am trying to get the iscsi transport class to have 
-> common code across virtual and non virtual drivers. I was not striving 
-> for virtual and non-virtual to alloc hosts alike. I was the one that 
-> converted the iscsi driver to host per session and caused this mess :(
+On Wed, 08 Sep 2004 12:33:51 +1000 Douglas Gilbert wrote:
 
-I'm not sure that's a good idea; virtual and physical drivers are very
-different things and the transport classes may end up being different to
-support their different needs.  I'd do the transport class for what you
-have currently, which is a virtual driver, and when the physical one
-comes along we'll see if it's possible to reuse pieces.  As long as the
-code itself is nicely clean and modular this shouldn't be too hard; so
-anywhere you're doing something that could easily be more generally
-abstracted, do it.  Anywhere where an abstraction would be a contortion
-of what you want to do, don't bother.
+| Scott M. Ferris wrote:
+| <snip>
+| > 
+| > Should all drivers that currently use one host for each SCSI initiator
+| > device, and a channel for each initiator port on each device, be
+| > modified to use a host for each initiator port?
+| > 
+| > Documentation/scsi/scsi_mid_low_api.txt says that a host corresponds
+| > to a SCSI initiator device.  Could someone change that to say SCSI
+| > initiator port instead, since that seems to be the new goal?
+| 
+| Scott,
+| Yes, I can change that if we all agree. Randy Dunlap asked me some
+| time back to define what was meant by a "linux SCSI host" and that
+| was the best I could come up with at the time.
 
-> The reason I kept asking below is becuase I misunderstood the resource 
-> comment, and was unsure if I did the right thing and was supposed to 
-> convert the driver back to a single host.
-
-A host to the mid-layer is the place in which driver instance resources
-are managed.  We expect to have things like an overall command limit per
-host, and manage host and device blocking caused by resource issues.
-
-For a physical iscsi driver, one host per card is easy and obvious; each
-instance of the driver controlling a single card.  For a virtual iscsi
-driver, the driver instances could be many things, but it seems logical
-to me that your driver instances are per connection, thus you have one
-host per iSCSI connection.  Its certainly possible to write a virtual
-iSCSI driver where there's a single set of resources for everything, and
-thus a single host, but I really don't think that would end up being a
-very efficient driver.
-
-James
+Sorry to be dense here, but what is an "initiator port" in this context?
+Is it a physical connector or something else?  A logical connector?
+(whatever that means)
 
 
+| Interesting to see you mention SAS. There could be lots of fun
+| for the linux SCSI subsystem here:
+|    - addressable switching elements (called "expanders") in the
+|      SCSI domain ** service delivery subsystem. These are not
+|      SCSI devices (in the SAM sense) but are pretty close. They
+|      are controlled by a packetized protocol called SMP whose
+|      initiator end sits on a host and target end sits on an
+|      expander. [SMP has no concept of logical units.]
+|    - discovery is either dead simple (for example when a disk is
+|      directly connected to a HBA's phy [like SATA]) or something
+|      that needs a breadth first, hierarchial descent through
+|      expanders to end devices. The latter type of discovery is
+|      probably better done from the user space.
+|    - in SCSI, devices can have multiple ports and in SAS a port can
+|      be made up of multiple phys (i.e. a wide link). The SCSI
+|      subsystem can ignore phys and just talk about ports but
+|      users can see and touch phys (e.g. those SATA red cables).
+|      Also expander routing is done at the link level.
+| 
+| It would be great to see a transport class architecture that
+| could cope with this. Think about how a SMP target device
+| (i.e. an expander's control port) will be represented.
+| I don't think struct scsi_device is appropriate ...
+| 
+| 
+| ** the term "bus" seems to have lost favour in SAM and been
+|     replaced by the term "domain".
+| 
+| 
+| A few related matters:
+| 
+| Steven Fairchild dropped a proposal for SAS storage management
+
+"dropped" as in dropped (oh, as in deleted) or as in "added", "put",
+or "placed" ?  Seems to be "added"...
+
+To me, this all boils down to "communication is hard" or
+"it's too easy to be ambiguous".
+
+
+| called "Common Storage Management Interface for SAS" in the
+| t10 "New Documents and Drafts" section. The url is:
+| http://www.t10.org/ftp/t10/document.04/04-284r0.pdf
+| A linux interface and driver is proposed.
+| 
+| A draft standard titled "SCSI-ATA translation" (SAT) is moving
+| along briskly. The primary target areas for this translator are
+| in a SAS host above an SAS domain when some of the "SCSI" devices
+| are SATA disks and SCSI-(p/s)ATA bridges.
+| 
+| Doug Gilbert
+
+
+--
+~Randy
