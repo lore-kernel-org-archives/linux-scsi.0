@@ -1,50 +1,57 @@
-From: Jeremy Higdon <jeremy@sgi.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: SCSI QLA not working on latest *-mm SN2
-Date: Tue, 21 Sep 2004 14:06:14 -0700
+Date: Tue, 21 Sep 2004 22:11:08 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040921210614.GD146363@sgi.com>
-References: <B179AE41C1147041AA1121F44614F0B0012AD911@AVEXCH02.qlogic.org>
+Message-ID: <20040921211108.GA16153@parcelfarce.linux.theplanet.co.uk>
+References: <20040917183029.GW642@parcelfarce.linux.theplanet.co.uk> <200409211346.58267.jbarnes@engr.sgi.com> <1095789421.2467.414.camel@mulgrave> <200409211409.11095.jbarnes@engr.sgi.com> <20040921190625.GB11708@colo.lackof.org> <20040921210341.GC146363@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx3-ext.sgi.com ([192.48.171.20]:406 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S268048AbUIUVGn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Sep 2004 17:06:43 -0400
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:37099 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S267985AbUIUVLJ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Sep 2004 17:11:09 -0400
 Content-Disposition: inline
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0012AD911@AVEXCH02.qlogic.org>
+In-Reply-To: <20040921210341.GC146363@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@SteelEye.com>, Jesse Barnes <jbarnes@engr.sgi.com>, Grant Grundler <grundler@parisc-linux.org>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: Grant Grundler <grundler@parisc-linux.org>, Jesse Barnes <jbarnes@engr.sgi.com>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <willy@debian.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
 
-On Tue, Sep 21, 2004 at 01:50:02PM -0700, Andrew Vasquez wrote:
+On Tue, Sep 21, 2004 at 02:03:42PM -0700, Jeremy Higdon wrote:
+> On Altix, we do have the sn_mmiob() option.  I don't think that
+> we want to Linux API to require that
 > 
-> Yes, please see my earlier reply to Matthew:
+> CPUA:	writel(value_X, common_register)
+> 	spin_unlock(common_lock)
 > 
-> 	Hmm...adding more confusion to the mix.  I apologize -- my
-> 	reply was not written correctly, yes, the config-read will
-> 	flush any pending writes.  But, the same problem persists 
-> 	- the RISC will still stop responding to requests (config
-> 	or MMIO) during the soft-reset -- potentially resulting in
-> 	a MAC (as seen by SGI).
-
-Sorry, I should have read all 30 or so messages before replying to
-any  :-)
-
-> > . . . unless there is some sort of random delay within the chip
-> > itself between a completion of the IO write on the PCI bus and the
-> > chip resetting itself.  That's not a problem, is it, Andrew?
-> >
+> CPUB:	spin_lock(common_lock)
+> 	writel(value_Y, common_register)
 > 
-> The only requirement after reception of a soft-reset request (by PIO
-> or MMIO) by the RISC is for the driver to wait 16 PCI clocks before
-> issuing another request.  The problem of course is determining when to
-> start timing within the driver.
+> be strongly ordered, because it places a performance penalty
+> on all writes.
 
-So I think that we just wait for some reasonable worst case time for
-the write to complete.  We can't really do anything else.
+I disagree with you.  If this were memory, then you would expect
+common_register to be set to value_Y after this sequence.  Why should
+IO be different?
 
-Are these resets done as part of error recovery?  I.e., do we have
-to be concerned about long the write will take on a busy system?
+> On Altix, we have the "sn_mmiob()" function to do
+> that.  I.e.
+> 
+> CPUA:	writel(value_X, common_register)
+> 	sn_mmiob()
+> 	spin_unlock(common_lock)
+> 
+> CPUB:	spin_lock(common_lock)
+> 	writel(value_Y, common_register)
+> 
+> would strongly order the writes.
 
-jeremy
+I think your _raw_spin_unlock() should include an sn_mmiob().
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
