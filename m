@@ -1,92 +1,80 @@
-From: Martin Schlemmer <azarah@gentoo.org>
-Subject: Re: libata driver update posted
-Date: 19 Jul 2003 23:18:14 +0200
+From: Frank van de Pol <fvdpol@home.nl>
+Subject: aha152x scsi OOPS with 2.6.0-pre1
+Date: Sun, 20 Jul 2003 00:56:17 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1058649494.23174.43.camel@nosferatu.lan>
-References: <3F1711C8.6040207@pobox.com>
-	 <Pine.LNX.4.53.0307180924020.19703@hosting.rdsbv.ro>
-	 <3F17F28C.9050105@pobox.com>
-	 <1058542771.13515.1599.camel@workshop.saharacpt.lan>
-	 <20030718154322.GB27152@gtf.org> <1058645294.23174.7.camel@nosferatu.lan>
-	 <3F19A651.2080503@pobox.com>
-Reply-To: azarah@gentoo.org
+Message-ID: <20030719225617.GA944@obelix.fvdpol.dyndns.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-O7aIybiZw/kbf7cHT9Kd"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kknd.mweb.co.za ([196.2.45.79]:56723 "EHLO kknd.mweb.co.za")
-	by vger.kernel.org with ESMTP id S270538AbTGSVDK (ORCPT
+Received: from smtpq2.home.nl ([213.51.128.197]:42923 "EHLO smtpq2.home.nl")
+	by vger.kernel.org with ESMTP id S270557AbTGSWlW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Jul 2003 17:03:10 -0400
-In-Reply-To: <3F19A651.2080503@pobox.com>
+	Sat, 19 Jul 2003 18:41:22 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Catalin BOIE <util@deuroconsult.ro>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Vojtech Pavlik <vojtech@suse.cz>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
---=-O7aIybiZw/kbf7cHT9Kd
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The aha152x driver fails for my Adaptec AVA-1505 scsi card for 2.6.0-pre1
+(using a dual P-II cpu, SMP kernel with preemption enabled)
 
-On Sat, 2003-07-19 at 22:13, Jeff Garzik wrote:
-> Martin Schlemmer wrote:
-> > On Fri, 2003-07-18 at 17:43, Jeff Garzik wrote:
-> >=20
-> > Slower this side.  The Maxtor 40GB (ata133) is however just set to
-> > udma33, where the Seagate 20GB (ata100) driver is set correctly to
-> > udma100.
->=20
-> Yeah, that's expected:  Parallel ATA (PATA) requires cable detection to=20
-> go beyond UDMA/33, and my driver doesn't do that yet [since I'm=20
-> concentrating on SATA].
->=20
+1) when loading the module the driver crashes when trying the software
+   interrupt (line 1053 of aha152x.c). Fortunate a patch exists for this in
+   the scsi bk tree, which I applied to my box. The driver now loads OK.
+   see: http://linux-scsi.bkbits.net:8080/scsi-for-linus-2.6/cset@1.1358.11.2
 
-Ok, make sense.  Nothing like the ide's 'hdx=3Dfoo' param?
+2) when I tried to access my tapedrive using tar I got an OOPS. Machine was
+   fairly dead (unresponsive) but interrupts still working though.
 
->=20
-> > The Seagate start off ok (about 35mb/s), but then after doing some heav=
-y
-> > disk io, it also just drops to the 20mb/s region.
->=20
-> That's definitely interesting.  Is "heavy disk I/O" the hdparm stuff you=20
-> described, or something else too?
->=20
+Jul 19 23:59:58 obelix kernel: aha152x: BIOS test: passed, detected 1 controller(s)
+Jul 19 23:59:58 obelix kernel: aha152x: resetting bus...
+Jul 19 23:59:59 obelix kernel: aha152x0: vital data: rev=1, io=0x340 (0x340/0x340), irq=10, scsiid=7, reconnect=disabled, parity=enabled, synchronous=disabled, delay=1000, extended translation=disabled
+Jul 20 00:00:00 obelix kernel: aha152x0: trying software interrupt, ok.
+Jul 20 00:00:00 obelix kernel: scsi0 : Adaptec 152x SCSI driver; $Revision: 2.5 $
+Jul 20 00:00:01 obelix kernel:   Vendor: DEC       Model: DLT2000           Rev: 8523
+Jul 20 00:00:01 obelix kernel:   Type:   Sequential-Access                  ANSI SCSI revision: 02
+Jul 20 00:00:01 obelix kernel: Attached scsi tape st0 at scsi0, channel 0, id 4, lun 0
+Jul 20 00:00:01 obelix kernel: st0: try direct i/o: yes, max page reachable by HBA 131056
+Jul 20 00:00:01 obelix kernel: Attached scsi generic sg0 at scsi0, channel 0, id 4, lun 0,  type 1
 
-Nope, its unpacking, compiling and installing glibc.  Sure, not _that_
-extensive, but it does make it work a bit.  Might be some other
-weirdness, as I did not try to reproduce it more than twice.
+<this is where started the tar>
 
-And then something else - gnome did not want to start due to missing
-icons.  They are there however, and rebooting to old kernel without
-libata worked fine (same kernel, just do not have the patch applied
-or the normal ata driver disabled).
+Jul 20 00:00:25 obelix kernel: Unable to handle kernel NULL pointer dereference at virtual address 00000068
+Jul 20 00:00:25 obelix kernel:  printing eip:
+Jul 20 00:00:25 obelix kernel: e097f071
+Jul 20 00:00:25 obelix kernel: *pde = 00000000
+Jul 20 00:00:25 obelix kernel: Oops: 0002 [#1]
+Jul 20 00:00:25 obelix kernel: CPU:    0
+Jul 20 00:00:25 obelix kernel: EIP:    0060:[_end+543106825/1070012056]    Not tainted
+Jul 20 00:00:25 obelix kernel: EFLAGS: 00010046
+Jul 20 00:00:25 obelix kernel: EIP is at busfree_run+0x391/0x570 [aha152x]
+Jul 20 00:00:25 obelix kernel: eax: d204f000   ebx: cf33ca00   ecx: d24cc060   edx: 00000000
+Jul 20 00:00:25 obelix kernel: esi: d204f000   edi: dff80000   ebp: 00000286   esp: dff81f10
+Jul 20 00:00:25 obelix kernel: ds: 007b   es: 007b   ss: 0068
+Jul 20 00:00:25 obelix kernel: Process events/0 (pid: 6, threadinfo=dff80000 task=dff852c0)
+Jul 20 00:00:25 obelix kernel: Stack: dffef670 00000020 c02dbce0 dff852c0 d4247040 d24cc060 00000002 d204f000 
+Jul 20 00:00:25 obelix kernel:        00000008 00000000 00000001 e098154d d204f000 c150abc0 00000092 dff81f70 
+Jul 20 00:00:25 obelix kernel:        00000092 0d42429a 00000000 e0986b44 e0986b40 00000216 e097ec10 d204f000 
+Jul 20 00:00:25 obelix kernel: Call Trace:
+Jul 20 00:00:25 obelix kernel:  [_end+543116261/1070012056] is_complete+0x2ed/0x330 [aha152x]
+Jul 20 00:00:25 obelix kernel:  [_end+543105704/1070012056] run+0x40/0x50 [aha152x]
+Jul 20 00:00:25 obelix kernel:  [worker_thread+533/816] worker_thread+0x215/0x330
+Jul 20 00:00:25 obelix kernel:  [_end+543105640/1070012056] run+0x0/0x50 [aha152x]
+Jul 20 00:00:25 obelix kernel:  [default_wake_function+0/48] default_wake_function+0x0/0x30
+Jul 20 00:00:25 obelix kernel:  [ret_from_fork+6/20] ret_from_fork+0x6/0x14
+Jul 20 00:00:25 obelix kernel:  [default_wake_function+0/48] default_wake_function+0x0/0x30
+Jul 20 00:00:25 obelix kernel:  [worker_thread+0/816] worker_thread+0x0/0x330
+Jul 20 00:00:25 obelix kernel:  [kernel_thread_helper+5/16] kernel_thread_helper+0x5/0x10
+Jul 20 00:00:25 obelix kernel: 
+Jul 20 00:00:25 obelix kernel: Code: 89 42 68 8b 41 04 8b 53 04 8b 80 9c 00 00 00 89 82 9c 00 00 
+Jul 20 00:00:25 obelix kernel:  <6>note: events/0[6] exited with preempt_count 1
 
-I will give it a go some more.  Currently I am having some issues with
-getting latest cvs glibc & nptl to play nice, so I will not take it too
-serious for now.  If anything obvious might cause it and you want me
-to test, ask.  Otherwise I will give it a good run in the next few
-weeks and get a more complete report.
+Cheers,
+Frank.
 
-
-Thanks,
-
---=20
-
-Martin Schlemmer
-
-
-
-
---=-O7aIybiZw/kbf7cHT9Kd
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (GNU/Linux)
-
-iD8DBQA/GbWWqburzKaJYLYRAg+IAJ96aBrsoy8WOcfdYHat9W5OikDfkwCgmWlV
-4j8bHoalwqKvvP+IZM4awmc=
-=Hbsb
------END PGP SIGNATURE-----
-
---=-O7aIybiZw/kbf7cHT9Kd--
-
+- 
++---- --- -- -  -   -    -
+| Frank van de Pol                  -o)    A-L-S-A
+| FvdPol@home.nl                    /\\  Sounds good!
+| http://www.alsa-project.org      _\_v
+| Linux - Why use Windows if we have doors available?
