@@ -1,101 +1,155 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: PATCH: exclude certain commands from emulated SCSI hosts
-Date: Mon, 21 Apr 2003 16:37:09 -0700
+From: Mike Christie <mikenc@us.ibm.com>
+Subject: [PATCH] fixes compile errors in psi240i.c
+Date: Mon, 21 Apr 2003 16:42:47 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030421163709.D12581@one-eyed-alien.net>
-References: <20030323230438.E24668@one-eyed-alien.net> <1048519237.1982.16.camel@mulgrave> <20030324093028.A1066@one-eyed-alien.net> <1049556643.1762.16.camel@mulgrave> <20030420143351.C20891@one-eyed-alien.net> <1050942530.1772.12.camel@mulgrave> <20030421100102.A12581@one-eyed-alien.net> <1050953018.2269.140.camel@mulgrave> <20030421123541.C12581@one-eyed-alien.net> <1050960465.1772.168.camel@mulgrave>
+Message-ID: <3EA481F7.8080403@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="7DO5AaGCk89r4vaK"
+Content-Type: multipart/mixed;
+ boundary="------------030307060901030908020408"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:37638 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S262682AbTDUXZU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Apr 2003 19:25:20 -0400
-Content-Disposition: inline
-In-Reply-To: <1050960465.1772.168.camel@mulgrave>; from James.Bottomley@SteelEye.com on Mon, Apr 21, 2003 at 04:27:42PM -0500
+Received: from e4.ny.us.ibm.com ([32.97.182.104]:31882 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262693AbTDUXbp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Apr 2003 19:31:45 -0400
+Received: from northrelay01.pok.ibm.com (northrelay01.pok.ibm.com [9.56.224.149])
+	by e4.ny.us.ibm.com (8.12.9/8.12.2) with ESMTP id h3LNhisZ139020
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Apr 2003 19:43:44 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Linus Torvalds <torvalds@transmeta.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>, USB Storage List <usb-storage@one-eyed-alien.net>, Linux SCSI list <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>
+To: linux-scsi@vger.kernel.org
+
+This is a multi-part message in MIME format.
+--------------030307060901030908020408
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+The attached patch fixes the compile errors in psi240i.c described in 
+Bugzilla bug #468 at http://bugme.osdl.org/show_bug.cgi?id=468. It was 
+built against 2.5.68. I do not have the hardware, so I have only 
+verified that it compiles correctly.
+
+Mike Christie
+mikenc@us.ibm.com
+
+psi240i.c |   57 ++++++++++++++++++++++++++++-----------------------------
+1 files changed, 28 insertions(+), 29 deletions(-)
 
 
---7DO5AaGCk89r4vaK
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+--------------030307060901030908020408
+Content-Type: text/plain;
+ name="psi_patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="psi_patch"
 
-James, I think we're misunderstanding each other here... I am in no way
-advocating the removal of the BLIST_INQUIRY flag.
+--- linux-2.5.68-orig/drivers/scsi/psi240i.c	Sat Apr 19 19:50:09 2003
++++ linux-2.5.68/drivers/scsi/psi240i.c	Mon Apr 21 15:45:02 2003
+@@ -54,7 +54,7 @@
+ #define DEB(x)
+ #endif
+ 
+-#define MAXBOARDS 2	/* Increase this and the sizes of the arrays below, if you need more. */
++#define MAXBOARDS 6	/* Increase this and the sizes of the arrays below, if you need more. */
+ 
+ #define	PORT_DATA				0
+ #define	PORT_ERROR				1
+@@ -390,8 +390,8 @@ static void do_Irq_Handler (int irq, voi
+ int Psi240i_QueueCommand (Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *))
+ 	{
+ 	UCHAR		   *cdb = (UCHAR *)SCpnt->cmnd;					// Pointer to SCSI CDB
+-	PADAPTER240I	padapter = HOSTDATA(SCpnt->host);			// Pointer to adapter control structure
+-	POUR_DEVICE		pdev	 = &padapter->device[SCpnt->target];// Pointer to device information
++	PADAPTER240I	padapter = HOSTDATA (SCpnt->device->host); 			// Pointer to adapter control structure
++	POUR_DEVICE 		pdev	 = &padapter->device [SCpnt->device->id];// Pointer to device information
+ 	UCHAR			rc;											// command return code
+ 
+ 	SCpnt->scsi_done = done;
+@@ -566,25 +566,25 @@ int Psi240i_Detect (Scsi_Host_Template *
+ 	int					count = 0;
+ 	int					unit;
+ 	int					z;
+-	USHORT				port;
++	USHORT				port, port_range = 16;
+ 	CHIP_CONFIG_N		chipConfig;
+ 	CHIP_DEVICE_N		chipDevice[8];
+ 	struct Scsi_Host   *pshost;
+-	ULONG				flags;
+ 
+-	for ( board = 0;  board < 6;  board++ )					// scan for I/O ports
++	for ( board = 0;  board < MAXBOARDS;  board++ )					// scan for I/O ports
+ 		{
++		pshost = NULL;
+ 		port = portAddr[board];								// get base address to test
+-		if ( check_region (port, 16) )						// test for I/O addresses available
+-			continue;										//   nope
+-		if ( inb_p (port + REG_FAIL) != CHIP_ID )			// do the first test for likley hood that it is us
++		if ( !request_region (port, port_range, "psi240i") )
+ 			continue;
++		if ( inb_p (port + REG_FAIL) != CHIP_ID )			// do the first test for likley hood that it is us
++			goto host_init_failure;
+ 		outb_p (SEL_NONE, port + REG_SEL_FAIL);				// setup EEPROM/RAM access
+ 		outw (0, port + REG_ADDRESS);						// setup EEPROM address zero
+ 		if ( inb_p (port) != 0x55 )							// test 1st byte
+-			continue;										//   nope
++			goto host_init_failure;									//   nope
+ 		if ( inb_p (port + 1) != 0xAA )						// test 2nd byte
+-			continue;										//   nope
++			goto host_init_failure;								//   nope
+ 
+ 		// at this point our board is found and can be accessed.  Now we need to initialize
+ 		// our informatation and register with the kernel.
+@@ -595,20 +595,11 @@ int Psi240i_Detect (Scsi_Host_Template *
+ 		ReadChipMemory (&ChipSetup, CHIP_EEPROM_DATA, sizeof (ChipSetup), port);
+ 
+ 		if ( !chipConfig.numDrives )						// if no devices on this board
+-			continue;
++			goto host_init_failure;
+ 
+ 		pshost = scsi_register (tpnt, sizeof(ADAPTER240I));
+ 		if(pshost == NULL)
+-			continue;
+-
+-		save_flags (flags);
+-		cli ();
+-		if ( request_irq (chipConfig.irq, do_Irq_Handler, 0, "psi240i", pshost) )
+-			{
+-			printk ("Unable to allocate IRQ for PSI-240I controller.\n");
+-			restore_flags (flags);
+-			goto unregister;
+-			}
++			goto host_init_failure;	
+ 
+ 		PsiHost[chipConfig.irq - 10] = pshost;
+ 		pshost->unique_id = port;
+@@ -642,14 +633,22 @@ int Psi240i_Detect (Scsi_Host_Template *
+ 			DEB (printk ("\n          blocks    = %lX", HOSTDATA(pshost)->device[unit].blocks));
+ 			}
+ 
+-		restore_flags (flags);
+-		printk("\nPSI-240I EIDE CONTROLLER: at I/O = %x  IRQ = %d\n", port, chipConfig.irq);
+-		printk("(C) 1997 Perceptive Solutions, Inc. All rights reserved\n\n");
+-		count++;
+-		continue;
++		if ( request_irq (chipConfig.irq, do_Irq_Handler, 0, "psi240i", pshost) == 0 ) 
++			{
++			printk("\nPSI-240I EIDE CONTROLLER: at I/O = %x  IRQ = %d\n", port, chipConfig.irq);
++		        printk("(C) 1997 Perceptive Solutions, Inc. All rights reserved\n\n");
++		        count++;
++		        continue;
++			}
++
++		printk ("Unable to allocate IRQ for PSI-240I controller.\n");
++           
++host_init_failure:
++		
++		release_region (port, port_range);
++		if (pshost)
++			scsi_unregister (pshost);
+ 
+-unregister:;
+-		scsi_unregister (pshost);
+ 		}
+ 	return count;
+ 	}
 
-We've been through several variants of INQUIRY in the scanning code.
-Nothing seems to make everyone happy.  My primary concern is that the SCSI
-layer will send commands (a long INQUIRY being one of them) which will
-crash the firmware of many devices.
+--------------030307060901030908020408--
 
-All I want is a way to easily filter out those commands which devices on my
-bus are likely (very likely) to choke over.  It's not just INQUIRY we're
-talking about.
-
-BLIST_INQUIRY serves some sort of alternate purpose.  It's never been
-exactly clear to me what that is, but it seems to be related to firmware on
-'real' SCSI devices being borked.
-
-Besides, even if you fix this for INQUIRY, then we have to worry about
-EVPD, MODE_SENSE for WP, 6-byte commands in general, etc. etc. etc.
-
-Don't bother touching the flags.  Let's just settle on a filter
-implementation.
-
-Matt
-
-On Mon, Apr 21, 2003 at 04:27:42PM -0500, James Bottomley wrote:
-> On Mon, 2003-04-21 at 14:35, Matthew Dharm wrote:
-> > I think takers may be waiting in the wings to see this code merged.
-> > Honestly, tho, I don't think I can send you such strings.  I work pretty
-> > closely with some vendors, so most of the devices in my possession have
-> > 'fixed' firmware (to report meaningful INQUIRY length).  However, I get
-> > report after report of devices that blow this in new and creative ways =
-from
-> > end-users.
-> >=20
-> > You may recall that my first approach was to set the BLIST flag for 36-=
-byte
-> > INQUIRY -- Linus shot that down in favor of a command-filter approach.
->=20
-> You mean we can junk the BLIST_INQUIRY flags?  Does the 58 byte inquiry
-> serve any purpose then (i.e. do you have a device that lies about its
-> inquiry length but can return 58 bytes?).  The 58 bytes is useful
-> because SPI fields lie in the 57th byte (information for the higher
-> ultra speeds), but on the other hand those bits are only defined for a
-> parallel bus.
->=20
-> If I junk the flags, we'll send a 36 byte inquiry and then one sized
-> from the inquiry return (unless we have to do an intermediate 58 byte
-> one) and let you filter them.  Does that sound OK?
->=20
-> James
->=20
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-You were using cheat codes too.  You guys suck.
-					-- Greg to General Studebaker
-User Friendly, 12/16/1997
-
---7DO5AaGCk89r4vaK
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE+pIClIjReC7bSPZARAlkcAJ0XdlfBJhUWNBpKJXcz2gWUXFcB0gCgiJJl
-tqc+dcFKgj0vpXGDWxwqjJ4=
-=Jop/
------END PGP SIGNATURE-----
-
---7DO5AaGCk89r4vaK--
