@@ -1,45 +1,95 @@
-From: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Subject: [PATCH] fix fusion breakage with multiple PCI domains
-Date: Thu, 17 Mar 2005 13:00:17 -0700
-Message-ID: <1111089617.11380.40.camel@eeyore>
+From: <Stuart_Hayes@Dell.com>
+Subject: RE: [PATCH 2.6.11] ide-scsi: map sg buffers in idescsi_input/output_buffers() to kernel virtual address
+Date: Thu, 17 Mar 2005 14:14:35 -0600
+Message-ID: <7A8F92187EF7A249BF847F1BF4903C040AFC85@ausx2kmpc103.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Received: from atlrel9.hp.com ([156.153.255.214]:55241 "EHLO atlrel9.hp.com")
-	by vger.kernel.org with ESMTP id S261782AbVCQUAV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Mar 2005 15:00:21 -0500
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
+Received: from ausc60ps301.us.dell.com ([143.166.148.206]:54824 "EHLO
+	ausc60ps301.us.dell.com") by vger.kernel.org with ESMTP
+	id S261958AbVCQUOj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2005 15:14:39 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sjralston1@netscape.net, mpt_linux_developer@lsil.com
-Cc: linux-scsi@vger.kernel.org
+To: axboe@suse.de
+Cc: linux-scsi@vger.kernel.org, Joshua_Giles@Dell.com
 
-mpt_detect_bound_ports(): Don't assume that two devices with the same
-    dev->bus->number are on the same bus.  With multiple PCI domains,
-    many buses may have the same number.
+Jens Axboe wrote:
+> On Wed, Mar 16 2005, Stuart_Hayes@Dell.com wrote:
+>> Jens Axboe wrote:
+>>> On Wed, Mar 16 2005, Stuart_Hayes@Dell.com wrote:
+>>>> Hayes, Stuart wrote:
+>>>>> This patch will map the sg buffers to kernel virtual memory space
+>>>>> in the functions idescsi_input_buffers() and
+>>>>> idescsi_output_buffers(). Without this patch, idescsi passes a
+>>>>> null pointer to atapi_input_bytes() and atapi_output_bytes() when
+>>>>> sg pages are in high memory (i686 architecture).
+>>>>> 
+>>>>> I'm attaching as a file, too, as the text will certainly be
+>>>>> wrapped. 
+>>>>> 
+>>>>> (Sorry for the subject rename--I'm trying to use the correct
+>>>>> format for patch emails.)
+>>>>> 
+>>>>> Thanks
+>>>>> Stuart
+>>>> 
+>>>> And, while there's another high memory/kmap patch question on this
+>>>> list... 
+>>>> 
+>>>> Is there some reason nobody seems interested in this patch (except
+>>>> Jens--thanks for the help!)?  I'm kind of new to sending in
+>>>> patches, and I'm not sure if I'm just not waiting long enough, or
+>>>> if there is a problem with this patch...
+>>>> 
+>>>> But really, we're getting a null pointer dereference oops when
+>>>> using ATAPI tape drives (with ide-scsi) without this patch...
+>>> 
+>>> Sorry, that did seem to get dropped on the floor. Actually I'm
+>>> wondering why you are seeing highmem pages there in the first place,
+>>> it would be easier/better just to limit ide-scsi to non-highmem
+>>> pages. That would remove the need to add any work arounds in the
+>>> driver.
+>> 
+>> I think we're seeing highmem pages in the sg list because that's
+>> where the user memory was when st_write() was called.
+>> 
+>> The sg list is set up when st_write(), which calls setup_buffering(),
+>> which calls st_map_user_pages()... this just sets up the sg pages to
+>> point directly to the user memory.  So, by the time ide-scsi comes
+>> into the picture, the sg list is already set up to point to high
+>> memory pages. 
+>> 
+>> Are you suggesting that ide-scsi should change the dma_mask for the
+>> device so that st_map_user_pages() won't let sg pages point to high
+>> memory?  Or is there something else I'm missing?
+> 
+> I think that is a bug, this effectively bypasses whatever
+> restrictions the scsi host adapter has said about memory limits. It
+> is a problem because the request doesn't come from the block layer
+> (which handles all of this).   
+> 
+> I would much prefer fixing that real issue!
 
-Signed-off-by: Bjorn Helgaas <bjorn.helgaas@hp.com>
+By "whatever restrictions the scsi host adapter has said about memory
+limits", are you referring to the dma_boundary or the dma_mask?  I'm
+don't know any other ways a host adapter can specify memory limits.
 
-===== drivers/message/fusion/mptbase.c 1.40 vs edited =====
---- 1.40/drivers/message/fusion/mptbase.c	2005-03-13 16:30:09 -07:00
-+++ edited/drivers/message/fusion/mptbase.c	2005-03-17 12:46:57 -07:00
-@@ -1834,14 +1834,14 @@
- 
- 	match_lo = pdev->devfn-1;
- 	match_hi = pdev->devfn+1;
--	dprintk((MYIOC_s_INFO_FMT "PCI bus/devfn=%x/%x, searching for devfn match on %x or %x\n",
--			ioc->name, pdev->bus->number, pdev->devfn, match_lo, match_hi));
-+	dprintk((MYIOC_s_INFO_FMT "PCI device %s devfn=%x/%x, searching for devfn match on %x or %x\n",
-+			ioc->name, pci_name(pdev), pdev->devfn, match_lo, match_hi));
- 
- 	list_for_each_entry(ioc_srch, &ioc_list, list) {
- 		struct pci_dev *_pcidev = ioc_srch->pcidev;
- 
- 		if ((_pcidev->device == pdev->device) &&
--		    (_pcidev->bus->number == pdev->bus->number) &&
-+		    (_pcidev->bus == pdev->bus) &&
- 		    (_pcidev->devfn == match_lo || _pcidev->devfn == match_hi) ) {
- 			/* Paranoia checks */
- 			if (ioc->alt_ioc != NULL) {
+I wasn't complete in my statement above, though--st_map_user_pages()
+does prevent the sg list from pointing to pages that are above the
+"max_pfn" for the device (it gets max_pfn from scsi_calculate_bounce_
+limit()), and that appears to be working ok.  But, even though
+max_pfn is 0xfffff (so that the maximum physical address of any sg
+page won't be over 4G (0xffffffff)), there are apparently high 
+memory pages that are below physical address of 4G (0xffffffff), but
+are still considered high memory.
 
+So the entire first 4G of memory isn't low memory... for example,
+on my box, pfn 0xfbc3c, with physical address 0xfbc3c000, has the
+PG_highmem bit set in &(page)->flags.  Because of this, when ide-scsi
+needs to do PIO, it needs to do a kmap_atomic().
+
+Am I completely missing your point?
 
