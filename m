@@ -1,55 +1,65 @@
-From: Mikael Pettersson <mikpe@csd.uu.se>
-Subject: Re: [PATCH][2.6.8-rc1-mm1] drivers/scsi/sg.c gcc341 inlining fix
-Date: Thu, 15 Jul 2004 11:46:52 +0200 (MEST)
+From: Naveen Burmi <naveenb@cisco.com>
+Subject: [PATCH] iscsi driver update 4.0.1.8
+Date: Thu, 15 Jul 2004 16:02:45 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200407150946.i6F9kqXn010635@harpo.it.uu.se>
+Message-ID: <200407151602.45830.naveenb@cisco.com>
+Reply-To: naveenb@cisco.com
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:3289 "EHLO aun.it.uu.se")
-	by vger.kernel.org with ESMTP id S266163AbUGOJre (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jul 2004 05:47:34 -0400
+Received: from syd-iport-1.cisco.com ([64.104.193.196]:45484 "EHLO
+	syd-iport-1.cisco.com") by vger.kernel.org with ESMTP
+	id S264571AbUGOKc4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jul 2004 06:32:56 -0400
+Received: from naveenb-lnx.cisco.com (naveenb-lnx.cisco.com [10.77.7.56])
+	by syd-core-1.cisco.com (8.12.10/8.12.6) with ESMTP id i6FAWnNq008766
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Jul 2004 20:32:50 +1000 (EST)
+Received: from localhost (localhost [[UNIX: localhost]])
+	by naveenb-lnx.cisco.com (8.11.6/8.11.6) id i6FAWkc04860
+	for linux-scsi@vger.kernel.org; Thu, 15 Jul 2004 16:02:46 +0530
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@suse.de, wli@holomorphy.com
-Cc: B.Zolnierkiewicz@elka.pw.edu.pl, akpm@osdl.org, dgilbert@interlog.com, jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mikpe@csd.uu.se
+To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 14 Jul 2004 23:12:54 -0700, William Lee Irwin III wrote:
->Jeff Garzik <jgarzik@pobox.com> wrote:
->>>> Or you could just call it "gcc is dumb" rather than a compiler bug.
->
->On Wed, Jul 14 2004, Andrew Morton wrote:
->[... code snippet ...]
->>> is pretty dumb too.  I don't see any harm if this compiler feature/problem
->>> pushes us to fix the above in the obvious way.
->
->On Thu, Jul 15, 2004 at 07:56:56AM +0200, Jens Axboe wrote:
->> Excuse my ignorance, but why on earth would that be dumb? Looks
->> perfectly legit to me, and I have to agree with Jeff that the compiler
->> is exceedingly dumb if it fails to inline that case.
->
->Enter gcc...
->
->Maybe "the obvious way" is sending a someone off to whip gcc into shape,
->or possibly reporting it as a gcc problem.
+This version of the iSCSI driver (4.0.1.8) contains the following changes
+since 4.0.1.7:
 
-It shows you guys aren't compiler writers.
+1. The issue of deadlock due to multiple kmaps has been partially resolved.
+   We now use sendpage along the xmit path.
+2. The driver used to overwrite scsi midlayer naming. This has been removed.
+   Now proc_name field is used for iSCSI device lookup in sysfs.
+3. The driver's queuecommand now returns SCSI_MLQUEUE_DEVICE_BUSY and
+   SCSI_MLQUEUE_HOST_BUSY on failure.
+4. We have removed bus reset handler from the code.
 
-Compilers for top-down (define-before-use) languages like C
-have traditionally also worked in a top-down fashion, processing
-one top-level declaration at a time. Forward references are
-either errors, or are (when a proper declaration is in scope)
-left to the linker to resolve.
+The following items are being worked on/debated:
 
-Processing an entire compilation-unit (e.g. whole C file)
-as a single unit is typically _only_ done when either the
-language semantics requires it (not C, but e.g. Haskell),
-or when very high optimisation levels are requested.
+a) Per target probe via hotplug.
+In earlier reviews, it was debated that the hotplug mechanism should be used
+for target activation. Though scsi_scan_host() is exported,
+scsi_scan_host_selected() isn't. So, an adapter scan is exported to LLDD
+whereas anything else (target or lun scan) has to go through hotplug.
+Network oriented storage like iSCSI has to deal with delays in targets
+getting discovered through SendTargets discovery and poll for SLP
+discoveries.
+It would help a lot to use scsi_scan_host_selected() in such cases and needs
+to be exported for such LLDDs.
 
-In the case of gcc-3.4.1 failing to inline, you are asking
-gcc to do something (peeking forward) which it never has
-promised to do. And with the kernel using -fno-unit-at-a-time
-for stack conservation reasons, gcc is actually being _told_
-not to do global compilation.
+b) Removal of multiple kmaps from recv path.
 
-This is not a gcc bug, nor is it being "exceedingly dumb".
+c) Use of TCQ from include/linux/scsi_tcq.h
 
-/Mikael
+4.0.1.8 release of linux iscsi driver also contains an incremental patch 
+against 4.0.1.7 release. (linux-iscsi-kernel-4.0.1.7-incremental.patch)
+
+The driver was not included as a patch because the file is too big, but it can 
+be downloaded from:
+
+http://sourceforge.net/project/showfiles.php?group_id=26396&package_id=106938&release_id=252559
+
+P.S. The current driver is tested against 2.6.7 linux kernel.
+
+Thanks,
+Naveen.
