@@ -1,36 +1,45 @@
-From: "shankar krishna" <kshan01@hotmail.com>
-Subject: building SCSI CDB over FC
-Date: Thu, 07 Nov 2002 19:44:24 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] scsi_mid_low_api.txt for 2.5.46-bk3
+Date: Fri, 8 Nov 2002 02:46:23 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <F393oHMwVN7miR9Odut000000b9@hotmail.com>
+Message-ID: <20021108024623.A19182@infradead.org>
+References: <3DCB0E51.5070407@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3DCB0E51.5070407@torque.net>; from dougg@torque.net on Fri, Nov 08, 2002 at 12:07:29PM +1100
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+On Fri, Nov 08, 2002 at 12:07:29PM +1100, Douglas Gilbert wrote:
+> This patch against 2.5.46-bk3 is work in progress
+> (since the interface is in flux). It dusts of some
+> cobwebs, removes politically incorrect typedefs and
 
-I am trying to send SCSI CDB over Fibre channel HBA.
+I'd suggest to leave them in where the struct names are raraly used and even
+worse (e.g. struct SHT), I'm probably going to a do a big cleansweap to
+give them saner struct names soon, and the fewer users they acquired until
+then the better..
 
-Using IBM FC disk drive and qlogic HBA(QLA2300).
+> describes slave_attach() and slave_detach(). It
+> removes the revoke() description (per hch? changes).
 
-I want to build my own CDB (not with 'write' cmd which
-sends an "ex write" to target) - eventually to build some
-vendor specific CDBs!
+Patrick did it.
 
-Can anybody help me in this?
+> Is a section describing mid level functions provided
+> for LLDDs (e.g. scsi_adjust_queue_depth() )
+> warranted?
 
-Rgds,
--Shankar.
-PS: I am using FC analyser(FCacccess) inbetween Drive and HBA to
-see the frames and their contents. If I do a "write"
-of my own CDB, it sends it as data not as a command!!
+LLDD = Low Level Driver Developer?
 
+It looks like a good idea to me, but I wonder whether that should be
+a separate Document.  BTW, what about movinf this and the other docs
+(e.g. README.*) in drivers/scsi/ to Documentation/scsi/ ?
 
+Another things that's worth mentioning is that ->detect and ->release are
+option now if you don't write a scsi_module.c-style driver.
 
-
-_________________________________________________________________
-MSN 8 helps eliminate e-mail viruses. Get 2 months FREE*. 
-http://join.msn.com/?page=features/virus
-
+And thanks a lot for caring for the scsi documentation, I usually try to update
+it for my changes, but you do a much better job..
