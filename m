@@ -1,58 +1,86 @@
-From: Thayne Harbaugh <tharbaugh@lnxi.com>
-Subject: Re: buffer-list destroyed message
-Date: 29 Apr 2003 08:46:04 -0600
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] 2.5.67+ scsi_release_request call queue next
+Date: Tue, 29 Apr 2003 16:56:29 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1051627563.1171.1935.camel@tubarao>
-References: <1051291883.1172.358.camel@tubarao>
-	 <20030426092552.GZ1012@suse.de>
+Message-ID: <Pine.LNX.4.44L0.0304291630510.656-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-u4/Q2egtaKzX52Wv9NzH"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ash.lnxi.com ([207.88.130.242]:35192 "HELO ash.lnxi.com")
-	by vger.kernel.org with SMTP id S262023AbTD2Odv (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:1796 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S261775AbTD2UoK (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Apr 2003 10:33:51 -0400
-In-Reply-To: <20030426092552.GZ1012@suse.de>
+	Tue, 29 Apr 2003 16:44:10 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
+To: Mike Anderson <andmike@us.ibm.com>
 Cc: linux-scsi@vger.kernel.org
 
+Mike:
 
---=-u4/Q2egtaKzX52Wv9NzH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I just noticed that your patch below isn't included in 2.5.68.  It still
+works just fine.  Is it going to be submitted?
 
-On Sat, 2003-04-26 at 03:25, Jens Axboe wrote:
-> On Fri, Apr 25 2003, Thayne Harbaugh wrote:
-> > I have a system that spits out the following error message:
-> >=20
-> > scsi_end_request: buffer-list destroyed
+Alan Stern
 
-Sorry for the extra noise - just wanted closure on this.
 
-My previous emails failed to state which kernel was in use.  If I had
-stated it I would have been wrong.  I thought the machine was running
-2.4.20 - it was, however, running 2.4.14.  Updating to 2.4.20 fixed the
-problem: no more "buffer-list destroyed" messages are being sent.
+Date: Mon, 14 Apr 2003 23:33:03 -0700
+From: Mike Anderson <andmike@us.ibm.com>
+To: linux-scsi@vger.kernel.org
+Cc: stern@rowland.harvard.edu
+Subject: [PATCH] 2.5.67+ scsi_release_request call queue next
 
-FWIW
+This patch is against 2.5.67 as of 04-14 as it needs extern for
+scsi_queue_next_request.
 
---=20
-Thayne Harbaugh
-Linux Networx
+I just compiled and booted this patch. I currently do not have a setup to
+check door lock post error recovery.
 
---=-u4/Q2egtaKzX52Wv9NzH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
 
-iD8DBQA+rpArfsBPTKE6HMkRAsVCAJ4xx8FWW2yzASK6506zib9ZurPCrwCfQSc7
-vf31ILKfNJZn3SAd4BY7qsw=
-=yL6u
------END PGP SIGNATURE-----
+DESC
+The patch adds a call to scsi_queue_next_request from scsi_release_request. It
+also removes a call in scsi_eh_lock_done to scsi_put_command.
+scsi_release_request will do a call to scsi_put_command if needed.
+EDESC
 
---=-u4/Q2egtaKzX52Wv9NzH--
+
+ drivers/scsi/scsi.c       |    2 ++
+ drivers/scsi/scsi_error.c |    4 ----
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff -puN drivers/scsi/scsi.c~scsi-release-req drivers/scsi/scsi.c
+--- sysfs-bleed-2.5/drivers/scsi/scsi.c~scsi-release-req	Mon Apr 14 15:34:14 2003
++++ sysfs-bleed-2.5-andmike/drivers/scsi/scsi.c	Mon Apr 14 15:34:14 2003
+@@ -224,8 +224,10 @@ void scsi_release_request(Scsi_Request *
+ {
+ 	if( req->sr_command != NULL )
+ 	{
++    		request_queue_t *q = req->sr_device->request_queue;
+ 		scsi_put_command(req->sr_command);
+ 		req->sr_command = NULL;
++		scsi_queue_next_request(q, NULL);
+ 	}
+ 
+ 	kfree(req);
+diff -puN drivers/scsi/scsi_error.c~scsi-release-req drivers/scsi/scsi_error.c
+--- sysfs-bleed-2.5/drivers/scsi/scsi_error.c~scsi-release-req	Mon Apr 14 15:34:14 2003
++++ sysfs-bleed-2.5-andmike/drivers/scsi/scsi_error.c	Mon Apr 14 15:34:14 2003
+@@ -1334,10 +1334,6 @@ static void scsi_eh_lock_done(struct scs
+ {
+ 	struct scsi_request *sreq = scmd->sc_request;
+ 
+-	scmd->sc_request = NULL;
+-	sreq->sr_command = NULL;
+-
+-	scsi_put_command(scmd);
+ 	scsi_release_request(sreq);
+ }
+ 
+
+_
+
+
 
