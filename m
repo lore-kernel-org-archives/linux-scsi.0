@@ -1,51 +1,42 @@
-From: Greg Banks <gnb@alphalink.com.au>
-Subject: Re: [TRIVIAL] PATCH 2.5: kconfig sychronise banners (2_16)
-Date: Fri, 09 Aug 2002 23:29:27 +1000
+From: Pete Zaitcev <zaitcev@redhat.com>
+Subject: Patch from my store of obscure fixes
+Date: Fri, 9 Aug 2002 16:48:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D53C3B7.215BE462@alphalink.com.au>
-References: <20020808032826.BA88E4A84@lists.samba.org>
+Message-ID: <20020809164834.A21474@devserv.devel.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Marcelo Tosatti <marcelo@conectiva.com.br>, geert@linux-m68k.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Pete Zaitcev <zaitcev@redhat.com>
 
-Rusty Russell wrote:
-> 
-> In message <1028720141.18478.244.camel@irongate.swansea.linux.org.uk> you write
-> :
-> > On Wed, 2002-08-07 at 05:06, Rusty Trivial Russell wrote:
-> > > From:  Greg Banks <gnb@alphalink.com.au>
-> > >
-> > >   2/5 definitions of CONFIG_BLK_DEV_SR have trivially different banners.
-> >
-> > 2.5 is wrong, 2.4 is right. At least according to Philips who invented
-> > the things. Please submit the reverse diff to 2.5 8)
-> 
-> <SIGH>
->         CDROM seems pretty prevelent in the kernel over CD-ROM.
+Apparently, this patch comes from an expirience with a Clariion array
+with some volumes disabled by operator. When Linux reboots, it
+tries to spin them up and for some reason it times out, and
+generally takes a very long time. I do suspect that START STOP UNIT
+should return failure immediately, but perhaps it does not.
+What do you guys think about this? Obviously a workaround, but
+is it useful?
 
-I counted them in 2.5 when I rolled this patch, it was CDROM 39, CD-ROM 15.
+-- Pete
 
-> Unification of the banners is a trivial first step to furthur removal
-> of things that are gratuitously arch-dependent: this wasn't primarily
-> a spelling fix.
-
-Exactly.  CONFIG_BLK_DEV_SR was defined in 5 places, 3 of which spelled
-it the wrong way; I chose to change the 2 correct spellings only because
-that was a smaller diff.  The actual spelling in the corpus doesn't bother
-me at all.
-
-> s/CDROM/CD-ROM/ would probably come under the new "too trivial for
-> trivial patch monkey rule" in normal circumstances 8)
-
-I'm willing to do the changes if someone credible will send them to Linus
-and Marcello.
-
-Greg.
--- 
-the price of civilisation today is a courageous willingness to prevail,
-with force, if necessary, against whatever vicious and uncomprehending
-enemies try to strike it down.     - Roger Sandall, The Age, 28Sep2001.
+--- linux-2.5.30/drivers/scsi/sd.c	Thu Aug  1 14:16:13 2002
++++ linux-2.5.30-sparc/drivers/scsi/sd.c	Fri Aug  9 13:47:52 2002
+@@ -847,6 +847,16 @@
+ 		}
+ 
+ 		/*
++		 * If the drive requires human intervention,
++		 * don't bother to jerk the drive until it happens.
++		 */
++		if (the_result != 0 &&
++		    SRpnt->sr_sense_buffer[2] == NOT_READY &&
++		    SRpnt->sr_sense_buffer[12] == 0x04 &&	/* ASC */
++		    SRpnt->sr_sense_buffer[13] == 0x03)		/* ASCQ */
++			return;
++
++		/*
+ 		 * If the drive has indicated to us that it doesn't have
+ 		 * any media in it, don't bother with any of the rest of
+ 		 * this crap.
