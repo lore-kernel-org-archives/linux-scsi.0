@@ -1,49 +1,30 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: [PATCH/RFC] scsi sync caches w/ dev offline
-Date: Mon, 21 Oct 2002 00:49:25 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021021074925.GC3197@beaverton.ibm.com>
+From: MShetty <mranalini.shetty@patni.com>
+Subject: Re: Lun 0
+Date: Mon, 21 Oct 2002 21:19:12 +0530
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <3DB421F8.438FF804@patni.com>
+References: <B9D57B41.43FC%mheinz@infiniconsys.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from westrelay01.boulder.ibm.com (westrelay01.boulder.ibm.com [9.17.194.22])
-	by e34.co.us.ibm.com (8.12.2/8.12.2) with ESMTP id g9L7m75Q032048
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Oct 2002 03:48:07 -0400
-Received: from hmsbounty (sig-9-65-19-52.mts.ibm.com [9.65.19.52])
-	by westrelay01.boulder.ibm.com (8.12.3/NCO/VER6.4) with ESMTP id g9L7m63A251884
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Oct 2002 01:48:07 -0600
-Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-When a scsi device is offlined and then the system is shutdown it will
-hang during the synchronizing SCSI caches task. The error handler was
-activated during this step, but post recovery the system did not
-complete the shutdown. 
+Hi,
 
-This patch just adds a check for online before sending the command. The
-better approach appeared to be to use scsi_block_when_processing_errors,
-but I was concerned that we might block to long in a shutdown case.
+Thanks a lot for all the replies
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+A piece of code I am reading, sends the Inquiry cmd to lun 0 first and then to
+the actual lun to be probed. As only SCSI devices have the concept of luns... I
+think the 1st probe to lun 0 is to check if it is a SCSI device but... on 2nd
+thought the same can be inferred by probing for lun n.
 
- sd.c |    3 +++
- 1 files changed, 3 insertions(+)
------
+I have read something which says that some devices may mess up if probed for
+luns > 0. Is this true ??
 
-===== drivers/scsi/sd.c 1.73 vs edited =====
---- 1.73/drivers/scsi/sd.c	Fri Oct 18 13:32:54 2002
-+++ edited/drivers/scsi/sd.c	Mon Oct 21 00:03:06 2002
-@@ -1567,6 +1567,9 @@
- 	Scsi_Device *SDpnt = sdkp->device;
- 	int retries, the_result;
- 
-+	if (!SDpnt->online)
-+		return 0;
-+
- 	if(verbose) {
- 		char buf[16];
- 
+
+Thanks and Regards,
+M Shetty
+
+
