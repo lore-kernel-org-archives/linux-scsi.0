@@ -1,67 +1,42 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: [dm-devel] [multipath] SCSI device capacity mess
-Date: Thu, 28 Oct 2004 13:35:50 +0200
+Date: Thu, 28 Oct 2004 11:14:36 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041028113550.GS32712@marowsky-bree.de>
-References: <1098833278.4914.24.camel@zezette> <20041027081713.GC32712@marowsky-bree.de> <1098903759.12464.32.camel@zezette>
+Message-ID: <20041028181436.GA18874@beaverton.ibm.com>
+References: <1098833278.4914.24.camel@zezette> <20041027081713.GC32712@marowsky-bree.de> <1098903759.12464.32.camel@zezette> <1098914250.1588.1.camel@mulgrave> <20041028113728.GT32712@marowsky-bree.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.in-addr.de ([212.8.193.158]:56788 "EHLO mx.in-addr.de")
-	by vger.kernel.org with ESMTP id S261948AbUJ1Ryg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Oct 2004 13:54:36 -0400
+Received: from e34.co.us.ibm.com ([32.97.110.132]:31195 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S262868AbUJ1SOt
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Oct 2004 14:14:49 -0400
+Received: from westrelay04.boulder.ibm.com (westrelay04.boulder.ibm.com [9.17.193.32])
+	by e34.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id i9SIElJ8367272
+	for <linux-scsi@vger.kernel.org>; Thu, 28 Oct 2004 14:14:47 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by westrelay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id i9SIEjMo114718
+	for <linux-scsi@vger.kernel.org>; Thu, 28 Oct 2004 12:14:46 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id i9SIEjGD007703
+	for <linux-scsi@vger.kernel.org>; Thu, 28 Oct 2004 12:14:45 -0600
 Content-Disposition: inline
-In-Reply-To: <1098903759.12464.32.camel@zezette>
+In-Reply-To: <20041028113728.GT32712@marowsky-bree.de>
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Lars Marowsky-Bree <lmb@suse.de>
+Cc: device-mapper development <dm-devel@redhat.com>, christophe varoqui <christophe.varoqui@free.fr>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 2004-10-27T21:02:39, christophe varoqui <christophe.varoqui@free.fr>=
- wrote:
+On Thu, Oct 28, 2004 at 01:37:28PM +0200, Lars Marowsky-Bree wrote:
 
-> > As a note, this is one mode the EMC CLARiiON arrays can also operat=
-e in.
-> > Even worse, they won't present the block device at all, just the SC=
-SI
-> > generic mode. However, for the CLARiiONs, they can be configured to
-> > behave sanely and reply to a READ_CAPACITY too (just all I/O will b=
-e
-> > errored), if setting the failovermode to 1.
-> >=20
-> > I wonder whether your system can also be configured as such?
-> Yes it could, but it's a controler wide setting.
+> 
+> Can't we do a test-unit-ready before trying to read and then just not
+> read the partition table w/o so much noise?
 
-Not per LUN? Too bad.
+We already issue a TUR in sd_spinup_disk() prior to the READ CAPACITY and
+partition reads.
 
-> Compatibility with other OS sharing the same controlers might impose
-> this mode though. So I'd like to straight this situation up.
+We might not be able to even black list them and not excute specific code
+if these devices can be configured differently - they might need special
+code (yuck) to query the device and figure out the configuration.
 
-Then I think hardware-specific hooks in the dm-mpath are the way to go.
-We already have them in place for the priority group initialization cod=
-e
-anyway, we can add them for anything else which needs them, like this
-one.
-
-> I wonder if it's not simpler just to remove the NOSTARTONADD flag on
-> this devices in scsi_devinfo.c. I tested that and all the READ CAPACI=
-TY
-> succeed as expected (DEC HSG80 / COMPAQ HSV*).
-
-As James points out, this won't be quite the thing to do.
-
-
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
-
---=20
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX AG - A Novell company
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- Patrick Mansfield
