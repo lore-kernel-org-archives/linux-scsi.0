@@ -1,101 +1,65 @@
-From: Ben Collins <bcollins@debian.org>
-Subject: Re: [BK PATCH] SCSI host num allocation improvement
-Date: Thu, 26 Feb 2004 22:04:28 -0500
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: [PATCH] 2.6.2, Partition support for SCSI CDROM...
+Date: Thu, 26 Feb 2004 22:22:46 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040227030428.GA707@phunnypharm.org>
-References: <20040226235412.GA819@phunnypharm.org> <20040226171928.750f5f6f.akpm@osdl.org> <20040226173743.2bf473b4.akpm@osdl.org>
+Message-ID: <403EB806.7090606@tmr.com>
+References: <40396134.6030906@realitydiluted.com> <20040222190047.01f6f024.akpm@osdl.org> <40396E8F.4050307@realitydiluted.com> <20040224061130.GC503530@sgi.com> <403B8108.6080606@realitydiluted.com> <20040224170906.GQ25779@parcelfarce.linux.theplanet.co.uk> <20040225101944.GB3832@pclin040.win.tue.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bristol.phunnypharm.org ([65.207.35.130]:45525 "EHLO
-	bristol.phunnypharm.org") by vger.kernel.org with ESMTP
-	id S261585AbUB0DFM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Feb 2004 22:05:12 -0500
-Content-Disposition: inline
-In-Reply-To: <20040226173743.2bf473b4.akpm@osdl.org>
+Received: from mail.tmr.com ([216.238.38.203]:21125 "EHLO gaimboi.tmr.com")
+	by vger.kernel.org with ESMTP id S261678AbUB0DXI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Feb 2004 22:23:08 -0500
+In-Reply-To: <20040225101944.GB3832@pclin040.win.tue.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James.Bottomley@steeleye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Andries Brouwer <aebr@win.tue.nl>
+Cc: Matthew Wilcox <willy@debian.org>, "Steven J. Hill" <sjhill@realitydiluted.com>, Jeremy Higdon <jeremy@sgi.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Here's one that actually compiles.
+Andries Brouwer wrote:
+> On Tue, Feb 24, 2004 at 05:09:06PM +0000, Matthew Wilcox wrote:
+> 
+>>On Tue, Feb 24, 2004 at 11:51:20AM -0500, Steven J. Hill wrote:
+> 
+> 
+>>>+ *    sr0 - first CDROM, whole disk
+>>>+ *    sr1 - first CDROM, first partition
+>>>+ *
+>>>+ *    [...]
+>>>+ *
+>>>+ *    sr16 - first CDROM, sixteenth partition
+>>>+ *    sr17 - second CDROM, whole disk
+>>>+ *    sr18 - second CDROM, first partition
+>>
+>>Umm... no.  I suspect you mean:
+>>
+>>sr15 - first CDROM, fifteenth partition
+>>sr16 - second CDROM, whole disk
+>>sr17 - second CDROM, first partition
+>>
+>>But what a bad idea for device names.  Why not
+>>
+>>sr0 whole disc
+>>sr0a ... sr0o partitions
+>>sr1, sr1a ... sr1o
+>>
+>>It's probably too late to be consistent with discs and call them
+>>sra, sra1, ... sra15
+>>srb, srb1, ... srb15
+> 
+> 
+> It is standard convention to use numerical suffixes to refer
+> to partitions, with a 'p' separator in case the full device
+> has a name ending in a digit.
+> 
+> So: sr0p1, ..., sr0p15, sr1p1, ...
 
-===== drivers/scsi/hosts.c 1.96 vs edited =====
---- 1.96/drivers/scsi/hosts.c	Mon Dec 29 16:38:10 2003
-+++ edited/drivers/scsi/hosts.c	Thu Feb 26 22:00:33 2004
-@@ -30,6 +30,7 @@
- #include <linux/list.h>
- #include <linux/completion.h>
- #include <linux/unistd.h>
-+#include <linux/idr.h>
- 
- #include <scsi/scsi_host.h>
- #include "scsi.h"
-@@ -37,12 +38,15 @@
- #include "scsi_priv.h"
- #include "scsi_logging.h"
- 
--
--static int scsi_host_next_hn;		/* host_no for next new host */
-+static DECLARE_MUTEX(host_num_lock);
-+static struct idr allocated_hosts;
- 
- 
- static void scsi_host_cls_release(struct class_device *class_dev)
- {
-+	down(&host_num_lock);
-+	idr_remove(&allocated_hosts, class_to_shost(class_dev)->host_no);
-+	up(&host_num_lock);
- 	put_device(&class_to_shost(class_dev)->shost_gendev);
- }
- 
-@@ -166,6 +170,7 @@
- 	kfree(shost);
- }
- 
-+
- /**
-  * scsi_host_alloc - register a scsi host adapter instance.
-  * @sht:	pointer to scsi host template
-@@ -214,7 +219,6 @@
- 
- 	init_MUTEX(&shost->scan_mutex);
- 
--	shost->host_no = scsi_host_next_hn++; /* XXX(hch): still racy */
- 	shost->dma_channel = 0xff;
- 
- 	/* These three are default values which can be overridden */
-@@ -263,6 +267,11 @@
- 	if (rval)
- 		goto fail_kfree;
- 
-+	down(&host_num_lock);
-+	idr_pre_get(&allocated_hosts, GFP_KERNEL);
-+	shost->host_no = idr_get_new(&allocated_hosts, NULL);
-+	up(&host_num_lock);
-+
- 	device_initialize(&shost->shost_gendev);
- 	snprintf(shost->shost_gendev.bus_id, BUS_ID_SIZE, "host%d",
- 		shost->host_no);
-@@ -307,6 +316,9 @@
- 
- void scsi_unregister(struct Scsi_Host *shost)
- {
-+	down(&host_num_lock);
-+	idr_remove(&allocated_hosts, shost->host_no);
-+	up(&host_num_lock);
- 	list_del(&shost->sht_legacy_list);
- 	scsi_host_put(shost);
- }
-@@ -361,6 +373,7 @@
- 
- int scsi_init_hosts(void)
- {
-+	idr_init(&allocated_hosts);
- 	return class_register(&shost_class);
- }
- 
+That sounds a LOT better. Of course mknod is your friend, and some of us 
+have sr0, sr1 etc, but that's our problem. I think one of the distros 
+does it that way, but not one I have here.
+
 -- 
-Debian     - http://www.debian.org/
-Linux 1394 - http://www.linux1394.org/
-Subversion - http://subversion.tigris.org/
-WatchGuard - http://www.watchguard.com/
+bill davidsen <davidsen@tmr.com>
+   CTO TMR Associates, Inc
+   Doing interesting things with small computers since 1979
