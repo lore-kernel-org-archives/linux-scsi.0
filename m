@@ -1,33 +1,23 @@
-From: Ming Zhang <mingz@ele.uri.edu>
+From: Clay Haapala <chaapala@cisco.com>
 Subject: Re: iSCSI Driver in Linux
-Date: Thu, 15 Jul 2004 15:54:54 -0400
+Date: Thu, 15 Jul 2004 15:22:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1089921294.2981.89.camel@Smeagol.geministorage.com>
+Message-ID: <yqujr7rdnhqa.fsf@chaapala-lnx.cisco.com>
 References: <519672568F040C41B6FAC21ADF51B18FF060@mailnode1.commstor.crossroads.com>
-Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from leviathan.ele.uri.edu ([131.128.51.64]:57011 "EHLO
-	leviathan.ele.uri.edu") by vger.kernel.org with ESMTP
-	id S266314AbUGOTzC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jul 2004 15:55:02 -0400
+Received: from rtp-iport-2.cisco.com ([64.102.122.149]:56999 "EHLO
+	rtp-iport-2.cisco.com") by vger.kernel.org with ESMTP
+	id S266177AbUGOUWZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jul 2004 16:22:25 -0400
 In-Reply-To: <519672568F040C41B6FAC21ADF51B18FF060@mailnode1.commstor.crossroads.com>
+	(Lee Xing's message of "Thu, 15 Jul 2004 14:38:12 -0500")
 List-Id: linux-scsi@vger.kernel.org
 To: Lee Xing <lxing@Crossroads.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org
 
-Hi
-
-iscsi code are still floating around the kernel. not in kernel yet.
-
-AFAIK, sf.net has unh-iscsi (ini&target), cisco (ini), and iscsi
-enterprise target (target).
-
-ming
-
-On Thu, 2004-07-15 at 15:38, Lee Xing wrote:
+On Thu, 15 Jul 2004, Lee Xing stated:
 > Hi,
 > 
 > Can someone please tell me:
@@ -35,27 +25,13 @@ On Thu, 2004-07-15 at 15:38, Lee Xing wrote:
 > - is the iSCSI driver in lk2.6 an iSCSI initiator or target or both?
 > - is lk2.6 the first kernel that has this iSCSI driver?
 > 
-> Thanks,
-> 
-> 
-> Lee
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+There is no iSCSI driver in the kernel yet.
+Join the fun at http://linux-iscsi.sourceforge.net/
+The 3.4 versions are for 2.4 kernels, and the 4.x versions are being
+developed for 2.6++ kernels.
+
+For a linux-based target, look for the UNH code.
 -- 
- --------------------------------------------------
-| Ming Zhang, PhD. Student
-| Dept. of Electrical & Computer Engineering
-| College of Engineering
-| University of Rhode Island
-| Kingston RI. 02881
-| e-mail: mingz at ele.uri.edu
-| Tel. (401) 874-2293 
-| Fax. (401) 782-6422
-| http://www.ele.uri.edu/~mingz/
- --------------------------------------------------
-
-
-
+Clay Haapala (chaapala@cisco.com) Cisco Systems Storage +1 763-398-1056
+   6450 Wedgwood Rd, Suite 130 Maple Grove MN 55311 PGP: C89240AD
+ "Espresso-chocolate malt balls .. try 'em, kid.  First hit's free."
