@@ -1,59 +1,101 @@
-From: Pat LaVarre <p_lavarre@yahoo.com>
-Subject: [PATCH] mount -w of dvd+rw etc. in vanilla 2.6
-Date: Mon, 18 Aug 2003 11:56:07 -0700 (PDT)
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH2.5] ips 3/4: use pci_dma APIs and remove GFP abuse
+Date: Mon, 18 Aug 2003 19:52:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030818185607.64948.qmail@web21108.mail.yahoo.com>
-Reply-To: p.lavarre@ieee.org
+Message-ID: <3F4166AB.9080609@pobox.com>
+References: <A3B9245C291EEF4785A24A1DBE8D852B037809@rtpexc01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web21108.mail.yahoo.com ([216.136.227.110]:51077 "HELO
-	web21108.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S272252AbTHRS4I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Aug 2003 14:56:08 -0400
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:31677 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S275235AbTHRXwZ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Aug 2003 19:52:25 -0400
+In-Reply-To: <A3B9245C291EEF4785A24A1DBE8D852B037809@rtpexc01.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: mdharm-scsi@one-eyed-alien.net, p.lavarre@ieee.org
+To: "Jeffery, David" <David_Jeffery@adaptec.com>
+Cc: linux-scsi@vger.kernel.org
 
-I see mount -w -t udf works with my dvd-ram in
-late Linux 2.4 and early 2.6, but mistakenly
-sees my dvd+rw as read-only.
+Jeffery, David wrote:
+>>-----Original Message-----
+>>From: Jeff Garzik
+>>Sent: Friday, August 15, 2003 5:10 PM
+>>To: Jeffery, David
+>>Cc: linux-scsi
+>>Subject: Re: [PATCH2.5] ips 3/4: use pci_dma APIs and remove GFP abuse
+>>
+>>
+>>David Jeffery wrote:
+>>
+>>>-#if !defined(__i386__) && !defined(__ia64__)
+>>>-#error "This driver has only been tested on the x86/ia64 platforms"
+>>>+#if !defined(__i386__) && !defined(__ia64__) && 
+>>
+>>!defined(__x86_64__)
+>>
+>>>+#error "This driver has only been tested on the 
+>>
+>>x86/ia64/x86_64 platforms"
+>>
+>>> #endif
+>>
+>>This should be removed completely.
+>>
+>>Under Linux, you limit the architectures that build your driver via 
+>>Kconfig (or in 2.4, Config.in) dependencies.
+>>
+>>Further, Linux actively encourages that all PCI platforms at least 
+>>attempt to build PCI drivers -- even if the company does not 
+>>support the 
+>>driver on that platform.  This leads to an increase in driver 
+>>quality, 
+>>as it increases the opportunities others have to point out bugs, and 
+>>offer fixes.
+> 
+> 
+> I need to fix up the Kconfig file.  How about I also downgrade that to
+> a #warning like Andi suggested earlier?
 
-To make my dvd+rw work, I find I can apply
-patches much like:
-http://fy.chalmers.se/~appro/linux/DVD+RW/
-http://fy.chalmers.se/~appro/linux/DVD+RW/linux-2.4.patch
-
-Can I somehow help ... to get a patch like this
-finished & merged into the kernel.org kernel?
-
-I'm new to drivers/scsi/sr_vendor.c ... but I
-first glanced thru www.t10.org back in 1994.
-
-Looks to me like this patch begins to expand the
-awareness of Linux beyond the "mode page" x2A of
-dvd-ram/cd-rw into the "profile"s and "feature"s
-that distinguish dvd+rw etc. from other dvd/cd,
-so that with my dvd+rw I achieve:
-
-scsi_CDs[minor].device->writeable = 1;
-scsi_CDs[minor].cdi.mask &= ~CDC_DVD_RAM;
-
-In particular, in the patch I see 3 mmc3_profile
-values from among the 7 values that mmc4r02c.pdf
-says imply the "feature" "0020h" =
-"Random Writable".
-
-Can I help somehow?
-
-Pat LaVarre
-http://members.aol.com/plscsi/tools/knoppix/
-
-P.S. Reply-to-all will reach me faster than
-reply to p.lavarre@ieee.org or linux-scsi alone.
+Yeah, that's definitely an improvement, thanks.
 
 
-__________________________________
-Do you Yahoo!?
-Yahoo! SiteBuilder - Free, easy-to-use web site design software
-http://sitebuilder.yahoo.com
+>>> #if LINUX_VERSION_CODE <= KERNEL_VERSION(2,
+
+>>It's not wrong... but it's a bit nasty to be calling 
+>>pci_alloc_consistent from the interrupt handler.  Typically, 
+>>if you can, 
+>>it would be better to have buffers waiting for you, and you 
+>>simply map 
+>>them here, using pci_map_single or pci_map_page or whatever.
+> 
+> 
+> Normally, that is what happens.  A new, larger buffer will
+> only be allocated in a few very rare cases.  No user should
+> ever hit those allocations when using the ServeRAID tools.
+> Only a few special commands like flashing firmware should
+> ever trigger reallocation.
+> 
+> 
+>>Also, as a tangent, I was thinking that it might be 
+>>beneficial to move 
+>>ips_next() to a tasklet.  Change all callers to call 
+>>schedule_tasklet() 
+>>instead.  That should allow more streamlined usage, IMO...
+> 
+> 
+> Reworking ips_next is on my large list of Things To Do if I
+> Had Time.
+
+hehe :)
+
+> The code still has plenty of warts and I wish I had more time to work
+> on them. (Notice a theme about time? :)
+
+Not an unique situation, either :)  Thanks,
+
+	Jeff
+
+
+
+
