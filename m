@@ -1,37 +1,41 @@
-From: Mario Giammarco <mgiammarco@virgilio.it>
-Subject: Re: Best driver for qlogic 2200 fc?
-Date: Tue, 18 Nov 2003 20:19:52 +0100
+From: Liran Schour <LIRANS@il.ibm.com>
+Subject: Re: Bidirectional support
+Date: Tue, 18 Nov 2003 22:02:06 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1069183192.4927.3.camel@cala>
-References: <200311171711.36441.mgiammarco@virgilio.it>
-	 <1069085218.14602.63.camel@localhost.localdomain>
+Message-ID: <OF4C1DEC00.6F7133BA-ONC2256DE2.006DB245-C2256DE2.006E0E82@il.ibm.com>
+References: <20031118175015.A29355@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vsmtp4.tin.it ([212.216.176.224]:41137 "EHLO vsmtp4.tin.it")
-	by vger.kernel.org with ESMTP id S263770AbTKRTUB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Nov 2003 14:20:01 -0500
-In-Reply-To: <1069085218.14602.63.camel@localhost.localdomain>
+Received: from mtagate2.de.ibm.com ([195.212.29.151]:30165 "EHLO
+	mtagate2.de.ibm.com") by vger.kernel.org with ESMTP id S263770AbTKRUEo
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Nov 2003 15:04:44 -0500
+In-Reply-To: <20031118175015.A29355@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Craig Tierney <ctierney@hpti.com>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, Muli Ben-Yehuda <MULI@il.ibm.com>
 
-Il lun, 2003-11-17 alle 17:06, Craig Tierney ha scritto:
 
-> > Unfortunately it gives me slow performance (sequential read of 30mb/sec on a 
-> > seagate 318452fc that can do 60mb/sec sequential read).
-> > 
-> 
-> What is your write performance?  Have you tried
-> to tune /proc/sys/vm/{min,max}-readahead?
 
-I have tuned readahead and not it goes 50 mb.
-I am shocked, why I need to tune it?
-Usually I do an hdparm -t -T to see if hard disk is good
-(and eventually hdparm again to tune ide interface)
-Without tuning I can reach sequential read of more than 60 mb using raid0.
-I do not understand why the OS cannot use the full speed of this FC drive.
 
-OTOH side I discovered that (in a raid1 array ) the two seagate write speed is very low: 10mb/s, why?
+
+
+Christoph Hellwig wrote:
+>
+> > Is it sound reasonable to extend the scatter-gather structure to
+include
+> > data direction flag and by that bypass the interface problem and allow
+> > support for bidirectional commands?
+>
+> Why do you need the flag in the scatterlist?  We already have a
+dma_direction
+> enum in the scsi_cmnd that's pased to the dma mapping routines, it may
+> be DMA_BIDRECTIONAL although that's currently not used by any code.
+
+I can use this DMA_BIDIRECTIONAL flag. But I still do need somthing like a
+scatterlist to overcome the fact that we have only one pointer for data
+buffer instead of two, one for data out and one for data in.
+
+- Liran
 
