@@ -1,66 +1,60 @@
-From: Andrew Morton <akpm@osdl.org>
+From: Mike Anderson <andmike@us.ibm.com>
 Subject: Re: Badness in device_release at drivers/base/core.c:84
-Date: Fri, 1 Aug 2003 14:44:55 -0700
+Date: Fri, 1 Aug 2003 16:27:22 -0700
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030801144455.450d8e52.akpm@osdl.org>
-References: <20030801182207.GA3759@blazebox.homeip.net>
+Message-ID: <20030801232721.GA5249@beaverton.ibm.com>
+References: <20030801182207.GA3759@blazebox.homeip.net> <20030801144455.450d8e52.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20030801182207.GA3759@blazebox.homeip.net>
-To: Diffie <diffie@blazebox.homeip.net>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+Content-Disposition: inline
+In-Reply-To: <20030801144455.450d8e52.akpm@osdl.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: Diffie <diffie@blazebox.homeip.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Diffie <diffie@blazebox.homeip.net> wrote:
->
-> Unable to handle kernel NULL pointer dereference at virtual address 00000120
-> printing eip:
-> c02a8cae
-> *pde = 00000000
-> Oops: 0000 [#1]
-> PREEMPT
-> CPU:    0
-> EIP:    0060:[<c02a8cae>]    Not tainted VLI
-> EFLAGS: 00210286
-> EIP is at aic7xxx_proc_info+0x2e/0xc80
-> eax: c1bb25b0   ebx: c1bb2400   ecx: c038bb20   edx: 00000000
-> esi: 00000400   edi: f1715000   ebp: 412de000   esp: f620fecc
-> ds: 007b   es: 007b   ss: 0068
-> Process nautilus (pid: 3555, threadinfo=f620e000 task=f6216720)
-> Stack: 000001f7 00000000 00000000 c013c612 c0379eb0 00000000 00000000 f6613340
->        00000000 00000000 c0379eb0 00000400 00000400 f1715000 412de000 c02956fc
->        c1bb2400 f1715000 f620ff60 00000000 00000400 00000000 c02956c0 c018bc91
-> Call Trace:
-> [<c013c612>] __alloc_pages+0x92/0x320
-> [<c02956fc>] proc_scsi_read+0x3c/0x60
-> [<c02956c0>] proc_scsi_read+0x0/0x60
+Andrew Morton [akpm@osdl.org] wrote:
+> This patch should fix the oops.
+> 
+> As for why the proc reading code was unable to locate the HBA: dunno, but
+> this is a first step.
+> 
+> Or maybe you don't have any adaptec controllers in the machine?
+> 
+> (jejb, please apply..)
+> 
+> 
+>  25-akpm/drivers/scsi/aic7xxx_old/aic7xxx_proc.c |    2 +-
+>  1 files changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff -puN drivers/scsi/aic7xxx_old/aic7xxx_proc.c~aic7xxx_old-oops-fix drivers/scsi/aic7xxx_old/aic7xxx_proc.c
+> --- 25/drivers/scsi/aic7xxx_old/aic7xxx_proc.c~aic7xxx_old-oops-fix	Fri Aug  1 14:41:14 2003
+> +++ 25-akpm/drivers/scsi/aic7xxx_old/aic7xxx_proc.c	Fri Aug  1 14:41:20 2003
+> @@ -92,7 +92,7 @@ aic7xxx_proc_info ( struct Scsi_Host *HB
+>  
+>    HBAptr = NULL;
+>  
+> -  for(p=first_aic7xxx; p->host != HBAptr; p=p->next)
+> +  for(p=first_aic7xxx; p && p->host != HBAptr; p=p->next)
+>      ;
+>  
+>    if (!p)
 
-This patch should fix the oops.
+Is this really the right thing to add. The only purpose of these few lines
+is a poor sanity check as down further in the code a pointer to the
+structure is already present in hostdata. 
 
-As for why the proc reading code was unable to locate the HBA: dunno, but
-this is a first step.
+Adding the "p" is an indication that this drivers list got corrupted some
+where.
 
-Or maybe you don't have any adaptec controllers in the machine?
+I agree it may be better than an oops, but what else is invalid?
 
-(jejb, please apply..)
+You need to have adaptec controllers in the system to get a procfs node
+to read / write, but this error could be related to the node not getting
+cleaned up correctly on a remove which a patch has previously been
+posted.
 
-
- 25-akpm/drivers/scsi/aic7xxx_old/aic7xxx_proc.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
-
-diff -puN drivers/scsi/aic7xxx_old/aic7xxx_proc.c~aic7xxx_old-oops-fix drivers/scsi/aic7xxx_old/aic7xxx_proc.c
---- 25/drivers/scsi/aic7xxx_old/aic7xxx_proc.c~aic7xxx_old-oops-fix	Fri Aug  1 14:41:14 2003
-+++ 25-akpm/drivers/scsi/aic7xxx_old/aic7xxx_proc.c	Fri Aug  1 14:41:20 2003
-@@ -92,7 +92,7 @@ aic7xxx_proc_info ( struct Scsi_Host *HB
- 
-   HBAptr = NULL;
- 
--  for(p=first_aic7xxx; p->host != HBAptr; p=p->next)
-+  for(p=first_aic7xxx; p && p->host != HBAptr; p=p->next)
-     ;
- 
-   if (!p)
-
-_
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
