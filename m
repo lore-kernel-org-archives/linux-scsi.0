@@ -1,37 +1,27 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: [PATCH][2.5] Aic7xxx and EISA API
-Date: Mon, 19 May 2003 10:53:56 -0600
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1364120000.1053363235@aslan.btc.adaptec.com>
-References: <wrpel2v54y9.fsf@hina.wild-wind.fr.eu.org>	<1328050000.1053359007@aslan.btc.adaptec.com>	<wrp8yt3545s.fsf@hina.wild-wind.fr.eu.org>	<1353820000.1053360902@aslan.btc.adaptec.com>	<wrpznli52iy.fsf@hina.wild-wind.fr.eu.org>	<1358650000.1053362109@aslan.btc.adaptec.com> <wrpu1bq51qq.fsf@hina.wild-wind.fr.eu.org>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: 2.4 SCSI bug fix tree open
+Date: 19 May 2003 13:58:59 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1053370740.1826.16.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic-mail.adaptec.com ([208.236.45.100]:39301 "EHLO
-	magic.adaptec.com") by vger.kernel.org with ESMTP id S262252AbTESQk6
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 May 2003 12:40:58 -0400
-In-Reply-To: <wrpu1bq51qq.fsf@hina.wild-wind.fr.eu.org>
-Content-Disposition: inline
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: marcelo@conectiva.com.br
 List-Id: linux-scsi@vger.kernel.org
-To: mzyngier@freesurf.fr
-Cc: linux-scsi@vger.kernel.org
 
->>>>>> "Justin" == Justin T Gibbs <gibbs@scsiguy.com> writes:
-> 
-> Justin> True EISA platforms will always report at slot 0.
-> 
-> Unfortunately not. The Alpha Jensen, despite being a pure EISA system,
-> doesn't report anything in slot 0. Well, some people will argue the
-> Jensen is broken in a number of ways... :-)
+Several people have complained that 2.4 SCSI bug fixes are getting lost,
+so I've opened a bitkeeper tree at
 
-So treat it as a quirk by having a "root bus" driver for the Jensen
-initiate the probe.  Otherwise you will never succeed in having a
-generic kernel with EISA enabled.  It will just choke on lots of
-PCI only systems.
+http://linux-scsi.bkbits.net/scsi-misc-2.4
 
---
-Justin
+to hold them.
 
+Patches going into this tree should be small, well documented bug fixes
+to the current SCSI code (i.e. not driver updates, just bug fixes).
+
+If you want a patch to go in, send it to linux-scsi@vger.kernel.org with
+a description of the problem and the fix.
+
+James
