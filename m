@@ -1,20 +1,22 @@
 From: Mathieu Chouquet-Stringer <mchouque@online.fr>
-Subject: Oops on alpha while loading aic7xxx driver
-Date: Thu, 13 May 2004 15:42:02 -0400
+Subject: Oops on alpha with 2.6.6 while loading aic7xxx driver
+Date: Thu, 13 May 2004 15:45:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040513194202.GA17752@localhost>
+Message-ID: <20040513194511.GA18200@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mta10.srv.hcvlny.cv.net ([167.206.5.85]:4981 "EHLO
+Received: from mta10.srv.hcvlny.cv.net ([167.206.5.85]:34934 "EHLO
 	mta10.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
-	id S264518AbUEMTnJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 May 2004 15:43:09 -0400
+	id S264646AbUEMTpw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 May 2004 15:45:52 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
+
+[with the kernel version in the subject it's probably better]
 
 	Hi,
 
