@@ -1,21 +1,49 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Adrian Bunk <bunk@fs.tum.de>
 Subject: Re: [PATCH][2.6.8-rc1-mm1] drivers/scsi/sg.c gcc341 inlining fix
-Date: Wed, 14 Jul 2004 14:44:06 -0400
+Date: Wed, 14 Jul 2004 21:05:43 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40F57EF6.5030702@pobox.com>
-References: <200407141216.i6ECGHxg008332@harpo.it.uu.se> <40F562FC.50806@pobox.com> <20040714165419.GF7308@fs.tum.de> <200407141931.12249.bzolnier@elka.pw.edu.pl> <20040714183335.GG7308@fs.tum.de>
+Message-ID: <20040714190542.GJ7308@fs.tum.de>
+References: <200407141751.i6EHprhf009045@harpo.it.uu.se> <40F57D14.9030005@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:26317 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S267459AbUGNSoT
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jul 2004 14:44:19 -0400
-In-Reply-To: <20040714183335.GG7308@fs.tum.de>
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:54263 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S265207AbUGNTFx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Jul 2004 15:05:53 -0400
+Content-Disposition: inline
+In-Reply-To: <40F57D14.9030005@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@fs.tum.de>
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, viro@parcelfarce.linux.theplanet.co.uk, Mikael Pettersson <mikpe@csd.uu.se>, akpm@osdl.org, dgilbert@interlog.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Arjan van de Ven <arjanv@redhat.com>
+Cc: Mikael Pettersson <mikpe@csd.uu.se>, B.Zolnierkiewicz@elka.pw.edu.pl, akpm@osdl.org, dgilbert@interlog.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Your patch looks OK to me...
+On Wed, Jul 14, 2004 at 02:36:04PM -0400, Jeff Garzik wrote:
+> Mikael Pettersson wrote:
+> >It's needed, and no it's not a compiler bug.
+> 
+> In fact, it is.  gcc isn't properly inlining functions where uses occur 
+> before implementation of the inlined function.
+> 
+> Or you could just call it "gcc is dumb" rather than a compiler bug.
+
+gcc 3.4 seems to be the first gcc version that could actually handle 
+such cases.
+
+But since the kernel uses -fno-unit-at-a-time, it doesn't work.
+
+The problem with unit-at-a-time is that it might increase the stack 
+usage. Arjan explained this in the "GCC 3.4 and broken inlining." thread 
+that started Thursday.
+
+> 	Jeff
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
