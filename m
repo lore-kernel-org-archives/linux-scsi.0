@@ -1,42 +1,132 @@
-From: Andries Brouwer <aebr@win.tue.nl>
-Subject: Re: SCSI layer retries even when medium is not present
-Date: Fri, 21 Mar 2003 17:11:49 +0100
+From: Badari Pulavarty <pbadari@us.ibm.com>
+Subject: [patch for playing] 2.5.65 patch to support > 256 disks
+Date: Fri, 21 Mar 2003 10:56:04 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030321161149.GA9464@win.tue.nl>
-References: <Pine.LNX.4.44L0.0303211004050.806-100000@ida.rowland.org>
+Message-ID: <200303211056.04060.pbadari@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Multipart/Mixed;
+  boundary="------------Boundary-00=_GL44BUSW346PXEXQ8DJ7"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0303211004050.806-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Andrew Morton <akpm@digeo.com>
 
-On Fri, Mar 21, 2003 at 10:08:02AM -0500, Alan Stern wrote:
 
-> Can anybody explain why the SCSI layer issues READ-CAPACITY three times in
-> a row (for an emulated direct-access drive) when each time the sense code
-> indicates the medium is not present?
-> 
-> Wouldn't just once be enough?
+--------------Boundary-00=_GL44BUSW346PXEXQ8DJ7
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-For 2.5 I did something like
+Hi,
 
-void sd_read_capacity(...) {
-	int retries = 3;
+Andries Brouwer recently submitted 32 bit dev_t patches,
+which are in 2.5.65-mm2. This patch applies on those patches to support=20
+more than 256 disks.  This is for playing only.
 
-	do {
-		cmd[0] = READ_CAPACITY;
-		scsi_wait_req(...);
-		if (media_not_present(...)
-			return;
-	} while (--retries);
-}
+I tested this with 4000 disks using scsi_debug. I attached my actual
+disks (50) after 4000 scsi_debug disks. I am able to access my disks
+fine and do IO on them.
 
-I tried to give Marcelo some very small sd patch, an obvious
-improvement, but failed. So, I have given up on 2.4. Maybe
-others can try to make corresponding improvements to 2.4.
+Problems (so far):
 
-Andries
+1) sd.c -  sd_index_bits[] arrys became big - need to be fixed.
+
+2) 4000 disks eats up lots of low memory (~460 MB). Here is the
+/proc/meminfo output before & after insmod.
+
+Before:
+MemTotal:      3883276 kB
+MemFree:       3808028 kB
+Buffers:          3240 kB
+Cached:          41860 kB
+SwapCached:          0 kB
+Active:          45360 kB
+Inactive:         7288 kB
+HighTotal:     3014616 kB
+HighFree:      2961856 kB
+LowTotal:       868660 kB
+LowFree:        846172 kB
+SwapTotal:     2040244 kB
+SwapFree:      2040244 kB
+Dirty:             192 kB
+Writeback:           0 kB
+Mapped:          14916 kB
+Slab:             7164 kB
+Committed_AS:    12952 kB
+PageTables:        312 kB
+ReverseMaps:      1895
+=3D=3D=3D=3D
+After:
+MemTotal:      3883276 kB
+MemFree:       3224140 kB
+Buffers:          3880 kB
+Cached:         140376 kB
+SwapCached:          0 kB
+Active:          47512 kB
+Inactive:       105508 kB
+HighTotal:     3014616 kB
+HighFree:      2838144 kB
+LowTotal:       868660 kB
+LowFree:        385996 kB
+SwapTotal:     2040244 kB
+SwapFree:      2040244 kB
+Dirty:              92 kB
+Writeback:           0 kB
+Mapped:          16172 kB
+Slab:           464364 kB
+Committed_AS:    14996 kB
+PageTables:        412 kB
+ReverseMaps:      2209
+
+--------------Boundary-00=_GL44BUSW346PXEXQ8DJ7
+Content-Type: text/x-diff;
+  charset="us-ascii";
+  name="sd.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="sd.patch"
+
+--- linux/drivers/scsi/sd.c	Thu Mar 20 15:06:00 2003
++++ linux.new/drivers/scsi/sd.c	Fri Mar 21 11:50:54 2003
+@@ -56,7 +56,9 @@
+  * Remaining dev_t-handling stuff
+  */
+ #define SD_MAJORS	16
+-#define SD_DISKS	(SD_MAJORS << 4)
++#define SD_DISKS_PER_MAJOR_SHIFT	(KDEV_MINOR_BITS - 4)
++#define SD_DISKS_PER_MAJOR	(1 << SD_DISKS_PER_MAJOR_SHIFT)
++#define SD_DISKS	(SD_MAJORS << SD_DISKS_PER_MAJOR_SHIFT)
+ 
+ /*
+  * Time out in seconds for disks and Magneto-opticals (which are slower).
+@@ -1328,17 +1330,23 @@ static int sd_attach(struct scsi_device 
+ 	sdkp->index = index;
+ 
+ 	gd->de = sdp->de;
+-	gd->major = sd_major(index >> 4);
+-	gd->first_minor = (index & 15) << 4;
++	gd->major = sd_major(index >> SD_DISKS_PER_MAJOR_SHIFT);
++	gd->first_minor = (index & (SD_DISKS_PER_MAJOR - 1)) << 4;
+ 	gd->minors = 16;
+ 	gd->fops = &sd_fops;
+ 
+-	if (index >= 26) {
++	if (index < 26) {
++		sprintf(gd->disk_name, "sd%c", 'a' + index % 26);
++	} else if (index < (26*27)) {
+ 		sprintf(gd->disk_name, "sd%c%c",
+ 			'a' + index/26-1,'a' + index % 26);
+ 	} else {
+-		sprintf(gd->disk_name, "sd%c", 'a' + index % 26);
+-	}
++		const unsigned int m1 = (index/ 26 - 1) / 26 - 1;
++		const unsigned int m2 = (index / 26 - 1) % 26;
++		const unsigned int m3 = index % 26;
++		sprintf(gd->disk_name, "sd%c%c%c", 
++			'a' + m1, 'a' + m2, 'a' + m3);
++	}	
+ 
+ 	sd_init_onedisk(sdkp, gd);
+ 
+
+--------------Boundary-00=_GL44BUSW346PXEXQ8DJ7--
 
