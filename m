@@ -1,36 +1,35 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: Problem with aacraid driver in 2.5.63-bk-latest
-Date: Fri, 14 Mar 2003 02:18:14 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030314101813.GA3458@beaverton.ibm.com>
-References: <20030228133037.GB7473@jiffies.dk> <1047517604.23902.39.camel@irongate.swansea.linux.org.uk> <20030313005046.GB14373@beaverton.ibm.com> <200303140709.h2E79Ju06461@Port.imtp.ilyichevsk.odessa.ua>
+Date: 14 Mar 2003 14:57:59 +0000
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1047653879.29544.9.camel@irongate.swansea.linux.org.uk>
+References: <20030228133037.GB7473@jiffies.dk>
+	 <1047510381.12193.28.camel@markh1.pdx.osdl.net>
+	 <1047514681.23725.35.camel@irongate.swansea.linux.org.uk>
+	 <3E6FC8D6.7090005@torque.net>
+	 <1047517604.23902.39.camel@irongate.swansea.linux.org.uk>
+	 <1047570132.30105.7.camel@markh1.pdx.osdl.net>
+	 <3E711194.9010505@redhat.com>
+	 <1047597729.30103.386.camel@markh1.pdx.osdl.net>
+	 <3E71134F.5060404@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200303140709.h2E79Ju06461@Port.imtp.ilyichevsk.odessa.ua>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <3E71134F.5060404@redhat.com>
+To: Doug Ledford <dledford@redhat.com>
+Cc: Mark Haverkamp <markh@osdl.org>, dougg@torque.net, Christoffer Hall-Frederiksen <hall@jiffies.dk>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux aacraid devel <linux-aacraid-devel@dell.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Denis Vlasenko <vda@port.imtp.ilyichevsk.odessa.ua>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, dougg@torque.net, Mark Haverkamp <markh@osdl.org>, Christoffer Hall-Frederiksen <hall@jiffies.dk>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux aacraid devel <linux-aacraid-devel@dell.com>
 
-Denis Vlasenko [vda@port.imtp.ilyichevsk.odessa.ua] wrote:
-> +       if(tags <= 0) {
-> +                       printk(KERN_WARNING "(scsi%d:%d:%d:%d) "
-> +                               "%s, tag value to small\n"
-> +                               "disabled\n", SDpnt->host->host_no,
+On Thu, 2003-03-13 at 23:25, Doug Ledford wrote:
+> Mark Haverkamp wrote:
+> > Then it sounds like the aacraid driver could set cmd_per_lun to a small
+> > number like one since the real queue depth will be set later in
+> > aac_slave_configure.
 > 
-> Please do not split message into several lines.
-> There are several reasons why you shouldn't do it.
+> Yes.  And since the driver doesn't support anything other than drives to 
+> my knowledge, 1 would be appropriate.
 
-Thanks for pointing this out.
-
-This was a paste typo. There was also some incorrect style spacing, and
-it did not work (the queue_depth was set to tags down below).  From Doug
-Ledford's later comments this change may not be needed to correct the
-problem, but I will re-roll tomorrow.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
-
+It supports both disks and non disk devices. Disks are mapped onto bus 0
+and are driven via firmware smarts as logical devices, non disks are bus 1
+and there it behaves mostly like a scsi controller
