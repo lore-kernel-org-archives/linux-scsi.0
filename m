@@ -1,85 +1,69 @@
 From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: sg_scan -i /dev/sg[0123] /dev/hd[abcd] /dev/scd[0123]
-Date: 08 Dec 2003 10:39:03 -0700
+Date: 08 Dec 2003 10:58:03 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1070905143.2263.63.camel@patibmrh9>
+Message-ID: <1070906283.2263.101.camel@patibmrh9>
 References: <1070670440.3056.7.camel@patibmrh9>
 	 <3FD43229.7070708@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:32673 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S265501AbTLHRjN
+Received: from email-out1.iomega.com ([147.178.1.82]:56739 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S265405AbTLHR6M
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Dec 2003 12:39:13 -0500
+	Mon, 8 Dec 2003 12:58:12 -0500
 In-Reply-To: <3FD43229.7070708@torque.net>
 List-Id: linux-scsi@vger.kernel.org
 To: dougg@torque.net
 Cc: linux-scsi@vger.kernel.org
 
-> > P.S. I presume already you are aware of the gcc -Wall warning:
+> > In lk 2.6 I wish sg_scan accepted a list of args e.g.
 > > 
-> > $ cd sg3_utils-1.06/
-> > $ make
-> > gcc -g -O2 -Wall -W -D_REENTRANT -D_LARGEFILE64_SOURCE
-> > -D_FILE_OFFSET_BITS=64
-> > -c -o sg_dd.o sg_dd.c
-> > sg_dd.c: In function `siginfo_handler':
-> > sg_dd.c:138: warning: unused parameter `sig'
-> > ...
-> 
-> Yes, but adding the '-W' flagging has several beneficial
-> effects (to counterbalance this annoying warning which
-> C++ but not C addresses).
+> > $ sudo sg_scan -i /dev/sg[0123] /dev/hd[abcd] /dev/scd[0123]
 
-Sorry I had forgotten that gcc -W warns of more than -Wall.
+Kindly offline I'm told `man sg_scan` may have changed lately.  I have
+sg installed without root privilege, so I have no man, but my sg_scan.8
+is readable.
 
-I have seen translations to C language express the idea of discarding a
-result on purpose via such source code as { result = result; }
-assign-no-change and { (void) result; } cast-to-void.
+> > From:sg_scan.8
 
-I vote assign-no-change, because ...
+There I see only the -anwix options defined, in particular the
+predefined -a and -n device lists.  I see no support for accepting a
+list of devices to try from the command line.  I will write a patch and
+reply again.
 
-gcc -Wall -W here now seems happy with either.  Possibly I remember
-msvc++ max warnings accepting assign-no-change and disliking
-cast-to-void.  I see javac here accepts assign-to-self, rejects
-cast-to-void as an error.  I see `man lint` here now chokes.  `man -k
-lint` suggests `splint`.  `splint sg_dd.c` yields about 283 warnings,
-but accepts assign-no-change quietly while complaining of cast-to-void
-via "Statement has no ...  visible effect --- no values are modified
-...".
+> Have a look at the sg3_utils-1.06.tgz beta on www.torque.net/sg
 
-Assign-no-change has not yet bitten me with gcc, your mileage may vary.
+1.06 of Mon differs from 1.06 of Fri, aye.  My diff -Nurp between those
+yields 1432 lines.  I see CHANGELOG mentions: "accept /dev/hd? ATAPI
+devices directly in lk 2.6", I thank you!
 
-I see `make sg_dd.lst` here doesn't yet know gcc -a well enough to try
-things like the linux-fsdevel suggestion `gcc -O -g -Wa=
-,-ahls file.c` that you might see hinted by lk 2.6 `make
-drivers/usb/core/usb.lst`.
+> Maybe sg_scan should renamed sam_scan (sadly apart from INQUIRYs
+> on st and osst devices).
+
+Lost me help?  I'm guessing this English means an "st device" is a PDT
+x01 device aggressively supported by CONFIG_CHR_DEV_ST, and we (lk 2.6)
+have history that precludes sg_scan from seeing st devices, and osst is
+something like st but distinct.
+
+> the gcc ... warning:
+
+Answered separately in this same thread.  Now I see gcc also complains
+of sgm_dd.c.
+
+> BTW The sginfo in that beta decodes mode pages for disks,
+> tapes, cd/dvds and enclosures (plus SPI-4, FCP and SAS on
+> the transport side).
+
+$ sudo ./sginfo -a /dev/hdc | wc -l
+    223
+$ sudo ./sginfo -a /dev/hdd | wc -l
+    117
+$
+
+Fun thank you.
 
 Pat LaVarre
-
-diff -Nurp sg3_utils-1.06/sg_dd.c sg3_utils/sg_dd.c
---- sg3_utils-1.06/sg_dd.c	2003-11-12 04:02:10.000000000 -0700
-+++ sg3_utils/sg_dd.c	2003-12-08 10:14:15.315282120 -0700
-@@ -137,6 +137,7 @@ static void interrupt_handler(int sig)
- 
- static void siginfo_handler(int sig)
- {
-+    sig = sig;
-     fprintf(stderr, "Progress report, continuing ...\n");
-     print_stats("  ");
- }
-diff -Nurp sg3_utils-1.06/sg_read.c sg3_utils/sg_read.c
---- sg3_utils-1.06/sg_read.c	2003-11-11 21:32:01.000000000 -0700
-+++ sg3_utils/sg_read.c	2003-12-08 10:14:35.178262488 -0700
-@@ -123,6 +123,7 @@ static void interrupt_handler(int sig)
- 
- static void siginfo_handler(int sig)
- {
-+    sig = sig;
-     fprintf(stderr, "Progress report, continuing ...\n");
-     print_stats(0);
- }
 
 
