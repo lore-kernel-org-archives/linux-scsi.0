@@ -1,17 +1,34 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: [PATCH 2.4.30-pre3] scsi_mod: add max_dma_memory and use_zone_normal params
-Date: Fri, 18 Mar 2005 13:18:33 -0600
-Message-ID: <20050318191833.GA22530@lists.us.dell.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH 2.4.30-pre3] scsi_mod: add max_dma_memory and use_zone_normal params
+Date: Fri, 18 Mar 2005 14:50:24 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458BED2A89@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from ausc60ps301.us.dell.com ([143.166.148.206]:26659 "EHLO
-	ausc60ps301.us.dell.com") by vger.kernel.org with ESMTP
-	id S261922AbVCRTSe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Mar 2005 14:18:34 -0500
-Content-Disposition: inline
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Received: from magic.adaptec.com ([216.52.22.17]:17794 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262081AbVCRTu1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Mar 2005 14:50:27 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matt Domsch <Matt_Domsch@dell.com>, linux-scsi@vger.kernel.org
+
+This is all done to work around a bug in the kernel dealing with
+ZONE_DMA. I applaud the fix, but so many drivers need to be rewritten to
+first try taking memory from the general pool, then dropping back to the
+DMA pool if not matching the dma_mask.
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Matt Domsch
+Sent: Friday, March 18, 2005 2:19 PM
 To: linux-scsi@vger.kernel.org
+Subject: [PATCH 2.4.30-pre3] scsi_mod: add max_dma_memory and
+use_zone_normal params
 
 For review and comment.
 Patch adds two new module parameters to scsi_mod:
@@ -60,20 +77,24 @@ Linux on Dell mailing lists @ http://lists.us.dell.com
  
 +static unsigned int max_dma_memory = 32; /* 32MB */
 +MODULE_PARM(max_dma_memory, "l");
-+MODULE_PARM_DESC(max_dma_memory, "maximum DMA pool size, in MB (default=32 -> 32MB)");
++MODULE_PARM_DESC(max_dma_memory, "maximum DMA pool size, in MB
+(default=32 -> 32MB)");
 +
 +
 +/* This flag is unsafe under these conditions:
-+ * - you've got a <64-bit addressable SCSI controller, >4GB RAM, and an architecture where ZONE_NORMAL
++ * - you've got a <64-bit addressable SCSI controller, >4GB RAM, and an
+architecture where ZONE_NORMAL
 + *   extends above 4GB (any 64-bit architecture)
 + * or
 + * - you've got an old ISA card with host->unchecked_isa_dma=1
 + *
-+ * This implies that it is really safe only with 64-bit addressable SCSI controllers
++ * This implies that it is really safe only with 64-bit addressable
+SCSI controllers
 + */
 +static unsigned int use_zone_normal;
 +MODULE_PARM(use_zone_normal, "i");
-+MODULE_PARM_DESC(use_zone_normal, "1 if scsi_malloc() can safely use ZONE_NORMAL instead of ZONE_DMA");
++MODULE_PARM_DESC(use_zone_normal, "1 if scsi_malloc() can safely use
+ZONE_NORMAL instead of ZONE_DMA");
 +
 +static inline unsigned int dma_gfp_flags()
 +{
@@ -89,16 +110,21 @@ Linux on Dell mailing lists @ http://lists.us.dell.com
  
  	/* limit DMA memory to 32MB: */
 -	new_dma_sectors = (new_dma_sectors + 15) & 0xfff0;
-+ 	new_dma_sectors = min(new_dma_sectors + 15, (max_dma_memory * 1024 * 2)) & 0xfffffff0;
++ 	new_dma_sectors = min(new_dma_sectors + 15, (max_dma_memory *
+1024 * 2)) & 0xfffffff0;
  
  	/*
  	 * We never shrink the buffers - this leads to
 @@ -330,7 +353,7 @@ void scsi_resize_dma_pool(void)
  			for (i = dma_sectors / SECTORS_PER_PAGE;
- 			   i < new_dma_sectors / SECTORS_PER_PAGE; i++) {
- 				new_dma_malloc_pages[i] = (unsigned char *)
--				    __get_free_pages(GFP_ATOMIC | GFP_DMA, 0);
-+				    __get_free_pages(dma_gfp_flags(), 0);
+ 			   i < new_dma_sectors / SECTORS_PER_PAGE; i++)
+{
+ 				new_dma_malloc_pages[i] = (unsigned char
+*)
+-				    __get_free_pages(GFP_ATOMIC |
+GFP_DMA, 0);
++				    __get_free_pages(dma_gfp_flags(),
+0);
  				if (!new_dma_malloc_pages[i])
  					break;
  			}
@@ -111,3 +137,7 @@ Linux on Dell mailing lists @ http://lists.us.dell.com
  			if (dma_malloc_pages[0])
  				has_space = 1;
  		}
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
