@@ -1,39 +1,32 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: [2.6 patch] show "Fusion MPT device support" menu only if
- BLK_DEV_SD
-Date: Sun, 25 Jan 2004 15:51:00 -0800
+From: Karen Shaeffer <shaeffer@neuralscape.com>
+Subject: latest 2.6 patch for dpt_i20 driver
+Date: Sun, 25 Jan 2004 22:58:20 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040125155100.76f2bbae.rddunlap@osdl.org>
-References: <20040120232507.GC6441@fs.tum.de>
-	<20040120233537.A23375@infradead.org>
-	<20040120160346.7e466ad2.akpm@osdl.org>
-	<20040125230756.GI11844@parcelfarce.linux.theplanet.co.uk>
-	<20040125151107.1ac381f1.akpm@osdl.org>
+Message-ID: <20040126065820.GD16500@synapse.neuralscape.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:50317 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S265365AbUAYXx0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 Jan 2004 18:53:26 -0500
-In-Reply-To: <20040125151107.1ac381f1.akpm@osdl.org>
+Received: from synapse.neuralscape.com ([198.144.200.82]:10624 "EHLO
+	neuralscape.com") by vger.kernel.org with ESMTP id S265531AbUAZG64
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jan 2004 01:58:56 -0500
+Received: from shaeffer by neuralscape.com with local (Exim 4.12)
+	id 1Al0hQ-0004JI-00
+	for linux-scsi@vger.kernel.org; Sun, 25 Jan 2004 22:58:20 -0800
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: willy@debian.org, hch@infradead.org, bunk@fs.tum.de, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sun, 25 Jan 2004 15:11:07 -0800 Andrew Morton <akpm@osdl.org> wrote:
 
-| Matthew Wilcox <willy@debian.org> wrote:
-| >
-| > Andrew, shall I start
-| >  feeding all my Kconfig cleanups through you rather than through
-| >  kernel-janitors?
-| 
-| Doesn't Randy have some system going there?
+Hi,
 
-Yes, some system, but I think that Matthew should go ahead
-and send this one to you.
+I have access to several Adaptec I2O RAID controllers and am interested in
+running linux-2.6.x kernels in this lab for testing purposes. Will someone
+please advise me on where to find the most up to date patch(es) for this
+driver. Thanks in advance.
 
---
-~Randy
+Karen
+-- 
+ Karen Shaeffer
+ Neuralscape, Palo Alto, Ca. 94306
+ shaeffer@neuralscape.com  http://www.neuralscape.com
