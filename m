@@ -2,11 +2,11 @@ From: Tim Schmielau <tim@physik3.uni-rostock.de>
 Subject: [patch] fix compares of jiffies
 Date: Sun, 22 Sep 2002 13:45:51 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200209221145.g8MBjp023269@gans.physik3.uni-rostock.de>
+Message-ID: <200209221145.g8MBjp723243@gans.physik3.uni-rostock.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: lw_linux@hotmail.com
-Cc: linux-scsi@vger.kernel.org, tim@physik3.uni-rostock.de
+To: linux-scsi@vger.kernel.org
+Cc: tim@physik3.uni-rostock.de
 
 Dear Linux kernel code maintainer,
 
@@ -29,42 +29,15 @@ Tim Schmielau (tim@physik3.uni-rostock.de)
 
 
 
-/* 
- *  sym53c416.c
- *  Low-level SCSI driver for sym53c416 chip.
- *  Copyright (C) 1998 Lieven Willems (lw_linux@hotmail.com)
-
-
---- linux-2.4.20-pre6/drivers/scsi/sym53c416.c	Sun Sep 30 21:26:07 2001
-+++ linux-2.4.20-pre6-jfix/drivers/scsi/sym53c416.c	Wed Sep 11 12:53:08 2002
-@@ -277,7 +277,7 @@
- 		{
- 			i = jiffies + timeout;
- 			restore_flags(flags);
--			while(jiffies < i && (inb(base + PIO_INT_REG) & EMPTY) && timeout)
-+			while(time_before(jiffies, i) && (inb(base + PIO_INT_REG) & EMPTY) && timeout)
- 				if(inb(base + PIO_INT_REG) & SCI)
- 					timeout = 0;
- 			save_flags(flags);
-@@ -323,7 +323,7 @@
- 		{
- 			i = jiffies + timeout;
- 			restore_flags(flags);
--			while(jiffies < i && (inb(base + PIO_INT_REG) & FULL) && timeout)
-+			while(time_before(jiffies, i) && (inb(base + PIO_INT_REG) & FULL) && timeout)
- 				;
- 			save_flags(flags);
- 			cli();
-@@ -559,9 +559,9 @@
- 	outb(0x00, base + DEST_BUS_ID);
- 	/* Wait for interrupt to occur */
- 	i = jiffies + 20;
--	while(i > jiffies && !(inb(base + STATUS_REG) & SCI))
-+	while(time_before(jiffies, i) && !(inb(base + STATUS_REG) & SCI))
- 		barrier();
--	if(i <= jiffies) /* timed out */
-+	if(time_after_eq(jiffies, i)) /* timed out */
- 		return 0;
- 	/* Get occurred irq */
- 	irq = probe_irq_off(irqs);
+--- linux-2.4.20-pre6/drivers/scsi/scsi_obsolete.c	Sat Aug  3 02:39:44 2002
++++ linux-2.4.20-pre6-jfix/drivers/scsi/scsi_obsolete.c	Wed Sep 11 12:47:46 2002
+@@ -967,7 +967,7 @@
+ 				   that the delay in internal_cmnd will guarantee at least a
+ 				   MIN_RESET_DELAY bus settle time.
+ 				 */
+-				if (host->last_reset - jiffies > 20UL * HZ)
++				if (time_before(jiffies, host->last_reset - 20UL * HZ))
+ 					host->last_reset = jiffies;
+ 			} else {
+ 				host->host_busy++;
 
