@@ -1,70 +1,41 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] fix breakage in the SCSI generic tag code
-Date: Sat, 19 Mar 2005 13:09:13 -0600
-Message-ID: <1111259353.5525.24.camel@mulgrave>
+From: Andi Kleen <ak@suse.de>
+Subject: Re: [PATCH 2.4.30-pre3] x86_64: pci_alloc_consistent() match 2.6 implementation
+Date: Sat, 19 Mar 2005 20:26:45 +0100
+Message-ID: <20050319192645.GA3937@wotan.suse.de>
+References: <20050318212344.GC26112@lists.us.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Received: from stat16.steeleye.com ([209.192.50.48]:56489 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262656AbVCSTKA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Mar 2005 14:10:00 -0500
-Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id j2JJ9xA25114
-	for <linux-scsi@vger.kernel.org>; Sat, 19 Mar 2005 14:09:59 -0500
+Content-Type: text/plain; charset=us-ascii
+Received: from mail-ex.suse.de ([195.135.220.2]:45983 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S262657AbVCST0u (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Mar 2005 14:26:50 -0500
+Content-Disposition: inline
+In-Reply-To: <20050318212344.GC26112@lists.us.dell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Matt Domsch <Matt_Domsch@dell.com>
+Cc: ak@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-When I redid the target allocation routines, I inadvertently broke the
-generic tag code.  The problem is that the device is added to the host
-list after slave_configure in the new code.  This is too late since if
-any command disconnects during the initial inquiry phase, we now cannot
-find the device for the reconnect.  The fix is to add the device to the
-lists earlier.
+On Fri, Mar 18, 2005 at 03:23:44PM -0600, Matt Domsch wrote:
+> For review and comment.
+> 
+> On x86_64 systems with no IOMMU and with >4GB RAM (in fact, whenever
+> there are any pages mapped above 4GB), pci_alloc_consistent() falls
+> back to using ZONE_DMA for all allocations, even if the device's
+> dma_mask could have supported using memory from other zones.  Problems
+> can be seen when other ZONE_DMA users (SWIOTLB, scsi_malloc()) consume
+> all of ZONE_DMA, leaving none left for pci_alloc_consistent() use.
+> 
+> Patch below makes pci_alloc_consistent() for the nommu case (EM64T
+> processors) match the 2.6 implementation of dma_alloc_coherent(), with
+> the exception that this continues to use GFP_ATOMIC.
 
-James
-
-===== drivers/scsi/scsi_sysfs.c 1.69 vs edited =====
---- 1.69/drivers/scsi/scsi_sysfs.c	2005-02-16 19:05:37 -06:00
-+++ edited/drivers/scsi/scsi_sysfs.c	2005-03-19 12:56:31 -06:00
-@@ -561,15 +561,7 @@
-  **/
- int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- {
--	struct Scsi_Host *shost = sdev->host;
--	struct scsi_target *starget = scsi_target(sdev);
- 	int error, i;
--	unsigned long flags;
--
--	spin_lock_irqsave(shost->host_lock, flags);
--	list_add_tail(&sdev->same_target_siblings, &starget->devices);
--	list_add_tail(&sdev->siblings, &shost->__devices);
--	spin_unlock_irqrestore(shost->host_lock, flags);
+You fixed the wrong code. The pci-nommu code is only used
+when IOMMU is disabled in the Kconfig. But most kernels have
+it enabled. You would need to change it in pci-gart.c too.
  
- 	if ((error = scsi_device_set_state(sdev, SDEV_RUNNING)) != 0)
- 		return error;
-@@ -786,6 +778,10 @@
- 
- void scsi_sysfs_device_initialize(struct scsi_device *sdev)
- {
-+	unsigned long flags;
-+	struct Scsi_Host *shost = sdev->host;
-+	struct scsi_target  *starget = sdev->sdev_target;
-+
- 	device_initialize(&sdev->sdev_gendev);
- 	sdev->sdev_gendev.bus = &scsi_bus_type;
- 	sdev->sdev_gendev.release = scsi_device_dev_release;
-@@ -801,6 +797,10 @@
- 		 sdev->channel, sdev->id, sdev->lun);
- 	sdev->scsi_level = SCSI_2;
- 	transport_setup_device(&sdev->sdev_gendev);
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	list_add_tail(&sdev->same_target_siblings, &starget->devices);
-+	list_add_tail(&sdev->siblings, &shost->__devices);
-+	spin_unlock_irqrestore(shost->host_lock, flags);
- }
- 
- int scsi_is_sdev_device(const struct device *dev)
+The reason it is like this that nommu was always intended as a hackish kludge
+that would be only used for debugging - little did we know that
+it would become standard later.
 
-
+-Andi
