@@ -1,51 +1,27 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: One question about SCSI device hotplug
-Date: Tue, 1 Mar 2005 22:42:38 -0600
-Message-ID: <20050302044238.GA20042@lists.us.dell.com>
-References: <0B1E13B586976742A7599D71A6AC733C12EC5E@xbl3.ma.emulex.com>
+From: "Zhao, Forrest" <forrest.zhao@intel.com>
+Subject: RE: One question about SCSI device hotplug
+Date: Wed, 2 Mar 2005 12:47:46 +0800
+Message-ID: <8126E4F969BA254AB43EA03C59F44E8401850062@pdsmsx404>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from linux.us.dell.com ([143.166.224.162]:1373 "EHLO
-	lists.us.dell.com") by vger.kernel.org with ESMTP id S261869AbVCBEmz
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2005 23:42:55 -0500
-Content-Disposition: inline
-In-Reply-To: <0B1E13B586976742A7599D71A6AC733C12EC5E@xbl3.ma.emulex.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Received: from fmr20.intel.com ([134.134.136.19]:7849 "EHLO
+	orsfmr005.jf.intel.com") by vger.kernel.org with ESMTP
+	id S262168AbVCBEt1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 23:49:27 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: matthew@wil.cx, forrest.zhao@intel.com, linux-scsi@vger.kernel.org, ramesh.caushik@intel.com
+To: Matt Domsch <Matt_Domsch@dell.com>, James.Smart@Emulex.Com
+Cc: matthew@wil.cx, linux-scsi@vger.kernel.org, "Caushik, Ramesh" <ramesh.caushik@intel.com>, sdake@mvista.com
 
-On Tue, Mar 01, 2005 at 11:35:28AM -0500, James.Smart@Emulex.Com wrote:
-> > On Tue, Mar 01, 2005 at 05:06:55PM +0800, Zhao, Forrest wrote:
-> > > If I surprisingly hot-remove a SCSI disk from HBA manually 
-> > > without executing "echo "scsi remove-single-device
-> > >  <h> <b> <t <l>" > /proc/scsi/scsi", can the "hotplug"
-> > > event be notified to SCSI mid-layer or user space?
-> > > 
-> > > I briefly browse some code of LLDD, it seems that LLDD never
-> > > report "hotplug" event to upper-level layer. Am I right?
-> > 
-> > I don't think it *can* ... the SCSI protocols don't tell the 
-> > host "hey,
-> > this device has disappeared".
-> 
-> All depends on what transport it is... In FC, we can detect when
-> a target is removed. In the most recent FC transport code (not
-> all integrated yet), it will indeed automagically invoke
-> scsi_remove_device() for all luns on the target.
+< but the LLDD doesn't get an interrupt from the firmware on such
+events).
 
-And in the patches I posted a couple weeks ago, userspace can notify
-the kernel about an added/removed device if it knows about it but the
-kernel doesn't (say, a management app does the add/remove but the LLDD
-doesn't get an interrupt from the firmware on such events).
+So you mean that when SCSI device is surprise-removed, HBA will not
+assert an interrupt to kernel? Even LLDD doesn't know the SCSI device is
+removed?
 
-There's also the slave_{alloc,configure,destroy} callbacks in the
-drivers, that let the LLDDs know about a LUN creation or removal, if
-you've got device state stored in the driver.
-
--- 
-Matt Domsch
-Software Architect
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+Thanks,
+Forrest
