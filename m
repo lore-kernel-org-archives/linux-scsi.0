@@ -1,73 +1,24 @@
-From: "Augustine Ortiz, Jr." <aortizjr@lanl.gov>
-Subject: RE: Getting HD Serial Numbers in RAID
-Date: Tue, 31 Aug 2004 15:10:48 -0600
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1093986648.27891.35.camel@afgar.lanl.gov>
-References: <200408312036.i7VKan311353@watkins-home.com>
+From: Alvin Oga <aoga@ns.Linux-Consulting.com>
+Subject: Re: Getting HD Serial Numbers in RAID
+Date: Tue, 31 Aug 2004 13:14:16 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <Pine.LNX.3.96.1040831131338.25589A-100000@Maggie.Linux-Consulting.com>
+References: <1093981522.27891.20.camel@afgar.lanl.gov>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200408312036.i7VKan311353@watkins-home.com>
-To: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from Mail.linux-consulting.com ([157.22.35.6]:2878 "EHLO
+	Mail.Linux-Consulting.com") by vger.kernel.org with ESMTP
+	id S269137AbUHaUOY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 Aug 2004 16:14:24 -0400
+In-Reply-To: <1093981522.27891.20.camel@afgar.lanl.gov>
 List-Id: linux-scsi@vger.kernel.org
-
-Usually, most hardware RAID stuff does give software. However since this
-one (AACRAID/PERC) is such a common controller, this manufacturer didn't
-include it. We do have some for other systems, but they are in Windows,
-and I can't seem to figure out how to get the serial numbers through
-that either.
-
-Interestingly, if you have the arrays broken, you can pull the serial
-numbers just fine.
-
-Some RAID cards (ie. DAC90 chipset) will report all the disks when the
-kernel module is loaded. I figured I could just sorta re-work that stuff
-and see if I could probe it. 
-
-I am having some trouble with the AACRAID module though. It looks like
-it grabs the info, but I can't tell if it does it when the drives are
-actually RAIDed. 
-
-Thank you for the info, I will see if I can get it via the SMART stuff.
-I will post if I have any luck.
-
-Thanks!
-
-Augustine
+To: "Augustine Ortiz, Jr." <aortizjr@lanl.gov>
+Cc: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
->                             From: 
-> Derek Vadala <derek@cynicism.com>
-> You could try smartctl, but I don't know what luck you'll have
-> accessing
-> the raw devices if they are behind a hardware controller.
-> 
-> http://smartmontools.sourceforge.net/
-> http://www.linuxjournal.com/article.php?sid=6983
-> 
+On Tue, 31 Aug 2004, Augustine Ortiz, Jr. wrote:
 
-
-> hddtemp will get you more info on the disk ... not sure if it works
-> on aacraid/perc etc
-> 
-> c ya
-> alvin
-
-
-On Tue, 2004-08-31 at 14:36, Guy wrote:
-> When I have used hardware RAID, the vender supplies software that will do
-> what you want.  But it is tied to the vender's hardware, not general.
-> 
-> Guy
-> 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Augustine Ortiz, Jr.
-> Sent: Tuesday, August 31, 2004 3:45 PM
-> To: linux-raid@vger.kernel.org; linux-scsi@vger.kernel.org
-> Subject: Getting HD Serial Numbers in RAID
-> 
 > Hi...
 > 
 > I have been working on getting serial numbers electronically off of hard
@@ -82,13 +33,10 @@ On Tue, 2004-08-31 at 14:36, Guy wrote:
 > 
 > Are there any tools available to get the serial number off the drives in
 > the array? Or can I get some pointers on writing such a tool?
-> 
-> Thank you.
-> 
-> Augustine
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+hddtemp will get you more info on the disk ... not sure if it works
+on aacraid/perc etc
+
+c ya
+alvin
 
