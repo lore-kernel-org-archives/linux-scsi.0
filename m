@@ -1,45 +1,30 @@
-From: Aristeu Sergio Rozanski Filho <aris@cathedrallabs.org>
-Subject: Re: [patch] qlogic: don't use qinfo as name
-Date: Mon, 1 Mar 2004 22:27:36 -0300
+From: "erick" <adejo1keashaye@hotmail.com>
+Subject: Increase your metabolism!
+Date: Tue, 02 Mar 2004 05:37:26 GMT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040302012735.GA656@cathedrallabs.org>
-References: <20031020232200.GA473@cathedrallabs.org> <20040219150747.A23822@infradead.org> <20040219172619.GA667@cathedrallabs.org> <1077399404.2285.10.camel@mulgrave>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; x-action=pgp-signed
+Message-ID: <1078205846-10072__41382.3729999878$1078205892@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from panda.sul.com.br ([200.219.150.4]:65038 "EHLO panda.sul.com.br")
-	by vger.kernel.org with ESMTP id S261544AbUCBBaa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Mar 2004 20:30:30 -0500
-Content-Disposition: inline
-In-Reply-To: <1077399404.2285.10.camel@mulgrave>
+Received: from [68.152.174.70] ([68.152.174.70]:8460 "HELO verlan.com")
+	by vger.kernel.org with SMTP id S261566AbUCBFh0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2004 00:37:26 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
 
-Hi James,
-> I'll put them in, but first I think the qlogicfas attachment type needs
-> to be all new style.
-> 
-> This:
-> 
-> > +#ifdef PCMCIA
-> > +	hreg = scsi_host_alloc(host, 0);
-> > +#else
-> >  	hreg = scsi_register(host, 0);	/* no host data */
-> > +#endif
-> 
-> Mixing of new and old styles is bound to cause difficulty.
-I'm working on that, sorry for the delay, I took last week off.
+FATBLAST is an advanced fat-binding supplement
+that removes fat from the foods you eat!
 
-- --
-aris
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
+http://healthypolicy.com/fb/index.php?pid=eph9106
 
-iD8DBQFAQ+MHRRJOudsVYbMRAr9nAKCYVr/FAhiaYYscKvAkKu9g2IeFJQCgmPyx
-dTWt0tZsQyFag3xBlhMSqDE=
-=xsMc
------END PGP SIGNATURE-----
+
+
+
+
+
+
+
+
+
+syjun ahoffman   clreilly Morris  mjhwang cmacosta dirk rjthorpe roundhea Cheese hiroko  sree buzz mlsage Batman honey ppennie mgonchar hall  
+Get off this list by writing to getmeoff731@excitemail.com
