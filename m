@@ -1,58 +1,45 @@
-From: Phil Stracchino <alaric@babcom.com>
-Subject: Re: [linux-usb-devel] Feiya 5-in-1 Card Reader
-Date: Wed, 4 Sep 2002 21:11:33 -0400
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [RFC][PATCH] 2.5 hosts.c and scsi_host list cleanup
+Date: Wed, 4 Sep 2002 22:45:52 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020905011133.GA921@babylon5.babcom.com>
-References: <UTC200209042256.g84Mu0w15389.aeb@smtp.cwi.nl> <20020904161042.O13478@one-eyed-alien.net>
+Message-ID: <20020905054552.GC1386@beaverton.ibm.com>
+References: <20020904204310.GA3588@beaverton.ibm.com> <20020905000158.A14644@infradead.org> <20020904232624.GA10227@win.tue.nl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="PNTmBPCT7hxwcZjr"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20020904161042.O13478@one-eyed-alien.net>
+In-Reply-To: <20020904232624.GA10227@win.tue.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl, greg@kroah.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
+To: Andries Brouwer <aebr@win.tue.nl>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+
+Andries Brouwer [aebr@win.tue.nl] wrote:
+> On Thu, Sep 05, 2002 at 12:01:58AM +0100, Christoph Hellwig wrote:
+> 
+>  +       shost_name = (Scsi_Host_Name *) kmalloc(sizeof(Scsi_Host_Name),
+>  +                                               GFP_KERNEL);
+>   
+>  Cast isn't really needed again.
+> 
+> 
+> It is true that the cast is not needed, but it belongs to the good casts.
+> Usually a cast is bad because it disables checks.
+> In this case the cast is a good one, it enables checks.
+> 
+> [Indeed, a void * can be assigned to any pointer, so without the cast
+> gcc will only check that shost_name is a pointer. With the cast it
+> will check that it is a pointer of the right type.
+> 
+> 	foo = (type *) kmalloc(N*sizeof(type), ...)
+> 
+> is a good coding habit. Of course using  sizeof(*foo)  is an alternative.]
+
+I switched it to the sizeof(*foo) style. Was this not the style
+previously discussed on LKML.
 
 
---PNTmBPCT7hxwcZjr
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+-Mike
+-- 
+Michael Anderson
+andmike@us.ibm.com
 
-On Wed, Sep 04, 2002 at 04:10:42PM -0700, Matthew Dharm wrote:
-> The MODE_SENSE bit is fine by me.  But it's a SCSI change, so I'm not the
-> person to ask.  The fix to sddr09.c for that seems reasonable, but you put
-> it all together and I haven't had time to split it up.  Of course, I fully
-> expect the changes to MODE_SENSE in the SCSI layer to break other USB
-> devices, but there is only one way to find out....
-
-Speaking of sddr09 devices (of which I possess one), what's the current
-state of support for the sddr09?  Last I knew, at the time when I finally
-got mine working, the sddr09 was only supported read-only, since there
-were not-fully-understood issues that resulted in filesystem corruption=20
-if you tried to write to it.  Currently, the driver will still allow me
-to mount it only as a read-only filesystem.  Can write support for the
-sddr09 be expected any time soon?
-
-
---=20
-  *********  Fight Back!  It may not be just YOUR life at risk.  *********
-  phil stracchino   ::   alaric@babcom.com   ::   halmayne@sourceforge.net
-    unix ronin     ::::   renaissance man   ::::   mystic zen biker geek
-     2000 CBR929RR, 1991 VFR750F3 (foully murdered), 1986 VF500F (sold)
-       Linux Now! ...because friends don't let friends use Microsoft.
-
---PNTmBPCT7hxwcZjr
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE9dq9F0DfOju+hMkkRAqGAAKDVmy2Cne8CZjaNnG5UKl0NHrLJFQCgsrwJ
-ALmY9bMRA9+atF2fo4LpOnU=
-=SjO0
------END PGP SIGNATURE-----
-
---PNTmBPCT7hxwcZjr--
