@@ -1,37 +1,52 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: One question about SCSI device hotplug
-Date: Tue, 1 Mar 2005 22:57:52 -0600
-Message-ID: <20050302045752.GC20042@lists.us.dell.com>
-References: <8126E4F969BA254AB43EA03C59F44E8401850062@pdsmsx404>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [Iscsitarget-devel] Re: [ANNOUNCE] iSCSI enterprise target
+ software
+Date: Wed, 02 Mar 2005 14:04:13 +0900
+Message-ID: <20050302140413R.fujita.tomonori@lab.ntt.co.jp>
+References: <20050301161951K.fujita.tomonori@lab.ntt.co.jp>
+	<1109666441.6293.62.camel@laptopd505.fenrus.org>
+	<20050301183549J.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from lists.us.dell.com ([143.166.224.162]:11614 "EHLO
-	lists.us.dell.com") by vger.kernel.org with ESMTP id S262174AbVCBE6O
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:18419 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S262176AbVCBFEY
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2005 23:58:14 -0500
-Content-Disposition: inline
-In-Reply-To: <8126E4F969BA254AB43EA03C59F44E8401850062@pdsmsx404>
+	Wed, 2 Mar 2005 00:04:24 -0500
+In-Reply-To: <20050301183549J.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Zhao, Forrest" <forrest.zhao@intel.com>
-Cc: James.Smart@Emulex.Com, matthew@wil.cx, linux-scsi@vger.kernel.org, "Caushik, Ramesh" <ramesh.caushik@intel.com>, sdake@mvista.com
+To: arjan@infradead.org
+Cc: linux-scsi@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net
 
-On Wed, Mar 02, 2005 at 12:47:46PM +0800, Zhao, Forrest wrote:
-> < but the LLDD doesn't get an interrupt from the firmware on such
-> events).
-> 
-> So you mean that when SCSI device is surprise-removed, HBA will not
-> assert an interrupt to kernel? Even LLDD doesn't know the SCSI device is
-> removed?
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [Iscsitarget-devel] Re: [ANNOUNCE] iSCSI enterprise target software
+Date: Tue, 01 Mar 2005 18:35:49 +0900
 
-Exactly.  Some controllers know, and assert events up to their LLDD.
-Jame's Emulex driver apparently does, perhaps this holds true for all
-FC devices.
+> The last reason is that user-space cost like memory copy. With 1Gbs
+> Ethernet, is is not critical. However, with 10G, it is critical, I
+> expect. I've been setting up 10G experimental infrastructure to
+> evaluate iSCSI performance.
 
-Some firmwares (LSI megaraid for sure, Adaptec SCSI I believe) don't.
+If we try to build high-performance iSCSI target software on 10Gbs
+Ethernet, I think that we need to implement it in the kernel
+space, although this topic is still in the research stage.
 
--- 
-Matt Domsch
-Software Architect
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+IICR, Intel provides open-source iSCSI target software, which uses
+mmap() in the user space, as you suggested. However, they chose a
+different approach to implement iSCSI target software for 10Gbs. They
+modified the Linux kernel TCP stack to fully integrate iSCSI
+functionality with it. It is still not clear how to get the best
+performance out of 10GBs Ethernet, however, it seems that using just
+the socket interface is not good enough. So I think that we need to
+control all the system-resources to do it.
+
+We've not optimized our code yet. The current code simply uses the
+socket interface, however, moving some functionality to the TCP stack
+can improve the performance, although I don't plan to modify the TCP
+stack. A possible approach to do it is exploiting sk_data_ready().
+
+In addition, you can find several papers (e.g., Chelsio technical
+papers) saying that UP kernel can achieve better throughput than SMP
+kernels with 10Gbs. There is some room for further improvement in the
+Linux kernel.
