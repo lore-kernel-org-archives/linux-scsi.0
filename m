@@ -1,47 +1,40 @@
-From: Henk Jan Priester <hj@justcroft.com>
-Subject: Que: generic scsi driver (sg) SG_IO ioctl
-Date: Thu, 16 Oct 2003 11:18:55 +0200 (CEST)
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: 2.6.0 stability and the BK scsi trees
+Date: Thu, 16 Oct 2003 21:56:54 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0310161109430.26363-100000@mars.justcroft.intern>
+Message-ID: <3F8E8786.2020502@torque.net>
+References: <1066265974.16761.426.camel@fuzzy>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from siemens4.servercity.co.uk ([217.205.138.46]:30216 "EHLO
-	justcroft.co.uk") by vger.kernel.org with ESMTP id S262781AbTJPJTF
+Received: from ns1.triode.net.au ([202.147.124.1]:13235 "EHLO
+	iggy.triode.net.au") by vger.kernel.org with ESMTP id S262878AbTJPL57
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Oct 2003 05:19:05 -0400
-Received: from mars [62.59.36.110]
-	by justcroft.co.uk [212.47.84.192]
-	with SMTP (MDaemon.Standard.v4.0.2.R)
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Oct 2003 10:13:09 +0100
+	Thu, 16 Oct 2003 07:57:59 -0400
+In-Reply-To: <1066265974.16761.426.camel@fuzzy>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+James Bottomley wrote:
+> In the light of the recently announced "bug fixes only" edict for the
+> 2.6 kernel, I'll be splitting our current SCSI BK tree:
 
-Hello,
+Ok, I'll bite:-)
 
-I am currently writing a program to communicate with 
-Xerox Xpress Plotter using the generic SCSI driver (kernel 2.4.20).
+What was the point of putting 32 dev_t's into the
+kernel? Many people who were advocating it used
+the increased number of scsi disks (> 256) and
+partitions (from 15 to 63 [to match the ide subsystem])
+as a major reason.
 
-I am using the ioctl SGIO to send the SCSI pakkets to the
-plotter, everything works fine till I start sending the plot data.
-(model enquiry is ok, roll selection is ok, print setup is ok)
-The ioctl goes ok but the status = 8, masked_status = 4, which
-is busy if I am correct.
-Does anybody know what can be the problem if the in case?
+The sd driver is still littered with hacks to distribute
+its 256 (max) disks over 8 majors. Shouldn't this be
+fixed?
 
-Is there also a limit on the pakket size you can send with ioctl 
-SG_IO command?
+Comments?
 
-Regards,
-
-Henk Jan 
-
--- 
-H.J. Priester                           email:	hjpriester@justcroft.com
-Justcroft Technical Systems B.V.        Tel:   +31 70 3644131 
-Atjehstraat  21, 2585 VG	        Fax:   +31 70 3107593	
-The Netherlands                        	WWW:   www.justcroft.com 
--------------------------------------------------------------------------------
-
+Doug Gilbert
 
