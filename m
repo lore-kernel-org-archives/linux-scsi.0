@@ -1,532 +1,242 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: PATCH [2/15]  qla2xxx: Remove flash routines
-Date: Thu, 6 May 2004 22:50:15 -0700
+Subject: PATCH [3/15]  qla2xxx: 2100 request-q contraints
+Date: Thu, 6 May 2004 22:51:00 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040507055015.GA4881@linux.local.home>
+Message-ID: <20040507055100.GA4893@linux.local.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-01-qfe0.socal.rr.com ([66.75.162.133]:3570 "EHLO
-	ms-smtp-01-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S261991AbUEGFsc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 May 2004 01:48:32 -0400
+Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:62204 "EHLO
+	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S262914AbUEGFtQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 May 2004 01:49:16 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 
 ChangeSet
-  1.1923 04/04/29 14:40:24 andrew.vasquez@apc.qlogic.com +4 -0
-  Remove flash support from embedded driver:
-  
-  	o Remove unused option-rom variables from host structure.
-  	o Remove flash manipulation routines.
+  1.1924 04/04/30 10:39:56 andrew.vasquez@apc.qlogic.com +5 -0
+  Older, notably the ISP2100, chips have some contraints for the request
+  queue depth and number of scatter-gather elements allowed for a 
+  given command.  For this chip, reduce request queue size to 128 and 
+  maximum number of scatter-gather entries for a command to 32.   
 
- drivers/scsi/qla2xxx/qla_def.h  |    2 
- drivers/scsi/qla2xxx/qla_gbl.h  |    8 
- drivers/scsi/qla2xxx/qla_init.c |    3 
- drivers/scsi/qla2xxx/qla_sup.c  |  446 ----------------------------------------
- 4 files changed, 459 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  |   14 +++-----------
+ drivers/scsi/qla2xxx/qla_init.c |    9 +++++----
+ drivers/scsi/qla2xxx/qla_iocb.c |   14 +++++++-------
+ drivers/scsi/qla2xxx/qla_os.c   |   14 +++++++++-----
+ drivers/scsi/qla2xxx/qla_rscn.c |    2 +-
+ 5 files changed, 25 insertions(+), 28 deletions(-)
 
 diff -Nru a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
---- a/drivers/scsi/qla2xxx/qla_def.h	Mon May  3 15:13:09 2004
-+++ b/drivers/scsi/qla2xxx/qla_def.h	Mon May  3 15:13:09 2004
-@@ -2340,8 +2340,6 @@
+--- a/drivers/scsi/qla2xxx/qla_def.h	Mon May  3 15:13:28 2004
++++ b/drivers/scsi/qla2xxx/qla_def.h	Mon May  3 15:13:28 2004
+@@ -209,20 +209,11 @@
+ #define MAX_OUTSTANDING_COMMANDS	1024
  
- 	uint8_t     node_name[WWN_SIZE];
- 	uint8_t     nvram_version; 
--	uint8_t     optrom_major; 
--	uint8_t     optrom_minor; 
- 	uint32_t    isp_abort_cnt;
+ /* ISP request and response entry counts (37-65535) */
+-#define REQUEST_ENTRY_CNT		2048	/* Number of request entries. */
++#define REQUEST_ENTRY_CNT_2100		128	/* Number of request entries. */
++#define REQUEST_ENTRY_CNT_2200		2048	/* Number of request entries. */
+ #define RESPONSE_ENTRY_CNT_2100		64	/* Number of response entries.*/
+ #define RESPONSE_ENTRY_CNT_2300		512	/* Number of response entries.*/
  
- 	/* Adapter I/O statistics for failover */
-diff -Nru a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
---- a/drivers/scsi/qla2xxx/qla_gbl.h	Mon May  3 15:13:09 2004
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h	Mon May  3 15:13:09 2004
-@@ -255,14 +255,6 @@
- extern void qla2x00_unlock_nvram_access(scsi_qla_host_t *);
- extern uint16_t qla2x00_get_nvram_word(scsi_qla_host_t *, uint32_t);
- extern void qla2x00_write_nvram_word(scsi_qla_host_t *, uint32_t, uint16_t);
--extern void qla2x00_flash_enable(scsi_qla_host_t *);
--extern void qla2x00_flash_disable(scsi_qla_host_t *);
--extern uint8_t qla2x00_read_flash_byte(scsi_qla_host_t *, uint32_t);
--extern uint8_t qla2x00_get_flash_manufacturer(scsi_qla_host_t *);
--extern uint16_t qla2x00_get_flash_version(scsi_qla_host_t *);
--extern uint16_t qla2x00_get_flash_image(scsi_qla_host_t *, uint8_t *);
--extern uint16_t qla2x00_set_flash_image(scsi_qla_host_t *, uint8_t *);
+-/* Calculations for SG segments */
+-#define SEGS_PER_REQUEST_32	3 
+-#define SEGS_PER_CONT_32	7
+-#define SG_SEGMENTS_32 (SEGS_PER_REQUEST_32 + \
+-    (SEGS_PER_CONT_32 * (REQUEST_ENTRY_CNT - 2)))     
+-#define SEGS_PER_REQUEST_64	2 
+-#define SEGS_PER_CONT_64	5
+-#define SG_SEGMENTS_64 (SEGS_PER_REQUEST_64 + \
+-    (SEGS_PER_CONT_64 * (REQUEST_ENTRY_CNT - 2)))     
 -
  /*
-  * Global Function Prototypes in qla_dbg.c source file.
+  * SCSI Request Block 
   */
+@@ -2123,6 +2114,7 @@
+ 	request_t       *request_ring_ptr;  /* Current address. */
+ 	uint16_t        req_ring_index;     /* Current index. */
+ 	uint16_t        req_q_cnt;          /* Number of available entries. */
++	uint16_t	request_q_length;
+ 
+ 	dma_addr_t	response_dma;       /* Physical address. */
+ 	response_t      *response_ring;     /* Base virtual address */
 diff -Nru a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
---- a/drivers/scsi/qla2xxx/qla_init.c	Mon May  3 15:13:09 2004
-+++ b/drivers/scsi/qla2xxx/qla_init.c	Mon May  3 15:13:09 2004
-@@ -133,9 +133,6 @@
- 	/* Initialize target map database. */
- 	qla2x00_init_tgt_map(ha);
+--- a/drivers/scsi/qla2xxx/qla_init.c	Mon May  3 15:13:28 2004
++++ b/drivers/scsi/qla2xxx/qla_init.c	Mon May  3 15:13:28 2004
+@@ -600,10 +600,11 @@
+ 	ha->product_id[3] = mb[4];
  
--	/* Get Flash Version */
--	qla2x00_get_flash_version(ha);
--
- 	qla_printk(KERN_INFO, ha, "Configure NVRAM parameters...\n");
- 	qla2x00_nvram_config(ha);
+ 	/* Adjust fw RISC transfer size */
+-	if (REQUEST_ENTRY_CNT > 1024)
++	if (ha->request_q_length > 1024)
+ 		ha->fw_transfer_size = REQUEST_ENTRY_SIZE * 1024;
+ 	else
+-		ha->fw_transfer_size = REQUEST_ENTRY_SIZE * REQUEST_ENTRY_CNT;
++		ha->fw_transfer_size = REQUEST_ENTRY_SIZE *
++		    ha->request_q_length;
  
-diff -Nru a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
---- a/drivers/scsi/qla2xxx/qla_sup.c	Mon May  3 15:13:09 2004
-+++ b/drivers/scsi/qla2xxx/qla_sup.c	Mon May  3 15:13:09 2004
-@@ -24,20 +24,6 @@
- static void qla2x00_nv_deselect(scsi_qla_host_t *);
- static void qla2x00_nv_write(scsi_qla_host_t *, uint16_t);
+ 	if (IS_QLA2200(ha) &&
+ 	    RD_MAILBOX_REG(ha, reg, 7) == QLA2200A_RISC_ROM_VER) {
+@@ -802,7 +803,7 @@
+ 	/* Initialize firmware. */
+ 	ha->request_ring_ptr  = ha->request_ring;
+ 	ha->req_ring_index    = 0;
+-	ha->req_q_cnt         = REQUEST_ENTRY_CNT;
++	ha->req_q_cnt         = ha->request_q_length;
+ 	ha->response_ring_ptr = ha->response_ring;
+ 	ha->rsp_ring_index    = 0;
  
--uint8_t qla2x00_read_flash_byte(scsi_qla_host_t *, uint32_t);
--static void qla2x00_write_flash_byte(scsi_qla_host_t *, uint32_t, uint8_t);
--static uint8_t qla2x00_poll_flash(scsi_qla_host_t *ha,
--		uint32_t addr, uint8_t poll_data, uint8_t mid);
--static uint8_t qla2x00_program_flash_address(scsi_qla_host_t *ha,
--		uint32_t addr, uint8_t data, uint8_t mid);
--static uint8_t qla2x00_erase_flash_sector(scsi_qla_host_t *ha,
--		uint32_t addr, uint32_t sec_mask, uint8_t mid);
--
--uint8_t qla2x00_get_flash_manufacturer(scsi_qla_host_t *ha);
--uint16_t qla2x00_get_flash_version(scsi_qla_host_t *);
--uint16_t qla2x00_get_flash_image(scsi_qla_host_t *ha, uint8_t *image);
--uint16_t qla2x00_set_flash_image(scsi_qla_host_t *ha, uint8_t *image);
--
+@@ -1378,7 +1379,7 @@
+ 	 */
+ 	icb->request_q_outpointer = __constant_cpu_to_le16(0);
+ 	icb->response_q_inpointer = __constant_cpu_to_le16(0);
+-	icb->request_q_length = __constant_cpu_to_le16(REQUEST_ENTRY_CNT);
++	icb->request_q_length = cpu_to_le16(ha->request_q_length);
+ 	icb->response_q_length = cpu_to_le16(ha->response_q_length);
+ 	icb->request_q_address[0] = cpu_to_le32(LSD(ha->request_dma));
+ 	icb->request_q_address[1] = cpu_to_le32(MSD(ha->request_dma));
+diff -Nru a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+--- a/drivers/scsi/qla2xxx/qla_iocb.c	Mon May  3 15:13:28 2004
++++ b/drivers/scsi/qla2xxx/qla_iocb.c	Mon May  3 15:13:28 2004
+@@ -124,7 +124,7 @@
  
- /*
-  * NVRAM support routines
-@@ -279,435 +265,3 @@
- 	RD_REG_WORD(&reg->nvram);		/* PCI Posting. */
- }
+ 	/* Adjust ring index. */
+ 	ha->req_ring_index++;
+-	if (ha->req_ring_index == REQUEST_ENTRY_CNT) {
++	if (ha->req_ring_index == ha->request_q_length) {
+ 		ha->req_ring_index = 0;
+ 		ha->request_ring_ptr = ha->request_ring;
+ 	} else {
+@@ -153,7 +153,7 @@
  
--/*
-- * Flash support routines
-- */
--
--/**
-- * qla2x00_flash_enable() - Setup flash for reading and writing.
-- * @ha: HA context
-- */
--void
--qla2x00_flash_enable(scsi_qla_host_t *ha)
--{
--	uint16_t	data;
--	device_reg_t	*reg = ha->iobase;
--
--	data = RD_REG_WORD(&reg->ctrl_status);
--	data |= CSR_FLASH_ENABLE;
--	WRT_REG_WORD(&reg->ctrl_status, data);
--	RD_REG_WORD(&reg->ctrl_status);		/* PCI Posting. */
--}
--
--/**
-- * qla2x00_flash_disable() - Disable flash and allow RISC to run.
-- * @ha: HA context
-- */
--void
--qla2x00_flash_disable(scsi_qla_host_t *ha)
--{
--	uint16_t	data;
--	device_reg_t	*reg = ha->iobase;
--
--	data = RD_REG_WORD(&reg->ctrl_status);
--	data &= ~(CSR_FLASH_ENABLE);
--	WRT_REG_WORD(&reg->ctrl_status, data);
--	RD_REG_WORD(&reg->ctrl_status);		/* PCI Posting. */
--}
--
--/**
-- * qla2x00_read_flash_byte() - Reads a byte from flash
-- * @ha: HA context
-- * @addr: Address in flash to read
-- *
-- * A word is read from the chip, but, only the lower byte is valid.
-- *
-- * Returns the byte read from flash @addr.
-- */
--uint8_t
--qla2x00_read_flash_byte(scsi_qla_host_t *ha, uint32_t addr)
--{
--	uint16_t	data;
--	uint16_t	bank_select;
--	device_reg_t	*reg = ha->iobase;
--
--	/* Setup bit 16 of flash address. */
--	bank_select = RD_REG_WORD(&reg->ctrl_status);
--	if ((addr & BIT_16) && ((bank_select & CSR_FLASH_64K_BANK) == 0)) {
--		bank_select |= CSR_FLASH_64K_BANK;
--		WRT_REG_WORD(&reg->ctrl_status, bank_select);
--		RD_REG_WORD(&reg->ctrl_status);	/* PCI Posting. */
--	} else if (((addr & BIT_16) == 0) &&
--	    (bank_select & CSR_FLASH_64K_BANK)) {
--		bank_select &= ~(CSR_FLASH_64K_BANK);
--		WRT_REG_WORD(&reg->ctrl_status, bank_select);
--		RD_REG_WORD(&reg->ctrl_status);	/* PCI Posting. */
--	}
--
--	/* The ISP2312 v2 chip cannot access the FLASH registers via MMIO. */
--	if (IS_QLA2312(ha) && ha->product_id[3] == 0x2 && ha->pio_address) {
--		uint16_t data2;
--
--		reg = (device_reg_t *)ha->pio_address;
--		outw((uint16_t)addr, (unsigned long)(&reg->flash_address));
--		do {
--			data = inw((unsigned long)(&reg->flash_data));
--			barrier();
--			cpu_relax();
--			data2 = inw((unsigned long)(&reg->flash_data));
--		} while (data != data2);
--	} else {
--		WRT_REG_WORD(&reg->flash_address, (uint16_t)addr);
--		data = qla2x00_debounce_register(&reg->flash_data);
--	}
--
--	return ((uint8_t)data);
--}
--
--/**
-- * qla2x00_write_flash_byte() - Write a byte to flash
-- * @ha: HA context
-- * @addr: Address in flash to write
-- * @data: Data to write
-- */
--static void
--qla2x00_write_flash_byte(scsi_qla_host_t *ha, uint32_t addr, uint8_t data)
--{
--	uint16_t	bank_select;
--	device_reg_t	*reg = ha->iobase;
--
--	/* Setup bit 16 of flash address. */
--	bank_select = RD_REG_WORD(&reg->ctrl_status);
--	if ((addr & BIT_16) && ((bank_select & CSR_FLASH_64K_BANK) == 0)) {
--		bank_select |= CSR_FLASH_64K_BANK;
--		WRT_REG_WORD(&reg->ctrl_status, bank_select);
--		RD_REG_WORD(&reg->ctrl_status);	/* PCI Posting. */
--	} else if (((addr & BIT_16) == 0) &&
--	    (bank_select & CSR_FLASH_64K_BANK)) {
--		bank_select &= ~(CSR_FLASH_64K_BANK);
--		WRT_REG_WORD(&reg->ctrl_status, bank_select);
--		RD_REG_WORD(&reg->ctrl_status);	/* PCI Posting. */
--	}
--
--	/* The ISP2312 v2 chip cannot access the FLASH registers via MMIO. */
--	if (IS_QLA2312(ha) && ha->product_id[3] == 0x2 && ha->pio_address) {
--		reg = (device_reg_t *)ha->pio_address;
--		outw((uint16_t)addr, (unsigned long)(&reg->flash_address));
--		outw((uint16_t)data, (unsigned long)(&reg->flash_data));
--	} else {
--		WRT_REG_WORD(&reg->flash_address, (uint16_t)addr);
--		RD_REG_WORD(&reg->ctrl_status);		/* PCI Posting. */
--		WRT_REG_WORD(&reg->flash_data, (uint16_t)data);
--		RD_REG_WORD(&reg->ctrl_status);		/* PCI Posting. */
--	}
--}
--
--/**
-- * qla2x00_poll_flash() - Polls flash for completion.
-- * @ha: HA context
-- * @addr: Address in flash to poll
-- * @poll_data: Data to be polled
-- * @mid: Flash manufacturer ID
-- *
-- * This function polls the device until bit 7 of what is read matches data
-- * bit 7 or until data bit 5 becomes a 1.  If that hapens, the flash ROM timed
-- * out (a fatal error).  The flash book recommeds reading bit 7 again after
-- * reading bit 5 as a 1.
-- *
-- * Returns 0 on success, else non-zero.
-- */
--static uint8_t
--qla2x00_poll_flash(scsi_qla_host_t *ha,
--    uint32_t addr, uint8_t poll_data, uint8_t mid)
--{
--	uint8_t		status;
--	uint8_t		flash_data;
--	uint32_t	cnt;
--	int		failed_pass;
--
--	status = 1;
--	failed_pass = 1;
--
--	/* Wait for 30 seconds for command to finish. */
--	poll_data &= BIT_7;
--	for (cnt = 3000000; cnt; cnt--) {
--		flash_data = qla2x00_read_flash_byte(ha, addr);
--		if ((flash_data & BIT_7) == poll_data) {
--			status = 0;
--			break;
--		}
--
--		if (mid != 0x40 && mid != 0xda) {
--			if (flash_data & BIT_5)
--				failed_pass--;
--			if (failed_pass < 0)
--				break;
--		}
--		udelay(10);
--		barrier();
--	}
--	return (status);
--}
--
--/**
-- * qla2x00_program_flash_address() - Programs a flash address
-- * @ha: HA context
-- * @addr: Address in flash to program
-- * @data: Data to be written in flash
-- * @mid: Flash manufacturer ID
-- *
-- * Returns 0 on success, else non-zero.
-- */
--static uint8_t
--qla2x00_program_flash_address(scsi_qla_host_t *ha,
--    uint32_t addr, uint8_t data, uint8_t mid)
--{
--	/* Write Program Command Sequence */
--	qla2x00_write_flash_byte(ha, 0x5555, 0xaa);
--	qla2x00_write_flash_byte(ha, 0x2aaa, 0x55);
--	qla2x00_write_flash_byte(ha, 0x5555, 0xa0);
--	qla2x00_write_flash_byte(ha, addr, data);
--
--	/* Wait for write to complete. */
--	return (qla2x00_poll_flash(ha, addr, data, mid));
--}
--
--/**
-- * qla2x00_erase_flash_sector() - Erase a flash sector.
-- * @ha: HA context
-- * @addr: Flash sector to erase
-- * @sec_mask: Sector address mask
-- * @mid: Flash manufacturer ID
-- *
-- * Returns 0 on success, else non-zero.
-- */
--static uint8_t
--qla2x00_erase_flash_sector(scsi_qla_host_t *ha,
--    uint32_t addr, uint32_t sec_mask, uint8_t mid)
--{
--	/* Individual Sector Erase Command Sequence */
--	qla2x00_write_flash_byte(ha, 0x5555, 0xaa);
--	qla2x00_write_flash_byte(ha, 0x2aaa, 0x55);
--	qla2x00_write_flash_byte(ha, 0x5555, 0x80);
--	qla2x00_write_flash_byte(ha, 0x5555, 0xaa);
--	qla2x00_write_flash_byte(ha, 0x2aaa, 0x55);
--
--	if (mid == 0xda)
--		qla2x00_write_flash_byte(ha, addr & sec_mask, 0x10);
--	else
--		qla2x00_write_flash_byte(ha, addr & sec_mask, 0x30);
--
--	udelay(150);
--
--	/* Wait for erase to complete. */
--	return (qla2x00_poll_flash(ha, addr, 0x80, mid));
--}
--
--/**
-- * qla2x00_get_flash_manufacturer() - Read manufacturer ID from flash chip.
-- * @ha: HA context
-- *
-- * Returns the manufacturer's ID read from the flash chip.
-- */
--uint8_t
--qla2x00_get_flash_manufacturer(scsi_qla_host_t *ha)
--{
--	uint8_t	manuf_id;
--
--	qla2x00_write_flash_byte(ha, 0x5555, 0xaa);
--	qla2x00_write_flash_byte(ha, 0x2aaa, 0x55);
--	qla2x00_write_flash_byte(ha, 0x5555, 0x90);
--	manuf_id = qla2x00_read_flash_byte(ha, 0x0001);
--
--	return (manuf_id);
--}
--
--/**
-- * qla2x00_get_flash_version() - Read version information from flash.
-- * @ha: HA context
-- *
-- * Returns QLA_SUCCESS on successful retrieval of flash version.
-- */
--uint16_t
--qla2x00_get_flash_version(scsi_qla_host_t *ha)
--{
--	uint16_t	ret = QLA_SUCCESS;
--	uint32_t	loop_cnt = 1;  /* this is for error exit only */
--	uint32_t	pcir_adr;
--
--	/* The ISP2312 v2 chip cannot access the FLASH registers via MMIO. */
--	if (IS_QLA2312(ha) && ha->product_id[3] == 0x2 && !ha->pio_address)
--		ret = QLA_FUNCTION_FAILED;
--
--	qla2x00_flash_enable(ha);
--	do {	/* Loop once to provide quick error exit */
--		/* Match signature */
--		if (!(qla2x00_read_flash_byte(ha, 0) == 0x55 &&
--		    qla2x00_read_flash_byte(ha, 1) == 0xaa)) {
--			/* No signature */
--			DEBUG2(printk("scsi(%ld): No matching FLASH "
--			    "signature.\n", ha->host_no));
--			ret = QLA_FUNCTION_FAILED;
--			break;
--		}
--
--		pcir_adr = qla2x00_read_flash_byte(ha, 0x18) & 0xff;
--
--		/* validate signature of PCI data structure */
--		if ((qla2x00_read_flash_byte(ha, pcir_adr)) == 'P' &&
--		    (qla2x00_read_flash_byte(ha, pcir_adr + 1)) == 'C' &&
--		    (qla2x00_read_flash_byte(ha, pcir_adr + 2)) == 'I' &&
--		    (qla2x00_read_flash_byte(ha, pcir_adr + 3)) == 'R') {
--
--			/* Read version */
--			ha->optrom_minor =
--			    qla2x00_read_flash_byte(ha, pcir_adr + 0x12);
--			ha->optrom_major =
--			    qla2x00_read_flash_byte(ha, pcir_adr + 0x13);
--			DEBUG3(printk("%s(): got %d.%d.\n",
--			    __func__, ha->optrom_major, ha->optrom_minor));
--		} else {
--			/* error */
--			DEBUG2(printk("%s(): PCI data struct not found. "
--			    "pcir_adr=%x.\n",
--			    __func__, pcir_adr));
--			ret = QLA_FUNCTION_FAILED;
--			break;
--		}
--
--	} while (--loop_cnt);
--	qla2x00_flash_disable(ha);
--
--	return (ret);
--}
--
--/**
-- * qla2x00_get_flash_image() - Read image from flash chip.
-- * @ha: HA context
-- * @image: Buffer to receive flash image
-- *
-- * Returns 0 on success, else non-zero.
-- */
--uint16_t
--qla2x00_get_flash_image(scsi_qla_host_t *ha, uint8_t *image)
--{
--	uint32_t	addr;
--	uint32_t	midpoint;
--	uint8_t		*data;
--	device_reg_t	*reg = ha->iobase;
--
--	midpoint = FLASH_IMAGE_SIZE / 2;
--
--	qla2x00_flash_enable(ha);
--	WRT_REG_WORD(&reg->nvram, 0);
--	RD_REG_WORD(&reg->nvram);		/* PCI Posting. */
--	for (addr = 0, data = image; addr < FLASH_IMAGE_SIZE; addr++, data++) {
--		if (addr == midpoint)
--			WRT_REG_WORD(&reg->nvram, NVR_SELECT);
--
--		*data = qla2x00_read_flash_byte(ha, addr);
--	}
--	qla2x00_flash_disable(ha);
--
--	return (0);
--}
--
--/**
-- * qla2x00_set_flash_image() - Write image to flash chip.
-- * @ha: HA context
-- * @image: Source image to write to flash
-- *
-- * Returns 0 on success, else non-zero.
-- */
--uint16_t
--qla2x00_set_flash_image(scsi_qla_host_t *ha, uint8_t *image)
--{
--	uint16_t	status;
--	uint32_t	addr;
--	uint32_t	midpoint;
--	uint32_t	sec_mask;
--	uint32_t	rest_addr;
--	uint8_t		mid;
--	uint8_t		sec_number;
--	uint8_t		data;
--	device_reg_t	*reg = ha->iobase;
--
--	status = 0;
--	sec_number = 0;
--
--	/* Reset ISP chip. */
--	WRT_REG_WORD(&reg->ctrl_status, CSR_ISP_SOFT_RESET);
--	RD_REG_WORD(&reg->ctrl_status);		/* PCI Posting. */
--
--	qla2x00_flash_enable(ha);
--	do {	/* Loop once to provide quick error exit */
--		/* Structure of flash memory based on manufacturer */
--		mid = qla2x00_get_flash_manufacturer(ha);
--		if (mid == 0x6d) {
--			// Am29LV001 part
--			rest_addr = 0x1fff;
--			sec_mask = 0x1e000;
--		} else if (mid == 0x40) {
--			// Mostel v29c51001 part
--			rest_addr = 0x1ff;
--			sec_mask = 0x1fe00;
--		} else if (mid == 0xbf) {
--			// SST39sf10 part
--			rest_addr = 0xfff;
--			sec_mask = 0x1f000;
--		} else if (mid == 0xda) {
--			// Winbond W29EE011 part
--			rest_addr = 0x7f;
--			sec_mask = 0x1ff80;
--			addr = 0;
--			if (qla2x00_erase_flash_sector(ha, addr, sec_mask,
--			    mid)) {
--				status = 1;
--				break;
--			}
--		} else {
--			// Am29F010 part
--			rest_addr = 0x3fff;
--			sec_mask = 0x1c000;
--		}
--
--		midpoint = FLASH_IMAGE_SIZE / 2;
--		for (addr = 0; addr < FLASH_IMAGE_SIZE; addr++) {
--			data = *image++;
--			/* Are we at the beginning of a sector? */
--			if (!(addr & rest_addr)) {
--				if (addr == midpoint)
--					WRT_REG_WORD(&reg->nvram, NVR_SELECT);
--
--				/* Then erase it */
--				if (qla2x00_erase_flash_sector(ha, addr,
--				    sec_mask, mid)) {
--					status = 1;
--					break;
--				}
--
--				sec_number++;
--			}
--			if (mid == 0x6d) {
--				if (sec_number == 1 &&
--				    (addr == (rest_addr - 1))) {
--					rest_addr = 0x0fff;
--					sec_mask   = 0x1f000;
--				} else if (sec_number == 3 && (addr & 0x7ffe)) {
--					rest_addr = 0x3fff;
--					sec_mask   = 0x1c000;
--				}
--			}
--
--			if (qla2x00_program_flash_address(ha, addr, data,
--			    mid)) {
--				status = 1;
--				break;
--			}
--		}
--	} while (0);
--
--	qla2x00_flash_disable(ha);
--
--	return (status);
--}
+ 	/* Adjust ring index. */
+ 	ha->req_ring_index++;
+-	if (ha->req_ring_index == REQUEST_ENTRY_CNT) {
++	if (ha->req_ring_index == ha->request_q_length) {
+ 		ha->req_ring_index = 0;
+ 		ha->request_ring_ptr = ha->request_ring;
+ 	} else {
+@@ -394,7 +394,7 @@
+ 		if (ha->req_ring_index < cnt)
+ 			ha->req_q_cnt = cnt - ha->req_ring_index;
+ 		else
+-			ha->req_q_cnt = REQUEST_ENTRY_CNT -
++			ha->req_q_cnt = ha->request_q_length -
+ 			    (ha->req_ring_index - cnt);
+ 	}
+ 
+@@ -484,7 +484,7 @@
+ 
+ 	/* Adjust ring index. */
+ 	ha->req_ring_index++;
+-	if (ha->req_ring_index == REQUEST_ENTRY_CNT) {
++	if (ha->req_ring_index == ha->request_q_length) {
+ 		ha->req_ring_index = 0;
+ 		ha->request_ring_ptr = ha->request_ring;
+ 	} else
+@@ -588,7 +588,7 @@
+ 			if  (ha->req_ring_index < cnt)
+ 				ha->req_q_cnt = cnt - ha->req_ring_index;
+ 			else
+-				ha->req_q_cnt = REQUEST_ENTRY_CNT -
++				ha->req_q_cnt = ha->request_q_length -
+ 				    (ha->req_ring_index - cnt);
+ 		}
+ 		/* If room for request in request ring. */
+@@ -658,7 +658,7 @@
+ 			if (ha->req_ring_index < cnt) {
+ 				ha->req_q_cnt = cnt - ha->req_ring_index;
+ 			} else {
+-				ha->req_q_cnt = REQUEST_ENTRY_CNT -
++				ha->req_q_cnt = ha->request_q_length -
+ 				    (ha->req_ring_index - cnt);
+ 			}
+ 		}
+@@ -740,7 +740,7 @@
+ 
+ 	/* Adjust ring index. */
+ 	ha->req_ring_index++;
+-	if (ha->req_ring_index == REQUEST_ENTRY_CNT) {
++	if (ha->req_ring_index == ha->request_q_length) {
+ 		ha->req_ring_index = 0;
+ 		ha->request_ring_ptr = ha->request_ring;
+ 	} else
+diff -Nru a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+--- a/drivers/scsi/qla2xxx/qla_os.c	Mon May  3 15:13:28 2004
++++ b/drivers/scsi/qla2xxx/qla_os.c	Mon May  3 15:13:28 2004
+@@ -168,7 +168,6 @@
+ 	.slave_configure	= qla2xxx_slave_configure,
+ 
+ 	.this_id		= -1,
+-	.can_queue		= REQUEST_ENTRY_CNT+128,
+ 	.cmd_per_lun		= 3,
+ 	.use_clustering		= ENABLE_CLUSTERING,
+ 	.sg_tablesize		= SG_ALL,
+@@ -1983,19 +1982,24 @@
+ 	if (IS_QLA2100(ha)) {
+ 		ha->max_targets = MAX_TARGETS_2100;
+ 		ha->mbx_count = MAILBOX_REGISTER_COUNT_2100;
++		ha->request_q_length = REQUEST_ENTRY_CNT_2100;
+ 		ha->response_q_length = RESPONSE_ENTRY_CNT_2100;
+ 		ha->last_loop_id = SNS_LAST_LOOP_ID_2100;
++		host->sg_tablesize = 32;
+ 	} else if (IS_QLA2200(ha)) {
+ 		ha->max_targets = MAX_TARGETS_2200;
+ 		ha->mbx_count = MAILBOX_REGISTER_COUNT;
++		ha->request_q_length = REQUEST_ENTRY_CNT_2200;
+ 		ha->response_q_length = RESPONSE_ENTRY_CNT_2100;
+ 		ha->last_loop_id = SNS_LAST_LOOP_ID_2100;
+ 	} else /*if (IS_QLA2300(ha))*/ {
+ 		ha->max_targets = MAX_TARGETS_2200;
+ 		ha->mbx_count = MAILBOX_REGISTER_COUNT;
++		ha->request_q_length = REQUEST_ENTRY_CNT_2200;
+ 		ha->response_q_length = RESPONSE_ENTRY_CNT_2300;
+ 		ha->last_loop_id = SNS_LAST_LOOP_ID_2300;
+ 	}
++	host->can_queue = ha->request_q_length + 128;
+ 
+ 	/* load the F/W, read paramaters, and init the H/W */
+ 	ha->instance = num_hosts;
+@@ -2390,8 +2394,8 @@
+ 		(unsigned long long)ha->response_dma);
+ 
+ 	copy_info(&info,
+-	    "Request Queue count = %ld, Response Queue count = %ld\n",
+-	    (long)REQUEST_ENTRY_CNT, (long)ha->response_q_length);
++	    "Request Queue count = %d, Response Queue count = %d\n",
++	    ha->request_q_length, ha->response_q_length);
+ 
+ 	copy_info(&info,
+ 	    "Total number of active commands = %ld\n",
+@@ -2861,7 +2865,7 @@
+ 		 * little delay and a retry.
+ 		 */
+ 		ha->request_ring = pci_alloc_consistent(ha->pdev,
+-		    ((REQUEST_ENTRY_CNT + 1) * (sizeof(request_t))),
++		    ((ha->request_q_length + 1) * (sizeof(request_t))),
+ 		    &ha->request_dma);
+ 		if (ha->request_ring == NULL) {
+ 			qla_printk(KERN_WARNING, ha,
+@@ -3077,7 +3081,7 @@
+ 
+ 	if (ha->request_ring) {
+ 		pci_free_consistent(ha->pdev,
+-		    ((REQUEST_ENTRY_CNT + 1) * (sizeof(request_t))),
++		    ((ha->request_q_length + 1) * (sizeof(request_t))),
+ 		    ha->request_ring, ha->request_dma);
+ 	}
+ 
+diff -Nru a/drivers/scsi/qla2xxx/qla_rscn.c b/drivers/scsi/qla2xxx/qla_rscn.c
+--- a/drivers/scsi/qla2xxx/qla_rscn.c	Mon May  3 15:13:28 2004
++++ b/drivers/scsi/qla2xxx/qla_rscn.c	Mon May  3 15:13:28 2004
+@@ -385,7 +385,7 @@
+ 		if  (ha->req_ring_index < cnt)
+ 			ha->req_q_cnt = cnt - ha->req_ring_index;
+ 		else
+-			ha->req_q_cnt = REQUEST_ENTRY_CNT -
++			ha->req_q_cnt = ha->request_q_length -
+ 			    (ha->req_ring_index - cnt);
+ 	}
+ 	if (ha->req_q_cnt >= 3) {
