@@ -1,98 +1,162 @@
-From: Orion Poplawski <orion@cora.nwra.com>
-Subject: sym53c8xx scsi errors
-Date: Thu, 11 Dec 2003 09:19:58 -0700
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH  2.6.0-test11 aacraid bug fix]
+Date: Thu, 11 Dec 2003 10:15:34 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <bra5fm$6gj$1@sea.gmane.org>
+Message-ID: <1071166533.24148.15.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.224.249]:27282 "EHLO main.gmane.org")
-	by vger.kernel.org with ESMTP id S265163AbTLKQao (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:47779 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S264886AbTLKSPg (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Dec 2003 11:30:44 -0500
-Received: from root by main.gmane.org with local (Exim 3.35 #1 (Debian))
-	id 1AUTi6-0005a3-00
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Dec 2003 17:30:42 +0100
+	Thu, 11 Dec 2003 13:15:36 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, kevin@tummy.com
 
-I was hoping someone might be able to explain the cause of the two scsi 
-errors at the end of this log output.  These errors occured at boot, but 
-I haven't seen any other errors.  System appears to be working fine 
-otherwise, but I'm concerned.
+This is a fix for aacraid errors with certain board types (2200S and
+maybe others) and high memory.  See
 
-Linux kernel version 2.4.22.
+http://marc.theaimsgroup.com/?l=linux-kernel&m=107039401409647&w=2
 
-Thanks!
+The fix is from the adaptec version of the aacraid driver applied to the
+2.6.0 version.
 
-  - Orion
+===== drivers/scsi/aacraid/aachba.c 1.20 vs edited =====
+--- 1.20/drivers/scsi/aacraid/aachba.c	Fri May  2 12:30:49 2003
++++ edited/drivers/scsi/aacraid/aachba.c	Wed Dec  3 15:10:22 2003
+@@ -525,6 +525,14 @@
+ 	if(dev->pae_support != 0) {
+ 		printk(KERN_INFO"%s%d: 64 Bit PAE enabled\n", dev->name, dev->id);
+ 		pci_set_dma_mask(dev->pdev, (dma_addr_t)0xFFFFFFFFFFFFFFFFULL);
++	} else {
++		/* 
++		 * Reset if Quirk 31 was used, since data 
++		 * transfers are ok.
++		 */
++		if (pci_set_dma_mask(dev->pdev, 0xFFFFFFFFULL)) {
++			printk(KERN_INFO"aacraid: Can't reset DMA mask.\n");
++		}
+ 	}
+ 
+ 	fib_complete(fibptr);
+===== drivers/scsi/aacraid/aacraid.h 1.9 vs edited =====
+--- 1.9/drivers/scsi/aacraid/aacraid.h	Wed Oct 22 02:52:43 2003
++++ edited/drivers/scsi/aacraid/aacraid.h	Wed Dec  3 15:21:48 2003
+@@ -529,6 +529,8 @@
+ 	char *	vname;
+ 	char *	model;
+ 	u16	channels;
++	int	quirks;
++#define AAC_QUIRK_31BIT         1
+ };
+ 
+ /*
+===== drivers/scsi/aacraid/linit.c 1.22 vs edited =====
+--- 1.22/drivers/scsi/aacraid/linit.c	Tue Aug 26 09:25:41 2003
++++ edited/drivers/scsi/aacraid/linit.c	Wed Dec  3 15:22:42 2003
+@@ -86,36 +86,47 @@
+  * for the card.  At that time we can remove the channels from here
+  */
+ static struct aac_driver_ident aac_drivers[] = {
+-	{ 0x1028, 0x0001, 0x1028, 0x0001, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 2/Si */
+-	{ 0x1028, 0x0002, 0x1028, 0x0002, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ 0x1028, 0x0003, 0x1028, 0x0003, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Si */
+-	{ 0x1028, 0x0004, 0x1028, 0x00d0, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Si */
+-	{ 0x1028, 0x0002, 0x1028, 0x00d1, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ 0x1028, 0x0002, 0x1028, 0x00d9, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ 0x1028, 0x000a, 0x1028, 0x0106, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ 0x1028, 0x000a, 0x1028, 0x011b, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ 0x1028, 0x000a, 0x1028, 0x0121, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2 }, /* PERC 3/Di */
+-	{ 0x9005, 0x0283, 0x9005, 0x0283, aac_rx_init, "aacraid",  "ADAPTEC ", "catapult        ", 2 }, /* catapult*/
+-	{ 0x9005, 0x0284, 0x9005, 0x0284, aac_rx_init, "aacraid",  "ADAPTEC ", "tomcat          ", 2 }, /* tomcat*/
+-	{ 0x9005, 0x0285, 0x9005, 0x0286, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1 }, /* Adaptec 2120S (Crusader)*/
+-	{ 0x9005, 0x0285, 0x9005, 0x0285, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2 }, /* Adaptec 2200S (Vulcan)*/
+-	{ 0x9005, 0x0285, 0x9005, 0x0287, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2 }, /* Adaptec 2200S (Vulcan-2m)*/
+-	{ 0x9005, 0x0285, 0x17aa, 0x0286, aac_rx_init, "aacraid",  "Legend  ", "Legend S220     ", 1 }, /* Legend S220*/
+-	{ 0x9005, 0x0285, 0x17aa, 0x0287, aac_rx_init, "aacraid",  "Legend  ", "Legend S230     ", 2 }, /* Legend S230*/
+-
+-	{ 0x9005, 0x0285, 0x9005, 0x0288, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 3230S   ", 2 }, /* Adaptec 3230S (Harrier)*/
+-	{ 0x9005, 0x0285, 0x9005, 0x0289, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 3240S   ", 2 }, /* Adaptec 3240S (Tornado)*/
+-	{ 0x9005, 0x0285, 0x9005, 0x028a, aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2020S PCI-X ", 2 }, /* ASR-2020S PCI-X ZCR (Skyhawk)*/
+-	{ 0x9005, 0x0285, 0x9005, 0x028b, aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2020S PCI-X ", 2 }, /* ASR-2020S SO-DIMM PCI-X ZCR(Terminator)*/
+-	{ 0x9005, 0x0285, 0x9005, 0x0290, aac_rx_init, "aacraid",  "ADAPTEC ", "AAR-2410SA SATA ", 2 }, /* AAR-2410SA PCI SATA 4ch (Jaguar II)*/
+-	{ 0x9005, 0x0250, 0x1014, 0x0279, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec         ", 2 }, /* (Marco)*/
+-	{ 0x9005, 0x0250, 0x1014, 0x028c, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec         ", 2 }, /* (Sebring)*/
++	{ 0x1028, 0x0001, 0x1028, 0x0001, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 2/Si (Iguana/PERC2Si) */
++	{ 0x1028, 0x0002, 0x1028, 0x0002, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di (Opal/PERC3Di) */
++	{ 0x1028, 0x0003, 0x1028, 0x0003, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Si (SlimFast/PERC3Si */
++	{ 0x1028, 0x0004, 0x1028, 0x00d0, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di (Iguana FlipChip/PERC3DiF */
++	{ 0x1028, 0x0002, 0x1028, 0x00d1, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di (Viper/PERC3DiV) */
++	{ 0x1028, 0x0002, 0x1028, 0x00d9, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di (Lexus/PERC3DiL) */
++	{ 0x1028, 0x000a, 0x1028, 0x0106, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 1, AAC_QUIRK_31BIT }, /* PERC 3/Di (Jaguar/PERC3DiJ) */
++	{ 0x1028, 0x000a, 0x1028, 0x011b, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di (Dagger/PERC3DiD) */
++	{ 0x1028, 0x000a, 0x1028, 0x0121, aac_rx_init, "percraid", "DELL    ", "PERCRAID        ", 2, AAC_QUIRK_31BIT }, /* PERC 3/Di (Boxster/PERC3DiB) */
++	{ 0x9005, 0x0283, 0x9005, 0x0283, aac_rx_init, "aacraid",  "ADAPTEC ", "catapult        ", 2, AAC_QUIRK_31BIT }, /* catapult */
++	{ 0x9005, 0x0284, 0x9005, 0x0284, aac_rx_init, "aacraid",  "ADAPTEC ", "tomcat          ", 2, AAC_QUIRK_31BIT }, /* tomcat */
++	{ 0x9005, 0x0285, 0x9005, 0x0286, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2120S   ", 1, AAC_QUIRK_31BIT }, /* Adaptec 2120S (Crusader) */
++	{ 0x9005, 0x0285, 0x9005, 0x0285, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT }, /* Adaptec 2200S (Vulcan) */
++	{ 0x9005, 0x0285, 0x9005, 0x0287, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 2200S   ", 2, AAC_QUIRK_31BIT }, /* Adaptec 2200S (Vulcan-2m) */
++	{ 0x9005, 0x0285, 0x17aa, 0x0286, aac_rx_init, "aacraid",  "Legend  ", "Legend S220     ", 1, AAC_QUIRK_31BIT }, /* Legend S220 (Legend Crusader) */
++	{ 0x9005, 0x0285, 0x17aa, 0x0287, aac_rx_init, "aacraid",  "Legend  ", "Legend S230     ", 2, AAC_QUIRK_31BIT }, /* Legend S230 (Legend Vulcan) */
++
++	{ 0x9005, 0x0285, 0x9005, 0x0288, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 3230S   ", 2 }, /* Adaptec 3230S (Harrier) */
++	{ 0x9005, 0x0285, 0x9005, 0x0289, aac_rx_init, "aacraid",  "ADAPTEC ", "Adaptec 3240S   ", 2 }, /* Adaptec 3240S (Tornado) */
++	{ 0x9005, 0x0285, 0x9005, 0x028a, aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2020S PCI-X ", 2 }, /* ASR-2020S PCI-X ZCR (Skyhawk) */
++	{ 0x9005, 0x0285, 0x9005, 0x028b, aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2020S PCI-X ", 2 }, /* ASR-2020S SO-DIMM PCI-X ZCR (Terminator) */
++/*	{ 0x9005, 0x0286, 0x9005, 0x028c, aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2230S PCI-X ", 2 }, */ /* ASR-2230S PCI-X (Lancer pre-production) */
++	{ 0x9005, 0x0285, 0x9005, 0x0290, aac_rx_init, "aacraid",  "ADAPTEC ", "AAR-2410SA SATA ", 1 }, /* AAR-2410SA PCI SATA 4ch (Jaguar II) */
++	{ 0x9005, 0x0285, 0x1028, 0x0291, aac_rx_init, "aacraid",  "DELL    ", "CERC SR2        ", 1 }, /* CERC SATA RAID 2 PCI SATA 6ch (DellCorsair) */
++	{ 0x9005, 0x0285, 0x9005, 0x0292, aac_rx_init, "aacraid",  "ADAPTEC ", "AAR-2810SA SATA ", 1 }, /* AAR-2810SA PCI SATA 8ch (Corsair-8) */
++	{ 0x9005, 0x0285, 0x9005, 0x0293, aac_rx_init, "aacraid",  "ADAPTEC ", "AAR-21610SA SATA", 1 }, /* AAR-21610SA PCI SATA 16ch (Corsair-16) */
++	{ 0x9005, 0x0285, 0x9005, 0x0294, aac_rx_init, "aacraid",  "ADAPTEC ", "SO-DIMM SATA ZCR", 1 }, /* ESD SO-DIMM PCI-X SATA ZCR (Prowler) */
++	{ 0x9005, 0x0285, 0x0E11, 0x0295, aac_rx_init, "aacraid",  "ADAPTEC ", "SATA 6Channel   ", 1 }, /* SATA 6Ch (Bearcat) */
+ 
+-	{ 0x9005, 0x0285, 0x1028, 0x0287, aac_rx_init, "percraid", "DELL    ", "PERC 320/DC     ", 2 }, /* Perc 320/DC*/
++	{ 0x9005, 0x0285, 0x1028, 0x0287, aac_rx_init, "percraid", "DELL    ", "PERC 320/DC     ", 2, AAC_QUIRK_31BIT }, /* Perc 320/DC*/
+ 	{ 0x1011, 0x0046, 0x9005, 0x0365, aac_sa_init, "aacraid",  "ADAPTEC ", "Adaptec 5400S   ", 4 }, /* Adaptec 5400S (Mustang)*/
+ 	{ 0x1011, 0x0046, 0x9005, 0x0364, aac_sa_init, "aacraid",  "ADAPTEC ", "AAC-364         ", 4 }, /* Adaptec 5400S (Mustang)*/
+-	{ 0x1011, 0x0046, 0x9005, 0x1364, aac_sa_init, "percraid", "DELL    ", "PERCRAID        ", 4 }, /* Dell PERC2 "Quad Channel" */
+-	{ 0x1011, 0x0046, 0x103c, 0x10c2, aac_sa_init, "hpnraid",  "HP      ", "NetRAID         ", 4 }  /* HP NetRAID-4M */
++	{ 0x1011, 0x0046, 0x9005, 0x1364, aac_sa_init, "percraid", "DELL    ", "PERCRAID        ", 4, AAC_QUIRK_31BIT }, /* Dell PERC2/QC */
++	{ 0x1011, 0x0046, 0x103c, 0x10c2, aac_sa_init, "hpnraid",  "HP      ", "NetRAID         ", 4 }, /* HP NetRAID-4M */
++
++	{ 0x9005, 0x0285, 0x1028, PCI_ANY_ID,
++					  aac_rx_init, "aacraid",  "DELL    ", "RAID            ", 2, AAC_QUIRK_31BIT }, /* Dell Catchall */
++	{ 0x9005, 0x0285, 0x17aa, PCI_ANY_ID,
++					  aac_rx_init, "aacraid",  "Legend  ", "RAID            ", 2, AAC_QUIRK_31BIT }, /* Legend Catchall */
++	{ 0x9005, 0x0285, PCI_ANY_ID, PCI_ANY_ID,
++					  aac_rx_init, "aacraid",  "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_31BIT }, /* Adaptec Catch All */
+ };
+ 
+ #define NUM_AACTYPES	(sizeof(aac_drivers) / sizeof(struct aac_driver_ident))
+@@ -174,6 +185,7 @@
+ 	struct aac_dev *aac;
+ 	struct fsa_scsi_hba *fsa_dev_ptr;
+ 	char *name = NULL;
++	int ret;
+ 	
+ 	printk(KERN_INFO "Red Hat/Adaptec aacraid driver (%s %s)\n", AAC_DRIVER_VERSION, AAC_DRIVER_BUILD_DATE);
+ 
+@@ -194,7 +206,15 @@
+ 			if (pci_enable_device(dev))
+ 				continue;
+ 			pci_set_master(dev);
+-			pci_set_dma_mask(dev, 0xFFFFFFFFULL);
++			if (aac_drivers[index].quirks & AAC_QUIRK_31BIT)
++				ret = pci_set_dma_mask(dev, 0x7FFFFFFFULL);
++			else
++				ret = pci_set_dma_mask(dev, 0xFFFFFFFFULL);
++
++			if (ret) {
++				printk(KERN_WARNING "aacraid: Can't set DMA mask.\n");
++				continue;
++			}
+ 
+ 			if((dev->subsystem_vendor != aac_drivers[index].subsystem_vendor) || 
+ 			   (dev->subsystem_device != aac_drivers[index].subsystem_device))
 
-Dec 10 17:43:04 saga kernel: sym.4.3.0: setting PCI_COMMAND_PARITY...
-Dec 10 17:43:04 saga kernel: sym.4.3.1: setting PCI_COMMAND_PARITY...
-Dec 10 17:43:04 saga kernel: sym0: <1010-33> rev 0x1 on pci bus 4 device 
-3 function 0 irq 18
-Dec 10 17:43:04 saga kernel: sym0: using 64 bit DMA addressing
-Dec 10 17:43:04 saga kernel: sym0: Symbios NVRAM, ID 7, Fast-80, LVD, 
-parity checking
-Dec 10 17:43:04 saga kernel: sym0: open drain IRQ line driver, using 
-on-chip SRAM
-Dec 10 17:43:04 saga kernel: sym0: using LOAD/STORE-based firmware.
-Dec 10 17:43:04 saga kernel: sym0: handling phase mismatch from SCRIPTS.
-Dec 10 17:43:04 saga kernel: sym0: SCSI BUS has been reset.
-Dec 10 17:43:04 saga kernel: sym1: <1010-33> rev 0x1 on pci bus 4 device 
-3 function 1 irq 18
-Dec 10 17:43:04 saga kernel: sym1: using 64 bit DMA addressing
-Dec 10 17:43:04 saga kernel: sym1: Symbios NVRAM, ID 7, Fast-80, SE, 
-parity checking
-Dec 10 17:43:04 saga kernel: sym1: open drain IRQ line driver, using 
-on-chip SRAM
-Dec 10 17:43:04 saga kernel: sym1: using LOAD/STORE-based firmware.
-Dec 10 17:43:04 saga kernel: sym1: handling phase mismatch from SCRIPTS.
-Dec 10 17:43:04 saga kernel: sym1: SCSI BUS has been reset.
-Dec 10 17:43:04 saga kernel: scsi2 : sym-2.1.17a
-Dec 10 17:43:04 saga kernel: scsi3 : sym-2.1.17a
-Dec 10 17:43:05 saga kernel: sym0:0:0: tagged command queuing enabled, 
-command queue depth 16.
-Dec 10 17:43:05 saga kernel: sym0:1:0: tagged command queuing enabled, 
-command queue depth 16.
-Dec 10 17:43:05 saga kernel: sym0:2:0: tagged command queuing enabled, 
-command queue depth 16.
-Dec 10 17:43:05 saga kernel: sym0:3:0: tagged command queuing enabled, 
-command queue depth 16.
-Dec 10 17:43:05 saga kernel: sym0:8:0: tagged command queuing enabled, 
-command queue depth 16.
-Dec 10 17:43:05 saga kernel: sym0:9:0: tagged command queuing enabled, 
-command queue depth 16.
-Dec 10 17:43:05 saga kernel: sym0:0: FAST-20 WIDE SCSI 40.0 MB/s ST 
-(50.0 ns, offset 15)
-Dec 10 17:43:05 saga kernel: sym0:1: FAST-20 WIDE SCSI 40.0 MB/s ST 
-(50.0 ns, offset 31)
-Dec 10 17:43:05 saga kernel: sym0:2: FAST-20 WIDE SCSI 40.0 MB/s ST 
-(50.0 ns, offset 31)
-Dec 10 17:43:05 saga kernel: sym0:3: FAST-20 WIDE SCSI 40.0 MB/s ST 
-(50.0 ns, offset 15)
-Dec 10 17:43:05 saga kernel: sym0:8: FAST-20 WIDE SCSI 40.0 MB/s ST 
-(50.0 ns, offset 31)
-Dec 10 17:43:05 saga kernel: sym0:9: FAST-20 WIDE SCSI 40.0 MB/s ST 
-(50.0 ns, offset 31)
-Dec 10 17:43:05 saga kernel: sym53c8xx: at PCI bus 4, device 3, function 0
-Dec 10 17:43:05 saga kernel: sym53c8xx: IO region 0x4000[0..127] is in use
-Dec 10 17:43:05 saga kernel: sym0:9: ERROR (0:8) (0-0-0) (1f/38/0) @ 
-(scripta 3c0:50000000).
-Dec 10 17:43:05 saga kernel: sym0: script cmd = 80000000
-Dec 10 17:43:05 saga kernel: sym0: regdump: da 00 00 38 47 1f 09 0f 04 
-08 89 00 80 00 0f 0a ff 10 46 37 02 00 00 00.
-Dec 10 17:43:05 saga kernel: sym53c8xx: at PCI bus 4, device 3, function 1
-Dec 10 17:43:05 saga kernel: sym53c8xx: IO region 0x4400[0..127] is in use
-Dec 10 17:43:05 saga kernel: sym0: SCSI BUS reset detected.
-Dec 10 17:43:05 saga kernel: sym0: SCSI BUS has been reset.
-Dec 10 17:43:05 saga kernel: sym1:15: ERROR (0:8) (0-0-0) (0/0/0) @ 
-(scripta 3c0:50000000).
-Dec 10 17:43:05 saga kernel: sym1: script cmd = 80000000
-Dec 10 17:43:05 saga kernel: sym1: regdump: da 00 00 00 47 00 0f 0f 00 
-08 00 00 80 00 08 0a ff c0 45 37 00 00 00 00.
-Dec 10 17:43:05 saga kernel: sym1: SCSI BUS reset detected.
-Dec 10 17:43:05 saga kernel: sym1: SCSI BUS has been reset.
-
+-- 
+Mark Haverkamp <markh@osdl.org>
 
