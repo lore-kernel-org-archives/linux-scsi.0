@@ -1,13 +1,13 @@
 From: janitor@sternwelten.at
-Subject: [patch 08/10]  scsi/dpt_i2o: replace 	schedule_timeout() with msleep_interruptible()
-Date: Thu, 21 Oct 2004 10:47:16 +0200
+Subject: [patch 09/10]  scsi/scsi_lib: replace 	schedule_timeout() with msleep_interruptible()
+Date: Thu, 21 Oct 2004 10:47:19 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <E1CKYbM-0004Oy-Cq@sputnik>
+Message-ID: <E1CKYbP-0004Rp-Fi@sputnik>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:32695 "EHLO
-	baikonur.stro.at") by vger.kernel.org with ESMTP id S270712AbUJUIrS
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Oct 2004 04:47:18 -0400
+Received: from baikonur.stro.at ([213.239.196.228]:8883 "EHLO baikonur.stro.at")
+	by vger.kernel.org with ESMTP id S270517AbUJUIrV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Oct 2004 04:47:21 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org, janitor@sternwelten.at, nacc@us.ibm.com
@@ -24,19 +24,27 @@ Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
 Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
 ---
 
- linux-2.6.9-max/drivers/scsi/dpt_i2o.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+ linux-2.6.9-max/drivers/scsi/scsi_lib.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/dpt_i2o.c~msleep_interruptible-drivers_scsi_dpt_i2o drivers/scsi/dpt_i2o.c
---- linux-2.6.9/drivers/scsi/dpt_i2o.c~msleep_interruptible-drivers_scsi_dpt_i2o	2004-10-21 02:41:53.000000000 +0200
-+++ linux-2.6.9-max/drivers/scsi/dpt_i2o.c	2004-10-21 02:41:53.000000000 +0200
-@@ -1179,7 +1179,7 @@ static int adpt_i2o_post_wait(adpt_hba* 
- 				// dangerous.
- 				status = -ETIME;
- 			}
--			schedule_timeout(timeout*HZ);
-+			msleep_interruptible(timeout * 1000);
- 		}
- 		if(pHba->host)
- 			spin_lock_irq(pHba->host->host_lock);
+diff -puN drivers/scsi/scsi_lib.c~msleep_interruptible-drivers_scsi_scsi_lib drivers/scsi/scsi_lib.c
+--- linux-2.6.9/drivers/scsi/scsi_lib.c~msleep_interruptible-drivers_scsi_scsi_lib	2004-10-21 02:41:54.000000000 +0200
++++ linux-2.6.9-max/drivers/scsi/scsi_lib.c	2004-10-21 02:41:54.000000000 +0200
+@@ -15,6 +15,7 @@
+ #include <linux/slab.h>
+ #include <linux/init.h>
+ #include <linux/pci.h>
++#include <linux/delay.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_dbg.h>
+@@ -1739,7 +1740,7 @@ scsi_device_quiesce(struct scsi_device *
+ 
+ 	scsi_run_queue(sdev->request_queue);
+ 	while (sdev->device_busy) {
+-		schedule_timeout(HZ/5);
++		msleep_interruptible(200);
+ 		scsi_run_queue(sdev->request_queue);
+ 	}
+ 	return 0;
 _
