@@ -1,49 +1,31 @@
-From: Rusty Trivial Russell <trivial@rustcorp.com.au>
-Subject: [TRIVIAL] 2.6] 2 spelling patches in helps
-Date: Thu, 04 Sep 2003 13:20:48 +1000
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [2.6 patch] let "PCMCIA SCSI adapter support" menu depend on MODULES
+Date: Thu, 4 Sep 2003 08:26:43 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030904033023.1B0802C0A7@lists.samba.org>
+Message-ID: <20030904082643.A26801@infradead.org>
+References: <20030903232334.GL18025@fs.tum.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dp.samba.org ([66.70.73.150]:29376 "EHLO lists.samba.org")
-	by vger.kernel.org with ESMTP id S264626AbTIDDaX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Sep 2003 23:30:23 -0400
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:18181 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S264787AbTIDH0o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Sep 2003 03:26:44 -0400
+Content-Disposition: inline
+In-Reply-To: <20030903232334.GL18025@fs.tum.de>; from bunk@fs.tum.de on Thu, Sep 04, 2003 at 01:23:34AM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: torvalds@transmeta.com
-Cc: linux-scsi@vger.kernel.org, axboe@suse.de
+To: Adrian Bunk <bunk@fs.tum.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@rustcorp.com.au
 
-From:  Maciej Soltysiak <solt@dns.toxicfilms.tv>
+On Thu, Sep 04, 2003 at 01:23:34AM +0200, Adrian Bunk wrote:
+> When configuring a kernel without modules support "PCMCIA SCSI adapter 
+> support" is a menu with no available items in it (all drivers depend on 
+> "m").
+> 
+> The patch below only shows this menu when MODULES is enabled.
 
-  Hi,
-  
-  please consider these patches to fix spelling.
-  
-  Regards,
-  Maciej Soltysiak
-  
+Not too happy with this watch although it's better than the previous
+situation.  For one thing I'd get rid of the menu - we don't have menus
+for PCI/ISA/MCA/whatever cards either.  Secondly these drivers probably
+should work non-modular these days.
 
---- trivial-2.6.0-test4-bk5/net/Kconfig.orig	2003-09-04 13:01:50.000000000 +1000
-+++ trivial-2.6.0-test4-bk5/net/Kconfig	2003-09-04 13:01:50.000000000 +1000
-@@ -623,7 +623,7 @@
- 	depends on EXPERIMENTAL
- 	---help---
- 	  This option enables NIC (Network Interface Card) hardware throttling
--	  during periods of extremal congestion. At the moment only a couple
-+	  during periods of extreme congestion. At the moment only a couple
- 	  of device drivers support it (really only one -- tulip, a modified
- 	  8390 driver can be found at
- 	  <ftp://ftp.inr.ac.ru/ip-routing/fastroute/fastroute-8390.tar.gz>).
---- trivial-2.6.0-test4-bk5/Documentation/scsi/ncr53c8xx.txt.orig	2003-09-04 13:01:50.000000000 +1000
-+++ trivial-2.6.0-test4-bk5/Documentation/scsi/ncr53c8xx.txt	2003-09-04 13:01:50.000000000 +1000
-@@ -1025,7 +1025,7 @@
- then it will for sure win the next SCSI BUS arbitration.
- 
- Since, there is no way to know what devices are trying to arbitrate for the 
--BUS, using this feature can be extremally unfair. So, you are not advised 
-+BUS, using this feature can be extremely unfair. So, you are not advised
- to enable it, or at most enable this feature for the case the chip lost 
- the previous arbitration (boot option 'iarb:1').
- 
--- 
-  What is this? http://www.kernel.org/pub/linux/kernel/people/rusty/trivial/
-  Don't blame me: the Monkey is driving
-  File: Maciej Soltysiak <solt@dns.toxicfilms.tv>: [TRIVIAL][PATCH 2.6] 2 spelling patches in helps
