@@ -1,67 +1,35 @@
 From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: [PATCH] fix Sony USB mass storage - pass larger receive buffer
-Date: Thu, 13 Nov 2003 07:21:01 -0700
+Date: Thu, 13 Nov 2003 07:28:26 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <9B540282-15E4-11D8-9DF1-0050E416C45B@ieee.org>
+Message-ID: <A4BED5DA-15E5-11D8-B482-0050E416C45B@ieee.org>
+References: <9B540282-15E4-11D8-9DF1-0050E416C45B@ieee.org>
 Mime-Version: 1.0 (Apple Message framework v552)
 Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rly-ip04.mx.aol.com ([64.12.138.8]:51106 "EHLO
-	rly-ip04.mx.aol.com") by vger.kernel.org with ESMTP id S264300AbTKMOWb
+Received: from rly-ip03.mx.aol.com ([64.12.138.7]:40442 "EHLO
+	rly-ip03.mx.aol.com") by vger.kernel.org with ESMTP id S264288AbTKMOcX
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Nov 2003 09:22:31 -0500
+	Thu, 13 Nov 2003 09:32:23 -0500
+In-Reply-To: <9B540282-15E4-11D8-9DF1-0050E416C45B@ieee.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: p.lavarre@ieee.org, mdharm-scsi@one-eyed-alien.net
+Cc: linux-scsi@vger.kernel.org, mdharm-scsi@one-eyed-alien.net, p.lavarre@ieee.org
 
- > This is a terrible idea.
- > There is a large number of devices
- > which choke if those two values do not match.
+P.S.
 
-Did I miss our record of the search for plscsi parameters that Sony's 
-USB mass storage would accept?
+Another thought: have we yet begun to experiment with disks that we can 
+write protect?
 
-I remember seeing we did try mode sense of header and whole page, but 
-not being convinced we had tried every reasonably variation of that.
+I am, I have an Iomega Zip disk - all those have soft write-protect 
+tabs inside.
 
- > > should not affect other devices since
- > > we are not changing the requested length,
- > > just the size of the receive
- > > buffer.
-
-Sorry.  The size of the receive buffer crosses the bus at least to USB 
-and to FireWire devices.  Assaulting devices with noise then finds 
-hits, yes.
-
-Also in a robust SCSI over whatever host, the bytes per buffer 
-parameter also alters the behaviour of ATAPI PIO drivers, though I do 
-not yet know myself if Linux ATAPI is robust in that way.
-
- > > Can we use a minium buffer length of 12 for
- > > any requests of less than 13 bytes?
- >
- > You can try.... I don't know if it will work.
-
-Me neither.
-
-A device refusing to agree to copy as few bytes as a header is a device 
-telling us we're not talking like Windows.  From the thread "usb 
-storage traces" we know Windows does sometimes fetch header, calculate 
-available length, fetch whole ... but apparently not for mode page x08 
-from this Sony device.
-
- > > Else, I give up ...
-
-We can give up on PDT x00 HDD/Flash that is writable except when the 
-write-protect tab is flipped ... without necessarily giving up on the 
-PDT x05 DVD/CD where those "usb storage traces" show us Windows 
-actually bothering to try the politically correct speech we see 
-implicitly blessed at t10.org.
+For the sake of experimenting with other kinds of disks I'm thinking we 
+could easily write a small patch to add a virtual write protect tab 
+inside Linux to any usb-storage PDT x00 HDD/Flash.  I think the change 
+is as small as catching mode sense headers to flip the Writable bit of 
+the device-specific-parameter, and catching write ops to fail via SK 
+ASC ASCQ = x 7 27 00 NotWritable.
 
 Pat LaVarre
-
-P.S. If this mail appears in the correct thread and appears labelled 
-"Pat LaVarre" rather than "Steve Jobs", I will have achieved a new high 
-in my understanding of `nslookup -q=mx $domain` etc.
 
