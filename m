@@ -1,127 +1,75 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH] fix dma mapping leak in fusion
-Date: Tue, 17 Aug 2004 14:18:01 -0400
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] clean up some more tmscsim scan logic
+Date: Tue, 17 Aug 2004 22:17:14 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <41224BD9.9060808@adaptec.com>
-References: <0E3FA95632D6D047BA649F95DAB60E5704DE66BB@exa-atlanta>
+Message-ID: <Pine.LNX.4.60.0408172136340.5224@poirot.grange>
+References: <20040817163323.GA16799@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:14284 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S268379AbUHQSSG (ORCPT
+Received: from imap.gmx.net ([213.165.64.20]:35799 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S268404AbUHQURY (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Aug 2004 14:18:06 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5704DE66BB@exa-atlanta>
+	Tue, 17 Aug 2004 16:17:24 -0400
+In-Reply-To: <20040817163323.GA16799@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, fukuchi.masao@jp.fujitsu.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
 
-Moore, Eric Dean wrote:
-> Ok - your proposed change will Opps the driver.
-> 
-> Sequence to oops:
-> 1.SCSI midlayer detects command timeout and issue abort
-> message to fusion MPT driver.
-> 2.Fusion MPT driver issues abort message to IOC and returns
-> SCSI midlayer with FAILED status.
-> 3.SCSI midlayer gives up the operation and call
-> scsi_release_buffers()to free buffers; this
-> routine does "cmd->request_buffer=NULL;"
-> 4.Fusion MPT driver initiates IOC reset and calls
-> mptscsih_flush_running_cmds() to cancel SCSI command.
-> 5.Oops - occurs when calling pci_unmap_sg when request_buffer=NULL.
+On Tue, 17 Aug 2004, Christoph Hellwig wrote:
 
-Points 2 and 4 -- once ABORT TASK is sent, the device server
-should NOT return status of the aborted task, regardless
-of the service response of the TMF. (SAM, 7.2)
+> - cleanup checks in ->queuecommand, we only get here either for
+>   inquiry or a found device now
+> - DCBmap in the acb is gone, was only used for debug prints after
+>   the prevous changes
+> - kill some more debugging keyed of by ->scan_devices
 
-			Luben
+Thanks for the patch!
 
+Christoph, when I have a couple of free minutes, I am trying to look at 
+the driver to see what else could one through away there:-), or what to 
+improve / break... I've got a couple of points, I am trying to implement, 
+but I am not sure if at all I am moving in the right direction, besides, 
+maybe you also have them on your todo. So, to avoid effort duplication, 
+maybe you could help me with my doubts, or tell me if you've already 
+implemented it:
 
-> 
-> The current fix testing for scsi_device_online
-> was provided last April by Fukuchi Masao.
-> 
-> Eric Moore
-> 
-> 
-> On Tuesday, August 17, 2004 10:17 AM, Christoph Hellwig wrote:
->  >
->  > stop fusion from leaking dma maps when the device has been offlined
->  >
->  >
->  > --- 1.13/drivers/message/fusion/linux_compat.h       
->  > 2004-06-23 16:48:43 +02:00
->  > +++ edited/drivers/message/fusion/linux_compat.h     
->  > 2004-08-17 20:09:21 +02:00
->  > @@ -3,16 +3,4 @@
->  >  #ifndef FUSION_LINUX_COMPAT_H
->  >  #define FUSION_LINUX_COMPAT_H
->  > 
->  > -#include <linux/version.h>
->  > -#include <scsi/scsi_device.h>
->  > -
->  > -#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,6))
->  > -static int inline scsi_device_online(struct scsi_device *sdev)
->  > -{
->  > -     return sdev->online;
->  > -}
->  > -#endif
->  > -
->  > -
->  > -/*}-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
->  > -=-=-=-=-=-=-=-=*/
->  >  #endif /* _LINUX_COMPAT_H */
->  > ===== drivers/message/fusion/mptscsih.c 1.45 vs edited =====
->  > --- 1.45/drivers/message/fusion/mptscsih.c    2004-08-03
->  > 01:01:01 +02:00
->  > +++ edited/drivers/message/fusion/mptscsih.c  2004-08-17
->  > 20:02:54 +02:00
->  > @@ -1019,19 +1019,18 @@
->  >                        * Do OS callback
->  >                        * Free driver resources (chain, msg buffers)
->  >                        */
->  > -                     if (scsi_device_online(SCpnt->device)) {
->  > -                             if (SCpnt->use_sg) {
->  > -                                     pci_unmap_sg(ioc->pcidev,
->  > -                                             (struct
->  > scatterlist *) SCpnt->request_buffer,
->  > -                                             SCpnt->use_sg,
->  > -                                            
->  > SCpnt->sc_data_direction);
->  > -                             } else if (SCpnt->request_bufflen) {
->  > -                                     pci_unmap_single(ioc->pcidev,
->  > -                                             SCpnt->SCp.dma_handle,
->  > -                                             SCpnt->request_bufflen,
->  > -                                            
->  > SCpnt->sc_data_direction);
->  > -                             }
->  > +                     if (SCpnt->use_sg) {
->  > +                             pci_unmap_sg(ioc->pcidev,
->  > +                                     (struct scatterlist *)
->  > SCpnt->request_buffer,
->  > +                                     SCpnt->use_sg,
->  > +                                     SCpnt->sc_data_direction);
->  > +                     } else if (SCpnt->request_bufflen) {
->  > +                             pci_unmap_single(ioc->pcidev,
->  > +                                     SCpnt->SCp.dma_handle,
->  > +                                     SCpnt->request_bufflen,
->  > +                                     SCpnt->sc_data_direction);
->  >                       }
->  > +
->  >                       SCpnt->result = DID_RESET << 16;
->  >                       SCpnt->host_scribble = NULL;
->  > 
->  > -
->  > To unsubscribe from this list: send the line "unsubscribe
->  > linux-scsi" in
->  > the body of a message to majordomo@vger.kernel.org
->  > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->  >
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Currently SCSI drivers (tmscsim included) implement multiplecommand 
+queues. Which, in part, makes sense, but the generic code changed, and not 
+all drivers nave been converted to fully use it promptly. So, as a 
+maximum, I saw (maybe you could add a couple:-)):
+
+1) Queue in the block-layer
+2) Incoming queue in a scsi LLD (recently removed in tmscsim)
+3) Issue queue in LLD (Waiting in tmscsim)
+4) Submitted tagged command queue or untagged 1 current command in LLD 
+with a timer (Going in tmscsim)
+5) tcq in SCSI mid-layer / block.
+
+So, I can't figure out, nor find a sample implementation or a document 
+about which queues should really be implemented in LLDs and how they 
+should inter-operate with the mid- / block-layer. Say, a document, 
+describing the (SCSI-)command flow would be very useful, like
+
+...
+n)   scsi.c: LLD->queuecommand()
+n+1) LLD:    send out on the bus, insert on tcq / return
+      SCSI_MLQUEUE_DEVICE_BUSY
+n+2) LLD:    on command-completion, if successful, report (scsi_done()),
+      if not - auto request sense, put the request-sense command on
+      internal "going" queue
+...
+
+Where n+2 is, actually, the second question - I've seen a comment 
+somewhere, that LLDs should (not?) auto request-sense, rather than failing 
+and letting the mid-layer issue one...
+
+Is there a "perfect" LLD, I could look at for an example? I looked at 
+53c700.c, as it was until recently the only one using tcq, but it also has 
+a few of those internal queues...
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
