@@ -1,56 +1,26 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/pas16.c: make code static
-Date: Mon, 28 Feb 2005 21:58:16 +0100
-Message-ID: <20050228205816.GL4021@stusta.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [2.6 patch] drivers/scsi/qla2xxx/: cleanups
+Date: Mon, 28 Feb 2005 21:29:20 +0000
+Message-ID: <20050228212920.GA18162@infradead.org>
+References: <20050228210024.GM4021@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:53511 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261750AbVB1U6W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Feb 2005 15:58:22 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:55532 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261752AbVB1V3a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Feb 2005 16:29:30 -0500
 Content-Disposition: inline
+In-Reply-To: <20050228210024.GM4021@stusta.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: andrew.vasquez@qlogic.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This patch makes needlessly global code static.
+On Mon, Feb 28, 2005 at 10:00:24PM +0100, Adrian Bunk wrote:
+> This patch contains the following cleanups:
+> - make needlessly global code static
+> - kill the unused global *_version and *_version_str variables
+>   in the firmware files
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
----
-
- drivers/scsi/pas16.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/pas16.c.old	2005-02-28 19:37:31.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/pas16.c	2005-02-28 20:38:07.000000000 +0100
-@@ -137,7 +137,7 @@
- static int pas16_irq = 0;
-  
- 
--int scsi_irq_translate[] =
-+static const int scsi_irq_translate[] =
- 	{ 0,  0,  1,  2,  3,  4,  5,  6, 0,  0,  7,  8,  9,  0, 10, 11 };
- 
- /* The default_irqs array contains values used to set the irq into the
-@@ -145,7 +145,7 @@
-  * irq jumpers on the board).  The first value in the array will be
-  * assigned to logical board 0, the next to board 1, etc.
-  */
--int default_irqs[] __initdata = 
-+static int default_irqs[] __initdata = 
- 	{  PAS16_DEFAULT_BOARD_1_IRQ,
- 	   PAS16_DEFAULT_BOARD_2_IRQ,
- 	   PAS16_DEFAULT_BOARD_3_IRQ,
-@@ -177,7 +177,7 @@
- 
- #define NO_BASES (sizeof (bases) / sizeof (struct base))
- 
--unsigned short  pas16_offset[ 8 ] =
-+static const unsigned short  pas16_offset[ 8 ] =
-     {
- 	0x1c00,    /* OUTPUT_DATA_REG */
- 	0x1c01,    /* INITIATOR_COMMAND_REG */
-
+The firmware files are generated, so it'd be better to leave them
+alone.
