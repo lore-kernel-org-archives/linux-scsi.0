@@ -1,31 +1,1946 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [ANNOUNCE] Adaptec SAS/SATA device driver [04/27]
-Date: Thu, 17 Feb 2005 12:35:42 -0500
-Message-ID: <4214D5EE.9050801@adaptec.com>
+Subject: [ANNOUNCE] Adaptec SAS/SATA device driver [03/27]
+Date: Thu, 17 Feb 2005 12:35:36 -0500
+Message-ID: <4214D5E8.9000907@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from magic.adaptec.com ([216.52.22.17]:62608 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262322AbVBQRfr (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:60048 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262320AbVBQRfl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Feb 2005 12:35:47 -0500
+	Thu, 17 Feb 2005 12:35:41 -0500
 Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHZkr30406
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:35:46 -0800
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHZer30363
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:35:40 -0800
 Received: from rtpe2k01.adaptec.com (rtpe2k01.adaptec.com [10.110.12.40])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHZjb20847
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:35:45 -0800
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHZdb20821
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:35:39 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-This is the SAS domain discovery code. Part 2/3.
+This is the SAS domain discovery code. Part 1/3.
 
+diff -Nru a/drivers/scsi/adp94xx/adp94xx_discover.c b/drivers/scsi/adp94xx/adp94xx_discover.c
+--- /dev/null	Wed Dec 31 16:00:00 196900
++++ b/drivers/scsi/adp94xx/adp94xx_discover.c	2005-02-16 16:08:12 -05:00
+@@ -0,0 +1,2460 @@
++#define NO_VPD_WORKAROUND
++#define SMP_OVERRUN_WORKAROUND
++#define SMP_UNDERRUN_WORKAROUND
++/*
++ * Adaptec ADP94xx SAS HBA device driver for Linux.
++ *
++ * Copyright (c) 2004 Adaptec Inc.
++ * All rights reserved.
++ *
++ * Adapted by : Robert Tarte  <robt@PacificCodeWorks.com>
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions, and the following disclaimer,
++ *    without modification.
++ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
++ *    substantially similar to the "NO WARRANTY" disclaimer below
++ *    ("Disclaimer") and any redistribution must be conditioned upon
++ *    including a substantially similar Disclaimer requirement for further
++ *    binary redistribution.
++ * 3. Neither the names of the above-listed copyright holders nor the names
++ *    of any contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * Alternatively, this software may be distributed under the terms of the
++ * GNU General Public License ("GPL") version 2 as published by the Free
++ * Software Foundation.
++ *
++ * NO WARRANTY
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
++ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
++ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGES.
++ *
++ * The source in this file is adapted from: SASDiscoverSimulation.cpp,
++ * from the SAS-1.1 draft, sas1r07.pdf, project T10/1601-D,
++ * ISO/IEC 14776-151:200x.
++ *
++ * This is an implementation of the initiator based expander discovery
++ * and configuration.  Structure names used are equivalent to those
++ * referenced in the SAS document.
++ * Basic assumptions:
++ *
++ * 1. Change primitives will initiate a rediscovery/configuration sequence.
++ * 2. Table locations for SASAddresses are deterministic for a specific
++ * topology only, when the topology changes, the location of a SASAddress
++ * in an ASIC table cannot be assumed.
++ * 3. A complete discovery level occurs before the configuration of the
++ * level begins, multiple passes are required as the levels of expanders
++ * encountered between the initiator and the end devices is increased.
++ * 4. Configuration of a single expander occurs before proceeding to
++ * subsequent expanders attached.
++ * 5. The Attached structure is filled in following OOB and is available
++ * from the initialization routines.
++ *
++ * $Id: //depot/razor/linux/src/adp94xx_discover.c#65 $
++ * 
++ */
++#define KDB_ENABLE	0
++#define DISCOVER_DEBUG	0
++
++#include "adp94xx_osm.h"
++#include "adp94xx_inline.h"
++#include "adp94xx_sata.h"
++#if KDB_ENABLE
++#include "linux/kdb.h"
++#endif
++
++/*
++ * this defines the type of algorithm used for discover
++ */
++#if 0
++int DiscoverAlgorithm = SAS_SIMPLE_LEVEL_DESCENT;
++#else
++int DiscoverAlgorithm = SAS_UNIQUE_LEVEL_DESCENT;
++#endif
++
++#define ROUTE_ENTRY(expander, i, j) \
++	(expander->RouteTable + \
++		((expander->num_phys * (i) * SAS_ADDR_LEN) + \
++		(j) * SAS_ADDR_LEN))
++
++#define DUMP_EXPANDER(s, expander) \
++	asd_dump_expander((uint8_t *)__FUNCTION__, __LINE__, (s), expander)
++
++#define NEW_STATE(new_state)	new_state(sm_contextp, new_state)
++
++struct state_machine asd_DiscoverySM = {
++	asd_DiscoverySM_Initialize,
++	asd_DiscoverySM_StateMachine,
++	asd_DiscoverySM_Finish,
++	asd_DiscoverySM_Abort,
++	ASD_STATE_DISCOVER_START
++};
++
++struct state_machine asd_DiscoverExpanderSM = {
++	asd_DiscoverExpanderSM_Initialize,
++	asd_DiscoverExpanderSM_StateMachine,
++	asd_DiscoverExpanderSM_Finish,
++	asd_DiscoverExpanderSM_Abort,
++	ASD_STATE_REPORT_AND_DISCOVER_START
++};
++
++struct state_machine asd_DiscoverFindBoundarySM = {
++	asd_DiscoverFindBoundarySM_Initialize,
++	asd_DiscoverFindBoundarySM_StateMachine,
++	asd_DiscoverFindBoundarySM_Finish,
++	asd_DiscoverFindBoundarySM_Abort,
++	ASD_STATE_FIND_BOUNDARY_START
++};
++
++struct state_machine asd_DiscoverConfigSetSM = {
++	asd_DiscoverConfigSetSM_Initialize,
++	asd_DiscoverConfigSetSM_StateMachine,
++	asd_DiscoverConfigSetSM_Finish,
++	asd_DiscoverConfigSetSM_Abort,
++	ASD_STATE_CONFIG_SET_START
++};
++
++struct state_machine asd_ConfigureExpanderSM = {
++	asd_ConfigureExpanderSM_Initialize,
++	asd_ConfigureExpanderSM_StateMachine,
++	asd_ConfigureExpanderSM_Finish,
++	asd_ConfigureExpanderSM_Abort,
++	ASD_STATE_CONFIG_EXPANDER_START
++};
++
++struct state_machine asd_ConfigureATA_SM = {
++	asd_ConfigureATA_SM_Initialize,
++	asd_ConfigureATA_SM_StateMachine,
++	asd_ConfigureATA_SM_Finish,
++	asd_ConfigureATA_SM_Abort,
++	ASD_STATE_CONFIGURE_ATA_START
++};
++
++struct state_machine asd_InitSATA_SM = {
++	asd_InitSATA_SM_Initialize,
++	asd_InitSATA_SM_StateMachine,
++	asd_InitSATA_SM_Finish,
++	asd_InitSATA_SM_Abort,
++	ASD_STATE_INIT_SATA_START
++};
++
++struct state_machine asd_SATA_SpinHoldSM = {
++	asd_SATA_SpinHoldSM_Initialize,
++	asd_SATA_SpinHoldSM_StateMachine,
++	asd_SATA_SpinHoldSM_Finish,
++	asd_SATA_SpinHoldSM_Abort,
++	ASD_STATE_SATA_SPINHOLD_START
++};
++
++struct state_machine asd_InitSAS_SM = {
++	asd_InitSAS_SM_Initialize,
++	asd_InitSAS_SM_StateMachine,
++	asd_InitSAS_SM_Finish,
++	asd_InitSAS_SM_Abort,
++	ASD_STATE_INIT_SAS_START
++};
++
++struct state_machine asd_InitSMP_SM = {
++	asd_InitSMP_SM_Initialize,
++	asd_InitSMP_SM_StateMachine,
++	asd_InitSMP_SM_Finish,
++	asd_InitSMP_SM_Abort,
++	ASD_STATE_INIT_SMP_START
++};
++
++extern void
++asd_scb_internal_done(struct asd_softc *asd, struct scb *scb,
++		      struct asd_done_list *dl);
++extern void asd_run_device_queues(struct asd_softc *asd);
++
++struct asd_target *asd_discover_get_target(struct state_machine_context
++					   *sm_contextp,
++					   uint8_t * dest_sas_address,
++					   struct list_head *old_discover_listp,
++					   struct list_head *found_listp,
++					   unsigned conn_rate,
++					   TRANSPORT_TYPE transport_type);
++
++struct asd_DiscoverySM_Context;
++
++static void asd_invalidate_targets(struct asd_softc *asd,
++				   struct asd_port *port);
++static void asd_validate_targets_hotplug(struct asd_softc *asd,
++					 struct asd_port *port,
++					 struct asd_DiscoverySM_Context *ctx);
++static void asd_validate_targets_init(struct asd_softc *asd);
++static void asd_apply_conn_mask(struct asd_softc *asd,
++				struct list_head *discover_list);
++static int asd_discovery_queue_cmd(struct asd_softc *asd,
++				   struct scb *scb, struct asd_target *targ,
++				   struct asd_device *dev);
++
++#if DISCOVER_DEBUG
++static void asd_dump_tree(struct asd_softc *asd, struct asd_port *port);
++#endif
++
++void asd_print_conn_rate(unsigned conn_rate, char *s)
++{
++	switch (conn_rate) {
++	case SAS_RATE_30GBPS:
++		printk(" 3.0-GBPS");
++		break;
++	case SAS_RATE_15GBPS:
++		printk(" 1.5-GBPS");
++		break;
++	default:
++		printk(" \?\?-GBPS");
++		break;
++	}
++	printk("%s", s);
++}
++
++void asd_print_state(unsigned state, char *s)
++{
++	switch (state) {
++	case ASD_STATE_DISCOVER_START:
++		printk("ASD_STATE_DISCOVER_START");
++		break;
++
++	case ASD_STATE_DISCOVER_ATTACHED:
++		printk("ASD_STATE_DISCOVER_ATTACHED");
++		break;
++
++	case ASD_STATE_FIND_BOUNDARY:
++		printk("ASD_STATE_FIND_BOUNDARY");
++		break;
++
++	case ASD_STATE_CONFIG_BOUNDARY_SET:
++		printk("ASD_STATE_CONFIG_BOUNDARY_SET");
++		break;
++
++	case ASD_STATE_CONFIG_ATTACHED_SET:
++		printk("ASD_STATE_CONFIG_ATTACHED_SET");
++		break;
++
++	case ASD_STATE_FINISHED:
++		printk("ASD_STATE_FINISHED");
++		break;
++
++	case ASD_STATE_SATA_SPINHOLD:
++		printk("ASD_STATE_SATA_SPINHOLD");
++		break;
++
++	case ASD_STATE_INIT_SATA:
++		printk("ASD_STATE_INIT_SATA");
++		break;
++
++	case ASD_STATE_INIT_SAS:
++		printk("ASD_STATE_INIT_SAS");
++		break;
++
++	case ASD_STATE_INIT_SMP:
++		printk("ASD_STATE_INIT_SMP");
++		break;
++
++	case ASD_STATE_FAILED:
++		printk("ASD_STATE_FAILED");
++		break;
++
++	case ASD_STATE_REPORT_AND_DISCOVER_START:
++		printk("ASD_STATE_REPORT_AND_DISCOVER_START");
++		break;
++
++	case ASD_STATE_ISSUE_REPORT_GENERAL:
++		printk("ASD_STATE_ISSUE_REPORT_GENERAL");
++		break;
++
++	case ASD_STATE_ISSUE_DISCOVER_LOOP:
++		printk("ASD_STATE_ISSUE_DISCOVER_LOOP");
++		break;
++
++	case ASD_STATE_REPORT_AND_DISCOVER_FINISHED:
++		printk("ASD_STATE_REPORT_AND_DISCOVER_FINISHED");
++		break;
++
++	case ASD_STATE_REPORT_AND_DISCOVER_FAILED:
++		printk("ASD_STATE_REPORT_AND_DISCOVER_FAILED");
++		break;
++
++	case ASD_STATE_FIND_BOUNDARY_START:
++		printk("ASD_STATE_FIND_BOUNDARY_START");
++		break;
++
++	case ASD_STATE_FIND_BOUNDARY_LOOP:
++		printk("ASD_STATE_FIND_BOUNDARY_LOOP");
++		break;
++
++	case ASD_STATE_FIND_BOUNDARY_FINISHED:
++		printk("ASD_STATE_FIND_BOUNDARY_FINISHED");
++		break;
++
++	case ASD_STATE_FIND_BOUNDARY_FAILED:
++		printk("ASD_STATE_FIND_BOUNDARY_FAILED");
++		break;
++
++	case ASD_STATE_CONFIG_SET_START:
++		printk("ASD_STATE_CONFIG_SET_START");
++		break;
++
++	case ASD_STATE_CONFIG_SET_ISSUE_DISCOVER:
++		printk("ASD_STATE_CONFIG_SET_ISSUE_DISCOVER");
++		break;
++
++	case ASD_STATE_CONFIG_SET_CONFIGURE_EXPANDER:
++		printk("ASD_STATE_CONFIG_SET_CONFIGURE_EXPANDER");
++		break;
++
++	case ASD_STATE_CONFIG_SET_FINISHED:
++		printk("ASD_STATE_CONFIG_SET_FINISHED");
++		break;
++
++	case ASD_STATE_CONFIG_SET_FAILED:
++		printk("ASD_STATE_CONFIG_SET_FAILED");
++		break;
++
++	case ASD_STATE_CONFIG_EXPANDER_START:
++		printk("ASD_STATE_CONFIG_EXPANDER_START");
++		break;
++
++	case ASD_STATE_CONFIG_EXPANDER_ROUTE:
++		printk("ASD_STATE_CONFIG_EXPANDER_ROUTE");
++		break;
++
++	case ASD_STATE_CONFIG_EXPANDER_ROUTE_LOOP:
++		printk("ASD_STATE_CONFIG_EXPANDER_ROUTE_LOOP");
++		break;
++
++	case ASD_STATE_CONFIG_EXPANDER_FINISHED:
++		printk("ASD_STATE_CONFIG_EXPANDER_FINISHED");
++		break;
++
++	case ASD_STATE_CONFIG_EXPANDER_FAILED:
++		printk("ASD_STATE_CONFIG_EXPANDER_FAILED");
++		break;
++
++	case ASD_STATE_INIT_SATA_START:
++		printk("ASD_STATE_INIT_SATA_START");
++		break;
++
++	case ASD_STATE_INIT_SATA_REPORT_PHY:
++		printk("ASD_STATE_INIT_SATA_REPORT_PHY");
++		break;
++
++	case ASD_STATE_INIT_SATA_IDENTIFY:
++		printk("ASD_STATE_INIT_SATA_IDENTIFY");
++		break;
++
++	case ASD_STATE_INIT_SATA_CONFIGURE_FEATURES:
++		printk("ASD_STATE_INIT_SATA_CONFIGURE_FEATURES");
++		break;
++
++	case ASD_STATE_INIT_SATA_FINISHED:
++		printk("ASD_STATE_INIT_SATA_FINISHED");
++		break;
++
++	case ASD_STATE_INIT_SATA_FAILED:
++		printk("ASD_STATE_INIT_SATA_FAILED");
++		break;
++
++	case ASD_STATE_SATA_SPINHOLD_START:
++		printk("ASD_STATE_SATA_SPINHOLD_START");
++		break;
++
++	case ASD_STATE_SATA_SPINHOLD_PHY_CONTROL:
++		printk("ASD_STATE_SATA_SPINHOLD_PHY_CONTROL");
++		break;
++
++	case ASD_STATE_SATA_SPINHOLD_DISCOVER:
++		printk("ASD_STATE_SATA_SPINHOLD_DISCOVER");
++		break;
++
++	case ASD_STATE_SATA_SPINHOLD_FINISHED:
++		printk("ASD_STATE_SATA_SPINHOLD_FINISHED");
++		break;
++
++	case ASD_STATE_SATA_SPINHOLD_FAILED:
++		printk("ASD_STATE_SATA_SPINHOLD_FAILED");
++		break;
++
++	case ASD_STATE_INIT_SAS_START:
++		printk("ASD_STATE_INIT_SAS_START");
++		break;
++
++	case ASD_STATE_INIT_SAS_INQUIRY:
++		printk("ASD_STATE_INIT_SAS_INQUIRY");
++		break;
++
++	case ASD_STATE_INIT_SAS_GET_DEVICE_ID:
++		printk("ASD_STATE_INIT_SAS_GET_DEVICE_ID");
++		break;
++
++	case ASD_STATE_INIT_SAS_GET_SERIAL_NUMBER:
++		printk("ASD_STATE_INIT_SAS_GET_SERIAL_NUMBER");
++		break;
++
++	case ASD_STATE_INIT_SAS_ISSUE_REPORT_LUNS:
++		printk("ASD_STATE_INIT_SAS_ISSUE_REPORT_LUNS");
++		break;
++
++	case ASD_STATE_INIT_SAS_GET_PORT_CONTROL:
++		printk("ASD_STATE_INIT_SAS_GET_PORT_CONTROL");
++		break;
++
++	case ASD_STATE_INIT_SAS_FINISHED:
++		printk("ASD_STATE_INIT_SAS_FINISHED");
++		break;
++
++	case ASD_STATE_INIT_SAS_FAILED:
++		printk("ASD_STATE_INIT_SAS_FAILED");
++		break;
++
++	case ASD_STATE_INIT_SMP_START:
++		printk("ASD_STATE_INIT_SMP_START");
++		break;
++
++	case ASD_STATE_INIT_SMP_REPORT_MANUFACTURER_INFO:
++		printk("ASD_STATE_INIT_SMP_REPORT_MANUFACTURER_INFO");
++		break;
++
++	case ASD_STATE_INIT_SMP_FINISHED:
++		printk("ASD_STATE_INIT_SMP_FINISHED");
++		break;
++
++	case ASD_STATE_INIT_SMP_FAILED:
++		printk("ASD_STATE_INIT_SMP_FAILED");
++		break;
++
++	case ASD_STATE_CONFIGURE_ATA_START:
++		printk("ASD_STATE_CONFIGURE_ATA_START");
++		break;
++
++	case ASD_STATE_CONFIGURE_ATA_FEATURES:
++		printk("ASD_STATE_CONFIGURE_ATA_FEATURES");
++		break;
++
++	case ASD_STATE_CONFIGURE_ATA_FINISHED:
++		printk("ASD_STATE_CONFIGURE_ATA_FINISHED");
++		break;
++
++	case ASD_STATE_CONFIGURE_ATA_FAILED:
++		printk("ASD_STATE_CONFIGURE_ATA_FAILED");
++		break;
++
++	default:
++		printk("[0x%04x]", state);
++		break;
++	}
++
++	printk("%s", s);
++}
++
++void SM_new_state(struct state_machine_context *sm_contextp, unsigned new_state)
++{
++	struct state_information *state_infop;
++
++	SETUP_STATE(sm_contextp);
++
++	//printk("[%d]===== ", sm_contextp->state_stack_top);
++	//asd_print_state(state_infop->current_state, " -> ");
++	//asd_print_state(new_state, "\n");
++
++	if ((new_state & state_infop->state_machine_p->first_state) !=
++	    state_infop->state_machine_p->first_state) {
++
++		printk("illegal state 0x%x\n", new_state);
++		printk("[%d]===== ", sm_contextp->state_stack_top);
++		asd_print_state(state_infop->current_state, " -> ");
++		asd_print_state(new_state, "\n");
++	}
++
++	state_infop->current_state = new_state;
++}
 +
 +DISCOVER_RESULTS
-+asd_issue_phy_control_post(struct state_machine_context * sm_contextp,
-+			   struct asd_target * expander)
++asd_run_state_machine(struct state_machine_context *sm_contextp)
 +{
++	struct state_information *state_infop;
++	DISCOVER_RESULTS results;
++
++	SETUP_STATE(sm_contextp);
++
++	results = state_infop->state_machine_p->state_machine(sm_contextp);
++
++	while (results != DISCOVER_OK) {
++
++		state_infop =
++		    &sm_contextp->state_stack[sm_contextp->state_stack_top];
++
++		if (results == DISCOVER_FAILED) {
++			printk("State Machine Failure: ");
++			asd_print_state(state_infop->current_state, "\n");
++		}
++
++		if ((results == DISCOVER_FINISHED) ||
++		    (results == DISCOVER_FAILED)) {
++
++			state_infop->state_machine_p->finish(sm_contextp,
++							     results);
++
++			if (sm_contextp->state_stack_top == 0) {
++
++				//printk("nothing on stack\n");
++
++				return DISCOVER_OK;
++			}
++
++			POP_STATE(sm_contextp);
++		}
++
++		results =
++		    state_infop->state_machine_p->state_machine(sm_contextp);
++	}
++
++	return results;
++}
++
++#define ASD_PUSH_STATE_MACHINE(sm_contextp, state_machine_p, arg)	\
++	asd_push_state_machine(sm_contextp, #state_machine_p,		\
++	state_machine_p, arg)
++
++DISCOVER_RESULTS
++asd_push_state_machine(struct state_machine_context * sm_contextp,
++		       char *s,
++		       struct state_machine * state_machine_p, void *arg)
++{
++	struct state_information *state_infop;
++	DISCOVER_RESULTS results;
++
++#if 0
++	printk("\n\n%s:=====================================================\n",
++	       __FUNCTION__);
++	printk("%s: %s ============================\n", __FUNCTION__, s);
++	printk("%s:=====================================================\n\n\n",
++	       __FUNCTION__);
++#endif
++
++	sm_contextp->state_stack_top++;
++
++	SETUP_STATE(sm_contextp);
++
++	state_infop->current_state = state_machine_p->first_state;
++	state_infop->stack_top = 0;
++	state_infop->state_machine_p = state_machine_p;
++
++	results = state_machine_p->initialize(sm_contextp, arg);
++
++	if (results != DISCOVER_CONTINUE) {
++
++		state_infop->state_machine_p->finish(sm_contextp, results);
++
++		if (sm_contextp->state_stack_top == 0) {
++
++			//printk("nothing on stack\n");
++
++			return results;
++		}
++
++		POP_STATE(sm_contextp);
++	}
++
++	return results;
++}
++
++void asd_abort_state_machine(struct state_machine_context *sm_contextp)
++{
++	struct state_information *state_infop;
++
++	SETUP_STATE(sm_contextp);
++
++	while (sm_contextp->state_stack_top != -1) {
++
++		state_infop =
++		    &sm_contextp->state_stack[sm_contextp->state_stack_top];
++
++		state_infop->state_machine_p->abort(sm_contextp);
++
++		POP_STATE(sm_contextp);
++	}
++}
++
++void
++asd_dump_expander(char *function,
++		  unsigned line, char *string, struct asd_target *expander)
++{
++	unsigned i;
++	struct Discover *discover;
++
++	printk("||||||||||| - %s  - %s:%d:\n", string, function, line);
++	printk("||||||||||| - %0llx - ",
++	       *((uint64_t *) expander->ddb_profile.sas_addr));
++
++	if (expander->management_type == ASD_DEVICE_END) {
++		printk("\n");
++		return;
++	}
++
++	printk("num_phys %d\n", expander->num_phys);
++
++	for (i = 0; i < expander->num_phys; i++) {
++
++		discover = &(expander->Phy[i].Result);
++
++		printk("||||||||||| - phy %d attached to %0llx\n", i,
++		       *((uint64_t *) discover->AttachedSASAddress));
++	}
++}
++
++void asd_dump_expander_list(char *s, struct list_head *discover_listp)
++{
++	struct asd_target *target;
++	struct asd_target *parent;
++
++	printk("----- %s\n", s);
++
++	list_for_each_entry(target, discover_listp, all_domain_targets) {
++
++		DUMP_EXPANDER("target:", target);
++
++		printk(" %0llx", *((uint64_t *) target->ddb_profile.sas_addr));
++
++		asd_print_conn_rate(target->ddb_profile.conn_rate, "\n");
++
++		for (parent = target->parent; parent != NULL;
++		     parent = parent->parent) {
++
++			printk("\t:%0llx\n",
++			       *((uint64_t *) parent->ddb_profile.sas_addr));
++		}
++	}
++
++	printk("-----\n");
++}
++
++void
++asd_discover_wakeup_state_machine(struct state_machine_context *sm_contextp)
++{
++	struct discover_context *discover_contextp;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	discover_contextp->port->events |= ASD_DISCOVERY_EVENT;
++
++	asd_wakeup_sem(&discover_contextp->asd->platform_data->discovery_sem);
++}
++
++DISCOVER_RESULTS
++asd_ssp_request(struct state_machine_context *sm_contextp,
++		struct asd_target *target,
++		uint8_t * command,
++		unsigned command_len,
++		dma_addr_t buf_busaddr, unsigned buffer_len, unsigned direction)
++{
++	struct asd_ssp_task_hscb *ssp_hscb;
++	unsigned long flags;
++	struct scb *scb;
++	struct sg_element *sg;
++	int error;
++	struct discover_context *discover_contextp;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	asd_lock(discover_contextp->asd, &flags);
++
++	/*
++	 * Get an scb to use.
++	 */
++	if ((scb = asd_hwi_get_scb(discover_contextp->asd, 1)) == NULL) {
++		// TODO - fix this
++
++		asd_unlock(discover_contextp->asd, &flags);
++
++		return DISCOVER_FAILED;
++	}
++
++	scb->flags |= SCB_INTERNAL;
++
++	scb->platform_data->targ = target;
++
++	scb->platform_data->dev = NULL;
++
++	list_add_tail(&scb->owner_links,
++		      &discover_contextp->asd->platform_data->pending_os_scbs);
++
++	ssp_hscb = &scb->hscb->ssp_task;
++
++	ssp_hscb->header.opcode = SCB_INITIATE_SSP_TASK;
++
++	asd_build_sas_header(target, ssp_hscb);
++
++	ssp_hscb->protocol_conn_rate |= PROTOCOL_TYPE_SSP;
++
++	ssp_hscb->data_dir_flags |= direction;
++
++	ssp_hscb->xfer_len = asd_htole32(buffer_len);
++
++	memcpy(ssp_hscb->cdb, command, command_len);
++
++	memset(&ssp_hscb->cdb[command_len], 0,
++	       SCB_EMBEDDED_CDB_SIZE - command_len);
++
++	sg = scb->sg_list;
++
++	scb->platform_data->buf_busaddr = buf_busaddr;
++
++	error = asd_sg_setup(sg, buf_busaddr, buffer_len, /*last */ 1);
++
++	if (error != 0) {
++		return DISCOVER_FAILED;
++	}
++
++	memcpy(ssp_hscb->sg_elements, scb->sg_list, sizeof(*sg));
++
++	scb->sg_count = 1;
++
++	asd_push_post_stack(discover_contextp->asd, scb, (void *)sm_contextp,
++			    asd_ssp_request_done);
++
++	scb->flags |= SCB_ACTIVE;
++
++	asd_hwi_post_scb(discover_contextp->asd, scb);
++
++	asd_unlock(discover_contextp->asd, &flags);
++
++	return DISCOVER_OK;
++}
++
++void
++asd_ssp_request_done(struct asd_softc *asd,
++		     struct scb *scb, struct asd_done_list *done_listp)
++{
++	struct state_machine_context *sm_contextp;
++	struct discover_context *discover_contextp;
++
++	sm_contextp = (struct state_machine_context *)scb->io_ctx;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	asd_scb_internal_done(asd, scb, done_listp);
++
++	discover_contextp->resid_len = 0;
++
++	/*
++	 * TODO: need better return value here
++	 */
++	switch (done_listp->opcode) {
++	case TASK_COMP_WO_ERR:
++		discover_contextp->openStatus = OPEN_ACCEPT;
++		break;
++
++	case TASK_COMP_W_UNDERRUN:
++		discover_contextp->openStatus = OPEN_ACCEPT;
++		discover_contextp->resid_len =
++		    asd_le32toh(done_listp->stat_blk.data.res_len);
++		break;
++
++	case TASK_F_W_OPEN_REJECT:
++		printk("%s:%d: reject abandon_open %x reason %x\n",
++		       __FUNCTION__, __LINE__,
++		       done_listp->stat_blk.open_reject.abandon_open,
++		       done_listp->stat_blk.open_reject.reason);
++		break;
++
++	case SSP_TASK_COMP_W_RESP:
++	default:
++#if 0
++		printk("%s:%d opcode=0x%x\n", __FUNCTION__, __LINE__,
++		       done_listp->opcode);
++#endif
++		/*
++		 * TODO: need better return value here
++		 */
++		discover_contextp->openStatus = OPEN_REJECT_BAD_DESTINATION;
++		break;
++	}
++
++	sm_contextp->wakeup_state_machine(sm_contextp);
++}
++
++DISCOVER_RESULTS
++asd_smp_request(struct state_machine_context *sm_contextp,
++		struct asd_target *target,
++		unsigned request_length, unsigned response_length)
++{
++	struct asd_smp_task_hscb *smp_hscb;
++	unsigned long flags;
++	struct scb *scb;
++	struct discover_context *discover_contextp;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	asd_lock(discover_contextp->asd, &flags);
++
++	/*
++	 * Get an scb to use.
++	 */
++	if ((scb = asd_hwi_get_scb(discover_contextp->asd, 1)) == NULL) {
++		// TODO - fix this
++
++		asd_unlock(discover_contextp->asd, &flags);
++
++		return DISCOVER_FAILED;
++	}
++
++	scb->flags |= SCB_INTERNAL;
++	scb->platform_data->dev = NULL;
++	scb->platform_data->targ = target;
++
++	list_add_tail(&scb->owner_links,
++		      &discover_contextp->asd->platform_data->pending_os_scbs);
++
++	smp_hscb = &scb->hscb->smp_task;
++
++	smp_hscb->header.opcode = SCB_INITIATE_SMP_TASK;
++	smp_hscb->protocol_conn_rate = target->ddb_profile.conn_rate;
++
++	smp_hscb->smp_req_busaddr = discover_contextp->SMPRequestBusAddr;
++	smp_hscb->smp_req_size = request_length;
++
++	smp_hscb->smp_req_ds = 0;
++	smp_hscb->sister_scb = 0xffff;
++	smp_hscb->conn_handle = target->ddb_profile.conn_handle;
++
++	smp_hscb->smp_resp_busaddr = discover_contextp->SMPResponseBusAddr;
++	smp_hscb->smp_resp_size = response_length;
++
++	smp_hscb->smp_resp_ds = 0;
++
++	asd_push_post_stack(discover_contextp->asd, scb, (void *)sm_contextp,
++			    asd_smp_request_done);
++
++	scb->flags |= SCB_ACTIVE;
++
++	asd_hwi_post_scb(discover_contextp->asd, scb);
++
++	asd_unlock(discover_contextp->asd, &flags);
++
++	return DISCOVER_OK;
++}
++
++void
++asd_smp_request_done(struct asd_softc *asd,
++		     struct scb *scb, struct asd_done_list *done_listp)
++{
++	struct state_machine_context *sm_contextp;
++	struct discover_context *discover_contextp;
++
++	sm_contextp = (struct state_machine_context *)scb->io_ctx;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	asd_scb_internal_done(asd, scb, done_listp);
++
++#if 0
++	if (done_listp->opcode != TASK_COMP_WO_ERR) {
++		printk("%s:%d: opcode = 0x%x\n", __FUNCTION__, __LINE__,
++		       done_listp->opcode);
++	}
++#endif
++
++	discover_contextp->resid_len = 0;
++
++	/*
++	 * TODO: need better return value here
++	 */
++	switch (done_listp->opcode) {
++	case TASK_COMP_WO_ERR:
++		discover_contextp->openStatus = OPEN_ACCEPT;
++		break;
++#ifdef SMP_UNDERRUN_WORKAROUND
++	case TASK_COMP_W_UNDERRUN:
++		printk("Ignoring UNDERRUN condition on SMP request\n");
++		discover_contextp->openStatus = OPEN_ACCEPT;
++		discover_contextp->resid_len =
++		    asd_le32toh(done_listp->stat_blk.data.res_len);
++		break;
++#endif
++#ifdef SMP_OVERRUN_WORKAROUND
++	case TASK_COMP_W_OVERRUN:
++		/*
++		 * This wasn't fixed in B0, so it will be investigated more.
++		 */
++		//printk("Ignoring OVERRUN condition on SMP request - ");
++		//printk("should be fixed in B0\n");
++		discover_contextp->openStatus = OPEN_ACCEPT;
++		break;
++#endif
++	case TASK_F_W_SMPRSP_TO:
++	case TASK_F_W_SMP_XMTRCV_ERR:
++		discover_contextp->openStatus = OPEN_REJECT_BAD_DESTINATION;
++		break;
++	case TASK_ABORTED_BY_ITNL_EXP:
++		switch (done_listp->stat_blk.itnl_exp.reason) {
++		case TASK_F_W_PHY_DOWN:
++		case TASK_F_W_BREAK_RCVD:
++		case TASK_F_W_OPEN_TO:
++			discover_contextp->openStatus =
++			    OPEN_REJECT_BAD_DESTINATION;
++			break;
++
++		case TASK_F_W_OPEN_REJECT:
++			discover_contextp->openStatus =
++			    OPEN_REJECT_BAD_DESTINATION;
++#if 0
++			discover_contextp->openStatus =
++			    OPEN_REJECT_RATE_NOT_SUPPORTED;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_NO_DESTINATION;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_PATHWAY_BLOCKED;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_PROTOCOL_NOT_SUPPORTED;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_RESERVE_ABANDON;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_RESERVE_CONTINUE;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_RESERVE_INITIALIZE;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_RESERVE_STOP;
++			discover_contextp->openStatus = OPEN_REJECT_RETRY;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_STP_RESOURCES_BUSY;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_WRONG_DESTINATION;
++#endif
++			break;
++		}
++		break;
++	case TASK_CLEARED:
++		/* Aborted command. Status needs to be changed .... */
++		break;
++	default:
++		discover_contextp->openStatus = OPEN_REJECT_BAD_DESTINATION;
++		break;
++	}
++
++	sm_contextp->wakeup_state_machine(sm_contextp);
++}
++
++DISCOVER_RESULTS
++asd_sata_identify_request(struct state_machine_context *sm_contextp,
++			  struct asd_target *target)
++{
++	unsigned long flags;
++	struct scb *scb;
++	struct discover_context *discover_contextp;
++	struct asd_target *old_target;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	asd_lock(discover_contextp->asd, &flags);
++
++	/*
++	 * Get an scb to use.
++	 */
++	if ((scb = asd_hwi_get_scb(discover_contextp->asd, 1)) == NULL) {
++		// TODO - fix this
++
++		asd_unlock(discover_contextp->asd, &flags);
++
++		return DISCOVER_FAILED;
++	}
++
++	scb->flags |= SCB_INTERNAL;
++	scb->platform_data->dev = NULL;
++
++	asd_push_post_stack(discover_contextp->asd, scb, (void *)sm_contextp,
++			    asd_sata_identify_request_done);
++
++	list_add_tail(&scb->owner_links,
++		      &discover_contextp->asd->platform_data->pending_os_scbs);
++
++	if (asd_sata_identify_build(discover_contextp->asd, target, scb) != 0) {
++
++		asd_hwi_free_scb(discover_contextp->asd, scb);
++
++		asd_unlock(discover_contextp->asd, &flags);
++
++		return DISCOVER_FAILED;
++	}
++
++	scb->flags |= SCB_ACTIVE;
++
++	/*
++	 * We want to use the flow control of the device queue if possible.
++	 * Look through the old/new discover list for this target.
++	 * If target exists, see if device exists.
++	 */
++	old_target = asd_find_target(discover_contextp->asd->old_discover_listp,
++				     target->ddb_profile.sas_addr);
++
++	if (old_target == NULL) {
++		old_target =
++		    asd_find_target(discover_contextp->asd->discover_listp,
++				    target->ddb_profile.sas_addr);
++	}
++
++	/*
++	 * sata devices should have only one lun, check lun 0.
++	 */
++	if (old_target != NULL) {
++
++		if (old_target->devices[0] != NULL) {
++
++			scb->platform_data->dev = target->devices[0];
++
++			asd_unlock(discover_contextp->asd, &flags);
++
++			if ((asd_discovery_queue_cmd(discover_contextp->asd,
++						     scb, old_target,
++						     old_target->devices[0]))) {
++
++				asd_hwi_free_scb(discover_contextp->asd, scb);
++
++				return DISCOVER_FAILED;
++			}
++
++			return DISCOVER_OK;
++		}
++	}
++
++	asd_hwi_post_scb(discover_contextp->asd, scb);
++
++	asd_unlock(discover_contextp->asd, &flags);
++
++	return DISCOVER_OK;
++}
++
++static int
++asd_discovery_queue_cmd(struct asd_softc *asd,
++			struct scb *scb, struct asd_target *targ,
++			struct asd_device *dev)
++{
++	struct scsi_cmnd *cmd;
++	u_long flags;
++
++	if ((cmd = asd_alloc_mem(sizeof(struct scsi_cmnd), GFP_ATOMIC)) == NULL) {
++		return -ENOMEM;
++	}
++
++	/* indicate its discovery SM  generated scsi_cmnd */
++	cmd->sc_magic = ASD_CSMI_COMMAND;
++
++	/* stick SCB into scsi_cmnd */
++	cmd->host_scribble = (unsigned char *)scb;
++
++	asd_lock(asd, &flags);
++	list_add_tail(&((union asd_cmd *)cmd)->acmd_links, &dev->busyq);
++	if ((dev->flags & ASD_DEV_ON_RUN_LIST) == 0) {
++		list_add_tail(&dev->links, &asd->platform_data->device_runq);
++		dev->flags |= ASD_DEV_ON_RUN_LIST;
++
++		asd_run_device_queues(asd);
++	}
++	asd_unlock(asd, &flags);
++
++	return 0;
++}
++
++void
++asd_sata_identify_request_done(struct asd_softc *asd,
++			       struct scb *scb,
++			       struct asd_done_list *done_listp)
++{
++	struct state_machine_context *sm_contextp;
++	struct discover_context *discover_contextp;
++
++	sm_contextp = (struct state_machine_context *)scb->io_ctx;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	/*
++	 * If this is not NULL, scb was sent via device queue.
++	 */
++	if (scb->platform_data->dev) {
++		scb->platform_data->dev->active--;
++		scb->platform_data->dev->openings++;
++		scb->platform_data->dev->commands_issued--;
++	}
++
++	asd_scb_internal_done(asd, scb, done_listp);
++
++	discover_contextp->resid_len = 0;
++
++	/*
++	 * TODO: need better return value here
++	 */
++	switch (done_listp->opcode) {
++	case TASK_COMP_WO_ERR:
++		discover_contextp->openStatus = OPEN_ACCEPT;
++		break;
++
++	case TASK_COMP_W_UNDERRUN:
++		discover_contextp->openStatus = OPEN_ACCEPT;
++		discover_contextp->resid_len =
++		    asd_le32toh(done_listp->stat_blk.data.res_len);
++		break;
++
++	case TASK_ABORTED_BY_ITNL_EXP:
++		switch (done_listp->stat_blk.itnl_exp.reason) {
++		case TASK_F_W_PHY_DOWN:
++		case TASK_F_W_BREAK_RCVD:
++		case TASK_F_W_OPEN_TO:
++			discover_contextp->openStatus =
++			    OPEN_REJECT_BAD_DESTINATION;
++			break;
++
++		case TASK_F_W_OPEN_REJECT:
++			discover_contextp->openStatus =
++			    OPEN_REJECT_BAD_DESTINATION;
++#if 0
++			discover_contextp->openStatus =
++			    OPEN_REJECT_RATE_NOT_SUPPORTED;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_NO_DESTINATION;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_PATHWAY_BLOCKED;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_PROTOCOL_NOT_SUPPORTED;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_RESERVE_ABANDON;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_RESERVE_CONTINUE;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_RESERVE_INITIALIZE;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_RESERVE_STOP;
++			discover_contextp->openStatus = OPEN_REJECT_RETRY;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_STP_RESOURCES_BUSY;
++			discover_contextp->openStatus =
++			    OPEN_REJECT_WRONG_DESTINATION;
++#endif
++			break;
++		}
++		break;
++	case TASK_CLEARED:
++		/* Aborted command. Status needs to be changed .... */
++		break;
++	default:
++		discover_contextp->openStatus = OPEN_REJECT_BAD_DESTINATION;
++		break;
++	}
++
++	sm_contextp->wakeup_state_machine(sm_contextp);
++}
++
++DISCOVER_RESULTS
++asd_sata_configure_features(struct state_machine_context *sm_contextp,
++			    struct asd_target *target,
++			    uint8_t feature, uint8_t sector_count)
++{
++	unsigned long flags;
++	struct scb *scb;
++	struct discover_context *discover_contextp;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	asd_lock(discover_contextp->asd, &flags);
++
++	/*
++	 * Get an scb to use.
++	 */
++	if ((scb = asd_hwi_get_scb(discover_contextp->asd, 1)) == NULL) {
++		// TODO - fix this
++
++		asd_unlock(discover_contextp->asd, &flags);
++
++		return DISCOVER_FAILED;
++	}
++
++	scb->flags |= SCB_INTERNAL;
++	scb->platform_data->dev = NULL;
++	scb->platform_data->targ = target;
++
++	list_add_tail(&scb->owner_links,
++		      &discover_contextp->asd->platform_data->pending_os_scbs);
++
++	if (asd_sata_set_features_build(discover_contextp->asd, target, scb,
++					feature, sector_count) != 0) {
++
++		asd_hwi_free_scb(discover_contextp->asd, scb);
++
++		asd_unlock(discover_contextp->asd, &flags);
++
++		return DISCOVER_FAILED;
++	}
++
++	asd_push_post_stack(discover_contextp->asd, scb, (void *)sm_contextp,
++			    asd_sata_configure_features_done);
++
++	scb->flags |= SCB_ACTIVE;
++
++	asd_hwi_post_scb(discover_contextp->asd, scb);
++
++	asd_unlock(discover_contextp->asd, &flags);
++
++	return DISCOVER_OK;
++}
++
++void
++asd_sata_configure_features_done(struct asd_softc *asd,
++				 struct scb *scb,
++				 struct asd_done_list *done_listp)
++{
++	struct state_machine_context *sm_contextp;
++	struct discover_context *discover_contextp;
++
++	sm_contextp = (struct state_machine_context *)scb->io_ctx;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	asd_scb_internal_done(asd, scb, done_listp);
++
++	discover_contextp->resid_len = 0;
++
++	/*
++	 * TODO: need better return value here
++	 */
++	switch (done_listp->opcode) {
++	case TASK_COMP_WO_ERR:
++		discover_contextp->openStatus = OPEN_ACCEPT;
++		break;
++
++	case TASK_COMP_W_UNDERRUN:
++		discover_contextp->openStatus = OPEN_ACCEPT;
++		discover_contextp->resid_len =
++		    asd_le32toh(done_listp->stat_blk.data.res_len);
++		break;
++
++	case TASK_ABORTED_BY_ITNL_EXP:
++		switch (done_listp->stat_blk.itnl_exp.reason) {
++		case TASK_F_W_PHY_DOWN:
++		case TASK_F_W_BREAK_RCVD:
++		case TASK_F_W_OPEN_TO:
++			discover_contextp->openStatus =
++			    OPEN_REJECT_BAD_DESTINATION;
++			break;
++
++		case TASK_F_W_OPEN_REJECT:
++			discover_contextp->openStatus =
++			    OPEN_REJECT_BAD_DESTINATION;
++			break;
++		}
++		break;
++	default:
++		discover_contextp->openStatus = OPEN_REJECT_BAD_DESTINATION;
++		break;
++	}
++
++	sm_contextp->wakeup_state_machine(sm_contextp);
++}
++
++struct asd_target *asd_discover_get_target(struct state_machine_context
++					   *sm_contextp,
++					   uint8_t * dest_sas_address,
++					   struct list_head *old_discover_listp,
++					   struct list_head *found_listp,
++					   unsigned conn_rate,
++					   TRANSPORT_TYPE transport_type)
++{
++	struct asd_target *target;
++	struct discover_context *discover_contextp;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	target = asd_find_target(old_discover_listp, dest_sas_address);
++
++	if (target != NULL) {
++		/*
++		 * This target was previously found.
++		 */
++		target->flags |= ASD_TARG_RESEEN;
++
++		target->ddb_profile.conn_rate = conn_rate;
++
++		asd_hwi_build_ddb_site(discover_contextp->asd, target);
++
++		/*
++		 * First, take this target off of the general chain of all
++		 * targets in the domain.
++		 */
++		list_del_init(&target->all_domain_targets);
++
++		return target;
++	}
++
++	/*
++	 * See if we haven't already talked to this device during the current
++	 * discovery process.
++	 */
++	target = asd_find_target(found_listp, dest_sas_address);
++
++	if (target != NULL) {
++		/*
++		 * First, take this target off of the general chain of all
++		 * targets in the domain.
++		 */
++		list_del_init(&target->all_domain_targets);
++
++		return target;
++	}
++
++	target = asd_alloc_target(discover_contextp->asd,
++				  discover_contextp->port);
++
++	/*
++	 * make sure we only do this if the allocation is successful
++	 */
++	if (target == NULL) {
++		return NULL;
++	}
++
++	target->domain =
++	    discover_contextp->asd->platform_data->domains[discover_contextp->
++							   port->id];
++
++	target->ddb_profile.conn_rate = conn_rate;
++
++	target->ddb_profile.itnl_const = ITNL_TIMEOUT_CONST;
++
++	target->parent = NULL;
++
++	/*
++	 * Set to 1 for SSP, STP, and SMP device ports. 0 for all SATA direct
++	 * attached ports.  Every device that is initialized by this routine
++	 * is not a SATA direct attach.
++	 */
++	target->ddb_profile.open_affl = OPEN_AFFILIATION;
++
++	memcpy(target->ddb_profile.sas_addr, dest_sas_address, SAS_ADDR_LEN);
++
++	if (transport_type == ASD_TRANSPORT_STP) {
++		//TODO: get SUPPORTS_AFFILIATION out of SMP request
++		target->ddb_profile.open_affl |=
++		    (STP_AFFILIATION | SUPPORTS_AFFILIATION);
++	}
++
++	asd_hwi_hash(target->ddb_profile.sas_addr,
++		     target->ddb_profile.hashed_sas_addr);
++
++	// TODO: - we need to allocate this from LRU DDB list
++	// (doesn't exist yet)
++	asd_hwi_setup_ddb_site(discover_contextp->asd, target);
++
++	return target;
++}
++
++DISCOVER_RESULTS
++asd_find_subtractive_phy(struct state_machine_context * sm_contextp,
++			 struct asd_target * expander,
++			 uint8_t * subtractiveSASAddress,
++			 uint8_t * attachedPhyIdentifier,
++			 unsigned *conn_rate, uint8_t * phyIdentifier)
++{
++	struct Discover *discover;
++	DISCOVER_RESULTS result;
++	uint8_t phyCount;
++	unsigned foundSubtractive;
++
++	SAS_ZERO(subtractiveSASAddress);
++	*attachedPhyIdentifier = 0;
++
++	foundSubtractive = 0;
++
++	/*
++	 * walk through all the phys of this expander
++	 */
++	for (phyCount = 0; phyCount < expander->num_phys; phyCount++) {
++
++		/*
++		 * this is just a pointer helper
++		 */
++		discover = &(expander->Phy[phyCount].Result);
++
++		/*
++		 * look for phys with edge or fanout devices attached...
++		 */
++		if ((discover->RoutingAttribute != SUBTRACTIVE) ||
++		    ((discover->AttachedDeviceType !=
++		      EDGE_EXPANDER_DEVICE) &&
++		     (discover->AttachedDeviceType !=
++		      FANOUT_EXPANDER_DEVICE))) {
++
++			continue;
++		}
++
++		/*
++		 * make sure all the subtractive phys point to
++		 * the same address when we are connected to an
++		 * expander device
++		 */
++		if (SAS_ISZERO(subtractiveSASAddress)) {
++
++			SASCPY(subtractiveSASAddress,
++			       discover->AttachedSASAddress);
++
++			*attachedPhyIdentifier =
++			    discover->AttachedPhyIdentifier;
++
++			result = DISCOVER_OK;
++
++			*conn_rate = discover->NegotiatedPhysicalLinkRate;
++
++			*phyIdentifier = phyCount;
++
++			foundSubtractive = 1;
++		} else if (!SAS_ISEQUAL(subtractiveSASAddress,
++					discover->AttachedSASAddress)) {
++
++			/*
++			 * the addresses don't match... 
++			 * problem...
++			 */
++			asd_log(ASD_DBG_ERROR, "\n"
++				"topology error, diverging "
++				"subtractive phys"
++				", '%0llx' != '%0llx' \n",
++				*((uint64_t *) subtractiveSASAddress),
++				*((uint64_t *) discover->AttachedSASAddress));
++
++			return DISCOVER_FAILED;
++		}
++	}
++
++	if (foundSubtractive == 0) {
++		return DISCOVER_FINISHED;
++	}
++
++	return DISCOVER_OK;
++}
++
++/*
++ * find the table structure associated with a specific SAS address
++ */
++struct asd_target *asd_find_target(struct list_head *target_list,
++				   uint8_t * SASAddress)
++{
++	struct asd_target *target;
++
++	/*
++	 * walk the list of expanders, when we find the one that matches, stop
++	 */
++	list_for_each_entry(target, target_list, all_domain_targets) {
++		/*
++		 * do the SASAdresses match
++		 */
++		if (SAS_ISEQUAL(target->ddb_profile.sas_addr, SASAddress)) {
++			return target;
++		}
++	}
++
++	return NULL;
++}
++
++/*
++ * find the table structure associated with a specific target identity.
++ */
++struct asd_target *asd_find_target_ident(struct list_head *target_list,
++					 struct asd_target *check_target)
++{
++	struct asd_target *target;
++
++	/*
++	 * walk the list of expanders, when we find the one that matches, stop
++	 */
++	list_for_each_entry(target, target_list, all_domain_targets) {
++
++		/*
++		 * Make sure we don't match ourselves.
++		 */
++		if (check_target == target) {
++			continue;
++		}
++
++		/*
++		 * It can't possibly be a match if the transport types don't
++		 * match.
++		 */
++		if (check_target->transport_type != target->transport_type) {
++			continue;
++		}
++
++		switch (target->transport_type) {
++		case ASD_TRANSPORT_SSP:
++			if (target->scsi_cmdset.ident_len !=
++			    check_target->scsi_cmdset.ident_len) {
++
++				continue;
++			}
++
++			if (memcmp(target->scsi_cmdset.ident,
++				   check_target->scsi_cmdset.ident,
++				   target->scsi_cmdset.ident_len) == 0) {
++
++				return target;
++			}
++			break;
++
++		case ASD_TRANSPORT_STP:
++			if (SAS_ISEQUAL(target->ddb_profile.sas_addr,
++					check_target->ddb_profile.sas_addr)) {
++
++				return target;
++			}
++			break;
++
++		default:
++			continue;
++		}
++
++	}
++
++	return NULL;
++}
++
++struct asd_target *asd_find_multipath(struct asd_softc *asd,
++				      struct asd_target *target)
++{
++	struct asd_port *port;
++	unsigned port_id;
++	struct asd_target *multipath_target;
++
++	/*
++	 * Check to make sure that this same device hasn't been exposed to the
++	 * OS on a different port.
++	 */
++	for (port_id = 0; port_id < asd->hw_profile.max_ports; port_id++) {
++
++		port = asd->port_list[port_id];
++
++		multipath_target = asd_find_target_ident(&port->targets,
++							 target);
++
++		if (multipath_target != NULL) {
++			return multipath_target;
++		}
++	}
++
++	return NULL;
++}
++
++/*
++ *
++ * this routine searches the subtractive phys for the upstream expander address
++ *
++ */
++static int
++asd_upstream_expander(struct asd_target *expander,
++		      uint8_t * SASAddress, uint8_t * PhyIdentifier)
++{
++	struct Discover *discover;
++	uint8_t phyCount;
++	int found;
++
++	found = 0;
++
++	/*
++	 * walk through all the phys of this expander, searching for
++	 * subtractive phys return the SASAddress and PhyIdentifier for the
++	 * first subtractive phy encountered, they should all be the same if
++	 * they have anything attached
++	 */
++	for (phyCount = 0; phyCount < expander->num_phys; phyCount++) {
++		/*
++		 * this is just a pointer helper
++		 */
++		discover = &(expander->Phy[phyCount].Result);
++
++		/*
++		 * look for phys with edge or fanout devices attached...
++		 */
++		if ((discover->RoutingAttribute == SUBTRACTIVE) &&
++		    ((discover->AttachedDeviceType == EDGE_EXPANDER_DEVICE) ||
++		     (discover->AttachedDeviceType ==
++		      FANOUT_EXPANDER_DEVICE))) {
++
++			SASCPY(SASAddress, discover->AttachedSASAddress);
++
++			*PhyIdentifier = discover->AttachedPhyIdentifier;
++
++			found = 1;
++
++			break;
++		}
++	}
++
++	return found;
++}
++
++/*
++ * this routine determines whether a SAS address is directly attached to
++ * an expander
++ */
++static int
++asd_direct_attached(struct asd_target *expander, uint8_t * SASAddress)
++{
++	int direct;
++	uint8_t phyCount;
++
++	direct = 0;
++
++	for (phyCount = 0; phyCount < expander->num_phys; phyCount++) {
++
++		/*
++		 * did we find the address attached locally
++		 */
++		if (*((uint64_t *) SASAddress) ==
++		    *((uint64_t *) expander->Phy[phyCount].
++		      Result.AttachedSASAddress)) {
++
++			direct = 1;
++			break;
++		}
++	}
++
++	return direct;
++}
++
++/*
++ * this routine determines whether the SAS address, can be optimized out
++ * of the route table.
++ *
++ * expander:	the expander whose route table we are configuring.
++ *
++ * discover:	the response to the discovery request for the device attached
++ *		to the phy of the expander that we are trying to configure
++ *		into "expander's" route table.
++ */
++static int
++asd_qualified_address(struct asd_target *expander,
++		      uint8_t PhyIdentifier,
++		      struct Discover *discover, uint8_t * DisableRouteEntry)
++{
++	int qualified;
++	uint16_t routeIndex;
++	uint8_t *sas_address;
++
++	qualified = 1;
++
++	if (DiscoverAlgorithm != SAS_UNIQUE_LEVEL_DESCENT) {
++		return qualified;
++	}
++
++	/*
++	 * leave in any entries that are direct routing attribute,
++	 * assumes that they are slots that will be filled by end
++	 * devices, if it is not direct, then filter out any empty
++	 * connections, connections that match the expander we are
++	 * configuring and connections that are truly direct attached
++	 */
++	if (!SAS_ISZERO(discover->AttachedSASAddress) &&
++	    !SAS_ISEQUAL(discover->AttachedSASAddress,
++			 expander->ddb_profile.sas_addr) &&
++	    (!asd_direct_attached(expander, discover->AttachedSASAddress))) {
++
++		if (discover->RoutingAttribute == DIRECT) {
++			/*
++			 * if this is a phy that is has a direct
++			 * routing attribute then, have it consume an
++			 * entry, it may be filled in at any time
++			 */
++		} else {
++			for (routeIndex = 0; routeIndex <
++			     expander->num_route_indexes; routeIndex++) {
++
++				sas_address = ROUTE_ENTRY(expander,
++							  PhyIdentifier,
++							  routeIndex);
++
++				if (SAS_ISEQUAL(sas_address,
++						discover->AttachedSASAddress)) {
++
++					qualified = 0;
++
++					break;
++				}
++			}
++		}
++	} else if (SAS_ISZERO(discover->AttachedSASAddress)) {
++		/*
++		 * if a 0 address, then assume it is an
++		 * empty slot that can be filled at any time, 
++		 * this keeps things positionally stable for most
++		 * reasonable topologies
++		 */
++		*DisableRouteEntry = DISABLED;
++	} else {
++		qualified = 0;
++	}
++
++	return qualified;
++}
++
++void
++asd_add_child(struct asd_port *port,
++	      struct asd_target *parent, struct asd_target *child)
++{
++	/*
++	 * Check to make sure that this particular target hasn't already been
++	 * put in the tree, or that it isn't the top of the tree.
++	 */
++	if ((port->tree_root == child) || (child->parent != NULL)) {
++		return;
++	}
++
++	child->parent = parent;
++
++	if (child->parent != NULL) {
++		list_add_tail(&child->siblings, &parent->children);
++	}
++}
++
++#define DUMP_LIST(a)		dump_list(__FUNCTION__, __LINE__, #a, a);
++void
++dump_list(char *function, unsigned line, char *s, struct list_head *target_list)
++{
++	struct asd_target *target;
++
++	printk("%s:%d: dumping list %s\n", function, line, s);
++	/*
++	 * walk the list of expanders, when we find the one that matches, stop
++	 */
++	list_for_each_entry(target, target_list, all_domain_targets) {
++		printk("%s:%d: %llx\n", __FUNCTION__, __LINE__,
++		       *((uint64_t *) target->ddb_profile.sas_addr));
++	}
++}
++
++DISCOVER_RESULTS
++asd_configure_device(struct state_machine_context *sm_contextp,
++		     struct asd_target *parentExpander,
++		     struct Discover *discover,
++		     struct list_head *discover_listp,
++		     struct list_head *found_listp,
++		     struct list_head *old_discover_listp, unsigned conn_rate)
++{
++	struct asd_target *target;
++	COMMAND_SET_TYPE command_set_type;
++	DEVICE_PROTOCOL_TYPE device_protocol_type;
++	MANAGEMENT_TYPE management_type;
++	TRANSPORT_TYPE transport_type;
++	struct discover_context *discover_contextp;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	/*
++	 * TODO: right now we are ignoring all virtual phy devices.
++	 */
++	if ((discover->InitiatorBits != 0) || (discover->VirtualPhy == 1)) {
++		return DISCOVER_OK;
++	}
++
++	switch (conn_rate) {
++	case RATE_UNKNOWN:
++	case PHY_DISABLED:
++	case PHY_FAILED:
++		return DISCOVER_FAILED;
++
++	case SPINUP_HOLD_OOB:
++		printk("found SPINUP_HOLD\n");
++		break;
++	case GBPS_1_5:
++	case GBPS_3_0:
++		/*
++		 * Nothing special to do.
++		 */
++		break;
++	}
++
++	/*
++	 * This routine is only called for end devices.
++	 */
++	ASSERT((discover->TargetBits & SMP_TGT_PORT) == 0);
++
++	if (discover->TargetBits & SSP_TGT_PORT) {
++
++		command_set_type = ASD_COMMAND_SET_SCSI;
++		device_protocol_type = ASD_DEVICE_PROTOCOL_SCSI;
++		transport_type = ASD_TRANSPORT_SSP;
++		management_type = ASD_DEVICE_END;
++
++	} else if (discover->TargetBits & STP_TGT_PORT) {
++		/* 
++		 * We don't know the command set yet (could be ATAPI or ATA)
++		 * We won't know until IDENTIFY / PIDENTIFY.
++		 */
++		command_set_type = ASD_COMMAND_SET_UNKNOWN;
++		device_protocol_type = ASD_DEVICE_PROTOCOL_ATA;
++		transport_type = ASD_TRANSPORT_STP;
++		management_type = ASD_DEVICE_END;
++
++	} else if (discover->TargetBits & SATA_TGT_PORT) {
++		/* 
++		 * We don't know the command set yet (could be ATAPI or ATA)
++		 * We won't know until IDENTIFY / PIDENTIFY.
++		 */
++		/* 
++		 * An "attached SATA host" which is "outside of the
++		 * scope of this standard" 
++		 * T10/1562-D Rev 5 - 10.4.3.5 pg. 340 - 7/9/2003
++		 */
++		command_set_type = ASD_COMMAND_SET_UNKNOWN;
++		device_protocol_type = ASD_DEVICE_PROTOCOL_ATA;
++		transport_type = ASD_TRANSPORT_STP;
++		management_type = ASD_DEVICE_END;
++	} else {
++		command_set_type = ASD_COMMAND_SET_UNKNOWN;
++		device_protocol_type = ASD_DEVICE_PROTOCOL_UNKNOWN;
++		transport_type = ASD_TRANSPORT_UNKNOWN;
++		management_type = ASD_DEVICE_UNKNOWN;
++	}
++
++	target = asd_discover_get_target(sm_contextp,
++					 discover->AttachedSASAddress,
++					 old_discover_listp,
++					 found_listp, conn_rate,
++					 transport_type);
++
++	if (target == NULL) {
++
++		printk("couldn't allocate target\n");
++
++		return DISCOVER_FAILED;
++	}
++
++	target->command_set_type = command_set_type;
++	target->device_protocol_type = device_protocol_type;
++	target->management_type = management_type;
++	target->transport_type = transport_type;
++
++	/*
++	 * Add the device to the tree.
++	 */
++	asd_add_child(discover_contextp->port, parentExpander, target);
++
++	list_add_tail(&target->all_domain_targets, discover_listp);
++
++	return DISCOVER_OK;
++}
++
++void
++asd_destroy_discover_list(struct asd_softc *asd,
++			  struct list_head *discover_list)
++{
++	struct asd_target *target;
++	struct asd_target *tmp_target;
++
++	list_for_each_entry_safe(target, tmp_target, discover_list,
++				 all_domain_targets) {
++
++		list_del_init(&target->all_domain_targets);
++
++		asd_free_ddb(asd, target->ddb_profile.conn_handle);
++
++		asd_free_target(asd, target);
++	}
++}
++
++/* -------------------------------------------------------------------------- */
++
++DISCOVER_RESULTS
++asd_issue_discover_request(struct state_machine_context *sm_contextp,
++			   struct asd_target *expander, unsigned phyIndex)
++{
++	DISCOVER_RESULTS results;
++	struct discover_context *discover_contextp;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	memset(discover_contextp->SMPRequestFrame, 0,
++	       sizeof(struct SMPRequest));
++
++	discover_contextp->SMPRequestFrame->SMPFrameType = SMP_REQUEST_FRAME;
++	discover_contextp->SMPRequestFrame->Function = DISCOVER;
++	discover_contextp->SMPRequestFrame->Request.Discover.PhyIdentifier =
++	    phyIndex;
++
++	/*
++	 * get the discover information for each phy
++	 */
++	results = asd_smp_request(sm_contextp, expander,
++				  sizeof(struct SMPRequestPhyInput),
++				  sizeof(struct SMPResponseDiscover));
++
++	return results;
++}
++
++DISCOVER_RESULTS
++asd_issue_discover_request_post(struct state_machine_context * sm_contextp,
++				struct asd_target * expander, unsigned phyIndex)
++{
++	struct Discover *discover;
 +	struct discover_context *discover_contextp;
 +
 +	discover_contextp = (struct discover_context *)
@@ -34,13 +1949,398 @@ This is the SAS domain discovery code. Part 2/3.
 +	if ((discover_contextp->openStatus != OPEN_ACCEPT) ||
 +	    (discover_contextp->SMPResponseFrame->FunctionResult !=
 +	     SMP_FUNCTION_ACCEPTED)) {
++
 +		/*
 +		 * if we had a problem on this  link, then don't 
 +		 * bother to  do anything else, production code,
 +		 * should be more robust...
 +		 */
++		// asd_log(ASD_DBG_ERROR, "\n"
++		printk("discover error, %02Xh at %0llx\n",
++		       discover_contextp->SMPResponseFrame->FunctionResult,
++		       *((uint64_t *) expander->ddb_profile.sas_addr));
++
++		return DISCOVER_FAILED;
++	}
++
++	discover = &(expander->Phy[phyIndex].Result);
++
++	/*
++	 * copy the result into the topology table
++	 */
++	memcpy((void *)&(expander->Phy[phyIndex]),
++	       (void *)&discover_contextp->SMPResponseFrame->Response.Discover,
++	       sizeof(struct SMPResponseDiscover));
++
++#if 0
++	printk("----------\n");
++	printk("PhyIdentifier 0x%x SASAddress 0x%llx\n",
++	       phyIndex, *((uint64_t *) discover->SASAddress));
++	printk("AttachedSASAddress 0x%llx AttachedPhyIdentifier 0x%x\n",
++	       *((uint64_t *) discover->AttachedSASAddress),
++	       discover->AttachedPhyIdentifier);
++	printk("InitiatorBits 0x%x TargetBits 0x%x\n",
++	       discover->InitiatorBits, discover->TargetBits);
++#endif
++
++	return DISCOVER_OK;
++}
++
++/* -------------------------------------------------------------------------- */
++
++/*
++ * this function gets the report general and discover information for
++ * a specific expander.  The discover process should begin at the subtractive
++ * boundary and progress downstream.
++ *
++ * If the dest_sas_address is an expander, the expander structure is returned
++ * in retExpander.
++ */
++DISCOVER_RESULTS
++asd_issue_report_general(struct state_machine_context * sm_contextp,
++			 uint8_t * dest_sas_address,
++			 uint8_t conn_rate,
++			 uint8_t attachedDeviceType,
++			 struct list_head * old_discover_listp,
++			 struct list_head * found_listp,
++			 struct asd_target ** retExpander)
++{
++	struct asd_target *expander;
++	DISCOVER_RESULTS results;
++	COMMAND_SET_TYPE command_set_type;
++	DEVICE_PROTOCOL_TYPE device_protocol_type;
++	TRANSPORT_TYPE transport_type;
++	MANAGEMENT_TYPE management_type;
++	struct discover_context *discover_contextp;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	expander = NULL;
++
++	memset(discover_contextp->SMPRequestFrame, 0,
++	       sizeof(struct SMPRequest));
++
++	discover_contextp->SMPRequestFrame->SMPFrameType = SMP_REQUEST_FRAME;
++	discover_contextp->SMPRequestFrame->Function = REPORT_GENERAL;
++
++	switch (attachedDeviceType) {
++	case EDGE_EXPANDER_DEVICE:
++		command_set_type = ASD_COMMAND_SET_SMP;
++		device_protocol_type = ASD_DEVICE_PROTOCOL_SMP;
++		transport_type = ASD_TRANSPORT_SMP;
++		management_type = ASD_DEVICE_EDGE_EXPANDER;
++		break;
++
++	case FANOUT_EXPANDER_DEVICE:
++		management_type = ASD_DEVICE_FANOUT_EXPANDER;
++		device_protocol_type = ASD_DEVICE_PROTOCOL_SMP;
++		command_set_type = ASD_COMMAND_SET_SMP;
++		transport_type = ASD_TRANSPORT_SMP;
++		break;
++
++	default:
++		/*
++		 * This should never happen.
++		 */
++		return DISCOVER_FAILED;
++	}
++
++	expander = asd_discover_get_target(sm_contextp, dest_sas_address,
++					   old_discover_listp, found_listp,
++					   conn_rate, transport_type);
++
++	/*
++	 * make sure we only do this if the allocation is successful
++	 */
++	if (expander == NULL) {
++		return DISCOVER_FAILED;
++	}
++
++	expander->command_set_type = command_set_type;
++	expander->device_protocol_type = device_protocol_type;
++	expander->transport_type = transport_type;
++	expander->management_type = management_type;
++
++	/*
++	 * get the report general information for the expander
++	 */
++	results = asd_smp_request(sm_contextp, expander,
++				  sizeof(struct SMPRequestGeneralInput),
++				  sizeof(struct SMPResponseReportGeneral));
++
++	*retExpander = expander;
++
++	return results;
++}
++
++DISCOVER_RESULTS
++asd_issue_report_general_post(struct state_machine_context * sm_contextp,
++			      struct asd_target * expander)
++{
++	uint8_t phyCount;
++	struct discover_context *discover_contextp;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	phyCount = 0;
++
++	/*
++	 * the assumptions we made were exceeded, need to bump limits...
++	 */
++	if ((discover_contextp->openStatus != OPEN_ACCEPT) ||
++	    (discover_contextp->SMPResponseFrame->FunctionResult !=
++	     SMP_FUNCTION_ACCEPTED)) {
++		/*
++		 * if we had a problem getting report general for this expander,
++		 * something is wrong, can't go any further down this path...
++		 * production code, should be more robust...
++		 */
 +		asd_log(ASD_DBG_ERROR, "\n"
-+			"phy control error, %02Xh at %0llx\n",
++			"report general error, open %02Xh result %02Xh at "
++			"0x%0llx\n",
++			discover_contextp->openStatus,
++			discover_contextp->SMPResponseFrame->FunctionResult,
++			*((uint64_t *) expander->ddb_profile.sas_addr));
++
++		asd_free_ddb(discover_contextp->asd,
++			     expander->ddb_profile.conn_handle);
++
++		asd_free_target(discover_contextp->asd, expander);
++
++		return DISCOVER_FAILED;
++	}
++
++	if (discover_contextp->SMPResponseFrame->Response.
++	    ReportGeneral.NumberOfPhys > MAXIMUM_EXPANDER_PHYS) {
++
++		asd_log(ASD_DBG_ERROR, "\n"
++			"report general error"
++			", NumberOfPhys %d exceeded limit %d on %0llx\n",
++			discover_contextp->SMPResponseFrame->
++			Response.ReportGeneral.NumberOfPhys,
++			MAXIMUM_EXPANDER_PHYS,
++			*((uint64_t *) expander->ddb_profile.sas_addr));
++
++		asd_free_ddb(discover_contextp->asd,
++			     expander->ddb_profile.conn_handle);
++
++		asd_free_target(discover_contextp->asd, expander);
++
++		return DISCOVER_FAILED;
++	}
++
++	expander->num_phys = discover_contextp->SMPResponseFrame->
++	    Response.ReportGeneral.NumberOfPhys;
++
++	expander->num_route_indexes =
++	    asd_be16toh(discover_contextp->SMPResponseFrame->Response.
++			ReportGeneral.ExpanderRouteIndexes);
++
++	if (expander->Phy != NULL) {
++		asd_free_mem(expander->Phy);
++	}
++
++	expander->Phy =
++	    (struct SMPResponseDiscover *)
++	    asd_alloc_mem(sizeof(struct SMPResponseDiscover) *
++			  expander->num_phys, GFP_KERNEL);
++
++	if (expander->Phy == NULL) {
++
++		printk("unable to allocate memory\n");
++
++		asd_free_ddb(discover_contextp->asd,
++			     expander->ddb_profile.conn_handle);
++
++		asd_free_target(discover_contextp->asd, expander);
++
++		return DISCOVER_FAILED;
++	}
++
++	if (expander->num_route_indexes != 0) {
++
++		if (expander->RouteTable != NULL) {
++			asd_free_mem(expander->RouteTable);
++		}
++
++		expander->RouteTable =
++		    (uint8_t *) asd_alloc_mem(SAS_ADDR_LEN *
++					      expander->num_phys *
++					      expander->num_route_indexes,
++					      GFP_KERNEL);
++
++		if (expander->route_indexes != NULL) {
++			asd_free_mem(expander->route_indexes);
++		}
++
++		expander->route_indexes =
++		    asd_alloc_mem(expander->num_route_indexes
++				  * sizeof(uint16_t), GFP_KERNEL);
++
++		memset(expander->route_indexes, 0,
++		       expander->num_route_indexes * sizeof(uint16_t));
++	}
++
++	return DISCOVER_OK;
++}
++
++/* -------------------------------------------------------------------------- */
++
++DISCOVER_RESULTS
++asd_issue_report_manufacturer_info(struct state_machine_context * sm_contextp,
++				   struct asd_target * expander)
++{
++	DISCOVER_RESULTS results;
++	struct discover_context *discover_contextp;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	memset(discover_contextp->SMPRequestFrame, 0,
++	       sizeof(struct SMPRequest));
++
++	discover_contextp->SMPRequestFrame->SMPFrameType = SMP_REQUEST_FRAME;
++	discover_contextp->SMPRequestFrame->Function =
++	    REPORT_MANUFACTURER_INFORMATION;
++
++	results = asd_smp_request(sm_contextp, expander,
++				  sizeof(struct SMPRequestGeneralInput),
++				  sizeof(struct
++					 SMPResponseReportManufacturerInfo));
++
++	return results;
++}
++
++DISCOVER_RESULTS
++asd_issue_report_manufacturer_info_post(struct state_machine_context *
++					sm_contextp,
++					struct asd_target * expander)
++{
++	struct discover_context *discover_contextp;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	/*
++	 * the assumptions we made were exceeded, need to bump limits...
++	 */
++	if ((discover_contextp->openStatus != OPEN_ACCEPT) ||
++	    (discover_contextp->SMPResponseFrame->FunctionResult !=
++	     SMP_FUNCTION_ACCEPTED)) {
++		/*
++		 * if we had a problem getting report general for this expander,
++		 * something is wrong, can't go any further down this path...
++		 * production code, should be more robust...
++		 */
++		asd_log(ASD_DBG_ERROR, "\n"
++			"get manufacturer information error, "
++			"open %02Xh result %02Xh at "
++			"0x%0llx\n",
++			discover_contextp->openStatus,
++			discover_contextp->SMPResponseFrame->FunctionResult,
++			*((uint64_t *) expander->ddb_profile.sas_addr));
++
++		asd_free_ddb(discover_contextp->asd,
++			     expander->ddb_profile.conn_handle);
++
++		asd_free_target(discover_contextp->asd, expander);
++
++		return DISCOVER_FAILED;
++	}
++
++	memcpy(&expander->smp_cmdset.manufacturer_info,
++	       &discover_contextp->SMPResponseFrame->
++	       Response.ReportManufacturerInfo,
++	       sizeof(struct SMPResponseReportManufacturerInfo));
++
++#if 0
++	printk("%8.8s|%16.16s|%4.4s\n",
++	       expander->smp_cmdset.manufacturer_info.VendorIdentification,
++	       expander->smp_cmdset.manufacturer_info.ProductIdentification,
++	       expander->smp_cmdset.manufacturer_info.ProductRevisionLevel);
++#endif
++
++	return DISCOVER_OK;
++}
++
++/* -------------------------------------------------------------------------- */
++
++DISCOVER_RESULTS
++asd_issue_route_config(struct state_machine_context * sm_contextp,
++		       struct asd_target * expander,
++		       unsigned phyIndex,
++		       uint8_t disableRouteEntry, uint8_t * attachedSASAddress)
++{
++	uint16_t index;
++	DISCOVER_RESULTS results;
++	struct discover_context *discover_contextp;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	index = expander->route_indexes[phyIndex];
++
++	memset(discover_contextp->SMPRequestFrame, 0,
++	       sizeof(struct SMPRequest));
++
++	discover_contextp->SMPRequestFrame->SMPFrameType = SMP_REQUEST_FRAME;
++	discover_contextp->SMPRequestFrame->Function =
++	    CONFIGURE_ROUTE_INFORMATION;
++
++	discover_contextp->SMPRequestFrame->Request.
++	    ConfigureRouteInformation.ExpanderRouteIndex = asd_htobe16(index);
++
++	discover_contextp->SMPRequestFrame->Request.
++	    ConfigureRouteInformation.PhyIdentifier = phyIndex;
++
++	discover_contextp->SMPRequestFrame->Request.
++	    ConfigureRouteInformation.Configure.DisableRouteEntry =
++	    disableRouteEntry;
++
++	SASCPY(discover_contextp->SMPRequestFrame->Request.
++	       ConfigureRouteInformation.Configure.RoutedSASAddress,
++	       attachedSASAddress);
++
++	/*
++	 * configure the route indexes for the
++	 * expander with the attached address
++	 * information
++	 */
++	results = asd_smp_request(sm_contextp, expander,
++				  sizeof(struct
++					 SMPRequestConfigureRouteInformation),
++				  sizeof(struct
++					 SMPResponseConfigureRouteInformation));
++
++	return results;
++}
++
++DISCOVER_RESULTS
++asd_issue_route_config_post(struct state_machine_context * sm_contextp,
++			    struct asd_target * expander, unsigned phyIndex)
++{
++	struct discover_context *discover_contextp;
++
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
++
++	/*
++	 * the assumptions we made were exceeded, need to bump limits...
++	 */
++	if ((discover_contextp->openStatus != OPEN_ACCEPT) ||
++	    (discover_contextp->SMPResponseFrame->FunctionResult !=
++	     SMP_FUNCTION_ACCEPTED)) {
++		/*
++		 * if we had a problem getting report general for this expander,
++		 * something is wrong, can't go any further down this path...
++		 * production code, should be more robust...
++		 */
++		asd_log(ASD_DBG_ERROR, "\n"
++			"route config error, open %02Xh result %02Xh at "
++			"0x%0llx\n",
++			discover_contextp->openStatus,
 +			discover_contextp->SMPResponseFrame->FunctionResult,
 +			*((uint64_t *) expander->ddb_profile.sas_addr));
 +
@@ -52,2465 +2352,136 @@ This is the SAS domain discovery code. Part 2/3.
 +
 +/* -------------------------------------------------------------------------- */
 +
-+/*
-+ * Standard inquiry command
-+ */
-+static uint8_t inquiry_cmd[] = {
-+	INQUIRY, 0x00, 0x00, 0x00, 0x00, 0x00
-+};
-+
-+/*
-+ * Device ID
-+ */
-+static uint8_t inquiry_dev_id_cmd[] = {
-+	INQUIRY, 0x01, 0x83, 0x00, 0x00, 0x00
-+};
-+
-+/*
-+ * Unit Serial Number
-+ */
-+static uint8_t inquiry_USN_cmd[] = {
-+	INQUIRY, 0x01, 0x80, 0x00, 0x00, 0x00
-+};
-+
-+#define MAX_INQUIRY_LEN(a)	(((a) > 255) ? 255 : (a))
-+
 +DISCOVER_RESULTS
-+asd_issue_inquiry(struct state_machine_context *sm_contextp,
-+		  struct asd_target *target,
-+		  uint8_t * command, unsigned command_len)
++asd_issue_report_phy_sata(struct state_machine_context * sm_contextp,
++			  struct asd_target * expander, unsigned phyIndex)
 +{
-+	struct discover_context *discover_contextp;
-+	unsigned xfer_len;
 +	DISCOVER_RESULTS results;
-+	uint8_t icmd[SCB_EMBEDDED_CDB_SIZE];
++	struct discover_context *discover_contextp;
 +
 +	discover_contextp = (struct discover_context *)
 +	    sm_contextp->state_handle;
 +
-+	xfer_len = MAX_INQUIRY_LEN(discover_contextp->sas_info_len);
++	memset(discover_contextp->SMPRequestFrame, 0,
++	       sizeof(struct SMPRequest));
 +
-+	memcpy(icmd, command, command_len);
++	discover_contextp->SMPRequestFrame->SMPFrameType = SMP_REQUEST_FRAME;
++	discover_contextp->SMPRequestFrame->Function = REPORT_PHY_SATA;
 +
-+	*((uint16_t *) & icmd[3]) = asd_htobe16(xfer_len);
++	discover_contextp->SMPRequestFrame->Request.
++	    ReportPhySATA.PhyIdentifier = phyIndex;
 +
-+	results = asd_ssp_request(sm_contextp, target, icmd, command_len,
-+				  discover_contextp->SASInfoBusAddr, xfer_len,
-+				  DATA_DIR_INBOUND);
++	results = asd_smp_request(sm_contextp, expander,
++				  sizeof(struct SMPRequestPhyInput),
++				  sizeof(struct SMPResponseReportPhySATA));
 +
 +	return results;
 +}
 +
-+/* -------------------------------------------------------------------------- */
-+
-+uint8_t report_luns_cmd[] = {
-+	REPORT_LUNS, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-+};
-+
 +DISCOVER_RESULTS
-+asd_issue_report_luns(struct state_machine_context * sm_contextp,
-+		      struct asd_target * target)
++asd_issue_report_phy_sata_post(struct state_machine_context * sm_contextp,
++			       struct asd_target * expander)
 +{
 +	struct discover_context *discover_contextp;
-+	DISCOVER_RESULTS results;
-+	uint8_t rl_cmd[SCB_EMBEDDED_CDB_SIZE];
 +
 +	discover_contextp = (struct discover_context *)
 +	    sm_contextp->state_handle;
 +
-+	memcpy(rl_cmd, report_luns_cmd, sizeof(report_luns_cmd));
++	/*
++	 * the assumptions we made were exceeded, need to bump limits...
++	 */
++	if ((discover_contextp->openStatus != OPEN_ACCEPT) ||
++	    (discover_contextp->SMPResponseFrame->FunctionResult !=
++	     SMP_FUNCTION_ACCEPTED)) {
++		/*
++		 * if we had a problem getting report general for this expander,
++		 * something is wrong, can't go any further down this path...
++		 * production code, should be more robust...
++		 */
++		asd_log(ASD_DBG_ERROR, "\n"
++			"report phy SATA error, open %02Xh result %02Xh at "
++			"0x%0llx\n",
++			discover_contextp->openStatus,
++			discover_contextp->SMPResponseFrame->FunctionResult,
++			*((uint64_t *) expander->ddb_profile.sas_addr));
 +
-+	*((uint32_t *) & rl_cmd[6]) =
-+	    asd_htobe32(discover_contextp->sas_info_len);
-+
-+	results = asd_ssp_request(sm_contextp, target,
-+				  rl_cmd, sizeof(report_luns_cmd),
-+				  discover_contextp->SASInfoBusAddr,
-+				  discover_contextp->sas_info_len,
-+				  DATA_DIR_INBOUND);
-+
-+	return results;
-+}
-+
-+/* -------------------------------------------------------------------------- */
-+
-+#define CONTROL_MODE_PAGE_SIZE		0x08
-+
-+uint8_t mode_sense_port_control_cmd[] = {
-+	MODE_SENSE, 0x00, 0x19, 0x00, 0x00, 0x00
-+};
-+
-+DISCOVER_RESULTS
-+asd_issue_get_port_control(struct state_machine_context * sm_contextp,
-+			   struct asd_target * target)
-+{
-+	struct discover_context *discover_contextp;
-+	DISCOVER_RESULTS results;
-+	uint8_t pc_cmd[SCB_EMBEDDED_CDB_SIZE];
-+
-+	discover_contextp = (struct discover_context *)
-+	    sm_contextp->state_handle;
-+
-+	memcpy(pc_cmd, mode_sense_port_control_cmd,
-+	       sizeof(mode_sense_port_control_cmd));
-+
-+	pc_cmd[4] = CONTROL_MODE_PAGE_SIZE;
-+
-+	results = asd_ssp_request(sm_contextp, target,
-+				  pc_cmd, sizeof(mode_sense_port_control_cmd),
-+				  discover_contextp->SASInfoBusAddr,
-+				  CONTROL_MODE_PAGE_SIZE, DATA_DIR_INBOUND);
-+
-+	return results;
-+}
-+
-+/* -------------------------------------------------------------------------- */
-+
-+struct asd_InitSMP_SM_Context {
-+	struct list_head *discover_listp;
-+	struct asd_target *currentTarget;
-+};
-+
-+ASD_DISCOVERY_STATES
-+asd_state_init_smp_start(struct state_machine_context *sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSMP_SM_Context *ctx;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	list_for_each_entry(ctx->currentTarget, ctx->discover_listp,
-+			    all_domain_targets) {
-+
-+		asd_log(ASD_DBG_INFO, "%s:%d - %llx %d\n",
-+			__FUNCTION__, __LINE__,
-+			*((uint64_t *) ctx->currentTarget->
-+			  ddb_profile.sas_addr),
-+			ctx->currentTarget->ddb_profile.conn_rate);
-+
-+		if (ctx->currentTarget->command_set_type == ASD_COMMAND_SET_SMP) {
-+
-+			return ASD_STATE_INIT_SMP_REPORT_MANUFACTURER_INFO;
-+		}
++		return DISCOVER_FAILED;
 +	}
 +
-+	return ASD_STATE_INIT_SMP_FINISHED;
++	return DISCOVER_OK;
 +}
 +
-+DISCOVER_RESULTS
-+asd_state_init_smp_report_manufacturer_info(struct state_machine_context *
-+					    sm_contextp)
++COMMAND_SET_TYPE asd_sata_get_type(struct adp_dev_to_host_fis * fis)
 +{
-+	struct state_information *state_infop;
-+	struct asd_InitSMP_SM_Context *ctx;
-+	DISCOVER_RESULTS results;
++	if ((fis->sector_count == 1) && (fis->lba0 == 1) &&
++	    (fis->lba1 == 0x14) && (fis->lba2 == 0xeb)) {
 +
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	results = asd_issue_report_manufacturer_info(sm_contextp,
-+						     ctx->currentTarget);
-+
-+	return results;
-+}
-+
-+ASD_DISCOVERY_STATES
-+asd_state_init_smp_report_manufacturer_info_post(struct state_machine_context *
-+						 sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSMP_SM_Context *ctx;
-+	struct discover_context *discover_contextp;
-+	DISCOVER_RESULTS results;
-+
-+	discover_contextp = (struct discover_context *)
-+	    sm_contextp->state_handle;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	results = asd_issue_report_manufacturer_info_post(sm_contextp,
-+							  ctx->currentTarget);
-+
-+	if (results != DISCOVER_OK) {
-+		printk("could not get manufactur_info from device\n");
++		return ASD_COMMAND_SET_ATAPI;
 +	}
 +
-+	while (ctx->currentTarget->all_domain_targets.next
-+	       != ctx->discover_listp) {
-+
-+		ctx->currentTarget =
-+		    list_entry(ctx->currentTarget->all_domain_targets.next,
-+			       struct asd_target, all_domain_targets);
-+
-+		if (ctx->currentTarget->command_set_type == ASD_COMMAND_SET_SMP) {
-+
-+			return ASD_STATE_INIT_SMP_REPORT_MANUFACTURER_INFO;
-+		}
-+	}
-+
-+	return ASD_STATE_INIT_SMP_FINISHED;
-+}
-+
-+DISCOVER_RESULTS
-+asd_InitSMP_SM_Initialize(struct state_machine_context * sm_contextp,
-+			  void *init_args)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSMP_SM_Context *ctx;
-+	struct asd_InitSMP_SM_Arguments *args;
-+
-+	NEW_CONTEXT(ctx);
-+
-+	args = (struct asd_InitSMP_SM_Arguments *)init_args;
-+
-+	ctx->discover_listp = args->discover_listp;
-+
-+	return DISCOVER_CONTINUE;
-+}
-+
-+DISCOVER_RESULTS
-+asd_InitSMP_SM_StateMachine(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSMP_SM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+	ASD_DISCOVERY_STATES current_state;
-+	ASD_DISCOVERY_STATES new_state;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	current_state = GET_CURRENT_STATE();
-+
-+	switch (current_state) {
-+	case ASD_STATE_INIT_SMP_START:
-+		new_state = asd_state_init_smp_start(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SMP_REPORT_MANUFACTURER_INFO:
-+		new_state =
-+		    asd_state_init_smp_report_manufacturer_info_post
-+		    (sm_contextp);
-+		break;
-+
-+	default:
-+		new_state = ASD_STATE_INIT_SMP_FAILED;
-+		break;
-+	}
-+
-+	SM_new_state(sm_contextp, new_state);
-+
-+	switch (new_state) {
-+
-+	case ASD_STATE_INIT_SMP_REPORT_MANUFACTURER_INFO:
-+		results =
-+		    asd_state_init_smp_report_manufacturer_info(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SMP_FINISHED:
-+		results = DISCOVER_FINISHED;
-+		break;
-+
-+	default:
-+		results = DISCOVER_FAILED;
-+		break;
-+	}
-+
-+	return results;
++	return ASD_COMMAND_SET_ATA;
 +}
 +
 +void
-+asd_InitSMP_SM_Finish(struct state_machine_context *sm_contextp,
-+		      DISCOVER_RESULTS results)
++asd_init_sata_direct_attached(struct state_machine_context *sm_contextp,
++			      struct asd_target *target)
 +{
-+	struct state_information *state_infop;
-+	struct asd_InitSMP_SM_Arguments *ctx;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	RETURN_STACK(results);
-+}
-+
-+void asd_InitSMP_SM_Abort(struct state_machine_context *sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSMP_SM_Arguments *ctx;
-+	ASD_DISCOVERY_STATES current_state;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	current_state = GET_CURRENT_STATE();
-+
-+#if 0
-+	switch (current_state) {
-+	}
-+#endif
-+}
-+
-+/* -------------------------------------------------------------------------- */
-+
-+struct asd_InitSAS_SM_Context {
-+	struct list_head *discover_listp;
-+	struct asd_target *currentTarget;
-+	unsigned phyIndex;
-+};
-+
-+ASD_DISCOVERY_STATES
-+asd_state_init_sas_start(struct state_machine_context *sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSAS_SM_Context *ctx;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	list_for_each_entry(ctx->currentTarget, ctx->discover_listp,
-+			    all_domain_targets) {
-+
-+		asd_log(ASD_DBG_INFO, "%s:%d - %llx %d\n",
-+			__FUNCTION__, __LINE__,
-+			*((uint64_t *) ctx->currentTarget->
-+			  ddb_profile.sas_addr),
-+			ctx->currentTarget->ddb_profile.conn_rate);
-+
-+		if (ctx->currentTarget->command_set_type ==
-+		    ASD_COMMAND_SET_SCSI) {
-+
-+			return ASD_STATE_INIT_SAS_INQUIRY;
-+		}
-+	}
-+
-+	return ASD_STATE_INIT_SAS_FINISHED;
-+}
-+
-+DISCOVER_RESULTS
-+asd_state_init_sas_inquiry(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSAS_SM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	results = asd_issue_inquiry(sm_contextp, ctx->currentTarget,
-+				    inquiry_cmd, sizeof(inquiry_cmd));
-+
-+	return results;
-+}
-+
-+ASD_DISCOVERY_STATES
-+asd_state_init_sas_inquiry_post(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSAS_SM_Context *ctx;
-+	unsigned inquiry_response_len;
-+	struct discover_context *discover_contextp;
-+
-+	discover_contextp = (struct discover_context *)
-+	    sm_contextp->state_handle;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	if (discover_contextp->openStatus != OPEN_ACCEPT) {
-+
-+		printk("Inquiry failed\n");
-+
-+	} else {
-+
-+		inquiry_response_len =
-+		    MAX_INQUIRY_LEN(discover_contextp->sas_info_len) -
-+		    discover_contextp->resid_len;
-+
-+		ctx->currentTarget->scsi_cmdset.inquiry = (uint8_t *)
-+		    asd_alloc_mem(inquiry_response_len, GFP_KERNEL);
-+
-+		if (ctx->currentTarget->scsi_cmdset.inquiry != NULL) {
-+
-+			memcpy(ctx->currentTarget->scsi_cmdset.inquiry,
-+			       &discover_contextp->SASInfoFrame[0],
-+			       inquiry_response_len);
-+
-+#if 0
-+			printk("%8.8s | ",
-+			       &ctx->currentTarget->scsi_cmdset.inquiry[8]);
-+			printk("%16.16s | ",
-+			       &ctx->currentTarget->scsi_cmdset.inquiry[16]);
-+			printk("%4.4s\n",
-+			       &ctx->currentTarget->scsi_cmdset.inquiry[32]);
-+#endif
-+		}
-+	}
-+
-+	return ASD_STATE_INIT_SAS_GET_DEVICE_ID;
-+}
-+
-+DISCOVER_RESULTS
-+asd_state_init_get_device_id(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSAS_SM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	results = asd_issue_inquiry(sm_contextp, ctx->currentTarget,
-+				    inquiry_dev_id_cmd,
-+				    sizeof(inquiry_dev_id_cmd));
-+
-+	return results;
-+}
-+
-+#define ASSOCIATION_SCSI_LOGICAL_UNIT		0
-+#define ASSOCIATION_SCSI_TARGET_PORT		1
-+#define ASSOCIATION_SCSI_TARGET_DEVICE		2
-+
-+#define PIV_VALID				0x80
-+#define VPD_SAS_PROTOCOL			6
-+
-+ASD_DISCOVERY_STATES
-+asd_state_init_get_device_id_post(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSAS_SM_Context *ctx;
-+	uint8_t *vpd_page_header;
-+	uint8_t *vpd_pagep;
-+	unsigned page_length;
-+	unsigned identifier_type;
-+	unsigned offset;
-+	unsigned association;
-+	unsigned code_set;
-+	unsigned protocol;
-+	unsigned length;
-+	struct discover_context *discover_contextp;
-+	unsigned inquiry_response_len;
-+	unsigned piv_valid;
-+#if 0
-+	unsigned i;
-+#endif
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	discover_contextp = (struct discover_context *)
-+	    sm_contextp->state_handle;
-+
-+	if (discover_contextp->openStatus != OPEN_ACCEPT) {
-+
-+		return ASD_STATE_INIT_SAS_GET_SERIAL_NUMBER;
-+	}
-+
-+	vpd_page_header = &discover_contextp->SASInfoFrame[0];
-+
-+	inquiry_response_len =
-+	    MAX_INQUIRY_LEN(discover_contextp->sas_info_len) -
-+	    discover_contextp->resid_len;
-+
-+	page_length = MIN(asd_be16toh(*((uint16_t *) & vpd_page_header[2])) + 3,
-+			  inquiry_response_len);
-+
-+#if 0
-+	for (i = 0; i < page_length; i++) {
-+		printk("%02x ", vpd_page_header[i]);
-+
-+		if (((i + 1) % 16) == 0) {
-+			printk("\n");
-+		}
-+	}
-+#endif
-+
-+	vpd_pagep = &vpd_page_header[4];
-+
-+	for (offset = vpd_pagep - vpd_page_header; offset < page_length;
-+	     vpd_pagep = vpd_pagep + length,
-+	     offset = vpd_pagep - vpd_page_header) {
-+
-+		length = vpd_pagep[3] + 3;
-+
-+		if ((offset + length) > page_length) {
-+			break;
-+		}
-+
-+		identifier_type = vpd_pagep[1] & 0xf;
-+
-+#if 0
-+		switch (identifier_type & 0xf) {
-+		case IDENTIFIER_TYPE_VENDOR_SPECIFIC:
-+			printk("IDENTIFIER_TYPE_VENDOR_SPECIFIC\n");
-+			break;
-+		case IDENTIFIER_TYPE_T10:
-+			printk("IDENTIFIER_TYPE_T10\n");
-+			break;
-+		case IDENTIFIER_TYPE_EIU_64:
-+			printk("IDENTIFIER_TYPE_EIU_64\n");
-+			break;
-+		case IDENTIFIER_TYPE_NAA:
-+			printk("IDENTIFIER_TYPE_NAA\n");
-+			break;
-+		case IDENTIFIER_TYPE_RELATIVE_TARGET_PORT:
-+			printk("IDENTIFIER_TYPE_RELATIVE_TARGET_PORT\n");
-+			break;
-+		case IDENTIFIER_TYPE_TARGET_PORT_GROUP:
-+			printk("IDENTIFIER_TYPE_TARGET_PORT_GROUP\n");
-+			break;
-+		case IDENTIFIER_TYPE_LOGICAL_UNIT_GROUP:
-+			printk("IDENTIFIER_TYPE_LOGICAL_UNIT_GROUP\n");
-+			break;
-+		case IDENTIFIER_TYPE_MD5_LOGICAL_UNIT:
-+			printk("IDENTIFIER_TYPE_MD5_LOGICAL_UNIT\n");
-+			break;
-+		case IDENTIFIER_TYPE_SCSI_NAME_STRING:
-+			printk("IDENTIFIER_TYPE_SCSI_NAME_STRING\n");
-+			break;
-+		default:
-+			printk("UNKNOWN\n");
-+			break;
-+		}
-+#endif
-+		if ((identifier_type & 0xf) != IDENTIFIER_TYPE_NAA) {
-+
-+			vpd_pagep = vpd_pagep + length;
-+
-+			continue;
-+		}
-+
-+		protocol = (vpd_pagep[0] & 0xf0) >> 4;
-+		piv_valid = vpd_pagep[1] & PIV_VALID;
-+		code_set = vpd_pagep[0] & 0xf;
-+		association = (vpd_pagep[1] & 0x30) >> 4;
-+
-+#if 0
-+		printk("Association %d | ", association);
-+		printk("Code Set %d | ", code_set);
-+		printk("PIV Valid %d | ", piv_valid);
-+		printk("Protocol %d\n", protocol);
-+#endif
-+
-+		ctx->currentTarget->scsi_cmdset.ident_len = length - 3;
-+
-+		switch (association) {
-+		case ASSOCIATION_SCSI_LOGICAL_UNIT:
-+			// seagate
-+			if (vpd_pagep[1] & PIV_VALID) {
-+				continue;
-+			}
-+			break;
-+
-+		case ASSOCIATION_SCSI_TARGET_PORT:
-+			// fujitsu
-+			if (((piv_valid & PIV_VALID) != PIV_VALID) ||
-+			    (protocol != VPD_SAS_PROTOCOL)) {
-+				continue;
-+			}
-+			break;
-+
-+		case ASSOCIATION_SCSI_TARGET_DEVICE:
-+			if (piv_valid & PIV_VALID) {
-+				continue;
-+			}
-+		}
-+
-+		ctx->currentTarget->scsi_cmdset.ident = (uint8_t *)
-+		    asd_alloc_mem(ctx->currentTarget->scsi_cmdset.ident_len,
-+				  GFP_KERNEL);
-+
-+		if (ctx->currentTarget->scsi_cmdset.ident != NULL) {
-+
-+			memcpy(ctx->currentTarget->scsi_cmdset.ident,
-+			       &vpd_pagep[4],
-+			       ctx->currentTarget->scsi_cmdset.ident_len);
-+		}
-+	}
-+
-+	while (ctx->currentTarget->all_domain_targets.next
-+	       != ctx->discover_listp) {
-+
-+		ctx->currentTarget =
-+		    list_entry(ctx->currentTarget->all_domain_targets.next,
-+			       struct asd_target, all_domain_targets);
-+
-+		if (ctx->currentTarget->command_set_type ==
-+		    ASD_COMMAND_SET_SCSI) {
-+
-+			return ASD_STATE_INIT_SAS_INQUIRY;
-+		}
-+	}
-+
-+	list_for_each_entry(ctx->currentTarget, ctx->discover_listp,
-+			    all_domain_targets) {
-+
-+		asd_log(ASD_DBG_INFO, "%s:%d - %llx %d\n",
-+			__FUNCTION__, __LINE__,
-+			*((uint64_t *) ctx->currentTarget->
-+			  ddb_profile.sas_addr),
-+			ctx->currentTarget->ddb_profile.conn_rate);
-+
-+		if (ctx->currentTarget->command_set_type ==
-+		    ASD_COMMAND_SET_SCSI) {
-+
-+			return ASD_STATE_INIT_SAS_ISSUE_REPORT_LUNS;
-+		}
-+	}
-+
-+	return ASD_STATE_INIT_SAS_FINISHED;
-+}
-+
-+static const char *asd_vpd_warning = "Warning: This device does not support "
-+"INQUIRY VPD Page 83h commmand which is required by the SAS spec. In addition, "
-+"this device does not support the optional INQUIRY VPD Page 80h. Devices that "
-+"do not support either of these commands may experience file corruption and "
-+"data loss. Please upgrade your firmware.";
-+
-+DISCOVER_RESULTS
-+asd_state_init_get_serial_number(struct state_machine_context *sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSAS_SM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	results = asd_issue_inquiry(sm_contextp, ctx->currentTarget,
-+				    inquiry_USN_cmd, sizeof(inquiry_USN_cmd));
-+
-+	return results;
-+}
-+
-+ASD_DISCOVERY_STATES
-+asd_state_init_get_serial_number_post(struct state_machine_context *
-+				      sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSAS_SM_Context *ctx;
-+	uint8_t *vpd_pagep;
-+	unsigned page_length;
-+	unsigned i;
-+	unsigned serial_number_len;
-+	struct discover_context *discover_contextp;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	discover_contextp = (struct discover_context *)
-+	    sm_contextp->state_handle;
-+
-+	if (discover_contextp->openStatus != OPEN_ACCEPT) {
-+
-+		printk("%s\n", asd_vpd_warning);
-+
-+#ifdef NO_VPD_WORKAROUND
-+		//TODO: free the ident field when the target is destroyed
-+
-+		ctx->currentTarget->scsi_cmdset.ident_len = sizeof(uint64_t);
-+
-+		ctx->currentTarget->scsi_cmdset.ident = (uint8_t *)
-+		    asd_alloc_mem(sizeof(uint64_t), GFP_KERNEL);
-+
-+		if (ctx->currentTarget->scsi_cmdset.ident != NULL) {
-+
-+			*(uint64_t *) ctx->currentTarget->scsi_cmdset.ident =
-+			    asd_be64toh(*((uint64_t *) ctx->currentTarget->
-+					  ddb_profile.sas_addr)) & ~0xfL;
-+
-+			printk("Setting ident to %llx\n",
-+			       *((uint64_t *) ctx->currentTarget->
-+				 scsi_cmdset.ident));
-+		}
-+#endif
-+	} else {
-+		vpd_pagep = &discover_contextp->SASInfoFrame[0];
-+
-+		page_length = vpd_pagep[3];
-+
-+		for (i = 0; i < (page_length + 3); i++) {
-+			printk("%02x ", vpd_pagep[i]);
-+
-+			if (((i + 1) % 16) == 0) {
-+				printk("\n");
-+			}
-+		}
-+
-+		serial_number_len = discover_contextp->SASInfoFrame[3];
-+
-+		if (serial_number_len > discover_contextp->sas_info_len) {
-+			serial_number_len = discover_contextp->sas_info_len;
-+		}
-+
-+		ctx->currentTarget->scsi_cmdset.ident_len = serial_number_len;
-+
-+		ctx->currentTarget->scsi_cmdset.ident = (uint8_t *)
-+		    asd_alloc_mem(ctx->currentTarget->scsi_cmdset.ident_len,
-+				  GFP_KERNEL);
-+
-+		if (ctx->currentTarget->scsi_cmdset.ident != NULL) {
-+			memcpy(ctx->currentTarget->scsi_cmdset.ident,
-+			       &discover_contextp->SASInfoFrame[4],
-+			       ctx->currentTarget->scsi_cmdset.ident_len);
-+		}
-+
-+		printk("serial number is %s\n",
-+		       ctx->currentTarget->scsi_cmdset.ident);
-+	}
-+
-+	while (ctx->currentTarget->all_domain_targets.next
-+	       != ctx->discover_listp) {
-+
-+		ctx->currentTarget =
-+		    list_entry(ctx->currentTarget->all_domain_targets.next,
-+			       struct asd_target, all_domain_targets);
-+
-+		if (ctx->currentTarget->command_set_type ==
-+		    ASD_COMMAND_SET_SCSI) {
-+
-+			return ASD_STATE_INIT_SAS_INQUIRY;
-+		}
-+	}
-+
-+	list_for_each_entry(ctx->currentTarget, ctx->discover_listp,
-+			    all_domain_targets) {
-+
-+		asd_log(ASD_DBG_INFO, "%s:%d - %llx %d\n",
-+			__FUNCTION__, __LINE__,
-+			*((uint64_t *) ctx->currentTarget->
-+			  ddb_profile.sas_addr),
-+			ctx->currentTarget->ddb_profile.conn_rate);
-+
-+		if (ctx->currentTarget->command_set_type ==
-+		    ASD_COMMAND_SET_SCSI) {
-+
-+			return ASD_STATE_INIT_SAS_ISSUE_REPORT_LUNS;
-+		}
-+	}
-+
-+	return ASD_STATE_INIT_SAS_FINISHED;
-+}
-+
-+DISCOVER_RESULTS
-+asd_state_init_sas_issue_report_luns(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSAS_SM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	results = asd_issue_report_luns(sm_contextp, ctx->currentTarget);
-+
-+	return results;
-+}
-+
-+ASD_DISCOVERY_STATES
-+asd_state_init_sas_issue_report_lun_post(struct state_machine_context *
-+					 sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSAS_SM_Context *ctx;
-+	unsigned i;
-+	unsigned num_luns;
-+	uint64_t *ReportLunsFrame;
-+	struct discover_context *discover_contextp;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	discover_contextp = (struct discover_context *)
-+	    sm_contextp->state_handle;
-+
-+	if (discover_contextp->openStatus != OPEN_ACCEPT) {
-+
-+		ctx->currentTarget->scsi_cmdset.num_luns = 1;
-+
-+		ctx->currentTarget->scsi_cmdset.luns = (uint64_t *)
-+		    asd_alloc_mem(sizeof(uint64_t), GFP_KERNEL);
-+
-+		memset(&ctx->currentTarget->scsi_cmdset.luns[0], 0,
-+		       sizeof(uint64_t));
-+
-+		printk("Report LUNS failed\n");
-+		/*
-+		 * Report LUNS failed.
-+		 */
-+	} else {
-+		ReportLunsFrame = (uint64_t *) discover_contextp->SASInfoFrame;
-+
-+		num_luns = asd_be32toh(ReportLunsFrame[0]) / sizeof(uint64_t);
-+
-+		if (num_luns > ASD_MAX_LUNS) {
-+			num_luns = ASD_MAX_LUNS;
-+		}
-+		// printk("%s: found %d luns\n", __FUNCTION__, num_luns);
-+
-+		ctx->currentTarget->scsi_cmdset.num_luns = num_luns;
-+
-+		ctx->currentTarget->scsi_cmdset.luns = (uint64_t *)
-+		    asd_alloc_mem(sizeof(uint64_t) * num_luns, GFP_KERNEL);
-+
-+		if (ctx->currentTarget->scsi_cmdset.luns != NULL) {
-+			for (i = 0; i < num_luns; i++) {
-+				/*
-+				 * The SASInfoFrame includes the length
-+				 * of the list as the first element.
-+				 */
-+				ctx->currentTarget->scsi_cmdset.luns[i] =
-+				    asd_be64toh(ReportLunsFrame[i + 1]);
-+			}
-+		} else {
-+			ctx->currentTarget->scsi_cmdset.num_luns = 0;
-+		}
-+	}
-+
-+	while (ctx->currentTarget->all_domain_targets.next
-+	       != ctx->discover_listp) {
-+
-+		ctx->currentTarget =
-+		    list_entry(ctx->currentTarget->all_domain_targets.next,
-+			       struct asd_target, all_domain_targets);
-+
-+		if (ctx->currentTarget->command_set_type ==
-+		    ASD_COMMAND_SET_SCSI) {
-+
-+			return ASD_STATE_INIT_SAS_ISSUE_REPORT_LUNS;
-+		}
-+	}
-+
-+	list_for_each_entry(ctx->currentTarget, ctx->discover_listp,
-+			    all_domain_targets) {
-+
-+		asd_log(ASD_DBG_INFO, "%s:%d - %llx %d\n",
-+			__FUNCTION__, __LINE__,
-+			*((uint64_t *) ctx->currentTarget->
-+			  ddb_profile.sas_addr),
-+			ctx->currentTarget->ddb_profile.conn_rate);
-+
-+		if (ctx->currentTarget->command_set_type ==
-+		    ASD_COMMAND_SET_SCSI) {
-+
-+			return ASD_STATE_INIT_SAS_GET_PORT_CONTROL;
-+		}
-+	}
-+
-+	return ASD_STATE_INIT_SAS_FINISHED;
-+}
-+
-+DISCOVER_RESULTS
-+asd_state_init_sas_get_port_control(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSAS_SM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	results = asd_issue_get_port_control(sm_contextp, ctx->currentTarget);
-+
-+	return results;
-+}
-+
-+ASD_DISCOVERY_STATES
-+asd_state_init_sas_get_port_control_post(struct state_machine_context *
-+					 sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSAS_SM_Context *ctx;
-+	uint8_t *port_control_page;
-+	struct discover_context *discover_contextp;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	discover_contextp = (struct discover_context *)
-+	    sm_contextp->state_handle;
-+
-+	if (discover_contextp->openStatus != OPEN_ACCEPT) {
-+
-+		//printk("Port Control failed\n");
-+		/*
-+		 * Report LUNS failed.
-+		 */
-+	} else {
-+		port_control_page = (uint8_t *) discover_contextp->SASInfoFrame;
-+
-+#if 0
-+		printk("page = 0x%x length = 0x%x protocol = 0x%x\n",
-+		       port_control_page[0],
-+		       port_control_page[1], port_control_page[2]);
-+
-+		printk("I_T Nexus Loss Time = %d\n",
-+		       asd_be16toh(*((uint16_t *) & port_control_page[4])));
-+#endif
-+	}
-+
-+	while (ctx->currentTarget->all_domain_targets.next
-+	       != ctx->discover_listp) {
-+
-+		ctx->currentTarget =
-+		    list_entry(ctx->currentTarget->all_domain_targets.next,
-+			       struct asd_target, all_domain_targets);
-+
-+		if (ctx->currentTarget->command_set_type ==
-+		    ASD_COMMAND_SET_SCSI) {
-+
-+			return ASD_STATE_INIT_SAS_GET_PORT_CONTROL;
-+		}
-+	}
-+
-+	return ASD_STATE_INIT_SAS_FINISHED;
-+}
-+
-+DISCOVER_RESULTS
-+asd_InitSAS_SM_Initialize(struct state_machine_context * sm_contextp,
-+			  void *init_args)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSAS_SM_Context *ctx;
-+	struct asd_InitSAS_SM_Arguments *args;
-+
-+	NEW_CONTEXT(ctx);
-+
-+	args = (struct asd_InitSAS_SM_Arguments *)init_args;
-+
-+	/*
-+	 * go through the configure cycle progressively
-+	 * ascending to each expander starting at "newExpander"
-+	 */
-+	ctx->discover_listp = args->discover_listp;
-+
-+	return DISCOVER_CONTINUE;
-+}
-+
-+DISCOVER_RESULTS
-+asd_InitSAS_SM_StateMachine(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSAS_SM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+	ASD_DISCOVERY_STATES current_state;
-+	ASD_DISCOVERY_STATES new_state;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	current_state = GET_CURRENT_STATE();
-+
-+	switch (current_state) {
-+	case ASD_STATE_INIT_SAS_START:
-+		new_state = asd_state_init_sas_start(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SAS_INQUIRY:
-+		new_state = asd_state_init_sas_inquiry_post(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SAS_GET_DEVICE_ID:
-+		new_state = asd_state_init_get_device_id_post(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SAS_GET_SERIAL_NUMBER:
-+		new_state = asd_state_init_get_serial_number_post(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SAS_ISSUE_REPORT_LUNS:
-+		new_state =
-+		    asd_state_init_sas_issue_report_lun_post(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SAS_GET_PORT_CONTROL:
-+		new_state =
-+		    asd_state_init_sas_get_port_control_post(sm_contextp);
-+		break;
-+
-+	default:
-+		new_state = ASD_STATE_INIT_SAS_FAILED;
-+		break;
-+	}
-+
-+	SM_new_state(sm_contextp, new_state);
-+
-+	switch (new_state) {
-+
-+	case ASD_STATE_INIT_SAS_INQUIRY:
-+		results = asd_state_init_sas_inquiry(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SAS_GET_DEVICE_ID:
-+		results = asd_state_init_get_device_id(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SAS_GET_SERIAL_NUMBER:
-+		results = asd_state_init_get_serial_number(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SAS_ISSUE_REPORT_LUNS:
-+		results = asd_state_init_sas_issue_report_luns(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SAS_GET_PORT_CONTROL:
-+		results = asd_state_init_sas_get_port_control(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SAS_FINISHED:
-+		results = DISCOVER_FINISHED;
-+		break;
-+
-+	default:
-+		results = DISCOVER_FAILED;
-+		break;
-+	}
-+
-+	return results;
-+}
-+
-+void
-+asd_InitSAS_SM_Finish(struct state_machine_context *sm_contextp,
-+		      DISCOVER_RESULTS results)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSAS_SM_Arguments *ctx;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	RETURN_STACK(results);
-+}
-+
-+void asd_InitSAS_SM_Abort(struct state_machine_context *sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSAS_SM_Arguments *ctx;
-+	ASD_DISCOVERY_STATES current_state;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	current_state = GET_CURRENT_STATE();
-+
-+#if 0
-+	switch (current_state) {
-+	}
-+#endif
-+}
-+
-+/* -------------------------------------------------------------------------- */
-+
-+struct asd_SATA_SpinHoldSM_Context {
-+	struct discover_context *discover_contextp;
-+	struct list_head *discover_listp;
-+	struct asd_target *currentTarget;
-+	unsigned phyIndex;
-+};
-+
-+ASD_DISCOVERY_STATES
-+asd_state_sata_spinhold_start(struct state_machine_context *sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_SATA_SpinHoldSM_Context *ctx;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	list_for_each_entry(ctx->currentTarget, ctx->discover_listp,
-+			    all_domain_targets) {
-+
-+		asd_log(ASD_DBG_INFO, "%s:%d - %llx %d\n",
-+			__FUNCTION__, __LINE__,
-+			*((uint64_t *) ctx->currentTarget->
-+			  ddb_profile.sas_addr),
-+			ctx->currentTarget->ddb_profile.conn_rate);
-+
-+		if ((ctx->currentTarget->transport_type ==
-+		     ASD_TRANSPORT_STP) &&
-+		    (ctx->currentTarget->ddb_profile.conn_rate ==
-+		     SPINUP_HOLD_OOB)) {
-+
-+			return ASD_STATE_SATA_SPINHOLD_PHY_CONTROL;
-+		}
-+	}
-+
-+	return ASD_STATE_SATA_SPINHOLD_FINISHED;
-+}
-+
-+DISCOVER_RESULTS
-+asd_sata_spinhold_get_next_target(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_SATA_SpinHoldSM_Context *ctx;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	while (ctx->currentTarget->all_domain_targets.next
-+	       != ctx->discover_listp) {
-+
-+		ctx->currentTarget =
-+		    list_entry(ctx->currentTarget->all_domain_targets.next,
-+			       struct asd_target, all_domain_targets);
-+
-+		if ((ctx->currentTarget->transport_type ==
-+		     ASD_TRANSPORT_STP) &&
-+		    (ctx->currentTarget->ddb_profile.conn_rate ==
-+		     SPINUP_HOLD_OOB)) {
-+
-+			return DISCOVER_OK;
-+		}
-+	}
-+
-+	return DISCOVER_FINISHED;
-+}
-+
-+DISCOVER_RESULTS
-+asd_state_sata_spinhold_phy_control(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_SATA_SpinHoldSM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+	struct asd_target *parent;
-+	unsigned i;
-+	struct Discover *discover;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	parent = ctx->currentTarget->parent;
-+
-+	/*
-+	 * Find the phy number of this device in the parent.
-+	 */
-+	for (i = 0; i < parent->num_phys; i++) {
-+
-+		discover = &(parent->Phy[i].Result);
-+
-+		if (SAS_ISEQUAL(ctx->currentTarget->ddb_profile.sas_addr,
-+				discover->AttachedSASAddress)) {
-+
-+			break;
-+		}
-+	}
-+
-+	if (i == parent->num_phys) {
-+
-+		results = asd_sata_spinhold_get_next_target(sm_contextp);
-+
-+		return results;
-+	}
-+
-+	results = asd_issue_phy_control(sm_contextp, parent, i, LINK_RESET);
-+
-+	return results;
-+}
-+
-+ASD_DISCOVERY_STATES
-+asd_state_sata_spinhold_phy_control_post(struct state_machine_context *
-+					 sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_SATA_SpinHoldSM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+	struct asd_target *parent;
-+	struct Discover *discover;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	results = asd_issue_phy_control_post(sm_contextp,
-+					     ctx->currentTarget->parent);
-+
-+	if (results != DISCOVER_OK) {
-+
-+		results = asd_sata_spinhold_get_next_target(sm_contextp);
-+
-+		if (results != DISCOVER_FINISHED) {
-+			return ASD_STATE_SATA_SPINHOLD_PHY_CONTROL;
-+		}
-+
-+		return ASD_STATE_SATA_SPINHOLD_FINISHED;
-+	}
-+
-+	parent = ctx->currentTarget->parent;
-+
-+	/*
-+	 * Find the phy number of the first matching device in the parent.
-+	 */
-+	for (ctx->phyIndex = 0; ctx->phyIndex < parent->num_phys;
-+	     ctx->phyIndex++) {
-+
-+		discover = &(parent->Phy[ctx->phyIndex].Result);
-+
-+		if (SAS_ISEQUAL(ctx->currentTarget->ddb_profile.sas_addr,
-+				discover->AttachedSASAddress)) {
-+
-+			return ASD_STATE_SATA_SPINHOLD_DISCOVER;
-+		}
-+	}
-+
-+	printk("Didn't find target!\n");
-+
-+	results = asd_sata_spinhold_get_next_target(sm_contextp);
-+
-+	if (results != DISCOVER_FINISHED) {
-+		return ASD_STATE_SATA_SPINHOLD_PHY_CONTROL;
-+	}
-+
-+	return ASD_STATE_SATA_SPINHOLD_FINISHED;
-+}
-+
-+DISCOVER_RESULTS
-+asd_state_sata_spinhold_discover(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_SATA_SpinHoldSM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+	struct asd_target *parent;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	parent = ctx->currentTarget->parent;
-+
-+	results = asd_issue_discover_request(sm_contextp,
-+					     parent, ctx->phyIndex);
-+
-+	return results;
-+}
-+
-+ASD_DISCOVERY_STATES
-+asd_state_sata_spinhold_discover_post(struct state_machine_context *
-+				      sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_SATA_SpinHoldSM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+	struct asd_target *parent;
-+	struct Discover *discover;
-+	struct discover_context *discover_contextp;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	discover_contextp = (struct discover_context *)
-+	    sm_contextp->state_handle;
-+
-+	parent = ctx->currentTarget->parent;
-+
-+	results = asd_issue_discover_request_post(sm_contextp,
-+						  parent, ctx->phyIndex);
-+
-+	if (results != DISCOVER_OK) {
-+		printk("discover request failed\n");
-+	}
-+
-+	parent = ctx->currentTarget->parent;
-+
-+	discover = &(parent->Phy[ctx->phyIndex].Result);
-+
-+	ctx->currentTarget->ddb_profile.conn_rate =
-+	    discover->NegotiatedPhysicalLinkRate;
-+
-+	asd_hwi_setup_ddb_site(discover_contextp->asd, ctx->currentTarget);
-+
-+	ctx->phyIndex++;
-+
-+	/*
-+	 * Find the phy number of this device in the parent.
-+	 */
-+	for (; ctx->phyIndex < parent->num_phys; ctx->phyIndex++) {
-+
-+		discover = &(parent->Phy[ctx->phyIndex].Result);
-+
-+		if (SAS_ISEQUAL(ctx->currentTarget->ddb_profile.sas_addr,
-+				discover->AttachedSASAddress)) {
-+
-+			return ASD_STATE_SATA_SPINHOLD_DISCOVER;
-+		}
-+	}
-+
-+	results = asd_sata_spinhold_get_next_target(sm_contextp);
-+
-+	if (results != DISCOVER_FINISHED) {
-+		return ASD_STATE_SATA_SPINHOLD_PHY_CONTROL;
-+	}
-+
-+	return ASD_STATE_SATA_SPINHOLD_FINISHED;
-+}
-+
-+DISCOVER_RESULTS
-+asd_SATA_SpinHoldSM_Initialize(struct state_machine_context * sm_contextp,
-+			       void *init_args)
-+{
-+	struct state_information *state_infop;
-+	struct asd_SATA_SpinHoldSM_Context *ctx;
-+	struct asd_SATA_SpinHoldSM_Arguments *args;
-+
-+	NEW_CONTEXT(ctx);
-+
-+	args = (struct asd_SATA_SpinHoldSM_Arguments *)init_args;
-+
-+	/*
-+	 * go through the configure cycle progressively
-+	 * ascending to each expander starting at "newExpander"
-+	 */
-+	ctx->discover_listp = args->discover_listp;
-+
-+	return DISCOVER_CONTINUE;
-+}
-+
-+DISCOVER_RESULTS
-+asd_SATA_SpinHoldSM_StateMachine(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_SATA_SpinHoldSM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+	ASD_DISCOVERY_STATES current_state;
-+	ASD_DISCOVERY_STATES new_state;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	current_state = GET_CURRENT_STATE();
-+
-+	switch (current_state) {
-+	case ASD_STATE_SATA_SPINHOLD_START:
-+		new_state = asd_state_sata_spinhold_start(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_SATA_SPINHOLD_PHY_CONTROL:
-+		new_state =
-+		    asd_state_sata_spinhold_phy_control_post(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_SATA_SPINHOLD_DISCOVER:
-+		new_state = asd_state_sata_spinhold_discover_post(sm_contextp);
-+		break;
-+
-+	default:
-+		new_state = ASD_STATE_SATA_SPINHOLD_FAILED;
-+		break;
-+	}
-+
-+	SM_new_state(sm_contextp, new_state);
-+
-+	switch (new_state) {
-+	case ASD_STATE_SATA_SPINHOLD_PHY_CONTROL:
-+		results = asd_state_sata_spinhold_phy_control(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_SATA_SPINHOLD_DISCOVER:
-+		results = asd_state_sata_spinhold_discover(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_SATA_SPINHOLD_FINISHED:
-+		results = DISCOVER_FINISHED;
-+		break;
-+
-+	default:
-+		results = DISCOVER_FAILED;
-+		break;
-+	}
-+
-+	return results;
-+}
-+
-+void
-+asd_SATA_SpinHoldSM_Finish(struct state_machine_context *sm_contextp,
-+			   DISCOVER_RESULTS results)
-+{
-+	struct state_information *state_infop;
-+	struct asd_SATA_SpinHoldSM_Arguments *ctx;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	RETURN_STACK(results);
-+}
-+
-+void asd_SATA_SpinHoldSM_Abort(struct state_machine_context *sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_SATA_SpinHoldSM_Arguments *ctx;
-+	ASD_DISCOVERY_STATES current_state;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	current_state = GET_CURRENT_STATE();
-+
-+	switch (current_state) {
-+	case ASD_STATE_SATA_SPINHOLD_PHY_CONTROL:
-+		/*
-+		 * TODO: we need to abort the outstanding Phy Control request.
-+		 */
-+		break;
-+
-+	case ASD_STATE_SATA_SPINHOLD_DISCOVER:
-+		/*
-+		 * TODO: we need to abort the outstanding Discover request.
-+		 */
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+
-+/* -------------------------------------------------------------------------- */
-+
-+struct asd_ConfigureATA_SM_Context {
-+	struct asd_target *target;
-+	uint8_t next_feature;
-+	uint8_t sector_count;
-+};
-+
-+ASD_DISCOVERY_STATES
-+asd_state_configure_ata_start(struct state_machine_context *sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_ConfigureATA_SM_Context *ctx;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	ctx->next_feature = asd_get_feature_to_enable(ctx->target,
-+						      &ctx->sector_count);
-+
-+	if (ctx->next_feature == 0) {
-+		return ASD_STATE_CONFIGURE_ATA_FINISHED;
-+	}
-+
-+	if (ctx->target->transport_type != ASD_TRANSPORT_ATA) {
-+		return ASD_STATE_CONFIGURE_ATA_FINISHED;
-+	}
-+
-+	return ASD_STATE_CONFIGURE_ATA_FEATURES;
-+}
-+
-+DISCOVER_RESULTS
-+asd_state_configure_ata_features(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_ConfigureATA_SM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	results = asd_sata_configure_features(sm_contextp, ctx->target,
-+					      ctx->next_feature,
-+					      ctx->sector_count);
-+
-+	return results;
-+}
-+
-+uint8_t
-+asd_get_feature_to_enable(struct asd_target * target, uint8_t * sector_count)
-+{
-+	unsigned features_enabled;
-+	unsigned features_state;
-+	unsigned *dma_mode_level;
-+
-+	switch (target->command_set_type) {
-+	case ASD_COMMAND_SET_ATA:
-+		features_enabled = target->ata_cmdset.features_enabled;
-+		features_state = target->ata_cmdset.features_state;
-+		dma_mode_level = &target->ata_cmdset.dma_mode_level;
-+		break;
-+
-+	case ASD_COMMAND_SET_ATAPI:
-+		features_enabled = target->atapi_cmdset.features_enabled;
-+		features_state = target->ata_cmdset.features_state;
-+		dma_mode_level = &target->atapi_cmdset.dma_mode_level;
-+		break;
-+
-+	default:
-+		return 0;
-+	}
-+
-+	*sector_count = 0;
-+
-+	if (features_enabled & WRITE_CACHE_FEATURE_ENABLED) {
-+		if ((features_state & SATA_USES_WRITE_CACHE) == 0) {
-+			return SETFEATURES_EN_WCACHE;
-+		}
-+	} else {
-+		if (features_state & SATA_USES_WRITE_CACHE) {
-+			return SETFEATURES_DIS_WCACHE;
-+		}
-+	}
-+
-+	if (features_enabled & READ_AHEAD_FEATURE_ENABLED) {
-+		if ((features_state & SATA_USES_READ_AHEAD) == 0) {
-+			return SETFEATURES_EN_RLA;
-+		}
-+	} else {
-+		if (features_state & SATA_USES_READ_AHEAD) {
-+			return SETFEATURES_DIS_RLA;
-+		}
-+	}
-+
-+	if (features_enabled & SATA_USES_UDMA) {
-+		if (features_state & NEEDS_XFER_SETFEATURES) {
-+			*sector_count = *dma_mode_level;
-+
-+			return SETFEATURES_XFER;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+ASD_DISCOVERY_STATES
-+asd_state_configure_ata_features_post(struct state_machine_context *
-+				      sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_ConfigureATA_SM_Context *ctx;
-+	unsigned *features_state;
-+	struct discover_context *discover_contextp;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	discover_contextp = (struct discover_context *)
-+	    sm_contextp->state_handle;
-+
-+	if (discover_contextp->openStatus != OPEN_ACCEPT) {
-+
-+		printk("configure failed\n");
-+
-+		//TODO: we can't give up, but we need to notify the user
-+
-+	} else {
-+		switch (ctx->target->command_set_type) {
-+		case ASD_COMMAND_SET_ATA:
-+			features_state =
-+			    &ctx->target->ata_cmdset.features_state;
-+			break;
-+
-+		case ASD_COMMAND_SET_ATAPI:
-+			features_state =
-+			    &ctx->target->ata_cmdset.features_state;
-+			break;
-+
-+		default:
-+			return ASD_STATE_CONFIGURE_ATA_FINISHED;
-+		}
-+
-+		switch (ctx->next_feature) {
-+		case SETFEATURES_EN_WCACHE:
-+			*features_state |= SATA_USES_WRITE_CACHE;
-+			break;
-+
-+		case SETFEATURES_EN_RLA:
-+			*features_state |= SATA_USES_READ_AHEAD;
-+			break;
-+
-+		case SETFEATURES_DIS_WCACHE:
-+			*features_state &= ~SATA_USES_WRITE_CACHE;
-+			break;
-+
-+		case SETFEATURES_DIS_RLA:
-+			*features_state &= ~SATA_USES_READ_AHEAD;
-+			break;
-+
-+		case SETFEATURES_XFER:
-+			*features_state &= ~NEEDS_XFER_SETFEATURES;
-+			break;
-+		}
-+	}
-+
-+	ctx->next_feature = asd_get_feature_to_enable(ctx->target,
-+						      &ctx->sector_count);
-+
-+	if (ctx->next_feature != 0) {
-+		return ASD_STATE_CONFIGURE_ATA_FEATURES;
-+	}
-+
-+	return ASD_STATE_CONFIGURE_ATA_FINISHED;
-+}
-+
-+/*
-+ * The ConfigureATA state machine operates on a signle target so that it can
-+ * be performed on an individual device to reconfigure that device after reset.
-+ *
-+ * This state machine does not need a discovery context (discover_contextp).
-+ */
-+DISCOVER_RESULTS
-+asd_ConfigureATA_SM_Initialize(struct state_machine_context * sm_contextp,
-+			       void *init_args)
-+{
-+	struct state_information *state_infop;
-+	struct asd_ConfigureATA_SM_Context *ctx;
-+	struct asd_ConfigureATA_SM_Arguments *args;
-+
-+	NEW_CONTEXT(ctx);
-+
-+	args = (struct asd_ConfigureATA_SM_Arguments *)init_args;
-+
-+	ctx->target = args->target;
-+
-+	return DISCOVER_CONTINUE;
-+}
-+
-+DISCOVER_RESULTS
-+asd_ConfigureATA_SM_StateMachine(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_ConfigureATA_SM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+	ASD_DISCOVERY_STATES current_state;
-+	ASD_DISCOVERY_STATES new_state;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	current_state = GET_CURRENT_STATE();
-+
-+	switch (current_state) {
-+	case ASD_STATE_CONFIGURE_ATA_START:
-+		new_state = asd_state_configure_ata_start(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_CONFIGURE_ATA_FEATURES:
-+		new_state = asd_state_configure_ata_features_post(sm_contextp);
-+		break;
-+
-+	default:
-+		new_state = ASD_STATE_CONFIGURE_ATA_FAILED;
-+		break;
-+	}
-+
-+	SM_new_state(sm_contextp, new_state);
-+
-+	switch (new_state) {
-+	case ASD_STATE_CONFIGURE_ATA_FEATURES:
-+		results = asd_state_configure_ata_features(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_CONFIGURE_ATA_FINISHED:
-+		results = DISCOVER_FINISHED;
-+		break;
-+
-+	default:
-+		results = DISCOVER_FAILED;
-+		break;
-+	}
-+
-+	return results;
-+}
-+
-+void
-+asd_ConfigureATA_SM_Finish(struct state_machine_context *sm_contextp,
-+			   DISCOVER_RESULTS results)
-+{
-+	struct state_information *state_infop;
-+	struct asd_ConfigureATA_SM_Context *ctx;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	RETURN_STACK(results);
-+}
-+
-+void asd_ConfigureATA_SM_Abort(struct state_machine_context *sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_ConfigureATA_SM_Context *ctx;
-+	ASD_DISCOVERY_STATES current_state;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	current_state = GET_CURRENT_STATE();
-+
-+	switch (current_state) {
-+	case ASD_STATE_CONFIGURE_ATA_FEATURES:
-+		break;
-+
-+	default:
-+		break;
-+	}
-+}
-+
-+/* -------------------------------------------------------------------------- */
-+
-+struct asd_InitSATA_SM_Context {
-+	struct discover_context *discover_contextp;
-+	struct list_head *discover_listp;
-+	struct asd_target *currentTarget;
-+};
-+
-+ASD_DISCOVERY_STATES
-+asd_state_init_sata_start(struct state_machine_context *sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSATA_SM_Context *ctx;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	/*
-+	 * Are there any devices that need a report phy?
-+	 */
-+	list_for_each_entry(ctx->currentTarget, ctx->discover_listp,
-+			    all_domain_targets) {
-+
-+		if (ctx->currentTarget->transport_type == ASD_TRANSPORT_STP) {
-+
-+			return ASD_STATE_INIT_SATA_REPORT_PHY;
-+
-+		} else if (ctx->currentTarget->transport_type ==
-+			   ASD_TRANSPORT_ATA) {
-+
-+			asd_init_sata_direct_attached(sm_contextp,
-+						      ctx->currentTarget);
-+
-+			continue;
-+		}
-+	}
-+
-+	/*
-+	 * If not, are there any devices that need a SATA identify or configure
-+	 * features?
-+	 */
-+	list_for_each_entry(ctx->currentTarget, ctx->discover_listp,
-+			    all_domain_targets) {
-+
-+		if (ctx->currentTarget->device_protocol_type ==
-+		    ASD_DEVICE_PROTOCOL_ATA) {
-+
-+			return ASD_STATE_INIT_SATA_IDENTIFY;
-+		}
-+	}
-+
-+	return ASD_STATE_INIT_SATA_FINISHED;
-+}
-+
-+DISCOVER_RESULTS
-+asd_state_init_sata_report_phy(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSATA_SM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+	struct asd_target *parent;
-+	unsigned i;
-+	struct Discover *discover;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	parent = ctx->currentTarget->parent;
-+
-+	for (i = 0; i < parent->num_phys; i++) {
-+
-+		discover = &(parent->Phy[i].Result);
-+
-+		if (SAS_ISEQUAL(ctx->currentTarget->ddb_profile.sas_addr,
-+				discover->AttachedSASAddress)) {
-+
-+			break;
-+		}
-+	}
-+
-+	if (i == parent->num_phys) {
-+
-+		results = DISCOVER_FAILED;
-+
-+		return results;
-+	}
-+
-+	results = asd_issue_report_phy_sata(sm_contextp, parent, i);
-+
-+	return results;
-+}
-+
-+#define NUM_FIS_DWORDS \
-+		(sizeof(struct adp_dev_to_host_fis) / sizeof(unsigned))
-+
-+ASD_DISCOVERY_STATES
-+asd_init_sata_report_phy_next_target(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSATA_SM_Context *ctx;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	while (ctx->currentTarget->all_domain_targets.next
-+	       != ctx->discover_listp) {
-+
-+		ctx->currentTarget =
-+		    list_entry(ctx->currentTarget->all_domain_targets.next,
-+			       struct asd_target, all_domain_targets);
-+
-+		if (ctx->currentTarget->transport_type == ASD_TRANSPORT_STP) {
-+
-+			return ASD_STATE_INIT_SATA_REPORT_PHY;
-+
-+		} else if (ctx->currentTarget->transport_type ==
-+			   ASD_TRANSPORT_ATA) {
-+
-+			asd_init_sata_direct_attached(sm_contextp,
-+						      ctx->currentTarget);
-+		}
-+	}
-+
-+	/*
-+	 * If there are no more STP devices to phy control, check to see if
-+	 * there are any devices that need IDENTIFY / PIDENTIFY.
-+	 */
-+	list_for_each_entry(ctx->currentTarget, ctx->discover_listp,
-+			    all_domain_targets) {
-+
-+		if (ctx->currentTarget->device_protocol_type ==
-+		    ASD_DEVICE_PROTOCOL_ATA) {
-+
-+			return ASD_STATE_INIT_SATA_IDENTIFY;
-+		}
-+	}
-+
-+	return ASD_STATE_INIT_SATA_FINISHED;
-+}
-+
-+ASD_DISCOVERY_STATES
-+asd_state_init_sata_report_phy_post(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSATA_SM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+	unsigned i;
++	struct asd_phy *phy;
 +	struct adp_dev_to_host_fis *fis;
-+	ASD_DISCOVERY_STATES new_state;
 +	struct discover_context *discover_contextp;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
 +
 +	discover_contextp = (struct discover_context *)
 +	    sm_contextp->state_handle;
 +
-+	results = asd_issue_report_phy_sata_post(sm_contextp,
-+						 ctx->currentTarget->parent);
++	phy = list_entry(target->src_port->phys_attached.next,
++			 struct asd_phy, links);
 +
-+	if (results != DISCOVER_OK) {
++	fis = (struct adp_dev_to_host_fis *)
++	    &phy->bytes_dmaed_rcvd.initial_fis_rcvd.fis[0];
 +
-+		new_state = asd_init_sata_report_phy_next_target(sm_contextp);
++	target->command_set_type = asd_sata_get_type(fis);
 +
-+		return new_state;
-+	}
-+
-+	fis = (struct adp_dev_to_host_fis *)&discover_contextp->
-+	    SMPResponseFrame->Response.ReportPhySATA.FIS;
-+
-+	if (fis->error == FIS_DEVICE_TO_HOST) {
-+
-+		for (i = 0; i < NUM_FIS_DWORDS; i++) {
-+
-+			*((unsigned *)fis + i) =
-+			    asd_htobe32(*((unsigned *)fis + i));
-+		}
-+	}
-+
-+	ctx->currentTarget->command_set_type = asd_sata_get_type(fis);
-+
-+	memcpy((void *)&ctx->currentTarget->
-+	       device_protocol.ata_device_protocol.initial_fis[0],
++	memcpy((void *)&target->device_protocol.
++	       ata_device_protocol.initial_fis[0],
 +	       (void *)fis, sizeof(struct adp_dev_to_host_fis));
 +
-+	ctx->currentTarget->ddb_profile.sata_status = fis->status;
++	target->ddb_profile.sata_status = fis->status;
 +
-+	asd_hwi_update_sata(discover_contextp->asd, ctx->currentTarget);
-+
-+	new_state = asd_init_sata_report_phy_next_target(sm_contextp);
-+
-+	return new_state;
-+}
-+
-+DISCOVER_RESULTS
-+asd_state_init_sata_identify(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSATA_SM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	results = asd_sata_identify_request(sm_contextp, ctx->currentTarget);
-+
-+	return results;
-+}
-+
-+ASD_DISCOVERY_STATES
-+asd_init_sata_identify_next_target(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSATA_SM_Context *ctx;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	while (ctx->currentTarget->all_domain_targets.next
-+	       != ctx->discover_listp) {
-+
-+		ctx->currentTarget =
-+		    list_entry(ctx->currentTarget->all_domain_targets.next,
-+			       struct asd_target, all_domain_targets);
-+
-+		if (ctx->currentTarget->device_protocol_type ==
-+		    ASD_DEVICE_PROTOCOL_ATA) {
-+
-+			return ASD_STATE_INIT_SATA_IDENTIFY;
-+		}
-+	}
-+
-+	/*
-+	 * If there are no more ATA devices to identify, then check to see
-+	 * if any device need to be configured.
-+	 */
-+	list_for_each_entry(ctx->currentTarget, ctx->discover_listp,
-+			    all_domain_targets) {
-+
-+		if (ctx->currentTarget->device_protocol_type ==
-+		    ASD_DEVICE_PROTOCOL_ATA) {
-+
-+			return ASD_STATE_INIT_SATA_CONFIGURE_FEATURES;
-+		}
-+	}
-+
-+	return ASD_STATE_INIT_SATA_FINISHED;
-+}
-+
-+ASD_DISCOVERY_STATES
-+asd_state_init_sata_identify_post(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSATA_SM_Context *ctx;
-+	ASD_DISCOVERY_STATES new_state;
-+	struct discover_context *discover_contextp;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	discover_contextp = (struct discover_context *)
-+	    sm_contextp->state_handle;
-+
-+	if (discover_contextp->openStatus != OPEN_ACCEPT) {
-+
-+		printk("identify failed\n");
-+
-+		//TODO: we can't give up, but we need to notify the user
-+	} else {
-+		/*
-+		 * Pre-compute the features that this drive supports so
-+		 * that we don't have to hunt them down in the hd_driveid
-+		 * structure.
-+		 */
-+		asd_sata_compute_support(discover_contextp->asd,
-+					 ctx->currentTarget);
-+	}
-+
-+	new_state = asd_init_sata_identify_next_target(sm_contextp);
-+
-+	return new_state;
-+}
-+
-+DISCOVER_RESULTS
-+asd_state_init_sata_configure_features(struct state_machine_context *
-+				       sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSATA_SM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+	struct asd_ConfigureATA_SM_Arguments args;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	args.target = ctx->currentTarget;
-+
-+	results = ASD_PUSH_STATE_MACHINE(sm_contextp,
-+					 &asd_ConfigureATA_SM, (void *)&args);
-+
-+	return results;
-+}
-+
-+ASD_DISCOVERY_STATES
-+asd_init_sata_configure_features_next_target(struct state_machine_context *
-+					     sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSATA_SM_Context *ctx;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	while (ctx->currentTarget->all_domain_targets.next
-+	       != ctx->discover_listp) {
-+
-+		ctx->currentTarget =
-+		    list_entry(ctx->currentTarget->all_domain_targets.next,
-+			       struct asd_target, all_domain_targets);
-+
-+		if (ctx->currentTarget->device_protocol_type ==
-+		    ASD_DEVICE_PROTOCOL_ATA) {
-+
-+			return ASD_STATE_INIT_SATA_CONFIGURE_FEATURES;
-+		}
-+	}
-+
-+	return ASD_STATE_INIT_SATA_FINISHED;
-+}
-+
-+ASD_DISCOVERY_STATES
-+asd_state_init_sata_configure_features_post(struct state_machine_context *
-+					    sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSATA_SM_Context *ctx;
-+	ASD_DISCOVERY_STATES new_state;
-+	struct discover_context *discover_contextp;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	discover_contextp = (struct discover_context *)
-+	    sm_contextp->state_handle;
-+
-+	if (discover_contextp->openStatus != OPEN_ACCEPT) {
-+
-+		printk("configure failed\n");
-+
-+		//TODO: we can't give up, but we need to notify the user
-+	}
-+
-+	new_state = asd_init_sata_configure_features_next_target(sm_contextp);
-+
-+	return new_state;
-+}
-+
-+DISCOVER_RESULTS
-+asd_InitSATA_SM_Initialize(struct state_machine_context * sm_contextp,
-+			   void *init_args)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSATA_SM_Context *ctx;
-+	struct asd_InitSATA_SM_Arguments *args;
-+
-+	NEW_CONTEXT(ctx);
-+
-+	args = (struct asd_InitSATA_SM_Arguments *)init_args;
-+
-+	/*
-+	 * go through the configure cycle progressively
-+	 * ascending to each expander starting at "newExpander"
-+	 */
-+	ctx->discover_listp = args->discover_listp;
-+
-+	return DISCOVER_CONTINUE;
-+}
-+
-+DISCOVER_RESULTS
-+asd_InitSATA_SM_StateMachine(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSATA_SM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+	ASD_DISCOVERY_STATES current_state;
-+	ASD_DISCOVERY_STATES new_state;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	current_state = GET_CURRENT_STATE();
-+
-+	switch (current_state) {
-+	case ASD_STATE_INIT_SATA_START:
-+		new_state = asd_state_init_sata_start(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SATA_REPORT_PHY:
-+		new_state = asd_state_init_sata_report_phy_post(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SATA_IDENTIFY:
-+		new_state = asd_state_init_sata_identify_post(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SATA_CONFIGURE_FEATURES:
-+		new_state =
-+		    asd_state_init_sata_configure_features_post(sm_contextp);
-+		break;
-+
-+	default:
-+		new_state = ASD_STATE_INIT_SATA_FAILED;
-+		break;
-+	}
-+
-+	SM_new_state(sm_contextp, new_state);
-+
-+	switch (new_state) {
-+	case ASD_STATE_INIT_SATA_REPORT_PHY:
-+		results = asd_state_init_sata_report_phy(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SATA_IDENTIFY:
-+		results = asd_state_init_sata_identify(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SATA_CONFIGURE_FEATURES:
-+		results = asd_state_init_sata_configure_features(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_INIT_SATA_FINISHED:
-+		results = DISCOVER_FINISHED;
-+		break;
-+
-+	default:
-+		results = DISCOVER_FAILED;
-+		break;
-+	}
-+
-+	return results;
-+}
-+
-+void
-+asd_InitSATA_SM_Finish(struct state_machine_context *sm_contextp,
-+		       DISCOVER_RESULTS results)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSATA_SM_Context *ctx;
-+	struct discover_context *discover_contextp;
-+	struct asd_phy *phy;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	discover_contextp = (struct discover_context *)
-+	    sm_contextp->state_handle;
-+
-+	if (results == DISCOVER_FAILED) {
-+		phy = list_entry(discover_contextp->port->phys_attached.next,
-+				 struct asd_phy, links);
-+
-+		printk("Phy%d: %s - discovery error\n", phy->id, __FUNCTION__);
-+	}
-+
-+	RETURN_STACK(results);
-+}
-+
-+void asd_InitSATA_SM_Abort(struct state_machine_context *sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_InitSATA_SM_Context *ctx;
-+	ASD_DISCOVERY_STATES current_state;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	current_state = GET_CURRENT_STATE();
-+
-+	switch (current_state) {
-+	case ASD_STATE_INIT_SATA_REPORT_PHY:
-+		/*
-+		 * TODO: Abort Report Phy request.
-+		 */
-+		break;
-+
-+	case ASD_STATE_INIT_SATA_IDENTIFY:
-+		/*
-+		 * TODO: Abort Identify request.
-+		 */
-+		break;
-+
-+	default:
-+		break;
-+	}
++	asd_hwi_update_sata(discover_contextp->asd, target);
 +}
 +
 +/* -------------------------------------------------------------------------- */
 +
-+struct asd_ConfigureExpanderSM_Context {
++DISCOVER_RESULTS
++asd_issue_phy_control(struct state_machine_context *sm_contextp,
++		      struct asd_target *expander,
++		      unsigned phyIndex, unsigned operation)
++{
++	DISCOVER_RESULTS results;
 +	struct discover_context *discover_contextp;
-+	struct list_head *discover_listp;
-+	struct asd_target *newExpander;
-+	struct asd_target *currentExpander;
-+	struct asd_target *configureExpander;
-+	uint8_t upstreamSASAddress[SAS_ADDR_LEN];
-+	uint8_t upstreamPhyIdentifier;
-+	unsigned phyIndex;
-+	unsigned routeIndex;
-+	uint32_t slowest_link;
-+};
 +
-+DISCOVER_RESULTS
-+asd_state_config_expander_route(struct state_machine_context *sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_ConfigureExpanderSM_Context *ctx;
-+	uint8_t disableRouteEntry;
-+	struct Discover *discover;
-+	DISCOVER_RESULTS results;
-+	uint8_t *attached_sas_addr;
++	discover_contextp = (struct discover_context *)
++	    sm_contextp->state_handle;
 +
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
++	memset(discover_contextp->SMPRequestFrame, 0,
++	       sizeof(struct SMPRequest));
 +
-+	for (; 1; ctx->currentExpander = ctx->configureExpander) {
++	discover_contextp->SMPRequestFrame->SMPFrameType = SMP_REQUEST_FRAME;
 +
-+		if (ctx->currentExpander->management_flags & DEVICE_SET_ROOT) {
-+			/*
-+			 * This is the edge of the device set, we are done.
-+			 */
-+			return DISCOVER_FINISHED;
-+		}
-+		/*
-+		 * move upstream from here to find the expander table to 
-+		 * configure with information from "attachedExpander"
-+		 */
-+		if (!asd_upstream_expander(ctx->currentExpander,
-+					   ctx->upstreamSASAddress,
-+					   &ctx->upstreamPhyIdentifier)) {
++	discover_contextp->SMPRequestFrame->Function = PHY_CONTROL;
 +
-+			return DISCOVER_FINISHED;
-+		}
++	discover_contextp->SMPRequestFrame->Request.PhyControl.
++	    PhyIdentifier = phyIndex;
 +
-+		if (SAS_ISZERO(ctx->upstreamSASAddress)) {
-+			return DISCOVER_FINISHED;
-+		}
-+
-+		/*
-+		 * get the expander associated with the upstream address
-+		 */
-+		ctx->configureExpander = asd_find_target(ctx->discover_listp,
-+							 ctx->
-+							 upstreamSASAddress);
-+
-+		if (ctx->configureExpander == NULL) {
-+			/*
-+			 * If we don't have the upstream expander, something
-+			 * is wrong.  This should never happen.
-+			 */
-+			return DISCOVER_FAILED;
-+		}
-+
-+		/*
-+		 * if we found an upstream expander, then program its route
-+		 * table.
-+		 */
-+		for (ctx->phyIndex = 0; ctx->phyIndex <
-+		     ctx->configureExpander->num_phys; ctx->phyIndex++) {
-+
-+			attached_sas_addr =
-+			    ctx->configureExpander->
-+			    Phy[ctx->phyIndex].Result.AttachedSASAddress;
-+
-+			if (SAS_ISEQUAL(attached_sas_addr,
-+					ctx->currentExpander->ddb_profile.
-+					sas_addr)) {
-+
-+				break;
-+			}
-+		}
-+
-+		if (ctx->phyIndex == ctx->configureExpander->num_phys) {
-+
-+			continue;
-+		}
-+
-+		/*
-+		 * assume the route entry is enabled
-+		 */
-+		disableRouteEntry = ENABLED;
-+
-+		discover = NULL;
-+
-+		for (ctx->routeIndex = 0;
-+		     ctx->routeIndex < ctx->newExpander->num_phys;
-+		     ctx->routeIndex++) {
-+
-+			discover = &(ctx->newExpander->
-+				     Phy[ctx->routeIndex].Result);
-+
-+			/*
-+			 * check to see if the address needs to be configured
-+			 * in the route table, this decision is based on the
-+			 * optimization flag
-+			 */
-+			if (asd_qualified_address(ctx->configureExpander,
-+						  ctx->phyIndex, discover,
-+						  &disableRouteEntry)) {
-+
-+				break;
-+			}
-+		}
-+
-+		if (ctx->routeIndex == ctx->newExpander->num_phys) {
-+
-+			continue;
-+		}
-+
-+		results = asd_issue_route_config(sm_contextp,
-+						 ctx->configureExpander,
-+						 ctx->phyIndex,
-+						 disableRouteEntry,
-+						 discover->AttachedSASAddress);
-+
-+		return results;
-+	}
-+}
-+
-+ASD_DISCOVERY_STATES
-+asd_state_config_expander_route_post(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_ConfigureExpanderSM_Context *ctx;
-+	struct Discover *discover;
-+	DISCOVER_RESULTS results;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	results = asd_issue_route_config_post(sm_contextp,
-+					      ctx->configureExpander,
-+					      ctx->phyIndex);
-+
-+	if (results == DISCOVER_OK) {
-+
-+		discover = &(ctx->newExpander->Phy[ctx->routeIndex].Result);
-+
-+		ctx->routeIndex++;
-+
-+		/*
-+		 * add the address to the internal copy of the
-+		 * route table, if successfully configured
-+		 */
-+		SASCPY(ROUTE_ENTRY(ctx->configureExpander, ctx->phyIndex,
-+				   ctx->configureExpander->
-+				   route_indexes[ctx->phyIndex]),
-+		       discover->AttachedSASAddress);
-+
-+		ctx->configureExpander->route_indexes[ctx->phyIndex]++;
-+
-+		return ASD_STATE_CONFIG_EXPANDER_ROUTE_LOOP;
-+	}
-+
-+	return ASD_STATE_CONFIG_EXPANDER_FAILED;
-+}
-+
-+DISCOVER_RESULTS
-+asd_state_config_expander_route_loop(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_ConfigureExpanderSM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+	uint8_t disableRouteEntry;
-+	struct Discover *discover;
-+	uint8_t *attached_sas_addr;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	while (1) {
-+		/*
-+		 * assume the route entry is enabled
-+		 */
-+		disableRouteEntry = ENABLED;
-+
-+		for (; ctx->routeIndex < ctx->newExpander->num_phys;
-+		     ctx->routeIndex++) {
-+
-+			discover = &(ctx->newExpander->
-+				     Phy[ctx->routeIndex].Result);
-+
-+			/*
-+			 * check to see if the address needs to be configured
-+			 * in the route table, this decision is based on the
-+			 * optimization flag
-+			 */
-+			if (asd_qualified_address(ctx->configureExpander,
-+						  ctx->phyIndex, discover,
-+						  &disableRouteEntry)) {
-+
-+				results = asd_issue_route_config(sm_contextp,
-+								 ctx->
-+								 configureExpander,
-+								 ctx->phyIndex,
-+								 disableRouteEntry,
-+								 discover->
-+								 AttachedSASAddress);
-+
-+				return results;
-+			}
-+		}
-+
-+		ctx->phyIndex++;
-+
-+		/*
-+		 * if we found an upstream expander, then program its route
-+		 * table.
-+		 */
-+		for (; ctx->phyIndex <
-+		     ctx->configureExpander->num_phys; ctx->phyIndex++) {
-+
-+			attached_sas_addr = ctx->configureExpander->
-+			    Phy[ctx->phyIndex].Result.AttachedSASAddress;
-+
-+			if (SAS_ISEQUAL(attached_sas_addr,
-+					ctx->currentExpander->ddb_profile.
-+					sas_addr)) {
-+
-+				break;
-+			}
-+		}
-+
-+		if (ctx->phyIndex == ctx->configureExpander->num_phys) {
-+
-+			break;
-+		}
-+
-+		ctx->routeIndex = 0;
-+	}
-+
-+	ctx->phyIndex = 0;
-+
-+	ctx->currentExpander = ctx->configureExpander;
-+
-+	results = asd_state_config_expander_route(sm_contextp);
-+
-+	return results;
-+}
-+
-+DISCOVER_RESULTS
-+asd_ConfigureExpanderSM_Initialize(struct state_machine_context * sm_contextp,
-+				   void *init_args)
-+{
-+	struct state_information *state_infop;
-+	struct asd_ConfigureExpanderSM_Context *ctx;
-+	struct asd_ConfigureExpanderSM_Arguments *args;
-+
-+	NEW_CONTEXT(ctx);
-+
-+	args = (struct asd_ConfigureExpanderSM_Arguments *)init_args;
++	discover_contextp->SMPRequestFrame->Request.PhyControl.
++	    PhyOperation = operation;
 +
 +	/*
-+	 * go through the configure cycle progressively
-+	 * ascending to each expander starting at "newExpander"
++	 * get the discover information for each phy
 +	 */
-+	ctx->discover_listp = args->discover_listp;
-+	ctx->newExpander = args->newExpander;
-+	ctx->currentExpander = ctx->newExpander;
-+	ctx->slowest_link = 0;
-+	SAS_ZERO(ctx->upstreamSASAddress);
-+
-+	return DISCOVER_CONTINUE;
-+}
-+
-+DISCOVER_RESULTS
-+asd_ConfigureExpanderSM_StateMachine(struct state_machine_context * sm_contextp)
-+{
-+	struct state_information *state_infop;
-+	struct asd_ConfigureExpanderSM_Context *ctx;
-+	DISCOVER_RESULTS results;
-+	ASD_DISCOVERY_STATES current_state;
-+	ASD_DISCOVERY_STATES new_state;
-+
-+	GET_STATE_CONTEXT(sm_contextp, ctx);
-+
-+	current_state = GET_CURRENT_STATE();
-+
-+	switch (current_state) {
-+	case ASD_STATE_CONFIG_EXPANDER_START:
-+		new_state = ASD_STATE_CONFIG_EXPANDER_ROUTE;
-+		break;
-+
-+	case ASD_STATE_CONFIG_EXPANDER_ROUTE:
-+		new_state = asd_state_config_expander_route_post(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_CONFIG_EXPANDER_ROUTE_LOOP:
-+		new_state = asd_state_config_expander_route_post(sm_contextp);
-+		break;
-+
-+	default:
-+		new_state = ASD_STATE_CONFIG_EXPANDER_FAILED;
-+		break;
-+	}
-+
-+	SM_new_state(sm_contextp, new_state);
-+
-+	switch (new_state) {
-+	case ASD_STATE_CONFIG_EXPANDER_ROUTE:
-+		results = asd_state_config_expander_route(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_CONFIG_EXPANDER_ROUTE_LOOP:
-+		results = asd_state_config_expander_route_loop(sm_contextp);
-+		break;
-+
-+	case ASD_STATE_CONFIG_EXPANDER_FINISHED:
-+		results = DISCOVER_FINISHED;
-+		break;
-+
-+	default:
-+		results = DISCOVER_FAILED;
-+		break;
-+	}
++	results = asd_smp_request(sm_contextp, expander,
++				  sizeof(struct SMPRequestPhyControl),
++				  sizeof(struct SMPResponsePhyControl));
 +
 +	return results;
 +}
