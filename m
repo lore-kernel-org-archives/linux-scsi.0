@@ -1,181 +1,97 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: 2.5.43 scsi _eh_ buslogic
-Date: Fri, 18 Oct 2002 15:43:12 -0700
+From: John Levon <levon@movementarian.org>
+Subject: [TROLLPATCH] 2.5.44 - ncr didn't compile
+Date: Sat, 19 Oct 2002 19:29:39 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021018224311.GB1066@beaverton.ibm.com>
-References: <Pine.LNX.4.30.0210181201060.29276-100000@tosko.alm.com>
+Message-ID: <20021019182939.GD40605@compsoc.man.ac.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from compsoc.umu.man.ac.uk
+	([130.88.22.5] helo=mrtall.compsoc.man.ac.uk ident=exim)
+	by probity.mcc.ac.uk with esmtp (Exim 2.05 #7)
+	id 182yLz-000Pe0-00
+	for linux-scsi@vger.kernel.org; Sat, 19 Oct 2002 19:29:39 +0100
+Received: from moz by mrtall.compsoc.man.ac.uk with local (Exim 3.33 #1)
+	id 182yLz-000Ac6-00
+	for linux-scsi@vger.kernel.org; Sat, 19 Oct 2002 19:29:39 +0100
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.30.0210181201060.29276-100000@tosko.alm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: andy barlak <andyb@island.net>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-
-Andy,
-	From looking at the driver it looks like the locking had been
-update to 2.5, but that the driver error handling has not been updated.
-scsi_obsolete.c has not existed in the 2.5 view for a while.
-
-I have cc'd linux-scsi as someone on the list might be able to
-give more information on the status of the driver.
-
-So if you where previously getting timeouts / errors on probe in 2.4 the
-older error handler might have been clearing things up and now nothing
-is being called.
-
-We should remove the older error handling interfaces as they are not
-called and possibly print a warning if a driver loads with no error
-handling functions set. 
-
-The older abort handler BusLogic_AbortCommand should be easy to change
-by just adjusting the locking. I do not have one of these adapter, but
-could look into the changes.
+To: linux-scsi@vger.kernel.org
 
 
-andy barlak [andyb@island.net] wrote:
-> 
-> Buslogic is still not functional in 2.5.43.
-> Info below is from successive boots on the same system.
-> Two scsi HDs and one scsi cdrom.
-> Removing the cdrom changes nothing.
-> 
-> Kernel 2.4.19 has run buslogic scsi just fine:
-> 
-> SCSI subsystem driver Revision: 1.00
-> PCI: Assigned IRQ 10 for device 00:08.0
-> scsi: ***** BusLogic SCSI Driver Version 2.1.15 of 17 August 1998 *****
-> scsi: Copyright 1995-1998 by Leonard N. Zubkoff <lnz@dandelion.com>
-> scsi0: Configuring BusLogic Model BT-958 PCI Wide Ultra SCSI Host Adapter
-> scsi0:   Firmware Version: 5.06J, I/O Address: 0xE800, IRQ Channel: 10/Level
-> scsi0:   PCI Bus: 0, Device: 8, Address: 0xED001000, Host Adapter SCSI ID: 7
-> scsi0:   Parity Checking: Disabled, Extended Translation: Disabled
-> scsi0:   Synchronous Negotiation: FFFFSFF#FFFFFFFF, Wide Negotiation: YYYYNYY#YY
-> YYYYYY
-> scsi0:   Disconnect/Reconnect: Enabled, Tagged Queuing: Enabled
-> scsi0:   Scatter/Gather Limit: 128 of 8192 segments, Mailboxes: 211
-> scsi0:   Driver Queue Depth: 211, Host Adapter Queue Depth: 192
-> scsi0:   Tagged Queue Depth: Automatic, Untagged Queue Depth: 3
-> scsi0:   Error Recovery Strategy: Default, SCSI Bus Reset: Disabled
-> scsi0:   SCSI Bus Termination: High Enabled, SCAM: Disabled
-> scsi0: *** BusLogic BT-958 Initialized Successfully ***
-> scsi0 : BusLogic BT-958
->   Vendor: CONNER    Model: CFP2107E  2.14GB  Rev: 1423
->   Type:   Direct-Access                      ANSI SCSI revision: 02
->   Vendor: SEAGATE   Model: SX423451W         Rev: 9E18
->   Type:   Direct-Access                      ANSI SCSI revision: 02
->   Vendor: TOSHIBA   Model: CD-ROM XM-5701TA  Rev: 0167
->   Type:   CD-ROM                             ANSI SCSI revision: 02
-> scsi0: Target 0: Queue Depth 28, Wide Synchronous at 20.0 MB/sec, offset 15
-> scsi0: Target 1: Queue Depth 28, Wide Synchronous at 20.0 MB/sec, offset 15
-> scsi0: Target 2: Queue Depth 3, Synchronous at 10.0 MB/sec, offset 8
-> Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-> Attached scsi disk sdb at scsi0, channel 0, id 1, lun 0
-> SCSI device sda: 4194303 512-byte hdwr sectors (2147 MB)
->  sda: sda1 sda2
-> SCSI device sdb: 45322644 512-byte hdwr sectors (23205 MB)
->  sdb: sdb1 sdb2 sdb3
-> 
-> -----------------------------
-> 
-> 
-> 
-> Kernel 2.5.43 and earlier produce this dmesg info
-> (edited  redundant lines):
-> 
-> SCSI subsystem driver Revision: 1.00
-> PCI: Assigned IRQ 10 for device 00:08.0
-> scsi: ***** BusLogic SCSI Driver Version 2.1.16 of 18 July 2002 *****
-> scsi: Copyright 1995-1998 by Leonard N. Zubkoff <lnz@dandelion.com>
-> scsi0: Configuring BusLogic Model BT-958 PCI Wide Ultra SCSI Host Adapter
-> scsi0:   Firmware Version: 5.06J, I/O Address: 0xE800, IRQ Channel: 10/Level
-> scsi0:   PCI Bus: 0, Device: 8, Address: 0xED001000, Host Adapter SCSI ID: 7
-> scsi0:   Parity Checking: Disabled, Extended Translation: Disabled
-> scsi0:   Synchronous Negotiation: FFFFSFF#FFFFFFFF, Wide Negotiation: YYYYNYY#YY
-> YYYYYY
-> scsi0:   Disconnect/Reconnect: Enabled, Tagged Queuing: Enabled
-> scsi0:   Scatter/Gather Limit: 128 of 8192 segments, Mailboxes: 211
-> scsi0:   Driver Queue Depth: 211, Host Adapter Queue Depth: 192
-> scsi0:   Tagged Queue Depth: Automatic, Untagged Queue Depth: 3
-> scsi0:   Error Recovery Strategy: Default, SCSI Bus Reset: Disabled
-> scsi0:   SCSI Bus Termination: High Enabled, SCAM: Disabled
-> scsi0: *** BusLogic BT-958 Initialized Successfully ***
-> scsi0 : BusLogic BT-958
->   Vendor: CONNER    Model: CFP2107E  2.14GB  Rev: 1423
->   Type:   Direct-Access                      ANSI SCSI revision: 02
->   Vendor: SEAGATE   Model: SX423451W         Rev: 9E18
->   Type:   Direct-Access                      ANSI SCSI revision: 02
-> scsi_eh_offline_sdevs: Device offlined - not ready or command retry failed after
->  error recovery: host 0 channel 0 id 1 lun 0
-> scsi_eh_offline_sdevs: Device offlined - not ready or command retry failed after
->  error recovery: host 0 channel 0 id 1 lun 0
-> scsi_eh_offline_sdevs: Device offlined - not ready or command retry failed after
->  error recovery: host 0 channel 0 id 2 lun 0
->   Vendor:           Model:                   Rev:
->   Type:   Direct-Access                      ANSI SCSI revision: 00
-> scsi_eh_offline_sdevs: Device offlined - not ready or command retry failed after
->  error recovery: host 0 channel 0 id 2 lun 0
-> scsi_eh_offline_sdevs: Device offlined - not ready or command retry failed after
->  error recovery: host 0 channel 0 id 2 lun 0
-> scsi_eh_offline_sdevs: Device offlined - not ready or command retry failed after
->  error recovery: host 0 channel 0 id 3 lun 0
->   Vendor:           Model:                   Rev:
->   Type:   Direct-Access                      ANSI SCSI revision: 00
-> .
-> .
-> .
-> scsi_eh_offline_sdevs: Device offlined - not ready or command retry failed after
->  error recovery: host 0 channel 0 id 15 lun 0
->   Vendor:           Model:                   Rev:
->   Type:   Direct-Access                      ANSI SCSI revision: 00
-> scsi_eh_offline_sdevs: Device offlined - not ready or command retry failed after
->  error recovery: host 0 channel 0 id 15 lun 0
-> scsi_eh_offline_sdevs: Device offlined - not ready or command retry failed after
->  error recovery: host 0 channel 0 id 15 lun 0
-> st: Version 20021015, fixed bufsize 32768, wrt 30720, s/g segs 256
-> Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-> Attached scsi disk sdb at scsi0, channel 0, id 1, lun 0
-> Attached scsi disk sdc at scsi0, channel 0, id 2, lun 0
-> Attached scsi disk sdd at scsi0, channel 0, id 3, lun 0
-> Attached scsi disk sde at scsi0, channel 0, id 4, lun 0
-> Attached scsi disk sdf at scsi0, channel 0, id 5, lun 0
-> Attached scsi disk sdg at scsi0, channel 0, id 6, lun 0
-> Attached scsi disk sdh at scsi0, channel 0, id 8, lun 0
-> Attached scsi disk sdi at scsi0, channel 0, id 9, lun 0
-> Attached scsi disk sdj at scsi0, channel 0, id 10, lun 0
-> Attached scsi disk sdk at scsi0, channel 0, id 11, lun 0
-> Attached scsi disk sdl at scsi0, channel 0, id 12, lun 0
-> Attached scsi disk sdm at scsi0, channel 0, id 13, lun 0
-> Attached scsi disk sdn at scsi0, channel 0, id 14, lun 0
-> Attached scsi disk sdo at scsi0, channel 0, id 15, lun 0
-> scsi_eh_offline_sdevs: Device offlined - not ready or command retry failed after
->  error recovery: host 0 channel 0 id 0 lun 0
-> scsi_eh_offline_sdevs: Device offlined - not ready or command retry failed after
->  error recovery: host 0 channel 0 id 0 lun 0
-> SCSI device sda: drive cache: write through
-> scsi_eh_offline_sdevs: Device offlined - not ready or command retry failed after
->  error recovery: host 0 channel 0 id 0 lun 0
-> sda : sector size 0 reported, assuming 512.
-> SCSI device sda: 1 512-byte hdwr sectors (0 MB)
-> .
-> .
-> .
-> 
-> scsi_eh_offline_sdevs: Device offlined - not ready or command retry failed after
->  error recovery: host 0 channel 0 id 15 lun 0
-> scsi_eh_offline_sdevs: Device offlined - not ready or command retry failed after
->  error recovery: host 0 channel 0 id 15 lun 0
-> SCSI device sdo: drive cache: write through
-> scsi_eh_offline_sdevs: Device offlined - not ready or command retry failed after
->  error recovery: host 0 channel 0 id 15 lun 0
-> sdo : sector size 0 reported, assuming 512.
-> SCSI device sdo: 1 512-byte hdwr sectors (0 MB)
-> Initializing USB Mass Storage driver...
-> 
+This makes ncr53c8xx.c compile. I accidentally "fixed" the wrong driver,
+so I'm not bothered whether it's right or not :)
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+regards
+john
 
+
+--- linux-linus/drivers/scsi/ncr53c8xx.c	Wed Oct 16 19:08:48 2002
++++ linux/drivers/scsi/ncr53c8xx.c	Sat Oct 19 18:59:21 2002
+@@ -362,17 +362,6 @@
+ #define NCR_SNOOP_TIMEOUT (1000000)
+ 
+ /*
+-**	Head of list of NCR boards
+-**
+-**	For kernel version < 1.3.70, host is retrieved by its irq level.
+-**	For later kernels, the internal host control block address 
+-**	(struct ncb) is used as device id parameter of the irq stuff.
+-*/
+-
+-static struct Scsi_Host		*first_host	= NULL;
+-static Scsi_Host_Template	*the_template	= NULL;	
+-
+-/*
+ **	Other definitions
+ */
+ 
+@@ -3854,14 +3843,6 @@
+ 	np->order = M_SIMPLE_TAG;
+ #endif
+ 
+-	/*
+-	**  Done.
+-	*/
+-        if (!the_template) {
+-        	the_template = instance->hostt;
+-        	first_host = instance;
+-	}
+-
+ 	NCR_UNLOCK_NCB(np, flags);
+ 
+ 	return 0;
+@@ -9125,16 +9106,15 @@
+ printk("ncr53c8xx_proc_info: hostno=%d, func=%d\n", hostno, func);
+ #endif
+ 
+-	for (host = first_host; host; host = host->next) {
+-		if (host->hostt == the_template && host->host_no == hostno) {
+-			host_data = (struct host_data *) host->hostdata;
+-			ncb = host_data->ncb;
+-			break;
+-		}
+-	}
+-
+-	if (!ncb)
++	host = scsi_host_hn_get(hostno);
++	if (!host)
+ 		return -EINVAL;
++ 
++	host_data = (struct host_data *)host->hostdata;
++	ncb = host_data->ncb;
++	retv = -EINVAL;
++	if (!ncb)
++		goto out;
+ 
+ 	if (func) {
+ #ifdef	SCSI_NCR_USER_COMMAND_SUPPORT
+@@ -9153,6 +9133,8 @@
+ #endif
+ 	}
+ 
++out:
++	scsi_host_put(host);
+ 	return retv;
+ }
+ 
