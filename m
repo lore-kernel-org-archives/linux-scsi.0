@@ -1,42 +1,38 @@
-From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH] fix sym2 negotiation
-Date: Sun, 22 Aug 2004 19:32:41 +0200
+Date: 22 Aug 2004 14:03:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m3hdqvt6x2.fsf@merlin.emma.line.org>
+Message-ID: <1093197825.1974.29.camel@mulgrave>
 References: <1093113450.1732.334.camel@mulgrave>
+	<m3hdqvt6x2.fsf@merlin.emma.line.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dt.e-technik.Uni-Dortmund.DE ([129.217.163.1]:43908 "EHLO
-	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
-	id S268052AbUHVRcp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Aug 2004 13:32:45 -0400
-In-Reply-To: <1093113450.1732.334.camel@mulgrave> (James Bottomley's message
-	of "21 Aug 2004 14:37:28 -0400")
+Received: from stat16.steeleye.com ([209.192.50.48]:8895 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S268054AbUHVSEt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Aug 2004 14:04:49 -0400
+In-Reply-To: <m3hdqvt6x2.fsf@merlin.emma.line.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
 Cc: willy@debian.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley <James.Bottomley@SteelEye.com> writes:
+On Sun, 2004-08-22 at 13:32, Matthias Andree wrote:
+> is the patch available in a BK tree that the public can pull from?
+> 
+> I can't seem to get it to apply even with either or both of the patches
+> Matt mentioned in another thread.
 
-> The problems with domain validation were just the tip of the iceberg in
-> the sym2 driver.  Most of its problems seem to come from an overly
-> complex set of negotiating rules, which I've swept away with this patch.
+Yes, they're all in the SCSI BK tree:
 
-> ===== drivers/scsi/sym53c8xx_2/sym_hipd.c 1.20 vs edited =====
-> --- 1.20/drivers/scsi/sym53c8xx_2/sym_hipd.c	2004-08-21 09:27:03 -07:00
-> +++ edited/drivers/scsi/sym53c8xx_2/sym_hipd.c	2004-08-21 11:17:09 -07:00
+bk://linux-scsi.bkbits.net/scsi-misc-2.6
 
-James,
+But if you're just looking for a quick fix for the atlas problem, it's
+here (and should apply to the vanilla kernel).
 
-is the patch available in a BK tree that the public can pull from?
+http://marc.theaimsgroup.com/?l=linux-scsi&m=109297058118127
 
-I can't seem to get it to apply even with either or both of the patches
-Matt mentioned in another thread.
+James
 
-Thanks in advance,
 
--- 
-Matthias Andree
-
-Encrypted mail welcome: my GnuPG key ID is 0x052E7D95 (PGP/MIME preferred)
