@@ -1,52 +1,56 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [RFC] IBM Power RAID driver (ipr)
-Date: Tue, 20 Jan 2004 15:57:00 +1000
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: AIC7xxx kernel problem with 2.4.2[234] kernels
+Date: Mon, 19 Jan 2004 23:15:47 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <400CC32C.8060601@torque.net>
-References: <40085EDA.4010802@us.ibm.com> <20040119183400.A4182@infradead.org> <20040119193354.GC967@beaverton.ibm.com>
-Reply-To: dougg@torque.net
+Message-ID: <Pine.LNX.4.58.0401192259330.2123@home.osdl.org>
+References: <400BDC85.8040907@wanadoo.es> <1074532919.1895.32.camel@mulgrave>
+  <3747775408.1074537497@aslan.btc.adaptec.com> <1074559838.2078.1.camel@mulgrave>
+ <3942145408.1074564149@aslan.btc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:2058 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S265101AbUATF7Q
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jan 2004 00:59:16 -0500
-In-Reply-To: <20040119193354.GC967@beaverton.ibm.com>
+Received: from fw.osdl.org ([65.172.181.6]:2702 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S265172AbUATHPy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jan 2004 02:15:54 -0500
+In-Reply-To: <3942145408.1074564149@aslan.btc.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Brian King <brking@us.ibm.com>, linux-scsi@vger.kernel.org
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Xose Vazquez Perez <xose@wanadoo.es>, Linux Kernel <linux-kernel@vger.kernel.org>, Tosatti <marcelo.tosatti@cyclades.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Mike Anderson wrote:
-> Christoph Hellwig [hch@infradead.org] wrote:
+
+
+On Mon, 19 Jan 2004, Justin T. Gibbs wrote:
 > 
->>+/**
->>+ * ipr_version_show - Show the driver version
->>+ * @dd:	device driver struct
->>+ * @buf:	buffer
->>+ * 
->>+ * Return value:
->>+ * 	number of bytes printed to buffer
->>+ **/
->>+static ssize_t ipr_version_show(struct device_driver *dd, char *buf)
->>+{
->>+	return snprintf(buf, PAGE_SIZE, "%s\n", IPR_DRIVER_VERSION);
->>+}
->>+
->>+static DRIVER_ATTR(version, S_IRUGO, ipr_version_show, NULL);
->>
->>Please don't do this in sysfs.  We're still hoping for a MODULE_VERSION
->>macro, but every driver crafting it's own version telling mechanism
->>doesn't scale.
->>
-> 
-> 
-> This is my fault. We recommended not to include procfs info in this
-> driver and pointed to sysfs. Do we have a timeline on MODULE_VERSION?
+> Does the maintainer have the ability to veto changes that harm the
+> code they maintain?
 
-... and will MODULE_VERSION be defined when the driver is built in?
+Nope. Nobody has that right.
 
-Doug Gilbert
+Even _I_ don't veto changes that the right people push (my motto:
+"everybody is wrong sometimes: when enough people complain, even I am
+wrong"). 
 
+In particular, maintainers of "conceptually higher" generally always have
+priority. If Al Viro says a filesystem is doing something wrong from a VFS
+standpoint, then that filesystem is broken - regardless of whether the
+filesystem maintainer agrees or not. Because the VFS layer requirements 
+trump any low-level filesystem issues.
 
+But perhaps more importantly (and it's the reason even _I_ don't have the 
+right, regardless of how high up in the maintainership chain I am), nobody 
+has veto-power over anything. That's to keep people honest: nobody should 
+_ever_ think that they are "in control", and that nobody else can replace 
+them. 
+
+In other words: maintainership is not ownership. It's a stewardship.
+
+End result: maintainership is a nasty and mostly unthankful job. It
+doesn't really give many privileges, and most of what it does is just have
+people complain to you about bugs. The satisfaction is there, of course, 
+but 
+
+And finally: maintainership is largely about working with people.  
+There's some code in there too, but people tend to be more important.
+
+		Linus
