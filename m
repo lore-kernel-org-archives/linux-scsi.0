@@ -1,52 +1,44 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [PATCH 2.4] export scsi_finish_command ACK?
-Date: Tue, 23 Mar 2004 11:18:55 -0500
+From: Alex Williamson <alex.williamson@hp.com>
+Subject: Re: Symbios 53C8XX broken on ia64?
+Date: Tue, 23 Mar 2004 09:47:48 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1080058735.14308.0.camel@compaq.xsintricity.com>
-References: <40604D8F.6080505@pobox.com>
+Message-ID: <1080060468.2091.28.camel@patsy.fc.hp.com>
+References: <je3c80ph2o.fsf@sykes.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51670 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S262648AbUCWQWV (ORCPT
+Received: from atlrel6.hp.com ([156.153.255.205]:36301 "EHLO atlrel6.hp.com")
+	by vger.kernel.org with ESMTP id S262675AbUCWQsC (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Mar 2004 11:22:21 -0500
-In-Reply-To: <40604D8F.6080505@pobox.com>
+	Tue, 23 Mar 2004 11:48:02 -0500
+In-Reply-To: <je3c80ph2o.fsf@sykes.suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Andreas Schwab <schwab@suse.de>
+Cc: linux-ia64 <linux-ia64@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Tue, 2004-03-23 at 09:45, Jeff Garzik wrote:
-> Doug,
-> 
-> Can I get your ACK on the attached patch?
 
-ACK.
+   Seems to work just fine on an rx2600 w/ latest bk plus this patch
+that was being tossed around yesterday:
 
-> I am about to submit libata to Marcelo (again :)), and this export is 
-> needed by all users of ->eh_strategy_handler, of which libata is one.
+http://marc.theaimsgroup.com/?l=linux-ia64&m=107999504909154&w=2
+
+I'm building it statically in my case.
+
+	Alex
+
+On Mon, 2004-03-22 at 17:01, Andreas Schwab wrote:
+> Has anyone been able to get the sym53c8xx_2 driver in 2.6.5-rc2 working on
+> HP zx1?  On the machines I tried it does not find any disks anymore.  This
+> has been working fine with 2.6.3.
 > 
-> 	Jeff
+> CONFIG_SCSI_SYM53C8XX_2=m
+> CONFIG_SCSI_SYM53C8XX_DMA_ADDRESSING_MODE=1
+> CONFIG_SCSI_SYM53C8XX_DEFAULT_TAGS=16
+> CONFIG_SCSI_SYM53C8XX_MAX_TAGS=64
+> # CONFIG_SCSI_SYM53C8XX_IOMAPPED is not set
 > 
-> 
-> 
-> ______________________________________________________________________
-> diff -Nru a/drivers/scsi/scsi_syms.c b/drivers/scsi/scsi_syms.c
-> --- a/drivers/scsi/scsi_syms.c	Tue Mar 23 09:43:29 2004
-> +++ b/drivers/scsi/scsi_syms.c	Tue Mar 23 09:43:29 2004
-> @@ -43,6 +43,7 @@
->  EXPORT_SYMBOL(scsi_do_cmd);
->  EXPORT_SYMBOL(scsi_command_size);
->  EXPORT_SYMBOL(scsi_ioctl);
-> +EXPORT_SYMBOL(scsi_finish_command);
->  EXPORT_SYMBOL(print_command);
->  EXPORT_SYMBOL(print_sense);
->  EXPORT_SYMBOL(print_req_sense);
+> Andreas.
 -- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc.
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-
+Alex Williamson                             HP Linux & Open Source Lab
 
