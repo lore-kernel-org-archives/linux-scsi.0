@@ -1,35 +1,42 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [RFC]: 64 bit LUN/Tags, dummy device in host_queue, host_lock <->
- LLDD reentrancy
-Date: Mon, 26 Aug 2002 14:00:52 -0500
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: 2.5.31 qlogic error "this should not happen"
+Date: Mon, 26 Aug 2002 12:36:22 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200208261900.g7QJ0r501788@localhost.localdomain>
-References: <andmike@us.ibm.com>
+Message-ID: <20020826123622.A11280@eng2.beaverton.ibm.com>
+References: <20020825191854.GA32490@rushmore>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id MAA11745
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2002 12:01:00 -0700
-In-Reply-To: Message from Mike Anderson <andmike@us.ibm.com>
-   of "Mon, 26 Aug 2002 10:27:46 PDT." <20020826172746.GA1301@beaverton.ibm.com>
+In-Reply-To: <20020825191854.GA32490@rushmore>; from rwhron@earthlink.net on Sun, Aug 25, 2002 at 03:18:54PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Aron Zeh <ARZEH@de.ibm.com>, Luben Tuikov <luben@splentec.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: rwhron@earthlink.net
+Cc: ehw@lanl.gov, dledford@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-andmike@us.ibm.com said:
-> James I do not follow the usage of LUNs linked by pointers, can you
-> explain further? 
+On Sun, Aug 25, 2002 at 03:18:54PM -0400, rwhron@earthlink.net wrote:
+> > I occasionally saw that error on our 2.4 RAID system; it went away when I
+> > increased the size of the handles array in qlogicfc.h:
+> 
+> -#define QLOGICFC_REQ_QUEUE_LEN  127 /* must be power of two - 1 */
+> +#define QLOGICFC_REQ_QUEUE_LEN  255 /* must be power of two - 1 */
+> 
+> That change in addition to Doug's patch in 
+> http://marc.theaimsgroup.com/?l=linux-kernel&m=103005703808312&w=2
+> have done the trick. 2.5.31-mm1-dl-ew completed the 54 hour
+> benchmarathon. (first 2.5 kernel to finish). 
+> 
+> Details at:
+> http://home.earthlink.net/~rwhron/kernel/bigbox.html
+> -- 
+> Randy Hron
 
-Yes:  the mid-layer could function only with Scsi_Devices and Scsi_Hosts.  
-LUNs are currently only used explicitly for scanning.  However, I'd like to 
-make the error handler handle the consequences of its action, thus it will 
-need to know LUN relationships to handle a BDR correctly.  However, the mid 
-layer doesn't need an arbitrary number associated with LUN or PUN.  Since the 
-number, string or whatever is only really useful to the lld.  So, simply put, 
-we'd probably have an entry in the Scsi_Device for lun_list.  This would be 
-the usual doubly linked list so starting with any Scsi_Device we could always 
-find the associated LUNs.
+That's a huge amount of data. Can you show cat /proc/scsi/scsi of the machine
+(as well as the lspci etc)?
 
-James
+Does RAID-5 mean you have a storage array attached? i.e. IBM 3542, fastt 200?
 
+It looks like the latest qlogic qla driver includes 2.5.x support,
+I haven't tried it but will at some time:
 
+http://download.qlogic.com/drivers/5639/qla2x00-v6.1b5-dist.tgz
+
+-- Patrick Mansfield
