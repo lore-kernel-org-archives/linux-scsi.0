@@ -1,52 +1,31 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: When & how is the SCSI strategy routine called?
-Date: Wed, 23 Mar 2005 11:39:28 +0100
-Message-ID: <20050323103926.GQ24105@suse.de>
-References: <267988DEACEC5A4D86D5FCD780313FBB06043621@exch-03.noida.hcltech.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: adaptec 2120S software under RedHat 8.0 and FC2
+Date: Wed, 23 Mar 2005 11:04:06 +0000
+Message-ID: <20050323110406.GA3691@infradead.org>
+References: <60807403EABEB443939A5A7AA8A7458BED25F7@otce2k01.adaptec.com> <20050320091251.GB12000@infradead.org> <3423.137.195.14.2.1111509124.squirrel@www.macs.hw.ac.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Received: from pentafluge.infradead.org ([213.146.154.40]:12782 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261551AbVCWLEJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Mar 2005 06:04:09 -0500
 Content-Disposition: inline
-In-Reply-To: <267988DEACEC5A4D86D5FCD780313FBB06043621@exch-03.noida.hcltech.com>
-Sender: linux-newbie-owner@vger.kernel.org
-To: "Rajat  Jain, Noida" <rajatj@noida.hcltech.com>
-Cc: lk <linux_kernel@patni.com>, linux-scsi@vger.kernel.org, linux-newbie@vger.kernel.org
+In-Reply-To: <3423.137.195.14.2.1111509124.squirrel@www.macs.hw.ac.uk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ross Macintyre <raz@macs.hw.ac.uk>
+Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Mark Haverkamp <markh@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, matt_domsch@dell.com
 
-On Wed, Mar 23 2005, Rajat  Jain, Noida wrote:
->  
-> 
-> Thanks lk.
-> 
-> It cleared a lot of things.
-> 
-> How ever, what I am wondering is:
-> 
-> - Does each device queue have a corresponding thread that is woken up when
-> it is time to call the request function? And the request function is called
-> in the context of this thread?
-> 
-> - I explored and found that there is some "worker thread" kblockd that does
-> this task of monitoring the queue and calling the request function. I want
-> to know whether there is a separate thread for each queue (device) , or just
-> one for all the block devices?
+On Tue, Mar 22, 2005 at 04:32:04PM -0000, Ross Macintyre wrote:
+> Since you advise us to stay away from Adaptec, and I assume you are part
+> of the team that manages the Fedora system,
 
-There is on kblockd thread per cpu for all queues. But note that the
-request function is only invoked through that, if you get the unplug
-threshold kicking in _or_ the io scheduler uses it to awake the queue.
-The normal path for unplugs (this is what invokes the request handler)
-is exceeding unplug_thresh or somebody calling blk_run_backing_dev()
-either directly or from blk_run_address_space().
+I'm not associated with Fedora at all.
 
-Normally drivers will re-invoke the request handler themselves, when
-requests complete. So once the unplug has happened, if there is a
-continual influx of io for that queue, the queue will not get replugged
-and it is the drivers responsibility to reinvoke the request handler.
+> can you advise users what RAID
+> / Storage vendors to use? ie what quality vendors support Linux?
 
--- 
-Jens Axboe
+LSI and 3ware for example do provide frequent driver updates, working
+managment tools and cooperate with the linux community very well.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-newbie" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at http://www.linux-learn.org/faqs
+
