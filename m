@@ -1,36 +1,64 @@
-From: John Hasler <john@dhh.gt.org>
-Subject: Re: Binary-only firmware covered by the GPL?
-Date: Thu, 25 Mar 2004 18:33:50 -0600
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <87lllobg5t.fsf@toncho.dhh.gt.org>
-References: <E1B6Izr-0002Ai-00@r063144.stusta.swh.mhn.de>
-	<20040325082949.GA3376@gondor.apana.org.au>
-	<20040325220803.GZ16746@fs.tum.de> <40635DD9.8090809@pobox.com>
-	<40636302.6080807@stesmi.com>
+From: "David Schwartz" <davids@webmaster.com>
+Subject: RE: Binary-only firmware covered by the GPL?
+Date: Thu, 25 Mar 2004 16:41:23 -0800
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <MDEHLPKNGKAHNMBLJOLKCEEOLEAA.davids@webmaster.com>
+References: <20040325225423.GT9248@cheney.cx>
+Reply-To: davids@webmaster.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sa-4.airstreamcomm.net ([64.33.192.164]:26898 "EHLO
-	sa-4.airstreamcomm.net") by vger.kernel.org with ESMTP
-	id S263817AbUCZA2N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Mar 2004 19:28:13 -0500
-In-Reply-To: <40636302.6080807@stesmi.com> (Stefan Smietanowski's message of
- "Thu, 25 Mar 2004 23:53:54 +0100")
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20040325225423.GT9248@cheney.cx>
+To: debian-devel@lists.debian.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 239952@bugs.debian.org, debian-devel@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Stefan writes:
-> Except the firmware itself is GPL in this case.
 
-So the problem is not GPL compatibility: it's GPL code being distributed
-without source.  Can we get written permission from the manufacturer?
-Without either source or written permission to do without we cannot
-redistribute.
+> On Thu, Mar 25, 2004 at 11:08:03PM +0100, Adrian Bunk wrote:
+> > There's another issue with these files:
+> >
+> <--  snip  -->
+> >
+> > The GPL says that you must give someone receiving a binary the source
+> > code, and it says:
+> >   The source code for a work means the preferred form of the work for
+> >   making modifications to it.
+> >
+> >
+> > This is perhaps a bit besides the main firmware discussion and IANAL,
+> > but is this file really covered by the GPL?
 
-Note that the GPL does not require that the firmware build from source on
-Linux.  We are not obligated (by the GPL) to supply a compiler.
--- 
-John Hasler               You may treat this work as if it 
-john@dhh.gt.org           were in the public domain.
-Dancing Horse Hill        I waive all rights.
-Elmwood, Wisconsin
+> IMHO code that can be compiled would probably be the preferred form
+> of the work.
+
+	You are seriously arguing that the obfuscated binary of the firmware is the
+preferred form of the firmware for the purpose of making modifications to
+it?!
+
+> The source to the firmware in many cases and probably even
+> this one is very unlikely to be able to be compiled under Linux at all.
+
+	What does it matter what it compiles under? The GPL is not Linux-specific.
+
+> Also, unless the driver is written by the company producing the hardware
+> itself even the author will likely not have the source code to the
+> firmware and will only have a binary form (think reverse engineering).
+
+	If you don't have the preferred form of something for the purpose of making
+modifications to it, then you can't give that to people, so you *CAN'T* GPL
+it. If you making an executable that derives from a GPL'd product and, for
+example, lose the source code, you MAY NOT distribute the executable. You
+must have the preferred form for the purpose of making modifications or you
+are not able to GPL.
+
+> IMHO a driver for a piece of hardware does not include the software that
+> the hardware itself is running, just the software that the primary CPU
+> itself is running. YMMV.
+
+	But it does. This file contains the software that the hardware itself is
+running. That's its sole purpose. Please tell me how you make modifications
+to this file.
+
+	DS
