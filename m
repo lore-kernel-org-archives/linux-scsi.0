@@ -1,79 +1,106 @@
-From: "Michael P. Carel" <mikecarel@teamglac.com>
-Subject: Re: Address or Write Phase Parity Error in  Adaptec Ultra320(29320)
-Date: Mon, 14 Apr 2003 13:35:35 +0800
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: Bugs in scsi system, need help to fix
+Date: Sun, 13 Apr 2003 23:23:33 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <00b601c30247$ac4bfae0$8601a8c0@teamglac.com>
-References: <005901c30229$735b8c00$8601a8c0@teamglac.com> <2555792704.1050287878@aslan.scsiguy.com><001d01c3022f$ab3806c0$8601a8c0@teamglac.com> <2574772704.1050290648@aslan.scsiguy.com> <008501c30240$b7049840$8601a8c0@teamglac.com>
+Message-ID: <20030414062333.GA11487@beaverton.ibm.com>
+References: <3E982DDE.7010002@pacbell.net> <Pine.LNX.4.44L0.0304121546330.3290-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from team5.teamglac.com ([203.87.142.130]:12044 "HELO
-	team5.teamglac.com") by vger.kernel.org with SMTP id S262763AbTDNFhG (for <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Apr 2003 01:37:06 -0400
-Received: (from root@localhost)
-	by team5.teamglac.com (8.9.3/8.9.3) id NAA29289
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Apr 2003 13:43:37 +0800
+Received: from e31.co.us.ibm.com ([32.97.110.129]:49804 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S262763AbTDNGKC (for <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Apr 2003 02:10:02 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0304121546330.3290-100000@netrider.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: David Brownell <david-b@pacbell.net>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
+Alan Stern [stern@rowland.harvard.edu] wrote:
+> The first problem is in the error-handling code in scsi_error.c.  The
+> scsi_eh_lock_done() function is the callback for a special request
+> inserted at the beginning of the queue while restarting normal operations.  
+> (It locks the drive's door.)  But this function does not call
+> scsi_io_completion(), scsi_end_request(), or scsi_queue_next_request(),
+> with the result that the device's request queue stops once the door-lock
+> command has been processed.  The callback needs to do _something_ to keep
+> the queue going, but I don't know what.
 
-Justin,
+The problem you are hitting is related to missing calls to
+scsi_queue_next_request. Patrick created a patch in a previous thread:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=104855818826887&w=2
 
-thanks  for the tips, my scsi now works fine, i've change my cnet network
-card to 3com network card. CNET network card give a parity error to my
-Adaptec Ultra320(29320) scsi card.
+though it did not cover the path scsi_eh_lock_done takes. It appears
+that we should add a call to scsi_queue_next_request in
+scsi_release_request if sr_command is set.
 
+> 
+> Maybe I'm wrong about that, and the problem doesn't lie in 
+> scsi_eh_lock_done().  But there is no doubt that at the end of error 
+> recovery, after the door-lock command finishes up no other commands are 
+> processed.  Logging just stops after the "Notifying upper driver of 
+> completion" message.
+> 
+> 
+> The second problem is a coding mistake in scsi_check_device_busy(), in
+> hosts.c.  Here is an excerpt from the source:
+> 
+> ---------------
+> 
+> static int scsi_check_device_busy(struct scsi_device *sdev)
+> {
+> 	struct Scsi_Host *shost = sdev->host;
+> 	struct scsi_cmnd *scmd;
+> 	unsigned long flags;
+> 
+> 	/*
+> 	 * Loop over all of the commands associated with the
+> 	 * device.  If any of them are busy, then set the state
+> 	 * back to inactive and bail.
+> 	 */
+> 	spin_lock_irqsave(&sdev->list_lock, flags);
+> 	list_for_each_entry(scmd, &sdev->cmd_list, list) {
+> 		if (scmd->request && scmd->request->rq_status != RQ_INACTIVE)
+> 			goto active;
+> 
+> <snip>
+> 
+> active:
+> 	printk(KERN_ERR "SCSI device not inactive - rq_status=%d, target=%d, "
+> 			"pid=%ld, state=%d, owner=%d.\n",
+> 			scmd->request->rq_status, scmd->device->id,
+> 			scmd->pid, scmd->state, scmd->owner);
+> 
+> (A)	list_for_each_entry(sdev, &shost->my_devices, siblings) {
+> 		list_for_each_entry(scmd, &sdev->cmd_list, list) {
+> (B)			if (scmd->request->rq_status == RQ_SCSI_DISCONNECTING)
+> 				scmd->request->rq_status = RQ_INACTIVE;
+> 		}
+> 	}
+> 
+> (C)	spin_unlock_irqrestore(&sdev->list_lock, flags);
+> 	printk(KERN_ERR "Device busy???\n");
+> 	return 1;
+> }
+> 
+> ---------------
+> 
+> The line labelled (A) is definitely wrong.  Maybe it doesn't belong there
+> at all -- I don't see any reason why a function devoted to checking
+> whether a particular device is busy needs to look at any other devices on
+> the same host.  Furthermore, line (A) changes the value of the sdev
+> variable, which means that line (C) unlocks the wrong spinlock.  Finally,
+> judging from the style of the code earlier on, line (B) needs to test that
+> scmd->request is non-NULL before dereferencing it.
+> 
 
-Mike
+The code you point to is incorrect. It looks like the migration of the
+2.4 code left a few lines behind. The short term fix if you are hitting
+a problem here is to remove (A) add "scmd->request" to (B). The better
+fix is to not call this code anymore.
 
-
-
-
------ Original Message -----
-From: "Michael P. Carel" <mikecarel@teamglac.com>
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: <linux-scsi@vger.kernel.org>
-Sent: Monday, April 14, 2003 12:45 PM
-Subject: Re: Address or Write Phase Parity Error in Adaptec Ultra320(29320)
-
-
-> changing slots doesnt change anything but removing the network make the
-scsi
-> work fine, but i need a network in this machine. What should i do?
->
-> ----- Original Message -----
-> From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-> To: "Michael P. Carel" <mikecarel@teamglac.com>
-> Sent: Monday, April 14, 2003 11:24 AM
-> Subject: Re: Address or Write Phase Parity Error in Adaptec
-Ultra320(29320)
->
->
-> > > attached was the dmesg and the lspci output. I'm using EPOX 4G4A with
-> Intel
-> > > chipset that have  a 32bit PCI slots.
-> >
-> > Some things to try:
-> >
-> > 1) Do you still get these messages when drivers for most other
-peripherals
-> > are not loaded (no sound, no ethernet, no ide, etc).
-> >
-> > 2) Does the behavior change when you change slots?
-> >
-> > I don't have a lot of experience with the 845xx chipsets, but you may
-> > be able to avoid the problem by moving the 29320 to a bus that is not
-> > getting strafed by some device sending out PCI transactions with bad
-> > parity.
-> >
-> > --
-> > Justin
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
