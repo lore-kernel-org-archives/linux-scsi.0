@@ -1,42 +1,66 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: sg_dd bpt= count=
-Date: 21 Oct 2003 13:44:38 -0600
+From: Nicolas Mailhot <Nicolas.Mailhot@laPoste.net>
+Subject: Usb storage mounting was broken somewhere between 2.6.0-test5-bk10
+	and 2.6.0-test6-bk1
+Date: Wed, 22 Oct 2003 00:33:36 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1066765478.2812.44.camel@patehci2>
-References: <1066174844.3399.6.camel@patehci2>
-	 <1066674092.2833.0.camel@patehci2> <1066679354.2833.66.camel@patehci2>
-	 <3F947565.1030804@torque.net>
+Message-ID: <1066775616.3458.8.camel@m70.net81-64-235.noos.fr>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BhvmmvruS0i1h4v8Qnw1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:46842 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S263259AbTJUTos
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Oct 2003 15:44:48 -0400
-In-Reply-To: <3F947565.1030804@torque.net>
+Received: from nan-smtp-01.noos.net ([212.198.2.70]:46418 "EHLO smtp.noos.fr")
+	by vger.kernel.org with ESMTP id S263311AbTJUWdu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Oct 2003 18:33:50 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: dbrownell@users.sourceforge.net
 
-> Applied to sg3_utils. Also added a check for non-positive bpt.
-> There is a new beta on http://www.torque.net/sg
 
-Perfect, thanks.
+--=-BhvmmvruS0i1h4v8Qnw1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Pat LaVarre
+Hi,
 
-P.S. More specifically:
+	I'd like to bring to your attention bug #1310 :
 
-In a Linux built without linux-scsi "[PATCH] SG_SET_RESERVED_SIZE
-negative oops", now rather than oops I see:
+http://bugzilla.kernel.org/show_bug.cgi?id=3D1310
 
-$ sg_dd of=/dev/sg0 if=/dev/zero bs=2k bpt= count=
-bpt must be greater than 0
-$
+Short summary (full info in the bugzilla page) :
 
-Also: diff -Nur sg3_utils-1.05-was sg3_utils-1.05
-tells me:
-+  - sg_dd, sgp_dd, sgm_dd, sg_read, sg_turs: require bpt > 0
+1. my usb storage device stopped working (mounting) after
+2.6.0-test5-bk10=20
 
+2. the usb storage maintainer says nothing changed at the usb level, so
+it's probably the scsi layer that broke somehow
+
+3. I won't test kernel snapshots between 2.6.0-test5-bk10 and
+2.6.0-test6-bk1 since they also had a raid bug and I spent days
+recovering from it (which is why I didn't push bug #1310 as I should
+have - I took a kernel testing break afterwards)
+=20
+I've just retested with 2.6.0-test8-bk1 and the bug is still there.
+
+More patch tests, logs, etc available on demand (though the bugzilla
+entry is already pretty complete)
+
+Cheers,
+
+--=20
+Nicolas Mailhot
+
+--=-BhvmmvruS0i1h4v8Qnw1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: Ceci est une partie de message
+	=?ISO-8859-1?Q?num=E9riquement?= =?ISO-8859-1?Q?_sign=E9e=2E?=
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
+
+iD8DBQA/lbQ/I2bVKDsp8g0RAhSfAJ43rpDAvMBfNhL/nVKybebrPzoNEACdG6Hv
+KWGnDhrsE7NLI0XUS7Rv2B8=
+=9QuE
+-----END PGP SIGNATURE-----
+
+--=-BhvmmvruS0i1h4v8Qnw1--
 
