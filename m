@@ -1,65 +1,32 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: "David S. Miller" <davem@redhat.com>
 Subject: Re: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple
-	map/unmaps
-Date: 05 Jan 2004 18:05:47 -0600
+ map/unmaps
+Date: Mon, 5 Jan 2004 19:04:39 -0800
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1073347548.2439.33.camel@mulgrave>
+Message-ID: <20040105190439.0a5f7370.davem@redhat.com>
 References: <200401051929.i05JTsM0000014248@mudpuddle.cs.wustl.edu.suse.lists.linux.kern
-	el> <20040105112800.7a9f240b.davem@redhat.com.suse.lists.linux.kernel>
-	<p73brpi1544.fsf@verdi.suse.de> <20040105130118.0cb404b8.davem@redhat.com>
+	el>
+	<20040105112800.7a9f240b.davem@redhat.com.suse.lists.linux.kernel>
+	<p73brpi1544.fsf@verdi.suse.de>
+	<20040105130118.0cb404b8.davem@redhat.com>
 	<20040105223158.3364a676.ak@suse.de>
+	<1073347548.2439.33.camel@mulgrave>
+	<20040106040640.1d2bcbd8.ak@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20040105223158.3364a676.ak@suse.de>
+In-Reply-To: <20040106040640.1d2bcbd8.ak@suse.de>
 To: Andi Kleen <ak@suse.de>
-Cc: "David S. Miller" <davem@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, gibbs@scsiguy.com
+Cc: James.Bottomley@steeleye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, gibbs@scsiguy.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2004-01-05 at 15:31, Andi Kleen wrote:
-> For the sake of bug-to-bug compatibility to the SCSI layer this patch may
-> work. I haven't tested it so no guarantees if it won't eat your file systems.
-> Feedback welcome anyways.
+On Tue, 6 Jan 2004 04:06:40 +0100
+Andi Kleen <ak@suse.de> wrote:
 
-This isn't a bug in SCSI, it's a deliberate design feature.  SCSI has
-certain events, like QUEUE full that cause us to re-queue the pending
-I/O.  Other block layer drivers that can get these EAGAIN type queueing
-problems from the device also follow this model.
+> It's ok. I fixed the code now[1] If you have other undocumented requirements
+> you should document them though, otherwise there may be more problems.
+> Since merging is disabled by default now it won't trigger anyways.
 
-The reason for doing this is the prep/request model for block drivers
-(although the behaviour pre-dates the bio model).  As part of the prep
-function, we prepare the mapping list that is later passed to
-dma_map_sg().  Requeueing is done from the request function; by design,
-we don't re-prepare the requests (and hence don't free and rebuild the
-sg list).
-
-Like Dave says, we rely on the sequence map/unmap/map to produce a
-correct SG list.  This does give you slightly more leeway, since we
-never look at the sg list after the unmap, for SCSI it doesn't have to
-be returned to the pre-map state as long as re-mapping it is correct.
-
-As to the idempotence of map/unmap: I'm ambivalent.  If it's going to be
-a performance hit to return the sg list to its prior state in unmap,
-then it does seem a waste given that for most of our I/O transactions we
-simply free the sg list after the unmap.
-
-It looks like we're down to a choice of three
-
-1. Fix the x86_64 mapping layer as your patch proposes (how much of a
-performance hit on every transaction will this be)?
-2. Change SCSI (and every other block driver) to re-prepare requeued
-I/O.  This will incur a free/setup overhead penalty, but only in the
-requeue path.
-3. Don't unmap the I/O in the requeue case.  I like this least because
-the LLD is responsible for map/unmap and the mid-layer is responsible
-for requeueing, so it's a layering violation (as well as a waste of
-potentially valuable mapping resources).
-
-On the whole, I prefer 1. Partly because it doesn't involve extra work
-for me ;-) but also because idempotence is an appealing property from a
-layering point of view.
-
-If we're agreed on this, I can add it to the DMA docs.
-
-James
+I totally agree with you Andi, not documenting this properly was an
+oversight and not intentional.
