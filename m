@@ -1,9 +1,9 @@
 From: Luben Tuikov <luben@splentec.com>
-Subject: Re: [PATCH] 2/7 add missing scsi_queue_next_request calls
-Date: Tue, 25 Mar 2003 14:41:30 -0500
+Subject: Re: [PATCH] 3/7 consolidate single_lun code
+Date: Tue, 25 Mar 2003 15:36:19 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E80B0EA.2090908@splentec.com>
-References: <20030324175337.A14957@beaverton.ibm.com> <20030324175422.A14996@beaverton.ibm.com> <20030324180227.A15047@beaverton.ibm.com>
+Message-ID: <3E80BDC3.7000503@splentec.com>
+References: <20030324175337.A14957@beaverton.ibm.com> <20030324175422.A14996@beaverton.ibm.com> <20030324180227.A15047@beaverton.ibm.com> <20030324180247.B15047@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -13,108 +13,309 @@ To: Patrick Mansfield <patmans@us.ibm.com>
 Cc: linux-scsi@vger.kernel.org
 
 Patrick Mansfield wrote:
-> Add missing scsi_queue_next_request calls.
+> Consolidate scsi single_lun code.
 > 
-> Add missing scsi_put_command and scsi_get_command exports.
-
-No logistic problem here, except that in the future, those
-scattered calls to scsi_queue_next_request() will have to
-be centralized and their count will have to be ONE.
-
-(My same opinion as before.)
-
-> diff -purN -X /home/patman/dontdiff starve-25/drivers/scsi/scsi.h put_cmd-25/drivers/scsi/scsi.h
-> --- starve-25/drivers/scsi/scsi.h	Mon Mar 24 12:14:28 2003
-> +++ put_cmd-25/drivers/scsi/scsi.h	Mon Mar 24 12:14:51 2003
-> @@ -417,6 +417,7 @@ extern void scsi_setup_cmd_retry(Scsi_Cm
->  extern void scsi_io_completion(Scsi_Cmnd * SCpnt, int good_sectors,
->  			       int block_sectors);
->  extern int scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
-> +extern void scsi_queue_next_request(request_queue_t *q, struct scsi_cmnd *cmd);
->  extern request_queue_t *scsi_alloc_queue(struct Scsi_Host *shost);
->  extern void scsi_free_queue(request_queue_t *q);
->  extern int scsi_init_queue(void);
-> diff -purN -X /home/patman/dontdiff starve-25/drivers/scsi/scsi_error.c put_cmd-25/drivers/scsi/scsi_error.c
-> --- starve-25/drivers/scsi/scsi_error.c	Tue Mar 18 12:53:33 2003
-> +++ put_cmd-25/drivers/scsi/scsi_error.c	Mon Mar 24 12:14:51 2003
-> @@ -1681,6 +1681,7 @@ scsi_reset_provider(struct scsi_device *
->  	struct scsi_cmnd *scmd = scsi_get_command(dev, GFP_KERNEL);
->  	struct request req;
->  	int rtn;
-> +	struct request_queue *q;
->  
->  	scmd->request = &req;
->  	memset(&scmd->eh_timeout, 0, sizeof(scmd->eh_timeout));
-> @@ -1735,6 +1736,8 @@ scsi_reset_provider(struct scsi_device *
->  	}
->  
->  	scsi_delete_timer(scmd);
-> +	q = scmd->device->request_queue;
->  	scsi_put_command(scmd);
-> +	scsi_queue_next_request(q, NULL);
->  	return rtn;
+> diff -purN -X /home/patman/dontdiff put_cmd-25/drivers/scsi/scsi_lib.c lun-single-25/drivers/scsi/scsi_lib.c
+> --- put_cmd-25/drivers/scsi/scsi_lib.c	Mon Mar 24 12:14:51 2003
+> +++ lun-single-25/drivers/scsi/scsi_lib.c	Mon Mar 24 12:14:55 2003
+> @@ -323,6 +323,49 @@ void scsi_setup_cmd_retry(struct scsi_cm
 >  }
-> diff -purN -X /home/patman/dontdiff starve-25/drivers/scsi/scsi_lib.c put_cmd-25/drivers/scsi/scsi_lib.c
-> --- starve-25/drivers/scsi/scsi_lib.c	Mon Mar 24 12:14:28 2003
-> +++ put_cmd-25/drivers/scsi/scsi_lib.c	Mon Mar 24 12:14:51 2003
-> @@ -174,14 +174,18 @@ void scsi_do_req(struct scsi_request *sr
->  		 void (*done)(struct scsi_cmnd *),
->  		 int timeout, int retries)
->  {
-> +	struct request_queue *q;
+>  
+>  /*
+> + * Called for single_lun devices. The target associated with current_sdev can
+> + * only handle one active command at a time. Scan through all of the luns
+> + * on the same target as current_sdev, return 1 if any are active.
+> + */
+
+Here is parth of your comment:
+	A single_lun (single_lu:1) marked target can handle a single
+	active LU at a time.
+
+> +static int scsi_single_lun_check(struct scsi_device *current_sdev)
+
+Here is the name:
+
+static int scsi_single_lun_active(struct scsi_device *dev);
+
+The reason is that this makes sense:
+
+	if (scsi_single_lun_active(dev)) {
+		/* then there is an active lu */
+	} else {
+		/* No, there's no active devices or
+		the target is NOT a single lun. */
+	}
+
+or the negation:
+
+	if (!scsi_single_lun_active(dev)) {
+		/* no active lun devices or target is not a single
+		LU, -- either way we can continue here: */
+		...
+	}
+
+And you comment continues:
+	Returns 1 if the target has an active LU at this time,
+	else 0.
+
+Ideally you'd do this:
+
+static int scsi_lu_active(struct scsi_target *target);
+
+Then go over the list of LUs of the target.
+(You'd have to add things to the scsi_target structure, etc...,
+see next emails.)
+
+{
+	if (!target->single_lun)
+		return 0;
+	for all devices
+		if an LU is busy
+			return 1;
+	return 0;
+} /* end scsi_lu_active() */
+
+
+> +{
+> +	struct scsi_device *sdev;
 > +
->  	/*
->  	 * If the upper level driver is reusing these things, then
->  	 * we should release the low-level block now.  Another one will
->  	 * be allocated later when this request is getting queued.
->  	 */
->  	if (sreq->sr_command) {
-> +		q = sreq->sr_command->device->request_queue;
->  		scsi_put_command(sreq->sr_command);
->  		sreq->sr_command = NULL;
-> +		scsi_queue_next_request(q, NULL);
+> +	list_for_each_entry(sdev, &current_sdev->same_target_siblings,
+> +			    same_target_siblings)
+> +		if (sdev->device_busy)
+> +			return 1;
+> +	return 0;
+> +}
+> +
+> +/*
+> + * Called for single_lun devices on IO completion. If no requests
+> + * outstanding for current_sdev, call __blk_run_queue for the next
+> + * scsi_device on the same target that has requests.
+> + *
+> + * Called with queue_lock held.
+> + */
+> +static void scsi_single_lun_run(struct scsi_device *current_sdev,
+> +				 struct request_queue *q)
+
+Now here I've got a problem.  This just pulls out the old logic
+into a separate fn.
+
+I'd rather you did this: in the request fn put the single_lun device
+into the starved devices list, just as you'd do for other devices.
+
+If you want you to discern between devices, you can add single_lun
+devices to the front and fully capable devices into the tail of the
+starved devices list -- this would make the starved devices list
+into a priority queue.
+
+Then have a general function to run the starved devices queues
+as follows:
+
+/**
+  * Function:	scsi_run_starved_devs()
+  * Purpose:	Run the request queue of starved devices of a host.
+  * Arguments:	shost, pointer to struct Scsi_Host.
+  * Returns:	Nothing.
+  * Notes:	This function may not necessarily empty the starved device
+  *		list.  For this reason the following should be observed:
+  *		- One shot prioritization: if the caller prioritizes
+  *		the starved device list, then the caller has to prioritize
+  *		it _before_ a call to this fn.
+  *		- Priority queue: if the starved device list is treated as
+  *		a priority queue, no prior arrangements are necessary.  The
+  *		reason is that if any entries are inserted in due time
+  *		of running of this function, the leftovers are added at
+  *		the front of the starved list, thus ordering them by time.
+  */
+static inline void scsi_run_starved_devs(struct Scsi_Host *shost)
+{
+	unsigned long flags;
+	LIST_HEAD(starved);
+	
+	spin_lock_irqsave(&shost->starved_devs_lock, flags);
+	list_splice_init(&shost->starved_devs, &starved);
+	spin_unlock_irqrestore(&shost->starved_devs_lock, flags);
+	
+	while (!list_empty(&starved)) {
+		struct scsi_device *dev;
+
+		if (shost->host_blocked || shost->host_self_blocked ||
+		    (shost->can_queue > 0 &&
+		     shost->host_busy >= shost->can_queue))
+			break;
+	
+		dev=list_entry(starved.next,struct scsi_device,starved_entry);
+		list_del_init(dev->starved_entry);
+		spin_lock_irqsave(dev->request_queue->queue_lock, flags);
+		__blk_run_queue(dev->request_queue);
+		spin_unlock_irqrestore(dev->request_queue->queue_lock, flags);
+	}
+	
+	if (!list_empty(&starved)) {
+		spin_lock_irqsave(&shost->starved_devs_lock, flags);
+		list_splice_init(&starved, &shost->starved_devs);
+		spin_unlock_irqrestore(&shost->starved_devs_lock, flags);
+	}
+}
+
+
+Now since __blk_run_queue(q) call the scsi_request_fn() it MAY
+add the device back to the starved list, but that's no problem
+as it is already emtpy.  If the host blocks in due time, then
+the left over devices are added to the front and we get
+prioritization by time (submittal).
+
+> +{
+> +	struct scsi_device *sdev;
+> +	struct Scsi_Host *shost;
+> +
+> +	shost = current_sdev->host;
+> +	if (blk_queue_empty(q) && current_sdev->device_busy == 0 &&
+> +	    !shost->host_blocked && !shost->host_self_blocked &&
+> +	    !((shost->can_queue > 0) &&
+> +	      (shost->host_busy >= shost->can_queue)))
+> +		list_for_each_entry(sdev, &current_sdev->same_target_siblings,
+> +				    same_target_siblings)
+> +			if (!sdev->device_blocked &&
+> +			    !blk_queue_empty(sdev->request_queue)) {
+> +				__blk_run_queue(sdev->request_queue);
+> +				break;
+> +			}
+> +}
+> +
+> +/*
+>   * Function:    scsi_queue_next_request()
+>   *
+>   * Purpose:     Handle post-processing of completed commands.
+
+And this is how scsi_queue_next_request() might look like:
+(i.e. a more general form)
+
+static void scsi_queue_next_request(request_queue_t *q, struct scsi_cmnd *cmd)
+{
+	struct scsi_device *sdev, *sdev2;
+	struct Scsi_Host *shost;
+	unsigned long flags;
+
+	ASSERT_LOCK(q->queue_lock, 0);
+
+	sdev = q->queuedata;
+	shost = sdev->host;
+
+	scsi_run_starved_devs(shost);
+
+	spin_lock_irqsave(q->queue_lock, flags);
+	if (cmd != NULL) {
+
+		/*
+		 * For some reason, we are not done with this request.
+		 * This happens for I/O errors in the middle of the request,
+		 * in which case we need to request the blocks that come after
+		 * the bad sector.
+		 */
+		cmd->request->special = cmd;
+		if (blk_rq_tagged(cmd->request))
+			blk_queue_end_tag(q, cmd->request);
+
+		/*
+		 * set REQ_SPECIAL - we have a command
+		 * clear REQ_DONTPREP - we assume the sg table has been
+		 *	nuked so we need to set it up again.
+		 */
+		cmd->request->flags |= REQ_SPECIAL;
+		cmd->request->flags &= ~REQ_DONTPREP;
+		__elv_add_request(q, cmd->request, 0, 0);
+	}
+
+	__blk_run_queue(q);
+
+	spin_unlock_irqrestore(q->queue_lock, flags);
+}
+
+And then in scsi_request_fn() you'd genrally include
+starved devices in the starved list.
+
+So to summarize, overall, you'd get single_lun devices to the
+front of the starved list, others enqueue at the end.
+This will give leverage and will give way to sinle_lun target devices
+as they are more finicky.
+
+
+> @@ -390,29 +433,11 @@ void scsi_queue_next_request(request_que
 >  	}
 >  
->  	/*
-> @@ -228,6 +232,7 @@ static void scsi_wait_done(struct scsi_c
->  void scsi_wait_req(struct scsi_request *sreq, const void *cmnd, void *buffer,
->  		   unsigned bufflen, int timeout, int retries)
->  {
-> +	struct request_queue *q;
->  	DECLARE_COMPLETION(wait);
->  	
->  	sreq->sr_request->waiting = &wait;
-> @@ -239,7 +244,9 @@ void scsi_wait_req(struct scsi_request *
->  	sreq->sr_request->waiting = NULL;
+>  	sdev = q->queuedata;
+> -	shost = sdev->host;
 >  
->  	if (sreq->sr_command) {
-> +		q = sreq->sr_command->device->request_queue;
->  		scsi_put_command(sreq->sr_command);
-> +		scsi_queue_next_request(q, NULL);
->  		sreq->sr_command = NULL;
->  	}
+> -	/*
+> -	 * If this is a single-lun device, and we are currently finished
+> -	 * with this device, then see if we need to get another device
+> -	 * started.  FIXME(eric) - if this function gets too cluttered
+> -	 * with special case code, then spin off separate versions and
+> -	 * use function pointers to pick the right one.
+> -	 */
+> -	if (sdev->single_lun && blk_queue_empty(q) && sdev->device_busy ==0 &&
+> -			!shost->host_blocked && !shost->host_self_blocked &&
+> -			!((shost->can_queue > 0) && (shost->host_busy >=
+> -				       		     shost->can_queue))) {
+> -		list_for_each_entry(sdev2, &sdev->same_target_siblings,
+> -			       same_target_siblings) {
+> -			if (!sdev2->device_blocked &&
+> -			    !blk_queue_empty(sdev2->request_queue)) {
+> -				__blk_run_queue(sdev2->request_queue);
+> -				break;
+> -			}
+> -		}
+> -	}
+> +	if (sdev->single_lun)
+> +		scsi_single_lun_run(sdev, q);
+>  
+> +	shost = sdev->host;
+>  	while (!list_empty(&shost->starved_list) &&
+>  	       !shost->host_blocked && !shost->host_self_blocked &&
+>  		!((shost->can_queue > 0) &&
+> @@ -917,22 +942,6 @@ static int scsi_init_io(struct scsi_cmnd
+>  	return BLKPREP_KILL;
 >  }
-> @@ -351,7 +358,7 @@ void scsi_setup_cmd_retry(struct scsi_cm
->   *		permutations grows as 2**N, and if too many more special cases
->   *		get added, we start to get screwed.
->   */
-> -static void scsi_queue_next_request(request_queue_t *q, struct scsi_cmnd *cmd)
-> +void scsi_queue_next_request(request_queue_t *q, struct scsi_cmnd *cmd)
->  {
->  	struct scsi_device *sdev, *sdev2;
->  	struct Scsi_Host *shost;
-> diff -purN -X /home/patman/dontdiff starve-25/drivers/scsi/scsi_syms.c put_cmd-25/drivers/scsi/scsi_syms.c
-> --- starve-25/drivers/scsi/scsi_syms.c	Thu Mar  6 12:34:52 2003
-> +++ put_cmd-25/drivers/scsi/scsi_syms.c	Mon Mar 24 12:14:51 2003
-> @@ -60,6 +60,8 @@ EXPORT_SYMBOL(scsi_allocate_request);
->  EXPORT_SYMBOL(scsi_release_request);
->  EXPORT_SYMBOL(scsi_wait_req);
->  EXPORT_SYMBOL(scsi_do_req);
-> +EXPORT_SYMBOL(scsi_get_command);
-> +EXPORT_SYMBOL(scsi_put_command);
 >  
->  EXPORT_SYMBOL(scsi_report_bus_reset);
->  EXPORT_SYMBOL(scsi_block_requests);
+> -/*
+> - * The target associated with myself can only handle one active command at
+> - * a time. Scan through all of the luns on the same target as myself,
+> - * return 1 if any are active.
+> - */
+> -static int check_all_luns(struct scsi_device *myself)
+> -{
+> -	struct scsi_device *sdev;
+> -
+> -	list_for_each_entry(sdev, &myself->same_target_siblings,
+> -			    same_target_siblings)
+> -		if (sdev->device_busy)
+> -			return 1;
+> -	return 0;
+> -}
+> -
+>  static int scsi_prep_fn(struct request_queue *q, struct request *req)
+>  {
+>  	struct Scsi_Device_Template *sdt;
+> @@ -1077,9 +1086,6 @@ static void scsi_request_fn(request_queu
+>  		if (sdev->device_busy >= sdev->queue_depth)
+>  			break;
+>  
+> -		if (sdev->single_lun && check_all_luns(sdev))
+> -			break;
+> -
+>  		if (shost->host_busy == 0 && shost->host_blocked) {
+>  			/* unblock after host_blocked iterates to zero */
+>  			if (--shost->host_blocked == 0) {
+> @@ -1120,6 +1126,9 @@ static void scsi_request_fn(request_queu
+>  			break;
+>  		}
+>  
+> +		if (sdev->single_lun && scsi_single_lun_check(sdev))
+> +			break;
+> +
+>  		/*
+>  		 * If we couldn't find a request that could be queued, then we
+>  		 * can also quit.
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
