@@ -1,45 +1,86 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: sense buffer not cleaned when retrying failed command by the eh
-Date: Mon, 12 Jan 2004 23:40:48 -0800
+From: "Heiko Carstens" <Heiko.Carstens@de.ibm.com>
+Subject: RE: linux-2.6.0-test11 [BUG] -- scsi_add/remove_device - out of memory
+Date: Tue, 13 Jan 2004 10:44:24 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040113074048.GA1280@beaverton.ibm.com>
-References: <40028A1A.2030609@il.marvell.com> <20040113002656.GW4339@linnie.riede.org>
+Message-ID: <OF11CFD4DA.B5836830-ONC1256E1A.00322027-C1256E1A.00356646@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.132]:61918 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S261953AbUAMHgJ
+Received: from mtagate7.de.ibm.com ([195.212.29.156]:57476 "EHLO
+	mtagate7.de.ibm.com") by vger.kernel.org with ESMTP id S263636AbUAMJoY
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Jan 2004 02:36:09 -0500
-Content-Disposition: inline
-In-Reply-To: <20040113002656.GW4339@linnie.riede.org>
+	Tue, 13 Jan 2004 04:44:24 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Willem Riede <wrlk@riede.org>
+To: Adam Radford <aradford@3WARE.com>
 Cc: linux-scsi@vger.kernel.org
 
-Willem Riede [wrlk@riede.org] wrote:
-> On 2004.01.12 06:50, Saeed Bishara wrote:
-> What about in the 2.6 kernel:
-> 
-> --- drivers/scsi/scsi_lib.c.orig	2004-01-12 18:40:28.000000000 -0500
-> +++ drivers/scsi/scsi_lib.c	2004-01-12 18:50:22.000000000 -0500
-> @@ -302,6 +302,7 @@
->  void scsi_setup_cmd_retry(struct scsi_cmnd *cmd)
->  {
->  	memcpy(cmd->cmnd, cmd->data_cmnd, sizeof(cmd->data_cmnd));
-> +	memset(cmd->sense_buffer, 0, sizeof(cmd->sense_buffer));
->  	cmd->request_buffer = cmd->buffer;
->  	cmd->request_bufflen = cmd->bufflen;
->  	cmd->use_sg = cmd->old_use_sg;
-> 
+Hi,
 
-In the 2.6 kernel this is cleared in scsi_retry_command. The other
-callers of scsi_setup_cmd_retry do not want the sense_buffer cleared as
-it has been set prior to calling scsi_setup_cmd_retry. To use the
-change suggested things would need to be reordered a bit.
+yes, now that I had some more time to look into it I found a leak.
+Actually the scsi mid layer creates a lot of sysfs attributes but
+doesn't remove a single one if a scsi device or a host gets removed.
+Since e.g. device_del (as it is called by scsi_remove_device) does
+not automatically remove all previously registered sysfs
+attributes, we end up with objects that have a reference count > 0
+and thus will never be released and eat up memory.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Heiko
+
+To:     Heiko Carstens/Germany/IBM@IBMDE
+cc: 
+Subject:        RE: linux-2.6.0-test11 [BUG] -- scsi_add/remove_device - out of m emory
+
+
+Heiko,
+
+Did you figure out where the bug is that is causing the memory leak in the 
+
+scsi layer?  is it in scsi_proc.c? 
+
+-Adam
+
+-----Original Message-----
+From: Heiko Carstens [mailto:heiko.carstens@de.ibm.com]
+Sent: Wednesday, December 10, 2003 1:12 AM
+To: linux-scsi@vger.kernel.org
+Subject: linux-2.6.0-test11 [BUG] -- scsi_add/remove_device - out of
+memory
+
+
+Hello all,
+
+it looks to me as if the SCSI stack has a memory leak. If I have the
+following
+endless loop in our ZFCP LLD we end up within a very short time in an out
+of memory situation (tested on an S390 virtual machine with 128MB):
+
+while(1) {
+        scsi_add_device(...)
+        scsi_remove_device(...);
+}
+
+It takes only about 40 iterations to reach the out of memory situation.
+The device that gets added and removed does respond to Inquiry commands.
+Since I'm not sure what are the pending fixes for the SCSI stack I'm
+wondering
+if this is a known bug.
+
+Heiko
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+DISCLAIMER: The information contained in this electronic mail transmission
+is intended by 3ware for the use of the named individual or entity to 
+which
+it is directed and may contain information that is confidential or
+privileged and should not be disseminated without prior approval from 
+3ware 
+
+
+
+
 
