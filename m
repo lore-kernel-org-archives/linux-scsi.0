@@ -1,74 +1,75 @@
-From: Oliver Neukum <oliver@neukum.name>
-Subject: Re: Re: [PATCH] USB changes for 2.5.58
-Date: Fri, 17 Jan 2003 23:07:41 +0100
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <200301172307.41308.oliver@neukum.name>
-References: <10426732153816@kroah.com> <20030117105414.E359@one-eyed-alien.net> <20030117202523.GE1225@beaverton.ibm.com>
+From: "Ravi Anand" <ravi.anand@qlogic.com>
+Subject: RE: scsi bus-reset in qlogic causes system stall
+Date: Fri, 17 Jan 2003 14:23:07 -0800
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <3679966B84813344B908D418BA3F6A4AA84088@AVEXCH01.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-In-Reply-To: <20030117202523.GE1225@beaverton.ibm.com>
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Mike Anderson <andmike@us.ibm.com>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
+To: Steven Dake <sdake@mvista.com>, devnetfs <devnetfs@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
+
+Please use the following link to download the latest driver-v6.04.00b8
+
+http://www.qlogic.com/support/os_detail.asp?productid=125&osid=26
+
+There has been some other fixes too in the bus reset code when issued through the backdoor.
+
+Regards
+Ravi
+
+-----Original Message-----
+From: Steven Dake [mailto:sdake@mvista.com]
+Sent: Friday, January 17, 2003 10:33 AM
+To: devnetfs
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: scsi bus-reset in qlogic causes system stall
 
 
-> > The way this should work is that the LLD calls scsi_remove_device(), =
-and
-> > that cuts off the flow of commands.  The LLD can promise to error-out=
- any
-> > pending commands in the device command queue.
-> >
-> > That is, unless scsi_block_requests() and scsi_unblock_requests() are
-> > more useful than the documentation suggests... block(), error all
-> > commands, unregister()... that would make some sense.  We could call
-> > scsi_block_request() as soon as we know the unit is gone, and
-> > unregister() as soon as the queue is empty.
+bug in qlogic driver I think this has been fixed to a schedule_timeout 
+in the 6.X drivers (from a spin on i/o)
+
+I have done this same thing with the 6.x driver and the system is still 
+usable.  Keep in mind that the I/O's will retry until the FC LIP has 
+completed.
+
+Thanks
+-steve
+
+devnetfs wrote:
+
+>Hello,
 >
-> We should really ensure that we have good separation between stopping
-> device IO, device gone, and release resources.
-
-Very good.
-
-> =09- SCSI seems to have the flags to stop the IO, but instead of
-> =09  scsi_block_requests we may want to export the setting of
-> =09  device online. This can be done from sysfs now, but
-
-Yes, extremely good, we _need_ this.
-
-> =09  not from the driver ( the driver does have a handle to the
-> =09  device, but it would be better to have an interface in case we
-> =09  need to do something addition operations).
+>I am running RedHat 2.4.9-13 with qlogic qla2x00 driver (ver 4.31.7b).
+>Trying to do a bus-reset (in an multi-initiator, shared-scsi scenario)
+>stalls one (or more) nodes in the system for a while. dmesg shows the
+>message: "Waiting for LIP to complete...", on all nodes. Everything
+>freezes for a while (around 10-40secs). It happens on UP/SMP both.
 >
-> =09- Possibly add a scsi_remove_device that would always succeed and
-> =09  a version of scsi_remove_host that calls scsi_remove_device for
-> =09  all devices. Though with the recent change to SCSI remove host to
-> =09  allow non sysfs device registration I do not believe we could
-> =09  ensure devices would be cleaned up.
+>Is this normal? or a bug in qlogic driver? 
+>
+>Thanks in advance for any insight,
+>A.
+>
+>
+>__________________________________________________
+>Do you Yahoo!?
+>Yahoo! Mail Plus - Powerful. Affordable. Sign up now.
+>http://mailplus.yahoo.com
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
+>  
+>
 
-Meaning? If memory stays tied up, we have a beautiful DOS attack,
-if disconnection can be faked by software.
-
-=09Regards
-=09=09Oliver
-
-
-
--------------------------------------------------------
-This SF.NET email is sponsored by: Thawte.com - A 128-bit supercerts will
-allow you to extend the highest allowed 128 bit encryption to all your 
-clients even if they use browsers that are limited to 40 bit encryption. 
-Get a guide here:http://ads.sourceforge.net/cgi-bin/redirect.pl?thaw0030en
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
