@@ -1,195 +1,126 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] Fix SATA ATAPI error handling
-Date: Wed, 23 Mar 2005 16:28:16 +0100
-Message-ID: <42418B10.6090009@suse.de>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: adaptec 2120S software under RedHat 8.0 and FC2
+Date: Wed, 23 Mar 2005 10:37:35 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458BED3211@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080109040205030400040809"
-Sender: linux-ide-owner@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@suse.de>, Kurt Garloff <garloff@suse.de>
-List-Id: linux-scsi@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------080109040205030400040809
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
-
-Hi all,
-
-the attached patch tries to fix SATA ATAPI error handling.
-The original code invokes scsi_finish_command() regardless whether this
-command is processed normally or by scsi_eh.
-This looks quite dangerous to me as this might trigger a recovery for a
-command which already is in recovery (as it's processed by scsi_eh).
-Plus the error handling _never_ clears eh_cmd_q, leaving failed command
-forever on that queue.
-
-The attached patch models the error handling closely to the existing
-error handling in scsi_unjam_host(), with the execption that we rely on
-a proper sense code being returned by the strategy handler.
-
-Comments are welcome.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke			hare@suse.de
-SuSE Linux AG				S390 & zSeries
-Maxfeldstraße 5				+49 911 74053 688
-90409 Nürnberg				http://www.suse.de
-
---------------080109040205030400040809
 Content-Type: text/plain;
- name="atapi-fix-error-handling.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="atapi-fix-error-handling.patch"
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Received: from magic.adaptec.com ([216.52.22.17]:3280 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261633AbVCWPhh convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Mar 2005 10:37:37 -0500
+content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ross Macintyre <raz@macs.hw.ac.uk>, Mark Haverkamp <markh@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, matt_domsch@dell.com
 
-From: Hannes Reinecke <hare@suse.de>
-Subject: Fix sata atapi error handling
-References: 70918
+Now you've gone and done it Christoph! ;-}
 
-SCSI commands which end up on the error handler need special attention;
-we have to make sure that eh_cmd_q is properly emptied or scsi_eh will
-try to forever finalize the command.
+Christoph Hellwig writes:
+> legacy of Adaptec's non linux-supporting past.
 
-With this patch eh_cmd_q is explicitely emptied if not done so in the
-strategy handler and a proper abort sequence is executed for each
-command if required.
-We rely on the strategy handler to fill out proper sense information for
-us as SATA is 'special' when it comes to command sense gathering.
+Cry with me for a moment... We all know that certification is the real
+issue here, most Penguins scoff at this requirement, but customers
+expect it none-the-less and pull us through the wringer to provide such
+certifications. Christoph, you are on record as not giving a flying fig
+for Channel (over the counter) or OEM (complete hardened systems)
+customers. There is not even a disagreement between us, as I do in fact
+understand your stance; it is merely a matter of which world's we each
+must live in.
 
-Signed-off-by: Kurt Garloff <garloff@suse.de>
-Signed-off-by: Jens Axboe <axboe@suse.de>
-Acked-by: Andreas Gruenbacher <agruen@suse.de>
+Adaptec built a complex RAID management tool with a team of hundreds of
+engineers and provided a dedicated build system that survives today many
+years later still producing Linux products several times a day. The
+products are release stabilized, passing through a costly certification
+mechanism to OEM clients. Adaptec spilled blood to do this task in the
+name of supporting Linux and our customers.
 
-Index: linux-2.6.11/drivers/scsi/libata-core.c
-===================================================================
---- linux-2.6.11.orig/drivers/scsi/libata-core.c
-+++ linux-2.6.11/drivers/scsi/libata-core.c
-@@ -41,6 +41,7 @@
- #include <scsi/scsi.h>
- #include "scsi.h"
- #include "scsi_priv.h"
-+#include "scsi_logging.h"
- #include <scsi/scsi_host.h>
- #include <linux/libata.h>
- #include <asm/io.h>
-@@ -2587,6 +2588,11 @@ static void atapi_request_sense(struct a
- 	DPRINTK("EXIT\n");
- }
- 
-+void ata_qc_timeout_done(struct scsi_cmnd *scmd)
-+{
-+	return;
-+}
-+
- /**
-  *	ata_qc_timeout - Handle timeout of queued command
-  *	@qc: Command that timed out
-@@ -2618,17 +2624,16 @@ static void ata_qc_timeout(struct ata_qu
- 		struct scsi_cmnd *cmd = qc->scsicmd;
- 
- 		if (!scsi_eh_eflags_chk(cmd, SCSI_EH_CANCEL_CMD)) {
--
- 			/* finish completing original command */
-+			qc->scsidone = ata_qc_timeout_done;
-+
- 			__ata_qc_complete(qc);
- 
- 			atapi_request_sense(ap, dev, cmd);
- 
- 			cmd->result = (CHECK_CONDITION << 1) | (DID_OK << 16);
--			scsi_finish_command(cmd);
--
--			goto out;
- 		}
-+		goto out;
- 	}
- 
- 	/* hack alert!  We cannot use the supplied completion
-Index: linux-2.6.11/drivers/scsi/libata-scsi.c
-===================================================================
---- linux-2.6.11.orig/drivers/scsi/libata-scsi.c
-+++ linux-2.6.11/drivers/scsi/libata-scsi.c
-@@ -633,12 +633,6 @@ int ata_scsi_error(struct Scsi_Host *hos
- 	ap = (struct ata_port *) &host->hostdata[0];
- 	ap->ops->eng_timeout(ap);
- 
--	/* TODO: this is per-command; when queueing is supported
--	 * this code will either change or move to a more
--	 * appropriate place
--	 */
--	host->host_failed--;
--
- 	DPRINTK("EXIT\n");
- 	return 0;
- }
-Index: linux-2.6.11/drivers/scsi/scsi_error.c
-===================================================================
---- linux-2.6.11.orig/drivers/scsi/scsi_error.c
-+++ linux-2.6.11/drivers/scsi/scsi_error.c
-@@ -1610,6 +1610,40 @@ static void scsi_unjam_host(struct Scsi_
- 	scsi_eh_flush_done_q(&eh_done_q);
- }
- 
-+static void scsi_invoke_strategy_handler(struct Scsi_Host *shost)
-+{
-+	int rtn;
-+	struct list_head *lh, *lh_sf;
-+	struct scsi_cmnd *scmd;
-+	unsigned long flags;
-+	LIST_HEAD(eh_work_q);
-+	LIST_HEAD(eh_done_q);
-+
-+	rtn = shost->hostt->eh_strategy_handler(shost);
-+
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	list_splice_init(&shost->eh_cmd_q, &eh_work_q);
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+	SCSI_LOG_ERROR_RECOVERY(1, scsi_eh_prt_fail_stats(shost, &eh_work_q));
-+
-+	list_for_each_safe(lh, lh_sf, &eh_work_q) {
-+		scmd = list_entry(lh, struct scsi_cmnd, eh_entry);
-+
-+		if (scsi_eh_eflags_chk(scmd, SCSI_EH_CANCEL_CMD) ||
-+		    !SCSI_SENSE_VALID(scmd))
-+			continue;
-+		scmd->retries = scmd->allowed;
-+		scsi_eh_finish_cmd(scmd, &eh_done_q);
-+	}
-+
-+	if (!list_empty(&eh_work_q))
-+		if (!scsi_eh_abort_cmds(&eh_work_q, &eh_done_q))
-+			scsi_eh_ready_devs(shost, &eh_work_q, &eh_done_q);
-+
-+	scsi_eh_flush_done_q(&eh_done_q);
-+}
-+
- /**
-  * scsi_error_handler - Handle errors/timeouts of SCSI cmds.
-  * @data:	Host for which we are running.
-@@ -1624,7 +1658,6 @@ static void scsi_unjam_host(struct Scsi_
- int scsi_error_handler(void *data)
- {
- 	struct Scsi_Host *shost = (struct Scsi_Host *) data;
--	int rtn;
- 	DECLARE_MUTEX_LOCKED(sem);
- 
- 	/*
-@@ -1680,8 +1713,8 @@ int scsi_error_handler(void *data)
- 		 * what we need to do to get it up and online again (if we can).
- 		 * If we fail, we end up taking the thing offline.
- 		 */
--		if (shost->hostt->eh_strategy_handler) 
--			rtn = shost->hostt->eh_strategy_handler(shost);
-+		if (shost->hostt->eh_strategy_handler)
-+			scsi_invoke_strategy_handler(shost);
- 		else
- 			scsi_unjam_host(shost);
- 
+The legacy tools shipped with cards in a 2.4 kernel timeframe based on
+Gold Distributions, the users of these legacy cards wish to utilize the
+familiar management tools that were shipped with these cards. They can't
+because /proc/scsi/aacraid is deprecated. Seems like a simple fix to new
+releases of the management tools, but certification testing still has to
+occur before release, or our customers will balk. The decision made by
+one of our customers recently was to continue to use the legacy
+management tools and the Adaptec branch of the Linux driver that
+supports /proc/scsi/aacraid to minimize the number of changes and manage
+the risks to certification tests.
 
---------------080109040205030400040809--
+New tools are developed that continue to support these old cards, these
+tools pass through additional Linux Certification testing and release
+occurs once the product passes all tests, with a standard of reliability
+that our customers expect. But their release is based only on what can
+be certified to the satisfaction of our customers, static 'Gold' popular
+Distributions laid out on CD which have only recently started to show
+2.6 based kernels. Today, our management tools function in said
+environments, but they are not to be released until we comply with
+existing testing standards.
+
+Thus the explanation for the delay...
+
+And the net result is that every kernel.org customer with less
+certification demands that wants our legacy management tools to function
+has to come to me to get the latest Adaptec Branch of the aacraid driver
+which I gladly and with good temper supply without hesitation, but
+leaving me buried trying to keep up. A problem that would go away in a
+relative instant if CONFIG_SCSI_PROC_FS was respected for what it was, a
+tie-in to legacy support. I, or rather Adaptec that pays my salary, pays
+the price for some idealism and Linux support suffers because I have not
+got one moment of time left to provide patches for review by MarkH.
+
+I am a Martyr, a bridge to the past, a historian, Christoph! I should be
+relished as a hero for all! :-). But I know better than to expect
+that...
+
+> note that if adaptec simply opensourced their managment tools we
+wouldn't
+> have this problem at all. I wonder why Adaptec did that for the old
+> i2o-based controllers but not aacraid.  
+
+Oh yes, that, worked hard on the powers-that-be to permit this. Could
+not release a substantial majority of it because it would violate
+licensed libraries (Zinc, being one of them, I am sorry to admit). So we
+release the engine and the raidutil. No logger, no remote communication
+engine, no GUI and no browser engine either. It was the best we could
+do.
+
+Once released, and under a BSD license, the open source community failed
+to contribute one change to the sources. All it did was permit the tools
+to be packaged, archived and to continue in-perpetuity when
+compatibility libraries failed to work on newer installations.
+
+Why do we not release aaccli & FSAAPI? Gohd knows I've tried. DPT
+released products using a Channel paradigm, DKI released products using
+an OEM paradigm. It was far easier to release a channel hardened product
+with wide OS and platform coverage. But alas, aaccli is no longer
+relevant to the new products, and releasing it will only serve to hurt
+Adaptec once the customers start utilizing these new products. We know
+this through experiences with our customers that have signed NDAs and
+are promised engineering support. Heaven forbid us having an uncertified
+release mucking around with the reliability...
+
+Adaptec will continue to commit to building and certifying tools that
+our customers demand. For those that wish to write their own management
+tools, and in an effort to minimize Adaptec's precious engineering
+support requirements, Adaptec has instead decided to release a
+documented OpenBuild SDK with a consistent management interface for all
+our products. The same SDK that our OEM clients get and the same SDK we
+use for our own management tools.
+
+It's a baby step in the right direction to satisfy as many as possible.
+Look at the definition of politics in the dictionary; it is not an easy
+task to please everyone.
+
+> Maybe it still was a DPT management decision?
+
+No, this was almost purely an Adaptec management decision. I can only
+find one legacy DPT management signatory to this proposal, and he was
+hired on only a matter of months before the DPT purchase and was several
+levels down from the top.
+
+Mere coders could work as hard as they want to prod such open releases
+along, but remain as JAFO to the likes of CEOs and Directors.
+
+Sincerely -- Mark Salyzyn
