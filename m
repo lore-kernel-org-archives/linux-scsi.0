@@ -1,116 +1,54 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: usb-storage and Sony Handycam
-Date: Sat, 8 Nov 2003 12:37:49 -0800
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <20031108123749.A3892@beaverton.ibm.com>
-References: <20031107223444.A1747@beaverton.ibm.com> <Pine.LNX.4.44L0.0311081105351.28814-100000@netrider.rowland.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH] sg negative size: 2.4.23-pre9
+Date: Sat, 08 Nov 2003 20:44:15 +1000
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <3FACC8FF.2000705@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0311081105351.28814-100000@netrider.rowland.org>; from stern@rowland.harvard.edu on Sat, Nov 08, 2003 at 11:28:37AM -0500
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Dmitri Katchalov <dmitrik@users.sourceforge.net>, Idan Sofer <idan@idanso.dyndns.org>, ronald@kuetemeier.com, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+Content-Type: multipart/mixed;
+ boundary="------------020009000001010001010201"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:59662 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S261678AbTKIAIg
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 8 Nov 2003 19:08:36 -0500
 List-Id: linux-scsi@vger.kernel.org
+To: marcelo.tosatti@cyclades.com
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, Nov 08, 2003 at 11:28:37AM -0500, Alan Stern wrote:
-> On Fri, 7 Nov 2003, Patrick Mansfield wrote:
+This is a multi-part message in MIME format.
+--------------020009000001010001010201
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> > Looking at usb/storage/transport.c, we are not generating the usb
-> > "fake_sense" with your change.
-> > 
-> > Maybe the failed MODE SENSE had a check condition, but the fake_sense
-> > prevented us from retrieving it?
-> 
-> No, the "babble" prevented that.
+Marcelo,
+Thanks to work by Pat LaVarre <p.lavarre@ieee.org> one
+of sg's ioctls [SG_SET_RESERVED_SIZE] was found to allow
+negative sizes. This causes the kernel pain. This
+patch fixes that (, a similar patch was recently put
+into lk 2.6.0-test8).
 
-> The "fake sense" is a compromise.  It lets us give a clear indication to 
-> the higher layers that something is wrong and asks them not to send the 
-> same command again.  But it doesn't do much about getting the device back 
-> into a working state (if that's even possible).
+Doug Gilbert
 
-Looking closer at the USB code, is the fake_sense code even hit? The logs
-do not show any of the US_DEBUGP in usb_stor_Bulk_transport(), like
-"Bulk Command S ...".
+--------------020009000001010001010201
+Content-Type: text/plain;
+ name="sg_2423pre9.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sg_2423pre9.diff"
 
-A DID_ERROR causes scsi core to retry the command - it will not even check
-the sense data. A DID_ABORT might be better, scsi core will not retry.
-(We still have issue 1, where the host byte is not checked in
-scsi_status_is_good.)
+--- linux/drivers/scsi/sg.c	2003-06-14 13:49:51.000000000 +1000
++++ linux/drivers/scsi/sg.c2423pre9dpg	2003-11-08 19:11:00.000000000 +1000
+@@ -871,6 +871,8 @@
+     case SG_SET_RESERVED_SIZE:
+         result = get_user(val, (int *)arg);
+         if (result) return result;
++        if (val < 0)
++            return -EINVAL;
+         if (val != sfp->reserve.bufflen) {
+             if (sg_res_in_use(sfp) || sfp->mmap_called)
+                 return -EBUSY;
 
-> > So the next command sent got a check condition, illegal request.
-> > 
-> > That still doesn't tell us why the MODE SENSE failed, and why the failure
-> > does not show up with 2.4.
-> 
-> The best approach for doing this is to have a side-by-side comparison of 
-> the usb-storage debugging logs for 2.4 and 2.6.
-
-Yes, we do not have a 2.4 trace of the same device.
-
-> I think we have to assume 
-> that the MODE-SENSE failed because the device simply doesn't support it 
-> correctly.
-> 
-> > Can you run the variants on MODE SENE via user space SG_IO, and figure out
-> > which ones work?
-
-Still no data on the above (from Dmitri or Ronald).
-
-> > 3) The next command - TEST UNIT READY - gets a check condition, illegal
-> > request. Maybe the fake sense handling is screwing things up - the device
-> > tells us it sent back more data than we asked for, but it is also trying
-> > to check us.
-> 
-> I don't understand your speculation here.  It seems clear to me that this 
-> is a situation where the device and the host are out of sync -- the host 
-> sends a command and the device sends back status from the _previous_ 
-> command.  Repeating the TEST-UNIT-READY may bring us back in sync.  Or 
-> maybe some sort of reset will -- no way to tell without trying it.
-
-The sense data is not cleared until it is retrieved, so if there is sense
-waiting, and we do not send a REQUEST SENSE, the next REQUEST SENSE will
-retrieve the pre-existing sense data (see SAM-3, I am looking at
-sam3r07.pdf, section 5.9.6 sense data).
-
-If the actual result of the command was checked in the babble cases, and a
-REQUEST SENSE sent, it might have gotten the ILLEGAL REQUEST, and the
-devices sense data might be cleared. It might be bad to do anything for
-babble cases, but the REQUEST SENSE should be sent to at least clear out
-any real sense data if we are going to generate our own fake sense.
-
-Dmitri's change (return USB_STOR_XFER_STALL instead of USB_STOR_XFER_LONG)
-causes us to return USB_STOR_TRANSPORT_GOOD vs USB_STOR_TRANSPORT_ERROR in
-usb_stor_CB_transport. 
-
-Then in usb_stor_invoke_transport we issue a REQUEST SENSE. 
-
-If for a USB_STOR_TRANSPORT_ERROR we also did a REQUEST SENSE, the
-following command (TEST UNIT READY) would not get the ILLEGAL REQUEST.
-
-I don't know why the TEST UNIT READY caused an auto REQUEST SENSE to
-be sent.
-
-Changing the sense stuff does not address the MODE SENSE failing, we still
-have 3 separate issues that are all hit by this device.
-
--- Patrick Mansfield
+--------------020009000001010001010201--
 
 
--------------------------------------------------------
-This SF.Net email sponsored by: ApacheCon 2003,
-16-19 November in Las Vegas. Learn firsthand the latest
-developments in Apache, PHP, Perl, XML, Java, MySQL,
-WebDAV, and more! http://www.apachecon.com/
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
