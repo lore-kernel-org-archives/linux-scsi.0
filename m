@@ -1,60 +1,72 @@
-From: "Tony Battersby" <tonyb@cybernetics.com>
-Subject: RE: Some constants I don't understand in sym2
-Date: Mon, 20 Sep 2004 17:12:23 -0400
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [RFTesters] Re: [PATCH] refactor tmscsim inititalization code
+Date: Mon, 20 Sep 2004 22:35:23 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <04Sep20.171220edt.332207@cyborg.cybernetics.com>
-References: <20040920202535.GS642@parcelfarce.linux.theplanet.co.uk>
-Reply-To: <tonyb@cybernetics.com>
+Message-ID: <Pine.LNX.4.60.0409202228500.6785@poirot.grange>
+References: <20040904130235.GA20552@lst.de> <Pine.LNX.4.60.0409071040120.2966@poirot.grange>
+ <20040910133254.GB32530@lst.de> <Pine.LNX.4.60.0409172052230.31193@poirot.grange>
+ <20040920152450.GA27419@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-1537914030-1095712523=:6785"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cyborg.cybernetics.com ([206.246.200.18]:37904 "EHLO
-	cybernetics.com") by vger.kernel.org with ESMTP id S267362AbUITVRq
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Sep 2004 17:17:46 -0400
-In-Reply-To: <20040920202535.GS642@parcelfarce.linux.theplanet.co.uk>
+Received: from pop.gmx.net ([213.165.64.20]:55708 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S267365AbUITVhN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Sep 2004 17:37:13 -0400
+In-Reply-To: <20040920152450.GA27419@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Matthew Wilcox' <willy@debian.org>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
 
-> Was there ever a TERMINATED that was 0x20, or is this simply a
-mistake?
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-SCSI-2 defines "COMMAND TERMINATED" status as 0x22.  This status value
-is special because the target is supposed to have sense data available
-after returning COMMAND TERMINATED status (just like after returning
-CHECK CONDITION).  The sym2 driver requests sense data after seeing a
-status of S_TERMINATED or S_CHECK_COND, so this looks like a typo.  The
-correct value is 0x22.
+---1463811839-1537914030-1095712523=:6785
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 
-> Other symbolic tags I haven't found Linux names for yet include:
+On Mon, 20 Sep 2004, Christoph Hellwig wrote:
+
+>> Ok, now, that the patch has been applied, and, as Christoph informed me,
+>> it would be difficult (impossible?) to undo it, we have to fix it. I'll
+>> explain my doubts separately as a reply to another Christoph's email. Or
+>> would it still be possible to get a patch in, reverting the EEPROM rework?
 >
->  #define        M_ABORT_TAG     (0x0d)
->  #define        M_CLEAR_QUEUE   (0x0e)
-> -#define        M_INIT_REC      (0x0f)
-> -#define        M_REL_REC       (0x10)
-> +#define        M_INIT_REC      INITIATE_RECOVERY
-> +#define        M_REL_REC       RELEASE_RECOVERY
->  #define        M_TERMINATE     (0x11)
->  #define        M_IGN_RESIDUE   (0x23)
->  #define        M_IDENTIFY      (0x80)
->
-> Again, history lesson / pointers to specs appreciated (I have sam3r09,
-> spc3r15 and spi5r06 handy).
+> might be best to just revert it, I'll cook up a patch.
 
-These are SCSI-2 names for various SPI messages.  SCSI-3 gave them
-different names but kept the same meanings.  Do a reverse lookup on the
-message code in the SPI spec to get the new names:
+Why? Would be a pity. I think, the only thing that's needed is the 
+attached micro-patch. Chiaki Ishikawa volunteered to test your patch, so, 
+I could send him this fix too for a check.
 
-ABORT TAG -> ABORT TASK
-CLEAR QUEUE -> CLEAR TASK SET
-TERMINATE TASK -> defined in SPI2 but not in SPI3 and above
-IGNORE WIDE RESIDUE (same)
-IDENTIFY (actually a bitmask - any message with the high bit set is
-IDENTIFY)
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
-As always, SCSI-related specs can be downloaded from www.t10.org
+---1463811839-1537914030-1095712523=:6785
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name="tmscsim-ch_10-fix.patch"
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.LNX.4.60.0409202235230.6785@poirot.grange>
+Content-Description: 
+Content-Disposition: attachment; filename="tmscsim-ch_10-fix.patch"
 
-Anthony J. Battersby
-Cybernetics
+LS0tIGEvZHJpdmVycy9zY3NpL3Rtc2NzaW0uYwlNb24gU2VwIDIwIDIyOjEy
+OjA1IDIwMDQNCisrKyBiL2RyaXZlcnMvc2NzaS90bXNjc2ltLmMJTW9uIFNl
+cCAyMCAyMjoxNjo0MyAyMDA0DQpAQCAtOTkxLDIzICs5OTEsMjAgQEANCiAN
+CiBzdGF0aWMgdm9pZCBfX2RldmluaXQgZGMzOTBfZWVwcm9tX3ByZXBhcmVf
+cmVhZChzdHJ1Y3QgcGNpX2RldiAqcGRldiwgdTggY21kKQ0KIHsNCi0JdTgg
+Y2FycnlGbGFnID0gMSwgaiA9IDB4ODAsIGksIGJ2YWwsIHJlZ3ZhbDsNCisJ
+dTggY2FycnlGbGFnID0gMSwgaiA9IDB4ODAsIGksIGJ2YWw7DQogDQogCWZv
+ciAoaSA9IDA7IGkgPCA5OyBpKyspIHsNCiAJCWlmIChjYXJyeUZsYWcpIHsN
+CiAJCQlidmFsID0gMHg0MDsNCi0JCQlyZWd2YWwgPSAweDgwOw0KIAkJDQot
+CQkJcGNpX3dyaXRlX2NvbmZpZ19ieXRlKHBkZXYsIHJlZ3ZhbCwgYnZhbCk7
+DQotCQl9IGVsc2Ugew0KKwkJCXBjaV93cml0ZV9jb25maWdfYnl0ZShwZGV2
+LCAweDgwLCBidmFsKTsNCisJCX0gZWxzZQ0KIAkJCWJ2YWwgPSAwOw0KLQkJ
+CXJlZ3ZhbCA9IDB4YzA7DQotCQl9DQogDQogCQl1ZGVsYXkoMTYwKTsNCi0J
+CXBjaV93cml0ZV9jb25maWdfYnl0ZShwZGV2LCByZWd2YWwsIGJ2YWwgfCAw
+eDgwKTsNCisJCXBjaV93cml0ZV9jb25maWdfYnl0ZShwZGV2LCAweDgwLCBi
+dmFsIHwgMHg4MCk7DQogCQl1ZGVsYXkoMTYwKTsNCi0JCXBjaV93cml0ZV9j
+b25maWdfYnl0ZShwZGV2LCByZWd2YWwsIDApOw0KKwkJcGNpX3dyaXRlX2Nv
+bmZpZ19ieXRlKHBkZXYsIDB4ODAsIDApOw0KIAkJdWRlbGF5KDE2MCk7DQog
+DQogCQljYXJyeUZsYWcgPSAoY21kICYgaikgPyAxIDogMDsNCg==
 
+---1463811839-1537914030-1095712523=:6785--
