@@ -1,25 +1,32 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: SAS overview
-Date: Sun, 28 Mar 2004 00:33:47 -0500
+From: "faustino" <mmirtceli@hotmail.com>
+Subject: As Seen on CNN, the Winningest CAS1N0! wright strawbera
+Date: Sun, 28 Mar 2004 01:20:14 GMT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <406663BB.6040303@pobox.com>
-References: <Pine.LNX.4.10.10403272026550.27892-100000@master.linux-ide.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <1080436814-16123__28433.9521349922$1080462187@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:5566 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262053AbUC1FeG
+Received: from [213.154.78.157] ([213.154.78.157]:1256 "HELO
+	vfb-lampertheim.de") by vger.kernel.org with SMTP id S262114AbUC1IPK
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 28 Mar 2004 00:34:06 -0500
-In-Reply-To: <Pine.LNX.4.10.10403272026550.27892-100000@master.linux-ide.org>
+	Sun, 28 Mar 2004 03:15:10 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Andre Hedrick <andre@linux-ide.org>
-Cc: dougg@torque.net, "Scott M. Ferris" <sferris@acm.org>, Matthew Wilcox <willy@debian.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
 
-Andre Hedrick wrote:
-> Until you enter port-multiplier mode, and if their is a prosposal which
+Come and play at the world's PREMIvERE ONLINzE CASvINO!
+We are happy to offer you, in an elegant atmosphere, a 50% BONUrS for YOUR FIRST DEPOiSIT as a New Player.
+
+Sign up now! Don't wait!
+
+http://www.virtualcasinoes.net/_e4faa55afa1972493c43ac8a3f66f869/
 
 
-Yeah, good point... ;)
+We'll automatically CREDIaT your account with a 50% BONUzS of extra chips, to wager in our CASIwNO.
+Don't hesirtate and try your luck!
 
+CLICiK HERnE!
+
+http://www.virtualcasinoes.net/_e4faa55afa1972493c43ac8a3f66f869/
+
+
+
+whitney reznor shawn volley slacker prof happyday orchid angels cccccc bmw gary charity mazda1 rux wolverin h2opolo bridges robinhoo naomi impala gambit alison james1 asdfghjk dickhead
