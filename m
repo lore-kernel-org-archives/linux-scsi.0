@@ -1,35 +1,47 @@
-From: John Hasler <john@dhh.gt.org>
+From: Stefan Smietanowski <stesmi@stesmi.com>
 Subject: Re: Binary-only firmware covered by the GPL?
-Date: Fri, 26 Mar 2004 07:59:19 -0600
+Date: Fri, 26 Mar 2004 15:19:38 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <87brmjaevc.fsf@toncho.dhh.gt.org>
-References: <E1B6Izr-0002Ai-00@r063144.stusta.swh.mhn.de>
-	<20040325082949.GA3376@gondor.apana.org.au>
-	<20040325220803.GZ16746@fs.tum.de> <40635DD9.8090809@pobox.com>
-	<20040326003339.GD25059@parcelfarce.linux.theplanet.co.uk>
-	<81ptb0wh45.wl@omega.webmasters.gr.jp> <4063EFA5.5070001@stesmi.com>
-	<200403260912.i2Q9CdLU000531@81-2-122-30.bradfords.org.uk>
+Message-ID: <40643BFA.1000302@stesmi.com>
+References: <20040325225423.GT9248@cheney.cx> <MDEHLPKNGKAHNMBLJOLKCEEOLEAA.davids@webmaster.com> <20040326131629.GB26910@zombie.inka.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sa-2.airstreamcomm.net ([64.33.192.162]:8459 "EHLO
-	sa-2.airstreamcomm.net") by vger.kernel.org with ESMTP
-	id S263843AbUCZNxF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Mar 2004 08:53:05 -0500
-In-Reply-To: <200403260912.i2Q9CdLU000531@81-2-122-30.bradfords.org.uk> (John
- Bradford's message of "Fri, 26 Mar 2004 09:12:39 GMT")
+Received: from 1-2-2-1a.has.sth.bostream.se ([82.182.130.86]:13480 "EHLO
+	K-7.stesmi.com") by vger.kernel.org with ESMTP id S262157AbUCZOTq
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Mar 2004 09:19:46 -0500
+In-Reply-To: <20040326131629.GB26910@zombie.inka.de>
 List-Id: linux-scsi@vger.kernel.org
-To: 239952@bugs.debian.org, debian-devel@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Eduard Bloch <edi@gmx.de>
+Cc: David Schwartz <davids@webmaster.com>, debian-devel@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-John Bradford writes:
-> Then why didn't the original programmer leave a patch space to allow for
-> such modifications?  Surely that could be considered part of the
-> 'preferred form'.
+Eduard Bloch wrote:
 
-It would be the 'preferred form' if and only if it's the form in which he
-wrote it, patch space or no.
--- 
-John Hasler
-john@dhh.gt.org (John Hasler)
-Dancing Horse Hill
-Elmwood, WI
+> #include <hallo.h>
+> * David Schwartz [Thu, Mar 25 2004, 04:41:23PM]:
+> 
+> 
+>>>IMHO code that can be compiled would probably be the preferred form
+>>>of the work.
+>>
+>>	You are seriously arguing that the obfuscated binary of the firmware is the
+>>preferred form of the firmware for the purpose of making modifications to
+>>it?!
+> 
+> 
+> Yes, the driver authors PREFERS to make the changes on the C source
+> code, he never has to modify the firmware. Exactly what the GPL
+> requests, where is your problem?
+
+But the firmware didn't appear out of thin air - someone wrote it
+somehow. If that's using a hex editor or inside the C code doesn't
+matter, but most likely they used some other language like either
+C or assembly (no, not all firmware is written using assembly), and
+there are cases where some are in fact written using a hex editor but
+I can't remember any that has been for the last 30 or so years but
+I'm sure there has been cases where there hasn't been a working
+assembler.
+
+// Stefan
