@@ -1,35 +1,53 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] make the SCSI mid-layer obey the device online flag
-Date: Fri, 6 Jun 2003 21:51:52 +0100
+From: naja <naja1969@yahoo.com>
+Subject: [ANNOUNCE] Storage server / virtualization software for Linux
+Date: Fri, 6 Jun 2003 15:55:48 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030606215152.B3240@infradead.org>
-References: <1054742495.1674.18.camel@mulgrave> <20030604165146.GA1426@beaverton.ibm.com> <1054754103.2360.8.camel@mulgrave> <20030606073603.A13259@infradead.org> <3EE0B316.4060207@rogers.com> <1054913984.1778.31.camel@mulgrave> <3EE0B8D8.4020909@rogers.com>
+Message-ID: <20030606225548.34736.qmail@web11202.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([195.224.96.167]:42764 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S262202AbTFFUiU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Jun 2003 16:38:20 -0400
-Content-Disposition: inline
-In-Reply-To: <3EE0B8D8.4020909@rogers.com>; from tluben@rogers.com on Fri, Jun 06, 2003 at 11:52:56AM -0400
+Received: from web11202.mail.yahoo.com ([216.136.131.184]:53590 "HELO
+	web11202.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S262331AbTFFWmO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Jun 2003 18:42:14 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <tluben@rogers.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Mike Anderson <andmike@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
+To: linux-scsi@vger.kernel.org
 
-On Fri, Jun 06, 2003 at 11:52:56AM -0400, Luben Tuikov wrote:
-> > Thus, we allow any special command because we assume it's part of error
-> > handling (or post error clean up).
-> 
-> So SCSI Core _has_ decided to know about ULP (block, tape, optical).
-> 
-> Unless we (SCSI Core) generate those, it's a pickle to decide
-> which are ``special'' enough commands.  I think that we'll see
-> more user space drivers controlling devices via sg sending
-> commands to the device for exactly those kinds of problems...
-> Else the burden on SCSI Core will/might be too great.
 
-I think James means REQ_SPECIAL request.  But some of them aren't
-special enough so we might need another flag for those.  But
-having knowledge about the upper drivers in the core sounds like
-a really bad idea.
+Download storage server software for redhat linux from
+http://www.pavitrasoft.com/mayastor/
+
+The Mayastor software running on Linux system is a powerful storage
+virtualization software with simple to use software modules. Some of
+the key benefits include:
+
+ - Fibre-Channel to parallel SCSI protocol bridging
+ - policy based access to shared storage devices
+ - storage pooling for capacity planning
+ - Block level services for disk virtualization
+ - FCP/SCSI command watch
+
+Mayastor requires Qlogic Fibre Channel HBA for the Fibre port.
+For the SCSI port any standard SCSI adapter that is supported under
+Linux kernel 2.4 can be used. 
+
+Derived benefits:
+With this most cost effective software based solution and Qlogic FC
+HBA;
+ a) Make Fibre Channel JBODs or Linux server can appear as FC JBOD
+ b) Any Linux block device can appear as direct attached disk. Now NAS
+server
+   can do block level services with increased performance & throughput.
+ c) Connect parallel SCSI tape libraries to SAN.
+ d) Watch fibre channel SCSI activity, without using expensive FC
+analyzer.
+ e) Enforce simple policy control based on WWN addresses.
+
+
+Visit http://www.pavitrasoft.com/
+
+
+__________________________________
+Do you Yahoo!?
+Yahoo! Calendar - Free online calendar with sync to Outlook(TM).
+http://calendar.yahoo.com
