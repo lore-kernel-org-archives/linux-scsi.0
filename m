@@ -1,44 +1,81 @@
-From: Erik Andersen <andersen@codepoet.org>
-Subject: Re: [PATCH] SCSI hotplug support
-Date: Tue, 15 Oct 2002 11:47:08 -0600
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021015174708.GA15778@codepoet.org>
-References: <200210142107.g9EL7IX04354@localhost.localdomain> <200210150019.53689.oliver@neukum.name> <20021015002252.GE1274@redhat.com> <200210150953.29905.oliver@neukum.name> <20021015143533.GA4288@redhat.com>
-Reply-To: andersen@codepoet.org
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: [patch] Re: 2.5.42 kernel BUG at drivers/base/core.c:251!
+Date: Tue, 15 Oct 2002 11:18:03 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20021015111803.A27953@eng2.beaverton.ibm.com>
+References: <200210151724.g9FHOI426577@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021015143533.GA4288@redhat.com>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <200210151724.g9FHOI426577@eng2.beaverton.ibm.com>; from pbadari@us.ibm.com on Tue, Oct 15, 2002 at 10:24:18AM -0700
+To: Badari Pulavarty <pbadari@us.ibm.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.name>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Tue Oct 15, 2002 at 10:35:33AM -0400, Doug Ledford wrote:
-> Now, please, someone tell me why everyone is whining about user space 
-> doing so little to accomplish what the much larger patch that was 
-> posted does in kernel space?  My point is, and was, that since we need the 
-
-Much larger patch?  If you look closely, that patch is actually
-very small.  It simply moves the code already the proc/scsi/scsi
-"scsi add-single-device" and "scsi remove-single-device" handlers
-into standalone functions.  There is actually not so much as a
-single line of new code...
-
-> user space manager *anyway* to handle things the kernel will *never* 
-> handle, there is no real reason to split up the code segments into a 
-> kernel space portion and a user space portion.  In fact, it simply makes 
-> things more complex because if something breaks and you have both a kernel 
-> part and a user space part, you have to track down which one screwed the 
-> pooch.  This way at least it's all in one spot.
+On Tue, Oct 15, 2002 at 10:24:18AM -0700, Badari Pulavarty wrote:
+> Is this a known problem on 2.5.42 ? Happens all the time with rmmod.
 > 
-> Besides, I've not heard anyone address my concerns about what context the
-> disc attach is done in with the kernel space patch.
+> - Badari
 
-I answered that last night.  It is called from within insmod
-(i.e. not an interrupt handler or any such problematic case),
+I hit a similiar bug for the put_device(&shpnt->host_driverfs_dev) of the
+Scsi_Host, here's a patch for the scsi changes, I can't fully test it
+since my devices seen via insmod aren't showing up properly right now, but
+rmmod works, and the scsi remove-single-device also works without BUG-ing
+or doing other bad things by leaving a dev model reference around:
 
- -Erik
-
---
-Erik B. Andersen             http://codepoet-consulting.com/
---This message was written using 73% post-consumer electrons--
+--- linux-2.5.42/drivers/scsi/st.c	Fri Oct 11 21:22:11 2002
++++ linux-2.5.42-scsi-unreg/drivers/scsi/st.c	Tue Oct 15 10:49:14 2002
+@@ -3909,12 +3909,12 @@
+ 						   &dev_attr_type);
+ 				device_remove_file(&tpnt->driverfs_dev_r[mode],
+ 						   &dev_attr_kdev);
+-				put_device(&tpnt->driverfs_dev_r[mode]);
++				device_unregister(&tpnt->driverfs_dev_r[mode]);
+ 				device_remove_file(&tpnt->driverfs_dev_n[mode],
+ 						   &dev_attr_type);
+ 				device_remove_file(&tpnt->driverfs_dev_n[mode],
+ 						   &dev_attr_kdev);
+-				put_device(&tpnt->driverfs_dev_n[mode]);
++				device_unregister(&tpnt->driverfs_dev_n[mode]);
+ 			}
+ 			if (tpnt->buffer) {
+ 				tpnt->buffer->orig_frp_segs = 0;
+--- linux-2.5.42/drivers/scsi/sg.c	Fri Oct 11 21:22:07 2002
++++ linux-2.5.42-scsi-unreg/drivers/scsi/sg.c	Tue Oct 15 10:49:29 2002
+@@ -1611,7 +1611,7 @@
+ 		sdp->de = NULL;
+ 		device_remove_file(&sdp->sg_driverfs_dev, &dev_attr_type);
+ 		device_remove_file(&sdp->sg_driverfs_dev, &dev_attr_kdev);
+-		put_device(&sdp->sg_driverfs_dev);
++		device_unregister(&sdp->sg_driverfs_dev);
+ 		if (NULL == sdp->headfp)
+ 			vfree((char *) sdp);
+ 	}
+--- linux-2.5.42/drivers/scsi/scsi.c	Fri Oct 11 21:22:08 2002
++++ linux-2.5.42-scsi-unreg/drivers/scsi/scsi.c	Tue Oct 15 10:49:51 2002
+@@ -1965,6 +1965,7 @@
+ 			if (HBA_ptr->hostt->slave_detach)
+ 				(*HBA_ptr->hostt->slave_detach) (scd);
+ 			devfs_unregister (scd->de);
++			device_unregister(&scd->sdev_driverfs_dev);
+ 			scsi_release_commandblocks(scd);
+ 
+ 			/* Now we can remove the device structure */
+@@ -2254,7 +2255,7 @@
+ 			if (shpnt->hostt->slave_detach)
+ 				(*shpnt->hostt->slave_detach) (SDpnt);
+ 			devfs_unregister (SDpnt->de);
+-			put_device(&SDpnt->sdev_driverfs_dev);
++			device_unregister(&SDpnt->sdev_driverfs_dev);
+ 		}
+ 	}
+ 
+@@ -2305,7 +2306,7 @@
+ 		/* Remove the /proc/scsi directory entry */
+ 		sprintf(name,"%d",shpnt->host_no);
+ 		remove_proc_entry(name, tpnt->proc_dir);
+-		put_device(&shpnt->host_driverfs_dev);
++		device_unregister(&shpnt->host_driverfs_dev);
+ 		if (tpnt->release)
+ 			(*tpnt->release) (shpnt);
+ 		else {
