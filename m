@@ -1,69 +1,96 @@
-From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
-Subject: RE: SCSI QLA not working on latest *-mm SN2
-Date: Tue, 21 Sep 2004 13:50:02 -0700
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: SCSI QLA not working on latest *-mm SN2
+Date: Tue, 21 Sep 2004 14:03:42 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <B179AE41C1147041AA1121F44614F0B0012AD911@AVEXCH02.qlogic.org>
+Message-ID: <20040921210341.GC146363@sgi.com>
+References: <20040917183029.GW642@parcelfarce.linux.theplanet.co.uk> <200409211346.58267.jbarnes@engr.sgi.com> <1095789421.2467.414.camel@mulgrave> <200409211409.11095.jbarnes@engr.sgi.com> <20040921190625.GB11708@colo.lackof.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch01.qlogic.com ([198.70.193.200]:55110 "EHLO
-	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S268060AbUIUUye convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Sep 2004 16:54:34 -0400
-Content-Class: urn:content-classes:message
+Received: from zeus.kernel.org ([204.152.189.113]:42992 "EHLO zeus.kernel.org")
+	by vger.kernel.org with ESMTP id S268082AbUIUVEd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Sep 2004 17:04:33 -0400
+Received: from omx3.sgi.com (omx3-ext.sgi.com [192.48.171.20])
+	by zeus.kernel.org (8.12.11/8.11.6) with ESMTP id i8LL4VfA000811
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Sep 2004 14:04:32 -0700
+Content-Disposition: inline
+In-Reply-To: <20040921190625.GB11708@colo.lackof.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>, Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jesse Barnes <jbarnes@engr.sgi.com>, Grant Grundler <grundler@parisc-linux.org>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
+To: Grant Grundler <grundler@parisc-linux.org>
+Cc: Jesse Barnes <jbarnes@engr.sgi.com>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <willy@debian.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
 
-
-On Tuesday, September 21, 2004 1:44 PM, Jeremy Higdon wrote:
-> On Tue, Sep 21, 2004 at 05:25:35PM +0100, Matthew Wilcox wrote:
-> > On Tue, Sep 21, 2004 at 08:58:23AM -0700, Andrew Vasquez wrote:
-> > > From what I can gather from the hw engineers, the config-read
-> > > will not guarantee a flush of posted writes.
-> > 
-> > I believe your hardware engineers to be mistaken.  See PCI 2.2,
-> > Appendix E, section E.2: 
-> > 
-> > 2. Memory writes can be posted in both directions in a bridge. I/O
-> > and Configuration writes are not posted. (I/O writes can be posted
-> > in the Host Bridge, but some restrictions apply.) Read
-> > transactions (Memory, I/O, or Configuration) are not posted.
-> > 
-> > 5. A read transaction must push ahead of it through the bridge any
-> > posted writes originating on the same side of the bridge and
-> > posted before the read. Before the read transaction can complete
-> > on its originating bus, it must pull out of the bridge any posted
-> > writes that originated on the opposite side and were posted before
-> > the read command completes on the read-destination bus. 
+On Tue, Sep 21, 2004 at 01:06:25PM -0600, Grant Grundler wrote:
+> On Tue, Sep 21, 2004 at 02:09:10PM -0400, Jesse Barnes wrote:
+> > Grant, you say that I/O writes can't possibly arrive out of order if issued 
+> > from different CPUs on any machines you're aware of?
 > 
+> Well, that's what I believe right now based on my experience.
+> Re-reading different parts of the PCI local bus spec doesn't give
+> me the warm fuzzies - especially in regard to retries.
 > 
-> I would agree.  A config read should retire any posted I/O writes,
-> whether Port or Memory Mapped.
+> The qla example Jeremy gave earlier wasn't clear on where the
+> mmio write reordering was taking place.  Based on my understanding
+> (and I've been wrong before) of ia64 .rel/.acq semantics the reordering
+> didn't happen in the CPU coherency - ie writes are ordered WRT
+> to each other out to the Mckinley bus. That really only leaves
+> the chipset suspect - ie anything between Mckinley bus and PCI bus.
+
+Do IO space writes follow the memory coherency rules?
+
+> And this chipset is already known to violate DMA writes and
+> MMIO read return ordering rules...which led to read_relaxed().
+> We've agreed DMA reads bypassing MMIO writes violates the spec
+> but is "mostly harmless" (I haven't seen a case in real life where
+> it matters). HP parisc and ia64 platforms also implement
+> this "optimization" (bug) and I've not seen a problem with it yet.
 > 
-> So, unless the qla2xxx chips also do not respond to config reads
-> after reset, the config read should be the answer . . .
+> > If not, it may be that the API will only benefit SGI machines.
 > 
+> Or hurt them.
+> We haven't talked about the flip side of this workaround much.
+> 
+> Normally, I expect the chipset is responsible for maintaining
+> order of MMIO writes - though that sounds near impossible on
+> a large fabric where the spinlock transactions may take a different
+> path than the IO transactions. But allowing out of order MMIO
+> write transactions is a big deal if we want high performance
+> devices that can operate correctly by only consuming MMIO
+> writes and doing DMA for everything else. Adding the MMIO
+> reads to enforcing MMIO write ordering will set us all back
+> a few years in terms of performance.
 
-Yes, please see my earlier reply to Matthew:
+On Altix, we do have the sn_mmiob() option.  I don't think that
+we want to Linux API to require that
 
-	Hmm...adding more confusion to the mix.  I apologize -- my
-	reply was not written correctly, yes, the config-read will
-	flush any pending writes.  But, the same problem persists 
-	- the RISC will still stop responding to requests (config
-	or MMIO) during the soft-reset -- potentially resulting in
-	a MAC (as seen by SGI).
+CPUA:	writel(value_X, common_register)
+	spin_unlock(common_lock)
 
-> . . . unless there is some sort of random delay within the chip
-> itself between a completion of the IO write on the PCI bus and the
-> chip resetting itself.  That's not a problem, is it, Andrew?
->
+CPUB:	spin_lock(common_lock)
+	writel(value_Y, common_register)
 
-The only requirement after reception of a soft-reset request (by PIO
-or MMIO) by the RISC is for the driver to wait 16 PCI clocks before
-issuing another request.  The problem of course is determining when to
-start timing within the driver.
+be strongly ordered, because it places a performance penalty
+on all writes.  On Altix, we have the "sn_mmiob()" function to do
+that.  I.e.
 
-Regards,
-Andrew Vasquez
+CPUA:	writel(value_X, common_register)
+	sn_mmiob()
+	spin_unlock(common_lock)
+
+CPUB:	spin_lock(common_lock)
+	writel(value_Y, common_register)
+
+would strongly order the writes.
+
+I think the flush that Jesse was talking about was an architecture
+independent abstraction of the sn_mmiob().
+
+Note that the sn_mmiob() does not guarantee that the preceding writel is
+completed -- just that there will be no other writeX issued from other
+CPUs ahead of it.
+
+However, if we lose this argument, the simple answer is to add an
+sn_mmiob to the Altix platform's writeX functions.  See ___sn_outb(),
+by the way.
+
+jeremy
