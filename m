@@ -1,30 +1,54 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: why store the search type in the ieee name field?
-Date: Tue, 11 Feb 2003 08:46:56 -0800
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH / RFC] scsi_error handler update. (1/4)
+Date: Tue, 11 Feb 2003 09:22:56 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030211084656.A27826@beaverton.ibm.com>
-References: <3E482B9E.40803@mvista.com> <1044918776.1776.257.camel@mulgrave> <20030211082039.A27630@beaverton.ibm.com> <1044981839.1774.10.camel@mulgrave>
+Message-ID: <20030211172256.GC3164@beaverton.ibm.com>
+References: <20030211081351.GA1368@beaverton.ibm.com> <3E492992.90502@splentec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1044981839.1774.10.camel@mulgrave>; from James.Bottomley@steeleye.com on Tue, Feb 11, 2003 at 10:43:57AM -0600
+In-Reply-To: <3E492992.90502@splentec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Steven Dake <sdake@mvista.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben@splentec.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Feb 11, 2003 at 10:43:57AM -0600, James Bottomley wrote:
-
-> No, look at the code.  After doing name[0] = hex_str[...
-> it then does a strcat.  If name is full of junk, strcat will append
-> after the first \0 it finds (which may be off the end of the name
-> field).  It only works because name[1] is zero but nothing seems to
-> clear it.  I'm hoping it's being cleared in a piece of code I haven't
-> found yet...
+Luben Tuikov [luben@splentec.com] wrote:
+> Could you call this ``eh_cmd_entry'' or ``eh_entry''*,
+> or why don't you use the already provided ``list'' entry.
 > 
-> James
 
-Yes - there's a memset() in scsi_load_identifier, plus on error some of
-the fields are re-zeroed (a bit ugly).
+I could change the name.
 
--- Patrick Mansfield
+I wanted a list just for the error handler I was concerned in the
+timeout (cancel cases) that until ownership was reclaimed that I did not
+want to risk modification of another scsi_cmnd list_head. We should be
+protected by the scsi_done scsi_delete_timer so I could possibly use the
+other list head.
+
+> Question: Could you explain when a command becomes a member of
+> the eh_cmd_list, and when it ceases to be a member of this list?
+> I.e. what is true and false when a command is part and not
+> part of this list?  I couldn't quite get it, just looking from the code,
+> and probably should've looked ``closer'', but am pressed for time.
+> ... I suspect it's something we've discussed here.
+
+A command becomes a member of the eh_cmd_list:
+	- If a scsi_cmnd times out.
+	- A call to scsi_set_device_offline with scsi_cmnds active.
+	- A command completes with DID_TIME_OUT and is not a TUR or
+	  Inquiry.
+	- A command completes with message byte of != COMMAND_COMPLETE.
+	- A few other cases in scsi_decide_disposition. I will document
+	  them.
+
+A command is removed from this list when:
+	- Legacy request sense is done.
+	- Abort was successful.
+	- A function in the sequence done by scsi_eh_ready_devs is
+	  successful.
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
