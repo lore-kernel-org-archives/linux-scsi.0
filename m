@@ -1,30 +1,24 @@
-From: Srihari Vijayaraghavan <harisri@bigpond.com>
-Subject: 2.5.65 and cciss.
-Date: Fri, 21 Mar 2003 01:29:11 +1100
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: SCSI tape write problems at EOT (patch)
+Date: Thu, 20 Mar 2003 21:28:14 +0200 (EET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200303210129.11650.harisri@bigpond.com>
+Message-ID: <Pine.LNX.4.52.0303202116100.1552@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from desktop ([144.135.25.81]) by mta05ps.bigpond.com
-          (Netscape Messaging Server 4.15 mta05ps Jul 16 2002 22:47:55)
-          with SMTP id HC1XMA00.BWH for <linux-scsi@vger.kernel.org>; Fri,
-          21 Mar 2003 00:30:10 +1000
+Received: from kai.makisara.local ([62.248.235.203])
+          by fep02-app.kolumbus.fi with ESMTP
+          id <20030320192813.CYSB4145.fep02-app.kolumbus.fi@kai.makisara.local>
+          for <linux-scsi@vger.kernel.org>; Thu, 20 Mar 2003 21:28:13 +0200
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hello,
-
-Anyone out there using Compaq Smart Array controller 5i (cciss) in 2.5.65?
-
-It works fine in 2.4.20 and in 2.4.21-pre5, but 2.5.65 panics and asking me to 
-pass on the right root= option. But I have verified it be identical to that 
-of 2.4.x
-
-Thanks.
+The SCSI tape driver is currently somewhat too conservative when writing
+in fixed block mode near the EOT early warning and reports as errors
+conditions that could be recovered. This has probably caused the problems
+some people have found but I have not been able to reconstruct earlier.
+I have made a patch for the 2.4.20 kernel to fix these problems. The patch
+and more information can be found from
+http://www.kolumbus.fi/kai.makisara/st-eot.html
 -- 
-Hari
-harisri@bigpond.com
-
+Kai
