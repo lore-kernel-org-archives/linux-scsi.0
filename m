@@ -1,32 +1,60 @@
-From: Luben Tuikov <luben@splentec.com>
-Subject: Re: [PATCH] 2.5.x use list_head to handle scsi starved request queues
-Date: Mon, 24 Mar 2003 17:15:26 -0500
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [patch for playing] 2.5.65 patch to support > 256 disks
+Date: Tue, 25 Mar 2003 08:22:51 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E7F837E.9020900@splentec.com>
-References: <3E7A1EF5.3050501@splentec.com> <20030320203912.A18471@beaverton.ibm.com> <3E7B7A9A.6030007@splentec.com> <20030321165050.B9578@beaverton.ibm.com> <3E7F3C67.5010704@splentec.com> <20030324112940.A11000@beaverton.ibm.com> <3E7F688C.3020009@splentec.com> <20030324202509.GF2371@suse.de> <20030324123813.A11614@beaverton.ibm.com> <3E7F77D6.9040300@splentec.com> <20030324135640.A12273@beaverton.ibm.com>
+Message-ID: <3E7F853B.1020603@torque.net>
+References: <200303211056.04060.pbadari@us.ibm.com> <3E7C4D05.2030500@torque.net> <20030322040550.0b8baeec.akpm@digeo.com> <200303241332.56996.pbadari@us.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: Badari Pulavarty <pbadari@us.ibm.com>
+Cc: Andrew Morton <akpm@digeo.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>
 
-Patrick Mansfield wrote:
+Badari Pulavarty wrote:
+> On Saturday 22 March 2003 04:05 am, Andrew Morton wrote:
 > 
-> The current code in scsi_queue_next_request() assume queue_lock ==
-> host_lock, as does code in scsi_error.c. We get a queue_lock (or
-> host_lock), and then iterate over different q's calling
-> __blk_run_queue(q).
+>>OK, thanks.  So with 48 disks you've lost five megabytes to blkdev_requests
+>>and deadline_drq objects.  With 4000 disks, you're toast.  That's enough
+>>request structures to put 200 gigabytes of memory under I/O ;)
+>>
+>>We need to make the request structures dymanically allocated for other
+>>reasons (which I cannot immediately remember) but it didn't happen.  I
+>>guess we have some motivation now.
+> 
+> 
+> Here is the list of slab caches which consumed more than 1 MB
+> in the process of inserting 4000 disks.
+> 
+> #insmod scsi_debug.ko add_host=4 num_devs=1000
+> 
+> deadline_drq    before:1280 after:1025420 diff:1024140 size:64 incr:65544960
+> blkdev_requests  before:1280 after:1025400 diff:1024120 size:156 incr:159762720
+> 
+> * deadline_drq, blkdev_requests consumed almost 80 MB. We need to fix this.
+> 
+> inode_cache     before:700 after:140770 diff:140070 size:364 incr:50985480
+> dentry_cache    before:4977 after:145061 diff:140084 size:172 incr:24094448
+> 
+> * inode cache increased by 50 MB, dentry cache 24 MB. 
+> It looks like we cached 140,000 inodes. I wonder why ? 
+ > <snip/>
 
-1. Please don't speak of queue_lock and host_lock as if they are
-the same thing.  They are NOT, even though one points to the other.
-This is an infrastructure bug and will have to go.
+Badari,
+What number do you get from
+  # cd /sys; du -a | wc
+when you have 4000 disks?
 
-2. Yes I see this in scsi_error.c. How did this ever slip in!
-(yes this is NOT a question, but a statement)
+With two disks the count on my system is 528.
 
--- 
-Luben
+Also scsi_debug should use only 8 MB (default) for
+simulated storage shared between all pseudo disks
+(i.e. not 8 MB per simulated host).
+
+Doug Gilbert
+
+
 
 
