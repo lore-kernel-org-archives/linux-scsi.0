@@ -1,60 +1,50 @@
-From: Thomas Meller <thomas.meller@gmx.net>
-Subject: finding out about QLogic features
-Date: Mon, 23 Aug 2004 13:10:04 +0200
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: mark scsi_add_host() as __must_check
+Date: Mon, 23 Aug 2004 13:24:40 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4129D08C.CF43CF96@gmx.net>
-Reply-To: thomas.meller@gmx.net
+Message-ID: <20040823112440.GA31874@devserv.devel.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sbbmail1.sbb.ch ([193.192.251.19]:39113 "EHLO sbbmail1.sbb.ch")
-	by vger.kernel.org with ESMTP id S263640AbUHWLLI (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:50661 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S262062AbUHWLYm (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Aug 2004 07:11:08 -0400
-Received: from intmail1.sbb.ch (intmail1.sbb.ch [10.104.27.189])
-	by sbbmail1.sbb.ch (Switch-3.1.6/Switch-3.1.0) with ESMTP id i7NBB1TP024957
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Aug 2004 13:11:01 +0200
-Received: from gmx.net (i34390.sbb.ch [147.78.17.245])
-	by intmail1.sbb.ch (Switch-3.1.6/Switch-3.1.6) with ESMTP id i7NBAx0R017133
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Aug 2004 13:11:00 +0200
+	Mon, 23 Aug 2004 07:24:42 -0400
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.12.10/8.12.10) with ESMTP id i7NBOge1011602
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Aug 2004 07:24:42 -0400
+Received: from devserv.devel.redhat.com (devserv.devel.redhat.com [172.16.58.1])
+	by int-mx1.corp.redhat.com (8.11.6/8.11.6) with ESMTP id i7NBOga10189
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Aug 2004 07:24:42 -0400
+Received: from devserv.devel.redhat.com (localhost.localdomain [127.0.0.1])
+	by devserv.devel.redhat.com (8.12.11/8.12.10) with ESMTP id i7NBOeAp032316
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Aug 2004 07:24:40 -0400
+Received: (from arjanv@localhost)
+	by devserv.devel.redhat.com (8.12.11/8.12.11/Submit) id i7NBOeIY032314
+	for linux-scsi@vger.kernel.org; Mon, 23 Aug 2004 13:24:40 +0200
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-My colleagues are going to hang me if my system produces further path failovers.
+Hi,
 
-I use a QLogic 2312-based HBA (FastT FC2-133) in failover mode on a LinuX HA-cluster.
+It seems it's a dangerous trap to write the following code:
 
-Everything works fine, but the driver causes several failovers per day without an urgent
-reason.
+        scsi_add_host(host, &pdev->dev);
+        scsi_scan_host(host);
 
-We're using a FastT 700 via McData fabric switches.
+without checking the return value of scsi_add_host; it seems scsi_add_host()
+is one of those functions that you reall have to check the return value of,
+this patch makes it so:
 
-Driver version 6.06-fo, Firmware 1.25, Kernel 2.4.18.
-
-Maybe I need to tune the driver's parameters to extend some timeouts. Maybe it's as simple
-as an upgrade.
-I found out that a FastT requires more retries than are set by default.
-QLogic support has given me some hints what to cause the scsi subsystem to do.
-
-In short: I have to set a bigger retry count when a device proclaims a not-ready condition.
-
->From my experience it is best to understand first how it works before setting weird
-parameters.
-Especially due to the use within a failover cluster it could cause timing problems.
-
-Are there any docs around to make a non-programmer understand the HBA-sd_mod interaction
-technique and it's implications?
-
-Is this the right mailing list for me?
-
-Thanks in advance
-
--- 
-Thomas Meller
-mailto: thomas.meller@t-systems.ch
-mailto: thomas.meller@gmx.net
-----
-...Our continuing mission: To seek out knowledge of C, to explore strange
-UNIX commands, and to boldly code where no man page has ever been seen
+--- linux-2.6.7/include/scsi/scsi_host.h~	2004-08-03 11:33:19.127693290 +0200
++++ linux-2.6.7/include/scsi/scsi_host.h	2004-08-03 11:33:19.127693290 +0200
+@@ -524,7 +524,7 @@
+ 	container_of(d, struct Scsi_Host, shost_classdev)
+ 
+ extern struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *, int);
+-extern int scsi_add_host(struct Scsi_Host *, struct device *);
++extern int __must_check scsi_add_host(struct Scsi_Host *, struct device *);
+ extern void scsi_scan_host(struct Scsi_Host *);
+ extern void scsi_remove_host(struct Scsi_Host *);
+ extern struct Scsi_Host *scsi_host_get(struct Scsi_Host *);
