@@ -1,63 +1,140 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [PATCH] scsi_error fix
-Date: Fri, 7 Mar 2003 13:17:32 -0800
+Date: 07 Mar 2003 16:20:58 -0600
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030307211732.GA1148@beaverton.ibm.com>
+Message-ID: <1047075661.3444.27.camel@mulgrave>
 References: <UTC200303072019.h27KJXX12872.aeb@smtp.cwi.nl>
+	<20030307211732.GA1148@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="=-BZ7IHQEHX7uGOnMBHiVT"
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <UTC200303072019.h27KJXX12872.aeb@smtp.cwi.nl>
-To: Andries.Brouwer@cwi.nl
-Cc: patmans@us.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, torvalds@transmeta.com
+In-Reply-To: <20030307211732.GA1148@beaverton.ibm.com>
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Andries.Brouwer@cwi.nl, Patrick Mansfield <patmans@us.ibm.com>, linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, torvalds@transmeta.com
 List-Id: linux-scsi@vger.kernel.org
 
-Andries.Brouwer@cwi.nl [Andries.Brouwer@cwi.nl] wrote:
->     From: Patrick Mansfield <patmans@us.ibm.com>
-> 
->     > [Further discussion and things I did not yet investigate:
->     > What was changed to make this fail first in 2.5.63?
->     > Experience shows that we get into a loop when something else
->     > than SUCCESS is returned here. Probably that is a bug elsewhere.
->     > Probably the commands that cause problems should never have been
->     > sent in the first place.]
-> 
->     The scsi error handler is also used to retrieve sense data for
->     adapters/drivers that do not auto retrieve it. In such cases, it should
->     not issue any aborts, resets etc.
-> 
-> Indeed.
-> 
->     Your change effectively disables that support - we never hit the code in
->     scsi_eh_get_sense() to request sense. It would be very nice if we could
->     fix (or audit) all the scsi drivers, apply your change and remove
->     scsi_eh_get_sense, but AFAIK that has not and is not happening.
-> 
-> No. What happened before was that we got into an infinite loop.
-> The right action is to read the code, understand why it gets
-> into a loop, and fix it. Once that has happened we may decide
-> to undo my change. Or we may decide to ask for sense at that very spot.
-> 
-> Today both James and Mike say that they can reproduce the loop,
-> so probably they'll fix that part. If not, I'll have a look again.
 
-Sorry about that Patrick. I had sent some mail last might and thought it
-went to the list.
+--=-BZ7IHQEHX7uGOnMBHiVT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-Both James and I can reproduce this problem. I was able to reproduce
-using a hack to scsi_debug. 
+On Fri, 2003-03-07 at 15:17, Mike Anderson wrote:
+> I believe James is still pursuing a solution also.
 
-The loop problem is related to scsi error handling using the common code
-of scsi_queue_insert / scsi_requesT_fn . When a command gets started the
-scsi_init_cmd_errh function is called which sets retries to 0.
+The attached is the fix that works for me (plus fixing a few other
+problems I noticed along the way).
 
-There maybe another issue with the scsi_eh_get_sense function, but I am
-still looking at it.
+This is against vanilla 2.5.64 (you have to take Andries work around out
+to see the fix in the BK version).
 
-I believe James is still pursuing a solution also.
+James
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+
+--=-BZ7IHQEHX7uGOnMBHiVT
+Content-Disposition: inline; filename=tmp.diff
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; name=tmp.diff; charset=ISO-8859-1
+
+=3D=3D=3D=3D=3D drivers/scsi/scsi_error.c 1.38 vs edited =3D=3D=3D=3D=3D
+--- 1.38/drivers/scsi/scsi_error.c	Sat Feb 22 10:17:01 2003
++++ edited/drivers/scsi/scsi_error.c	Fri Mar  7 15:39:51 2003
+@@ -515,7 +515,7 @@
+ 	 * actually did complete normally.
+ 	 */
+ 	if (rtn =3D=3D SUCCESS) {
+-		int rtn =3D scsi_eh_completed_normally(scmd);
++		rtn =3D scsi_eh_completed_normally(scmd);
+ 		SCSI_LOG_ERROR_RECOVERY(3,
+ 			printk("%s: scsi_eh_completed_normally %x\n",
+ 			       __FUNCTION__, rtn));
+@@ -545,20 +545,20 @@
+ static int scsi_request_sense(struct scsi_cmnd *scmd)
+ {
+ 	static unsigned char generic_sense[6] =3D
+-	{REQUEST_SENSE, 0, 0, 0, 255, 0};
+-	unsigned char scsi_result0[256], *scsi_result =3D &scsi_result0[0];
++	{REQUEST_SENSE, 0, 0, 0, 254, 0};
++	unsigned char *scsi_result;
+ 	int saved_result;
+ 	int rtn;
+=20
+ 	memcpy(scmd->cmnd, generic_sense, sizeof(generic_sense));
+=20
+-	if (scmd->device->host->hostt->unchecked_isa_dma) {
+-		scsi_result =3D kmalloc(512, GFP_ATOMIC | __GFP_DMA);
+-		if (unlikely(!scsi_result)) {
+-			printk(KERN_ERR "%s: cannot allocate scsi_result.\n",
+-					__FUNCTION__);
+-			return FAILED;
+-		}
++	scsi_result =3D kmalloc(254, GFP_ATOMIC | (scmd->device->host->hostt->unc=
+hecked_isa_dma) ? __GFP_DMA : 0);
++
++
++	if (unlikely(!scsi_result)) {
++		printk(KERN_ERR "%s: cannot allocate scsi_result.\n",
++		       __FUNCTION__);
++		return FAILED;
+ 	}
+=20
+ 	/*
+@@ -568,11 +568,11 @@
+ 	 * address (db).  0 is not a valid sense code.=20
+ 	 */
+ 	memset(scmd->sense_buffer, 0, sizeof(scmd->sense_buffer));
+-	memset(scsi_result, 0, 256);
++	memset(scsi_result, 0, 254);
+=20
+ 	saved_result =3D scmd->result;
+ 	scmd->request_buffer =3D scsi_result;
+-	scmd->request_bufflen =3D 256;
++	scmd->request_bufflen =3D 254;
+ 	scmd->use_sg =3D 0;
+ 	scmd->cmd_len =3D COMMAND_SIZE(scmd->cmnd[0]);
+ 	scmd->sc_data_direction =3D SCSI_DATA_READ;
+@@ -581,13 +581,12 @@
+ 	rtn =3D scsi_send_eh_cmnd(scmd, SENSE_TIMEOUT);
+=20
+ 	/* last chance to have valid sense data */
+-	if (!SCSI_SENSE_VALID(scmd)) {
++	if(!SCSI_SENSE_VALID(scmd)) {
+ 		memcpy(scmd->sense_buffer, scmd->request_buffer,
+-				sizeof(scmd->sense_buffer));
++		       sizeof(scmd->sense_buffer));
+ 	}
+=20
+-	if (scsi_result !=3D &scsi_result0[0])
+-		kfree(scsi_result);
++	kfree(scsi_result);
+=20
+ 	/*
+ 	 * when we eventually call scsi_finish, we really wish to complete
+@@ -702,8 +701,14 @@
+ 		 * if the result was normal, then just pass it along to the
+ 		 * upper level.
+ 		 */
+-		if (rtn =3D=3D SUCCESS)
++		if (rtn =3D=3D SUCCESS) {
++			/* we don't want this command reissued, just
++			 * finished with the sense data, so set
++			 * retries to the max allowed to ensure it
++			 * won't get reissued */
++			scmd->retries =3D scmd->allowed;
+ 			scsi_eh_finish_cmd(scmd, done_q);
++		}
+ 		if (rtn !=3D NEEDS_RETRY)
+ 			continue;
+=20
+=3D=3D=3D=3D=3D drivers/scsi/scsi_lib.c 1.73 vs edited =3D=3D=3D=3D=3D
+--- 1.73/drivers/scsi/scsi_lib.c	Sat Feb 22 14:35:33 2003
++++ edited/drivers/scsi/scsi_lib.c	Fri Mar  7 15:19:46 2003
+@@ -265,7 +265,6 @@
+ 	cmd->serial_number =3D 0;
+ 	cmd->serial_number_at_timeout =3D 0;
+ 	cmd->flags =3D 0;
+-	cmd->retries =3D 0;
+ 	cmd->abort_reason =3D 0;
+=20
+ 	memset(cmd->sense_buffer, 0, sizeof cmd->sense_buffer);
+
+--=-BZ7IHQEHX7uGOnMBHiVT--
