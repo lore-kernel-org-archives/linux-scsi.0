@@ -1,88 +1,82 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: SCSI QLA not working on latest *-mm SN2
-Date: Wed, 15 Sep 2004 16:13:46 -0700
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: [PATCH 2.6.9-rc1] add blacklist attribute indicating no ULD attach
+Date: Wed, 15 Sep 2004 17:41:25 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040915161346.78f0229e.akpm@osdl.org>
-References: <20040915155132.177b51f2.pj@sgi.com>
+Message-ID: <20040916004125.GA108136@sgi.com>
+References: <20040914063237.GA97486@sgi.com> <20040914144023.GA9524@beaverton.ibm.com> <20040914182203.GA100433@sgi.com> <20040915031834.GA102988@sgi.com> <20040915074744.A17264@infradead.org> <1095254765.1717.0.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:22171 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S267696AbUIOXMr (ORCPT
+Received: from omx3-ext.sgi.com ([192.48.171.20]:26069 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S267409AbUIPAoI (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2004 19:12:47 -0400
-In-Reply-To: <20040915155132.177b51f2.pj@sgi.com>
+	Wed, 15 Sep 2004 20:44:08 -0400
+Content-Disposition: inline
+In-Reply-To: <1095254765.1717.0.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Jackson <pj@sgi.com>
-Cc: linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, jbarnes@cthulhu.engr.sgi.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Patrick Mansfield <patmans@us.ibm.com>, Jens Axboe <axboe@suse.de>
 
-Paul Jackson <pj@sgi.com> wrote:
->
-> Jeremy Higdon recommended I send this to you.  I am running into
-> a fatal problem with SCSI QLA2, unable to boot using the latest *-mm
-> on SGI's SN2 hardware (don't know if other hardware involved or not).
+Add blacklist attribute to disable ULD attachment to a lun, and use
+that attribute for SGI-branded Engenio UTM luns.
 
-Do you have this?
+This incorporates input on braces :-)
 
+Signed-off-by: Jeremy Higdon  <jeremy@sgi.com>
 
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-
-Hmm, there seems to be some merging problems in changeset 1.44 for qla_os.c
--- the 'DMA pool/api usage' patch I sent is not completely integrated
-(appears to be massaging problems while attempting to apply on top off
-1.43).
-
-Signed-off-by: Andrew Morton <akpm@osdl.org>
----
-
- 25-akpm/drivers/scsi/qla2xxx/qla_os.c |   28 +++++++++++++---------------
- 1 files changed, 13 insertions(+), 15 deletions(-)
-
-diff -puN drivers/scsi/qla2xxx/qla_os.c~qlogic-oops-fix drivers/scsi/qla2xxx/qla_os.c
---- 25/drivers/scsi/qla2xxx/qla_os.c~qlogic-oops-fix	Tue Sep 14 16:20:34 2004
-+++ 25-akpm/drivers/scsi/qla2xxx/qla_os.c	Tue Sep 14 16:20:34 2004
-@@ -2892,6 +2892,19 @@ qla2x00_mem_alloc(scsi_qla_host_t *ha)
- 			continue;
- 		}
+diff -Nru a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+--- a/drivers/scsi/scsi_devinfo.c	2004-09-15 14:21:22 -07:00
++++ b/drivers/scsi/scsi_devinfo.c	2004-09-15 14:21:22 -07:00
+@@ -182,6 +182,7 @@
+ 	{"SGI", "RAID3", "*", BLIST_SPARSELUN},
+ 	{"SGI", "RAID5", "*", BLIST_SPARSELUN},
+ 	{"SGI", "TP9100", "*", BLIST_REPORTLUN2},
++	{"SGI", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+ 	{"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN},
+ 	{"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
+ 	{"SONY", "TSL", NULL, BLIST_FORCELUN},		/* DDS3 & DDS4 autoloaders */
+diff -Nru a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+--- a/drivers/scsi/scsi_scan.c	2004-09-15 14:21:22 -07:00
++++ b/drivers/scsi/scsi_scan.c	2004-09-15 14:21:22 -07:00
+@@ -531,7 +531,8 @@
+ 		 */
+ 		inq_result[0] = TYPE_ROM;
+ 		inq_result[1] |= 0x80;	/* removable */
+-	}
++	} else if (*bflags & BLIST_NO_ULD_ATTACH)
++		sdev->no_uld_attach = 1;
  
-+		/* get consistent memory allocated for init control block */
-+		ha->init_cb = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL,
-+		    &ha->init_cb_dma);
-+		if (ha->init_cb == NULL) {
-+			qla_printk(KERN_WARNING, ha,
-+			    "Memory Allocation failed - init_cb\n");
-+
-+			qla2x00_mem_free(ha);
-+			msleep(100);
-+
-+			continue;
-+		}
-+		memset(ha->init_cb, 0, sizeof(init_cb_t));
+ 	switch (sdev->type = (inq_result[0] & 0x1f)) {
+ 	case TYPE_TAPE:
+diff -Nru a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+--- a/drivers/scsi/scsi_sysfs.c	2004-09-15 14:21:22 -07:00
++++ b/drivers/scsi/scsi_sysfs.c	2004-09-15 14:21:22 -07:00
+@@ -183,6 +183,8 @@
+ static int scsi_bus_match(struct device *dev, struct device_driver *gendrv)
+ {
+ 	struct scsi_device *sdp = to_scsi_device(dev);
++	if (sdp->no_uld_attach)
++		return 0;
+ 	return (sdp->inq_periph_qual == SCSI_INQ_PQ_CON)? 1: 0;
+ }
  
- 		/* Get consistent memory allocated for Get Port Database cmd */
- 		ha->iodesc_pd = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL,
-@@ -2983,21 +2996,6 @@ qla2x00_mem_alloc(scsi_qla_host_t *ha)
- 			memset(ha->ct_sns, 0, sizeof(struct ct_sns_pkt));
- 		}
+diff -Nru a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+--- a/include/scsi/scsi_device.h	2004-09-15 14:21:22 -07:00
++++ b/include/scsi/scsi_device.h	2004-09-15 14:21:22 -07:00
+@@ -106,6 +106,7 @@
+ 	unsigned use_192_bytes_for_3f:1; /* ask for 192 bytes from page 0x3f */
+ 	unsigned no_start_on_add:1;	/* do not issue start on add */
+ 	unsigned allow_restart:1; /* issue START_UNIT in error handler */
++	unsigned no_uld_attach:1; /* disable connecting to upper level drivers */
  
--		/* Get consistent memory allocated for Get Port Database cmd */
--		ha->iodesc_pd = pci_alloc_consistent(ha->pdev,
--		    PORT_DATABASE_SIZE, &ha->iodesc_pd_dma);
--		if (ha->iodesc_pd == NULL) {
--			/* error */
--			qla_printk(KERN_WARNING, ha,
--			    "Memory Allocation failed - iodesc_pd\n");
--
--			qla2x00_mem_free(ha);
--			msleep(100);
--
--			continue;
--		}
--		memset(ha->iodesc_pd, 0, PORT_DATABASE_SIZE);
--
- 		/* Done all allocations without any error. */
- 		status = 0;
+ 	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
  
-_
-
+diff -Nru a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
+--- a/include/scsi/scsi_devinfo.h	2004-09-15 14:21:22 -07:00
++++ b/include/scsi/scsi_devinfo.h	2004-09-15 14:21:22 -07:00
+@@ -25,4 +25,5 @@
+  					   (if HBA supports more than 8 LUNs) */
+ #define BLIST_NOREPORTLUN	0x40000	/* don't try REPORT_LUNS scan (SCSI-3 devs) */
+ #define BLIST_NOT_LOCKABLE	0x80000	/* don't use PREVENT-ALLOW commands */
++#define BLIST_NO_ULD_ATTACH	0x100000 /* device is actually for RAID config */
+ #endif
