@@ -1,809 +1,375 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] streamline lpfc error handling
-Date: Sun, 20 Jun 2004 15:56:00 +0200
+Subject: [PATCH] remove dead event counters from lpfc
+Date: Sun, 20 Jun 2004 17:25:59 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040620135600.GA15620@lst.de>
+Message-ID: <20040620152559.GA16809@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:20924 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S265286AbUFTN4H (ORCPT
+Received: from verein.lst.de ([212.34.189.10]:42429 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S264571AbUFTP0F (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Jun 2004 09:56:07 -0400
+	Sun, 20 Jun 2004 11:26:05 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James.Smart@Emulex.Com
 Cc: linux-scsi@vger.kernel.org
 
-streamline the callchain in the lpdc EH functions, use sdev->hostdata in
-a few places instead of the lpfc-internal lookup, fix up return values
-(they seemd to be completely wrong before)
 
-
+diff -ur lpfcdriver-2.6-8.0.4/lpfc.h lpfcdriver-2.6-8.0.4-hch/lpfc.h
+--- lpfcdriver-2.6-8.0.4/lpfc.h	2004-06-15 00:07:01.000000000 +0200
++++ lpfcdriver-2.6-8.0.4-hch/lpfc.h	2004-06-20 17:17:14.148703680 +0200
+@@ -122,15 +122,6 @@
+ struct lpfc_lun;
+ struct lpfc_scsi_buf;
+ 
+-/* This should correspond with the HBA API event structure */
+-struct lpfc_hba_event {
+-	uint32_t fc_eventcode;
+-	uint32_t fc_evdata1;
+-	uint32_t fc_evdata2;
+-	uint32_t fc_evdata3;
+-	uint32_t fc_evdata4;
+-};
+-
+ /*
+  * lpfc stat counters
+  */
+@@ -251,16 +242,8 @@
+ 	struct timer_list fc_fdmitmo;	/* fdmi timer */
+ 
+ 
+-	void *fc_evt_head;	/* waiting for event queue */
+-	void *fc_evt_tail;	/* waiting for event queue */
+-
+-	uint16_t hba_event_put;	/* hbaevent event put word anchor */
+-	uint16_t hba_event_get;	/* hbaevent event get word anchor */
+-	uint32_t hba_event_missed;	/* hbaevent missed event word anchor */
+ 	uint32_t sid_cnt;	/* SCSI ID counter */
+ 
+-	struct lpfc_hba_event hbaevt[MAX_HBAEVT];
+-
+ #define FC_CPQ_LUNMAP   0x1	/* SCSI passthru interface LUN 0 mapping */
+ 
+ 	/* These fields used to be binfo */
+@@ -361,7 +344,6 @@
+ 	uint16_t fc_unmap_cnt;
+ 	uint16_t fc_map_cnt;
+ 	struct lpfc_nodelist fc_fcpnodev; /* nodelist entry for no device */
+-	uint32_t nport_event_cnt;	/* timestamp for nlplist entry */
+ 
+ 	struct lpfc_target *device_queue_hash[MAX_FCP_TARGET];
+ #define LPFC_RPI_HASH_SIZE     64
+@@ -405,10 +387,6 @@
+ 	void *CAregaddr;	/* virtual address for chip attn reg */
+ 	void *HSregaddr;	/* virtual address for host status reg */
+ 	void *HCregaddr;	/* virtual address for host ctl reg */
+-	wait_queue_head_t linkevtwq;
+-	wait_queue_head_t rscnevtwq;
+-	wait_queue_head_t ctevtwq;
+-
+ 
+ 	uint8_t brd_no;		/* FC board number */
+ 	uint8_t fc_busflag;	/* bus access flags */
 diff -ur lpfcdriver-2.6-8.0.4/lpfc_crtn.h lpfcdriver-2.6-8.0.4-hch/lpfc_crtn.h
 --- lpfcdriver-2.6-8.0.4/lpfc_crtn.h	2004-06-15 00:07:01.000000000 +0200
-+++ lpfcdriver-2.6-8.0.4-hch/lpfc_crtn.h	2004-06-20 15:46:50.287255952 +0200
-@@ -216,8 +216,6 @@
- 				 struct lpfc_iocbq *);
- int lpfc_sli_abort_iocb_ctx(struct lpfc_hba *, struct lpfc_sli_ring *,
- 			    uint32_t);
--int lpfc_sli_abort_iocb_context1(struct lpfc_hba *, struct lpfc_sli_ring *,
--				 void *);
- int lpfc_sli_abort_iocb_lun(struct lpfc_hba *, struct lpfc_sli_ring *, uint16_t,
- 			    uint64_t);
- int lpfc_sli_abort_iocb_tgt(struct lpfc_hba *, struct lpfc_sli_ring *,
-@@ -228,7 +226,6 @@
- void lpfc_stop_timer(struct clk_data *);
++++ lpfcdriver-2.6-8.0.4-hch/lpfc_crtn.h	2004-06-20 17:15:36.287580832 +0200
+@@ -163,9 +163,6 @@
+ void lpfc_decode_firmware_rev(struct lpfc_hba *, char *, int);
+ uint8_t *lpfc_get_lpfchba_info(struct lpfc_hba *, uint8_t *);
+ int lpfc_fcp_abort(struct lpfc_hba *, int, int, int);
+-int lpfc_put_event(struct lpfc_hba *, uint32_t, uint32_t, void *, void *);
+-int lpfc_hba_put_event(struct lpfc_hba *, uint32_t, uint32_t, uint32_t,
+-		       uint32_t, uint32_t);
+ void lpfc_get_hba_model_desc(struct lpfc_hba *, uint8_t *, uint8_t *);
  
  
--LPFC_SCSI_BUF_t *lpfc_get_scsi_buf(struct lpfc_hba *, int);
- void lpfc_free_scsi_buf(LPFC_SCSI_BUF_t *);
- void lpfc_map_fcp_cmnd_to_bpl(struct lpfc_hba *, LPFC_SCSI_BUF_t *);
- void lpfc_free_scsi_cmd(LPFC_SCSI_BUF_t *);
-@@ -277,6 +274,7 @@
- int lpfc_revoke(struct scsi_device *);
- int lpfc_queuecommand(struct scsi_cmnd *, void (*done) (struct scsi_cmnd *));
- int lpfc_abort_handler(struct scsi_cmnd *);
-+int lpfc_reset_bus_handler(struct scsi_cmnd *cmnd);
- int lpfc_reset_lun_handler(struct scsi_cmnd *);
+diff -ur lpfcdriver-2.6-8.0.4/lpfc_ct.c lpfcdriver-2.6-8.0.4-hch/lpfc_ct.c
+--- lpfcdriver-2.6-8.0.4/lpfc_ct.c	2004-06-15 00:07:01.000000000 +0200
++++ lpfcdriver-2.6-8.0.4-hch/lpfc_ct.c	2004-06-20 17:15:29.603596952 +0200
+@@ -98,7 +98,6 @@
+ 	uint32_t count;
+ 	IOCB_t *icmd;
+ 	int i;
+-	int status;
+ 	int go_exit = 0;
+ 	struct list_head head;
  
- #define ScsiResult(host_code, scsi_code) (((host_code) << 16) | scsi_code)
+@@ -165,21 +164,6 @@
+ 		icmd->ulpBdeCount = 0;
+ 	}
+ 
+-	/*
+-	 * if not early-exiting and there is pmbuf,
+-	 * then do  FC_REG_CT_EVENT for libdfc
+-	 */
+-	if (go_exit == 0  &&  pmbuf != 0) {
+-		status = lpfc_put_event(phba, FC_REG_CT_EVENT, ctx,
+-				       pmbuf,
+-				       (void *) (unsigned long)count);
+-
+-		if ( status) {
+-			/* Need to free IOCB buffer ? */
+-			return;
+-		}
+-	}
+-
+ exit_unsol_event:
+ 	list_for_each_entry_safe(matp, next_matp, &pmbuf->list, list) {
+ 		lpfc_mbuf_free(phba, matp->virt, matp->phys);
+diff -ur lpfcdriver-2.6-8.0.4/lpfc_els.c lpfcdriver-2.6-8.0.4-hch/lpfc_els.c
+--- lpfcdriver-2.6-8.0.4/lpfc_els.c	2004-06-15 00:07:01.000000000 +0200
++++ lpfcdriver-2.6-8.0.4-hch/lpfc_els.c	2004-06-20 17:15:04.760373696 +0200
+@@ -2595,10 +2595,6 @@
+ {
+ 	struct lpfc_nodelist *ndlp;
+ 
+-	lpfc_hba_put_event(phba, HBA_EVENT_RSCN, phba->fc_myDID,
+-			  phba->fc_myDID, 0, 0);
+-	lpfc_put_event(phba, FC_REG_RSCN_EVENT, phba->fc_myDID, 0, 0);
+-
+ 	/* RSCN processed */
+ 	lpfc_printf_log(phba,
+ 			KERN_INFO,
 diff -ur lpfcdriver-2.6-8.0.4/lpfc_fcp.c lpfcdriver-2.6-8.0.4-hch/lpfc_fcp.c
 --- lpfcdriver-2.6-8.0.4/lpfc_fcp.c	2004-06-15 00:07:01.000000000 +0200
-+++ lpfcdriver-2.6-8.0.4-hch/lpfc_fcp.c	2004-06-20 15:47:16.409284800 +0200
-@@ -83,7 +83,6 @@
++++ lpfcdriver-2.6-8.0.4-hch/lpfc_fcp.c	2004-06-20 17:15:44.693302968 +0200
+@@ -414,9 +413,6 @@
  
+ 	/* Initialize plxhba - LINUX specific */
+ 	phba->pcidev = pdev;
+-	init_waitqueue_head(&phba->linkevtwq);
+-	init_waitqueue_head(&phba->rscnevtwq);
+-	init_waitqueue_head(&phba->ctevtwq);
  
- static int lpfc_device_queue_depth(struct lpfc_hba *, struct scsi_device *);
--static int lpfc_reset_bus_handler(struct scsi_cmnd *cmnd);
- 
- static int lpfc_memmap(struct lpfc_hba *);
- static int lpfc_unmemmap(struct lpfc_hba *);
-@@ -994,38 +993,6 @@
- 	return (len);
+ 	if ((rc = lpfc_pcimap(phba))) {
+ 		goto error_2;
+@@ -1771,134 +1735,6 @@
+ 	return (0);
  }
  
--static int
--lpfc_reset_bus_handler(struct scsi_cmnd *cmnd)
+-static void
+-lpfc_wakeup_event(struct lpfc_hba * phba, fcEVTHDR_t * ep)
 -{
--	struct lpfc_hba *phba;
--	LPFC_SCSI_BUF_t *lpfc_cmd;
--	unsigned long iflag;
--	int rc, tgt, lun;
--
--	phba = (struct lpfc_hba *) cmnd->device->host->hostdata[0];
--	tgt = cmnd->device->id;
--	lun = cmnd->device->lun;
--
--	rc = 0;
--	if ((lpfc_cmd = lpfc_get_scsi_buf(phba, GFP_ATOMIC))) {
--		rc = lpfc_scsi_hba_reset(phba, lpfc_cmd);
--		spin_lock_irqsave(&(phba->drvrlock), iflag);
--		lpfc_free_scsi_buf(lpfc_cmd);
--		spin_unlock_irqrestore(&(phba->drvrlock), iflag);
+-	ep->e_mode &= ~E_SLEEPING_MODE;
+-	switch (ep->e_mask) {
+-	case FC_REG_LINK_EVENT:
+-		wake_up_interruptible(&phba->linkevtwq);
+-		break;
+-	case FC_REG_RSCN_EVENT:
+-		wake_up_interruptible(&phba->rscnevtwq);
+-		break;
+-	case FC_REG_CT_EVENT:
+-		wake_up_interruptible(&phba->ctevtwq);
+-		break;
 -	}
--
--	/* SCSI layer issued Bus Reset */
--	lpfc_printf_log(phba,
--		        KERN_ERR,
--		        LOG_FCP,
--		        "0714 SCSI layer issued Bus Reset Data: x%x x%x x%x",
--		        tgt, lun, rc);
--
--
--	return (SUCCESS);
--
--}				/* lpfc_reset_bus_handler */
--
- int
- lpfc_slave_alloc(struct scsi_device *scsi_devs)
- {
-diff -ur lpfcdriver-2.6-8.0.4/lpfc_scsi.h lpfcdriver-2.6-8.0.4-hch/lpfc_scsi.h
---- lpfcdriver-2.6-8.0.4/lpfc_scsi.h	2004-06-15 00:07:02.000000000 +0200
-+++ lpfcdriver-2.6-8.0.4-hch/lpfc_scsi.h	2004-06-20 15:05:27.444705392 +0200
-@@ -208,14 +208,8 @@
- 
- #define LPFC_SCSI_INITIAL_BPL_SIZE  4	/* Number of scsi buf BDEs in fcp_bpl */
- 
--#define FAILURE -1
- #define LPFC_CMD_STATUS_ABORTED -1
- 
--#define LPFC_INTERNAL_RESET   0	/* internal reset */
--#define LPFC_EXTERNAL_RESET   1	/* external reset, scsi layer */
--#define LPFC_ISSUE_LUN_RESET  2	/* flag for reset routine to issue LUN_RESET */
--#define LPFC_ISSUE_ABORT_TSET 4	/* flag for reset routine to issue ABORT_TSET */
--
- #define LPFC_SCSI_DMA_EXT_SIZE 264
- #define LPFC_BPL_SIZE          1024
- 
-diff -ur lpfcdriver-2.6-8.0.4/lpfc_scsiport.c lpfcdriver-2.6-8.0.4-hch/lpfc_scsiport.c
---- lpfcdriver-2.6-8.0.4/lpfc_scsiport.c	2004-06-15 00:07:02.000000000 +0200
-+++ lpfcdriver-2.6-8.0.4-hch/lpfc_scsiport.c	2004-06-20 15:41:31.401733920 +0200
-@@ -141,7 +141,6 @@
- static int lpfc_scsi_cmd_start(LPFC_SCSI_BUF_t *);
- static int lpfc_scsi_prep_task_mgmt_cmd(struct lpfc_hba *, LPFC_SCSI_BUF_t *,
- 					uint8_t);
--static int lpfc_scsi_cmd_abort(struct lpfc_hba *, LPFC_SCSI_BUF_t *);
- static int lpfc_os_prep_io(struct lpfc_hba *, LPFC_SCSI_BUF_t *);
- static void lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *, struct lpfc_iocbq *,
- 				    struct lpfc_iocbq *);
-@@ -149,8 +148,6 @@
- static void lpfc_iodone(struct lpfc_hba *, LPFC_SCSI_BUF_t *);
- static int lpfc_scsi_delay_iodone(struct lpfc_hba *, LPFC_SCSI_BUF_t *);
- static void lpfc_scsi_done(struct lpfc_hba *, struct scsi_cmnd *);
--static int lpfc_scsi_lun_reset(LPFC_SCSI_BUF_t *, struct lpfc_hba *, uint32_t);
--static int lpfc_scsi_tgt_reset(LPFC_SCSI_BUF_t *, struct lpfc_hba *, uint32_t);
- 
- /* Functions required by the scsiport module. */
- 
-@@ -161,7 +158,7 @@
-  * In addition to allocating memeory, the FCP CMND and FCP RSP BDEs are setup
-  * in the BPL and the BPL BDE is setup in the IOCB.
-  */
--LPFC_SCSI_BUF_t *
-+static LPFC_SCSI_BUF_t *
- lpfc_get_scsi_buf(struct lpfc_hba * phba, int gfp_flags)
- {
- 	LPFC_SCSI_BUF_t *psb;
-@@ -420,17 +417,9 @@
- 	struct lpfc_iocbq *piocbq;
- 	IOCB_t *piocb;
- 	FCP_CMND *fcp_cmnd;
--	struct lpfc_lun *lun_device;
--	struct lpfc_nodelist *ndlp;
--	struct scsi_device *scsi_dev;
--
--	scsi_dev = lpfc_cmd->pCmd->device;
--	lun_device = lpfc_find_lun(phba, scsi_dev->id, scsi_dev->lun, 1);
--	if (lun_device == 0) {
--		return 0;
--	}
--
--	ndlp = (struct lpfc_nodelist *) lun_device->pTarget->pcontext;
-+	struct scsi_device *scsi_dev = lpfc_cmd->pCmd->device;
-+	struct lpfc_lun *lun_device = scsi_dev->hostdata;
-+	struct lpfc_nodelist *ndlp = lun_device->pTarget->pcontext;
- 
- 	if ((lun_device->failMask & LPFC_DEV_FATAL_ERROR) || (ndlp == 0)) {
- 		return 0;
-@@ -510,214 +499,66 @@
- 	return (1);
- }
- 
--/* returns:  0 if we successfully find and abort the command,
--	     1 if we couldn't find the command
--*/
--static int
--lpfc_scsi_cmd_abort(struct lpfc_hba * phba, LPFC_SCSI_BUF_t * lpfc_cmd)
--{
--
--	/* when this function returns, the command has been aborted and
--	   returned to the OS, or it was returned before we could abort
--	   it */
--
--	/* flush an oustanding command */
--	if (lpfc_sli_abort_iocb_context1
--	    (phba, &phba->sli.ring[phba->sli.fcp_ring], lpfc_cmd) == 0) {
--		return 1;
--	} else {
--		/* couldn't find command - fail */
--		return 0;
--	}
--
+-	return;
 -}
--
--static int
--lpfc_scsi_lun_reset(LPFC_SCSI_BUF_t * lpfc_cmd,
--		    struct lpfc_hba *phba, uint32_t flag)
--{
--	struct lpfc_iocbq *piocbq;
--	LPFC_SLI_t *psli;
--	struct lpfc_lun *plun;
--	struct lpfc_iocbq *piocbqrsp = 0;
--	int ret = 0;
--	unsigned long iflag;
--	struct scsi_device *scsi_dev;
--
--	lpfc_cmd->scsi_hba = phba;
--	scsi_dev = lpfc_cmd->pCmd->device;
--	/*
--	 * Reset a device with either a LUN reset or an ABORT TASK
--	 * reset depending on the caller's flag value.
--	 */
--	if (flag & LPFC_ISSUE_LUN_RESET) {
--		ret = lpfc_scsi_prep_task_mgmt_cmd(phba, lpfc_cmd, LUN_RESET);
--	} else {
--		if (flag & LPFC_ISSUE_ABORT_TSET) {
--			ret =
--			    lpfc_scsi_prep_task_mgmt_cmd(phba, lpfc_cmd,
--							 ABORT_TASK_SET);
--		} else {
--			ret = 0;
--		}
--	}
--
--	if (ret) {
--		psli = &phba->sli;
--		piocbq = &(lpfc_cmd->cur_iocbq);
--		if (flag & LPFC_EXTERNAL_RESET) {
--
--			/* get a buffer for this response IOCB command */
--			if ((piocbqrsp = mempool_alloc(phba->iocb_mem_pool,
--						       GFP_ATOMIC)) == 0) {
--				return (ENOMEM);
--			}
--			memset(piocbqrsp, 0, sizeof (struct lpfc_iocbq));
--
--			piocbq->iocb_flag |= LPFC_IO_POLL;
--			piocbq->iocb_cmpl = lpfc_sli_wake_iocb_high_priority;
--			ret = lpfc_sli_issue_iocb_wait_high_priority(phba,
--					     &phba->sli.ring[psli->fcp_ring],
--					     piocbq, SLI_IOCB_USE_TXQ,
--					     piocbqrsp, 60);	/* 60 secs */
--			ret = (ret == IOCB_SUCCESS) ? 1 : 0;
--
--			lpfc_cmd->result = piocbqrsp->iocb.un.ulpWord[4];
--			if ((lpfc_cmd->status = piocbqrsp->iocb.ulpStatus) ==
--			    IOSTAT_LOCAL_REJECT) {
--				if (lpfc_cmd->result & IOERR_DRVR_MASK) {
--					lpfc_cmd->status = IOSTAT_DRIVER_REJECT;
--				}
--			}
--
--			spin_lock_irqsave(&(phba->drvrlock), iflag);
--			plun = lpfc_find_lun(phba, scsi_dev->id, scsi_dev->lun,
--					     1);
--			if (plun) {
--				/* flush outstanding commands on the lun */
--				lpfc_sli_abort_iocb_lun(phba,
--				       &phba->sli.ring[phba->sli.fcp_ring],
--				       plun->pTarget->scsi_id,
--				       plun->lun_id);
--
--			}
--
--			spin_unlock_irqrestore(&(phba->drvrlock), iflag);
--
--			/* Done with piocbqrsp, return to free list */
--			if (piocbqrsp) {
--				mempool_free( piocbqrsp, phba->iocb_mem_pool);
--			}
--
--			/* If this was an external lun reset, issue a message
--			 * indicating its completion.
--			 */
--			if (flag & LPFC_ISSUE_LUN_RESET) {
--				lpfc_printf_log(phba,
--						KERN_INFO,
--						LOG_FCP,
--						"0748 Cmpl LUN Reset Data: x%x x%x x%x x%x x%x",
--						lpfc_cmd->pCmd->device->id,
--						lpfc_cmd->pCmd->device->lun,
--						ret, lpfc_cmd->status,
--						lpfc_cmd->result);
--			}
--		} else {
--
--			ret =
--			    lpfc_sli_issue_iocb(phba,
--						&phba->sli.ring[psli->fcp_ring],
--						piocbq,
--						SLI_IOCB_HIGH_PRIORITY |
--						SLI_IOCB_RET_IOCB);
--			ret = (ret == IOCB_SUCCESS) ? 1 : 0;
--		}
--	}
--
--	return (ret);
--
--}
--
- static int
--lpfc_scsi_tgt_reset(LPFC_SCSI_BUF_t * lpfc_cmd,
--		    struct lpfc_hba * phba, uint32_t flag)
-+lpfc_scsi_tgt_reset(LPFC_SCSI_BUF_t * lpfc_cmd, struct lpfc_hba *phba,
-+		struct lpfc_target *ptarget)
- {
- 	struct lpfc_iocbq *piocbq;
- 	LPFC_SLI_t *psli;
--	struct lpfc_target *ptarget = 0;
--	struct lpfc_lun *plun;
- 	struct lpfc_iocbq *piocbqrsp = 0;
--	struct scsi_device *scsi_dev;
- 	int ret = 0;
- 
- 	lpfc_cmd->scsi_hba = phba;
--	scsi_dev = lpfc_cmd->pCmd->device;
- 
- 	/*
- 	 * target reset a device
- 	 */
- 	ret = lpfc_scsi_prep_task_mgmt_cmd(phba, lpfc_cmd, TARGET_RESET);
--	if (ret) {
--		psli = &phba->sli;
--		piocbq = &(lpfc_cmd->cur_iocbq);
--		if (flag & LPFC_EXTERNAL_RESET) {
--
--			/* get a buffer for this IOCB command response */
--			if ((piocbqrsp = mempool_alloc(phba->iocb_mem_pool,
--						       GFP_ATOMIC)) == 0) {
--				return (ENOMEM);
--			}
--			memset(piocbqrsp, 0, sizeof (struct lpfc_iocbq));
--
--			piocbq->iocb_flag |= LPFC_IO_POLL;
--			piocbq->iocb_cmpl = lpfc_sli_wake_iocb_high_priority;
--
--			ret = lpfc_sli_issue_iocb_wait_high_priority(phba,
--				     &phba->sli.ring[psli->fcp_ring],
--				     piocbq, SLI_IOCB_HIGH_PRIORITY,
--				     piocbqrsp,
--				     lpfc_cmd->timeout + LPFC_DRVR_TIMEOUT);
--			ret = (ret == IOCB_SUCCESS) ? 1 : 0;
--
--			lpfc_cmd->result = piocbqrsp->iocb.un.ulpWord[4];
--			if ((lpfc_cmd->status = piocbqrsp->iocb.ulpStatus) ==
--			    IOSTAT_LOCAL_REJECT) {
--				if (lpfc_cmd->result & IOERR_DRVR_MASK) {
--					lpfc_cmd->status = IOSTAT_DRIVER_REJECT;
--				}
--			}
--
--			plun = lpfc_find_lun(phba, scsi_dev->id, scsi_dev->lun,
--					     1);
--			ptarget = plun->pTarget;
--			if (ptarget) {
--				/* flush the target */
--				lpfc_sli_abort_iocb_tgt(phba,
--				       &phba->sli.ring[phba->sli.fcp_ring],
--				       ptarget->scsi_id);
--			}
--
--			/* Done with piocbqrsp, return to free list */
--			if (piocbqrsp) {
--				mempool_free( piocbqrsp, phba->iocb_mem_pool);
--			}
--		} else {
-+	if (!ret) {
-+		ret =
-+		    lpfc_sli_issue_iocb(phba,
-+					&phba->sli.ring[psli->fcp_ring],
-+					piocbq,
-+					SLI_IOCB_HIGH_PRIORITY |
-+					SLI_IOCB_RET_IOCB);
-+		goto out;
-+	}
- 
--			ret =
--			    lpfc_sli_issue_iocb(phba,
--						&phba->sli.ring[psli->fcp_ring],
--						piocbq,
--						SLI_IOCB_HIGH_PRIORITY |
--						SLI_IOCB_RET_IOCB);
--			ret = (ret == IOCB_SUCCESS) ? 1 : 0;
--		}
-+	psli = &phba->sli;
-+	piocbq = &(lpfc_cmd->cur_iocbq);
-+	/* get a buffer for this IOCB command response */
-+	piocbqrsp = mempool_alloc(phba->iocb_mem_pool, GFP_ATOMIC);
-+	if (!piocbqrsp)
-+		return ENOMEM;
-+	memset(piocbqrsp, 0, sizeof (struct lpfc_iocbq));
-+
-+	piocbq->iocb_flag |= LPFC_IO_POLL;
-+	piocbq->iocb_cmpl = lpfc_sli_wake_iocb_high_priority;
-+
-+	ret = lpfc_sli_issue_iocb_wait_high_priority(phba,
-+		     &phba->sli.ring[psli->fcp_ring],
-+		     piocbq, SLI_IOCB_HIGH_PRIORITY,
-+		     piocbqrsp,
-+		     lpfc_cmd->timeout + LPFC_DRVR_TIMEOUT);
-+
-+	lpfc_cmd->result = piocbqrsp->iocb.un.ulpWord[4];
-+	lpfc_cmd->status = piocbqrsp->iocb.ulpStatus;
-+	if (lpfc_cmd->status == IOSTAT_LOCAL_REJECT) {
-+		if (lpfc_cmd->result & IOERR_DRVR_MASK)
-+			lpfc_cmd->status = IOSTAT_DRIVER_REJECT;
- 	}
- 
--	return (ret);
-+	/* flush the target */
-+	lpfc_sli_abort_iocb_tgt(phba,
-+	       &phba->sli.ring[phba->sli.fcp_ring],
-+	       ptarget->scsi_id);
-+
-+	/* Done with piocbqrsp, return to free list */
-+	mempool_free(piocbqrsp, phba->iocb_mem_pool);
-+ out:
-+	return (ret == IOCB_SUCCESS) ? 1 : 0;
- }
- 
--
--
- void
- lpfc_npr_timeout(unsigned long ptr)
- {
-@@ -744,45 +585,56 @@
- }
- 
- int
--lpfc_scsi_hba_reset(struct lpfc_hba * phba, LPFC_SCSI_BUF_t * lpfc_cmd)
-+lpfc_reset_bus_handler(struct scsi_cmnd *cmnd)
- {
-+	struct Scsi_Host *shost = cmnd->device->host;
-+	struct lpfc_hba *phba = (struct lpfc_hba *)shost->hostdata;
- 	struct lpfc_target *ptarget;
- 	int ret, i;
--	unsigned long iflag;
-+	unsigned long flags;
- 	struct scsi_cmnd *lnx_cmd;
- 	struct scsi_device *scsi_dev;
-+	LPFC_SCSI_BUF_t *lpfc_cmd;
-+
-+	lpfc_cmd = lpfc_get_scsi_buf(phba, GFP_ATOMIC);
-+	if (!lpfc_cmd)
-+		return FAILED;
- 
- 	lnx_cmd = kmalloc(sizeof(struct scsi_cmnd), GFP_ATOMIC);
- 	if (lnx_cmd == 0) {
--		return (0);
-+		return FAILED;
- 	}
-+
- 	scsi_dev = kmalloc(sizeof(struct scsi_device), GFP_ATOMIC);
- 	if (scsi_dev == 0) {
- 		kfree(lnx_cmd);
--		return (0);
-+		return FAILED;
- 	}
-+
- 	lpfc_cmd->pCmd = lnx_cmd;
- 	lpfc_cmd->pCmd->device = scsi_dev;
- 
- 	for (i = 0; i < MAX_FCP_TARGET; i++) {
--		spin_lock_irqsave(&(phba->drvrlock), iflag);
-+		spin_lock_irqsave(&phba->drvrlock, flags);
- 		ptarget = phba->device_queue_hash[i];
--		spin_unlock_irqrestore(&(phba->drvrlock), iflag);
--		if (ptarget) {
--			lpfc_cmd->scsi_hba = phba;
--			lpfc_cmd->pCmd->device->channel = 0;
--			lpfc_cmd->pCmd->device->id = i;
--			lpfc_cmd->pCmd->device->lun = 0;
--
--			ret = lpfc_scsi_tgt_reset(lpfc_cmd,
--						  phba, LPFC_EXTERNAL_RESET);
--			if (!ret) {
--				return (0);
--			}
--		}
-+		spin_unlock_irqrestore(&phba->drvrlock, flags);
-+		if (!ptarget)
-+			continue;
-+		lpfc_cmd->scsi_hba = phba;
-+		lpfc_cmd->pCmd->device->channel = 0;
-+		lpfc_cmd->pCmd->device->id = i;
-+		lpfc_cmd->pCmd->device->lun = 0;
-+
-+		ret = lpfc_scsi_tgt_reset(lpfc_cmd, phba, ptarget);
-+		if (!ret)
-+			return FAILED;
- 	}
- 
--	return (1);
-+	spin_lock_irqsave(&phba->drvrlock, flags);
-+	lpfc_free_scsi_buf(lpfc_cmd);
-+	spin_unlock_irqrestore(&phba->drvrlock, flags);
-+
-+	return SUCCESS;
- }
- 
- LPFC_SCSI_BUF_t *
-@@ -1323,99 +1175,71 @@
- }
- 
- int
--lpfc_abort_handler(struct scsi_cmnd *cmnd)
--{
--	struct lpfc_hba *phba;
--	LPFC_SCSI_BUF_t *lpfc_cmd;
--	unsigned long iflag;
--	int rc;
--
--	phba = (struct lpfc_hba *) cmnd->device->host->hostdata[0];
--
--	spin_lock_irqsave(&(phba->drvrlock), iflag);
--
--	lpfc_cmd = (LPFC_SCSI_BUF_t *) cmnd->host_scribble;
--
--	/*
--	   If the command is in retry cahin. delete the command from the
--	   list.
--	 */
--	if (!lpfc_cmd) {
--
--		spin_unlock_irqrestore(&(phba->drvrlock), iflag);
--		return (0);
--	}
--
--	/* set command timeout to 60 seconds */
--	lpfc_cmd->timeout = 60;
--
--	/* SCSI layer issued abort device */
--	lpfc_printf_log(phba,
--			KERN_ERR,
--			LOG_FCP,
--			"0712 SCSI layer issued abort device Data: x%x x%x",
--			lpfc_cmd->pCmd->device->id,
--			lpfc_cmd->pCmd->device->lun);
--
--	/* tell low layer to abort it */
--	rc = lpfc_scsi_cmd_abort(phba, lpfc_cmd);
--
--	/* SCSI layer issued abort device */
--	lpfc_printf_log(phba,
--			KERN_INFO,
--			LOG_FCP,
--			"0749 Cmpl Abort Task Set Data: x%x x%x x%x x%x x%x",
--			lpfc_cmd->pCmd->device->id, lpfc_cmd->pCmd->device->lun,
--			rc, lpfc_cmd->status, lpfc_cmd->result);
--
--	spin_unlock_irqrestore(&(phba->drvrlock), iflag);
--
--	return ((rc == 0) ? SUCCESS : FAILURE);
--
--}
--
--/* This function is now OS-specific and driver-specific */
 -
 -int
- lpfc_reset_lun_handler(struct scsi_cmnd *cmnd)
- {
--	struct lpfc_hba *phba;
-+	struct Scsi_Host *shost = cmnd->device->host;
-+	struct lpfc_hba *phba = (struct lpfc_hba *)shost->hostdata;
-+	LPFC_SLI_t *psli = &phba->sli;
-+	struct scsi_device *scsi_dev = cmnd->device;
-+	struct lpfc_lun *plun = scsi_dev->hostdata;
- 	LPFC_SCSI_BUF_t *lpfc_cmd;
--	int rc;
-+	struct lpfc_iocbq *piocbq;
-+	struct lpfc_iocbq *piocbqrsp = 0;
-+	unsigned long iflag;
-+	int ret = 0;
- 
--	phba = (struct lpfc_hba *) cmnd->device->host->hostdata[0];
- 	/* Get resources to send a SCSI command */
- 	lpfc_cmd = lpfc_get_scsi_buf(phba, GFP_ATOMIC);
--	if (lpfc_cmd == 0) {
+-lpfc_put_event(struct lpfc_hba * phba,
+-	      uint32_t evcode, uint32_t evdata0, void *evdata1, void *evdata2)
+-{
+-	fcEVT_t *ep;
+-	fcEVT_t *oep;
+-	fcEVTHDR_t *ehp = 0;
+-	int found;
+-	DMABUF_t *mp;
+-	void *fstype;
+-	struct lpfc_sli_ct_request *ctp;
+-
+-	ehp = (fcEVTHDR_t *) phba->fc_evt_head;
+-	fstype = 0;
+-	switch (evcode) {
+-	case FC_REG_CT_EVENT:
+-		mp = (DMABUF_t *) evdata1;
+-		ctp = (struct lpfc_sli_ct_request *) mp->virt;
+-		fstype = (void *)(ulong) (ctp->FsType);
+-		break;
+-	}
+-
+-	while (ehp) {
+-		if ((ehp->e_mask == evcode) && (ehp->e_type == fstype))
+-			break;
+-		
+-		ehp = (fcEVTHDR_t *) ehp->e_next_header;
+-	}
+-
+-	if (!ehp) {
 -		return (0);
 -	}
--	lpfc_cmd->pCmd = cmnd;
 -
--	/* set command timeout to 60 seconds */
--	lpfc_cmd->timeout = 60;
+-	ep = ehp->e_head;
+-	oep = 0;
+-	found = 0;
 -
--	/* SCSI layer issued abort device */
--	lpfc_printf_log(phba,
--			KERN_ERR,
--			LOG_FCP,
--			"0713 SCSI layer issued Target Reset Data: x%x x%x",
--			lpfc_cmd->pCmd->device->id,
--			lpfc_cmd->pCmd->device->lun);
+-	while (ep && !(found)) {
+-		if (ep->evt_sleep) {
+-			switch (evcode) {
+-			case FC_REG_CT_EVENT:
+-				if ((ep->evt_type ==
+-				     (void *)(ulong) FC_FSTYPE_ALL)
+-				    || (ep->evt_type == fstype)) {
+-					found++;
+-					ep->evt_data0 = evdata0; /* tag */
+-					ep->evt_data1 = evdata1; /* buffer
+-								    ptr */
+-					ep->evt_data2 = evdata2; /* count */
+-					ep->evt_sleep = 0;
+-					if (ehp->e_mode & E_SLEEPING_MODE) {
+-						ehp->e_flag |=
+-						    E_GET_EVENT_ACTIVE;
+-						lpfc_wakeup_event(phba, ehp);
+-					}
+-					/* For FC_REG_CT_EVENT just give it to
+-					   first one found */
+-				}
+-				break;
+-			default:
+-				found++;
+-				ep->evt_data0 = evdata0;
+-				ep->evt_data1 = evdata1;
+-				ep->evt_data2 = evdata2;
+-				ep->evt_sleep = 0;
+-				if ((ehp->e_mode & E_SLEEPING_MODE)
+-				    && !(ehp->e_flag & E_GET_EVENT_ACTIVE)) {
+-					ehp->e_flag |= E_GET_EVENT_ACTIVE;
+-					lpfc_wakeup_event(phba, ehp);
+-				}
+-				/* For all other events, give it to every one
+-				   waiting */
+-				break;
+-			}
+-		}
+-		oep = ep;
+-		
+-		ep = ep->evt_next;
+-	}
+-	return (found);
+-}
 -
--	rc = lpfc_scsi_lun_reset(lpfc_cmd, phba,
--				 LPFC_EXTERNAL_RESET | LPFC_ISSUE_ABORT_TSET);
-+	if (lpfc_cmd == 0)
-+		return FAILED;
- 
--	/* SCSI layer issued abort device */
--	lpfc_printf_log(phba,
--			KERN_INFO,
--			LOG_FCP,
--			"0747 Cmpl Target Reset Data: x%x x%x x%x x%x x%x",
--			lpfc_cmd->pCmd->device->id, lpfc_cmd->pCmd->device->lun,
--			rc, lpfc_cmd->status, lpfc_cmd->result);
-+	lpfc_cmd->pCmd = cmnd;
-+	lpfc_cmd->timeout = 60;	/* set command timeout to 60 seconds */
-+	lpfc_cmd->scsi_hba = phba;
- 
-+	ret = lpfc_scsi_prep_task_mgmt_cmd(phba, lpfc_cmd, ABORT_TASK_SET);
-+	if (!ret) {
-+		ret = lpfc_sli_issue_iocb(phba,
-+					&phba->sli.ring[psli->fcp_ring],
-+					piocbq,
-+					SLI_IOCB_HIGH_PRIORITY |
-+					SLI_IOCB_RET_IOCB);
-+		goto out;
-+	}
-+
-+	piocbq = &lpfc_cmd->cur_iocbq;
-+
-+	/* get a buffer for this response IOCB command */
-+	piocbqrsp = mempool_alloc(phba->iocb_mem_pool, GFP_ATOMIC);
-+	if (!piocbqrsp)
-+		return FAILED;
-+	memset(piocbqrsp, 0, sizeof (struct lpfc_iocbq));
-+
-+	piocbq->iocb_flag |= LPFC_IO_POLL;
-+	piocbq->iocb_cmpl = lpfc_sli_wake_iocb_high_priority;
-+	ret = lpfc_sli_issue_iocb_wait_high_priority(phba,
-+			     &phba->sli.ring[psli->fcp_ring],
-+			     piocbq, SLI_IOCB_USE_TXQ,
-+			     piocbqrsp, 60);	/* 60 secs */
-+
-+	lpfc_cmd->result = piocbqrsp->iocb.un.ulpWord[4];
-+	lpfc_cmd->status = piocbqrsp->iocb.ulpStatus;
-+	if (lpfc_cmd->status == IOSTAT_LOCAL_REJECT) {
-+		if (lpfc_cmd->result & IOERR_DRVR_MASK)
-+			lpfc_cmd->status = IOSTAT_DRIVER_REJECT;
-+	}
- 
-+	/* flush outstanding commands on the lun */
-+	spin_lock_irqsave(&(phba->drvrlock), iflag);
-+	lpfc_sli_abort_iocb_lun(phba,
-+			&phba->sli.ring[phba->sli.fcp_ring],
-+			plun->pTarget->scsi_id,
-+			plun->lun_id);
-+	spin_unlock_irqrestore(&(phba->drvrlock), iflag);
- 
--	return ((rc == 0) ? SUCCESS : FAILURE);
-+	mempool_free(piocbqrsp, phba->iocb_mem_pool);
-+ out:
-+	return (ret == IOCB_SUCCESS) ? SUCCESS : FAILED;
- 
- }
- 
-@@ -1858,8 +1682,7 @@
- 				lnx_cmnd->resid);
- 
- 		scsi_dev = lnx_cmnd->device;
--		lun_device = lpfc_find_lun(phba, scsi_dev->id, scsi_dev->lun,
--					   1);
-+		lun_device = scsi_dev->hostdata;
- 		if (lnx_cmnd->result && lun_device &&
- 		    (lun_device->pTarget->targetFlags & FC_NPR_ACTIVE)) {
- 			lnx_cmnd->result =
-diff -ur lpfcdriver-2.6-8.0.4/lpfc_sli.c lpfcdriver-2.6-8.0.4-hch/lpfc_sli.c
---- lpfcdriver-2.6-8.0.4/lpfc_sli.c	2004-06-15 00:07:02.000000000 +0200
-+++ lpfcdriver-2.6-8.0.4-hch/lpfc_sli.c	2004-06-20 15:23:40.068601312 +0200
-@@ -27,8 +27,11 @@
- #include <linux/dma-mapping.h>
- #include <linux/pci.h>
- #include <linux/spinlock.h>
-+
-+#include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_device.h>
-+#include <scsi/scsi_host.h>
- 
- #include "lpfc_sli.h"
- #include "lpfc_disc.h"
-@@ -3089,82 +3092,93 @@
- }
- 
- int
--lpfc_sli_abort_iocb_context1(struct lpfc_hba * phba,
--			     struct lpfc_sli_ring * pring, void *ctx)
-+lpfc_abort_handler(struct scsi_cmnd *cmnd)
+-int
+-lpfc_hba_put_event(struct lpfc_hba * phba, uint32_t evcode, uint32_t evdata1,
+-		  uint32_t evdata2, uint32_t evdata3, uint32_t evdata4)
+-{
+-	struct lpfc_hba_event *rec;
+-
+-	rec = &phba->hbaevt[phba->hba_event_put];
+-	rec->fc_eventcode = evcode;
+-
+-	rec->fc_evdata1 = evdata1;
+-	rec->fc_evdata2 = evdata2;
+-	rec->fc_evdata3 = evdata3;
+-	rec->fc_evdata4 = evdata4;
+-	phba->hba_event_put++;
+-	if (phba->hba_event_put >= MAX_HBAEVT) {
+-		phba->hba_event_put = 0;
+-	}
+-	if (phba->hba_event_put == phba->hba_event_get) {
+-		phba->hba_event_missed++;
+-		phba->hba_event_get++;
+-		if (phba->hba_event_get >= MAX_HBAEVT) {
+-			phba->hba_event_get = 0;
+-		}
+-	}
+-
+-	return (0);
+-}
+-
+ static uint32_t
+ lpfc_get_cfgtkval(const char *string, const char *tk)
  {
--	LPFC_SLI_t *psli;
--	struct lpfc_iocbq *iocb, *next_iocb;
--	struct lpfc_iocbq *abtsiocbp;
--	IOCB_t *icmd = 0, *cmd = 0;
--	int errcnt;
-+	struct Scsi_Host *shost = cmnd->device->host;
-+	struct lpfc_hba *phba = (struct lpfc_hba *) shost->hostdata;
-+	LPFC_SLI_t *psli = &phba->sli;
-+	struct lpfc_sli_ring *pring = &psli->ring[psli->fcp_ring];
-+	struct lpfc_iocbq *iocb, *next_iocb, *abtsiocbp;
-+	LPFC_SCSI_BUF_t *lpfc_cmd;
-+	IOCB_t *cmd = NULL, *icmd;
-+	unsigned long flags;
-+	int errcnt = 0;
+diff -ur lpfcdriver-2.6-8.0.4/lpfc_hbadisc.c lpfcdriver-2.6-8.0.4-hch/lpfc_hbadisc.c
+--- lpfcdriver-2.6-8.0.4/lpfc_hbadisc.c	2004-06-15 00:07:01.000000000 +0200
++++ lpfcdriver-2.6-8.0.4-hch/lpfc_hbadisc.c	2004-06-20 17:16:58.376101480 +0200
+@@ -136,11 +136,6 @@
+ 	phba->hba_state = LPFC_LINK_DOWN;
+ 	phba->fc_flag |= FC_LNK_DOWN;
  
--	psli = &phba->sli;
--	errcnt = 0;
-+	spin_lock_irqsave(&phba->drvrlock, flags);
-+	lpfc_cmd = (LPFC_SCSI_BUF_t *)cmnd->host_scribble;
+-	lpfc_put_event(phba, FC_REG_LINK_EVENT, 0, 0, 0);
+-	phba->nport_event_cnt++;
+-
+-	lpfc_hba_put_event(phba, HBA_EVENT_LINK_DOWN, phba->fc_myDID, 0, 0, 0);
+-
+ 	/* Clean up any firmware default rpi's */
+ 	if ((mb = mempool_alloc(phba->mbox_mem_pool, GFP_ATOMIC))) {
+ 		lpfc_unreg_did(phba, 0xffffffff, mb);
+@@ -294,12 +289,6 @@
+ 			   FC_LD_TIMEOUT);
+ 	phba->fc_ns_retry = 0;
  
--	/* Error matching iocb on txq or txcmplq
--	 * First check the txq.
-+	/*
-+	 * If the command is in retry cahin. delete the command from the list.
- 	 */
-+	if (!lpfc_cmd) {
-+		spin_unlock_irqrestore(&phba->drvrlock, flags);
-+		return FAILED;
-+	}
-+
-+	/* set command timeout to 60 seconds */
-+	lpfc_cmd->timeout = 60;
-+
- 	list_for_each_entry_safe(iocb, next_iocb, &pring->txq, list) {
- 		cmd = &iocb->iocb;
--		if (iocb->context1 != ctx) {
-+		if (iocb->context1 != lpfc_cmd)
- 			continue;
--		}
+-	lpfc_put_event(phba, FC_REG_LINK_EVENT, 0, 0, 0);
+-	phba->nport_event_cnt++;
+-
+-	lpfc_hba_put_event(phba, HBA_EVENT_LINK_UP, phba->fc_myDID,
+-			  phba->fc_topology, 0, phba->fc_linkspeed);
+-
+ 	if (phba->fc_linkdown.function) {
+ 		del_timer_sync(&phba->fc_linkdown);
+ 		phba->fc_linkdown.function = 0;
+@@ -991,7 +980,6 @@
+ 			nlp->nlp_flag &= ~NLP_MAPPED_LIST;
+ 			phba->fc_map_cnt--;
+ 			list_del(&nlp->nlp_listp);
+-			phba->nport_event_cnt++;
  
- 		list_del_init(&iocb->list);
- 		pring->txq_cnt--;
--		if (iocb->iocb_cmpl) {
--			icmd = &iocb->iocb;
--			icmd->ulpStatus = IOSTAT_LOCAL_REJECT;
--			icmd->un.ulpWord[4] = IOERR_SLI_ABORTED;
--			(iocb->iocb_cmpl) (phba, iocb, iocb);
--		} else {
--			mempool_free( iocb, phba->iocb_mem_pool);
-+		if (!iocb->iocb_cmpl) {
-+			mempool_free(iocb, phba->iocb_mem_pool);
-+			continue;
- 		}
-+
-+		cmd->ulpStatus = IOSTAT_LOCAL_REJECT;
-+		cmd->un.ulpWord[4] = IOERR_SLI_ABORTED;
-+		(iocb->iocb_cmpl)(phba, iocb, iocb);
- 	}
+ 			/* Must call before binding is removed */
+ 			lpfc_set_failmask(phba, nlp, LPFC_DEV_DISCONNECTED,
+@@ -1017,7 +1005,6 @@
+ 			    ~(NLP_UNMAPPED_LIST | NLP_TGT_NO_SCSIID);
+ 			phba->fc_unmap_cnt--;
+ 			list_del(&nlp->nlp_listp);
+-			phba->nport_event_cnt++;
  
- 	/* Next check the txcmplq */
- 	list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list) {
- 		cmd = &iocb->iocb;
--		if (iocb->context1 != ctx) {
-+		if (iocb->context1 != lpfc_cmd)
- 			continue;
--		}
+ 		} else if (nlp->nlp_flag & NLP_PLOGI_LIST) {
+ 			return (0);	/* Already on plogi list */
+@@ -1062,7 +1049,6 @@
+ 			nlp->nlp_flag &= ~NLP_MAPPED_LIST;
+ 			phba->fc_map_cnt--;
+ 			list_del(&nlp->nlp_listp);
+-			phba->nport_event_cnt++;
  
- 		/* issue ABTS for this IOCB based on iotag */
--		if ((abtsiocbp = mempool_alloc(phba->iocb_mem_pool,
--					       GFP_ATOMIC)) == 0) {
-+		abtsiocbp = mempool_alloc(phba->iocb_mem_pool, GFP_ATOMIC);
-+		if (!abtsiocbp) {
- 			errcnt++;
- 			continue;
- 		}
- 		memset(abtsiocbp, 0, sizeof (struct lpfc_iocbq));
--		icmd = &abtsiocbp->iocb;
+ 			/* Must call before binding is removed */
+ 			lpfc_set_failmask(phba, nlp, LPFC_DEV_DISAPPEARED,
+@@ -1094,9 +1080,6 @@
+ 			    ~(NLP_UNMAPPED_LIST | NLP_TGT_NO_SCSIID);
+ 			phba->fc_unmap_cnt--;
+ 			list_del(&nlp->nlp_listp);
+-			phba->nport_event_cnt++;
+-
+-
+ 		} else if (nlp->nlp_flag & NLP_PLOGI_LIST) {
+ 			nlp->nlp_flag &= ~NLP_PLOGI_LIST;
+ 			phba->fc_plogi_cnt--;
+@@ -1177,7 +1160,6 @@
  
-+		icmd = &abtsiocbp->iocb;
- 		icmd->un.acxri.abortType = ABORT_TYPE_ABTS;
- 		icmd->un.acxri.abortContextTag = cmd->ulpContext;
- 		icmd->un.acxri.abortIoTag = cmd->ulpIoTag;
+ 	/* Put it at the end of the unmapped list */
+ 	list_add_tail(&nlp->nlp_listp, &phba->fc_nlpunmap_list);
+-	phba->nport_event_cnt++;
+ 	phba->fc_unmap_cnt++;
+ 	nlp->nlp_type |= NLP_FC_NODE;
+ 	nlp->nlp_flag |= NLP_UNMAPPED_LIST;
+@@ -1229,7 +1211,6 @@
  
- 		icmd->ulpLe = 1;
- 		icmd->ulpClass = cmd->ulpClass;
--		if (phba->hba_state >= LPFC_LINK_UP) {
-+		if (phba->hba_state >= LPFC_LINK_UP)
- 			icmd->ulpCommand = CMD_ABORT_XRI_CN;
--		} else {
-+		else
- 			icmd->ulpCommand = CMD_CLOSE_XRI_CN;
--		}
+ 	/* Put it at the end of the mapped list */
+ 	list_add_tail(&nlp->nlp_listp, &phba->fc_nlpmap_list);
+-	phba->nport_event_cnt++;
+ 	phba->fc_map_cnt++;
+ 	nlp->nlp_flag |= NLP_MAPPED_LIST;
+ 	nlp->nlp_type |= NLP_FCP_TARGET;
+@@ -1749,7 +1730,6 @@
+ 					      NLP_TGT_NO_SCSIID);
+ 					phba->fc_unmap_cnt--;
+ 					list_del(&ndlp->nlp_listp);
+-					phba->nport_event_cnt++;
+ 				}
  
- 		/* set up an iotag  */
- 		icmd->ulpIoTag = lpfc_sli_next_iotag(phba, pring);
+ 				return (ndlp);
+@@ -1777,7 +1757,6 @@
+ 					ndlp->nlp_flag &= ~NLP_MAPPED_LIST;
+ 					phba->fc_map_cnt--;
+ 					list_del(&ndlp->nlp_listp);
+-					phba->nport_event_cnt++;
  
--		if (lpfc_sli_issue_iocb
--		    (phba, pring, abtsiocbp, SLI_IOCB_USE_TXQ)
--		    == IOCB_ERROR) {
--			mempool_free( abtsiocbp, phba->iocb_mem_pool);
-+		if (lpfc_sli_issue_iocb(phba, pring, abtsiocbp,
-+					SLI_IOCB_USE_TXQ) == IOCB_ERROR) {
-+			mempool_free(abtsiocbp, phba->iocb_mem_pool);
- 			errcnt++;
- 			continue;
- 		}
--		/* The rsp ring completion will remove IOCB from txcmplq when
-+
-+		/*
-+		 * The rsp ring completion will remove IOCB from txcmplq when
- 		 * abort is read by HBA.
- 		 */
- 	}
--	return (errcnt);
-+
-+	spin_unlock_irqrestore(&phba->drvrlock, flags);
-+	return errcnt ? FAILED : SUCCESS;
- }
- 
- int
+ 					/* Must call before binding is
+ 					   removed */
