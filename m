@@ -1,44 +1,46 @@
 From: Jens Axboe <axboe@suse.de>
-Subject: Re: Fw: PROBLEM: Linux V. 2.6.3 panics with "Buffers at physical address >16Mb used for aha1542" at boot time
-Date: Mon, 23 Feb 2004 20:04:22 +0100
+Subject: Re: PROBLEM: 2.6.3 hangs when writing to scsi-dvd
+Date: Mon, 23 Feb 2004 20:05:36 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040223190422.GL32010@suse.de>
-References: <20040218171212.0eb6618a.akpm@osdl.org> <1077243517.2164.61.camel@mulgrave> <1077265837.1297.9.camel@felicia> <20040220083808.GA11822@suse.de> <1077300620.1937.11.camel@mulgrave> <20040223164811.GK32010@suse.de> <1077557656.1759.58.camel@mulgrave>
+Message-ID: <20040223190536.GN32010@suse.de>
+References: <403512B8.2060403@ics.uci.edu> <Pine.LNX.4.58.0402231615270.1749@kai.makisara.local> <20040223142531.GF32010@suse.de> <200402231921.33895.pieczy@web.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:6058 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262002AbUBWTEh (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:29866 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262002AbUBWTFj (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Feb 2004 14:04:37 -0500
+	Mon, 23 Feb 2004 14:05:39 -0500
 Content-Disposition: inline
-In-Reply-To: <1077557656.1759.58.camel@mulgrave>
+In-Reply-To: <200402231921.33895.pieczy@web.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: "Dr. Ernst Molitor" <molitor@uni-bonn.de>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Frank Pieczynski <pieczy@web.de>
+Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, Joachim Feise <jfeise@ics.uci.edu>, linux-scsi@vger.kernel.org, Michael Guntsche <mike@it-loops.com>, Andrew Morton <akpm@osdl.org>, "Justin T. Gibbs" <gibbs@scsiguy.com>
 
-On Mon, Feb 23 2004, James Bottomley wrote:
-> On Mon, 2004-02-23 at 10:48, Jens Axboe wrote:
-> > Something half-assed like this should work as an immediate fix...
+On Mon, Feb 23 2004, Frank Pieczynski wrote:
+> On Monday 23 February 2004 15:25, Jens Axboe wrote:
+> > > > > I hope someone sees no where the real problem is.
+> > > >
+> > > > SCSI io completion path (sr/sd/st rw_intr() -> scsi_io_completion() ->
+> > > > scsi_end_request()) doesn't properly handle non-sector aligned data
+> > > > transfers. This patch should fix it up. Warning: untested.
+> > >
+> > > Now it is slightly tested: it works with my SCSI tape test program. Since
+> > > the program only does an inquiry, I tried it with the SCSI system disk
+> > > without problems. Unfortunately, I don't have access to a SCSI CDROM now.
+> >
+> > Great, that's promising (code like this tends to either break at first
+> > access, or work :-). Thanks for testing.
 > 
-> But I don't see how this bounces the buffer?  Without a bio, this simply
-> passes req->data (which is cgc->buffer) into cmd->request_buffer in
-> scsi_init_io(); but the problem was that this buffer is outside the
-> dma_mask.
+> Hello all,
+> yes, this fix works! I can open k3b now without problems.
+> And yes, my other SCSI devices are still working, also my SATA disks using 
+> libata.
+> Thank you ver much,
 
-Duh you are right, I completely forgot about that. Well that really
-settles the fact that it must be bio backed, and that use_sg should just
-die in the same iteration.
-
-It was a step in the wrong direction regardless, I'd love to kill ->data
-eventually.
-
-Anyways, I have another way to solve this without shaking
-scsi_wait_req() up too much. The way I see it, you cannot implement what
-you want there, you simply don't have access to everything you need to
-make it possible. The best way is to add a few helpers to map to a (bio
-backed) request and have sr/sd/st call these to set things up. I'll give
-that a go.
+Andrew, care to shake it down in -mm for a release? IMO it's clearly the
+way to go (changing io completion to be byte based instead of sectors),
+and the patch looks ok to me (well obviously :-)
 
 -- 
 Jens Axboe
