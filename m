@@ -1,26 +1,35 @@
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH] make the SCSI mid-layer obey the device online flag
-Date: Fri, 6 Jun 2003 21:52:42 +0100
+Date: Fri, 6 Jun 2003 21:51:52 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030606215242.C3240@infradead.org>
-References: <1054742495.1674.18.camel@mulgrave> <20030604165146.GA1426@beaverton.ibm.com> <1054754103.2360.8.camel@mulgrave> <20030606073603.A13259@infradead.org> <3EE0B316.4060207@rogers.com> <20030606202350.GC3330@beaverton.ibm.com>
+Message-ID: <20030606215152.B3240@infradead.org>
+References: <1054742495.1674.18.camel@mulgrave> <20030604165146.GA1426@beaverton.ibm.com> <1054754103.2360.8.camel@mulgrave> <20030606073603.A13259@infradead.org> <3EE0B316.4060207@rogers.com> <1054913984.1778.31.camel@mulgrave> <3EE0B8D8.4020909@rogers.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from carisma.slowglass.com ([195.224.96.167]:44300 "EHLO
+Received: from phoenix.infradead.org ([195.224.96.167]:42764 "EHLO
 	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S262269AbTFFUjK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Jun 2003 16:39:10 -0400
+	id S262202AbTFFUiU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Jun 2003 16:38:20 -0400
 Content-Disposition: inline
-In-Reply-To: <20030606202350.GC3330@beaverton.ibm.com>; from andmike@us.ibm.com on Fri, Jun 06, 2003 at 01:23:50PM -0700
+In-Reply-To: <3EE0B8D8.4020909@rogers.com>; from tluben@rogers.com on Fri, Jun 06, 2003 at 11:52:56AM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <tluben@rogers.com>, Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
+To: Luben Tuikov <tluben@rogers.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Mike Anderson <andmike@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
 
-On Fri, Jun 06, 2003 at 01:23:50PM -0700, Mike Anderson wrote:
-> Instead of talking bit fields it might be good to write down the states
-> for scsi_device and Scsi_Host and the policy for each state. This is
-> partially being done in this thread, but I believe it is confusing as we
-> keep mapping to an already overloaded bit field.
+On Fri, Jun 06, 2003 at 11:52:56AM -0400, Luben Tuikov wrote:
+> > Thus, we allow any special command because we assume it's part of error
+> > handling (or post error clean up).
+> 
+> So SCSI Core _has_ decided to know about ULP (block, tape, optical).
+> 
+> Unless we (SCSI Core) generate those, it's a pickle to decide
+> which are ``special'' enough commands.  I think that we'll see
+> more user space drivers controlling devices via sg sending
+> commands to the device for exactly those kinds of problems...
+> Else the burden on SCSI Core will/might be too great.
 
-Yes, please, please, please! :)
-
+I think James means REQ_SPECIAL request.  But some of them aren't
+special enough so we might need another flag for those.  But
+having knowledge about the upper drivers in the core sounds like
+a really bad idea.
