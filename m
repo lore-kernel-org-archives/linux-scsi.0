@@ -1,26 +1,32 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: sym2 probs in current scsi bk
-Date: Thu, 24 Jun 2004 21:14:32 -0700
+From: Zwane Mwaikambo <zwane@linuxpower.ca>
+Subject: Re: [PATCH] fix aic7xxx probing
+Date: Fri, 25 Jun 2004 00:56:34 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040624211432.156bc83d.akpm@osdl.org>
-References: <20040624193311.6ea456c6.akpm@osdl.org>
+Message-ID: <Pine.LNX.4.58.0406250036000.3261@montezuma.fsmlabs.com>
+References: <1088117341.2174.67.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:48810 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S266196AbUFYEP2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Jun 2004 00:15:28 -0400
-Received: from bix (build.pdx.osdl.net [172.20.1.2])
-	by mail.osdl.org (8.11.6/8.11.6) with SMTP id i5P4FRZ22212
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Jun 2004 21:15:27 -0700
-In-Reply-To: <20040624193311.6ea456c6.akpm@osdl.org>
+Received: from dragnfire.mtl.istop.com ([66.11.160.179]:55168 "EHLO
+	dsl.commfireservices.com") by vger.kernel.org with ESMTP
+	id S266199AbUFYEyU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Jun 2004 00:54:20 -0400
+In-Reply-To: <1088117341.2174.67.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, William Lee Irwin III <wli@holomorphy.com>
 
-Andrew Morton <akpm@osdl.org> wrote:
+On Thu, 24 Jun 2004, James Bottomley wrote:
+
+> It looks like there's still a problem with the probing:
 >
-> One of my test boxes has sym2, and it is now hanging during boot.
+> ahc_linux_pci_init() returns the number of boards attached
+> ahc_linux_eisa_init() returns 0 on success or error
+>
+> The only reason the current code actually works on PCI seems to be that
+> it's already attached the devices by the time it returns what the
+> ahc_linux_detect() assumes to be a failure code.
 
-Please ignore - a separate patch had mucked up the interrupt routing.
+This patch applied against 2.6.7-mm2 doesn't detect my PCI HBA whereas
+2.6.7-mm2 currently does.
+
