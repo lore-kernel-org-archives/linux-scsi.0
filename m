@@ -1,8 +1,8 @@
 From: Paul Mackerras <paulus@samba.org>
-Subject: [PATCH] update mac53c94 scsi driver
-Date: Sun, 23 Mar 2003 15:19:32 +1100 (EST)
+Subject: [PATCH] update MESH scsi driver
+Date: Sun, 23 Mar 2003 15:10:59 +1100 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <15997.13780.518276.558779@nanango.paulus.ozlabs.org>
+Message-ID: <15997.13267.498276.509580@nanango.paulus.ozlabs.org>
 Reply-To: paulus@samba.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -11,302 +11,143 @@ Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, torvalds@transmeta.com
 
-This patch updates the mac53c94 scsi HBA driver, used on older
-powermacs, to correspond with the recent scsi subsystem changes, to
-use the PCI DMA API, to not panic, and to use a spinlock instead of
-save_flags/restore_flags/cli/sti. 
+This patch updates the `mesh' scsi driver used on older powermacs to
+correspond with recent changes in the scsi subsystem (things like
+using cmd->device->id instead of cmd->target).
 
 Paul.
 
-diff -urN linux-2.5/drivers/scsi/mac53c94.c linuxppc-2.5/drivers/scsi/mac53c94.c
---- linux-2.5/drivers/scsi/mac53c94.c	2002-02-06 02:28:32.000000000 +1100
-+++ linuxppc-2.5/drivers/scsi/mac53c94.c	2003-02-09 16:38:15.000000000 +1100
-@@ -16,11 +16,13 @@
- #include <linux/proc_fs.h>
- #include <linux/stat.h>
- #include <linux/spinlock.h>
-+#include <linux/interrupt.h>
- #include <asm/dbdma.h>
- #include <asm/io.h>
- #include <asm/pgtable.h>
- #include <asm/prom.h>
- #include <asm/system.h>
-+#include <asm/pci-bridge.h>
+diff -urN linux-2.5/drivers/scsi/mesh.c linuxppc-2.5/drivers/scsi/mesh.c
+--- linux-2.5/drivers/scsi/mesh.c	2002-10-23 06:53:01.000000000 +1000
++++ linuxppc-2.5/drivers/scsi/mesh.c	2003-02-09 16:38:15.000000000 +1100
+@@ -80,7 +80,7 @@
+ #define ALLOW_SYNC(tgt)		((sync_targets >> (tgt)) & 1)
+ #define ALLOW_RESEL(tgt)	((resel_targets >> (tgt)) & 1)
+ #define ALLOW_DEBUG(tgt)	((debug_targets >> (tgt)) & 1)
+-#define DEBUG_TARGET(cmd)	((cmd) && ALLOW_DEBUG((cmd)->target))
++#define DEBUG_TARGET(cmd)	((cmd) && ALLOW_DEBUG((cmd)->device->id))
  
- #include "scsi.h"
- #include "hosts.h"
-@@ -48,6 +50,8 @@
- 	enum fsc_phase phase;		/* what we're currently trying to do */
- 	struct dbdma_cmd *dma_cmds;	/* space for dbdma commands, aligned */
- 	void	*dma_cmd_space;
-+	struct	pci_dev *pdev;
-+	dma_addr_t dma_addr;
- };
- 
- static struct fsc_state *all_53c94s;
-@@ -70,36 +74,66 @@
- 	void *dma_cmd_space;
- 	unsigned char *clkprop;
- 	int proplen;
-+	struct pci_dev *pdev;
-+	u8 pbus, devfn;
- 
- 	nfscs = 0;
- 	prev_statep = &all_53c94s;
- 	for (node = find_devices("53c94"); node != 0; node = node->next) {
--		if (node->n_addrs != 2 || node->n_intrs != 2)
--			panic("53c94: expected 2 addrs and intrs (got %d/%d)",
--			      node->n_addrs, node->n_intrs);
-+		if (node->n_addrs != 2 || node->n_intrs != 2) {
-+			printk(KERN_ERR "mac53c94: expected 2 addrs and intrs"
-+			       " (got %d/%d) for node %s\n",
-+			       node->n_addrs, node->n_intrs, node->full_name);
-+			continue;
-+		}
-+
-+		pdev = NULL;
-+		if (node->parent != NULL
-+		    && !pci_device_from_OF_node(node->parent, &pbus, &devfn))
-+			pdev = pci_find_slot(pbus, devfn);
-+		if (pdev == NULL) {
-+			printk(KERN_ERR "mac53c94: can't find PCI device "
-+			       "for %s\n", node->full_name);
-+			continue;
-+		}
-+
- 		host = scsi_register(tp, sizeof(struct fsc_state));
- 		if (host == NULL)
- 			break;
- 		host->unique_id = nfscs;
--#ifndef MODULE
--		note_scsi_host(node, host);
--#endif
- 
- 		state = (struct fsc_state *) host->hostdata;
--		if (state == 0)
--			panic("no 53c94 state");
-+		if (state == 0) {
-+			/* "can't happen" */
-+			printk(KERN_ERR "mac53c94: no state for %s?!\n",
-+			       node->full_name);
-+			scsi_unregister(host);
-+			break;
-+		}
- 		state->host = host;
-+		state->pdev = pdev;
-+
- 		state->regs = (volatile struct mac53c94_regs *)
- 			ioremap(node->addrs[0].address, 0x1000);
- 		state->intr = node->intrs[0].line;
- 		state->dma = (volatile struct dbdma_regs *)
- 			ioremap(node->addrs[1].address, 0x1000);
- 		state->dmaintr = node->intrs[1].line;
-+		if (state->regs == NULL || state->dma == NULL) {
-+			printk(KERN_ERR "mac53c94: ioremap failed for %s\n",
-+			       node->full_name);
-+			if (state->dma != NULL)
-+				iounmap(state->dma);
-+			if (state->regs != NULL)
-+				iounmap(state->regs);
-+			scsi_unregister(host);
-+			break;
-+		}
- 
- 		clkprop = get_property(node, "clock-frequency", &proplen);
- 		if (clkprop == NULL || proplen != sizeof(int)) {
--			printk(KERN_ERR "%s: can't get clock frequency\n",
--			       node->full_name);
-+			printk(KERN_ERR "%s: can't get clock frequency, "
-+			       "assuming 25MHz\n", node->full_name);
- 			state->clk_freq = 25000000;
- 		} else
- 			state->clk_freq = *(int *)clkprop;
-@@ -108,8 +142,11 @@
- 		   +1 to allow for aligning. */
- 		dma_cmd_space = kmalloc((host->sg_tablesize + 2) *
- 					sizeof(struct dbdma_cmd), GFP_KERNEL);
--		if (dma_cmd_space == 0)
--			panic("53c94: couldn't allocate dma command space");
-+		if (dma_cmd_space == 0) {
-+			printk(KERN_ERR "mac53c94: couldn't allocate dma "
-+			       "command space for %s\n", node->full_name);
-+			goto err_cleanup;
-+		}
- 		state->dma_cmds = (struct dbdma_cmd *)
- 			DBDMA_ALIGN(dma_cmd_space);
- 		memset(state->dma_cmds, 0, (host->sg_tablesize + 1)
-@@ -121,7 +158,13 @@
- 
- 		if (request_irq(state->intr, do_mac53c94_interrupt, 0,
- 				"53C94", state)) {
--			printk(KERN_ERR "mac53C94: can't get irq %d\n", state->intr);
-+			printk(KERN_ERR "mac53C94: can't get irq %d for %s\n",
-+			       state->intr, node->full_name);
-+		err_cleanup:
-+			iounmap(state->dma);
-+			iounmap(state->regs);
-+			scsi_unregister(host);
-+			break;
- 		}
- 
- 		mac53c94_init(state);
-@@ -150,7 +193,6 @@
- int
- mac53c94_queue(Scsi_Cmnd *cmd, void (*done)(Scsi_Cmnd *))
- {
--	unsigned long flags;
- 	struct fsc_state *state;
- 
- #if 0
-@@ -167,10 +209,8 @@
+ #undef MESH_DBG
+ #define N_DBG_LOG	50
+@@ -465,7 +465,7 @@
  	cmd->scsi_done = done;
  	cmd->host_scribble = NULL;
  
--	state = (struct fsc_state *) cmd->host->hostdata;
-+	state = (struct fsc_state *) cmd->device->host->hostdata;
+-	ms = (struct mesh_state *) cmd->host->hostdata;
++	ms = (struct mesh_state *) cmd->device->host->hostdata;
  
--	save_flags(flags);
--	cli();
- 	if (state->request_q == NULL)
- 		state->request_q = cmd;
- 	else
-@@ -180,7 +220,6 @@
- 	if (state->phase == idle)
- 		mac53c94_start(state);
- 
--	restore_flags(flags);
- 	return 0;
- }
- 
-@@ -191,15 +230,12 @@
- }
- 
+ 	if (ms->request_q == NULL)
+ 		ms->request_q = cmd;
+@@ -486,15 +486,12 @@
  int
--mac53c94_reset(Scsi_Cmnd *cmd, unsigned how)
-+mac53c94_host_reset(Scsi_Cmnd *cmd)
+ mesh_abort(Scsi_Cmnd *cmd)
  {
--	struct fsc_state *state = (struct fsc_state *) cmd->host->hostdata;
-+	struct fsc_state *state = (struct fsc_state *) cmd->device->host->hostdata;
- 	volatile struct mac53c94_regs *regs = state->regs;
- 	volatile struct dbdma_regs *dma = state->dma;
+-	struct mesh_state *ms = (struct mesh_state *) cmd->host->hostdata;
 -	unsigned long flags;
++	struct mesh_state *ms = (struct mesh_state *) cmd->device->host->hostdata;
  
--	save_flags(flags);
--	cli();
- 	st_le32(&dma->control, (RUN|PAUSE|FLUSH|WAKE) << 16);
- 	regs->command = CMD_SCSI_RESET;	/* assert RST */
- 	eieio();
-@@ -210,15 +246,7 @@
- 	mac53c94_init(state);
- 	regs->command = CMD_NOP;
- 	eieio();
--	restore_flags(flags);
--	return SCSI_RESET_PENDING;
--}
--
--int
--mac53c94_command(Scsi_Cmnd *cmd)
--{
--	printk(KERN_DEBUG "whoops... mac53c94_command called\n");
--	return -1;
-+	return SUCCESS;
+ 	printk(KERN_DEBUG "mesh_abort(%p)\n", cmd);
+-	spin_lock_irqsave(ms->host->host_lock, flags);
+ 	mesh_dump_regs(ms);
+-	dumplog(ms, cmd->target);
++	dumplog(ms, cmd->device->id);
+ 	dumpslog(ms);
+-	spin_unlock_irqrestore(ms->host->host_lock, flags);
+ 	return SCSI_ABORT_SNOOZE;
  }
  
- static void
-@@ -269,7 +297,7 @@
- 	regs->command = CMD_FLUSH;
- 	udelay(1);
- 	eieio();
--	regs->dest_id = cmd->target;
-+	regs->dest_id = cmd->device->id;
- 	regs->sync_period = 0;
- 	regs->sync_offset = 0;
- 	eieio();
-@@ -292,7 +320,7 @@
- do_mac53c94_interrupt(int irq, void *dev_id, struct pt_regs *ptregs)
+@@ -540,7 +537,7 @@
+ int
+ mesh_host_reset(Scsi_Cmnd *cmd)
  {
- 	unsigned long flags;
--	struct Scsi_Host *dev = ((struct fsc_state *) dev_id)->current_req->host;
-+	struct Scsi_Host *dev = ((struct fsc_state *) dev_id)->current_req->device->host;
- 	
- 	spin_lock_irqsave(dev->host_lock, flags);
- 	mac53c94_interrupt(irq, dev_id, ptregs);
-@@ -308,6 +336,7 @@
- 	Scsi_Cmnd *cmd = state->current_req;
- 	int nb, stat, seq, intr;
- 	static int mac53c94_errors;
-+	int dma_dir;
+-	struct mesh_state *ms = (struct mesh_state *) cmd->host->hostdata;
++	struct mesh_state *ms = (struct mesh_state *) cmd->device->host->hostdata;
+ 	volatile struct mesh_regs *mr = ms->mesh;
+ 	volatile struct dbdma_regs *md = ms->dma;
  
- 	/*
- 	 * Apparently, reading the interrupt register unlatches
-@@ -427,7 +456,16 @@
- 		if ((stat & STAT_PHASE) != STAT_CD + STAT_IO) {
- 			printk(KERN_DEBUG "intr %x before data xfer complete\n", intr);
+@@ -661,7 +658,7 @@
+ 		for (cmd = ms->request_q; ; cmd = (Scsi_Cmnd *) cmd->host_scribble) {
+ 			if (cmd == NULL)
+ 				return;
+-			if (ms->tgts[cmd->target].current_req == NULL)
++			if (ms->tgts[cmd->device->id].current_req == NULL)
+ 				break;
+ 			prev = cmd;
  		}
--		st_le32(&dma->control, RUN << 16);	/* stop dma */
-+		out_le32(&dma->control, RUN << 16);	/* stop dma */
-+		dma_dir = scsi_to_pci_dma_dir(cmd->sc_data_direction);
-+		if (cmd->use_sg != 0) {
-+			pci_unmap_sg(state->pdev,
-+				(struct scatterlist *)cmd->request_buffer,
-+				cmd->use_sg, dma_dir);
-+		} else {
-+			pci_unmap_single(state->pdev, state->dma_addr,
-+				cmd->request_bufflen, dma_dir);
-+		}
- 		/* should check dma status */
- 		regs->command = CMD_I_COMPLETE;
- 		state->phase = completing;
-@@ -480,19 +518,27 @@
- 	int i, dma_cmd, total;
- 	struct scatterlist *scl;
- 	struct dbdma_cmd *dcmds;
-+	dma_addr_t dma_addr;
-+	u32 dma_len;
-+	int dma_dir = scsi_to_pci_dma_dir(cmd->sc_data_direction);
+@@ -681,17 +678,18 @@
+ mesh_start_cmd(struct mesh_state *ms, Scsi_Cmnd *cmd)
+ {
+ 	volatile struct mesh_regs *mr = ms->mesh;
+-	int t;
++	int t, id;
  
- 	dma_cmd = data_goes_out(cmd)? OUTPUT_MORE: INPUT_MORE;
- 	dcmds = state->dma_cmds;
- 	if (cmd->use_sg > 0) {
-+		int nseg;
-+
- 		total = 0;
- 		scl = (struct scatterlist *) cmd->buffer;
--		for (i = 0; i < cmd->use_sg; ++i) {
--			if (scl->length > 0xffff)
-+		nseg = pci_map_sg(state->pdev, scl, cmd->use_sg, dma_dir);
-+		for (i = 0; i < nseg; ++i) {
-+			dma_addr = sg_dma_address(scl);
-+			dma_len = sg_dma_len(scl);
-+			if (dma_len > 0xffff)
- 				panic("mac53c94: scatterlist element >= 64k");
--			total += scl->length;
--			st_le16(&dcmds->req_count, scl->length);
-+			total += dma_len;
-+			st_le16(&dcmds->req_count, dma_len);
- 			st_le16(&dcmds->command, dma_cmd);
--			st_le32(&dcmds->phy_addr, virt_to_phys(scl->address));
-+			st_le32(&dcmds->phy_addr, dma_addr);
- 			dcmds->xfer_status = 0;
- 			++scl;
- 			++dcmds;
-@@ -501,8 +547,11 @@
- 		total = cmd->request_bufflen;
- 		if (total > 0xffff)
- 			panic("mac53c94: transfer size >= 64k");
-+		dma_addr = pci_map_single(state->pdev, cmd->request_buffer,
-+					  total, dma_dir);
-+		state->dma_addr = dma_addr;
- 		st_le16(&dcmds->req_count, total);
--		st_le32(&dcmds->phy_addr, virt_to_phys(cmd->request_buffer));
-+		st_le32(&dcmds->phy_addr, dma_addr);
- 		dcmds->xfer_status = 0;
- 		++dcmds;
- 	}
-@@ -514,12 +563,19 @@
++	id = cmd->device->id;
+ 	ms->current_req = cmd;
+-	ms->tgts[cmd->target].data_goes_out = data_goes_out(cmd);
+-	ms->tgts[cmd->target].current_req = cmd;
++	ms->tgts[id].data_goes_out = data_goes_out(cmd);
++	ms->tgts[id].current_req = cmd;
+ 
+ #if 1
+ 	if (DEBUG_TARGET(cmd)) {
+ 		int i;
+ 		printk(KERN_DEBUG "mesh_start: %p ser=%lu tgt=%d cmd=",
+-		       cmd, cmd->serial_number, cmd->target);
++		       cmd, cmd->serial_number, id);
+ 		for (i = 0; i < cmd->cmd_len; ++i)
+ 			printk(" %x", cmd->cmnd[i]);
+ 		printk(" use_sg=%d buffer=%p bufflen=%u\n",
+@@ -708,12 +706,12 @@
+ 	ms->n_msgout = 0;
+ 	ms->last_n_msgout = 0;
+ 	ms->expect_reply = 0;
+-	ms->conn_tgt = cmd->target;
+-	ms->tgts[cmd->target].saved_ptr = 0;
++	ms->conn_tgt = id;
++	ms->tgts[id].saved_ptr = 0;
+ 	ms->stat = DID_OK;
+ 	ms->aborting = 0;
+ #ifdef MESH_DBG
+-	ms->tgts[cmd->target].n_log = 0;
++	ms->tgts[id].n_log = 0;
+ 	dlog(ms, "start cmd=%x", (int) cmd);
+ #endif
+ 
+@@ -1160,7 +1158,7 @@
+ 		case selecting:
+ 			dlog(ms, "Selecting phase at command completion",0);
+ 			ms->msgout[0] = IDENTIFY(ALLOW_RESEL(ms->conn_tgt),
+-						 (cmd? cmd->lun: 0));
++						 (cmd? cmd->device->lun: 0));
+ 			ms->n_msgout = 1;
+ 			ms->expect_reply = 0;
+ 			if (ms->aborting) {
+@@ -1331,7 +1329,7 @@
+ 			if (ms->request_q == NULL)
+ 				ms->request_qtail = cmd;
+ 			ms->request_q = cmd;
+-			tp = &ms->tgts[cmd->target];
++			tp = &ms->tgts[cmd->device->id];
+ 			tp->current_req = NULL;
+ 		}
+ 		break;
+@@ -1714,10 +1712,10 @@
+ 			if (cmd == NULL) {
+ 				do_abort(ms);
+ 				ms->msgphase = msg_out;
+-			} else if (code != cmd->lun + IDENTIFY_BASE) {
++			} else if (code != cmd->device->lun + IDENTIFY_BASE) {
+ 				printk(KERN_WARNING "mesh: lun mismatch "
+ 				       "(%d != %d) on reselection from "
+-				       "target %d\n", i, cmd->lun,
++				       "target %d\n", i, cmd->device->lun,
+ 				       ms->conn_tgt);
+ 			}
+ 			break;
+@@ -1902,12 +1900,19 @@
  
  /*
-  * Work out whether data will be going out from the host adaptor or into it.
+  * Work out whether we expect data to go out from the host adaptor or into it.
 - * (If this information is available from somewhere else in the scsi
 - * code, somebody please let me know :-)
   */
@@ -325,57 +166,61 @@ diff -urN linux-2.5/drivers/scsi/mac53c94.c linuxppc-2.5/drivers/scsi/mac53c94.c
  	switch (cmd->cmnd[0]) {
  	case CHANGE_DEFINITION: 
  	case COMPARE:	  
-@@ -557,6 +613,19 @@
- 	}
+@@ -2036,6 +2041,22 @@
  }
+ #endif /* MESH_DBG */
  
--static Scsi_Host_Template driver_template = SCSI_MAC53C94;
+-static Scsi_Host_Template driver_template = SCSI_MESH;
 +static Scsi_Host_Template driver_template = {
-+	.proc_name	= "53c94",
-+	.name		= "53C94",
-+	.detect		= mac53c94_detect,
-+	.release	= mac53c94_release,
-+	.queuecommand	= mac53c94_queue,
-+	.eh_abort_handler = mac53c94_abort,
-+	.eh_host_reset_handler = mac53c94_host_reset,
-+	.can_queue	= 1,
-+	.this_id	= 7,
-+	.sg_tablesize	= SG_ALL,
-+	.cmd_per_lun	= 1,
-+	.use_clustering	= DISABLE_CLUSTERING,
++	.proc_name			= "mesh",
++	.name				= "MESH",
++	.detect				= mesh_detect,
++	.release			= mesh_release,
++	.command			= NULL,
++	.queuecommand			= mesh_queue,
++	.eh_abort_handler		= mesh_abort,
++	.eh_device_reset_handler	= NULL,
++	.eh_bus_reset_handler		= NULL,
++	.eh_host_reset_handler		= mesh_host_reset,
++	.can_queue			= 20,
++	.this_id			= 7,
++	.sg_tablesize			= SG_ALL,
++	.cmd_per_lun			= 2,
++	.use_clustering			= DISABLE_CLUSTERING,
 +};
  
  #include "scsi_module.c"
-diff -urN linux-2.5/drivers/scsi/mac53c94.h linuxppc-2.5/drivers/scsi/mac53c94.h
---- linux-2.5/drivers/scsi/mac53c94.h	2002-12-11 07:28:33.000000000 +1100
-+++ linuxppc-2.5/drivers/scsi/mac53c94.h	2003-01-09 09:48:37.000000000 +1100
-@@ -7,29 +7,6 @@
- #ifndef _MAC53C94_H
- #define _MAC53C94_H
+diff -urN linux-2.5/drivers/scsi/mesh.h linuxppc-2.5/drivers/scsi/mesh.h
+--- linux-2.5/drivers/scsi/mesh.h	2002-12-11 07:28:33.000000000 +1100
++++ linuxppc-2.5/drivers/scsi/mesh.h	2003-02-09 16:38:15.000000000 +1100
+@@ -7,30 +7,6 @@
+ #ifndef _MESH_H
+ #define _MESH_H
  
--int mac53c94_detect(Scsi_Host_Template *);
--int mac53c94_release(struct Scsi_Host *);
--int mac53c94_command(Scsi_Cmnd *);
--int mac53c94_queue(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
--int mac53c94_abort(Scsi_Cmnd *);
--int mac53c94_reset(Scsi_Cmnd *, unsigned int);
+-int mesh_detect(Scsi_Host_Template *);
+-int mesh_release(struct Scsi_Host *);
+-int mesh_queue(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+-int mesh_abort(Scsi_Cmnd *);
+-int mesh_host_reset(Scsi_Cmnd *);
 -
--#define SCSI_MAC53C94 {					\
--	.proc_name	= "53c94",			\
--	.name		= "53C94",			\
--	.detect		= mac53c94_detect,		\
--	.release	= mac53c94_release,		\
--	.command	= mac53c94_command,		\
--	.queuecommand	= mac53c94_queue,			\
--	.abort		= mac53c94_abort,			\
--	.reset		= mac53c94_reset,			\
--	.can_queue	= 1,				\
--	.this_id	= 7,				\
--	.sg_tablesize	= SG_ALL,				\
--	.cmd_per_lun	= 1,				\
--	.use_clustering	= DISABLE_CLUSTERING,		\
+-#define SCSI_MESH {						\
+-	.proc_name			= "mesh",			\
+-	.name				= "MESH",			\
+-	.detect				= mesh_detect,		\
+-	.release			= mesh_release,		\
+-	.command			= NULL,			\
+-	.queuecommand			= mesh_queue,		\
+-	.eh_abort_handler		= mesh_abort,		\
+-	.eh_device_reset_handler	= NULL,			\
+-	.eh_bus_reset_handler		= NULL,			\
+-	.eh_host_reset_handler		= mesh_host_reset,	\
+-	.can_queue			= 20,			\
+-	.this_id			= 7,			\
+-	.sg_tablesize			= SG_ALL,			\
+-	.cmd_per_lun			= 2,			\
+-	.use_clustering			= DISABLE_CLUSTERING,	\
 -}
 -
  /*
-  * Registers in the 53C94 controller.
+  * Registers in the MESH controller.
   */
