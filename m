@@ -1,88 +1,52 @@
-From: Andi Kleen <ak@muc.de>
-Subject: Re: [PATCH] Add compat_ioctl to SG
-Date: 18 Jan 2005 12:43:50 +0100
-Message-ID: <20050118114350.GM43344@muc.de>
-References: <20050118110743.GD43344@muc.de> <41ECF499.9040501@torque.net>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] Add compat_ioctl to st
+Date: Tue, 18 Jan 2005 12:25:24 +0000
+Message-ID: <20050118122524.GN30982@parcelfarce.linux.theplanet.co.uk>
+References: <20050118110613.GC43344@muc.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from colin2.muc.de ([193.149.48.15]:20498 "HELO colin2.muc.de")
-	by vger.kernel.org with SMTP id S261273AbVARLnu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Jan 2005 06:43:50 -0500
-Date: Tue, 18 Jan 2005 12:43:50 +0100
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:18602 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261270AbVARMZ0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Jan 2005 07:25:26 -0500
 Content-Disposition: inline
-In-Reply-To: <41ECF499.9040501@torque.net>
+In-Reply-To: <20050118110613.GC43344@muc.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: Andi Kleen <ak@muc.de>
+Cc: James.Bottomley@SteelEye.com, Kai.Makisara@kolumbus.fi, linux-scsi@vger.kernel.org
 
-On Tue, Jan 18, 2005 at 09:35:53PM +1000, Douglas Gilbert wrote:
-> Andi Kleen wrote:
-> <snip>
-> >@@ -1343,6 +1366,9 @@
-> > 	.write = sg_write,
-> > 	.poll = sg_poll,
-> > 	.ioctl = sg_ioctl,
-> >+#ifdef CONFIG_COMPAT
-> >+	.ioctl = sg_compat_ioctl,
-> >+#endif
-> 
-> Andi,
-> Two initializations of ".ioctl" looks wrongs.
-> Comparing with the patch to sd should that be:
->  +       .compat_ioctl = sg_compat_ioctl,
+On Tue, Jan 18, 2005 at 12:06:13PM +0100, Andi Kleen wrote:
+> @@ -3716,6 +3732,9 @@
+>  	.read =		st_read,
+>  	.write =	st_write,
+>  	.ioctl =	st_ioctl,
+> +#ifdef CONFIG_COMPAT
+> +	.compat_ioctl = st_compat_ioctl,
+> +#endif
+>  	.open =		st_open,
+>  	.flush =	st_flush,
+>  	.release =	st_release,
 
-Yep, you're right. Thanks for catching it.  
-#$@#!-compiler doesn't warn about that. Here's a corrected patch.
+How about having a macro ...
 
--Andi
+	.ioctl =	st_ioctl,
+	COMPAT_IOCTL_ENTRY(st_compat_ioctl)
+	.open =		st_open,
 
-Add compat_ioctl to SG driver
+which could be defined something like:
 
-Signed-off-by: Andi Kleen <ak@muc.de>
+#ifdef CONFIG_COMPAT
+#define COMPAT_IOCTL_ENTRY(x)	.compat_ioctl = x,
+#else
+#define COMPAT_IOCTL_ENTRY(x)	/* */
+#endif
 
-diff -u linux-2.6.11-rc1-bk4/drivers/scsi/sg.c-o linux-2.6.11-rc1-bk4/drivers/scsi/sg.c
---- linux-2.6.11-rc1-bk4/drivers/scsi/sg.c-o	2005-01-04 12:13:07.000000000 +0100
-+++ linux-2.6.11-rc1-bk4/drivers/scsi/sg.c	2005-01-18 05:24:28.000000000 +0100
-@@ -1037,6 +1037,29 @@
- 	}
- }
- 
-+#ifdef CONFIG_COMPAT
-+static long sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
-+{
-+	Sg_device *sdp;
-+	Sg_fd *sfp;
-+	struct scsi_device *sdev;
-+
-+	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
-+		return -ENXIO;
-+
-+	sdev = sdp->device;
-+	if (sdev->host->hostt->compat_ioctl) { 
-+		int ret;
-+
-+		ret = sdev->host->hostt->compat_ioctl(sdev, cmd_in, (void __user *)arg);
-+
-+		return ret;
-+	}
-+	
-+	return -ENOIOCTLCMD;
-+}
-+#endif
-+
- static unsigned int
- sg_poll(struct file *filp, poll_table * wait)
- {
-@@ -1343,6 +1366,9 @@
- 	.write = sg_write,
- 	.poll = sg_poll,
- 	.ioctl = sg_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.compat_ioctl = sg_compat_ioctl,
-+#endif
- 	.open = sg_open,
- 	.mmap = sg_mmap,
- 	.release = sg_release,
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
