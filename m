@@ -1,52 +1,67 @@
-From: Shane Wegner <shane@cm.nu>
-Subject: Performance with multiple drives
-Date: Sun, 18 Apr 2004 13:34:08 -0700
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: [PATCH] 1/6: scsi_largelun and scsi_sparselun
+Date: Mon, 19 Apr 2004 00:10:38 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040418203408.GA16788@cm.nu>
+Message-ID: <20040418221038.GL4868@tpkurt.garloff.de>
+References: <20040418185820.GD4868@tpkurt.garloff.de> <20040418201852.A3393@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="gmhhrsDozM2n+uz5"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from continuum.cm.nu ([216.113.193.225]:15328 "EHLO continuum.cm.nu")
-	by vger.kernel.org with ESMTP id S264102AbUDRUeK (ORCPT
+Received: from ns.suse.de ([195.135.220.2]:26279 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S264188AbUDRWKn (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Apr 2004 16:34:10 -0400
-Received: from shane by continuum.cm.nu with local (Exim 4.31)
-	id 1BFIzR-0004Rd-Aw
-	for linux-scsi@vger.kernel.org; Sun, 18 Apr 2004 13:34:09 -0700
+	Sun, 18 Apr 2004 18:10:43 -0400
 Content-Disposition: inline
+In-Reply-To: <20040418201852.A3393@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Hello list,
 
-I am experiencing a performance hit on my SCSI setup here
-and am wondering if this is to be expected or whether there
-is anything I can do about it.  In summary, when reading
-from a single drive, I am getting read performance of
-approx 73mb/s, when reading from two drives concurrently,
-regardless of which two, reads drop to 64mb/sec per drive
-and when reading from all three, read performance is
-approximately 46mb/sec.  The drives are matched Maxtor
-Atlas 10K IV sca units using a dual channel u160 onboard
-aic7xxx controler.  Two drives are on channel 0 and the
-third is on channel 1.  The drives are sca units so I had
-to use 80/68 pin converters on all three in case that would
-make a difference as I couldn't find a scsi backplane which
-would support splitting the drives across the channels as
-is necessary due to the 160mb/sec channel limit.
+--gmhhrsDozM2n+uz5
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The system is a dual Pentium III tualatin setup with 1gb of
-ram.  The board claims to support 64 bit 66mhz pci on the
-scsi bus and I have no legacy cards on that particular bus
-so it should be running at 64 bit.  However, I don't know
-of a way to verify that under linux.
+On Sun, Apr 18, 2004 at 08:18:52PM +0100, Christoph Hellwig wrote:
+> On Sun, Apr 18, 2004 at 08:58:20PM +0200, Kurt Garloff wrote:
+> > +static int scsi_sparselun;
+> > +module_param_named(scsi_sparselun, scsi_sparselun, int, S_IRUGO|S_IWUS=
+R);
+                        ^^^^^
+> > +MODULE_PARM_DESC(scsi_sparselun,
+                      ^^^^^
+> > +		 "Assume sparse LUNs for all SCSI devices");
+> > +
+> > +static int scsi_largelun;
+> > +module_param_named(scsi_largelun, scsi_largelun, int, S_IRUGO|S_IWUSR);
+                        ^^^^^
+> > +MODULE_PARM_DESC(scsi_largelun,
+                      ^^^^^
+> > +		 "Assume all SCSI-2 devs support more than 8 LUNs");
+>=20
+> The names are badly chosen.  On the bootline commandline they already
+> have a scsi_mod. prefix, so the additional scsi_ is superflous.
 
-If anyone has any suggestions on how I can find the
-bottleneck, I would appreciate it.
+Good point, so I'll remove all scsi_ prefixes.
 
-Best,
-Shane
+Regards,
+--=20
+Kurt Garloff                   <kurt@garloff.de>             [Koeln, DE]
+Physics:Plasma modeling <garloff@plasimo.phys.tue.nl> [TU Eindhoven, NL]
+Linux: SUSE Labs (Head)        <garloff@suse.de>    [SUSE Nuernberg, DE]
 
--- 
-Shane Wegner
-http://www.cm.nu/~shane/
+--gmhhrsDozM2n+uz5
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFAgvzexmLh6hyYd04RAq4JAJ9wdbAy5KREpgykZcncKNbJelCBUQCff3wd
+ynu51BHT+w2MQCFxj2/0+6Y=
+=12kV
+-----END PGP SIGNATURE-----
+
+--gmhhrsDozM2n+uz5--
