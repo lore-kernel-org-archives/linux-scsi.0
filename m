@@ -1,46 +1,70 @@
-From: Jamie Lenehan <lenehan@twibble.org>
-Subject: Re: dc395x: can't write to tape
-Date: Sun, 9 Jan 2005 23:51:17 +1100
-Message-ID: <20050109125116.GA6293@twibble.org>
-References: <200501060518.25782.andrex@alumni.utexas.net> <Pine.LNX.4.60.0501062138580.7568@poirot.grange> <20050109053342.GA5799@twibble.org> <Pine.LNX.4.60.0501091238010.3910@poirot.grange>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] Fw: [BUG] USB Storage OOPS and a D state
+ process in 2.6.10
+Date: Sun, 9 Jan 2005 12:32:36 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0501091225010.19950-100000@netrider.rowland.org>
+References: <200501091526.22408.harisri@internode.on.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nynaeve.twibble.org ([202.173.155.194]:33955 "EHLO
-	nynaeve.twibble.org") by vger.kernel.org with ESMTP id S261377AbVAIMvT
+Received: from netrider.rowland.org ([192.131.102.5]:58382 "HELO
+	netrider.rowland.org") by vger.kernel.org with SMTP id S261654AbVAIRci
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 Jan 2005 07:51:19 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.60.0501091238010.3910@poirot.grange>
+	Sun, 9 Jan 2005 12:32:38 -0500
+In-Reply-To: <200501091526.22408.harisri@internode.on.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Andrew Schulman <andrex@alumni.utexas.net>, linux-scsi@vger.kernel.org
+To: Srihari Vijayaraghavan <harisri@internode.on.net>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Sun, Jan 09, 2005 at 12:42:26PM +0100, Guennadi Liakhovetski wrote:
-[...]
-> The driver is full of "hardware bug workarounds". Jamie, are those PIO 
-> operations really needed? Do you ever see, that DMA doesn't transfer the 
-> last 1-3 bytes of the segment?
+On Sun, 9 Jan 2005, Srihari Vijayaraghavan wrote:
 
-What I suspect those workarounds were added for was to handle a
-driver bug with dealing with WIDE transfers. The dc315 doesn't
-support WIDE transfers and that's the card I have.
+> On Saturday 08 January 2005 14:51, Alan Stern wrote:
+> > ...
+> > I see you didn't have CONFIG_USB_STORAGE_DEBUG set when you ran this test.
+> 
+> Actually I did. I do not know what log level the USB debug messages were, but 
+> the silly syslog did not capture them. Now I have set it to write all kernel 
+> messages.
 
-I wouldn't mind removing all the PIO code and disabling support for
-WIDE devices. It'll simplify various bits of code a lot and mean no
-longer having to be concered about breaking things for the dc395 when
-making changes. 
+It's a very common thing to overlook.  And by the way, the log level for 
+the debug messages is DEBUG (what a surprise!).
 
-[...]
-> I could try to improve the highmem situation / sg-handling. Or do you plan 
-> to do it, Jamie?
+> > Or else you didn't have your syslog daemon configured to store the
+> > debugging messages.  If you can get anything unusual to happen with the
+> > debugging enabled, it would make things much easier to track down.
+> 
+> That is right. I am trying to trigger the bug, and I have ensured that the USB 
+> debug messages are being written to the log file. But I have not triggered 
+> the bug yet.
 
-It's on my list of things to do, but I doubt I'll have any time to do
-anything about in the next few months. So if you have the time and
-desire please go ahead! I'll can test any changes you make (with a
-CD-R/W, tape-drive and HDD), although it may take me a week or two to
-get around to it.
+If you're unable to trigger the bug, you can try turning the debug 
+configuration option back off and using that patch I sent earlier.  It 
+wouldn't hurt to use that patch even with the debugging messages...
 
--- 
- Jamie Lenehan <lenehan@twibble.org>
+
+> > Those errors are quite unusual.  They seem to indicate there's a problem
+> > with your computer's USB hardware, as do the numerous spontaneous (?)
+> > disconnections in your log.  However I'm not familiar with all the details
+> > of the EHCI driver.  It's faintly possible that plugging the drive into a
+> > different USB port would work better.
+> 
+> The numerous disconnections (because without debug, I can trigger the D state 
+> process and oops within a dozen connection/disconnection, but with debug it 
+> takes 10 times more connection/disconnection to trigger D state process, and 
+> I do not know how many are needed for oops :-( ) are purposefully generated 
+> to trigger the bug.
+
+Oh, so you did those by hand.  All right.  Probably the fact that they 
+come fairly close together is related to the bug.  I wonder if something 
+could be causing the SCSI error handler to run when it shouldn't, using an 
+out-of-date host structure?
+
+> Of course UHCI (USB 1) is not as fast as EHCI (USB 2). Would that not matter 
+> for CD/DVD burning?
+
+It definitely will slow things down a lot.  For normal operation you would 
+not want to rely on it.
+
+Alan Stern
+
