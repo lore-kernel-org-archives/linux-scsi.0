@@ -1,28 +1,119 @@
-From: "David Peterson \(Eng\)" <david_peterson@cnt.com>
-Subject: SSC-2 support in Linux
-Date: Tue, 14 Sep 2004 18:03:29 -0500
+From: "Ken Hwang" <ken.hwang@zyxel.com>
+Subject: RE: ata_piix in 2.4.27
+Date: Tue, 14 Sep 2004 16:43:34 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <82C736F456CA3E4EA3D0DC6CC31AA5CB01651157@esply09.cnt.ad.cnt.com>
+Message-ID: <HIENIDNHFMODBIPFNJPDAEGJCEAA.ken.hwang@zyxel.com>
+References: <HIENIDNHFMODBIPFNJPDCEFLCEAA.ken.hwang@zyxel.com>
+Reply-To: <ken.hwang@zyxel.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gatehider.cnt.com ([139.93.128.13]:44611 "EHLO esply07.cnt.com")
-	by vger.kernel.org with ESMTP id S267705AbUINXDj convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Sep 2004 19:03:39 -0400
-Content-class: urn:content-classes:message
+Received: from [65.170.185.70] ([65.170.185.70]:54162 "EHLO zyxel.com")
+	by vger.kernel.org with ESMTP id S264919AbUINXnc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Sep 2004 19:43:32 -0400
+Received: from dns.zyxel.com (root@localhost)
+	by zyxel.com (8.12.11/8.12.5) with SMTP id i8ENhV54006287
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Sep 2004 16:43:31 -0700
+Received: from KenHwang (adsl-67-124-113-178.dsl.snfc21.pacbell.net [67.124.113.178])
+	(authenticated bits=0)
+	by zyxel.com (8.12.11/8.12.5) with ESMTP id i8ENhU03006263
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Sep 2004 16:43:30 -0700
+In-Reply-To: <HIENIDNHFMODBIPFNJPDCEFLCEAA.ken.hwang@zyxel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-I'd like to hear from anyone interested, or has looked into, adding
-support for SSC-2 (SCSI Stream Commands -2, i.e., tape devices) explicit
-address mode into the Linux OS.
+Hi,
 
-In summary, SSC-2 explicit address mode enables for tape devices:
-- robust tagged command queuing
-- multi-path I/O
-- enhanced error detection and recovery
+I realized that I probably used wrong package and it caused the problem. I
+used another patch file from Jeff's website 2.4.27-rc3-libata1.patch to
+patch 2.4.27 and then #define the ATA_ENABLE_PATA as before. Then I can boot
+the PATA disk connected to ICH5 as /dev/sda. Sorry for sending false alarm
+by my own mistake.
 
-Thanks...Dave
+Ken
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Ken Hwang
+Sent: Monday, September 13, 2004 11:19 AM
+To: linux-scsi@vger.kernel.org
+Subject: ata_piix in 2.4.27
+
+
+Hi,
+
+I have a problem with ata_piix in 2.4.27 and please HELP. If I send this
+message to a wrong list please also let me know. Thanks.
+
+I was using kernel 2.4.26 plus the 2.4.26-rc1-libata3.patch on the hardware
+I have. The system had Intel 865 chipset and the disk controllers are: 2x
+Promise SATA, 1x Intel PIIX ATA. And I want to treat all 3 disks as SATA for
+easier scripting later on. I used kernel 2.4.26 + 2.4.26-rc1-libata3 and I
+added one line in the ata_piix.c to define the ATA_ENABLE_PATA so that the
+disks connect to Intel PIIX can show as /dev/sdx instead of /dev/hdx. And
+they work fine: the system can boot from the disk connected to PIIX and
+treat it as /dev/sda.
+
+I need to move to 2.4.27 for some FS fixes. I downloaded kernel 2.4.27 and
+added 2.4.26-bk1-libata1. I then define the ATA_ENABLE_PATA in the
+include/linux/libata.h and recompiled the kernel with Intel PIIX SCSI low
+level driver support configured as part of kernel. I then use the kernel to
+boot and it can recognize the PATA disk as SCSI disk but then kernel panic.
+I list some of the bootup messege as the following:
+
+SCSI subsystem driver Revision: 1.00
+PCI: Found IRQ 9 for device 00:1f.1
+PCI Sharing IRQ 9 with 00:1d.2
+ata1: PATA mac UDMA/33 cmd 0x1F0 ctl 0c3F6 bmdma 0xF000 irq 14
+ata1: dev 0 ATA, max UDMA/100, 312581808 sectors: lba48
+ata1: dev 0 configured for UDMA/33
+ata2: PATA max UDMA/33 cmd 0x170 ctl 0x376 bmdma 0xF008 irq 15
+ata2: disabling port
+scsi0 : ata_piix
+scsi1 : ata_piix
+  Vendor: ATA   Model: WDC WD1600BB-00D Rev. 75.1
+  Type:   Direct-Access                 ANSI SCSI revision: 05
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
+Partition check:
+ sda:<1>Unable to handle kernel NULL pointer dereference at virtual address
+0000 0000
+ printing eip:
+00000000
+*pde = 00000000
+O0ps: 0000
+CPU: 0
+EIP: 0010:[<00000000>] Not tainted
+EFLAGS: 00010046
+...........
+
+
+Please HELP and thanks,
+
+
+Ken
+
+---
+Outgoing mail is certified Virus Free.
+Checked by AVG anti-virus system (http://www.grisoft.com).
+Version: 6.0.687 / Virus Database: 448 - Release Date: 5/16/2004
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+Incoming mail is certified Virus Free.
+Checked by AVG anti-virus system (http://www.grisoft.com).
+Version: 6.0.687 / Virus Database: 448 - Release Date: 5/16/2004
+
+---
+Outgoing mail is certified Virus Free.
+Checked by AVG anti-virus system (http://www.grisoft.com).
+Version: 6.0.687 / Virus Database: 448 - Release Date: 5/16/2004
+
+
