@@ -1,68 +1,77 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: [PATCH] tmscsim: Update version after "new API"
-Date: Wed, 26 May 2004 23:05:39 +0200 (CEST)
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Re: Help - looking for a Linux SCSI testing utility
+Date: Wed, 26 May 2004 14:10:39 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0405262301360.4272-200000@poirot.grange>
+Message-ID: <20040526211039.GC29805@one-eyed-alien.net>
+References: <1F6D1D1660975A4887628A011443A1BC0305E3CF@uswaumsx13medge.med.ge.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-520390527-1085605539=:4272"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="raC6veAxrt5nqIoY"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:9604 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S265805AbUEZVKW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 May 2004 17:10:22 -0400
+Received: from multivac.one-eyed-alien.net ([64.169.228.101]:64489 "EHLO
+	multivac.one-eyed-alien.net") by vger.kernel.org with ESMTP
+	id S265804AbUEZVKu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 May 2004 17:10:50 -0400
+Content-Disposition: inline
+In-Reply-To: <1F6D1D1660975A4887628A011443A1BC0305E3CF@uswaumsx13medge.med.ge.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
+To: "Edwards, Scott (MED, Kelly IT Resouces)" <James.Edwards@med.ge.com>
 Cc: linux-scsi@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-  Send mail to mime@docserver.cac.washington.edu for more info.
 
----1463811839-520390527-1085605539=:4272
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+--raC6veAxrt5nqIoY
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Hi
+On Wed, May 26, 2004 at 03:24:49PM -0500, Edwards, Scott (MED, Kelly IT Res=
+ouces) wrote:
+>=20
+> I know this is slightly off topic for this list, but I have been
+> fighting with this for about a month now and I feel like I'm getting
+> nowhere.  I tried the plscsi and scu utilities.  One of them I couldn't
+> make heads or tails of.  The other one would read the "inquiry" command
+> ok, but I couldn't figure out how to make it give me the output of the
+> "IDENTIFY" command (0xEC).  This is what I really need to read.
+>=20
+> I have written (mostly copied from other stuff) a little program to just
+> turn off the write cache.  (I have included the source below.)  But
+> without being able to read the results of the identify I can't tell if
+> it actually works or not.  I have tried writing a program myself that
+> just sends the (0xEC) command, but all I get back is 70 00 05 00 00 00
+> 00 06 00 00 00 00 20 00 00 00 which I'm guessing are the sense bytes?
+> (Excuse my ignorance the last time I messed with this stuff it was
+> called SASI instead of SCSI.)
 
-The "API-update" patch, just approved by Christoph deserves a new version.
-In the future, I am not going to update the version with every patch -
-just with essential changes, is that alright? And I'll try to do it
-together with the respective patch.
+Those do look like sense bytes.  I decode them to mean:
+	Illegal Request: invalid command operation code
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+So it sounds to me like the device got your command, but didn't understand
+it.
 
+Matt
 
----1463811839-520390527-1085605539=:4272
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name="tmscsim-new_pci-version.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.44.0405262305390.4272@poirot.grange>
-Content-Description: 
-Content-Disposition: attachment; filename="tmscsim-new_pci-version.patch"
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
 
-ZGlmZiAtdSBhL2RyaXZlcnMvc2NzaS9kYzM5MC5oIGIvZHJpdmVycy9zY3Np
-L2RjMzkwLmgNCi0tLSBhL2RyaXZlcnMvc2NzaS9kYzM5MC5oCTI2IE1heSAy
-MDA0IDE5OjQ5OjAwDQorKysgYi9kcml2ZXJzL3Njc2kvZGMzOTAuaAkyNiBN
-YXkgMjAwNCAyMDoxNjowOA0KQEAgLTE5LDcgKzE5LDcgQEANCiAjZW5kaWYN
-CiANCiAjZGVmaW5lIERDMzkwX0JBTk5FUiAiVGVrcmFtIERDMzkwL0FNNTND
-OTc0Ig0KLSNkZWZpbmUgREMzOTBfVkVSU0lPTiAiMi4xYiAyMDA0LTA0LTEz
-Ig0KKyNkZWZpbmUgREMzOTBfVkVSU0lPTiAiMi4xYyAyMDA0LTA1LTIzIg0K
-IA0KIC8qIFdlIGRvbid0IGhhdmUgZWhfYWJvcnRfaGFuZGxlciwgZWhfZGV2
-aWNlX3Jlc2V0X2hhbmRsZXIsIA0KICAqIGVoX2J1c19yZXNldF9oYW5kbGVy
-LCBlaF9ob3N0X3Jlc2V0X2hhbmRsZXIgeWV0ISANCmRpZmYgLXUgYS9kcml2
-ZXJzL3Njc2kvdG1zY3NpbS5jIGIvZHJpdmVycy9zY3NpL3Rtc2NzaW0uYw0K
-LS0tIGEvZHJpdmVycy9zY3NpL3Rtc2NzaW0uYwkyNiBNYXkgMjAwNCAxOTo0
-OTowMA0KKysrIGIvZHJpdmVycy9zY3NpL3Rtc2NzaW0uYwkyNiBNYXkgMjAw
-NCAyMDoxNjoxMA0KQEAgLTE3Miw2ICsxNzIsOCBAQA0KICAqCTIuMWIxIDA0
-LzAxLzMxCUdMCShhcHBsaWVkIDA1LjA0KSBSZW1vdmUgaW50ZXJuYWwJCSoN
-CiAgKgkJCQljb21tYW5kLXF1ZXVpbmcuCQkJKg0KICAqCTIuMWIyIDA0LzAy
-LzAxCUNICShhcHBsaWVkIDA1LjA0KSBGaXggZXJyb3ItaGFuZGxpbmcJKg0K
-KyAqCTIuMWMgIDA0LzA1LzIzICBHTAlVcGRhdGUgdG8gdXNlIHRoZSBuZXcg
-cGNpX2RyaXZlciBBUEksCSoNCisgKgkJCQlzb21lIHNjc2kgRUggdXBkYXRl
-cywgbW9yZSBjbGVhbnVwLgkqDQogICoqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqLw0KIA0KIC8qIFVuY29tbWVudCBTQV9JTlRFUlJVUFQsIGlmIHRoZSBk
-cml2ZXIgcmVmdXNlcyB0byBzaGFyZSBpdHMgSVJRIHdpdGggb3RoZXIgZGV2
-aWNlcyAqLw0K
----1463811839-520390527-1085605539=:4272--
+A:  The most ironic oxymoron wins ...
+DP: "Microsoft Works"
+A:  Uh, okay, you win.
+					-- A.J. & Dust Puppy
+User Friendly, 1/18/1998
+
+--raC6veAxrt5nqIoY
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQFAtQfPIjReC7bSPZARAvA0AJ9/l00q/K9N0ydTJZBHIbt6WlzVPwCgkVhZ
+JSqXQMhudTeiGA0LzdlJuQo=
+=4cd9
+-----END PGP SIGNATURE-----
+
+--raC6veAxrt5nqIoY--
