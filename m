@@ -1,58 +1,38 @@
 From: Andrew Vasquez <praka@users.sourceforge.net>
-Subject: Re: [PATCH] 2.6.3 qla2xxx driver -- use readX_relaxed
-Date: Thu, 4 Mar 2004 21:51:17 -0800
+Subject: Re: [bug]
+Date: Thu, 4 Mar 2004 21:54:31 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040305055117.GA9315@praka.local.home>
-References: <B179AE41C1147041AA1121F44614F0B060EE25@AVEXCH02.qlogic.org> <20040303101014.GA586666@sgi.com>
+Message-ID: <20040305055431.GB9315@praka.local.home>
+References: <40426118.6000904@free.fr> <1078181191.1804.82.camel@mulgrave> <4043C172.1060800@free.fr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-02-qfe0.socal.rr.com ([66.75.162.134]:6791 "EHLO
-	ms-smtp-02-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S262203AbUCEGML (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Mar 2004 01:12:11 -0500
+Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:59839 "EHLO
+	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S262221AbUCEGPS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2004 01:15:18 -0500
 Content-Disposition: inline
-In-Reply-To: <20040303101014.GA586666@sgi.com>
+In-Reply-To: <4043C172.1060800@free.fr>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Jeremy Higdon <jeremy@sgi.com>
+Cc: christophe varoqui <christophe.varoqui@free.fr>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On Wed, 03 Mar 2004, Jeremy Higdon wrote:
-> On Mon, Mar 01, 2004 at 04:45:49PM -0800, Andrew Vasquez wrote:
-> > Interesting...but this implementation seems to be applying a different
-> > set of semantic rules to the term 'relaxed' in comparison to the
-> > 'relaxed ordering' rules defined by PCI-X and PCI-Express, no?
+On Tue, 02 Mar 2004, christophe varoqui wrote:
+> mm, digging this, I traced the bug to an sg_inq in my userspace code :
+> do_inq(fd, 0, 1, 0x83, buff, 64, 1);
 > 
+> seting the size of the buff to a higher value (#define MX_ALLOC_LEN 255) 
+> mutes the oops. Dunno what happened, it worked with size = 64 until 
+> recently.
 > 
-> I'm going to retract my previous agreement to this :-).  I took a good
-> look at the PCI Express specification today, and it appears to me as
-> though this implementation should be applicable to PCI Express.
-> 
-
-The intent of my original statement wasn't to imply that the
-readX_relaxed() routines wouldn't be applicable to PCI-[X|Express],
-but instead to note my own concerns with the differing semantics of
-readX_relaxed() and 'relaxed ordering' of PCI-[X|Express], which you
-mention below.
-
-> When set, it indicates that the posted write or the read completion
-> (reply from the device to the PIO read) may pass other posted writes,
-> read completions, or messages.
+> For completeness, the bug triggered at modprobe qla2200 because my code 
+> got exec'ed by scsi hotplug events.
 > 
 
-I've read through the original readX_relaxed() thread posted on LK and
-no-one else seemed to express similiar concerns.  My own personal
-slant leans towards the readX_nosyncdma() name, but again I seem to
-always be in the minority...
+Have you had any luck isolating the problem? I'd just like to know if
+I need to peek any further into troubleshooting this as a qla2x00
+problem.  
 
-Finally, in looking through other locations where we could apply this
-technique (though i must admit your patch covers almost all fast-path
-uses), the old calls to qla2x00_debounce_register(ISP_REQ_Q_OUT())
-in qla2x00_req_pkt() and qla2x00_ms_req_pkt() should be replaced with
-the standard RD_REG_WORD().  Through not in the fast, the
-RD_REG_WORD() could then be extended to the *_relaxed() calls.
-
-Thanks again for the patches.
-
-Regards,
+Thanks,
 Andrew Vasquez
