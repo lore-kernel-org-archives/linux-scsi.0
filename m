@@ -1,36 +1,35 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [ANNOUNCE] nsp32, nsp_cs driver update
-Date: Mon, 21 Feb 2005 23:07:15 +0100
-Message-ID: <1109023635.9005.68.camel@laptopd505.fenrus.org>
-References: <20050222.062603.74692750.yokota@netlab.is.tsukuba.ac.jp>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH as470] Add a NOREPORTLUN blacklist flag
+Date: Mon, 21 Feb 2005 17:07:51 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0502211703160.31863-100000@netrider.rowland.org>
+References: <20050221064709.GA30205@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Received: from pentafluge.infradead.org ([213.146.154.40]:59094 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S262147AbVBUWHT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Feb 2005 17:07:19 -0500
-In-Reply-To: <20050222.062603.74692750.yokota@netlab.is.tsukuba.ac.jp>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from netrider.rowland.org ([192.131.102.5]:57865 "HELO
+	netrider.rowland.org") by vger.kernel.org with SMTP id S262147AbVBUWHw
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Feb 2005 17:07:52 -0500
+In-Reply-To: <20050221064709.GA30205@one-eyed-alien.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
-Cc: linux-scsi@vger.kernel.org
+To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Sergey Vlasov <vsu@altlinux.ru>, Samuel Colin <Samuel.Colin3@wanadoo.fr>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-On Tue, 2005-02-22 at 06:26 +0900, YOKOTA Hiroshi wrote:
->  Hi.
+On Sun, 20 Feb 2005, Matthew Dharm wrote:
+
+> > Matt, it looks like the best way to solve this problem is to go back to
+> > the old strategy of always setting the SCSI revision to 2 (no matter what
+> > it might actually be), at least for Direct Access devices.  That would
+> > suppress the REPORT_LUNS command.  Would we lose anything by doing this?
 > 
->  "nsp32" and "nsp_cs" SCSI host adapter driver is now updated.
-> You can get newest version from here.
-> 
-> http://www.netlab.is.tsukuba.ac.jp/~yokota/archive/nsp_cs+nsp32-20050222.tar.gz
+> Besides the use of REPORT_LUNS on devices which actually support it?  I
+> don't think so...
 
-Hi,
+That doesn't sound like much of a loss, especially since these devices do
+implement Get_Max_LUN.  Or if they don't, I can't believe they would
+implement REPORT_LUNS either.
 
-could you please be so kind as to also provide a diff -u via email to
-this list, between your new driver and the existing driver in the 2.6
-kernel series? That makes it a lot easier for everyone on this mailing
-list to look at only what changed. Thank you.
+I'll send in a patch for this soon.
 
-Greetings,
-    Arjan van de Ven
+Alan Stern
 
