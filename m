@@ -1,97 +1,113 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: [2.6 patch] SCSI tmscsim.c: fix inline compile errors
-Date: Fri, 16 Jul 2004 00:47:26 +0200
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: Re: PATCH  [4/5]  qla2xxx: Command queueing fixes
+Date: Thu, 15 Jul 2004 17:03:48 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040715224726.GQ25633@fs.tum.de>
+Message-ID: <B179AE41C1147041AA1121F44614F0B060EEDF@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:6360 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S266359AbUGOWrg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jul 2004 18:47:36 -0400
-Content-Disposition: inline
+Received: from pat.qlogic.com ([198.70.193.2]:53418 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S266247AbUGPAGg convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jul 2004 20:06:36 -0400
+Content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org
 
-Trying to compile drivers/scsi/tmscsim.c in 2.6.8-rc1-mm1 using gcc 3.4 
-results in compile errors starting with the following:
+James,
 
-<--  snip  -->
+There are some problems being reported with the attached patch applied
+to the 8.x series driver.  Please revert the patch if you have already
+applied to the scsi-misc-2.6 tree.
 
-...
-  CC      drivers/scsi/tmscsim.o
-In file included from drivers/scsi/tmscsim.c:1477:
-drivers/scsi/scsiiom.c: In function `do_DC390_Interrupt':
-drivers/scsi/tmscsim.c:295: sorry, unimplemented: inlining failed in 
-call to 'dc390_InvalidCmd': function body not available
-drivers/scsi/scsiiom.c:279: sorry, unimplemented: called from here
-drivers/scsi/tmscsim.c:296: sorry, unimplemented: inlining failed in 
-call to 'dc390_EnableMsgOut_Abort': function body not available
-drivers/scsi/scsiiom.c:317: sorry, unimplemented: called from here
-make[2]: *** [drivers/scsi/tmscsim.o] Error 1
-
-<--  snip  -->
-
-
-The patch below removes the inlines from the affected functions.
-
-An alternative approach would be to move the functions above the place  
-where they are called the first time.
-
-
-
-diffstat output:
- drivers/scsi/scsiiom.c |    6 +++---
- drivers/scsi/tmscsim.c |    6 +++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
-
-
-Signed-off-by: Adrian Bunk <bunk@fs.tum.de>
-
---- linux-2.6.7-mm6-full-gcc3.4/drivers/scsi/scsiiom.c.old	2004-07-09 01:31:13.000000000 +0200
-+++ linux-2.6.7-mm6-full-gcc3.4/drivers/scsi/scsiiom.c	2004-07-09 01:33:35.000000000 +0200
-@@ -594,7 +594,7 @@
- }
+Sorry,
+Andrew Vasquez
+QLogic Corporation
  
- /* abort command */
--static void __inline__
-+static void
- dc390_EnableMsgOut_Abort ( struct dc390_acb* pACB, struct dc390_srb* pSRB )
- {
-     pSRB->MsgOutBuf[0] = ABORT; 
-@@ -1656,7 +1656,7 @@
- }
- 
- 
--static void __inline__
-+static void
- dc390_RequestSense( struct dc390_acb* pACB, struct dc390_dcb* pDCB, struct dc390_srb* pSRB )
- {
-     struct scsi_cmnd *pcmd;
-@@ -1696,7 +1696,7 @@
- 
- 
- 
--static void __inline__
-+static void
- dc390_InvalidCmd( struct dc390_acb* pACB )
- {
-     if( pACB->pActiveDCB->pActiveSRB->SRBState & (SRB_START_+SRB_MSGOUT) )
---- linux-2.6.7-mm6-full-gcc3.4/drivers/scsi/tmscsim.c.old	2004-07-09 01:29:36.000000000 +0200
-+++ linux-2.6.7-mm6-full-gcc3.4/drivers/scsi/tmscsim.c	2004-07-09 01:33:46.000000000 +0200
-@@ -291,9 +291,9 @@
- static void dc390_DoingSRB_Done( struct dc390_acb* pACB, struct scsi_cmnd * cmd);
- static void dc390_ScsiRstDetect( struct dc390_acb* pACB );
- static void dc390_ResetSCSIBus( struct dc390_acb* pACB );
--static void __inline__ dc390_RequestSense( struct dc390_acb* pACB, struct dc390_dcb* pDCB, struct dc390_srb* pSRB );
--static void __inline__ dc390_InvalidCmd( struct dc390_acb* pACB );
--static void __inline__ dc390_EnableMsgOut_Abort (struct dc390_acb*, struct dc390_srb*);
-+static void dc390_RequestSense( struct dc390_acb* pACB, struct dc390_dcb* pDCB, struct dc390_srb* pSRB );
-+static void dc390_InvalidCmd( struct dc390_acb* pACB );
-+static void dc390_EnableMsgOut_Abort (struct dc390_acb*, struct dc390_srb*);
- static irqreturn_t do_DC390_Interrupt( int, void *, struct pt_regs *);
- 
- static int    dc390_initAdapter(struct Scsi_Host *psh, unsigned long io_port, u8 Irq, u8 index );
-
+> ChangeSet
+>   1.1868 04/07/12 09:42:23 andrew.vasquez@apc.qlogic.com +1 -0
+>   Fix issue where a single command could inadvertently get 
+>   'stuck' in the pending queue during resource availability
+>   failures.
+> 
+> Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+> 
+>  drivers/scsi/qla2xxx/qla_os.c |   25 +++++++++++--------------
+>  1 files changed, 11 insertions(+), 14 deletions(-)
+>
+> diff -Nru a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> --- a/drivers/scsi/qla2xxx/qla_os.c	2004-07-12 09:55:05 -07:00
+> +++ b/drivers/scsi/qla2xxx/qla_os.c	2004-07-12 09:55:05 -07:00
+> @@ -4175,19 +4175,15 @@
+>  	unsigned long   flags;
+>  	scsi_qla_host_t *dest_ha;
+>  	fc_port_t	*fcport;
+> -	srb_t           *sp, *sptemp;
+> -	LIST_HEAD(local_sp_list);
+> +	srb_t           *sp;
+>  
+>  	dest_ha = NULL;
+>  
+>  	spin_lock_irqsave(&vis_ha->list_lock, flags);
+> -	list_splice_init(&vis_ha->pending_queue, &local_sp_list);
+> -	vis_ha->qthreads = 0;
+> -	spin_unlock_irqrestore(&vis_ha->list_lock, flags);
+> +	while (!list_empty(&vis_ha->pending_queue)) {
+> +		sp = list_entry(vis_ha->pending_queue.next, srb_t, list);
+>  
+> -	list_for_each_entry_safe(sp, sptemp, &local_sp_list, list) {
+> -		list_del_init(&sp->list);
+> -        	sp->state = SRB_NO_QUEUE_STATE;
+> +		__del_from_pending_queue(vis_ha, sp);
+>  
+>  		fcport = sp->fclun->fcport;
+>  		dest_ha = fcport->ha;
+> @@ -4208,7 +4204,7 @@
+>  			/* 
+>  			 * Initiate a failover - done routine will initiate.
+>  			 */
+> -			add_to_done_queue(vis_ha, sp);
+> +			__add_to_done_queue(vis_ha, sp);
+>  
+>  			continue;
+>  		}
+> @@ -4243,8 +4239,7 @@
+>  			    dest_ha->dpc_flags));
+>  
+>  			qla2x00_extend_timeout(sp->cmd, EXTEND_CMD_TIMEOUT);
+> -			add_to_retry_queue(vis_ha, sp);
+> -
+> +			__add_to_retry_queue(vis_ha, sp);
+>  			continue;
+>  		} 
+>  
+> @@ -4262,22 +4257,24 @@
+>  			    sp->cmd->allowed,
+>  			    sp->cmd->retries));
+>  				
+> -			add_to_scsi_retry_queue(vis_ha, sp);
+> -
+> +			__add_to_scsi_retry_queue(vis_ha, sp);
+>  			continue;
+>  		}
+>  
+>  		sp->lun_queue->io_cnt++;
+>  
+> +		spin_unlock_irqrestore(&vis_ha->list_lock, flags);
+>  		rval = qla2x00_start_scsi(sp);
+> +		spin_lock_irqsave(&vis_ha->list_lock, flags);
+>  		if (rval != QLA_SUCCESS) {
+>  			/* Place request back on top of device queue */
+>  			/* add to the top of queue */
+> -			add_to_pending_queue_head(vis_ha, sp);
+> +			__add_to_pending_queue_head(vis_ha, sp);
+>  
+>  			sp->lun_queue->io_cnt--;
+>  		}
+>  	}
+> +	spin_unlock_irqrestore(&vis_ha->list_lock, flags);
+>  
+>  	if (!IS_QLA2100(vis_ha) && !IS_QLA2200(vis_ha)) {
+>  		/* Process response_queue if ZIO support is enabled*/ 
