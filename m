@@ -1,61 +1,73 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: Re: Possible use of uninitialized variable in sd.c
-Date: Fri, 25 Feb 2005 13:26:50 -0800
-Message-ID: <1109366810.5014.15.camel@markh1.pdx.osdl.net>
-References: <20050225210629.GA23018@excalibur.research.wombat.ie>
+From: Christian Iversen <chrivers@iversen-net.dk>
+Subject: Problem with tape drive: illegal seek
+Date: Sat, 26 Feb 2005 00:16:11 +0100
+Message-ID: <200502260016.11954.chrivers@iversen-net.dk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Received: from fire.osdl.org ([65.172.181.4]:17818 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261451AbVBYV0y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Feb 2005 16:26:54 -0500
-In-Reply-To: <20050225210629.GA23018@excalibur.research.wombat.ie>
+Received: from port741.ds1-noe.adsl.cybercity.dk ([212.242.204.118]:24651 "EHLO
+	boreas.iversen-net.dk") by vger.kernel.org with ESMTP
+	id S262102AbVBYXQc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Feb 2005 18:16:32 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by boreas.iversen-net.dk (Postfix) with ESMTP id E2357744D8
+	for <linux-scsi@vger.kernel.org>; Sat, 26 Feb 2005 00:16:16 +0100 (CET)
+Received: from boreas.iversen-net.dk ([127.0.0.1])
+	by localhost (boreas.iversen-net.dk [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 26027-04 for <linux-scsi@vger.kernel.org>;
+	Sat, 26 Feb 2005 00:16:06 +0100 (CET)
+Received: from zephyr.iversen-net.dk (zephyr.iversen-net.dk [10.0.0.2])
+	by boreas.iversen-net.dk (Postfix) with ESMTP
+	for <linux-scsi@vger.kernel.org>; Sat, 26 Feb 2005 00:16:06 +0100 (CET)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kenn Humborg <kenn@linux.ie>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 2005-02-25 at 21:06 +0000, Kenn Humborg wrote:
-> In drivers/scsi/sd.c:sd_probe:
-> 
->         int index;
-> ...
->         spin_lock(&sd_index_lock);
->         error = idr_get_new(&sd_index_idr, NULL, &index);
->         spin_unlock(&sd_index_lock);
-> 
->         if (index >= SD_MAX_DISKS)
->                 error = -EBUSY;
->         if (error)
->                 goto out_put;
-> 
-> Note that if idr_get_new() fails, index remains uninitialized.  If it
-> happens to be >= SD_MAX_DISKS, the error returned from idr_get_new will
-> be clobbered.  Patch initializes index to zero.
 
-I wonder if it wouldn't be better to just check the error return before
-the index value.
+Whenever I use --verify for tar, I get problems. Specifically, I get 
+"Illegal seek" when tar gets to the verify phase. 
 
-> 
-> Signed-off-by: Kenn Humborg <kenn@linux.ie>
-> 
-> 
-> --- src/drivers/scsi/sd.c-2.6.10	2005-02-25 21:02:17.035529833 +0000
-> +++ src/drivers/scsi/sd.c	2005-02-25 21:03:09.057517937 +0000
-> @@ -1409,7 +1409,7 @@
->  	struct scsi_device *sdp = to_scsi_device(dev);
->  	struct scsi_disk *sdkp;
->  	struct gendisk *gd;
-> -	u32 index;
-> +	u32 index = 0;
->  	int error;
->  
->  	error = -ENODEV;
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm trying this on a Compaq SDT-10000 on an Adaptec AHA-3940U2x/395U2x, 
+according to lspci.
+
+
+The following simulates my backup script.. to some extend :)
+
+[root@boreas]/tmp #dd if=/dev/urandom of=random-data bs=1024 count=1024                        
+1024+0 records in
+1024+0 records out
+1048576 bytes transferred in 0,324788 seconds (3228493 bytes/sec)
+[root@boreas]/tmp #mt rewind
+[root@boreas]/tmp #tar --create --verify --file /dev/tape random-data
+tar: /dev/tape: Warning: Cannot seek: Illegal seek
+[root@boreas]/tmp #dmesg | tail
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+program smartd is using a deprecated SCSI ioctl, please convert it to SG_IO
+ReiserFS: md0: warning: vs-8115: get_num_ver: not directory item
+[root@boreas]/tmp #
+
+Should I look into the buggy'dness of this, or am I doing something wrong?
+
+Please note that I can restore the data just fine, if I use tar. If I try to 
+use dd, I get strange errors as well:
+
+[root@boreas]/tmp #dd if=/dev/tape of=dump
+dd: reading `/dev/tape': Cannot allocate memory
+0+0 records in
+0+0 records out
+0 bytes transferred in 3,699040 seconds (0 bytes/sec)
+
+I hope you can help me.
+
 -- 
-Mark Haverkamp <markh@osdl.org>
-
+Regards,
+Christian Iversen
