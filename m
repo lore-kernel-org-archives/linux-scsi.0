@@ -1,75 +1,53 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 1/1] scsicam_getgeo_odd_sector_size
-Date: 13 Oct 2004 10:45:15 -0500
+From: "Tony Battersby" <tonyb@cybernetics.com>
+Subject: [PATCH 2.4] MPT fusion data transfer residuals
+Date: Wed, 13 Oct 2004 11:39:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1097682323.2204.142.camel@mulgrave>
-References: <200408192303.i7JN3cv9110958@northrelay02.pok.ibm.com>
-	<416D3536.5030501@us.ibm.com>
-	<20041013140439.GI16153@parcelfarce.linux.theplanet.co.uk>
-	<416D3ABE.6030107@us.ibm.com>
+Message-ID: <04Oct13.113932edt.333165@cyborg.cybernetics.com>
+Reply-To: <tonyb@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:47531 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S269103AbUJMPph (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Oct 2004 11:45:37 -0400
-In-Reply-To: <416D3ABE.6030107@us.ibm.com>
+Received: from host02.cybernetics.com ([206.246.200.18]:16390 "EHLO
+	cybernetics.com") by vger.kernel.org with ESMTP id S269748AbUJMQve
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Oct 2004 12:51:34 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com
-Cc: Matthew Wilcox <matthew@wil.cx>, SCSI Mailing List <linux-scsi@vger.kernel.org>, dwmw2@infradead.org
+To: mpt_linux_developer@lsil.com
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2004-10-13 at 09:25, Brian King wrote:
-> Looks like the code in fs/buffer.c has changed since I originally submitted this.
-> The BUG()s appear to have been moved directly into __getblk_slow. The patch is
-> still appropriate and needed, but the text at the beginning is now incorrect.
-> Here was the backtrace of the original failure.
-> 
-> 
-> GPR24: C0000000CCC9BB00 C0000000CF7B3C20 0000000000001050 0000000000001050
-> GPR28: 0000000000000000 C0000000CCC9BB00 C0000000005E1480 C0000000CCC9BB00
-> NIP [c0000000000c479c] .__getblk_slow+0xa8/0x484
-> LR [c0000000000c474c] .__getblk_slow+0x58/0x484
-> Call Trace:
-> [c0000000cf7b3520] [c0000000000c474c] .__getblk_slow+0x58/0x484 (unreliable)
-> [c0000000cf7b35e0] [c0000000000c4bdc] .__getblk+0x64/0x6c
-> [c0000000cf7b3680] [c0000000000c7b3c] .__bread+0x20/0x14c
-> [c0000000cf7b3710] [d000000000098044] .scsi_bios_ptable+0x50/0xd4 [scsi_mod]
-> [c0000000cf7b37a0] [d0000000000980f8] .scsicam_bios_param+0x30/0x18c [scsi_mod]
-> [c0000000cf7b3840] [d000000000063118] .sd_ioctl+0x240/0x274 [sd_mod]
-> [c0000000cf7b38f0] [c000000000258a64] .blkdev_ioctl+0xd0/0x9e4
-> [c0000000cf7b3a50] [c0000000000cbbc8] .block_ioctl+0x18/0x2c
-> [c0000000cf7b3ad0] [c0000000000dd3d4] .sys_ioctl+0x450/0x690
-> [c0000000cf7b3bb0] [c00000000002715c] .hdio_getgeo+0x40/0xcc
-> [c0000000cf7b3c50] [c0000000000fc57c] .compat_sys_ioctl+0x178/0x32c
-> [c0000000cf7b3d10] [c00000000001045c] .ret_from_syscall_1+0x0/0xa4
+This patch to lk 2.4.27 fixes two problems with the MPT fusion driver:
 
-But this isn't a BUG().  It should be a warning followed by a stack
-dump.  However, it looks like the correct fix is to get rid of the
-__bread() in the cam code.
+1) Data transfer commands that transfer no data but have GOOD status should
+not return DID_SOFT_ERROR.
 
-How does the attached work for you?
+2) Set the data transfer residual for commands that return CHECK CONDITION
+status.  Without this patch, only commands that return GOOD status have the
+data transfer residual set.
 
-James
+Anthony J. Battersby
+Cybernetics
 
-===== drivers/scsi/scsicam.c 1.16 vs edited =====
---- 1.16/drivers/scsi/scsicam.c	2004-06-19 09:45:02 -05:00
-+++ edited/drivers/scsi/scsicam.c	2004-10-13 10:38:25 -05:00
-@@ -29,10 +29,11 @@
- 	unsigned char *res = kmalloc(66, GFP_KERNEL);
- 	if (res) {
- 		struct block_device *bdev = dev->bd_contains;
--		struct buffer_head *bh = __bread(bdev, 0, block_size(bdev));
--		if (bh) {
--			memcpy(res, bh->b_data + 0x1be, 66);
--			brelse(bh);
-+		Sector sect;
-+		void *data = read_dev_sector(bdev, 0, &sect);
-+		if (data) {
-+			memcpy(res, data + 0x1be, 66);
-+			put_dev_sector(sect);
- 		} else {
- 			kfree(res);
- 			res = NULL;
+--- linux-2.4.27-vanilla/drivers/message/fusion/mptscsih.c	Sat Aug  7 19:26:04 2004
++++ linux-2.4.27-mpt/drivers/message/fusion/mptscsih.c	Wed Oct 13 10:34:22 2004
+@@ -885,7 +885,7 @@
+ 				 */
+ 				;
+ 			} else {
+-				if ( (xfer_cnt == 0) || (sc->underflow > xfer_cnt)) {
++				if (sc->underflow > xfer_cnt) {
+ 					sc->result = DID_SOFT_ERROR << 16;
+ 				}
+ 				if (scsi_state & (MPI_SCSI_STATE_AUTOSENSE_FAILED | MPI_SCSI_STATE_NO_SCSI_STATUS)) {
+@@ -1004,6 +1004,10 @@
+ 						sc->buffer,
+ 						xfer_cnt);
+ 			}
++
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
++			sc->resid = sc->request_bufflen - xfer_cnt;
++#endif
+ 			break;
+ 
+ 		case MPI_IOCSTATUS_SCSI_PROTOCOL_ERROR:		/* 0x0047 */
 
