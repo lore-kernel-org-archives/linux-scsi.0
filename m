@@ -1,48 +1,37 @@
-From: Brian King <brking@us.ibm.com>
-Subject: drivers/block/scsi_ioctl problem
-Date: Tue, 14 Dec 2004 17:49:44 -0600
-Message-ID: <41BF7C18.9090303@us.ibm.com>
-Reply-To: brking@us.ibm.com
+From: Karsten Wiese <annabellesgarden@yahoo.de>
+Subject: Re: Help needed: No CD-Recording on 2.6.9 / 2.6.10 for TEAC CD-R55S @ sym53c8xx
+Date: Wed, 15 Dec 2004 01:05:54 +0100
+Message-ID: <200412150105.54482.annabellesgarden@yahoo.de>
+References: <200412141738.01763.annabellesgarden@yahoo.de> <m3ekhsfvoq.fsf@merlin.emma.line.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:37822 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261699AbULNXtp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Dec 2004 18:49:45 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e3.ny.us.ibm.com (8.12.10/8.12.10) with ESMTP id iBENniV8031981
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Dec 2004 18:49:44 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id iBENniYQ241880
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Dec 2004 18:49:44 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id iBENnia1012278
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Dec 2004 18:49:44 -0500
-Received: from [9.10.86.27] (kaled.rchland.ibm.com [9.10.86.27])
-	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id iBENnidI012264
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Dec 2004 18:49:44 -0500
+Received: from smtp001.mail.ukl.yahoo.com ([217.12.11.32]:14194 "HELO
+	smtp001.mail.ukl.yahoo.com") by vger.kernel.org with SMTP
+	id S261730AbULOAFn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Dec 2004 19:05:43 -0500
+In-Reply-To: <m3ekhsfvoq.fsf@merlin.emma.line.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
+Cc: linux-scsi@vger.kernel.org, matthew@wil.cx
 
-Can someone explain to me the need for this bit of code in 
-drivers/block/scsi_ioctl.c:
+Am Dienstag 14 Dezember 2004 21:53 schrieb Matthias Andree:
+> Karsten Wiese <annabellesgarden@yahoo.de> writes:
+> 
+> > IIRC stuff also ill behaved with 2.4 kernel and sym53c8xx_2 module.
+> > 2.4 kernel with ncr53c8xx module lets cdrecord work just fine. (Just
+> > verified with knoppix 3.4 boot cd.)
+> 
+> Are you using cdrecord setuid? If so, remove the setuid bit and retry
+> with "sudo".
+> 
+I ran those tests as root. So the setuid bit should be irrelevant, no?
+And it is not set anyhow, just checked.
+Me still thinks, this failure is related to the sym53c8xx module not working correctly with the scsi card.
+Should I try to port 2.4's ncr53c8xx to 2.6 ? hrm.... =:)
 
-if (!(type & CMD_WARNED)) {
-	cmd_type[cmd[0]] = CMD_WARNED;
-	printk(KERN_WARNING "scsi: unknown opcode 0x%02x\n", cmd[0]);
-}
-
-I'm trying to convert an application to use SG_IO to /dev/sd* devices 
-rather than using /dev/sg* devices and this is one problem I have been 
-running into. Any time I issue a vendor specific scsi opcode I end up 
-getting one of these error logs. Is there a good reason this error log 
-is needed?
-
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+Karsten
