@@ -1,55 +1,37 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [PATCH] fusion: streamline ->queuecommand
-Date: 06 Oct 2004 10:47:30 -0500
+From: Martin Peschke3 <MPESCHKE@de.ibm.com>
+Subject: Re: [PATCH] add device_configure to the transport classes
+Date: Wed, 6 Oct 2004 18:29:50 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1097077662.1949.37.camel@mulgrave>
-References: <BC3CE0375D29D51199A400508B66CA6C0862AEFE@exc-snake.co.lsil.com>
+Message-ID: <OF4B71AD6D.2ACA3A91-ONC1256F25.00518CAF-C1256F25.005B33E2@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:38820 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S269300AbUJFPsR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Oct 2004 11:48:17 -0400
-In-Reply-To: <BC3CE0375D29D51199A400508B66CA6C0862AEFE@exc-snake.co.lsil.com>
+Received: from mtagate3.de.ibm.com ([195.212.29.152]:61386 "EHLO
+	mtagate3.de.ibm.com") by vger.kernel.org with ESMTP id S269419AbUJFQad
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Oct 2004 12:30:33 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Gibbons, Terry" <Terry.Gibbons@lsil.com>
-Cc: "'arjanv@redhat.com'" <arjanv@redhat.com>, Eric Dean Moore <Emoore@lsil.com>, "Stephens, Larry" <larry.stephens@lsil.com>, "Shirron, Stephen" <Stephen.Shirron@lsil.com>, Matthew Wilcox <matthew@wil.cx>, Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: dougg@torque.net
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 2004-10-06 at 09:23, Gibbons, Terry wrote:
-> Maybe we should change the focus. What are your suggestions for making sure
-> that every major server vendor isn't negatively impacted by changes to DV? 
 
-Well, since every statment from you and your engineers is that you
-haven't looked through the generic DV code, I suggest you do so if you
-want to participate meaningfully in the discussion.  Saying point blank
-you won't use any replacement whatever it looks like is hardly conducive
-to a measured debate.
 
-After you look through it, any technical criticisms or requests for
-missing features would be welcome.
 
-You appear to be assuming that you can't suggest changes to the generic
-DV code, which isn't the case.  The object of making the code generic is
-to avoid all the pitfalls that the other drivers fell into trying to
-roll their own while creating the best code for all of them.
 
-As has been said before no-one gets a veto on open source code.  Your
-choice is either to participate in the evolution of the SCSI subsystem
-or not to.  However, the evolution will continue, whatever you decide.
+> That is right, 64 bit LUNs were mandated in SAM-2
+> (standardized in 2003) and SAM-3 (soon to become a standard).
 
-The thing I know it's hardest to appreciate, coming from the computing
-industry myself, is that maintaining a driver doesn't just make you
-responsible for that driver alone but also for improving the subsystem
-it sits in and the rest of the kernel that surrounds it.  If you find a
-bug, it's always tempting to apply a workaround to your driver when what
-is really needed is a fix for the subsystem itself.  However, in
-exchange for thinking of the kernel and the subsystem as well as just
-your driver you get a genuine franchise in how the kernel and the
-subsystem evolve ... most industry maintainers find that to be more than
-worth the extra effort.
+So, do you know how to read table A.2? (Yes, it's only "informative",
+and therewith not normative)
 
-James
+> When SCSI devices start using advanced LUN features like
+> "well known logical units" (SPC-3 rev 21 section 8)
+> we are really going to start hurting.
 
+I see. The bone of contention from my perspective has been that LLDDs
+are currently required to guess in which way the mid-layer has compressed
+a LUN, and the resulting question: "Which LUN addressing modes does
+your LLDD support?" Ouch!
+
+Martin
 
