@@ -1,132 +1,27 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] handles possible failures in scsi initialization
-Date: Thu, 20 Feb 2003 20:41:51 +0100
+From: Douglas Gilbert <dougg@torque.net>
+Subject: drop scsi_register_blocked_host() in 2.5?
+Date: Fri, 21 Feb 2003 12:24:37 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030220204151.A19476@lst.de>
+Message-ID: <3E557FD5.5080708@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
+Received: from torque.net (dm1-50.triode.net.au [202.147.125.50])
+	by iggy.triode.net.au (8.12.7/8.12.7) with ESMTP id h1L1LQVY003421
+	for <linux-scsi@vger.kernel.org>; Fri, 21 Feb 2003 12:21:28 +1100
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-.. and unwind properly to avoid leaks
+Just doing some documentation and noticed these two functions:
+   - scsi_register_blocked_host()
+   - scsi_deregister_blocked_host()
+that return void and do nothing. See scsi_lib.c around line 1344
+for Eric's comment. These functions are exported and the
+eata and u14-34f drivers call them.
 
+Time for Christoph's razor?
 
---- 1.91/drivers/scsi/scsi.c	Tue Feb 11 10:53:40 2003
-+++ edited/drivers/scsi/scsi.c	Thu Feb 20 17:57:04 2003
-@@ -1148,29 +1148,6 @@
- }
- 
- /**
-- * scsi_dev_list_init: set up the dynamic device list.
-- * @dev_list:	string of device flags to add
-- *
-- * Description:
-- * 	Add command line @dev_list entries, then add
-- * 	scsi_static_device_list entries to the scsi device info list.
-- **/
--static void scsi_dev_info_list_init (char *dev_list)
--{
--	int i;
--
--	if (scsi_dev_info_list_add_str(dev_list) == -ENOMEM)
--		return;
--	for (i = 0; scsi_static_device_list[i].vendor != NULL; i++)
--		if (scsi_dev_info_list_add(1 /* compatibile */,
--			   scsi_static_device_list[i].vendor,
--			   scsi_static_device_list[i].model,
--			   NULL,
--			   scsi_static_device_list[i].flags) == -ENOMEM)
--			return;
--}
--
--/**
-  * scsi_dev_info_list_delete: called from scsi.c:exit_scsi to remove
-  * 	the scsi_dev_info_list.
-  **/
-@@ -1187,6 +1164,37 @@
- }
- 
- /**
-+ * scsi_dev_list_init: set up the dynamic device list.
-+ * @dev_list:	string of device flags to add
-+ *
-+ * Description:
-+ * 	Add command line @dev_list entries, then add
-+ * 	scsi_static_device_list entries to the scsi device info list.
-+ **/
-+static int scsi_dev_info_list_init (char *dev_list)
-+{
-+	int error, i;
-+
-+	error = scsi_dev_info_list_add_str(dev_list);
-+	if (error)
-+		return error;
-+
-+	for (i = 0; scsi_static_device_list[i].vendor != NULL; i++) {
-+		error = scsi_dev_info_list_add(1 /* compatibile */,
-+				scsi_static_device_list[i].vendor,
-+				scsi_static_device_list[i].model,
-+				NULL,
-+				scsi_static_device_list[i].flags);
-+		if (error)
-+			break;
-+	}
-+
-+	if (error)
-+		scsi_dev_info_list_delete();
-+	return error;
-+}
-+
-+/**
-  * get_device_flags - get device specific flags from the dynamic device
-  * list. Called during scan time.
-  * @vendor:	vendor name
-@@ -1437,17 +1445,39 @@
- 
- #endif
- 
--/* FIXME(hch): add proper error handling */
- static int __init init_scsi(void)
- {
--	scsi_init_queue();
--	scsi_init_procfs();
--	devfs_mk_dir(NULL, "scsi", NULL);
-+	int error;
-+
-+	error = scsi_init_queue();
-+	if (error)
-+		return error;
-+	error = scsi_init_procfs();
-+	if (error)
-+		goto cleanup_queue;
-+	error = -ENOMEM;
-+	if (!devfs_mk_dir(NULL, "scsi", NULL))
-+		goto cleanup_procfs;
-+	error = scsi_dev_info_list_init(scsi_dev_flags);
-+	if (error)
-+		goto cleanup_devfs;
-+	error = scsi_sysfs_register();
-+	if (error)
-+		goto cleanup_devlist;
-+
- 	scsi_host_init();
--	scsi_dev_info_list_init(scsi_dev_flags);
--	scsi_sysfs_register();
- 	open_softirq(SCSI_SOFTIRQ, scsi_softirq, NULL);
- 	return 0;
-+
-+cleanup_devlist:
-+	scsi_dev_info_list_delete();
-+cleanup_devfs:
-+	devfs_remove("scsi");
-+cleanup_procfs:
-+	scsi_exit_procfs();
-+cleanup_queue:
-+	scsi_exit_queue();
-+	return error;
- }
- 
- static void __exit exit_scsi(void)
+Doug Gilbert
+
