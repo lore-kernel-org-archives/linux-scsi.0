@@ -1,38 +1,29 @@
-From: "Adam Radford" <aradford@amcc.com>
-Subject: RE: 3w-xxxx updates
-Date: Mon, 21 Jun 2004 14:11:58 -0700
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] tmscsim: host_lock use in LLD
+Date: Mon, 21 Jun 2004 23:29:30 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <HZOG7T01.NS0@hadar.amcc.com>
+Message-ID: <Pine.LNX.4.60.0406212328120.7018@poirot.grange>
+References: <Pine.LNX.4.60.0406182225260.10481@poirot.grange>
+ <1087739384.10858.9.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hadar.amcc.com ([192.195.69.168]:33448 "EHLO hadar.amcc.com")
-	by vger.kernel.org with ESMTP id S266473AbUFUVLz convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Jun 2004 17:11:55 -0400
+Received: from mail.gmx.net ([213.165.64.20]:40140 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S266480AbUFUV3f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Jun 2004 17:29:35 -0400
+In-Reply-To: <1087739384.10858.9.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Yes, I am definately going to be updating the 3w-xxxx driver in 2.6 to
-convert it to the new pci driver interface / remove obsolete scsi interfaces.
+James
 
--Adam
+For your convenience, outstanding (submitted but not yet applied) patches 
+are at http://home.arcor.de/g.liakhovetski/scsi/outstanding/
 
------Original Message-----
-From: Christoph Hellwig [mailto:hch@lst.de]
-Sent: Sunday, June 20, 2004 8:37 AM
-To: aradford@amcc.com
-Cc: linux-scsi@vger.kernel.org
-Subject: 3w-xxxx updates
-
-
-Hi Adam,
-
-after you got the new 3w-9xxx driver so nicely in shape is there any
-chance you could do some of that to the old 3ware driver, too?  We'd
-like to move all scsi drivers to the modern hotplug pci driver interface
-and get rid of the obsolete scsi interfaces (#include "scsi.h") at
-least.
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
