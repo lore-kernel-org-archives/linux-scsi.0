@@ -1,41 +1,48 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] resend add scsi_level to scsi_device sysfs attributes
-Date: Tue, 7 Jan 2003 16:56:59 -0800
+Subject: [PATCH] add scsi_level and revision support to lsscsci 0.03
+Date: Tue, 7 Jan 2003 17:00:44 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030107165659.A17757@beaverton.ibm.com>
-References: <20030107165324.A17719@beaverton.ibm.com>
+Message-ID: <20030107170044.A17770@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20030107165324.A17719@beaverton.ibm.com>; from patmans@us.ibm.com on Tue, Jan 07, 2003 at 04:53:24PM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: JEJ Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org
 
-Hi -
+Doug -
 
-[Resending and cc-ing linux-scsi properly.]
+This patch adds support for use of scsi_level and the output of revision
+to lsscsi 0.03. It should work even without scsi_level in the scsi sysfs
+attributes.
 
-This simple patch adds scsi_level to the scsi_device sysfs attributes,
-mainly for use with Doug Gilbert's lsscsi program.
+lsscsi -c now gives the exact same output as catting /proc/scsi/scsi.
 
---- 1.2/drivers/scsi/scsi_sysfs.c	Tue Dec  3 00:53:21 2002
-+++ edited/drivers/scsi/scsi_sysfs.c	Mon Dec 30 14:11:10 2002
-@@ -224,6 +224,7 @@
- sdev_rd_attr (current_queue_depth, "%d\n");
- sdev_rd_attr (new_queue_depth, "%d\n");
- sdev_rd_attr (type, "%d\n");
-+sdev_rd_attr (scsi_level, "%d\n");
- sdev_rd_attr (access_count, "%d\n");
- sdev_rd_attr (vendor, "%.8s\n");
- sdev_rd_attr (model, "%.16s\n");
-@@ -235,6 +236,7 @@
- 	&dev_attr_current_queue_depth,
- 	&dev_attr_new_queue_depth,
- 	&dev_attr_type,
-+	&dev_attr_scsi_level,
- 	&dev_attr_access_count,
- 	&dev_attr_vendor,
- 	&dev_attr_model,
+--- lsscsi.c-orig	Tue Jan  7 15:55:25 2003
++++ lsscsi.c	Tue Jan  7 15:56:25 2003
+@@ -221,7 +221,7 @@
+ 	int hcil_arr[4];
+ 	char buff[NAME_LEN_MAX];
+ 	char value[NAME_LEN_MAX];
+-	int type, k;
++	int type, scsi_level, k;
+ 
+ 	strcpy(buff, dir_name);
+ 	strcat(buff, "/");
+@@ -254,7 +254,13 @@
+ 		printf("  Type:   %-33s", "???");
+ 	} else
+ 		printf("  Type:   %-33s", scsi_device_types[type]);
+-	printf("ANSI SCSI revision: ??\n");
++	if (! get_value(buff, "scsi_level", value, NAME_LEN_MAX)) {
++		printf("ANSI SCSI revision: ?\n");
++	} else if (1 != sscanf(value, "%d", &scsi_level)) {
++		printf("ANSI SCSI revision: ??\n");
++	} else
++		printf("ANSI SCSI revision: %02x\n", (scsi_level - 1) ?
++		                            scsi_level - 1 : 1);
+ 	if (out_mask & MASK_NAME) {
+ 		if (get_value(buff, "name", value, NAME_LEN_MAX))
+ 			printf("  name: %s\n", value);
 
 -- Patrick Mansfield
