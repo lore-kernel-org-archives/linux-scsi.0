@@ -1,54 +1,60 @@
 From: Michael Clark <michael@metaparadigm.com>
 Subject: Re: ANNOUNCE: saftemon - SCSI Enclosure monitor for linux
-Date: Thu, 18 Apr 2002 12:43:55 +0800
+Date: Thu, 18 Apr 2002 13:18:06 +0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3CBE4F0B.2010108@metaparadigm.com>
-References: <71714C04806CD51193520090272892170452B66C@ausxmrr502.us.dell.com>	<3CBE1D51.9050300@metaparadigm.com>	<3CBE3B56.1020408@metaparadigm.com> <yq1elhdwt3i.fsf@austin.mkp.net>
+Message-ID: <3CBE570E.10302@metaparadigm.com>
+References: <Pine.BSF.4.21.0204172122300.80194-100000@beppo>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <mkp@mkp.net>
-Cc: Matt_Domsch@Dell.com, mjacob@feral.com, linux-scsi@vger.kernel.org
+To: mjacob@feral.com
+Cc: Matt_Domsch@Dell.com, linux-scsi@vger.kernel.org
 
-Martin K. Petersen wrote:
+Matthew Jacob wrote:
 
->>>>>>"Michael" == Michael Clark <michael@metaparadigm.com> writes:
->>>>>>
->
->Michael> The SES command set is supposedly documented in the SFF-8067
->Michael> specification developed by an X3 committee. I assume is
->Michael> different to SAF-TE and have removed the reference to it in
->Michael> the readme.
->
->Yes.  SES is the successor to SAF-TE.
->
->It's different in the sense that there's no SAF-TE processor device
->visible on the bus.  Instead devices on an SES-capable bus will have
->EnvServ set in the inquiry page.
->
->I have some sample code kicking around, if you're interested.  Also,
->the SES specs are official T10 ones (unlike SAF-TE).  You can download
->them off t10.org.
+>No- SAF-TE was what an *early* version of SES looked like. Then it went it's
+>own way. Currently there is a bunch of SAF-TE chips out there (e.g. GEM-I and
+>GEM-II), but the spec is no longer owned by anyone and www.safte.org
+>disappeared over two years ago, so the ability to even find the spec is
+>limited to finding those who had downloaded both the .doc and the addendum.
 >
 
-Thanks. Okay, i just had a quick look at the spec and yes, it's quite 
-different to SAF-TE.
+Okay. Yeah, for a while they weren't accessible and I initially worked off a
+google cached copy. The SAF-TE spec and addendum can now be found here:
 
-I don't have any SES devices to test on but I may think about 
-abstracting saftemon to handle
-more than one protocol for inquiring enclosures. The SES attributes 
-match pretty closely although
-SES is s superset of SAF-TE.
+    http://www.nstor.com/white_papers.cfm
 
-It probably makes sense to include SMART, SAF-TE and SES monitoring into 
-s single
-consistent package. I'm not using SMART as with most RAID controllers, 
-you only see logical
-devices and have no contact directly with the drives (unless you use 
-SCSI passthrough APIs
-althoug these are different from one RAID controller driver to the next).
+>
+>Somebody out there correct me if I'm wrong.
+>
+>At any rate, you *can* emulate SAF-TE within SES. In fact, it's better to
+>create an SES driver and then map SAF-TE into it (which is what I did for
+>Solaris && *BSD). There are a couple of global status items that don't map
+>easily- and the one wierd thing is to map the overtemp bits (all 17 of them)  
+>into SES temperature elements. Plus the conversion of SAF-TE temp ranges for
+>SAF-TE temp elements into SES temperature elements (different ranges). What a
+>PITA.
+>
+
+Yes, would make sense to do it that way. The SAF-TE specific code in 
+saftemon
+is mostly limited to a handful of functions that probe the device and 
+populate
+the enclosure information structures. All the state information 
+bitfields are
+currently SAF-TE, although as you say, it could be changed to SES and 
+make the
+safte probing routines do the conversion.
+
+Somebody with an SES enclosure may want to do this.
+(unless someone wants to donate one to me - full of disks of course ;).
+
+I can probably make some changes like changing safte_device_t to 
+enclosure_t,
+etc. to make the code a bit more generic. When I get time, i'll take a look
+at that.
 
 ~mc
 
