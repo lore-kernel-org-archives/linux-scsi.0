@@ -1,75 +1,78 @@
-From: Jens Axboe <axboe@suse.de>
+From: Kurt Garloff <garloff@suse.de>
 Subject: Re: [PATCH] Format Unit can take many hours
-Date: Tue, 11 May 2004 18:14:27 +0200
+Date: Tue, 11 May 2004 18:26:38 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040511161427.GW1906@suse.de>
-References: <20040511114936.GI4828@tpkurt.garloff.de> <20040511122037.GG1906@suse.de> <40A0FAE9.90900@pobox.com>
+Message-ID: <20040511162638.GU4828@tpkurt.garloff.de>
+References: <20040511114936.GI4828@tpkurt.garloff.de> <20040511122037.GG1906@suse.de> <40A0FAE9.90900@pobox.com> <20040511161427.GW1906@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="oIMVlEQ///Q2JYC7"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:23218 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S264819AbUEKQP0 (ORCPT
+Received: from ns.suse.de ([195.135.220.2]:43675 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S264827AbUEKQ0m (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 May 2004 12:15:26 -0400
+	Tue, 11 May 2004 12:26:42 -0400
 Content-Disposition: inline
-In-Reply-To: <40A0FAE9.90900@pobox.com>
+In-Reply-To: <20040511161427.GW1906@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
 
-On Tue, May 11 2004, Jeff Garzik wrote:
-> Jens Axboe wrote:
-> >On Tue, May 11 2004, Kurt Garloff wrote:
-> >
-> >>Hi,
-> >>
-> >>the timeout for FORMAT_UNIT should be much longer; I've seen 8hrs
-> >>already (75Gig). I've increased the timeout from 2hrs to 12hrs.
-> >>
-> >>Regards,
-> >>-- 
-> >>Kurt Garloff  <garloff@suse.de>                            Cologne, DE 
-> >>SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
-> >
-> >
-> >>--- linux-2.6.5.orig/drivers/scsi/scsi_ioctl.c	2004-04-04 
-> >>05:38:20.000000000 +0200
-> >>+++ linux-2.6.5/drivers/scsi/scsi_ioctl.c	2004-05-11 
-> >>08:59:12.837421215 +0200
-> >>@@ -26,12 +26,12 @@
-> >>#include "scsi_logging.h"
-> >>
-> >>#define NORMAL_RETRIES			5
-> >>-#define IOCTL_NORMAL_TIMEOUT			(10 * HZ)
-> >>-#define FORMAT_UNIT_TIMEOUT		(2 * 60 * 60 * HZ)
-> >>+#define IOCTL_NORMAL_TIMEOUT		(10 * HZ)
-> >>+#define FORMAT_UNIT_TIMEOUT		(12 * 60 * 60 * HZ)
-> >>#define START_STOP_TIMEOUT		(60 * HZ)
-> >>#define MOVE_MEDIUM_TIMEOUT		(5 * 60 * HZ)
-> >>#define READ_ELEMENT_STATUS_TIMEOUT	(5 * 60 * HZ)
-> >>-#define READ_DEFECT_DATA_TIMEOUT	(60 * HZ )  /* ZIP-250 on parallel 
-> >>port takes as long! */
-> >>+#define READ_DEFECT_DATA_TIMEOUT	(60 * HZ)  /* ZIP-250 on parallel 
-> >>port takes as long! */
-> >>
-> >>#define MAX_BUF PAGE_SIZE
-> >
-> >
-> >block/scsi_ioctl.c should likely receive similar treatment then.
-> 
-> 
-> This timeout is dependent on media size, I should think...
-> 
-> Is there any reason to think that this timeout will _not_ be continually 
-> patched in the future, as larger and larger sizes are used?
 
-I think the timeout is only used for ancient programs that use the old
-sg interface. Newer programs should pass in the timeout themselves, or
-set IMMED as somebody else in this thread noted.
+--oIMVlEQ///Q2JYC7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-So I do think the easiest is just to patch this define for the odd case,
-and forget about it.
+Hi,
 
--- 
-Jens Axboe
+On Tue, May 11, 2004 at 06:14:27PM +0200, Jens Axboe wrote:
+> On Tue, May 11 2004, Jeff Garzik wrote:
+> > Jens Axboe wrote:
+> > >block/scsi_ioctl.c should likely receive similar treatment then.
+> >=20
+> > This timeout is dependent on media size, I should think...
+> >=20
+> > Is there any reason to think that this timeout will _not_ be continuall=
+y=20
+> > patched in the future, as larger and larger sizes are used?
 
+The disks gets faster as well.
+
+But if we have to touch it every three years, I don't see this as a=20
+huge problem either. If you want some more room, you can set it to=20
+24hrs now ...
+
+> I think the timeout is only used for ancient programs that use the old
+> sg interface. Newer programs should pass in the timeout themselves, or
+> set IMMED as somebody else in this thread noted.
+
+If you do use the sg interface, you can specify the timeout.
+If you use SCSI_IOCTL_SEND_COMMAND, there's no way to do it and
+the value from scsi_ioctl.c applies.
+
+scsiformat is one of the users.
+
+> So I do think the easiest is just to patch this define for the odd case,
+> and forget about it.
+
+Agreed.
+
+Regards,
+--=20
+Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
+SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
+
+--oIMVlEQ///Q2JYC7
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFAoP6+xmLh6hyYd04RAgaPAKDHOe0IgAYExTCEPQXGov1+3OIHKACfYRkV
+qBC77/SVlmIc1ynkSwM8lrg=
+=Kvbx
+-----END PGP SIGNATURE-----
+
+--oIMVlEQ///Q2JYC7--
