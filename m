@@ -1,179 +1,124 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] make the SCSI mid-layer obey the device online flag
-Date: Mon, 9 Jun 2003 17:00:43 -0700
+From: Grant Grundler <iod00d@hp.com>
+Subject: Re: convert 520 byte sector disk to 512 byte sector?
+Date: Mon, 9 Jun 2003 17:36:37 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030610000043.GA2240@beaverton.ibm.com>
-References: <1054742495.1674.18.camel@mulgrave> <20030604165146.GA1426@beaverton.ibm.com> <1054754103.2360.8.camel@mulgrave> <20030606073603.A13259@infradead.org> <3EE0B316.4060207@rogers.com> <20030606202350.GC3330@beaverton.ibm.com>
+Message-ID: <20030610003637.GI29808@cup.hp.com>
+References: <20030609174647.GB29808@cup.hp.com> <20030609122907.A16169@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:19907 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S262298AbTFIXpT
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Jun 2003 19:45:19 -0400
+Received: from palrel13.hp.com ([156.153.255.238]:23712 "EHLO palrel13.hp.com")
+	by vger.kernel.org with ESMTP id S262316AbTFJAXB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jun 2003 20:23:01 -0400
 Content-Disposition: inline
-In-Reply-To: <20030606202350.GC3330@beaverton.ibm.com>
+In-Reply-To: <20030609122907.A16169@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <tluben@rogers.com>, Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-Mike Anderson [andmike@us.ibm.com] wrote:
-> I am currently updating my previously posted SCSI Mid refcounting text
-> to match recent updates by Christoph. I am also adding current bit fields
-> in scsi_device and Scsi_Host used for state.
-> 
+On Mon, Jun 09, 2003 at 12:29:07PM -0700, Patrick Mansfield wrote:
+> Are you sure the mode select is really working in your code?
 
-I update the previously posted refcounting document. I added scsi_host
-and scsi_device bitfields "related" to state. I added some thoughts
-on host and device states (really status bits as there is no indication
-of valid state transitions in this document). 
+Short answer, i don't think so.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+I found a SCSI IBM "DGHS09Y  CLAR09" still formatted to 520 byte.
+I've twiddled the code a bit so the output isn't identical to
+previous FC runs. But my main goal is to show the format mode
+page "Mask" isn't all zero's for this drive and blk512-linux.c
+doesn't work for a "regular" SCSI drive either.
 
-<ref counting rules>
+The DGHS09Y drive is behind 53c1030 (built-in) using mpt v2.03.00 driver.
 
-1.) Reference counting for scsi_host
-	Private = Private to SCSI mid
-	Public = SCSI mid API
+thanks,
+grant
 
-	(Public) scsi_host_alloc:
-		(A) kmalloc Scsi_Host + xtr_bytes.
-		(B) Call device_initialize, class_device_initialize
-			refcount is 1 on host_gendev.
-			refcount is 1 on class_dev.
-	(Public) scsi_register:
-		(A) Call scsi_host_alloc
-		(B) Add Scsi_Host to legacy_hosts.
 
-	(Public) scsi_get_host:
-		(A) Call get_device on host_gendev
-			refcount +1 on host_gendev
-		(B) Call class_device_get on class_dev
-			refcount +1 on class_dev
-	(Public) scsi_host_put:
-		(A) Call put_device on host_gendev
-			refcount -1 on host_gendev
-		(B) Call class_device_put on class_dev
-			refcount -1 on class_dev
-	(Public) scsi_add_host:
-		(A) Call scsi_sysfs_add_host
-			(1) Call device_add
-				refcount +1 on parent struct device
-				host_gendev now visible in sysfs tree.
-			(2) Call class_device_add
-				refcount +1 on scsi_host class
-				refcount +1 on parent struct device
-				class_dev now visible in sysfs tree
-		(C) Call scsi_proc_host_add
-			Scsi_Host now visible in proc.
-		(D) Call scsi_scan_host
-			refcount +1 on host_gendev for each scsi_device
-			discovered
+iota:/home/grundler/Src/blk512# scsiinfo -i /dev/sg0
 
-	(Public) scsi_remove_host:
-		(A) "scsi_offline_host" NOT implemented.
-		(B) Call scsi_proc_host_rm
-		(C) Call scsi_forget_host
-			refcount -1 on host_gendev for each scsi_device
-			unregistered
-		(D) Call scsi_sysfs_remove_host
-			(1) Call class_device_del
-			(2) Call device_del
+Inquiry command
+---------------
+Relative Address                   0
+Wide bus 32                        0
+Wide bus 16                        1
+Synchronous neg.                   1
+Linked Commands                    1
+Command Queueing                   1
+SftRe                              0
+Device Type                        0
+Peripheral Qualifier               0
+Removable?                         0
+Device Type Modifier               0
+ISO Version                        0
+ECMA Version                       0
+ANSI Version                       3
+AENC                               0
+TrmIOP                             0
+Response Data Format               2
+Vendor:                    IBM     
+Product:                   DGHS09Y  CLAR09 
+Revision level:            HP1A68007236GAGSPDH01A  DG11802742000
+iota:/home/grundler/Src/blk512# ./blk512-linux -s 512 -c 17916240  /dev/sg0
 
-	(Public) scsi_unregister:
-		(A) Call scsi_put_host
+Mode Sense Current:
 
-	(Private) scsi_free_shost:
-		(A) Kill error recovery thread.
-		(B) Call scsi_destroy_command_freelist
-		(C) kfree(shost)
+0x0000:   23 00 10 08 00 ff ff ff  00 00 02 08 83 16 00 0a
+0x0010:   00 02 00 00 00 00 01 13  02 08 00 01 00 1c 00 47
+0x0020:   40 00 00 00
 
-	(Private) scsi_host_release:
-		(A) Call scsi_free_shost
+Mode Sense Default:
 
-	(Private) init_this_scsi_driver: (Legacy only)
-		(A) Call template detect
-			(1) Call scsi_register for each instance
-		(B) Call scsi_add_host for each instance
-	
-	(Private) exit_this_scsi_driver: (Legacy only)
-		(A) Call scsi_remove_host for each instance
-		(B) Call template release for each instance
-			(1) Call scsi_unregister for Scsi_Host
+0x0000:   23 00 10 08 00 ff ff ff  00 00 02 08 83 16 00 0a
+0x0010:   00 02 00 00 00 00 01 13  02 08 00 01 00 1c 00 47
+0x0020:   40 00 00 00
 
-2.) Reference counting for scsi_device
+Mode Select Data:
 
-	(Private) scsi_add_lun:
-		(A) Call scsi_device_register
-		refcount 1 on sdev_driverfs_dev
-		refcount +1 on parent struct device (i.e host_gendev)
+0x0000:   00 00 00 08 01 11 61 50  00 00 02 00
+        mlen 0xc  resid 0xb duration 0  info 0x0
+Done setting /dev/sg0 to 17916240 blocks/512 bytes_per_block
+iota:/home/grundler/Src/blk512# scsiinfo -f /dev/sg0
 
-	(Public) scsi_add_device:
-		(A) Call scsi_probe_and_add_lun
+Data from Format Device Page
+----------------------------
+Removable Medium                   0
+Supports Hard Sectoring            1
+Supports Soft Sectoring            0
+Addresses assigned by surface      0
+Tracks per Zone                    10
+Alternate sectors per zone         2
+Alternate tracks per zone          0
+Alternate tracks per lun           0
+Sectors per track                  275
+Bytes per sector                   520
+Interleave                         1
+Track skew factor                  28
+Cylinder skew factor               71
 
-	(Public) scsi_remove_device:
-		(C) Call scsi_device_unregister
-		refcount -1 on sdev_driverfs_dev
-		refcount -1 on parent struct device (i.e host_gendev)
+iota:/home/grundler/Src/blk512# ./blk512-linux -M -s 512 -c 17916240  /dev/sg0
 
-	(Public) scsi_device_get:
-		(A) try_module_get
-		(B) access_count +1
+Mode Sense Mask:
 
-	(Public) scsi_device_put:
-		(A) access_count -1
-		(B) module_put on host module
+0x0000:   23 00 10 08 00 ff ff ff  00 00 02 08 83 16 ff ff
+0x0010:   ff ff 00 00 00 00 00 00  ff ff ff ff 00 00 00 00
+0x0020:   00 00 00 00
 
-</ref counting rules>
+Mode Sense Current:
 
-<device and host states>
+0x0000:   23 00 10 08 00 ff ff ff  00 00 02 08 83 16 00 0a
+0x0010:   00 02 00 00 00 00 01 13  02 08 00 01 00 1c 00 47
+0x0020:   40 00 00 00
 
-3.) struct scsi_device states
+Mode Sense Default:
 
-	(A) Bitfields
-		- online (device responding / connected. Currently
-		  overloaded)
-		- access_count (Number of openers, ?other get/put callers?)
+0x0000:   23 00 10 08 00 ff ff ff  00 00 02 08 83 16 00 0a
+0x0010:   00 02 00 00 00 00 01 13  02 08 00 01 00 1c 00 47
+0x0020:   40 00 00 00
 
-		- device_busy (if non-zero IO in-flight)
-		- device_blocked (no processing)
+Mode Select Data:
 
-		- locked (SCSI_REMOVAL_PREVENT active)
-		- changed (possible media change)
-
-		- was_reset (device reset or bus reset)
-		- expecting_cc_ua (redundant was_reset bit field)
-
-	(B) States (?? Needs review ??)
-		(1) Init
-		(2) Ready (PQ of 000b, TUR Good)
-		(3) Not_Ready (sense key not ready)
-		(4) Lun_Not_Connected (PQ of 001b)
-		(5) No_Response (DID_NO_CONNECT) (Surprise removal here?)
-
-		(6) Blocked (QUEUE_FULL or BUSY status)
-		(7) Timed_Out (A command timed out on this lun)
-		(8) Shutdown (Device going away)
-
-4.) struct Scsi_Host states
-
-	(A) Bitfields
-		- host_blocked (no processing)
-		- host_self_blocked ( "host requested no processing")
-		- host_busy (if non-zero IO in-flight)
-
-		- host_failed (if non-zero IO failure(s))
-		- in_recovery (error recovery scheduled or running)
-
-		- resetting (delay calling queuecommand due to reset)
-		- last_reset (used in conjunction with resetting).
-
-	(B) States (?? Needs review ??)
-		(1) Init
-		(2) Ready (registered)
-		(3) In_Recovery (error recovery thread scheduled to run)
-		(4) Blocked (queuecommand returned non-zero)
-		(4) Shutdown (Host going away)
+0x0000:   00 00 00 08 01 11 61 50  00 00 02 00 03 16 00 0a
+0x0010:   00 02 00 00 00 00 01 13  02 00 00 01 00 1c 00 47
+0x0020:   40 00 00 00
+        mlen 0x24  resid 0x23 duration 0  info 0x0
+Done setting /dev/sg0 to 17916240 blocks/512 bytes_per_block
 
