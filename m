@@ -1,32 +1,33 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: [ANNOUNCE]: megaraid driver version 2.20.0.rc2
-Date: Wed, 23 Jun 2004 21:48:20 +0100
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Subject: Re: Proposal for new generic device API: dma_get_required_mask()
+Date: Wed, 23 Jun 2004 21:32:16 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040623204820.GA29920@infradead.org>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC694@exa-atlanta> <20040528140238.GA28249@infradead.org> <20040623203350.GA29538@infradead.org> <40D9EB36.7040806@pobox.com>
+Message-ID: <m33c4myssf.fsf@defiant.pm.waw.pl>
+References: <1087481331.2210.27.camel@mulgrave>
+	<m33c4tsnex.fsf@defiant.pm.waw.pl>
+	<20040618102120.A29213@flint.arm.linux.org.uk>
+	<m3brjg7994.fsf@defiant.pm.waw.pl>
+	<20040619212246.B8063@flint.arm.linux.org.uk>
+	<m3zn6zf68l.fsf@defiant.pm.waw.pl>
+	<20040620204723.B641@flint.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.146.154.40] ([213.146.154.40]:19356 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S262007AbUFWUs0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Jun 2004 16:48:26 -0400
-Content-Disposition: inline
-In-Reply-To: <40D9EB36.7040806@pobox.com>
+Received: from hq.pm.waw.pl ([195.116.170.10]:54224 "EHLO hq.pm.waw.pl")
+	by vger.kernel.org with ESMTP id S266665AbUFWU57 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Jun 2004 16:57:59 -0400
+In-Reply-To: <20040620204723.B641@flint.arm.linux.org.uk> (Russell King's
+ message of "Sun, 20 Jun 2004 20:47:23 +0100")
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, "Mukker, Atul" <Atulm@lsil.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Jun 23, 2004 at 04:42:30PM -0400, Jeff Garzik wrote:
-> 'Christoph Hellwig' wrote:
-> >>- any chance to rework megaraid_mbox.c to need less forward-declarations
-> >>  by reordering the function in their natural order?
-> >
-> >
-> >still quite a lot of those.
-> 
-> This is maintainer's choice, and is _not_ a requirement for merging.
+Russell King <rmk+lkml@arm.linux.org.uk> writes:
 
-Read the request, it's certainly not written as a hard requirement, but
-I ask every maintainer nicely for it anyway.
+> So it's quite correct for this to be a device thing not a platform
+> thing.  It _is_ the SA1111 device itself which has the problem.
 
+Now I see that. Many thanks for detailed explanation.
+-- 
+Krzysztof Halasa, B*FH
