@@ -1,79 +1,64 @@
-From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Subject: RE: megaraid2 compile problems
-Date: Wed, 10 Mar 2004 13:56:30 -0500
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [usb-storage] Time to allow MODE SENSE for USB disk-type storag
+ edevices?
+Date: Wed, 10 Mar 2004 15:24:29 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230C760@exa-atlanta.se.lsil.com>
+Message-ID: <Pine.LNX.4.44L0.0403101515470.962-100000@ida.rowland.org>
+References: <1078944795.5156.210.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:21179 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S262748AbUCJS4e (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:9988 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S262793AbUCJUYf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Mar 2004 13:56:34 -0500
+	Wed, 10 Mar 2004 15:24:35 -0500
+In-Reply-To: <1078944795.5156.210.camel@patibmrh9>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Jiann-Ming Su' <jsu2@emory.edu>, "Mukker, Atul" <Atulm@lsil.com>
-Cc: linux-scsi@vger.kernel.org
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: Andries Brouwer <Andries.Brouwer@cwi.nl>, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, Patrick Mansfield <patmans@us.ibm.com>
 
-In megaraid2.h, please delete the line that has "vary_io" and recompile.
-The scsi/hosts.h shouldn't be modified.
+On 10 Mar 2004, Pat LaVarre wrote:
 
-Sreenivas
+> > * First attempt: ask for all pages (0x3F), ...
+> 
+> I hear Windows starts with page x08, not x3F.
 
------Original Message-----
-From: Jiann-Ming Su [mailto:jsu2@emory.edu]
-Sent: Wednesday, March 10, 2004 12:02 PM
-To: Atul.Mukker@lsil.com
-Cc: linux-scsi@vger.kernel.org
-Subject: megaraid2 compile problems
+That's not so.  Windows 2000 asks for page x1C, then page x3F.  Windows XP 
+does the same and then asks for page x08.
 
+> > all pages (0x3F), but only 4 bytes.
+> 
+> SCSI Pass-Through Mode Sense Command May Crash the Computer
+> http://support.microsoft.com/?kbid=813908
+> 
+> suggests Talk-like-Windows excludes 4 bytes, by saying -i 4 -y "1A
+> xx:xx:xx 04 00" crashes the Win 2K kernel for much Atapi, just as -y "12
+> 00:00:00 00 00" crashes some lk for much Usb.
 
-I just downloaded megaraid v2.10.1 driver.  I'm trying to build it against
-a 2.4.20 kernel from RedHat.  As background info, this kernel came only
-with the megaraid1 driver.  I copied the megaraid2 from a 2.4.24 kernel 
-(v2.00.9), modified the scsi/Config.in and scsi/Makefile, and was able
-to build a working kernel.
+I don't think so.  That web page actually states that a bug in Windows' 
+atapi.sys storage port driver causes the crash and that an update is 
+available to fix the problem.  So it's no longer relevant.  In any case, 
+I'm proposing to always ask for 192 bytes (for USB devices).
 
-However, it looks like with v2.10.1, the Scsi_Host_Template structure
-has changed, and now I get the following error during compile:
+> > some devices hang if we ask for more than is available.
+> 
+> Also some hosts hang when D < H.
 
-  gcc -D__KERNEL__ -I/usr/src/linux-ssi/include -Wall -Wstrict-prototypes
--Wno-trigraphs -O2 -fno-strict-aliasing -fno-common -pipe
--mpreferred-stack-boundary=2 -march=i686   -nostdinc -iwithprefix include
--DKBUILD_BASENAME=megaraid2  -c -o megaraid2.o megaraid2.c
-  In file included from megaraid2.c:46:
-  megaraid2.h:1087:1: warning: "ASSERT" redefined
-  In file included from /usr/src/linux-ssi/include/cluster/ssi/rcopy.h:27,
-                   from /usr/src/linux-ssi/include/asm/uaccess.h:11,
-                   from megaraid2.c:36:
-  /usr/src/linux-ssi/include/cluster/assert.h:38:1: warning: this is the
-location of the previous definition
-  megaraid2.c:5655: error: unknown field `vary_io' specified in initializer
-  megaraid2.c:5655: warning: initialization makes pointer from integer
-without a cast
-  make[3]: *** [megaraid2.o] Error 1
-  make[3]: Leaving directory `/usr/src/linux-ssi/drivers/scsi'
-  make[2]: *** [first_rule] Error 2
-  make[2]: Leaving directory `/usr/src/linux-ssi/drivers/scsi'
-  make[1]: *** [_subdir_scsi] Error 2
-  make[1]: Leaving directory `/usr/src/linux-ssi/drivers'
-  make: *** [_dir_drivers] Error 2
+Not USB hosts.
 
-It looks like vary_io is a new field in the SHT struct that's not defined.
-I flipped through the megaraid-linux-2.4.24-megaraid-2.10.1.patch and didn't
-see any reference to modifying the scsi/hosts.h file which SHT is defined.
+> Offline recently I received an as yet unconfirmed report that 2.4.25
+> ioctl CDROM_SEND_PACKET fails (but does not hang) when D < H.
+> 
+> > ... my devices ... work...
+> 
+> Yes, here we choose among evils.
+> 
+> If Windows doesn't discover PDT x00/0E writability except by trying to
+> write blocks, then any other technique we invent will fail to
+> interoperate broadly.
 
-I'm wanting to try the new driver because the current one seems to have
-some strange disk access latency.  On a regular basis, my terminal will
-pause for a few seconds before continuing, specifically with tab 
-continuation in bash and opening any file.  
+For PDT x00, Windows appears to use the same technique that we do: look at
+the header from a page x3F response.
 
--- 
-Jiann-Ming Su  jsu2@emory.edu  404-712-2603
-Development Team Systems Administrator
-General Libraries Systems Division
+Alan Stern
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
