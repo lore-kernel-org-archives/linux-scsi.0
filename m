@@ -1,34 +1,30 @@
-From: Roman Zippel <zippel@linux-m68k.org>
-Subject: Re: [PATCH] /proc/scsi/map
-Date: Sat, 22 Jun 2002 22:57:03 +0200 (CEST)
+From: "Grover, Andrew" <andrew.grover@intel.com>
+Subject: driverfs is not for everything! (was:  [PATCH] /proc/scsi/map)
+Date: Sun, 23 Jun 2002 15:59:04 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0206222247020.8911-100000@serv>
-References: <3D14D9F1.8B88668F@torque.net>
+Message-ID: <59885C5E3098D511AD690002A5072D3C02AB7F52@orsmsx111.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3D14D9F1.8B88668F@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Roman Zippel <zippel@linux-m68k.org>, David Brownell <david-b@pacbell.net>, Nick Bellinger <nickb@attheoffice.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: 'Nick Bellinger' <nickb@attheoffice.org>, David Brownell <david-b@pacbell.net>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Patrick Mochel <mochel@osdl.org>
 
-Hi,
+> From: Nick Bellinger [mailto:nickb@attheoffice.org] 
+> Giving the IP stack its own directory (leaf?) under driverfs 
+> root sounds
+> interesting enough and could have some potential uses, but in the case
+> of iSCSI there are a few problems:
 
-On Sat, 22 Jun 2002, Douglas Gilbert wrote:
+I know this is one of those things that has more and more cool possibilities
+the more you think about it but...
 
-> Trying to clear up the nomenclature here, according to SAM-2
-> ( www.10.org ) target ports have mandatory "identifiers"
-> and optional "names". The WWUI in iSCSI is part of the
-> target _identifier_. SAM-2 is pretty vague about "names"
-> but it does note that for a logical unit, its _name_
-> may be reported in the Device Identification VPD page in
-> an INQUIRY.
+Is the device PHYSICALLY hooked up to the computer? If not, it shouldn't be
+in devicefs.
 
-iSCSI currently specifies two types of names:
-1. iSCSI Qualified Name: contains a date, domain and an arbitrary name,
-   e.g. "iqn.2001-04.com.acme.diskarrays-sn-a8675309"
-2. IEEE EUI-64 format: an IEEE assigned name, e.g.
-   "eui.02004567A425678D"
+The device tree (for which devicefs is the fs representation) was originally
+meant to enable good device power management and configuration. driverfs
+wasn't meant to handle iscsi or tcpip (that is, network) connections, nor
+should it have to.
 
-bye, Roman
-
+Regards -- Andy
