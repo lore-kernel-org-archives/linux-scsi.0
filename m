@@ -1,54 +1,41 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: [SUBJECT CHANGE]: megaraid unified driver version 2.20.0.0-alpha1
-Date: Wed, 25 Feb 2004 13:03:28 -0600
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: coding style question
+Date: Wed, 25 Feb 2004 11:29:05 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040225130328.B14838@lists.us.dell.com>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC3E2@exa-atlanta.se.lsil.com> <20040225131640.A3966@infradead.org> <20040225112839.A14838@lists.us.dell.com> <20040225173540.GB25779@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <20040225112905.33bfdea8.rddunlap@osdl.org>
+References: <20040225182523.GD25779@parcelfarce.linux.theplanet.co.uk>
+	<Pine.LNX.4.44.0402251128430.6557-100000@dent.deepthot.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from linux.us.dell.com ([143.166.224.162]:3301 "EHLO
-	lists.us.dell.com") by vger.kernel.org with ESMTP id S262430AbUBYTEI
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Feb 2004 14:04:08 -0500
-Content-Disposition: inline
-In-Reply-To: <20040225173540.GB25779@parcelfarce.linux.theplanet.co.uk>; from willy@debian.org on Wed, Feb 25, 2004 at 05:35:40PM +0000
+Received: from fw.osdl.org ([65.172.181.6]:64966 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S261262AbUBYT3X (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Feb 2004 14:29:23 -0500
+In-Reply-To: <Pine.LNX.4.44.0402251128430.6557-100000@dent.deepthot.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, "Mukker, Atul" <Atulm@lsil.com>, 'Arjan van de Ven' <arjanv@redhat.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, 'Paul Wagland' <paul@wagland.net>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Jay Denebeim <denebeim@deepthot.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Feb 25, 2004 at 05:35:40PM +0000, Matthew Wilcox wrote:
-> On Wed, Feb 25, 2004 at 11:28:39AM -0600, Matt Domsch wrote:
-> > The list of PCI devices should be ordered in two buckets: ROMBs first,
-> > then add in cards; secondarily, oldest to newest.  We do this with
-> > aacraid today.
-> 
-> In 2.4, you can do what you like.  The list of PCI devices is in PCI
-> bus number order, and that's the order you get when you use the hotplug
-> interfaces.
+On Wed, 25 Feb 2004 11:40:27 -0700 (MST) Jay Denebeim wrote:
 
-Ahh, yes, of course.  
+| On Wed, 25 Feb 2004, Matthew Wilcox wrote:
+| 
+| > On Wed, Feb 25, 2004 at 06:16:48PM +0000, Jay Denebeim wrote:
+| (I mentioned typedefs being removed)
+| > > what was the reasoning for this?
+| > 
+| > We hate typedefs.
+| 
+| Well, that's certainly convincing.  Funny that, I don't recall hating
+| typedefs, in fact I distinctly recall liking them and being happy when
+| they were added to Lattice's Amiga compiler back in the stone age.  Is
+| there some particular reason 'we' hate them?
 
-> Yes, this is a painful customer-visible change, but if they use scsi
-> discs, they must already be used to devices changing name at random.
+For anything other than very basic types, they hide/obfuscate
+data structures.  If it's a struct, we had rather see a struct
+used there.
 
-Well, to be fair, most people count on it not changing, i.e. it is
-deterministic at least, such that if you don't change hardware or add
-logical drives, you won't see any changes between boots.  For most
-users, file system labels serve quite well to keep things consistent.
-For swap, raw devices, and the like, devlabel or udev are used, but at
-least devlabel (sorry Greg, I haven't played with udev too much yet)
-uses SCSI inquiry page 83 or 80 data if it's there, which megaraid
-doesn't provide.
-
-For the install scenario, EDD (which megaraid *does* provide) will
-suffice, but I need to get distro installers to start using it. ;-)
-Oh, and get it working on x86-64.  That should be easy, soon as I have
-access to such a system for a few days.
-
-
--- 
-Matt Domsch
-Sr. Software Engineer, Lead Engineer
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+--
+~Randy
