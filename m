@@ -1,49 +1,41 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [RFC PATCH 2.6.9-rc2] Add sysfs queue depth override to qla2xxx
-Date: 28 Sep 2004 10:05:31 -0400
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [patch 1/28] Sync up drivers/scsi/aic7xxx
+Date: Tue, 28 Sep 2004 15:42:14 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1096380337.1717.4.camel@mulgrave>
-References: <20040927061003.GA182890@sgi.com>
-	<20040928075407.GA190115@sgi.com>
+Message-ID: <20040928144214.GX16153@parcelfarce.linux.theplanet.co.uk>
+References: <41596126.7080502@adaptec.com> <20040928141547.A1871@infradead.org> <41596581.1030102@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:27085 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S267759AbUI1OFr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Sep 2004 10:05:47 -0400
-In-Reply-To: <20040928075407.GA190115@sgi.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:41698 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S267783AbUI1OmP
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Sep 2004 10:42:15 -0400
+Content-Disposition: inline
+In-Reply-To: <41596581.1030102@adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, andrew.vasquez@qlogic.com
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-09-28 at 03:54, Jeremy Higdon wrote:
-> On Sun, Sep 26, 2004 at 11:10:03PM -0700, Jeremy Higdon wrote:
-> > This patch is to QLA2xxx version 8.00.00b15-k, and it allows users
-> > to override the default driver queue depth for a target by making
-> > the queue_depth sysfs attribute writeable.
-> > 
-> > I based this on the code in the 53c700 driver.
-> > 
-> > Andrew, please apply if it looks correct to you and James.
-> > 
-> > Let me know if you'd like me to regenerate against a different qla2xxx
-> > version.
-> > 
-> > thanks
-> > 
-> > Jeremy
+On Tue, Sep 28, 2004 at 09:22:09AM -0400, Luben Tuikov wrote:
+> That's true.  As there are other fixes alongside all the 205 patches
+> of AIC into our SCM, I wanted to level it off and submit the timeout,
+> dma, PCI fixes off of the latest version which we have here.
 > 
-> Found a bug in the patch.  It returned an incorrect count if tagged_supported
-> was not true.
+> Those patches are simply for a review as other member of the community
+> wanted.  PCI, dma naming and timeout fixes would be off of those
+> so as to not lose other important fixes in the drivers.
 
-I haven't had time to check yet, but I believe I remember queue depth
-being also a parameter that has to be communicated to the card's
-firmware for the sizing of an internal queue.  Could you check ... and
-if that is the case, we'll have to communicate this change to the card
-as well.
+There is no reasonable way to review this.  You need to diff your current
+internal driver against the one in mainline, pull out logical changes and
+send those one at a time.  That is reviewable, both by us and by you.
+When I've done this before, I've often found things I could have done
+better.
 
-James
-
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
