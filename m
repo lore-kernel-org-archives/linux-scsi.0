@@ -1,28 +1,62 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/3] qla1280: update changelog
-Date: Thu, 10 Feb 2005 17:00:53 +0100
-Message-ID: <20050210160053.GC8743@lst.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [BK PATCH] SCSI bug fixes for 2.6.11-rc3
+Date: Thu, 10 Feb 2005 12:51:45 -0500
+Message-ID: <1108057905.7361.21.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from verein.lst.de ([213.95.11.210]:5849 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S262156AbVBJQA7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Feb 2005 11:00:59 -0500
-Content-Disposition: inline
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from stat16.steeleye.com ([209.192.50.48]:2726 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262176AbVBJRv7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Feb 2005 12:51:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@steeleye.com, jes@trained-monkey.org
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
---- 1.72/drivers/scsi/qla1280.c	2004-10-22 06:20:31 +02:00
-+++ edited/drivers/scsi/qla1280.c	2005-02-10 13:42:44 +01:00
-@@ -20,6 +20,9 @@
- #define QLA1280_VERSION      "3.25"
- /*****************************************************************************
-     Revision History:
-+    Rev  3.25.1, February 10, 2005 Christoph Hellwig
-+	- use pci_map_single to map non-S/G requests
-+	- remove qla1280_proc_info
-     Rev  3.25, September 28, 2004, Christoph Hellwig
- 	- add support for ISP1020/1040
- 	- don't include "scsi.h" anymore for 2.6.x
+This is a set of four bug fixes each with a corresponding user oops
+report and one well tested driver update.
+
+The patch is available at
+
+bk://linux-scsi.bkbits.net/scsi-rc-fixes-2.6
+
+The short changelog is
+
+Andreas Herrmann:
+  o zfcp: bugfixes (without kfree) for -bk
+
+Andrew Vasquez:
+  o qla2xxx: fix BUG's for smp_processor_id() on interrupt
+
+Christoph Hellwig:
+  o cciss: handle scsi_add_host failure
+
+James Bottomley:
+  o SCSI: fix HBA removal problem with transport classes
+
+Seokmann Ju:
+  o megaraid_mbox 2.20.4.3 patch
+
+and the diffstat is:
+
+ Documentation/scsi/ChangeLog.megaraid  |  104 ++++++++
+ drivers/block/cciss_scsi.c             |   15 -
+ drivers/s390/scsi/zfcp_erp.c           |    6 
+ drivers/s390/scsi/zfcp_fsf.c           |   37 +--
+ drivers/scsi/megaraid/Kconfig.megaraid |    1 
+ drivers/scsi/megaraid/mega_common.h    |    3 
+ drivers/scsi/megaraid/megaraid_ioctl.h |    1 
+ drivers/scsi/megaraid/megaraid_mbox.c  |  403 ++++++++++++++++++++++++++++++++-
+ drivers/scsi/megaraid/megaraid_mbox.h  |   24 +
+ drivers/scsi/megaraid/megaraid_mm.c    |   39 +++
+ drivers/scsi/megaraid/megaraid_mm.h    |    5 
+ drivers/scsi/qla2xxx/qla_isr.c         |    4 
+ drivers/scsi/scsi_transport_fc.c       |    3 
+ drivers/scsi/scsi_transport_iscsi.c    |    4 
+ drivers/scsi/scsi_transport_spi.c      |    3 
+ 15 files changed, 604 insertions(+), 48 deletions(-)
+
+James
+
+
