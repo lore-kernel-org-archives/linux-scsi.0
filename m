@@ -1,51 +1,81 @@
-From: florin@iucha.net (Florin Iucha)
-Subject: Re: [linux-usb-devel] USB Storage oops in 2.5.69-bk8
-Date: Sat, 31 May 2003 09:35:24 -0500
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] SG_IO readcd and various bugs
+Date: Sun, 01 Jun 2003 17:39:49 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030531143524.GW15486@iucha.net>
-References: <Pine.LNX.4.44L0.0305171108050.26146-100000@netrider.rowland.org> <20030517113848.A26713@beaverton.ibm.com>
+Message-ID: <3ED9ADC5.7060006@torque.net>
+References: <3ED86687.6000805@torque.net> <20030531105742.GC9561@suse.de>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="7uidztUHYC105IRM"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iucha.net ([209.98.146.184]:47217 "EHLO mail.iucha.net")
-	by vger.kernel.org with ESMTP id S264338AbTEaOWC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 31 May 2003 10:22:02 -0400
-Content-Disposition: inline
-In-Reply-To: <20030517113848.A26713@beaverton.ibm.com>
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:41997 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263376AbTFAM0a
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 Jun 2003 08:26:30 -0400
+In-Reply-To: <20030531105742.GC9561@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Mike Anderson <andmike@us.ibm.com>, David Brownell <david-b@pacbell.net>, USB development list <linux-usb-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+
+Jens Axboe wrote:
+> On Sat, May 31 2003, Douglas Gilbert wrote:
+
+>>With the latest changes from Jens (mainly dropping the
+>>artificial 64 KB per operation limit) the maximum
+>>element size in the block layer SG_IO is:
+>>  - 128 KB when direct I/O is not used (i.e. the user
+>>    space buffer does not meet bio_map_user()'s
+>>    requirements). This seems to be the largest buffer
+>>    kmalloc() will allow (in my tests)
+> 
+> 
+> Correct.
+> 
+> 
+>>  - (sg_tablesize * page_size) when direct I/O is used.
+>>    My test was with the sym53c8xx_2 driver in which
+>>    sg_tablesize==96 so my largest element size was 384 KB
+> 
+> 
+> Or ->max_sectors << 9, whichever is smallest. Really, the limits are in
+> the queue. Don't confuse SCSI with block.
+
+The block layer SG_IO ioctl passes through the SCSI
+command set to a device that understands it
+(i.e. not necessarily a "SCSI" device in the traditional
+sense). Other pass throughs exist (or may be needed) for
+ATA's task file interface and SAS's management protocol.
+
+Even though my tests, shown earlier in this thread, indicated
+that the SG_IO ioctl might be a shade faster than O_DIRECT,
+the main reason for having it is to pass through "non-block"
+commands to a device. Some examples:
+   - special writes (e.g. formating a disk, writing a CD/DVD)
+   - uploading firmware
+   - reading the defect table from a disk
+   - reading and writing special areas on a disk
+     (e.g. application client log page)
+
+The reason for choosing this list is that all these
+operations potentially move large amounts of data in a
+single operation. For such data transfers to be constrained
+by max_sectors is questionable. Putting a block paradigm
+bypass in the block layer is an interesting design :-)
+
+With these patches in place cdrecord (in RH 9) works via
+/dev/hdb (using ide-cd). Cdrecord fails on the same ATAPI
+writer via /dev/scd0 because ide-scsi does not set max_sectors
+high enough [and the SG_SET_RESERVED_SIZE ioctl reacts
+differently in this case to the sg driver].
+
+In summary, I see no reason to constrain the SG_IO ioctl
+by max_sectors. SG_IO is a "one shot" with no command
+merging or retries. If the HBA driver doesn't like a command,
+then it can reject it. [However, currently there is no
+mechanism to convey host or HBA driver errors back through
+the request queue, only the device (response) status.]
+
+Doug Gilbert
 
 
---7uidztUHYC105IRM
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-The problem is fixed in 2.5.70-bk5. I have closed the bug [1] in
-bugzilla.
-
-Thank you,
-florin
-
-   1. http://bugme.osdl.org/show_bug.cgi?id=3D724
-
---=20
-
-"NT is to UNIX what a doughnut is to a particle accelerator."
-
---7uidztUHYC105IRM
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQE+2L2sNLPgdTuQ3+QRAjdIAKCcWBNB6cmbH+MXyfNSQKw7oqnpIACfbb3E
-Rm3rp2Slw/IVjxtRSGm5Dgg=
-=c/gV
------END PGP SIGNATURE-----
-
---7uidztUHYC105IRM--
