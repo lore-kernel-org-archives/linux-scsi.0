@@ -1,48 +1,50 @@
 From: David Brownell <david-b@pacbell.net>
 Subject: Re: [linux-usb-devel] Re: /proc/scsi/map
-Date: Mon, 17 Jun 2002 09:53:53 -0700
+Date: Mon, 17 Jun 2002 10:15:12 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D0E1421.2070001@pacbell.net>
-References: <oliver@neukum.name>
- <200206171454.g5HEsu802593@localhost.localdomain>
- <20020617090958.A19843@eng2.beaverton.ibm.com>
+Message-ID: <ael5hn$njm$2@main.gmane.org>
+References: <200206162202.g5GM2XT02750@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Oliver Neukum <oliver@neukum.name>, Andries.Brouwer@cwi.nl, garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sancho@dauskardt.de, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dougg@torque.net
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Oliver Neukum <oliver@neukum.name>, Andries.Brouwer@cwi.nl, garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sancho@dauskardt.de, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dougg@torque.net
 
-> Any SCSI device can return an ID (i.e. INQUIRY VPD page 0x80 or 0x83),
-> so the logic need not be in sd. I don't know how removable media should
-> be handled (not a SCSI device being added/removed from the system), for
-> tape this is probably not an issue.
-> ...
+> The idea behind using hotplug to solve the problem is that with scsimon, a 
+> hotplug insertion event is generated for every SCSI device as it is added.  
+> The script is provided with the information the kernel knows (host, channel, 
+> pun lun, model and vendor inquiry strings---see www.torque.net/scsimon.html 
+
+Make that http://www.torque.net/scsi/scsimon.html ... that page is linked
+from the http://linux-hotplug.sourceforge.net links page, and I'm glad to
+see it's been updated recently.
+
+
+> for details).  The hotplug script then does the remaining processing to 
+> extract the ID from the device (by ioctls, sending down SCSI commands etc.) 
+> and then binds it into the /dev/volume nodes using the identifier it 
+> determines.
 > 
->>Here, the usb-storage driver does know about the real device (and already has 
->>a huge exception table), so it has enough knowledge to probe for an identifier.
->  
-> usb-storage could emulate VPD page 0x83 to return the GID, and that could
-> then be used by the mid-layer or a user level program to extract an ID.
+> The result is that however you move the device around (between controllers or 
+> even change its id), it will always show up as its unique /dev/volume name.
+> 
+> The key philosophy is that the code to make the policy decision for assigning 
+> a unique name isn't cluttering up the kernel, it's in user land where it can 
+> be easily customised.  
 
-Except that as I recall, that's not practical for all devices; they may not
-have built in IDs.  Hence there need to be topology-based IDs available.
+I think that's a good approach for packaging that naming policy, though I'm
+not quite sure where it stands in relation to "driverfs".  As with "usbfs"
+it seems to me that there need to be both low-level "topological" and higher
+level "logical/policy-driven" names.  And I'd prefer not to see a multiplicity
+of approaches for anything except the bus-specific parts (which in this case
+is "SCSI" even if the transport may be USB); I think I'm not alone in that.
 
-Which is why I had pointed out usb_make_path() ... which returns a stable
-controller ID for the "CBTU tuple".  It isn't going to get re-assigned by
-changing the bus probe sequence or driver load order.  Even PCI has better
-IDs available than those simple numbers (pci_device.slot_name).
-
-If the driverfs names for all devices are supposed to be using stable IDs
-(ones that don't change unless at least the hardware gets re-configured)
-where possible, then those driverfs names will be better answers for the
-"what is this device's topological ID" than those purely numeric CBTU tuples.
-
-(And they won't address the volume/media/... ID level problems, which are
-of course a separate issue.)
+Also, given what I noted earlier about stable IDs, I think SCSI_HOST should
+be a stable string ID, not an integer that can easily get switched around
+during system boot.
 
 - Dave
-
 
 
