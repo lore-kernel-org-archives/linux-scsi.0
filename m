@@ -1,39 +1,38 @@
-From: "Aron Zeh" <ARZEH@de.ibm.com>
-Subject: Re: [RFC]: 64 bit LUN/Tags, dummy device in host_queue, host_lock <-> LLDD
- reentrancy
-Date: Mon, 26 Aug 2002 10:02:47 +0200
+From: "Martinez, Michael - CSREES/ISTM" <MMARTINEZ@intranet.reeusda.gov>
+Subject: RE: sex
+Date: Mon, 26 Aug 2002 08:15:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF80DCCDBC.5B147AD9-ONC1256C21.002BB3EE@de.ibm.com>
+Message-ID: <630DA58AD01AD311B13A00C00D00E9BC067B8387@CSREESSERVER>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: "'MERVE@SEX.COM'" <MERVE@SEX.COM>, linux-scsi@vger.kernel.org
+
+Spam control please
+
+Michael Martinez
+System Administrator (Contractor)
+Information Systems and Technology Management
+CSREES - United States Department of Agriculture
+(202) 720-6223
 
 
-
-
-> * SAM-3 specifies that a LUN is 64 bit. While there may not
-> be any devices which actually even come close to using this
-> huge space, it provides different _addressing__modes_.
->
-> This very nicely fits LUN virtualization (iSCSI, LUN masking, etc),
-> and would allow one to do magic for storage devices (IP SANs, etc).
->
-> A 64 bit LUN could be presented to userspace which may/can then
-> present a nice ``picture'' (GUI or what not) of the underlying
-> physical/virtual (depending on the SCSI port name/id) storage
-> network.
->
-> (E.g. iSCSI communicates 64 bit LUNs only...)
-
-To me all of the proposed changes look good. The one above I'd be
-interested in particularly. It would help sorting out a lot of woes we had
-with writing a fibre-channel HBA driver. For fibre-channel LUNs and port
-IDs (WWPN) are 64-bit and depending on configuration, high values can be
-(and in our case are) common.
-
-Aron
-
-
+> -----Original Message-----
+> From: MERVE@SEX.COM [mailto:MERVE@SEX.COM]
+> Sent: Monday, August 26, 2002 10:29 AM
+> To: linux-scsi@vger.kernel.org
+> Subject: sex 
+> 
+> 
+> sex
+> 
+> --------------------------------------------------------------------
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
