@@ -1,35 +1,25 @@
-From: Matthew Jacob <mjacob@feral.com>
-Subject: Re: sense buffer length for REQUEST SENSE?
-Date: Fri, 26 Jul 2002 20:57:55 -0700 (PDT)
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [TRIVIAL] Re: aic7xxx gcc3 warning fix
+Date: Sat, 27 Jul 2002 14:14:31 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.BSF.4.21.0207262054090.60229-100000@beppo>
-References: <3D4225D5.9A8ED692@torque.net>
-Reply-To: mjacob@feral.com
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <20020727042038.BBC52412A@lists.samba.org>
+References: <20020726101754.A6596@infradead.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3D4225D5.9A8ED692@torque.net>
+In-Reply-To: Your message of "Fri, 26 Jul 2002 10:17:54 +0100."
+             <20020726101754.A6596@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Luben Tuikov <luben@splentec.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: dledford@redhat.com, linux-scsi@vger.kernel.org
 
+In message <20020726101754.A6596@infradead.org> you write:
+> Can't we just remove this stupid option parsing entirely in 2.5 and make it
+> take sane module options?  
 
-> Yes I can see that number in SPC-3. Has anyone every seen
-> an actual REQUEST SENSE response (sense buffer) anywhere near 
-> that size? The new "descriptor" sense data format should
-> further reduce the size requirement.
+Yes.  I will be updating my PARAM() patches RSN.
 
-Some specialized RAID units do this, IIRC. Very rare.
+Of course, you have to make sure the boot command length limit is
+sane, too.
 
-Every now and then I get a Fibre Channel disk that actually sends back via the
-QLogic HBA several continuation responses- that means the sense data is > 64
-bytes.
-
-I wouldn't expect this to be anything but rare. Even if you have such data,
-it's probably very application specific that you'd *do* anything with it. I
-would think 64 is fine. Perhaps one should architect an exception condition
-that is similar to AUTOSENSE FAILED, i.e. AUTOSENSE OVERFLOW- it's up to the
-HBA to store the 252 bytes of data somewhere until a REQUEST SENSE comes down
-to pick it up. And the REQUEST SENSE can have more than enough data space
-allocated.
-
+Rusty.
+--
+  Anyone who quotes me in their sig is an idiot. -- Rusty Russell.
