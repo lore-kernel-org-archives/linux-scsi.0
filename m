@@ -1,33 +1,33 @@
-From: Vojtech Pavlik <vojtech@suse.cz>
-Subject: Re: [scsi drivers summary]
-Date: Sun, 15 Jun 2003 11:46:33 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: PATCH: (as33b) Remove /proc/scsi directory in scsi_remove_host()
+Date: Sun, 15 Jun 2003 14:01:24 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030615114633.A31019@ucw.cz>
-References: <3EEBD8FD.90600@wanadoo.es> <1055668035.18966.0.camel@dhcp22.swansea.linux.org.uk>
+Message-ID: <20030615140124.A9321@infradead.org>
+References: <20030612065122.GA1877@beaverton.ibm.com> <Pine.LNX.4.44L0.0306121653140.709-100000@ida.rowland.org> <20030612215858.GB3281@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from twilight.ucw.cz ([81.30.235.3]:54428 "EHLO twilight.ucw.cz")
-	by vger.kernel.org with ESMTP id S262063AbTFOJcp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 15 Jun 2003 05:32:45 -0400
+Received: from phoenix.infradead.org ([195.224.96.167]:15887 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S262185AbTFOMre (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 15 Jun 2003 08:47:34 -0400
 Content-Disposition: inline
-In-Reply-To: <1055668035.18966.0.camel@dhcp22.swansea.linux.org.uk>; from alan@lxorguk.ukuu.org.uk on Sun, Jun 15, 2003 at 10:07:16AM +0100
+In-Reply-To: <20030612215858.GB3281@beaverton.ibm.com>; from andmike@us.ibm.com on Thu, Jun 12, 2003 at 02:58:58PM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Xose Vazquez Perez <xose@wanadoo.es>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>, Christoph Hellwig <hch@infradead.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Sun, Jun 15, 2003 at 10:07:16AM +0100, Alan Cox wrote:
+On Thu, Jun 12, 2003 at 02:58:58PM -0700, Mike Anderson wrote:
+> 	I also had a patch that I was working on that removed the users
+> 	of "->present" and just left the procfs users. This might be a
+> 	good one to add on top of this patch.
 
-> On Sul, 2003-06-15 at 03:25, Xose Vazquez Perez wrote:
-> > o gdth
-> >  - manufacturer: INTEL
-> >  - kernel: 2.05
-> 
-> Apparently Intel just sold this stuff off to someone else
+Yes, certainly.
 
-To Adaptec.
+> 	We still have the issue outside of what this patch was trying
+> 	to address with the proc_read/proc_write functions racing with
+> 	the remove_proc_entry, but in previous statements this will
+> 	currently be left as is for this obsolete interface.
 
--- 
-Vojtech Pavlik
-SuSE Labs, SuSE CR
+This is a generic procfs problem.  We could maybe use real file operations
+for the procfs files and then set the owner to the LLDD module.
+But probably it's not worth the effort..
