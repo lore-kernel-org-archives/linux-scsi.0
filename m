@@ -1,42 +1,37 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] serialize bus scanning
-Date: Mon, 15 Sep 2003 10:10:04 +0100
+From: Shane Shrybman <shrybman@aei.ca>
+Subject: Broken SCSI disks looking for good home
+Date: 15 Sep 2003 10:40:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030915101004.B25024@infradead.org>
-References: <20030825122416.GE15506@lst.de> <20030827202908.GB7852@krispykreme> <20030827203544.GA27020@lst.de> <20030910075741.GC1532@krispykreme> <20030911133419.A10316@beaverton.ibm.com> <20030915071305.GA820@krispykreme>
+Message-ID: <1063636834.9630.8.camel@mars.goatskin.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:41481 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S261595AbTIOJKM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Sep 2003 05:10:12 -0400
-Content-Disposition: inline
-In-Reply-To: <20030915071305.GA820@krispykreme>; from anton@samba.org on Mon, Sep 15, 2003 at 05:13:05PM +1000
+Received: from aeimail.aei.ca ([206.123.6.14]:46548 "EHLO aeimail.aei.ca")
+	by vger.kernel.org with ESMTP id S261437AbTIOOkg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Sep 2003 10:40:36 -0400
+Received: from zeke.yi.org (strider@dsl-62-148.aei.ca [216.221.62.148])
+	by aeimail.aei.ca (8.11.6/8.10.1) with ESMTP id h8FEeZW19873
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Sep 2003 10:40:35 -0400 (EDT)
+Received: from mars.goatskin.org (mars.goatskin.org [34.34.36.1])
+	by zeke.yi.org (8.11.6/8.9.3) with ESMTP id h8FEeYQ06614
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Sep 2003 10:40:34 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Anton Blanchard <anton@samba.org>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Sep 15, 2003 at 05:13:05PM +1000, Anton Blanchard wrote:
-> 
-> Hi Pat,
-> 
-> > The patch looks fine to me, I hope James will apply it.
-> 
-> Good to see someone else does parallel scan :)
+Hi,
 
-Looks fine to me aswell.  Not that I have a machine with more than
-one real HBA :)
+(Please CC me, I'm not subscribed)
 
-> Speaking of races... Ive been tripping one when parallel probing.
-> I hit a poisoned list pointer in scsi_run_host_queues, which is being
-> called out of the error handler thread. (Ive got a few scsi buses in this
-> machine full of bad disks)
-> 
-> I havent had a chance to look into it but Im guessing we are racing with
-> someone calling scsi_free_sdev. Im not sure how we should be protecting
-> ->siblings but it looks like we have to do something.
+I have a collection of broken SCSI disks and I recall some folks saying
+that they could use them for developing/testing the SCSI error
+reporting.
 
-->siblings needs protection.  I've been working for this for a long time
-and should have a final patchkit soon.
+I am happy to ship them at my own expense if they would be useful to
+anyone here.
+
+Regards,
+
+Shane
 
