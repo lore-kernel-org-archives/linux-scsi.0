@@ -1,42 +1,35 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] allow NULL dev argument to scsi_add_host
-Date: Sun, 12 Jan 2003 22:50:31 -0800
+From: William Lee Irwin III <wli@holomorphy.com>
+Subject: Adaptec 39160 / Yamaha CRW8424S CD burning
+Date: Sun, 12 Jan 2003 23:15:43 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030113065031.GA4599@beaverton.ibm.com>
-References: <20030111203317.A25836@lst.de> <20030112011720.GC1878@beaverton.ibm.com> <20030112090647.A28861@lst.de> <20030112194030.GB1414@beaverton.ibm.com> <20030112231151.GA20678@win.tue.nl>
+Message-ID: <20030113071543.GA9558@holomorphy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20030112231151.GA20678@win.tue.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Andries Brouwer <aebr@win.tue.nl>
-Cc: Christoph Hellwig <hch@lst.de>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: gibbs@scsiguy.com
 
-Andries Brouwer [aebr@win.tue.nl] wrote:
-> On Sun, Jan 12, 2003 at 11:40:30AM -0800, Mike Anderson wrote:
-> 
-> > Currently we have a couple of issues that might be solved by the creation of a
-> > scsi subsystem in /sysfs/scsi:
-> 
-> Is /sysfs/scsi better than /sysfs/devices/scsiX?
+SCSI CD burning appears to fail, causing audio CD's burned with
+bash-2.05# cdrecord -v -pad speed=1 dev=0,3,0 -audio `cat tracks`
+(where the tracks are wav files) to have massive numbers of skips.
 
-The choice was not better it was just a difference of semantics. The
-/sysfs/devices tree normal contains devices with an associated bus
-(though you can set this to NULL).  The device tree was meant to contain
-real devices. The support I added to scsi_debug was to emulate a real
-device so the overhead was needed to try to match the call paths of
-other LLDD like some of the converted pci's. The addition of ide-scsi to
-the device tree was that there was no other option.
+$ cat /proc/scsi/scsi 
+Attached devices: 
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+  Vendor: WDIGTL   Model: WDE18310 ULTRA2  Rev: 1.30
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+Host: scsi0 Channel: 00 Id: 03 Lun: 00
+  Vendor: YAMAHA   Model: CRW8424S         Rev: 1.0j
+  Type:   CD-ROM                           ANSI SCSI revision: 02
+Host: scsi1 Channel: 00 Id: 06 Lun: 00
+  Vendor: IBM      Model: DDYS-T36950N     Rev: S93E
+  Type:   Direct-Access                    ANSI SCSI revision: 03
 
-I hoped to get a smaller object to represent the emulated scsi hosts or
-hosts that had not been converted in a /sysfs/scsi subsystem. I also
-thought we might need other sysfs entries related to the SCSI subsystem
-(scsi logging control, sg mapping solution, scsiX host mapping "The
-scsi-host class I created sucks right now"). 
+The adapter is an Adaptec 39160, kernel is 2.5.49-mm2.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+It works in 2.4, of course.
 
+
+Bill
