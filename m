@@ -1,37 +1,49 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Fw: ACARD SCSI driver update for Linux kernel v2.6
-Date: Thu, 06 Jan 2005 23:10:58 +0000
-Message-ID: <1105052325.17166.284.camel@localhost.localdomain>
-References: <026801c4ee56$1e802810$6200a8c0@jameshsu>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: SCSI aic7xxx driver: Initialization Failure over a kdump reboot
+Date: Thu, 6 Jan 2005 19:50:43 -0800
+Message-ID: <20050106195043.4b77c63e.akpm@osdl.org>
+References: <1105014959.2688.296.camel@2fwv946.in.ibm.com>
+	<1105013524.4468.3.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:51388 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S261643AbVAGAPb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Jan 2005 19:15:31 -0500
-In-Reply-To: <026801c4ee56$1e802810$6200a8c0@jameshsu>
+Received: from fw.osdl.org ([65.172.181.6]:59544 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S261203AbVAGDvC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jan 2005 22:51:02 -0500
+In-Reply-To: <1105013524.4468.3.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jameshsu <jameshsu@mail.acard.com>
-Cc: linux-scsi@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: vgoyal@in.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-The trouble with the patch as is, is that it mixes up
+Arjan van de Ven <arjan@infradead.org> wrote:
+>
+> On Thu, 2005-01-06 at 18:05 +0530, Vivek Goyal wrote:
+>  > 
+>  > In my machine Adaptec SCSI controller is not managing any devices. It
+>  > is
+>  > a lonely controller.
+>  > 
+> 
+>  looks like the following is happening:
+>  the controller wants to send an irq (probably from previous life)
+>  then suddenly the driver gets loaded
+>  * which registers an irq handler
+>  * which does pci_enable_device()
+>  and .. the irq goes through. 
+>  the irq handler just is not yet expecting this irq, so
+>  returns "uh dunno not mine"
+>  the kernel then decides to disable the irq on the apic level
+>  and then the driver DOES need an irq during init
+>  ... which never happens.
+> 
 
-- Reversals of improvements like hotplug pci made outside Acard
-- Addition of support for the AEC67160
-- Other unknown improvements Acard may have made
+yes, that's exactly what e100 was doing on my laptop last month.  Fixed
+that by arranging for the NIC to be reset before the call to
+pci_set_master().
 
-In order for this to be useful we need to be able to see just the
-changes that are important.
-
-I can easily see for example the new PCI identifiers but not the other
-needed changes. In order to do that I really need either a description
-of the relevant changes or those changes versus the existing 2.6 driver
-tree.
-
-Any help welcomed.
-
-Alan
-
+I expect the adaptec driver could be fixed by calling ahc_reset() from a
+strategic place in either ahc_linux_pci_dev_probe() or in the shutdown
+handler.  (Does the crashdump code call shutdown handlers?  Sounds like a
+bad idea...)
