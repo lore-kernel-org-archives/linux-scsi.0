@@ -1,51 +1,58 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: fwd: 2.4.27rc2, DVD-RW support broke DVD-RAM writes
-Date: Sun, 1 Aug 2004 08:17:04 -0600
+From: Jesper Juhl <juhl-lkml@dif.dk>
+Subject: Re: [PATCH] fix gcc 3.4 inlining errors in drivers/scsi/dc395x.c
+Date: Sun, 1 Aug 2004 16:45:38 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <76A380F2-E3C5-11D8-B01E-00039398BB5E@ieee.org>
-References: <20040730153657.GB2748@logos.cnet> <20040731163334.GH23697@suse.
-	de>
-Mime-Version: 1.0 (Apple Message framework v618)
-Content-Type: text/plain;
-	charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <Pine.LNX.4.60.0408011642060.2535@dragon.hygekrogen.localhost>
+References: <Pine.LNX.4.60.0408011355080.2535@dragon.hygekrogen.localhost>
+ <20040801141541.GO2746@fs.tum.de>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:42730 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S265978AbUHAOQo
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 Aug 2004 10:16:44 -0400
-Received: from royntex01.iomegacorp.com (franklin [10.1.1.83])
-	by email.iomega.com (Postfix) with ESMTP id DFD2B3F56
-	for <linux-scsi@vger.kernel.org>; Sun,  1 Aug 2004 08:16:41 -0600 (MDT)
-In-Reply-To: <20040731163334.GH23697@suse.de>
+Received: from mail.dif.dk ([193.138.115.101]:2503 "EHLO mail.dif.dk")
+	by vger.kernel.org with ESMTP id S265977AbUHAOlH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Aug 2004 10:41:07 -0400
+In-Reply-To: <20040801141541.GO2746@fs.tum.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@fs.tum.de>
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Oliver Neukum <oliver@neukum.name>, Ali Akcaagac <aliakc@web.de>, Jamie Lenehan <lenehan@twibble.org>
 
->> With 2.4.27rc2 (and I assume anything later than pre5 - that's when
->> DVD-RW got added) DVD-RAMs have become read-only. Opening a DVD-RAM 
->> for
->> writing results in "EROFS (Read-only file system)" (reported by
->> 'strace'.
-...
->  let Pat fix it. Pat?
+On Sun, 1 Aug 2004, Adrian Bunk wrote:
 
-I'll work first to duplicate this result, then try to fix it, maybe by 
-deleting all set_disk_ro.
+> On Sun, Aug 01, 2004 at 02:02:50PM +0200, Jesper Juhl wrote:
+> > 
+> > drivers/scsi/dc395x.c fails to build in 2.6.8-rc2-mm1 with gcc 3.4.0 with 
+> > the following errors :
+> > 
+> > drivers/scsi/dc395x.c: In function `dc395x_handle_interrupt':
+> > drivers/scsi/dc395x.c:388: sorry, unimplemented: inlining failed in call to 'enable_msgout_abort': function body not available
+> > drivers/scsi/dc395x.c:1740: sorry, unimplemented: called from here
+> > 
+> > drivers/scsi/dc395x.c: In function `msgin_set_async':
+> > drivers/scsi/dc395x.c:394: sorry, unimplemented: inlining failed in call to 'set_xfer_rate': function body not available
+> > drivers/scsi/dc395x.c:2677: sorry, unimplemented: called from here
+> > 
+> > The patch below fixes the build by un-inlining the functions (an 
+> > alternative would be to rework the file so the functions move before their 
+> > first use). As for 'set_xfer_rate' the function itself was not declared 
+> > inline, only the prototype.
+> >...
+> 
+> Jamie Lenehan already ACK'ed a similar patch I sent two weeks ago which 
+> moves enable_msgout_abort instead of un-inlining it.
+> 
+Ohh, OK, I did a search in my lkml mailbox before sending off the patch, 
+guess I missed it.
 
-I'll look for code that ends up rewriting both DVD-RAM and Iomega REV 
-discs.
+Since you already did a bunch of these I'm trying to avoid sending patches 
+for the ones you alrady did, but a few might slip. Just trying to fill in 
+the remaining blanks :)
 
-> Also, any chance we get proper 'DVD-RAM is write-protected' support in
-> 2.4.x ? It'd be really nice if write()/open(O_WRONLY) would fail in
-> those cases.
 
-I'll try Iomega REV discs with the MMC PWP switch flipped on and off.
+> Both approaches are feasible, it's up to the maintainers to decide which 
+> one is better in this case.
+> 
+Agreed.
 
- > ...
 
-Please redirect me if need be.
-
-Pat LaVarre
-http://linux-pel.blog-city.com/read/754579.htm
+/Jesper
 
