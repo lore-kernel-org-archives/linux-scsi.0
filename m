@@ -1,140 +1,51 @@
-From: "Richard Waltham" <richard@fars-robotics.net>
-Subject: RE: Kernel 2.6.x hangs with Symbios Logic 53c1010 Ultra3 SCSI Ada pter
-Date: Sat, 6 Nov 2004 00:02:32 -0000
-Message-ID: <D5169CBBC6369D4CBFFABD7905CC9D695D31@tehran.Fars-Robotics.local>
+From: " Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: [SAS ANNOUNCEMENT] MPT Fusion driver 3.02.07 update
+Date: Fri, 5 Nov 2004 17:21:06 -0700
+Message-ID: <91888D455306F94EBD4D168954A9457C2D18BA@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 82-68-133-177.dsl.in-addr.zen.co.uk ([82.68.133.177]:55269 "EHLO
-	fars-robotics.net") by vger.kernel.org with ESMTP id S261268AbUKFACf convert rfc822-to-8bit
+Received: from mail0.lsil.com ([147.145.40.20]:46847 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261275AbUKFAVI convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Nov 2004 19:02:35 -0500
-Content-class: urn:content-classes:message
+	Fri, 5 Nov 2004 19:21:08 -0500
+Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
+	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id iA60Jbcq025695
+	for <linux-scsi@vger.kernel.org>; Fri, 5 Nov 2004 16:19:37 -0800 (PST)
+Received: from nacos172.ad.lsil.com (nacos172.co.lsil.com [172.21.35.122])
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id iA60L7Ek016667
+	for <linux-scsi@vger.kernel.org>; Fri, 5 Nov 2004 16:21:07 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>, SUPPORT <support@4bridgeworks.com>
-Cc: Thomas Babut <thomas@babut.net>, linux-kernel@vger.kernel.org, Linux SCSI <linux-scsi@vger.kernel.org>, groudier@free.fr
+To: linux-scsi@vger.kernel.org
 
- 
+We are pleased to announce the MPT Fusion release candidate for lk 2.6
 
-> -----Original Message-----
-> From: willy@www.linux.org.uk [mailto:willy@www.linux.org.uk] 
-> 
-> On Fri, Nov 05, 2004 at 04:25:03PM -0000, SUPPORT wrote:
-> > I've been seeing problems with various tape drives and PPR. 
-> And a SCSI 
-> > 3 SE disk is interesting as well! SE and PPR don't get on too well;)
-> 
-> ... yes ...
-> 
-> I think we should *never* attempt PPR on a SE bus, even when 
-> the drive supports it.  We've seen bugs in Seagate drive 
-> firmware because of this, so let's stop doing it.
-> 
-> How does this patch (whitespace damaged, apply by hand) make 
-> people feel?
-> 
+Highlights of this release:
+=B7	SAS Support - 1064, 1066, 1068
+=B7	mpi headers v1.5.2
 
-Good as a backup but the original PPR capability is defined in
-scan_scsi.c. Shouldn't scan_scsi.c take note of the bus mode and enable
-PPR capabilities accordingly? This would then cover this issue for all
-relevant LLDDs wouldn't it?
+=B7	Also included are hch@ suggestions from previous 3.02.06 release
+- 	remove ioc->chip_type checks, using the new bus_type member
+-	removing SAS CSMI Ioctls
+-	using scsi_remove_device and scsi_add_device =3D> for hot swap suppor=
+t
 
-> 
-> > Matthew - I have attached some bits of SCSI analyser traces which I 
-> > hope may be useful. An IBM SCSI 3 SE disk and a couple of LTO tape 
-> > drives - IBM and HP. The HP causes severe problems as 
-> modprobe hangs 
-> > without the fix. I have also seen drives that do unexpected 
-> disconnects if they get sent PPR.
-> 
-> Thanks, those are interesting.  It's good to see that we 
-> really are spitting PPR out onto the wire when we shouldn't be.
+This patch applied against bk://linux-scsi.bkbits.net/scsi-misc-2.6
 
-And from what I've seen is the PPR negotiation keeps on being retied on
-all subsequent commands. So performance really is killed by this.
+Here is a link to this patch:
+ftp://ftp.lsil.com/HostAdapterDrivers/linux/Fusion-MPT/2.6-kernel/3.02.=
+07/mp
+tlinux-3.02.07.patch
+=46ull source are also provided at link above.
 
-> 
-> > I have been toying with the idea of disabling PPR 
-> capability if PPR is 
-> > rejected - forcing sdev->ppr=0 in the driver when it determines PPR 
-> > has been rejected - but I'm not sure that's right. There are drives 
-> > which reject negotiation - legacy sync and wide at least - 
-> while they 
-> > are initialising but will then accept it later on.
-> 
-> I think disabling PPR on an SE bus should be a better fix than that.
-> 
-
-And don't forget HVD as well;)   
-
-My main concern with my patch to scan_scsi.c was to handle SCSI 3 LVD
-devices that caused problems. Scan_scsi.c sets all SCSI 3 devices as PPR
-capable - SE, HVD as well as LVD. I have no issue with explicitly
-disallowing PPR for SE and HVD devices. But what about SCSI 3 and LVD
-devices that don't handle PPR - OK they may be broken but... For now the
-patch for scan_scsi.c is a temp fix for us while we dream up something
-better. It will only allow PPR with devices that advertise that they
-handle DT transfers.
-
-There is an issue that needs resolving where a drive appears to indicate
-it is capable of PPR, i.e. says it is SCSI 3 + LVD, but does not
-actually support PPR. Then when it receives at PPR message it causes
-problems in the driver because it terminates the PPR MSG OUT early with
-an unexpected phase change.
-
-Exactly what happens then seems dependent on when the message is
-aborted. You can see the differences in the analyser traces. The IBM LTO
-is handled reasonably well although the driver spits out an unexpected
-phase change msg, but the HP LTO really causes problems. And the disk
-accepts the whole message and again causes no problems.
-
-However currently the problem in these cases is that the PPR
-capabilities bit (sdev->ppr) remains set so the next time negotiation is
-attempted PPR is used again etc, etc. so the drives never negotiate to
-what they are really capable of running at. This is why I mentioned
-clearing sdev->ppr above. Because the capabilities determined in
-scan_scsi.c indicate ppr, sync and wide and sdev->ppr remains set after
-the negotiation is aborted the drives never ever successfully complete
-negotiation no matter how many commands are sent as far as I can see.
-
-Guess this boils down to three problems. 1. Make sure only drives on bus
-modes capable of supporting PPR can be flagged as PPR capable. 2. Drives
-that appear to support PPR (SCSI 3 + LVD) but _may be_ broken in some
-way are handled by the driver without the unexpected phase changes
-causing issues. And 3. What to do with drives that abort negotiation
-messages, wide, sync or ppr?
-
-1. is straight forward although there could be disagreement about where
-the fix should really be. Personally, I think, this should really be
-classified a general SCSI problem rather than specific to just this
-driver.
-2. requires modification to the handling of extended messages (or all
-multi-byte messages?) so an aborted message doesn't break the driver.
-This is driver specific.
-3. this may be the nasty one. What do we do with negotiations that fail?
-Do we keep trying the same negotiation time after time - i.e. leave it
-as it is - not at all satisfactory, although I'm pretty certain I've
-seen a trace from a drive that aborts negotiation until it is ready and
-then accepts it later on - I really need to check this out when I'm back
-in the office. Do we drop back from PPR to WIDE/SYNC? Is this better?
-May be. Anything else? This again, I believe, can be classified as a
-general issue rather than driver specific but may be easier to handle
-within the driver. 
-
-
-Richard
-
-
-Richard Waltham
-Bridgeworks Ltd
-135 Somerford Road,
-Christchurch
-Dorset, BH23 3PY
-England.
-
-Tel 0870 121 0708
-Fax 0870 121 0709
-
+Eric Moore
+Standard Storage Products Division
+LSI Logic Corporation
+Web: http://www.lsilogic.com/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
