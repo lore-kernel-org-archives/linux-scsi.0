@@ -1,113 +1,31 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [BK PATCH] SCSI updates for 2.6.11-rc2
-Date: Tue, 25 Jan 2005 12:56:05 -0600
-Message-ID: <1106679365.6434.45.camel@mulgrave>
+From: Stephen Hemminger <shemminger@osdl.org>
+Subject: Re: IP/ethernet/networking-over-SCSI.
+Date: Tue, 25 Jan 2005 11:01:13 -0800
+Message-ID: <20050125110113.54cf5725@dxpl.pdx.osdl.net>
+References: <Pine.GSO.4.53.0501251546570.25246@amos.bath.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:38096 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261729AbVAYS4Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jan 2005 13:56:24 -0500
+Received: from fw.osdl.org ([65.172.181.6]:38531 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S262060AbVAYTBk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jan 2005 14:01:40 -0500
+In-Reply-To: <Pine.GSO.4.53.0501251546570.25246@amos.bath.ac.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: S Iremonger <exxsi@bath.ac.uk>
+Cc: linux-net@vger.kernel.org, linux-scsi@vger.kernel.org
 
-This is mostly simple updates.  There is one new feature: the move over
-to generic transport classes.  This doesn't impact anything other than
-SCSI (although the idea is that it will in future) but it does introduce
-new abstractions in drivers/base (which I got Greg's sign off on).
+On Tue, 25 Jan 2005 16:19:12 +0000 (GMT)
+S Iremonger <exxsi@bath.ac.uk> wrote:
 
-The patch is available from:
+> 
+> For some purposes at the moment, working IP-over-SCSI could be rather
+>   handy... ;-).
 
-bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
+You probably are looking for:
+	http://linux-iscsi.sourceforge.net/
 
-The short changelog is:
-
-<mark_salyzyn:adaptec.com>:
-  o dpt_i2o: remove schedule_timeout()
-
-Adrian Bunk:
-  o SCSI NCR_Q720.c: make some code static
-
-Alan Stern:
-  o Fix reference to deallocated memory in sd.c
-
-Andi Kleen:
-  o Add compat_ioctl to scsi host structure
-
-Christoph Hellwig:
-  o osst: don't use obsolete SCSI APIs
-  o cosmetic jazz_esp updates
-  o update dec_esp with changes from mips CVS
-  o update mips driver Kconfig bits
-
-Domen Puncer:
-  o delete unused file dpt_osdutil.h
-
-Douglas Gilbert:
-  o sd descriptor sense support
-  o streamline block SG_IO error processing in sd
-  o streamline block SG_IO error processing
-  o sense data helpers lk 2.6.11-rc1-bk1
-  o sg descriptor sense cleanup lk 2.6.11-rc1-bk1
-  o scsi_debug dsense
-
-Geert Uytterhoeven:
-  o SCSI NCR53C9x.c: some cleanups
-
-James Bottomley:
-  o SCSI: Fix style nitpicks
-  o move the SCSI transport classes over to the generic transport class
-  o add a generic device transport class
-  o Add attribute container to generic device model
-  o fix use after potential free in scsi_cd_put
-
-Mark Haverkamp:
-  o aacraid 2.6: add scsi synchronize cache support
-
-and the diffstat:
-
- b/drivers/base/Makefile               |    3 
- b/drivers/base/attribute_container.c  |  274 +++++++++++++++++++++++
- b/drivers/base/init.c                 |    3 
- b/drivers/base/transport_class.c      |  272 +++++++++++++++++++++++
- b/drivers/scsi/Kconfig                |    4 
- b/drivers/scsi/NCR53C9x.c             |    4 
- b/drivers/scsi/NCR53C9x.h             |    2 
- b/drivers/scsi/NCR_Q720.c             |    4 
- b/drivers/scsi/aacraid/aachba.c       |  113 +++++++++
- b/drivers/scsi/aacraid/aacraid.h      |   24 ++
- b/drivers/scsi/dec_esp.c              |  396 +++++++++++++++++-----------------
- b/drivers/scsi/dpt_i2o.c              |    1 
- b/drivers/scsi/hosts.c                |   21 -
- b/drivers/scsi/jazz_esp.c             |   49 ++--
- b/drivers/scsi/oktagon_esp.c          |    2 
- b/drivers/scsi/osst.c                 |  198 ++++++++---------
- b/drivers/scsi/osst.h                 |    4 
- b/drivers/scsi/scsi_debug.c           |    6 
- b/drivers/scsi/scsi_error.c           |   93 +++++++
- b/drivers/scsi/scsi_lib.c             |  108 ++++-----
- b/drivers/scsi/scsi_priv.h            |    2 
- b/drivers/scsi/scsi_scan.c            |   24 --
- b/drivers/scsi/scsi_sysfs.c           |  131 ++---------
- b/drivers/scsi/scsi_transport_fc.c    |  112 +++++----
- b/drivers/scsi/scsi_transport_iscsi.c |   85 ++++---
- b/drivers/scsi/scsi_transport_spi.c   |  139 +++++++----
- b/drivers/scsi/sd.c                   |  169 ++++++++------
- b/drivers/scsi/sg.c                   |   30 +-
- b/drivers/scsi/sr.c                   |    4 
- b/include/linux/attribute_container.h |   61 +++++
- b/include/linux/transport_class.h     |   77 ++++++
- b/include/scsi/scsi_device.h          |    9 
- b/include/scsi/scsi_eh.h              |    6 
- b/include/scsi/scsi_host.h            |   19 +
- b/include/scsi/scsi_transport.h       |   33 --
- b/include/scsi/scsi_transport_spi.h   |    1 
- drivers/scsi/dpt/dpt_osdutil.h        |  358 ------------------------------
- 37 files changed, 1729 insertions(+), 1112 deletions(-)
-
-James
-
+-- 
+Stephen Hemminger	<shemminger@osdl.org>
