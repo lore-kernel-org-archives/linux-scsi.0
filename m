@@ -1,36 +1,34 @@
-From: Daniel Stekloff <dsteklof@us.ibm.com>
-Subject: Re: sysfs support for sg
-Date: Wed, 7 Jan 2004 21:41:02 -0800
+From: "Garth Sutton" <jimmorris@yahoo.com>
+Subject: this is beyond bizzare fsfk
+Date: Thu, 08 Jan 04 11:08:42 GMT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200401072141.02158.dsteklof@us.ibm.com>
-References: <20040107223341.GA23799@suse.de> <20040107224028.GA24290@suse.de> <3FFCB74B.9090102@torque.net>
+Message-ID: <628a8$0$oy2u-1v8-07d83917-7v89f@j2vzz.09.x084>
+Reply-To: "Garth Sutton" <jimmorris@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/alternative;
+	boundary="_A6B41.FD87FF__.1."
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:49377 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S263666AbUAHFn2 convert rfc822-to-8bit
+Received: from cs2428158-128.satx.rr.com ([24.28.158.128]:60428 "HELO
+	67.72.78.212") by vger.kernel.org with SMTP id S263996AbUAHIQn
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jan 2004 00:43:28 -0500
-In-Reply-To: <3FFCB74B.9090102@torque.net>
+	Thu, 8 Jan 2004 03:16:43 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net, Olaf Hering <olh@suse.de>
-Cc: linux-scsi@vger.kernel.org, patmans@ibm.com, ananth@in.ibm.com
-
-On Wednesday 07 January 2004 05:50 pm, Douglas Gilbert wrote:
-[snip]
-> BTW Is there a definitive libsysfs site anywhere? I noticed that
-> scsi_id provided in the "extras" directory of udev-009 doesn't
-> build with the libsysfs provided by udev-009.
->
-> Doug Gilbert
+To: linux-scsi@vger.kernel.org
 
 
-The official site for libsysfs, which is part of the sysfsutils package, is 
-here:
+--_A6B41.FD87FF__.1.
+Content-Type: text/plain;
+Content-Transfer-Encoding: quoted-printable
 
-http://linux-diag.sourceforge.net/Sysfsutils.html
+Click the link BELOW FOR 100% FREE PARIS HILTON VIDEO
 
-Thanks,
+Your Instant Access is Granted to:
 
-Dan
+CLICK THE LINK BELOW TO BEGIN FOR FREE
+
+http://www.tnc4u.com/install.php?id=3D805124
+
+Thank you
+
+--_A6B41.FD87FF__.1.--
+
