@@ -1,67 +1,73 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 2/3] ipr only tcq cancel all
-Date: Fri, 18 Jun 2004 16:17:36 -0500
+From: "Frank Borich" <Frank_Borich@us.xyratex.com>
+Subject: RE: Help - why mid-layer does not scan LUNs?
+Date: Fri, 18 Jun 2004 14:29:05 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40D35BF0.1070306@us.ibm.com>
+Message-ID: <47F3C2BE74738E4683574107469DFA20433932@XYUSEX01.xyus.xyratex.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060109010902050905040609"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.106]:52676 "EHLO e6.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S264513AbUFRVRp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jun 2004 17:17:45 -0400
-List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------060109010902050905040609
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
-
---------------060109010902050905040609
 Content-Type: text/plain;
- name="ipr_only_tcq_cancel_all.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ipr_only_tcq_cancel_all.patch"
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from xyratexus11.xyratex.com ([65.203.33.11]:5314 "EHLO
+	XYUSEX01.xyus.xyratex.com") by vger.kernel.org with ESMTP
+	id S264296AbUFRV3O convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jun 2004 17:29:14 -0400
+Content-class: urn:content-classes:message
+List-Id: linux-scsi@vger.kernel.org
+To: Lee Xing <lxing@Crossroads.com>, linux-scsi@vger.kernel.org
 
+Make sure you have CONFIG_SCSI_MULTI_LUN=y in you kernel's .config file.
+If you don't the mid-layer will not scan past lun # 0 for any target.  
+Without this the only other thing I know of is use proc interface to add
+more luns.  
 
-Some SCSI-IDE cdrom drives take up to 15 seconds to respond following
-an abort being issued to them. This patch changes ipr to only send
-a cancel all to a device as part of request sense processing when
-the device is running tagged command queueing.
-
-
----
-
- linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.c |    5 +++++
- 1 files changed, 5 insertions(+)
-
-diff -puN drivers/scsi/ipr.c~ipr_only_tcq_cancel_all drivers/scsi/ipr.c
---- linux-2.6.7-rc2/drivers/scsi/ipr.c~ipr_only_tcq_cancel_all	2004-06-07 17:11:05.000000000 -0500
-+++ linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.c	2004-06-07 17:11:05.000000000 -0500
-@@ -3535,6 +3535,11 @@ static void ipr_erp_cancel_all(struct ip
+Frank Borich
+------------------------------------------------------------------
+Systems Engineer
+Direct 630 654 6089
+Fax 630 325 2513
+e-mail frank_borich@us.xyratex.com
  
- 	ipr_reinit_ipr_cmnd_for_erp(ipr_cmd);
- 
-+	if (!res->tcq_active) {
-+		ipr_erp_request_sense(ipr_cmd);
-+		return;
-+	}
-+
- 	cmd_pkt = &ipr_cmd->ioarcb.cmd_pkt;
- 	cmd_pkt->request_type = IPR_RQTYPE_IOACMD;
- 	cmd_pkt->cdb[0] = IPR_CANCEL_ALL_REQUESTS;
 
-_
-
---------------060109010902050905040609--
-
+>>-----Original Message-----
+>>From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>>owner@vger.kernel.org] On Behalf Of Lee Xing
+>>Sent: Friday, June 18, 2004 4:10 PM
+>>To: linux-scsi@vger.kernel.org
+>>Subject: Help - why mid-layer does not scan LUNs?
+>>
+>>Hi,
+>>
+>>Can some one please tell me why mid-layer doesn't scan LUNs but just
+Buses
+>>and Targets in lk 2.4?
+>>
+>>The default max_channel, max_id and max_lun defined in mid-layer are
+0, 8
+>>and 8 respectively.  I use scsi_debug low-level driver to check which
+>>B:T:L mid-layer scans, but find it only scans 0:0:0, 0:1:0, 0:2:0...
+Why
+>>it doesn't scan 0:0:1, 0:0:2...?
+>>
+>>I have taken out:
+>>
+>>	if ((target > driver_template.this_id) || (SCpnt->lun != 0))
+>>		return schedule_resp(SCpnt, NULL, done, DID_NO_CONNECT
+<< 16,
+>>0);
+>>
+>>from scsi_debug_queuecommand(...) of scsi_debug driver, but mid-layer
+>>still does not scan LUNs.
+>>
+>>I would appreciate it if some one could tell me what I missed.
+>>
+>>Thanks,
+>>
+>>
+>>Lee
+>>
+>>-
+>>To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+in
+>>the body of a message to majordomo@vger.kernel.org
+>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
