@@ -1,44 +1,40 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] Re: inquiry in scsi_scan.c
-Date: Mon, 6 Jan 2003 13:54:32 -0500 (EST)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33L2.0301061343210.1054-100000@ida.rowland.org>
-References: <3E19B24D.1080500@splentec.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3E19B24D.1080500@splentec.com>
+From: Andries.Brouwer@cwi.nl
+Subject: Re: Re: inquiry in scsi_scan.c
+Date: Mon, 6 Jan 2003 20:18:45 +0100 (MET)
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <UTC200301061918.h06JIjB21034.aeb@smtp.cwi.nl>
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: luben@splentec.com, stern@rowland.harvard.edu
+Cc: Andries.Brouwer@cwi.nl, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-kernel@one-eyed-alien.net
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
-Cc: Andries.Brouwer@cwi.nl, mdharm-kernel@one-eyed-alien.net, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 
-On Mon, 6 Jan 2003, Luben Tuikov wrote:
+> In the case reported, the problem was
 
-> In this most recent case reported, this looks very similar to
-> overflow residual, but not quite the same. I.e. *more* data is
-> actually immediately available (in the buffer) than *we requested* or can
-> find out by other means (i.e. checking the ADDITIONAL LENGTH field).
+Ha, Alan - it is possible that the two of you are referring
+to different things.
 
-In the case reported, the problem was not that there was additional data
-immediately available.  In fact, there was not any additional data.  The
-problem was that the firmware returned a value in the ADDITIONAL LENGTH
-field indicating that additional data existed when in fact it did not.
-(The host requested 36 bytes, the device returned 36 bytes and indicated
-that one more byte was available, the host then requested 37 bytes, and
-the device returned a short reply of 36 bytes.)
+I mentioned two devices, both return 36 bytes when asked for
+36 bytes, but the first has 0 in the additional length field
+(thus reports length 5), the second has 32 in the additional
+length field (thus reports length 37).
+This second device, when asked for 37 bytes, still only returns 36.
 
-> But if we requested 36 and the transport provided 36 then the
-> residual should be 0 (set by the transport).
+Andries
 
-As indeed it would be.
 
-> Had we requested 5 and the
-> transport provided 36 then the residual should be 31, but there's no way
-> of reporting this residual, since it is an *overflow* residual, and from
-> the comments therein, cmd->resid is *only underflow* residual.
-
-No.  This can't happen at all with USB; the protocol does not allow the
-device to return more data than the host requested.
-
-Alan Stern
-
+-------------------------------------------------------
+This sf.net email is sponsored by:ThinkGeek
+Welcome to geek heaven.
+http://thinkgeek.com/sf
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
