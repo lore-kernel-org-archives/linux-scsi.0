@@ -1,58 +1,89 @@
-From: "Charlie Brett" <cfb@ldl.fc.hp.com>
-Subject: serial_number and serial_number_at_timeout in 2.4
-Date: Mon, 15 Sep 2003 13:52:34 -0600
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] yet another patch to limit mode sense usage
+Date: Mon, 15 Sep 2003 13:25:01 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <002e01c37bc2$e838bc10$3906ee0f@americas.cpqcorp.net>
-References: <20030914174104.A20722@one-eyed-alien.net> <Pine.LNX.4.56.0309152048550.1409@kai.makisara.local>
+Message-ID: <20030915132501.A9849@beaverton.ibm.com>
+References: <20030915132330.A9823@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atlrel8.hp.com ([156.153.255.206]:19124 "EHLO atlrel8.hp.com")
-	by vger.kernel.org with ESMTP id S261419AbTIOTwh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Sep 2003 15:52:37 -0400
-Received: from udlkern.fc.hp.com (udlkern.fc.hp.com [15.1.52.48])
-	by atlrel8.hp.com (Postfix) with ESMTP id E736C1C00CC9
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Sep 2003 15:52:34 -0400 (EDT)
+Received: from e35.co.us.ibm.com ([32.97.110.133]:27105 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S261559AbTIOUZ6
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Sep 2003 16:25:58 -0400
+Content-Disposition: inline
+In-Reply-To: <20030915132330.A9823@beaverton.ibm.com>; from patmans@us.ibm.com on Mon, Sep 15, 2003 at 01:23:30PM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI list <linux-scsi@vger.kernel.org>
-Cc: dann frazier <dannf@hp.com>
+To: James Bottomley <James.Bottomley@steeleye.com>, stern@rowland.harvard.edu, mdharm-usb@one-eyed-alien.net, linux-scsi@vger.kernel.org
 
-We discovered what appears to be a race problem in scsi_done() on the 2.4
-kernel. On MP systems, we found the following to occur:
+Some sample output showing results of using the patch. As noted I have not
+tested usb storage (or removable devices).
 
-1) A command is scheduled through scsi_dispatch_cmd(). This will start the
-timeout timer and call queuecommand().
-2) The command completes and the interrupt handler acquires the lock.
-3) The timeout occurs before scsi_done()[scsi_old_done()] is called (which
-would have turned off the timeout).
-4) The timeout routine, scsi_old_times_out(), waits for the lock.
-In scsi_done() the following lines are executed:
+scsi scan logging is enabled (sysctl -w dev.scsi.logging_level=0x000001c0).
 
-    SCpnt->serial_number = 0;
-    SCpnt->serial_number_at_timeout = 0;
+Before modifying any devinfo values, scan shows:
 
-5) If, it is decided that the command should be retried, the lock is
-released to call scsi_dispatch_cmd().
-6) As soon as the lock is released, the timeout routine acquires the lock
-and starts to complete. It will either call scsi_abort() or scsi_reset(). In
-each of the routines, serial_number and serial_number_at_timeout are
-compared, which are now both 0, so the routines continue (calling
-scsi_done() a second time).
+-----------------------------------------------------------------------
+scsi_scan_host_selected: <6:6:9:0>
+scsi_scan_host_selected: <6:0:9:0>
+scsi scan: INQUIRY to host 6 channel 0 id 9 lun 0
+scsi scan: 1st INQUIRY successful with code 0x0
+scsi scan: 2nd INQUIRY successful with code 0x0
+  Vendor: IBM       Model: DRVL09L  CLAR09   Rev: SQ00
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+scsi(6:0:9:0): Enabled tagged queuing, queue depth 64.
+SCSI device sdg: 17783112 512-byte hdwr sectors (9105 MB)
+SCSI device sdg: drive cache: write through
+ sdg: sdg1 < sdg5 sdg6 sdg7 sdg8 sdg9 >
+Attached scsi disk sdg at scsi6, channel 0, id 9, lun 0
+scsi_scan_host_selected: <6:0:9:10>
+scsi scan: INQUIRY to host 6 channel 0 id 9 lun 10
+scsi scan: 1st INQUIRY failed with code 0x10000
+scsi_scan_host_selected: <6:0:0:10>
+scsi scan: INQUIRY to host 6 channel 0 id 0 lun 10
+scsi scan: 1st INQUIRY successful with code 0x0
+  Vendor: IBM       Model: 3542              Rev: 0520
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+scsi(6:0:0:10): Enabled tagged queuing, queue depth 64.
+SCSI device sdh: 11087872 512-byte hdwr sectors (5677 MB)
+SCSI device sdh: drive cache: write back
+ sdh: unknown partition table
+Attached scsi disk sdh at scsi6, channel 0, id 0, lun 10
+Synchronizing SCSI cache for disk sdh: 
+-----------------------------------------------------------------------
 
-To minimize the changes, we would like propose the addition of a check to
-see if the serial number is zero at the beginning of scsi_old_times_out().
-This would prevent to continuation of an abort or reset on a command that
-scsi_done() has already processed.
+Notice - the 3542 above has "drive cache: write back"
 
-Note: If scsi_dispatch_cmd() does start, before the timeout routine, then a
-new serial number is assigned, which cause the current test to work.
+After running:
 
-Any thoughts?
+echo "IBM:3542:0xe000" > /proc/scsi/device_info
+echo "IBM:DRVL09L  CLAR09:0xe000" > /proc/scsi/device_info
 
-   Thanks,
-            Charlie Brett - Hewlett Packard
+Scanning now shows:
+-----------------------------------------------------------------------
+scsi_scan_host_selected: <6:0:9:0>
+scsi scan: INQUIRY to host 6 channel 0 id 9 lun 0
+scsi scan: 1st INQUIRY successful with code 0x0
+scsi scan: 2nd INQUIRY successful with code 0x0
+  Vendor: IBM       Model: DRVL09L  CLAR09   Rev: SQ00
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+scsi(6:0:9:0): Enabled tagged queuing, queue depth 64.
+SCSI device sdg: 17783112 512-byte hdwr sectors (9105 MB)
+sdg: assuming drive cache: write through
+ sdg: sdg1 < sdg5 sdg6 sdg7 sdg8 sdg9 >
+Attached scsi disk sdg at scsi6, channel 0, id 9, lun 0
+scsi_scan_host_selected: <6:0:0:10>
+scsi scan: INQUIRY to host 6 channel 0 id 0 lun 10
+scsi scan: 1st INQUIRY successful with code 0x0
+  Vendor: IBM       Model: 3542              Rev: 0520
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+scsi(6:0:0:10): Enabled tagged queuing, queue depth 64.
+SCSI device sdh: 11087872 512-byte hdwr sectors (5677 MB)
+sdh: assuming drive cache: write through
+ sdh: unknown partition table
+Attached scsi disk sdh at scsi6, channel 0, id 0, lun 10
+-----------------------------------------------------------------------
 
+Both the above now have "assuming drive cache: write through".
 
+-- Patrick Mansfield
