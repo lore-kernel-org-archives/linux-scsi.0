@@ -1,100 +1,43 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: advansys modules fails to compile in 2.5.8-pre3
-Date: Thu, 11 Apr 2002 23:30:09 -0400
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Subject: [PATCH] Aic7xxx driver version 6.2.6
+Date: Thu, 11 Apr 2002 22:22:58 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3CB654C1.844C9A0B@torque.net>
-References: <Pine.LNX.4.44.0204120212450.1853-100000@grignard.amagerkollegiet.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Message-ID: <200204120422.g3C4Mw950533@aslan.scsiguy.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Rasmus =?iso-8859-1?Q?B=F8g?= Hansen <moffe@amagerkollegiet.dk>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Marcelo Tosatti <marcelo@conectiva.com.br>, Alan Cox <alan@redhat.com>
 
-Rasmus,
+Patches against marcelo_2.4 as of yesturday can be found here:
 
-Point 1)
-Here is a tarball of driver/scsi/advansys.[hc]
-taken from lk 2.5.7-dj3. It is a bit big to attach
-so you can fetch it here:
-http://www.torque.net/sg/p/advansys257dj3.tgz
+http://people.FreeBSD.org/~gibbs/linux/aic7xxx-6.2.6-marcelo_2.4.patch.gz
 
-My advansys fix has been in Dave Jones's tree for nearly
-2 months now (along with a lot of other SCSI fixes and
-enhancements). Maybe if we said we were introducing a
-new IO subsystem called the "small computer system
-interface" we might be more successful having our patches
-accepted :-)
+6.2.6 corrects the following issues:
 
-Point 2)
-=46rom advansys.c:
- * As of March 8, 2000 Advanced System Products, Inc. (AdvanSys)
- * changed its name to ConnectCom Solutions, Inc.
+1) Correctly deregister our pci_driver entry points on hot-eject.
+   This should allow you to hot-plug the APA1480 again.
 
-Then if you go to www.connectcom.net you get told that
-advansys has been taken over by initio.
+2) Set max_sectors to a sane value.  The aic7xxx driver was not
+   updated when this value was added to the host template structure.
+   In more recent kernels, the default setting for this field, 255,
+   can limit our transaction size to 127K.  This often causes the
+   scsi_merge routines to generate 127k followed by 1k I/Os to complete
+   a client transaction.  The command overhead of such small transactions
+   can severely impact performance.  The driver now sets max_sectors to
+   8192 which equates to the 16MB S/G element limit for these cards as
+   expressed in 2K sectors.  Many thanks to Radio Free Asia for
+   loaning me a box to diagnose this issue.
 
-Doug Gilbert
+This version also adds the ability to read and write the contents of
+the seeprom from /proc/scsi/aic7xxx/#.
 
+Marcelo.  The Makefile has been returned to a format conducive
+to adding a second target.  This is in anticipation of the addition
+of the U320 driver in 2-3 weeks time.  I believe this follows the
+template that Keith Owens proposed for a multi-target Makefile,
+but if you have questions about this, feel free to ignore that
+hunk of the patch.  Keith's Makefile version will work with 6.2.6
+as is.
 
-Rasmus B=F8g Hansen wrote:
->=20
-> Hi
->=20
-> Two things:
->=20
-> When I try to compile kernel 2.5.8-pre3, I get this error:
->=20
-> gcc -D__KERNEL__ -I/tmp/linux-2.5.7/include -Wall -Wstrict-prototypes
-> -Wno-trigraphs -O2 -fomit-frame-pointer -fno-strict-aliasing -fno-com=
-mon
-> -pipe -mpreferred-stack-boundary=3D2 -march=3Dathlon  -DMODULE
-> -DKBUILD_BASENAME=3Dadvansys  -c -o advansys.o advansys.c
-> advansys.c:755:2: #error Please convert me to
-> Documentation/DMA-mapping.txt
-> advansys.c: In function `asc_build_req':
-> advansys.c:6754: structure has no member named `address'
-> advansys.c:6754: structure has no member named `address'
-> advansys.c: In function `adv_get_sglist':
-> advansys.c:7014: structure has no member named `address'
-> advansys.c:7014: structure has no member named `address'
-> make[2]: *** [advansys.o] Error 1
-> make[2]: Leaving directory `/tmp/linux-2.5.7/drivers/scsi'
-> make[1]: *** [_modsubdir_scsi] Error 2
-> make[1]: Leaving directory `/tmp/linux-2.5.7/drivers'
-> make: *** [_mod_drivers] Error 2
->=20
-> The error seems pretty obvious; the DMA interface changed -
-> unfortunately I do not know anything about DMA...
->=20
-> One more thing:
->=20
-> In MAINTAINERS is this maintainer information about the advansys driv=
-er:
->=20
-> W:      http://www.advansys.com/linux.html
->=20
-> This web page does not exist. This error is common for 2.4.18 and
-> 2.5.8-pre3.
->=20
-> Regards
-> /Rasmus
->=20
-> --
-> -- [ Rasmus "M=F8ffe" B=F8g Hansen ] --------------------------------=
--------
-> Beware of programmers who carry screwdrivers
-> ----------------------------------[ moffe at amagerkollegiet dot dk ]=
- --
->=20
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+Justin
