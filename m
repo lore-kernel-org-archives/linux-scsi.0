@@ -1,69 +1,76 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] SCSI 53c700.c: make NCR_700_intr static
-Date: Fri, 11 Feb 2005 19:54:19 +0100
-Message-ID: <20050211185419.GC3736@stusta.de>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [usb-storage] Re: MPIO HS200 Gigabox weird behaviour again
+Date: Fri, 11 Feb 2005 11:07:41 -0800
+Message-ID: <20050211190741.GA8641@us.ibm.com>
+References: <1108138682.5773.23.camel@mulgrave> <Pine.LNX.4.44L0.0502111326540.937-100000@ida.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:29202 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S262302AbVBKSyY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Feb 2005 13:54:24 -0500
+Received: from e32.co.us.ibm.com ([32.97.110.130]:49814 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S262312AbVBKTIz
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Feb 2005 14:08:55 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e32.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j1BJ8ouA071184
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2005 14:08:50 -0500
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j1BJ8n2x274966
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2005 12:08:49 -0700
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id j1BJ8m3V017738
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2005 12:08:49 -0700
 Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0502111326540.937-100000@ida.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Radovan Garabik <garabik@kassiopeia.juls.savba.sk>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-NCR_700_intr was EXPORT_SYMBOL'e but has no external users.
+On Fri, Feb 11, 2005 at 01:31:30PM -0500, Alan Stern wrote:
+> On Fri, 11 Feb 2005, James Bottomley wrote:
+> 
+> > On Fri, 2005-02-11 at 11:00 -0500, Alan Stern wrote:
+> > > SCSI developers: Is there any hope of this?
+> > 
+> > Well, IBM also has some old buggy piece of hardware that apparently
+> > gives fatal errors but actually wants them retried:
+> > 
+> > http://marc.theaimsgroup.com/?t=110088696100005
+> > 
+> > After a bit of argument, they agreed to do it as a blacklist flag, so
+> > you should be able to add the same flag to your gigabox.
+> > 
+> > I planned to put the patch in just as soon as they managed to send the
+> > patch unmangled by a mailer, but they went very quiet.
+> 
+> Thanks, James.
+> 
+> Radovan: Below is an updated version of the patch James mentioned, with an
+> entry included for your Gigabox drive.  It's meant to apply to
+> 2.6.11-rc3-bk5, but it will probably go with older kernels too.  Try it
+> out and let me know how it works.  If it solves your problem, I'll submit
+> it for inclusion in the official kernel.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Do you have the asc/ascq for the USB device?
 
----
+Longer term, it would be nice to have a black list modifiable via sysfs
+(similiar to the scsi devinfo one) with a vendor + model + sense key + asc
++ ascq, for both this USB device and for the IBM one. AFAIUI, the IBM
+ESS/2105 really wants certain hardware errors retried not all of them, I
+don't know if the IBM ESS/storage developers were OK with Martin's patch
+(I never see responses from them to anything posted on linux-scsi).
 
-This patch was already sent on:
-- 15 Nov 2004
-- 24 Nov 2004
+The sense black list could be used for quirks plus vendor specific
+asc/ascq values. It could also be used by dm multipath, if error codes
+(like Mike C's old patch) and not sense data were passed up.
 
- drivers/scsi/53c700.c |    4 ++--
- drivers/scsi/53c700.h |    1 -
- 2 files changed, 2 insertions(+), 3 deletions(-)
+James - would you be OK with such an approach?
 
---- linux-2.6.10-rc1-mm5-full/drivers/scsi/53c700.h.old	2004-11-13 16:05:17.000000000 +0100
-+++ linux-2.6.10-rc1-mm5-full/drivers/scsi/53c700.h	2004-11-13 16:19:50.000000000 +0100
-@@ -63,7 +63,6 @@
- 		struct NCR_700_Host_Parameters *, struct device *,
- 		unsigned long, u8);
- int NCR_700_release(struct Scsi_Host *host);
--irqreturn_t NCR_700_intr(int, void *, struct pt_regs *);
- 
- 
- enum NCR_700_Host_State {
---- linux-2.6.10-rc1-mm5-full/drivers/scsi/53c700.c.old	2004-11-13 16:19:58.000000000 +0100
-+++ linux-2.6.10-rc1-mm5-full/drivers/scsi/53c700.c	2004-11-13 16:22:42.000000000 +0100
-@@ -167,6 +167,7 @@
- #include "53c700_d.h"
- 
- 
-+STATIC irqreturn_t NCR_700_intr(int irq, void *dev_id, struct pt_regs *regs);
- STATIC int NCR_700_queuecommand(struct scsi_cmnd *, void (*done)(struct scsi_cmnd *));
- STATIC int NCR_700_abort(struct scsi_cmnd * SCpnt);
- STATIC int NCR_700_bus_reset(struct scsi_cmnd * SCpnt);
-@@ -1486,7 +1487,7 @@
- 	return 1;
- }
- 
--irqreturn_t
-+STATIC irqreturn_t
- NCR_700_intr(int irq, void *dev_id, struct pt_regs *regs)
- {
- 	struct Scsi_Host *host = (struct Scsi_Host *)dev_id;
-@@ -2148,7 +2149,6 @@
- 
- EXPORT_SYMBOL(NCR_700_detect);
- EXPORT_SYMBOL(NCR_700_release);
--EXPORT_SYMBOL(NCR_700_intr);
- 
- static struct spi_function_template NCR_700_transport_functions =  {
- 	.set_period	= NCR_700_set_period,
+It should be populated after loading scsi_mod, but before loading HBA
+drivers (the same is true for devinfo); I think this means manually
+loading scsi_mod, populate the tables, then allow hotplug loading of HBA
+drivers.
 
+We still need a nice way to display and modify a list or array in sysfs (for
+both the devinfo or this asc/ascq table).
 
+-- Patrick Mansfield
