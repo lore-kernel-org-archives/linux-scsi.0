@@ -1,41 +1,40 @@
-From: "Jun'ichi Nomura" <jnomura@mtc.biglobe.ne.jp>
-Subject: megaraid driver always fails to reset adapter
-Date: Tue, 01 Mar 2005 13:36:04 -0500
-Message-ID: <4224B614.9060403@mtc.biglobe.ne.jp>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [ANNOUNCE] iSCSI enterprise target software
+Date: Tue, 01 Mar 2005 19:37:07 +0100
+Message-ID: <1109702227.6293.137.camel@laptopd505.fenrus.org>
+References: <OF00F39C19.AE2C12A8-ON88256FB7.00641755-88256FB7.0065149B@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Received: from mx1.redhat.com ([66.187.233.31]:8858 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S261980AbVCASgN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 13:36:13 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:12689 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S262019AbVCAShP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Mar 2005 13:37:15 -0500
+In-Reply-To: <OF00F39C19.AE2C12A8-ON88256FB7.00641755-88256FB7.0065149B@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bryan Henderson <hbryan@us.ibm.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, iscsitarget-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-Hello,
+On Tue, 2005-03-01 at 10:24 -0800, Bryan Henderson wrote:
+> One thing that's implicit in your reasons for wanting to be in the kernel 
+> is that you've chosen to exploit the kernel's page cache.  As a user of 
+> the page cache, you have more control from inside the kernel than from 
+> user space.  The page cache was designed to be fundamentally invisible to 
+> user space.
+> 
+> A pure user space implementation of an ISCSI target would use process 
+> virtual memory for a cache and manage it itself.  It would access the 
+> storage with direct I/O. 
 
-I found that the megaraid driver always fails to reset the
-adapter with the following message:
-    megaraid: resetting the host...
-    megaraid mbox: reset sequence completed successfully
-    megaraid: fast sync command timed out
-    megaraid: reservation reset failed
-when the "Cluster mode" of the adapter BIOS is enabled.
-So, whenever the reset occurs, the adapter goes to
-offline and just become unavailable.
+why would it use direct I/O ? Direct I/O would be really stupid for such
+a thing to use since that means there's no caching going on *at all*.
 
-Is this a known problem?
-
-I tried 2.6.9 and 2.6.11-rc5 and the results were the same.
-I used sg_reset to invoke reset artificially to test this.
-
-The problem doesn't occur if I disabled the "Cluster mode"
-parameter in the adapter BIOS.
-
-I'm not sure how well the currenet megaraid driver supports
-the "Cluster mode".
-I appreciate if you have any idea.
-
-Thanks,
-Jun'ichi Nomura
+You want to *use* the kernel pagecache as much as you can. You do so by
+using mmap and such, and msync to force content to disk. That uses the
+kernel pagecache to the maximum extend, while not having to bother with
+knowing the intimate details of the implementation thereof, which a
+kernel side implementation would be involved in. (if it wasnt and only
+used highlevel functions, then you might as well do the same in
+userspace after all)
 
