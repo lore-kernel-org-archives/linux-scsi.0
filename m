@@ -1,22 +1,20 @@
 From: Francis Wiran <francis.wiran@hp.com>
 Subject: [PATCH]2.5.40, cpqfc, fix ioctl sense buffer memcpy size
-Date: Wed, 9 Oct 2002 13:44:41 -0600 (CST)
+Date: Wed, 9 Oct 2002 13:59:56 -0600 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0210091337070.1500-100000@localhost.localdomain>
+Message-ID: <Pine.LNX.4.44.0210091357370.1239-100000@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: axboe@suse.de
+Cc: axboe@suse.de, francis.wiran@hp.com
 
+Sorry for the double post.
 
-This patch fixes hangs after doing an ioctl to cpqfc due to the different 
-size of the defined sense buffer, causing memcpy to write stuff where it 
-shouldn't.
-
-Also submitted to SourceForge as cpqfc-2.5.3-to-2.5.4.patch
-
+This patch fixes hangs after doing an ioctl to cpqfc due to different size 
+of the defined sense buffer, causing memcpy to write stuff where it 
+shouldn't
 
 --- linux-2.5.40/drivers/scsi/cpqfc.Readme	Tue Oct  1 01:07:47 2002
 +++ linux-2.5.40-p1/drivers/scsi/cpqfc.Readme	Fri Oct  4 16:56:34 2002
