@@ -1,45 +1,92 @@
-From: berthiaume_wayne@emc.com
-Subject: RE: [RFC] Persistent naming of scsi devices
-Date: Fri, 12 Apr 2002 14:03:48 -0400
+From: rudmer@legolas.dynup.net
+Subject: [PATCH] 2.5.18-pre3 - fix for aha152x
+Date: 13 Apr 2002 05:22:04 -0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <93F527C91A6ED411AFE10050040665D0049BF8EE@corpusmx1.us.dg.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Message-ID: <20020413052204.766.qmail@legolas.dynup.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: hbryan@us.ibm.com
+To: fischer@norbit.de
 Cc: linux-scsi@vger.kernel.org
 
-	I guess I hail back from when a LUN, or as I ahd always perceived
-it, was a whole device and not a portion of one or several (if they were
-bound in a RAID group.) =%^)
+Hi,
 
------Original Message-----
-From: Bryan Henderson [mailto:hbryan@us.ibm.com]
-Sent: Friday, April 12, 2002 1:19 PM
-To: berthiaume_wayne@emc.com
-Cc: linux-scsi@vger.kernel.org
-Subject: RE: [RFC] Persistent naming of scsi devices
+since kernel 2.5.5 aha152x.c does not compile due to a missing
+member in struct scatterlist, I think I have found the cure.
+I sort of copied the conversion/modification used in sg.c and
+only modified the name of the inline function accordingly.
 
+The modified aha152x.c does compile when included in the kernel
+or when it is build as a module. I only tested the module, and
+it works for me (could use my scanner and got a good scan of a
+full A4)
 
-
-That clarifies things a bit.  Clariion uses an unfortunate terminology; we
-have to keep that in mind in these naming discussions because, for example,
-when we talk a about making a device file name out of host/bus/target/lun,
-we're talking about a Clariion VLUN, not a Clariion LUN.  The Clariion LUN
-is what I believe most others would call a "volume."  Or maybe a virtual
-disk.
-
->The physical LUN itself is not a physical disk in the physical
->array but created at the time you bind disks or portions of disks into
-LUN.
-
-Don't you feel funny saying "physical LUN" (physical logical unit number)?
-:-) Is it physical or logical?  And is it a number or a storage medium?
+Juergen can you (as maintainer) submit this for inclusion (when
+everything seems fine)
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Patch follows,
+
+	Rudmer
+
+--
+diff -u linux-2.5.8-pre3/drivers/scsi/aha152x.c.orig linux-2.5.8-pre3/drivers/scsi/aha152x.c
+--- linux-2.5.8-pre3/drivers/scsi/aha152x.c.orig        Sat Apr 13 06:40:39 2002
++++ linux-2.5.8-pre3/drivers/scsi/aha152x.c     Sat Apr 13 07:51:38 2002
+@@ -803,6 +803,13 @@
+        return ptr;
+ }
+
++static inline unsigned char * aha152x_scatg2virt(const struct scatterlist * sclp)
++{
++    return (sclp && sclp->page) ?
++               (unsigned char *)page_address(sclp->page) + sclp->offset :
++               NULL;
++}
++
+ #if defined(PCMCIA) || !defined(MODULE)
+ void aha152x_setup(char *str, int *ints)
+ {
+@@ -1494,7 +1501,7 @@
+           SCp.phase            : current state of the command */
+        if (SCpnt->use_sg) {
+                SCpnt->SCp.buffer           = (struct scatterlist *) SCpnt->request_buffer;
+-               SCpnt->SCp.ptr              = SCpnt->SCp.buffer->address;
++               SCpnt->SCp.ptr              = aha152x_scatg2virt(SCpnt->SCp.buffer);
+                SCpnt->SCp.this_residual    = SCpnt->SCp.buffer->length;
+                SCpnt->SCp.buffers_residual = SCpnt->use_sg - 1;
+        } else {
+@@ -2681,7 +2688,7 @@
+                                                /* advance to next buffer */
+                                                CURRENT_SC->SCp.buffers_residual--;
+                                                CURRENT_SC->SCp.buffer++;
+-                                               CURRENT_SC->SCp.ptr           = CURRENT_SC->SCp.buffer->address;
++                                               CURRENT_SC->SCp.ptr           = aha152x_scatg2virt(CURRENT_SC->SCp.buffer);
+                                                CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length;
+                                }
+                        }
+@@ -2791,7 +2798,7 @@
+                        /* advance to next buffer */
+                        CURRENT_SC->SCp.buffers_residual--;
+                        CURRENT_SC->SCp.buffer++;
+-                       CURRENT_SC->SCp.ptr           = CURRENT_SC->SCp.buffer->address;
++                       CURRENT_SC->SCp.ptr           = aha152x_scatg2virt(CURRENT_SC->SCp.buffer);
+                        CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length;
+                }
+
+@@ -2821,13 +2828,13 @@
+                CURRENT_SC->resid += data_count;
+
+                if(CURRENT_SC->use_sg) {
+-                       data_count -= CURRENT_SC->SCp.ptr - CURRENT_SC->SCp.buffer->address;
++                       data_count -= (unsigned char *)CURRENT_SC->SCp.ptr - aha152x_scatg2virt(CURRENT_SC->SCp.buffer);
+                        while(data_count>0) {
+                                CURRENT_SC->SCp.buffer--;
+                                CURRENT_SC->SCp.buffers_residual++;
+                                data_count -= CURRENT_SC->SCp.buffer->length;
+                        }
+-                       CURRENT_SC->SCp.ptr           = CURRENT_SC->SCp.buffer->address - data_count;
++                       CURRENT_SC->SCp.ptr           = aha152x_scatg2virt(CURRENT_SC->SCp.buffer) - data_count;
+                        CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length + data_count;
+                } else {
+                        CURRENT_SC->SCp.ptr           -= data_count;
+
