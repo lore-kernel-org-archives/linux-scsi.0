@@ -1,69 +1,66 @@
-From: David Jacovkis Halperin <david@vega.uab.es>
-Subject: aic7xxx, HP-dat i/o error
-Date: Fri, 18 Oct 2002 13:20:14 +0200
+From: service@artofservice.com.au
+Subject: ITIL in Government and Major Corporations - Has it worked?  -  BREAKFAST SEMINAR Thu 28/11/02
+Date: Fri, 18 Oct 2002 20:24:53 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <02101812544601.11648@vega>
+Message-ID: <37547.850622731479200.504630@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vega (localhost [127.0.0.1])
-	by vega.uab.es (8.11.3/8.11.3/SuSE Linux 8.11.1-0.5) with SMTP id g9IBKEW02509
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2002 13:20:14 +0200
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-hi all. I have a problem with a tape drive (hp dat24i, model C1537A)=20
-connected to an Adaptec 2930U SCSI card installed in a SuSE7.2 (2.4.4-4=
-GB=20
-kernel) on a pc-intel box. The drive used to work until some days ago, =
-when=20
-it got blocked, not allowing to load the aic7xxx. After powering it off=
- and=20
-on again it loads the module, but any operation involving read or write=
-=20
-results in an I/O error of this kind:
+ITIL in Government and Major Corporations - Has it worked?
+Speaker: Gerard Blokdijk, Managing Director The Art of Service
 
-__________________________
+When: Thursday 28 November - 7.30am to 9.30am
+Venue: Italo-Australian Club, 78 Franklin Street, Forrest ACT
+Cost: $45 including GST
+Features: Breakfast, Networking. Already over 40 participants - CIO's / (IT) Managers.
+Register: http://www.artofservicedirect.com click on Enrol, Canberra Events
 
-Oct 18 11:04:42 vega kernel: st0: Error with sense data: Info fld=3D0x0=
-,=20
-	Current st09:00: sns =3D f0  3
-Oct 18 11:04:42 vega kernel: ASC=3D c ASCQ=3D 0
-Oct 18 11:04:42 vega kernel: Raw sense data:0xf0 0x00 0x03 0x00 0x00 0x=
-00=20
-	0x00 0x0e 0x00 0x00 0x00 0x00 0x0c 0x00 0x00 0x00 0x00 0x85 0x00 0x00 =
-0x00 	=09
-	0x08=20
-Oct 18 11:04:42 vega kernel: st0: Error on write filemark.
-___________________________
+Sydney, Brisbane and Melbourne sessions are nearly booked full - Few seats available in Sydney 19/11, Melbourne 29/10 and Brisbane 24/10.
 
-I'm not familiar with SCSI devices, so I don't even know which kind of =
-error=20
-should I look for, or at which level. I'd appreciate any suggestions.
 
-Thanks in advance,
+ 
+About this Event
+--------------------------
+ITIL is more than a simple set of best practices guidelines to optimise a few service management processes. ITIL is a set of non-proprietary, comprehensive,
+well-documented and fully integrated set of management procedures and best practices that optimises service management and IT/business alignment. With over 20,000
+businesses, governments and non-profit organisations using it, ITIL is the most widely accepted process management framework in the world.
 
-David
+But has it worked? Many IT organisations suffer from poor perceptions of value and feel powerless to improve the situation. IT's top challenge right now is to build and
+demonstrate value to the rest of the organisation - be that commerce, government or academia. How are CIO's and their Service Managers to leverage ITIL and ITSM to
+meet that challenge head on and win?   
 
---=20
-David Jacovkis Halperin
-Grup de F=EDsica dels Materials I
-Universitat Aut=F2noma de Barcelona
-08193 Bellaterra
-Spain
+Several ACT and federal governments have started looking at how Service Management can help increase service levels and efficiency. This briefing illustrates the current
+challenges for government and where ITIL fits into the IT-strategy.
 
-http://vega.uab.es
-Tel:  (34) 93 581 1481
-=46ax: (34) 39 581 2155
-Jabber: memnoch@jabber.at / ICQ: 103428664 / MSN: memnoch@inicia.es
+Do not be content with prepared remarks alone. Go one-on-one with Gerard, asking the tough questions, eliciting the most revealing replies. Trends are confirmed. Illusions
+shattered. News is broken. Live on the breakfast briefing stage.
+ 
+ 
+Summary
+-----------------
+You are cordially invited to attend an IT Service Management breakfast session presented by The Art of Service.  Gerard Blokdijk is Managing Director and co-founder of The
+Art of Service. Prior to The Art of Service Gerard has successfully set up and managed another IT Service Management education and research firm. He is the author of  "IT
+Management becomes Service", a frequent publisher and public speaker.
 
-"No uso ning=FAn programa de Micro$oft. Por favor, a ser posible no me =
-mandes=20
-archivos de Word"
+Gerard has an active duty in IT Management since the late 80's. He has held positions as Capacity Manager, Security Manager, Disaster Recovery Manager, overall IT
+Manager and CIO for large organisations like ING Bank, ABN AMRO and Philips.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Gerard holds the Managers Certificate in IT Service Management.
+ 
+ 
+What You'll Get
+--------------------------
+- Insight into the pressing, urgent issues of today and tomorrow, distilled into a brief overview.
+- Interaction with thought leaders by networking with your peers during question-and-answer sessions with The Art of Service specialists.
+- Accessibility and convenience. These Briefings are designed to deliver the most critical information without taking too much time from your busy schedule.
+ 
+ 
+Registration is on a first-come first-served basis, places are strictly limited, so we encourage early registration. To join, please register at http://www.artofservicedirect.com If
+you have questions or concerns about the breakfast session email service@artofservice.com.au or call 1300 13 44 99
+
+To change your contact details, reply to this email.
+
