@@ -1,36 +1,36 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Warning - running *really* short on DMA buffers while doing file transfers
-Date: Fri, 27 Sep 2002 16:33:27 +0200
+From: Rik van Riel <riel@conectiva.com.br>
+Subject: Re: Warning - running *really* short on DMA buffers while doing file
+ transfers
+Date: Fri, 27 Sep 2002 11:56:49 -0300 (BRT)
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20020927143327.GG23468@suse.de>
-References: <389902704.1033133455@aslan.scsiguy.com> <200209271426.g8REQ3228125@localhost.localdomain>
+Message-ID: <Pine.LNX.4.44L.0209271155510.22735-100000@imladris.surriel.com>
+References: <389902704.1033133455@aslan.scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200209271426.g8REQ3228125@localhost.localdomain>
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, Matthew Jacob <mjacob@feral.com>, "Pedro M. Rodrigues" <pmanuel@myrealbox.com>, Mathieu Chouquet-Stringer <mathieu@newview.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <389902704.1033133455@aslan.scsiguy.com>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: Jens Axboe <axboe@suse.de>, Matthew Jacob <mjacob@feral.com>, "Pedro M. Rodrigues" <pmanuel@myrealbox.com>, Mathieu Chouquet-Stringer <mathieu@newview.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Sep 27 2002, James Bottomley wrote:
-> Therefore, it is in SCSI's interest to have the OS merge requests if it can 
-> purely from the transport efficiency point of view.  Once we accept the 
-> necessity of having the OS do some elevator work it becomes detrimental to 
-> have this work repeated in the drive firmware.
+On Fri, 27 Sep 2002, Justin T. Gibbs wrote:
 
-Hear, hear. And given that the os io scheduler (I prefer to call it
-that, elevator is pretty far from the truth :-) gets so close to drives
-optimal performance in most cases, a small tag depth makes sense and
-protects us from the latency concerns.
+> writes *unless* you are creating an ISO image on your disk.  In my opinion
+> it is much more important to optimize for the more common, concurrent
+> read case, than it is for the sequential write case with intermittent
+> reads.
 
-> I guess, however, that this issue will evaporate substantially once
-> the aic7xxx driver uses ordered tags to represent the transaction
-> integrity since the barriers will force the drive seek algorithm to
-> follow the tag transmission order much more closely.
+You're missing the point.  The only reason the reads are
+intermittent is that the application can't proceed until
+the read is done and the read is being starved by writes.
 
-Depends on how often you issue these ordered tags, but yes I hope so
-too.
+If the read was serviced immediately, the next read could
+get scheduled quickly and they wouldn't be intermittant.
 
+Rik
 -- 
-Jens Axboe
+Bravely reimplemented by the knights who say "NIH".
+
+http://www.surriel.com/		http://distro.conectiva.com/
+
+Spamtraps of the month:  september@surriel.com trac@trac.org
