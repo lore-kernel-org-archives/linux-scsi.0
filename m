@@ -1,62 +1,30 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Willem Riede <wrlk@riede.org>
 Subject: Re: [PATCH] remove dead ATAPI multi-lun support (used for ide-scsi)
-Date: Sun, 07 Mar 2004 11:13:17 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <404B4A1D.80107@pobox.com>
-References: <200402202247.02345.bzolnier@elka.pw.edu.pl> <20040307134905.GK29509@serve.riede.org>
+Date: Sun, 7 Mar 2004 11:53:44 -0500
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20040307165344.GM29509@serve.riede.org>
+References: <200402202247.02345.bzolnier@elka.pw.edu.pl> <20040307134905.GK29509@serve.riede.org> <404B4A1D.80107@pobox.com>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:10944 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262190AbUCGQNa
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 7 Mar 2004 11:13:30 -0500
-In-Reply-To: <20040307134905.GK29509@serve.riede.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <404B4A1D.80107@pobox.com> (from jgarzik@pobox.com on Sun, Mar 07, 2004 at 11:13:17 -0500)
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: wrlk@riede.org, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: wrlk@riede.org
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Willem Riede wrote:
-> On 2004.02.20 16:47, Bartlomiej Zolnierkiewicz wrote:
-> 
->>[IDE] remove dead ATAPI multi-lun support (used for ide-scsi)
->>
->>ChangeSet@1.889.69.2 03-01-23 14:51:03-05:00  adam@yggdrasil.com
->>|  The following changes to ide-scsi.c are a recovery of the
->>| changes that I had in ide-scsi.c in the stock kernel's before
->>| Martin Dalecki's IDE tree was reverted and a few other changes.
->>...
->>
->>broke it.
->>
->>Before this change drive->id->last_id & 0x7 was used as shost->max_lun
->>and "hdXlun=" kernel parameter could be used to override it.
->>
->>It was needed probably only for some rare ATAPI PD-CD drives
->>(http://www.geocrawler.com/archives/3/58/1999/11/50/2877161/).
->>
->>However it was far from optimal:
->>- people played with "hdXlun=" and then complained about multiple instances
->>  of the same device (most ATAPI drives respond to each LUN)
->>- probably some devices return 7 not 0 in id->last_id (=> 7 x same device)
->>
->>This patch cleans things up, multi-lun will be fixed if needed in ide-scsi.
->>I think that this may work but can't verify it:
->>
->>	if (id->last_lun && id->last_lun != 7)
->>		shost->max_lun = id->last_lun + 1;
->>	else
->>		shost->max_lun = 1;
+On 2004.03.07 11:13, Jeff Garzik wrote:
+> Willem Riede wrote:
+> >
+> > I have verified that this works with my PD/CD drive, the patch to ide-scsi.c
+> > that I suggest (against linux-2.6.4-rc1-mm2) is below.
 > 
 > 
-> I have verified that this works with my PD/CD drive, the patch to ide-scsi.c
-> that I suggest (against linux-2.6.4-rc1-mm2) is below.
+> I have a multi-LUN ATAPI CD changer here...
 
+If you can test my patch with it, that would be great. 
+My CD changer doesn't report multiple LUNs :-(
 
-I have a multi-LUN ATAPI CD changer here...
-
-	Jeff
-
-
-
+Thanks, Willem Riede.
