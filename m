@@ -1,34 +1,64 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] scsi-misc-2.5 remove scsi_device list_lock
-Date: Fri, 25 Apr 2003 19:20:41 +0200
+From: Thayne Harbaugh <tharbaugh@lnxi.com>
+Subject: buffer-list destroyed message
+Date: 25 Apr 2003 11:31:23 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030425172041.GS1012@suse.de>
-References: <20030424100229.A32098@beaverton.ibm.com> <20030425111212.A28577@infradead.org> <20030425104745.GK1012@suse.de> <20030425095326.C8776@beaverton.ibm.com>
+Message-ID: <1051291883.1172.358.camel@tubarao>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BCoeEi1K+D81iCd/JWD3"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:24513 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S263298AbTDYRId (ORCPT
+Received: from ash.lnxi.com ([207.88.130.242]:40270 "HELO ash.lnxi.com")
+	by vger.kernel.org with SMTP id S263381AbTDYRTO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Apr 2003 13:08:33 -0400
-Content-Disposition: inline
-In-Reply-To: <20030425095326.C8776@beaverton.ibm.com>
+	Fri, 25 Apr 2003 13:19:14 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Apr 25 2003, Patrick Mansfield wrote:
-> On Fri, Apr 25, 2003 at 12:47:46PM +0200, Jens Axboe wrote:
-> 
-> > Again... Besides, this alias _must_ only be used by the block layer.
-> > Every other driver should use the real one.
-> 
-> So we should never use queue_lock in the scsi code? 
 
-Basically, no. The only place where it _might_ be appropriate, is the
-entry points from the block layer where it is already held (for
-clarity). That's basically scsi_request_fn only.
+--=-BCoeEi1K+D81iCd/JWD3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Jens Axboe
+I have a system that spits out the following error message:
+
+scsi_end_request: buffer-list destroyed
+
+It appears to come from drivers/scsi/scsi_lib.c: __scsi_end_request()
+
+I can see that the code detects a mis-match in the number of sectors.=20
+I'm wondering if anyone can enlighten me on how serious this problem is
+(the machine appears to work fine), what might be causing the problem,
+and how I might fix things.
+
+I searched the archives and only found one mail that seemed relevant:
+
+http://marc.theaimsgroup.com/?l=3Dlinux-scsi&m=3D93303946423398&w=3D2
+
+The comment for the MegaRAID refers to SMP and that the system appears
+to continue to function with no problems - two symptoms of the machine I
+have.  Yep, not a lot of information.
+
+Additional information is that the SCSI disk has been swapped twice -
+all three disks had the same errors.  The cable has been swapped and the
+SCSI controller (aic7899 Ultra 160 - Tyan 2462 built-in) has been
+swapped (motherboard was swapped).
+
+
+--=20
+Thayne Harbaugh
+Linux Networx
+
+--=-BCoeEi1K+D81iCd/JWD3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
+
+iD8DBQA+qXDrfsBPTKE6HMkRAsgjAJ9M3iSbuNHzkYOVxWoevc52jownwwCfcwH3
+sDrvKhk+b/bdmqaMU8p3O8M=
+=iUly
+-----END PGP SIGNATURE-----
+
+--=-BCoeEi1K+D81iCd/JWD3--
 
