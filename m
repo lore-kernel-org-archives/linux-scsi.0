@@ -1,49 +1,46 @@
-From: Dan Dennedy <dan@dennedy.org>
-Subject: Re: Usage question
-Date: Sat, 02 Apr 2005 20:38:22 -0500
-Message-ID: <1112492302.20936.12.camel@kino.dennedy.org>
-References: <1112394885.6487.9.camel@localhost.localdomain>
-	 <424DFE79.4080003@s5r6.in-berlin.de>  <1112450118.5518.3.camel@defiant>
+From: "David S. Miller" <davem@davemloft.net>
+Subject: Re: iomapping a big endian area
+Date: Sat, 2 Apr 2005 18:38:05 -0800
+Message-ID: <20050402183805.20a0cf49.davem@davemloft.net>
+References: <1112475134.5786.29.camel@mulgrave>
+	<20050403013757.GB24234@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nuvox.net ([64.89.70.9]:59848 "EHLO
-	smtp05.gnvlscdb.sys.nuvox.net") by vger.kernel.org with ESMTP
-	id S261419AbVDCBjE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 2 Apr 2005 20:39:04 -0500
-In-Reply-To: <1112450118.5518.3.camel@defiant>
+Received: from dsl027-180-174.sfo1.dsl.speakeasy.net ([216.27.180.174]:49095
+	"EHLO cheetah.davemloft.net") by vger.kernel.org with ESMTP
+	id S261439AbVDCCia (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 2 Apr 2005 21:38:30 -0500
+In-Reply-To: <20050403013757.GB24234@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthias =?ISO-8859-1?Q?Bl=E4sing?= <mblaesing@gmx.de>
-Cc: linux-scsi@vger.kernel.org, linux1394-user@lists.sourceforge.net
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, 2005-04-02 at 15:55 +0200, Matthias Bl=E4sing wrote:
-> Am Sa, den 02.04.2005 schrieb Stefan Richter um 4:07:
-> > ...CD/DVD-ROMs, because there are problems with device and host=20
-> > structures management if sr_mod of Linux 2.6 is involved. It is an =
-old=20
-> > known bug whose cause has not yet been figured out.
->=20
-> There was a patch for the kernel on this list, which work quite good =
-for
-> me (sr.c and sr_ioctl.c have to be modified - Olaf Hering on
-> 24.10.2004). I couldn't find any bad side effects of this.
+On Sun, 3 Apr 2005 02:37:57 +0100
+Matthew Wilcox <matthew@wil.cx> wrote:
 
-Thanks, I located the message on the linux1394-devel list:
-http://marc.theaimsgroup.com/?l=3Dlinux1394-devel&m=3D109862922621832&w=
-=3D2
+> My thought on this is that we should encode the endianness of the
+> registers in the ioremap cookie.  Some architectures (sparc, I think?) can
+> do this in their PTEs.  The rest of us can do it in our ioread/writeN
+> methods.  I've planned for this in the parisc iomap implementation but
+> not actually implemented it.
 
-There is a very good report response to Olaf's little patch.
-http://marc.theaimsgroup.com/?l=3Dlinux1394-devel&m=3D109925711513542&w=
-=3D2
+SPARC64 can do it in the PTEs, but we just use raw physical
+addresses in our I/O accessors, and in those load/store instructions
+we can specify the endianness.
 
-Please, others, try it as well. I'm going to....
+Be careful though.  Endianness can be dealt with on a hardware
+level.  Consider a byte access to a 32-bit word sized config space
+datum, the PCI controller on a big-endian system will likely byte-twist
+the data lanes in order for this to work properly.
 
+It's a subtle issue, and it's explained pretty well in some of the
+UltraSPARC PCI controller docs at:
 
+	http://www.sun.com/processors/documentation.html
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In particular, "U2P UPA to PCI User's Manual", chapter 10
+"Little-Endian Support", has some informative diagrams.
+
