@@ -1,115 +1,63 @@
-From: dgilbert@interlog.com
-Subject: Re: [PATCH] sg.c and USER_HZ, kernel 2.5.37
-Date: Sat, 21 Sep 2002 11:40:54 +0000 (UTC)
+From: "Mukker, Atul" <atulm@lsil.com>
+Subject: RE: scsi timeout questions
+Date: Sat, 21 Sep 2002 13:04:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <E17sidC-0005lW-00@app3.nasc.inter.net>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57A8B499@EXA-ATLANTA.se.lsil.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mhbs.lsil.com (mhbs [147.145.31.100])
+	by mail2.lsil.com (8.12.4/8.12.4) with ESMTP id g8LGq6KB007945
+	for <linux-scsi@vger.kernel.org>; Sat, 21 Sep 2002 10:05:11 -0700 (PDT)
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Fokkens <fokkensr@fokkensr.vertis.nl>, dgilbert@interlog.com, linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@SteelEye.com>
+To: 'Mike Anderson' <andmike@us.ibm.com>, "Mukker, Atul" <Atulm@lsil.com>
+Cc: linux-scsi@vger.kernel.org
 
-Rolf,
-I'm a little out of touch at the moment.
+new error handling?
 
-Your explanation and patch below seem fine. Hopefully James Bottomley
-can forward it on my behalf if it hasn't been accepted already.
+Thanks
+-Atul
 
-Doug Gilbert
+-----Original Message-----
+From: Mike Anderson [mailto:andmike@us.ibm.com]
+Sent: Thursday, September 19, 2002 4:09 PM
+To: Mukker, Atul
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: scsi timeout questions
 
-Rolf Fokkens wrote:
+
+Mukker, Atul [atulm@lsil.com] wrote:
+> Hi All,
 > 
-> Since the introduction of USER_HZ the SG_[GS]ET_TIMEOUT ioctls may have
-> a serious BUG as userspace uses a different HZ from the HZ in kernelspace.
+> How can the default timeout value changed for scsi commands, per command
+> basis. Under certain circumstances ( e.g., rebuild and/or check
+consistency
+> on logical drives + heavy IO ), the megaraid F/W is not able to complete
+the
+> commands in default timeout period ( 60 seconds in 2.4.18-3) kernel.
 > 
-> In x86 HZ=1000 and USER_HZ=100, resulting in confusing timouts as the
-> kernel measures time 10 times as fast as userspace.
-> 
-> This patch is an attempt to fix this by transforming USER_HZ based timing to
-> HZ based timing before storing it in timeout. To make sure that SG_GET_TIMEOUT
-> and SG_SET_TIMEOUT behave consistently a field timeout_user is added which
-> stores the exact value that's passed by SG_SET_TIMEOUT and it's returned on
-> SG_GET_TIMEOUT.
-> 
-> Rolf Fokkens
-> fokkensr@fokkensr.vertis.nl
-> 
-> P.S. this is the second post of this patch
-> 
-> --- linux-2.5.37.orig/drivers/scsi/sg.c	Sun Sep  8 09:00:32 2002
-> +++ linux-2.5.37/drivers/scsi/sg.c	Sat Sep 21 00:31:23 2002
-> @@ -82,6 +82,19 @@
->  
->  #define SG_MAX_DEVS_MASK ((1U << KDEV_MINOR_BITS) - 1)
->  
-> +/*
-> + * Suppose you want to calculate the formula muldiv(x,m,d)=int(x * m / d)
-> + * Then when using 32 bit integers x * m may overflow during the calculation.
-> + * Replacing muldiv(x) by muldiv(x)=((x % d) * m) / d + int(x / d) * m
-> + * calculates the same, but prevents the overflow when both m and d
-> + * are "small" numbers (like HZ and USER_HZ).
-> + * Of course an overflow is inavoidable if the result of muldiv doesn't fit
-> + * in 32 bits.
-> + */
-> +#define MULDIV(X,MUL,DIV) ((((X % DIV) * MUL) / DIV) + ((X / DIV) * MUL))
-> +
-> +#define SG_DEFAULT_TIMEOUT MULDIV(SG_DEFAULT_TIMEOUT_USER, HZ, USER_HZ)
-> +
->  int sg_big_buff = SG_DEF_RESERVED_SIZE;
->  /* N.B. This variable is readable and writeable via
->     /proc/scsi/sg/def_reserved_size . Each time sg_open() is called a buffer
-> @@ -150,7 +163,8 @@
->  	struct sg_device *parentdp;	/* owning device */
->  	wait_queue_head_t read_wait;	/* queue read until command done */
->  	rwlock_t rq_list_lock;	/* protect access to list in req_arr */
-> -	int timeout;		/* defaults to SG_DEFAULT_TIMEOUT */
-> +	int timeout;		/* defaults to SG_DEFAULT_TIMEOUT      */
-> +	int timeout_user;	/* defaults to SG_DEFAULT_TIMEOUT_USER */
->  	Sg_scatter_hold reserve;	/* buffer held for this file descriptor */
->  	unsigned save_scat_len;	/* original length of trunc. scat. element */
->  	Sg_request *headrp;	/* head of request slist, NULL->empty */
-> @@ -790,10 +804,15 @@
->  			return result;
->  		if (val < 0)
->  			return -EIO;
-> -		sfp->timeout = val;
-> +		if (val >= MULDIV (INT_MAX, USER_HZ, HZ))
-> +		    val = MULDIV (INT_MAX, USER_HZ, HZ);
-> +		sfp->timeout_user = val;
-> +		sfp->timeout = MULDIV (val, HZ, USER_HZ);
-> +
->  		return 0;
->  	case SG_GET_TIMEOUT:	/* N.B. User receives timeout as return value */
-> -		return sfp->timeout;	/* strange ..., for backward compatibility */
-> +				/* strange ..., for backward compatibility */
-> +		return sfp->timeout_user;
->  	case SG_SET_FORCE_LOW_DMA:
->  		result = get_user(val, (int *) arg);
->  		if (result)
-> @@ -2431,6 +2450,7 @@
->  	sfp->rq_list_lock = RW_LOCK_UNLOCKED;
->  
->  	sfp->timeout = SG_DEFAULT_TIMEOUT;
-> +	sfp->timeout_user = SG_DEFAULT_TIMEOUT_USER;
->  	sfp->force_packid = SG_DEF_FORCE_PACK_ID;
->  	sfp->low_dma = (SG_DEF_FORCE_LOW_DMA == 0) ?
->  	    sdp->device->host->unchecked_isa_dma : 1;
-> --- linux-2.5.37.orig/include/scsi/sg.h	Sun Sep  8 09:00:19 2002
-> +++ linux-2.5.37/include/scsi/sg.h	Sat Sep 21 00:31:23 2002
-> @@ -304,7 +304,12 @@
->  
->  
->  /* Defaults, commented if they differ from original sg driver */
-> -#define SG_DEFAULT_TIMEOUT (60*HZ) /* HZ == 'jiffies in 1 second' */
-> +#ifdef __KERNEL__
-> +#define SG_DEFAULT_TIMEOUT_USER	(60*USER_HZ) /* HZ == 'jiffies in 1 second' */
-> +#else
-> +#define SG_DEFAULT_TIMEOUT	(60*HZ)	     /* HZ == 'jiffies in 1 second' */
-> +#endif
-> +
->  #define SG_DEF_COMMAND_Q 0     /* command queuing is always on when
->  				  the new interface is used */
->  #define SG_DEF_UNDERRUN_FLAG 0
 
-          			
+sd and sr do not allow there timeouts to be altered from there #define
+values. st and sg allow there timeouts to be altered, but it applies to
+all commands for that device. Altering the timeout on the fly somewhat
+defeats a timeout value for the upper layers.
 
+> Also, what is the expected behavior of the driver for aborted commands.
+The
+> commands which have been issued to f/w and are pending, the abort handler
+> returns "cannot abort". If such commands are later completed by the
+> firmware, the ISR completes the command with DID_ABORT. Is it ok?
+> 
 
+It appears from reading scsi_old_timesout that this stops furthur error
+recovery and leaves the command in the host adapter with no timeout
+running. The side effect of returning DID_ABORT in scsi_old_done appears
+to be ok. I believe (if I followed the old error handler chain
+correctly) you will not retry the command and it will be failed back to
+the block layer.
+
+-andmike
+-- 
+Michael Anderson
+andmike@us.ibm.com
