@@ -1,37 +1,31 @@
-From: Ricky Beam <jfbeam@bluetronic.net>
-Subject: Re: SCSI vs IDE
-Date: Tue, 31 Aug 2004 14:02:59 -0400 (EDT)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.33.0408311359120.10693-100000@sweetums.bluetronic.net>
-References: <20040831050117.80689.qmail@web53204.mail.yahoo.com>
+From: "Augustine Ortiz, Jr." <aortizjr@lanl.gov>
+Subject: Getting HD Serial Numbers in RAID
+Date: Tue, 31 Aug 2004 13:45:23 -0600
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <1093981522.27891.20.camel@afgar.lanl.gov>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sweetums.bluetronic.net ([24.199.150.42]:18069 "EHLO
-	sweetums.bluetronic.net") by vger.kernel.org with ESMTP
-	id S266274AbUHaSFG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Aug 2004 14:05:06 -0400
-In-Reply-To: <20040831050117.80689.qmail@web53204.mail.yahoo.com>
-Content-ID: 
-Content-Disposition: INLINE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Explorer <erforschen_linux@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Mon, 30 Aug 2004, Linux Explorer wrote:
->Can anyone tell me , why SCSI disk takes approximately
->3 times as IDE disk?
+Hi...
 
-Just a guess... that SCSI disk is 10 years older than your IDE disk.  You
-have not provided any details about the hardware setup: controller for
-both scsi and ide, cabling, other devices on the bus, model of the IDE
-disk...
+I have been working on getting serial numbers electronically off of hard
+drives for various reasons.
 
->I have tried this with adaptec and LSI logic scsi
->controllers, both are taking same time.
+I have been successful with IDE and most SCSI drives (using hdparm and
+scsiinfo). However I am running into trouble with ones that are on
+AACRAID/PERC3 adaptors and actually in a RAID array.
 
-(btw, adaptec and lsi make/have made hundreds of controllers.)
+The only serial number I can seem to grab is the one for the entire
+volume which is just assigned.
 
---Ricky
+Are there any tools available to get the serial number off the drives in
+the array? Or can I get some pointers on writing such a tool?
 
+Thank you.
+
+Augustine
 
