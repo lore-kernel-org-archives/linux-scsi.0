@@ -1,73 +1,78 @@
 From: Doug Ledford <dledford@redhat.com>
 Subject: Re: Kernel 2.6.x hangs with Symbios Logic 53c1010 Ultra3 SCSI Ada
 	pter
-Date: Fri, 05 Nov 2004 23:20:20 -0500
-Message-ID: <1099714821.10944.27.camel@compaq-rhel4.xsintricity.com>
-References: <C18BA5DDB58DD511BD0700C0DF0DD4501EEC6A@NTSERVER4>
-	 <20041105203651.GA24690@parcelfarce.linux.theplanet.co.uk>
-	 <418C105E.4040607@babut.net>
+Date: Fri, 05 Nov 2004 23:46:14 -0500
+Message-ID: <1099716374.10944.48.camel@compaq-rhel4.xsintricity.com>
+References: <D5169CBBC6369D4CBFFABD7905CC9D695D31@tehran.Fars-Robotics.local>
+	 <20041106035951.GC24690@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:61158 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S261311AbUKFEUY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Nov 2004 23:20:24 -0500
-In-Reply-To: <418C105E.4040607@babut.net>
+Received: from mx1.redhat.com ([66.187.233.31]:25729 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S261314AbUKFEqX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Nov 2004 23:46:23 -0500
+In-Reply-To: <20041106035951.GC24690@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Babut <thomas@babut.net>
-Cc: linux-scsi mailing list <linux-scsi@vger.kernel.org>, Matthew Wilcox <matthew@wil.cx>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Richard Waltham <richard@fars-robotics.net>, SUPPORT <support@4bridgeworks.com>, Thomas Babut <thomas@babut.net>, linux-kernel@vger.kernel.org, linux-scsi mailing list <linux-scsi@vger.kernel.org>, groudier@free.fr
 
-On Sat, 2004-11-06 at 00:44 +0100, Thomas Babut wrote:
+On Sat, 2004-11-06 at 03:59 +0000, Matthew Wilcox wrote:
 
-> None of the patches you posted solved my problems. I'm loosing hope... ;)
+> I think those devices need blacklisting.  Either that, or we need to do
+> DV in non-approved ways.  Perhaps start with SDTR+WDTR.  If we get up
+> to Fast-40, then try PPR.  I suspect James has Opinions on this though ;-)
 
-Well, having "been there, done that" many years ago when PPR messages
-were first defined, here's the logic I found that worked in all cases:
+Bleah.  I have opinions on this whether James does or not.  If you are
+going to control device negotiation at the mid layer level, then you
+need these things:
 
-OK, in the INQUIRY snoop area of the completion handler, I did the
-appropriate card/device checks to determine if we should enable PPR:
+     1. Current bus state, as pointed out there are devices that reject
+        PPR unless on an LVD bus, and whether or not you can get at the
+        current bus mode and how is hardware dependent and changes from
+        driver to driver, so now you have to add a new entry into the
+        low level driver for all SPI class drivers hostt->bus_is_lvd()
+        in order to be able to do proper checks at the mid layer level.
+        This needs to be a call in function, not a static element.  Bus
+        mode can change, especially from something as simple as hot
+        plugging a new drive into an existing LVD JBOD, but the drive
+        accidentally has the FORCE_SE jumper enabled.  This will force
+        the whole bus to switch to SE instantly, and all drives will
+        have to renegotiate.  So, given hotplug issues, the bus state
+        needs to be checked at each negotiation, not based upon some
+        previous state.
+     2. Drivers *should*, when possible, honor user settings stored in
+        NVRAM on the cards.  So, add another entry point so that the low
+        level drivers with NVRAM can pass up the user specified max
+        speed, width, cache settings, etc.  Oh, and if it isn't obvious,
+        there are devices out there that reject attempted PPR messages
+        if the speed/width/mode that you are requesting can be
+        represented by a SDTR/WDTR pairs instead.  In other words, if
+        you aren't requesting a DT + possible options settings, then
+        don't use PPR.
+     3. Recovery operations in the LLDD interrupt handler need to change
+        the way commands are handled.  Given an attempt to send PPR
+        messages, both BUSFREE and subsequent MSG_REJECT situations need
+        to cancel the attempted and all future PPR messages, so now you
+        need a hook in the scsi layer for the driver to tell the mid
+        layer "Quit telling me to do PPR, it doesn't work you moron"
+     4. In the event that a device doesn't advertise in any given way
+        that it is capable of PPR, but does in fact send an unsolicited
+        PPR message to the driver, we now need a hook in the mid layer
+        so the driver can say "Well, would you look at that...it's a PPR
+        device hiding in the corner"
 
-if (bus_mode == LVD && sdev->scsi_level >= 3 &&
-	host->user_transfer_settings >= MIN_DT_SPEED)
-	use_ppr = 1;
-else if (bus_mode == LVD && sdev->scsi_level < 3 && 
-	(inquiry_len >= 57 && inq_data[56] & INQUIRY_DT_BIT) &&
-	host->user_transfer_settings >= MIN_DT_SPEED)
-	use_ppr = 1;
-else
-	use_sdtr_wdtr = 1;
+That's the level of API you'll need to properly do this from the mid
+level.
 
-In the event we set ppr on a device that can't handle it, I had to go
-into the interrupt handler routine and in both the case of BUSFREE and
-MSG_REJECT, if we were in the process of sending a ppr message and we
-get either one of these in return, then turn off ppr messages for the
-device (otherwise, we can get into an infinite loop were we accidentally
-turned PPR on for a device that won't tolerate it for whatever reason,
-and in fact once I know the ppr message has been rejected, the interrupt
-handler would rewrite the ppr message into the closest possible
-WDTR/SDTR message pair, assert ATNO on the bus to get us back in message
-out phase, and proceed to go ahead and send the WDTR message, then wait
-for a WDTR return, then assert ATNO again so we have a chance to do the
-SDTR, then wait for the SDTR return, then proceed with the other
-phases).
-
-Finally, there are devices out there that do target initiated speed
-negotiations.  If we get an incoming PPR message from a device, then you
-are free to skip all those other checks in the INQUIRY snoop area and
-just immediately set PPR on this device.  Now, you still need to do the
-things like check that the bus is LVD before actually enabling LVD
-speeds, but an unsolicited incoming PPR message is a dead giveaway that
-the device supports PPR messages.  So, in the incoming message handling
-portion of the interrupt handler, if we get an unsolicited PPR message
-from a device, then we override any other settings we may have on the
-device in terms of whether or not it supports PPR messages and we
-disable the whole INQUIRY snoop operation for this device because we
-don't want the INQUIRY snoop to disable PPR now that we know for a fact
-that it's supported on this device.
-
-Implement that, and you won't have these problems any more.
+Of course, you could genericize this a bit.  You could have a callin for
+current bus state in the LLDD.  Something like hostt->get_bus_type() and
+have it return an or'ed bitmask of state bits, BUS_WIDE | BUS_SYNC |
+BUS_{LVD,SE,HVD}, something like that, then it could possibly do more
+than just PPR/LVD negotiation, but personally this is one of those
+things that I think is card specific enough that it ought to just stay
+in the LLDD.  My $.02.
 
 -- 
   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
