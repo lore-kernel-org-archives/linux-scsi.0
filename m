@@ -1,93 +1,229 @@
-From: Mike Grant <mgg@ecs.soton.ac.uk>
-Subject: Advansys scsi reset problems
-Date: Fri, 04 Oct 2002 20:10:28 +0100
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: [PATCH] sg might_sleep fixes
+Date: Fri, 4 Oct 2002 12:40:07 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D9DE7A4.7000002@ecs.soton.ac.uk>
+Message-ID: <20021004194007.GA9544@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from roadrunner.ecs.soton.ac.uk (roadrunner.ecs.soton.ac.uk [152.78.68.161])
-	by raven.ecs.soton.ac.uk (8.9.3/8.9.3) with ESMTP id UAA11972
-	for <linux-scsi@vger.kernel.org>; Fri, 4 Oct 2002 20:10:30 +0100 (BST)
-Received: from ecs.soton.ac.uk (IDENT:t4D+U/icpssIVKD/qdGyPZTgfo5hVv22@beermat.ecs.soton.ac.uk [152.78.191.92])
-	by roadrunner.ecs.soton.ac.uk (8.12.3/8.12.3) with ESMTP id g94JASn0007974
-	for <linux-scsi@vger.kernel.org>; Fri, 4 Oct 2002 20:10:29 +0100
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,
+This is a update to a previous patch that fixed some sg might sleep
+errors.
 
-A while ago, I bought a SCSI Ultra3 LVD disk and an Advansys Ultra160 (2
-channel) card and installed RedHat 7.2 on it, hoping for a pleasant
-speed up from my IDE setup.  Unfortunately, the performance was very
-poor - taking over 10 mins just to boot due to many long inactive pauses
-and frequent scsi resets.  Thinking it might be a kernel problem, I
-built several kernels (2.4.16 & 18) and found that I could get a usable
-(some resets, ~3min to boot) system by building the advansys driver into
-the kernel.  As a module, I'd get a lot more resets.
+This patch corrects a problem in sg.c where a lock is held during calls to
+vmalloc and calls for device model registration.
 
-Later, I tried booting into the old RedHat7.1 (still on the IDE disk)
-and checking that I could see the same problems there.  While I didn't
-see any resets from SCSI disk activity, I did still have the long
-pauses.  I did see resets on the (SCSI-II) CD* devices, which are on the
-other channel.
+Note:
+	Douglas Gilbert is the maintainer of this driver.
+	dougg@gear.torque.net
+	http://www.torque.net/sg/
 
-Symptoms:
-=========
-   - Frequent resets (approx 1 every 30-60min) with no load.
-   - Heavy load (i.e. disk intensive operations) gives long inactive
-pauses with intermittent resets.  Not every pause is followed by a
-reset.  I think write operations are worse, but I've not properly tested
-that.
+	During Douglas Gilbert's time-off he connects when he can so it
+	maybe a bit until he can address this.
 
-The most common manifestation is when the machine boots - it's virtually
-guaranteed to have several long pauses and a couple of resets during the
-boot process.  Typically this happens near the ext3 and fcsk parts
-(during disk activity I guess).
-
-The hardware:
-=============
-   - 1.4GHz Athlon, Gigabyte m/b, 768MB
-   - Advansys 3950 SCSI card (two channels)
-   - Fujitsu MAN3184MP LVD SCSI disk  **
-   - Ricoh MP6201S CD writer  ++
-   - Iomega SCSI ZIP drive ++
-   - Pioneer 106S DVDROM ++
-   - Plextor 32x CDROM ++
-**=on LVD chain   ++=on SCSI-II chain
-The devices are correctly terminated as far I can tell.
-
-Things I've tried:
-==================
-   - since it's a two-channel card, I've tried moving the disk to the
-other channel.  No change.
-   - removing various scsi devices (ie. tests with no scsi disk or with
-the cd writer removed).  No change.
-   - removing whole channels (ie. just disk, or just SCSI-II devices).
-No change, although resets caused by the SCSI-II devices (CD*, zip
-drive) are less frequent.
-   - changing the LVD cable (albeit to a worse cable).  No change.
-
-Since any combination of the devices still gives resets (in different
-amounts) I speculate the problem is with the card/other hardware or the
-driver.
-
-Things I could try:
-===================
-     - 2.5.?
-     - a different LVD terminator (but resets occur without any LVD cable
-connected, so this seems unlikely)
-     - set fire to and stomp on the resetting SCSI card, then buy a new one.
-
-Any other ideas?
-
-Thanks,
-
-Mike Grant.
-
-PS. There's some more info (output of lspci -v, etc) at:
-http://www.ecs.soton.ac.uk/~mgg/scsi_misery/
-I thought this mail was getting a little bit big :)
+	In the interim this patch should fix the problem, and
+	still provide for safe additions.
 
 
+The full patch is available at:
+http://www-124.ibm.com/storageio/patches/2.5/sg
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
+ sg.c |   83 +++++++++++++++++++++++++++++++++++++++++--------------------------
+ 1 files changed, 52 insertions(+), 31 deletions(-)
+-----
+
+diff -Nru a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+--- a/drivers/scsi/sg.c	Fri Oct  4 11:53:21 2002
++++ b/drivers/scsi/sg.c	Fri Oct  4 11:53:21 2002
+@@ -1354,32 +1354,42 @@
+ {
+ 	static int sg_registered = 0;
+ 	unsigned long iflags;
++	int tmp_dev_max;
++	Sg_device **tmp_da;
+ 
+ 	if ((sg_template.dev_noticed == 0) || sg_dev_arr)
+ 		return 0;
+ 
++	SCSI_LOG_TIMEOUT(3, printk("sg_init\n"));
++
++	write_lock_irqsave(&sg_dev_arr_lock, iflags);
++	tmp_dev_max = sg_template.dev_noticed + SG_DEV_ARR_LUMP;
++	write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
++
++	tmp_da = (Sg_device **)vmalloc(
++				tmp_dev_max * sizeof(Sg_device *));
++	if (NULL == tmp_da) {
++		printk(KERN_ERR "sg_init: no space for sg_dev_arr\n");
++		return 1;
++	}
+ 	write_lock_irqsave(&sg_dev_arr_lock, iflags);
++
+ 	if (!sg_registered) {
+ 		if (register_chrdev(SCSI_GENERIC_MAJOR, "sg", &sg_fops)) {
+ 			printk(KERN_ERR
+ 			       "Unable to get major %d for generic SCSI device\n",
+ 			       SCSI_GENERIC_MAJOR);
+ 			write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
++			vfree((char *) tmp_da);
+ 			return 1;
+ 		}
+ 		sg_registered++;
+ 	}
+ 
+-	SCSI_LOG_TIMEOUT(3, printk("sg_init\n"));
+-	sg_template.dev_max = sg_template.dev_noticed + SG_DEV_ARR_LUMP;
+-	sg_dev_arr = (Sg_device **)vmalloc(
+-			sg_template.dev_max * sizeof(Sg_device *));
+-	if (NULL == sg_dev_arr) {
+-		printk(KERN_ERR "sg_init: no space for sg_dev_arr\n");
+-		write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+-		return 1;
+-	}
+-	memset(sg_dev_arr, 0, sg_template.dev_max * sizeof (Sg_device *));
++	memset(tmp_da, 0, tmp_dev_max * sizeof (Sg_device *));
++	sg_template.dev_max = tmp_dev_max;
++	sg_dev_arr = tmp_da;
++
+ 	write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+ #ifdef CONFIG_PROC_FS
+ 	sg_proc_init();
+@@ -1430,7 +1440,7 @@
+ static int
+ sg_attach(Scsi_Device * scsidp)
+ {
+-	Sg_device *sdp;
++	Sg_device *sdp = NULL;
+ 	unsigned long iflags;
+ 	int k;
+ 
+@@ -1439,15 +1449,16 @@
+ 		Sg_device **tmp_da;
+ 		int tmp_dev_max = sg_template.nr_dev + SG_DEV_ARR_LUMP;
+ 
++		write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+ 		tmp_da = (Sg_device **)vmalloc(
+ 				tmp_dev_max * sizeof(Sg_device *));
+ 		if (NULL == tmp_da) {
+ 			scsidp->attached--;
+-			write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+ 			printk(KERN_ERR
+ 			       "sg_attach: device array cannot be resized\n");
+ 			return 1;
+ 		}
++		write_lock_irqsave(&sg_dev_arr_lock, iflags);
+ 		memset(tmp_da, 0, tmp_dev_max * sizeof (Sg_device *));
+ 		memcpy(tmp_da, sg_dev_arr,
+ 		       sg_template.dev_max * sizeof (Sg_device *));
+@@ -1456,6 +1467,7 @@
+ 		sg_template.dev_max = tmp_dev_max;
+ 	}
+ 
++find_empty_slot:
+ 	for (k = 0; k < sg_template.dev_max; k++)
+ 		if (!sg_dev_arr[k])
+ 			break;
+@@ -1467,11 +1479,19 @@
+ 		       " type=%d, minor number exceed %d\n",
+ 		       scsidp->host->host_no, scsidp->channel, scsidp->id,
+ 		       scsidp->lun, scsidp->type, SG_MAX_DEVS_MASK);
++		if (NULL != sdp)
++			vfree((char *) sdp);
+ 		return 1;
+ 	}
+-	if (k < sg_template.dev_max)
+-		sdp = (Sg_device *)vmalloc(sizeof(Sg_device));
+-	else
++	if (k < sg_template.dev_max) {
++		if (NULL == sdp) {
++			write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
++			sdp = (Sg_device *)vmalloc(sizeof(Sg_device));
++			write_lock_irqsave(&sg_dev_arr_lock, iflags);
++			if (!sg_dev_arr[k])
++				goto find_empty_slot;
++		}
++	} else
+ 		sdp = NULL;
+ 	if (NULL == sdp) {
+ 		scsidp->attached--;
+@@ -1498,17 +1518,18 @@
+ 		scsidp->sdev_driverfs_dev.name);
+ 	sdp->sg_driverfs_dev.parent = &scsidp->sdev_driverfs_dev;
+ 	sdp->sg_driverfs_dev.bus = &scsi_driverfs_bus_type;
++
++	sg_template.nr_dev++;
++	sg_dev_arr[k] = sdp;
++	write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
++
+ 	device_register(&sdp->sg_driverfs_dev);
+ 	device_create_file(&sdp->sg_driverfs_dev, &dev_attr_type);
+ 	device_create_file(&sdp->sg_driverfs_dev, &dev_attr_kdev);
+-
+ 	sdp->de = devfs_register(scsidp->de, "generic", DEVFS_FL_DEFAULT,
+ 				 SCSI_GENERIC_MAJOR, k,
+ 				 S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP,
+ 				 &sg_fops, sdp);
+-	sg_template.nr_dev++;
+-	sg_dev_arr[k] = sdp;
+-	write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+ 	switch (scsidp->type) {
+ 	case TYPE_DISK:
+ 	case TYPE_MOD:
+@@ -1529,7 +1550,7 @@
+ static void
+ sg_detach(Scsi_Device * scsidp)
+ {
+-	Sg_device *sdp;
++	Sg_device *sdp = NULL;
+ 	unsigned long iflags;
+ 	Sg_fd *sfp;
+ 	Sg_fd *tsfp;
+@@ -1571,22 +1592,11 @@
+ 				}
+ 			}
+ 			SCSI_LOG_TIMEOUT(3, printk("sg_detach: dev=%d, dirty\n", k));
+-			devfs_unregister(sdp->de);
+-			device_remove_file(&sdp->sg_driverfs_dev,
+-					   &dev_attr_type);
+-			device_remove_file(&sdp->sg_driverfs_dev,
+-					   &dev_attr_kdev);
+-			put_device(&sdp->sg_driverfs_dev);
+-			sdp->de = NULL;
+ 			if (NULL == sdp->headfp) {
+-				vfree((char *) sdp);
+ 				sg_dev_arr[k] = NULL;
+ 			}
+ 		} else {	/* nothing active, simple case */
+ 			SCSI_LOG_TIMEOUT(3, printk("sg_detach: dev=%d\n", k));
+-			devfs_unregister(sdp->de);
+-			put_device(&sdp->sg_driverfs_dev);
+-			vfree((char *) sdp);
+ 			sg_dev_arr[k] = NULL;
+ 		}
+ 		scsidp->attached--;
+@@ -1595,6 +1605,17 @@
+ 		break;
+ 	}
+ 	write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
++
++	if (sdp) {
++		devfs_unregister(sdp->de);
++		sdp->de = NULL;
++		device_remove_file(&sdp->sg_driverfs_dev, &dev_attr_type);
++		device_remove_file(&sdp->sg_driverfs_dev, &dev_attr_kdev);
++		put_device(&sdp->sg_driverfs_dev);
++		if (NULL == sdp->headfp)
++			vfree((char *) sdp);
++	}
++
+ 	if (delay)
+ 		scsi_sleep(2);	/* dirty detach so delay device destruction */
+ }
