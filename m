@@ -1,94 +1,73 @@
-From: Alex Aizman <itn780@yahoo.com>
-Subject: Re: [ANNOUNCE 0/6] Open-iSCSI High-Performance Initiator for Linux
-Date: Wed, 09 Mar 2005 18:36:37 -0800
-Message-ID: <422FB2B5.3070803@yahoo.com>
-References: <422BFCB2.6080309@yahoo.com> <20050309050434.GT3163@waste.org> <422E8EEB.7090209@yahoo.com> <20050309060544.GW3120@waste.org> <422E96D9.6090202@yahoo.com> <20050309222114.GF4105@marowsky-bree.de>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: How does a SCSI device gets a target ID?
+Date: Wed, 9 Mar 2005 23:38:53 -0500
+Message-ID: <200503100438.j2A4cx519046@www.watkins-home.com>
+References: <20050309172943.GB21986@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Received: from smtp105.mail.sc5.yahoo.com ([66.163.169.225]:61619 "HELO
-	smtp105.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S261178AbVCJChL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Mar 2005 21:37:11 -0500
-In-Reply-To: <20050309222114.GF4105@marowsky-bree.de>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Received: from rwcrmhc11.comcast.net ([204.127.198.35]:26335 "EHLO
+	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
+	id S262373AbVCJEjL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Mar 2005 23:39:11 -0500
+In-Reply-To: <20050309172943.GB21986@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lars Marowsky-Bree <lmb@suse.de>
-Cc: Matt Mackall <mpm@selenic.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: 'Matthew Wilcox' <matthew@wil.cx>
+Cc: "'Rajat  Jain, Noida'" <rajatj@noida.hcltech.com>, linux-scsi@vger.kernel.org
 
-Lars Marowsky-Bree wrote:
+You said:
+"And plugging any SE device onto an LVD bus causes the whole bus to fall
+back to SE.  This includes terminators."
 
->On 2005-03-08T22:25:29, Alex Aizman <itn780@yahoo.com> wrote:
-> =20
->
->>There's (or at least was up until today) an ongoing discussion on our=
-=20
->>mailing list at http://groups-beta.google.com/group/open-iscsi. The=20
->>short and long of it: the problem can be solved, and it will. Couple=20
->>simple things we already do: mlockall() to keep the daemon un-swapped=
-,=20
->>and also looking into potential dependency created by syslog (there's=
-=20
->>one for 2.4 kernel, not sure if this is an issue for 2.6).
->>   =20
->>
->
->BTW, to get around the very same issues, heartbeat does much the same:
->lock itself into memory, reserve a couple of pages more to spare on
->stack & heap, run at soft-realtime priority.
-> =20
->
-Heartbeat is good for reliability, etc. WRT "getting paged-out" -=20
-non-deterministic (things depend on time), right?
+True, but if your terminator is LVD only, it will get hot!!!  Not sure if it
+can be damaged, but it does get hot (or warm). :)
 
->syslog(), however, sucks.
-> =20
->
-It does.
+I also believe some LVD devices do not support SE.
 
->We went down the path of using our non-blocking IPC library to have al=
-l
->our various components log to ha_logd, which then logs to syslog() or
->writes to disk or wherever.
-> =20
->
+Guy
 
-=46ound ha_logd under http://linux-ha.org. The latter is extemely=20
-interesting in the longer term. In the short term, there's quite a bit=20
-of information on this site, need time.
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Matthew Wilcox
+Sent: Wednesday, March 09, 2005 12:30 PM
+To: Guy
+Cc: 'Rajat Jain, Noida'; linux-scsi@vger.kernel.org
+Subject: Re: How does a SCSI device gets a target ID?
 
->That works well in our current development series, and if you want to
->share code, you can either rip it off (Open Source, we love ya ;) or w=
-e
->can spin off these parts into a sub-package for you to depend on...
->
-> =20
->
-If it's not a big deal :-) let's do the "sub-package" option.
+On Wed, Mar 09, 2005 at 11:54:57AM -0500, Guy wrote:
+> A narrow SCSI bus will support 8 devices.
+> A wide SCSI bus will support 16 devices.
+> A narrow bus uses 50 pins.
+> A wide bus uses 68 pins.
 
->>The sfnet is a learning experience; it is by no means a proof that it=
-=20
->>cannot be done.
->>   =20
->>
->
->I'd also argue that it MUST be done, because the current way of "Oh,
->it's somehow related to block stuff, must be in kernel" leads down to
->hell. We better figure out good ways around it ;-)
-> =20
->
-Yes, it MUST be done.
+We need a SCSI Wiki for all this kind of information ... maybe Wikipedia?
 
->
->Sincerely,
->    Lars Marowsky-Br=E9e <lmb@suse.de>
->
-> =20
->
-Alex
+> There is a standard for auto selecting the SCSI ID.  I have never used
+this.
+> SCAM (SCSI Configures Auto Magically).
+
+I think the SCSI vendors prefer to sell SCA drives rather than SCAM
+drives ;-) Drives with the SCA connector have power supplied to them and
+their SCSI ID configured automatically depending on which slot they're
+plugged into.  If you're doing hotplug SCSI, it's probably with SCA drives.
+
+> Mixing devices with different electrical standards can be tricky.  Some
+> can't be mixed.  HVD is not compatible with any other.
+
+And plugging any SE devince onto an LVD bus causes the whole bus to fall
+back to SE.  This includes terminators.
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
 -
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
