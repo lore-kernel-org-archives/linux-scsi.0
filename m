@@ -1,1103 +1,1836 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [ANNOUNCE] Adaptec SAS/SATA device driver [11/27]
-Date: Thu, 17 Feb 2005 12:36:31 -0500
-Message-ID: <4214D61F.7090204@adaptec.com>
+Subject: [ANNOUNCE] Adaptec SAS/SATA device driver [08/27]
+Date: Thu, 17 Feb 2005 12:36:14 -0500
+Message-ID: <4214D60E.9040501@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from magic.adaptec.com ([216.52.22.17]:49297 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262325AbVBQRgg (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:32913 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262319AbVBQRgT (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Feb 2005 12:36:36 -0500
+	Thu, 17 Feb 2005 12:36:19 -0500
 Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHaZr30944
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:36:35 -0800
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHaIr30788
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:36:18 -0800
 Received: from rtpe2k01.adaptec.com (rtpe2k01.adaptec.com [10.110.12.40])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHaYb21127
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:36:34 -0800
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHaHb21031
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:36:17 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Inline functions.
+Hardware interface. Part 2/3.
 
-diff -Nru a/drivers/scsi/adp94xx/adp94xx_inline.h b/drivers/scsi/adp94xx/adp94xx_inline.h
---- /dev/null	Wed Dec 31 16:00:00 196900
-+++ b/drivers/scsi/adp94xx/adp94xx_inline.h	2005-02-16 16:08:12 -05:00
-@@ -0,0 +1,1075 @@
++
 +/*
-+ * Adaptec ADP94xx SAS HBA device driver for Linux.
-+ *
-+ * Written by : David Chaw  <david_chaw@adaptec.com>
-+ *
-+ * Copyright (c) 2004 Adaptec Inc.
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ * 1. Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions, and the following disclaimer,
-+ *    without modification.
-+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
-+ *    substantially similar to the "NO WARRANTY" disclaimer below
-+ *    ("Disclaimer") and any redistribution must be conditioned upon
-+ *    including a substantially similar Disclaimer requirement for further
-+ *    binary redistribution.
-+ * 3. Neither the names of the above-listed copyright holders nor the names
-+ *    of any contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * Alternatively, this software may be distributed under the terms of the
-+ * GNU General Public License ("GPL") version 2 as published by the Free
-+ * Software Foundation.
-+ *
-+ * NO WARRANTY
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+ * POSSIBILITY OF SUCH DAMAGES.
-+ *
-+ * $Id: //depot/razor/linux/src/adp94xx_inline.h#29 $
++ * Function:
++ * 	asd_hwi_process_prim_event()
 + * 
-+ */
-+
-+#ifndef ADP94XX_INLINE_H
-+#define ADP94XX_INLINE_H
-+
-+
-+/******************************* Locking routines *****************************/
-+
-+static inline void 	asd_lock_init(struct asd_softc *asd);
-+static inline void 	asd_lock(struct asd_softc *asd, u_long *flags);
-+static inline void 	asd_unlock(struct asd_softc *asd, u_long *flags);
-+
-+/* Locking routines during midlayer entry points */
-+static inline void 	asd_sml_lock(struct asd_softc *asd);
-+static inline void 	asd_sml_unlock(struct asd_softc *asd);
-+
-+/* Locking routine during list manipulation */
-+extern spinlock_t asd_list_spinlock;
-+static inline void 	asd_list_lockinit(void);
-+static inline void 	asd_list_lock(u_long *flags);
-+static inline void 	asd_list_unlock(u_long *flags);
-+
-+static inline void
-+asd_lock_init(struct asd_softc  *asd)
-+{
-+	spin_lock_init(&asd->platform_data->spinlock);
-+}
-+
-+static inline void
-+asd_lock(struct asd_softc *asd, u_long *flags)
-+{
-+	spin_lock_irqsave(&asd->platform_data->spinlock, *flags);
-+}
-+
-+static inline void
-+asd_unlock(struct asd_softc *asd, u_long *flags)
-+{
-+	spin_unlock_irqrestore(&asd->platform_data->spinlock, *flags);
-+}
-+
-+#ifdef CONFIG_SMP
-+#define ASD_LOCK_ASSERT(asd) \
-+	ASSERT(spin_is_locked(&asd->platform_data->spinlock))
-+#else
-+#define ASD_LOCK_ASSERT(asd)
-+#endif
-+
-+static inline void 
-+asd_sml_lock(struct asd_softc *asd)
-+{
-+#if (SCSI_ML_HAS_HOST_LOCK == 0)
-+	spin_unlock(&io_request_lock);
-+	spin_lock(&asd->platform_data->spinlock);
-+#endif
-+}
-+
-+static inline void 
-+asd_sml_unlock(struct asd_softc *asd)
-+{
-+#if (SCSI_ML_HAS_HOST_LOCK == 0)
-+	spin_unlock(&asd->platform_data->spinlock);
-+	spin_lock(&io_request_lock);
-+#endif
-+}
-+
-+#if (SCSI_ML_HAS_HOST_LOCK == 0)
-+#define ASD_SML_LOCK_ASSERT(asd)  {\
-+	ASSERT(!spin_is_locked(&asd->platform_data->spinlock)); \
-+	ASSERT(spin_is_locked(&io_request_lock)) }
-+#else
-+#define ASD_SML_LOCK_ASSERT(asd)
-+#endif
-+
-+static inline void 
-+asd_list_lockinit(void)
-+{
-+	spin_lock_init(&asd_list_spinlock);
-+}
-+
-+static inline void 
-+asd_list_lock(u_long *flags)
-+{
-+	spin_lock_irqsave(&asd_list_spinlock, *flags);
-+}
-+
-+static inline void 
-+asd_list_unlock(u_long *flags)
-+{
-+	spin_unlock_irqrestore(&asd_list_spinlock, *flags);
-+}
-+
-+
-+/* Delay routine for microseconds interval */
-+static inline void asd_delay(long usecs);
-+
-+static inline void
-+asd_delay(long usecs)
-+{
-+	/* 
-+	 * Delay max up to 2 milliseconds at a time. 
-+	 */
-+	/*touch_nmi_watchdog();*/
-+	if (usecs > 1000)
-+		mdelay((usecs/1000));
-+	else
-+		udelay(usecs);
-+}
-+
-+static inline char *asd_name(struct asd_softc  *asd);
-+	
-+static inline char *
-+asd_name(struct asd_softc  *asd)
-+{
-+	return (asd->profile.name);
-+}
-+
-+/************************* Large Disk Handling ********************************/
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-+static inline int asd_sector_div(u_long capacity, int heads, int sectors);
-+
-+static inline int
-+asd_sector_div(u_long capacity, int heads, int sectors)
-+{
-+	return (capacity / (heads * sectors));
-+}
-+#else
-+static inline int asd_sector_div(sector_t capacity, int heads, int sectors);
-+
-+static inline int
-+asd_sector_div(sector_t capacity, int heads, int sectors)
-+{
-+	sector_div(capacity, (heads * sectors));
-+	return (int)capacity;
-+}
-+#endif
-+
-+/************************ Memory space  access routines ***********************/
-+
-+static inline uint8_t  	asd_read_byte(struct asd_softc *asd, u_long offset);
-+static inline uint16_t 	asd_read_word(struct asd_softc *asd, u_long offset);
-+static inline uint32_t 	asd_read_dword(struct asd_softc *asd, u_long offset);
-+static inline void 	asd_write_byte(struct asd_softc *asd, u_long offset, 
-+				       uint8_t val);
-+static inline void 	asd_write_word(struct asd_softc *asd, u_long offset, 
-+				       uint16_t val);
-+static inline void 	asd_write_dword(struct asd_softc *asd, u_long offset, 
-+					uint32_t val);
-+static inline void 	asd_readstr_byte(struct asd_softc *asd, u_long offset,
-+	       				 uint8_t *buffer, u_long count);
-+static inline void 	asd_readstr_word(struct asd_softc *asd, u_long offset,
-+					 uint16_t *buffer, u_long count);
-+static inline void 	asd_readstr_dword(struct asd_softc *asd, u_long offset,
-+					  uint32_t *buffer, u_long count);
-+static inline void 	asd_writestr_byte(struct asd_softc *asd, u_long offset,
-+					  uint8_t *buffer, u_long count);
-+static inline void 	asd_writestr_word(struct asd_softc *asd, u_long offset,
-+					  uint16_t *buffer, u_long count);
-+static inline void 	asd_writestr_dword(struct asd_softc *asd, u_long offset,					   uint32_t *buffer, u_long count);
-+
-+static inline uint8_t
-+asd_read_byte(struct asd_softc *asd, u_long offset)
-+{
-+	uint8_t		val;
-+	
-+	if (asd->io_handle[0]->type == ASD_IO_SPACE)
-+		val = inb(asd->io_handle[0]->baseaddr.iobase + 
-+			 (offset & 0xFF));
-+	else
-+		val = readb(asd->io_handle[0]->baseaddr.membase + offset);
-+	mb();
-+	return val;
-+}
-+
-+static inline uint16_t
-+asd_read_word(struct asd_softc *asd, u_long offset)
-+{
-+	uint16_t	val;
-+	
-+	if (asd->io_handle[0]->type == ASD_IO_SPACE)
-+		val = inw(asd->io_handle[0]->baseaddr.iobase + 
-+			 (offset & 0xFF));
-+	else
-+		val = readw(asd->io_handle[0]->baseaddr.membase + offset);	
-+	mb();	
-+	return val;
-+}
-+
-+static inline uint32_t
-+asd_read_dword(struct asd_softc *asd, u_long offset)
-+{
-+	uint32_t	val;
-+	
-+	if (asd->io_handle[0]->type == ASD_IO_SPACE)
-+		val = inl(asd->io_handle[0]->baseaddr.iobase + 
-+			 (offset & 0xFF));
-+	else
-+		val = readl(asd->io_handle[0]->baseaddr.membase + offset);
-+	mb();
-+	return val;
-+}
-+
-+static inline void
-+asd_write_byte(struct asd_softc *asd, u_long offset, uint8_t val)
-+{
-+	if (asd->io_handle[0]->type == ASD_IO_SPACE)
-+		outb(val, asd->io_handle[0]->baseaddr.iobase + 
-+		    (offset & 0xFF));
-+	else
-+		writeb(val, asd->io_handle[0]->baseaddr.membase + offset);
-+	mb();
-+}
-+	
-+static inline void
-+asd_write_word(struct asd_softc *asd, u_long offset, uint16_t val)
-+{
-+	if (asd->io_handle[0]->type == ASD_IO_SPACE)
-+		outw(val, asd->io_handle[0]->baseaddr.iobase + 
-+		    (offset & 0xFF));
-+	else
-+		writew(val, asd->io_handle[0]->baseaddr.membase + offset);
-+	mb();
-+}
-+
-+static inline void
-+asd_write_dword(struct asd_softc *asd, u_long offset, uint32_t val)
-+{
-+	if (asd->io_handle[0]->type == ASD_IO_SPACE)
-+		outl(val, asd->io_handle[0]->baseaddr.iobase + 
-+		    (offset & 0xFF));
-+	else
-+		writel(val, asd->io_handle[0]->baseaddr.membase + offset);
-+	mb();
-+}
-+
-+static inline void
-+asd_readstr_byte(struct asd_softc *asd, u_long offset, uint8_t *buffer,
-+		 u_long	count)
-+{ 	
-+	u_long	i;
-+	
-+	for (i = 0; i < count; i++)
-+		*buffer++ = asd_read_byte(asd, offset);
-+}
-+
-+static inline void
-+asd_readstr_word(struct asd_softc *asd, u_long offset, uint16_t *buffer,
-+		 u_long	count)
-+{ 	
-+	u_long	i;
-+	
-+	for (i = 0; i < count; i++)
-+		*buffer++ = asd_read_word(asd, offset);
-+}
-+
-+static inline void
-+asd_readstr_dword(struct asd_softc *asd, u_long	offset, uint32_t *buffer,
-+		  u_long count)
-+{ 	
-+	u_long	i;
-+	
-+	for (i = 0; i < count; i++)
-+		*buffer++ = asd_read_dword(asd, offset);
-+}
-+
-+static inline void
-+asd_writestr_byte(struct asd_softc *asd, u_long offset, uint8_t	*buffer,
-+		  u_long count)
-+{ 	
-+	u_long	i;
-+	
-+	for (i = 0; i < count; i++)
-+		asd_write_byte(asd, offset, *buffer++);
-+}
-+
-+static inline void
-+asd_writestr_word(struct asd_softc *asd, u_long	offset, uint16_t *buffer,
-+		  u_long count)
-+{ 	
-+	u_long	i;
-+	
-+	for (i = 0; i < count; i++)
-+		asd_write_word(asd, offset, *buffer++);
-+}
-+
-+static inline void
-+asd_writestr_dword(struct asd_softc *asd, u_long offset, uint32_t *buffer,
-+		   u_long count)
-+{ 	
-+	u_long	i;
-+	
-+	for (i = 0; i < count; i++)
-+		asd_write_dword(asd, offset, *buffer++);
-+}
-+
-+
-+/******************* PCI Config Space (PCIC) access routines ******************/
-+
-+static inline uint8_t	asd_pcic_read_byte(struct asd_softc *asd, int reg);
-+static inline uint16_t 	asd_pcic_read_word(struct asd_softc *asd, int reg);   
-+static inline uint32_t 	asd_pcic_read_dword(struct asd_softc *asd, int reg);
-+static inline void 	asd_pcic_write_byte(struct asd_softc *asd, int reg, 
-+					    uint8_t val);
-+static inline void 	asd_pcic_write_word(struct asd_softc *asd, int reg, 
-+					    uint16_t val);
-+static inline void 	asd_pcic_write_dword(struct asd_softc *asd, int reg, 
-+					     uint32_t val);
-+static inline void 	asd_flush_device_writes(struct asd_softc *asd);
-+					
-+static inline uint8_t
-+asd_pcic_read_byte(struct asd_softc *asd, int reg)
-+{
-+	struct pci_dev	*dev;
-+	uint8_t		val;
-+	
-+	dev = asd_dev_to_pdev(asd->dev);
-+	pci_read_config_byte(dev, reg, &val);
-+	
-+	return (val);
-+}
-+
-+static inline uint16_t
-+asd_pcic_read_word(struct asd_softc *asd, int reg)
-+{
-+	struct pci_dev	*dev;
-+	uint16_t	val;
-+	
-+	dev = asd_dev_to_pdev(asd->dev);	
-+	pci_read_config_word(dev, reg, &val);
-+	
-+	return (val);
-+}
-+
-+static inline uint32_t
-+asd_pcic_read_dword(struct asd_softc *asd, int reg)
-+{
-+	struct pci_dev	*dev;
-+	uint32_t	val;
-+	
-+	dev = asd_dev_to_pdev(asd->dev);
-+	pci_read_config_dword(dev, reg, &val);
-+	
-+	return (val);
-+}
-+
-+static inline void
-+asd_pcic_write_byte(struct asd_softc *asd, int reg, uint8_t val)
-+{
-+	struct pci_dev	*dev;
-+	
-+	dev = asd_dev_to_pdev(asd->dev);
-+	pci_write_config_byte(dev, reg, val);
-+}	
-+ 
-+static inline void
-+asd_pcic_write_word(struct asd_softc *asd, int reg, uint16_t val)
-+{
-+	struct pci_dev	*dev;
-+	
-+	dev = asd_dev_to_pdev(asd->dev);
-+	pci_write_config_word(dev, reg, val);
-+}
-+
-+static inline void
-+asd_pcic_write_dword(struct asd_softc *asd, int reg, uint32_t val)
-+{
-+	struct pci_dev	*dev;
-+	
-+	dev = asd_dev_to_pdev(asd->dev);
-+	pci_write_config_dword(dev, reg, val);
-+}
-+
-+static inline void
-+asd_flush_device_writes(struct asd_softc *asd)
-+{
-+	/*
-+	 * Reading the interrupt status register
-+	 * is always safe, but is this enough to
-+	 * flush writes on *all* the architectures
-+	 * we may support?
-+	 */
-+	asd_read_dword(asd, CHIMINT);
-+}
-+
-+
-+/**************** Sliding Windows memory read/write utilities *****************/
-+
-+static inline uint32_t	asd_hwi_adjust_sw_b(struct asd_softc *asd, 
-+					    uint32_t reg);
-+static inline uint32_t	asd_hwi_adjust_sw_c(struct asd_softc *asd, 
-+					    uint32_t reg);
-+static inline uint8_t	asd_hwi_swb_read_byte(struct asd_softc *asd, 
-+					      uint32_t reg);
-+static inline uint16_t	asd_hwi_swb_read_word(struct asd_softc *asd, 
-+					      uint32_t reg);
-+static inline uint32_t	asd_hwi_swb_read_dword(struct asd_softc *asd, 
-+					       uint32_t reg);
-+static inline void	asd_hwi_swb_write_byte(struct asd_softc *asd, 
-+					       uint32_t reg, uint8_t val);
-+static inline void	asd_hwi_swb_write_word(struct asd_softc *asd, 
-+					       uint32_t reg, uint16_t val);
-+static inline void	asd_hwi_swb_write_dword(struct asd_softc *asd, 
-+						uint32_t reg, uint32_t val);
-+static inline uint8_t	asd_hwi_swc_read_byte(struct asd_softc *asd, 
-+					      uint32_t reg);
-+static inline uint16_t	asd_hwi_swc_read_word(struct asd_softc *asd, 
-+					      uint32_t reg);
-+static inline uint32_t	asd_hwi_swc_read_dword(struct asd_softc *asd, 
-+					       uint32_t reg);
-+static inline void	asd_hwi_swc_write_byte(struct asd_softc *asd, 
-+					       uint32_t reg, uint8_t val);
-+static inline void	asd_hwi_swc_write_word(struct asd_softc *asd, 
-+					       uint32_t reg, uint16_t val);
-+static inline void	asd_hwi_swc_write_dword(struct asd_softc *asd, 
-+						uint32_t reg, uint32_t val);
-+static inline void 	asd_hwi_set_hw_addr(struct asd_softc *asd, 
-+					    uint32_t base_addr, 
-+					    dma_addr_t bus_addr);
-+
-+/* 
-+ * Function:
-+ *	asd_hwi_adjust_sw_b()
-+ *
 + * Description:
-+ *      Setup the Sliding Window B to proper base in order to be able to 
-+ *	access to the desired register.
++ *	Process any recevied primitives that are not handled by the 
++ *	firmware (eg. BROADCAST, HARD_RESET, etc.)
 + */
-+static inline uint32_t
-+asd_hwi_adjust_sw_b(struct asd_softc *asd, uint32_t reg)
++static void
++asd_hwi_process_prim_event(struct asd_softc *asd, struct asd_phy *phy,
++			   u_int reg_addr, u_int reg_content)
 +{
-+	uint32_t	new_swb_base;
-+	uint32_t	new_reg_offset;
-+	
-+	if (asd->io_handle[0]->type == ASD_IO_SPACE) {
-+		/* IO Mapped. */
-+		new_swb_base = (uint32_t) (reg & ~BASEB_IOMAP_MASK);
-+		new_reg_offset = (uint32_t) (reg & BASEB_IOMAP_MASK);
-+	} else {
-+		/*To be reviewed...*/ 
++	uint32_t	reg_val;
 +
-+		/* Memory Mapped. */
-+		uint32_t	mbar0_mask;
-+		uint32_t	offset;
-+
-+		offset = (uint32_t) (reg - asd->io_handle[0]->swb_base);
-+		mbar0_mask = asd->io_handle[0]->length - 1;
-+
++	reg_val = 0;
++	if (reg_addr == LmPRMSTAT0BYTE1) {
 +		/* 
-+		* Check if the register to be accessed is already accessible 
-+		* with the current window B and avoid reprogramming the 
-+		* window. 
-+	        *
-+		* The boundaries of window B in a memory mapped space are:
-+		* lower bound: 
-+		*	io_handle[0]->swb_base (e.g. 0xBF80_0000h,current value)
-+		*	mbar0_mask (e.g., 0003_FFFFh)
-+		*	BASEB_START (e.g. 0000_0080h) or BF83_FF7Fh for example.
-+		*
-+		* The following check assumes that the largest access to
-+		* reg will be an 8 byte access.
-+		*/
-+         
-+		if ((reg >= (uint32_t) asd->io_handle[0]->swb_base) &&
-+			((reg + 7) <= (uint32_t) (asd->io_handle[0]->swb_base 
-+				+ mbar0_mask - BASEB_START))) {
++		 * First byte of Primitive Status register is intended for
++		 * BROADCAST primitives.
++		 */
++		reg_val = (reg_content << 8) & 0xFF00;
++		switch (reg_val) {
++		case LmBROADCH:
++		case LmBROADRVCH0:
++		case LmBROADRVCH1:
++			asd_log(ASD_DBG_RUNTIME, "BROADCAST PRIMITIVE "
++				"received.\n");
 +			/* 
-+			* The window B is already positioned to allow the 
-+			* register to be accessed. The offset to the register 
-+			* is the difference between the register to be accessed 
-+			* and the current value of the base address register
-+			*/
-+			new_swb_base = (uint32_t) asd->io_handle[0]->swb_base;
-+			new_reg_offset = offset;
-+		} else {
-+			/*
-+			* The window B base address register must be changed to 
-+			* position window B to a location where the register 
-+			* can be accessed.
-+			*/
-+			new_swb_base = (uint32_t) (reg & ~BASEB_IOMAP_MASK);
-+			new_reg_offset = (uint32_t) (reg & BASEB_IOMAP_MASK);
++			 * Set the event that discovery is needed and
++			 * wakeup discovery thread.  
++			 */ 
++			if(phy->src_port->events & ASD_DISCOVERY_PROCESS)
++				phy->src_port->events |= ASD_DISCOVERY_RETRY;
++			else
++				phy->src_port->events = ASD_DISCOVERY_REQ;
++			asd_wakeup_sem(&asd->platform_data->discovery_sem);
++			phy->brdcst_rcvd_cnt++;
++			break;
++
++		default:
++			asd_log(ASD_DBG_ERROR, "Unsupported BROADCAST "
++				"primitive.\n");
++			break;
 +		}
-+#if 0
-+		/* 
-+		* The following code is not working correctly with a reg 
-+		* value of 0xBF83FF80. The resulting base of 0xBF80_0000 and 
-+		* the resulting offset of 0x003F_FF80, appear correct, but 
-+		* the calling routines always add BASEB_START to the offset. 
-+		* This results in an invalid write acess.
-+		*/
-+      
-+		uint32_t	mbar0_mask;
-+		uint32_t	offset;
-+		
-+		offset = (uint32_t) (reg - asd->io_handle[0]->swb_base);
-+		mbar0_mask = asd->io_handle[0]->length - 1;
-+		if (offset & ~mbar0_mask) {
-+			/*
-+			 * The register needs to be accessed is out of the 
-+			 * current sliding window B range.
-+			 */
-+			new_swb_base = (uint32_t) (reg & ~mbar0_mask);
-+			new_reg_offset = (uint32_t) (reg & mbar0_mask);
-+		} else {
-+			/*
-+			 * The register needs to be accessed is in the 
-+			 * current sliding window B range.
-+			 */
-+			 new_swb_base = asd->io_handle[0]->swb_base;
-+			 new_reg_offset = offset;
++	} else if (reg_addr == LmPRMSTAT1BYTE0) {
++		reg_val = reg_content & 0xFF;
++		if (reg_val == LmHARDRST) {
++			asd_log(ASD_DBG_RUNTIME, "HARD_RESET primitive "
++				"received.\n");
 +		}
-+#endif
++	} else if (reg_addr == LmPRMSTAT0BYTE3) {
++		reg_val = (reg_content << 24) & 0xFF000000;
++		if (reg_val == LmUNKNOWNP) {
++			asd_log(ASD_DBG_RUNTIME, "Undefined BREAK primitive "
++				"received.\n");
++		}
++	} else {
++		asd_log(ASD_DBG_ERROR, "Unsupported PRIMITIVE STATUS REG.\n");
 +	}
-+	/*
-+	 * Adjust the SW B Base if the the new base is different from the old
-+	 * one.
-+	 */
-+	if (new_swb_base != asd->io_handle[0]->swb_base) {
-+		asd_write_dword(asd, PCIC_BASEB, new_swb_base);
-+		asd->io_handle[0]->swb_base = new_swb_base;
-+	}
-+	
-+	return (new_reg_offset);
-+} 
-+
-+/* 
-+ * Function:
-+ *	asd_hwi_adjust_sw_c()
-+ *
-+ * Description:
-+ *      Setup the Sliding Window C to proper base in order to be able to 
-+ *	access to the desired register.
-+ */
-+static inline uint32_t   
-+asd_hwi_adjust_sw_c(struct asd_softc *asd, uint32_t reg)
-+{
-+	uint32_t	new_swc_base;
-+	uint32_t	new_reg_offset;
-+
-+	new_swc_base = (uint32_t) (reg & ~BASEC_MASK);
-+	new_reg_offset = (uint32_t) (reg & BASEC_MASK);
-+	
-+	asd_write_dword(asd, PCIC_BASEC, new_swc_base);
-+	return (new_reg_offset);
-+}
-+
-+static inline uint8_t
-+asd_hwi_swb_read_byte(struct asd_softc *asd, uint32_t reg)
-+{
-+	uint32_t	reg_offset;
-+	
-+	reg_offset = asd_hwi_adjust_sw_b(asd, reg);
-+	return ((uint8_t) asd_read_byte(asd, (reg_offset + BASEB_START)));
-+}
-+
-+static inline uint16_t
-+asd_hwi_swb_read_word(struct asd_softc *asd, uint32_t reg)
-+{
-+	uint32_t	reg_offset;
-+	
-+	reg_offset = asd_hwi_adjust_sw_b(asd, reg);
-+	return ((uint16_t) asd_read_word(asd, (reg_offset + BASEB_START)));
-+}
-+
-+static inline uint32_t
-+asd_hwi_swb_read_dword(struct asd_softc *asd, uint32_t reg)
-+{
-+	uint32_t	reg_offset;
-+	
-+	reg_offset = asd_hwi_adjust_sw_b(asd, reg);
-+	return ((uint32_t) asd_read_dword(asd, (reg_offset + BASEB_START)));
-+}
-+
-+static inline void
-+asd_hwi_swb_write_byte(struct asd_softc *asd, uint32_t reg, uint8_t val)
-+{
-+	uint32_t	reg_offset;
-+	
-+	reg_offset = asd_hwi_adjust_sw_b(asd, reg);
-+	asd_write_byte(asd, (reg_offset + BASEB_START), val);
-+}
-+
-+static inline void
-+asd_hwi_swb_write_word(struct asd_softc *asd, uint32_t reg, uint16_t val)
-+{
-+	uint32_t	reg_offset;
-+	
-+	reg_offset = asd_hwi_adjust_sw_b(asd, reg);
-+	asd_write_word(asd, (reg_offset + BASEB_START), val);
-+}
-+
-+static inline void
-+asd_hwi_swb_write_dword(struct asd_softc  *asd, uint32_t reg, uint32_t val)
-+{
-+	uint32_t	reg_offset;
-+	
-+	reg_offset = asd_hwi_adjust_sw_b(asd, reg);
-+	asd_write_dword(asd, (reg_offset + BASEB_START), val);
-+}
-+
-+static inline uint8_t
-+asd_hwi_swc_read_byte(struct asd_softc *asd, uint32_t reg)
-+{
-+	uint32_t	reg_offset;
-+	
-+	reg_offset = asd_hwi_adjust_sw_c(asd, reg);
-+	return ((uint8_t) asd_read_byte(asd, (reg_offset + BASEC_START)));
-+} 
-+
-+static inline uint16_t
-+asd_hwi_swc_read_word(struct asd_softc *asd, uint32_t reg)
-+{
-+	uint32_t	reg_offset;
-+	
-+	reg_offset = asd_hwi_adjust_sw_c(asd, reg);
-+	return ((uint16_t) asd_read_word(asd, (reg_offset + BASEC_START)));
-+}
-+
-+static inline uint32_t
-+asd_hwi_swc_read_dword(struct asd_softc *asd, uint32_t reg)
-+{
-+	uint32_t	reg_offset;
-+	
-+	reg_offset = asd_hwi_adjust_sw_c(asd, reg);
-+	return ((uint32_t) asd_read_dword(asd, (reg_offset + BASEC_START)));
-+}
-+
-+static inline void
-+asd_hwi_swc_write_byte(struct asd_softc *asd, uint32_t reg, uint8_t val)
-+{
-+	uint32_t	reg_offset;
-+	
-+	reg_offset = asd_hwi_adjust_sw_c(asd, reg);	
-+	asd_write_byte(asd, (reg_offset + BASEC_START), val);
-+}
-+
-+static inline void
-+asd_hwi_swc_write_word(struct asd_softc *asd, uint32_t reg, uint16_t val)
-+{
-+	uint32_t	reg_offset;
-+	
-+	reg_offset = asd_hwi_adjust_sw_c(asd, reg);	
-+	asd_write_word(asd, (reg_offset + BASEC_START), val);
-+}
-+
-+static inline void
-+asd_hwi_swc_write_dword(struct asd_softc *asd, uint32_t reg, uint32_t val)
-+{
-+	uint32_t	reg_offset;
-+	
-+	reg_offset = asd_hwi_adjust_sw_c(asd, reg);	
-+	asd_write_dword(asd, (reg_offset + BASEC_START), val);
-+}
-+
-+static inline void
-+asd_hwi_set_hw_addr(struct asd_softc *asd, uint32_t base_addr,
-+		    dma_addr_t bus_addr)
-+{
-+	asd_hwi_swb_write_dword(asd, base_addr,
-+				asd_htole32(ASD_GET_PADR(bus_addr)));
-+	asd_hwi_swb_write_dword(asd, base_addr + 4,
-+				asd_htole32(ASD_GET_PUADR(bus_addr)));
-+}
-+
-+
-+/************************** Scatter/Gather entry setup ************************/
-+
-+static inline int	asd_sg_setup(struct sg_element *sg, dma_addr_t addr,
-+				     uint32_t len, int last);
-+
-+static inline int
-+asd_sg_setup(struct sg_element *sg, dma_addr_t addr, uint32_t len, int last)
-+{
-+	sg->bus_address = asd_htole64(addr);
-+	sg->length = asd_htole32(len);
-+	memset(sg->res_1, 0, sizeof(*sg) - offsetof(struct sg_element, res_1));
-+	if (last)
-+		sg->flags |= SG_EOL;
-+	return (0);
-+}
-+
-+
-+/********************* Host Queue management routines ************************/ 
-+
-+static inline struct asd_device *
-+			asd_next_device_to_run(struct asd_softc *asd);
-+static inline void	asd_schedule_runq(struct asd_softc *asd);
-+static inline void	asd_schedule_unblock(struct asd_softc *asd);
-+static inline void	asd_freeze_hostq(struct asd_softc *asd);
-+static inline void	asd_release_hostq(struct asd_softc *asd);
-+static inline void	asd_release_hostq_locked(struct asd_softc *asd);
-+static inline void	asd_freeze_targetq(struct asd_softc *asd,
-+					   struct asd_target *targ);
-+static inline void	asd_unfreeze_targetq(struct asd_softc *asd,
-+					     struct asd_target *targ);
-+static inline void	asd_setup_dev_timer(struct asd_device *dev,
-+					    u_long timeout,
-+					    void (*func)(u_long));
-+static inline void	asd_setup_dev_dpc_task(struct asd_device *dev,
-+					       void (*func)(void *));
-+					
-+
-+static inline struct asd_device *
-+asd_next_device_to_run(struct asd_softc *asd)
-+{
-+	ASD_LOCK_ASSERT(asd);
-+
-+	if (asd->platform_data->qfrozen != 0)
-+		return (NULL);
-+
-+	if (list_empty(&asd->platform_data->device_runq))
-+		return (NULL);
-+
-+	return (list_entry(asd->platform_data->device_runq.next,
-+			   struct asd_device, links));
 +}
 +
 +/*
-+ * Must be called with our lock held.
++ * Function:
++ * 	asd_hwi_process_phy_event()
++ * 
++ * Description:
++ *	Process received async. phy events.
 + */
-+static inline void
-+asd_schedule_runq(struct asd_softc *asd)
++static void
++asd_hwi_process_phy_event(struct asd_softc *asd, struct asd_phy *phy, 
++			  u_int oob_status, u_int oob_mode)
 +{
-+	ASD_LOCK_ASSERT(asd);
++	switch (oob_status) {
++	case DEVICE_REMOVED:
++		/*
++		 * We received a phy event that notified us that the 
++		 * signal is lost with the direct attached device to 
++		 * this phy. The device has been hot removed.
++		 */	 
++		asd_log(ASD_DBG_RUNTIME, 
++			"PHY_EVENT (%d) - DEVICE HOT REMOVED.\n", phy->id);
++		phy->state = ASD_PHY_ONLINE;
++		phy->attr = (ASD_SSP_INITIATOR | ASD_SMP_INITIATOR | 
++			     ASD_STP_INITIATOR);
 +
-+	tasklet_schedule(&asd->platform_data->runq_tasklet);
-+}
++		if (phy->src_port != NULL)
++			phy->src_port->events |= ASD_LOSS_OF_SIGNAL;
 +
-+static inline void
-+asd_schedule_unblock(struct asd_softc *asd)
-+{
-+	tasklet_schedule(&asd->platform_data->unblock_tasklet);
-+}
++		asd_wakeup_sem(&asd->platform_data->discovery_sem);
++		break;
 +
-+static inline void
-+asd_freeze_hostq(struct asd_softc *asd)
-+{
-+	asd->platform_data->qfrozen++;
-+	if (asd->platform_data->qfrozen == 1)
-+		scsi_block_requests(asd->platform_data->scsi_host);
-+}
++	case DEVICE_ADDED_W_CNT:
++	case DEVICE_ADDED_WO_CNT:
++		asd_log(ASD_DBG_RUNTIME,
++			"PHY_EVENT (%d) - DEVICE HOT ADDED.\n", phy->id);
 +
-+static inline void
-+asd_release_hostq(struct asd_softc *asd)
-+{
-+	u_long flags;
++		/* There is a device attached. */
++		if (oob_status & CURRENT_DEVICE_PRESENT) {
++			phy->attr |= ASD_DEVICE_PRESENT;
 +
-+	asd_lock(asd, &flags);
-+	asd_release_hostq_locked(asd);
-+	asd_unlock(asd, &flags);
-+}
++			if (oob_status & CURRENT_SPINUP_HOLD)
++				phy->attr |= ASD_SATA_SPINUP_HOLD;
 +
-+static inline void
-+asd_release_hostq_locked(struct asd_softc *asd)
-+{
-+	if (asd->platform_data->qfrozen > 0)
-+		asd->platform_data->qfrozen--;
-+	if (asd->platform_data->qfrozen == 0) {
-+		asd_schedule_unblock(asd);
-+		asd_schedule_runq(asd);
-+	}
-+}
-+
-+static inline void
-+asd_freeze_targetq(struct asd_softc *asd, struct asd_target *targ)
-+{
-+	targ->qfrozen++;
-+}
-+
-+static inline void
-+asd_unfreeze_targetq(struct asd_softc *asd, struct asd_target *targ)
-+{
-+	if (targ->qfrozen > 0)
-+		targ->qfrozen--;
-+}
-+
-+static inline void
-+asd_setup_dev_timer(struct asd_device *dev, u_long timeout,
-+		    void (*func)(u_long))
-+{
-+	dev->flags |= ASD_DEV_TIMER_ACTIVE;
-+	init_timer(&dev->timer);
-+	dev->timer.expires = jiffies + timeout;
-+	dev->timer.data = (u_long) dev;
-+	dev->timer.function = func;
-+	add_timer(&dev->timer);
-+}
-+
-+static inline void
-+asd_setup_dev_dpc_task(struct asd_device *dev, void (*func)(void *))
-+{
-+	dev->flags |= ASD_DEV_DPC_ACTIVE;
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,41)
-+	dev->taskq.routine = func;
-+	dev->taskq.data = (void *) dev;
-+	schedule_task(&dev->taskq);
-+#else
-+	INIT_WORK(&dev->workq, func, (void *) dev);
-+	schedule_work(&dev->workq);
-+#endif
-+}
-+
-+/**************************** Semaphores Handling *****************************/
-+
-+static inline void	asd_sleep_sem(struct semaphore *sem);
-+static inline void	asd_wakeup_sem(struct semaphore *sem);
-+
-+static inline void
-+asd_sleep_sem(struct semaphore *sem)
-+{
-+	down(sem);
-+}
-+
-+static inline void
-+asd_wakeup_sem(struct semaphore *sem)
-+{
-+	up(sem);
-+}
-+
-+/****************************** SCB/EDB Handling ******************************/
-+
-+static inline void 	asd_platform_scb_free(struct asd_softc *asd, 
-+					      struct scb *scb);
-+static inline void 	asd_hwi_free_scb(struct asd_softc *asd,
-+					 struct scb *scb);
-+static inline void 	*asd_hwi_sdata_bus_to_virt(struct asd_softc *asd, 
-+						   uint64_t baddr);
-+static inline union edb *asd_hwi_get_edb_vaddr(struct asd_softc *asd, 
-+						uint64_t baddr);
-+static inline union edb *asd_hwi_get_edb_from_dl(struct asd_softc *asd,
-+						 struct scb *scb,
-+						 struct asd_done_list *dl,
-+						 struct scb **pescb,
-+						 u_int *pedb_index);
-+static inline void	asd_setup_scb_timer(struct scb *scb, u_long timeout,
-+					    void (*func)(u_long));
-+static inline void	asd_cmd_set_retry_status(Scsi_Cmnd *cmd);
-+static inline void	asd_cmd_set_offline_status(Scsi_Cmnd *cmd);
-+
-+static inline void
-+asd_platform_scb_free(struct asd_softc *asd, struct scb *scb)
-+{
-+	if ((asd->flags & ASD_SCB_RESOURCE_SHORTAGE) != 0) {
-+		asd->flags &= ~ASD_SCB_RESOURCE_SHORTAGE;
-+		if ((asd->flags & ASD_WAITING_FOR_RESOURCE) != 0) {
-+			asd->flags &= ~ASD_WAITING_FOR_RESOURCE;
-+			wake_up(&asd->platform_data->waitq);
++			phy->state = ASD_PHY_WAITING_FOR_ID_ADDR;
 +		}
-+		asd_release_hostq_locked(asd);
++
++		/* Get the negotiated connection rate. */
++		if (oob_mode & PHY_SPEED_30) {
++			phy->conn_rate = SAS_30GBPS_RATE;
++		} else if (oob_mode & PHY_SPEED_15) {
++			phy->conn_rate = SAS_15GBPS_RATE;
++		}
++			
++		/* Get the transport mode. */
++		if (oob_mode & SAS_MODE) {
++			phy->attr |= ASD_SAS_MODE;
++		} else if (oob_mode & SATA_MODE) {
++			phy->attr |= ASD_SATA_MODE;
++		}
++
++		break;
++	
++	case CURRENT_OOB1_ERROR:
++	case CURRENT_OOB2_ERROR:
++		asd_print("PHY_EVENT (%d) - OOB ERROR.\n", phy->id);
++		break;
++	
++	default:
++		asd_log(ASD_DBG_ERROR,
++			"PHY_EVENT (%d) - UNKNOWN EVENT 0x%x.\n", phy->id,
++			oob_status);
++		break;
 +	}
 +}
 +
-+static inline void
-+asd_hwi_free_scb(struct asd_softc *asd, struct scb *scb)
++#ifdef ASD_TEST
++static void
++asd_hwi_dump_phy_id_addr(struct asd_phy  *phy)
 +{
-+	if ((scb->flags & SCB_RESERVED) != 0) {
-+        	list_add(&scb->hwi_links, &asd->rsvd_scbs);
-+	} else {
-+        	list_add(&scb->hwi_links, &asd->free_scbs);
-+		/* Notify the OSM that a resource is now available. */
-+		asd_platform_scb_free(asd, scb);
++	u_char	i;
++
++	asd_print("ID ADDRESS FRAME RECEIVED.\n");
++	asd_print("Addr Frame Type = 0x%x.\n", 
++			phy->bytes_dmaed_rcvd.id_addr_rcvd.addr_frame_type);
++	asd_print("Init Port Type = 0x%x.\n", 
++			phy->bytes_dmaed_rcvd.id_addr_rcvd.init_port_type);
++	asd_print("Tgt Port Type = 0x%x.\n", 
++			phy->bytes_dmaed_rcvd.id_addr_rcvd.tgt_port_type);
++	asd_print("Phy ID = 0x%x.\n", 
++			phy->bytes_dmaed_rcvd.id_addr_rcvd.phy_id);
++	for (i = 0; i < 8; i++)
++		asd_print("TGT Sas Addr[%d] = 0x%x.\n",
++			i, phy->bytes_dmaed_rcvd.id_addr_rcvd.sas_addr[i]);
++}
++#endif 
++
++/*
++ * Function:
++ * 	asd_hwi_handle_link_rst_err()
++ * 
++ * Description:
++ *	Handle Link Reset Error event as a result of timedout while
++ *	waiting for Identity Frame Address or Initial Device-to-Host
++ *	Register FIS from direct-attached device.
++ */
++static void
++asd_hwi_handle_link_rst_err(struct asd_softc *asd, struct asd_phy *phy)
++{
++	struct scb	*scb;
++
++	/*
++	 * We are skipping OOB register initialization as it was done
++	 * the first time we enable the phy.
++	 * Should we redo this initialization again??
++	 */
++
++	/*
++	 * We want to retry the link reset sequence up to a certain
++	 * amount of time to retry establishing connection with the device.
++	 */
++	if (phy->link_rst_cnt > MAX_LINK_RESET_RETRY) {
++		/* 
++		 * We have tried link reset a few times, the device still
++	 	 * failed to return the ID Frame Addr or Device-to-Host
++		 * Register FIS.
++		 * End the discovery process for this phy.
++		 */
++		phy->state = ASD_PHY_ONLINE;
++		phy->attr = (ASD_SSP_INITIATOR | ASD_SMP_INITIATOR | 
++			     ASD_STP_INITIATOR);
++		asd_wakeup_sem(&asd->platform_data->discovery_sem);
 +	}
++
++	if ((scb = asd_hwi_get_scb(asd, 0)) == NULL) {
++		asd_log(ASD_DBG_ERROR, "Out of SCB resources.\n");
++
++		return;
++	}
++
++	scb->io_ctx = (void *) phy;
++	scb->flags |= SCB_INTERNAL;
++
++	asd_hwi_build_control_phy(scb, phy, ENABLE_PHY);
++
++	list_add_tail(&scb->owner_links, &phy->pending_scbs);
++	phy->link_rst_cnt++;
++	asd_hwi_post_scb(asd, scb);
++}
++
++/*
++ * Function:
++ * 	asd_hwi_process_req_task()
++ * 
++ * Description:
++ *	Process the requested task recevied from the sequencer.
++ */
++static void
++asd_hwi_process_req_task(struct asd_softc *asd, uint8_t req_type,
++			 uint16_t index)
++{
++	struct scb	*scb;
++	int		 found;
++
++	if ((req_type != REQ_TASK_ABORT) && (req_type != REQ_DEVICE_RESET)) {
++		asd_log(ASD_DBG_ERROR, "Unsupported REQ TASK 0x%x.\n",
++			req_type);
++		return;
++	}
++
++	found = 0;
++	list_for_each_entry(scb, &asd->platform_data->pending_os_scbs,
++			    owner_links) {
++		if (SCB_GET_INDEX(scb) == index) {
++			found = 1;
++			break;
++		}
++	}
++
++	if (found == 0) {
++		asd_log(ASD_DBG_ERROR, "REQ TASK with invalid TC.\n");
++		return;
++	}
++
++	if (req_type == REQ_TASK_ABORT)
++		scb->eh_state = SCB_EH_ABORT_REQ;
++	else
++		scb->eh_state = SCB_EH_DEV_RESET_REQ;
++
++	scb->flags |= SCB_TIMEDOUT;
++	scb->eh_post = asd_hwi_req_task_done;
++	list_add_tail(&scb->timedout_links, &asd->timedout_scbs);
++	asd_wakeup_sem(&asd->platform_data->ehandler_sem);
++}
++
++static void
++asd_hwi_req_task_done(struct asd_softc *asd, struct scb *scb)
++{
++	asd_log(ASD_DBG_ERROR, "Req Task completed.\n");
++}
++
++/*************** Helper Functions to build a specific SCB type. ***************/
++
++/*
++ * Function:
++ * 	asd_hwi_build_id_frame()
++ *
++ * Description:
++ *	Build an Identify Frame address.
++ */
++static void
++asd_hwi_build_id_frame(struct asd_phy *phy)
++{
++	struct sas_id_addr	*id_addr;
++	u_char			 i;
++
++	id_addr = (struct sas_id_addr *) phy->id_addr_map.vaddr;
++	memset(id_addr, 0x0, sizeof(*id_addr));
++
++	/* Set the device type to end-device. */
++	id_addr->addr_frame_type |= SAS_END_DEVICE;	
++
++	for (i = 0; i < SAS_ADDR_LEN; i++) 
++		id_addr->sas_addr[i] = phy->sas_addr[i]; 
++	
++	/* Set the Initiator Port attributes. */
++	id_addr->init_port_type = (SSP_INIT_PORT | STP_INIT_PORT | 
++				   SMP_INIT_PORT);
++	id_addr->phy_id = phy->id;
++}
++
++/* 
++ * Function:
++ *	asd_hwi_build_control_phy()
++ *
++ * Description:
++ *      Build a CONTROL PHY SCB.
++ *	CONTROL PHY SCB is used to control the operation of a phy, such as
++ *	enable or disable phy, execute hard reset, release spinup hold and
++ *	control ATA device.
++ */
++void
++asd_hwi_build_control_phy(struct scb *scb, struct asd_phy *phy, 
++			  uint8_t sub_func)
++{
++	struct asd_control_phy_hscb 	*cntrlphy_hscb;
++	uint8_t 			 phy_id;
++	uint8_t				 speed_mask;
++
++	speed_mask = 0;
++	phy_id = phy->id;
++	cntrlphy_hscb = &scb->hscb->control_phy;
++
++	cntrlphy_hscb->header.opcode = SCB_CONTROL_PHY;
++	cntrlphy_hscb->phy_id = phy_id;
++	cntrlphy_hscb->sub_func = sub_func;
++
++	if ((cntrlphy_hscb->sub_func == ENABLE_PHY) || 
++	    (cntrlphy_hscb->sub_func == EXECUTE_HARD_RESET) ||
++	    (cntrlphy_hscb->sub_func == PHY_NO_OP)) {
++		cntrlphy_hscb->func_mask = FUNCTION_MASK_DEFAULT;
++
++		/* 
++		 * Hot Plug timer needs to be disabled while performing
++		 * Hard Reset.
++		 */
++		if (cntrlphy_hscb->sub_func == EXECUTE_HARD_RESET)
++			cntrlphy_hscb->func_mask |= HOT_PLUG_DIS;
++
++		/* mask all speeds */
++		speed_mask = (SAS_SPEED_60_DIS | SAS_SPEED_30_DIS |
++			      SAS_SPEED_15_DIS | SATA_SPEED_30_DIS |
++			      SATA_SPEED_15_DIS);
++
++		/* enable required speed */	
++		asd_hwi_set_speed_mask(phy->max_link_rate, &speed_mask); 
++		asd_hwi_set_speed_mask(phy->min_link_rate, &speed_mask); 
++
++#if SAS_COMSTOCK_SUPPORT
++		/* COMSTOCK only support 1.5 Gbits/s data transfer. */
++		speed_mask &= ~SATA_SPEED_15_DIS;
++		cntrlphy_hscb->speed_mask = speed_mask | (SATA_SPEED_30_DIS | 
++					    SAS_SPEED_60_DIS |
++					    SAS_SPEED_30_DIS);	 
++#else
++		cntrlphy_hscb->speed_mask = speed_mask;
++#endif
++		/* Set to Hot plug time delay to 100 ms. */
++		cntrlphy_hscb->hot_plug_delay = HOTPLUG_DEFAULT_DELAY;
++		cntrlphy_hscb->port_type = (SSP_INITIATOR_PORT | 
++					    STP_INITIATOR_PORT |
++					    SMP_INITIATOR_PORT);
++	} else {
++		cntrlphy_hscb->func_mask = 0;
++		cntrlphy_hscb->speed_mask = 0;
++		cntrlphy_hscb->hot_plug_delay = 0;
++		cntrlphy_hscb->port_type = 0;
++	}
++
++	cntrlphy_hscb->ovrd_devpres_timer = 0;
++	cntrlphy_hscb->devpres_timer_to_const_ovrd = 0;
++	cntrlphy_hscb->link_reset_retries = 0;
++	memset(&cntrlphy_hscb->res1[0], 0x0, 
++		sizeof(struct asd_control_phy_hscb) - 
++		offsetof(struct asd_control_phy_hscb, res1));
++	cntrlphy_hscb->conn_handle = 0xFFFF;
++}
++
++/* 
++ * Function:
++ *	asd_hwi_build_abort_task()
++ *
++ * Description:
++ *      Build an ABORT TASK SCB.
++ *	ABORT TASK scb is used to abort an SCB previously sent to the 
++ *	firmware.
++ */
++void
++asd_hwi_build_abort_task(struct scb *scb, struct scb *scb_to_abort)
++{
++	struct asd_abort_task_hscb	*abort_hscb;
++	struct asd_target		*targ;
++
++	targ = scb_to_abort->platform_data->targ;
++	abort_hscb = &scb->hscb->abort_task;
++	abort_hscb->header.opcode = SCB_ABORT_TASK;
++
++	memset(&abort_hscb->protocol_conn_rate, 0x0,
++	       offsetof(struct asd_abort_task_hscb, res3) -
++	       offsetof(struct asd_abort_task_hscb, protocol_conn_rate));
++	/* 
++	 * The conn_rate is only valid when aborting an SCB with SSP protocol.
++	 */
++	if (targ->transport_type == ASD_TRANSPORT_SSP)
++		abort_hscb->protocol_conn_rate = targ->ddb_profile.conn_rate;
++
++	if ((SCB_GET_OPCODE(scb_to_abort) == SCB_INITIATE_SSP_TASK) ||
++	    (SCB_GET_OPCODE(scb_to_abort) == SCB_INITIATE_LONG_SSP_TASK)) 
++		abort_hscb->protocol_conn_rate |= PROTOCOL_TYPE_SSP;
++	else if ((SCB_GET_OPCODE(scb_to_abort) == SCB_INITIATE_ATA_TASK) ||
++		 (SCB_GET_OPCODE(scb_to_abort) == SCB_INITIATE_ATAPI_TASK))
++		abort_hscb->protocol_conn_rate |= PROTOCOL_TYPE_STP;
++	else
++		abort_hscb->protocol_conn_rate |= PROTOCOL_TYPE_SMP;
++	/*
++	 * Build SSP Frame Header and SSP Task IU, these fields only valid
++         * when aborting an SCB with SSP protocol.
++	 */
++	if (targ->transport_type == ASD_TRANSPORT_SSP) {
++		/* SSP Frame Header. */
++		abort_hscb->sas_header.frame_type = TASK_FRAME;
++		memcpy(abort_hscb->sas_header.hashed_dest_sasaddr,
++		       targ->ddb_profile.hashed_sas_addr, HASHED_SAS_ADDR_LEN);
++		memcpy(abort_hscb->sas_header.hashed_src_sasaddr,
++		       targ->src_port->hashed_sas_addr, HASHED_SAS_ADDR_LEN);
++		abort_hscb->sas_header.target_port_xfer_tag = 0xFFFF;
++		abort_hscb->sas_header.data_offset = 0;
++
++		/* SSP Task IU. */
++		if (scb_to_abort->platform_data->dev != NULL) {
++			/*
++			 * We could be aborting task for SMP target or
++		         * target during discovery and there is no device
++			 * associated with that target.
++			 */	 
++			memcpy(abort_hscb->task_iu.lun,
++			       scb_to_abort->platform_data->dev->saslun,
++			       SAS_LUN_LEN);
++		}
++
++		abort_hscb->task_iu.tmf = ABORT_TASK_TMF;
++		/*
++		 * Setting tag_to_manage to 0xFFFF will indicate the sequencer
++	         * to use conn_handle, lun, and tc_to_abort to determine the
++		 * I_T_L_Q nexus of the task to be aborted.
++		 */	 
++		abort_hscb->task_iu.tag_to_manage = 0xFFFF;
++	}
++
++	abort_hscb->sister_scb = 0xFFFF;
++	abort_hscb->conn_handle = targ->ddb_profile.conn_handle;
 +
 +	/* 
-+	 * Clean up the SCB's flags for the next user.
++	 * For Aborting SSP Task, we need to suspend the data transmission
++	 * of the task to be aborted.
 +	 */
-+	scb->flags = SCB_FLAG_NONE;
++	if (SCB_GET_OPCODE(scb_to_abort) == SCB_INITIATE_SSP_TASK) {
++		abort_hscb->suspend_data = SUSPEND_DATA;
++		scb->eh_state |= SCB_EH_SUSPEND_SENDQ;
++	}
++
++	abort_hscb->retry_cnt = TASK_RETRY_CNT;
++
++	/* Set the TC to be aborted. */
++	abort_hscb->tc_to_abort = asd_htole16(SCB_GET_INDEX(scb_to_abort));
 +}
 +
-+static inline void *
-+asd_hwi_sdata_bus_to_virt(struct asd_softc *asd, uint64_t baddr)
++/* 
++ * Function:
++ *	asd_hwi_build_query_task()
++ *
++ * Description:
++ *      Build an QUERY TASK SCB.
++ *	QUERY TASK scb is used to issue an SSP Task IU for a Query Task
++ *	Task Management Function.
++ */
++void
++asd_hwi_build_query_task(struct scb *scb, struct scb *scb_to_query)
 +{
-+	uint8_t		*vaddr;
-+	uint64_t	vaddr_offset;
++	struct asd_query_ssp_task_hscb	*query_hscb;
++	struct asd_target		*targ;
 +
-+	vaddr_offset = baddr - asd->shared_data_map.busaddr;
-+	vaddr = asd->shared_data_map.vaddr + vaddr_offset;
-+	return (vaddr);
-+}
++	targ = scb_to_query->platform_data->targ;
++	query_hscb = &scb->hscb->query_ssp_task;
++	query_hscb->header.opcode = SCB_QUERY_SSP_TASK;
 +
-+static inline union edb *
-+asd_hwi_get_edb_vaddr(struct asd_softc *asd, uint64_t baddr)
-+{
-+	return ((union edb *)asd_hwi_sdata_bus_to_virt(asd, baddr));
-+}
++	memset(&query_hscb->protocol_conn_rate, 0x0,
++	       offsetof(struct asd_query_ssp_task_hscb, res3) -
++	       offsetof(struct asd_query_ssp_task_hscb, protocol_conn_rate));
++		
++	query_hscb->protocol_conn_rate = (targ->ddb_profile.conn_rate |
++					  PROTOCOL_TYPE_SSP);
++	/* SSP Frame Header. */
++	query_hscb->sas_header.frame_type = TASK_FRAME;
++	memcpy(query_hscb->sas_header.hashed_dest_sasaddr,
++	       targ->ddb_profile.hashed_sas_addr, HASHED_SAS_ADDR_LEN);
++	memcpy(query_hscb->sas_header.hashed_src_sasaddr,
++	       targ->src_port->hashed_sas_addr, HASHED_SAS_ADDR_LEN);
++	query_hscb->sas_header.target_port_xfer_tag = 0xFFFF;
++	query_hscb->sas_header.data_offset = 0;
 +
-+static inline union edb * 
-+asd_hwi_get_edb_from_dl(struct asd_softc *asd, struct scb *scb, 
-+	   		struct asd_done_list *dl, struct scb **pescb, 
-+			u_int *pedb_index)
-+{
-+	union edb 		*edb;
-+	struct response_sb   	*rsp;
-+	struct scb 		*escb;
-+	u_int  			 escb_index;
-+	u_int			 edb_index;
-+
-+	edb = NULL;
-+	rsp = &dl->stat_blk.response;
-+	escb_index = asd_le16toh(rsp->empty_scb_tc);
-+	edb_index = RSP_EDB_ELEM(rsp) - 1;
-+
-+	edb = asd_hwi_indexes_to_edb(asd, &escb, escb_index, edb_index);
-+
-+	*pescb = escb;
-+	*pedb_index = edb_index;
-+
-+	return edb;
-+}
-+
-+static inline void
-+asd_setup_scb_timer(struct scb *scb, u_long timeout, void (*func)(u_long))
-+{
-+	init_timer(&scb->platform_data->timeout);
-+	scb->platform_data->timeout.expires = jiffies + timeout;
-+	scb->platform_data->timeout.data = (u_long) scb;
-+	scb->platform_data->timeout.function = func;
-+	add_timer(&scb->platform_data->timeout);
-+}
-+
-+static inline void
-+asd_cmd_set_retry_status(Scsi_Cmnd *cmd)
-+{
++	/* SSP Task IU. */
++	query_hscb->task_iu.tmf = QUERY_TASK_TMF;
 +	/*
-+	 * If we want the request requeued, make sure there
-+	 * are sufficent retries.  In the old scsi error code,
-+	 * we used to be able to specify a result code that
-+	 * bypassed the retry count.  Now we must use this
-+	 * hack.  We also "fake" a check condition with
-+	 * a sense code of ABORTED COMMAND.  This seems to
-+	 * evoke a retry even if this command is being sent
-+	 * via the eh thread.  Ick!  Ick!  Ick!
-+	 */
-+	if (cmd->retries > 0)
-+		cmd->retries--;
++	 * Setting tag_to_manage to 0xFFFF will indicate the sequencer
++         * to use conn_handle, lun, and tc_to_query to determine the
++	 * I_T_L_Q nexus of the task to be queried.
++	 */	 
++	query_hscb->task_iu.tag_to_manage = 0xFFFF;
 +
-+	asd_cmd_set_scsi_status(cmd, SCSI_STATUS_CHECK_COND);
-+	asd_cmd_set_host_status(cmd, DID_OK);
-+	asd_cmd_set_driver_status(cmd, DRIVER_SENSE);
-+	memset(cmd->sense_buffer, 0, sizeof(cmd->sense_buffer));
-+	cmd->sense_buffer[0] = SSD_ERRCODE_VALID
-+			     | SSD_CURRENT_ERROR;
-+	cmd->sense_buffer[2] = SSD_KEY_ABORTED_COMMAND;
-+} 
-+
-+static inline void
-+asd_cmd_set_offline_status(Scsi_Cmnd *cmd)
-+{
-+	asd_cmd_set_host_status(cmd, DID_NO_CONNECT);
-+	asd_cmd_set_driver_status(cmd, DRIVER_SENSE);
-+	memset(cmd->sense_buffer, 0, sizeof(cmd->sense_buffer));
-+	cmd->sense_buffer[0] = SSD_ERRCODE_VALID
-+			     | SSD_CURRENT_ERROR;
-+	cmd->sense_buffer[2] = SSD_KEY_NOT_READY;
++	query_hscb->sister_scb = 0xFFFF;
++	query_hscb->conn_handle = targ->ddb_profile.conn_handle;
++	query_hscb->retry_cnt = TASK_RETRY_CNT;
++	/* Set the TC to be queried. */
++	query_hscb->tc_to_query = asd_htole16(SCB_GET_INDEX(scb_to_query));
 +}
 +
-+static inline void
-+asd_build_sas_header(
-+struct asd_target 		*targ,
-+struct asd_ssp_task_hscb	*ssp_hscb
-+)
++/* 
++ * Function:
++ *	asd_hwi_build_clear_nexus()
++ *
++ * Description:
++ *      Build a CLEAR NEXUS SCB.
++ *	CLEAR NEXUS SCB is used to request the firmware that a set of pending
++ *	transactions pending for a specified nexus be return to the driver
++ *	and free the associated SCBs to the free list.
++ */
++void
++asd_hwi_build_clear_nexus(struct scb *scb, u_int nexus_ind, u_int parm,
++			  u_int context)
 +{
-+	ssp_hscb->protocol_conn_rate = targ->ddb_profile.conn_rate;
++	struct asd_clear_nexus_hscb	*clr_nxs_hscb;
++	struct asd_target		*targ;
++
++#define RESUME_SENDQ_REQ					\
++do {								\
++	if (context == SCB_EH_RESUME_SENDQ) 			\
++		clr_nxs_hscb->queue_ind = (uint8_t) RESUME_TX;	\
++} while (0)
++	
++	clr_nxs_hscb = &scb->hscb->clear_nexus;
++	clr_nxs_hscb->header.opcode = SCB_CLEAR_NEXUS;
++	targ = scb->platform_data->targ;
++	
++	memset(&clr_nxs_hscb->nexus_ind, 0x0, 
++	       offsetof(struct asd_clear_nexus_hscb, res8) - 
++	       offsetof(struct asd_clear_nexus_hscb, nexus_ind));
++	
++	clr_nxs_hscb->nexus_ind = nexus_ind;
++	switch (nexus_ind) {
++	case CLR_NXS_I_OR_T:
++		/* Clear Nexus intended for I or T. */
++		clr_nxs_hscb->conn_mask_to_clr = targ->src_port->conn_mask;
++		break;
++
++	case CLR_NXS_I_T_L:
++		/* Clear Nexus intended for I_T_L. */
++		if (scb->platform_data->dev != NULL) {
++			memcpy(clr_nxs_hscb->lun_to_clr,
++			       scb->platform_data->dev->saslun,
++			       SAS_LUN_LEN);
++		}
++		/* Fallthrough */
++	case CLR_NXS_IT_OR_TI:
++		/* Clear Nexus intended for I_T or T_I. */
++		clr_nxs_hscb->conn_handle_to_clr = 
++					targ->ddb_profile.conn_handle;
++		clr_nxs_hscb->queue_ind = (uint8_t) parm;
++		break;
++		
++	case CLR_NXS_I_T_L_Q_TAG:
++		/* Clear Nexus intended for I_T_L_Q (by tag). */
++		clr_nxs_hscb->tag_to_clr = (uint16_t) parm;
++		clr_nxs_hscb->conn_handle_to_clr = 
++					targ->ddb_profile.conn_handle;
++		if (scb->platform_data->dev != NULL) {
++			memcpy(clr_nxs_hscb->lun_to_clr,
++			       scb->platform_data->dev->saslun,
++			       SAS_LUN_LEN);
++		}
++		RESUME_SENDQ_REQ;
++		break;
++
++	case CLR_NXS_I_T_L_Q_TC:
++		/* Clear Nexus intended for I_T_L_Q (by TC). */
++		clr_nxs_hscb->tc_to_clr = (uint16_t) parm;
++		clr_nxs_hscb->conn_handle_to_clr = 
++					targ->ddb_profile.conn_handle;
++		if (scb->platform_data->dev != NULL) {
++			memcpy(clr_nxs_hscb->lun_to_clr,
++			       scb->platform_data->dev->saslun,
++			       SAS_LUN_LEN);
++		}
++		RESUME_SENDQ_REQ;
++		break;
++		
++	case CLR_NXS_I_T_L_Q_STAG:
++		/* Clear Nexus intended for I_T_L_Q (by SATA tag). */
++		clr_nxs_hscb->conn_handle_to_clr = 
++					targ->ddb_profile.conn_handle;
++		/* 
++		 * Bits 4-0 of the tag_to_clr contain the SATA tag to be
++		 * cleared. Bits 15-5 shall be set to zero.
++		 */
++		clr_nxs_hscb->tag_to_clr = ((uint16_t) parm && 0x001F);
++		RESUME_SENDQ_REQ;
++		break;
++
++	case CLR_NXS_ADAPTER:
++		/* Clear Nexus for Adapter. */
++	default:
++		/* Unsupported Clear Nexus function. */
++		break;	
++	}
++
++	clr_nxs_hscb->nexus_ctx = (uint16_t) context;
++}
++
++/* 
++ * Function:
++ *	asd_hwi_build_ssp_tmf()
++ *
++ * Description:
++ *      Build a SSP TMF SCB.
++ *	SSP TMF SCB is used to issue an SSP Task information unit for a
++ *	LOGICAL UNIT RESET, ABORT TASK SET, CLEAR TASK SET, or CLEAR ACA
++ *	task management function.
++ */
++void
++asd_hwi_build_ssp_tmf(struct scb *scb, struct asd_target *targ, 
++		      uint8_t *lun, u_int tmf_opcode)
++{
++	struct asd_ssp_tmf_hscb	*tmf_hscb;
++
++	tmf_hscb = &scb->hscb->ssp_tmf;
++	tmf_hscb->header.opcode = SCB_INITIATE_SSP_TMF;
++
++	memset(&tmf_hscb->protocol_conn_rate, 0x0,
++	       offsetof(struct asd_ssp_tmf_hscb, res3) -
++	       offsetof(struct asd_ssp_tmf_hscb, protocol_conn_rate));
++
++	tmf_hscb->protocol_conn_rate = (targ->ddb_profile.conn_rate | 
++					PROTOCOL_TYPE_SSP);
++	/* SSP Frame Header. */
++	tmf_hscb->sas_header.frame_type = TASK_FRAME;
++	memcpy(tmf_hscb->sas_header.hashed_dest_sasaddr,
++	       targ->ddb_profile.hashed_sas_addr, HASHED_SAS_ADDR_LEN);
++	memcpy(tmf_hscb->sas_header.hashed_src_sasaddr,
++	       targ->src_port->hashed_sas_addr, HASHED_SAS_ADDR_LEN);
++	tmf_hscb->sas_header.target_port_xfer_tag = 0xFFFF;
++	tmf_hscb->sas_header.data_offset = 0;
++	
++	/* SSP Task IU. */
++	memcpy(tmf_hscb->task_iu.lun, lun, SAS_LUN_LEN);
++	tmf_hscb->task_iu.tmf = tmf_opcode;
++
++	tmf_hscb->sister_scb = 0xFFFF;
++	tmf_hscb->conn_handle = targ->ddb_profile.conn_handle;
++	
++	/* Suspend data transmission to the target. */
++	scb->eh_state |= SCB_EH_SUSPEND_SENDQ;
++	tmf_hscb->suspend_data = SUSPEND_DATA;
++	tmf_hscb->retry_cnt = TASK_RETRY_CNT;
++}
++ 
++/*
++ * Function:
++ * 	asd_hwi_build_smp_phy_req()
++ *
++ * Description:
++ *	Build a SMP PHY related request.
++ */ 
++static void
++asd_hwi_build_smp_phy_req(struct asd_port *port, int req_type,
++			  int phy_id, int ctx)
++{
++	struct SMPRequest	*smp_req;
++
++	smp_req = port->dc.SMPRequestFrame;
++	memset(smp_req, 0, sizeof(*smp_req));
++
++	smp_req->SMPFrameType = SMP_REQUEST_FRAME;
++
++	switch (req_type) {
++	case PHY_CONTROL:
++		smp_req->Function = PHY_CONTROL;
++		smp_req->Request.PhyControl.PhyIdentifier = phy_id;
++		smp_req->Request.PhyControl.PhyOperation = ctx;
++		break;
++
++	case REPORT_PHY_ERROR_LOG:
++		smp_req->Function = REPORT_PHY_ERROR_LOG;
++		smp_req->Request.ReportPhyErrorLog.PhyIdentifier = phy_id;
++		break;
++
++	default:
++		panic("Unknown SMP PHY request type.\n"); 
++		break;
++	}
++
++	/*
++	 * DC: Currently, we are not changing the programmed min/max 
++         *     physical link rate for LINK RESET or HARD RESET.
++	 *     We might need to change the link rate if CMSI application
++	 *     required..
++	 */
++}
++
++/*
++ * Function:
++ *	asd_hwi_build_smp_task()
++ *
++ * Description:
++ *	Build a SMP TASK SCB.
++ *	SMP TASK SCB is used to send an SMP TASK to an expander.
++ */ 
++void
++asd_hwi_build_smp_task(struct scb *scb, struct asd_target *targ,
++		       uint64_t req_bus_addr, u_int req_len, 
++		       uint64_t resp_bus_addr, u_int resp_len)
++{
++	struct asd_smp_task_hscb	*smp_hscb;
++
++	smp_hscb = &scb->hscb->smp_task;
++	smp_hscb->header.opcode = SCB_INITIATE_SMP_TASK;
++
++	memset(&smp_hscb->protocol_conn_rate, 0x0,
++	       offsetof(struct asd_smp_task_hscb, res5) -
++	       offsetof(struct asd_ssp_tmf_hscb, protocol_conn_rate));
++
++	smp_hscb->protocol_conn_rate = (targ->ddb_profile.conn_rate |
++					PROTOCOL_TYPE_SMP);
++	smp_hscb->smp_req_busaddr = req_bus_addr;
++	smp_hscb->smp_req_size = req_len;
++	smp_hscb->smp_req_ds = 0;
++	smp_hscb->sister_scb = 0xffff;
++	smp_hscb->conn_handle = targ->ddb_profile.conn_handle;
++	smp_hscb->smp_resp_busaddr = resp_bus_addr;
++	smp_hscb->smp_resp_size = resp_len;
++	smp_hscb->smp_resp_ds = 0;
++}
++
++/*
++ * Function:
++ *	asd_hwi_build_ssp_task()
++ *
++ * Description:
++ *	Build a SSP TASK SCB.
++ *	SSP TASK SCB is used to send an SSP TASK to an expander.
++ */ 
++void
++asd_hwi_build_ssp_task(struct scb *scb, struct asd_target *targ,
++		       uint8_t *saslun, uint8_t *cdb, uint32_t cdb_len,
++		       uint8_t addl_cdb_len, uint32_t data_len)
++{
++	struct asd_ssp_task_hscb *ssp_hscb;
++
++	ssp_hscb = &scb->hscb->ssp_task;
++	ssp_hscb->header.opcode = SCB_INITIATE_SSP_TASK;
++	ssp_hscb->protocol_conn_rate = targ->ddb_profile.conn_rate 
++					| PROTOCOL_TYPE_SSP;
++	ssp_hscb->xfer_len = asd_htole32(data_len);
 +	ssp_hscb->sas_header.frame_type = OPEN_ADDR_FRAME;
++	
 +	memcpy(ssp_hscb->sas_header.hashed_dest_sasaddr,
 +	       targ->ddb_profile.hashed_sas_addr, HASHED_SAS_ADDR_LEN);
++
 +	ssp_hscb->sas_header.res = 0;
++
 +	memcpy(ssp_hscb->sas_header.hashed_src_sasaddr,
 +	       targ->src_port->hashed_sas_addr, HASHED_SAS_ADDR_LEN);
++
 +	memset(ssp_hscb->sas_header.res1, 0,
 +	       offsetof(struct asd_sas_header, target_port_xfer_tag) - 
 +	       offsetof(struct asd_sas_header, res1));
++
 +	ssp_hscb->sas_header.target_port_xfer_tag = 0xFFFF;
 +	ssp_hscb->sas_header.data_offset = 0;
-+	ssp_hscb->conn_handle = targ->ddb_profile.conn_handle;
-+	ssp_hscb->sister_scb = 0xFFFF;
-+	ssp_hscb->retry_cnt = TASK_RETRY_CNT;
 +
-+	/*
-+	 * SSP Command IU.
-+	 */
++	/* SSP Command IU */
 +	memset(ssp_hscb->lun, 0,
 +	       offsetof(struct asd_ssp_task_hscb, cdb) -
 +	       offsetof(struct asd_ssp_task_hscb, lun));
++	memcpy(ssp_hscb->lun, saslun, 8);
++	memcpy(ssp_hscb->cdb, cdb, cdb_len);
++	
++	memset(&ssp_hscb->cdb[cdb_len], 0,
++	      SCB_EMBEDDED_CDB_SIZE - cdb_len);
 +
-+	memset(&ssp_hscb->data_dir_flags, 0, 
++	ssp_hscb->addl_cdb_len = addl_cdb_len;
++	ssp_hscb->sister_scb = 0xFFFF;
++	ssp_hscb->conn_handle = targ->ddb_profile.conn_handle;
++	ssp_hscb->retry_cnt = TASK_RETRY_CNT;
++
++	memset(&ssp_hscb->LAST_SSP_HSCB_FIELD, 0,
 +	       offsetof(struct asd_ssp_task_hscb, sg_elements) - 
-+	       offsetof(struct asd_ssp_task_hscb, data_dir_flags));
++	       offsetof(struct asd_ssp_task_hscb, LAST_SSP_HSCB_FIELD));
 +
-+	ssp_hscb->data_dir_flags = 0;
++	return;
 +}
 +
-+static inline void
-+asd_push_post_stack(
-+struct asd_softc	*asd,
-+struct scb		*scb,
-+asd_io_ctx_t		io_ctx,
-+asd_scb_post_t		*post
-+)
++/*
++ * Function:
++ *	asd_hwi_build_stp_task()
++ *
++ * Description:
++ *	Build a STP TASK SCB.
++ *	STP TASK SCB is used to send an ATA TASK to an expander.
++ */ 
++void 
++asd_hwi_build_stp_task(struct scb *scb, struct asd_target *targ,
++		       uint32_t data_len)
 +{
-+	if (scb->post_stack_depth == SCB_POST_STACK_DEPTH) {
-+		panic("post_stack overflow\n");
++	struct asd_ata_task_hscb *ata_hscb;
++
++	ata_hscb = &scb->hscb->ata_task;
++	ata_hscb->header.opcode = SCB_INITIATE_ATA_TASK;
++	ata_hscb->protocol_conn_rate =
++		PROTOCOL_TYPE_SATA | targ->ddb_profile.conn_rate;
++	ata_hscb->xfer_len = asd_htole32(data_len);
++	ata_hscb->data_offset = 0;
++	ata_hscb->sister_scb = 0xffff;
++	ata_hscb->conn_handle = targ->ddb_profile.conn_handle;
++	ata_hscb->retry_cnt = TASK_RETRY_CNT;
++	ata_hscb->affiliation_policy = 0;
++
++	ata_hscb->ata_flags = 0;
++#ifdef TAGGED_QUEUING
++	// RST - add support for SATA II queueing
++	ata_hscb->ata_flags |= LEGACY_QUEUING;
++#else
++	ata_hscb->ata_flags |= UNTAGGED;
++#endif
++	return;
++}
++
++/*
++ * Function:
++ * 	asd_hwi_hash()
++ *
++ * Desctiption:
++ * 	Convert a 64-bit SAS address into a 24-bit Hash address.
++ * 	This is based on the hash implementation from the SAS 1.1 draft.
++ */
++void
++asd_hwi_hash(uint8_t *sas_addr, uint8_t *hashed_addr)
++{
++	const uint32_t 	distance_9_poly = 0x01DB2777;
++	uint32_t 	upperbits;
++	uint32_t 	lowerbits;
++	uint32_t 	msb;
++	uint32_t 	moving_one;
++	uint32_t 	leading_bit;
++	uint32_t 	regg;
++	int	 	i;
++
++	upperbits = scsi_4btoul(sas_addr);
++	lowerbits = scsi_4btoul(sas_addr + 4);
++	msb = 0x01000000;
++	regg = 0;
++	moving_one = 0x80000000;
++	for (i = 31; i >= 0; i--) {
++		leading_bit = 0;
++		if (moving_one & upperbits)
++			leading_bit = msb;
++		regg <<= 1;
++		regg ^= leading_bit;
++		if (regg & msb)
++			regg ^= distance_9_poly;
++		moving_one >>= 1;
++	}
++	moving_one = 0x80000000;
++	for (i = 31; i >= 0; i--) {
++		leading_bit = 0;
++		if (moving_one & lowerbits)
++			leading_bit = msb;
++		regg <<= 1;
++		regg ^= leading_bit;
++		if (regg & msb)
++			regg ^= distance_9_poly;
++
++		moving_one >>= 1;
++	}
++	scsi_ulto3b(regg, hashed_addr);
++}
++
++/*************************** Error Handling routines **************************/
++
++void
++asd_recover_cmds(struct asd_softc *asd)
++{
++	struct scb	*scb;
++	struct scb	*free_scb;
++	struct scb	*safe_scb;
++	u_long		 flags;
++
++	if (list_empty(&asd->timedout_scbs)) {
++		asd_log(ASD_DBG_ERROR, "Timed-out scbs already completed.\n");
++		goto exit;
++	}
++	
++	list_for_each_entry_safe(scb, safe_scb, &asd->timedout_scbs,
++				 timedout_links) {
++		asd_lock(asd, &flags);
++
++		/* 
++		 * Error recovery is in progress for this scb.
++		 * Proceed to next one.
++		 */
++		if ((scb->eh_state & SCB_EH_IN_PROGRESS) != 0) {
++			asd_unlock(asd, &flags);
++			continue;
++		}
++		/*
++		 * Error recovery is completed for this scb.
++	         */
++		if (scb->eh_state == SCB_EH_DONE) {
++			asd_unlock(asd, &flags);
++			goto done;
++		}
++		/*
++		 * Only allowed one Error Recovery ongoing for a particular
++		 * target.
++		 */
++		if ((scb->platform_data->targ->flags &
++					ASD_TARG_IN_RECOVERY) != 0) {
++			asd_unlock(asd, &flags);
++			continue;
++		}
++		/* 
++		 * Acquire a free SCB from reserved pool to be used
++		 * for error recovery purpose.
++		 */
++		if ((free_scb = asd_hwi_get_scb(asd, 1)) == NULL) {
++			asd_log(ASD_DBG_ERROR, "Failed to get free SCB "
++				"for error recovery.\n");
++			asd_unlock(asd, &flags);
++			continue;
++		}
++
++		/* Mark this target to be in recovery mode. */
++		scb->platform_data->targ->flags |= ASD_TARG_IN_RECOVERY;
++
++		/* Freeze the target's queue. */
++		asd_freeze_targetq(asd, scb->platform_data->targ);
++
++		/* Initialiaze the state. */
++		scb->eh_state |= SCB_EH_IN_PROGRESS;
++		free_scb->eh_state = SCB_EH_INITIATED;
++		free_scb->eh_status = SCB_EH_SUCCEED;
++		
++		switch (scb->eh_state & SCB_EH_LEVEL_MASK) {
++		case SCB_EH_ABORT_REQ:
++			asd_log(ASD_DBG_ERROR, "ABORT ER REQ.\n");
++			asd_hwi_abort_scb(asd, scb, free_scb);
++			break;
++
++		case SCB_EH_LU_RESET_REQ:
++			asd_log(ASD_DBG_ERROR, "LU RESET ER REQ.\n");
++			asd_hwi_reset_lu(asd, scb, free_scb);
++			break;
++		
++		case SCB_EH_DEV_RESET_REQ:
++			asd_log(ASD_DBG_ERROR, "DEV RESET ER REQ.\n");
++			asd_hwi_reset_device(asd, scb, free_scb);
++			break;
++			
++		case SCB_EH_PORT_RESET_REQ:
++			asd_log(ASD_DBG_ERROR, "PORT RESET ER REQ.\n");
++			asd_hwi_reset_port(asd, scb, free_scb);
++			break;
++			
++		default:
++			asd_log(ASD_DBG_ERROR, "Unknown Error Recovery "
++				"Level.\n");
++			scb->eh_state = SCB_EH_DONE;
++			scb->eh_status = SCB_EH_FAILED;
++			break;
++		}
++		asd_unlock(asd, &flags);
++
++done:
++		if (scb->eh_state == SCB_EH_DONE) {
++			/*
++			 * Error recovery is done for this scb,
++		         * Clean up and free the scb.
++			 */	 
++			asd_lock(asd, &flags);
++
++			list_del(&scb->timedout_links);
++			scb->flags &= ~SCB_TIMEDOUT;
++			scb->platform_data->targ->flags &= 
++						~ASD_TARG_IN_RECOVERY;
++			/* Unfreeze the target's queue. */
++			asd_unfreeze_targetq(asd, scb->platform_data->targ);
++			scb->eh_post(asd, scb);
++
++			if (scb->eh_status != SCB_EH_FAILED) {
++				struct asd_device *dev;
++				/* 
++				 * Schedule a timer to run the device
++				 * queue if the device is not frozen and
++				 * not in the process of being removed.
++				 */
++				dev = scb->platform_data->dev;
++				if ((dev != NULL) && (dev->qfrozen == 0) &&
++				    (dev->flags & ASD_DEV_TIMER_ACTIVE) == 0 &&
++				    (dev->target->flags &
++				     ASD_TARG_HOT_REMOVED) == 0) {
++
++					asd_setup_dev_timer(
++						dev, HZ,
++						asd_timed_run_dev_queue);
++				}
++				/*
++			 	 * Only free the scb if the error recovery is
++			 	 * successful.
++			 	 */
++				asd_hwi_free_scb(asd, scb);
++			}
++			asd_unlock(asd, &flags);
++		}
 +	}
 +
-+	scb->post_stack[scb->post_stack_depth].io_ctx = io_ctx;
-+	scb->post_stack[scb->post_stack_depth].post = post;
-+
-+	scb->io_ctx = io_ctx;
-+	scb->post = post;
-+
-+	scb->post_stack_depth++;
++exit:
++	return;
 +}
 +
-+static inline void
-+asd_pop_post_stack(
-+struct asd_softc	*asd,
-+struct scb		*scb,
-+struct asd_done_list	*done_listp
-+)
++static void
++asd_scb_eh_timeout(u_long arg)
 +{
-+	if (scb->post_stack_depth == 0) {
-+		panic("post_stack underflow\n");
++	struct asd_softc 	*asd;
++	struct scb		*scb;
++	struct scb		*err_scb;
++	u_long		 	 flags;
++	
++	scb = (struct scb *) arg;
++	err_scb = (struct scb *) scb->post_stack[0].io_ctx;
++	asd = scb->softc;
++	asd_lock(asd, &flags);
++
++	scb->eh_state = SCB_EH_TIMEDOUT;
++	err_scb->eh_state &= ~SCB_EH_IN_PROGRESS;
++	/* 
++	 * Error recovery SCB timed out.
++	 * If this error recovery requested by the OS, we need to mark the
++	 * error recovery failed and make an attempt to perform the next
++	 * level error recovery if possible.
++	 */ 
++	switch (err_scb->eh_state) {
++	case SCB_EH_ABORT_REQ:
++		err_scb->eh_state = SCB_EH_LU_RESET_REQ;
++		break;
++		
++	case SCB_EH_LU_RESET_REQ:
++		err_scb->eh_state = SCB_EH_DEV_RESET_REQ;
++		break;
++
++	case SCB_EH_DEV_RESET_REQ:
++		err_scb->eh_state = SCB_EH_PORT_RESET_REQ;
++		break;
++
++	case SCB_EH_PORT_RESET_REQ:
++	default:
++		/* 
++		 * Currently, our biggest hammer now is PORT RESET.
++		 * We might perform ADAPTER RESET later on.
++		 */ 
++		err_scb->eh_state = SCB_EH_DONE;
++		break;
 +	}
 +
-+	scb->post_stack_depth--;
-+
-+	scb->io_ctx = scb->post_stack[scb->post_stack_depth].io_ctx;
-+	scb->post = scb->post_stack[scb->post_stack_depth].post;
-+
-+	scb->post(asd, scb, done_listp);
++	err_scb->eh_status = SCB_EH_FAILED;
++	err_scb->platform_data->targ->flags &= ~ASD_TARG_IN_RECOVERY;
++	asd_unlock(asd, &flags);
++	asd_wakeup_sem(&asd->platform_data->ehandler_sem);
 +}
 +
-+#endif /* ADP94XX_INLINE_H */
++int
++asd_hwi_check_cmd_pending(struct asd_softc *asd, struct scb *scb, 
++		       	  struct asd_done_list *dl)
++{
++	struct scb *abort_scb;
 +
++	while (!list_empty(&asd->timedout_scbs)) {
++		abort_scb = list_entry(asd->timedout_scbs.next, 
++				       struct scb, timedout_links);
++		if (((struct asd_abort_task_hscb *)
++		      &scb->hscb->abort_task)->tc_to_abort == 
++		      asd_htole16(SCB_GET_INDEX(abort_scb))) {
++			return (1);
++		}
++	}
++
++	return (0);
++}
++
++/*
++ * Function: 
++ *	asd_hwi_abort_scb()
++ *
++ * Description:
++ *	This routine will issue an ABORT_TASK to abort the requested scb.
++ *	ONLY SCB with protocol SSP, SMP and STP can be issued ABORT_TASK TMF.
++ */
++static void
++asd_hwi_abort_scb(struct asd_softc *asd, struct scb *scb_to_abort,
++		  struct scb *scb)
++{
++	ASD_LOCK_ASSERT(asd);
++
++	asd_log(ASD_DBG_ERROR, "Curr State: 0x%x Status: 0x%x.\n",
++		scb->eh_state, scb->eh_status);
++
++	/*
++	 * DC: We probably need to search the scb_to_abort in the 
++	 *     target/device queue as initial step for internal requested
++	 *     command.
++	 */ 
++	switch (scb->eh_state) {
++	case SCB_EH_INITIATED:
++	{
++		/* 
++		 * Validate the opcode of scb to be aborted. 
++		 * Only scb with specific opcode can be aborted.
++		 */
++		if ((SCB_GET_OPCODE(scb_to_abort) != SCB_INITIATE_SSP_TASK) &&
++	    	    (SCB_GET_OPCODE(scb_to_abort) != SCB_INITIATE_SMP_TASK) &&
++	    	    (SCB_GET_OPCODE(scb_to_abort) != 
++		     				SCB_INITIATE_LONG_SSP_TASK) &&
++	    	    (SCB_GET_OPCODE(scb_to_abort) != SCB_INITIATE_ATA_TASK) &&
++	    	    (SCB_GET_OPCODE(scb_to_abort) != SCB_INITIATE_ATAPI_TASK)) {
++			asd_log(ASD_DBG_ERROR, "Requested to abort unsupported "
++				"SCB request.\n");
++			scb->eh_state = SCB_EH_DONE;
++			scb->eh_status = SCB_EH_FAILED;
++			/* 
++			 * Recursively call this function again upon changing
++		 	 * the state.
++			 */
++			asd_hwi_abort_scb(asd, scb_to_abort, scb);
++			break;
++		}
++
++		scb->platform_data->targ = scb_to_abort->platform_data->targ;
++		scb->platform_data->dev = scb_to_abort->platform_data->dev;
++		scb->eh_state = SCB_EH_ABORT_REQ;
++		asd_hwi_abort_scb(asd, (struct scb *) scb_to_abort, scb);
++		break;
++	}
++
++	case SCB_EH_ABORT_REQ:
++		/* Build the ABORT_TASK SCB. */
++		asd_hwi_build_abort_task(scb, scb_to_abort);
++
++		scb->flags |= (SCB_INTERNAL | SCB_ACTIVE | SCB_RECOVERY);
++		asd_setup_scb_timer(scb, (4 * HZ), asd_scb_eh_timeout);
++		asd_push_post_stack(asd, scb, (void *) scb_to_abort,
++				    asd_hwi_abort_scb_done);
++		/* Post the ABORT_TASK SCB. */
++		asd_hwi_post_scb(asd, scb);
++		break;
++
++	case SCB_EH_CLR_NXS_REQ:
++		/* 
++		 * The Clear Nexus SCB has been prepared in the abort
++		 * post routine. All we need is to post it to the firmware.
++		 */
++		scb->flags |= (SCB_INTERNAL | SCB_ACTIVE | SCB_RECOVERY);
++		asd_setup_scb_timer(scb, (4 * HZ), asd_scb_eh_timeout);
++		asd_push_post_stack(asd, scb, (void *) scb_to_abort,
++				    asd_hwi_abort_scb_done);
++		asd_hwi_post_scb(asd, scb);
++		break;
++	
++	case SCB_EH_RESUME_SENDQ:
++		/*
++		 * We are here because the ABORT TMF failed.
++	         * We need to resume the data transmission of the task
++		 * that was going to be aborted.
++		 */	 
++		scb->flags |= (SCB_INTERNAL | SCB_ACTIVE | SCB_RECOVERY);
++		asd_hwi_build_clear_nexus(scb, CLR_NXS_I_T_L_Q_TC,
++					  SCB_GET_INDEX(scb_to_abort),
++					  SCB_EH_RESUME_SENDQ);
++		asd_setup_scb_timer(scb, (4 * HZ), asd_scb_eh_timeout);
++		asd_push_post_stack(asd, scb, (void *) scb_to_abort,
++				    asd_hwi_abort_scb_done);
++		asd_hwi_post_scb(asd, scb);
++		break;
++
++	case SCB_EH_DONE:
++		scb_to_abort->eh_state = scb->eh_state;
++		scb_to_abort->eh_status = scb->eh_status;
++
++		if ((scb_to_abort->eh_state == SCB_EH_DONE) && 
++		    (scb_to_abort->eh_status == SCB_EH_FAILED)) {
++			/*
++		 	 * Failed to perform abort error recovery for the
++		 	 * failed command, we shall procced with the next 
++			 * level of error recovery (Logical Unit Reset).
++			 * We need to change the scb eh_state to 
++			 * SCB_EH_LU_RESET_REQ. 
++		 	 */
++			scb_to_abort->eh_state = SCB_EH_LU_RESET_REQ;
++			scb_to_abort->platform_data->targ->flags &= 
++							~ASD_TARG_IN_RECOVERY;
++		}
++		asd_hwi_free_scb(asd, scb);
++		asd_wakeup_sem(&asd->platform_data->ehandler_sem);
++		break;
++
++	default:
++		asd_log(ASD_DBG_ERROR, "Invalid EH State 0x%x.\n",
++			scb->eh_state);
++
++		scb_to_abort->eh_state = SCB_EH_DONE;
++		scb_to_abort->eh_status = SCB_EH_FAILED;
++		asd_hwi_free_scb(asd, scb);
++		asd_wakeup_sem(&asd->platform_data->ehandler_sem);
++		break;
++	}
++}
++
++static void
++asd_hwi_abort_scb_done(struct asd_softc *asd, struct scb *scb, 
++		       struct asd_done_list *dl)
++{
++	asd_log(ASD_DBG_ERROR, "DL Opcode = 0x%x.\n", dl->opcode);
++
++	/*
++       	 * There is a possibility that this post routine is called after
++	 * the SCB timedout. So, only delete the timer if the SCB hasn't
++	 * timedout.
++	 */
++	if (scb->eh_state != SCB_EH_TIMEDOUT)
++		del_timer_sync(&scb->platform_data->timeout);
++
++	/*
++	 * This post routine is shared by ABORT_TASK and CLEAR_NEXUS
++         * issued by this abort handler code.
++ 	 * Hence, the DL opcodes also apply to both SCB task.
++	 */	 
++	switch (dl->opcode) {
++	case TASK_COMP_WO_ERR:
++	case TMF_F_W_TAG_NOT_FOUND:
++	case TMF_F_W_CONN_HNDL_NOT_FOUND:
++	case TMF_F_W_TAG_ALREADY_DONE:
++	case TMF_F_W_TAG_ALREADY_FREE:
++	case TMF_F_W_TC_NOT_FOUND:
++		/*
++		 * For SMP or STP target, firmware will only try to abort
++		 * the task if it is still in its execution queue.
++		 * If the task to be aborted couldn't be found, mostly like it
++		 * has been issued to the target.
++		 * We should try next level error recovery.
++		 */
++		if (scb->platform_data->targ->device_protocol_type
++					!= ASD_DEVICE_PROTOCOL_SCSI) {
++			scb->eh_state = SCB_EH_DONE;
++			scb->eh_status = SCB_EH_FAILED;
++			break;
++		}
++		/* Fall thru */
++	case TASK_ABORTED_BY_ITNL_EXP:
++		/* Indicate that Abort succeeded. */
++		scb->eh_state = SCB_EH_DONE;
++		scb->eh_status = SCB_EH_SUCCEED;
++		break;
++
++	case TASK_F_W_NAK_RCVD:
++		/* 
++		 * Indicate that Abort failed.
++		 * If this is a failure in issuing ABORT TMF, we need to 
++		 * resume the data transmission of the task that was
++		 * going to be aborted.
++		 */
++		if ((scb->eh_state & SCB_EH_SUSPEND_SENDQ) != 0)
++			scb->eh_state = SCB_EH_RESUME_SENDQ;
++		else
++			scb->eh_state = SCB_EH_DONE;
++		
++		scb->eh_status = SCB_EH_FAILED;
++		break;
++
++	case SSP_TASK_COMP_W_RESP:
++	{
++		union edb 		*edb;
++		struct scb 		*escb;
++		struct ssp_resp_edb  	*redb;
++		struct ssp_resp_iu	*riu;
++		u_int			 edb_index;
++		
++		edb = asd_hwi_get_edb_from_dl(asd, scb, dl, &escb, &edb_index);
++		if (edb == NULL) {
++			asd_log(ASD_DBG_ERROR, "Invalid EDB recv for SSP "
++				"comp w/response.\n");
++			scb->eh_state = SCB_EH_RESUME_SENDQ;
++			scb->eh_status = SCB_EH_SUCCEED;
++			break;
++		}
++
++		/*
++		 * Search if the aborted command still pending on the firmware
++	         * queue. If so, we need to send CLEAR_NEXUS to have the 
++		 * command freed and returned to us.
++		 */	 
++		if (!asd_hwi_check_cmd_pending(asd, scb, dl)) {
++			asd_log(ASD_DBG_RUNTIME, "Aborted cmd has been "
++				"completed.\n");
++			scb->eh_state = SCB_EH_DONE;
++			scb->eh_status = SCB_EH_SUCCEED;
++			asd_hwi_free_edb(asd, escb, edb_index);
++			break;
++		}
++
++		redb = &edb->ssp_resp;
++		riu = &redb->resp_frame.riu;
++		if (SSP_RIU_DATAPRES(riu) == SSP_RIU_DATAPRES_RESP) {
++			uint8_t	resp_code;
++
++			resp_code = ((struct resp_data_iu *)
++						&riu->data[0])->resp_code;
++
++			/* Handle the SSP TMF response code. */
++			asd_hwi_map_tmf_resp(scb, resp_code);
++			
++			if (scb->eh_state == SCB_EH_CLR_NXS_REQ) {
++				asd_log(ASD_DBG_ERROR,
++					"Tag to Clear=0x%x.\n",
++					asd_be16toh(redb->tag_to_clear));
++				/* 
++				 * Upon receving TMF_COMPLETE, we need to send
++				 * CLEAR_NEXUS SCB for tag_to_clear.
++				 */
++				asd_hwi_build_clear_nexus(scb, 
++							  CLR_NXS_I_T_L_Q_TAG,
++							  redb->tag_to_clear,
++							  /*ctx*/0);
++			}
++		} else {
++			/* 
++			 * Response Data not available. Protocol error.
++			 * Indicate that Abort failed. 
++			 */
++			scb->eh_state = SCB_EH_RESUME_SENDQ;
++			scb->eh_status = SCB_EH_FAILED;
++		}
++		
++		asd_hwi_free_edb(asd, escb, edb_index);
++		break;
++	}
++
++	case TASK_F_W_OPEN_REJECT:
++		scb->eh_state = SCB_EH_RESUME_SENDQ;
++		scb->eh_status = SCB_EH_FAILED;
++		break;
++
++	case RESUME_COMPLETE:
++		scb->eh_state = SCB_EH_DONE;
++		scb->eh_status = SCB_EH_FAILED;
++		break;
++
++	case TASK_CLEARED:
++		/* 
++	 	 * Previous error recovery SCB that timed-out and
++	 	 * was aborted.
++	 	 * All we need to do here is just free the scb.
++	 	 */ 
++		asd_hwi_free_scb(asd, scb);
++		return;
++
++	default:
++		asd_log(ASD_DBG_ERROR, "DL opcode not handled.\n");
++		scb->eh_state = SCB_EH_RESUME_SENDQ;
++		scb->eh_status = SCB_EH_FAILED;
++		break;		
++	}
++
++	asd_hwi_abort_scb(asd, (struct scb *) scb->io_ctx, scb);
++}
++
++/*
++ * Function:
++ *	asd_hwi_reset_lu()
++ *	
++ * Description:
++ *	Issue a Logical Unit Reset to the end device.
++ *	LU Reset can only be done for SSP end device.
++ */
++static void
++asd_hwi_reset_lu(struct asd_softc *asd, struct scb *scb_to_reset,
++		 struct scb *scb)
++{
++	ASD_LOCK_ASSERT(asd);
++
++	asd_log(ASD_DBG_ERROR, "Curr State: 0x%x Status: 0x%x.\n",
++		scb->eh_state, scb->eh_status);
++
++	switch (scb->eh_state) {
++	case SCB_EH_INITIATED:
++	{
++		struct asd_target	*targ;
++		struct asd_device	*dev;
++		
++		targ = scb_to_reset->platform_data->targ;
++		dev = scb_to_reset->platform_data->dev;
++		if ((targ == NULL) || (dev == NULL)) {
++			/* This shouldn't happen. */
++			scb->eh_state = SCB_EH_DONE;
++			scb->eh_status = SCB_EH_FAILED;
++			asd_hwi_reset_lu(asd, scb_to_reset, scb);
++			break;
++		}
++
++		/*
++   		 * Only SSP end device can be issued a LU reset.
++		 */
++		if (targ->device_protocol_type != ASD_DEVICE_PROTOCOL_SCSI) {
++			scb->eh_state = SCB_EH_DONE;
++			scb->eh_status = SCB_EH_FAILED;
++			asd_hwi_reset_lu(asd, (struct scb *) scb_to_reset, scb);
++			break;
++		}
++
++		scb->platform_data->targ = targ;
++		scb->platform_data->dev = dev;
++		scb->eh_state = SCB_EH_LU_RESET_REQ;
++		asd_hwi_reset_lu(asd, (struct scb *) scb_to_reset, scb);	
++		break;
++	}
++
++	case SCB_EH_LU_RESET_REQ:
++		/* Build LUR Task Management Function. */
++		asd_hwi_build_ssp_tmf(scb, scb->platform_data->targ,
++				      scb->platform_data->dev->saslun,	
++				      LOGICAL_UNIT_RESET_TMF);
++		scb->flags |= (SCB_INTERNAL | SCB_ACTIVE | SCB_RECOVERY);
++		asd_setup_scb_timer(scb, (4 * HZ), asd_scb_eh_timeout);
++		asd_push_post_stack(asd, scb, (void *) scb_to_reset,
++				    asd_hwi_reset_lu_done);
++		asd_hwi_post_scb(asd, scb);
++		break;
++
++	case SCB_EH_CLR_NXS_REQ:
++		asd_hwi_build_clear_nexus(scb, CLR_NXS_I_T_L,
++					  (RESUME_TX | NOT_IN_Q | SEND_Q),
++					  /*ctx*/0);
++		scb->flags |= (SCB_INTERNAL | SCB_ACTIVE | SCB_RECOVERY);
++		asd_setup_scb_timer(scb, (4 * HZ), asd_scb_eh_timeout);
++		asd_push_post_stack(asd, scb, (void *) scb_to_reset,
++				    asd_hwi_reset_lu_done);
++		asd_hwi_post_scb(asd, scb);
++		break;
++
++	case SCB_EH_RESUME_SENDQ:
++		/*
++		 * If we failed to perform LU Reset, we need to resume
++		 * the firmware send queue for the I_T_L.
++		 */
++		asd_hwi_build_clear_nexus(scb, CLR_NXS_I_T_L,
++					  RESUME_TX, /*ctx*/0);
++		scb->flags |= (SCB_INTERNAL | SCB_ACTIVE | SCB_RECOVERY);
++		asd_setup_scb_timer(scb, (4 * HZ), asd_scb_eh_timeout);
++		asd_push_post_stack(asd, scb, (void *) scb_to_reset,
++				    asd_hwi_reset_lu_done);
++		asd_hwi_post_scb(asd, scb);
++		break;
++
++	case SCB_EH_DONE:
++	{
++		scb_to_reset->eh_state = scb->eh_state;
++		scb_to_reset->eh_status = scb->eh_status;
++
++		if ((scb_to_reset->eh_state == SCB_EH_DONE) &&
++		    (scb_to_reset->eh_status == SCB_EH_FAILED)) {
++			/*
++		 	 * Failed to perform LU Reset or LU Reset is not
++		 	 * supported then we shall procced with 
++			 * the next level of error recovery (Device Port Reset).
++			 * We need to change the scb eh_state to 
++			 * SCB_EH_DEV_RESET_REQ.
++		 	 */
++			scb_to_reset->eh_state = SCB_EH_DEV_RESET_REQ;
++			scb_to_reset->platform_data->targ->flags &= 
++							~ASD_TARG_IN_RECOVERY;
++		}
++		asd_hwi_free_scb(asd, scb);
++		asd_wakeup_sem(&asd->platform_data->ehandler_sem);
++		break;
++	}
++
++	default:
++		asd_log(ASD_DBG_ERROR, "Invalid EH State 0x%x.\n",
++			scb->eh_state);
++		scb_to_reset->eh_state = SCB_EH_DONE;
++		scb_to_reset->eh_status = SCB_EH_FAILED;
++		asd_hwi_free_scb(asd, scb);
++		asd_wakeup_sem(&asd->platform_data->ehandler_sem);
++		break;
++	}
++}
++
++static void
++asd_hwi_reset_lu_done(struct asd_softc *asd, struct scb *scb,
++		     struct asd_done_list *dl)
++{
++	asd_log(ASD_DBG_ERROR, "DL Opcode = 0x%x.\n", dl->opcode);
++
++	/*
++       	 * There is a possibility that this post routine is called after
++	 * the SCB timedout. So, only delete the timer if the SCB hasn't
++	 * timedout.
++	 */
++	if (scb->eh_state != SCB_EH_TIMEDOUT)
++		del_timer_sync(&scb->platform_data->timeout);
++
++	switch (dl->opcode) {
++	case TASK_COMP_WO_ERR:
++		scb->eh_state = SCB_EH_DONE;
++		scb->eh_status = SCB_EH_SUCCEED;
++		break;
++
++	case TMF_F_W_TC_NOT_FOUND:
++	case TMF_F_W_TAG_NOT_FOUND:
++	case TMF_F_W_CONN_HNDL_NOT_FOUND:
++	case TASK_F_W_NAK_RCVD:
++		if ((scb->eh_state & SCB_EH_SUSPEND_SENDQ) != 0)
++			scb->eh_state = SCB_EH_RESUME_SENDQ;
++		else
++			scb->eh_state = SCB_EH_DONE;
++		
++		scb->eh_status = SCB_EH_FAILED;
++		break;
++
++	case SSP_TASK_COMP_W_RESP:
++	{	
++		union edb 		*edb;
++		struct scb 		*escb;
++		struct ssp_resp_edb  	*redb;
++		struct ssp_resp_iu	*riu;
++		u_int			 edb_index;
++
++		edb = asd_hwi_get_edb_from_dl(asd, scb, dl, &escb, &edb_index);
++		if (edb == NULL) {
++			asd_log(ASD_DBG_ERROR, "Invalid EDB recv for SSP "
++				"comp w/response.\n");
++			scb->eh_state = SCB_EH_RESUME_SENDQ;
++			scb->eh_status = SCB_EH_FAILED;
++			break;
++		}
++		
++		redb = &edb->ssp_resp;
++		riu = &redb->resp_frame.riu;
++		if (SSP_RIU_DATAPRES(riu) == SSP_RIU_DATAPRES_RESP) {
++			uint8_t	resp_code;
++
++			resp_code = ((struct resp_data_iu *)
++						&riu->data[0])->resp_code;
++
++			/* Handle the SSP TMF response code. */
++			asd_hwi_map_tmf_resp(scb, resp_code);
++		} else {
++			/* 
++			 * Response Data not available. Protocol error.
++			 * Indicate that LUR failed.
++			 */
++			scb->eh_state = SCB_EH_RESUME_SENDQ;
++			scb->eh_status = SCB_EH_FAILED;
++		}
++
++		asd_hwi_free_edb(asd, escb, edb_index);
++		break;
++	}
++
++	case TASK_F_W_OPEN_REJECT:
++		scb->eh_state = SCB_EH_RESUME_SENDQ;
++		scb->eh_status = SCB_EH_FAILED;
++		break;
++
++	case RESUME_COMPLETE:
++		scb->eh_state = SCB_EH_DONE;
++		scb->eh_status = SCB_EH_FAILED;
++		break;
++
++	case TASK_CLEARED:
++		/* 
++		 * Previous error recovery SCB that timed-out and
++		 * was aborted.
++		 * All we need to do here is just free the scb.
++		 */ 
++		asd_hwi_free_scb(asd, scb);
++		return;
++	
++	default:
++		asd_log(ASD_DBG_ERROR, "DL Opcode not handled.\n");
++		scb->eh_state = SCB_EH_RESUME_SENDQ;
++		scb->eh_status = SCB_EH_FAILED;
++		break;
++	}
++
++	asd_hwi_reset_lu(asd, (struct scb *) scb->io_ctx, scb);
++}
++
++void
++asd_hwi_map_tmf_resp(struct scb *scb, u_int resp_code)
++{
++	/* 
++	 * Handle TMF Response upon completion of issuing 
++	 * Task Management Function to the target..
++	 * Based on the response code, we will move to certain
++	 * error recovery state.
++	 */
++	switch (resp_code) {
++	case TMF_COMPLETE:
++		scb->eh_state = SCB_EH_CLR_NXS_REQ;
++		scb->eh_status = SCB_EH_SUCCEED;
++		break;
++
++	case INVALID_FRAME:
++	case TMF_FAILED:
++	case TMF_SUCCEEDED:
++	case TMF_NOT_SUPPORTED:
++	case INVALID_LUN:
++	default:
++		/* We treat all this as a failure case. */
++		scb->eh_state = SCB_EH_RESUME_SENDQ;
++		scb->eh_status = SCB_EH_FAILED;
++		break;
++	}
++}
++
++/*
++ * Function:
++ *	asd_hwi_reset_device()
++ *	
++ * Description:
++ *	Issue a device reset to the failing device.
++ */
++static void
++asd_hwi_reset_device(struct asd_softc *asd, struct scb *scb_to_reset,
++		     struct scb *scb)
++{
++	ASD_LOCK_ASSERT(asd);
++
++	asd_log(ASD_DBG_ERROR, "Curr State: 0x%x Status: 0x%x.\n",
++		scb->eh_state, scb->eh_status);
++
++	switch (scb->eh_state) {
++	case SCB_EH_INITIATED:
++	{
++		struct asd_target	*targ;
++		struct asd_device	*dev;
++
++		targ = scb_to_reset->platform_data->targ;
++		dev = scb_to_reset->platform_data->dev;
++		if ((targ == NULL) || (dev == NULL)) {
++			/* This shouldn't happen. */
++			scb->eh_state = SCB_EH_DONE;
++			scb->eh_status = SCB_EH_FAILED;
++			asd_hwi_reset_device(asd, scb_to_reset, scb);
++			break;
++		}
++
++		/*
++	 	 * DC: Currently we are not handling error recovery for
++		 *     expander.
++		 *     Logic for that will be added later on.
++         	 */ 
++		if ((targ->device_protocol_type != ASD_DEVICE_PROTOCOL_SCSI) &&
++		    (targ->device_protocol_type != ASD_DEVICE_PROTOCOL_ATA)) {
++			scb->eh_state = SCB_EH_DONE;
++			scb->eh_status = SCB_EH_FAILED;
++			asd_hwi_reset_device(asd, scb_to_reset, scb);
++			break;
++		}
++		
++		scb->platform_data->targ = targ;
++		scb->platform_data->dev = dev;
++
++		/* 
++		 * Saving final post routine and the scb_to_reset in
++		 * the first post stack slot. We need to access the
++		 * scb_to_reset during the device reset process.
++		 */
++		asd_push_post_stack(asd, scb, (void *) scb_to_reset,
++				    asd_hwi_reset_device_done);
++		
++		if (SCB_GET_SRC_PORT(scb_to_reset)->management_type == 
++							ASD_DEVICE_END) {
++			/* We or'ed it to remember its previous state. */
++			scb->eh_state |= SCB_EH_CLR_NXS_REQ;
++		} else {
++			/*
++			 * For device attached behind expander,
++		         * prior to device reset, we will try to
++			 * obtain the error report log of the phy
++			 * that the device is connected to.
++			 */
++			scb->eh_state = SCB_EH_PHY_REPORT_REQ;
++		}
++		asd_hwi_reset_device(asd, scb_to_reset, scb);	
++		break;
++	}
++
++	case SCB_EH_DEV_RESET_REQ:
++	{
++		struct asd_target	*targ;
++		struct asd_port		*port;
++
++		targ = scb->platform_data->targ;
++		port = SCB_GET_SRC_PORT(scb);
++		/*
++	 	 * Perform a specific device reset for device that is 
++		 * direct-attached or expander-attached.
++	 	 */
++		if (port->management_type == ASD_DEVICE_END) {
++			/* Device is directly attached to the initiator. */
++			asd_hwi_reset_end_device(asd, scb);
++		} else {
++			/* Device is attached behind expander. */
++			asd_hwi_reset_exp_device(asd, scb);
++		}
++	    	break;
++	}
++
++	case SCB_EH_PHY_NO_OP_REQ:
++	{
++		struct asd_phy	*phy;
++
++		phy = (struct asd_phy *) scb->io_ctx;
++		/*
++		 * Upon completion of HARD RESET, we need to initialize
++		 * OOB registers to enable hot-plug timer.
++		 * PHY NO OP currently only applied for direct-attached
++		 * device.
++		 */
++		asd_hwi_build_control_phy(scb, phy, PHY_NO_OP);
++		scb->flags |= (SCB_INTERNAL | SCB_ACTIVE | SCB_RECOVERY);
++		asd_setup_scb_timer(scb, (4 * HZ), asd_scb_eh_timeout);
++		asd_push_post_stack(asd, scb, scb->io_ctx,
++				    asd_hwi_reset_end_device_done);
++		asd_hwi_post_scb(asd, scb);
++		break;
++	}
++
++	case SCB_EH_PHY_REPORT_REQ:
++		/*
++		 * Obtain the report error log of the phy that the failing
++		 * device is connected to.
++		 * Ideally, we want to traverse the route and obtain the
++		 * error report log of each phy that has pathway to the
++		 * device.
++		 */
++		asd_hwi_report_phy_err_log(asd, scb);
++		break;
++
++	case SCB_EH_CLR_NXS_REQ:
++	case (SCB_EH_CLR_NXS_REQ|SCB_EH_INITIATED):
++	case (SCB_EH_CLR_NXS_REQ|SCB_EH_PHY_REPORT_REQ):
++		/*
++	 	 * Prior to performing Link Reset or Hard Reset to the 
++		 * target, we need to clear the firmware's execution queue
++		 * and suspend the data transimission to the target.
++	 	 */
++		if (((scb->eh_state & SCB_EH_INITIATED) != 0) ||
++		    ((scb->eh_state & SCB_EH_PHY_REPORT_REQ) != 0)) {
++			asd_hwi_build_clear_nexus(scb, CLR_NXS_IT_OR_TI,
++					  	 (SUSPEND_TX | EXEC_Q),
++						  /*ctx*/0);
++			asd_push_post_stack(asd, scb, (void *) scb_to_reset,
++					    asd_hwi_reset_device_done);
++		} else {
++			/* 
++			 * Upon completion of Device Reset, we need to issue
++			 * CLEAR NEXUS to the firmware to free up the SCB
++		         * resume data transmission.
++			 * Also, we will be using the first post stack
++			 * we save at the beginning.
++			 */
++			asd_hwi_build_clear_nexus(scb, CLR_NXS_IT_OR_TI,
++						 (RESUME_TX|SEND_Q|NOT_IN_Q),
++					  	  /*ctx*/0);
++		}
++		scb->flags |= (SCB_INTERNAL | SCB_ACTIVE | SCB_RECOVERY);
++		asd_setup_scb_timer(scb, (4 * HZ), asd_scb_eh_timeout);
++		asd_hwi_post_scb(asd, scb);
++		break;
++	
++	case SCB_EH_DONE:
++		scb_to_reset->eh_state = scb->eh_state;
++		scb_to_reset->eh_status = scb->eh_status;
++
++		if ((scb_to_reset->eh_state == SCB_EH_DONE) &&
++		    (scb_to_reset->eh_status == SCB_EH_FAILED)) {
++			/*
++		 	 * Failed to perform DEVICE RESET,
++			 * we shall procced with the next level of 
++			 * error recovery (Port Reset).
++			 * We need to change the scb eh_state to 
++			 * SCB_EH_PORT_RESET_REQ.
++		 	 */
++			scb_to_reset->eh_state = SCB_EH_PORT_RESET_REQ;
++			scb_to_reset->platform_data->targ->flags &= 
++							~ASD_TARG_IN_RECOVERY;
++		}
++		asd_hwi_free_scb(asd, scb);
++		asd_wakeup_sem(&asd->platform_data->ehandler_sem);
++		break;
++
++	default:
++		asd_log(ASD_DBG_ERROR, "Invalid EH State 0x%x.\n",
++			scb->eh_state);
++
++		scb_to_reset->eh_state = SCB_EH_DONE;
++		scb_to_reset->eh_status = SCB_EH_FAILED;
++		asd_hwi_free_scb(asd, scb);
++		asd_wakeup_sem(&asd->platform_data->ehandler_sem);
++		break;
++	}
++}
+
 
