@@ -1,63 +1,26 @@
 From: Rusty Trivial Russell <rusty@rustcorp.com.au>
-Subject: [TRIVIAL] warning cleanup for drivers_scsi_qla1280.c
-Date: Tue, 20 Aug 2002 18:33:35 +1000
+Subject: [TRIVIAL] drivers_scsi_sym53c8xx_comm.h, typo: the the
+Date: Tue, 20 Aug 2002 19:00:37 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020820041037.6C89C2C442@lists.samba.org>
+Message-ID: <20020820041035.AA2EB2C4A5@lists.samba.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: marcelo@conectiva.com.br, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, Gerard Roudier <groudier@free.fr>
 
-[ Hasn't been touched in years, but this cleans up an "unused" warning
-  the simplest way (make the whole function dependent on kernel
-  version, since its only call is ]
+From:  James Mayer <james@cobaltmountain.com>
 
 
-From:  Eric Sandeen <sandeen@sgi.com>
-
-
---- trivial-2.4.20-pre4/drivers/scsi/qla1280.c.orig	2002-08-20 18:00:34.000000000 +1000
-+++ trivial-2.4.20-pre4/drivers/scsi/qla1280.c	2002-08-20 18:00:34.000000000 +1000
-@@ -312,7 +312,9 @@
- STATIC int qla1280_return_status( sts_entry_t *sts, Scsi_Cmnd       *cp);
- STATIC void qla1280_removeq(scsi_lu_t *q, srb_t *sp);
- STATIC void qla1280_mem_free(scsi_qla_host_t *ha);
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,1,95)
- static void qla1280_do_dpc(void *p);
-+#endif
- #ifdef  QLA1280_UNUSED 
- static void qla1280_set_flags(char * s);
- #endif
-@@ -1611,17 +1613,12 @@
-  * "host->can_queue". This can cause a panic if we were in our interrupt
-  * code .
-  **************************************************************************/
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,1,95)
- static void qla1280_do_dpc(void *p)
- {
-     scsi_qla_host_t *ha = (scsi_qla_host_t *) p;
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,1,95)
--    unsigned long cpu_flags = 0;
--#endif
- 
-     COMTRACE('p')  
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,1,95)
--    spin_lock_irqsave(&io_request_lock, cpu_flags);
--#endif
-     if (ha->flags.isp_abort_needed)
-         qla1280_abort_isp(ha);
- 
-@@ -1631,10 +1628,8 @@
-     if (ha->done_q_first)
-         qla1280_done(ha, (srb_t **)&ha->done_q_first, (srb_t **)&ha->done_q_last);
-     ha->flags.dpc_sched = FALSE;
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,1,95)
--    spin_unlock_irqrestore(&io_request_lock, cpu_flags);
--#endif
- }
-+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,1,95) */
- 
- /**************************************************************************
-  *   qla1280_device_queue_depth
+--- trivial-2.4.20-pre4/drivers/scsi/sym53c8xx_comm.h.orig	2002-08-20 18:00:47.000000000 +1000
++++ trivial-2.4.20-pre4/drivers/scsi/sym53c8xx_comm.h	2002-08-20 18:00:47.000000000 +1000
+@@ -2509,7 +2509,7 @@
+ **    differ and attach them using the order in the NVRAM.
+ **
+ **    If no NVRAM is found or data appears invalid attach boards in 
+-**    the the order they are detected.
++**    the order they are detected.
+ **
+ **===================================================================
+ */
 -- 
   Don't blame me: the Monkey is driving
-  File: Eric Sandeen <sandeen@sgi.com>: warning cleanup for drivers_scsi_qla1280.c
+  File: James Mayer <james@cobaltmountain.com>: drivers_scsi_sym53c8xx_comm.h, typo: the the
