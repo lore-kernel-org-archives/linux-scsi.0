@@ -1,43 +1,63 @@
-From: Willem Riede <wrlk@riede.org>
-Subject: Re: devices with more than one node
-Date: Tue, 13 Jan 2004 22:08:47 -0500
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: Building sym 2.1.18f on linux/alpha
+Date: Wed, 14 Jan 2004 05:44:49 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040114030847.GG4339@linnie.riede.org>
-References: <20040113193842.GA29887@suse.de> <20040113194631.GA3818@kroah.com> <20040113211122.GA28100@suse.de> <20040113212058.GA2595@kroah.com> <20040113150147.A9902@beaverton.ibm.com> <20040113231813.GA7409@kroah.com> <1074042776.4004979822819@wwws.torque.net>
-Reply-To: wrlk@riede.org
+Message-ID: <20040114054449.GD10711@parcelfarce.linux.theplanet.co.uk>
+References: <40040870.9000306@solvo.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sccrmhc11.comcast.net ([204.127.202.55]:20978 "EHLO
-	sccrmhc11.comcast.net") by vger.kernel.org with ESMTP
-	id S266149AbUANDIs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Jan 2004 22:08:48 -0500
-Received: from linnie.riede.org (localhost.localdomain [127.0.0.1])
-	by linnie.riede.org (8.12.10/8.12.10) with ESMTP id i0E38lEM019190
-	for <linux-scsi@vger.kernel.org>; Tue, 13 Jan 2004 22:08:47 -0500
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:31687 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S266316AbUANFoy
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Jan 2004 00:44:54 -0500
 Content-Disposition: inline
-In-Reply-To: <1074042776.4004979822819@wwws.torque.net> (from dougg@torque.net on Tue, Jan 13, 2004 at 20:12:56 -0500)
+In-Reply-To: <40040870.9000306@solvo.ru>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Sergey Tikhonov <tsv@solvo.ru>
+Cc: willy@debian.org, "J.E.J. Bottomley" <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@zip.com.au>
 
-On 2004.01.13 20:12, dougg@torque.net wrote:
-> Quoting Greg KH <greg@kroah.com>:
+On Tue, Jan 13, 2004 at 06:02:08PM +0300, Sergey Tikhonov wrote:
+> The final kernel could not pass linking stage with 2.1.18f version 
+> (included into 2.6.1 kernel patch).
+> The linker complains that :
+> drivers/built-in.o(.init.text+0x8cec): In function 'sym2_probe':
+> : undfined reference to 'local symbols in discarded section .exit.text'
 > 
-> > For scsi generic you should create a scsi generic class (scsi_generic?)
-> > and create the individual sg devices in that directory (feel free to use
-> > the simple_class.c code that is currently in the -mm tree if you want,
-> > it makes it much simpler)
-> 
-> Does any device use the simple_class.c code yet?
+> I compared arch/alpha/kernel/vmlinux.lds.S with one from the i386 tree. 
+> The '.exit.text' and '.exit.data'
+> sections were moved out of DISCARD attributes in the i386 version. I did 
+> the same with alpha version
+> and it helped.
 
-I did in osst, see 
-http://marc.theaimsgroup.com/?l=linux-kernel&m=107275923222124&w=2
-  
-> > > st also needs changes.
-> 
-> and osst.
+Thanks for this report; you uncovered a real bug.  Actually two real
+bugs; one is that parisc is not discarding the .init.text and .exit.text
+sections (so I didn't notice this bug) and the other is that sym_detach
+is marked __devexit, yet called from a __devinit function.
 
-Right. So I'm following this thread for guidance.
+Patch follows:
 
-Regards, Willem Riede.
+Index: drivers/scsi/sym53c8xx_2/sym_glue.c
+===================================================================
+RCS file: /var/cvs/linux-2.6/drivers/scsi/sym53c8xx_2/sym_glue.c,v
+retrieving revision 1.38
+diff -u -p -r1.38 sym_glue.c
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c	17 Oct 2003 13:32:00 -0000	1.38
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c	14 Jan 2004 05:43:33 -0000
+@@ -2228,7 +2228,7 @@ void sym_config_pqs(struct pci_dev *pdev
+  *  Detach the host.
+  *  We have to free resources and halt the NCR chip.
+  */
+-static int __devexit sym_detach(struct sym_hcb *np)
++static int sym_detach(struct sym_hcb *np)
+ {
+ 	printk("%s: detaching ...\n", sym_name(np));
+ 
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
