@@ -1,31 +1,28 @@
-From: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
+From: Arnd Bergmann <arndb@de.ibm.com>
 Subject: Re: [RFC][PATCH] move dma_mask into struct device
-Date: Sat, 16 Nov 2002 09:48:31 -0500
+Date: Sat, 16 Nov 2002 18:23:48 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200211161448.gAGEmYl02479@localhost.localdomain>
-References: <andmike@us.ibm.com>
+Message-ID: <200211161823.48018.arndb@de.ibm.com>
+Reply-To: Arnd Bergmann <ibm.com@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id GAA02652
-	for <linux-scsi@vger.kernel.org>; Sat, 16 Nov 2002 06:48:43 -0800
-In-Reply-To: Message from Mike Anderson <andmike@us.ibm.com>
-   of "Fri, 15 Nov 2002 16:19:14 PST." <20021116001914.GA3153@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, grundler@dsl2.external.hp.com, willy@debian.org
+To: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Linux Scsi <linux-scsi@vger.kernel.org>, Mike Anderson <andmike@us.ibm.com>
 
-andmike@us.ibm.com said:
-> I got a compile error here. This should be.
-> 	dev->dev.dma_mask = &dev->dma_mask; 
+J.E.J. Bottomley [James.Bottomley@steeleye.com] wrote:
 
-Oops, yes, that's what comes of making changes in code you don't compile.
+> Attached is a patch which moves dma_mask into struct device and cleans up the 
+> scsi mid-layer to use it (instead of using struct pci_dev).  The advantage to 
+> doing this is probably most apparent on non-pci bus architectures where 
+> currently you have to construct a fake pci_dev just so you can get the bounce 
+> buffers to work correctly.
 
-> The machine is a 2x pci systems with the following drivers loaded:
-> 	aic7xxx, ips, qlogicisp. 
+That does not sound like the right way to me. If you need to have the dma_mask
+for the Scsi_Host, you should store it in Scsi_Host itself. A struct device
+must never know about obscure architecture specific stuff like dma.
 
-Thanks for testing it.
-
-James
-
-
+	Arnd <><
