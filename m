@@ -1,88 +1,62 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [Patch] QLogic qla2x00 driver fixes
-Date: Tue, 01 Mar 2005 01:52:07 -0500
-Message-ID: <1109659927.27139.276.camel@compaq-rhel4.xsintricity.com>
-References: <1109305293.27139.216.camel@compaq-rhel4.xsintricity.com>
-	 <1109318231.6290.27.camel@laptopd505.fenrus.org>
-	 <421EE410.7020603@pobox.com>
-	 <1109332659.27139.224.camel@compaq-rhel4.xsintricity.com>
-	 <20050225170202.GB8539@us.ibm.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Fw: [Bugme-new] [Bug 4268] New: SCSI performance regression in
+ 2.6.10
+Date: Mon, 28 Feb 2005 23:11:41 -0800
+Message-ID: <20050228231141.3ac7c145.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Received: from mx1.redhat.com ([66.187.233.31]:65154 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S261250AbVCAGwQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 01:52:16 -0500
-In-Reply-To: <20050225170202.GB8539@us.ibm.com>
+Received: from fire.osdl.org ([65.172.181.4]:30669 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S261277AbVCAHMD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 02:12:03 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Arjan van de Ven <arjan@infradead.org>, linux-scsi mailing list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: duraid@octopus.com.au
 
-On Fri, 2005-02-25 at 09:02 -0800, Patrick Mansfield wrote:
-> On Fri, Feb 25, 2005 at 06:57:39AM -0500, Doug Ledford wrote:
-> > On Fri, 2005-02-25 at 03:38 -0500, Jeff Garzik wrote:
-> > > Arjan van de Ven wrote:
-> > > > On Thu, 2005-02-24 at 23:21 -0500, Doug Ledford wrote:
-> > > > 
-> > > >>Don't use cmd->request->nr_hw_segments as it may not be initialized
-> > > >>(SG_IO in particular bypasses anything that initializes this and just
-> > > >>uses scsi_do_req to insert a scsi_request directly on the head of the
-> > > >>queue) 
-> > > > 
-> > > > 
-> > > > should we fix that in the SG_IO layer ?
-> > > 
-> > > Possibly/probably.
-> 
-> Doug,
-> 
-> What kernel did you hit this with? 
 
-Our RHEL4 kernel (2.6.9 plus bunches-o'-patches)
+Did anything change in the mpt fusion driver?
 
-> And same question as Doug G: is it via sg (not the block SG_IO)? sg uses
-> scsi_do_req(), block SG_IO doesn't.
+I'm seeing the same thing, again with mpt-fusion.  38MB/sec when it should
+be getting >60.
 
-At the moment, I'm sorting that out.  It's a bit of a black box.  We
-have two different loops of commands running on my test machine.  There
-are 10 instances of:
 
-while true; do scsiinfo -i /dev/sdf; done 
+Begin forwarded message:
 
-which sends an INQUIRY request to the target device.  I'm running into a
-problem getting an strace from this command, so I'm tell you more when I
-can.
+Date: Mon, 28 Feb 2005 22:03:57 -0800
+From: bugme-daemon@osdl.org
+To: bugme-new@lists.osdl.org
+Subject: [Bugme-new] [Bug 4268] New: SCSI performance regression in 2.6.10
 
-The other 10 loops are:
 
-while true; do scsi_id -g -s /block/sdf -p 0x80; done
+http://bugme.osdl.org/show_bug.cgi?id=4268
 
-> Jens sent changes last August or so that fixed SG_IO (not sg) to always
-> set nr_hw_segments, change should be in 2.6.10. It is not obvious that his
-> change fixed this, I can't find the changeset or log.
+           Summary: SCSI performance regression in 2.6.10
+    Kernel Version: 2.6.10
+            Status: NEW
+          Severity: normal
+             Owner: andmike@us.ibm.com
+         Submitter: duraid@octopus.com.au
 
-Finding out if this is fixed is only greatly complicated by the fact
-that there exists a drivers/block/scsi_ioctl.c and
-drivers/scsi/scsi_ioctl.c and they both are compiled into the kernel, so
-knowing which one is actually being used, codepath wise, can be
-confusing.  Then on top of that there's drivers/scsi/sg.c with it's
-SG_IO path.  It's not necessarily an easy issue to sort out without that
-strace and for some reason strace is locking on the test box I'm
-running.
 
-(insert delay as we get the strace issue resolved)
+Distribution: Debian 'unstable', pristine 2.6.10 kernel
+Hardware Environment: HP rx2600 (ia64), LSI 53C1030 U320 SCSI host (Fusion MPT)
+Problem Description: There is a quite severe performance regression in 2.6.10
+when using SCSI disk drives. (I've tested against 2.4.20, 2.6.8 and 2.6.9, none
+of which exhibit this problem)
 
-OK, the program that's causing the problem, from what I can tell, is
-opening /dev/sdf and then issuing a SCSI_IOCTL_SEND_COMMAND request.
-That means we go to scsi/sd.c:sd_ioctl to
-block/scsi_ioctl.c:scsi_cmd_ioctl to block/scsi_ioctl.c:sg_scsi_ioctl
-and it's on that path that we aren't always getting an initialized
-nr_hw_segments.
+Steps to reproduce: dd if=/dev/sdXX of=/dev/null bs=1048576 count=10000
+(streaming read the first 10GB of scsi disk XX)
 
-/me votes for consolidating some of this ioctl mess if at all possible.
+In 2.6.10, with a Fujitsu 10Krpm SCSI disk I get 34MB/sec, with a Maxtor 15Krpm
+SCSI disk I get 37MB/sec. CPU usage of 'dd' is ~2% and %system time is about the
+same.
 
--- 
-Doug Ledford <dledford@redhat.com>
-http://people.redhat.com/dledford
+Using 2.6.9 (or earlier), I get 63MB/sec for the 10K disk and 95MB/sec for the
+15K disk. CPU usage goes up in proportion. (OK, fair enough.)
 
+This is a real performance issue (shows up everywhere, not just in 'dd'), and
+affects both reads and writes. Does anyone know what's going on here?
+
+------- You are receiving this mail because: -------
+You are on the CC list for the bug, or are watching someone who is.
