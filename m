@@ -1,89 +1,60 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: 2.6.1: media change check fails for busy unplugged device
-Date: Thu, 29 Jan 2004 01:30:51 -0800
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040129093051.GA1556@beaverton.ibm.com>
-References: <200401182141.12468.arvidjaar@mail.ru> <20040119233641.GA1859@beaverton.ibm.com> <200401262216.42966.arvidjaar@mail.ru>
+From: George Magklaras <george.magklaras@biotek.uio.no>
+Subject: Re: SCSI Disk layer performance
+Date: Thu, 29 Jan 2004 13:26:50 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <4018FC0A.3050309@biotek.uio.no>
+References: <400FF79A.6050108@wanadoo.es>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200401262216.42966.arvidjaar@mail.ru>
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pat.uio.no ([129.240.130.16]:62953 "EHLO pat.uio.no")
+	by vger.kernel.org with ESMTP id S265895AbUA2M1p (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Jan 2004 07:27:45 -0500
+In-Reply-To: <400FF79A.6050108@wanadoo.es>
 List-Id: linux-scsi@vger.kernel.org
+To: Xose Vazquez Perez <xose@wanadoo.es>, linux-scsi@vger.kernel.org
 
-Andrey Borzenkov [arvidjaar@mail.ru] wrote:
-> On Tuesday 20 January 2004 02:36, Mike Anderson wrote:
-> > Andrey Borzenkov [arvidjaar@mail.ru] wrote:
-> > > If we unplug busy device (consider mounted USB stick) media change check
-> > > always returns true (no media change happened). It happens because
-> > >
-> > > - device state is set to SDEV_DEL and scsi_prep_fn silently kills any
-> > > request including TEST_UNIT_READY sent by sd_media_changed without
-> > > propagating any information back to caller
-> >
-> > The silently kill would appear to be the issue. The addition of any
-> > number of additional checks prior to calling scsi_ioctl would not ensure
-> > that as soon as the last check is done the device state has not changed.
-> >
+
+
+Xose Vazquez Perez wrote:
+> Christoph Hellwig wrote:
 > 
-> But why sdev->online remains set after device has been deleted? It is 
-> definitely cannot accept any command after that point?
 > 
-> Is it possible to clear sdev->online in scsi_remove_device? That would solve 
-> the problem.
+>>What kernel tree do you use?  If you're looking for decent scsi
+>>performance use linux 2.6 or the SuSE/RH vendor trees.  Stock Linux 2.4
 > 
+>                                            ^^^^^^
+> _Enterprise_ kernels, RHEL or SLES.
+> Fedora Core kernel is, more or less, a plain kernel.org.
+> 
+> I'm runnig RHEL 2.4.21-9.EL kernel and it's _much better_ than any 2.4.xx
+> kernel.org. I could call it 2.5 because it's a mix of 2.4 and 2.6 ;-)
+> 
+The 2.4.21-9EL might have clever things backported into it, but it is 
+still missing essential things that can make a difference in the block 
+layer, like an anticipatory I/O schedule. My impression is that all 
+2.4 kernels use the Linus Elevator. That works well with moderate SMP 
+loads, but it does not perform well on my large-ish Hardware RAID0 
+1.1Tbyte ext3 partition on a Power Vault 220S with a Dell PERC4 host 
+adapter. The 2.6.1 does work a lot more better in that sense, giving 
+me an average read of 90 Mbytes/sec as opposed to 
+60+somethingMbytes/sec I used to get before with 2.4.21-9ELsmp.
 
-The sdev->online flag was left as is when the device state model was
-update as we where overloading the meaning on this flag. I believe James
-last statement on this was that we need to merge this in at some point
-(correct James?).
+The new I/O schedulers (let alone driver maturity issues) are the way 
+to go for maximum performance! I won't place -for the moment- a 2.6 on 
+a production grade system, but in a couple of releases, I will put 2.4 
+in the museum :-) with respect to SCSI I/O performance.
 
-As I previously stated above no flag checking will work in this case
-(you can make the race smaller) as it can go SDEV_DEL or offline false
-after all kinds of checks, but prior to running the command. The
-scsi_wait_req needs to handle the case that it might have been woken up
-by someone else beside scsi_wait_done. One way to do this would be the
-patch below. I did some testing using a ioctl to the sd device that had
-been deleted. The patch changed the result return by the ioctl from
-success to failure (It should be noted that there is some odd behavior
-in the ioctl_internal_command in that it will not return negative errno
-values but instead returns the result of the command which will be
-positive under errors). We probably need to come up with a better method
-than the test in the patch to determine that a request was killed, but
-it should be valid enough to test to see if it solves your issue.
-
--andmike
+Regards,
+-- 
 --
-Michael Anderson
-andmike@us.ibm.com
+George B. Magklaras
 
-DESC
-If a request is sent through scsi_wait_req the function may be woken up
-from the completion by a function other than scsi_wait_done. This can
-happen as a result of cases that return BLKPREP_KILL in the scsi_prep_fn
-function.
-
-author: Mike Anderson <andmike@us.ibm.com>
-patch_version: Thu Jan 29 09:03:44 UTC 2004
-EDESC
+Computer Systems Engineer/UNIX Systems Administrator
+The Biotechnology Centre of Oslo
 
 
- patched-2.6-andmike/drivers/scsi/scsi_lib.c |    2 ++
- 1 files changed, 2 insertions(+)
 
-diff -puN drivers/scsi/scsi_lib.c~sdev_del_scsi_wait_req drivers/scsi/scsi_lib.c
---- patched-2.6/drivers/scsi/scsi_lib.c~sdev_del_scsi_wait_req	Mon Jan 26 18:31:45 2004
-+++ patched-2.6-andmike/drivers/scsi/scsi_lib.c	Mon Jan 26 18:50:51 2004
-@@ -238,6 +238,8 @@ void scsi_wait_req(struct scsi_request *
- 	generic_unplug_device(sreq->sr_device->request_queue);
- 	wait_for_completion(&wait);
- 	sreq->sr_request->waiting = NULL;
-+	if (sreq->sr_request->rq_status != RQ_SCSI_DONE)
-+		sreq->sr_result |= (DRIVER_ERROR << 24);
- 
- 	__scsi_release_request(sreq);
- }
 
-_
