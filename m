@@ -1,107 +1,44 @@
-From: "Ju, Seokmann" <sju@lsil.com>
-Subject: RE: installing new MegaRaid driver on Suse Enterprise Server 8
-Date: Thu, 24 Feb 2005 08:48:04 -0500
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57036626E2@exa-atlanta>
+From: Erik Mouw <erik@harddisk-recovery.com>
+Subject: Re: CSMI questions
+Date: Thu, 24 Feb 2005 15:25:02 +0100
+Message-ID: <20050224142502.GC13226@harddisk-recovery.com>
+References: <20050222171656.GA5953@beardog.cca.cpqcorp.net> <20050222231450.GB10067@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Received: from mail0.lsil.com ([147.145.40.20]:11678 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S262349AbVBXNsl (ORCPT
+Content-Type: text/plain; charset=us-ascii
+Received: from users.linvision.com ([62.58.92.114]:57486 "HELO bitwizard.nl")
+	by vger.kernel.org with SMTP id S262354AbVBXOZH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Feb 2005 08:48:41 -0500
+	Thu, 24 Feb 2005 09:25:07 -0500
+Content-Disposition: inline
+In-Reply-To: <20050222231450.GB10067@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Mrvka Andreas' <mrv@tuev-a.at>, "Ju, Seokmann" <sju@lsil.com>, linux-scsi@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: mikem <mikem@beardog.cca.cpqcorp.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wednesday, February 23, 2005 11:35 AM, Andrew wrote:
-> well, i installed SLES 8 and the system found its PERC 2/dc
-> as an i2o block device.
-> it loads all i2o_core, i2o_block, i2o_config, and i2o_pci
+On Tue, Feb 22, 2005 at 03:14:50PM -0800, Greg KH wrote:
+> On Tue, Feb 22, 2005 at 11:16:56AM -0600, mikem wrote:
+> > I'd also like an (brief) explanation of why ioctls are so bad. I've seen the 
+> > reasons of them never going away, etc. But from the beginning of time (UNIX)
+> > ioctls have been the preferred method of user space/kernel communication.
 > 
-> and at i2o_pci it says to wait for more devices in the background....
+> That's because there was no other method.  See the lkml archives for why
+> ioctls are considered bad, I don't want to dredge it up again.
 
-I2O mode is not for general use.
-You should set the mode to 'mass storage' device from the ctrl-m
-configuration utility.
+Here's a quote from the official syndicated kernelnewbies fortunes
+file (http://www.kernelnewbies.org/kernelnewbies-fortunes.tar.gz ):
 
-> i used to try the following modules: (rpm packages)
-> megaraid-megamgr-1.07-5
-> megaraid2-2.10.1-3dkms
+"Basically, ioctl's will _never_ be done right, because of the way people
+ think about them. They are a back door. They are by design typeless and
+ without rules. They are, in fact, the Microsoft of UNIX."
 
-Once you install above packages, reboot the system and you will see the
-driver loaded.
+	- Linus Torvalds on linux-kernel
 
-Thanks,
-Seokmann
-LSI Logic Corporation.
+For the full story, see http://lkml.org/lkml/2001/5/20/81 .
 
-> -----Original Message-----
-> From: Mrvka Andreas [mailto:mrv@tuev-a.at]
-> Sent: Wednesday, February 23, 2005 11:35 AM
-> To: Ju, Seokmann; linux-scsi@vger.kernel.org
-> Subject: Re: installing new MegaRaid driver on Suse Enterprise Server 8
-> 
-> Hello!
-> 
-> Thanks for your response!
-> 
-> well, i installed SLES 8 and the system found its PERC 2/dc
-> as an i2o block device.
-> it loads all i2o_core, i2o_block, i2o_config, and i2o_pci
-> 
-> and at i2o_pci it says to wait for more devices in the background....
-> but it does get an timeout back.
-> so i believe the i2o module is not that correct one.
-> 
-> i used to try the following modules: (rpm packages)
-> megaraid-megamgr-1.07-5
-> megaraid2-2.10.1-3dkms
-> 
-> can you guide me through updating to actual megaraid version?
-> well, i believe that this is what i have to try next.
-> cause, there is no kernel update for SLES 8 available :-(
-> 
-> thanks,
-> andrew
-> 
-> 
-> Am Mittwoch, 23. Februar 2005 16:57 schrieb Ju, Seokmann:
-> > On Wednesday, February 23, 2005 9:47 AM, Mrvka wrote:
-> >
-> > Please let me know what version of driver you are using.
-> > Also, Is O/S installed on the device connected to megaraid controller?
-> >
-> > Thanks,
-> >
-> > > -----Original Message-----
-> > > From: Mrvka Andreas [mailto:mrv@tuev-a.at]
-> > > Sent: Wednesday, February 23, 2005 9:47 AM
-> > > To: linux-scsi@vger.kernel.org
-> > > Subject: installing new MegaRaid driver on Suse Enterprise Server 8
-> > >
-> > > hi list,
-> > >
-> > > does anybody can help to guide me through an update
-> > > of an megaraid driver?
-> > >
-> > > i have a Dell Perc 2/dc controller in my Dell 2450 Server and
-> > > SuSE Server 8.
-> > >
-> > > if i use the standard megaraid driver, then the server crashes
-> > > and stands... (no error log entry)
-> > >
-> > > i found many sites for updates but no instruction for that.
-> > >
-> > > can anybody please support me?
-> > >
-> > > thanks in advance!
-> > >
-> > > cheers
-> > > Andrew
-> > >
-> > > -
-> > > To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-> in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> >
+
+Erik
+
+-- 
++-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
+| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
