@@ -1,28 +1,49 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [PATCH] depends on PCI DMA API: Adaptec AIC7xxx_old
-Date: Tue, 20 Jul 2004 20:55:52 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040720195552.GB2820@parcelfarce.linux.theplanet.co.uk>
-References: <200407201839.i6KIdo2I015550@anakin.of.borg>
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: [ANNOUNCE]: megaraid driver version 2.20.0.1
+Date: Tue, 20 Jul 2004 17:21:46 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC897@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S266129AbUGTT5Y@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200407201839.i6KIdo2I015550@anakin.of.borg>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:9696 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S266281AbUGTVWC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jul 2004 17:22:02 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On Tue, Jul 20, 2004 at 08:39:50PM +0200, Geert Uytterhoeven wrote:
-> Adaptec AIC7xxx_old unconditionally depends on the PCI DMA API, so mark it
-> broken if !PCI
+This is a delayed post because of some offline discussions.
 
-Shouldn't we rather have dummy PCI DMA APIs?
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+
+> The biggest structural issue still seems to be the pending queue.  It
+> looks to me like the driver could be nicely simplified if you 
+> got rid of
+> it and simply relied on returning SCSI_MLQUEUE_HOST_BUSY from
+> queeucommand().  You'd still get the queue restart almost from the ISR
+> like you want.
+Is there a existing driver using this interface.
+
+> The biggest structural issue still seems to be the pending queue.  It
+> looks to me like the driver could be nicely simplified if you 
+> got rid of
+> it and simply relied on returning SCSI_MLQUEUE_HOST_BUSY from
+> queeucommand().  You'd still get the queue restart almost from the ISR
+> like you want.
+> 
+> My other main gripe is things like this:
+> 
+> +	// wait for maximum 1 second for status to post
+> +	for (i = 0; i < 40000; i++) {
+> +		if (mbox->numstatus != 0xFF) break;
+> +		udelay(25); yield();
+> +	}
+> 
+Also, are these two changes gating factor for the driver to be included in
+the kernel. I do not want to make driver releases too often, unless
+of-course there is a critical fix, since it reset the driver validation in
+our testing labs. I have marked this and the yield() fix for the next drop
+of the driver
