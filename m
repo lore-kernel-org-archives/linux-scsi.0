@@ -1,56 +1,41 @@
-From: Mike Christie <mikenc@us.ibm.com>
-Subject: [PATCH] fix compile errors in scsi_sysfs.c
-Date: Wed, 15 Oct 2003 16:38:49 -0700
+From: Anton Blanchard <anton@samba.org>
+Subject: Re: ppc64-sym2-fix.patch
+Date: Thu, 16 Oct 2003 10:03:51 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F8DDA89.500@us.ibm.com>
+Message-ID: <20031016000351.GA1135@krispykreme>
+References: <20031015171347.GE16535@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020808000203000909000709"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.105]:412 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262613AbTJOXiv (ORCPT
+Received: from dp.samba.org ([66.70.73.150]:20371 "EHLO lists.samba.org")
+	by vger.kernel.org with ESMTP id S262441AbTJPAG6 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Oct 2003 19:38:51 -0400
-Received: from northrelay02.pok.ibm.com (northrelay02.pok.ibm.com [9.56.224.150])
-	by e5.ny.us.ibm.com (8.12.10/8.12.2) with ESMTP id h9FNcoUN680120
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Oct 2003 19:38:50 -0400
-Received: from us.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by northrelay02.pok.ibm.com (8.12.9/NCO/VER6.6) with ESMTP id h9FNcnnl218396
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Oct 2003 19:38:50 -0400
+	Wed, 15 Oct 2003 20:06:58 -0400
+Content-Disposition: inline
+In-Reply-To: <20031015171347.GE16535@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: Andrew Morton <akpm@zip.com.au>, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------020808000203000909000709
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
 
-In scsi_sysfs.c there is a call to snscanf, but I could only find this 
-function defined and in use by the toshiba acpi files. The attached 
-patch replaces snscanf with sscanf.
+Hi,
 
-Mike Christie
-mikenc@us.ibm.com
+> Hi Anton.  Looks like you forgot to cc me on this one:
+> 
+> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.0-test7/2.6.0-test7-mm1/broken-out/ppc64-sym2-fix.patch
 
---------------020808000203000909000709
-Content-Type: text/plain;
- name="scsi_sysfs.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="scsi_sysfs.patch"
+Yeah sorry about that, I did the quick fix and havent revisited it yet.
 
---- linux-2.6.0-test7/drivers/scsi/scsi_sysfs.c	2003-10-08 12:24:02.000000000 -0700
-+++ linux-2.6.0-test7-scsi/drivers/scsi/scsi_sysfs.c	2003-10-15 02:07:58.246162299 -0700
-@@ -195,8 +195,7 @@
- {									\
- 	struct scsi_device *sdev;					\
- 	sdev = to_scsi_device(dev);					\
--	snscanf (buf, 20, format_string, &sdev->field);			\
--	return count;							\
-+	return sscanf (buf, format_string, &sdev->field);		\
- }									\
- static DEVICE_ATTR(field, S_IRUGO | S_IWUSR, sdev_show_##field, sdev_store_##field)
- 
+> The comment in include/asm-ppc64/pci.h seems to indicate that it actually
+> wouldn't do any harm to return success since the "hardware treats MWI
+> the same as memory write".
 
---------------020808000203000909000709--
+I didnt want to because we have certain firmware workarounds that
+involve setting smaller cacheline sizes. I was trying to avoid undoing
+that.
 
+As Milton here just pointed out, the generic part of the MWI code only
+sets the MWI bit (which we should ignore) so we should be good to do
+this. I'll test and send the ppc64 specific fix to akpm.
+
+Anton
