@@ -1,58 +1,69 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: BUG: CD driver sends command during host removal
-Date: Mon, 11 Oct 2004 16:13:18 -0700
+From: Dave Olien <dmo@osdl.org>
+Subject: Question about Request Sense case in scsi_lib.c
+Date: Mon, 11 Oct 2004 17:00:58 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041011231317.GA11365@us.ibm.com>
-References: <Pine.LNX.4.44L0.0410111558460.21084-100000@netrider.rowland.org> <1097525576.2031.173.camel@mulgrave> <20041011204050.GD8296@us.ibm.com> <1097529322.2031.199.camel@mulgrave>
+Message-ID: <20041012000058.GA26569@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.101]:8373 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S269341AbUJKXNX (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:26605 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S269358AbUJLAA7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Oct 2004 19:13:23 -0400
+	Mon, 11 Oct 2004 20:00:59 -0400
 Content-Disposition: inline
-In-Reply-To: <1097529322.2031.199.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-James Bottomley [James.Bottomley@SteelEye.com] wrote:
-> On Mon, 2004-10-11 at 15:40, Mike Anderson wrote:
-> > > This is the remove implies cancel issue that was discussed earlier.  I
-> > > thought the proposal was to have a remove that wouldn't automatically
-> > > cancel all the commands? ... although I don't think I've seen any code
-> > > for that case yet.
-> > > 
-> > 
-> > Clarification. James, are you indicating that there needs to be a new
-> > scsi mid api that performs similar function to scsi_remove_host expect
-> > does not cancel commands?
-> 
-> Sorry, by "a remove that .." I was meaning "another remove method that
-> ..."
-> 
 
-Well based on Mike C's mail it looks like when I moved scsi_forget_host
-up in scsi_remove_host that I broke scsi_host_cancel as it stands now
-scsi_remove_host is not really doing any cancels.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=109743460011434&w=2
+I'm having some odd behavior with my multipath fibre channel system.
+I'm running 2.6.9-rc3, and have a Qlogic 2300 dual ported controller,
+routed through two brocade switches to two IBM FastT200 disk arrays.
 
-> > If is unclear to me if a LLDD provides a slave_destroy which is called
-> > from scsi_remove_device during the scsi_forget_host function that we
-> > would hit a case where the LLDD has good IO to complete still
-> > outstanding when we complete scsi_forget_host and call scsi_host_cancel.
-> 
-> That depends what the LLD does with the slave destroy really.  The API
-> doesn't say the LLD has to chase all I/Os down when slave destroy is
-> called, so we can't assume it has.
-> 
+The FastT200 are configured as JBOD. Each array has 10 disks.  Each FastT200
+is dual ported, configured in "active-active" mode.  So, I have
+four paths to each physical disk, 80 paths total.
 
-ok.
+Doing just simple IO (dd if=/dev/zero of=/dev/sdX bs=1M) on all 20 at once
+drives gives me occasional messages of the form:
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Incorrect number of segments after building list
+counted 31, received 30
+req nr_sec 1024, cur_nr_sec 8
 
+this is from the code in scsi_init_io() function in scsi_lib.c
+
+I traced this to scsi_io_completion(), to the scsi_requeue_command() at
+the bottom of this code.
+
+			if ((cmd->sense_buffer[2] & 0xf) == UNIT_ATTENTION) {
+                                if (cmd->device->removable) {
+                                        /* detected disc change.  set a bit
+                                         * and quietly refuse further access.
+                                         */
+                                        cmd->device->changed = 1;
+                                        cmd = scsi_end_request(cmd, 0,
+                                                        this_count, 1);
+                                        return;
+                                } else {
+                                        /*
+                                        * Must have been a power glitch, or a
+                                        * bus reset.  Could not have been a
+                                        * media change, so we just retry the
+                                        * request and see what happens.
+                                        */
+                                        scsi_requeue_command(q, cmd);
+                                        return;
+                                }
+			}
+
+
+My system hits this scsi_requeue_command() case a lot (maybe 1 in 1000 writes),
+and of these I occasionally get the error messages in the requeue.
+
+Can anyone explain why I might be getting the "bus reset" in my
+request sense data?  I'll later look into the requeued commands that
+fail, to understand what's going on there.
+
+Thanks!
+Dave Olien
