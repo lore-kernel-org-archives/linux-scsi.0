@@ -1,84 +1,52 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] cpnvert scsi_debug to use virtual host bus
-Date: Tue, 15 Feb 2005 10:48:34 -0800
-Message-ID: <42124402.1060300@cs.wisc.edu>
-References: <420D5E03.2020409@cs.wisc.edu> <421184DC.8010900@torque.net>
+From: "Fireworks L. Downstairs" <jjtroup@usa.net>
+Subject: Hi Linux, special 0ffer lifetime vip memberships.
+Date: Tue, 15 Feb 2005 19:59:53 +0100
+Message-ID: <100101c51390$81e46cb9$c042ba61@usa.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:63400 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S261815AbVBOSsv (ORCPT
+Received: from [200.208.128.73] ([200.208.128.73]:19467 "EHLO google.com")
+	by vger.kernel.org with ESMTP id S261826AbVBOTNu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Feb 2005 13:48:51 -0500
-In-Reply-To: <421184DC.8010900@torque.net>
+	Tue, 15 Feb 2005 14:13:50 -0500
+Received: from usa.net (mxpool01.netaddress.usa.net [165.212.8.32])
+	by google.com with esmtp
+	id 0CE543B0A4 for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2005 19:59:53 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Linux <linux-scsi@vger.kernel.org>
 
-Douglas Gilbert wrote:
-> Mike Christie wrote:
-> 
->> The attach patch converts scsi_debug to use the virtual scsi bus.
->> It was built against scsi-rc-fixes-2.6.
->>
->> The interface has changed a little. Here is an
->> example of adding and removing a single host:
->>
->> cd /sys/bus/scsi_host/drivers/scsi_debug
->> [root@mina scsi_debug]# ls
->> add_host  dev_size_mb  every_nth  module     num_parts  opts   scsi_level
->> delay     dsense       max_luns   num_hosts  num_tgts   ptype
->> [root@mina scsi_debug]# echo 1 > add_host
->> [root@mina scsi_debug]# ls
->> add_host  dev_size_mb  every_nth  module     num_parts  opts   scsi_level
->> delay     dsense       max_luns   num_hosts  num_tgts   ptype  virt_host4
->> [root@mina scsi_debug]# cd virt_host4/
->> [root@mina virt_host4]# ls
->> detach_state  driver  host4  power  remove_host
->> [root@mina virt_host4]# echo 1 > remove_host
-> 
-> 
-> Mike,
-> I have noticed a few differences in the scsi_debug
-> driver with this patch applied.
-> 
-> Firstly, when loaded the scsi_debug driver has no hosts
-> and thus no devices. Previously it defaulted to 1 host,
-> 1 target and 1 lun (hence 1 device). Now a user needs
-> to do something like:
-> $ modprobe scsi_debug
-> $ cd /sys/bus/scsi_host/drivers/scsi_debug
-> $ echo 42 > add_host
-> 
+Hi Linux,
+  
+Special one time promotion only. No charge membership site for life! Use credit card for age verification purposes only! Then you are in. Their hopes are they get you in then you like it so much you want to upgrade to buy another product. It's up to you! Your choice.  
 
-This is just a result of me trying to emulate
-normal HW drivers. For example I did not see
-any that would add the bus's device (the device
-equivalent to a pci_dev for example), so this
-is why I was always just doing the additions
-from userspace.
+http://great.order.wontbe.com/369997/hxw/index.html
 
-I can break out part of scsi_host_driver_add_host
-and export it so LLDs can call it and
-add hosts from the kernel for scsi_debug.
 
-> The next issue is the number passed to "add_host".
-> It doesn't matter, one host is added. When add_host
-> belonged to scsi_debug the number and sign of the
-> value sent to add_host was significant (and a negative
-> number tried to remove that number of hosts).
-> Perhaps we could get that capability back by making
-> "num_hosts" writeable.
-> 
+As you go through life, make this your goal, watch the doughnut and not the hole. 
 
-I can easily add both behaviors back to the "add_host"
-attr.
 
-> Otherwise it looks good and fixes the "pseudo" bus
-> problem which prevented two or more drivers using
-> the "pseudo" bus at the same time.
-> 
-> Doug Gilbert
-> 
+
+Good wine ruins the purse, and bad wine ruins the stomach. . Variety is the spice of life. . Fools rush in where angels fear to tread. . A little body doth often harbour a great soul. .
+A little each day is much in a year. 
+
+One mans junk is another man's treasure. 
+
+no more?
+http://added.placed.wontbe.com/emms/preference/control.php
+
+
+
+
+
+
+
+
+
+
+The best cast at dice is not to play. . Home is where the heart is. . A man is known by the company he keeps. .
+Sticks and stones may break my bones but words will never hurt me. . Honesty is the best policy. . A chain is no stronger than its weakest link. .
+
+Never look a gift horse in the mouth. . Conscience makes cowards of us all. . It is better to stay silent and be thought a fool, than to open one's mouth and remove all doubt. .
+
 
