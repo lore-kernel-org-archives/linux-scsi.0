@@ -1,46 +1,34 @@
-From: Steven Dake <sdake@mvista.com>
-Subject: Re: [PATCH] [RFC] Advanced TCA SCSI Disk Hotswap
-Date: Thu, 24 Oct 2002 15:47:41 -0700
+From: Philippe Troin <phil@fifi.org>
+Subject: Re: more aic7xxx boot failure
+Date: 24 Oct 2002 15:46:56 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DB8788D.4030009@mvista.com>
-References: <3DB7436E.9060100@mvista.com> <20021024223603.GF1563@beaverton.ibm.com>
+Message-ID: <87lm4nxxnj.fsf@ceramic.fifi.org>
+References: <8800000.1035498319@w-hlinder>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <8800000.1035498319@w-hlinder>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: Hanna Linder <hannal@us.ibm.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, tmolina@cox.net, haveblue@us.ibm.com
 
-Thanks for pointing that out.  I fixed this once but must have used the 
-wrong set of code
-when starting this patch.  I'll fix.
+Hanna Linder <hannal@us.ibm.com> writes:
 
-Thanks again!
--steve
+> >                                2.5 Kernel Problem Reports as of 22 Oct
+> >    Status                 Discussion  Problem Title
+> > 
+> >    open                   04 Oct 2002 AIC7XXX boot failure
+> >    1. http://marc.theaimsgroup.com/?l=linux-kernel&m=103356254615324&w=2
+> > 
+> 
+> 
+> This may be a different problem but it is related to the aic7xxx
+> driver. My system is a 2-way PIII 500MHz 2.5GB RAM box. It boots
+> if I remove the aic7xxx driver. This is on 2.5.44 btw. Works fine
+> on 2.4.x.
 
-Mike Anderson wrote:
+What error do you get on boot?
 
->Steven Dake [sdake@mvista.com] wrote:
->  
->
->>+static char scsi_hotswap_insert_by_scsi_id_usage[] = {
->>+	"Usage: echo \"[host] [channel] [lun] [id]\" > insert_by_scsi_id\n"
->>+};
->>+
->>    
->>
->
->Why is the interface lun id istead of id lun.
->The same for lun wwn instead of wwn lun.
->
->-andmike
->--
->Michael Anderson
->andmike@us.ibm.com
->
->
->
->  
->
+Have you tried booting with "noapic"?
 
+Phil.
