@@ -1,176 +1,266 @@
 From: Yokota Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
-Subject: [PATCH 11/13] nsp32, nsp_cs driver update
-Date: Tue, 22 Feb 2005 16:13:18 +0900 (JST)
-Message-ID: <20050222.161318.48465403.yokota@netlab.is.tsukuba.ac.jp>
+Subject: [PATCH 12/13] nsp32, nsp_cs driver update
+Date: Tue, 22 Feb 2005 16:13:56 +0900 (JST)
+Message-ID: <20050222.161356.08385274.yokota@netlab.is.tsukuba.ac.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Received: from pixy-gw.netlab.cs.tsukuba.ac.jp ([130.158.83.98]:54798 "HELO
+Received: from pixy-gw.netlab.cs.tsukuba.ac.jp ([130.158.83.98]:55310 "HELO
 	pixy.netlab.cs.tsukuba.ac.jp") by vger.kernel.org with SMTP
-	id S262234AbVBVHNV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Feb 2005 02:13:21 -0500
+	id S262236AbVBVHN6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Feb 2005 02:13:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
---- linux-2.6.10/drivers/scsi/pcmcia/nsp_debug.c	2004-10-19 06:53:51.000000000 +0900
-+++ linux-2.6.10-nsp/drivers/scsi/pcmcia/nsp_debug.c	2004-11-20 17:17:42.000000000 +0900
-@@ -1,12 +1,12 @@
- /*========================================================================
-     Debug routines for nsp_cs
+--- linux-2.6.10/drivers/scsi/pcmcia/nsp_io.h	2004-10-19 06:55:36.000000000 +0900
++++ linux-2.6.10-nsp/drivers/scsi/pcmcia/nsp_io.h	2004-07-27 00:24:21.000000000 +0900
+@@ -1,40 +1,39 @@
+-/*
++/***********************************************************************
+   NinjaSCSI I/O funtions 
 -      By: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
 +      By: YOKOTA Hiroshi <yokota (at) netlab (dot) is (dot) tsukuba (dot) ac (dot) jp>
+  
+   This software may be used and distributed according to the terms of
+   the GNU General Public License.
++************************************************************************/
  
-     This software may be used and distributed according to the terms of
-     the GNU General Public License.
- =========================================================================*/
+-  */
+-
+-/* $Id: nsp_io.h,v 1.3 2003/08/04 21:15:26 elca Exp $ */
++/* $Id: nsp_io.h,v 1.5 2004/07/26 15:24:21 elca Exp $ */
  
--/* $Id: nsp_debug.c,v 1.3 2003/07/26 14:21:09 elca Exp $ */
-+/* $Id: nsp_debug.c,v 1.8 2004/11/20 08:17:42 elca Exp $ */
+ #ifndef __NSP_IO_H__
+ #define __NSP_IO_H__
  
- /*
-  * Show the command data of a command
-@@ -17,10 +17,10 @@
- /* 00-03 */ "Test Unit Ready", "Rezero Unit", unknown, "Request Sense",
- /* 04-07 */ "Format Unit", "Read Block Limits", unknown, "Reasssign Blocks",
- /* 08-0d */ "Read (6)", unknown, "Write (6)", "Seek (6)", unknown, unknown,
--/* 0e-12 */ unknown, "Read Reverse", "Write Filemarks", "Space", "Inquiry",  
-+/* 0e-12 */ unknown, "Read Reverse", "Write Filemarks", "Space", "Inquiry",
- /* 13-16 */ unknown, "Recover Buffered Data", "Mode Select", "Reserve",
- /* 17-1b */ "Release", "Copy", "Erase", "Mode Sense", "Start/Stop Unit",
--/* 1c-1d */ "Receive Diagnostic", "Send Diagnostic", 
-+/* 1c-1d */ "Receive Diagnostic", "Send Diagnostic",
- /* 1e-1f */ "Prevent/Allow Medium Removal", unknown,
- };
+-static inline          void nsp_write(unsigned int base,
++inline static          void nsp_write(unsigned int base,
+ 				      unsigned int index,
+ 				      unsigned char val);
+-static inline unsigned char nsp_read(unsigned int base,
++inline static unsigned char nsp_read(unsigned int base,
+ 				     unsigned int index);
+-static inline          void nsp_index_write(unsigned int BaseAddr,
++inline static          void nsp_index_write(unsigned int BaseAddr,
+ 					    unsigned int Register,
+ 					    unsigned char Value);
+-static inline unsigned char nsp_index_read(unsigned int BaseAddr,
++inline static unsigned char nsp_index_read(unsigned int BaseAddr,
+ 					   unsigned int Register);
  
-@@ -30,7 +30,7 @@
- /* 23-28 */ unknown, unknown, "Read Capacity", unknown, unknown, "Read (10)",
- /* 29-2d */ unknown, "Write (10)", "Seek (10)", unknown, unknown,
- /* 2e-31 */ "Write Verify","Verify", "Search High", "Search Equal",
--/* 32-34 */ "Search Low", "Set Limits", "Prefetch or Read Position", 
-+/* 32-34 */ "Search Low", "Set Limits", "Prefetch or Read Position",
- /* 35-37 */ "Synchronize Cache","Lock/Unlock Cache", "Read Defect Data",
- /* 38-3c */ "Medium Scan", "Compare","Copy Verify", "Write Buffer", "Read Buffer",
- /* 3d-3f */ "Update Block", "Read Long",  "Write Long",
-@@ -38,8 +38,8 @@
+ /*******************************************************************
+  * Basic IO
+  */
  
- 
- static const char *group_2_commands[] = {
--/* 40-41 */ "Change Definition", "Write Same", 
--/* 42-48 */ "Read Sub-Ch(cd)", "Read TOC", "Read Header(cd)", "Play Audio(cd)", unknown, "Play Audio MSF(cd)", "Play Audio Track/Index(cd)", 
-+/* 40-41 */ "Change Definition", "Write Same",
-+/* 42-48 */ "Read Sub-Ch(cd)", "Read TOC", "Read Header(cd)", "Play Audio(cd)", unknown, "Play Audio MSF(cd)", "Play Audio Track/Index(cd)",
- /* 49-4f */ "Play Track Relative(10)(cd)", unknown, "Pause/Resume(cd)", "Log Select", "Log Sense", unknown, unknown,
- /* 50-55 */ unknown, unknown, unknown, unknown, unknown, "Mode Select (10)",
- /* 56-5b */ unknown, unknown, unknown, unknown, "Mode Sense (10)", unknown,
-@@ -53,9 +53,9 @@
- #define NOTEXT_GROUP    2
- 
- static const char **commands[] = {
--    group_0_commands, group_1_commands, group_2_commands, 
--    (const char **) RESERVED_GROUP, (const char **) RESERVED_GROUP, 
--    (const char **) NOTEXT_GROUP, (const char **) VENDOR_GROUP, 
-+    group_0_commands, group_1_commands, group_2_commands,
-+    (const char **) RESERVED_GROUP, (const char **) RESERVED_GROUP,
-+    (const char **) NOTEXT_GROUP, (const char **) VENDOR_GROUP,
-     (const char **) VENDOR_GROUP
- };
- 
-@@ -68,13 +68,13 @@
- 
- 	switch ((unsigned long) table) {
- 	case RESERVED_GROUP:
--		printk("%s[%02x] ", reserved, opcode); 
-+		printk("%s[%02x] ", reserved, opcode);
- 		break;
- 	case NOTEXT_GROUP:
--		printk("%s(notext)[%02x] ", unknown, opcode); 
-+		printk("%s(notext)[%02x] ", unknown, opcode);
- 		break;
- 	case VENDOR_GROUP:
--		printk("%s[%02x] ", vendor, opcode); 
-+		printk("%s[%02x] ", vendor, opcode);
- 		break;
- 	default:
- 		if (table[opcode & 0x1f] != unknown)
-@@ -85,23 +85,23 @@
- 	}
- }
- 
--static void print_commandk (unsigned char *command)
-+static void print_commandk (const unsigned char *command)
+-static inline void nsp_write(unsigned int  base,
++inline static void nsp_write(unsigned int  base,
+ 			     unsigned int  index,
+ 			     unsigned char val)
  {
--	int i, s;
-+	int i, size;
- 	printk(KERN_DEBUG);
- 	print_opcodek(command[0]);
--	/*printk(KERN_DEBUG "%s ", __FUNCTION__);*/
-+	/*printk(KERN_DEBUG __FUNCTION__ " ");*/
- 	if ((command[0] >> 5) == 6 ||
- 	    (command[0] >> 5) == 7 ) {
--		s = 12; /* vender specific */
-+		size = 12; /* vender specific */
- 	} else {
--		s = COMMAND_SIZE(command[0]);
-+		size = COMMAND_SIZE(command[0]);
- 	}
--	for ( i = 1; i < s; ++i) {
-+	for ( i = 1; i < size; ++i) {
- 		printk("%02x ", command[i]);
- 	}
- 
--	switch (s) {
-+	switch (size) {
- 	case 6:
- 		printk("LBA=%d len=%d",
- 		       (((unsigned int)command[1] & 0x0f) << 16) |
-@@ -138,12 +138,12 @@
- 	printk("\n");
+ 	outb(val, (base + index));
  }
  
--static void show_command(Scsi_Cmnd *SCpnt)
-+static void show_command(const struct scsi_cmnd *SCpnt)
+-static inline unsigned char nsp_read(unsigned int base,
++inline static unsigned char nsp_read(unsigned int base,
+ 				     unsigned int index)
  {
- 	print_commandk(SCpnt->cmnd);
+ 	return inb(base + index);
+@@ -44,14 +43,14 @@
+ /**********************************************************************
+  * Indexed IO
+  */
+-static inline unsigned char nsp_index_read(unsigned int BaseAddr,
++inline static unsigned char nsp_index_read(unsigned int BaseAddr,
+ 					   unsigned int Register)
+ {
+ 	outb(Register, BaseAddr + INDEXREG);
+ 	return inb(BaseAddr + DATAREG);
  }
  
--static void show_phase(Scsi_Cmnd *SCpnt)
-+static void show_phase(const struct scsi_cmnd *SCpnt)
+-static inline void nsp_index_write(unsigned int  BaseAddr,
++inline static void nsp_index_write(unsigned int  BaseAddr,
+ 				   unsigned int  Register,
+ 				   unsigned char Value)
  {
- 	int i = SCpnt->SCp.phase;
+@@ -64,7 +63,7 @@
+  */
  
-@@ -201,14 +201,30 @@
+ /* read 8 bit FIFO */
+-static inline void nsp_multi_read_1(unsigned int   BaseAddr,
++inline static void nsp_multi_read_1(unsigned int   BaseAddr,
+ 				    unsigned int   Register,
+ 				    void          *buf,
+ 				    unsigned long  count)
+@@ -72,7 +71,7 @@
+ 	insb(BaseAddr + Register, buf, count);
+ }
+ 
+-static inline void nsp_fifo8_read(unsigned int   base,
++inline static void nsp_fifo8_read(unsigned int   base,
+ 				  void          *buf,
+ 				  unsigned long  count)
+ {
+@@ -83,7 +82,7 @@
+ /*--------------------------------------------------------------*/
+ 
+ /* read 16 bit FIFO */
+-static inline void nsp_multi_read_2(unsigned int   BaseAddr,
++inline static void nsp_multi_read_2(unsigned int   BaseAddr,
+ 				    unsigned int   Register,
+ 				    void          *buf,
+ 				    unsigned long  count)
+@@ -91,7 +90,7 @@
+ 	insw(BaseAddr + Register, buf, count);
+ }
+ 
+-static inline void nsp_fifo16_read(unsigned int   base,
++inline static void nsp_fifo16_read(unsigned int   base,
+ 				   void          *buf,
+ 				   unsigned long  count)
+ {
+@@ -102,7 +101,7 @@
+ /*--------------------------------------------------------------*/
+ 
+ /* read 32bit FIFO */
+-static inline void nsp_multi_read_4(unsigned int   BaseAddr,
++inline static void nsp_multi_read_4(unsigned int   BaseAddr,
+ 				    unsigned int   Register,
+ 				    void          *buf,
+ 				    unsigned long  count)
+@@ -110,7 +109,7 @@
+ 	insl(BaseAddr + Register, buf, count);
+ }
+ 
+-static inline void nsp_fifo32_read(unsigned int   base,
++inline static void nsp_fifo32_read(unsigned int   base,
+ 				   void          *buf,
+ 				   unsigned long  count)
+ {
+@@ -121,7 +120,7 @@
+ /*----------------------------------------------------------*/
+ 
+ /* write 8bit FIFO */
+-static inline void nsp_multi_write_1(unsigned int   BaseAddr,
++inline static void nsp_multi_write_1(unsigned int   BaseAddr,
+ 				     unsigned int   Register,
+ 				     void          *buf,
+ 				     unsigned long  count)
+@@ -129,7 +128,7 @@
+ 	outsb(BaseAddr + Register, buf, count);
+ }
+ 
+-static inline void nsp_fifo8_write(unsigned int   base,
++inline static void nsp_fifo8_write(unsigned int   base,
+ 				   void          *buf,
+ 				   unsigned long  count)
+ {
+@@ -139,7 +138,7 @@
+ /*---------------------------------------------------------*/
+ 
+ /* write 16bit FIFO */
+-static inline void nsp_multi_write_2(unsigned int   BaseAddr,
++inline static void nsp_multi_write_2(unsigned int   BaseAddr,
+ 				     unsigned int   Register,
+ 				     void          *buf,
+ 				     unsigned long  count)
+@@ -147,7 +146,7 @@
+ 	outsw(BaseAddr + Register, buf, count);
+ }
+ 
+-static inline void nsp_fifo16_write(unsigned int   base,
++inline static void nsp_fifo16_write(unsigned int   base,
+ 				    void          *buf,
+ 				    unsigned long  count)
+ {
+@@ -157,7 +156,7 @@
+ /*---------------------------------------------------------*/
+ 
+ /* write 32bit FIFO */
+-static inline void nsp_multi_write_4(unsigned int   BaseAddr,
++inline static void nsp_multi_write_4(unsigned int   BaseAddr,
+ 				     unsigned int   Register,
+ 				     void          *buf,
+ 				     unsigned long  count)
+@@ -165,7 +164,7 @@
+ 	outsl(BaseAddr + Register, buf, count);
+ }
+ 
+-static inline void nsp_fifo32_write(unsigned int   base,
++inline static void nsp_fifo32_write(unsigned int   base,
+ 				    void          *buf,
+ 				    unsigned long  count)
+ {
+@@ -175,7 +174,7 @@
+ 
+ /*====================================================================*/
+ 
+-static inline void nsp_mmio_write(unsigned long base,
++inline static void nsp_mmio_write(unsigned long base,
+ 				  unsigned int  index,
+ 				  unsigned char val)
+ {
+@@ -184,7 +183,7 @@
+ 	writeb(val, ptr);
+ }
+ 
+-static inline unsigned char nsp_mmio_read(unsigned long base,
++inline static unsigned char nsp_mmio_read(unsigned long base,
+ 					  unsigned int  index)
+ {
+ 	unsigned char *ptr = (unsigned char *)(base + NSP_MMIO_OFFSET + index);
+@@ -194,7 +193,7 @@
+ 
+ /*-----------*/
+ 
+-static inline unsigned char nsp_mmio_index_read(unsigned long base,
++inline static unsigned char nsp_mmio_index_read(unsigned long base,
+ 						unsigned int  reg)
+ {
+ 	unsigned char *index_ptr = (unsigned char *)(base + NSP_MMIO_OFFSET + INDEXREG);
+@@ -204,7 +203,7 @@
+ 	return readb(data_ptr);
+ }
+ 
+-static inline void nsp_mmio_index_write(unsigned long base,
++inline static void nsp_mmio_index_write(unsigned long base,
+ 					unsigned int  reg,
+ 					unsigned char val)
+ {
+@@ -216,7 +215,7 @@
+ }
+ 
+ /* read 32bit FIFO */
+-static inline void nsp_mmio_multi_read_4(unsigned long  base,
++inline static void nsp_mmio_multi_read_4(unsigned long  base,
+ 					 unsigned int   Register,
+ 					 void          *buf,
+ 					 unsigned long  count)
+@@ -234,7 +233,7 @@
  	}
  }
  
--static void show_message(nsp_hw_data *data)
-+static void show_message(const nsp_hw_data *data)
+-static inline void nsp_mmio_fifo32_read(unsigned int   base,
++inline static void nsp_mmio_fifo32_read(unsigned int   base,
+ 					void          *buf,
+ 					unsigned long  count)
  {
- 	int i;
- 
- 	printk(KERN_DEBUG "msg:");
--	for(i=0; i < data->MsgLen; i++) {
--		printk(" %02x", data->MsgBuffer[i]);
-+
-+	switch (data->CurrentSC->SCp.phase) {
-+	case PH_MSG_IN:
-+		for(i=0; i < data->MsgInLen; i++) {
-+			printk(" %02x", data->MsgInBuffer[i]);
-+		}
-+		break;
-+	case PH_MSG_OUT:
-+		for(i=0; i < data->MsgOutLen; i++) {
-+			printk(" %02x", data->MsgOutBuffer[i]);
-+		}
-+		break;
-+	default:
-+		printk("???\n");
-+		return;
-+		break;
- 	}
-+
-+
- 	printk("\n");
+@@ -242,7 +241,7 @@
+ 	nsp_mmio_multi_read_4(base, FIFODATA, buf, count);
  }
  
+-static inline void nsp_mmio_multi_write_4(unsigned long  base,
++inline static void nsp_mmio_multi_write_4(unsigned long  base,
+ 					  unsigned int   Register,
+ 					  void          *buf,
+ 					  unsigned long  count)
+@@ -260,7 +259,7 @@
+ 	}
+ }
+ 
+-static inline void nsp_mmio_fifo32_write(unsigned int   base,
++inline static void nsp_mmio_fifo32_write(unsigned int   base,
+ 					 void          *buf,
+ 					 unsigned long  count)
+ {
