@@ -1,39 +1,61 @@
-From: domen@coderock.org
-Subject: [patch 1/1] drivers/scsi/lasi700.c: Use the DMA_32BIT_MASK constant
-Date: Sat, 19 Mar 2005 14:19:32 +0100
-Message-ID: <20050319131932.9CBD01ECA8@trashy.coderock.org>
-Received: from coderock.org ([193.77.147.115]:44168 "EHLO trashy.coderock.org")
-	by vger.kernel.org with ESMTP id S262545AbVCSNTj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Mar 2005 08:19:39 -0500
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.11-mm4: drivers/scsi/arcmsr/arcmsr.c: enormous stack usage
+Date: Sat, 19 Mar 2005 14:39:52 +0100
+Message-ID: <20050319133951.GK3143@stusta.de>
+References: <20050316040654.62881834.akpm@osdl.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:63237 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S262576AbVCSNj6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Mar 2005 08:39:58 -0500
+Content-Disposition: inline
+In-Reply-To: <20050316040654.62881834.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, domen@coderock.org, tklauser@nuerscht.ch
+To: Andrew Morton <akpm@osdl.org>, Erich Chen <erich@areca.com.tw>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+
+On Wed, Mar 16, 2005 at 04:06:54AM -0800, Andrew Morton wrote:
+>...
+> Changes since 2.6.11-mm3:
+>...
+> +areca-raid-linux-scsi-driver.patch
+> 
+>  Updated version of this driver.
+>...
+
+<--  snip  -->
+
+...
+static int arcmsr_iop_ioctlcmd(PACB pACB, int ioctl_cmd, void *arg)
+{
+...
+uint8_t tmpQbuffer[1032];
+...
+uint8_t tmpuserbuffer[1032];
+...
+}
+...
+
+<--  snip  -->
 
 
-
-Use the DMA_32BIT_MASK constants from dma-mapping.h
-when calling dma_set_mask().
-
-Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
-Signed-off-by: Domen Puncer <domen@coderock.org>
----
+1kB allocations from the stack aren't a good idea considering that you 
+might have only a 4kB stack altogether.
 
 
- kj-domen/drivers/scsi/lasi700.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+Running "make checkstack" after compiling the kernel helps you finding 
+such problems.
 
-diff -puN drivers/scsi/lasi700.c~dma_mask-drivers_scsi_lasi700 drivers/scsi/lasi700.c
---- kj/drivers/scsi/lasi700.c~dma_mask-drivers_scsi_lasi700	2005-03-18 20:05:40.000000000 +0100
-+++ kj-domen/drivers/scsi/lasi700.c	2005-03-18 20:05:40.000000000 +0100
-@@ -111,7 +111,7 @@ lasi700_probe(struct parisc_device *dev)
- 	memset(hostdata, 0, sizeof(struct NCR_700_Host_Parameters));
- 
- 	hostdata->dev = &dev->dev;
--	dma_set_mask(&dev->dev, 0xffffffffUL);
-+	dma_set_mask(&dev->dev, DMA_32BIT_MASK);
- 	hostdata->base = base;
- 	hostdata->differential = 0;
- 
-_
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
