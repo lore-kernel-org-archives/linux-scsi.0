@@ -1,40 +1,38 @@
-From: pranav r <pranavrr@yahoo.com>
-Subject: segmentation fault...while you insmod qla2200.o
-Date: Thu, 27 May 2004 00:58:10 -0700 (PDT)
+From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
+Subject: Re: cpio problems with SCSI tape drive
+Date: Thu, 27 May 2004 14:27:24 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040527075810.71282.qmail@web12906.mail.yahoo.com>
+Message-ID: <m3n03um4wj.fsf@merlin.emma.line.org>
+References: <200405270617.i4R6HBB08441@www.watkins-home.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web12906.mail.yahoo.com ([216.136.174.73]:47652 "HELO
-	web12906.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S261711AbUE0H6L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 May 2004 03:58:11 -0400
+Received: from krusty.dt.e-technik.Uni-Dortmund.DE ([129.217.163.1]:57786 "EHLO
+	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
+	id S262060AbUE0M11 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 May 2004 08:27:27 -0400
+In-Reply-To: <200405270617.i4R6HBB08441@www.watkins-home.com>
+	(bugzilla@watkins-home.com's message of "Thu, 27 May 2004 02:17:05
+	-0400")
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Guy <bugzilla@watkins-home.com>
+Cc: linux-scsi@vger.kernel.org
 
-hi,
+"Guy" <bugzilla@watkins-home.com> writes:
 
-I have downloaded the Qlogic Fbber Channel Driver (for HBAs QLA2200) from the qlogic site for
-LINUX RED HAT. I use Linux Red Hat 7.3 (kernel-2.4.18-3). I did the following:
+> Maybe a clue:  While cpio is waiting for me to type the "device/file name"
+> the tape drive is busy.  From another shell/window I tried to list the
+> contents of another tape.  I could not, I got this error: "/dev/nst0: Device
+> or resource busy".
 
-[root@localhost tmp]# tar -xvzf qla2x00-v6.06.10-dist.tgz
+Try using lsof to find out who uses the device.
 
-[root@localhost tmp]# cd qlogic/
+Might be that cpio just holds the device open so nothing gets in the
+way. You can also try to attach strace to cpio as soon as it requests
+the 2nd tape (strace -p 12345, where 12345 is cpio's process ID) and see
+what it does and where it fails.
 
-[root@localhost qlogic]# ./drvrsetup
+-- 
+Matthias Andree
 
-[root@localhost qlogic]# make all
-
-[root@localhost qlogic]# insmod qla2200.o
-Segmentation fault........
-
-
-
-
-	
-		
-__________________________________
-Do you Yahoo!?
-Friends.  Fun.  Try the all-new Yahoo! Messenger.
-http://messenger.yahoo.com/ 
+Encrypted mail welcome: my GnuPG key ID is 0x052E7D95
