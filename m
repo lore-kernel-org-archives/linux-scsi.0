@@ -1,80 +1,50 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: bidirectional, long commands + OSD
-Date: Thu, 29 Jan 2004 23:07:29 +1000
+From: "Philip R. Auld" <pauld@egenera.com>
+Subject: Re: Is there a grand plan for FC failover?
+Date: Thu, 29 Jan 2004 09:49:10 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40190591.5060409@torque.net>
-References: <0E3FA95632D6D047BA649F95DAB60E5703D19D33@exa-atlanta.se.lsil.com>	<1075136727.2290.48.camel@mulgrave>  <401625CA.1070404@torque.net> <1075316397.1739.15.camel@mulgrave>
-Reply-To: dougg@torque.net
+Message-ID: <20040129094910.F11527@vienna.EGENERA.COM>
+References: <3356669BBE90C448AD4645C843E2BF2802C013B0@xbl.ma.emulex.com> <1075328212.2534.14.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:50190 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S266252AbUA2NKQ
+Received: from roadrunner-base.egenera.com ([63.160.166.46]:12698 "EHLO
+	coyote.egenera.com") by vger.kernel.org with ESMTP id S266122AbUA2Ovh
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Jan 2004 08:10:16 -0500
-In-Reply-To: <1075316397.1739.15.camel@mulgrave>
+	Thu, 29 Jan 2004 09:51:37 -0500
+Content-Disposition: inline
+In-Reply-To: <1075328212.2534.14.camel@mulgrave>; from James.Bottomley@steeleye.com on Wed, Jan 28, 2004 at 05:16:51PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: "Smart, James" <James.Smart@Emulex.com>, 'Patrick Mansfield' <patmans@us.ibm.com>, Simon Kelley <simon@thekelleys.org.uk>, SCSI Mailing List <linux-scsi@vger.kernel.org>, dm-devel@sistina.com
 
-James Bottomley wrote in thread:
-   [PATCH] 2.6.2-rc2 - MPT Fusion driver 3.00.02 update
-
-> On Tue, 2004-01-27 at 02:48, Douglas Gilbert wrote:
+Rumor has it that on Wed, Jan 28, 2004 at 05:16:51PM -0500 James Bottomley said:
+> On Wed, 2004-01-28 at 16:02, Smart, James wrote:
+> > I'd add one additional issue :
+> > 
+> > 3) SCSI Reservations
+> > 
+> > I guess this could be considered a part of (2), but given that reservations
+> > bring in a host of additional problems, and potentially brings up multi-host
+> > configs/clusters as well...
 > 
->>So the sg (or SG_IO/SCSI_IOCTL_SEND_COMMAND ioctl) user controls
->>the data direction and they are free to get it wrong:-)
+> The current crop of cluster implementations that use reservations manage
+> quite well in user space alone.  Certainly, though, the presence of
+> reservations can interfere with failover code and may be considered a
+> problem that needs to be solved in multi-path...it all depends on how
+> the multi-path devices react to path switching in the face of
+> reservations.
 > 
+
+It needs to be known to the pathing layer if you've got load balancing. 
+It has to know which path has the reservation and only use that one.
+ 
+> I'm open to suggestions on this,  but I think it should be done
+> separately as part of a device ownership API.
 > 
-> Since we do have a mid layer library for this, perhaps we should set it
-> in sg if the user leaves it apparently unset.
-
-It is valid for vendor specific commands to have command lengths
-other than those dictated by the top 3 bits of the opcode. The
-variable length opcode (0x7f) breaks that convention as well.
-The pass-through philosophy is (within reason) "you asked for
-it ....".
-
->>** The Object Storage Device (OSD) commands use bidirectional
->>data transfers so perhaps we should think about catering for
->>that.
+> James
 > 
-> 
-> Actually, a much more fundamental problem for OSD is going to be >16
-> byte CDBs.  The mid and block layers today are coded with an internal 16
-> byte array for the CDB.  That's not very scaleable to the hundreds of
-> bytes that OSD needs.
 
-Just did a check on recent drafts and SPC-3 doesn't have any
-commands with lengths > 16 bytes but SBC-2 has:
-    XDREAD(32)
-    XDWRITE(32)
-    XDWRITEREAD(32)
-    XPWRITE(32)
-
-> As far as bidirectional goes, we should be able to support that today
-> providing there's just a *single* data buffer, which the OSD spec
-> implies is the easiest way to support this (although I suspect most SCSI
-> processor coding won't be expecting to see both a data in and a data out
-> from a single command).
-
-... and XDWRITEREAD (both 10 and 32 byte variants) is bidirectional.
-
-> As I see it, OSD seems to require a different interface from the current
-> bio layer, so there would be some type of object layer glue between the
-> fs and the mid-layer, with the block layer relegated simply to queueing
-> specials for the mid-layer, but since no-one's actually come forward
-> with an implementation, that's just a guess.
-
-Both Jens and Linus jumped on me when I suggested
-similar heresy :-)
-
-For anyone interested, an overview of the proposed Object
-Storage Device (OSD) architecture can be found at:
-http://www.t10.org/ftp/t10/drafts/osd/osd-r08.pdf
-in section 4.2 .
-
-Doug Gilbert
-
-
+-- 
+Philip R. Auld, Ph.D.  	        	       Egenera, Inc.    
+Principal Software Engineer                   165 Forest St.
+(508) 858-2628                            Marlboro, MA 01752
