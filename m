@@ -1,26 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: TMSCSIM [2.6] (was: Re: [PATCH] Re: AMD 53c974 SCSI driver in 2.6)
-Date: Mon, 24 Nov 2003 07:47:21 +0000
+From: 'Christoph Hellwig' <hch@infradead.org>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Mon, 24 Nov 2003 07:48:30 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031124074721.B29095@infradead.org>
-References: <Pine.LNX.4.44.0311202354360.2876-100000@poirot.grange> <Pine.LNX.4.44.0311230024300.1354-100000@poirot.grange>
+Message-ID: <20031124074830.C29095@infradead.org>
+References: <20031027153932.A16679@infradead.org> <00c901c3b251$91016a30$a0074d0a@apac.cisco.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:53509 "EHLO
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:56069 "EHLO
 	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263647AbTKXHrW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2003 02:47:22 -0500
+	id S263650AbTKXHsb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2003 02:48:31 -0500
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0311230024300.1354-100000@poirot.grange>; from g.liakhovetski@gmx.de on Sun, Nov 23, 2003 at 12:27:32AM +0100
+In-Reply-To: <00c901c3b251$91016a30$a0074d0a@apac.cisco.com>; from surekhap@cisco.com on Mon, Nov 24, 2003 at 11:39:48AM +0530
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: linux-scsi@vger.kernel.org
+To: "Surekha.PC" <surekhap@cisco.com>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Sun, Nov 23, 2003 at 12:27:32AM +0100, Guennadi Liakhovetski wrote:
-> The appended patch is an attempt to fix the tmscsim driver for 2.6. Tested
-> only on an on-board AM53C974 controller so far.
+On Mon, Nov 24, 2003 at 11:39:48AM +0530, Surekha.PC wrote:
+> 
+> Hi,
+> 
+> >>  	- this comment indicates you don't want normal EH:
+> 
+> >> * check condition with no sense.  We need to avoid this, 
+> >> * since the Linux SCSI code could put the command in 
+> >> * SCSI_STATE_FAILED, which it's error recovery doesn't appear 
+> >> * to handle correctly, and even if it does, we're trying to 
+> >> * bypass all of the Linux error recovery code
+> >> * to avoid blocking all I/O to the HBA.  Fake some sense 
+> >> * data that gets a retry from Linux.
+> 
+> >	so don't use scsi_error.c and define your own
+> eh_strategy_handler method.
+> 
+> By implementing the iSCSI driver specific strategy_handler we will need
+> to duplicate most of the mid layer strategy handler logic only to
+> accommodate the above condition.
+> 
+> Is that justified ? Or is it ok, to fix the above case in scsi_error.c ?
 
-Patch looks good as far as I can see, of course there's lot of cleanup
-potential, but let's have a working driver in mainline first..
+I haven't followed the code closely, but the comment reads like scsi_error.c
+is mostly useless for you - if that were true I'd suggest using
+eh_strategy_handler, if on the other hand you can fix scsi_error.c easily
+it's better to use it.
 
