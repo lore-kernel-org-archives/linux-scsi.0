@@ -1,8 +1,8 @@
 From: James Morris <jmorris@redhat.com>
 Subject: Re: [PATCH 2.6.1] Add CRC32C chksums to crypto and lib routines
-Date: Tue, 3 Feb 2004 12:13:34 -0500 (EST)
+Date: Tue, 3 Feb 2004 12:09:56 -0500 (EST)
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Xine.LNX.4.44.0402031213120.939-100000@thoron.boston.redhat.com>
+Message-ID: <Xine.LNX.4.44.0402031207330.939-100000@thoron.boston.redhat.com>
 References: <yquj4qu8je1m.fsf@chaapala-lnx2.cisco.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
@@ -14,14 +14,14 @@ List-Id: linux-scsi@vger.kernel.org
 
 On Tue, 3 Feb 2004, Clay Haapala wrote:
 
-The patch looks malformed:
+> If this patch looks good, I'd like it accepted so we can submit code
+> iSCSI driver code that makes use of it.  This may be a good time,
+> since the crypto SHA code is getting a little scrutiny right now.
 
-+/*
-+ * This function will XOR the results with ~0, so take that into
-+ * account.
-+ */
-+static inline void c
+This will need to wait until 2.6.2 is released, and will you also please 
+submit the iSCSI change for review?
 
+Thanks,
 
 
 - James
