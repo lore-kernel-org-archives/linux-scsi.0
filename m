@@ -1,36 +1,51 @@
-From: Alexander Viro <viro@math.psu.edu>
-Subject: Re: Failure to reread partition tables on non-busy devices
-Date: Sun, 17 Nov 2002 19:43:27 -0500 (EST)
+From: Andries Brouwer <aebr@win.tue.nl>
+Subject: Re: aic7xxx_biosparam
+Date: Mon, 18 Nov 2002 01:43:41 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.21.0211171939580.23400-100000@steklov.math.psu.edu>
-References: <20021118000505.GM3280@redhat.com>
+Message-ID: <20021118004341.GA1943@win.tue.nl>
+References: <20021118002742.GO3280@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20021118000505.GM3280@redhat.com>
+Received: from wsdw14.win.tue.nl (wsdw14.win.tue.nl [131.155.69.207])
+	by mailhost.tue.nl (8.12.3/8.12.3) with ESMTP id gAI0hfcA23947996
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Nov 2002 01:43:41 +0100 (MET)
+Received: (from aebr@localhost)
+	by wsdw14.win.tue.nl (8.12.6/8.12.3) id gAI0hfkS001949
+	for linux-scsi@vger.kernel.org; Mon, 18 Nov 2002 01:43:41 +0100 (MET)
+Content-Disposition: inline
+In-Reply-To: <20021118002742.GO3280@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
+To: Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
+
+On Sun, Nov 17, 2002 at 07:27:42PM -0500, Doug Ledford wrote:
+
+> So, this is the change I made to update it so that it won't puke on large 
+> devices.  It seems to be working OK for me, but I didn't check the gcc 
+> assembly output to see if it's horrible.  Unless someone tells me I'm 
+> smoking crack for making this change, I'll submit it pretty soon (I don't 
+> consider myself a partition expert, I'm just trying to make sure that when 
+> geometry does get defined on my driver that it at least is something the 
+> Adaptec BIOS will accept, and the Adaptec BIOS *only* accepts the two 
+> listed head/sector combos).
+
+Yes. But note: the number of cylinders (i) is totally immaterial,
+(ii) is returned in a short, the only place where it is used.
+Thus, computing values larger than 65535 is undesired, they will
+be truncated later.
+
+That is why you can replace this strange
+
+> +    while( capacity >= (cylinders * sectors * heads))
+> +      cylinders++;
+> +    cylinders--;
+
+by a test like:
+
+	if (capacity > 65535 * sectors * heads)
+		cylinders = 65535;
+	else
+		cylinders = ((unsigned int) capacity) / (sectors * heads);
 
 
-
-On Sun, 17 Nov 2002, Doug Ledford wrote:
-
-> This patch (almost certainly wrong BTW) makes it work.  Obviously, 
-> somewhere there should be a call to invalidate_bdev(); that doesn't exist.  
-> I'm not sure A) where that call should be and B) what checks there should 
-> be to avoid calling invalidate_bdev() on a device that is busy.
-
-
-Not really.  Correct fix is:
-	a) in fs/block_dev.c::full_check_disk_change() replace
-
-	if (check_disk_change(bdev)) {
-with
-	if (check_disk_change(bdev) && bdev->bd_invalidated) {
-
-	b) lost the check in rescan_partitions().
-
-Other callers either do that check themselves or don't want that check to
-happen at all (BLKRRPART).
-
+Andries
