@@ -1,77 +1,68 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: Lars Marowsky-Bree <lmb@suse.de>
 Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b4).
-Date: Fri, 18 Jul 2003 12:23:04 +0100
+Date: Fri, 18 Jul 2003 14:12:02 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030718122304.A23013@infradead.org>
-References: <B179AE41C1147041AA1121F44614F0B0598B10@AVEXCH02.qlogic.org>
+Message-ID: <20030718121202.GC6520@marowsky-bree.de>
+References: <B179AE41C1147041AA1121F44614F0B0598B10@AVEXCH02.qlogic.org> <20030718122304.A23013@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="NDin8bjvE/0mNLFQ"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:28943 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S270208AbTGRLIJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jul 2003 07:08:09 -0400
+Received: from gate.in-addr.de ([212.8.193.158]:16617 "EHLO mx.in-addr.de")
+	by vger.kernel.org with ESMTP id S271616AbTGRL5s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Jul 2003 07:57:48 -0400
 Content-Disposition: inline
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0598B10@AVEXCH02.qlogic.org>; from andrew.vasquez@qlogic.com on Thu, Jul 17, 2003 at 04:40:00PM -0700
+In-Reply-To: <20030718122304.A23013@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
 
 
-More comments:
+--NDin8bjvE/0mNLFQ
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
- - Documentation/scsi/qla2xxx.txt seems to document a 2.4ish driver
- - Documentation/scsi/qla2xxx.release.txt looks superflous, can you
-   merge it into the (updated) qla2xxx.txt?
- - drivers/scsi/qla2xxx/ has duplicates of the documentation
+On 2003-07-18T12:23:04,
+   Christoph Hellwig <hch@infradead.org> said:
 
- - the (v8) comments in drivers/scsi/qla2xxx/Kconfig are superflous
- - drivers/scsi/qla2xxx/Makefile is a mess.  If you want to compile
-   a single source file multiple times in different ways create a
-   new source file that sets the needed defines and #includes the
-   source file.  But in general this should be avoided in favour of
-   a common library module..
+>  - the driver still has multipath support in the lowlevel driver which
+>    we don't want in Linux
 
- - please document which files are shared with other operating systems
-   (some look like they do, don't they?)
- - the driver still has multipath support in the lowlevel driver which
-   we don't want in Linux
- - UNIQUE_FW_NAME is still there.  shouldn't this be enabled uncdontionally?
- - still tons of typedefs that want cleaning up
- - your include structures is very confusing.  Please include the linux
-   headers directly i nthe files using them (except of course for
-   source files shares with other OSes)
- 
- - qla2x00_intr_handler should use spin_lock, not spin_lock_irqsave
- - you're using down_interruptible without checking the return value
- - please switch to newstyle module/boot parameter handling (module_param)
-   (oh, okay, found the TODO comment)
- - what is #if defined (CONFIG_SCSIFCHOTSWAP) || defined(CONFIG_GAMAP)?
-   that's never defined in a 2.5 tree and the code looks ugly as hell.
- - .unchecked_isa_dma      = 0 in the host template is superflous,
-   it's 0 by default.
- - what is CONFIG_MD_MULTIHOST_FC?
- - you are using a static buffer in qla2x00_info, there's a lock needed
-   to protect it
- - in qla2x00_queuecommand you need to call spin_unlock_irq/spin_lock_irq
-   on the hostlock, otherwise your whole ->queuecommand runs with (local)
-   interrupts disabled
- - qla2x00_biosparam is superflous, if there's no ->biosparam the midlayer
-   calls scsicam_bios_param directly
- - you don't need to call scsi_set_device if you pass the proper struct device
-   to scsi_add_host
- - please don't use scsi_assign_lock.  In 2.5 we already have a per-HBA
-   lock and using a different one than the default one doesn't make sense.
- - you need to check the return value from scsi_add_host
- - please remove the "sanity check" in qla2x00_remove_device.  If you
-   can't trust the pci layer you have worse problems..
- - ->proc_info is deprecated, please implement shost and sdev sysfs
-   attributes instead.
- 
- - all contents of qla_ip.c is surrounded by a big if defined(FC_IP_SUPPORT),
-   please compile the file conditionally instead.  (also in linux we prefer
-   #ifdef over #if defined)
- - where is qla2200_ip_inquiry/qla2300_ip_inquiry called??  also it makes
-   more sense to pass the scsi_qla_host_t directrly to it instead of an
-   adapter number that requires list walking
+Fully agreed.
 
+Please come and attend the multipath session at the Kernel Summit and/or
+the Ottawa Linux Symposium next week to learn why this is a bad idea and
+how it can be done better -> http://www.linuxsymposium.org/
+
+However, for backwards compatibility with 2.4, I assume it might still
+be needed in 2.5/2.6, but _only_ with the clear intend of phasing it out
+within 2.6 and dropping it in 2.7.
+
+QLogic is reasonably good already in that it can be disabled via a
+module parameter (ql2xfailover=3D0), allowing the higher level solutions
+to operate.
+
+
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
+
+--=20
+SuSE Labs - Research & Development, SuSE Linux AG
+ =20
+"If anything can go wrong, it will." "Chance favors the prepared (mind)."
+  -- Capt. Edward A. Murphy            -- Louis Pasteur
+
+--NDin8bjvE/0mNLFQ
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.7 (GNU/Linux)
+
+iD8DBQE/F+QSudf3XQV4S2cRAnaMAJ9iiRlEjGxYhHHd5L/Avm0gvrLyfwCfdtnn
+NP5s+1mqfZjWlx248F6Jrbw=
+=sB0m
+-----END PGP SIGNATURE-----
+
+--NDin8bjvE/0mNLFQ--
