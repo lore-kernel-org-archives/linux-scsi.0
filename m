@@ -1,181 +1,260 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 05/13] scsi: remove a timer race from scsi_queue_insert() and cleanup timer
-Date: Thu, 31 Mar 2005 18:08:15 +0900 (KST)
-Message-ID: <20050331090647.4025028A@htj.dyndns.org>
+Subject: Re: [PATCH scsi-misc-2.6 06/13] scsi: remove meaningless scsi_cmnd->serial_number_at_timeout field
+Date: Thu, 31 Mar 2005 18:08:20 +0900 (KST)
+Message-ID: <20050331090647.1428AD14@htj.dyndns.org>
 References: <20050331090647.FEDC3964@htj.dyndns.org>
 Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.196]:11566 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261233AbVCaJIU (ORCPT
+Received: from rproxy.gmail.com ([64.233.170.196]:12887 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261235AbVCaJIZ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Mar 2005 04:08:20 -0500
-Received: by wproxy.gmail.com with SMTP id 68so491741wra
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2005 01:08:19 -0800 (PST)
+	Thu, 31 Mar 2005 04:08:25 -0500
+Received: by rproxy.gmail.com with SMTP id a41so330789rng
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2005 01:08:25 -0800 (PST)
 In-Reply-To: <20050331090647.FEDC3964@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com, axboe@suse.de
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-05_scsi_timer_cleanup.patch
+06_scsi_remove_serial_number_at_timeout.patch
 
-	scsi_queue_insert() has four callers.  Three callers call with
-	timer disabled and one (the second invocation in
-	scsi_dispatch_cmd()) calls with timer activated.
-	scsi_queue_insert() used to always call scsi_delete_timer()
-	and ignore the return value.  This results in race with timer
-	expiration.  Remove scsi_delete_timer() call from
-	scsi_queue_insert() and make the caller delete timer and check
-	the return value.
-
-	While at it, as, once a scsi timer is added, it should expire
-	or be deleted before reused, make scsi_add_timer() strict
-	about timer reuses.  Now timer expiration function should
-	clear ->function and all timer deletion should go through
-	scsi_delete_timer().  Also, remove bogus ->eh_action tests
-	from scsi_eh_{done|times_out} functions.  The condition is
-	always true and the test is somewhat misleading.
+	scsi_cmnd->serial_number_at_timeout doesn't serve any purpose
+	anymore.  All serial_number == serial_number_at_timeout tests
+	are always true in abort callbacks.  Kill the field.  Also, as
+	->pid always equals ->serial_number and ->serial_number
+	doesn't have any special meaning anymore, update comments
+	above ->serial_number accordingly.  Once we remove all uses of
+	this field from all lldd's, this field should go.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
- aic7xxx/aic79xx_osm.c |    1 +
- aic7xxx/aic7xxx_osm.c |    1 +
- scsi.c                |   10 ++++++----
- scsi_error.c          |   25 ++++++++-----------------
- scsi_lib.c            |    6 ------
- 5 files changed, 16 insertions(+), 27 deletions(-)
+ drivers/scsi/BusLogic.c             |    7 -------
+ drivers/scsi/advansys.c             |    5 ++---
+ drivers/scsi/ips.c                  |    7 -------
+ drivers/scsi/ncr53c8xx.c            |   14 ++------------
+ drivers/scsi/qla2xxx/qla_dbg.c      |    6 ++----
+ drivers/scsi/scsi.c                 |    2 --
+ drivers/scsi/scsi_error.c           |    7 -------
+ drivers/scsi/scsi_lib.c             |    1 -
+ drivers/scsi/sym53c8xx_2/sym_glue.c |    6 ------
+ include/scsi/scsi_cmnd.h            |   22 +++++++++-------------
+ 10 files changed, 15 insertions(+), 62 deletions(-)
 
-Index: scsi-export/drivers/scsi/aic7xxx/aic79xx_osm.c
+Index: scsi-export/drivers/scsi/BusLogic.c
 ===================================================================
---- scsi-export.orig/drivers/scsi/aic7xxx/aic79xx_osm.c	2005-03-31 17:42:04.000000000 +0900
-+++ scsi-export/drivers/scsi/aic7xxx/aic79xx_osm.c	2005-03-31 18:06:21.000000000 +0900
-@@ -2725,6 +2725,7 @@ ahd_linux_dv_target(struct ahd_softc *ah
- 		/* Queue the command and wait for it to complete */
- 		/* Abuse eh_timeout in the scsi_cmnd struct for our purposes */
- 		init_timer(&cmd->eh_timeout);
-+		cmd->eh_timeout.function = NULL;
- #ifdef AHD_DEBUG
- 		if ((ahd_debug & AHD_SHOW_MESSAGES) != 0)
- 			/*
-Index: scsi-export/drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- scsi-export.orig/drivers/scsi/BusLogic.c	2005-03-31 17:42:04.000000000 +0900
++++ scsi-export/drivers/scsi/BusLogic.c	2005-03-31 18:06:21.000000000 +0900
+@@ -2958,13 +2958,6 @@ static int BusLogic_AbortCommand(struct 
+ 	struct BusLogic_CCB *CCB;
+ 	BusLogic_IncrementErrorCounter(&HostAdapter->TargetStatistics[TargetID].CommandAbortsRequested);
+ 	/*
+-	   If this Command has already completed, then no Abort is necessary.
+-	 */
+-	if (Command->serial_number != Command->serial_number_at_timeout) {
+-		BusLogic_Warning("Unable to Abort Command to Target %d - " "Already Completed\n", HostAdapter, TargetID);
+-		return SUCCESS;
+-	}
+-	/*
+ 	   Attempt to find an Active CCB for this Command.  If no Active CCB for this
+ 	   Command is found, then no Abort is necessary.
+ 	 */
+Index: scsi-export/drivers/scsi/advansys.c
 ===================================================================
---- scsi-export.orig/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-03-31 17:42:04.000000000 +0900
-+++ scsi-export/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-03-31 18:06:21.000000000 +0900
-@@ -2409,6 +2409,7 @@ ahc_linux_dv_target(struct ahc_softc *ah
- 		/* Queue the command and wait for it to complete */
- 		/* Abuse eh_timeout in the scsi_cmnd struct for our purposes */
- 		init_timer(&cmd->eh_timeout);
-+		cmd->eh_timeout.function = NULL;
- #ifdef AHC_DEBUG
- 		if ((ahc_debug & AHC_SHOW_MESSAGES) != 0)
- 			/*
+--- scsi-export.orig/drivers/scsi/advansys.c	2005-03-31 18:06:20.000000000 +0900
++++ scsi-export/drivers/scsi/advansys.c	2005-03-31 18:06:21.000000000 +0900
+@@ -9198,9 +9198,8 @@ asc_prt_scsi_cmnd(struct scsi_cmnd *s)
+         s->use_sg, s->sglist_len, s->abort_reason);
+ 
+     printk(
+-" serial_number 0x%x, serial_number_at_timeout 0x%x, retries %d, allowed %d\n",
+-        (unsigned) s->serial_number, (unsigned) s->serial_number_at_timeout,
+-         s->retries, s->allowed);
++" serial_number 0x%x, retries %d, allowed %d\n",
++        (unsigned) s->serial_number, s->retries, s->allowed);
+ 
+     printk(
+ " timeout_per_command %d, timeout_total %d, timeout %d\n",
+Index: scsi-export/drivers/scsi/ips.c
+===================================================================
+--- scsi-export.orig/drivers/scsi/ips.c	2005-03-31 17:42:04.000000000 +0900
++++ scsi-export/drivers/scsi/ips.c	2005-03-31 18:06:21.000000000 +0900
+@@ -833,13 +833,6 @@ ips_eh_abort(Scsi_Cmnd * SC)
+ 	if (!ha->active)
+ 		return (FAILED);
+ 
+-	if (SC->serial_number != SC->serial_number_at_timeout) {
+-		/* HMM, looks like a bogus command */
+-		DEBUG(1, "Abort called with bogus scsi command");
+-
+-		return (FAILED);
+-	}
+-
+ 	/* See if the command is on the copp queue */
+ 	item = ha->copp_waitlist.head;
+ 	while ((item) && (item->scsi_cmd != SC))
+Index: scsi-export/drivers/scsi/ncr53c8xx.c
+===================================================================
+--- scsi-export.orig/drivers/scsi/ncr53c8xx.c	2005-03-31 17:42:04.000000000 +0900
++++ scsi-export/drivers/scsi/ncr53c8xx.c	2005-03-31 18:06:21.000000000 +0900
+@@ -7601,24 +7601,14 @@ static int ncr53c8xx_abort(struct scsi_c
+ 	struct scsi_cmnd *done_list;
+ 
+ #if defined SCSI_RESET_SYNCHRONOUS && defined SCSI_RESET_ASYNCHRONOUS
+-	printk("ncr53c8xx_abort: pid=%lu serial_number=%ld serial_number_at_timeout=%ld\n",
+-		cmd->pid, cmd->serial_number, cmd->serial_number_at_timeout);
++	printk("ncr53c8xx_abort: pid=%lu serial_number=%ld\n",
++		cmd->pid, cmd->serial_number);
+ #else
+ 	printk("ncr53c8xx_abort: command pid %lu\n", cmd->pid);
+ #endif
+ 
+ 	NCR_LOCK_NCB(np, flags);
+ 
+-#if defined SCSI_RESET_SYNCHRONOUS && defined SCSI_RESET_ASYNCHRONOUS
+-	/*
+-	 * We have to just ignore abort requests in some situations.
+-	 */
+-	if (cmd->serial_number != cmd->serial_number_at_timeout) {
+-		sts = SCSI_ABORT_NOT_RUNNING;
+-		goto out;
+-	}
+-#endif
+-
+ 	sts = ncr_abort_command(np, cmd);
+ out:
+ 	done_list     = np->done_list;
+Index: scsi-export/drivers/scsi/qla2xxx/qla_dbg.c
+===================================================================
+--- scsi-export.orig/drivers/scsi/qla2xxx/qla_dbg.c	2005-03-31 17:42:04.000000000 +0900
++++ scsi-export/drivers/scsi/qla2xxx/qla_dbg.c	2005-03-31 18:06:21.000000000 +0900
+@@ -1050,10 +1050,8 @@ qla2x00_print_scsi_cmd(struct scsi_cmnd 
+ 	for (i = 0; i < cmd->cmd_len; i++) {
+ 		printk("0x%02x ", cmd->cmnd[i]);
+ 	}
+-	printk("\n  seg_cnt=%d, allowed=%d, retries=%d, "
+-	    "serial_number_at_timeout=0x%lx\n",
+-	    cmd->use_sg, cmd->allowed, cmd->retries,
+-	    cmd->serial_number_at_timeout);
++	printk("\n  seg_cnt=%d, allowed=%d, retries=%d\n",
++	    cmd->use_sg, cmd->allowed, cmd->retries);
+ 	printk("  request buffer=0x%p, request buffer len=0x%x\n",
+ 	    cmd->request_buffer, cmd->request_bufflen);
+ 	printk("  tag=%d, transfersize=0x%x\n",
 Index: scsi-export/drivers/scsi/scsi.c
 ===================================================================
---- scsi-export.orig/drivers/scsi/scsi.c	2005-03-31 18:06:20.000000000 +0900
+--- scsi-export.orig/drivers/scsi/scsi.c	2005-03-31 18:06:21.000000000 +0900
 +++ scsi-export/drivers/scsi/scsi.c	2005-03-31 18:06:21.000000000 +0900
-@@ -638,10 +638,12 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
- 	}
- 	spin_unlock_irqrestore(host->host_lock, flags);
- 	if (rtn) {
--		atomic_inc(&cmd->device->iodone_cnt);
--		scsi_queue_insert(cmd,
--				(rtn == SCSI_MLQUEUE_DEVICE_BUSY) ?
--				 rtn : SCSI_MLQUEUE_HOST_BUSY);
-+		if (scsi_delete_timer(cmd)) {
-+			atomic_inc(&cmd->device->iodone_cnt);
-+			scsi_queue_insert(cmd,
-+					  (rtn == SCSI_MLQUEUE_DEVICE_BUSY) ?
-+					  rtn : SCSI_MLQUEUE_HOST_BUSY);
-+		}
- 		SCSI_LOG_MLQUEUE(3,
- 		    printk("queuecommand : request rejected\n"));
- 	}
+@@ -688,7 +688,6 @@ void scsi_init_cmd_from_req(struct scsi_
+ 	cmd->request = sreq->sr_request;
+ 	memcpy(cmd->data_cmnd, sreq->sr_cmnd, sizeof(cmd->data_cmnd));
+ 	cmd->serial_number = 0;
+-	cmd->serial_number_at_timeout = 0;
+ 	cmd->bufflen = sreq->sr_bufflen;
+ 	cmd->buffer = sreq->sr_buffer;
+ 	cmd->retries = 0;
+@@ -767,7 +766,6 @@ void __scsi_done(struct scsi_cmnd *cmd)
+ 	 * Set the serial numbers back to zero
+ 	 */
+ 	cmd->serial_number = 0;
+-	cmd->serial_number_at_timeout = 0;
+ 	cmd->state = SCSI_STATE_BHQUEUE;
+ 	cmd->owner = SCSI_OWNER_BH_HANDLER;
+ 
 Index: scsi-export/drivers/scsi/scsi_error.c
 ===================================================================
---- scsi-export.orig/drivers/scsi/scsi_error.c	2005-03-31 18:06:20.000000000 +0900
+--- scsi-export.orig/drivers/scsi/scsi_error.c	2005-03-31 18:06:21.000000000 +0900
 +++ scsi-export/drivers/scsi/scsi_error.c	2005-03-31 18:06:21.000000000 +0900
-@@ -107,14 +107,7 @@ int scsi_eh_scmd_add(struct scsi_cmnd *s
- void scsi_add_timer(struct scsi_cmnd *scmd, int timeout,
- 		    void (*complete)(struct scsi_cmnd *))
- {
--
--	/*
--	 * If the clock was already running for this command, then
--	 * first delete the timer.  The timer handling code gets rather
--	 * confused if we don't do this.
--	 */
--	if (scmd->eh_timeout.function)
--		del_timer(&scmd->eh_timeout);
-+	BUG_ON(scmd->eh_timeout.function);
- 
- 	scmd->eh_timeout.data = (unsigned long)scmd;
- 	scmd->eh_timeout.expires = jiffies + timeout;
-@@ -168,6 +161,8 @@ EXPORT_SYMBOL(scsi_delete_timer);
-  **/
- void scsi_times_out(struct scsi_cmnd *scmd)
- {
-+	scmd->eh_timeout.function = NULL;
-+
- 	scsi_log_completion(scmd, TIMEOUT_ERROR);
- 
- 	if (scmd->device->host->hostt->eh_timed_out)
-@@ -439,12 +434,12 @@ static int scsi_eh_completed_normally(st
-  **/
- static void scsi_eh_times_out(struct scsi_cmnd *scmd)
- {
-+	scmd->eh_timeout.function = NULL;
-+
- 	scsi_eh_eflags_set(scmd, SCSI_EH_REC_TIMEOUT);
- 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: scmd:%p\n", __FUNCTION__,
- 					  scmd));
--
--	if (scmd->device->host->eh_action)
--		up(scmd->device->host->eh_action);
-+	up(scmd->device->host->eh_action);
- }
- 
- /**
-@@ -459,15 +454,12 @@ static void scsi_eh_done(struct scsi_cmn
- 	 * way of stopping the timeout handler from running, so we must
- 	 * always defer to it.
+@@ -80,11 +80,6 @@ int scsi_eh_scmd_add(struct scsi_cmnd *s
  	 */
--	if (del_timer(&scmd->eh_timeout)) {
-+	if (scsi_delete_timer(scmd)) {
- 		scmd->request->rq_status = RQ_SCSI_DONE;
- 		scmd->owner = SCSI_OWNER_ERROR_HANDLER;
--
- 		SCSI_LOG_ERROR_RECOVERY(3, printk("%s scmd: %p result: %x\n",
- 					   __FUNCTION__, scmd, scmd->result));
--
--		if (scmd->device->host->eh_action)
--			up(scmd->device->host->eh_action);
-+		up(scmd->device->host->eh_action);
- 	}
- }
+ 	scmd->owner = SCSI_OWNER_ERROR_HANDLER;
+ 	scmd->state = SCSI_STATE_FAILED;
+-	/*
+-	 * Set the serial_number_at_timeout to the current
+-	 * serial_number
+-	 */
+-	scmd->serial_number_at_timeout = scmd->serial_number;
+ 	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
+ 	set_bit(SHOST_RECOVERY, &shost->shost_state);
+ 	shost->host_failed++;
+@@ -1057,7 +1052,6 @@ static int scsi_try_bus_reset(struct scs
+ 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Bus RST\n",
+ 					  __FUNCTION__));
+ 	scmd->owner = SCSI_OWNER_LOWLEVEL;
+-	scmd->serial_number_at_timeout = scmd->serial_number;
  
-@@ -1877,7 +1869,6 @@ scsi_reset_provider(struct scsi_device *
- 		rtn = FAILED;
- 	}
+ 	if (!scmd->device->host->hostt->eh_bus_reset_handler)
+ 		return FAILED;
+@@ -1089,7 +1083,6 @@ static int scsi_try_host_reset(struct sc
+ 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Host RST\n",
+ 					  __FUNCTION__));
+ 	scmd->owner = SCSI_OWNER_LOWLEVEL;
+-	scmd->serial_number_at_timeout = scmd->serial_number;
  
--	scsi_delete_timer(scmd);
- 	scsi_next_command(scmd);
- 	return rtn;
- }
+ 	if (!scmd->device->host->hostt->eh_host_reset_handler)
+ 		return FAILED;
 Index: scsi-export/drivers/scsi/scsi_lib.c
 ===================================================================
---- scsi-export.orig/drivers/scsi/scsi_lib.c	2005-03-31 18:06:20.000000000 +0900
+--- scsi-export.orig/drivers/scsi/scsi_lib.c	2005-03-31 18:06:21.000000000 +0900
 +++ scsi-export/drivers/scsi/scsi_lib.c	2005-03-31 18:06:21.000000000 +0900
-@@ -229,12 +229,6 @@ int scsi_queue_insert(struct scsi_cmnd *
- 		 printk("Inserting command %p into mlqueue\n", cmd));
+@@ -386,7 +386,6 @@ static int scsi_init_cmd_errh(struct scs
+ {
+ 	cmd->owner = SCSI_OWNER_MIDLEVEL;
+ 	cmd->serial_number = 0;
+-	cmd->serial_number_at_timeout = 0;
+ 	cmd->abort_reason = 0;
+ 
+ 	memset(cmd->sense_buffer, 0, sizeof cmd->sense_buffer);
+Index: scsi-export/drivers/scsi/sym53c8xx_2/sym_glue.c
+===================================================================
+--- scsi-export.orig/drivers/scsi/sym53c8xx_2/sym_glue.c	2005-03-31 17:42:04.000000000 +0900
++++ scsi-export/drivers/scsi/sym53c8xx_2/sym_glue.c	2005-03-31 18:06:21.000000000 +0900
+@@ -799,12 +799,6 @@ static int sym_eh_handler(int op, char *
+ 
+ 	dev_warn(&cmd->device->sdev_gendev, "%s operation started.\n", opname);
+ 
+-#if 0
+-	/* This one should be the result of some race, thus to ignore */
+-	if (cmd->serial_number != cmd->serial_number_at_timeout)
+-		goto prepare;
+-#endif
+-
+ 	/* This one is queued in some place -> to wait for completion */
+ 	FOR_EACH_QUEUED_ELEMENT(&np->busy_ccbq, qp) {
+ 		struct sym_ccb *cp = sym_que_entry(qp, struct sym_ccb, link_ccbq);
+Index: scsi-export/include/scsi/scsi_cmnd.h
+===================================================================
+--- scsi-export.orig/include/scsi/scsi_cmnd.h	2005-03-31 18:06:20.000000000 +0900
++++ scsi-export/include/scsi/scsi_cmnd.h	2005-03-31 18:06:21.000000000 +0900
+@@ -43,21 +43,17 @@ struct scsi_cmnd {
+ 	void (*done) (struct scsi_cmnd *);	/* Mid-level done function */
  
  	/*
--	 * We are inserting the command into the ml queue.  First, we
--	 * cancel the timer, so it doesn't time out.
--	 */
--	scsi_delete_timer(cmd);
--
--	/*
- 	 * Next, set the appropriate busy bit for the device/host.
- 	 *
- 	 * If the host/device isn't busy, assume that something actually
+-	 * A SCSI Command is assigned a nonzero serial_number when internal_cmnd
+-	 * passes it to the driver's queue command function.  The serial_number
+-	 * is cleared when scsi_done is entered indicating that the command has
+-	 * been completed.  If a timeout occurs, the serial number at the moment
+-	 * of timeout is copied into serial_number_at_timeout.  By subsequently
+-	 * comparing the serial_number and serial_number_at_timeout fields
+-	 * during abort or reset processing, we can detect whether the command
+-	 * has already completed.  This also detects cases where the command has
+-	 * completed and the SCSI Command structure has already being reused
+-	 * for another command, so that we can avoid incorrectly aborting or
+-	 * resetting the new command.
+-	 * The serial number is only unique per host.
++	 * A SCSI Command is assigned a nonzero serial_number before passed
++	 * to the driver's queue command function.  The serial_number is
++	 * cleared when scsi_done is entered indicating that the command
++	 * has been completed.  It currently doesn't have much use other
++	 * than printk's.  Some lldd's use this number for other purposes.
++	 * It's almost certain that such usages are either incorrect or
++	 * meaningless.  Please kill all usages other than printk's.  Also,
++	 * as this number is always identical to ->pid, please convert
++	 * printk's to use ->pid, so that we can kill this field.
+ 	 */
+ 	unsigned long serial_number;
+-	unsigned long serial_number_at_timeout;
+ 
+ 	int retries;
+ 	int allowed;
 
