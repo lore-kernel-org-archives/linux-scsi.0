@@ -1,69 +1,32 @@
-From: Andrew Morton <akpm@digeo.com>
-Subject: Re: [patch for playing] 2.5.65 patch to support > 256 disks
-Date: Mon, 24 Mar 2003 16:10:16 -0800
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030324161016.25a9a77a.akpm@digeo.com>
-References: <200303211056.04060.pbadari@us.ibm.com>
-	<3E7C4D05.2030500@torque.net>
-	<20030322040550.0b8baeec.akpm@digeo.com>
-	<200303241332.56996.pbadari@us.ibm.com>
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [PATCH] 2.5.x use list_head to handle scsi starved request queues
+Date: Mon, 24 Mar 2003 17:15:26 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <3E7F837E.9020900@splentec.com>
+References: <3E7A1EF5.3050501@splentec.com> <20030320203912.A18471@beaverton.ibm.com> <3E7B7A9A.6030007@splentec.com> <20030321165050.B9578@beaverton.ibm.com> <3E7F3C67.5010704@splentec.com> <20030324112940.A11000@beaverton.ibm.com> <3E7F688C.3020009@splentec.com> <20030324202509.GF2371@suse.de> <20030324123813.A11614@beaverton.ibm.com> <3E7F77D6.9040300@splentec.com> <20030324135640.A12273@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <200303241332.56996.pbadari@us.ibm.com>
-To: Badari Pulavarty <pbadari@us.ibm.com>
-Cc: dougg@torque.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de
+Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-Badari Pulavarty <pbadari@us.ibm.com> wrote:
->
-> Here is the list of slab caches which consumed more than 1 MB
-> in the process of inserting 4000 disks.
-
-Thanks for doing this.
-
-> #insmod scsi_debug.ko add_host=4 num_devs=1000
+Patrick Mansfield wrote:
 > 
-> deadline_drq    before:1280 after:1025420 diff:1024140 size:64 incr:65544960
-> blkdev_requests  before:1280 after:1025400 diff:1024120 size:156 incr:159762720
-> 
-> * deadline_drq, blkdev_requests consumed almost 80 MB. We need to fix this.
+> The current code in scsi_queue_next_request() assume queue_lock ==
+> host_lock, as does code in scsi_error.c. We get a queue_lock (or
+> host_lock), and then iterate over different q's calling
+> __blk_run_queue(q).
 
-Yes, we do.  But.
+1. Please don't speak of queue_lock and host_lock as if they are
+the same thing.  They are NOT, even though one points to the other.
+This is an infrastructure bug and will have to go.
 
-> inode_cache     before:700 after:140770 diff:140070 size:364 incr:50985480
-> dentry_cache    before:4977 after:145061 diff:140084 size:172 incr:24094448
-> 
-> * inode cache increased by 50 MB, dentry cache 24 MB. 
-> It looks like we cached 140,000 inodes. I wonder why ? 
+2. Yes I see this in scsi_error.c. How did this ever slip in!
+(yes this is NOT a question, but a statement)
 
-# find /sys/block/hda | wc -l
-     43
-
-Oh shit, we're toast.
-
-How many partitions did these "disks" have?
-
-> size-2048       before:112 after:4102 diff:3990 size:2060 incr:8219400
-> size-512        before:87 after:8085 diff:7998 size:524 incr:4190952
-> size-192        before:907 after:16910 diff:16003 size:204 incr:3264612
-> size-64         before:459 after:76500 diff:76041 size:76 incr:5779116
-> size-32         before:523 after:24528 diff:24005 size:44 incr:1056220
-> 
-> * 30MB for all other structures. I need to look closely on what these are..
-
-Yes, that will take some work.  What I would do is to change kmalloc:
-
-+ int foo;
-
-  kmalloc(...)
-  {
-+	if (foo)
-+		dump_stack();
+-- 
+Luben
 
 
-and then set `foo' in gdb across the registration of one disk.
-
-Probably you can set foo by hand in scsi_register_device() or wherever it
-happens.
