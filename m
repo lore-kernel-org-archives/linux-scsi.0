@@ -1,56 +1,27 @@
-From: linux-scsi-031126@amos.mailshell.com
-Subject: 2.6test10: Annoying "CDROM not ready" messages once a second
-Date: Wed, 26 Nov 2003 15:41:38 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Wed, 26 Nov 2003 13:41:38 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031126134041.25698.qmail@mailshell.com>
+Message-ID: <20031126134138.A5897@infradead.org>
+References: <200310231734.10263.krmurthy@cisco.com> <20031027153932.A16679@infradead.org> <yqujvfpdwu4f.fsf@chaapala-lnx2.cisco.com> <20031121173236.GX30485@parcelfarce.linux.theplanet.co.uk> <yqujn0apwpp2.fsf@chaapala-lnx2.cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www11.mailshell.com ([209.157.66.249]:47246 "HELO mailshell.com")
-	by vger.kernel.org with SMTP id S262569AbTKZNkp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Nov 2003 08:40:45 -0500
+Received: from phoenix.infradead.org ([213.86.99.234]:38406 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S263591AbTKZNll (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Nov 2003 08:41:41 -0500
+Content-Disposition: inline
+In-Reply-To: <yqujn0apwpp2.fsf@chaapala-lnx2.cisco.com>; from chaapala@cisco.com on Fri, Nov 21, 2003 at 12:18:17PM -0600
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Clay Haapala <chaapala@cisco.com>
+Cc: Matthew Wilcox <willy@debian.org>, Christoph Hellwig <hch@infradead.org>, Krishna Murthy <krmurthy@cisco.com>, linux-scsi@vger.kernel.org, davmyers@cisco.com
 
-Hello,
+On Fri, Nov 21, 2003 at 12:18:17PM -0600, Clay Haapala wrote:
+> Question:  Should the implementation use the crypto api
+> or be added to the lib/crc32 code?
 
-I've just moved to 2.6test10 from test9 and startted getting messages
-like:
-
-sr0: CDROM not ready.  Make sure there is a disc in the drive.
-
-Once a second.  From googling around I see that it's a very old problem
-but I haven't found a solution for it.
-
-It seems to come from drivers/scsi/sr_ioctl.c line 139, where there
-is:
-
-      138                         if (!cgc->quiet)
-      139                                 printk(KERN_INFO "%s: CDROM not
-ready.
-      139 Make sure there is a disc in the drive.\n", cd->cdi.name);
-      140 #ifdef DEBUG
-      141                         print_req_sense("sr", SRpnt);
-      142 #endif
-      143                         err = -ENOMEDIUM;
-
-But I don't see where can I set cgc->quiet to be non-zero.
-
-For now I stick some CD in the drive to keep this quite, but I'd rather
-not do this because if the machine reboots it delays on trying to boot
-from the CD.
-
-My system is an AMD Athlon, no SCSI devices (I need generic SCSI only
-for cd burning software and USB access, I'm aware that it's supposed to
-be gone in 2.6 but the software I use is still not aware of this).
-Preemption enabled (no problems from that part).
-
-Please CC me with replys, I'm not on the list.
-
-Thanks,
-
---Amos Shapira
-
+I've talen a quick look at the code and it looks like you're doing the crc
+not only for control but also for data packages, thus it seems the best idea
+to make it a digest in the crypto framework.
 
