@@ -1,174 +1,91 @@
-From: Poul Petersen <petersp@roguewave.com>
-Subject: RE: What's the "right" qla2100 driver?
-Date: Wed, 26 May 2004 17:25:02 -0700
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: cpio problems with SCSI tape drive
+Date: Thu, 27 May 2004 02:17:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <D486606E7AD20947BDB7E56862E04C3952D2@cvo1.cvo.roguewave.com>
+Message-ID: <200405270617.i4R6HBB08441@www.watkins-home.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="ISO-8859-1"
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cvo-ext.roguewave.com ([12.22.36.198]:50538 "EHLO
-	cvo1.cvo.roguewave.com") by vger.kernel.org with ESMTP
-	id S261439AbUE0AZO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 May 2004 20:25:14 -0400
+Received: from rwcrmhc12.comcast.net ([216.148.227.85]:13440 "EHLO
+	rwcrmhc12.comcast.net") by vger.kernel.org with ESMTP
+	id S261451AbUE0GRN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 May 2004 02:17:13 -0400
+Received: from astroboy (astroboy.watkins-home.com [192.168.0.8])
+	by www.watkins-home.com (8.11.6/8.11.6) with ESMTP id i4R6HBB08441
+	for <linux-scsi@vger.kernel.org>; Thu, 27 May 2004 02:17:11 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: 'Andrew Vasquez' <praka@users.sourceforge.net>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-	OK - The box is now running kernel 2.6.6 and the qla2xxx driver
-version 8.00.00b12. I tried making a single raid set and about 17% of the
-way into the sync I got the following:
+I think this is the wrong place to ask.
+If someone could direct me to the correct place, thanks.
 
-qla2100 0000:00:0e.0: LIP reset occured (f7ef).
-qla2100 0000:00:0e.0: LIP occured (f7ef).
-qla2100 0000:00:0e.0: Mailbox command timeout occured. Issuing ISP abort.
-qla2100 0000:00:0e.0: Performing ISP error recovery - ha= c121c218.
-qla2100 0000:00:0e.0: LIP reset occured (f8f7).
-qla2100 0000:00:0e.0: LIP occured (f8f7).
-qla2100 0000:00:0e.0: LOOP UP detected (1 Gbps).
-qla2100 0000:00:0e.0: qla2xxx_eh_abort: cmd already done sp=00000000
-qla2100 0000:00:0e.0: qla2xxx_eh_abort: cmd already done sp=00000000
-qla2100 0000:00:0e.0: qla2xxx_eh_abort: cmd already done sp=00000000
-qla2100 0000:00:0e.0: qla2xxx_eh_abort: cmd already done sp=00000000
-qla2100 0000:00:0e.0: qla2xxx_eh_abort scsi(0:0:2:0):
-cmd_timeout_in_sec=0x1e.
-qla2100 0000:00:0e.0: qla2xxx_eh_abort Exiting: status=Failed
-	
-	And so on, each disc failing with an error similar to the last two
-lines. I changed DEBUG_QLA2100 to "1" in qla_settings.h and then I got a
-bunch of these when I loaded the driver:
+Anyway, it is a SCSI tape drive! :)
 
-scsi(1): RLC failed to issue iocb! fcport=[000c/cf5e84ec] rval=0 cs=0 ss=b02
+I am doing a cpio backup.  I get end of tape.  I knew the data would not fit
+on 1 tape.
+It takes 2-4 hours before EOT.
+This is what happens:
+================================================
+Found end of tape.  To continue, type device/file name when ready.
+/dev/nst0
+To continue, type device/file name when ready.
+/dev/nst0
+To continue, type device/file name when ready.
+nst0
+Found end of tape.  To continue, type device/file name when ready.
+================================================
 
-	Followed by a bunch of:
+It ejected the full tape.
+I gave it another tape before I typed /dev/nst0
+The tape is good, I have been trying different things using 3 different
+tapes.
+I can read the first tape, so I think everything went well until after end
+of tape.
+I have tried:
+/dev/st0
+st0
+/dev/nst0
+nst0
 
-cmd_timeout: Found in ISP
+I have also just typed enter without a device/file name.  cpio just
+exits/aborts.
+When I typed "nst0" I got a 2 Gig file named "/nst0".
+So, it seems the problem is re-using the tape drive.
+I typed "nst1" and got another 2 Gig file.
 
-	And after resyncing the raid set for sometime, the failure messages:
+Maybe a clue:  While cpio is waiting for me to type the "device/file name"
+the tape drive is busy.  From another shell/window I tried to list the
+contents of another tape.  I could not, I got this error: "/dev/nst0: Device
+or resource busy".  Maybe cpio gets the same error (without reporting it)
+and just prompts for another tape.  Maybe cpio needs to close the tape
+before asking for another?  Even after cpio writes to the files "/nst0" and
+"/nst1" the tape drive is still busy!  The 2 files "/nst0" and "/nst1" are
+not locked.  I have overwritten and deleted them.  The disk space has been
+freed.
 
-qla2xxx_eh_abort: refcount 1
-qla2100 0000:00:0e.0: qla2xxx_eh_abort scsi(1:0:3:0):
-cmd_timeout_in_sec=0x1e.
-SCSI Command @=0xc4eabaa8, Handle=0x00000335
-  chan=0x00, target=0x03, lun=0x00, cmd_len=0x0a
- CDB: 0x28 0x00 0x00 0xe6 0xc6 0x3f 0x00 0x01 0x00 0x00
-  seg_cnt=32, allowed=20, retries=0, serial_number_at_timeout=0x103982
-  request buffer=0xca53365c, request buffer len=0x20000
-  tag=90, transfersize=0x200
-  serial_number=103982, SP=cb214b38
-  data direction=2
-  sp flags=0x2
-  r_start=0x190678, u_start=0x190678, f_start=0x5a5a5a5a, state=7
- e_start= 0x5a5a5a5a, ext_history=1515870810, fo retry=0, loopid=4, port
-path=0
-qla2100 0000:00:0e.0: qla2xxx_eh_abort Exiting: status=Failed
-qla2xxx_eh_abort: refcount 1
-qla2100 0000:00:0e.0: qla2xxx_eh_abort scsi(1:0:6:0):
-cmd_timeout_in_sec=0x1e.
-SCSI Command @=0xca4f033c, Handle=0x00000339
-  chan=0x00, target=0x06, lun=0x00, cmd_len=0x0a
- CDB: 0x28 0x00 0x00 0xe6 0xc7 0xbf 0x00 0x00 0x48 0x00
-  seg_cnt=9, allowed=20, retries=0, serial_number_at_timeout=0x103986
-  request buffer=0xc82088b4, request buffer len=0x9000
-  tag=90, transfersize=0x200
-  serial_number=103986, SP=cb214e98
-  data direction=2
-  sp flags=0x2
-  r_start=0x19067a, u_start=0x19067a, f_start=0x5a5a5a5a, state=7
- e_start= 0x5a5a5a5a, ext_history=1515870810, fo retry=0, loopid=7, port
-path=0
-qla2100 0000:00:0e.0: qla2xxx_eh_abort Exiting: status=Failed
-qla2xxx_eh_abort: refcount 1
-qla2100 0000:00:0e.0: qla2xxx_eh_abort scsi(1:0:0:0):
-cmd_timeout_in_sec=0x1e.
-SCSI Command @=0xcbc51c24, Handle=0x0000033b
-  chan=0x00, target=0x00, lun=0x00, cmd_len=0x0a
- CDB: 0x28 0x00 0x00 0xe6 0xc7 0xbf 0x00 0x00 0x48 0x00
-  seg_cnt=9, allowed=20, retries=0, serial_number_at_timeout=0x103988
-  request buffer=0xcf5dd9c0, request buffer len=0x9000
-  tag=90, transfersize=0x200
-  serial_number=103988, SP=cb214238
-  data direction=2
-  sp flags=0x2
-  r_start=0x19067a, u_start=0x19067a, f_start=0x5a5a5a5a, state=7
- e_start= 0x5a5a5a5a, ext_history=1515870810, fo retry=0, loopid=1, port
-path=0
+This happens every time.  But takes 2-4 hours to re-produce.
+This is part of the script:
+TAPE=/dev/nst0
+mt -f $TAPE rewind
+cd /
+find root BigFS -depth| cpio -o --format=newc --block-size=128 > $TAPE
+mt -f $TAPE eject
 
-Thoughts? Many thanks,
+This is a RedHat 9 system.  Up to date confirmed 1-2 days ago using:
+apt-get update
+apt-get upgrade
+apt-get dist-upgrade
 
--poul
+No updates were needed.
+
+Kernel 2.4.20-8smp
+GNU cpio version 2.5
+
+Any ideas?
+
+Thanks,
+Guy
 
 
-> -----Original Message-----
-> From: Andrew Vasquez [mailto:praka@users.sourceforge.net]
-> Sent: Wednesday, January 21, 2004 9:22 PM
-> To: linux-scsi@vger.kernel.org
-> Subject: Re: What's the "right" qla2100 driver?
-> 
-> 
-> On Wed, 21 Jan 2004, Poul Petersen wrote:
-> 
-> > I've got a Qlogic qla2100 card connected via copper to an array of
-> > 28 ~18GB disks. I'm trying to create two raid level 5 md devices
-> > with 13disk+1spare each. What I'm experiencing is a lot of hangs and
-> > strange disk failures that appear to be related to the drivers for
-> > the 2100. As there seems to be many different drivers to choose from
-> > for the qla2100, I've tried them all and collected my (all bad)
-> > experiences, a summary of which I have attached below. 
-> > 
-> > What I am wondering is if anyone else is using this card with Linux
-> > and if so what driver are they using? More importantly, which driver
-> > is actively being worked on (if any) so that I might contribute some
-> > failure information? 
-> > 
-> 
-> For 2.4, you could try another driver -- 6.06.10 (available at the
-> QLogic website).  This driver has support for the 2100 (though it's
-> not actually documented).  The makefile will not build the driver
-> though, try something similiar to the following:
-> 
-> 	# make qla2100.o
-> 
-> For 2.6, why don't we start out with the default qla2xxx driver in
-> 2.6.2-rc1.  
-> 
-> > It's possible that I am experiencing a hardware problem, since these
-> > disks and controller are a few years old now, but I doubt it since
-> > most of the errors seem inconsistent with bad hardware (all disks
-> > failing, etc). If nothing else, if I get feedback saying that
-> > someone else is successfully using a certain driver, then I can
-> > start playing with hardware using the same driver and maybe get to
-> > the bottom of this...
-> > 
-> 
-> From there let's see how far you get with the drivers.  We may need to
-> enable some extra debugging for additional information.
-> 
-> > ---
-> > Test #5
-> > 2.6.1 with sourceforge qlogic driver 8.00.00.b8 (
-> > http://sourceforge.net/projects/linux-qla2xxx/ )
-> > ---
-> > 
-> > # modprobe qla2xxx
-> > # mkraid /dev/md0
-> > # mkraid /dev/md1
-> > # mkfs.ext3 /dev/md0
-> > 
-> >  	After awhile, the mkfs hung and when I tried to reboot 
-> the machine,
-> > I got a bunch of errors like the following for all 28 disks:
-> > 
-> > qla2xxx_eh_abort scsi(1:0:12:0) cmd_timeout_in_sec=0x1e.
-> > qla2xxx_eh_abort Exiting: status=Failed
-> > 
-> 
-> Interesting...
-> 
-> Regards,
-> Andrew Vasquez
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
