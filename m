@@ -1,48 +1,48 @@
-From: "Scott M. Ferris" <sferris@acm.org>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Mon, 8 Dec 2003 09:46:18 -0600 (CST)
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Notify about errors during initialization
+Date: Mon, 8 Dec 2003 11:15:06 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031208154618.1AFB45DC7E@bambi.visi.com>
-References: <200312082036.41027.krmurthy@cisco.com>
+Message-ID: <Pine.LNX.4.44L0.0312081101480.1043-100000@ida.rowland.org>
+References: <20031207051634.GB21951@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from conn.mc.mpls.visi.com ([208.42.156.2]:36494 "EHLO
-	conn.mc.mpls.visi.com") by vger.kernel.org with ESMTP
-	id S265468AbTLHPq3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Dec 2003 10:46:29 -0500
-In-Reply-To: <200312082036.41027.krmurthy@cisco.com> from "N.C.Krishna Murthy"
- at "Dec 8, 2003 09:16:19 am"
+Received: from ida.rowland.org ([192.131.102.52]:9732 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S264574AbTLHQPH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Dec 2003 11:15:07 -0500
+In-Reply-To: <20031207051634.GB21951@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: "N.C.Krishna Murthy" <krmurthy@cisco.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, davmyers@cisco.com
+To: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Cc: USB Storage List <usb-storage@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-N.C.Krishna Murthy wrote:
-> Hi,
-> 	We agree to using the wrapper when we are notified about 
-> "reported lun data change". 
-> 
-> 	However when a session is initially established to an iSCSI target,
-> luns on the target need to be configured. As mentioned in one of my previous
-> mails , we need to use scsi_scan_host_selected(). 
-> Will the function be exported in the next release of 2.6 or do I need to 
-> generate a patch for the same?
+Cross-posted to the linux-scsi list in the hope that someone there can 
+confirm this answer...
 
-You'd be better off letting the OS decide which LUNs to use, and not
-masking anything in the low-level driver. If LUN masking is needed,
-adding a general mechanism to the kernel to provide LUN masking for
-any particular target would be a better approach than having each
-low-level driver implement its own way of masking LUNs.
+On Sat, 6 Dec 2003, Matthew Dharm wrote:
 
-The main motivation for LUN masking is the limited number of SCSI disk
-devices Linux can support.  Now that Linux has 32-bit device numbers,
-the SCSI disk driver could be changed to support many more LUNs per
-target, and the need for LUN masking would be greatly reduced.  This
-would probably be less work than adding a general LUN masking
-mechanism, and would be useful to a larger number of users than LUN
-masking would.
+> Question: Are we guaranteed that scsi_scan_host() doesn't return until the
+> scanning process is complete?
 
--- 
-Scott M. Ferris,
-sferris@acm.org 
+I'm not absolutely certain -- best to check with someone on the linux-scsi
+list.  But a quick look through the call chain in scsi_scan.c indicates
+that scsi_scan_host() doesn't return until the scanning process is indeed
+complete.  The real work is done in scsi_probe_lun() (called from
+scsi_probe_and_add_lun()), and that uses scsi_wait_req().  After all, it
+can't tell whether the LUN is there or not until it gets a reply to the
+INQUIRY!
+
+> I recall a problem that we had with the setting of flags and the call to
+> scan the host -- without pre-emption, it worked, but with pre-emption
+> things happened in the wrong order.  Could that happen here?
+
+I don't remember that problem.  But I don't think pre-emption would cause 
+any difficulties here.  All the flags should be set before we call 
+scsi_scan_host().  If you can provide more details or a reference to what 
+you're thinking of, I could reply in more detail.
+
+When pre-emption does cause a problem it's generally because of some
+assumption that the current task won't be scheduled out when it calls up()
+or complete() or something like that.
+
+Alan Stern
+
