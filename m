@@ -1,64 +1,53 @@
-From: "David Schwartz" <davids@webmaster.com>
-Subject: RE: Binary-only firmware covered by the GPL?
-Date: Thu, 25 Mar 2004 16:41:23 -0800
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <MDEHLPKNGKAHNMBLJOLKCEEOLEAA.davids@webmaster.com>
-References: <20040325225423.GT9248@cheney.cx>
-Reply-To: davids@webmaster.com
+From: Matthew Wilcox <willy@debian.org>
+Subject: Bug#239952: Binary-only firmware covered by the GPL?
+Date: Fri, 26 Mar 2004 00:33:39 +0000
+Sender: <willy@www.linux.org.uk>
+Message-ID: <20040326003339.GD25059@parcelfarce.linux.theplanet.co.uk>
+References: <E1B6Izr-0002Ai-00@r063144.stusta.swh.mhn.de> <20040325082949.GA3376@gondor.apana.org.au> <20040325220803.GZ16746@fs.tum.de> <40635DD9.8090809@pobox.com>
+Reply-To: Matthew Wilcox <willy@debian.org>, 239952@bugs.debian.org
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20040325225423.GT9248@cheney.cx>
-To: debian-devel@lists.debian.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <bounce-debian-bugs-rc=glddbr-debian-bugs-rc=gmane.org@lists.debian.org>
+Sender: <willy@www.linux.org.uk>
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.239952.B239952.10802612214489@bugs.debian.org>
+Content-Disposition: inline
+In-Reply-To: <40635DD9.8090809@pobox.com>
+List-Post: <mailto:debian-bugs-rc@lists.debian.org>
+List-Help: <mailto:debian-bugs-rc-request@lists.debian.org?subject=help>
+List-Subscribe: <mailto:debian-bugs-rc-request@lists.debian.org?subject=subscribe>
+List-Unsubscribe: <mailto:debian-bugs-rc-request@lists.debian.org?subject=unsubscribe>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Adrian Bunk <bunk@fs.tum.de>, 239952@bugs.debian.org, debian-devel@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu, Mar 25, 2004 at 05:31:53PM -0500, Jeff Garzik wrote:
+> 
+> Well IANAL, but it seems not so cut-n-dried, at least.
+> 
+> Firmware is a program that executes on another processor, so no linking 
+> is taking place at all.  It is analagous to shipping a binary-only 
+> program in your initrd, IMO.
 
-> On Thu, Mar 25, 2004 at 11:08:03PM +0100, Adrian Bunk wrote:
-> > There's another issue with these files:
-> >
-> <--  snip  -->
-> >
-> > The GPL says that you must give someone receiving a binary the source
-> > code, and it says:
-> >   The source code for a work means the preferred form of the work for
-> >   making modifications to it.
-> >
-> >
-> > This is perhaps a bit besides the main firmware discussion and IANAL,
-> > but is this file really covered by the GPL?
+Linking isn't the issue.  I went and read the original bug on this a
+while back.  The issue is that it's a program that's distributed in
+binary form without source code.  That's forbidden from being in main
+by the terms of the Debian Social Contract.
 
-> IMHO code that can be compiled would probably be the preferred form
-> of the work.
+I realise there's a grey area between "magic data you write to a device"
+and "a program that is executed on a different processor".  For example,
+palette data for a frame buffer.  But nobody's arguing for that grey
+area here -- it's clearly a program without source code that Debian
+can't distribute.
 
-	You are seriously arguing that the obfuscated binary of the firmware is the
-preferred form of the firmware for the purpose of making modifications to
-it?!
+I think this is a terribly unfortunate state of affairs and I'm not happy
+about how it's been handled or communicated.  I'd really appreciate it
+if someone managed to think of a good solution to this.
 
-> The source to the firmware in many cases and probably even
-> this one is very unlikely to be able to be compiled under Linux at all.
-
-	What does it matter what it compiles under? The GPL is not Linux-specific.
-
-> Also, unless the driver is written by the company producing the hardware
-> itself even the author will likely not have the source code to the
-> firmware and will only have a binary form (think reverse engineering).
-
-	If you don't have the preferred form of something for the purpose of making
-modifications to it, then you can't give that to people, so you *CAN'T* GPL
-it. If you making an executable that derives from a GPL'd product and, for
-example, lose the source code, you MAY NOT distribute the executable. You
-must have the preferred form for the purpose of making modifications or you
-are not able to GPL.
-
-> IMHO a driver for a piece of hardware does not include the software that
-> the hardware itself is running, just the software that the primary CPU
-> itself is running. YMMV.
-
-	But it does. This file contains the software that the hardware itself is
-running. That's its sole purpose. Please tell me how you make modifications
-to this file.
-
-	DS
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
