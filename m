@@ -1,20 +1,20 @@
 From: soohoon.lee@amd.com
 Subject: Re: [PATCH] fix units/partition count in sd.c (2.4.x)
-Date: Wed, 16 Feb 2005 16:05:40 -0500
-Message-ID: <15FF3C77E196EA4888E281B9E0FF37150646B0@SBOSEXMB1.amd.com>
+Date: Wed, 16 Feb 2005 16:17:12 -0500
+Message-ID: <15FF3C77E196EA4888E281B9E0FF37150646B3@SBOSEXMB1.amd.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="----_=_NextPart_000_01C5146B.4566A5A6"
-Received: from amdext4.amd.com ([163.181.251.6]:45030 "EHLO amdext4.amd.com")
-	by vger.kernel.org with ESMTP id S262069AbVBPVF4 (ORCPT
+ boundary="----_=_NextPart_000_01C5146C.DA29BEE8"
+Received: from amdext4.amd.com ([163.181.251.6]:65512 "EHLO amdext4.amd.com")
+	by vger.kernel.org with ESMTP id S262067AbVBPVR1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Feb 2005 16:05:56 -0500
+	Wed, 16 Feb 2005 16:17:27 -0500
 Received: from SAUSGW02.amd.com (sausgw02.amd.com [163.181.250.22])
-	by amdext4.amd.com (8.12.11/8.12.11/AMD) with ESMTP id j1GL5Gad002569
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2005 15:05:56 -0600
+	by amdext4.amd.com (8.12.11/8.12.11/AMD) with ESMTP id j1GLGv8O005838
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2005 15:17:27 -0600
 Received: from maexmta1.amd.com (maexmta1.amd.com [165.204.61.3]) by
- amdint2.amd.com (8.12.8/8.12.8/AMD) with ESMTP id j1GL5jB1016277 for
- <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2005 15:05:45 -0600 (CST)
+ amdint2.amd.com (8.12.8/8.12.8/AMD) with ESMTP id j1GLHFB1018371 for
+ <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2005 15:17:15 -0600 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -22,7 +22,7 @@ To: linux-scsi@vger.kernel.org
 This message is in MIME format. Since your mail reader does not understand
 this format, some or all of this message may not be legible.
 
-------_=_NextPart_000_01C5146B.4566A5A6
+------_=_NextPart_000_01C5146C.DA29BEE8
 Content-Type: text/plain;
  charset=iso-8859-1
 Content-Transfer-Encoding: 7bit
@@ -50,7 +50,7 @@ sd.c:sd_probe()
 Soohoon.
 
 
-------_=_NextPart_000_01C5146B.4566A5A6
+------_=_NextPart_000_01C5146C.DA29BEE8
 Content-Type: application/octet-stream;
  name=diff.patch
 Content-Transfer-Encoding: quoted-printable
@@ -87,5 +87,5 @@ sizeof(struct hd_struct));=0A=
  		}=0A=
  	return;=0A=
 
-------_=_NextPart_000_01C5146B.4566A5A6--
+------_=_NextPart_000_01C5146C.DA29BEE8--
 
