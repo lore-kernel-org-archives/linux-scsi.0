@@ -1,76 +1,74 @@
-From: "Merle Erickson" <m1scg9wzzjt@juno.com>
-Subject: You Are Being Watched gj kqr fw sbbhtut f
-Date: Sat, 07 Jun 03 22:27:44 GMT
-Sender: linux-msdos-owner@vger.kernel.org
-Message-ID: <71k33--puk1$1$o$3v$8c4n-i-7553@rx3v86nz6>
+From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
+Subject: Re: [patch] scsi: ten -> use_10_for_rw / use_10_for_ms
+Date: Sun, 8 Jun 2003 14:28:21 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20030608142821.F25191@one-eyed-alien.net>
+References: <UTC200305230722.h4N7Mid25812.aeb@smtp.cwi.nl>
 Mime-Version: 1.0
-Content-Type: multipart/alternative;
-	boundary="59_7AE4B889DD.2..28"
-Return-path: <linux-msdos-owner@vger.kernel.org>
-To: linux-kernel-owner@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-msdos@vger.kernel.org, linux-net@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-md5;
+	protocol="application/pgp-signature"; boundary="pyE8wggRBhVBcj8z"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:36623 "EHLO
+	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
+	id S263859AbTFHVOq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 8 Jun 2003 17:14:46 -0400
+Content-Disposition: inline
+In-Reply-To: <UTC200305230722.h4N7Mid25812.aeb@smtp.cwi.nl>; from Andries.Brouwer@cwi.nl on Fri, May 23, 2003 at 09:22:44AM +0200
 List-Id: linux-scsi@vger.kernel.org
+To: Andries.Brouwer@cwi.nl
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, torvalds@transmeta.com
 
-This is a multi-part message in MIME format.
 
---59_7AE4B889DD.2..28
-Content-Type: text/plain
+--pyE8wggRBhVBcj8z
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Protect Your Privacy NOW!
+On Fri, May 23, 2003 at 09:22:44AM +0200, Andries.Brouwer@cwi.nl wrote:
+> In the old days, ancient scsi devices understood 6-byte commands
+> and more recent ones also understood 10-byte commands.
+> Thus, we had a "ten" flag indicating that 10-byte commands worked.
+>=20
+> These days, especially for usb-storage devices, the opposite
+> sometimes holds - 10-byte commands are supported, but 6-byte commands
+> are not.
+>=20
+> The patch below changes the field ten into the pair of fields
+> use_10_for_rw, use_10_for_ms set initially when the driver
+> thinks these are supported. Ifthe device returns ILLEGAL_REQUEST
+> they are cleared.
+>=20
+> This patch obsoletes a large amount of code in usb-storage,
+> and not only that, once the subsequent patch removes all this
+> usb-storage code many devices will work that hang today.
 
-Did you know that government agencies are spying on
-your computer? Hackers? Marketers? Etc.
+Any idea when you'll submit that patch to usb-storage?
 
-We'll the latest program gets rid of all these sources
-and protects you.
+Do you perhaps just want to send what you have to me for integration?
 
-Avoid the following:
+Matt
 
-* Unwanted people/agencies on your computer
-* Your computer keeping a incriminating log of what
-you do
-* Being traced by others online
-* Slow Computer Speeds
-* PLUS MUCH MORE!
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
 
-Click below to Learn more and get your essential copy
-today!
+Sir, for the hundreth time, we do NOT carry 600-round boxes of belt-fed=20
+suction darts!
+					-- Salesperson to Greg
+User Friendly, 12/30/1997
 
+--pyE8wggRBhVBcj8z
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-http://www.bestdealss.net/cgi-bin/kherefer.cgi/he/index008.html?MID=3Dkhe0=
-08&r=3DEraser8373
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
 
+iD8DBQE+46p1IjReC7bSPZARAlRWAJ9JvC9CFZNdXMb0ke3G8q3KnDFC7QCfamXN
+b6F9r/KWJkRZL9+vDDZOjnY=
+=Br0e
+-----END PGP SIGNATURE-----
 
-
-"Many employees remain unaware technology isn't
-private. They may visit sexually explicit Web sites
-and not realize their employer is watching, for
-example. Many don't know messages can be retrieved
-months later."
-
--- USA Today
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-To be removed click below:
-http://cythsia.com/auto/index.htm
-
- 
-ht noohxxuocds
-p znssddhmmmjx vwahjpxoqq  otahzhi
---59_7AE4B889DD.2..28--
-
+--pyE8wggRBhVBcj8z--
