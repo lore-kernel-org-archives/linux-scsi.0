@@ -1,23 +1,32 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [patch] NCR5380.c fix
-Date: 15 May 2003 17:52:06 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1053039127.3998.23.camel@mulgrave>
-References: <UTC200305152245.h4FMjAj26766.aeb@smtp.cwi.nl>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: "do ata" scsi command?
+Date: Thu, 15 May 2003 19:02:23 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20030515230223.GA516@gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <UTC200305152245.h4FMjAj26766.aeb@smtp.cwi.nl>
-To: Andries.Brouwer@cwi.nl
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, torvalds@transmeta.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from host-64-213-145-173.atlantasolutions.com ([64.213.145.173]:33186
+	"EHLO havoc.gtf.org") by vger.kernel.org with ESMTP id S264283AbTEOWtc
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 May 2003 18:49:32 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2003-05-15 at 17:45, Andries.Brouwer@cwi.nl wrote:
-> -					else if (cmd->SCp.Status != GOOD)
-> +					else if (status_byte(cmd->SCp.Status) != GOOD)
+In terms of a userspace interface for my ata-over-scsi gadget, I would
+prefer to use /dev/sg instead of inventing a totally new interface.
+That, in turn, implies a need for a "do ata taskfile" scsi command,
+which is sorta like ATAPI in reverse:  we are wrapping a raw ata
+taskfile inside a scsi cdb.
 
-Well...if we're doing it this way, any reason not to use the newly
-minted SAM_STAT_GOOD and SAM_STAT_CHECK_CONDITION?
+My question is, does an existing standard or spec exist for such an idea?
 
-James
+If not, I'll just roll my own.
+
+Thanks,
+
+	Jeff
+
+
+
