@@ -1,55 +1,55 @@
-From: "Eric Raskin" <eraskin@paslists.com>
-Subject: How to disconnect a SCSI device without crashing SLES8?
-Date: Fri, 4 Feb 2005 14:12:13 -0500
-Message-ID: <156801c50aed$2348aee0$650aa8c0@ehrpc>
-Reply-To: <eraskin@paslists.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: PATCH [0/3]   qla2xxx: new experimental changes...
+Date: Fri, 04 Feb 2005 11:21:48 -0800
+Message-ID: <1107544908.14183.11.camel@plap.san.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Received: from paslists.com ([12.170.105.210]:61638 "EHLO fw.paslists.com")
-	by vger.kernel.org with ESMTP id S265047AbVBDTKj convert rfc822-to-8bit
-	(ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
-	Fri, 4 Feb 2005 14:10:39 -0500
-Received: from ehrpc (ehrpc.paslists.com [192.168.10.101])
-	by fw.paslists.com (8.12.8/8.12.8) with ESMTP id j14JAPo8002381
-	for <Linux-scsi@vger.kernel.org>; Fri, 4 Feb 2005 14:10:36 -0500
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from avexch02.qlogic.com ([198.70.193.200]:33594 "EHLO
+	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S265202AbVBDTVh
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Feb 2005 14:21:37 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-scsi@vger.kernel.org
+To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: andrew.vasquez@qlogic.com
 
-Hello all:
+All,
 
-I apologize in advance if this is the wrong forum for this question.  Please
-feel free to direct me to the correct newgroup.
+Here's a set of patches which begin to strip legacy features from the
+qla2xxx driver.  These 'features' have been superceded in functionality
+and simplicity by additions present (for some time) in the SCSI
+mid-layer.
 
-I have a Dell 6650 running Suse Enterprise 8 (SLES8) with the 2.4.21-138-smp
-kernel.  I have a Quantum M1500 tape library with 2 SDLT220 tape drives
-connected to one of the internal Adaptec Controllers using the aic7xxxx
-driver.  One of the tape drives has failed.  From experience, and from
-Quantum tech support, I know that turning off the library while the system
-is up will crash Linux.
+Here's the breakdown of patches being submitted:
 
-In searching the web, I've found the "remove-scsi-device" and
-"add-scsi-device" commands that can be sent to /proc/scsi/scsi.
+     1. Remove internal command queuing.  This entails removal of the
+        driver's *_queue lists as well as modifications and removal of
+        routines which used them.  With the queuing removed -- the
+        driver will be unable to tolerate cable-pulls.  Thus we depend
+        on the next patch for support.
+     2. Add initial support for FC remote port infrastructure.  This
+        patch is based off the proposal submitted by James Smart:
+        ([Patch RFC ] Update FC transport for FC Remote Ports)
+        http://marc.theaimsgroup.com/?l=linux-scsi&m=110187926413504&w=2
+     3. Remove internal lun discovery routines and support structures.
+        The mid-layer has a more exhaustive and fully capable set of
+        functions for lun discovery.
 
-Does anybody know if the system will stay up if I use these commands to
-remove all my tape library devices before shutting it down?  Is this the
-proper way to repair my library without having to shut the system off?
+Other patches in the queue:
 
-TIA
-
-  Eric Raskin
-
-PS.  Dell wants to charge me $199 to get an answer to speak with the
-engineers who can answer this question.  It's easier to just turn off the
-system! :-/
-
-----------------------------------------------------------------------------
-Eric H. Raskin                                          Voice: 914-765-0500
-Professional Advertising Systems Inc.                   Fax:   914-765-0503
-200 Business Park Dr Suite 107                          eraskin@paslists.com
-Armonk, NY 10504
+     A. Complete fc_host attributes support.  This patch is mostly
+        complete, I'd just like to let the dust settle with the recent
+        transport_template changes.
+     B. Additional dusting and scrubbing: /proc removal, unused
+        functions and structures left over from the cleanup.
+     C. lock simplification and consolidation -- we're still reviewing
+        the implications of removing the driver's 'hardware_lock' and
+        begin using the host->host_lock exclusively.
+     D. additional hardware (ISP) support.
+     E. firmware loading via request_firmware() infrastructure.
 
 
-
+Regards,
+Andrew Vasquez
+QLogic Corporation
