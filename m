@@ -1,60 +1,68 @@
-From: Douglas Gilbert <dougg@torque.net>
+From: Badari Pulavarty <pbadari@us.ibm.com>
 Subject: Re: [patch for playing] 2.5.65 patch to support > 256 disks
-Date: Tue, 25 Mar 2003 08:22:51 +1000
+Date: Mon, 24 Mar 2003 14:57:32 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E7F853B.1020603@torque.net>
-References: <200303211056.04060.pbadari@us.ibm.com> <3E7C4D05.2030500@torque.net> <20030322040550.0b8baeec.akpm@digeo.com> <200303241332.56996.pbadari@us.ibm.com>
-Reply-To: dougg@torque.net
+Message-ID: <200303241457.32655.pbadari@us.ibm.com>
+References: <200303211056.04060.pbadari@us.ibm.com> <200303241332.56996.pbadari@us.ibm.com> <20030324161016.25a9a77a.akpm@digeo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20030324161016.25a9a77a.akpm@digeo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Badari Pulavarty <pbadari@us.ibm.com>
-Cc: Andrew Morton <akpm@digeo.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>
+To: Andrew Morton <akpm@digeo.com>
+Cc: dougg@torque.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de
 
-Badari Pulavarty wrote:
-> On Saturday 22 March 2003 04:05 am, Andrew Morton wrote:
-> 
->>OK, thanks.  So with 48 disks you've lost five megabytes to blkdev_requests
->>and deadline_drq objects.  With 4000 disks, you're toast.  That's enough
->>request structures to put 200 gigabytes of memory under I/O ;)
->>
->>We need to make the request structures dymanically allocated for other
->>reasons (which I cannot immediately remember) but it didn't happen.  I
->>guess we have some motivation now.
-> 
-> 
-> Here is the list of slab caches which consumed more than 1 MB
-> in the process of inserting 4000 disks.
-> 
-> #insmod scsi_debug.ko add_host=4 num_devs=1000
-> 
-> deadline_drq    before:1280 after:1025420 diff:1024140 size:64 incr:65544960
-> blkdev_requests  before:1280 after:1025400 diff:1024120 size:156 incr:159762720
-> 
-> * deadline_drq, blkdev_requests consumed almost 80 MB. We need to fix this.
-> 
-> inode_cache     before:700 after:140770 diff:140070 size:364 incr:50985480
-> dentry_cache    before:4977 after:145061 diff:140084 size:172 incr:24094448
-> 
-> * inode cache increased by 50 MB, dentry cache 24 MB. 
-> It looks like we cached 140,000 inodes. I wonder why ? 
- > <snip/>
+On Monday 24 March 2003 04:10 pm, Andrew Morton wrote:
+> Badari Pulavarty <pbadari@us.ibm.com> wrote:
+> > Here is the list of slab caches which consumed more than 1 MB
+> > in the process of inserting 4000 disks.
+>
+> Thanks for doing this.
+>
+> > #insmod scsi_debug.ko add_host=4 num_devs=1000
+> >
+> > deadline_drq    before:1280 after:1025420 diff:1024140 size:64
+> > incr:65544960 blkdev_requests  before:1280 after:1025400 diff:1024120
+> > size:156 incr:159762720
+> >
+> > * deadline_drq, blkdev_requests consumed almost 80 MB. We need to fix
+> > this.
+>
+> Yes, we do.  But.
+>
+> > inode_cache     before:700 after:140770 diff:140070 size:364
+> > incr:50985480 dentry_cache    before:4977 after:145061 diff:140084
+> > size:172 incr:24094448
+> >
+> > * inode cache increased by 50 MB, dentry cache 24 MB.
+> > It looks like we cached 140,000 inodes. I wonder why ?
+>
+> # find /sys/block/hda | wc -l
+>      43
+>
+> Oh shit, we're toast.
+>
+> How many partitions did these "disks" have?
 
-Badari,
-What number do you get from
-  # cd /sys; du -a | wc
-when you have 4000 disks?
+These are all scsi_debug disks. No partitions. 
+Yeah !! I know what you mean, with partitions we
+are going to get 5 more inodes per partition..
 
-With two disks the count on my system is 528.
+[root@elm3b78 sdaaa]# find /sysfs/block/sdaa
+/sysfs/block/sdaa
+/sysfs/block/sdaa/iosched
+/sysfs/block/sdaa/iosched/fifo_batch
+/sysfs/block/sdaa/iosched/front_merges
+/sysfs/block/sdaa/iosched/writes_starved
+/sysfs/block/sdaa/iosched/write_expire
+/sysfs/block/sdaa/iosched/read_expire
+/sysfs/block/sdaa/device
+/sysfs/block/sdaa/stat
+/sysfs/block/sdaa/size
+/sysfs/block/sdaa/range
+/sysfs/block/sdaa/dev
 
-Also scsi_debug should use only 8 MB (default) for
-simulated storage shared between all pseudo disks
-(i.e. not 8 MB per simulated host).
-
-Doug Gilbert
-
-
-
+Thanks,
+Badari
 
