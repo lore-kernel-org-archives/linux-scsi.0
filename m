@@ -1,47 +1,56 @@
-From: Willem Riede <wrlk@riede.org>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [PATCH] Eliminate signals entirely from the mid-layer
-Date: Sat, 11 Jan 2003 09:23:11 -0500
+Date: Sat, 11 Jan 2003 10:44:24 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030111142311.GQ1378@linnie.riede.org>
-References: <200301102119.h0ALJUf05888@localhost.localdomain>
-Reply-To: wrlk@riede.org
+Message-ID: <200301111544.h0BFiQD02270@localhost.localdomain>
+References: <wrlk@riede.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed ;
+	boundary="==_Exmh_-2790530500"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200301102119.h0ALJUf05888@localhost.localdomain>; from James.Bottomley@steeleye.com on Fri, Jan 10, 2003 at 16:19:30 -0500
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA01963
+	for <linux-scsi@vger.kernel.org>; Sat, 11 Jan 2003 07:44:34 -0800
+In-Reply-To: Message from Willem Riede <wrlk@riede.org>
+   of "Sat, 11 Jan 2003 09:23:11 EST." <20030111142311.GQ1378@linnie.riede.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
+To: wrlk@riede.org
 Cc: linux-scsi@vger.kernel.org
 
-On 2003.01.10 16:19 James Bottomley wrote:
-> the attached patch removes SCSI's use of signals for killing the error handler 
-> thread.  It also:
-> 
-> - changes the eh_notify semaphore to a completion
-> - adds complete_and_exit() to the thread
-> - uses a host structure flag to signal thread death instead of the signal
-> 
-> I'm currently travelling, so could someone test it out for me?  Thanks,
-> 
-Sorry, James,
+This is a multipart MIME message.
 
-When I apply your patch, rmmod ide-scsi hangs. This is my log:
+--==_Exmh_-2790530500
+Content-Type: text/plain; charset=us-ascii
 
-Jan 11 09:08:06 fallguy kernel: Error handler scsi_eh_2 waking up
-Jan 11 09:08:06 fallguy kernel: Total of 0 commands on 0 devices require eh work
-Jan 11 09:08:06 fallguy kernel: scsi_eh_get_sense: checking to see if we need to request sense
-Jan 11 09:08:06 fallguy kernel: scsi_restart_operations: waking up host to restart
-Jan 11 09:08:06 fallguy kernel: Error handler scsi_eh_2 sleeping
+wrlk@riede.org said:
+> When I apply your patch, rmmod ide-scsi hangs. This is my log: 
 
-and ps shows:
+Well, we all have these embarassing things we forget from time to time (like 
+remembering actually to tell the daemon to die...).  Can you try the attached 
+as an additional patch?
 
-...
-040     0   236     1  15   0     0    0 down_i SW   ?          0:00 [scsi_eh_2]
-...
-100     0   946   887  16   0  1324  380 scsi_u D    pts/0      0:00 rmmod ide-scsi
-044     0   947   946  16   0     0    0 do_exi Z    pts/0      0:00 [kmodule0? <defunct>]
-...
+Thanks,
 
-Regards, Willem Riede.
+James
+
+
+--==_Exmh_-2790530500
+Content-Type: text/plain ; name="tmp.diff"; charset=us-ascii
+Content-Description: tmp.diff
+Content-Disposition: attachment; filename="tmp.diff"
+
+===== drivers/scsi/hosts.c 1.43 vs edited =====
+--- 1.43/drivers/scsi/hosts.c	Fri Jan 10 16:13:38 2003
++++ edited/drivers/scsi/hosts.c	Sat Jan 11 10:39:20 2003
+@@ -338,6 +338,7 @@
+ 	if (shost->ehandler) {
+ 		DECLARE_COMPLETION(sem);
+ 		shost->eh_notify = &sem;
++		shost->eh_kill = 1;
+ 		up(shost->eh_wait);
+ 		wait_for_completion(&sem);
+ 		shost->eh_notify = NULL;
+
+--==_Exmh_-2790530500--
+
+
