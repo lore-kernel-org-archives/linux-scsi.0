@@ -1,28 +1,43 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: sg MiB writes scheduling while atomic
-Date: Tue, 16 Sep 2003 13:58:43 +0100
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] take 2 yet another patch to limit mode sense usage
+Date: Tue, 16 Sep 2003 10:17:54 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030916135843.A15918@infradead.org>
-References: <Pine.LNX.4.44L0.0309101219190.905-100000@ida.rowland.org> <1063217791.3669.43.camel@patehci2> <1063219776.3669.72.camel@patehci2> <1063222216.3669.87.camel@patehci2> <3F66AF1B.5010402@torque.net> <20030916114238.GA21596@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <Pine.LNX.4.44L0.0309161015200.761-100000@ida.rowland.org>
+References: <20030915142244.A10286@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:50446 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S261251AbTIPM6r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Sep 2003 08:58:47 -0400
-Content-Disposition: inline
-In-Reply-To: <20030916114238.GA21596@parcelfarce.linux.theplanet.co.uk>; from willy@debian.org on Tue, Sep 16, 2003 at 12:42:38PM +0100
+Received: from ida.rowland.org ([192.131.102.52]:2308 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S261898AbTIPOR4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Sep 2003 10:17:56 -0400
+In-Reply-To: <20030915142244.A10286@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: Douglas Gilbert <dougg@torque.net>, Pat LaVarre <p.lavarre@ieee.org>, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Tue, Sep 16, 2003 at 12:42:38PM +0100, Matthew Wilcox wrote:
-> scsi_device_put() calls down_write() so it needs to be called in process
-> context.  Probably the best way to do this is by calling schedule_work().
-> An ickier solution would be to hijack an error handling thread ;-)
+On Mon, 15 Sep 2003, Patrick Mansfield wrote:
 
-The down_write was recently introduced and also hurts my scsi_device
-refcounting patches badly.  I'll submit a patch make scsi_device_{get,put}
-nonblocking again ASAP.
+> Patch to allow overriding or setting of mode sense related flags, includes
+> Alan Stern's as95 patch minus his scsiglue.c changes. Per Matthew's
+> comment use BLIST_MS_SKIP_PAGE_08 rather than BLIST_MS_SKIP_PAGE_3F in
+> scsiglue.c.
+> 
+> In addition:
+> 
+> Moves scsi_devinfo.h for use outside of drivers/scsi, and adds three new
+> devinfo flags:
+> 
+> 	BLIST_MS_SKIP_PAGE_08
+> 	BLIST_MS_SKIP_PAGE_3F
+> 	BLIST_USE_10_BYTE_MS
+> 
+> Adds a per host template flags, and use of it in scsiglue.c. The per host
+> value can be overridden by a devinfo entry. The patch does not allow
+> scsi_default_dev_flags to override default host values.
+
+Patrick's patch is more elaborate than mine but is also more generally
+applicable.  I would support the adoption of either one.
+
+Alan Stern
 
