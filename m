@@ -1,272 +1,351 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] kill of ->command
-Date: Mon, 9 Jun 2003 18:20:56 +0200
+Subject: [PATCH] some sd.c code consolidation
+Date: Mon, 9 Jun 2003 18:24:02 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030609162056.GA1857@lst.de>
+Message-ID: <20030609162402.GA1890@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:44174 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S264493AbTFIQHU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jun 2003 12:07:20 -0400
+Received: from verein.lst.de ([212.34.189.10]:48014 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S264494AbTFIQK0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jun 2003 12:10:26 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-It's unused now.  Also kill off the stupid = NULL initializations
-in usb-storage that made this not compile the first time..
+fold sd_init_onedisk into sd_revalidate_disk and sd_synchronize_cache
+into sd_shutdown.
 
 
-diff -Nru a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
---- a/drivers/scsi/scsi.c	Sun Jun  8 20:31:57 2003
-+++ b/drivers/scsi/scsi.c	Sun Jun  8 20:31:57 2003
-@@ -441,29 +441,18 @@
- 		goto out;
- 	}
+diff -Nru a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+--- a/drivers/scsi/sd.c	Sun Jun  8 20:33:57 2003
++++ b/drivers/scsi/sd.c	Sun Jun  8 20:33:57 2003
+@@ -88,7 +88,7 @@
+ static unsigned long sd_index_bits[SD_DISKS / BITS_PER_LONG];
+ static spinlock_t sd_index_lock = SPIN_LOCK_UNLOCKED;
  
--	if (host->can_queue) {
--		SCSI_LOG_MLQUEUE(3, printk("queuecommand : routine at %p\n",
--					   host->hostt->queuecommand));
-+	SCSI_LOG_MLQUEUE(3, printk("queuecommand : routine at %p\n",
-+				   host->hostt->queuecommand));
+-static void sd_init_onedisk(struct scsi_disk * sdkp, struct gendisk *disk);
++static int sd_revalidate_disk(struct gendisk *disk);
+ static void sd_rw_intr(struct scsi_cmnd * SCpnt);
  
--		spin_lock_irqsave(host->host_lock, flags);
--		rtn = host->hostt->queuecommand(cmd, scsi_done);
--		spin_unlock_irqrestore(host->host_lock, flags);
--		if (rtn) {
--			scsi_queue_insert(cmd,
-+	spin_lock_irqsave(host->host_lock, flags);
-+	rtn = host->hostt->queuecommand(cmd, scsi_done);
-+	spin_unlock_irqrestore(host->host_lock, flags);
-+	if (rtn) {
-+		scsi_queue_insert(cmd,
- 				(rtn == SCSI_MLQUEUE_DEVICE_BUSY) ?
--					rtn : SCSI_MLQUEUE_HOST_BUSY);
--			SCSI_LOG_MLQUEUE(3,
--			    printk("queuecommand : request rejected\n"));
--		}
--	} else {
--		SCSI_LOG_MLQUEUE(3, printk("command() :  routine at %p\n",
--					host->hostt->command));
--
--		spin_lock_irqsave(host->host_lock, flags);
--		cmd->result = host->hostt->command(cmd);
--		scsi_done(cmd);
--		spin_unlock_irqrestore(host->host_lock, flags);
--		rtn = 0;
-+				 rtn : SCSI_MLQUEUE_HOST_BUSY);
-+		SCSI_LOG_MLQUEUE(3,
-+		    printk("queuecommand : request rejected\n"));
- 	}
+ static int sd_probe(struct device *);
+@@ -96,7 +96,6 @@
+ static void sd_shutdown(struct device *dev);
+ static void sd_rescan(struct device *);
+ static int sd_init_command(struct scsi_cmnd *);
+-static int sd_synchronize_cache(struct scsi_disk *, int);
+ static void sd_read_capacity(struct scsi_disk *sdkp, char *diskname,
+ 		 struct scsi_request *SRpnt, unsigned char *buffer);
  
-  out:
-diff -Nru a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
---- a/drivers/scsi/scsi_error.c	Sun Jun  8 20:31:57 2003
-+++ b/drivers/scsi/scsi_error.c	Sun Jun  8 20:31:57 2003
-@@ -435,6 +435,7 @@
- static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, int timeout)
- {
- 	struct Scsi_Host *host = scmd->device->host;
-+	DECLARE_MUTEX_LOCKED(sem);
- 	unsigned long flags;
- 	int rtn = SUCCESS;
- 
-@@ -448,71 +449,53 @@
- 		scmd->cmnd[1] = (scmd->cmnd[1] & 0x1f) |
- 			(scmd->device->lun << 5 & 0xe0);
- 
--	if (host->can_queue) {
--		DECLARE_MUTEX_LOCKED(sem);
-+	scsi_add_timer(scmd, timeout, scsi_eh_times_out);
- 
--		scsi_add_timer(scmd, timeout, scsi_eh_times_out);
-+	/*
-+	 * set up the semaphore so we wait for the command to complete.
-+	 */
-+	scmd->device->host->eh_action = &sem;
-+	scmd->request->rq_status = RQ_SCSI_BUSY;
- 
--		/*
--		 * set up the semaphore so we wait for the command to complete.
--		 */
--		scmd->device->host->eh_action = &sem;
--		scmd->request->rq_status = RQ_SCSI_BUSY;
-+	spin_lock_irqsave(scmd->device->host->host_lock, flags);
-+	host->hostt->queuecommand(scmd, scsi_eh_done);
-+	spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
- 
--		spin_lock_irqsave(scmd->device->host->host_lock, flags);
--		host->hostt->queuecommand(scmd, scsi_eh_done);
--		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
-+	down(&sem);
- 
--		down(&sem);
-+	scmd->device->host->eh_action = NULL;
- 
--		scmd->device->host->eh_action = NULL;
-+	/*
-+	 * see if timeout.  if so, tell the host to forget about it.
-+	 * in other words, we don't want a callback any more.
-+	 */
-+	if (scsi_eh_eflags_chk(scmd, SCSI_EH_REC_TIMEOUT)) {
-+		scsi_eh_eflags_clr(scmd,  SCSI_EH_REC_TIMEOUT);
-+		scmd->owner = SCSI_OWNER_LOWLEVEL;
- 
- 		/*
--		 * see if timeout.  if so, tell the host to forget about it.
--		 * in other words, we don't want a callback any more.
-+		 * as far as the low level driver is
-+		 * concerned, this command is still active, so
-+		 * we must give the low level driver a chance
-+		 * to abort it. (db) 
-+		 *
-+		 * FIXME(eric) - we are not tracking whether we could
-+		 * abort a timed out command or not.  not sure how
-+		 * we should treat them differently anyways.
- 		 */
--		if (scsi_eh_eflags_chk(scmd, SCSI_EH_REC_TIMEOUT)) {
--			scsi_eh_eflags_clr(scmd,  SCSI_EH_REC_TIMEOUT);
--                        scmd->owner = SCSI_OWNER_LOWLEVEL;
--
--			/*
--			 * as far as the low level driver is
--			 * concerned, this command is still active, so
--			 * we must give the low level driver a chance
--			 * to abort it. (db) 
--			 *
--			 * FIXME(eric) - we are not tracking whether we could
--			 * abort a timed out command or not.  not sure how
--			 * we should treat them differently anyways.
--			 */
--			spin_lock_irqsave(scmd->device->host->host_lock, flags);
--			if (scmd->device->host->hostt->eh_abort_handler)
--				scmd->device->host->hostt->eh_abort_handler(scmd);
--			spin_unlock_irqrestore(scmd->device->host->host_lock,
--					       flags);
-+		spin_lock_irqsave(scmd->device->host->host_lock, flags);
-+		if (scmd->device->host->hostt->eh_abort_handler)
-+			scmd->device->host->hostt->eh_abort_handler(scmd);
-+		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
- 			
--			scmd->request->rq_status = RQ_SCSI_DONE;
--			scmd->owner = SCSI_OWNER_ERROR_HANDLER;
-+		scmd->request->rq_status = RQ_SCSI_DONE;
-+		scmd->owner = SCSI_OWNER_ERROR_HANDLER;
- 			
--			rtn = FAILED;
--		}
--		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: scmd: %p, rtn:%x\n",
--						  __FUNCTION__, scmd, rtn));
--	} else {
--		int temp;
--
--		/*
--		 * we damn well had better never use this code.  there is no
--		 * timeout protection here, since we would end up waiting in
--		 * the actual low level driver, we don't know how to wake it up.
--		 */
--		spin_lock_irqsave(host->host_lock, flags);
--		temp = host->hostt->command(scmd);
--		spin_unlock_irqrestore(host->host_lock, flags);
--
--		scmd->result = temp;
--		/* fall through to code below to examine status. */
-+		rtn = FAILED;
- 	}
-+
-+	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: scmd: %p, rtn:%x\n",
-+					  __FUNCTION__, scmd, rtn));
- 
- 	/*
- 	 * now examine the actual status codes to see whether the command
-diff -Nru a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
---- a/drivers/usb/storage/scsiglue.c	Sun Jun  8 20:31:57 2003
-+++ b/drivers/usb/storage/scsiglue.c	Sun Jun  8 20:31:57 2003
-@@ -365,24 +365,15 @@
- 	.name =				"usb-storage",
- 	.proc_name =			"usb-storage",
- 	.proc_info =			usb_storage_proc_info,
--	.proc_dir =			NULL,
- 	.info =				usb_storage_info,
--	.ioctl =			NULL,
--
--	/* old-style detect and release */
--	.detect =			NULL,
--	.release =			NULL,
- 
- 	/* command interface -- queued only */
--	.command =			NULL,
- 	.queuecommand =			usb_storage_queuecommand,
- 
- 	/* error and abort handlers */
- 	.eh_abort_handler =		usb_storage_command_abort,
- 	.eh_device_reset_handler =	usb_storage_device_reset,
- 	.eh_bus_reset_handler =		usb_storage_bus_reset,
--	.eh_host_reset_handler =	NULL,
--	.eh_strategy_handler =		NULL,
- 
- 	/* queue commands only, only one command per LUN */
- 	.can_queue =			1,
-@@ -391,21 +382,9 @@
- 	/* unknown initiator id */
- 	.this_id =			-1,
- 
--	/* no limit on commands */
--	.max_sectors =			0,
--	
--	/* pre- and post- device scan functions */
--	.slave_alloc =			NULL,
--	.slave_configure =		NULL,
--	.slave_destroy =		NULL,
--
- 	/* lots of sg segments can be handled */
- 	.sg_tablesize =			SG_ALL,
- 
--	/* use 32-bit address space for DMA */
--	.unchecked_isa_dma =		FALSE,
--	.highmem_io =			FALSE,
--
- 	/* merge commands... this seems to help performance, but
- 	 * periodically someone should test to see which setting is more
- 	 * optimal.
-@@ -414,9 +393,6 @@
- 
- 	/* emulated HBA */
- 	.emulated =			TRUE,
--
--	/* sorry, no BIOS to help us */
--	.bios_param =			NULL,
- 
- 	/* module management */
- 	.module =			THIS_MODULE
-diff -Nru a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
---- a/include/scsi/scsi_host.h	Sun Jun  8 20:31:57 2003
-+++ b/include/scsi/scsi_host.h	Sun Jun  8 20:31:57 2003
-@@ -95,24 +95,10 @@
- 	 * I/O pressure in the system if there are no other outstanding
- 	 * commands.
+@@ -570,7 +569,7 @@
+ 	 * UNIT ATTENTION, or with same cartridge - GOOD STATUS.
  	 *
--	 * STATUS: REQUIRED	(for exceptions see below)
-+	 * STATUS: REQUIRED
+ 	 * Drives that auto spin down. eg iomega jaz 1G, will be started
+-	 * by sd_spinup_disk() from sd_init_onedisk(), which happens whenever
++	 * by sd_spinup_disk() from sd_revalidate_disk(), which happens whenever
+ 	 * sd_revalidate() is called.
  	 */
- 	int (* queuecommand)(struct scsi_cmnd *,
- 			     void (*done)(struct scsi_cmnd *));
+ 	retval = -ENODEV;
+@@ -636,15 +635,6 @@
+ 	kfree(buffer);
+ }
+ 
+-static int sd_revalidate_disk(struct gendisk *disk)
+-{
+-	struct scsi_disk *sdkp = scsi_disk(disk);
 -
--	/*
--	 * This is used instead of queuecommand if can_queue == 0;
--	 *
--	 * The return value has the following meaning:
--	 * Byte What:
--	 * 0    SCSI status code
--	 * 1    SCSI 1 byte message
--	 * 2    host error return.
--	 * 3    mid level error return
--	 *
--	 * Status: OBSOLETE
--	 */
--	int (* command)(struct scsi_cmnd *);
+-	sd_init_onedisk(sdkp, disk);
+-	set_capacity(disk, sdkp->capacity);
+-	return 0;
+-}
+-
+ static struct block_device_operations sd_fops = {
+ 	.owner			= THIS_MODULE,
+ 	.open			= sd_open,
+@@ -776,7 +766,7 @@
+ }
+ 
+ /*
+- * spinup disk - called only in sd_init_onedisk()
++ * spinup disk - called only in sd_revalidate_disk()
+  */
+ static void
+ sd_spinup_disk(struct scsi_disk *sdkp, char *diskname,
+@@ -896,7 +886,7 @@
+ }
+ 
+ /*
+- * read disk capacity - called only in sd_init_onedisk()
++ * read disk capacity
+  */
+ static void
+ sd_read_capacity(struct scsi_disk *sdkp, char *diskname,
+@@ -1109,7 +1099,7 @@
+ }
+ 
+ /*
+- * read write protect setting, if possible - called only in sd_init_onedisk()
++ * read write protect setting, if possible - called only in sd_revalidate_disk()
+  * called with buffer of length 512
+  */
+ static void
+@@ -1151,7 +1141,7 @@
+ }
+ 
+ /*
+- * sd_read_cache_type - called only from sd_init_onedisk()
++ * sd_read_cache_type - called only from sd_revalidate_disk()
+  * called with buffer of length 512
+  */
+ static void
+@@ -1210,71 +1200,72 @@
+ }
+ 
+ /**
+- *	sd_init_onedisk - called the first time a new disk is seen,
++ *	sd_revalidate_disk - called the first time a new disk is seen,
+  *	performs disk spin up, read_capacity, etc.
+- *	@sdkp: pointer to associated struct scsi_disk object
+- *	@dsk_nr: disk number within this driver (e.g. 0->/dev/sda,
+- *	1->/dev/sdb, etc)
+- *
+- *	Note: this function is local to this driver.
++ *	@disk: struct gendisk we care about
+  **/
+-static void
+-sd_init_onedisk(struct scsi_disk * sdkp, struct gendisk *disk)
++static int sd_revalidate_disk(struct gendisk *disk)
+ {
++	struct scsi_disk *sdkp = scsi_disk(disk);
++	struct scsi_device *sdp = sdkp->device;
++	struct scsi_request *sreq;
+ 	unsigned char *buffer;
+-	struct scsi_device *sdp;
+-	struct scsi_request *SRpnt;
+ 
+-	SCSI_LOG_HLQUEUE(3, printk("sd_init_onedisk: disk=%s\n", disk->disk_name));
++	SCSI_LOG_HLQUEUE(3, printk("sd_revalidate_disk: disk=%s\n", disk->disk_name));
  
  	/*
- 	 * This is an error handling strategy routine.  You don't need to
-
+ 	 * If the device is offline, don't try and read capacity or any
+ 	 * of the other niceties.
+ 	 */
+-	sdp = sdkp->device;
+-	if (sdp->online == FALSE)
+-		return;
++	if (!sdp->online)
++		goto out;
+ 
+-	SRpnt = scsi_allocate_request(sdp);
+-	if (!SRpnt) {
+-		printk(KERN_WARNING "(sd_init_onedisk:) Request allocation "
++	sreq = scsi_allocate_request(sdp);
++	if (!sreq) {
++		printk(KERN_WARNING "(sd_revalidate_disk:) Request allocation "
+ 		       "failure.\n");
+-		return;
++		goto out;
+ 	}
+ 
+-	buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
++	buffer = kmalloc(512, GFP_KERNEL | __GFP_DMA);
+ 	if (!buffer) {
+-		printk(KERN_WARNING "(sd_init_onedisk:) Memory allocation "
++		printk(KERN_WARNING "(sd_revalidate_disk:) Memory allocation "
+ 		       "failure.\n");
+-		goto leave;
++		goto out_release_request;
+ 	}
+ 
+ 	/* defaults, until the device tells us otherwise */
++	sdp->sector_size = 512;
+ 	sdkp->capacity = 0;
+-	sdkp->device->sector_size = 512;
+ 	sdkp->media_present = 1;
+ 	sdkp->write_prot = 0;
+ 	sdkp->WCE = 0;
+ 	sdkp->RCD = 0;
+ 
+-	sd_spinup_disk(sdkp, disk->disk_name, SRpnt, buffer);
++	sd_spinup_disk(sdkp, disk->disk_name, sreq, buffer);
+ 
+-	if (sdkp->media_present)
+-		sd_read_capacity(sdkp, disk->disk_name, SRpnt, buffer);
+-	
+-	if (sdp->removable && sdkp->media_present)
+-		sd_read_write_protect_flag(sdkp, disk->disk_name, SRpnt, buffer);
+-	/* without media there is no reason to ask;
+-	   moreover, some devices react badly if we do */
+-	if (sdkp->media_present)
+-		sd_read_cache_type(sdkp, disk->disk_name, SRpnt, buffer);
++	/*
++	 * Without media there is no reason to ask; moreover, some devices
++	 * react badly if we do.
++	 */
++	if (sdkp->media_present) {
++		sd_read_capacity(sdkp, disk->disk_name, sreq, buffer);
++		if (sdp->removable)
++			sd_read_write_protect_flag(sdkp, disk->disk_name,
++					sreq, buffer);
++		sd_read_cache_type(sdkp, disk->disk_name, sreq, buffer);
++	}
+ 		
+-	SRpnt->sr_device->use_10_for_rw = 1;
+-	SRpnt->sr_device->use_10_for_ms = 0;
+- leave:
+-	scsi_release_request(SRpnt);
++	sdp->use_10_for_rw = 1;
++	sdp->use_10_for_ms = 0;
+ 
++	set_capacity(disk, sdkp->capacity);
+ 	kfree(buffer);
++
++ out_release_request: 
++	scsi_release_request(sreq);
++ out:
++	return 0;
+ }
+ 
+ /**
+@@ -1349,7 +1340,7 @@
+ 
+ 	strcpy(gd->devfs_name, sdp->devfs_name);
+ 
+-	sd_init_onedisk(sdkp, gd);
++	sd_revalidate_disk(gd);
+ 
+ 	gd->driverfs_dev = &sdp->sdev_driverfs_dev;
+ 	gd->flags = GENHD_FL_DRIVERFS;
+@@ -1358,7 +1349,6 @@
+ 	gd->private_data = &sdkp->driver;
+ 	gd->queue = sdkp->device->request_queue;
+ 
+-	set_capacity(gd, sdkp->capacity);
+ 	dev_set_drvdata(dev, sdkp);
+ 	add_disk(gd);
+ 
+@@ -1405,16 +1395,57 @@
+ 	return 0;
+ }
+ 
++/*
++ * Send a SYNCHRONIZE CACHE instruction down to the device through
++ * the normal SCSI command structure.  Wait for the command to
++ * complete.
++ */
+ static void sd_shutdown(struct device *dev)
+ {
++	struct scsi_device *sdp = to_scsi_device(dev);
+ 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
++	struct scsi_request *sreq;
++	int retries, res;
++
++	if (!sdp->online || !sdkp->WCE)
++		return;
++
++	printk(KERN_NOTICE "Synchronizing SCSI cache for disk %s: ",
++			sdkp->disk->disk_name);
++
++	sreq = scsi_allocate_request(sdp);
++	if (!sreq) {
++		printk("FAILED\n  No memory for request\n");
++		return;
++	}
+ 
+-	if (sdkp->WCE) {
+-		printk(KERN_NOTICE "Synchronizing SCSI cache: ");
+-		sd_synchronize_cache(sdkp, 1);
+-		printk("\n");
++	sreq->sr_data_direction = SCSI_DATA_NONE;
++	for (retries = 3; retries > 0; --retries) {
++		unsigned char cmd[10] = { 0 };
++
++		cmd[0] = SYNCHRONIZE_CACHE;
++		/*
++		 * Leave the rest of the command zero to indicate
++		 * flush everything.
++		 */
++		scsi_wait_req(sreq, cmd, NULL, 0, SD_TIMEOUT, SD_MAX_RETRIES);
++		if (sreq->sr_result == 0)
++			break;
+ 	}
+-}
++
++	res = sreq->sr_result;
++	if (res) {
++		printk(KERN_WARNING "FAILED\n  status = %x, message = %02x, "
++				    "host = %d, driver = %02x\n  ",
++				    status_byte(res), msg_byte(res),
++				    host_byte(res), driver_byte(res));
++			if (driver_byte(res) & DRIVER_SENSE)
++				print_req_sense("sd", sreq);
++	}
++	
++	scsi_release_request(sreq);
++	printk("\n");
++}	
+ 
+ /**
+  *	init_sd - entry point for this driver (both when built in or when
+@@ -1452,60 +1483,6 @@
+ 	scsi_unregister_driver(&sd_template.gendrv);
+ 	for (i = 0; i < SD_MAJORS; i++)
+ 		unregister_blkdev(sd_major(i), "sd");
+-}
+-
+-/* send a SYNCHRONIZE CACHE instruction down to the device through the
+- * normal SCSI command structure.  Wait for the command to complete (must
+- * have user context) */
+-static int sd_synchronize_cache(struct scsi_disk *sdkp, int verbose)
+-{
+-	struct scsi_request *SRpnt;
+-	struct scsi_device *SDpnt = sdkp->device;
+-	int retries, the_result;
+-
+-	if (!SDpnt->online)
+-		return 0;
+-
+-	if (verbose)
+-		printk("%s ", sdkp->disk->disk_name);
+-
+-	SRpnt = scsi_allocate_request(SDpnt);
+-	if(!SRpnt) {
+-		if(verbose)
+-			printk("FAILED\n  No memory for request\n");
+-		return 0;
+-	}
+-
+-	SRpnt->sr_data_direction = SCSI_DATA_NONE;
+-
+-	for(retries = 3; retries > 0; --retries) {
+-		unsigned char cmd[10] = { 0 };
+-
+-		cmd[0] = SYNCHRONIZE_CACHE;
+-		/* leave the rest of the command zero to indicate 
+-		 * flush everything */
+-		scsi_wait_req(SRpnt, (void *)cmd, NULL, 0,
+-			      SD_TIMEOUT, SD_MAX_RETRIES);
+-
+-		if(SRpnt->sr_result == 0)
+-			break;
+-	}
+-
+-	the_result = SRpnt->sr_result;
+-	if(verbose) {
+-		if(the_result != 0) {
+-			printk("FAILED\n  status = %x, message = %02x, host = %d, driver = %02x\n  ",
+-			       status_byte(the_result),
+-			       msg_byte(the_result),
+-			       host_byte(the_result),
+-			       driver_byte(the_result));
+-			if (driver_byte(the_result) & DRIVER_SENSE)
+-				print_req_sense("sd", SRpnt);
+-
+-		}
+-	}
+-	scsi_release_request(SRpnt);
+-	return (the_result == 0);
+ }
+ 
+ MODULE_LICENSE("GPL");
