@@ -1,116 +1,189 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] scsi_debug [was: scsi_debug issues]
-Date: Tue, 19 Oct 2004 08:05:53 +1000
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: [PATCH] tmscsim: improve tagging
+Date: Tue, 19 Oct 2004 00:55:51 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <41743E41.8020707@torque.net>
-References: <20041015190154.GA3073@us.ibm.com> <4170C505.3000805@torque.net> <1097932370.1962.4.camel@mulgrave> <4173C8DB.8030009@torque.net> <20041018183747.GA3530@us.ibm.com>
-Reply-To: dougg@torque.net
+Message-ID: <Pine.LNX.4.60.0410190011090.6761@poirot.grange>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050303070206030003080301"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub1.uq.edu.au ([130.102.148.128]:7431 "EHLO
-	mailhub1.uq.edu.au") by vger.kernel.org with ESMTP id S267535AbUJRWHE
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Oct 2004 18:07:04 -0400
-In-Reply-To: <20041018183747.GA3530@us.ibm.com>
+Received: from mail.gmx.de ([213.165.64.20]:59613 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S267759AbUJRW4x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Oct 2004 18:56:53 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Nishanth Aravamudan <nacc@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, hch@infradead.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------050303070206030003080301
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Reviews as well as suggestions for (stress-)testing of task-queueing paths 
+welcome. Until now I never saw tags higher than 0 on tmscsim:-) However, 
+it could have been due to debugging.
 
-Nishanth Aravamudan wrote:
-> On Mon, Oct 18, 2004 at 11:44:59PM +1000, Douglas Gilbert wrote:
-> 
->>James Bottomley wrote:
->>
->>>On Sat, 2004-10-16 at 01:51, Douglas Gilbert wrote:
->>>
->>>
->>>>So this problem seems related to highmem.
-> 
-> 
-> <snip>
-> 
->>The above required a fair few changes to scsi_debug.
->>Attached is a patch that rolls "kmap" changes with
->>patches I have sent recently for scsi_debug.
->>Attachment is gzipped (due to size) and applies against
->>lk 2.6.8.1 -> lk 2.6.9-rc4 .
->>
->>Nishanth, could you test this with highmem?
-> 
-> 
-> Doug,
-> 
-> I ran 2.6.9-rc4 with your patch applied and had several dump_stack()s
-> occur (complaining about sleeping in an invalid context) and a final
-> panic during mkfs :) I think something is still wrong... ;) Output is
-> below and attached.
+Use scsi_track_queue_full(), don't lie about driver's queueing
+abilities.
 
-Ok, it looks like kmap_atomic() is needed.
-Could you try this additional patch.
+Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 
-Doug Gilbert
-
---------------050303070206030003080301
-Content-Type: text/x-patch;
- name="sdebug269rc4_174b.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sdebug269rc4_174b.diff"
-
---- linux/drivers/scsi/scsi_debug.c	2004-10-19 07:59:14.966673272 +1000
-+++ linux/drivers/scsi/scsi_debug.c174b	2004-10-19 07:58:46.044070176 +1000
-@@ -56,7 +56,7 @@
- #include "scsi_debug.h"
+diff -u a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
+--- a/drivers/scsi/tmscsim.c	Mon Oct 18 23:28:48 2004
++++ b/drivers/scsi/tmscsim.c	Mon Oct 18 22:39:54 2004
+@@ -527,21 +527,23 @@
+     DC390_write8 (ScsiCmd, CLEAR_FIFO_CMD);		/* Flush FIFO */
+     DEBUG1(printk (KERN_INFO "DC390: Start SCSI command: %02x (Sync:%02x)\n",\
+             scmd->cmnd[0], pDCB->SyncMode));
+-    disc_allowed = pDCB->DevMode & EN_DISCONNECT_;
+-    try_sync_nego = 0;
++
+     /* Don't disconnect on AUTO_REQSENSE, cause it might be an
+      * Contingent Allegiance Condition (6.6), where no tags should be used.
+      * All other have to be allowed to disconnect to prevent Incorrect 
+      * Initiator Connection (6.8.2/6.5.2) */
+     /* Changed KG, 99/06/06 */
+-    if( /*(((pSRB->pcmd->cmnd[0] == INQUIRY) || (pSRB->pcmd->cmnd[0] == REQUEST_SENSE) ||
+-	 * (pSRB->pcmd->cmnd[0] == TEST_UNIT_READY)) && pACB->scan_devices)
+-		||*/ (pSRB->SRBFlag & AUTO_REQSENSE) ) 
+-      disc_allowed = 0;
+-    if ( (pDCB->SyncMode & SYNC_ENABLE) && (pDCB->TargetLUN == 0) && sdev->sdtr &&
+-	( ( ( (scmd->cmnd[0] == REQUEST_SENSE) || (pSRB->SRBFlag & AUTO_REQSENSE) )
+-	  && !(pDCB->SyncMode & SYNC_NEGO_DONE) ) || (scmd->cmnd[0] == INQUIRY) ) )
++    if (! (pSRB->SRBFlag & AUTO_REQSENSE))
++	disc_allowed = pDCB->DevMode & EN_DISCONNECT_;
++    else
++	disc_allowed = 0;
++
++    if ((pDCB->SyncMode & SYNC_ENABLE) && pDCB->TargetLUN == 0 && sdev->sdtr &&
++	(((scmd->cmnd[0] == REQUEST_SENSE || (pSRB->SRBFlag & AUTO_REQSENSE)) &&
++	  !(pDCB->SyncMode & SYNC_NEGO_DONE)) || scmd->cmnd[0] == INQUIRY))
+       try_sync_nego = 1;
++    else
++      try_sync_nego = 0;
  
- #define SCSI_DEBUG_VERSION "1.74"
--static const char * scsi_debug_version_date = "20041018";
-+static const char * scsi_debug_version_date = "20041019";
+     pSRB->MsgCnt = 0;
+     cmd = SEL_W_ATN;
+@@ -549,7 +551,7 @@
+     /* Change 99/05/31: Don't use tags when not disconnecting (BUSY) */
+     if ((pDCB->SyncMode & EN_TAG_QUEUEING) && disc_allowed && scsi_populate_tag_msg(scmd, tag)) {
+ 	DC390_write8(ScsiFifo, tag[0]);
+-	pDCB->TagMask |= (1 << tag[1]);
++	pDCB->TagMask |= 1 << tag[1];
+ 	pSRB->TagNumber = tag[1];
+ 	DC390_write8(ScsiFifo, tag[1]);
+ 	DEBUG1(printk(KERN_INFO "DC390: Select w/DisCn for Cmd %li (SRB %p), block tag %02x\n", scmd->pid, pSRB, tag[1]));
+@@ -557,7 +559,7 @@
+     } else {
+ 	/* No TagQ */
+ //no_tag:
+-	DEBUG1(printk(KERN_INFO "DC390: Select w%s/DisCn for Cmd %li (SRB %p), No TagQ\n", (disc_allowed ? "" : "o"), scmd->pid, pSRB));
++	DEBUG1(printk(KERN_INFO "DC390: Select w%s/DisCn for Cmd %li (SRB %p), No TagQ\n", disc_allowed ? "" : "o", scmd->pid, pSRB));
+     }
  
- /* Additional Sense Code (ASC) used */
- #define NO_ADDED_SENSE 0x0
-@@ -505,7 +505,8 @@
- 	active = 1;
- 	for (k = 0, req_len = 0, act_len = 0; k < scp->use_sg; ++k, ++sgpnt) {
- 		if (active) {
--			kaddr = (unsigned char *)kmap(sgpnt->page);
-+			kaddr = (unsigned char *)
-+				kmap_atomic(sgpnt->page, KM_USER0);
- 			if (NULL == kaddr)
- 				return (DID_ERROR << 16);
- 			kaddr = (unsigned char *)kaddr + sgpnt->offset;
-@@ -515,7 +516,7 @@
- 				len = arr_len - req_len;
- 			}
- 			memcpy(kaddr, arr + req_len, len);
--			kunmap(sgpnt->page);
-+			kunmap_atomic(sgpnt->page, KM_USER0);
- 			act_len += len;
- 		}
- 		req_len += sgpnt->length;
-@@ -547,7 +548,7 @@
+     pSRB->SRBState = SRB_START_;
+@@ -1462,14 +1464,13 @@
+     }
+     else
+     {
+-	u8 bval = 0;
+ 	DC390_write8 (ScsiFifo, REQUEST_SENSE);
+ 	pDCB = pACB->pActiveDCB;
+ 	DC390_write8 (ScsiFifo, pDCB->TargetLUN << 5);
+-	DC390_write8 (ScsiFifo, bval);
+-	DC390_write8 (ScsiFifo, bval);
++	DC390_write8 (ScsiFifo, 0);
++	DC390_write8 (ScsiFifo, 0);
+ 	DC390_write8 (ScsiFifo, sizeof(pSRB->pcmd->sense_buffer));
+-	DC390_write8 (ScsiFifo, bval);
++	DC390_write8 (ScsiFifo, 0);
+ 	DEBUG0(printk(KERN_DEBUG "DC390: AutoReqSense (CmndPhase)!\n"));
+     }
+     pSRB->SRBState = SRB_COMMAND;
+@@ -1825,13 +1826,7 @@
  	}
- 	sgpnt = (struct scatterlist *)scp->request_buffer;
- 	for (k = 0, req_len = 0, fin = 0; k < scp->use_sg; ++k, ++sgpnt) {
--		kaddr = (unsigned char *)kmap(sgpnt->page);
-+		kaddr = (unsigned char *)kmap_atomic(sgpnt->page, KM_USER0);
- 		if (NULL == kaddr)
- 			return -1;
- 		kaddr = (unsigned char *)kaddr + sgpnt->offset;
-@@ -557,7 +558,7 @@
- 			fin = 1;
- 		}
- 		memcpy(arr + req_len, kaddr, len);
--		kunmap(sgpnt->page);
-+		kunmap_atomic(sgpnt->page, KM_USER0);
- 		if (fin)
- 			return req_len + len;
- 		req_len += sgpnt->length;
+ 	else if( status_byte(status) == QUEUE_FULL )
+ 	{
+-	    if (pDCB->GoingSRBCnt > 2) {
+-		pDCB->MaxCommand = pDCB->GoingSRBCnt - 1;
+-		scsi_adjust_queue_depth(pcmd->device, MSG_ORDERED_TAG, pDCB->MaxCommand);
+-	    } else {
+-	       	pDCB->MaxCommand = 1;
+-		scsi_deactivate_tcq(pcmd->device, pcmd->device->host->can_queue);
+-	    }
++	    scsi_track_queue_full(pcmd->device, pDCB->GoingSRBCnt - 1);
+ 	    pcmd->use_sg = pSRB->SavedSGCount;
+ 	    DEBUG0 (printk ("DC390: RETRY pid %li (%02x), target %02i-%02i\n", pcmd->pid, pcmd->cmnd[0], pcmd->device->id, pcmd->device->lun));
+ 	    pSRB->TotalXferredLen = 0;
+@@ -1979,7 +1974,7 @@
+ 	struct dc390_dcb *dcb = sdev->hostdata;
+ 	struct dc390_srb *srb;
+ 
+-	if (dcb->MaxCommand <= dcb->GoingSRBCnt)
++	if (sdev->queue_depth <= dcb->GoingSRBCnt)
+ 		goto device_busy;
+ 	if (acb->pActiveDCB)
+ 		goto host_busy;
+@@ -2182,7 +2177,6 @@
+ 	pDCB->pDCBACB = pACB;
+ 	pDCB->TargetID = id;
+ 	pDCB->TargetLUN = lun;
+-	pDCB->MaxCommand = 1;
+ 
+ 	/*
+ 	 * Some values are for all LUNs: Copy them 
+@@ -2275,8 +2269,7 @@
+ 	acb->scan_devices = 0;
+ 	if (sdev->tagged_supported && (dcb->DevMode & TAG_QUEUEING_)) {
+ 		dcb->SyncMode |= EN_TAG_QUEUEING;
+-		dcb->MaxCommand = dcb->pDCBACB->TagMaxNum;
+-		scsi_activate_tcq(sdev, dcb->MaxCommand);
++		scsi_activate_tcq(sdev, acb->TagMaxNum);
+ 	}
+ 
+ 	return 0;
+@@ -2292,10 +2285,10 @@
+ 	.queuecommand		= DC390_queuecommand,
+ 	.eh_abort_handler	= DC390_abort,
+ 	.eh_bus_reset_handler	= DC390_bus_reset,
+-	.can_queue		= 42,
++	.can_queue		= 1,
+ 	.this_id		= 7,
+ 	.sg_tablesize		= SG_ALL,
+-	.cmd_per_lun		= 16,
++	.cmd_per_lun		= 1,
+ 	.use_clustering		= DISABLE_CLUSTERING,
+ };
+ 
+@@ -2588,8 +2581,6 @@
+ 
+ 	io_port = pci_resource_start(pdev, 0);
+ 
+-	shost->can_queue = MAX_CMD_QUEUE;
+-	shost->cmd_per_lun = MAX_CMD_PER_LUN;
+ 	shost->this_id = dc390_eepromBuf[dc390_adapterCnt][EE_ADAPT_SCSI_ID];
+ 	shost->io_port = io_port;
+ 	shost->n_io_port = 0x80;
+diff -u a/drivers/scsi/tmscsim.h b/drivers/scsi/tmscsim.h
+--- a/drivers/scsi/tmscsim.h	Sat Oct 16 14:06:26 2004
++++ b/drivers/scsi/tmscsim.h	Mon Oct 18 23:01:09 2004
+@@ -15,10 +15,8 @@
+ 
+ #define MAX_ADAPTER_NUM 	4
+ #define MAX_SG_LIST_BUF 	16	/* Not used */
+-#define MAX_CMD_PER_LUN 	32
+-#define MAX_CMD_QUEUE		MAX_CMD_PER_LUN+MAX_CMD_PER_LUN/2+1	
+ #define MAX_SCSI_ID		8
+-#define MAX_SRB_CNT		MAX_CMD_QUEUE+1	/* Max number of started commands */
++#define MAX_SRB_CNT		50	/* Max number of started commands */
+ 
+ #define SEL_TIMEOUT		153	/* 250 ms selection timeout (@ 40 MHz) */
+ 
+@@ -90,8 +88,6 @@
+ struct dc390_srb	*pGoingLast;
+ struct dc390_srb	*pActiveSRB;
+ u8		GoingSRBCnt;
+-
+-u8		MaxCommand;
+ 
+ u32		TagMask;
+ 
 
---------------050303070206030003080301--
+---
+Guennadi Liakhovetski
+
