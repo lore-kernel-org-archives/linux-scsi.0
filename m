@@ -1,41 +1,41 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] QStor SATA/RAID driver for 2.6.9-rc3
-Date: Tue, 12 Oct 2004 13:05:26 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20041012170526.GB9274@havoc.gtf.org>
-References: <4165A85D.7080704@rtr.ca> <4165AB1B.8000204@pobox.com> <4165ACF8.8060208@rtr.ca> <20041007221537.A17712@infradead.org> <1097241583.2412.15.camel@mulgrave> <4166AF2F.6070904@rtr.ca> <1097249266.1678.40.camel@mulgrave> <4166B37D.8030701@rtr.ca> <1097251299.1928.56.camel@mulgrave> <416C0DC5.2080206@rtr.ca>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Question about Request Sense case in scsi_lib.c
+Date: 12 Oct 2004 12:13:13 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1097601199.2044.91.camel@mulgrave>
+References: <20041012000058.GA26569@osdl.org>
+	<eada2a07041012092973d35415@mail.gmail.com>
+	<20041012165919.GA27526@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S266366AbUJLRJe@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <416C0DC5.2080206@rtr.ca>
-To: Mark Lord <lkml@rtr.ca>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Mark Lord <lsml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:45968 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S266349AbUJLRNa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Oct 2004 13:13:30 -0400
+In-Reply-To: <20041012165919.GA27526@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Dave Olien <dmo@osdl.org>
+Cc: Tim Pepper <tpepper@gmail.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, Oct 12, 2004 at 01:00:53PM -0400, Mark Lord wrote:
-> James Bottomley wrote:
-> >On Fri, 2004-10-08 at 10:34, Mark Lord wrote:
-> >
-> >>If those locks are not needed, the scsi.c maintainer really should
-> >>nuke'em.
-> >
-> >I think you can safely assume he has more important things to do.
-> 
-> I was actually working on the assumption that the lock might be
-> there because it is/was necessary for something, like perhaps protecting
-> access to the add_timer()/del_timer() calls associated with the scmd?
-> 
-> If not, no issue -- it can be removed from the driver.
+On Tue, 2004-10-12 at 11:59, Dave Olien wrote:
+> Thanks for the feedback.  Yes, Automatic volume transfer is on, and I
+> was expecting there'd be poor performance as a result.  I just
+> didn't expect to get IO errors.  The odd thing is that the "bus reset"
+> leads to the SCSI request being requeued.  But every once in a while,
+> the requeue fails with errors and the request is failed.  I'll look at
+> these cases a little more closely, try to understand why the requeues fail.
+
+Hang on a minute ... if you're ping pong'ing the drives using AVT, those
+transfers take time to achieve.  The device is probably returning UNIT
+ATTENTION, NOT_READY while the transfer is in progress.  This is
+probably the source of the requeue.
+
+As for the error, I still don't understand that, but it looks like
+something went wrong in setting up or tearing down the dma mapping, so
+that it was incorrectly described when this happened a second time.
+
+James
 
 
-I'll respectfully disagree with James...  I think the most prudent
-course of action is to follow the example of SCSI common code.
-
-If the SCSI core is doing something wrong, we should fix that _first_,
-not set a precedent of confusing dissociation.
-
-Everyone knows that Linux programmers engineer with their cut-n-paste
-feature.
-
-	Jeff
