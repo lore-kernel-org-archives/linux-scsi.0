@@ -1,22 +1,22 @@
 From: Aristeu Sergio Rozanski Filho <aris@cathedrallabs.org>
-Subject: [patch] qlogic: don't use qinfo as name
-Date: Thu, 23 Oct 2003 23:10:17 -0200
+Subject: [patch] qlogic: force can_queue
+Date: Thu, 23 Oct 2003 23:11:09 -0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031024011017.GC474@cathedrallabs.org>
+Message-ID: <20031024011109.GD474@cathedrallabs.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="qlTNgmc+xy1dBmNv"
+Content-Type: multipart/mixed; boundary="Clx92ZfkiYIKRjnr"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from panda.sul.com.br ([200.219.150.4]:59148 "EHLO panda.sul.com.br")
-	by vger.kernel.org with ESMTP id S261827AbTJXBLT (ORCPT
+Received: from panda.sul.com.br ([200.219.150.4]:61452 "EHLO panda.sul.com.br")
+	by vger.kernel.org with ESMTP id S261890AbTJXBMM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Oct 2003 21:11:19 -0400
+	Thu, 23 Oct 2003 21:12:12 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
 
---qlTNgmc+xy1dBmNv
+--Clx92ZfkiYIKRjnr
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
@@ -24,19 +24,20 @@ Content-Disposition: inline
 aris
 
 
---qlTNgmc+xy1dBmNv
+--Clx92ZfkiYIKRjnr
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="qlogic-dont_use_qinfo.patch"
+Content-Disposition: attachment; filename="qlogic-force_can_queue.patch"
 
---- linux/drivers/scsi/qlogicfas.c.orig	2003-10-17 16:47:54.000000000 -0200
-+++ linux/drivers/scsi/qlogicfas.c	2003-10-17 16:48:30.000000000 -0200
-@@ -665,7 +665,6 @@
- 	sprintf(qinfo,
- 		"Qlogicfas Driver version 0.46, chip %02X at %03X, IRQ %d, TPdma:%d",
- 		qltyp, qbase, qlirq, QL_TURBO_PDMA);
--	host->name = qinfo;
- 
- 	return hreg;
- 
+--- linux/drivers/scsi/qlogicfas.c.orig	2003-10-20 21:12:09.000000000 -0200
++++ linux/drivers/scsi/qlogicfas.c	2003-10-20 21:12:17.000000000 -0200
+@@ -793,7 +793,7 @@
+ 	.eh_device_reset_handler= qlogicfas_device_reset,
+ 	.eh_host_reset_handler	= qlogicfas_host_reset,
+ 	.bios_param		= qlogicfas_biosparam,
+-	.can_queue		= 0,
++	.can_queue		= 1,
+ 	.this_id		= -1,
+ 	.sg_tablesize		= SG_ALL,
+ 	.cmd_per_lun		= 1,
 
---qlTNgmc+xy1dBmNv--
+--Clx92ZfkiYIKRjnr--
