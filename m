@@ -1,107 +1,68 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [OOPS] 2.6.11 - NMI lockup with CFQ scheduler
-Date: Wed, 6 Apr 2005 13:32:55 -0700
-Message-ID: <20050406203254.GA27417@us.ibm.com>
-References: <20050329122226.94666.qmail@web52902.mail.yahoo.com> <20050329122635.GP16636@suse.de> <20050406123147.GD9417@suse.de> <1112791930.6275.69.camel@laptopd505.fenrus.org> <20050406125536.GG9417@suse.de> <4253E673.2000001@gmail.com>
+Date: Wed, 06 Apr 2005 17:09:59 -0400
+Message-ID: <1112821799.5850.19.camel@mulgrave>
+References: <20050329115405.97559.qmail@web52909.mail.yahoo.com>
+	 <20050329120311.GO16636@suse.de> <1112804840.5476.16.camel@mulgrave>
+	 <20050406175838.GC15165@suse.de> <1112811607.5555.15.camel@mulgrave>
+	 <20050406190838.GE15165@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:65181 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S262311AbVDFUd3
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Apr 2005 16:33:29 -0400
-Content-Disposition: inline
-In-Reply-To: <4253E673.2000001@gmail.com>
+Received: from stat16.steeleye.com ([209.192.50.48]:17051 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262320AbVDFVKJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Apr 2005 17:10:09 -0400
+In-Reply-To: <20050406190838.GE15165@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <axboe@suse.de>, Arjan van de Ven <arjan@infradead.org>, Chris Rankin <rankincj@yahoo.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Chris Rankin <rankincj@yahoo.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Tejun Heo [htejun@gmail.com] wrote:
-> Jens Axboe wrote:
-> >On Wed, Apr 06 2005, Arjan van de Ven wrote:
-> >
-> >>>@@ -324,6 +334,7 @@
-> >>>	issue_flush_fn		*issue_flush_fn;
-> >>>	prepare_flush_fn	*prepare_flush_fn;
-> >>>	end_flush_fn		*end_flush_fn;
-> >>>+	release_queue_data_fn	*release_queue_data_fn;
-> >>>
-> >>>	/*
-> >>>	 * Auto-unplugging state
-> >>
-> >>where does this function method actually get called?
-> >
-> >
-> >I missed the hunk in ll_rw_blk.c, rmk pointed the same thing out not 5
-> >minutes ago :-)
-> >
-> >The patch would not work anyways, as scsi_sysfs.c clears queuedata
-> >unconditionally. This is a better work-around, it just makes the queue
-> >hold a reference to the device as well only killing it when the queue is
-> >torn down.
-> >
-> >Still not super happy with it, but I don't see how to solve the circular
-> >dependency problem otherwise.
-> >
+On Wed, 2005-04-06 at 21:08 +0200, Jens Axboe wrote:
+> > I think the correct model for all of this is that the block driver
+> > shouldn't care (or be tied to) the scsi one.  Thus, as long as SCSI can
+> > reject requests from a queue whose device has been released (without
+> > checking the device) then everything is fine as long as we sort out the
+> > lock lifetime problem.
 > 
->  Hello, Jens.
-> 
->  I've been thinking about it for a while.  The problem is that we're 
-> reference counting two different objects to track lifetime of one 
-> entity.  This happens in both SCSI upper and mid layers.  In the upper 
-> layer, genhd and scsi_disk (or scsi_cd, ...) are ref'ed separately while 
-> they share their destiny together (not really different entity) and in 
-> the middle layer scsi_device and request_queue does the same thing. 
-> Circular dependency is occuring because we separate one entity into two 
-> and reference counting them separately.  Two are actually one and 
-> necessarily want each other. (until death aparts.  Wow, serious. :-)
-> 
->  IMHO, what we need to do is consolidate ref counting such that in each 
-> layer only one object is reference counted, and the other object is 
-> freed when the ref counted object is released.  The object of choice 
-> would be genhd in upper layer and request_queue in mid layer.  All 
-> ref-counting should be updated to only ref those objects.  We'll need to 
-> add a release callback to genhd and make request_queue properly 
-> reference counted.
-> 
->  Conceptually, scsi_disk extends genhd and scsi_device extends 
-> request_queue.  So, to go one step further, as what UL represents is 
-> genhd (disk device) and ML request_queue (request-based device), 
-> embedding scsi_disk into genhd and scsi_device into request_queue will 
-> make the architecture clearer.  To do this, we'll need something like 
-> alloc_disk_with_udata(int minors, size_t udata_len) and the equivalent 
-> for request_queue.
-> 
->  I've done this half-way and then doing it without fixing the SCSI 
-> model seemed silly so got into working on the state model.  (BTW, the 
-> state model is almost done, I'm about to run tests.)
-> 
->  What do you think?  Jens?
+> But you are tying it completely to the SCSI problem, since we have no
+> locking problems of this sort elsewhere. At least the notified could
+> potentially be used for something else. The lock is just hack number two
+> to work around the problem.
 
-Well I think extends is one way to look at the subsystem objects,
-Couldn't it also be said that these objects from each subsystem have just
-a relationship (parent / child, etc). As reference counting has been
-implemented in each subsystem sometimes interfaces that cross subsystem
-boundaries (had / have) not been converted to use similar life time rules.
+Then help me understand the problem as you see it.
 
-Well your solution tries to solve the problem by creating a new larger
-object that contains both of the old objects. Another solution would be to
-use a consistent lifetime rules and stay with smaller objects. Unless
-going to large objects helps with allocation fragmentation or we get some
-other benefit it would seem that these combined structures may sometime in
-the future limit creation of lighter or flexible objects.
+My current understanding is that these problems occur because we've
+mixed data in two objects of different lifetimes.  So far, this is stack
+independent.
 
-It would appear another solution is that when you allocate a resource from
-another subsystem (i.e. blk_init_queue) that both subsystems participate
-in the same reference counting model and in the allocation routine you
-past in your object to be referenced counted by the allocating subsystem.
-Then when it is time to shutdown you do not free the others subsystems
-object directly, but use the normal release routines.
+My proposal is to correct this by moving the data back to the correct
+object, and make any object using it hold a reference, so this would
+make the provider of the block request_fn hold a reference to the queue
+and initialise the queue lock pointer with the lock currently in the
+queue.  Drivers that still use a global lock would be unaffected.  This
+also means that any provider of a request_fn may expect to process (and
+reject) requests for a period of time after blk_cleanup_queue().
+Really, this refcounting is inherent in blk_init_queue(),
+blk_cleanup_queue() so the only additional requirement is sanely
+processing queue requests after you think it's been cleaned up.  This is
+request_fn() provider independent, I think (providers who currently
+don't violate the lifetime rules don't need fixing).
 
+I claim that this proposal solves the current problem, and any other
+ones we run across that occur because of data mixing.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Your current patch tries to solve the problem by tying the two objects
+together; unifying the lifetimes.  I agree this can be done (it was how
+the sd/sr close race was fixed). But the current way the freeing
+functions thread across the subsystems doesn't look nice and I don't
+currently see a way to get the queue freed:  We free the queue on scsi
+device release; if the queue holds a reference to the scsi_device, the
+release function will never be called.  Our only other choice is to try
+to free the queue on device_del instead, but that's too early, I think.
+
+James
+
 
