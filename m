@@ -1,57 +1,48 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: bug 2400
-Date: Fri, 2 Apr 2004 08:45:31 -0800
+Date: 02 Apr 2004 12:05:17 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040402164531.GB3880@us.ibm.com>
-References: <20040401131502.41136788.akpm@osdl.org> <1080862354.2118.78.camel@mulgrave> <20040402084338.GA3547@us.ibm.com> <1080921450.1804.66.camel@mulgrave>
+Message-ID: <1080925518.1830.93.camel@mulgrave>
+References: <20040401131502.41136788.akpm@osdl.org>
+	<1080862354.2118.78.camel@mulgrave> <20040402084338.GA3547@us.ibm.com>
+	<1080921450.1804.66.camel@mulgrave>  <20040402164531.GB3880@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 130-94-160-149-dsl.hevanet.com ([130.94.160.149]:10880 "EHLO
-	hmsbounty.us.ibm.com") by vger.kernel.org with ESMTP
-	id S264105AbUDBQpi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Apr 2004 11:45:38 -0500
-Content-Disposition: inline
-In-Reply-To: <1080921450.1804.66.camel@mulgrave>
+Received: from stat1.steeleye.com ([65.114.3.130]:30106 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264109AbUDBRFy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Apr 2004 12:05:54 -0500
+In-Reply-To: <20040402164531.GB3880@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
+To: Mike Anderson <andmike@us.ibm.com>
 Cc: Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>, stern@rowland.harvard.edu
 
-James Bottomley [James.Bottomley@steeleye.com] wrote:
-> > Recently I have not been spending the proper time looking at this, but
-> > last look it appeared that we needed to  add a release / put method call
-> > to the gendisk disk_release routine. The release function or object to do
-> > the put on would need to be set prior to the call to add_disk.
-> 
-> Actually, I can't believe this problem to be local entirely to SCSI. 
-> So, a simpler mechanism (and more globally useful) might be to have a
-> two phase driver release in sysfs:
+On Fri, 2004-04-02 at 11:45, Mike Anderson wrote:
+> Maybe some clarification here as I am unsure if we both think there
+> needs to be a notification (a put call) from outside SCSI. We have
+> release functions available on most objects in SCSI now. The issue is
+> that when we register (add_disk, dev_set_drvdata, etc.) or pass a handle
+> to another subsystem we need a reference count agreement to know when
+> the other subsystem is done with the the object. Something like the
+> put_device(parent) used in scsi_host_dev_release.
 
-I would agree this should be more general than SCSI, but if kobjects are
-being passed during the registration / setup in other subsystem
-interfaces than this could already be handled.
+Actually, no, that's not the issue here, if I understand you.  The
+reference counting model on the sdev->sdev_gendev seems to be working
+correctly because sr.c takes a reference to the sdev_gendev on open and
+drops it on close.
 
-> 
-> - the current ->remove would stay where it is (as a notify on
-> device_del).  On receving this the driver begins clean up enough to drop
-> any internal references to the device it is holding.
-> - then introduce a ->release which is called as part of dropping the
-> last device reference where the driver cleans up any resources the
-> driver was keeping to service the removed but not released device.
-> 
-> Then, we'd obviously not call unregister_cdrom and kfree the scsi_cd
-> structure until ->release time.
+The problem is that ULDs are implemented as struct device_drivers and as
+such, their ->remove method gets called *not* on last put of sdev_gendev
+but on device_del (when there are still active references).
 
-Maybe some clarification here as I am unsure if we both think there
-needs to be a notification (a put call) from outside SCSI. We have
-release functions available on most objects in SCSI now. The issue is
-that when we register (add_disk, dev_set_drvdata, etc.) or pass a handle
-to another subsystem we need a reference count agreement to know when
-the other subsystem is done with the the object. Something like the
-put_device(parent) used in scsi_host_dev_release.
+sr.c frees the cdinfo structure on ->remove, but still has its own
+reference to sdev_gendev (because the device is still open). On final
+close, the generic cdrom code tries to use cdinfo to close the device
+and references a kfree'd structure.  Really what sr.c wants to be doing
+is freeing the cdinfo structure on last put, not on device_del.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+James
+
 
