@@ -1,50 +1,58 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: 2.6.6-rc2-mm2 + Adaptec I2O
-Date: Mon, 26 Apr 2004 23:25:22 -0700
+From: Jan-Benedict Glaw <jbglaw@lug-owl.de>
+Subject: Re: MODULE_VERSION for scsi drivers
+Date: Tue, 27 Apr 2004 10:22:37 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040426232522.253594a2.akpm@osdl.org>
-References: <408DE95F.5010201@tequila.co.jp>
-	<20040426221814.490a0cfd.akpm@osdl.org>
-	<Pine.LNX.4.58.0404262223260.17702@dlang.diginsite.com>
-	<408DF117.4060309@tequila.co.jp>
-	<20040426230455.53406d74.akpm@osdl.org>
-	<408DFBEE.3080803@tequila.co.jp>
+Message-ID: <20040427082237.GB29503@lug-owl.de>
+References: <20040427040923.GA9901@lists.us.dell.com> <32805.4.5.45.142.1083039354.squirrel@www.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="0eh6TmSyL6TZE2Uz"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:48095 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S263820AbUD0GZp (ORCPT
+Received: from dvmwest.gt.owl.de ([62.52.24.140]:8378 "EHLO dvmwest.gt.owl.de")
+	by vger.kernel.org with ESMTP id S263826AbUD0IWi (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Apr 2004 02:25:45 -0400
-In-Reply-To: <408DFBEE.3080803@tequila.co.jp>
+	Tue, 27 Apr 2004 04:22:38 -0400
+Content-Disposition: inline
+In-Reply-To: <32805.4.5.45.142.1083039354.squirrel@www.osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Clemens Schwaighofer <cs@tequila.co.jp>
-Cc: linux-scsi@vger.kernel.org, dlang@digitalinsight.com, linux-kernel@vger.kernel.org, go@turbolinux.co.jp
+To: linux-scsi@vger.kernel.org
 
-Clemens Schwaighofer <cs@tequila.co.jp> wrote:
->
-> Andrew Morton wrote:
->  | Clemens Schwaighofer <cs@tequila.co.jp> wrote:
->  |
->  |> on this URL [http://www.smartcgi.com/?action=docs,kernel26-adaptec] you
->  |> can find a patch that I could successfully path again 2.6.5 (vanilla)
->  |> and compile successfully.
->  |
->  |
->  | hm.  Against 2.6.0.  Go, would you have time to send that patch in to the
->  | scsi team at linux-scsi@vger.kernel.org?
-> 
->  yes,
-> 
->  remark:
-> 
->  ~ Originally this patch has been released by Go Taniguchi at
->  http://pkgcvs.turbolinux.co.jp/~go/patch-2.6/dpt_i2o.patch
-> 
->  patch attached
 
-Sorry, my question was directed to Go Taniguchi <go@turbolinux.co.jp> - Go
-should submit the patch.
+--0eh6TmSyL6TZE2Uz
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks.
+On Mon, 2004-04-26 21:15:54 -0700, Randy.Dunlap <rddunlap@osdl.org>
+wrote in message <32805.4.5.45.142.1083039354.squirrel@www.osdl.org>:
+>=20
+> What's the purpose of the
+> MODULE_VERSION(""):
+> instances?  (e.g.:)
+
+"I'm that ol', I forgot my age..."
+
+MfG, JBG
+
+--=20
+   Jan-Benedict Glaw       jbglaw@lug-owl.de    . +49-172-7608481
+   "Eine Freie Meinung in  einem Freien Kopf    | Gegen Zensur | Gegen Krieg
+    fuer einen Freien Staat voll Freier B=FCrger" | im Internet! |   im Ira=
+k!
+   ret =3D do_actions((curr | FREE_SPEECH) & ~(NEW_COPYRIGHT_LAW | DRM | TC=
+PA));
+
+--0eh6TmSyL6TZE2Uz
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFAjhhNHb1edYOZ4bsRAjoAAJ928eOMQvodINnQnVUYyrckmXDrEACeOjVW
+DtdCh4+PATBHrA/hJS+YFHA=
+=6BH3
+-----END PGP SIGNATURE-----
+
+--0eh6TmSyL6TZE2Uz--
