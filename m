@@ -1,46 +1,85 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [Patch 2.6] sd.c spinup messages
-Date: 24 Jun 2004 17:02:31 -0500
+Subject: [PATCH] fix aic7xxx probing
+Date: 24 Jun 2004 17:49:00 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1088114552.2069.63.camel@mulgrave>
-References: <200406091950_MC3-1-8463-F129@compuserve.com>
+Message-ID: <1088117341.2174.67.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:41859 "EHLO
+Received: from stat1.steeleye.com ([65.114.3.130]:51347 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S265878AbUFXWCd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Jun 2004 18:02:33 -0400
-In-Reply-To: <200406091950_MC3-1-8463-F129@compuserve.com>
+	id S265811AbUFXWtB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Jun 2004 18:49:01 -0400
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/linuxconf) with ESMTP id i5OMmwi01522
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Jun 2004 18:48:58 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Chuck Ebbert <76306.1226@compuserve.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 2004-06-09 at 18:48, Chuck Ebbert wrote:
-> -                               printk(KERN_NOTICE "%s: Spinning up disk...",
-> +                               printk(KERN_NOTICE "%s: Spinning up disk...\n",
->                                        diskname);
->                                 cmd[0] = START_STOP;
->                                 cmd[1] = 1;     /* Return immediately */
-> @@ -903,7 +906,6 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
->                                 current->state = TASK_UNINTERRUPTIBLE;
->                                 time1 = schedule_timeout(time1);
->                         } while(time1);
-> -                       printk(".");
+It looks like there's still a problem with the probing:
 
-What this basically does is remove the indication that the drive is
-being spun up.  That's quite a significant user visible change from what
-we do now.
+ahc_linux_pci_init() returns the number of boards attached
+ahc_linux_eisa_init() returns 0 on success or error
 
-Current behaviour is dictated by the fact that some of the drives
-(particularly older ones) take ages to spin up.  Without the visual
-indication that something is going on people tend to press the reset
-button and report kernel errors.
-
-Instead of making such a global change, how about making this a
-non-default configurable option within sd.
+The only reason the current code actually works on PCI seems to be that
+it's already attached the devices by the time it returns what the
+ahc_linux_detect() assumes to be a failure code.
 
 James
 
+===== drivers/scsi/aic7xxx/aic7xxx_osm.c 1.54 vs edited =====
+--- 1.54/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-04-26 02:09:37 -04:00
++++ edited/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-06-24 18:39:54 -04:00
+@@ -842,9 +842,7 @@
+ static int
+ ahc_linux_detect(Scsi_Host_Template *template)
+ {
+-	struct	ahc_softc *ahc;
+ 	int     found = 0;
+-	int	eisa_err, pci_err;
+ 
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+ 	/*
+@@ -892,13 +890,11 @@
+ 	 */
+ 	ahc_list_lockinit();
+ 
+-	pci_err = ahc_linux_pci_init();
+-	eisa_err = ahc_linux_eisa_init();
+-
+-	if(pci_err && eisa_err)
+-		goto out;
+-
+-
++	found = ahc_linux_pci_init();
++	if (!ahc_linux_eisa_init())
++		found++;
++	
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+ 	/*
+ 	 * Register with the SCSI layer all
+ 	 * controllers we've found.
+@@ -908,9 +904,7 @@
+ 		if (ahc_linux_register_host(ahc, template) == 0)
+ 			found++;
+ 	}
+-out:
+ 
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+ 	spin_lock_irq(&io_request_lock);
+ #endif
+ 	aic7xxx_detect_complete++;
+===== drivers/scsi/aic7xxx/aic7xxx_osm.h 1.54 vs edited =====
+--- 1.54/drivers/scsi/aic7xxx/aic7xxx_osm.h	2004-05-12 11:46:27 -04:00
++++ edited/drivers/scsi/aic7xxx/aic7xxx_osm.h	2004-06-24 18:41:49 -04:00
+@@ -940,7 +940,7 @@
+ }
+ #else
+ static inline int ahc_linux_pci_init(void) {
+-	return -ENODEV;
++	return 0;
+ }
+ static inline void ahc_linux_pci_exit(void) {
+ }
 
