@@ -1,228 +1,201 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [(re)Announce] Emulex LightPulse Device Driver
-Date: Tue, 18 May 2004 13:08:28 +0100
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH] scsi_debug: num_parts, ptype and (re-)scans
+Date: Tue, 18 May 2004 22:23:03 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040518130828.B9363@infradead.org>
-References: <3356669BBE90C448AD4645C843E2BF28034F92F0@xbl.ma.emulex.com>
+Message-ID: <40AA0027.1090201@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------030208090100020705020908"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:62221 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263149AbUERMIb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 May 2004 08:08:31 -0400
-Content-Disposition: inline
-In-Reply-To: <3356669BBE90C448AD4645C843E2BF28034F92F0@xbl.ma.emulex.com>; from James.Smart@Emulex.com on Sun, May 09, 2004 at 12:33:35AM -0400
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:36881 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263191AbUERMXm
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 May 2004 08:23:42 -0400
+Received: from torque.net (d-233-137.stlucia.uq.net.au [203.101.233.137])
+	by bunyip.cc.uq.edu.au (8.12.10/8.12.10) with ESMTP id i4ICNUL6001975
+	for <linux-scsi@vger.kernel.org>; Tue, 18 May 2004 22:23:31 +1000 (GMT+1000)
 List-Id: linux-scsi@vger.kernel.org
-To: "Smart, James" <James.Smart@Emulex.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Okay, I took a look at the tasklet handling and have re-arranged it a litte:
+This is a multi-part message in MIME format.
+--------------030208090100020705020908
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
- - unused member task_discq_cnt of lpfcHBA_t removed
- - lpfc_discq_tasklet merged into lpfc_discq_post_event and streamlined
- - splice the list in lpfc_tasklet to shorten lock holding (and irq disabling)
-   time
- - use list_for_each_entry to be readable
- - split into subfunctions
+Changes in version 1.73:
+   - 'num_parts' parameter to specify 0 to 4 partitions
+   - 'ptype' to specify (or change via sysfs) SCSI
+     peripheral device type
+   - support ability to increase the number of targets
+     and/or luns then re-scan a scsi_debug host
+   - remove redundant trailing spaces
 
-I'm still far less than happy with the whole tasklet code, though:
+The patch is against lk 2.6.6 (or -bk[1-4]). The last
+change is superficial but substantially increases the size
+of the patch. So the attachment is gzipped.
 
- - lpfc_discq_post_event allocates a structure for every event from irq
-   kontext.  Look at qla2xxx how to embedd the lists into the actual
-   object to solve this (OTOH qla2xxx is much much nicer in that respect
-   anyway as there's only one type of object queued up from the isr to
-   the dpc thread)
- - usage of tasklet itself is questionable, you probably want a kernel-thread
-   ala qla2xxx so it's always in usercontext, making your life much easier
-   in many places
- - phba->tasklet_running is a mess.  You couldn't care less whether the
-   tasklet is running but rather you want to know whether you're called from
-   it.
+The new facilties are described at:
+http://www.torque.net/sg/sdebug26.html
+A tarball of driver (version 1.73) is also there.
 
+Doug Gilbert
 
-diff -urp lpfcdriver-2.6-8.0.1/lpfc.h lpfcdriver-2.6-8.0.1.hch/lpfc.h
---- lpfcdriver-2.6-8.0.1/lpfc.h	2004-05-16 20:03:37.000000000 +0200
-+++ lpfcdriver-2.6-8.0.1.hch/lpfc.h	2004-05-18 13:23:37.491363504 +0200
-@@ -399,7 +399,6 @@ typedef struct lpfcHBA {
- 	spinlock_t            task_lock;
- 	struct tasklet_struct task_run;
- 	struct list_head      task_disc;
--	uint16_t              task_discq_cnt;
- 	uint16_t	      tasklet_running;
- 
- 	atomic_t cmnds_in_flight;
-diff -urp lpfcdriver-2.6-8.0.1/lpfc_fcp.c lpfcdriver-2.6-8.0.1.hch/lpfc_fcp.c
---- lpfcdriver-2.6-8.0.1/lpfc_fcp.c	2004-05-16 20:03:37.000000000 +0200
-+++ lpfcdriver-2.6-8.0.1.hch/lpfc_fcp.c	2004-05-18 13:55:23.843553920 +0200
-@@ -2097,111 +2097,98 @@ lpfc_sleep(lpfcHBA_t * phba, void *wait_
- 		return (ETIMEDOUT);
- }
- 
--void
--lpfc_discq_tasklet(lpfcHBA_t * phba, LPFC_DISC_EVT_t * evtp)
-+int
-+lpfc_discq_post_event(lpfcHBA_t * phba, void *arg1, void *arg2, uint32_t evt)
- {
--	unsigned long flags;
-+	LPFC_DISC_EVT_t	*evtp;
-+	unsigned long	flags;
-+
-+	/*
-+	 * All Mailbox completions and LPFC_ELS_RING rcv ring events will be
-+	 * queued to tasklet for processing
-+	 */
-+	evtp = kmalloc(sizeof(LPFC_DISC_EVT_t), GFP_ATOMIC);
-+	if (unlikely(!evtp))
-+		return 0;
-+
-+	evtp->evt_arg1  = arg1;
-+	evtp->evt_arg2  = arg2;
-+	evtp->evt       = evt;
- 
--	/* Queue the cmnd to the iodone tasklet to be scheduled later */
- 	spin_lock_irqsave(&phba->task_lock, flags);
- 	list_add_tail(&evtp->evt_listp, &phba->task_disc);
--	phba->task_discq_cnt++;
- 	spin_unlock_irqrestore(&phba->task_lock, flags);
-+
- 	tasklet_schedule(&phba->task_run);
--	return;
-+	return 1;
- }
- 
--int
--lpfc_discq_post_event(lpfcHBA_t * phba, void *arg1, void *arg2, uint32_t evt)
-+static void
-+lpfc_process_evt_mbox(lpfcHBA_t *phba, LPFC_MBOXQ_t *pmb)
-+{
-+	pmb->mbox_cmpl(phba, pmb);
-+}
-+
-+static void
-+lpfc_process_evt_iocb(lpfcHBA_t *phba, LPFC_IOCBQ_t *cmdiocbp,
-+		LPFC_RING_MASK_t *func, LPFC_IOCBQ_t *saveq)
- {
--	LPFC_DISC_EVT_t  *evtp;
-+	LPFC_IOCBQ_t		*rspiocbp, *tmp;
- 
--	/* All Mailbox completions and LPFC_ELS_RING rcv ring events will be
--	 * queued to tasklet for processing
--	 */
--	evtp = (LPFC_DISC_EVT_t *) kmalloc(sizeof(LPFC_DISC_EVT_t), GFP_ATOMIC);
--	if(evtp == 0) {
--		return (0);
-+	if (func) {
-+		func->lpfc_sli_rcv_unsol_event(phba,
-+				&phba->sli.ring[LPFC_ELS_RING], saveq);
-+	} else {
-+		cmdiocbp->iocb_cmpl(phba, cmdiocbp, saveq);
- 	}
--	evtp->evt_arg1  = arg1;
--	evtp->evt_arg2  = arg2;
--	evtp->evt       = evt;
--	evtp->evt_listp.next = 0;
--	evtp->evt_listp.prev = 0;
--	lpfc_discq_tasklet(phba, evtp);
--	return (1);
-+
-+	/* free up iocb buffer chain for command just processed */
-+	list_for_each_entry_safe(rspiocbp, tmp, &saveq->list, list) {
-+		list_del(&rspiocbp->list);
-+		mempool_free(rspiocbp, phba->iocb_mem_pool);
-+	}
-+
-+	mempool_free(saveq, phba->iocb_mem_pool);
- }
- 
- void
- lpfc_tasklet(unsigned long p)
- {
--	lpfcHBA_t        * phba = (lpfcHBA_t *)p;
--	LPFC_SLI_t       * psli;
--	LPFC_DISC_EVT_t  * evtp;
--	struct list_head * pos, * pos_tmp;
--	struct list_head * cur, * next;
--	LPFC_MBOXQ_t     * pmb;
--	LPFC_IOCBQ_t     * cmdiocbp;
--	LPFC_IOCBQ_t     * rspiocbp;
--	LPFC_IOCBQ_t     * saveq;
--	LPFC_RING_MASK_t * func;
--	unsigned long      flags;
-+	lpfcHBA_t	*phba = (lpfcHBA_t *)p;
-+	LPFC_DISC_EVT_t	*evtp, *evtp_tmp;
-+	unsigned long	flags;
-+	LIST_HEAD	(local_task_q);
- 
--	psli = &phba->sli;
- 	spin_lock_irqsave(&phba->task_lock, flags);
-+	list_splice_init(&phba->task_disc, &local_task_q);
-+	spin_unlock_irqrestore(&phba->task_lock, flags);
-+
- 	/* check discovery event list */
--	list_for_each_safe(pos, pos_tmp, &phba->task_disc) {
--		evtp = list_entry(pos, LPFC_DISC_EVT_t, evt_listp);
-+	list_for_each_entry_safe(evtp, evtp_tmp, &local_task_q, evt_listp) {
- 		list_del(&evtp->evt_listp);
--		phba->task_discq_cnt--;
--		spin_unlock_irqrestore(&phba->task_lock, flags);
- 
--		spin_lock_irqsave(&(phba->drvrlock), flags);
--		phba->tasklet_running += 1;
--		switch(evtp->evt) {
-+		spin_lock_irqsave(&phba->drvrlock, flags);
-+		phba->tasklet_running++;
-+		switch (evtp->evt) {
- 		case LPFC_EVT_MBOX:
--			pmb = (LPFC_MBOXQ_t *)(evtp->evt_arg1);
--			(pmb->mbox_cmpl) (phba, pmb);
-+			lpfc_process_evt_mbox(phba, evtp->evt_arg1);
- 			break;
- 		case LPFC_EVT_SOL_IOCB:
--			cmdiocbp = (LPFC_IOCBQ_t *)(evtp->evt_arg1);
--			saveq = (LPFC_IOCBQ_t *)(evtp->evt_arg2);
--			(cmdiocbp->iocb_cmpl) (phba, cmdiocbp, saveq);
--			/* Free up iocb buffer chain for command just
--			   processed */
--			list_for_each_safe(cur, next, &saveq->list) {
--				rspiocbp = list_entry(cur, LPFC_IOCBQ_t, list);
--				list_del(&rspiocbp->list);
--				mempool_free( rspiocbp, phba->iocb_mem_pool);
--			}
--			mempool_free( saveq, phba->iocb_mem_pool);
-+			lpfc_process_evt_iocb(phba, evtp->evt_arg1,
-+					NULL, evtp->evt_arg2);
- 			break;
- 		case LPFC_EVT_UNSOL_IOCB:
--			func = (LPFC_RING_MASK_t *)(evtp->evt_arg1);
--			saveq = (LPFC_IOCBQ_t *)(evtp->evt_arg2);
--			(func->lpfc_sli_rcv_unsol_event) (phba, 
--	 		&psli->ring[LPFC_ELS_RING], saveq);
--			/* Free up iocb buffer chain for command just
--			   processed */
--			list_for_each_safe(cur, next, &saveq->list) {
--				rspiocbp = list_entry(cur, LPFC_IOCBQ_t, list);
--				list_del(&rspiocbp->list);
--				mempool_free( rspiocbp, phba->iocb_mem_pool);
--			}
--			mempool_free( saveq, phba->iocb_mem_pool);
-+			lpfc_process_evt_iocb(phba, NULL,
-+					evtp->evt_arg1, evtp->evt_arg2);
- 			break;
- 		}
--		phba->tasklet_running -= 1;
--		spin_unlock_irqrestore(&(phba->drvrlock), flags);
-+		phba->tasklet_running--;
-+		spin_unlock_irqrestore(&phba->drvrlock, flags);
- 
--		spin_lock_irqsave(&phba->task_lock, flags);
- 		kfree(evtp);
- 	}
--	spin_unlock_irqrestore(&phba->task_lock, flags);
--	return;
- }
- 
--
- module_init(lpfc_init);
- module_exit(lpfc_exit);
- MODULE_LICENSE("GPL");
+--------------030208090100020705020908
+Content-Type: application/x-gzip;
+ name="scsi_debug_lk266_173.diff.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="scsi_debug_lk266_173.diff.gz"
+
+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
+3AQxgWibWaR5bxDs94f/AmERLiyrgQAA
+--------------030208090100020705020908--
+
