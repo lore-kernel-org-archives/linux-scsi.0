@@ -1,84 +1,37 @@
-From: wb <dead_email@nospam.com>
-Subject: Re: Badness in device_release at drivers/base/core.c:84
-Date: Tue, 05 Aug 2003 05:20:02 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] some left highmem_io instances
+Date: Tue, 5 Aug 2003 13:46:53 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F2F84D2.8000202@nospam.com>
-References: <20030801182207.GA3759@blazebox.homeip.net>	    <20030801144455.450d8e52.akpm@osdl.org>	    <20030803015510.GB4696@blazebox.homeip.net>	    <20030802190737.3c41d4d8.akpm@osdl.org>	    <20030803214755.GA1010@blazebox.homeip.net>	    <20030803145211.29eb5e7c.akpm@osdl.org>	    <20030803222313.GA1090@blazebox.homeip.net>	    <20030803223115.GA1132@blazebox.homeip.net>	    <20030804093035.A24860@beaverton.ibm.com>    <1060021614.889.6.camel@blaze.homeip.net>    <1352160000.1060025773@aslan.btc.adaptec.com> <5793.199.181.174.146.1060050091.squirrel@www.blazebox.homeip.net>
+Message-ID: <20030805114653.GA24015@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zmamail03.zma.compaq.com ([161.114.64.103]:32265 "EHLO
-	zmamail03.zma.compaq.com") by vger.kernel.org with ESMTP
-	id S272611AbTHEKNO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Aug 2003 06:13:14 -0400
+Received: from verein.lst.de ([212.34.189.10]:53163 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S272674AbTHELq4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Aug 2003 07:46:56 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Blazejowski <paulb@blazebox.homeip.net>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, Patrick Mansfield <patmans@us.ibm.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
 
-> 
-> I'll look into serial console and try to set it up.Do i need extra
-> hardware or cables to run serial console? any poniters or setup
-> suggestions would be welcome as i never used serial consoles before.
-> Regards,
-> 
-> Paul
-> -
-
-  Your need a NULL modem serial cable available
-  from any computer store.
-
-Install uucp - I use on the HOST :
-
-uucp-1.06.1-33.7.2.
-
-Also , LILO is broken on some machines and ignores
-serial input so make sure you use at least
-
-lilo-21.6-71
-
-On the TARGET
-
-1. Connect the serial ports together ( COM1->COM1 ) with
-    the serial cable .
-
-2. Modify LILO to use serial line on the TARGET
-    add to lilo.conf:
-       append="console=ttyS0,9600n8  console=tty0 "
-       serial=0,9600N8
-
-    Run lilo
-
-3. Add to /etc/inittab on the HOST
-
-       S0:s12345:respawn:/sbin/agetty 9600 ttyS0
-
-4. To see ALL THE CONSOLE MESSAGES during boot on the TARGET
-
-    mv /dev/console /dev/console.org
-    ln  /dev/ttyS0 /dev/console
-
-5. Start uucp on the HOST:
-
-     cu -l /dev/ttyS0 -s 9600
-
-6. Boot your target
-
-///
-
-John Donnelly AT HP DOT com
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+--- 1.40/drivers/ieee1394/sbp2.c	Sat Jul  5 21:42:23 2003
++++ edited/drivers/ieee1394/sbp2.c	Sun Aug  3 05:01:38 2003
+@@ -2881,7 +2881,6 @@
+ 	.cmd_per_lun =			SBP2_MAX_CMDS_PER_LUN,
+ 	.can_queue = 			SBP2_MAX_SCSI_QUEUE,
+ 	.emulated =			1,
+-	.highmem_io =			1,
+ };
+ 
+ static int sbp2_module_init(void)
+--- 1.25/drivers/message/fusion/mptscsih.c	Fri May  2 19:56:19 2003
++++ edited/drivers/message/fusion/mptscsih.c	Tue Aug  5 04:00:12 2003
+@@ -1458,7 +1458,6 @@
+ 				sh->max_lun = MPT_LAST_LUN + 1;
+ 
+ 				sh->max_sectors = MPT_SCSI_MAX_SECTORS;
+-				sh->highmem_io = 1;
+ 				sh->this_id = this->pfacts[portnum].PortSCSIID;
+ 
+ 				/* Required entry.
