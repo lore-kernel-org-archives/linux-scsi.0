@@ -1,79 +1,94 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH] p00001_scsi_tcq_queue_lock
-Date: Tue, 03 Aug 2004 12:49:50 -0500
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: PATCH: (as355) Fix test for valid sense data present
+Date: Tue, 3 Aug 2004 15:25:43 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <410FD03E.6040305@us.ibm.com>
-Reply-To: brking@us.ibm.com
+Message-ID: <Pine.LNX.4.44L0.0408031517480.6693-100000@ida.rowland.org>
+References: <1088721250.40e4916212bed@wwws.torque.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030905010501020100060003"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.103]:61170 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S266771AbUHCRt7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Aug 2004 13:49:59 -0400
+Received: from ida.rowland.org ([192.131.102.52]:20228 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S266807AbUHCTZn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Aug 2004 15:25:43 -0400
+In-Reply-To: <1088721250.40e4916212bed@wwws.torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: james Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, dougg@triode.net.au
 
-This is a multi-part message in MIME format.
---------------030905010501020100060003
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+James:
 
+This patch fixes a bug in several upper-level SCSI drivers.  According to 
+Douglas Gilbert, masking with 0x7f is wrong.  Note that in several other 
+places we already have code that masks the first sense_buffer byte with 
+0x70.
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
-
---------------030905010501020100060003
-Content-Type: text/plain;
- name="p00001_scsi_tcq_queue_lock.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="p00001_scsi_tcq_queue_lock.patch"
+Alan Stern
 
 
-Add locking to scsi_activate_tcq and scsi_deactivate_tcq to fix a race
-condition that can occur when disabling tcqing with commands in flight.
+On Thu, 1 Jul 2004 dougg@torque.net wrote:
 
-Signed-off-by: Brian King <brking@us.ibm.com>
----
+> > 	The test given for valid data in the sense_buffer isn't correct.
+> > 	The actual test used is ((cmd->sense_buffer[0] & 0x7f) == 0x70).
+> > 	This is mentioned in a couple of places in the document.
+> 
+> If that comparison is in linux code then the comparison
+> is wrong! The comparison that is correct is bits 4, 5 and 6
+> all being set. So we don't care about bit 7 and the bottom
+> two bits can be 0x0, 0x1, 0x2 or 0x3. The fact that linux
+> can't handle sense buffer "descriptor" format is an issue
+> that needs to be addressed soon (but is unlikely to be an
+> issue for usb-storage devices for some time).
 
- linux-2.6.8-rc2-bjking1/include/scsi/scsi_tcq.h |    8 ++++++++
- 1 files changed, 8 insertions(+)
 
-diff -puN include/scsi/scsi_tcq.h~scsi_tcq_queue_lock include/scsi/scsi_tcq.h
---- linux-2.6.8-rc2/include/scsi/scsi_tcq.h~scsi_tcq_queue_lock	2004-08-03 11:05:28.000000000 -0500
-+++ linux-2.6.8-rc2-bjking1/include/scsi/scsi_tcq.h	2004-08-03 11:12:19.000000000 -0500
-@@ -25,9 +25,13 @@
-  **/
- static inline void scsi_activate_tcq(struct scsi_device *sdev, int depth)
- {
-+	unsigned long flags;
-+
-         if (sdev->tagged_supported) {
-+		spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
- 		if (!blk_queue_tagged(sdev->request_queue))
- 			blk_queue_init_tags(sdev->request_queue, depth, NULL);
-+		spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
- 		scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, depth);
-         }
- }
-@@ -38,8 +42,12 @@ static inline void scsi_activate_tcq(str
-  **/
- static inline void scsi_deactivate_tcq(struct scsi_device *sdev, int depth)
- {
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
- 	if (blk_queue_tagged(sdev->request_queue))
- 		blk_queue_free_tags(sdev->request_queue);
-+	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
- 	scsi_adjust_queue_depth(sdev, 0, depth);
- }
+
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+
+===== drivers/scsi/scsi_lib.c 1.56 vs edited =====
+--- 1.56/drivers/scsi/scsi_lib.c	Mon Jun 28 07:54:28 2004
++++ edited/drivers/scsi/scsi_lib.c	Tue Aug  3 15:15:40 2004
+@@ -774,7 +774,7 @@
+ 	 * can choose a block to remap, etc.
+ 	 */
+ 	if (driver_byte(result) != 0) {
+-		if ((cmd->sense_buffer[0] & 0x7f) == 0x70) {
++		if ((cmd->sense_buffer[0] & 0x70) == 0x70) {
+ 			/*
+ 			 * If the device is in the process of becoming ready,
+ 			 * retry.
+===== drivers/scsi/sd.c 1.68 vs edited =====
+--- 1.68/drivers/scsi/sd.c	Wed Jul 21 02:09:17 2004
++++ edited/drivers/scsi/sd.c	Tue Aug  3 15:15:48 2004
+@@ -723,7 +723,7 @@
  
-_
-
---------------030905010501020100060003--
+ 	/* An error occurred */
+ 	if (driver_byte(result) != 0 && 	/* An error occurred */
+-	    (SCpnt->sense_buffer[0] & 0x7f) == 0x70) { /* Sense current */
++	    (SCpnt->sense_buffer[0] & 0x70) == 0x70) { /* Sense current */
+ 		switch (SCpnt->sense_buffer[2]) {
+ 		case MEDIUM_ERROR:
+ 			if (!(SCpnt->sense_buffer[0] & 0x80))
+===== drivers/scsi/sg.c 1.66 vs edited =====
+--- 1.66/drivers/scsi/sg.c	Sun Jul 18 07:46:31 2004
++++ edited/drivers/scsi/sg.c	Tue Aug  3 15:15:57 2004
+@@ -1280,7 +1280,7 @@
+ 
+ 		/* Following if statement is a patch supplied by Eric Youngdale */
+ 		if (driver_byte(SRpnt->sr_result) != 0
+-		    && (SRpnt->sr_sense_buffer[0] & 0x7f) == 0x70
++		    && (SRpnt->sr_sense_buffer[0] & 0x70) == 0x70
+ 		    && (SRpnt->sr_sense_buffer[2] & 0xf) == UNIT_ATTENTION
+ 		    && sdp->device->removable) {
+ 			/* Detected disc change. Set the bit - this may be used if */
+===== drivers/scsi/sr.c 1.72 vs edited =====
+--- 1.72/drivers/scsi/sr.c	Wed Jul 21 02:09:17 2004
++++ edited/drivers/scsi/sr.c	Tue Aug  3 15:16:05 2004
+@@ -241,7 +241,7 @@
+ 	 * memcpy's that could be avoided.
+ 	 */
+ 	if (driver_byte(result) != 0 &&		/* An error occurred */
+-	    (SCpnt->sense_buffer[0] & 0x7f) == 0x70) { /* Sense current */
++	    (SCpnt->sense_buffer[0] & 0x70) == 0x70) { /* Sense current */
+ 		switch (SCpnt->sense_buffer[2]) {
+ 		case MEDIUM_ERROR:
+ 		case VOLUME_OVERFLOW:
 
