@@ -1,52 +1,48 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: David Brownell <david-b@pacbell.net>
 Subject: Re: [linux-usb-devel] Re: /proc/scsi/map
-Date: Mon, 17 Jun 2002 11:42:05 -0500
+Date: Mon, 17 Jun 2002 09:53:53 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200206171642.g5HGg5b03044@localhost.localdomain>
-References: <patmans@us.ibm.com>
+Message-ID: <3D0E1421.2070001@pacbell.net>
+References: <oliver@neukum.name>
+ <200206171454.g5HEsu802593@localhost.localdomain>
+ <20020617090958.A19843@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id JAA18362
-	for <linux-scsi@vger.kernel.org>; Mon, 17 Jun 2002 09:42:18 -0700
-In-Reply-To: Message from Patrick Mansfield <patmans@us.ibm.com>
-   of "Mon, 17 Jun 2002 09:09:58 PDT." <20020617090958.A19843@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Oliver Neukum <oliver@neukum.name>, David Brownell <david-b@pacbell.net>, Andries.Brouwer@cwi.nl, garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sancho@dauskardt.de, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dougg@torque.net
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Oliver Neukum <oliver@neukum.name>, Andries.Brouwer@cwi.nl, garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sancho@dauskardt.de, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dougg@torque.net
 
-patmans@us.ibm.com said:
-> I agree it would be nice to get the ID via user space, but it is not
-> that hard to get the ID, and trying the various SCSI INQUIRY pages
-> that supply  the ID is not complicated.
+> Any SCSI device can return an ID (i.e. INQUIRY VPD page 0x80 or 0x83),
+> so the logic need not be in sd. I don't know how removable media should
+> be handled (not a SCSI device being added/removed from the system), for
+> tape this is probably not an issue.
+> ...
+> 
+>>Here, the usb-storage driver does know about the real device (and already has 
+>>a huge exception table), so it has enough knowledge to probe for an identifier.
+>  
+> usb-storage could emulate VPD page 0x83 to return the GID, and that could
+> then be used by the mid-layer or a user level program to extract an ID.
 
-OK, how about some hardware scenarios:
+Except that as I recall, that's not practical for all devices; they may not
+have built in IDs.  Hence there need to be topology-based IDs available.
 
-I've a scsi array (an LSI 6298) which has no WWN page (0x83) but does have a 
-serial number in the VPD page.  However, the VPD serial number is an 
-identifier for the array *controller* and thus is the *same* for all the LUNs. 
- For this beast I have to add in the LUN number to the VPD serial number to 
-get a unique identifier per device.  Worse, the LSI 6298 is multi path.  Now I 
-get a different "unique" identifier depending on path (because different 
-controllers give different VPD serial numbers), so if I want to identify it 
-uniquely, I have to use some property of the LUN, like partion UUID.
+Which is why I had pointed out usb_make_path() ... which returns a stable
+controller ID for the "CBTU tuple".  It isn't going to get re-assigned by
+changing the bus probe sequence or driver load order.  Even PCI has better
+IDs available than those simple numbers (pci_device.slot_name).
 
-Or, what about an old 8 bit EMC symmetrix.  They have no WWN page and they 
-embed both a LUN and a *path* identifier in the VPD serial number.  To get the 
-globally unique ID for this one, I have to strip off the path part.
+If the driverfs names for all devices are supposed to be using stable IDs
+(ones that don't change unless at least the hardware gets re-configured)
+where possible, then those driverfs names will be better answers for the
+"what is this device's topological ID" than those purely numeric CBTU tuples.
 
-> FYI the various SCSI ID pages and such are described in the SCSI
-> primaray command for example the following:
+(And they won't address the volume/media/... ID level problems, which are
+of course a separate issue.)
 
-> ftp://ftp.t10.org/t10/drafts/spc3/spc3r07.pdf 
+- Dave
 
-Ah, but that's the scsi-3 spec which (finally) cleaned up this unique name 
-business.  However, for SCSI-2 and before, it was an unholy mess, as the two 
-examples above illustrate.  I agree that for all modern devices which are 
-SCSI-3 SPC compliant, then just asking for the WWN page probably works.  The 
-question is what to do about all the legacy hardware out there?
-
-James
 
 
