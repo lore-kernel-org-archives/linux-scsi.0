@@ -1,135 +1,96 @@
-From: "Kai Ruhnau" <kai@tragetaschen.dyndns.org>
-Subject: Re: Driver for Adaptec AHA-1530P
-Date: Sat, 10 Jan 2004 16:03:48 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0bb601c3d78a$f3394020$060ba8c0@AldiP4>
-References: <Pine.LNX.4.44.0401101348010.9458-100000@poirot.grange>
+From: Thomas Steudten <alpha@steudten.com>
+Subject: BUG: Kernel Panic: kernel-2.6.1 for alpha in scsi context ll_rw_blk.c
+Date: Sat, 10 Jan 2004 17:59:21 +0100
+Sender: linux-alpha-owner@vger.kernel.org
+Message-ID: <40002F69.9020302@steudten.com>
+References: <3FB92938.8040906@steudten.com> <87r806d6n6.fsf@student.uni-tuebingen.de> <3FB93EF6.807@steudten.com> <87islid5tq.fsf@student.uni-tuebingen.de> <20031118021922.A7816@den.park.msu.ru> <3FBA8F20.3050701@steudten.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout07.sul.t-online.com ([194.25.134.83]:35482 "EHLO
-	mailout07.sul.t-online.com") by vger.kernel.org with ESMTP
-	id S265178AbUAJPEP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Jan 2004 10:04:15 -0500
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-alpha-owner@vger.kernel.org>
+In-Reply-To: <3FBA8F20.3050701@steudten.com>
+To: Thomas Steudten <alpha@steudten.com>
+Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>, Falk Hueffner <falk.hueffner@student.uni-tuebingen.de>, Richard Henderson <rth@twiddle.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-alpha@vger.kernel.org, akpm@osdl.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: linux-scsi@vger.kernel.org
 
-Hi,
+Hello
 
-Thank you for the quick reply!
+I test the new 2.6.1 kernel and run in the same problem as before.
+The reason is, that the patch from Ivan isn=B4t there in the kernel
+source tree.
 
-> Can you send the relevant lines from 2.4.10 boot?
+Please add the patch to the mainline.
 
-The kernel 2.4.10 is from a SuSE-Linux 7.3 boot-disk with the aha152x as
-module.
+Tom
 
-Here is the log after I loaded the module:
-
-<snip>
-[...]
-[isapnp]
-aha152x: BIOS test: passed, auto configuration: ok, detected 1 controller(s)
-aha152x: resetting bus...
-aha152x0: vital data: rev=1, io=0x340 (0x340/0x340), irq=11, scsiid=7,
-reconnect=enabled, parity=enabled, synchronous=enabled, delay=1000, extended
-translation=disabled
-aha152x0: trying software interrupt, ok.
-scsi0 : Adaptec 152x SCSI driver; $Revision: 2.4 $
-(scsi0:0:0) 01 03 01 32 08 00
-  Vendor: IBM       Model: DCAS-34330        Rev: S65A
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-[my cdrom @ scsi0:5:0]
-[...]
-</snip>
-
-HTH
-Greetings
-Kai
-
------ Original Message ----- 
-From: "Guennadi Liakhovetski" <g.liakhovetski@gmx.de>
-To: "Kai Ruhnau" <kai@tragetaschen.dyndns.org>
-Cc: <linux-scsi@vger.kernel.org>
-Sent: Saturday, January 10, 2004 1:48 PM
-Subject: Re: Driver for Adaptec AHA-1530P
-
+Thomas Steudten wrote:
 
 > Hi
->
-> Can you send the relevant lines from 2.4.10 boot?
->
-> Cheers
-> Guennadi
->
-> On Sat, 10 Jan 2004, Kai Ruhnau wrote:
->
-> > Hi,
-> >
-> > I have an old scsi-only P200. It has an Adaptec AHA-1530P ISA-board.
-> >
-> > I had and have a running Kernel 2.4.10. It uses the driver aha152x
-> > successfully. I tried to update to 2.4.16, 2.4.20 and now I try 2.4.24.
-All
-> > show the same behaviour:
-> >
-> > Kernel-parameter: 'aha152x=0x340'
-> >
-> > <snip>
-> > SCSI subsystem driver Revision: 1.00
-> > aha152x: processing commandline: <3>
-> > aha152x: 0x340
-> > aha152x: Invalid line
-> > ok
-> > aha152x: BIOS test: passed, detected 1 controller(s)
-> > aha152x: resetting bus...
-> > aha152x0: vital data: rev=7, io=0x340 (0x340/0x340), irq=11, scsiid=7,
-> > reconnect=enabled, parity=enabled, synchronous=enabled, delay=1000,
-extended
-> > translation=disabled
-> > aha152x0: trying software interrupt, ok.
-> > scsi0 : Adaptec 152x SCSI driver; $Revision: 2.5 $
-> > (long pause)
-> > aha152x: ABORT timed out - removed from issue queue
-> > scsi: device set offline - not ready or command retry failed after bus
-> > reset: host 0 channel 0 id 0 lun 0
-> > scsi: unknown type 22
-> > Vendor: [crap] Model: [more crap] Rev:
-> > Type: Unknown
-> > (again long pause)
-> > </snip>
-> >
-> > And the last seven lines count up the lun and the id up to 'id 7 lun 7'.
-> > After that, I end up with a kernel-panic due to the missing root-device.
-> > The [crap] and [more crap] are always the same characters.
-> >
-> > In kernel 2.6.0 the aha152x-driver does not find any appropiate device.
-Here
-> > I also tried the aha1542, but I can't read any error, it scrolls up too
-> > fast.
-> >
-> >
-> > I know from the Changelogs that there were a couple of changes since
-2.4.10,
-> > but is it possible to convince the aha152x (or any other) driver to work
-> > with my card?
-> >
-> > Of course I'm willing to help everybody as I can.
-> >
-> > Greetings
-> > Kai
-> >
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> >
->
-> ---
-> Guennadi Liakhovetski
->
->
+>=20
+> With the patch from Ivan, the prefetch problem is gone.
+> Please add this patch to the mainline for 2.6.0 for alpha.
+>=20
+> Regards
+> Tom
+>=20
+>> We shouldn't prefetch the spinlocks on UP.
+>>
+>> Ivan.
+>>
+>> --- 2.6/include/asm-alpha/processor.h    Sat Oct 25 22:44:54 2003
+>> +++ linux/include/asm-alpha/processor.h    Tue Nov 18 01:48:39 2003
+>> @@ -78,6 +78,11 @@ unsigned long get_wchan(struct task_stru
+>>  #define ARCH_HAS_PREFETCHW
+>>  #define ARCH_HAS_SPINLOCK_PREFETCH
+>> =20
+>> +#ifndef CONFIG_SMP
+>> +/* Nothing to prefetch. */
+>> +#define spin_lock_prefetch(lock)      do { } while (0)
+>> +#endif
+>> +
+>>  #if __GNUC__ > 3 || (__GNUC__ =3D=3D 3 && __GNUC_MINOR__ >=3D 1)
+>>  extern inline void prefetch(const void *ptr)   { @@ -89,10 +94,13 @=
+@=20
+>> extern inline void prefetchw(const void      __builtin_prefetch(ptr,=
+=20
+>> 1, 3);
+>>  }
+>> =20
+>> +#ifdef CONFIG_SMP
+>>  extern inline void spin_lock_prefetch(const void *ptr)   {
+>>      __builtin_prefetch(ptr, 1, 3);
+>>  }
+>> +#endif
+>> +
+>>  #else
+>>  extern inline void prefetch(const void *ptr)   { @@ -104,10 +112,13=
+=20
+>> @@ extern inline void prefetchw(const void      __asm__ ("ldq $31,%0=
+"=20
+>> : : "m"(*(char *)ptr));  }
+>> =20
+>> +#ifdef CONFIG_SMP
+>>  extern inline void spin_lock_prefetch(const void *ptr)   {
+>>      __asm__ ("ldq $31,%0" : : "m"(*(char *)ptr));  }
+>> +#endif
+>> +
+>>  #endif /* GCC 3.1 */
+>> =20
+>>  #endif /* __ASM_ALPHA_PROCESSOR_H */
+>=20
+>=20
 
+--=20
+Tom
+
+LINUX user since kernel 0.99.x 1994.
+RPM Alpha packages at http://alpha.steudten.com/packages
+Want to know what S.u.S.E 1995 cdrom-set contains?
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-alpha" =
+in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
