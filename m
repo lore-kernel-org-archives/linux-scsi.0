@@ -1,48 +1,29 @@
-From: "flight@beam.screaming.net" <Notams@beam.screaming.net>
-Subject: The FlightTimes
-Date: Fri, 27 Dec 2002 13:26:11 -00
+From: "David Anderson" <david-ander2023@mail.com>
+Subject: Reading data from a file
+Date: Fri, 27 Dec 2002 10:34:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4116-2200212527132610810@OpusOne>
+Message-ID: <20021227153427.70720.qmail@mail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: takeoff <Notams@Beam.Screaming.Net>
+To: linux-scsi@vger.kernel.org
 
-Hello,
+Hi,
 
-Please pardon my intrusion.
+I am reading some data from a file byte by byte in my driver. Although it's not a good thing to read a file in the driver I have to do it. My file is quite big can contain about 1000 lines each line containing anywhere from 0 to 500 characters. I believe carry out 500000 reads is not a good thing. 
 
-Could it be possible that you have an interest in aviation? I am writing to you to offer you a subscription to 
+Any suggestions on how I can improve ??
 
-The FlightTimes
+Thanks and Regards,
+David
+-- 
+__________________________________________________________
+Sign-up for your own FREE Personalized E-mail at Mail.com
+http://www.mail.com/?sr=signup
 
-An email based newspaper. It is read around the world by the aviation industry obtained by invitation only.
-
-It is for Free..
-
-My simple question.....  My I send you a free sample?
-
-You will not be bothered again; I will only contact you if you answer to this email. Thank you for your time.
-
-James van Etten, editor  The FlightTimes
-London, UK  +44 207 603 5340
-
-flight@beam.screaming.net
-
-
-Finally you can check out all the above and have an instant look at an older issue of my papers on our website; your sample however will be the latest issue.
-
-Http://myweb.tiscali.co.uk/londonmorningpaper
-
-
-
-
-Scratch with the chickens or fly with the eagles
-
-A Publication by The London Morning Paper Group
-166 Blythe Road
-West Kensington - London - W14 0HD
-United Kingdom
+Meet Singles
+http://corp.mail.com/lavalife
 
