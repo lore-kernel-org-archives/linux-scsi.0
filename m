@@ -1,56 +1,54 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [usb-storage] Re: PATCH: exclude certain commands from emulated SCSI hosts
-Date: Mon, 24 Mar 2003 12:20:50 -0800
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] 2.5.x use list_head to handle scsi starved request queues
+Date: Mon, 24 Mar 2003 21:25:09 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030324122050.C1066@one-eyed-alien.net>
-References: <0FA2250F5A23D64FBD983956F9B2864301ED5277@royntex01.iomegacorp.com>
+Message-ID: <20030324202509.GF2371@suse.de>
+References: <20030319182755.A9535@beaverton.ibm.com> <3E7A1EF5.3050501@splentec.com> <20030320203912.A18471@beaverton.ibm.com> <3E7B7A9A.6030007@splentec.com> <20030321165050.B9578@beaverton.ibm.com> <3E7F3C67.5010704@splentec.com> <20030324112940.A11000@beaverton.ibm.com> <3E7F688C.3020009@splentec.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="f+W+jCU1fRNres8c"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <0FA2250F5A23D64FBD983956F9B2864301ED5277@royntex01.iomegacorp.com>; from LAVARRE@iomega.com on Mon, Mar 24, 2003 at 12:16:29PM -0700
+In-Reply-To: <3E7F688C.3020009@splentec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <LAVARRE@iomega.com>
-Cc: dougg@torque.net, Linus Torvalds <torvalds@transmeta.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>, USB Storage List <usb-storage@one-eyed-alien.net>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben@splentec.com>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
+On Mon, Mar 24 2003, Luben Tuikov wrote:
+> Patrick Mansfield wrote:
+> >On Mon, Mar 24, 2003 at 12:12:07PM -0500, Luben Tuikov wrote:
+> >
+> >>If scsi_queue_next_request(q, cmd) is running on more than one CPU
+> >>and q != q1 then you have a problem with the starved devices list.
+> >
+> >
+> >Not with the current locking: we lock queue_lock (equal to host_lock)
+> >at the start of scsi_queue_next_request, and unlock at the end of
+> >scsi_queue_next_request.
+> 
+> Are you sure that all device's request queues will use
+> the same lock (the host lock) in the future?
+> 
+> My problem is that your patch code for scsi_queue_next_request()
+> behaves as if q->queue_lock is the same for all devices' request_queues
+> of the host.  And this is a _special case_, valid only at the present!!!!
+> 
+> I absolutely _detest_ the fact that the host_lock is used to lock LLDD's
+> entry points, SCSI Core's data, *and* the request queues for
+> all devices of the host... Talk about serializaion!
+> 
+> But okay, if you want to leave it like it is, holding the q->lock
+> all over the place, _*PLEASE*_, put a comment saying that
+> the q->lock is actually the host_lock and locks all the
+> queues for all devices on the host... similar to my ``detest''
+> paragraph above.  And if this were to be ever changed then
+> the individual locks will have to be attained and released...
+> and lots of code _rewritten_.
 
---f+W+jCU1fRNres8c
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Irk no, that's quite a bad idea.
 
-On Mon, Mar 24, 2003 at 12:16:29PM -0700, Pat LaVarre wrote:
-> In particular, passing CDB's thru sg will mark them
-> Required, until/ unless we rev sg to let its client
-> choose to say Required or not?
+I completely agree with you that making assumptions about q->queue_lock
+== host lock is really really bad. Don't do that.
 
-That was my intent, at least.  The assumption being that a userspace
-program should have done an INQUIRY for 36-bytes to determine if it knows
-what it's about to do is safe.
+-- 
+Jens Axboe
 
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-Pitr!  That's brilliant!  Funded by Microsoft refunds.  What sweet irony!
-					-- A.J.
-User Friendly, 2/15/1999
-
---f+W+jCU1fRNres8c
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE+f2iiIjReC7bSPZARArTOAJ9phczDBgvoFXREUqqqGjBFflQbIgCgvA+L
-9f6aT3hkpxE8b4df1X7OUNE=
-=esYH
------END PGP SIGNATURE-----
-
---f+W+jCU1fRNres8c--
