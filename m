@@ -1,107 +1,156 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [usb-storage] Re: 2 PATCHES: fix request_tranferlength
-Date: Sat, 27 Jul 2002 19:55:03 -0700
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [RFC][PATCH] Direct I/O for the SCSI tapes
+Date: Sun, 28 Jul 2002 00:39:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020727195503.C3121@one-eyed-alien.net>
-References: <UTC200207272248.g6RMm3h14110.aeb@smtp.cwi.nl>
+Message-ID: <3D437590.8D69B132@torque.net>
+References: <Pine.LNX.4.44.0207271530500.1090-100000@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="3siQDZowHQqNOShm"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <UTC200207272248.g6RMm3h14110.aeb@smtp.cwi.nl>; from Andries.Brouwer@cwi.nl on Sun, Jul 28, 2002 at 12:48:03AM +0200
-List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl
-Cc: linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net
-
-
---3siQDZowHQqNOShm
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: linux-scsi@vger.kernel.org, ingo.oeser@informatik.tu-chemnitz.de
 
-ARGH!!
+Kai Makisara wrote:
+> 
+> The URL http://www.kolumbus.fi/kai.makisara/st-dio.html contains
+> explanation and a link to a patch implementing direct I/O in the SCSI tape
+> driver (st). Before adding this to the official kernel, I would like to
+> get some feedback on this patch. If no one is interested in this
+> enhancement and/or it seems to be useless, it will probably be left to
+> collect dust.
 
-Okay search the linux-scsi archives for May 29-30.  We've had this
-discussion before.
+Kai,
+Faster throughput and less CPU overhead seem pretty good reasons
+to use direct IO. With larger disk sizes, faster tape transfer speeds 
+are needed to backup them up in a reasonable time. So I hope your
+patch doesn't collect dust. Also most high speed application that
+use sg are _streaming_ to disks [I have one report of > 320 MB/sec].
+Perhaps people may one day use a purpose built command set for
+streaming like SSC rather than SBC (as used by direct access devices).
 
-At that time, I proposed adding a field to indicate the actual amount of
-data being requested, as opposed to the buffer size.  At the time (again,
-see the archives), I was told that the request_bufflen field _was_ that
-field.... any case where the request_bufflen didn't match up with the
-command was a bug and needed to be fixed.
+It was interesting to see that your patch used variants of Ingo Oeser's 
+sg_map_user_pages() [see Kai's version shown below] **. My interest in 
+those functions is that I would like to use them in sg (since kiobufs 
+have been removed from lk 2.5). According to Ingo several other char
+drivers that previously used kiobufs are probably looking for
+replacements as well.
 
-So which is it?  This needs to be fixed one way or another.
+Since they are general routines of use to char drivers that
+build scatter gather lists (block drivers have bio) perhaps they 
+should be placed in some common area.
 
-Emulated SCSI busses _need_ to know how much data to move.  usb-storage has
-a large table to try to figure it out, but it only gets the correct answer
-in _most_ cases, not all cases.  Only the originator of the command truly
-knows how much data is going to be moved, so the only mechanism that makes
-sense is to make the originator of the command indicate that number via
-some mechanism.
+Doug Gilbert
 
-Matt
+** lkml 2002-07-19 22:39:18 Ingo Oeser "Re: [never mind] kiobufs and highmem"
 
-On Sun, Jul 28, 2002 at 12:48:03AM +0200, Andries.Brouwer@cwi.nl wrote:
->     I haven't seen these patches integrated into a kernel yet... have I j=
-ust
->     missed them, or is there some reason they have been rejected?
->=20
->     > +++ b/drivers/scsi/scsi_scan.c    Sun Jul 21 00:55:37 2002
->     > -              256, SCSI_TIMEOUT+4*HZ, 3);
->     > +              scsi_cmd[4], SCSI_TIMEOUT+4*HZ, 3);
->=20
->     > +++ b/drivers/scsi/sd.c    Sun Jul 21 00:55:44 2002
->     > -              512, SD_TIMEOUT, MAX_RETRIES);
->     > +              255, SD_TIMEOUT, MAX_RETRIES);
->=20
-> There are many more possibilities.
-> Since the number of hours in a day is very finite, Linus cannot
-> look at everything, so even if the patch is perfect it can be ignored.
->=20
-> There is not really a SCSI maintainer, but there are people that are
-> well-known as active in the SCSI area. You may try to submit via
-> one of them.
->=20
-> But then the question is whether these are good patches.
->=20
-> I booted 2.5.29 earlier this evening and was greeted by
-> kernel BUG at transport.c: 351 and
-> kernel BUG at scsiglue.c: 150.
-> (And the usb-storage module now hangs initializing; rmmod fails,
-> reboot is necessary.)
->=20
-> The former BUG_ON wants to have len =3D=3D srb->request_bufflen.
-> But I don't know whether that is wise. It is less confusing
-> when bufflen indicates the size of the buffer available,
-> rather than the number of bytes you expect to move.
-> It is not unusual to get one byte more than you asked for,
-> in case you ask for an odd number of bytes.
->=20
-> So, maybe these patches aren't clear improvements.
->=20
-> Andries
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+Kai's st_map_user_pages() and st_unmap_user_pages() follow:
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
-I could always suspend a few hundred accounts and watch what happens.
-					-- Tanya
-User Friendly, 7/31/1998
+static int st_map_user_pages(struct scatterlist *sgl, const unsigned int max_pages,
+                            unsigned long uaddr, size_t count, int rw,
+                            unsigned long max_pfn)
+{
+       int res, i, j;
+       unsigned int nr_pages;
+       struct page **pages;
 
---3siQDZowHQqNOShm
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+       nr_pages = ((uaddr & ~PAGE_MASK) + count - 1 + ~PAGE_MASK) >> PAGE_SHIFT;
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
+       /* User attempted Overflow! */
+       if ((uaddr + count) < uaddr)
+               return -EINVAL;
 
-iD8DBQE9Q10HIjReC7bSPZARAufvAJ9tme86sut29/qxs5Lg3UCC5wHnNwCgldsv
-GLNSMIdZ066jQRol2Bfv914=
-=Q08z
------END PGP SIGNATURE-----
+       /* Too big */
+        if (nr_pages > max_pages)
+               return -ENOMEM;
 
---3siQDZowHQqNOShm--
+       /* Hmm? */
+       if (count == 0)
+               return 0;
+
+       if ((pages = kmalloc(max_pages * sizeof(*pages), GFP_ATOMIC)) == NULL)
+               return -ENOMEM;
+
+        /* Try to fault in all of the necessary pages */
+       down_read(&current->mm->mmap_sem);
+        /* rw==READ means read from drive, write into memory area */
+       res = get_user_pages(
+               current,
+               current->mm,
+               uaddr,
+               nr_pages,
+               rw == READ,
+               0, /* don't force */
+               pages,
+               NULL);
+       up_read(&current->mm->mmap_sem);
+
+       /* Errors and no page mapped should return here */
+       if (res < nr_pages)
+               goto out_unmap;
+
+        for (i=0; i < nr_pages; i++) {
+                /* FIXME: flush superflous for rw==READ,                 
+		 * probably wrong function for rw==WRITE
+                 */
+               flush_dcache_page(pages[i]);
+               if (page_to_pfn(pages[i]) > max_pfn)
+                       goto out_unlock;
+               /* ?? Is locking needed? I don't think so */
+               /* if (TestSetPageLocked(pages[i]))
+                  goto out_unlock; */
+        }
+
+       /* Populate the scatter/gather list */
+       sgl[0].page = pages[0];
+       sgl[0].offset = uaddr & ~PAGE_MASK;
+       if (nr_pages > 1) {
+               sgl[0].length = PAGE_SIZE - sgl[0].offset;
+               count -= sgl[0].length;
+               for (i=1; i < nr_pages ; i++) {
+                       sgl[i].offset = 0;
+                       sgl[i].page = pages[i];
+                       sgl[i].length = count < PAGE_SIZE ? count : PAGE_SIZE;
+                       count -= PAGE_SIZE;
+               }
+       }
+       else {
+               sgl[0].length = count;
+       }
+
+       kfree(pages);
+       return nr_pages;
+
+ out_unlock:
+       /* for (j=0; j < i; j++)
+          unlock_page(pages[j]); */
+       res = 0;
+ out_unmap:
+       if (res > 0)
+               for (j=0; j < res; j++)
+                       page_cache_release(pages[j]);
+       kfree(pages);
+       return res;
+}
+
+/* And unmap them... */
+static int st_unmap_user_pages(struct scatterlist *sgl, const unsigned int nr_pages,
+                              int dirtied)
+{
+       int i;
+
+       for (i=0; i < nr_pages; i++) {
+               if (dirtied && !PageReserved(sgl[i].page))
+                       SetPageDirty(sgl[i].page);
+               /* unlock_page(sgl[i].page); */
+               /* FIXME: cache flush missing for rw==READ
+                * FIXME: call the correct reference counting function
+                */
+               page_cache_release(sgl[i].page);
+       }
+
+       return 0;
+}
