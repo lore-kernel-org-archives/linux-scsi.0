@@ -1,30 +1,36 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: usb storage traces
-Date: Thu, 4 Dec 2003 21:08:32 -0800
+Date: Fri, 5 Dec 2003 10:01:10 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031204210832.A1757@beaverton.ibm.com>
-References: <20031204184428.GA17116@one-eyed-alien.net> <Pine.LNX.4.44L0.0312041509380.994-100000@ida.rowland.org>
+Message-ID: <Pine.LNX.4.44L0.0312050954360.850-100000@ida.rowland.org>
+References: <1070576669.2269.108.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.104]:45460 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S263857AbTLEFJH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2003 00:09:07 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0312041509380.994-100000@ida.rowland.org>; from stern@rowland.harvard.edu on Thu, Dec 04, 2003 at 03:59:58PM -0500
+Received: from ida.rowland.org ([192.131.102.52]:4100 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S264266AbTLEPBL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2003 10:01:11 -0500
+In-Reply-To: <1070576669.2269.108.camel@patibmrh9>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Pat LaVarre <p.lavarre@ieee.org>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>, David Brownell <david-b@pacbell.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: linux-scsi@vger.kernel.org, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>, David Brownell <david-b@pacbell.net>
 
-On Thu, Dec 04, 2003 at 03:59:58PM -0500, Alan Stern wrote:
+On 4 Dec 2003, Pat LaVarre wrote:
 
-> It was generic (transparent) scsi.
-> 
-> Perhaps I'll try implementing some of the other protocol codes in FSG,
-> maybe also the "removeable media" flag.  This would also require
-> implementing the PREVENT-ALLOW-MEDIUM-REMOVAL, READ-FORMAT-CAPACITIES, and
-> START-STOP, possibly also REZERO-UNIT, SEEK, READ(12), and WRITE(12).
+> > Does anybody know what ... mode page x1c do?  Although 
+> > nominally vendor-specific, they must be reasonably standardized if Windows 
+> > can get away with using them on a generic device.
 
-What is FSG?
+According to my newly-located source, page x1c is the Timer and Protect
+page.  It includes values for the Inactivity Time Multiplier, Disable
+Media Access, and Software Write Protect.
 
--- Patrick Mansfield
+Windows may use it to try and set the drive's spin-down time.
+
+Incidentally, Pat, can you confirm whether bInterfaceSubClass x01 = RBC 
+(Reduced Block Commands, T10 project 1240-D) uses 0-padding of commands to 
+12 bytes or not?  The Linux usb-storage driver seems to think that it 
+doesn't.
+
+Alan Stern
+
