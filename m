@@ -1,63 +1,73 @@
-From: "Scott M. Ferris" <sferris@acm.org>
-Subject: Re: SAS overview
-Date: Tue, 16 Mar 2004 11:47:13 -0600 (CST)
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Re: adding flag for 192 byte mode sense
+Date: Tue, 16 Mar 2004 10:02:39 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040316174713.C424976C4F@isis.visi.com>
-References: <20040316131246.GQ25059@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <20040316180238.GA19787@one-eyed-alien.net>
+References: <20040313174651.A3054@beaverton.ibm.com> <Pine.LNX.4.44L0.0403161214510.815-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="tKW2IUtsqtDRztdT"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from corb.mc.mpls.visi.com ([208.42.156.1]:30403 "EHLO
-	corb.mc.mpls.visi.com") by vger.kernel.org with ESMTP
-	id S264312AbUCPRrP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Mar 2004 12:47:15 -0500
-In-Reply-To: <20040316131246.GQ25059@parcelfarce.linux.theplanet.co.uk> from
- Matthew Wilcox at "Mar 16, 2004 07:12:58 am"
+Received: from multivac.one-eyed-alien.net ([64.169.228.101]:64903 "EHLO
+	multivac.one-eyed-alien.net") by vger.kernel.org with ESMTP
+	id S261852AbUCPSCs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Mar 2004 13:02:48 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0403161214510.815-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: Douglas Gilbert <dougg@torque.net>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-Matthew Wilcox wrote:
-> On Tue, Mar 16, 2004 at 09:46:31PM +1000, Douglas Gilbert wrote:
-> 
-> > Now things start to get interesting. SAS can aggregate
-> > individual phy interconnects to form "wide" links. So
-> > if two (single phy) cables are run from a HBA (occupying
-> > two of its phys) to phys on the same expander then that
-> > is a wide link. Seen from Linux driving that HBA that is
-> > two PCI devices (each HBA phy) but only one SCSI initiator
-> > port. Up to 256 phy interconnects can be ganged to make
-> > a very wide SAS link (a parallel bus you might say).
-> 
-> It's different though (and I suspect you know this, but let's clarify for
-> the audience).  A parallel link would send each bit down a different phy.
-> PCI-E (and probably SAS) send each byte down a different phy.
 
-The assumption that each phy will be a different PCI device is likely
-to be false, at least for initiators.  Under normal circumstances,
-there's simply no reason for a host driver to care which initiator phy
-gets used, and it's more efficient for the HBA to choose the phy when
-it wants to open a connection, and expose a firmware interface that
-deals with either logical (SAM-2) SCSI initiator ports (narrow or wide
-depending on cabling), or end devices that the HBA has discovered in
-the SAS domain.  You can probably get phy information from the HBA for
-configuration or error reporting purposes, but host drivers probably
-won't queue commands to specific phys.
+--tKW2IUtsqtDRztdT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-SAS is connection-oriented, and each connection is between one
-initiator phy and one target phy.  The wide ports don't aggregate data
-at the byte level.  A wide port lets you have multiple connections
-open at the same time, to different devices, or to the same device if
-that device has enough phys.  Once a connection is established, SAS is
-fairly similar to packetized U320.
+On Tue, Mar 16, 2004 at 12:25:03PM -0500, Alan Stern wrote:
+> +
+> +	/* We can't put these settings in slave_alloc() because that gets
+> +	 * called before the device type is known.  Consequently these
+> +	 * settings can't be overridden via the scsi devinfo mechanism. */
+> +	if (sdev->type =3D=3D TYPE_DISK) {
+> +
+> +		/* Disk-type devices use MODE SENSE(6) if the protocol
+> +		 * (SubClass) is Transparent SCSI */
+> +		if (us->subclass =3D=3D US_SC_SCSI)
+> +			sdev->use_10_for_ms =3D 0;
+> +	} else {
+> +
+> +		/* Non-disk-type devices don't need to blacklist MS page x08
+> +		 * or to force 192 byte transfer lengths for MODE SENSE */
+> +		sdev->skip_ms_page_8 =3D 0;
+> +		sdev->use_192_bytes_for_3f =3D 0;
+> +	}
+> =20
 
-The main effect of having wide ports on the HBAs is that it allows the
-HBA to have 4 connections open at once, and it allows a target to open
-a connection to any of the HBA's 4 initiator phys when reconnecting to
-the initiator to provide data-in or status.  It's like having 4 phone
-lines with the same hunt-group phone number for incoming calls.
+Do we know what non-disk type devices use for MODE_SENSE?  That would
+(primarily) be CD-ROMs, I think...
 
--- 
-Scott M. Ferris,
-sferris@acm.org 
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+Somebody call an exorcist!
+					-- Dust Puppy
+User Friendly, 5/16/1998
+
+--tKW2IUtsqtDRztdT
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQFAV0E+IjReC7bSPZARAj2BAJ9+R4nuvAQq+2yLqKESpP2dYQMlXgCgtnCv
+wF1wfYWC0/EHQ7WMrwr//Vk=
+=w3IK
+-----END PGP SIGNATURE-----
+
+--tKW2IUtsqtDRztdT--
