@@ -1,56 +1,56 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Advansys SCSI compile problems in 2.5.73
-Date: Thu, 26 Jun 2003 13:27:27 +0200 (MEST)
+From: "Tony Battersby" <tonyb@cybernetics.com>
+Subject: [PATCH] 2.4.21 fix race condition in sg.c
+Date: Thu, 26 Jun 2003 11:18:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.21.0306261326160.20587-100000@vervain.sonytel.be>
+Message-ID: <002801c33bf6$24672940$e0019d89@cybernetics.com>
+Reply-To: <tonyb@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail2.sonytel.be ([195.0.45.172]:42669 "EHLO witte.sonytel.be")
-	by vger.kernel.org with ESMTP id S265572AbTFZLNX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jun 2003 07:13:23 -0400
+Received: from cyborg.cybernetics.com ([206.246.200.18]:62734 "EHLO
+	cybernetics.com") by vger.kernel.org with ESMTP id S261868AbTFZPD4
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Jun 2003 11:03:56 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Bob Frey <linux@advansys.com>
-Cc: linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>
+To: dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
-	Hi Bob,
+The function sg_cmd_done_bh() sets srp->done = 1 before setting other fields
+to be returned to userspace (such as srp->header.resid).  This is a race
+condition since other code assumes that done == 1 means that all fields to
+be returned to userspace (via read()) have already been set.  I am seeing
+this race condition manifest in a program that uses poll() to wait for any
+one of several outstanding commands to complete.  The symptom is that every
+once in a while the resid value returned for the command is 0 rather than
+the correct value, since poll() showed that the command was complete and
+read() returned the completion status for it before sg_cmd_done_bh() had
+gotten to the line "srp->header.resid = SCpnt->resid".
 
-If CONFIG_PCI is not set, the advansys driver doesn't compile. Below are a few
-required changes, but some more are needed. Since I don't have the hardware, I
-gave up.
+This patch against 2.4.21 fixes the problem.
 
---- linux-2.5.73/drivers/scsi/advansys.c.orig	Sun Jun 15 09:38:35 2003
-+++ linux-2.5.73/drivers/scsi/advansys.c	Mon Jun 23 15:51:12 2003
-@@ -4765,7 +4765,10 @@
-                 continue;
-             }
- 
-+#ifdef CONFIG_PCI
-+	    /* FIXME */
- 	    scsi_set_device(shp, &pci_devp->dev);
-+#endif
- 
-             /* Save a pointer to the Scsi_Host of each board found. */
-             asc_host[asc_board_count++] = shp;
-@@ -9146,8 +9149,6 @@
- {
- #ifdef CONFIG_PCI
-     pci_write_config_byte(asc_dvc->cfg->pci_dev, offset, byte_data);
--#else /* CONFIG_PCI */
--    return 0;
- #endif /* CONFIG_PCI */
- }
- 
+--- drivers/scsi/sg.c.orig	Fri Jun 13 10:51:36 2003
++++ drivers/scsi/sg.c	Thu Jun 26 11:07:28 2003
+@@ -1241,7 +1241,6 @@
+     SRpnt->sr_request.rq_dev = MKDEV(0, 0);  /* "sg" _disowns_ request blk
+*/
 
-Gr{oetje,eeting}s,
+     srp->my_cmdp = NULL;
+-    srp->done = 1;
+     read_unlock(&sg_dev_arr_lock);
 
-						Geert
+     SCSI_LOG_TIMEOUT(4, printk("sg...bh: dev=%d, pack_id=%d, res=0x%x\n",
+@@ -1274,6 +1273,8 @@
+     }
+     /* Rely on write phase to clean out srp status values, so no "else" */
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
++    srp->done = 1;
++
+     scsi_release_request(SRpnt);
+     SRpnt = NULL;
+     if (sfp->closed) { /* whoops this fd already released, cleanup */
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+---------------
+
+Anthony J. Battersby
+Cybernetics
 
