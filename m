@@ -1,61 +1,33 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: Re: [TRIVIAL] [2.5 patch] remove an unused function from NCR53c406a.c
-Date: Thu, 10 Jul 2003 23:37:30 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030710213730.GL6848@fs.tum.de>
-References: <1057586204.1812.2.camel@mulgrave> <20030708034706.C1ABF2C244@lists.samba.org>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: Re: Hang with anticipatory I/O scheduler and aacraid controller
+Date: 10 Jul 2003 15:06:58 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1057874818.935.12.camel@markh1.pdx.osdl.net>
+References: <1057868803.19383.159.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:48330 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S269587AbTGJVW7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jul 2003 17:22:59 -0400
-Content-Disposition: inline
-In-Reply-To: <20030708034706.C1ABF2C244@lists.samba.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <1057868803.19383.159.camel@markh1.pdx.osdl.net>
+To: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
 
-On Tue, Jul 08, 2003 at 11:27:45AM +1000, Rusty Russell wrote:
-> In message <1057586204.1812.2.camel@mulgrave> you write:
-> > On Mon, 2003-07-07 at 02:46, Rusty Trivial Russell wrote:
-> > > From:  Adrian Bunk <bunk@fs.tum.de>
-> > > 
-> > >   The patch below removes an unused function from 
-> > >   drivers/scsi/NCR53c406a.c .
-> > >    
-> > >   I've tested the compilation with 2.5.72-mm2.
-> > 
-> > Rusty, I'm not going to remove this immediately.
-> > 
-> > It's the old polling interface for the chip.  It was unplumbed when the
-> > ->command() API was removed, but these chips were strangely connected to
-> > soundblaster cards and may need to operate in no-interrupt mode (in
-> > which case we'll need to ressurect it).  I'm just waiting to see if
-> > anyone complains that their sound card attached CDROM no-longer works.
+On Thu, 2003-07-10 at 13:26, Mark Haverkamp wrote:
+> I have been seeing hangs when using an aacraid adapter after updating my
+> kernel view to the latest as of yesterday.  It doesn't seem to affect
+> the sym53c8xx that I have as the boot controller. I discovered today
+> that if I boot with elevator=deadline that I don't see the hangs
+> anymore.  I have been using dd to copy from one partition to another to
+> create these hangs. 
 > 
-> Thanks for taking the time to explain, James.  From the other patches
-> Adrian sent, I think he was on a warning hunt.
+> It seems to be related to writes.  If I dd from a partition to /dev/null
+> I don't see a hang.  But a dd from /dev/zero to a partition does hang.
+> 
 
-Yup, that's correct.
+Sorry, this looks like a false alarm.  I updated my view to 2.5.75 this
+afternoon and the problem seems to have disappeared.
 
-> I'll turn off re-transmit on this patch, so if it gets applied later
-> Adrian will get a closure mail, otherwise I'll dredge it up again late
-> in the 2.6-pre stuff.
-
-That's OK for me.
-
-> Thanks!
-> Rusty.
-
-Thanks
-Adrian
+Mark.
 
 -- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+Mark Haverkamp <markh@osdl.org>
