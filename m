@@ -1,54 +1,70 @@
-From: Luben Tuikov <luben@splentec.com>
-Subject: Re: [PATCH] SCSI Core patches
-Date: Mon, 13 Jan 2003 16:30:05 -0500
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Adaptec 39160 / Yamaha CRW8424S CD burning
+Date: Tue, 14 Jan 2003 10:01:24 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E232FDD.5000906@splentec.com>
-References: <3E1ADC9A.6090800@splentec.com> <20030107102127.B15528@beaverton.ibm.com> <3E1B2934.8060805@splentec.com> <20030107123301.A16378@beaverton.ibm.com> <3E1B513B.2090409@splentec.com> <20030107173633.A17825@beaverton.ibm.com> <20030111181224.B3178@infradead.org> <20030113123306.A16718@beaverton.ibm.com>
+Message-ID: <3E234544.6050508@torque.net>
+References: <20030113071543.GA9558@holomorphy.com> <3E22738D.3020000@torque.net> <20030113091635.GC9558@holomorphy.com> <20030113093833.GD9558@holomorphy.com> <20030113103502.GA940@holomorphy.com> <20030113125723.GD940@holomorphy.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+To: William Lee Irwin III <wli@holomorphy.com>
+Cc: linux-scsi@vger.kernel.org, gibbs@scsiguy.com, axboe@suse.de
 
-Patrick Mansfield wrote:
- >
-> This is _not_ just for multi-path. The current scsi code does not properly
-> size the target and lun based on the transport. For SPI the target and lun
-> need only be one byte; for FCP they are 4 and 8 bytes; for iSCSI I don't
-> know what. (Our current four byte host-ordered lun does not match anything
-> in any SCSI spec.)
+William Lee Irwin III wrote:
+> On Mon, Jan 13, 2003 at 02:35:02AM -0800, William Lee Irwin III wrote:
+> 
+>>Okay, 2.5.56-mm1 + your SG_IO fixes got the following in the debug stuff
+>>with Jens' patched cdrecord:
+> 
+> 
+> I'm giving up at this point. I got another skipping CD (again, this
+> produces playable CD's in 2.4.x, and the only difference is the kernel):
 
-I brought this up last year sometime, either privately or here (search
-the archives if anyone is interested) and the idea of using a 64-bit LUN
-was shot down as in ``we don't need so many bits''.
+Bill,
+Thanks for all the testing.
 
-The problem is that due to its hierarchical structure all 64 bits are
-used. If SPI wants to use 5 bits, let it use 5 bits, if iSCSI wants
-to use 64, we've got this covered too.
+One comment:
+'cat /proc/scsi/sg/debug' will only show SCSI commands
+being sent to the burner when the sg interface is being used.
+So it seems that your earlier posts showed sg being
+used in all cases.
+For example:
+ > $ cat /proc/scsi/sg/debug
+ > dev_max(currently)=6 max_active_device=3 (origin 1)
+ >  def_reserved_size=32768
+ >  >>> device=sg1 scsi0 chan=0 id=3 lun=0   em=0 sg_tablesize=128 excl=0
+ >    FD(1): timeout=20500ms bufflen=129024 (res)sgat=4 low_dma=0
+ >    cmd_q=1 f_packid=0 k_orphan=0 closed=0
+ >      rb>> act: id=0 blen=63504 t_o/elap=40000/15ms sgat=2 op=0x2a
+shows a SCSI WRITE (10) command in progress. This is typical
+for cdrecord using sg during a burn.
 
-But it would not be interpreted by SCSI Core, i.e. SCSI Core will simply
-copy around the LUN.
+> Included as a MIME attachment is a compressed log of the following cmd:
+> 
+> /share/projects/kernel/hacking/misc/axboe/cdrtools-1.11/cdrecord/OBJ/i686-linux-cc/cdrecord -v -pad -swab debug=2 fs=16m timeout=120 speed=0 dev=0,3,0 -audio `cat tracks` >/share/projects/kernel/hacking/cdrecord.log 2>&1
 
-BTW, a LUN is a well defined object, cf. SAM-3, 4.9.
+Well that log looks fine, no errors or underruns. cdrecord
+checks the status of each executed command quite closely
+and would not complete if there was something wrong.
 
-> Having a scsi_nexus or such that is host adapter specific (something like
-> Mike A. posted about) possibly with common transport code (for FCP, SPI,
-> and iSCSI) would be useful, and would make it easier to add multi-pathing
-> or support for future transports. The scsi_device current_tag, sdtr, wdtr,
-> and ppr would be moved to a scsi_nexus since they are SPI specific.
+> run on 2.5.56-mm1 with your (Doug Gilbert's) SG_IO fixes.
+> 
+> If there's some fix for this this, I'd be much obliged if it were
+> included in mainline.
 
-SCSI Core should know as little as possible about the transport, IMHO.
+In this case my SG_IO fixes should not have made any difference
+as they are not in the code path when sg is being used.
+Unfortunately those fixes didn't get into lk 2.5.57 .
 
-Also I'd get rid of ``current_tag'', and leave only information as to
-what kind of task management the device supports (BQue and CmdQue bits
-in INQUIRY data). Also see:
+So I can't explain what you are seeing. It's probably
+time to pull out my Yamaha 4416 (SCSI burner) and waste
+my own CDRs to see if I get the same problem :-)
 
-http://MARC.10East.com/?l=linux-scsi&m=103488799412511&w=2
+Doug Gilbert
 
--- 
-Luben
 
 
 
