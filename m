@@ -1,65 +1,60 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] - Fusion-MPT much faster as module
-Date: Tue, 22 Mar 2005 13:35:20 -0700
-Message-ID: <91888D455306F94EBD4D168954A9457C01AEB1F7@nacos172.co.lsil.com>
+From: Willem Riede <osst@riede.org>
+Subject: Re: [2.6 patch] drivers/scsi/osst.c: make code static
+Date: Tue, 22 Mar 2005 21:19:52 +0000
+Message-ID: <1111526392l.12349l.36l@serve.riede.org>
+References: <20050322142806.GR3982@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Received: from mail0.lsil.com ([147.145.40.20]:28117 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261844AbVCVUfr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Mar 2005 15:35:47 -0500
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Received: from sccrmhc14.comcast.net ([204.127.202.59]:47860 "EHLO
+	sccrmhc11.comcast.net") by vger.kernel.org with ESMTP
+	id S261965AbVCVVT5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2005 16:19:57 -0500
+In-Reply-To: <20050322142806.GR3982@stusta.de> (from bunk@stusta.de on Tue
+	Mar 22 09:28:07 2005)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, kenneth.w.chen@intel.com
+To: James.Bottomley@SteelEye.com, Adrian Bunk <bunk@stusta.de>
+Cc: Andrew Morton <akpm@osdl.org>, osst-users@lists.sourceforge.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tuesday, March 22, 2005 12:05 PM, James Bottomley wrote:
-> On Tue, 2005-03-22 at 11:40 -0700, Moore, Eric Dean wrote:
-> > History on this:
-> > Between the 3.01.16 and 3.01.18, we introduced new method
-> > to passing command line options to the driver.  Some of the
-> > command line options are used for fine tuning dv(domain
-> > validation) in the driver.  By accident, these command line 
-> options were
-> > wrapped around #ifdef MODULE in the 3.01.18 version of the driver.
-> > What this meant is when the driver is compiled built-in the kernel,
-> > the optimal settings for dv were ignored, thus poor performance.  
+On 03/22/2005 09:28:07 AM, Adrian Bunk wrote:
+> This patch makes needlessly global code static.
 > 
-> OK, I'll add this to the queue.
+> Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+James, I agree with this, can you put it in BK, please?
+
+Signed-off-by: Willem Riede <osst@riede.org>
+ 
+> ---
 > 
-> Could I just point out that if your driver actually printed 
-> the results
-> of negotiation, this would have been an awful lot easier to debug.
+> This patch was already sent on:
+> - 28 Feb 2005
 > 
-> Additionally, if you used the SPI transport class domain 
-> validation, the
-> issue wouldn't have arisen in the first place.
+>  drivers/scsi/osst.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
 > 
-> James
+> --- linux-2.6.11-rc4-mm1-full/drivers/scsi/osst.c.old	2005-02-28 19:36:05.000000000 +0100
+> +++ linux-2.6.11-rc4-mm1-full/drivers/scsi/osst.c	2005-02-28 19:36:25.000000000 +0100
+> @@ -24,7 +24,7 @@
+>  */
+>  
+>  static const char * cvsid = "$Id: osst.c,v 1.73 2005/01/01 21:13:34 wriede Exp $";
+> -const char * osst_version = "0.99.3";
+> +static const char * osst_version = "0.99.3";
+>  
+>  /* The "failure to reconnect" firmware bug */
+>  #define OSST_FW_NEED_POLL_MIN 10601 /*(107A)*/
+> @@ -170,7 +170,7 @@
+>  static int osst_probe(struct device *);
+>  static int osst_remove(struct device *);
+>  
+> -struct scsi_driver osst_template = {
+> +static struct scsi_driver osst_template = {
+>  	.owner			= THIS_MODULE,
+>  	.gendrv = {
+>  		.name		=  "osst",
 > 
-
-Yes, I agree with you.
-
-I'm actively working in the background to split the mptscish driver into
-separate bus type drivers.  One for fiber channel, one for SCSI, and
-one for eventually SAS.  This was a request from you long time back, at
-a time when I tried to submitting a patch having FC transport attributes
-support.
-I think once I submit that, then we can start taking a looking at supporting
-the SPI transport layer.  
-
-I still wonder if the SPI transport layer will work for RAID volumes.  
-Do you know if the spi transport layer supports dv on hidden devices in a
-raid volume? 
-Meaning these hidden physical disks will not been seen by the block layer,
-however 
-spi transport layer would be aware so dv can be performed those hidden disk?
-
-Eric 
-
-
-
-
 
 
