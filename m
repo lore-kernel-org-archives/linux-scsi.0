@@ -1,82 +1,29 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] Format Unit can take many hours
-Date: Tue, 11 May 2004 14:46:15 +0200
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [BK PATCH] SCSI updates for 2.6.6
+Date: 11 May 2004 08:42:41 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040511124614.GI1906@suse.de>
-References: <20040511114936.GI4828@tpkurt.garloff.de> <20040511122037.GG1906@suse.de> <1084279242.2688.12.camel@laptop.fenrus.com>
+Message-ID: <1084282961.1886.8.camel@mulgrave>
+References: <1084229974.1763.512.camel@mulgrave>
+	<20040511123441.GL4828@tpkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:13268 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S264670AbUEKMqS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 May 2004 08:46:18 -0400
-Content-Disposition: inline
-In-Reply-To: <1084279242.2688.12.camel@laptop.fenrus.com>
+Received: from stat1.steeleye.com ([65.114.3.130]:65005 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264729AbUEKNoQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 May 2004 09:44:16 -0400
+In-Reply-To: <20040511123441.GL4828@tpkurt.garloff.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjanv@redhat.com>
-Cc: Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
+To: Kurt Garloff <garloff@suse.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Tue, May 11 2004, Arjan van de Ven wrote:
-> On Tue, 2004-05-11 at 14:20, Jens Axboe wrote:
-> > On Tue, May 11 2004, Kurt Garloff wrote:
-> > > Hi,
-> > block/scsi_ioctl.c should likely receive similar treatment then.
-> 
-> how about sticking these in a shared header between the 2 files ?
+On Tue, 2004-05-11 at 07:34, Kurt Garloff wrote:
+> Should I resubmit the other SCSI scanning/blacklist patches or are they
+> queued? Or rejected?
 
-yep would be best, ala
+I thought' I'd put in all the necessary ones, what's missing?
 
-===== drivers/block/scsi_ioctl.c 1.42 vs edited =====
---- 1.42/drivers/block/scsi_ioctl.c	Tue Apr 27 15:20:34 2004
-+++ edited/drivers/block/scsi_ioctl.c	Tue May 11 14:43:51 2004
-@@ -209,11 +209,6 @@
- 	return 0;
- }
- 
--#define FORMAT_UNIT_TIMEOUT		(2 * 60 * 60 * HZ)
--#define START_STOP_TIMEOUT		(60 * HZ)
--#define MOVE_MEDIUM_TIMEOUT		(5 * 60 * HZ)
--#define READ_ELEMENT_STATUS_TIMEOUT	(5 * 60 * HZ)
--#define READ_DEFECT_DATA_TIMEOUT	(60 * HZ )
- #define OMAX_SB_LEN 16          /* For backward compatibility */
- 
- static int sg_scsi_ioctl(request_queue_t *q, struct gendisk *bd_disk,
-===== drivers/scsi/scsi_ioctl.c 1.24 vs edited =====
---- 1.24/drivers/scsi/scsi_ioctl.c	Mon Aug 25 15:37:40 2003
-+++ edited/drivers/scsi/scsi_ioctl.c	Tue May 11 14:45:09 2004
-@@ -27,11 +27,6 @@
- 
- #define NORMAL_RETRIES			5
- #define IOCTL_NORMAL_TIMEOUT			(10 * HZ)
--#define FORMAT_UNIT_TIMEOUT		(2 * 60 * 60 * HZ)
--#define START_STOP_TIMEOUT		(60 * HZ)
--#define MOVE_MEDIUM_TIMEOUT		(5 * 60 * HZ)
--#define READ_ELEMENT_STATUS_TIMEOUT	(5 * 60 * HZ)
--#define READ_DEFECT_DATA_TIMEOUT	(60 * HZ )  /* ZIP-250 on parallel port takes as long! */
- 
- #define MAX_BUF PAGE_SIZE
- 
-===== include/scsi/scsi.h 1.20 vs edited =====
---- 1.20/include/scsi/scsi.h	Wed Feb 25 12:37:46 2004
-+++ edited/include/scsi/scsi.h	Tue May 11 14:45:25 2004
-@@ -362,6 +362,14 @@
- #define SCSI_2          3
- #define SCSI_3          4
- 
-+/*
-+ * default timeouts
-+ */
-+#define FORMAT_UNIT_TIMEOUT		(12 * 60 * 60 * HZ)
-+#define START_STOP_TIMEOUT		(60 * HZ)
-+#define MOVE_MEDIUM_TIMEOUT		(5 * 60 * HZ)
-+#define READ_ELEMENT_STATUS_TIMEOUT	(5 * 60 * HZ)
-+#define READ_DEFECT_DATA_TIMEOUT	(60 * HZ )
- 
- /*
-  * Here are some scsi specific ioctl commands which are sometimes useful.
+James
 
-
--- 
-Jens Axboe
 
