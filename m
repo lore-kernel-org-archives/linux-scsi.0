@@ -1,33 +1,37 @@
-From: "Barry K. Nathan" <barryn@pobox.com>
-Subject: Re: reiserfs and SCSI oops seen in 2.6.9-rc2 with local SCSI disk IO
-Date: Fri, 24 Sep 2004 12:39:42 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040924193942.GA17460@ip68-4-98-123.oc.oc.cox.net>
-References: <4154372C.7070506@netapp.com>
+From: David Wysochanski <davidw@netapp.com>
+Subject: Re: reiserfs and SCSI oops seen in 2.6.9-rc2 with local SCSI disk
+ IO
+Date: Fri, 24 Sep 2004 15:42:44 -0400
+Sender: linux-fsdevel-owner@vger.kernel.org
+Message-ID: <415478B4.7090208@netapp.com>
+References: <4154372C.7070506@netapp.com> <20040924193942.GA17460@ip68-4-98-123.oc.oc.cox.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from puzzle.sasl.smtp.pobox.com ([207.8.226.4]:48824 "EHLO
-	sasl.smtp.pobox.com") by vger.kernel.org with ESMTP id S269045AbUIXTjp
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Sep 2004 15:39:45 -0400
-Content-Disposition: inline
-In-Reply-To: <4154372C.7070506@netapp.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20040924193942.GA17460@ip68-4-98-123.oc.oc.cox.net>
+To: "Barry K. Nathan" <barryn@pobox.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Wysochanski <davidw@netapp.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Sep 24, 2004 at 11:03:08AM -0400, David Wysochanski wrote:
-> I can reproduce this pretty easily with local disk.
-[snip]
+Barry K. Nathan wrote:
+> On Fri, Sep 24, 2004 at 11:03:08AM -0400, David Wysochanski wrote:
+>  > I can reproduce this pretty easily with local disk.
+> [snip]
+> 
+> Make absolutely very very sure that you are *NOT* using SELinux --
+> reiserfs and SELinux do NOT get along right now (this is a known
+> problem). If you try to use the two together, you'll almost certainly
+> get freezes and oopses.
+> 
+Nope - here's my /proc/cmdline:
+root=0802 vga=0x314 selinux=0 splash=silent desktop resume=/dev/sda1 showopts console=tty0 console=ttyS0,9600n8 nmi_watchdog=1
 
-Make absolutely very very sure that you are *NOT* using SELinux --
-reiserfs and SELinux do NOT get along right now (this is a known
-problem). If you try to use the two together, you'll almost certainly
-get freezes and oopses.
 
-If you're seeing this type of problem even without SELinux, that's
-interesting...
+> If you're seeing this type of problem even without SELinux, that's
+> interesting...
+> 
+> -Barry K. Nathan <barryn@pobox.com>
+> 
 
--Barry K. Nathan <barryn@pobox.com>
 
