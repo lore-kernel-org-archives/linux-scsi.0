@@ -1,40 +1,52 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: Transport Attributes -- attempt#4
-Date: Mon, 23 Feb 2004 21:58:28 -0800
+From: Eric Kerin <eric@bootseg.com>
+Subject: Re: 2.6.3 oops at kobject_unregister, alsa & aic7xxx
+Date: Tue, 24 Feb 2004 01:05:25 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040224055828.GA503530@sgi.com>
-References: <20040120215645.GG15871@localhost> <1077581832.1833.21.camel@mulgrave>
+Message-ID: <1077602725.3172.19.camel@opiate>
+References: <1077546633.362.28.camel@boxen>
+	 <20040223160716.799195d0.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.sgi.com ([192.48.171.6]:59361 "EHLO rj.sgi.com")
-	by vger.kernel.org with ESMTP id S262174AbUBXF6h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2004 00:58:37 -0500
-Content-Disposition: inline
-In-Reply-To: <1077581832.1833.21.camel@mulgrave>
+Received: from mxsf18.cluster1.charter.net ([209.225.28.218]:15886 "EHLO
+	mxsf18.cluster1.charter.net") by vger.kernel.org with ESMTP
+	id S262176AbUBXGL2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Feb 2004 01:11:28 -0500
+In-Reply-To: <20040223160716.799195d0.akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Martin Hicks <mort@wildopensource.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Alexander Nyberg <alexn@telia.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Feb 23, 2004 at 06:17:11PM -0600, James Bottomley wrote:
+On Mon, 2004-02-23 at 19:07, Andrew Morton wrote:
+> Alexander Nyberg <alexn@telia.com> wrote:
+> >
+> > This happens at shutdown when alsa is to close down. I'm running debian
+> > sid. NOTE: I recently removed my aic7xxx out of the motherboard, so the
+> > driver obviously can't find it. But if I remove aic7xxx from the modules
+> > list, this oops does _not_ happen.
 > 
-> OK, I finally found time to look at all this and try it out.
+> That's useful infomation.  It indicates that the aic7xxx driver is screwing
+> up the kobject lists.
 > 
-> My big objection is still that the scsi mid-layer needs to know about
-> the transports.  In testing, I recoded this so that no mid-layer
-> transport knowledge is necessary (patch attached).  I didn't opt for a
-> transport registration API in the mid-layer, but I could see that such a
-> thing might have been a better solution.
+> Just to confirm: are you saying that the aic7xxx driver is loaded at the
+> tie of the oops, but there is no aic7xxx hardware present in the machine?
 
-James, was scsi/scsi_transport.h supposed to be patched also?
-There is a new "size" member of the scsi_transport_template
-structure, but no patch to the data structure itself.  Did you
-replace attributes with size?
 
-Also, Martin is on vacation this week, I believe, so he probably
-won't respond until next week.
+I stumbled up this in early January.  I posted a patch to linux-scsi,
+but it dosn't seem to be merged at this point.  This problem will also
+occur with the aic79xx driver.
 
-thanks
+Here's the location of the original thread:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=107307695430108&w=2
 
-jeremy
+I just tried the patch on 2.6.3, and it still applies cleanly.
+
+Eric Kerin
+
+
+
+
+
+
+
