@@ -1,48 +1,40 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: sym53c8xx: 'echo "scsi dump 1" > /proc/scsi/scsi' generates an oops
-Date: Wed, 29 May 2002 10:44:51 -0700
+From: Luben Tuikov <luben@splentec.com>
+Subject: /proc/scsi/driver/hosts with same numeric???
+Date: Wed, 29 May 2002 15:59:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020529104451.A5229@eng2.beaverton.ibm.com>
-References: <200205272332.g4RNWgi22980@bach.leonora.org>
+Message-ID: <3CF53339.A21383FE@splentec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200205272332.g4RNWgi22980@bach.leonora.org>; from vladimir@acm.org on Mon, May 27, 2002 at 04:32:42PM -0700
+Received: from splentec.com (canoe.splentec.com [209.47.35.250])
+	by pepsi.splentec.com (8.11.6/8.11.0) with ESMTP id g4TIwju20407
+	for <linux-scsi@vger.kernel.org>; Wed, 29 May 2002 14:58:45 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Vladimir G. Ivanovic" <vladimir@acm.org>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, May 27, 2002 at 04:32:42PM -0700, Vladimir G. Ivanovic wrote:
-> The command 
-> 
->     echo "scsi dump 1" > /proc/scsi/scsi
-> 
-> generated an oops (syslog entries appended) on my SMP machine running a
-> 2.4.18 custom kernel derived from Red Hat's 2.4.18-4 kernel. My SCSI
-> controller is an sym53c1010-33, and its driver is
-> sym53c8xx-1.7.3c-20010512. 
-> 
-> Is this (1) operator error, (2) a high/mid/low-level SCSI problem, or
-> (3) some other kind of kernel problem that should be reported on the
-> linux-kernel list?
-> 
-> If some more information is needed, please let me know.
-> 
-> Thanks. 
-> 
-> --- Vladimir
-> 
-> P.S. I know, if it hurts, don't do that. ;-)
+Hello, this is what I see in /proc/scsi/some_driver:
 
-It's a mid layer SCSI bug, it improperly references the queue:
+total 0
+-rw-r--r--    1 root     root            0 May 29 15:52 1
+-rw-r--r--    1 root     root            0 May 29 15:52 2
+-rw-r--r--    1 root     root            0 May 29 15:52 3  <- What is
+-rw-r--r--    1 root     root            0 May 29 15:52 3  <-  the problem
+-rw-r--r--    1 root     root            0 May 29 15:52 4  <-  here?
+-rw-r--r--    1 root     root            0 May 29 15:52 4  <-
+-rw-r--r--    1 root     root            0 May 29 15:52 5
+-rw-r--r--    1 root     root            0 May 29 15:52 5
+-rw-r--r--    1 root     root            0 May 29 15:52 6
+-rw-r--r--    1 root     root            0 May 29 15:52 7
+-rw-r--r--    1 root     root            0 May 29 15:52 8
+-rw-r--r--    1 root     root            0 May 29 15:52 9
 
-	queue_head = &blk_dev[i].request_queue.queue_head;
+This driver scsi_registered() more than 10 hosts
+and this happened? But as long as there are less
+than 10 hosts, things seem ok.
 
-It should really be something like:
+How can I resolve this?
 
-	queue_head = SDpnt->request_queue;
-
-Better yet the code should be deleted, as it is also dumping all queues for
-each Scsi_Device. The code is gone in the current 2.5.x.
-
--- Patrick Mansfield
+TIA,
+-- 
+Luben
