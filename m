@@ -1,61 +1,37 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [Q] 2.4.x: how to handle driver aborts in sd/sr
-Date: Wed, 8 May 2002 09:07:29 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Task Sets in SCSI and Linux
+Date: Wed, 08 May 2002 11:34:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020508090729.A5368@eng2.beaverton.ibm.com>
-References: <OF789CF225.896237A6-ONC1256BB1.004E87CD@de.ibm.com>
+Message-ID: <200205081634.g48GYe304381@localhost.localdomain>
+References: <mheinz@infiniconsys.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from westrelay03.boulder.ibm.com (westrelay03.boulder.ibm.com [9.17.194.24])
-	by e32.co.us.ibm.com (8.12.2/8.12.2) with ESMTP id g48G7iiT045250
-	for <linux-scsi@vger.kernel.org>; Wed, 8 May 2002 12:07:44 -0400
-Received: from gateway.beaverton.ibm.com (gateway.beaverton.ibm.com [138.95.180.1])
-	by westrelay03.boulder.ibm.com (8.11.1m3/NCO/VER6.1) with ESMTP id g48G7XZ132624
-	for <linux-scsi@vger.kernel.org>; Wed, 8 May 2002 10:07:33 -0600
-In-Reply-To: <OF789CF225.896237A6-ONC1256BB1.004E87CD@de.ibm.com>; from Stefan.Bader@de.ibm.com on Wed, May 08, 2002 at 01:35:52PM +0200
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id JAA05661
+	for <linux-scsi@vger.kernel.org>; Wed, 8 May 2002 09:34:45 -0700
+In-Reply-To: Message from Michael Heinz <mheinz@infiniconsys.com>
+   of "Wed, 08 May 2002 10:54:48 EDT." <8B024BD9-6293-11D6-B607-0003934B22FE@infiniconsys.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Bader <Stefan.Bader@de.ibm.com>
+To: Michael Heinz <mheinz@infiniconsys.com>
 Cc: linux-scsi@vger.kernel.org
 
-Stefan,
+mheinz@infiniconsys.com said:
+>  From perusing the source code it appears to me that the Linux SCSI
+> layers do not take advantage of SCSI task sets. Is that correct? 
 
-Why not return DID_SOFT_ERROR? Disks (SCpnt->allowed > 0) will retry the
-IO some limited number of times, and tape (SCpnt->allowed == 0) will complete
-the IO with DID_SOFT_ERROR in the result.
+Could you elaborate on what you mean by "task set"?  SCSI 3 defines a task 
+simply as "work to be performed by the logical unit in the form of a command 
+or a group of linked commands".  This basically means the I_T_L or I_T_L_Q 
+nexus of scsi2, however scsi3 expands this for multi-ported devices.  "task 
+set" usually just means the outstanding tasks on a given logical unit, and as 
+such it's really a target concept although the initiator must know how to 
+track outstanding tasks correctly.
 
-Or, do you have to handle an arbitrary numbers of retries?
+If by "take advantage of SCSI task sets" you mean use tagged tasks to get 
+multiple outstanding tasks on a logical unit, the answer is yes but it depends 
+on the low level driver implementation.
 
--- Patrick
+James Bottomley
 
-On Wed, May 08, 2002 at 01:35:52PM +0200, Stefan Bader wrote:
-> Hi,
-> 
-> I've got some sort of error handling design question which I need some 
-> advice whether
-> this might be done the way I think.
-> In some error situations our low-level driver has to abort all currently 
-> active commands.
-> The device may work if the requests are retried. This works for disk for 
-> now by triggering
-> the mid-layer retry mechanism. This is ok for disks but a big problem for 
-> tapes which need
-> to handle this situation with more effort.
-> Now for that, the low-level driver can (and probably should) return 
-> DID_ABORT and let the
-> upper layer handle the situation. But then the sd driver would fail the 
-> request(s) because it
-> takes a result != 0 (aside from MEDIUM_ERROR) as 'no successful sectors' 
-> (which wouldn't
-> hurt) and there is no special catch for the condition in 
-> scsi_io_completion() from scsi_lib.c.
-> The desired action for the the abort case for disks would be just to 
-> requeue the whole request
-> (as it is done in the case of DID_RESET). 
-> The only two highlevel drivers that seem to use scsi_io-completion seem to 
-> be sd.c and sr.c
-> and in the reset case the request would just requeued as well. So, would 
-> there be a problem
-> in adding this to scsi_lib.c?
-> 
-> /Stefan Bader
+
