@@ -1,49 +1,42 @@
-From: koala@blooded.org
-Subject: Mohammed Al-Foudari's ThinkGeek.com Wish List!
-Date: Sat, 18 Oct 2003 10:44:03 -0400
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: 2.6.0 stability and the BK scsi trees
+Date: Sat, 18 Oct 2003 08:24:50 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <E1AAsJH-0001Mp-00@admin.thinkgeek.com>
+Message-ID: <20031018082450.A6510@beaverton.ibm.com>
+References: <1066265974.16761.426.camel@fuzzy> <3F8E8786.2020502@torque.net> <20031016132804.GA18370@parcelfarce.linux.theplanet.co.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.osdn.com ([66.35.250.105]:22715 "EHLO
-	sc8-osdn-mail.osdn.com") by vger.kernel.org with ESMTP
-	id S261639AbTJROoE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 18 Oct 2003 10:44:04 -0400
-Received: from sc8-thinkgeek-admin-2.thinkgeek.com ([10.2.160.1] helo=admin.thinkgeek.com)
-	by sc8-osdn-mail.osdn.com with esmtp (Exim 3.35 #1 (Debian))
-	id 1AAsJH-0004Fz-00
-	for <linux-scsi@vger.kernel.org>; Sat, 18 Oct 2003 07:44:03 -0700
-Received: from nobody by admin.thinkgeek.com with local (Exim 3.35 #1 (Debian))
-	id 1AAsJH-0001Mp-00
-	for <linux-scsi@vger.kernel.org>; Sat, 18 Oct 2003 10:44:03 -0400
+Received: from e32.co.us.ibm.com ([32.97.110.130]:55024 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S261664AbTJRP0A
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 18 Oct 2003 11:26:00 -0400
+Content-Disposition: inline
+In-Reply-To: <20031016132804.GA18370@parcelfarce.linux.theplanet.co.uk>; from willy@debian.org on Thu, Oct 16, 2003 at 02:28:04PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, pbadari@us.ibm.com
 
-Greetings!
+On Thu, Oct 16, 2003 at 02:28:04PM +0100, Matthew Wilcox wrote:
+> On Thu, Oct 16, 2003 at 09:56:54PM +1000, Douglas Gilbert wrote:
+> > What was the point of putting 32 dev_t's into the
+> > kernel? Many people who were advocating it used
+> > the increased number of scsi disks (> 256) and
+> > partitions (from 15 to 63 [to match the ide subsystem])
+> > as a major reason.
+> > 
+> > The sd driver is still littered with hacks to distribute
+> > its 256 (max) disks over 8 majors. Shouldn't this be
+> > fixed?
+> 
+> Well, let's see some fixes and then decide whether it's worth merging
+> before 2.6.0 or after 2.6.0.  We can be sure that vendors will integrate
+> this patch even if it's not in mainline kernel.org ... and i'd rather
+> see one variant of the patch which everybody uses than a different one
+> in RH, SuSE and Linux 2.7.
 
-Mohammed Al-Foudari has created a ThinkGeek.com wish list and 
-has sent this e-mail to you to tell you about it.
+If you have not seen it, Badari's sd patch is in the mm tree:
 
-If you think they deserve it, you may follow the link provided below to
-see what they have in their wishlist. You may also select any of the
-items for purchase. Don't worry about buying a double for them, our
-software will tell you what items have already been purchased so that 
-you can avoid being the tenth person to give them a copy of the same book.
+ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.0-test7/2.6.0-test7-mm1/broken-out/support-zillions-of-scsi-disks.patch
 
-To view Mohammed's wish list, simply click on (or copy) this URL:
-
-    http://www.thinkgeek.com/brain/gimme.cgi?wid=81cfa69a0
-
-If you have any questions or problems about ThinkGeek's Wish Lists,
-please feel free to drop us a note or give us a call at the address 
-or phone numbers below.
-
-Your fellow smart masses,
-Jen, Jon, Scott, Willie, JenH, Chris, Mat, Andy, John & Trevor
-
- -------------------------------------------------------------
- ThinkGeek, Inc.                      voice://1-888-GEEK-STUFF
- 10801 Main Street Suite 700              fax://1-703-293-6292
- Fairfax, VA 22030                   http://www.thinkgeek.com/
- -------------------------------------------------------------
- S  T  U  F  F    F  O  R    S  M  A  R  T    M  A  S  S  E  S
- 
+-- Patrick Mansfield
