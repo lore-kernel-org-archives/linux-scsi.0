@@ -1,41 +1,33 @@
-From: Kenn Humborg <kenn@linux.ie>
-Subject: Re: Locking in NCR5380_select
-Date: Mon, 9 Aug 2004 23:43:48 +0100
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Fw: 2.6.8-rc3-mm2:  Debug: sleeping function called from invalid context at mm/mempool.c:197
+Date: Mon, 9 Aug 2004 23:59:29 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040809224347.GA24883@excalibur.research.wombat.ie>
-References: <20040808223809.GB17161@excalibur.research.wombat.ie> <20040809230013.A10976@infradead.org>
+Message-ID: <20040809235929.A11498@infradead.org>
+References: <20040809153740.3dd31e2b.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail2.mail.iol.ie ([193.95.141.54]:17307 "EHLO
-	mail2.mail.iol.ie") by vger.kernel.org with ESMTP id S267327AbUHIWod
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Aug 2004 18:44:33 -0400
+Received: from imladris.demon.co.uk ([193.237.130.41]:54541 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S267330AbUHIW7e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Aug 2004 18:59:34 -0400
 Content-Disposition: inline
-In-Reply-To: <20040809230013.A10976@infradead.org>
+In-Reply-To: <20040809153740.3dd31e2b.akpm@osdl.org>; from akpm@osdl.org on Mon, Aug 09, 2004 at 03:37:40PM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org, Janet Morgan <janetmor@us.ibm.com>
 
-On Mon, Aug 09, 2004 at 11:00:13PM +0100, Christoph Hellwig wrote:
-> On Sun, Aug 08, 2004 at 11:38:09PM +0100, Kenn Humborg wrote:
-> > 
-> > Hi,
-> > 
-> > I'm working on the Linux/VAX port and I'm writing a driver for a
-> > 5380 SCSI controller.  Running on UP with CONFIG_DEBUG_SPINLOCK=y
-> > throws up some locking problems in NCR5380_main and NCR5380_select.
-> > 
-> > NCR5380_main expects NCR5380_select to always return with the host
-> > adapter lock acquired.  However, there is inconsistent locking within
-> > NCR5380_select (I've removed most of the code, but left in all the
-> > spinlock calls, and return paths):
+On Mon, Aug 09, 2004 at 03:37:40PM -0700, Andrew Morton wrote:
 > 
-> Yes, this is a known bug.  I have a fix and will post it as soon as I have
-> recovered from travelling.
+> qla2x00_get_new_sp() does a GFP_KERNEL allocation on the IO submission
+> path.  That can cause recursion into already-held filesystem and VFS locks,
+> so at the very least the allocation should be GFP_NOIO.
+> 
+> But even that is wrong, because some lock is held - probably the queue lock.
+> 
+> iow: it's all screwed up.  Is there any fix which is less lame than
+> replacing the GFP_KERNEL with GFP_ATOMIC?
 
-Excellent!  Thanks.
-
-Later,
-Kenn
+Unfortunately not.  As seen in that stacktrace there's a case where ->queuecommand
+can be called from softirq context.
 
