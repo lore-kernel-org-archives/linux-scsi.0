@@ -1,91 +1,73 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] consolidate and log scsi command on send and completion
-Date: Tue, 30 Sep 2003 17:23:39 -0700
+From: "Donna Slaughter" <5r5qy4y1u4t@juno.com>
+Subject: Buy Vicodin online today, overnight shipping k pvk abrbwqmshbpzik
+Date: Wed, 01 Oct 03 15:35:35 GMT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030930172339.A10629@beaverton.ibm.com>
-References: <20030930172134.A10611@beaverton.ibm.com>
+Message-ID: <kpv6i4677dd7$075__35952.0203121521$1064968893@2i7q5h9i4k9>
+Reply-To: "Donna Slaughter" <5r5qy4y1u4t@juno.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/alternative;
+	boundary="0C26760.73_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:6872 "EHLO e32.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261842AbTJAAYE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Sep 2003 20:24:04 -0400
-Content-Disposition: inline
-In-Reply-To: <20030930172134.A10611@beaverton.ibm.com>; from patmans@us.ibm.com on Tue, Sep 30, 2003 at 05:21:34PM -0700
+Received: from host4-122.pool80116.interbusiness.it ([80.116.122.4]:52237 "HELO
+	host4-122.pool80116.interbusiness.it") by vger.kernel.org with SMTP
+	id S261861AbTJAAhO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Sep 2003 20:37:14 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
-
-Some sample output showing the command logging (with CONFIG_SCSI_CONSTANTS
-enabled).
-
-Of course after shutting off syslogd :-(
-
-And with scsi logging for ml queue of 2 and ml complete of 2 via:
-
-	sysctl -w dev.scsi.logging_level=0x2400
-
-FYI, if you want both ml queue and ml complete both set:
-
-	to 	use scsi_logging_level
-	1		0x1200
-	2		0x2400
-	3		0x3600
-	4		0x4800
-
-Output for scanning host3 id 0, a0 is REPORT LUNS, interspersed with writes 
-to the root disk <0:0:0:0>, and partition information:
-
-scsi <3:0:0:0> send                  UNKNOWN(0xa0) 00 00 00 00 00 00 00 04 08 00 00 
-scsi <3:0:0:0> done SUCCESS        0 UNKNOWN(0xa0) 00 00 00 00 00 00 00 04 08 00 00 
-scsi <3:0:0:1> send                  Inquiry 00 00 00 24 00 
-scsi <3:0:0:1> done SUCCESS        0 Inquiry 00 00 00 24 00 
-  Vendor: IBM       Model: 3542              Rev: 0520
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-scsi(3:0:0:1): Enabled tagged queuing, queue depth 64.
-scsi <3:0:0:1> send                  Test Unit Ready 00 00 00 00 00 
-scsi <3:0:0:1> done SUCCESS        0 Test Unit Ready 00 00 00 00 00 
-scsi <3:0:0:1> send                  Read Capacity 00 00 00 00 00 00 00 00 00 
-scsi <3:0:0:1> done SUCCESS        0 Read Capacity 00 00 00 00 00 00 00 00 00 
-SCSI device sdi: 11087872 512-byte hdwr sectors (5677 MB)
-scsi <3:0:0:1> send                  Mode Sense 00 08 00 04 00 
-scsi <3:0:0:1> done SUCCESS        0 Mode Sense 00 08 00 04 00 
-scsi <3:0:0:1> send                  Mode Sense 00 08 00 20 00 
-scsi <3:0:0:1> done SUCCESS<6>scsi <0:0:0:0> send                  Write (10) 00 00 28 00 47 00 00 08 00 
-scsi <0:0:0:0> done SUCCESS        0 Write (10) 00 00 28 00 47 00 00 08 00 
-scsi <0:0:0:0> send                  Write (10) 00 00 28 02 67 00 00 08 00 
-scsi <0:0:0:0> done SUCCESS        0 Write (10) 00 00 28 02 67 00 00 08 00 
-scsi <0:0:0:0> send                  Write (10) 00 00 28 18 3f 00 00 08 00 
-scsi <0:0:0:0> done SUCCESS        0 Write (10) 00 00 28 18 3f 00 00 08 00 
-scsi <0:0:0:0> send                  Write (10) 00 00 34 00 a7 00 00 08 00 
-        0 Mode Sense 00 08 00 20 00 
-scsi <0:0:0:0> done <5>SCSI device sdi: drive cache: write back
- sdi:<6>scsi <3:0:0:1> send                  Read (10) 00 00 00 00 00 00 00 08 00 
-scsi <3:0:0:1> done SUCCESS        0 Read (10) 00 00 00 00 00 00 00 08 00 
- unknown partition table
-Attached scsi disk sdi at scsi3, channel 0, id 0, lun 1
-SUCCESS        0 Write (10) 00 00 34 00 a7 00 00 08 00 
+To: linux-kernel-owner@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-msdos@vger.kernel.org, linux-net@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org
 
 
-Example of a device not supporting INQUIRY page code 0x83 (with sense data
-dump):
+--0C26760.73_
+Content-Type: text/plain;
+Content-Transfer-Encoding: quoted-printable
 
-scsi <0:0:0:0> send                  Inquiry 01 83 00 ff 00 
-scsi <0:0:0:0> done SUCCESS        2 Inquiry 01 83 00 ff 00 
-Current sda: sense key Illegal Request
-Additional sense: Invalid field in cdb
-scsi <0:0:0:0> done SUCCESS        2 Inquiry 01 83 00 ff 00 
-Current sda: sense key Illegal Request
-Additional sense: Invalid field in cdb
+Vicodin ES 90 Tab Special. 
+-Free Doctors consultation
+-No Rx Required
+-Overnight Shipping
+-Other Drugs Available Including SOMA, HYDROCODONE, LEVITRA...
 
-
-Ard example output on timeout, with scsi logging for ml queue of 3 and ml
-complete of 3:
+Buy Now!
+http://www.rxdiscountusa.biz/medical
 
 
-scsi <2:0:0:0> done 0xf4abd560 TIMEOUT        0 Read (10) 00 00 00 00 00 00 00 80 00 
-scsi <2:0:0:0> send 0xf4abd560                  Test Unit Ready 00 00 00 00 00 
-scsi <2:0:0:0> done 0xf4abd560 SUCCESS        0 Test Unit Ready 00 00 00 00 00 
-Inserting command f4abd560 into mlqueue
-scsi <2:0:0:0> send 0xf4abd560                  Read (10) 00 00 00 00 00 00 00 80 00 
-scsi <2:0:0:0> done 0xf4abd560 SUCCESS        0 Read (10) 00 00 00 00 00 00 00 80 00 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+take off list
+http://www.rxdiscountusa.biz/a.html
+
+
+
+
+
+
+baq xilkdd   avom
+
+veazlszsxyln
+ztxzg  x
+ f p spzuav  zaocgk qzs
+lwat
+pvh
+lkwydas d 
+
+--0C26760.73_--
+
