@@ -1,43 +1,35 @@
-From: Jesse Barnes <jbarnes@engr.sgi.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: SCSI QLA not working on latest *-mm SN2
-Date: Tue, 21 Sep 2004 19:17:31 -0400
+Date: Wed, 22 Sep 2004 01:02:11 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200409211917.31817.jbarnes@engr.sgi.com>
-References: <B179AE41C1147041AA1121F44614F0B0012AD911@AVEXCH02.qlogic.org> <200409211843.49312.jbarnes@engr.sgi.com> <20040921225405.GC147518@sgi.com>
+Message-ID: <20040922000211.GE16153@parcelfarce.linux.theplanet.co.uk>
+References: <20040917183029.GW642@parcelfarce.linux.theplanet.co.uk> <200409211346.58267.jbarnes@engr.sgi.com> <1095789421.2467.414.camel@mulgrave> <200409211409.11095.jbarnes@engr.sgi.com> <20040921190625.GB11708@colo.lackof.org> <20040921210341.GC146363@sgi.com> <20040921211108.GA16153@parcelfarce.linux.theplanet.co.uk> <20040921214302.GG146363@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx3-ext.sgi.com ([192.48.171.20]:60380 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S267494AbUIUXTi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Sep 2004 19:19:38 -0400
-In-Reply-To: <20040921225405.GC147518@sgi.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:14988 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S266613AbUIVACN
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Sep 2004 20:02:13 -0400
 Content-Disposition: inline
+In-Reply-To: <20040921214302.GG146363@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
 To: Jeremy Higdon <jeremy@sgi.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@steeleye.com>, Grant Grundler <grundler@parisc-linux.org>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, Grant Grundler <grundler@parisc-linux.org>, Jesse Barnes <jbarnes@engr.sgi.com>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <willy@debian.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
 
-On Tuesday, September 21, 2004 6:54 pm, Jeremy Higdon wrote:
-> On Tue, Sep 21, 2004 at 06:43:49PM -0400, Jesse Barnes wrote:
-> > On Tuesday, September 21, 2004 6:39 pm, Jeremy Higdon wrote:
-> > > On Tue, Sep 21, 2004 at 06:36:36PM -0400, Jesse Barnes wrote:
-> > > > Shouldn't we do a config space read and *then* start the delay, which
-> > > > will only delay for as long as it takes to reset the card on a 33 MHz
-> > > > bus?
-> > >
-> > > The config space read has the same problem that the mmio space read
-> > > does. The chip does not respond.
-> >
-> > Right, but config space reads are supposed to soft fail no matter what. 
-> > So we'll get back all ones, but we'll also know that the write has been
-> > received by the device.  We can start the delay regardless of the value
-> > the read returns.
->
-> I thought you said that config space read failures generate an MCA.
-> Or are you going to fix that?
+On Tue, Sep 21, 2004 at 02:43:02PM -0700, Jeremy Higdon wrote:
+> That could be very painful.
+> On Irix, we actually had a separate spinunlock (io_spin_unlock) that
+> added the MIPS equivalent.  I'm assuming we don't want to entertain
+> that here :-)  (Though tell me if I'm wrong)
 
-That's the plan.  I'll come up with a patch.
+That seems like a reasonable solution to me.  Want to float it to Linus
+and see how he takes it?
 
-Jesse
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
