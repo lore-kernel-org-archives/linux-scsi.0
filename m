@@ -1,45 +1,31 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH 3/3] MidLayer updates - extending scsi_target support
-Date: Sun, 06 Feb 2005 17:18:19 +0300
-Message-ID: <4206272B.6030106@vlnb.net>
-References: <0B1E13B586976742A7599D71A6AC733C12EAB3@xbl3.ma.emulex.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: About ARECA RAID driver for Linux i386/x86-64
+Date: Sun, 6 Feb 2005 14:50:01 +0000
+Message-ID: <20050206145001.GB834@infradead.org>
+References: <003f01c509a9$87913290$9300a8c0@erich2003>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from asplinux.ru ([195.133.213.194]:42503 "EHLO relay.asplinux.ru")
-	by vger.kernel.org with ESMTP id S261234AbVBFOQO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Feb 2005 09:16:14 -0500
-In-Reply-To: <0B1E13B586976742A7599D71A6AC733C12EAB3@xbl3.ma.emulex.com>
+Content-Type: text/plain; charset=us-ascii
+Received: from pentafluge.infradead.org ([213.146.154.40]:22700 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261178AbVBFOuH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 6 Feb 2005 09:50:07 -0500
+Content-Disposition: inline
+In-Reply-To: <003f01c509a9$87913290$9300a8c0@erich2003>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Smart@Emulex.Com
+To: erich <erich@areca.com.tw>
+Cc: Linux Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
-Please, forgive me my ignorance, it looks like something was happened 
-"behind the scene" (linux-scsi list), and I missed it. Is support for 
-SCSI targets started to be added in Linux? I mean "SCSI targets" as the 
-ability to export local devices on a SCSI bus. If so, please consider 
-proposed SCSI target mid-level (SCST) living on 
-http://scst.sourceforge.net. In the next few weeks we are going to clean 
-it a bit and prepare the patch, so it could start being part of some 
-testing tree, probably "-mm", although it is stable enough ever for 
-Linus one.
-
-BTW, are there any descriptions for current scsi_target support and in 
-which direction it's moving?
-
-Vlad
-
-James.Smart@Emulex.Com wrote:
-> Patch 3: 
->   This patch extends scsi_target support:
->   - Allows for driver-specific data to be allocated along with the
->     target structure and accessible via the starget->hostdata pointer.
->   - Adds scsi target alloc/configure/destory callbacks to the
->     scsi host template.
->   - Rearranges the calling sequences for scsi targets so that the
->     target and slave alloc/configure/destory callbacks are in
->     order (target before slave on alloc/configure).
+On Thu, Feb 03, 2005 at 12:33:37PM +0800, erich wrote:
+> Hi,Andrew Morton
 > 
-> -- James S
+> Thanks for your doing.
+> ARECA Linux RAID driver need to support old linux kerenel version.
+> There are a lot of  NAS RAID STORAGE SYSTEM development worker still use it
+> at old linux kernel.
+> Maybe I need to released one package that as cleanly as look like a Linux
+> driver :) modern times :( .
+
+If you write two proper drivers for 2.4.x and 2.6.x they're probably
+less size than your current driver.
 
