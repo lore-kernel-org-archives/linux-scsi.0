@@ -1,36 +1,36 @@
-From: "Sachin Mhatre \(smhatre\)" <smhatre@cisco.com>
-Subject: RE: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Wed, 19 Nov 2003 18:34:39 +0530
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [linux-usb-devel] Re: Unaligned scatter-gather buffers and usb-storage
+Date: Wed, 19 Nov 2003 14:04:00 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <012101c3ae9d$b0a3d010$8f074d0a@apac.cisco.com>
-References: <20031027153932.A16679@infradead.org>
-Reply-To: <smhatre@cisco.com>
+Message-ID: <20031119130400.GG1106@suse.de>
+References: <20031110095914.B22518@beaverton.ibm.com> <20031118143720.A6411@beaverton.ibm.com> <20031119084729.GA1106@suse.de> <200311191401.34540.oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from india-ironport-1.cisco.com ([64.104.129.195]:32554 "EHLO
-	india-ironport-1.cisco.com") by vger.kernel.org with ESMTP
-	id S264060AbTKSNEo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Nov 2003 08:04:44 -0500
-In-Reply-To: <20031027153932.A16679@infradead.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:57729 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S264063AbTKSNEM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Nov 2003 08:04:12 -0500
+Content-Disposition: inline
+In-Reply-To: <200311191401.34540.oliver@neukum.org>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Christoph Hellwig' <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, davmyers@cisco.com
+To: Oliver Neukum <oliver@neukum.org>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dougg@torque.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
 
-Hi Christopher,
-	Could you please elaborate on this review comment? 
-	- kill ctl_open/ctl_release and move add an owner to the fops
-structure for refcounting.
+On Wed, Nov 19 2003, Oliver Neukum wrote:
+> 
+> > > You could add a scsi_host fields or bits specifying alignment
+> > > restrictions, and enforce them as needed in upper level drivers.
+> > 
+> > The queue already has such a restriction embedded, see bio_map_user()
+> > and queue_dma_alignment().
+> 
+> Very well, as far as sd and sr are concerned, but it doesn't help for
+> sg and st, does it?
 
-Especially, what do you mean by "move add an owner to the fops structure
-for refcounting" ? We already use the .owner field in the
-file_operations template. What else are you refering to?
+They both have a queue through the scsi device structure. But you could
+put the value someplace else if you wanted.
 
-
-Thanks,
-Sachin
-
-
+-- 
+Jens Axboe
 
