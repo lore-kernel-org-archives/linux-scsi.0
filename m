@@ -1,64 +1,61 @@
-From: Fabien Salvi <fabien@cri74.org>
+From: Mario Giammarco <mgiammarco@virgilio.it>
 Subject: Re: Bad fibre channel performance: need howto
-Date: Mon, 24 Nov 2003 11:55:15 +0100
+Date: Mon, 24 Nov 2003 12:30:45 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FC1E393.4090907@cri74.org>
-References: <1069443458.7047.35.camel@cala>
+Message-ID: <1069673445.1231.18.camel@cala>
+References: <1069443458.7047.35.camel@cala>  <3FC1E393.4090907@cri74.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aravis.cur-archamps.fr ([195.202.0.99]:15240 "EHLO
-	aravis.cur-archamps.fr") by vger.kernel.org with ESMTP
-	id S263717AbTKXKzS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2003 05:55:18 -0500
+Received: from vsmtp4.tin.it ([212.216.176.224]:53890 "EHLO vsmtp4.tin.it")
+	by vger.kernel.org with ESMTP id S263745AbTKXLaz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2003 06:30:55 -0500
+In-Reply-To: <3FC1E393.4090907@cri74.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mario Giammarco <mgiammarco@virgilio.it>
+To: Fabien Salvi <fabien@cri74.org>
 Cc: linux-scsi@vger.kernel.org
 
+Il lun, 2003-11-24 alle 11:55, Fabien Salvi ha scritto:
+
+> Hello Mario,
+> 
 
 
-Mario Giammarco a =E9crit:
-> Hello,
-> I asked a similar question last week.
-> I discovered that my hard disk which can do 60mb/sec sequential read,
-> under linux/lsilogic40909 fibre hba gives only 30mb/sec, 45 if I twea=
-k a
-> lot readahead (why  I need to?).
->=20
-> I have searched a lot in internet and it seems that:
->=20
-> 1) fibrechannel howto was in sistina home page but now disappeared
-> 2) fibrechannel specific mailing list for linux disappeared (archives
-> to)
->=20
-> Where can I search for help?=20
-> Here it not seems appropriate to me.=20
->=20
-> I have to find my bottleneck, please help with sending me docs.
->=20
+> If you want, I can send you an archive of the howto.
+> I've downloaded it a long time ago, before sistina removed it from their 
+> server.
+> 
+> But, it's true, it's a bit old
 
-Hello Mario,
+Yes send it to me please. I like to read all.
 
-If you want, I can send you an archive of the howto.
-I've downloaded it a long time ago, before sistina removed it from thei=
-r=20
-server.
+> About your problem, I am not sure it's really because of FibreChannel.
+> There are a lot of differences between theorical values and real ones.
+> Which tool are you using for the benchmark ?
 
-But, it's true, it's a bit old. Therefore, there are some basic=20
-informations about protocol that could have some interest.
+I know but usually the "sequential read" is the easiest test to discover
+if there are problems.
 
-About your problem, I am not sure it's really because of FibreChannel.
-There are a lot of differences between theorical values and real ones.
-Which tool are you using for the benchmark ?
+I have used hdparm and sg3 tools to do a quick sequential read test.
+On ide world if hdparm tells me that I have  sequential transfer rate
+lower than shown on web reviews it means that I have to tweak dma, etc.
+and usually after tweaking I get performance promised.
+
+Here there is little to tweak and I then discovered with a serious test
+(tiobench) that write performance is also worse.
+
+I suppose there is some problem.
+
+I am now buying a qlogic2200 to try if it is better.
+Can someone tell me best drivers for qlogic2200?
 
 
---=20
-=46abien SALVI
+Thanks again!
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Mario Giammarco
+
+
