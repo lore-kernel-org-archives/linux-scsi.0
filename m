@@ -1,43 +1,60 @@
-From: akpm@osdl.org
-Subject: [patch 1/1] Whitelist-Entry (FORCELUN) for SGS Thomson Microelectronics Cytronix 6in1 card reader in scsi_devinfo.c
-Date: Wed, 09 Mar 2005 01:03:32 -0800
-Message-ID: <200503090903.j2993vjp022052@shell0.pdx.osdl.net>
-Received: from fire.osdl.org ([65.172.181.4]:51845 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261651AbVCIJEH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2005 04:04:07 -0500
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH] mac_scsi boot crash fix
+Date: Wed, 9 Mar 2005 23:00:09 +1100 (EST)
+Message-ID: <Pine.LNX.4.61.0503092224160.4800@loopy.telegraphics.com.au>
+References: <20050213063225.GA17415@orchestra.cs.caltech.edu>
+ <Pine.LNX.4.61.0502131736300.25553@loopy.telegraphics.com.au>
+ <20050213075506.GA18622@orchestra.cs.caltech.edu>
+ <Pine.LNX.4.61.0502212233290.15372@loopy.telegraphics.com.au>
+ <Pine.LNX.4.61.0503071612290.27126@loopy.telegraphics.com.au>
+ <20050307063719.GA12478@infradead.org> <Pine.LNX.4.61.0503072333310.27126@loopy.telegraphics.com.au>
+ <20050307175322.GA12907@pants.nu> <20050307234233.GA6240@excalibur.research.wombat.ie>
+ <Pine.LNX.4.61.0503090156380.1135@loopy.telegraphics.com.au>
+ <20050308173939.GA17983@pants.nu>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from loopy.telegraphics.com.au ([202.45.126.152]:22488 "EHLO
+	loopy.telegraphics.com.au") by vger.kernel.org with ESMTP
+	id S262318AbVCIMAN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Mar 2005 07:00:13 -0500
+In-Reply-To: <20050308173939.GA17983@pants.nu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, mail@hboeck.de
+To: Brad Boyer <flar@allandria.com>
+Cc: Kenn Humborg <kenn@linux.ie>, Geert Uytterhoeven <geert@linux-m68k.org>, linux scsi <linux-scsi@vger.kernel.org>, linux m68k <linux-m68k@vger.kernel.org>
 
 
-From: Hanno Boeck <mail@hboeck.de>
+I found the bus error, the trivial fix is below.
 
-I have a usb-cardreader here that needs some FORCELUN-entries in
-scsi_devinfo.c.
+I don't know if this patch will work for others quite yet, since my kernel 
+has had some work done to slow interrupt handling. I intend to post that 
+patch soon.
 
-lsusb says about the device:
+On Tue, 8 Mar 2005, Brad Boyer wrote:
 
-Bus 001 Device 003: ID 0483:1307 SGS Thomson Microelectronics Cytronix 6in1 card reader
+> I notice it got through all the device identify stuff. It dies as soon
+> as it actually tries to tranfer a real block of data (the partition map)
+> and do something useful with it. Could you see if disabling PDMA helps?
 
-Signed-off-by: Andrew Morton <akpm@osdl.org>
----
+I tested both: my Daystar Mac II now works great with or without PDMA, so 
+hopefully the IIfx will work too.
 
- 25-akpm/drivers/scsi/scsi_devinfo.c |    4 ++++
- 1 files changed, 4 insertions(+)
+Kenn, my macs like your patch :-) Did it make it upstream?
 
-diff -puN drivers/scsi/scsi_devinfo.c~whitelist-entry-forcelun-for-sgs-thomson-microelectronics-cytronix-6in1-card-reader-in-scsi_devinfoc drivers/scsi/scsi_devinfo.c
---- 25/drivers/scsi/scsi_devinfo.c~whitelist-entry-forcelun-for-sgs-thomson-microelectronics-cytronix-6in1-card-reader-in-scsi_devinfoc	2005-03-09 01:03:19.000000000 -0800
-+++ 25-akpm/drivers/scsi/scsi_devinfo.c	2005-03-09 01:03:19.000000000 -0800
-@@ -149,6 +149,10 @@ static struct {
- 	{"Generic", "USB SD Reader", "1.00", BLIST_FORCELUN | BLIST_INQUIRY_36},
- 	{"Generic", "USB Storage-SMC", "0180", BLIST_FORCELUN | BLIST_INQUIRY_36},
- 	{"Generic", "USB Storage-SMC", "0207", BLIST_FORCELUN | BLIST_INQUIRY_36},
-+	{"Generic", "USB Reader-SMC", NULL, BLIST_FORCELUN | BLIST_INQUIRY_36},
-+	{"Generic", "USB Reader-CF", NULL, BLIST_FORCELUN | BLIST_INQUIRY_36},
-+	{"Generic", "USB Reader-SD", NULL, BLIST_FORCELUN | BLIST_INQUIRY_36},
-+	{"Generic", "USB Reader-MS", NULL, BLIST_FORCELUN | BLIST_INQUIRY_36},
- 	{"HITACHI", "DF400", "*", BLIST_SPARSELUN},
- 	{"HITACHI", "DF500", "*", BLIST_SPARSELUN},
- 	{"HITACHI", "DF600", "*", BLIST_SPARSELUN},
-_
+-f
+
+
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+
+
+--- a/drivers/scsi/mac_scsi.c	2005-03-09 22:21:01.369397570 +1100
++++ b/drivers/scsi/mac_scsi.c	2005-03-09 22:02:12.594082086 +1100
+@@ -302,7 +302,7 @@ int macscsi_detect(Scsi_Host_Template * 
+ 
+     if (instance->irq != SCSI_IRQ_NONE)
+ 	if (request_irq(instance->irq, NCR5380_intr, IRQ_FLG_SLOW, 
+-		"ncr5380", NCR5380_intr)) {
++		"ncr5380", instance)) {
+ 	    printk(KERN_WARNING "scsi%d: IRQ%d not free, interrupts disabled\n",
+ 		   instance->host_no, instance->irq);
+ 	    instance->irq = SCSI_IRQ_NONE;
