@@ -1,78 +1,68 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: SATA on SAS [was: ATAPI cdrecord issue 2.5.67]
-Date: Sat, 12 Apr 2003 10:51:59 +1000
+From: Paul McKenney <Paul.McKenney@us.ibm.com>
+Subject: Re: [patch for playing] Patch to support 4000 disks and maintain backward
+ compatibility
+Date: Fri, 11 Apr 2003 18:13:24 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E97632F.1090104@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <OFAD4FBC86.382E53DF-ON88256D06.0006AAF3@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:45836 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S262219AbTDLAin (for <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Apr 2003 20:38:43 -0400
+Received: from e32.co.us.ibm.com ([32.97.110.130]:30147 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S262219AbTDLBFy (for <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Apr 2003 21:05:54 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Andries.Brouwer@cwi.nl, James.Bottomley@steeleye.com, linux-kernel@vger.kernel.org, linux-kernel-owner@vger.kernel.org, linux-scsi@vger.kernel.org, pbadari@us.ibm.com
 
-John Bradford wrote:
- > > Alan Cox writes:
- > > On Thu, 2003-04-10 at 20:53, H. Peter Anvin wrote:
- > > > I think ide-scsi needs to be supported for some time
- > > > going forward.
- > > > After all, cdrecord, cdrdao, dvdrecord aren't going to be
- > > > the only applications.
- > >
- > > And far longer than that. People seem to be testing and demoing
- > > crazy things like SATA attached scanners, printers and
- > > even enclosure services.
- > >
- > > ATAPI tape drives will need ide-scsi too, unless ide-tape
- > > somehow got repaired lately. And some people already use
- > > ide-scsi+st in
- > > 2.4 since ide-tape doesn't always work reliably.
- > >
- > > ide-scsi isn't just for CD/DVD writers.
- >
- > How long will it be before somebody develops an ATAPI, SCSI host
- > adaptor, I.E. a SCSI host adaptor which appears as an ATAPI device?
 
-That is precisely what is planned when a SATA cdwriter is
-connected to a SAS host (read below).
 
- > (I know that ATAPI really is effectively just a SCSI transport, but
- > you can already get SCSI, SCSI host adaptors, I.E. where the devices
- > on the second-level adaptor appear as the logical units of the host
- > adaptor, and there is no reason this couldn't be done using ATAPI).
 
-Spinning this discussion another way, with Serial Attached SCSI
-(SAS) real SATA disk drives can be attached to SAS host bus adapters
-(HBAs). For that matter cdwriters that use MMC (scsi instruction
-set) over ATAPI could be SATA devices connected to a SAS HBA.
 
-SAS HBAs will be compilicated beasts (at least in their plumbing)
-because they need to speak 3 protocols:
-   - SSP to "real" SAS devices. This carries the SCSI command set
-   - STP to SATA devices. This carries the ATA/ATAPI command set
-   - SMP, a management protocol, to talk to fanout devices, etc
+> > It would also be nice for numeric compatibility to be a compile time
+option
+>
+> It sounds as if you expect a lot of old cruft.
+> But the compatibility code is just ten lines or so.
+> Internally the kernel has an index. Externally there is a dev_t.
+> At open() time the dev_t is converted. At registration time
+> sd announces interest in three or four dev_t regions.
+> That is all.
 
-So how does Linux handle a SATA disk on a SAS HBA?
-Possibilities:
-   - the scsi subsystem gets a new disk driver (called
-     "ad"?? (or perhaps "hd"!)) that speaks ATA
-   - the ide susbsystem supports SAS HBAs and can speak
-     all three SAS protocols
-   - after cleaning up "ide-scsi" we write another driver
-     that does the logical inverse ("scsi-ide" ??):
-     bridging upper layers of the IDE subsystem down into
-     the nether regions of the SCSI subsystem
-   - the SCSI subsystem hides SATA devices that speak ATA
-     (as opposed to ATAPI) with a SCSI to ATA transformation
-     layer.
+Some compatibility needs more code than other compatibility.
+The desired compatibility includes the following, much of which
+has been noted earlier in this thread, and some of which may
+need to wait for multipath I/O and other of which might be best
+provided by a volume manager:
 
-This problem is a year or less away.
+o     It must be possible to switch between 2.4 and 2.5/6
+      kernels without a given disk's name changing.
 
-Apologies for all the TLAs (three letter acronyms).
-More coffee anybody?
+o     New 2.5/6 installations should se a clean disk naming
+      scheme without historical cruft.
 
-Doug Gilbert
+o     Removing or adding one disk should not affect the
+      names of other disks.  Ideally, moving a given disk
+      from one place to another should not change its
+      name.  "The good news is that we repaired your
+      disk.  The bad news is that, due to the resulting
+      name changes, your application thoroughly
+      corrupted all of its data."
+
+o     Adding or removing a FC or SCSI adapter should not
+      affect the names of disks hanging off of other
+      FC or SCSI controllers.  Ideally, the name of
+      a disk should not change when its FC or SCSI
+      controller is moved from one slot to another.
+
+o     Failures of or repairs to the FC fabric should
+      not change the names of any of the disks (though
+      a sufficiently thorough failure might make some
+      of the disks unreachable).
+
+o     Cluster nodes should ideally have the same name
+      for a given disk.  Extra credit, though greatly
+      appreciated by anyone who has ever had to deal
+      with a cluster where different nodes have different
+      names for the same disk.  ;-)
+
+                              Thanx, Paul
 
