@@ -1,101 +1,38 @@
-From: "Smart, James" <James.Smart@Emulex.Com>
-Subject: RE: Emulex lpfcdriver v8.0.2 available
-Date: Tue, 8 Jun 2004 10:54:27 -0400
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [usb-storage] Re: iRiver H100 series and usb-storage issues
+Date: 08 Jun 2004 10:52:12 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3356669BBE90C448AD4645C843E2BF28034F9465@xbl.ma.emulex.com>
+Message-ID: <1086709937.2105.8.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0406081019281.1222-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:33409 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S265010AbUFHOyp
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Jun 2004 10:54:45 -0400
+Received: from stat1.steeleye.com ([65.114.3.130]:15510 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265229AbUFHPw1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Jun 2004 11:52:27 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0406081019281.1222-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Smart, James" <James.Smart@Emulex.Com>, 'Christoph Hellwig' <hch@infradead.org>, Anton Blanchard <anton@samba.org>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Pat LaVarre <p.lavarre@ieee.org>, Philippe Troin <phil@fifi.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, usb-storage@lists.one-eyed-alien.net
 
-FYI - and status update.
+On Tue, 2004-06-08 at 09:24, Alan Stern wrote:
+> sd doesn't receive any error indication other than positive residue, and 
+> it ignores the residue.
 
-A malloc or two was condense on the fast path. However, the reorg so alloc
-was not under lock is not done yet. Should be in the next drop. In
-queuecommand, we will: unload the host lock, perform all allocations and do
-prep data, then take the driver lock, complete state checks and submit to
-hardware. Should allow all the ATOMIC allocations to go back to normal for
-the queuecommand sequence.
+Erm, but sd doesn't expect a non zero residue (and producing one is
+illegal) because it sets underflow to the exact size for all read and
+write commands.
 
--- James
+Usually HBAs ignore underflow, because it simply works correctly for all
+SCSI devices I've ever come across.  However, if you're going to be
+getting these problems, you really should be checking the underflow.
+
+The meaning of this field is supposed to be "return an error if you
+transfer fewer than underflow bytes".  The error's not specified, but
+something like DID_ERROR with SUGGEST_RETRY should be fine.
+
+James
 
 
-> -----Original Message-----
-> From: Smart, James 
-> Sent: Wednesday, June 02, 2004 9:03 AM
-> To: 'Christoph Hellwig'; Anton Blanchard
-> Cc: 'linux-scsi@vger.kernel.org'
-> Subject: RE: Emulex lpfcdriver v8.0.2 available
-> 
-> 
-> 
-> Anton,
-> 
-> Thanks for the feedback.
-> 
-> We've avoided (actually removed) more driver memory pools. 
-> The thought was
-> that it was unneeded, especially as kmem_alloc is ultimately 
-> mempool backed.
-> 
-> The real issue, as Christoph points out, is the allocations 
-> taking place
-> under spinlocks, thus requiring the atomic allocations. The 
-> driver has a
-> very ugly lock scheme due to past history, and one which we 
-> are hesitant to
-> rewrite right now (it will happen, but not in the short term).  
-> 
-> Anyway - there's a couple of things we're going to do...  The 
-> first is to
-> reorder the fastpath (queuecommand -> to the hardware) so that we can
-> perform the allocations outside of locks, thus loose the 
-> atomic requirement.
-> The number of allocations is not excessive, but there are a 
-> couple of spots
-> where separate control structures are always allocated which 
-> we can optimize
-> by embedding them in other structures.  Hopefully, this can 
-> make the code
-> drop due the end of the week.
-> 
-> -- James S
-> 
-> 
-> > -----Original Message-----
-> > From: 'Christoph Hellwig' [mailto:hch@infradead.org]
-> > Sent: Tuesday, June 01, 2004 3:01 PM
-> > To: Anton Blanchard
-> > Cc: Smart, James; 'linux-scsi@vger.kernel.org'
-> > Subject: Re: Emulex lpfcdriver v8.0.2 available
-> > 
-> > 
-> > On Wed, Jun 02, 2004 at 04:52:00AM +1000, Anton Blanchard wrote:
-> > > We gave it a spin on a ppc64 box and managed to hit the following
-> > > backtrace when doing heavy writeout. I wonder if a number of these
-> > > atomic allocations (in lpfc_get_scsi_buf etc) should be 
-> > using a mempool,
-> > > otherwise we could deadlock on writeout.
-> > 
-> > The ->queuecommand path has a few more problems.  The number 
-> > of different
-> > memory allocation is just too many, this needs some thinking 
-> > into needing
-> > less allocations.  Most allocations are happening under a 
-> spinlock and
-> > with irqs disabled which is not exactly a good idea.  And the whole
-> > I/O submission path is very badly structured and hard to follow.
-> > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
