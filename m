@@ -1,56 +1,86 @@
-From: Jamie Lenehan <lenehan@twibble.org>
-Subject: Re: dc395x: CD writer causes endless "sg_to_virt failed" loop
-Date: Sun, 28 Mar 2004 02:10:34 +1000
+From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
+Subject: Re: Can't eject jaz disk on 2.6
+Date: Sat, 27 Mar 2004 14:52:58 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040327161034.GA9963@twibble.org>
-References: <c444p3$b3v$1@sea.gmane.org>
+Message-ID: <20040327225258.GB5203@one-eyed-alien.net>
+References: <20040327075918.A2232@animx.eu.org> <20040327224222.GA5203@one-eyed-alien.net> <20040327180018.A4269@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Yylu36WmvOXNoKYn"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tuon.twibble.org ([203.217.29.157]:41954 "EHLO tuon.twibble.org")
-	by vger.kernel.org with ESMTP id S261802AbUC0QKk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Mar 2004 11:10:40 -0500
+Received: from multivac.one-eyed-alien.net ([64.169.228.101]:45207 "EHLO
+	multivac.one-eyed-alien.net") by vger.kernel.org with ESMTP
+	id S261913AbUC0WxG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Mar 2004 17:53:06 -0500
 Content-Disposition: inline
-In-Reply-To: <c444p3$b3v$1@sea.gmane.org>
+In-Reply-To: <20040327180018.A4269@animx.eu.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Schulman <andrex@alumni.utexas.net>
-Cc: linux-scsi@vger.kernel.org, dc395x@twibble.org
+To: Wakko Warner <wakko@animx.eu.org>
+Cc: linux-kernel@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@lists.one-eyed-alien.net>
 
-On Sat, Mar 27, 2004 at 09:57:39AM -0500, Andrew Schulman wrote:
-> I have a Tekram DC395UW card, running in Debian with kernel 2.6.3 and the
-> dc395x driver from the kernel source.  Attached to the card are a Seagate
-[...]
-> by, for example, trying to mount or burn a CD-- my console and syslog
-> begin to fill up with "dc395x: sg_to_virt failed!" messages-- several
 
-Yeah, this has been reported a few months back for the original
-driver in 2.4. I *think* I found and fixed what would have caused
-this problem in the latest version included in 2.6 but since no one
-has ever seen this issue in 2.6 it's been difficult to be certain.
+--Yylu36WmvOXNoKYn
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-[...]
-> I'm frustrated by this problem because the drive worked fine with earlier
-> kernels.  It definitely worked fine with 2.6.0-test4 and -test9.  I don't
+On Sat, Mar 27, 2004 at 06:00:18PM -0500, Wakko Warner wrote:
+> > > I've used 2.6.0 to 2.6.4 on a computer with a jaz drive.
+> > > Using eject 2.0.13, I'm unable to eject the disk.  I have tested on 2=
+.4.24
+> > > and it does eject.
+> >=20
+> > Over on the usb-storage list, we've just become aware of a similar prob=
+lem.
+>=20
+> What was it with?
 
-There has been no changes to the in kernel dc395x driver between
-2.6.0-test4 and 2.6.3.
+The device in question there was an Iomega USB Zip 100 drive.
 
-> want to go back to an earlier kernel, because of other security and
-> hardware issues.  My 2.6.3 kernel works perfectly, except that now my CD
-> writer is broken.
-> 
-> Any help would be much appreciated.  I'm willing to try any patches or
-> diagnostics.
+> > Are you using SCSI or IDE?
+>=20
+> SCSI.  I thought all JAZ disks were scsi?
 
-First thing to try would be to upgrade to 2.6.5-rc1 (or newer) and
-see if that works any better.
+I wasn't sure.  USB is emulated through the SCSI layer, tho.  I would
+recommend we take this discussion to the linux-scsi mailing list.
 
-If it still has issues then you should edit drivers/scsi/dc395x.c and
-uncomment the first "#define DEBUG_MASK" line, rebuild the dc395x
-module and then reload the module. You should then gets lots of
-debugging output in one of your log file which you can then gzip or
-bzip2 and then send directly to me.
+> > We've actually recorded the SCSI layer sending us a PREVENT_MEDIUM_REMO=
+VAL,
+> > then a START_STOP (to actually eject), and then an ALLOW_MEDIUM_REMOVAL.
+> > So, nothing gets ejected.  This is under 2.6.
+>=20
+> I have noticed that when I attempt to eject, it spins the disk backup,
+> spins down and that's it.
 
--- 
- Jamie Lenehan <lenehan@twibble.org>
+The user of the Zip 100 actually sent us logs showing this behavior.  We
+assume it's coming from the SCSI system, as usb-storage doesn't contain
+anything remotely resembling this....
+
+Repeated uses of the 'eject' command generated the same sequence in his
+test scenario, but his Zip 100 actually ejected the media on the second
+try.  I think that's a device-dependent behavior, tho.
+
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+I say, what are all those naked people doing?
+					-- Big client to Stef
+User Friendly, 12/14/1997
+
+--Yylu36WmvOXNoKYn
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQFAZgXKIjReC7bSPZARAvxOAJ9SQmLIiWeiwlYFT10hTBXs4kovyACeNZM8
+19Y4H8CW7EbJE/DqE2JELbI=
+=yCb+
+-----END PGP SIGNATURE-----
+
+--Yylu36WmvOXNoKYn--
