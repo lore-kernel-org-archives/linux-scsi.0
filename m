@@ -1,60 +1,40 @@
-From: Paul Wagland <paul@wagland.net>
-Subject: Re: reiser4 and megaraid problems with debian 2.6.5 (*solved*)
-Date: Mon, 19 Apr 2004 00:36:16 +0200
-Message-ID: <1082327775.2003.5.camel@morsel.kungfoocoder.org>
-References: <36927C82-8DE0-11D8-A41D-000A95CD704C@wagland.net>
-	 <20040414090547.GB13578@raptus.homelinux.org>
-	 <6699459A-8E10-11D8-A41D-000A95CD704C@wagland.net>
-	 <16509.14375.539110.986025@laputa.namesys.com>
-	 <295743F0-8E17-11D8-A41D-000A95CD704C@wagland.net>
-	 <1081987184.11193.87.camel@morsel.kungfoocoder.org>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Patches for SCSI scanning
+Date: 18 Apr 2004 18:16:31 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1082330192.1969.37.camel@mulgrave>
+References: <20040418185751.GC4868@tpkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YGH7GBhT02j08IrkG0cH"
-Return-path: <reiserfs-list-return-18036-reiserfs=m.gmane.org@namesys.com>
-list-help: <mailto:reiserfs-list-help@namesys.com>
-list-unsubscribe: <mailto:reiserfs-list-unsubscribe@namesys.com>
-list-post: <mailto:reiserfs-list@namesys.com>
-Errors-To: flx@namesys.com
-In-Reply-To: <1081987184.11193.87.camel@morsel.kungfoocoder.org>
-To: Nikita Danilov <Nikita@Namesys.COM>
-Cc: reiserfs-list@Namesys.COM, Linux SCSI mailing list <linux-scsi@vger.kernel.org>, Atul Mukker <atulm@lsil.com>, Domenico Andreoli <cavok@libero.it>, Hans Reiser <reiser@Namesys.COM>, Linux kernel mailing list <linux-kernel@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
-
---=-YGH7GBhT02j08IrkG0cH
 Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat1.steeleye.com ([65.114.3.130]:33977 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264207AbUDRXQh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 18 Apr 2004 19:16:37 -0400
+In-Reply-To: <20040418185751.GC4868@tpkurt.garloff.de>
+List-Id: linux-scsi@vger.kernel.org
+To: Kurt Garloff <garloff@suse.de>
+Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Hi all,
+On Sun, 2004-04-18 at 13:57, Kurt Garloff wrote:
+> An alternative to the blacklist is to offer boot/module parameters
+> again. This is what the following series of 6 patches do.
+> Most don't really depend on each other, but they'll only apply
+> cleanly in the order sent.
+> 
+> I did not yet compare our 2.4 blacklist with the 2.6 one; I'll
+> port our additional 2.4 entries to 2.6 soon.
 
-well partly solved anyway... I am just posting this so that if anyone
-finds this thread later they can also find this conclusion... There is
-still more work to be done before this problem can be properly closed,
-but at least now I am certain that it has nothing to do with the
-hardware :-)
+Erm, Kurt, we already have a module load time parameter for altering
+both blacklist entries and scanning defaults.
 
-It appears (my own unsupported theory) that the problem is that reiser4
-is taking some time to free up the free blocks that are currently in use
-by the wandering log. Since I was running a test that causes a lot of
-wandering log to be created, and I was doing it on a filesystem with
-very little free space, then I was running into the problem.
+It's dev_flags and default_dev_flags in scsi_devinfo.c
 
-Rerunning the test with either a) more space, or b) a smaller data set
-solved the problem. On the reiserfs-list we are now trying to find out
-exactly why this is happening, and how to solve the problem properly.
+Could you first explain why you can't use this existing infrastructure?
 
-Cheers,
-Paul
+Thanks,
 
---=-YGH7GBhT02j08IrkG0cH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+James
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
 
-iD8DBQBAgwLftch0EvEFvxURAp5AAJ47g0pYpmfoLzcxbUJ4eymWDYhcbACfSMII
-hSKeT05AHFB7jFC7SJuGIgE=
-=covQ
------END PGP SIGNATURE-----
-
---=-YGH7GBhT02j08IrkG0cH--
