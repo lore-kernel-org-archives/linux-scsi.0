@@ -1,56 +1,89 @@
-From: "Infante, Jon" <Jon.Infante@Emulex.Com>
-Subject: RE: How to resurrect offlined SCSI devices?
-Date: Wed, 26 May 2004 09:17:04 -0700
+From: Quercus <quercus@nosomos.org>
+Subject: dc395 with a scanner, failing.
+Date: Wed, 26 May 2004 18:49:07 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <8D43EFD7CCBDB24980134BE078C227E704E37B0A@xcm.emulex.com>
+Message-ID: <40B4CA83.8020700@nosomos.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig6046116510EB663679152864"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:63486 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S265647AbUEZQRO
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 May 2004 12:17:14 -0400
+Received: from [217.26.248.6] ([217.26.248.6]:16039 "EHLO ns5.virtualpyme.net")
+	by vger.kernel.org with ESMTP id S265663AbUEZQrU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 May 2004 12:47:20 -0400
+Received: from nosomos.org (213.Red-80-33-110.pooles.rima-tde.net [80.33.110.213])
+	by ns5.virtualpyme.net (8.11.6/8.10.2) with ESMTP id i4QGgrD23624
+	for <linux-scsi@vger.kernel.org>; Wed, 26 May 2004 18:42:54 +0200
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@SteelEye.com>, Martin Peschke3 <MPESCHKE@de.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig6046116510EB663679152864
+Content-Type: multipart/mixed;
+ boundary="------------090608090308080805090601"
 
+This is a multi-part message in MIME format.
+--------------090608090308080805090601
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Wouldn't it be acceptable for the lldd to call  scsi_scan_host() at this
-point to force a scsi mid layer rescan of the devices attached to the hba?
-In a fibre channel environment a device can disappear for a long period of
-time, then come back. The driver knows exactly when it comes back and should
-be able to tell the scsi layer.
+Hi there... I own a dc395 scsi card "working" on a Debian GNU/Linux 3.0, 
+with kernels 2.4.22 and 2.6.5.
 
-Jon Infante
-Emulex
+On the 2.4 series kernel it works flawlessly using the old driver from 
+Garloff, but on the 2.6 series (using the new one, included in the 
+kernel source) it seems to work, but while scanning with sane the 
+scanner freezes for some time (minutes) until I cancel the scan and wait 
+for a while until the scsi processes end :-(
 
+I've tried changing the parameters for the kernel module (while loading 
+the module) but no combination seem to solve the problem :-(
 
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
-Sent: Wednesday, May 26, 2004 7:46 AM
-To: Martin Peschke3
-Cc: SCSI Mailing List
-Subject: Re: How to resurrect offlined SCSI devices?
+The scanner is an old HP ScanJet 3c.
 
+What other tests should I do to send some feedback to the list and try 
+to find a solution? Anyone had this same problem?
 
-On Wed, 2004-05-26 at 08:14, Martin Peschke3 wrote:
-> Is there a SCSI mid layer interface that allows an lldd to get a
-> SCSI devices back online?
+Thanks in advance.
 
-actually
+-Quercus-
+-- 
+Yo uso Software Libre
+Debian GNU/Linux 3.0 (Woody)       Kernel 2.6.5
+OpenPGP id: 700F3CC6
+Mi weblog :: http://quercus.nosomos.org
 
-echo "running" > /sys/...<device path>.../state
+--------------090608090308080805090601
+Content-Type: text/txt;
+ name="info_firma.txt"
+Content-Transfer-Encoding: 8bit
+Content-Disposition: inline;
+ filename="info_firma.txt"
 
-will work from user land.
+(ES) Este mensaje está firmado/encriptado digitalmente con OpenPGP,
+en formago PGP/MIME (rfc 3156). Para verificar su autenticidad utilice software compatible con PGP/MIME:
 
-Really, it isn't safe for a LLD to try to bring a device back online on
-its own without user intervention.
+(EN) This email is signed/encrypted digitally with OpenPGP, using 
+PGP/MIME (rfc 3156) format. To verify its authenticity use compatible software with OpenPGP:
 
-James
+Mozilla - http://www.mozilla.org
+GnuPG - http://www.gnupg.org
 
+--------------090608090308080805090601--
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--------------enig6046116510EB663679152864
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFAtMqLZPYrUXAPPMYRAnzeAJ9TaYuemCwuU+GOc9VjDpucUqsluwCdGzrK
+eoWnQNzOJ6ODxJ4235iJPz4=
+=vZP0
+-----END PGP SIGNATURE-----
+
+--------------enig6046116510EB663679152864--
