@@ -1,58 +1,75 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [patch 4/7] scsi/qla_os: replace schedule_timeout() with
-	ssleep()
-Date: Fri, 14 Jan 2005 08:50:34 -0800
-Message-ID: <1105721434.12434.9.camel@plap.san.rr.com>
-References: <20050111232257.909231F226@trashy.coderock.org>
-	 <1105547532.5577.18.camel@mulgrave>  <20050112234314.GB2688@us.ibm.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] REPORT LUN scan even if no storage is available on LUN 0
+Date: Fri, 14 Jan 2005 08:51:42 -0800
+Message-ID: <20050114165142.GA32650@us.ibm.com>
+References: <20041210123333.GD685@bogon.ms20.nix> <20041213222206.GA18893@us.ibm.com> <20050110164200.GA8655@bogon.ms20.nix> <20050111181500.GA9046@us.ibm.com> <20050113124032.GB5701@bogon.ms20.nix> <20050114002134.GA14102@us.ibm.com> <20050114132623.GA7837@bogon.ms20.nix>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch02.qlogic.com ([198.70.193.200]:55970 "EHLO
-	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S261756AbVANQuZ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Jan 2005 11:50:25 -0500
-In-Reply-To: <20050112234314.GB2688@us.ibm.com>
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:5805 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261932AbVANQwW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Jan 2005 11:52:22 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e5.ny.us.ibm.com (8.12.10/8.12.10) with ESMTP id j0EGqMJX010534
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Jan 2005 11:52:22 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j0EGqM8u251210
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Jan 2005 11:52:22 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j0EGqLrU000301
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Jan 2005 11:52:22 -0500
+Content-Disposition: inline
+In-Reply-To: <20050114132623.GA7837@bogon.ms20.nix>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nishanth Aravamudan <nacc@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, domen@coderock.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Guido Guenther <agx@sigxcpu.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2005-01-12 at 15:43 -0800, Nishanth Aravamudan wrote:
-> On Wed, Jan 12, 2005 at 10:32:11AM -0600, James Bottomley wrote:
-> > On Wed, 2005-01-12 at 00:22 +0100, domen@coderock.org wrote:
-> > > Description: Use ssleep() instead of schedule_timeout() to guarantee the
-> > [...]
-> > > -		set_current_state(TASK_UNINTERRUPTIBLE);
-> > > -		schedule_timeout(ABORT_POLLING_PERIOD);
-> > > +		msleep(ABORT_POLLING_PERIOD);
-> > 
-> > The description doesn't match the code.
-> > 
-> > Also, the qla driver is maintained.  You should cc
-> > andrew.vasquez@qlogic.com (I know they don't make it easy, like having
-> > an entry in the MAINTAINERS file or even an email address in the code).
+On Fri, Jan 14, 2005 at 02:26:23PM +0100, Guido Guenther wrote:
+> On Thu, Jan 13, 2005 at 04:21:34PM -0800, Patrick Mansfield wrote:
+
+> This is the target that has all the devices:
+> # echo "0 0 -" > /sys/class/scsi_host/host0/scan
+> scsi_scan_host_selected: <0:0:0:4294967295>
+> scsi scan: INQUIRY to host 0 channel 0 id 0 lun 0
+> scsi <0:0:0:0> send                  scsi0 : destination target 0, lun 0
+>         command = Inquiry 00 00 00 24 00
+> scsi <0:0:0:0> done SUCCESS        0 scsi0 : destination target 0, lun 0
+>         command = Inquiry 00 00 00 24 00
+> scsi scan: 1st INQUIRY successful with code 0x0
+> scsi <0:0:0:0> send                  scsi0 : destination target 0, lun 0
+>         command = Inquiry 00 00 00 95 00
+> scsi <0:0:0:0> done SUCCESS        0 scsi0 : destination target 0, lun 0
+>         command = Inquiry 00 00 00 95 00
+> scsi scan: 2nd INQUIRY successful with code 0x0
+> scsi scan: peripheral qualifier of 3, no device added
+> scsi scan: Sequential scan of host 0 channel 0 id 0
 > 
-> Please find the corrected Description with this patch (and the appropriate CC).
-> Thanks!
-> 
-> -Nish
-> 
-> Description: Use msleep() instead of schedule_timeout() to guarantee the
-> task delays as expected. Change the values of the constants being used
-> appropriately. I left the arithmetic there as it was before, even though
-> it could be easily simplified away.
-> 
-> Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
-> Signed-off-by: Domen Puncer <domen@coderock.org>
+> While this is an empty one:
+> # echo "0 1 -" > /sys/class/scsi_host/host0/scan
+> scsi_scan_host_selected: <0:0:1:4294967295>
+> scsi scan: INQUIRY to host 0 channel 0 id 1 lun 0
+> scsi <0:0:1:0> send                  scsi0 : destination target 1, lun 0
+>         command = Inquiry 00 00 00 24 00
+> scsi <0:0:1:0> done SUCCESS    10000 scsi0 : destination target 1, lun 0
+>         command = Inquiry 00 00 00 24 00
+> scsi scan: 1st INQUIRY failed with code 0x10000
 
-ACK.
+Your device must be reporting as SCSI-2, that makes sense, since you
+needed other bflags set. The logging should really dump the scsi_level.
+You need to add an entry to the devinfo list to force a REPORT LUNs scan.
 
-James, please add to your tree.
+I don't know why it is not already in scsi_devinfo.c, AFAIR REPORT LUNs
+has always worked with EMC, and should be in its devinfo flag (and
+probably the only devinfo flag, since sparse, largelun and forcelun are
+meaningless for a REPORT LUN scan).
 
-I'll forward over a diff to add an entry to the MAINTAINERS file in
-another email.
+module params can be used, but /proc/scsi/device_info is easiest. Make
+sure I have the correct vendor:model, this should work:
 
-Thanks,
-Andrew Vasquez
+	echo "EMC:SYMMETRIX:0x20000" > /proc/scsi/device_info
+
+BLIST_REPORTLUN2 is 0x20000.
+
+-- Patrick Mansfield
