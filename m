@@ -1,40 +1,43 @@
-From: Pedro Pla <pedropla@holidaymarketing.com>
-Subject: Problem with Gdt driver under smp?
-Date: Thu, 31 Oct 2002 16:37:07 +0800
+From: Enver Haase <ehaase@inf.fu-berlin.de>
+Subject: Bug in mounting a CDROM
+Date: Thu, 31 Oct 2002 12:31:50 +0100 (MEZ)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DC0EBB3.9030707@holidaymarketing.com>
+Message-ID: <Pine.LNX.4.10.10210311224220.760-100000@haneman.hacenet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lgm.com.sg (bb-203-125-28-243.singnet.com.sg [203.125.28.243])
-	by smtp23.singnet.com.sg (8.12.6/8.12.6) with SMTP id g9V8eKhc004600
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2002 16:40:21 +0800
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: axboe@suse.de, linux-scsi@vger.kernel.org
 
-Hello,
 
-I was wondering if there is any known problem with the Gdt driver under 
-an smp machine, I have a dual p3 scb2 motherboard, with 1-2GB ram, an 
-scrmr intel 0 channel raid controller and 3 hotswap disks. Initially I 
-thought it was a memory problem since the kernel was complaining at 
-mem_alloc:89, however as long as the memory I move is not read from the 
-disk (through a kernel compile, or a dd if=/dev/sda) then it seems to 
-work fine. A kernel compiled with no smp works fine as well. I've tried 
-kernels from the 2.2.22 to the 2.4.17-2.4.20-pre10-ac with pre11 patches 
-applied on top.
+Hallo,
 
-The symptoms are segmentation faults, signal 11's, and occasionally 
-kernel oops at mem_alloc:89, I have also seen several kernel oops in 
-journal.c when I tried using ext3, I disactivated that but the faults 
-remained. It has also froze once and given a kernel oops while loading 
-the scsi driver at boot, and another time it simply rebooted the machine 
-when loading the driver. Any ideas? For now I will work with only one 
-cpu and smp disactivated since that gives no problems at all, but I 
-would like to be able to unleash the full power of these machines.
+as you know the kernel locks a CD-ROM drive's door when mounting it.
+Having an unmountable medium still locks the door, so that nobody can ever
+get that defective medium out.
+I'm using Linux 2.4.19 with EIDE drives and the Pseudo-SCSI layer on top
+of that.
 
-Thanks
+$mount /cdrw
+mount: Kein Medium gefunden
 
-Pedro
+$umount /cdrw
+umount: /cdrw is not mounted (according to mtab)
+
+$mount /cdrw
+mount: wrong fs type, bad option, bad superblock on /dev/cdrw,
+       or too many mounted file systems
+
+fstab:
+/dev/cdrw         /cdrw       iso9660     ro,user 0 2
+
+/dev:
+lrwxrwxrwx   1 root     root            3 Aug 26  2000 /dev/cdrw -> sr1
+
+"umount -f" doesn't work, either. And right "umount" is, the mtab
+doesn't have a cdrw entry.
+
+Greetings and thanks for your portion of Linux!
+Enver
+
 
