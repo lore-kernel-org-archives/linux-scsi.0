@@ -1,201 +1,247 @@
-From: Andries.Brouwer@cwi.nl
-Subject: [PATCH] MODE SENSE in sd.c; sddr09.c
-Date: Mon, 2 Sep 2002 02:41:16 +0200 (MEST)
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: [PATCH] 2.5.33 __NO_VERSION__ useless since 2.3
+Date: Mon, 02 Sep 2002 12:54:25 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <UTC200209020041.g820fGS22828.aeb@smtp.cwi.nl>
+Message-ID: <20020901215535.1DBA62C150@lists.samba.org>
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="----- =_aaaaaaaaaa0"
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-ID: <7399.1030935257.0@rustcorp.com.au>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, torvalds@transmeta.com
-Cc: mdharm-usb@one-eyed-alien.net
+To: linux-kernel@vger.kernel.org
+Cc: Jaroslav Kysela <perex@suse.cz>, Kai Germaschewski <kai.germaschewski@gmx.de>, Karsten Keil <kkeil@suse.de>, Nils Faerber <nils@kernelconcepts.de>, alan@redhat.com, braam@clusterfs.com, davem@redhat.com, dwmw2@redhat.com, faith@redhat.com, greg@kroah.com, hpa@zytor.com, jaharkes@cs.cmu.edu, jffs-dev@axis.com, laforge@gnumonks.org, linux-scsi@vger.kernel.org, mac@melware.de, neilb@cse.unsw.edu.au, paulus@samba.org, schwidefsky@de.ibm.com, t.sailer@alumni.ethz.ch, trond.myklebust@fys.uio.no, viro@math.psu.edu
 
-In sd.c we call MODE SENSE (6) in order to find out whether the
-device is write protected. The info we need is in byte 2, the
-header of the MODE SENSE answer, but in the request we have to
-specify (i) what page(s) we want, and (ii) how many bytes we want.
+------- =_aaaaaaaaaa0
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <7399.1030935257.1@rustcorp.com.au>
 
-Long ago we asked for 12 bytes from page 1 (Daniel Roche, 1.3.35).
-Matthew Dharm made this 8 bytes from page 3F (all pages), patch-2.4.0-test8.
-In patch-2.4.10 the 8 was increased to 255.
+....but people keep copying it.  Pointed out by Keith Owens.
 
-I found on the one hand devices that only react to page 0
-(the vendor page), and return an error for page 3F.
-And on the other hand devices that are unable to handle requests
-for more bytes than they actually have.
+Please apply your pieces and forward to Linus next update.
 
-So, it seems that the cautious way to ask for MODE SENSE data is
-to first ask for the header only, see how much is available,
-and then ask for everything.
-
-The patch below first separates out the MODE SENSE call,
-and then tries it three times: on all pages (3F), only the first
-four bytes; on the vendor page (0), only the first four bytes;
-on all pages (3F), 255 bytes.
-
-This should be at least as robust as our current code.
-I tried it on 8 SCSI devices (of which 2 fail under 2.5.33)
-and found no problems.
-
-Below - maybe I should have sent it in a separate mail -
-a diff of usb/storage/sddr09.c teaching the code there
-how to return less than a full page.
-
-Andries
+Yes, I'm getting lazy,
+Trivial Rusty.
 
 
---- linux-2.5.33/linux/drivers/scsi/sd.c	Sun Sep  1 09:47:13 2002
-+++ linux-2.5.33a/linux/drivers/scsi/sd.c	Mon Sep  2 01:49:28 2002
-@@ -1007,6 +1007,28 @@
- 	sdkp->device->sector_size = sector_size;
- }
- 
-+static int
-+sd_do_mode_sense6(Scsi_Device *sdp, Scsi_Request *SRpnt,
-+		  int modepage, unsigned char *buffer, int len) {
-+	unsigned char cmd[8];
-+
-+	memset((void *) &cmd[0], 0, 8);
-+	cmd[0] = MODE_SENSE;
-+	cmd[1] = (sdp->scsi_level <= SCSI_2) ? ((sdp->lun << 5) & 0xe0) : 0;
-+	cmd[2] = modepage;
-+	cmd[4] = len;
-+
-+	SRpnt->sr_cmd_len = 0;
-+	SRpnt->sr_sense_buffer[0] = 0;
-+	SRpnt->sr_sense_buffer[2] = 0;
-+	SRpnt->sr_data_direction = SCSI_DATA_READ;
-+
-+	scsi_wait_req(SRpnt, (void *) cmd, (void *) buffer,
-+		      len, SD_TIMEOUT, MAX_RETRIES);
-+
-+	return SRpnt->sr_result;
-+}
-+
- /*
-  * read write protect setting, if possible - called only in sd_init_onedisk()
-  */
-@@ -1014,50 +1036,38 @@
- sd_read_write_protect_flag(Scsi_Disk *sdkp, char *diskname,
- 			   Scsi_Request *SRpnt, unsigned char *buffer) {
- 	Scsi_Device *sdp = sdkp->device;
--	unsigned char cmd[8];
--	int the_result;
-+	int res;
- 
- 	/*
--	 * For removable scsi disks we have to recognise the
--	 * Write Protect Flag. This flag is kept in the Scsi_Disk
--	 * struct and tested at open !
--	 * Daniel Roche ( dan@lectra.fr )
--	 *
--	 * Changed to get all pages (0x3f) rather than page 1 to
--	 * get around devices which do not have a page 1.  Since
--	 * we're only interested in the header anyway, this should
--	 * be fine.
--	 *   -- Matthew Dharm (mdharm-scsi@one-eyed-alien.net)
--	 *
--	 * As it turns out, some devices return an error for
--	 * every MODE_SENSE request except one for page 0.
--	 * So, we should also try that. --aeb
-+	 * First attempt: ask for all pages (0x3F), but only 4 bytes.
-+	 * We have to start carefully: some devices hang if we ask
-+	 * for more than is available.
- 	 */
-+	res = sd_do_mode_sense6(sdp, SRpnt, 0x3F, buffer, 4);
- 
--	memset((void *) &cmd[0], 0, 8);
--	cmd[0] = MODE_SENSE;
--	cmd[1] = (sdp->scsi_level <= SCSI_2) ?
--		((sdp->lun << 5) & 0xe0) : 0;
--	cmd[2] = 0x3f;	/* Get all pages */
--	cmd[4] = 255;   /* Ask for 255 bytes, even tho we want just the first 8 */
--	SRpnt->sr_cmd_len = 0;
--	SRpnt->sr_sense_buffer[0] = 0;
--	SRpnt->sr_sense_buffer[2] = 0;
--	SRpnt->sr_data_direction = SCSI_DATA_READ;
--
--	scsi_wait_req(SRpnt, (void *) cmd, (void *) buffer,
--		      255, SD_TIMEOUT, MAX_RETRIES);
-+	/*
-+	 * Second attempt: ask for page 0
-+	 * When only page 0 is implemented, a request for page 3F may return
-+	 * Sense Key 5: Illegal Request, Sense Code 24: Invalid field in CDB.
-+	 */
-+	if (res)
-+		res = sd_do_mode_sense6(sdp, SRpnt, 0, buffer, 4);
- 
--	the_result = SRpnt->sr_result;
-+	/*
-+	 * Third attempt: ask 255 bytes, as we did earlier.
-+	 */
-+	if (res)
-+		res = sd_do_mode_sense6(sdp, SRpnt, 0x3F, buffer, 255);
- 
--	if (the_result) {
--		printk("%s: test WP failed, assume Write Enabled\n",
--		       diskname);
--		/* alternatively, try page 0 */
-+	if (res) {
-+		printk(KERN_WARNING
-+		       "%s: test WP failed, assume Write Enabled\n", diskname);
- 	} else {
- 		sdkp->write_prot = ((buffer[2] & 0x80) != 0);
- 		printk(KERN_NOTICE "%s: Write Protect is %s\n", diskname,
- 		       sdkp->write_prot ? "on" : "off");
-+		printk(KERN_DEBUG "%s: Mode Sense: %02x %02x %02x %02x\n",
-+		       diskname, buffer[0], buffer[1], buffer[2], buffer[3]);
- 	}
- }
- 
+------- =_aaaaaaaaaa0
+Content-Type: application/octet-stream;
+	name="remove_no_version.patch.2.5.33.gz"
+Content-ID: <7399.1030935257.2@rustcorp.com.au>
+Content-Description: __NO_VERSION__ removal patch for 2.5.33
+Content-Transfer-Encoding: base64
 
---- linux-2.5.33/linux/drivers/usb/storage/sddr09.c	Sun Jun  9 07:31:18 2002
-+++ linux-2.5.33a/linux/drivers/usb/storage/sddr09.c	Mon Sep  2 01:33:40 2002
-@@ -1443,36 +1443,27 @@
- 	}
- 
- 	if (srb->cmnd[0] == MODE_SENSE) {
-+		int modepage = (srb->cmnd[2] & 0x3F);
-+		int len;
- 
--		// Read-write error recovery page: there needs to
--		// be a check for write-protect here
-+		/* They ask for the Read/Write error recovery page,
-+		   or for all pages. Give as much as they have room for. */
-+		if (modepage == 0x01 || modepage == 0x3F) {
- 
--		if ( (srb->cmnd[2] & 0x3F) == 0x01 ) {
--
--			US_DEBUGP(
--				"SDDR09: Dummy up request for mode page 1\n");
-+			US_DEBUGP("SDDR09: Dummy up request for "
-+				  "mode page 0x%x\n", modepage);
- 
--			if (ptr == NULL || 
--			    srb->request_bufflen<sizeof(mode_page_01))
-+			if (ptr == NULL)
- 				return USB_STOR_TRANSPORT_ERROR;
- 
-+			len = srb->request_bufflen;
-+			if (len > sizeof(mode_page_01))
-+				len = sizeof(mode_page_01);
-+
- 			mode_page_01[0] = sizeof(mode_page_01) - 1;
- 			mode_page_01[2] = (info->flags & SDDR09_WP) ? 0x80 : 0;
--			memcpy(ptr, mode_page_01, sizeof(mode_page_01));
-+			memcpy(ptr, mode_page_01, len);
- 			return USB_STOR_TRANSPORT_GOOD;
--
--		} else if ( (srb->cmnd[2] & 0x3F) == 0x3F ) {
--
--			US_DEBUGP("SDDR09: Dummy up request for "
--				  "all mode pages\n");
--
--			if (ptr == NULL || 
--			    srb->request_bufflen<sizeof(mode_page_01))
--				return USB_STOR_TRANSPORT_ERROR;
--
--			memcpy(ptr, mode_page_01, sizeof(mode_page_01));
--			return USB_STOR_TRANSPORT_GOOD;
--
- 		}
- 
- 		return USB_STOR_TRANSPORT_ERROR;
+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
+AgA=
+
+------- =_aaaaaaaaaa0
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <7399.1030935257.3@rustcorp.com.au>
+
+--
+  Anyone who quotes me in their sig is an idiot. -- Rusty Russell.
+
+------- =_aaaaaaaaaa0--
