@@ -1,36 +1,33 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Mike Anderson <andmike@us.ibm.com>
 Subject: Re: [PATCH] switch scsi upper driver probing to the driver model
-Date: 17 May 2003 11:19:50 -0500
+Date: Sat, 17 May 2003 09:35:39 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1053188393.1968.97.camel@mulgrave>
-References: <20030516182039.A7369@lst.de>
-	<20030516235718.GA3260@beaverton.ibm.com>
-	<Pine.LNX.4.52.0305171248460.4436@kai.makisara.local>
-	<20030517160801.A9431@infradead.org>
+Message-ID: <20030517163538.GA3459@beaverton.ibm.com>
+References: <20030516182039.A7369@lst.de> <20030516235718.GA3260@beaverton.ibm.com> <20030517111723.A14681@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:39684 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261617AbTEQQHq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 May 2003 12:07:46 -0400
-In-Reply-To: <20030517160801.A9431@infradead.org>
+Received: from e33.co.us.ibm.com ([32.97.110.131]:55187 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S261624AbTEQQUa
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 May 2003 12:20:30 -0400
+Content-Disposition: inline
+In-Reply-To: <20030517111723.A14681@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, Mike Anderson <andmike@us.ibm.com>, Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-On Sat, 2003-05-17 at 10:08, Christoph Hellwig wrote:
-> That exactly what I said in my mail to Douglas before - now there always
-> is one driver for each device.  If you have sg loaded but not st (yet)
-> sg will claim your tapes, not st.
+Christoph Hellwig [hch@lst.de] wrote:
+> 
+> Okay, here's the patch to remove the strange kdev and type attributes
+> that caused this problems.  All the useful attributes are still left,
+> they're attributes of the right struct device.
 
-In principle, I'm not opposed to single attachment.  However, we need
-the SG_IO demonstrably working for all devices (including tape) before
-we try turning it off.
+Thanks, I am doing insmod / rmmod with sd, sg, sr, and st upper levels
+binding and unbinding.
 
-So, let's look at the SG_IO for cdev patch before considering this one.
-
-James
-
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
