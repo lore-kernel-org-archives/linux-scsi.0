@@ -1,61 +1,50 @@
-From: Nick Bellinger <nickb@attheoffice.org>
+From: David Brownell <david-b@pacbell.net>
 Subject: Re: [PATCH] /proc/scsi/map
-Date: 21 Jun 2002 22:38:39 -0600
+Date: Sat, 22 Jun 2002 10:24:31 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1024720721.6874.104.camel@subjeKt>
-References: <Pine.LNX.4.44.0206211616510.16808-100000@waste.org>
+Message-ID: <3D14B2CF.90002@pacbell.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0206211616510.16808-100000@waste.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Xymoron <oxymoron@waste.org>
-Cc: Patrick Mochel <mochel@osdl.org>, sullivan <sullivan@austin.ibm.com>, Linus Torvalds <torvalds@transmeta.com>, Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Nick Bellinger <nickb@attheoffice.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, 2002-06-21 at 15:33, Oliver Xymoron wrote:
-> On Thu, 20 Jun 2002, Patrick Mochel wrote:
-> 
-> > > But it was entierly behind me how to fit this
-> > > in to the sheme other sd@4,0:h,raw
-> > > OS-es are using. And finally how would one fit this in to the
-> > > partitioning shemes? For the system aprtitions are simply
-> > > block devices hanging off the corresponding block device.
-> >
-> > Partitions are purely logical entities on a physical disk. They have no
-> > presence in the physical device tree.
-> 
-> As I raised elsewhere in this thread, the distinction between physical and
-> logical is troubling. Consider iSCSI, (aka SCSI-over-IP). It's analogous
-> to SCSI-over-Fibre Channel, except that rather than using an embedded FC
-> stack, it's using the kernel's IP stack. But it's every bit as much a SCSI
-> disk/tape/whatever as a local device. Ergo, it ought to show up in the
-> device tree so that it can be discovered in the same way. But where?
-> 
-> This is only one step (the SCSI midlayer) removed from the logical devices
-> created by partitioning, LVM, NBD, MD, loopback, ramdisk and the like,
-> that again, ought to be discoverable in the same way as all other block
-> devices. Perhaps we need root/{virtual,logical}?
-> 
+> On the other hand there is the obvious fact that an iSCSI initiator
+> driver is not attached to a bus, and assuming /root/iSCSI.target/disk1
+> etc, is out of the question.  There is a real need for a solution to
+> handle virtual devices (as stated your previous message) that are not
+> assoicated with any physical connectors.  
 
-The interaction between iSCSI & driverfs does pose an interesting
-problem:
+There are those who see the IP stack as a kind of logical bus ... :)
+It's just not tied any specific hardware interface; it's "multipathed" in
+some sense. Linking it to an eth0 entry in $DRIVERFS/root/pci0/00:10.0
+would be wrong, since it can also be accessed through eth2.
 
-On one hand I tend to lead toward the view of a physical device. 
-The reason being that there will never be a distinction as far as the
-kernel is concerned (other than driverfs of course) that a SCSI upper
-level driver (hopefully soon to be a personality driver) using a iSCSI
-Initiator low-level driver is not really a physical host. 
+Why shouldn't there be a $DRIVERFS/net/ipv4@10.42.135.99/... style hookup
+for iSCSI devices?  Using whatever physical addressing the kernel uses
+there, which I assume wouldn't necessarily be restricted to ipv4.  (And
+not exposing physical network topology -- routing! -- in driverfs.)
 
-On the other hand there is the obvious fact that an iSCSI initiator
-driver is not attached to a bus, and assuming /root/iSCSI.target/disk1
-etc, is out of the question.  There is a real need for a solution to
-handle virtual devices (as stated your previous message) that are not
-assoicated with any physical connectors.  
 
-Not being too fimilar with driverfs,  what are the options with regard
-to virtual devices as things currently stand without tainting the
-elegant tree that is provides?
-				
-				Nicholas Bellinger
+On a related topic ... if driverfs is going to be providing a nice unique
+ID for the controller ($DRIVERFS/root/pci0/00:02.0/02:0f.0/03:07.0 for
+Linus' behind-two-bridges case), why are people talking as if the SCSI
+layer's arbitrary "controller number" should still be getting pushed as
+part of user visible names?
+
+That is, I'd sure hope the standard policy for assigning driverfs names
+would avoid _all_ IDs that are derived from enumeration order.  Otherwise
+it'll be hard to store those names for (re)use by user mode tools.
+
+To be sure, those IDs can still be exposed when needed, since in the
+"very big picture" attribute-based names end up being the only really
+scalable model.  But putting unstable attributes into path names just
+causes trouble.  (Much like putting device types in path names.)  If
+they're really necessary (why?) driverfs makes it easy to expose them
+in better ways.
+
+- Dave
+
 
