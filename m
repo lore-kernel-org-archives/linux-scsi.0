@@ -1,28 +1,34 @@
-From: Andries Brouwer <aebr@win.tue.nl>
-Subject: Re: New model for managing dev_t's for partitionable block devices
-Date: Wed, 29 Jan 2003 18:38:37 +0100
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: Re: dev nodes assignement ?
+Date: Wed, 29 Jan 2003 10:59:06 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030129173837.GA3979@win.tue.nl>
-References: <OFD9CDB238.908E6C3C-ON87256CBD.00070A30-88256CBD.00095D4B@us.ibm.com> <3E380532.2010900@mvista.com>
+Message-ID: <OFA0A98C43.F47155A2-ON87256CBD.00627856-88256CBD.0062D452@us.ibm.com>
+References: <20030129110004.22210.qmail@web20421.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3E380532.2010900@mvista.com>
+In-Reply-To: <20030129110004.22210.qmail@web20421.mail.yahoo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Steven Dake <sdake@mvista.com>
-Cc: Bryan Henderson <hbryan@us.ibm.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Douglas Gilbert <dougg@torque.net>, Christoph Hellwig <hch@infradead.org>, Joel Becker <Joel.Becker@oracle.com>, Kurt Garloff <kurt@garloff.de>, linux-kernel@kernel.vger.org, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: devnetfs <devnetfs@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Jan 29, 2003 at 09:45:38AM -0700, Steven Dake wrote:
 
-> What is needed is a compromise, described above, limiting the number of 
-> partitions to some sane amount, but allowing significantly more disks 
-> for the power user.
 
-Always this discussion, over and over again.
-Changing dev_t to be 32-bit is something many people that take part
-in this discussion could do in a few hours. The subsequent kernel
-audit takes a weekend.
-Is there a reason everybody prefers to discuss ugly hacks?
 
-Andries
+
+>Is /dev/sdX scsi dev node assignment based *only* on the pci-slot
+>the HBA's are in? or also upon the order in which the LLDD is loaded?
+
+First of all, let's acknowledge that the /dev/sdX device special file
+assignments are done manually by the user and are permanent.  /dev/sdX is
+assigned to a major and minor number.
+
+So the actual question is about minor number assignments.
+
+>... OR
+>Does each LLDD do a pci-scan and assign [minor numbers] for HBA's that it
+>can handle -- in which case the order of LLDD getting loaded is also
+>important in deciding the [minor number].
+
+Yes.
+
