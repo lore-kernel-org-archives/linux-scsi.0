@@ -1,31 +1,27 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] ips driver for 2.4.23-pre4
-Date: Thu, 8 Jan 2004 17:15:31 +0000
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040108171531.B12595@infradead.org>
-References: <3FFC5B2C.6000302@wanadoo.es>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: x86_64 + 2.6.1-rc3 panics on aic79xx
+Date: 08 Jan 2004 12:26:07 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1073582767.2741.14.camel@mulgrave>
+References: <200401081627.i08GRgZ0000027670@mudpuddle.cs.wustl.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:54031 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S265649AbUAHRPd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jan 2004 12:15:33 -0500
-Content-Disposition: inline
-In-Reply-To: <3FFC5B2C.6000302@wanadoo.es>; from xose@wanadoo.es on Wed, Jan 07, 2004 at 08:17:00PM +0100
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <200401081627.i08GRgZ0000027670@mudpuddle.cs.wustl.edu>
+To: Berkley Shands <berkley@cs.wustl.edu>
+Cc: gibbs@scsiguy.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, pbadari@us.ibm.com
 List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose@wanadoo.es>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Tosatti <marcelo.tosatti@cyclades.com>
 
-On Wed, Jan 07, 2004 at 08:17:00PM +0100, Xose Vazquez Perez wrote:
-> -#if !defined(__i386__) && !defined(__ia64__)
-> -#error "This driver has only been tested on the x86/ia64 platforms"
-> +#if !defined(__i386__) && !defined(__ia64__) && !defined(__x86_64__)
-> +#error "This driver has only been tested on the x86/ia64/x86_64 platforms"
->  #endif
+On Thu, 2004-01-08 at 11:27, Berkley Shands wrote:
+> 	A pure stock 2.6.1-rc3 kernel also bug halts with sg corruption
+> on the first scsi retry. It seems that the iommu has serious issues
+> with all three variants of  current kernel patches.
 
-This warning schould be removed completly.  Lots of PCI drivers have
-been tested only on a few plattforms.
+Andi Kleen has produced a patch for the sg list problems.  Could you see
+if you can reproduce the issues when Andi produces a patch kit for
+x86_64 and -rc3, so we're not trying to debug non-scsi issues?
 
-Else the patch is okay, but where's the maintainer?
+Thanks,
 
+James
