@@ -1,102 +1,74 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] kill unused scsi_device fields
-Date: Fri, 6 Jun 2003 10:04:26 +0200
+From: Jamie Lenehan <lenehan@twibble.org>
+Subject: Re: [PATCH] introduce scsi_host_alloc
+Date: Fri, 6 Jun 2003 21:40:18 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030606080426.GF18838@lst.de>
+Message-ID: <20030606114018.GA20458@twibble.org>
+References: <20030606080103.GC18838@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:17361 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S264650AbTFFHu4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2003 03:50:56 -0400
+Received: from charon.twibble.org ([203.217.29.134]:11439 "EHLO
+	egwene.twibble.org") by vger.kernel.org with ESMTP id S261169AbTFFL0w
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Jun 2003 07:26:52 -0400
 Content-Disposition: inline
+In-Reply-To: <20030606080103.GC18838@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, dc395x@twibble.org
+
+On Fri, Jun 06, 2003 at 10:01:03AM +0200, Christoph Hellwig wrote:
+> Rediffed version, with Mike's isp fix and taking the new
+> scsi_add_host users in usb in account.
+> 
+> Currently this is juist a new name for scsi_register, but we make
+> sure new-style drivers never call scsi_register/scsi_unregister
+> but always scsi_host_alloc/scsi_host_put in this patch so the
+> next patch can introduce code specific to legacy drivers in
+> the former.  Also cleanup scsi_register/scsi_host_alloc a bit.
+
+I think I made the dc395x driver new style init as of 2.5.70-bk9 (if
+what scsi_mid_low_api.txt calls "hotplug" style is new style then it
+is). So it'll need to be updated as well.
+
+Patch against 2.5.70-bk9. Untested, just modified the names as per
+your other changes.
 
 
-diff -Nru a/drivers/scsi/scsi.h b/drivers/scsi/scsi.h
---- a/drivers/scsi/scsi.h	Thu Jun  5 12:06:03 2003
-+++ b/drivers/scsi/scsi.h	Thu Jun  5 12:06:03 2003
-@@ -355,14 +355,12 @@
- 	char * model;		/* ... after scan; point to static string */
- 	char * rev;		/* ... "nullnullnullnull" before scan */
- 	unsigned char current_tag;	/* current tag */
--//	unsigned char sync_min_period;	/* Not less than this period */
--//	unsigned char sync_max_offset;	/* Not greater than this offset */
- 	struct scsi_target      *sdev_target;   /* used only for single_lun */
- 
- 	unsigned online:1;
-+
- 	unsigned writeable:1;
- 	unsigned removable:1;
--	unsigned random:1;
- 	unsigned changed:1;	/* Data invalid due to media change */
- 	unsigned busy:1;	/* Used to prevent races */
- 	unsigned lockable:1;	/* Able to prevent media removal */
-@@ -388,9 +386,6 @@
- 				     * because we did a bus reset. */
- 	unsigned use_10_for_rw:1; /* first try 10-byte read / write */
- 	unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
--	unsigned remap:1;	/* support remapping  */
--//	unsigned sync:1;	/* Sync transfer state, managed by host */
--//	unsigned wide:1;	/* WIDE transfer state, managed by host */
- 	unsigned no_start_on_add:1;	/* do not issue start on add */
- 
- 	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
-diff -Nru a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c	Thu Jun  5 12:06:03 2003
-+++ b/drivers/scsi/scsi_lib.c	Thu Jun  5 12:06:03 2003
-@@ -730,17 +730,6 @@
- 	 * can choose a block to remap, etc.
+diff -du -r a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+--- a/drivers/scsi/dc395x.c	2003-06-06 21:27:00.000000000 +1000
++++ b/drivers/scsi/dc395x.c	2003-06-06 21:28:47.000000000 +1000
+@@ -5726,9 +5726,9 @@
+ 	/*
+ 	 *$$$$$$$$$$$  MEMORY ALLOCATE FOR ADAPTER CONTROL BLOCK $$$$$$$$$$$$
  	 */
- 	if (driver_byte(result) != 0) {
--		if (suggestion(result) == SUGGEST_REMAP) {
--#ifdef REMAP
--			/*
--			 * Not yet implemented.  A read will fail after being remapped,
--			 * a write will call the strategy routine again.
--			 */
--			if (cmd->device->remap) {
--				result = 0;
--			}
--#endif
--		}
- 		if ((cmd->sense_buffer[0] & 0x7f) == 0x70) {
- 			/*
- 			 * If the device is in the process of becoming ready,
-diff -Nru a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c	Thu Jun  5 12:06:03 2003
-+++ b/drivers/scsi/scsi_scan.c	Thu Jun  5 12:06:03 2003
-@@ -541,8 +541,6 @@
- 		printk(KERN_INFO "scsi: unknown device type %d\n", sdev->type);
+-	host = scsi_register(host_template, sizeof(struct AdapterCtlBlk));
++	host = scsi_host_alloc(host_template, sizeof(struct AdapterCtlBlk));
+ 	if (!host) {
+-		dprintkl(KERN_INFO, "pSH scsi_register ERROR\n");
++		dprintkl(KERN_INFO, "pSH scsi_host_alloc ERROR\n");
+ 		return 0;
  	}
+ 	DC395x_print_eeprom_settings(index);
+@@ -5736,7 +5736,7 @@
+ 	pACB = (struct AdapterCtlBlk *) host->hostdata;
  
--	sdev->random = (sdev->type == TYPE_TAPE) ? 0 : 1;
--
- 	scsi_set_name(sdev, inq_result);
+ 	if (DC395x_initACB(host, io_port, irq, index)) {
+-		scsi_unregister(host);
++		scsi_host_put(host);
+ 		return 0;
+ 	}
+ 	DC395x_print_config(pACB);
+@@ -5755,7 +5755,7 @@
  
- 	print_inquiry(inq_result);
-diff -Nru a/drivers/scsi/sd.c b/drivers/scsi/sd.c
---- a/drivers/scsi/sd.c	Thu Jun  5 12:06:03 2003
-+++ b/drivers/scsi/sd.c	Thu Jun  5 12:06:03 2003
-@@ -1271,8 +1271,6 @@
- 		
- 	SRpnt->sr_device->use_10_for_rw = 1;
- 	SRpnt->sr_device->use_10_for_ms = 0;
--	SRpnt->sr_device->remap = 1;
--
-  leave:
- 	scsi_release_request(SRpnt);
- 
-diff -Nru a/drivers/scsi/sr.c b/drivers/scsi/sr.c
---- a/drivers/scsi/sr.c	Thu Jun  5 12:06:03 2003
-+++ b/drivers/scsi/sr.c	Thu Jun  5 12:06:03 2003
-@@ -526,7 +526,6 @@
- 	sdev->sector_size = 2048;	/* A guess, just in case */
- 	sdev->use_10_for_rw = 1;
- 	sdev->use_10_for_ms = 0;
--	sdev->remap = 1;
- 
- 	/* FIXME: need to handle a get_capabilities failure properly ?? */
- 	get_capabilities(cd);
+ 	} else {
+ 		dprintkl(KERN_INFO, "DC395x_initAdapter initial ERROR\n");
+-		scsi_unregister(host);
++		scsi_host_put(host);
+ 		host = NULL;
+ 	}
+ 	return host;
+
+-- 
+ Jamie Lenehan              Work Phone: +61 3 9843 8817
+ lenehan@twibble.org        Work Email: jamie.lenehan@activcard.com.au
