@@ -1,40 +1,48 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: Daniel Stekloff <dsteklof@us.ibm.com>
 Subject: Re: [announce] scsi_id 0.1 - generate unique scsi id
-Date: Wed, 22 Oct 2003 15:46:38 +0100
+Date: 22 Oct 2003 00:42:16 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031022154638.A22952@infradead.org>
-References: <20031021165857.A8240@beaverton.ibm.com> <20031022153140.A22298@infradead.org> <1066808536.27285.19.camel@w-stekloff.beaverton.ibm.com>
+Message-ID: <1066808536.27285.19.camel@w-stekloff.beaverton.ibm.com>
+References: <20031021165857.A8240@beaverton.ibm.com>
+	 <20031022153140.A22298@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:28177 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263693AbTJVOqj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Oct 2003 10:46:39 -0400
-Content-Disposition: inline
-In-Reply-To: <1066808536.27285.19.camel@w-stekloff.beaverton.ibm.com>; from dsteklof@us.ibm.com on Wed, Oct 22, 2003 at 12:42:16AM -0700
+Received: from e35.co.us.ibm.com ([32.97.110.133]:33949 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S263685AbTJVOn0
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Oct 2003 10:43:26 -0400
+In-Reply-To: <20031022153140.A22298@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Stekloff <dsteklof@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Patrick Mansfield <patmans@us.ibm.com>, linux-hotplug-devel@lists.sourceforge, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-hotplug-devel@lists.sourceforge, linux-scsi@vger.kernel.org
 
-On Wed, Oct 22, 2003 at 12:42:16AM -0700, Daniel Stekloff wrote:
-> > Umm, libsysfs isn't installing headers into /usr/include/sys, is it?
-> > Especially with something like dlist.h that sounds like yet another
-> > linked list implementation..
+On Wed, 2003-10-22 at 07:31, Christoph Hellwig wrote:
+> On Tue, Oct 21, 2003 at 04:58:57PM -0700, Patrick Mansfield wrote:
+> > libsysfs 0_2_0 was not installing libsysfs.h or dlist.h, manually copy
+> > those files to /usr/include/sys before compiling.
 > 
-> 
-> 
-> Patrick told me about this, we will change libsysfs to install headers
-> there.
+> Umm, libsysfs isn't installing headers into /usr/include/sys, is it?
+> Especially with something like dlist.h that sounds like yet another
+> linked list implementation..
 
-??
 
-s/there/not there/
 
-> Is there another linked list implementation that you'd recommend?
+Patrick told me about this, we will change libsysfs to install headers
+there. Is there another linked list implementation that you'd recommend?
+We couldn't include list.h like Greg did in udev because we are keeping
+libsysfs LGPL and we didn't want the overhead of glibc.
 
-I'd recommend not to expose your linked list implementation to
-libsysfs users.  If you really need it might be best to use <sys/queue.h>
-although it's quite ugly.  But if dlist.h is the one from evms is certainly
-much much better than that one 8)
+Thanks,
+
+Dan
+
+
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Daniel Stekloff <dsteklof@us.ibm.com>
 
