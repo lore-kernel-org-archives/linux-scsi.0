@@ -1,43 +1,39 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [BUG?] 2.5.71 removed request_module("scsi_hostadapter")
-Date: Thu, 17 Jul 2003 11:31:58 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030717113158.B18620@infradead.org>
-References: <200307161145.h6GBjaSi025681@harpo.it.uu.se>
+Subject: Re: bus:id:lun to device name
+Date: Thu, 17 Jul 2003 11:29:51 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20030717112951.A18620@infradead.org>
+References: <OF19C5DBC5.6CF569E6-ON87256D64.005C1908-88256D64.005DBB45@us.ibm.com> <1058344192.3983.98.camel@lt-sv>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:526 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S271387AbTGQKPA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Jul 2003 06:15:00 -0400
 Content-Disposition: inline
-In-Reply-To: <200307161145.h6GBjaSi025681@harpo.it.uu.se>; from mikpe@csd.uu.se on Wed, Jul 16, 2003 at 01:45:36PM +0200
-To: Mikael Pettersson <mikpe@csd.uu.se>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <1058344192.3983.98.camel@lt-sv>; from Stefan.Voelkel@millenux.com on Wed, Jul 16, 2003 at 10:29:52AM +0200
 List-Id: linux-scsi@vger.kernel.org
+To: Stefan Voelkel <Stefan.Voelkel@millenux.com>
+Cc: Bryan Henderson <hbryan@us.ibm.com>, Kurt Garloff <garloff@suse.de>, linux-scsi@vger.kernel.org
 
-On Wed, Jul 16, 2003 at 01:45:36PM +0200, Mikael Pettersson wrote:
-> While trying to figure out why my SCSI modules don't autoload
-> properly in 2.6.0-test1 and late 2.5 kernels, I found that
-> patch-2.5.71 removed scsi.c's request_module("scsi_hostadapter").
-> It seems that some driver model conversion changed scsi_register_device()
-> to scsi_register_{driver,interface}(), but the latter don't do
-> anything wrt autoloading the host adapter.
-> 
-> Is this an oversight or is it intensional?
+On Wed, Jul 16, 2003 at 10:29:52AM +0200, Stefan Voelkel wrote:
+> Yes, basically. I have this information: host_id:bus:target:lun, and now
+> I'd like the "device file name with which one normally access' this
+> specific lun".
 
-It's intentional.
+This is not possible in Linux as it's a userspace policy decision.
+E.g. scsi cdrom devices at least have three commonly used naming schemes.
 
-> I can probably work around this through "install" command
-> kludgery in /etc/modprobe.conf, but that's (a) is ugly, and
-> (b) probably won't work for configs with built-in SCSI core
-> but modular host adapter.
+> Let me give you some details (hope that will make it clearer). I am
+> implementing FC-HBA (ftp://ftp.t11.org/t11/pub/fc/hba/03-108v2.pdf). The
+> problem occures with HBA_GetFcpTargetMapping() on page 73 (7.4.4), the
+> parameters are describerd on page 31 (6.6.1) and the specific struct is
+> HBA_ScsiId (6.6.1.5), actually the member OSDeviceName (6.6.2.11).
 
-builtin scsi core doesn't matter for this at all, the question
-is whether the highlevel drivers are compiled in or not.
+This doesn't make any sense in a linux enviroment.  I'd rather try to
+get that draft fixed before it's ratified instead of working around
+it especially as they already mention Linux in some examples.
 
-modular highlevel driver(s)
+OTOH it's probably totally irrelevant for real life anyway.
 
-	simples postinst in old-style modules.conf (or some rusty equivalent)
-
-builtin highlevel driver(s)
-
-	the request_module is useless anyway as it happens before root is
-	mounted.
