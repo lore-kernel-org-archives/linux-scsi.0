@@ -1,44 +1,51 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [RFC] Clean up scsi documentation
-Date: Sun, 10 Nov 2002 09:49:43 +1100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <3DCD9107.3020103@torque.net>
-Reply-To: dougg@torque.net
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] scsi_debug 1.64 , remove detect(), "hotplug" hosts
+Date: Sat, 9 Nov 2002 17:27:48 -0800
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20021110012748.GA1301@beaverton.ibm.com>
+References: <3DCCE2E6.6050800@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, Rolf Eike Beer <eike@bilbo.math.uni-mannheim.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3DCCE2E6.6050800@torque.net>
 List-Id: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: linux-scsi@vger.kernel.org
 
-Eike Beer <eike@bilbo.math.uni-mannheim.de> wrote:
- > currently the documentation for scsi is not completely located
- > where it should IMHO be: in Documentation/
- >
- > There are a few files in Documentation and much more files in
- > drivers/scsi/ .
- > I think this should be fixed. Any thougts?
- >
- > My way would be:
- >
- > 1) create a directory Documentation/scsi/
- > 2) move everything to this location
- > 3) rename some of the docs (currently the names look
- > like "README.drivername"
- > but "drivername.txt" is more common in Documentation/*)
- > 4) fix up the references
- > 5) add a 00-INDEX file to Documentation/scsi
-<snip/>
+Douglas Gilbert [dougg@torque.net] wrote:
+> Notes:
+>   - Christoph and Mike A. are pulling me in 2 different
+>     directions. In this case Christoph got to me first
+>     so I have moved along that direction. Mike's
+>     "/sysfs/bus/scsi_dbg_fake" has me perplexed ...
 
-Yes, this would be a positive step and has been proposed by
-others on the linux-scsi list. It may be a bit late for the
-2.4 series but the time would be right for the 2.5 series.
+I was not trying to pull in another direction, but my patches may have
+had to many steps in one chunk that may have made it look that way. 
 
-James Bottomley <James.Bottomley@steeleye.com> and Doug Ledford
-<dledford@redhat.com> are maintaining BK repositories for the
-scsi subsystem in the 2.5 series. If you could submit your
-patches to them, then they will find their way to Linus
-in an orderly fashion.
+I have split the functionality of my previous patch for scsi_debug into
+smaller chunks. I believe there are advantages to scsi mid code and the
+device model code in making scsi_debug look more like a real adapter.
 
-Doug Gilbert
+I need to do more testing hopefully I can send you something Sunday if
+you are interested.
+
+>   - rmmod and subsequent modprobe's on scsi_debug
+>     sometimes blow up.
+>     Hopefully Patrick's fix (not in bk3?) addresses that.
+
+I would use the changes that Patrick sent out as we had problems
+with insmod / rmmod without these. I previously sent these to Mochel,
+but he was in the process of moving and they probably will not show up
+in a bk ( or fixes like these) until he can respond.
+
+It seemed when I was re-working my patches that num_hosts_present is
+used during scsi_debug_exit to cleanup, but is not incremented during
+sdebug_add_host_write. There seems to a mixed use of scsi_debug_add_host
+and num_hosts_present.
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
