@@ -1,103 +1,62 @@
-From: David Jeffery <david_jeffery@adaptec.com>
-Subject: [PATCH 2.5] ips: remove arch limitations
-Date: 28 Aug 2003 12:07:18 -0400
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Fix for EISA only aic7xxx compile
+Date: 28 Aug 2003 12:40:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1062086838.25316.32.camel@blackmagic>
+Message-ID: <1062088833.1999.31.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-0TlZJXPbHAND8y9wHRSo"
+Content-Type: multipart/mixed; boundary="=-/TyN6+CjuaOXtwhpkofN"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic-mail.adaptec.com ([216.52.22.10]:11453 "EHLO
-	magic.adaptec.com") by vger.kernel.org with ESMTP id S264084AbTH1QEk
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Aug 2003 12:04:40 -0400
-Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id h7SG4do29003
-	for <linux-scsi@vger.kernel.org>; Thu, 28 Aug 2003 09:04:39 -0700
-Received: from rtpexc01.adaptec.com (rtpexc01.adaptec.com [10.110.12.22])
-	by redfish.adaptec.com (8.8.8p2+Sun/8.8.8) with ESMTP id JAA18993
-	for <linux-scsi@vger.kernel.org>; Thu, 28 Aug 2003 09:04:38 -0700 (PDT)
+Received: from nat9.steeleye.com ([65.114.3.137]:22278 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264080AbTH1Qkl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Aug 2003 12:40:41 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 
---=-0TlZJXPbHAND8y9wHRSo
+--=-/TyN6+CjuaOXtwhpkofN
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 
-This patch removes the X86 arch limitation in drivers/scsi/Kconfig,
-downgrades the #error check for x86/x86_64/ia64 to a #warning, and
-updates an old email address in the help.
+If I build an EISA (no PCI) kernel for my intel express, I get undefined
+references to ahc_linux_pci_exit().
 
-It also fixes up a two places in the driver which have 8 spaces instead
-of a tab for indention.
+The attached patch fixes this (seemed simpler than trying to work out
+how to move the function calls).
 
-David Jeffery
+Other than that, EISA only seems to work fine for me.
 
---=-0TlZJXPbHAND8y9wHRSo
-Content-Disposition: attachment; filename=test4.patch
+James
+
+
+--=-/TyN6+CjuaOXtwhpkofN
+Content-Disposition: attachment; filename=tmp.diff
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/x-patch; name=test4.patch; charset=ANSI_X3.4-1968
+Content-Type: text/plain; name=tmp.diff; charset=ISO-8859-1
 
-diff -urN linux-2.6.0-test4_p0/drivers/scsi/Kconfig linux-2.6.0-test4_p1/dr=
-ivers/scsi/Kconfig
---- linux-2.6.0-test4_p0/drivers/scsi/Kconfig	2003-08-25 08:19:14.000000000=
- -0400
-+++ linux-2.6.0-test4_p1/drivers/scsi/Kconfig	2003-08-25 08:30:04.000000000=
- -0400
-@@ -726,13 +726,13 @@
+=3D=3D=3D=3D=3D drivers/scsi/aic7xxx/aic7xxx_osm.h 1.50 vs edited =3D=3D=3D=
+=3D=3D
+--- 1.50/drivers/scsi/aic7xxx/aic7xxx_osm.h	Fri May  2 15:26:21 2003
++++ edited/drivers/scsi/aic7xxx/aic7xxx_osm.h	Thu Aug 28 12:05:26 2003
+@@ -852,10 +852,16 @@
+ int			 aic7770_map_int(struct ahc_softc *ahc, u_int irq);
 =20
- config SCSI_IPS
- 	tristate "IBM ServeRAID support"
--	depends on X86 && PCI && SCSI
-+	depends on PCI && SCSI
- 	---help---
- 	  This is support for the IBM ServeRAID hardware RAID controllers.
- 	  See <http://www.developer.ibm.com/welcome/netfinity/serveraid.html>
- 	  for more information.  If this driver does not work correctly
- 	  without modification please contact the author by email at
--	  ipslinux@us.ibm.com.
-+	  ipslinux@adaptec.com.
+ /******************************* PCI Routines ****************************=
+*****/
++#ifdef CONFIG_PCI
+ int			 ahc_linux_pci_init(void);
+ void			 ahc_linux_pci_exit(void);
+ int			 ahc_pci_map_registers(struct ahc_softc *ahc);
+ int			 ahc_pci_map_int(struct ahc_softc *ahc);
++#else
++static inline void ahc_linux_pci_exit(void)
++{
++}
++#endif
 =20
- 	  You can build this driver as a module ( =3D code which can be
- 	  inserted in and removed from the running kernel whenever you want),
-diff -urN linux-2.6.0-test4_p0/drivers/scsi/ips.c linux-2.6.0-test4_p1/driv=
-ers/scsi/ips.c
---- linux-2.6.0-test4_p0/drivers/scsi/ips.c	2003-08-25 08:18:32.000000000 -=
-0400
-+++ linux-2.6.0-test4_p1/drivers/scsi/ips.c	2003-08-25 08:25:08.000000000 -=
-0400
-@@ -199,7 +199,7 @@
- #define IPS_VERSION_LOW         ".90-BETA"
-=20
- #if !defined(__i386__) && !defined(__ia64__) && !defined(__x86_64__)
--#error "This driver has only been tested on the x86/ia64/x86_64 platforms"
-+#warning "This driver has only been tested on the x86/ia64/x86_64 platform=
-s"
- #endif
-=20
- #if LINUX_VERSION_CODE <=3D KERNEL_VERSION(2,5,0)
-@@ -284,9 +284,9 @@
- /* This table describes all ServeRAID Adapters */
- static struct  pci_device_id  ips_pci_table[] =3D {
- 	{ 0x1014, 0x002E, PCI_ANY_ID, PCI_ANY_ID, 0, 0 },
--        { 0x1014, 0x01BD, PCI_ANY_ID, PCI_ANY_ID, 0, 0 },
--        { 0x9005, 0x0250, PCI_ANY_ID, PCI_ANY_ID, 0, 0 },
--        { 0, }
-+	{ 0x1014, 0x01BD, PCI_ANY_ID, PCI_ANY_ID, 0, 0 },
-+	{ 0x9005, 0x0250, PCI_ANY_ID, PCI_ANY_ID, 0, 0 },
-+	{ 0, }
- };
-=20
- MODULE_DEVICE_TABLE( pci, ips_pci_table );
-@@ -300,7 +300,7 @@
- 	.name		=3D ips_hot_plug_name,
- 	.id_table	=3D ips_pci_table,
- 	.probe		=3D ips_insert_device,
--        .remove		=3D __devexit_p(ips_remove_device),
-+	.remove		=3D __devexit_p(ips_remove_device),
- };
-           =20
-=20
+ static __inline uint32_t ahc_pci_read_config(ahc_dev_softc_t pci,
+ 					     int reg, int width);
 
---=-0TlZJXPbHAND8y9wHRSo--
+--=-/TyN6+CjuaOXtwhpkofN--
 
