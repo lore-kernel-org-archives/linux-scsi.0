@@ -1,49 +1,31 @@
-From: Patrick Mochel <mochel@osdl.org>
-Subject: Re: sysfs mount point permissions in 2.5.64
-Date: Wed, 5 Mar 2003 17:08:08 -0600 (CST)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0303051706020.998-100000@localhost.localdomain>
-References: <3E667068.4000204@torque.net>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3E667068.4000204@torque.net>
+From: Andries.Brouwer@cwi.nl
+Subject: 2.5.63/64 do not boot: loop in scsi_error
+Date: Thu, 6 Mar 2003 02:01:38 +0100 (MET)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <UTC200303060101.h2611cg08660.aeb@smtp.cwi.nl>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, torvalds@transmeta.com
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+
+See that 2.5.64 came out - good. Time to send the next dev_t patch.
+Unfortunately 2.5.63 and 2.5.64 do not boot.
+
+A moment ago I looked at what goes wrong, and it turns out that
+scsi_error is activated
+  [always a bad sign - I have never see it do any good, and
+   often see it crash the machine]
+and an infinite loop occurs, leaving the machine rather dead.
+
+(Total of 1 commands require eh work; scsi_unjam_host; requesting sense;
+ scsi_eh_done: result 0) - infinite repeat.
+
+Have no time tonight to make a patch, but I suppose the author of
+the 2.5.63 scsi_error.c changes knows what she did wrong.
+
+Andries
 
 
-On Thu, 6 Mar 2003, Douglas Gilbert wrote:
-
-> In lk 2.5.64 on my i386 box the sysfs mount point
-> ( "/sys") changes permission from:
->    drwxr-xr-x
-> to
->    drw-r--r--
-> during the boot process. I didn't notice this feature
-> in lk 2.5.63 . Chmodding the directory back to its former
-> permissions get overridden by subsequent boot sequences.
-> 
-> This change in permissions inhibits non-root users from using
-> utilities that scan sysfs for information (e.g. lsscsi).
-> 
-> Is this a feature or otherwise?
-
-This is certainly not intended, and is entirely my fault. The patch below 
-should fix it.
-
-	-pat
-
-===== fs/sysfs/mount.c 1.5 vs edited =====
---- 1.5/fs/sysfs/mount.c	Tue Mar  4 12:17:14 2003
-+++ edited/fs/sysfs/mount.c	Wed Mar  5 17:06:25 2003
-@@ -33,7 +33,7 @@
- 	sb->s_op = &sysfs_ops;
- 	sysfs_sb = sb;
- 
--	inode = sysfs_new_inode(S_IFDIR | S_IRUGO | S_IWUSR);
-+	inode = sysfs_new_inode(S_IFDIR | S_IRWXU | S_IRUGO | S_IXUGO);
- 	if (inode) {
- 		inode->i_op = &simple_dir_inode_operations;
- 		inode->i_fop = &simple_dir_operations;
-
+[I can make 2.5.64 boot if I make sure no errors ever occur.
+That means that I must disable get_evpd_page, get_serialnumber,
+get_cachetype that my old stuff doesnt know about.
+If I do that all is well.]
