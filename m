@@ -1,43 +1,48 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [PATCH] fusion update to current APIs
-Date: Sat, 12 Jun 2004 06:20:03 +0100
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: SCSI Persistent Reservations
+Date: Sun, 13 Jun 2004 11:43:24 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040612052003.GR24864@parcelfarce.linux.theplanet.co.uk>
-References: <20040531115229.GA16143@lst.de> <20040612003608.GA152454@sgi.com> <20040612034518.GN24864@parcelfarce.linux.theplanet.co.uk> <20040612051353.GA152829@sgi.com>
+Message-ID: <40CBB13C.1020000@torque.net>
+References: <1074736570.26607.304.camel@swtf.comptex.com.au> <1075746272.3248.11.camel@compaq.xsintricity.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:42979 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264643AbUFLFUK
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:22542 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S264966AbUFMBr0
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Jun 2004 01:20:10 -0400
-Content-Disposition: inline
-In-Reply-To: <20040612051353.GA152829@sgi.com>
+	Sat, 12 Jun 2004 21:47:26 -0400
+In-Reply-To: <1075746272.3248.11.camel@compaq.xsintricity.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: Matthew Wilcox <willy@debian.org>, Christoph Hellwig <hch@lst.de>, Emoore@lsil.com, linux-scsi@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: Burn Alting <burn@comptex.com.au>, linux-scsi mailing list <linux-scsi@vger.kernel.org>
 
-On Fri, Jun 11, 2004 at 10:13:53PM -0700, Jeremy Higdon wrote:
-> On Sat, Jun 12, 2004 at 04:45:18AM +0100, Matthew Wilcox wrote:
-> > ... then the midlayer needs to get fixed rather than have all this code
-> > duplicated in a million different drivers with subtly different bugs in
-> > each one.
+Doug Ledford wrote:
+> On Wed, 2004-01-21 at 20:56, Burn Alting wrote:
 > 
-> That makes sense to me.  In fact, I think we could just fix it in sg.
-> It's only a problem with the older sg interfaces that don't specify
-> a direction.
-[...]
-> Something like this, where sg_direction() does what the host drivers
-> are currently doing.  I haven't actually tried this yet, but I can
-> code something up and give it a whirl if folks would like (I'm a little
-> short on time tonight :-).
+>>Hi,
+>>
+>>Can anyone point me towards GPL or OpenSource code that uses SCSI-3
+>>Persistent Reservations. I've looked at Doug Ledford's scsires (version
+>>0.7-2) code but it mainly deals with SCSI-2 Reserve/Release commands.
+>>
+>>Thanks in advance
+> 
+> 
+> Unfortunately, my experience when writing that code was that I couldn't
+> find any devices that support persistent reservations, hence the reason
+> that the code in that package is mostly theoretical and not tested as
+> far as the persistent reservations are concerned.
 
-This looks like exactly the right approach to take.
+Further to this thread, I have added a utility called
+sg_persist to sg3_utils package (version 1.07 beta)
+that permits low level access
+to the SCSI Persistent Reservation In and Out commands.
+I can do a limited amount of testing with my equipment
+so I would be keen for others to test the utility.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+See the news section at the top of http://www.torque.net/sg
+
+Doug Gilbert
+
