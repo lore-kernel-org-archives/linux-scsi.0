@@ -1,96 +1,47 @@
-From: Nathan Bryant <nbryant@optonline.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH] SCSI midlayer power management
-Date: Wed, 11 Aug 2004 09:13:22 -0400
+Date: 11 Aug 2004 08:37:41 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <411A1B72.1010302@optonline.net>
-References: <4119611D.60401@optonline.net> <20040811080935.GA26098@elf.ucw.cz>
+Message-ID: <1092231462.2087.3.camel@mulgrave>
+References: <4119611D.60401@optonline.net>
+	<20040811080935.GA26098@elf.ucw.cz>  <411A1B72.1010302@optonline.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mta8.srv.hcvlny.cv.net ([167.206.5.75]:56004 "EHLO
-	mta8.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
-	id S268051AbUHKNNX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Aug 2004 09:13:23 -0400
-In-reply-to: <20040811080935.GA26098@elf.ucw.cz>
+Received: from stat16.steeleye.com ([209.192.50.48]:15756 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S268054AbUHKNhr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Aug 2004 09:37:47 -0400
+In-Reply-To: <411A1B72.1010302@optonline.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: 'James Bottomley' <James.Bottomley@steeleye.com>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>, jgarzik@pobox.com
+To: Nathan Bryant <nbryant@optonline.net>
+Cc: Pavel Machek <pavel@ucw.cz>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-Pavel Machek wrote:
+On Wed, 2004-08-11 at 08:13, Nathan Bryant wrote:
+> No. Remember that DMA works differently under SCSI than it does under 
+> IDE. SCSI DMA is a host controller feature, whereas under IDE it is 
+> enabled/disabled at the drive level and the drives have special 
+> knowledge of DMA. Since generic_scsi_suspend() is the device level 
+> suspend routine, it is called before the host controller's suspend 
+> routine, (due to depth first traversal of device tree), which is 
+> responsible for disabling the PCI slot. Only after the host controller 
+> is suspended will there be no DMA, but if your real question is "can I 
+> generically control a SCSI disk with PIO for software suspend" then the 
+> answer is NO. For purposes of not suspending the drivers, I haven't 
+> looked into how swsusp would see which host adapter owns which drive, 
+> but some of the required information seems to be present in sysfs.
 
->Hi!
->
->  
->
->>This proposed patch implements enough power-management support within
->>the SCSI midlayer to get ACPI S3 working on my system. Changes as follows:
->>
->>* Add generic_scsi_{suspend,resume} methods to scsi.c
->>* Add suspend and resume callbacks to the scsi_driver structure, and
->>implement those callbacks in sd.c
->>* In sd.c, we call sd_shutdown on suspend, in order to synchronize the
->>write-back cache.
->>* In sd.c, we call sd_rescan from sd_resume in order to ensure that
->>drives have spun up and avoid passing not ready errors back to the block
->>layer.
->>* In generic_scsi_suspend, we call scsi_device_quiesce before calling
->>the scsi_driver suspend callback. We resume from quiesce state in
->>reverse order in generic_scsi_resume.
->>
->>ACPI S1 and S4/swsusp are untested, but I think there should be no
->>regressions with S1. To do S1 properly, we probably need to tell the
->>drive to spin down, and I don't know what the SCSI command is for
->>that... For S4, the call to scsi_device_quiesce might pose a problem for
->>the subsequent state dump to disk. But I'm not sure swsusp ever worked
->>for SCSI.
->>    
->>
->
->swsusp will then resume disk and write the image, that should not be a
->problem. Is it guaranteed that after generic_scsi_suspend() no DMA is
->going on?
->  
->
-No. Remember that DMA works differently under SCSI than it does under 
-IDE. SCSI DMA is a host controller feature, whereas under IDE it is 
-enabled/disabled at the drive level and the drives have special 
-knowledge of DMA. Since generic_scsi_suspend() is the device level 
-suspend routine, it is called before the host controller's suspend 
-routine, (due to depth first traversal of device tree), which is 
-responsible for disabling the PCI slot. Only after the host controller 
-is suspended will there be no DMA, but if your real question is "can I 
-generically control a SCSI disk with PIO for software suspend" then the 
-answer is NO. For purposes of not suspending the drivers, I haven't 
-looked into how swsusp would see which host adapter owns which drive, 
-but some of the required information seems to be present in sysfs.
+Actually, the answer is to most intents and purposes "yes".  You are
+technically correct: there's no way to disable DMA in SCSI.  However,
+once a device is quiesced, it has no outstanding commands, so there will
+be no outstanding DMA to that device.  When all devices on a host have
+been quiesced, then there will be no DMA at all going on *except* if the
+user initiates any via another interface (like sending a device probe or
+doing a unit scan).  The guarantee should be strong enough for swsusp to
+proceed, but we can look at quiescing a host properly (however, we'd
+need to move to a better host state model than we currently possess).
 
-Now, I don't know how disabling DMA is supposed to behave under SATA. 
-There may be something extra we have to do that isn't really standard 
-SCSI... SATA is a weird beast and if somebody is using libata it seems 
-it might not be possible to use PIO, since enhanced mode might have to 
-be enabled at the BIOS. But I don't know this stuff, ask jgarzik.
+James
 
->Anyway, you should try swsusp, preferably on some IDE notebook first
->and prefereably -mm one, to get feel how it works. It should be
->possible/easy to make it work with SCSI...
->  
->
-Does it depend on IDE PIO for some reason? Perhaps related to writing 
-out a consistent memory image? I'm not sure if I'm motivated to do 
-anything about that ;)
 
->>This might help SATA drives, too, but I seem to remember that the SATA
->>layer doesn't properly emulate the SYNCHRONIZE_CACHE command.
->>
->>Comments, anybody? Can this be applied upstream? I think it's a step in
->>the right direction.
->>    
->>
->
->Looks good to me.
->								Pavel
->  
->
-Thanks.
-Nathan
