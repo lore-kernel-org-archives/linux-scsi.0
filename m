@@ -1,93 +1,32 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH] lk 2.6.7-bk6 [Re: noisy reservation conflicts]
-Date: Fri, 25 Jun 2004 16:17:00 +1000
+From: 'Christoph Hellwig' <hch@infradead.org>
+Subject: Re: [ANNOUNCE]: megaraid driver version 2.20.0.1
+Date: Fri, 25 Jun 2004 09:13:36 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40DBC35C.8000208@torque.net>
-References: <40CD3F44.4080004@torque.net> <20040614191832.GA1298@us.ibm.com>
-Reply-To: dougg@torque.net
+Message-ID: <20040625081335.GA26302@infradead.org>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BC7CA@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000300060206080105010202"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub2.uq.edu.au ([130.102.149.128]:33042 "EHLO
-	mailhub2.uq.edu.au") by vger.kernel.org with ESMTP id S266240AbUFYGRj
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Jun 2004 02:17:39 -0400
-In-Reply-To: <20040614191832.GA1298@us.ibm.com>
+Received: from [213.146.154.40] ([213.146.154.40]:41908 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S266335AbUFYINj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Jun 2004 04:13:39 -0400
+Content-Disposition: inline
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC7CA@exa-atlanta>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: "Mukker, Atul" <Atulm@lsil.com>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------000300060206080105010202
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Mike Anderson wrote:
-> Douglas Gilbert [dougg@torque.net] wrote:
+On Thu, Jun 24, 2004 at 09:07:48PM -0400, Mukker, Atul wrote:
+> Christoph,
 > 
->>While testing persistent reservations it is quite common
->>to get a status of "reservation conflict". When using
->>the SG_IO ioctl this status is returned via the
->>sg_io_hdr::status field and is simple to process.
->>
->>However this lk 2.6.7-rc3 code fragment in
->>scsi_decide_disposition() [scsi_error.c] makes it very
->>noisy (on the console and in the log):
->>
->>        case RESERVATION_CONFLICT:
->>                printk("scsi%d (%d,%d,%d) : reservation conflict\n",
->>                       scmd->device->host->host_no,
->>                       scmd->device->channel,
->>                       scmd->device->id, scmd->device->lun);
->>                return SUCCESS; /* causes immediate i/o error */
->>
+> I have put the revised driver on the ftp server
 > 
+> ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-2.20.0.1/
 > 
-> If we think it is important enough to leave we should wrap it with
-> either a SCSI_LOG_MLCOMPLETE or SCSI_LOG_ERROR_RECOVERY to stay
-> consistent with the scsi_decide_disposition function. Though I think the
-> use of SCSI_LOG_ERROR_RECOVERY maybe should be replaced with
-> SCSI_LOG_MLCOMPLETE in scsi_decide_disposition.
-> 
-> The upper level drivers could also report similar info if this was
-> removed as sd has SCSI_LOG_HLCOMPLETE that should cover sg_io ios
-> through sd and sg_cmd_done has SCSI_LOG_TIMEOUT (correct?).
+> This driver incorporates almost all your suggestions. I think it's high
+> time, the driver makes into the mainstream kernel.
 
-Mike,
-Yes the sg driver uses SCSI_LOG_TIMEOUT to avoid other usages
-and a logging loop.
-
-Just so this thread isn't forgotten, attached is a patch to
-wrap the printk in question in a SCSI_LOG_ERROR_RECOVERY
-macro.
-
-Doug Gilbert
-
-
-
---------------000300060206080105010202
-Content-Type: text/x-patch;
- name="scsi_error_rconflict.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="scsi_error_rconflict.diff"
-
---- linux/drivers/scsi/scsi_error.c	2004-06-25 15:10:49.000000000 +1000
-+++ linux/drivers/scsi/scsi_error.c267bk6rc	2004-06-25 16:04:20.161354808 +1000
-@@ -1375,9 +1375,10 @@
- 		return SUCCESS;
- 
- 	case RESERVATION_CONFLICT:
--		printk("scsi%d (%d,%d,%d) : reservation conflict\n",
--		       scmd->device->host->host_no, scmd->device->channel,
--		       scmd->device->id, scmd->device->lun);
-+		SCSI_LOG_ERROR_RECOVERY(5, printk("scsi%d (%d,%d,%d) : "
-+			"reservation conflict\n",
-+			scmd->device->host->host_no, scmd->device->channel,
-+			scmd->device->id, scmd->device->lun));
- 		return SUCCESS; /* causes immediate i/o error */
- 	default:
- 		return FAILED;
-
---------------000300060206080105010202--
+Oh well, let's include it and I'll fix up some minor cruft later on.
+Note that changes to drivers/pci/pci.ids should be sent separately to
+pci-ids@ucw.cz (see http://pciids.sourceforge.net/ for defails)
