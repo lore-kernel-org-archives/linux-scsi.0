@@ -1,42 +1,56 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
-Date: Mon, 22 Sep 2003 18:21:42 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030922182142.A26720@infradead.org>
-References: <20030922004943.E32009@one-eyed-alien.net> <Pine.LNX.4.44L0.0309221001090.1697-100000@ida.rowland.org> <20030922153123.A23388@infradead.org> <20030922161104.A24155@infradead.org> <20030922084930.A679@beaverton.ibm.com> <20030922173732.A25639@infradead.org> <20030922094404.A1056@beaverton.ibm.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Re: USB storage problems on OHCI..
+Date: Mon, 22 Sep 2003 10:23:15 -0700
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <20030922102315.A1632@beaverton.ibm.com>
+References: <20030922084930.A679@beaverton.ibm.com> <Pine.LNX.4.44.0309220900440.1753-100000@home.osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:32529 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263248AbTIVRWc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Sep 2003 13:22:32 -0400
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
 Content-Disposition: inline
-In-Reply-To: <20030922094404.A1056@beaverton.ibm.com>; from patmans@us.ibm.com on Mon, Sep 22, 2003 at 09:44:04AM -0700
+In-Reply-To: <Pine.LNX.4.44.0309220900440.1753-100000@home.osdl.org>; from torvalds@osdl.org on Mon, Sep 22, 2003 at 09:09:47AM -0700
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, Andries.Brouwer@cwi.nl
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Linus Torvalds <torvalds@osdl.org>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, Sep 22, 2003 at 09:44:04AM -0700, Patrick Mansfield wrote:
-> The current code allows us to set or clear a given bit, but not both. So
-> if we set them in slave_alloc, they can't be cleared without adding
-> other flags or code.
-
-If we want drivers to mess with blist flags that's the more general
-solution, yes.  But the blist flags really are a target thing and
-I'd prefer to keep host drivers a bit away from this.  Of course
-this doesn't really work for the usb case where the host driver only
-deals with emulated targets that are all completly hosed.
-
-Maybe sdev->scsi_level should recognize a new level, SCSI_TOTALLY_B0RKED
-for those usb-storage devices where the vendor somehow heard of the
-spec but nothing that isn't excercised by the windows drivers has
-the slightest chance of working..
+On Mon, Sep 22, 2003 at 09:09:47AM -0700, Linus Torvalds wrote:
 
 > 
-> -- Patrick Mansfield
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
+> (Btw, where are the different mode sense pages documented?)
+> 
+
+The latest SCSI 3 draft standards are online as follows, the SCSI 2 specs
+are also online at www.t10.org (.ORG!).
+
+For block (applies to some USB mass storage) specific pages:
+
+http://www.t10.org/ftp/t10/drafts/sbc/sbc-r08c.pdf
+
+See page 105 section 7.1.3 of the above (table 73 the "Mode page codes").
+
+General MODE SENSE stuff is in:
+
+http://www.t10.org/ftp/t10/drafts/spc3/spc3r15.pdf
+
+See page 151 section 6.9.1 for MODE SENSE, page 261 section 7.4.5 or so
+for page codes applying to all devices.
+
+-- Patrick Mansfield
+
+
+-------------------------------------------------------
+This sf.net email is sponsored by:ThinkGeek
+Welcome to geek heaven.
+http://thinkgeek.com/sf
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
