@@ -1,38 +1,52 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: Prototype SATA -> SCSI error mapper
-Date: Tue, 17 Aug 2004 07:57:59 -0400
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: dvd-ram open succeeds despite write-protect
+Date: 17 Aug 2004 09:19:19 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040817115759.GE3204@devserv.devel.redhat.com>
-References: <20040816141243.GA3898@devserv.devel.redhat.com> <4121D0DE.5070307@torque.net>
+Message-ID: <1092755959.4517.5.camel@patlinux.iomegacorp.com>
+References: <20040804045839.GA8139@suse.de><1091619347.5681.6.camel@patibmrh
+	9>  <20040804113829.GJ10340@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:9633 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S265287AbUHQL6y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Aug 2004 07:58:54 -0400
-Content-Disposition: inline
-In-Reply-To: <4121D0DE.5070307@torque.net>
+Received: from email-out2.iomega.com ([147.178.1.83]:53167 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S268296AbUHQPUa
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Aug 2004 11:20:30 -0400
+In-Reply-To: <20040804113829.GJ10340@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Alan Cox <alan@redhat.com>, jgarzik@pobox.com, linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Aug 17, 2004 at 07:33:18PM +1000, Douglas Gilbert wrote:
-> Alan,
-> With a MEDIUM or HARDWARE ERROR if you know the LBA of
-> the failure, then that value can be placed in the
-> (fixed format) sense buffer.
-> 
-> if (LBA_of_failure_known) {
->     sb[0] |= 0x80;       /* set VALID bit */
->     sb[3] = msb_of_LBA;  /* put LBA in INFORMATION field */
->     sb[4] = umb_of_LBA;
->     sb[5] = lmb_of_LBA;
->     sb[6] = lsb_of_LBA;
-> }
+Jens A:
 
-Ok I'll add that, the LBA28/48 fail sector is in the taskfile at this
-point. 
+> Subject: Re: [PATCH] DVD-RAM rewritable again
+> ...
+> ... with everything, test ...
 
+In 2.6 Linux, do we care about write-protected DVD/CD discs?  Do we
+agree they don't quite work yet?  Can I help best by working to fix
+them?
+
+Just now I specifically tried toggling the invisible MMC PWP
+write-protect switch found inside of DVD-RAM discs, Iomega REV discs,
+etc.  In Linux-2.6.8.1, with write-protected discs,
+
+I'm glad to see EROFS correctly fail open to write of Iomega REV discs,
+no matter PATAPI or USB.  But I'm sorry to see open, write, and close of
+DVD-RAM discs succeed, no matter PATAPI or USB.  Only in my dmesg do I
+see that the DVD-RAM disc is actually not changing, e.g.
+
+kernel: hdd: command error: status=0x51 { DriveReady SeekComplete Error }
+kernel: hdd: command error: error=0x70
+kernel: end_request: I/O error, dev hdd, sector 0
+
+kernel: SCSI error : <0 0 0 0> return code = 0x8000002
+kernel: Current sr0: sense key Data Protect
+kernel: Additional sense: Write protected
+kernel: end_request: I/O error, dev sr0, sector 0
+
+Pat LaVarre
+http://linux-pel.blog-city.com/read/771746.htm
 
 
