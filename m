@@ -1,48 +1,77 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: iomapping a big endian area
-Date: Tue, 5 Apr 2005 19:55:06 +0100
-Message-ID: <20050405195506.A16617@flint.arm.linux.org.uk>
-References: <1112475134.5786.29.camel@mulgrave> <20050403013757.GB24234@parcelfarce.linux.theplanet.co.uk> <20050402183805.20a0cf49.davem@davemloft.net> <20050403031000.GC24234@parcelfarce.linux.theplanet.co.uk> <1112499639.5786.34.camel@mulgrave> <20050405084219.A21615@flint.arm.linux.org.uk> <1112709915.5764.4.camel@mulgrave>
+From: Ying Li <hellbunni@yahoo.com>
+Subject: Re: slow write speed
+Date: Tue, 5 Apr 2005 12:22:35 -0700 (PDT)
+Message-ID: <20050405192235.83825.qmail@web51302.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261892AbVDETAU@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1112709915.5764.4.camel@mulgrave>; from James.Bottomley@SteelEye.com on Tue, Apr 05, 2005 at 09:05:15AM -0500
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, "David S. Miller" <davem@davemloft.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web51302.mail.yahoo.com ([206.190.38.168]:3201 "HELO
+	web51302.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S261902AbVDETWg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Apr 2005 15:22:36 -0400
+In-Reply-To: 6667
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Apr 05, 2005 at 09:05:15AM -0500, James Bottomley wrote:
-> On Tue, 2005-04-05 at 08:42 +0100, Russell King wrote:
-> > Not so.  There are two different styles of big endian.  (Lets just face
-> > it, BE is fucked in the head anyway...)
-> > 
-> > physical bus:	31...24	23...16	15...8	7...0
-> > 
-> > BE version 1 (word invariant)
-> >   byte access	byte 0	byte 1	byte 2	byte 3
-> >   word access	31-24	23-16	15-8	7-0
-> > 
-> > BE version 2 (byte invariant)
-> >   byte access	byte 3	byte 2	byte 1	byte 0
-> >   word access	7-0	15-8	23-16	31-24
+Forgot to mention, I've tried the sg_dd program with
+different bpt values.  Like 30,40,60,400,401,257,267. 
+seems like whenever it's even the speeds is faster.
+
+--- Ying Li <hellbunni@yahoo.com> wrote:
+> hi,
 > 
-> These are just representations of the same thing.  However, I did
-> deliberately elect not to try to solve this problem in the accessors.  I
-> know all about the register relayout, because 53c700 has to do that on
-> parisc.
+> I recently got a seagate cheetah (ST336753FC, 15k.3
+> RPM 37GB) harddrive that sits in my JMR Fortra 2G6
+> array.
+> I'm running Linux 2.6, using sg3_util.1.13
+> 
+> My seagate is mapped to /dev/sdb
+> I run the following:
+> 
+> 1.)time sg_dd if=/dev/zero of=/dev/sdb bpt=256
+> count=1200000
+>   a.) it finishes on average around 10 seconds
+> 
+> 2.)time sg_dd if=/dev/zero of=/dev/sdb bpt=255
+> count=1200000
+>   a.) this finishes on average around 18 seconds
+> 
+> Why is there such a big difference?
+> 
+> In a program that I wrote, 
+>  --one pc reads data from one hd
+>  --transfers it over a closed network
+>  --another pc writes the data received to another hd
+> 
+> When I had both the hd being as seagate cheetah
+> (ST318453FC, 15k RPM 17GB), I was getting good
+> overall
+>   (transfer + read/write) speed around 300Mb/s.  The
+> drives sit in the JMR Fortra 2G6 array.  But when I
+> replaced one of these with my new 37GB hd, i get
+> weird
+> resuls.
+>   --if the 37GB replaced the one data is written to,
+> my overall speed drops by a factor of 100Mb/s
+>   --if the 37GB replaced the one data is read off
+> of,
+> my overall speed remains at 300Mb/s.
+> 
+> Any help would be greatly appreciated.  THANKS!!!
+> 
+> -Ying
+> 
+> __________________________________________________
+> Do You Yahoo!?
+> Tired of spam?  Yahoo! Mail has the best spam
+> protection around 
+> http://mail.yahoo.com 
+> 
 
-They aren't.  On some of our platforms, we have to exclusive-or the address
-for byte accesses with 3 to convert to the right endian-ness.
 
-Sure, from the point of view of which byte each byte of a word represents,
-it's true that they're indentical.  But as far as the hardware is concerned,
-they're definitely different.
-
-See the Intel IXP platforms for an example.
-
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:  2.6 Serial core
+		
+__________________________________ 
+Do you Yahoo!? 
+Yahoo! Small Business - Try our new resources site!
+http://smallbusiness.yahoo.com/resources/ 
