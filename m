@@ -1,35 +1,79 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] ibmvscsi driver - sixth version
-Date: Wed, 31 Mar 2004 19:10:34 -0500
+Date: Wed, 31 Mar 2004 19:16:12 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <406B5DFA.80201@pobox.com>
-References: <opr3u0ffo7l6e53g@us.ibm.com> <20040225134518.A4238@infradead.org>  <opr3xta6gbl6e53g@us.ibm.com> <1079027038.2820.57.camel@mulgrave> <opr5qwiyw4l6e53g@us.ibm.com> <406B3FDA.9010507@pobox.com>  <opr5q1enb6l6e53g@us.ibm.com> <1080776399.11299.63.camel@mulgrave> <opr5q28vkql6e53g@us.ibm.com>
+Message-ID: <406B5F4C.10000@pobox.com>
+References: <opr3u0ffo7l6e53g@us.ibm.com> <20040225134518.A4238@infradead.org>  <opr3xta6gbl6e53g@us.ibm.com> <1079027038.2820.57.camel@mulgrave> <opr5qwiyw4l6e53g@us.ibm.com> <406B3FDA.9010507@pobox.com> <opr5q1enb6l6e53g@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:6866 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262143AbUDAAKr
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:18386 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262143AbUDAAQ0
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Mar 2004 19:10:47 -0500
-In-Reply-To: <opr5q28vkql6e53g@us.ibm.com>
+	Wed, 31 Mar 2004 19:16:26 -0500
+In-Reply-To: <opr5q1enb6l6e53g@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 To: Dave Boutcher <sleddog@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
 
 Dave Boutcher wrote:
-> There will always be 1 (no more, no less) of these struct devices in the
-> system, so I'll move the definition of this into iSeries_iommu and then
-> just reference it from the driver.  I think that should abstract things
-> sufficiently.
+> On Wed, 31 Mar 2004 17:02:02 -0500, Jeff Garzik <jgarzik@pobox.com> wrote:
+> 
+>> Comments:
+>>
+>> 1) Would be nice to eliminate  module options for commands-per-lun, 
+>> max-requests etc. and actually have the driver figure out the real 
+>> needs.  One or two options could fall into the "performance tuning" 
+>> category, and stay, but the others are really dependent on the 
+>> underlying configuration and underlying limits.
+> 
+> Hmmm...well, I could collapse the two together, since commands_per_lun
+> is not limited by anything specific for this adapter.  I would prefer
+> to leave them broken out to handle users who have extreme requirements.
+
+"Do what you need to do, and no more."
+
+Don't engineer code because users _might_ have some outlandish requirement.
 
 
-Sounds like a small module declaring devices such as this would be more 
-appropriate than unrelated iommu code?
+>> 2) why is one-descriptor a special case in map_sg_data()?  You proceed 
+>> to do the same thing in a loop, right below that...  AFAICS you can 
+>> just use the loop, and clamp the number of scatterlist elements to one.
+> 
+> The SRP spec has two different buffer formats: SRP_DIRECT_BUFFER for a
+> single buffer, and SRP_INDIRECT_BUFFER for lists of buffers, and the
+> layout of the buffers in the request is different for those two cases.
 
-In a regular PCI system, the PCI bus probing code creates devices.  For 
-platform-specific virtual devices, ppc64 needs "create my virtual 
-devices" initialization code, it looks like.
+My mistake here -- I was misreading the code as testing both 
+DIRECT_BUFFER and INDIRECT_BUFFER in both the loop and non-sg case.
+
+
+>> 10) what the heck is this???  do some people not know they are running 
+>> Linux???
+>> +static ssize_t show_host_os_type(struct class_device *class_dev, char 
+>> *buf)
+> 
+> This whole driver has to do with adapter sharing....and this answers
+> the question with whom you are sharing it.  Which may in fact NOT
+> be Linux.
+
+ewwww ;-)
+
+
+>> 12) in ibmvscsi_probe(), you want to use TASK_UNINTERRUPTIBLE here:
+>>
+>> +            set_current_state(TASK_INTERRUPTIBLE);
+>> +            schedule_timeout(5);
+>>
+>> 13) in the code pasted in #12, you should pass a value calculated 
+>> using the 'HZ' constant.
+> 
+> Hmmm...above code copied from the qlogic driver...and it looked reasonable
+> to me, but I'll tweak it.
+
+Well, qlogic is wrong too.  Do you want to submit a patch fixing qlogic 
+while you're at it?  ;-)
 
 	Jeff
 
