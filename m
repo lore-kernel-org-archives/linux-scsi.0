@@ -1,99 +1,255 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH 1/1] scsicam_getgeo_odd_sector_size
-Date: Wed, 13 Oct 2004 14:55:01 -0500
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] tmscsim: use block-layer tags
+Date: Wed, 13 Oct 2004 21:35:21 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <416D8815.4010808@us.ibm.com>
-References: <200408192303.i7JN3cv9110958@northrelay02.pok.ibm.com>	<416D3536.5030501@us.ibm.com>	<20041013140439.GI16153@parcelfarce.linux.theplanet.co.uk> 	<416D3ABE.6030107@us.ibm.com> <1097682323.2204.142.camel@mulgrave>
-Reply-To: brking@us.ibm.com
+Message-ID: <Pine.LNX.4.60.0410132131040.3426@poirot.grange>
+References: <Pine.LNX.4.60.0410122307180.4565@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.103]:31126 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S269377AbUJMT4r (ORCPT
+Received: from imap.gmx.net ([213.165.64.20]:6283 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S269805AbUJMUGE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Oct 2004 15:56:47 -0400
-In-Reply-To: <1097682323.2204.142.camel@mulgrave>
+	Wed, 13 Oct 2004 16:06:04 -0400
+In-Reply-To: <Pine.LNX.4.60.0410122307180.4565@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, SCSI Mailing List <linux-scsi@vger.kernel.org>, dwmw2@infradead.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> But this isn't a BUG().  It should be a warning followed by a stack
-> dump.  However, it looks like the correct fix is to get rid of the
-> __bread() in the cam code.
+On Tue, 12 Oct 2004, Guennadi Liakhovetski wrote:
 
-Looks like the BUG() was removed since I originally submitted this patch. I
-recreated the original problem with a 2.6.9-rc2 kernel, which has the
-change you mention above. It looks like we now survive the __getblk call
-from __bread, but __bread promptly dereferences the NULL bh returned by
-__getblk by calling buffer_uptodate and we end up oopsing all the same.
+> Slightly tested. Applies on the top of all up to date tmscsim patches (if 
+> I didn't miss any). Reviews, tests highly welcome. Inline patch should be 
+> fine now. Will re-send if still not...
 
-> How does the attached work for you?
+I think, there was (at least) one missing chunk in the first version of 
+the patch. Here's an updated version. Patch inlining seems to work indeed 
+now.
 
-Not very well. It looks like it blows up in create_buffers() with this patch.
-Since the block size (522) is not a multiple of the host page size, we end up
-decrementing offset to a negative number in create_buffers, which then hits a BUG()
-in set_bh_page. It looks to me like the block layer assumes the device block size
-is a multiple of PAGE_SIZE, in more than one place. Here is the latest backtrace:
+Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 
-cpu 0x7: Vector: 300 (Data Access) at [c00000003480b240]
-     pc: c0000000000aba20: .create_empty_buffers+0x30/0x10c
-     lr: c0000000000aba18: .create_empty_buffers+0x28/0x10c
-     sp: c00000003480b4c0
-    msr: 8000000000009032
-    dar: 0
-  dsisr: 40000000
-   current = 0xc0000000345982c0
-   paca    = 0xc000000000465600
-     pid   = 9012, comm = hwscan
-7:mon> t
-[c00000003480b550] c0000000000afbb0 .block_read_full_page+0x2d4/0x3f8
-[c00000003480b670] c0000000000b3bf0 .blkdev_readpage+0x20/0x38
-[c00000003480b6f0] c00000000007cf0c .read_cache_page+0xf4/0x25c
-[c00000003480b7a0] c0000000000f7d84 .read_dev_sector+0x44/0x148
-[c00000003480b830] d000000000080f38 .scsi_bios_ptable+0x50/0xd0 [scsi_mod]
-[c00000003480b8d0] d000000000080fe8 .scsicam_bios_param+0x30/0x18c [scsi_mod]
-[c00000003480b970] d00000000004b170 .sd_ioctl+0x258/0x28c [sd_mod]
-[c00000003480ba30] c000000000249eac .blkdev_ioctl+0xd0/0x9b8
-[c00000003480bb90] c0000000000b3c88 .block_ioctl+0x18/0x2c
-[c00000003480bc10] c0000000000c3e34 .sys_ioctl+0x3c0/0x5c4
-[c00000003480bcd0] c000000000021bb0 .hdio_getgeo+0x40/0xd8
-[c00000003480bd70] c0000000000e3438 .compat_sys_ioctl+0x148/0x3dc
-[c00000003480be30] c000000000010980 syscall_exit+0x0/0x18
-
-
-> 
-> James
-> 
-> ===== drivers/scsi/scsicam.c 1.16 vs edited =====
-> --- 1.16/drivers/scsi/scsicam.c	2004-06-19 09:45:02 -05:00
-> +++ edited/drivers/scsi/scsicam.c	2004-10-13 10:38:25 -05:00
-> @@ -29,10 +29,11 @@
->  	unsigned char *res = kmalloc(66, GFP_KERNEL);
->  	if (res) {
->  		struct block_device *bdev = dev->bd_contains;
-> -		struct buffer_head *bh = __bread(bdev, 0, block_size(bdev));
-> -		if (bh) {
-> -			memcpy(res, bh->b_data + 0x1be, 66);
-> -			brelse(bh);
-> +		Sector sect;
-> +		void *data = read_dev_sector(bdev, 0, &sect);
-> +		if (data) {
-> +			memcpy(res, data + 0x1be, 66);
-> +			put_dev_sector(sect);
->  		} else {
->  			kfree(res);
->  			res = NULL;
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+diff -u a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
+--- a/drivers/scsi/tmscsim.c	Tue Oct 12 23:06:39 2004
++++ b/drivers/scsi/tmscsim.c	Wed Oct 13 21:27:25 2004
+@@ -494,8 +494,10 @@
+ static int
+ dc390_StartSCSI( struct dc390_acb* pACB, struct dc390_dcb* pDCB, struct dc390_srb* pSRB )
+ {
+-    struct scsi_device *sdev = pSRB->pcmd->device;
+-    u8 cmd; u8  disc_allowed, try_sync_nego;
++    struct scsi_cmnd *scmd = pSRB->pcmd;
++    struct scsi_device *sdev = scmd->device;
++    u8 cmd, disc_allowed, try_sync_nego;
++    char tag[2];
+ 
+     pSRB->ScsiPhase = SCSI_NOP0;
+ 
+@@ -524,7 +526,7 @@
+     DC390_write8 (CtrlReg4, pDCB->CtrlR4);
+     DC390_write8 (ScsiCmd, CLEAR_FIFO_CMD);		/* Flush FIFO */
+     DEBUG1(printk (KERN_INFO "DC390: Start SCSI command: %02x (Sync:%02x)\n",\
+-	    pSRB->pcmd->cmnd[0], pDCB->SyncMode));
++            scmd->cmnd[0], pDCB->SyncMode));
+     disc_allowed = pDCB->DevMode & EN_DISCONNECT_;
+     try_sync_nego = 0;
+     /* Don't disconnect on AUTO_REQSENSE, cause it might be an
+@@ -537,33 +539,26 @@
+ 		||*/ (pSRB->SRBFlag & AUTO_REQSENSE) ) 
+       disc_allowed = 0;
+     if ( (pDCB->SyncMode & SYNC_ENABLE) && (pDCB->TargetLUN == 0) && sdev->sdtr &&
+-	( ( ( (pSRB->pcmd->cmnd[0] == REQUEST_SENSE) || (pSRB->SRBFlag & AUTO_REQSENSE) )
+-	  && !(pDCB->SyncMode & SYNC_NEGO_DONE) ) || (pSRB->pcmd->cmnd[0] == INQUIRY) ) )
++	( ( ( (scmd->cmnd[0] == REQUEST_SENSE) || (pSRB->SRBFlag & AUTO_REQSENSE) )
++	  && !(pDCB->SyncMode & SYNC_NEGO_DONE) ) || (scmd->cmnd[0] == INQUIRY) ) )
+       try_sync_nego = 1;
+ 
+-    pSRB->MsgCnt = 0; cmd = SEL_W_ATN;
++    pSRB->MsgCnt = 0;
++    cmd = SEL_W_ATN;
+     DC390_write8 (ScsiFifo, IDENTIFY(disc_allowed, pDCB->TargetLUN));
+     /* Change 99/05/31: Don't use tags when not disconnecting (BUSY) */
+-    if ((pDCB->SyncMode & EN_TAG_QUEUEING) && disc_allowed)
+-      {
+-	s8 tag_no = 0;
+-	while ((1 << tag_no) & pDCB->TagMask) tag_no++;
+-	if (tag_no >= sizeof (pDCB->TagMask)*8 || tag_no >= pDCB->MaxCommand) { 
+-		printk (KERN_WARNING "DC390: Out of tags for Dev. %02x %02x\n", pDCB->TargetID, pDCB->TargetLUN); 
+-		return 1;
+-		//goto no_tag;
+-	}
+-	DC390_write8 (ScsiFifo, SIMPLE_QUEUE_TAG);
+-	pDCB->TagMask |= (1 << tag_no); pSRB->TagNumber = tag_no;
+-	DC390_write8 (ScsiFifo, tag_no);
+-	DEBUG1(printk (KERN_DEBUG "DC390: Select w/DisCn for Cmd %li (SRB %p), Using Tag %02x\n", pSRB->pcmd->pid, pSRB, tag_no));
++    if ((pDCB->SyncMode & EN_TAG_QUEUEING) && disc_allowed && scsi_populate_tag_msg(scmd, tag)) {
++	DC390_write8(ScsiFifo, tag[0]);
++	pDCB->TagMask |= (1 << tag[1]);
++	pSRB->TagNumber = tag[1];
++	DC390_write8(ScsiFifo, tag[1]);
++	DEBUG1(printk(KERN_INFO "DC390: Select w/DisCn for Cmd %li (SRB %p), block tag %02x\n", scmd->pid, pSRB, tag[1]));
+ 	cmd = SEL_W_ATN3;
+-      }
+-    else	/* No TagQ */
+-      {
+-//      no_tag:
+-	DEBUG1(printk (KERN_DEBUG "DC390: Select w%s/DisCn for Cmd %li (SRB %p), No TagQ\n", (disc_allowed?"":"o"), pSRB->pcmd->pid, pSRB));
+-      }
++    } else {
++	/* No TagQ */
++//no_tag:
++	DEBUG1(printk(KERN_INFO "DC390: Select w%s/DisCn for Cmd %li (SRB %p), No TagQ\n", (disc_allowed ? "" : "o"), scmd->pid, pSRB));
++    }
+ 
+     pSRB->SRBState = SRB_START_;
+ 
+@@ -592,15 +587,15 @@
+ 	    DC390_write8 (ScsiFifo, pDCB->TargetLUN << 5);
+ 	    DC390_write8 (ScsiFifo, 0);
+ 	    DC390_write8 (ScsiFifo, 0);
+-	    DC390_write8 (ScsiFifo, sizeof(pSRB->pcmd->sense_buffer));
++	    DC390_write8 (ScsiFifo, sizeof(scmd->sense_buffer));
+ 	    DC390_write8 (ScsiFifo, 0);
+ 	    DEBUG1(printk (KERN_DEBUG "DC390: AutoReqSense !\n"));
+ 	  }
+ 	else	/* write cmnd to bus */ 
+ 	  {
+ 	    u8 *ptr; u8 i;
+-	    ptr = (u8 *) pSRB->pcmd->cmnd;
+-	    for (i=0; i<pSRB->pcmd->cmd_len; i++)
++	    ptr = (u8 *)scmd->cmnd;
++	    for (i = 0; i < scmd->cmd_len; i++)
+ 	      DC390_write8 (ScsiFifo, *(ptr++));
+ 	  }
+       }
+@@ -613,14 +608,15 @@
+     {
+ 	dc390_freetag (pDCB, pSRB);
+ 	DEBUG0(printk ("DC390: Interrupt during Start SCSI (pid %li, target %02i-%02i)\n",
+-		pSRB->pcmd->pid, pSRB->pcmd->device->id, pSRB->pcmd->device->lun));
++		scmd->pid, scmd->device->id, scmd->device->lun));
+ 	pSRB->SRBState = SRB_READY;
+ 	//DC390_write8 (ScsiCmd, CLEAR_FIFO_CMD);
+ 	pACB->SelLost++;
+ 	return 1;
+     }
+     DC390_write8 (ScsiCmd, cmd);
+-    pACB->pActiveDCB = pDCB; pDCB->pActiveSRB = pSRB;
++    pACB->pActiveDCB = pDCB;
++    pDCB->pActiveSRB = pSRB;
+     pACB->Connected = 1;
+     pSRB->ScsiPhase = SCSI_NOP1;
+     return 0;
+@@ -1067,7 +1063,8 @@
+ dc390_MsgIn_reject (struct dc390_acb* pACB, struct dc390_srb* pSRB)
+ {
+   pSRB->MsgOutBuf[0] = MESSAGE_REJECT;
+-  pSRB->MsgCnt = 1; DC390_ENABLE_MSGOUT;
++  pSRB->MsgCnt = 1;
++  DC390_ENABLE_MSGOUT;
+   DEBUG0 (printk (KERN_INFO "DC390: Reject message\n"));
+ }
+ 
+@@ -1083,29 +1080,24 @@
+ static struct dc390_srb*
+ dc390_MsgIn_QTag (struct dc390_acb* pACB, struct dc390_dcb* pDCB, s8 tag)
+ {
+-  struct dc390_srb* lastSRB = pDCB->pGoingLast;
+   struct dc390_srb* pSRB = pDCB->pGoingSRB;
+ 
+   if (pSRB)
+     {
+-      for( ;pSRB ; )
+-	{
+-	  if (pSRB->TagNumber == tag) break;
+-	  if (pSRB == lastSRB) goto mingx0;
+-	  pSRB = pSRB->pNextSRB;
+-	}
++	struct scsi_cmnd *scmd = scsi_find_tag(pSRB->pcmd->device, tag);
++	pSRB = (struct dc390_srb *)scmd->host_scribble;
+ 
+-      if( pDCB->DCBFlag & ABORT_DEV_ )
++	if (pDCB->DCBFlag & ABORT_DEV_)
+ 	{
+ 	  pSRB->SRBState = SRB_ABORT_SENT;
+ 	  dc390_EnableMsgOut_Abort( pACB, pSRB );
+ 	}
+ 
+-      if( !(pSRB->SRBState & SRB_DISCONNECT) )
+-	goto  mingx0;
++	if (!(pSRB->SRBState & SRB_DISCONNECT))
++		goto mingx0;
+ 
+-      pDCB->pActiveSRB = pSRB;
+-      pSRB->SRBState = SRB_DATA_XFER;
++	pDCB->pActiveSRB = pSRB;
++	pSRB->SRBState = SRB_DATA_XFER;
+     }
+   else
+     {
+@@ -1782,7 +1774,7 @@
+ static void
+ dc390_SRBdone( struct dc390_acb* pACB, struct dc390_dcb* pDCB, struct dc390_srb* pSRB )
+ {
+-    u8  bval, status;
++    u8 status;
+     struct scsi_cmnd *pcmd;
+ 
+     pcmd = pSRB->pcmd;
+@@ -1833,9 +1825,13 @@
+ 	}
+ 	else if( status_byte(status) == QUEUE_FULL )
+ 	{
+-	    bval = (u8) pDCB->GoingSRBCnt;
+-	    bval--;
+-	    pDCB->MaxCommand = bval;
++	    if (pDCB->GoingSRBCnt > 2) {
++		pDCB->MaxCommand = pDCB->GoingSRBCnt - 1;
++		scsi_adjust_queue_depth(pcmd->device, MSG_ORDERED_TAG, pDCB->MaxCommand);
++	    } else {
++	       	pDCB->MaxCommand = 1;
++		scsi_deactivate_tcq(pcmd->device, pcmd->device->host->can_queue);
++	    }
+ 	    pcmd->use_sg = pSRB->SavedSGCount;
+ 	    DEBUG0 (printk ("DC390: RETRY pid %li (%02x), target %02i-%02i\n", pcmd->pid, pcmd->cmnd[0], pcmd->device->id, pcmd->device->lun));
+ 	    pSRB->TotalXferredLen = 0;
+@@ -1906,7 +1902,7 @@
+ {
+     struct dc390_dcb *pDCB, *pdcb;
+     struct dc390_srb *psrb, *psrb2;
+-    u8  i;
++    int i;
+     struct scsi_cmnd *pcmd;
+ 
+     pDCB = pACB->pLinkDCB;
+@@ -1915,7 +1911,7 @@
+     do
+     {
+ 	psrb = pdcb->pGoingSRB;
+-	for( i=0; i<pdcb->GoingSRBCnt; i++)
++	for (i = 0; i < pdcb->GoingSRBCnt; i++)
+ 	{
+ 	    psrb2 = psrb->pNextSRB;
+ 	    pcmd = psrb->pcmd;
+@@ -2003,6 +1999,7 @@
+ 
+ 	srb->pSRBDCB = dcb;
+ 	srb->pcmd = cmd;
++	cmd->host_scribble = (char *)srb;
+     
+ 	srb->SGIndex = 0;
+ 	srb->AdaptStatus = 0;
+@@ -2279,7 +2276,9 @@
+ 	if (sdev->tagged_supported && (dcb->DevMode & TAG_QUEUEING_)) {
+ 		dcb->SyncMode |= EN_TAG_QUEUEING;
+ 		dcb->MaxCommand = dcb->pDCBACB->TagMaxNum;
++		scsi_activate_tcq(sdev, dcb->MaxCommand);
+ 	}
++
+ 	return 0;
+ }
+ 
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
