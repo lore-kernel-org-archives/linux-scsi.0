@@ -1,44 +1,61 @@
-From: Stephen Cameron <steve.cameron@hp.com>
-Subject: Strange Scsi_Cmnd->request_buffer addresses
-Date: Thu, 1 Aug 2002 17:02:04 -0500
+From: ael <law_ence.dev@ntlworld.com>
+Subject: Re: st.c block limits
+Date: Thu, 01 Aug 2002 23:51:05 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020801170204.A1876@zuul.cca.cpqcorp.net>
-Reply-To: steve.cameron@hp.com
+Message-ID: <3D49BB59.2020405@ntlworld.com>
+References: <002001c2395d$6e842150$e0019d89@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: tonyb@cybernetics.com
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+Tony Battersby wrote:
+>>>># tar -cf /dev/ntape blah_home.tar.bz2; mt  tell
+>>>
+> 
+>>The tape has a real 10GB capacity. (I believe.)  The 20BG
+>>blocks is correct
+>>for the default block size of 512. So compression is not an
+>>issue here. And
+>>the report above is actually 17.8/2 = 8.9 GB :-(
+> 
+> 
+> Some compression algorithms will actually expand data by a significant
+> amount.  For example, many implementations of ALDC compression will give a
+> compression ratio of 0.8 on random data.  In your example above you are
+> writing a .bz2 file (which is already compressed), so it would probably
+> expand if compressed again.  Try turning drive internal compression off:
+> 
+> mt -f /dev/ntape compression off
+> 
+> This might help squeeze a little more data on your tape.
 
-I'm seeing some strange Scsi_Cmnd->request_buffer addresses....
+Thanks for the suggestion. Various such thoughts had crossed what passes 
+for my mind, including whether 10GB was before formatting. But I did assume 
+that the tape drive/driver was reporting actual bytes on the tape 
+regardless of compression.
 
-I'm trying to fix the passthru ioctl in cpqfc driver for 2.5.29.
-(The cpqfc patch from 2.5.28 -> 2.5.29 makes it compile but not
-more.  It will panic if you try to use the passthrough ioctl.)  
+I was indeed recording largely bz2 files, and I did realize that the 
+default drive streaming compression would almost certainly expand again. I 
+sometimes do remember to turn the drive compression off in such 
+circumstances. But as I say, I assume that the actual data on the tape 
+after compression was being reported. That has always seemed to be the case 
+in the past, although I am not sure whether I checked very thoroughly.
 
-In my (heavily modified) code for the passthrough ioctl, 
-I kmalloc buf:
+I guess that I should browse the Imation web site and see exactly they 
+specify for the tape itself. The packaging is clearly marked 10GB 
+uncompressed. The drive has a read-while-write-and-rerecord-on-error 
+circuit, but the tapes have not had much use, and I don't think that the
+data is being expanded by repeated blocks. I could be wrong, of course.
+And in any case, I would expect the drive to report the total blaoc count 
+including repeats.
 
-buf = cfe02800  <--- this is kmalloc'ed, and passed into scsi_wait_req(),
-and eventually comes back into the driver in the form of a Scsi_Cmnd
-via queuecommand entry point.  I would expect the Scsi_Cmnd->request_buffer
-to correspond to the buf (maybe it is/will be a copy?)
+ael
 
-pd = c12e2400 pt request_buffer = bffff850 <--- This is the 
-	Scsi_Cmnd->request_buffer that should correspond to buf, above.
-	The address looks weird.  I would expect 0xCxxxxxxx, not 0xBxxxxxxx
-	Scsi_Cmnd->use_sg is 0.  Or, does this kind of address look ok?
 
-single request_buffer = bffff850
-request_bufflen = 00000200  <--- 512 bytes, this looks reasonable.
-ms fffff850 <----------- This is the result of pci_map_single() on
-	the Scsi_Cmnd->request_buffer.   This physical address does
-	not look valid to me.  (I have 128 Mbytes in my intel ia32 box)
 
-Any ideas?
 
--- steve
 
