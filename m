@@ -1,419 +1,354 @@
-From: "Ulrich Windl" <Ulrich.Windl@rz.uni-regensburg.de>
-Subject: 2.6.1/aic7xxx: "Unexpected busfree in Message-out phase" during boot
-Date: Mon, 19 Jan 2004 12:18:15 +0100
+From: Jes Sorensen <jes@trained-monkey.org>
+Subject: [patch] qla1280 update for 2.6.1-mm4
+Date: Mon, 19 Jan 2004 07:08:04 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <400BCB06.2293.E986EA@localhost>
+Message-ID: <16395.51364.833229.536552@gargle.gargle.HOWL>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed; boundary=Message-Boundary-10853
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rrzd2.rz.uni-regensburg.de ([132.199.1.12]:23946 "EHLO
-	rrzd2.rz.uni-regensburg.de") by vger.kernel.org with ESMTP
-	id S264506AbUASLSb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Jan 2004 06:18:31 -0500
-Received: from rrzd2 (rrzd2 [127.0.0.1])
-	by rrzd2.rz.uni-regensburg.de (8.12.3/8.12.3/Debian -4) with ESMTP id i0JBITv9028937
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Jan 2004 12:18:29 +0100
-Received: from rkdvmks1.ngate.uni-regensburg.de (rkdvmks1.dvm.klinik.uni-regensburg.de [132.199.176.1])
-	by kgate.dvm.klinik.uni-regensburg.de (8.12.7/8.12.7/20031029MT-1) with ESMTP id i0JBIMM7002534
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Jan 2004 12:18:22 +0100
+Received: from jaguar.mkp.net ([192.139.46.146]:20410 "EHLO jaguar.mkp.net")
+	by vger.kernel.org with ESMTP id S264894AbUASMIG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Jan 2004 07:08:06 -0500
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-
-
---Message-Boundary-10853
-Content-type: text/plain; charset=US-ASCII
-Content-transfer-encoding: 7BIT
-Content-description: Mail message body
+Cc: akpm@osdl.org, James.Bottomley@steeleye.com, jeremy@sgi.com
 
 Hi,
 
-I'm not subscribed to this list, so please consider that when replying.
-I've tried Linux-2.6.1 on my Hardware running 2.4 without problems:
+I am attaching the latest patch for qla1280, which includes Andrew's and
+James' patches (modulo the 64 bit enable part) as well changes to make
+it handle pci_set_dma_mask() correctly and switch to only use one of the
+two SCSI command issuing versions depending on whether the driver is
+compiled for 64 or 32 bit DMA. The old code effectively did this anyway,
+but with this change it is no longer compiling in the part not used.
 
-During boot I'm getting a "Unexpected busfree in Message-out phase" for my 
-AHA2940 and my harddisk. I'm attaching "dmesg" output (19kB) and some PCI and 
-SCSI information. I guess it's a programming error, maybe related to kernel 
-preemption.
+Cheers,
+Jes
 
-I would try any patches to have the problem fixed.
-
-Regards,
-Ulrich
-
-
---Message-Boundary-10853
-Content-type: Application/Octet-stream; name="2.6.1.msg"; type=Unknown
-Content-disposition: attachment; filename="2.6.1.msg"
-Content-transfer-encoding: BASE64
-
-S2VybmVsIE1lc3NhZ2VzIChkbWVzZyk6Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoocyk6
-IGZkMCBpcyAxLjQ0TQpGREMgMCBpcyBhIHBvc3QtMTk5MSA4MjA3Nwpsb29wOiBsb2FkZWQg
-KG1heCA4IGRldmljZXMpClVuaWZvcm0gTXVsdGktUGxhdGZvcm0gRS1JREUgZHJpdmVyIFJl
-dmlzaW9uOiA3LjAwYWxwaGEyCmlkZTogQXNzdW1pbmcgMzNNSHogc3lzdGVtIGJ1cyBzcGVl
-ZCBmb3IgUElPIG1vZGVzOyBvdmVycmlkZSB3aXRoIGlkZWJ1cz14eApWUF9JREU6IElERSBj
-b250cm9sbGVyIGF0IFBDSSBzbG90IDAwMDA6MDA6MDcuMQpWUF9JREU6IGNoaXBzZXQgcmV2
-aXNpb24gMTYKVlBfSURFOiBub3QgMTAwJSBuYXRpdmUgbW9kZTogd2lsbCBwcm9iZSBpcnFz
-IGxhdGVyCmlkZTogQXNzdW1pbmcgMzNNSHogc3lzdGVtIGJ1cyBzcGVlZCBmb3IgUElPIG1v
-ZGVzOyBvdmVycmlkZSB3aXRoIGlkZWJ1cz14eApWUF9JREU6IFZJQSB2dDgyYzU5NmIgKHJl
-diAyMykgSURFIFVETUE2NiBjb250cm9sbGVyIG9uIHBjaTAwMDA6MDA6MDcuMQogICAgaWRl
-MDogQk0tRE1BIGF0IDB4ZTAwMC0weGUwMDcsIEJJT1Mgc2V0dGluZ3M6IGhkYTpETUEsIGhk
-YjpwaW8KICAgIGlkZTE6IEJNLURNQSBhdCAweGUwMDgtMHhlMDBmLCBCSU9TIHNldHRpbmdz
-OiBoZGM6cGlvLCBoZGQ6cGlvCmhkYTogSUMzNUwwNDBBVlZBMDctMCwgQVRBIERJU0sgZHJp
-dmUKaWRlMCBhdCAweDFmMC0weDFmNywweDNmNiBvbiBpcnEgMTQKaGRhOiBtYXggcmVxdWVz
-dCBzaXplOiAxMjhLaUIKaGRhOiA4MDQxODI0MCBzZWN0b3JzICg0MTE3NCBNQikgdy8xODYz
-S2lCIENhY2hlLCBDSFM9NjU1MzUvMTYvNjMsIFVETUEoNjYpCiBoZGE6IGhkYTEgaGRhMiA8
-IGhkYTUgPgpQQ0k6IEZvdW5kIElSUSA5IGZvciBkZXZpY2UgMDAwMDowMDowYS4wCmFoY19w
-Y2k6MDoxMDowOiBSZWFkaW5nIFNFRVBST00uLi5kb25lLgphaGNfcGNpOjA6MTA6MDogaW50
-ZXJuYWwgNTAgY2FibGUgaXMgcHJlc2VudAphaGNfcGNpOjA6MTA6MDogZXh0ZXJuYWwgY2Fi
-bGUgbm90IHByZXNlbnQKYWhjX3BjaTowOjEwOjA6IEJJT1MgZWVwcm9tIG5vdCBwcmVzZW50
-CmFoY19wY2k6MDoxMDowOiBMb3cgYnl0ZSB0ZXJtaW5hdGlvbiBFbmFibGVkCmFoY19wY2k6
-MDoxMDowOiBEb3dubG9hZGluZyBTZXF1ZW5jZXIgUHJvZ3JhbS4uLiA0MzggaW5zdHJ1Y3Rp
-b25zIGRvd25sb2FkZWQKYWhjX3BjaTowOjEwOjA6IEZlYXR1cmVzIDB4MCwgQnVncyAweDI1
-LCBGbGFncyAweDMwNDgxNTAwCnNjc2kwIDogQWRhcHRlYyBBSUM3WFhYIEVJU0EvVkxCL1BD
-SSBTQ1NJIEhCQSBEUklWRVIsIFJldiA2LjIuMzYKICAgICAgICA8QWRhcHRlYyAyOTQwIFND
-U0kgYWRhcHRlcj4KICAgICAgICBhaWM3ODcwOiBTaW5nbGUgQ2hhbm5lbCBBLCBTQ1NJIElk
-PTcsIDE2LzI1MyBTQ0JzCgpzY3NpMDogU2xhdmUgQWxsb2MgMAooc2NzaTA6QTowOjApOiBT
-ZW5kaW5nIFNEVFIgcGVyaW9kIDQ1LCBvZmZzZXQgMAooc2NzaTA6QTowOjApOiBSZWNlaXZl
-ZCBTRFRSIHBlcmlvZCA0NSwgb2Zmc2V0IDAKCUZpbHRlcmVkIHRvIHBlcmlvZCAwLCBvZmZz
-ZXQgMAooc2NzaTA6QTowKTogMy4zMDBNQi9zIHRyYW5zZmVycwpzY3NpMDogdGFyZ2V0IDAg
-dXNpbmcgYXN5bmNocm9ub3VzIHRyYW5zZmVycwooc2NzaTA6QToxOjApOiBTZW5kaW5nIFNE
-VFIgcGVyaW9kIDQ1LCBvZmZzZXQgMAooc2NzaTA6QToxOjApOiBSZWNlaXZlZCBTRFRSIHBl
-cmlvZCA0NSwgb2Zmc2V0IDAKCUZpbHRlcmVkIHRvIHBlcmlvZCAwLCBvZmZzZXQgMAooc2Nz
-aTA6QToxKTogMy4zMDBNQi9zIHRyYW5zZmVycwpzY3NpMDogdGFyZ2V0IDEgdXNpbmcgYXN5
-bmNocm9ub3VzIHRyYW5zZmVycwooc2NzaTA6QToyOjApOiBTZW5kaW5nIFNEVFIgcGVyaW9k
-IDQ1LCBvZmZzZXQgMAooc2NzaTA6QToyOjApOiBSZWNlaXZlZCBTRFRSIHBlcmlvZCA0NSwg
-b2Zmc2V0IDAKCUZpbHRlcmVkIHRvIHBlcmlvZCAwLCBvZmZzZXQgMAooc2NzaTA6QToyKTog
-My4zMDBNQi9zIHRyYW5zZmVycwpzY3NpMDogdGFyZ2V0IDIgdXNpbmcgYXN5bmNocm9ub3Vz
-IHRyYW5zZmVycwooc2NzaTA6QTowOjApOiBTZW5kaW5nIFNEVFIgcGVyaW9kIDE5LCBvZmZz
-ZXQgZgooc2NzaTA6QTowOjApOiBSZWNlaXZlZCBTRFRSIHBlcmlvZCAxOSwgb2Zmc2V0IGYK
-CUZpbHRlcmVkIHRvIHBlcmlvZCAxOSwgb2Zmc2V0IGYKKHNjc2kwOkE6MCk6IDEwLjAwME1C
-L3MgdHJhbnNmZXJzICgxMC4wMDBNSHosIG9mZnNldCAxNSkKc2NzaTA6IHRhcmdldCAwIHN5
-bmNocm9ub3VzIGF0IDEwLjBNSHosIG9mZnNldCA9IDB4ZgogIFZlbmRvcjogSUJNICAgICAg
-IE1vZGVsOiBEUFNTLTMxODM1ME4gICAgICBSZXY6IFM5NkgKICBUeXBlOiAgIERpcmVjdC1B
-Y2Nlc3MgICAgICAgICAgICAgICAgICAgICAgQU5TSSBTQ1NJIHJldmlzaW9uOiAwMwpzY3Np
-MDogU2xhdmUgQ29uZmlndXJlIDAKKHNjc2kwOkE6MCk6IDEwLjAwME1CL3MgdHJhbnNmZXJz
-ICgxMC4wMDBNSHosIG9mZnNldCAxNSkKc2NzaTA6QTowOjA6IFRhZ2dlZCBRdWV1aW5nIGVu
-YWJsZWQuICBEZXB0aCAxNgpzY3NpMDogU2xhdmUgQWxsb2MgMApzY3NpMDogU2xhdmUgRGVz
-dHJveSAwCnNjc2kwOiBTbGF2ZSBBbGxvYyAxCihzY3NpMDpBOjE6MCk6IFNlbmRpbmcgU0RU
-UiBwZXJpb2QgMTksIG9mZnNldCBmCihzY3NpMDpBOjE6MCk6IFJlY2VpdmVkIFNEVFIgcGVy
-aW9kIDNiLCBvZmZzZXQgZgoJRmlsdGVyZWQgdG8gcGVyaW9kIDNiLCBvZmZzZXQgZgooc2Nz
-aTA6QToxKTogNC4yMzdNQi9zIHRyYW5zZmVycyAoNC4yMzdNSHosIG9mZnNldCAxNSkKc2Nz
-aTA6IHRhcmdldCAxIHN5bmNocm9ub3VzIGF0IDQuME1Ieiwgb2Zmc2V0ID0gMHhmCiAgVmVu
-ZG9yOiBUT1NISUJBICAgTW9kZWw6IENELVJPTSBYTS01MzAxVEEgIFJldjogMTg5NQogIFR5
-cGU6ICAgQ0QtUk9NICAgICAgICAgICAgICAgICAgICAgICAgICAgICBBTlNJIFNDU0kgcmV2
-aXNpb246IDAyCnNjc2kwOiBTbGF2ZSBDb25maWd1cmUgMQooc2NzaTA6QToxKTogNC4yMzdN
-Qi9zIHRyYW5zZmVycyAoNC4yMzdNSHosIG9mZnNldCAxNSkKc2NzaTA6IFNsYXZlIEFsbG9j
-IDEKc2NzaTA6IFNsYXZlIERlc3Ryb3kgMQpzY3NpMDogU2xhdmUgQWxsb2MgMgooc2NzaTA6
-QToyOjApOiBTZW5kaW5nIFNEVFIgcGVyaW9kIDE5LCBvZmZzZXQgZgooc2NzaTA6QToyOjAp
-OiBSZWNlaXZlZCBTRFRSIHBlcmlvZCAzMiwgb2Zmc2V0IDgKCUZpbHRlcmVkIHRvIHBlcmlv
-ZCAzMiwgb2Zmc2V0IDgKKHNjc2kwOkE6Mik6IDUuMDAwTUIvcyB0cmFuc2ZlcnMgKDUuMDAw
-TUh6LCBvZmZzZXQgOCkKc2NzaTA6IHRhcmdldCAyIHN5bmNocm9ub3VzIGF0IDUuME1Ieiwg
-b2Zmc2V0ID0gMHg4CiAgVmVuZG9yOiBIUCAgICAgICAgTW9kZWw6IEhQMzU0ODBBICAgICAg
-ICAgIFJldjogVDYwMwogIFR5cGU6ICAgU2VxdWVudGlhbC1BY2Nlc3MgICAgICAgICAgICAg
-ICAgICBBTlNJIFNDU0kgcmV2aXNpb246IDAyCnNjc2kwOiBTbGF2ZSBDb25maWd1cmUgMgoo
-c2NzaTA6QToyKTogNS4wMDBNQi9zIHRyYW5zZmVycyAoNS4wMDBNSHosIG9mZnNldCA4KQpz
-Y3NpMDogU2xhdmUgQWxsb2MgMgpzY3NpMDogU2xhdmUgRGVzdHJveSAyCnNjc2kwOiBTbGF2
-ZSBBbGxvYyAzCnNjc2kwOiBTbGF2ZSBEZXN0cm95IDMKc2NzaTA6IFNsYXZlIEFsbG9jIDQK
-c2NzaTA6IFNsYXZlIERlc3Ryb3kgNApzY3NpMDogU2xhdmUgQWxsb2MgNQpzY3NpMDogU2xh
-dmUgRGVzdHJveSA1CnNjc2kwOiBTbGF2ZSBBbGxvYyA2CnNjc2kwOiBTbGF2ZSBEZXN0cm95
-IDYKU0NTSSBkZXZpY2Ugc2RhOiAzNTg0MzY3MCA1MTItYnl0ZSBoZHdyIHNlY3RvcnMgKDE4
-MzUyIE1CKQpTQ1NJIGRldmljZSBzZGE6IGRyaXZlIGNhY2hlOiB3cml0ZSBiYWNrCiBzZGE6
-IHNkYTEgc2RhMiA8IHNkYTUgc2RhNiBzZGE3IHNkYTggc2RhOSBzZGExMCA+CkF0dGFjaGVk
-IHNjc2kgZGlzayBzZGEgYXQgc2NzaTAsIGNoYW5uZWwgMCwgaWQgMCwgbHVuIDAKbWljZTog
-UFMvMiBtb3VzZSBkZXZpY2UgY29tbW9uIGZvciBhbGwgbWljZQpzZXJpbzogaTgwNDIgQVVY
-IHBvcnQgYXQgMHg2MCwweDY0IGlycSAxMgppbnB1dDogUFMvMiBHZW5lcmljIE1vdXNlIG9u
-IGlzYTAwNjAvc2VyaW8xCnNlcmlvOiBpODA0MiBLQkQgcG9ydCBhdCAweDYwLDB4NjQgaXJx
-IDEKaW5wdXQ6IEFUIFRyYW5zbGF0ZWQgU2V0IDIga2V5Ym9hcmQgb24gaXNhMDA2MC9zZXJp
-bzAKTkVUOiBSZWdpc3RlcmVkIHByb3RvY29sIGZhbWlseSAyCklQOiByb3V0aW5nIGNhY2hl
-IGhhc2ggdGFibGUgb2YgNDA5NiBidWNrZXRzLCAzMktieXRlcwpUQ1A6IEhhc2ggdGFibGVz
-IGNvbmZpZ3VyZWQgKGVzdGFibGlzaGVkIDMyNzY4IGJpbmQgNjU1MzYpCkluaXRpYWxpemlu
-ZyBJUHNlYyBuZXRsaW5rIHNvY2tldApORVQ6IFJlZ2lzdGVyZWQgcHJvdG9jb2wgZmFtaWx5
-IDEKTkVUOiBSZWdpc3RlcmVkIHByb3RvY29sIGZhbWlseSAxNwpORVQ6IFJlZ2lzdGVyZWQg
-cHJvdG9jb2wgZmFtaWx5IDE1ClZGUzogTW91bnRlZCByb290IChleHQyIGZpbGVzeXN0ZW0p
-IHJlYWRvbmx5LgpGcmVlaW5nIHVudXNlZCBrZXJuZWwgbWVtb3J5OiAxNTJrIGZyZWVkCihz
-Y3NpMDpBOjA6MCk6IFVuZXhwZWN0ZWQgYnVzZnJlZSBpbiBNZXNzYWdlLW91dCBwaGFzZQpT
-RVFBRERSID09IDB4MTY1CihzY3NpMDpBOjA6MCk6IFNlbmRpbmcgU0RUUiBwZXJpb2QgMTks
-IG9mZnNldCBmCihzY3NpMDpBOjA6MCk6IFJlY2VpdmVkIFNEVFIgcGVyaW9kIDE5LCBvZmZz
-ZXQgZgoJRmlsdGVyZWQgdG8gcGVyaW9kIDE5LCBvZmZzZXQgZgooc2NzaTA6QTowOjApOiBV
-bmV4cGVjdGVkIGJ1c2ZyZWUgaW4gTWVzc2FnZS1vdXQgcGhhc2UKU0VRQUREUiA9PSAweDE2
-NQooc2NzaTA6QTowOjApOiBTZW5kaW5nIFNEVFIgcGVyaW9kIDE5LCBvZmZzZXQgZgooc2Nz
-aTA6QTowOjApOiBSZWNlaXZlZCBTRFRSIHBlcmlvZCAxOSwgb2Zmc2V0IGYKCUZpbHRlcmVk
-IHRvIHBlcmlvZCAxOSwgb2Zmc2V0IGYKKHNjc2kwOkE6MDowKTogU2VuZGluZyBTRFRSIHBl
-cmlvZCAxOSwgb2Zmc2V0IGYKKHNjc2kwOkE6MDowKTogUmVjZWl2ZWQgU0RUUiBwZXJpb2Qg
-MTksIG9mZnNldCBmCglGaWx0ZXJlZCB0byBwZXJpb2QgMTksIG9mZnNldCBmCnNjc2kwOjA6
-MDowOiBBdHRlbXB0aW5nIHRvIHF1ZXVlIGFuIEFCT1JUIG1lc3NhZ2UKQ0RCOiAweDI4IDB4
-MCAweDAgMHg1ZSAweDJlIDB4OSAweDAgMHgwIDB4OCAweDAKc2NzaTA6IEF0IHRpbWUgb2Yg
-cmVjb3ZlcnksIGNhcmQgd2FzIG5vdCBwYXVzZWQKPj4+Pj4+Pj4+Pj4+Pj4+Pj4+IER1bXAg
-Q2FyZCBTdGF0ZSBCZWdpbnMgPDw8PDw8PDw8PDw8PDw8PDwKc2NzaTA6IER1bXBpbmcgQ2Fy
-ZCBTdGF0ZSB3aGlsZSBpZGxlLCBhdCBTRVFBRERSIDB4OApDYXJkIHdhcyBwYXVzZWQKQUND
-VU0gPSAweDc5LCBTSU5ERVggPSAweDMsIERJTkRFWCA9IDB4OGMsIEFSR18yID0gMHgwCkhD
-TlQgPSAweDAgU0NCUFRSID0gMHgzClNDU0lTSUdJWzB4MF0gRVJST1JbMHgwXSBTQ1NJQlVT
-TFsweDBdIExBU1RQSEFTRVsweDFdOihQX0JVU0ZSRUUpIApTQ1NJU0VRWzB4MTJdOihFTkFV
-VE9BVE5QfEVOUlNFTEkpIFNCTEtDVExbMHgwXSBTQ1NJUkFURVsweDBdIApTRVFDVExbMHgz
-MF06KEZBU1RNT0RFfEZBSUxESVMpIFNFUV9GTEFHU1sweGMwXTooTk9fQ0RCX1NFTlR8Tk9U
-X0lERU5USUZJRUQpIApTU1RBVDBbMHg1XTooRE1BRE9ORXxTRE9ORSkgU1NUQVQxWzB4YV06
-KFBIQVNFQ0hHfEJVU0ZSRUUpIApTU1RBVDJbMHgwXSBTU1RBVDNbMHgwXSBTSU1PREUwWzB4
-MF0gU0lNT0RFMVsweGE0XTooRU5TQ1NJUEVSUnxFTlNDU0lSU1R8RU5TRUxUSU1PKSAKU1hG
-UkNUTDBbMHg4MF06KERGT04pIERGQ05UUkxbMHgwXSBERlNUQVRVU1sweDI5XTooRklGT0VN
-UHxIRE9ORXxGSUZPUVdERU1QKSAKU1RBQ0s6IDB4ZDIgMHgxNWYgMHgxMDIgMHgzClNDQiBj
-b3VudCA9IDgKS2VybmVsIE5FWFRRU0NCID0gNwpDYXJkIE5FWFRRU0NCID0gNwpRSU5GSUZP
-IGVudHJpZXM6IApXYWl0aW5nIFF1ZXVlIGVudHJpZXM6IApEaXNjb25uZWN0ZWQgUXVldWUg
-ZW50cmllczogMDowIDE6MiAyOjEgClFPVVRGSUZPIGVudHJpZXM6IApTZXF1ZW5jZXIgRnJl
-ZSBTQ0IgTGlzdDogMyA0IDUgNiA3IDggOSAxMCAxMSAxMiAxMyAxNCAxNSAKU2VxdWVuY2Vy
-IFNDQiBJbmZvOiAKICAwIFNDQl9DT05UUk9MWzB4NjRdOihESVNDT05ORUNURUR8VEFHX0VO
-QnxESVNDRU5CKSBTQ0JfU0NTSUlEWzB4N10gClNDQl9MVU5bMHgwXSBTQ0JfVEFHWzB4MF0g
-CiAgMSBTQ0JfQ09OVFJPTFsweDY0XTooRElTQ09OTkVDVEVEfFRBR19FTkJ8RElTQ0VOQikg
-U0NCX1NDU0lJRFsweDddIApTQ0JfTFVOWzB4MF0gU0NCX1RBR1sweDJdIAogIDIgU0NCX0NP
-TlRST0xbMHg2NF06KERJU0NPTk5FQ1RFRHxUQUdfRU5CfERJU0NFTkIpIFNDQl9TQ1NJSURb
-MHg3XSAKU0NCX0xVTlsweDBdIFNDQl9UQUdbMHgxXSAKICAzIFNDQl9DT05UUk9MWzB4ZTBd
-OihUQUdfRU5CfERJU0NFTkJ8VEFSR0VUX1NDQikgU0NCX1NDU0lJRFsweDddIApTQ0JfTFVO
-WzB4MF0gU0NCX1RBR1sweGZmXSAKICA0IFNDQl9DT05UUk9MWzB4MF0gU0NCX1NDU0lJRFsw
-eGZmXTooVFdJTl9DSE5MQnxPSUR8VFdJTl9USUQpIApTQ0JfTFVOWzB4ZmZdOihTQ0JfWEZF
-UkxFTl9PRER8TElEKSBTQ0JfVEFHWzB4ZmZdIAogIDUgU0NCX0NPTlRST0xbMHgwXSBTQ0Jf
-U0NTSUlEWzB4ZmZdOihUV0lOX0NITkxCfE9JRHxUV0lOX1RJRCkgClNDQl9MVU5bMHhmZl06
-KFNDQl9YRkVSTEVOX09ERHxMSUQpIFNDQl9UQUdbMHhmZl0gCiAgNiBTQ0JfQ09OVFJPTFsw
-eDBdIFNDQl9TQ1NJSURbMHhmZl06KFRXSU5fQ0hOTEJ8T0lEfFRXSU5fVElEKSAKU0NCX0xV
-TlsweGZmXTooU0NCX1hGRVJMRU5fT0REfExJRCkgU0NCX1RBR1sweGZmXSAKICA3IFNDQl9D
-T05UUk9MWzB4MF0gU0NCX1NDU0lJRFsweGZmXTooVFdJTl9DSE5MQnxPSUR8VFdJTl9USUQp
-IApTQ0JfTFVOWzB4ZmZdOihTQ0JfWEZFUkxFTl9PRER8TElEKSBTQ0JfVEFHWzB4ZmZdIAog
-IDggU0NCX0NPTlRST0xbMHgwXSBTQ0JfU0NTSUlEWzB4ZmZdOihUV0lOX0NITkxCfE9JRHxU
-V0lOX1RJRCkgClNDQl9MVU5bMHhmZl06KFNDQl9YRkVSTEVOX09ERHxMSUQpIFNDQl9UQUdb
-MHhmZl0gCiAgOSBTQ0JfQ09OVFJPTFsweDBdIFNDQl9TQ1NJSURbMHhmZl06KFRXSU5fQ0hO
-TEJ8T0lEfFRXSU5fVElEKSAKU0NCX0xVTlsweGZmXTooU0NCX1hGRVJMRU5fT0REfExJRCkg
-U0NCX1RBR1sweGZmXSAKIDEwIFNDQl9DT05UUk9MWzB4MF0gU0NCX1NDU0lJRFsweGZmXToo
-VFdJTl9DSE5MQnxPSUR8VFdJTl9USUQpIApTQ0JfTFVOWzB4ZmZdOihTQ0JfWEZFUkxFTl9P
-RER8TElEKSBTQ0JfVEFHWzB4ZmZdIAogMTEgU0NCX0NPTlRST0xbMHgwXSBTQ0JfU0NTSUlE
-WzB4ZmZdOihUV0lOX0NITkxCfE9JRHxUV0lOX1RJRCkgClNDQl9MVU5bMHhmZl06KFNDQl9Y
-RkVSTEVOX09ERHxMSUQpIFNDQl9UQUdbMHhmZl0gCiAxMiBTQ0JfQ09OVFJPTFsweDBdIFND
-Ql9TQ1NJSURbMHhmZl06KFRXSU5fQ0hOTEJ8T0lEfFRXSU5fVElEKSAKU0NCX0xVTlsweGZm
-XTooU0NCX1hGRVJMRU5fT0REfExJRCkgU0NCX1RBR1sweGZmXSAKIDEzIFNDQl9DT05UUk9M
-WzB4MF0gU0NCX1NDU0lJRFsweGZmXTooVFdJTl9DSE5MQnxPSUR8VFdJTl9USUQpIApTQ0Jf
-TFVOWzB4ZmZdOihTQ0JfWEZFUkxFTl9PRER8TElEKSBTQ0JfVEFHWzB4ZmZdIAogMTQgU0NC
-X0NPTlRST0xbMHgwXSBTQ0JfU0NTSUlEWzB4ZmZdOihUV0lOX0NITkxCfE9JRHxUV0lOX1RJ
-RCkgClNDQl9MVU5bMHhmZl06KFNDQl9YRkVSTEVOX09ERHxMSUQpIFNDQl9UQUdbMHhmZl0g
-CiAxNSBTQ0JfQ09OVFJPTFsweDBdIFNDQl9TQ1NJSURbMHhmZl06KFRXSU5fQ0hOTEJ8T0lE
-fFRXSU5fVElEKSAKU0NCX0xVTlsweGZmXTooU0NCX1hGRVJMRU5fT0REfExJRCkgU0NCX1RB
-R1sweGZmXSAKUGVuZGluZyBsaXN0OiAKICAwIFNDQl9DT05UUk9MWzB4NjBdOihUQUdfRU5C
-fERJU0NFTkIpIFNDQl9TQ1NJSURbMHg3XSBTQ0JfTFVOWzB4MF0gCiAgMiBTQ0JfQ09OVFJP
-TFsweDYwXTooVEFHX0VOQnxESVNDRU5CKSBTQ0JfU0NTSUlEWzB4N10gU0NCX0xVTlsweDBd
-IAogIDEgU0NCX0NPTlRST0xbMHg2MF06KFRBR19FTkJ8RElTQ0VOQikgU0NCX1NDU0lJRFsw
-eDddIFNDQl9MVU5bMHgwXSAKS2VybmVsIEZyZWUgU0NCIGxpc3Q6IDMgNiA1IDQgCkRldlEo
-MDowOjApOiAwIHdhaXRpbmcKRGV2USgwOjE6MCk6IDAgd2FpdGluZwpEZXZRKDA6MjowKTog
-MCB3YWl0aW5nCgo8PDw8PDw8PDw8PDw8PDw8PCBEdW1wIENhcmQgU3RhdGUgRW5kcyA+Pj4+
-Pj4+Pj4+Pj4+Pj4+Pj4KKHNjc2kwOkE6MDowKTogRGV2aWNlIGlzIGRpc2Nvbm5lY3RlZCwg
-cmUtcXVldWluZyBTQ0IKKHNjc2kwOkE6MDowKTogQWJvcnQgVGFnIE1lc3NhZ2UgU2VudApS
-ZWNvdmVyeSBjb2RlIHNsZWVwaW5nCihzY3NpMDpBOjA6MCk6IFNDQiAxIC0gQWJvcnQgVGFn
-IENvbXBsZXRlZC4KUmVjb3ZlcnkgU0NCIGNvbXBsZXRlcwpSZWNvdmVyeSBjb2RlIGF3YWtl
-CmFpYzd4eHhfYWJvcnQgcmV0dXJucyAweDIwMDIKc2NzaTA6MDowOjA6IEF0dGVtcHRpbmcg
-dG8gcXVldWUgYW4gQUJPUlQgbWVzc2FnZQpDREI6IDB4MjggMHgwIDB4MCAweDVlIDB4MmQg
-MHhjOSAweDAgMHgwIDB4MzggMHgwCnNjc2kwOiBBdCB0aW1lIG9mIHJlY292ZXJ5LCBjYXJk
-IHdhcyBub3QgcGF1c2VkCj4+Pj4+Pj4+Pj4+Pj4+Pj4+PiBEdW1wIENhcmQgU3RhdGUgQmVn
-aW5zIDw8PDw8PDw8PDw8PDw8PDw8CnNjc2kwOiBEdW1waW5nIENhcmQgU3RhdGUgd2hpbGUg
-aWRsZSwgYXQgU0VRQUREUiAweDcKQ2FyZCB3YXMgcGF1c2VkCkFDQ1VNID0gMHg3YiwgU0lO
-REVYID0gMHg3LCBESU5ERVggPSAweDhjLCBBUkdfMiA9IDB4MApIQ05UID0gMHgwIFNDQlBU
-UiA9IDB4MgpTQ1NJU0lHSVsweDBdIEVSUk9SWzB4MF0gU0NTSUJVU0xbMHgwXSBMQVNUUEhB
-U0VbMHgxXTooUF9CVVNGUkVFKSAKU0NTSVNFUVsweDEyXTooRU5BVVRPQVROUHxFTlJTRUxJ
-KSBTQkxLQ1RMWzB4MF0gU0NTSVJBVEVbMHgwXSAKU0VRQ1RMWzB4MzBdOihGQVNUTU9ERXxG
-QUlMRElTKSBTRVFfRkxBR1NbMHhjMF06KE5PX0NEQl9TRU5UfE5PVF9JREVOVElGSUVEKSAK
-U1NUQVQwWzB4NV06KERNQURPTkV8U0RPTkUpIFNTVEFUMVsweGFdOihQSEFTRUNIR3xCVVNG
-UkVFKSAKU1NUQVQyWzB4MF0gU1NUQVQzWzB4MF0gU0lNT0RFMFsweDBdIFNJTU9ERTFbMHhh
-NF06KEVOU0NTSVBFUlJ8RU5TQ1NJUlNUfEVOU0VMVElNTykgClNYRlJDVEwwWzB4ODBdOihE
-Rk9OKSBERkNOVFJMWzB4MF0gREZTVEFUVVNbMHgyOV06KEZJRk9FTVB8SERPTkV8RklGT1FX
-REVNUCkgClNUQUNLOiAweGUxIDB4MTVmIDB4MTAyIDB4MwpTQ0IgY291bnQgPSA4Cktlcm5l
-bCBORVhUUVNDQiA9IDEKQ2FyZCBORVhUUVNDQiA9IDEKUUlORklGTyBlbnRyaWVzOiAKV2Fp
-dGluZyBRdWV1ZSBlbnRyaWVzOiAKRGlzY29ubmVjdGVkIFF1ZXVlIGVudHJpZXM6IDA6MCAx
-OjIgClFPVVRGSUZPIGVudHJpZXM6IApTZXF1ZW5jZXIgRnJlZSBTQ0IgTGlzdDogMiAzIDQg
-NSA2IDcgOCA5IDEwIDExIDEyIDEzIDE0IDE1IApTZXF1ZW5jZXIgU0NCIEluZm86IAogIDAg
-U0NCX0NPTlRST0xbMHg2NF06KERJU0NPTk5FQ1RFRHxUQUdfRU5CfERJU0NFTkIpIFNDQl9T
-Q1NJSURbMHg3XSAKU0NCX0xVTlsweDBdIFNDQl9UQUdbMHgwXSAKICAxIFNDQl9DT05UUk9M
-WzB4NjRdOihESVNDT05ORUNURUR8VEFHX0VOQnxESVNDRU5CKSBTQ0JfU0NTSUlEWzB4N10g
-ClNDQl9MVU5bMHgwXSBTQ0JfVEFHWzB4Ml0gCiAgMiBTQ0JfQ09OVFJPTFsweGUwXTooVEFH
-X0VOQnxESVNDRU5CfFRBUkdFVF9TQ0IpIFNDQl9TQ1NJSURbMHg3XSAKU0NCX0xVTlsweDBd
-IFNDQl9UQUdbMHhmZl0gCiAgMyBTQ0JfQ09OVFJPTFsweGUwXTooVEFHX0VOQnxESVNDRU5C
-fFRBUkdFVF9TQ0IpIFNDQl9TQ1NJSURbMHg3XSAKU0NCX0xVTlsweDBdIFNDQl9UQUdbMHhm
-Zl0gCiAgNCBTQ0JfQ09OVFJPTFsweDBdIFNDQl9TQ1NJSURbMHhmZl06KFRXSU5fQ0hOTEJ8
-T0lEfFRXSU5fVElEKSAKU0NCX0xVTlsweGZmXTooU0NCX1hGRVJMRU5fT0REfExJRCkgU0NC
-X1RBR1sweGZmXSAKICA1IFNDQl9DT05UUk9MWzB4MF0gU0NCX1NDU0lJRFsweGZmXTooVFdJ
-Tl9DSE5MQnxPSUR8VFdJTl9USUQpIApTQ0JfTFVOWzB4ZmZdOihTQ0JfWEZFUkxFTl9PRER8
-TElEKSBTQ0JfVEFHWzB4ZmZdIAogIDYgU0NCX0NPTlRST0xbMHgwXSBTQ0JfU0NTSUlEWzB4
-ZmZdOihUV0lOX0NITkxCfE9JRHxUV0lOX1RJRCkgClNDQl9MVU5bMHhmZl06KFNDQl9YRkVS
-TEVOX09ERHxMSUQpIFNDQl9UQUdbMHhmZl0gCiAgNyBTQ0JfQ09OVFJPTFsweDBdIFNDQl9T
-Q1NJSURbMHhmZl06KFRXSU5fQ0hOTEJ8T0lEfFRXSU5fVElEKSAKU0NCX0xVTlsweGZmXToo
-U0NCX1hGRVJMRU5fT0REfExJRCkgU0NCX1RBR1sweGZmXSAKICA4IFNDQl9DT05UUk9MWzB4
-MF0gU0NCX1NDU0lJRFsweGZmXTooVFdJTl9DSE5MQnxPSUR8VFdJTl9USUQpIApTQ0JfTFVO
-WzB4ZmZdOihTQ0JfWEZFUkxFTl9PRER8TElEKSBTQ0JfVEFHWzB4ZmZdIAogIDkgU0NCX0NP
-TlRST0xbMHgwXSBTQ0JfU0NTSUlEWzB4ZmZdOihUV0lOX0NITkxCfE9JRHxUV0lOX1RJRCkg
-ClNDQl9MVU5bMHhmZl06KFNDQl9YRkVSTEVOX09ERHxMSUQpIFNDQl9UQUdbMHhmZl0gCiAx
-MCBTQ0JfQ09OVFJPTFsweDBdIFNDQl9TQ1NJSURbMHhmZl06KFRXSU5fQ0hOTEJ8T0lEfFRX
-SU5fVElEKSAKU0NCX0xVTlsweGZmXTooU0NCX1hGRVJMRU5fT0REfExJRCkgU0NCX1RBR1sw
-eGZmXSAKIDExIFNDQl9DT05UUk9MWzB4MF0gU0NCX1NDU0lJRFsweGZmXTooVFdJTl9DSE5M
-QnxPSUR8VFdJTl9USUQpIApTQ0JfTFVOWzB4ZmZdOihTQ0JfWEZFUkxFTl9PRER8TElEKSBT
-Q0JfVEFHWzB4ZmZdIAogMTIgU0NCX0NPTlRST0xbMHgwXSBTQ0JfU0NTSUlEWzB4ZmZdOihU
-V0lOX0NITkxCfE9JRHxUV0lOX1RJRCkgClNDQl9MVU5bMHhmZl06KFNDQl9YRkVSTEVOX09E
-RHxMSUQpIFNDQl9UQUdbMHhmZl0gCiAxMyBTQ0JfQ09OVFJPTFsweDBdIFNDQl9TQ1NJSURb
-MHhmZl06KFRXSU5fQ0hOTEJ8T0lEfFRXSU5fVElEKSAKU0NCX0xVTlsweGZmXTooU0NCX1hG
-RVJMRU5fT0REfExJRCkgU0NCX1RBR1sweGZmXSAKIDE0IFNDQl9DT05UUk9MWzB4MF0gU0NC
-X1NDU0lJRFsweGZmXTooVFdJTl9DSE5MQnxPSUR8VFdJTl9USUQpIApTQ0JfTFVOWzB4ZmZd
-OihTQ0JfWEZFUkxFTl9PRER8TElEKSBTQ0JfVEFHWzB4ZmZdIAogMTUgU0NCX0NPTlRST0xb
-MHgwXSBTQ0JfU0NTSUlEWzB4ZmZdOihUV0lOX0NITkxCfE9JRHxUV0lOX1RJRCkgClNDQl9M
-VU5bMHhmZl06KFNDQl9YRkVSTEVOX09ERHxMSUQpIFNDQl9UQUdbMHhmZl0gClBlbmRpbmcg
-bGlzdDogCiAgMCBTQ0JfQ09OVFJPTFsweDYwXTooVEFHX0VOQnxESVNDRU5CKSBTQ0JfU0NT
-SUlEWzB4N10gU0NCX0xVTlsweDBdIAogIDIgU0NCX0NPTlRST0xbMHg2MF06KFRBR19FTkJ8
-RElTQ0VOQikgU0NCX1NDU0lJRFsweDddIFNDQl9MVU5bMHgwXSAKS2VybmVsIEZyZWUgU0NC
-IGxpc3Q6IDcgMyA2IDUgNCAKRGV2USgwOjA6MCk6IDAgd2FpdGluZwpEZXZRKDA6MTowKTog
-MCB3YWl0aW5nCkRldlEoMDoyOjApOiAwIHdhaXRpbmcKCjw8PDw8PDw8PDw8PDw8PDw8IER1
-bXAgQ2FyZCBTdGF0ZSBFbmRzID4+Pj4+Pj4+Pj4+Pj4+Pj4+Pgooc2NzaTA6QTowOjApOiBE
-ZXZpY2UgaXMgZGlzY29ubmVjdGVkLCByZS1xdWV1aW5nIFNDQgooc2NzaTA6QTowOjApOiBB
-Ym9ydCBUYWcgTWVzc2FnZSBTZW50ClJlY292ZXJ5IGNvZGUgc2xlZXBpbmcKKHNjc2kwOkE6
-MDowKTogU0NCIDIgLSBBYm9ydCBUYWcgQ29tcGxldGVkLgpSZWNvdmVyeSBTQ0IgY29tcGxl
-dGVzClJlY292ZXJ5IGNvZGUgYXdha2UKYWljN3h4eF9hYm9ydCByZXR1cm5zIDB4MjAwMgpz
-Y3NpMDowOjA6MDogQXR0ZW1wdGluZyB0byBxdWV1ZSBhbiBBQk9SVCBtZXNzYWdlCkNEQjog
-MHgyOCAweDAgMHgwIDB4NWMgMHg5MiAweDk5IDB4MCAweDAgMHgyMCAweDAKc2NzaTA6IEF0
-IHRpbWUgb2YgcmVjb3ZlcnksIGNhcmQgd2FzIG5vdCBwYXVzZWQKPj4+Pj4+Pj4+Pj4+Pj4+
-Pj4+IER1bXAgQ2FyZCBTdGF0ZSBCZWdpbnMgPDw8PDw8PDw8PDw8PDw8PDwKc2NzaTA6IER1
-bXBpbmcgQ2FyZCBTdGF0ZSB3aGlsZSBpZGxlLCBhdCBTRVFBRERSIDB4OApDYXJkIHdhcyBw
-YXVzZWQKQUNDVU0gPSAweDdkLCBTSU5ERVggPSAweDEsIERJTkRFWCA9IDB4OGMsIEFSR18y
-ID0gMHgwCkhDTlQgPSAweDAgU0NCUFRSID0gMHgxClNDU0lTSUdJWzB4MF0gRVJST1JbMHgw
-XSBTQ1NJQlVTTFsweDBdIExBU1RQSEFTRVsweDFdOihQX0JVU0ZSRUUpIApTQ1NJU0VRWzB4
-MTJdOihFTkFVVE9BVE5QfEVOUlNFTEkpIFNCTEtDVExbMHgwXSBTQ1NJUkFURVsweDBdIApT
-RVFDVExbMHgzMF06KEZBU1RNT0RFfEZBSUxESVMpIFNFUV9GTEFHU1sweGMwXTooTk9fQ0RC
-X1NFTlR8Tk9UX0lERU5USUZJRUQpIApTU1RBVDBbMHg1XTooRE1BRE9ORXxTRE9ORSkgU1NU
-QVQxWzB4YV06KFBIQVNFQ0hHfEJVU0ZSRUUpIApTU1RBVDJbMHgwXSBTU1RBVDNbMHgwXSBT
-SU1PREUwWzB4MF0gU0lNT0RFMVsweGE0XTooRU5TQ1NJUEVSUnxFTlNDU0lSU1R8RU5TRUxU
-SU1PKSAKU1hGUkNUTDBbMHg4MF06KERGT04pIERGQ05UUkxbMHgwXSBERlNUQVRVU1sweDI5
-XTooRklGT0VNUHxIRE9ORXxGSUZPUVdERU1QKSAKU1RBQ0s6IDB4ZTEgMHgxNWYgMHgxMDIg
-MHgzClNDQiBjb3VudCA9IDgKS2VybmVsIE5FWFRRU0NCID0gMgpDYXJkIE5FWFRRU0NCID0g
-MgpRSU5GSUZPIGVudHJpZXM6IApXYWl0aW5nIFF1ZXVlIGVudHJpZXM6IApEaXNjb25uZWN0
-ZWQgUXVldWUgZW50cmllczogMDowIApRT1VURklGTyBlbnRyaWVzOiAKU2VxdWVuY2VyIEZy
-ZWUgU0NCIExpc3Q6IDEgMiAzIDQgNSA2IDcgOCA5IDEwIDExIDEyIDEzIDE0IDE1IApTZXF1
-ZW5jZXIgU0NCIEluZm86IAogIDAgU0NCX0NPTlRST0xbMHg2NF06KERJU0NPTk5FQ1RFRHxU
-QUdfRU5CfERJU0NFTkIpIFNDQl9TQ1NJSURbMHg3XSAKU0NCX0xVTlsweDBdIFNDQl9UQUdb
-MHgwXSAKICAxIFNDQl9DT05UUk9MWzB4ZTBdOihUQUdfRU5CfERJU0NFTkJ8VEFSR0VUX1ND
-QikgU0NCX1NDU0lJRFsweDddIApTQ0JfTFVOWzB4MF0gU0NCX1RBR1sweGZmXSAKICAyIFND
-Ql9DT05UUk9MWzB4ZTBdOihUQUdfRU5CfERJU0NFTkJ8VEFSR0VUX1NDQikgU0NCX1NDU0lJ
-RFsweDddIApTQ0JfTFVOWzB4MF0gU0NCX1RBR1sweGZmXSAKICAzIFNDQl9DT05UUk9MWzB4
-ZTBdOihUQUdfRU5CfERJU0NFTkJ8VEFSR0VUX1NDQikgU0NCX1NDU0lJRFsweDddIApTQ0Jf
-TFVOWzB4MF0gU0NCX1RBR1sweGZmXSAKICA0IFNDQl9DT05UUk9MWzB4MF0gU0NCX1NDU0lJ
-RFsweGZmXTooVFdJTl9DSE5MQnxPSUR8VFdJTl9USUQpIApTQ0JfTFVOWzB4ZmZdOihTQ0Jf
-WEZFUkxFTl9PRER8TElEKSBTQ0JfVEFHWzB4ZmZdIAogIDUgU0NCX0NPTlRST0xbMHgwXSBT
-Q0JfU0NTSUlEWzB4ZmZdOihUV0lOX0NITkxCfE9JRHxUV0lOX1RJRCkgClNDQl9MVU5bMHhm
-Zl06KFNDQl9YRkVSTEVOX09ERHxMSUQpIFNDQl9UQUdbMHhmZl0gCiAgNiBTQ0JfQ09OVFJP
-TFsweDBdIFNDQl9TQ1NJSURbMHhmZl06KFRXSU5fQ0hOTEJ8T0lEfFRXSU5fVElEKSAKU0NC
-X0xVTlsweGZmXTooU0NCX1hGRVJMRU5fT0REfExJRCkgU0NCX1RBR1sweGZmXSAKICA3IFND
-Ql9DT05UUk9MWzB4MF0gU0NCX1NDU0lJRFsweGZmXTooVFdJTl9DSE5MQnxPSUR8VFdJTl9U
-SUQpIApTQ0JfTFVOWzB4ZmZdOihTQ0JfWEZFUkxFTl9PRER8TElEKSBTQ0JfVEFHWzB4ZmZd
-IAogIDggU0NCX0NPTlRST0xbMHgwXSBTQ0JfU0NTSUlEWzB4ZmZdOihUV0lOX0NITkxCfE9J
-RHxUV0lOX1RJRCkgClNDQl9MVU5bMHhmZl06KFNDQl9YRkVSTEVOX09ERHxMSUQpIFNDQl9U
-QUdbMHhmZl0gCiAgOSBTQ0JfQ09OVFJPTFsweDBdIFNDQl9TQ1NJSURbMHhmZl06KFRXSU5f
-Q0hOTEJ8T0lEfFRXSU5fVElEKSAKU0NCX0xVTlsweGZmXTooU0NCX1hGRVJMRU5fT0REfExJ
-RCkgU0NCX1RBR1sweGZmXSAKIDEwIFNDQl9DT05UUk9MWzB4MF0gU0NCX1NDU0lJRFsweGZm
-XTooVFdJTl9DSE5MQnxPSUR8VFdJTl9USUQpIApTQ0JfTFVOWzB4ZmZdOihTQ0JfWEZFUkxF
-Tl9PRER8TElEKSBTQ0JfVEFHWzB4ZmZdIAogMTEgU0NCX0NPTlRST0xbMHgwXSBTQ0JfU0NT
-SUlEWzB4ZmZdOihUV0lOX0NITkxCfE9JRHxUV0lOX1RJRCkgClNDQl9MVU5bMHhmZl06KFND
-Ql9YRkVSTEVOX09ERHxMSUQpIFNDQl9UQUdbMHhmZl0gCiAxMiBTQ0JfQ09OVFJPTFsweDBd
-IFNDQl9TQ1NJSURbMHhmZl06KFRXSU5fQ0hOTEJ8T0lEfFRXSU5fVElEKSAKU0NCX0xVTlsw
-eGZmXTooU0NCX1hGRVJMRU5fT0REfExJRCkgU0NCX1RBR1sweGZmXSAKIDEzIFNDQl9DT05U
-Uk9MWzB4MF0gU0NCX1NDU0lJRFsweGZmXTooVFdJTl9DSE5MQnxPSUR8VFdJTl9USUQpIApT
-Q0JfTFVOWzB4ZmZdOihTQ0JfWEZFUkxFTl9PRER8TElEKSBTQ0JfVEFHWzB4ZmZdIAogMTQg
-U0NCX0NPTlRST0xbMHgwXSBTQ0JfU0NTSUlEWzB4ZmZdOihUV0lOX0NITkxCfE9JRHxUV0lO
-X1RJRCkgClNDQl9MVU5bMHhmZl06KFNDQl9YRkVSTEVOX09ERHxMSUQpIFNDQl9UQUdbMHhm
-Zl0gCiAxNSBTQ0JfQ09OVFJPTFsweDBdIFNDQl9TQ1NJSURbMHhmZl06KFRXSU5fQ0hOTEJ8
-T0lEfFRXSU5fVElEKSAKU0NCX0xVTlsweGZmXTooU0NCX1hGRVJMRU5fT0REfExJRCkgU0NC
-X1RBR1sweGZmXSAKUGVuZGluZyBsaXN0OiAKICAwIFNDQl9DT05UUk9MWzB4NjBdOihUQUdf
-RU5CfERJU0NFTkIpIFNDQl9TQ1NJSURbMHg3XSBTQ0JfTFVOWzB4MF0gCktlcm5lbCBGcmVl
-IFNDQiBsaXN0OiAxIDcgMyA2IDUgNCAKRGV2USgwOjA6MCk6IDAgd2FpdGluZwpEZXZRKDA6
-MTowKTogMCB3YWl0aW5nCkRldlEoMDoyOjApOiAwIHdhaXRpbmcKCjw8PDw8PDw8PDw8PDw8
-PDw8IER1bXAgQ2FyZCBTdGF0ZSBFbmRzID4+Pj4+Pj4+Pj4+Pj4+Pj4+Pgooc2NzaTA6QTow
-OjApOiBEZXZpY2UgaXMgZGlzY29ubmVjdGVkLCByZS1xdWV1aW5nIFNDQgooc2NzaTA6QTow
-OjApOiBBYm9ydCBUYWcgTWVzc2FnZSBTZW50ClJlY292ZXJ5IGNvZGUgc2xlZXBpbmcKKHNj
-c2kwOkE6MDowKTogU0NCIDAgLSBBYm9ydCBUYWcgQ29tcGxldGVkLgpSZWNvdmVyeSBTQ0Ig
-Y29tcGxldGVzClJlY292ZXJ5IGNvZGUgYXdha2UKYWljN3h4eF9hYm9ydCByZXR1cm5zIDB4
-MjAwMgpkcml2ZXJzL3VzYi9jb3JlL3VzYi5jOiByZWdpc3RlcmVkIG5ldyBkcml2ZXIgdXNi
-ZnMKZHJpdmVycy91c2IvY29yZS91c2IuYzogcmVnaXN0ZXJlZCBuZXcgZHJpdmVyIGh1Ygpz
-ZXJpbzoga3NlcmlvZCBleGl0aW5nCnJlcXVlc3RfbW9kdWxlOiBmYWlsZWQgL3NiaW4vbW9k
-cHJvYmUgLS0gbnRmcy4gZXJyb3IgPSAyNTYKCmxzcGNpIC12OgotLS0tLS0tLS0KMDA6MDAu
-MCBIb3N0IGJyaWRnZTogVklBIFRlY2hub2xvZ2llcywgSW5jLiBWVDgyQzY5M0EvNjk0eCBb
-QXBvbGxvIFBSTzEzM3hdIChyZXYgNDQpCglGbGFnczogYnVzIG1hc3RlciwgbWVkaXVtIGRl
-dnNlbCwgbGF0ZW5jeSAwCglNZW1vcnkgYXQgZTAwMDAwMDAgKDMyLWJpdCwgcHJlZmV0Y2hh
-YmxlKSBbc2l6ZT02NE1dCglDYXBhYmlsaXRpZXM6IFthMF0gQUdQIHZlcnNpb24gMS4wCgow
-MDowMS4wIFBDSSBicmlkZ2U6IFZJQSBUZWNobm9sb2dpZXMsIEluYy4gVlQ4MkM1OTgvNjk0
-eCBbQXBvbGxvIE1WUDMvUHJvMTMzeCBBR1BdIChwcm9nLWlmIDAwIFtOb3JtYWwgZGVjb2Rl
-XSkKCUZsYWdzOiBidXMgbWFzdGVyLCA2Nk1oeiwgbWVkaXVtIGRldnNlbCwgbGF0ZW5jeSAw
-CglCdXM6IHByaW1hcnk9MDAsIHNlY29uZGFyeT0wMSwgc3Vib3JkaW5hdGU9MDEsIHNlYy1s
-YXRlbmN5PTAKCU1lbW9yeSBiZWhpbmQgYnJpZGdlOiBlNDAwMDAwMC1lNWZmZmZmZgoJUHJl
-ZmV0Y2hhYmxlIG1lbW9yeSBiZWhpbmQgYnJpZGdlOiBkODAwMDAwMC1kZmZmZmZmZgoJQ2Fw
-YWJpbGl0aWVzOiBbODBdIFBvd2VyIE1hbmFnZW1lbnQgdmVyc2lvbiAyCgowMDowNy4wIElT
-QSBicmlkZ2U6IFZJQSBUZWNobm9sb2dpZXMsIEluYy4gVlQ4MkM1OTYgSVNBIFtNb2JpbGUg
-U291dGhdIChyZXYgMjMpCglTdWJzeXN0ZW06IFZJQSBUZWNobm9sb2dpZXMsIEluYy4gVlQ4
-MkM1OTYvQS9CIFBDSSB0byBJU0EgQnJpZGdlCglGbGFnczogYnVzIG1hc3Rlciwgc3RlcHBp
-bmcsIG1lZGl1bSBkZXZzZWwsIGxhdGVuY3kgMAoKMDA6MDcuMSBJREUgaW50ZXJmYWNlOiBW
-SUEgVGVjaG5vbG9naWVzLCBJbmMuIFZUODJDNTg2QS9CL1ZUODJDNjg2L0EvQi9WVDgyMzMv
-QS9DL1ZUODIzNSBQSVBDIEJ1cyBNYXN0ZXIgSURFIChyZXYgMTApIChwcm9nLWlmIDhhIFtN
-YXN0ZXIgU2VjUCBQcmlQXSkKCUZsYWdzOiBidXMgbWFzdGVyLCBtZWRpdW0gZGV2c2VsLCBs
-YXRlbmN5IDY0CglJL08gcG9ydHMgYXQgZTAwMCBbc2l6ZT0xNl0KCUNhcGFiaWxpdGllczog
-W2MwXSBQb3dlciBNYW5hZ2VtZW50IHZlcnNpb24gMgoKMDA6MDcuMiBVU0IgQ29udHJvbGxl
-cjogVklBIFRlY2hub2xvZ2llcywgSW5jLiBVU0IgKHJldiAxMSkgKHByb2ctaWYgMDAgW1VI
-Q0ldKQoJU3Vic3lzdGVtOiBWSUEgVGVjaG5vbG9naWVzLCBJbmMuIChXcm9uZyBJRCkgVVNC
-IENvbnRyb2xsZXIKCUZsYWdzOiBidXMgbWFzdGVyLCBtZWRpdW0gZGV2c2VsLCBsYXRlbmN5
-IDY0LCBJUlEgOQoJSS9PIHBvcnRzIGF0IGU0MDAgW3NpemU9MzJdCglDYXBhYmlsaXRpZXM6
-IFs4MF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9uIDIKCjAwOjA3LjMgSG9zdCBicmlkZ2U6
-IFZJQSBUZWNobm9sb2dpZXMsIEluYy4gVlQ4MkM1OTYgUG93ZXIgTWFuYWdlbWVudCAocmV2
-IDMwKQoJRmxhZ3M6IG1lZGl1bSBkZXZzZWwKCjAwOjBhLjAgU0NTSSBzdG9yYWdlIGNvbnRy
-b2xsZXI6IEFkYXB0ZWMgQUhBLTI5NDAvMjk0MFcgLyBBSUMtNzg3MSAocmV2IDAzKQoJRmxh
-Z3M6IGJ1cyBtYXN0ZXIsIG1lZGl1bSBkZXZzZWwsIGxhdGVuY3kgNjQsIElSUSA5CglJL08g
-cG9ydHMgYXQgZTgwMCBbZGlzYWJsZWRdIFtzaXplPTI1Nl0KCU1lbW9yeSBhdCBlNzAwMDAw
-MCAoMzItYml0LCBub24tcHJlZmV0Y2hhYmxlKSBbc2l6ZT00S10KCUV4cGFuc2lvbiBST00g
-YXQgZTYwMDAwMDAgW2Rpc2FibGVkXSBbc2l6ZT02NEtdCgowMTowMC4wIFZHQSBjb21wYXRp
-YmxlIGNvbnRyb2xsZXI6IG5WaWRpYSBDb3Jwb3JhdGlvbiBOVjExIFtHZUZvcmNlMiBNWC9N
-WCA0MDBdIChyZXYgYTEpIChwcm9nLWlmIDAwIFtWR0FdKQoJRmxhZ3M6IGJ1cyBtYXN0ZXIs
-IDY2TWh6LCBtZWRpdW0gZGV2c2VsLCBsYXRlbmN5IDY0LCBJUlEgMTEKCU1lbW9yeSBhdCBl
-NDAwMDAwMCAoMzItYml0LCBub24tcHJlZmV0Y2hhYmxlKSBbc2l6ZT0xNk1dCglNZW1vcnkg
-YXQgZDgwMDAwMDAgKDMyLWJpdCwgcHJlZmV0Y2hhYmxlKSBbc2l6ZT0xMjhNXQoJRXhwYW5z
-aW9uIFJPTSBhdCA8dW5hc3NpZ25lZD4gW2Rpc2FibGVkXSBbc2l6ZT02NEtdCglDYXBhYmls
-aXRpZXM6IFs2MF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9uIDIKCUNhcGFiaWxpdGllczog
-WzQ0XSBBR1AgdmVyc2lvbiAyLjAKCmNhdCAvcHJvYy9zY3NpL3Njc2k6Ci0tLS0tLS0tLS0t
-LS0tLS0tLS0tCkF0dGFjaGVkIGRldmljZXM6Ckhvc3Q6IHNjc2kwIENoYW5uZWw6IDAwIElk
-OiAwMCBMdW46IDAwCiAgVmVuZG9yOiBJQk0gICAgICBNb2RlbDogRFBTUy0zMTgzNTBOICAg
-ICBSZXY6IFM5NkgKICBUeXBlOiAgIERpcmVjdC1BY2Nlc3MgICAgICAgICAgICAgICAgICAg
-IEFOU0kgU0NTSSByZXZpc2lvbjogMDMKSG9zdDogc2NzaTAgQ2hhbm5lbDogMDAgSWQ6IDAx
-IEx1bjogMDAKICBWZW5kb3I6IFRPU0hJQkEgIE1vZGVsOiBDRC1ST00gWE0tNTMwMVRBIFJl
-djogMTg5NQogIFR5cGU6ICAgQ0QtUk9NICAgICAgICAgICAgICAgICAgICAgICAgICAgQU5T
-SSBTQ1NJIHJldmlzaW9uOiAwMgpIb3N0OiBzY3NpMCBDaGFubmVsOiAwMCBJZDogMDIgTHVu
-OiAwMAogIFZlbmRvcjogSFAgICAgICAgTW9kZWw6IEhQMzU0ODBBICAgICAgICAgUmV2OiBU
-NjAzCiAgVHlwZTogICBTZXF1ZW50aWFsLUFjY2VzcyAgICAgICAgICAgICAgICBBTlNJIFND
-U0kgcmV2aXNpb246IDAyCgpjYXQgL3Byb2Mvc2Nzc2kvYWljN3h4eC8wOgotLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLQpBZGFwdGVjIEFJQzd4eHggZHJpdmVyIHZlcnNpb246IDYuMi4z
-NgpBZGFwdGVjIDI5NDAgU0NTSSBhZGFwdGVyCmFpYzc4NzA6IFNpbmdsZSBDaGFubmVsIEEs
-IFNDU0kgSWQ9NywgMTYvMjUzIFNDQnMKQWxsb2NhdGVkIFNDQnM6IDgsIFNHIExpc3QgTGVu
-Z3RoOiAxMjgKClNlcmlhbCBFRVBST006CjB4MDMxOCAweDAyMTggMHgwMjE4IDB4MDIxMCAw
-eDAyMTAgMHgwMjEwIDB4MDIxMCAweDAyMTAgCjB4MDIzOCAweDAyMzggMHgwMjM4IDB4MDIz
-OCAweDAyMzggMHgwMjM4IDB4MDIzOCAweDAyMzggCjB4MTk5NiAweDAwMTkgMHgyODA3IDB4
-MDAwOCAweGZmMDAgMHhmZmZmIDB4ZmZmZiAweGZmZmYgCjB4ZmZmZiAweGZmZmYgMHhmZmZm
-IDB4ZmZmZiAweGZmZmYgMHhmZmZmIDB4MDBmZiAweDY1MGMgCgpUYXJnZXQgMCBOZWdvdGlh
-dGlvbiBTZXR0aW5ncwoJVXNlcjogMTAuMDAwTUIvcyB0cmFuc2ZlcnMgKDEwLjAwME1Ieiwg
-b2Zmc2V0IDEyNykKCUdvYWw6IDEwLjAwME1CL3MgdHJhbnNmZXJzICgxMC4wMDBNSHosIG9m
-ZnNldCAxNSkKCUN1cnI6IDEwLjAwME1CL3MgdHJhbnNmZXJzICgxMC4wMDBNSHosIG9mZnNl
-dCAxNSkKCUNoYW5uZWwgQSBUYXJnZXQgMCBMdW4gMCBTZXR0aW5ncwoJCUNvbW1hbmRzIFF1
-ZXVlZCA2NjcKCQlDb21tYW5kcyBBY3RpdmUgMAoJCUNvbW1hbmQgT3BlbmluZ3MgMTYKCQlN
-YXggVGFnZ2VkIE9wZW5pbmdzIDE2CgkJRGV2aWNlIFF1ZXVlIEZyb3plbiBDb3VudCAwClRh
-cmdldCAxIE5lZ290aWF0aW9uIFNldHRpbmdzCglVc2VyOiAxMC4wMDBNQi9zIHRyYW5zZmVy
-cyAoMTAuMDAwTUh6LCBvZmZzZXQgMTI3KQoJR29hbDogNC4yMzdNQi9zIHRyYW5zZmVycyAo
-NC4yMzdNSHosIG9mZnNldCAxNSkKCUN1cnI6IDQuMjM3TUIvcyB0cmFuc2ZlcnMgKDQuMjM3
-TUh6LCBvZmZzZXQgMTUpCglDaGFubmVsIEEgVGFyZ2V0IDEgTHVuIDAgU2V0dGluZ3MKCQlD
-b21tYW5kcyBRdWV1ZWQgMgoJCUNvbW1hbmRzIEFjdGl2ZSAwCgkJQ29tbWFuZCBPcGVuaW5n
-cyAxCgkJTWF4IFRhZ2dlZCBPcGVuaW5ncyAwCgkJRGV2aWNlIFF1ZXVlIEZyb3plbiBDb3Vu
-dCAwClRhcmdldCAyIE5lZ290aWF0aW9uIFNldHRpbmdzCglVc2VyOiAxMC4wMDBNQi9zIHRy
-YW5zZmVycyAoMTAuMDAwTUh6LCBvZmZzZXQgMTI3KQoJR29hbDogNS4wMDBNQi9zIHRyYW5z
-ZmVycyAoNS4wMDBNSHosIG9mZnNldCA4KQoJQ3VycjogNS4wMDBNQi9zIHRyYW5zZmVycyAo
-NS4wMDBNSHosIG9mZnNldCA4KQoJQ2hhbm5lbCBBIFRhcmdldCAyIEx1biAwIFNldHRpbmdz
-CgkJQ29tbWFuZHMgUXVldWVkIDIKCQlDb21tYW5kcyBBY3RpdmUgMAoJCUNvbW1hbmQgT3Bl
-bmluZ3MgMQoJCU1heCBUYWdnZWQgT3BlbmluZ3MgMAoJCURldmljZSBRdWV1ZSBGcm96ZW4g
-Q291bnQgMApUYXJnZXQgMyBOZWdvdGlhdGlvbiBTZXR0aW5ncwoJVXNlcjogMy4zMDBNQi9z
-IHRyYW5zZmVycwpUYXJnZXQgNCBOZWdvdGlhdGlvbiBTZXR0aW5ncwoJVXNlcjogMy4zMDBN
-Qi9zIHRyYW5zZmVycwpUYXJnZXQgNSBOZWdvdGlhdGlvbiBTZXR0aW5ncwoJVXNlcjogMy4z
-MDBNQi9zIHRyYW5zZmVycwpUYXJnZXQgNiBOZWdvdGlhdGlvbiBTZXR0aW5ncwoJVXNlcjog
-My4zMDBNQi9zIHRyYW5zZmVycwpUYXJnZXQgNyBOZWdvdGlhdGlvbiBTZXR0aW5ncwoJVXNl
-cjogMy4zMDBNQi9zIHRyYW5zZmVycwo=
-
---Message-Boundary-10853--
-
+--- orig/linux-2.6.1-mm4/drivers/scsi/qla1280.c	Fri Jan 16 01:59:19 2004
++++ linux-2.6.1-mm4/drivers/scsi/qla1280.c	Mon Jan 19 03:50:29 2004
+@@ -17,9 +17,16 @@
+ * General Public License for more details.
+ *
+ ******************************************************************************/
+-#define QLA1280_VERSION      "3.24.1"
++#define QLA1280_VERSION      "3.24.3"
+ /*****************************************************************************
+     Revision History:
++    Rev  3.24.3 January 19, 2004, Jes Sorensen
++	- Handle PCI DMA mask settings correctly
++	- Correct order of error handling in probe_one, free_irq should not
++	  be called if request_irq failed
++    Rev  3.24.2 January 19, 2004, James Bottomley & Andrew Vasquez
++	- Big endian fixes (James)
++	- Remove bogus IOCB content on zero data transfer commands (Andrew)
+     Rev  3.24.1 January 5, 2004, Jes Sorensen
+ 	- Initialize completion queue to avoid OOPS on probe
+ 	- Handle interrupts during mailbox testing
+@@ -507,8 +514,11 @@
+ static int qla1280_abort_device(struct scsi_qla_host *, int, int, int);
+ static int qla1280_abort_command(struct scsi_qla_host *, struct srb *, int);
+ static int qla1280_abort_isp(struct scsi_qla_host *);
++#ifdef QLA_64BIT_PTR
+ static int qla1280_64bit_start_scsi(struct scsi_qla_host *, struct srb *);
++#else
+ static int qla1280_32bit_start_scsi(struct scsi_qla_host *, struct srb *);
++#endif
+ static void qla1280_nv_write(struct scsi_qla_host *, uint16_t);
+ static void qla1280_poll(struct scsi_qla_host *);
+ static void qla1280_reset_adapter(struct scsi_qla_host *);
+@@ -765,7 +775,7 @@
+ {
+ 	uint16_t *wptr;
+ 	uint8_t chksum;
+-	int cnt;
++	int cnt, i;
+ 	struct nvram *nv;
+ 
+ 	ENTER("qla1280_read_nvram");
+@@ -812,6 +822,28 @@
+ 	} else
+ 		ha->nvram_valid = 1;
+ 
++	/* The firmware interface is, um, interesting, in that the
++	 * actual firmware image on the chip is little endian, thus,
++	 * the process of taking that image to the CPU would end up
++	 * little endian.  However, the firmare interface requires it
++	 * to be read a word (two bytes) at a time.
++	 *
++	 * The net result of this would be that the word (and
++	 * doubleword) quantites in the firmware would be correct, but
++	 * the bytes would be pairwise reversed.  Since most of the
++	 * firmware quantites are, in fact, bytes, we do an extra
++	 * le16_to_cpu() in the firmware read routine.
++	 *
++	 * The upshot of all this is that the bytes in the firmware
++	 * are in the correct places, but the 16 and 32 bit quantites
++	 * are still in little endian format.  We fix that up below by
++	 * doing extra reverses on them */
++	nv->isp_parameter = cpu_to_le16(nv->isp_parameter);
++	nv->firmware_feature.w = cpu_to_le16(nv->firmware_feature.w);
++	for(i = 0; i < MAX_BUSES; i++) {
++		nv->bus[i].selection_timeout = cpu_to_le16(nv->bus[i].selection_timeout);
++		nv->bus[i].max_queue_depth = cpu_to_le16(nv->bus[i].max_queue_depth);
++	}
+ 	dprintk(1, "qla1280_read_nvram: Completed Reading NVRAM\n");
+ 	LEAVE("qla1280_read_nvram");
+ 
+@@ -860,6 +892,7 @@
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	struct scsi_qla_host *ha = (struct scsi_qla_host *)host->hostdata;
+ 	struct srb *sp = (struct srb *)&cmd->SCp;
++	int status;
+ 
+ 	cmd->scsi_done = fn;
+ 	sp->cmd = cmd;
+@@ -867,9 +900,18 @@
+ 
+ 	qla1280_print_scsi_cmd(5, cmd);
+ 
+-	if (ha->flags.enable_64bit_addressing)
+-		return qla1280_64bit_start_scsi(ha, sp);
+-	return qla1280_32bit_start_scsi(ha, sp);
++#ifdef QLA_64BIT_PTR
++	/*
++	 * Using 64 bit commands if the PCI bridge doesn't support it is a
++	 * bit wasteful, however this should really only happen if one's
++	 * PCI controller is completely broken, like the BCM1250. For
++	 * sane hardware this is not an issue.
++	 */
++	status = qla1280_64bit_start_scsi(ha, sp);
++#else
++	status = qla1280_32bit_start_scsi(ha, sp);
++#endif
++	return status;
+ }
+ 
+ enum action {
+@@ -1558,6 +1600,10 @@
+ qla1280_return_status(struct response * sts, struct scsi_cmnd *cp)
+ {
+ 	int host_status = DID_ERROR;
++	uint16_t comp_status = le16_to_cpu(sts->comp_status);
++	uint16_t state_flags = le16_to_cpu(sts->state_flags);
++	uint16_t residual_length = le16_to_cpu(sts->residual_length);
++	uint16_t scsi_status = le16_to_cpu(sts->scsi_status);
+ #if DEBUG_QLA1280_INTR
+ 	static char *reason[] = {
+ 		"DID_OK",
+@@ -1578,26 +1624,27 @@
+ #if DEBUG_QLA1280_INTR
+ 	/*
+ 	  dprintk(1, "qla1280_return_status: compl status = 0x%04x\n",
+-	  sts->comp_status);
++	  comp_status);
+ 	*/
+ #endif
+-	switch (sts->comp_status) {
++
++	switch (comp_status) {
+ 	case CS_COMPLETE:
+ 		host_status = DID_OK;
+ 		break;
+ 
+ 	case CS_INCOMPLETE:
+-		if (!(sts->state_flags & SF_GOT_BUS))
++		if (!(state_flags & SF_GOT_BUS))
+ 			host_status = DID_NO_CONNECT;
+-		else if (!(sts->state_flags & SF_GOT_TARGET))
++		else if (!(state_flags & SF_GOT_TARGET))
+ 			host_status = DID_BAD_TARGET;
+-		else if (!(sts->state_flags & SF_SENT_CDB))
++		else if (!(state_flags & SF_SENT_CDB))
+ 			host_status = DID_ERROR;
+-		else if (!(sts->state_flags & SF_TRANSFERRED_DATA))
++		else if (!(state_flags & SF_TRANSFERRED_DATA))
+ 			host_status = DID_ERROR;
+-		else if (!(sts->state_flags & SF_GOT_STATUS))
++		else if (!(state_flags & SF_GOT_STATUS))
+ 			host_status = DID_ERROR;
+-		else if (!(sts->state_flags & SF_GOT_SENSE))
++		else if (!(state_flags & SF_GOT_SENSE))
+ 			host_status = DID_ERROR;
+ 		break;
+ 
+@@ -1614,14 +1661,14 @@
+ 		break;
+ 
+ 	case CS_DATA_OVERRUN:
+-		dprintk(2, "Data overrun 0x%x\n", sts->residual_length);
++		dprintk(2, "Data overrun 0x%x\n", residual_length);
+ 		dprintk(2, "qla1280_isr: response packet data\n");
+ 		qla1280_dump_buffer(2, (char *)sts, RESPONSE_ENTRY_SIZE);
+ 		host_status = DID_ERROR;
+ 		break;
+ 
+ 	case CS_DATA_UNDERRUN:
+-		if ((cp->request_bufflen - sts->residual_length) <
++		if ((cp->request_bufflen - residual_length) <
+ 		    cp->underflow) {
+ 			printk(KERN_WARNING
+ 			       "scsi: Underflow detected - retrying "
+@@ -1638,12 +1685,12 @@
+ 
+ #if DEBUG_QLA1280_INTR
+ 	dprintk(1, "qla1280 ISP status: host status (%s) scsi status %x\n",
+-		reason[host_status], sts->scsi_status);
++		reason[host_status], scsi_status);
+ #endif
+ 
+ 	LEAVE("qla1280_return_status");
+ 
+-	return (sts->scsi_status & 0xff) | (host_status << 16);
++	return (scsi_status & 0xff) | (host_status << 16);
+ }
+ 
+ /****************************************************************************/
+@@ -2394,23 +2441,6 @@
+ 	ha->flags.disable_risc_code_load =
+ 		nv->cntr_flags_1.disable_loading_risc_code;
+ 
+-#ifdef QLA_64BIT_PTR
+-	/* Enable 64bit addressing for OS/System combination supporting it   */
+-	/* actual NVRAM bit is: nv->cntr_flags_1.enable_64bit_addressing     */
+-	/* but we will ignore it and use BITS_PER_LONG macro to setup for    */
+-	/* 64 or 32 bit access of host memory in all x86/ia-64/Alpha systems */
+-	ha->flags.enable_64bit_addressing = 1;
+-#else
+-	ha->flags.enable_64bit_addressing = 0;
+-#endif
+-
+-	if (ha->flags.enable_64bit_addressing) {
+-		dprintk(2, "scsi(%li): 64 Bit PCI Addressing Enabled\n",
+-			ha->host_no);
+-
+-		pci_set_dma_mask(ha->pdev, (dma_addr_t) ~ 0ULL);
+-	}
+-
+ 	/* Set ISP hardware DMA burst */
+ 	mb[0] = nv->isp_config.c;
+ 	/* Enable DMA arbitration on dual channel controllers */
+@@ -3315,7 +3345,7 @@
+ #endif
+ 			*dword_ptr++ = cpu_to_le32(pci_dma_lo32(dma_handle));
+ 			*dword_ptr++ = cpu_to_le32(pci_dma_hi32(dma_handle));
+-			*dword_ptr = (uint32_t)cmd->request_bufflen;
++			*dword_ptr = cpu_to_le32(cmd->request_bufflen);
+ 
+ 			dprintk(5, "qla1280_64bit_start_scsi: No scatter/"
+ 				"gather command packet data - b %i, t %i, "
+@@ -3325,10 +3355,6 @@
+ 					    REQUEST_ENTRY_SIZE);
+ 		}
+ 	} else {	/* No data transfer */
+-		dword_ptr = (uint32_t *)(pkt + 1);
+-		*dword_ptr++ = 0;
+-		*dword_ptr++ = 0;
+-		*dword_ptr = 0;
+ 		dprintk(5, "qla1280_64bit_start_scsi: No data, command "
+ 			"packet data - b %i, t %i, l %i \n",
+ 			SCSI_BUS_32(cmd), SCSI_TCN_32(cmd), SCSI_LUN_32(cmd));
+@@ -3359,6 +3385,7 @@
+ }
+ 
+ 
++#ifndef QLA_64BIT_PTR
+ /*
+  * qla1280_32bit_start_scsi
+  *      The start SCSI is responsible for building request packets on
+@@ -3593,9 +3620,6 @@
+ 			*dword_ptr = cpu_to_le32(cmd->request_bufflen);
+ 		}
+ 	} else {	/* No data transfer at all */
+-		dword_ptr = (uint32_t *)(pkt + 1);
+-		*dword_ptr++ = 0;
+-		*dword_ptr = 0;
+ 		dprintk(5, "qla1280_32bit_start_scsi: No data, command "
+ 			"packet data - \n");
+ 		qla1280_dump_buffer(5, (char *)pkt, REQUEST_ENTRY_SIZE);
+@@ -3627,6 +3651,7 @@
+ 
+ 	return status;
+ }
++#endif
+ 
+ /*
+  * qla1280_req_pkt
+@@ -4686,6 +4711,26 @@
+ 	ha->pdev = pdev;
+ 	ha->devnum = devnum;	/* specifies microcode load address */
+ 
++#ifdef QLA_64BIT_PTR
++	if (pci_set_dma_mask(ha->pdev, (dma_addr_t) ~ 0ULL)) {
++		if (pci_set_dma_mask(ha->pdev, 0xffffffff)) {
++			printk(KERN_WARNING "scsi(%li): Unable to set a "
++			       " suitable DMA mask - aboring\n", ha->host_no);
++			error = -ENODEV;
++			goto error_free_irq;
++		}
++	} else
++		dprintk(2, "scsi(%li): 64 Bit PCI Addressing Enabled\n",
++			ha->host_no);
++#else
++	if (pci_set_dma_mask(ha->pdev, 0xffffffff)) {
++		printk(KERN_WARNING "scsi(%li): Unable to set a "
++		       " suitable DMA mask - aboring\n", ha->host_no);
++		error = -ENODEV;
++		goto error_free_irq;
++	}
++#endif
++
+ 	ha->request_ring = pci_alloc_consistent(ha->pdev,
+ 			((REQUEST_ENTRY_CNT + 1) * (sizeof(request_t))),
+ 			&ha->request_dma);
+@@ -4780,14 +4825,14 @@
+  error_disable_adapter:
+ 	WRT_REG_WORD(&ha->iobase->ictrl, 0);
+ #endif
++ error_free_irq:
++	free_irq(pdev->irq, ha);
+  error_release_region:
+ #if MEMORY_MAPPED_IO
+ 	iounmap(ha->mmpbase);
+ #else
+ 	release_region(host->io_port, 0xff);
+ #endif
+- error_free_irq:
+-	free_irq(pdev->irq, ha);
+  error_free_response_ring:
+ 	pci_free_consistent(ha->pdev,
+ 			((RESPONSE_ENTRY_CNT + 1) * (sizeof(struct response))),
+--- orig/linux-2.6.1-mm4/drivers/scsi/qla1280.h	Fri Jan 16 01:59:19 2004
++++ linux-2.6.1-mm4/drivers/scsi/qla1280.h	Mon Jan 19 00:41:15 2004
+@@ -309,16 +309,19 @@
+ 	} cntr_flags_1;		/* 5 */
+ 
+ 	struct {
+-		uint16_t boot_lun_number:5;
+-		uint16_t scsi_bus_number:1;
+-		uint16_t unused_6:1;
+-		uint16_t unused_7:1;
+-		uint16_t boot_target_number:4;
+-		uint16_t unused_12:1;
+-		uint16_t unused_13:1;
+-		uint16_t unused_14:1;
+-		uint16_t unused_15:1;
+-	} cntr_flags_2;		/* 6, 7 */
++		uint8_t boot_lun_number:5;
++		uint8_t scsi_bus_number:1;
++		uint8_t unused_6:1;
++		uint8_t unused_7:1;
++	} cntr_flags_2l;	/* 7 */
++
++	struct {
++		uint8_t boot_target_number:4;
++		uint8_t unused_12:1;
++		uint8_t unused_13:1;
++		uint8_t unused_14:1;
++		uint8_t unused_15:1;
++	} cntr_flags_2h;	/* 8 */
+ 
+ 	uint16_t unused_8;	/* 8, 9 */
+ 	uint16_t unused_10;	/* 10, 11 */
