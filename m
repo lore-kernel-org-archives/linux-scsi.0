@@ -1,104 +1,81 @@
-From: Andrew Morton <akpm@digeo.com>
-Subject: Fw: 2.5.65 panic in remove_proc_entry() while trying to rmmod
-Date: Fri, 21 Mar 2003 16:48:55 -0800
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [PATCH] 2.5.x alternate add back missing scsi_queue_next_request
+ calls
+Date: Fri, 21 Mar 2003 17:52:16 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030321164855.598090d7.akpm@digeo.com>
+Message-ID: <3E7B97A0.4010204@splentec.com>
+References: <20030321141525.A8134@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="Multipart_Fri__21_Mar_2003_16:48:55_-0800_08581db0"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from digeo-nav01.digeo.com (digeo-nav01.digeo.com [192.168.1.233])
-	by packet.digeo.com (8.9.3+Sun/8.9.3) with SMTP id OAA08159
-	for <linux-scsi@vger.kernel.org>; Fri, 21 Mar 2003 14:43:46 -0800 (PST)
-Received: from digeo-e2k04.digeo.com ([192.168.2.24])
- by digeo-nav01.digeo.com (SAVSMTP 3.0.0.44) with SMTP id M2003032114454605070
- for <linux-scsi@vger.kernel.org>; Fri, 21 Mar 2003 14:45:46 -0800
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+Patrick Mansfield wrote:
+> Alternate version of the patch. I prefer the previous version. Posting to
+> clarify the coding issues.
 
---Multipart_Fri__21_Mar_2003_16:48:55_-0800_08581db0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+1. Thanks for posing this patch.
 
-Looks like removal on the scsi_deubg module causes some
-/proc entries to be removed twice.
+2. I know that you prefer the previous version of the patch.
 
+Please DO NOT export scsi_queue_next_request()!  It is not needed
+in LLDD and ULDD (unless they feed DIRECTLY from the request queue,
+which is currently NOT the case).
 
-Begin forwarded message:
+cpqfcTSinit.c -- needs a scsi command to reset the device -- called
+from the eh_handler.
 
-Date: Fri, 21 Mar 2003 10:36:35 -0800
-From: Badari Pulavarty <pbadari@us.ibm.com>
-To: linux-kernel@vger.kernel.org
-Cc: andrew <akpm@digeo.com>
-Subject: 2.5.65 panic in remove_proc_entry() while trying to rmmod
+aha152x.c -- needs a scsi command to reset the device -- called
+from the eh_handler.
 
+gdth.c -- flushing and releasing the device.
+gdth_proc.c -- same.
 
-Hi,
+All those users of scsi_put_command() DO NOT need to call
+scsi_queue_next_request().
 
-I get following panic while playing with scsi_debug.
-Any ideas on how to fix this ?
+For this reason you do not need to export it.
 
-Thanks,
-Badari
+Logically its part of SCSI Core's queueing mechanism and
+the more reason not to export it.
 
+3. The way this is scattered all over the place will NOT
+last long.  It WILL be centralized in the near future,
+for this reason I'd rather keep the slab allocation for
+command struct intact.
 
+See my previous email on scsi request and scsi command
+entry points and completion notifiers -- having a centralized
+place you'll be able to do all kinds of magic there.
 
---Multipart_Fri__21_Mar_2003_16:48:55_-0800_08581db0
-Content-Type: text/plain;
- name="panic"
-Content-Disposition: attachment;
- filename="panic"
-Content-Transfer-Encoding: 7bit
+> The change to use a pool for scsi_cmnd allocations removed some
+> scsi_queue_next_request calls, this patch restores the calls, and
+> exports scsi_put_command and scsi_get_command.
 
-Unable to handle kernel paging request at virtual address 6b6b6b6d
- printing eip:
-c018590a
-*pde = 00000000
-Oops: 0000 [#1]
-CPU:    4
-EIP:    0060:[<c018590a>]    Not tainted
-EFLAGS: 00010202 VLI
-EIP is at proc_match+0xa/0x30
-eax: 6b6b6b6b   ebx: 00000002   ecx: d9d61e9c   edx: 6b6b6b6b
-esi: d9d61e9c   edi: f7166e74   ebp: c03a2648   esp: d9d61e60
-ds: 007b   es: 007b   ss: 0068
-Process rmmod (pid: 10547, threadinfo=d9d60000 task=d9ade0a0)
-Stack: d9d61e9c f7166e74 c018679e 00000002 d9d61e9c 6b6b6b6b d9d61e9c f440a084
-       f440a084 c0295efa d9d61e9c f7166e44 d9d61e9c c03a23cc 0000001a d9003632
-       f440a084 c03a2648 c01081cc f440a084 f44259c4 c028f733 f440a084 00000000
-Call Trace:
- [<c018679e>] remove_proc_entry+0x5e/0x110
- [<c0295efa>] scsi_proc_host_rm+0x2a/0x50
- [<c01081cc>] __up_wakeup+0x8/0xc
- [<c028f733>] scsi_unregister+0x103/0x120
- [<f8966929>] sdebug_driver_remove+0x119/0x160 [scsi_debug]
- [<f8969440>] sdebug_driverfs_driver+0x0/0x74 [scsi_debug]
- [<f8969440>] sdebug_driverfs_driver+0x0/0x74 [scsi_debug]
- [<c0254134>] device_release_driver+0x44/0x50
- [<f8969498>] sdebug_driverfs_driver+0x58/0x74 [scsi_debug]
- [<c0254169>] driver_detach+0x29/0x40
- [<f8969660>] pseudo_lld_bus+0x40/0xe0 [scsi_debug]
- [<f8969620>] pseudo_lld_bus+0x0/0xe0 [scsi_debug]
- [<c02543e8>] bus_remove_driver+0x38/0x80
- [<f8969440>] sdebug_driverfs_driver+0x0/0x74 [scsi_debug]
- [<f896944c>] sdebug_driverfs_driver+0xc/0x74 [scsi_debug]
- [<f8969440>] sdebug_driverfs_driver+0x0/0x74 [scsi_debug]
- [<c025479f>] driver_unregister+0xf/0x33
- [<f8969440>] sdebug_driverfs_driver+0x0/0x74 [scsi_debug]
- [<f8969700>] +0x0/0x4e0 [scsi_debug]
- [<f896651a>] scsi_debug_unregister_driver+0xa/0x10 [scsi_debug]
- [<f8969440>] sdebug_driverfs_driver+0x0/0x74 [scsi_debug]
- [<f8966984>] +0x14/0x40 [scsi_debug]
- [<f8969440>] sdebug_driverfs_driver+0x0/0x74 [scsi_debug]
- [<c013517f>] sys_delete_module+0x1ff/0x230
- [<c0148f8b>] do_munmap+0x17b/0x190
- [<c0148fe4>] sys_munmap+0x44/0x70
- [<c0109303>] syscall_call+0x7/0xb
+As I said before: look at scsi_get_command() and try to MIRROR
+the same for scsi_put_command() -- one centralized place where
+you can call whatever function you want and do whatever
+checks and magic there.
 
-Code: 63 08 00 59 e9 8a e6 ff ff 66 4a 0f 85 1b e7 ff ff 51 e8 9a 64 08 00 59 e9 0f e7 ff ff 8d 74 26 00 57 56 8b
+Modularizing the command allocation is THE FIRST STEP, if we
+contaminate it, all this work goes down the drain.
+
+More and more parts of SCSI Core will be modularized similarly
+and then SCSI Core will be defined in terms of their interaction.
+
+> The extra scsi_queue_next_request calls are needed to handle non-block
+> device IO completion (char devices and scsi scanning).
+
+ONLY because they notify via scsi_done(command), but entered via
+scsi_request! This needs a patch. See my previous post.
+
+I.e. we need a patch which fixes this infrastructre, rather than
+a patchwork solution. (Address at the root.)
+
+-- 
+Luben
 
 
-
---Multipart_Fri__21_Mar_2003_16:48:55_-0800_08581db0--
