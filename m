@@ -1,38 +1,36 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: lsscsi-0.07 + scsi host information?
-Date: Fri, 14 Feb 2003 08:49:26 -0800
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [PATCH / RFC] scsi_error handler update. (1/4)
+Date: Fri, 14 Feb 2003 13:50:46 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030214084926.B25020@beaverton.ibm.com>
-References: <3E4C1FAE.2090904@torque.net>
+Message-ID: <20030214135046.A21504@redhat.com>
+References: <20030211212048.GC1114@beaverton.ibm.com> <3E49698D.3030402@splentec.com> <20030211224119.A23149@infradead.org> <3E4AAA3F.8040002@splentec.com> <20030212204634.A17425@infradead.org> <3E4AC0B5.9030208@splentec.com> <20030213154748.A1965@infradead.org> <3E4BEA13.50402@splentec.com> <20030213192440.A6660@redhat.com> <20030214165827.GA1165@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3E4C1FAE.2090904@torque.net>; from dougg@torque.net on Fri, Feb 14, 2003 at 09:43:58AM +1100
+In-Reply-To: <20030214165827.GA1165@beaverton.ibm.com>; from andmike@us.ibm.com on Fri, Feb 14, 2003 at 08:58:27AM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Luben Tuikov <luben@splentec.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Fri, Feb 14, 2003 at 09:43:58AM +1100, Douglas Gilbert wrote:
+On Fri, Feb 14, 2003 at 08:58:27AM -0800, Mike Anderson wrote:
+> The need is there for per target data, but if we talk about future
+> directions it would appear a cleaner interface would be to have luns as
+> children of the targets (? ports ?) vs having a list of luns and post linking
+> relationships.
 
-> I would like lsscsi to list SCSI hosts (portals?) but there
-> doesn't seem to be enough normalized sysfs information
-> available to do that. Is the "/sys/class/scsi-host" sub-tree
-> the place to be looking? Of the scsi hosts I have, only
-> scsi_debug (thanks to work by Mike Anderson) puts an
-> entry in that sub-tree. I would also like to have normalized
-> information from the scsi_host structure available (similar
-> to what Patrick Mansfield provided for scsi devices).
+Yes it would be cleaner.  I haven't had the time to work on scsi lately 
+(job responsibility issues) and so I'm not one to go telling people what 
+to do.  I suggested an easy alternative, while this requires, I think, 
+quite a bit more work to restructure things.  If I had the time to do it 
+myself this is the direction I would be looking in.  It has other side 
+benefits as well, like you can simplify the scsi scanning code a little 
+bit because the lun0 scsi level would always be device->target->scsi_level 
+and I'm sure other minor optimizations can be made.
 
-We could add scsi_host attributes under the same place as the
-scsi_host->host_gendev. But with sysfs, you could not tell if they were
-pci or scsi_host attributes.
-
-We also need a place in sysfs for scsi core attributes - like
-max_scsi_luns, scsi_logging_level, max_scsi_report_luns, and maybe others,
-so they can be set and checked via /sysfs. But drivers under sysfs must
-(AFAIK) be on a "bus" and bind to devices on that same bus. For scsi core,
-we are more like a library, and do not have a specific type and set of
-devices to bind to.
-
--- Patrick Mansfield
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
