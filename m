@@ -1,105 +1,27 @@
-From: Eric Kerin <eric@bootseg.com>
-Subject: Re: 2.6.3 oops at kobject_unregister, alsa & aic7xxx
-Date: Tue, 24 Feb 2004 02:54:44 -0500
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: [PATCH][BUGFIX] : megaraid patch for 2.10.1 (irq disable bug
+	fix)
+Date: Tue, 24 Feb 2004 09:47:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1077609283.3172.46.camel@opiate>
-References: <1077546633.362.28.camel@boxen>
-	 <20040223160716.799195d0.akpm@osdl.org> <1077602725.3172.19.camel@opiate>
-	 <20040223221740.5786b0b3.akpm@osdl.org> <1077606462.3172.38.camel@opiate>
-	 <20040223233218.73e61a9e.akpm@osdl.org>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC3D9@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mxsf06.cluster1.charter.net ([209.225.28.206]:3589 "EHLO
-	mxsf06.cluster1.charter.net") by vger.kernel.org with ESMTP
-	id S262205AbUBXH5q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2004 02:57:46 -0500
-In-Reply-To: <20040223233218.73e61a9e.akpm@osdl.org>
+Received: from mail0.lsil.com ([147.145.40.20]:1452 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S262263AbUBXOrT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Feb 2004 09:47:19 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: alexn@telia.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>
+Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-02-24 at 02:32, Andrew Morton wrote:
-> Eric Kerin <eric@bootseg.com> wrote:
-> >  There's a 2nd patch in the above thread that changes those modules to
-> >  stay loaded even if no devices are found, which Arjan V pointed out was
-> >  the preferred way for drivers to work.
-> 
-> Sounds good.  Do you have that patch handy?
-> -
+> >> The following patch fixes a bug in megaraid driver version 2.10.1
+> >> where irq was erroneously being disabled.
+> >
+> > Could we have a later version than 2.00.3 in 2.6 please?
+We are in process of releasing a unified driver, which will natively support
+the 2.4.x and 2.6.x kernels. 
 
-Sure do, 
-
-Below are the patches I coded up for the aic7xxx and aic79xx drivers
-that leave the module loaded.
-
-Eric Kerin
-
-
---- aic7xxx_osm.c.original      2004-01-02 03:56:32.000000000 -0500
-+++ aic7xxx_osm.c       2004-01-03 05:03:41.000000000 -0500
-@@ -844,6 +844,7 @@ ahc_linux_detect(Scsi_Host_Template *tem
- {
-        struct  ahc_softc *ahc;
-        int     found;
-+       int     pci_reg_state;
- 
- #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-        /*
-@@ -891,8 +892,9 @@ ahc_linux_detect(Scsi_Host_Template *tem
-         */
-        ahc_list_lockinit();
- 
-+       pci_reg_state = -1;
- #ifdef CONFIG_PCI
--       ahc_linux_pci_init();
-+       pci_reg_state = ahc_linux_pci_init();
- #endif
- 
- #ifdef CONFIG_EISA
-@@ -913,6 +915,10 @@ ahc_linux_detect(Scsi_Host_Template *tem
-        spin_lock_irq(&io_request_lock);
- #endif
-        aic7xxx_detect_complete++;
-+       if(pci_reg_state == 0 && found == 0){
-+               return(1); 
-+       }
-+
-        return (found);
- }
- 
-
-
---- aic79xx_osm.c.original      2004-01-02 02:46:43.000000000 -0500
-+++ aic79xx_osm.c       2004-01-03 05:05:52.000000000 -0500
-@@ -856,6 +856,7 @@ ahd_linux_detect(Scsi_Host_Template *tem
- {
-        struct  ahd_softc *ahd;
-        int     found;
-+       int     pci_reg_state;
- 
- #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-        /*
-@@ -906,8 +907,9 @@ ahd_linux_detect(Scsi_Host_Template *tem
-         */
-        ahd_list_lockinit();
- 
-+       pci_reg_state = -1;
- #ifdef CONFIG_PCI
--       ahd_linux_pci_init();
-+       pci_reg_state = ahd_linux_pci_init();
- #endif
- 
-        /*
-@@ -924,6 +926,10 @@ ahd_linux_detect(Scsi_Host_Template *tem
-        spin_lock_irq(&io_request_lock);
- #endif
-        aic79xx_detect_complete++;
-+       if(pci_reg_state == 0 && found == 0){
-+               return(1); 
-+       }
-+
-        return (found);
- }
-
+Thanks
+-Atul Mukker
