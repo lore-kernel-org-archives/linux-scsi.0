@@ -1,46 +1,50 @@
 From: Jes Sorensen <jes@wildopensource.com>
-Subject: Re: [patch] qla1280 update for 2.6.1-mm4
-Date: 19 Jan 2004 16:18:42 -0500
+Subject: Re: qla1280 endiannes and 64/32bit fixes
+Date: 19 Jan 2004 16:13:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <yq01xpvocwd.fsf@wildopensource.com>
-References: <16395.51364.833229.536552@gargle.gargle.HOWL>
-	<1074531798.1894.17.camel@mulgrave>
+Message-ID: <yq065f7od4r.fsf@wildopensource.com>
+References: <1074382860.1756.20.camel@mulgrave>
+	<20040118024326.GA381527@sgi.com> <1074395819.1756.31.camel@mulgrave>
+	<20040118062157.GA11083@praka.local.home>
+	<20040118073321.GC383498@sgi.com> <1074437655.1804.12.camel@mulgrave>
+	<20040119174027.B3176@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:8898 "EHLO jaguar.mkp.net")
-	by vger.kernel.org with ESMTP id S263596AbUASVSo (ORCPT
+Received: from jaguar.mkp.net ([192.139.46.146]:5314 "EHLO jaguar.mkp.net")
+	by vger.kernel.org with ESMTP id S263486AbUASVOe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Jan 2004 16:18:44 -0500
-In-Reply-To: <1074531798.1894.17.camel@mulgrave>
+	Mon, 19 Jan 2004 16:14:34 -0500
+In-Reply-To: <20040119174027.B3176@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, jeremy@sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Jeremy Higdon <jeremy@sgi.com>, Andrew Vasquez <praka@users.sourceforge.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
->>>>> "James" == James Bottomley <James.Bottomley@steeleye.com> writes:
+>>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
 
-James> Something to think about (I'm not asking you to change it) is
-James> whether you really want to use 64 bit descriptors on all 64 bit
-James> machines.  The way the qla1280 single issue queue is organised
-James> it looks like we eat up slots (and, worse, overflow slots)
-James> quite a bit faster in 64 bit addressing mode.  Therefore, it
-James> seems like the driver would operate more efficiently in 32 bit
-James> mode, so it might be worth a runtime check even on 64 bit
-James> machines to see whether the addressing mode is really necessary
-James> (i.e. no physical memory > 4GB for instance).
+Christoph> On Sun, Jan 18, 2004 at 09:54:13AM -0500, James Bottomley
+Christoph> wrote:
+>> However, I have another question for you: Does the card BIOS
+>> actually get to run on bootup?  It doesn't (because it can't) on
+>> PA, so I get strange values for certain NVRAM quantities (like the
+>> 32 bit mode, but more importantly, the offset of all my devices
+>> gets set to 1).  I was thinking about doing an override to set them
+>> more sensibly and wondered if you were having the same problem.
 
-Hi James,
+Christoph> Guys, given that problems with that nvram reading stuff
+Christoph> show up again and again, shouldn't we rip out the code
+Christoph> looking at the nvram completely?  Or at least disable it by
+Christoph> default and enable it only by a module option (for both
+Christoph> qla1280 and qla2xxx).
 
-Certainly a valid concern, however it would probably more likely be
-based on available IOMMU slots, ie. with loads of 1280's in a box or
-other devices causing a lot of packets going through the system, it
-will probably be preferred to use 64 bit addressing where on smaller
-boxes I think you suggestion will be a pretty decent win. The driver
-also needs to handle it's busy situation a lot better, the current
-busy wait loop in qla1280_req_pkt is ehm ... no comment. Even if we
-decide to do dynamic switching between 64 and 32 bit mappings then I
-think it will be desirable to merge the two queuecommand versions for
-cache locality.
+Christoph, I have thought about this before and while I agree in
+principle that relying on BIOS settings is inherently broken, I am
+also wary of changing a behavior a number of users are currently
+relying upon.
+
+Second, for qla2xxx you need a persistent place where you can store
+the Fibre Channel ID (the name slips my mind right now).
 
 Cheers,
 Jes
+
