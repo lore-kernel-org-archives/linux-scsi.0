@@ -1,42 +1,65 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Tue, 2 Dec 2003 09:42:02 -0800
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: RE: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
+Date: Tue, 2 Dec 2003 10:10:22 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031202174202.GA1960@beaverton.ibm.com>
-References: <03120118001300.08627@naveenb-lnx.cisco.com> <Pine.LNX.4.58.0312011655240.26106@serv> <03120217260300.01630@naveenb-lnx.cisco.com> <1070383028.2345.8.camel@mulgrave>
+Message-ID: <B179AE41C1147041AA1121F44614F0B060ED87@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.132]:41140 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S262601AbTLBRjo
+Received: from [198.70.193.2] ([198.70.193.2]:35201 "EHLO AVEXCH01.qlogic.org")
+	by vger.kernel.org with ESMTP id S262766AbTLBSKP convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Dec 2003 12:39:44 -0500
-Content-Disposition: inline
-In-Reply-To: <1070383028.2345.8.camel@mulgrave>
+	Tue, 2 Dec 2003 13:10:15 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: naveenb@cisco.com, Roman Zippel <zippel@linux-m68k.org>, hch@infradead.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jeremy Higdon <jeremy@SGI.com>, Jes Sorensen <jes@wildopensource.com>, Linux-SCSI <linux-scsi@vger.kernel.org>, jbarnes@SGI.com, mdr@SGI.com
 
-James Bottomley [James.Bottomley@steeleye.com] wrote:
-> On Tue, 2003-12-02 at 05:56, Naveen Burmi wrote:
-> > Our assumption so far was that if a buffer is given to SCSI HBA driver, then 
-> > nobody can touch the buffer until the HBA says that he is done with the 
-> > buffer. It seems that this assumption isn't true. Can you give an instance 
-> > where somebody (probably buffer cache) will modify the buffer which is handed
-> > over to an HBA driver?
+On Tuesday, December 02, 2003 1:37 AM, Jeremy Higdon wrote:
+
+> On Tue, Dec 02, 2003 at 02:01:25AM -0800, Andrew Vasquez wrote:
+> > 
+> > > Is it okay to read back from the request queue in register?
+> > > I'm planning to generate a new patch that includes the previous
+> > > changes, and I may as well generate something without the
+> > > sn_mmiob. 
+> > > 
+> > 
+> > I believe we'll need a readl() to flush the write.  Just curious, on
+> > SGI ia64 machines, how many bridges must a PCI write transaction
+> > cross before it reaches the target device?
 > 
-> This is an incorrect assumption.  The Linux SCSI subsystem is
-> architected for zero copy, meaning that if the user maps a copy of the
-> data, they can alter it at will, even if it is in flight within the
-> driver.  The only thing you can guarantee is that you will get another
-> write request for any page the user dirtied.
+> It depends on what you call a bridge.  If you count chips traversed,
+> it could be as many as 6, I think.  However, the system in which I
+> had the problem is much smaller than that.
+> 
+> Here is my patch to the v8.00.00b6 driver.  It includes most of
+> Jes's earlier patch, but not Christoph's patch, which I have not
+> yet tried.  
+>
 
+Thanks, I've already had a running tree which included Jes's patch --
+I'll add the deltas.
 
-The user would need to generate another write request and the
-"guarantee" is up to the user (correct?)?
+> If you're going to supply a way to change NVRAM without
+> using BIOS (please!), then this patch can be a bit smaller.  Please
+> let me know what you think. 
+> 
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+The model with which I'm basing the NVRAM update on is the code for
+PCI config space updates in drivers/pci/pci-sysfs.c (pci_config_attr).
 
+> I added a read-after-write of the Request In register and commented
+> out setting of the enable_64bit_addressing flag in the nvram config
+> function. 
+> 
+> I returned SN2 to using nvram variables, except for data rate and
+> frame size, since at least some QLA2310/2342 boards have the wrong
+> values.  As you pointed out, we need the nvram node and port name
+> for proper fabric operation.
+> 
+
+That's the safest path.
+
+Regards,
+Andrew Vasquez
