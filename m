@@ -1,24 +1,32 @@
-From: Andrew Morton <akpm@digeo.com>
-Subject: Re: possible use-after-free in 2.5.44 scsi changes
-Date: Thu, 24 Oct 2002 21:40:25 -0700
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] [RFC] Advanced TCA SCSI Disk Hotswap
+Date: 25 Oct 2002 11:04:29 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DB8CB39.AD55D84@digeo.com>
-References: <3DB8A0CC.1804DF79@digeo.com> <20021025040659.GB3556@redhat.com>
+Message-ID: <1035540269.13032.7.camel@irongate.swansea.linux.org.uk>
+References: <Pine.LNX.4.33L2.0210241350230.20950-100000@dragon.pdx.osdl.net>
+	<Pine.LNX.4.33.0210241839490.10937-100000@rancor.yyz.somanetworks.com>
+	<20021024232258.GA26093@kroah.com>  <3DB886B9.3060304@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from digeo-nav01.digeo.com (digeo-nav01.digeo.com [192.168.1.233])
-	by packet.digeo.com (8.9.3+Sun/8.9.3) with SMTP id VAA00098
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Oct 2002 21:40:26 -0700 (PDT)
+In-Reply-To: <3DB886B9.3060304@mvista.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Badari Pulavarty <pbadari@us.ibm.com>, "Martin J. Bligh" <Martin.Bligh@us.ibm.com>, Jens Axboe <axboe@suse.de>
+To: Steven Dake <sdake@mvista.com>
+Cc: Greg KH <greg@kroah.com>, Scott Murray <scottm@somanetworks.com>, "Randy.Dunlap" <rddunlap@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Doug Ledford wrote:
-> 
-> Anyway, I've got all my current updates pushed to
-> linux-scsi.bkbits.net/scsi-misc-2.5 and I know James and Patrick have some
-> fixes in there as well.
+On Fri, 2002-10-25 at 00:48, Steven Dake wrote:
+> Surprise extraction is not a simple problem especially to ensure the 
+> device drivers exit
+> cleanly without dumping more data on the PCI bus to a PCI device that 
+> may not
+> exist.
 
-OK, thanks.  Could someone please extract a diff which we can try out?
+Thats primarily about resource handling orders. Making sure we don't
+release the claimed pci resources in the driver until the driver itself
+is sure it has shut up.
+
+I'm doing suprise removal ok with the thinkpad 600 (in 2.4 with some
+limits due to the 2.4 pci layer). Network stuff seems to be fine. The
+block layer has major issues.
+
