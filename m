@@ -1,81 +1,67 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] add device_configure to the transport classes
-Date: Wed, 06 Oct 2004 14:59:38 +1000
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <41637BBA.804@torque.net>
-References: <OF2154D688.D97183DA-ONC1256F24.005BD3E3-C1256F24.005EE95C@de.ibm.com> <1096996724.2064.56.camel@mulgrave>
-Reply-To: dougg@torque.net
+From: christophe.varoqui@free.fr
+Subject: [ANNOUNCE] multipath-tools-0.3.0
+Date: Wed,  6 Oct 2004 11:22:53 +0200
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <1097054573.4163b96d1262c@imp5-q.free.fr>
+References: <1096071849.4466.31.camel@zezette>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from borg.st.net.au ([65.23.158.22]:32933 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S267232AbUJFFAE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Oct 2004 01:00:04 -0400
-In-Reply-To: <1096996724.2064.56.camel@mulgrave>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1096071849.4466.31.camel@zezette>
+Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Martin Peschke3 <MPESCHKE@de.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> On Tue, 2004-10-05 at 12:10, Martin Peschke3 wrote:
-> 
->>now that there is more and more stuff handed over to transport classes,
->>would it be feasible to put LUN there as well, as its form appears to be
->>transport specific as well? (e.g. 64 bit for FC while other transports
->>may be unable to convey 64 bit LUNs)
-> 
-> 
-> Well, I'm not sure about that, primarily because the LUN specifications
-> in the standards aren't transport specific.
+Hello,
 
-That is right, 64 bit LUNs were mandated in SAM-2
-(standardized in 2003) and SAM-3 (soon to become a standard).
-So the Linux SCSI subsystem's 32 bit LUNs have been deficient
-for some time. [Incidentally I am probably responsible for
-bumping the lun representation from 8 bit to 32 bit some years
-back. From memory the only reason we didn't go to 64 bits
-was uncertainties about 64 bit arithmetic on various target
-platforms. Those days are long since gone.]
+here goes multipath-tools-0.3.0
 
-When SCSI devices start using advanced LUN features like
-"well known logical units" (SPC-3 rev 21 section 8)
-we are really going to start hurting.
+Faster release cycle.
+Big things for some people out there.
+Upgrade will need you to manualy remove your /etc/udev/rules.d/multipath.rules
+and kill your devmap_name rule in udev.rules (we use a separate rules.d file
+now)
 
-So I sympathize with Martin; in the past he has tried to get
-the mid-level's representation expanded from 32 bits to 64 bits
-and failed. Now that he tries to shadow luns in the FCP
-transport (like is already being done for port identifiers
-and names which _are_ transport defined (i.e. arguably should
-not be in the mid-level)) he seems to get turned down on the
-basis of architecture.
+In short :
 
->>I see that this particular patch is not exactly what was needed to achieve
->>this, because at the time of the evaluation INQUIRY data the LUN has
->>already been adapted to the way LUNs are stored in scsi_device.
 
-The SCSI INQUIRY command seems a pretty fluid beast. There is
-potentially a large amount of very important information in
-its vital product pages (especially the device identification
-page descriptors) with other information formerly held by the
-INQUIRY command being passed off to new SCSI commands
-(e.g. REPORT SUPPORTED OPERATION CODES).
+* easy multipath-aware initrds on Debian SID
+	* fully fonctionnal with direct-attached SCSI disks (single-path)
 
-The ugliest aspect of an INQUIRY is the way SPI information
-is conveyed in byte 56. That information should have been in
-the protocol specific port control mode page (and is for more
-recently defined protocols and transports).
+Full ChangeLog for the release :
 
->>I am also not sure yet how this approach would go with REPORT_LUNS,
->>which returns 64 bit LUNs for all transports. But for everybody interested
->>in 64 bit LUNs, it would certainly clean things up.
-> 
-> 
-> Yes, that's another reason to make it transport specific.  Even SPI code
-> has to understand 64 bit LUN returns.
+        * first cut at making scripts to create multipath-aware initrds
+	  those scripts are tested on Debian SID, and must be copied into
+	  /etc/mkinitrd/scripts. it works here.
+	* [multipath] verify presence of the /sys/block/... node before
+	  reading sysfs attributes. Avoids libsysfs and scsi_id stderr
+	  garbage
+	* [multipath] move down the stderr close (Ake Sandgren at umu.se)
+	* [multipath] don't care about 0-sized mp (Ake Sandgren at umu.se)
+	* [multipath] bump mp size field to ulong (Ake Sandgren at umu.se)
+	* [multipath] replace quiet/verbose flags by a verbosity one.
+	  introduce a new verbosity level : 1 == print only devmap names
+	  thus we can feed kpartx with that output
+	* [multipath] update man page to reflect the hotplug.d -> dev.d
+	  transition and replace the obsolete group_by_tur policy by the
+	  forgotten group_by_prio
+	* [multipath] provide a /etc/udev/rules.d/multipath.rules for
+	  multipath devices naming. Cleaner than the previously suggested
+	  rule addition in the main udev.rules
+	* [multipath] move out of hotplug.d to dev.d : kill synchronisation
+	  problems between device node creation and multipath execution.
+	  Incidentally the unfriendly $DEVPATH param become a friendly
+	  $DEVNAME (simply /dev/sdb)
+	* [multipath] rework the iopolicies name-to-id & id-to-name
+	  translations. kills the last compilation warning here too
+	* [kpartx] kill last compilation warnings
+	* bump klibc to 0.181
+	* add the debian/ packaging dir (make deb)
+	* prototype __clone & __clone2 (kills compilation warning)
 
-So does James now support Martin's proposal or is there a "not"
-missing in the first sentence of the above paragraph?
+As usual, doc and download at :
+http://christophe.varoqui.free.fr/
 
-Doug Gilbert
-
+regards,
+--
+christophe varoqui <christophe.varoqui@free.fr>
