@@ -1,32 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [RFC] exposing the sdev_target in sysfs
-Date: 04 Sep 2004 09:54:40 -0400
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] tmscsim: INQUIRY always only untagged
+Date: Sun, 5 Sep 2004 00:26:14 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1094306082.1924.0.camel@mulgrave>
-References: <1094254851.1712.28.camel@mulgrave>
-	<41394901.3050804@us.ibm.com>
+Message-ID: <Pine.LNX.4.60.0409050022570.3092@poirot.grange>
+References: <Pine.LNX.4.60.0409040033310.5266@poirot.grange>
+ <20040904140102.A15247@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:44503 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263735AbUIDNyo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 4 Sep 2004 09:54:44 -0400
-In-Reply-To: <41394901.3050804@us.ibm.com>
+Received: from pop.gmx.de ([213.165.64.20]:52953 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S263806AbUIDW0v (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Sep 2004 18:26:51 -0400
+In-Reply-To: <20040904140102.A15247@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <mikenc@us.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Sat, 2004-09-04 at 00:48, Mike Christie wrote:
-> device_add calls kobject_add which can sleep.
+On Sat, 4 Sep 2004, Christoph Hellwig wrote:
 
-Yes, I'll move it outside the lock.
+> On Sat, Sep 04, 2004 at 12:41:00AM +0200, Guennadi Liakhovetski wrote:
+>> Hello
+>>
+>> The attached patch makes sure, all INQUIRY commands are only sent
+>> untagged. This way drives, affected by bug 2139, also survive further
+>> INQUIRYs, sent after the initial scan, e.g., by scsiinfo.
+>
+> Looks basically good to me, but if you want to store SCSI_NO_TAG in
+> ->TagNumber I'd suggest that you make it an unsigned type.
 
-I suppose I should add a comment somewhere about our critical dependence
-on sequential LUN scanning as well just in case someone tries to
-parallelise it.
+It is unsigned (u8) now. Or did you mean signed, since SCSI_NO_TAG is 
+defined as (-1). I thought about making TagNumber an int, but I didn't 
+bother, because it is anyway due removal...
 
-James
-
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
