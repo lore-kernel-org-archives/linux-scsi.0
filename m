@@ -1,33 +1,33 @@
-From: "Maciej W. Rozycki" <macro@linux-mips.org>
-Subject: Re: [patch 1/2] cciss: cleans up warnings in the 32/64 bit conversions
-Date: Fri, 22 Oct 2004 21:59:52 +0100 (BST)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58L.0410222157080.22781@blysk.ds.pg.gda.pl>
-References: <20041021211718.GA10462@beardog.cca.cpqcorp.net>
- <Pine.LNX.4.58L.0410220054010.15504@blysk.ds.pg.gda.pl>
- <20041022183057.GA23032@beardog.cca.cpqcorp.net>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] Re: libata: BLKFLSBUF ioctl broken
+Date: Fri, 22 Oct 2004 21:31:43 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1098477101.19435.46.camel@localhost.localdomain>
+References: <200410221942.i9MJguMR017671@falcon30.maxeymade.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S267743AbUJVVJE@vger.kernel.org>
-In-Reply-To: <20041022183057.GA23032@beardog.cca.cpqcorp.net>
-To: mikem <mikem@beardog.cca.cpqcorp.net>
-Cc: marcelo.tosatti@cyclades.com, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from clock-tower.bc.nu ([81.2.110.250]:39138 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S268001AbUJVVew (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Oct 2004 17:34:52 -0400
+In-Reply-To: <200410221942.i9MJguMR017671@falcon30.maxeymade.com>
 List-Id: linux-scsi@vger.kernel.org
+To: Doug Maxey <dwm@maxeymade.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lsml@rtr.ca>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>
 
-On Fri, 22 Oct 2004, mikem wrote:
+On Gwe, 2004-10-22 at 20:42, Doug Maxey wrote:
+> >We are slowly fixing the abusers of -EINVAL/-EOPNOTSUPP. Note btw that
+> >networking stuff is in many places a little different in its returns.
+> 
+> What about the case of "This is normally a valid command, but this
+> particulat device is incapable of this particular subcommand"?
+> 
+> Hypothetical instance: a disk drive that indicates it is not capable of 
+> changing it's write cache setting?
 
-> >  These constructs (casts as lvalues) are deprecated with GCC 3.4 (a
-> > warning is triggered) and no longer supported with 4.0.  Please consider
-> > rewriting -- you'll probably need an auxiliary variable.
-[...]
-> Is this documented somewhere?
+Thats less clear. Traditional Unix has tended to use EINVAL for that
+too, while Linux re-uses things like EOPNOTSUPP and that may well be a
+better approach - its at least fairly consistent in Linux.
 
- Sure:
-
-http://gcc.gnu.org/gcc-3.4/changes.html
-
-http://gcc.gnu.org/gcc-4.0/changes.html
-
-Plus reported zillion of times here and elsewhere.
-
-  Maciej
