@@ -1,59 +1,52 @@
-From: Rajesh <rajeshsg@netcore.co.in>
-Subject: Adaptec 7901A-iROC - aic79xx
-Date: Fri, 26 Sep 2003 12:38:49 +0530
+From: KELEMEN Peter <Peter.Kelemen@cern.ch>
+Subject: STK9840/SYM53c875 ODD transfer in DATA OUT phase
+Date: Fri, 26 Sep 2003 12:20:21 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F73E601.5060300@netcore.co.in>
+Message-ID: <20030926102021.GA32502@chihiro.cern.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [202.162.229.13] ([202.162.229.13]:36540 "EHLO
-	uucp3.netcore.co.in") by vger.kernel.org with ESMTP id S261959AbTIZHCA
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Sep 2003 03:02:00 -0400
-Received: from uucp1.netcore.co.in (unknown [192.168.2.1])
-	by uucp3.netcore.co.in (Postfix) with ESMTP id BCB7F3CCF9
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2003 12:28:06 +0530 (IST)
-Received: (from uucp@localhost)
-	by uucp1.netcore.co.in (8.11.0/8.8.7) with UUCP id h8Q718I24234
-	for linux-scsi@vger.kernel.org; Fri, 26 Sep 2003 12:31:08 +0530
+Received: from smtp3.cern.ch ([137.138.131.164]:60871 "EHLO smtp3.cern.ch")
+	by vger.kernel.org with ESMTP id S261464AbTIZKU2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Sep 2003 06:20:28 -0400
+Received: from chihiro.cern.ch (pcitadc13.cern.ch [137.138.34.18])
+	by smtp3.cern.ch (8.12.1-20030924/8.12.1) with ESMTP id h8QAKOBs025836
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2003 12:20:25 +0200 (MET DST)
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, rajeshsg@netcore.co.in
+To: linux-scsi@vger.kernel.org
 
-Hi List,
+[ Please Cc: me as I'm not subscribed to the list.  Thanks. ]
 
+Hello,
 
-     I am having on-board Adaptec 7901-iROC (SCSI Raid Controller).  I 
-am not able
-to get it working even with latest 2.4.22 kernel. Kernel 2.4.22 seems to 
-have latest
-source from http://people.freebsd.org/~gibbs/linux/ of the driver. Is 
-this controller supported by
-aic79xx???  Or else i have to try something else???
+Since 2.4.18, we have a problem with the above combo if and only
+if the transfer is odd number of bytes.  Even byte transfer works
+well.  The error message we see is:
 
-    The PCI-ID reported by lspci -v for this card is 809e. Any pointers???
+Sep 25 17:45:48 x kernel: st0: Error 70000 (sugg. bt 0x0, driver bt 0x0=
+, host bt 0x7).
+Sep 25 17:45:49 x kernel: sym0:0:0:extraneous data discarded.
+Sep 25 17:45:49 x kernel: sym0:0:0:ODD transfer in DATA OUT phase.
+Sep 25 17:45:49 x kernel: sym0:0:0:COMMAND FAILED (87 0 9).
 
+I'm out of ideas what to try next, debugging didn't show up
+anything unusual.  The same hardware works with 2.2.19.
 
+Any ideas?
 
+Peter
 
-- Rajesh
-
-
-----------------------------------------------------------------
-
-NETCORE SOLUTIONS *** Ph: +91 22 5662 8000 Fax: +91 22 5662 8134
-
-MailServ: Email, IM, Proxy, Firewall, Anti-Virus, LDAP
-Fleximail: Mail Storage, Management and Relaying
-http://netcore.co.in
-
-Emergic Freedom: Linux-based Thin Client-Thick Server Computing
-http://www.emergic.com
-
-BlogStreet: Blog Profiles, RSS Ecosystem, Blog Tops, Search
-http://www.blogstreet.com
-
-Rajesh Jain's Weblog on Technology: http://www.emergic.org
-----------------------------------------------------------------
-
-
+--=20
+    .+'''+.         .+'''+.         .+'''+.         .+'''+.         .+'=
+'
+ Kelemen P=E9ter     /       \       /       \     Peter.Kelemen@cern.c=
+h
+=2E+'         `+...+'         `+...+'         `+...+'         `+...+'
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
