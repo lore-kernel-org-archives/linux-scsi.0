@@ -1,44 +1,108 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] 2.5.x use list_head to handle scsi starved request queues
-Date: Fri, 21 Mar 2003 16:50:50 -0800
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [patch for playing] 2.5.65 patch to support > 256 disks
+Date: Sat, 22 Mar 2003 21:00:33 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030321165050.B9578@beaverton.ibm.com>
-References: <20030319182755.A9535@beaverton.ibm.com> <3E7A1EF5.3050501@splentec.com> <20030320203912.A18471@beaverton.ibm.com> <3E7B7A9A.6030007@splentec.com>
+Message-ID: <3E7C4251.4010406@torque.net>
+References: <200303211056.04060.pbadari@us.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3E7B7A9A.6030007@splentec.com>; from luben@splentec.com on Fri, Mar 21, 2003 at 03:48:26PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: Badari Pulavarty <pbadari@us.ibm.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Andrew Morton <akpm@digeo.com>
 
-On Fri, Mar 21, 2003 at 03:48:26PM -0500, Luben Tuikov wrote:
-> Patrick Mansfield wrote:
-> > 
-> > Okay, the comments are not clear, and don't match the code, I'll remove
-> > them rather than try to get something terse and meaningful.
+Badari Pulavarty wrote:
+> Hi,
 > 
-> No, please -- you don't have to go from one extreme to the other.
-
-> Comments are good, please put some, just make sure that they don't tell
-> things which can already be determined like int a; /* integer counter */,
-> but something like int a; /* number of customers served */, i.e. portray
-> the meaning.
-
-The comments (just the two in the host.h and scsi.h) are close to trivial,
-and the code is not tricky. So I'll remove them.
-
-> Ok, then go over the list of starved scsi devices FIRST, hit their queues,
-> and THEN after this, get the lock for the queue and hit it.
+> Andries Brouwer recently submitted 32 bit dev_t patches,
+> which are in 2.5.65-mm2. This patch applies on those patches to support 
+> more than 256 disks.  This is for playing only.
 > 
-> I.e. keep the queue lock for the shortest amount of time.
+> I tested this with 4000 disks using scsi_debug. I attached my actual
+> disks (50) after 4000 scsi_debug disks. I am able to access my disks
+> fine and do IO on them.
+> 
+> Problems (so far):
+> 
+> 1) sd.c -  sd_index_bits[] arrys became big - need to be fixed.
+> 
+> 2) 4000 disks eats up lots of low memory (~460 MB). Here is the
+> /proc/meminfo output before & after insmod.
+> 
+> Before:
+> MemTotal:      3883276 kB
+> MemFree:       3808028 kB
+> Buffers:          3240 kB
+> Cached:          41860 kB
+> SwapCached:          0 kB
+> Active:          45360 kB
+> Inactive:         7288 kB
+> HighTotal:     3014616 kB
+> HighFree:      2961856 kB
+> LowTotal:       868660 kB
+> LowFree:        846172 kB
+> SwapTotal:     2040244 kB
+> SwapFree:      2040244 kB
+> Dirty:             192 kB
+> Writeback:           0 kB
+> Mapped:          14916 kB
+> Slab:             7164 kB
+> Committed_AS:    12952 kB
+> PageTables:        312 kB
+> ReverseMaps:      1895
+> ====
+> After:
+> MemTotal:      3883276 kB
+> MemFree:       3224140 kB
+> Buffers:          3880 kB
+> Cached:         140376 kB
+> SwapCached:          0 kB
+> Active:          47512 kB
+> Inactive:       105508 kB
+> HighTotal:     3014616 kB
+> HighFree:      2838144 kB
+> LowTotal:       868660 kB
+> LowFree:        385996 kB
+> SwapTotal:     2040244 kB
+> SwapFree:      2040244 kB
+> Dirty:              92 kB
+> Writeback:           0 kB
+> Mapped:          16172 kB
+> Slab:           464364 kB
+> Committed_AS:    14996 kB
+> PageTables:        412 kB
+> ReverseMaps:      2209
 
-The lock has to be held while checking shost->host_busy and then when
-removing the starved entry, we can have multiple cpu's in the function for
-the same adapter at the same time. Plus the lock has to be acquired prior
-to any __blk_run_queue call.
+Badari,
+I poked around looking for data on the size issue.
+Here are the byte sizes for the per device and per host
+structures in scsi_debug and the scsi mid level for
+i386, non-smp in lk 2.5.65:
+   sizeof(sdebug_dev_info)=60, sizeof(scsi_device)=376
+     sizeof(sdebug_host_info)=24, sizeof(Scsi_Host)=224
 
-I am still working patches for the lock split up in this area.
+So for 4000 disks they should be responsible for about
+2 MB.
 
--- Patrick Mansfield
+The scsi_cmd_cache slab info went from this before those
+84 pseudo disks were added:
+# cat slabinfo_pre.txt
+scsi_cmd_cache         3     11    356    1    1    1 :   32   16 : 
+22     301     6    5    0    0   43 :   3235     31   3264      0
+to this afterwards:
+# cat slabinfo_post.txt
+scsi_cmd_cache        44     55    356    5    5    1 :   32   16 : 
+66     398    12    7    0    0   43 :   5837     40   5833      0
+
+I did notice a rather large growth of nodes
+in sysfs. For 84 added scsi_debug pseudo disks the number
+of sysfs nodes went from 686 to 3347.
+
+Does anybody know what is the per node memory cost of sysfs?
+
+Doug Gilbert
+
+
+
