@@ -1,58 +1,44 @@
-From: "Frank Borich" <Frank_Borich@us.xyratex.com>
-Subject: [PATCH] 2.4.27 add device to scsi_scan.c's blacklist
-Date: Wed, 11 Aug 2004 12:57:07 -0700
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH] SCSI midlayer power management
+Date: Wed, 11 Aug 2004 22:19:45 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <47F3C2BE74738E4683574107469DFA204CCC5F@XYUSEX01.xyus.xyratex.com>
+Message-ID: <20040811201944.GA1550@openzaurus.ucw.cz>
+References: <4119611D.60401@optonline.net> <20040811080935.GA26098@elf.ucw.cz> <411A1B72.1010302@optonline.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xyratexus11.xyratex.com ([65.203.33.11]:4198 "EHLO
-	XYUSEX01.xyus.xyratex.com") by vger.kernel.org with ESMTP
-	id S268194AbUHKT5Q convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Aug 2004 15:57:16 -0400
-Content-class: urn:content-classes:message
+Received: from atrey.karlin.mff.cuni.cz ([195.113.31.123]:57785 "EHLO
+	atrey.karlin.mff.cuni.cz") by vger.kernel.org with ESMTP
+	id S268217AbUHKU3T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Aug 2004 16:29:19 -0400
+Content-Disposition: inline
+In-Reply-To: <411A1B72.1010302@optonline.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Marcelo Tosatti <marcelo.tosatti@cyclades.com>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: David Lethe <David_Lethe@us.xyratex.com>
+To: Nathan Bryant <nbryant@optonline.net>
+Cc: Pavel Machek <pavel@ucw.cz>, 'James Bottomley' <James.Bottomley@steeleye.com>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>, jgarzik@pobox.com
 
+Hi!
 
-Hi,
+> >swsusp will then resume disk and write the image, that should not be 
+> >a
+> >problem. Is it guaranteed that after generic_scsi_suspend() no DMA is
+> >going on?
+> > 
+> >
+> No. Remember that DMA works differently under SCSI than it does under 
+> IDE. SCSI DMA is a host controller feature, whereas under IDE it is 
+> enabled/disabled at the drive level and the drives have special 
+> knowledge of DMA. Since generic_scsi_suspend() is the device level 
+> suspend routine, it is called before the host controller's suspend 
+> routine, (due to depth first traversal of device tree), which is 
+> responsible for disabling the PCI slot. Only after the host 
+> controller is suspended will there be no DMA, but if your real 
+> question is "can I generically control a SCSI disk with PIO for 
+> software suspend" then the answer is NO. For purposes of not 
 
-I have submitted this patch several times to the 2.4.x tree.  It keeps
-getting dropped silently.  This is my first time submitting a patch,
-so can someone kindly let me know if I am doing something wrong? I have
-followed the instructions at
-http://www.kernel.org/pub/linux/docs/lkml/#s4-1.  
-Any advice would be greatly appreciated.  The patch simply adds our
-FC-SATA 
-RAID to scsi_scan.c's blacklist.  
-
-
---- linux-2.4.27/drivers/scsi/scsi_scan.c       2004-08-11
-14:42:12.000000000 -0500
-+++ linux-2.4.27.changed/drivers/scsi/scsi_scan.c       2004-08-11
-14:43:34.000000000 -0500
-@@ -208,6 +208,7 @@
-        {"SMSC", "USB 2 HS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-        {"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-        {"NEC", "iStorage", "*", BLIST_SPARSELUN | BLIST_LARGELUN |
-BLIST_FORCELUN},
-+       {"Xyratex", "4200", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-
-        /*
-         * Must be at end of list...
-
-
-Thanks in Advance,
-
-Frank Borich
-------------------------------------------------------------------
-Xyratex Inc.
-Systems Engineer
-Direct 630 654 6089
-Fax 630 325 2513
-e-mail frank_borich@us.xyratex.com
- 
+No, I do not need PIO. I'll probably need host
+controller support, too, but even w/o it it should
+work acceptably. Thanks for the answers.
+-- 
+64 bytes from 195.113.31.123: icmp_seq=28 ttl=51 time=448769.1 ms         
 
