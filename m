@@ -1,83 +1,43 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: usb storage traces
-Date: Thu, 4 Dec 2003 13:27:49 -0800
+Date: 04 Dec 2003 14:34:44 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031204212749.GA4998@one-eyed-alien.net>
-References: <20031204184428.GA17116@one-eyed-alien.net> <Pine.LNX.4.44L0.0312041509380.994-100000@ida.rowland.org>
+Message-ID: <1070573684.2269.37.camel@patibmrh9>
+References: <Pine.LNX.4.44L0.0312041509380.994-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="VS++wcV0S1rZb1Fb"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from multivac.one-eyed-alien.net ([64.169.228.101]:17792 "EHLO
-	multivac.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S263591AbTLDV2J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Dec 2003 16:28:09 -0500
-Content-Disposition: inline
+Received: from email-out1.iomega.com ([147.178.1.82]:35554 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S263533AbTLDVzS
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Dec 2003 16:55:18 -0500
 In-Reply-To: <Pine.LNX.4.44L0.0312041509380.994-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Pat LaVarre <p.lavarre@ieee.org>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>, David Brownell <david-b@pacbell.net>, SCSI development list <linux-scsi@vger.kernel.org>
+Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>, David Brownell <david-b@pacbell.net>, SCSI development list <linux-scsi@vger.kernel.org>
+
+> Pat LaVarre says that protocols x02 (SFF-8020i = CD/DVD) and 
+> x05 (SFF-8070i = Removeable media, floppy) are the most important, since
+> they are the only other ones the generic Windows USB mass storage drivers
+> recognize.
+
+I mean to be paraphrasing the windows/inf/usbstor.inf quotation:
+
+...
+[Generic] 
+%GenericBulkOnly.DeviceDesc%=USBSTOR_BULK, USB\Class_08&SubClass_02&Prot_50 
+%GenericBulkOnly.DeviceDesc%=USBSTOR_BULK, USB\Class_08&SubClass_05&Prot_50 
+%GenericBulkOnly.DeviceDesc%=USBSTOR_BULK, USB\Class_08&SubClass_06&Prot_50 
+
+[...
+
+>From that quotation I ignorantly guess that plugging anything other than
+x 08 (02|05|06) 50 into Win XP/ 2K/ ME requires an idVendor:idProduct
+match (possibly already found elsewhere in Windows e.g. elsewhere in
+that same file), else installing a driver (possibly as trivial as
+additional .inf text) to match the device.
+
+Pat LaVarre
 
 
---VS++wcV0S1rZb1Fb
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, Dec 04, 2003 at 03:59:58PM -0500, Alan Stern wrote:
-> On Thu, 4 Dec 2003, Matthew Dharm wrote:
->=20
-> > Did the device advertise 'generic scsi' or one of the other protocol co=
-des?
-> >=20
-> > Microsoft has published information that indicates that they 'translate'
-> > the mode-sense commands into the 10-byte variants for everything bug
-> > 'transparent scsi' -- I think actually seeing that information would be
-> > necessary in constructing a new algorithm for Linux.
->=20
-> It was generic (transparent) scsi.
->=20
-> Perhaps I'll try implementing some of the other protocol codes in FSG,
-> maybe also the "removeable media" flag.  This would also require
-> implementing the PREVENT-ALLOW-MEDIUM-REMOVAL, READ-FORMAT-CAPACITIES, and
-> START-STOP, possibly also REZERO-UNIT, SEEK, READ(12), and WRITE(12).
->=20
-> (1).  Am I missing anything important?
-
-Based on the information I've seen, any one of the other protocol codes
-will be fine -- you don't need to do all, just transparent SCSI and one
-other.  Of course, all codes would be good for testing.
-
-> (2).  Can I afford to leave out some of those?  The last four don't look=
-=20
-> very useful.
-
-I agree about the last four.  I can't think of anything else that might be
-good to test.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-G:  Money isn't everything, A.J.
-AJ: Who convinced you of that?
-G:  The Chief, at my last salary review.
-					-- Mike and Greg
-User Friendly, 11/3/1998
-
---VS++wcV0S1rZb1Fb
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQE/z6bVIjReC7bSPZARAjTiAJ4+zWtrY2NPeldWhYsKQfZiew7iUgCgvO7T
-GksHUhc+7VMzb7Be7fx0Vfw=
-=6rwT
------END PGP SIGNATURE-----
-
---VS++wcV0S1rZb1Fb--
