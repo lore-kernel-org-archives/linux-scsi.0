@@ -1,43 +1,50 @@
-From: Manu <nobody@guzu.net>
-Subject: [BUG] Fusion MPT 2.6.8 driver and multi LUN device
-Date: Tue, 01 Mar 2005 11:04:05 +0100
-Message-ID: <42243E15.5070502@guzu.net>
-Reply-To: linux-kernel@guzu.net
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [Iscsitarget-devel] Re: [ANNOUNCE] iSCSI enterprise target
+ software
+Date: Tue, 01 Mar 2005 19:22:57 +0900
+Message-ID: <20050301192257C.fujita.tomonori@lab.ntt.co.jp>
+References: <1109666441.6293.62.camel@laptopd505.fenrus.org>
+	<20050301183549J.fujita.tomonori@lab.ntt.co.jp>
+	<1109670363.6293.70.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Received: from 26.mail-out.ovh.net ([213.186.42.179]:15332 "EHLO
-	26.mail-out.ovh.net") by vger.kernel.org with ESMTP id S261850AbVCAKEv
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:5102 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S261852AbVCAKXI
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2005 05:04:51 -0500
+	Tue, 1 Mar 2005 05:23:08 -0500
+In-Reply-To: <1109670363.6293.70.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: arjan@infradead.org
+Cc: linux-scsi@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net
+
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: [Iscsitarget-devel] Re: [ANNOUNCE] iSCSI enterprise target software
+Date: Tue, 01 Mar 2005 10:46:03 +0100
+
+> fsync or msync() ? I would imagine the target mmaping it's backend in
+> userspace and using msync() to kick off IO. At which point it's not that
+> much different from the control you do of the pagecache from inside the
+> kernel...
+
+Can we avoid calling mmap() and munmap() repeatedly with large disk?
 
 
-Under a fresh Mandrake 10.1 with a 2.6.8 kernel, the Fusion MPT driver 
-do recognize the HP tape autoloader. The autoloader is composed of tape 
-drive (on LUN 0) and the changer (on LUN 1).
-The message comes from scsi_scan.c :
-     printk(KERN_WARNING "scsi: %s lun%d has a LUN larger"
-	       " than allowed by the host adapter\n",
-	       devname, lun);
+> > When the target calls fsync(), dirty page cache is supposed to be
+> > committed to disk. However, the disk drive uses write-back policy, it
+> > is not. The data is still in disk drive cache. There is no system call
+> > to control disk drive cache. So the target (in the user space) cannot
+> > make good use of it.
+> 
+> fsync() (and I suppose msync()) nowadays send a "flush cache" command to
+> the physical disk as well. This is new since 2.6.9 or so.
+> 
+> > The current code also assumes the disk drive uses write-through
+> > policy. This is because no handy vfs interface for controlling disk
+> > drive cache. I think that there is some room for further improvement
+> > in the Linux kernel for storage systems.
+> 
+> that's already present since 2.6.9.....
 
-Playing a bit with printk it looks like the num_luns is well computed 
-(the value is 2), but the 2 LUN values seems to be miss-aligned.
-When displaying the 8 bytes raw buffer (through lunp) in the loop :
-  00 00 00 00 00 00 00 00
-  00 00 01 00 00 00 00 00
-
-I think the second buffer should be :
-  00 01 00 00 00 00 00 00
-
-Which, when computed, gives 1 instead of 16777216 (0x1000000).
-
-The autoloader works like a charm under the 2.4.27 kernel provided with 
-the Mandrake 10.1.
-
-- Emmanuel Varagnat
-
-PS: the 2 harddrives in RAID1 are well working, even with the 2.6.8 kernel.
-
+Thanks a lot. I've not noticed these changes. I'll see the code later.
