@@ -1,35 +1,48 @@
-From: Andries.Brouwer@cwi.nl
+From: Badari Pulavarty <pbadari@us.ibm.com>
 Subject: Re: [patch for playing] Patch to support 4000 disks and maintain backward compatibility
-Date: Fri, 11 Apr 2003 02:13:07 +0200 (MEST)
+Date: Thu, 10 Apr 2003 18:09:55 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <UTC200304110013.h3B0D7S24054.aeb@smtp.cwi.nl>
+Message-ID: <200304101809.55311.pbadari@us.ibm.com>
+References: <UTC200304102353.h3ANrXv10792.aeb@smtp.cwi.nl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.cwi.nl ([192.16.191.8]:28140 "EHLO hera.cwi.nl")
-	by vger.kernel.org with ESMTP id S264091AbTDKACD (for <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Apr 2003 20:02:03 -0400
+Received: from e35.co.us.ibm.com ([32.97.110.133]:10154 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S264282AbTDKBAi convert rfc822-to-8bit (for <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Apr 2003 21:00:38 -0400
+In-Reply-To: <UTC200304102353.h3ANrXv10792.aeb@smtp.cwi.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl, zippel@linux-m68k.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, pbadari@us.ibm.com
+To: Andries.Brouwer@cwi.nl, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-    From: Roman Zippel <zippel@linux-m68k.org>
+On Thursday 10 April 2003 04:53 pm, Andries.Brouwer@cwi.nl wrote:
+>     From: Badari Pulavarty <pbadari@us.ibm.com>
+>
+>     >     I am more worried about names slipping. I atleast hope
+>     >     to see device names not changing by just doing
+>     >     rmmod/insmod.
+>     >
+>     > But you see, the present sd_index_bits[] gives no such
+>     > guarantee. In sd_detach a bit is cleared, in sd_attach
+>     > the first free bit is given out. There is no memory.
+>
+>     But the disks are probed in the same manner as last time
+>     (if the disks/controllers are not moved, crashed etc..).
+>     So we will end up getting same names.
+>
+> Oh, but if next_index is 0 in the module (or reset by the
+> init_module code), then also with index = next_index++
+> things will be the same after rmmod/insmod.
 
-    > The conclusion is that the easy way out is to define MAX_NR_DISKS.
-    > A different way out, especially when we use 32+32, is to kill this
-    > sd_index_bits[] array, and give each disk a new number: replace
-    >     index = find_first_zero_bit(sd_index_bits, SD_DISKS);
-    > by
-    >     index = next_index++;
+Here is my problem..
 
-    Unless you fix all programs which scan /dev/sg*, you better keep 
-    the used range dense, so this not really option.
+#insmod ips.o
+  < found 10 disks>
+#insmod qla2300.o
+  < found 10 disks>
+#rmmod ips.o
+   <removed 10 disks>
+#insmod ips.o
+  <found 10 disks - but new names>
 
-That only holds for the first 256 minors (of the first 8 majors).
-Since we want to be completely backwards compatible, nothing
-changes there.
-
-But people who want to use new features must update their programs
-or at least recompile.
-
-Andries
-
-
+- Badari
