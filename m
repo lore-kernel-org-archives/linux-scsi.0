@@ -1,46 +1,43 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Sym2 driver timeouts on powerstacks
-Date: Tue, 4 Jan 2005 13:08:52 +0000
-Message-ID: <20050104130852.GS18080@parcelfarce.linux.theplanet.co.uk>
-References: <200501041354.50294.marvin24@gmx.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [PATCH] fix gcc warning on 64 bit compile of gdth
+Date: Tue, 04 Jan 2005 08:55:59 -0600
+Message-ID: <1104850560.5327.6.camel@mulgrave>
+References: <B51CDBDEB98C094BB6E1985861F53AF302DE45@nkse2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:41402 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261605AbVADNIz
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Jan 2005 08:08:55 -0500
-Content-Disposition: inline
-In-Reply-To: <200501041354.50294.marvin24@gmx.de>
+Received: from stat16.steeleye.com ([209.192.50.48]:10172 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261683AbVADO41 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Jan 2005 09:56:27 -0500
+In-Reply-To: <B51CDBDEB98C094BB6E1985861F53AF302DE45@nkse2k01.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Marc Dietrich <marvin24@gmx.de>
-Cc: linux-scsi@vger.kernel.org
+To: "Leubner, Achim" <Achim_Leubner@adaptec.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Al Viro <viro@parcelfarce.linux.theplanet.co.uk>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, Jan 04, 2005 at 01:54:49PM +0100, Marc Dietrich wrote:
-> This machine runs fine on 2.4 series kernels, but fails on 2.6 due to timeouts 
-> in the scsi driver. The 2.4 series kernels used the (I guess now obsoleted) 
-> ncr53c8xx.c/sym53c8xx.c driver.
-> There were some PReP specific "fixed" in the old driver, which not have been 
-> ported to the sym2 driver. I tried to backport the "latency" and the 
-> "pci_command_master/parity" fixes (see the 2.4 log), but even with this I had 
-> no success.
+On Tue, 2005-01-04 at 10:29 +0100, Leubner, Achim wrote:
+> You are right, in gdth_fill_raw_command() the driver is doing two
+> different dma mappings, one for the data buffer stored in
+> SCp.dma_handle, and the second for the sense buffer stored in SCp.buffer
+> and host_scribble. So reuse of dma_handle does not work here.
+> And, you are right, this is ugly and brittle, but there is no remaining
+> space in the SCp scratch area to save the second dma mapping.  
+> The other patches look fine for me, thanks. But what's the reason to
+> remove the support of 2.2.x and 2.4.x without the full dma API?
 
-I'm not surprised, those patches ought to have no effect.
-PCI_COMMAND_MASTER is set when the driver calls pci_set_master().
-PCI_COMMAND_PARITY should be set by the platform code, but afaict is
-currently not set on ppc.
+Well, most other drivers don't have this problem.
 
-> I attached the full debug output of both 2.4 and 2.6 kernels.
+The sense buffer is only used to communicate sense if the command fails
+with a check condition.  The point being that you only have either the
+command or the request sense active, so you can do the mappings
+sequentially.  It's a bit of a waste of dma mapping space to map both
+the request buffer and the sense buffer for every command that comes in.
 
-Umm.  Not terribly helpful.  Could you delete all the spurious blank lines
-next time, and it'd be much more helpful if you could boot with the option
-"sym53c8xx.debug=0x1fff"
+Is it not possible to modify gdth to do the mappings sequentially and
+only if the initial command gets the check condition?
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+James
+
+
