@@ -1,48 +1,56 @@
-From: greg k-h <greg@kroah.com>
-Subject: Re: scsi "target1:0:0"
-Date: Tue, 16 Nov 2004 11:15:01 -0800
-Message-ID: <pan.2004.11.16.19.14.54.941291@kroah.com>
-References: <1100622096.8606.104.camel@localhost.localdomain> <1100622800.2574.41.camel@mulgrave> <1100624154.8606.122.camel@localhost.localdomain> <20041116171018.GK26623@parcelfarce.linux.theplanet.co.uk> <1100625783.4546.4.camel@davidz>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: Fw: [Bugme-new] [Bug 3753] New: multiple definition of `ST_partstat'
+Date: Tue, 16 Nov 2004 22:12:53 +0200 (EET)
+Message-ID: <Pine.LNX.4.61.0411162200590.3893@kai.makisara.local>
+References: <20041116111905.0e0de864.akpm@osdl.org> <1100633837.2279.60.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:39631 "EHLO main.gmane.org")
-	by vger.kernel.org with ESMTP id S262121AbUKPTby (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Nov 2004 14:31:54 -0500
-Received: from root by main.gmane.org with local (Exim 3.35 #1 (Debian))
-	id 1CU93O-0004RA-00
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Nov 2004 20:31:50 +0100
-Received: from c-67-171-180-138.client.comcast.net ([67.171.180.138])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Nov 2004 20:31:50 +0100
-Received: from greg by c-67-171-180-138.client.comcast.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Nov 2004 20:31:50 +0100
+Received: from fep01-0.kolumbus.fi ([193.229.0.41]:17071 "EHLO
+	fep01-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S261778AbUKPUMz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Nov 2004 15:12:55 -0500
+In-Reply-To: <1100633837.2279.60.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 16 Nov 2004 12:23:03 -0500, David Zeuthen wrote:
+On Tue, 16 Nov 2004, James Bottomley wrote:
 
-> On Tue, 2004-11-16 at 17:10 +0000, Matthew Wilcox wrote:
->> There you go, it's just another example of this one.  It's just faulty
->> assumptions in hald by the looks of things.
->> 
+> On Tue, 2004-11-16 at 13:19, Andrew Morton wrote:
+> > Problem Description:
+> >   LD      drivers/scsi/sd_mod.o
+> >   CC      drivers/scsi/sg.o
+> >   LD      drivers/scsi/built-in.o
+> > drivers/scsi/osst.o(.bss+0x0): multiple definition of `ST_partstat'
+> > drivers/scsi/st.o(.bss+0x0): first defined here
+> > make[2]: *** [drivers/scsi/built-in.o] Error 1
+> > make[1]: *** [drivers/scsi] Error 2
+> > make: *** [drivers] Error 2
 > 
-> Please explain how you expect userspace to keep track of the device tree
-> and enforce policy if we don't get hotplug events for things in the
-> middle of the tree?
+> Kai,
+> 
+> This looks like a missed piece in a typedef conversion in st.h from the
+> patch SCSI tape: remove remaining typedefs.
+> 
+> James
+> 
+> ===== drivers/scsi/st.h 1.20 vs edited =====
+> --- 1.20/drivers/scsi/st.h	2004-10-25 13:32:30 -05:00
+> +++ edited/drivers/scsi/st.h	2004-11-16 13:30:48 -06:00
+> @@ -67,7 +67,7 @@
+>  	u32 last_block_visited;
+>  	int drv_block;		/* The block where the drive head is */
+>  	int drv_file;
+> -} ST_partstat;
+> +};
+>  
+>  #define ST_NBR_PARTITIONS 4
+>  
+Yes. One more reminder that I should _never_ forget to re-add osst to the 
+kernel configuration if I temporarily remove it ;-(
 
-You do get hotplug events for those devices in the device tree, just no 
-bus is assigned to them, right?
-
-That should still work out just fine, as Matthew has pointed out, other
-devices in the device tree do not have busses either.
-
-thanks,
-
-greg k-h
-
+Thanks to all involved in noticing and fixing this bug.
+-- 
+Kai
