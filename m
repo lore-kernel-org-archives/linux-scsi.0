@@ -1,60 +1,109 @@
-From: Austin Gonyou <austin@digitalroadkill.net>
-Subject: Re: max_scsi_luns and 2.4.19-pre10.
-Date: 26 Jun 2002 09:32:27 -0500
+From: Ihno Krumreich <ihno@suse.de>
+Subject: Re: [PATCH] /proc/scsi/map
+Date: Wed, 26 Jun 2002 18:03:50 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1025101947.19700.15.camel@UberGeek>
-References: <1025052385.19462.5.camel@UberGeek>
-	  <20020626123337.GC1217@gum01m.etpnet.phys.tue.nl>
+Message-ID: <20020626180350.A29197@wotan.suse.de>
+References: <20020620165553.GA16897@win.tue.nl> <Pine.LNX.4.44.0206201046340.8225-100000@home.transmeta.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020626123337.GC1217@gum01m.etpnet.phys.tue.nl>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0206201046340.8225-100000@home.transmeta.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>
-Cc: Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: Andries Brouwer <aebr@win.tue.nl>, Martin Schwenke <martin@meltin.net>, Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>
 
-On Wed, 2002-06-26 at 07:33, Kurt Garloff wrote:
-> Hi Austin,
+On Thu, Jun 20, 2002 at 11:11:45AM -0700, Linus Torvalds wrote:
 > 
-> enough guesses have been there not answering your questions ...
 > 
-> On Tue, Jun 25, 2002 at 07:46:25PM -0500, Austin Gonyou wrote:
-> > This originally was asking for help regarding QLA2200's, but I've since
-> > discovered it's a kernel param problem that I'm not sure how to solve.
-> > 
-> > Using a default RH kernel (from SGI XFS installer) and passing
-> > max_scsi_luns=128 in grub, and for scsi_mod, it seems to work. 
+> On Thu, 20 Jun 2002, Andries Brouwer wrote:
+> >
+> > At present this does not look very useful, but it may have future.
 > 
-> In 2.4.19pre1 a patch was merged into mainline which introduced a flag
-> BLIST_LARGELUN and set it for EMC Symmetrix devices. Some distributors
-> (incl. RH and SuSE) did ship kernels with this patch included.
-> http://van-dijk.net/linuxkernel/200206/0347.html
-> (An older patch for 2.4.16 exists as well.)
-
-Ahh...I see now. I looked for DELL in the scsi_scan.c and saw the
-symmetrix there right above it. I should be able to add LARGELUN, since
-it's #defined above and go for it. I'll see what this does, it's
-starting to make sense now. TIA.
+> Nobody is actually using it yet, so there hasn't been much feedback (and,
+> for the same reason, not much reason for driver writers to care -
+> everything that shows up there now ends up being pretty much built by the
+> bus that contains the devices rather than any device-specific information
+> itself).
+> 
+> > But there is a pressing present problem. What name do my devices have?
+> > I plug in a SmartMedia card reader. It will become some SCSI device.
+> 
+> That's a user-space issue, the kernel is not going to make any policy.
+> We've seen where policy takes us with devfs.
+> 
 
 
+Hello,
 
-> The flag does allow a device to use more than 8 LUNs despite it reporting
-> as SCSI Version 2 devices (which can not support more than 8 LUNs normally
-> ...) 
-> The flag also needs to be set for some more devices, look for DGC, DELL, CMD
-> and CNSi/CNSI devices that already have the BLIST_SPARSELUN flag.
-> 
-> But as you did not post the output of /proc/scsi/scsi nor the syslog
-> meesages from your SCSI subsystem nobody knows what devices you're using or
-> what actually happens. Just speculations ...
-> 
-> PS: The better list for such questions is linux-scsi@vger.kernel.org
-> 
-> Regards,
-> -- 
-> Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
-> GPG key: See mail header, key servers         Linux kernel development
-> SuSE Linux AG, Nuernberg, DE                            SCSI, Security
--- 
-Austin Gonyou <austin@digitalroadkill.net>
+by following the discussion I still miss a naming sceme for
+devices like disks, tapes, cdrom for the user (no kernelhackers, but the
+daily user running the system for some productive work). Does there exist
+a naming sceme for persistant names for those devices? I think of something
+like scsidev (http://www.garloff.de/kurt/linux/scsidev/#scsidev). 
+
+I think the scsidev idea could be extended to a general sceme that
+satisfies all technologies (not only ide and scsi).
+
+I think of something like 
+
+/dev/<device-type>/<technologie>_<Uniq-Number>_<Bus-number>_<Target>_<Lun>_<Device_type_specific>
+
+<device-type> would be disks, tapes, cd-rom and other devices (scanner?)
+
+<technologie> is something really readable for the user (ide, scsi, dasd (dasd are
+              disks on the IBM zSeries)
+
+<Uniq-number>	something to make a device uniq. examples for this could be:
+                - PC the I/O-port used by the controller
+		- DASD the device-port where the dasd is assigned
+<bus-Number>
+<Target>
+<Lun>		As intented by SCSI. On technologies where they make no sense
+		just leave them 0 (for example dasd don`t have that).
+
+<device_type_specific>	depends on the device type. 
+			for disks this is the partition-number
+			for tapes rewind, norewind, compression, density
+
+examples:
+
+disks:
+
+/dev/disks/ide_01f0_0_0_0_0	for the whole IDE disk
+/dev/disks/ide_01f0_0_0_0_1	for partition 1
+.
+.
+/dev/disks/ide_01f0_0_0_0_31	for partition 31
+
+/dev/disks/scsi_0330_0_1_0_0	for the controller at port 0x330, disk bus 0 target 1, lun 0
+/dev/disks/scsi_0330_0_1_0_1	for partition 1
+.
+.
+/dev/disks/scsi_0330_0_1_0_15	for partition 15
+
+/dev/disks/dasd_0150_0_0_0_0	for dasd at device-port 0x150, whole disk
+/dev/disks/dasd_0150_0_0_0_1	for partition 1
+.
+.
+/dev/disks/dasd_0150_0_0_0_3	for partition 3
+
+tapes:
+
+/dev/tapes/scsi_0330_0_2_0_r	auto-rewind SCSI-Tape at controller at Port 0x330
+/dev/tapes/scsi_0330_0_2_0_n	no-rewind SCSI-Tape at controller at Port 0x330
+
+
+Beside some standard devices, the devices could be created
+
+- at system start for coldplugged devices
+- by /sbin/hotplug for hotpluged devices
+
+This naming sceme could be used for kernel 2.4 by creating nodes and for
+kernel 2.5 by making symbolic links to /devices.
+
+something forgotten?
+
+
+Ihno
+
