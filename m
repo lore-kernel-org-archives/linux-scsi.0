@@ -1,41 +1,31 @@
-From: Andi Kleen <ak@suse.de>
-Subject: Re: [PATCH 2.4.30-pre3] x86_64: pci_alloc_consistent() match 2.6 implementation
-Date: Sat, 19 Mar 2005 20:26:45 +0100
-Message-ID: <20050319192645.GA3937@wotan.suse.de>
-References: <20050318212344.GC26112@lists.us.dell.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [patch 1/1] drivers/scsi/lasi700.c: Use the DMA_32BIT_MASK constant
+Date: Sat, 19 Mar 2005 21:03:58 +0000
+Message-ID: <20050319210358.GN21986@parcelfarce.linux.theplanet.co.uk>
+References: <20050319131932.9CBD01ECA8@trashy.coderock.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from mail-ex.suse.de ([195.135.220.2]:45983 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S262657AbVCST0u (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Mar 2005 14:26:50 -0500
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:37034 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261790AbVCSVEC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Mar 2005 16:04:02 -0500
 Content-Disposition: inline
-In-Reply-To: <20050318212344.GC26112@lists.us.dell.com>
+In-Reply-To: <20050319131932.9CBD01ECA8@trashy.coderock.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@dell.com>
-Cc: ak@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: domen@coderock.org
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, tklauser@nuerscht.ch
 
-On Fri, Mar 18, 2005 at 03:23:44PM -0600, Matt Domsch wrote:
-> For review and comment.
-> 
-> On x86_64 systems with no IOMMU and with >4GB RAM (in fact, whenever
-> there are any pages mapped above 4GB), pci_alloc_consistent() falls
-> back to using ZONE_DMA for all allocations, even if the device's
-> dma_mask could have supported using memory from other zones.  Problems
-> can be seen when other ZONE_DMA users (SWIOTLB, scsi_malloc()) consume
-> all of ZONE_DMA, leaving none left for pci_alloc_consistent() use.
-> 
-> Patch below makes pci_alloc_consistent() for the nommu case (EM64T
-> processors) match the 2.6 implementation of dma_alloc_coherent(), with
-> the exception that this continues to use GFP_ATOMIC.
+On Sat, Mar 19, 2005 at 02:19:32PM +0100, domen@coderock.org wrote:
+> Use the DMA_32BIT_MASK constants from dma-mapping.h
+> when calling dma_set_mask().
 
-You fixed the wrong code. The pci-nommu code is only used
-when IOMMU is disabled in the Kconfig. But most kernels have
-it enabled. You would need to change it in pci-gart.c too.
- 
-The reason it is like this that nommu was always intended as a hackish kludge
-that would be only used for debugging - little did we know that
-it would become standard later.
+Already submitted.  I told you I'd take it through the parisc tree.
 
--Andi
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
