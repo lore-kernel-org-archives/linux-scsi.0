@@ -1,88 +1,83 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: differences in megaraid2 v2.00.9 source from LSIL FTP and 2.4.24 tree
-Date: Wed, 3 Nov 2004 07:47:34 -0600
-Message-ID: <20041103134734.GA3686@lists.us.dell.com>
-References: <20040113125922.58ccb619@philou.gramoulle.local>
+From: mike.miller@hp.com
+Subject: problems with ACPI on 2.4.28-rc1
+Date: Wed, 3 Nov 2004 16:33:08 -0600
+Message-ID: <20041103223308.GA3588@beardog.cca.cpqcorp.net>
+Reply-To: mike.miller@hp.com, mikem@beardog.cca.cpqcorp.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lists.us.dell.com ([143.166.224.162]:30288 "EHLO
-	lists.us.dell.com") by vger.kernel.org with ESMTP id S261608AbUKCNrj
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Nov 2004 08:47:39 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261908AbUKCWkc@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20040113125922.58ccb619@philou.gramoulle.local>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Philippe Gramoull? <philippe.gramoulle@mmania.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Tue, Jan 13, 2004 at 12:59:22PM +0100, Philippe Gramoull? wrote:
-> 
->  Hi,
-> 
-> I just compared the original source code from ftp.lsil.com and 2.4.24.
-> v2.00.9 megaraid driver and i'd like to know what are the differences and which one i should use.
-> 
-> I assume that the one in the 2.4.24 is the one to be used but i just wanted to be sure.
-> 
-> Thanks,
-> 
-> Philippe
-> Lycos Europe
-> 
-> 
-> ~/2.4.24-filer/megaraid$ diff -Nu megaraid2.c ../linux-2.4.24/drivers/scsi/megaraid2.c 
-> --- megaraid2.c 2003-09-09 21:24:36.000000000 +0200
-> +++ ../linux-2.4.24/drivers/scsi/megaraid2.c    2003-11-28 19:26:20.000000000 +0100
-> @@ -398,9 +398,7 @@
->                 // replace adapter->lock with io_request_lock for kernels w/o
->                 // per host lock and delete the line which tries to initialize
->                 // the lock in host structure.
-> -               adapter->host_lock = &adapter->lock;
-> -
-> -               host->lock = adapter->host_lock;
-> +               adapter->host_lock = &io_request_lock;
+Hello,
+Can anyone assist with this problem? I'm seeing a hang very early in boot under both 2.4.27 & 2.4.28-rc1.
+When the kernel begins to execute the system hangs with ERROR: Invalid Checksum. This seems to be ACPI related. The HW is HP DL360G4. Any help is appreciated. Here is the console output:
 
-This is because stock 2.4 doesn't have the field host->lock, so
-instead the lock must still be &io_request_lock.  This is correct.
+GRUB Loading stage2...
+  Booting command-list
 
-> @@ -2402,7 +2400,7 @@
->         *len = (u32)cmd->request_bufflen;
->  
->         if( scb->dma_direction == PCI_DMA_TODEVICE ) {
-> -               pci_dma_sync_sg(adapter->host->pci_dev, sgl, cmd->use_sg,
-> +               pci_dma_sync_sg(adapter->host->pci_dev, cmd->request_buffer, cmd->use_sg,
+root (hd0,0)
+ Filesystem type is ext2fs, partition type 0x83
+kernel /vmlinuz-2427 ro root=LABEL=/ console=ttyS0,115200 console=tty1
+   [Linux-bzImage, setup=0x1400, size=0x10b8d4]
+initrd /initrd-2427
+   [Linux-initrd @ 0x37f45000, 0xaaafb bytes]
 
-There was a bug around this.  Ahh, found it (thanks gmane).  The
-latter is correct of course.
+ok
+Bootdata ok (command line is ro root=LABEL=/ console=ttyS0,115200 console=tty1)
+Linux version 2.4.27 (root@orange-rh3u4) (gcc version 3.2.3 20030502 (Red Hat Linux 3.2.3-46)) #1 SMP Wed Nov 3 14:40:24 CST 2004
+BIOS-provided physical RAM map:
+ BIOS-e820: 0000000000000000 - 000000000009f400 (usable)
+ BIOS-e820: 000000000009f400 - 00000000000a0000 (reserved)
+ BIOS-e820: 00000000000f0000 - 0000000000100000 (reserved)
+ BIOS-e820: 0000000000100000 - 000000003fff3000 (usable)
+ BIOS-e820: 000000003fff3000 - 000000003fffb000 (ACPI data)
+ BIOS-e820: 000000003fffb000 - 0000000040000000 (reserved)
+ BIOS-e820: 00000000fec00000 - 00000000fed00000 (reserved)
+ BIOS-e820: 00000000fee00000 - 00000000fee10000 (reserved)
+ BIOS-e820: 00000000ffc00000 - 0000000100000000 (reserved)
+kernel direct mapping tables upto 10100000000 @ 8000-c000
+No NUMA configuration found
+Faking a node at 0000000000000000-000000003fff3000
+Bootmem setup node 0 0000000000000000-000000003fff3000
+Scan SMP from 0000010000000000 for 1024 bytes.
+Scan SMP from 000001000009fc00 for 1024 bytes.
+Scan SMP from 00000100000f0000 for 65536 bytes.
+found SMP MP-table at 00000000000f4fa0
+hm, page 000f4000 reserved twice.
+hm, page 000f5000 reserved twice.
+hm, page 000f2000 reserved twice.
+hm, page 000f3000 reserved twice.
+setting up node 0 0-3fff3
+On node 0 totalpages: 262131
+zone(0): 4096 pages.
+zone(1): 258035 pages.
+zone(2): 0 pages.
+ACPI: RSDP (v002 HP                                        ) @ 0x00000000000f4f20
+  >>> ERROR: Invalid checksum
+Intel MultiProcessor Specification v1.4
+    Virtual Wire compatibility mode.
+OEM ID: HP       Product ID: PROLIANT     APIC at: 0xFEE00000
+Processor #0 15:3 APIC version 20
+I/O APIC #8 Version 17 at 0xFEC00000.
+I/O APIC #9 Version 17 at 0xFEC10000.
+Processors: 1
+Checking aperture...
+Kernel command line: ro root=LABEL=/ console=ttyS0,115200 console=tty1
+Initializing CPU#0
+time.c: Detected 1.193182 MHz PIT timer.
+time.c: Detected 3000.220 MHz TSC timer.
+Console: colour VGA+ 80x25
+Calibrating delay loop... 5989.99 BogoMIPS
+Memory: 1021296k/1048524k available (1612k kernel code, 0k reserved, 703k data, 152k init)
+Dentry cache hash table entries: 131072 (order: 9, 2097152 bytes)
+Inode cache hash table entries: 65536 (order: 8, 1048576 bytes)
+Mount cache hash table entries: 256 (order: 0, 4096 bytes)
 
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fix wrong argument to pci_dma_sync_sg in megaraid
-driver
-Newsgroups: gmane.linux.scsi
-Cc: linux-scsi@vger.kernel.org
-Date: Sun, 1 Feb 2004 17:00:32 +0100
+I've tried several different things including disabling ACPI in the kernel, erasing NVRAM, etc. No luck.
 
-sgl is incremented for each element in the routine, but
-pci_dma_sync_sg needs the original buffer.
-
-
---- 1.59/drivers/scsi/megaraid.c    Fri Jan 23 06:37:03 2004
-+++ edited/drivers/scsi/megaraid.c  Sat Jan 31 07:09:25 2004
-@@ -1805,7 +1805,7 @@
-   *len = (u32)cmd->request_bufflen;
- 
-    if( scb->dma_direction == PCI_DMA_TODEVICE ) {
--	pci_dma_sync_sg(adapter->dev, sgl, cmd->use_sg,
-+				      pci_dma_sync_sg(adapter->dev,
-cmd->request_buffer, cmd->use_sg,
-				PCI_DMA_TODEVICE);
-				}
- 
-
--- 
-Matt Domsch
-Sr. Software Engineer, Lead Engineer
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+Thanks,
+mikem
