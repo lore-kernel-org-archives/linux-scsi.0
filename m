@@ -1,154 +1,119 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] 3/7 consolidate single_lun code
-Date: Mon, 24 Mar 2003 18:02:47 -0800
+Subject: [PATCH] 2/7 add missing scsi_queue_next_request calls
+Date: Mon, 24 Mar 2003 18:02:27 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030324180247.B15047@beaverton.ibm.com>
-References: <20030324175337.A14957@beaverton.ibm.com> <20030324175422.A14996@beaverton.ibm.com> <20030324180227.A15047@beaverton.ibm.com>
+Message-ID: <20030324180227.A15047@beaverton.ibm.com>
+References: <20030324175337.A14957@beaverton.ibm.com> <20030324175422.A14996@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from westrelay04.boulder.ibm.com (westrelay04.boulder.ibm.com [9.17.193.32])
-	by e35.co.us.ibm.com (8.12.8/8.12.2) with ESMTP id h2P26LgJ072818
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Mar 2003 21:06:21 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e34.co.us.ibm.com (8.12.8/8.12.2) with ESMTP id h2P26264190548
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Mar 2003 21:06:02 -0500
 Received: from localhost.localdomain (d03av02.boulder.ibm.com [9.17.193.82])
-	by westrelay04.boulder.ibm.com (8.12.8/NCO/VER6.5) with ESMTP id h2P26KVR125776
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Mar 2003 19:06:20 -0700
+	by westrelay02.boulder.ibm.com (8.12.8/NCO/VER6.5) with ESMTP id h2P261BS102806
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Mar 2003 19:06:01 -0700
 Received: (from patman@localhost)
-	by localhost.localdomain (8.11.2/8.11.6) id h2P22lq15133
-	for linux-scsi@vger.kernel.org; Mon, 24 Mar 2003 18:02:47 -0800
+	by localhost.localdomain (8.11.2/8.11.6) id h2P22R515128
+	for linux-scsi@vger.kernel.org; Mon, 24 Mar 2003 18:02:27 -0800
 Content-Disposition: inline
-In-Reply-To: <20030324180227.A15047@beaverton.ibm.com>; from patmans@us.ibm.com on Mon, Mar 24, 2003 at 06:02:27PM -0800
+In-Reply-To: <20030324175422.A14996@beaverton.ibm.com>; from patmans@us.ibm.com on Mon, Mar 24, 2003 at 05:54:22PM -0800
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Consolidate scsi single_lun code.
+Add missing scsi_queue_next_request calls.
 
-diff -purN -X /home/patman/dontdiff put_cmd-25/drivers/scsi/scsi_lib.c lun-single-25/drivers/scsi/scsi_lib.c
---- put_cmd-25/drivers/scsi/scsi_lib.c	Mon Mar 24 12:14:51 2003
-+++ lun-single-25/drivers/scsi/scsi_lib.c	Mon Mar 24 12:14:55 2003
-@@ -323,6 +323,49 @@ void scsi_setup_cmd_retry(struct scsi_cm
- }
+Add missing scsi_put_command and scsi_get_command exports.
+
+diff -purN -X /home/patman/dontdiff starve-25/drivers/scsi/scsi.h put_cmd-25/drivers/scsi/scsi.h
+--- starve-25/drivers/scsi/scsi.h	Mon Mar 24 12:14:28 2003
++++ put_cmd-25/drivers/scsi/scsi.h	Mon Mar 24 12:14:51 2003
+@@ -417,6 +417,7 @@ extern void scsi_setup_cmd_retry(Scsi_Cm
+ extern void scsi_io_completion(Scsi_Cmnd * SCpnt, int good_sectors,
+ 			       int block_sectors);
+ extern int scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
++extern void scsi_queue_next_request(request_queue_t *q, struct scsi_cmnd *cmd);
+ extern request_queue_t *scsi_alloc_queue(struct Scsi_Host *shost);
+ extern void scsi_free_queue(request_queue_t *q);
+ extern int scsi_init_queue(void);
+diff -purN -X /home/patman/dontdiff starve-25/drivers/scsi/scsi_error.c put_cmd-25/drivers/scsi/scsi_error.c
+--- starve-25/drivers/scsi/scsi_error.c	Tue Mar 18 12:53:33 2003
++++ put_cmd-25/drivers/scsi/scsi_error.c	Mon Mar 24 12:14:51 2003
+@@ -1681,6 +1681,7 @@ scsi_reset_provider(struct scsi_device *
+ 	struct scsi_cmnd *scmd = scsi_get_command(dev, GFP_KERNEL);
+ 	struct request req;
+ 	int rtn;
++	struct request_queue *q;
  
- /*
-+ * Called for single_lun devices. The target associated with current_sdev can
-+ * only handle one active command at a time. Scan through all of the luns
-+ * on the same target as current_sdev, return 1 if any are active.
-+ */
-+static int scsi_single_lun_check(struct scsi_device *current_sdev)
-+{
-+	struct scsi_device *sdev;
-+
-+	list_for_each_entry(sdev, &current_sdev->same_target_siblings,
-+			    same_target_siblings)
-+		if (sdev->device_busy)
-+			return 1;
-+	return 0;
-+}
-+
-+/*
-+ * Called for single_lun devices on IO completion. If no requests
-+ * outstanding for current_sdev, call __blk_run_queue for the next
-+ * scsi_device on the same target that has requests.
-+ *
-+ * Called with queue_lock held.
-+ */
-+static void scsi_single_lun_run(struct scsi_device *current_sdev,
-+				 struct request_queue *q)
-+{
-+	struct scsi_device *sdev;
-+	struct Scsi_Host *shost;
-+
-+	shost = current_sdev->host;
-+	if (blk_queue_empty(q) && current_sdev->device_busy == 0 &&
-+	    !shost->host_blocked && !shost->host_self_blocked &&
-+	    !((shost->can_queue > 0) &&
-+	      (shost->host_busy >= shost->can_queue)))
-+		list_for_each_entry(sdev, &current_sdev->same_target_siblings,
-+				    same_target_siblings)
-+			if (!sdev->device_blocked &&
-+			    !blk_queue_empty(sdev->request_queue)) {
-+				__blk_run_queue(sdev->request_queue);
-+				break;
-+			}
-+}
-+
-+/*
-  * Function:    scsi_queue_next_request()
-  *
-  * Purpose:     Handle post-processing of completed commands.
-@@ -390,29 +433,11 @@ void scsi_queue_next_request(request_que
+ 	scmd->request = &req;
+ 	memset(&scmd->eh_timeout, 0, sizeof(scmd->eh_timeout));
+@@ -1735,6 +1736,8 @@ scsi_reset_provider(struct scsi_device *
  	}
  
- 	sdev = q->queuedata;
--	shost = sdev->host;
- 
--	/*
--	 * If this is a single-lun device, and we are currently finished
--	 * with this device, then see if we need to get another device
--	 * started.  FIXME(eric) - if this function gets too cluttered
--	 * with special case code, then spin off separate versions and
--	 * use function pointers to pick the right one.
--	 */
--	if (sdev->single_lun && blk_queue_empty(q) && sdev->device_busy ==0 &&
--			!shost->host_blocked && !shost->host_self_blocked &&
--			!((shost->can_queue > 0) && (shost->host_busy >=
--				       		     shost->can_queue))) {
--		list_for_each_entry(sdev2, &sdev->same_target_siblings,
--			       same_target_siblings) {
--			if (!sdev2->device_blocked &&
--			    !blk_queue_empty(sdev2->request_queue)) {
--				__blk_run_queue(sdev2->request_queue);
--				break;
--			}
--		}
--	}
-+	if (sdev->single_lun)
-+		scsi_single_lun_run(sdev, q);
- 
-+	shost = sdev->host;
- 	while (!list_empty(&shost->starved_list) &&
- 	       !shost->host_blocked && !shost->host_self_blocked &&
- 		!((shost->can_queue > 0) &&
-@@ -917,22 +942,6 @@ static int scsi_init_io(struct scsi_cmnd
- 	return BLKPREP_KILL;
+ 	scsi_delete_timer(scmd);
++	q = scmd->device->request_queue;
+ 	scsi_put_command(scmd);
++	scsi_queue_next_request(q, NULL);
+ 	return rtn;
  }
- 
--/*
-- * The target associated with myself can only handle one active command at
-- * a time. Scan through all of the luns on the same target as myself,
-- * return 1 if any are active.
-- */
--static int check_all_luns(struct scsi_device *myself)
--{
--	struct scsi_device *sdev;
--
--	list_for_each_entry(sdev, &myself->same_target_siblings,
--			    same_target_siblings)
--		if (sdev->device_busy)
--			return 1;
--	return 0;
--}
--
- static int scsi_prep_fn(struct request_queue *q, struct request *req)
+diff -purN -X /home/patman/dontdiff starve-25/drivers/scsi/scsi_lib.c put_cmd-25/drivers/scsi/scsi_lib.c
+--- starve-25/drivers/scsi/scsi_lib.c	Mon Mar 24 12:14:28 2003
++++ put_cmd-25/drivers/scsi/scsi_lib.c	Mon Mar 24 12:14:51 2003
+@@ -174,14 +174,18 @@ void scsi_do_req(struct scsi_request *sr
+ 		 void (*done)(struct scsi_cmnd *),
+ 		 int timeout, int retries)
  {
- 	struct Scsi_Device_Template *sdt;
-@@ -1077,9 +1086,6 @@ static void scsi_request_fn(request_queu
- 		if (sdev->device_busy >= sdev->queue_depth)
- 			break;
- 
--		if (sdev->single_lun && check_all_luns(sdev))
--			break;
--
- 		if (shost->host_busy == 0 && shost->host_blocked) {
- 			/* unblock after host_blocked iterates to zero */
- 			if (--shost->host_blocked == 0) {
-@@ -1120,6 +1126,9 @@ static void scsi_request_fn(request_queu
- 			break;
- 		}
- 
-+		if (sdev->single_lun && scsi_single_lun_check(sdev))
-+			break;
++	struct request_queue *q;
 +
- 		/*
- 		 * If we couldn't find a request that could be queued, then we
- 		 * can also quit.
+ 	/*
+ 	 * If the upper level driver is reusing these things, then
+ 	 * we should release the low-level block now.  Another one will
+ 	 * be allocated later when this request is getting queued.
+ 	 */
+ 	if (sreq->sr_command) {
++		q = sreq->sr_command->device->request_queue;
+ 		scsi_put_command(sreq->sr_command);
+ 		sreq->sr_command = NULL;
++		scsi_queue_next_request(q, NULL);
+ 	}
+ 
+ 	/*
+@@ -228,6 +232,7 @@ static void scsi_wait_done(struct scsi_c
+ void scsi_wait_req(struct scsi_request *sreq, const void *cmnd, void *buffer,
+ 		   unsigned bufflen, int timeout, int retries)
+ {
++	struct request_queue *q;
+ 	DECLARE_COMPLETION(wait);
+ 	
+ 	sreq->sr_request->waiting = &wait;
+@@ -239,7 +244,9 @@ void scsi_wait_req(struct scsi_request *
+ 	sreq->sr_request->waiting = NULL;
+ 
+ 	if (sreq->sr_command) {
++		q = sreq->sr_command->device->request_queue;
+ 		scsi_put_command(sreq->sr_command);
++		scsi_queue_next_request(q, NULL);
+ 		sreq->sr_command = NULL;
+ 	}
+ }
+@@ -351,7 +358,7 @@ void scsi_setup_cmd_retry(struct scsi_cm
+  *		permutations grows as 2**N, and if too many more special cases
+  *		get added, we start to get screwed.
+  */
+-static void scsi_queue_next_request(request_queue_t *q, struct scsi_cmnd *cmd)
++void scsi_queue_next_request(request_queue_t *q, struct scsi_cmnd *cmd)
+ {
+ 	struct scsi_device *sdev, *sdev2;
+ 	struct Scsi_Host *shost;
+diff -purN -X /home/patman/dontdiff starve-25/drivers/scsi/scsi_syms.c put_cmd-25/drivers/scsi/scsi_syms.c
+--- starve-25/drivers/scsi/scsi_syms.c	Thu Mar  6 12:34:52 2003
++++ put_cmd-25/drivers/scsi/scsi_syms.c	Mon Mar 24 12:14:51 2003
+@@ -60,6 +60,8 @@ EXPORT_SYMBOL(scsi_allocate_request);
+ EXPORT_SYMBOL(scsi_release_request);
+ EXPORT_SYMBOL(scsi_wait_req);
+ EXPORT_SYMBOL(scsi_do_req);
++EXPORT_SYMBOL(scsi_get_command);
++EXPORT_SYMBOL(scsi_put_command);
+ 
+ EXPORT_SYMBOL(scsi_report_bus_reset);
+ EXPORT_SYMBOL(scsi_block_requests);
