@@ -1,61 +1,90 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Question about Request Sense case in scsi_lib.c
-Date: Wed, 13 Oct 2004 12:10:21 +1000
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH 1/1] scsicam_getgeo_odd_sector_size
+Date: Wed, 13 Oct 2004 09:01:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <416C8E8D.7050000@torque.net>
-References: <20041012000058.GA26569@osdl.org>	<eada2a07041012092973d35415@mail.gmail.com> 	<20041012165919.GA27526@osdl.org> <1097601199.2044.91.camel@mulgrave>
-Reply-To: dougg@torque.net
+Message-ID: <416D3536.5030501@us.ibm.com>
+References: <200408192303.i7JN3cv9110958@northrelay02.pok.ibm.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------040101030806010103050508"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e1.ny.us.ibm.com ([32.97.182.101]:42681 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S269709AbUJMOB3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Oct 2004 10:01:29 -0400
+In-Reply-To: <200408192303.i7JN3cv9110958@northrelay02.pok.ibm.com>
+List-Id: linux-scsi@vger.kernel.org
+To: brking@us.ibm.com
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+
+This is a multi-part message in MIME format.
+--------------040101030806010103050508
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub2.uq.edu.au ([130.102.149.128]:30476 "EHLO
-	mailhub2.uq.edu.au") by vger.kernel.org with ESMTP id S268294AbUJMDoL
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Oct 2004 23:44:11 -0400
-In-Reply-To: <1097601199.2044.91.camel@mulgrave>
-List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Dave Olien <dmo@osdl.org>, Tim Pepper <tpepper@gmail.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> On Tue, 2004-10-12 at 11:59, Dave Olien wrote:
-> 
->>Thanks for the feedback.  Yes, Automatic volume transfer is on, and I
->>was expecting there'd be poor performance as a result.  I just
->>didn't expect to get IO errors.  The odd thing is that the "bus reset"
->>leads to the SCSI request being requeued.  But every once in a while,
->>the requeue fails with errors and the request is failed.  I'll look at
->>these cases a little more closely, try to understand why the requeues fail.
-> 
-> 
-> Hang on a minute ... if you're ping pong'ing the drives using AVT, those
-> transfers take time to achieve.  The device is probably returning UNIT
-> ATTENTION, NOT_READY while the transfer is in progress.  This is
-> probably the source of the requeue.
+This patch appears to have been dropped. Resending.
 
-UNIT ATTENTION and NOT READY are both sense keys so a
-device can't yield both on one command. However you may be
-on the right track as there is an ever increasing number of
-reasons a device could issue a UNIT ATTENTION. [See SPC-3
-rev 21 and I believe these ASC codes (and all their associated
-ASCQ codes) occur with a sense key of UNIT ATTENTION:
-0x28, 0x29, 0x2a, 0x3f, 0x5b/0x1 and 0x5d.]
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
 
-Unlikely in this case but a sense key of UNIT ATTENTION
-(or perhaps RECOVERED ERROR)  with an additional sense
-of "Hardware impending failure, seek error rate too high"
-may slip by without even a log entry.
+--------------040101030806010103050508
+Content-Type: text/plain;
+ name="scsicam_getgeo_odd_sector_size.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsicam_getgeo_odd_sector_size.patch"
 
-> As for the error, I still don't understand that, but it looks like
-> something went wrong in setting up or tearing down the dma mapping, so
-> that it was incorrectly described when this happened a second time.
 
-I hope to address the code in the scsi_io_completion() error/warning
-processing paths with the descriptor_sense cleanup. There seems to
-be a missing scsi_print_sense() call on the UNIT ATTENTION path.
+The following BUG() was observed when a scsi disk formatted to 522 bytes/sector
+was discovered attached to a sym2 adapter.
 
-Dave, does your log show a bus error (ASC/ASCQ=0x29/0x2) has occurred?
+<2>kernel BUG in grow_buffers at fs/buffer.c:1271!
 
-Doug Gilbert
+which corresponds to:
+
+static inline int
+grow_buffers(struct block_device *bdev, sector_t block, int size)
+{
+        struct page *page;
+        pgoff_t index;
+        int sizebits;
+
+        /* Size must be multiple of hard sectorsize */
+        if (size & (bdev_hardsect_size(bdev)-1))
+                BUG();
+        if (size < 512 || size > PAGE_SIZE)
+                BUG();                      <----- line 1271 is here
+
+
+The following patch fixes this by not attempting to read the partition table
+of a device with an unsupported sector size.
+
+
+Signed-off-by: Brian King <brking@us.ibm.com>
+---
+
+ linux-2.6.9-rc4-bk1-bjking1/drivers/scsi/scsicam.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletion(-)
+
+diff -puN drivers/scsi/scsicam.c~scsicam_getgeo_odd_sector_size drivers/scsi/scsicam.c
+--- linux-2.6.9-rc4-bk1/drivers/scsi/scsicam.c~scsicam_getgeo_odd_sector_size	2004-10-13 08:57:46.000000000 -0500
++++ linux-2.6.9-rc4-bk1-bjking1/drivers/scsi/scsicam.c	2004-10-13 08:57:46.000000000 -0500
+@@ -29,7 +29,10 @@ unsigned char *scsi_bios_ptable(struct b
+ 	unsigned char *res = kmalloc(66, GFP_KERNEL);
+ 	if (res) {
+ 		struct block_device *bdev = dev->bd_contains;
+-		struct buffer_head *bh = __bread(bdev, 0, block_size(bdev));
++		struct buffer_head *bh = NULL;
++
++		if (get_capacity(bdev->bd_disk))
++			bh = __bread(bdev, 0, block_size(bdev));
+ 		if (bh) {
+ 			memcpy(res, bh->b_data + 0x1be, 66);
+ 			brelse(bh);
+_
+
+--------------040101030806010103050508--
 
