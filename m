@@ -1,67 +1,62 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: 2.6.6-rc3 ia64 smp_call_function() called with interrupts
- disabled
-Date: Sun, 2 May 2004 21:45:25 -0700
+From: Pierre Berthier <berthierp@yahoo.com>
+Subject: Re: memory leak while reading /proc/scsi/gdth/1
+Date: Mon, 3 May 2004 03:58:47 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040502214525.5ad05bed.akpm@osdl.org>
+Message-ID: <20040503105847.71057.qmail@web41213.mail.yahoo.com>
+References: <20040429195132.GC20141@logos.cnet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:46489 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S263584AbUECEpm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 May 2004 00:45:42 -0400
-Received: from bix (build.pdx.osdl.net [172.20.1.2])
-	by mail.osdl.org (8.11.6/8.11.6) with ESMTP id i434jf218816
-	for <linux-scsi@vger.kernel.org>; Sun, 2 May 2004 21:45:41 -0700
+Received: from web41213.mail.yahoo.com ([66.218.93.46]:55685 "HELO
+	web41213.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S263636AbUECK6s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 May 2004 06:58:48 -0400
+In-Reply-To: <20040429195132.GC20141@logos.cnet>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Cc: linux-scsi@vger.kernel.org
+
+
+--- Marcelo Tosatti <marcelo.tosatti@cyclades.com> wrote:
+> In the meantime can you 
+> turn VM debugging on
+> 
+> # echo 1 > /sys/vm/vm_gfp_debug
+> 
+> and run "cat /proc/scsi/gdth/1" ? 
+> 
+> There should be some backtraces in dmesg. Copy them (the full output), 
+> and run then through ksymoops (using the System.map for this kernel).
+> 
+> Thanks!
+
+I suppose you want this output (appearing in /var/log/messages)
+
+ea411ae0 c0132e67 00000021 00000283 ea411bec c0390000 00000001 00000000
+       c02afa00 c02afca4 00000000 00000021 ffffffff c0132a1e c0390080 c0132e7e
+       c01fbd74 00000146 ea411bec c01fac99 00000000 00001000 00000000 cdf84134
+Call Trace:    [__alloc_pages+639/652] [_alloc_pages+22/24]
+[__get_free_pages+10/24] [gdth_ioctl_alloc+88/104] [gdth_get_info+1021/5048]
+  [lru_cache_add+103/116] [do_no_page+375/508] [do_page_fault+0/1210]
+[do_generic_file_read+1154/1168] [__vma_link+97/176] [do_mmap_pgoff+1076/1276]
+  [error_code+52/60] [error_code+52/60] [error_code+52/60] [clear_user+46/60]
+[padzero+28/32] [load_elf_binary+2490/2872]
+  [load_elf_binary+0/2872] [__alloc_pages+106/652] [lru_cache_add+103/116]
+[gdth_proc_info+144/152] [proc_scsi_read+68/96] [proc_file_read+242/404]
+  [sys_read+143/256] [system_call+51/56]
+ea411ae0 c0132e67 00000021 00000283 ea411bec c0390000 00000001 00000000
+       c02afa00 c02afca4 00000000 00000021 ffffffff c0132a1e c0390080 c0132e7e
+       c01fbd74 00000146 ea411bec c01fac99 00000000 00001000 00000000 e55d7035
+Call Trace:    [__alloc_pages+639/652] [_alloc_pages+22/24]
+[__get_free_pages+10/24] [gdth_ioctl_alloc+88/104] [gdth_get_info+1021/5048]
+  [lru_cache_add+103/116] [do_no_page+375/508] [do_page_fault+0/1210]
+[do_generic_file_read+1154/1168] [__vma_link+97/176] [do_mmap_pgoff+1076/1276]
+  [error_code+52/60] [error_code+52/60] [error_code+52/60] [clear_user+46/60]
+[padzero+28/32] [load_elf_binary+2490/2872]
+  [load_elf_binary+0/2872] [gdth_proc_info+144/152] [proc_scsi_read+68/96]
+[proc_file_read+242/404] [sys_read+143/256] [system_call+51/56]
 
 
 
-Begin forwarded message:
-
-Date: Mon, 03 May 2004 12:39:44 +1000
-From: Keith Owens <kaos@sgi.com>
-To: linux-kernel@vger.kernel.org
-Subject: 2.6.6-rc3 ia64 smp_call_function() called with interrupts disabled
-
-
-2.6.6-rc3, modprobe sg calls vfree() with interrupts disabled.  On
-ia64, vfree calls smp_flush_tlb_all() which calls smp_call_function().
-Calling smp_call_function() with interrupts disabled can deadlock.
-
-Badness in smp_call_function at arch/ia64/kernel/smp.c:312
-
-Call Trace:
- [<a0000001000190a0>] show_stack+0x80/0xa0
-                                sp=e00001307811fc40 bsp=e0000130781191c0
- [<a000000100058a50>] smp_call_function+0x3d0/0x3e0
-                                sp=e00001307811fe10 bsp=e000013078119160
- [<a000000100057e60>] smp_flush_tlb_all+0x40/0x80
-                                sp=e00001307811fe30 bsp=e000013078119140
- [<a000000100142850>] unmap_vm_area+0xf0/0x120
-                                sp=e00001307811fe30 bsp=e000013078119108
- [<a000000100142ed0>] remove_vm_area+0x150/0x1e0
-                                sp=e00001307811fe30 bsp=e0000130781190e0
- [<a000000100142fb0>] __vunmap+0x50/0x1e0
-                                sp=e00001307811fe30 bsp=e0000130781190a0
- [<a0000002002ae4d0>] sg_add+0x2d0/0xbe0 [sg]
-                                sp=e00001307811fe30 bsp=e000013078119038
- [<a00000010047da40>] class_interface_register+0x1e0/0x2a0
-                                sp=e00001307811fe30 bsp=e000013078119000
- [<a0000001005371b0>] scsi_register_interface+0x30/0x60
-                                sp=e00001307811fe30 bsp=e000013078118fe0
- [<a0000002002d0200>] init_sg+0x140/0x190 [sg]
-                                sp=e00001307811fe30 bsp=e000013078118fb8
- [<a000000100104b40>] sys_init_module+0x3c0/0x660
-                                sp=e00001307811fe30 bsp=e000013078118f48
- [<a000000100011be0>] ia64_ret_from_syscall+0x0/0x20
-                                sp=e00001307811fe30 bsp=e000013078118f40
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
+Cheers
+Pierre
