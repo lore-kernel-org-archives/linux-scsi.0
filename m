@@ -1,73 +1,280 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: One more change pushed to bk tree
-Date: Fri, 22 Nov 2002 15:56:15 -0800
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] more sdev freeing rationalization
+Date: Sat, 23 Nov 2002 03:02:42 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021122155615.A21301@eng2.beaverton.ibm.com>
-References: <20021122183603.GC16865@redhat.com>
+Message-ID: <20021123030242.A11192@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from northrelay03.pok.ibm.com (northrelay03.pok.ibm.com [9.56.224.151])
-	by e5.ny.us.ibm.com (8.12.2/8.12.2) with ESMTP id gAMNuI4s222302
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Nov 2002 18:56:18 -0500
-Received: from gateway1.beaverton.ibm.com (gateway1.beaverton.ibm.com [138.95.180.2])
-	by northrelay03.pok.ibm.com (8.12.3/NCO/VER6.4) with ESMTP id gAMNuFFQ079922
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Nov 2002 18:56:15 -0500
-Received: from eng2.beaverton.ibm.com (eng2.beaverton.ibm.com [9.47.57.17])
-	by gateway1.beaverton.ibm.com (8.11.6/8.11.6) with ESMTP id gAMNpJV08451
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Nov 2002 15:51:19 -0800
-Received: (from patman@localhost)
-	by eng2.beaverton.ibm.com (8.10.0.Beta10/8.8.5/token.aware-1.2) id gAMNuFj24820
-	for linux-scsi@vger.kernel.org; Fri, 22 Nov 2002 15:56:15 -0800 (PST)
-In-Reply-To: <20021122183603.GC16865@redhat.com>; from dledford@redhat.com on Fri, Nov 22, 2002 at 01:36:03PM -0500
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Nov 22, 2002 at 01:36:03PM -0500, Doug Ledford wrote:
-> Like last time, this has been through a full compile test, but not a boot 
-> test.  I'm heading up to the office next so the boot test will come 
-> shortly.  But, because it touches lots of files, again, I thought I would 
-> go ahead and push it up for people to see.  If there are no objections to 
-> this or my previous patches, then once the boot test is complete and I'm 
-> satisfied things are working properly, I'll push the whole lot to Linus 
-> (which will necessarily include the scsi-misc-2.5 changes because they are 
-> in my tree as well).
-> 
-> bk pull bk://linux-scsi.bkbits.net/scsi-dledford
-> 
-> New Changeset added since last night:
-> ChangeSet@1.852, 2002-11-22 12:59:10-05:00, dledford@dledford.theledfords.org
->   Convert from host->host_queue to host->my_devices list usage
->   Add in usage of new same_target_siblings list
->   Add scsi_release_commandblocks() call to scsi_free_sdev()
->   Make all scsi device freeing use scsi_free_sdev()
+(1) new helper in scsi_scan.c: scsi_forget_host.  it's the counterpart to
+    scsi_scan_host.  it shares code with scsi_remove_single_device
+    through a common subroutine, scsi_forget_host.
+(2) move scsi_get_host_dev/scsi_free_host_dev (again).  Having them in
+    scsi_scan.c allows to make scsi_alloc_sdev/scsi_free_sdev static.
 
-Hi Doug -
 
-It booted and runs fine on a netfinity + aic. I haven't updated my 
-modutils yet, so did not try the qla driver (ported to your new naming
-scheme, I need the qla to test with a qlogics 2300 with a multi-lun target).
-
-Was there a missing scsi_release_commandblocks call?
-
-Why not remove the next/prev in scsi_device? Any code referencing
-them is broken, usage should at least generate a compilation warning.
-
-The slave_destroy should be called before the channel/id/lun is modified
-during scanning, so slave_destroy if needed can index off of 
-host/channel/id/lun and figure out properly what to destroy. Perhaps there
-should be a common function for this that calls slave_destroy, modifies
-sdevscan channel/id/lun, and then calls slave_alloc; such a function might
-also release and build command blocks.
-
-The report lun usage does not modify the channel/id/lun, so does not need
-the slave_destroy/slave_alloc calls.
-
-IMO the traversal of scsi_devices should be completely transparent
-to the user, such as a wrapper or call back function, so we would not 
-have to change anything if the underlying data structure changed (the
-list of scsi_hosts contains a list of scsi_devices). Namely, for
-multi-path  it is useful to have all the scsi_devices on one list, and
-not have a host centric view of the scsi_devices.
-
--- Patrick Mansfield
+--- 1.35/drivers/scsi/hosts.c	Fri Nov 22 12:59:03 2002
++++ edited/drivers/scsi/hosts.c	Sat Nov 23 01:31:25 2002
+@@ -260,7 +260,6 @@
+ int scsi_remove_host(struct Scsi_Host *shost)
+ {
+ 	struct scsi_device *sdev;
+-	struct list_head *le, *lh;
+ 
+ 	/*
+ 	 * FIXME Do ref counting.  We force all of the devices offline to
+@@ -287,16 +286,9 @@
+ 			       sdev->attached);
+ 			return 1;
+ 		}
+-		devfs_unregister(sdev->de);
+-		device_unregister(&sdev->sdev_driverfs_dev);
+-	}
+-
+-	/* Next we free up the Scsi_Cmnd structures for this host */
+-
+-	list_for_each_safe(le, lh, &shost->my_devices) {
+-		scsi_free_sdev(list_entry(le, Scsi_Device, siblings));
+ 	}
+ 
++	scsi_forget_host(shost);
+ 	return 0;
+ }
+ 
+@@ -668,64 +660,6 @@
+ 	}
+ }
+ 
+-/*
+- * Function:    scsi_get_host_dev()
+- *
+- * Purpose:     Create a Scsi_Device that points to the host adapter itself.
+- *
+- * Arguments:   SHpnt   - Host that needs a Scsi_Device
+- *
+- * Lock status: None assumed.
+- *
+- * Returns:     The Scsi_Device or NULL
+- *
+- * Notes:
+- *	Attach a single Scsi_Device to the Scsi_Host - this should
+- *	be made to look like a "pseudo-device" that points to the
+- *	HA itself.
+- *
+- *	Note - this device is not accessible from any high-level
+- *	drivers (including generics), which is probably not
+- *	optimal.  We can add hooks later to attach 
+- */
+-struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
+-{
+-	struct scsi_device *sdev;
+-
+-	sdev = scsi_alloc_sdev(shost, 0, shost->this_id, 0);
+-	if (sdev) {
+-		scsi_build_commandblocks(sdev);
+-		if (sdev->current_queue_depth == 0)
+-			goto fail;
+-		sdev->borken = 0;
+-	}
+-
+-	return sdev;
+-
+-fail:
+-	kfree(sdev);
+-	return NULL;
+-}
+-
+-/*
+- * Function:    scsi_free_host_dev()
+- *
+- * Purpose:     Free a scsi_device that points to the host adapter itself.
+- *
+- * Arguments:   SHpnt   - Host that needs a Scsi_Device
+- *
+- * Lock status: None assumed.
+- *
+- * Returns:     Nothing
+- *
+- * Notes:
+- */
+-void scsi_free_host_dev(struct scsi_device *sdev)
+-{
+-	BUG_ON(sdev->id != sdev->host->this_id);
+-	scsi_free_sdev(sdev);
+-}
+-
+ void scsi_host_busy_inc(struct Scsi_Host *shost, Scsi_Device *sdev)
+ {
+ 	unsigned long flags;
+@@ -765,22 +699,3 @@
+ 	}
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ }
+-
+-/*
+- * Overrides for Emacs so that we follow Linus's tabbing style.
+- * Emacs will notice this stuff at the end of the file and automatically
+- * adjust the settings for this buffer only.  This must remain at the end
+- * of the file.
+- * ---------------------------------------------------------------------------
+- * Local variables:
+- * c-indent-level: 4
+- * c-brace-imaginary-offset: 0
+- * c-brace-offset: -4
+- * c-argdecl-indent: 4
+- * c-label-offset: -4
+- * c-continued-statement-offset: 4
+- * c-continued-brace-offset: 0
+- * indent-tabs-mode: nil
+- * tab-width: 8
+- * End:
+- */
+===== drivers/scsi/hosts.h 1.42 vs edited =====
+--- 1.42/drivers/scsi/hosts.h	Fri Nov 22 12:59:03 2002
++++ edited/drivers/scsi/hosts.h	Sat Nov 23 01:30:50 2002
+@@ -532,6 +532,8 @@
+  * Prototypes for functions/data in scsi_scan.c
+  */
+ extern void scsi_scan_host(struct Scsi_Host *);
++extern void scsi_forget_host(struct Scsi_Host *);
++
+ 
+ struct Scsi_Device_Template
+ {
+===== drivers/scsi/scsi.h 1.46 vs edited =====
+--- 1.46/drivers/scsi/scsi.h	Thu Nov 21 12:55:52 2002
++++ edited/drivers/scsi/scsi.h	Sat Nov 23 01:26:01 2002
+@@ -507,9 +507,6 @@
+ /*
+  * Prototypes for functions in scsi_scan.c
+  */
+-extern struct scsi_device *scsi_alloc_sdev(struct Scsi_Host *,
+-			uint, uint, uint);
+-extern void scsi_free_sdev(struct scsi_device *);
+ extern int scsi_add_single_device(uint, uint, uint, uint);
+ extern int scsi_remove_single_device(uint, uint, uint, uint);
+ 
+===== drivers/scsi/scsi_scan.c 1.43 vs edited =====
+--- 1.43/drivers/scsi/scsi_scan.c	Fri Nov 22 12:59:03 2002
++++ edited/drivers/scsi/scsi_scan.c	Sat Nov 23 01:32:16 2002
+@@ -465,8 +465,8 @@
+  * Return value:
+  *     Scsi_Device pointer, or NULL on failure.
+  **/
+-struct scsi_device *scsi_alloc_sdev(struct Scsi_Host *shost, uint channel,
+-				    uint id, uint lun)
++static struct scsi_device *scsi_alloc_sdev(struct Scsi_Host *shost,
++					   uint channel, uint id, uint lun)
+ {
+ 	struct scsi_device *sdev, *device;
+ 
+@@ -535,7 +535,7 @@
+  *     Undo the actions in scsi_alloc_sdev, including removing @sdev from
+  *     the list, and freeing @sdev.
+  **/
+-void scsi_free_sdev(struct scsi_device *sdev)
++static void scsi_free_sdev(struct scsi_device *sdev)
+ {
+ 	list_del(&sdev->siblings);
+ 	list_del(&sdev->same_target_siblings);
+@@ -1412,6 +1412,14 @@
+ 	return SCSI_SCAN_LUN_PRESENT;
+ }
+ 
++static int scsi_remove_lun(struct scsi_device *sdev)
++{
++	devfs_unregister(sdev->de);
++	device_unregister(&sdev->sdev_driverfs_dev);
++
++	scsi_free_sdev(sdev);
++}
++
+ /**
+  * scsi_probe_and_add_lun - probe a LUN, if a LUN is found add it
+  * @sdevscan:	probe the LUN corresponding to this Scsi_Device
+@@ -1934,8 +1942,7 @@
+ 	if (sdev->attached)
+ 		goto out;
+ 
+-	devfs_unregister(sdev->de);
+-	scsi_free_sdev(sdev);
++	scsi_remove_lun(sdev);
+ 	error = 0;
+ 
+ out:
+@@ -2060,4 +2067,70 @@
+ 		}
+ 	}
+ 	scsi_free_sdev(sdevscan);
++}
++
++void scsi_forget_host(struct Scsi_Host *shost)
++{
++	struct list_head *le, *lh;
++
++	list_for_each_safe(le, lh, &shost->my_devices)
++		scsi_remove_lun(list_entry(le, struct scsi_device, siblings));
++}
++
++/*
++ * Function:    scsi_get_host_dev()
++ *
++ * Purpose:     Create a Scsi_Device that points to the host adapter itself.
++ *
++ * Arguments:   SHpnt   - Host that needs a Scsi_Device
++ *
++ * Lock status: None assumed.
++ *
++ * Returns:     The Scsi_Device or NULL
++ *
++ * Notes:
++ *	Attach a single Scsi_Device to the Scsi_Host - this should
++ *	be made to look like a "pseudo-device" that points to the
++ *	HA itself.
++ *
++ *	Note - this device is not accessible from any high-level
++ *	drivers (including generics), which is probably not
++ *	optimal.  We can add hooks later to attach 
++ */
++struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
++{
++	struct scsi_device *sdev;
++
++	sdev = scsi_alloc_sdev(shost, 0, shost->this_id, 0);
++	if (sdev) {
++		scsi_build_commandblocks(sdev);
++		if (sdev->current_queue_depth == 0)
++			goto fail;
++		sdev->borken = 0;
++	}
++
++	return sdev;
++
++fail:
++	kfree(sdev);
++	return NULL;
++}
++
++/*
++ * Function:    scsi_free_host_dev()
++ *
++ * Purpose:     Free a scsi_device that points to the host adapter itself.
++ *
++ * Arguments:   SHpnt   - Host that needs a Scsi_Device
++ *
++ * Lock status: None assumed.
++ *
++ * Returns:     Nothing
++ *
++ * Notes:
++ */
++void scsi_free_host_dev(struct scsi_device *sdev)
++{
++	BUG_ON(sdev->id != sdev->host->this_id);
++	scsi_free_sdev(sdev);
+ }
