@@ -1,42 +1,54 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] add device_configure to the transport classes
-Date: 05 Oct 2004 12:18:38 -0500
+From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Subject: RE: [PATCH]: megaraid 2.20.4: Fixes a data corruption bug
+Date: Tue, 5 Oct 2004 15:15:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1096996724.2064.56.camel@mulgrave>
-References: <OF2154D688.D97183DA-ONC1256F24.005BD3E3-C1256F24.005EE95C@de.ibm.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230C98F@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:54667 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S269091AbUJERSq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Oct 2004 13:18:46 -0400
-In-Reply-To: <OF2154D688.D97183DA-ONC1256F24.005BD3E3-C1256F24.005EE95C@de.ibm.com>
+Received: from mail0.lsil.com ([147.145.40.20]:60894 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261239AbUJETXP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2004 15:23:15 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Peschke3 <MPESCHKE@de.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>
+Cc: "Mukker, Atul" <Atulm@lsil.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "'Matt_Domsch@dell.com'" <Matt_Domsch@dell.com>, "Ju, Seokmann" <sju@lsil.com>
 
-On Tue, 2004-10-05 at 12:10, Martin Peschke3 wrote:
-> now that there is more and more stuff handed over to transport classes,
-> would it be feasible to put LUN there as well, as its form appears to be
-> transport specific as well? (e.g. 64 bit for FC while other transports
-> may be unable to convey 64 bit LUNs)
+James,
 
-Well, I'm not sure about that, primarily because the LUN specifications
-in the standards aren't transport specific.
+The latest megaraid driver on bk://linux-scsi.bkbits.net/scsi-misc-2.6 still
+has
+CONFIG_COMPAT around register_ioctl32_conversion. Will it remain in the
+source
+or should it go?
 
-> I see that this particular patch is not exactly what was needed to achieve
-> this, because at the time of the evaluation INQUIRY data the LUN has
-> already been adapted to the way LUNs are stored in scsi_device.
-> 
-> I am also not sure yet how this approach would go with REPORT_LUNS,
-> which returns 64 bit LUNs for all transports. But for everybody interested
-> in 64 bit LUNs, it would certainly clean things up.
-
-Yes, that's another reason to make it transport specific.  Even SPI code
-has to understand 64 bit LUN returns.
-
-James
+Thanks,
+Sreenivas
 
 
+>-----Original Message-----
+>From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
+>Sent: Friday, October 01, 2004 7:09 PM
+>To: Bagalkote, Sreenivas
+>Cc: Mukker, Atul; 'linux-kernel@vger.kernel.org';
+>'linux-scsi@vger.kernel.org'; 'bunk@fs.tum.de'; 'Andrew Morton';
+>'Matt_Domsch@dell.com'; Ju, Seokmann
+>Subject: RE: [PATCH]: megaraid 2.20.4: Fixes a data corruption bug
+>
+>
+>On Fri, 2004-10-01 at 18:52, Bagalkote, Sreenivas wrote:
+>> Would you please send us your version of megaraid driver that will
+>> most likely go into 2.6.9? We would like baseline your version and
+>> make our internal releases off of that. I appreciate your help.
+>
+>You can get my tree in bitkeeper here
+>
+>bk://linux-scsi.bkbits.net/scsi-misc-2.6
+>
+>Or, you can get it (with a slight time lag) in the -mm tree:
+>
+>http://www.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/
+>
+>James
+>
+>
