@@ -1,70 +1,88 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: PATCH 2/5: scsi-scan-blist_replun
-Date: Wed, 21 Apr 2004 16:14:12 +0100
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: PATCH 4/5: scsi-scan-dont-att-pq-notcon
+Date: Wed, 21 Apr 2004 17:24:36 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040421161412.B6793@infradead.org>
-References: <20040418185751.GC4868@tpkurt.garloff.de> <1082330192.1969.37.camel@mulgrave> <20040420115419.GG4356@tpkurt.garloff.de> <1082471881.1804.34.camel@mulgrave> <20040420160334.GO4356@tpkurt.garloff.de> <20040421134511.GP28633@tpkurt.garloff.de> <20040421141234.GT28633@tpkurt.garloff.de>
+Message-ID: <20040421152436.GD29699@tpkurt.garloff.de>
+References: <20040418185751.GC4868@tpkurt.garloff.de> <1082330192.1969.37.camel@mulgrave> <20040420115419.GG4356@tpkurt.garloff.de> <1082471881.1804.34.camel@mulgrave> <20040420160334.GO4356@tpkurt.garloff.de> <20040421134511.GP28633@tpkurt.garloff.de> <20040421141417.GV28633@tpkurt.garloff.de> <20040421160257.A6793@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="VMt1DrMGOVs3KQwf"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:60167 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263040AbUDUPOO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Apr 2004 11:14:14 -0400
+Received: from ns.suse.de ([195.135.220.2]:20971 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S263191AbUDUPZS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Apr 2004 11:25:18 -0400
 Content-Disposition: inline
-In-Reply-To: <20040421141234.GT28633@tpkurt.garloff.de>; from garloff@suse.de on Wed, Apr 21, 2004 at 04:12:34PM +0200
+In-Reply-To: <20040421160257.A6793@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>
+To: Linux SCSI list <linux-scsi@vger.kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>
 
-On Wed, Apr 21, 2004 at 04:12:34PM +0200, Kurt Garloff wrote:
-> 
-> Cleanup/Feature
-> 
-> Remove CONFIG_SCSI_REPORT_LUNS config option.
-> Instead provide BLIST_NOREPORTLUN that can be passed as default_dev_flags
-> (but also per device if needed).
-> Provide BLIST_REPORTLUN2
 
-Can we make this simply BLIST_REPORTLUN?  I always have to think why the
-2 is there until I guess this could mean only for scsi <= 2..
+--VMt1DrMGOVs3KQwf
+Content-Type: multipart/mixed; boundary="WplhKdTI2c8ulnbP"
+Content-Disposition: inline
 
-> -#ifdef CONFIG_SCSI_REPORT_LUNS
->  /*
->   * max_scsi_report_luns: the maximum number of LUNS that will be
->   * returned from the REPORT LUNS command. 8 times this value must
-> @@ -88,13 +87,12 @@ MODULE_PARM_DESC(max_luns,
->   * in practice, the maximum number of LUNs suppored by any device
->   * is about 16k.
->   */
-> -static unsigned int max_scsi_report_luns = 128;
-> +static unsigned int max_scsi_report_luns = 511;
 
-Hmm, where does this number come from?
+--WplhKdTI2c8ulnbP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->  	/*
-> -	 * Only support SCSI-3 and up devices.
-> -	 */
-> -	if (sdev->scsi_level < SCSI_3)
-> +	 * Only support SCSI-3 and up devices if BLIST_NOREPORTLUN is not set.
-> +	 * Also allow SCSI-2 if BLIST_REPORTLUN2 is set and host adapter does
-> +	 * support more than 8 LUNs.
+On Wed, Apr 21, 2004 at 04:02:58PM +0100, Christoph Hellwig wrote:
+> On Wed, Apr 21, 2004 at 04:14:17PM +0200, Kurt Garloff wrote:
+> >=20
+> > Don't attach high level drivers (except sg) to devices with peripheral
+> > qualifier indicating not connected (1) or not capable (3).
+> > SPC3, 7.4.2.
+>=20
+> Please don't duplicate it in every driver but in scsi_bus_match.  sg uses
+> a completely different attachment path so it shouldn't be affected by tha=
+t.
 
-This comment and the nested if is a little confusing.  Also why shouldn't
-the arbitrary SCSI2 limit for BLIST_REPORTLUN2?  I'm sure we won't find
-SCSI1 devices supporting it, but there should not be any harm leaving out
-that check - and doing so makes the logic much cleaner.
+Is it safe to assume it will stay like this?
 
-	/*
-	 * REPORT_LUN is used by default only for SCSI 3 devices (unless
-	 * BLIST_NOREPORTLUN is set).  For other devices BLIST_REPORTLUN
-	 * enables it if the HBA does support more than 8 LUNs.
+Regards,
+--=20
+Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
+SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
 
-	 if (bflags & BLIST_NOREPORTLUN)
-	 	return 1;
-	 if (sdev->scsi_level < 3 && sdev->host->max_lun <= 8 &&
-	     !(bflags & BLIST_REPORTLUN2))
-	     	return 1;
+--WplhKdTI2c8ulnbP
+Content-Type: text/plain; charset=us-ascii
+Content-Description: scsi-scan-nomatch-pq-notcon
+Content-Disposition: attachment; filename=scsi-scan-nomatch-pq-notcon
+Content-Transfer-Encoding: quoted-printable
 
-Note that I'd prefer not to add BLIST_NOREPORTLUN if the discussing
-about the LUN mapping comes to a useable consensus.
+diff -uNrp linux-2.6.5.attach/drivers/scsi/scsi_sysfs.c linux-2.6.5.noattac=
+h/drivers/scsi/scsi_sysfs.c
+--- linux-2.6.5.attach/drivers/scsi/scsi_sysfs.c	2004-04-04 05:36:26.000000=
+000 +0200
++++ linux-2.6.5.noattach/drivers/scsi/scsi_sysfs.c	2004-04-21 17:22:22.0000=
+00000 +0200
+@@ -155,7 +155,9 @@ struct class sdev_class =3D {
+ /* all probing is done in the individual ->probe routines */
+ static int scsi_bus_match(struct device *dev, struct device_driver *gendrv)
+ {
+-	return 1;
++	struct scsi_device *sdp =3D to_scsi_device(dev);
++	int pq =3D (sdp->inquiry[0] >> 5) & 7;
++	return (pq =3D=3D SCSI_INQ_PQ_CON)? 1: 0;
+ }
+=20
+ struct bus_type scsi_bus_type =3D {
 
+--WplhKdTI2c8ulnbP--
+
+--VMt1DrMGOVs3KQwf
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFAhpI0xmLh6hyYd04RAuC2AJ0eZimT93hSwat/VjLursRQMlGZCQCfXgpi
+FVhyb8MObDd912gp/J7dsBI=
+=2FyB
+-----END PGP SIGNATURE-----
+
+--VMt1DrMGOVs3KQwf--
