@@ -1,33 +1,67 @@
-From: Jeremy Higdon <jeremy@classic.engr.sgi.com>
-Subject: Re: is there a clean way to disable a scsi timer
-Date: Fri, 27 Sep 2002 01:29:42 -0700 (PDT)
+From: Matthew Jacob <mjacob@feral.com>
+Subject: Re: Warning - running *really* short on DMA buffers while doing file
+ transfers
+Date: Fri, 27 Sep 2002 01:37:18 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <10209270129.ZM103701@classic.engr.sgi.com>
-References: <10209270124.ZM103645@classic.engr.sgi.com>
+Message-ID: <Pine.BSF.4.21.0209270055290.18408-100000@beppo>
+References: <20020927074509.GA860@suse.de>
+Reply-To: mjacob@feral.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [192.26.80.2])
-	by zok.sgi.com (8.12.2/8.12.2/linux-outbound_gateway-1.2) with ESMTP id g8R7VST1029936
-	for <linux-scsi@vger.kernel.org>; Fri, 27 Sep 2002 00:31:28 -0700
-Received: from classic.engr.sgi.com (classic.engr.sgi.com [163.154.5.111])
-	by cthulhu.engr.sgi.com (SGI-8.9.3/8.9.3) with ESMTP id BAA11976
-	for <linux-scsi@vger.kernel.org>; Fri, 27 Sep 2002 01:30:02 -0700 (PDT)
-Received: (from jeremy@localhost)
-	by classic.engr.sgi.com (SGI-8.9.3/8.9.3) id BAA03761
-	for linux-scsi@vger.kernel.org; Fri, 27 Sep 2002 01:29:42 -0700 (PDT)
-In-Reply-To: Jeremy Higdon <jeremy@classic.engr.sgi.com>
-        "is there a clean way to disable a scsi timer" (Sep 27,  1:24am)
+In-Reply-To: <20020927074509.GA860@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, "Pedro M. Rodrigues" <pmanuel@myrealbox.com>, Mathieu Chouquet-Stringer <mathieu@newview.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Misremembered the name -- sorry.
 
-s/scsi_disable_timer/scsi_delete_timer/
 
-On Sep 27,  1:24am, Jeremy Higdon wrote:
+> On Fri, Sep 27 2002, Matthew Jacob wrote:
+> > 
+> > The issue here is not whether it's appropriate to oversaturate the
+> > 'standard' SCSI drive- it isn't- I never suggested it was.
 > 
-> I have a host driver that does its own timeout and error handling.  Is there
-> a clean way to disable the midlayer timeout handling?  It appears that I
-> can just call scsi_disable_timer() from the queuecommand function, but
-> I'd prefer something less nasty.
+> Ok so we agree. I think our oversaturate thresholds are different,
+> though.
+
+I think we simply disagree as to where to put them. See below.
+
+> 
+> > I'd just suggest that it's asinine to criticise an HBA for running up to
+> > reasonable limits when it's the non-toy OS that will do sensible I/O
+> > scheduling. So point your gums elsewhere.
+> 
+> Well I don't think 253 is a reasonable limit, that was the whole point.
+> How can sane io scheduling ever prevent starvation in that case? I can't
+> point my gums elsewhere, this is where I'm seeing starvation.
+
+You're in starvation because the I/O midlayer and buffer cache are
+allowing you to build enough transactions on one bus to impact system
+response times. This is an old problem with Linux that comes and goes
+(as it has come and gone for most systems). There are a number of
+possible solutions to this problem- but because this is in 2.4 perhaps
+the most sensible one is to limit how much you *ask* from an HBA,
+perhaps based upon even as vague a set of parameters as CPU speed and
+available memory divided by the number of <n-scsibus/total spindles).
+
+It's the job of the HBA driver to manage resources on the the HBA and on
+the bus the HBA interfaces to. If the HBA and its driver can efficiently
+manage 1000 concurrent commands per lun and 16384 luns per target and
+500 'targets' in a fabric, let it.
+
+Let oversaturation of a *spindle* be informed by device quirks and the
+rate of QFULLs received, or even, if you will, by finding the knee in
+the per-command latency curve (if you can and you think that it's
+meaningful). Let oversaturation of the system be done elsewhere- let the
+buffer cache manager and system policy knobs decide whether the fact
+that the AIC driver is so busy moving I/O that the user can't get window
+focus onto the window in N-P complete time to kill the runaway tar.
+
+Sorry- an overlong response. It *is* easier to just say "well, 'fix' the
+HBA driver so it doesn't allow the system to get too busy or
+overloaded". But it seems to me that this is even best solved in the
+midlayer which should, in fact, know best (better than a single HBA).
+
+-matt
+
+
