@@ -1,29 +1,52 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: AIC7902 lockups on Intel SMP (Re: HD somtimes hanging)
-Date: Thu, 24 Jul 2003 15:58:57 -0600
+From: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Subject: RE: I have modified the megaraid driver v2.00.5 from kernel 2.6 t
+	 o 2 .4.22-prex-ac1
+Date: Fri, 25 Jul 2003 13:39:39 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1470082704.1059083936@aslan.btc.adaptec.com>
-References: <20030724151233.E9280@laokoon.bug.net> <1059057411.6798.30.camel@carwash.duncangibb.com> <1382692704.1059068823@aslan.btc.adaptec.com> <20030724213847.B31870@laokoon.bug.net>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Message-ID: <200307250440.NAA25924@toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-2022-jp"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic-mail.adaptec.com ([208.236.45.100]:27850 "EHLO
-	magic.adaptec.com") by vger.kernel.org with ESMTP id S271739AbTGXVmI
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Jul 2003 17:42:08 -0400
-In-Reply-To: <20030724213847.B31870@laokoon.bug.net>
-Content-Disposition: inline
+Received: from inet-tsb.toshiba.co.jp ([202.33.96.40]:6037 "EHLO
+	inet-tsb.toshiba.co.jp") by vger.kernel.org with ESMTP
+	id S271113AbTGYEZR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Jul 2003 00:25:17 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Beutin <tyrone@laokoon.IN-Berlin.DE>, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: atulm@lsil.com, Matt Domsch <Matt_Domsch@Dell.com>, linux-megaraid-devel@dell.com, linux-scsi@vger.kernel.org, "Tomita, Haruo" <htomita@pcs.pc.ome.toshiba.co.jp>
 
-> I will give my system a try next time when i have access to the
-> machine.
+Hi Matthew,
 
-My response was to Duncan.  I don't have enough information to
-say what might be wrong with your system yet.
+Haruo> Please explain in detail to a slight degree.
+Haruo> Although it corresponds to PCI2001 by 2.6, 
+Haruo> is it having stopped corresponding with my patch?
 
---
-Justin
+Matthew> No, not at all.  I'm criticising the original code here, not 
+Matthew> your patch.In my opinion, we should simply delete these lines:
 
+OK, I will leave an original code. 
+
+Haruo> I think it priority to make it operate by 2.4.
+Matthew> Is the driver in 2.4 not functional for you?
+ 
+No, I should also operate the driver of v2.00.x by the kernel 2.4.
+
+Matthew> In 2.5, it is finally possible to write a scsi driver that can cope
+with
+Matthew> the pci card being hotplugged.  The changes are actually not too
+hard, but
+Matthew> they do have some consequences we have to accept.
+Matthew> For example, converting the sym8xx driver to this means the
+controllers will
+Matthew> be detected in a different order.  This is going to suck for some
+people,
+Matthew> but it's really unavoidable.  It doesn't look like megaraid would
+have
+Matthew> the same problem, though this comment scared me:
+Matthew> but there's no code associated with it, so it doesn't matter.
+
+Thank you for intelligible description. I understood in general.
+
+Thanks!!
+Haruo
