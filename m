@@ -1,87 +1,49 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Subject: Re: AIC7xxx LUN enumeration failure and DV config failure
-Date: Wed, 17 Sep 2003 08:23:59 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030917082359.A23802@beaverton.ibm.com>
+Date: Wed, 17 Sep 2003 10:20:02 -0600
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <2589900000.1063815602@aslan.btc.adaptec.com>
 References: <20030917130656.GA2948@m23.limsi.fr>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic-mail.adaptec.com ([216.52.22.10]:51131 "EHLO
+	magic.adaptec.com") by vger.kernel.org with ESMTP id S261175AbTIQQQv
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Sep 2003 12:16:51 -0400
+In-Reply-To: <20030917130656.GA2948@m23.limsi.fr>
 Content-Disposition: inline
-In-Reply-To: <20030917130656.GA2948@m23.limsi.fr>; from olivier.galibert@limsi.fr on Wed, Sep 17, 2003 at 03:06:56PM +0200
-To: Olivier Galibert <olivier.galibert@limsi.fr>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-On Wed, Sep 17, 2003 at 03:06:56PM +0200, Olivier Galibert wrote:
+To: Olivier Galibert <olivier.galibert@limsi.fr>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 > We have two transtec 5016 IDE disks/SCSI interface raid arrays
 > connected to a motherboard Adaptec AIC7902 Ultra320 SCSI adapter on
 > scsi1.  Each is split in two LUNs, 2x1.4Tb for the first and 2x2Tb for
-> the second.  There is also the root disk and $DEITY-knows-what on
-> scsi0.
-> 
-> With 2.4.22-pre9 aic79xx driver:
+> the second.
+
+...
 
 > Sep 17 14:41:42 m61 kernel: scsi1:A:0:0: DV failed to configure device.  Please file a bug report against this driver.
 > Sep 17 14:41:42 m61 kernel: scsi1:A:1:0: DV failed to configure device.  Please file a bug report against this driver.
 
-Are you sure the above is not a bug or a failure with the array (Justin)?
+In the case of SCSI-IDE RAID arrays, many of which are of questionable
+quality, this typically means that the device is not providing a valid
+echo buffer size for performing domain validation.  In this case, the
+driver defaults to running at the maximum speed supported by the device,
+but also prints out a diagnostic.  I plan to remove the diagnostic for
+the echo buffer issue since there seem to be lots of broken devices
+out there.
 
-> Sep 17 14:41:42 m61 kernel: Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-> Sep 17 14:41:42 m61 kernel: Attached scsi disk sdb at scsi1, channel 0, id 0, lun 0
-> Sep 17 14:41:42 m61 kernel: Attached scsi disk sdc at scsi1, channel 0, id 0, lun 1
-> Sep 17 14:41:42 m61 kernel: Attached scsi disk sdd at scsi1, channel 0, id 1, lun 0
-> Sep 17 14:41:42 m61 kernel: Attached scsi disk sde at scsi1, channel 0, id 1, lun 1
+Your RAID array only supports U160, so it only runs at that speed.
+This has everything to do with the device, and nothing to do with the
+aic79xx controller/driver.
 
-> There is a DV configuration failure which limits the speed to U160,
-> but otherwise everything works nicely.
+As to the LUN issues, as already pointed out by others, it looks like
+the report luns support in this device is broken.  Perhaps the vendor
+has a firmware update available.
 
-> With 2.4.23-pre4 aix7xxx driver:
+--
+Justin
 
-The following looks like 2.6.x output, since 2.4.x does not have REPORT
-LUN support.
-
-> Sep 17 14:37:25 m61 kernel: scsi: On host 1 channel 0 id 0 only 128 (max_scsi_report_luns) of 536870896 luns reported, try increasing max_scsi_report_luns.
-> Sep 17 14:37:25 m61 kernel: scsi: host 1 channel 0 id 0 lun 0x7400616e73746563 has a LUN larger than currently supported.
-> Sep 17 14:37:25 m61 kernel: scsi: host 1 channel 0 id 0 lun 0x2001202020202020 has a LUN larger than currently supported.
-> Sep 17 14:37:25 m61 kernel: scsi: host 1 channel 0 id 0 lun 0x2002202020202020 has a LUN larger than currently supported.
-> Sep 17 14:37:25 m61 kernel: scsi: host 1 channel 0 id 0 lun808529923 has a LUN larger than allowed by the host adapter
-> Sep 17 14:37:25 m61 kernel: scsi: host 1 channel 0 id 0 lun3078 has a LUN larger than allowed by the host adapter
-> Sep 17 14:37:25 m61 kernel: scsi: host 1 channel 0 id 0 lun 0x000000000f000000 has a LUN larger than currently supported.
-> Sep 17 14:37:25 m61 kernel: (scsi1:A:1): 160.000MB/s transfers (80.000MHz DT, 16bit)
-> Sep 17 14:37:25 m61 kernel:   Vendor: transtec  Model:                   Rev: 0001
-> Sep 17 14:37:25 m61 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 03
-> Sep 17 14:37:25 m61 kernel: scsi1:A:1:0: Tagged Queuing enabled.  Depth 32
-> Sep 17 14:37:25 m61 kernel: scsi: On host 1 channel 0 id 1 only 128 (max_scsi_report_luns) of 536870896 luns reported, try increasing max_scsi_report_luns.
-> Sep 17 14:37:25 m61 kernel: scsi: host 1 channel 0 id 1 lun 0x7400616e73746563 has a LUN larger than currently supported.
-> Sep 17 14:37:25 m61 kernel: scsi: host 1 channel 0 id 1 lun 0x2001202020202020 has a LUN larger than currently supported.
-> Sep 17 14:37:25 m61 kernel: scsi: host 1 channel 0 id 1 lun 0x2002202020202020 has a LUN larger than currently supported.
-> Sep 17 14:37:25 m61 kernel: scsi: host 1 channel 0 id 1 lun808529923 has a LUN larger than allowed by the host adapter
-> Sep 17 14:37:25 m61 kernel: scsi: host 1 channel 0 id 1 lun3078 has a LUN larger than allowed by the host adapter
-> Sep 17 14:37:25 m61 kernel: scsi: host 1 channel 0 id 1 lun 0x000000000f000000 has a LUN larger than currently supported.
-
-My guess is that something is totally screwed up with the arrays REPORT
-LUN results.
-
-Does it work OK if you turn off CONFIG_SCSI_REPORT_LUNS?
-
-Did you check with the vendor about the problem?
-
-You could also try modifying the arrays to report as SCSI 2, and then the
-REPORT LUNS will not be sent.
-
-If you could dump the result of sending a REPORT LUN to the device, that
-would be useful. You could use the sg interface on a system (modify one of
-the sg utils programs, like sg_inq.c) that found the LUNs OK, or hack the
-kernel to dump the REPORT LUN output, or get a trace.
-
-Also with CONFIG_SCSI_LOGGING enabled (hope I have this right), turn on
-scsi scan logging by booting with:
-
-	scsi_mod.scsi_logging_level=0x000001c0
-	
-And post the output. The extra logging probably won't help, given that the
-REPORT LUN output looks corrupted.
-
--- Patrick Mansfield
