@@ -1,37 +1,45 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] Bio Traversal Changes
-Date: Fri, 02 Aug 2002 08:48:06 -0500
+From: Craig Tierney <ctierney@hpti.com>
+Subject: Re: Performance
+Date: Fri, 2 Aug 2002 08:16:55 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <13845.9527669058$1028296355@news.gmane.org>
-References: <suparna@in.ibm.com>
+Message-ID: <20020802081655.B15152@hpti.com>
+References: <20020802065548.87405.qmail@web14006.mail.yahoo.com> <20020802075037.66373.qmail@web14001.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id GAA03837
-	for <linux-scsi@vger.kernel.org>; Fri, 2 Aug 2002 06:48:14 -0700
-In-Reply-To: Message from Suparna Bhattacharya <suparna@in.ibm.com>
-   of "Fri, 02 Aug 2002 18:05:13 +0530." <20020802180513.A1802@in.ibm.com>
+Content-Disposition: inline
+In-Reply-To: <20020802075037.66373.qmail@web14001.mail.yahoo.com>; from mkotwani@yahoo.com on Fri, Aug 02, 2002 at 12:50:37AM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: suparna@in.ibm.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, akpm@zip.com.au
+To: Mukul Kotwani <mkotwani@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
 
-The SCSI changes (small that they are) look reasonable.
+For the Qlogic 2200F I am able to push 100 MB/s for
+reads and writes using multiple threads to a filesystem
+that is striped across mutliple host ports on the SAN.  Backend RAID is a 
+Data Direct Networks SAN.  For a single thread to a ext3 filesystem
+and 2.4.18, I get about 70 MB/s for reads and writes.
 
-This does look like it exposes an existing problem in the tag/barrier 
-approach, though.
+I have no Iops/sec numbers.
 
-The bio can be split by making multiple requests over segements of the bio, 
-correct?  If this is a BIO_RW_BARRIER, then each of these requests will be a 
-REQ_BARRIER.  However, in the SCSI paradigm where we translate REQ_BARRIER to 
-ordered tag, each of the requests will get a new ordered tag as it comes back 
-around through end_that_request_first, potentially allowing other tags to be 
-inserted in between these, which would be incorrect, since other bios would be 
-inserted in between the segments of this one, thus violating the barrier.
-
-Is the above correct?  If it is, I may have finally found a use for linked 
-scsi tasks (gives you the ability to have one tag cover multiple commands).
-
-James
+Craig
 
 
+> Hello!
+> Does anyone have any performace numbers of a Qlogic
+> HBA? No of IOps/sec Max MBs /sec?
+> 
+> Thanks!
+> M
+> 
+> 
+> __________________________________________________
+> Do You Yahoo!?
+> Yahoo! Health - Feel better, live better
+> http://health.yahoo.com
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Craig Tierney (ctierney@hpti.com)
