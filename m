@@ -1,39 +1,63 @@
 From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: Is there a Comparison or Difference document between kernel	2.4
- and kernel 2.6
-Date: Sun, 31 Oct 2004 19:39:53 -0800
-Message-ID: <4185B009.20205@osdl.org>
-References: <374639AB1012AA4C840022842AA95BC20334FCAC@ruby.patni.com> <1099248007.7695.1.camel@tinny.home.foo>
+Subject: Re: Can anyone be part of Linux kernel development team.
+Date: Sun, 31 Oct 2004 19:43:29 -0800
+Message-ID: <4185B0E1.2060103@osdl.org>
+References: <374639AB1012AA4C840022842AA95BC20334FCA9@ruby.patni.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:8624 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S261734AbUKADpF (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:64178 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S261736AbUKADsg (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 31 Oct 2004 22:45:05 -0500
-In-Reply-To: <1099248007.7695.1.camel@tinny.home.foo>
+	Sun, 31 Oct 2004 22:48:36 -0500
+In-Reply-To: <374639AB1012AA4C840022842AA95BC20334FCA9@ruby.patni.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Scott T. Smith" <scott@gelatinous.com>
-Cc: "Kotian, Deepak ( JBU Mumbai )" <Deepak.Kotian@patni.com>, Jan-Benedict Glaw <jbglaw@lug-owl.de>, linux-scsi@vger.kernel.org
+To: "Kotian, Deepak ( JBU Mumbai )" <Deepak.Kotian@patni.com>
+Cc: linux-scsi@vger.kernel.org
 
-Scott T. Smith wrote:
-> On Sun, 2004-10-31 at 10:14, Kotian, Deepak ( JBU Mumbai ) wrote:
-> 
->>If there are drivers that are running on 2.4 will it work as it is on kernel 2.6 or will there be any port issues,
->>has there any study carried out for that, please let me know.
-> 
-> 
-> I have found:
-> 
-> http://www.sao.ru/hq/sts/linux/doc/porting_to_26/26porting.html
-> 
-> invaluable in developing/modifying drivers for the 2.6 kernel.
+Kotian, Deepak ( JBU Mumbai ) wrote:
+> Is there a defect list and I can start fixing it whenever time.
+> How does one avoid duplication of work by 2 or more individuals working on
+> the same problem.
 
-which appears to be a copy of
-   http://lwn.net/Articles/driver-porting/
-(without some graphics etc.)
+Short of finding an itch and scratching it, you can always
+check the kernel bug list at
+http://bugzilla.kernel.org/
+(which is same as http://bugme.osdl.org/ FYI).
+
+
+> Thanks and Regards
+> Deepak
+>  
+> 
+> ________________________________
+> 
+> From: willy@www.linux.org.uk on behalf of Matthew Wilcox
+> Sent: Sun 10/31/2004 10:57 PM
+> To: Kotian, Deepak ( JBU Mumbai )
+> Cc: linux-scsi@vger.kernel.org
+> Subject: Re: Can anyone be part of Linux kernel development team.
+> 
+> 
+> 
+> On Sun, Oct 31, 2004 at 10:21:39PM +0530, Kotian, Deepak ( JBU  Mumbai ) wrote:
+> 
+>>Can anyone be part of Linux kernel development team.
+> 
+> 
+> Anyone with the requisite skill, interest and time, yes.
+> 
+> 
+>>I would be interested in SCSI layer/block devices and large Storage Devices like SAN or new development in this area.
+>>The reason for joining the kernel team is gain indepth knowledge
+>>of kernel on the job and at the same time contribute to the development.
+>>Where do I start, please let me know.
+> 
+> 
+> Start by finding something that doesn't work and fix it ;-)
+
 
 -- 
 ~Randy
