@@ -1,87 +1,131 @@
-From: Andre Hedrick <andre@linux-ide.org>
-Subject: Re: requeuing a Scsi_Cmnd?
-Date: Thu, 30 Oct 2003 15:48:16 -0800 (PST)
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [PATCH/RFT] mode sense madness always use page 8
+Date: 30 Oct 2003 16:59:45 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.10.10310301544250.23682-100000@master.linux-ide.org>
-References: <3EC03A69.1060302@pobox.com>
+Message-ID: <1067558384.14409.50.camel@patrh9>
+References: <Pine.LNX.4.44L0.0310301004010.852-100000@ida.rowland.org>
+	 <1067531731.4250.11.camel@pathost1.iomegacorp.com>
+	 <20031030091808.A6781@beaverton.ibm.com>
+	 <1067535485.6411.42.camel@pathost1.iomegacorp.com>
+	 <20031030100501.A7250@beaverton.ibm.com>
+	 <1067541899.1141.4.camel@ronald.kuetemeier.com>
+	 <20031030134850.A9076@beaverton.ibm.com>
+	 <1067551081.1138.7.camel@ronald.kuetemeier.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from astound-64-85-224-253.ca.astound.net ([64.85.224.253]:14853
-	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
-	id S262913AbTJ3Xs2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Oct 2003 18:48:28 -0500
-In-Reply-To: <3EC03A69.1060302@pobox.com>
+Received: from email-out1.iomega.com ([147.178.1.82]:36740 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S262973AbTJaAAO
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Oct 2003 19:00:14 -0500
+In-Reply-To: <1067551081.1138.7.camel@ronald.kuetemeier.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Luben Tuikov <tluben@rogers.com>, James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: patmans@us.ibm.com
+Cc: ronald@kuetemeier.com, stern@rowland.harvard.edu, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, james.bottomley@steeleye.com
 
-
-Jeff,
-
-If the goal is to add a queue depth to hba's w/o a qdma ring, you need a
-whole pile of tasklets and thread queues.
-
-If you have a hba with qdma ring(s) then it is just like standard scsi.
-
-Cheers,
-
-Andre Hedrick
-LAD Storage Consulting Group
-
-On Mon, 12 May 2003, Jeff Garzik wrote:
-
-> Luben Tuikov wrote:
-> > James Bottomley wrote:
+> > Can you hack the base 2.6 so the len is 255, and configure or modify to
+> > that it uses only page 3f so it closely matches what 2.4 sends, and see
+> > what happens?
 > > 
-> >> On Sun, 2003-05-11 at 15:25, Jeff Garzik wrote:
-> >>
-> >>> This question applies to 2.4 as well as 2.5 (I believe the strategies 
-> >>> are different for the two?)
-> >>>
-> >>> Suppose I am passed several Scsi_Cmnd structures via ->queuecommand. 
-> >>> TCQ depth is >1.  An event causes the entire queue to be aborted, but 
-> >>> I know that the majority of the queue was actually ok.  So, my LLD 
-> >>> would need to requeue and resend most of the recently-aborted 
-> >>> Scsi_Cmnds.
-> >>
-> >>
-> >>
-> >> You keep finding these unhandled condidions, sigh.  The correct thing to
-> >> do (since this is a situation identical to QErr set) is to return a
-> >> check condition to the failing command and to return a status of TASK
-> >> ABORTED for all the others (SPC3).  Of course, the SCSI-2 behaviour was
-> >> just to expect all tasks to be silently aborted on QErr=1.  Neither of
-> >> these, of course, is coded into the mid-layer.
-> > 
-> > 
-> > Iff TAS is set and if TST is 001, and there is more than one initiator
-> > whose task are being nuked, then this is correct.
-> > 
-> > Jeff didn't give much information, but it sounds like ABORT/CLEAR TASK SET.
-> > Anyway, no point in speculating.
-> 
-> 
-> I'm working on a SCSI low-level driver that drives SATA host 
-> controllers.  For ATAPI, it's mainly a passthru.  The headache comes in 
-> the translation of SCSI->ATA, and in the error handling.  The SCSI->ATA 
-> translator can be effectively considered a SCSI simulator (or at least 
-> that's how I look at it), so like iSCSI I'm creating a software target, 
-> and I want my target to be compliant to spec.  (Which spec, you ask? 
-> Well, initially SCSI-2, but long term James has convinced me SCSI-3)
-> 
-> So for my specific example, I'm passed a bunch of Scsi_Cmnds.  I queue 
-> them.  And then according to spec, an error on the active command will 
-> cause the entire queue to abort.  Clearly, I do not want to error-out 
-> the other probably-valid commands, only the specific one that caused the 
-> error.  So, the remaining ones need to be retried.
-> 
-> 	Jeff
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Sorry has to wait until next week. 
+
+Can we cycle more quickly thru compile-test-edit up in user land, rather
+than patching the kernel?
+
+For example, the kernel code:
+
+drivers/scsi/sd.c
+... sd_do_mode_sense(SRpnt, 0, 0x08, buffer, 0x1C, &data);
+... sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 4, &data);
+... sd_do_mode_sense(SRpnt, 0, 0, buffer, 4, &data);
+... sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 255, &data);
+
+becomes the bash script:
+
+sudo ./plscsi /dev/sg1 -v -i x1C -x "5A 00 08:00:00:00 00 00:1C 00"
+sudo ./plscsi /dev/sg1 -v -i 4   -x "5A 00 3F:00:00:00 00 00:04 00"
+sudo ./plscsi /dev/sg1 -v -i 4   -x "5A 00 00:00:00:00 00 00:04 00"
+sudo ./plscsi /dev/sg1 -v -i xFF -x "5A 00 3F:00:00:00 00 00:FF 00"
+
+after the setup of the tty log below.
+
+I trust this audience already knows we have to be wary of experimenting
+near here: by definition this kind of root-privileged user code can
+crash kernels (and thus smash hdd) almost as readily as kernel mods.
+
+Also personally I find the source for that plscsi app impenetrably awful
+to read.
+
+Pat LaVarre
+
+P.S. If you have sufficiently shy automounting daemon's, to duplicate
+these results you may have to skip past such non-repeating errors as:
+
+// x 6 29 sense
+// x 6 28 sense
+
+SK 6 = unit attention, ASC x29 = reset, ASC x28 = gone ready.  If you
+eat an x28 in place of the automounting daemon, some of your system may
+neglect to notice you have inserted/ swapped that disk.
+
+//////////////////// tty log of setup
+
+$ mkdir plscsi
+$
+$ cd plscsi
+$
+$ wget http://members.aol.com/plscsi/2002/09/22/plscsi.zip
+...
+16:34:21 (68.48 KB/s) - `plscsi.zip' saved [56729/56729]
+ 
+$ unzip plscsi.zip
+Archive:  plscsi.zip
+  inflating: Makefile
+...
+  inflating: wnaspi32.h
+$
+$ mv -i Makefile Makefile~
+$
+$ sed 's/gcc/g++/' Makefile~ >Makefile
+$
+$ make
+g++ -o plscsi -Wall *.c*
+$
+$ sudo ./plscsi -w
+export PLSCSI=/dev/sg0        // @ LITE-ON  COMBO LTC-48161H KH0K
+export PLSCSI=/dev/sg1        // B IOMEGA   ZIP 250          61.T
+$
+
+///////////////// tty log of a way for these tests to pass
+
+$ sudo ./plscsi /dev/sg1 -v -i 4 -x "5A 00 08:00:00:00 00 00:04 00"
+x 00000000 5A 00 08:00:00:00 00 00:04 00 .. .. .. .. .. .. "Z@H@@@@@D@"
+x 00000000 00:12:00:00 .. .. .. .. .. .. .. .. .. .. .. .. "@R@@"
+// 0 = plscsi.main exit int
+$
+$ sudo ./plscsi /dev/sg1 -v -i 4 -x "5A 00 3F:00:00:00 00 00:04 00"
+x 00000000 5A 00 3F:00:00:00 00 00:04 00 .. .. .. .. .. .. "Z@?@@@@@D@"
+x 00000000 00:40:00:00 .. .. .. .. .. .. .. .. .. .. .. .. "@@@@"
+// 0 = plscsi.main exit int
+$
+$ sudo ./plscsi /dev/sg1 -v -i 4 -x "5A 00 00:00:00:00 00 00:04 00"
+x 00000000 5A 00 00:00:00:00 00 00:04 00 .. .. .. .. .. .. "Z@@@@@@@D@"
+x 00000000 00:06:00:00 .. .. .. .. .. .. .. .. .. .. .. .. "@F@@"
+// 0 = plscsi.main exit int
+$
+$ sudo ./plscsi /dev/sg1 -v -i xFF -x "5A 00 3F:00:00:00 00 00:FF 00"
+x 00000000 5A 00 3F:00:00:00 00 00:FF 00 .. .. .. .. .. .. "Z@?@@@@@?@"
+x 00000000 00:40:00:00 00:00:00:00 01:06:C8:64 00:00:00:00 "@@@@@@@@AFHd@@@@"
+x 00000010 05:1E:80:00 40:20:02:00 00:00:00:00 00:00:00:00 "E^@@@ B@@@@@@@@@"
+x 00000020 00:00:00:00 00:00:00:00 00:00:00:00 0B:7D:00:00 "@@@@@@@@@@@@K}@@"
+x 00000030 08:0A:04:00 FF:FF:00:00 FF:FF:FF:FF 2F:04:5C:01 "HJD@??@@????/D\A"
+x 00000040 0F:0F:00:00 00:00:00:00 00:00:00:00 00:00:00:00 "OO@@@@@@@@@@@@@@"
+x 00000050 00:00:00:00 00:00:00:00 00:00:00:00 00:00:00:00 "@@@@@@@@@@@@@@@@"
+...
+x 000000E0 00:00:00:00 00:00:00:00 00:00:00:00 00:00:00:00 "@@@@@@@@@@@@@@@@"
+x 000000F0 00:00:00:00 00:00:00:00 00:00:00:00 00:00:00 .. "@@@@@@@@@@@@@@@"
+// 0 = plscsi.main exit int
+$
+
 
