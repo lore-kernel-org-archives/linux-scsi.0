@@ -1,75 +1,47 @@
-From: "Ravi Anand" <ravi.anand@qlogic.com>
-Subject: RE: scsi bus-reset in qlogic causes system stall
-Date: Fri, 17 Jan 2003 14:23:07 -0800
+From: William Lee Irwin III <wli@holomorphy.com>
+Subject: 2.5.59 qlogicisp.c oops
+Date: Fri, 17 Jan 2003 17:34:35 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3679966B84813344B908D418BA3F6A4AA84088@AVEXCH01.qlogic.org>
+Message-ID: <20030118013435.GI940@holomorphy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-content-class: urn:content-classes:message
+Received: from wli by holomorphy with local (Exim 3.34 #1 (Debian))
+	id 18ZhsZ-0003a9-00
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2003 17:34:35 -0800
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Steven Dake <sdake@mvista.com>, devnetfs <devnetfs@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Please use the following link to download the latest driver-v6.04.00b8
+Unable to handle kernel NULL pointer dereference a
+t virtual address 00000150
+ printing eip:
+c0214f98
+*pde = 0073c001
+Oops: 0002
+CPU:    2
+EIP:    0060:[<c0214f98>]    Not tainted
+EFLAGS: 00010046                        
+EIP is at isp1020_intr_handler+0x248/0x2f8
+eax: 00000000   ebx: d802e140   ecx: 00000000   edx: 00000000
+esi: d8065400   edi: 00000002   ebp: d8d99f04   esp: d8d99ee0
+ds: 007b   es: 007b   ss: 0068                               
+Process swapper (pid: 0, threadinfo=d8d98000 task=d8d9cc80)
+Stack: d802e140 d8065410 d8065400 00000002 00000006 00000006 d8065498 d8065400 
+       00000000 d8d99f24 c0214d27 00000013 d8065400 d8d99f74 d8defec0 24000001 
+       00000013 d8d99f44 c010b034 00000013 d8065400 d8d99f74 c0307a70 c0307a60 
+Call Trace:                                                                    
+ [<c0214d27>] do_isp1020_intr_handler+0x4b/0x74
+ [<c010b034>] handle_IRQ_event+0x28/0x50       
+ [<c010b2bd>] do_IRQ+0xf1/0x194         
+ [<c0106f04>] default_idle+0x0/0x34
+ [<c01099fc>] common_interrupt+0x18/0x20
+ [<c0106f04>] default_idle+0x0/0x34
+ [<c0106f30>] default_idle+0x2c/0x34
+ [<c0106fc6>] cpu_idle+0x3a/0x48
+ [<c011fd18>] printk+0x1b0/0x1f4
+ 
+Code: 89 82 50 01 00 00 83 c4 04 eb 0d 8b 4d fc c7 81 50 01 00 00
+ <0>Kernel panic: Aiee, killing interrupt handler!
+In interrupt handler - not syncing
 
-http://www.qlogic.com/support/os_detail.asp?productid=125&osid=26
-
-There has been some other fixes too in the bus reset code when issued through the backdoor.
-
-Regards
-Ravi
-
------Original Message-----
-From: Steven Dake [mailto:sdake@mvista.com]
-Sent: Friday, January 17, 2003 10:33 AM
-To: devnetfs
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: scsi bus-reset in qlogic causes system stall
-
-
-bug in qlogic driver I think this has been fixed to a schedule_timeout 
-in the 6.X drivers (from a spin on i/o)
-
-I have done this same thing with the 6.x driver and the system is still 
-usable.  Keep in mind that the I/O's will retry until the FC LIP has 
-completed.
-
-Thanks
--steve
-
-devnetfs wrote:
-
->Hello,
->
->I am running RedHat 2.4.9-13 with qlogic qla2x00 driver (ver 4.31.7b).
->Trying to do a bus-reset (in an multi-initiator, shared-scsi scenario)
->stalls one (or more) nodes in the system for a while. dmesg shows the
->message: "Waiting for LIP to complete...", on all nodes. Everything
->freezes for a while (around 10-40secs). It happens on UP/SMP both.
->
->Is this normal? or a bug in qlogic driver? 
->
->Thanks in advance for any insight,
->A.
->
->
->__________________________________________________
->Do you Yahoo!?
->Yahoo! Mail Plus - Powerful. Affordable. Sign up now.
->http://mailplus.yahoo.com
->-
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
->  
->
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
