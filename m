@@ -1,40 +1,22 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [ANNOUNCE][RELEASE]: megaraid unified driver version 2.20.0.B1
-Date: Fri, 16 Apr 2004 13:18:40 +0100
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: assertion failure with new megaraid beta driver leads to sche
+	 duling failure
+Date: Fri, 16 Apr 2004 09:45:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040416131840.E5080@infradead.org>
-References: <0E3FA95632D6D047BA649F95DAB60E570230C7B4@exa-atlanta.se.lsil.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC53A@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:64016 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S262952AbUDPMSw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Apr 2004 08:18:52 -0400
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570230C7B4@exa-atlanta.se.lsil.com>; from sreenib@lsil.com on Wed, Apr 07, 2004 at 07:18:02PM -0400
+Received: from mail0.lsil.com ([147.145.40.20]:57728 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S263168AbUDPNpp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Apr 2004 09:45:45 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Cc: "'jgarzik@pobox.com'" <jgarzik@pobox.com>, "'Matt_Domsch@dell.com'" <Matt_Domsch@dell.com>, "'paul@kungfoocoder.org'" <paul@kungfoocoder.org>, "'James.Bottomley@SteelEye.com'" <James.Bottomley@SteelEye.com>, "'arjanv@redhat.com'" <arjanv@redhat.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
+To: 'Paul Wagland' <paul@wagland.net>, "Mukker, Atul" <Atulm@lsil.com>
+Cc: Linux SCSI mailing list <linux-scsi@vger.kernel.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, Linux kernel mailing list <linux-kernel@vger.kernel.org>
 
-kdep.h:
- - mraid_scsi_host_alloc/mraid_scsi_host_dealloc should go away, just
-   define scsi_host_alloc/scsi_host_put wrappers for 2.4.
- - mraid_scsi_set_pdev should go away, it's not needed in 2.6 at all
-   because scsi_add_host does all the work and for 2.4 just use
-   scsi_set_pci_device directly.
- - all the SCP2FOO defines should go away, the 2.6 variants work for 2.4
-   aswell
- - mraid_set_host_lock should go, just use scsi_assign_lock and define
-   it for 2.4.
+> If so, would it be possible to rename the output file to megaraid.o, 
+It's been already done like that in next release
 
-megaraid_clib.c:
-  - why do you need the scb pool managment code at all?  You can dynamically
-    allocate scbs in ->queuecommand
-  - can you explain the need for all the mraid_pci_blk_pool?  I.e. why the
-    generic dma pool routines don't work for megaraid
-
-all files:
-  - please avoid using scsi.h and hosts.h from drivers/scsi in favour of
-    the include/scsi/ headers, especially get rid of all the Scsi_Foo
-    typedefs
+-Atul
