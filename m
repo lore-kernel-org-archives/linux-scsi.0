@@ -1,57 +1,63 @@
-From: Nicolas Mailhot <Nicolas.Mailhot@one2team.com>
-Subject: Re: Adaptec scsi probe failure
-Date: Fri, 24 Oct 2003 13:38:13 +0200
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: aligned /dev/scd$n reads less rare how
+Date: 24 Oct 2003 08:41:16 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1066995492.5072.2.camel@ulysse.olympe.o2t>
-References: <1066926316.20919.6.camel@ulysse.olympe.o2t>
+Message-ID: <1067006475.16062.10.camel@patehci2>
+References: <1064271322.4797.9.camel@patehci2>
+	 <1064847281.24854.2.camel@patehci2>  <1064850600.25057.7.camel@patehci2>
+	 <1064858121.4262.0.camel@patehci2>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RFYncCn2A/CoFsswEOZH"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.clb.oleane.net ([213.56.31.18]:60909 "EHLO
-	smtp2.clb.oleane.net") by vger.kernel.org with ESMTP
-	id S262133AbTJXLiT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Oct 2003 07:38:19 -0400
-Received: from smtp.olympe.o2t (cerbere.one2team.com [194.206.159.179])
-	by smtp2.clb.oleane.net with ESMTP id h9OBcFfo005889
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Oct 2003 13:38:17 +0200
-Received: from ulysse.olympe.o2t (ulysse.olympe.o2t [192.168.1.40])
-	by smtp.olympe.o2t (Postfix) with ESMTP id 023C01CB4D
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Oct 2003 13:38:13 +0200 (CEST)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by ulysse.olympe.o2t (Postfix) with ESMTP id 970AEA8CBF
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Oct 2003 13:38:13 +0200 (CEST)
-In-Reply-To: <1066926316.20919.6.camel@ulysse.olympe.o2t>
+Received: from email-out1.iomega.com ([147.178.1.82]:45253 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S262228AbTJXOli
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Oct 2003 10:41:38 -0400
+Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
+	by email.iomega.com (Postfix) with ESMTP id 5522920E8
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Oct 2003 08:41:37 -0600 (MDT)
+In-Reply-To: <1064858121.4262.0.camel@patehci2>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
+> Anything easy I can do
+> to make aligned reads more common?
 
---=-RFYncCn2A/CoFsswEOZH
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: quoted-printable
+Instead we first could/ should ask:
 
-Forget this - the third time the on-site people checked, they discovered
-they didn't plug the SCSI cable at the right place, and despite what
-they did tell us the device didn't appear in the boot firmware messages.
+How does Linux align write/read of cd-rw/dvd+rw?
 
-So this was a classic stupid operator mistake;)
+We know 2.6 vs. 2.4 newly connects cd-rw as writeable, by
+http://kniggit.net/wwol26.html of l=kernelnewbies.  And "everybody
+knows" cd-rw needs 64 KiB write alignment, dvd+rw needs 32 KiB write
+alignment, and both prefer write alignment in reads, right?  How then
+does Linux hint at the mounted fs to align write/read to something other
+than the 0.5 KiB that was optimal for legacy hdd?
 
---=20
-Nicolas Mailhot
-One2team : 12 bis rue de la Pierre lev=E9e - 75011 Paris - France =20
-T=E9l : + 33 1 43 38 19 80 - Fax : +33 1 43 14 23 07
+> I ask because often thru /dev/scd$n
+> I see seemingly pointless misalignment,
+> ...
+> $ sudo blockdev --flushbufs /dev/scd0
+> $ time sudo dd if=/dev/scd0 bs=1M
+> ...
+> usb-storage:  x 28 00 00 00 00 00 00 00 20 00
 
---=-RFYncCn2A/CoFsswEOZH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: Ceci est une partie de message
-	=?ISO-8859-1?Q?num=E9riquement?= =?ISO-8859-1?Q?_sign=E9e=2E?=
+Initially we see aligned in address and length to x20 blocks = 64 KiB.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (GNU/Linux)
+> usb-storage:  x 28 00 00 00 00 20 00 00 24 00
 
-iD8DBQA/mQ8kmsj7VFSyrYsRAiRDAJ9kauNL4pz31Mh7pAiIdPtt3XmszACeI8fU
-9jPvdA0kw9ofYiQeedMpt18=
-=cQ2H
------END PGP SIGNATURE-----
+Soon we see aligned in address but, whoops, not in length.
 
---=-RFYncCn2A/CoFsswEOZH--
+> usb-storage:  x 28 00 00 00 00 44 00 00 40 00
+> usb-storage:  x 28 00 00 00 00 84 00 00 40 00
+> usb-storage:  x 28 00 00 00 00 C4 00 00 40 00
+> ...
+> usb-storage:  x 28 00 00 07 FE C4 00 00 40 00
+
+Mostly we see contiguous after a misaligned access, so not aligned in
+address though yes aligned in length.  Ouch.
+
+Pat LaVarre
+
 
