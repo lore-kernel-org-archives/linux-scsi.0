@@ -1,46 +1,55 @@
-From: "Amit D. Chaudhary" <amit_c@comcast.net>
-Subject: Re: A question on low-level driver document
-Date: Thu, 13 May 2004 18:18:18 -0700
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] BUG when removing USB flash drive
+Date: Thu, 13 May 2004 23:11:01 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40A41E5A.4060002@comcast.net>
-References: <519672568F040C41B6FAC21ADF51B18FEFF1@mailnode1.commstor.crossroads.com>
+Message-ID: <Pine.LNX.4.44L0.0405132305400.32262-100000@netrider.rowland.org>
+References: <20040514004132.GA10537@telpin.com.ar>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sccrmhc11.comcast.net ([204.127.202.55]:24981 "EHLO
-	sccrmhc11.comcast.net") by vger.kernel.org with ESMTP
-	id S264184AbUENBU2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 May 2004 21:20:28 -0400
-In-Reply-To: <519672568F040C41B6FAC21ADF51B18FEFF1@mailnode1.commstor.crossroads.com>
+Received: from netrider.rowland.org ([192.131.102.5]:62219 "HELO
+	netrider.rowland.org") by vger.kernel.org with SMTP id S264192AbUENDLC
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 May 2004 23:11:02 -0400
+In-Reply-To: <20040514004132.GA10537@telpin.com.ar>
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Xing <lxing@Crossroads.com>
-Cc: linux-scsi@vger.kernel.org
+To: Alberto Bertogli <albertogli@telpin.com.ar>
+Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Pick up a driver and follow the function pointers for 
-Scsi_Host_Template. For example, qlogicfc.c,
-static Scsi_Host_Template driver_template = QLOGICFC;
-qlogicfc.h for definition of QLOGICFC.
+On Thu, 13 May 2004, Alberto Bertogli wrote:
 
-The detect fptr is good starting point.
+> Hi!
+> 
+> I've just hit a bug after removing a Kingston USB flash drive.
+> 
+> I have removed it several (probably more than 40) times today without
+> problems until now. I'm removing it while doing streaming write()s on
+> the device (using /dev/sda) because I'm testing some things with the
+> drive. This was just like all the other times, so it looks like a race
+> somewhere.
+> 
+> This is a stock 2.6.6 kernel, on a Pentium 4 with HT (the kernel is
+> compiled with both SMP and preempt).
+> 
+> After the BUG the kernel doesn't detect the device anymore.
+> 
+> Please let me know if you need any more information or if I can give you a
+> hand with testing.
+> 
+> Thanks a lot,
+> 		Alberto
+> 
+> 
+> kernel BUG at drivers/usb/storage/usb.c:848!
 
-Amit
+This BUG happened because the SCSI layer was still using the drive after 
+usb-storage had called scsi_remove_host().
 
+This is an aspect of SCSI midlayer <-> low-level driver interaction that
+I'm not very clear about.  How long after the host is removed can the
+midlayer continue to use it?  How does the driver know when the midlayer
+is finished using the host so the driver can exit (and unload from
+memory)?
 
-Lee Xing wrote:
-> Hi,
-> 
-> I could find <<SCSI mid_level - lower_lever driver interface>> for Linux kernel 2.6.  Is there a similar document for Linux 2.4?  The interface between mid_level and lower_level has quite a few changes from lk 2.4 to 2.6.
-> 
-> I'm trying to find the call stack after a low-level driver is loaded.  For example, after low-level driver calls scsi_register(), what's next, and how SCSI disks are registered with mid-level.
-> 
-> Thanks,
-> 
-> 
-> Lee
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Alan Stern
+
