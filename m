@@ -1,55 +1,146 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: [PATCH] 2.4.19 scsi_rescan patch (2nd pass)
-Date: Wed, 2 Oct 2002 09:26:17 -0700
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: 2.4.39 "Sleeping function called from illegal context at slab.c:1374"
+Date: Wed, 2 Oct 2002 09:24:43 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A5974D8E5F98D511BB910002A50A66470580D250@hdsmsx103.hd.intel.com>
+Message-ID: <20021002162443.GA1317@beaverton.ibm.com>
+References: <3D99885B.533C320D@aitel.hist.no> <3D99EF62.3A3E6932@digeo.com> <20021001215907.GA8273@midgaard.us> <3D9A207A.14BFF440@digeo.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmsmsxv040-1.fm.intel.com (fmsmsxvs040.fm.intel.com [132.233.42.124])
-	by petasus.ch.intel.com (8.11.6/8.11.6/d: solo.mc,v 1.46 2002/09/23 20:41:22 dmccart Exp $) with SMTP id g92GQsG06749
-	for <linux-scsi@vger.kernel.org>; Wed, 2 Oct 2002 16:26:54 GMT
+Content-Disposition: inline
+In-Reply-To: <3D9A207A.14BFF440@digeo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@digeo.com>
+Cc: Andreas Boman <aboman@nerdfest.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, dougg@gear.torque.net
 
-James,
+Andrew Morton [akpm@digeo.com] wrote:
+> That is known - sg_init() is blatantly calling vmalloc under
+> write_lock_irqsave().
 
-I had been trying to do that with a user-level daemon I've written
-(sgraidmon at scsirastools.sf.net), but I can't rescan from user level
-because the new devices aren't attached to any /dev, so the user-level can't
-detect that a new device has been inserted, and it doesn't have any way to
-detect which device it might be.  
+I had not already seen a patch for this.
 
-Previous development has assumed that some administrator "knows" what the
-new device is and that it has been inserted, in order to invoke a hotplug
-function.  My use case is to make software RAID more like hardware RAID,
-where a service tech inserts the disk and walks away, and the software raid
-(OS & daemon) detects it and handles it automatically.
+During Douglas Gilbert's time-off he connects when he can so it maybe a
+bit until he can address this. 
 
-Andy
+In the interim a quick patch below should fix the problem, and still
+provide for safe additions.
 
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@steeleye.com] 
-Sent: Wednesday, October 02, 2002 11:35 AM
-To: Cress, Andrew R
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] 2.4.19 scsi_rescan patch (2nd pass) 
+I have done just minor testing on 2.5.40 using the sg_utils.
 
-andrew.r.cress@intel.com said:
-> Here is a 2nd pass at a patch to do a scsi rescan so that hot-inserted
-> scsi disks can automatically be recognized.  It includes some
-> recommended changes/cleanup from Patrick and Mike. 
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
-Is there a really good reason we can't use the hotplug infrastructure for
-this 
-and scan from user level?  I know the 2.4 hotplug is less well developed
-than 
-2.5, but I believe it will work well enough for this.
+sg.c |   48 +++++++++++++++++++++++++++++++++---------------
+1 files changed, 33 insertions(+), 15 deletions(-)
 
-If you go the hotplug route, all we need is a hook to trigger the SCSI
-hotplug 
-event.
-
-James
+diff -Nru a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+--- a/drivers/scsi/sg.c	Wed Oct  2 09:00:41 2002
++++ b/drivers/scsi/sg.c	Wed Oct  2 09:00:41 2002
+@@ -1354,11 +1354,29 @@
+ {
+ 	static int sg_registered = 0;
+ 	unsigned long iflags;
++	int tmp_dev_max;
++	Sg_device **tmp_da;
+ 
+ 	if ((sg_template.dev_noticed == 0) || sg_dev_arr)
+ 		return 0;
+ 
++	SCSI_LOG_TIMEOUT(3, printk("sg_init\n"));
++
++	write_lock_irqsave(&sg_dev_arr_lock, iflags);
++	tmp_dev_max = sg_template.dev_noticed + SG_DEV_ARR_LUMP;
++	write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
++
++	tmp_da = (Sg_device **)vmalloc(
++				tmp_dev_max * sizeof(Sg_device *));
++	if (NULL == tmp_da) {
++		printk(KERN_ERR "sg_init: no space for sg_dev_arr\n");
++		return 1;
++	}
++	memset(tmp_da, 0, tmp_dev_max * sizeof (Sg_device *));
+ 	write_lock_irqsave(&sg_dev_arr_lock, iflags);
++	sg_template.dev_max = tmp_dev_max;
++	sg_dev_arr = tmp_da;
++
+ 	if (!sg_registered) {
+ 		if (register_chrdev(SCSI_GENERIC_MAJOR, "sg", &sg_fops)) {
+ 			printk(KERN_ERR
+@@ -1370,16 +1388,6 @@
+ 		sg_registered++;
+ 	}
+ 
+-	SCSI_LOG_TIMEOUT(3, printk("sg_init\n"));
+-	sg_template.dev_max = sg_template.dev_noticed + SG_DEV_ARR_LUMP;
+-	sg_dev_arr = (Sg_device **)vmalloc(
+-			sg_template.dev_max * sizeof(Sg_device *));
+-	if (NULL == sg_dev_arr) {
+-		printk(KERN_ERR "sg_init: no space for sg_dev_arr\n");
+-		write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+-		return 1;
+-	}
+-	memset(sg_dev_arr, 0, sg_template.dev_max * sizeof (Sg_device *));
+ 	write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+ #ifdef CONFIG_PROC_FS
+ 	sg_proc_init();
+@@ -1430,7 +1438,7 @@
+ static int
+ sg_attach(Scsi_Device * scsidp)
+ {
+-	Sg_device *sdp;
++	Sg_device *sdp = NULL;
+ 	unsigned long iflags;
+ 	int k;
+ 
+@@ -1439,15 +1447,16 @@
+ 		Sg_device **tmp_da;
+ 		int tmp_dev_max = sg_template.nr_dev + SG_DEV_ARR_LUMP;
+ 
++		write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+ 		tmp_da = (Sg_device **)vmalloc(
+ 				tmp_dev_max * sizeof(Sg_device *));
+ 		if (NULL == tmp_da) {
+ 			scsidp->attached--;
+-			write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+ 			printk(KERN_ERR
+ 			       "sg_attach: device array cannot be resized\n");
+ 			return 1;
+ 		}
++		write_lock_irqsave(&sg_dev_arr_lock, iflags);
+ 		memset(tmp_da, 0, tmp_dev_max * sizeof (Sg_device *));
+ 		memcpy(tmp_da, sg_dev_arr,
+ 		       sg_template.dev_max * sizeof (Sg_device *));
+@@ -1456,6 +1465,7 @@
+ 		sg_template.dev_max = tmp_dev_max;
+ 	}
+ 
++find_empty_slot:
+ 	for (k = 0; k < sg_template.dev_max; k++)
+ 		if (!sg_dev_arr[k])
+ 			break;
+@@ -1467,11 +1477,19 @@
+ 		       " type=%d, minor number exceed %d\n",
+ 		       scsidp->host->host_no, scsidp->channel, scsidp->id,
+ 		       scsidp->lun, scsidp->type, SG_MAX_DEVS_MASK);
++		if (NULL != sdp)
++			vfree((char *) sdp);
+ 		return 1;
+ 	}
+-	if (k < sg_template.dev_max)
+-		sdp = (Sg_device *)vmalloc(sizeof(Sg_device));
+-	else
++	if (k < sg_template.dev_max) {
++		if (NULL == sdp) {
++			write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
++			sdp = (Sg_device *)vmalloc(sizeof(Sg_device));
++			write_lock_irqsave(&sg_dev_arr_lock, iflags);
++			if (!sg_dev_arr[k])
++				goto find_empty_slot;
++		}
++	} else
+ 		sdp = NULL;
+ 	if (NULL == sdp) {
+ 		scsidp->attached--;
 
