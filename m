@@ -1,10 +1,9 @@
 From: Luben Tuikov <luben@splentec.com>
-Subject: Re: [PATCH] 2.5.x alternate add back missing scsi_queue_next_request
- calls
-Date: Fri, 21 Mar 2003 17:52:16 -0500
+Subject: Re: [PATCH] 2.5.x add back missing scsi_queue_next_request calls
+Date: Fri, 21 Mar 2003 17:29:22 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E7B97A0.4010204@splentec.com>
-References: <20030321141525.A8134@beaverton.ibm.com>
+Message-ID: <3E7B9242.9030200@splentec.com>
+References: <20030319184444.A9694@beaverton.ibm.com> <3E7A317A.702@splentec.com> <20030320155215.A16187@beaverton.ibm.com> <3E7B6E25.6010005@splentec.com> <20030321123159.A6684@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -14,68 +13,107 @@ To: Patrick Mansfield <patmans@us.ibm.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
 Patrick Mansfield wrote:
-> Alternate version of the patch. I prefer the previous version. Posting to
-> clarify the coding issues.
+>>So effectively you remove one function call to
+>>scsi_queue_next_request(q, NULL) from scsi_end_request(),
+>>and in order to accomodate this removal, you rename
+>>scsi_put_command() to __scsi_put_command()
+>>and then pollute/contaminate the original implementation
+>>of scsi_put_command() to include the removed call
+>>scsi_queue_next_request().
+> 
+> 
+> No - I'm trying to make sure scsi_queue_next_request() is called for all
+> IO, not just block IO.
 
-1. Thanks for posing this patch.
+No problem here.  This okay.
 
-2. I know that you prefer the previous version of the patch.
+> Please look at all the places scsi_put_command is
+> called that I did *not* change.
 
-Please DO NOT export scsi_queue_next_request()!  It is not needed
-in LLDD and ULDD (unless they feed DIRECTLY from the request queue,
-which is currently NOT the case).
+The problem was messing with the implementation of scsi_put_command().
+This was my beef.  Now I'm glad you posted a new patch.
 
-cpqfcTSinit.c -- needs a scsi command to reset the device -- called
-from the eh_handler.
+>>Actually, if I were you, I'd try to have only one call, centralized,
+>>to scsi_put_command(), and the same for scsi_get_command() in
+>>all of SCSI Core.
+> 
+> 
+> That sounds like the patch I posted, just change the name of
+> scsi_put_command to scsi_put_command_and_wtf.
 
-aha152x.c -- needs a scsi command to reset the device -- called
-from the eh_handler.
+The problem is the spaghetti code which will result.
 
-gdth.c -- flushing and releasing the device.
-gdth_proc.c -- same.
+What I meant in ``centralizing'' is the mirroring of the prep
+function -- when scsi_get_command() is called, i.e.
+from the scsi_prep_fn() <-- only place in SCSI Core.*
 
-All those users of scsi_put_command() DO NOT need to call
-scsi_queue_next_request().
+* Ignoring of course scsi_reset_provider()...
 
-For this reason you do not need to export it.
+What's scsi_prep_fn()'s counterpart?  This is where scsi_put_command()
+should be called and where a decision should be made as to whether
+scsi_queue_next_request() should be called (host reset, hot plugs,
+queue depths...)
 
-Logically its part of SCSI Core's queueing mechanism and
-the more reason not to export it.
+> I don't see any way around this, I'll post the alternate approach, it is
+> worse than I orginally thought since we have to save
+> scmd->device->request_queue prior to each scsi_queue_next_request.
+> 
+> I have no problems with you posting an alternate patch.
 
-3. The way this is scattered all over the place will NOT
-last long.  It WILL be centralized in the near future,
-for this reason I'd rather keep the slab allocation for
-command struct intact.
+Here are a few thoughts on what I'd submit for a patch:
+making clean, _homogeneous_ entries in SCSI Core for a
+scsi request, and scsi command.  Two of each -- one
+blocking and one non-blocking.  Four, total.
 
-See my previous email on scsi request and scsi command
-entry points and completion notifiers -- having a centralized
-place you'll be able to do all kinds of magic there.
+Homogeneous in this context means opposite of what scsi_do_req()
+does: NOT to export scsi command (via scsi_done() fn for completion)
+IF the ULDD has submitted a scsi_request !!!
 
-> The change to use a pool for scsi_cmnd allocations removed some
-> scsi_queue_next_request calls, this patch restores the calls, and
-> exports scsi_put_command and scsi_get_command.
+scsi command is _part_ of scsi request, and SCSI Core instantiates it
+as it needs it, so it should NOT be shown back to the ULDD for completion
+purposes -- i.e. need another completion function for scsi_requests.
 
-As I said before: look at scsi_get_command() and try to MIRROR
-the same for scsi_put_command() -- one centralized place where
-you can call whatever function you want and do whatever
-checks and magic there.
+this way you get (block structure):
+-------------------------------------------------
+	submit a request R via scsi_do_req()
 
-Modularizing the command allocation is THE FIRST STEP, if we
-contaminate it, all this work goes down the drain.
+		instantiate a scsi command C,
+		hook it up to R, (R->C)
 
-More and more parts of SCSI Core will be modularized similarly
-and then SCSI Core will be defined in terms of their interaction.
+			do work, when done,
+			call scsi_done(C)
 
-> The extra scsi_queue_next_request calls are needed to handle non-block
-> device IO completion (char devices and scsi scanning).
+scsi_done(C):
+		do needed work,
+		DESTROY scsi command C
+		if (R) do minimal work
+		and call scsi_done_req(R)
 
-ONLY because they notify via scsi_done(command), but entered via
-scsi_request! This needs a patch. See my previous post.
+scsi_done_req(R):
+	notifies ULDD of completion status
 
-I.e. we need a patch which fixes this infrastructre, rather than
-a patchwork solution. (Address at the root.)
+-------------------------------------------------
+
+This is the logical infrastructure and is mirrored
+horizontally about ``do work''.
+
+The functional structure would break this apart as those
+will become separate functions.
+
+Then you can centralize all code for instantiating
+scsi commands et al. AND the code in ``do work'' can
+be reused for entities who just submit scsi commands.
+(This would involve a double scsi_done() one for the
+command and if request, do minimal work and then call
+the scsi_done_req() fn.)
+
+This would also allow a more flexible control as the
+logical path is well defined.
+
+I *would* submit such a patch only if I had the time.
 
 -- 
 Luben
+
 
 
