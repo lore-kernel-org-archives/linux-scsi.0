@@ -1,65 +1,54 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [RFC] scsi host sysfs support again [0/4]
-Date: Mon, 5 May 2003 14:45:32 -0700
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] scsi-misc-2.5 remove scsi_scan.c EVPD code
+Date: Mon, 5 May 2003 15:51:27 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030505214532.GB3254@beaverton.ibm.com>
-References: <20030505083315.GB8416@beaverton.ibm.com> <3EB64F11.2030806@torque.net>
+Message-ID: <20030505155127.A11734@beaverton.ibm.com>
+References: <UTC200304250047.h3P0lhl03517.aeb@smtp.cwi.nl> <3EB619A4.5090407@torque.net> <20030505093834.B7831@beaverton.ibm.com> <20030505174602.GA3433@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:50686 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S261373AbTEEVbF
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 May 2003 17:31:05 -0400
+Received: from bi01p1.co.us.ibm.com ([32.97.110.142]:42590 "EHLO laptop")
+	by vger.kernel.org with ESMTP id S262073AbTEEWov (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2003 18:44:51 -0400
 Content-Disposition: inline
-In-Reply-To: <3EB64F11.2030806@torque.net>
+In-Reply-To: <20030505174602.GA3433@beaverton.ibm.com>; from andmike@us.ibm.com on Mon, May 05, 2003 at 10:46:02AM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>, Andries.Brouwer@cwi.nl, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-scsi@one-eyed-alien.net
 
-Douglas Gilbert [dougg@torque.net] wrote:
-> What seems to be missing, at least in what I am
-> running here is a useful 'name'. There is no 'name'
-> file in the listing above (under each 'host<n>'
-> directory). There is a 'name' file in that 'device' (symlink)
-> directory but it is an empty file here.
-> 
-> ># tree /sys/bus/scsi/devices
-> >/sys/bus/scsi/devices
-> >|-- 0:0:0:0 -> ../../../devices/pci0/00:09.0/host0/0:0:0:0
-> 
-> So finally I can get some output from my
-> version of lsscsi (unreleased version 10):
-> 
-> $ lsscsi -Hl
-> [0]    ??
->   cmd_per_lun=64   host_busy=0    sg_tablesize=96   unchecked_isa_dma=0
-> [1]    ??
->   cmd_per_lun=64   host_busy=0    sg_tablesize=96   unchecked_isa_dma=0
-> [2]    ??
->   cmd_per_lun=3    host_busy=0    sg_tablesize=64   unchecked_isa_dma=0
-> [3]    ??
->   cmd_per_lun=5    host_busy=0    sg_tablesize=255  unchecked_isa_dma=0
-> 
-> Hosts 0 and 1 are the 2 HBAs on a Tekram 390u3w while
-> host 2 is a scsi_debug pseudo host and host3 is
-> ide-scsi. A name would be instructive.
-> 
-> $ lsscsi
-> [0:0:1:0]    disk    FUJITSU  MAM3184MP        0106  /dev/sda
-> [2:0:0:0]    disk    Linux    scsi_debug       0004  /dev/sdb
-> [3:0:0:0]    cd      CREATIVE CD5233E          1.00  /dev/sr0
-> 
+On Mon, May 05, 2003 at 10:46:02AM -0700, Mike Anderson wrote:
+> Patrick Mansfield [patmans@us.ibm.com] wrote:
 
-OK, that is a bug. Is proc_name ok for name
+> > Right now, we could have an sgid that runs whenever an sg is found (sg
+> > hotplug generated via device_register), and stores a sysfs path and the id
+> > returned into a flat file.
+> 
+> I believe devlabel's scsi_unique_id.c file does some of this, though I
+> have not looked at it closely.
+> 
+> -andmike
 
-# cat /sys/class/scsi_host/*/device/name
-ips
-aic7xxx
-aic7xxx
+Yes, it looks very close, and has the underlying infrastructure (uses the
+SCSI_IOCTL_SEND_COMMAND, not sg, so can be used for all upper level linux
+scsi devices). It looks like we would need functionallity that is in the
+devlabel script itself (to output just a  single ID), maybe just integrate
+that into scsi_unique_id. (I did not look closely at devlabel, it has more
+lines than the scsi_unique_id.c source.)
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+It looks like scsi_unique_id should also dump the code set, so it can pick
+one code set (the same one) over anoother (if both were ever used by a
+single LU).
 
+It fails for character devices, but that is easily fixed by deletion of
+the check (SCSI_IOCTL_SEND_COMMAND works for any scsi device: st, sd, sr
+or sg). I deleted the check and it ran ok on a "processor" scsi device,
+though the device does not support page 80 or page 83. 
+
+scsi_unique_id should also have some sort of error checking/reporting, so
+we can tell if a device is not functioning (versus does not support page
+80 or 83).
+
+I don't know how this would be integrated into the scsi device model tree,
+given the current flux (class or bus for upper level devices, as well as
+for the scsi_device itself).
+
+-- Patrick Mansfield
