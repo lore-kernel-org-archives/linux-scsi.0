@@ -1,28 +1,39 @@
-From: "Miller, Mike (OS Dev)" <mike.miller@hp.com>
-Subject: RE: [PATCH 2.6] cciss typo fix
-Date: Mon, 10 Jan 2005 09:45:44 -0600
-Message-ID: <D4CFB69C345C394284E4B78B876C1CF107DC0188@cceexc23.americas.cpqcorp.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] zfcp: kfree patch
+Date: Mon, 10 Jan 2005 09:19:51 -0600
+Message-ID: <1105370391.4477.3.camel@mulgrave>
+References: <OFF5A7977B.6DEBE53D-ONC1256F85.00246A36-C1256F85.0024C19A@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262297AbVAJPrQ@vger.kernel.org>
-Content-class: urn:content-classes:message
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:54480 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262301AbVAJPvP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jan 2005 10:51:15 -0500
+In-Reply-To: <OFF5A7977B.6DEBE53D-ONC1256F85.00246A36-C1256F85.0024C19A@de.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Heiko Carstens <Heiko.Carstens@de.ibm.com>
+Cc: Arjan van de Ven <arjan@infradead.org>, Greg Kroah-Hartman <greg@kroah.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-> > > -		*block_size = be32_to_cpu(*((__be32 *) 
-> > &buf->block_size[0]));
-> > > +		*total_size = be32_to_cpu(*((__u32 *) 
-> > &buf->total_size[0]))+1;
->
+On Mon, 2005-01-10 at 07:41 +0100, Heiko Carstens wrote:
+> What would keep the two release functions defined in
+> scsi_transport_fc.c from being called _after_ the fc transport class
+> module was unloaded? As usual I might be wrong but this looks like
+> the same problem to me.
+
+Object lifetime rules:  devices which are attached to transport classes
+must be serviced by HBAs which do the attachment.  This makes the
+transport class a required module for the HBA.  So the transport class
+can't be removed until all of the HBAs have been removed (which means
+that all the objects they service have also been removed).
+
+If you're asking how SCSI ensures that all the scsi_devices are
+destroyed before the HBA driver is removed, we have a module reference
+count system that means the HBA unload waits until everything
+relinquishes the devices.
+
+James
 
 
-> From: Jens Axboe [mailto:axboe@suse.de]
-> Hmm odd, no one should have complained, it should just have been added
-> to the compat header.
-
-Even if it were added to the compat header; is using __be32 correct in this context?
-
-mikem
