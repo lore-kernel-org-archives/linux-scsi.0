@@ -1,29 +1,30 @@
-From: rob@osinvestor.com (Rob Radez)
-Subject: Re: [PATCH] scsi_error fix
-Date: Thu, 6 Mar 2003 20:09:46 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030307010946.GA18991@osinvestor.com>
-References: <UTC200303062337.h26Nbv714178.aeb@smtp.cwi.nl>
+From: "Subodh S" <subodh_s_1975@mail.com>
+Subject: About dd & make_request
+Date: Fri, 07 Mar 2003 09:05:02 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20030307140502.95076.qmail@mail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <UTC200303062337.h26Nbv714178.aeb@smtp.cwi.nl>
-To: Andries.Brouwer@cwi.nl
-Cc: torvalds@transmeta.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Mar 07, 2003 at 12:37:57AM +0100, Andries.Brouwer@cwi.nl wrote:
-> Below:
-> scsi_error.c: apart from similar trivialities the only change:
-> 
->     If a command fails (e.g. because it belongs to a newer
->     SCSI version than the device), it is fed to
->     scsi_decide_disposition(). That routine must return
->     SUCCESS, unless the error handler should be invoked.
-[snip patch]
+Hi,
 
-This patch gets me booting again.
+When run
 
-Regards,
-Rob Radez
+dd if=/dev/mydevice of=/dev/null count=10
+
+why does my make_request function get called only five times ??
+
+
+Thanks and Regards,
+Subodh
+-- 
+__________________________________________________________
+Sign-up for your own FREE Personalized E-mail at Mail.com
+http://www.mail.com/?sr=signup
+
