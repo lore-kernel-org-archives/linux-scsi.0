@@ -1,61 +1,45 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH] remove extra queue unplug calls
-Date: Mon, 24 May 2004 19:04:55 -0700
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: [ANNOUNCE]: megaraid driver version 2.20.0.rc2
+Date: Tue, 25 May 2004 00:47:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40B2A9C7.2070300@cs.wisc.edu>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC694@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070207080807060907050105"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:59912 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S264479AbUEYCE6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 May 2004 22:04:58 -0400
-List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>, dougg@torque.net
-
-This is a multi-part message in MIME format.
---------------070207080807060907050105
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-
-blk_insert_request will do the right thing and either unplug the queue or
-call the request_fn, so users of scsi_do_req do not need to call
-generic_unplug_device themselves. The attached patch just removes that
-call from scsi_lib.c and the sg driver after they do a scsi_do_req.
-It was built against 2.6.7-rc1
-
-Mike
-
---------------070207080807060907050105
 Content-Type: text/plain;
- name="rm-extra-unplugs.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="rm-extra-unplugs.patch"
+	charset="iso-8859-1"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:64766 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S264725AbUEYE4P (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 May 2004 00:56:15 -0400
+List-Id: linux-scsi@vger.kernel.org
+To: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: 'Marcelo Tosatti' <marcelo.tosatti@cyclades.com>, 'Matthew Wilcox' <willy@debian.org>, 'Arjan van de Ven' <arjanv@redhat.com>, 'Christoph Hellwig' <hch@infradead.org>, "'matt_domsch@dell.com'" <matt_domsch@dell.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'paul@wagland.net'" <paul@wagland.net>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, "Prabhakaran, Rajesh" <rajeshpr@lsil.com>, "Jose, Manoj" <Manojj@lsil.com>
 
-diff -arup linux-2.6.7-rc1/drivers/scsi/scsi_lib.c linux-2.6.7-rc1-work/drivers/scsi/scsi_lib.c
---- linux-2.6.7-rc1/drivers/scsi/scsi_lib.c	2004-05-24 18:55:54.445045005 -0700
-+++ linux-2.6.7-rc1-work/drivers/scsi/scsi_lib.c	2004-05-24 18:59:39.404883171 -0700
-@@ -255,7 +255,6 @@ void scsi_wait_req(struct scsi_request *
- 	sreq->sr_request->rq_status = RQ_SCSI_BUSY;
- 	scsi_do_req(sreq, cmnd, buffer, bufflen, scsi_wait_done,
- 			timeout, retries);
--	generic_unplug_device(sreq->sr_device->request_queue);
- 	wait_for_completion(&wait);
- 	sreq->sr_request->waiting = NULL;
- 	if (sreq->sr_request->rq_status != RQ_SCSI_DONE)
-diff -arup linux-2.6.7-rc1/drivers/scsi/sg.c linux-2.6.7-rc1-work/drivers/scsi/sg.c
---- linux-2.6.7-rc1/drivers/scsi/sg.c	2004-05-24 18:55:54.510036561 -0700
-+++ linux-2.6.7-rc1-work/drivers/scsi/sg.c	2004-05-24 18:59:39.512869215 -0700
-@@ -727,7 +727,6 @@ sg_common_write(Sg_fd * sfp, Sg_request 
- 		    (void *) SRpnt->sr_buffer, hp->dxfer_len,
- 		    sg_cmd_done, timeout, SG_DEFAULT_RETRIES);
- 	/* dxfer_len overwrites SRpnt->sr_bufflen, hence need for b_malloc_len */
--	generic_unplug_device(q);
- 	return 0;
- }
- 
+All,
 
---------------070207080807060907050105--
+We are pleased to announce the megaraid release candidate (since it is still
+in test labs at LSI) for lk 2.6
 
+This driver incorporates the inputs from Paul Wagland, James Bottomley, Matt
+Domsch, Christoph Hellwig, Arjan van de Ven, Matthew Wilcox, Marcelo
+Tosatti, and many others on the scsi and kernel lists. As always, the
+feedback is greatly appreciated.
+
+Highlight of this release
+
+1.	Fully qualified PCI identifiers to identify MegaRAID controllers
+2.	PCI shutdown notification routine with hba and devices sync
+3.	Support for random drive deletion
+4.	Fully re-entrant hot-path w/ data structures protected by their
+respective locks. No longer rely on "host_lock". Should boost performance by
+5-10% and hopefully better CPU utilization
+5.	Better abort and reset handling.
+
+The patch for lk 2.6.6 and the driver is available at
+
+ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-2.20.0.rc2/
+
+Thanks
+
+-Atul Mukker
+LSI Logic Corporation
