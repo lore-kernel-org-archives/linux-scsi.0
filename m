@@ -1,54 +1,35 @@
-From: Doug Ledford <dledford@redhat.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: aic7xxx sets CDR offline, how to reset?
-Date: Tue, 3 Sep 2002 14:23:53 -0400
+Date: Tue, 03 Sep 2002 14:09:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020903142353.A12157@redhat.com>
-References: <200209031435.g83EZ2F03562@localhost.localdomain>
+Message-ID: <200209031909.g83J9iG07312@localhost.localdomain>
+References: <dledford@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200209031435.g83EZ2F03562@localhost.localdomain>; from James.Bottomley@steeleye.com on Tue, Sep 03, 2002 at 09:35:02AM -0500
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id MAA20210
+	for <linux-scsi@vger.kernel.org>; Tue, 3 Sep 2002 12:09:58 -0700
+In-Reply-To: Message from Doug Ledford <dledford@redhat.com>
+   of "Tue, 03 Sep 2002 14:23:53 EDT." <20020903142353.A12157@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Sep 03, 2002 at 09:35:02AM -0500, James Bottomley wrote:
-> 
-> 1) Quiesce host (set in_recovery flag)
+dledford@redhat.com said:
+> Leave abort active.  It does actually work in certain scenarios.  The
+> CD  burner scenario that started this thread is an example of
+> somewhere that  an abort should actually do the job. 
 
-Right.
+Unfortunately, it would destroy the REQ_BARRIER approach in the block layer.  
+At best, abort probably causes a command to overtake a barrier it shouldn't, 
+at worst we abort the ordered tag that is the barrier and transactional 
+integrity is lost.
 
-> 2) Suspend active timers on this host
+When error correction is needed, we have to return all the commands for that 
+device to the block layer so that ordering and barrier issues can be taken 
+care of in the reissue.  This makes LUN RESET (for those that support it) the 
+minimum level of error correction we can apply.
 
-Right.
-
-> 3) Proceed down the error correction track (eliminate abort and go down 
-> device, bus and host resets and finally set the device offline).
-
-Leave abort active.  It does actually work in certain scenarios.  The CD 
-burner scenario that started this thread is an example of somewhere that 
-an abort should actually do the job.
-
-> 5) On each error recovery wait out a recovery timer for the device to become 
-> active before talking to it again.  Send all affected commands back to the 
-> block layer to await reissue (note: it would now be illegal for commands to 
-> lie to the mid layer and say they've done the reset when they haven't).
-> 6) issue a TUR using a command allocated to the eh for that purpose.  Process 
-> the return code (in particular, if the device says NOT READY, wait some more). 
->  Only if the TUR definitively fails proceed up the recovery chain all the way 
-> to taking the device offline.
-
-Right.
-
-> I also plan to expose the suspend and resume timers API in some form for FC 
-> drivers to use.
+James
 
 
-
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
