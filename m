@@ -1,101 +1,112 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] 7/7 fix single_lun code for per-scsi_device queue_lock
-Date: Wed, 26 Mar 2003 13:47:17 -0800
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [PATCH] 3/7 consolidate single_lun code
+Date: Wed, 26 Mar 2003 17:05:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030326134717.B5307@beaverton.ibm.com>
-References: <20030324175337.A14957@beaverton.ibm.com> <20030324175422.A14996@beaverton.ibm.com> <20030324180227.A15047@beaverton.ibm.com> <20030324180247.B15047@beaverton.ibm.com> <20030324180304.C15047@beaverton.ibm.com> <20030324180325.D15047@beaverton.ibm.com> <20030324180341.E15047@beaverton.ibm.com> <20030324180404.F15047@beaverton.ibm.com> <3E80C8DD.4060803@splentec.com>
+Message-ID: <3E822415.2080306@splentec.com>
+References: <20030324175337.A14957@beaverton.ibm.com> <20030324175422.A14996@beaverton.ibm.com> <20030324180227.A15047@beaverton.ibm.com> <20030324180247.B15047@beaverton.ibm.com> <3E80BDC3.7000503@splentec.com> <20030326111146.A3548@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3E80C8DD.4060803@splentec.com>; from luben@splentec.com on Tue, Mar 25, 2003 at 04:23:41PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
+To: Patrick Mansfield <patmans@us.ibm.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Tue, Mar 25, 2003 at 04:23:41PM -0500, Luben Tuikov wrote:
-> Patrick Mansfield wrote:
-> > Fix single_lun code for per-scsi_device queue_lock
-> > 
-> > diff -purN -X /home/patman/dontdiff lksplit-25/drivers/scsi/scsi.h sl_lksplit-25/drivers/scsi/scsi.h
-> > --- lksplit-25/drivers/scsi/scsi.h	Mon Mar 24 12:15:10 2003
-> > +++ sl_lksplit-25/drivers/scsi/scsi.h	Mon Mar 24 12:15:26 2003
-> > @@ -531,6 +531,15 @@ extern struct list_head scsi_dev_info_li
-> >  extern int scsi_dev_info_list_add_str(char *);
-> >  
-> >  /*
-> > + * scsi_target: representation of a scsi target, for now, this is only
-> > + * used for single_lun devices.
-> > + */
-> > +struct scsi_target {
-> > +	unsigned int starget_busy;
-> > +	unsigned int starget_refcnt;
-> > +};
+Patrick Mansfield wrote:
 > 
-> Yes ok, but let's do it right.
-> First, I abhore all this letter playing to devise
-> names like: starget_busy and starget_refcnt.
-
-> starget_busy could be an atomic_t which is equal
-> to the sum of all LU's pending_q_counts, i.e.
-> it better, else we're losing commands, and also
-> with a different name (more descriptive).
-> Something like active_cmds, or active_cmd_count,
-> but NOT ``..._cnt''!
+> But the last single_lun LU that ran should have priority over any other
+> LU's on that same target (well it should really get some slice of IO time,
+> rather than allowing IO til it is no longer busy), and separately, the
+> first starved device should have priority over all other starved devices,
+> I can't do that (simply) with one list. 
 > 
-> Also, moving all the necessary variables into scsi_target, like
-> say single_lun to be renamed single_lu.
+> single_lun devices are likely slow (CDROM), and we really don't want to
+> give them priority over other starved devices.
+
+So, using the starved_list as a priority queue will not work?
+
+Given: consumer of starved_list takes from its front.
+
+``the last single_lun LU that run'' has priority over all others,
+*IF* added at the front. (LIFO) (since any latter one of the same
+sort (single lun) will be added at the front)
+
+The *first* starved device DOES HAVE priority over all others,
+*IF* added at the tail. (FIFO)  (since all others of the same
+sort (non-single lun) all *also* be added at the tail)
+
+So, so for single_lun, our priority queue (starved_list) behaves
+as LIFO, and for non-single_lun, our priority queue (starved_list)
+behaves as FIFO.
+
+The bottom line is that you have one, universal logic for single
+lun and non-single lun device simply by manipulating where
+you insert in the starved list.
+
+The insertion is, of course, done at scsi_request_fn.
+
+(cont'd)
+
 > 
-> Also having a list of devices:
-> 
-> 	struct list_head lu_list;
-> 
-> etc, etc.
-
-> > +	struct scsi_target      *sdev_target;   /* used only for single_lun */
-> 
-> 
-> Should probably be used for all devices.  Let's do it right.
-
-I would like to have a scsi_target that always shows up, I don't have time
-now to code it. So for now the klugey single_lun code.
-
-> > +	spin_lock_irqsave(current_sdev->request_queue->queue_lock, flags2);
-> > +	spin_lock_irqsave(current_sdev->host->host_lock, flags);
-> 
-> No, you do NOT need flags and flags2.  Look at other kernel code
-> to see how this is done.  scsi_put_command() gives
-> an example of doing double locks and irq state -- it's a nice one.
-
-OK
-
-> you MUST absolutely mention this somewhere with boldface red
-> letters comment that the queue lock is always obtained FIRST
-> and the host lock SECOND (and, trivially, released in opposite
-> order).
-
-OK will add comments, though undecided on whether to have both a
-target lock and host_lock, or just go with host_lock (per comments sent
-reply to James).
-
-> > +	__blk_run_queue(current_sdev->request_queue);
-> > +	spin_unlock_irqrestore(current_sdev->request_queue->queue_lock, flags2);
-> 
-> Now if you make device_busy an atomic_t type, then you DO not
-> need these double locking acrobatics.
-
-We should defer such changes until we clean up IO completion, per other
-email comments.
-
-> > +	if (sdev->single_lun) {
-> > +		spin_lock_irqsave(sdev->host->host_lock, flags);
-> > +		sdev->sdev_target->starget_refcnt--;
-> > +		if (sdev->sdev_target->starget_refcnt == 0)
-> > +			kfree(sdev->sdev_target);
+>>static inline void scsi_run_starved_devs(struct Scsi_Host *shost)
+>>{
+>>	unsigned long flags;
+>>	LIST_HEAD(starved);
+>>	
+>>	spin_lock_irqsave(&shost->starved_devs_lock, flags);
+>>	list_splice_init(&shost->starved_devs, &starved);
+>>	spin_unlock_irqrestore(&shost->starved_devs_lock, flags);
+>>	
+>>	while (!list_empty(&starved)) {
+>>		struct scsi_device *dev;
+>>
+>>		if (shost->host_blocked || shost->host_self_blocked ||
+>>		    (shost->can_queue > 0 &&
+>>		     shost->host_busy >= shost->can_queue))
+>>			break;
+>>	
+>>		dev=list_entry(starved.next,struct scsi_device,starved_entry);
+>>		list_del_init(dev->starved_entry);
+>>		spin_lock_irqsave(dev->request_queue->queue_lock, flags);
+>>		__blk_run_queue(dev->request_queue);
+>>		spin_unlock_irqrestore(dev->request_queue->queue_lock, flags);
+>>	}
+>>	
+>>	if (!list_empty(&starved)) {
+>>		spin_lock_irqsave(&shost->starved_devs_lock, flags);
+>>		list_splice_init(&starved, &shost->starved_devs);
+>>		spin_unlock_irqrestore(&shost->starved_devs_lock, flags);
+>>	}
+>>}
 > 
 > 
-> Have you seen ``atomic_dec_and_test()''?
+> I did not take the list_splice an approach mainly because I wanted to
+> allow multiple CPU's to run the starved queues (host_blocked cases, not
+> can_queue). I don't have any data to back this up, and it probably does
+> not matter. 
+> 
+> For the can_queue limit being hit, with continuous IO across multiple LU's
+> on a host, there we will (likely) send only one more IO (run one starved
+> queue) and stop - the last few lines of the above code would always be
+> executed.
+> 
+> Also the same lock has to be used to protect the scsi_host->starved_list
+> and scsi_device->starved_entry. In the above code the first
+> list_splice_init above touches the shost->starved_devs->next->prev,
+> corresponding to a scsi_device->starved_entry->prev, while holding
+> starved_devs_lock but the following list_del_init is done holding the
+> queue_lock.
 
-OK
+We're working with the local list now!
 
--- Patrick Mansfield
+So that starved_entry is in the local starved list now,
+and shost->starved_list is EMPTY!
+
+On the ``following list_del_init'' dev->starved_entry is in
+the local ``starved'' list!
+
+-- 
+Luben
+
+
+
