@@ -1,34 +1,40 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: [PATCH] sym53c8xx PPR negotiation fix
-Date: Fri, 31 Oct 2003 17:16:58 -0700
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [PATCH] CDC_MMC_WR
+Date: 31 Oct 2003 17:51:55 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4168130000.1067645818@aslan.btc.adaptec.com>
-References: <1067447221.3112.336.camel@compaq.xsintricity.com>	 <1067447490.1829.30.camel@mulgrave>	 <20031029175045.GC25237@parcelfarce.linux.theplanet.co.uk>	 <1067450547.3112.363.camel@compaq.xsintricity.com>	 <20031029183159.GE25237@parcelfarce.linux.theplanet.co.uk>	 <1067453148.3112.369.camel@compaq.xsintricity.com>	 <4159000000.1067644546@aslan.btc.adaptec.com>	 <1067644902.1782.20.camel@mulgrave> <1067645285.3112.538.camel@compaq.xsintricity.com>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Message-ID: <1067647915.2682.5.camel@patrh9>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:11914 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261906AbTKAAMq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Oct 2003 19:12:46 -0500
-In-Reply-To: <1067645285.3112.538.camel@compaq.xsintricity.com>
-Content-Disposition: inline
+Received: from email-out2.iomega.com ([147.178.1.83]:33707 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S262802AbTKAAwS
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Oct 2003 19:52:18 -0500
+Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
+	by email.iomega.com (Postfix) with ESMTP id 1CB7C2C4E
+	for <linux-scsi@vger.kernel.org>; Fri, 31 Oct 2003 17:52:18 -0700 (MST)
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>, James Bottomley <James.Bottomley@steeleye.com>
-Cc: Matthew Wilcox <willy@debian.org>, Marcelo Tosatti <marcelo@conectiva.com.br>, linux-scsi mailing list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
->> slave_configure is only called if the mid-layer decides there's
->> something worth attaching to there (i.e. if the initial inquiry
->> succeeds); otherwise it just calls slave_destroy to signal loss of
->> interest in the target.
-> 
-> That's exactly what Justin was saying *isn't* happening (aka, no target
-> is there, we *don't* call slave_destroy is what Justin said).
+> My 2003-10-13 -test7 patch,
+> with the q=raw suffix included
+> to help ask for hard tabs etc. intact, appears archived as:
 
-It seems the slave_destroy is missing from scsi_free_sdev().
+Bzzzzt.  Wrong link, sorry.
 
---
-Justin
+To see that 2.6.0-test7 patch that works -test8 or -test9 as well, the
+correct link into the depths of history is:
+
+http://marc.theaimsgroup.com/?l=linux-scsi&m=106605749929120&q=raw
+
+I know this because now for a friend I'm trying to apply this patch to
+2.4.22.
+
+Pat LaVarre
+
+P.S. Of course unless you add an eol to the linux-scsi majordomo
+signature, you will be warned: "patch unexpectedly ends in middle of
+line".
+
 
