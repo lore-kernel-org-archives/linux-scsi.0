@@ -1,78 +1,82 @@
-From: Paul Wagland <paul@kungfoocoder.org>
-Subject: megaraid /proc under kernel 2.6.2
-Date: Sun, 15 Feb 2004 23:41:31 +0100
+From: Paul Wagland <paul@wagland.net>
+Subject: Re: megaraid /proc under kernel 2.6.2
+Date: Mon, 16 Feb 2004 01:18:33 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1076884890.2943.265.camel@morsel.kungfoocoder.org>
+Message-ID: <1076890712.2943.276.camel@morsel.kungfoocoder.org>
+References: <1076884890.2943.265.camel@morsel.kungfoocoder.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uLJgzWV7NgpJzQ/EPF6e"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out2.xs4all.nl ([194.109.24.12]:29706 "EHLO
-	smtp-out2.xs4all.nl") by vger.kernel.org with ESMTP id S265203AbUBOWlf
+Received: from smtp-out2.xs4all.nl ([194.109.24.12]:64007 "EHLO
+	smtp-out2.xs4all.nl") by vger.kernel.org with ESMTP id S265258AbUBPASh
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 15 Feb 2004 17:41:35 -0500
-Received: from umlsmtp.wagland.net (kungfucoder.org [80.126.186.202])
-	by smtp-out2.xs4all.nl (8.12.10/8.12.10) with ESMTP id i1FMfWZG001492
-	for <linux-scsi@vger.kernel.org>; Sun, 15 Feb 2004 23:41:32 +0100 (CET)
-Received: from 6-allhosts (unknown [10.87.98.191])
-	by umlsmtp.wagland.net (Postfix) with ESMTP id E403858
-	for <linux-scsi@vger.kernel.org>; Sun, 15 Feb 2004 23:41:31 +0100 (CET)
+	Sun, 15 Feb 2004 19:18:37 -0500
+In-Reply-To: <1076884890.2943.265.camel@morsel.kungfoocoder.org>
 List-Id: linux-scsi@vger.kernel.org
 To: Linux SCSI mailing list <linux-scsi@vger.kernel.org>
+Cc: hch@infradead.org
 
-Hi all,
 
-I was playing around with forward porting the 2.10.1 megaraid driver to
-use the new megaraid layout as found in kernel 2.6.2. First I wanted to
-make sure that the default kernel worked as previously, and then to make
-sure that each of my layered patches kept the same behaviour.
+--=-uLJgzWV7NgpJzQ/EPF6e
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-However, the /proc/megaraid directory is no longer populated, and I am
-not quite sure why.
+Hi again, further information to add....
 
-In megaraid_init() we do a:
+On Sun, 2004-02-15 at 23:41, Paul Wagland wrote:
+> the board. So, I am assuming that mega_create_proc_entry() is called.
+> The first thing that this does is to call (effectively)
+> proc_mkdir("hba0", mega_proc_dir_entry); The only way that this can fail
+> to create /proc/megaraid/hba0 (as far as I can see) is if
+> mega_proc_dir_entry is null. The only way that it can be null, is if
+> megaraid_probe_one() is called before megaraid_init(), since the
+> megaraid directory is created.
 
-mega_proc_dir_entry = proc_mkdir("megaraid", &proc_root);
+After adding some printk's to figure out what was going on, I am
+officially confused. I added this line:
 
-, which is good, since that throws a /proc/megaraid directory there for
-us. So far, so good. mega_proc_dir_entry is a static pointer to a struct
-proc_dir_entry. The module is now loaded, and we get to device scanning,
-AFAIK, the new "hotplug-aware pci probing and scsi registration" code
-put in by Christoph means that once the module is loaded, the hotplug
-code is then responsible for generating the event to activate the
-driver. This then calls megaraid_probe_one(). Now, this is where it
-starts to get a little tricky. There are five different error conditions
-that do not do a printk to notify of failure, I will send a patch
-through to address this later, however at the moment I don't think that
-the initialisation is failing, since I can use the drives attached to
-the board. So, I am assuming that mega_create_proc_entry() is called.
-The first thing that this does is to call (effectively)
-proc_mkdir("hba0", mega_proc_dir_entry); The only way that this can fail
-to create /proc/megaraid/hba0 (as far as I can see) is if
-mega_proc_dir_entry is null. The only way that it can be null, is if
-megaraid_probe_one() is called before megaraid_init(), since the
-megaraid directory is created.
+printk(KERN_WARNING "megaraid: trying to proc_mkdir index:%d, parent:%p, pr=
+ocdir:%s\n",index, parent, string);
 
-Either that or I have missed something....
+to mega_create_proc_entry() which gives this response when booting the
+kernel and loading the module:
 
-But in any case something weird is going on. I have a three megaraid
-partitions in use, one which is used for swap, one for /boot and one for
-a device mapper PV, even though my system is running, and using all
-three devices, the usage count on the megaraid driver is still 0, and I
-can rmmod the module, although doing so brings up:
+megaraid: trying to proc_mkdir index:0, parent:00000000, procdir:hba0
 
-tidbit kernel: journal-601, buffer write failed
+Now, the problem is that this means that the following lines:
 
-which is, I assume, reiserfs bitching about the fact that it's backing
-device has just totally disappeared, and as soon as I try to do anything
-that wants read access to the disk, that program will freeze, but that
-is only to be expected. What is not expected is that I can remove a
-device that is in use...
+	controller_proc_dir_entry =3D
+		adapter->controller_proc_dir_entry =3D proc_mkdir(string, parent);
 
-Does anyone know what is going on? I am investigating further, but I
-thought that I would throw this out so that people might be able to tell
-me where to look...
+	if(!controller_proc_dir_entry) {
+		printk(KERN_WARNING "\nmegaraid: proc_mkdir failed\n");
+		return;
+	}
+
+should print a warning and return. Well, it may or may not be returning,
+but the "proc_mkdir failed" never turns up. But, if you pass NULL into
+proc_mkdir as the parent, then it will return NULL as a result, or at
+least it will as far as I can tell.
+
+So, why is that message not turning up?
+
+I have not looked any further into the missing driver references
+problem, hopefully someone else will know what that problem is :-)
 
 Cheers,
 Paul
+
+--=-uLJgzWV7NgpJzQ/EPF6e
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQBAMAxYtch0EvEFvxURAi1pAJ4hkI3PLrRNWL8VyzrWQ0faAYmSIACfQqXY
+N8z4spbKRSieMze6aSgMRpI=
+=wD+3
+-----END PGP SIGNATURE-----
+
+--=-uLJgzWV7NgpJzQ/EPF6e--
 
