@@ -1,35 +1,49 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: unique entry points for all driver hosts
-Date: Mon, 12 May 2003 16:38:21 -0700
+From: Andrew Vasquez <praka@san.rr.com>
+Subject: Re: [ANNOUNCE] QLogic FC Driver for Linux kernel 2.5 available.
+Date: Mon, 12 May 2003 16:50:05 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030512233821.GF3226@beaverton.ibm.com>
-References: <0E3FA95632D6D047BA649F95DAB60E570185F192@EXA-ATLANTA.se.lsil.com>
+Message-ID: <20030512235005.GA26292@praka.local.home>
+References: <3EBDB953.1040908@wanadoo.es> <20030512190013.GA23981@praka.local.home> <1052768456.2093.64.camel@mulgrave> <m3ptmnsv7d.fsf@trained-monkey.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:7418 "EHLO e31.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262941AbTELXXK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 May 2003 19:23:10 -0400
+Received: from orngca-mls01.socal.rr.com ([66.75.160.16]:49321 "EHLO
+	orngca-mls01.socal.rr.com") by vger.kernel.org with ESMTP
+	id S262946AbTELXkt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 May 2003 19:40:49 -0400
+Received: from san.rr.com (66-75-128-22.san.rr.com [66.75.128.22])
+	by orngca-mls01.socal.rr.com (8.11.4/8.11.3) with ESMTP id h4CNp3S08593
+	for <linux-scsi@vger.kernel.org>; Mon, 12 May 2003 16:51:03 -0700 (PDT)
+Received: from san.rr.com (localhost [127.0.0.1])
+	by san.rr.com (8.12.3/8.12.3/SuSE Linux 0.6) with ESMTP id h4CNo5jW026326
+	for <linux-scsi@vger.kernel.org>; Mon, 12 May 2003 16:50:06 -0700
+Received: (from praka@localhost)
+	by san.rr.com (8.12.3/8.12.3/Submit) id h4CNo5Sv026325
+	for linux-scsi@vger.kernel.org; Mon, 12 May 2003 16:50:05 -0700
 Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570185F192@EXA-ATLANTA.se.lsil.com>
+In-Reply-To: <m3ptmnsv7d.fsf@trained-monkey.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <atulm@lsil.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Mukker, Atul [atulm@lsil.com] wrote:
-> Why doesn't mid-layer allow LLDs to specify separate entry points to various
-> hosts attached to the same driver. Like some other entries in the Scsi Host
-> Template, entry points should also  allowed to be overridden.
+On Mon, 12 May 2003, Jes Sorensen wrote:
+
+> >>>>> "James" == James Bottomley <James.Bottomley@steeleye.com> writes:
 > 
+> James> On Mon, 2003-05-12 at 14:00, Andrew Vasquez wrote:
+> >> Unfortunately, no.  QLogic has no plans to update qla1280 -- all
+> >> parallel SCSI HBAs have been EOLed.
 > 
-> Thanks
+> James> Could Qlogic at least publish the documentation for these chips
+> James> electronically so we have a vague chance of supporting them?
+> 
+> James> At the moment most of the ISP1020 and ISP1040 bug reports
+> James> elicit sympathy but not much else.
+> 
+> I very strongly support that idea, right now all the changes I have
+> made to the qla1280 driver have pretty much been done in the dark.
+> 
 
-Is there a issue you are hitting of common host template functions and
-selecting unique host instance functions using hostdata?
+I've forwarded a request to the appropriate people.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
-
+Regards,
+Andrew Vasquez
