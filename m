@@ -1,47 +1,70 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: PROBLEM: 2.6.3 hangs when writing to scsi-dvd
-Date: Mon, 23 Feb 2004 20:05:36 +0100
+From: Dave Boutcher <sleddog@us.ibm.com>
+Subject: Re: [PATCH] ibmvscsi driver - next version
+Date: Mon, 23 Feb 2004 13:41:36 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040223190536.GN32010@suse.de>
-References: <403512B8.2060403@ics.uci.edu> <Pine.LNX.4.58.0402231615270.1749@kai.makisara.local> <20040223142531.GF32010@suse.de> <200402231921.33895.pieczy@web.de>
+Message-ID: <opr3t8zmyel6e53g@us.ibm.com>
+References: <opr3s2iefyl6e53g@us.ibm.com> <20040223144542.A9624@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:29866 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262002AbUBWTFj (ORCPT
+Received: from e1.ny.us.ibm.com ([32.97.182.101]:45998 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262011AbUBWTmK (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Feb 2004 14:05:39 -0500
-Content-Disposition: inline
-In-Reply-To: <200402231921.33895.pieczy@web.de>
+	Mon, 23 Feb 2004 14:42:10 -0500
+In-Reply-To: <20040223144542.A9624@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Frank Pieczynski <pieczy@web.de>
-Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, Joachim Feise <jfeise@ics.uci.edu>, linux-scsi@vger.kernel.org, Michael Guntsche <mike@it-loops.com>, Andrew Morton <akpm@osdl.org>, "Justin T. Gibbs" <gibbs@scsiguy.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Feb 23 2004, Frank Pieczynski wrote:
-> On Monday 23 February 2004 15:25, Jens Axboe wrote:
-> > > > > I hope someone sees no where the real problem is.
-> > > >
-> > > > SCSI io completion path (sr/sd/st rw_intr() -> scsi_io_completion() ->
-> > > > scsi_end_request()) doesn't properly handle non-sector aligned data
-> > > > transfers. This patch should fix it up. Warning: untested.
-> > >
-> > > Now it is slightly tested: it works with my SCSI tape test program. Since
-> > > the program only does an inquiry, I tried it with the SCSI system disk
-> > > without problems. Unfortunately, I don't have access to a SCSI CDROM now.
-> >
-> > Great, that's promising (code like this tends to either break at first
-> > access, or work :-). Thanks for testing.
-> 
-> Hello all,
-> yes, this fix works! I can open k3b now without problems.
-> And yes, my other SCSI devices are still working, also my SATA disks using 
-> libata.
-> Thank you ver much,
+Chrisoph,
 
-Andrew, care to shake it down in -mm for a release? IMO it's clearly the
-way to go (changing io completion to be byte based instead of sectors),
-and the patch looks ok to me (well obviously :-)
+Thanks for the fast revew!!!  I'll get a new version out today.  A couple 
+of comments on comments...
 
--- 
-Jens Axboe
+On Mon, 23 Feb 2004 14:45:42 +0000, Christoph Hellwig <hch@infradead.org> 
+wrote:
+> +#include <linux/module.h>
+> +#include <scsi/scsi_device.h>
+> +#include "ibmvscsi.h"
+>
+> 	any reason you hid all headers in ibmvscsi.h?  normally we include
+> 	them in the source files directly.
+
+Philosophy question....I usually assume that a header file should in turn 
+include anything it needs...so ibmvscsi.h includes all the scsi header 
+files it uses...bad philosophy?
+
+> +	/* If we can't find this event, just return false */
+> +	if (found_evt == NULL) {
+> +		printk(KERN_ERR "ibmvscsi: failed to abort command\n");
+> +		return FAILED;
+> +	}
+>
+> 	This can't ever happen.  You will only get called for commands
+> 	that you have accepted in queuecommand and not called the completion
+> 	routine for.
+
+The above code was in the abort routine....I would personally prefer to 
+leave the check in there from pure paranoia.  If we are into aborts, bad 
+things are happening, and I don't really care about code path in 
+abort...perhaps I should add a "this should never happen" comment? :-)  I 
+could make it a BUG()...I'm not a huge fan of BUG() in drivers...
+
+> +/**
+> + * This stub is needed by ibmvscsi
+> + */
+> +void ibmvscsi_task(unsigned long data)
+> +{
+> +}
+>
+> 	I think you should just set up the task in the rpa subdriver
+> 	when it's not needed by the iseries one.
+
+The INIT_WORK call needs to be done before we get back to the subdriver in 
+case the first message gets turned around really fast.  Having this stub 
+seemed the cleanest way to handle that generically.
+
+Dave B
 
