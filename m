@@ -1,42 +1,59 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [linux-usb-devel] FW: USB 2.0 external hard drive problem
-Date: 06 Feb 2004 10:24:25 -0500
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: When should we avoid auto-sense? [was: USB 2.0 external hard drive
+ problem]
+Date: Fri, 6 Feb 2004 10:36:09 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1076081067.1823.5.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0402060946350.830-100000@ida.rowland.org>
+Message-ID: <Pine.LNX.4.44L0.0402061029100.617-100000@ida.rowland.org>
+References: <200402061510.i16FAxbX002025@burner.fokus.fraunhofer.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:15334 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S265476AbUBFPYt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Feb 2004 10:24:49 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0402060946350.830-100000@ida.rowland.org>
+Received: from ida.rowland.org ([192.131.102.52]:2052 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S265479AbUBFPgK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Feb 2004 10:36:10 -0500
+In-Reply-To: <200402061510.i16FAxbX002025@burner.fokus.fraunhofer.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Joerg Schilling <schilling@fokus.fraunhofer.de>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, magliery@csb.yale.edu, appro@fy.chalmers.se, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Joerg Schilling <schilling@fokus.fraunhofer.de>
+Cc: mdharm-usb@one-eyed-alien.net, appro@fy.chalmers.se, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, magliery@csb.yale.edu
 
-On Fri, 2004-02-06 at 09:59, Alan Stern wrote:
-> Who says it's wrong to retrieve sense information when there is an
-> underrun but not Check Condition?  Can you provide a reference to a
-> published (or draft) document that states this?
+On Fri, 6 Feb 2004, Joerg Schilling wrote:
 
-It's not wrong according to the SCSI standards, a REQUEST SENSE issued
-to a device with no sense data will produce a NO SENSE key.
+> >Who says it's wrong to retrieve sense information when there is an
+> >underrun but not Check Condition?  Can you provide a reference to a
+> >published (or draft) document that states this?
+> 
+> The SCSI standard says that the sense data should retrieved when the 
+> CHECK CONDITION bit is set. ATAPI drives use a bit in the ATA Status
+> for this purpose.
+> 
+> Read the SCSI CAM standard to see more on this topic.
 
-However, because of the way sense is processed in contingent allegiance
-conditions (suspending the I_T_L nexus until sense is cleared) it is
-dangerous to issue arbitrary request sense commands because you may
-receive sense for a different command (and prevent that command from
-erroring correctly).
+I have checked the standards.  They say that under certain circumstances
+the driver must perform auto-sense.  As far as I can see they don't
+mention any circumstances under which the driver _must not_ auto-sense.
 
-The SCSI mid-layer definitely does not expect this behaviour.  A driver
-either does not do any sense commands at all or it only issues a REQUEST
-SENSE in response to a Check Condition status in order not to have the
-nexus halted because of a contingent allegiance condition (simulating
-ACA if you will).
 
-James
+> >Bear in mind that there are some transports which do not provide any
+> >status at all.  The _only_ way for a driver to determine whether an
+> >error occurred is to get the sense data.
+> 
+> Let us asume such transport does not exist, unless you name at least a
+> single transport that has no bit that means "CHECK CONDITION".
+
+The USB Control-Bulk transport does not include a status phase.  This
+transport isn't used with CDs or DVDs; it's pretty much confined to USB
+floppy disk drives and digital cameras.
+
+
+> If you retrive sense data without reason, you may "read away" a senseful
+> error status that is related to a different command. 
+
+That's a good point.  Although for USB it's not so important, since there 
+can only be one command running at a time.
+
+I'd like to hear what Matt Dharm and the people on the SCSI development
+mailing list have to say about that.
+
+Alan Stern
 
 
