@@ -1,65 +1,133 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: 2.5.x Scsi_Cmnd to Scsi_Request driver fixup...
-Date: Thu, 25 Jul 2002 00:26:39 -0400
+Subject: [PATCH] scsi_mid_low_api.txt against 2.5.28
+Date: Thu, 25 Jul 2002 00:33:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D3F7DFF.C0F077C3@torque.net>
-References: <20020724165109.A32395@zuul.cca.cpqcorp.net>
+Message-ID: <3D3F7F92.F2A1A5AE@torque.net>
 Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------D17A6C2626D5EE289C6DB24C"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from torque.net (dial3.torque.net [204.138.244.13])
+	by gear.torque.net (8.9.3/8.9.3) with ESMTP id AAA31199
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Jul 2002 00:32:26 -0400
+List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+This is a multi-part message in MIME format.
+--------------D17A6C2626D5EE289C6DB24C
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
-To: steve.cameron@hp.com
-Cc: linux-scsi@vger.kernel.org
 
-Stephen Cameron wrote:
-> 
-> I was patching up the cpqfc driver to compile again in the 2.5.27
-> kernel, which was easy enough, or so I thought, until I noticed
-> this in scsi.c:
-> 
-> >  *              This function is deprecated, and drivers should be
-> >  *              rewritten to use Scsi_Request instead of Scsi_Cmnd.
-> >  */
-> >
-> > Scsi_Cmnd *scsi_allocate_device(Scsi_Device * device, int wait,
-> >                                 int interruptable)
-> 
-> So, I'm wondering if anyone has written anything up to help
-> low-level scsi driver maintainers know what is needed to
-> accomplish this rewrite?  Probably I can figure it out myself,
-> (eventually) but I'm always left with a nagging feeling maybe
-> I missed something crucial.  A summary of the types of things
-> that need to change would be most helpful, if such a thing exists.
-> 
-> I stumbled onto this: http://gear.torque.net/scsi/scsi_stat25.html
-> but it doesn't seem to mention Scsi_Request, the rationale
-> for the change and what is expected of the low-level driver
-> maintainers.
+Here are a few changes to this document. Note that the
+bios_param callback changed its second argument in lk 2.5.28 .
 
-Steve,
-That document was some rough ideas prior to OLS 2002. It probably
-should be removed.
-
-There is some documentation on the scsi mid level to lower
-level interface for the lk 2.5 series in the kernel source file:
-	/usr/src/linux/drivers/scsi/scsi_mid_low_api.txt
-[a small update follows in my next post]
-
-
-This document does not address scsi_allocate_device(). I believe
-that comment was placed in there by Eric Youngdale in the lk 2.3
-development series (i.e. prior to lk 2.4). About the same time
-the sg driver (and st) switched from using:
-    scsi_allocate_device() and scsi_do_cmd()
-to
-    scsi_allocate_request() and scsi_do_req()
-
-My guess is that little has changed in this area in lk 2.5 (yet)
-so if it worked in lk 2.4, leave it and see what happens :-)
-eata_dma_proc.c is the only lower level driver in 2.5.28 using the
-newer scsi_allocate_request().
+There is a new section on how a lower level driver passes
+back the sense buffer to the mid level (autosense or
+a REQUEST SENSE command performed by the lower level driver).
 
 Doug Gilbert
+--------------D17A6C2626D5EE289C6DB24C
+Content-Type: text/plain; charset=us-ascii;
+ name="scsi_mid_low_api.txt2528.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi_mid_low_api.txt2528.diff"
 
-P.S. the bios_param() callback changed its 2nd argument in lk 2.5.28
+--- linux/drivers/scsi/scsi_mid_low_api.txt	Wed Jul 24 23:57:35 2002
++++ linux/drivers/scsi/scsi_mid_low_api.txt2528add	Thu Jul 25 00:05:52 2002
+@@ -34,12 +34,15 @@
+ level driver. For it to work a declaration like this is needed before
+ it is included:
+     static Scsi_Host_Template driver_template = DRIVER_TEMPLATE;
+-    /* DRIVER_TEMPLATE should contain pointers to supported interface
+-       functions. Scsi_Host_Template is defined in hosts.h */
+     #include "scsi_module.c"
+ 
++In this case "DRIVER_TEMPLATE" is defined to be a structure initializer
++that is placed in the driver header file by convention. It contains
++pointers to supported interface functions and other values.
++Scsi_Host_Template is defined in hosts.h . 
++
+ The scsi_module.c assumes the name "driver_template" is appropriately
+-defined. It contains 2 functions:
++defined. scsi_module.c contains 2 functions:
+   1) init_this_scsi_driver() called during builtin and module driver
+      initialization: invokes mid level's scsi_register_host()
+   2) exit_this_scsi_driver() called during closedown: invokes
+@@ -68,7 +71,7 @@
+ /**
+  *      bios_param - fetch head, sector, cylinder info for a disk
+  *      @sdkp: pointer to disk structure (defined in sd.h)
+- *      @dev: corresponds to dev_t of device file name (e.g. /dev/sdb)
++ *      @bdev: pointer to block device context (defined in fs.h)
+  *      @params: three element array to place output:
+  *              params[0] number of heads
+  *              params[1] number of sectors
+@@ -304,7 +307,10 @@
+  *      @scp: pointer to scsi command object
+  *      @done: function pointer to be invoked on completion
+  *
+- *      Returns 1 if the adapter is busy, else returns 0.
++ *      Returns 1 if the adapter (host) is busy, else returns 0. One
++ *		reason for an adapter to be busy is that the number
++ *		of outstanding queued commands is already equal to
++ *		Scsi_Host::can_queue .
+  *
+  *      Required: if Scsi_Host::can_queue is ever non-zero
+  *                then this function is required.
+@@ -324,6 +330,9 @@
+  *      return value should be generated by this function. However, in
+  *      this case, it should be placed in scp->result before this function 
+  *      returns.
++ *      If a status of CHECK CONDITION is placed in "result" when the
++ *	'done' callback is invoked, then the lower level driver should 
++ *	perform autosense and fill in the Scsi_Cmnd::sense_buffer array.
+  **/
+     int queuecommand(Scsi_Cmnd * scp, void (*done)(Scsi_Cmnd *));
+ 
+@@ -505,6 +514,28 @@
+ (e.g. per scsi device) may be possible by juggling locks in
+ queuecommand().
+ 
++Autosense
++=========
++Autosense (or auto-sense) is defined in the SAM-2 document as "the
++automatic return of sense data to the application client coincident
++with the completion of a SCSI command" when a status of CHECK CONDITION
++occurs. Lower level drivers should perform autosense. This should be
++done when the lower level driver detects a CHECK CONDITION status by either: 
++    a) instructing the SCSI protocol (e.g. SCSI Parallel Interface (SPI))
++       to perform an extra data in phase on such responses
++    b) or, the lower level driver issuing a REQUEST SENSE command itself
++
++Either way, the mid level decides whether the lower level driver has 
++performed autosense by checking Scsi_Cmnd::sense_buffer[0] . If this
++byte has an upper nibble of 7 then autosense is assumed to have taken 
++place. If it has another value (and this byte is initialized to 0 before
++each command) then the mid level will issue a REQUEST SENSE command.
++
++In the presence of queued commands the "nexus" that maintains sense
++buffer data from the command that failed until a following REQUEST SENSE
++may get out of synchronization. This is why it is best for the lower
++level driver to perform autosense.
++
+ 
+ Changes since lk 2.4 series
+ ===========================
+@@ -514,6 +545,7 @@
+ 
+ The older error handling mechanism has been removed. This means the
+ lower level interface functions abort() and reset() have been removed.
++The Scsi_Host_Template::use_new_eh_code flag has been removed.
+ 
+ In the 2.4 series the scsi subsystem configuration descriptions were 
+ aggregated with the configuration descriptions from all other Linux 
+@@ -532,4 +564,4 @@
+ 
+ Douglas Gilbert
+ dgilbert@interlog.com
+-27th April 2002
++24th July 2002
+
+--------------D17A6C2626D5EE289C6DB24C--
+
