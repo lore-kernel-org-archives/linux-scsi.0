@@ -1,121 +1,87 @@
-From: Eric Kerin <eric@bootseg.com>
-Subject: [PATCH] 2.6.0 aic7xxx and aic79xx stale pci_device list entry
-Date: Sat, 24 Jan 2004 11:09:43 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1074960582.18481.3.camel@opiate>
-References: <1073076654.2048.19.camel@opiate>
-	 <1073120514.4429.0.camel@laptop.fenrus.com>
-	 <1073128375.5478.12.camel@opiate>
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: smp dead lock of io_request_lock/queue_lock patch
+Date: Sun, 25 Jan 2004 01:31:29 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040125003129.GG28435@tpkurt.garloff.de>
+References: <OF317B32D5.C8C681CB-ONC1256E19.005066CF-C1256E19.00538DEF@de.ibm.com> <20040112151230.GB5844@devserv.devel.redhat.com> <20040112194829.A7078@infradead.org> <1073937102.3114.300.camel@compaq.xsintricity.com> <Pine.LNX.4.58L.0401131843390.6737@logos.cnet> <1074345000.13198.25.camel@compaq.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mxsf13.cluster1.charter.net ([209.225.28.213]:12046 "EHLO
-	mxsf13.cluster1.charter.net") by vger.kernel.org with ESMTP
-	id S266967AbUAXQOU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Jan 2004 11:14:20 -0500
-Received: from [10.254.1.30] (24.231.168.37.bay.mi.chartermi.net [24.231.168.37] (may be forged))
-	by mxsf13.cluster1.charter.net (8.12.10/8.12.8) with ESMTP id i0OGBFtV021169
-	for <linux-scsi@vger.kernel.org>; Sat, 24 Jan 2004 11:11:15 -0500 (EST)
-	(envelope-from eric@bootseg.com)
-In-Reply-To: <1073128375.5478.12.camel@opiate>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Kra4tWuoVJHqwr45"
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1074345000.13198.25.camel@compaq.xsintricity.com>
+To: Doug Ledford <dledford@redhat.com>
+Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, Christoph Hellwig <hch@infradead.org>, Arjan Van de Ven <arjanv@redhat.com>, Martin Peschke3 <MPESCHKE@de.ibm.com>, Jens Axboe <axboe@suse.de>, Peter Yao <peter@exavio.com.cn>, linux-kernel@vger.kernel.org, linux-scsi mailing list <linux-scsi@vger.kernel.org>, ihno@suse.de
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Just trying to follow up on this one, make sure this fix dosn't get lost
-in the list.
 
-Thanks,
-Eric
+--Kra4tWuoVJHqwr45
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2004-01-03 at 06:12, Eric Kerin wrote:
-> On Sat, 2004-01-03 at 04:01, Arjan van de Ven wrote: 
-> > On Fri, 2004-01-02 at 21:50, Eric Kerin wrote:
-> > > Loading the aic7xxx or aic79xx modules, on a machine that did not
-> > > contain the card, left a stale entry in the pci_device list.  This
-> > > caused an oops upon loading the next module that registered a
-> > > pci_device. 
-> > > 
-> > > The patches below will unregister the pci_device if it successfully
-> > > registers the device, but does not find any cards. 
-> > > 
-> > > Comments are appreciated.
-> > 
-> > well in 2.6 modules are supposed to remain loaded even though no device
-> > is found (since one can be hotplugged later) so that part of the driver
-> > needs changing; other than that yes the driver needs to deregister
-> > itself....
-> Here's a new patch, now it will leave the module loaded if it
-> successfully registers the pci device.
-> 
-> Eric Kerin
-> 
-> 
-> 
-> --- aic7xxx_osm.c.original	2004-01-02 03:56:32.000000000 -0500
-> +++ aic7xxx_osm.c	2004-01-03 05:03:41.000000000 -0500
-> @@ -844,6 +844,7 @@ ahc_linux_detect(Scsi_Host_Template *tem
->  {
->  	struct	ahc_softc *ahc;
->  	int     found;
-> +	int	pci_reg_state;
->  
->  #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
->  	/*
-> @@ -891,8 +892,9 @@ ahc_linux_detect(Scsi_Host_Template *tem
->  	 */
->  	ahc_list_lockinit();
->  
-> +	pci_reg_state = -1;
->  #ifdef CONFIG_PCI
-> -	ahc_linux_pci_init();
-> +	pci_reg_state = ahc_linux_pci_init();
->  #endif
->  
->  #ifdef CONFIG_EISA
-> @@ -913,6 +915,10 @@ ahc_linux_detect(Scsi_Host_Template *tem
->  	spin_lock_irq(&io_request_lock);
->  #endif
->  	aic7xxx_detect_complete++;
-> +	if(pci_reg_state == 0 && found == 0){
-> +		return(1); 
-> +	}
-> +
->  	return (found);
->  }
->  
-> 
-> 
-> --- aic79xx_osm.c.original	2004-01-02 02:46:43.000000000 -0500
-> +++ aic79xx_osm.c	2004-01-03 05:05:52.000000000 -0500
-> @@ -856,6 +856,7 @@ ahd_linux_detect(Scsi_Host_Template *tem
->  {
->  	struct	ahd_softc *ahd;
->  	int     found;
-> +	int	pci_reg_state;
->  
->  #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
->  	/*
-> @@ -906,8 +907,9 @@ ahd_linux_detect(Scsi_Host_Template *tem
->  	 */
->  	ahd_list_lockinit();
->  
-> +	pci_reg_state = -1;
->  #ifdef CONFIG_PCI
-> -	ahd_linux_pci_init();
-> +	pci_reg_state = ahd_linux_pci_init();
->  #endif
->  
->  	/*
-> @@ -924,6 +926,10 @@ ahd_linux_detect(Scsi_Host_Template *tem
->  	spin_lock_irq(&io_request_lock);
->  #endif
->  	aic79xx_detect_complete++;
-> +	if(pci_reg_state == 0 && found == 0){
-> +		return(1); 
-> +	}
-> +
->  	return (found);
->  }
->  
+Doug,
 
+On Sat, Jan 17, 2004 at 08:10:00AM -0500, Doug Ledford wrote:
+> On Tue, 2004-01-13 at 15:55, Marcelo Tosatti wrote:
+> > Merging "straight" _bugfixes_=20
+>=20
+> OK, I've got some new bk trees established on linux-scsi.bkbits.net.=20
+> There is a 2.4-for-marcelo, which is where I will stick stuff I think is
+> ready to go to you.  There is a 2.4-drivers.  Then there is a
+> 2.4-everything.  The everything tree will be a place to put any and all
+> patches that aren't just experimental patches.  So, just about any Red
+> Hat SCSI patch is fair game.  Same for the mods SuSE has made.
+
+Not everything we have is straight bugfixes :-\
+
+> Pushing
+> changes from here to 2.4-for-marcelo on a case by case basis is more or
+> less my plan.  Right now, these trees are all just perfect clones of
+> Marcelo's tree.  As I make changes and commit things, I'll update the
+> lists with the new stuff.
+
+Find the collection of changes we've done to SCSI scanning at
+http://www.suse.de/~garloff/linux/scsi-scan/scsi-scanning.html
+(currently syncing, might take an hour before the patches are visible)
+
+It contains=20
+* various blacklist updates
+* various new parameters that influence the way SCSI scanning is done
+  (one of the areas that generated amazingly many support calls and
+   HW vendor requests)
+* a refactoring of the code to make it resemble 2.6
+* support for REPORT_LUNS (backport from 2.6 as well)
+
+The amount of parameters is larger than in 2.6, you can also instruct
+the code not to use REPORT_LUNS at all, you can blacklist devices
+for REPORT_LUNS (BLIST_NOREPLUN) and you can tell the code to try
+REPORT_LUNS on SCSI-2 devices (if the host adapter reports to support
+more than 8 LUNs, so you avoid the usual USB screwups).
+
+I'd certainly appreciate if this is merged into more 2.4 trees and I'll
+try to find the time to push some improvements into 2.6. If anybody is
+faster, I would not mind either ;-)
+
+Destructive criticism appreciated ;-)
+
+Doug, would you mind to post the BUSY and QUEUE_FULL fixes for review?
+
+Regards,
+--=20
+Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
+SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
+
+--Kra4tWuoVJHqwr45
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+
+iD4DBQFAEw5hxmLh6hyYd04RAnPZAJjLR6kIbiUmGIa0rz3VN9tJnblmAJ9dbdea
+RRPFNZP+SvIuP2dL6DZCbA==
+=QrHb
+-----END PGP SIGNATURE-----
+
+--Kra4tWuoVJHqwr45--
