@@ -1,87 +1,67 @@
-From: =?ISO-8859-1?Q?G=E9rard_Roudier?= <groudier@free.fr>
-Subject: Re: Sym53C8xx Driver Hardening
-Date: Sat, 27 Jul 2002 00:25:25 +0200 (CEST)
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: [PATCH] sd_many done right (1/5)
+Date: Sat, 27 Jul 2002 00:32:24 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020726235003.V5056-100000@localhost.my.domain>
-References: <10207251533.ZM1198000@classic.engr.sgi.com>
+Message-ID: <40468.5903377414$1027723030@news.gmane.org>
+References: <20020726154533.GD19721@nbkurt.etpnet.phys.tue.nl> <Pine.GSO.4.21.0207261245070.21586-100000@weyl.math.psu.edu> <20020726165411.GI19721@nbkurt.etpnet.phys.tue.nl> <20020726175027.GC2746@clusterfs.com> <20020726185545.B18629@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="S0GG+JvAI2G0KxBG"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <10207251533.ZM1198000@classic.engr.sgi.com>
+Content-Disposition: inline
+In-Reply-To: <20020726185545.B18629@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@classic.engr.sgi.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Rogier Wolff <R.E.Wolff@BitWizard.nl>, "Isabelle, Francois" <Francois.Isabelle@ca.kontron.com>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Alexander Viro <viro@math.psu.edu>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>, Marcelo Tosatti <marcelo@conectiva.com.br>
 
 
+--S0GG+JvAI2G0KxBG
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, 25 Jul 2002, Jeremy Higdon wrote:
+Hi Christoph, Andreas,
 
-> On Jul 25,  1:11am, G=E9rard Roudier wrote:
-> >
-> > By the way, the sym53c8xx_2 driver (and probably version 1 too) nev=
-er
-> > intentionnaly panics the system on hardware failure detection.
-> > The couple of calls to panic you can see in the driver are related =
-to
-> > software unexpected situations.
-> > In my opinion, serious high reliability requires special hardware s=
-upport.
-> >
-> > On serious harware error detected, the driver simply tries to reset
-> > everything it can in order to have a chance to restart operations
-> > properly. May-be it should count such events and give up in some wa=
-y after
-> > some given number of retries. If you just suggest such 'give up'
-> > operations to disable the device this should be doable, but this wi=
-ll not
-> > make upper layers aware of the situation and certainly not be what =
-most
-> > users expect. This MEANS that serious high reliability ALSO require=
-s
-> > special SOFTWARE support and USER utilities, and certainly NOT ONLY=
- be
-> > based on some questionnable trivial tinking in device drivers, in m=
-y
-> > opinion.
-> >
-> >   G=E9rard.
->
->
-> Also, with some sorts of errors, one might suspect that the device ha=
-s
-> DMA'd data into the wrong place in memory.
->
-> Generally, I think a crash is preferable to data corruption (i.e. no
-> answer is better than a wrong answer), so in such cases, the driver
-> might want to panic.
+On Fri, Jul 26, 2002 at 06:55:45PM +0100, Christoph Hellwig wrote:
+> On Fri, Jul 26, 2002 at 11:50:27AM -0600, Andreas Dilger wrote:
+> > Actually, one interesting aspect of the EVMS vs. device-mapper argument
+> > going on that has totally been missed is that EVMS can do management of
+> > ALL disk block devices.
+>=20
+> That's only natural as it try to duplicate the whole Linux block layer.
+> But it's everything but a good idea.
 
-The sym53c8xx ensures that all possible path checkings against errors i=
-t
-has under control are enabled. If the drivers gets the error, then this
-ideally means that it is not a fatal system error or user or O/S does n=
-ot
-want it to handled so. Otherwise, some NMI should occur and the system
-should halt. So, my opinion is that a hardware error that could be hand=
-led
-as a system error but is not so should be considered as an invitation t=
-o
-try to recover. Hence, the answer of the driver is the appropriate one,=
- in
-my opinion.
+I won't go into that discussion ... Duplicating the Linux block layer is
+certainly not such a good idea as the block layer is getting really nice
+nowadays. But I have no idea to what extent something like this is done in
+EVMS.
 
-> If hardware can place a fence around DMA (such that DMA to unintended
-> locations is impossible), then you might not want to panic in such
-> situations, assuming that you can retry.
+But the idea of having a number of majors assigned to disks, no matter what
+the driver below is looks certainly like a good idea. With the current
+approach, we'll need way too many majors, even if we'd have some more bits
+in the future. Why not have a pool of disk majors and sd, hd, dasd, rd
+(DAC960), the IDE-Raids, and ... allocate some of these as needed.
 
-You may be dreaming there. At least, I never heard about such magic in
-the PCI world.
+driverfs + some userspace tool will be needed to provide a consistent view
+on them and to handle the permissions. Fortunately, disk devs tend to all
+have the same perms, so we can start before this is addressed to its
+full extent.
 
 Regards,
-  G=E9rard.
+--=20
+Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
+GPG key: See mail header, key servers         Linux kernel development
+SuSE Linux AG, Nuernberg, DE                            SCSI, Security
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--S0GG+JvAI2G0KxBG
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.7 (GNU/Linux)
+
+iD8DBQE9Qc34xmLh6hyYd04RArTyAJ0Uig6iiCc+2TVB41EQJuZJ3aJ22QCgj9X6
+U9rTa6iLaVo8Tis9ryARyBc=
+=NRTi
+-----END PGP SIGNATURE-----
+
+--S0GG+JvAI2G0KxBG--
