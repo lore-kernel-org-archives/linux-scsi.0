@@ -1,44 +1,24 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Proposal for new generic device API: dma_get_required_mask()
-Date: 20 Jun 2004 11:56:26 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1087750590.11000.87.camel@mulgrave>
-References: <1087481331.2210.27.camel@mulgrave>
-	<m33c4tsnex.fsf@defiant.pm.waw.pl> <1087523134.2210.97.camel@mulgrave>
-	<m3fz8s79dz.fsf@defiant.pm.waw.pl> <1087657251.2162.49.camel@mulgrave>
-	<m34qp7glsp.fsf@defiant.pm.waw.pl>
+From: "David S. Miller" <davem@redhat.com>
+Subject: Re: future of drivers/fc4/
+Date: Sun, 20 Jun 2004 11:40:10 -0700
+Sender: sparclinux-owner@vger.kernel.org
+Message-ID: <20040620114010.73f1b98a.davem@redhat.com>
+References: <20040620160353.GA17163@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:19906 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264705AbUFTQ4e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Jun 2004 12:56:34 -0400
-In-Reply-To: <m34qp7glsp.fsf@defiant.pm.waw.pl>
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <20040620160353.GA17163@lst.de>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Krzysztof Halasa <khc@pm.waw.pl>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sat, 2004-06-19 at 18:39, Krzysztof Halasa wrote:
-> The problem is that (depending on platform) the pci_map_* and dma_map_*
-> functions ignore both masks. An example of such platform is i386 :-)
-> 
-> It seems the masks are used on i386 for only one thing - consistent
-> dma mask is used for consistent allocations only, and normal dma mask
-> is not used at all.
+On Sun, 20 Jun 2004 18:03:53 +0200
+Christoph Hellwig <hch@lst.de> wrote:
 
-Actually, I think you misunderstand the way the API works.  The only
-time the dma_map_ functions pay attention to the mask is in an IOMMU
-transaction.  For no-IOMMU systems, its far more efficient for bouncing
-to occur in the upper layers (as it does for block and net).
+> The SUN FCAL support has been non-working for ages and needs major work
+> to keep up with scsi API changes.  Is anyone planning to ressurect it
+> midterm?  If not I'd like to remove it from the tree.
 
-> The normal mask is used mainly on 64-bit platforms and the meaningful
-> values are 2^32-1 and 2^64-1. It's used by PCI-X device drivers to
-> enable DAC transfers. This is why it isn't used on 32-bit platforms.
-
-This statement is incorrect, Russell has already given you a counter
-example.
-
-James
-
+Feel free to remove it, interested parties can resurrect the source
+really easily.
