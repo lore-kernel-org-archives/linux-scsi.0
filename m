@@ -1,98 +1,45 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: Re: [PATCH 1/3] 2.6.0 aacraid driver update
-Date: Mon, 06 Oct 2003 15:09:45 -0700
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: writable mmc profiles actually are writable
+Date: 06 Oct 2003 16:14:08 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1065478184.17021.85.camel@markh1.pdx.osdl.net>
-References: <1065475266.17021.75.camel@markh1.pdx.osdl.net>
-	 <3F81E4D8.20904@pobox.com>
+Message-ID: <1065478448.2361.1.camel@patehci2>
+References: <1064847281.24854.2.camel@patehci2>
+	 <1064850600.25057.7.camel@patehci2> <20030929164654.GS15415@suse.de>
+	 <1064855570.3184.3.camel@patehci2> <1064865746.4262.63.camel@patehci2>
+	 <1065460336.10804.1.camel@patehci2> <1065463946.5185.8.camel@patehci2>
+	 <20031006182223.GF972@suse.de> <20031006182510.GG972@suse.de>
+	 <1065469831.5185.44.camel@patehci2>  <20031006203816.GJ972@suse.de>
+	 <1065473899.6835.41.camel@patehci2>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:50892 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S261754AbTJFWKE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Oct 2003 18:10:04 -0400
-In-Reply-To: <3F81E4D8.20904@pobox.com>
+Received: from email-out1.iomega.com ([147.178.1.82]:47744 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S261889AbTJFWOT
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Oct 2003 18:14:19 -0400
+In-Reply-To: <1065473899.6835.41.camel@patehci2>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: axboe@suse.de
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2003-10-06 at 14:55, Jeff Garzik wrote:
-> Mark Haverkamp wrote:
+> diff -Nur linux-2.6.0-test5/include/scsi/scsi.h linux/include/scsi/scsi.h
+> diff -Nur linux-2.6.0-test5/include/linux/cdrom.h linux/include/linux/cdrom.h
+> diff -Nur linux-2.6.0-test5/drivers/cdrom/cdrom.c linux/drivers/cdrom/cdrom.c
+> diff -Nur linux-2.6.0-test5/drivers/scsi/sr.c linux/drivers/scsi/sr.c
 
-> > @@ -523,9 +632,27 @@
-> >  		dev->pae_support = (paemode!=0);
-> >  	}
-> >  	if(dev->pae_support != 0) {
-> > -		printk(KERN_INFO"%s%d: 64 Bit PAE enabled\n", dev->name, dev->id);
-> > -		pci_set_dma_mask(dev->pdev, (dma_addr_t)0xFFFFFFFFFFFFFFFFULL);
-> > +		if (pci_set_dma_mask(dev->pdev, 
-> > +					(dma_addr_t)0xFFFFFFFFFFFFFFFFULL)) {
-> 
-> you may (and should) remove the cast.
-> 
+Trying that -test5 patch in -test6 I get:
 
-> 
-> 
-> > +	} else {
-> > +		/* 
-> > +		 * Reset if Quirk 31 was used, since data 
-> > +		 * transfers are ok.
-> > +		 */
-> > +		if (pci_set_dma_mask(dev->pdev, (dma_addr_t)0xFFFFFFFFULL)) {
-> > +			printk(KERN_INFO"aacraid: Can't reset DMA mask.\n");
-> 
-> remove the cast
-> 
-> 
-> 
-> > @@ -559,7 +686,7 @@
-> >  			scsicmd->use_sg,
-> >  			scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
-> >  	else if(scsicmd->request_bufflen)
-> > -		pci_unmap_single(dev->pdev, (dma_addr_t)(ulong)scsicmd->SCp.ptr,
-> > +		pci_unmap_single(dev->pdev, (dma_addr_t)(unsigned long)scsicmd->SCp.ptr,
-> >  				 scsicmd->request_bufflen,
-> >  				 scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
-> >  	readreply = (struct aac_read_reply *)fib_data(fibptr);
-> 
-> do you really need all that casting?  :)
-> 
-> 
-> 
-> > @@ -603,7 +734,7 @@
-> >  			scsicmd->use_sg,
-> >  			scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
-> >  	else if(scsicmd->request_bufflen)
-> > -		pci_unmap_single(dev->pdev, (dma_addr_t)(ulong)scsicmd->SCp.ptr,
-> > +		pci_unmap_single(dev->pdev, (dma_addr_t)(unsigned long)scsicmd->SCp.ptr,
-> >  				 scsicmd->request_bufflen,
-> >  				 scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
-> >  
-> 
-> likewise
-> 
-> 
-> 
-> 
-> > @@ -1235,7 +1511,7 @@
-> >  			scsicmd->use_sg,
-> >  			scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
-> >  	else if(scsicmd->request_bufflen)
-> > -		pci_unmap_single(dev->pdev, (ulong)scsicmd->SCp.ptr, scsicmd->request_bufflen,
-> > +		pci_unmap_single(dev->pdev, (unsigned long)scsicmd->SCp.ptr, scsicmd->request_bufflen,
-> >  			scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
-> >  
-> 
-> ah-hah, you choose another casting style, differing from the above 
-> examples I pointed out...
+patching file include/scsi/scsi.h
+Hunk #1 succeeded at 74 (offset -7 lines).
+patching file include/linux/cdrom.h
+patching file drivers/cdrom/cdrom.c
+Hunk #2 succeeded at 2465 (offset 9 lines).
+patching file drivers/scsi/sr.c
+Hunk #3 succeeded at 759 (offset -1 lines).
 
-I'll go back over everything and fix and make the casting more
-consistent, as well as check over the code for all you other comments.
+I will study this result and report back.
 
-Thanks for looking this over.
-Mark.
-> 
--- 
-Mark Haverkamp <markh@osdl.org>
+Pat LaVarre
+
 
