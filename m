@@ -1,38 +1,41 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH][RFC] ST Tape assignement
-Date: Wed, 24 Jul 2002 20:22:42 +0300 (EEST)
+From: "Lawson,Jonathan" <Jonathan.Lawson@Edwards.BOC.com>
+Subject: DPT PM3224
+Date: Wed, 24 Jul 2002 20:29:56 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0207242016020.3585-100000@kai.makisara.local>
-References: <Pine.LNX.4.21.0207241623140.990-100000@ftp.philosys.de>
+Message-ID: <1F9CFA65E33ED511868B00508BCF1FA87D087A@EXC_CRA05>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.21.0207241623140.990-100000@ftp.philosys.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Sertic <robert@philosys.de>
-Cc: linux-scsi@vger.kernel.org, Robert.Sertic@gmx.net
+To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On Wed, 24 Jul 2002, Robert Sertic wrote:
+Hello everyone,
+	Please does someone have a DPT-PM3224 SmartRaid III manual I could
+have a copy of. I bought a second hand computer a while back, unfortunately
+it came with very little documentation. I am currently having some IRQ/IO
+conflict problems with the card and a U.S. Robotics modem and I am hoping
+the manual would shed some light on the matter. I've been to the Adaptec
+website to no avail; I emailed their sales reps and the only response I got
+was that the product had been made obsolete and so is unsupported - so no
+manual
 
->
->
->
-> Hi Everybody,
->
-> i rewrote my patch so that is applyable to a
-> 2.5.27 Kernel. Do you remember???
->
-> With this patch you can make an assingement between
-> a certain Tape and a device file, so for example
-> Tape on ScsiHost 1 Channel 0 ID 5 Lun0 should be
-> st31.
->
-This problem is better solved outside the kernel. What you need is a
-program or script that makes links to the actual devices when they are
-found. The program/script should examine the new device and based on the
-result it then creates the link with the desired name pointing to the
-device. One example of this kind of approach is called scsidev.
+Regards
 
-	Kai
+Jonathan
+
+--
+Jonathan Lawson
+Experimental & Applied Thermodynamicist
+BOC Edwards, Manor Royal, Crawley, 
+West Sussex RH10 9LW. UK.
+T: 01293 60 3482 F: 01293 53 3453
+
+Lord, for the erring thought, not into evil wrought;
+Lord, for the wicked will, betrayed and baffled still. 
+For the heart from itself kept ... Our thanksgiving, accept.
 
 
+_____________________________________________________________________
+This e-mail has been scanned for viruses by the WorldCom Internet Managed Scanning Service - powered by MessageLabs. For further information visit http://www.worldcom.com
