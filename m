@@ -1,38 +1,62 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: smp dead lock of io_request_lock/queue_lock patch
-Date: Sat, 17 Jan 2004 20:54:50 +0000
+From: Andrew Vasquez <praka@users.sourceforge.net>
+Subject: Re: pulling failover out of qla2xxx
+Date: Sat, 17 Jan 2004 12:52:30 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040117205450.A7305@infradead.org>
-References: <20040112194829.A7078@infradead.org> <1073937102.3114.300.camel@compaq.xsintricity.com> <Pine.LNX.4.58L.0401131843390.6737@logos.cnet> <1074345000.13198.25.camel@compaq.xsintricity.com> <20040117165828.A4977@infradead.org> <1074366452.13198.48.camel@compaq.xsintricity.com> <20040117191704.A6344@infradead.org> <1074367303.13198.52.camel@compaq.xsintricity.com> <20040117192946.A6479@infradead.org> <1074371793.13198.58.camel@compaq.xsintricity.com>
+Message-ID: <20040117205230.GB8301@praka.local.home>
+References: <B179AE41C1147041AA1121F44614F0B0598E34@AVEXCH02.qlogic.org> <40084860.90902@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:60175 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S266145AbUAQUyv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Jan 2004 15:54:51 -0500
+Received: from ms-smtp-01-qfe0.socal.rr.com ([66.75.162.133]:5018 "EHLO
+	ms-smtp-01-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S266129AbUAQVEE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Jan 2004 16:04:04 -0500
+Received: from praka.san.rr.com (66-75-130-8.san.rr.com [66.75.130.8])
+	by ms-smtp-01-eri0.socal.rr.com (8.12.10/8.12.7) with ESMTP id i0HL3xqG028679
+	for <linux-scsi@vger.kernel.org>; Sat, 17 Jan 2004 13:04:01 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <1074371793.13198.58.camel@compaq.xsintricity.com>; from dledford@redhat.com on Sat, Jan 17, 2004 at 03:36:33PM -0500
+In-Reply-To: <40084860.90902@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: linux-scsi mailing list <linux-scsi@vger.kernel.org>
+To: Linux-SCSI <linux-scsi@vger.kernel.org>
 
-On Sat, Jan 17, 2004 at 03:36:33PM -0500, Doug Ledford wrote:
-> I'm exactly the opposite.  In my opinion, the mid layer should be using
-> the device locks for its internal operations
+On Fri, 16 Jan 2004, Jeff Garzik wrote:
 
-well, I strongly disagree with that.
+> >I'll open up a request-for-response from the rest of the listers in
+> >asking if parceling out qlaAB00.ko modules based on firmware types is
+> >both practical and sensible from a user standpoint.  Especially
+> >considering that many users aren't really concerned with the ISP chip
+> >type on their QLAXXXX or OEM-BRANDED ABC host bus adapter.
+> 
+> 
+> Speaking from a generic driver / distro standpoint, module dependencies 
+> and PCI tables (i.e. pci_device_id and MODULE_DEVICE_TABLE) all things 
+> to magically Just Work :)
+> 
 
-> and calling into the low
-> level drivers with no locks held.  The fact that the mid layer still
-> tries to lock drivers for the drivers is a bug IMO.  Every time I see a
-> driver do spin_unlock_irq(host->host_lock); do driver work;
-> spin_lock_irq(host->host_lock); return; it really points out that the
-> mid layer has no business locking down drivers for them.
+I certainly hope this to be the case.  Perhaps I'm still viewing this
+with an eye as an external module maintainer.  When a user compiles
+the qla2xxx driver she's given the following options:
 
-I completely agree with that, though.  I didn't have time fixing up
-all drivers before we got 2.6, though so this won't happen before 2.7.
+	...
+        [ ] QLogic ISP2100 host adapter family support
+        [ ] QLogic ISP2200 host adapter family support
+        [ ] QLogic ISP2300 host adapter family support
+        [ ] QLogic ISP2322 host adapter family support
+        [ ] QLogic ISP6312 host adapter family support
+        [ ] QLogic ISP6322 host adapter family support
+	...
 
-Btw, I just noticed how little this has to do with the original discussion,
-Cc list thus cut down quite a lot.
+how will she know which option to select for her QLA2362 HBA?  Will
+she know it's based on an ISP2322 chip and properly select the correct
+CONFIG option?  How about for a QLA2342 card?  BTW: it's based on the
+ISP2312 chip so one must select the ISP2300 CONFIG option.
 
+The CONFIG list will just get longer as new ISP chips come out.
+
+> I heartily encourage the creation of "library modules", which are loaded 
+
+Library modules seems fine, but, as you noted in a later email, the
+qla2100/qla2200.ko modules are mostly wrappers for firmware loads.
+
+Regards,
+Andrew Vasquez
