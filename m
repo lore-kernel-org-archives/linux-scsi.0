@@ -1,54 +1,72 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH / RFC] scsi_error handler update. (1/4)
-Date: Tue, 11 Feb 2003 09:22:56 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030211172256.GC3164@beaverton.ibm.com>
-References: <20030211081351.GA1368@beaverton.ibm.com> <3E492992.90502@splentec.com>
+From: Manfred Spraul <manfred@colorfullife.com>
+Subject: eata irq abuse (was: Re: Linux 2.5.60)
+Date: Tue, 11 Feb 2003 18:45:35 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <3E4936BF.3050809@colorfullife.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3E492992.90502@splentec.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: "Zephaniah E. Hull" <warp@mercury.d2dc.net>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-eata@i-connect.net
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
-Cc: linux-scsi@vger.kernel.org
 
-Luben Tuikov [luben@splentec.com] wrote:
-> Could you call this ``eh_cmd_entry'' or ``eh_entry''*,
-> or why don't you use the already provided ``list'' entry.
-> 
+Zephaniah wrote:
 
-I could change the name.
+>kernel BUG at mm/slab.c:1102!
 
-I wanted a list just for the error handler I was concerned in the
-timeout (cancel cases) that until ownership was reclaimed that I did not
-want to risk modification of another scsi_cmnd list_head. We should be
-protected by the scsi_done scsi_delete_timer so I could possibly use the
-other list head.
+Slab notices that a function that expects enabled local interrupts is called with disabled local interrupts.
 
-> Question: Could you explain when a command becomes a member of
-> the eh_cmd_list, and when it ceases to be a member of this list?
-> I.e. what is true and false when a command is part and not
-> part of this list?  I couldn't quite get it, just looking from the code,
-> and probably should've looked ``closer'', but am pressed for time.
-> ... I suspect it's something we've discussed here.
 
-A command becomes a member of the eh_cmd_list:
-	- If a scsi_cmnd times out.
-	- A call to scsi_set_device_offline with scsi_cmnds active.
-	- A command completes with DID_TIME_OUT and is not a TUR or
-	  Inquiry.
-	- A command completes with message byte of != COMMAND_COMPLETE.
-	- A few other cases in scsi_decide_disposition. I will document
-	  them.
+>Call Trace:
+> [<c014a3b3>] do_tune_cpucache+0x83/0x240
 
-A command is removed from this list when:
-	- Legacy request sense is done.
-	- Abort was successful.
-	- A function in the sequence done by scsi_eh_ready_devs is
-	  successful.
--andmike
+do_tune_cpucache:
+the function call smp_call_function(), and that is only permitted with enabled local interrupts. The complain is correct.
+
+
+> [<c014a300>] do_ccpupdate_local+0x0/0x30
+> [<c014a5c1>] enable_cpucache+0x51/0x80
+> [<c0148ea5>] kmem_cache_create+0x4a5/0x560
+
+Within kmem_cache_create. kmem_cache_create checks for in_interrupt(), thus someone probably does
+
+	spin_lock_irqsave();
+	kmem_cache_create();
+
+
+> [<c0285dd2>] scsi_setup_command_freelist+0xa2/0x130
+
+calls kmem_cache_create()
+
+> [<c02887e0>] scsi_register+0x3c0/0x660
+
+calls scsi_setup_command_freelist
+
+
+> [<c02919a1>] get_pci_dev+0x31/0x50
+
+?? probably stale
+
+> [<c0291df2>] port_detect+0x3c2/0xe50
+
+Do you have an eata scsi controller?
+
+Ugs.
+eata2x_detect():
+* spin_lock_irqsave();
+* calls port_detect();
+* * spin_unlock();
+* * scsi_register.
+
+Eata maintainers: Is that necessary?
+Why do the interrupts remain disabled across scsi_register?
+Is that a bug workaround, or an oversight?
+I'd use
+
+	spin_unlock_irq();
+	scsi_register();
+	spin_lock_irq();
+
 --
-Michael Anderson
-andmike@us.ibm.com
-
+	Manfred
