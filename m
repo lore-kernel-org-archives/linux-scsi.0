@@ -1,73 +1,34 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: Patches for SCSI scanning
-Date: Tue, 20 Apr 2004 18:42:38 +0200
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] 4/6: scsi_allow_ghost_devices
+Date: Tue, 20 Apr 2004 10:34:16 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040420164238.GT4356@tpkurt.garloff.de>
-References: <20040418185751.GC4868@tpkurt.garloff.de> <1082330192.1969.37.camel@mulgrave> <20040420115419.GG4356@tpkurt.garloff.de> <1082471881.1804.34.camel@mulgrave> <20040420092650.A7749@beaverton.ibm.com>
+Message-ID: <20040420103416.A8602@beaverton.ibm.com>
+References: <20040418185950.GG4868@tpkurt.garloff.de> <20040418202022.B3393@infradead.org> <1082360042.4691.3.camel@laptop.fenrus.com> <1082376382.4635.65.camel@compaq.xsintricity.com> <20040419131410.A10772@infradead.org> <20040419133426.GV18329@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="OiITrshLgfui8fEl"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:49291 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S263156AbUDTQmm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Apr 2004 12:42:42 -0400
-Content-Disposition: inline
-In-Reply-To: <20040420092650.A7749@beaverton.ibm.com>
-List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
-
-
---OiITrshLgfui8fEl
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e6.ny.us.ibm.com ([32.97.182.106]:57475 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S263475AbUDTRfD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Apr 2004 13:35:03 -0400
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20040419133426.GV18329@parcelfarce.linux.theplanet.co.uk>; from willy@debian.org on Mon, Apr 19, 2004 at 02:34:26PM +0100
+List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Doug Ledford <dledford@redhat.com>, Arjan Van de Ven <arjanv@redhat.com>, Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>
 
-Hi Patrick,
+Here's EMC's post in the archives describing the original problem:
 
-On Tue, Apr 20, 2004 at 09:26:51AM -0700, Patrick Mansfield wrote:
-> On Tue, Apr 20, 2004 at 09:38:00AM -0500, James Bottomley wrote:
-> > Yes, sounds reasonable.  We can do it all with the boot flags now.
->=20
-> max_scsi_luns should default to zero to avoid devices that should be black
-> listed as single lun.
+http://marc.theaimsgroup.com/?t=99790431900006&r=1&w=2
 
-I strongly disagree.
+A better method is to not mark it offline, and have sd_probe not attach
+based on the PQ fields, like Mike Anderson and (I thought) Doug Ledford
+had proposed:
 
-The target should be to blacklist broken devices not working ones.=20
+http://marc.theaimsgroup.com/?l=linux-scsi&m=99837483305810&w=2
 
-Devices that have multiple LUNs are not, devices that have only one but
-report severals are.
+Above patch should be modified to check the scsi_device inquiry data
+rather than store the PQ separately. This method also means we don't have
+offlined devices showing up under sd.
 
-With max_scsi_luns=3D1, we would need to "black"list every single multi lun
-device. I very much dislike that idea.
-
-Fortunately, distributors don't do this.
-
-> So how can you remove those and maintain compatibilty? The removal should
-> wait for 2.7.
-
-Expecting your multi lun devices to work with max_scsi_luns=3D1 is just
-wrong. max_scsi_luns should not default to 1.
-Anyways, BLIST_SPARSELUN will have the side-effect of also working
-around that misconfiguration.
-
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
-
---OiITrshLgfui8fEl
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFAhVL+xmLh6hyYd04RAtF0AKCOSJSlFz6yY9/I6KQMpfS11sVwHQCgrXFl
-l7qSJI4Ps0ZsYx/t5Vc7qJM=
-=D29E
------END PGP SIGNATURE-----
-
---OiITrshLgfui8fEl--
+-- Patrick Mansfield
