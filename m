@@ -1,57 +1,62 @@
-From: Tim Pepper <tpepper@vato.org>
-Subject: Re: Summary of the Multi-Path BOF at OLS and future directions
-Date: Thu, 7 Aug 2003 16:54:52 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030807165452.A27532@jose.vato.org>
-References: <1060042082.1985.53.camel@fuzzy> <20030807172028.A13400@infradead.org>
+From: Greg KH <greg@kroah.com>
+Subject: Re: Usb in 2.6 breaks proc
+Date: Thu, 7 Aug 2003 16:49:32 -0700
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <20030807234932.GA13780@kroah.com>
+References: <20030807191740.C27716@devserv.devel.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adsl-64-142-13-48.sonic.net ([64.142.13.48]:58378 "HELO
-	jose.vato.org") by vger.kernel.org with SMTP id S271103AbTHGXys
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Aug 2003 19:54:48 -0400
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
 Content-Disposition: inline
-In-Reply-To: <20030807172028.A13400@infradead.org>; from hch@infradead.org on Thu, Aug 07, 2003 at 05:20:28PM +0100
+In-Reply-To: <20030807191740.C27716@devserv.devel.redhat.com>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Pete Zaitcev <zaitcev@redhat.com>
+Cc: linux-usb-devel@lists.sourceforge.net, warren@togami.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu 07 Aug at 17:20:28 +0100 hch@infradead.org done said:
-> > 
-> > 5. Vendor value add for specific devices could be encoded both as
-> > configuration (udev) pieces and plug-ins to the upper layer multi-path
-> > driver to activate any proprietary vendor specific configuration options
-> > that may be needed for specific solutions.
+On Thu, Aug 07, 2003 at 07:17:40PM -0400, Pete Zaitcev wrote:
+> Greg, Matt & folks:
 > 
-> What are examples of such value add?
+> There was a tangential report from one of our users that /proc
+> seems to get corrupt when usb-storage is rmmod-ed and inserted again.
+> 
+> Kernel 2.6.0-0.test2.1.29 (Arjan's -test2 based RPM).
+> 
+> Problem looks like this:
+> 
+> [root@laptop scsi]# pwd
+> /proc/scsi
+> [root@laptop scsi]# find
+> .
+> ./usb-storage
+> ./usb-storage/2
+> ./usb-storage
+> ./usb-storage/2
+> ./device_info
+> ./scsi
 
-Personally I'm skeptical that there is much need for plugins, but my employer
-really wants to find ways to sell software licenses for advanced
-features with their hardware.  They've never defined any advanced features
-in terms that weren't marketing speak.  :|
+Ouch, could this be a scsi issue?  I know a bunch of patches are pending
+to get into Linus's tree with regards to scsi reference counting and
+such.
 
-One thing I'm curious about is where non-active-active targets would
-be manually failed over to their alternate controller (if they aren't
-able to automatically)?  Depending on how config happens, a pluggable
-interface for path selection (or error recovery path selection) _and_
-configuration may be needed to handle controller failover in the right
-way for these devices.  Hopefully this sort of device is going away
-though as higher end storage features are commoditised.
+thanks,
 
-At config time there's obviously a need for vendor specific bits since
-everybody's doing their inquiry data differently and there's no standard
-way to know a device is active-active or if not which is the preferred
-controller for a given lun and whether the device is doing automatic
-or manual volume transfer on a controller failure.  I for one wouldn't
-want to try maintaining a central list of this stuff if the vendors are
-willing to do it individually.
+greg k-h
 
 
-t.
-
--- 
-*********************************************************
-*  tpepper@vato dot org             * Venimus, Vidimus, *
-*  http://www.vato.org/~tpepper     * Dolavimus         *
-*********************************************************
+-------------------------------------------------------
+This SF.Net email sponsored by: Free pre-built ASP.NET sites including
+Data Reports, E-commerce, Portals, and Forums are available now.
+Download today and enter to win an XBOX or Visual Studio .NET.
+http://aspnet.click-url.com/go/psa00100003ave/direct;at.aspnet_072303_01/01
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
