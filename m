@@ -1,39 +1,34 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [PATCH + RFC] Beginning of some updates to scsi mid layer
-Date: Mon, 1 Jul 2002 15:59:28 -0400
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: softscsi patch
+Date: Mon, 01 Jul 2002 16:04:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020701155928.H776@redhat.com>
-References: <20020701151553.G776@redhat.com> <Pine.BSF.4.21.0207011221020.62375-100000@beppo>
+Message-ID: <200207012004.g61K4wn03675@localhost.localdomain>
+References: <willy@debian.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.BSF.4.21.0207011221020.62375-100000@beppo>; from mjacob@feral.com on Mon, Jul 01, 2002 at 12:23:56PM -0700
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id NAA11493
+	for <linux-scsi@vger.kernel.org>; Mon, 1 Jul 2002 13:05:06 -0700
+In-Reply-To: Message from Matthew Wilcox <willy@debian.org>
+   of "Sun, 30 Jun 2002 22:20:43 BST." <20020630222043.B29045@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Jacob <mjacob@feral.com>
-Cc: =?iso-8859-1?Q?G=E9rard_Roudier?= <groudier@free.fr>, Jeremy Higdon <jeremy@classic.engr.sgi.com>, Martin Peschke3 <MPESCHKE@de.ibm.com>, Pete Zaitcev <zaitcev@redhat.com>, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: linux-scsi@vger.kernel.org, "David S. Miller" <davem@redhat.com>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>
 
-On Mon, Jul 01, 2002 at 12:23:56PM -0700, Matthew Jacob wrote:
-> Fibre. Devices 'go away' for shortish to longish periods of time on Fibre (or
-> iSCSI for that matter). Lacking a sane framework that is USB-like about
-> hotpluggable that does *not* cause complete system spasm when this happens
-> (and it happens a lot), what one wants is a bit of hysteresis to give the
-> disks that went away a chance to log back into the fabric and thus appear
-> again (as if they had never gone).
+willy@debian.org said:
+> This work shows up a hole in the current softirq API -- there's no
+> support for unregistering a softirq (close_softirq or similar).  We
+> should do this in scsi_exit -- make sure no softirqs are running while
+> we unload. This probably isn't a problem in practice, but it'd be nice
+> to fix it. 
 
-(I knew this, but it had slipped my mind).  This reminds me of something I 
-was thinking about for the mid layer code stuff.  Does FreeBSD have it's 
-drivers declare their connection method anywhere?  It seems to me there 
-are a limited number of connection specific details that the mid layer 
-would benefit from being aware of (for example > 8 luns on SCSI-2 fiber 
-devices, but not on SCSI-2 SPI devices, the selection timeout issue you 
-just raised with transient disk loss which should not happen on SPI, 
-things like that).  Does the FreeBSD mid layer do anything with that sort 
-of information?
+Actually, there's another problem: open_softirq isn't an exported symbol, so 
+the compile won't work when the entire scsi subsystem is a module (the usual 
+case for distributions these days).
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+I'm currently booting the patch (with this change) to see how it works out.
+
+James
+
+
