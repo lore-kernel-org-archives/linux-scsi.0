@@ -1,59 +1,57 @@
-From: Andreas Jellinghaus <aj@leogic.com>
-Subject: Re: [PATCH 2.6 ] MPT Fusion driver 3.01.00 update
-Date: Tue, 09 Mar 2004 19:13:45 +0100
+From: Ricky Beam <jfbeam@bluetronic.net>
+Subject: Re: QLogic (qla2100 / qlogicfc)
+Date: Wed, 10 Mar 2004 09:48:57 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <pan.2004.03.09.18.13.44.518204@leogic.com>
-References: <0E3FA95632D6D047BA649F95DAB60E57040DA96B@exa-atlanta.se.lsil.com>
+Message-ID: <Pine.GSO.4.33.0403100941460.28488-100000@sweetums.bluetronic.net>
+References: <20040310053950.GA25105@praka.local.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.224.249]:191 "EHLO main.gmane.org")
-	by vger.kernel.org with ESMTP id S262562AbUCJKKH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Mar 2004 05:10:07 -0500
-Received: from root by main.gmane.org with local (Exim 3.35 #1 (Debian))
-	id 1B10f8-0000cm-00
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Mar 2004 11:10:06 +0100
-Received: from 62.245.182.10 ([62.245.182.10])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Mar 2004 11:10:06 +0100
-Received: from aj by 62.245.182.10 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Mar 2004 11:10:06 +0100
+Received: from sweetums.bluetronic.net ([24.199.150.42]:29169 "EHLO
+	sweetums.bluetronic.net") by vger.kernel.org with ESMTP
+	id S262649AbUCJOve (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Mar 2004 09:51:34 -0500
+In-Reply-To: <20040310053950.GA25105@praka.local.home>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>
 
-Hi Eric,
+On Tue, 9 Mar 2004, Andrew Vasquez wrote:
+>Yes, but even before the timeouts occur, there appear to be some
+>questionable events occuring with the firmware:
+>
+>	qla2100 0000:06:03.0: ISP System Error - mbx1=18d1h mbx2=ch mbx3=11h.
+>	qla2100 0000:06:03.0: Failed to dump firmware (256)!!!
+>	qla2x00: DPC handler waking up
+>	scsi(0): DPC handler
+>	scsi(0): dpc: sched qla2x00_abort_isp ha = f71481d4
+>	qla2100 0000:06:03.0: Performing ISP error recovery - ha= f71481d4.
 
-we are trying
-Fusion MPT base driver 3.00.02
-Copyright (c) 1999-2003 LSI Logic Corporation
-mptbase: Initiating ioc0 bringup
-ioc0: 53C1030: Capabilities={Initiator}
-Fusion MPT SCSI Host driver 3.00.02
-scsi0 : ioc0: LSI53C1030, FwRev=01030a00h, Ports=1, MaxQ=222, IRQ=26
-  Vendor: LSILOGIC  Model: 1030 IM       IM  Rev: 1000
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-SCSI device sda: 143376384 512-byte hdwr sectors (73409 MB)
-SCSI device sda: drive cache: write back
- sda: sda1 sda2 sda3 sda4
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
-  Vendor: IBM       Model: 25P3495a S320  1  Rev: 1   
-  Type:   Processor                          ANSI SCSI revision: 02
-Attached scsi generic sg1 at scsi0, channel 0, id 8, lun 0,  type 3
+That only happened once and did recover.  The console output doesn't have
+timestamps; the system error occured about 20min before the dropped command.
 
-as well as the 3.01.00 version on amd64 dual opteron machines
-on mainboards with amd chipset and two ibm 60Gb disks connected.
+>The ISP2100 has not been a supported chip for some time now, but, I'll
+>see if I can get some information from the firmware group regarding
+>the events that led-up to this system-error.
 
-our problem: terrible speed when writing.
-we used dbench for benchmarking under linux 2.6.3
-and we get 1-2 mb/s :-(
+That may be, but it's still one of the most widely deployed FC cards on the
+market. (however, LSI's fusion MPT has a growing following.)
 
-Any idea how to solve this issue?
-Thanks for your help.
+>I've also been gathering a short-dozen or so patches that I was
+>planning on forwarding to linux-scsi towards the end of the week.
+>When I get in tomorrow, I'd like to forward you a couple of them for
+>some additional testing, if you don't mind?
 
-Regards, Andreas
+Fire away.  The system is still running i/o benchmarks (1mil 6G files takes
+awhile)
+
+>I appreciate your initiative in enabling some of the debug settings of
+>the driver and posting the resultant messages, it certainly makes
+>troubleshooting problems a bit easier.
+
+Note, minicom.cap-1 isn't there. :-) I turned on a little too much debugging
+and left it on for an entire array resync.
+
+--Ricky
+
 
