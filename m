@@ -1,63 +1,48 @@
-From: Doug Ledford <dledford@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: smp dead lock of io_request_lock/queue_lock patch
-Date: Sat, 17 Jan 2004 14:21:43 -0500
+Date: Sat, 17 Jan 2004 19:29:46 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1074367303.13198.52.camel@compaq.xsintricity.com>
-References: <OF317B32D5.C8C681CB-ONC1256E19.005066CF-C1256E19.00538DEF@de.ibm.com>
-	 <20040112151230.GB5844@devserv.devel.redhat.com>
-	 <20040112194829.A7078@infradead.org>
-	 <1073937102.3114.300.camel@compaq.xsintricity.com>
-	 <Pine.LNX.4.58L.0401131843390.6737@logos.cnet>
-	 <1074345000.13198.25.camel@compaq.xsintricity.com>
-	 <20040117165828.A4977@infradead.org>
-	 <1074366452.13198.48.camel@compaq.xsintricity.com>
-	 <20040117191704.A6344@infradead.org>
+Message-ID: <20040117192946.A6479@infradead.org>
+References: <OF317B32D5.C8C681CB-ONC1256E19.005066CF-C1256E19.00538DEF@de.ibm.com> <20040112151230.GB5844@devserv.devel.redhat.com> <20040112194829.A7078@infradead.org> <1073937102.3114.300.camel@compaq.xsintricity.com> <Pine.LNX.4.58L.0401131843390.6737@logos.cnet> <1074345000.13198.25.camel@compaq.xsintricity.com> <20040117165828.A4977@infradead.org> <1074366452.13198.48.camel@compaq.xsintricity.com> <20040117191704.A6344@infradead.org> <1074367303.13198.52.camel@compaq.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:62166 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S266154AbUAQT0V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Jan 2004 14:26:21 -0500
-In-Reply-To: <20040117191704.A6344@infradead.org>
+Received: from phoenix.infradead.org ([213.86.99.234]:19983 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S266170AbUAQT3y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Jan 2004 14:29:54 -0500
+Content-Disposition: inline
+In-Reply-To: <1074367303.13198.52.camel@compaq.xsintricity.com>; from dledford@redhat.com on Sat, Jan 17, 2004 at 02:21:43PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
+To: Doug Ledford <dledford@redhat.com>
 Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, Arjan Van de Ven <arjanv@redhat.com>, Martin Peschke3 <MPESCHKE@de.ibm.com>, Jens Axboe <axboe@suse.de>, Peter Yao <peter@exavio.com.cn>, linux-kernel@vger.kernel.org, linux-scsi mailing list <linux-scsi@vger.kernel.org>, ihno@suse.de
 
-On Sat, 2004-01-17 at 14:17, Christoph Hellwig wrote:
-> On Sat, Jan 17, 2004 at 02:07:33PM -0500, Doug Ledford wrote:
-> > #ifdef SCSI_HAS_HOST_LOCK
-> > #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-> > 	adapter->lock_ptr = &adapter->lock;
-> > 	host->lock = &adapter->lock;
-> > #else
-> > 	adapter->lock_ptr = &adapter->lock;
-> > 	host->host_lock = &adapter->lock;
-> > #endif
-> > #else
-> > 	adapter->lock_ptr = &io_request_lock;
-> > #endif
-> 
-> Still looks wrong for the 2.6 case which should just be;
-> 
-> 	adapter->lock_ptr = shost->host_lock;
-> 
-> as I just stated in the review for the megaraid update.
+On Sat, Jan 17, 2004 at 02:21:43PM -0500, Doug Ledford wrote:
+> I should pay more attention to what goes on in 2.6.  That was a crap
+> decision.  There are drivers out there that use global data and need one
+> lock across all controllers.  Putting a lock in the scsi host struct for
+> per controller locks is a waste of space.  Let the driver decide if it
+> needs a global driver lock, a per controller lock (in which case it
+> should be part of the driver private host struct), or just the global
+> io_request_lock.  It really is up to the driver and putting it into the
+> scsi host struct doesn't make sense.
 
-I should pay more attention to what goes on in 2.6.  That was a crap
-decision.  There are drivers out there that use global data and need one
-lock across all controllers.  Putting a lock in the scsi host struct for
-per controller locks is a waste of space.  Let the driver decide if it
-needs a global driver lock, a per controller lock (in which case it
-should be part of the driver private host struct), or just the global
-io_request_lock.  It really is up to the driver and putting it into the
-scsi host struct doesn't make sense.
+I tend to disagree.  Giving the driver control over the lock used by the
+midlayer is just wrong.  If it has global state (which a good driver better
+shouldn't) it's up to the driver to protect it.  That we still have a way
+to override that lock is the big bug rather, and in fact only three drivers
+are doing that, and they all override it with a lock that's per-HBA anyway.
+
+> 
+> -- 
+>   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+>          Red Hat, Inc.
+>          1801 Varsity Dr.
+>          Raleigh, NC 27606
+> 
+> 
+---end quoted text---
 
 -- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc.
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-
-
+Christoph Hellwig <hch@lst.de>		-	Freelance Hacker
+Contact me for driver hacking and kernel development consulting
