@@ -1,32 +1,56 @@
-From: Pete Clements <clem@clem.clem-digital.net>
-Subject: Re: final SCSI updates (hopefully) for 2.6.0
-Date: Mon, 24 Nov 2003 19:52:08 -0500 (EST)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200311250052.TAA16575@clem.clem-digital.net>
-References: <1069716546.2870.69.camel@mulgrave>
+From: Micah Anderson <micah@riseup.net>
+Subject: Re: Cannot get device recognized on a megaraid
+Date: Mon, 24 Nov 2003 18:58:18 -0600
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20031125005818.GA4399@riseup.net>
+References: <1069716110.4123.382.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <1069716546.2870.69.camel@mulgrave> from James Bottomley at "Nov 24, 2003  5:29: 4 pm"
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: torvalds@osdl.org, akpm@osdl.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.riseup.net ([216.162.217.191]:17379 "EHLO mail.riseup.net")
+	by vger.kernel.org with ESMTP id S261863AbTKYA6c (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2003 19:58:32 -0500
+Content-Disposition: inline
+In-Reply-To: <1069716110.4123.382.camel@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
+To: Matt_Domsch@Dell.com
+Cc: linux-scsi@vger.kernel.org
 
-Quoting James Bottomley
-  > This should be the final set of refcounting and bugfix updates.  It
-  > contains the two refcounting fixes I identified earlier (now fully
-  > tested) and a bugfix for the aic7xxx/aic79xx drivers which was caused by
-  > one of the previous refcounting changes.
-  > 
-  > The patch is here
-  > 
-  > bk://linux-scsi.bkbits.net/scsi-bugfixes-2.6
-  > 
+Yeah, it is indeed the MegaRAID ATA 133 RAID Controller... are there
+no linux drivers for this? :(
 
-FYI:
-  Applied the patch set, cleared my hang on boot problem. Looks
-  good now.
+micah
 
--- 
-Pete Clements 
+On Mon, 24 Nov 2003, Matt_Domsch@Dell.com wrote:
+
+> > I've been fighting a megaraid card with one device, just trying to get
+> > it recognized. The card has the latest bios, the drive is in a RAID 0
+> > container.
+> >
+> > > What is the card type please?  What does lspci -vv and lspci -vvn
+> > > show for it?
+> > 
+> > I need to look up what the card type is, but until then...
+> 
+> 
+> 00:11.0 RAID bus controller: CMD Technology Inc: Unknown device 0680 (rev
+> 02)
+>         Subsystem: LSI Logic / Symbios Logic (formerly NCR): Unknown device
+> 0524
+> 00:11.0 Class 0104: 1095:0680 (rev 02)
+>         Subsystem: 1000:0524
+> 
+> OK, best as I know, this isn't a card that 'megaraid' supports.  More
+> likely 'megaide'.
+> 
+> http://www.lsilogic.com/techlib/techdocs/storage_stand_prod/RAIDpage/
+> may have docs you're looking for.
+> 
+> 
+> -- 
+> Matt Domsch
+> Sr. Software Engineer, Lead Engineer
+> Dell Linux Solutions www.dell.com/linux
+> Linux on Dell mailing lists @ http://lists.us.dell.com
+> 
