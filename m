@@ -1,46 +1,50 @@
-From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
-Subject: RE: [Patch RFC ver2] Add FC transport host statistics
-Date: Mon, 18 Oct 2004 09:24:39 -0700
+From: mikem <mikem@beardog.cca.cpqcorp.net>
+Subject: Re: cciss update [2/2] fixes for Steeleye Lifekeeper
+Date: Mon, 18 Oct 2004 11:35:32 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <B179AE41C1147041AA1121F44614F0B0DD05AE@AVEXCH02.qlogic.org>
+Message-ID: <20041018163532.GA24511@beardog.cca.cpqcorp.net>
+References: <20041013212253.GB9866@beardog.cca.cpqcorp.net> <20041014083900.GB7747@infradead.org> <1097764660.2198.11.camel@mulgrave> <20041014183948.GA12325@infradead.org> <1097852716.1718.9.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch01.qlogic.com ([198.70.193.200]:20890 "EHLO
-	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S266835AbUJRQVw convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Oct 2004 12:21:52 -0400
-content-class: urn:content-classes:message
+Received: from palrel12.hp.com ([156.153.255.237]:36296 "EHLO palrel12.hp.com")
+	by vger.kernel.org with ESMTP id S266864AbUJRQfy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Oct 2004 12:35:54 -0400
+Content-Disposition: inline
+In-Reply-To: <1097852716.1718.9.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, Jens Axboe <axboe@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sunday, October 17, 2004 5:56 AM, James.Smart@Emulex.Com wrote:
-> Christoph,
+On Fri, Oct 15, 2004 at 10:05:09AM -0500, James Bottomley wrote:
+> On Thu, 2004-10-14 at 13:39, Christoph Hellwig wrote:
+> > Such a volume has been configured and set up, and although it's still
+> > ugly I'd say it's okay.  But the patch also adds one gendisk per controller
+> > even if no volume is set up.
 > 
-> I've updated the patch relative to the following comments:
+> That's this bit of code:
 > 
-> - Kill the "host_port" prefix. This has been done. See below.
-> The "port" prefix remains in a couple of cases where I think
-> it clarifies the attribute.
+> @@ -2762,7 +2810,9 @@ static int __devinit cciss_init_one(stru
+>                 disk->fops = &cciss_fops;
+>                 disk->queue = hba[i]->queue;
+>                 disk->private_data = drv;
+> -               if( !(drv->nr_blocks))
+> +               /* we must register the controller even if no disks
+> exist */
+> +               /* this is for the online array utilities */
+> +               if(!drv->heads && j)
+>                         continue;
+>                 blk_queue_hardsect_size(hba[i]->queue, drv->block_size);
+>                 set_capacity(disk, drv->nr_blocks);
 > 
-> - uint64_t's converted to u64. Also, assuming this applies to
-> other types, converted uint32_t's to u32's, and uint8_t's to u8's.
->
+> Mike, is there a way we can only allocate a gendisk when we know there's
+> actually a device there (if owned by another controller currently)?
+> 
+> James
 
-This looks really good.  I do have a couple of questions on how 
-the sysfs tree handles multi-value values for entries.  For example:
-
-	active_fc4s :  hex: 40 41 42 43 44 45 46 47 48 49 4a 4b 4c 4d 4e 4f 50 51 52 53 54 55 56 57 58 59 5a 5b 5c 5d 5e 5f
-
-The closest multi-value reprentation of a sysfs entry I could find 
-was /sys/block/loop.*/stat, where the data appears to be space 
-delimited with no base prefix (i.e. 'hex:').  Perhaps for 
-consistency, we could represent the string similarly to what is done
-for all hex-base values, prefix with '0x'?  i.e:
-
-	active_fc4s :  0x40 0x41 0x42 0x43 0x44 0x45 0x46 0x47 0x48 0x49 0x4a 0x4b 0x4c 0x4d 0x4e 0x4f 0x50 0x51 0x52 0x53 0x54 0x55 0x56 0x57 0x58 0x59 0x5a 0x5b 0x5c 0x5d 0x5e 0x5f
+This patch only registers the controller if no logical drives are configured. It will not result in all possible logical drives being added. I added printk's to the driver to show me what I'm registering.
+What I see is the controller registers every time, and only drives that are phsically configured are registered. That is true for reserved drives, also.
 
 Thanks,
-Andrew
+mikem
