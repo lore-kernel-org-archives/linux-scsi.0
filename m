@@ -1,86 +1,36 @@
-From: Kurt Garloff <kurt@garloff.de>
-Subject: Re: /proc/scsi/map
-Date: Sun, 16 Jun 2002 22:36:06 +0200
+From: Oliver Neukum <oliver@neukum.name>
+Subject: Re: [linux-usb-devel] Re: /proc/scsi/map
+Date: Sun, 16 Jun 2002 22:54:42 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020616203606.GB21461@gum01m.etpnet.phys.tue.nl>
-References: <UTC200206152154.g5FLsCI23053.aeb@smtp.cwi.nl> <5.0.2.1.2.20020616003031.02a06330@pop.puretec.de>
+Message-ID: <200206162254.42323.oliver@neukum.name>
+References: <200206161725.g5GHP6S23020@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ZfOjI3PrQbgiZnxM"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5.0.2.1.2.20020616003031.02a06330@pop.puretec.de>
+In-Reply-To: <200206161725.g5GHP6S23020@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: Sancho Dauskardt <sancho@dauskardt.de>
-Cc: Douglas Gilbert <dougg@torque.net>, Andries.Brouwer@cwi.nl, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net
+To: James Bottomley <James.Bottomley@steeleye.com>, David Brownell <david-b@pacbell.net>
+Cc: Andries.Brouwer@cwi.nl, garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sancho@dauskardt.de, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dougg@torque.net
 
+Am Sonntag, 16. Juni 2002 19:25 schrieb James Bottomley:
+> Since we already have a huge long list of different ways to identify
+> different devices, I don't think coding any one or even a set of such
+> methods into the kernel would satisfy everyone.
+>
+> What about a different approach:
+>
+> We already (nearly) have the scsimon patches to do hot plug events on
+> SCSI devices incorporated.  Any identification could be done from the
+> scsi device hotplug script (i.e. if you see it's USB, get the GID, if
+> it's enterprise storage get the WWN, try the filesystem UUID etc).  Then
+> all the hotplug script does is plug this device into some type of volume
+> idenfication scheme like /dev/volume/<name>.
 
---ZfOjI3PrQbgiZnxM
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+How would you find out what a device is ?
+If the kernel has to supply the information anyway, you could
+just as well pass all information to the script or devfs.
 
-Hi Sancho,
+	Regards
+		Oliver
 
-On Sun, Jun 16, 2002 at 12:40:50AM +0200, Sancho Dauskardt wrote:
-> >In lk 2.5 we are hoping that driverfs will give us an
-> >"information bridge" between scsi pseudo devices
-> >and other driver subsystems such as ide, usb and iee1394.
-> >Mike Sullivan's persistent naming patch (that I mentioned
-> >in my previous post on this thread) adds driverfs capability
-> >into the scsi subsystem. Driverfs capability is already
-> >in the ide and usb subsystems.
-> Driverfs will hopefully solve the problem, of "oh there's a SCSI device.=
-=20
-> how is it connected ?".
->=20
-> But to date, SCSI doesn't know about the GUID's, right ?
-> And without this, we won't get a uniform way of creating stable names for=
-=20
-> hot-plugable devices...
-
-For the SCSI code, a device is uniquely identified by the CBTU tuple.
-Every device has one and it's known to the SCSI code.
-If you don't change your SCSI IDs (which rarely happens in practice) and
-make sure the SCSI host adpters are loaded in the same order always (by
-using scsihosts=3D or by just doing the modprobe in a certain order) you=20
-even a stable way to address devices.
-
-The SCSI code does not know about GUIDs or such things. It's up to the
-lowlevel code to report such things. Or change the SCSI code to collect
-such information.
-
-Low-level drivers that are supposed to have a lot of SCSI devices attached,
-such as FC drivers, should provide a way of making a stable mapping from the
-identifiers in FC Land (Unique IDs) to the identifiers in SCSI land (CBTU).
-If not, they should at least report the mapping in some proc file.
-
-A more general approach could be to build a unique identifier from a host
-adapter identifier and the BTU and use this unique identifier (which would
-be the UID of FC devices for FC devices) inside the SCSI code instead of
-CBTU. Then the first column of /proc/scsi/map would report this identifier
-instead ...
-
-But that would be a more invasive change than the simple code that I added
-to report the SCSI CBTU to SCSI high-level devices mapping.
-
-Regards,
---=20
-Kurt Garloff                   <kurt@garloff.de>         [Eindhoven, NL]
-Physics: Plasma simulations    <K.Garloff@TUE.NL>     [TU Eindhoven, NL]
-Linux: SCSI, Security          <garloff@suse.de>    [SuSE Nuernberg, DE]
- (See mail header or public key servers for PGP2 and GPG public keys.)
-
---ZfOjI3PrQbgiZnxM
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.7 (GNU/Linux)
-
-iD8DBQE9DPa2xmLh6hyYd04RAjitAJ9y8KPXlXmYINUevhumE8ukK5nC+QCfbObB
-ATuf5vzakWB8GWMSC09h1Rw=
-=A3z0
------END PGP SIGNATURE-----
-
---ZfOjI3PrQbgiZnxM--
