@@ -1,77 +1,95 @@
-From: Patrick Mansfield <patmans@ibm.com>
-Subject: [PATCH] Re: 2.6.1-rc1: SCSI: `TIMEOUT' redefined
-Date: Tue, 6 Jan 2004 14:40:33 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040106144033.A13031@beaverton.ibm.com>
-References: <Pine.LNX.4.58.0312310033110.30995@home.osdl.org> <20040106183325.GJ11523@fs.tum.de>
+From: Jonathan McDowell <noodles@earth.li>
+Subject: Patch for reset in ini9100u [Initio 9100U(W)]
+Date: Tue, 6 Jan 2004 23:14:26 +0000
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040106231426.GR1845@earth.li>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:24540 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S265434AbUAFWmR
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Jan 2004 17:42:17 -0500
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20040106183325.GJ11523@fs.tum.de>; from bunk@fs.tum.de on Tue, Jan 06, 2004 at 07:33:25PM +0100
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@fs.tum.de>
-Cc: neuffer@goofy.zdv.uni-mainz.de, a.arnold@kfa-juelich.de, Kernel Mailing List <linux-kernel@vger.kernel.org>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-On Tue, Jan 06, 2004 at 07:33:25PM +0100, Adrian Bunk wrote:
-> On Wed, Dec 31, 2003 at 12:36:49AM -0800, Linus Torvalds wrote:
-> >...
-> > Summary of changes from v2.6.0 to v2.6.1-rc1
-> > ============================================
-> >...
-> > Patrick Mansfield:
-> >   o consolidate and log scsi command on send and completion
-> >...
-> 
-> This adds a #define TIMEOUT to scsi.h conflicting with a different 
-> TIMEOUT #define in drivers/scsi/eata_generic.h:
+Hi.
 
-Sorry Adrian, here is a patch renaming TIMEOUT to TIMEOUT_ERROR.  Still
-not a good name for the usage in SCSI core, but it does not conflict, and
-matches the other names for the IO completion results (SUCCESS, FAILED,
-etc., they and others should really be prefixed with at least SCSI).
+I have an IWill 2935UW SCSI controller which uses the ini9100u driver.
+This has been working fine under 2.4 but I've recently built up a box of
+spare bits including the controller and installed 2.6 on it. The driver
+is marked broken in 2.6, apparently because of a lack of reset/abort
+functionality as it compiles and runs ok. So I've taken a stab at
+getting reset support back. Patch is below and it's received minimal
+testing - it boots, removes the callback trace and error message and
+doesn't seem to cause problems (the only disk in the machine is on this
+card).
 
-eata does not use the TIMEOUT it defines, but there are enough defines of
-TIMEOUT that it could be a problem in other drivers.
-
-Only compile tested for eata driver.
-
---- 1.132/drivers/scsi/scsi.c	Tue Sep 30 07:24:17 2003
-+++ edited/drivers/scsi/scsi.c	Tue Jan  6 13:13:34 2004
-@@ -441,7 +441,7 @@
- 			case FAILED:
- 				printk("FAILED ");
- 				break;
--			case TIMEOUT:
-+			case TIMEOUT_ERROR:
- 				/* 
- 				 * If called via scsi_times_out.
- 				 */
-===== drivers/scsi/scsi_error.c 1.67 vs edited =====
---- 1.67/drivers/scsi/scsi_error.c	Mon Sep 29 05:37:28 2003
-+++ edited/drivers/scsi/scsi_error.c	Tue Jan  6 13:12:58 2004
-@@ -164,7 +164,7 @@
-  **/
- void scsi_times_out(struct scsi_cmnd *scmd)
- {
--	scsi_log_completion(scmd, TIMEOUT);
-+	scsi_log_completion(scmd, TIMEOUT_ERROR);
- 	if (unlikely(!scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD))) {
- 		panic("Error handler thread not present at %p %p %s %d",
- 		      scmd, scmd->device->host, __FILE__, __LINE__);
-===== include/scsi/scsi.h 1.15 vs edited =====
---- 1.15/include/scsi/scsi.h	Mon Sep 29 05:39:10 2003
-+++ edited/include/scsi/scsi.h	Tue Jan  6 13:12:42 2004
-@@ -302,7 +302,7 @@
- #define QUEUED          0x2004
- #define SOFT_ERROR      0x2005
- #define ADD_TO_MLQUEUE  0x2006
--#define TIMEOUT         0x2007
-+#define TIMEOUT_ERROR   0x2007
+-----------
+diff -u linux-2.6.1-rc2.orig/drivers/scsi/ini9100u.c linux-2.6.1-rc2/drivers/scsi/ini9100u.c
+--- linux-2.6.1-rc2.orig/drivers/scsi/ini9100u.c	2004-01-06 22:56:04.000000000 +0000
++++ linux-2.6.1-rc2/drivers/scsi/ini9100u.c	2004-01-06 22:58:04.000000000 +0000
+@@ -106,6 +106,8 @@
+  *		- Changed the assumption that HZ = 100
+  * 10/17/03 mc	- v1.04
+  *		- added new DMA API support
++ * 06/01/04 jmd	- v1.04a
++ *		- Re-add reset_bus support
+  **************************************************************************/
  
+ #define CVT_LINUX_VERSION(V,P,S)        (V * 65536 + P * 256 + S)
+@@ -149,6 +151,7 @@
+ 	.queuecommand	= i91u_queue,
+ //	.abort		= i91u_abort,
+ //	.reset		= i91u_reset,
++	.eh_bus_reset_handler = i91u_bus_reset,
+ 	.bios_param	= i91u_biosparam,
+ 	.can_queue	= 1,
+ 	.this_id	= 1,
+@@ -161,7 +164,7 @@
+ char *i91uCopyright = "Copyright (C) 1996-98";
+ char *i91uInitioName = "by Initio Corporation";
+ char *i91uProductName = "INI-9X00U/UW";
+-char *i91uVersion = "v1.04";
++char *i91uVersion = "v1.04a";
+ 
+ #define TULSZ(sz)     (sizeof(sz) / sizeof(sz[0]))
+ #define TUL_RDWORD(x,y)         (short)(inl((int)((ULONG)((ULONG)x+(UCHAR)y)) ))
+@@ -587,6 +590,15 @@
+ 		return tul_device_reset(pHCB, (ULONG) SCpnt, SCpnt->device->id, reset_flags);
+ }
+ 
++int i91u_bus_reset(Scsi_Cmnd * SCpnt)
++{
++	HCS *pHCB;
++
++	pHCB = (HCS *) SCpnt->device->host->base;
++	tul_reset_scsi_bus(pHCB);
++	return SUCCESS;
++}
++
  /*
-  * Midlevel queue return values.
+  * Return the "logical geometry"
+  */
+diff -u linux-2.6.1-rc2.orig/drivers/scsi/ini9100u.h linux-2.6.1-rc2/drivers/scsi/ini9100u.h
+--- linux-2.6.1-rc2.orig/drivers/scsi/ini9100u.h	2003-12-18 02:58:56.000000000 +0000
++++ linux-2.6.1-rc2/drivers/scsi/ini9100u.h	2004-01-06 22:58:35.000000000 +0000
+@@ -82,10 +82,11 @@
+ extern int i91u_queue(Scsi_Cmnd *, void (*done) (Scsi_Cmnd *));
+ extern int i91u_abort(Scsi_Cmnd *);
+ extern int i91u_reset(Scsi_Cmnd *, unsigned int);
++extern int i91u_bus_reset(Scsi_Cmnd *);
+ extern int i91u_biosparam(struct scsi_device *, struct block_device *,
+ 		sector_t, int *);
+ 
+-#define i91u_REVID "Initio INI-9X00U/UW SCSI device driver; Revision: 1.03g"
++#define i91u_REVID "Initio INI-9X00U/UW SCSI device driver; Revision: 1.04a"
+ 
+ #define VIRT_TO_BUS(i)  (unsigned int) virt_to_bus((void *)(i))
+ #define ULONG   unsigned long
+-----------
+
+J.
+
+-- 
+] http://www.earth.li/~noodles/ []  "0 tends to simplify things a bit  [
+]  PGP/GPG Key @ the.earth.li   []   when you multiply by it..." --    [
+] via keyserver, web or email.  []             Bill McColl             [
+] RSA: 4DC4E7FD / DSA: 5B430367 []                                     [
