@@ -1,43 +1,47 @@
-From: Linus Torvalds <torvalds@osdl.org>
+From: David Brownell <david-b@pacbell.net>
 Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
-Date: Mon, 22 Sep 2003 10:41:47 -0700 (PDT)
+Date: Mon, 22 Sep 2003 10:49:38 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0309221038440.2160-100000@home.osdl.org>
-References: <20030922102315.A1632@beaverton.ibm.com>
+Message-ID: <3F6F3632.6020300@pacbell.net>
+References: <Pine.LNX.4.44.0309221027480.2160-100000@home.osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:32916 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S263245AbTIVRme (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Sep 2003 13:42:34 -0400
-In-Reply-To: <20030922102315.A1632@beaverton.ibm.com>
+Received: from mta7.pltn13.pbi.net ([64.164.98.8]:52193 "EHLO
+	mta7.pltn13.pbi.net") by vger.kernel.org with ESMTP id S263254AbTIVRoC
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Sep 2003 13:44:02 -0400
+In-Reply-To: <Pine.LNX.4.44.0309221027480.2160-100000@home.osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, Andries.Brouwer@cwi.nl
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-
-On Mon, 22 Sep 2003, Patrick Mansfield wrote:
-> On Mon, Sep 22, 2003 at 09:09:47AM -0700, Linus Torvalds wrote:
-> > 
-> > (Btw, where are the different mode sense pages documented?)
+Linus Torvalds wrote:
+> On Mon, 22 Sep 2003, David Brownell wrote:
 > 
-> The latest SCSI 3 draft standards are online as follows, the SCSI 2 specs
-> are also online at www.t10.org (.ORG!).
+>>In this case, because it's not "EHCI + USB 2.0 hub", it's still using
+>>the OHCI companion controller.  So that wasn't a new case.
 > 
-> For block (applies to some USB mass storage) specific pages:
 > 
-> http://www.t10.org/ftp/t10/drafts/sbc/sbc-r08c.pdf
-> 
-> See page 105 section 7.1.3 of the above (table 73 the "Mode page codes").
+> Ok. Here's the broken case with an added usb-2 hub in between. It is 
+> indeed a bit different.
 
-Ok, thanks. In particular, it seems to be pointless to read anything past 
-byte 20 - nothing past there is even defined.
+Yes.  Instead of getting 64/128 bytes transferred, with -EOVERFLOW
+reported, it gets 0/128, with -EPIPE.  And the recovery got a bit
+confused; it's a STALL but not from the device, it's from the hub.
 
-What's the general sense of things - for a random SCSI device with bugs 
-(and they all have _some_ sort of bugs, let's not just rain on USB here), 
-is it saner to try to read just the bytes we need (3 bytes: page code, 
-page size and the cache bits), or the full 20 bytes?
+It might be worth making EHCI use a different code in that case,
+if this class of TT-related errors starts to be trouble.
 
-		Linus
+
+> Again, this case worked fine with the sd.c changes, so it does seem to be 
+> all related to "big" transfers out of the mode page.
+
+Or at any rate, "big enough" to confuse the device.
+
+Thanks for the additional test results.
+
+- Dave
+
 
