@@ -1,82 +1,53 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: PATCH: exclude certain commands from emulated SCSI hosts
-Date: Mon, 24 Mar 2003 09:30:28 -0800
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [PATCH] 2.5.x use list_head to handle scsi starved request queues
+Date: Mon, 24 Mar 2003 12:12:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030324093028.A1066@one-eyed-alien.net>
-References: <20030322193705.C17056@one-eyed-alien.net> <Pine.LNX.4.44.0303222005520.29393-100000@home.transmeta.com> <20030322233136.D17056@one-eyed-alien.net> <1048467235.1634.22.camel@mulgrave> <20030323173733.B24668@one-eyed-alien.net> <1048469946.1643.2.camel@mulgrave> <20030323230438.E24668@one-eyed-alien.net> <1048519237.1982.16.camel@mulgrave>
+Message-ID: <3E7F3C67.5010704@splentec.com>
+References: <20030319182755.A9535@beaverton.ibm.com> <3E7A1EF5.3050501@splentec.com> <20030320203912.A18471@beaverton.ibm.com> <3E7B7A9A.6030007@splentec.com> <20030321165050.B9578@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="ReaqsoxgOBHFXBhH"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1048519237.1982.16.camel@mulgrave>; from James.Bottomley@SteelEye.com on Mon, Mar 24, 2003 at 09:15:57AM -0600
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Linus Torvalds <torvalds@transmeta.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>, USB Storage List <usb-storage@one-eyed-alien.net>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+
+Patrick Mansfield wrote:
+> 
+> The lock has to be held while checking shost->host_busy and then when
+> removing the starved entry, we can have multiple cpu's in the function for
+> the same adapter at the same time. Plus the lock has to be acquired prior
+> to any __blk_run_queue call.
+
+If scsi_queue_next_request(q, cmd) is running on more than one CPU
+and q != q1 then you have a problem with the starved devices list.
+
+I.e. the lock for an object should NOT depend on the circumstances --
+an object (or set of objects) should _always_ use the same lock, if
+any.
+
+For this reason, when you obtain the q->queue_lock, just use it
+around your critical section and __blk_run_queue(), in a minimalistic
+approach, then release it.
+
+Then have a starved_list_lock, or use the host->lock (extreme and I do NOT
+recommend it) to lock your starved_list.
+
+So, obtain the starved_list_lock, go over the devices, get their request
+queues's lock and call __blk_run_queue(sdev->request_queue), then release
+the sdev->request_queue->queue_lock and loop over again if needed,
+when done, release the starved_list_lock.
+
+Remember that, someone else might want to *rearrange* the order of
+devices in the starved list for, say, _prioritization_, at some other
+time when there is no queue in context! (thus a starved_list_lock would
+make most sense)
+
+> I am still working patches for the lock split up in this area.
+
+Good!
+
+-- 
+Luben
 
 
---ReaqsoxgOBHFXBhH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, Mar 24, 2003 at 09:15:57AM -0600, James Bottomley wrote:
-> On Mon, 2003-03-24 at 01:04, Matthew Dharm wrote:
-> > Note that MODE_SENSE isn't on this list.  How does the 'popular OS' test
-> > for write-protect, you ask?  It tries to write and then looks for a
-> > failure, AFAICT.
->=20
-> We use MODE_SENSE on CDs to probe for capabilities: this is required
-> behaviour and we've been doing for a long time.
->=20
-> sd also uses MODE_SENSE to probe the cache type as well as the write
-> protect state.  Cache type certainly can't be obtained any other way,
-> and I'm not sure allowing writes to read only media wouldn't cause us
-> more problems in the long run.
-
-CD is fine, I was referring to MODE_SENSE in sd.c
-
-I think allowing write to read-only media is the only way to go.  I don't
-see another way to get write-protect status.
-
-> > I'd be willing to write a helper, but I'm a bit out of my element here.=
-..
-> > can someone at least suggest a good place to put such a helper (or
-> > volunteer to mock one up for me)?
->=20
-> OK, I can do this: A simple one with either a blacklist (reject these
-> commands) or whitelist (only accept these commands) going by the first
-> command byte OK?
-
-Well, you need to go by more than the first command byte -- ex. INQUIRY is
-okay, unless length !=3D 36 or EVPD.
-
-I think a blacklist is probably in order, but with a BIG COMMENT mentioning
-that if someone adds new commands into the code paths they should at least
-consider if they belong in the blacklist.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-Type "format c:"  That should fix everything.
-					-- Greg
-User Friendly, 12/18/1997
-
---ReaqsoxgOBHFXBhH
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE+f0C0IjReC7bSPZARAhw8AKCWiyRpeJruzae1jzSmG2qDEHDMkwCcC7Y1
-9TDTdhY8po9YFDf3CeGOSXU=
-=4qWV
------END PGP SIGNATURE-----
-
---ReaqsoxgOBHFXBhH--
