@@ -1,45 +1,43 @@
-From: Bryan Henderson <hbryan@us.ibm.com>
-Subject: Re: Newbie: multiple initiator contention resolution?
-Date: Fri, 2 Apr 2004 16:05:47 -0800
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: bug 2400
+Date: Fri, 2 Apr 2004 16:11:05 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF9A569789.59ADE54F-ON88256E6A.00833381-88256E6B.0000658B@us.ibm.com>
-References: <406DC64C.4030405@ecs.soton.ac.uk>
+Message-ID: <20040403001105.GC1472@us.ibm.com>
+References: <20040401131502.41136788.akpm@osdl.org> <1080862354.2118.78.camel@mulgrave> <1080949016.1804.161.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:49605 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S261416AbUDCAGI
+Received: from e35.co.us.ibm.com ([32.97.110.133]:26093 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S261396AbUDCAL2
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Apr 2004 19:06:08 -0500
-In-Reply-To: <406DC64C.4030405@ecs.soton.ac.uk>
+	Fri, 2 Apr 2004 19:11:28 -0500
+Content-Disposition: inline
+In-Reply-To: <1080949016.1804.161.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Patton <djp101@ecs.soton.ac.uk>
-Cc: linux-scsi@vger.kernel.org, sdake@mvista.com
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
->Steven Dake wrote:
->
-> You have to use some form of external locking mechanism, most often. 
->> Most filesystems do not support such a thing.  Check out opengfs (use
->> google) for an example of one that does.
->> 
->
-Daniel Patton:
+James Bottomley [James.Bottomley@steeleye.com] wrote:
+> ===== drivers/scsi/sr.c 1.103 vs edited =====
+> --- 1.103/drivers/scsi/sr.c	Fri Apr  2 11:30:44 2004
+> +++ edited/drivers/scsi/sr.c	Fri Apr  2 17:29:06 2004
+> @@ -424,8 +424,19 @@
+>  
+>  static int sr_block_release(struct inode *inode, struct file *file)
+>  {
+> +	int ret;
+>  	struct scsi_cd *cd = scsi_cd(inode->i_bdev->bd_disk);
+> -	return cdrom_release(&cd->cdi, file);
+> +	struct scsi_device *sdev = cd->device;
+> +	ret = cdrom_release(&cd->cdi, file);
+> +	if(ret)
+> +		return ret;
 
->Many thanks, I will look into this.  I don't understand why SCSI 
->RESERVE/RELEASE can't be used as the locking mechanism though.  Call me 
->stupid, but I'm only a student.
+It looks like cdrom_release always returns 0? Is there some other patch
+outstanding that changes this.
 
-You _can_ use SCSI RESERVE/RELEASE for the locking.  The locking doesn't 
-have to be external to the SCSI channel -- it has to be external to the 
-device driver.  The reason is that every filesystem driver I know caches 
-information from the disk -- above the device driver.
-
-So the filesystem drivers on the various accessing systems would have to 
-use a locking mechanism (possibly with a lock based on SCSI 
-RESERVE/RELEASE) to communicate amongst themselves and coordinate their 
-caches.
-
-There's also the matter of multi-write updates that have to be atomic. 
-That's a problem naturally solved with SCSI RESERVE/RELEASE, but it still 
-has to be handled external to the device driver.
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
