@@ -1,74 +1,88 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: RE: [SAS ANNOUNCEMENT] MPT Fusion driver 3.02.07 update
-Date: Mon, 8 Nov 2004 16:35:06 -0700
-Message-ID: <91888D455306F94EBD4D168954A9457C2D1EB5@nacos172.co.lsil.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Report luns [was: Apple Xserve RAID and qlogic ISP2312 (qla2300)]
+Date: Tue, 09 Nov 2004 12:49:21 +1000
+Message-ID: <41903031.3050205@torque.net>
+References: <20041027233321.GA842@astral.ro> <20041028143734.GA16358@beaverton.ibm.com> <20041028153522.GC1915@astral.ro> <20041028164210.GA16905@beaverton.ibm.com> <20041028172143.GA20949@praka.san.rr.com> <20041029085800.GF6671@astral.ro> <20041029180633.GA27267@beaverton.ibm.com> <20041101105611.GJ22603@astral.ro> <20041101194845.GA27913@us.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:27309 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261303AbUKHXfc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2004 18:35:32 -0500
+Received: from borg.st.net.au ([65.23.158.22]:10146 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261415AbUKIHo0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2004 02:44:26 -0500
+In-Reply-To: <20041101194845.GA27913@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
-Cc: "Stephens, Larry" <larry.stephens@lsil.com>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-
-On Saturday, November 06, 2004 4:03 PM, Christoph Hellwig wrote:
+Patrick Mansfield wrote:
+> [ resending ... not sure if this went out at all ]
 > 
->  - ioc->sasDeviceList still exists although it's not actually 
-> traversed,
->    and quite a lot od dead code to fill it
+> On Mon, Nov 01, 2004 at 12:56:11PM +0200, Catalin Muresan wrote:
+> 
+>>	I have the attached patch from Andrew which fixes the qla2300 part
+>>of the problem (attached) and a patch is still needed for the case where
+>>there are LUN0,3 to blacklist the device as BLIST_SPARSELUN.
+> 
+> 
+> No attachment ...
+> 
+> 
+>> > 2) If LUN 0 gets a DID_NO_CONNECT (and we do return the
+>> > SCSI_SCAN_NO_RESPONSE), we won't scan anything, via REPORT LUN or via
+>> > a sequential scan.
+>>
+>>	we need to have something on LUN 0 to be able to send REPORT LUN, in
+>>this case we don't.
+> 
+> 
+> You don't need storage configured on LUN 0 to send it a REPORT LUN, if
+> there is a target there, you can (well should) be able to send it a REPORT
+> LUN.
+> 
+> You do need the driver to allow commands to be issued to LUN 0 (that is
+> what the patch should have fixed).
+> 
+> SCSI spec says:
+> 
+> 	A SCSI device shall support a REPORT LUNS command that is
+> 	addressed to logical unit zero. Support of the REPORT LUNS command
+> 	by logical units other than logical unit zero is optional.
 
-Yes this is being used, and its not dead code.  Its filled and deleted
-in mptscsih.c when devices are added and removed.  It appears now
-that you had me removed the CSMI IOCTLs last week, this code will be
-needed in other aspects such as sas transport layer, misc future features, 
-and debugging.
+Patrick,
+That would be SAM or SAM-2. In SAM-3 (and SPC-3) that requirement
+has been widened to:
+"All SCSI devices shall support LUN 0 (i.e. 00000000 00000000h) or
+the REPORT LUNS well-known logical unit". [SAM-3 rev 14 section 4.9.3]
 
->  - the mptctl_hba_pciinfo() ioctl call is vetoed, this information
->    can be easily retrived from sysfs, and we aboslutely don't 
-> want this
->    duplicated in every LLDD
+Having recently implemented sg_luns (in sg3_utils) I was surprised
+to find a "select" field (byte 2) in REPORT LUN's cdb. When it is 0
+(as per scsi_scan.c) the returned lun inventory does _not_ include
+any well known lus. When select is 1 the returned lun inventory
+only includes well known lus (and when select==2 all lus are
+returned). Still this is not going to help in SPC-3 since the
+device need not respond to lun 0 at all.
 
-fine
+So if that fails scsi_scan.c might issue a REPORT LUNS command to
+this lun: 0xc101 which is the value of the REPORT LUNS well-known lu.
+Note that this is a 16 bit quantity (not 64 bit as I said in a
+previous post about luns). For simplicity let us assume that
+that it is at the top level. [If a device returns HiSup=1 in its
+standard INQUIRY response then it claims to support a 4 level
+hierarchy in its luns (with 16 bits in each level).]
 
->  - please don't add TRUE/FALSE defines - Linux codingstyle prefers 0/1
+SPC-3 defines 3 well known lus:
+   - REPORT LUNS
+   - ACCESS CONTROLS [0xc102]
+   - TARGET LOG PAGES [0xc103]
+and each of these supports a small number of (mandatory) SCSI
+commands.
 
-fine
+So if a modern SCSI enclosure or bridge uses well known lus
+rather than the lun 0 hack, how will applications in linux
+access them? They are certainly not block devices.
 
->  - what's that ->last_lun thing about?
+Doug Gilbert
 
-This fixes a bug sent to us by Tom Coughlan of Redhat; here
-is the description of the bug from Tom : 
-
-"When SPARSELUN is set, the SCSI midlayer unconditionally probes LUN
-values up to max_lun in the SCSI host template.  In recent versions of
-the mpt fusion driver this is set to 256. The problem is that on
-non-U320 SCSI (non-packetized) the identify message is used, and its LUN
-field is only 6 bits, allowing only 64 LUNs. This causes
-selectio/reselection problems on the SCSI bus, resulting the
-configuration of non-existant devices, or maybe worse."
-
-
->  - your forgot to kill one MPTSCSIH_DBG_TIMEOUT in ->queuecommand
-
-fine
-
->  - mptscsih_slave_destroy still has the vdev != NULL check - if this
->    case still happens now that the hotremoval is fixed you're in
->    much deeper problems than this check could solve
-
-Your correct, deleting the hotremoval stuff last week solved this.
-
->  - if you already changed the boot parameter syntax please move to
->    a module_param for each individual parameter
-
-I will consider moving saf-te and pt_clear seperate.
-However no change to the existing paramers that are dv 
-associated parameters passed on the same line with "mptscsih".
-
-Eric
-
- 
