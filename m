@@ -1,50 +1,68 @@
-From: Carl Schaefer <schaefer+lk0@employees.org>
-Subject: aic7xxx generic SCSI hang in 2.4.22 and later
-Date: Tue, 20 Apr 2004 10:23:34 -0400
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Patches for SCSI scanning
+Date: 20 Apr 2004 09:38:00 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040420142339.15D9C6730D@wot.wot>
+Message-ID: <1082471881.1804.34.camel@mulgrave>
+References: <20040418185751.GC4868@tpkurt.garloff.de>
+	<1082330192.1969.37.camel@mulgrave>
+	<20040420115419.GG4356@tpkurt.garloff.de>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-04-lbl.southeast.rr.com ([24.25.9.103]:42703 "EHLO
-	ms-smtp-04-eri0.southeast.rr.com") by vger.kernel.org with ESMTP
-	id S262927AbUDTOXl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Apr 2004 10:23:41 -0400
-Received: from wot.wot (rdu74-157-179.nc.rr.com [24.74.157.179])
-	by ms-smtp-04-eri0.southeast.rr.com (8.12.10/8.12.7) with SMTP id i3KENdC8020953
-	for <linux-scsi@vger.kernel.org>; Tue, 20 Apr 2004 10:23:39 -0400 (EDT)
-Received: from wot.cisco.com (localhost [127.0.0.1])
-	by wot.wot (Postfix) with ESMTP id 0A8EB669E4
-	for <linux-scsi@vger.kernel.org>; Tue, 20 Apr 2004 10:23:39 -0400 (EDT)
+Received: from stat1.steeleye.com ([65.114.3.130]:37323 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263019AbUDTOiH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Apr 2004 10:38:07 -0400
+In-Reply-To: <20040420115419.GG4356@tpkurt.garloff.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Kurt Garloff <garloff@suse.de>
+Cc: Andrew Morton <akpm@osdl.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Hello,
+On Tue, 2004-04-20 at 06:54, Kurt Garloff wrote:
+> What about the others:
+> * Patch 2: Drop REPORT_LUN config option and introduce 
+>   noreportlun and reportlun2 parameters (the latter allowing SCSI-2
+>   devs to be scanned with REPORT_LUNS).
 
-I find that recent kernel versions hang when I run a program called
-'vuescan' that uses a generic SCSI device to access a film scanner
-(though my SCSI disks, tape drive and CD-RW seem to work fine).
-Trying different kernel versions, I discovered that 2.4.21 didn't
-hang, but 2.4.22 did.  The hang also occurs with 2.4.25 and 2.4.26.
+Agree, but should be a blacklist flag to force the use of report luns in
+the scan.
 
-The hang is such that a hardware reset is required to recover, and
-there are no console or log messages generated.  I'm using a Dell PC
-with integrated Adaptec 7899P (rev 01) controller and this kernel
-config:
+> * Patch 3: Allow host adapters to avoid REPORT_LUNS.
 
-CONFIG_SCSI=y
-CONFIG_SCSI_AIC7XXX=y
-CONFIG_AIC7XXX_CMDS_PER_DEVICE=64
-CONFIG_AIC7XXX_RESET_DELAY_MS=15000
-CONFIG_AIC7XXX_DEBUG_MASK=0
+This should be a black list flag too, but first explain why we need it. 
+The only devices we do REPORT_LUNS for are SCSI 3 ones.  Which SCSI 3
+device is so badly implemented as to respond incorrectly?  I mean these
+are recent devices, so the implementors should have learned from past
+mistakes, right ?
 
-As an experiment, I copied the aic7xxx directory from 2.4.21 into a
-2.4.22 source tree and found that the hang no longer occurred with a
-kernel built in that tree.  Is this a reasonable workaround that would
-allow me to use recent kernels with my film scanner until the new
-driver is fixed, or was I lucky that anything at all worked after a
-stunt like that?  :-)
+> * Patch 4: allow_ghost_devices parameter
 
-Please let me know if there's anything I can do to extract some useful
-debugging information.
+Blacklist flag again (oh and "Yuk!!!" by the way).
 
-thanks!
-Carl
+> * Patch 5: inq_timeout parameter
+
+OK, just remove the arch gating of the default (ppc64 will have to have
+a permanent boot/module flag).
+
+> If we introduce two more BLIST flags (BLIST_NOREPORTLUN and
+> BLIST_REPORTLUN2), we can get rid of patch 2 and 3, if we add another one
+> (BLIST_LUN0ONLINE), we can get rid off 4.
+> 
+> We have 16 bits left, so it should be possible.
+> 
+> If there's consensus to go that way, I can code it up, no problem.
+> Only patch 5 will remain then ...
+
+Yes, I'm fine with that (as long as the arch specific code from patch 5
+goes).
+
+> Sidenote: We should drop SCSI_FORCELUN and CONFIG_SCSI_MULTI_LUN, otherwise 
+> people will misconfigure their kernel (such as the HP guy) and start to want 
+> every multi-lun device listed.
+
+Yes, sounds reasonable.  We can do it all with the boot flags now.
+
+James
+
+
