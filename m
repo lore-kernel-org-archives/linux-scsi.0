@@ -1,214 +1,146 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: [PATCH] tmscsim: host_lock use in LLD
-Date: Fri, 18 Jun 2004 23:28:05 +0200 (CEST)
+From: "Smart, James" <James.Smart@Emulex.Com>
+Subject: RE: [Emulex] Ready for next round...
+Date: Fri, 18 Jun 2004 15:56:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60.0406182225260.10481@poirot.grange>
+Message-ID: <3356669BBE90C448AD4645C843E2BF28034F9530@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-1651930528-1087594085=:10481"
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.net ([213.165.64.20]:16803 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S263881AbUFRV24 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jun 2004 17:28:56 -0400
+Received: from emulex.emulex.com ([138.239.112.1]:59383 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S266780AbUFRT4x
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Jun 2004 15:56:53 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Kurt Garloff <garloff@suse.de>
+To: 'Christoph Hellwig' <hch@infradead.org>
+Cc: Linux SCSI Reflector <linux-scsi@vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Christoph,
 
----1463811839-1651930528-1087594085=:10481
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+per your comments:
+ 
+> > - your module_param usage is b0rked.  Instead of duplicating every
+> >   option 31 times use module_param_array.  You also seem to miss
+> >   the paramter descriptions (MODULE_PARAM_DESC)
+> 
+> Your paramters are still extremly crappy.  lpfc.conf is 
+> horrible, as is
+> having the module paramters in a header.  What's especially 
+> bad is that
+> they are character paramters without any abvious reasons, please use
+> the proper integer types.
+> 
+> lpfc_cfgparm.h is truely horrible.
 
-Hi
+More guidance needed than the terms used.... What are you looking for ?
 
-While reviewing tmscsim, I noticed something, I didn't quite like / 
-understand. The driver takes the host_lock (with irqsave) at the entry to 
-the ISR, and releases it at the exit. And inside the ISR there are 
-potentially long busy-waits... Like
+lpfc.conf - should be better renamed to a .c file and it is compiled into
+the driver. It provides the default values for the attributes for each
+adapter. Our requirement is to have individual attributes per instance, with
+the approach to setting them being - supply a global default, then
+optionally allow per-instance overrides.
 
- 	int ctr = 6000000; /* only try for about a second */
- 	while( --ctr && !((dstate = DC390_read8 (DMA_Status)) &
- 				DMA_XFER_DONE) && pSRB->SGToBeXferLen );
+Why per-instance attributes ?  With large adapter counts (no real max,
+expect > 32), the potential uses and configurations can vary widely on each.
+This requirement has been confirmed by customer requests.
 
-The attached patch is attempting to fix those places. Not sure if this is 
-a proper fix though. In my understanding, after looking through the code, 
-the host_lock is used to protect host-specific data and host-registers. 
-The ->queuecommand is already called with it help, so, one just, 
-basically, have to protect other contexts - interrupt, timer,... So, looks 
-mostly right.
+Why compile it in ? The view on how an attribute can be dynamically updated
+is either via modules.conf or a utility that runs post module load. Given
+the large adapter count and the number of attributes - it's too much for
+modules.conf. Given that anything that runs post module load means the
+driver has already performed adapter initialization and link bringup, it's
+too late for some parameters. For these late parameters, we can reconfigure
+to pick up the dynamic settings, but brief behavior with the unwanted
+parameters may cause undesired effects for the user. The end result - we let
+users update the values and recompile the driver. If there's a better way,
+please point us in the right direction. I'd love to not require
+recompilation.
 
-BTW, I noticed, that other drivers have this bug (?) too, e.g.:
+Why the character parameters ? It becomes clear rapidly. Previously, we had
+integer arrays, but as we didn't want to cap the number of adapters that can
+be supported, nor require huge numbers of elements to be dealt with (a set
+per adapter), we reduced it to 1 element per attribute - a character string
+so that it can be dynamic in length. The string contains the global default,
+and can be extended if there are 1 or more instances that needed specific
+values. This significantly reduced the memory requirements, the number of
+elements, and seemed more intuitive to specify by the user.  We also looked
+at module_param_array, but this doesn't seem to work with the model of
+wanting to set different defaults for different elements at compile time.
 
-in *NCR5380.c::NCR5380_information_transfer() (called with lock held, irqs 
-disabled)
- 				while (NCR5380_read(STATUS_REG) & SR_REQ);
+lpfc_cfgparm.h: for the most part, it's a structured way to manage the
+attributes. Contains min/max so that we can verify the user didn't
+inadvertantly screw up a setting, as well as knowing what to fall back to in
+case they did. A couple of the elements, such as the strings, are largely
+unnecessary, but could be useful for log messages.  One thing we will change
+- this huge array is currently copied per instance right now. It will be
+changes so that there is only 1 master array containing the boundaries, and
+the current values will be the only thing kept per instance.
 
-But just now, looking at dc395x.c I see at places, symmetric to those 
-from tmscsim, that I am trying to fix with this patch, a comment from 
-Kurt:
-/* KG: This should not be needed any more! */
-and those loops are commented out. Kurt (or anybody else), please, 
-explain?
+Can you provide some additional comments or options ?
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+> 
+> > - lpfc_clock.c should go away, just use add_timer/etc. diretly and
+> >   embedd the timer into your structures.  Yes, I know that's not
+> >   how SVR4-derivates work, but Linux does.  You also have an
+> >   unchecked kmalloc and a list_head cast in there..
+> 
+> Still not much better.  In fact the crappy datastructures and code are
+> still there, just spread all over the place now instead of fixed up.
 
----1463811839-1651930528-1087594085=:10481
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name="tmscsim-busywait_2.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.60.0406182328050.10481@poirot.grange>
-Content-Description: 
-Content-Disposition: attachment; filename="tmscsim-busywait_2.patch"
+Ok - so the disagreement here really is the fact we had clock data
+structures.
 
-ZGlmZiAtdXIgLS1leGNsdWRlPUNWUyB2YW5pbGxhL2xpbnV4LTIuNi42L2Ry
-aXZlcnMvc2NzaS9zY3NpaW9tLmMgbGludXgtMi42LjYtYms2LXRtc2NzaW0v
-ZHJpdmVycy9zY3NpL3Njc2lpb20uYw0KLS0tIHZhbmlsbGEvbGludXgtMi42
-LjYvZHJpdmVycy9zY3NpL3Njc2lpb20uYwlUaHUgSnVuIDE3IDIzOjQ3OjAz
-IDIwMDQNCisrKyBsaW51eC0yLjYuNi1iazYtdG1zY3NpbS9kcml2ZXJzL3Nj
-c2kvc2NzaWlvbS5jCUZyaSBKdW4gMTggMjM6MDM6MzggMjAwNA0KQEAgLTIy
-Nyw3ICsyMjcsNiBAQA0KICNpZiBETUFfSU5UDQogICAgIFVDSEFSICBkc3Rh
-dHVzOw0KICNlbmRpZg0KLSAgICBEQzM5MF9JRkxBR1M7DQogDQogICAgIHBB
-Q0IgPSAoUEFDQilkZXZfaWQ7DQogICAgIGZvciAocEFDQjIgPSBkYzM5MF9w
-QUNCX3N0YXJ0OyAocEFDQjIgJiYgcEFDQjIgIT0gcEFDQik7IHBBQ0IyID0g
-cEFDQjItPnBOZXh0QUNCKTsNCkBAIC0yNDQsOSArMjQzLDkgQEANCiAgICAg
-REVCVUcxKHByaW50ayAoS0VSTl9ERUJVRyAic3N0YXR1cz0lMDJ4LCIsIHNz
-dGF0dXMpKTsNCiANCiAjaWYgRE1BX0lOVA0KLSAgICBEQzM5MF9MT0NLX0lP
-KHBBQ0ItPnBTY3NpSG9zdCk7DQorICAgIHNwaW5fbG9ja19pcnEocEFDQi0+
-cFNjc2lIb3N0LT5ob3N0X2xvY2spOw0KICAgICBkc3RhdHVzID0gZGMzOTBf
-ZG1hX2ludHIgKHBBQ0IpOw0KLSAgICBEQzM5MF9VTkxPQ0tfSU8ocEFDQi0+
-cFNjc2lIb3N0KTsNCisgICAgc3Bpbl91bmxvY2tfaXJxKHBBQ0ItPnBTY3Np
-SG9zdC0+aG9zdF9sb2NrKTsNCiANCiAgICAgREVCVUcxKHByaW50ayAoS0VS
-Tl9ERUJVRyAiZHN0YXR1cz0lMDJ4LCIsIGRzdGF0dXMpKTsNCiAgICAgaWYg
-KCEgKGRzdGF0dXMgJiBTQ1NJX0lOVEVSUlVQVCkpDQpAQCAtMjYwLDcgKzI1
-OSw3IEBADQogICAgIC8vREMzOTBfd3JpdGUzMiAoRE1BX1Njc2lCdXNDdHJs
-LCBFTl9JTlRfT05fUENJX0FCT1JUKTsNCiAjZW5kaWYNCiANCi0gICAgREMz
-OTBfTE9DS19JTyhwQUNCLT5wU2NzaUhvc3QpOw0KKyAgICBzcGluX2xvY2tf
-aXJxKHBBQ0ItPnBTY3NpSG9zdC0+aG9zdF9sb2NrKTsNCiANCiAgICAgaXN0
-YXRlID0gREMzOTBfcmVhZDggKEludGVybl9TdGF0ZSk7DQogICAgIGlzdGF0
-dXMgPSBEQzM5MF9yZWFkOCAoSU5UX1N0YXR1cyk7IC8qIFRoaXMgY2xlYXJz
-IFNjc2lfU3RhdHVzLCBJbnRlcm5fU3RhdGUgYW5kIElOVF9TdGF0dXMgISAq
-Lw0KQEAgLTMyOCwxMSArMzI3LDEwIEBADQogCURFQlVHMShwcmludGsgKEtF
-Uk5fSU5GTyAiREMzOTA6IFslaV0lcygxKSAoJTAyeClcbiIsIHBoYXNlLCBk
-YzM5MF9wMV9zdHJbcGhhc2VdLCBzc3RhdHVzKSk7DQogCXN0YXRlViA9ICh2
-b2lkICopIGRjMzkwX3BoYXNlMVtwaGFzZV07DQogCSggKnN0YXRlViApKCBw
-QUNCLCBwU1JCLCAmc3N0YXR1cyApOw0KLQlnb3RvIHVubG9jazsNCiAgICAg
-fQ0KIA0KICB1bmxvY2s6DQotICAgIERDMzkwX1VOTE9DS19JTyhwQUNCLT5w
-U2NzaUhvc3QpOw0KKyAgICBzcGluX3VubG9ja19pcnEocEFDQi0+cFNjc2lI
-b3N0LT5ob3N0X2xvY2spOw0KICAgICByZXR1cm4gSVJRX0hBTkRMRUQ7DQog
-fQ0KIA0KQEAgLTM2MywxMCArMzYxLDIwIEBADQogDQogCWlmKCBzc3RhdHVz
-ICYgQ09VTlRfMl9aRVJPICkNCiAJew0KLQkgICAgaW50IGN0ciA9IDYwMDAw
-MDA7IC8qIG9ubHkgdHJ5IGZvciBhYm91dCBhIHNlY29uZCAqLw0KLQkgICAg
-d2hpbGUoIC0tY3RyICYmICEoKGRzdGF0ZSA9IERDMzkwX3JlYWQ4IChETUFf
-U3RhdHVzKSkgJiBETUFfWEZFUl9ET05FKSAmJiBwU1JCLT5TR1RvQmVYZmVy
-TGVuICk7DQotCSAgICBpZiAoIWN0cikgcHJpbnRrIChLRVJOX0NSSVQgIkRD
-MzkwOiBEZWFkbG9jayBpbiBEYXRhT3V0XzA6IERNQSBhYm9ydGVkIHVuZmlu
-aXNoZWQ6ICUwNnggYnl0ZXMgcmVtYWluISFcbiIsIERDMzkwX3JlYWQzMiAo
-RE1BX1drX0J5dGVDbnRyKSk7DQotCSAgICBkYzM5MF9sYXN0c3RhdHVzICY9
-IH4weGZmMDAwMDAwOyBkYzM5MF9sYXN0c3RhdHVzIHw9IGRzdGF0ZSA8PCAy
-NDsNCisJICAgIHVuc2lnbmVkIGxvbmcgdGltZW91dCA9IGppZmZpZXMgKyBI
-WjsNCisNCisJICAgIC8qIEZ1bmN0aW9uIGNhbGxlZCBmcm9tIHRoZSBJU1Ig
-d2l0aCB0aGUgaG9zdF9sb2NrIGhlbGQgYW5kIGludGVycnVwdHMgZGlzYWJs
-ZWQgKi8NCisJICAgIGlmIChwU1JCLT5TR1RvQmVYZmVyTGVuKQ0KKwkJd2hp
-bGUgKHRpbWVfYmVmb3JlKGppZmZpZXMsIHRpbWVvdXQpICYmICEoKGRzdGF0
-ZSA9IERDMzkwX3JlYWQ4IChETUFfU3RhdHVzKSkgJiBETUFfWEZFUl9ET05F
-KSkgew0KKwkJICAgIHNwaW5fdW5sb2NrX2lycShwQUNCLT5wU2NzaUhvc3Qt
-Pmhvc3RfbG9jayk7DQorCQkgICAgdWRlbGF5KDUwKTsNCisJCSAgICBzcGlu
-X2xvY2tfaXJxKHBBQ0ItPnBTY3NpSG9zdC0+aG9zdF9sb2NrKTsNCisJCX0N
-CisJICAgIGlmICghdGltZV9iZWZvcmUoamlmZmllcywgdGltZW91dCkpDQor
-CQlwcmludGsgKEtFUk5fQ1JJVCAiREMzOTA6IERlYWRsb2NrIGluIERhdGFP
-dXRfMDogRE1BIGFib3J0ZWQgdW5maW5pc2hlZDogJTA2eCBieXRlcyByZW1h
-aW4hIVxuIiwNCisJCQlEQzM5MF9yZWFkMzIgKERNQV9Xa19CeXRlQ250cikp
-Ow0KKwkgICAgZGMzOTBfbGFzdHN0YXR1cyAmPSB+MHhmZjAwMDAwMDsNCisJ
-ICAgIGRjMzkwX2xhc3RzdGF0dXMgfD0gZHN0YXRlIDw8IDI0Ow0KIAkgICAg
-cFNSQi0+VG90YWxYZmVycmVkTGVuICs9IHBTUkItPlNHVG9CZVhmZXJMZW47
-DQogCSAgICBwU1JCLT5TR0luZGV4Kys7DQogCSAgICBpZiggcFNSQi0+U0dJ
-bmRleCA8IHBTUkItPlNHY291bnQgKQ0KQEAgLTQxOCwxMiArNDI2LDIzIEBA
-DQogDQogCWlmKCBzc3RhdHVzICYgQ09VTlRfMl9aRVJPICkNCiAJew0KLQkg
-ICAgaW50IGN0ciA9IDYwMDAwMDA7IC8qIG9ubHkgdHJ5IGZvciBhYm91dCBh
-IHNlY29uZCAqLw0KIAkgICAgaW50IGRzdGF0ZSA9IDA7DQotCSAgICB3aGls
-ZSggLS1jdHIgJiYgISgoZHN0YXRlID0gREMzOTBfcmVhZDggKERNQV9TdGF0
-dXMpKSAmIERNQV9YRkVSX0RPTkUpICYmIHBTUkItPlNHVG9CZVhmZXJMZW4g
-KTsNCi0JICAgIGlmICghY3RyKSBwcmludGsgKEtFUk5fQ1JJVCAiREMzOTA6
-IERlYWRsb2NrIGluIERhdGFJbl8wOiBETUEgYWJvcnRlZCB1bmZpbmlzaGVk
-OiAlMDZ4IGJ5dGVzIHJlbWFpbiEhXG4iLCBEQzM5MF9yZWFkMzIgKERNQV9X
-a19CeXRlQ250cikpOw0KLQkgICAgaWYgKCFjdHIpIHByaW50ayAoS0VSTl9D
-UklUICJEQzM5MDogRGF0YUluXzA6IERNQSBTdGF0ZTogJWlcbiIsIGRzdGF0
-ZSk7DQotCSAgICBkYzM5MF9sYXN0c3RhdHVzICY9IH4weGZmMDAwMDAwOyBk
-YzM5MF9sYXN0c3RhdHVzIHw9IGRzdGF0ZSA8PCAyNDsNCisJICAgIHVuc2ln
-bmVkIGxvbmcgdGltZW91dCA9IGppZmZpZXMgKyBIWjsNCisNCisJICAgIC8q
-IEZ1bmN0aW9uIGNhbGxlZCBmcm9tIHRoZSBJU1Igd2l0aCB0aGUgaG9zdF9s
-b2NrIGhlbGQgYW5kIGludGVycnVwdHMgZGlzYWJsZWQgKi8NCisJICAgIGlm
-IChwU1JCLT5TR1RvQmVYZmVyTGVuKQ0KKwkJd2hpbGUgKHRpbWVfYmVmb3Jl
-KGppZmZpZXMsIHRpbWVvdXQpICYmICEoKGRzdGF0ZSA9IERDMzkwX3JlYWQ4
-IChETUFfU3RhdHVzKSkgJiBETUFfWEZFUl9ET05FKSkgew0KKwkJICAgIHNw
-aW5fdW5sb2NrX2lycShwQUNCLT5wU2NzaUhvc3QtPmhvc3RfbG9jayk7DQor
-CQkgICAgdWRlbGF5KDUwKTsNCisJCSAgICBzcGluX2xvY2tfaXJxKHBBQ0It
-PnBTY3NpSG9zdC0+aG9zdF9sb2NrKTsNCisJCX0NCisJICAgIGlmICghdGlt
-ZV9iZWZvcmUoamlmZmllcywgdGltZW91dCkpIHsNCisJCXByaW50ayAoS0VS
-Tl9DUklUICJEQzM5MDogRGVhZGxvY2sgaW4gRGF0YUluXzA6IERNQSBhYm9y
-dGVkIHVuZmluaXNoZWQ6ICUwNnggYnl0ZXMgcmVtYWluISFcbiIsDQorCQkJ
-REMzOTBfcmVhZDMyIChETUFfV2tfQnl0ZUNudHIpKTsNCisJCXByaW50ayAo
-S0VSTl9DUklUICJEQzM5MDogRGF0YUluXzA6IERNQSBTdGF0ZTogJWlcbiIs
-IGRzdGF0ZSk7DQorCSAgICB9DQorCSAgICBkYzM5MF9sYXN0c3RhdHVzICY9
-IH4weGZmMDAwMDAwOw0KKwkgICAgZGMzOTBfbGFzdHN0YXR1cyB8PSBkc3Rh
-dGUgPDwgMjQ7DQogCSAgICBERUJVRzEoUmVzaWRDbnQgPSAoKFVMT05HKSBE
-QzM5MF9yZWFkOCAoQ3RjUmVnX0hpZ2gpIDw8IDE2KQlcDQogCQkrICgoVUxP
-TkcpIERDMzkwX3JlYWQ4IChDdGNSZWdfTWlkKSA8PCA4KQkJXA0KIAkJKyAo
-KFVMT05HKSBEQzM5MF9yZWFkOCAoQ3RjUmVnX0xvdykpKTsNCkBAIC0xMTEx
-LDEwICsxMTMwLDkgQEANCiAgICAgcERDQiA9IHBBQ0ItPnBBY3RpdmVEQ0I7
-DQogICAgIGlmICghcERDQikNCiAgICAgIHsNCi0JaW50IGogPSA0MDA7DQog
-CURFQlVHMChwcmludGsoS0VSTl9FUlIgIkFDQjolcC0+QWN0aXZlRENCOiVw
-IElPUG9ydDolMDR4IElSUTolMDJ4ICFcbiIsXA0KIAkgICAgICAgcEFDQiwg
-cERDQiwgcEFDQi0+SU9Qb3J0QmFzZSwgcEFDQi0+SVJRTGV2ZWwpKTsNCi0J
-d2hpbGUgKC0taikgdWRlbGF5ICgxMDAwKTsNCisJbWRlbGF5KDQwMCk7DQog
-CURDMzkwX3JlYWQ4IChJTlRfU3RhdHVzKTsJLyogUmVzZXQgUGVuZGluZyBJ
-TlQgKi8NCiAJREMzOTBfd3JpdGU4IChTY3NpQ21kLCBFTl9TRUxfUkVTRUwp
-Ow0KIAlyZXR1cm47DQpkaWZmIC11ciAtLWV4Y2x1ZGU9Q1ZTIHZhbmlsbGEv
-bGludXgtMi42LjYvZHJpdmVycy9zY3NpL3Rtc2NzaW0uYyBsaW51eC0yLjYu
-Ni1iazYtdG1zY3NpbS9kcml2ZXJzL3Njc2kvdG1zY3NpbS5jDQotLS0gdmFu
-aWxsYS9saW51eC0yLjYuNi9kcml2ZXJzL3Njc2kvdG1zY3NpbS5jCVRodSBK
-dW4gMTcgMjM6NDc6MDMgMjAwNA0KKysrIGxpbnV4LTIuNi42LWJrNi10bXNj
-c2ltL2RyaXZlcnMvc2NzaS90bXNjc2ltLmMJRnJpIEp1biAxOCAyMzowMjoy
-MCAyMDA0DQpAQCAtMjgzLDEyICsyODMsNiBAQA0KIH07DQogTU9EVUxFX0RF
-VklDRV9UQUJMRShwY2ksIHRtc2NzaW1fcGNpX3RibCk7DQogDQotI2RlZmlu
-ZSBVU0VfU1BJTkxPQ0tTIDENCi0NCi0jZGVmaW5lIERDMzkwX0lGTEFHUyB1
-bnNpZ25lZCBsb25nIGlmbGFncw0KLSNkZWZpbmUgREMzOTBfTE9DS19JTyhk
-ZXYpIHNwaW5fbG9ja19pcnFzYXZlICgoKHN0cnVjdCBTY3NpX0hvc3QgKilk
-ZXYpLT5ob3N0X2xvY2ssIGlmbGFncykNCi0jZGVmaW5lIERDMzkwX1VOTE9D
-S19JTyhkZXYpIHNwaW5fdW5sb2NrX2lycXJlc3RvcmUgKCgoc3RydWN0IFNj
-c2lfSG9zdCAqKWRldiktPmhvc3RfbG9jaywgaWZsYWdzKQ0KLQ0KIC8qIFRo
-ZXNlIG1hY3JvcyBhcmUgdXNlZCBmb3IgdW5pZm9ybSBhY2Nlc3MgdG8gMi4w
-LnggYW5kIDIuMS54IFBDSSBjb25maWcgc3BhY2UqLw0KIA0KICNkZWZpbmUg
-UERFViBwZGV2DQpAQCAtODYzLDExICs4NTcsMTEgQEANCiBzdGF0aWMgdm9p
-ZCBEQzM5MF93YWl0aW5nX3RpbWVkX291dCAodW5zaWduZWQgbG9uZyBwdHIp
-DQogew0KIAlQQUNCIHBBQ0IgPSAoUEFDQilwdHI7DQotCURDMzkwX0lGTEFH
-UzsNCisJdW5zaWduZWQgbG9uZyBpZmxhZ3M7DQogCURFQlVHMChwcmludGsg
-KCJEQzM5MDogRGVidWc6IFdhaXRpbmcgcXVldWUgd29rZW4gdXAgYnkgdGlt
-ZXIhXG4iKSk7DQotCURDMzkwX0xPQ0tfSU8ocEFDQi0+cFNjc2lIb3N0KTsN
-CisJc3Bpbl9sb2NrX2lycXNhdmUocEFDQi0+cFNjc2lIb3N0LT5ob3N0X2xv
-Y2ssIGlmbGFncyk7DQogCWRjMzkwX1dhaXRpbmdfcHJvY2VzcyAocEFDQik7
-DQotCURDMzkwX1VOTE9DS19JTyhwQUNCLT5wU2NzaUhvc3QpOw0KKwlzcGlu
-X3VubG9ja19pcnFyZXN0b3JlKHBBQ0ItPnBTY3NpSG9zdC0+aG9zdF9sb2Nr
-LCBpZmxhZ3MpOw0KIH0NCiANCiAvKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioNCkBAIC0yMDI2LDEyICsyMDIwLDEyIEBADQogc3RhdGljIHZvaWQgX19k
-ZXZleGl0IGRjMzkwX3JlbW92ZV9vbmUoc3RydWN0IHBjaV9kZXYgKmRldikN
-CiB7DQogCXN0cnVjdCBTY3NpX0hvc3QgKnNjc2lfaG9zdCA9IHBjaV9nZXRf
-ZHJ2ZGF0YShkZXYpOw0KLQlEQzM5MF9JRkxBR1M7DQorCXVuc2lnbmVkIGxv
-bmcgaWZsYWdzOw0KIAlQQUNCIHBBQ0IgPSAoUEFDQikgc2NzaV9ob3N0LT5o
-b3N0ZGF0YTsNCiANCiAJc2NzaV9yZW1vdmVfaG9zdChzY3NpX2hvc3QpOw0K
-IA0KLQlEQzM5MF9MT0NLX0lPKHNjc2lfaG9zdCk7DQorCXNwaW5fbG9ja19p
-cnFzYXZlKHNjc2lfaG9zdC0+aG9zdF9sb2NrLCBpZmxhZ3MpOw0KIA0KIAkv
-KiBUTyBETzogV2Ugc2hvdWxkIGNoZWNrIGZvciBvdXRzdGFuZGluZyBjb21t
-YW5kcyBmaXJzdC4gKi8NCiAJZGMzOTBfc2h1dGRvd24oc2NzaV9ob3N0KTsN
-CkBAIC0yMDQzLDcgKzIwMzcsNyBAQA0KIA0KIAlyZWxlYXNlX3JlZ2lvbihz
-Y3NpX2hvc3QtPmlvX3BvcnQsIHNjc2lfaG9zdC0+bl9pb19wb3J0KTsNCiAJ
-ZGMzOTBfZnJlZURDQnMoc2NzaV9ob3N0KTsNCi0JREMzOTBfVU5MT0NLX0lP
-KHNjc2lfaG9zdCk7DQorCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoc2NzaV9o
-b3N0LT5ob3N0X2xvY2ssIGlmbGFncyk7DQogDQogCXBjaV9kaXNhYmxlX2Rl
-dmljZShkZXYpOw0KIAlzY3NpX2hvc3RfcHV0KHNjc2lfaG9zdCk7DQo=
+The data structures were for 2 purposes:
+- to pass more than 1 argument to a callback.  
+- to keep a "safety" list of all timers when we needed to take an adapter
+offline.
 
----1463811839-1651930528-1087594085=:10481--
+Since this isn't acceptable, here's what our approach is:
+- Were seeing if the need for >1 arg is really needed. If so, we'll axe this
+part of the structure.
+- We're removing the safety list. We shouldn't need it anyway as normal data
+structure teardown should handle it.
+If both happen, the structure will be gone.
+
+> 
+> > - dito for lpfc_sysfs_info_show, in short all your sysfs 
+> work is completely
+> >   wrong, also you seem to use driver attributes instead of 
+> scsi device/host
+> >   attributes.  why?
+> 
+> You're still attaching all the attributes yourself.  Please use the
+> scsi-provided host/device attributes instead.
+
+Ok. The way I interpret this comment: the sysfs implementation (mechanics)
+is ok. The per adapter attributes are ok, with the exception of where they
+overlap with scsi attributes (such as lun skip and queue depths).  I agree -
+we'll remove the overlaps. This was old history..
+
+> 
+> > - the lpfc_find_target usage in queuecommand looks bogus.  You have
+> >   scsi_device->hostdata to put per-lun data, from which you 
+> can trivially
+> >   link per-target data directly.  All the checks for 
+> inquiry and valid
+> >   luns are similarly b0rked - scsi probing works by calling 
+> ->slave_alloc
+> >   first so you'll a) have a place where you know the 
+> midlayer is probing
+> >   and b) always private data when quecommand is called.
+> 
+> While you started using sdev->hostdata the whole code is 
+> still more than
+> fishy.  You have a complete set of secondary data structures 
+> for target/lun
+> data lookup yet.  Please allocate all per-lun data in 
+> ->slave_alloc and
+> if the target data doesn't exist yet that one too and hang it 
+> off the lun
+> data.
+> 
+
+Not fishy - but done differently based on the code's history.  In either
+case, we'll rework to fit the desired approach.
+
+-- James
