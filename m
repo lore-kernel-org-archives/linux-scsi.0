@@ -1,39 +1,47 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Fri, 12 Dec 2003 12:48:54 +0000
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: sg_scan -i /dev/sg[0123] /dev/hd[abcd] /dev/scd[0123]
+Date: Fri, 12 Dec 2003 23:00:35 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031212124854.GH27116@parcelfarce.linux.theplanet.co.uk>
-References: <200312112117.46216.krmurthy@cisco.com>
+Message-ID: <3FD9BBF3.1030209@torque.net>
+References: <1070670440.3056.7.camel@patibmrh9>	 <3FD43229.7070708@torque.net>  <1070906283.2263.101.camel@patibmrh9>	 <1070908146.2263.121.camel@patibmrh9> <1071172941.2868.26.camel@patibmrh9>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:42414 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264549AbTLLMs6
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:12307 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S264562AbTLLNC5
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Dec 2003 07:48:58 -0500
-Content-Disposition: inline
-In-Reply-To: <200312112117.46216.krmurthy@cisco.com>
+	Fri, 12 Dec 2003 08:02:57 -0500
+In-Reply-To: <1071172941.2868.26.camel@patibmrh9>
 List-Id: linux-scsi@vger.kernel.org
-To: "N.C.Krishna Murthy" <krmurthy@cisco.com>
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI -DEVEL <linux-scsi@vger.kernel.org>, davmyers@cisco.com
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Dec 11, 2003 at 09:17:46PM +0530, N.C.Krishna Murthy wrote:
-> Hi,
-> 	One of your comments was
-> "having multiple kmap() in the same process at the same time can deadlock(),
-> you redesign iscsi_xmit_task/iscsi_xmit_data/iscsi_recv_data not to do that.
-> for the tx path use ->sendpage to avoid a data copy and kmapping altogether".
+Pat LaVarre wrote:
+> Doug G:
 > 
-> I did try using sendpage in iscsi_xmit_data. 
-> Whenever the scatterlist->length was 4096 sendpage did succeed.
-> When it was 8192 I did see a panic 
+> Thank you, I see sg_scan now lets me name the devices to scan, including
+> lk 2.6 block devices:
+> 
+> The inline patch of this e-mail then also omits and scans past the
+> "Stopping because there are too many error" message in configurations
+> with few devices present, ....
 
-could you post the code for that?
+Pat,
+Patch applied, uploaded to the sg webpage.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Willem Riede wrote:
+ > > Maybe sg_scan should renamed sam_scan (sadly apart from INQUIRYs
+ > > on st and osst devices).
+ >             ^^^^
+ > Is there something I can/should do to enable that?
+
+No, the problem is in sg_scan. The version I just uploaded
+falls back to the SCSI_IOCTL_SEND_COMMAND if the SG_IO
+ioctl fails. This should make INQUIRYs work on st and osst
+devices.
+
+Doug Gilbert
+
+
