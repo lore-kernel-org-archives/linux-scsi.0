@@ -1,71 +1,57 @@
-From: "Heinz, Michael" <mheinz@infiniconsys.com>
-Subject: RE: is there a clean way to disable a scsi timer
-Date: Sat, 28 Sep 2002 11:47:42 -0400
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: Warning - running *really* short on DMA buffers while
+ doingfiletransfers
+Date: Sat, 28 Sep 2002 19:25:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <08628CA53C6CBA4ABAFB9E808A5214CB0C4DAF@mercury.infiniconsys.com>
+Message-ID: <3D963A73.F593F5F7@splentec.com>
+References: <200209281552.g8SFqKS04855@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: "Infante, Jon" <Jon.Infante@Emulex.Com>, Jeremy Higdon <jeremy@classic.engr.sgi.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, Andrew Morton <akpm@digeo.com>, Jens Axboe <axboe@suse.de>, Matthew Jacob <mjacob@feral.com>, "Pedro M. Rodrigues" <pmanuel@myrealbox.com>, Mathieu Chouquet-Stringer <mathieu@newview.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jon, Jeremy:
+James Bottomley wrote:
+> 
+> > 5) Proper transaction ordering across a queue full.  The aic7xxx
+> >    driver "requeues" all transactions that have not yet been sent
+> >    to the device replacing the transaction that experienced the queue
+> >    full back at the head so that ordering is maintained.
+> 
+> I'm lost here.  We currently implement TCQ with simple tags which have no
+> guarantee of execution order in the drive I/O scheduler.  Why would we want to
+> bother preserving the order of what will become essentially an unordered queue?
+> 
+> This will become an issue when (or more likely if) journalled fs rely on the
+> barrier being implemented down to the medium, and the mid layer does do
+> reqeueing in the correct order in that case, except for the tiny race where
+> the command following the queue full could be accepted by the device before
+> the queue is blocked.
 
-What is the intent in having the device driver do timeout handling? I ask because I've run into some issues with the midlayer timeouts not always working correctly and I've been thinking about implementing timeout processing in my driver. Was that the issue you had or was it something else?
+Justin has the right idea.
 
---
-Michael Heinz
-Staff Software Engineer
-Infinicon Systems, Inc.
-http://www.infiniconsys.com 
+TCQ goes hand in hand with Task Attributes. I.e. a tagged task
+is an I_T_L_Q nexus and has a task attribute (Simple, Ordered, Head
+of Queue, ACA; cf. SAM-3, 4.9.1).
 
-> -----Original Message-----
-> From: Infante, Jon [mailto:Jon.Infante@Emulex.Com]
-> Sent: Friday, September 27, 2002 11:27 AM
-> To: 'Jeremy Higdon'; linux-scsi@vger.kernel.org
-> Subject: RE: is there a clean way to disable a scsi timer
-> 
-> 
-> I do my own timeout handling as well. My queuecommand does
-> scsi_delete_timer() just as you suggested. However, just to 
-> be safe, I also
-> do a scsi_add_timer() in my iodone routine just before I call
-> cmnd->scsi_done(cmnd) to put things back the way they were.
-> 
-> Jon Infante
-> 
-> 
-> -----Original Message-----
-> From: Jeremy Higdon [mailto:jeremy@classic.engr.sgi.com]
-> Sent: Friday, September 27, 2002 1:30 AM
-> To: linux-scsi@vger.kernel.org
-> Subject: Re: is there a clean way to disable a scsi timer
-> 
-> 
-> Misremembered the name -- sorry.
-> 
-> s/scsi_disable_timer/scsi_delete_timer/
-> 
-> On Sep 27,  1:24am, Jeremy Higdon wrote:
-> > 
-> > I have a host driver that does its own timeout and error 
-> handling.  Is
-> there
-> > a clean way to disable the midlayer timeout handling?  It 
-> appears that I
-> > can just call scsi_disable_timer() from the queuecommand 
-> function, but
-> > I'd prefer something less nasty.
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Maybe the generator of tags (block layer, user process through sg, etc)
+should also set the tag attribute of the task, as per SAM-3.
+Most often (as currently implicitly) this would be a Simple task attribute.
+Why not the block layer borrow the idea from SAM-3, I see IDE only
+coming closer to SCSI...
+
+This way there'd be no need for explicit barriers. They can be implemented
+through Ordered and Head of Queue Tasks, everything else is Simple
+attribute task (IO scheduler can play with those as it wishes).
+
+This would provide for a more general basis the whole game (IO scheduling,
+TCQ, IO barriers, etc).
+
+If the device is not SCSI or it doesn't provide for those (the applicable
+bits in the INQ data and mode pages), then those can be succesfully
+simulated in the kernel, but at lowest level as I mentioned before.
+
+-- 
+Luben
