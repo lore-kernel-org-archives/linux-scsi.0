@@ -1,86 +1,95 @@
-From: Andre Hedrick <andre@pyxtechnologies.com>
-Subject: Re: linux-2.4.18-modified-scsi-h.patch
-Date: Mon, 18 Nov 2002 22:42:54 -0800 (PST)
+From: Alexander Viro <viro@math.psu.edu>
+Subject: Re: Why /dev/sdc1 doesn't show up...
+Date: Tue, 19 Nov 2002 02:12:54 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.10.10211182239570.2779-100000@master.linux-ide.org>
-References: <3DD9DA23.1070102@pobox.com>
+Message-ID: <Pine.GSO.4.21.0211190116420.27757-100000@steklov.math.psu.edu>
+References: <20021119055636.94C182C088@lists.samba.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3DD9DA23.1070102@pobox.com>
+In-Reply-To: <20021119055636.94C182C088@lists.samba.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Douglas Gilbert <dougg@torque.net>, "J. E. J. Bottomley" <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@transmeta.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Doug Ledford <dledford@redhat.com>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>
 
-On Tue, 19 Nov 2002, Jeff Garzik wrote:
 
-> Andre Hedrick wrote:
-> 
-> > Greetings Doug et al.
-> >
-> > Please consider the addition of this simple void ptr to the scsi_request
-> > struct.  The addition of this simple void pointer allows one to map any
-> > and all request execution caller the facility to search for a specific
-> > operation without having to run in circles.  Hunting for these details
-> > over the global device list of all HBA's is silly and one of the key
-> > reasons why there error recovery path is so painful.
-> >
-> >
-> > Scsi_Request    *req = sc_cmd->sc_request;
-> > blah_blah_t     *trace = NULL;
-> >
-> > trace = (blah_blah_t *)req->trace_ptr;
-> >
-> >
-> > Therefore the specific transport invoking operations via the midlayer will
-> > have the ablity to track and trace any operation.
-> >
-> > It will save everyone headaches.
-> >
-> > Cheers,
-> >
-> >
-> > Andre Hedrick, CTO & Founder
-> > iSCSI Software Solutions Provider
-> > http://www.PyXTechnologies.com/
-> >
-> >
-> > ------------------------------------------------------------------------
-> >
-> > --- linux/drivers/scsi/scsi.h.orig	2002-10-31 01:45:39.000000000 -0800
-> > +++ linux/drivers/scsi/scsi.h	2002-10-31 01:46:31.000000000 -0800
-> > @@ -667,8 +667,11 @@
-> >  	unsigned short sr_sglist_len;	/* size of malloc'd scatter-gather list */
-> >  	unsigned sr_underflow;	/* Return error if less than
-> >  				   this amount is transferred */
-> > +	void *trace_ptr;	/* capable of cmd-cmnd-error tracing */
-> 
-> 
-> ok
-> 
-> 
-> >  };
-> >
-> > +#define MODIFIED_SCSI_H
-> 
-> 
-> This falls into C style :)  Instead of this I would do
-> 
-> 	#define HAVE_TRACE_PTR 1
-> 
-> just like we already do HAVE_xxx in include/linux/netdevice.h and other 
-> places.
-> 
-> 	Jeff
 
-Works for me, just need to test the state of intelligence of the SCSI
-stack and if it is possible to teach the old dog a new trick.  The ablitly
-to logically seek an operation without chasing, the link list of devices
-and outstanding commands, it tail!
+On Tue, 19 Nov 2002, Rusty Russell wrote:
 
-Cheers,
+> means that /sbin/hotplug is called for everything which was registered
+> at boot.  (We may not want to do this, but in general the symmetry
+> seems really nice).
+> 
+> [ Note: the logic for /sbin/hotplug applies to any similar "publicity"
+>   function which promises that something now exists. ]
+> 
+> Al, thoughts?
+> Rusty.
 
-Andre Hedrick, CTO & Founder 
-iSCSI Software Solutions Provider
-http://www.PyXTechnologies.com/
+Wrong granularity.  "module had finished initialization" is _not_ a natural
+event wrt stuff exported by that module.  And that's one of the main problems
+I have with your approach - you are trying to make module loader do the
+stuff that has nothing whatsoever with modules.
+
+Moreover, if driver is built into the kernel, you get (at the very least)
+a different mechanism for triggering the same events, if not the outright
+different sequence of events.  Which is a Bad Thing(tm) since it leads to
+a shitload of extra problems with debugging.
+
+I went through the init code of all block device drivers and there was
+a metric buttload of crap in handling failures.  I doubt that more than
+5% had any relation to races - much more often taking given failure path
+had lead to oops.  Deterministic one.  With nothing else happening with
+the system.
+
+Double freeing.  Forgetting to free.  Dereference after freeing.  Leaving
+timers active.  Leaving pointers to local structures in global arrays.
+Plain and simple dereferencing of NULL due to wrong order.  Freeing what
+you had never allocated.  Similar for resources other than memory.  Doing
+cleanup in a fashion that screws other drivers.  IOW, all sorts of crap
+that can accumulate in a spaghetty code that never got any serious testing.
+Path-dependent crap, at that - different exits are fscked in different ways.
+
+On that background all shite you are so concerned about is a noise.  More often
+than not, screwups in export order that might be papered over by your semantics
+change either do not matter since the module doesn't fail in init _or_ do not
+matter since it does fail and gets the system fscked to hell and back on the
+failure exit path, races or not.
+
+In other words, this band-aid doesn't do anything useful - if you go and
+fix the crap in driver's init you can fix the export order while you are
+at it.  If you do not - pray that failure will not happen, because it it
+will you are screwed without any races.
+
+There is no fscking way for module loader to handle that.  Leave it as-is,
+possibly making the loader BUG() if init fails and refcount is positive.
+Anything beyond that is not a responsibility of modules code.  Note that
+such BUG() doesn't add any new breakage - such situation had always been
+a bug.  
+
+And yes, that means the need to fix the error recovery in driver init.
+Tough.  I don't know any other way to handle
+	kfree(p);
+	p = NULL;
+	kfree(p->bar);
+and I don't believe that you can find one.  Again, no silver bullets -
+if you want to talk about handling half-way failures in module init,
+be ready to deal with the above (embedded into the mess of goto and
+function calls, to boot).
+
+We are talking about bugs that had always been on these codepaths - both
+in modular and built-in cases.  They need to be dealt with before we can
+do anything about these codepaths.  Has nothing to module loader...
+
+What we _can_ do (and that will be on per-subsystem basis) is providing
+APIs that would cut down on the amount of glue needed in driver init.
+And that's where switch to use of /sbin/hotplug (again, on per-subsystem
+basis) might help big way.  But for each subsystem that will require
+looking through the drivers using it.
+
+BTW, remember the flamef^Warguments about turning kdev_t into a pointer
+and thus avoiding digging through piles and piles of cr^Hode?  Didn't
+fly for exactly the same reasons - there's no way to do it magically
+for entire kernel without breaking tons of code and/or creating an
+impossible-to-debug mess...
 
