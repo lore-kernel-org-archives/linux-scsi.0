@@ -1,44 +1,56 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: grsec problem in scsi_ioctl
-Date: Fri, 07 Jan 2005 15:54:24 -0500
-Message-ID: <1105131264.4151.19.camel@mulgrave>
-References: <20050107194903.GB27371@parcelfarce.linux.theplanet.co.uk>
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: Re: [sg3_utils] report target group
+Date: Sat, 01 Jan 2005 13:57:44 +0100
+Message-ID: <1104584264.5752.4.camel@zezette>
+References: <1104233396.41d143b44e073@imp5-q.free.fr>
+	 <41D21DDD.5010109@torque.net> <1104307397.41d264c5c5d3c@imp5-q.free.fr>
+	 <41D2AF42.5050007@torque.net> <1104327781.41d2b4654846d@imp5-q.free.fr>
+	 <41D38DBF.6010303@torque.net> <1104415233.41d40a018c287@imp5-q.free.fr>
+	 <1104415927.41d40cb782493@imp5-q.free.fr>  <41D623BF.8060304@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:5562 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261589AbVAGUyq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Jan 2005 15:54:46 -0500
-In-Reply-To: <20050107194903.GB27371@parcelfarce.linux.theplanet.co.uk>
+Received: from smtp2.wanadoo.fr ([193.252.22.29]:61557 "EHLO smtp2.wanadoo.fr")
+	by vger.kernel.org with ESMTP id S261648AbVAGVvf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Jan 2005 16:51:35 -0500
+In-Reply-To: <41D623BF.8060304@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: dougg@torque.net
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, 2005-01-07 at 19:49 +0000, Matthew Wilcox wrote:
-> What a pleasant way to find out about a vulnerability ...
-> 
-> much snipped, I'm sure you can find the whole thing if you care to.
+Le samedi 01 janvier 2005 =C3=A0 14:14 +1000, Douglas Gilbert a =C3=A9c=
+rit :
+> christophe.varoqui@free.fr wrote:
+> >>All in all, I don't really see how one can use the result of RTPG.
+> >>
+> >=20
+> > Ok, sorry to bug around.
+> > the response is at chapter 7.6.8 of SPC-3 :
+> > VPD page 88h contains the mapping between relative port ids and por=
+t ids
+>=20
+> sg_inq -s /dev/sda
+>=20
+> decodes the SCSI Ports VPD (0x88) page. Evidentally it will
+> be present in SAS dual ported disks.
+>=20
+> So is sg_rtpg of any use?
+>=20
+I have yet to see the output of these commands on a device that support=
+s
+them, but I think the multipath can use that quite well.
 
-Not really .. the fix looks simple enough. I wonder what it would take
-to train these people how actually to report a bug, sigh ...
+I have added a call for contribution for that on the webpage.
 
-James
+thanks for the help,
+--=20
+christophe varoqui <christophe.varoqui@free.fr>
 
-===== drivers/block/scsi_ioctl.c 1.63 vs edited =====
---- 1.63/drivers/block/scsi_ioctl.c	2004-12-26 12:27:51 -05:00
-+++ edited/drivers/block/scsi_ioctl.c	2005-01-07 15:46:36 -05:00
-@@ -339,7 +339,8 @@
- 			 struct gendisk *bd_disk, Scsi_Ioctl_Command __user *sic)
- {
- 	struct request *rq;
--	int err, in_len, out_len, bytes, opcode, cmdlen;
-+	int err;
-+	unsigned int in_len, out_len, bytes, opcode, cmdlen;
- 	char *buffer = NULL, sense[SCSI_SENSE_BUFFERSIZE];
- 
- 	/*
-
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
