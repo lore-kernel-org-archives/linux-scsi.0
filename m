@@ -1,90 +1,77 @@
-From: "Justin T. Gibbs" <gibbs@btc.adaptec.com>
-Subject: Aic7xxx 6.2.28 and Aic79xx 1.3.0 Released
-Date: Wed, 22 Jan 2003 15:50:33 -0700
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH] SAM-3 status codes
+Date: Thu, 23 Jan 2003 10:10:18 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <87730000.1043275833@aslan.btc.adaptec.com>
+Message-ID: <3E2F24DA.50206@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------020109050705050908020802"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
+Received: from torque.net (dm1-33.triode.net.au [202.147.125.33])
+	by iggy.triode.net.au (8.12.7/8.12.7) with ESMTP id h0MN9FvJ010629
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jan 2003 10:09:16 +1100
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@transmeta.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Marcelo Tosatti <marcelo@conectiva.com.br>
+To: linux-scsi@vger.kernel.org
 
-GNU patch relative to 2.5.59:
- http://people.FreeBSD.org/~gibbs/linux/SRC/aic79xx-linux-2.5.59-20030122-gnupatch.gz
+This is a multi-part message in MIME format.
+--------------020109050705050908020802
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-BK send and tarball distributions:
- http://people.FreeBSD.org/~gibbs/linux/SRC/aic79xx-linux-2.4-20030122.bksend.gz
- http://people.FreeBSD.org/~gibbs/linux/SRC/aic79xx-linux-2.5-20030122.bksend.gz
- http://people.FreeBSD.org/~gibbs/linux/SRC/aic79xx-linux-2.4-20030122-tar.gz
- http://people.FreeBSD.org/~gibbs/linux/SRC/aic79xx-linux-2.5-20030122-tar.gz
+The perverse CHECK_CONDITION in include/scsi/scsi.h seems
+to have struck again (see "Can't burn DVD under 2.5.59 with
+ide-cd" thread on the linux kernel list). Most users of
+CHECK_CONDITION found out to their surprise that it is
+shifted 1 bit (right) from those values found in the
+standards.
 
-Driver update diskettes for most distributions:
+The attachment marks the orginal list of SCSI status codes
+as deprecated and supplies defines taken from the most
+recent SAM-3 draft.
 
-	http://people.FreeBSD.org/~gibbs/linux/DUD/aic7xxx/
-	http://people.FreeBSD.org/~gibbs/linux/DUD/aic79xx/
+The patch is against 2.5.59 but may also be suitable for
+the lk 2.4 tree.
 
-RPMs for most distributions:
+Doug Gilbert
 
-	http://people.FreeBSD.org/~gibbs/linux/RPM/aic7xxx/
-	http://people.FreeBSD.org/~gibbs/linux/RPM/aic79xx/
+--------------020109050705050908020802
+Content-Type: text/plain;
+ name="sam_stats_2559.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sam_stats_2559.diff"
 
-Changes since the driver versions incorperated in 2.5.59:
+--- linux/include/scsi/scsi.h	2002-12-24 18:12:54.000000000 +1100
++++ linux/include/scsi/scsi.h2559sam	2003-01-23 09:54:00.000000000 +1100
+@@ -104,7 +104,26 @@
+ 
+ 
+ /*
+- *  Status codes
++ *  SCSI Architecture Model (SAM) Status codes. Taken from SAM-3 draft
++ *  T10/1561-D Revision 4 Draft dated 7th November 2002.
++ */
++#define SAM_STAT_GOOD            0x00
++#define SAM_STAT_CHECK_CONDITION 0x02
++#define SAM_STAT_CONDITION_MET   0x04
++#define SAM_STAT_BUSY            0x08
++#define SAM_STAT_IMMEDIATE       0x10
++#define SAM_STAT_IMMEDIATE_CONDITION_MET 0x14
++#define SAM_STAT_RESERVATION_CONFLICT 0x18
++#define SAM_STAT_COMMAND_TERMINATED 0x22	/* obsolete in SAM-3 */
++#define SAM_STAT_TASK_SET_FULL   0x28
++#define SAM_STAT_ACA_ACTIVE      0x30
++#define SAM_STAT_TASK_ABORTED    0x40
++
++/*
++ *  Status codes. These are deprecated as they are shifted 1 bit right
++ *  from those found in the SCSI standards. This causes confusion for
++ *  applications that are ported to several OSes. Prefer SAM Status codes
++ *  above.
+  */
+ 
+ #define GOOD                 0x00
 
-ChangeSet@1.961, 2003-01-22 15:09:24-07:00, gibbs@overdrive.btc.adaptec.com
-  Bump aic79xx driver version number to 1.3.0, now that it has
-  passed functional test.
-
-ChangeSet@1.960, 2003-01-22 14:44:51-07:00, gibbs@overdrive.btc.adaptec.com
-  Update Aic7xxx and Aic79xx driver documentation.
-
-ChangeSet@1.959, 2003-01-20 16:46:37-07:00, gibbs@overdrive.btc.adaptec.com
-  Aic7xxx Driver Update 6.2.28
-        o Add some more DV diagnostic code
-        o Fix bug that caused sequencer debug code to be
-          downloaded always.
-
-  Aic79xx Driver Update 1.3.0.RC2
-        o Correct a regression in RC1 that effectively limited DV to just ID 0.
-        o Add some more DV diagnostic code
-        o Misc code cleanups.
-
-ChangeSet@1.958, 2003-01-17 14:49:42-07:00, gibbs@overdrive.btc.adaptec.com
-  Aic7xxx and Aic79xx Driver Update
-        Force an SDTR after a rejected WDTR if the syncrate is unkonwn.
-
-ChangeSet@1.957, 2003-01-17 13:20:53-07:00, gibbs@overdrive.btc.adaptec.com
-  Bump aic7xxx driver version to 6.2.27.
-
-ChangeSet@1.956, 2003-01-17 13:17:49-07:00, gibbs@overdrive.btc.adaptec.com
-  Aic7xxx Driver Update:
-    o Determine more conclusively that a BIOS has initialized the
-      adapter before using "left over BIOS settings".
-    o Adapt to upcoming removal of cmd->target/channel/lun/host in 2.5.X
-    o Fix a memory leak on driver unload.
-    o Enable the pci_parity command line option and default to pci parity
-      error detection *disabled*.  There are just too many broken VIA
-      chipsets out there.
-    o Move more functionality into aiclib to share with the aic79xx driver.
-    o Correct a few negotiation regressions.
-    o Don't bother doing full DV on devices that only support async transfers.
-      This should fix a few more of the reported problems with DV.
-
-  Aic79xx Driver Update
-    o Add abort and bus device reset handlers.
-    o Fix a memory leak on driver unload.
-    o Adapt to upcoming removal of cmd->target/channel/lun/host in 2.5.X.
-    o Correct a few negotiation regressions.
-
-ChangeSet@1.955, 2003-01-17 12:18:22-07:00, gibbs@overdrive.btc.adaptec.com
-  Aic79xx Driver Update
-        Enable abort and bus device reset handlers for both legacy
-        and packetized connections.
-
-ChangeSet@1.954, 2003-01-17 12:10:23-07:00, gibbs@overdrive.btc.adaptec.com
-  Aic7xxx and Aic79xx DV Fix:
-        Don't bother with DV if the device can only do async
-
+--------------020109050705050908020802--
 
