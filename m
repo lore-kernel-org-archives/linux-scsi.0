@@ -1,31 +1,55 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Wed, 26 Nov 2003 13:45:01 +0000
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: sg utils sg_io -i 0x24 -y "12 00:00:00 24 00"
+Date: 26 Nov 2003 09:15:12 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031126134501.B6004@infradead.org>
-References: <20031027153932.A16679@infradead.org> <00c901c3b251$91016a30$a0074d0a@apac.cisco.com> <20031124074830.C29095@infradead.org> <20031124124543.A1017@beaverton.ibm.com>
+Message-ID: <1069863312.4325.45.camel@patrh9>
+References: <1068165515.28505.29.camel@patrh9>
+	 <20031107095145.A3785@beaverton.ibm.com>  <1068228695.3417.34.camel@patrh9>
+	 <1068229639.3417.46.camel@patrh9>  <1068229873.3417.51.camel@patrh9>
+	 <1068594777.6448.7.camel@patrh9>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:41478 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263852AbTKZNpF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Nov 2003 08:45:05 -0500
-Content-Disposition: inline
-In-Reply-To: <20031124124543.A1017@beaverton.ibm.com>; from patmans@us.ibm.com on Mon, Nov 24, 2003 at 12:45:43PM -0800
+Received: from email-out1.iomega.com ([147.178.1.82]:54445 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264240AbTKZQPy convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Nov 2003 11:15:54 -0500
+In-Reply-To: <1068594777.6448.7.camel@patrh9>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, "Surekha.PC" <surekhap@cisco.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Nov 24, 2003 at 12:45:43PM -0800, Patrick Mansfield wrote:
-> We need a new timeout + canceller mechanism, so that a single command can
-> be cancelled without waiting for all other IO on an adapter to complete.
-> Errors must still escalate some how so device, bus, or adapter resets can
-> (under some conditions) still be issued.
-> 
-> The qla2xxx hacks around this by adding its own timer that is shorter than
-> the scsi cmd timeout. Is that a good or a bad hack? I don't know.
+> again there we see CDB for length, data for expected
+> length returning actual length, sense for expected length returning
+> actual length.
 
-Well, it's a hack :)  Although one that works.   I agree with your above
-statement that we need to add support for that to the midlayer.  
+ftp://members.aol.com/plscsi/linux/plscsi.tar.gz
+says g++ rather than gcc in that Makefile for the sake of that minority
+of folk who have gcc/g++ configured so that gcc fails to link after
+compiling .cpp.
+
+http://members.aol.com/plscsi/linux/plscsi.tar.gz
+fetches the same, but via http rather than via ftp.
+
+Neither, whoops, yet give us the following popular patch that often
+makes such commands work as:
+
+plscsi /dev/hdc
+plscsi /dev/hdd
+plscsi /dev/scd0
+
+Pat LaVarre
+
+diff -Nur plscsi.2002-09-21/sgio.cpp plscsi/sgio.cpp
+--- plscsi.2002-09-21/sgio.cpp	2002-09-21 13:25:18.000000000 -0600
++++ plscsi/sgio.cpp	2003-11-26 09:10:59.109906736 -0700
+@@ -116,6 +116,7 @@
+     sgio->theErrFile = stderr;
+ 
+     sgio->theOpenMode = O_RDWR; /* O_RDONLY often works */
++    sgio->theOpenMode = O_RDONLY|O_NONBLOCK;
+     sgio->theFileDescriptor = -1;
+     sgio->theSgVersionNum = 0; /* 0 = unknown */
+ 
+
 
