@@ -1,56 +1,31 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Re: USB storage problems on OHCI..
-Date: Mon, 22 Sep 2003 12:42:52 -0400 (EDT)
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <Pine.LNX.4.44L0.0309221239460.636-100000@ida.rowland.org>
-References: <Pine.LNX.4.44.0309220900440.1753-100000@home.osdl.org>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
+Date: Mon, 22 Sep 2003 09:44:04 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20030922094404.A1056@beaverton.ibm.com>
+References: <20030922004943.E32009@one-eyed-alien.net> <Pine.LNX.4.44L0.0309221001090.1697-100000@ida.rowland.org> <20030922153123.A23388@infradead.org> <20030922161104.A24155@infradead.org> <20030922084930.A679@beaverton.ibm.com> <20030922173732.A25639@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-In-Reply-To: <Pine.LNX.4.44.0309220900440.1753-100000@home.osdl.org>
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, Andries.Brouwer@cwi.nl
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e35.co.us.ibm.com ([32.97.110.133]:12744 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S263218AbTIVQpr
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Sep 2003 12:45:47 -0400
+Content-Disposition: inline
+In-Reply-To: <20030922173732.A25639@infradead.org>; from hch@infradead.org on Mon, Sep 22, 2003 at 05:37:32PM +0100
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Linus Torvalds <torvalds@osdl.org>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, 22 Sep 2003, Linus Torvalds wrote:
-
+On Mon, Sep 22, 2003 at 05:37:32PM +0100, Christoph Hellwig wrote:
 > 
-> [ Andries added to the cc ]
+> What I meant is not adding a blist flags member at all but rather
+> setting skip_ms_page_8 and skip_ms_page_3f from ->slave_alloc.
 > 
-> On Mon, 22 Sep 2003, Patrick Mansfield wrote:
-> > 
-> > I can modify the patch for that.
-> 
-> How about just making the sd.c layer more robust? That has worked well in 
-> the past, and it seems wrong to have to add more and more flags.
+> But I probably missed something obvious :)
 
-<snip>
+The current code allows us to set or clear a given bit, but not both. So
+if we set them in slave_alloc, they can't be cleared without adding
+other flags or code.
 
-> Basically, Andries Brouwer's strategy of making sd.c more conservative has
-> been a very successful one in the past. Why not continue on that?
-
-I would be interested in hearing what Andries has to say.  But there has
-been a large number of reports from users trying out various patches, and
-it's clear that no single strategy will work with every device.  The
-variety of ways in which these things fail is truly amazing.
-
-Alan Stern
-
-
-
--------------------------------------------------------
-This sf.net email is sponsored by:ThinkGeek
-Welcome to geek heaven.
-http://thinkgeek.com/sf
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+-- Patrick Mansfield
