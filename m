@@ -1,32 +1,52 @@
-From: kuznet@ms2.inr.ac.ru
-Subject: Re: softscsi patch
-Date: Fri, 5 Jul 2002 19:58:43 +0400 (MSD)
+From: Patrick Mochel <mochel@osdl.org>
+Subject: Re: [PATCH] driverfs scsi for 2.5.24
+Date: Fri, 5 Jul 2002 11:31:42 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200207051558.TAA06460@sex.inr.ac.ru>
-References: <20020705164121.B27706@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <Pine.LNX.4.33.0207051126240.8496-100000@geena.pdx.osdl.net>
+References: <200207031434.g63EYCv01985@localhost.localdomain>
 Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020705164121.B27706@parcelfarce.linux.theplanet.co.uk> from "Matthew Wilcox" at Jul 5, 2 04:41:21 pm
+In-Reply-To: <200207031434.g63EYCv01985@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-Cc: willy@debian.org, linux-scsi@vger.kernel.org, davem@redhat.com
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Douglas Gilbert <dougg@torque.net>, sullivan <sullivan@austin.ibm.com>, Martin Dalecki <dalecki@evision-ventures.com>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Hello!
 
-> sure, but it's fine to synchronise all CPUs at subsystem unload...
+On Wed, 3 Jul 2002, James Bottomley wrote:
 
-Of course. If this become necessary, this is ... necessary. :-)
+> Actually, the patch already went into Linus' BK tree and will be in 2.5.25.
+> 
+> dougg@torque.net said:
+> > It will probably take a few iterations before we get close to an
+> > "approved" naming model :-) 
+> 
+> That's part of the reason for putting it in early...
+> 
+> > I'll start with one suggestion: perhaps "kdev" could be replaced by
+> > two files: "major" and "minor". 
+> 
+> I think kdev belongs in the (not yet implemented) class driver, doesn't it? 
+> (Pat?), so we shouldn't be doing anything to expose it in SCSI.  If it's done 
+> at the class level, the kdev policy will be set globally.
 
-> If we have a controller finishing four requests in rapid succession,
-> each interrupt going to a different CPU then three CPUs will spin waiting
-> for that controller's lock... and then waste time pingponging the cache
-> lines between themselves as each gets its turn.  Would be more efficient
-> to use a tasklet for this case.  With multiple controllers it should
-> get even better as they can be handled on different CPUs.
+Yes. However, if you guys can use it now, go ahead and implement it where
+you see fit. Once the infrasructure is in place, we can push it upwards to
+the generic structure. 
 
-Exactly. With networking the things are even worse:
-we used to grab requests completed by device at irq, to queue them
-and to raise softirq. The result is that they reach final consumer
-(f.e. socket) in _different_ order, which creates lots of troubles.
-If SCSI is also sensitive to order, stronger serialization may be required too.
+> I think the partition `name' file should reflect the partition UUID if one 
+> exists, and that the disc `name' file should be mutable by root so we can do 
+> fixups (from hotplug) for the exceptional devices that don't have a proper 
+> unique name.
 
-Alexey
+Dave Brownell (USB guy) brought this up a few days ago. The 'name' field 
+is intended to be a user-friendly ascii description of the device. I'm 
+considering changing the name to 'descr' to end all confusion. 
+
+I intend to create a field to represent the unique identifier (maybe 
+'uuid'). Again, if you guys need something like that, go ahead and put it 
+in the SCSI-specific structure, and let it pushed upwards when the time 
+comes. 
+
+	-pat
+
