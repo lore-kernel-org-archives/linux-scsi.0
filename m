@@ -1,59 +1,53 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH] scsi SEND DIAGNOSTIC timeout 2.4.21-pre6
-Date: Fri, 04 Apr 2003 22:31:13 +1000
+Subject: Re: lsscsi-0.09
+Date: Fri, 04 Apr 2003 22:55:45 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E8D7B11.1070708@torque.net>
+Message-ID: <3E8D80D1.9070902@torque.net>
+References: <3E8D1D76.7050203@torque.net> <20030404124617.A24518@infradead.org>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080206090309040908010206"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:11282 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263690AbTDDMTJ (for <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Apr 2003 07:19:09 -0500
-List-Id: linux-scsi@vger.kernel.org
-To: marcelo@hera.kernel.org
-Cc: alan@lxorguk.ukuu.org.uk, linux-scsi@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------080206090309040908010206
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:15891 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263766AbTDDMnI (for <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Apr 2003 07:43:08 -0500
+List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-Marcelo,
-While working with smartmontools I found that an
-extended foreground self-test failed because the
-SCSI command that sends it: SEND DIAGNOSTIC, has a
-normal timeout value of 10 seconds. With my 18 GB
-disk this test takes 12 minutes. Larger disks can
-take up to an hour.
+Christoph Hellwig wrote:
+> On Fri, Apr 04, 2003 at 03:51:50PM +1000, Douglas Gilbert wrote:
+> 
+>>lsscsi is a utility the uses sysfs in kernels >= lk 2.5.50
+>>to list information about all SCSI devices (including devices
+>>that use the SCSI stack such as USB mass storage devices)
+>>and SCSI hosts. Both a compact format (default), one line
+>>per device, and a "classic" format (like the output of
+>>'cat /proc/scsi/scsi') are supported for devices.
+> 
+> 
+> That reminds me that I wanted to get rid of /proc/scsi/scsi eventually.
+> Does someone have an idea for a replacement of it's write routine?
+> Some of them don't fit nicely into the sysfs model unfortunatley.
 
-This patch makes the SCSI_IOCTL_SEND_COMMAND ioctl's
-timeout for SEND DIAGNOSTIC the same as it is for
-FORMAT (2 hours).
+Christoph,
+The scsi mid level is just another driver (singleton device?)
+so it can have driver parameters in sysfs. If sysfs is going to
+displace writes to /proc/scsi/scsi then some of its rules may
+have to bend (if they haven't already been). The "one parameter
+one file node" rule would make for an ugly replacement of:
+   # echo "scsi add-single-device 1 2 3 4" > /proc/scsi/scsi
 
-The scsi_ioctl.c file is the same in lk 2.4.20 and
-lk 2.4.21-pre6 .
+Actually, scsi_debug's sysfs interface is not far away from
+doing something like that (adding hosts rather than individual
+devices) but I'm not sure the syntax is very clear:
+   # echo 3 > num_tgts
+   # echo 64 > max_luns
+   # echo 2 > add_host    # add 2 hosts, each with 3 targets,
+                          #  each with 64 luns
+   # echo -1 > add_hosts  # remove highest numbered host
 
 Doug Gilbert
 
---------------080206090309040908010206
-Content-Type: text/plain;
- name="scsi_ioctl_2420sd.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="scsi_ioctl_2420sd.diff"
-
---- linux/drivers/scsi/scsi_ioctl.c	2002-08-09 01:31:46.000000000 +1000
-+++ linux/drivers/scsi/scsi_ioctl.c2420sd	2003-04-04 21:58:44.000000000 +1000
-@@ -282,6 +282,7 @@
- 		cmd[1] = (cmd[1] & 0x1f) | (dev->lun << 5);
- 
- 	switch (opcode) {
-+	case SEND_DIAGNOSTIC:
- 	case FORMAT_UNIT:
- 		timeout = FORMAT_UNIT_TIMEOUT;
- 		retries = 1;
-
---------------080206090309040908010206--
 
