@@ -1,44 +1,60 @@
-From: Chris Friesen <chris_friesen@sympatico.ca>
-Subject: unloading scsi debug module gives errors in logs
-Date: Thu, 09 Oct 2003 21:35:46 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <3F860CF2.8010105@sympatico.ca>
+From: "Steve Weiss" <steve.weiss@virgin.net>
+Subject: Do you sell in Germany?
+Date: Fri, 10 Oct 2003 05:26:36 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <S262436AbTJJEXr/20031010042347Z+11431@vger.kernel.org>
+Reply-To: "Steve Weiss" <steve.weiss@virgin.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, dgilbert@interlog.com
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from m209-mp1.cvx1-a.ren.dial.ntli.net ([62.252.132.209]:46600 "HELO
+	192.168.0.238") by vger.kernel.org with SMTP id S262436AbTJJEXr
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Oct 2003 00:23:47 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+Inexpensive attractive offices near Frankfurt, Germany
 
-Seen on 2.6.0-test6:
+Do you need an office in Europe?
 
-Oct  9 21:22:25 doug kernel: SCSI device sda: 16384 512-byte hdwr 
-sectors (8 MB)
-Oct  9 21:22:25 doug kernel: SCSI device sda: drive cache: write back
-Oct  9 21:22:25 doug kernel:  sda: unknown partition table
-Oct  9 21:22:25 doug kernel: Attached scsi disk sda at scsi1, channel 0, 
-id 0, lun 0
-Oct  9 21:22:53 doug kernel: FAT: bogus number of reserved sectors
-Oct  9 21:22:53 doug kernel: VFS: Can't find a valid FAT filesystem on 
-dev sda.
-Oct  9 21:24:42 doug kernel: Device 'pseudo_0' does not have a release() 
-function, it is broken and must be fixed.
-Oct  9 21:24:42 doug kernel: Badness in device_release at 
-drivers/base/core.c:85
-Oct  9 21:24:42 doug kernel: Call Trace:
-Oct  9 21:24:42 doug kernel:  [device_release+68/80] 
-device_release+0x44/0x50
-Oct  9 21:24:42 doug kernel:  [kobject_cleanup+67/96] 
-kobject_cleanup+0x43/0x60
-Oct  9 21:24:42 doug kernel:  [kobject_put+20/32] kobject_put+0x14/0x20
-Oct  9 21:24:42 doug kernel:  [put_device+13/32] put_device+0xd/0x20
-Oct  9 21:24:42 doug kernel:  [device_unregister+17/32] 
-device_unregister+0x11/0x20
-Oct  9 21:24:42 doug kernel:  [__crc_generic_file_llseek+338540/1261671] 
-scsi_debug_exit+0x3b/0x4b [scsi_debug]
-Oct  9 21:24:42 doug kernel:  [sys_delete_module+301/336] 
-sys_delete_module+0x12d/0x150
-Oct  9 21:24:42 doug kernel:  [sys_munmap+55/96] sys_munmap+0x37/0x60
-Oct  9 21:24:42 doug kernel:  [syscall_call+7/11] syscall_call+0x7/0xb
+It couldn't be easier:
+
+Everything you need is ready for you right now. You can choose from bar=
+e
+office space to fully-equipped with everything.=20
+
+Short or long term rental.
+
+If you want a base to market to Europe, this is an ideal location. Cent=
+ral
+for Germany and France, Netherlands, Belgium, Switzerland, Czechoslovak=
+ia
+Austria, within easy reach. A massive market for you.=20
+
+Broadband, networked, desks, computers, furniture, English-speaking
+assistants, marketing help, translation, free parking, apartment
+accommodation also available.
+
+Space for 1 to 40 people, 200 to 2000 sq ft
+
+25 mins from Frankfurt airport. =BD mile to main North South Autobahn a=
+nd
+high-speed train service.=20
+
+This office space represents exceptionally good value, newly-built, ful=
+ly
+equipped and inexpensive.
+
+Please give me a call for further info.
+
+Steve Weiss
+
+Tel:  +44 (0)1481 720 294
+=46ax: +44 (0)1481 720 317
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
