@@ -1,29 +1,30 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [RFC][RFT] scsi_scan.c cleanup/rewrite
-Date: Thu, 20 Jun 2002 14:17:17 -0400
+Subject: Re: [HELP] qla2200 driver over 4G memory
+Date: Thu, 20 Jun 2002 14:18:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020620141717.A9181@redhat.com>
-References: <OF8DE8DA9F.FE61DF6F-ONC1256BDE.002EB207@de.ibm.com>
+Message-ID: <20020620141813.B9181@redhat.com>
+References: <20020619190228S.miyoshi@hpc.bs1.fc.nec.co.jp> <20020619095747.M20569@hpti.com> <20020620192038J.miyoshi@hpc.bs1.fc.nec.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <OF8DE8DA9F.FE61DF6F-ONC1256BDE.002EB207@de.ibm.com>; from MPESCHKE@de.ibm.com on Thu, Jun 20, 2002 at 10:49:55AM +0200
+In-Reply-To: <20020620192038J.miyoshi@hpc.bs1.fc.nec.co.jp>; from miyoshi@hpc.bs1.fc.nec.co.jp on Thu, Jun 20, 2002 at 07:20:38PM +0900
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Peschke3 <MPESCHKE@de.ibm.com>
-Cc: patman@beaverton.ibm.com, linux-scsi@vger.kernel.org
+To: miyoshi@hpc.bs1.fc.nec.co.jp
+Cc: ctierney@hpti.com, linux-scsi@vger.kernel.org
 
-On Thu, Jun 20, 2002 at 10:49:55AM +0200, Martin Peschke3 wrote:
-> A suggestion:
-> In my opinion, such a patch would avail from a cleanup of the SCSI stack
-> data structures which should be done in the first place. I would like to
-> see
-> all those lists rethought and rewritten using list_heads and introducing
-> some locks which are required to protect changes to these lists.
+On Thu, Jun 20, 2002 at 07:20:38PM +0900, miyoshi@hpc.bs1.fc.nec.co.jp wrote:
+> 
+> Hi, 
+> 
+> Thanks for your reply.
+> 
+> I enabled "4GB > addressing" on HBA BIOS but it still destroys
+> wrap-around memory area...
 
-That's coming.  At least, I'm working on it right now so it's coming from 
-me fairly soon, if not from someone else sooner.
-
+Try splitting the sg segment up into a segment that goes up to the 
+boundary and a different segment that starts after the boundary and see if 
+that solves the problem.
 
 -- 
   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
