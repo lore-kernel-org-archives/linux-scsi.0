@@ -1,36 +1,65 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] Re: inquiry in scsi_scan.c
-Date: Mon, 6 Jan 2003 10:03:08 -0500 (EST)
+From: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Subject: RE: Seagate Cheetah: Firmware, Bugs, Compatibility?
+Date: Mon, 6 Jan 2003 07:51:55 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33L2.0301060956210.740-100000@ida.rowland.org>
-References: <UTC200301051307.h05D7da08203.aeb@smtp.cwi.nl>
+Message-ID: <A5974D8E5F98D511BB910002A50A66470580D4F1@hdsmsx103.hd.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <UTC200301051307.h05D7da08203.aeb@smtp.cwi.nl>
+Received: from petasus.fm.intel.com (petasus.fm.intel.com [10.1.192.37])
+	by hermes.fm.intel.com (8.11.6/8.11.6/d: outer.mc,v 1.51 2002/09/23 20:43:23 dmccart Exp $) with ESMTP id h06Fksd22513
+	for <linux-scsi@vger.kernel.org>; Mon, 6 Jan 2003 15:46:54 GMT
+Received: from fmsmsxvs041.fm.intel.com (fmsmsxvs041.fm.intel.com [132.233.42.126])
+	by petasus.fm.intel.com (8.11.6/8.11.6/d: inner.mc,v 1.27 2002/10/16 23:46:59 dmccart Exp $) with SMTP id h06FiaE23831
+	for <linux-scsi@vger.kernel.org>; Mon, 6 Jan 2003 15:44:36 GMT
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl
-Cc: mdharm-kernel@one-eyed-alien.net, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
+To: 'Dan Jones' <dmjones@ix.netcom.com>, Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: Linux-SCSI <linux-scsi@vger.kernel.org>
 
-On Sun, 5 Jan 2003 Andries.Brouwer@cwi.nl wrote:
+Mikael,
 
-> The SCSI code has no means of knowing the actual length transferred,
-> so has no choice but to believe the length byte in the reply.
-> But the USB code does the transferring itself, and knows precisely
-> how many bytes were transferred. If 36 bytes were transferred and
-> the additional length byte is 0, indicating a length of 5, then the
-> USB code can fix the response and change the additional length byte
-> to 31, indicating a length of 36. That way the SCSI code knows that
-> not 5 but 36 bytes are valid, and it gets actual vendor and model strings.
+For your own system, you know when it is really idle, so you can do it when
+you wish.  
 
-I'm not familiar with the details of the SCSI code you are referring to,
-but usb-storage does make available the actual transfer length.  All the
-transport routine paths set the resid field of the Scsi_Cmnd structure
-properly.  With this information, there should be no difficulty in
-determining how many bytes were transferred.  (Maybe the setting doesn't
-percolate up to the particular code you mention -- and maybe other host
-adapter drivers don't set resid correctly so you cannot rely on its value.
-I don't know what other problems might crop up.)
+The recommended way to do this on a production system (assuming some kind of
+RAID) is to take one disk out of the raid, update its firmware, add it back
+to the raid, then do the same to the next one.  This can all be scripted,
+and even if it takes a bit longer, it's worth it to most HA customers to
+keep the system running throughout the update.
 
-Alan Stern
+Each OS is different in handling live disk firmware updates.  Some OSs
+handle the 'not ready' sense condition while the download is happening
+robustly enough so that it can be done almost at will.  Most disk vendors
+only support DOS tools, because that's the easiest way.  
 
+Andy
+
+-----Original Message-----
+From: Dan Jones [mailto:dmjones@ix.netcom.com] 
+Sent: Saturday, January 04, 2003 5:24 PM
+To: Mikael Abrahamsson
+Cc: Linux-SCSI
+Subject: Re: Seagate Cheetah: Firmware, Bugs, Compatibility?
+
+
+Mikael Abrahamsson wrote:
+> 
+> On Fri, 3 Jan 2003, Cress, Andrew R wrote:
+> 
+> It's not clear from the docs if it's a good idea to flash the drives when
+> the system is up and running normally, any comments on that?
+> 
+
+Yes, never flash a drive that is not idle. A real-time update to running
+code 
+is not trivial and drive vendors don't support it.
+
+-- 
+Dan Jones           "'Tis hard to say, if greater want of skill
+                     Appear in writing or in judging ill;
+                     But of the two, less dangerous is th' offence 
+                     To tire our patience, than mislead our sense." Pope
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
