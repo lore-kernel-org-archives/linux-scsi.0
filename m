@@ -1,76 +1,45 @@
-From: "Miller, Mike (OS Dev)" <mike.miller@hp.com>
-Subject: RE: patch so cciss stats are collected in /proc/stat
-Date: Wed, 29 Sep 2004 14:26:08 -0500
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: BUG: CD driver sends command during host removal
+Date: Wed, 29 Sep 2004 12:27:56 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <D4CFB69C345C394284E4B78B876C1CF107DBFE1A@cceexc23.americas.cpqcorp.net>
+Message-ID: <20040929192756.GA6179@us.ibm.com>
+References: <415AF8A6.2080705@adaptec.com> <Pine.LNX.4.44L0.0409291452120.1700-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ztxmail03.ztx.compaq.com ([161.114.1.207]:60422 "EHLO
-	ztxmail03.ztx.compaq.com") by vger.kernel.org with ESMTP
-	id S267387AbUI2T0J convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2004 15:26:09 -0400
-Content-class: urn:content-classes:message
+Received: from e1.ny.us.ibm.com ([32.97.182.101]:27807 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S268884AbUI2T2T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Sep 2004 15:28:19 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0409291452120.1700-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Neil Horman <nhorman@redhat.com>, mikem@beardog.cca.cpqcorp.net
-Cc: marcelo.tosatti@cyclades.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Baker, Brian (ISS - Houston)" <brian.b@hp.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, SCSI development list <linux-scsi@vger.kernel.org>, Mohammed Sameer <uniball@gmx.net>, USB users list <linux-usb-users@lists.sourceforge.net>
 
-> mike.miller@hp.com wrote:
-> > Currently cciss statistics are not collected in /proc/stat. 
-> This patch
-> > bumps DK_MAX_MAJOR to 111 to fix that. This has been a 
-> common complaint
-> > by customers wishing to gather info about cciss devices.
-> > Please consider this for inclusion. Applies to 2.4.28-pre3.
-> > 
-> > Thanks,
-> > mikem
-> > 
-> --------------------------------------------------------------
-> -----------------
-> > 
-> > diff -burNp lx2428-pre1.orig/include/linux/kernel_stat.h 
-> lx2428-pre1/include/linux/kernel_stat.h
-> > --- lx2428-pre1.orig/include/linux/kernel_stat.h	
-> 2004-08-23 15:41:43.640300000 -0500
-> > +++ lx2428-pre1/include/linux/kernel_stat.h	2004-08-23 
-> 15:43:07.097613064 -0500
-> > @@ -12,7 +12,7 @@
-> >   * used by rstatd/perfmeter
-> >   */
-> >  
-> > -#define DK_MAX_MAJOR 16
-> > +#define DK_MAX_MAJOR 111
-> >  #define DK_MAX_DISK 16
-> >  
-> >  struct kernel_stat {
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe 
-> linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> The answer to this is to use the latest sysstat tools.  the latest 
-> version of iostat, sar, etc draw information out of /proc/partitions 
-> rather than out of /proc/stat.  Or are you using some other 
-> home rolled 
-> tool in this case?
+Alan Stern [stern@rowland.harvard.edu] wrote:
+> On 29 Sep 2004, James Bottomley wrote:
 > 
-> Neil
-
-It's customers that are doing this. I think some of them are using their own tools. Others are probably using whatever comes on their distro.
-
-mikem
-
+> > On Wed, 2004-09-29 at 14:02, Luben Tuikov wrote:
+> > > > According to Documentation/scsi/scsi_mid_low_api.txt, the only possible
+> > > > error returns are SCSI_MLQUEUE_DEVICE_BUSY and SCSI_MLQUEUE_HOST_BUSY.
+> > > > Neither is appropriate; should the second one be returned?
+> > >
+> > > I believe internally SCSI Core returns DID_ERROR.
+> >
+> > For a device that no-longer exists, DID_NO_CONNECT is probably the most
+> > appropriately descriptive.
 > 
-> -- 
-> /***************************************************
->   *Neil Horman
->   *Software Engineer
->   *Red Hat, Inc.
->   *nhorman@redhat.com
->   *gpg keyid: 1024D / 0x92A74FA1
->   *http://pgp.mit.edu
->   ***************************************************/
+> Regardless of how descriptive the value is, the code in
+> scsi_dispatch_cmd treats anything other than SCSI_MLQUEUE_DEVICE_BUSY
+> as SCSI_MLQUEUE_HOST_BUSY.  Will this matter?
 > 
+
+You would not want to return non zero status from your queucommand, but
+set the result of the command to DID_NO_CONNECT and call done.
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
