@@ -1,54 +1,51 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Autosense requirement
-Date: Mon, 29 Jul 2002 15:55:18 -0400
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [usb-storage] Re: 2 PATCHES: fix request_tranferlength
+Date: Mon, 29 Jul 2002 23:50:45 +0300 (EEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020729155518.B20905@redhat.com>
-References: <3D453CE8.5A15FCD6@splentec.com> <3D457FF3.C7A02C57@torque.net>
+Message-ID: <Pine.LNX.4.44.0207292313280.1307-100000@kai.makisara.local>
+References: <20020729155059.A20905@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3D457FF3.C7A02C57@torque.net>; from dougg@torque.net on Mon, Jul 29, 2002 at 01:48:35PM -0400
+In-Reply-To: <20020729155059.A20905@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Luben Tuikov <luben@splentec.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Doug Ledford <dledford@redhat.com>
+Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net
 
-On Mon, Jul 29, 2002 at 01:48:35PM -0400, Douglas Gilbert wrote:
-> Hence in the development lk 2.5 series there are many stranded
-> drivers, including ide-scsi, some of which have been converted "on
-> the fly". His is an incomplete list of issues to be addressed
-> in lower level (HBA) driver conversions:
->   - "eh" interface [mandatory]
->   - io_request_lock displaced by host_lock [mandatory]
->   - PCI memory/DMA interface
->   - driverfs aware
->   - autosense for high performance drivers (perhaps all)
-> 
-> As you point out autosense support (at the device level)
-> is now mandatory in recent scsi drafts/standards. For
-> simplicity of queueing logic, the sense buffer should not
-> be left for the mid level to fetch (with a REQUEST SENSE).
+On Mon, 29 Jul 2002, Doug Ledford wrote:
 
-It will be mandatory for the LLDD to do autosense.  All remnants of code 
-to perform a follow up request sense operation *will* dissappear from the 
-mid layer.  OTOH, the sense command and sense buffer will be pre-set for 
-each device so at least the LLDD won't have to build their own command any 
-longer, they can just change the command pointer from the original command 
-to the sense command and the data buffer to the sense buffer and reissue 
-the request.
+> On Mon, Jul 29, 2002 at 12:01:24AM +0300, Kai Makisara wrote:
+...
+> > My interpretation is that bufflen in the call should be 255 in this case.
+> > Using 512 is a bug. Is it useful for the lower levels to know how much
+> > excess space the caller has reserved? If it is, I take back my suggestion.
+>
+> No, that just confuses the issue needlessly and down that road lies future
+> bugs.
+>
+It simplifies the issue. However, note that we are looking at the problem
+from different sides of the scsi_do_req() interface. I am arguing that for
+the _users_ of scsi_do_req() the current situation is confusing and adding
+a new member to Scsi_Request only makes it worse. You are looking at the
+problem as consumer of Scsi_Cmnds.
 
-> I have attempted the conversion on several HBA drivers
-> (of which scsi_debug is the only one I maintain). As Ben
-> LaHaise has pointed out, I have skipped addressing the
-> "PCI memory/DMA interface" so far.
+We are talking about 2.5. Perhaps the scsi_do_req() interface should be
+cleaned. If you don't want to use function arguments, everything
+necessary can be stuffed directly into Scsi_Request and the parameters
+buff, bufflen, cmnd, done, timeout, retries can be removed.
 
-Feel lucky.  It's currently pissing me off and I'm thinking of changing 
-it.
+...
+> > I think we both agree that the information in dxfer_len must be passed.
+> > The difference is that you suggest adding a new field to Scsi_Request
+> > whereas I suggest clarifying the meaning of the existing bufflen
+> > parameter.
+>
+> There really isn't a need to clarify the meaning of the request_bufflen
+                                                          ^^^^^^^^^^^^^^^
+I agree, but I was talking about the bufflen parameter of the
+scsi_do_req() function taking Scsi_Request. request_bufflen is a field in
+struct Scsi_Cmnd.
+
+	Kai
 
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
