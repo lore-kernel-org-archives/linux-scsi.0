@@ -1,33 +1,35 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: scsi_scan_target and SCSI_2
-Date: 27 Nov 2003 09:57:20 -0600
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: sg utils sg_io -i 0x24 -y "12 00:00:00 24 00"
+Date: Thu, 27 Nov 2003 10:15:28 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1069948641.1913.41.camel@mulgrave>
-References: <200311252037.34015.krmurthy@cisco.com>
-	<200311271849.15241.krmurthy@cisco.com> <1069947459.1837.28.camel@mulgrave>
-	 <200311272115.28094.krmurthy@cisco.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+Message-ID: <4C806550-20FD-11D8-B3BD-0050E416C45B@ieee.org>
+Mime-Version: 1.0 (Apple Message framework v552)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:54532 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264546AbTK0P5a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Nov 2003 10:57:30 -0500
-In-Reply-To: <200311272115.28094.krmurthy@cisco.com>
+Received: from rly-ip04.mx.aol.com ([64.12.138.8]:7906 "EHLO
+	rly-ip04.mx.aol.com") by vger.kernel.org with ESMTP id S264560AbTK0RS6
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Nov 2003 12:18:58 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Krishna Murthy <krmurthy@cisco.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, davmyers@cisco.com
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2003-11-27 at 09:45, Krishna Murthy wrote:
-> 	What I intended to say was in case we get 3 as the peripheral qualifier
-> in response to inquiry on lun 0, shouldn't we use the scsi level as returned 
-> in inquiry response instead of using a a default scsi level of SCSI_2.
+ > ftp://members.aol.com/plscsi/linux/plscsi.tar.gz
+ > http://members.aol.com/plscsi/linux/plscsi.tar.gz
+ > ...
+ > Neither, whoops, yet give us ...
+ > - O_RDWR
+ > + O_RDONLY|O_NONBLOCK
+ > ... SG_IO ... ioctl ...
 
-It's open to debate whether a device reporting PQ 3 is required to fill
-in all the rest of the inquiry data correctly.  The code takes the most
-conservative view.
+Fixed.
 
-James
+However, I dreamed up this patch only by guessing from hints found on 
+the web, not from reading a document anywhere.  At first glance 
+O_RDONLY | O_NONBLOCK works better than O_RDWR.  No disk required, no 
+disk spin up implied, even when the name is /dev/hd$v or /dev/scd$v$n 
+rather than /dev/sg$n.   But as yet I'm none too sure what this change 
+actually means.
 
+Pat LaVarre
 
