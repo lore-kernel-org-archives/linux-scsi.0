@@ -1,39 +1,30 @@
-From: Tom Oehser <tom@toms.net>
-Subject: megaraid doesn't detect when bios jumper is off...
-Date: Wed, 21 Jul 2004 22:36:04 -0400 (EDT)
+From: Nathan Bryant <nbryant@optonline.net>
+Subject: aic7xxx question
+Date: Thu, 22 Jul 2004 00:03:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0407212232110.548@jupiter.toms.net>
+Message-ID: <40FF3C86.8000604@optonline.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from Jupiter.Toms.NET ([64.32.223.162]:52104 "EHLO jupiter.toms.net")
-	by vger.kernel.org with ESMTP id S266678AbUGVCgG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Jul 2004 22:36:06 -0400
-Received: from Jupiter.Toms.NET (Jupiter.Toms.NET [64.32.223.162])
-	by jupiter.toms.net (8.12.10/8.12.10) with ESMTP id i6M2a4p1000958
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Jul 2004 22:36:04 -0400
+Received: from mta6.srv.hcvlny.cv.net ([167.206.5.72]:8120 "EHLO
+	mta6.srv.hcvlny.cv.net") by vger.kernel.org with ESMTP
+	id S266293AbUGVEDT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Jul 2004 00:03:19 -0400
+Received: from optonline.net (ool-43564880.dyn.optonline.net [67.86.72.128])
+ by mta6.srv.hcvlny.cv.net
+ (iPlanet Messaging Server 5.2 HotFix 1.25 (built Mar  3 2004))
+ with ESMTP id <0I18004JAJ9UJV@mta6.srv.hcvlny.cv.net> for
+ linux-scsi@vger.kernel.org; Thu, 22 Jul 2004 00:03:31 -0400 (EDT)
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, Luben Tuikov <luben_tuikov@adaptec.com>
 
 
-Hi, I have a MegaRAID SATA 150-6, which is in the same box as a
-Mylex AcceleRaid-250 which is the boot drive.  The motherboard
-doesn't give a way to control boot priority between scsi cards,
-so I set the bios-disable jumper on the MegaRAID card, so that
-it will boot the Mylex, which works fine...
+I have a quick aic7xxx question.. where is the routine that initializes 
+the SCB's? I see where they are being allocated in kernel memory, but I 
+need to know where/how we tell the controller what their DMA address and 
+any other status bits are... that's not obvious
 
-BUT, the MegaRAID driver isn't detecting the MegaRAID when its
-boot bios is disabled!  I can't find a way to get the driver to
-find it and enable it...  And the BIOS setup of the MegaRAID is
-not seeming to have a way to tell it not to try to boot...
-
-So, if I enable the bios jumper on the MegaRAID, it tries to boot
-from it (which fails miserably, as it isn't a boot drive), and if
-I disable the bios jumper on the MegaRAID, it doesn't try to boot
-it, but then the Linux driver doesn't enable it, either!
-
-Help?
-
--Tom
+(Suspend/resume progress: I've fixed the storm of bus reset interrupts, 
+but now I am getting a storm of NO_MATCH sequencer interrupts.)
 
