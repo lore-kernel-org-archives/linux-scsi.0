@@ -1,55 +1,59 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: RE: Kernel 2.6.x hangs with Symbios Logic 53c1010 Ultra3 SCSI
-	Adapter
-Date: Mon, 08 Nov 2004 10:38:33 -0500
-Message-ID: <1099928314.10944.81.camel@compaq-rhel4.xsintricity.com>
-References: <04Nov8.094419est.332239@cyborg.cybernetics.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: Handling erroneous READ CAPACITY response in sd.c
+Date: Mon, 08 Nov 2004 13:55:19 -0500
+Message-ID: <418FC117.1040207@adaptec.com>
+References: <Pine.LNX.4.44L0.0411051059540.834-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:14724 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S261905AbUKHPii (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2004 10:38:38 -0500
-In-Reply-To: <04Nov8.094419est.332239@cyborg.cybernetics.com>
+Received: from magic.adaptec.com ([216.52.22.17]:163 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261190AbUKHSzg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2004 13:55:36 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0411051059540.834-100000@ida.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: tonyb@cybernetics.com
-Cc: 'Thomas Babut' <thomas@babut.net>, linux-scsi mailing list <linux-scsi@vger.kernel.org>, 'Matthew Wilcox' <matthew@wil.cx>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-On Mon, 2004-11-08 at 09:44 -0500, Tony Battersby wrote:
-> > Finally, there are devices out there that do target initiated speed
-> > negotiations.  If we get an incoming PPR message from a device
+Alan Stern wrote:
+> Everything we've tried for detecting too-high-by-one READ CAPACITY
+> responses has failed on one device or another.  I can't think of any way
+> to detect the error at runtime, short of actually trying to read the last
+> sector.  And that is not a good tactic because it will quite likely leave
+> the device is some non-resettable hung-up state.  Even the heuristic that
+> USB devices will always have an even number of sectors turns out to be
+> wrong for the Apple iPod.
 > 
-> The spec says:
+> There doesn't seem to be anything left but blacklisting.  This could be
+> done at the SCSI level or the usb-storage level.  It turns out there's
+> actually an advantage to putting the entries in the usb-storage list:  In
+> many cases a vendor will use a USB interface chip from another company,
+> changing the vendor name stored in the INQUIRY data but leaving the USB
+> vendor ID alone (so it reflects the chip designer, not the drive seller).  
+> This means that a single USB blacklist could cover a range of devices that
+> would require multiple SCSI blacklist entries.  I've actually seen
+> something like this happen in a different context (the Panasonic DMC-LCx
+> cameras with internal interfaces by Matsushita have different Product
+> strings in their INQUIRY data but the same Product ID in their USB
+> descriptors).
 > 
-> "PPR may be originated by SCSI initiator ports but shall not be
-> originated by SCSI target ports."
+> On the other hand, the adjustment of the READ CAPACITY value should still 
+> be moved to sd.c from usb-storage.  This can be implemented easily enough 
+> by adding a bitflag to the scsi_device structure; the flag could be set 
+> either by a SCSI blist entry or by usb-storage in its slave_configure 
+> routine.  The flag would tell sd_read_capacity to decrement the number of 
+> sectors it receives from the device.
 
-Yeah, what the spec says and what devices do are not always one and the
-same thing.
+This sounds good.  Just to clarify: if we blacklist in usb-storage, then
+I think there's no need to also blacklist in SCSI Core as well.  Let sd
+use the flag to decrement the Returned LBA (effectively assign Returned
+LBA to capacity rather than increment it and then assign it.)
 
-> "WDTR and SDTR may be originated by either SCSI target ports or SCSI
-> initiator ports."
-> 
-> Unless someone has seen a counter-example, the case of target-originated
-> PPR negotiations can probably be ignored.
+	Luben
 
-DEC SCSI-2 hard disks that were installed with modified firmware.
-Specifically, the Vaxen class computers they were hooked up to A) didn't
-expect and handle SCSI-3 devices properly, B) didn't handle the DT bit
-in the INQUIRY data properly, C) but DEC still wanted the devices to
-talk 160MByte/s transfer rates, so the firmware was modified to send
-preemptive PPR messages.  Problem solved something like 4 years ago, but
-it existed at the time and physical devices may still exist in the
-field.  In any case, yeah, the spec says otherwise, but I wouldn't rely
-on that since getting this wrong leads to an infinite speed negotiation
-loop.  Infinite loops suck...better safe than sorry on this issue IMO.
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc.
-         1801 Varsity Dr.
-         Raleigh, NC 27606
+
+
 
 
