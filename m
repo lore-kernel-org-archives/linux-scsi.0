@@ -1,30 +1,54 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Help - a question on scsi_debug and mid-layer
-Date: 21 Jun 2004 14:12:40 -0500
+From: "Dupuis, Chad" <chad.dupuis@hp.com>
+Subject: patch for scsi_devinfo.c
+Date: Mon, 21 Jun 2004 16:07:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1087845161.2077.75.camel@mulgrave>
-References: <519672568F040C41B6FAC21ADF51B18FF03D@mailnode1.commstor.crossroads.com>
+Message-ID: <A8B003DDA3332A479C0ECCA641F47E6503BE69F9@tayexc13.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:59565 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S266419AbUFUTMr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Jun 2004 15:12:47 -0400
-In-Reply-To: <519672568F040C41B6FAC21ADF51B18FF03D@mailnode1.commstor.crossroads.com>
+Received: from zmamail04.zma.compaq.com ([161.114.64.104]:47374 "EHLO
+	zmamail04.zma.compaq.com") by vger.kernel.org with ESMTP
+	id S266444AbUFUUHG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jun 2004 16:07:06 -0400
+Received: from tayexg12.americas.cpqcorp.net (tayexg12.americas.cpqcorp.net [16.103.130.103])
+	by zmamail04.zma.compaq.com (Postfix) with ESMTP id 74409623A
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 16:07:06 -0400 (EDT)
+Content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Xing <lxing@Crossroads.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Douglas Gilbert <dougg@torque.net>
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2004-06-21 at 13:53, Lee Xing wrote:
-> I'm playing with scsi_debug (a low-level driver) of lk2.4 and notice that scsi_debug_queuecommand(...) defined in scsi_debug returns sometimes before the SCSI command completes (i.e. before done(cmd) is invoked), and sometimes after done(cmd) is invoked.  Can SCSI mid-layer really handle both cases without any problems, and why?
-> 
-> I assume that before scsi_debug_queuecommand() returns the control to mid-layer, mid-layer has no way to know whether that SCSI command has been successfully queued in low-level driver, therefore scsi_debug should not invoke done(cmd) before completing scsi_debug_queuecommand(...), correct?
+The entries for HP and Compaq HSV110 are incorrect.  The HSV110
+controllers report themselves as SCSI 2 devices and therefore need the
+BLIST_LARGELUN flag to see LUNs passed 7.
 
-I think if you look in Documentation/scsi/scsi_mid_low_api.txt (on 2.6)
-you'll find it explains all of this under the entry for queuecommand.
-
-James
-
-
+----------------------------------------
+--- scsi_devinfo.c      2004-06-21 16:06:14.000000000 -0400
++++ scsi_devinfo.c.new  2004-06-21 16:01:43.000000000 -0400
+@@ -126,7 +126,7 @@ static struct {
+        {"COMPAQ", "CR3500", NULL, BLIST_FORCELUN},
+        {"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN |
+BLIST_NOSTARTONADD},
+        {"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN |
+BLIST_NOSTARTONADD},
+-       {"COMPAQ", "HSV110", NULL, BLIST_SPARSELUN |
+BLIST_NOSTARTONADD},
++       {"COMPAQ", "HSV110", NULL, BLIST_SPARSELUN | BLIST_LARGELUN |
+BLIST_NOSTARTONADD},
+        {"DDN", "SAN DataDirector", "*", BLIST_SPARSELUN},
+        {"DEC", "HSG80", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+        {"DELL", "PV660F", NULL, BLIST_SPARSELUN},
+@@ -147,7 +147,7 @@ static struct {
+        {"HP", "A6189A", NULL, BLIST_SPARSELUN | BLIST_LARGELUN},
+/* HP VA7400 */
+        {"HP", "OPEN-", "*", BLIST_SPARSELUN | BLIST_LARGELUN}, /* HP XP
+Arrays */
+        {"HP", "NetRAID-4M", NULL, BLIST_FORCELUN},
+-       {"HP", "HSV100", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
++       {"HP", "HSV100", NULL, BLIST_SPARSELUN | BLIST_LARGELUN |
+BLIST_NOSTARTONADD},
+        {"HP", "C1557A", NULL, BLIST_FORCELUN},
+        {"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
+        {"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN |
+BLIST_LARGELUN},
