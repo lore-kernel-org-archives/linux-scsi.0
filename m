@@ -1,40 +1,78 @@
 From: Andi Kleen <ak@suse.de>
-Subject: Re: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple  map/unmaps
-Date: 05 Jan 2004 22:02:19 +0100
+Subject: Re: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple map/unmaps
+Date: 05 Jan 2004 21:58:24 +0100
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <p73brpi1544.fsf@verdi.suse.de>
-References: <200401051929.i05JTsM0000014248@mudpuddle.cs.wustl.edu.suse.lists.linux.kernel>
-	<20040105112800.7a9f240b.davem@redhat.com.suse.lists.linux.kernel>
+Message-ID: <p73fzeu15an.fsf@verdi.suse.de>
+References: <2938942704.1073325455@aslan.btc.adaptec.com.suse.lists.linux.kernel>
+	<m3brpi41q0.fsf@averell.firstfloor.org.suse.lists.linux.kernel>
+	<2997092704.1073333041@aslan.btc.adaptec.com.suse.lists.linux.kernel>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20040105112800.7a9f240b.davem@redhat.com.suse.lists.linux.kernel>
-To: "David S. Miller" <davem@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, gibbs@scsiguy.com
+In-Reply-To: <2997092704.1073333041@aslan.btc.adaptec.com.suse.lists.linux.kernel>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-"David S. Miller" <davem@redhat.com> writes:
+"Justin T. Gibbs" <gibbs@scsiguy.com> writes:
 
-> On Mon, 5 Jan 2004 13:29:54 -0600 (CST)
-> Berkley Shands <berkley@cs.wustl.edu> wrote:
+> > "Justin T. Gibbs" <gibbs@scsiguy.com> writes:
+> > 
+> >> Berkley Shands recently tripped over this problem.  The 2.6.X pci_map_sg
+> >> code for x86_64 modifies the passed in S/G list to compact it for mapping
+> >> by the GART.  This modification is not reversed when pci_unmap_sg is
+> >> called.  In the case of a retried SCSI command, this causes any attempt
+> > 
+> > Qlogic has the same bug.
 > 
-> > 	The pci layer is modifying the sg list, and then placing a zero
-> > in the length field. pci-gart.c at line 453 (2.6.0 sources) checks this length field
-> > after a retry, sees that it is zero, and bughalts.
+> Which bug is this?  Not updating use_sg, or mapping the command the
+> second time when it is retried?  If the latter, I don't think this is an
+> HBA bug.  The HBA driver doesn't know that the command has been mapped in
+> the past, so it will blindly map/unmap it again.
+
+In some cases x86-64 pci_map_sg causes a BUG() when you pass it an already
+mapped list. I've got reports of that happening with Qlogic.
+
+I haven't analyzed it in detail, whether the mid layer or the driver
+or someone else is to blame.
+ 
+> ...
 > 
-> Oh that's a bug.  It is allowed to modify the dma_length field but not
-> the physical length field.
+> >> DMA-API.txt doesn't seem to cover this issue.
+> > 
+> > It does actually, but not very clearly. I've suggested changes of wording
+> > recently to make this more clear, but it hasn't gotten in.
+> 
+> Can you point to the section of the document you believe applies?
 
-It sets length to zero to terminate the list when entries were merged.
-It doesn't have a dma_length.
+It documents that pci_map_sg rewrites the sg list and never guarantees
+that the rewriting is undone on pci_unmap_sg.
 
-It tripping over remapped lists is an side effect, but an useful one 
-because remapping is not supported (merging destroys information that
-cannot be reconstructed). If the bug didn't exist you would get data
-corruption.
+> > You should never remap an already mapped sg list.
+> 
+> But the sg list is no longer mapped.  The HBA driver did call pci_unmap_sg
+> on it.  Did you mean to say, "Never map an sg list again that has been
+> mapped in the past"?
+
+Yep. While it would be in theory possible to reconstruct the list at
+unmap time it would be extremly costly (require lots of uncached
+memory access on x86-64) and is not done.
+
+> 
+> > Either reuse the already mapped list or keep a copy of the original list
+> > around. First is better because the later may have problems with the page
+> > reference counts.
+> 
+> The mid-layer doesn't map the list.  The HBA drivers do.  So you're saying
+> that either the mid-layer or the HBA drivers need to copy the list so it
+> can be restored just in case the command will be retried?
+
+I'm just pointing out the requirements of pci_map_sg.
+
+Either you can keep a flag around somewhere that says if the list is
+mapped or not and skip the remapping and don't do a unmap in
+between. Or copy and make sure the page reference counts are correctly
+maintained.  I'm not very intimate with the SCSI/block code so you
+guys have to decide what is more convenient.
 
 -Andi
-
-P.S.: The x86-64 IOMMU code in 2.6.0 was buggy. Use current -bk*.
-It will avoid the problem because merging is turned off by default, 
-but it should be still fixed.
