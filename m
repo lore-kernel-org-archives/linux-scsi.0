@@ -1,50 +1,59 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] [v2] aha152x cmnd->device oops
-Date: 29 Oct 2003 08:58:28 -0600
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Expose shost->max_sectors via sysfs
+Date: Wed, 29 Oct 2003 10:04:14 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1067439510.1829.4.camel@mulgrave>
-References: <20031027155713.GA28140@lst.de>
-	<20031027160101.76d5291b.rddunlap@osdl.org> <20031028090600.GA7370@lst.de>
-	<20031028124536.3ce82c23.rddunlap@osdl.org> <3F9EF2B4.9030708@us.ibm.com>
-	<20031028162610.6dcfd06e.rddunlap@osdl.org>
-	<20031029122008.GA5903@linux-buechse.de>
+Message-ID: <Pine.LNX.4.44L0.0310290951110.874-100000@ida.rowland.org>
+References: <20031029003101.GB2029@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:63236 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261744AbTJ2O6n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2003 09:58:43 -0500
-In-Reply-To: <20031029122008.GA5903@linux-buechse.de>
+Received: from ida.rowland.org ([192.131.102.52]:3332 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S261648AbTJ2PEO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Oct 2003 10:04:14 -0500
+In-Reply-To: <20031029003101.GB2029@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Juergen E. Fischer" <fischer@linux-buechse.de>
-Cc: "Randy.Dunlap" <rddunlap@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, fischer@norbit.de
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>, Pat LaVarre <p.lavarre@ieee.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>
 
-On Wed, 2003-10-29 at 06:20, Juergen E. Fischer wrote:
-> The first is when a command returns with status CHECK CONDITION and the
-> driver needs to do a REQUEST SENSE to fetch sense data and add that to
-> the Ssci_Cmnd which resulted in the CHECK CONDITION.  The internally
-> queued command fills the sense_buffer of the offending command and then
-> calls its ->scsi_done().
+On Tue, 28 Oct 2003, Mike Anderson wrote:
 
-You don't actually need a new command for this.  The struct scsi_cmnd
-layout is designed to allow you to reuse the current command for
-clearing contingent allegiance conditions (the fields you need to alter
-all have copies stored somewhere which you can restore when you have the
-sense data.  See for example how the 53c700 does this, or aic7xxx_old)
+> Alan Stern [stern@rowland.harvard.edu] wrote:
+> > I would like to add my voice to the complaint copied below.  Is there any
+> > possibility of having shost->max_sectors exposed and settable via a sysfs
+> > attribute file, so that data transfer sizes can be tuned by the user to
+> > match the capabilities of high-performance devices?
+> > 
+> > My reason for asking is that a number of USB Mass Storage devices die when
+> > asked to accept a transfer larger than about 128 KB.  But plenty of others
+> > work just fine with transfers of 1 MB or more.  It would be nice to leave
+> > the default limit set at the low value for interoperability but give
+> > people a mechanism for increasing the transfer size limit when they want.
+> 
+> Well we have a set of host attribute exposed today in scsi_host class.
+> Ideally the value would be tied to the device and not the host as these
+> are per queue values (e.g., max_hw_segments, max_phys_segments,
+> max_sectors). This would suggest that we use the host template attribute
+> pointers for this.
+> 
+> I believe this capability is what lead to the creation of the host
+> template shost_attrs and sdev_attrs (which you have already had
+> experience / cleanup issues with). IIRC while this is our current
+> interface James had indicated that a better infrastructure was need for
+> this type of attribute exposing / overriding.
+> 
+> -andmike
 
-> The second it when the controller needs to be resetted.  Both are purely
-> internal to the driver.
+I have no objection to making max_sectors a device attribute.  The reason 
+I asked about making a host attribute is because the scsi_host structure 
+includes a max_sectors member but the scsi_device structure doesn't, so it 
+seemed to make more sense that way.
 
-As a rule of thumb: as long as the command is never seen outside the
-driver, then using kmalloc is fine.  If it is ever seen outside the
-driver (like in requeueing conditions) then you should use
-scsi_get_command().
+While we could make max_sectors (also max_hw_segments and
+max_phys_segments) a USB host-specific attribute, it is applicable to any
+SCSI device so it ought to be centralized and available for all.  
+However, if the feeling is that it should not be generally exposed, then
+I'll implement it just for USB devices.
 
-James
-
-
-James
-
+Alan Stern
 
