@@ -1,96 +1,92 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: Luben Tuikov <luben@splentec.com>
 Subject: Re: [PATCH] SCSI Core patches
-Date: Tue, 7 Jan 2003 12:33:01 -0800
+Date: Tue, 07 Jan 2003 17:14:19 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030107123301.A16378@beaverton.ibm.com>
-References: <3E1ADC9A.6090800@splentec.com> <20030107102127.B15528@beaverton.ibm.com> <3E1B2934.8060805@splentec.com>
+Message-ID: <3E1B513B.2090409@splentec.com>
+References: <3E1ADC9A.6090800@splentec.com> <20030107102127.B15528@beaverton.ibm.com> <3E1B2934.8060805@splentec.com> <20030107123301.A16378@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3E1B2934.8060805@splentec.com>; from luben@splentec.com on Tue, Jan 07, 2003 at 02:23:32PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben@splentec.com>
+To: Patrick Mansfield <patmans@us.ibm.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Tue, Jan 07, 2003 at 02:23:32PM -0500, Luben Tuikov wrote:
-> Patrick Mansfield wrote:
-> > 
-> > For use with multi-path, it is very useful to have the path in the
-> > scsi_cmnd, and generally to not have the lldd's know about the scsi_device
-> > at all, such that we can pick a path, and send a scsi_cmnd to a lldd.
+Patrick Mansfield wrote:
 > 
-> It shouldn't know about the path either. :-)
-> No one is forcing LLDD to peek into the device struct (but it will
-> have to, see below).
+> Removing channel/target/lun from scsi_cmnd forces the LLDD to use the
+> scsi_device (scmd->device-> channel/id/lun).
 
-Removing channel/target/lun from scsi_cmnd forces the LLDD to use the
-scsi_device (scmd->device-> channel/id/lun).
+It forces them just as much as it forces them to use
+cmd->{lun, target, channel}. I.e. none at all.
 
-> > Putting path information only in scsi_device makes it hard to do
-> > multi-path below (or even in) the block layer, and makes it hard to
-> > multi-path non block devices (like tape).
-> > 
-> > I would prefer we keep the current scsi_cmnd with its
-> > host/channel/target[id]/lun.
-> 
-> For multipathing there should be *no* distinction between
-> char and block devices sitting in fabric or on a SCSI Bus.
+All LLDD have been converted to use cmd->device->{lun, id, channel}.
 
-Agreed. Although retries must be handled differently for sequential and
-direct-access devices.
+You must agree that the tuple (COMMAND, (lun, target, channel))
+doesn't say as much as (COMMAND, DEVICE). Anywhich way you look at it,
+this is a better abstraction. LUN is a property of a *SCSI* device,
+and not of a SCSI command.
 
-> Conceptually you'd want to say SEND(C,D), where C is the
-> command and D is the device, or if the device D is a property
-> of the command C, you can do SEND(C), and the device is C::D.
-> 
-> A path or paths to a device is a property of the device D.
->  From any point of view (user, kernel), a command C needs to
-> be sent to the device D, or simply the command C needs to
-> be sent, (where the device is C::D).  The SEND() will check
-> the paths which are property of the device and will
-> perform the desired action to send it (C) along the chosen
-> path P.  I.e. D::A is a collection of paths P, (0/1:N), and is a
-> property of the device, thus you get C::D::A.
-> This is object oriented design.
+SCSI LLDD provide transport, this is their function and existence. We
+need to represent the devices they provide and struct scsi_device is
+good for it. Multipathing shouldn't be stuffed into it. More below.
 
-In order to allow selection of a path, we should abstract out the path
-information, not lump it into a single pointer reference (i.e. not
-scmd->device->lun) spread throughout the scsi mid and LLDD. If we had a
-single macro or function to access the host/channel/target/lun, the issue
-goes away, as there is only one point that we have to change for
-multi-path. But if they are hardcoded into scsi_device, I'll have to
-revert the changes for multi-path support.
+> In order to allow selection of a path, we should abstract out the path
+> information, not lump it into a single pointer reference (i.e. not
+> scmd->device->lun) spread throughout the scsi mid and LLDD. If we had a
+> single macro or function to access the host/channel/target/lun, the issue
+> goes away, as there is only one point that we have to change for
+> multi-path. But if they are hardcoded into scsi_device, I'll have to
+> revert the changes for multi-path support.
 
-Again, this is true whether we have multi-path support in the scsi
-mid-level code or in the block layer.
+Right, right, but this is the *first* step; let's get it out of scsi command
+struct first. This opens up enough opportunities already. I.e. we're moving
+the pertinent information *up* where it belongs.
 
-> Currently, host/channel/target/lun *is* D::A all in *one*,
-> i.e. it is a device and a single path in one ugly lump
-> in the command struct. Thus, the more reason to get rid of
-> it (at least partially).
+BTW, in order to be able to do C::D::A(P) stuff as I mentioned in my previous
+letter, you'd have to have the device being an *abstract* device, and
+here we're dealing with SCSI devices which always have a LUN, for example.
+This is in SAM-3 and is unavoidable.
 
-For scsi_device yes, but the LLDD does not have to look at scsi_device to
-send a command, it can currently use the values found in scsi_cmnd.
+For this reason you might consider the suggestions by Doug, or research moving
+multipathing higher up into the char/block layer, or thereabouts.
 
-> There are other advantages to these patches:
-> 1. No redundant data (OOD).
-> 2. Transparent command struct allocation/deallocaton
->     via scsi_get_command() / scsi_put_command().
-> 3. Improved queuing logic for SCSI Core, not yet ready,
->     I'm just waiting for more input on this current stuff.
+SCSI Core is *SCSI*, it's function well defined in delivery/receipt of SCSI
+commands and doing discovery of devices.
 
-I don't see how 2) and 3) are tied into your changes. I can understand
-your changes leading to fewer changes for a common pool of all
-scsi_cmnd's.  But, we could also have a single pool if the
-host/channel/target/lun were set separtely from the allocation.
+Somewhere between write(fd, buf, count) and scsi_request_fn(), multipathing
+will have to have already occured (ideally).
 
-> There must be enough research papers on multipathing, and
-> OS IO books should have a chapter on it. I just don't
-> have time to go to my alma mater's sci. library and do the
-> research since I do all this in my spare time.
+> For scsi_device yes, but the LLDD does not have to look at scsi_device to
+> send a command, it can currently use the values found in scsi_cmnd.
 
-I haven't found any good research papers, if anyone knows of some please
-let me know (at least searching online, I should look in a real library).
+You see, by abstractizing this way, you get rid of redundancies,
+which let's you do all those nice things which Doug mentioned.
 
--- Patrick Mansfield
+Getting rid of redundancies in data design and code design is important.
+
+> I don't see how 2) and 3) are tied into your changes. I can understand
+> your changes leading to fewer changes for a common pool of all
+> scsi_cmnd's.  But, we could also have a single pool if the
+> host/channel/target/lun were set separtely from the allocation.
+
+2 says that you can just grab the command and ``hook'' it
+on the device via its list member. The mechanism is very
+versatile -- take a look at it.
+
+3 comes from discussions with ppl, some research and my own
+implementation of a mini-scsi-core, but basically playing
+with the list member. Putting command on different queues
+depending on its status, etc.
+
+> I haven't found any good research papers, if anyone knows of some please
+> let me know (at least searching online, I should look in a real library).
+
+A real library is your best bet. Papers are sometimes not available online,
+but only in their respective periodicals due to copyright.
+
+-- 
+Luben
+
+
+
