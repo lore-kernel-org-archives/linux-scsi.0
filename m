@@ -1,74 +1,36 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: (RAID controller) Unified way to get alarms
-Date: Tue, 2 Mar 2004 09:37:31 -0500
+From: jbarnes@sgi.com (Jesse Barnes)
+Subject: Re: [PATCH] 2.6.3 qla2xxx driver -- use readX_relaxed
+Date: Tue, 2 Mar 2004 09:19:19 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F38D237@otce2k03.adaptec.com>
+Message-ID: <20040302171919.GA25454@sgi.com>
+References: <B179AE41C1147041AA1121F44614F0B060EE25@AVEXCH02.qlogic.org> <20040302010227.GA583940@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:36320 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261658AbUCBOhd convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Mar 2004 09:37:33 -0500
-content-class: urn:content-classes:message
+Received: from mtvcafw.SGI.COM ([192.48.171.6]:18422 "EHLO rj.sgi.com")
+	by vger.kernel.org with ESMTP id S261712AbUCBRUC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2004 12:20:02 -0500
+Content-Disposition: inline
+In-Reply-To: <20040302010227.GA583940@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Fabien Salvi <fabien@cri74.org>, linux-scsi@vger.kernel.org
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi@vger.kernel.org
 
-Unification would be nice, especially when internationalization is
-required.
+On Mon, Mar 01, 2004 at 05:02:28PM -0800, Jeremy Higdon wrote:
+> On Mon, Mar 01, 2004 at 04:45:49PM -0800, Andrew Vasquez wrote:
+> > Sounds good, I just wish I had an Altix machine to test with.  You
+> > seem to have covered most of the fast-path cases, I'll look some more
+> > tonight for any others.  I guess my only nit-pick is the lowercase
+> > _relaxed() suffix applied to RD_REG* #defines.
 
-Currently syslogd does not support utf-8z and converts some of the
-characters into escape sequences. The fix is simple, the path is long
-...
+Cool, that would be nice.
 
-/proc/ is being shunned in any case, I'd drop that one like a rock.
+> You can certainly change the #defines in the driver to match what you
+> want.  If you want to change the underlying pci codes, we'd have to
+> patch the kernel a bit.  If there's a good consensus that _relaxed
+> is bad and something else is better, we could do that, right Jesse?  :-)
 
-Drivers have no access to system language environment, so the
-translation for internationalization definitely lives in the application
-world.
+Sure, we can do a search and replace before there are too many users if
+there's enough demand.
 
-Sincerely -- Mark Salyzyn
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Fabien Salvi
-Sent: Tuesday, March 02, 2004 4:06 AM
-To: linux-scsi@vger.kernel.org
-Subject: (RAID controller) Unified way to get alarms
-
-Hello,
-
-I've noticed each PCI Raid card (for example ICP-Vortex ,LSILogic or 
-ServerRAID) with their own driver uses a specific way to get alarms.
-
-We could have several types of alarm or warning, depending on the event 
-(degraded RAID, bad sectors detected, temperature sensor, etc...) :
-
-- audible alarm ==> the more classical signal
-- messages in kernel logs ==> not all drivers support this and each one 
-send different messages
-- messages in console ==> idem
-- informations in /proc/scsi/... (for 2.4 kernel) ==> for example in 
-/proc/scsi/gdth/0 with ICP controllers
-
-- others ?
-
-
-Unlike proprietary OS with proprietary (manufacter) driver, we have the 
-ability under linux and with opensource drivers to use an unified way to
-
-get warning and alarms from a RAID controller.
-
-Why don't use it ?
-
-It will permit a single tool to manage these events without writing one 
-per driver...
-
--- 
-Fabien SALVI
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Jesse
