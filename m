@@ -1,28 +1,39 @@
-From: Jan-Frode Myklebust <janfrode@parallab.uib.no>
-Subject: Re: LSI Logic FC HBA / mptscsih hang
-Date: Mon, 19 Apr 2004 17:18:47 +0200
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] 5/6: scsi_inq_timeout
+Date: Mon, 19 Apr 2004 09:41:06 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040419151847.GA25931@ii.uib.no>
-References: <0E3FA95632D6D047BA649F95DAB60E570442C522@exa-atlanta.se.lsil.com> <20040419150727.GA25544@ii.uib.no>
+Message-ID: <20040419094106.A31555@beaverton.ibm.com>
+References: <20040418185957.GH4868@tpkurt.garloff.de> <20040418202109.C3393@infradead.org> <20040418221610.GN4868@tpkurt.garloff.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eik.ii.uib.no ([129.177.16.3]:22191 "EHLO eik.ii.uib.no")
-	by vger.kernel.org with ESMTP id S263962AbUDSPSu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Apr 2004 11:18:50 -0400
+Received: from e35.co.us.ibm.com ([32.97.110.133]:58844 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S261468AbUDSQlW
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Apr 2004 12:41:22 -0400
 Content-Disposition: inline
-In-Reply-To: <20040419150727.GA25544@ii.uib.no>
+In-Reply-To: <20040418221610.GN4868@tpkurt.garloff.de>; from garloff@suse.de on Mon, Apr 19, 2004 at 12:16:10AM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Emoore@lsil.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Kurt Garloff <garloff@suse.de>, Christoph Hellwig <hch@infradead.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-On Mon, Apr 19, 2004 at 05:07:27PM +0200, Jan-Frode Myklebust wrote:
-> On Mon, Apr 19, 2004 at 10:53:47AM -0400, Moore, Eric Dean wrote:
+On Mon, Apr 19, 2004 at 12:16:10AM +0200, Kurt Garloff wrote:
+> On Sun, Apr 18, 2004 at 08:21:09PM +0100, Christoph Hellwig wrote:
+> > On Sun, Apr 18, 2004 at 08:59:57PM +0200, Kurt Garloff wrote:
+> > > +#ifdef __powerpc64__
+> > > +static unsigned int scsi_inq_timeout = SCSI_TIMEOUT/HZ+25;
+> > > +#else
+> > > +static unsigned int scsi_inq_timeout = SCSI_TIMEOUT/HZ+3;
+> > > +#endif
+> > 
+> > Huh?  per-arch ifdefs in the scsi code are completely bogus.
 > 
-> > Is the Dell PowerEdge having onboard mpt scsi chip?
-> 
+> Well, those broken chips seem to be very common on machines from
+> a specific vendor that ships PPC64 hardware ...
+> That hunk could be dropped of course in mainline, I would not mind.
 
-It has onboard adaptec scsi.. 
+Why not increase it for all cases? And/or make it a config value? 
 
+It won't slow down functioning hardware, just the cases where we get no
+response.
 
-   -jf
+-- Patrick Mansfield
