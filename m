@@ -1,31 +1,34 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: [Emulex] queuecommands and GFP_ATOMIC
-Date: Tue, 8 Jun 2004 19:23:56 +0100
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Requested changes for the SCSI error handler
+Date: Tue, 8 Jun 2004 14:31:29 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040608182356.GA7523@infradead.org>
-References: <3356669BBE90C448AD4645C843E2BF28034F946C@xbl.ma.emulex.com>
+Message-ID: <Pine.LNX.4.44L0.0406081430220.649-100000@ida.rowland.org>
+References: <1086711994.2105.18.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.146.154.40] ([213.146.154.40]:38630 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S265277AbUFHSX7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Jun 2004 14:23:59 -0400
-Content-Disposition: inline
-In-Reply-To: <3356669BBE90C448AD4645C843E2BF28034F946C@xbl.ma.emulex.com>
+Received: from ida.rowland.org ([192.131.102.52]:7684 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S265284AbUFHSbc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jun 2004 14:31:32 -0400
+In-Reply-To: <1086711994.2105.18.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: "Smart, James" <James.Smart@Emulex.Com>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, Anton Blanchard <anton@samba.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Mike Anderson <andmike@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, Jun 08, 2004 at 02:21:05PM -0400, Smart, James wrote:
-> So we've done some testing with the locks moved and the GFP_xxx flag
-> changed...
-> 
-> On a RedHat 3.90 2.6.5 kernel, we hit the following:
-> 
-> Debug: sleeping function called from invalid context at mm/slab.c:1980
-> in_atomic():1, irqs_disabled():0
-> Call Trace:
+On 8 Jun 2004, James Bottomley wrote:
 
-Looks like you used spin_unlock instead of spin_unlock_irq for the host
-lock.
+> Well, how about a compromise?  I like the ability to alter the host
+> settle time; however, I think turning these over to the driver to sort
+> out how it pleases gives the LLD more control in this situation,
+> certainly for the HOST reset.
+> 
+> I'm less sure that a bus reset timeout belongs in the LLD, but I suppose
+> that could be pulled into the SPI transport class eventually.
+> 
+> So, what about Alan's approach using a single flag to give the LLD
+> control, but give it control for both the host and bus resets?
+
+Sorry to appear slow... but isn't that exactly what my patch did?
+
+Alan Stern
+
