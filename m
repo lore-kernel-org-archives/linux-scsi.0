@@ -1,37 +1,99 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
-Date: Mon, 1 Dec 2003 19:22:53 -0800
+From: Andre Hedrick <andre@linux-ide.org>
+Subject: RE: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Mon, 1 Dec 2003 19:46:31 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031202032253.GA175030@sgi.com>
-References: <B179AE41C1147041AA1121F44614F0B060ED86@AVEXCH02.qlogic.org>
+Message-ID: <Pine.LNX.4.10.10312011925380.17836-100000@master.linux-ide.org>
+References: <Pine.LNX.4.58.0312011655240.26106@serv>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.SGI.COM ([192.48.171.6]:29278 "EHLO rj.sgi.com")
-	by vger.kernel.org with ESMTP id S264292AbTLBDYA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Dec 2003 22:24:00 -0500
-Content-Disposition: inline
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B060ED86@AVEXCH02.qlogic.org>
+Received: from astound-64-85-224-253.ca.astound.net ([64.85.224.253]:60681
+	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
+	id S264308AbTLBDun (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Dec 2003 22:50:43 -0500
+In-Reply-To: <Pine.LNX.4.58.0312011655240.26106@serv>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Jes Sorensen <jes@wildopensource.com>, Linux-SCSI <linux-scsi@vger.kernel.org>, jbarnes@sgi.com, mdr@sgi.com
+To: Roman Zippel <zippel@linux-m68k.org>
+Cc: Naveen Burmi <naveenb@cisco.com>, hch@infradead.org, linux-scsi@vger.kernel.org
 
-Andrew,
 
-The enable_64bit_addressing flag is set in qla2x00_nvram_config().
-It is then later overridden in qla2x00_config_dma_addressing().
 
-Since we would like to call qla2x00_config_dma_addressing() before
-consistent allocations in order to set the consistent mask, that
-would mean that the flag set in qla2x00_config_dma_addressing() would
-now be overridden in qla2x00_nvram_config().
+The rare cases of "data corruption" under iSCSI is because most iSCSI
+products fail to follow the rules of DAS.  Operating from the mindset of
+DAS, local buffers are permitted to change regardless.  This includes
+execution to platter.  It includes pre and operationial IO execution or
+commits to the media.
 
-What was your intention here?  It seems to me that you should not
-be touching this flag in qla2x00_nvram_config().  Is that correct?
+If a "memcpy" is held and the original content changes with the top level
+caller not marking the request dirty, BOOM you just commited crap to
+platter.
 
-Is there any other problem caused by moving the call to
-qla2x00_config_dma_addressing() to an early position?
+If you are not zero-copy to the network stack, you will never catch the
+changes between calculation of the CRC32C and pumping to the wire.
 
-thanks
+iSCSI(MC)
 
-jeremy
+BLOCK->SCSI->iSCSI->MEMCPY->CRC32C->TCP->WIRE
+                              ^^^^^^^^^^^^^^
+                              BOOM memory buffers change
+
+iSCSI(ZC)
+
+BLOCK->SCSI->iSCSI->CRC32C->TCP->WIRE
+                      ^^^^^^^^^^^^^^
+                      BOOM memory buffers change
+
+iSCSI(MC) passes CRC32C
+
+iSCSI(ZC) fails CRC32C, and retries the failed PDU.
+
+It should be clear that any TARGET, INITIATOR, or PAIR doing iSCSI(MC)
+will roast your data.
+
+Now iSCSI(ZC) requires ERL >= 1 w/ Sync-and-Steering.
+
+Real iSCSI does ERL >= 2, but then again > 2 means new async-connections.
+To learn more join the IETF reflector.  Please be kind to the folks who
+are only "network centric" they mean well but just don't get storage.
+
+Cheers,
+
+Andre Hedrick
+LAD Storage Consulting Group
+
+On Mon, 1 Dec 2003, Roman Zippel wrote:
+
+> Hi,
+> 
+> On Mon, 1 Dec 2003, Naveen Burmi wrote:
+> 
+> > In linux kernel there is a rare occurrence of data corruption. This data can
+> > be buffer cache data as well as raw I/O data. Don't know the actual root
+> > cause of the problem, but the fix that we put under macro
+> > "PREVENT_DATA_CORRUPTION" is capable of resolving this problem.
+> 
+> You probably mean the page cache and it's normal that a page can be
+> modified, while it's written out.
+> 
+> > On iSCSI target, 5428-2, upon detecting the CRC data error by the QlogicFC
+> > card it generates  the sense data with sense key as HARDWARE ERROR
+> > and Additional sense data as LOGICAL UNIT COMMUNICATION FAILURE.
+> > Upon receving this sense data iSCSI initiator driver is not retrying this
+> > command and failing the command to the upper layers of SCSI subsystem.
+> > But linux SCSI subsystem does not perform any error recovery for this kind of
+> > sense data.
+> 
+> The answer from the target is weird, why does it react with a scsi error
+> to an iSCSI transport problem?
+> At ERL0 the target should just drop the packet and/or close the
+> connection. Recovery of such case would require ERL1, where the target
+> could request to retransmit the corrupted data pdu or send a CHECK
+> CONDITION (but also with a different sense data).
+> 
+> bye, Roman
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
