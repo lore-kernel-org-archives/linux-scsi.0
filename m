@@ -1,36 +1,38 @@
-From: Erik Mouw <erik@harddisk-recovery.com>
-Subject: Re: status of the scsi changer driver
-Date: Mon, 10 Jan 2005 12:52:43 +0100
-Message-ID: <20050110115243.GA12837@harddisk-recovery.com>
-References: <20050109120156.GA19296@lst.de>
+From: "Tony Battersby" <tonyb@cybernetics.com>
+Subject: RE: linux-scsi list filtering
+Date: Mon, 10 Jan 2005 10:08:50 -0500
+Message-ID: <05Jan10.100851est.332347@cyborg.cybernetics.com>
+References: <41E1B79A.3080706@torque.net>
+Reply-To: <tonyb@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from users.linvision.com ([62.58.92.114]:26531 "HELO bitwizard.nl")
-	by vger.kernel.org with SMTP id S262217AbVAJLwp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jan 2005 06:52:45 -0500
-Content-Disposition: inline
-In-Reply-To: <20050109120156.GA19296@lst.de>
+Received: from cyborg.cybernetics.com ([206.246.200.18]:17420 "EHLO
+	cybernetics.com") by vger.kernel.org with ESMTP id S262286AbVAJPOm
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jan 2005 10:14:42 -0500
+In-Reply-To: <41E1B79A.3080706@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: kraxel@bytesex.org, linux-scsi@vger.kernel.org, debian-kernel@lists.debian.org
+To: dougg@torque.net, linux-scsi@vger.kernel.org
+Cc: postmaster@vger.kernel.org
 
-On Sun, Jan 09, 2005 at 01:01:56PM +0100, Christoph Hellwig wrote:
-> do you plan to ever polish and submit the scsi changer driver for
-> mainline inclusion?
-> 
-> We've been carring it along with the Debian kernel for a while, but
-> it looks pretty much like a dead end currently.
+> Obviously the original poster received my mail as he has
+> recently responded to the list. That tends to suggest
+> that incoming mail is being filtered by the linux-scsi
+> list.
+>
+> Is anyone else experiencing this type of behaviour?
 
-FWIW, mtx (http://mtx.sourceforge.net/ ) worked rather nice last time I
-tried with a Dell 8 slot DLT changer. It uses the sg interface rather
-than a special scsi changer device.
+I had this problem last week when replying to someone with a list of
+relevant URLs where one could find more information about a legitimate
+topic.  After the message didn't appear on linux-scsi, I resent it
+without the URLs, but even the resend without URLs never made it.  I'm
+not sure what blocked the second message, but later in the day I sent a
+message on a different topic that got through, using the same mailer
+settings.
 
+Anthony J. Battersby
+Cybernetics
 
-Erik
-
--- 
-+-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
-| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
