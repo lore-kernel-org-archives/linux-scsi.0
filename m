@@ -1,128 +1,205 @@
-From: Vlado Koutny <vlado@element.ksp.sk>
-Subject: HP Scanjet 4p & HP's ncr53c400a scsi adapter
-Date: Sat, 15 Feb 2003 15:56:56 +0100 (CET)
+From: Andre Hedrick <andre@linux-ide.org>
+Subject: Re: [PATCH / RFC] scsi_error handler update. (1/4)
+Date: Sat, 15 Feb 2003 20:23:54 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.21.0302151509160.4103-100000@element.ksp.sk>
+Message-ID: <Pine.LNX.4.10.10302152015230.13440-100000@master.linux-ide.org>
+References: <3E4D44EB.1090402@splentec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <3E4D44EB.1090402@splentec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: sane-devel@www.mostang.com, linux-scsi@vger.kernel.org
-
-Hello,
-
-  I'm trying to get HP ScanJet 4p working with supplied ncr53c400a scsi
-adapter under 2.4.20 linux kernel. As suggested in
-http://www.mostang.com/pipermail/sane-devel/2002-May/014280.html (HP
-ScanJet 4p (SCSI ncr53c400a) Solution), I've added wake-up sequence into
-g_NCR5380.
-
-The card is initialized OK, either without IRQ as well as with ncr_irq=9
-(the one usualy used under windows). /proc/scsi etc. lists the card as
-well as the scanner, so everything seems to be ok. The outputs here were
-generated using scsi error logging, echo "scsi log token #N" >
-/proc/scsi/scsi.
-
-configuration:
-  Celeron 366, 128MB memory, disk/cdrom on IDE
-  Debian 3.0 woody
-  2.4.20 kernel
-  HP ScanJet 4p + HP-supplied interface card ncr53c400a (no other
-    scsi-anything)
-  scsi subsystem as module, sg, g_NCR5380, verbose errors, logging 
-  g_NCR5380 patched as described above
-  
-used commands:
-  modprobe scsi_mod
-  echo "scsi log error 7" > /proc/scsi/scsi
-  echo "scsi log timeout 7" > /proc/scsi/scsi
-  echo "scsi log scan 7" > /proc/scsi/scsi
-  modprobe g_NCR5380 ncr_53c400a=1 ncr_addr=0x280 [ncr_irq=9]
-
-After this, sane-find-scanner reports the scanner correctly.
+To: Luben Tuikov <luben@splentec.com>
+Cc: linux-scsi@vger.kernel.org
 
 
-What happens next:
-  * when using IRQ: when I start scanimage -d hp:/dev/sg0 -h, nothing
-      happens, just some scsi logs... ending with "Open returning 
-      1" sveral times; it can be ctrl-breaked, and after several (like 3) 
-      retries I got the following error message:
+What are trying to achieve, a split n-way mid-layer to provide fastpath(N)
+for fail-over?  Or are you attempting to provide path(N) for some type of
+load balance or flow control schedule?  Regardless, you can not do
+multi-path on a given HBA, real or virtual.
 
-      NCR5380 core release=7     Generic5380 release 1
-      Base Addr: 0x00000     io_port: 0280    IRQ: 9
-      NCR5380: coroutine isn't running
-      scsi0: no currently connected command
-      scsi0: issue_queue
-      scsi0: disconnected_queue
-      scsi0 : destination target=3, lun=0
-              command = 10 (0x0a)00 00 00 02 00
+Unless you have a special HPA that allows queue stalls and each
+port/spindle has its own host queue.  This sounds very much like FPDMA
+with DPIO for raw FIS creation and loading, aka SAS.
 
-      and the system hangs completly (SysRq can reboot, cannot
-      sync/umount). Between the tries, cat /proc/interrupts shows
-      zero count for IRQ 9. Tested also as IRQ 12, IRQ 5 - exactly the
-      same result.
+I have such HBA's but are cleverly coded as to not need path(N).
+They fake the mid-layer to report each port as a restanding HBA, yet share
+a common hostdata to allow command migration or redirection.  This yeilds
+the same effect with out fudging the current driver mid-layer.
 
-  * when not using IRQ: the scanner partialy works, I can scan something
-      correctly; but it is VERY slow - scanimage -d hp:/dev/sg0 -h
-      identifies all available options correctly, but it takes about 2
-      minutes to finish, and the same delay is present before each scan
-      (because scanimage always queries the scanner for its capabilities).
-      Additionaly, the scanning is also quite slow, but I don't claim
-      it is slower than under windows (actually I saw it working under 
-      windows very long time ago, so I cannot compare, but I remember that
-      the scanner head used to move in "steps", probably because of
-      interface speed) -- this could be avoided by patching SANE not to
-      perform the query each time.
+My Nickle --
 
-      But, sometimes, the scanning just freezes, together with the whole
-      system, not even SysRq works.
-
-      After some debugging, it seems that it is not SANE problem, but SCSI
-      problem. Following is the syslog output on the console after the
-      system freezes:
-
-      sg_poll: dev=0, res=0x145
-      sg_read: dev=0, count=64
-      sg_read_xfer: num_xfer=32768, iovec_count=0, k_use_sg=0
-      sg_finish_rem_req: res_used=0
-      sg_remove_scat: k_use_sg=0
-      sg_free: buff=0xc22d0000, size=32768
-      sg_write: dev=0, count=64
-
-      Open returning 1
-      sg_common_write: scsi opcode=0x08, cmd_size=6
-      sg_start_req: dxfer_len=32758
-      sg_build_indi: buff_size=32768, blk_size=32768
-      sg_malloc: size=32768, ms=1, ret=0xc0720000
-      Adding timer for command c28a1200 at 6000 (ca948370)
-      sg_poll: dev=0, res=0x104
-      Clearing timer for command c2bb2600 1
-      sg...bh: dev=9, pack_id=3683, res=0x00 
- 
-      -- nothing more, just hanged-up system
-
-      After this probably should follow about the same lines as in the
-      begining of supplied log, i.e. sg_poll: dev=0. res=0x145 and so on.
-
-      /var/log/kern.log says during the initialization:
-	scsi0 : interrupts not enabled. for better interactive performance,                  
-	scsi0 : please jumper the board for a free IRQ.                                      
-	scsi0 : at port 0x280 interrupts disabled options CAN_QUEUE=16 \
-		CMD_PER_LUN=2 release=1 generic options AUTOPROBE_IRQ\ 
-		AUTOSENSE PSEUDO DMA USLEEP, USLEEP_POLL=1 USLEEP_SLEEP=20\ 
-		generic release=7   
-	scsi0 : Generic NCR5380/53C400 Driver
+Andre Hedrick
+LAD Storage Consulting Group
 
 
-So, any ideas of what's the problem with that?
+On Fri, 14 Feb 2003, Luben Tuikov wrote:
 
-
-thanks
-  vlado koutny
-
-
-btw: I've found some quesses what is the jumper on the 53c400a card good
-for... The HP manual says: "If you have an IBM PS/1 computer, move the
-wait state jumper to cover pins 3 and 2 as shown below." followed by an
-illustration of jumper position: IBM PS/1 (2-3) and Normal (1-2).
+> Doug Ledford [dledford@redhat.com] wrote:
+> >
+> > On Thu, Feb 13, 2003 at 01:55:15PM -0500, Luben Tuikov wrote:
+>  >
+> >	::same_target_siblings -- this shouldn't exist by design.
+>  >
+> > Yes!  That one most certainly should exist!  There are lots of operations 
+> 
+> Sorry, I had my mind in new-scsi-core, while looking at the structs
+> of current-scsi-core.
+> 
+> I.e. I was assuming that struct scsi_target existed, while
+> it *only* exists in new-scsi-core... :-(
+> 
+> Now let's get back to theme:
+> 
+> Mike Anderson on Feb 14, 2003, wrote:
+> >
+> > The need is there for per target data, but if we talk about future
+> > directions it would appear a cleaner interface would be to have luns as
+> > children of the targets (? ports ?) vs having a list of luns and post linking
+> > relationships.
+> 
+> And Patrick Mansfield on Feb. 14, 2003, wrote:
+>  >
+>  > And it would be nice if each scsi_device pointed to a parent struct
+>  > scsi_target that grouped all per-target information - like (as you
+>  > mentioned) active_cmd_count_target, *lld_target_data, and other target
+>  > specific data that is now stored in scsi_device.
+>  >
+>  > This might aid in probe/scanning for transports (like FCP) that can figure
+>  > out a target is there without scanning: a representation of the target can
+>  > show up without any scsi_device, and then we scan those targets.
+>  >
+>  > It also gives a better representation (under sysfs) of the physical layout
+>  > of the devices.
+> 
+> Abosolutely correct!
+> 
+> And this is quite evident from my Feb 11, 2003 message:
+> 
+> 	E.g. scsi_core <- portal <- target <- lun <- command,
+> 	where each level to the right is 0/1:N.
+> 
+> I was going to talk about this, but no time yesterday.
+> 
+> Now, we have:
+> 
+> struct scsi_core {
+> 	struct list_head entry;
+> 
+> 	struct list_head portal_list;
+> 	spinlock_t       portal_list_lock;
+> 	atomic_t         portal_list_count;
+> 	...
+> };
+> 
+> struct scsi_portal {
+> 	struct list_head entry;
+> 
+> 	struct list_head target_list;
+> 	spinlock_t       target_list_lock;
+> 	atomic_t         target_list_count;
+> 	...
+> };
+> 
+> struct scsi_target {
+> 	struct list_head entry;
+> 
+> 	struct list_head lun_list;
+> 	spinlock_t       lun_list_lock;
+> 	atomic_t         lun_list_count;
+> 	...
+> };
+> 
+> struct scsi_lun {
+> 	struct list_head entry;
+> 	
+> 	/* pending execution status by the device server */
+> 	struct list_head pending_cmd_q;
+> 	spinlock_t       pending_cmd_q_lock;
+> 	atomic_t         pending_cmd_q_count;
+> 	...
+> };
+> 
+> struct scsi_command {
+> 	struct list_head entry;
+> 	...
+> };
+> 
+> Where each predecessor can contain 0/1:N of its successor.
+> 
+> Points:
+> 
+> 1) If an object of type struct scsi_core exists, then this means
+> that SCSI Core is loaded, thus its representation in sysfs (and SCSI
+> Core itself, i.e. it represents itself... :-) ).
+> ... this was the reason I wanted scsi_core in current-scsi-core,
+> alas, no one saw it...
+> 
+> ((Is anyone dreaming of multiple scsi_core's, say on a NUMA machine...?))
+> 
+> 2) struct scsi_portal represents a service delivery subsystem type,
+> e.g. SPI, USB, FC, iSCSI, SAS, etc.  Nitty-gritty of the *actual*
+> delivery subsystem should have their own sub-sub structure, since
+> struct scsi_portal unifies them all for scsi_core and scsi_target's
+> sake.
+> 
+> 3) struct scsi_target: this is an *important* point: those appear
+> and dissapear asynchronously at the scsi_portal's request!  That is,
+> once a scsi_portal is registered with scsi_core and operational,
+> it will do something like:
+> 	/* async: new device appeared ... */
+> 	struct scsi_target *t = NULL;
+> 	t = scsi_get_target(this_portal); /* get a struct from scsi_core */
+> 	if (t) {
+> 		this_portal_conf_target(portal_target_representation, t);
+> 		scsi_register_target(t);
+> 	}
+> 
+> The reason for this is that the service delivery subsystem *knows*
+> how to discover targets, scsi_core does not -- SCSI architecture.
+> New_scsi_core will discover luns present on targets.
+> 
+> This also means that a scsi_portal will have an interface exported
+> via sysfs so that one can control how/when/where/etc targets are
+> discovered -- this is important for FC and iSCSI ppl.
+> 
+> 4) struct scsi_lun: this is the actual device, and can be any
+> kind of device at all.  It will have more command queues than this.
+> But, the only queue where commands will actually ``pend'' is
+> the pending device queue.  A done_q will most likely exist
+> in scsi_core.  An incoming_q will exist in either the lun
+> struct or the target struct, and will represent a command
+> which is being worked upon, i.e. someone is currently setting
+> the cdb, and other members; as soon as this is done, it will
+> go on the pending_q and *then* void queuecommand() called,
+> this fixes some races (been there, done that).
+> 
+> The locks could be a macro so that they could be either
+> a spinlock or rw_lock, as I have it for my own mini-scsi-core.
+> 
+> Furthermore using this layout there's no ether-pointers
+> on which SCSI Core structurally depends.
+> 
+> The drawback is that LLDD are not compatible with this
+> new-scsi-core structure.
+> 
+> There's a few more quirks in scsi_command, but I'll leave those
+> out for now, until I hear any kudos, comments and flames
+> regarding this layout.
+> 
+> BTW, if you like it, please say so, *NOT* privately to me,
+> but here publicly on this list -- this will not make you any
+> less of a man! :-)
+> 
+> Happy Valentine's everyone,
+> -- 
+> Luben
+> 
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
