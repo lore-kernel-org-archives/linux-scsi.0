@@ -1,29 +1,58 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: PATCH: Stop megaraid trashing other i960 based devices
-Date: Sat, 22 May 2004 13:11:04 -0400
+From: "Adam Radford" <aradford@amcc.com>
+Subject: RE: 2.6.6-mm5
+Date: Sat, 22 May 2004 11:02:18 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040522171104.GA7481@devserv.devel.redhat.com>
-References: <20040522154659.GA17320@devserv.devel.redhat.com> <20040522160205.GA8643@infradead.org> <20040522160328.GA22256@devserv.devel.redhat.com> <20040522160718.GA8736@infradead.org> <20040522170706.GA27386@lists.us.dell.com>
+Message-ID: <HY4NGC01.77W@hadar.amcc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:5601 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S261706AbUEVRMQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 May 2004 13:12:16 -0400
-Content-Disposition: inline
-In-Reply-To: <20040522170706.GA27386@lists.us.dell.com>
+Received: from hadar.amcc.com ([192.195.69.168]:51401 "EHLO hadar.amcc.com")
+	by vger.kernel.org with ESMTP id S261711AbUEVSCk convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 22 May 2004 14:02:40 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@dell.com>
-Cc: hch@infradead.org, Alan Cox <alan@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@osdl.org
+To: hch@infradead.org, Jeff Garzik <jgarzik@pobox.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sat, May 22, 2004 at 12:07:06PM -0500, Matt Domsch wrote:
-> of that vintage are hard-coded so AMI couldn't have changed them if
-> they wanted to.  So their magic words were the equivalent of what we
-> now do with subsystem IDs.  It's only the older cards that have a
-> problem, AFAIK.
+Hch,
 
-Certain megaraid 3 era cards - so yes quite old stuff only. Its not the
-only driver with these kind of problems although the other i960 stuff I have
-does all have a unique id or class.
+I did try to CC linux-scsi in the original email for the 3ware driver submission/review,
+and 2 emails since then.  None of them went through (no bounce message either).  
+
+Does anybody know what the max email size is?  Is it < 145k?
+
+--
+Adam Radford
+Staff Software Engineer
+AMCC
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of hch@infradead.org
+Sent: Saturday, May 22, 2004 2:23 AM
+To: Jeff Garzik
+Cc: Andrew Morton; linux-kernel@vger.kernel.org; SCSI Mailing List
+Subject: Re: 2.6.6-mm5
+
+
+On Sat, May 22, 2004 at 05:09:59AM -0400, Jeff Garzik wrote:
+> Andrew Morton wrote:
+> >- Added a new SATA RAID driver from 3ware.  From a quick peek it seem to
+> >  need a little work yet.
+> 
+> 
+> It's not too bad... but it looks more like a 2.2 driver forward ported 
+> to 2.4, than a 2.6.x driver.  Needs some luvin' from the 2.6 scsi api crew.
+> 
+> Overall, it appears to be a message-based firmware engine like 
+> drivers/block/carmel.c, that hides the SATA details in the firmware.
+
+In addition driver submission should always go through linux-scsi.  Please
+tell them to submit it to linux-scsi so we can have a public review process
+there.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
