@@ -1,43 +1,95 @@
-From: David Brownell <david-b@pacbell.net>
-Subject: Re: usb-strage not working in the latest kernel 2.4
-Date: Tue, 09 Sep 2003 10:18:56 -0700
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: [PATCH] cpqfc: remove unused variables/function
+Date: Tue, 9 Sep 2003 17:01:44 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F5E0B80.6040401@pacbell.net>
-References: <Pine.LNX.4.44L0.0309081523200.665-100000@ida.rowland.org>
+Message-ID: <20030909170144.271af2f4.rddunlap@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtaw6.prodigy.net ([64.164.98.56]:49593 "EHLO mtaw6.prodigy.net")
-	by vger.kernel.org with ESMTP id S264251AbTIIR7Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Sep 2003 13:59:24 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0309081523200.665-100000@ida.rowland.org>
+Received: from fw.osdl.org ([65.172.181.6]:57297 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S265090AbTIJAHX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Sep 2003 20:07:23 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, "Tomita, Haruo" <htomita@pcs.pc.ome.toshiba.co.jp>
+To: linux-scsi@vger.kernel.org
+Cc: jejb <james.bottomley@steeleye.com>, support@compaq.com, compaqandlinux@cpqlin.van-dijk.net
 
-Alan Stern wrote:
-> On Mon, 8 Sep 2003, David Brownell wrote:
-> 
 
->>When a device stops responding, it's hard to think the
->>problem is anything other than with the device.  (Though
->>I still don't see where the storage class-specific reset
->>gets sent by usb-storage, maybe that'd clean up better.)
-> 
-> 
-> The reset was sent three times.  Twice in response to command aborts and
-> once at the express request of the SCSI layer.  You can see it in the
-> logs:
+cpqfcTSinit.c has unused variables in cpqfcTS_TargetDeviceReset().
+After I cleaned that up, the  my_ioctl_done() function was no longer
+used.
 
-OK, I must have missed it when I was scanning for that
-control request ... likely because this one's using the
-usbcore method, not the usb-storage one I grepped for.
+This patch adds a local #ifdef for "SUPPORT_RESET" to control
+compilation of these functions.  If it is not defined (default),
+TargetDeviceReset() just returns -ENOTSUPP, as before, but
+much cleaner.
 
-So I'm back to "hard to think the problem is anything
-other than with the device".
+Patch is for 2.6.0-test5.
 
-- Dave
+--
+~Randy
 
 
 
+diff -Naurp ./drivers/scsi/cpqfcTSinit.c~clean ./drivers/scsi/cpqfcTSinit.c
+--- ./drivers/scsi/cpqfcTSinit.c~clean	2003-09-08 12:49:52.000000000 -0700
++++ ./drivers/scsi/cpqfcTSinit.c	2003-09-09 16:54:19.000000000 -0700
+@@ -467,6 +467,7 @@ int cpqfcTS_detect(Scsi_Host_Template *S
+   return NumberOfAdapters;
+ }
+ 
++#ifdef SUPPORT_RESET
+ static void my_ioctl_done (Scsi_Cmnd * SCpnt)
+ {
+     struct request * req;
+@@ -477,7 +478,7 @@ static void my_ioctl_done (Scsi_Cmnd * S
+     if (req->CPQFC_WAITING != NULL)
+ 	CPQFC_COMPLETE(req->CPQFC_WAITING);
+ }   
+-
++#endif
+ 
+ static int cpqfc_alloc_private_data_pool(CPQFCHBA *hba)
+ {
+@@ -1577,6 +1578,8 @@ Done:
+ // See dpANS Fibre Channel Protocol for SCSI
+ // X3.269-199X revision 12, pg 25
+ 
++#ifdef SUPPORT_RESET
++
+ int cpqfcTS_TargetDeviceReset( Scsi_Device *ScsiDev, 
+                                unsigned int reset_flags)
+ {
+@@ -1592,8 +1595,7 @@ int cpqfcTS_TargetDeviceReset( Scsi_Devi
+ // around the 2.5.30 kernel.  Scsi_Cmnd replaced with 
+ // Scsi_Request, etc.
+ // For now, so people don't fall into a hole...
+-return -ENOTSUPP;
+-/*
++
+   // printk("   ENTERING cpqfcTS_TargetDeviceReset() - flag=%d \n",reset_flags);
+ 
+   if (ScsiDev->host->eh_active) return FAILED;
+@@ -1647,7 +1649,6 @@ return -ENOTSUPP;
+ 		   SCpnt->sense_buffer[2] & 0xf);
+ 	    
+       };
+-*/    
+   result = SCpnt->result;
+ 
+   SDpnt = SCpnt->device;
+@@ -1658,6 +1659,14 @@ return -ENOTSUPP;
+   return SUCCESS;
+ }
+ 
++#else
++int cpqfcTS_TargetDeviceReset( Scsi_Device *ScsiDev, 
++                               unsigned int reset_flags)
++{
++	return -ENOTSUPP;
++}
++
++#endif /* SUPPORT_RESET */
+ 
+ int cpqfcTS_eh_device_reset(Scsi_Cmnd *Cmnd)
+ {
