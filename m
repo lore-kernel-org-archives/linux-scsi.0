@@ -1,49 +1,82 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [ANNOUNCE] Adaptec SAS/SATA device driver [0/27]
-Date: Thu, 17 Feb 2005 16:14:36 -0500
-Message-ID: <4215093C.3010702@adaptec.com>
-References: <4214D5B1.1060701@adaptec.com> <1108673824.5507.32.camel@mulgrave>
+Subject: Re: [ANNOUNCE] Adaptec SAS/SATA device driver [17/27]
+Date: Thu, 17 Feb 2005 16:16:44 -0500
+Message-ID: <421509BC.3090708@adaptec.com>
+References: <4214D645.60709@adaptec.com> <m14qgadhdg.fsf@muc.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from magic.adaptec.com ([216.52.22.17]:35750 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261165AbVBQVOl (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:4776 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261151AbVBQVQt (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Feb 2005 16:14:41 -0500
-In-Reply-To: <1108673824.5507.32.camel@mulgrave>
+	Thu, 17 Feb 2005 16:16:49 -0500
+In-Reply-To: <m14qgadhdg.fsf@muc.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Andi Kleen <ak@muc.de>
+Cc: linux-scsi@vger.kernel.org
 
-On 02/17/05 15:57, James Bottomley wrote:
-> Well, the initial reaction is yuk.
+On 02/17/05 16:08, Andi Kleen wrote:
+> Luben Tuikov <luben_tuikov@adaptec.com> writes:
 > 
-> Just from a brief glance over the files, the code is full of obfuscation
-> and unnecessary compatibility gunk which needs removing.
 > 
-> It's also full of the same queueing junk that I asked be taken out of
-> the aic7xxx driver.
+> 
+>>+/********************************** Misc Macros *******************************/
+> 
+> 
+> [... lots of code...]
+> 
+> What are they all good for? As far as I can see every one of them
+> duplicates or wraps something Linux already has.
+> 
+> How about you just use the native Linux functions directly?
+> 
+>  +
+> 
+>>+#if KDB_ENABLE
+>>+#define ASSERT(expression)						\
+>>+	if (!(expression)) {						\
+>>+		printk("assertion failed: %s, file: %s, line: %d\n",	\
+>>+			#expression, __FILE__, __LINE__);		\
+>>+		KDB_ENTER();						\
+>>+	}
+>>+#else
+>>+#define ASSERT(expression)						\
+>>+	if (!(expression)) {						\
+>>+		panic("assertion failed: %s, file: %s, line: %d\n",	\
+>>+			#expression, __FILE__, __LINE__);		\
+>>+	}
+>>+#endif
+> 
+> 
+> That's called BUG_ON in Linux land.
 
-Thank you for all the comments guys!
+Hi Andi,
+
+Yes I agree.  As I didn't write this code I hadn't noticed this.
  
-> Then we get to the architectural stuff, which should really have been
-> discussed before you wrote the driver, not after
+> 
+>>+#ifndef list_for_each_entry_safe
+> 
+> 
+> [...]
+> 
+> Such compat code does not really belong into a 2.6 driver.
 
-Just for the record: I did *not* write this driver!  I was merely given
-it to present it to the community.
+Yes, that's true.  The driver was written to compile for 2.4 as well
+as for 2.6.
  
-> - We need a SAS and a PHY transport class.  Three of your files are to
-> do domain discover and should actually be part of the SAS transport
-> class.  In fact, it looks like a large amount of the code should be in
-> the various transport classes.
+> 
+>>+
+>>+#define list_move_all(to_list, from_list)				\
+> 
+> 
+> [...]
+> 
+> And this should be put into list.h
 
-I absolutely agree.
- 
-> - The SATA pieces should use libata instead of trying to reinvent what
-> already exists.
+Yes, I agree.
 
-I agree here as well.
-
-Thanks for all the comments guys!
 	Luben
+
+ 
