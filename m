@@ -1,51 +1,43 @@
-From: Ingo Korb <nospam@akana.de>
-Subject: Re: sym53c8xx_2 hangs on 53c810 rev 02
-Date: Sun, 20 Feb 2005 20:09:01 +0100
-Message-ID: <uekfbm4ky.fsf@dragon.akana.de>
-References: <41992BE8.22985.49329380@localhost>
-	<20050218204840.GB29917@parcelfarce.linux.theplanet.co.uk>
+From: "Delmar Walker" <pluton@casholasavings.com>
+Subject: Rates fixed at 3.25
+Date: Mon, 14 Feb 2005 06:36:10 -0700
+Message-ID: <200410031459.i93OayTw005284__23814.0924521305$1108937199$gmane$org@www6.warnerreprise.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from snowcat.de ([213.146.167.7]:33284 "EHLO snowcat.de")
-	by vger.kernel.org with ESMTP id S261738AbVBTTJU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Feb 2005 14:09:20 -0500
-In-Reply-To: <20050218204840.GB29917@parcelfarce.linux.theplanet.co.uk> (Matthew
- Wilcox's message of "Fri, 18 Feb 2005 20:48:40 +0000")
+Content-Type: text/plain;
+Received: from d53-64-114-193.nap.wideopenwest.com ([64.53.193.114]:39694 "HELO
+	d53-64-114-193.nap.wideopenwest.com") by vger.kernel.org with SMTP
+	id S261950AbVBTWHX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Feb 2005 17:07:23 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: linux-msdos-owner@vger.kernel.org
+Cc: linux-net@vger.kernel.org, linux-net-owner@vger.kernel.org, linux-newbie@vger.kernel.org, linux-perf@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-raid-owner@vger.kernel.org, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 
-Matthew Wilcox <matthew@wil.cx> writes:
+Hello,
 
-> To be honest, this looks like the sym2 driver never received any interrupts.
+ We tried contacting you awhile ago about your low interest morta(ge rate.
 
-I guess so - I'm not sure why I reported problems with the 2.4 version
-of the driver, when I just retested it with 2.4.29 everything was
-working fine.
+ You have qualified for the lowest rate in years...
 
-> Could you boot with sym53c8xx.debug=0xffff on the command line?  That should
-> report any interrupts that come in.
+ You could get over $380,000 for as little as $500 a month!
 
-2.6.10, just the part after the hexdumps:
+ Ba(d credit? Doesn't matter, low rates are fixed no matter what!
 
-=== Cut ===
-new BADLUNTBL [ 256] @fffffc0005ea5200.
-sym0: SCSI BUS has been reset.
-scsi0 : sym-2.1.18m
-sym0:0:0:ccb @fffffc0005ea5800 using tag 256.
-sym0: queuepos=2.
-sym0:0:0: ABORT operation started.
-sym0:0:0: ABORT operation timed-out.
-sym0:0:0: DEVICE RESET operation started.
-sym0:0:0: DEVICE RESET operation timed-out.
-sym0:0:0: BUS RESET operation started.
-sym0:0:0: BUS RESET operation timed-out.
-sym0:0:0: HOST RESET operation started.
-sym0:0:0:ccb @fffffc0005ea5800 freeing tag 256.
-sym0: SCSI BUS has been reset.
-=== Cut ===
+ 
+ To get a free, no obli,gation consultation click below:
 
--ik
+ http://www.bestlenderz.com/x/loan.php?id=nu
+
+
+
+ Best Regards,
+
+ Walter Novak
+ 
+ to be remov(ed:	http://www.bestlenderz.com/x/st.html
+
+ this process takes one week, so please be patient. we do our 
+ best to take your email/s off but you have to fill out a rem/ove
+ or else you will continue to recieve email/s.
+
 
