@@ -1,51 +1,67 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] 2.5.41 sd.c sd_synchronize_cache free request after error check
-Date: Wed, 9 Oct 2002 11:05:33 -0700
+From: Francis Wiran <francis.wiran@hp.com>
+Subject: [PATCH]2.5.40, cpqfc, fix ioctl sense buffer memcpy size
+Date: Wed, 9 Oct 2002 13:44:41 -0600 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021009110533.A968@eng2.beaverton.ibm.com>
+Message-ID: <Pine.LNX.4.44.0210091337070.1500-100000@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from northrelay03.pok.ibm.com (northrelay03.pok.ibm.com [9.56.224.151])
-	by e3.ny.us.ibm.com (8.12.2/8.12.2) with ESMTP id g99I5gxw132112
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Oct 2002 14:05:42 -0400
-Received: from gateway.beaverton.ibm.com (gateway.beaverton.ibm.com [138.95.180.1])
-	by northrelay03.pok.ibm.com (8.12.3/NCO/VER6.4) with ESMTP id g99I5cn4092000
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Oct 2002 14:05:39 -0400
-Received: from eng2.beaverton.ibm.com (eng2.beaverton.ibm.com [9.47.57.17])
-	by gateway.beaverton.ibm.com (8.10.0.Beta10/8.11.6) with ESMTP id g99I5Zv25413
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Oct 2002 11:05:35 -0700 (PDT)
-Received: (from patman@localhost)
-	by eng2.beaverton.ibm.com (8.10.0.Beta10/8.8.5/token.aware-1.2) id g99I5Xu20784
-	for linux-scsi@vger.kernel.org; Wed, 9 Oct 2002 11:05:33 -0700 (PDT)
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: axboe@suse.de
 
-Hi -
 
-This fixes sd_synchronize_cache() to free the scsi request after its
-possible use in printing sense data.
+This patch fixes hangs after doing an ioctl to cpqfc due to the different 
+size of the defined sense buffer, causing memcpy to write stuff where it 
+shouldn't.
 
-I hit this while running with scsi_debug (with Mike A's patch, or in
-current ac) with 2.5.41, there was an oops when trying to print the
-request sense of a failed SYNCHRONIZE_CACHE.
+Also submitted to SourceForge as cpqfc-2.5.3-to-2.5.4.patch
 
-diff -Nru a/drivers/scsi/sd.c b/drivers/scsi/sd.c
---- a/drivers/scsi/sd.c	Wed Oct  9 10:57:02 2002
-+++ b/drivers/scsi/sd.c	Wed Oct  9 10:57:02 2002
-@@ -1616,7 +1616,6 @@
+
+--- linux-2.5.40/drivers/scsi/cpqfc.Readme	Tue Oct  1 01:07:47 2002
++++ linux-2.5.40-p1/drivers/scsi/cpqfc.Readme	Fri Oct  4 16:56:34 2002
+@@ -7,6 +7,8 @@
+ SEST size 512 Exchanges (simultaneous I/Os) limited by module kmalloc() 
+ 	max of 128k bytes contiguous.
+ 
++Ver 2.5.4  Oct 03, 2002
++   * fixed memcpy of sense buffer in ioctl to copy the smaller defined size
+ Ver 2.5.3  Aug 01, 2002
+    * fix the passthru ioctl to handle the Scsi_Cmnd->request being a pointer
+ Ver 2.5.1  Jul 30, 2002
+--- linux-2.5.40/drivers/scsi/cpqfcTSstructs.h	Tue Oct  1 01:06:57 2002
++++ linux-2.5.40-p1/drivers/scsi/cpqfcTSstructs.h	Fri Oct  4 17:01:28 2002
+@@ -33,7 +33,7 @@
+ // don't forget to also change MODULE_DESCRIPTION in cpqfcTSinit.c
+ #define VER_MAJOR 2
+ #define VER_MINOR 5
+-#define VER_SUBMINOR 3
++#define VER_SUBMINOR 4
+ 
+ // Macros for kernel (esp. SMP) tracing using a PCI analyzer
+ // (e.g. x86).
+--- linux-2.5.40/drivers/scsi/cpqfcTSinit.c	Fri Oct  4 16:52:28 2002
++++ linux-2.5.40-p1/drivers/scsi/cpqfcTSinit.c	Fri Oct  4 17:00:46 2002
+@@ -68,7 +68,7 @@
+ 
+ /* Embedded module documentation macros - see module.h */
+ MODULE_AUTHOR("Compaq Computer Corporation");
+-MODULE_DESCRIPTION("Driver for Compaq 64-bit/66Mhz PCI Fibre Channel HBA v. 2.5.3");
++MODULE_DESCRIPTION("Driver for Compaq 64-bit/66Mhz PCI Fibre Channel HBA v. 2.5.4");
+ MODULE_LICENSE("GPL");
+   
+ int cpqfcTS_TargetDeviceReset( Scsi_Device *ScsiDev, unsigned int reset_flags);
+@@ -668,7 +668,11 @@
+ 	{
+ 	  memcpy( vendor_cmd->sense_data, // see struct def - size=40
+ 		  ScsiPassThruReq->sr_sense_buffer, 
+-		  sizeof(ScsiPassThruReq->sr_sense_buffer)); 
++		  sizeof(ScsiPassThruReq->sr_sense_buffer) <
++                  sizeof(vendor_cmd->sense_data)           ?
++                  sizeof(ScsiPassThruReq->sr_sense_buffer) :
++                  sizeof(vendor_cmd->sense_data)
++                ); 
  	}
- 
- 	the_result = SRpnt->sr_result;
--	scsi_release_request(SRpnt);
- 	if(verbose) {
- 		if(the_result != 0) {
- 			printk("FAILED\n  status = %x, message = %02x, host = %d, driver = %02x\n  ",
-@@ -1629,6 +1628,7 @@
- 
- 		}
- 	}
-+	scsi_release_request(SRpnt);
- 	return (the_result == 0);
- }
- 
+         SDpnt = ScsiPassThruReq->sr_device;
+ 	/* upper_private_data is already freed in call_scsi_done() */
+
