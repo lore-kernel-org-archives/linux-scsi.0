@@ -1,53 +1,56 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] improvement of fastfail operation
-Date: 27 Mar 2004 10:57:14 -0500
+From: Jamie Lenehan <lenehan@twibble.org>
+Subject: Re: dc395x: CD writer causes endless "sg_to_virt failed" loop
+Date: Sun, 28 Mar 2004 02:10:34 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1080403035.2078.10.camel@mulgrave>
-References: <200403240038.AA03092@fukuchi.jp.fujitsu.com>
+Message-ID: <20040327161034.GA9963@twibble.org>
+References: <c444p3$b3v$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:27040 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261795AbUC0P5W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Mar 2004 10:57:22 -0500
-In-Reply-To: <200403240038.AA03092@fukuchi.jp.fujitsu.com>
+Received: from tuon.twibble.org ([203.217.29.157]:41954 "EHLO tuon.twibble.org")
+	by vger.kernel.org with ESMTP id S261802AbUC0QKk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Mar 2004 11:10:40 -0500
+Content-Disposition: inline
+In-Reply-To: <c444p3$b3v$1@sea.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Andrew Schulman <andrex@alumni.utexas.net>
+Cc: linux-scsi@vger.kernel.org, dc395x@twibble.org
 
-On Tue, 2004-03-23 at 19:38, Masao Fukuchi wrote:
-> We propose the following improvements for fastfail.
+On Sat, Mar 27, 2004 at 09:57:39AM -0500, Andrew Schulman wrote:
+> I have a Tekram DC395UW card, running in Debian with kernel 2.6.3 and the
+> dc395x driver from the kernel source.  Attached to the card are a Seagate
+[...]
+> by, for example, trying to mount or burn a CD-- my console and syslog
+> begin to fill up with "dc395x: sg_to_virt failed!" messages-- several
+
+Yeah, this has been reported a few months back for the original
+driver in 2.4. I *think* I found and fixed what would have caused
+this problem in the latest version included in 2.6 but since no one
+has ever seen this issue in 2.6 it's been difficult to be certain.
+
+[...]
+> I'm frustrated by this problem because the drive worked fine with earlier
+> kernels.  It definitely worked fine with 2.6.0-test4 and -test9.  I don't
+
+There has been no changes to the in kernel dc395x driver between
+2.6.0-test4 and 2.6.3.
+
+> want to go back to an earlier kernel, because of other security and
+> hardware issues.  My 2.6.3 kernel works perfectly, except that now my CD
+> writer is broken.
 > 
-> 1.Validate fastfail flag for command timeout.
->   Currently fastfail flag is not valid for command timeout and repeats
->   4 times.
-> 2.Set timeout value to 10sec.
->   Currently timeout value is set to 30sec.
-> 3.Set wait time for bus reset/host reset to 5sec.
->   Currently wait time is set to 10sec.
->   (In many cases, abort task command fails for command timeout and it needs
->   bus reset or host reset operation)
-> 
-> Each timeout values come from:
->   timeout(10sec)+Abort/Bus reset(5sec+)+alt retry timeout(10sec) < 30sec
-> 
-> This is one idea for quick response on device/path error.
-> If you have any comments or idea for this improvements, please let me know.
+> Any help would be much appreciated.  I'm willing to try any patches or
+> diagnostics.
 
-This isn't the right thing to do.  These timeouts control transport
-recovery; if it's safe to lower them in the fastfail case, then it would
-also be safe to lower them in the general case.
+First thing to try would be to upgrade to 2.6.5-rc1 (or newer) and
+see if that works any better.
 
-The correct thing for what you want to do would be to return the command
-with a transient transport error (which we don't actually have yet)
-*before* beginning transport recovery.  This is not going to be easy
-because we need to return a command we're also going to do error
-recovery on (so it can't be freed as normal).  I'd suggest the best way
-to do this would be to refcount the commands.
+If it still has issues then you should edit drivers/scsi/dc395x.c and
+uncomment the first "#define DEBUG_MASK" line, rebuild the dc395x
+module and then reload the module. You should then gets lots of
+debugging output in one of your log file which you can then gzip or
+bzip2 and then send directly to me.
 
-James
-
-
-
+-- 
+ Jamie Lenehan <lenehan@twibble.org>
