@@ -1,56 +1,34 @@
-From: Luben Tuikov <luben@splentec.com>
-Subject: Re: Fwd: Patch - SCSI host numbers - please apply
-Date: Wed, 19 Jun 2002 12:26:34 -0400
+From: Pete Zaitcev <zaitcev@redhat.com>
+Subject: Re: [PATCH + RFC] Beginning of some updates to scsi mid layer
+Date: Wed, 19 Jun 2002 13:44:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D10B0BA.17090E63@splentec.com>
-References: <200206171604.57115.nahshon@actcom.co.il> <200206181514.52827.nahshon@actcom.co.il> <3D0FA398.8DA6C959@splentec.com> <200206190303.45188.nahshon@actcom.co.il>
+Message-ID: <20020619134436.A27002@devserv.devel.redhat.com>
+References: <20020619014048.B8623@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20020619014048.B8623@redhat.com>; from dledford@redhat.com on Wed, Jun 19, 2002 at 01:40:48AM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: nahshon@actcom.co.il
-Cc: Marcelo Tosatti <marcelo@conectiva.com.br>, linux-scsi <linux-scsi@vger.kernel.org>
+To: dledford@redhat.com
+Cc: linux-scsi@vger.kernel.org
 
-Itai Nahshon wrote:
+>   So, when Justin Gibbs' driver allocates a queue depth of 253 
+> commands on drive X, then finds out that drive X has a hard limit of 64, 
+> then we aren't continuing to waste 189 commands worth of allocated kernel 
+> memory that can never be effectively used.
 
-> I suspect there
-> is something wrong with your configuration or with the
-> way that you run your tests.
+> +		  diff = p->dev_lun_queue_depth[tindex] -
+> +			 p->dev_active_cmds[tindex];
+> +		  p->dev_lun_queue_depth[tindex] -= diff;
 
-What could be wrong with my configuration? Anything specific
-that you have in mind?
+I think this is not enough, or backwards. We hit a situation with
+EMC when attaching hundreds of disks depleted atomic memory with
+queue request arrays before swapper had a chance to replenish it.
+I would much appreciate if the initial allocation was concervative,
+if low performing, and was adjusted upwards at slave_attach time.
 
-What do you mean ``they way you run your tests''?
-Could you please elaborate...
+For 2.5 I would appreciate if we made some SCSI allocations non-atomic.
+The probe time things better be GFP_KERNEL.
 
-The second time you loaded the module did you get
-1 to 100 or 31 to 131?
- 
-> My configuration:
-> RedHat 7.2, non-SMP. All the updates from RedHat applied +KDE-3.0.
-> Relevant RPMS:
->         gcc-2.96-98
->         cpp-2.96-98
->         binutils-2.11.90.0.8-11
->         modutils-2.4.13-0.7.1
-
-My configuration is as follows (RH7.1):
-- kernel: 2.4.18
-- gcc 3.0.4 
-Reading specs from /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0.4/specs
-Configured with: ../gcc-3.0.4/configure --host=i686-pc-linux-gnu --with-gnu-as --with-gnu-ld
---disable-win32-registry --enable-threads=posix
-Thread model: posix
-gcc version 3.0.4
-- GNU ld version 2.10.91 (with BFD 2.10.91.0.2)
-- modinfo (Linux modutils) 2.4.2
-
-This is very strange, maybe we should get someone else to
-independently test this? (scsi_reg.o with and without your patch
-on a 2.4.18.)
-
-Anyone?
-
--- 
-Luben
+-- Pete
