@@ -1,110 +1,170 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/6] add ISP1040 register definitions
-Date: Sun, 6 Jun 2004 14:57:28 +0200
+Subject: [PATCH 2/6] add IS_ISP* helpers
+Date: Sun, 6 Jun 2004 14:57:35 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040606125728.GB31063@lst.de>
+Message-ID: <20040606125735.GC31063@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:25802 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S263544AbUFFM5c (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Jun 2004 08:57:32 -0400
+Received: from verein.lst.de ([212.34.189.10]:26826 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S263555AbUFFM5i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Jun 2004 08:57:38 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: jes@trained-monkey.org
 Cc: linux-scsi@vger.kernel.org
 
-The old 1020/1040 has some registers where the newer controlers only
-have reserved space, add that to qla1280.h
+The code is already messy due to the explicit pci id checks for
+1280 vs 1x160, so add some nice helpers for that.
 
 
-diff -Nru a/drivers/scsi/qla1280.h b/drivers/scsi/qla1280.h
---- a/drivers/scsi/qla1280.h	2004-06-06 14:45:26 +02:00
-+++ b/drivers/scsi/qla1280.h	2004-06-06 14:45:26 +02:00
-@@ -126,7 +126,20 @@
- 	uint16_t id_l;		/* ID low */
- 	uint16_t id_h;		/* ID high */
- 	uint16_t cfg_0;		/* Configuration 0 */
-+#define ISP_CFG0_HWMSK   0x000f	/* Hardware revision mask */
-+#define ISP_CFG0_1020    BIT_0	/* ISP1020 */
-+#define ISP_CFG0_1020A	 BIT_1	/* ISP1020A */
-+#define ISP_CFG0_1040	 BIT_2	/* ISP1040 */
-+#define ISP_CFG0_1040A	 BIT_3	/* ISP1040A */
-+#define ISP_CFG0_1040B	 BIT_4	/* ISP1040B */
-+#define ISP_CFG0_1040C	 BIT_5	/* ISP1040C */
- 	uint16_t cfg_1;		/* Configuration 1 */
-+#define ISP_CFG1_F128    BIT_6  /* 128-byte FIFO threshold */
-+#define ISP_CFG1_F64     BIT_4|BIT_5 /* 128-byte FIFO threshold */
-+#define ISP_CFG1_F32     BIT_5  /* 128-byte FIFO threshold */
-+#define ISP_CFG1_F16     BIT_4  /* 128-byte FIFO threshold */
-+#define ISP_CFG1_BENAB   BIT_2  /* Global Bus burst enable */
-+#define ISP_CFG1_SXP     BIT_0  /* SXP register select */
- 	uint16_t ictrl;		/* Interface control */
- #define ISP_RESET        BIT_0	/* ISP soft reset */
- #define ISP_EN_INT       BIT_1	/* ISP enable interrupts. */
-@@ -147,7 +160,42 @@
- 	uint16_t flash_data;	/* Flash BIOS data */
- 	uint16_t flash_address;	/* Flash BIOS address */
+diff -Nru a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+--- a/drivers/scsi/qla1280.c	2004-06-06 14:44:56 +02:00
++++ b/drivers/scsi/qla1280.c	2004-06-06 14:44:56 +02:00
+@@ -485,6 +485,14 @@
+ #define ia64_platform_is(foo)		(!strcmp(x, platform_name))
+ #endif
  
--	uint16_t unused_1[0x2e];	/* 0x14-0x6f Gap */
-+	uint16_t unused_1[0x06];
-+	
-+	/* cdma_* and ddma_* are 1040 only */
-+	uint16_t cdma_cfg;
-+#define CDMA_CONF_SENAB  BIT_3	/* SXP to DMA Data enable */
-+#define CDMA_CONF_RIRQ   BIT_2	/* RISC interrupt enable */
-+#define CDMA_CONF_BENAB  BIT_1	/* Bus burst enable */
-+#define CDMA_CONF_DIR    BIT_0	/* DMA direction (0=fifo->host 1=host->fifo) */
-+	uint16_t cdma_ctrl; 
-+	uint16_t cdma_status;   
-+	uint16_t cdma_fifo_status;
-+	uint16_t cdma_count;
-+	uint16_t cdma_reserved;
-+	uint16_t cdma_address_count_0;
-+	uint16_t cdma_address_count_1;
-+	uint16_t cdma_address_count_2;
-+	uint16_t cdma_address_count_3;
 +
-+	uint16_t unused_2[0x06];
++#define IS_ISP1040(ha) (ha->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP1020)
++#define IS_ISP1x40(ha) (ha->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP1020 || \
++			ha->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP1240)
++#define IS_ISP1x160(ha)        (ha->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP10160 || \
++				ha->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP12160)
 +
-+	uint16_t ddma_cfg;
-+#define DDMA_CONF_SENAB  BIT_3	/* SXP to DMA Data enable */
-+#define DDMA_CONF_RIRQ   BIT_2	/* RISC interrupt enable */
-+#define DDMA_CONF_BENAB  BIT_1	/* Bus burst enable */
-+#define DDMA_CONF_DIR    BIT_0	/* DMA direction (0=fifo->host 1=host->fifo) */
-+	uint16_t ddma_ctrl;
-+	uint16_t ddma_status; 
-+	uint16_t ddma_fifo_status;
-+	uint16_t ddma_xfer_count_low;
-+	uint16_t ddma_xfer_count_high;
-+	uint16_t ddma_addr_count_0;
-+	uint16_t ddma_addr_count_1;
-+	uint16_t ddma_addr_count_2;
-+	uint16_t ddma_addr_count_3; 
 +
-+	uint16_t unused_3[0x0e];
+ static int qla1280_probe_one(struct pci_dev *, const struct pci_device_id *);
+ static void qla1280_remove_one(struct pci_dev *);
  
- 	uint16_t mailbox0;	/* Mailbox 0 */
- 	uint16_t mailbox1;	/* Mailbox 1 */
-@@ -158,18 +206,18 @@
- 	uint16_t mailbox6;	/* Mailbox 6 */
- 	uint16_t mailbox7;	/* Mailbox 7 */
+@@ -1384,16 +1392,10 @@
+ 	uint8_t mr;
+ 	uint16_t mb[MAILBOX_REGISTER_COUNT];
+ 	struct nvram *nv;
+-	int is1x160, status;
++	int status;
  
--	uint16_t unused_2[0x20];/* 0x80-0xbf Gap */
-+	uint16_t unused_4[0x20];/* 0x80-0xbf Gap */
+ 	nv = &ha->nvram;
  
- 	uint16_t host_cmd;	/* Host command and control */
- #define HOST_INT      BIT_7	/* host interrupt bit */
- #define BIOS_ENABLE   BIT_0
+-	if (ha->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP12160 ||
+-	    ha->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP10160)
+-		is1x160 = 1;
+-	else
+-		is1x160 = 0;
+-
+ 	mr = BIT_3 | BIT_2 | BIT_1 | BIT_0;
  
--	uint16_t unused_6[0x5];	/* 0xc2-0xcb Gap */
-+	uint16_t unused_5[0x5];	/* 0xc2-0xcb Gap */
+ 	/* Set Target Parameters. */
+@@ -1403,17 +1405,16 @@
  
- 	uint16_t gpio_data;
- 	uint16_t gpio_enable;
+ 	mb[2] = (nv->bus[bus].target[target].parameter.c << 8);
  
--	uint16_t unused_7[0x11];	/* d0-f0 */
-+	uint16_t unused_6[0x11];	/* d0-f0 */
- 	uint16_t scsiControlPins;	/* f2 */
- };
+-	if (is1x160)
+-		mb[3] =	nv->bus[bus].target[target].flags.flags1x160.sync_offset << 8;
+-	else
+-		mb[3] =	nv->bus[bus].target[target].flags.flags1x80.sync_offset << 8;
+-	mb[3] |= nv->bus[bus].target[target].sync_period;
+-
+-	if (is1x160) {
++	if (IS_ISP1x160(ha)) {
+ 		mb[2] |= nv->bus[bus].target[target].ppr_1x160.flags.enable_ppr << 5;
+-		mb[6] =	nv->bus[bus].target[target].ppr_1x160.flags.ppr_options << 8;
+-		mb[6] |= nv->bus[bus].target[target].ppr_1x160.flags.ppr_bus_width;
++		mb[3] =	(nv->bus[bus].target[target].flags.flags1x160.sync_offset << 8) |
++			 nv->bus[bus].target[target].sync_period;
++		mb[6] =	(nv->bus[bus].target[target].ppr_1x160.flags.ppr_options << 8) |
++			 nv->bus[bus].target[target].ppr_1x160.flags.ppr_bus_width;
+ 		mr |= BIT_6;
++	} else {
++		mb[3] =	(nv->bus[bus].target[target].flags.flags1x80.sync_offset << 8) |
++			 nv->bus[bus].target[target].sync_period;
+ 	}
  
+ 	status = qla1280_mailbox_command(ha, mr, &mb[0]);
+@@ -1476,8 +1477,7 @@
+ 	    (driver_setup.wide_mask &&
+ 	     (~driver_setup.wide_mask & (1 << target))))
+ 		nv->bus[bus].target[target].parameter.f.enable_wide = 0;
+-	if (ha->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP12160 ||
+-	    ha->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP10160) {
++	if (IS_ISP1x160(ha)) {
+ 		if (driver_setup.no_ppr ||
+ 		    (driver_setup.ppr_mask &&
+ 		     (~driver_setup.ppr_mask & (1 << target))))
+@@ -2289,19 +2289,13 @@
+ {
+ 	struct device_reg *reg = ha->iobase;
+ 	struct nvram *nv;
+-	int is1x160, status = 0;
++	int status = 0;
+ 	int bus, target, lun;
+ 	uint16_t mb[MAILBOX_REGISTER_COUNT];
+ 	uint16_t mask;
+ 
+ 	ENTER("qla1280_nvram_config");
+ 
+-	if (ha->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP12160 ||
+-	    ha->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP10160)
+-		is1x160 = 1;
+-	else
+-		is1x160 = 0;
+-
+ 	nv = &ha->nvram;
+ 	if (!ha->nvram_valid) {
+ 		dprintk(1, "Using defaults for NVRAM: \n");
+@@ -2325,7 +2319,7 @@
+ 		 */
+ 		nv->isp_config.c = 0x44;
+ 
+-		if (is1x160)
++		if (IS_ISP1x160(ha))
+ 			nv->isp_parameter = 0x01;
+ 
+ 		for (bus = 0; bus < MAX_BUSES; bus++) {
+@@ -2357,7 +2351,7 @@
+ 					disconnect_allowed = 1;
+ 				nv->bus[bus].target[target].execution_throttle=
+ 					nv->bus[bus].max_queue_depth - 1;
+-				if (is1x160) {
++				if (IS_ISP1x160(ha)) {
+ 					nv->bus[bus].target[target].flags.
+ 						flags1x160.device_enable = 1;
+ 					nv->bus[bus].target[target].flags.
+@@ -2558,16 +2552,18 @@
+ 			nv->bus[bus].target[target].parameter.f.
+ 				stop_queue_on_check = 0;
+ 
+-			if (is1x160)
++			if (IS_ISP1x160(ha)) {
+ 				nv->bus[bus].target[target].ppr_1x160.
+ 					flags.enable_ppr = 0;
++			}
++
+ 			/*
+ 			 * No sync, wide, etc. while probing
+ 			 */
+ 			mb[2] = (nv->bus[bus].target[target].parameter.c << 8)&
+ 				~(TP_SYNC /*| TP_WIDE | TP_PPR*/);
+ 
+-			if (is1x160)
++			if (IS_ISP1x160(ha))
+ 				mb[3] =	nv->bus[bus].target[target].flags.flags1x160.sync_offset << 8;
+ 			else
+ 				mb[3] =	nv->bus[bus].target[target].flags.flags1x80.sync_offset << 8;
+@@ -2579,7 +2575,7 @@
+ 			 * determined that the target actually supports it
+ 			 */
+ #if 0
+-			if (is1x160) {
++			if (IS_ISP1x160(ha)) {
+ 				mb[2] |= nv->bus[bus].target[target].ppr_1x160.flags.enable_ppr << 5;
+ 
+ 				mb[6] =	nv->bus[bus].target[target].ppr_1x160.flags.ppr_options << 8;
+@@ -2596,7 +2592,7 @@
+ 				ha->bus_settings[bus].qtag_enables |= mb[0];
+ 
+ 			/* Save Device enable flag. */
+-			if (is1x160) {
++			if (IS_ISP1x160(ha)) {
+ 				if (nv->bus[bus].target[target].flags.flags1x160.device_enable)
+ 					ha->bus_settings[bus].device_enables |= mb[0];
+ 				ha->bus_settings[bus].lun_disables |= 0;
