@@ -1,49 +1,49 @@
-From: Ken Tyler <kent@werple.net.au>
-Subject: Re: State of NCR53c7xx based drivers
-Date: Mon, 24 Nov 2003 16:12:02 +1100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Fix for aic7xxx problems in BK latest
+Date: 23 Nov 2003 23:53:20 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0311241553080.17702-100000@leo.crm114.net>
-References: <20031123232126.B1657@sygehus.dk>
+Message-ID: <1069653204.2066.25.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gizmo09bw.bigpond.com ([144.140.70.19]:31463 "HELO
-	gizmo09bw.bigpond.com") by vger.kernel.org with SMTP
-	id S263618AbTKXFMG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2003 00:12:06 -0500
-In-Reply-To: <20031123232126.B1657@sygehus.dk>
+Received: from nat9.steeleye.com ([65.114.3.137]:16390 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262425AbTKXFxZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2003 00:53:25 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Rask Ingemann Lambertsen <rask@sygehus.dk>
-Cc: Linux/m68k <linux-m68k@lists.linux-m68k.org>, linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>, Pete Clements <clem@clem.clem-digital.net>, Fabio Coatti <cova@ferrara.linux.it>, Zwane Mwaikambo <zwane@arm.linux.org.uk>
+Cc: Christoph Hellwig <hch@lst.de>
 
-On Sun, 23 Nov 2003, Rask Ingemann Lambertsen wrote:
+It turns out the scsi_device refcounting and list lockdown altered the
+conditions under which scsi_report_bus_reset() works, since it calls
+shost_for_each_device, which now takes the host lock, that lock cannot
+be held while calling the report functions.  However, the assumption by
+aic is that it can.
 
-> I have an Amiga with a CyberStorm PPC board and wouldn't mind having Linux
-> running on it. What would be a good name for the driver?
+I fixed the problem by using the no lock version of the iterator.
 
-Which Amiga and which PPC board?
+James
 
-SCSI works on ppc 1200s but not reliably on ppc 4000s.  I tried many, many 
-times to fix 53c710.c (with endless help from Richard Hirst) all to no 
-avail.
-
-It will work for a variable amount of time and then machine locks up,
-CDROMS and ZIPs seem to run longer than HDs.
-
-A hacked together sim710.c behaved exactly the same.  This is with Quantum 
-drives.
-
-An odd as it might seem when I bought a Seagate drive for the PPC on board
-SCSI it did the same thing too.
-
-At this point I decided the driver was probably OK all along and the 
-problem is else where, either in the logic that connects ZORRO to PPC or a 
-deadlock in interrupt code but this is stabbing in the dark.
-
-Good luck,
-
-Ken.   
-
-
-
+===== drivers/scsi/scsi_error.c 1.65 vs edited =====
+--- 1.65/drivers/scsi/scsi_error.c	Sun Sep 21 12:49:36 2003
++++ edited/drivers/scsi/scsi_error.c	Sun Nov 23 23:39:09 2003
+@@ -1622,7 +1622,7 @@
+ {
+ 	struct scsi_device *sdev;
+ 
+-	shost_for_each_device(sdev, shost) {
++	__shost_for_each_device(sdev, shost) {
+ 		if (channel == sdev->channel) {
+ 			sdev->was_reset = 1;
+ 			sdev->expecting_cc_ua = 1;
+@@ -1656,7 +1656,7 @@
+ {
+ 	struct scsi_device *sdev;
+ 
+-	shost_for_each_device(sdev, shost) {
++	__shost_for_each_device(sdev, shost) {
+ 		if (channel == sdev->channel &&
+ 		    target == sdev->id) {
+ 			sdev->was_reset = 1;
 
