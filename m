@@ -1,36 +1,46 @@
-From: Guennadi Liakhovetski <gl@dsa-ac.de>
-Subject: Re: [PATCH] Re: AMD 53c974 SCSI driver in 2.6
-Date: Thu, 20 Nov 2003 12:37:51 +0100 (CET)
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Thu, 20 Nov 2003 13:34:33 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0311201234090.2153-100000@pcgl.dsa-ac.de>
-References: <20031119153437.GA2115@tpkurt.garloff.de>
+Message-ID: <20031120133433.A31298@infradead.org>
+References: <200310231734.10263.krmurthy@cisco.com> <03111920183201.15831@naveenb-lnx.cisco.com> <20031119091717.A11499@beaverton.ibm.com> <03112019020601.16789@naveenb-lnx.cisco.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dsa-ac.de ([62.112.80.99]:11794 "EHLO k2.dsa-ac.de")
-	by vger.kernel.org with ESMTP id S261773AbTKTLh4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Nov 2003 06:37:56 -0500
-In-Reply-To: <20031119153437.GA2115@tpkurt.garloff.de>
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:1035 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S261780AbTKTNej (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Nov 2003 08:34:39 -0500
+Content-Disposition: inline
+In-Reply-To: <03112019020601.16789@naveenb-lnx.cisco.com>; from naveenb@cisco.com on Thu, Nov 20, 2003 at 07:02:06PM +0530
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>
-Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, "Randy.Dunlap" <rddunlap@osdl.org>, hch@infradead.org, linux-scsi@vger.kernel.org
+To: Naveen Burmi <naveenb@cisco.com>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, davmyers@cisco.com
 
-Hi
+On Thu, Nov 20, 2003 at 07:02:06PM +0530, Naveen Burmi wrote:
+> Lun masking feature is provided by the linux-iscsi driver. In the linux-iscsi 
+> driver configuration file user can specify the luns of a target that needs to 
+> be activated upon the detection of that target.
+> 
+> > If you already have the LUN specified, why do you need to issue a REPORT
+> > LUN command?
+> 
+> User has specified the LUNs that needs to be activated upon the detection of 
+> a target. Once that target gets detected then to find out weather the LUNs 
+> specified by the user are actually present, we need to issue REPORT LUN 
+> command.
+>  
+> >
+> > I don't know iSCSI specification details, but I would want to specify a
+> > target, not a LUN, in a configuration file and have all LUNs on the target
+> > be automatically configured.
+> >
+> 
+> User might not want to configure all the LUNs of a target. 
 
-Tests yesterday showed, DMA-buffers are always empty (on receiving),
-I printed out the first 32 bytes of the buffer on each interrupt, and it
-is either all 0, or all 0x5a (or was it 0xa5?), or first 8 bytes 0, then
-0x5a... So, either DMA isn't set up properly, or we are handling the wrong
-buffer somewhere... Because, AFAIU, the chip receives commands from the
-host correctly, according to the status-register readings...
-
-Thanks
-Guennadi
----------------------------------
-Guennadi Liakhovetski, Ph.D.
-DSA Daten- und Systemtechnik GmbH
-Pascalstr. 28
-D-52076 Aachen
-Germany
+I'm not sure I agree with that.  Users might also want whatever but it's not
+sensible to do that.  Ignore the user request now, if we see real-world use
+for that we'll implement it in the midlayer.  And if you think it's really
+important implement it in the midlayer now and keep the patch around for
+users that want it.
 
