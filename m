@@ -1,45 +1,44 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [2.6 patch] SCSI aacraid: make some code static
-Date: Mon, 15 Nov 2004 18:31:38 +0100
-Message-ID: <20041115173138.GB2730@stusta.de>
-References: <20041115014955.GC2249@stusta.de> <1100528774.27202.7.camel@localhost.localdomain>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: Serial Attached SCSI Driver Interface (SDI)
+Date: Mon, 15 Nov 2004 10:40:51 -0700
+Message-ID: <91888D455306F94EBD4D168954A9457C3FFAC7@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:48141 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261506AbUKORgD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Nov 2004 12:36:03 -0500
-Content-Disposition: inline
-In-Reply-To: <1100528774.27202.7.camel@localhost.localdomain>
+Received: from mail0.lsil.com ([147.145.40.20]:15245 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261651AbUKORlD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Nov 2004 12:41:03 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Luben Tuikov <luben_tuikov@adaptec.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Nov 15, 2004 at 02:26:31PM +0000, Alan Cox wrote:
-> On Llu, 2004-11-15 at 01:49, Adrian Bunk wrote:
-> > The patch below makes some needlessly global code static.
-> > 
-> > It also removes the completely unused global function 
-> > aac_consumer_avail.
+How are you planning to support CSMI?
+
+I have already submitted drivers last week
+on this mailing list with CSMI support, 
+and it was rejected by Christoph, Arjan, 
+and Company.
+
+Eric Moore
+LSI Logic
+
+
+On Monday, November 15, 2004 10:22 AM, Luben Tuikov wrote:
 > 
-> Looks good to me but make sure you send a copy on to the maintainer
-> <mark_salyzyn@adaptec.com> as he'll want it for the development drivers
-> (and we want that because there are a pile of new cards 8))
-
-If Mark wants an explicit Cc on aacraid patches, he should add his email 
-address to the entry in MAINTAINERS.
-
-cu
-Adrian
-
-BTW: I've seen Mark has already incorporated my patch.
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+> I think it would be a good thing:
+> 
+> ftp://ftp.t10.org/t10/document.04/04-345r1.pdf
+> 
+> 	Luben
+> 
+> P.S. CSMI...
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
