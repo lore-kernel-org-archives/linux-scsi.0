@@ -1,40 +1,70 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: [PATCH/RFT] mode sense madness always use page 8
-Date: Fri, 31 Oct 2003 10:16:46 -0800
+Date: 31 Oct 2003 13:38:21 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031031101645.A14729@beaverton.ibm.com>
-References: <Pine.LNX.4.44L0.0310301004010.852-100000@ida.rowland.org> <1067531731.4250.11.camel@pathost1.iomegacorp.com> <20031030091808.A6781@beaverton.ibm.com> <1067535485.6411.42.camel@pathost1.iomegacorp.com> <20031030100501.A7250@beaverton.ibm.com> <1067541899.1141.4.camel@ronald.kuetemeier.com> <20031030134850.A9076@beaverton.ibm.com> <1067551081.1138.7.camel@ronald.kuetemeier.com> <1067558384.14409.50.camel@patrh9>
+Message-ID: <1067632701.5742.45.camel@patrh9>
+References: <20031030100501.A7250@beaverton.ibm.com>
+	 <Pine.LNX.4.44L0.0310301351380.1440-100000@ida.rowland.org>
+	 <20031030112621.A7844@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.132]:43402 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S263485AbTJaSRu
+Received: from email-out1.iomega.com ([147.178.1.82]:1176 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S263553AbTJaUi6
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Oct 2003 13:17:50 -0500
-Content-Disposition: inline
-In-Reply-To: <1067558384.14409.50.camel@patrh9>; from p.lavarre@ieee.org on Thu, Oct 30, 2003 at 04:59:45PM -0700
+	Fri, 31 Oct 2003 15:38:58 -0500
+In-Reply-To: <20031030112621.A7844@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: ronald@kuetemeier.com, stern@rowland.harvard.edu, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, james.bottomley@steeleye.com
+To: patmans@us.ibm.com
+Cc: stern@rowland.harvard.edu, ronald@kuetemeier.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, james.bottomley@steeleye.com
 
-On Thu, Oct 30, 2003 at 04:59:45PM -0700, Pat LaVarre wrote:
-> Can we cycle more quickly thru compile-test-edit up in user land, rather
-> than patching the kernel?
+> > __scsi_mode_sense() ...
+> ...
+> per Pat L's comment, should we decrement the len by four if going from
+> MODE SENSE 10 to MODE SENSE? Or request four more bytes than required?
 
-Good idea.
+I've seen no answer here yet, so I figured I'd volunteer a little more
+study myself, so now I ask:
 
-> sudo ./plscsi /dev/sg1 -v -i x1C -x "5A 00 08:00:00:00 00 00:1C 00"
-> sudo ./plscsi /dev/sg1 -v -i 4   -x "5A 00 3F:00:00:00 00 00:04 00"
-> sudo ./plscsi /dev/sg1 -v -i 4   -x "5A 00 00:00:00:00 00 00:04 00"
-> sudo ./plscsi /dev/sg1 -v -i xFF -x "5A 00 3F:00:00:00 00 00:FF 00"
+Tell me again what we think __scsi_mode_sense does?
 
-Nice. Does sg_utils have an equivalent tool?
+Am I correct to guess by intent __scsi_mode_sense does a complete job of
+hiding the op x1A MODE_SENSE vs. op x5A MODE_SENSE_10 choice only if the
+caller ignores the content of the buffer after the call, choosing
+instead to interpret only the struct scsi_mode_data?
 
-You can use /dev/sdN with 2.6.
+Supposing that's correct, then I vote we zero the buffer after copying
+its bits into the struct scsi_mode_data.
 
-> Also personally I find the source for that plscsi app impenetrably awful
-> to read.
+Meanwhile, from that perspective, we say we bother to pass the dbd,
+modepage, len parms into __scsi_mode_sense only to guess at specifically
+what combination of sreq->sr_cmnd sr_cmd_len sr_bufflen might work.
 
-Maybe you can rewrite it in c and get it into sg_utils.
+Since we offer only one set of guesses, no matter
+sreq->sr_device->use_10_for_ms, then yes, we have to reduce our guess by
+four if we substitute op x1A MODE_SENSE for op x5A MODE_SENSE_10, else
+our guesses are not consistent - not orthogonal vs. use_10_for_ms.
 
--- Patrick Mansfield
+Ouch that doesn't sound like a 2.6.0 change necessary enough to pass
+review, does it?
+
+> __scsi_mode_sense() ...
+
+I see { unsigned char cmd[12]; } there.  We mean 16, right?
+
+I argue by way of seeing { memcpy(sreq->sr_cmnd, cmnd,
+sizeof(sreq->sr_cmnd)); } in scsi_do_req.  I conclude we need sizeof
+*cmnd to meet or exceed sizeof(sreq->sr_cmnd), thus same for
+scsi_wait_req.  include/scsi/scsi_request.h tells me that size is
+MAX_COMMAND_SIZE, possibly the 16 seen in include/scsi/scsi_cmnd.h.
+
+I guess we're getting away with what we've got because we're mostly
+using gcc in places where copying more than exists out of a local
+variable picks up some extra stack that has already been allocated,
+rather than double-faulting by trying to grow stack while talking scsi
+to the paging device.
+
+Pat LaVarre
+
+
