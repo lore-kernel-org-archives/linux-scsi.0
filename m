@@ -1,53 +1,54 @@
-From: Luben Tuikov <luben@splentec.com>
-Subject: Re: [RFC]: 64 bit LUN/Tags, dummy device in host_queue, host_lock <->
- LLDD reentrancy
-Date: Mon, 26 Aug 2002 16:48:57 -0400
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [RFC]: 64 bit LUN/Tags, dummy device in host_queue, host_lock <-> LLDD reentrancy
+Date: Mon, 26 Aug 2002 13:57:20 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D6A9439.F713A042@splentec.com>
-References: <OF80DCCDBC.5B147AD9-ONC1256C21.002BB3EE@de.ibm.com> <20020826101748.B6694@eng2.beaverton.ibm.com>
+Message-ID: <20020826205720.GE1301@beaverton.ibm.com>
+References: <20020826172746.GA1301@beaverton.ibm.com> <200208261900.g7QJ0r501788@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from splentec.com (canoe.splentec.com [209.47.35.250])
-	by pepsi.splentec.com (8.11.6/8.11.0) with ESMTP id g7QKmsH08312
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2002 16:48:54 -0400
+Content-Disposition: inline
+In-Reply-To: <200208261900.g7QJ0r501788@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Patrick Mansfield wrote:
->
-> If we are to add an 8 byte LUN:
+James Bottomley [James.Bottomley@SteelEye.com] wrote:
+> andmike@us.ibm.com said:
+> > James I do not follow the usage of LUNs linked by pointers, can you
+> > explain further? 
 > 
-> We still need to allow a smaller lun for all of the current open source
-> adapter drivers (AFAIK all open source drivers except the qlogic drivers
-> use a one byte lun, and the qlogic uses a two byte lun) - either a field
-> in Scsi_Device and/or Scsi_Cmnd, or a functional interface to get the
-> equivalent four byte value (and then it can be assigned to a one or two
-> byte value as is done today) in addition to any new 8 byte lun field.
+> Yes:  the mid-layer could function only with Scsi_Devices and Scsi_Hosts.  
+> LUNs are currently only used explicitly for scanning.  However, I'd like to 
+> make the error handler handle the consequences of its action, thus it will 
+> need to know LUN relationships to handle a BDR correctly.  However, the mid 
+> layer doesn't need an arbitrary number associated with LUN or PUN.  Since the 
+> number, string or whatever is only really useful to the lld.  So, simply put, 
+> we'd probably have an entry in the Scsi_Device for lun_list.  This would be 
+> the usual doubly linked list so starting with any Scsi_Device we could always 
+> find the associated LUNs.
+> 
 
-For transition purposes, yes.
+Ok, so we are looking for a sibling check. We should alter our driverfs
+registration so that we pick this up for free by comparing the
+de->parent of our scsi_device. Example tree shown below. Our scsi_device
+devfs_entry would be pointing the lun leaf node. TBD on where all the
+devfs_entrys get stored an who creates / destroys them.
 
-But, ideally, the LUN should be a function of the LLDD, since
-it is the _LLDD_ which knows (then maybe not) about the transport
-used (FCP, SPI, etc).
+Example tree
+devices/root/pci0/00:09.0/name "PCI device 1014:002e"
+devices/root/pci0/00:09.0/0/name "scsi0"
+devices/root/pci0/00:09.0/0/0/name "chan0"
+devices/root/pci0/00:09.0/0/0/1/name "tgt1"
+devices/root/pci0/00:09.0/0/0/1/1/name "lun1"
+devices/root/pci0/00:09.0/0/0/1/0/name "lun0"
+devices/root/pci0/00:09.0/0/0/0/name "tgt0"
+devices/root/pci0/00:09.0/0/0/0/1/name "lun1"
+devices/root/pci0/00:09.0/0/0/0/0/name "lun0"
 
-The kernel shouldn't care if the transport uses 5 bits (SPI) or
-64 bits (iSCSI) for LUN identification, it should use the SAM-3
-definition of 64 bits.
 
-> The Scsi_Host::max_lun usage would have to remain for the old four byte
-
-Certainly one can limit the scan, but we no more can enumerate it so
-simply as it was done before.
-
-There may be only 6 LU, with addresses scattered in the 64 bit space,
-only to tell us that the transport is iSCSI and the target is
-actually 4 daisy-chained SANs. (or something like that, you guys get the idea)
-
-LUNs should be picked up from the REPORT LUNS report data, in order to
-discover all the LUNs currently available, just because of the large
-but sparse LUN space.
-
+-Mike
 -- 
-Luben
+Michael Anderson
+andmike@us.ibm.com
+
