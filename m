@@ -1,51 +1,65 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: MODULE_VERSION for scsi drivers
-Date: Mon, 26 Apr 2004 21:15:54 -0700 (PDT)
+From: akpm@osdl.org
+Subject: [patch 1/3] aic7xxx deadlock fix
+Date: Mon, 26 Apr 2004 22:01:16 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <32805.4.5.45.142.1083039354.squirrel@www.osdl.org>
-References: <20040427040923.GA9901@lists.us.dell.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Message-ID: <200404270501.i3R51V207721@mail.osdl.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:41951 "EHLO fire-2.osdl.org")
-	by vger.kernel.org with ESMTP id S262019AbUD0EP5 (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:53673 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S263467AbUD0FBg (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Apr 2004 00:15:57 -0400
-In-Reply-To: <20040427040923.GA9901@lists.us.dell.com>
+	Tue, 27 Apr 2004 01:01:36 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@dell.com>
-Cc: linux-scsi@vger.kernel.org
-
-> Now that the MODULE_VERSION() macro is in 2.6, I'd love to see all
-> modules implement it.  So before I go touch all the SCSI drivers, I
-> thought I'd bounce this off the list.
->
-> There are a few drivers with version strings that look like this:
->  #define VERSION "1.10 (23/01/2003 2.5.57)"
->
-> In the new world order, I think they need to look more like this:
->  #define DRV_VERSION "2.5.57"
->  #define DRV_DATE "23/01/2003"
-> and print both strings if it's interesting to do so, but the date
-> stays out of the MODULE_VERSION(DRV_VERSION).
->
-> Thoughts?  Patch below against Linus's BK-cur covers a the a* drivers,
-> plus a few I care specifically about.
-
-What's the purpose of the
-MODULE_VERSION(""):
-instances?  (e.g.:)
+To: James.Bottomley@steeleye.com
+Cc: gibbs@scsiguy.com, linux-scsi@vger.kernel.org, akpm@osdl.org
 
 
-> ===== drivers/scsi/a2091.c 1.13 vs edited ====---
-> 1.13/drivers/scsi/a2091.c	Sat Sep 27 10:17:28 2003
-> +++ edited/drivers/scsi/a2091.c	Mon Apr 26 22:21:06 2004
-> @@ -258,3 +258,4 @@
->  }
->
->  MODULE_LICENSE("GPL");
-> +MODULE_VERSION("");
 
-~Randy
+We cannot call del_timer_sync() from within that timer's handler function!
 
+
+---
+
+ 25-akpm/drivers/scsi/aic7xxx/aic7xxx_osm.c |   12 +++++++++---
+ 1 files changed, 9 insertions(+), 3 deletions(-)
+
+diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7xxx-deadlock-fix drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- 25/drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7xxx-deadlock-fix	2004-04-25 23:09:28.575737936 -0700
++++ 25-akpm/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-04-25 23:09:28.581737024 -0700
+@@ -3980,11 +3980,10 @@ ahc_linux_alloc_device(struct ahc_softc 
+ }
+ 
+ static void
+-ahc_linux_free_device(struct ahc_softc *ahc, struct ahc_linux_device *dev)
++__ahc_linux_free_device(struct ahc_softc *ahc, struct ahc_linux_device *dev)
+ {
+ 	struct ahc_linux_target *targ;
+ 
+-	del_timer_sync(&dev->timer);
+ 	targ = dev->target;
+ 	targ->devices[dev->lun] = NULL;
+ 	free(dev, M_DEVBUF);
+@@ -3994,6 +3993,13 @@ ahc_linux_free_device(struct ahc_softc *
+ 		ahc_linux_free_target(ahc, targ);
+ }
+ 
++static void
++ahc_linux_free_device(struct ahc_softc *ahc, struct ahc_linux_device *dev)
++{
++	del_timer_sync(&dev->timer);
++	__ahc_linux_free_device(ahc, dev);
++}
++
+ void
+ ahc_send_async(struct ahc_softc *ahc, char channel,
+ 	       u_int target, u_int lun, ac_code code, void *arg)
+@@ -4704,7 +4710,7 @@ ahc_linux_dev_timed_unfreeze(u_long arg)
+ 		ahc_linux_run_device_queue(ahc, dev);
+ 	if (TAILQ_EMPTY(&dev->busyq)
+ 	 && dev->active == 0)
+-		ahc_linux_free_device(ahc, dev);
++		__ahc_linux_free_device(ahc, dev);
+ 	ahc_unlock(ahc, &s);
+ }
+ 
+
+_
