@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 08/13] scsi: move request preps in other places into prep_fn()
-Date: Fri, 1 Apr 2005 14:25:42 +0900
-Message-ID: <20050401052542.GG11318@htj.dyndns.org>
-References: <20050331090647.FEDC3964@htj.dyndns.org> <20050331090647.94FFEC1E@htj.dyndns.org> <1112292464.5619.30.camel@mulgrave>
+Subject: Re: [PATCH scsi-misc-2.6 09/13] scsi: in scsi_prep_fn(), remove bogus comments & clean up
+Date: Fri, 1 Apr 2005 14:29:42 +0900
+Message-ID: <20050401052942.GH11318@htj.dyndns.org>
+References: <20050331090647.FEDC3964@htj.dyndns.org> <20050331090647.B562915C@htj.dyndns.org> <1112292140.5619.26.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.197]:43869 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262642AbVDAFZt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2005 00:25:49 -0500
-Received: by wproxy.gmail.com with SMTP id 68so797596wra
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2005 21:25:49 -0800 (PST)
+Received: from rproxy.gmail.com ([64.233.170.200]:31162 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262635AbVDAF3t (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2005 00:29:49 -0500
+Received: by rproxy.gmail.com with SMTP id j1so563872rnf
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2005 21:29:49 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <1112292464.5619.30.camel@mulgrave>
+In-Reply-To: <1112292140.5619.26.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
@@ -20,35 +20,26 @@ Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, 
 
  Hello, James.
 
-On Thu, Mar 31, 2005 at 12:07:44PM -0600, James Bottomley wrote:
+On Thu, Mar 31, 2005 at 12:02:20PM -0600, James Bottomley wrote:
 > On Thu, 2005-03-31 at 18:08 +0900, Tejun Heo wrote:
-> > 	Move request preparations scattered in scsi_request_fn() and
-> > 	scsi_dispatch_cmd() into scsi_prep_fn().
-> > 
-> > 	* CDB_SIZE check in scsi_dispatch_cmd()
-> > 	* SCSI-2 LUN preparation in scsi_dispatch_cmd()
-> > 	* scsi_init_cmd_errh() in scsi_request_fn()
-> > 
-> > 	No invalid request reaches scsi_request_fn() anymore.
+> > -	 * come up when there is a medium error.  We have to treat
+> > -	 * these two cases differently.  We differentiate by looking
+> > -	 * at request->cmd, as this tells us the real story.
+> > +	 * come up when there is a medium error.
 > 
-> This one, I like, there's just one small problem:
+> This comment isn't wrong.  That's exactly what this piece of code:
 > 
-> You can't move scsi_init_cmd_errh() out of the request function path:
-> It's where we set up the sense buffer handling, so it has to be done
-> every time the command is prepared for execution (the prep function is
-> only called once)---think what happens if we turn a command around for
-> retry based on a sense indication.
+> 		if (sreq->sr_magic == SCSI_REQ_MAGIC) {
 > 
-> So redo the patch and I'll put it in.
+> is all about ... that's how it distinguishes between the two cases.
+> 
+> The comment is misleading --- what it actually should say is that req-
+> >special has different contents depending upon the two cases, so
+> rephrasing it to be more accurate would be helpful.
 
- Ah.. with later requeue path consolidation patches, all requests get
-their sense buffer cleared during requeueing, which, IMHO, is more
-logical.  Moving scsi_init_cmd_errh() should come after the patch.
-Sorry. :-)
-
- I'll make another take of this patchset (maybe subset) after issues
-are resolved.  I'll split and reorder relocation of scsi_init_cmd_errh
-then.
+ Yes, it was misleading, even more so with previous REQ_SPECIAL
+patches.  I'll rewrite the comment once we resolve the REQ_SPECIAL
+issue.
 
  Thanks.
 
