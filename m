@@ -1,39 +1,67 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: SAI_READ_CAPACITY_16?
-Date: Wed, 06 Apr 2005 14:27:14 -0400
-Message-ID: <1112812035.5555.20.camel@mulgrave>
-References: <60807403EABEB443939A5A7AA8A7458BFF2211@otce2k01.adaptec.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: SAI_READ_CAPACITY_16?
+Date: Wed, 6 Apr 2005 14:30:20 -0400
+Message-ID: <60807403EABEB443939A5A7AA8A7458BFF22BD@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:11161 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262276AbVDFS1Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Apr 2005 14:27:24 -0400
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458BFF2211@otce2k01.adaptec.com>
+Received: from magic.adaptec.com ([216.52.22.17]:43726 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262277AbVDFSaW convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Apr 2005 14:30:22 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+To: mingz@ele.uri.edu
 Cc: Linux SCSI <linux-scsi@vger.kernel.org>
 
-On Wed, 2005-04-06 at 12:00 -0400, Salyzyn, Mark wrote:
+Thanks, needed to set shost->max_cmd_len to 16 in the driver.
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: Ming Zhang [mailto:mingz@ele.uri.edu] 
+Sent: Wednesday, April 06, 2005 12:12 PM
+To: Salyzyn, Mark
+Cc: Linux SCSI
+Subject: Re: SAI_READ_CAPACITY_16?
+
+we tested several iSCSI initiator/target combinations that work with
+>2TB devices in current 2.6.11.x kernel.
+
+our experience is that some code only support cdb len 10 or 12. you need
+16.
+
+Ming
+
+
+On Wed, 2005-04-06 at 12:00, Salyzyn, Mark wrote:
+> Troubled spoofing back >2TB support in the aacraid driver.
+> 
 > For some reason, sd_read_capacity (in sd.c) in the 2.6.9-5.EL (RHEL4)
 > kernel is not issuing the SERVICE_REQUEST_IN+SAI_READ_CAPACITY_16
 > command to the queuecommand handler (the handler is not even called),
 > even though it instruments up that the command is issued (and returns
 > not supported). The READ_CAPACITY call makes it through successfully
 > indicating 0xFFFFFFFF capacity to trigger the SAI_READ_CAPACITY_16
-> request fine. Could there be a bug in the scsi layers reissuing commands
+> request fine. Could there be a bug in the scsi layers reissuing
+commands
 > reusing the request structure misdirecting the requests?
-
-The person who coded it gave a success report on it ... and I've had
-several others since then.
-
-On a 32 bit system, you have to have CONFIG_LBD for it to work.
-
-This code is pretty verbose, what are your kernel traces?
-
-James
-
+> 
+> The only changes to the current tree appear to be in the handling of
+the
+> request sense information, so I expect the same behavior from
+> latest/greatest.
+> 
+> Any successes in the current tree with >2TB support being reported by
+> the SAI_READ_CAPACITY_16 call?
+> 
+> Sincerely -- Mark Salyzyn
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
