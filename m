@@ -1,43 +1,34 @@
-From: "Mukker, Atul" <Atulm@lsil.com>
-Subject: RE: megaraid battery status questions
-Date: Mon, 13 Sep 2004 09:07:59 -0400
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: IO buffer alignment for block devices
+Date: 13 Sep 2004 10:14:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BCA20@exa-atlanta>
+Message-ID: <1095084876.1762.8.camel@mulgrave>
+References: <41459729.5060106@il.marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:1414 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S266689AbUIMNIM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Sep 2004 09:08:12 -0400
+Received: from stat16.steeleye.com ([209.192.50.48]:11999 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S266835AbUIMOOj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Sep 2004 10:14:39 -0400
+In-Reply-To: <41459729.5060106@il.marvell.com>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Russell Johnson' <rjohnson@rtlogic.com>, linux-scsi@vger.kernel.org
+To: Saeed Bishara <Saeed.Bishara@il.marvell.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-> I have been using the megaraid driver on a Dell system using 
-> the PERC4 for
-> several months now and have noticed that 
-> /proc/megaraid/hba0/battery-status
-> will report errors after reading it over time.  If I reboot 
-> the system then
-> the battery status errors go away until I poll again.  The 
-> BIOS for the
-> Megaraid doesn't report battery status errors in any of the 
-> tests I have
-> run.  The errors I see include "low voltage" and "charge fail".  In
-> addition, I have seen the same "errors" across several 
-> different systems so
-> it isn't just a single adapter or system that is failing.
+On Mon, 2004-09-13 at 08:48, Saeed Bishara wrote:
+>     Is there any minimal alignment for the IO buffers (sg and single) 
+> sent to a scsi LLD?
+>     I found that buffers that come from buffer cache, page cache and sg 
+> are page aligned , and the raw driver send sector aligned     buffers.
+>     so can I assume that the minimal alignment of the buffer is 512 bytes?
 
-Can you provide your dmesg output and the information from *all* files from
-the /proc/megaraid/hbaX/ directory
+You can assume it will be whatever you set blk_queue_dma_alignment() to
+in your slave configure routines.  If the LLD doesn't set this, then it
+will be 8 bytes.  However, beware, setting this higher can cause user
+generated commands to be errored if they fail the alignment checks.
+
+James
 
 
-> 
-> With my goal to poll raid status and battery status on a 
-> periodic basis,
-> does anyone have ideas on what mechanism I can use?  Ioctl?  
-> Other programs?
-
-If you have an application which issues the corresponding ioctl, the same
-would work with 2.20.3.1 driver
