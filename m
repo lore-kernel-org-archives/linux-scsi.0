@@ -1,35 +1,23 @@
-From: Linus Torvalds <torvalds@transmeta.com>
-Subject: Re: PATCH: exclude certain commands from emulated SCSI hosts
-Date: Sat, 22 Mar 2003 23:39:05 -0800 (PST)
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] update MESH scsi driver
+Date: Sun, 23 Mar 2003 08:12:23 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0303222337260.5588-100000@home.transmeta.com>
-References: <20030322233136.D17056@one-eyed-alien.net>
+Message-ID: <20030323081223.A6568@infradead.org>
+References: <15997.13267.498276.509580@nanango.paulus.ozlabs.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20030322233136.D17056@one-eyed-alien.net>
+Content-Disposition: inline
+In-Reply-To: <15997.13267.498276.509580@nanango.paulus.ozlabs.org>; from paulus@samba.org on Sun, Mar 23, 2003 at 03:10:59PM +1100
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Cc: USB Developers <linux-usb-devel@lists.sourceforge.net>, USB Storage List <usb-storage@one-eyed-alien.net>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Paul Mackerras <paulus@samba.org>
+Cc: linux-scsi@vger.kernel.org, torvalds@transmeta.com
 
+On Sun, Mar 23, 2003 at 03:10:59PM +1100, Paul Mackerras wrote:
+> This patch updates the `mesh' scsi driver used on older powermacs to
+> correspond with recent changes in the scsi subsystem (things like
+> using cmd->device->id instead of cmd->target).
 
-On Sat, 22 Mar 2003, Matthew Dharm wrote:
-> 
-> As I see it, SCSI commands break down into two basic categories:  common
-> and uncommon.  Common things (basic read and write, 36-byte INQUIRY, eject,
-> etc.) are all fine, but the 'uncommon' things (checking cache type,
-> 255-byte INQUIRY, etc) cause problems.  I'm trying to find a way to choke
-> off the problematic commands without having to write code to recognize what
-> is being sent (and choke it off) based on what is in the command bytes.
-> 
-> I'm open to suggestions.
+Looks good, please also make all functions static while you're at it.
 
-How about making the SCSI stuff pass a "common" flag (or "required") down
-with the command? Then, a emulated thing could just decide to punt all 
-commands with an immediate failure if they aren't marked "required".
-
-That still _allows_ the driver to implement it if it wants to, unlike your 
-previous approach.
-
-		Linus
-
+(dito for mac53c94)
