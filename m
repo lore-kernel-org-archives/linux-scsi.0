@@ -1,35 +1,29 @@
-From: Rusty Trivial Russell <rusty@rustcorp.com.au>
-Subject: [TRIVIAL] Fix mesh config
-Date: Mon, 12 Aug 2002 16:43:33 +1000
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [TRIVIAL] Remove __NO_VERSION__ from 2.4
+Date: 12 Aug 2002 11:18:09 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020812015102.CD4DB2C246@lists.samba.org>
+Message-ID: <1029147489.16216.126.camel@irongate.swansea.linux.org.uk>
+References: <20020811210612.B18882C0DD@lists.samba.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20020811210612.B18882C0DD@lists.samba.org>
 List-Id: linux-scsi@vger.kernel.org
-To: torvalds@transmeta.com, linux-scsi@vger.kernel.org
+To: Rusty Trivial Russell <rusty@samba.org>
+Cc: Marcelo Tosatti <marcelo@conectiva.com.br>, Kai Germaschewski <kai.germaschewski@gmx.de>, Karsten Keil <kkeil@suse.de>, braam@clusterfs.com, davem@redhat.com, dledford@redhat.com, dwmw2@redhat.com, faith@redhat.com, greg@kroah.com, hpa@zytor.com, jaharkes@cs.cmu.edu, jffs-dev@axis.com, jhartmann@precisioninsight.com, laforge@gnumonks.org, linux-scsi@vger.kernel.org, mac@melware.de, perex@suse.cz, schwidefsky@de.ibm.com, trond.myklebust@fys.uio.no
 
-(Included in 2.4)
-From:  Paul Mackerras <paulus@samba.org>
+On Mon, 2002-08-12 at 02:50, Rusty Trivial Russell wrote:
+> [ BTW: rustcorp.com.au temporarily not resolving, using samba.org address ]
+> 
+> From:  Keith Owens <kaos@ocs.com.au>
+> 
+>   #define __NO_VERSION__ has not been required since 2.3 days.  Trivial
+>   change to remove all references to __NO_VERSION__, it just hits a lot
+>   of files.
 
-  We need this small change to drivers/scsi/Config.in.  It only affects
-  people using powermacs since the MESH hardware only exists on
-  powermacs and clones.
-  
+This seems to touch files whose authors have explicitly asked people not
+to mangle 2.2/2.4 compatibility. Surely 2.5 is the place for this kind
+of stuff. Its a change that has no effect other than making sure patches
+don't apply and 2.2/2.4 compat code breaks on people.
 
---- trivial-2.5.31/drivers/scsi/Config.in.orig	2002-08-12 16:14:34.000000000 +1000
-+++ trivial-2.5.31/drivers/scsi/Config.in	2002-08-12 16:14:34.000000000 +1000
-@@ -221,10 +221,11 @@
- if [ "$CONFIG_EXPERIMENTAL" = "y" ]; then
-    dep_tristate 'SCSI debugging host simulator (EXPERIMENTAL)' CONFIG_SCSI_DEBUG $CONFIG_SCSI
- fi
--if [ "$CONFIG_PPC" = "y" ]; then
-+if [ "$CONFIG_ALL_PPC" = "y" ]; then
-    dep_tristate 'MESH (Power Mac internal SCSI) support' CONFIG_SCSI_MESH $CONFIG_SCSI
-    if [ "$CONFIG_SCSI_MESH" != "n" ]; then
-       int '  maximum synchronous transfer rate (MB/s) (0 = async)' CONFIG_SCSI_MESH_SYNC_RATE 5
-+      int '  initial bus reset delay (ms) (0 = no reset)' CONFIG_SCSI_MESH_RESET_DELAY_MS 4000
-    fi
-    dep_tristate '53C94 (Power Mac external SCSI) support' CONFIG_SCSI_MAC53C94 $CONFIG_SCSI
- fi
--- 
-  Don't blame me: the Monkey is driving
-  File: Paul Mackerras <paulus@samba.org>: [PATCH] Fix mesh config
