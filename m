@@ -1,45 +1,32 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: PATCH; make sr.c respect use_10_for_ms
-Date: 22 Jun 2003 08:58:00 -0500
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Is it safe to do DMA directly into scmd->sense_buffer?
+Date: Sun, 22 Jun 2003 12:09:52 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1056290282.1979.4.camel@mulgrave>
-References: <20030621165920.F2811@one-eyed-alien.net>
-	<1056241551.1775.14.camel@mulgrave>
-	<20030621174640.M2811@one-eyed-alien.net>
-	<1056250487.1775.58.camel@mulgrave>
-	<20030621212406.N2811@one-eyed-alien.net>
+Message-ID: <Pine.LNX.4.44L0.0306221200050.434-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:20485 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S265023AbTFVNoF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Jun 2003 09:44:05 -0400
-In-Reply-To: <20030621212406.N2811@one-eyed-alien.net>
+Received: from netrider.rowland.org ([192.131.102.5]:42252 "HELO
+	netrider.rowland.org") by vger.kernel.org with SMTP id S264505AbTFVPzr
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Jun 2003 11:55:47 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Cc: torvalds@transmeta.com, Linux SCSI list <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>
+To: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Sat, 2003-06-21 at 23:24, Matthew Dharm wrote:
-> On Sat, Jun 21, 2003 at 09:54:46PM -0500, James Bottomley wrote:
-> >  	}
-> > -	n = buffer[3] + 4;
-> > +	n = rc;
-> >  	cd->cdi.speed = ((buffer[n + 8] << 8) + buffer[n + 9]) / 176;
-> 
-> This bit isn't right.  n is supposed to point to the start of the page
-> data, not the page header.  The header is a different size if the command
-> is 6-byte or 10-byte.
+When retrieving sense data for a failed command, is it safe to transfer
+the data by DMA directly into scmd->sense_buffer?  My guess is that on
+architectures that have non-cache-coherent DMA, it's _not_.
 
-Yes it is.
+The reason is that there is no guarantee the SCSI core won't touch the
+scmd structure while the I/O is taking place.  For instance, should the
+abort timer expire, the error-handler thread might very well end up
+reading or writing data falling in the same cache line as the
+sense_buffer.  That would corrupt the CPU's view of data transferred from
+the device.
 
-That's why I eliminated the dbd bit.  Your patch was calculating the
-offsets past the dbd headers.  However, if you tell the mode sense not
-to send any dbd headers (which are pointless, because the routine isn't
-interested in them), then you don't have to skip past them. and the mode
-data begins just past the mode header.
+But maybe there's some provision for taking care of this I'm not aware of.  
+If anyone can supply the correct answer, my sense-bounce-buffer and I
+would appreciate it.
 
-James
-
+Alan Stern
 
