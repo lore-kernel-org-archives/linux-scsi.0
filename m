@@ -1,40 +1,38 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple map/unmaps
-Date: Mon, 05 Jan 2004 10:57:35 -0700
+From: "David S. Miller" <davem@redhat.com>
+Subject: Re: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple
+ map/unmaps
+Date: Mon, 5 Jan 2004 11:22:02 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <2938942704.1073325455@aslan.btc.adaptec.com>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Message-ID: <20040105112202.1fe5cacf.davem@redhat.com>
+References: <2938942704.1073325455@aslan.btc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic-mail.adaptec.com ([216.52.22.10]:39828 "EHLO
-	magic.adaptec.com") by vger.kernel.org with ESMTP id S265279AbUAERwB
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Jan 2004 12:52:01 -0500
-Content-Disposition: inline
+Received: from rth.ninka.net ([216.101.162.244]:26753 "EHLO rth.ninka.net")
+	by vger.kernel.org with ESMTP id S265130AbUAETWK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2004 14:22:10 -0500
+In-Reply-To: <2938942704.1073325455@aslan.btc.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Kernel Mailinglist <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
-Cc: Berkley Shands <berkley@cs.wustl.edu>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, berkley@cs.wustl.edu
 
-Berkley Shands recently tripped over this problem.  The 2.6.X pci_map_sg
-code for x86_64 modifies the passed in S/G list to compact it for mapping
-by the GART.  This modification is not reversed when pci_unmap_sg is
-called.  In the case of a retried SCSI command, this causes any attempt
-to map the command a second time to fail with a BUG assertion since the
-nseg parameter passed into the second map call is state.  nseg comes from
-the "use_sg" field in the SCSI command structure which is never touched
-by the HBA drivers invoking pci_map_sg.
+On Mon, 05 Jan 2004 10:57:35 -0700
+"Justin T. Gibbs" <gibbs@scsiguy.com> wrote:
 
-DMA-API.txt doesn't seem to cover this issue.  Should the low-level DMA
-code restore the S/G list to its original state on unmap or should the
-SCSI HBA drivers be changed to update "use_sg" with the segment count
-reported by the pci_map_sg() API?  If the latter, this seems to contradict
-the mandate in DMA-API that the nseg parameter passed into the unmap call
-be the same as that passed into the map call.  Most of the kernel assumes
-that an S/G list can be mapped an unmapped multiple times using the same
-arguments.  This doesn't seem to me to be an unreasonable expectation.
+> DMA-API.txt doesn't seem to cover this issue.  Should the low-level DMA
+> code restore the S/G list to its original state on unmap or should the
+> SCSI HBA drivers be changed to update "use_sg" with the segment count
+> reported by the pci_map_sg() API?  If the latter, this seems to contradict
+> the mandate in DMA-API that the nseg parameter passed into the unmap call
+> be the same as that passed into the map call.  Most of the kernel assumes
+> that an S/G list can be mapped an unmapped multiple times using the same
+> arguments.  This doesn't seem to me to be an unreasonable expectation.
 
---
-Justin
+No, the PCI layer is not required at all to restore the SG to it's original state
+if it does DMA page coalescing as sparc64 and x86_64 do.
 
+But I don't see what the real problem is, all the PCI layer is doing is setting up
+the DMA address/length pairs in the entries that are needed, then returning
+the number of such slots that exist.  You, in your driver, can remember the original
+total number of physical entries and use that value to pass things back in.
