@@ -1,41 +1,70 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: [linux-usb-devel] Re: Unaligned scatter-gather buffers and usb-storage
-Date: Thu, 20 Nov 2003 17:28:51 +0100
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [usb-storage] mode sense blacklist how
+Date: 20 Nov 2003 09:32:07 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200311201728.51200.oliver@neukum.org>
-References: <20031120065353.GW1106@suse.de> <Pine.LNX.4.44L0.0311201015030.878-100000@ida.rowland.org> <20031120153026.GB1106@suse.de>
+Message-ID: <1069345927.6663.27.camel@patrh9>
+References: <Pine.LNX.4.44L0.0311131638320.949-100000@ida.rowland.org>
+	 <1068767049.2851.166.camel@patrh9>
+	 <1068768796.3fb41e1c8d075@webmail.netregistry.net>
+	 <1068775834.2851.321.camel@patrh9>
+	 <20031113181945.I30194@one-eyed-alien.net>
+	 <1068777510.2851.359.camel@patrh9>
+	 <1068779468.3fb447ccc6e60@webmail.netregistry.net>
+	 <1068838908.2852.34.camel@patrh9>
+	 <1069246502.3fbb6826955dd@webmail.netregistry.net>
+	 <1069261377.2867.37.camel@patrh9>  <3FBBFDFB.9010406@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1.kontent.de ([81.88.34.36]:54170 "EHLO Mail1.KONTENT.De")
-	by vger.kernel.org with ESMTP id S261956AbTKTQaL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Nov 2003 11:30:11 -0500
-In-Reply-To: <20031120153026.GB1106@suse.de>
-Content-Disposition: inline
+Received: from email-out1.iomega.com ([147.178.1.82]:2211 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S261957AbTKTQcq
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Nov 2003 11:32:46 -0500
+In-Reply-To: <3FBBFDFB.9010406@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>, Alan Stern <stern@rowland.harvard.edu>
-Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, James Bottomley <James.Bottomley@steeleye.com>, Patrick Mansfield <patmans@us.ibm.com>, Douglas Gilbert <dougg@torque.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
+To: dougg@torque.net
+Cc: dmitrik@users.sourceforge.net, linux-scsi@vger.kernel.org
 
- 
-> > The answer seems very simple.  There should be a host template entry for
-> > dma buffer alignment (there's already a dma_boundary member).  It would be
-> > copied into the device's request queue stucture if it is nonzero,
-> > overriding the default value of 512.  sg and st should check the user
-> > buffer against the request queue's dma_alignment mask and avoid doing
-> > direct I/O if the alignment is wrong -- just fall back to normal I/O.
-> > 
-> > Any objections to this scheme?
-> 
-> Well yes, that's what my objection is against - adding that member. Did
-> you not read any of my mails? And it's quite simple why - basically
-> noone will add it, so it'll end up being 512 anyways.
+> > > The only really important question IMHO is
+> > > how come SG_IO is not interruptible.
+> >
+> > Yes, now being pursued by Doug G in this thread.
+>
+> block/scsi_ioctl.c...
+> I suspect ... cannot interrupt the sg_io... blk_do_rq...
+> Perhaps someone could enlighten me (and I could document it).
+>
+> Further it looks like the SCSI_IOCTL_SEND_COMMAND is not
+> interruptible either. See scsi_wait_req() in scsi_lib.c .
 
-But neither sg nor st currently honor the 512 byte alignment requirement.
-Whether this really hurts st in terms of performance is another question.
+Open question I see.
 
-	Regards
-		Oliver
+> Apologies in advance for each reboot these experiments force on you.
+> ...
+> sg.c .... coping with orphaned SCSI responses from user killed
+> processes requires a lot of logic ...
+
+Ouch.
+
+Designing an lk 2.6 user app to recommend more prominent devie names
+like /dev/hdd and /dev/scd0 in place of less prominent /dev/sg$n names
+thereby steers people into using the less robust pass thru of SG_IO via
+block/scsi_ioctl.c.
+
+> I suspect ... cannot interrupt ...
+
+Sorry I'm too much of a kernelnewbie to guess confidently the full
+implications of "not interruptible".  Does "not interruptible" mean
+timeouts don't work, or does "not interruptible" mean that only timeouts
+work, or does "not interruptible" mean that only timeouts and resets but
+not SIGINT of the calling process works ...
+
+I will return here with answers if I find them faster than people here
+give them to me.
+
+Pat LaVarre
+
+P.S. Another open netiquette question is when we rename this thread.
+
 
