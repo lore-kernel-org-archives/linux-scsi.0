@@ -1,70 +1,55 @@
-From: "Russell Johnson" <rjohnson@rtlogic.com>
-Subject: RE: Megaraid corruption?
-Date: Thu, 9 Dec 2004 11:26:06 -0700
-Message-ID: <003401c4de1c$8c5fddc0$1e01a8c0@rtlogic.com>
-References: <1102613697.8512.31.camel@TroysLinux.verari.com>
+From: David Wysochanski <davidw@netapp.com>
+Subject: Re: [linux-iscsi-devel] [PATCH]cleanup of xmit_task
+Date: Thu, 09 Dec 2004 18:05:23 -0500
+Message-ID: <41B8DA33.7060400@netapp.com>
+References: <000001c4d3a5$a3e7f990$6f074d0a@apac.cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eagle.rtlogic.com ([216.87.68.236]:30695 "EHLO
-	eagle.rtlogic.com") by vger.kernel.org with ESMTP id S261567AbULIS0K
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Dec 2004 13:26:10 -0500
-In-Reply-To: <1102613697.8512.31.camel@TroysLinux.verari.com>
+Received: from mx1.netapp.com ([216.240.18.38]:56070 "EHLO mx1.netapp.com")
+	by vger.kernel.org with ESMTP id S261651AbULIXF0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2004 18:05:26 -0500
+In-Reply-To: <000001c4d3a5$a3e7f990$6f074d0a@apac.cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: res1uo0c@verizon.net
-Cc: 'Tom Coughlan' <coughlan@redhat.com>, linux-scsi@vger.kernel.org
+To: smithan@cisco.com
+Cc: linux-iscsi-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-I'm running 2.6.7.
+Smitha Narayanaswamy (smithan) wrote:
+> <..snip>
+> 
+>  > @@ -720,17 +720,6 @@ fill_task_immediate_data(struct iscsi_ta
+>  >       struct crypto_tfm *tfm= NULL;
+>  >       struct scatterlist tmpsg;
+>  >
+>  > -     /* make sure we have data to send when we expect to */
+>  > -     if ((iscsi_expected_data_length(sc) == 0) &&
+>  > -         ((sc->request_bufflen == 0) || (sc->request_buffer
+>  > == NULL))) {
+>  > -             printk("iSCSI: xmit_task for itt %u, sc 0x%x,
+>  > expected %u, no "
+>  > -                    "data in buffer. request_buffer %p len
+>  > %u, buffer %p "
+>  > -                    "len %u\n", task->itt, sc->cmnd[0],
+>  > -                    iscsi_expected_data_length(sc),
+>  > sc->request_buffer,
+>  > -                    sc->request_bufflen, sc->buffer, sc->bufflen);
+>  > -             scsi_print_command(sc);
+>  > -             return 0;
+>  > -     }
+>  >
+>  > What protects this function from being called with a scsi command
+>  > that has no data?  Are you sure we don't need this check with maybe
+>  > just a return here?
+>  >
+> 
+> Is it possible to have scsi write command with no data being sent?
+> 
+I don't know.
 
-Did you try running a test without the megamgr running?  The bug that I had
-didn't exhibit itself if nothing was running ioctls to the driver.  So by
-disabling megamgr you would be possibly getting rid of the source of the
-data corruption if your bug is the same that mine was.
-
-Once you figure that out you can determine if you want to update to the 2.6
-series or not.
-
-Russ
-
-> -----Original Message-----
-> From: Troy Klein [mailto:res1uo0c@verizon.net] 
-> Sent: Thursday, December 09, 2004 10:35 AM
-> To: Russell Johnson
-> Cc: 'Tom Coughlan'; linux-scsi@vger.kernel.org
-> Subject: RE: Megaraid corruption?
-> 
-> 
-> What kernel version are you running?  I am running 
-> 2.4.21-20.ELsmp (RedHat EL).
-> 
-> Does the megaraid compile with 2.4 kernels and if so how is 
-> that done the source appears to be for 2.6?
-> 
-> Troy
-> 
-> On Thu, 2004-12-09 at 10:26 -0700, Russell Johnson wrote:
-> > There was a recent patch to the megaraid2 driver that fixed 
-> corruption 
-> > while some ioctl's were executing during file operations.  You 
-> > mentioned using
-> > megamgr.  If that is running in the background while you are
-> > performing the
-> > file copies, it could be causing the bug that was fixed in the most
-> > recent
-> > megaraid2 driver.
-> > 
-> > Try disabling megamgr and run your test...
-> > 
-> > Or try updating megaraid2 to the latest version.  I'm using
-> > megaraid cmm: 2.20.2.0 (Release Date: Thu Aug 19 09:58:33 EDT 2004)
-> > megaraid: 2.20.4.0 (Release Date: Mon Sep 27 22:15:07 EDT)
-> > 
-> 
-> 
-
+Since nobody replied with a definate 'yes', I'd guess
+it's probably a pathalogical case that we don't
+need to waste time checking for in the main IO path.
 
 
