@@ -1,40 +1,23 @@
-From: Oliver Xymoron <oxymoron@waste.org>
-Subject: Re: [PATCH] /proc/scsi/map
-Date: Fri, 21 Jun 2002 16:33:28 -0500 (CDT)
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Troobleshooting
+Date: Sat, 22 Jun 2002 00:33:06 +0100 (BST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0206211616510.16808-100000@waste.org>
-References: <Pine.LNX.4.33.0206201230190.654-100000@geena.pdx.osdl.net>
+Message-ID: <E17LXtq-0001re-00@the-village.bc.nu>
+References: <005901c216f5$a451d460$c600a8c0@alecto>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.33.0206201230190.654-100000@geena.pdx.osdl.net>
+In-Reply-To: <005901c216f5$a451d460$c600a8c0@alecto> from "Jonatan Rullman" at Jun 18, 2002 08:26:14 PM
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mochel <mochel@osdl.org>
-Cc: Martin Dalecki <dalecki@evision-ventures.com>, Linus Torvalds <torvalds@transmeta.com>, Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Jonatan Rullman <jonatan@sverok.se>
+Cc: linux-scsi@vger.kernel.org, linux-mca@vger.kernel.org
 
-On Thu, 20 Jun 2002, Patrick Mochel wrote:
+> on. As far as too booting it everything worked out very nicely.
+> When using a Slackware bootdisk (using ibmmca.s or scsi.s) the computer
+> hangs and starts shewing through de floppy. The message given before this is
+> 
+> "Checking 386/387 coupling... OK, FPU using exception 16 error reporting."
+> "Checking 'hlt' instruction..."
 
-> > But it was entierly behind me how to fit this
-> > in to the sheme other sd@4,0:h,raw
-> > OS-es are using. And finally how would one fit this in to the
-> > partitioning shemes? For the system aprtitions are simply
-> > block devices hanging off the corresponding block device.
->
-> Partitions are purely logical entities on a physical disk. They have no
-> presence in the physical device tree.
-
-As I raised elsewhere in this thread, the distinction between physical and
-logical is troubling. Consider iSCSI, (aka SCSI-over-IP). It's analogous
-to SCSI-over-Fibre Channel, except that rather than using an embedded FC
-stack, it's using the kernel's IP stack. But it's every bit as much a SCSI
-disk/tape/whatever as a local device. Ergo, it ought to show up in the
-device tree so that it can be discovered in the same way. But where?
-
-This is only one step (the SCSI midlayer) removed from the logical devices
-created by partitioning, LVM, NBD, MD, loopback, ramdisk and the like,
-that again, ought to be discoverable in the same way as all other block
-devices. Perhaps we need root/{virtual,logical}?
-
--- 
- "Love the dolphins," she advised him. "Write by W.A.S.T.E.."
-
+But with "nohlt" - not a scsi problem but a PS/2 funny
