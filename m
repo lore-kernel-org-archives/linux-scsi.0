@@ -1,49 +1,64 @@
-From: "Nicholas A. Bellinger" <nick@pyxtechnologies.com>
-Subject: [ANNOUNCE] iSCSI Initiator Core Tools v2.2
-Date: Mon, 21 Mar 2005 04:01:49 -0800
-Message-ID: <1111406509.13496.80.camel@haakon>
+From: Jens Axboe <axboe@suse.de>
+Subject: [PATCH] scsi_allocate_request() reference
+Date: Mon, 21 Mar 2005 14:26:06 +0100
+Message-ID: <20050321132604.GA25452@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Received: from smtp806.mail.sc5.yahoo.com ([66.163.168.185]:16222 "HELO
-	smtp806.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S261760AbVCUMHc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2005 07:07:32 -0500
+Content-Type: text/plain; charset=us-ascii
+Received: from ns.virtualhost.dk ([195.184.98.160]:42217 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261787AbVCUN0I (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Mar 2005 08:26:08 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: iscsi-initiator-core-announce <iscsi-initiator-core-announce@iscsi-initiator-core.org>, iscsi-initiator-core-devel <iscsi-initiator-core-devel@iscsi-initiator-core.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 
-The following is v2.2 of the iscsi-initiator-core-tools.  This release
-contains support for iSCSI Authentication by way of initiator-authd.
-This release also adds support for generating unique iSCSI Initiator
-Node Names and using the same /etc/initiatorname.iscsi format as
-linux-sfnet in order to ease transition between existing iSCSI SAN
-topography and iscsi-initiator-core.org.
+Hi,
 
-Please upgrade your existing iscsi-initiator-core installations to this
-release.
+scsi_allocate_request() doesn't hold a reference to the device that it
+points to, that is not good. This patch fixes that up.
 
-http://www.kernel.org/pub/linux/utils/storage/iscsi/iscsi-initiator-core-tools-2.2.tar.bz2
+Signed-off-by: Jens Axboe <axboe@suse.de>
 
-A huge thanks go out to the following people for contributing to this
-release:
-
-Ming Zhang
-Eddy Quicksall
-David Wysochanski
-Mike Christie
-AJ Lewis
-Bryan Black
-Sig Lange
-
-We are always looking for more users and feedback! Everyone is welcome
-to join the lists at http://iscsi-initiator-core.org
-
-Thanks!
+===== drivers/scsi/scsi.c 1.157 vs edited =====
+--- 1.157/drivers/scsi/scsi.c	2005-03-03 09:22:17 +01:00
++++ edited/drivers/scsi/scsi.c	2005-03-21 14:24:27 +01:00
+@@ -132,7 +132,11 @@
+ 	const int offset = ALIGN(sizeof(struct scsi_request), 4);
+ 	const int size = offset + sizeof(struct request);
+ 	struct scsi_request *sreq;
+-  
++
++
++	if (!get_device(&sdev->sdev_gendev))
++		return NULL;
++
+ 	sreq = kmalloc(size, gfp_mask);
+ 	if (likely(sreq != NULL)) {
+ 		memset(sreq, 0, size);
+@@ -141,7 +145,8 @@
+ 		sreq->sr_host = sdev->host;
+ 		sreq->sr_magic = SCSI_REQ_MAGIC;
+ 		sreq->sr_data_direction = DMA_BIDIRECTIONAL;
+-	}
++	} else
++		put_device(&sdev->sdev_gendev);
+ 
+ 	return sreq;
+ }
+@@ -184,6 +189,10 @@
+ void scsi_release_request(struct scsi_request *sreq)
+ {
+ 	__scsi_release_request(sreq);
++
++	if (sreq->sr_device)
++		put_device(&sreq->sr_device->sdev_gendev);
++
+ 	kfree(sreq);
+ }
+ EXPORT_SYMBOL(scsi_release_request);
 
 -- 
-Nicholas A. Bellinger <nick@pyxtechnologies.com>
-Chief Architect, PyX Technologies, Inc
-http://iscsi-initiator-core.org
+Jens Axboe
 
