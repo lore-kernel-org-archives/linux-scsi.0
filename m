@@ -1,31 +1,35 @@
-From: Roman Zippel <zippel@linux-m68k.org>
-Subject: Re: [patch for playing] Patch to support 4000 disks and maintain
- backward compatibility
-Date: Fri, 11 Apr 2003 02:08:00 +0200 (CEST)
+From: Andries.Brouwer@cwi.nl
+Subject: Re: [patch for playing] Patch to support 4000 disks and maintain backward compatibility
+Date: Fri, 11 Apr 2003 02:13:07 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0304110157460.12110-100000@serv>
-References: <200304101339.49895.pbadari@us.ibm.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <UTC200304110013.h3B0D7S24054.aeb@smtp.cwi.nl>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpzilla1.xs4all.nl ([194.109.127.137]:27400 "EHLO
-	smtpzilla1.xs4all.nl") by vger.kernel.org with ESMTP
-	id S264249AbTDJX41 (for <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Apr 2003 19:56:27 -0400
-In-Reply-To: <200304101339.49895.pbadari@us.ibm.com>
+Received: from hera.cwi.nl ([192.16.191.8]:28140 "EHLO hera.cwi.nl")
+	by vger.kernel.org with ESMTP id S264091AbTDKACD (for <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Apr 2003 20:02:03 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Badari Pulavarty <pbadari@us.ibm.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Andries.Brouwer@cwi.nl, zippel@linux-m68k.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, pbadari@us.ibm.com
 
-Hi,
+    From: Roman Zippel <zippel@linux-m68k.org>
 
-On Thu, 10 Apr 2003, Badari Pulavarty wrote:
+    > The conclusion is that the easy way out is to define MAX_NR_DISKS.
+    > A different way out, especially when we use 32+32, is to kill this
+    > sd_index_bits[] array, and give each disk a new number: replace
+    >     index = find_first_zero_bit(sd_index_bits, SD_DISKS);
+    > by
+    >     index = next_index++;
 
-> This patch addresses the backward compatibility with device nodes
-> issue. All the new disks will be addressed by only last major.
+    Unless you fix all programs which scan /dev/sg*, you better keep 
+    the used range dense, so this not really option.
 
-This nicely demonstrates, that it's not exactly becoming nicer, when one 
-has to deal with compatibility. This is one more reason to at least 
-consider a more general solution, from which all drivers can benefit from.
+That only holds for the first 256 minors (of the first 8 majors).
+Since we want to be completely backwards compatible, nothing
+changes there.
 
-bye, Roman
+But people who want to use new features must update their programs
+or at least recompile.
+
+Andries
+
 
