@@ -1,42 +1,78 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: PATCH 4/5: scsi-scan-dont-att-pq-notcon
-Date: 22 Apr 2004 16:45:13 -0400
+From: rct@gherkin.frus.com (Bob Tracy)
+Subject: Re: [PATCH] sym53c500_cs PCMCIA SCSI driver (new)
+Date: Thu, 22 Apr 2004 15:48:07 -0500 (CDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1082666713.1714.109.camel@mulgrave>
-References: <20040420160334.GO4356@tpkurt.garloff.de>
-	<20040421134511.GP28633@tpkurt.garloff.de>
-	<20040421141417.GV28633@tpkurt.garloff.de>
-	<20040421160257.A6793@infradead.org>
-	<20040421152436.GD29699@tpkurt.garloff.de>
-	<20040421163336.A7382@infradead.org>
-	<20040421160823.GK29699@tpkurt.garloff.de>
-	<1082564314.1932.22.camel@mulgrave>
-	<20040421095500.A17447@beaverton.ibm.com>
-	<20040421225137.GE643@tpkurt.garloff.de>
-	<20040422133912.A31488@beaverton.ibm.com>
+Message-ID: <20040422204807.55E0BDBDB@gherkin.frus.com>
+References: <40881F1B.8060909@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:24963 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264663AbUDVUqp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Apr 2004 16:46:45 -0400
-In-Reply-To: <20040422133912.A31488@beaverton.ibm.com>
+Received: from gherkin.frus.com ([192.158.254.49]:10898 "EHLO gherkin.frus.com")
+	by vger.kernel.org with ESMTP id S264656AbUDVUsJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Apr 2004 16:48:09 -0400
+In-Reply-To: <40881F1B.8060909@tmr.com> "from Bill Davidsen at Apr 22, 2004 03:38:03
+ pm"
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Kurt Garloff <garloff@suse.de>, Christoph Hellwig <hch@infradead.org>, Linux SCSI list <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, 2004-04-22 at 16:39, Patrick Mansfield wrote:
-> Yes, it's minor; James hasn't replied, and there aren't any other macros
-> like I'm suggesting, so go with the extra char.
+Bill Davidsen wrote:
+> WRT the split of code... if there is some reason why there will never be 
+> another type of card then the split is unnessessary. But otherwise, 
+> you've done the work, and it matches the way other drivers were split, 
+> so why scrap it?
+> 
+> As you guessed I don't feel strongly one way or the other, just thought 
+> you could use a little support for having made the effort to design for 
+> the future.
 
-Well ... I'm agnostic.  I care about the abstraction rather than the
-implementation of the abstraction.  I suppose I have a slight preference
-for an extra field, because that can be fixed up if there's an
-identified problem with the inquiry data but I can't think of a single
-case where that would be necessary.
+You give me too much credit :-).  I inherited the split design from the
+original author and simply preserved it.  As far as maintaining the
+split design, the only evidence I've seen of non-PCMCIA cards using the
+Symbios/NCR 53c500 controller is the existence of a driver in the FreeBSD
+tree.  In any event, I don't have the hardware to test anything other
+than the PCMCIA case, and if there's someone out there who needs support
+for the non-PCMCIA case, I expect the Linux driver would have been written
+before now.  Christoph suggested in an earlier posting that the split to
+support other hardware would probably be accomplished differently these
+days anyway, so we (the community) probably haven't lost all that much by
+concentrating on producing a well-written PCMCIA-only driver.
 
-James
+I saved my first attempt at a 2.6 driver (in case someone wants to
+revisit the issue).  Otherwise, although I appreciate your support,
+it's OBE.  I'm waiting to hear back from Christoph on a few design
+issues (questions asked off-line) before submitting a third 2.6 driver.
 
+The main issue I'm wrestling with at the moment is support for the
+improbable case of multiple HBAs...  I agree in principle with the
+objective as long as I don't do something stupid that kills performance
+for the normal case of a single HBA.  As I see it, there are essentially
+two approaches:
 
+(1) Calculate all the needed hardware register offsets up front at HBA
+    init time, and carry them as part of the per-instance data.  This
+    approach has a few things going for it -- the in-core memory
+    requirement is essentially identical for the single HBA case, and
+    dereferencing a structure pointer to get a register address is
+    barely worse than accessing the equivalent global variable in the
+    driver.
+
+(2) Calculate a particular register offset each time that register is
+    accessed, using something like shost->io_port + offset, which, it
+    is claimed, is normal Linux driver practice.  Although this
+    approach is extremely attractive from the standpoint of code
+    simplicity, I'm concerned about the arithmetic overhead.  If it
+    turns out most of the hardware register accesses occur during
+    initialization, my concerns are pretty well meaningless.  Obviously
+    I need to look at this more closely.
+
+You may safely assume I'm learning more about this than I originally
+anticipated :-).
+
+-- 
+-----------------------------------------------------------------------
+Bob Tracy                   WTO + WIPO = DMCA? http://www.anti-dmca.org
+rct@frus.com
+-----------------------------------------------------------------------
