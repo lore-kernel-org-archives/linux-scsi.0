@@ -1,60 +1,97 @@
-From: Andries Brouwer <Andries.Brouwer@cwi.nl>
-Subject: Re: [usb-storage] Time to allow MODE SENSE for USB disk-type storage devices?
-Date: Wed, 10 Mar 2004 10:13:12 +0100
+From: Paul Wagland <paul@kungfoocoder.org>
+Subject: [PATCH][BUGFIX] : Megaraid patch for 2.6 (please apply)
+Date: Wed, 10 Mar 2004 09:53:27 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040310091312.GA25632@apps.cwi.nl>
-References: <Pine.LNX.4.44L0.0403081046190.1187-100000@ida.rowland.org> <20040308201328.GA13708@apps.cwi.nl> <20040309174353.A15780@beaverton.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <65D8CA0E-7270-11D8-AFFE-000A95CD704C@kungfoocoder.org>
+Mime-Version: 1.0 (Apple Message framework v612)
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-29--330123600"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.cwi.nl ([192.16.191.8]:9112 "EHLO hera.cwi.nl")
-	by vger.kernel.org with ESMTP id S261698AbUCJJNZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Mar 2004 04:13:25 -0500
-Content-Disposition: inline
-In-Reply-To: <20040309174353.A15780@beaverton.ibm.com>
+Received: from smtp-out4.xs4all.nl ([194.109.24.5]:38408 "EHLO
+	smtp-out4.xs4all.nl") by vger.kernel.org with ESMTP id S262556AbUCJJ6j
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Mar 2004 04:58:39 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Andries Brouwer <Andries.Brouwer@cwi.nl>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, USB Storage List <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Linux SCSI mailing list <linux-scsi@vger.kernel.org>, Linux kernel mailing list <linux-kernel@vger.kernel.org>
+Cc: akpm@osdl.org, James.Bottomley@HansenPartnership.com, torvalds@osdl.org, atulm@lsil.com
 
-On Tue, Mar 09, 2004 at 05:43:53PM -0800, Patrick Mansfield wrote:
 
-> Andries or others -
-> 
-> Can you elaborate on this comment in sd.c? Do you have a device that hangs
-> with the current kernel when asking for more than 4 bytes here? Is it USB
-> storage?
-> 
-> 	/*
-> 	 * First attempt: ask for all pages (0x3F), but only 4 bytes.
-> 	 * We have to start carefully: some devices hang if we ask
-> 	 * for more than is available.
-> 	 */
-> 	res = sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 4, &data);
-> 
-> Per this changeset:
-> 
-> http://linux.bkbits.net:8080/linux-2.5/diffs/drivers/scsi/sd.c@1.53?nav=index.html|src/|src/drivers|src/drivers/scsi|hist/drivers/scsi/sd.c
-> 
-> -- Patrick Mansfield
+--Apple-Mail-29--330123600
+Content-Type: multipart/mixed; boundary=Apple-Mail-28--330123604
 
-Yes, I changed this code twice, I think, each time because I acquired
-a USB device that did not work. The state that I left things in
-was carefully crafted in such a way that each of my half a dozen or so
-USB card reader devices worked. In the meantime I got a few more readers,
-and they all worked (late 2.5).
 
-Of course there is no particular interest in my selection of devices,
-and no reason to expect that code exists that works on everything
-on the market.
+--Apple-Mail-28--330123604
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=US-ASCII;
+	format=flowed
 
-An oft repeated maxim is: do as Windows does - and that may be
-a good idea. On the other hand, half of my devices come with their
-own drivers, and also fail under Windows without their own driver.
+Hi all,
 
-The conclusion is that yes, if you change something here then
-almost certainly there will be devices that are broken by the
-change, but the change may still be an improvement if there
-are more devices that were broken and now function.
+I know that LSI are working on an updated driver for 2.6, but would 
+really like to see this bug fix placed in the main tree before then, 
+whenever then happens to be.
 
-Andries
+This patch fixes the problem of the /proc entries for this driver being 
+created in the wrong location.
+
+Cheers,
+Paul
+
+
+--Apple-Mail-28--330123604
+Content-Transfer-Encoding: 7bit
+Content-Type: application/octet-stream;
+	x-unix-mode=0644;
+	name="2-megaraid.init.patch"
+Content-Disposition: attachment;
+	filename=2-megaraid.init.patch
+
+diff --recursive --ignore-all-space --unified linux-2.6.2.o/drivers/scsi/megaraid.c linux-2.6.2.megaraid/drivers/scsi/megaraid.c
+--- linux-2.6.2.o/drivers/scsi/megaraid.c	2004-02-20 01:32:21.000000000 +0100
++++ linux-2.6.2.megaraid/drivers/scsi/megaraid.c	2004-02-20 01:32:26.000000000 +0100
+@@ -5119,10 +5119,6 @@
+ 	if (max_mbox_busy_wait > MBOX_BUSY_WAIT)
+ 		max_mbox_busy_wait = MBOX_BUSY_WAIT;
+ 
+-	error = pci_module_init(&megaraid_pci_driver);
+-	if (error) 
+-		return error;
+-	
+ #ifdef CONFIG_PROC_FS
+ 	mega_proc_dir_entry = proc_mkdir("megaraid", &proc_root);
+ 	if (!mega_proc_dir_entry) {
+@@ -5130,6 +5126,13 @@
+ 				"megaraid: failed to create megaraid root\n");
+ 	}
+ #endif
++	error = pci_module_init(&megaraid_pci_driver);
++	if (error) {
++#ifdef CONFIG_PROC_FS
++		remove_proc_entry("megaraid", &proc_root);
++#endif
++		return error;
++	}
+ 
+ 	/*
+ 	 * Register the driver as a character device, for applications
+
+--Apple-Mail-28--330123604--
+
+--Apple-Mail-29--330123600
+content-type: application/pgp-signature; x-mac-type=70674453;
+	name=PGP.sig
+content-description: This is a digitally signed message part
+content-disposition: inline; filename=PGP.sig
+content-transfer-encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (Darwin)
+
+iD8DBQFATteLtch0EvEFvxURAtAtAJ90FbiZdfnCt92zSZ7GQnwYY3KPiACfatzJ
+GHvDKKA/MvfurECfjj36zCY=
+=8mF8
+-----END PGP SIGNATURE-----
+
+--Apple-Mail-29--330123600--
+
