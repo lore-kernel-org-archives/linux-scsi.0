@@ -1,37 +1,23 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Maybe a patch?
-Date: Wed, 22 Jan 2003 08:59:43 +0100
+From: "Bennie J. Venter" <Bennie.Venter@shoden.co.za>
+Subject: RE: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
+Date: Wed, 22 Jan 2003 14:07:23 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030122075943.GW20780@suse.de>
-References: <Pine.LNX.4.44.0301211606060.27122-100000@wizardsworks.org>
+Message-ID: <0A62368A12C5BC4080B2F8254680D454149E8F@shodenjhb02.shoden.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0301211606060.27122-100000@wizardsworks.org>
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Sir Ace <chandleg@wizardsworks.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Jan 21 2003, Sir Ace wrote:
-> 
-> I saw in /usr/src/linux/drivers/net/tg3.c
-> That the following was added...  I have no idea why..
-> Like I said I am not a developer nor do I know a lot about this part of
-> the kernel.  But it now compiles:
-> 
-> Added to /usr/src/linux/drivers/scsi/scsi_merge.c
-> 
-> #ifndef PCI_DMA_BUS_IS_PHYS
-> #define PCI_DMA_BUS_IS_PHYS 1
-> #endif
+> That model cannot be applied to SCSI as it is much more diverse
+> in the number of bus types it supports.
+> USB can do it, because it knows about hubs. SCSI cannot,
+> as there are no hubs in SCSI.
 
-Please don't do stuff like that, it _could_ be dangerous to your data
-when you don't know what you are doing.
+Not entirely true - there are devices known as bridges that bridge parallel SCSI to parallel SCSI and parallel SCSI to fiber channel.  Not to talk about fiber channel as a SCSI interface.
 
-That said, it is correct for hppa it seems. asm/pci.h has the same
-thing, do you are just looking at a missing include. You should fix that
-instead. page_to_phys() is also there.
-
--- 
-Jens Axboe
+Tnx & Bi
+Bennie Venter
 
