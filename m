@@ -1,30 +1,39 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] introduce scsi_host_alloc
-Date: Fri, 6 Jun 2003 13:43:03 +0200
+From: Matthew Wilcox <willy@debian.org>
+Subject: Documentation
+Date: Fri, 6 Jun 2003 14:20:54 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030606114303.GA21519@lst.de>
-References: <20030606080103.GC18838@lst.de> <20030606114018.GA20458@twibble.org>
+Message-ID: <20030606132054.GZ28581@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:51155 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S261222AbTFFL3k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2003 07:29:40 -0400
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:48537 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261411AbTFFNHV
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Jun 2003 09:07:21 -0400
+Received: from willy by www.linux.org.uk with local (Exim 4.14)
+	id 19OH9L-0004WY-1Q
+	for linux-scsi@vger.kernel.org; Fri, 06 Jun 2003 14:20:55 +0100
 Content-Disposition: inline
-In-Reply-To: <20030606114018.GA20458@twibble.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jamie Lenehan <lenehan@twibble.org>
-Cc: linux-scsi@vger.kernel.org, dc395x@twibble.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Jun 06, 2003 at 09:40:18PM +1000, Jamie Lenehan wrote:
-> I think I made the dc395x driver new style init as of 2.5.70-bk9 (if
-> what scsi_mid_low_api.txt calls "hotplug" style is new style then it
-> is). So it'll need to be updated as well.
 
-Yes, that's the same.
+Kconfig's in pretty good shape now from a structural point of view,
+so I thought I'd review some of the actual help text.
 
-> Patch against 2.5.70-bk9. Untested, just modified the names as per
-> your other changes.
+Many entries refer to the ancient SCSI-HOWTO.  It doesn't
+seemto be on tldp.org anywhere, but I found it at
+http://www.ibiblio.org/pub/Linux/docs/HOWTO/unmaintained/SCSI-HOWTO
 
-Thanks a lot for update!
+Do we want to correct the URL from http://www.tldp.org/docs.html#howto
+to the one above or excise all references to it?
 
+The Disk-HOWTO, Multi-Disk-HOWTO, and CD-ROM-HOWTO are also referenced.
+The Disk-HOWTO has also disappeared.  The Multi-Disk-HOWTO doesn't really
+seem relevant at this point.  Though the CD-ROM-HOWTO is listed as the
+CDROM-HOWTO, it still seems relevant.
+
+-- 
+"It's not Hollywood.  War is real, war is primarily not about defeat or
+victory, it is about death.  I've seen thousands and thousands of dead bodies.
+Do you think I want to have an academic debate on this subject?" -- Robert Fisk
