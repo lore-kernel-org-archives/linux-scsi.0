@@ -1,71 +1,49 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: oops when removing sbp2 module
-Date: Sun, 5 Oct 2003 07:49:02 -0700
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: libata update posted
+Date: Sun, 05 Oct 2003 19:15:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031005074902.A26284@beaverton.ibm.com>
-References: <16256.6322.388402.857084@cargo.ozlabs.ibm.com>
+Message-ID: <3F80A60B.30306@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.104]:33158 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S263126AbTJEOuH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Oct 2003 10:50:07 -0400
-Content-Disposition: inline
-In-Reply-To: <16256.6322.388402.857084@cargo.ozlabs.ibm.com>; from paulus@samba.org on Sun, Oct 05, 2003 at 11:12:18PM +1000
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:16318 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S263886AbTJEXPg
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 5 Oct 2003 19:15:36 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Mackerras <paulus@samba.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+To: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Andrea Arcangeli <andrea@suse.de>, Andrew Morton <akpm@osdl.org>
 
-On Sun, Oct 05, 2003 at 11:12:18PM +1000, Paul Mackerras wrote:
+New version of my Serial ATA (SATA) driver posted.  Main change is 
+better integration with the drivers/ide driver.
 
-> In fact what is happening is that class_device_unregister gets called
-> twice for the same classdev.  This is because scsi_remove_device gets
-> called twice for the same device.  The first time, the call chain
-> looks like this:
->
-> scsi_remove_device
-> sbp2_remove_device
-> sbp2_remove
-> device_release_driver
-> driver_detach
-> bus_remove_driver
-> driver_unregister
-> hpsb_unregister_protocol
-> sbp2_module_exit
-> 
-> and the second time it looks like this:
-> 
-> scsi_remove_device
-> scsi_forget_host
-> scsi_remove_host
-> sbp2_remove_host
-> hpsb_unregister_highlevel
-> sbp2_module_exit
-> 
-> So, is this a reference counting problem on the classdev, a problem
-> where the scsi layer doesn't remove the scsi device from its internal
-> lists properly in scsi_remove_device, or a problem in the sbp2 code?
-> Anyone got a fix?
-> 
-> Thanks,
-> Paul.
+Current libata SATA hardware support status:
+* Intel ICH5:			production
+* ServerWorks / Apply K2:	production
+* Silicon Image:		developers only.  known to lock up.
+* VIA:				beta.  1 failure on 64-bit.
 
-Paul -
+Patch for 2.4 (diff'd against latest 2.4.23-pre BK snapshot):
+ftp://ftp.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.4.22-bk28-libata1.patch.bz2
 
-There is a typo on a change to the access_count check. 
+Patch for 2.6.0-test (diff'd against latest 2.6.0-test6 BK snapshot):
+ftp://ftp.kernel.org/pub/linux/kernel/people/jgarzik/libata/2.6.0-test6-bk7-libata1.patch.bz2
 
-Try this patch:
+BK repositories:
+	http://gkernel.bkbits.net/libata-2.[45]
+		or
+	bk://kernel.bkbits.net/jgarzik/libata-2.[45]
 
---- bleed-2.5/drivers/scsi/scsi_sysfs.c-orig	Mon Sep 29 12:21:09 2003
-+++ bleed-2.5/drivers/scsi/scsi_sysfs.c	Mon Sep 29 16:19:22 2003
-@@ -412,7 +412,7 @@
- 		set_bit(SDEV_DEL, &sdev->sdev_state);
- 		if (sdev->host->hostt->slave_destroy)
- 			sdev->host->hostt->slave_destroy(sdev);
--		if (atomic_read(&sdev->access_count))
-+		if (!atomic_read(&sdev->access_count))
- 			device_del(&sdev->sdev_gendev);
- 		up_write(&class->subsys.rwsem);
- 	}
+Coming soon:
+* Promise SATA support.
+* Silicon Image fix (needs to ack some more interrupts)
+* Hardware queueing (TCQ) support for Promise, ServerWorks
 
--- Patrick Mansfield
+I wonder if there is a "linux-ide" mailing list somewhere......
+
+	Jeff
+
+
+
+
