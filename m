@@ -1,44 +1,84 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 1/2] RE: How to add/drop SCSI drives from within the
-	drive r?
-Date: Thu, 09 Dec 2004 21:24:06 -0600
-Message-ID: <1102649046.3814.6.camel@mulgrave>
-References: <0E3FA95632D6D047BA649F95DAB60E570230CA9F@exa-atlanta>
+Subject: [BK PATCH] SCSI -rc fixes for 2.6.10-rc3
+Date: Thu, 09 Dec 2004 21:56:28 -0600
+Message-ID: <1102650988.3814.13.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:36234 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:63910 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261555AbULJDZM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Dec 2004 22:25:12 -0500
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570230CA9F@exa-atlanta>
+	id S261654AbULJD4m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Dec 2004 22:56:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Cc: Matt Domsch <Matt_Domsch@Dell.com>, "'brking@us.ibm.com'" <brking@us.ibm.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, Andrew Morton <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Thu, 2004-12-09 at 20:18 -0500, Bagalkote, Sreenivas wrote:
-> diff -Naur a/Documentation/scsi/ChangeLog.megaraid
-> b/Documentation/scsi/ChangeLog.megaraid
-> --- a/Documentation/scsi/ChangeLog.megaraid	2004-12-07
-> 16:40:23.000000000 -0500
-> +++ b/Documentation/scsi/ChangeLog.megaraid	2004-12-09
-> 19:05:47.795231320 -0500
-> @@ -1,3 +1,10 @@
-> +Release Date	: Thu Dec  9 19:02:14 EST 2004 - Sreenivas Bagalkote
-> <sreenib@lsil.com>
-> +
-> +Current Version	: 2.20.4.1 (scsi module), 2.20.2.3 (cmm module)
-> +Older Version	: 2.20.4.1 (scsi module), 2.20.2.2 (cmm module)
-> +
-> +i.	Fix a bug in kioc's dma buffer deallocation
+This one is another set of small driver fixes
 
-This patch won't apply --- it looks like your mailer broke the lines.
-Could you resend it?
+It is available from:
 
-Thanks,
+bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
+
+The short changelog is:
+
+Andreas Herrmann:
+  o zfcp: act enhancements corrections
+
+Castor Fu:
+  o support for 3PAR sparse SCSI LUNs
+
+Douglas Gilbert:
+  o extracting resid from struct scsi_cmnd
+
+Eric Moore:
+  o mptfusion: kill fusion init called
+  o mptfusion: resid cleanup
+  o mptfusion: replace chip_type
+  o mptfusion: streamline queuecommand
+  o mptfusion: streamline slave_alloc
+  o mptfusion: delete MPTSCSIH_DBG_TIMEOUT
+
+James Bottomley:
+  o aic7xxx: fix compiler warning from dma mask assignement
+  o mptfusion: command line parameters
+
+Mark Haverkamp:
+  o 2.6.9 aacraid: Support ROMB RAID/SCSI mode - Resend -
+
+Matthew Wilcox:
+  o Blacklist devices that falsely claim an echo buffer
+  o SCSI: spi_transport set_signalling is buggy
+
+Mike Miller:
+  o cciss: cciss_ioctl return code fix
+
+
+And the diffstat is:
+
+ block/cciss.c                  |    2 
+ message/fusion/mptbase.c       |   83 +----
+ message/fusion/mptbase.h       |   36 --
+ message/fusion/mptctl.c        |    8 
+ message/fusion/mptscsih.c      |  633 ++++++++++-------------------------------
+ message/fusion/mptscsih.h      |   11 
+ s390/scsi/zfcp_def.h           |    4 
+ s390/scsi/zfcp_erp.c           |   38 +-
+ s390/scsi/zfcp_ext.h           |    4 
+ s390/scsi/zfcp_fsf.c           |   53 ---
+ s390/scsi/zfcp_scsi.c          |    3 
+ scsi/Kconfig                   |    2 
+ scsi/aacraid/aachba.c          |   46 ++
+ scsi/aacraid/aacraid.h         |    3 
+ scsi/aic7xxx/aic79xx_osm.h     |    2 
+ scsi/aic7xxx/aic79xx_osm_pci.c |   14 
+ scsi/aic7xxx/aic7xxx_osm.h     |    2 
+ scsi/aic7xxx/aic7xxx_osm_pci.c |    7 
+ scsi/scsi_devinfo.c            |    1 
+ scsi/scsi_lib.c                |    2 
+ scsi/scsi_transport_spi.c      |    9 
+ 21 files changed, 292 insertions(+), 671 deletions(-)
 
 James
-
 
