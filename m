@@ -1,33 +1,25 @@
-From: Rusty Trivial Russell <rusty@rustcorp.com.au>
-Subject: [TRIVIAL] [Trivial Patch] scsi_register-006
-Date: Fri, 08 Nov 2002 19:26:33 +1100
+From: Sean Proctor <sproctor@ccs.neu.edu>
+Subject: aic7880 failure on boot
+Date: Fri, 8 Nov 2002 05:47:18 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021108083827.EBCEB2C3BB@lists.samba.org>
+Message-ID: <Pine.GSO.4.44.0211080535180.3754-100000@denali.ccs.neu.edu>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from denali.ccs.neu.edu (denali.ccs.neu.edu [129.10.116.200])
+	by amber.ccs.neu.edu (Postfix) with ESMTP id 400A31AB12
+	for <linux-scsi@vger.kernel.org>; Fri,  8 Nov 2002 05:47:18 -0500 (EST)
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, achim@vortex.de
+To: linux-scsi@vger.kernel.org
 
-From:  Michael Still <mikal@stillhq.com>
+I'm running a netfinity 7000 w/ quad pentium pros, 4 HDDs on one aic7880
+controller and none on the other, and debian 3.0.  it boots fine with
+debian's 2.2.20 kernel, but not their 2.4.18 kernel, nor a custom 2.4.19,
+nor a custom 2.5.46 kernel (that last 3 were smp, but not the first one).
+I'm going to try building a custom 2.2 kernel with smp tomorrow.  I
+haven't done any kernel hacking in the past, but I would be interested in
+it if someone could point me to some useful reading.
 
-  
-  This patch has been generated as part of my scsi_register audit of the 2.5.45 kernel tree. scsi_register() can fail, returning a NULL pointer, and the failure case was not being handled here...
-  
-  
-  
-  
+regards,
+Sean
 
---- trivial-2.5-bk/drivers/scsi/gdth.c.orig	2002-11-08 18:47:03.000000000 +1100
-+++ trivial-2.5-bk/drivers/scsi/gdth.c	2002-11-08 18:47:03.000000000 +1100
-@@ -4105,6 +4105,9 @@
-             break;
-         if (gdth_search_eisa(eisa_slot)) {      /* controller found */
-             shp = scsi_register(shtp,sizeof(gdth_ext_str));
-+	    if(shp == NULL)
-+		    continue;
-+
-             ha = HADATA(shp);
-             if (!gdth_init_eisa(eisa_slot,ha)) {
-                 scsi_unregister(shp);
--- 
-  Don't blame me: the Monkey is driving
-  File: Michael Still <mikal@stillhq.com>: [Trivial Patch] scsi_register-006
