@@ -1,44 +1,37 @@
 From: Jamie Lenehan <lenehan@twibble.org>
-Subject: [PATCH] dc395x [1/6] - make functions static
-Date: Thu, 21 Aug 2003 20:14:34 +1000
+Subject: [PATCH] dc395x [6/6] - use pci resource len
+Date: Thu, 21 Aug 2003 20:17:59 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030821101434.GB7570@twibble.org>
-References: <20030821101348.GA7570@twibble.org>
+Message-ID: <20030821101759.GG7570@twibble.org>
+References: <20030821101348.GA7570@twibble.org> <20030821101434.GB7570@twibble.org> <20030821101525.GC7570@twibble.org> <20030821101619.GD7570@twibble.org> <20030821101658.GE7570@twibble.org> <20030821101729.GF7570@twibble.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tuon.twibble.org ([203.217.29.157]:26002 "EHLO tuon.twibble.org")
-	by vger.kernel.org with ESMTP id S262556AbTHUKOf (ORCPT
+Received: from tuon.twibble.org ([203.217.29.157]:43410 "EHLO tuon.twibble.org")
+	by vger.kernel.org with ESMTP id S262571AbTHUKR7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Aug 2003 06:14:35 -0400
+	Thu, 21 Aug 2003 06:17:59 -0400
 Content-Disposition: inline
-In-Reply-To: <20030821101348.GA7570@twibble.org>
+In-Reply-To: <20030821101729.GF7570@twibble.org>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: dc395x@twibble.org
 
-I forgot to make some of the new functions added during the list
-cleanups static. This patch just declares those new functions static.
+Instead of hard coding the number of io ports (to the wrong value no
+less) use the pci_resource_length to determine the number.
 
 diff -du -r a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
---- a/drivers/scsi/dc395x.c	2003-08-19 23:24:41.797147152 +1000
-+++ b/drivers/scsi/dc395x.c	2003-08-19 23:24:49.822927048 +1000
-@@ -822,6 +822,7 @@
-  *
-  * @head: The pointer to the head of the list to count the items in.
-  **/
-+static
- unsigned int list_size(struct list_head *head)
- {
- 	unsigned int count = 0;
-@@ -841,6 +842,7 @@
-  * @pos: The pointer the dcb for which we are searching for the
-  *       following dcb.
-  **/
-+static
- struct DeviceCtlBlk *dcb_get_next(
- 		struct list_head *head,
- 		struct DeviceCtlBlk *pos)
+--- a/drivers/scsi/dc395x.c	2003-08-20 21:39:11.817249304 +1000
++++ b/drivers/scsi/dc395x.c	2003-08-20 21:39:19.213124960 +1000
+@@ -5843,7 +5843,7 @@
+ 		return -ENODEV;
+ 	}
+ 	io_port_base = pci_resource_start(dev, 0) & PCI_BASE_ADDRESS_IO_MASK;
+-	io_port_len = 0x80;	/* XXX: use pci_resource_len? */
++	io_port_len = pci_resource_len(dev, 0);
+ 	irq = dev->irq;
+ 	dprintkdbg(DBG_0, "IO_PORT=%04x, IRQ=%x\n", io_port_base, dev->irq);
+ 
 
 -- 
  Jamie Lenehan <lenehan@twibble.org>
