@@ -1,111 +1,85 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [example PATCH - not for applying] exclude certain commands
-Date: Sun, 27 Apr 2003 02:35:17 -0700
+From: Andries.Brouwer@cwi.nl
+Subject: [PATCH] scsi_mid_low_api.txt
+Date: Sun, 27 Apr 2003 13:11:06 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030427023517.A15212@one-eyed-alien.net>
-References: <UTC200304262144.h3QLiAt04450.aeb@smtp.cwi.nl> <20030426151356.A8697@one-eyed-alien.net> <1051397024.4089.86.camel@mulgrave> <20030426183428.B8697@one-eyed-alien.net> <1051409717.4089.146.camel@mulgrave>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="AhhlLboLdkugWU4S"
+Message-ID: <UTC200304271111.h3RBB6M14317.aeb@smtp.cwi.nl>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:14858 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S263865AbTD0JXI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 27 Apr 2003 05:23:08 -0400
-Content-Disposition: inline
-In-Reply-To: <1051409717.4089.146.camel@mulgrave>; from James.Bottomley@SteelEye.com on Sat, Apr 26, 2003 at 09:15:07PM -0500
+Received: from hera.cwi.nl ([192.16.191.8]:18050 "EHLO hera.cwi.nl")
+	by vger.kernel.org with ESMTP id S263921AbTD0K6x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 27 Apr 2003 06:58:53 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andries.Brouwer@cwi.nl, greg@kroah.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net
+To: dgilbert@interlog.com
+Cc: James.Bottomley@steeleye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+The specification says that slave_configure() has to call
+scsi_adjust_queue_depth(). This is false, and moreover
+does not always happen in the current tree.
+(I was interested since I plan to add a slave_configure()
+that will not call scsi_adjust_queue_depth().)
 
---AhhlLboLdkugWU4S
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+So, the patch below adapts scsi_mid_low_api.txt a little.
 
-On Sat, Apr 26, 2003 at 09:15:07PM -0500, James Bottomley wrote:
-> On Sat, 2003-04-26 at 20:34, Matthew Dharm wrote:
-> > To parse correctly, I would need to remember what type of device it is =
-by
-> > snooping the INQUIRY data.  I would also have to keep around data such =
-as
-> > block size (for TYPE_DISK).  I haven't even looked at what extra data I
-> > would need to keep around for all the other types.
->=20
-> OK, I don't understand this.  To extract the transfer length from a
-> given SCSI command (excluding vendor specific ones) is a well defined
-> process.  All you need is the command, it doesn't require knowing device
-> type or anything else.
+Andries
 
-Okay.  A READ_10 command for 4 blocks.  How many bytes is that?  The
-command bytes in question look something like this:
-	0x28 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x4 0x0
+----------------------------------------------------------
 
-I don't see a way to know the byte count without having additional
-knowledge about the device.  Maybe I'm wrong -- I certainly don't claim to
-be a SCSI expert.  So explain it to me.
-
-> > Why should usb-storage do that when someone else (the command source)
-> > already knows this data?  Whatever is sending the command already knows=
- how
-> > much data to expect -- my reparsing the command to try to figure it out=
- is
-> > guaranteed to be less precise than just using the correct answer from t=
-he
-> > source of the command.
->=20
-> Because we're exploring options for this "lengthen the transfer size"
-> behaviour the USB layer exhibits.  Assuming you can transfer more bytes
-> than the indicated buffer size is a recipe for data corruption problems
-> down the line.
-
-My point in asking the question was to emphasize that I do not believe the
-transfer length to be calculable (only guessable) -- why guess when some
-bit of code has to know?
-
-The problem if transferring more data than the buffer has room for is an
-obvious problem -- that I don't debate.
-
-> > Also, user-issued commands can specify buffer size and transfer length
-> > separately, but only one value gets given to the usb-storage driver.  T=
-he
-> > other is dropped on the floor somewhere in the mid-layer.
->=20
-> I usually use the SCSI_IOCTL_SEND_COMMAND, which only allows the
-> specification of a buffer size (rather than both length and buffer
-> size), how do you send SCSI commands?
-
-Okay, I'm wrong here.  I would have sworn that the SG3 interface allowed me
-to specify the two values separately -- I have quite a bit of code that
-uses that interface.
-
-Interestinly enough, the one value it specifies it defines as the length of
-the transfer, not the size of the buffer -- at least, according to the sg
-HOWTO.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-Hey, has anyone seen the Microsoft sales guy? It's his feeding time...
-					-- Mike
-User Friendly, 4/17/1998
-
---AhhlLboLdkugWU4S
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE+q6RVIjReC7bSPZARApnxAKCwY7VO8mr9Gw8GtWHu0I8GQOAczgCggneD
-1TlKsbcmaFnWZjw82cS8be4=
-=+nNN
------END PGP SIGNATURE-----
-
---AhhlLboLdkugWU4S--
+diff -u --recursive --new-file -X /linux/dontdiff a/Documentation/scsi/scsi_mid_low_api.txt b/Documentation/scsi/scsi_mid_low_api.txt
+--- a/Documentation/scsi/scsi_mid_low_api.txt	Mon Feb 24 23:02:44 2003
++++ b/Documentation/scsi/scsi_mid_low_api.txt	Sun Apr 27 12:58:21 2003
+@@ -134,7 +134,7 @@
+                     slave_configure() -->  scsi_adjust_queue_depth()
+ 			 |
+ 		    slave_alloc()
+-                    slave_configure() -->  scsi_adjust_queue_depth()
++                    slave_configure()
+ 			 |
+ 		    slave_alloc()
+                     slave_configure() -->  scsi_adjust_queue_depth()
+@@ -142,8 +142,9 @@
+ 		    slave_alloc()   **
+                     slave_destroy() **
+ 
+-The invocation of scsi_adjust_queue_depth() by the LLD is required
+-if slave_configure() is supplied.
++If the LLD wants to adjust the default queue settings, it can invoke
++scsi_adjust_queue_depth() in its slave_configure() routine.
++
+ ** For scsi devices that the mid level tries to scan but do not
+    respond, a slave_alloc(), slave_destroy() pair is called.
+ 
+@@ -199,7 +200,7 @@
+                             |                scsi_register()
+                             |
+ 		      slave_alloc()
+-                      slave_configure()  -->  scsi_adjust_queue_depth()
++                      slave_configure()
+ 		      slave_alloc()   **
+ 		      slave_destroy() **
+                             |
+@@ -208,9 +209,10 @@
+ 		      slave_alloc()   **
+ 		      slave_destroy() **
+ 
+-If the LLD does not supply a slave_configure() then the mid level invokes
+-scsi_adjust_queue_depth() itself with tagged queuing off and "cmd_per_lun"
+-for that host as the queue length.
++The mid level invokes scsi_adjust_queue_depth() with tagged queuing off and
++"cmd_per_lun" for that host as the queue length. These settings can be
++overridden by a slave_configure() supplied by the LLD.
++
+ ** For scsi devices that the mid level tries to scan but do not
+    respond, a slave_alloc(), slave_destroy() pair is called.
+ 
+@@ -903,11 +905,6 @@
+  *      Notes: Allows the driver to inspect the response to the initial
+  *	INQUIRY done by the scanning code and take appropriate action.
+  *	For more details see the hosts.h file.
+- *	If this function is not supplied, the mid level will call
+- *	scsi_adjust_queue_depth() with the struct Scsi_Host::cmd_per_lun
+- *	value on behalf of the given device. If this function is
+- *	supplied then its implementation must call
+- *	scsi_adjust_queue_depth(). 	
+  **/
+     int slave_configure(struct scsi_device *sdp);
+ 
