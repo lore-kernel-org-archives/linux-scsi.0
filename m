@@ -1,44 +1,40 @@
-From: "David S. Miller" <davem@redhat.com>
-Subject: Re: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple
- map/unmaps
-Date: Mon, 5 Jan 2004 12:35:09 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040105123509.4bacf670.davem@redhat.com>
-References: <2938942704.1073325455@aslan.btc.adaptec.com>
-	<m3brpi41q0.fsf@averell.firstfloor.org>
+From: Andi Kleen <ak@suse.de>
+Subject: Re: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple  map/unmaps
+Date: 05 Jan 2004 22:02:19 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <p73brpi1544.fsf@verdi.suse.de>
+References: <200401051929.i05JTsM0000014248@mudpuddle.cs.wustl.edu.suse.lists.linux.kernel>
+	<20040105112800.7a9f240b.davem@redhat.com.suse.lists.linux.kernel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pizda.ninka.net ([216.101.162.242]:45965 "EHLO pizda.ninka.net")
-	by vger.kernel.org with ESMTP id S265357AbUAEUku (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2004 15:40:50 -0500
-In-Reply-To: <m3brpi41q0.fsf@averell.firstfloor.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20040105112800.7a9f240b.davem@redhat.com.suse.lists.linux.kernel>
+To: "David S. Miller" <davem@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, gibbs@scsiguy.com
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@muc.de>
-Cc: gibbs@scsiguy.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, 05 Jan 2004 20:47:19 +0100
-Andi Kleen <ak@muc.de> wrote:
+"David S. Miller" <davem@redhat.com> writes:
 
-> Actually I disabled merging by default in the latest x86-64 code,
-> but it can be still enabled by the user using options (it makes some
-> adapters run several percent faster). I would appreciate if you could
-> fix the problem anyways.
+> On Mon, 5 Jan 2004 13:29:54 -0600 (CST)
+> Berkley Shands <berkley@cs.wustl.edu> wrote:
 > 
-> I was actually planning to add a BUG() for this. Should do that.
-> There is already one that triggers often when the problem occurs.
+> > 	The pci layer is modifying the sg list, and then placing a zero
+> > in the length field. pci-gart.c at line 453 (2.6.0 sources) checks this length field
+> > after a retry, sees that it is zero, and bughalts.
+> 
+> Oh that's a bug.  It is allowed to modify the dma_length field but not
+> the physical length field.
 
-Andi, you must not modify sg->length in any way shape or form.
+It sets length to zero to terminate the list when entries were merged.
+It doesn't have a dma_length.
 
-The following is legal:
+It tripping over remapped lists is an side effect, but an useful one 
+because remapping is not supported (merging destroys information that
+cannot be reconstructed). If the bug didn't exist you would get data
+corruption.
 
-	pci_map_sg(..&sg);
-	pci_unmap_sg(...&sg);
-	pci_map_sg(..&sg);
+-Andi
 
-If you must modify the length field for DMA, you must have a seperate
-dma_length member of the scatterlist structure on your platform, see what
-sparc64 does here.
-
-If the documentation states this wrongly, it's a doc bug.
+P.S.: The x86-64 IOMMU code in 2.6.0 was buggy. Use current -bk*.
+It will avoid the problem because merging is turned off by default, 
+but it should be still fixed.
