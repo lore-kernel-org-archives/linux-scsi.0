@@ -1,64 +1,62 @@
-From: Stefan Voelkel <Stefan.Voelkel@millenux.com>
-Subject: bus:id:lun to device name
-Date: 02 Jul 2003 17:24:08 +0200
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: 2.5.74: aha1740.c doesn't compile
+Date: Thu, 3 Jul 2003 12:18:47 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1057159447.825.68.camel@lt-sv>
+Message-ID: <20030703101846.GH282@fs.tum.de>
+References: <Pine.LNX.4.44.0307021433520.2323-100000@home.osdl.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-vbipc56iZBtK5Y9SBhsH"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pong.to.com ([194.221.251.36]:50949 "EHLO pong.to.com")
-	by vger.kernel.org with ESMTP id S265037AbTGBPJz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jul 2003 11:09:55 -0400
-Received: from pong.to.com (localhost.localdomain [127.0.0.1])
-	by localhost.pong.to.com (Postfix) with ESMTP id B8809E6A5A
-	for <linux-scsi@vger.kernel.org>; Wed,  2 Jul 2003 17:24:19 +0200 (CEST)
-Received: from to.com (fw-dmz.to.com [194.221.251.46])
-	by pong.to.com (Postfix) with ESMTP id 988D18B2E2
-	for <linux-scsi@vger.kernel.org>; Wed,  2 Jul 2003 17:24:19 +0200 (CEST)
-Received: from localhost (elwood.think [192.168.10.15])
-	by to.com (Postfix) with ESMTP id 5FE89C0460
-	for <linux-scsi@vger.kernel.org>; Wed,  2 Jul 2003 17:24:19 +0200 (CEST)
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:45796 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S265925AbTGCKEd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Jul 2003 06:04:33 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0307021433520.2323-100000@home.osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Marc Zyngier <mzyngier@freesurf.fr>
+Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
+drivers/scsi/aha1740.c fails to build on 2.5.74 withthe following error:
 
---=-vbipc56iZBtK5Y9SBhsH
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+<--  snip  -->
 
-Hi,
+...
+  CC      drivers/scsi/aha1740.o
+drivers/scsi/aha1740.c: In function `aha1740_queuecommand':
+drivers/scsi/aha1740.c:378: error: request for member `magic' in 
+something not a structure or union
+drivers/scsi/aha1740.c:378: error: request for member `lock' in 
+something not a structure or union
+drivers/scsi/aha1740.c:378: error: request for member `babble' in 
+something not a structure or union
+drivers/scsi/aha1740.c:378: error: request for member `babble' in 
+something not a structure or union
+drivers/scsi/aha1740.c:378: error: request for member `module' in 
+something not a structure or union
+drivers/scsi/aha1740.c:378: error: request for member `owner' in 
+something not a structure or union
+drivers/scsi/aha1740.c:378: error: request for member `oline' in 
+something not a structure or union
+drivers/scsi/aha1740.c:378: error: request for member `lock' in 
+something not a structure or union
+drivers/scsi/aha1740.c:378: error: request for member `owner' in 
+something not a structure or union
+drivers/scsi/aha1740.c:378: error: request for member `oline' in 
+something not a structure or union
+drivers/scsi/aha1740.c:397: error: request for member `magic' in 
+something not a structure or union
+...
 
-I want to convert a bus:id:lun triple to something like "/dev/sda".
+<--  snip  -->
 
-=46rom userspace I can ioctl() /dev/s[d|cd|...]* or parse /proc/scsi/scsi.
-I do not like any of those solutions.
+cu
+Adrian
 
-Since a kernel module is already involved, I was wondering if it
-can/may/should be done from kernelspace. As of 2.4.21 some data
-structures from the middle layer are exported, but with a "debug only"
-comment.
+-- 
 
-regards
-	Stefan
---=20
---------------------------------------------------------------------
-Stefan V=F6lkel                            stefan.voelkel@millenux.com
-Millenux GmbH                              mobile: +49.170.79177.17
-Lilienthalstra=DFe 2                          phone: +49.711.88770.300
-70825 Stuttgart-Korntal                       fax: +49.711.88770.349
-     -=3D linux without limits -=3D- http://linux.zSeries.org/ =3D-
-
---=-vbipc56iZBtK5Y9SBhsH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (GNU/Linux)
-
-iD8DBQA/AvkXtWF28C4HGsQRArPyAKCFd8RsXx47j3OP01C0lvAJGAYgBQCeIX79
-Y2oBWXHPB4kzucMdCV7XDCw=
-=Kr+c
------END PGP SIGNATURE-----
-
---=-vbipc56iZBtK5Y9SBhsH--
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
