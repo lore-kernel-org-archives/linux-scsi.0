@@ -1,82 +1,53 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] handle failure when starting the eh thread
-Date: Sun, 21 Sep 2003 18:44:42 +0200
+From: Don Jessup <donj@asaca.com>
+Subject: SCSI memeory warnings
+Date: Sun, 21 Sep 2003 10:11:59 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030921164442.GA7910@lst.de>
+Message-ID: <20030921171159.81052.qmail@web14504.mail.yahoo.com>
+Reply-To: donj@asaca.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:65168 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S262456AbTIUQop (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 Sep 2003 12:44:45 -0400
-Content-Disposition: inline
+Received: from web14504.mail.yahoo.com ([216.136.224.67]:4658 "HELO
+	web14504.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S262465AbTIURMA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 21 Sep 2003 13:12:00 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
-
-And while at it also fix the scsi_error_handler() prototype.
+To: linux-scsi@vger.kernel.org
 
 
---- 1.91/drivers/scsi/hosts.c	Wed Sep  3 23:53:20 2003
-+++ edited/drivers/scsi/hosts.c	Sun Sep 21 17:52:38 2003
-@@ -262,7 +262,7 @@
- 
- 	rval = scsi_setup_command_freelist(shost);
- 	if (rval)
--		goto fail;
-+		goto fail_kfree;
- 
- 	device_initialize(&shost->shost_gendev);
- 	snprintf(shost->shost_gendev.bus_id, BUS_ID_SIZE, "host%d",
-@@ -276,13 +276,17 @@
- 		  shost->host_no);
- 
- 	shost->eh_notify = &complete;
--	/* XXX(hch): handle error return */
--	kernel_thread((int (*)(void *))scsi_error_handler, shost, 0);
-+	rval = kernel_thread(scsi_error_handler, shost, 0);
-+	if (rval < 0)
-+		goto fail_destroy_freelist;
- 	wait_for_completion(&complete);
- 	shost->eh_notify = NULL;
- 	scsi_proc_hostdir_add(shost->hostt);
- 	return shost;
-- fail:
-+
-+ fail_destroy_freelist:
-+	scsi_destroy_command_freelist(shost);
-+ fail_kfree:
- 	kfree(shost);
- 	return NULL;
- }
---- 1.63/drivers/scsi/scsi_error.c	Sat Sep 20 11:11:42 2003
-+++ edited/drivers/scsi/scsi_error.c	Sun Sep 21 17:49:36 2003
-@@ -1490,7 +1490,7 @@
-  *    event (i.e. failure).  When this takes place, we have the job of
-  *    trying to unjam the bus and restarting things.
-  **/
--void scsi_error_handler(void *data)
-+int scsi_error_handler(void *data)
- {
- 	struct Scsi_Host *shost = (struct Scsi_Host *) data;
- 	int rtn;
-@@ -1594,6 +1594,7 @@
- 	 * the way out the door.
- 	 */
- 	complete_and_exit(shost->eh_notify, 0);
-+	return 0;
- }
- 
- /*
---- 1.26/drivers/scsi/scsi_priv.h	Mon Aug 25 15:37:25 2003
-+++ edited/drivers/scsi/scsi_priv.h	Sun Sep 21 17:49:44 2003
-@@ -91,7 +91,7 @@
- 
- /* scsi_error.c */
- extern void scsi_times_out(struct scsi_cmnd *cmd);
--extern void scsi_error_handler(void *host);
-+extern int scsi_error_handler(void *host);
- extern int scsi_decide_disposition(struct scsi_cmnd *cmd);
- extern void scsi_eh_wakeup(struct Scsi_Host *shost);
- extern int scsi_eh_scmd_add(struct scsi_cmnd *, int);
+  I'm using the 2.4.22 linux kernel and I have a system that trys to bring
+  48 SATA drives online.   For some reason it will only register the first
+  41 devices with scsi subsystem.  In other words I get devices sda - sdz, 
+  sdaa - sdao.  When it gets to the 42nd device, I see the following warning
+  in /var/log/messages.
+
+
+scsi::resize_dma_pool: WARNING, dma_sectors=26992, wanted=36736, scaling
+scsi::resize_dma_pool: WARNING, dma_sectors=26992, wanted=27552, scaling
+       WARNING, not enough memory, pool not expanded
+
+
+  Oh, by the way this system has 2G of ram  and all 48 devices are seen when
+   doing "cat" on /proc/scsi/scsi but as I wrote above only 41 devices get 
+  assigned a name.  
+
+
+    I read this might be a issue with kernel when compiling in support for 
+  ISA.   I have recompiled kernel and removed support for ISA or at least I
+  think I have.   
+
+   Does anybody know why I would get these warnings and why not all 48 SATA
+disk
+   show up?
+
+
+   
+
+=====
+Don Jessup
+Asaca/Shibasoku Corp. of America
+400 Corporate Circle, Unit G
+Golden, CO  80401
+303-278-1111 X232
+donj@asaca.com
+http://www.asaca.com
