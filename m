@@ -1,64 +1,93 @@
-From: christophe.varoqui@free.fr
-Subject: Re: storageworks controlers & linux-scsi
-Date: Fri, 29 Aug 2003 12:25:46 +0200
+From: "Wu Zhou" <zhouwu@cn.ibm.com>
+Subject: /dev/nst0 Input/Output error,dmesg showing "sense key Unit Attention, Additional
+ sense indicates Power on,reset,or bus device reset occurred"
+Date: Fri, 29 Aug 2003 18:29:50 +0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1062152746.3f4f2a2ab5f3e@impt1-2.free.fr>
-References: <1061816116.3f4a073487d64@impt3-1.free.fr> <1061999793.1660.8.camel@mulgrave> <20030828013706.45760cb5.christophe.varoqui@free.fr> <20030828130626.A15749@beaverton.ibm.com>
+Message-ID: <OF783A9861.65122639-ON48256D91.0039644D@cn.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from postfix4-2.free.fr ([213.228.0.176]:32465 "EHLO
-	postfix4-2.free.fr") by vger.kernel.org with ESMTP id S264500AbTH2KZw
+Received: from ausmtp01.au.ibm.com ([202.81.18.186]:508 "EHLO
+	ausmtp01.au.ibm.com") by vger.kernel.org with ESMTP id S264495AbTH2Kdq
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Aug 2003 06:25:52 -0400
-In-Reply-To: <20030828130626.A15749@beaverton.ibm.com>
+	Fri, 29 Aug 2003 06:33:46 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Kai.Makisara@kolumbus.fi
 
-Selon Patrick Mansfield <patmans@us.ibm.com>:
+Hi,
 
-> On Thu, Aug 28, 2003 at 01:37:06AM +0200, christophe varoqui wrote:
-> > 
-> > I leave for a 2 week vacation, but if the HSV LUNs handling is turned to a
-> usable state I'll be able to post a GPL C agent to handle DM multipath
-> autoconfig & reconfig on event (through VPD 0x83 for wwid detection and TUR
-> for ghosts detection) in  about 3 weeks. In hope there will interest to move
-> it to a broader use.
-> > 
-> 
-> Hi -
-> 
-> Is that a 2.4 solution?
-it initialy is.
-2.6 support will be easy to add, as we don't have to mess with /dev/sg* anymore.
+      While I am using tar to test a new kind of SCSI tape on linux for
+ppc64, I found a "Input/Output error". Running "dmesg" will showing "sense
+key Unit Attention, Additional sense indicates Power on,reset,or bus device
+reset occurred". Following is the runing process:
 
-> 
-> I was starting to work on a hotplug interface to get and store scsi wwid's
-> or serial numbers for use with 2.6.
-> 
-good
+------------------------- Running process start here
+-----------------------------------------
+[root@plinuxt14 root]# mt -f /dev/nst0 rewind
+[root@plinuxt14 root]# mt -f /dev/nst0 status
+SCSI 2 tape drive:
+File number=0, block number=0, partition=0.
+Tape block size 1024 bytes. Density code 0x28 (Exabyte Mammoth-2).
+Soft error count since last status=0
+General status bits on (41010000):
+ BOT ONLINE IM_REP_EN
+[root@plinuxt14 root]# tar cf /dev/nst0 install.log
+[root@plinuxt14 root]# tar cf /dev/nst0 install.log.syslog
+tar: /dev/nst0: Warning: Cannot close: Input/output error
+[root@plinuxt14 root]# mt -f /dev/nst0 status
+SCSI 2 tape drive:
+File number=1, block number=-1, partition=0.
+Tape block size 1024 bytes. Density code 0x28 (Exabyte Mammoth-2).
+Soft error count since last status=0
+General status bits on (1010000):
+ ONLINE IM_REP_EN
+[root@plinuxt14 root]#  dmesg |tail -n 20
+sym53c8xx_abort: pid=14926 serial_number=14927
+serial_number_at_timeout=14927
+scsi : aborting command due to timeout : pid 14927, scsi1, channel 0, id 2,
+lun 0 Write (10) 00 00 03 cd b8 00 00 08 00
+sym53c8xx_abort: pid=14927 serial_number=14928
+serial_number_at_timeout=14928
+scsi : aborting command due to timeout : pid 14928, scsi1, channel 0, id 2,
+lun 0 Write (10) 00 00 03 cd c0 00 00 08 00
+sym53c8xx_abort: pid=14928 serial_number=14929
+serial_number_at_timeout=14929
+scsi : aborting command due to timeout : pid 14929, scsi1, channel 0, id 2,
+lun 0 Write (10) 00 00 03 cd c8 00 00 08 00
+sym53c8xx_abort: pid=14929 serial_number=14930
+serial_number_at_timeout=14930
+scsi : aborting command due to timeout : pid 14930, scsi1, channel 0, id 2,
+lun 0 Write (10) 00 00 03 cd d0 00 00 08 00
+sym53c8xx_abort: pid=14930 serial_number=14931
+serial_number_at_timeout=14931
+scsi : aborting command due to timeout : pid 14931, scsi1, channel 0, id 2,
+lun 0 Write (10) 00 00 03 cd d8 00 00 08 00
+sym53c8xx_abort: pid=14931 serial_number=14932
+serial_number_at_timeout=14932
+SCSI host 1 abort (pid 14924) timed out - resetting
+SCSI bus is being reset for host 1 channel 0.
+sym53c8xx_reset: pid=14924 reset_flags=2 serial_number=14925
+serial_number_at_timeout=14925
+sym53c896-1: handling phase mismatch from SCRIPTS.
+st0: Error with sense data: <6>sym53c896-1-<2,*>: FAST-20 WIDE SCSI 40.0
+MB/s (50.0 ns, offset 31)
+Current st09:00: sense key Unit Attention
+Additional sense indicates Power on,reset,or bus device reset occurred
+st0: Error on flush.
+sym53c896-1-<0,*>: FAST-20 WIDE SCSI 40.0 MB/s (50.0 ns, offset 31)
+----------------------- Running process stop here
+-------------------------------------------------------
 
-> We need a method that would (ideally) work for all users, so we: don't
-> hang broken devices, can use other pages (0x80), can use vendor
-> specific methods, and works for udev or multipath config tools.
-> 
-> We need a black/white list (or config file) for the broken or special
-> devices.
->
-Speaking of blacklists, the kernel lists could be fed in early userspace and 
-thus tweaked at run-time. Didn't Linus search for initramfs uses ? :)
 
-While I'm in the wish list, it would be good to 
-have 'cat /sys/bus/scsi/...../tur' trigger a TUR and echo the result.
+      Could anyone explain why this error message will display? Why a
+poweron, reset or bus device reset would occured? What cause this? Is it a
+hardware failure, or a software defect? Thanks very much!
 
-> Have you seen the libsysfs/udev code? We can use libsysfs for common
-> interfaces to get/set a scsi serial number, and for other common uses of
-> sysfs such as getting the bus_id, or figuring out if we have a scsi
-> device.
-> 
-yes, will do. Thanks for the feedback and hints
+Thanks and Best Regards
+---------------------------------------------
+Wu Zhou
+Software Engineer, IBM China Development Lab
+Email: zhouwu@cn.ibm.com
+Notes: Wu Zhou/China/IBM@IBMCN
 
-regards,
-cvaroqui
