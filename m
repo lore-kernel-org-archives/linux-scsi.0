@@ -1,58 +1,60 @@
-From: sullivan <sullivan@austin.ibm.com>
+From: Rick Stevens <rstevens@vitalstream.com>
 Subject: Re: [RFC] Persistent naming of scsi devices
-Date: Tue, 9 Apr 2002 08:55:36 -0600
+Date: Tue, 09 Apr 2002 18:16:53 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020409085536.N7333@austin.ibm.com>
-References: <patmans@us.ibm.com> <200204081917.g38JHg905081@localhost.localdomain>
+Message-ID: <3CB39285.8000609@vitalstream.com>
+References: <OF8B2F3581.590066BE-ONC1256B95.0068B28C@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <200204081917.g38JHg905081@localhost.localdomain>; from James.Bottomley@SteelEye.com on Mon, Apr 08, 2002 at 02:17:42PM -0500
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Apr 08, 2002 at 02:17:42PM -0500, James Bottomley wrote:
-> patmans@us.ibm.com said:
-> > We could have a set of interfaces to get a SCSI UUID, and then have
-> > hotplug tell us which interface (or module?) to use. That way we don't
-> > require sg.
-> 
-> I'm in two minds about this one.  Deciding exactly what constitutes the UUID 
-> for a particular device can be non trivial.  Usually you have to probe for the 
-> supported vital product pages, and if they have the WWN one use that otherwise 
-> fall back to the (less guaranteed to be unique) SCSI-2 serial number page or 
-> finally make something up dependent on what unique numbers you can get from 
-> the device.
-> 
-> It makes sense to me that this type of complex rule (of thumb almost) based 
-> lookup is best done from user level by doing the explicit SCSI commands if 
-> necessary.
-> 
-> However, I'm biased.  From a philosophical point of view, I like the hotplug 
-> approach because it allows us to eject a lot of the use once initialisation 
-> code into user space from the kernel.
-> 
-> > The device_list[] (black/white list) should also come from user land.
-> > Maybe hotplug could get the device_list[] characteristics, including
-> > the UUID method for the device.
-> 
-> > I'd also like a uuid stored in Scsi_Device for multi-path support in
-> > the mid-layer (independent of how it's set). This uuid could not be
-> > stored in the partition or as part of the file system. 
-> 
-> If we can come up with a nice, general mechanism, there's no reason why it 
-> cannot apply outside the SCSI system, so I wouldn't necessarily tie it to 
-> Scsi_Devce.  More likely (and actually what the persistent binding begins) is 
-> to tie it to the concept of the Mochel internal device tree.
+Martin Peschke3 wrote:
 
-I think this is the decision that is the most difficult. Setting up nodes on driverfs provides a consistent location and format (if we are careful) for surfacing information on devices. I find it much more difficult to keep up with where stuff is and what format it's in in /proc. Also, I must confess that keeping track of what userland utilites to use to collect various pieces of device information strains my limited memory cells. Of course this comes at the cost of extra code in the kernel.
+<much stuff snipped>
 
-> 
-> James
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm going to wade in here.  Based on my experiences on many other
+Unixish systems, wouldn't it be simply better to number the things
+based on controller position, SCSI ID, LUN and partition?  This
+has been called "CTL" format in various documents, and many systems
+use this method such as Sun, DG AvIIons, DEC, HP and a host of others.
+
+E.g. "/dev/dsk/c0t1d2s3" is controller 0 (first SCSI controller seen on
+the bus), target ID 1, LUN 2, partition (slice) 3.  Simple, unambiguous
+and repeatable.
+
+I understand that other devices may be seen on the PCI if you add or
+remove cards.  Under this scheme, controller 0 is the first (lowest
+slot number) unit found.  The next one would be controller 1.  Even
+if you were to stuff, say, a video card in there, these would _still_
+be the first SCSI cards found.  The only time a change would occur
+is if a SCSI card was installed in a lower slot number or between
+other SCSI controllers (and only then if the original cards were
+left in) or if the ORDER of the cards was changed in the bus.
+
+As I said, other people smarter than I seem to think it makes sense.
+Why not Linux?  It's silly to smush things together just to satisfy a
+bizzare craving to have a list of devices with no "holes" in it.
+Besides "fsck"ing or "mkfs"ing drives, how often do you refer to them
+by their names in "/dev", anyway?
+
+This would also work for tape drives.  However, they're rooted at
+/dev/stape rather than /dev/dsk.
+
+At boot, you could create more mnemonic names as symbolic links to the
+CTL names if you wish (as is done with /dev/cdrom and such), but if
+you absolutely want to talk to the SAME DEVICE, you use the CTL name.
+
+Just adding my $0.02.  We now return you to your regularly scheduled
+arguments.
+
+----------------------------------------------------------------------
+- Rick Stevens, SSE, VitalStream, Inc.      rstevens@vitalstream.com -
+- 949-743-2010 (Voice)                    http://www.vitalstream.com -
+-                                                                    -
+-          su -; find / -name someone -exec touch \{\} \;            -
+-                          - The UNIX way of touching someone        -
+----------------------------------------------------------------------
+
