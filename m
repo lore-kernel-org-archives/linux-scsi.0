@@ -1,40 +1,37 @@
-From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH] 1.1.4-2313 aacraid driver for LiNUX 2.4.25-pre4
-Date: Wed, 7 Jan 2004 21:00:20 +0000
-Sender: linux-aacraid-devel-admin-8PEkshWhKlo@public.gmane.org
-Message-ID: <20040107210020.A1166@infradead.org>
-References: <3FFC4C09.3020103@wanadoo.es>
+From: Olaf Hering <olh@suse.de>
+Subject: sysfs support for sg
+Date: Wed, 7 Jan 2004 23:33:41 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20040107223341.GA23799@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-aacraid-devel-admin-8PEkshWhKlo@public.gmane.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.suse.de ([195.135.220.2]:20907 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S265647AbUAGWdn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jan 2004 17:33:43 -0500
+Received: from Hermes.suse.de (Hermes.suse.de [195.135.221.8])
+	(using TLSv1 with cipher EDH-RSA-DES-CBC3-SHA (168/168 bits))
+	(No client certificate requested)
+	by Cantor.suse.de (Postfix) with ESMTP id 67AA219A87AF
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Jan 2004 23:33:42 +0100 (CET)
 Content-Disposition: inline
-In-Reply-To: <3FFC4C09.3020103-39ZsbGIQGT7e5aOfsHch1g@public.gmane.org>; from xose-39ZsbGIQGT7e5aOfsHch1g@public.gmane.org on Wed, Jan 07, 2004 at 07:12:25PM +0100
-Errors-To: linux-aacraid-devel-admin-8PEkshWhKlo@public.gmane.org
-List-Help: <mailto:linux-aacraid-devel-request-8PEkshWhKlpvbvzxeQLTJuMTnGGMi8c9@public.gmane.org>
-List-Post: <mailto:linux-aacraid-devel-8PEkshWhKlo@public.gmane.org>
-List-Subscribe: <http://lists.us.dell.com/mailman/listinfo/linux-aacraid-devel>,
-	<mailto:linux-aacraid-devel-request-8PEkshWhKlpvbvzxeQLTJhLjRD9WNpgrmSKB9SHqsyg@public.gmane.org>
-List-Unsubscribe: <http://lists.us.dell.com/mailman/listinfo/linux-aacraid-devel>,
-	<mailto:linux-aacraid-devel-request-8PEkshWhKlpvbvzxeQLTJt/CJOUnrhF+9vnX9k1QryA@public.gmane.org>
-List-Archive: <http://lists.us.dell.com/pipermail/linux-aacraid-devel/>
-To: Xose Vazquez Perez <xose-39ZsbGIQGT7e5aOfsHch1g@public.gmane.org>
-Cc: linux-aacraid-devel-XtjxT7Vmt5ZskZv2Y/7f+AC/G2K4zDHf@public.gmane.org, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Olaf Hering <olh@suse.de>
 
-On Wed, Jan 07, 2004 at 07:12:25PM +0100, Xose Vazquez Perez wrote:
-> hi,
-> 
-> here goes latest aacraid driver, it was sent for 2.4 kernel
-> inclusion. CHANGELOG has an extensive list of changes.
+Hello,
 
-That's a huge mess adding lots of broken crap and hooks for binary only modules
-through ioctls (urgg..).
+are there any plans to add sysfs support to the sg driver?
+I see no 'dev' nodes for it.
+Can stuff like 'sg_start /dev/sg2 0' be done in another way?
 
-If you want to help getting this driver merged please split out reviewable
-pieces and send them to linux-scsi.
+--=20
+USB is for mice, FireWire is for men!
 
-_______________________________________________
-Linux-aacraid-devel mailing list
-Linux-aacraid-devel-8PEkshWhKlo@public.gmane.org
-http://lists.us.dell.com/mailman/listinfo/linux-aacraid-devel
-Please read the FAQ at http://lists.us.dell.com/faq or search the list archives at http://lists.us.dell.com/htdig/
+sUse lINUX ag, n=C3=9CRNBERG
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
