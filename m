@@ -1,85 +1,46 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: [patch] 2.6.7-mm2: fdomain_cs needs unknown symbols
-Date: Thu, 24 Jun 2004 21:16:18 +0200
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [Patch 2.6] sd.c spinup messages
+Date: 24 Jun 2004 17:02:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040624191617.GB26669@fs.tum.de>
-References: <20040624014655.5d2a4bfb.akpm@osdl.org>
+Message-ID: <1088114552.2069.63.camel@mulgrave>
+References: <200406091950_MC3-1-8463-F129@compuserve.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:60664 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S265289AbUFXTQ0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Jun 2004 15:16:26 -0400
-Content-Disposition: inline
-In-Reply-To: <20040624014655.5d2a4bfb.akpm@osdl.org>
+Received: from stat1.steeleye.com ([65.114.3.130]:41859 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265878AbUFXWCd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Jun 2004 18:02:33 -0400
+In-Reply-To: <200406091950_MC3-1-8463-F129@compuserve.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com, David Hinds <dahinds@users.sourceforge.net>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Chuck Ebbert <76306.1226@compuserve.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Jun 24, 2004 at 01:46:55AM -0700, Andrew Morton wrote:
->...
-> All 195 patches:
->...
-> bk-scsi.patch
->...
+On Wed, 2004-06-09 at 18:48, Chuck Ebbert wrote:
+> -                               printk(KERN_NOTICE "%s: Spinning up disk...",
+> +                               printk(KERN_NOTICE "%s: Spinning up disk...\n",
+>                                        diskname);
+>                                 cmd[0] = START_STOP;
+>                                 cmd[1] = 1;     /* Return immediately */
+> @@ -903,7 +906,6 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
+>                                 current->state = TASK_UNINTERRUPTIBLE;
+>                                 time1 = schedule_timeout(time1);
+>                         } while(time1);
+> -                       printk(".");
 
-This makes two functions in drivers/scsi/fdomain.c static that are 
-required in fdomain_cs.o:
+What this basically does is remove the indication that the drive is
+being spun up.  That's quite a significant user visible change from what
+we do now.
 
-<--  snip  -->
+Current behaviour is dictated by the fact that some of the drives
+(particularly older ones) take ages to spin up.  Without the visual
+indication that something is going on people tend to press the reset
+button and report kernel errors.
 
-WARNING: /lib/modules/2.6.7-mm2/kernel/drivers/scsi/pcmcia/fdomain_cs.ko 
-needs unknown symbol fdomain_16x0_bus_reset
-WARNING: /lib/modules/2.6.7-mm2/kernel/drivers/scsi/pcmcia/fdomain_cs.ko 
-needs unknown symbol fdomain_setup
+Instead of making such a global change, how about making this a
+non-default configurable option within sd.
 
-<--  snip  -->
+James
 
-
-Although I agree that the way fdomain_cs.o is built is too ugly for
-words, I'd suggest the following patch that revert these static's:
-
-
---- linux-2.6.7-mm2-modular/drivers/scsi/fdomain.c.old	2004-06-24 21:04:56.000000000 +0200
-+++ linux-2.6.7-mm2-modular/drivers/scsi/fdomain.c	2004-06-24 21:07:17.000000000 +0200
-@@ -418,7 +418,7 @@
- 
- static irqreturn_t       do_fdomain_16x0_intr( int irq, void *dev_id,
- 					    struct pt_regs * regs );
--static int		 fdomain_16x0_bus_reset(struct scsi_cmnd *SCpnt);
-+int			 fdomain_16x0_bus_reset(struct scsi_cmnd *SCpnt);
- 
- /* Allow insmod parameters to be like LILO parameters.  For example:
-    insmod fdomain fdomain=0x140,11 */
-@@ -555,7 +555,7 @@
-    printk( "\n" );
- }
- 
--static int __init fdomain_setup(char *str)
-+int __init fdomain_setup(char *str)
- {
- 	int ints[4];
- 
-@@ -1541,7 +1541,7 @@
-    return SUCCESS;
- }
- 
--static int fdomain_16x0_bus_reset(struct scsi_cmnd *SCpnt)
-+int fdomain_16x0_bus_reset(struct scsi_cmnd *SCpnt)
- {
-    outb( 1, SCSI_Cntl_port );
-    do_pause( 2 );
-
-
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
 
