@@ -1,38 +1,34 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Cleanup for sd in 2.4.19
-Date: Thu, 08 Aug 2002 09:31:14 -0500
+From: Luben Tuikov <luben@splentec.com>
+Subject: Questions on scsi-scan.c::scsi_get_device_id()
+Date: Thu, 08 Aug 2002 15:21:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200208081431.g78EVEb01989@localhost.localdomain>
-References: <zaitcev@redhat.com>
+Message-ID: <3D52C4C4.F3EBDAE9@splentec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA09133
-	for <linux-scsi@vger.kernel.org>; Thu, 8 Aug 2002 07:31:20 -0700
-In-Reply-To: Message from Pete Zaitcev <zaitcev@redhat.com>
-   of "Thu, 08 Aug 2002 01:58:06 EDT." <20020808015806.B10154@devserv.devel.redhat.com>
+Received: from splentec.com (canoe.splentec.com [209.47.35.250])
+	by pepsi.splentec.com (8.11.6/8.11.0) with ESMTP id g78JLbs15338
+	for <linux-scsi@vger.kernel.org>; Thu, 8 Aug 2002 15:21:38 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Pete Zaitcev <zaitcev@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-zaitcev@redhat.com said:
-> A pure cleanup here. I know that something that works should not be
-> fixed, but cheesh. There are limits to everything. I cannot wait until
-> James destroys all this crap, it's just too painful to read. 
+Is it possible that the
 
-I didn't sign up to clean out the Augean Stables on my own.  I'm trying to 
-rationalise the substance.  Beautifying the structure when not part of a 
-substantive change (however painful it may be to the eye) isn't high on my 
-list of priorities.  And 2.4 is nowhere; I'm working on 2.5 almost exclusively.
+	idtype = 3;
+	while (idtype > 0) {
+		<< BODY >>
+		idtype--;
+	}
 
-The patch looks fine to me: send it off to Marcelo---he's been wanting to get 
-into SCSI coding anyway, so he might be interested in helping out on this type 
-of work.
+loop in scsi_scan.c :: scsi_get_device() be turned
+into a for loop using the proverbial, classical
+example. ( <<BODY>> is longer than to justify the
+current use and as such using a for loop would make
+the intentions of the code clear at the top. )
 
-Oh, and if the same problem persists in 2.5, I'll take patches (or you can 
-toss them over the wall at Doug Leadford).
+Is it imperative that 80 column limit is imposed?
 
-James
-
-
+TIA,
+-- 
+Luben
