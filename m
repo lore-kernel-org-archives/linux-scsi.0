@@ -1,441 +1,156 @@
-From: "Adam J. Richter" <adam@yggdrasil.com>
-Subject: Untested port of parisc_device to generic device interface
-Date: Fri, 8 Nov 2002 17:28:05 -0800
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH] scsi_debug 1.64 , remove detect(), "hotplug" hosts
+Date: Sat, 09 Nov 2002 21:26:46 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200211090128.RAA31693@adam.yggdrasil.com>
+Message-ID: <3DCCE2E6.6050800@torque.net>
+Reply-To: dougg@torque.net
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------030505010003020309050506"
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from torque.net (dm1-53.triode.net.au [202.147.125.53])
+	by iggy.triode.net.au (8.11.6/8.11.6) with ESMTP id gA9AS3201072
+	for <linux-scsi@vger.kernel.org>; Sat, 9 Nov 2002 21:28:04 +1100
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: andmike@us.ibm.com, hch@lst.de, parisc-linux@lists.parisc-linux.org
+To: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
->A full abstraction would require the sync point functions that the 53c700 uses
->so that they can optimize away on unnecessary architectures.
+This is a multi-part message in MIME format.
+--------------030505010003020309050506
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-	For the moment, I've added the following inline routine to
-my linux/dma-ops.h in my generic DMA mapping patch.  I haven't even
-tried to compile it, but you should get the picture.
+This patch is against lk 2.5.46-bk3 which includes
+Christoph's work removing the requirement for
+detect() functions in LLDDs. He sent me an example
+for scsi_debug which I have built on with this patch.
 
-extern void (*_wback_fake_consistent)(void *vaddr, int len);
-static inline void wback_fake_consistent(void *vaddr, int len)
-{
-#ifdef DMA_CONSISTENT_IS_FAKE
-	(*_wback_fake_consistent)(vaddr, len);
-#endif
-}
+As threatened, this version includes a "scsi_debug_add_host"
+parameter. At kernel or module load time this is an absolute
+number (0..127 are allowable and 1 is the default). So:
+     modprobe scsi_debug scsi_debug_num_devs=20 scsi_debug_add_host=0
+will result in no scsi_debug hosts (thus no devices) but
+the driver has 20 slots available for devices.
 
-	The parisc initialization can set _wback_fake_consistent to
-either a no-op or dma_cache_wback depending on the architecture that
-it is booted on.
+Then a host can be introduced (simulated hotplug) by
+     echo 1 > /sysfs/bus/scsi/drivers/scsi_debug/add_host
+This causes a scsi_debug host to appear and devices get
+found on it [14 in my system: 7 targets (0..6) each with
+2 luns (0..1)]. Another host hotplug can be simulated by
+     echo 1 > /sysfs/bus/scsi/drivers/scsi_debug/add_host
+which results in another 6 devices being attached (for a
+total of 20 scsi_debug devices as dictated by the original
+scsi_debug_num_devs).
 
->If you're
->signing up to do this right, then I can try it out in the 53c700.  I still
->have two parisc machines, one which cannot do consistent allocations and one
->which can.
+That last (second) scsi_debug host can be removed by
+     echo -1 > /sysfs/bus/scsi/drivers/scsi_debug/add_host
+and its 6 devices go. Another application of this "echo"
+removes the first host and all remaining devices.
 
-	I'll sign up to try if you'll help me, and, most importantly,
-to me, get it shepherded into Linus's tree promptly once it looks good.
-
-	To start with, here is another completely untested patch that
-I haven't even tried to compile that attempts to port the parisc device
-type to the generic device model.  I have deliberately not included any
-changes that would make it dependent on my generic DMA routine facility.
-
-	If we could get this patch working, "blessed" as needed,
-and into Linus's releases, then I think that would simplify adding
-a fake_dma_consistent mechanism that the drivers/net/lasi_82596.c
-and drivers/scsi/{lasi700,53c700,etc.}.c could use.
-
-	I think it would be much easier to get this patch integrated
-first, as that the next step will probably rely heavily on it.
-
-	One question about the machine that has no consistent memory
-option: does it take PCI cards?  If so, then all PCI device drivers
-should theoretically use something like wback_fake_consistent.
-If not, then it sounds like the facility needs only to apply to
-generic DMA operations for "parisc" bus cards.
-
-	I've added parisc-linux@lists.parisc-linux.org to the
-cc list and plan to drop linux-scsi from this tangent in my subsequent
-responses.
-
-Adam J. Richter     __     ______________   575 Oroville Road
-adam@yggdrasil.com     \ /                  Milpitas, California 95035
-+1 408 309-6081         | g g d r a s i l   United States of America
-                         "Free Software For The Rest Of Us."
+Seems to work fine.
 
 
+Notes:
+   - Christoph and Mike A. are pulling me in 2 different
+     directions. In this case Christoph got to me first
+     so I have moved along that direction. Mike's
+     "/sysfs/bus/scsi_dbg_fake" has me perplexed ...
+   - rmmod and subsequent modprobe's on scsi_debug
+     sometimes blow up.
+     Hopefully Patrick's fix (not in bk3?) addresses that.
+   - this patch has a work around for a kernel sscanf() bug
+     (parsing -ve numbers). Randy Dunlap has attended to that.
+   - the simulated "hotplug" thread belongs to the echo command
+     or some sysfs magic. scsi_debug could schedule a timer
+     event and do the hotplug (hot unplug) in the context of
+     a timer interrupt (?) for added reality.
+   - cleaned out some extraneous includes and comments.
+     Suggestions welcome.
 
-diff -u -r linux-2.5.46/include/asm-parisc/hardware.h linux/include/asm-parisc/hardware.h
---- linux-2.5.46/include/asm-parisc/hardware.h	Wed Oct 30 21:32:15 2002
-+++ linux/include/asm-parisc/hardware.h	Fri Nov  8 01:49:09 2002
-@@ -1,6 +1,7 @@
- #ifndef _PARISC_HARDWARE_H
- #define _PARISC_HARDWARE_H
- 
-+#include <linux/device.h>
- #include <asm/pdc.h>
- 
- struct parisc_device_id {
-@@ -26,14 +27,10 @@
- struct parisc_device {
- 	unsigned long   hpa;		/* Hard Physical Address */
- 	struct parisc_device_id id;
--	struct parisc_device *parent;
--	struct parisc_device *sibling;
--	struct parisc_device *child;
--	struct parisc_driver *driver;	/* Driver for this device */
--	void		*sysdata;	/* Driver instance private data */
- 	char		name[80];	/* The hardware description */
- 	int		irq;
- 
-+	struct device	device;
- 	char		hw_path;        /* The module number on this bus */
- 	unsigned int	num_addrs;	/* some devices have additional address ranges. */
- 	unsigned long	*addr;          /* which will be stored here */
-@@ -66,10 +63,10 @@
- extern char *cpu_name_version[][2]; /* mapping from enum cpu_type to strings */
- 
- struct parisc_driver {
--	struct parisc_driver *next;
- 	char *name; 
- 	const struct parisc_device_id *id_table;
- 	int (*probe) (struct parisc_device *dev); /* New device discovered */
-+	struct device_driver driver;
- };
- 
- struct io_module {
-@@ -128,6 +125,26 @@
- #define HPHW_FAULTY    31
- 
- 
-+static inline struct parisc_device *to_parisc_dev(struct device *dev)
-+{
-+	return container_of(dev, struct parisc_device, device);
-+}
-+
-+static inline struct parisc_driver *to_parisc_drv(struct driver *dev)
-+{
-+	return container_of(drv, struct parisc_driver, driver);
-+}
-+
-+static inline void *parisc_get_drvdata(struct parisc_device *pa_dev)
-+{
-+	return dev_get_drvdata(pa_dev->device);
-+}
-+
-+static inline void parisc_set_drvdata(struct parisc_device *pa_dev, void *ptr)
-+{
-+	dev_set_drvdata(pa_dev->device, ptr);
-+}
-+
- /* hardware.c: */
- extern const char *parisc_hardware_description(struct parisc_device_id *id);
- extern enum cpu_type parisc_get_cpu_type(unsigned long hversion);
-@@ -135,12 +152,13 @@
- struct pci_dev;
- 
- /* drivers.c: */
-+extern struct bus_type parisc_bus_type;
- extern struct parisc_device *alloc_pa_dev(unsigned long hpa,
- 		struct hardware_path *path);
- extern int register_parisc_device(struct parisc_device *dev);
- extern int register_parisc_driver(struct parisc_driver *driver);
- extern int count_parisc_driver(struct parisc_driver *driver);
--extern int unregister_parisc_driver(struct parisc_driver *driver);
-+extern void unregister_parisc_driver(struct parisc_driver *driver);
- extern void walk_central_bus(void);
- extern void fixup_child_irqs(struct parisc_device *parent, int irqbase,
- 		int (*choose)(struct parisc_device *parent));
-diff -u -r linux-2.5.46/arch/parisc/kernel/drivers.c linux/arch/parisc/kernel/drivers.c
---- linux-2.5.46/arch/parisc/kernel/drivers.c	Mon Nov  4 21:35:43 2002
-+++ linux/arch/parisc/kernel/drivers.c	Fri Nov  8 02:05:25 2002
-@@ -27,17 +27,8 @@
- /* See comments in include/asm-parisc/pci.h */
- struct pci_dma_ops *hppa_dma_ops;
- 
--static struct parisc_driver *pa_drivers;
- static struct parisc_device root;
- 
--/* This lock protects the pa_drivers list _only_ since all parisc_devices
-- * are registered before smp_init() is called.  If you wish to add devices
-- * after that, this muct be serialised somehow.  I recommend a semaphore
-- * rather than a spinlock since driver ->probe functions are allowed to
-- * sleep (for example when allocating memory).
-- */
--static spinlock_t pa_lock = SPIN_LOCK_UNLOCKED;
--
- #define for_each_padev(dev) \
- 	for (dev = root.child; dev != NULL; dev = next_dev(dev))
- 
-@@ -53,20 +44,13 @@
-  */
- struct parisc_device *next_dev(struct parisc_device *dev)
- {
--	if (dev->child) {
--		return check_dev(dev->child);
--	} else if (dev->sibling) {
--		return dev->sibling;
--	}
-+	struct device *next =
-+		list_entry(dev->device.next, struct device, g_list);
- 
--	/* Exhausted tree at this level, time to go up. */
--	do {
--		dev = dev->parent;
--		if (dev && dev->sibling)
--			return dev->sibling;
--	} while (dev != &root);
--
--	return NULL;
-+	if (next->parent == NULL) /* end of list.  back at root */
-+		return NULL;
-+	else
-+		return container_of(next, struct parisc_device, device);
- }
- 
- /**
-@@ -74,8 +58,11 @@
-  * @driver: the PA-RISC driver to try
-  * @dev: the PA-RISC device to try
-  */
--static int match_device(struct parisc_driver *driver, struct parisc_device *dev)
-+static int
-+parisc_match_device(struct device_driver *gendrv, struct device *gendev)
- {
-+	struct parisc_driver *driver = to_parisc_driver(gendrv);
-+	struct parisc_device *dev = to_parisc_device(gendev);
- 	const struct parisc_device_id *ids;
- 
- 	for (ids = driver->id_table; ids->sversion; ids++) {
-@@ -96,10 +83,14 @@
- 	return 0;
- }
- 
--static void claim_device(struct parisc_driver *driver, struct parisc_device *dev)
-+static int parisc_device_probe(struct device *dev)
- {
--	dev->driver = driver;
--	request_mem_region(dev->hpa, 0x1000, driver->name);
-+	struct parisc_device *pa_dev = to_parisc_device(dev);
-+	struct parisc_driver *pa_drv = to_parisc_driver(dev->driver);
-+	int err = (*pa_drv->probe)(pa_dev);
-+	if (!err)
-+		request_mem_region(dev->hpa, 0x1000, driver->name);
-+	return err;
- }
- 
- /**
-@@ -108,37 +99,22 @@
-  */
- int register_parisc_driver(struct parisc_driver *driver)
- {
--	struct parisc_device *device;
--
--	if (driver->next) {
--		printk(KERN_WARNING 
--		       "BUG: Skipping previously registered driver: %s\n",
--		       driver->name);
--		return 1;
--	}
--
--	for_each_padev(device) {
--		if (device->driver)
--			continue;
--		if (!match_device(driver, device))
--			continue;
--
--		if (driver->probe(device) < 0)
--			continue;
--		claim_device(driver, device);
--	}
-+	driver->driver.bus_type = &parisc_bus_type;
-+	driver->driver.probe = parisc_device_probe;
-+	return driver_register(&driver->driver);
-+}
- 
--	/* Note that the list is in reverse order of registration.  This
--	 * may be significant if we ever actually support hotplug and have
--	 * multiple drivers capable of claiming the same chip.
--	 */
--
--	spin_lock(&pa_lock);
--	driver->next = pa_drivers;
--	pa_drivers = driver;
--	spin_unlock(&pa_lock);
-+struct count_arg {
-+	struct driver *driver;
-+	int count;
-+};
- 
--	return 0;
-+static void count_callback(struct device *dev, void *data)
-+{
-+	struct count_arg *arg = data;
-+	
-+	if (parisc_match_device(&arg->driver, dev))
-+		(arg->count)++;
- }
- 
- /**
-@@ -148,17 +124,14 @@
-  * Use by IOMMU support to "guess" the right size IOPdir.
-  * Formula is something like memsize/(num_iommu * entry_size).
-  */
--int count_parisc_driver(struct parisc_driver *driver)
-+int count_parisc_driver(struct parisc_driver *pa_driver)
- {
--	struct parisc_device *device;
--	int cnt = 0;
--
--	for_each_padev(device) {
--		if (match_device(driver, device))
--			cnt++;
--	}
--
--	return cnt;
-+	struct count_arg arg;
-+  
-+	arg.driver = &pa_driver->driver;
-+	arg.count = 0;
-+	bus_for_each_dev(arg.driver->bus, &arg, count_callback);
-+	return arg.count;
- }
- 
- 
-@@ -167,42 +140,9 @@
-  * unregister_parisc_driver - Unregister this driver from the list of drivers
-  * @driver: the PA-RISC driver to unregister
-  */
--int unregister_parisc_driver(struct parisc_driver *driver)
-+void unregister_parisc_driver(struct parisc_driver *driver)
- {
--	struct parisc_device *dev;
--
--	spin_lock(&pa_lock);
--
--	if (pa_drivers == driver) {
--		/* was head of list - update head */
--		pa_drivers = driver->next;
--	} else {
--		struct parisc_driver *prev = pa_drivers;
--
--		while (prev && driver != prev->next) {
--			prev = prev->next;
--		}
--
--		if (!prev) {
--			printk(KERN_WARNING "unregister_parisc_driver: %s wasn't registered\n", driver->name);
--		} else {
--			/* Drop driver from list */
--			prev->next = driver->next;
--			driver->next = NULL;
--		}
--
--	}
--
--	spin_unlock(&pa_lock);
--
--	for_each_padev(dev) {
--		if (dev->driver != driver)
--			continue;
--		dev->driver = NULL;
--		release_mem_region(dev->hpa, 0x1000);
--	}
--
--	return 0;
-+	driver_unregister(&driver->driver);
- }
- 
- static struct parisc_device *find_device_by_addr(unsigned long hpa)
-@@ -335,7 +275,8 @@
- 	memset(dev, 0, sizeof(*dev));
- 	dev->hw_path = id;
- 	dev->id.hw_type = HPHW_FAULTY;
--	dev->parent = parent;
-+	dev->device.bus_type = &parisc_bus_type;
-+	dev->device.parent = &parent->device;
- 	dev->sibling = *insert;
- 	*insert = dev;
- 	return dev;
-@@ -429,32 +370,11 @@
-  *
-  * Search the driver list for a driver that is willing to manage
-  * this device.
-+ * WARNING: This routine now returns 0 on success. --Adam J. Richter 2002.11.08
-  */
- int register_parisc_device(struct parisc_device *dev)
- {
--	struct parisc_driver *driver;
--
--	if (!dev)
--		return 0;
--
--	if (dev->driver)
--		return 1;
--	
--	spin_lock(&pa_lock);
--
--	/* Locate a driver which agrees to manage this device.  */
--	for (driver = pa_drivers; driver; driver = driver->next) {
--		if (!match_device(driver,dev))
--			continue;
--		if (driver->probe(dev) == 0)
--			break;
--	}
--
--	if (driver != NULL) {
--		claim_device(driver, dev);
--	}
--	spin_unlock(&pa_lock);
--	return driver != NULL;
-+	return device_register(&dev->device);
- }
- 
- #define BC_PORT_MASK 0x8
-@@ -588,3 +508,8 @@
- 		print_parisc_device(dev);
- 	}
- }
-+
-+struct bus_type parisc_bus_type = {
-+	.name =		"parisc",
-+	.match =	parisc_match_device,
-+};
-diff -u -r linux-2.5.46/arch/parisc/kernel/processor.c linux/arch/parisc/kernel/processor.c
---- linux-2.5.46/arch/parisc/kernel/processor.c	Mon Nov  4 21:35:44 2002
-+++ linux/arch/parisc/kernel/processor.c	Fri Nov  8 01:00:32 2002
-@@ -370,9 +370,9 @@
- };
- 
- static struct parisc_driver cpu_driver = {
--	name:		"CPU",
--	id_table:	processor_tbl,
--	probe:		processor_probe
-+	.name =		"CPU",
-+	.id_table =	processor_tbl,
-+	.probe =	processor_probe
- };
- 
- /**
-diff -u -r linux-2.5.46/drivers/parisc/sba_iommu.c linux/drivers/parisc/sba_iommu.c
---- linux-2.5.46/drivers/parisc/sba_iommu.c	Fri Nov  8 01:28:15 2002
-+++ linux/drivers/parisc/sba_iommu.c	Fri Nov  8 01:43:35 2002
-@@ -1988,7 +1988,7 @@
- 		return(1);
- 	}
- 
--	dev->sysdata = (void *) sba_dev;
-+	parisc_set_drvdata(dev, sba_dev);
- 	memset(sba_dev, 0, sizeof(struct sba_device));
- 
- 	for(i=0; i<MAX_IOC; i++)
-@@ -2041,7 +2041,7 @@
-  */
- void * sba_get_iommu(struct parisc_device *pci_hba)
- {
--	struct sba_device *sba = (struct sba_device *) pci_hba->parent->sysdata;
-+	struct sba_device *sba = parisc_get_drvdata(pci_hba->parent);
- 	char t = pci_hba->parent->id.hw_type;
- 	int iocnum = (pci_hba->hw_path >> 3);	/* rope # */
- 
+Doug Gilbert
+
+
+--------------030505010003020309050506
+Content-Type: application/x-gzip;
+ name="scsi_debug_164_46bk3.diff.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="scsi_debug_164_46bk3.diff.gz"
+
+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
+--------------030505010003020309050506--
+
