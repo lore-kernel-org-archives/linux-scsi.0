@@ -1,150 +1,91 @@
-From: "Augustine Ortiz, Jr." <aortizjr@lanl.gov>
-Subject: RE: Getting HD Serial Numbers in RAID
-Date: Wed, 01 Sep 2004 08:33:45 -0600
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: bytes/CDB of SCSI pass thru grossly limited maybe
+Date: 01 Sep 2004 09:20:28 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1094049224.31782.11.camel@afgar.lanl.gov>
-References: <60807403EABEB443939A5A7AA8A7458B0B4445@otce2k01.adaptec.com>
+Message-ID: <1094052028.27196.6.camel@patlinux.iomegacorp.com>
+References: <A8E06BE4-F7BA-11D8-AC6B-00039398BB5E@ieee.org><Pine.LNX.4.44L0
+	.0408271100590.1238-100000@ida.rowland.org><20040828143124.GB2518@suse.de>
+	<1093715498.3682.4.camel@mulgrave><20040828175547.GA8339@suse.de> <109371 7
+	255.3682.13.camel@mulgrave><20040828184104.GA8460@suse.de> <1093742128.16 7
+	0.2.camel@mulgrave><20040829134505.GB10384@suse.de><8AE29B65-FAB0-11D8-85F1
+	-00039398BB5E@ieee.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailwasher.lanl.gov ([192.65.95.54]:6692 "EHLO
-	mailwasher-b.lanl.gov") by vger.kernel.org with ESMTP
-	id S266756AbUIAOds (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Sep 2004 10:33:48 -0400
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458B0B4445@otce2k01.adaptec.com>
+Received: from email-out2.iomega.com ([147.178.1.83]:44459 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S266864AbUIAPVv
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Sep 2004 11:21:51 -0400
+In-Reply-To: <8AE29B65-FAB0-11D8-85F1-00039398BB5E@ieee.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>
 
-Hi...
+Alan S:
 
-Thank you for the very informative response. I was afraid that the
-passthrough was just not supported.
+> > interested in trying higher values, ...
+> 
+> a) whole revolution delays seen in bus traces
+> b) no limit below 2 to 4 GiB in the standard for the bus
+> c) device developers need xFFFF blocks per CDB
 
-Would it be possible for me to get the driver (OEM) that can report this
-information (SRB Passthrough)? Or can I get the pieces to implement the
-passthrough myself. 
+Also,
 
-If you know anything about getting that info in Win32 that would help
-greatly also, since I am in the same boat in that OS as well.
+d) experience of lower values
 
-Thanks!
+I see usb-storage.ko runs 3X slow like ub.ko does if I ask to choke off
+usb-storage at 4 KiB/CDB, same as ub.ko gives me by default today.
 
-Augustine
+That is, we visibly run out of margin to allow for pointlessly
+shattering streams into microscopic fragments at values maybe not far
+enough from our max.
 
-On Wed, 2004-09-01 at 06:18, Salyzyn, Mark wrote:
-> The aacraid module only reports the logicals and none-DASD devices to
-> the scsi layer. There is no direct communication to any DASD devices.
-> 
-> I have toyed with exporting the components of the arrays, but to please
-> the (Security, RAID & OEM) gohds I need to ensure that R/W requests are
-> not honored. I will look into producing a patch to MarkH for this once
-> the current set (about a dozen patches pending) has finished bubbling
-> through his hands ...
-> 
-> The current mechanism for exporting this component information is via
-> the applications, there is an SRB passthrough command that is in our OEM
-> variant of the driver used for such a purpose. The SRB passthrough was
-> rejected by the community and is not in the kernels.org driver and will
-> remain a legacy requirement by the OEMs.
-> 
-> Sincerely -- Mark Salyzyn
-> 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Augustine Ortiz,
-> Jr.
-> Sent: Tuesday, August 31, 2004 5:11 PM
-> To: linux-raid@vger.kernel.org; linux-scsi@vger.kernel.org
-> Subject: RE: Getting HD Serial Numbers in RAID
-> 
-> Usually, most hardware RAID stuff does give software. However since this
-> one (AACRAID/PERC) is such a common controller, this manufacturer didn't
-> include it. We do have some for other systems, but they are in Windows,
-> and I can't seem to figure out how to get the serial numbers through
-> that either.
-> 
-> Interestingly, if you have the arrays broken, you can pull the serial
-> numbers just fine.
-> 
-> Some RAID cards (ie. DAC90 chipset) will report all the disks when the
-> kernel module is loaded. I figured I could just sorta re-work that stuff
-> and see if I could probe it. 
-> 
-> I am having some trouble with the AACRAID module though. It looks like
-> it grabs the info, but I can't tell if it does it when the drives are
-> actually RAIDed. 
-> 
-> Thank you for the info, I will see if I can get it via the SMART stuff.
-> I will post if I have any luck.
-> 
-> Thanks!
-> 
-> Augustine
-> 
-> 
-> >                             From: 
-> > Derek Vadala <derek@cynicism.com>
-> > You could try smartctl, but I don't know what luck you'll have
-> > accessing
-> > the raw devices if they are behind a hardware controller.
-> > 
-> > http://smartmontools.sourceforge.net/
-> > http://www.linuxjournal.com/article.php?sid=6983
-> > 
-> 
-> 
-> > hddtemp will get you more info on the disk ... not sure if it works
-> > on aacraid/perc etc
-> > 
-> > c ya
-> > alvin
-> 
-> 
-> On Tue, 2004-08-31 at 14:36, Guy wrote:
-> > When I have used hardware RAID, the vender supplies software that will
-> do
-> > what you want.  But it is tied to the vender's hardware, not general.
-> > 
-> > Guy
-> > 
-> > -----Original Message-----
-> > From: linux-raid-owner@vger.kernel.org
-> > [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Augustine
-> Ortiz, Jr.
-> > Sent: Tuesday, August 31, 2004 3:45 PM
-> > To: linux-raid@vger.kernel.org; linux-scsi@vger.kernel.org
-> > Subject: Getting HD Serial Numbers in RAID
-> > 
-> > Hi...
-> > 
-> > I have been working on getting serial numbers electronically off of
-> hard
-> > drives for various reasons.
-> > 
-> > I have been successful with IDE and most SCSI drives (using hdparm and
-> > scsiinfo). However I am running into trouble with ones that are on
-> > AACRAID/PERC3 adaptors and actually in a RAID array.
-> > 
-> > The only serial number I can seem to grab is the one for the entire
-> > volume which is just assigned.
-> > 
-> > Are there any tools available to get the serial number off the drives
-> in
-> > the array? Or can I get some pointers on writing such a tool?
-> > 
-> > Thank you.
-> > 
-> > Augustine
-> > 
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Pat LaVarre
+
+$ sudo blockdev --flushbufs /dev/uba
+BLKFLSBUF: Inappropriate ioctl for device
+$ time sudo dd if=/dev/uba bs=64K skip=0 count=3200 >/dev/null
+3200+0 records in
+3200+0 records out
+ 
+real    0m26.481s
+user    0m0.007s
+sys     0m0.598s
+$ 
+$ modprobe -r ub
+$ modprobe usb-storage
+$
+$ ln -s /sys/devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:2.0/host1/1:0:0:0/max_sectors .
+$ echo 240 | sudo dd of=max_sectors
+0+1 records in
+0+1 records out
+$ cat max_sectors
+240
+$ sudo blockdev --flushbufs /dev/scd0
+$ time sudo dd if=/dev/scd0 bs=1M skip=0 count=200 >/dev/null
+200+0 records in
+200+0 records out
+ 
+real    0m8.420s
+user    0m0.006s
+sys     0m0.630s
+$
+$ echo 8 | sudo dd of=max_sectors
+0+1 records in
+0+1 records out
+$ cat max_sectors
+8
+$ sudo blockdev --flushbufs /dev/scd0
+$ time sudo dd if=/dev/scd0 bs=1M skip=0 count=200 >/dev/null
+200+0 records in
+200+0 records out
+ 
+real    0m27.464s
+user    0m0.002s
+sys     0m0.766s
+$
+$ rm max_sectors
+$
+
 
