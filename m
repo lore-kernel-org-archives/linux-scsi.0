@@ -1,144 +1,74 @@
-From: Eric Kerin <eric@bootseg.com>
-Subject: [PATCH] 2.6.0 aic7xxx and aic79xx stale pci_device list entry
-Date: Fri, 02 Jan 2004 15:50:55 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Transport Attributes Export API
+Date: Fri, 2 Jan 2004 21:18:48 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1073076654.2048.19.camel@opiate>
+Message-ID: <20040102211848.A1894@infradead.org>
+References: <20031231190849.GE3066@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mxsf03.cluster1.charter.net ([209.225.28.203]:39949 "EHLO
-	mxsf03.cluster1.charter.net") by vger.kernel.org with ESMTP
-	id S265677AbUABUz3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Jan 2004 15:55:29 -0500
-Received: from [10.254.1.30] (24.231.168.37.bay.mi.chartermi.net [24.231.168.37] (may be forged))
-	by mxsf03.cluster1.charter.net (8.12.10/8.12.8) with ESMTP id i02KrGiN030763
-	for <linux-scsi@vger.kernel.org>; Fri, 2 Jan 2004 15:53:16 -0500 (EST)
-	(envelope-from eric@bootseg.com)
+Received: from phoenix.infradead.org ([213.86.99.234]:27922 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S265644AbUABVSu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Jan 2004 16:18:50 -0500
+Content-Disposition: inline
+In-Reply-To: <20031231190849.GE3066@localhost>; from mort@wildopensource.com on Wed, Dec 31, 2003 at 02:08:49PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Martin Hicks <mort@wildopensource.com>
+Cc: linux-scsi@vger.kernel.org
 
-Loading the aic7xxx or aic79xx modules, on a machine that did not
-contain the card, left a stale entry in the pci_device list.  This
-caused an oops upon loading the next module that registered a
-pci_device. 
+On Wed, Dec 31, 2003 at 02:08:49PM -0500, Martin Hicks wrote:
+> 
+> Hello,
+> 
+> I've run into a situation where I need to export driver-hidden
+> information to sysfs.  This information is specific to a transport
+> (e.g., Parallel SCSI or Fiber Channel) and, in general, the kernel
+> doesn't use this information so it is not available outside the HBA
+> driver.
+> 
+> Attached is a patch that attempts to provide a means to export this
+> information to sysfs.  It introduces a new class for the scsi_device's
+> transport and provides facilities to export class_device_attributes.
+> 
+> A few suggestions that James Bottomley has already given are below, but
+> I thought that it was time that others saw this and could give their
+> suggestions too.  Thanks.
 
-The patches below will unregister the pci_device if it successfully
-registers the device, but does not find any cards. 
+You could get rid of most code in the drivers by placing a pointer
+to the transport attributes and the desired transport class into
+the host template and letting the common code do all setup for you.
 
-Comments are appreciated.
+That's also consistant to how we handle all the other attributes.
 
+> - Separate the transports out into two separate .c files
 
-Also, I created a bug in bugzilla.kernel.org for this (before I got in
-the mood to fix it myself). What should I do about closing it out?
-Attach the patch, or put "posted fix to linux-scsi mailing list"?
+probably a good idea.
 
+> (so they can be loaded as modules).
 
-Eric Kerin
+for the sysfs code alone that's total overkill.
 
+> This also plays in to future work I'm thinking
+> about: make the error handler more transport specific.
 
+Yupp, that's a good idea, but not really much related to this patch.
 
-diff -puN aic7xxx_osm.c aic7xxx_osm.c.oopsfix
---- aic7xxx_osm.c	2004-01-02 03:56:32.606291000 -0500
-+++ aic7xxx_osm.c.oopsfix	2004-01-02 03:53:15.236291000 -0500
-@@ -844,7 +844,8 @@ ahc_linux_detect(Scsi_Host_Template *tem
- {
- 	struct	ahc_softc *ahc;
- 	int     found;
--
-+	int	pci_reg_stat;
-+	
- #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
- 	/*
- 	 * It is a bug that the upper layer takes
-@@ -891,8 +892,9 @@ ahc_linux_detect(Scsi_Host_Template *tem
- 	 */
- 	ahc_list_lockinit();
- 
-+	pci_reg_stat = -1;
- #ifdef CONFIG_PCI
--	ahc_linux_pci_init();
-+	pci_reg_stat = ahc_linux_pci_init();
- #endif
- 
- #ifdef CONFIG_EISA
-@@ -913,7 +915,24 @@ ahc_linux_detect(Scsi_Host_Template *tem
- 	spin_lock_irq(&io_request_lock);
- #endif
- 	aic7xxx_detect_complete++;
--	return (found);
-+	if(found){
-+		return (found);
-+	}
-+
-+	/*
-+	 * Cleanup everything we registered, 
-+	 * because we didn't find any cards.
-+	 */
-+	
-+#ifdef CONFIG_PCI
-+	if(pci_reg_stat == 0){
-+		ahc_linux_pci_exit();
-+	}
-+#endif
-+#ifdef CONFIG_EISA
-+	ahc_linux_eisa_exit();
-+#endif
-+	return 0;
- }
- 
- #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+> - Then, the class register/unregister can be done in the
+> module_init/exit routines
+> - Probably move all the show/store routines in .h files so they can be
+> used equally for fc and parallel
+> - This switch on ttype (and the enum transport_type) in
 
- 
+> scsi_add_transport_attributes is not scaleable.  I think a better
+> solution might be to have a struct scsi_transport which has the class
+> device and a pointer to the overridden attribute.  Then, this is the
+> thing pointed to in the scsi host structure (and it can contain the
+> attributes, the class and a pointer to the default attributes, so most
+> of the trying to find the defaults code goes away).
 
-
-
- 
-diff -puN aic79xx_osm.c aic79xx_osm.c.oopsfix
---- aic79xx_osm.c	2004-01-02 02:46:43.000000000 -0500
-+++ aic79xx_osm.c.oopsfix	2004-01-02 03:54:43.846291000 -0500
-@@ -856,7 +856,8 @@ ahd_linux_detect(Scsi_Host_Template *tem
- {
- 	struct	ahd_softc *ahd;
- 	int     found;
--
-+	int	pci_reg_stat;
-+	
- #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
- 	/*
- 	 * It is a bug that the upper layer takes
-@@ -906,8 +907,9 @@ ahd_linux_detect(Scsi_Host_Template *tem
- 	 */
- 	ahd_list_lockinit();
- 
-+	pci_reg_stat = -1;
- #ifdef CONFIG_PCI
--	ahd_linux_pci_init();
-+	pci_reg_stat = ahd_linux_pci_init();
- #endif
- 
- 	/*
-@@ -924,7 +926,20 @@ ahd_linux_detect(Scsi_Host_Template *tem
- 	spin_lock_irq(&io_request_lock);
- #endif
- 	aic79xx_detect_complete++;
--	return (found);
-+	if(found){
-+		return (found);
-+	}
-+
-+	/*
-+	 * Cleanup everything we registered, 
-+	 * because we didn't find any cards.
-+	 */
-+#ifdef CONFIG_PCI	
-+	if(pci_reg_stat == 0){
-+		ahd_linux_pci_exit();
-+	}
-+#endif	
-+	return 0;
- }
- 
- #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-
+Or no extra structure and put the two pointers directly in the host
+template as I suggested above.  Yes, that means drivers that support
+multiple transports need a template for each of them, but that's not
+a big overhead anyway.
 
