@@ -1,61 +1,45 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: [PATCH] tmscsim: implement change_queue_depth
-Date: Wed, 22 Dec 2004 13:15:35 +0100 (CET)
-Message-ID: <Pine.LNX.4.60.0412221305140.2636@poirot.grange>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] convert 53c700 driver to use change_queue_depth API
+Date: Wed, 22 Dec 2004 10:53:33 -0600
+Message-ID: <1103734414.5290.8.camel@mulgrave>
+References: <1102812847.5232.6.camel@mulgrave>
+	 <Pine.LNX.4.60.0412201605360.15046@poirot.grange>
+	 <Pine.LNX.4.60.0412201700350.16691@poirot.grange>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imap.gmx.net ([213.165.64.20]:60851 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S261970AbULVMTh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Dec 2004 07:19:37 -0500
+Received: from stat16.steeleye.com ([209.192.50.48]:32153 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261839AbULVQxp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Dec 2004 11:53:45 -0500
+In-Reply-To: <Pine.LNX.4.60.0412201700350.16691@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi
+On Mon, 2004-12-20 at 17:04 +0100, Guennadi Liakhovetski wrote:
+> On Mon, 20 Dec 2004, Guennadi Liakhovetski wrote:
+> 
+> > Shouldn't it really be something like
+> > 
+> >  	if(depth > NCR_700_MAX_TAGS)
+> > -		return -EINVAL;
+> > +		depth = NCR_700_MAX_TAGS;
+> > +	if (depth < 0)
+> > +		depth = 0;
+> 
+> Ahh, yeah, sure, because of the simple_strtoul incompatibility with glibc 
+> this check is superfluous, but, the below doubt still remains
 
-Further to my recent doubts wrt change_queue_depth semantics, I decided to 
-just implement this function for tmscsim following comments in 
-scsi_host.h. If this gets accepted in this form (returning -EIO if depth 
-!= sdev->queue_depth after scsi_adjust_depth_queue), I'll submit patches 
-to 53c700.c and a comment-modification to scsi_host.h.
+Actually, depth may never be zero.  There is a check in an updated piece
+of code which I'll send out shortly that checks it is never less than
+one (in the main routine).  This got folded into an update I did and
+then not properly separated again.
 
-Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+I'll send the update under a new subject.
 
---- a/drivers/scsi/tmscsim.c	Tue Dec 14 23:20:52 2004
-+++ b/drivers/scsi/tmscsim.c	Tue Dec 14 22:59:55 2004
-@@ -2274,6 +2274,18 @@
- 	return 0;
- }
- 
-+static int dc390_change_queue_depth(struct scsi_device *sdev, int depth)
-+{
-+	struct dc390_acb *acb = (struct dc390_acb *)sdev->host->hostdata;
-+
-+	if (depth > acb->TagMaxNum)
-+		depth = acb->TagMaxNum;
-+
-+	scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, depth);
-+
-+	return depth == sdev->queue_depth ? depth : -EIO;
-+}
-+
- static struct scsi_host_template driver_template = {
- 	.module			= THIS_MODULE,
- 	.proc_name		= "tmscsim", 
-@@ -2284,6 +2296,7 @@
- 	.queuecommand		= DC390_queuecommand,
- 	.eh_abort_handler	= DC390_abort,
- 	.eh_bus_reset_handler	= DC390_bus_reset,
-+	.change_queue_depth	= dc390_change_queue_depth,
- 	.can_queue		= 1,
- 	.this_id		= 7,
- 	.sg_tablesize		= SG_ALL,
+James
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
 
