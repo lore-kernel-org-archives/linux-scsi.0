@@ -1,54 +1,43 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] SCSI: dpt_i2o.c: make some code static (fwd)
-Date: Wed, 24 Nov 2004 19:47:02 +0100
-Message-ID: <20041124184702.GI19873@stusta.de>
+From: David Brownell <david-b@pacbell.net>
+Subject: Re: [linux-usb-devel] Fw: Re: 2.6.10-rc2-mm3
+Date: Wed, 24 Nov 2004 17:08:27 -0800
+Message-ID: <200411241708.27187.david-b@pacbell.net>
+References: <20041122162206.0d43cd30.akpm@osdl.org> <200411231816.38235.david-b@pacbell.net> <200411242201.13815.cova@ferrara.linux.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262908AbUKYAxe@vger.kernel.org>
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ylpvm15-ext.prodigy.net ([207.115.57.46]:36030 "EHLO
+	ylpvm15.prodigy.net") by vger.kernel.org with ESMTP id S262884AbUKYB0X
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Nov 2004 20:26:23 -0500
+In-Reply-To: <200411242201.13815.cova@ferrara.linux.it>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-usb-devel@lists.sourceforge.net
+Cc: Fabio Coatti <cova@ferrara.linux.it>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
+On Wednesday 24 November 2004 13:01, Fabio Coatti wrote:
+> 
+> Ok, it seems that now the device is detected without problems at first try; 
+> I've tried several times with this setup in modprobe.conf:
+> options usbcore old_scheme_first=1
+> and I'm unable to reproduce the behaviour of missed detection of usb device, 
+> no matter how many times I can try, so I think you have hit the point, many 
+> thanks :)
 
-The patch forwarded below still applies and compiles against 
-2.6.10-rc2-mm3.
+Interesting.  We expected some devices would be unhappy
+with that new scheme, but this is the first time I remember
+hearing about an unhappy one.  Well, 2.6.10 is young ... :)
 
-Please apply.
+- Dave
 
-
-
------ Forwarded message from Adrian Bunk <bunk@stusta.de> -----
-
-Date:	Mon, 15 Nov 2004 02:57:36 +0100
-From: Adrian Bunk <bunk@stusta.de>
-To: deanna_bonds@adaptec.com
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [2.6 patch] SCSI: dpt_i2o.c: make some code static
-
-The patch below makes some needlessly global code static.
-
-
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
---- linux-2.6.10-rc1-mm5-full/drivers/scsi/dpt_i2o.c.old	2004-11-13 21:01:47.000000000 +0100
-+++ linux-2.6.10-rc1-mm5-full/drivers/scsi/dpt_i2o.c	2004-11-13 21:01:57.000000000 +0100
-@@ -108,7 +108,7 @@
-  *============================================================================
-  */
  
--DECLARE_MUTEX(adpt_configuration_lock);
-+static DECLARE_MUTEX(adpt_configuration_lock);
- 
- static struct i2o_sys_tbl *sys_tbl = NULL;
- static int sys_tbl_ind = 0;
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
-
------ End forwarded message -----
+> As expected, the faulty behaviour of kobject is still here (double 
+> registration..), but now the device is working on first try, so half the 
+> problem is gone away :)
+> I get some scsi errors about unit not ready, but the driver seems to handle 
+> this quite well.
+> 
