@@ -1,75 +1,43 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: SNIA iSCSI Management API Public Review
-Date: Tue, 26 Oct 2004 13:29:14 -0500
+From: mikem <mikem@beardog.cca.cpqcorp.net>
+Subject: Re: [patch 1/2] cciss: cleans up warnings in the 32/64 bit conversions
+Date: Tue, 26 Oct 2004 14:45:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041026182914.GA6006@lists.us.dell.com>
+Message-ID: <20041026194551.GA21003@beardog.cca.cpqcorp.net>
+References: <20041021211718.GA10462@beardog.cca.cpqcorp.net> <1098633262.10824.35.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from linux.us.dell.com ([143.166.224.162]:37820 "EHLO
-	lists.us.dell.com") by vger.kernel.org with ESMTP id S261387AbUJZS3P
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Oct 2004 14:29:15 -0400
-Received: from lists.us.dell.com (localhost.localdomain [127.0.0.1])
-	by lists.us.dell.com (8.12.10/8.12.10/Dell.IT.3.31.03) with ESMTP id i9QITE6R006111
-	for <linux-scsi@vger.kernel.org>; Tue, 26 Oct 2004 13:29:15 -0500
-Received: (from mdomsch@localhost)
-	by lists.us.dell.com (8.12.10/8.12.10/Submit) id i9QITE0i006109
-	for linux-scsi@vger.kernel.org; Tue, 26 Oct 2004 13:29:14 -0500
+Received: from palrel11.hp.com ([156.153.255.246]:41910 "EHLO palrel11.hp.com")
+	by vger.kernel.org with ESMTP id S261495AbUJZTqP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Oct 2004 15:46:15 -0400
 Content-Disposition: inline
+In-Reply-To: <1098633262.10824.35.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: marcelo.tosatti@cyclades.com, Jens Axboe <axboe@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-FYI.
+On Sun, Oct 24, 2004 at 11:54:15AM -0400, James Bottomley wrote:
+> On Thu, 2004-10-21 at 17:17, mike.miller@hp.com wrote:
+> > Patch 1 of 2 for 20041021.
+> > This patch cleans up some warnings in the 32-bit to 64-bit conversions.
+> > Please consider this for inclusion. Built against 2.4.28-pre4.
+> > Please apply in order.
+> 
+> There's something wrong with this patch (it might be a missing prior
+> patch) that's causing it to reject comprehensively.
+> 
+> > -typedef long (*handler_type) (unsigned int, unsigned int, unsigned long,
+> > +typedef int (*handler_type) (unsigned int, unsigned int, unsigned long,
+> 
+> Things like this.  handler_type has always been int not long in the
+> source that's currently in the tree.
+> 
+> James
+> 
 
------ Forwarded message from Arnold Jones <td@snia.org> -----
-Date: Tue, 26 Oct 2004 11:27:28 -0400
-From: Arnold Jones <td@snia.org>
-To: members@snia.org
+Which tree are you applying to? This was made from 2.4.28-pre4.
 
-SNIA Members,
+mikem
 
-  ** PLEASE PASS THIS ON TO YOUR ENGINEERING DEPARTMENT **
-
-The IP Storage Technical Work Group(TWG) has created and reviewed the
-iSCSI Management API (IMA) Specification and would like review
-feedback from a wider community. The iSCSI Management API is a C
-language interface library which allows clients to manage both iSCSI
-HBAs and iSCSI software initiators in a host system. It provides APIs
-for the discovery and management of iSCSI initiators. In addition, it
-provides APIs to discover iSCSI targets and manage the relationships
-of iSCSI initiators with iSCSI targets.
-
-The DRAFT document is available at:
-http://www.snia.org/tech_activities/publicreview/
-
-This public review ends 11/30/2004. Please send comments to the IP
-Storage TWG snia-ips@snia.org.
-
-NOTE: This review is not limited to SNIA Members and is open to the
-general public, therefore feel free forward this message to anyone
-outside of the SNIA.
-
-If you have any questions please contact me at td@snia.org
-
-Thanks ...
-
-- Arnold
-
-
----
-Arnold Jones
-Technical Director
-Storage Networking Industry Association (SNIA)
-td@snia.org
-407-679-8232
-
-
-
------ End forwarded message -----
-
--- 
-Matt Domsch
-Sr. Software Engineer, Lead Engineer
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+> 
