@@ -1,48 +1,48 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: Fusion-MPT much faster as module
-Date: Tue, 8 Mar 2005 17:39:51 -0800
-Message-ID: <20050308173951.7338c846.akpm@osdl.org>
+From: Matt Mackall <mpm@selenic.com>
+Subject: Re: [ANNOUNCE 0/6] Open-iSCSI High-Performance Initiator for Linux
+Date: Tue, 8 Mar 2005 21:04:35 -0800
+Message-ID: <20050309050434.GT3163@waste.org>
+References: <422BFCB2.6080309@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Received: from fire.osdl.org ([65.172.181.4]:19089 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S262288AbVCIBkU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2005 20:40:20 -0500
+Content-Type: text/plain; charset=us-ascii
+Received: from waste.org ([216.27.176.166]:39601 "EHLO waste.org")
+	by vger.kernel.org with ESMTP id S261168AbVCIFEg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2005 00:04:36 -0500
+Content-Disposition: inline
+In-Reply-To: <422BFCB2.6080309@yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Holger Kiehl <Holger.Kiehl@dwd.de>
+To: Alex Aizman <itn780@yahoo.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Sun, Mar 06, 2005 at 11:03:14PM -0800, Alex Aizman wrote:
+> As far as user/kernel, the existing iSCSI initiators bloat the kernel with
+> ever-growing control plane code, including but not limited to: iSCSI
+> discovery, Login (Authentication and Operational), session and connection
+> management, connection-level error processing, iSCSI Text, Nop-Out/In, Async
+> Message, iSNS, SLP, Radius... Open-iSCSI puts the entire control plane in
+> the user space. This control plane talks to the data plane via well defined
+> interface over the netlink transport.
 
+How big is the userspace client?
 
-Begin forwarded message:
+How does this perform under memory pressure? If the userspace iSCSI
+client is paged out for whatever reason, and flushing _to_ an iSCSI
+device is necessary to page the usersace portion back in, and the
+connection needs restarting or the like to flush... 
+ 
+> Performance.
+> This is the major goal and motivation for this project. As it happens, iSCSI
+> has to compete with Fibre Channel, which is a more entrenched technology in
+> the storage space. In addition, the "soft" iSCSI implementation have to show
+> good results in presence of specialized hardware offloads.
+> 
+> Our today's performance numbers are:
+> 
+> - 450MB/sec Read on a single connection (2-way 2.4Ghz Opteron, 64KB block 
+> size);
 
-Date: Tue, 8 Mar 2005 13:38:07 +0000 (GMT)
-From: Holger Kiehl <Holger.Kiehl@dwd.de>
-To: linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Fusion-MPT much faster as module
+With what network hardware and drives, please?
 
-
-Hello
-
-On a four CPU Opteron compiling the Fusion-MPT as module gives much better
-performance when compiling it in, here some bonnie++ results:
-
-Version  1.03       ------Sequential Output------ --Sequential Input- --Random-
-                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-compiled in  15872M 38366 71  65602  22 18348   4 53276 84  57947   7 905.4   2
-module       15872M 51246 96 204914  70 57236  14 59779 96 264171  33 923.0   2
-
-This happens with 2.6.10, 2.6.11 and 2.6.11-bk2. Controller is a
-Symbios Logic 53c1030 PCI-X Fusion-MPT Dual Ultra320 SCSI.
-
-Why is there such a large difference?
-
-Holger
 -- 
--
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
+Mathematics is the supreme nostalgia of our time.
