@@ -1,67 +1,42 @@
-From: R.E.Wolff@BitWizard.nl (Rogier Wolff)
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: Sym53C8xx Driver Hardening
-Date: Tue, 23 Jul 2002 15:57:56 +0200 (MEST)
+Date: 23 Jul 2002 16:24:22 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200207231357.PAA02632@cave.bitwizard.nl>
-References: <5009AD9521A8D41198EE00805F85F18F219A7C@sembo111.teknor.com>
+Message-ID: <1027437862.31787.136.camel@irongate.swansea.linux.org.uk>
+References: <200207231357.PAA02632@cave.bitwizard.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <5009AD9521A8D41198EE00805F85F18F219A7C@sembo111.teknor.com> from
- "Isabelle, Francois" at "Jul 23, 2002 09:29:53 am"
+In-Reply-To: <200207231357.PAA02632@cave.bitwizard.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: "Isabelle, Francois" <Francois.Isabelle@ca.kontron.com>
-Cc: linux-scsi@vger.kernel.org
+To: Rogier Wolff <R.E.Wolff@BitWizard.nl>
+Cc: "Isabelle, Francois" <Francois.Isabelle@ca.kontron.com>, linux-scsi@vger.kernel.org
 
-Isabelle, Francois wrote:
-> Some of the features:
->  - Panic removal
->  - Standardized event logging
->  - Parameter checking ...
+On Tue, 2002-07-23 at 14:57, Rogier Wolff wrote:
+> Now it won't be as easy as this. But for instance in my firestream
+> driver, you sometimes put a value in a register in the chip, and if
+> later on you read it back, you want the chip to have left it
+> unmodified, or to have it changed in a predictable way. If the value
+> is unexpected, a panic is the right "way out". 
 
-Panic removal is NOT a good thing. 
+The high reliability people take a different view. I actually agree with
+them. It isnt about 'oops didnt happen' it is about controlling the
+failure case
 
-A panic should only happen wehn the driver/kernel/whatever CANNOT
-continue because of some serious problem.
+Suppose your firestream driver reports catacylsmic internal error
+status. Their argument is not that you should pretend life is good but
+that the driver should log a fault and shut off the chip as best it can.
+So you might have a firestream_failed() function which did
 
-A panic should occurin cases like: 
+	Disable master bit
+	Put board into D3
+	Wait
+	Put board into running state
+	Try to reset and configure it
+	If this fails shove it in D3 and give up
 
-	b = 2 + 3;
+At this point the high reliability system is servicing the other links
+it manages and flashing warning lights to the engineers, rather than
+completely down
 
-	....
-
-	if (b != 5) panic (); 
-
-
-Now it won't be as easy as this. But for instance in my firestream
-driver, you sometimes put a value in a register in the chip, and if
-later on you read it back, you want the chip to have left it
-unmodified, or to have it changed in a predictable way. If the value
-is unexpected, a panic is the right "way out". 
-
-If this is NOT done, the chip may be DMA-ing data into the wrong spot
-in main memory. This will not panic your system, but crash it (*). A
-panic can be configured to "do the right thing": reboot, and be back
-in business as soon as possible. An operator should then be notified
-and somehow take action.
-
-Removing panics sounds like a manager-solution to the problem: A
-system that panics is not reliable, so we should remove the panics.
-
-Well, if the code panics for the right reason, then the panic is
-to be preferred above continuing. 
-
-I'm convinced that most linux-code is well-written in this respect.
-
-			Rogier. 
-
-(*) A crash is meant as where the system ends up being wedged, with
-only a hardware watchdog able to get it out of that state.
-
-
--- 
-** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2137555 **
-*-- BitWizard writes Linux device drivers for any device you may have! --*
-* There are old pilots, and there are bold pilots. 
-* There are also old, bald pilots. 
