@@ -1,35 +1,42 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] SCSI Core patches
-Date: Sat, 11 Jan 2003 18:12:24 +0000
+From: Willem Riede <wrlk@riede.org>
+Subject: Re: [BUG - 2.5.56] bad: scheduling while atomic
+Date: Sat, 11 Jan 2003 13:45:04 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030111181224.B3178@infradead.org>
-References: <3E1ADC9A.6090800@splentec.com> <20030107102127.B15528@beaverton.ibm.com> <3E1B2934.8060805@splentec.com> <20030107123301.A16378@beaverton.ibm.com> <3E1B513B.2090409@splentec.com> <20030107173633.A17825@beaverton.ibm.com>
+Message-ID: <20030111184504.GX1378@linnie.riede.org>
+References: <003d01c2b95d$e7a6a370$2101a8c0@witbe> <200301110949.48169.akpm@digeo.com>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20030107173633.A17825@beaverton.ibm.com>; from patmans@us.ibm.com on Tue, Jan 07, 2003 at 05:36:33PM -0800
+In-Reply-To: <200301110949.48169.akpm@digeo.com>; from akpm@digeo.com on Sat, Jan 11, 2003 at 12:49:48 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Luben Tuikov <luben@splentec.com>, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@digeo.com>
+Cc: Paul Rolland <rol@as2917.net>, linux-kernel@vger.kernel.orgrol@as2917.net, linux-scsi@vger.kernel.org
 
-On Tue, Jan 07, 2003 at 05:36:33PM -0800, Patrick Mansfield wrote:
-> Having the LLDD use more data structures does not imply a better
-> abstraction.  Again, a better abstraction would be to use interfaces to
-> get the host/channel/target/lun. This could add overhead depending on the
-> implementation.
-
-Not having the cmnd replicate information in the device implies a better
-abstraction :)  The LLDD knows about struct scsi_device anyway.
-
-> > For this reason you might consider the suggestions by Doug, or research moving
-> > multipathing higher up into the char/block layer, or thereabouts.
+On 2003.01.11 12:49 Andrew Morton wrote:
+> On Sat January 11 2003 02:40, Paul Rolland wrote:
+> >
+> > Hello,
+> >
+> > Trying 2.5.56 this morning, I ended up with the trace included below.
+> > To get that, I simply added a
+> > "hdd=ide-scsi"
+[snip]
+> > ide-scsi: abort called for 21
+> > bad: scheduling while atomic!
+[snip]
+> Well this backtrace is not the reason why ide-scsi fails to work - it is
+> being triggered as a consequence of the I/O failure.
 > 
-> I have looked into putting multipath in the block layer, I've looked at
-> md, at the T3 code, and at the qlogic multi-path code. Code in the block
-> layer would be interesting, but might not solve problems with char
-> devices,
+> This trace is due to the following bug:
+> 
+> scsi_try_to_abort_cmd() takes spin_lock_irqsave(scmd->host->host_lock, flags);
+> then it calls ide_scsi_abort()
+> ide_scsi_abort() calls scsi_sleep(), still inside ->host_lock.
+> 
+That would be my mistake. scmd->host->host_lock doesn't need to be held during
+the sleep. I'll come up with a patch.
 
-Scsi character drivers _do_ go through the block layer.  (through
-scsi_do_req).
-
+Thanks, Willem Riede.
