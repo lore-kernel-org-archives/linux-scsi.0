@@ -1,111 +1,49 @@
-From: "David Horton" <dhorton@megsinet.net>
-Subject: Re: Problems with SCSI device
-Date: Wed, 26 Mar 2003 14:09:24 -0500
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] 6/7 add and use a per-scsi_device queue_lock
+Date: Wed, 26 Mar 2003 13:33:08 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200303261926.h2QJQEHH085577@mail5.mx.voyager.net>
+Message-ID: <20030326133308.A5307@beaverton.ibm.com>
+References: <20030324175337.A14957@beaverton.ibm.com> <20030324175422.A14996@beaverton.ibm.com> <20030324180227.A15047@beaverton.ibm.com> <20030324180247.B15047@beaverton.ibm.com> <20030324180304.C15047@beaverton.ibm.com> <20030324180325.D15047@beaverton.ibm.com> <20030324180341.E15047@beaverton.ibm.com> <3E80C41F.6000607@splentec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3E80C41F.6000607@splentec.com>; from luben@splentec.com on Tue, Mar 25, 2003 at 04:03:27PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: gmartin@filmayer.es
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben@splentec.com>
+Cc: linux-scsi@vger.kernel.org
 
-Gustavo,
+On Tue, Mar 25, 2003 at 04:03:27PM -0500, Luben Tuikov wrote:
+> Patrick Mansfield wrote:
 
-I'm not sure about your situation, but with my tape drive I used the
-example stinit.def file shown in the stinit man page and edited
-Manufacturer and Model to match my device and that was about it.  (I
-also had to take out the stuff about compression since I have an older
-model that does not support it in hardware, but I doubt you'll have that
-problem with the DLT.)  So my stinit.def basically looks like this:
-
-# The XY dat
-manufacturer=HP model = "HP35480A" {
-scsi2logical=1 # Common definitions for all modes
-can-bsr can-partitions auto-lock
-# Definition of modes
-mode1 blocksize=0 compression=0
-mode2 blocksize = 1024 compression=0 }
-
-With this setup I can access everything using /dev/st0.  I think the
-only difference with /dev/nst0 is that it does not rewind.
-
-My best advice at this point would be to try finding someone with the
-exact same make and model of tape drive and look at their stinit.def. 
-You may even be able to contact HP tech support about this as they are
-getting very Linux-friendly these days and also there may be
-similarities with using the tape drive on HP-UX.  Otherwise you might
-try attaching the drive to a Windows box and using HP tape tools to do
-some diagnostics, check for firmware updates, etc.
-
-I hope that is at least somewhat useful.  I just can't think of what
-else it could be at this time.
-
-Dave
-
-
-
-
-> Hi again,
-> 
-> I made some changes on my .def file. The manufacturer, model, etc seems 
-> to be correct. I changed the modes and now I recive errno 5, can't open 
-> tape device /dev/nst0.
-> 
-> I'm getting crazy with this stuff. Any other idea?
-> 
-> Cheers,
-> GUSTAVO
-> 
-> David Horton wrote:
-> 
-> >>  Hi again,
-> >>
-> >>thanks Dave. No the conection with the device doesn't hang. But I still 
-> >>have problems. When I try to initialize the device I get the following 
-> >>error:
-> >>
-> >>    The SCSI INQUIRY for device '/dev/nst0' failed (power off?)
-> >>    Definition for '/dev/st0' failed.
-> >>
-> >>What it can be this time? I have created and configured the
-stinit.def   
-> >>file (not .conf file 'cause in the man page for stinit is the file that 
-> >>sugests)  as you told me. I don't know if it is well configured because 
-> >>I don't have the specifications of my drive.
-> >>
-> >>Does any one of you have any idea of where the problem can be?
-> >>
-> >>Thanks,
-> >>GUSTAVO
-> >>    
-> >>
-> >
-> >You are right, it is stinit.def.  Anyway, when I set up my DAT drive I
-> >used a combination of info from /proc/scsi and HP's website.
-> >
-> >You can put in your product number at hp.com's support & driver's
-> >section and probably dig up a .PDF manual.  The HP Tape Tools is also
-> >helpful, but I think it only runs on Windows.
-> >
-> >As for /proc/scsi, that's where you can find parameters that you will
-> >need for stinit.def such as 'manufacturer' and 'model'.  Wrong info here
-> >could be causing some trouble.  For example, even though I have a
-> >product labeled "HP SureStore 5000" I have to put model "HP35480A" in
-> >stinit.def, because that is the generic name shown in /proc/scsi. 
-> >Otherwise stinit never initializes the tape drive because it can't
-find it.
-> >
-> >-Dave
-> >
-> >
-> >
-> >
-> >  
-> >
+> >           */
+> >  	scsi_host_busy_dec_and_test(host, device);
+> > +	spin_lock_irqsave(SCpnt->device->request_queue->queue_lock, flags);
+> > +	SCpnt->device->device_busy--;
+> > +	spin_unlock_irqrestore(SCpnt->device->request_queue->queue_lock, flags);
 > 
 > 
+> Such acrobatics warrant an atomic variable. I.e. make device_busy an
+> atomic_t and avoid all this juggling.
 > 
+> atomic_dec(SCpnt->device->device_busy);
 
+If we handled all of the SCSI IO completions the same way (got rid of
+scsi_retry_command and more), the device_busy-- might happen in
+scsi_queue_next_request or a related function, where we might do more than
+just decrement device_busy with the lock held. This is related somewhat to
+the current handling of scsi_queue_next_request, in that we should always
+call it after IO completion.
 
+Having both an atomic_t for device_busy and a lock protecting other
+scsi_device and queue data does not appear to give any overall reduction
+in executed code (at least on x86, I don't know about other archs). We get
+rid of a spin lock/unlock for the above, but we have to add 3
+atomic_read's and one atomic_inc in the main line code path - on x86 SMP
+four assembler lock instructions (counting in my current tree with all the
+lock patches applied).
 
+We should leave this as-is for now, and future SCSI IO completion clean up
+could determine how best to protect device_busy.
+
+-- Patrick Mansfield
