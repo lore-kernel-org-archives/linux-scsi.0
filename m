@@ -1,54 +1,35 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [patch 6/8] mptfusion: fc transport
-Date: 01 Dec 2004 15:49:53 -0500
-Message-ID: <1101934199.1930.236.camel@mulgrave>
-References: <91888D455306F94EBD4D168954A9457C667C7D@nacos172.co.lsil.com>
+From: "Jose R. Santos" <jrsantos@austin.ibm.com>
+Subject: Re: phase change messages cusing slowdown with sym53c8xx_2 driver
+Date: Wed, 1 Dec 2004 15:22:41 -0600
+Message-ID: <20041201212241.GA1528@rx8.austin.ibm.com>
+References: <20041130030212.GB22916@austin.ibm.com> <20041201165654.GA32687@rx8.austin.ibm.com> <1101921398.1930.24.camel@mulgrave> <20041201203226.GI5752@parcelfarce.linux.theplanet.co.uk> <1101933788.1930.226.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:37785 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261444AbULAUuF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Dec 2004 15:50:05 -0500
-In-Reply-To: <91888D455306F94EBD4D168954A9457C667C7D@nacos172.co.lsil.com>
+Received: from e33.co.us.ibm.com ([32.97.110.131]:39671 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S261454AbULAVXJ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Dec 2004 16:23:09 -0500
+Content-Disposition: inline
+In-Reply-To: <1101933788.1930.226.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, "Jose R. Santos" <jrsantos@austin.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Wed, 2004-12-01 at 14:46, Moore, Eric Dean wrote:
-> On Thursday, November 25, 2004 1:55 PM, James Bottomley wrote:
-> > How difficult would it be to separate out the scsi and FC 
-> > pieces of the
-> > fusion driver, so we could allow more fined grained control of this?
->  
-> This driver is four separate driver modules { mptbase, mptscsih, mptlan,
-> mptctl },
-> with FC and SCSI spread through out, and SAS waiting in the wings.
-> In this current design, separating FC is not going to be an easy task,
-> as well as dealing with SAS because I'm sure people would want that
-> separated as well.  
-> Device recognization done from mptbase, as well as unique
-> configuration/initialization
-> for respective bus type, and messaging interface from the other drivers
-> (mptscsih,
-> mptlan, and mptctl) to the firmware.  The scsi interface layer is in
-> mptscsih, 
-> and is where this fc transports and our spi domain validation is done
-> currently. 
+James Bottomley <James.Bottomley@SteelEye.com> [041201]:
+> Actually, yes, or the attached variant of it.  Does this solve the
+> problem?
 > 
-> What do you have in mind in seperating this code for each (3) different bus
-> classes from 
-> each these (4) drivers?  
+> There's no reason why we should assume a SCSI_3 or greater device
+> automatically supports ppr (especially if it's inquiry bit is
+> advertising that it doesn't...)
+> 
+> James
 
-Nothing complex.  How about just a simple module wrapper for the PCI
-attachment, so you have the FC devices in one, the SPI in another etc. 
-Then you could attach and initialise the FC transport only if the user
-modprobes the FC driver.
+That fixes the problem.  No more messages "phase change" messages are
+showing up and the disk performance is as expected.
 
-I just don't see it being tenable to drag in the whole of the fc
-transport class in a SCSI only configuration for fusion.
+Thanks
 
-James
-
+-JRS
