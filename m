@@ -1,175 +1,188 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: [BKPATCH] SCSI update for 2.6.4
-Date: 11 Mar 2004 12:01:13 -0500
+From: "Moore, Eric Dean" <Emoore@lsil.com>
+Subject: [PATCH 2.6 ] MPT Fusion driver 3.01.01 update
+Date: Thu, 11 Mar 2004 12:32:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1079024474.1887.35.camel@mulgrave>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57040DAD5A@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_000_01C4078E.C60D08F0"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:61159 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261573AbUCKRBX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2004 12:01:23 -0500
+Received: from mail0.lsil.com ([147.145.40.20]:17873 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261558AbUCKRcK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Mar 2004 12:32:10 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@steeleye.com
 
-This represents my current accumulation of SCSI patches since the 2.6.3
-tree went -rc.
+This message is in MIME format. Since your mail reader does not understand
+this format, some or all of this message may not be legible.
 
-It is basically driver fixes except for these two features:
+------_=_NextPart_000_01C4078E.C60D08F0
+Content-Type: text/plain;
+	charset="iso-8859-1"
 
-- Large disc support (this has been floating around for a while, so it
-was time to merge it)
-- The addition of transport attributes.  These are effectively sysfs
-class libraries which drivers may be coded to make use of.  They have n=
-o
-impact at all to the mid-layer (and are separately compilable).
+This is an update for the MPT Fusion drivers 2.6 kernel.
+Version 3.01.01.
 
-The update is at
+This is a fix for poor performance in RAID Volumes. 
+The dvStatus was being cleared for hidden physical disks
+when mptscsih_slave_destroy is called.
 
-bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
+Also, I have fixed the warning comming from mptscsih_reset_timeouts.
 
-The short changelog is:
+You can download full source as well as the patches for this 
+driver at:
+ftp://ftp.lsil.com/HostAdapterDrivers/linux/FiberChannel/2.6-patches/3.01.01
 
-<michaelc:cs.wisc.edu>:
-  o add missing free sgtable in scsi_init_io error path
-
-<naveenb:cisco.com>:
-  o New SCSI host_byte status code
-
-<paul:kungfoocoder.org>:
-  o SCSI: megaraid /proc dir fix
-
-Andrew Morton:
-  o ini9100u build fix
-
-Aristeu Sergio Rozanski Filho:
-  o qlogic_cs: use own MODULE_ macros
-  o qlogicfas: finish to convert to new scsi driver
-  o qlogicfas: move common definitions to qlogicfas.h
-  o qlogicfas: support multiple cards
-  o qlogicfas: disable irqs on exit
-  o qlogicfas: begin to convert qlogicfas to new driver
-  o qlogicfas: use qlogicfas_name instead qinfo
-  o qlogicfas: kill QL_USE_IRQ
-  o qlogic_cs: don't call qlogic_release on fail
-  o qlogic_cs: use own detect and release functions
-  o qlogicfas: force can_queue
-  o qlogic_cs: use scsi_host_put
-  o qlogic_cs: use a static string as name
-  o qlogic_cs: don't release region
-  o qlogicfas: use a static string as name
-
-Brian King:
-  o SCSI Midlayer initiated START_UNIT
-  o SCSI: Recognize device type 0x0C
-
-Dave Jones:
-  o USB 6-in-1 card reader blacklist addition
-  o sort SCSI blacklist
-
-James Bottomley:
-  o MPT Fusion driver 3.01.00 update
-  o Make the SCSI mempool allocations variable
-  o CONFIG_SCSI_AIC7XXX Kconfig bug
-  o fix Kconfig select problem with SCSI_SPI_ATTRS
-  o SCSI: implement transport attributes for 53c700
-  o SCSI: Make SPI transport attributes mutable
-  o Add full complement of SPI transport attributes
-  o Add SCSI transport attributes
-  o Add SCSI lots of disk support
-  o SCSI: mptfusion update to 3.00.04
-
-Jamie Lenehan:
-  o dc395x [5/5] - version update
-  o dc395x [4/5] - debugging cleanup
-  o dc395x [3/5] - remove old debugging stuff
-  o dc395x [2/5] - sg list handling cleanups
-  o dc395x [1/5] - formatting cleanups
-
-Jeremy Higdon:
-  o SCSI: remove some SGI devices from the device list
-
-Kai M=E4kisara:
-  o SCSI tape sysfs name fixes
-
-Kurt Garloff:
-  o SCSI sysfs host name support
-
-Randy Dunlap:
-  o buslogic init. section fix
-
-And the diffstats are:
-
- Documentation/scsi/st.txt             |   19=20
- drivers/message/fusion/Kconfig        |   51=20
- drivers/message/fusion/Makefile       |    8=20
- drivers/message/fusion/isense.c       |    4=20
- drivers/message/fusion/linux_compat.h |   88=20
- drivers/message/fusion/lsi/mpi.h      |  146 +
- drivers/message/fusion/lsi/mpi_cnfg.h |  596 ++++++
- drivers/message/fusion/lsi/mpi_fc.h   |    9=20
- drivers/message/fusion/lsi/mpi_inb.h  |  220 ++
- drivers/message/fusion/lsi/mpi_init.h |   52=20
- drivers/message/fusion/lsi/mpi_ioc.h  |   94 -
- drivers/message/fusion/lsi/mpi_lan.h  |    6=20
- drivers/message/fusion/lsi/mpi_raid.h |   17=20
- drivers/message/fusion/lsi/mpi_sas.h  |  181 +
- drivers/message/fusion/lsi/mpi_targ.h |   14=20
- drivers/message/fusion/lsi/mpi_tool.h |  305 +++
- drivers/message/fusion/lsi/mpi_type.h |    6=20
- drivers/message/fusion/mptbase.c      |  686 ++++---
- drivers/message/fusion/mptbase.h      |   72=20
- drivers/message/fusion/mptctl.c       |  358 ++-
- drivers/message/fusion/mptctl.h       |   34=20
- drivers/message/fusion/mptlan.c       |    9=20
- drivers/message/fusion/mptscsih.c     | 2121 ++++++++++++----------
- drivers/message/fusion/mptscsih.h     |   13=20
- drivers/message/fusion/scsi3.h        |    2=20
- drivers/scsi/53c700.c                 |  196 +-
- drivers/scsi/53c700.h                 |   14=20
- drivers/scsi/BusLogic.c               |    2=20
- drivers/scsi/Kconfig                  |   22=20
- drivers/scsi/Makefile                 |   16=20
- drivers/scsi/aic7xxx/Kconfig.aic79xx  |    2=20
- drivers/scsi/aic7xxx/Kconfig.aic7xxx  |    2=20
- drivers/scsi/constants.c              |    2=20
- drivers/scsi/dc395x.c                 | 3165
-+++++++++++-----------------------
- drivers/scsi/dc395x.h                 |   10=20
- drivers/scsi/hosts.c                  |    6=20
- drivers/scsi/ini9100u.c               |   11=20
- drivers/scsi/megaraid.c               |   11=20
- drivers/scsi/pcmcia/qlogic_stub.c     |  104 -
- drivers/scsi/qlogicfas.c              |  370 +--
- drivers/scsi/qlogicfas.h              |  124 +
- drivers/scsi/scsi.c                   |    2=20
- drivers/scsi/scsi_devinfo.c           |  114 -
- drivers/scsi/scsi_error.c             |  125 +
- drivers/scsi/scsi_lib.c               |   38=20
- drivers/scsi/scsi_priv.h              |    1=20
- drivers/scsi/scsi_scan.c              |   24=20
- drivers/scsi/scsi_sysfs.c             |   48=20
- drivers/scsi/scsi_transport_fc.c      |  104 +
- drivers/scsi/scsi_transport_spi.c     |  302 +++
- drivers/scsi/sd.c                     |   52=20
- drivers/scsi/st.c                     |   40=20
- drivers/scsi/st.h                     |    2=20
- include/scsi/scsi.h                   |    8=20
- include/scsi/scsi_device.h            |    8=20
- include/scsi/scsi_host.h              |    2=20
- include/scsi/scsi_transport.h         |   41=20
- include/scsi/scsi_transport_fc.h      |   38=20
- include/scsi/scsi_transport_spi.h     |   79=20
- 59 files changed, 5950 insertions(+), 4246 deletions(-)
-
-James
+This attached patch is against the 3.01.00 driver.
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Eric Moore
+Staff Engineer
+Standard Storage Products Division
+LSI Logic Corporation
+4420 Arrowswest Drive
+Colorado Springs, CO 80907
+Email: emoore@lsil.com
+Web: http://www.lsilogic.com/
+
+
+------_=_NextPart_000_01C4078E.C60D08F0
+Content-Type: application/octet-stream;
+	name="mptlinux-3.01.01.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="mptlinux-3.01.01.patch"
+
+diff -uarN b/drivers/message/fusion/mptbase.h =
+a/drivers/message/fusion/mptbase.h=0A=
+--- b/drivers/message/fusion/mptbase.h	2004-03-05 12:01:39.000000000 =
+-0700=0A=
++++ a/drivers/message/fusion/mptbase.h	2004-03-11 08:41:17.000000000 =
+-0700=0A=
+@@ -81,8 +81,8 @@=0A=
+ #define COPYRIGHT	"Copyright (c) 1999-2004 " MODULEAUTHOR=0A=
+ #endif=0A=
+ =0A=
+-#define MPT_LINUX_VERSION_COMMON	"3.01.00"=0A=
+-#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.01.00"=0A=
++#define MPT_LINUX_VERSION_COMMON	"3.01.01"=0A=
++#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.01.01"=0A=
+ #define WHAT_MAGIC_STRING		"@" "(" "#" ")"=0A=
+ =0A=
+ #define show_mptmod_ver(s,ver)  \=0A=
+diff -uarN b/drivers/message/fusion/mptscsih.c =
+a/drivers/message/fusion/mptscsih.c=0A=
+--- b/drivers/message/fusion/mptscsih.c	2004-03-05 12:01:39.000000000 =
+-0700=0A=
++++ a/drivers/message/fusion/mptscsih.c	2004-03-11 08:55:49.000000000 =
+-0700=0A=
+@@ -199,8 +199,8 @@=0A=
+ static int	mptscsih_setup(char *str);=0A=
+ =0A=
+ /* module entry point */=0A=
+-static int  __init    mptscsih_init  (void);=0A=
+-static void __exit    mptscsih_exit  (void);=0A=
++static int  __init   mptscsih_init  (void);=0A=
++static void __exit   mptscsih_exit  (void);=0A=
+ =0A=
+ static int  mptscsih_probe (struct pci_dev *, const struct =
+pci_device_id *);=0A=
+ static void mptscsih_remove(struct pci_dev *);=0A=
+@@ -1067,10 +1067,14 @@=0A=
+ 	Scsi_Cmnd	*SCpnt;=0A=
+ 	int		 ii;=0A=
+ 	int		 max =3D hd->ioc->req_depth;=0A=
++		=0A=
+ =0A=
+ 	for (ii=3D 0; ii < max; ii++) {=0A=
+ 		if ((SCpnt =3D hd->ScsiLookup[ii]) !=3D NULL) {=0A=
+-			mod_timer(&SCpnt->eh_timeout, jiffies + (HZ * 60));=0A=
++	/* calling mod_timer() panics in 2.6 kernel...=0A=
++	 * need to investigate=0A=
++	 */=0A=
++//			mod_timer(&SCpnt->eh_timeout, jiffies + (HZ * 60));=0A=
+ 			dtmprintk((MYIOC_s_WARN_FMT "resetting SCpnt=3D%p timeout + =
+60HZ",=0A=
+ 				(hd && hd->ioc) ? hd->ioc->name : "ioc?", SCpnt));=0A=
+ 		}=0A=
+@@ -1978,8 +1982,8 @@=0A=
+  *	mptscsih_exit - Unregisters MPT adapter(s)=0A=
+  *=0A=
+  */=0A=
+-static void=0A=
+-__exit mptscsih_exit(void)=0A=
++static void __exit=0A=
++mptscsih_exit(void)=0A=
+ {=0A=
+ 	MPT_ADAPTER	*ioc;=0A=
+ =0A=
+@@ -3339,6 +3343,7 @@=0A=
+ 	struct Scsi_Host	*host =3D device->host;=0A=
+ 	MPT_SCSI_HOST		*hd;=0A=
+ 	VirtDevice		*vdev;=0A=
++	int 			raid_volume=3D0;=0A=
+ =0A=
+ 	hd =3D (MPT_SCSI_HOST *)host->hostdata;=0A=
+ =0A=
+@@ -3361,25 +3366,33 @@=0A=
+ 			kfree(hd->Targets[device->id]);=0A=
+ 			hd->Targets[device->id] =3D NULL;=0A=
+ =0A=
+-			if (hd->is_spi) {=0A=
++			if (!hd->is_spi) =0A=
++				return;=0A=
++=0A=
++			if((hd->ioc->spi_data.isRaid) && (hd->ioc->spi_data.pIocPg3)) {=0A=
++			int i;=0A=
++				for(i=3D0;i<hd->ioc->spi_data.pIocPg3->NumPhysDisks &&=0A=
++					raid_volume=3D=3D0;i++)=0A=
++						=0A=
++					if(device->id =3D=3D =0A=
++					  hd->ioc->spi_data.pIocPg3->PhysDisk[i].PhysDiskNum) {=0A=
++						raid_volume=3D1;=0A=
++						hd->ioc->spi_data.forceDv |=3D=0A=
++						  MPT_SCSICFG_RELOAD_IOC_PG3;=0A=
++					}=0A=
++			}=0A=
++=0A=
++			if(!raid_volume){=0A=
+ 				hd->ioc->spi_data.dvStatus[device->id] =3D=0A=
+ 				MPT_SCSICFG_NEGOTIATE;=0A=
+ =0A=
+ 				if (hd->negoNvram =3D=3D 0)=0A=
+ 					hd->ioc->spi_data.dvStatus[device->id]=0A=
+ 					|=3D MPT_SCSICFG_DV_NOT_DONE;=0A=
+-=0A=
+-				/* Don't alter isRaid, not allowed to move=0A=
+-				 * volumes on a running system.=0A=
+-				 */=0A=
+-				if (hd->ioc->spi_data.isRaid & (1 <<=0A=
+-					(device->id)))=0A=
+-					hd->ioc->spi_data.forceDv |=3D=0A=
+-					MPT_SCSICFG_RELOAD_IOC_PG3;=0A=
+ 			}=0A=
+ 		}=0A=
+ 	}=0A=
+-=0A=
++	=0A=
+ 	return;=0A=
+ }=0A=
+ =0A=
+@@ -3693,12 +3706,8 @@=0A=
+ 		 */=0A=
+ 		hd->resetPending =3D 1;=0A=
+ =0A=
+-#if 0		=0A=
+-		/* calling mod_timer() panics in 2.6 kernel...=0A=
+-		 * need to investigate=0A=
+-		 */=0A=
+ 		mptscsih_reset_timeouts (hd);=0A=
+-#endif=0A=
++	=0A=
+ 	} else if (reset_phase =3D=3D MPT_IOC_PRE_RESET) {=0A=
+ 		dtmprintk((MYIOC_s_WARN_FMT "Pre-Diag Reset\n", ioc->name));=0A=
+ =0A=
+
+------_=_NextPart_000_01C4078E.C60D08F0--
