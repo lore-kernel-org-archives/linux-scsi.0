@@ -1,85 +1,38 @@
-From: Jeremy Higdon <jeremy@classic.engr.sgi.com>
+From: Andries Brouwer <aebr@win.tue.nl>
 Subject: Re: aic7xxx sets CDR offline, how to reset?
-Date: Wed, 4 Sep 2002 00:40:26 -0700 (PDT)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <10209040040.ZM49716@classic.engr.sgi.com>
-References: <alan@lxorguk.ukuu.org.uk>
-	<200209032132.g83LWdD09043@localhost.localdomain>
-	<20020903185036.G12201@redhat.com>
+Date: Wed, 4 Sep 2002 12:37:37 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20020904103737.GA9936@win.tue.nl>
+References: <dledford@redhat.com> <20020903171321.A12201@redhat.com> <200209032148.g83LmeP09177@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: Doug Ledford <dledford@redhat.com>
-        "Re: aic7xxx sets CDR offline, how to reset?" (Sep  3,  6:50pm)
-To: Doug Ledford <dledford@redhat.com>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200209032148.g83LmeP09177@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sep 3,  6:50pm, Doug Ledford wrote:
-> 
-> > alan@lxorguk.ukuu.org.uk said:
-> > > Next you only need to return stuff if commands have been issued
-> > > between the aborting command and a barrier. Since most sane systems
-> > > will never be causing REQ_BARRIER
-> 
-> Hmmm...I thought a big reason for adding REQ_BARRIER was to be able to 
-> support more robust journaling with order requirement verification.  If 
-> that's true, then REQ_BARRIER commands could become quite common on disks 
-> using ext3.
+On Tue, Sep 03, 2002 at 04:48:39PM -0500, James Bottomley wrote:
 
-Hmm.  There do seem to be a lot of loopholes/race conditions where the
-barrier just won't work right in the face of error recovery.  I wouldn't
-want to use barriers on any system where data integrity was crucial.
+> If you're hitting error recovery so often that whether it recovers
+> in  half a second or several seconds makes a difference, I'd say
+> there's something else wrong.
 
-For example, in Fibrechannel using class 3 (the usual)
+Not that I want to contradict, but an example.
+Without my sd.c patch from yesterday or so (fixing MODE SENSE calls)
+an "insmod usb-storage.o" would take 14 minutes and 6 seconds for me.
 
-	send command (command frame corrupted; device does not receive)
-	send barrier (completes normally)
-	... (lots of time goes by, many more commands are processed)
-	timeout original command whose command frame was corrupted
+[One USB device, with 3 subdevices, gets into a bad state when
+presented with a MODE SENSE command that asks for more than the
+56 bytes it has available. For each of the three subdevices we
+get a long sequence of retries, abort, reset, host reset, bus reset
+before it is taken off-line.]
 
-The only safe way to run such a filesystem is to hold the barriers in
-the driver until all previous commands are successfully completed.
+The scsi error recovery has many bad properties, but one is its slowness.
+Once it gets triggered on a machine with SCSI disks it is common to
+have a dead system for several minutes. I have not yet met a situation
+in which rebooting was not preferable above scsi error recovery,
+especially since the attempt to recover often fails.
 
-There was also the problem of the queue full to the barrier command,
-etc.
-
-Did I miss the answer to these?  I don't recall seeing an answer to
-Patrick Mansfield's questions either (original message edited cutting
-out a couple of paragraphs):
-
-> On Tue, Sep 03, 2002 at 02:09:44PM -0500, James Bottomley wrote:
-> > dledford@redhat.com said:
-> > > Leave abort active.  It does actually work in certain scenarios.  The
-> > > CD  burner scenario that started this thread is an example of
-> > > somewhere that  an abort should actually do the job.
-> >
-> > Unfortunately, it would destroy the REQ_BARRIER approach in the block layer.
-> > At best, abort probably causes a command to overtake a barrier it shouldn't,
-> > at worst we abort the ordered tag that is the barrier and transactional
-> > integrity is lost.
-> >
-> > When error correction is needed, we have to return all the commands for that
-> > device to the block layer so that ordering and barrier issues can be taken
-> > care of in the reissue.  This makes LUN RESET (for those that support it) the
-> > minimum level of error correction we can apply.
-> >
-> > James
-> 
-> If we only send an abort or reset after a quiesce I don't see why one
-> is better than the other.
-> 
-> Not specific to reset or abort - if a single command gets an error, we
-> wait for oustanding commands to complete before starting up the error
-> handler thread. If all the commands (error one and outstanding) have
-> barriers, those that do not error out will complete out of order from
-> the errored command.
-> 
-> How is this properly handled?
-> 
-> And what happens if one command gets some sort of check condition (like
-> medium error, or aborted command) that causes a retry? Will IO's still
-> be correctly ordered?
-
-
-jeremy
+Andries
