@@ -1,111 +1,81 @@
-From: "Smart, James" <James.Smart@Emulex.Com>
-Subject: RE: [Emulex] Ready for next round...
-Date: Sat, 17 Jul 2004 07:26:32 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: suspending I/Os to a device
+Date: Sat, 17 Jul 2004 13:24:37 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3356669BBE90C448AD4645C843E2BF28034F968E@xbl.ma.emulex.com>
+Message-ID: <20040717122437.GA31551@infradead.org>
+References: <3356669BBE90C448AD4645C843E2BF28025AB744@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:38638 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S266697AbUGQL0n
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Jul 2004 07:26:43 -0400
+Received: from [213.146.154.40] ([213.146.154.40]:19626 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S266566AbUGQMYl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Jul 2004 08:24:41 -0400
+Content-Disposition: inline
+In-Reply-To: <3356669BBE90C448AD4645C843E2BF28025AB744@xbl.ma.emulex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Smart, James" <James.Smart@Emulex.Com>, 'Christoph Hellwig' <hch@infradead.org>
-Cc: Linux SCSI Reflector <linux-scsi@vger.kernel.org>
+To: "Ely, Paul" <Paul.Ely@Emulex.Com>
+Cc: "Smart, James" <James.Smart@Emulex.Com>, 'James Bottomley' <James.Bottomley@steeleye.com>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>
 
-Christoph,
+On Mon, Jul 12, 2004 at 04:53:34PM -0400, Ely, Paul wrote:
+> The proposal:
+> 	o A new device state called SDEV_SUSPEND
+> 		- The device's current state must be SDEV_CREATED or
+> SDEV_RUNNING.
+> 		- Once in SDEV_SUSPEND, the device state is allowed to
+> transition
+> 		  to SDEV_RUNNING or SDEV_CANCEL.
+> 
+> 	o A new routine called scsi_device_suspend to enter the SDEV_SUSPEND
+> 	  state.
+> 		- Called by scsi LLDs only.
+> 		- scsi LLD must not hold any locks, including the host lock,
+> 		  when calling this routine.
+> 		- Routine can be called from interrupt context or normal
+> kernel
+> 		  context.
+> 		- This routine calls into the scsi_device_set_state
+> 		  function to handle the state transition.  Other
+> functionality
+> 		  is TBD.
+> 
+> 	o A routine that the scsi LLD calls to successfully transition from
+> 	  SDEV_SUSPEND to SDEV_RUNNING state and restart scsi commands.  I
+> am
+> 	  proposing some alternatives.
 
-We've updated the driver on SourceForge again.  This addresses the rework of
-the clk functions. Also rids the driver of Report Lun use.
+This sounds fine to me.
 
-I know this next week will probably be busy due to the OLS, but we would
-appreciate comments any time that you can provide them.
+> 		- Reuse scsi_device_resume.
+> 			+ Overloads quiesce and suspend.  This may work
+> since
+> 			  the state machine will not allow transitions
+> to/from
+> 			  SDEV_QUIESCE and SDEV_SUSPEND.
+> 
+> 		OR
+> 
+> 		- Provide a new routine called scsi_device_continue 
+> 			+ Analogous functionality as scsi_device_resume, but
+> is
+> 			  called specifically to transition out of
+> SDEV_SUSPEND.
 
-Thanks.
+Please use separate functions.
 
-- James S
+> 	o Provide TMO control that limits the amount of time a device can 
+> 	  disappear.  The timeout handling would clean up pending
+> 	  commands on the device queue.  I am proposing some
+> 	  alternatives here.
+> 		- Require the scsi LLD to provide tmo functionality.
+> Timeout 
+> 		  value would be a driver default, but also settable via a
+> sysfs
+> 		  class transport attribute.  For example, Fibre Channel
+> drivers
+> 		  would use a FC transport value in sysfs.
 
-
-> -----Original Message-----
-> From: Smart, James 
-> Sent: Friday, July 09, 2004 3:24 PM
-> To: 'Christoph Hellwig'
-> Cc: Linux SCSI Reflector
-> Subject: RE: [Emulex] Ready for next round...
-> 
-> 
-> Christoph,
-> 
-> Can you please take a look at the snapshot just posted on SourceForge.
-> 
-> The following things have been reworked:
-> - USE_HGP_HOST_SLIM: finally resolved this issue and implemented it
-> correctly.
-> - Logging: We killed lpfc_logmsg.c and converted over to a 
-> single define
-> using dev_printk. Still implements a subsystem filter in the macro.
-> - Attributes: They have been moved over to shost_attrs. We 
-> changed the basic
-> philosophy about per-instance attributes, as many simply 
-> aren't needed to be
-> set prior to attachment. This allowed them to go back 
-> integers. You will
-> find several removed as we removed some of the logic that 
-> insulated the
-> midlayer and above from transient conditions (delayed io 
-> error, etc - see
-> last paragraph). We killed lpfc.conf and have converted over 
-> to a separation
-> of attributes from their description arrays. One discrepancy 
-> - the static
-> configuration array for persistent bindings remains for 
-> compatibility - but
-> it's own file.
-> - Your big patch to lpfc_fcp.c - was incorporated.
-> - [PATCH] streamline lpfc error handling: This was 
-> incorporated. There were
-> some changes to clean up return codes and misplaced blocks.
-> - [PATCH] remove dead event counters from lpfc. Rather than 
-> remove this
-> code, as it will be used later, we have at least consolidated 
-> it and made
-> the events visible via sysfs.
-> 
-> 
-> Things we're still addressing - and should be in drop on 7/16:
-> - clk_data: We're removing the safety list, and converting 
-> from multiple
-> clock args to 1 so that it better maps to the kernel api.
-> - secondary data structures for target/lun data : We're attempting to
-> reduce/remove the notions of luns as, in general, the driver 
-> issues i/o at
-> the target level. Part of this is removing report luns use, 
-> etc. Note: We
-> will see if we can help the midlayer with addressing mode support.
-> 
-> We have one major issue, which has been partially discussed already
-> (http://marc.theaimsgroup.com/?l=linux-scsi&m=108275840501608&w=2). In
-> summary, there are discovery state machine events when we 
-> lose connectivity
-> with the target for a short period. If we do not suspend i/o 
-> to the target,
-> the upper layer retries can exhaust before the target comes 
-> back, triggering
-> other system error reports/problems/etc.  James Bottomly 
-> suggested adding a
-> scsi device SUSPEND function. We are actively addressing this 
-> and you should
-> see a conversation started shortly.
-> 
-> 
-> -- James S
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Not sure if I parsed that correctly.  You want a timeout after which the
+device gets unblocked again?  In that case the scsi_device should get a timer
+that calls the unblock routine, sounds fine to me and can be done in the
+scsi midlayer.
