@@ -1,12 +1,12 @@
 From: Tim Schmielau <tim@physik3.uni-rostock.de>
 Subject: [patch] fix compares of jiffies
-Date: Sun, 22 Sep 2002 13:45:51 +0200
+Date: Sun, 22 Sep 2002 13:45:52 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200209221145.g8MBjp723243@gans.physik3.uni-rostock.de>
+Message-ID: <200209221145.g8MBjq523300@gans.physik3.uni-rostock.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: tim@physik3.uni-rostock.de
+To: mike@i-connect.net
+Cc: linux-eata@i-connect.net, linux-scsi@vger.kernel.org, tim@physik3.uni-rostock.de
 
 Dear Linux kernel code maintainer,
 
@@ -29,15 +29,22 @@ Tim Schmielau (tim@physik3.uni-rostock.de)
 
 
 
---- linux-2.4.20-pre6/drivers/scsi/scsi_obsolete.c	Sat Aug  3 02:39:44 2002
-+++ linux-2.4.20-pre6-jfix/drivers/scsi/scsi_obsolete.c	Wed Sep 11 12:47:46 2002
-@@ -967,7 +967,7 @@
- 				   that the delay in internal_cmnd will guarantee at least a
- 				   MIN_RESET_DELAY bus settle time.
- 				 */
--				if (host->last_reset - jiffies > 20UL * HZ)
-+				if (time_before(jiffies, host->last_reset - 20UL * HZ))
- 					host->last_reset = jiffies;
- 			} else {
- 				host->host_busy++;
+EATA-DMA SCSI DRIVER
+P:	Michael Neuffer
+M:	mike@i-Connect.Net
+L:	linux-eata@i-connect.net, linux-scsi@vger.kernel.org
+S:	Maintained
+
+
+--- linux-2.4.20-pre6/drivers/scsi/eata_generic.h	Wed Aug 15 10:22:16 2001
++++ linux-2.4.20-pre6-jfix/drivers/scsi/eata_generic.h	Wed Sep 11 12:48:52 2002
+@@ -97,7 +97,7 @@
+ #define DELAY(x) { ulong flags, i;                \
+                    save_flags(flags); sti();      \
+                    i = jiffies + (x * HZ);        \
+-                   while (jiffies < i);           \
++                   while (time_before(jiffies, i));           \
+                    restore_flags(flags); }
+ 
+ /***********************************************
 
