@@ -1,89 +1,85 @@
-From: Jeff Layton <jtlayton@poochiereds.net>
-Subject: Re: Qlogic ISP 1020
-Date: Tue, 23 Mar 2004 16:00:53 -0500
+From: Steven Dake <sdake@mvista.com>
+Subject: Re: Physical disk removal does not create hotplug events
+Date: Tue, 23 Mar 2004 15:29:40 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1080075653.2457.11.camel@localhost>
-References: <1080004793.5848.34.camel@localhost>
-	 <20040323062912.B29405@infradead.org>
+Message-ID: <1080080980.26056.39.camel@persist.az.mvista.com>
+References: <2F75A5CCEF1E6A4C8CA2E75CF7F529E9022B1547@orsmsx409.jf.intel.com>
+Reply-To: sdake@mvista.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rdu26-93-067.nc.rr.com ([66.26.93.67]:9192 "EHLO
-	salusa.poochiereds.net") by vger.kernel.org with ESMTP
-	id S262834AbUCWVAz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Mar 2004 16:00:55 -0500
-In-Reply-To: <20040323062912.B29405@infradead.org>
+Received: from rav-az.mvista.com ([65.200.49.157]:28912 "EHLO
+	zipcode.az.mvista.com") by vger.kernel.org with ESMTP
+	id S262881AbUCWW3s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Mar 2004 17:29:48 -0500
+In-Reply-To: <2F75A5CCEF1E6A4C8CA2E75CF7F529E9022B1547@orsmsx409.jf.intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
+To: "Sabharwal, Atul" <atul.sabharwal@intel.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2004-03-23 at 01:29, Christoph Hellwig wrote:
-> https://verein.lst.de/~hch/qla1280-isp1040.diff.bz2 has my current patch.
+Atul,
+
+The problem you face is that the device is still "seen" by the operating
+system in a "failed" state.
+
+How should the operating system (scsi layer) know when you pull out a
+disk, vs when the disk has failed?  This is the problem faced by the
+current SCSI tree.
+
+If removals are to work properly, the operating system (Linux) should
+always be notified.
+
+One possibility you might suggest is that the FibreChannel knows the
+difference between when a device is removed (It doesn't participate in
+the LIP), and when it is failed.  It might be simple for the driver to
+notify the scsi layer to remove the device, because it has been
+physically removed...
+
+If you have tried to remove a SCSI disk while in use using the standard
+interface, you will see the next problem of notification.  What about
+all those references in the filesystems, VFS layers, RAID layers, and
+LVM layers still attached to that FibreChannel disk?  Those layers have
+to be notified of the removal as well so they can clean up their
+references and remove the device.
+
+There are bits and peices of this functionality floating around, but it
+has not been accepted into the mainline kernel as of yet.  It is in some
+vendor products, though.
+
+For now, the safest bet is to remove the device using the standard
+interfaces provided by the kernel.  Another option is to use vendor
+kernels with these features, but then you deviate from kernel.org.
+
+Good luck
+-steve
+
+
+On Tue, 2004-03-23 at 11:03, Sabharwal, Atul wrote:
+> I have a Linux system running 2.6.3 kernel, udev v 22.  I have an array
+> of Qlogic Disk array which shows up as a SCSI device to the kernel.
+>  
+> Now, when I do virtual insertion/deletion of devices, rules get called
+> and Device entries get created/deleted.  ( using sysfs interface to
+> delete or Scan new devices ).
+>  
+> Now, when I do physical insertion/deletions, the deletions do not work.
+> The sysfs Sub-system still shows the device under /sys although the
+> device has been physically Removed.
 > 
-> So far I only kno it works with 1040B's on SGI Origins.   If you want to
-> give it a try apply the patch and make sure you have the qla1280 but not the
-> qlogicisp driver in the kernel.
+> Is this is Qlogic driver problem or a SCSI sub-system problem ? In
+> syslog,
+> The LIP up/down events are detected. 
 > 
-> I'll try to split the patch into reasoable chunk soon and feed it to Jes.
+> Thanks,
+> 
+> Atul
+> 
+> >-------------------------------------------------------------
+> >P.S:  All opinions are my personal opinion(s) & responsibility and do
+> >not represent the view of my employer ( Intel Corporation ).
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-I tried this out today, and the results were mixed. Here's the lspci
-output for this card:
-
-00:0f.0 SCSI storage controller: QLogic Corp. ISP1020 Fast-wide SCSI
-(rev 05)
-
-When I built a patched driver and plugged it in, here's what I saw in
-dmesg:
-
-qla1280: no version magic, tainting kernel.
-qla1280: QLA1040 found on PCI bus 0, dev 15
-scsi(0:0): Resetting SCSI BUS
-scsi0 : QLogic QLA1040 PCI to SCSI Host Adapter
-       Firmware version:  7.65.00, Driver version 3.25
-  Vendor: Quantum   Model: DLT4000           Rev: CD3C
-  Type:   Sequential-Access                  ANSI SCSI revision: 02
-scsi(0:0:2:0): Sync: period 10, offset 12
-st: Version 20040213, fixed bufsize 32768, s/g segs 256
-Attached scsi tape st0 at scsi0, channel 0, id 2, lun 0
-st0: try direct i/o: yes, max page reachable by HBA 1048575
-
-Looked pretty good, other than it seems to think that my card is a 1040
-and not a 1020. I then tried to do some operations with my tape drive:
-
-jtlayton@salusa:/usr/src/linux-2.6.4% sudo mt -f /dev/nst0 status
-SCSI 2 tape drive:
-File number=-1, block number=-1, partition=0.
-Tape block size 0 bytes. Density code 0x0 (default).
-Soft error count since last status=0
-General status bits on (1010000):
- ONLINE IM_REP_EN
-
-I then tried to use tar to write a file to the tape and it failed almost
-immediately:
-
-jtlayton@salusa:~% sudo tar cvf /dev/nst0 ./wolf-linux-1.33.x86.run
-./wolf-linux-1.33.x86.run
-tar: /dev/nst0: Wrote only 0 of 10240 bytes
-tar: Error is not recoverable: exiting now
-
-These errors seem to cause these messages to pop up in dmesg:
-
-st0: Error 70000 (sugg. bt 0x0, driver bt 0x0, host bt 0x7).
-st0: Error 70000 (sugg. bt 0x0, driver bt 0x0, host bt 0x7).
-st0: Error 70000 (sugg. bt 0x0, driver bt 0x0, host bt 0x7).
-
-Please let me know if there's any info I can provide that might help, or
-if you need me to test another patch.
-
-Heck, I'll even offer up a case of beer (or an equivalent reward) if we
-can get it working!
-
-Thanks,
--- 
-Jeff Layton <jtlayton@poochiereds.net>
 
