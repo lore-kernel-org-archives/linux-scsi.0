@@ -1,80 +1,71 @@
 From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [linux-usb-devel] [2.6-test] Bug in usb-storage or scsi?
-Date: 10 Sep 2003 15:07:08 -0600
+Subject: Re: [usb-storage] unsolicited sense in 2.6.0-test5 usb-storage.ko
+Date: 10 Sep 2003 15:24:09 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1063228028.6151.1.camel@patehci2>
+Message-ID: <1063229049.6245.12.camel@patehci2>
+References: <Pine.LNX.4.44L0.0309101700230.1579-100000@ida.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:24209 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S265726AbTIJV1b
+Received: from email-out2.iomega.com ([147.178.1.83]:2704 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S265626AbTIJV0G
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Sep 2003 17:27:31 -0400
+	Wed, 10 Sep 2003 17:26:06 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0309101700230.1579-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
 To: stern@rowland.harvard.edu
-Cc: mdharm-usb@one-eyed-alien.net, usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org
-
-I see Google didn't thread my first try properly, sorry.  Here I am
-again with an edited subject line.
-
------Forwarded Message-----
-
-From: Pat LaVarre <p.lavarre@ieee.org>
-To: stern@rowland.harvard.edu
-Cc: mdharm-usb@one-eyed-alien.net, usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org
-Subject: Re: [usb-storage] Re: [linux-usb-devel] [2.6-test] Bug in usb-storage or scsi?
-Date: 10 Sep 2003 12:16:31 -0600
+Cc: usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org
 
 
-> What do the SCSI folk have to say about it?
+> The reason for the unsolicited REQUEST-SENSE ...
 
-Anyone?
+Help, lost me.
 
-> > for 2.6.0 ... drivers/scsi/sd.c ...
-> > sd_read_cache_type ...
-> > Get rid of (or #ifdef out) most ...
->
-> Is there any feeling about how to handle these
-> ongoing problems with the mode-sense cache
-> page?
+I'm thinking usb-storage auto sense should always and only follow
+bCSWStatus = x01 Failed.  I'm thinking unsolicited auto sense should
+occur only if the layers above request such an abuse - never
+automagically.
 
-Yes, much.
+I'm thinking not injecting unsolicited auto sense is a part of the
+unwritten specification that "everyone knows" helps hosts get along with
+devices.
 
-Maybe more feeling if you remind/teach me what breaks if we don't fetch
-page 8 re Cache.  First I imagine automounters mount read-only disks rw,
-and then the write cache gets errors while flushing.  I wonder what else
-breaks.  Maybe thruput varies for devices that do or do not bother to
-claim they have write cache.
+No?  Where have I gone wrong?
 
-Maybe more feeling if you can say how in/accurate page 8 re Cache
-commonly is.  For example, I know of no clear & broadly adopted standard
-that requires a device to declare write-behind or background defect map
-updates as a form of write cache.
+> usb-storage expects that certain commands will
+> never yield a short transfer, so if they do it
+> must mean something has gone wrong,
 
-> There doesn't seem to be any general solution
-> that can work with all USB storage devices.
+I agree something has gone wrong, indeed I am delighted to see that
+linux usb-storage detects that something has gone wrong.
 
-I understand you to be saying we can settle for an sd solution, we don't
-mind if the sd heuristic we discover then doesn't apply to pdt x05
-dvd/cd.
+> Since sgp_dd asked for a 64-byte
+> READ-CAPACITY, it gets what it deserves.
 
-> some hang when asked to read just the page
-> header.
-> ...
-> some hang when asked to read just part of the
-> page;
-> ...
-> Some hang when asked to read the entire page;
+Ah, here we educate me.
 
-Device folk ship bugs, aye, same as host folk.
+I should prepare and forward a patch to correct sgp_dd?
 
-Are not two of these three failures disproportionately common?
+We the community now broadly accept this rule?  We say apps own the job
+of keeping the bus "on the thin diagonal" i.e. asking for precisely the
+expected count of data bytes?
 
-Me, I would expect asking anything but what Windows asks would fail most
-often.  Is that not so?  Do we know what Windows asks?  Do we know
-if/how Win ME/ 2K/ XP differ here?  Have we matched CBWCB and
-dCBWDataTransferLength in every bit?
+I expect we can do better, but already I stumbled into a patch that
+works (-: because I needed one :-):
+
+--- sg3_utils-1.05/sgp_dd.c	2003-05-29 03:00:48.000000000 -0600
++++ sg3_utils/sgp_dd.c	2003-09-10 14:52:40.408420816 -0600
+@@ -244,6 +244,9 @@
+     io_hdr.mx_sb_len = sizeof(sense_b);
+     io_hdr.dxfer_direction = SG_DXFER_FROM_DEV;
+     io_hdr.dxfer_len = sizeof(rcBuff);
++#if 1 // PEL
++    io_hdr.dxfer_len = 8;
++#endif
+     io_hdr.dxferp = rcBuff;
+     io_hdr.cmdp = rcCmdBlk;
+     io_hdr.sbp = sense_b;
 
 Pat LaVarre
 
