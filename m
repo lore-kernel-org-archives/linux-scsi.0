@@ -1,34 +1,111 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: PATCH [5/15] qla2xxx:  SG tablesize update
-Date: Mon, 15 Mar 2004 22:40:37 -0800
+From: Matthias Andree <ma+lscsi@dt.e-technik.uni-dortmund.de>
+Subject: 2.6.5-rc1 SCSI + st regressions (was: Linux 2.6.5-rc1)
+Date: Tue, 16 Mar 2004 22:12:03 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040316064037.GA618317@sgi.com>
-References: <B179AE41C1147041AA1121F44614F0B0598FC6@AVEXCH02.qlogic.org>
+Message-ID: <20040316211203.GA3679@merlin.emma.line.org>
+References: <Pine.LNX.4.58.0403152154070.19853@ppc970.osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.sgi.com ([192.48.171.6]:1274 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S261680AbUCPVJA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Mar 2004 16:09:00 -0500
+Received: from krusty.dt.E-Technik.Uni-Dortmund.DE ([129.217.163.1]:22724 "EHLO
+	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
+	id S261502AbUCPVMJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Mar 2004 16:12:09 -0500
 Content-Disposition: inline
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0598FC6@AVEXCH02.qlogic.org>
+In-Reply-To: <Pine.LNX.4.58.0403152154070.19853@ppc970.osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jgarzik@pobox.com>, Anton Blanchard <anton@samba.org>, Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Mon, Mar 15, 2004 at 03:43:18PM -0800, Andrew Vasquez wrote:
+On Mon, 15 Mar 2004, Linus Torvalds wrote:
+
+> Here's the current set of patches I've merged from various poeple..
 > 
-> Since the driver specifies SG_ALL for the sg_tablesize, from testing
-> (x86 and ppc64), we've seen at most 128 SG entries attached to a
-> command request of 512K bytes (4K page size * 128).  
+> Merging from Andrew, but also i2c updates, ALSA CVS merge, netconsole,
+> prism54 driver merge, sata updates, carmel driver, pcmcia and nfs client
+> updates..
+> 
+> And a few architectures updated: ia64, ppc32, sparc32, arm.
+> 
+ 
+> Summary of changes from v2.6.4 to v2.6.5-rc1
+> ============================================
 
-Andrew, with a slight mod to your driver, and using James's patch
-to issue larger requests, I was able to issue 4MB requests to a
-device (256 SG entries times 16KB page size) on our Itanium box.
+...
 
-Some H/W RAIDs have a strong preference for really large requests.
+I have some SCSI troubles with 2.6.5-rc1 (from BK) that 2.6.4 didn't
+have.
 
-Your plan to switch to the midlayer throttling mechanism sounds good.
+Modprobe, loading the st driver, tries a NULL pointer dereference in
+kernel space and my 2nd tape drive isn't found: st1 is not shown. cat
+/proc/scsi/scsi (typed after the attempted zero page dereference) hangs
+in rwsem_down_read_failed with process state D.
 
-jeremy
+I've re-built the kernel after doing a "make clean"
+but to no avail (as expected).
+
+...
+sym0: <875> rev 0x26 at pci 0000:00:0d.0 irq 16
+sym0: Tekram NVRAM, ID 7, Fast-20, SE, parity checking
+sym0: SCSI BUS has been reset.
+scsi0 : sym-2.1.18i
+  Vendor: FUJITSU   Model: MAH3182MP         Rev: 0114
+  Type:   Direct-Access                      ANSI SCSI revision: 04
+sym0:1:0: tagged command queuing enabled, command queue depth 32.
+  Vendor: PLEXTOR   Model: CD-ROM PX-32TS    Rev: 1.02
+  Type:   CD-ROM                             ANSI SCSI revision: 02
+  Vendor: TANDBERG  Model:  TDC 4222         Rev: =07:
+  Type:   Sequential-Access                  ANSI SCSI revision: 02
+  Vendor: TANDBERG  Model: SLR6              Rev: 0404
+  Type:   Sequential-Access                  ANSI SCSI revision: 02
+DC390: 0 adapters found
+libata version 1.01 loaded.
+sym0:1: FAST-20 WIDE SCSI 40.0 MB/s ST (50.0 ns, offset 16)
+SCSI device sda: 35701260 512-byte hdwr sectors (18279 MB)
+SCSI device sda: drive cache: write through
+ sda: sda1 sda2 sda3 < sda5 >
+Attached scsi disk sda at scsi0, channel 0, id 1, lun 0
+...
+Attached scsi generic sg0 at scsi0, channel 0, id 1, lun 0,  type 0
+Attached scsi generic sg1 at scsi0, channel 0, id 2, lun 0,  type 5
+Attached scsi generic sg2 at scsi0, channel 0, id 6, lun 0,  type 1
+Attached scsi generic sg3 at scsi0, channel 0, id 8, lun 0,  type 1
+sym0:2: FAST-20 SCSI 20.0 MB/s ST (50.0 ns, offset 15)
+sr0: scsi-1 drive
+Attached scsi CD-ROM sr0 at scsi0, channel 0, id 2, lun 0
+st: Version 20040226, fixed bufsize 32768, s/g segs 256
+Unable to handle kernel NULL pointer dereference at virtual address 0000002e
+ printing eip:
+d1ba00fc
+*pde = 00000000
+Oops: 0002 [#1]
+CPU:    0
+EIP:    0060:[<d1ba00fc>]    Not tainted
+EFLAGS: 00010282   (2.6.5-rc1) 
+EIP is at st_probe+0x7dc/0x99f [st]
+eax: cd20024c   ebx: ffffffea   ecx: 00000000   edx: 0000000a
+esi: 00000004   edi: 00000000   ebp: cd10bdbc   esp: cd10bd34
+ds: 007b   es: 007b   ss: 0068
+Process modprobe (pid: 1303, threadinfo=cd10a000 task=cd148d80)
+Stack: cd5f9cc0 00900000 cfa3597c d1ba0628 cd70c6c4 00000000 cd10bd68 cd10bd68 
+       00000000 cd20024c 00000000 cd20024c cc623c80 cd10bd84 00000000 cd200200 
+       cd9d2980 00000008 cd88b000 00000000 d1ba2bf0 00000000 00000000 cd20024c 
+Call Trace:
+ [<c027eaeb>] bus_match+0x3b/0x70
+ [<c027ed00>] driver_attach+0x50/0x90
+ [<c027eddb>] bus_add_driver+0x9b/0xc0
+ [<c027f3c1>] driver_register+0x31/0x40
+ [<d19e50b6>] init_st+0xb6/0x155 [st]
+ [<c0131200>] sys_init_module+0x130/0x1670
+ [<c01bd5c1>] journal_stop+0x171/0x210
+ [<c01af4b7>] ext3_mark_inode_dirty+0x47/0x60
+ [<c0157110>] cdev_alloc+0x0/0x60
+ [<c0144c55>] do_mmap_pgoff+0x365/0x6c0
+ [<c014cda7>] filp_close+0x57/0x90
+ [<c014ce2f>] sys_close+0x4f/0x60
+ [<c01070ff>] syscall_call+0x7/0xb
+
+Code: 89 43 44 89 1c 24 c7 44 24 04 5c 2a ba d1 e8 f1 fb 6d ee c7 
+ <6>sym0:6: FAST-5 SCSI 4.8 MB/s ST (208.0 ns, offset 8)
+st0: Block limits 1 - 16777215 bytes.
+...
