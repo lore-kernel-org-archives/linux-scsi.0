@@ -1,37 +1,48 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] ibmvscsi driver
-Date: 09 Feb 2004 16:55:03 -0500
+From: "Tony Battersby" <tonyb@cybernetics.com>
+Subject: RE: [linux-usb-devel] FW: USB 2.0 external hard drive problem
+Date: Mon, 9 Feb 2004 17:11:19 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1076363704.1804.48.camel@mulgrave>
-References: <opr232htwdl6e53g@us.ibm.com>
+Message-ID: <04Feb9.171120est.332381@cyborg.cybernetics.com>
+References: <Pine.LNX.4.44L0.0402091317290.1821-100000@ida.rowland.org>
+Reply-To: <tonyb@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:45733 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264477AbUBIVzI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Feb 2004 16:55:08 -0500
-In-Reply-To: <opr232htwdl6e53g@us.ibm.com>
+Received: from cyborg.cybernetics.com ([206.246.200.18]:28680 "EHLO
+	cybernetics.com") by vger.kernel.org with ESMTP id S265251AbUBIWL0
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Feb 2004 17:11:26 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0402091317290.1821-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Boutcher <sleddog@us.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: 'Alan Stern' <stern@rowland.harvard.edu>, 'James Bottomley' <James.Bottomley@steeleye.com>
+Cc: 'Matthew Dharm' <mdharm-scsi@one-eyed-alien.net>, 'Joerg Schilling' <schilling@fokus.fraunhofer.de>, magliery@csb.yale.edu, appro@fy.chalmers.se, 'USB development list' <linux-usb-devel@lists.sourceforge.net>, 'SCSI development list' <linux-scsi@vger.kernel.org>
 
-On Mon, 2004-02-09 at 11:23, Dave Boutcher wrote:
-> I would like to submit the following new driver for inclusion in the 2.6 
-> kernel.  This is the first patch I'm sending outside of IBM, so I expect 
-> there will be comments.
+> Especially if the sense code is NO SENSE.  Logically that should
+> indicate the driver needed to find out whether or not there was error,
+> and it learned that there wasn't.
 
-Could you elaborate more on why you actually want to use the SCSI
-subsystem for this.
+For tape drives, sense key == NO SENSE is not equivalent to no error to
+report.  Often a tape drive returns a sense key of NO SENSE but with one
+of the other bits (EOM, FILEMARK, ILI) set in the same byte as the sense
+key.  There are also some ASC/ASCQ combinations that go with a sense key
+of NO SENSE but without any of the EOM, FILEMARK, or ILI bits set.
 
-It looks like what you're proposing is a type of client/server device
-pipe for which nbd may well be able to fill all your needs.
+On the other hand, some tape drives set the EOM bit in unsolicited
+request sense data just to report the position of the tape, so the EOM
+bit being set isn't necessarily an indicator that there was an error.
+However, ASC/ASCQ should be nonzero when the EOM bit is set because of
+an error.
 
-I'm not opposed to a simple SCSI tunnel driver, but knowing what you
-need beyond what nbd can provide would help me understand why what
-you're proposing is really necessary.
+I recommend defining "no error" to be:
 
-James
+(sense_data[2] & 0xaf) == 0x00 && /* Filemark 0, ignore EOM, ILI 0, NO
+SENSE */
+sense_data[12]  == 0x00 && /* ASC */
+sense_data[13] == 0x00 /* ASCQ */
 
+This should work for most devices that I have encountered.
+
+Anthony J. Battersby
+Cybernetics
 
