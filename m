@@ -1,61 +1,37 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] add scsi bus for virtual drivers
-Date: Fri, 11 Feb 2005 18:25:18 -0800
-Message-ID: <420D690E.7060003@cs.wisc.edu>
-References: <420D5E3C.3020005@cs.wisc.edu>
+Subject: [PATCH] add scsi bus for virtual drivers take3
+Date: Fri, 11 Feb 2005 21:23:38 -0800
+Message-ID: <420D92DA.10409@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------060802020208000605020309"
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:54423 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S262245AbVBLCZ2 (ORCPT
+ boundary="------------020205090505060208030705"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:16536 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S262396AbVBLFXq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Feb 2005 21:25:28 -0500
-In-Reply-To: <420D5E3C.3020005@cs.wisc.edu>
+	Sat, 12 Feb 2005 00:23:46 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: linux-iscsi-devel <linux-iscsi-devel@lists.sourceforge.net>
+To: linux-iscsi-devel <linux-iscsi-devel@lists.sourceforge.net>, linux-scsi <linux-scsi@vger.kernel.org>
 
 This is a multi-part message in MIME format.
---------------060802020208000605020309
+--------------020205090505060208030705
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
-oops, I think my mailer wrapped some lines and I had some
-extra formatting. Let me try a again.
+I do not know what I was diffing the last time.
+The attached patch should work now.
+
+Sorry.
+
+Mike
 
 
-Mike Christie wrote:
-> Currently, LLDs using the newer driver model APIs use a driver's probe 
-> routine to perform setup and call scsi_host_alloc and scsi_add_host. 
-> And, then in remove the driver calls scsi_remove_host and scsi_host_put.
-> 
-> Virtual drivers like scsi_debug and software iscsi do not have a driver 
-> model bus or device_driver, so scsi_debug impements its own and software 
-> iscsi just adds and removes hosts from where ever makes it happy. A 
-> review comment we recieved for the software iscsi driver was to use a 
-> bus and driver and the callouts they provide. But instead of having the 
-> driver implement its own driver model bus code, the attached patch has 
-> scsi-ml maintain a virtual host bus for scsi_debug and software iscsi to 
-> use.
-> 
-> I had tried to just use the existing scsi bus, but it ends up that the 
-> host level device would need the bus's semaphore and the hosts' scanned 
-> scsi devices would try to grab the bus's semaphore at the same time.
-> 
-> The attached patch was made against scsi-rc-fixes-2.6.
-> I will also send a patch in the next mail to convert
-> scsi_debug.
-> 
-> Mike
-> 
-
---------------060802020208000605020309
+--------------020205090505060208030705
 Content-Type: text/x-patch;
- name="add-ml-virtual-bus2.patch"
+ name="add-ml-virtual-bus3.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="add-ml-virtual-bus2.patch"
+ filename="add-ml-virtual-bus3.patch"
 
 diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/hosts.c scsi-rc-fixes-2.6.work/drivers/scsi/hosts.c
 --- scsi-rc-fixes-2.6.orig/drivers/scsi/hosts.c	2005-02-04 22:10:09.000000000 -0800
@@ -262,7 +238,7 @@ diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/hosts.c scsi-rc-fixes-2.6.work/dr
 +EXPORT_SYMBOL(scsi_unregister_host_driver);
 diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/osst.c scsi-rc-fixes-2.6.work/drivers/scsi/osst.c
 --- scsi-rc-fixes-2.6.orig/drivers/scsi/osst.c	2005-02-04 22:10:56.000000000 -0800
-+++ scsi-rc-fixes-2.6.work/drivers/scsi/osst.c	2005-02-11 16:28:05.000000000 -0800
++++ scsi-rc-fixes-2.6.work/drivers/scsi/osst.c	2005-02-11 20:51:09.000000000 -0800
 @@ -170,7 +170,7 @@ static int osst_copy_from_buffer(struct 
  static int osst_probe(struct device *);
  static int osst_remove(struct device *);
@@ -277,10 +253,31 @@ diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/osst.c scsi-rc-fixes-2.6.work/dri
  	osst_sysfs_init();
  
 -	if ((register_chrdev(OSST_MAJOR,"osst", &osst_fops) < 0) || scsi_register_driver(&osst_template.gendrv)) {
-+	if ((register_chrdev(OSST_MAJOR,"osst", &osst_fops) < 0) || scsi_register_device_driver(&osst_template.gendrv)) {
++	if ((register_chrdev(OSST_MAJOR,"osst", &osst_fops) < 0) || scsi_register_device_driver(&osst_template)) {
  		printk(KERN_ERR "osst :E: Unable to register major %d for OnStream tapes\n", OSST_MAJOR);
  		osst_sysfs_cleanup();
  		return 1;
+@@ -5866,7 +5866,7 @@ static void __exit exit_osst (void)
+ 	struct osst_tape * STp;
+ 
+ 	osst_remove_driverfs_files(&osst_template.gendrv);
+-	scsi_unregister_driver(&osst_template.gendrv);
++	scsi_unregister_device_driver(&osst_template);
+ 	unregister_chrdev(OSST_MAJOR, "osst");
+ 	osst_sysfs_cleanup();
+ 
+diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/osst.h scsi-rc-fixes-2.6.work/drivers/scsi/osst.h
+--- scsi-rc-fixes-2.6.orig/drivers/scsi/osst.h	2005-02-04 22:11:33.000000000 -0800
++++ scsi-rc-fixes-2.6.work/drivers/scsi/osst.h	2005-02-11 20:55:23.000000000 -0800
+@@ -529,7 +529,7 @@ struct osst_buffer {
+ 
+ /* The OnStream tape drive descriptor */
+ struct osst_tape {
+-  struct scsi_driver *driver;
++  struct scsi_device_driver *driver;
+   unsigned capacity;
+   struct scsi_device *device;
+   struct semaphore lock;       /* for serialization */
 diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/scsi_lib.c scsi-rc-fixes-2.6.work/drivers/scsi/scsi_lib.c
 --- scsi-rc-fixes-2.6.orig/drivers/scsi/scsi_lib.c	2005-02-04 22:11:02.000000000 -0800
 +++ scsi-rc-fixes-2.6.work/drivers/scsi/scsi_lib.c	2005-02-10 20:25:50.000000000 -0800
@@ -337,26 +334,42 @@ diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/scsi_scan.c scsi-rc-fixes-2.6.wor
  			drv->rescan(dev);
 diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/scsi_sysfs.c scsi-rc-fixes-2.6.work/drivers/scsi/scsi_sysfs.c
 --- scsi-rc-fixes-2.6.orig/drivers/scsi/scsi_sysfs.c	2005-02-04 22:10:23.000000000 -0800
-+++ scsi-rc-fixes-2.6.work/drivers/scsi/scsi_sysfs.c	2005-02-11 18:01:11.000000000 -0800
-@@ -653,13 +653,13 @@ out:
++++ scsi-rc-fixes-2.6.work/drivers/scsi/scsi_sysfs.c	2005-02-11 20:53:22.000000000 -0800
+@@ -14,6 +14,7 @@
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_device.h>
++#include <scsi/scsi_driver.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsi_transport.h>
+@@ -653,13 +654,19 @@ out:
  }
  EXPORT_SYMBOL(scsi_remove_device);
  
 -int scsi_register_driver(struct device_driver *drv)
-+int scsi_register_device_driver(struct device_driver *drv)
++int scsi_register_device_driver(struct scsi_device_driver *sdrv)
  {
- 	drv->bus = &scsi_bus_type;
+-	drv->bus = &scsi_bus_type;
++	sdrv->gendrv.bus = &scsi_bus_type;
  
- 	return driver_register(drv);
+-	return driver_register(drv);
++	return driver_register(&sdrv->gendrv);
  }
 -EXPORT_SYMBOL(scsi_register_driver);
 +EXPORT_SYMBOL(scsi_register_device_driver);
++
++void scsi_unregister_device_driver(struct scsi_device_driver *sdrv)
++{
++	driver_unregister(&sdrv->gendrv);
++}
++EXPORT_SYMBOL(scsi_unregister_device_driver);
  
  int scsi_register_interface(struct class_interface *intf)
  {
 diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/sd.c scsi-rc-fixes-2.6.work/drivers/scsi/sd.c
 --- scsi-rc-fixes-2.6.orig/drivers/scsi/sd.c	2005-02-04 22:11:57.000000000 -0800
-+++ scsi-rc-fixes-2.6.work/drivers/scsi/sd.c	2005-02-11 16:28:15.000000000 -0800
++++ scsi-rc-fixes-2.6.work/drivers/scsi/sd.c	2005-02-11 20:50:20.000000000 -0800
 @@ -92,7 +92,7 @@
  static void scsi_disk_release(struct kref *kref);
  
@@ -380,13 +393,22 @@ diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/sd.c scsi-rc-fixes-2.6.work/drive
  		return -ENODEV;
  
 -	return scsi_register_driver(&sd_template.gendrv);
-+	return scsi_register_device_driver(&sd_template.gendrv);
++	return scsi_register_device_driver(&sd_template);
  }
  
  /**
+@@ -1645,7 +1645,7 @@ static void __exit exit_sd(void)
+ 
+ 	SCSI_LOG_HLQUEUE(3, printk("exit_sd: exiting sd driver\n"));
+ 
+-	scsi_unregister_driver(&sd_template.gendrv);
++	scsi_unregister_device_driver(&sd_template);
+ 	for (i = 0; i < SD_MAJORS; i++)
+ 		unregister_blkdev(sd_major(i), "sd");
+ }
 diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/sr.c scsi-rc-fixes-2.6.work/drivers/scsi/sr.c
 --- scsi-rc-fixes-2.6.orig/drivers/scsi/sr.c	2005-02-04 22:13:14.000000000 -0800
-+++ scsi-rc-fixes-2.6.work/drivers/scsi/sr.c	2005-02-11 16:28:25.000000000 -0800
++++ scsi-rc-fixes-2.6.work/drivers/scsi/sr.c	2005-02-11 20:50:33.000000000 -0800
 @@ -74,7 +74,7 @@ static int sr_probe(struct device *);
  static int sr_remove(struct device *);
  static int sr_init_command(struct scsi_cmnd *);
@@ -396,18 +418,36 @@ diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/sr.c scsi-rc-fixes-2.6.work/drive
  	.owner			= THIS_MODULE,
  	.gendrv = {
  		.name   	= "sr",
-@@ -947,7 +947,7 @@ static int __init init_sr(void)
+@@ -947,12 +947,12 @@ static int __init init_sr(void)
  	rc = register_blkdev(SCSI_CDROM_MAJOR, "sr");
  	if (rc)
  		return rc;
 -	return scsi_register_driver(&sr_template.gendrv);
-+	return scsi_register_device_driver(&sr_template.gendrv);
++	return scsi_register_device_driver(&sr_template);
  }
  
  static void __exit exit_sr(void)
+ {
+-	scsi_unregister_driver(&sr_template.gendrv);
++	scsi_unregister_device_driver(&sr_template);
+ 	unregister_blkdev(SCSI_CDROM_MAJOR, "sr");
+ }
+ 
+diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/sr.h scsi-rc-fixes-2.6.work/drivers/scsi/sr.h
+--- scsi-rc-fixes-2.6.orig/drivers/scsi/sr.h	2005-02-04 22:10:40.000000000 -0800
++++ scsi-rc-fixes-2.6.work/drivers/scsi/sr.h	2005-02-11 20:55:00.000000000 -0800
+@@ -28,7 +28,7 @@ struct scsi_device;
+ 
+ 
+ typedef struct scsi_cd {
+-	struct scsi_driver *driver;
++	struct scsi_device_driver *driver;
+ 	unsigned capacity;	/* size in blocks                       */
+ 	struct scsi_device *device;
+ 	unsigned int vendor;	/* vendor code, see sr_vendor.c         */
 diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/st.c scsi-rc-fixes-2.6.work/drivers/scsi/st.c
 --- scsi-rc-fixes-2.6.orig/drivers/scsi/st.c	2005-02-04 22:11:33.000000000 -0800
-+++ scsi-rc-fixes-2.6.work/drivers/scsi/st.c	2005-02-11 16:28:32.000000000 -0800
++++ scsi-rc-fixes-2.6.work/drivers/scsi/st.c	2005-02-11 20:56:43.000000000 -0800
 @@ -198,7 +198,7 @@ static void do_create_driverfs_files(voi
  static void do_remove_driverfs_files(void);
  static void do_create_class_files(struct scsi_tape *, int, int);
@@ -422,13 +462,34 @@ diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/st.c scsi-rc-fixes-2.6.work/drive
  	if (!register_chrdev_region(MKDEV(SCSI_TAPE_MAJOR, 0),
  				    ST_MAX_TAPE_ENTRIES, "st")) {
 -		if (scsi_register_driver(&st_template.gendrv) == 0) {
-+		if (scsi_register_device_driver(&st_template.gendrv) == 0) {
++		if (scsi_register_device_driver(&st_template) == 0) {
  			do_create_driverfs_files();
  			return 0;
  		}
+@@ -4083,7 +4083,7 @@ static void __exit exit_st(void)
+ 		class_simple_destroy(st_sysfs_class);
+ 	st_sysfs_class = NULL;
+ 	do_remove_driverfs_files();
+-	scsi_unregister_driver(&st_template.gendrv);
++	scsi_unregister_device_driver(&st_template);
+ 	unregister_chrdev_region(MKDEV(SCSI_TAPE_MAJOR, 0),
+ 				 ST_MAX_TAPE_ENTRIES);
+ 	kfree(scsi_tapes);
+diff -aurp scsi-rc-fixes-2.6.orig/drivers/scsi/st.h scsi-rc-fixes-2.6.work/drivers/scsi/st.h
+--- scsi-rc-fixes-2.6.orig/drivers/scsi/st.h	2005-02-04 22:12:09.000000000 -0800
++++ scsi-rc-fixes-2.6.work/drivers/scsi/st.h	2005-02-11 20:55:39.000000000 -0800
+@@ -73,7 +73,7 @@ struct st_partstat {
+ 
+ /* The tape drive descriptor */
+ struct scsi_tape {
+-	struct scsi_driver *driver;
++	struct scsi_device_driver *driver;
+ 	struct scsi_device *device;
+ 	struct semaphore lock;	/* For serialization */
+ 	struct completion wait;	/* For SCSI commands */
 diff -aurp scsi-rc-fixes-2.6.orig/include/scsi/scsi_driver.h scsi-rc-fixes-2.6.work/include/scsi/scsi_driver.h
 --- scsi-rc-fixes-2.6.orig/include/scsi/scsi_driver.h	2005-02-04 22:11:49.000000000 -0800
-+++ scsi-rc-fixes-2.6.work/include/scsi/scsi_driver.h	2005-02-11 16:26:50.000000000 -0800
++++ scsi-rc-fixes-2.6.work/include/scsi/scsi_driver.h	2005-02-11 20:47:43.000000000 -0800
 @@ -7,7 +7,7 @@ struct module;
  struct scsi_cmnd;
  
@@ -438,7 +499,7 @@ diff -aurp scsi-rc-fixes-2.6.orig/include/scsi/scsi_driver.h scsi-rc-fixes-2.6.w
  	struct module		*owner;
  	struct device_driver	gendrv;
  
-@@ -15,15 +15,42 @@ struct scsi_driver {
+@@ -15,15 +15,41 @@ struct scsi_driver {
  	void (*rescan)(struct device *);
  	int (*issue_flush)(struct device *, sector_t *);
  };
@@ -449,9 +510,9 @@ diff -aurp scsi-rc-fixes-2.6.orig/include/scsi/scsi_driver.h scsi-rc-fixes-2.6.w
  
 -extern int scsi_register_driver(struct device_driver *);
 -#define scsi_unregister_driver(drv) \
-+extern int scsi_register_device_driver(struct device_driver *);
-+#define scsi_unregister_device_driver(drv) \
- 	driver_unregister(drv);
+-	driver_unregister(drv);
++extern int scsi_register_device_driver(struct scsi_device_driver *);
++extern void scsi_unregister_device_driver(struct scsi_device_driver *);
  
  extern int scsi_register_interface(struct class_interface *);
  #define scsi_unregister_interface(intf) \
@@ -486,4 +547,4 @@ diff -aurp scsi-rc-fixes-2.6.orig/include/scsi/scsi_driver.h scsi-rc-fixes-2.6.w
 +
  #endif /* _SCSI_SCSI_DRIVER_H */
 
---------------060802020208000605020309--
+--------------020205090505060208030705--
