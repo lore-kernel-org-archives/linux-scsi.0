@@ -1,107 +1,136 @@
-From: augustus@linuxhardware.org
-Subject: RE: Fusion-MPT much faster as module
-Date: Thu, 31 Mar 2005 13:59:50 -0500 (EST)
-Message-ID: <Pine.LNX.4.62.0503311359360.3702@penguin.linuxhardware.org>
-References: <91888D455306F94EBD4D168954A9457C01AEAC93@nacos172.co.lsil.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Convert i2o to compat_ioctl
+Date: Thu, 31 Mar 2005 20:41:18 +0100
+Message-ID: <20050331194118.GA24242@infradead.org>
+References: <20050118112455.GK43344@muc.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from penguin.linuxhardware.org ([63.173.68.170]:47056 "EHLO
-	penguin.linuxhardware.org") by vger.kernel.org with ESMTP
-	id S261680AbVCaSyw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Mar 2005 13:54:52 -0500
-In-Reply-To: <91888D455306F94EBD4D168954A9457C01AEAC93@nacos172.co.lsil.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:29568 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261657AbVCaTl3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Mar 2005 14:41:29 -0500
+Content-Disposition: inline
+In-Reply-To: <20050118112455.GK43344@muc.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: Andrew Morton <akpm@osdl.org>, Holger Kiehl <Holger.Kiehl@dwd.de>, linux-scsi@vger.kernel.org
+To: Andi Kleen <ak@muc.de>
+Cc: James.Bottomley@HansenPartnership.com, Markus.Lidel@shadowconnect.com, linux-scsi@vger.kernel.org
 
-Any word on this bug yet?
+Markus, is this patch actually okay?  I just talked to Andi about the
+ioctl32 issues and he told me about this patch.
 
-Thanks,
-Kris Kersey (Augustus)
-LinuxHardware.org Site Manager
-augustus@linuxhardware.org
-Gentoo Linux AMD64 Developer
-augustus@gentoo.org
-
-On Mon, 21 Mar 2005, Moore, Eric Dean wrote:
-
-> Sorry for delay in responding.
-> We at LSI Logic are looking into these reports
-> of poor performance coming from the U320.
-> I will report later.
->
-> Eric Moore
-> LSI Logic
->
->
-> On Monday, March 21, 2005 4:27 PM, Andrew Morton wrote:
->>
->>
->> Holger Kiehl <Holger.Kiehl@dwd.de> wrote:
->>>
->>> Hello
->>>
->>> On a four CPU Opteron compiling the Fusion-MPT as module
->> gives much better
->>> performance when compiling it in, here some bonnie++ results:
->>>
->>> Version  1.03       ------Sequential Output------
->> --Sequential Input- --Random-
->>>                      -Per Chr- --Block-- -Rewrite- -Per
->> Chr- --Block-- --Seeks--
->>> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP
->> K/sec %CP  /sec %CP
->>> compiled in  15872M 38366 71  65602  22 18348   4 53276 84
->> 57947   7 905.4   2
->>> module       15872M 51246 96 204914  70 57236  14 59779 96
->> 264171  33 923.0   2
->>>
->>> This happens with 2.6.10, 2.6.11 and 2.6.11-bk2. Controller is a
->>> Symbios Logic 53c1030 PCI-X Fusion-MPT Dual Ultra320 SCSI.
->>>
->>> Why is there such a large difference?
->>>
->>
->> Holger, this problem remains unresolved, does it not?  Have
->> you done any
->> more experimentation?
->>
->> I must say that something funny seems to be happening here.
->> I have two
->> MPT-based Dell machines, neither of which is using a modular driver:
->>
->>
->> akpm:/usr/src/25> 0 hdparm -t /dev/sda
->>
->> /dev/sda:
->>  Timing buffered disk reads:  64 MB in  5.00 seconds = 12.80 MB/sec
->>
->> That's a bit disappointing.  Running 2.6.9-rc2-mm2(!) with a
->>
->>  SCSI storage controller: LSI Logic / Symbios Logic 53c1030 (rev 07)
->>
->> controller on disks which shudl hit 50MB/sec.
->>
->>
->>
->>
->> And
->>
->> bix:/home/akpm# hdparm -t /dev/sda
->>
->> /dev/sda:
->>  Timing buffered disk reads:  114 MB in  3.03 seconds =  37.57 MB/sec
->>
->> with 2.6.11-rc4-mm1 using
->>
->> Fusion MPT SCSI Host driver 3.01.16
->> scsi0 : ioc0: LSI53C1030, FwRev=01030600h, Ports=1, MaxQ=222, IRQ=25
->> scsi1 : ioc1: LSI53C1030, FwRev=01030600h, Ports=1, MaxQ=222, IRQ=26
->> Vendor: SEAGATE   Model: ST3146807LW       Rev: DS09
->> Type:   Direct-Access                      ANSI SCSI revision: 03
->>
->> Better, but again I'd expect >50MB/sec.
->>
->
+On Tue, Jan 18, 2005 at 12:24:55PM +0100, Andi Kleen wrote:
+> Convert I2O to new compat_ioctl entry points
+> 
+> Also broken design in its compat handlers - CONFIG_COMPAT doesn't 
+> mean that there should be no native ioctls.
+> 
+> Signed-off-by: Andi Kleen <ak@muc.de>
+> 
+> diff -u linux-2.6.11-rc1-bk4/drivers/message/i2o/i2o_config.c-o linux-2.6.11-rc1-bk4/drivers/message/i2o/i2o_config.c
+> --- linux-2.6.11-rc1-bk4/drivers/message/i2o/i2o_config.c-o	2005-01-17 10:39:40.000000000 +0100
+> +++ linux-2.6.11-rc1-bk4/drivers/message/i2o/i2o_config.c	2005-01-18 06:27:24.000000000 +0100
+> @@ -54,6 +54,9 @@
+>  
+>  extern int i2o_parm_issue(struct i2o_device *, int, void *, int, void *, int);
+>  
+> +static int i2o_cfg_ioctl(struct inode *inode, struct file *fp, unsigned int cmd,
+> +			 unsigned long arg);
+> +
+>  static spinlock_t i2o_config_lock;
+>  
+>  #define MODINC(x,y) ((x) = ((x) + 1) % (y))
+> @@ -538,8 +541,7 @@
+>  }
+>  
+>  #ifdef CONFIG_COMPAT
+> -static int i2o_cfg_passthru32(unsigned fd, unsigned cmnd, unsigned long arg,
+> -			      struct file *file)
+> +static int i2o_cfg_passthru32(struct file *file, unsigned cmnd, unsigned long arg)
+>  {
+>  	struct i2o_cmd_passthru32 __user *cmd;
+>  	struct i2o_controller *c;
+> @@ -752,7 +754,26 @@
+>  	return rcode;
+>  }
+>  
+> -#else
+> +static long compat_i2o_cfg_ioctl(struct file *file, unsigned cmd, unsigned long arg)
+> +{
+> +	int ret;
+> +	lock_kernel();		
+> +	switch (cmd) { 
+> +	case I2OGETIOPS:
+> +		ret = i2o_cfg_ioctl(NULL, file, cmd, arg);
+> +		break;
+> +	case I2OPASSTHRU32:
+> +		ret = i2o_cfg_passthru32(file, cmd, arg);
+> +		break;
+> +	default:
+> +		ret = -ENOIOCTLCMD;
+> +		break;
+> +	}
+> +	unlock_kernel();
+> +	return ret;
+> +}
+> +
+> +#endif
+>  
+>  static int i2o_cfg_passthru(unsigned long arg)
+>  {
+> @@ -958,7 +979,6 @@
+>  	kfree(reply);
+>  	return rcode;
+>  }
+> -#endif
+>  
+>  /*
+>   * IOCTL Handler
+> @@ -1013,11 +1033,9 @@
+>  		ret = i2o_cfg_evt_get(arg, fp);
+>  		break;
+>  
+> -#ifndef CONFIG_COMPAT
+>  	case I2OPASSTHRU:
+>  		ret = i2o_cfg_passthru(arg);
+>  		break;
+> -#endif
+>  
+>  	default:
+>  		osm_debug("unknown ioctl called!\n");
+> @@ -1105,6 +1123,9 @@
+>  	.owner = THIS_MODULE,
+>  	.llseek = no_llseek,
+>  	.ioctl = i2o_cfg_ioctl,
+> +#ifdef CONFIG_COMPAT
+> +	.compat_ioctl = compat_i2o_cfg_ioctl,
+> +#endif
+>  	.open = cfg_open,
+>  	.release = cfg_release,
+>  	.fasync = cfg_fasync,
+> @@ -1134,19 +1155,11 @@
+>  		misc_deregister(&i2o_miscdev);
+>  		return -EBUSY;
+>  	}
+> -#ifdef CONFIG_COMPAT
+> -	register_ioctl32_conversion(I2OPASSTHRU32, i2o_cfg_passthru32);
+> -	register_ioctl32_conversion(I2OGETIOPS, (void *)sys_ioctl);
+> -#endif
+>  	return 0;
+>  }
+>  
+>  static void i2o_config_exit(void)
+>  {
+> -#ifdef CONFIG_COMPAT
+> -	unregister_ioctl32_conversion(I2OPASSTHRU32);
+> -	unregister_ioctl32_conversion(I2OGETIOPS);
+> -#endif
+>  	misc_deregister(&i2o_miscdev);
+>  	i2o_driver_unregister(&i2o_config_driver);
+>  }
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---end quoted text---
