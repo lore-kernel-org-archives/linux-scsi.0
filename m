@@ -1,63 +1,51 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: Aic7x_x_x 6.3.4 && Aic79xx 2.0.5 Updates
-Date: 27 Dec 2003 09:52:43 -0600
+Date: 27 Dec 2003 09:54:08 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1072540364.2030.41.camel@mulgrave>
-References: <1051920000.1054684267@aslan.btc.adaptec.com>	<3637050000.1054690456@aslan.s
-				csiguy.com>
-	<2113050000.1072285128@aslan.scsiguy.com>	<1072288242.1906.35.camel@mulgrave
-			>	<2148850000.1072292121@aslan.scsiguy.com>
-	<1072292714.2415.39.camel@mulgrave	>
-		<2304040000.1072326693@aslan.scsiguy.com>	<1072463795.1873.127.camel@mulgra
-	ve> <2832150000.1072484024@aslan.scsiguy.com>
-	<1072495231.1873.363.camel@mulgrave>
-	<2906490000.1072499170@aslan.scsiguy.com>
+Message-ID: <1072540449.2030.45.camel@mulgrave>
+References: <1051920000.1054684267@aslan.btc.adaptec.com>
+	<3637050000.1054690456@aslan.s csiguy.com>
+	<2113050000.1072285128@aslan.scsiguy.com>
+	<1072288242.1906.35.camel@mulgrave >
+	<2148850000.1072292121@aslan.scsiguy.com>
+	<1072292714.2415.39.camel@mulgrave>
+	<2304040000.1072326693@aslan.scsiguy.com>
+	<1072463795.1873.127.camel@mulgrave>
+	<1072538231.5494.12.camel@dhcp23.swansea.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:61840 "EHLO
+Received: from stat1.steeleye.com ([65.114.3.130]:64656 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264476AbTL0Pwu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Dec 2003 10:52:50 -0500
-In-Reply-To: <2906490000.1072499170@aslan.scsiguy.com>
+	id S264484AbTL0PyM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Dec 2003 10:54:12 -0500
+In-Reply-To: <1072538231.5494.12.camel@dhcp23.swansea.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Marcelo Tosatti <marcelo@conectiva.com.br>, Andrew Morton <akpm@osdl.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>, Marcelo Tosatti <marcelo@conectiva.com.br>, Andrew Morton <akpm@osdl.org>
 
-On Fri, 2003-12-26 at 22:26, Justin T. Gibbs wrote:
-> You're telling me that fail-over for a multi-controller external RAID box
-> connected to a single SCSI controller will occur at a higher level?  The
-> fail-over has already occurred by the time the HBA see the timeout.  This
-> means that completion of recovery is the only impediment to completing the
-> fail-over.
+On Sat, 2003-12-27 at 09:17, Alan Cox wrote:
+> Or install your own EH handler. You don't have to use the kernel eh at
+> all, you can just opt out of it and for some cards like smart raid
+> devices its precisely the right thing to do. I can believe the argument
+> that for fast failover you want to do EH differently, and nothing in the
+> architecture seems to make that hard providing a driver is willing to
+> opt cleanly out of the scsi_eh handler.
 
-The usual architecture of a multiple controller RAID box is no
-SPOF...Therefore *two* or more SCSI cards...local in card attempts at
-recovery only delays eventual failover.
+Well, that's what the eh_strategy_handler hook is for.
 
-> I've already written one OpenSource SCSI layer, I think I've contributed
-> more than enough in that particular area.  Back in late 2000 and early 2001,
-> I voiced my opinions, based on that experience, on how Linux should improve
-> its SCSI subsystem.  After 3 years of waiting for improvement in the
-> error recovery semantics of Linux, I had to do something to satisfy customer
-> complaints on error recovery.  I still don't see things improving in
-> this area of Linux and I'm not about to *break* the driver until there is
-> a viable alternative.
+It certainly makes sense to do this for pseudo-scsi devices, like RAID
+cards.  But, for standard transports, like parallel SCSI and Fibre, I'd
+much rather see a standardised error handling library as part of the
+stack, with the mid-layer providing standard transport recovery
+functions on a per-transport basis, and the Upper Layer Drivers
+providing device specific handling.
 
-This is open source...areas which cause problems for many people get
-fixed (OK, often many times).  Areas that only annoy one person don't
-get fixed just by expressing that annoyance.
+> Similarly it would be nice to be able to revector the actual scsi eh
+> timeouts via an optional handler. Something of the form
 
-> I'm sorry you feel that way.  I suppose I will just have to continue
-> to point distributors and users of this driver to my own patch sets since
-> that seems to be the only viable alternative you've given me.
-
-OK, I'll be sorry to see it happen, but if Adaptec formally wishes to
-relinquish maintainership of the aic7xxx/aic79xx drivers and develop
-their own fork of the kernel, that is, of course, their right under the
-GPL.  If this is what you want to do, could you send the list a note to
-that effect so that I can begin looking for a new maintainer now.
+That's a good idea...do you want to send in the patches?
 
 James
 
