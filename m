@@ -1,70 +1,69 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [RFC] put symbolic links between drivers and modules in the sysfs tree
-Date: Wed, 22 Sep 2004 16:40:44 -0700
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: I/O write ordering
+Date: Thu, 23 Sep 2004 10:19:57 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040922234044.GA14552@kroah.com>
-References: <1095701390.2016.34.camel@mulgrave> <20040922230423.GA14279@kroah.com> <20040922230650.GB14279@kroah.com>
+Message-ID: <1095898796.6359.18.camel@gaston>
+References: <1095789421.2467.414.camel@mulgrave>
+	 <200409211409.11095.jbarnes@engr.sgi.com>
+	 <20040921190625.GB11708@colo.lackof.org> <20040921210341.GC146363@sgi.com>
+	 <20040921211108.GA16153@parcelfarce.linux.theplanet.co.uk>
+	 <20040921214302.GG146363@sgi.com>
+	 <20040922000211.GE16153@parcelfarce.linux.theplanet.co.uk>
+	 <20040922011652.GD147856@sgi.com> <20040922014428.GD20053@colo.lackof.org>
+	 <20040922025805.GA148414@sgi.com>
+	 <20040922143208.GL16153@parcelfarce.linux.theplanet.co.uk>
+	 <1095864485.2143.1.camel@mulgrave>  <1095864709.6297.5.camel@gaston>
+	 <1095865892.1715.5.camel@mulgrave>  <1095865863.6340.7.camel@gaston>
+	 <1095866530.2295.8.camel@mulgrave>  <1095866930.6340.11.camel@gaston>
+	 <1095867824.2295.13.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kroah.org ([69.55.234.183]:23750 "EHLO perch.kroah.org")
-	by vger.kernel.org with ESMTP id S268088AbUIVXlS (ORCPT
+Received: from gate.crashing.org ([63.228.1.57]:51670 "EHLO gate.crashing.org")
+	by vger.kernel.org with ESMTP id S265098AbUIWAYI (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Sep 2004 19:41:18 -0400
-Content-Disposition: inline
-In-Reply-To: <20040922230650.GB14279@kroah.com>
+	Wed, 22 Sep 2004 20:24:08 -0400
+In-Reply-To: <1095867824.2295.13.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Rusty Russell <rusty@rustcorp.com.au>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net
+Cc: Matthew Wilcox <matthew@wil.cx>, Jeremy Higdon <jeremy@sgi.com>, Grant Grundler <grundler@parisc-linux.org>, Jesse Barnes <jbarnes@engr.sgi.com>, Matthew Wilcox <willy@debian.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>, Richard Henderson <rth@twiddle.net>, Paul Mackerras <paulus@samba.org>
 
-On Wed, Sep 22, 2004 at 04:06:50PM -0700, Greg KH wrote:
-> On Wed, Sep 22, 2004 at 04:04:23PM -0700, Greg KH wrote:
-> > I'll post my usb core change after this, to show you how USB can
-> > be hooked up to it.
+On Thu, 2004-09-23 at 01:43, James Bottomley wrote:
+> On Wed, 2004-09-22 at 11:28, Benjamin Herrenschmidt wrote:
+> >  - consistent memory is either cacheable or non-cacheable depending on
+> > the CPU type (some embedded CPUs who don't implement cache coherency
+> > will map consistent memory as non-cacheable, most desktop CPUs and all
+> > 64 bits CPU don't mind and will map it cacheable).
 > 
-> And here's the 3 line patch that I added to the usb core to hook up both
-> the usb and usb-serial drivers to support the modules symlinks.
+> Yes, this was what I feared, since streaming memory has exact ownership
+> and handoff paradigms for handling it.
 > 
-> I'll go mess with the pci core now, but as there is no "struct module *"
-> in the pci driver structure, it will take a bit of auditing to get them
-> all hooked up properly.
+> Your problem case is consistent memory access vs readX/writeX then.
+> 
+> Could you not just make consistent memory always uncacheable ... then
+> you'd look identical to everyone else...
 
-Here's that patch, if anyone cares...
+Nope :) That would be a big waste, and it's not simple as that would
+also prevent us from using large pages on the linear mapping unless
+we start playing horrible tricks with where consistent memory is
+allocated from etc... we have a fully coherent DMA architecture, we'd
+rather use it !
 
-thanks,
+And that wouldn't help vs. spinlocks which are in real RAM
+(we have a similar issue with IO leaking potentially out of locks, 
+if we don't use some heavy barriers there too).
 
-greg k-h
+> The alternative in I/O terms is to implement an ownership model for
+> consistent PCI memory itself...which is sort of what I had to do in the
+> dma_noncoherent_alloc() API, but to make that more general would be
+> quite a bit of work.
 
-------
+The alternative is to have proper barrier abstractions to use between
+MMIO read & consistent memory read, and between consistent memory write
+& MMIO write ... or get the architecture designers at IBM change the
+way our barriers operate in future chips ;) (which is less likely ? :)
 
-
-PCI: add "struct module *" to struct pci_driver to show symlink in sysfs for pci drivers.
-
-Signed-off-by: Greg Kroah-Hartman <greg@kroah.com>
-
-diff -Nru a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
---- a/drivers/pci/pci-driver.c	2004-09-22 16:24:57 -07:00
-+++ b/drivers/pci/pci-driver.c	2004-09-22 16:24:57 -07:00
-@@ -417,6 +417,7 @@
- 	drv->driver.bus = &pci_bus_type;
- 	drv->driver.probe = pci_device_probe;
- 	drv->driver.remove = pci_device_remove;
-+	drv->driver.owner = drv->owner;
- 	drv->driver.kobj.ktype = &pci_driver_kobj_type;
- 	pci_init_dynids(&drv->dynids);
+Ben.
  
-diff -Nru a/include/linux/pci.h b/include/linux/pci.h
---- a/include/linux/pci.h	2004-09-22 16:24:57 -07:00
-+++ b/include/linux/pci.h	2004-09-22 16:24:57 -07:00
-@@ -632,9 +632,11 @@
- 	unsigned int use_driver_data:1; /* pci_driver->driver_data is used */
- };
- 
-+struct module;
- struct pci_driver {
- 	struct list_head node;
- 	char *name;
-+	struct module *owner;
- 	const struct pci_device_id *id_table;	/* must be non-NULL for probe to be called */
- 	int  (*probe)  (struct pci_dev *dev, const struct pci_device_id *id);	/* New device inserted */
- 	void (*remove) (struct pci_dev *dev);	/* Device removed (NULL if not a hot-plug capable driver) */
+
