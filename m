@@ -1,37 +1,49 @@
-From: christophe.varoqui@free.fr
-Subject: Re: [dm-devel] [ANNOUNCE] multipath-tools-0.3.0
-Date: Fri,  8 Oct 2004 14:49:02 +0200
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1097239742.41668cbec3b65@imp1-q.free.fr>
-References: <1096071849.4466.31.camel@zezette> <1097054573.4163b96d1262c@imp5-q.free.fr> <20041007200143.GA9667@osdl.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] QStor SATA/RAID driver for 2.6.9-rc3
+Date: 08 Oct 2004 08:19:38 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1097241583.2412.15.camel@mulgrave>
+References: <4161A06D.8010601@rtr.ca> <416547B6.5080505@rtr.ca>
+	<20041007150709.B12688@infradead.org> <4165624C.5060405@rtr.ca>
+	<416565DB.4050006@pobox.com> <4165A45D.2090200@rtr.ca>
+	<4165A766.1040104@pobox.com> <4165A85D.7080704@rtr.ca>
+	<4165AB1B.8000204@pobox.com> <4165ACF8.8060208@rtr.ca>
+	<20041007221537.A17712@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20041007200143.GA9667@osdl.org>
-To: device-mapper development <dm-devel@redhat.com>, Dave Olien <dmo@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:14516 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S269968AbUJHNTz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Oct 2004 09:19:55 -0400
+In-Reply-To: <20041007221537.A17712@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Mark Lord <lkml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lsml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Selon Dave Olien <dmo@osdl.org>:
+On Thu, 2004-10-07 at 16:15, Christoph Hellwig wrote:
+>  - please use the kernel/kthread.c interface for your kernel thread
 
->
-> Christophe,
->
-> I downloaded your new multipath tools, and they seem to have solved a problem
-> I was having with the previous version.
->
-> The only difficulty I had was with the new klibc version (klibc-0.181).
-> For i386 architecture, it compiles by default with -mregparm=3, to
-> pass arguments in registers.
->
-good catch.
+Actually, the driver has no need for a thread at all.  Since you're
+simply using it to fire hotplug events, use schedule_work instead.
 
-I think the correct fix is to follow the klibc rules, ie :
-CFLAGS += ${OPTFLAGS} in Makefile.inc
+I also noticed the following in a lightening review:
 
-I'll release a new tarball soon to correct this.
+- Kill these constructs:
++	/* scsi_done expects to be called while locked */
++	if (!in_interrupt())
++		spin_lock_irqsave(uhba->lock, flags);
 
-thanks,
-cvaroqui
---
+scsi_done() doesn't require a lock
+
+- Your emulated commands assume they're non-sg and issued through the
+kernel (i.e. you don't kmap and you don't do SG).  This will blow up on
+the first inquiry submitted via SG_IO for instance.
+
+I'm sure there are others, but I don't have time to do a thorough review
+at the moment.
+
+James
+
+
