@@ -1,50 +1,48 @@
-From: Peter Yao <peter@exavio.com.cn>
-Subject: smp dead lock of io_request_lock/queue_lock patch
-Date: Mon, 12 Jan 2004 16:32:35 +0000
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4002CC23.6000105@exavio.com.cn>
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: Re: smp dead lock of io_request_lock/queue_lock patch
+Date: Mon, 12 Jan 2004 10:08:47 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1073898527.4428.1.camel@laptop.fenrus.com>
+References: <4002CC23.6000105@exavio.com.cn>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [61.51.120.139] ([61.51.120.139]:17653 "EHLO exavio.com.cn")
-	by vger.kernel.org with ESMTP id S266080AbUALIay (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jan 2004 03:30:54 -0500
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wc9YurIkDirWCxgweQwB"
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <4002CC23.6000105@exavio.com.cn>
+To: Peter Yao <peter@exavio.com.cn>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
-
-Hi,
-I found a smp dead lock in io_request_lock/queue_lock patch in redhat's
-2.4.18-4 kernel. I don't know how this patch is going on, just put my
-fix for it here. :)
-The dead lock is for scsi host->lock and scsi q->queue_lock between
-scsi_restart_operations@scsi_error.c and scsi_request_fn@scsi_lib.c.
 
 
-Index: scsi_error.c
-===================================================================
-RCS file:
-/home/cvsroot/ieee1394_driver/linux-2.4.18-3/drivers/scsi/scsi_error.c,v
-retrieving revision 1.13
-retrieving revision 1.13.8.1
-diff -Llinux-2.4.18-3/drivers/scsi/scsi_error.c
--Llinux-2.4.18-3/drivers/scsi/scsi_error.c -u -d -r1.13 -r1.13.8.1
---- linux-2.4.18-3/drivers/scsi/scsi_error.c
-+++ linux-2.4.18-3/drivers/scsi/scsi_error.c
-@@ -1293,11 +1293,11 @@
- 			break;
- 		}
- 		q = &SDpnt->request_queue;
--		spin_lock(q->queue_lock);
- 		spin_unlock(host->lock);
-+		spin_lock(q->queue_lock);
- 		q->request_fn(q);
--		spin_lock(host->lock);
- 		spin_unlock(q->queue_lock);
-+		spin_lock(host->lock);
- 	}
- 	spin_unlock_irqrestore(host->lock, flags);
- }
+--=-wc9YurIkDirWCxgweQwB
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, 2004-01-12 at 17:32, Peter Yao wrote:
+> Hi,
+> I found a smp dead lock in io_request_lock/queue_lock patch in redhat's
+> 2.4.18-4 kernel.=20
+
+1) Bugs in vendor kernels are best reported to the vendor, in this case
+in http://bugzilla.redhat.com
+2) 2.4.18-4 is really old and has been superceeded by updates a few
+dozen times
+3) 2.4.18-4 has both remote and local security issues and datacorruption
+issues
+
+
+
+
+--=-wc9YurIkDirWCxgweQwB
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+
+iD8DBQBAAmQfxULwo51rQBIRAne7AJ9JhyNDJlW8NUReMuG03LZfgwdoSgCginAV
+f2O6uwqx/BDTX1OzBU90+KY=
+=sVej
+-----END PGP SIGNATURE-----
+
+--=-wc9YurIkDirWCxgweQwB--
