@@ -1,78 +1,65 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: RE: [PATCH] megaraid driver fix for 2.5.70
-Date: 06 Jun 2003 07:15:40 -0700
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: What's the state of sdev->tagged_queue
+Date: Fri, 6 Jun 2003 16:19:33 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1054908940.17288.1.camel@markh1.pdx.osdl.net>
-References: <0E3FA95632D6D047BA649F95DAB60E570185F234@EXA-ATLANTA.se.lsil.com>
-	 <1054907212.1777.10.camel@mulgrave>
+Message-ID: <20030606141933.GA23096@lst.de>
+References: <20030606074813.GA18748@lst.de> <3EE09F82.2060000@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from air-2.osdl.org ([65.172.181.6]:62087 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S261568AbTFFOCB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2003 10:02:01 -0400
-In-Reply-To: <1054907212.1777.10.camel@mulgrave>
+Received: from verein.lst.de ([212.34.189.10]:27349 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S261624AbTFFOGD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2003 10:06:03 -0400
+Content-Disposition: inline
+In-Reply-To: <3EE09F82.2060000@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: "Mukker, Atul" <atulm@lsil.com>, Linus Torvalds <torvalds@transmeta.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Doug Ledford <dledford@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2003-06-06 at 06:46, James Bottomley wrote:
-> On Fri, 2003-06-06 at 09:28, Mukker, Atul wrote:
-> > Coming back to main issue, declaring complete mailbox would be superfluous
-> > since driver uses 16 bytes at most. The following patch should fix the panic
-> > 
-> >  	mbox = (mbox_t *)raw_mbox;
-> >  
-> > -	memset(mbox, 0, sizeof(*mbox));
-> > +	memset(mbox, 0, 16);
-> >  
-> >  	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
-> >  
+On Fri, Jun 06, 2003 at 10:04:50AM -0400, Doug Ledford wrote:
+> >but several drivers still look at it although it's never touched
+> >outside scsi_ioctl.c and the individual drivers.  Most drivers uses also
+> >look pretty bogus.  Can we just the ioctls and the field?
 > 
-> This, I think, is a bad idea.  It looks intrinsically wrong to allocate
-> storage and assign a pointer to it of a type that is longer than the
-> allocated storage.  The initial buffer overrun was due to problems with
-> this.
-> 
-> I think the correct solution is to define your mailbox like this:
-> 
-> typedef struct {
-> 	/* 0x0 */ u8 cmd;
-> 	/* 0x1 */ u8 cmdid;
-> 	/* 0x2 */ u16 numsectors;
-> 	/* 0x4 */ u32 lba;
-> 	/* 0x8 */ u32 xferaddr;
-> 	/* 0xC */ u8 logdrv;
-> 	/* 0xD */ u8 numsgelements;
-> 	/* 0xE */ u8 resvd;
-> 	/* 0xF */ volatile u8 busy;
-> } __attribute__ ((packed)) user_mbox_t;
-> 
-> typedef struct {
-> 	user_mbox_t mbox_out
-> 	/* 0x10 */ volatile u8 numstatus;
-> 	/* 0x11 */ volatile u8 status;
-> 	/* 0x12 */ volatile u8 completed[MAX_FIRMWARE_STATUS];
-> 	volatile u8 poll;
-> 	volatile u8 ack;
-> } __attribute__ ((packed)) mbox_t;
-> 
-> and then re-define the issue_scb..() routines to use user_mbox_t which
-> is always the correct size.
-> 
-> Thus, you can throw away the raw_mbox and just do
-> 
-> user_mbox_t mbox;
-> memset(&mbox, 0, sizeof(mbox));
-> 
-> of course, your ->busy references become ->mbox_out.busy.
+> I assume that should read "Can we just kill the ioctls and the field?" :-)
 
-I started working on an update along these lines yesterday.  I will test
-it out today.
+Umm, yes..
 
-Mark.
+> The answer to that is yes I think.  The ioctls for certain, the field 
+> I'm pretty sure of.  Originally, the field was used as a boolean that 
+> was when we enabled tagged queueing on a device.  Now, a value of 
+> simple_tags > 1 should do the same thing.
 
--- 
-Mark Haverkamp <markh@osdl.org>
+simple_tags == 1?  in my source it's a bitfield.
+
+> However, due to usage of 
+> cmd_per_lun on both tagged and untagged devices (I would have to check 
+> this, I'm a bit out of touch since my accident)
+
+Sorry, didn't know of that.  I hope you're well already and if not
+I wish you to get well soon.
+
+> may cause confusion.  If 
+> we set queue depth to cmd_per_lun the device may look tagged when it is 
+> in fact not tagged.  The replacement test may need to be if simple_tags 
+
+<snip>
+
+> Currently, we use the value of host->this_id to skip the scsi device of 
+> the host controller in our device scan.  What I would like to do is 
+> create an sg device entry for this_id that is type processor,
+
+We already have scsi_get_host_dev to get such a device if the LLDD
+wants it.  Generalizing it sounds like a good idea.  But before
+that we need a 64bit dev_t so we can have sg devices for the
+ever-growing number of scsi_devices :)
+
+> is a fake 
+> device, that implements whatever ioctls at the mid layer level that are 
+> appropriate, but that also allow the low level driver to register a fall 
+> through host ioctl routine that can be attached to this device.
+
+I don't think we should another ioctl routine.  Just use the normal
+ioctl routine in the host template and let the LLDD check for
+host->this_id.
 
