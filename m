@@ -1,36 +1,41 @@
-From: James.Smart@Emulex.Com
-Subject: RE: One question about SCSI device hotplug
-Date: Tue, 1 Mar 2005 11:35:28 -0500
-Message-ID: <0B1E13B586976742A7599D71A6AC733C12EC5E@xbl3.ma.emulex.com>
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: Re: [ANNOUNCE] iSCSI enterprise target software
+Date: Tue, 1 Mar 2005 10:24:34 -0800
+Message-ID: <OF00F39C19.AE2C12A8-ON88256FB7.00641755-88256FB7.0065149B@us.ibm.com>
+References: <20050301183549J.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Received: from emulex.emulex.com ([138.239.112.1]:44423 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S261966AbVCAQjq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2005 11:39:46 -0500
-content-class: urn:content-classes:message
+Content-Type: text/plain; charset="US-ASCII"
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:30155 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262010AbVCASYO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 13:24:14 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e6.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j21IOEWZ021115
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Mar 2005 13:24:14 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j21IODk0068102
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Mar 2005 13:24:13 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j21IODPg000575
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Mar 2005 13:24:13 -0500
+In-Reply-To: <20050301183549J.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: matthew@wil.cx, forrest.zhao@intel.com
-Cc: linux-scsi@vger.kernel.org, ramesh.caushik@intel.com
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: arjan@infradead.org, iscsitarget-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-> On Tue, Mar 01, 2005 at 05:06:55PM +0800, Zhao, Forrest wrote:
-> > If I surprisingly hot-remove a SCSI disk from HBA manually 
-> > without executing "echo "scsi remove-single-device
-> >  <h> <b> <t <l>" > /proc/scsi/scsi", can the "hotplug"
-> > event be notified to SCSI mid-layer or user space?
-> > 
-> > I briefly browse some code of LLDD, it seems that LLDD never
-> > report "hotplug" event to upper-level layer. Am I right?
-> 
-> I don't think it *can* ... the SCSI protocols don't tell the 
-> host "hey,
-> this device has disappeared".
+One thing that's implicit in your reasons for wanting to be in the kernel 
+is that you've chosen to exploit the kernel's page cache.  As a user of 
+the page cache, you have more control from inside the kernel than from 
+user space.  The page cache was designed to be fundamentally invisible to 
+user space.
 
-All depends on what transport it is... In FC, we can detect when
-a target is removed. In the most recent FC transport code (not
-all integrated yet), it will indeed automagically invoke
-scsi_remove_device() for all luns on the target.
+A pure user space implementation of an ISCSI target would use process 
+virtual memory for a cache and manage it itself.  It would access the 
+storage with direct I/O.  It looks to me like this is aimed at a 
+single-application Linux system (the whole system is just an ISCSI 
+target), which means there's not much need for a kernel to manage shared 
+resources.
 
--- james s
+--
+Bryan Henderson                          IBM Almaden Research Center
+San Jose CA                              Filesystems
