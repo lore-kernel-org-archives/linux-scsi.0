@@ -1,100 +1,61 @@
-From: Nicolas Mailhot <Nicolas.Mailhot@laPoste.net>
-Subject: Re: Usb storage mounting was broken somewhere between
-	2.6.0-test5-bk10 and 2.6.0-test6-bk1
-Date: Wed, 22 Oct 2003 09:49:04 +0200
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: 2.6.0 stability and the BK scsi trees
+Date: 22 Oct 2003 09:23:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1066808944.3699.9.camel@ulysse.olympe.o2t>
-References: <1066775616.3458.8.camel@m70.net81-64-235.noos.fr>
-	 <20031021175556.A8670@beaverton.ibm.com>
+Message-ID: <1066832592.10892.33.camel@mulgrave>
+References: <1066265974.16761.426.camel@fuzzy>
+	<3F8E8786.2020502@torque.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-F7oFhboEjAO2S0atO5Q4"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp4.clb.oleane.net ([213.56.31.20]:19339 "EHLO
-	smtp4.clb.oleane.net") by vger.kernel.org with ESMTP
-	id S263309AbTJVHzF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Oct 2003 03:55:05 -0400
-In-Reply-To: <20031021175556.A8670@beaverton.ibm.com>
+Received: from nat9.steeleye.com ([65.114.3.137]:31751 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263425AbTJVOXt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Oct 2003 10:23:49 -0400
+In-Reply-To: <3F8E8786.2020502@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, dbrownell@users.sourceforge.net
+To: dougg@torque.net
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+OK, I now have the scsi-misc-2.5 tree split up correctly into
+scsi-bugfixes-2.6 and scsi-misc-2.7
+
+Since BK isn't very good at keeping two parallel trees like this
+(especially if I have to move patches from one to the other), this is
+probably the end of usable SCSI BK trees.
 
 
---=-F7oFhboEjAO2S0atO5Q4
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: quoted-printable
+On Thu, 2003-10-16 at 06:56, Douglas Gilbert wrote:
+> What was the point of putting 32 dev_t's into the
+> kernel? Many people who were advocating it used
+> the increased number of scsi disks (> 256) and
+> partitions (from 15 to 63 [to match the ide subsystem])
+> as a major reason.
+> 
+> The sd driver is still littered with hacks to distribute
+> its 256 (max) disks over 8 majors. Shouldn't this be
+> fixed?
 
-Le mer 22/10/2003 =E0 02:55, Patrick Mansfield a =E9crit :
+Well, my opinion is that this bugfix only edict is to get 2.6.0 stable. 
+I anticipate the rules for driver updates will be relaxed again for
+2.6.1+
 
-> It is a multi slot card reader, and SCSI sees these as multiple LUNs
-> (multiple sd's), though you say you can only use one at a time. So we see
-> INQUIRY's to LUN 0 and LUN 1, and LUN 1 shows up and is then mounted via
-> /dev/smartmedia, correct?
+I'm also going to argue that our current refcounting problems are a bug
+(especially since they induce oopses), so fixes for refcounting problems
+will go into the bugfix tree.
 
-/mnt/smartmedia, yes.
+I'm not sure about 32 bit kdev_t.  Initially, I think it counts as an
+enhancement, but will revise this if any other driver gets 32 bit kdev_t
+patches in under the bugfixes label.
 
-The device is a dual CF/SM reader. CF is lun 0, SM lun 1.
-A mechanical flap prevents use of more than one slot at once (so maybe
-the chip/driver has no knowledge at all it's restricted)
+As far as driver bug fixes go, using the old error handler is still a
+bug.  However, I'll only place it into the bugfix tree if you've tested
+it out on the actual hardware (however obvious the change looks).
 
-Card presence is checked via polling. So with debug activated one sees a
-lot of accesses to lun 0 before lun 1 is probed.
+I'll cc the list on tree submissions, so you'll be able to read any
+objections I get from Andrew or Linus over what constitutes a bug.
 
-> David - as replied to you by Nicolas in the bug, the dmesg you commented
-> on is the one that was working (the "2.6.0-test5-bk5 scenario"). SCSI is
-> not confused in that case (though I am somewhat confused by the various
-> dmesg and log files).
+James
 
-Well, I tried to provide all the data:(.
-
-> Where are the SCSI INQUIRY messages? The ones with Vendor and Model. And
-> sd attach messages?
->=20
-> If the SCSI INQUIRY messages are not output, SCSI is not seeing the devic=
-e
-> at all and it is more likely a usb issue.
->=20
-> AFAICT the bad dmesg ends without a reset, where the good one shows an
-> INQUIRY being sent and returned back OK, followed by logs of the mount
-> command.
->=20
-> i.e. bad demsg/log has:
->=20
-> Oct  2 23:55:35 rousalka kernel: usb-storage: USB Mass Storage device det=
-ected
-> Oct  2 23:55:35 rousalka kernel: usb-storage: act_altsetting is 0, id_ind=
-ex is 16
-> Oct  2 23:55:35 rousalka kernel: usb-storage: -- associate_dev
-> Oct  2 23:55:35 rousalka kernel: usb-storage: Vendor: SCM Microsystems
-> Oct  2 23:55:35 rousalka kernel: usb-storage: Product: eUSB SmartMedia /
-> CompactFlash Adapter
->=20
-> And then nothing at all???
-
-Nothing. The broken kernel outputs no further usb storage messages.
-I'll re-test this evening with full usb-storage and usb debug, though
-I'm pretty sure they were already activated in the test scenarii (on
-both kernels - same .config after all).
-
-And looking at the .configs that were uploaded at test time - yes they
-were. I doubt -test8-bk1 will be different when tested.
-
-Cheers,
-
---=20
-Nicolas Mailhot
-
---=-F7oFhboEjAO2S0atO5Q4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: Ceci est une partie de message
-	=?ISO-8859-1?Q?num=E9riquement?= =?ISO-8859-1?Q?_sign=E9e=2E?=
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (GNU/Linux)
-
-iD8DBQA/ljZvI2bVKDsp8g0RAtHGAJ9TmF/luTNS3CRUA82cs4xGRIiNMQCfTTrN
-MAaxZFerE7AG7jP28qlzeF4=
-=1TkX
------END PGP SIGNATURE-----
-
---=-F7oFhboEjAO2S0atO5Q4--
 
