@@ -1,52 +1,53 @@
-From: "Dr. Ernst Molitor" <molitor@uni-bonn.de>
-Subject: Re: Linux-2.6.0-test4: Kernel Panic in scsi_host_dev_release
-Date: Tue, 26 Aug 2003 09:20:55 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1061882454.491.4.camel@felicia>
-References: <1061844849.486.12.camel@felicia>
-	 <20030825234232.GA2470@beaverton.ibm.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [2.6.0-test4] blocking access to mounted scsi devices
+Date: Tue, 26 Aug 2003 20:20:50 +1000
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <3F4B3482.4060304@torque.net>
+References: <3F49B515.6010107@torque.net> <20030825130822.A4258@infradead.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout06.sul.t-online.com ([194.25.134.19]:61589 "EHLO
-	mailout06.sul.t-online.com") by vger.kernel.org with ESMTP
-	id S262481AbTHZHVO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Aug 2003 03:21:14 -0400
-In-Reply-To: <20030825234232.GA2470@beaverton.ibm.com>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20030825130822.A4258@infradead.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ballen@gravity.phys.uwm.edu
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, "Dr. Ernst Molitor" <molitor@uni-bonn.de>
 
-Dear Michael Anderson, 
-
-thank you very much for your kind e-mail message and the patch you've
-written. 
-
-On Tue, 2003-08-26 at 01:42, Mike Anderson wrote:
-> I believe the problem you are hitting is a bug in the code I added for a
-> doing a put on the parent in the release function. If a driver calls
-> scsi_register, but then has a problem in there detect where they need to
-> call scsi_unregister the parent pointer of the struct device may never
-> be set.
+Christoph Hellwig wrote:
+> On Mon, Aug 25, 2003 at 05:04:53PM +1000, Douglas Gilbert wrote:
 > 
-> I you have time could you please try the patch below. I have compiled it
-> only. I will try to run it with a modified driver that will fail in
-> detect shortly.
+>>A recent test of smartmontools on lk 2.6.0-test4 failed
+>>miserably on my main SCSI disk. It would seem that
+>>attempts to use either the:
+>>    SCSI_IOCTL_SEND_COMMAND
+>>    SG_IO
+>>ioctls on a mounted SCSI "block" device fail with EBUSY.
+>>These ioctls work fine on devices that don't have mounted
+>>file systems on then. If this is a new policy then it needs
+>>to be reconsidered. smartmontools still works ok on ATA disks
+>>in lk 2.6.0-test4.
 > 
-
-My pleasure. Your patch fixes the problem I have seen - thank you very
-much! Linux-2.6.3-test4 is up and running on the box I'm writing this
-message on.
- 
 > 
-> We need to kfree the shost as the struct device is contained inside the
-> scsi_host structure.
+> That's because both mount (or e.g. volume managers) claims
+> devices for exclusive use, as does drivers/block/scsi_ioctl.c
 
-I see, thank you very much for your kind explanation.
+Well it is reasonable that mount should exclude other attempts
+to mount. However the device holding the root file system
+may be an ATA or SCSI disk and the ide-disk and sd drivers
+do not support SMART probing directly.
 
-Best wishes and regards, 
+Tools like smartmontools periodically (or on demand) probe disks
+to find their SMART status. According to an IBM white paper
+a significant percentage of disk failures can be predicted
+by increased error rates and drive temperature. It doesn't
+seem practical to unmount the root file system (and any other
+mounted partitions) to allow such a probe then remount.
 
-Ernst
+If this policy is to remain in lk 2.6 (for SCSI disks
+but not ATA disks yet) then perhaps the sd and sr drivers
+need to be changed to treat READ and WRITE commands differently
+from other commands. Other commands should not be subject
+block level policy.
 
-
+Doug Gilbert
