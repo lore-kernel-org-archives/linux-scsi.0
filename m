@@ -1,72 +1,81 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: AIC7xxx kernel problem with 2.4.2[234] kernels
-Date: 22 Jan 2004 00:14:09 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1074748451.2124.78.camel@mulgrave>
-References: <400BDC85.8040907@wanadoo.es>	<1074532919.1895.32.camel@mulgrave>		<37477754
-	 08.1074537497@aslan.btc.adaptec.com>	<1074559838.2078.1.camel@mulgrave>
-	<3942145408.1074564149@aslan.btc.adaptec.com>
-	<1074573912.2081.81.camel@mulgrave>
-	<4022195408.1074577421@aslan.btc.adaptec.com>
+From: Andrew Vasquez <praka@users.sourceforge.net>
+Subject: Re: What's the "right" qla2100 driver?
+Date: Wed, 21 Jan 2004 21:22:19 -0800
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20040122052218.GA2405@praka.local.home>
+References: <F888C30C3021D411B9DA00B0D0209BE8038F9BD1@cvo-exchange.cvo.roguewave.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <4022195408.1074577421@aslan.btc.adaptec.com>
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: Xose Vazquez Perez <xose@wanadoo.es>, Linux Kernel <linux-kernel@vger.kernel.org>, Tosatti <marcelo.tosatti@cyclades.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ms-smtp-01-qfe0.socal.rr.com ([66.75.162.133]:20208 "EHLO
+	ms-smtp-01-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S264368AbUAVFeh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Jan 2004 00:34:37 -0500
+Received: from praka.san.rr.com (66-75-130-8.san.rr.com [66.75.130.8])
+	by ms-smtp-01-eri0.socal.rr.com (8.12.10/8.12.7) with ESMTP id i0M5YaqG017130
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Jan 2004 21:34:36 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <F888C30C3021D411B9DA00B0D0209BE8038F9BD1@cvo-exchange.cvo.roguewave.com>
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2004-01-20 at 00:43, Justin T. Gibbs wrote: 
-> As for control, the type of control "I seek" does exist.  You have it.
-> You can also delegate some of that control if it suits you.
+On Wed, 21 Jan 2004, Poul Petersen wrote:
 
-Well, as you have heard from the horse's mouth: I don't. 
-
-> I provided all of the information required for you to make a reasoned
-> decision of which change sets to integrate.  I had no idea that you
-> would completely disregard the wealth of information in the change sets
-> and change set comments when coming up with an integration point.  Your
-> actions show that you didn't review or understand the changes well enough
-> to submit them into the tree.  You probably didn't even test the resulting
-> driver on real hardware before you submitted the changes.
-
-Actually, I would have done nothing but for some 2.6 migration reports
-of total lockups with the then in tree aic79xx driver.  The patch that
-went into the tree was tested by the people reporting the lockups. 
-
-> > The recovery code does work.  You may want it to work differently, and
-> > that may make it work better, but that's an enhancement not a bug fix.
+> I've got a Qlogic qla2100 card connected via copper to an array of
+> 28 ~18GB disks. I'm trying to create two raid level 5 md devices
+> with 13disk+1spare each. What I'm experiencing is a lot of hangs and
+> strange disk failures that appear to be related to the drivers for
+> the 2100. As there seems to be many different drivers to choose from
+> for the qla2100, I've tried them all and collected my (all bad)
+> experiences, a summary of which I have attached below. 
 > 
-> No.  The recovery code doesn't work.  Many of the people that know this
-> don't bother complaining to you about it.  They complain to the HBA driver
-> authors and the tech support departments of the companies that make the HBAs.
-> The HBA driver authors then do what they have to ensure that the system
-> remains viable after recovery.  
+> What I am wondering is if anyone else is using this card with Linux
+> and if so what driver are they using? More importantly, which driver
+> is actively being worked on (if any) so that I might contribute some
+> failure information? 
+> 
 
-You haven't outlined any incorrect cases in your emails, just could do
-better cases.  If you have all these bug reports that you haven't been
-passing on, could you at least distil them to the mid layer failure
-scenario that we can discuss fixing? 
+For 2.4, you could try another driver -- 6.06.10 (available at the
+QLogic website).  This driver has support for the 2100 (though it's
+not actually documented).  The makefile will not build the driver
+though, try something similiar to the following:
 
-> I mean honestly.  Do you think I would have gone to all of the trouble
-> I did in doing my own watchdog recovery if the recovery code worked
-> correctly?  Or that I would stand so firm in my position if these issues
-> didn't have real customer impact?
+	# make qla2100.o
 
-Well, in coming up with the mid layer changes from 2.4 to 2.6 I did look
-at what issues the main drivers had work arounds for. I used these work
-arounds and an email you sent in September 2002 as the basis for a lot
-of the mid-layer changes in 2.6.  None of the other drivers does this
-timer interception and the issue wasn't mentioned in your email, so I am
-dubious about the seriousness of the impact.
+For 2.6, why don't we start out with the default qla2xxx driver in
+2.6.2-rc1.  
 
-The way fixes get into linux is either lots of people complain, or one
-person sends a fix, neither has happened in this case, which again leads
-me to suspect that it's not a huge problem.
+> It's possible that I am experiencing a hardware problem, since these
+> disks and controller are a few years old now, but I doubt it since
+> most of the errors seem inconsistent with bad hardware (all disks
+> failing, etc). If nothing else, if I get feedback saying that
+> someone else is successfully using a certain driver, then I can
+> start playing with hardware using the same driver and maybe get to
+> the bottom of this...
+> 
 
-The still outstanding question is, now that you have a clearer idea what
-being a Maintainer entails, do you wish to be the maintainer for
-aic7xxx?
+>From there let's see how far you get with the drivers.  We may need to
+enable some extra debugging for additional information.
 
-James
+> ---
+> Test #5
+> 2.6.1 with sourceforge qlogic driver 8.00.00.b8 (
+> http://sourceforge.net/projects/linux-qla2xxx/ )
+> ---
+> 
+> # modprobe qla2xxx
+> # mkraid /dev/md0
+> # mkraid /dev/md1
+> # mkfs.ext3 /dev/md0
+> 
+>  	After awhile, the mkfs hung and when I tried to reboot the machine,
+> I got a bunch of errors like the following for all 28 disks:
+> 
+> qla2xxx_eh_abort scsi(1:0:12:0) cmd_timeout_in_sec=0x1e.
+> qla2xxx_eh_abort Exiting: status=Failed
+> 
+
+Interesting...
+
+Regards,
+Andrew Vasquez
