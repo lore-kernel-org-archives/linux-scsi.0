@@ -1,74 +1,76 @@
-From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-Subject: Re: [patch] scsi: ten -> use_10_for_rw / use_10_for_ms
-Date: Sun, 8 Jun 2003 14:28:21 -0700
+From: Nathan Hunsperger <linux-scsi@hunsperger.com>
+Subject: Are QLA2000's doomed under 2.4?
+Date: Sun, 8 Jun 2003 21:20:14 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030608142821.F25191@one-eyed-alien.net>
-References: <UTC200305230722.h4N7Mid25812.aeb@smtp.cwi.nl>
+Message-ID: <20030609042014.GH4373@munchnet.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="pyE8wggRBhVBcj8z"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:36623 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S263859AbTFHVOq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 8 Jun 2003 17:14:46 -0400
-Content-Disposition: inline
-In-Reply-To: <UTC200305230722.h4N7Mid25812.aeb@smtp.cwi.nl>; from Andries.Brouwer@cwi.nl on Fri, May 23, 2003 at 09:22:44AM +0200
-List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, torvalds@transmeta.com
-
-
---pyE8wggRBhVBcj8z
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from adsl-66-120-172-74.dsl.sntc01.pacbell.net ([66.120.172.74]:62407
+	"EHLO server-linux.munchnet.com") by vger.kernel.org with ESMTP
+	id S264143AbTFIEEb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Jun 2003 00:04:31 -0400
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, May 23, 2003 at 09:22:44AM +0200, Andries.Brouwer@cwi.nl wrote:
-> In the old days, ancient scsi devices understood 6-byte commands
-> and more recent ones also understood 10-byte commands.
-> Thus, we had a "ten" flag indicating that 10-byte commands worked.
->=20
-> These days, especially for usb-storage devices, the opposite
-> sometimes holds - 10-byte commands are supported, but 6-byte commands
-> are not.
->=20
-> The patch below changes the field ten into the pair of fields
-> use_10_for_rw, use_10_for_ms set initially when the driver
-> thinks these are supported. Ifthe device returns ILLEGAL_REQUEST
-> they are cleared.
->=20
-> This patch obsoletes a large amount of code in usb-storage,
-> and not only that, once the subsequent patch removes all this
-> usb-storage code many devices will work that hang today.
+I've been trying to get a QLA2000 (ISP2100) up and running under 2.4.20
+for a while now.  While I've been able to make it work, I can't make the
+system stable.
 
-Any idea when you'll submit that patch to usb-storage?
+When I use the drivers in the kernel, the system locks up within 1
+minute of applying a heavy load.  When I use QLogic's driver, I get a
+very nice "this should not happen" error message and a frozen system
+within 15 minutes of heavy load.
 
-Do you perhaps just want to send what you have to me for integration?
+With Feral's driver, the system never freezes, but I'm having problems
+on the FC loop.  After about an hour of heavy load, anything using disks
+on the FC loop freezes, and syslog gives the following (where ... is
+many more instances of above message):
 
-Matt
+May 27 22:12:25 delta kernel: isp0: Interrupting Mailbox Command (0x15) Timeout
+May 27 22:12:25 delta kernel: isp0: Mailbox Command 'ABORT' failed (TIMEOUT)
+May 27 22:12:30 delta kernel: isp0: Interrupting Mailbox Command (0x15) Timeout
+May 27 22:12:30 delta kernel: isp0: Mailbox Command 'ABORT' failed (TIMEOUT)
+...
+May 27 22:21:30 delta kernel: isp0: Interrupting Mailbox Command (0x17) Timeout
+May 27 22:21:30 delta kernel: isp0: Mailbox Command 'ABORT TARGET' failed (TIMEOUT) 
+May 27 22:21:35 delta kernel: isp0: Interrupting Mailbox Command (0x17) Timeout
+May 27 22:21:35 delta kernel: isp0: Mailbox Command 'ABORT TARGET' failed (TIMEOUT)
+...
+May 27 22:22:40 delta kernel: isp0: Interrupting Mailbox Command (0x18) Timeout
+May 27 22:22:40 delta kernel: isp0: Mailbox Command 'BUS RESET' failed (TIMEOUT)
+May 27 22:22:50 delta kernel: isp0: Interrupting Mailbox Command (0x18) Timeout
+May 27 22:22:50 delta kernel: isp0: Mailbox Command 'BUS RESET' failed (TIMEOUT)...
+May 27 22:40:46 delta kernel: isp0: Board Type 2100, Chip Revision 0x3, loaded F/W Revision 1.19.20
+May 27 22:40:46 delta kernel: isp0: Loop ID 7, AL_PA 0xda, Port ID 0xda, Loop State 0x2, Topology 'Private Loop'
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+Other times, I get similar results, but with COMMAND_ERROR messages
+instead.  Always, the card eventually is reset, and all processes
+continue normally.
 
-Sir, for the hundreth time, we do NOT carry 600-round boxes of belt-fed=20
-suction darts!
-					-- Salesperson to Greg
-User Friendly, 12/30/1997
+I've been able to trace the final resets to the SCSI layer finally
+calling the eh_host_reset_handler function (isplinux_hreset).
 
---pyE8wggRBhVBcj8z
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+Originally, I was thinking that I had a hardware problem, but I have
+swapped everything except the disk chassis and disks.  Also, during a 45
+minute session of 'BUS RESET' failed, I power-cycled the disk chassis,
+unplugged the FC cable, etc, all to no avail.  If something other than
+the QLA2000 card itself was causing the reset to fail, I would have
+expected one of those two actions to allow the reset to occur.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
+Does anybody have any ideas on what is going on?  Is the QLA2000 simply
+destined to never work?  I've heard of many getting the QLA2100 (same
+chipset) to work without a hitch.  So, in short, I'm a tad lost trying
+to get this card up and working, and any suggestions would be very much
+appreciated.
 
-iD8DBQE+46p1IjReC7bSPZARAlRWAJ9JvC9CFZNdXMb0ke3G8q3KnDFC7QCfamXN
-b6F9r/KWJkRZL9+vDDZOjnY=
-=Br0e
------END PGP SIGNATURE-----
+- Nathan
 
---pyE8wggRBhVBcj8z--
+Some additional info:
+I have 14 disks on the loop, all as part of a software raid 5 array,
+with lvm on top of that, and an ext3 fs on that.  I am able to cause
+these symptoms during parity resync, as well as when doing things like
+10 parallel untars of 5GB each.  The system is SMP, though I have also
+tried this with non-SMP kernels.  Under FreeBSD and Solaris, I have no
+issues, although I get 1/2 the throughput.
