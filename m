@@ -1,49 +1,53 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: [PATCH] fix problem in sym2 auto request sense
-Date: 21 Mar 2004 10:59:13 -0500
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: adding flag for 192 byte mode sense
+Date: Mon, 22 Mar 2004 11:16:55 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1079884753.2045.20.camel@mulgrave>
+Message-ID: <Pine.LNX.4.44L0.0403221105290.8035-100000@ida.rowland.org>
+References: <20040313174651.A3054@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:5555 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263669AbUCUP7S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 Mar 2004 10:59:18 -0500
+Received: from ida.rowland.org ([192.131.102.52]:8964 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S262078AbUCVQQ7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Mar 2004 11:16:59 -0500
+In-Reply-To: <20040313174651.A3054@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: willy@debian.org
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: mdharm-usb@one-eyed-alien.net, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-sym2 currently returns DID_ERROR if its auto request sense fails for
-some reason.  This is wrong because it leaves a contingent allegiance
-condition on the device and it will ever after return BUSY to all
-commands.
-
-I tripped this in the somewhat artificial situation of two wide devices
-connected over a narrow bus (the DATA phase of the request sense can
-thus never complete successfully).
-
-The solution is to kick the device very hard in this rare scenario.
-
-James
-
-===== drivers/scsi/sym53c8xx_2/sym_glue.c 1.44 vs edited =====
---- 1.44/drivers/scsi/sym53c8xx_2/sym_glue.c	Sat Mar 20 16:00:09 2004
-+++ edited/drivers/scsi/sym53c8xx_2/sym_glue.c	Sun Mar 21 09:54:45 2004
-@@ -384,6 +384,12 @@
- 			}
- #endif
- 		} else {
-+			/* Error return from our internal request
-+			 * sense.  This is bad: we must clear the
-+			 * contingent allegiance condition otherwise
-+			 * the device will always return BUSY.  Use a
-+			 * big stick */
-+			sym_reset_scsi_bus(np, 1);
- 			cam_status = DID_ERROR;
- 		}
- 	} else if (cp->host_status == HS_COMPLETE) 	/* Bad SCSI status */
+Three items:
 
 
+	1. I haven't seen much feedback regarding the suggested patches that 
+Patrick and I wrote:
+
+http://marc.theaimsgroup.com/?l=linux-scsi&m=107922926816157&w=2
+http://marc.theaimsgroup.com/?l=linux-scsi&m=107922905218137&w=2
+http://marc.theaimsgroup.com/?l=linux-scsi&m=107945931705407&w=2
+
+Do they look good?  Should they be applied?  One suggestion for a change: 
+the flag could be renamed "use_192_bytes_for_ms" since we may end up 
+wanting to use it for both page 0x3f and 0x08.
+
+Also, why does sd.c check write-enable only for removable media?  Can't 
+non-removable-media drives also have a write-protect switch?
+
+
+	2. Some users have reported problems with USB digital cameras that 
+don't support PREVENT-ALLOW MEDIUM REMOVAL and crash when they receive 
+that command, even though they return the RMB flag set in their INQUIRY 
+data.  Their medium really _is_ removable, in the sense that you can swap 
+memory cards while the camera is turned on and plugged in to the computer.
+How should we handle this?
+
+
+	3. When a USB mass storage device enters a state that requires a
+device reset, what command completion code should the usb-storage driver
+return to invoke the SCSI error handler?  And is there any way to do this
+so that the error handler skips the initial TEST UNIT READY step and goes
+directly to the device reset?
+
+
+Alan Stern
 
