@@ -1,63 +1,38 @@
 From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Subject: RE: [ANNOUNCE][PATCH 2.6.11 1/3] megaraid_sas: Announcing new mod
+Subject: RE: [ANNOUNCE][PATCH 2.6.11 2/3] megaraid_sas: Announcing new mod
 	 ule  for LSI Logic's SAS based MegaRAID controllers
-Date: Wed, 9 Mar 2005 09:30:22 -0500
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230CC1B@exa-atlanta>
+Date: Wed, 9 Mar 2005 09:43:47 -0500
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230CC1C@exa-atlanta>
 Mime-Version: 1.0
 Content-Type: text/plain
-Received: from mail0.lsil.com ([147.145.40.20]:46224 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261648AbVCIOiu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2005 09:38:50 -0500
+Received: from mail0.lsil.com ([147.145.40.20]:8337 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261856AbVCIOof (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2005 09:44:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Adrian Bunk' <bunk@stusta.de>
-Cc: 'Arjan van de Ven' <arjan@infradead.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'Matt_Domsch@Dell.com'" <Matt_Domsch@Dell.com>, Andrew Morton <akpm@osdl.org>, 'Christoph Hellwig' <hch@infradead.org>
+To: 'Arjan van de Ven' <arjan@infradead.org>
+Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'Matt_Domsch@Dell.com'" <Matt_Domsch@Dell.com>, Andrew Morton <akpm@osdl.org>, 'Christoph Hellwig' <hch@infradead.org>
 
->> >
->> >>  source "drivers/scsi/megaraid/Kconfig.megaraid"
->> >> +source "drivers/scsi/megaraid/Kconfig.megaraid_sas"
->> >>  
->> >
->> >why a fully separate file and not add your ONE config option to
->> >Kconfig.megaraid instead ??
->> >
 >> 
->> Arjan, I didn't want to needlessly couple megaraid and megaraid_sas.
->> Since they are in the same directory, I couldn't avoid having single
->> Makefile. I thought at least these two should be separate to 
->be consistent
->> with their independent nature.
+>> I will make this an instance parameter if the idea to reduce as many
+>> global variables as possible. But if the objection is because each
+>> adapter
+>> may have different value for variable, then it is indeed a global
+>> value.
+>> "is_dma64" - which is computed using the size of dma_addr_t - is
+>> telling
+>> something about the kernel rather than the controller feature.
 >> 
->> If this is not a good enough reason, I will merge these two files.
 >
->Please merge them.
->
->Whether they are in the same Kconfig file or not does not in any way 
->imply any relation between them.
->
->E.g. drivers/scsi/Kconfig contains many drivers that are not 
->in any way 
->coupled to each other.
+>then having it as variable sounds really really wrong; the size of
+>dma_addr_t is a compile time property...
+>(and why do you care about it? you see high dma addresses when 
+>they come
+>in, right?)
 >
 
-Understood. I will merge them.
-
->
->BTW: Why does the text say "(New Driver)"?
->
-
-I thought I saw some new modules being labeled as such. I will remove
-it in the next update if it not correct.
-
->-- 
->
->       "Is there not promise of rain?" Ling Tan asked suddenly out
->        of the darkness. There had been need of rain for many days.
->       "Only a promise," Lao Er said.
->                                       Pearl S. Buck - Dragon Seed
->
-There is a 30% chance of rain here today.
-
-Thanks,
-Sreenivas
-LSI Logic Corporation
+During the module load time, I allocate 32 bit or 64 bit SGLs based on
+whether I can receive 64 bit DMA addresses or not. If size of dma_addr_t
+is 4, then I allocate only 32 bit SGLs. During the run time, I prepare 
+32/64 bit SGLs based on this variable. And since this is compile time
+system-wide property, I kept it as driver global.
