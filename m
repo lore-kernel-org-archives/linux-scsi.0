@@ -1,91 +1,97 @@
 From: Adrian Bunk <bunk@fs.tum.de>
-Subject: [2.6 patch] SCSI nsp32.c: remove inlines
-Date: Fri, 16 Jul 2004 00:41:43 +0200
+Subject: [2.6 patch] SCSI tmscsim.c: fix inline compile errors
+Date: Fri, 16 Jul 2004 00:47:26 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040715224143.GP25633@fs.tum.de>
+Message-ID: <20040715224726.GQ25633@fs.tum.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:35544 "HELO
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:6360 "HELO
 	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S266435AbUGOWlw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jul 2004 18:41:52 -0400
+	id S266359AbUGOWrg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jul 2004 18:47:36 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: yokota@netlab.is.tsukuba.ac.jp, gotom@debian.or.jp
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Trying to compile drivers/scsi/nsp32.c in 2.6.8-rc1-mm1 using gcc 3.4 
+Trying to compile drivers/scsi/tmscsim.c in 2.6.8-rc1-mm1 using gcc 3.4 
 results in compile errors starting with the following:
 
 <--  snip  -->
 
 ...
-  CC      drivers/scsi/nsp32.o
-drivers/scsi/nsp32.c: In function `nsp32_prom_start':
-drivers/scsi/nsp32.c:270: sorry, unimplemented: inlining failed in call 
-to 'nsp32_prom_set': function body not available
-drivers/scsi/nsp32.c:3348: sorry, unimplemented: called from here
-drivers/scsi/nsp32.c:270: sorry, unimplemented: inlining failed in call 
-to 'nsp32_prom_set': function body not available
-drivers/scsi/nsp32.c:3349: sorry, unimplemented: called from here
-drivers/scsi/nsp32.c:270: sorry, unimplemented: inlining failed in call 
-to 'nsp32_prom_set': function body not available
-drivers/scsi/nsp32.c:3350: sorry, unimplemented: called from here
-drivers/scsi/nsp32.c:270: sorry, unimplemented: inlining failed in call 
-to 'nsp32_prom_set': function body not available
-drivers/scsi/nsp32.c:3351: sorry, unimplemented: called from here
-drivers/scsi/nsp32.c:270: sorry, unimplemented: inlining failed in call 
-to 'nsp32_prom_set': function body not available
-drivers/scsi/nsp32.c:3353: sorry, unimplemented: called from here
-make[2]: *** [drivers/scsi/nsp32.o] Error 1
-
+  CC      drivers/scsi/tmscsim.o
+In file included from drivers/scsi/tmscsim.c:1477:
+drivers/scsi/scsiiom.c: In function `do_DC390_Interrupt':
+drivers/scsi/tmscsim.c:295: sorry, unimplemented: inlining failed in 
+call to 'dc390_InvalidCmd': function body not available
+drivers/scsi/scsiiom.c:279: sorry, unimplemented: called from here
+drivers/scsi/tmscsim.c:296: sorry, unimplemented: inlining failed in 
+call to 'dc390_EnableMsgOut_Abort': function body not available
+drivers/scsi/scsiiom.c:317: sorry, unimplemented: called from here
+make[2]: *** [drivers/scsi/tmscsim.o] Error 1
 
 <--  snip  -->
 
 
-The patch below removes the inlines from nsp32_prom_{get,set}.
+The patch below removes the inlines from the affected functions.
 
 An alternative approach would be to move the functions above the place  
 where they are called the first time.
 
 
+
 diffstat output:
- drivers/scsi/nsp32.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/scsiiom.c |    6 +++---
+ drivers/scsi/tmscsim.c |    6 +++---
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
 
 Signed-off-by: Adrian Bunk <bunk@fs.tum.de>
 
---- linux-2.6.8-rc1-mm1-full-3.4/drivers/scsi/nsp32.c.old	2004-07-16 00:34:49.000000000 +0200
-+++ linux-2.6.8-rc1-mm1-full-3.4/drivers/scsi/nsp32.c	2004-07-16 00:37:26.000000000 +0200
-@@ -267,8 +267,8 @@
- static        int  nsp32_prom_read     (nsp32_hw_data *, int);
- static        int  nsp32_prom_read_bit (nsp32_hw_data *);
- static        void nsp32_prom_write_bit(nsp32_hw_data *, int);
--static inline void nsp32_prom_set      (nsp32_hw_data *, int, int);
--static inline int  nsp32_prom_get      (nsp32_hw_data *, int);
-+static        void nsp32_prom_set      (nsp32_hw_data *, int, int);
-+static        int  nsp32_prom_get      (nsp32_hw_data *, int);
- 
- /* debug/warning/info message */
- static void nsp32_message (const char *, int, char *, char *, ...);
-@@ -3387,7 +3387,7 @@
- 	return val;
+--- linux-2.6.7-mm6-full-gcc3.4/drivers/scsi/scsiiom.c.old	2004-07-09 01:31:13.000000000 +0200
++++ linux-2.6.7-mm6-full-gcc3.4/drivers/scsi/scsiiom.c	2004-07-09 01:33:35.000000000 +0200
+@@ -594,7 +594,7 @@
  }
  
--static inline void nsp32_prom_set(nsp32_hw_data *data, int bit, int val)
-+static void nsp32_prom_set(nsp32_hw_data *data, int bit, int val)
+ /* abort command */
+-static void __inline__
++static void
+ dc390_EnableMsgOut_Abort ( struct dc390_acb* pACB, struct dc390_srb* pSRB )
  {
- 	int base = data->BaseAddress;
- 	int tmp;
-@@ -3405,7 +3405,7 @@
- 	udelay(10);
+     pSRB->MsgOutBuf[0] = ABORT; 
+@@ -1656,7 +1656,7 @@
  }
  
--static inline int nsp32_prom_get(nsp32_hw_data *data, int bit)
-+static int nsp32_prom_get(nsp32_hw_data *data, int bit)
+ 
+-static void __inline__
++static void
+ dc390_RequestSense( struct dc390_acb* pACB, struct dc390_dcb* pDCB, struct dc390_srb* pSRB )
  {
- 	int base = data->BaseAddress;
- 	int tmp, ret;
+     struct scsi_cmnd *pcmd;
+@@ -1696,7 +1696,7 @@
+ 
+ 
+ 
+-static void __inline__
++static void
+ dc390_InvalidCmd( struct dc390_acb* pACB )
+ {
+     if( pACB->pActiveDCB->pActiveSRB->SRBState & (SRB_START_+SRB_MSGOUT) )
+--- linux-2.6.7-mm6-full-gcc3.4/drivers/scsi/tmscsim.c.old	2004-07-09 01:29:36.000000000 +0200
++++ linux-2.6.7-mm6-full-gcc3.4/drivers/scsi/tmscsim.c	2004-07-09 01:33:46.000000000 +0200
+@@ -291,9 +291,9 @@
+ static void dc390_DoingSRB_Done( struct dc390_acb* pACB, struct scsi_cmnd * cmd);
+ static void dc390_ScsiRstDetect( struct dc390_acb* pACB );
+ static void dc390_ResetSCSIBus( struct dc390_acb* pACB );
+-static void __inline__ dc390_RequestSense( struct dc390_acb* pACB, struct dc390_dcb* pDCB, struct dc390_srb* pSRB );
+-static void __inline__ dc390_InvalidCmd( struct dc390_acb* pACB );
+-static void __inline__ dc390_EnableMsgOut_Abort (struct dc390_acb*, struct dc390_srb*);
++static void dc390_RequestSense( struct dc390_acb* pACB, struct dc390_dcb* pDCB, struct dc390_srb* pSRB );
++static void dc390_InvalidCmd( struct dc390_acb* pACB );
++static void dc390_EnableMsgOut_Abort (struct dc390_acb*, struct dc390_srb*);
+ static irqreturn_t do_DC390_Interrupt( int, void *, struct pt_regs *);
+ 
+ static int    dc390_initAdapter(struct Scsi_Host *psh, unsigned long io_port, u8 Irq, u8 index );
 
