@@ -1,46 +1,36 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: TMSCSIM [2.6]
-Date: Sun, 23 Nov 2003 21:53:02 +0100 (CET)
+From: Rask Ingemann Lambertsen <rask@sygehus.dk>
+Subject: Re: State of NCR53c7xx based drivers
+Date: Sun, 23 Nov 2003 23:21:30 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0311232151110.2286-100000@poirot.grange>
-References: <m365haomqt.fsf@merlin.emma.line.org>
+Message-ID: <20031123232126.B1657@sygehus.dk>
+References: <20031123175041.A1461@sygehus.dk> <Pine.GSO.4.21.0311231806320.14450-100000@waterleaf.sonytel.be>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.de ([213.165.64.20]:36788 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S263462AbTKWUxH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Nov 2003 15:53:07 -0500
-In-Reply-To: <m365haomqt.fsf@merlin.emma.line.org>
+Received: from 0x50a144f4.albnxx15.adsl-dhcp.tele.dk ([80.161.68.244]:3332
+	"EHLO 0x50a144f4.albnxx15.adsl-dhcp.tele.dk") by vger.kernel.org
+	with ESMTP id S263488AbTKWWVc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Nov 2003 17:21:32 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.GSO.4.21.0311231806320.14450-100000@waterleaf.sonytel.be>; from geert@linux-m68k.org on Sun, Nov 23, 2003 at 06:07:22PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
-Cc: linux-scsi@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Christoph Hellwig <hch@lst.de>, Linux/m68k <linux-m68k@lists.linux-m68k.org>, linux-scsi@vger.kernel.org
 
-On Sun, 23 Nov 2003, Matthias Andree wrote:
+On Sun, Nov 23, 2003 at 06:07:22PM +0100, Geert Uytterhoeven wrote:
+> On Sun, 23 Nov 2003, Rask Ingemann Lambertsen wrote:
 
-> Guennadi Liakhovetski <g.liakhovetski@gmx.de> writes:
->
-> > @@ -47,8 +47,9 @@
-> >      DC390_write8 (CtrlReg4, pDCB->CtrlR4);
-> >      DC390_write8 (ScsiCmd, CLEAR_FIFO_CMD);		/* Flush FIFO */
-> >      DEBUG1(printk (KERN_INFO "DC390: Start SCSI command: %02x (Sync:%02x)\n",\
-> > -	    pSRB->pcmd->cmnd[0], pDCB->SyncMode);)
-> > -    disc_allowed = pDCB->DevMode & EN_DISCONNECT_; try_sync_nego = 0;
-> > +	    pSRB->pcmd->cmnd[0], pDCB->SyncMode));
-> > +    disc_allowed = pDCB->DevMode & EN_DISCONNECT_;
-> > +    try_sync_nego = 0;
-> >      /* Don't disconnect on AUTO_REQSENSE, cause it might be an
-> >       * Contingent Allegiance Condition (6.6), where no tags should be used.
-> >       * All other have to be allowed to disconnect to prevent Incorrect
->
-> Out if interest: Why "try_sync_nego = 0"?
+> > And while we are at amiga7xx and 53c770: There are Amiga SCSI host adapters
+> > with the 53c770 (CyberStorm PPC/MkIII), although amiga7xx doesn't support
+> > them. Why?
+> 
+> The usual answer: because no one who has the hardware wrote the support and
+> submitted it?
 
-No idea. I didn't change it - just broke the line. Actually, such
-changes shouldn't go into patches, but it goes almost automatic, you
-know:-(
+I don't know, that's why I asked. ;-)
+I have an Amiga with a CyberStorm PPC board and wouldn't mind having Linux
+running on it. What would be a good name for the driver?
 
-Guennadi
----
-Guennadi Liakhovetski
-
-
+-- 
+Regards,
+Rask Ingemann Lambertsen
