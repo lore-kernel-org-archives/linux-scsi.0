@@ -1,47 +1,35 @@
-From: Fabien Salvi <fabien@cri74.org>
-Subject: Re: Migrating RAID array to a different manufacturer controller
-Date: Tue, 18 Feb 2003 09:59:03 +0100
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: [PATCH 2.5.62] kill unneeded includes in NCR_D700.c
+Date: Tue, 18 Feb 2003 13:32:40 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E51F5D7.2070507@cri74.org>
-References: <Pine.LNX.4.44.0302170920001.31351-100000@ddnsupport.com>
+Message-ID: <200302181332.40148@bilbo.math.uni-mannheim.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Ryan Weiss <ryan@ddnsupport.com>
-Cc: linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-
-
-Ryan Weiss a =E9crit:
-> The stripe segment size, stripe order, the parameter block informatio=
-n
-> (depends on controller, some have, some don't) being compatible, and =
-any
-> offset before starting storage space.  For the most part, I would cou=
-nt on
-> these things _not_ being compatible, and be happily surprised in any =
-case
-> where it is.
->=20
-> Your best bet is to get the same controller (and have it run the same=
-=20
-> firmware rev), to pull data off.
->=20
-
-Ok, I will try this.
-Thanks for your advice, Ryan.
-
-
---=20
-=46abien SALVI      Centre de Ressources Informatiques
-                   Archamps, France -- http://www.cri74.org
-                   PingOO GNU/linux distribution : http://www.pingoo.or=
-g
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff -Naur linux-2.5.62/drivers/scsi/NCR_D700.c linux-2.5.62-eike/drivers/scsi/NCR_D700.c
+--- linux-2.5.62/drivers/scsi/NCR_D700.c	Mon Feb 17 23:55:56 2003
++++ linux-2.5.62-eike/drivers/scsi/NCR_D700.c	Tue Feb 18 13:00:49 2003
+@@ -95,17 +95,8 @@
+ #include <linux/config.h>
+ #include <linux/blk.h>
+ #include <linux/interrupt.h>
+-#include <linux/version.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+-#include <linux/types.h>
+-#include <linux/string.h>
+-#include <linux/spinlock.h>
+-#include <linux/ioport.h>
+-#include <linux/delay.h>
+-#include <linux/proc_fs.h>
+-#include <linux/init.h>
+-#include <linux/device.h>
+ #include <linux/mca.h>
+ 
+ #include <asm/dma.h>
