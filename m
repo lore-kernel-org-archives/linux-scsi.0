@@ -1,25 +1,25 @@
 From: Andrew Vasquez <praka@san.rr.com>
 Subject: Re: Qlogic driver hang
-Date: Thu, 2 Oct 2003 22:53:05 -0700
+Date: Fri, 3 Oct 2003 11:15:20 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031003055305.GA32001@praka.local.home>
+Message-ID: <20031003181520.GA2077@praka.local.home>
 References: <B179AE41C1147041AA1121F44614F0B060ED34@AVEXCH02.qlogic.org> <1065109530.24236.6127.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from orngca-mls02.socal.rr.com ([66.75.160.17]:13953 "EHLO
+Received: from orngca-mls02.socal.rr.com ([66.75.160.17]:6273 "EHLO
 	orngca-mls02.socal.rr.com") by vger.kernel.org with ESMTP
-	id S263843AbTJCSgq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Oct 2003 14:36:46 -0400
+	id S263842AbTJCSgn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Oct 2003 14:36:43 -0400
 Received: from praka.san.rr.com (66-75-133-254.san.rr.com [66.75.133.254])
-	by orngca-mls02.socal.rr.com (8.11.4/8.11.3) with ESMTP id h93IW9k23839
-	for <linux-scsi@vger.kernel.org>; Fri, 3 Oct 2003 11:32:09 -0700 (PDT)
+	by orngca-mls02.socal.rr.com (8.11.4/8.11.3) with ESMTP id h93IW4k23715
+	for <linux-scsi@vger.kernel.org>; Fri, 3 Oct 2003 11:32:05 -0700 (PDT)
 Received: from san.rr.com (localhost [127.0.0.1])
-	by san.rr.com (8.12.3/8.12.3/SuSE Linux 0.6) with ESMTP id h935r5ZB032195
-	for <linux-scsi@vger.kernel.org>; Thu, 2 Oct 2003 22:53:05 -0700
+	by san.rr.com (8.12.3/8.12.3/SuSE Linux 0.6) with ESMTP id h93IFMZB002100
+	for <linux-scsi@vger.kernel.org>; Fri, 3 Oct 2003 11:15:22 -0700
 Received: (from praka@localhost)
-	by san.rr.com (8.12.3/8.12.3/Submit) id h935r5PB032194
-	for linux-scsi@vger.kernel.org; Thu, 2 Oct 2003 22:53:05 -0700
+	by san.rr.com (8.12.3/8.12.3/Submit) id h93IFK6M002099
+	for linux-scsi@vger.kernel.org; Fri, 3 Oct 2003 11:15:20 -0700
 Content-Disposition: inline
 In-Reply-To: <1065109530.24236.6127.camel@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
