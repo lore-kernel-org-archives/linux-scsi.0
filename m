@@ -1,103 +1,94 @@
 From: Alex Aizman <itn780@yahoo.com>
 Subject: Re: [ANNOUNCE 0/6] Open-iSCSI High-Performance Initiator for Linux
-Date: Wed, 09 Mar 2005 18:09:45 -0800
-Message-ID: <422FAC69.1040206@yahoo.com>
-References: <OF44130B14.D1B3F38E-ON85256FBF.0068AD48-88256FBF.006AACD8@us.ibm.com>
+Date: Wed, 09 Mar 2005 18:36:37 -0800
+Message-ID: <422FB2B5.3070803@yahoo.com>
+References: <422BFCB2.6080309@yahoo.com> <20050309050434.GT3163@waste.org> <422E8EEB.7090209@yahoo.com> <20050309060544.GW3120@waste.org> <422E96D9.6090202@yahoo.com> <20050309222114.GF4105@marowsky-bree.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from smtp107.mail.sc5.yahoo.com ([66.163.169.227]:7299 "HELO
-	smtp107.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S261466AbVCJCKY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Mar 2005 21:10:24 -0500
-In-Reply-To: <OF44130B14.D1B3F38E-ON85256FBF.0068AD48-88256FBF.006AACD8@us.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Received: from smtp105.mail.sc5.yahoo.com ([66.163.169.225]:61619 "HELO
+	smtp105.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S261178AbVCJChL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Mar 2005 21:37:11 -0500
+In-Reply-To: <20050309222114.GF4105@marowsky-bree.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bryan Henderson <hbryan@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Matt Mackall <mpm@selenic.com>
+To: Lars Marowsky-Bree <lmb@suse.de>
+Cc: Matt Mackall <mpm@selenic.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Bryan Henderson wrote:
+Lars Marowsky-Bree wrote:
 
->Its fundamental to Unix architecture that user programs sit above the 
->kernel and get services from the kernel, and turning that on its head so 
->that the kernel depends on a user space program to do something as 
->fundamental as a pageout can't come to any good.  
+>On 2005-03-08T22:25:29, Alex Aizman <itn780@yahoo.com> wrote:
+> =20
 >
-Agreed.
-
->Even if we're able to 
->identify every assumption in Linux design that's being broken and patch it 
->up with something like mlockall, tomorrow someone will change something, 
->using his vast experience with engineering user space programs, and break 
->it again.
->  
+>>There's (or at least was up until today) an ongoing discussion on our=
+=20
+>>mailing list at http://groups-beta.google.com/group/open-iscsi. The=20
+>>short and long of it: the problem can be solved, and it will. Couple=20
+>>simple things we already do: mlockall() to keep the daemon un-swapped=
+,=20
+>>and also looking into potential dependency created by syslog (there's=
+=20
+>>one for 2.4 kernel, not sure if this is an issue for 2.6).
+>>   =20
+>>
 >
-In the same vein can quote Murphy's laws here, like "things get worse 
-under pressure", etc. Specifics, please!
-
->Maybe a more important point is that to the extent that you make a user 
->space process a proxy of the kernel, you lose all those advantages that 
->are supposed to come with user space engineering:  you can now totally 
->hose your system by making a mistake in the code; you have to be 
->intimately familiar with kernel internals to get the code right, etc.
+>BTW, to get around the very same issues, heartbeat does much the same:
+>lock itself into memory, reserve a couple of pages more to spare on
+>stack & heap, run at soft-realtime priority.
+> =20
 >
->mlockall is meant to provide performance characteristics to a user space 
->process.  If it can be used to create resource ordering correctness, it's 
->an accident.
->
->Syslog is one of those things you're not supposed to have to think about. 
->If every time you issue a message you have to visualize the entire syslog 
->system with all of its options to know if you've broken something, the 
->simplicity of user space is gone.
->  
->
+Heartbeat is good for reliability, etc. WRT "getting paged-out" -=20
+non-deterministic (things depend on time), right?
 
-The issue with syslog is clear, we are looking into implementation options.
+>syslog(), however, sucks.
+> =20
+>
+It does.
 
->I would think as a basic design principle that if kernel code ever has to 
->wait for a user process to do something, 
+>We went down the path of using our non-blocking IPC library to have al=
+l
+>our various components log to ha_logd, which then logs to syslog() or
+>writes to disk or wherever.
+> =20
 >
 
-Open-iSCSI is designed for this to never happen. The user/kernel 
-interface (see include/iscsi_if.h) is non-blocking. Once the transport 
-connection gets established (by the user) and handed over to the kernel 
-(to transport block data), the rest data path happens without user 
-interaction. Command level error processing is done by the kernel part, 
-_no_ dependency here. Connection-level error processing is _delegated_ 
-to the user, kernel does not block - it just expects the "higher" 
-authority to make the decision wrt faulty connection.
+=46ound ha_logd under http://linux-ha.org. The latter is extemely=20
+interesting in the longer term. In the short term, there's quite a bit=20
+of information on this site, need time.
 
+>That works well in our current development series, and if you want to
+>share code, you can either rip it off (Open Source, we love ya ;) or w=
+e
+>can spin off these parts into a sub-package for you to depend on...
+>
+> =20
+>
+If it's not a big deal :-) let's do the "sub-package" option.
 
->it should do it high in a system 
->call, in user context, interruptibly, etc.  I don't know if it's possible 
->to arrange to have the ISCSI initiator waiting there, but I think it's the 
->only way having a user space process can do what it's supposed to do.
+>>The sfnet is a learning experience; it is by no means a proof that it=
+=20
+>>cannot be done.
+>>   =20
+>>
 >
->  
+>I'd also argue that it MUST be done, because the current way of "Oh,
+>it's somehow related to block stuff, must be in kernel" leads down to
+>hell. We better figure out good ways around it ;-)
+> =20
 >
-I also don't know whether it is possible (but I know that if it were 
-possible it would by quite ugly); the main thing however is - this is 
-not what's happening.
+Yes, it MUST be done.
 
->I'd like to remind everyone that user space processes aside, there's still 
->a basic ISCSI initiator resource inversion that needs to be fixed to avoid 
->deadlock:
 >
->ISCSI initiator driver sits below the memory pool
->  (I..e a pageout involving ISCSI might be prerequisite to getting memory)
->Socket layer sits below ISCSI
->  (ISCSI initiator driver relies on socket services)
->Memory pool sits below socket layer
->  (socket layer allocates memory from the main pool)
+>Sincerely,
+>    Lars Marowsky-Br=E9e <lmb@suse.de>
 >
->One might say as long as that's there, close is good enough on the user 
->space initiator component.
+> =20
 >
->--
->Bryan Henderson                               San Jose California
->IBM Almaden Research Center                   Filesystems
->
->  
->
-
 Alex
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
