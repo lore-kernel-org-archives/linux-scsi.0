@@ -1,80 +1,97 @@
-From: Martin Hicks <mort@wildopensource.com>
-Subject: [PATCH] Fix template size calculation in transport attributes
-Date: Mon, 29 Mar 2004 12:22:01 -0500
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: Re: [PATCH] 2.4.X Avoid excessive recursion when setting device
+	offline
+Date: Mon, 29 Mar 2004 19:26:48 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040329172201.GB18948@localhost>
+Message-ID: <1080581208.3570.10.camel@laptop.fenrus.com>
+References: <387680000.1080580020@aslan.btc.adaptec.com>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="FkmkrVfFsRoUs1wW"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2HGxmxR76Wv4Yrhw6LWW"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from galileo.bork.org ([66.11.174.156]:21670 "HELO galileo.bork.org")
-	by vger.kernel.org with SMTP id S263027AbUC2RWE (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:36500 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S263012AbUC2R0x (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Mar 2004 12:22:04 -0500
-Content-Disposition: inline
+	Mon, 29 Mar 2004 12:26:53 -0500
+In-Reply-To: <387680000.1080580020@aslan.btc.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
+To: "Justin T. Gibbs" <Justin_Gibbs@adaptec.com>
 Cc: linux-scsi@vger.kernel.org
 
 
---FkmkrVfFsRoUs1wW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-2HGxmxR76Wv4Yrhw6LWW
+Content-Type: multipart/mixed; boundary="=-NAyUroEndoorNZSHOv3h"
 
 
-Hi,
+--=-NAyUroEndoorNZSHOv3h
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-This small patch fixes the template size calculation in
-{spi,fc}_attach_transport().
+On Mon, 2004-03-29 at 19:07, Justin T. Gibbs wrote:
+> How to reproduce: Queue up lots of I/O to a device.  Set that device
+> 		  offline.
+>=20
+> Result: The SCSI mid-layer blows out the kernel stack due to the inherent
+> 	recursion in its request function.  The repeating stack trace goes
+> 	something like:
+>=20
+> 	scsi_request_fn
+> 	__scsi_end_request
+> 	scsi_release_command
+> 	scsi_queue_next_request
+> 	scsi_request_fn
+> 	...
+>=20
+> This patch prevents recursive calls through the scsi_request_fn
+> for the same queue:
 
-Thanks
-mh
+won't this achieve the same ?
 
--- 
-Martin Hicks                Wild Open Source Inc.
-mort@wildopensource.com     613-266-2296
+diff -urN Linux/drivers/scsi/scsi_lib.c linux/drivers/scsi/scsi_lib.c
+--- Linux/drivers/scsi/scsi_lib.c       2002-10-03 16:50:07.000000000
++0200
++++ linux/drivers/scsi/scsi_lib.c       2002-10-03 17:33:20.000000000
++0200
+@@ -442,7 +442,7 @@
+         * This will goose the queue request function at the end, so we
+don't
+         * need to worry about launching another command.
+         */
+-       scsi_release_command(SCpnt);
++       __scsi_release_command(SCpnt);
+ =20
+        if( frequeue ) {
+                request_queue_t *q;
 
---FkmkrVfFsRoUs1wW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="transport-attrs-template-size.patch"
 
-# This is a BitKeeper generated patch for the following project:
-# Project Name: Linux kernel tree
-# This patch format is intended for GNU patch command version 2.5 or higher.
-# This patch includes the following deltas:
-#	           ChangeSet	1.1663  -> 1.1664 
-#	drivers/scsi/scsi_transport_fc.c	1.2     -> 1.3    
-#	drivers/scsi/scsi_transport_spi.c	1.5     -> 1.6    
-#
-# The following is the BitKeeper ChangeSet Log
-# --------------------------------------------
-# 04/03/29	mort@tomahawk.engr.sgi.com	1.1664
-# Fix a bug in the SPI and FC transport attributes code.
-# The calculation of template size was wrong.
-# --------------------------------------------
-#
-diff -Nru a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
---- a/drivers/scsi/scsi_transport_fc.c	Mon Mar 29 09:19:12 2004
-+++ b/drivers/scsi/scsi_transport_fc.c	Mon Mar 29 09:19:12 2004
-@@ -159,7 +159,7 @@
- 	i->t.attrs = &i->attrs[0];
- 	i->t.class = &fc_transport_class;
- 	i->t.setup = &fc_setup_transport_attrs;
--	i->t.size = sizeof(struct fc_transport_attrs) - sizeof(unsigned long);
-+	i->t.size = sizeof(struct fc_transport_attrs);
- 	i->f = ft;
- 
- 	SETUP_ATTRIBUTE_RD(port_id);
-diff -Nru a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
---- a/drivers/scsi/scsi_transport_spi.c	Mon Mar 29 09:19:12 2004
-+++ b/drivers/scsi/scsi_transport_spi.c	Mon Mar 29 09:19:12 2004
-@@ -632,7 +632,7 @@
- 	i->t.attrs = &i->attrs[0];
- 	i->t.class = &spi_transport_class;
- 	i->t.setup = &spi_setup_transport_attrs;
--	i->t.size = sizeof(struct spi_transport_attrs) - sizeof(unsigned long);
-+	i->t.size = sizeof(struct spi_transport_attrs);
- 	i->f = ft;
- 
- 	SETUP_ATTRIBUTE(period);
+--=-NAyUroEndoorNZSHOv3h
+Content-Disposition: attachment; filename=scsi.patch
+Content-Transfer-Encoding: base64
+Content-Type: text/x-patch; name=scsi.patch; charset=UTF-8
 
---FkmkrVfFsRoUs1wW--
+ZGlmZiAtdXJOIExpbnV4L2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jIGxpbnV4L2RyaXZlcnMvc2Nz
+aS9zY3NpX2xpYi5jDQotLS0gTGludXgvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMJMjAwMi0xMC0w
+MyAxNjo1MDowNy4wMDAwMDAwMDAgKzAyMDANCisrKyBsaW51eC9kcml2ZXJzL3Njc2kvc2NzaV9s
+aWIuYwkyMDAyLTEwLTAzIDE3OjMzOjIwLjAwMDAwMDAwMCArMDIwMA0KQEAgLTQ0Miw3ICs0NDIs
+NyBAQA0KIAkgKiBUaGlzIHdpbGwgZ29vc2UgdGhlIHF1ZXVlIHJlcXVlc3QgZnVuY3Rpb24gYXQg
+dGhlIGVuZCwgc28gd2UgZG9uJ3QNCiAJICogbmVlZCB0byB3b3JyeSBhYm91dCBsYXVuY2hpbmcg
+YW5vdGhlciBjb21tYW5kLg0KIAkgKi8NCi0Jc2NzaV9yZWxlYXNlX2NvbW1hbmQoU0NwbnQpOw0K
+KwlfX3Njc2lfcmVsZWFzZV9jb21tYW5kKFNDcG50KTsNCiANCiAJaWYoIGZyZXF1ZXVlICkgew0K
+IAkJcmVxdWVzdF9xdWV1ZV90ICpxOw0K
+
+--=-NAyUroEndoorNZSHOv3h--
+
+--=-2HGxmxR76Wv4Yrhw6LWW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+
+iD8DBQBAaFxYxULwo51rQBIRAvL4AJ0QU3wX7mgusXniE4WIROS6/gBtFgCeLOHt
+Xs+xBtP1BR9yBDHpt1d9huQ=
+=dGm3
+-----END PGP SIGNATURE-----
+
+--=-2HGxmxR76Wv4Yrhw6LWW--
+
