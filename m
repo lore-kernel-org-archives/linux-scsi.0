@@ -1,51 +1,63 @@
-From: Willem Riede <wriede@riede.org>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [PATCH] sg block layer tcqing fix
-Date: Tue, 6 Jan 2004 06:46:30 -0500
+Date: 06 Jan 2004 09:14:29 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040106114630.GW4339@linnie.riede.org>
-References: <3FF08EAF.9080708@us.ibm.com> <3FFA426B.2030406@torque.net>
+Message-ID: <1073402071.2047.5.camel@mulgrave>
+References: <3FF08EAF.9080708@us.ibm.com>  <3FFA426B.2030406@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sccrmhc12.comcast.net ([204.127.202.56]:23015 "EHLO
-	sccrmhc12.comcast.net") by vger.kernel.org with ESMTP
-	id S261889AbUAFLqb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Jan 2004 06:46:31 -0500
-Received: from linnie.riede.org (localhost.localdomain [127.0.0.1])
-	by linnie.riede.org (8.12.10/8.12.10) with ESMTP id i06BkUEM006358
-	for <linux-scsi@vger.kernel.org>; Tue, 6 Jan 2004 06:46:30 -0500
-Content-Disposition: inline
-In-Reply-To: <3FFA426B.2030406@torque.net> (from dougg@torque.net on Tue, Jan 06, 2004 at 00:06:51 -0500)
+Received: from stat1.steeleye.com ([65.114.3.130]:54926 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264505AbUAFPOi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jan 2004 10:14:38 -0500
+In-Reply-To: <3FFA426B.2030406@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: Brian King <brking@us.ibm.com>, dgilbert@interlog.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 2004.01.06 00:06, Douglas Gilbert wrote:
-> Brian King wrote:
-> > In bringing up a new LLD driver I am working on, I came across an oops 
-> > related to sg and using the TCQ function provided by the block layer. 
-> > The backtrace is shown below. I did some poking around and it looks like 
-> > when doing SG_IO ioctls to devices running blk tagged command queuing, 
-> > blk_queue_start_tag gets called, but blk_queue_end_tag never does. 
-> > Attached is a patch against 2.6.0 which adds the call in sg_cmd_done and 
-> > gets rid of the oops for me. Please apply.
-> 
-> Brian,
-> Thanks for this patch. As far as I can tell this patch is needed
-> for all SCSI char ULDs (in other words: sg, st and osst) when
-> used with a LLD that uses block layer queueing infrastructure.
-> At the moment that is only the 53c700 driver (maintained by James B.)
-> and that one you are working on (I suspect).
-> 
+On Mon, 2004-01-05 at 23:06, Douglas Gilbert wrote:
 > Given that no other ULDs call blk_queue_*_tag() routines it seems
 > a bit strange that sg, st and osst need to call blk_queue_end_tag()
 > prior to calling scsi_release_request(). Perhaps the cleanup can be
 > built into scsi_release_request() or a new variant (e.g.
 > scsi_release_special_request() ) could be introduced.
 
-IMHO, it would be much cleaner if sg, st and osst didn't need to be
-aware of tagging, so I'd prefer that it be handled automagically in
-the existing scsi_release_request().
+I agree.  Having the ULD stop tags but not start them is a layering
+violation.  The attached patch will end the tag in the release request.
 
-Thanks, Willem Riede,
-osst maintainer.
+It's still appropriate to release the tag earlier, as the mid layer does
+to free up tag slots for other requests.  Once the tag is ended, the tag
+queue flag is cleared, so the check in release request now fails.
+
+James
+
+===== drivers/scsi/scsi.c 1.132 vs edited =====
+--- 1.132/drivers/scsi/scsi.c	Tue Sep 30 09:24:17 2003
++++ edited/drivers/scsi/scsi.c	Tue Jan  6 09:10:25 2004
+@@ -142,6 +142,23 @@
+ 
+ void __scsi_release_request(struct scsi_request *sreq)
+ {
++	struct request *req = sreq->sr_request;
++
++	/* unlikely because the tag was usually ended earlier
++	 *
++	 * NOTE: the lock should be held while checking the
++	 * flag.  However, any race here requiring the lock
++	 * would be a gross error. */
++	if (unlikely(blk_rq_tagged(req))) {
++		unsigned long flags;
++		struct request_queue *q = req->q;
++
++		spin_lock_irqsave(q->queue_lock, flags);
++		blk_queue_end_tag(q, req);
++		spin_unlock_irqrestore(q->queue_lock, flags);
++	}
++
++
+ 	if (likely(sreq->sr_command != NULL)) {
+ 		struct scsi_cmnd *cmd = sreq->sr_command;
+ 
+
