@@ -1,62 +1,38 @@
-From: Luben Tuikov <luben@splentec.com>
-Subject: Re: ide-scsi command status bug
-Date: Tue, 16 Jul 2002 21:04:25 -0400
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [TRIVIAL] copy_XX_user for sg.c - take 2
+Date: Tue, 16 Jul 2002 23:25:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D34C299.982829BF@splentec.com>
-References: <000301c226c0$ffcd0dc0$e0019d89@cybernetics.com>
+Message-ID: <3D34E3BA.2B2EE2AC@torque.net>
+References: <20020715082116.98C2A434C@lists.samba.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: tonyb@cybernetics.com
-Cc: linux-scsi@vger.kernel.org
+To: Rusty Trivial Russell <rusty@rustcorp.com.au>
+Cc: linux-scsi@vger.kernel.org, wstinson@infonie.fr
 
-Tony Battersby wrote:
+Rusty Trivial Russell wrote:
 > 
-> Hello,
+> [ This one is hardly trivial: it seems correct, but... Please check ]
 > 
-> I have tracked down a problem with incorrect status being returned for a
-> command sent through sg and ide-scsi.  I am using vanilla 2.4.17.  Here is
-> what is happening:
+> From: (via Rusty) william stinson <wstinson@infonie.fr>
 > 
-> The device returns CHECK CONDITION for a command sent to it from sg and
-> ide-scsi.
-> The following line executes in idescsi_end_request() in ide-scsi.c:
-> pc->scsi_cmd->result = (CHECK_CONDITION << 1) | (DID_OK << 16);
-> ide-scsi calls the callback completion function.
-> An internal request sense is queued.
-> The request sense completes successfully.
-> The following line executes in idescsi_end_request() in ide-scsi.c:
-> pc->scsi_cmd->result = (DID_OK << 16)
-> ide-scsi calls the callback completion function for the request sense
-> command.
+>   Hi Rusty,
 > 
-> In my userspace program, sg_io_hdr_t { status, masked_status } are both
-> zero, but sg_io_hdr_t { driver_status } & DRIVER_SENSE is set and the sense
-> data is valid.  It appears to me as if the status from the request sense
-> command overwrote the original CHECK CONDITION status.  I verified this by
-> forcing all request sense commands to return a status of 0x01 (reserved bit
-> set) in idescsi_end_request() in ide-scsi.c, and sure enough, I got a status
-> of 0x01 for the failed command in sg_io_hdr_t { status }.
+>   here is version 2 of my sg.c patch to correct indentation to 4blanks as you pointed out (I hope I didn't miss anything).
+> 
+>   This proposed patch for the sg.c driver which allows user process control of SCSI devices
+>           1) checks the result of copy_XX_user
+>           2) returns -EFAULT in case not all data was copied
+>           3) releases resources in case of failure
+>           4) return value of sg_read_oxfer changed from void to int 
+> in order to be able to pass back error conditions
 
-You are relying on specific Linux SCSI core behaviour
-rather than the spec. SPC-2, 7.20.1, specifies that if REQUEST
-SENSE completed successfully, i.e. the sense data is valid, then
-status GOOD is returned. If the status is CHECK CONDITION
-for a completed REQUEST SENSE command then the sense data may NOT
-be valid.
+Rusty,
+This patch, together with one to disable kiobufs usage
+(for Andrew Morton's direct-to-BIO changes), are in
+lk 2.5.26
 
-Simply: if you issue REQUEST SENSE and the command completes and
-returns valid sense data, then you should get GOOD status.
+Doug Gilbert
 
-You should NOT filter REQUEST SENSE and set status to CHECK CONDITION!
- 
-> I have not tested any other kernel versions.  I am working around the
-> problem for now by faking a CHECK CONDITION status when driver_status &
-> DRIVER_SENSE in my program.
-
-In userspace you can pretty much make up your own rules.
-
--- 
-Luben
