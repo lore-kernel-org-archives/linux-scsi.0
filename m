@@ -1,62 +1,62 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: Re: Help - looking for IO test tools
-Date: Wed, 04 Aug 2004 15:53:15 -0400
+From: Ralph Bergmann <ralph@dasralph.de>
+Subject: Re: 2.6.6 Kernel + Adaptec aic7890/91 = Kernel panic
+Date: Wed, 04 Aug 2004 21:53:51 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1091649195.3108.44.camel@localhost.localdomain>
-References: <519672568F040C41B6FAC21ADF51B18F1C4441@mailnode1.commstor.crossroads.com>
-	 <20040804122928.3152449b.rddunlap@osdl.org>
-Reply-To: mingz@ele.uri.edu
+Message-ID: <41113ECF.3050506@dasralph.de>
+References: <40C30644.2020307@dasralph.de> <166998953.1086771720@stonetable> <40C76B6F.3010103@dasralph.de> <123170000.1086819395@aslan.scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from leviathan.ele.uri.edu ([131.128.51.64]:39861 "EHLO
-	leviathan.ele.uri.edu") by vger.kernel.org with ESMTP
-	id S267394AbUHDTxb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Aug 2004 15:53:31 -0400
-In-Reply-To: <20040804122928.3152449b.rddunlap@osdl.org>
+Received: from mailout06.sul.t-online.com ([194.25.134.19]:17330 "EHLO
+	mailout06.sul.t-online.com") by vger.kernel.org with ESMTP
+	id S267378AbUHDTyK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Aug 2004 15:54:10 -0400
+In-Reply-To: <123170000.1086819395@aslan.scsiguy.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rddunlap@osdl.org>
-Cc: Lee Xing <lxing@Crossroads.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: luben_tuikov@adaptec.com, linux-scsi@vger.kernel.org
 
-current iometer still need a windows machine as a console. but we have
-plan to get rid of that console sometime later.
+Justin T. Gibbs wrote:
 
-ming
-
-On Wed, 2004-08-04 at 15:29, Randy.Dunlap wrote:
-> On Wed, 4 Aug 2004 13:58:36 -0500 Lee Xing wrote:
+>>Justin T. Gibbs wrote:
+>>
+>>
+>>>...  Can you provide the output of
+>>>"lspci -vv -n" which will indicate the PCI ID information of your
+>>>controller?
+>>
+>>
+>>yes of course
+>>
+>>0000:02:01.0 Class 0100: 9005:0010
+>>         Subsystem: 9005:a180
 > 
-> | Hi,
-> | 
-> | Sorry, this post may be a bit off topic.
-> | 
-> | Just wondering if there are any IO test tools like IOMeter, with which we can select different parameters (IO size, percentage of read/write, percentage of sequential/random, etc.) and see the IO rate (MB/sec) and num of IO/sec with the selected parameters.
-> | 
-> | IOMeter is okay but we have to use an extra Windows machine to run it.  If we can find a self-contained IO test tool for Linux, that would be very helpful.
 > 
-> IOmeter is available for Linux, too.  Does it still need an extra
-> Windows machine?  or maybe for analysis?
-> 	http://sourceforge.net/projects/iometer
+> Hmm.  Those IDs should be supported in the driver.  Can you add
+> printk statements in aic7xxx_osm_pci.c just before each location
+> where the driver returns "-ENODEV".  This should help narrow down
+> why the driver is refusing to attach to the controller.  If I
+> had to guess, I would say that pci_enable_device() is failing for
+> some strange reason.
 > 
 > --
-> ~Randy
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
- --------------------------------------------------
-| Ming Zhang, PhD. Student
-| Dept. of Electrical & Computer Engineering
-| College of Engineering
-| University of Rhode Island
-| Kingston RI. 02881
-| e-mail: mingz at ele.uri.edu
-| Tel. (401) 874-2293 
-| Fax. (401) 782-6422
-| http://www.ele.uri.edu/~mingz/
-| http://crab.ele.uri.edu/gallery/albums.php
- --------------------------------------------------
+> Justin
+> 
 
+First of all I have to excuse, because you have to wait so long for my 
+answer. But I've got good news: the problem is partially fixed. I put 
+the scsi-adapter in another pci-slot (now a 32bit one in contradiction 
+to the 64bit one I used before), and now it's working. But I've got some 
+questions concerning this:
 
+1. should it have worked, no matter, which kind of pci-slot I use? When 
+i used the 2.4 kernel, there were no error-messages, but when i switched 
+to 2.6 kernel, I run into trouble as you know... So is it a 
+kernel-problem or a hardware-thing?
+
+2. And if you want to have the specific output nevertheless,  I would 
+prefer, that you send me the special adjusted file I have to use, 
+because I have no idea about kernel-programming at all...
+
+Ralph
