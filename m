@@ -1,108 +1,46 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: Warning - running *really* short on DMA buffers while doing
- file  transfers
-Date: Fri, 27 Sep 2002 14:58:15 -0600
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Warning - running *really* short on DMA buffers while
+ doingfiletransfers
+Date: Fri, 27 Sep 2002 17:13:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <2628736224.1033160295@aslan.btc.adaptec.com>
-References: <200209271721.g8RHLTn05231@localhost.localdomain>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Message-ID: <200209272113.g8RLD1420775@localhost.localdomain>
+References: <gibbs@scsiguy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200209271721.g8RHLTn05231@localhost.localdomain>
-Content-Disposition: inline
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id OAA21549
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Sep 2002 14:13:12 -0700
+In-Reply-To: Message from "Justin T. Gibbs" <gibbs@scsiguy.com>
+   of "Fri, 27 Sep 2002 13:52:09 MDT." <2580166224.1033156329@aslan.btc.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Jens Axboe <axboe@suse.de>, Matthew Jacob <mjacob@feral.com>, "Pedro M. Rodrigues" <pmanuel@myrealbox.com>, Mathieu Chouquet-Stringer <mathieu@newview.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: Andrew Morton <akpm@digeo.com>, James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, Matthew Jacob <mjacob@feral.com>, "Pedro M. Rodrigues" <pmanuel@myrealbox.com>, Mathieu Chouquet-Stringer <mathieu@newview.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->> Hooks for sending ordered tags have been in the aic7xxx driver, at
->> least in FreeBSD's version, since '97.  As soon as the Linux cmd
->> blocks have such information it will be trivial to have the aic7xxx
->> driver issue the appropriate tag types.
-> 
-> They already do in 2.5, see scsi_populate_tag_msg() in scsi.h.  This
-> assumes  you're using the generic tag queueing, which the aic7xxx
-> doesn't, but you  could easily key the tag type off REQ_BARRIER.
+> Since your drive cannot handle 253 tags, when saturated with commands,
+> a new command is never submitted to the drive directly.  Instead the
+> command waits in the aic7xxx driver's queue until space is available
+> on the device.  In FreeBSD, this never happens as tag depth is known
+> to, and adjusted by, the mid-layer.  In Linux I must report the queue
+> depth without having sufficient load or history with the device to
+> know anything about its capabilities so I have no choice but to
+> throttle internally should the device support fewer tags than
+> initially reported to the OS.  You can determine the actual device
+> queue depth from "cat /proc/scsi/aic7xxx/#".  Run a bunch of I/O first
+> so that the tag depth gets locked first. 
 
-If anyone wants to play with the updated aic7xxx and aic79xx drivers
-(new port to 2.5, plus it honors the otag stuff), you can pick it up
-from here:
+Linux is perfectly happy just to have you return 1 in queuecommand if the 
+device won't accept the tag.  The can_queue parameter represents the maximum 
+number of outstanding commands the mid-layer will ever send.  The mid-layer is 
+happy to re-queue I/O below this limit if it cannot be accepted by the drive.  
+In fact, that's more or less what queue plugging is about.
 
+The only problem occurs if you return 1 from queuecommand with no other 
+outstanding I/O for the device.
 
+There should be no reason in 2.5 for a driver to have to implement an internal 
+queue.
 
---On Friday, September 27, 2002 13:21:29 -0400 James Bottomley
-<James.Bottomley@steeleye.com> wrote:
-
->> Which part of the OS are you talking about?
-> 
-> I'm not, I'm talking about the pure physical characteristics of the
-> transport  bus.
-> 
->> I also do not believe that the command overhead is as significant as
->> you suggest.  I've personally seen a non-packetized SCSI bus perform
->> over 15K transactions per-second.
-> 
-> Well, lets assume the simplest setup possible: select + tag msg + 10 byte 
-> command + disconnect + reselect + status; that's 17 bytes async.  The
-> maximum  bus speed async narrow is about 4Mb/s, so those 17 bytes take
-> around 4us to  transmit.  On a wide Ultra2 bus, the data rate is about
-> 80Mb/s so it takes  50us to transmit 4k or 800us to transmit 64k.
-> However, the major killer in  this model is going to be disconnection
-> delay at around 200us (dwarfing  arbitration delay, bus settle time etc).
-> For 4k packets you spend about 3  times longer arbitrating for the bus
-> than you do transmitting data.  For 64k  packets it's 25% of your data
-> transmit time in arbitration.  Your theoretical  throughput for 4k
-> packets is thus 20Mb/s.  In my book that's a significant  loss on an
-> 80Mb/s bus.
-> 
-> On Fabric busses, you move to the network model and collision
-> probabilities  which increase as the packet size goes down.
-> 
-> gibbs@scsiguy.com said:
->> Because of read-ahead, the OS should never send 16 4k contiguous reads
->> to the I/O layer for the same application.
-> 
-> read ahead is basically a very simplistic form of I/O scheduling.  
-> 
+James
 
 
---On Friday, September 27, 2002 13:21:29 -0400 James Bottomley
-<James.Bottomley@steeleye.com> wrote:
-
->> Which part of the OS are you talking about?
-> 
-> I'm not, I'm talking about the pure physical characteristics of the
-> transport  bus.
-> 
->> I also do not believe that the command overhead is as significant as
->> you suggest.  I've personally seen a non-packetized SCSI bus perform
->> over 15K transactions per-second.
-> 
-> Well, lets assume the simplest setup possible: select + tag msg + 10 byte 
-> command + disconnect + reselect + status; that's 17 bytes async.  The
-> maximum  bus speed async narrow is about 4Mb/s, so those 17 bytes take
-> around 4us to  transmit.  On a wide Ultra2 bus, the data rate is about
-> 80Mb/s so it takes  50us to transmit 4k or 800us to transmit 64k.
-> However, the major killer in  this model is going to be disconnection
-> delay at around 200us (dwarfing  arbitration delay, bus settle time etc).
-> For 4k packets you spend about 3  times longer arbitrating for the bus
-> than you do transmitting data.  For 64k  packets it's 25% of your data
-> transmit time in arbitration.  Your theoretical  throughput for 4k
-> packets is thus 20Mb/s.  In my book that's a significant  loss on an
-> 80Mb/s bus.
-> 
-> On Fabric busses, you move to the network model and collision
-> probabilities  which increase as the packet size goes down.
-> 
-> gibbs@scsiguy.com said:
->> Because of read-ahead, the OS should never send 16 4k contiguous reads
->> to the I/O layer for the same application.
-> 
-> read ahead is basically a very simplistic form of I/O scheduling.  
-> 
-
-http://people.FreeBSD.org/~gibbs/linux/linux-2.5-aic79xxx.tar.gz
-
---
-Justin
