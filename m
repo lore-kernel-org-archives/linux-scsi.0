@@ -1,97 +1,96 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: Quantum disk firmware update
-Date: Wed, 8 Jan 2003 09:08:49 -0800
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [PATCH] SCSI Core patches
+Date: Wed, 08 Jan 2003 12:33:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A5974D8E5F98D511BB910002A50A66470580D4FE@hdsmsx103.hd.intel.com>
+Message-ID: <3E1C60D5.2070805@splentec.com>
+References: <3E1ADC9A.6090800@splentec.com> <20030107102127.B15528@beaverton.ibm.com> <20030107194445.GC11402@redhat.com> <20030107145300.A16954@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from petasus.fm.intel.com (petasus.fm.intel.com [10.1.192.37])
-	by caduceus.fm.intel.com (8.11.6/8.11.6/d: outer.mc,v 1.51 2002/09/23 20:43:23 dmccart Exp $) with ESMTP id h08H0tx03623
-	for <linux-scsi@vger.kernel.org>; Wed, 8 Jan 2003 17:00:55 GMT
-Received: from fmsmsxvs041.fm.intel.com (fmsmsxvs041.fm.intel.com [132.233.42.126])
-	by petasus.fm.intel.com (8.11.6/8.11.6/d: inner.mc,v 1.27 2002/10/16 23:46:59 dmccart Exp $) with SMTP id h08H1Sq23595
-	for <linux-scsi@vger.kernel.org>; Wed, 8 Jan 2003 17:01:28 GMT
 List-Id: linux-scsi@vger.kernel.org
-To: 'Shanker Balan' <shanu@exocore.com>
-Cc: Linux-SCSI <linux-scsi@vger.kernel.org>, "'scsirastools-developers@lists.sourceforge.net.'" <scsirastools-developers@lists.sourceforge.net>
+To: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
 
-Shanu,
+Patrick Mansfield wrote:
+ >
+> The hard part is making sure all of the references to scsi_device values
+> are OK - that we correctly use and set the values across all of the
+> scsi_devices that represent a single scsi device. It would be easy for a
+> LLDD to screw this up, unless we have some sort of interface to get/set
+> every value in scsi_device.
 
-The sense key message shows "Illegal Request" for the Write Buffer command.
-This could be one of several things:
-  1) The device cannot handle SCSI commands this large (377k).
-or
-  2) The command was truncated or malformed so that it appeared incomplete.
-or 
-  3) Some devices return this sense code if the model number in the image 
-     does not match the device model number.
+An LLDD cannot screw up.  It will be fixed in the testing phase and
+given that so many eyes will check it out before it is even considered.
+Plus, vendors usually test LLDDs long before they are considered
+into a test tree.
 
-For (1) it would be an issue to take back to Quantum, asking how does this
-disk device expect to download firmware?  Most disks use one big buffer like
-this, but some require a fragmented, iterative download algorithm.  I've
-downloaded firmware images as large as 600k with this tool, so it is within
-a normal range.  
-For (2), it could be a software bug, but the fact that the DOS Quantum tool
-provided gets the same error would weigh against this.  It could be a
-cabling/termination problem, or it could be an issue with the adapter
-handling large SCSI commands.  Which SCSI adapter was involved? 
-For (3), this seems like the most likely case.  You can also do a "strings"
-on the image file to see if there is a model string there that matches.  You
-can check with Quantum/Maxtor to verify the image.  The sgdskfl should also
-explictly check this, but I just noticed that Quantum wasn't in my list of
-vendors that support this.  This will be changed in the next cut.  
+> Plus we have the overhead of redundant data for the fields: type,
+> scsi_level, inquiry, vendor, etc.
 
-RE "servo image":
-Some disk devices have the capability to download a servo image as well as a
-firmware image.
-The servo controls the mechanical/physical operation of the disk (comparable
-to BIOS on a PC), while the firmware handles higher level logic, including
-the SCSI protocol.  
+Implementation issue.
 
------Original Message-----
-From: Shanker Balan [mailto:shanu@exocore.com] 
-Sent: Wednesday, January 08, 2003 3:15 AM
-To: Linux-SCSI
-Subject: Re: Seagate Cheetah: Firmware, Bugs, Compatibility?
+> And the atomic device_active might have to be re-done with SMP locking.
 
-[...]
+Implementation issue.
 
-I got a similar sense error while trying to flash using the Quantum supplied
-"DL_scsi.exe" under DOS.
+> I'm arguing for a linked list of structs that hold the minimum data we
+> need to use them as a path - much like a scsi_device with the redundant
+> fields removed (and if needed it can also point to the actual
+> scsi_device). And then plugging this data (or a pointer) into a scsi_cmnd
+> for use by the LLDD.
 
-Andrew, any idea what might be the problem here? Also whats a "Servo
-image"?
+This may be an easier approach, but a scsi_cmnd stands for SCSI command.
 
-Here is paste from "sgdskfl" run:
+Its a good thing to have multipathing represented as an ADT (abstract
+data type).  Say something like a linked list of structs with
+cost/weight member and a pointer to an actual low-level device (the infrastructure
+will be more involved since multipathing will need to be notified
+when a device goes away, but read further...).  Now this ADT may be embeded
+into a block device and char device structs -- i.e. highest hierarchy.
+(The assumption is that there won't be a device which will present
+a char and block interface at the same time.)
 
-Log file /var/log/sgdskfl.log is open, debug=0
+Now since this ADT is embeded into the block/char device, we do get
+notification when it goes away. So this should be ok.
 
-Num Name [bus:ch:id:lun] Type Vendor   Device_Model     FW__ Serial#_
-Servo___
-0 /dev/sg0 [0:0:0:0] Disk  QUANTUM  ATLAS10K3_18_SCA 020W 34220894
-1 /dev/sg1 [0:0:1:0] Disk  QUANTUM  ATLAS10K3_73_SCA 020W 34820965
-2 /dev/sg2 [0:0:2:0] Disk  QUANTUM  ATLAS10K3_73_SCA 020W 34820635
+The effect is that when write(fd, buf, count) is done, somewhere along
+the way *before* the actual physical device (ide,scsi,etc) is referenced
+multipathing has already been accomplished.  This preserves as much as possible
+the current infrastructure of the kernel.
 
-Enter Selection ('d' to download, 'q' to quit) : d
+So when a low-level device (LLD) says that it cannot satisfy the request,
+you *may* try another path.
 
-Device Num (0 to 2) : 2
-Selected 2: [0:2] QUANTUM ATLAS10K3_73_SCA020W34820635
-Reading image file atlas10k.lod, size = 377167
-No servo image
-Device [2] is ready for download
-Starting download process for 1 disk.
-Downloading Firmware image to disk 2 Wed Jan  8 13:40:52 2003
-Current sg_cmd_done_bh00:00: sense key Illegal Request
-write_buffer: Check Condition Driver_status=0x08 (DRIVER_SENSE,SUGGEST_OK)
-sense error, key=05 asc=26 ascq=80 Illegal Request
-Info valid=0, Current
-[2] Error -2 in writing buffer
-Press ENTER to continue
+In effect a low-level device *as seen from the multipath code* is the tuple
+(PATH, DEVICE), and this is where a request is sent, i.e. to the tuple
+(PATH, DEVICE). Where for each PATH, there can be exactly one DEVICE, since
+a PATH describes a device (or access to it), but the opposite is not necessarily
+true. I.e. for each DEVICE there can be zero/one to many PATHs.
 
--- Shanu
-http://shankerbalan.com/
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> As long as we have an interface (function or macro), I'm not strongly
+> opposed to the above. We can keep the scsi_allocate_device (in dire need
+> of a new name), and just have it allocate and init (or not) any fields as
+> needed, so there is only one place to change the init of the allocated
+> scsi_cmnd.
+
+The SCSI Core has a well-defined funtion. I'm not so sure that we
+should muck it up with other well-defined functions, like multipathing.
+
+> Adding a new interface to get the host/channel/target/lun is not so easy,
+> but IMO worthwhile.
+
+Changing all LLDD, SCSI Core, usb storage, message/fusion to use
+cmd->device->{lun, id, channel, host} and scsi_get_command(),
+scsi_put_command(), scsi_getset_command() was also not easy, but
+doable.
+
+There, you have a project. Please note, that this is only worthwhile
+if multipathing is to go into SCSI Core.
+
+It is *inevitable* that multipathing will be moved up into the
+generic device char and block structs; sooner or later.
+
+-- 
+Luben
+
+
