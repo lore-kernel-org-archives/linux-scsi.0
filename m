@@ -1,157 +1,125 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH] scsi_mid_low_api.txt update
-Date: Wed, 25 Aug 2004 13:17:37 +1000
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: 2.6.8.1-mm3
+Date: 24 Aug 2004 23:50:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <412C04D1.3090503@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <1093405836.2206.447.camel@mulgrave>
+References: <200408211838.i7LIcUdl025108@harpo.it.uu.se>
+	<20040821191417.GA3402@beaverton.ibm.com>
+	<1093116298.2092.388.camel@mulgrave>
+	<20040821214733.GE9660@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060605030608090605050807"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from borg.st.net.au ([65.23.158.22]:47770 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S268406AbUHYDS0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Aug 2004 23:18:26 -0400
-List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com
-
-This is a multi-part message in MIME format.
---------------060605030608090605050807
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:38604 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S267310AbUHYDvG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Aug 2004 23:51:06 -0400
+In-Reply-To: <20040821214733.GE9660@parcelfarce.linux.theplanet.co.uk>
+List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Mikael Pettersson <mikpe@csd.uu.se>, Andrew Morton <akpm@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-After some prompting from Adrian Bunk here is an
-update to the scsi mid level to lower level driver
-(A)PI document.
+On Sat, 2004-08-21 at 17:47, Matthew Wilcox wrote:
+> I prefer the former, something like
+> 
+> int scsi_test_unit_ready(struct scsi_device *sdev);
 
-Comments welcome.
+OK, how about the attached.  It seems to work for me, but then I don't
+have any of the problem devices ...
 
+James
 
-This patch was sent a month ago but received no comments
-and has not made it into the kernel. This patch is
-against lk 2.6.9-rc1. The scsi_mid_low_api.txt file has had
-a one line change since lk 2.6.8-rc1.
+===== drivers/scsi/scsi_ioctl.c 1.29 vs edited =====
+--- 1.29/drivers/scsi/scsi_ioctl.c	2004-08-19 16:11:54 -05:00
++++ edited/drivers/scsi/scsi_ioctl.c	2004-08-24 22:34:39 -05:00
+@@ -432,12 +432,8 @@
+ 	case SCSI_IOCTL_DOORUNLOCK:
+ 		return scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
+ 	case SCSI_IOCTL_TEST_UNIT_READY:
+-		scsi_cmd[0] = TEST_UNIT_READY;
+-		scsi_cmd[1] = 0;
+-		scsi_cmd[2] = scsi_cmd[3] = scsi_cmd[5] = 0;
+-		scsi_cmd[4] = 0;
+-		return ioctl_internal_command(sdev, scsi_cmd,
+-				   IOCTL_NORMAL_TIMEOUT, NORMAL_RETRIES);
++		return scsi_test_unit_ready(sdev, IOCTL_NORMAL_TIMEOUT,
++					    NORMAL_RETRIES);
+ 	case SCSI_IOCTL_START_UNIT:
+ 		scsi_cmd[0] = START_STOP;
+ 		scsi_cmd[1] = 0;
+===== drivers/scsi/scsi_lib.c 1.130 vs edited =====
+--- 1.130/drivers/scsi/scsi_lib.c	2004-08-23 03:14:46 -05:00
++++ edited/drivers/scsi/scsi_lib.c	2004-08-24 22:08:51 -05:00
+@@ -1572,6 +1572,34 @@
+ 	return ret;
+ }
+ 
++int
++scsi_test_unit_ready(struct scsi_device *sdev, int timeout, int retries)
++{
++	struct scsi_request *sreq;
++	char cmd[] = {
++		TEST_UNIT_READY, 0, 0, 0, 0, 0,
++	};
++	int result;
++	
++	sreq = scsi_allocate_request(sdev, GFP_KERNEL);
++	if (!sreq)
++		return -ENOMEM;
++
++		sreq->sr_data_direction = DMA_NONE;
++        scsi_wait_req(sreq, cmd, NULL, 0, timeout, retries);
++
++	if ((driver_byte(sreq->sr_result) & DRIVER_SENSE)
++	    && (sreq->sr_sense_buffer[2] & 0x0f) == UNIT_ATTENTION
++	    && sdev->removable) {
++		sdev->changed = 1;
++		sreq->sr_result = 0;
++	}
++	result = sreq->sr_result;
++	scsi_release_request(sreq);
++	return result;
++}
++EXPORT_SYMBOL(scsi_test_unit_ready);
++
+ /**
+  *	scsi_device_set_state - Take the given device through the device
+  *		state model.
+===== drivers/scsi/sd.c 1.157 vs edited =====
+--- 1.157/drivers/scsi/sd.c	2004-08-24 18:09:03 -05:00
++++ edited/drivers/scsi/sd.c	2004-08-24 22:36:10 -05:00
+@@ -648,7 +648,7 @@
+ 	 */
+ 	retval = -ENODEV;
+ 	if (scsi_block_when_processing_errors(sdp))
+-		retval = scsi_ioctl(sdp, SCSI_IOCTL_TEST_UNIT_READY, NULL);
++		retval = scsi_test_unit_ready(sdp, SD_TIMEOUT, SD_MAX_RETRIES);
+ 
+ 	/*
+ 	 * Unable to test, unit probably not ready.   This usually
+===== drivers/scsi/sr.c 1.114 vs edited =====
+--- 1.114/drivers/scsi/sr.c	2004-08-12 19:03:53 -05:00
++++ edited/drivers/scsi/sr.c	2004-08-24 22:39:41 -05:00
+@@ -183,7 +183,7 @@
+ 		return -EINVAL;
+ 	}
+ 
+-	retval = scsi_ioctl(cd->device, SCSI_IOCTL_TEST_UNIT_READY, NULL);
++	retval = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES);
+ 	if (retval) {
+ 		/* Unable to test, unit probably not ready.  This usually
+ 		 * means there is no disc in the drive.  Mark as changed,
+===== include/scsi/scsi_device.h 1.21 vs edited =====
+--- 1.21/include/scsi/scsi_device.h	2004-08-22 20:06:22 -05:00
++++ edited/include/scsi/scsi_device.h	2004-08-24 22:11:48 -05:00
+@@ -185,6 +185,8 @@
+ extern int scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
+ 			   unsigned char *buffer, int len, int timeout,
+ 			   int retries, struct scsi_mode_data *data);
++extern int scsi_test_unit_ready(struct scsi_device *sdev, int timeout,
++				int retries);
+ extern int scsi_device_set_state(struct scsi_device *sdev,
+ 				 enum scsi_device_state state);
+ extern int scsi_device_quiesce(struct scsi_device *sdev);
 
-Doug Gilbert
-
---------------060605030608090605050807
-Content-Type: application/x-gzip;
- name="scsi_mid_low_api.txt269rc1.diff.gz"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="scsi_mid_low_api.txt269rc1.diff.gz"
-
-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
-be3Ygcw5Hmu50NoZ7NfG77X+B9TOBtucTwAA
---------------060605030608090605050807--
