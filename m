@@ -1,68 +1,83 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH bug fix] Work around aacraid FW problem
-Date: Wed, 22 Oct 2003 12:53:57 -0700
+From: Nicolas Mailhot <Nicolas.Mailhot@laPoste.net>
+Subject: Re: Usb storage mounting was broken
+Date: Wed, 22 Oct 2003 22:33:06 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1066852437.1499.19.camel@markh1.pdx.osdl.net>
+Message-ID: <1066854786.3848.8.camel@m70.net81-64-235.noos.fr>
+References: <1066775616.3458.8.camel@m70.net81-64-235.noos.fr>
+	 <20031021175556.A8670@beaverton.ibm.com>
+	 <1066808944.3699.9.camel@ulysse.olympe.o2t> <3F969E04.6060801@pacbell.net>
+	 <1066837537.6960.3.camel@ulysse.olympe.o2t> <3F96AE64.5020305@pacbell.net>
+	 <1066845819.2806.11.camel@m70.net81-64-235.noos.fr>
+	 <3F96D00E.1080500@pacbell.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yRf4ARbbcz4WZ+uYKBy1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:17572 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S263415AbTJVTx7 (ORCPT
+Received: from nan-smtp-02.noos.net ([212.198.2.71]:1558 "EHLO smtp.noos.fr")
+	by vger.kernel.org with ESMTP id S261406AbTJVUhl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Oct 2003 15:53:59 -0400
+	Wed, 22 Oct 2003 16:37:41 -0400
+In-Reply-To: <3F96D00E.1080500@pacbell.net>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
-
-I think that this qualifies as a bug fix.
-
-If you have a 4gig or greater system, some versions of aacraid firmware
-have problems if you set HostPhysMemPages >= 0x100000.  This can
-potentially cause data corruption.  If you have 4gig or greater memory,
-this patch sets the HostPhysMemPages to something that the firmware can
-deal with.
+To: David Brownell <david-b@pacbell.net>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
 
 
-===== drivers/scsi/aacraid/aacraid.h 1.8 vs edited =====
---- 1.8/drivers/scsi/aacraid/aacraid.h	Thu Aug 21 00:06:52 2003
-+++ edited/drivers/scsi/aacraid/aacraid.h	Wed Oct 22 09:52:43 2003
-@@ -14,6 +14,8 @@
- #define AAC_MAX_TARGET (MAXIMUM_NUM_CONTAINERS+1)
- #define AAC_MAX_LUN	(8)
- 
-+#define AAC_MAX_HOSTPHYSMEMPAGES (0xfffff)
-+
- /*
-  * These macros convert from physical channels to virtual channels
-  */
-===== drivers/scsi/aacraid/comminit.c 1.6 vs edited =====
---- 1.6/drivers/scsi/aacraid/comminit.c	Fri May  2 12:30:22 2003
-+++ edited/drivers/scsi/aacraid/comminit.c	Wed Oct 22 09:54:35 2003
-@@ -92,7 +92,21 @@
- 	init->AdapterFibsPhysicalAddress = cpu_to_le32((u32)phys);
- 	init->AdapterFibsSize = cpu_to_le32(fibsize);
- 	init->AdapterFibAlign = cpu_to_le32(sizeof(struct hw_fib));
--	init->HostPhysMemPages = cpu_to_le32(num_physpages);		// number of 4k pages of host physical memory
-+	/* 
-+	 * number of 4k pages of host physical memory. The aacraid fw needs
-+	 * this number to be less than 4gb worth of pages. num_physpages is in
-+	 * system page units. New firmware doesn't have any issues with the
-+	 * mapping system, but older Firmware did, and had *troubles* dealing
-+	 * with the math overloading past 32 bits, thus we must limit this
-+	 * field.
-+	 */
-+	if ((num_physpages << (PAGE_SHIFT - 12)) <= AAC_MAX_HOSTPHYSMEMPAGES) {
-+		init->HostPhysMemPages = 
-+			cpu_to_le32(num_physpages << (PAGE_SHIFT-12));
-+	} else {
-+		init->HostPhysMemPages = cpu_to_le32(AAC_MAX_HOSTPHYSMEMPAGES);
-+	}
-+
- 
- 	/*
- 	 * Increment the base address by the amount already used
+--=-yRf4ARbbcz4WZ+uYKBy1
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Mark Haverkamp <markh@osdl.org>
+Le mer 22/10/2003 =E0 20:44, David Brownell a =E9crit :
+> > The only weird thing is some messages made it to /var/log/messages,
+> > /var/log/kernel and show up with dmesg, but didn't end up in
+> > /var/log/dmesg (which is what I used as attachement before, but the
+> > other messages were extracted from /var/log/kernel and put in the bug
+> > too). I suppose RedHat stops writing in /var/log/dmesg after the end of
+> > the boot.
+>=20
+> As a rule, "dmesg output" means "output of dmesg command" ... :)
+
+Well, the acpi people for example need /var/log/dmesg since their stuff
+happens early and the log buffer will often overflow:)
+
+> Boot messages (/var/log/dmesg) aren't a substitute.
+>=20
+> OK, at this point what's needed is the more customary usb debug
+> information.  Contents of /proc/bus/usb/devices for starters.
+
+In the bugzilla report
+
+> And since this resembles an enumeration failure, it'd be good
+> to have the Alt-Sysrq-t output for "khubd".
+
+In the report too (took me some time to remember it ended up in
+/var/log/messages, not only the current console)
+
+> And does this happen if you try this with, say, OHCI not EHCI?
+
+I haven't used OHCI for months - all my usb1 devices are plugged in an
+external usb2 hub, so I don't even build OHCI as module in my own
+kernels. Do you really want me to try it ? Because if it fails I won't
+be able to tell you if it ever worked for me this year.
+
+One less usb driver makes tester life easier:)
+
+Cheers,
+
+--=20
+Nicolas Mailhot
+
+--=-yRf4ARbbcz4WZ+uYKBy1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: Ceci est une partie de message
+	=?ISO-8859-1?Q?num=E9riquement?= =?ISO-8859-1?Q?_sign=E9e=2E?=
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
+
+iD8DBQA/lumBI2bVKDsp8g0RAhRIAJ9jwrgUgMQe9pJrVvaP4IZgqkVDbwCeMmwC
+voFOw7UfVczE67CdjWYc5AQ=
+=8wDe
+-----END PGP SIGNATURE-----
+
+--=-yRf4ARbbcz4WZ+uYKBy1--
 
