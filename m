@@ -1,1234 +1,1020 @@
 From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [RFC] [PATCH] 2/7 2.5.35 SCSI multi-path
-Date: Tue, 17 Sep 2002 15:50:41 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020917155041.B18424@eng2.beaverton.ibm.com>
-References: <20020917154940.A18401@eng2.beaverton.ibm.com> <20020917155018.A18424@eng2.beaverton.ibm.com>
+Subject: [RFC] [PATCH] 3/7 2.5.35 SCSI multi-path
+Date: Tue, 17 Sep 2002 15:51:20 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20020917155120.C18424@eng2.beaverton.ibm.com>
+References: <20020917154940.A18401@eng2.beaverton.ibm.com> <20020917155018.A18424@eng2.beaverton.ibm.com> <20020917155041.B18424@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020917155018.A18424@eng2.beaverton.ibm.com>; from patman on Tue, Sep 17, 2002 at 03:50:18PM -0700
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20020917155041.B18424@eng2.beaverton.ibm.com>; from patman on Tue, Sep 17, 2002 at 03:50:41PM -0700
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Patch 2 of 3 to add mid-layer scsi changes to simplify and enable the
+Patch 3 of 3 to add mid-layer scsi changes to simplify and enable the
 addition of scsi multi-path IO support.
 
 This does not add multi-path support, it adds changes that simplify the
 addition of the actual scsi multi-path code.
 
- scsi.h       |  201 +++++++++++++++++++++++++-
- scsi_ioctl.c |   85 ++++++-----
- scsi_lib.c   |  444 +++++++++++++++++++++++++++++++++++++++++++++--------------
- 3 files changed, 585 insertions(+), 145 deletions(-)
+ drivers/scsi/scsi_merge.c |   59 +++++++
+ drivers/scsi/scsi_proc.c  |    8 -
+ drivers/scsi/scsi_queue.c |   29 +++
+ drivers/scsi/scsi_scan.c  |  361 +++++++++++++++++++++++-----------------------
+ drivers/scsi/scsi_syms.c  |    6 
+ include/scsi/scsi.h       |   23 ++
+ 6 files changed, 303 insertions(+), 183 deletions(-)
 
-diff -Nru a/drivers/scsi/scsi.h b/drivers/scsi/scsi.h
---- a/drivers/scsi/scsi.h	Mon Sep 16 15:29:45 2002
-+++ b/drivers/scsi/scsi.h	Mon Sep 16 15:29:45 2002
-@@ -133,12 +133,14 @@
- #define sense_error(sense)  ((sense) & 0xf)
- #define sense_valid(sense)  ((sense) & 0x80);
- 
-+#define	UNKNOWN_ERROR	0x0000
- #define NEEDS_RETRY     0x2001
- #define SUCCESS         0x2002
- #define FAILED          0x2003
- #define QUEUED          0x2004
- #define SOFT_ERROR      0x2005
- #define ADD_TO_MLQUEUE  0x2006
-+#define REQUEUE  	0x2007
- 
- /*
-  * These are the values that scsi_cmd->state can take.
-@@ -387,6 +389,13 @@
- #define SYNC_RESET      0x40
- 
- /*
-+ * Prefix values for the SCSI id's. These are stored in the first byte of the
-+ * driverfs name field, see scsi_scan.c.
-+ */
-+#define SCSI_UID_SER_NUM 'S'
-+#define SCSI_UID_UNKNOWN 'Z'
-+
-+/*
-  * This is the crap from the old error handling code.  We have it in a special
-  * place so that we can more easily delete it later on.
-  */
-@@ -398,6 +407,7 @@
- typedef struct scsi_device Scsi_Device;
- typedef struct scsi_cmnd Scsi_Cmnd;
- typedef struct scsi_request Scsi_Request;
-+struct scsi_path_id;
- 
- #define SCSI_CMND_MAGIC 0xE25C23A5
- #define SCSI_REQ_MAGIC  0x75F6D354
-@@ -428,6 +438,7 @@
- 			   void (*complete) (Scsi_Cmnd *));
- extern int scsi_delete_timer(Scsi_Cmnd * SCset);
- extern void scsi_error_handler(void *host);
-+extern int scsi_check_sense(Scsi_Cmnd * SCpnt);
- extern int scsi_decide_disposition(Scsi_Cmnd * SCpnt);
- extern int scsi_block_when_processing_errors(Scsi_Device *);
- extern void scsi_sleep(int);
-@@ -458,6 +469,7 @@
-  */
- extern void scsi_initialize_merge_fn(Scsi_Device *SDpnt);
- extern int scsi_init_io(Scsi_Cmnd *SCpnt);
-+extern void scsi_cleanup_io(Scsi_Cmnd *SCpnt);
- 
- /*
-  * Prototypes for functions in scsi_queue.c
-@@ -467,6 +479,7 @@
- /*
-  * Prototypes for functions in scsi_lib.c
-  */
-+struct Scsi_Host;
- extern int scsi_maybe_unblock_host(Scsi_Device * SDpnt);
- extern Scsi_Cmnd *scsi_end_request(Scsi_Cmnd * SCpnt, int uptodate,
- 				   int sectors);
-@@ -475,9 +488,12 @@
- extern int scsi_insert_special_cmd(Scsi_Cmnd * SCpnt, int);
- extern void scsi_io_completion(Scsi_Cmnd * SCpnt, int good_sectors,
- 			       int block_sectors);
--extern void scsi_queue_next_request(request_queue_t * q, Scsi_Cmnd * SCpnt);
-+extern void scsi_queue_next_request(request_queue_t * q, Scsi_Cmnd * SCpnt,
-+				    struct Scsi_Host * SHpnt);
- extern void scsi_request_fn(request_queue_t * q);
- extern int scsi_starvation_completion(Scsi_Device * SDpnt);
-+extern void scsi_add_scsi_device(Scsi_Device *SDpnt, struct Scsi_Host *SHpnt);
-+extern void scsi_remove_scsi_device(Scsi_Device *SDpnt);
- 
- /*
-  * Prototypes for functions in scsi.c
-@@ -489,7 +505,8 @@
- extern void scsi_done(Scsi_Cmnd * SCpnt);
- extern void scsi_finish_command(Scsi_Cmnd *);
- extern int scsi_retry_command(Scsi_Cmnd *);
--extern Scsi_Cmnd *scsi_allocate_device(Scsi_Device *, int, int);
-+extern Scsi_Cmnd *scsi_allocate_device(Scsi_Device *, int, int,
-+				       struct scsi_path_id *);
- extern void __scsi_release_command(Scsi_Cmnd *);
- extern void scsi_release_command(Scsi_Cmnd *);
- extern void scsi_do_cmd(Scsi_Cmnd *, const void *cmnd,
-@@ -498,6 +515,9 @@
- 			int timeout, int retries);
- extern int scsi_dev_init(void);
- 
-+extern int scsi_paths_proc_print_paths(Scsi_Device *SDpnt, char *buffer,
-+				       char *format);
-+
- /*
-  * Newer request-based interfaces.
-  */
-@@ -542,6 +562,17 @@
- extern const char *scsi_extd_sense_format(unsigned char, unsigned char);
- 
- /*
-+ * The scsi_path_id struct contains the basic description of a path. IO to any
-+ * logical LUN must use all four of these elements.
-+ */
-+struct scsi_path_id {
-+	struct Scsi_Host *spi_shpnt;	/* Host adapter to use */
-+	unsigned int spi_channel;	/* channel on the host */
-+	unsigned int spi_id;		/* target id on the channel */
-+	unsigned int spi_lun;		/* LUN on the target */
-+};
-+
-+/*
-  *  The scsi_device struct contains what we know about each given scsi
-  *  device.
-  *
-@@ -558,19 +589,25 @@
- 	/*
- 	 * This information is private to the scsi mid-layer.
- 	 */
--	struct scsi_device *next;	/* Used for linked list */
--	struct scsi_device *prev;	/* Used for linked list */
-+	/*
-+	 * Only the SCSI mid-layer routines should access sdev_next and 
-+	 * sdev_prev. If you need to traverse through scsi_device's, use
-+	 * one of the scsi traverse functions - adapter drivers probably want
-+	 * to use scsi_for_each_host_sdev.
-+	 */
-+	struct scsi_device *sdev_next;	/* Used for linked list */
-+	struct scsi_device *sdev_prev;	/* Used for linked list */
- 	wait_queue_head_t   scpnt_wait;	/* Used to wait if
- 					   device is busy */
--	struct Scsi_Host *host;
- 	request_queue_t request_queue;
-         atomic_t                device_active; /* commands checked out for device */
- 	volatile unsigned short device_busy;	/* commands actually active on low-level */
- 	Scsi_Cmnd *device_queue;	/* queue of SCSI Command structures */
-         Scsi_Cmnd *current_cmnd;	/* currently active command */
--
--	unsigned int id, lun, channel;
--
-+	struct Scsi_Host *host;
-+	unsigned int channel;
-+	unsigned int id;
-+	unsigned int lun;
- 	unsigned int manufacturer;	/* Manufacturer of device, for using 
- 					 * vendor-specific cmd's */
- 	unsigned sector_size;	/* size in bytes */
-@@ -621,6 +658,7 @@
- 	unsigned remap:1;	/* support remapping  */
- 	unsigned starved:1;	/* unable to process commands because
- 				   host busy */
-+	unsigned scanning:1;	/* set while scanning */
- 
- 	// Flag to allow revalidate to succeed in sd_open
- 	int allow_revalidate;
-@@ -664,7 +702,6 @@
- 						 * received on original command 
- 						 * (auto-sense) */
- 
--	struct Scsi_Host *sr_host;
- 	Scsi_Device *sr_device;
- 	Scsi_Cmnd *sr_command;
- 	struct request *sr_request;	/* A copy of the command we are
-@@ -738,6 +775,10 @@
- 	struct scsi_cmnd *bh_next;	/* To enumerate the commands waiting 
- 					   to be processed. */
- 
-+	/*
-+	 * XXX a scsi_path_id should eventually replace the following,
-+	 * including the *host.
-+	 */
- 	unsigned int target;
- 	unsigned int lun;
- 	unsigned int channel;
-@@ -832,6 +873,7 @@
-  */
- #define SCSI_MLQUEUE_HOST_BUSY   0x1055
- #define SCSI_MLQUEUE_DEVICE_BUSY 0x1056
-+#define SCSI_MLQUEUE_RETRY       0x1057
- 
- #define SCSI_SLEEP(QUEUE, CONDITION) {		    \
-     if (CONDITION) {			            \
-@@ -852,6 +894,90 @@
- 	current->state = TASK_RUNNING;	\
-     }; }
- 
-+typedef struct scsi_traverse_hndl {
-+	Scsi_Device *last_scsi_device_p;
-+	struct Scsi_Host *last_scsi_host_p;
-+} scsi_traverse_hndl_t;
-+
-+extern Scsi_Device *scsi_traverse_sdevs(scsi_traverse_hndl_t *handle,
-+					uint host_no, uint channel, uint id, uint lun);
-+/*
-+ * Values used for scsi_find_lun_start()
-+ */
-+#define SCSI_FIND_ALL_HOST_NO	0xffffffff
-+#define SCSI_FIND_ALL_CHANNEL	0xffffffff
-+#define SCSI_FIND_ALL_ID	0xffffffff
-+#define SCSI_FIND_ALL_LUN	0xffffffff
-+
-+#define __INIT_TRAVERSE_HNDL(name)		\
-+	(name)->last_scsi_device_p = NULL, 	\
-+	(name)->last_scsi_host_p = NULL
-+
-+#define SCSI_TRAVERSE_ALL_SDEVS(hndl)			\
-+	scsi_traverse_sdevs(hndl,			\
-+			    SCSI_FIND_ALL_HOST_NO,	\
-+			    SCSI_FIND_ALL_CHANNEL,	\
-+			    SCSI_FIND_ALL_ID,		\
-+			    SCSI_FIND_ALL_LUN)
-+
-+#define scsi_for_all_sdevs(hndl, sdev)			\
-+	for (__INIT_TRAVERSE_HNDL(hndl), 		\
-+	     sdev = SCSI_TRAVERSE_ALL_SDEVS(hndl); 	\
-+	     sdev != NULL; 				\
-+	     sdev = SCSI_TRAVERSE_ALL_SDEVS(hndl))
-+
-+#define SCSI_TRAVERSE_HOST_SDEVS(hndl, host)		\
-+	scsi_traverse_sdevs(hndl,			\
-+			    host,			\
-+			    SCSI_FIND_ALL_CHANNEL,	\
-+			    SCSI_FIND_ALL_ID,		\
-+			    SCSI_FIND_ALL_LUN)
-+
-+#define scsi_for_each_host_sdev(hndl, sdev, host)			\
-+	for (__INIT_TRAVERSE_HNDL(hndl), 			\
-+	     sdev = SCSI_TRAVERSE_HOST_SDEVS(hndl, host); 	\
-+	     sdev != NULL; 					\
-+	     sdev = SCSI_TRAVERSE_HOST_SDEVS(hndl, host))
-+
-+#define SCSI_TRAVERSE_HOST_CHAN_SDEVS(hndl, host, chan)	\
-+	scsi_traverse_sdevs(hndl,			\
-+			    host,			\
-+			    chan,			\
-+			    SCSI_FIND_ALL_ID,		\
-+			    SCSI_FIND_ALL_LUN)
-+
-+#define scsi_for_each_host_chan_sdev(hndl, sdev, host, chan)		\
-+	for (__INIT_TRAVERSE_HNDL(hndl), 				\
-+	     sdev = SCSI_TRAVERSE_HOST_CHAN_SDEVS(hndl, host, chan); 	\
-+	     sdev != NULL; 						\
-+	     sdev = SCSI_TRAVERSE_HOST_CHAN_SDEVS(hndl, host, chan))
-+
-+#define SCSI_TRAVERSE_SDEV_LUNS(hndl, host, chan, id)	\
-+	scsi_traverse_sdevs(hndl,			\
-+			    host,			\
-+			    chan,			\
-+			    id,				\
-+			    SCSI_FIND_ALL_LUN)
-+
-+#define scsi_for_each_sdev_lun(hndl, sdev, host, chan, id)			\
-+	for (__INIT_TRAVERSE_HNDL(hndl), 				\
-+	     sdev = SCSI_TRAVERSE_SDEV_LUNS(hndl, host, chan, id); 	\
-+	     sdev != NULL; 						\
-+	     sdev = SCSI_TRAVERSE_SDEV_LUNS(hndl, host, chan, id))
-+
-+
-+#define scsi_for_each_sdev(hndl, sdev, host, chan, id, lun)			\
-+	for (__INIT_TRAVERSE_HNDL(hndl), 				\
-+	     sdev = scsi_traverse_sdevs(hndl, host, chan, id, lun); 	\
-+	     sdev != NULL; 						\
-+	     sdev = scsi_traverse_sdevs(hndl, host, chan, id, lun))
-+
-+#define scsi_locate_sdev(host, chan, id, lun)			\
-+	scsi_traverse_sdevs((scsi_traverse_hndl_t *) NULL,	\
-+			    host,				\
-+			    chan,				\
-+			    id,					\
-+			    lun)
- /*
-  * old style reset request from external source
-  * (private to sg.c and scsi_error.c, supplied by scsi_obsolete.c)
-@@ -944,6 +1070,63 @@
- 
-         return (Scsi_Cmnd *)req->special;
+diff -Nru a/drivers/scsi/scsi_merge.c b/drivers/scsi/scsi_merge.c
+--- a/drivers/scsi/scsi_merge.c	Mon Sep 16 15:29:45 2002
++++ b/drivers/scsi/scsi_merge.c	Mon Sep 16 15:29:45 2002
+@@ -22,6 +22,7 @@
+ #include <linux/timer.h>
+ #include <linux/string.h>
+ #include <linux/slab.h>
++#include <linux/bio.h>
+ #include <linux/ioport.h>
+ #include <linux/kernel.h>
+ #include <linux/stat.h>
+@@ -117,6 +118,58 @@
  }
-+
-+static inline Scsi_Device *scsi_lookup_id(char *id, Scsi_Device *sdev)
-+{
-+	return(NULL);
-+}
-+
-+static inline struct Scsi_Host *scsi_get_host(Scsi_Device *SDpnt)
-+{
-+	return (SDpnt->host);
-+}
-+
-+static inline int scsi_add_path(Scsi_Device *SDpnt, struct Scsi_Host *shpnt,
-+				unsigned int channel, unsigned int dev,
-+				unsigned int lun)
-+{
-+	SDpnt->host = shpnt;
-+	SDpnt->channel = channel;
-+	SDpnt->lun = lun;
-+	SDpnt->id = dev;
-+	return 0;
-+}
-+
-+static inline void scsi_remove_path(Scsi_Device *SDpnt, unsigned int host_no,
-+				    unsigned int channel, unsigned int dev,
-+				    unsigned int lun)
-+{
-+}
-+
-+static inline void scsi_replace_path(Scsi_Device *sdev, struct Scsi_Host *shost,
-+	unsigned int channel, unsigned int id, unsigned int lun)
-+{
-+	sdev->host = shost;
-+	sdev->channel = channel;
-+	sdev->id = id;
-+	sdev->lun = lun;
-+}
-+
-+static inline int scsi_get_path(Scsi_Device *SDpnt, struct scsi_path_id *pathp)
-+{
-+	pathp->spi_shpnt = SDpnt->host;
-+	pathp->spi_id = SDpnt->id;
-+	pathp->spi_lun = SDpnt->lun;
-+	pathp->spi_channel = SDpnt->channel;
-+	return 0;
-+}
-+
-+static inline int scsi_path_decide_disposition(Scsi_Cmnd * SCpnt)
-+{
-+	return UNKNOWN_ERROR;
-+}
-+
-+extern void scsi_paths_printk(Scsi_Device *SDpnt, char *prefix, char *format);
-+#define scsi_path_set_scmnd_ids(scp, pathp) do {		 	\
-+	scp->host = pathp->spi_shpnt;			\
-+	scp->target = pathp->spi_id;			\
-+	scp->lun = pathp->spi_lun; 				\
-+	scp->channel = pathp->spi_channel; } while(0)
  
- #define scsi_eh_eflags_chk(scp, flags) (scp->eh_eflags & flags)
+ /*
++ * Function:    scsi_cleanup_io()
++ *
++ * Purpose:     SCSI I/O cleanup io function.
++ *
++ * Arguments:   SCpnt - Command descriptor we wish to cleanup
++ *
++ * Returns:     N/A
++ *
++ * Lock status: 
++ *
++ * Notes:       Code was previously part of scsi_io_completion, moved here
++ *              as we now also call it when redriving IO that does not make
++ *              it to the upper layer.
++ */
++void scsi_cleanup_io(Scsi_Cmnd *SCpnt)
++{
++	struct request *req = SCpnt->request;
++
++	/*
++	 * Free up any indirection buffers we allocated for DMA purposes. 
++	 * For the case of a READ, we need to copy the data out of the
++	 * bounce buffer and into the real buffer.
++	 */
++	if (SCpnt->use_sg) {
++		struct scatterlist *sgpnt;
++
++		sgpnt = (struct scatterlist *) SCpnt->buffer;
++		scsi_free_sgtable(SCpnt->buffer, SCpnt->sglist_len);
++	} else {
++		if (SCpnt->buffer != req->buffer) {
++			if (rq_data_dir(req) == READ) {
++				unsigned long flags;
++				char *to = bio_kmap_irq(req->bio, &flags);
++
++				memcpy(to, SCpnt->buffer, SCpnt->bufflen);
++				bio_kunmap_irq(to, &flags);
++			}
++			kfree(SCpnt->buffer);
++		}
++	}
++
++	/*
++	 * Zero these out.  They now point to freed memory, and it is
++	 * dangerous to hang onto the pointers.
++	 */
++	SCpnt->buffer  = NULL;
++	SCpnt->bufflen = 0;
++	SCpnt->request_buffer = NULL;
++	SCpnt->request_bufflen = 0;
++}
++
++/*
+  * Function:    scsi_initialize_merge_fn()
+  *
+  * Purpose:     Initialize merge function for a host
+@@ -131,16 +184,18 @@
+  */
+ void scsi_initialize_merge_fn(Scsi_Device * SDpnt)
+ {
+-	struct Scsi_Host *SHpnt = SDpnt->host;
++	struct Scsi_Host *SHpnt;
+ 	request_queue_t *q = &SDpnt->request_queue;
+ 	u64 bounce_limit;
  
-diff -Nru a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
---- a/drivers/scsi/scsi_ioctl.c	Mon Sep 16 15:29:45 2002
-+++ b/drivers/scsi/scsi_ioctl.c	Mon Sep 16 15:29:45 2002
-@@ -129,10 +129,15 @@
++	SHpnt = scsi_get_host(SDpnt);
++	BUG_ON(SHpnt == NULL);
+ 	/*
+ 	 * The generic merging functions work just fine for us.
+ 	 * Enable highmem I/O, if appropriate.
+ 	 */
+ 	bounce_limit = BLK_BOUNCE_HIGH;
+-	if (SHpnt->highmem_io && (SDpnt->type == TYPE_DISK)) {
++	if (SHpnt->highmem_io) {
+ 		if (!PCI_DMA_BUS_IS_PHYS)
+ 			/* Platforms with virtual-DMA translation
+  			 * hardware have no practical limit.
+diff -Nru a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
+--- a/drivers/scsi/scsi_proc.c	Mon Sep 16 15:29:45 2002
++++ b/drivers/scsi/scsi_proc.c	Mon Sep 16 15:29:45 2002
+@@ -255,15 +255,15 @@
+ 	return (cmdIndex);
+ }
+ 
+-void proc_print_scsidevice(Scsi_Device * scd, char *buffer, int *size, int len)
++void proc_print_scsidevice(Scsi_Device *scd, char *buffer, int *size, int len)
+ {
+ 
+ 	int x, y = *size;
+ 	extern const char *const scsi_device_types[MAX_SCSI_DEVICE_CODE];
+ 
+-	y = sprintf(buffer + len,
+-	     "Host: scsi%d Channel: %02d Id: %02d Lun: %02d\n  Vendor: ",
+-		    scd->host->host_no, scd->channel, scd->id, scd->lun);
++	y = scsi_paths_proc_print_paths(scd, buffer + len,
++		"Host: scsi%d Channel: %02d Id: %02d Lun: %02d\n");
++	y += sprintf(buffer + len + y, "Vendor: ");
+ 	for (x = 0; x < 8; x++) {
+ 		if (scd->vendor[x] >= 0x20)
+ 			y += sprintf(buffer + len + y, "%c", scd->vendor[x]);
+diff -Nru a/drivers/scsi/scsi_queue.c b/drivers/scsi/scsi_queue.c
+--- a/drivers/scsi/scsi_queue.c	Mon Sep 16 15:29:45 2002
++++ b/drivers/scsi/scsi_queue.c	Mon Sep 16 15:29:45 2002
+@@ -76,7 +76,8 @@
+  */
+ int scsi_mlqueue_insert(Scsi_Cmnd * cmd, int reason)
+ {
+-	struct Scsi_Host *host;
++	struct Scsi_Host *host; 
++	unsigned long flags;
+ 
+ 	SCSI_LOG_MLQUEUE(1, printk("Inserting command %p into mlqueue\n", cmd));
+ 
+@@ -106,7 +107,7 @@
+ 			}
+ 		}
+ 		host->host_blocked = TRUE;
+-	} else {
++	} else if (reason == SCSI_MLQUEUE_DEVICE_BUSY) {
+ 		/*
+ 		 * Protect against race conditions.  If the device isn't busy,
+ 		 * assume that something actually completed, and that we should
+@@ -121,6 +122,11 @@
+ 			}
+ 		}
+ 		cmd->device->device_blocked = TRUE;
++	} else {
++		/*
++		 * Must be SCSI_MLQUEUE_RETRY: requeue without marking
++		 * host or device as busy.
++		 */
+ 	}
+ 
+ 	/*
+@@ -134,12 +140,27 @@
+ 	 * Decrement the counters, since these commands are no longer
+ 	 * active on the host/device.
+ 	 */
++	spin_lock_irqsave(cmd->device->request_queue.queue_lock, flags);
++	cmd->device->device_busy--; /* XXX race */
+ 	scsi_host_busy_dec_and_test(cmd->host, cmd->device);
+-
++	spin_unlock_irqrestore(cmd->device->request_queue.queue_lock, flags);
+ 	/*
+ 	 * Insert this command at the head of the queue for it's device.
+ 	 * It will go before all other commands that are already in the queue.
+ 	 */
+-	scsi_insert_special_cmd(cmd, 1);
++	if (cmd->request->flags & REQ_SPECIAL) {
++		/*
++		 * Calling this for REQ_CMD requests is fatal.
++		 */
++		scsi_insert_special_cmd(cmd, 1);
++	} else {
++		/*
++		 * Clean up the IO, and requeue it without setting cmd to
++		 * REQ_SPECIAL.
++		 */
++		scsi_cleanup_io(cmd);
++		scsi_queue_next_request(&cmd->device->request_queue, cmd,
++					cmd->host);
++	}
+ 	return 0;
+ }
+diff -Nru a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+--- a/drivers/scsi/scsi_scan.c	Mon Sep 16 15:29:45 2002
++++ b/drivers/scsi/scsi_scan.c	Mon Sep 16 15:29:45 2002
+@@ -189,26 +189,22 @@
+ 	" SCSI scanning, some SCSI devices might not be configured\n"
+ 
+ /*
+- * Prefix values for the SCSI id's (stored in driverfs name field)
+- */
+-#define SCSI_UID_SER_NUM 'S'
+-#define SCSI_UID_UNKNOWN 'Z'
+-
+-/*
+- * Return values of some of the scanning functions.
++ * Return values for (some of) the scanning functions, these are masks.
+  *
+  * SCSI_SCAN_NO_RESPONSE: no valid response received from the target, this
+  * includes allocation or general failures preventing IO from being sent.
+  *
+- * SCSI_SCAN_TARGET_PRESENT: target responded, but no device is available
+- * on the given LUN.
++ * SCSI_SCAN_TARGET_PRESENT: target responded, a device may or may not be
++ * present on a given LUN in such cases.
++ *
++ * SCSI_SCAN_LUN_PRESENT: A device is available on a given LUN.
+  *
+- * SCSI_SCAN_LUN_PRESENT: target responded, and a device is available on a
+- * given LUN.
++ * SCSI_SCAN_NEW_LUN: This is a pre-existing device with a new path.
+  */
+-#define SCSI_SCAN_NO_RESPONSE		0
+-#define SCSI_SCAN_TARGET_PRESENT	1
+-#define SCSI_SCAN_LUN_PRESENT		2
++#define SCSI_SCAN_NO_RESPONSE		0x00
++#define SCSI_SCAN_TARGET_PRESENT	0x01
++#define SCSI_SCAN_LUN_PRESENT		0x02
++#define SCSI_SCAN_NEW_LUN		0x04
+ 
+ static char *scsi_null_device_strs = "nullnullnullnull";
+ 
+@@ -291,15 +287,11 @@
+  **/
+ static void scsi_unlock_floptical(Scsi_Request *sreq, unsigned char *result)
+ {
+-	Scsi_Device *sdscan = sreq->sr_device;
+ 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
+ 
+ 	printk(KERN_NOTICE "scsi: unlocking floptical drive\n");
+ 	scsi_cmd[0] = MODE_SENSE;
+-	if (sdscan->scsi_level <= SCSI_2)
+-		scsi_cmd[1] = (sdscan->lun << 5) & 0xe0;
+-	else
+-		scsi_cmd[1] = 0;
++	scsi_cmd[1] = 0;
+ 	scsi_cmd[2] = 0x2e;
+ 	scsi_cmd[3] = 0;
+ 	scsi_cmd[4] = 0x2a;	/* size */
+@@ -490,9 +482,8 @@
+  * scsi_alloc_sdev - allocate and setup a Scsi_Device
+  *
+  * Description:
+- *     Allocate, initialize for io, and return a pointer to a Scsi_Device.
+- *     Stores the @shost, @channel, @id, and @lun in the Scsi_Device, and
+- *     adds Scsi_Device to the appropriate list.
++ *     Allocate, initialize for io, add to the device list, and return a
++ *     pointer to a Scsi_Device.
+  *
+  * Return value:
+  *     Scsi_Device pointer, or NULL on failure.
+@@ -510,10 +501,16 @@
+ 		sdev->vendor = scsi_null_device_strs;
+ 		sdev->model = scsi_null_device_strs;
+ 		sdev->rev = scsi_null_device_strs;
+-		sdev->host = shost;
+-		sdev->id = id;
+-		sdev->lun = lun;
+-		sdev->channel = channel;
++
++		/*
++		 * XXX move this out, if it is overly redundant; if so, be
++		 * sure to call scsi_add_path somewhere, or modify
++		 * scsi_replace_path.
++		 */
++		if (scsi_add_path(sdev, shost, channel, id, lun)) {
++			kfree(sdev);
++			return (NULL);
++		}
+ 		sdev->online = TRUE;
+ 		/*
+ 		 * Some low level driver could use device->type
+@@ -531,17 +528,7 @@
+ 		scsi_initialize_merge_fn(sdev);
+ 		init_waitqueue_head(&sdev->scpnt_wait);
+ 
+-		/*
+-		 * Add it to the end of the shost->host_queue list.
+-		 */
+-		if (shost->host_queue != NULL) {
+-			sdev->prev = shost->host_queue;
+-			while (sdev->prev->next != NULL)
+-				sdev->prev = sdev->prev->next;
+-			sdev->prev->next = sdev;
+-		} else
+-			shost->host_queue = sdev;
+-
++		scsi_add_scsi_device(sdev, shost);
+ 	}
+ 	return (sdev);
+ }
+@@ -556,17 +543,13 @@
+  **/
+ static void scsi_free_sdev(Scsi_Device *sdev)
+ {
+-	if (sdev->prev != NULL)
+-		sdev->prev->next = sdev->next;
+-	else
+-		sdev->host->host_queue = sdev->next;
+-	if (sdev->next != NULL)
+-		sdev->next->prev = sdev->prev;
+-
++	/*
++	 * XXX move the following to scsi_remove_scsi_device?
++	 */
++	scsi_remove_path(sdev, SCSI_FIND_ALL_HOST_NO, SCSI_FIND_ALL_CHANNEL,
++			 SCSI_FIND_ALL_ID, SCSI_FIND_ALL_LUN);
+ 	blk_cleanup_queue(&sdev->request_queue);
+-	if (sdev->inquiry != NULL)
+-		kfree(sdev->inquiry);
+-	kfree(sdev);
++	scsi_remove_scsi_device(sdev);
+ }
+ 
+ /**
+@@ -585,11 +568,10 @@
+ static int scsi_check_id_size(Scsi_Device *sdev, int size)
+ {
+ 	if (size > DEVICE_NAME_SIZE) {
+-		printk(KERN_WARNING "scsi scan: host %d channel %d id %d lun %d"
+-		       " identifier too long, length %d, max %d. Device might"
+-		       " be improperly identified.\n", sdev->host->host_no,
+-		       sdev->channel, sdev->id, sdev->lun, size,
+-		       DEVICE_NAME_SIZE);
++		printk(KERN_WARNING "scsi scan: ");
++		scsi_paths_printk(sdev, " ", "host %d channel %d id %d lun %d");
++		printk(" identifier too long, length %d, max %d. Device might"
++		       " be improperly identified.\n", size, DEVICE_NAME_SIZE);
+ 		return 1;
+ 	} else
+ 		return 0;
+@@ -607,32 +589,28 @@
+  * Return:
+  *     A pointer to data containing the results on success, else NULL.
+  **/
+-unsigned char *scsi_get_evpd_page(Scsi_Device *sdev, Scsi_Request *sreq)
++unsigned char *scsi_get_evpd_page(Scsi_Device *sdev, Scsi_Request *sreq,
++				  struct scsi_path_id *pathid)
+ {
+ 	unsigned char *evpd_page;
+ 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
+-	int lun = sdev->lun;
+-	int scsi_level = sdev->scsi_level;
+ 	int max_lgth = 255;
+ 
+ retry:
+ 	evpd_page = kmalloc(max_lgth, GFP_ATOMIC |
+-			      (sdev->host->unchecked_isa_dma) ?
++			      (pathid->spi_shpnt->unchecked_isa_dma) ?
+ 			      GFP_DMA : 0);
+ 	if (!evpd_page) {
+-		printk(KERN_WARNING "scsi scan: Allocation failure identifying"
+-		       " host %d channel %d id %d lun %d, device might be"
+-		       " improperly identified.\n", sdev->host->host_no,
+-		       sdev->channel, sdev->id, sdev->lun);
++		printk(KERN_WARNING "scsi scan: Allocation failure identifying ");
++		scsi_paths_printk(sdev, " ", "host %d channel %d id %d lun %d");
++		printk("device might be improperly identified.\n");
+ 		return NULL;
+ 	}
++	memset(evpd_page, 0, max_lgth);
+ 
+ 	memset(scsi_cmd, 0, MAX_COMMAND_SIZE);
+ 	scsi_cmd[0] = INQUIRY;
+-	if ((lun > 0) && (scsi_level <= SCSI_2))
+-		scsi_cmd[1] = ((lun << 5) & 0xe0) | 0x01;
+-	else
+-		scsi_cmd[1] = 0x01;	/* SCSI_3 and higher, don't touch */
++	scsi_cmd[1] = 0x01;
+ 	scsi_cmd[4] = max_lgth;
+ 	sreq->sr_cmd_len = 0;
+ 	sreq->sr_sense_buffer[0] = 0;
+@@ -865,33 +843,30 @@
+  *     0: Failure
+  *     1: Success
+  **/
+-int scsi_get_deviceid(Scsi_Device *sdev, Scsi_Request *sreq)
++int scsi_get_deviceid(Scsi_Device *sdev, Scsi_Request *sreq,
++		      struct scsi_path_id *pathid)
+ {
+ 	unsigned char *id_page;
+ 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
+ 	int id_idx, scnt, ret;
+-	int lun = sdev->lun;
+-	int scsi_level = sdev->scsi_level;
+ 	int max_lgth = 255;
+ 
++
+ retry:
+ 	id_page = kmalloc(max_lgth, GFP_ATOMIC |
+-			      (sdev->host->unchecked_isa_dma) ?
++			      (pathid->spi_shpnt->unchecked_isa_dma) ?
+ 			      GFP_DMA : 0);
+ 	if (!id_page) {
+-		printk(KERN_WARNING "scsi scan: Allocation failure identifying"
+-		       " host %d channel %d id %d lun %d, device might be"
+-		       " improperly identified.\n", sdev->host->host_no,
+-		       sdev->channel, sdev->id, sdev->lun);
++		printk(KERN_WARNING "scsi scan: Allocation failure identifying ");
++		scsi_paths_printk(sdev, " ", "host %d channel %d id %d lun %d");
++		printk("device might be improperly identified.\n");
+ 		return 0;
+ 	}
++	memset(id_page, 0, max_lgth);
+ 
+ 	memset(scsi_cmd, 0, MAX_COMMAND_SIZE);
+ 	scsi_cmd[0] = INQUIRY;
+-	if ((lun > 0) && (scsi_level <= SCSI_2))
+-		scsi_cmd[1] = ((lun << 5) & 0xe0) | 0x01;
+-	else
+-		scsi_cmd[1] = 0x01;	/* SCSI_3 and higher, don't touch */
++	scsi_cmd[1] = 0x01;
+ 	scsi_cmd[2] = 0x83;
+ 	scsi_cmd[4] = max_lgth;
+ 	sreq->sr_cmd_len = 0;
+@@ -930,8 +905,9 @@
+ 				SCSI_LOG_SCAN_BUS(4, printk(KERN_INFO
+ 				  "scsi scan: host %d channel %d id %d lun %d"
+ 				  " used id desc %d/%d/%d\n",
+-				  sdev->host->host_no, sdev->channel,
+-				  sdev->id, sdev->lun,
++				  pathid->spi_shpnt->host_no,
++				  pathid->spi_channel, pathid->spi_id,
++				  pathid->spi_lun,
+ 				  id_search_list[id_idx].id_type,
+ 				  id_search_list[id_idx].naa_type,
+ 				  id_search_list[id_idx].code_set));
+@@ -941,8 +917,9 @@
+ 				SCSI_LOG_SCAN_BUS(4, printk(KERN_INFO
+ 				  "scsi scan: host %d channel %d id %d lun %d"
+ 				  " no match/error id desc %d/%d/%d\n",
+-				  sdev->host->host_no, sdev->channel,
+-				  sdev->id, sdev->lun,
++				  pathid->spi_shpnt->host_no,
++				  pathid->spi_channel, pathid->spi_id,
++				  pathid->spi_lun,
+ 				  id_search_list[id_idx].id_type,
+ 				  id_search_list[id_idx].naa_type,
+ 				  id_search_list[id_idx].code_set));
+@@ -973,32 +950,28 @@
+  *     0: Failure
+  *     1: Success
+  **/
+-int scsi_get_serialnumber(Scsi_Device *sdev, Scsi_Request *sreq)
++int scsi_get_serialnumber(Scsi_Device *sdev, Scsi_Request *sreq,
++			  struct scsi_path_id *pathid)
+ {
+ 	unsigned char *serialnumber_page;
+ 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
+-	int lun = sdev->lun;
+-	int scsi_level = sdev->scsi_level;
+ 	int max_lgth = 255;
+ 
+  retry:
+ 	serialnumber_page = kmalloc(max_lgth, GFP_ATOMIC |
+-			      (sdev->host->unchecked_isa_dma) ?
++			      (pathid->spi_shpnt->unchecked_isa_dma) ?
+ 			      GFP_DMA : 0);
+ 	if (!serialnumber_page) {
+-		printk(KERN_WARNING "scsi scan: Allocation failure identifying"
+-		       " host %d channel %d id %d lun %d, device might be"
+-		       " improperly identified.\n", sdev->host->host_no,
+-		       sdev->channel, sdev->id, sdev->lun);
++		printk(KERN_WARNING "scsi scan: Allocation failure identifying ");
++		scsi_paths_printk(sdev, " ", "host %d channel %d id %d lun %d");
++		printk("device might be improperly identified.\n");
+ 		return 0;
+ 	}
++	memset(serialnumber_page, 0, max_lgth);
+ 
+ 	memset(scsi_cmd, 0, MAX_COMMAND_SIZE);
+ 	scsi_cmd[0] = INQUIRY;
+-	if ((lun > 0) && (scsi_level <= SCSI_2))
+-		scsi_cmd[1] = ((lun << 5) & 0xe0) | 0x01;
+-	else
+-		scsi_cmd[1] = 0x01;	/* SCSI_3 and higher, don't touch */
++	scsi_cmd[1] = 0x01;
+ 	scsi_cmd[2] = 0x80;
+ 	scsi_cmd[4] = max_lgth;
+ 	sreq->sr_cmd_len = 0;
+@@ -1093,14 +1066,20 @@
+ {
+ 	unsigned char *evpd_page = NULL;
+ 	int cnt;
++	struct scsi_path_id pathid;
+ 
+ 	memset(sdev->sdev_driverfs_dev.name, 0, DEVICE_NAME_SIZE);
+-	evpd_page = scsi_get_evpd_page(sdev, sreq);
++	if (scsi_get_path(sdev, &pathid)) {
++		printk(KERN_ERR "scsi scan: no path to scan device.\n");
++		scsi_get_default_name(sdev);
++		return;
++	}
++	evpd_page = scsi_get_evpd_page(sdev, sreq, &pathid);
+ 	if (evpd_page == NULL) {
+ 		/*
+ 		 * try to obtain serial number anyway
+ 		 */
+-		(void)scsi_get_serialnumber(sdev, sreq);
++		(void)scsi_get_serialnumber(sdev, sreq, &pathid);
+ 	} else {
+ 		/*
+ 		 * XXX search high to low, since the pages are lowest to
+@@ -1108,23 +1087,25 @@
+ 		 */
+ 		for(cnt = 4; cnt <= evpd_page[3] + 3; cnt++)
+ 			if (evpd_page[cnt] == 0x83)
+-				if (scsi_get_deviceid(sdev, sreq))
++				if (scsi_get_deviceid(sdev, sreq, &pathid))
+ 					goto leave;
+ 
+ 		for(cnt = 4; cnt <= evpd_page[3] + 3; cnt++)
+ 			if (evpd_page[cnt] == 0x80)
+-				if (scsi_get_serialnumber(sdev, sreq))
++				if (scsi_get_serialnumber(sdev, sreq, &pathid))
+ 					goto leave;
+ 
+-		if (sdev->sdev_driverfs_dev.name[0] == 0)
+-			scsi_get_default_name(sdev);
+ 
+ 	}
++	if (sdev->sdev_driverfs_dev.name[0] == 0)
++		scsi_get_default_name(sdev);
+ leave:
+ 	if (evpd_page) kfree(evpd_page);
+-	SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: host %d channel %d"
+-	    " id %d lun %d name/id: '%s'\n", sdev->host->host_no,
+-	    sdev->channel, sdev->id, sdev->lun, sdev->sdev_driverfs_dev.name));
++	SCSI_LOG_SCAN_BUS(3, {
++		printk(KERN_INFO "scsi scan: ");
++		scsi_paths_printk(sdev, " ", "host %d channel %d id %d lun %d");
++		printk(" name/id: '%s'\n", sdev->sdev_driverfs_dev.name);
++		});
+ 	return;
+ }
+ 
+@@ -1143,9 +1124,10 @@
+ {
+ 	int res = SCSI_2;
+ 	Scsi_Device *sdev;
++	scsi_traverse_hndl_t strav_hndl;
+ 
+-	for (sdev = shost->host_queue; sdev; sdev = sdev->next)
+-		if ((id == sdev->id) && (channel == sdev->channel))
++	scsi_for_each_sdev_lun (&strav_hndl, sdev, shost->host_no,
++				channel, id)
+ 			return (int) sdev->scsi_level;
+ 	/*
+ 	 * FIXME No matching target id is configured, this needs to get
+@@ -1175,14 +1157,13 @@
+ 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
+ 	int possible_inq_resp_len;
+ 
+-	SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: INQUIRY to host %d"
+-			" channel %d id %d lun %d\n", sdev->host->host_no,
+-			sdev->channel, sdev->id, sdev->lun));
++	SCSI_LOG_SCAN_BUS(3, {
++		printk(KERN_INFO "scsi scan: INQUIRY to ");
++		scsi_paths_printk(sdev, " ", "host %d channel %d id %d lun %d\n");
++	});
+ 
+ 	memset(scsi_cmd, 0, 6);
+ 	scsi_cmd[0] = INQUIRY;
+-	if ((sdev->lun > 0) && (sdev->scsi_level <= SCSI_2))
+-		scsi_cmd[1] = (sdev->lun << 5) & 0xe0;
+ 	scsi_cmd[4] = 36;	/* issue conservative alloc_length */
+ 	sreq->sr_cmd_len = 0;
+ 	sreq->sr_data_direction = SCSI_DATA_READ;
+@@ -1230,8 +1211,6 @@
+ 	if (possible_inq_resp_len > 36) {	/* do additional INQUIRY */
+ 		memset(scsi_cmd, 0, 6);
+ 		scsi_cmd[0] = INQUIRY;
+-		if ((sdev->lun > 0) && (sdev->scsi_level <= SCSI_2))
+-			scsi_cmd[1] = (sdev->lun << 5) & 0xe0;
+ 		scsi_cmd[4] = (unsigned char) possible_inq_resp_len;
+ 		sreq->sr_cmd_len = 0;
+ 		sreq->sr_data_direction = SCSI_DATA_READ;
+@@ -1308,9 +1287,7 @@
+  *     NULL, store the address of the new Scsi_Device in *@sdevnew (needed
+  *     when scanning a particular LUN).
+  *
+- * Return:
+- *     SCSI_SCAN_NO_RESPONSE: could not allocate or setup a Scsi_Device
+- *     SCSI_SCAN_LUN_PRESENT: a new Scsi_Device was allocated and initialized
++ * Returns a SCSI_SCAN_ mask value.
+  **/
+ static int scsi_add_lun(Scsi_Device *sdevscan, Scsi_Device **sdevnew,
+ 			Scsi_Request *sreq, char *inq_result, int *bflags)
+@@ -1319,9 +1296,19 @@
+ 	struct Scsi_Device_Template *sdt;
+ 	char devname[64];
+ 	extern devfs_handle_t scsi_devfs_handle;
++	struct scsi_path_id pathid;
+ 
+-	sdev = scsi_alloc_sdev(sdevscan->host, sdevscan->channel,
+-				     sdevscan->id, sdevscan->lun);
++	/*
++	 * sdevscan must have only one path, add it to this device.  XXX
++	 * this is a bit ugly, there must be a better solution, maybe pass
++	 * a scsi_path_id everywhere.
++	 */
++	if (scsi_get_path(sdevscan, &pathid)) {
++		printk(KERN_ERR "scsi scan: no path to scan device.\n");
++		return SCSI_SCAN_NO_RESPONSE;
++	}
++	sdev = scsi_alloc_sdev(pathid.spi_shpnt, pathid.spi_channel,
++			       pathid.spi_id, pathid.spi_lun);
+ 	if (sdev == NULL)
+ 		return SCSI_SCAN_NO_RESPONSE;
+ 
+@@ -1348,6 +1335,15 @@
+ 	sdev->model = (char *) (sdev->inquiry + 16);
+ 	sdev->rev = (char *) (sdev->inquiry + 32);
+ 
++	/*
++	 * XXX move the identifier and driverfs/devfs setup to a new
++	 * function
++	 *
++	 * scsi_load_identifier is the only reason sreq is needed in this
++	 * function; it also requires that the inquiry strings be set up.
++	 */
++	scsi_load_identifier(sdev, sreq);
++
+ 	if (*bflags & BLIST_ISROM) {
+ 		/*
+ 		 * It would be better to modify sdev->type, and set
+@@ -1410,20 +1406,12 @@
+ 	sdev->soft_reset = (inq_result[7] & 1) && ((inq_result[3] & 7) == 2);
+ 
+ 	/*
+-	 * XXX maybe move the identifier and driverfs/devfs setup to a new
+-	 * function, and call them after this function is called.
+-	 *
+-	 * scsi_load_identifier is the only reason sreq is needed in this
+-	 * function.
+-	 */
+-	scsi_load_identifier(sdev, sreq);
+-
+-	/*
+ 	 * create driverfs files
+ 	 */
+ 	sprintf(sdev->sdev_driverfs_dev.bus_id,"%d:%d:%d:%d",
+-		sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
+-	sdev->sdev_driverfs_dev.parent = &sdev->host->host_driverfs_dev;
++		pathid.spi_shpnt->host_no, pathid.spi_channel, pathid.spi_id,
++		pathid.spi_lun);
++	sdev->sdev_driverfs_dev.parent = &pathid.spi_shpnt->host_driverfs_dev;
+ 	sdev->sdev_driverfs_dev.bus = &scsi_driverfs_bus_type;
+ 	device_register(&sdev->sdev_driverfs_dev);
+ 
+@@ -1433,7 +1421,8 @@
+ 	device_create_file(&sdev->sdev_driverfs_dev, &dev_attr_type);
+ 
+ 	sprintf(devname, "host%d/bus%d/target%d/lun%d",
+-		sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
++		pathid.spi_shpnt->host_no, pathid.spi_channel, pathid.spi_id,
++		pathid.spi_lun);
+ 	if (sdev->de)
+ 		printk(KERN_WARNING "scsi devfs dir: \"%s\" already exists\n",
+ 		       devname);
+@@ -1468,7 +1457,8 @@
+ 	if (sdevnew != NULL)
+ 		*sdevnew = sdev;
+ 
+-	return SCSI_SCAN_LUN_PRESENT;
++	return (SCSI_SCAN_TARGET_PRESENT | SCSI_SCAN_LUN_PRESENT |
++		SCSI_SCAN_NEW_LUN);
+ }
+ 
+ /**
+@@ -1481,11 +1471,7 @@
+  *     Call scsi_probe_lun, if a LUN with an attached device is found,
+  *     allocate and set it up by calling scsi_add_lun.
+  *
+- * Return:
+- *     SCSI_SCAN_NO_RESPONSE: could not allocate or setup a Scsi_Device
+- *     SCSI_SCAN_TARGET_PRESENT: target responded, but no device is
+- *         attached at the LUN
+- *     SCSI_SCAN_LUN_PRESENT: a new Scsi_Device was allocated and initialized
++ * Returns a SCSI_SCAN_ mask value.
+  **/
+ static int scsi_probe_and_add_lun(Scsi_Device *sdevscan, Scsi_Device **sdevnew,
+ 				  int *bflagsp)
+@@ -1495,7 +1481,15 @@
+ 	unsigned char *scsi_result = NULL;
+ 	int bflags;
+ 	int res;
++	struct scsi_path_id pathid;
+ 
++	if (sdevnew != NULL)
++		*sdevnew = NULL;
++
++	if (scsi_get_path(sdevscan, &pathid)) {
++		printk(KERN_ERR "scsi scan: no path to scan device.\n");
++		return SCSI_SCAN_NO_RESPONSE;
++	}
+ 	/*
+ 	 * Any command blocks allocated are fixed to use sdevscan->lun,
+ 	 * so they must be allocated and released if sdevscan->lun
+@@ -1521,9 +1515,8 @@
+ 	 * The sreq is for use only with sdevscan.
+ 	 */
+ 
+-	scsi_result = kmalloc(256, GFP_ATOMIC |
+-			      (sdevscan->host->unchecked_isa_dma) ?
+-			      GFP_DMA : 0);
++	scsi_result = kmalloc(256, GFP_ATOMIC | 
++	    (pathid.spi_shpnt->unchecked_isa_dma) ?  GFP_DMA : 0);
+ 	if (scsi_result == NULL)
+ 		goto alloc_failed;
+ 
+@@ -1552,12 +1545,12 @@
+ 		} else {
+ 			res = scsi_add_lun(sdevscan, &sdev, sreq, scsi_result,
+ 					   &bflags);
+-			if (res == SCSI_SCAN_LUN_PRESENT) {
++			if (res & SCSI_SCAN_LUN_PRESENT) {
+ 				BUG_ON(sdev == NULL);
+-				if ((bflags & BLIST_KEY) != 0) {
++				if ((res & SCSI_SCAN_NEW_LUN) &&
++				    (bflags & BLIST_KEY) != 0) {
+ 					sdev->lockable = 0;
+-					scsi_unlock_floptical(sreq,
+-							      scsi_result);
++					scsi_unlock_floptical(sreq, scsi_result);
+ 					/*
+ 					 * scsi_result no longer contains
+ 					 * the INQUIRY data.
+@@ -1606,22 +1599,26 @@
+ static void scsi_sequential_lun_scan(Scsi_Device *sdevscan, int bflags,
+ 				     int lun0_res)
+ {
+-	struct Scsi_Host *shost = sdevscan->host;
+ 	unsigned int sparse_lun;
+ 	unsigned int max_dev_lun;
++	struct scsi_path_id pathid;
+ 
++	if (scsi_get_path(sdevscan, &pathid)) {
++		printk(KERN_ERR "scsi scan: no path to scan device.\n");
++		return;
++	}
+ 	SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: Sequential scan of"
+-			" host %d channel %d id %d\n", sdevscan->host->host_no,
+-			sdevscan->channel, sdevscan->id));
++		" host %d channel %d id %d\n", pathid.spi_shpnt->host_no,
++		pathid.spi_channel, pathid.spi_id));
+ 
+-	max_dev_lun = min(max_scsi_luns, shost->max_lun);
++	max_dev_lun = min(max_scsi_luns, pathid.spi_shpnt->max_lun);
+ 	/*
+ 	 * If this device is known to support sparse multiple units,
+ 	 * override the other settings, and scan all of them. Normally,
+ 	 * SCSI-3 devices should be scanned via the REPORT LUNS.
+ 	 */
+ 	if (bflags & BLIST_SPARSELUN) {
+-		max_dev_lun = shost->max_lun;
++		max_dev_lun = pathid.spi_shpnt->max_lun;
+ 		sparse_lun = 1;
+ 	} else
+ 		sparse_lun = 0;
+@@ -1630,7 +1627,7 @@
+ 	 * If not sparse lun and no device attached at LUN 0 do not scan
+ 	 * any further.
+ 	 */
+-	if (!sparse_lun && (lun0_res != SCSI_SCAN_LUN_PRESENT))
++	if (!sparse_lun && !(lun0_res & SCSI_SCAN_LUN_PRESENT))
+ 		return;
+ 
+ 	/*
+@@ -1647,7 +1644,7 @@
+ 	 * the other settings, and scan all of them.
+ 	 */
+ 	if (bflags & BLIST_FORCELUN)
+-		max_dev_lun = shost->max_lun;
++		max_dev_lun = pathid.spi_shpnt->max_lun;
+ 	/*
+ 	 * REGAL CDC-4X: avoid hang after LUN 4
+ 	 */
+@@ -1665,10 +1662,16 @@
+ 	 * until we reach the max, or no LUN is found and we are not
+ 	 * sparse_lun.
+ 	 */
+-	for (sdevscan->lun = 1; sdevscan->lun < max_dev_lun; ++sdevscan->lun)
+-		if ((scsi_probe_and_add_lun(sdevscan, NULL, NULL)
+-		     != SCSI_SCAN_LUN_PRESENT) && !sparse_lun)
++
++	for (pathid.spi_lun = 1; pathid.spi_lun < max_dev_lun;
++	     ++pathid.spi_lun) {
++		scsi_replace_path(sdevscan, pathid.spi_shpnt,
++				   pathid.spi_channel, pathid.spi_id,
++				  pathid.spi_lun);
++		if (!(scsi_probe_and_add_lun(sdevscan, NULL, NULL)
++		     & SCSI_SCAN_LUN_PRESENT) && !sparse_lun)
+ 			return;
++	}
+ }
+ 
+ #ifdef CONFIG_SCSI_REPORT_LUNS
+@@ -1732,6 +1735,7 @@
+ 	ScsiLun *fcp_cur_lun, *lun_data;
+ 	Scsi_Request *sreq;
+ 	char *data;
++	struct scsi_path_id pathid;
+ 
+ 	/*
+ 	 * Only support SCSI-3 and up devices.
+@@ -1739,6 +1743,13 @@
+ 	if (sdevscan->scsi_level < SCSI_3)
+ 		return 1;
+ 
++	if (scsi_get_path(sdevscan, &pathid)) {
++		printk(KERN_ERR "scsi scan: no path to scan device.\n");
++		/*
++		 * An inconsistency, so don't try scanning any further.
++		 */
++		return 0;
++	}
+ 	sdevscan->queue_depth = 1;
+ 	scsi_build_commandblocks(sdevscan);
+ 	if (sdevscan->has_cmdblocks == 0) {
+@@ -1750,8 +1761,8 @@
+ 	}
+ 	sreq = scsi_allocate_request(sdevscan);
+ 
+-	sprintf(devname, "host %d channel %d id %d", sdevscan->host->host_no,
+-		sdevscan->channel, sdevscan->id);
++	sprintf(devname, "host %d channel %d id %d", pathid.spi_shpnt->host_no,
++		pathid.spi_channel, pathid.spi_id);
+ 	/*
+ 	 * Allocate enough to hold the header (the same size as one ScsiLun)
+ 	 * plus the max number of luns we are requesting.
+@@ -1763,9 +1774,8 @@
+ 	 * prevent us from finding any LUNs on this target.
+ 	 */
+ 	length = (max_scsi_report_luns + 1) * sizeof(ScsiLun);
+-	lun_data = (ScsiLun *) kmalloc(length, GFP_ATOMIC |
+-					   (sdevscan->host->unchecked_isa_dma ?
+-					    GFP_DMA : 0));
++	lun_data = (ScsiLun *) kmalloc(length, GFP_ATOMIC | 
++	    (pathid.spi_shpnt->unchecked_isa_dma ?  GFP_DMA : 0));
+ 	if (lun_data == NULL) {
+ 		printk(ALLOC_FAILURE_MSG, __FUNCTION__);
+ 		scsi_release_commandblocks(sdevscan);
+@@ -1845,9 +1855,8 @@
+ 	} else
+ 		num_luns = (length / sizeof(ScsiLun));
+ 
+-	SCSI_LOG_SCAN_BUS(3, printk (KERN_INFO "scsi scan: REPORT LUN scan of"
+-			" host %d channel %d id %d\n", sdevscan->host->host_no,
+-			sdevscan->channel, sdevscan->id));
++	SCSI_LOG_SCAN_BUS(3, 
++	    printk(KERN_INFO "scsi scan: REPORT LUN scan of %s\n", devname));
+ 	/*
+ 	 * Scan the luns in lun_data. The entry at offset 0 is really
+ 	 * the header, so start at 1 and go up to and including num_luns.
+@@ -1877,22 +1886,23 @@
+ 			/*
+ 			 * LUN 0 has already been scanned.
+ 			 */
+-		} else if (lun > sdevscan->host->max_lun) {
++		} else if (lun > pathid.spi_shpnt->max_lun) {
+ 			printk(KERN_WARNING "scsi: %s lun%d has a LUN larger"
+ 			       " than allowed by the host adapter\n",
+ 			       devname, lun);
+ 		} else {
+-			int res;
+-
+-			sdevscan->lun = lun;
+-			res = scsi_probe_and_add_lun(sdevscan, NULL, NULL);
+-			if (res == SCSI_SCAN_NO_RESPONSE) {
++			pathid.spi_lun = lun;
++			scsi_replace_path(sdevscan, pathid.spi_shpnt,
++					   pathid.spi_channel, pathid.spi_id,
++					  pathid.spi_lun);
++			if (scsi_probe_and_add_lun(sdevscan, NULL, NULL) ==
++			    SCSI_SCAN_NO_RESPONSE) {
+ 				/*
+ 				 * Got some results, but now none, abort.
+ 				 */
+ 				printk(KERN_ERR "scsi: Unexpected response"
+ 				       " from %s lun %d while scanning, scan"
+-				       " aborted\n", devname, sdevscan->lun);
++				       " aborted\n", devname, pathid.spi_lun);
  				break;
  			}
- 		default:	/* Fall through for non-removable media */
--			printk("SCSI error: host %d id %d lun %d return code = %x\n",
--			       dev->host->host_no,
--			       dev->id,
--			       dev->lun,
-+			/*
-+			 * This is a bit klugey, since we rely on SRpnt
-+			 * to contain the scsi_cmnd for the IO.
-+			 */
-+			printk("SCSI error: host %d channel %d id %d lun %d return code = %x\n",
-+			       SRpnt->sr_command->host->host_no,
-+			       SRpnt->sr_command->channel,
-+			       SRpnt->sr_command->target,
-+			       SRpnt->sr_command->lun,
- 			       SRpnt->sr_result);
- 			printk("\tSense class %x, sense error %x, extended sense %x\n",
- 			       sense_class(SRpnt->sr_sense_buffer[0]),
-@@ -191,6 +196,7 @@
- 	char *cmd_in;
- 	Scsi_Request *SRpnt;
- 	Scsi_Device *SDpnt;
-+	struct Scsi_Host *SHpnt;
- 	unsigned char opcode;
- 	unsigned int inlen, outlen, cmdlen;
- 	unsigned int needed, buf_needed;
-@@ -200,7 +206,9 @@
- 	if (!sic)
- 		return -EINVAL;
- 
--	if (dev->host->unchecked_isa_dma)
-+	if ((SHpnt = scsi_get_host(dev)) == NULL)
-+		return -ENODEV;
-+	if (SHpnt->unchecked_isa_dma)
- 		gfp_mask |= GFP_DMA;
- 
- 	/*
-@@ -275,11 +283,9 @@
- 		goto error;
- 
- 	/*
--	 * Set the lun field to the correct value.
-+	 * The lun field in cmd[1] is conditionally set in the mid-layer
-+	 * before sending cmd.
- 	 */
--	if (dev->scsi_level <= SCSI_2)
--		cmd[1] = (cmd[1] & 0x1f) | (dev->lun << 5);
--
- 	switch (opcode) {
- 	case FORMAT_UNIT:
- 		timeout = FORMAT_UNIT_TIMEOUT;
-@@ -378,10 +384,16 @@
- static int
- scsi_ioctl_get_pci(Scsi_Device * dev, void *arg)
- {
-+	struct Scsi_Host *SHpnt;
- 
--        if (!dev->host->pci_dev) return -ENXIO;
--        return copy_to_user(arg, dev->host->pci_dev->slot_name,
--                            sizeof(dev->host->pci_dev->slot_name));
-+	/*
-+	 * XXX this ioctl should be replaced by a host specific interface
-+	 */ 
-+	if ((SHpnt = scsi_get_host(dev)) == NULL)
-+		return -ENODEV;
-+        if (!SHpnt->pci_dev) return -ENXIO;
-+        return copy_to_user(arg, SHpnt->pci_dev->slot_name,
-+                            sizeof(SHpnt->pci_dev->slot_name));
- }
- 
- 
-@@ -393,7 +405,8 @@
- int scsi_ioctl(Scsi_Device * dev, int cmd, void *arg)
- {
- 	char scsi_cmd[MAX_COMMAND_SIZE];
--	char cmd_byte1;
-+	struct scsi_path_id scsi_path;
-+	struct Scsi_Host *SHpnt;
- 
- 	/* No idea how this happens.... */
- 	if (!dev)
-@@ -408,22 +421,29 @@
- 	if (!scsi_block_when_processing_errors(dev)) {
- 		return -ENODEV;
- 	}
--	cmd_byte1 = (dev->scsi_level <= SCSI_2) ? (dev->lun << 5) : 0;
- 
- 	switch (cmd) {
- 	case SCSI_IOCTL_GET_IDLUN:
- 		if (verify_area(VERIFY_WRITE, arg, sizeof(Scsi_Idlun)))
- 			return -EFAULT;
- 
--		__put_user((dev->id & 0xff)
--			 + ((dev->lun & 0xff) << 8)
--			 + ((dev->channel & 0xff) << 16)
--			 + ((dev->host->host_no & 0xff) << 24),
-+		/*
-+		 * Just get first path, and use its
-+		 * id/lun/channel/host_no. This is fine for single path
-+		 * devices, or when no multi-path IO.
-+		 */
-+		scsi_get_path(dev, &scsi_path);
-+		__put_user((scsi_path.spi_id & 0xff)
-+			 + ((scsi_path.spi_lun & 0xff) << 8)
-+			 + ((scsi_path.spi_channel & 0xff) << 16)
-+			 + ((scsi_path.spi_shpnt->host_no & 0xff) << 24),
- 			 &((Scsi_Idlun *) arg)->dev_id);
--		__put_user(dev->host->unique_id, &((Scsi_Idlun *) arg)->host_unique_id);
-+		__put_user(scsi_path.spi_shpnt->unique_id, &((Scsi_Idlun *) arg)->host_unique_id);
- 		return 0;
- 	case SCSI_IOCTL_GET_BUS_NUMBER:
--		return put_user(dev->host->host_no, (int *) arg);
-+		if ((SHpnt = scsi_get_host(dev)) == NULL)
-+			return -ENODEV;
-+		return put_user(SHpnt->host_no, (int *) arg);
- 	case SCSI_IOCTL_TAGGED_ENABLE:
- 		if (!capable(CAP_SYS_ADMIN))
- 			return -EACCES;
-@@ -441,7 +461,9 @@
- 		dev->current_tag = 0;
- 		return 0;
- 	case SCSI_IOCTL_PROBE_HOST:
--		return ioctl_probe(dev->host, arg);
-+		if ((SHpnt = scsi_get_host(dev)) == NULL)
-+			return -ENODEV;
-+		return ioctl_probe(SHpnt, arg);
- 	case SCSI_IOCTL_SEND_COMMAND:
- 		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
- 			return -EACCES;
-@@ -451,8 +473,7 @@
- 		if (!dev->removable || !dev->lockable)
- 			return 0;
- 		scsi_cmd[0] = ALLOW_MEDIUM_REMOVAL;
--		scsi_cmd[1] = cmd_byte1;
--		scsi_cmd[2] = scsi_cmd[3] = scsi_cmd[5] = 0;
-+		scsi_cmd[1] = scsi_cmd[2] = scsi_cmd[3] = scsi_cmd[5] = 0;
- 		scsi_cmd[4] = SCSI_REMOVAL_PREVENT;
- 		return ioctl_internal_command((Scsi_Device *) dev, scsi_cmd,
- 				   IOCTL_NORMAL_TIMEOUT, NORMAL_RETRIES);
-@@ -461,31 +482,27 @@
- 		if (!dev->removable || !dev->lockable)
- 			return 0;
- 		scsi_cmd[0] = ALLOW_MEDIUM_REMOVAL;
--		scsi_cmd[1] = cmd_byte1;
--		scsi_cmd[2] = scsi_cmd[3] = scsi_cmd[5] = 0;
-+		scsi_cmd[1] = scsi_cmd[2] = scsi_cmd[3] = scsi_cmd[5] = 0;
- 		scsi_cmd[4] = SCSI_REMOVAL_ALLOW;
- 		return ioctl_internal_command((Scsi_Device *) dev, scsi_cmd,
- 				   IOCTL_NORMAL_TIMEOUT, NORMAL_RETRIES);
- 	case SCSI_IOCTL_TEST_UNIT_READY:
- 		scsi_cmd[0] = TEST_UNIT_READY;
--		scsi_cmd[1] = cmd_byte1;
--		scsi_cmd[2] = scsi_cmd[3] = scsi_cmd[5] = 0;
-+		scsi_cmd[1] = scsi_cmd[2] = scsi_cmd[3] = scsi_cmd[5] = 0;
- 		scsi_cmd[4] = 0;
- 		return ioctl_internal_command((Scsi_Device *) dev, scsi_cmd,
- 				   IOCTL_NORMAL_TIMEOUT, NORMAL_RETRIES);
- 		break;
- 	case SCSI_IOCTL_START_UNIT:
- 		scsi_cmd[0] = START_STOP;
--		scsi_cmd[1] = cmd_byte1;
--		scsi_cmd[2] = scsi_cmd[3] = scsi_cmd[5] = 0;
-+		scsi_cmd[1] = scsi_cmd[2] = scsi_cmd[3] = scsi_cmd[5] = 0;
- 		scsi_cmd[4] = 1;
- 		return ioctl_internal_command((Scsi_Device *) dev, scsi_cmd,
- 				     START_STOP_TIMEOUT, NORMAL_RETRIES);
- 		break;
- 	case SCSI_IOCTL_STOP_UNIT:
- 		scsi_cmd[0] = START_STOP;
--		scsi_cmd[1] = cmd_byte1;
--		scsi_cmd[2] = scsi_cmd[3] = scsi_cmd[5] = 0;
-+		scsi_cmd[1] = scsi_cmd[2] = scsi_cmd[3] = scsi_cmd[5] = 0;
- 		scsi_cmd[4] = 0;
- 		return ioctl_internal_command((Scsi_Device *) dev, scsi_cmd,
- 				     START_STOP_TIMEOUT, NORMAL_RETRIES);
-@@ -494,8 +511,10 @@
-                 return scsi_ioctl_get_pci(dev, arg);
-                 break;
- 	default:
--		if (dev->host->hostt->ioctl)
--			return dev->host->hostt->ioctl(dev, cmd, arg);
-+		if ((SHpnt = scsi_get_host(dev)) == NULL)
-+			return -ENODEV;
-+		if (SHpnt->hostt->ioctl)
-+			return SHpnt->hostt->ioctl(dev, cmd, arg);
- 		return -EINVAL;
- 	}
- 	return -EINVAL;
-diff -Nru a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c	Mon Sep 16 15:29:45 2002
-+++ b/drivers/scsi/scsi_lib.c	Mon Sep 16 15:29:45 2002
-@@ -37,6 +37,7 @@
- #define __KERNEL_SYSCALLS__
- 
- #include <linux/unistd.h>
-+#include <linux/slab.h>
- 
- #include <asm/system.h>
- #include <asm/irq.h>
-@@ -195,12 +196,14 @@
-  *		permutations grows as 2**N, and if too many more special cases
-  *		get added, we start to get screwed.
-  */
--void scsi_queue_next_request(request_queue_t * q, Scsi_Cmnd * SCpnt)
-+void scsi_queue_next_request(request_queue_t * q, Scsi_Cmnd * SCpnt,
-+			     struct Scsi_Host * SHpnt)
- {
--	int all_clear;
- 	unsigned long flags;
- 	Scsi_Device *SDpnt;
--	struct Scsi_Host *SHpnt;
-+	/* see comment further below */
-+	int all_clear;
-+	scsi_traverse_hndl_t STrav_hndl;
- 
- 	ASSERT_LOCK(q->queue_lock, 0);
- 
-@@ -225,7 +228,6 @@
- 	q->request_fn(q);
- 
- 	SDpnt = (Scsi_Device *) q->queuedata;
--	SHpnt = SDpnt->host;
- 
- 	/*
- 	 * If this is a single-lun device, and we are currently finished
-@@ -237,7 +239,7 @@
- 	if (SDpnt->single_lun && blk_queue_empty(q) && SDpnt->device_busy ==0) {
- 		request_queue_t *q;
- 
--		for (SDpnt = SHpnt->host_queue; SDpnt; SDpnt = SDpnt->next) {
-+		scsi_for_each_host_sdev(&STrav_hndl, SDpnt, SHpnt->host_no) {
- 			if (((SHpnt->can_queue > 0)
- 			     && (SHpnt->host_busy >= SHpnt->can_queue))
- 			    || (SHpnt->host_blocked)
-@@ -261,7 +263,7 @@
- 	 */
- 	all_clear = 1;
- 	if (SHpnt->some_device_starved) {
--		for (SDpnt = SHpnt->host_queue; SDpnt; SDpnt = SDpnt->next) {
-+		scsi_for_each_host_sdev(&STrav_hndl, SDpnt, SHpnt->host_no) {
- 			request_queue_t *q;
- 			if ((SHpnt->can_queue > 0 && (SHpnt->host_busy >= SHpnt->can_queue))
- 			    || (SHpnt->host_blocked) 
-@@ -314,6 +316,7 @@
- 	request_queue_t *q = &SCpnt->device->request_queue;
- 	struct request *req = SCpnt->request;
- 	unsigned long flags;
-+	struct Scsi_Host * SHpnt = SCpnt->host;
- 
- 	ASSERT_LOCK(q->queue_lock, 0);
- 
-@@ -331,7 +334,7 @@
- 		 * Bleah.  Leftovers again.  Stick the leftovers in
- 		 * the front of the queue, and goose the queue again.
+ 		}
+@@ -1938,18 +1948,15 @@
  		 */
--		scsi_queue_next_request(q, SCpnt);
-+		scsi_queue_next_request(q, SCpnt, SHpnt);
- 		return SCpnt;
- 	}
- 
-@@ -351,7 +354,7 @@
- 	__scsi_release_command(SCpnt);
- 
- 	if (frequeue)
--		scsi_queue_next_request(q, NULL);
-+		scsi_queue_next_request(q, NULL, SHpnt);
- 
- 	return NULL;
- }
-@@ -467,38 +470,7 @@
- 	 */
- 	ASSERT_LOCK(q->queue_lock, 0);
- 
--	/*
--	 * Free up any indirection buffers we allocated for DMA purposes. 
--	 * For the case of a READ, we need to copy the data out of the
--	 * bounce buffer and into the real buffer.
--	 */
--	if (SCpnt->use_sg) {
--		struct scatterlist *sgpnt;
--
--		sgpnt = (struct scatterlist *) SCpnt->buffer;
--		scsi_free_sgtable(SCpnt->buffer, SCpnt->sglist_len);
--	} else {
--		if (SCpnt->buffer != req->buffer) {
--			if (rq_data_dir(req) == READ) {
--				unsigned long flags;
--				char *to = bio_kmap_irq(req->bio, &flags);
--
--				memcpy(to, SCpnt->buffer, SCpnt->bufflen);
--				bio_kunmap_irq(to, &flags);
--			}
--			kfree(SCpnt->buffer);
--		}
--	}
--
--	/*
--	 * Zero these out.  They now point to freed memory, and it is
--	 * dangerous to hang onto the pointers.
--	 */
--	SCpnt->buffer  = NULL;
--	SCpnt->bufflen = 0;
--	SCpnt->request_buffer = NULL;
--	SCpnt->request_bufflen = 0;
--
-+	scsi_cleanup_io(SCpnt);
- 	/*
- 	 * Next deal with any sectors which we were able to correctly
- 	 * handle.
-@@ -558,7 +530,7 @@
- 			 */
- 			if (SCpnt->sense_buffer[12] == 0x04 &&
- 			    SCpnt->sense_buffer[13] == 0x01) {
--				scsi_queue_next_request(q, SCpnt);
-+				scsi_queue_next_request(q, SCpnt, SCpnt->host);
- 				return;
- 			}
- 			if ((SCpnt->sense_buffer[2] & 0xf) == UNIT_ATTENTION) {
-@@ -576,7 +548,8 @@
- 				 	* media change, so we just retry the
- 				 	* request and see what happens.  
- 				 	*/
--					scsi_queue_next_request(q, SCpnt);
-+					scsi_queue_next_request(q, SCpnt,
-+								SCpnt->host);
- 					return;
- 				}
- 			}
-@@ -596,7 +569,7 @@
- 				 * This will cause a retry with a 6-byte
- 				 * command.
- 				 */
--				scsi_queue_next_request(q, SCpnt);
-+				scsi_queue_next_request(q, SCpnt, SCpnt->host);
- 				result = 0;
- 			} else {
- 				SCpnt = scsi_end_request(SCpnt, 0, this_count);
-@@ -628,7 +601,7 @@
- 		 * recovery reasons.  Just retry the request
- 		 * and see what happens.  
- 		 */
--		scsi_queue_next_request(q, SCpnt);
-+		scsi_queue_next_request(q, SCpnt, SCpnt->host);
  		return;
- 	}
- 	if (result) {
-@@ -637,10 +610,10 @@
- 		STpnt = scsi_get_request_dev(SCpnt->request);
- 		printk("SCSI %s error : host %d channel %d id %d lun %d return code = %x\n",
- 		       (STpnt ? STpnt->name : "device"),
--		       SCpnt->device->host->host_no,
--		       SCpnt->device->channel,
--		       SCpnt->device->id,
--		       SCpnt->device->lun, result);
-+		       SCpnt->host->host_no,
-+		       SCpnt->channel,
-+		       SCpnt->target,
-+		       SCpnt->lun, result);
  
- 		if (driver_byte(result) & DRIVER_SENSE)
- 			print_sense("sd", SCpnt);
-@@ -706,6 +679,74 @@
- }
- 
- /*
-+ * Function:    scsi_dec_check_host_busy
-+ *
-+ * Purpose:     Decrement host_busy, and see if any action should be taken.
-+ *
-+ * Arguments:   SHpnt and request q.
-+ *
-+ * Lock status: Assumes that queue_lock is held when called.
-+ *
-+ * Returns:     Nothing
-+ *
-+ * Notes: 	The q arg and local flags are only needed for the locking hack.
-+ */
-+void scsi_dec_check_host_busy (struct Scsi_Host *SHpnt, request_queue_t * q)
-+{
-+	unsigned long flags;
-+
-+	/* XXX gross lock hack */
-+	if (SHpnt->host_lock != q->queue_lock)
-+		spin_lock_irqsave(SHpnt->host_lock, flags);
-+	SHpnt->host_busy--;
-+	/*
-+	 * XXX check to see if the change in host_busy should kick off
-+	 * error handling. This is really only needed if we drop and then
-+	 * later lock queue_lock, but it is OK to always check it.
-+	 */
-+	if (SHpnt->host_lock != q->queue_lock)
-+		spin_unlock_irqrestore(SHpnt->host_lock, flags);
-+}
-+
-+/*
-+ * Function:    scsi_get_best_path, not-multi-path IO version.
-+ *
-+ * Purpose:     Get and then check pathpnt to see if we can send IO.
-+ *
-+ * Arguments:   Scsi_Device pointer SDpnt, and struct scsi_path_id
-+ * 		*pathpnt.
-+ *
-+ * Returns:     0 if it's OK to send IO, else 1.
-+ *
-+ * Notes:       This is not with the other not-multi-path-io functions,
-+ * 		because it is not extern, and it is inlined; it is not in
-+ * 		scsi.h because it needs Scsi_Host (in hosts.h) and
-+ * 		Scsi_Device (in scsi.h).
-+ */
-+static int inline scsi_get_best_path(Scsi_Device *SDpnt, struct scsi_path_id
-+				     *pathpnt, struct request *req)
-+{
-+	scsi_get_path(SDpnt, pathpnt);
-+	if (pathpnt->spi_shpnt->in_recovery)
-+		return 1;
-+	if (SDpnt->device_blocked)
-+		return 1;
-+	if ((pathpnt->spi_shpnt->can_queue > 0 &&
-+	     (pathpnt->spi_shpnt->host_busy >= pathpnt->spi_shpnt->can_queue))
-+	    || (pathpnt->spi_shpnt->host_blocked) ||
-+	    (pathpnt->spi_shpnt->host_self_blocked)) {
-+		if (SDpnt->device_busy == 0) {
-+			SDpnt->starved = 1;
-+			pathpnt->spi_shpnt->some_device_starved = 1;
-+		}
-+		return 1;
-+	} else
-+		SDpnt->starved = 0;
-+	pathpnt->spi_shpnt->host_busy++;
-+	return 0;
-+}
-+
-+/*
-  * Function:    scsi_request_fn()
-  *
-  * Purpose:     Generic version of request function for SCSI hosts.
-@@ -730,8 +771,9 @@
- 	Scsi_Cmnd *SCpnt;
- 	Scsi_Request *SRpnt;
- 	Scsi_Device *SDpnt;
--	struct Scsi_Host *SHpnt;
- 	struct Scsi_Device_Template *STpnt;
-+	struct scsi_path_id path;
-+	int res;
- 
- 	ASSERT_LOCK(q->queue_lock, 1);
- 
-@@ -739,7 +781,6 @@
- 	if (!SDpnt) {
- 		panic("Missing device");
- 	}
--	SHpnt = SDpnt->host;
- 
+-	sdevscan->host = shost;
+-	sdevscan->id = id;
+-	sdevscan->channel = channel;
++	scsi_replace_path(sdevscan, shost, channel, id, 0 /* LUN */);
  	/*
- 	 * To start with, we keep looping until the queue is empty, or until
-@@ -747,12 +788,18 @@
+ 	 * Scan LUN 0, if there is some response, scan further. Ideally, we
+ 	 * would not configure LUN 0 until all LUNs are scanned.
+ 	 *
+ 	 * The scsi_level is set (in scsi_probe_lun) if a target responds.
  	 */
- 	while (1 == 1) {
+-	sdevscan->lun = 0;
+ 	res = scsi_probe_and_add_lun(sdevscan, NULL, &bflags);
+-	if (res != SCSI_SCAN_NO_RESPONSE) {
++	if (res & SCSI_SCAN_TARGET_PRESENT) {
  		/*
--		 * Check this again - each time we loop through we will have
--		 * released the lock and grabbed it again, so each time
--		 * we need to check to see if the queue is plugged or not.
-+		 * Each time we loop through we will have released the
-+		 * lock and grabbed it again, so each time we need to
-+		 * check to see if the queue is plugged or not.
+ 		 * Some scsi devices cannot properly handle a lun != 0.
+ 		 * BLIST_NOLUN also prevents a REPORT LUN from being sent.
+@@ -1995,9 +2002,10 @@
+ 		return;
+ 
+ 	sdevscan->scsi_level = scsi_find_scsi_level(channel, id, shost);
++	sdevscan->scanning = 1;
+ 	res = scsi_probe_and_add_lun(sdevscan, &sdev, NULL);
+ 	scsi_free_sdev(sdevscan);
+-	if (res == SCSI_SCAN_LUN_PRESENT) {
++	if (res & SCSI_SCAN_NEW_LUN) {
+ 		BUG_ON(sdev == NULL);
+ 		/*
+ 		 * FIXME calling select_queue_depths is wrong for adapters
+@@ -2014,7 +2022,6 @@
  		 */
--		if (SHpnt->in_recovery || blk_queue_plugged(q))
-+		if (blk_queue_plugged(q))
+ 		if (shost->select_queue_depths != NULL)
+ 			(shost->select_queue_depths) (shost, shost->host_queue);
+-
+ 		for (sdt = scsi_devicelist; sdt; sdt = sdt->next)
+ 			if (sdt->init && sdt->dev_noticed)
+ 				(*sdt->init) ();
+@@ -2080,11 +2087,19 @@
+ 		 * queue_nr_requests requests are allocated. Don't do so
+ 		 * here for scsi_scan_selected_lun, since we end up
+ 		 * calling select_queue_depths with an extra Scsi_Device
+-		 * on the host_queue list.
++		 * on the device list.
+ 		 */
+ 		sdevscan = scsi_alloc_sdev(shost, 0, 0, 0);
+ 		if (sdevscan == NULL)
  			return;
 +		/*
-+		 * If we couldn't find a request that could be queued, then we
-+		 * can also quit.
++		 * Set the scanning bit, so error messages about errors
++		 * and path failure are not printed; this should be used
++		 * in scsi_error.c to prevent overly aggressive action on
++		 * failure for a scan. This is never reset, as the default
++		 * state for a new Scsi_Device is 0.
 +		 */
-+		if (blk_queue_empty(q))
-+			break;
- 
++		sdevscan->scanning = 1;
  		/*
- 		 * If the device cannot accept another request, then quit.
-@@ -760,24 +807,28 @@
- 		if (SDpnt->device_blocked) {
- 			break;
- 		}
--		if ((SHpnt->can_queue > 0 && (SHpnt->host_busy >= SHpnt->can_queue))
--		    || (SHpnt->host_blocked) 
--		    || (SHpnt->host_self_blocked)) {
-+
-+		/*
-+		 * get next queueable request.
-+		 */
-+		req = elv_next_request(q);
-+
-+		res = scsi_get_best_path(SDpnt, &path, req);
-+		if (res == 1) {
- 			/*
--			 * If we are unable to process any commands at all for
--			 * this device, then we consider it to be starved.
--			 * What this means is that there are no outstanding
--			 * commands for this device and hence we need a
--			 * little help getting it started again
--			 * once the host isn't quite so busy.
-+			 * IO is blocked.
- 			 */
--			if (SDpnt->device_busy == 0) {
--				SDpnt->starved = 1;
--				SHpnt->some_device_starved = 1;
--			}
--			break;
--		} else {
--			SDpnt->starved = 0;
-+			req->flags &= ~REQ_STARTED;
-+			return;
-+		} else if (res == 2) {
-+			/*
-+			 * No active paths available.
-+			 */
-+			blkdev_dequeue_request(req);
-+			if (end_that_request_first(req, 0, req->nr_sectors))
-+				BUG();
-+			end_that_request_last(req);
-+			return;
- 		}
+ 		 * The sdevscan host, channel, id and lun are filled in as
+ 		 * needed to scan.
+diff -Nru a/drivers/scsi/scsi_syms.c b/drivers/scsi/scsi_syms.c
+--- a/drivers/scsi/scsi_syms.c	Mon Sep 16 15:29:45 2002
++++ b/drivers/scsi/scsi_syms.c	Mon Sep 16 15:29:45 2002
+@@ -102,6 +102,12 @@
+ EXPORT_SYMBOL(scsi_add_timer);
+ EXPORT_SYMBOL(scsi_delete_timer);
  
-  		/*
-@@ -803,23 +854,13 @@
- 				spin_unlock_irq(q->queue_lock);
- 				scsi_ioctl(SDpnt, SCSI_IOCTL_DOORLOCK, 0);
- 				spin_lock_irq(q->queue_lock);
-+				scsi_host_busy_dec_and_test(path.spi_shpnt,
-+							    SDpnt);
- 				continue;
- 			}
- 		}
- 
- 		/*
--		 * If we couldn't find a request that could be queued, then we
--		 * can also quit.
--		 */
--		if (blk_queue_empty(q))
--			break;
--
--		/*
--		 * get next queueable request.
--		 */
--		req = elv_next_request(q);
--
--		/*
- 		 * Find the actual device driver associated with this command.
- 		 * The SPECIAL requests are things like character device or
- 		 * ioctls, which did not originate from ll_rw_blk.  Note that
-@@ -834,15 +875,38 @@
- 			SCpnt = (Scsi_Cmnd *) req->special;
- 			SRpnt = (Scsi_Request *) req->special;
- 
-+			/*
-+			 * A scsi_do_cmd() or scsi_do_req().
-+			 *
-+			 * XXX modify Scsi_Request to include a path, if a
-+			 * path is set in Scsi_Request, use it here.
-+			 */
- 			if( SRpnt->sr_magic == SCSI_REQ_MAGIC ) {
- 				SCpnt = scsi_allocate_device(SRpnt->sr_device, 
--							     FALSE, FALSE);
--				if (!SCpnt)
-+							     FALSE, FALSE, &path);
-+				if (!SCpnt) {
-+					scsi_host_busy_dec_and_test(path.spi_shpnt, SDpnt);
-+					req->flags &= ~REQ_STARTED;
- 					break;
-+				}
- 				scsi_init_cmd_from_req(SCpnt, SRpnt);
-+			} else {
-+				/* 
-+				 * Either a scsi_do_cmd() or a retry of
-+				 * scsi_do_req() or scsi_do_cmd().
-+				 *
-+				 * set SCpnt host/id/lun/channel
-+				 */
-+				SCpnt->host = path.spi_shpnt;
-+				SCpnt->target = path.spi_id;
-+				SCpnt->lun = path.spi_lun;
-+				SCpnt->channel = path.spi_channel;
- 			}
- 
- 		} else if (req->flags & REQ_CMD) {
-+			/*
-+			 * Block driver.
-+			 */
- 			SRpnt = NULL;
- 			STpnt = scsi_get_request_dev(req);
- 			if (!STpnt) {
-@@ -852,30 +916,37 @@
- 			 * Now try and find a command block that we can use.
- 			 */
- 			if (req->special) {
-+				/*
-+				 * Retry.
-+				 */
- 				SCpnt = (Scsi_Cmnd *) req->special;
-+				SCpnt->host = path.spi_shpnt;
-+				SCpnt->target = path.spi_id;
-+				SCpnt->lun = path.spi_lun;
-+				SCpnt->channel = path.spi_channel;
- 			} else {
--				SCpnt = scsi_allocate_device(SDpnt, FALSE, FALSE);
-+				SCpnt = scsi_allocate_device(SDpnt, FALSE, FALSE, &path);
- 			}
- 			/*
- 			 * If so, we are ready to do something.  Bump the count
- 			 * while the queue is locked and then break out of the
- 			 * loop. Otherwise loop around and try another request.
- 			 */
--			if (!SCpnt)
-+			if (!SCpnt) {
-+				scsi_host_busy_dec_and_test(path.spi_shpnt, SDpnt);
-+				req->flags &= ~REQ_STARTED;
- 				break;
-+			}
- 
- 			/* pull a tag out of the request if we have one */
- 			SCpnt->tag = req->tag;
- 		} else {
- 			blk_dump_rq_flags(req, "SCSI bad req");
-+			scsi_host_busy_dec_and_test(path.spi_shpnt, SDpnt);
-+			req->flags &= ~REQ_STARTED;
- 			break;
- 		}
- 
--		/*
--		 * Now bump the usage count for both the host and the
--		 * device.
--		 */
--		SHpnt->host_busy++;
- 		SDpnt->device_busy++;
- 
- 		/*
-@@ -926,11 +997,11 @@
- 			 */
- 			if (!scsi_init_io(SCpnt)) {
- 				spin_lock_irq(q->queue_lock);
--				SHpnt->host_busy--;
--				SDpnt->device_busy--;
-+				scsi_host_busy_dec_and_test(path.spi_shpnt, SDpnt);
-+				SDpnt->device_busy--;	/* XXX race */
- 				if (SDpnt->device_busy == 0) {
- 					SDpnt->starved = 1;
--					SHpnt->some_device_starved = 1;
-+					path.spi_shpnt->some_device_starved = 1;
- 				}
- 				SCpnt->request->special = SCpnt;
- 				SCpnt->request->flags |= REQ_SPECIAL;
-@@ -952,12 +1023,19 @@
- 					panic("Should not have leftover blocks\n");
- 				}
- 				spin_lock_irq(q->queue_lock);
--				SHpnt->host_busy--;
--				SDpnt->device_busy--;
-+				scsi_host_busy_dec_and_test(path.spi_shpnt, SDpnt);
-+				SDpnt->device_busy--;	/* XXX race */
- 				continue;
- 			}
- 		}
- 		/*
-+		 * If SCSI-2 or lower, store the LUN value in cmnd.
-+		 */
-+		if (SDpnt->scsi_level <= SCSI_2)
-+			SCpnt->cmnd[1] = (SCpnt->cmnd[1] & 0x1f) |
-+				(SCpnt->lun << 5 & 0xe0);
-+
-+		/*
- 		 * Finally, initialize any error handling parameters, and set up
- 		 * the timers for timeouts.
- 		 */
-@@ -1020,11 +1098,13 @@
- void scsi_unblock_requests(struct Scsi_Host * SHpnt)
- {
- 	Scsi_Device *SDloop;
-+	scsi_traverse_hndl_t STrav_hndl;
- 
- 	SHpnt->host_self_blocked = FALSE;
- 	/* Now that we are unblocked, try to start the queues. */
--	for (SDloop = SHpnt->host_queue; SDloop; SDloop = SDloop->next)
--		scsi_queue_next_request(&SDloop->request_queue, NULL);
-+	scsi_for_each_host_sdev(&STrav_hndl, SDloop, SHpnt->host_no) {
-+		scsi_queue_next_request(&SDloop->request_queue, NULL, SHpnt);
-+	}
- }
++EXPORT_SYMBOL(scsi_add_path);
++EXPORT_SYMBOL(scsi_remove_path);
++EXPORT_SYMBOL(scsi_get_path);
++EXPORT_SYMBOL(scsi_get_host);
++EXPORT_SYMBOL(scsi_paths_printk);
++EXPORT_SYMBOL(scsi_traverse_sdevs);
+ /*
+  * driverfs support for determining driver types
+  */
+diff -Nru a/include/scsi/scsi.h b/include/scsi/scsi.h
+--- a/include/scsi/scsi.h	Mon Sep 16 15:29:45 2002
++++ b/include/scsi/scsi.h	Mon Sep 16 15:29:45 2002
+@@ -91,6 +91,29 @@
+ #define WRITE_LONG_2          0xea
  
  /*
-@@ -1051,11 +1131,11 @@
- void scsi_report_bus_reset(struct Scsi_Host * SHpnt, int channel)
- {
- 	Scsi_Device *SDloop;
--	for (SDloop = SHpnt->host_queue; SDloop; SDloop = SDloop->next) {
--		if (channel == SDloop->channel) {
--			SDloop->was_reset = 1;
--			SDloop->expecting_cc_ua = 1;
--		}
-+	scsi_traverse_hndl_t STrav_hndl;
++ * SCSI INQUIRY Flags (byte 7)
++ */
++#define SCSI_EVPD       0x01   /* enable vital product data */
++#define SCSI_RMB7       0x80   /* removable media */
++#define SCSI_AENC       0x80   /* asynchronous event notification capability */
++#define SCSI_TRMIOP     0x40   /* terminate I/O process capability */
++#define SCSI_RELADR7    0x80   /* relative addressing capability */
++#define SCSI_WBUS16     0x20   /* 16 byte wide transfer capabilitiy */
++#define SCSI_WBUS32     0x40   /* 32 byte wide transfer capabilitiy */
++#define SCSI_SYNC       0x10   /* synchronous data transfer capability */
++#define SCSI_LINKED     0x08   /* linked command capability */
++#define SCSI_CMDQUE     0x02   /* command queueing capability */
++#define SCSI_SFTRE      0x01   /* soft reset capability */
 +
-+	scsi_for_each_host_sdev(&STrav_hndl, SDloop, SHpnt->host_no) {
-+		SDloop->was_reset = 1;
-+		SDloop->expecting_cc_ua = 1;
- 	}
- }
++/*
++ * SCSI INQUIRY Vital Product Data Page Codes
++ */
++#define SCSI_VPROD_SUPPORTED            0x00
++#define SCSI_VPROD_UNIT_SERIAL          0x80
++#define SCSI_VPROD_AODEFN               0x82
++#define SCSI_VPROD_DEVICE_ID            0x83
++
++/*
+  *  Status codes
+  */
  
-@@ -1075,3 +1155,161 @@
- void scsi_deregister_blocked_host(struct Scsi_Host * SHpnt)
- {
- }
-+
-+/*
-+ * Function:    scsi_add_scsi_device
-+ *
-+ * Purpose:     Add a SDpnt to the list of Scsi_Devices, add it to the
-+ *		"tail" of the list. If needed, add it to the list for
-+ *		shostpnt.
-+ *
-+ * Arguments:   Scsi_Device pointer SDpnt.
-+ *
-+ * Notes:       Doesn't do anything other than link in SDpnt, we should add
-+ *		other code that is common to the addition of all Scsi_Devices.
-+ */
-+void scsi_add_scsi_device(Scsi_Device *SDpnt, struct Scsi_Host *shostpnt)
-+{
-+	Scsi_Device *sdtailpnt;
-+
-+	SDpnt->sdev_prev = NULL;
-+	SDpnt->sdev_next = NULL;
-+
-+	if (shostpnt->host_queue != NULL) {
-+		sdtailpnt = shostpnt->host_queue;
-+		while (sdtailpnt->sdev_next != NULL)
-+			sdtailpnt = sdtailpnt->sdev_next;
-+
-+		sdtailpnt->sdev_next = SDpnt;
-+		SDpnt->sdev_prev = sdtailpnt;
-+	} else {
-+		shostpnt->host_queue = SDpnt;
-+	}
-+}
-+
-+/*
-+ * Function:    scsi_remove_scsi_device
-+ *
-+ * Purpose:     Remove SDpnt from the list of Scsi_Devices.
-+ *
-+ * Arguments:   Scsi_Device pointer SDpnt.
-+ *
-+ * Notes:       unlink and kfree SDpnt, we should add other code that is common
-+ * 		to removal of all Scsi_Devices.
-+ */
-+void scsi_remove_scsi_device(Scsi_Device *SDpnt)
-+{
-+	struct Scsi_Host *hbapnt;
-+
-+	if (SDpnt == NULL)
-+		return;
-+	if (SDpnt->sdev_next != NULL)
-+		SDpnt->sdev_next->sdev_prev = SDpnt->sdev_prev;
-+	if (SDpnt->sdev_prev != NULL)
-+		SDpnt->sdev_prev->sdev_next = SDpnt->sdev_next;
-+
-+	hbapnt = SDpnt->host;
-+	if ((hbapnt != NULL) && (hbapnt->host_queue == SDpnt))
-+		hbapnt->host_queue = SDpnt->sdev_next;
-+	if (SDpnt->inquiry != NULL)
-+		kfree(SDpnt->inquiry);
-+	kfree((char *) SDpnt);
-+}
-+
-+/*
-+ * scsi_traverse_sdevs - Return the next Scsi_Device matching the search
-+ * requested, non-multi-path version
-+ *
-+ * @handle: Handle used to bookmark location of search thus far.
-+ * @host_no: Host to search for.
-+ * @channel: Channel to search for.
-+ * @id:	Id to search for.
-+ * @lun: Lun to search for.
-+ *
-+ * Description:
-+ * 	Returns - A pointer to Scsi_Device, NULL when the list is complete.
-+ * 	Notes -  Assumes that we do not remove a device between calls.
-+ *
-+ */
-+Scsi_Device *scsi_traverse_sdevs(scsi_traverse_hndl_t *handle, uint host_no, uint channel,
-+				 uint id, uint lun)
-+{
-+	Scsi_Device	*SDpnt;
-+	struct Scsi_Host	*shostpnt;
-+
-+	if (handle == NULL) {
-+		shostpnt = NULL;
-+		SDpnt = NULL;
-+	} else {
-+		shostpnt = handle->last_scsi_host_p;
-+		SDpnt = handle->last_scsi_device_p;
-+	}
-+
-+	
-+	if (shostpnt == NULL) {
-+		/*
-+		 * New search starts with handles NULL.
-+		 * Set shostpnt here and let SDpnt get set
-+		 * in the for loop below.
-+		 */
-+		shostpnt = scsi_hostlist;
-+		SDpnt = shostpnt->host_queue;
-+	} else
-+		SDpnt = SDpnt->sdev_next;
-+
-+	while (shostpnt) {
-+		if (shostpnt->host_no == host_no ||
-+		    host_no == SCSI_FIND_ALL_HOST_NO) {
-+			for(; SDpnt; SDpnt = SDpnt->sdev_next) {
-+				if ((channel == SCSI_FIND_ALL_CHANNEL ||
-+				   channel == SDpnt->channel) &&
-+				   (id == SCSI_FIND_ALL_ID ||
-+				   id == SDpnt->id) &&
-+				   (lun == SCSI_FIND_ALL_LUN ||
-+				   lun == SDpnt->lun))
-+					goto done;
-+
-+			}
-+
-+		}
-+		if (shostpnt->host_no == host_no)
-+			goto done;
-+
-+		shostpnt = shostpnt->next;
-+		if (shostpnt)
-+			SDpnt = shostpnt->host_queue;
-+	}
-+
-+done:
-+	if (handle) {
-+		handle->last_scsi_device_p = SDpnt;
-+		handle->last_scsi_host_p = shostpnt;
-+	}
-+	return SDpnt;
-+}
-+
-+/*
-+ * Function:    scsi_paths_printk, not-multi-path IO version.
-+ *
-+ * Purpose:     For the path in SDpnt, printk the host/channel/id/lun
-+ * 		using the specified format.
-+ *
-+ * Arguments:   Scsi_Device pointer SDpnt, *prefix the string to print first.
-+ *
-+ * Notes:       This is not inlined because of circular dependencies (Scsi_Host
-+ * 		is in hosts.h, Scsi_Device in scsi.h).
-+ */
-+void scsi_paths_printk(Scsi_Device *SDpnt, char *prefix,
-+	char *format)
-+{
-+	printk(format, SDpnt->host->host_no, SDpnt->channel, SDpnt->id,
-+	       SDpnt->lun);
-+}
-+
-+#ifdef CONFIG_PROC_FS
-+int scsi_paths_proc_print_paths(Scsi_Device *SDpnt, char *buffer, char *format)
-+{
-+	return(sprintf(buffer, format, SDpnt->host->host_no,
-+		      SDpnt->channel, SDpnt->id, SDpnt->lun));
-+}
-+#endif
