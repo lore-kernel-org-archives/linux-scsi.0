@@ -1,42 +1,39 @@
-From: janitor@sternwelten.at
-Subject: [patch 06/10]  scsi/qla1280: replace 	schedule_timeout() with msleep()
-Date: Thu, 21 Oct 2004 10:47:09 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Qlogic ISP 1020
+Date: Thu, 21 Oct 2004 10:11:16 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <E1CKYbG-0004JG-74@sputnik>
+Message-ID: <20041021091116.GA2130@infradead.org>
+References: <1080004793.5848.34.camel@localhost> <20040323062912.B29405@infradead.org> <1080075653.2457.11.camel@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:16288 "EHLO
-	baikonur.stro.at") by vger.kernel.org with ESMTP id S270710AbUJUIrN
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Oct 2004 04:47:13 -0400
+Received: from phoenix.infradead.org ([81.187.226.98]:57865 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S268819AbUJUJLY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Oct 2004 05:11:24 -0400
+Content-Disposition: inline
+In-Reply-To: <1080075653.2457.11.camel@localhost>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, janitor@sternwelten.at, nacc@us.ibm.com
+To: Jeff Layton <jtlayton@poochiereds.net>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
+On Tue, Mar 23, 2004 at 04:00:53PM -0500, Jeff Layton wrote:
+> On Tue, 2004-03-23 at 01:29, Christoph Hellwig wrote:
+> > https://verein.lst.de/~hch/qla1280-isp1040.diff.bz2 has my current patch.
+> > 
+> > So far I only kno it works with 1040B's on SGI Origins.   If you want to
+> > give it a try apply the patch and make sure you have the qla1280 but not the
+> > qlogicisp driver in the kernel.
+> > 
+> > I'll try to split the patch into reasoable chunk soon and feed it to Jes.
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> I tried this out today, and the results were mixed. Here's the lspci
+> output for this card:
 
+In current mainline the qla1280 driver supports the 1020 now.  Care to test
+again?  I've heard success reports for both i386 and alpha so far.
 
-
-Any comments would be appreciated.
-
-Description: Use msleep() instead of schedule_timeout()
-to guarantee the task delays as expected.
-
-Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
-Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
----
-
- linux-2.6.9-max/drivers/scsi/qla1280.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
-
-diff -puN drivers/scsi/qla1280.c~msleep-drivers_scsi_qla1280 drivers/scsi/qla1280.c
---- linux-2.6.9/drivers/scsi/qla1280.c~msleep-drivers_scsi_qla1280	2004-10-21 02:41:35.000000000 +0200
-+++ linux-2.6.9-max/drivers/scsi/qla1280.c	2004-10-21 02:41:35.000000000 +0200
-@@ -2938,7 +2938,7 @@ qla1280_bus_reset(struct scsi_qla_host *
- 		ha->bus_settings[bus].failed_reset_count++;
- 	} else {
- 		spin_unlock_irq(HOST_LOCK);
--		schedule_timeout(reset_delay * HZ);
-+		msleep(reset_delay * 1000);
- 		spin_lock_irq(HOST_LOCK);
- 
- 		ha->bus_settings[bus].scsi_bus_dead = 0;
-_
