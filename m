@@ -1,54 +1,48 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: [Bugme-new] [Bug 3753] New: multiple definition of
- `ST_partstat'
-Date: Tue, 16 Nov 2004 11:19:05 -0800
-Message-ID: <20041116111905.0e0de864.akpm@osdl.org>
+From: greg k-h <greg@kroah.com>
+Subject: Re: scsi "target1:0:0"
+Date: Tue, 16 Nov 2004 11:15:01 -0800
+Message-ID: <pan.2004.11.16.19.14.54.941291@kroah.com>
+References: <1100622096.8606.104.camel@localhost.localdomain> <1100622800.2574.41.camel@mulgrave> <1100624154.8606.122.camel@localhost.localdomain> <20041116171018.GK26623@parcelfarce.linux.theplanet.co.uk> <1100625783.4546.4.camel@davidz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:22915 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S262097AbUKPTTT (ORCPT
+Received: from main.gmane.org ([80.91.229.2]:39631 "EHLO main.gmane.org")
+	by vger.kernel.org with ESMTP id S262121AbUKPTby (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Nov 2004 14:19:19 -0500
-Received: from bix (build.pdx.osdl.net [172.20.1.2])
-	by mail.osdl.org (8.11.6/8.11.6) with SMTP id iAGJJG909894
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Nov 2004 11:19:17 -0800
+	Tue, 16 Nov 2004 14:31:54 -0500
+Received: from root by main.gmane.org with local (Exim 3.35 #1 (Debian))
+	id 1CU93O-0004RA-00
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Nov 2004 20:31:50 +0100
+Received: from c-67-171-180-138.client.comcast.net ([67.171.180.138])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Tue, 16 Nov 2004 20:31:50 +0100
+Received: from greg by c-67-171-180-138.client.comcast.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Tue, 16 Nov 2004 20:31:50 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
+On Tue, 16 Nov 2004 12:23:03 -0500, David Zeuthen wrote:
 
+> On Tue, 2004-11-16 at 17:10 +0000, Matthew Wilcox wrote:
+>> There you go, it's just another example of this one.  It's just faulty
+>> assumptions in hald by the looks of things.
+>> 
+> 
+> Please explain how you expect userspace to keep track of the device tree
+> and enforce policy if we don't get hotplug events for things in the
+> middle of the tree?
 
-Begin forwarded message:
+You do get hotplug events for those devices in the device tree, just no 
+bus is assigned to them, right?
 
-Date: Tue, 16 Nov 2004 10:43:01 -0800
-From: bugme-daemon@osdl.org
-To: bugme-new@lists.osdl.org
-Subject: [Bugme-new] [Bug 3753] New: multiple definition of `ST_partstat'
+That should still work out just fine, as Matthew has pointed out, other
+devices in the device tree do not have busses either.
 
+thanks,
 
-http://bugme.osdl.org/show_bug.cgi?id=3753
+greg k-h
 
-           Summary: multiple definition of `ST_partstat'
-    Kernel Version: 2.6.10-rc2
-            Status: NEW
-          Severity: blocking
-             Owner: andmike@us.ibm.com
-         Submitter: selecter@spray.se
-
-
-Distribution: Debian Sarge
-
-Problem Description:
-  LD      drivers/scsi/sd_mod.o
-  CC      drivers/scsi/sg.o
-  LD      drivers/scsi/built-in.o
-drivers/scsi/osst.o(.bss+0x0): multiple definition of `ST_partstat'
-drivers/scsi/st.o(.bss+0x0): first defined here
-make[2]: *** [drivers/scsi/built-in.o] Error 1
-make[1]: *** [drivers/scsi] Error 2
-make: *** [drivers] Error 2
-
-------- You are receiving this mail because: -------
-You are on the CC list for the bug, or are watching someone who is.
