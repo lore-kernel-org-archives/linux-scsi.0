@@ -1,38 +1,30 @@
-From: Bryan Henderson <hbryan@us.ibm.com>
-Subject: Re: linux-scsi list filtering
-Date: Mon, 10 Jan 2005 12:53:38 -0800
-Message-ID: <OFDC8B8134.33900CF7-ON88256F85.007273F4-88256F85.0072BB9E@us.ibm.com>
-References: <20050110084124.GL8704@mea-ext.zmailer.org>
+From: "Stephens, Larry" <larry.stephens@lsil.com>
+Subject: scsi_transport_spi.c
+Date: Mon, 10 Jan 2005 14:07:14 -0700
+Message-ID: <91888D455306F94EBD4D168954A9457C2023B3@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:2534 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262478AbVAJUzY (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:26784 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S262546AbVAJVHQ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jan 2005 15:55:24 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e2.ny.us.ibm.com (8.12.10/8.12.10) with ESMTP id j0AKtNk7009167
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Jan 2005 15:55:23 -0500
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j0AKtN3X282796
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Jan 2005 15:55:23 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j0AKtNgp006563
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Jan 2005 15:55:23 -0500
-In-Reply-To: <20050110084124.GL8704@mea-ext.zmailer.org>
+	Mon, 10 Jan 2005 16:07:16 -0500
+Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
+	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id j0AL59cq025973
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Jan 2005 13:05:09 -0800 (PST)
+Received: from nacos172.ad.lsil.com (cos1.co.lsil.com [172.21.35.122])
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id j0AL7EsG004982
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Jan 2005 13:07:14 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matti Aarnio <matti.aarnio@zmailer.org>
-Cc: Douglas Gilbert <dougg@torque.net>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
->   Subject: BOUNCE linux-scsi@vger.kernel.org:
->            global taboo header: /charset=.*windows-/i
+I'm in the initial stages of looking at modifying the LSI driver to utilize
+the Domain Validation code in scsi_transport_spi.c rather than our own
+driver DV code.
 
-I'm guessing this rule means to bounce the relevant email, i.e. to send an 
-email to the originator saying it wasn't accepted.
+I've installed RHEL 4.  Where can I obtain the kernel source file for kernel
+2.6.9-1.906_ELsmp, containing scsi_transport_spi.c?
 
-If so, the rule and ones like it aren't behind the problems that have been 
-described, wherein the mail just went into a black hole.
-
-Do the filters drop mail without response?
-
+Thanks in advance.
