@@ -1,61 +1,175 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: 2.5.32 IO performance issues
-Date: Sat, 31 Aug 2002 11:14:01 +0200
+From: Andries.Brouwer@cwi.nl
+Subject: Feiya 5-in-1 Card Reader
+Date: Sun, 1 Sep 2002 01:29:58 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <41172.7909268395$1030785365@news.gmane.org>
-References: <3D6E6B64.66203783@zip.com.au> <200208292055.g7TKte224951@eng2.beaverton.ibm.com> <20020829145342.A25892@eng2.beaverton.ibm.com> <3D6E9EDC.ED1E546C@zip.com.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <15118.4736555026$1030836724@news.gmane.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3D6E9EDC.ED1E546C@zip.com.au>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@zip.com.au>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Badari Pulavarty <pbadari@us.ibm.com>, linux-kernel@vger.kernel.org, Gerrit Huizenga <gerrit@us.ibm.com>, Hans-J Tannenberger <hjt@us.ibm.com>, Janet Morgan <janetmor@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>, Martin Bligh <mjbligh@us.ibm.com>, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-usb@one-eyed-alien.net
 
-On Thu, Aug 29 2002, Andrew Morton wrote:
-> > We want to allow high mem for block devices other than SCSI direct access
-> > devices (TYPE_DISK), such as CD ROM (SDpnt->type TYPE_ROM), WORM devices
-> > (TYPE_WORM), and optical disks (TYPE_MOD).
-> > 
-> > So it is better to patch scsi_initialize_merge_fn:
-> > 
-> > --- 1.16/drivers/scsi/scsi_merge.c      Fri Jul  5 09:43:00 2002
-> > +++ edited/drivers/scsi/scsi_merge.c    Thu Aug 29 14:30:12 2002
-> > @@ -140,7 +140,7 @@
-> >          * Enable highmem I/O, if appropriate.
-> >          */
-> >         bounce_limit = BLK_BOUNCE_HIGH;
-> > -       if (SHpnt->highmem_io && (SDpnt->type == TYPE_DISK)) {
-> > +       if (SHpnt->highmem_io) {
-> >                 if (!PCI_DMA_BUS_IS_PHYS)
-> >                         /* Platforms with virtual-DMA translation
-> >                          * hardware have no practical limit.
-> > 
-> 
-> That will certainly fix it.  But who added the TYPE_DISK check,
-> and why???
+I have a USB 5-in-1 Card Reader, that will read CF and SM and SD/MMC.
+Under Linux it appears as three SCSI devices.
+For today, the report is on the CF part.
 
-I guess that block-highmem has been around long enough, that I can use
-the term 'historically' at least in the kernel sense :-)
+The CF part works fine under ordinary usb-storage SCSI simulation,
+with one small problem: 8 and 32 MB cards, that are detected as
+having 15872 and 63488 sectors by other readers, are detected as
+having 15873 and 63489 sectors by this Feiya reader
+(0x090c / 0x1132).
+In the good old days probably nobody would have noticed, but these
+days the partition reading code also wants to read the last sector.
+This results in the SCSI code taking the device off line:
 
-This extra check was added for IDE because each device type driver
-(ide-disk, ide-cd, etc) needed to be updated to not assume virtual
-mappings of request data was valid. I only did that for ide-disk, since
-this is the only one where bounce buffering really hurt performance
-wise. So while ide-cd and ide-tape etc could have been updated, I deemed
-it uninteresting and not worthwhile.
+[USB storage does a READ_10, which fails since the sector is past
+the end of the disk. Then it tries a READ_6 and nothing ever happens,
+probably because the device does not support READ_6. Then the
+error handler does an abort which triggers some bugs in scsiglue.c
+and transport.c, then the error handler does a device reset, then
+a host reset, then a bus reset, and finally the device is taken offline.]
 
-Now, this was just carried straight into the scsi counter parts,
-conveniently, because of laziness. A quick glance at sr shows that it
-too can aviod bouncing easily (no changes needed). st may need some
-changes, though. So again, for scsi it was a matter of not impacting
-existing code in 2.4 too much.
+The patch below does not address any bugs in the SCSI error code
+(a big improvement would be just to rip it all out - this error code
+never achieves anything useful but has crashed many a machine)
+and does not fix the USB code either.
+It just adds a flag to the unusual_devices section mentioning that
+this device (my revision is 1.00) has this bug.
 
-So TYPE_DISK check can be killed in 2.5 if someone does the work of
-checking that it is safe. I'm not so sure it will make eg your SCSI
-CD-ROM that much faster :-)
+Without the patch the kernel crashes, or insmod usb-storage hangs.
+With the patch the CF part of the device works perfectly.
 
--- 
-Jens Axboe
+(Another change is to only print "Fixing INQUIRY data" when
+really something is changed, not when the data was OK already.)
 
+Andries
+
+
+diff -u --recursive --new-file -X /linux/dontdiff a/drivers/usb/storage/protocol.c b/drivers/usb/storage/protocol.c
+--- a/drivers/usb/storage/protocol.c	Sun Jun  9 07:26:30 2002
++++ b/drivers/usb/storage/protocol.c	Sun Sep  1 00:23:37 2002
+@@ -54,10 +54,27 @@
+  * Helper routines
+  ***********************************************************************/
+ 
+-/* Fix-up the return data from an INQUIRY command to show 
++static void *
++find_data_location(Scsi_Cmnd *srb) {
++	if (srb->use_sg) {
++		/*
++		 * This piece of code only works if the first page is
++		 * big enough to hold more than 3 bytes -- which is
++		 * _very_ likely.
++		 */
++		struct scatterlist *sg;
++
++		sg = (struct scatterlist *) srb->request_buffer;
++		return (void *) page_address(sg[0].page) + sg[0].offset;
++	} else
++		return (void *) srb->request_buffer;
++}
++
++/*
++ * Fix-up the return data from an INQUIRY command to show 
+  * ANSI SCSI rev 2 so we don't confuse the SCSI layers above us
+  */
+-void fix_inquiry_data(Scsi_Cmnd *srb)
++static void fix_inquiry_data(Scsi_Cmnd *srb)
+ {
+ 	unsigned char *data_ptr;
+ 
+@@ -65,24 +82,43 @@
+ 	if (srb->cmnd[0] != INQUIRY)
+ 		return;
+ 
+-	US_DEBUGP("Fixing INQUIRY data to show SCSI rev 2\n");
++	data_ptr = find_data_location(srb);
+ 
+-	/* find the location of the data */
+-	if (srb->use_sg) {
+-		/* this piece of code only works if the first page is big enough to
+-		 * hold more than 3 bytes -- which is _very_ likely
+-		 */
+-		struct scatterlist *sg;
++	if ((data_ptr[2] & 7) == 2)
++		return;
+ 
+-		sg = (struct scatterlist *) srb->request_buffer;
+-		data_ptr = (unsigned char *) page_address(sg[0].page) + sg[0].offset;
+-	} else
+-		data_ptr = (unsigned char *)srb->request_buffer;
++	US_DEBUGP("Fixing INQUIRY data to show SCSI rev 2 - was %d\n",
++		  data_ptr[2] & 7);
+ 
+ 	/* Change the SCSI revision number */
+ 	data_ptr[2] = (data_ptr[2] & ~7) | 2;
+ }
+ 
++/*
++ * Fix-up the return data from a READ CAPACITY command. My Feiya reader
++ * returns a value that is 1 too large.
++ */
++static void fix_read_capacity(Scsi_Cmnd *srb)
++{
++	unsigned char *dp;
++	unsigned long capacity;
++
++	/* verify that it's a READ CAPACITY command */
++	if (srb->cmnd[0] != READ_CAPACITY)
++		return;
++
++	dp = find_data_location(srb);
++
++	capacity = (dp[0]<<24) + (dp[1]<<16) + (dp[2]<<8) + (dp[3]);
++	US_DEBUGP("US: Fixing capacity: from %ld to %ld\n",
++	       capacity+1, capacity);
++	capacity--;
++	dp[0] = (capacity >> 24);
++	dp[1] = (capacity >> 16);
++	dp[2] = (capacity >> 8);
++	dp[3] = (capacity);
++}
++
+ /***********************************************************************
+  * Protocol routines
+  ***********************************************************************/
+@@ -346,8 +382,11 @@
+ 		if ((us->flags & US_FL_MODE_XLATE) && (old_cmnd == MODE_SENSE))
+ 			usb_stor_scsiSense10to6(srb);
+ 
+-		/* fix the INQUIRY data if necessary */
++		/* Fix the INQUIRY data if necessary */
+ 		fix_inquiry_data(srb);
++
++		/* Fix the READ CAPACITY result if necessary */
++		if (us->flags & US_FL_FIX_CAPACITY)
++			fix_read_capacity(srb);
+ 	}
+ }
+-
+diff -u --recursive --new-file -X /linux/dontdiff a/drivers/usb/storage/unusual_devs.h b/drivers/usb/storage/unusual_devs.h
+--- a/drivers/usb/storage/unusual_devs.h	Tue Aug 27 23:58:37 2002
++++ b/drivers/usb/storage/unusual_devs.h	Sun Sep  1 00:30:30 2002
+@@ -507,6 +507,13 @@
+ 		US_SC_8070, US_PR_CB, NULL,
+ 		US_FL_FIX_INQUIRY ),
+ 
++/* aeb */
++UNUSUAL_DEV( 0x090c, 0x1132, 0x0000, 0xffff,
++	        "Feiya",
++	        "5-in-1 Card Reader",
++	        US_SC_SCSI, US_PR_BULK, NULL,
++	        US_FL_FIX_CAPACITY ),
++
+ UNUSUAL_DEV(  0x097a, 0x0001, 0x0000, 0x0001,
+ 		"Minds@Work",
+ 		"Digital Wallet",
+diff -u --recursive --new-file -X /linux/dontdiff a/drivers/usb/storage/usb.h b/drivers/usb/storage/usb.h
+--- a/drivers/usb/storage/usb.h	Tue Aug 27 23:58:37 2002
++++ b/drivers/usb/storage/usb.h	Sun Sep  1 00:18:31 2002
+@@ -102,6 +102,7 @@
+ #define US_FL_IGNORE_SER      0x00000010 /* Ignore the serial number given  */
+ #define US_FL_SCM_MULT_TARG   0x00000020 /* supports multiple targets	    */
+ #define US_FL_FIX_INQUIRY     0x00000040 /* INQUIRY response needs fixing   */
++#define US_FL_FIX_CAPACITY    0x00000080 /* READ CAPACITY response too big  */
+ 
+ #define US_FL_DEV_ATTACHED    0x00010000 /* is the device attached?	    */
+ #define US_FLIDX_IP_WANTED   17  /* 0x00020000	is an IRQ expected?	    */
