@@ -1,45 +1,52 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: Problem with tape drive: illegal seek
-Date: Sat, 26 Feb 2005 10:42:52 +0200 (EET)
-Message-ID: <Pine.LNX.4.61.0502261037220.9787@kai.makisara.local>
-References: <200502260016.11954.chrivers@iversen-net.dk>
+From: S Iremonger <exxsi@bath.ac.uk>
+Subject: Please, does anybody have BIOS/Firmware for aha1542B/C ?
+Date: Sat, 26 Feb 2005 11:11:27 +0000 (GMT)
+Message-ID: <Pine.GSO.4.53.0502261048530.25771@amos.bath.ac.uk>
+Reply-To: S Iremonger <exxsi@bath.ac.uk>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from fep02-0.kolumbus.fi ([193.229.0.44]:23513 "EHLO
-	fep02-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S261861AbVBZIlr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 26 Feb 2005 03:41:47 -0500
-In-Reply-To: <200502260016.11954.chrivers@iversen-net.dk>
+Received: from roche.bath.ac.uk ([138.38.32.21]:24392 "EHLO roche.bath.ac.uk")
+	by vger.kernel.org with ESMTP id S261161AbVBZLL1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 26 Feb 2005 06:11:27 -0500
+Received: from amos.bath.ac.uk ([138.38.32.36] ident=mmdf)
+	by roche.bath.ac.uk with smtp  id 1D4zr4-0004aI-7s
+	for linux-scsi@vger.kernel.org; Sat, 26 Feb 2005 11:11:26 +0000
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christian Iversen <chrivers@iversen-net.dk>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Sat, 26 Feb 2005, Christian Iversen wrote:
+I apologize for writing to "linux" scsi list asking if anybody has
+  such-and-such that doesnt directly help linux...
 
-> 
-> Whenever I use --verify for tar, I get problems. Specifically, I get 
-> "Illegal seek" when tar gets to the verify phase. 
-> 
-I looked at tar 1.13.25 sources and this looks like a tar bug: verify from 
-tape does not work for the first file (and I am not sure about other 
-files). After writing, tar tries to skip backwards over two filemarks. 
-When writing the first file, there is no second filemark to skip over: 
-this fails and gives you the error. If you do verify with a second call to 
-tar (tar --compare) after skipping backwards with mt, this should work.
+I have an AHA-1542B (a common model of controller, seemingly)
+  and some AHA-1542CF's (quite different physically....),
+Seems to be one of the best in its' class (AT-bus master!)...
+I have some SCSI disks whose instructions state that they are not
+  compatible with the AHA-1542B controller (something like that)
+  unless you upgrade the BIOS/microcode pair to have a "B56"
+  version of the controller or something like that.
 
-...
-> Please note that I can restore the data just fine, if I use tar. If I try to 
-> use dd, I get strange errors as well:
-> 
-> [root@boreas]/tmp #dd if=/dev/tape of=dump
-> dd: reading `/dev/tape': Cannot allocate memory
-> 0+0 records in
-> 0+0 records out
-> 0 bytes transferred in 3,699040 seconds (0 bytes/sec)
-> 
-Guy already solved this problem. The message (Cannot allocate memory) is 
-not very clear but this is what other Unices use.
+Unfortunately, adaptec USED to list the BIOS+firmware for
+  the AHA1542B at least, but then stopped doing so! aargh!.
+I'd like to "have it" and will happily give files to others
+  who need it, etc.
 
--- 
-Kai
+In short, I would really appreciate if anybody who has AHA-1542
+  upgrade ROM files (any of them really, B or C etc..., to
+  use.... I'm not expecting to get over 8gb disk translation
+  facility (i.e. no extended int13-LBA), but particuarly on
+  the AHA-1542B a newer BIOS would be nice.......
+
+I expect to put this on EPROM/flash IC and stick in, since
+  these cards do not use flashable chip normally).
+Please, please let me know if you have such rom upgrade files.
+Somewhere, somebody, out there!
+
+Please write to me off this list if you can help...
+Or point me in the right direction.
+
+Thankyou in advance, and apologies for people who aren't
+  interested!
+
+--S Iremonger <exxsi@bath.ac.uk>
