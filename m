@@ -1,37 +1,79 @@
-From: Xose Vazquez Perez <xose-39ZsbGIQGT7e5aOfsHch1g@public.gmane.org>
-Subject: scsi drivers was Re: [PATCH] 1.1.4-2313 aacraid driver for LiNUX
- 2.4.25-pre4
-Date: Thu, 08 Jan 2004 17:36:22 +0100
-Sender: linux-aacraid-devel-admin-8PEkshWhKlo@public.gmane.org
-Message-ID: <3FFD8706.7050403@wanadoo.es>
-References: <3FFC4C09.3020103@wanadoo.es> <20040107210020.A1166@infradead.org> <3FFD7E3A.3010808@wanadoo.es> <20040108160431.A11515@infradead.org>
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: RE: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b7).
+Date: Thu, 8 Jan 2004 08:47:51 -0800
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <B179AE41C1147041AA1121F44614F0B060EDD4@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-aacraid-devel-admin-8PEkshWhKlo@public.gmane.org>
-Errors-To: linux-aacraid-devel-admin-8PEkshWhKlo@public.gmane.org
-List-Help: <mailto:linux-aacraid-devel-request-8PEkshWhKlpvbvzxeQLTJuMTnGGMi8c9@public.gmane.org>
-List-Post: <mailto:linux-aacraid-devel-8PEkshWhKlo@public.gmane.org>
-List-Subscribe: <http://lists.us.dell.com/mailman/listinfo/linux-aacraid-devel>,
-	<mailto:linux-aacraid-devel-request-8PEkshWhKlpvbvzxeQLTJhLjRD9WNpgrmSKB9SHqsyg@public.gmane.org>
-List-Unsubscribe: <http://lists.us.dell.com/mailman/listinfo/linux-aacraid-devel>,
-	<mailto:linux-aacraid-devel-request-8PEkshWhKlpvbvzxeQLTJt/CJOUnrhF+9vnX9k1QryA@public.gmane.org>
-List-Archive: <http://lists.us.dell.com/pipermail/linux-aacraid-devel/>
-To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: linux-aacraid-devel-XtjxT7Vmt5ZskZv2Y/7f+AC/G2K4zDHf@public.gmane.org, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [198.70.193.2] ([198.70.193.2]:4753 "EHLO AVEXCH01.qlogic.org")
+	by vger.kernel.org with ESMTP id S265149AbUAHQrh convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Jan 2004 11:47:37 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig wrote:
+On Monday, December 29, 2003 9:33 AM, James Bottomley wrote:
+> On Fri, 2003-12-05 at 19:15, Andrew Vasquez wrote:
+> > False start.  I've uploaded 8.00.00b8 to the SF site.  This driver
+> > instructs the mid-layer to perform its initial scan with
+> > scsi_scan_host().  During testing, I disable the scan.  Sorry for
+> > the confusion.
+> 
+> OK, I've begun the BK process again.
+> 
+> This driver is now in BK at
+> 
+> bk://linux-scsi.bkbits.net/scsi-qla2xxx-2.6
+> 
+> I didn't see any comments about Christoph's patches, so is it OK if I
+> apply them? 
+>
 
-> And who the heck thinks it's a good idea to submit scsi driver directly
-> instead of through the proper lists?
+Yes, I've been entrenched in several side projects.  I have a beta 9
+ready for release which includes Christoph's patches as well as a
+couple of other changes as a result of his comments (qla_fo.cfg,
+exioct.h dependencies).  At this time though, I need to wait to
+release until I receive another firmware drop.
+ 
+> I plan to let it mature in it's own tree for a short while with the
+> object being to get it into the right shape for a 2.6 inclusion
+> candidate. 
+> 
+> The two items we still need to do something about are:
+> 
+> - Multi Pathing.  This really doesn't belong in the kernel
+>
 
-A lot of vendor's drivers maintainers, do that. And the driver is
-automagically rejected ;-). This is the reason why LiNUX SCSI drivers are
-obsolete, and some of them have important bugs.
+Yes, given the structure and form of recent patches, that certainly
+does seem to be the case - which from QLogic's standpoint (now) seems
+to be the proper path.  Just for clarification, given the structure of
+the driver now (failover completely separated), inclusion of the
+qla2xxx driver would exclude the following failover files:
 
-_______________________________________________
-Linux-aacraid-devel mailing list
-Linux-aacraid-devel-8PEkshWhKlo@public.gmane.org
-http://lists.us.dell.com/mailman/listinfo/linux-aacraid-devel
-Please read the FAQ at http://lists.us.dell.com/faq or search the list archives at http://lists.us.dell.com/htdig/
+	qla_fo.c qla_foln.c qla_cfg.c qla_cfgln.c
+
+correct?
+
+> - The odd ioctl set to the qla device...I'd much rather see something
+> more standard that all FC drivers can use.
+> 
+
+Are you proposing to standardize a transport by which a user-space
+application communicates with a driver (beyond IOCTLs), or, are you
+suggesting there be some commonality in functional interfaces (i.e.
+SNIA) for all FC drivers?
+
+Look, IOCTLs were mainly used and built upon due the platform agnostic
+nature of the interface.  All QLogic drivers (Linux, Solaris, Windows,
+and Netware), use the platform's IOCTL interface with the QLogic
+specific EXIOCT interfaces to pass information to/from user and driver
+space.  Several user-space APIs were then created which use the EXIOCT
+interface, SNIA (or HBAAPI), and several internal APIs, which are
+ultimately used by all QLogic applications.
+
+--
+Andrew Vasquez
