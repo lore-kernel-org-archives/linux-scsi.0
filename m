@@ -1,50 +1,71 @@
-From: Takayoshi Kochi <t-kochi@bq.jp.nec.com>
-Subject: Re: [PATCH] qla1280.c /proc/scsi/qla1280/x reads garbage
-Date: Mon, 07 Feb 2005 10:13:50 +0900 (JST)
-Message-ID: <20050207.101350.21926396.t-kochi@bq.jp.nec.com>
-References: <20050204.202110.59656828.t-kochi@bq.jp.nec.com>
-	<20050204112730.GA18895@infradead.org>
+From: "Alexander Stohr" <Alexander.Stohr@gmx.de>
+Subject: return value warnings about scsi_add_host, anything in progress?
+Date: Mon, 7 Feb 2005 10:40:18 +0100 (MET)
+Message-ID: <10482.1107769218@www35.gmx.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Received: from TYO202.gate.nec.co.jp ([202.32.8.202]:217 "EHLO
-	tyo202.gate.nec.co.jp") by vger.kernel.org with ESMTP
-	id S261329AbVBGBOO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 6 Feb 2005 20:14:14 -0500
-In-Reply-To: <20050204112730.GA18895@infradead.org>
+Received: from mail.gmx.de ([213.165.64.20]:19334 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261376AbVBGJkT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2005 04:40:19 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org
-Cc: jes@wildopensource.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi,
+Hello,
 
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] qla1280.c /proc/scsi/qla1280/x reads garbage
-Date: Fri, 4 Feb 2005 11:27:30 +0000
+is anything going to happen with the below listed locations?
+(Some are part of the USB system, one is in block device, rest is SCSI.)
+Note that a few locations do still lack the "XXX" comment.
 
-> > In 2.6.11-rc3, reading /proc/scsi/qla1280/0 sometimes spits garbage.
-> > This is because in qla1280_proc_info() the returned pointer to
-> > the buffer isn't what the upper layer expects.
-> > 
-> > This problem seems already fixed in 2.4 series (I checked 2.4.28).
-> > 
-> > Why the fix is missing in 2.6?  This can be lead to a security
-> > problem (random kernel memory leaks to userspace).
-> > 
-> > Patch attached. (compiled and worked for me)
-> 
-> What about killing qla1280_proc_info completely?  It doesn't
-> return any useful information.
+I am asking because i am seeing ther respective warning
+anytime when i am checking the quality of a new linux kernel.
+And now i am wondering if there is already some work in progress
+or already pending in the queue for submitting to bitkeeper.
 
-I agree with you; if anyone's depending on that info, the bug
-should have been noticed earlier.  I'm not a serious
-qla1280_proc_info user, either.
+-Alex.
 
-But as I was just sending the patch and scsi is not my primary working
-area, I'd like to let the scsi maintainers decide whether taking in
-the patch or remove the function completely.  I don't want the bug
-to be left as is.
+PS: i am not subscribed to that list, so please CC me on replys.
+Hunting answers via the list archives is not always successful.
 
----
-Takayoshi Kochi
+
+./drivers/usb/image/hpusbscsi.c:112:    scsi_add_host(new->host,
+&intf->dev); /* XXX handle failure */                                       
+                  
+./drivers/usb/image/microtek.c:812:     scsi_add_host(new_desc->host, NULL);
+/* XXX handle failure */                                                    
+      
+./drivers/scsi/arm/ecoscsi.c:208:       scsi_add_host(host, NULL); /* XXX
+handle failure */                                                           
+         
+./drivers/scsi/megaraid.c:4890: error = scsi_add_host(host, &pdev->dev);    
+   
+./drivers/scsi/aic7xxx/aic7xxx_osm.c:1732:      scsi_add_host(host,
+(ahc->dev_softc ? &ahc->dev_softc->dev : NULL)); /* XXX handle failure */   
+               
+./drivers/scsi/aic7xxx/aic79xx_osm.c:2068:      scsi_add_host(host,
+&ahd->dev_softc->dev); /* XXX handle failure */                             
+               
+./drivers/scsi/pcmcia/fdomain_stub.c:226:    scsi_add_host(host, NULL); /*
+XXX handle failure */                                                       
+        
+./drivers/scsi/pcmcia/nsp_cs.c:1908:    scsi_add_host (host, NULL);         
+   
+./drivers/scsi/mac53c94.c:506:  scsi_add_host(host, &mdev->ofdev.dev);      
+   
+./drivers/scsi/nsp32.c:2891:    scsi_add_host (host, &PCIDEV->dev);         
+   
+./drivers/scsi/mesh.c:1963:     scsi_add_host(mesh_host, &mdev->ofdev.dev); 
+   
+./drivers/scsi/aha1740.c:645:   scsi_add_host (shpnt, dev); /* XXX handle
+failure */                                                                  
+         
+./drivers/scsi/BusLogic.c:2299:                         scsi_add_host(Host,
+NULL);                                                                      
+       
+./drivers/block/cciss_scsi.c:709:       scsi_add_host(sh,
+&hba[ctlr]->pdev->dev); /* XXX handle failure *
+
+-- 
+DSL Komplett von GMX +++ Supergünstig und stressfrei einsteigen!
+AKTION "Kein Einrichtungspreis" nutzen: http://www.gmx.net/de/go/dsl
