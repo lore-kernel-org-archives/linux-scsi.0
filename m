@@ -1,63 +1,48 @@
-From: "Smart, James" <James.Smart@Emulex.Com>
-Subject: RE: [Emulex] Ready for next round... (log function)
-Date: Fri, 18 Jun 2004 11:38:19 -0400
+From: "Frank Borich" <Frank_Borich@us.xyratex.com>
+Subject: [PATCH] 2.4.27-pre6 add device to scsi_scan.c blacklist
+Date: Fri, 18 Jun 2004 10:23:37 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3356669BBE90C448AD4645C843E2BF28034F9526@xbl.ma.emulex.com>
+Message-ID: <47F3C2BE74738E4683574107469DFA20433908@XYUSEX01.xyus.xyratex.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:33752 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S265212AbUFRPib
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jun 2004 11:38:31 -0400
+Received: from xyratexus11.xyratex.com ([65.203.33.11]:35930 "EHLO
+	XYUSEX01.xyus.xyratex.com") by vger.kernel.org with ESMTP
+	id S266254AbUFRRXl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jun 2004 13:23:41 -0400
+Content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: 'Christoph Hellwig' <hch@infradead.org>
-Cc: Linux SCSI Reflector <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Christoph,
+Hi,
 
-Can you be more specific than "it's horrible" ?
-
-The api we essentially have is :
-  lpfc_printf_log(ha, level, mask, fmt, arg...) and this uses the
-dev_info/warn/err defines for dev_printk.
-
-So, other than ordering, the only difference we have is the "mask" element.
-This element lets us filter by logical function or component via a
-runtime-changable flag, something our customers have asked for. In fact,
-they've asked for even more detail than what is there.
-
-Are you complaining about the implementation of lpfc_printf_log() itself vs
-being a #define for dev_printk ? The only ugliness is the addition of
-preambles for compatibility with what was there previously. I don't mind
-removing this (and have already kicked this off).  But - is there more? The
-api used throughout the driver is basically the same as the one referenced.
-A small amount of code is needed just to implement a runtime filter, but
-it's constrained to 1 small function.
-
--- James S
+Adds Xyratex 4200 FC-SATA RAID controller to blacklist.
 
 
+--- scsi_scan.c.OLD     2004-06-18 09:55:39.000000000 -0500
++++ scsi_scan.c 2004-06-18 10:57:21.000000000 -0500
+@@ -207,6 +207,7 @@
+        {"HP", "C7200", "*", BLIST_SPARSELUN},                  /*
+Medium Changer */
+        {"SMSC", "USB 2 HS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+        {"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
++       {"Xyratex", "4200", "*", BLIST_SPARSELUN | BLIST_LARGELUN |
+BLIST_FORCELUN},
+        {"NEC", "iStorage", "*", BLIST_SPARSELUN | BLIST_LARGELUN |
+BLIST_FORCELUN},
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Wednesday, June 16, 2004 4:20 AM
-> To: Smart, James
-> Cc: Linux SCSI Reflector
-> Subject: Re: [Emulex] Ready for next round...
-> 
-> 
-> On Tue, Jun 15, 2004 at 01:32:56PM -0400, Smart, James wrote:
-> > Comments:
-> > --------------
-> > [From 5/9] Re: lpfc_msg* stuff is not acceptable.
-> > We've inlined the print strings and filter values. Should 
-> be acceptable now.
-> 
-> Still quite horrible.  Please use dev_printk ala qlogic:
-> 
-> #define qla_printk(level, ha, format, arg...) \
->         dev_printk(level , &((ha)->pdev->dev) , format , ## arg)
-> 
-> 
+        /*
+
+
+Thanks,
+
+Frank Borich
+------------------------------------------------------------------
+Systems Engineer
+Direct 630 654 6089
+Fax 630 325 2513
+e-mail frank_borich@us.xyratex.com
+ 
+
