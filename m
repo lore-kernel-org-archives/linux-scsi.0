@@ -1,42 +1,49 @@
-From: Andries Brouwer <Andries.Brouwer@cwi.nl>
-Subject: Re: [usb-storage] Re: Handling erroneous READ CAPACITY response in sd.c
-Date: Fri, 5 Nov 2004 19:44:02 +0100
-Message-ID: <20041105184402.GB10912@apps.cwi.nl>
-References: <41765CD1.8060108@adaptec.com> <Pine.LNX.4.44L0.0411051059540.834-100000@ida.rowland.org> <20041105180611.GA23104@one-eyed-alien.net>
+From: "Bailey, Scott" <scott.bailey@eds.com>
+Subject: RE: Qlogic ISP 1020
+Date: Fri, 5 Nov 2004 14:20:15 -0500
+Message-ID: <1CF4FE310DCDD3119A1F00508BDF0A6823C3E0A9@usahm019.exmi01.exch.eds.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.cwi.nl ([192.16.191.8]:16620 "EHLO hera.cwi.nl")
-	by vger.kernel.org with ESMTP id S261155AbUKESoM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Nov 2004 13:44:12 -0500
-Content-Disposition: inline
-In-Reply-To: <20041105180611.GA23104@one-eyed-alien.net>
+Received: from ahmler5.mail.eds.com ([192.85.154.70]:49868 "EHLO
+	ahmler5.mail.eds.com") by vger.kernel.org with ESMTP
+	id S261170AbUKETV1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Nov 2004 14:21:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Luben Tuikov <luben_tuikov@adaptec.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
+To: 'Ingvar Hagelund' <ingvar@linpro.no>, Christoph Hellwig <hch@lst.de>
+Cc: "Bailey, Scott" <scott.bailey@eds.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
+To recap, I have a 3-processor Alphaserver 4100 5/466 with several KZPBA-BA
+(ISP1020A-based) SCSI controllers that runs Debian Linux on top of LVM on
+top of md RAID-1 devices. I've been patching the feral driver into my kernel
+but on the lookout for something easier to maintain.
 
-> On the other hand, the adjustment of the READ CAPACITY value should still 
-> be moved to sd.c from usb-storage.  This can be implemented easily enough 
-> by adding a bitflag to the scsi_device structure; the flag could be set 
-> either by a SCSI blist entry or by usb-storage in its slave_configure 
-> routine.  The flag would tell sd_read_capacity to decrement the number of 
-> sectors it receives from the device.
+Christoph developed a patch for the qla1280 driver (under 2.6) that
+introduced support for ISP1020/ISP1040 devices; Ingvar brought this to my
+attention and provided patches to backport this support to 2.4. These are
+available at http://users.linpro.no/ingvar/alpha/qla1280/ for those coming
+late to this party. :-)
 
-I have not been following the discussion but happen to see this
-fragment. Probably the below is irrelevant.
+I tried building a kernel from the Debian 2.4.27 kernel source with these
+patches included; on 3 separate attempts, my system would lock up part-way
+through the boot process.
 
-We used to have entries in unusual_devices - the above sounds
-as if it is proposed to move such entries to a SCSI blist.
-I don't see why that is progress.
+Following up on a last suggestion from Ingvar, I rebuilt my 2.4.27 kernel
+with CONFIG_SMP turned off.
 
-Concerning the size of a disk: if one claims that the disk is one
-sector shorter than it really is, in most cases no great harm is done.
-However, certain partition tables and RAID configuration info
-lives on the last sector or the last cylinder of a disk.
-Even worse, sometimes this information is read or written by
-the hardware.
-Thus, there exist situations where it is really bad when
-the last sector of a disk disappears from sight.
+It wasn't a huge test, but I was able to boot my system cleanly without any
+problems. That's much farther than I got running the SMP-enabled kernel.
 
-Andries
+Therefore I conclude that either I am the first person in the universe to
+use the 2.4 qla1280 driver on a multiprocessor Alpha system, or the ISP10x0
+support patch somehow is not SMP-safe (at least as backported).
+
+I am happy and eager to do more playtesting if anybody has more suggestions,
+requests for additional information, or revised patches appear. (As I
+mentioned before, I am clueless about using magic SYSRQ keys on an
+Alphaserver with a serial console.)
+
+Tantalized,
+
+	Scott
