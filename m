@@ -1,58 +1,47 @@
-From: Matthew Jacob <mjacob@feral.com>
-Subject: Re: Re:[ANNOUNCE] QLogic FC Driver for Linux kernel 2.5 available.
-Date: Tue, 13 May 2003 14:04:02 -0700 (PDT)
+From: Patrick Mochel <mochel@osdl.org>
+Subject: Re: [PATCH] scsi_host sysfs updates scsi-misc-2.5 [0/2]
+Date: Tue, 13 May 2003 17:00:24 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030513135931.A83125@mailhost.quaver.net>
-References: <3EBDB953.1040908@wanadoo.es>  <20030512190013.GA23981@praka.local.home>
- <1052768456.2093.64.camel@mulgrave>
-Reply-To: mjacob@quaver.net
+Message-ID: <Pine.LNX.4.44.0305131659110.9816-100000@cherise>
+References: <20030512184140.GB3226@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from beppo.feral.com ([192.67.166.79]:523 "EHLO beppo.feral.com")
-	by vger.kernel.org with ESMTP id S261219AbTEMUyj (ORCPT
+Received: from air-2.osdl.org ([65.172.181.6]:15324 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S263273AbTEMXrT (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 May 2003 16:54:39 -0400
-In-Reply-To: <1052768456.2093.64.camel@mulgrave>
+	Tue, 13 May 2003 19:47:19 -0400
+In-Reply-To: <20030512184140.GB3226@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Andrew Vasquez <praka@san.rr.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 
-You typically have to sign an NDA for such information :-(.
+On Mon, 12 May 2003, Mike Anderson wrote:
 
-It's really not all that hard to support the older chips though. A more
-crucial piece of information is the chip errata- issues like the first
-cut of the 1080 chip not working with Seagate drives but with Quantum
-and IBM drives- those pieces of info are very hard to get ahold of.
+> James Bottomley [James.Bottomley@steeleye.com] wrote:
+> > On Mon, 2003-05-12 at 12:50, James Bottomley wrote:
+> > > Surprisingly, it still fails.  I've debugged the refcounting and I see
+> > > it fall to zero in scsi_host_put but the dev release method doesn't
+> > > trigger for no reason I can see.
+> > > 
+> > > It's probably a kobject initialisation problem somewhere.
+> > 
+> > OK, found it.  the ->release is triggered by the kobj_kset, which isn't
+> > set until device_add time, not device init time.
+> > 
+> > Therefore, we shouldn't really put and get objects until they've been
+> > added (or the kobj_set_kset_s needs to be moved to device_initialize()).
+> > 
+> 
+> I would like to have feedback from Mochel on the device_initialize
+> call.
 
-Personally, *I* care about the older chipsets. I *do* support them in my
-somewhat problematic linux driver. I also have active target mode
-support in a number of contexts for them because I actually *do* have
-people who still need this support.
-
-This is also a non-PCI issue as there are still boatloads of the ISP1000
-SBus cards out there as well.
+Just to set the record straight - James suggested this on irc yesterday, 
+and I've added it to my tree. I haven't seen any issues with it, and based 
+on later emails, you've worked out the slab issue. So, it'll be pushed to 
+Linus. 
 
 
+	-pat
 
-On Mon, 12 May 2003, James Bottomley wrote:
-
-> On Mon, 2003-05-12 at 14:00, Andrew Vasquez wrote:
-> > Unfortunately, no.  QLogic has no plans to update qla1280 -- all
-> > parallel SCSI HBAs have been EOLed.
->
-> Could Qlogic at least publish the documentation for these chips
-> electronically so we have a vague chance of supporting them?
->
-> At the moment most of the ISP1020 and ISP1040 bug reports elicit
-> sympathy but not much else.
->
-> James
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
