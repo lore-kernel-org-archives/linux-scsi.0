@@ -1,96 +1,71 @@
-From: Thomas Steudten <alpha@steudten.com>
-Subject: BUG: Kernel Panic: kernel-2.6.1 for alpha in scsi context ll_rw_blk.c
-Date: Sat, 10 Jan 2004 17:59:21 +0100
-Sender: linux-alpha-owner@vger.kernel.org
-Message-ID: <40002F69.9020302@steudten.com>
-References: <3FB92938.8040906@steudten.com> <87r806d6n6.fsf@student.uni-tuebingen.de> <3FB93EF6.807@steudten.com> <87islid5tq.fsf@student.uni-tuebingen.de> <20031118021922.A7816@den.park.msu.ru> <3FBA8F20.3050701@steudten.com>
+From: "Larry W. Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: Kernel oops in 2.6.1 when loading aha152x_cs.ko
+Date: Sat, 10 Jan 2004 10:09:46 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <6.0.0.22.0.20040110100325.01b88158@pop-server.kc.rr.com>
+References: <6.0.0.22.0.20040109124348.01b86068@pop-server.kc.rr.com>
+ <1073698638.2026.3.camel@opiate>
+ <6.0.0.22.0.20040109221955.01b86f28@pop-server.kc.rr.com>
+ <1073716698.2026.18.camel@opiate>
+ <1073747000.1945.5.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-alpha-owner@vger.kernel.org>
-In-Reply-To: <3FBA8F20.3050701@steudten.com>
-To: Thomas Steudten <alpha@steudten.com>
-Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>, Falk Hueffner <falk.hueffner@student.uni-tuebingen.de>, Richard Henderson <rth@twiddle.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-alpha@vger.kernel.org, akpm@osdl.org
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:18861 "EHLO
+	mtiwmhc12.worldnet.att.net") by vger.kernel.org with ESMTP
+	id S265255AbUAJRNJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Jan 2004 12:13:09 -0500
+In-Reply-To: <1073747000.1945.5.camel@mulgrave>
+References: <6.0.0.22.0.20040109124348.01b86068@pop-server.kc.rr.com>
+ <1073698638.2026.3.camel@opiate>
+ <6.0.0.22.0.20040109221955.01b86f28@pop-server.kc.rr.com>
+ <1073716698.2026.18.camel@opiate>
+ <1073747000.1945.5.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, eric@bootseg.com, turbo-desktop-environment@t-online.de
 
-Hello
+At 08:03 AM 1/10/2004, James Bottomley wrote:
+>The problem seems to be this code in aha152x.c:
+>
+>#ifndef PCMCIA
+>#define driver_template aha152x_driver_template
+>#include "scsi_module.c"
+>#endif
+>
+>Since it's still behaving as a legacy driver (by calling
+>register_scsi()), it needs the aha152x_driver_template.legacy_hosts list
+>initialised (which is done in scsi_module.c).
+>
+>The true fix would be to convert aha152x to the new API.  However, a
+>quick fix is probably to add
+>
+>         INIT_LIST_HEAD(&s.legacy_hosts);
+>
+>just before the call to aha152x_probe_one() in aha152x_stub.c
+>
+>James
 
-I test the new 2.6.1 kernel and run in the same problem as before.
-The reason is, that the patch from Ivan isn=B4t there in the kernel
-source tree.
+This doesn't compile. The structure 's' has no member named 'legacy_hosts'. 
+On the other hand, the patch from Eric Kerin fixes the problem. Although 
+this sample may be mangled by my mailer, it is as follows:
 
-Please add the patch to the mainline.
+--- drivers/scsi/aha152x.c.orig 2003-12-31 11:04:14.000000000 -0500
++++ drivers/scsi/aha152x.c      2004-01-10 01:23:31.568684000 -0500
+@@ -965,6 +965,12 @@ struct Scsi_Host *aha152x_probe_one(stru
+  {
+         struct Scsi_Host *shpnt;
 
-Tom
++#ifdef PCMCIA
++       if(!aha152x_driver_template.legacy_hosts.next){
++               INIT_LIST_HEAD(&aha152x_driver_template.legacy_hosts);
++       }
++#endif
++
+         shpnt = scsi_register(&aha152x_driver_template, sizeof(struct
+aha152x_hostdata));
+         if (!shpnt) {
+                 printk(KERN_ERR "aha152x: scsi_register failed\n");
 
-Thomas Steudten wrote:
+Larry
 
-> Hi
->=20
-> With the patch from Ivan, the prefetch problem is gone.
-> Please add this patch to the mainline for 2.6.0 for alpha.
->=20
-> Regards
-> Tom
->=20
->> We shouldn't prefetch the spinlocks on UP.
->>
->> Ivan.
->>
->> --- 2.6/include/asm-alpha/processor.h    Sat Oct 25 22:44:54 2003
->> +++ linux/include/asm-alpha/processor.h    Tue Nov 18 01:48:39 2003
->> @@ -78,6 +78,11 @@ unsigned long get_wchan(struct task_stru
->>  #define ARCH_HAS_PREFETCHW
->>  #define ARCH_HAS_SPINLOCK_PREFETCH
->> =20
->> +#ifndef CONFIG_SMP
->> +/* Nothing to prefetch. */
->> +#define spin_lock_prefetch(lock)      do { } while (0)
->> +#endif
->> +
->>  #if __GNUC__ > 3 || (__GNUC__ =3D=3D 3 && __GNUC_MINOR__ >=3D 1)
->>  extern inline void prefetch(const void *ptr)   { @@ -89,10 +94,13 @=
-@=20
->> extern inline void prefetchw(const void      __builtin_prefetch(ptr,=
-=20
->> 1, 3);
->>  }
->> =20
->> +#ifdef CONFIG_SMP
->>  extern inline void spin_lock_prefetch(const void *ptr)   {
->>      __builtin_prefetch(ptr, 1, 3);
->>  }
->> +#endif
->> +
->>  #else
->>  extern inline void prefetch(const void *ptr)   { @@ -104,10 +112,13=
-=20
->> @@ extern inline void prefetchw(const void      __asm__ ("ldq $31,%0=
-"=20
->> : : "m"(*(char *)ptr));  }
->> =20
->> +#ifdef CONFIG_SMP
->>  extern inline void spin_lock_prefetch(const void *ptr)   {
->>      __asm__ ("ldq $31,%0" : : "m"(*(char *)ptr));  }
->> +#endif
->> +
->>  #endif /* GCC 3.1 */
->> =20
->>  #endif /* __ASM_ALPHA_PROCESSOR_H */
->=20
->=20
-
---=20
-Tom
-
-LINUX user since kernel 0.99.x 1994.
-RPM Alpha packages at http://alpha.steudten.com/packages
-Want to know what S.u.S.E 1995 cdrom-set contains?
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-alpha" =
-in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
