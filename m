@@ -1,47 +1,65 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [TRIVIAL] aic7xxx_Makefile fix
-Date: Tue, 17 Dec 2002 10:12:20 +1100
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: slave_destroy called in scsi_scan.c:scsi_probe_and_add_lun()
+Date: Tue, 17 Dec 2002 11:03:56 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021216233429.53E752C2B4@lists.samba.org>
-References: <Pine.LNX.4.44.0212161527350.21707-100000@chaos.physics.uiowa.edu>
+Message-ID: <3DFE69EC.1020804@torque.net>
+References: <170040000.1040080786@aslan.btc.adaptec.com>
+Reply-To: dougg@torque.net
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-reply-to: Your message of "Mon, 16 Dec 2002 15:30:03 MDT."
-             <Pine.LNX.4.44.0212161527350.21707-100000@chaos.physics.uiowa.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Germaschewski <kai@tp1.ruhr-uni-bochum.de>
-Cc: junio@siamese.dyndns.org, linux-scsi@vger.kernel.org
+To: "Justin T. Gibbs" <gibbs@btc.adaptec.com>
+Cc: linux-scsi@vger.kernel.org, dledford@redhat.com
 
-In message <Pine.LNX.4.44.0212161527350.21707-100000@chaos.physics.uiowa.edu> y
-ou write:
-> On Mon, 16 Dec 2002, Rusty Trivial Russell wrote:
+Justin T. Gibbs wrote:
+> In debugging a different bug in the new 2.5.X port of the aic7xxx driver,
+> I came across this behavior in scsi_probe_and_add_lun()
 > 
-> > From:  junio@siamese.dyndns.org
-> > 
-> >   Patch against 2.4.19.  If you are in a (good) habit of making
-> >   all the upstream sources read-only before starting your build,
-> >   generation of the firmware code fails because it tries to write
-> >   into read-only files.  This bites only in configurations where
-> >   CONFIG_AIC7XXX_BUILD_FIRMWARE is set to 'y'. 
-> >   
-> > 
-> > --- trivial-2.4.21-pre1/drivers/scsi/aic7xxx/Makefile.orig	2002-12-16 17:22:40.000000000 +1100
-> > +++ trivial-2.4.21-pre1/drivers/scsi/aic7xxx/Makefile	2002-12-16 17:22:40.000000000 +1100
-> > @@ -39,6 +39,7 @@
-> >  $(obj-aic7xxx): aic7xxx_reg.h
-> >  
-> >  aic7xxx_seq.h aic7xxx_reg.h: aic7xxx.seq aic7xxx.reg aicasm/aicasm
-> > +	rm -f aic7xxx_seq.h aic7xxx_reg.h
-> >  	aicasm/aicasm -I. -r aic7xxx_reg.h -o aic7xxx_seq.h aic7xxx.seq
-> >  endif
+>         /*
+>          * Since we reuse the same sdevscan over and over with different
+>          * target and lun values, we have to destroy and then recreate
+>          * any possible low level attachments since they very will might
+>          * also store the id and lun numbers in some form and need updating
+>          * with each scan.
+>          */
+>         if (sdevscan->host->hostt->slave_destroy)
+>                 sdevscan->host->hostt->slave_destroy(sdevscan);
+>         if (sdevscan->host->hostt->slave_alloc)
+>                 sdevscan->host->hostt->slave_alloc(sdevscan);
 > 
-> This is 2.4, so I don't feel authorative for that ;) Anyhow, this is not a
-> right fix (it's fixed properly in 2.5). Overwriting shipped files should
-> never happen, the "rm" may fix the symptoms for some cases, but SCS as
-> e.g. bitkeeper will generally not be happy with that kind of behavior.
+> So, you cannot rely on slave_destroy as an indication of a device really
+> going away in the physical sense.  In SPI, for example, the driver can only
+> tell that the device is gone if a command is issued to it.  I had hoped that
+> I could detect hot-pull/scsi-remove-single-device operations via this
+> callback.
+> Granted, for some drivers, recreating and destroying state associated with a
+> particular device might be pretty cheap, but certainly not in all cases.
+> The
+> aic7xxx and aic79xx drivers maintain domain validation and other negotiation
+> state in these structures.  You certainly don't want to go through another
+> full
+> Domain Validation sequence the next time a device is allocated via
+> slave_alloc() if the device isn't really "new".
+> 
+> Any chance in changing this behavior?
 
-Thanks Kai, I've closed it pending someone doing a backport from 2.5.
+Justin,
+Yes, that behaviour does seem inconsistent with the
+description of slave_alloc() and slave_destroy().
 
-Cheers,
-Rusty.
---
-  Anyone who quotes me in their sig is an idiot. -- Rusty Russell.
+This post from 29th November shows a trace from a
+device scan being done on the scsi_debug driver:
+marc.theaimsgroup.com/?l=linux-scsi&m=103855771307230&w=2
+
+I believe Pat Mansfield has done most of the recent
+work in th device scan area and he is currently on
+holiday.
+
+Doug Gilbert
+
+
+
+
+
