@@ -1,113 +1,70 @@
-From: Mike Christie <mikenc@us.ibm.com>
-Subject: Re: Initio 9100u -- Mike Christie's 2.6.0-test11 Patch -- Kernel
- Errors
-Date: Mon, 22 Dec 2003 15:42:15 -0800 (PST)
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: Suggestions for determining if device currently in-use
+Date: Tue, 23 Dec 2003 09:07:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0312221530460.6621-200000@dyn319634.beaverton.ibm.com>
-References: <1072021603.1952.10.camel@mulgrave>
+Message-ID: <C2CB6D8BA015124783C0EB9B33D24FFD047D50@otcexc01.otc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="789150742-1771436102-1072136535=:6621"
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.102]:64210 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S264581AbTLVXqB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Dec 2003 18:46:01 -0500
-In-Reply-To: <1072021603.1952.10.camel@mulgrave>
+Received: from magic-mail.adaptec.com ([216.52.22.10]:41382 "EHLO
+	magic.adaptec.com") by vger.kernel.org with ESMTP id S265144AbTLWOHa
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Dec 2003 09:07:30 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: James Daniel <jdaniel@dakotacom.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: 'Christoph Hellwig' <hch@infradead.org>, 'SCSI development list' <linux-scsi@vger.kernel.org>
+Cc: 'Mark Haverkamp' <markh@osdl.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-  Send mail to mime@docserver.cac.washington.edu for more info.
+Christoph, in the past you indicated that access_count would drop away, as
+it has.
 
---789150742-1771436102-1072136535=:6621
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+The RAID drivers are capable of changing the devices geometry and status
+live, and as such we need to protect against actions associated with those
+changes when devices are mounted, in error recovery, or in-use by some form
+of direct access applications.
 
-On 21 Dec 2003, James Bottomley wrote:
+The new internal structure member (sd.c) `openers' replaces that
+functionality, but is not accessible externally.
 
-> On Fri, 2003-12-19 at 05:15, Mike Christie wrote:
-> > Here is another try. It should compile against 2.6.0-test11/2.6.0.
+What is the recommended means to determine if the device is in-use or
+in-error-recovery?
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Christoph Hellwig
+Sent: Thursday, December 11, 2003 6:39 AM
+To: Alan Stern; SCSI development list
+Subject: Re: Suggestion for aiding debugging of host removal
+
+On Wed, Dec 10, 2003 at 11:48:28PM -0800, Mike Anderson wrote:
+> > > I've got a question about host removal.  Once scsi_remove_host() has
+> > > returned, the host driver's module is free to unload from memory
+(assuming
+> > > the module's reference count is 0, which it normally is).  Hence it is
+a
+> > > mistake to access the host template in any way after that time.
 > 
-> That's great thanks.  I've put it in the scsi tree.
+> Normally it would not be zero on the return from scsi_remove_host. It
+> would not go to zero until scsi_host_put is called. If the scsi_host_put
+> is the last ref then prior to the returning of the scsi_host_put
+> scsi_host_dev_release would have been called. If it is not then there
+> must of been a open on a device outstanding (which would keep a rmmod
+> from being called, but would allow hotplug and unexpectged disconnects).
+
+An opened sysfs file won't stop the unload.  Only if we still have
+a scsi_device still referencing the host.
+
+> > I'll see whether I can come up with a fix.
 > 
-> I did notice in the diffs between this one and the previous patch things
-> like:
-> 
-> 
-> -			pSG->SG_Ptr = cpu_to_le32((u32)sg_dma_address(pSrbSG));
-> -			TotalLen += pSG->SG_Len = cpu_to_le32((u32)sg_dma_len(pSrbSG));
-> +			pSG->SG_Ptr = (u32)sg_dma_address(pSrbSG);
-> +			TotalLen += pSG->SG_Len = (u32)sg_dma_len(pSrbSG);
-> 
-> Which is obviously incorrect, since sg_dma_address() does return the
-> address in CPU endianness (and the device SG list needs to be in PCI
-> endiannes), 
+> Unless I missing something I do not see any interlock / wait in
+free_netdev
+> (in looking at test11).
 
-I read the docs and added the cpu_to_le32 calls, but when the patch failed 
-for JamesD I looked at the Initio driver that was already converted and noticed
-it was not managing the endiannes so I put 2 and 2 together and got 3.
+Sorry, it's actually unregister_nedevice (throuch netdev_run_todo and
+netdev_wait_allrefs).
 
-but I think, since it was hard enough to find anyone with
-> one of these things, that the chances of finding one on a non-x86 box
-> are zero.
-> 
-
-The attached patch adds the cpu_to_le32 calls just in case. It was built 
-against my previous patch.
-
-
-mike
-
---789150742-1771436102-1072136535=:6621
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name="ini9100_le.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.44.0312221542150.6621@dyn319634.beaverton.ibm.com>
-Content-Description: 
-Content-Disposition: attachment; filename="ini9100_le.patch"
-
-LS0tIGxpbnV4LTIuNi4wLXRlc3QxMS1vcmlnL2RyaXZlcnMvc2NzaS9pbmk5
-MTAwdS5jCTIwMDMtMTItMjIgMTU6MzA6MTUuOTI3ODYxOTQzIC0wODAwDQor
-KysgbGludXgtMi42LjAtdGVzdDExLXdvcmsvZHJpdmVycy9zY3NpL2luaTkx
-MDB1LmMJMjAwMy0xMi0yMiAxNToyODoyOC4zOTMyOTM0MTIgLTA4MDANCkBA
-IC00ODQsNyArNDg0LDcgQEAgc3RhdGljIHZvaWQgaTkxdUJ1aWxkU0NCKEhD
-UyAqIHBIQ0IsIFNDQg0KIAlkbWFfYWRkciA9IGRtYV9tYXBfc2luZ2xlKCZw
-SENCLT5wY2lfZGV2LT5kZXYsIFNDcG50LT5zZW5zZV9idWZmZXIsDQogCQkJ
-CSAgU0VOU0VfU0laRSwgRE1BX0ZST01fREVWSUNFKTsNCiAJcFNDQi0+U0NC
-X1NlbnNlUHRyID0gY3B1X3RvX2xlMzIoKHUzMilkbWFfYWRkcik7DQotCXBT
-Q0ItPlNDQl9TZW5zZUxlbiA9IFNFTlNFX1NJWkU7DQorCXBTQ0ItPlNDQl9T
-ZW5zZUxlbiA9IGNwdV90b19sZTMyKFNFTlNFX1NJWkUpOw0KIAlTQ3BudC0+
-U0NwLnB0ciA9IChjaGFyICopKHVuc2lnbmVkIGxvbmcpZG1hX2FkZHI7DQog
-DQogCXBTQ0ItPlNDQl9DREJMZW4gPSBTQ3BudC0+Y21kX2xlbjsNCkBAIC01
-MDIsNyArNTAyLDcgQEAgc3RhdGljIHZvaWQgaTkxdUJ1aWxkU0NCKEhDUyAq
-IHBIQ0IsIFNDQg0KIAkJZG1hX2FkZHIgPSBkbWFfbWFwX3NpbmdsZSgmcEhD
-Qi0+cGNpX2Rldi0+ZGV2LCAmcFNDQi0+U0NCX1NHTGlzdFswXSwNCiAJCQkJ
-CSAgc2l6ZW9mKHN0cnVjdCBTR19TdHJ1YykgKiBUT1RBTF9TR19FTlRSWSwN
-CiAJCQkJCSAgRE1BX0JJRElSRUNUSU9OQUwpOw0KLQkJcFNDQi0+U0NCX0J1
-ZlB0ciA9IGRtYV9hZGRyOw0KKwkJcFNDQi0+U0NCX0J1ZlB0ciA9IGNwdV90
-b19sZTMyKCh1MzIpZG1hX2FkZHIpOw0KIAkJU0NwbnQtPlNDcC5kbWFfaGFu
-ZGxlID0gZG1hX2FkZHI7DQogDQogCQlwU3JiU0cgPSAoc3RydWN0IHNjYXR0
-ZXJsaXN0ICopIFNDcG50LT5yZXF1ZXN0X2J1ZmZlcjsNCkBAIC01MTIsOCAr
-NTEyLDggQEAgc3RhdGljIHZvaWQgaTkxdUJ1aWxkU0NCKEhDUyAqIHBIQ0Is
-IFNDQg0KIAkJcFNDQi0+U0NCX0ZsYWdzIHw9IFNDRl9TRzsJLyogVHVybiBv
-biBTRyBsaXN0IGZsYWcgICAgICAgKi8NCiAJCWZvciAoaSA9IDAsIFRvdGFs
-TGVuID0gMCwgcFNHID0gJnBTQ0ItPlNDQl9TR0xpc3RbMF07CS8qIDEuMDFn
-ICovDQogCQkgICAgIGkgPCBwU0NCLT5TQ0JfU0dMZW47IGkrKywgcFNHKyss
-IHBTcmJTRysrKSB7DQotCQkJcFNHLT5TR19QdHIgPSAodTMyKXNnX2RtYV9h
-ZGRyZXNzKHBTcmJTRyk7DQotCQkJVG90YWxMZW4gKz0gcFNHLT5TR19MZW4g
-PSAodTMyKXNnX2RtYV9sZW4ocFNyYlNHKTsNCisJCQlwU0ctPlNHX1B0ciA9
-IGNwdV90b19sZTMyKCh1MzIpc2dfZG1hX2FkZHJlc3MocFNyYlNHKSk7DQor
-CQkJVG90YWxMZW4gKz0gcFNHLT5TR19MZW4gPSBjcHVfdG9fbGUzMigodTMy
-KXNnX2RtYV9sZW4ocFNyYlNHKSk7DQogCQl9DQogDQogCQlwU0NCLT5TQ0Jf
-QnVmTGVuID0gKFNDcG50LT5yZXF1ZXN0X2J1ZmZsZW4gPiBUb3RhbExlbikg
-Pw0KQEAgLTUyMyw4ICs1MjMsOCBAQCBzdGF0aWMgdm9pZCBpOTF1QnVpbGRT
-Q0IoSENTICogcEhDQiwgU0NCDQogCQkJCQkgIFNDcG50LT5yZXF1ZXN0X2J1
-ZmZsZW4sDQogCQkJCQkgIFNDcG50LT5zY19kYXRhX2RpcmVjdGlvbik7DQog
-CQlTQ3BudC0+U0NwLmRtYV9oYW5kbGUgPSBkbWFfYWRkcjsNCi0JCXBTQ0It
-PlNDQl9CdWZQdHIgPSAodTMyKWRtYV9hZGRyOw0KLQkJcFNDQi0+U0NCX0J1
-ZkxlbiA9ICh1MzIpU0NwbnQtPnJlcXVlc3RfYnVmZmxlbjsNCisJCXBTQ0It
-PlNDQl9CdWZQdHIgPSBjcHVfdG9fbGUzMigodTMyKWRtYV9hZGRyKTsNCisJ
-CXBTQ0ItPlNDQl9CdWZMZW4gPSBjcHVfdG9fbGUzMigodTMyKVNDcG50LT5y
-ZXF1ZXN0X2J1ZmZsZW4pOw0KIAkJcFNDQi0+U0NCX1NHTGVuID0gMDsNCiAJ
-fSBlbHNlIHsNCiAJCXBTQ0ItPlNDQl9CdWZMZW4gPSAwOw0K
---789150742-1771436102-1072136535=:6621--
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
