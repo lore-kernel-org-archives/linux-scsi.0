@@ -1,53 +1,65 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: dpt_i2o driver
-Date: Tue, 2 Sep 2003 18:14:57 +0100
+From: Arnaldo Carvalho de Melo <acme@conectiva.com.br>
+Subject: Re: [2.4 patch] Fix IRQ_NONE clash in SCSI drivers
+Date: Tue, 2 Sep 2003 17:02:30 -0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030902181457.A13499@infradead.org>
-References: <0998F43EAD645A47B3F6507196DD70EA256915@OTCEXC01>
+Message-ID: <20030902200230.GP3398@conectiva.com.br>
+References: <Pine.LNX.4.55L.0308271449170.23236@freak.distro.conectiva> <20030902184436.GO23729@fs.tum.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:33549 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S261284AbTIBRPG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Sep 2003 13:15:06 -0400
+Received: from orion.netbank.com.br ([200.203.199.90]:26893 "EHLO
+	orion.netbank.com.br") by vger.kernel.org with ESMTP
+	id S261853AbTIBUCo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Sep 2003 16:02:44 -0400
 Content-Disposition: inline
-In-Reply-To: <0998F43EAD645A47B3F6507196DD70EA256915@OTCEXC01>; from mark_salyzyn@adaptec.com on Tue, Sep 02, 2003 at 01:10:04PM -0400
+In-Reply-To: <20030902184436.GO23729@fs.tum.de>
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Mark Haverkamp <markh@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Adrian Bunk <bunk@fs.tum.de>
+Cc: Marcelo Tosatti <marcelo@conectiva.com.br>, lkml <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
-On Tue, Sep 02, 2003 at 01:10:04PM -0400, Salyzyn, Mark wrote:
-> When the device is mounted, should we not have a usage count in the kernel,
-> or are the hotplug events clearing this? Sorry for showing my ignorance of
-> the hotplug needs ...
+Em Tue, Sep 02, 2003 at 08:44:36PM +0200, Adrian Bunk escreveu:
+> On Wed, Aug 27, 2003 at 02:52:45PM -0300, Marcelo Tosatti wrote:
+> >...
+> > Summary of changes from v2.4.22 to v2.4.23-pre1
+> > ============================================
+> >...
+> > Arnaldo Carvalho de Melo:
+> >   o irqreturn_t compatibility with 2.6
+> >...
+> 
+> This change added an (empty) IRQ_NONE #define to interrupt.h.
+> 
+> Several scsi drivers are already using an IRQ_NONE.  Rename that to
+> SCSI_IRQ_NONE (a similar change was done in 2.5 by Andrew Morton several
+> months ago).
+> 
+> I've tested the compilation with 2.4.23-pre2.
 
-Wach scsi_device has a reference count (actually two currently, but one
-will go away).  this is not a traditional usage count because everytime
-we do something with the device without holding the protecting lock
-we should have one of this references, often temporary.  (We don't do
-yet but we will before 2.6.0 is finished).  If the device is marked for
-unregistration and the last reference vanishes the device is freed.
-So you only have a chance to see a zero refcount if the device isn't
-unregistered yet - which is completly useless for monitoring when
-it's deleted.
+Thanks a lot!
 
+- Arnaldo
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
-On Tue, Sep 02, 2003 at 01:10:04PM -0400, Salyzyn, Mark wrote:
-> When the device is mounted, should we not have a usage count in the kernel,
-> or are the hotplug events clearing this? Sorry for showing my ignorance of
-> the hotplug needs ...
+Em Tue, Sep 02, 2003 at 08:44:36PM +0200, Adrian Bunk escreveu:
+> On Wed, Aug 27, 2003 at 02:52:45PM -0300, Marcelo Tosatti wrote:
+> >...
+> > Summary of changes from v2.4.22 to v2.4.23-pre1
+> > ============================================
+> >...
+> > Arnaldo Carvalho de Melo:
+> >   o irqreturn_t compatibility with 2.6
+> >...
+> 
+> This change added an (empty) IRQ_NONE #define to interrupt.h.
+> 
+> Several scsi drivers are already using an IRQ_NONE.  Rename that to
+> SCSI_IRQ_NONE (a similar change was done in 2.5 by Andrew Morton several
+> months ago).
+> 
+> I've tested the compilation with 2.4.23-pre2.
 
-Wach scsi_device has a reference count (actually two currently, but one
-will go away).  this is not a traditional usage count because everytime
-we do something with the device without holding the protecting lock
-we should have one of this references, often temporary.  (We don't do
-yet but we will before 2.6.0 is finished).  If the device is marked for
-unregistration and the last reference vanishes the device is freed.
-So you only have a chance to see a zero refcount if the device isn't
-unregistered yet - which is completly useless for monitoring when
-it's deleted.
+Thanks a lot!
 
+- Arnaldo
