@@ -1,317 +1,420 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] make sym2 scan devices again
-Date: Fri, 8 Aug 2003 21:07:54 +0200
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: [PATCH] take 3 add sysfs attributes to scan and delete scsi_devices
+Date: Fri, 8 Aug 2003 14:01:57 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030808190754.GB17983@lst.de>
+Message-ID: <20030808140157.A18242@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:50562 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S271848AbTHHTH7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2003 15:07:59 -0400
+Received: from e33.co.us.ibm.com ([32.97.110.131]:29573 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S271972AbTHHVCT
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Aug 2003 17:02:19 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-It needs a call to scsi_scan_host to find devices.  Also remove the
-superflous scsi_set_device call - scsi_add_host does that for us.
+This patch against scsi-misc-2.5 adds a sysfs attribute to allow scanning
+(or rescanning) and deletion of scsi_devices.
 
+It also allows scanning of entire hosts, channels, or targets.
 
-diff -Nru a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c	Fri Aug  8 11:11:33 2003
-+++ b/drivers/scsi/sym53c8xx_2/sym_glue.c	Fri Aug  8 11:11:33 2003
-@@ -83,19 +83,6 @@
- void sym_udelay(int us) { udelay(us); }
- void sym_mdelay(int ms) { mdelay(ms); }
- 
--/*
-- *  SMP threading.
-- *
-- *  The whole SCSI sub-system under Linux is basically single-threaded.
-- *  Everything, including low-level driver interrupt routine, happens 
-- *  with the `io_request_lock' held.
-- *  The sym53c8xx-1.x drivers series ran their interrupt code using a 
-- *  spin mutex per controller. This added complexity without improving 
-- *  scalability significantly. the sym-2 driver still use a spinlock 
-- *  per controller for safety, but basically runs with the damned 
-- *  io_request_lock held.
-- */
--
- spinlock_t sym53c8xx_lock = SPIN_LOCK_UNLOCKED;
- 
- #define	SYM_LOCK_DRIVER(flags)    spin_lock_irqsave(&sym53c8xx_lock, flags)
-@@ -139,8 +126,6 @@
- 	SYM_UNLOCK_DRIVER(flags);
- }
- 
--#ifdef	SYM_LINUX_DYNAMIC_DMA_MAPPING
--
- void *__sym_calloc_dma(m_pool_ident_t dev_dmat, int size, char *name)
- {
- 	u_long flags;
-@@ -169,9 +154,6 @@
- 	return b;
- }
- 
--#endif	/* SYM_LINUX_DYNAMIC_DMA_MAPPING */
--
--
- /*
-  *  Map/unmap a PCI memory window.
-  */
-@@ -193,14 +175,6 @@
- #endif
+It adds a per-host scan attribute, and a per scsi_device delete attribute.
+
+diff -purN -X /home/patman/dontdiff scsi-misc-2.5-pure/drivers/scsi/scsi_priv.h scan-del-attr-sm-2.5/drivers/scsi/scsi_priv.h
+--- scsi-misc-2.5-pure/drivers/scsi/scsi_priv.h	Mon Aug  4 11:56:46 2003
++++ scan-del-attr-sm-2.5/drivers/scsi/scsi_priv.h	Thu Aug  7 12:25:43 2003
+@@ -42,6 +42,12 @@
+ 	(((scmd)->sense_buffer[0] & 0x70) == 0x70)
  
  /*
-- *  Used to retrieve the host structure when the 
-- *  driver is called from the proc FS.
-- */
--static struct Scsi_Host	*first_host = NULL;
--
--#define scsi_data_direction(cmd)	(cmd->sc_data_direction)
--
--/*
-  *  Driver host data structure.
-  */
- struct host_data {
-@@ -208,15 +182,6 @@
- };
- 
- /*
-- * Some type that fit DMA addresses as seen from BUS.
-- */
--#ifndef SYM_LINUX_DYNAMIC_DMA_MAPPING
--typedef u_long		bus_addr_t;
--#else
--typedef dma_addr_t	bus_addr_t;
--#endif
--
--/*
-  *  Used by the eh thread to wait for command completion.
-  *  It is allocated on the eh thread stack.
-  */
-@@ -233,10 +198,8 @@
-  */
- struct sym_ucmd {		/* Override the SCSI pointer structure */
- 	SYM_QUEHEAD link_cmdq;	/* Must stay at offset ZERO */
--#ifdef SYM_LINUX_DYNAMIC_DMA_MAPPING
--	bus_addr_t data_mapping;
-+	dma_addr_t data_mapping;
- 	u_char	data_mapped;
--#endif
- 	struct sym_eh_wait *eh_wait;
- };
- 
-@@ -250,20 +213,6 @@
-  *  Deal with DMA mapping/unmapping.
-  */
- 
--#ifndef SYM_LINUX_DYNAMIC_DMA_MAPPING
--
--/* Linux versions prior to pci bus iommu kernel interface */
--
--#define __unmap_scsi_data(pdev, cmd)	do {; } while (0)
--#define __map_scsi_single_data(pdev, cmd) (__vtobus(pdev,(cmd)->request_buffer))
--#define __map_scsi_sg_data(pdev, cmd)	((cmd)->use_sg)
--#define __sync_scsi_data(pdev, cmd)	do {; } while (0)
--
--#define bus_sg_dma_address(sc)		vtobus((sc)->address)
--#define bus_sg_dma_len(sc)		((sc)->length)
--
--#else /* Linux version with pci bus iommu kernel interface */
--
- #define	bus_unmap_sg(pdev, sgptr, sgcnt, dir)		\
- 	pci_unmap_sg(pdev, sgptr, sgcnt, dir)
- 
-@@ -301,9 +250,9 @@
- 	SYM_UCMD_PTR(cmd)->data_mapped = 0;
- }
- 
--static bus_addr_t __map_scsi_single_data(struct pci_dev *pdev, struct scsi_cmnd *cmd)
-+static dma_addr_t __map_scsi_single_data(struct pci_dev *pdev, struct scsi_cmnd *cmd)
- {
--	bus_addr_t mapping;
-+	dma_addr_t mapping;
- 	int dma_dir = scsi_to_pci_dma_dir(cmd->sc_data_direction);
- 
- 	mapping = bus_map_single(pdev, cmd->request_buffer,
-@@ -345,8 +294,6 @@
- 	}
- }
- 
--#endif	/* SYM_LINUX_DYNAMIC_DMA_MAPPING */
--
- #define unmap_scsi_data(np, cmd)	\
- 		__unmap_scsi_data(np->s.device, cmd)
- #define map_scsi_single_data(np, cmd)	\
-@@ -536,7 +483,7 @@
- 	cp->data_len = cmd->request_bufflen;
- 
- 	if (cmd->request_bufflen) {
--		bus_addr_t baddr = map_scsi_single_data(np, cmd);
-+		dma_addr_t baddr = map_scsi_single_data(np, cmd);
- 		if (baddr) {
- 			sym_build_sge(np, data, baddr, cmd->request_bufflen);
- 			segment = 1;
-@@ -571,7 +518,7 @@
- 		data = &cp->phys.data[SYM_CONF_MAX_SG - use_sg];
- 
- 		for (segment = 0; segment < use_sg; segment++) {
--			bus_addr_t baddr = bus_sg_dma_address(&scatter[segment]);
-+			dma_addr_t baddr = bus_sg_dma_address(&scatter[segment]);
- 			unsigned int len = bus_sg_dma_len(&scatter[segment]);
- 
- 			sym_build_sge(np, &data[segment], baddr, len);
-@@ -693,7 +640,7 @@
- 	/*
- 	 *  No direction means no data.
- 	 */
--	dir = scsi_data_direction(csio);
-+	dir = csio->sc_data_direction;
- 	if (dir != SCSI_DATA_NONE) {
- 		cp->segments = sym_scatter (np, cp, csio);
- 		if (cp->segments < 0) {
-@@ -1748,7 +1695,6 @@
- /*
-  *  Ask/tell the system about DMA addressing.
-  */
--#ifdef SYM_LINUX_DYNAMIC_DMA_MAPPING
- static int sym_setup_bus_dma_mask(hcb_p np)
- {
- #if   SYM_CONF_DMA_ADDRESSING_MODE == 0
-@@ -1780,7 +1726,6 @@
- 			sym_name(np));
- 	return -1;
- }
--#endif /* SYM_LINUX_DYNAMIC_DMA_MAPPING */
- 
- /*
-  *  Host attach and initialisations.
-@@ -1837,7 +1782,6 @@
- 	 *  We keep track in the HCB of all the resources that 
- 	 *  are to be released on error.
- 	 */
--#ifdef	SYM_LINUX_DYNAMIC_DMA_MAPPING
- 	np = __sym_calloc_dma(dev->pdev, sizeof(*np), "HCB");
- 	if (np) {
- 		np->s.device = dev->pdev;
-@@ -1845,11 +1789,7 @@
- 	}
- 	else
- 		goto attach_failed;
--#else
--	np = sym_calloc_dma(sizeof(*np), "HCB");
--	if (!np)
--		goto attach_failed;
--#endif
++ * Special value for scanning to specify scanning or rescanning of all
++ * possible channels, (target) ids, or luns on a given shost.
++ */
++#define SCAN_WILD_CARD	~0
 +
- 	host_data->ncb = np;
- 	np->s.host = instance;
++/*
+  * scsi_target: representation of a scsi target, for now, this is only
+  * used for single_lun devices. If no one has active IO to the target,
+  * starget_sdev_user is NULL, else it points to the active sdev.
+@@ -106,6 +112,8 @@ extern void scsi_exit_procfs(void);
+ #endif /* CONFIG_PROC_FS */
  
-@@ -1883,10 +1823,8 @@
- 	/*
- 	 *  Ask/tell the system about DMA addressing.
- 	 */
--#ifdef SYM_LINUX_DYNAMIC_DMA_MAPPING
- 	if (sym_setup_bus_dma_mask(np))
- 		goto attach_failed;
--#endif
+ /* scsi_scan.c */
++int scsi_scan_host_selected(struct Scsi_Host *, unsigned int, unsigned int,
++			    unsigned int, int);
+ extern void scsi_forget_host(struct Scsi_Host *);
+ extern void scsi_free_sdev(struct scsi_device *);
+ extern void scsi_free_shost(struct Scsi_Host *);
+diff -purN -X /home/patman/dontdiff scsi-misc-2.5-pure/drivers/scsi/scsi_proc.c scan-del-attr-sm-2.5/drivers/scsi/scsi_proc.c
+--- scsi-misc-2.5-pure/drivers/scsi/scsi_proc.c	Mon Aug  4 11:56:46 2003
++++ scan-del-attr-sm-2.5/drivers/scsi/scsi_proc.c	Thu Aug  7 12:36:19 2003
+@@ -189,21 +189,13 @@ static int proc_print_scsidevice(struct 
+ static int scsi_add_single_device(uint host, uint channel, uint id, uint lun)
+ {
+ 	struct Scsi_Host *shost;
+-	struct scsi_device *sdev;
+ 	int error = -ENXIO;
  
- 	/*
- 	 *  Try to map the controller chip to
-@@ -1987,12 +1925,6 @@
- 	sym_timer (np);
+ 	shost = scsi_host_lookup(host);
+ 	if (IS_ERR(shost))
+ 		return PTR_ERR(shost);
  
- 	/*
--	 *  Done.
--	 */
--        if (!first_host)
--        	first_host = instance;
+-	if (!scsi_find_device(shost, channel, id, lun)) {
+-		sdev = scsi_add_device(shost, channel, id, lun);
+-		if (IS_ERR(sdev))
+-			error = PTR_ERR(sdev);
+-		else
+-			error = 0;
+-	}
 -
--	/*
- 	 *  Fill Linux host instance structure
- 	 *  and return success.
- 	 */
-@@ -2015,17 +1947,17 @@
++	error = scsi_scan_host_selected(shost, channel, id, lun, 1);
+ 	scsi_host_put(shost);
+ 	return error;
+ }
+diff -purN -X /home/patman/dontdiff scsi-misc-2.5-pure/drivers/scsi/scsi_scan.c scan-del-attr-sm-2.5/drivers/scsi/scsi_scan.c
+--- scsi-misc-2.5-pure/drivers/scsi/scsi_scan.c	Mon Aug  4 11:56:46 2003
++++ scan-del-attr-sm-2.5/drivers/scsi/scsi_scan.c	Sun Aug 10 15:16:23 2003
+@@ -676,13 +676,32 @@ static int scsi_add_lun(struct scsi_devi
+  **/
+ static int scsi_probe_and_add_lun(struct Scsi_Host *host,
+ 		uint channel, uint id, uint lun, int *bflagsp,
+-		struct scsi_device **sdevp)
++		struct scsi_device **sdevp, int rescan)
+ {
+ 	struct scsi_device *sdev;
+ 	struct scsi_request *sreq;
+ 	unsigned char *result;
+ 	int bflags, res = SCSI_SCAN_NO_RESPONSE;
  
- 	SYM_UNLOCK_HCB(np, flags);
++	/*
++	 * The rescan flag is used as an optimization, the first scan of a
++	 * host adapter calls into here with rescan == 0.
++	 */
++	if (rescan) {
++		sdev = scsi_find_device(host, channel, id, lun);
++		if (sdev) {
++			SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
++				"scsi scan: device exists on <%d:%d:%d:%d>\n",
++				host->host_no, channel, id, lun));
++			if (sdevp)
++				*sdevp = sdev;
++			if (bflagsp)
++				*bflagsp = scsi_get_device_flags(sdev->vendor,
++								 sdev->model);
++			return SCSI_SCAN_LUN_PRESENT;
++		}
++	}
++
+ 	sdev = scsi_alloc_sdev(host, channel, id, lun);
+ 	if (!sdev)
+ 		goto out;
+@@ -757,7 +776,7 @@ static int scsi_probe_and_add_lun(struct
+  *     Modifies sdevscan->lun.
+  **/
+ static void scsi_sequential_lun_scan(struct Scsi_Host *shost, uint channel,
+-		uint id, int bflags, int lun0_res, int scsi_level)
++		uint id, int bflags, int lun0_res, int scsi_level, int rescan)
+ {
+ 	unsigned int sparse_lun, lun, max_dev_lun;
  
--	scsi_set_device(instance, &dev->pdev->dev);
--
- 	/*
- 	 *  Now let the generic SCSI driver
- 	 *  look for the SCSI devices on the bus ..
+@@ -826,7 +845,8 @@ static void scsi_sequential_lun_scan(str
  	 */
--	scsi_add_host(instance, &dev->pdev->dev);
-+	scsi_add_host(instance, &dev->pdev->dev); /* XXX: handle failure */
-+	scsi_scan_host(instance);
+ 	for (lun = 1; lun < max_dev_lun; ++lun)
+ 		if ((scsi_probe_and_add_lun(shost, channel, id, lun,
+-		      NULL, NULL) != SCSI_SCAN_LUN_PRESENT) && !sparse_lun)
++		      NULL, NULL, rescan) != SCSI_SCAN_LUN_PRESENT) &&
++		    !sparse_lun)
+ 			return;
+ }
+ 
+@@ -877,7 +897,8 @@ static int scsilun_to_int(struct scsi_lu
+  *     0: scan completed (or no memory, so further scanning is futile)
+  *     1: no report lun scan, or not configured
+  **/
+-static int scsi_report_lun_scan(struct scsi_device *sdev, int bflags)
++static int scsi_report_lun_scan(struct scsi_device *sdev, int bflags,
++				int rescan)
+ {
+ 	char devname[64];
+ 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
+@@ -1031,7 +1052,7 @@ static int scsi_report_lun_scan(struct s
+ 			int res;
+ 
+ 			res = scsi_probe_and_add_lun(sdev->host, sdev->channel,
+-				sdev->id, lun, NULL, NULL);
++				sdev->id, lun, NULL, NULL, rescan);
+ 			if (res == SCSI_SCAN_NO_RESPONSE) {
+ 				/*
+ 				 * Got some results, but now none, abort.
+@@ -1057,7 +1078,7 @@ static int scsi_report_lun_scan(struct s
  	return 0;
+ }
+ #else
+-# define scsi_report_lun_scan(sdev, blags)	(1)
++# define scsi_report_lun_scan(sdev, blags, rescan)	(1)
+ #endif	/* CONFIG_SCSI_REPORT_LUNS */
  
- attach_failed:
--	if (!instance) return -1;
-+	if (!instance)
-+		return -1;
- 	printf_info("%s: giving up ...\n", sym_name(np));
- 	if (np)
- 		sym_free_resources(np);
-diff -Nru a/drivers/scsi/sym53c8xx_2/sym_glue.h b/drivers/scsi/sym53c8xx_2/sym_glue.h
---- a/drivers/scsi/sym53c8xx_2/sym_glue.h	Fri Aug  8 11:11:33 2003
-+++ b/drivers/scsi/sym53c8xx_2/sym_glue.h	Fri Aug  8 11:11:33 2003
-@@ -111,8 +111,6 @@
+ struct scsi_device *scsi_add_device(struct Scsi_Host *shost,
+@@ -1066,7 +1087,7 @@ struct scsi_device *scsi_add_device(stru
+ 	struct scsi_device *sdev;
+ 	int res;
+ 
+-	res = scsi_probe_and_add_lun(shost, channel, id, lun, NULL, &sdev);
++	res = scsi_probe_and_add_lun(shost, channel, id, lun, NULL, &sdev, 1);
+ 	if (res != SCSI_SCAN_LUN_PRESENT)
+ 		sdev = ERR_PTR(-ENODEV);
+ 	return sdev;
+@@ -1103,7 +1124,7 @@ void scsi_rescan_device(struct device *d
+  *     sequential scan of LUNs on the target id.
+  **/
+ static void scsi_scan_target(struct Scsi_Host *shost, unsigned int channel,
+-			     unsigned int id)
++			     unsigned int id, unsigned int lun, int rescan)
+ {
+ 	int bflags = 0;
+ 	int res;
+@@ -1115,19 +1136,29 @@ static void scsi_scan_target(struct Scsi
+ 		 */
+ 		return;
+ 
++	if (lun != SCAN_WILD_CARD) {
++		/*
++		 * Scan for a specific host/chan/id/lun.
++		 */
++		scsi_probe_and_add_lun(shost, channel, id, lun, NULL, NULL,
++				       rescan);
++		return;
++	}
++
+ 	/*
+ 	 * Scan LUN 0, if there is some response, scan further. Ideally, we
+ 	 * would not configure LUN 0 until all LUNs are scanned.
+ 	 */
+-	res = scsi_probe_and_add_lun(shost, channel, id, 0, &bflags, &sdev);
++	res = scsi_probe_and_add_lun(shost, channel, id, 0, &bflags, &sdev,
++				     rescan);
+ 	if (res == SCSI_SCAN_LUN_PRESENT) {
+-		if (scsi_report_lun_scan(sdev, bflags) != 0)
++		if (scsi_report_lun_scan(sdev, bflags, rescan) != 0)
+ 			/*
+ 			 * The REPORT LUN did not scan the target,
+ 			 * do a sequential scan.
+ 			 */
+ 			scsi_sequential_lun_scan(shost, channel, id, bflags,
+-				       	res, sdev->scsi_level);
++				       	res, sdev->scsi_level, rescan);
+ 	} else if (res == SCSI_SCAN_TARGET_PRESENT) {
+ 		/*
+ 		 * There's a target here, but lun 0 is offline so we
+@@ -1136,37 +1167,26 @@ static void scsi_scan_target(struct Scsi
+ 		 * a default scsi level of SCSI_2
+ 		 */
+ 		scsi_sequential_lun_scan(shost, channel, id, BLIST_SPARSELUN,
+-				SCSI_SCAN_TARGET_PRESENT, SCSI_2);
++				SCSI_SCAN_TARGET_PRESENT, SCSI_2, rescan);
+ 	}
+ }
+ 
+-/**
+- * scsi_scan_host - scan the given adapter
+- * @shost:	adapter to scan
+- *
+- * Description:
+- *     Iterate and call scsi_scan_target to scan all possible target id's
+- *     on all possible channels.
+- **/
+-void scsi_scan_host(struct Scsi_Host *shost)
++static void scsi_scan_channel(struct Scsi_Host *shost, unsigned int channel,
++			      unsigned int id, unsigned int lun, int rescan)
+ {
+-	uint channel, id, order_id;
++	uint order_id;
+ 
+-	/*
+-	 * The sdevscan host, channel, id and lun are filled in as
+-	 * needed to scan.
+-	 */
+-	for (channel = 0; channel <= shost->max_channel; channel++) {
+-		/*
+-		 * XXX adapter drivers when possible (FCP, iSCSI)
+-		 * could modify max_id to match the current max,
+-		 * not the absolute max.
+-		 *
+-		 * XXX add a shost id iterator, so for example,
+-		 * the FC ID can be the same as a target id
+-		 * without a huge overhead of sparse id's.
+-		 */
++	if (id == SCAN_WILD_CARD)
+ 		for (id = 0; id < shost->max_id; ++id) {
++			/*
++			 * XXX adapter drivers when possible (FCP, iSCSI)
++			 * could modify max_id to match the current max,
++			 * not the absolute max.
++			 *
++			 * XXX add a shost id iterator, so for example,
++			 * the FC ID can be the same as a target id
++			 * without a huge overhead of sparse id's.
++			 */
+ 			if (shost->reverse_ordering)
+ 				/*
+ 				 * Scan from high to low id.
+@@ -1174,9 +1194,39 @@ void scsi_scan_host(struct Scsi_Host *sh
+ 				order_id = shost->max_id - id - 1;
+ 			else
+ 				order_id = id;
+-			scsi_scan_target(shost, channel, order_id);
++			scsi_scan_target(shost, channel, order_id, lun, rescan);
+ 		}
+-	}
++	else
++		scsi_scan_target(shost, channel, id, lun, rescan);
++}
++
++int scsi_scan_host_selected(struct Scsi_Host *shost, unsigned int channel,
++			    unsigned int id, unsigned int lun, int rescan)
++{
++	SCSI_LOG_SCAN_BUS(3, printk (KERN_INFO "%s: <%u:%u:%u:%u>\n",
++		__FUNCTION__, shost->host_no, channel, id, lun));
++
++	if (((channel != SCAN_WILD_CARD) && (channel > shost->max_channel)) ||
++	    ((id != SCAN_WILD_CARD) && (id > shost->max_id)) ||
++	    ((lun != SCAN_WILD_CARD) && (lun > shost->max_lun)))
++		return -EINVAL;
++
++	if (channel == SCAN_WILD_CARD) 
++		for (channel = 0; channel <= shost->max_channel; channel++)
++			scsi_scan_channel(shost, channel, id, lun, rescan);
++	else
++		scsi_scan_channel(shost, channel, id, lun, rescan);
++	return 0;
++}
++
++/**
++ * scsi_scan_host - scan the given adapter
++ * @shost:	adapter to scan
++ **/
++void scsi_scan_host(struct Scsi_Host *shost)
++{
++	scsi_scan_host_selected(shost, SCAN_WILD_CARD, SCAN_WILD_CARD,
++				SCAN_WILD_CARD, 0);
+ }
+ 
+ void scsi_forget_host(struct Scsi_Host *shost)
+diff -purN -X /home/patman/dontdiff scsi-misc-2.5-pure/drivers/scsi/scsi_sysfs.c scan-del-attr-sm-2.5/drivers/scsi/scsi_sysfs.c
+--- scsi-misc-2.5-pure/drivers/scsi/scsi_sysfs.c	Mon Aug  4 11:56:46 2003
++++ scan-del-attr-sm-2.5/drivers/scsi/scsi_sysfs.c	Sun Aug 10 15:12:14 2003
+@@ -15,6 +15,43 @@
+ #include "hosts.h"
+ 
+ #include "scsi_priv.h"
++#include "scsi_logging.h"
++
++static int check_set(unsigned int *val, char *src)
++{
++	char *last;
++
++	if (strncmp(src, "-", 20) == 0) {
++		*val = SCAN_WILD_CARD;
++	} else {
++		/*
++		 * Doesn't check for int overflow
++		 */
++		*val = simple_strtoul(src, &last, 0);
++		if (*last != '\0')
++			return 1;
++	}
++	return 0;
++}
++
++static int scsi_scan(struct Scsi_Host *shost, const char *str)
++{
++	char s1[15], s2[15], s3[15], junk;
++	unsigned int channel, id, lun;
++	int res;
++
++	res = sscanf(str, "%10s %10s %10s %c", s1, s2, s3, &junk);
++	if (res != 3)
++		return -EINVAL;
++	if (check_set(&channel, s1))
++		return -EINVAL;
++	if (check_set(&id, s2))
++		return -EINVAL;
++	if (check_set(&lun, s3))
++		return -EINVAL;
++	res = scsi_scan_host_selected(shost, channel, id, lun, 1);
++	return res;
++}
+ 
  /*
-  * Configuration addendum for Linux.
+  * shost_show_function: macro to create an attr function that can be used to
+@@ -39,6 +76,20 @@ static CLASS_DEVICE_ATTR(field, S_IRUGO,
+ /*
+  * Create the actual show/store functions and data structures.
   */
--#define	SYM_LINUX_DYNAMIC_DMA_MAPPING
++
++static ssize_t store_scan(struct class_device *class_dev, const char *buf,
++			  size_t count)
++{
++	struct Scsi_Host *shost = class_to_shost(class_dev);
++	int res;
++
++	res = scsi_scan(shost, buf);
++	if (res == 0)
++		res = count;
++	return res;
++};
++static CLASS_DEVICE_ATTR(scan, S_IWUSR, NULL, store_scan);
++
+ shost_rd_attr(unique_id, "%u\n");
+ shost_rd_attr(host_busy, "%hu\n");
+ shost_rd_attr(cmd_per_lun, "%hd\n");
+@@ -51,6 +102,7 @@ static struct class_device_attribute *sc
+ 	&class_device_attr_cmd_per_lun,
+ 	&class_device_attr_sg_tablesize,
+ 	&class_device_attr_unchecked_isa_dma,
++	&class_device_attr_scan,
+ 	NULL
+ };
+ 
+@@ -113,7 +165,6 @@ struct bus_type scsi_bus_type = {
+         .match		= scsi_bus_match,
+ };
+ 
 -
- #define	SYM_CONF_TIMER_INTERVAL		((HZ+1)/2)
+ int scsi_sysfs_register(void)
+ {
+ 	int error;
+@@ -243,6 +294,24 @@ store_rescan_field (struct device *dev, 
  
- #define SYM_OPT_HANDLE_DIR_UNKNOWN
-@@ -121,10 +119,7 @@
- #define SYM_OPT_SNIFF_INQUIRY
- #define SYM_OPT_LIMIT_COMMAND_REORDERING
- #define	SYM_OPT_ANNOUNCE_TRANSFER_RATE
--
--#ifdef	SYM_LINUX_DYNAMIC_DMA_MAPPING
- #define	SYM_OPT_BUS_DMA_ABSTRACTION
--#endif
+ static DEVICE_ATTR(rescan, S_IWUSR, NULL, store_rescan_field)
  
- /*
-  *  Print a message with severity.
-@@ -496,9 +491,7 @@
- #ifdef	MODULE
- #define SYM_MEM_FREE_UNUSED	/* Free unused pages immediately */
- #endif
--#ifdef	SYM_LINUX_DYNAMIC_DMA_MAPPING
- typedef struct pci_dev *m_pool_ident_t;
--#endif
++static ssize_t sdev_store_delete(struct device *dev, const char *buf,
++				 size_t count)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	int res = count;
++
++	if (sdev->access_count)
++		/*
++		 * FIXME and scsi_proc.c: racey use of access_count,
++		 * possibly add a new arg to scsi_remove_device.
++		 */
++		res = -EBUSY;
++	else
++		scsi_remove_device(sdev);
++	return res;
++};
++static DEVICE_ATTR(delete, S_IWUSR, NULL, sdev_store_delete);
++
+ /* Default template for device attributes.  May NOT be modified */
+ static struct device_attribute *scsi_sysfs_sdev_attrs[] = {
+ 	&dev_attr_device_blocked,
+@@ -255,6 +324,7 @@ static struct device_attribute *scsi_sys
+ 	&dev_attr_rev,
+ 	&dev_attr_online,
+ 	&dev_attr_rescan,
++	&dev_attr_delete,
+ 	NULL
+ };
  
- /*
-  *  Include driver soft definitions.
-@@ -521,17 +514,6 @@
- void *sym_calloc(int size, char *name);
- void sym_mfree(void *m, int size, char *name);
- 
--#ifndef	SYM_LINUX_DYNAMIC_DMA_MAPPING
--/*
-- *  Simple case.
-- *  All the memory assummed DMAable and O/S providing virtual 
-- *  to bus physical address translation.
-- */
--#define __sym_calloc_dma(pool_id, size, name)	sym_calloc(size, name)
--#define __sym_mfree_dma(pool_id, m, size, name)	sym_mfree(m, size, name)
--#define __vtobus(b, p)				virt_to_bus(p)
--
--#else	/* SYM_LINUX_DYNAMIC_DMA_MAPPING */
- /*
-  *  Complex case.
-  *  We have to provide the driver memory allocator with methods for 
-@@ -566,8 +548,6 @@
- void *__sym_calloc_dma(m_pool_ident_t dev_dmat, int size, char *name);
- void __sym_mfree_dma(m_pool_ident_t dev_dmat, void *m, int size, char *name);
- m_addr_t __vtobus(m_pool_ident_t dev_dmat, void *m);
--
--#endif	/* SYM_LINUX_DYNAMIC_DMA_MAPPING */
- 
- /*
-  *  Set the status field of a CAM CCB.
