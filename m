@@ -1,60 +1,42 @@
-From: christophe.varoqui@free.fr
-Subject: [ANNOUNCE] multipath-tools-0.2.1
-Date: Thu,  3 Jun 2004 11:52:22 +0200
+From: Martin Peschke3 <MPESCHKE@de.ibm.com>
+Subject: Re: [PATCH] sdd scsi-ml event wq
+Date: Thu, 3 Jun 2004 12:46:11 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1086256342.40bef4d61b3e9@imp3-q.free.fr>
-References: <1084519750.40a47546dd0e6@imp1-q.free.fr>
+Message-ID: <OF4949B6A8.0EE8EFCA-ONC1256EA8.0039AF13@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from postfix4-1.free.fr ([213.228.0.62]:8074 "EHLO
-	postfix4-1.free.fr") by vger.kernel.org with ESMTP id S263629AbUFCJwX
+Received: from mtagate4.de.ibm.com ([195.212.29.153]:65269 "EHLO
+	mtagate4.de.ibm.com") by vger.kernel.org with ESMTP id S263174AbUFCKqx
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jun 2004 05:52:23 -0400
-In-Reply-To: <1084519750.40a47546dd0e6@imp1-q.free.fr>
+	Thu, 3 Jun 2004 06:46:53 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: christophe.varoqui@free.fr
-Cc: linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Arjan van de Ven <arjanv@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hello,
 
-here goes multipath-tools-0.2.1
 
-This is a fairly big update which address all the problems reported so far and
-includes patchs from a greater number of testers. I'm quite happy to see it
-mostly works for a wide variety of hardware (server arch and storage).
-Anyway, it still needs more beating. Specificaly on EMC hardware, to which I
-don't have access.
 
-Changelog for this release :
 
-        * [multipath] add a flag to inihibit the final SIGHUP to
-          multipathd. Needed to avoid recursion with the correction
-          below
-        * [multipathd] devmap event now triggers a multipath exec
-          in addition to the usual updatepaths()
-        * [multipathd] move checkers from sg_io on BLK onto CHR
-          readsector0 goes from read to sg_read
-        * [multipathd] rely on sysfs for failedpaths enum and no
-          longer on the device mapper
-        * [multipathd] convert get_lun_strings from ioctl to sysfs
-          so we can benefit from strings persistency for failed
-          paths
-        * [multipath] readconfig() to take only 8 char from vendor
-          string (ake)
-        * [multipath] remove unecessery and wrong getuid == NULL
-          check from devinfo() (ake)
-        * [multipathd] make readsector0 open path O_DIRECT
-        * [multipathd] sizeof(path) -> sizeof(struct path) (MikeC)
-        * [Makefile] don't try to install and uninstall libs
-        * [devmap_name] kill the wrong trailing '\n'
-          (Mike Christie)
-        * [kpartx] works with device nodes outside /dev
-        * [kpartx] correctly display the delimiter in partition
-          name outputs
+> For the short term would it be best to harden the SCSI side of the API
+then
+> worry about the API we are using, or is the kobject_hotplug/userspace
+route not
+> looking to be the best option?
 
-Downloads and docs at http://christophe.varoqui.free.fr
+I am not sure for what other events this interface is going to be used.
+However, for link down/up events there might be a feasible solution.
+The minimum requirement is to ensure that paths are re-enabled on
+link-up. If we use a flag in scsi_device for the link status, a flag in
+scsi_device that indicates whether an event could be propagated,
+and one spare buffer for an event then there should always be a way
+to report a link-up event. If the spare buffer is being used when a
+link-up event occurs, just set the scsi_device->linkup flag as well as
+the scsi_device->lostevent flag and report the event later when the
+spare buffer has been freed, provided that scsi_device->lostevent
+was set. Which means that we might skip a few events in case of a
+rapidly changing link status. But we would always report - with a minor
+delay - the last, and therewith most important link event.
 
-regards,
-cvaroqui
+Martin
+
