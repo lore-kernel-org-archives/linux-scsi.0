@@ -1,156 +1,248 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: Handling erroneous READ CAPACITY response in sd.c
-Date: Mon, 25 Oct 2004 16:55:18 -0400
+Date: Mon, 25 Oct 2004 16:27:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <417D6836.80509@adaptec.com>
-References: <Pine.LNX.4.44L0.0410201130460.638-100000@ida.rowland.org> <417BA172.40203@ping-viini.org> <417D5D4D.5000400@adaptec.com> <417D6123.4060902@ping-viini.org>
+Message-ID: <417D61AF.3090003@adaptec.com>
+References: <Pine.LNX.4.44L0.0410251536010.1185-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010606090400070201010302"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:23761 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262024AbUJYUza (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Oct 2004 16:55:30 -0400
-In-Reply-To: <417D6123.4060902@ping-viini.org>
-List-Id: linux-scsi@vger.kernel.org
-To: Eero Volotinen <eero@ping-viini.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>
-
-This is a multi-part message in MIME format.
---------------010606090400070201010302
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:12226 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261297AbUJYU1k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Oct 2004 16:27:40 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0410251536010.1185-100000@ida.rowland.org>
+List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Eero Volotinen <eero@ping-viini.org>, Adriaan Penning <a.penning@luon.net>, Darsen Lu <darsen@micro.ee.nthu.edu.tw>, Andries Brouwer <aebr@win.tue.nl>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Eero Volotinen wrote:
+Alan Stern wrote:
+> On Sun, 24 Oct 2004, Eero Volotinen wrote:
 > 
->> Eero, can you try the attached patch?  I wonder if we
->> can take the maximum capacity media which could be supported?
->> (This is "patch 2", you still have to apply "patch 1" which
->> removes the broken devices from unusual devs.)
->>
->> Thanks,
->>     Luben
->>
 > 
-> Ok. I test your patch in a few days and report results then.
+>>Does not work on my machine. It detects disk and then it hangs.
+> 
+> 
+>>   Vendor: HDS72808  Model: 0PLAT20           Rev: PF2O
+>>   Type:   Direct-Access                      ANSI SCSI revision: 00
+>>sd_read_true_cap: sda: spec behavior
+>>sd_read_format_cap: sda: no media or unformatted media
+>>SCSI device sda: 160836481 512-byte hdwr sectors (82348 MB)
+>>sda: assuming drive cache: write through
+>>  sda:SCSI error : <0 0 0 0> return code = 0x70000
+>>end_request: I/O error, dev sda, sector 160836480
+>>Buffer I/O error on device sda, logical block 160836480
+> 
+> 
+> Okay, so it looks like neither of the earlier suggestions will work.
 
-Forgot to add code to weed out the descriptor type 0 (reserved)
-case.  Please try this (attached) version of the patch.
+Well, see my earlier email.  Let's not weed out descriptor type 3,
+only 0 (which has no meaning as it is "reserved").  Looks like all
+descriptors return _some_ kind of capacity -- let's see what it is
+and possibly use it.  That is, since as you said Windows uses it...
 
-Thanks,
+> Here's one that I feel certain will work, although it takes a slightly 
+> different approach.  Please try it out and see what happens.
+> 
+> Luben and Andries, what do you think of this patch?
+
+Patch itself looks good.  But...
+
+Brandishing all USB storage disk devices to have even number
+capacity isn't something I think we can have in a kernel.  Or can we?
+
 	Luben
 
 
 
---------------010606090400070201010302
-Content-Type: application/octet-stream;
- name="cap.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="cap.patch"
-
-PT09PT0gZHJpdmVycy9zY3NpL3NkLmMgMS4xNjEgdnMgZWRpdGVkID09PT09Ci0tLSAxLjE2
-MS9kcml2ZXJzL3Njc2kvc2QuYwkyMDA0LTEwLTE1IDEwOjQ2OjA3IC0wNDowMAorKysgZWRp
-dGVkL2RyaXZlcnMvc2NzaS9zZC5jCTIwMDQtMTAtMjUgMTc6MDE6MDMgLTA0OjAwCkBAIC05
-ODcsNiArOTg3LDE1NSBAQAogCX0KIH0KIAorLyogc2RfcmVhZF90cnVlX2NhcDogU29tZSBk
-ZXZpY2Ugc2VydmVycyBpbmNvcnJlY3RseSByZXR1cm4gdGhlCisgKiBjYXBhY2l0eSBhcyBv
-cHBvc2VkIHRvIHRoZSBMQkEgb2YgdGhlIGxhc3QgbG9naWNhbCBibG9jayBvZiB0aGUKKyAq
-IGJsb2NrIGRldmljZS4KKyAqCisgKiBXZSB0cnkgdG8gZml4IHRoaXMgYXMgZm9sbG93czog
-TGV0IHggPSBSZXR1cm5lZCBMQkEgZnJvbSB0aGUgbGFzdAorICogUkVBRCBDQVBBQ0lUWSBj
-b21tYW5kIGlzc3VlZCAocmVzdWx0IGluICJidWZmZXIiKS4gIFJlaXNzdWUgdGhlCisgKiBS
-RUFEIENBUEFDSVRZIGNvbW1hbmQgYXMgZm9sbG93czogc2V0IHRoZSBwYXJ0aWFsIG1lZGl1
-bSBpbmRpY2F0b3IKKyAqIChQTUkpIGJpdCB0byBvbmU7IHNldCB0aGUgTEJBIHRvIHggLSAx
-LiBGaXJlIG9mZiB0aGF0IFJFQUQgQ0FQQUNJVFkKKyAqIGNvbW1hbmQuCisgKgorICogSWYg
-d2UgZ2V0IHN1Y2Nlc3MsCisgKiAgICAgICBJZiBSZXR1cm5lZCBMQkEgPiB4IC0gMSwgdGhl
-biBjYXBhY2l0eSBpcyB4KzEsIHNwZWMgYmVoYXZpb3IuCisgKiAgICAgICBFbHNlIFJldHVy
-bmVkIExCQSA8PSB4IC0gMSwgdGhlbiBjYXBhY2l0eSBpcyB4LCBicm9rZW4gZGV2aWNlIHNl
-cnZlci4KKyAqIEVsc2UgZXJyb3IsIG5vdGhpbmcgY2FuIGJlIGFzc3VtZWQsIGNhcGFjaXR5
-IGlzIHgrMS4KKyAqLworc3RhdGljIHZvaWQgc2RfcmVhZF90cnVlX2NhcChzdHJ1Y3Qgc2Nz
-aV9kaXNrICpzZCwgY2hhciAqZGlza25hbWUsCisJCQkgICAgIHN0cnVjdCBzY3NpX3JlcXVl
-c3QgKlNScG50LCB1bnNpZ25lZCBjaGFyICpidWZmZXIsCisJCQkgICAgIGludCBsb25ncmMp
-Cit7CisJdW5zaWduZWQgY2hhciBjbWRbMTZdOworCXVuc2lnbmVkIGNoYXIgYnVmWzEyXTsK
-KworCS8qIHNhdmUgdGhlIG9sZCBidWZmZXIgY29udGVudHMgaGVyZSAqLworCW1lbWNweShi
-dWYsIGJ1ZmZlciwgMTIpOworCisJaWYgKGxvbmdyYykgeworCQl1NjQgKmxiYSA9ICh1NjQg
-KikgKGNtZCsyKTsKKwkJdTY0IHJsYmE7CisKKwkJbWVtc2V0KCh2b2lkICopIGNtZCwgMCwg
-MTYpOworCQljbWRbMF0gPSBTRVJWSUNFX0FDVElPTl9JTjsKKwkJY21kWzFdID0gU0FJX1JF
-QURfQ0FQQUNJVFlfMTY7CisJCWNtZFsxM10gPSAxMjsKKworCQlybGJhID0gYmU2NF90b19j
-cHUoKih1NjQgKilidWZmZXIpOworCQlybGJhIC09IDE7CisJCSpsYmEgPSBjcHVfdG9fYmU2
-NChybGJhKTsKKwkJLyogdHVybiBvbiB0aGUgUE1JIGJpdCAqLworCQljbWRbMTRdIHw9IDE7
-CisJCW1lbXNldCgodm9pZCAqKSBidWZmZXIsIDAsIDEyKTsKKwl9IGVsc2UgeworCQl1MzIg
-KmxiYSA9ICh1MzIgKikgKGNtZCsyKTsKKwkJdTMyIHJsYmE7CisKKwkJY21kWzBdID0gUkVB
-RF9DQVBBQ0lUWTsKKwkJbWVtc2V0KCh2b2lkICopICZjbWRbMV0sIDAsIDkpOworCQkKKwkJ
-cmxiYSA9IGJlMzJfdG9fY3B1KCoodTMyICopYnVmZmVyKTsKKwkJcmxiYSAtPSAxOworCQkq
-bGJhID0gY3B1X3RvX2JlMzIocmxiYSk7CisJCS8qIHR1cm4gb24gdGhlIFBNSSBiaXQgKi8K
-KwkJY21kWzhdIHw9IDE7CisJCW1lbXNldCgodm9pZCAqKSBidWZmZXIsIDAsIDgpOworCX0K
-KworCVNScG50LT5zcl9jbWRfbGVuID0gMDsKKwlTUnBudC0+c3Jfc2Vuc2VfYnVmZmVyWzBd
-ID0gMDsKKwlTUnBudC0+c3Jfc2Vuc2VfYnVmZmVyWzJdID0gMDsKKwlTUnBudC0+c3JfZGF0
-YV9kaXJlY3Rpb24gPSBETUFfRlJPTV9ERVZJQ0U7CisJCisJc2NzaV93YWl0X3JlcShTUnBu
-dCwgKHZvaWQgKikgY21kLCAodm9pZCAqKSBidWZmZXIsCisJCSAgICAgIGxvbmdyYyA/IDEy
-IDogOCwgU0RfVElNRU9VVCwgU0RfTUFYX1JFVFJJRVMpOworCisJaWYgKFNScG50LT5zcl9y
-ZXN1bHQpIHsKKwkJLyogTm90aGluZyBjYW4gYmUgYXNzdW1lZC4gKi8KKwkJcHJpbnRrKEtF
-Uk5fTk9USUNFICIlczogJXM6IFBNSSBub3Qgc3VwcG9ydGVkXG4iLAorCQkgICAgICAgX19G
-VU5DVElPTl9fLCBkaXNrbmFtZSk7CisJCW1lbWNweShidWZmZXIsIGJ1ZiwgMTIpOworCQly
-ZXR1cm47CisJfQorCisJaWYgKGxvbmdyYykgeworCQl1NjQgcmxiYSA9IGJlNjRfdG9fY3B1
-KCoodTY0ICopYnVmZmVyKTsKKwkJdTY0IHggICAgPSBiZTY0X3RvX2NwdSgqKHU2NCAqKWJ1
-Zik7CisJCWlmIChybGJhID4geCAtIDEpIHsKKwkJCWdvdG8gb3V0X3NwZWM7CisJCX0KKwl9
-IGVsc2UgeworCQl1MzIgcmxiYSA9IGJlMzJfdG9fY3B1KCoodTMyICopYnVmZmVyKTsKKwkJ
-dTMyIHggICAgPSBiZTMyX3RvX2NwdSgqKHUzMiAqKWJ1Zik7CisJCWlmIChybGJhID4geCAt
-IDEpIHsKKwkJCWdvdG8gb3V0X3NwZWM7CisJCX0KKwl9CisJcHJpbnRrKEtFUk5fTk9USUNF
-ICIlczogJXM6IGJyb2tlbiBkZXZpY2Ugc2VydmVyXG4iLCBfX0ZVTkNUSU9OX18sCisJICAg
-ICAgIGRpc2tuYW1lKTsKKwlyZXR1cm47CisKKyBvdXRfc3BlYzoKKwkvKiBDYXBhY2l0eSBp
-cyB4KzEsIHNwZWMgYmVoYXZpb3IuICovCisJcHJpbnRrKEtFUk5fTk9USUNFICIlczogJXM6
-IHNwZWMgYmVoYXZpb3JcbiIsIF9fRlVOQ1RJT05fXywgZGlza25hbWUpOworCW1lbWNweShi
-dWZmZXIsIGJ1ZiwgMTIpOworfSAvKiBlbmQgc2RfcmVhZF90cnVlX2NhcCgpICovCisKKwor
-LyogVHJ5IHRvIHVzZSB0aGUgUkVBRCBGT1JNQVQgQ0FQQUNJVElFUyBjb21tYW5kIHRvIGNo
-ZWNrIHdoZXRoZXIgdGhlCisgKiBSRUFEIENBUEFDSVRZIHJlc3VsdCBpcyBjb3JyZWN0Lgor
-ICovCitzdGF0aWMgdm9pZCBzZF9yZWFkX2Zvcm1hdF9jYXAoc3RydWN0IHNjc2lfZGlzayAq
-c2QsIGNoYXIgKmRpc2tuYW1lLAorCQkgICAgICAgc3RydWN0IHNjc2lfcmVxdWVzdCAqU1Jw
-bnQsIHVuc2lnbmVkIGNoYXIgKmJ1ZmZlcikKK3sKKwl1bnNpZ25lZCBjaGFyIGNtZFsxMl07
-CisJdW5zaWduZWQgY2hhciBidWZbMTJdOworCXUzMiBybGJhOworCXUzMiB4OworCisJLyog
-c2F2ZSB0aGUgb2xkIGJ1ZmZlciBjb250ZW50cyBoZXJlICovCisJbWVtY3B5KGJ1ZiwgYnVm
-ZmVyLCAxMik7CisKKwlybGJhID0gYmUzMl90b19jcHUoKih1MzIgKilidWZmZXIpOworCisJ
-Y21kWzBdID0gMHgyMzsgICAgICAgICAgLyogUkVBRF9GT1JNQVRfQ0FQQUNJVElFUyAqLwor
-CW1lbXNldCgmY21kWzFdLCAwLCAxMSk7CisJY21kWzhdID0gMTI7CisJbWVtc2V0KGJ1ZmZl
-ciwgMCwgMTIpOworCisJU1JwbnQtPnNyX2NtZF9sZW4gPSAwOworCVNScG50LT5zcl9zZW5z
-ZV9idWZmZXJbMF0gPSAwOworCVNScG50LT5zcl9zZW5zZV9idWZmZXJbMl0gPSAwOworCVNS
-cG50LT5zcl9kYXRhX2RpcmVjdGlvbiA9IERNQV9GUk9NX0RFVklDRTsKKworCXNjc2lfd2Fp
-dF9yZXEoU1JwbnQsICh2b2lkICopIGNtZCwgKHZvaWQgKikgYnVmZmVyLAorCQkgICAgICAx
-MiwgU0RfVElNRU9VVCwgU0RfTUFYX1JFVFJJRVMpOworCisJaWYgKFNScG50LT5zcl9yZXN1
-bHQpIHsKKwkJLyogTm90aGluZyBjYW4gYmUgYXNzdW1lZC4gKi8KKwkJcHJpbnRrKEtFUk5f
-Tk9USUNFICIlczogJXM6IFJFQUQgRk9STUFUIENBUEFDSVRJRVMgIgorCQkgICAgICAgIm5v
-dCBzdXBwb3J0ZWRcbiIsIF9fRlVOQ1RJT05fXywgZGlza25hbWUpOworCQlnb3RvIGRvbmU7
-CisJfQorCisJaWYgKChidWZmZXJbOF0gJiAzKSA9PSAwKQorCQlnb3RvIGRvbmU7CisKKwl4
-ID0gYmUzMl90b19jcHUoKih1MzIgKikoYnVmZmVyICsgNCkpOworCXByaW50ayhLRVJOX05P
-VElDRSAiJXM6ICVzOiAldSB2cy4gJXVcbiIsCisJICAgICAgIF9fRlVOQ1RJT05fXywgZGlz
-a25hbWUsIHJsYmEsIHgpOworCWlmICgwIDwgeCAmJiB4IDw9IHJsYmEpIHsKKwkJdTMyICps
-YmEgPSAodTMyICopIGJ1ZjsKKwkJCisJCXByaW50ayhLRVJOX05PVElDRSAiJXM6ICVzOiB1
-c2luZyBsb3dlciBjYXBhY2l0eVxuIiwKKwkJICAgICAgIF9fRlVOQ1RJT05fXywgZGlza25h
-bWUpOworCQl4IC09IDE7CisJCSpsYmEgPSBjcHVfdG9fYmUzMih4KTsKKwl9CisgZG9uZToK
-KyAJbWVtY3B5KGJ1ZmZlciwgYnVmLCAxMik7Cit9CisKIC8qCiAgKiByZWFkIGRpc2sgY2Fw
-YWNpdHkKICAqLwpAQCAtMTA3MCw3ICsxMjE5LDE0IEBACiAJCQogCQlzZGtwLT5jYXBhY2l0
-eSA9IDEgKyAoc2VjdG9yX3QpIDB4ZmZmZmZmZmY7CQkKIAkJZ290byBnb3RfZGF0YTsKLQl9
-CQorCX0KKworCS8qIENoZWNrIGlmIHRoZSBkZXZpY2UgcmVwb3J0ZWQgQ0FQQUNJVFkgYXMg
-b3Bwb3NlZCB0bworCSAqIHRoZSBtYXh1bXVtIExCQSAoYXMgcGVyIHRoZSBTQkMgc3BlYyku
-CisJICovCisJc2RfcmVhZF90cnVlX2NhcChzZGtwLCBkaXNrbmFtZSwgU1JwbnQsIGJ1ZmZl
-ciwgbG9uZ3JjKTsKKyAJaWYgKCFsb25ncmMpCisgCQlzZF9yZWFkX2Zvcm1hdF9jYXAoc2Rr
-cCwgZGlza25hbWUsIFNScG50LCBidWZmZXIpOwogCQogCWlmICghbG9uZ3JjKSB7CiAJCXNl
-Y3Rvcl9zaXplID0gKGJ1ZmZlcls0XSA8PCAyNCkgfApAQCAtMTA3OCwxMiArMTIzNCwxNCBA
-QAogCQlpZiAoYnVmZmVyWzBdID09IDB4ZmYgJiYgYnVmZmVyWzFdID09IDB4ZmYgJiYKIAkJ
-ICAgIGJ1ZmZlclsyXSA9PSAweGZmICYmIGJ1ZmZlclszXSA9PSAweGZmKSB7CiAJCQlpZihz
-aXplb2Yoc2RrcC0+Y2FwYWNpdHkpID4gNCkgewotCQkJCXByaW50ayhLRVJOX05PVElDRSAi
-JXMgOiB2ZXJ5IGJpZyBkZXZpY2UuIHRyeSB0byB1c2UiCi0JCQkJICAgICAgICIgUkVBRCBD
-QVBBQ0lUWSgxNikuXG4iLCBkaXNrbmFtZSk7CisJCQkJcHJpbnRrKEtFUk5fTk9USUNFICIl
-cyA6IHZlcnkgYmlnIGRldmljZS4gIgorCQkJCSAgICAgICAidHJ5IHRvIHVzZSBSRUFEIENB
-UEFDSVRZKDE2KS5cbiIsCisJCQkJICAgICAgIGRpc2tuYW1lKTsKIAkJCQlsb25ncmMgPSAx
-OwogCQkJCWdvdG8gcmVwZWF0OwogCQkJfSBlbHNlIHsKLQkJCQlwcmludGsoS0VSTl9FUlIg
-IiVzOiB0b28gYmlnIGZvciBrZXJuZWwuICBBc3N1bWluZyBtYXhpbXVtIDJUYlxuIiwgZGlz
-a25hbWUpOworCQkJCXByaW50ayhLRVJOX0VSUiAiJXM6IHRvbyBiaWcgZm9yIGtlcm5lbC4g
-IgorCQkJCSAgICAgICAiQXNzdW1pbmcgbWF4aW11bSAyVGJcbiIsIGRpc2tuYW1lKTsKIAkJ
-CX0KIAkJfQogCQlzZGtwLT5jYXBhY2l0eSA9IDEgKyAoKChzZWN0b3JfdClidWZmZXJbMF0g
-PDwgMjQpIHwKQEAgLTExMDIsNyArMTI2MCw3IEBACiAJCQkKIAkJc2VjdG9yX3NpemUgPSAo
-YnVmZmVyWzhdIDw8IDI0KSB8CiAJCQkoYnVmZmVyWzldIDw8IDE2KSB8IChidWZmZXJbMTBd
-IDw8IDgpIHwgYnVmZmVyWzExXTsKLQl9CQorCX0KIAogZ290X2RhdGE6CiAJaWYgKHNlY3Rv
-cl9zaXplID09IDApIHsK
---------------010606090400070201010302--
+> Alan Stern
+> 
+> 
+> 
+> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> 
+> ===== include/scsi/scsi_device.h 1.14 vs edited =====
+> --- 1.14/include/scsi/scsi_device.h	2004-10-05 11:47:13 -04:00
+> +++ edited/include/scsi/scsi_device.h	2004-10-25 15:10:48 -04:00
+> @@ -111,6 +111,7 @@
+>  	unsigned allow_restart:1; /* issue START_UNIT in error handler */
+>  	unsigned no_uld_attach:1; /* disable connecting to upper level drivers */
+>  	unsigned select_no_atn:1;
+> +	unsigned even_capacity:1; /* must have an even number of sectors */
+>  
+>  	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
+>  
+> ===== drivers/scsi/sd.c 1.73 vs edited =====
+> --- 1.73/drivers/scsi/sd.c	2004-10-20 12:24:44 -04:00
+> +++ edited/drivers/scsi/sd.c	2004-10-25 15:19:33 -04:00
+> @@ -1133,6 +1133,16 @@
+>  		 */
+>  		sector_size = 512;
+>  	}
+> +
+> +	/* Handle broken devices that return the total number of sectors
+> +	 * rather than the highest sector number, by forcing the total
+> +	 * number to be even. */
+> +	if (sdp->even_capacity && (sdkp->capacity & 1)) {
+> +		printk(KERN_NOTICE "%s : odd number of sectors reported, "
+> +			"decreasing by one.\n", diskname);
+> +		--sdkp->capacity;
+> +	}
+> +
+>  	{
+>  		/*
+>  		 * The msdos fs needs to know the hardware sector size
+> ===== drivers/usb/storage/protocol.c 1.25 vs edited =====
+> --- 1.25/drivers/usb/storage/protocol.c	2004-10-20 12:38:15 -04:00
+> +++ edited/drivers/usb/storage/protocol.c	2004-10-25 15:23:32 -04:00
+> @@ -57,35 +57,6 @@
+>   * Helper routines
+>   ***********************************************************************/
+>  
+> -/*
+> - * Fix-up the return data from a READ CAPACITY command. My Feiya reader
+> - * returns a value that is 1 too large.
+> - */
+> -static void fix_read_capacity(struct scsi_cmnd *srb)
+> -{
+> -	unsigned int index, offset;
+> -	__be32 c;
+> -	unsigned long capacity;
+> -
+> -	/* verify that it's a READ CAPACITY command */
+> -	if (srb->cmnd[0] != READ_CAPACITY)
+> -		return;
+> -
+> -	index = offset = 0;
+> -	if (usb_stor_access_xfer_buf((unsigned char *) &c, 4, srb,
+> -			&index, &offset, FROM_XFER_BUF) != 4)
+> -		return;
+> -
+> -	capacity = be32_to_cpu(c);
+> -	US_DEBUGP("US: Fixing capacity: from %ld to %ld\n",
+> -	       capacity+1, capacity);
+> -	c = cpu_to_be32(capacity - 1);
+> -
+> -	index = offset = 0;
+> -	usb_stor_access_xfer_buf((unsigned char *) &c, 4, srb,
+> -			&index, &offset, TO_XFER_BUF);
+> -}
+> -
+>  /***********************************************************************
+>   * Protocol routines
+>   ***********************************************************************/
+> @@ -174,12 +145,6 @@
+>  {
+>  	/* send the command to the transport layer */
+>  	usb_stor_invoke_transport(srb, us);
+> -
+> -	if (srb->result == SAM_STAT_GOOD) {
+> -		/* Fix the READ CAPACITY result if necessary */
+> -		if (us->flags & US_FL_FIX_CAPACITY)
+> -			fix_read_capacity(srb);
+> -	}
+>  }
+>  
+>  /***********************************************************************
+> ===== drivers/usb/storage/scsiglue.c 1.86 vs edited =====
+> --- 1.86/drivers/usb/storage/scsiglue.c	2004-09-30 16:07:33 -04:00
+> +++ edited/drivers/usb/storage/scsiglue.c	2004-10-25 15:25:44 -04:00
+> @@ -152,6 +152,12 @@
+>  		sdev->skip_ms_page_3f = 1;
+>  #endif
+>  
+> +		/* Some devices return the total number of blocks in
+> +		 * response to READ CAPACITY instead of the highest
+> +		 * block number.  Deal with this by forcing the number
+> +		 * of blocks to be even.  Fortunately no existing USB
+> +		 * drive has an odd number of blocks, so far as I know! */
+> +		sdev->even_capacity = 1;
+>  	} else {
+>  
+>  		/* Non-disk-type devices don't need to blacklist any pages
+> @@ -390,7 +396,7 @@
+>  		DO_FLAG(SINGLE_LUN);
+>  		DO_FLAG(SCM_MULT_TARG);
+>  		DO_FLAG(FIX_INQUIRY);
+> -		DO_FLAG(FIX_CAPACITY);
+> +		DO_FLAG(IGNORE_RESIDUE);
+>  
+>  		*(pos++) = '\n';
+>  	}
+> ===== drivers/usb/storage/unusual_devs.h 1.161 vs edited =====
+> --- 1.161/drivers/usb/storage/unusual_devs.h	2004-10-20 12:38:15 -04:00
+> +++ edited/drivers/usb/storage/unusual_devs.h	2004-10-25 15:24:29 -04:00
+> @@ -171,16 +171,6 @@
+>  		"CD-R/RW Drive",
+>  		US_SC_8070, US_PR_CB, NULL, 0),
+>  
+> -/* Reported by Adriaan Penning <a.penning@luon.net>
+> - * Note that these cameras report "Medium not present" after
+> - * ALLOW_MEDIUM_REMOVAL, so they also need to be marked
+> - * NOT_LOCKABLE in the SCSI blacklist (and the vendor is MATSHITA). */
+> -UNUSUAL_DEV(  0x04da, 0x2372, 0x0000, 0x9999,
+> -		"Panasonic",
+> -		"DMC-LCx Camera",
+> -		US_SC_DEVICE, US_PR_DEVICE, NULL,
+> -		US_FL_FIX_CAPACITY ),
+> -
+>  /* Most of the following entries were developed with the help of
+>   * Shuttle/SCM directly.
+>   */
+> @@ -483,13 +473,6 @@
+>  		US_FL_SINGLE_LUN ),
+>  #endif
+>  
+> -/* Reported by Darsen Lu <darsen@micro.ee.nthu.edu.tw> */
+> -UNUSUAL_DEV( 0x066f, 0x8000, 0x0001, 0x0001,
+> -		"SigmaTel",
+> -		"USBMSC Audio Player",
+> -		US_SC_DEVICE, US_PR_DEVICE, NULL,
+> -		US_FL_FIX_CAPACITY ),
+> -
+>  /* Submitted by Benny Sjostrand <benny@hostmobility.com> */
+>  UNUSUAL_DEV( 0x0686, 0x4011, 0x0001, 0x0001,
+>  		"Minolta",
+> @@ -547,13 +530,6 @@
+>  		US_SC_QIC, US_PR_FREECOM, freecom_init, 0),
+>  #endif
+>  
+> -/* Reported by Eero Volotinen <eero@ping-viini.org> */
+> -UNUSUAL_DEV(  0x07ab, 0xfccd, 0x0406, 0x0406,
+> -		"Freecom Technologies",
+> -		"FHD-Classic",
+> -		US_SC_DEVICE, US_PR_DEVICE, NULL,
+> -		US_FL_FIX_CAPACITY),
+> -
+>  UNUSUAL_DEV(  0x07af, 0x0004, 0x0100, 0x0133, 
+>  		"Microtech",
+>  		"USB-SCSI-DB25",
+> @@ -710,13 +686,6 @@
+>  		"MP3 player",
+>  		US_SC_RBC, US_PR_BULK, NULL,
+>  		US_FL_MODE_XLATE),
+> -
+> -/* aeb */
+> -UNUSUAL_DEV( 0x090c, 0x1132, 0x0000, 0xffff,
+> -		"Feiya",
+> -		"5-in-1 Card Reader",
+> -		US_SC_DEVICE, US_PR_DEVICE, NULL,
+> -		US_FL_FIX_CAPACITY ),
+>  
+>  UNUSUAL_DEV(  0x097a, 0x0001, 0x0000, 0x0001,
+>  		"Minds@Work",
+> ===== drivers/usb/storage/usb.h 1.64 vs edited =====
+> --- 1.64/drivers/usb/storage/usb.h	2004-10-20 12:38:15 -04:00
+> +++ edited/drivers/usb/storage/usb.h	2004-10-25 15:23:01 -04:00
+> @@ -72,7 +72,7 @@
+>  #define US_FL_IGNORE_SER      0		 /* [no longer used]		    */
+>  #define US_FL_SCM_MULT_TARG   0x00000020 /* supports multiple targets	    */
+>  #define US_FL_FIX_INQUIRY     0x00000040 /* INQUIRY response needs faking   */
+> -#define US_FL_FIX_CAPACITY    0x00000080 /* READ CAPACITY response too big  */
+> +#define US_FL_FIX_CAPACITY    0		 /* [no longer used]		    */
+>  #define US_FL_IGNORE_RESIDUE  0x00000100 /* reported residue is wrong	    */
+>  
+>  /* Dynamic flag definitions: used in set_bit() etc. */
+> 
 
