@@ -1,38 +1,45 @@
-From: Vivek Mahajan <vmahajan@gmail.com>
-Subject: scsi_unregister_driver in 2.6.10
-Date: Mon, 10 Jan 2005 17:57:32 -0700
-Message-ID: <e20f392505011016575aac92a1@mail.gmail.com>
-Reply-To: Vivek Mahajan <vmahajan@gmail.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: scsi_transport_spi.c
+Date: Mon, 10 Jan 2005 21:17:57 +0000
+Message-ID: <20050110211757.GQ27371@parcelfarce.linux.theplanet.co.uk>
+References: <91888D455306F94EBD4D168954A9457C2023B3@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.201]:32095 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262716AbVAKA5h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jan 2005 19:57:37 -0500
-Received: by wproxy.gmail.com with SMTP id 67so117837wri
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Jan 2005 16:57:33 -0800 (PST)
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:57486 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262610AbVAJVSE
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jan 2005 16:18:04 -0500
+Content-Disposition: inline
+In-Reply-To: <91888D455306F94EBD4D168954A9457C2023B3@nacos172.co.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Stephens, Larry" <larry.stephens@lsil.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-I was working on my SCSI module and tried to use
-scsi_unregister_driver(). But looks like it has been made GPL only. I
-get unresolved symbol : driver_unregister(), when I tried to load the
-module. I think it is #defined to driver_unregister() in
-include/scsi/scsi_driver.h. And driver_unregister is exported as GPL
-only.
+On Mon, Jan 10, 2005 at 02:07:14PM -0700, Stephens, Larry wrote:
+> I'm in the initial stages of looking at modifying the LSI driver to utilize
+> the Domain Validation code in scsi_transport_spi.c rather than our own
+> driver DV code.
 
-At the same time, scsi_register_driver() works with non GPL code
-without any problem. As this call is exclusively defined in
-drivers/scsi/scsi_sysfs.c.
+Yay!
 
-I was just wondering wss it unintentional Or there was a purpose
-behind that to make scsi_register_driver( ) as non GPL and
-scsi_unregister_driver( ) as GPL only.
+> I've installed RHEL 4.  Where can I obtain the kernel source file for kernel
+> 2.6.9-1.906_ELsmp, containing scsi_transport_spi.c?
 
-Any help in this matter will be highly appreciated.
+Well, RHEL 4 is currently not released, so I can't tell you ;-)
 
-Regards,
-Vivek
+You'd probably be best off starting with the 2.6.10 kernel from
+http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.10.tar.bz2
+
+That way, your development work won't be impeded by trying to rebuild
+RPMs, and contributing the changes back will be easier since you won't
+inadvertently depend on a change Red Hat have made to their kernel..
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
