@@ -1,35 +1,27 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+From: Willy Tarreau <willy@w.ods.org>
 Subject: Re: [PATCH] aic7xxx bouncing over 4G
-Date: Sat, 28 Dec 2002 13:50:51 -0700
+Date: Sat, 28 Dec 2002 22:04:01 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <770128112.1041108651@aslan.scsiguy.com>
-References: <200212281500.gBSF0pc01929@localhost.localdomain>
- <712898112.1041103010@aslan.scsiguy.com> <3E0E071F.F6819548@digeo.com>
+Message-ID: <20021228210401.GA596@alpha.home.local>
+References: <200212210012.gBL0Cng21338@eng2.beaverton.ibm.com> <176730000.1040430221@aslan.btc.adaptec.com> <3E03BB0D.5070605@rackable.com> <Pine.LNX.4.50L.0212280331110.30646-100000@freak.distro.conectiva> <20021228091608.GA13814@louise.pinerecords.com> <Pine.LNX.4.50L.0212281131580.26879-100000@imladris.surriel.com> <705128112.1041102818@aslan.scsiguy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3E0E071F.F6819548@digeo.com>
 Content-Disposition: inline
+In-Reply-To: <705128112.1041102818@aslan.scsiguy.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@digeo.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Rik van Riel <riel@conectiva.com.br>, Tomas Szepe <szepe@pinerecords.com>, Marcelo Tosatti <marcelo@conectiva.com.br>, Samuel Flory <sflory@rackable.com>, Janet Morgan <janetmor@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> "Justin T. Gibbs" wrote:
->> 
->> > So far, the only bug report I have is from Andrew Morton proving that
->> > it still  doesn't get it's bounce buffers right.
->> 
->> That hasn't applied since 6.2.10 or so.  2.5.X is still using 6.2.4.
->> 
-> 
-> 2.5.53 is using 6.2.24, and it is bounce buffering highmem I/O.  6.2.4
-> was OK in this regard.
+On Sat, Dec 28, 2002 at 12:13:38PM -0700, Justin T. Gibbs wrote:
+> The main reason why the new driver "breaks" where the old one
+> doesn't is that the new driver does not perform an extra register
+> read to work-around chipsets that screw up memory mapped I/O.
 
-Hmm.  The only previous bug report I had in this area was related to a
-missing cast.  That was fixed, but I guess it wasn't enough to solve
-the problem.
+Thanks for this clear description, Justin. I now understand why I've had
+problems in the past with earlier versions here, since I have other devices
+(eg dl2k) which can't do MMIO on my system.
 
---
-Justin
+Cheers,
+Willy
 
