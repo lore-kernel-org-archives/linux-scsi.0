@@ -1,41 +1,42 @@
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
-Subject: [Patch] set data direction in sd_synchronize_cache in sd.c
-Date: Mon, 28 Apr 2003 13:19:34 +0200
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] split private and public scsi headers
+Date: Mon, 28 Apr 2003 10:08:19 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200304281319.34050.heiko.carstens@de.ibm.com>
+Message-ID: <20030428100819.A27762@beaverton.ibm.com>
+References: <20030426233054.A22823@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from d06lmsgate.uk.ibm.com ([195.212.29.1]:49383 "EHLO
-	d06lmsgate.uk.ibm.com") by vger.kernel.org with ESMTP
-	id S263220AbTD1LKY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Apr 2003 07:10:24 -0400
+Received: from 216-99-218-173.dsl.aracnet.com ([216.99.218.173]:50424 "EHLO
+	dyn9-47-17-132.beaverton.ibm.com") by vger.kernel.org with ESMTP
+	id S261198AbTD1Q7w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Apr 2003 12:59:52 -0400
+Content-Disposition: inline
+In-Reply-To: <20030426233054.A22823@lst.de>; from hch@lst.de on Sat, Apr 26, 2003 at 11:30:54PM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-Hi,
+On Sat, Apr 26, 2003 at 11:30:54PM +0200, Christoph Hellwig wrote:
+> Two new headers:
+> 
+>   scsi_priv.h - for macros/declarations private to the scsi midlayer
+> 		  (= not EXPORT_SYMBOL()ed)
+>   scsi_logging.h - for SCSI_LOG_* and friends, semi-private to the
+>   		midlayer and the upper drivers.  One abuse of this
+> 		in dpt_i2o killed.
 
-the following patch sets the data direction in sd_synchronize_cache
-to SCSI_DATA_NONE. Otherwise the data direction would be
-SCSI_DATA_UNKNOWN, which is at least a problem for the zfcp
-lldd, since it expects a value differently from unknown.
-Please apply, thanks.
+Hi -
 
-Heiko
+I had to add an include of scsi_logging.h to compile with logging configured:
 
-diff -urN linux-2.5.68/drivers/scsi/sd.c linux-2.5.68-sd/drivers/scsi/sd.c
---- linux-2.5.68/drivers/scsi/sd.c	Sun Apr 20 04:50:34 2003
-+++ linux-2.5.68-sd/drivers/scsi/sd.c	Fri Apr 25 12:51:41 2003
-@@ -1502,7 +1502,8 @@
- 			printk("FAILED\n  No memory for request\n");
- 		return 0;
- 	}
--		
-+
-+	SRpnt->sr_data_direction = SCSI_DATA_NONE;
+--- sm-inclsplit-hch/drivers/scsi/scsi_syms.c-orig	Mon Apr 28 09:47:50 2003
++++ sm-inclsplit-hch/drivers/scsi/scsi_syms.c	Mon Apr 28 09:59:48 2003
+@@ -21,6 +21,7 @@
+ #include "scsi.h"
+ #include <scsi/scsi_ioctl.h>
+ #include "hosts.h"
++#include "scsi_logging.h"
  
- 	for(retries = 3; retries > 0; --retries) {
- 		unsigned char cmd[10] = { 0 };
-
+ #include <scsi/scsicam.h>
+ 
