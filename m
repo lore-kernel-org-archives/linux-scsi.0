@@ -1,77 +1,313 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: Help - looking for a Linux SCSI testing utility
-Date: Wed, 26 May 2004 14:10:39 -0700
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH/RFC 2/2] 3ware 9000 SATA-RAID driver v2.26.00.009
+Date: Wed, 26 May 2004 17:16:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040526211039.GC29805@one-eyed-alien.net>
-References: <1F6D1D1660975A4887628A011443A1BC0305E3CF@uswaumsx13medge.med.ge.com>
+Message-ID: <40B50931.6050002@pobox.com>
+References: <HYC9VV01.E0R@hadar.amcc.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="raC6veAxrt5nqIoY"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from multivac.one-eyed-alien.net ([64.169.228.101]:64489 "EHLO
-	multivac.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S265804AbUEZVKu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 May 2004 17:10:50 -0400
-Content-Disposition: inline
-In-Reply-To: <1F6D1D1660975A4887628A011443A1BC0305E3CF@uswaumsx13medge.med.ge.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:51372 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S265809AbUEZVQt
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 May 2004 17:16:49 -0400
+In-Reply-To: <HYC9VV01.E0R@hadar.amcc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Edwards, Scott (MED, Kelly IT Resouces)" <James.Edwards@med.ge.com>
-Cc: linux-scsi@vger.kernel.org
+To: Adam Radford <aradford@amcc.com>
+Cc: akpm@osdl.org, james.bottomley@steeleye.com, hch@lst.de, linux-scsi@vger.kernel.org
+
+Adam Radford wrote:
+> +/* Command Packet */
+> +typedef struct TW_Command {
+> +	/* First DWORD */
+> +	struct {
+> +		unsigned char opcode:5;
+> +		unsigned char sgl_offset:3;
+> +	} byte0_offset;
+> +	unsigned char size;
+> +	unsigned char request_id;
+> +	struct {
+> +		unsigned char unit:4;
+> +		unsigned char host_id:4;
+> +	} byte3_offset;
+> +	/* Second DWORD */
+> +	unsigned char status;
+> +	unsigned char flags;
+> +	union {
+> +		unsigned short block_count;
+> +		unsigned short parameter_count;
+> +	} byte6_offset;
+> +	union {
+> +		struct {
+> +			u32 lba;
+> +			TW_SG_Entry sgl[TW_ESCALADE_MAX_SGL_LENGTH];
+> +#if BITS_PER_LONG > 32
+> +			u32 padding[2];	/* pad to 512 bytes */
+> +#else
+> +			u32 padding;
+> +#endif
+> +		} io;
+> +		struct {
+> +			TW_SG_Entry sgl[TW_ESCALADE_MAX_SGL_LENGTH];
+> +#if BITS_PER_LONG > 32
+> +			u32 padding[3];
+> +#else
+> +			u32 padding[2];
+> +#endif
+> +		} param;
+> +	} byte8_offset;
+> +} TW_Command;
+
+Bitfields aren't portable to big endian machines...  grep for 
+__LITTLE_ENDIAN_BITFIELD and __BIG_ENDIAN_BITFIELD for examples.
 
 
---raC6veAxrt5nqIoY
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> +/* Scatter gather element for 9000+ controllers */
+> +typedef struct TAG_TW_SG_Apache {
+> +	unsigned long address;
+> +	u32 length;
+> +} TW_SG_Apache;
 
-On Wed, May 26, 2004 at 03:24:49PM -0500, Edwards, Scott (MED, Kelly IT Res=
-ouces) wrote:
->=20
-> I know this is slightly off topic for this list, but I have been
-> fighting with this for about a month now and I feel like I'm getting
-> nowhere.  I tried the plscsi and scu utilities.  One of them I couldn't
-> make heads or tails of.  The other one would read the "inquiry" command
-> ok, but I couldn't figure out how to make it give me the output of the
-> "IDENTIFY" command (0xEC).  This is what I really need to read.
->=20
-> I have written (mostly copied from other stuff) a little program to just
-> turn off the write cache.  (I have included the source below.)  But
-> without being able to read the results of the identify I can't tell if
-> it actually works or not.  I have tried writing a program myself that
-> just sends the (0xEC) command, but all I get back is 70 00 05 00 00 00
-> 00 06 00 00 00 00 20 00 00 00 which I'm guessing are the sense bytes?
-> (Excuse my ignorance the last time I messed with this stuff it was
-> called SASI instead of SCSI.)
+is this a hardware structure?
 
-Those do look like sense bytes.  I decode them to mean:
-	Illegal Request: invalid command operation code
+This structure changes size and padding on 32-bit versus 64-bit machines.
 
-So it sounds to me like the device got your command, but didn't understand
-it.
 
-Matt
+> +/* Command Packet for 9000+ controllers */
+> +typedef struct TAG_TW_Command_Apache {
+> +	struct {
+> +		unsigned char opcode:5;
+> +		unsigned char reserved:3;
+> +	} command;
+> +	unsigned char unit;
+> +	unsigned short request_id;
+> +	unsigned char status;
+> +	unsigned char sgl_offset;
+> +	unsigned short sgl_entries;
+> +	unsigned char cdb[16];
+> +	TW_SG_Apache sg_list[TW_APACHE_MAX_SGL_LENGTH];
+> +#if BITS_PER_LONG > 32
+> +	unsigned char padding[8];
+> +#endif
+> +} TW_Command_Apache;
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+ditto bitfield comment.
 
-A:  The most ironic oxymoron wins ...
-DP: "Microsoft Works"
-A:  Uh, okay, you win.
-					-- A.J. & Dust Puppy
-User Friendly, 1/18/1998
 
---raC6veAxrt5nqIoY
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+> +/* New command packet header */
+> +typedef struct TAG_TW_Command_Apache_Header {
+> +	unsigned char sense_data[TW_SENSE_DATA_LENGTH];
+> +	struct {
+> +		char reserved[4];
+> +		unsigned short error;
+> +		unsigned char padding;
+> +		struct {
+> +			unsigned char severity:3;
+> +			unsigned char reserved:5;
+> +		} substatus_block;
+> +	} status_block;
+> +	unsigned char err_specific_desc[98];
+> +	struct {
+> +		unsigned char size_header;
+> +		unsigned short reserved;
+> +		unsigned char size_sense;
+> +	} header_desc;
+> +} TW_Command_Apache_Header;
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
+bitfield
 
-iD8DBQFAtQfPIjReC7bSPZARAvA0AJ9/l00q/K9N0ydTJZBHIbt6WlzVPwCgkVhZ
-JSqXQMhudTeiGA0LzdlJuQo=
-=4cd9
------END PGP SIGNATURE-----
 
---raC6veAxrt5nqIoY--
+> +/* This struct is a union of the 2 command packets */
+> +typedef struct TAG_TW_Command_Full {
+> +	TW_Command_Apache_Header header;
+> +	union {
+> +		TW_Command oldcommand;
+> +		TW_Command_Apache newcommand;
+> +	} command;
+> +} TW_Command_Full;
+> +
+> +/* Initconnection structure */
+> +typedef struct TAG_TW_Initconnect {
+> +	unsigned char opcode:5;
+> +	unsigned char res1:3;
+> +	unsigned char size;
+> +	unsigned char request_id;
+> +	unsigned char res2;
+> +	unsigned char status;
+> +	unsigned char flags;
+> +	unsigned short message_credits;
+> +	u32 features;
+> +	unsigned short fw_srl;
+> +	unsigned short fw_arch_id;
+> +	unsigned short fw_branch;
+> +	unsigned short fw_build;
+> +	u32 result;
+> +} TW_Initconnect;
+
+ditto
+
+
+> +/* Event info structure */
+> +typedef struct TAG_TW_Event
+> +{
+> +	unsigned int sequence_id;
+> +	unsigned int time_stamp_sec;
+> +	unsigned short aen_code;
+> +	unsigned char severity;
+> +	unsigned char retrieved;
+> +	unsigned char repeat_count;
+> +	unsigned char parameter_len;
+> +	unsigned char parameter_data[98];
+> +} TW_Event;
+> +
+> +typedef struct TAG_TW_Ioctl_Driver_Command {
+> +	unsigned int control_code;
+> +	unsigned int status;
+> +	unsigned int unique_id;
+> +	unsigned int sequence_id;
+> +	unsigned int os_specific;
+> +	unsigned int buffer_length;
+> +} TW_Ioctl_Driver_Command;
+> +
+> +typedef struct TAG_TW_Ioctl_Apache {
+> +	TW_Ioctl_Driver_Command driver_command;
+> +        char padding[488];
+> +	TW_Command_Full firmware_command;
+> +	char data_buffer[1];
+> +} TW_Ioctl_Buf_Apache;
+> +
+> +/* Lock structure for ioctl get/release lock */
+> +typedef struct TAG_TW_Lock {
+> +	unsigned long timeout_msec;
+> +	unsigned long time_remaining_msec;
+> +	unsigned long force_flag;
+> +} TW_Lock;
+> +
+> +/* GetParam descriptor */
+> +typedef struct {
+> +	unsigned short	table_id;
+> +	unsigned short	parameter_id;
+> +	unsigned short	parameter_size_bytes;
+> +	unsigned short  actual_parameter_size_bytes;
+> +	unsigned char	data[1];
+> +} TW_Param_Apache, *PTW_Param_Apache;
+> +
+> +/* Response queue */
+> +typedef union TAG_TW_Response_Queue {
+> +	struct {
+> +		u32 undefined_1: 4;
+> +		u32 response_id: 8;
+> +		u32 undefined_2: 20;
+> +	} u;
+> +	u32 value;
+> +} TW_Response_Queue;
+
+ditto
+
+
+> +typedef struct TAG_TW_Info {
+> +	char *buffer;
+> +	int length;
+> +	int offset;
+> +	int position;
+> +} TW_Info;
+> +
+> +/* Compatibility information structure */
+> +typedef struct TAG_TW_Compatibility_Info
+> +{
+> +	char driver_version[32];
+> +	unsigned short working_srl;
+> +	unsigned short working_branch;
+> +	unsigned short working_build;
+> +} TW_Compatibility_Info;
+> +
+> +/* Command header for ATA pass-thru */
+> +typedef struct TAG_TW_Passthru
+> +{
+> +	struct {
+> +		unsigned char opcode:5;
+> +		unsigned char sgloff:3;
+> +	} byte0;
+> +	unsigned char size;
+> +	unsigned char request_id;
+> +	struct {
+> +		unsigned char aport:4;
+> +		unsigned char host_id:4;
+> +	} byte3;
+> +	unsigned char status;
+> +	unsigned char flags;
+> +	unsigned short param;
+> +	unsigned short features;
+> +	unsigned short sector_count;
+> +	unsigned short sector_num;
+> +	unsigned short cylinder_lo;
+> +	unsigned short cylinder_hi;
+> +	unsigned char drive_head;
+> +	unsigned char command;
+> +	TW_SG_Entry sg_list[TW_ATA_PASS_SGL_MAX];
+> +	unsigned char padding[12];
+> +} TW_Passthru;
+
+ditto
+
+
+> +typedef struct TAG_TW_Device_Extension {
+> +	u32                     *base_addr;
+> +	unsigned long	       	*generic_buffer_virt[TW_Q_LENGTH];
+> +	unsigned long	       	generic_buffer_phys[TW_Q_LENGTH];
+> +	unsigned long	       	*command_packet_virt[TW_Q_LENGTH];
+> +	unsigned long		command_packet_phys[TW_Q_LENGTH];
+> +	struct pci_dev		*tw_pci_dev;
+> +	struct scsi_cmnd	*srb[TW_Q_LENGTH];
+> +	unsigned char		free_queue[TW_Q_LENGTH];
+> +	unsigned char		free_head;
+> +	unsigned char		free_tail;
+> +	unsigned char		pending_queue[TW_Q_LENGTH];
+> +	unsigned char		pending_head;
+> +	unsigned char		pending_tail;
+> +	int     		state[TW_Q_LENGTH];
+> +	unsigned int		posted_request_count;
+> +	unsigned int		max_posted_request_count;
+> +	unsigned int	        pending_request_count;
+> +	unsigned int		max_pending_request_count;
+> +	unsigned int		max_sgl_entries;
+> +	unsigned int		sgl_entries;
+> +	unsigned int		num_aborts;
+> +	unsigned int		num_resets;
+> +	unsigned int		sector_count;
+> +	unsigned int		max_sector_count;
+> +	unsigned int		aen_count;
+> +	struct Scsi_Host	*host;
+> +	long			flags;
+> +	int			reset_print;
+> +	TW_Event                *event_queue[TW_Q_LENGTH];
+> +	unsigned char           error_index;
+> +	unsigned char		event_queue_wrapped;
+> +	unsigned int            error_sequence_id;
+> +	int                     ioctl_sem_lock;
+> +	u32                     ioctl_msec;
+> +	int			chrdev_request_id;
+> +	wait_queue_head_t	ioctl_wqueue;
+> +	struct semaphore	ioctl_sem;
+> +	char			aen_clobber;
+> +	unsigned short		working_srl;
+> +	unsigned short		working_branch;
+> +	unsigned short		working_build;
+> +} TW_Device_Extension;
+> +
+> +#pragma pack()
+> +
+> +#endif /* _3W_9XXX_H */
+
+
+General comment:  bitfields are annoying.  Even if you do apply the 
+__BIG_ENDIAN_BITFIELD switching, the compiler still generates crappy 
+code for bitfields (as do all compilers).
+
+You'll find that using bitmasks on natural integers often results in 
+_much_ better generated code out of the compiler.
+
+	Jeff
+
+
