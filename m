@@ -1,54 +1,51 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: hot scsi disk resize
-Date: Mon, 3 Mar 2003 18:15:36 +0000
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [RFC][PATCH] scsi-misc-2.5 software enqueue when can_queue reached
+Date: Mon, 03 Mar 2003 13:17:02 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030303181536.A30199@infradead.org>
-References: <m3bs0s9xij.fsf@lexa.home.net>
+Message-ID: <3E639C1E.7060000@splentec.com>
+References: <20030228111924.A32018@beaverton.ibm.com> <20030302085728.A11407@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <m3bs0s9xij.fsf@lexa.home.net>; from bzzz@tmi.comex.ru on Mon, Mar 03, 2003 at 08:21:24PM +0300
 List-Id: linux-scsi@vger.kernel.org
-To: Alex Tomas <bzzz@tmi.comex.ru>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Jens Axboe <axboe@suse.de>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
 
-On Mon, Mar 03, 2003 at 08:21:24PM +0300, Alex Tomas wrote:
-> +		if (err >= 0)
-> +			err = length;
-> +	} else if (!strncmp("rescan", buffer + 5, 6)) {
-> +		p = buffer + 12;
-> +
-> +		host = simple_strtoul(p, &p, 0);
-> +		channel = simple_strtoul(p + 1, &p, 0);
-> +		id = simple_strtoul(p + 1, &p, 0);
-> +		lun = simple_strtoul(p + 1, &p, 0);
-> +		err = scsi_rescan_single_device(host, channel, id, lun);
-> +		if (err >= 0)
-> +			err = length;
+Christoph Hellwig wrote:
+[cut]
+>>+{
+>>+	struct scsi_cmnd *scmd;
+>>+	unsigned long flags;
+>>+
+>>+	spin_lock_irqsave(shost->host_lock, flags);
+>>+	while (!shost->host_self_blocked
+>>+	       && !list_empty(&shost->pending_queue)) {
+> 
+> 
+> Linux codingstyle sais the && should be before the line break.
 
-Please don't add more procfs option.  A resize attribute for the
-sysfs node of the scsi_device is the better choice in my opinion.
+Actually there's a point to this.
 
-> +		buffer = kmalloc(512, GFP_DMA);
-> +	else
-> +		buffer = kmalloc(512, GFP_KERNEL);
-> +
-> +    	sd_read_capacity(sdkp, gd->disk_name, SRpnt, buffer);
-> +	set_capacity(gd, sdkp->capacity);	
-> +	scsi_release_request(SRpnt);
-> +	kfree(buffer);
+Vision research has shown that the human eye doesn't scan/parse
+more than 5% to 15% of the beginning of text lines when
+searching for an item.
 
-Don't you need some kind of serialization here?
+When a binary logical operator is on the continued (second)
+line of the if test, the brain automatically assumes that
+this is a _continuation_ of the logical condition -- since
+no valid C language line starts _with_ a _binary logical op_.
 
-> --- linux/fs/block_dev.c	Mon Jan 20 02:23:49 2003
-> +++ edited/fs/block_dev.c	Mon Mar  3 18:49:47 2003
-> @@ -623,6 +623,8 @@
->  			up(&whole->bd_sem);
->  		}
->  	} else {
-> +		if (!part)
-> +			bd_set_size(bdev,(loff_t)get_capacity(disk)<<9);
+But if the binary logical op were on the previous line, then
+the next line would look just like a normal line and one would
+_have_ to look at the previous line to see if it ends with `}' or
+`;'.
 
-This needs more explanation.
+There's a book called "C Style: Standards and Guidelines" by
+David Straker, (C) 1992, Prentice Hall, ISBN: 0-13-116898-3.
+More information can be found therein.
+
+-- 
+Luben
+
 
