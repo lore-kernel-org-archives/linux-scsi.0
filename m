@@ -1,54 +1,65 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Serial ATA (SATA) for Linux status report
-Date: Thu, 04 Dec 2003 09:54:03 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <3FCF4A8B.6030701@pobox.com>
-References: <20031203204445.GA26987@gtf.org>	<1070494030.15415.111.camel@slurv.pasop.tomt.net> 	<3FCE737C.1080105@pobox.com> <1070545088.11956.43.camel@lotte.street-vision.com>
+From: Hironobu Ishii <ishii.hironobu@jp.fujitsu.com>
+Subject: Re: PROBLEM: 2.6.0-test9: SCSI mid layer tells a lie.
+Date: Thu, 04 Dec 2003 23:58:05 +0900
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <007b01c3ba77$07612f30$2987110a@lsd.css.fujitsu.com>
+References: <0E3FA95632D6D047BA649F95DAB60E57037F83D5@exa-atlanta.se.lsil.com>
+ <200312032348.AA02824@fukuchi.jp.fujitsu.com>
+ <20031204020508.GB1775@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;	charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <1070545088.11956.43.camel@lotte.street-vision.com>
-To: Justin Cormack <justin@street-vision.com>
-Cc: Andre Tomt <lkml@tomt.net>, Kernel mailing list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:32140 "EHLO
+	fgwmail5.fujitsu.co.jp") by vger.kernel.org with ESMTP
+	id S262228AbTLDO6f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Dec 2003 09:58:35 -0500
+Received: from m1.gw.fujitsu.co.jp ([10.0.50.71]) by fgwmail5.fujitsu.co.jp (8.12.10/Fujitsu Gateway)
+	id hB4EwXVv006451 for <linux-scsi@vger.kernel.org>; Thu, 4 Dec 2003 23:58:33 +0900
+	(envelope-from ishii.hironobu@jp.fujitsu.com)
+Received: from s3.gw.fujitsu.co.jp by m1.gw.fujitsu.co.jp (8.12.10/Fujitsu Domain Master)
+	id hB4EwXap028455 for <linux-scsi@vger.kernel.org>; Thu, 4 Dec 2003 23:58:33 +0900
+	(envelope-from ishii.hironobu@jp.fujitsu.com)
+Received: from fjmail502.fjmail.jp.fujitsu.com (fjmail502-0.fjmail.jp.fujitsu.com [10.59.80.98]) by s3.gw.fujitsu.co.jp (8.12.10)
+	id hB4EwWwS014388 for <linux-scsi@vger.kernel.org>; Thu, 4 Dec 2003 23:58:32 +0900
+	(envelope-from ishii.hironobu@jp.fujitsu.com)
+Received: from CARREN (fjscan502-0.fjmail.jp.fujitsu.com [10.59.80.122])
+ by fjmail502.fjmail.jp.fujitsu.com
+ (Sun Internet Mail Server sims.4.0.2001.07.26.11.50.p9)
+ with SMTP id <0HPD00JARLLJ05@fjmail502.fjmail.jp.fujitsu.com> for
+ linux-scsi@vger.kernel.org; Thu,  4 Dec 2003 23:58:32 +0900 (JST)
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>, Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
+Cc: "Moore, Eric Dean" <emoore@lsil.com>, linux-scsi <linux-scsi@vger.kernel.org>, mpt_linux_developer@lsil.com
 
-Justin Cormack wrote:
-> On Wed, 2003-12-03 at 23:36, Jeff Garzik wrote:
-> 
->>Andre Tomt wrote:
->>
->>>On Wed, 2003-12-03 at 21:44, Jeff Garzik wrote:
->>>
->>>
->>>>Intel ICH5
->>>>----------
->>>>Summary:  No TCQ.  Looks like a PATA controller, but with a few added,
->>>>non-standard SATA port controls.
->>
->>>One question - with "including hotplug", does that mean some set hotplug
->>>standard? Reason I'm asking is, we have a few servers from SuperMicro,
->>>with a ICH5R S-ATA controller that claims it's supporting hotplug, but
->>>hotplug is not in your ICH5-summary.
->>
->>Alas, there is no hotplug support in the ICH5 or ICH5-R SATA hardware.
->>
->>One could argue there is "coldplug" support in that hardware -- disable 
->>the entire interface, including any active devices, then re-enable and 
->>re-scan -- but it's a bit of a hack.  If there's enough demand, I could 
->>write some code for that.  It would involve something like
->>
->>	# /sbin/sata off
->>	{ plug in or remove a device }
->>	# /sbin/sata on
->>
->>You really, really, really don't want to actually unplug a SATA drive 
->>while it's active, on ICH5 hardware.
-> 
-> 
-> How does it work on other hardware?
+----- Original Message ----- 
+From: "Mike Anderson" <andmike@us.ibm.com>
+To: "Masao Fukuchi" <fukuchi.masao@jp.fujitsu.com>
+Cc: "Moore, Eric Dean" <emoore@lsil.com>; "Hironobu Ishii"
+<ishii.hironobu@jp.fujitsu.com>; "linux-scsi" <linux-scsi@vger.kernel.org>;
+<mpt_linux_developer@lsil.com>
+Sent: Thursday, December 04, 2003 11:05 AM
+Subject: Re: PROBLEM: 2.6.0-test9: SCSI mid layer tells a lie.
 
 
-Just yank the cord :)
+> In reviewing the error handler with Patrick it looks like there is a bug
+> in scsi_eh_flush_done_q when scmd->allowed has been exceeded and the
+> command error was a timeout.
+>
+> The patch below may help, but I only have compile / boot tested it.
+> Could you test this on your error and see if it helps.
+>
 
-	Jeff
+> DESC
+> This patch fixes a bug in scsi_eh_flush_done_q when the allowed count has
+> been exceeded and the command errored for a timeout. The bug is that the
+> result will be left at zero and the command finished.
+
+
+Thank you, Mike.
+
+Your patch solved the problem.
+I appreciate your quick help.
+
+Hironobu Ishii
+
