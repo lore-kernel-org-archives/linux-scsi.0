@@ -1,45 +1,128 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: linux-2.4.18-modified-scsi-h.patch
-Date: Tue, 19 Nov 2002 21:11:47 +1100
+Subject: [PATCH] scsi_debug 1.65 for lk 2.5.48
+Date: Tue, 19 Nov 2002 22:19:16 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DDA0E63.9050307@torque.net>
-References: <Pine.LNX.4.10.10211182138310.2779-200000@master.linux-ide.org>
+Message-ID: <3DDA1E34.4020507@torque.net>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------000801090807080704060501"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from torque.net (dm1-21.triode.net.au [202.147.125.21])
+	by iggy.triode.net.au (8.11.6/8.11.6) with ESMTP id gAJBtD108005
+	for <linux-scsi@vger.kernel.org>; Tue, 19 Nov 2002 22:55:13 +1100
+List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+This is a multi-part message in MIME format.
+--------------000801090807080704060501
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
-To: Andre Hedrick <andre@pyxtechnologies.com>
-Cc: "J. E. J. Bottomley" <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@transmeta.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Andre Hedrick wrote:
-> Greetings Doug et al.
-> 
-> Please consider the addition of this simple void ptr to the scsi_request
-> struct.  The addition of this simple void pointer allows one to map any
-> and all request execution caller the facility to search for a specific
-> operation without having to run in circles.  Hunting for these details
-> over the global device list of all HBA's is silly and one of the key
-> reasons why there error recovery path is so painful.
-> 
-> 
-> Scsi_Request    *req = sc_cmd->sc_request;
-> blah_blah_t     *trace = NULL;
-> 
-> trace = (blah_blah_t *)req->trace_ptr;
-> 
-> 
-> Therefore the specific transport invoking operations via the midlayer will
-> have the ablity to track and trace any operation.
-
-Andre,
-No need to convince me: I have already put a similar pointer
-in that structure in lk 2.5 (for either sd, st, sr or sg to use).
-In sg case's it saved some ugly looping in (what was formerly
-called) the bottom half handler. Sounds like your motivation is
-similar.
+The scsi_debug version in lk 2.5.48 is the second last one
+I sent to this list. So this patch includes the changes from
+the last one I sent:
+   - fix "in use" counting [hch]
+   - clean up bios_param() code
+It also merges a sysfs re-organisation from Mike Anderson.
 
 Doug Gilbert
+
+--------------000801090807080704060501
+Content-Type: application/x-gzip;
+ name="scsi_debug_165_lk2548.diff.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="scsi_debug_165_lk2548.diff.gz"
+
+H4sICOYa2j0AA3Njc2lfZGVidWdfMTY1X2xrMjU0OC5kaWZmAO1b61PbypL/LP6KudwKx0Iy
+SPIDgwMVgh3iijFcDLmbzaZUwpKxyg/5SDKE5OR/3+6eGb0sAzm1dT+tKwV4pqdnpp+/binV
+apXN/MXq+74b+g9eGO1Ho8inH7br3a3u9yaKZRhW1TSrZotZ1lHDPDJbe4b8MM00DWNL07SX
++JjNRpaVYRxZh0dWbY3Vu3esWq/pTabBzwP27t0WU/bmznc78kZxEEbsWFHqxmFTx/HVYjTx
+RlPPtf3Isd25w46ZYvCpyLNHs1UUe6G/uMfx7uD0fb9rn/Vvhzfd697gXN/SgHXgrmYecr35
+2BvaF5ed234XOPxqb7Et9k9v4frjreqLchr9H8lplJPTITONI7N+VFtnhXIyD1FO8JPLie0y
+8YHLs4e5M5sFo4rK5kHoMX/x58oPnzS4rweyXADFV9zHqBnWt+xax3VZ7M/hcGwchMz1Zs6T
+57LQi5YBrIrEsgPLlMuunDj0R1N24Syise/NXPZ26cRz+PZuFe35d/O9UTA/YajE2WoRaXTd
+mffgzTgv06gBL414XfhTj50uXNg+WLC3zsKdw0iOT/QUjSP2GIRTsdw0W3SUfdKYvwC1ux57
+ywU9ChZjH+zvhFuWQZZlCokVie9mU6RMx7fxrHuT7ezQJIjiCMe0dHmixpEzJw7rvKPYifkU
+HQSVpjXkQYpbSq+BjbequNIfMbhJFLPRxAlBUimRjXbkBws7ikMw8+3P/OsRM/eadVYREjKZ
+pW63t7S/z6uR8DpETnTkMShqzIZnw559dtGxr7unHdtswgwM+wtvbYYZ31stun/T0K0605qW
+bjWlBOSiTvf97bl9c3p+3u3Y/7rt3oKvMoPt78KPv9jF8Nwe9i6uwJWBRAxcXne610CNI2QH
+VaA+ZWPvkQXLGK4QsXjixOzRY4/OImaRN4NwAmYNxBqQdryxs5rF7MGZrTxh+OShbOmEztyL
+0R2QsTxkp/vBHlzbH04/de1O9/MQTNfMz8IonPO/u/bFe5hsbVWzk7Tuff+TAVNGfl33c/f6
+iz24+YgsDaPItH/6ZX2vi9P/svu3AzyFlZ8hDfSBZx/maoXz317YHy+HN8RPy85cXt0M6WRa
+ugL3kCvoulYL5Vy+DER658fg8tE0K9OMpYFa8hKlk3LVAx97cNkbdvM3LVBcdDs9OE/3+jp/
+7QJZVp71rJ3ledinnQ4yMr6bVg3ppKv4aC7puV3vwY78H549vwMPKSga3KJ81WI1x5WRWJK1
+nI1rSELHiWA30kEgDZ/sRTwRxMmF2+RprQPdglBzaOo1gzytnEsmKB8XLGfjzpAqbIyG8lbC
+OjA4VBUwgZuJHzEnilZz0H8AIofwj7nJZUvwLEpPDjph7IT3Xsx8csfEogb2R4gaLPm0slPD
+7tnN5bWcquWs/jOFm8tB/0vl5vxG5SQVQy3SXFx+7iIkSKhyNFeAEa4+oop6ZxBqvlwJugr+
+aXd6w09qOxOdf89MkpsM4RZdGmeVDct3IQxArOS/1MQuIZP69wuQ3iwAfBMJLQJE8mhlGxXg
+L9jdU+yRo8l1HEfZsVwycpbOyI+f5AKJs3AJOXIACf1973IIRrAaj3U29cIFWMnceWKotRDU
+FowhvHpzdrcCtsHcY4gyGEcZS+feiyC7M1oRxf5sxhYeah1XZA5GEuRnmniOG7UVPBH9Sfbi
++hBMyulHT5BjETPYQEgXSUZoabQKx87I27Ba3JivxcVSBLhUMhLwAmZdkSs4FUNhM7Dzhmlx
+YevM2t09TAWfWtTlvy0yXK7vw0zISgYrJnv7tkCpblWzpn/2pd8bQLpjlYzx7MO3hMlu6iC7
+wo1UYoI+CdCOxQGkQYjPd94YsSHAquXMixEnO/gFoFveFc9Or07PejdfWEU4ZWEHeSS15Eo2
+OBL3nGSIu024GsVsiDb/EWPIbsb8CWJ9zWWcbwReaE2UEtn+YhywnwDkS/ghQTudAp/y0Qbg
+N4wCvtc2c8yBIjpNuwSiDLuDYRdi5IACEIfk9QYCO7Nh6WYu3EZLfwHxbgqO9+fKW0HJ4oSh
+jSMQH4ZXvYHdvzz7ZN8O8Fe3k8bc8FEsc+Jg7o/s8BEWXP97jTyJRLnr2gLGiBvyb+NI/JEB
+hAgFBdEyDEb2AlDP128IAlNJZADkb2wCPFBBe8gR/i5uopMuuGuNoaBDtAZ8RzMAXhy5oQ9l
+vBYrEVuUM5UkCgosO5q7OlHxnKKzIsEdxjCuqoOG3gJVtRq62eAF1OZPDjBjdPZdBMl8r/Q7
+ZNCFmuruIYDg6Ab2KPQg0aWCGfszL6rgbAlx6M2Dh03EBSVnzF0KFpMymb5comX5rxHh+QGd
+bKATZymSsrIwijwd11kCVn4d183EeY9dRt4K5LIM/bkTPq1R3a0iO35aJnSzmWvDGNAVcnLo
+3fvYDxCirZTa8K66vnC1ePVSlqizaHgRYJ1768EP4wo3Jhl7YBw4z3yuxNFsCVH0p6jva7pZ
+YxpUyDpkFzTRwskolIiIXUkYwvRojiEcsPByAU7gAviyybkgjuAX2oIphTOC84CDFn1K5Vyq
+J8gTLFDBM9xhUJJfVkvIlDYUzxhtk1k9HddRv+31DdEZcRjXeGEYEeA15IiAhcdyf/5dzuJa
+8LZ0OvRAGhDAxYQ8HOysMwI5eLo8ahLDTMnnAfJnngZQw0vYY3Db75dcgEXiCqQvqwZ6MkFf
+9abOq1rFH0Ni5udD8HtynNWe7IiANhQl9OJVCPBrNPGwI2VjmKsI/eHuXIs6Q1pFoaDU6XWg
+TrLPLgcDSK0IHMymzgwME1CbQx1WVcBpFvG08ql7PbB7gw+XEM5p76M/R0eM8t0iOH6zgjjm
+0q/IXR6/WeoYR4+N72++/89iWwc2Igqiq6riOtz2qyfIhP8EVnopie9meOTmBD1aHp2at9uY
+IsUOv3ugiGvvnotCbQuZokTY8THXz+/JDzVVMyxM0zUz6TEqif1RSxGXe7Fcz3fBvZW5N8cJ
+SiPM0KUZ8kk8mbTLE3aggpNVQVlkZsA5gVFVZqIxpjOVnF2qBWjO6VHvyPyrgWm5wpeenDAo
+CjKTZn7SbKpsB4pa7meCxsrTtFISkk2LsItWO6xJK37+1neQ3aZt0hoh46PU/MrsL7H/I3a7
+iCBGBCEWgSKK6Wwb1wlj2Q6WIyglElPk5gLWAkLIGQyJvvKyDlWVi0EeWZlPeTeUwgZEdiLT
+Wa/f756f9qFK/Ndtd3gDl/5uGXR1E8WNcmrUa4gfGg0Dfr0AH9IPZyL+fa+nf3MQJD8g8NHy
+qQInAYQ+d2J7ea9TqRGMK8mIiiKQK5ZfTW4YCTLPqzZLSEaS0EkKbY3VeoFUYKoVmZasSMwv
+Q8stMK1Y8lyzlDWkTAnXSFDvhXKe5wnQNDUaD9DFtWbLkF1yufBVOYQVMoY/njn3Ee9w4NZJ
+imN//QW+T3hew5wD/i/dXVUJAL9EXnB6WvV7BmqmBpoGxMrZ5cXF6aADaQKbpjddzBMgbNj/
+7GMXaghIH53eTe9yQAmE1v4i0R1YFCQPrMP/F91viq5lUG3RMi0ZQrH+AyBJtZwf/gmhCVs1
+lZ1CMagLMSGvXxub/4USaq1Kq27s8s0cBN5x7IwmObwoi2MEAAIc4tIpD3WHCEDr2ERs6Jb1
+TBfxzg8i6piXModzP+DDOQm3SInp1nc4nfanpDZ5jbWLgIxOxiEmCDCH5xJAiXW9xF0lHeWd
+YouVEsLzaSq5FaQgDLm8Uxbz1s9xctA29UwUPCjP0bxZ0pZjuaibjFp8VLZQ2sI75BwgRt73
+g6SY0uMQXh/uywSkxEPay9i5m3kVlKTaFo4DNNyLwKwjSQ3XifH4OKtnRE2ohLLvjthNF38Z
+yV/mN+KtTMehRwz4V9zrH6gXlZgIHxJ6+kVqk4LJtfnkzIb8kcxbmfl8ww80KHYzhNtQ9WS1
+6CGbycEeeSFerLzNqhftQi/tsevrTLAsskfBCkFGjvfMeSohl6BfL+++S6ScpDw9Yxy6MCk9
+MSN8hl0gLxORnhO5XiJmeVJ8UuHcASSLqGgjERGOEt+x2s5+J+DPBxJwvgwi9pYF4zGMilDM
+U4XRFk0yDr/NOsSTZq5LRtrItRRog8fQj70NVTdz3WVaFuUCJRm3YCk0NINjwTf4ScGkWtI4
+ZBNIaO18ugNtxg7vBOqMkCNtgU+hv1rGt3bS/hOR0qxD8rTMUlyYsdUsijHZP8C+o5GzGHOv
+3H5jGhFgXtxEzdY41W5v8Pm0L0NFdiHS4koX1u1kDq1SACmu15SfGMtibw4g3Amf2MSBrOqE
+ICpXclQZ5BkIKnP26McTVn3wUO/8+YDCK2zvnutWk2Hgj+ofWJzt0skpGnAaMwkUxTNjKvfu
+N5w8E04yRyc+sIjPZ1bARtXMVx5+uGVmqU6gUubG6Qb8t4LPKCtTugybggnnOtBtpmlTWdLl
+itC1zvX0W0KnoDGlgSttvFEiwU/JaqDnNqi9Yqs94idCPPIr7jQV9WG27FFIJIqAK2CtLar5
+zHr9QFQzyi/mzSKPFcX29hmx5Z8RY9UKYjwhcVaredk9KzOaFF1CukIZdU5+aYvuZdo1WfPm
+jvbM0TbIONcefY2Ym4f4FBbE3GrqTd50Vngck7yw21vZKe+ko2NwYkBwIc8wRaD46sbwK/vC
+HAtuDpKyd0dNYS6+9XYwMlJJdlmghU/ut4sbH5W0k9nYAam4HH1pMhZIv5YOxm1GGEFegjZG
+uJkTe7w7lm8h4Xqh2fL+tOh5v+7w2VPkzp2G38Tc5D0Y3QOEKK8h815lku15AYHwvNceJHlA
+nz0IW3cZsU3JEZ+TyNoNJlQICoDDSluduInYQ0Q4fEBXdDjgL1wuiYRk5K9+RLGl/ZR8nw0j
+6UZ0nxdDSZH+Wek8fy0h4l+ZRwZ4etv2F36upsLvwmUpQFLl8YNQSLGfHf2QHfipkGzxtYCS
+XuPmtw7qrcZBM3PPpB+Z4vSU8X6KQfneACzA554knCD0cO8Fcy8On6gZ+0fMHh2QM4uDgM1X
+owkLFiwOEYIYHF5kQSts2sqcJdthOmY1S1Y7G66DZVRTZRmTlkz50iTVbV5vNZpqyfpmPSuh
+LOh+ua+7z+stAQLL2m27OeCe1HSl28lSkf0ktvjqRjyB8X6/E4G8WTzxozbzIRL6UAgi9fl7
+BlUtf7Nib29PYLrCBa1GIxsK8oJv1rJz/4nrk8MUVZ28X5WCuugHminvmJY/3lHzj/klD1Gj
+NIw6f5LfaMrnw0kfXDyWWFLTKPohGj/Y2KJd0/cyyDQ2HiR53wBPkseaJeEDuMh3emlL7Vlg
+KDLaeqbIB5YjFqywGsKGcwAFgFlIsgC4B5cX3QtZwwsBFHdLBaElN157IwmENHamHh9aFq+T
+T8oZwo0579mb6PIqXJlmU7dqqM2DpuxgEXbxYxvOwJ+juhX+RpeSww4J+pIvMFTEY9FiF669
+eSUUzbBwh59Yzsnn1rguwYCl8CVhRJoR5W9Km38+rvK+ULROIB6MF3NT8dn25r0Bq256l4E/
++s7fP0Fde9lO5Wbxoeifta+cD2Ww6Jr70FmzxVwFq7mSNxdVtrPDJwvr2VTTRD1SXjNsqOde
+URZqG0o07TcqPawpXnaIbaIT4XUNIwpQyKbHb1x6tiYLmLR8+UVxraqUSA5EMG0r+/sIt+4g
+UoPj8SjljOIVuNQTW2JXaBHnjS23XHY/XsNFBv1XNnXXY8Z6Wxcz3t3Kn8Xsjcs4PlTpeTcP
+GXWIFFirNY2GfiBqYgGtWNa8XlX0vlDy/kbB+/py94Vi91Wl7jOF7i+B+iFKL4tBVNn4HpOa
+CXeZWzwX8J59E+e5hRgFs3uUxEERTEuo0nCK2n6gXnc2K8mMJbEANeg4WTIka3P+n4w4ki94
+KZ5CHAK/jkCQJSRMcPC+5zngd1W8yfjim1PZF/EU5ZhtY/TcvyIa9j703Xtvm/5PFMrNd4lE
+cDC29fSVyaRWycsTarw4faqUedsSnyqsNUGTT3lTFzGa0CTVcoXeqUmV09q1N7wKxi8uWeD1
+j+TN8F5ygs5/VHqr5PZ/65Wy4mWUdKB6IrDB2stra5ggw4XDrLSPzGXxN99aWz/dmnfmt17b
++HXvAoqaPG8ejL+Ny2WCSUFCQp7r8XCqfv7hysYY3u2vwV6c34B030QFSEhJzrY/3A7O8Jmt
+beeArikgbgpyyXRT3EFnkUHjOb3h7NIJPWpL7ay9vahEdNRxhQjpFVielxjJjgm5cRieo+V+
+CdSChHrlottQAgzFQ8CNnQgu8UQBG7T6ihc3E6MuhNKN26q0x/8C5QZKnX46AAA=
+--------------000801090807080704060501--
 
 
