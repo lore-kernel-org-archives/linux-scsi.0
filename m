@@ -1,32 +1,60 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [patch] 2.4.23-pre8: link error with both megaraid drivers
-Date: Thu, 23 Oct 2003 15:18:12 +0100
+From: Xose Vazquez Perez <xose@wanadoo.es>
+Subject: [patch] 2.4.23-pre8: link error with both megaraid drivers
+Date: Thu, 23 Oct 2003 17:27:25 +0200
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20031023141812.GC18370@parcelfarce.linux.theplanet.co.uk>
-References: <Pine.LNX.4.44.0310222116270.1364-100000@logos.cnet> <20031023140743.GF11807@fs.tum.de>
+Message-ID: <3F97F35D.30101@wanadoo.es>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------070706090603000102060209"
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20031023140743.GF11807@fs.tum.de>
-To: Adrian Bunk <bunk@fs.tum.de>
-Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, Matt Domsch <Matt_Domsch@dell.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Oct 23, 2003 at 04:07:43PM +0200, Adrian Bunk wrote:
-> --- linux-2.4.23-pre7-full/drivers/scsi/Config.in.old	2003-10-11 17:00:47.000000000 +0200
-> +++ linux-2.4.23-pre7-full/drivers/scsi/Config.in	2003-10-11 17:24:00.000000000 +0200
-> -dep_tristate 'AMI MegaRAID2 support' CONFIG_SCSI_MEGARAID2 $CONFIG_SCSI
-> +if [ "$CONFIG_SCSI_MEGARAID" != "y" ]; then
-> +  define_tristate CONFIG_SCSI_MEGARAID2_DEP $CONFIG_SCSI
-> +else
-> +  define_tristate CONFIG_SCSI_MEGARAID2_DEP m $CONFIG_SCSI
-> +fi
-> +dep_tristate 'AMI MegaRAID2 support' CONFIG_SCSI_MEGARAID2 $CONFIG_SCSI_MEGARAID2_DEP
+This is a multi-part message in MIME format.
+--------------070706090603000102060209
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 
-define_tristate?!  Did you actually try this?
+Adrian Bunk wrote:
 
--- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
+> The patch below fixes this issue by disalllowing the static inclusion of
+> both drivers at the same time.
+
+IMO this patch makes a better job. It only allows one in kernel,
+and it allows two modules at same time.
+
+xconfig and menuconfig work ok.
+
+-thanks-
+--
+HTML mails are going to trash automatically
+
+--------------070706090603000102060209
+Content-Type: text/plain;
+ name="config-megaraid.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="config-megaraid.diff"
+
+--- linux/drivers/scsi/Config.in	2003-10-23 16:56:13.000000000 +0200
++++ new/drivers/scsi/Config.in	2003-10-23 17:00:51.000000000 +0200
+@@ -66,8 +66,14 @@
+ dep_tristate 'AdvanSys SCSI support' CONFIG_SCSI_ADVANSYS $CONFIG_SCSI
+ dep_tristate 'Always IN2000 SCSI support' CONFIG_SCSI_IN2000 $CONFIG_SCSI
+ dep_tristate 'AM53/79C974 PCI SCSI support' CONFIG_SCSI_AM53C974 $CONFIG_SCSI $CONFIG_PCI
+-dep_tristate 'AMI MegaRAID support' CONFIG_SCSI_MEGARAID $CONFIG_SCSI
+-dep_tristate 'AMI MegaRAID2 support' CONFIG_SCSI_MEGARAID2 $CONFIG_SCSI
++
++if [ "$CONFIG_SCSI_MEGARAID2" != "y" ]; then
++	dep_tristate 'AMI MegaRAID support' CONFIG_SCSI_MEGARAID $CONFIG_SCSI
++fi
++
++if [ "$CONFIG_SCSI_MEGARAID" != "y" ]; then
++	dep_tristate 'AMI MegaRAID2 support' CONFIG_SCSI_MEGARAID2 $CONFIG_SCSI
++fi
+ 
+ dep_tristate 'BusLogic SCSI support' CONFIG_SCSI_BUSLOGIC $CONFIG_SCSI
+ if [ "$CONFIG_SCSI_BUSLOGIC" != "n" ]; then
+
+
+--------------070706090603000102060209--
