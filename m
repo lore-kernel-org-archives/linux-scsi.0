@@ -1,117 +1,341 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: lots and lots of disks again
-Date: Wed, 11 Feb 2004 23:09:18 +0100
+From: John McKell <mckellj@iomega.com>
+Subject: [PATCH] Allow random write for PDT 5 profile 2 Removable Disk
+Date: 11 Feb 2004 15:10:52 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040211220918.GJ4010@tpkurt.garloff.de>
-References: <20040204024512.5bf68428.akpm@osdl.org> <20040210110417.GB4010@tpkurt.garloff.de> <20040210112658.GC4010@tpkurt.garloff.de> <20040210133932.A3870@infradead.org> <20040210154751.GH4010@tpkurt.garloff.de> <20040210102603.0c835212.akpm@osdl.org> <20040211145614.GA4010@tpkurt.garloff.de> <20040211132848.49eece0d.akpm@osdl.org>
+Message-ID: <1076537451.3112.152.camel@lintest.iomegacorp.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="bXVaen7Op4LYXSUn"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:10646 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S265875AbUBKWLi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Feb 2004 17:11:38 -0500
-Content-Disposition: inline
-In-Reply-To: <20040211132848.49eece0d.akpm@osdl.org>
+Received: from email-out1.iomega.com ([147.178.1.82]:52655 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S266170AbUBKWKy
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Feb 2004 17:10:54 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: hch@infradead.org, linux-scsi@vger.kernel.org, pbadari@us.ibm.com, willy@debian.org, James.Bottomley@steeleye.com
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-scsi@vger.kernel.org
+
+Jens,
+
+I see linux-2.6.2 extends the list of writable PDT x05 DVD/CD devices
+to include MRW, not just DVD-RAM and MO.
+
+With that change in place, this small further patch allows write
+through to PDT 0x05 DVD/CD for profile x0002 Removable Disk:
+
+a) if feature x0020 "Random Writable" present (no matter if current or
+not) at plug-in time, and...
+
+b) if feature x0024 "Hardware Defect Management" present (no matter if
+current or not) at plug-in time, and...
+
+c) if both features "current" at /dev/* open time (e.g., mount time),
+and ...
+
+d) the device in question is not any of MRW, MRW_W, DVD_RAM, CD_R,
+CD_RW, DVD, DVD_R
+
+Since 1999 MMC-2, MMC says these tests in combination say this device
+writes at random like DVD-RAM: no load balancing (aka wear leveling)
+required and blocks of the size the x0020 feature reports (64 KiB if
+like CD, 32 KiB if like DVD).
+
+This composite version of this patch includes the already posted
+patch:
+
+Subject:[PATCH] DVD-R capability flag set incorrectly, /proc
+                formatting fix
+http://marc.theaimsgroup.com/?l=linux-scsi&m=107637086904512&w=2
+
+Please let me know if you'd rather have an incremental patch.
+
+---John McKell
 
 
---bXVaen7Op4LYXSUn
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+--- linux-2.6.2/include/linux/cdrom.h	2004-02-03 20:43:06.000000000 -0700
++++ linux/include/linux/cdrom.h	2004-02-07 15:21:53.000000000 -0700
+@@ -721,7 +721,9 @@ struct request_sense {
+ /*
+  * feature profile
+  */
+-#define CDF_MRW		0x28
++#define CDF_RWRT	0x0020
++#define CDF_HWDM	0x0024
++#define CDF_MRW		0x0028
+ 
+ /*
+  * media status bits
+@@ -770,6 +772,34 @@ struct mrw_feature_desc {
+ 	__u8 reserved5;
+ };
+ 
++/* cf. mmc4r02g.pdf 5.3.10 Random Writable Feature (0020h) pg 197 of 635 */
++struct rwrt_feature_desc {	
++	__u16 feature_code;
++#if defined(__BIG_ENDIAN_BITFIELD)
++	__u8 reserved1		: 2;
++	__u8 feature_version	: 4;
++	__u8 persistent		: 1;
++	__u8 curr		: 1;
++#elif defined(__LITTLE_ENDIAN_BITFIELD)
++	__u8 curr		: 1;
++	__u8 persistent		: 1;
++	__u8 feature_version	: 4;
++	__u8 reserved1		: 2;
++#endif
++	__u8 add_len;
++	__u32 last_lba;
++	__u32 block_size;
++	__u16 blocking;
++#if defined(__BIG_ENDIAN_BITFIELD)
++	__u8 reserved2		: 7;
++	__u8 page_present	: 1;
++#elif defined(__LITTLE_ENDIAN_BITFIELD)
++	__u8 page_present	: 1;
++	__u8 reserved2		: 7;
++#endif
++	__u8 reserved3;
++};
++
+ typedef struct {
+ 	__u16 disc_information_length;
+ #if defined(__BIG_ENDIAN_BITFIELD)
+@@ -1129,6 +1159,7 @@ struct media_event_desc {
+ 
+ extern int cdrom_get_media_event(struct cdrom_device_info *cdi, struct media_event_desc *med);
+ extern int cdrom_is_mrw(struct cdrom_device_info *cdi, int *write);
++extern int cdrom_is_random_writable(struct cdrom_device_info *cdi, int *write);
+ 
+ #endif  /* End of kernel only stuff */ 
+ 
+--- linux-2.6.2/drivers/ide/ide-cd.c	2004-02-03 20:43:44.000000000 -0700
++++ linux/drivers/ide/ide-cd.c	2004-02-09 16:08:13.000000000 -0700
+@@ -2911,6 +2911,8 @@ static int ide_cdrom_register (ide_drive
+ 		devinfo->mask |= CDC_MRW;
+ 	if (!CDROM_CONFIG_FLAGS(drive)->mrw_w)
+ 		devinfo->mask |= CDC_MRW_W;
++	if (!CDROM_CONFIG_FLAGS(drive)->ram)
++		devinfo->mask |= CDC_RAM;
+ 
+ 	return register_cdrom(devinfo);
+ }
+@@ -2946,7 +2948,7 @@ int ide_cdrom_probe_capabilities (ide_dr
+ 	struct cdrom_info *info = drive->driver_data;
+ 	struct cdrom_device_info *cdi = &info->devinfo;
+ 	struct atapi_capabilities_page cap;
+-	int nslots = 1, mrw_write = 0;
++	int nslots = 1, mrw_write = 0, ram_write = 0;
+ 
+ 	if (drive->media == ide_optical) {
+ 		CDROM_CONFIG_FLAGS(drive)->mo_drive = 1;
+@@ -2982,7 +2984,11 @@ int ide_cdrom_probe_capabilities (ide_dr
+ 			CDROM_CONFIG_FLAGS(drive)->ram = 1;
+ 		}
+ 	}
+-
++	if (!cdrom_is_random_writable(cdi, &ram_write)) {
++		if (ram_write) {
++			CDROM_CONFIG_FLAGS(drive)->ram = 1;
++		}
++	}
+ 	if (cap.lock == 0)
+ 		CDROM_CONFIG_FLAGS(drive)->no_doorlock = 1;
+ 	if (cap.eject)
+--- linux-2.6.2/drivers/scsi/sr.c	2004-02-03 20:43:19.000000000 -0700
++++ linux/drivers/scsi/sr.c	2004-02-10 16:39:23.000000000 -0700
+@@ -693,7 +693,7 @@ Enomem:
+ static void get_capabilities(struct scsi_cd *cd)
+ {
+ 	unsigned char *buffer;
+-	int rc, n, mrw_write = 0, mrw = 1;
++	int rc, n, mrw_write = 0, mrw = 1,ram_write=0;
+ 	struct scsi_mode_data data;
+ 	struct scsi_request *SRpnt;
+ 	unsigned char cmd[MAX_COMMAND_SIZE];
+@@ -775,6 +775,12 @@ static void get_capabilities(struct scsi
+ 	if (!mrw_write)
+ 		cd->cdi.mask |= CDC_MRW_W;
+ 
++	if (cdrom_is_random_writable(&cd->cdi, &ram_write)) {
++		cd->cdi.mask |= CDC_RAM;
++	}
++	if (!ram_write)
++		cd->cdi.mask |= CDC_RAM;
++
+ 	n = data.header_length + data.block_descriptor_length;
+ 	cd->cdi.speed = ((buffer[n + 8] << 8) + buffer[n + 9]) / 176;
+ 	cd->readcd_known = 1;
+@@ -795,10 +801,9 @@ static void get_capabilities(struct scsi
+ 	if ((buffer[n + 2] & 0x8) == 0)
+ 		/* not a DVD drive */
+ 		cd->cdi.mask |= CDC_DVD;
+-	if ((buffer[n + 3] & 0x20) == 0) {
++	if ((buffer[n + 3] & 0x20) == 0)
+ 		/* can't write DVD-RAM media */
+ 		cd->cdi.mask |= CDC_DVD_RAM;
+-	} else
+ 	if ((buffer[n + 3] & 0x10) == 0)
+ 		/* can't write DVD-R media */
+ 		cd->cdi.mask |= CDC_DVD_R;
+@@ -825,7 +830,8 @@ static void get_capabilities(struct scsi
+ 	/*
+ 	 * if DVD-RAM of MRW-W, we are randomly writeable
+ 	 */
+-	if ((cd->cdi.mask & (CDC_DVD_RAM | CDC_MRW_W)) != (CDC_DVD_RAM | CDC_MRW_W))
++	if ((cd->cdi.mask & (CDC_DVD_RAM | CDC_MRW_W | CDC_RAM)) != 
++	    (CDC_DVD_RAM | CDC_MRW_W | CDC_RAM))
+ 		cd->device->writeable = 1;
+ 
+ 	scsi_release_request(SRpnt);
+--- linux-2.6.2/drivers/cdrom/cdrom.c	2004-02-05 14:30:46.000000000 -0700
++++ linux/drivers/cdrom/cdrom.c	2004-02-11 11:14:23.995187637 -0700
+@@ -641,6 +641,80 @@ static int cdrom_mrw_set_lba_space(struc
+ 	return 0;
+ }
+ 
++int cdrom_get_random_writable(struct cdrom_device_info *cdi, 
++			      struct rwrt_feature_desc *rfd)
++{
++	struct cdrom_generic_command cgc;
++	char buffer[24];
++	struct feature_header *fh;
++	int ret;
++
++	init_cdrom_command(&cgc, buffer, sizeof(buffer), CGC_DATA_READ);
++
++	cgc.cmd[0] = GPCMD_GET_CONFIGURATION;	/* often 0x46 */
++	cgc.cmd[3] = CDF_RWRT;			/* often 0x0020 */
++	cgc.cmd[8] = sizeof(buffer);		/* often 0x18 */
++	cgc.quiet = 1;
++
++	if ((ret = cdi->ops->generic_packet(cdi, &cgc))) 
++		return ret;
++
++	fh = (struct feature_header *)&buffer[0];
++	if (be32_to_cpu(fh->data_len) >= (sizeof(struct feature_header)+
++					  sizeof(struct rwrt_feature_desc))) {
++		memcpy(rfd, &buffer[sizeof(struct feature_header)], 
++		       sizeof (*rfd));
++	} else {
++		memset(rfd, 0, sizeof(*rfd));
++	}
++	return 0;
++}
++
++int cdrom_has_defect_mgt(struct cdrom_device_info *cdi)
++{
++	struct cdrom_generic_command cgc;
++	char buffer[16];
++	struct feature_header *fh;
++	__u16 *feature_code;
++	int ret;
++
++	init_cdrom_command(&cgc, buffer, sizeof(buffer), CGC_DATA_READ);
++
++	cgc.cmd[0] = GPCMD_GET_CONFIGURATION;	/* often 0x46 */
++	cgc.cmd[3] = CDF_HWDM;			/* often 0x0024 */
++	cgc.cmd[8] = sizeof(buffer);		/* often 0x10 */
++	cgc.quiet = 1;
++
++	if ((ret = cdi->ops->generic_packet(cdi, &cgc))) 
++		return ret;
++
++	fh = (struct feature_header *)&buffer[0];
++	ret = 1;
++	if (be32_to_cpu(fh->data_len) >= (sizeof(struct feature_header)+8)) {
++		feature_code = (__u16 *)&buffer[sizeof(struct feature_header)];
++		if (CDF_HWDM == be16_to_cpu(*feature_code)) 
++			ret = 0;
++	} 
++	return ret;
++}
++
++
++int cdrom_is_random_writable(struct cdrom_device_info *cdi, int *write)
++{
++	struct rwrt_feature_desc rfd;
++	int ret;
++	
++	*write = 0;
++
++	if ((ret = cdrom_get_random_writable(cdi, &rfd))) 
++		return ret;
++
++	if (CDF_RWRT == be16_to_cpu(rfd.feature_code)) 
++		*write = 1;
++
++	return 0;
++}
++
+ static int cdrom_media_erasable(struct cdrom_device_info *cdi)
+ {
+ 	disc_information di;
+@@ -695,6 +769,24 @@ static int cdrom_mrw_open_write(struct c
+ 	return ret;
+ }
+ 
++static int cdrom_ram_open_write(struct cdrom_device_info *cdi)
++{
++	struct rwrt_feature_desc rfd;
++	int ret;
++
++	if ((ret = cdrom_has_defect_mgt(cdi))) {
++		return ret;
++	} else {
++		if ((ret = cdrom_get_random_writable(cdi, &rfd))) {
++			return ret;
++		} else if (CDF_RWRT == be16_to_cpu(rfd.feature_code)) {
++			ret = !rfd.curr;
++		}
++	}
++	cdinfo(CD_OPEN, "can open for random write\n");
++	return ret;
++}
++
+ /*
+  * returns 0 for ok to open write, non-0 to disallow
+  */
+@@ -706,6 +798,10 @@ static int cdrom_open_write(struct cdrom
+ 		ret = cdrom_mrw_open_write(cdi);
+ 	else if (CDROM_CAN(CDC_DVD_RAM))
+ 		ret = cdrom_dvdram_open_write(cdi);
++	else if (CDROM_CAN(CDC_RAM) && 
++		 !CDROM_CAN(CDC_CD_R|CDC_CD_RW|CDC_DVD|CDC_DVD_R|CDC_MRW)) {
++		ret = cdrom_ram_open_write(cdi);
++	}
+ 	/*
+ 	 * needs to really check whether media is writeable
+ 	 */
+@@ -2644,6 +2740,7 @@ EXPORT_SYMBOL(cdrom_mode_sense);
+ EXPORT_SYMBOL(init_cdrom_command);
+ EXPORT_SYMBOL(cdrom_get_media_event);
+ EXPORT_SYMBOL(cdrom_is_mrw);
++EXPORT_SYMBOL(cdrom_is_random_writable);
+ 
+ #ifdef CONFIG_SYSCTL
+ 
+@@ -2740,13 +2837,17 @@ int cdrom_sysctl_info(ctl_table *ctl, in
+ 	for (cdi=topCdromPtr;cdi!=NULL;cdi=cdi->next)
+ 	    pos += sprintf(info+pos, "\t%d", CDROM_CAN(CDC_DVD_RAM) != 0);
+ 
+-	pos += sprintf(info+pos, "\nCan read MRW:");
++	pos += sprintf(info+pos, "\nCan read MRW:\t");
++	for (cdi=topCdromPtr;cdi!=NULL;cdi=cdi->next)
++	    pos += sprintf(info+pos, "\t%d", CDROM_CAN(CDC_MRW) != 0);
++
++	pos += sprintf(info+pos, "\nCan write MRW:\t");
+ 	for (cdi=topCdromPtr;cdi!=NULL;cdi=cdi->next)
+-	    pos += sprintf(info+pos, "\t\t%d", CDROM_CAN(CDC_MRW) != 0);
++	    pos += sprintf(info+pos, "\t%d", CDROM_CAN(CDC_MRW_W) != 0);
+ 
+-	pos += sprintf(info+pos, "\nCan write MRW:");
++	pos += sprintf(info+pos, "\nCan write RAM:\t");
+ 	for (cdi=topCdromPtr;cdi!=NULL;cdi=cdi->next)
+-	    pos += sprintf(info+pos, "\t\t%d", CDROM_CAN(CDC_MRW_W) != 0);
++	    pos += sprintf(info+pos, "\t%d", CDROM_CAN(CDC_RAM) != 0);
+ 
+ 	strcpy(info+pos,"\n\n");
+ 		
 
-Hi Andrew,
 
-On Wed, Feb 11, 2004 at 01:28:48PM -0800, Andrew Morton wrote:
-> Kurt Garloff <garloff@suse.de> wrote:
-> > If we really allocate thousands of disks, the overhead of this solution
-> > will be higher than the bitmap, I'm afraid.
->=20
-> Four (or eight) bytes per disk!  I perceive a lack of perspecitve here ;)
 
-We're fighting about a static 4k array currently ;-)
-
-Well, it's certainly true that the memory we allocate in gendisk per
-disk is higher than these wasted 4/8 bytes. It's just that I don't like
-wasting anything ... The waste is 32/64times higher than with our
-bitfield, except that it's dynamic.
-
-> I'd trade clarity of implementation for that. =20
-
-You seem to have used idr often before. It took me much longer to read
-the docu and look at the function decsl than to understand the array
-and the meaning of find_first_zero_bit().
-
-> (As well as, possibly, reduced memory use on low-end machines).
-
-This one is true.
-
-If you think this is a relevant issue, tell me. I'll convert to use
-idr then. Currently, I'm not sure whether the patch has any chance
-to be merged, given the opposition of some people.=20
-
-Actually, I'm not sure we currently have the right discussion here.
-
-We want to have > 256 disk support, and we need to agree on how we=20
-want to present it to the user. Changing some implementation behind
-this is not really painful to do afterwards. Changing the way we
-interpret majors/minors would be painful. Thus the suggestion of
-Matthew which I liked and adopted. No need for new majors, no
-changes to the well known numbers.
-
-Of course there's the long term perspective of having a "disk" major
-and udev taking care of everything. This will happen, but nobody
-so far told that this should be done within 2.6. Nor do I see
-udev replacing the classical device nodes completely within that
-timeframe.
-
-If we want something useful now, we need to keep the old disks=20
-major/minor scheme untouched.
-I see two possibilities to get somes done:
-* Matthew's proposal (whatever we use the two extra "partition"
-  bits for in the end)
-* Introducing new majors, where we introduce a new numbering scheme.
-  One major can accomodate 65536 disks =E0 16 partitions or 8192 disks
-  with 64 partitions. We'd allocate one new major and sort disks
-  after 256 there. The 64 partitions is actually out of the race,
-  as the number of possible partitions would depend on the order=20
-  that scsi disks are detected :-/
-
-I think adding some bit shifting in the kernel is preferable to
-breaking user interfaces. The effort to fix all the apps is much
-higher. We should be aware that some bit shifting in the kernel
-is really not the most complex part of this picture.
-
-I would appreciate if those disliking Matthew's maj/min layout would
-come up with a proposal and tell what they want. Or maybe admit that
-they actually don't care?
-
-I'm definitely not religious about how to solve this. But I would
-like to have _a_ solution and I would like this solution not to
-change anything for already well-known devices.
-
-Once we have that, we can struggle about implememtation details that
-are easy to change anyways.
- =20
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
-
---bXVaen7Op4LYXSUn
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
-
-iD8DBQFAKqgOxmLh6hyYd04RAipeAKC7f8g9QjYJsRHWP40XVWLPyTz2FgCguKgH
-Pc81Yb065lQ1CzkU2uohobo=
-=Qhs4
------END PGP SIGNATURE-----
-
---bXVaen7Op4LYXSUn--
