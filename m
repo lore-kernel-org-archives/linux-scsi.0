@@ -1,38 +1,36 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: I can't use aic79xx with RAID
-Date: 19 Apr 2003 00:46:55 +0100
+From: Douglas Gilbert <dougg@torque.net>
+Subject: scsi_mid_low_api.txt updated
+Date: Sun, 20 Apr 2003 10:33:39 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1050709614.2269.21.camel@dhcp22.swansea.linux.org.uk>
-References: <20030418154452.GA27820@galliera.it>
+Message-ID: <3EA1EAE3.90004@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pc2-cwma1-4-cust86.swan.cable.ntl.com ([213.105.254.86]:47054
-	"EHLO lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S263324AbTDSAdD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Apr 2003 20:33:03 -0400
-In-Reply-To: <20030418154452.GA27820@galliera.it>
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:58379 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263505AbTDTATv
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Apr 2003 20:19:51 -0400
+Received: from torque.net (d-241-40.stlucia.uq.net.au [203.101.241.40])
+	by bunyip.cc.uq.edu.au (8.12.9/8.12.9) with ESMTP id h3K0VlHO026403
+	for <linux-scsi@vger.kernel.org>; Sun, 20 Apr 2003 10:31:48 +1000 (GMT+1000)
 List-Id: linux-scsi@vger.kernel.org
-To: debe@galliera.it
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Gwe, 2003-04-18 at 16:44, Marco De Benedetto wrote:
-> I have compiled the kernel 2.4.20 with the 2.4.21-pre7 patch and the
-> support for aic79xx, now I can see the two disks but after creating
-> the RAID(0/1) the kernel does not see any disk.  I have also tried the
-> latest drivers from Justin T. Gibbs.
+The interface between the SCSI mid level and the lower
+level (HBA) drivers is still a moving target with more
+changes to come. So instead of a patch against the file
+currently in Documentation/scsi/scsi_mid_low_api.txt
+here is a gzipped version:
 
-Software raid is independant of the underlying driver so that bit should
-just work.
+http://www.torque.net/sg/p/scsi_mid_low_api.txt.gz
 
-> BTW, does someone know what are the performance of the Linux sw RAID1
-> with respect to hw RAID1?
+Please send corrections and suggestions to me.
 
-CPU wise its basically zero overhead. The PCI bus overhead kills you at
-high performance rates so its a tradeoff. On the other hand most but not
-all hardware raid cards have crappy on board controllers, firmware that
-is funny, non free managemet tools and low power CPU's that mean they
-still underperform software raid in most respects.
+There are quite a few changes since the last patch
+(document date on last line was 21st February 2003)
 
+
+Doug Gilbert
 
