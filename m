@@ -1,47 +1,31 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: sg_scan -i /dev/sg[0123] /dev/hd[abcd] /dev/scd[0123]
-Date: Fri, 12 Dec 2003 23:00:35 +1000
+From: Rask Ingemann Lambertsen <rask@sygehus.dk>
+Subject: Re: [announce] scsi_id release 0.2
+Date: Fri, 12 Dec 2003 15:27:37 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FD9BBF3.1030209@torque.net>
-References: <1070670440.3056.7.camel@patibmrh9>	 <3FD43229.7070708@torque.net>  <1070906283.2263.101.camel@patibmrh9>	 <1070908146.2263.121.camel@patibmrh9> <1071172941.2868.26.camel@patibmrh9>
-Reply-To: dougg@torque.net
+Message-ID: <20031212152737.A1254@sygehus.dk>
+References: <20031205151810.A8891@beaverton.ibm.com> <20031207153802.GA6700@suse.de> <20031207114242.A29572@beaverton.ibm.com> <20031207195915.GA6714@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:12307 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S264562AbTLLNC5
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Dec 2003 08:02:57 -0500
-In-Reply-To: <1071172941.2868.26.camel@patibmrh9>
+Received: from 0x50a41c34.albnxx15.adsl-dhcp.tele.dk ([80.164.28.52]:1796 "EHLO
+	0x50a41c34.albnxx15.adsl-dhcp.tele.dk") by vger.kernel.org with ESMTP
+	id S265241AbTLLO1k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Dec 2003 09:27:40 -0500
+Content-Disposition: inline
+In-Reply-To: <20031207195915.GA6714@suse.de>; from olh@suse.de on Sun, Dec 07, 2003 at 08:59:15PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-scsi@vger.kernel.org
+To: Olaf Hering <olh@suse.de>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net
 
-Pat LaVarre wrote:
-> Doug G:
-> 
-> Thank you, I see sg_scan now lets me name the devices to scan, including
-> lk 2.6 block devices:
-> 
-> The inline patch of this e-mail then also omits and scans past the
-> "Stopping because there are too many error" message in configurations
-> with few devices present, ....
+On Sun, Dec 07, 2003 at 08:59:15PM +0100, Olaf Hering wrote:
 
-Pat,
-Patch applied, uploaded to the sg webpage.
+> I need also this patch because gcc decides that a printf("\n"); could be
+> done with a putchar, which is not defined for some reasons.
 
-Willem Riede wrote:
- > > Maybe sg_scan should renamed sam_scan (sadly apart from INQUIRYs
- > > on st and osst devices).
- >             ^^^^
- > Is there something I can/should do to enable that?
+#include <stdio.h>
 
-No, the problem is in sg_scan. The version I just uploaded
-falls back to the SCSI_IOCTL_SEND_COMMAND if the SG_IO
-ioctl fails. This should make INQUIRYs work on st and osst
-devices.
+must be missing somewhere.
 
-Doug Gilbert
-
-
+-- 
+Regards,
+Rask Ingemann Lambertsen
