@@ -1,125 +1,81 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: 2.6.8.1-mm3
-Date: 24 Aug 2004 23:50:33 -0400
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] fix sym2 negotiation
+Date: Tue, 24 Aug 2004 23:57:47 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1093405836.2206.447.camel@mulgrave>
-References: <200408211838.i7LIcUdl025108@harpo.it.uu.se>
-	<20040821191417.GA3402@beaverton.ibm.com>
-	<1093116298.2092.388.camel@mulgrave>
-	<20040821214733.GE9660@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <20040825065747.GA2275@us.ibm.com>
+References: <1093113450.1732.334.camel@mulgrave> <20040824132936.GA25263@suse.de> <20040824203914.GA25755@us.ibm.com> <20040824205126.GA10105@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:38604 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S267310AbUHYDvG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Aug 2004 23:51:06 -0400
-In-Reply-To: <20040821214733.GE9660@parcelfarce.linux.theplanet.co.uk>
+Received: from e31.co.us.ibm.com ([32.97.110.129]:8949 "EHLO e31.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S268580AbUHYG7R (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Aug 2004 02:59:17 -0400
+Content-Disposition: inline
+In-Reply-To: <20040824205126.GA10105@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Mikael Pettersson <mikpe@csd.uu.se>, Andrew Morton <akpm@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Olaf Hering <olh@suse.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, willy@debian.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, Anton Blanchard <anton@samba.org>
 
-On Sat, 2004-08-21 at 17:47, Matthew Wilcox wrote:
-> I prefer the former, something like
+Olaf Hering [olh@suse.de] wrote:
+>  On Tue, Aug 24, Mike Anderson wrote:
 > 
-> int scsi_test_unit_ready(struct scsi_device *sdev);
+> > I would guess this cdrom is behind a ACARD. We have had issues in
+> > the past with negotiation / interaction between the ACARD and the sym. 
+> 
+> Oh, that would be possible. I will look through our patches and find the
+> one that adds an insane delay. Maybe it helps.
+> 
 
-OK, how about the attached.  It seems to work for me, but then I don't
-have any of the problem devices ...
+Yes increasing scsi_inq_timeout to 27 seconds makes the messages go away
+on my system. Prior to increasing the timeout I bk pulled scsi-misc-2.6
+and received the same ABORT recovery sequence you did.
 
-James
+Output post increasing the timeout:
 
-===== drivers/scsi/scsi_ioctl.c 1.29 vs edited =====
---- 1.29/drivers/scsi/scsi_ioctl.c	2004-08-19 16:11:54 -05:00
-+++ edited/drivers/scsi/scsi_ioctl.c	2004-08-24 22:34:39 -05:00
-@@ -432,12 +432,8 @@
- 	case SCSI_IOCTL_DOORUNLOCK:
- 		return scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
- 	case SCSI_IOCTL_TEST_UNIT_READY:
--		scsi_cmd[0] = TEST_UNIT_READY;
--		scsi_cmd[1] = 0;
--		scsi_cmd[2] = scsi_cmd[3] = scsi_cmd[5] = 0;
--		scsi_cmd[4] = 0;
--		return ioctl_internal_command(sdev, scsi_cmd,
--				   IOCTL_NORMAL_TIMEOUT, NORMAL_RETRIES);
-+		return scsi_test_unit_ready(sdev, IOCTL_NORMAL_TIMEOUT,
-+					    NORMAL_RETRIES);
- 	case SCSI_IOCTL_START_UNIT:
- 		scsi_cmd[0] = START_STOP;
- 		scsi_cmd[1] = 0;
-===== drivers/scsi/scsi_lib.c 1.130 vs edited =====
---- 1.130/drivers/scsi/scsi_lib.c	2004-08-23 03:14:46 -05:00
-+++ edited/drivers/scsi/scsi_lib.c	2004-08-24 22:08:51 -05:00
-@@ -1572,6 +1572,34 @@
- 	return ret;
- }
- 
-+int
-+scsi_test_unit_ready(struct scsi_device *sdev, int timeout, int retries)
-+{
-+	struct scsi_request *sreq;
-+	char cmd[] = {
-+		TEST_UNIT_READY, 0, 0, 0, 0, 0,
-+	};
-+	int result;
-+	
-+	sreq = scsi_allocate_request(sdev, GFP_KERNEL);
-+	if (!sreq)
-+		return -ENOMEM;
-+
-+		sreq->sr_data_direction = DMA_NONE;
-+        scsi_wait_req(sreq, cmd, NULL, 0, timeout, retries);
-+
-+	if ((driver_byte(sreq->sr_result) & DRIVER_SENSE)
-+	    && (sreq->sr_sense_buffer[2] & 0x0f) == UNIT_ATTENTION
-+	    && sdev->removable) {
-+		sdev->changed = 1;
-+		sreq->sr_result = 0;
-+	}
-+	result = sreq->sr_result;
-+	scsi_release_request(sreq);
-+	return result;
-+}
-+EXPORT_SYMBOL(scsi_test_unit_ready);
-+
- /**
-  *	scsi_device_set_state - Take the given device through the device
-  *		state model.
-===== drivers/scsi/sd.c 1.157 vs edited =====
---- 1.157/drivers/scsi/sd.c	2004-08-24 18:09:03 -05:00
-+++ edited/drivers/scsi/sd.c	2004-08-24 22:36:10 -05:00
-@@ -648,7 +648,7 @@
- 	 */
- 	retval = -ENODEV;
- 	if (scsi_block_when_processing_errors(sdp))
--		retval = scsi_ioctl(sdp, SCSI_IOCTL_TEST_UNIT_READY, NULL);
-+		retval = scsi_test_unit_ready(sdp, SD_TIMEOUT, SD_MAX_RETRIES);
- 
- 	/*
- 	 * Unable to test, unit probably not ready.   This usually
-===== drivers/scsi/sr.c 1.114 vs edited =====
---- 1.114/drivers/scsi/sr.c	2004-08-12 19:03:53 -05:00
-+++ edited/drivers/scsi/sr.c	2004-08-24 22:39:41 -05:00
-@@ -183,7 +183,7 @@
- 		return -EINVAL;
- 	}
- 
--	retval = scsi_ioctl(cd->device, SCSI_IOCTL_TEST_UNIT_READY, NULL);
-+	retval = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES);
- 	if (retval) {
- 		/* Unable to test, unit probably not ready.  This usually
- 		 * means there is no disc in the drive.  Mark as changed,
-===== include/scsi/scsi_device.h 1.21 vs edited =====
---- 1.21/include/scsi/scsi_device.h	2004-08-22 20:06:22 -05:00
-+++ edited/include/scsi/scsi_device.h	2004-08-24 22:11:48 -05:00
-@@ -185,6 +185,8 @@
- extern int scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 			   unsigned char *buffer, int len, int timeout,
- 			   int retries, struct scsi_mode_data *data);
-+extern int scsi_test_unit_ready(struct scsi_device *sdev, int timeout,
-+				int retries);
- extern int scsi_device_set_state(struct scsi_device *sdev,
- 				 enum scsi_device_state state);
- extern int scsi_device_quiesce(struct scsi_device *sdev);
+x0537p1:~ # modprobe sym53c8xx
+sym0: <1010-66> rev 0x1 at pci 0000:58:01.0 irq 137
+sym0: No NVRAM, ID 7, Fast-80, LVD, parity checking
+sym0: SCSI BUS has been reset.
+scsi3 : sym-2.1.18j
+sym1: <1010-66> rev 0x1 at pci 0000:58:01.1 irq 138
+sym1: No NVRAM, ID 7, Fast-80, LVD, parity checking
+sym1: SCSI BUS has been reset.
+scsi4 : sym-2.1.18j
+  Vendor: IBM       Model: DROM0020311       Rev: 8R22
+  Type:   CD-ROM                             ANSI SCSI revision: 02
+scsi(4:0:1:0): Beginning Domain Validation
+sym1:1: wide asynchronous.
+sym1:1: FAST-40 WIDE SCSI 80.0 MB/s ST (25.0 ns, offset 14)
+scsi(4:0:1:0): Domain Validation skipping write tests
+scsi(4:0:1:0): Ending Domain Validation
+sr0: scsi3-mmc drive: 48x/48x cd/rw xa/form2 cdda tray
+Attached scsi CD-ROM sr0 at scsi4, channel 0, id 1, lun 0
+Attached scsi generic sg5 at scsi4, channel 0, id 1, lun 0,  type 5
+program scsi_id is using a deprecated SCSI ioctl, please convert it to
+SG_IO
+program scsi_id is using a deprecated SCSI ioctl, please convert it to
+SG_IO
+program hwscan is using a deprecated SCSI ioctl, please convert it to
+SG_IO
+program hwscan is using a deprecated SCSI ioctl, please convert it to
+SG_IO
+
+x0537p1:~ # sg_inq /dev/sg5
+standard INQUIRY:
+PQual=0  Device_type=5  RMB=1  [ANSI_version=2]  version=0x02
+[AERC=0]  [TrmTsk=0]  NormACA=0  HiSUP=0  Resp_data_format=2
+SCCS=0  ACC=0  ALUA=0  3PC=0  Protect=0
+BQue=0  EncServ=0  MultiP=0  MChngr=0  [ACKREQQ=0]  Addr16=0
+[RelAdr=0]  WBus16=1  Sync=1  Linked=0  [TranDis=0]  CmdQue=0
+Clocking=0x0  QAS=0  IUS=0
+length=148 (0x94)   Peripheral device type: cd/dvd
+Vendor identification: IBM
+Product identification: DROM0020311
+Product revision level: 8R22
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
