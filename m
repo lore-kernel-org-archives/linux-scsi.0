@@ -1,379 +1,133 @@
-From: Nicolas Meaux <nicolas.meaux@artabel.net>
-Subject: Re: crashing with sym53c8xx
-Date: Mon, 29 Dec 2003 10:08:36 +0100
+From: Andrew Morton <akpm@osdl.org>
+Subject: many-disk support
+Date: Mon, 29 Dec 2003 02:25:49 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FEFEF14.60905@artabel.net>
-References: <0E3FA95632D6D047BA649F95DAB60E5703A751F2@exa-atlanta.se.lsil.com>
+Message-ID: <20031229022549.50bae6d7.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from artabel.net1.nerim.net ([62.212.107.173]:57236 "EHLO
-	mail.artabel.net") by vger.kernel.org with ESMTP id S262925AbTL2JIi
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Dec 2003 04:08:38 -0500
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703A751F2@exa-atlanta.se.lsil.com>
+Received: from fw.osdl.org ([65.172.181.6]:59537 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S263178AbTL2KZo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Dec 2003 05:25:44 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <emoore@lsil.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Badari Pulavarty <pbadari@us.ibm.com>, "viro@parcelfarce.linux.theplanet.co.uk" <viro@parcelfarce.linux.theplanet.co.uk>
 
-Moore, Eric Dean wrote:
 
->Nicolas - Here's a reply from Larry Stephens:
->  
->
-First, sorry for the long delays reponse ...
+Guys, I've had this patch for ages.  Badari seemed to say that it wasn't
+the "right" way to do it.
 
->On Wednesday, December 17, 2003 9:23 AM, Larry Stephens wrote:
->  
->
->>Usually Parity errors are associated with bad cables or 
->>incorrect termination.  I'd suggest that the customer check 
->>and/or replace those items.  I don't suppose he has a SCSI 
->>bus analyzer so we could get a trace, does he?
->>    
->>
-I changed some times the SCSI cable and the SCSI termination, but 
-problems persisted, the problem is not new it occurred before i get the 
-responsibility of this machine ( 1 year ).
-And sorry, i dont have a bus analyzer, i will see if i can buy one.
-
->>I'd be interested to see if the same symptoms occur with the 
->>1030 and the mpt driver.  Any chance he could try the 1030?
->>
-Sorry again, but i cannot try any new drivers, my raid partition crashed 
-a few days ago, with strange logs.
-Here they are :
-
-kernel: SCSI disk error : host 1 channel 0 id 5 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:50, sector 779528
-kernel: raid5: Disk failure on sdf, disabling device. Operation 
-continuing on 5 devices
-kernel: md: recovery thread got woken up ...
-kernel: md2: resyncing spare disk sdd to replace failed disk
-kernel: md: updating md2 RAID superblock on device
-kernel: md: sdd [events: 00000062]<6>(write) sdd's sb offset: 35843584
-kernel: RAID5 conf printout:
-kernel:  --- rd:6 wd:5 fd:1
-kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:sdh
-kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 dev:sdb
-kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1 dev:sdc
-kernel:  disk 3, s:0, o:1, n:3 rd:3 us:1 dev:sdg
-kernel:  disk 4, s:0, o:1, n:4 rd:4 us:1 dev:sde
-kernel:  disk 5, s:0, o:0, n:5 rd:5 us:1 dev:sdf
-kernel: RAID5 conf printout:
-kernel:  --- rd:6 wd:5 fd:1
-kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:sdh
-kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 dev:sdb
-kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1 dev:sdc
-kernel:  disk 3, s:0, o:1, n:3 rd:3 us:1 dev:sdg
-kernel:  disk 4, s:0, o:1, n:4 rd:4 us:1 dev:sde
-kernel:  disk 5, s:0, o:0, n:5 rd:5 us:1 dev:sdf
-kernel: md: syncing RAID array md2
-kernel: md: minimum _guaranteed_ reconstruction speed: 100 KB/sec/disc.
-kernel: md: using maximum available idle IO bandwith (but not more than 
-100000 KB/sec) for reconstruction.
-kernel: md: using 124k window, over a total of 35843584 blocks.
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 779528
-kernel: raid5: Disk failure on sdc, disabling device. Operation 
-continuing on 4 devices
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 19008320
-kernel: raid5: Disk failure on sde, disabling device. Operation 
-continuing on 3 devices
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 19008320
-kernel: raid5: Disk failure on sdh, disabling device. Operation 
-continuing on 2 devices
-kernel: SCSI disk error : host 1 channel 0 id 3 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:30, sector 71687168
-kernel: md: write_disk_sb failed for device sdd
-kernel: md: (skipping faulty sdf )
-kernel: md: (skipping faulty sde )
-kernel: md: sdg [events: 00000062]<6>(write) sdg's sb offset: 35843584
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 0
-kernel: raid5: Disk failure on sdg, disabling device. Operation 
-continuing on 1 devices
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 8
-kernel: raid5: Disk failure on sdb, disabling device. Operation 
-continuing on 0 devices
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 0
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 0
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 32
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 248
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 248
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 248
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 248
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 64
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 992
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 992
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 992
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 992
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 744
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 1736
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 1736
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 1736
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 1736
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 1488
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 8
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 496
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 496
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 496
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 40
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 256
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 1240
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 1240
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 1240
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 72
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 1000
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 1984
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 1984
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 1984
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 752
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 1744
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 744
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 744
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 744
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 1496
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 16
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 1488
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 1488
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 1488
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 48
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 264
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 16
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 8
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 8
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 80
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 1008
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 256
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 256
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 256
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 1736
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 1752
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 1000
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 1000
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 1000
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 248
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 24
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 1744
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 1744
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 1744
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 992
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 272
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 504
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 504
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 504
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 1984
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 1016
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 1248
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 1248
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 1248
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 496
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 1760
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 1992
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 1992
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 1992
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 1240
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 32
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 752
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 752
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 752
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 760
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 280
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 1496
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 1496
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 1496
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 1504
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 1024
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 24
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 16
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 16
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 88
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 1768
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 264
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 264
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 264
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 1744
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 40
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 1008
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 1008
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 1008
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 256
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 288
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 1752
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 1256
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 1256
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 504
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 2000
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 1504
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 1504
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 1512
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 32
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 1752
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 1752
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 1000
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 1032
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 512
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 2000
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 2000
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 1248
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 760
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 24
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 24
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 96
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 272
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 512
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 512
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 1992
-kernel: SCSI disk error : host 1 channel 0 id 6 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:60, sector 1776
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 1256
-kernel: SCSI disk error : host 1 channel 0 id 2 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:20, sector 760
-kernel: SCSI disk error : host 1 channel 0 id 4 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:40, sector 760
-kernel: SCSI disk error : host 1 channel 0 id 7 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:70, sector 768
-kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 100ff
-kernel:  I/O error: dev 08:10, sector 1504
+Can we get this nailed down please?
 
 
 
 
-Thanks in advance.
-    Nicolas
+From: Badari Pulavarty <pbadari@us.ibm.com>
+
+Here is the patch to support large number of SCSI disks.  The patch is not
+fully cooked yet.  I was hoping to use this generate discussion.  I have
+not tested it fully on 2.6.0-test6-mm1.
+
+As I mentioned earlier, it maintains backward compatibility with existing
+sd major/minors - by attached all the new disks to last sd major.  And
+also, I made the number of disks to support as configurable - to avoid
+dependency on how many minor bits.
+
+
+
+ drivers/scsi/Kconfig |    8 ++++++++
+ drivers/scsi/sd.c    |   25 +++++++++++++++++++------
+ 2 files changed, 27 insertions(+), 6 deletions(-)
+
+diff -puN drivers/scsi/Kconfig~support-zillions-of-scsi-disks drivers/scsi/Kconfig
+--- 25/drivers/scsi/Kconfig~support-zillions-of-scsi-disks	2003-10-23 22:01:19.000000000 -0700
++++ 25-akpm/drivers/scsi/Kconfig	2003-10-23 22:01:19.000000000 -0700
+@@ -55,6 +55,14 @@ config BLK_DEV_SD
+ 	  In this case, do not compile the driver for your SCSI host adapter
+ 	  (below) as a module either.
+ 
++config MAX_SD_DISKS
++	int "Maximum number of SCSI disks to support (256-8192)"
++	depends on BLK_DEV_SD
++	default "256"
++	help
++	The maximum number SCSI disks to support. Default is 256.
++	Change this value if you want kernel to support lots of SCSI devices.
++
+ config CHR_DEV_ST
+ 	tristate "SCSI tape support"
+ 	depends on SCSI
+diff -puN drivers/scsi/sd.c~support-zillions-of-scsi-disks drivers/scsi/sd.c
+--- 25/drivers/scsi/sd.c~support-zillions-of-scsi-disks	2003-10-23 22:01:19.000000000 -0700
++++ 25-akpm/drivers/scsi/sd.c	2003-10-23 22:01:19.000000000 -0700
+@@ -62,6 +62,7 @@
+  */
+ #define SD_MAJORS	16
+ #define SD_DISKS	(SD_MAJORS << 4)
++#define TOTAL_SD_DISKS	CONFIG_MAX_SD_DISKS
+ 
+ /*
+  * Time out in seconds for disks and Magneto-opticals (which are slower).
+@@ -95,7 +96,7 @@ struct scsi_disk {
+ };
+ 
+ 
+-static unsigned long sd_index_bits[SD_DISKS / BITS_PER_LONG];
++static unsigned long sd_index_bits[TOTAL_SD_DISKS / BITS_PER_LONG];
+ static spinlock_t sd_index_lock = SPIN_LOCK_UNLOCKED;
+ 
+ static int sd_revalidate_disk(struct gendisk *disk);
+@@ -130,6 +131,9 @@ static int sd_major(int major_idx)
+ 		return SCSI_DISK1_MAJOR + major_idx - 1;
+ 	case 8 ... 15:
+ 		return SCSI_DISK8_MAJOR + major_idx - 8;
++#define MAX_IDX        (TOTAL_SD_DISKS >> 4)
++	case 16 ... MAX_IDX:
++		return SCSI_DISK15_MAJOR;
+ 	default:
+ 		BUG();
+ 		return 0;	/* shut up gcc */
+@@ -1318,8 +1322,8 @@ static int sd_probe(struct device *dev)
+ 		goto out_free;
+ 
+ 	spin_lock(&sd_index_lock);
+-	index = find_first_zero_bit(sd_index_bits, SD_DISKS);
+-	if (index == SD_DISKS) {
++	index = find_first_zero_bit(sd_index_bits, TOTAL_SD_DISKS);
++	if (index == TOTAL_SD_DISKS) {
+ 		spin_unlock(&sd_index_lock);
+ 		error = -EBUSY;
+ 		goto out_put;
+@@ -1334,15 +1338,24 @@ static int sd_probe(struct device *dev)
+ 	sdkp->openers = 0;
+ 
+ 	gd->major = sd_major(index >> 4);
+-	gd->first_minor = (index & 15) << 4;
++	if (index > SD_DISKS)
++		gd->first_minor = ((index - SD_DISKS) & 15) << 4;
++	else
++		gd->first_minor = (index & 15) << 4;
+ 	gd->minors = 16;
+ 	gd->fops = &sd_fops;
+ 
+-	if (index >= 26) {
++	if (index < 26) {
++		sprintf(gd->disk_name, "sd%c", 'a' + index % 26);
++	} else if (index < (26*27)) {
+ 		sprintf(gd->disk_name, "sd%c%c",
+ 			'a' + index/26-1,'a' + index % 26);
+ 	} else {
+-		sprintf(gd->disk_name, "sd%c", 'a' + index % 26);
++		const unsigned int m1 = (index/ 26 - 1) / 26 - 1;
++		const unsigned int m2 = (index / 26 - 1) % 26;
++		const unsigned int m3 = index % 26;
++		sprintf(gd->disk_name, "sd%c%c%c",
++			'a' + m1, 'a' + m2, 'a' + m3);
+ 	}
+ 
+ 	strcpy(gd->devfs_name, sdp->devfs_name);
+
+_
 
