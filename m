@@ -1,60 +1,34 @@
-From: Willem Riede <osst@riede.org>
-Subject: Re: [2.6 patch] drivers/scsi/osst.c: make code static
-Date: Tue, 22 Mar 2005 21:19:52 +0000
-Message-ID: <1111526392l.12349l.36l@serve.riede.org>
-References: <20050322142806.GR3982@stusta.de>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/scsi/osst.c: remove unused code
+Date: Tue, 22 Mar 2005 22:59:48 +0100
+Message-ID: <20050322215948.GP1948@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Received: from sccrmhc14.comcast.net ([204.127.202.59]:47860 "EHLO
-	sccrmhc11.comcast.net") by vger.kernel.org with ESMTP
-	id S261965AbVCVVT5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2005 16:19:57 -0500
-In-Reply-To: <20050322142806.GR3982@stusta.de> (from bunk@stusta.de on Tue
-	Mar 22 09:28:07 2005)
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:59660 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S262120AbVCVV7x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Mar 2005 16:59:53 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com, Adrian Bunk <bunk@stusta.de>
-Cc: Andrew Morton <akpm@osdl.org>, osst-users@lists.sourceforge.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: osst@riede.org
+Cc: osst-users@lists.sourceforge.net, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 03/22/2005 09:28:07 AM, Adrian Bunk wrote:
-> This patch makes needlessly global code static.
-> 
-> Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Thanks to both the Coverity checker and GNU gcc, it was found that this 
+variable is completely unused.
 
-James, I agree with this, can you put it in BK, please?
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-Signed-off-by: Willem Riede <osst@riede.org>
+--- linux-2.6.12-rc1-mm1-full/drivers/scsi/osst.c.old	2005-03-22 21:04:36.000000000 +0100
++++ linux-2.6.12-rc1-mm1-full/drivers/scsi/osst.c	2005-03-22 22:09:32.000000000 +0100
+@@ -4770,9 +4770,6 @@ static int os_scsi_tape_close(struct ino
+ {
+ 	int		      result = 0;
+ 	struct osst_tape    * STp    = filp->private_data;
+-	struct scsi_request * SRpnt  = NULL;
+-
+-	if (SRpnt) scsi_release_request(SRpnt);
  
-> ---
-> 
-> This patch was already sent on:
-> - 28 Feb 2005
-> 
->  drivers/scsi/osst.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> --- linux-2.6.11-rc4-mm1-full/drivers/scsi/osst.c.old	2005-02-28 19:36:05.000000000 +0100
-> +++ linux-2.6.11-rc4-mm1-full/drivers/scsi/osst.c	2005-02-28 19:36:25.000000000 +0100
-> @@ -24,7 +24,7 @@
->  */
->  
->  static const char * cvsid = "$Id: osst.c,v 1.73 2005/01/01 21:13:34 wriede Exp $";
-> -const char * osst_version = "0.99.3";
-> +static const char * osst_version = "0.99.3";
->  
->  /* The "failure to reconnect" firmware bug */
->  #define OSST_FW_NEED_POLL_MIN 10601 /*(107A)*/
-> @@ -170,7 +170,7 @@
->  static int osst_probe(struct device *);
->  static int osst_remove(struct device *);
->  
-> -struct scsi_driver osst_template = {
-> +static struct scsi_driver osst_template = {
->  	.owner			= THIS_MODULE,
->  	.gendrv = {
->  		.name		=  "osst",
-> 
-
+ 	if (STp->door_locked == ST_LOCKED_AUTO)
+ 		do_door_lock(STp, 0);
 
