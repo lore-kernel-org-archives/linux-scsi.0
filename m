@@ -1,28 +1,28 @@
 From: maximilian attems <janitor@sternwelten.at>
-Subject: [patch-kj] remove old ifdef'd code from aic7xxx_osm.h
-Date: Mon, 21 Jun 2004 20:17:52 +0200
+Subject: [patch-kj] remove old ifdef'd code from aic7xxx_osm_pci.c
+Date: Mon, 21 Jun 2004 20:19:33 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040621181752.GU1545@sputnik.stro.at>
+Message-ID: <20040621181933.GV1545@sputnik.stro.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:64434 "EHLO
-	baikonur.stro.at") by vger.kernel.org with ESMTP id S266378AbUFUSRv
+Received: from baikonur.stro.at ([213.239.196.228]:32676 "EHLO
+	baikonur.stro.at") by vger.kernel.org with ESMTP id S264422AbUFUSTd
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Jun 2004 14:17:51 -0400
+	Mon, 21 Jun 2004 14:19:33 -0400
 Received: from localhost (localhost [127.0.0.1])
-	by baikonur.stro.at (Postfix) with ESMTP id 93E7E5C0A4
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:17:50 +0200 (CEST)
+	by baikonur.stro.at (Postfix) with ESMTP id 537E65C0A4
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:19:32 +0200 (CEST)
 Received: from baikonur.stro.at ([127.0.0.1])
 	by localhost (baikonur [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 30589-03 for <linux-scsi@vger.kernel.org>;
-	Mon, 21 Jun 2004 20:17:49 +0200 (CEST)
+	with ESMTP id 30589-04 for <linux-scsi@vger.kernel.org>;
+	Mon, 21 Jun 2004 20:19:30 +0200 (CEST)
 Received: from sputnik (unknown [62.47.144.54])
-	by baikonur.stro.at (Postfix) with ESMTP id 4E46C5C002
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:17:49 +0200 (CEST)
+	by baikonur.stro.at (Postfix) with ESMTP id EF9E35C002
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 20:19:29 +0200 (CEST)
 Received: from max by sputnik with local (Exim 4.32)
-	id 1BcTMe-0004fq-UJ
-	for linux-scsi@vger.kernel.org; Mon, 21 Jun 2004 20:17:52 +0200
+	id 1BcTOH-0004fx-GT
+	for linux-scsi@vger.kernel.org; Mon, 21 Jun 2004 20:19:33 +0200
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -31,205 +31,234 @@ To: linux-scsi@vger.kernel.org
  Patches to remove some old ifdefs.
  kill compat cruft like #define ahd_pci_set_dma_mask pci_set_dma_mask
 
- Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
+Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
+
+
 
 ---
 
- linux-2.6.7-max/drivers/scsi/aic7xxx/aic7xxx_osm.h |   81 +--------------------
- 1 files changed, 6 insertions(+), 75 deletions(-)
+ linux-2.6.7-max/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c |  103 -----------------
+ 1 files changed, 5 insertions(+), 98 deletions(-)
 
-diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.h~remove-old-ifdefs-aic7xxx_osm.h drivers/scsi/aic7xxx/aic7xxx_osm.h
---- linux-2.6.7/drivers/scsi/aic7xxx/aic7xxx_osm.h~remove-old-ifdefs-aic7xxx_osm.h	2004-06-18 09:14:33.000000000 +0200
-+++ linux-2.6.7-max/drivers/scsi/aic7xxx/aic7xxx_osm.h	2004-06-18 09:14:33.000000000 +0200
-@@ -70,17 +70,9 @@
- #include <asm/byteorder.h>
- #include <asm/io.h>
+diff -puN drivers/scsi/aic7xxx/aic7xxx_osm_pci.c~remove-old-ifdefs-aic7xxx_osm_pci drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
+--- linux-2.6.7/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c~remove-old-ifdefs-aic7xxx_osm_pci	2004-06-18 09:14:37.000000000 +0200
++++ linux-2.6.7-max/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	2004-06-18 09:14:37.000000000 +0200
+@@ -41,12 +41,6 @@
  
--#ifndef KERNEL_VERSION
--#define KERNEL_VERSION(x,y,z) (((x)<<16)+((y)<<8)+(z))
+ #include "aic7xxx_osm.h"
+ 
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+-struct pci_device_id
+-{
+-};
 -#endif
 -
+ static int	ahc_linux_pci_dev_probe(struct pci_dev *pdev,
+ 					const struct pci_device_id *ent);
+ static int	ahc_linux_pci_reserve_io_region(struct ahc_softc *ahc,
+@@ -54,7 +48,6 @@ static int	ahc_linux_pci_reserve_io_regi
+ static int	ahc_linux_pci_reserve_mem_region(struct ahc_softc *ahc,
+ 						 u_long *bus_addr,
+ 						 uint8_t **maddr);
 -#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- #include <linux/interrupt.h> /* For tasklet support. */
- #include <linux/config.h>
- #include <linux/slab.h>
--#else
--#include <linux/malloc.h>
--#endif
+ static void	ahc_linux_pci_dev_remove(struct pci_dev *pdev);
  
- /* Core SCSI definitions */
- #define AIC_LIB_PREFIX ahc
-@@ -156,11 +148,6 @@ extern Scsi_Host_Template aic7xxx_driver
+ /* We do our own ID filtering.  So, grab all SCSI storage class devices. */
+@@ -102,13 +95,12 @@ ahc_linux_pci_dev_remove(struct pci_dev 
+ 	}
+ 	ahc_list_unlock(&l);
+ }
+-#endif /* !LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0) */
  
- /***************************** Bus Space/DMA **********************************/
- 
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,2,17)
--typedef dma_addr_t bus_addr_t;
--#else
--typedef uint32_t bus_addr_t;
--#endif
- typedef uint32_t bus_size_t;
- 
- typedef enum {
-@@ -175,7 +162,7 @@ typedef union {
- 
- typedef struct bus_dma_segment
+ static int
+ ahc_linux_pci_dev_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  {
--	bus_addr_t	ds_addr;
-+	dma_addr_t	ds_addr;
- 	bus_size_t	ds_len;
- } bus_dma_segment_t;
+ 	char		 buf[80];
+-	bus_addr_t	 mask_39bit;
++	dma_addr_t	 mask_39bit;
+ 	struct		 ahc_softc *ahc;
+ 	ahc_dev_softc_t	 pci;
+ 	struct		 ahc_pci_identity *entry;
+@@ -152,34 +144,31 @@ ahc_linux_pci_dev_probe(struct pci_dev *
+ 	ahc = ahc_alloc(NULL, name);
+ 	if (ahc == NULL)
+ 		return (-ENOMEM);
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+ 	if (pci_enable_device(pdev)) {
+ 		ahc_free(ahc);
+ 		return (-ENODEV);
+ 	}
+ 	pci_set_master(pdev);
  
-@@ -189,11 +176,11 @@ typedef struct ahc_linux_dma_tag* bus_dm
- 
- struct ahc_linux_dmamap
- {
--	bus_addr_t	bus_addr;
-+	dma_addr_t	bus_addr;
- };
- typedef struct ahc_linux_dmamap* bus_dmamap_t;
- 
--typedef int bus_dma_filter_t(void*, bus_addr_t);
-+typedef int bus_dma_filter_t(void*, dma_addr_t);
- typedef void bus_dmamap_callback_t(void *, bus_dma_segment_t *, int, int);
- 
- #define BUS_DMA_WAITOK		0x0
-@@ -210,7 +197,7 @@ typedef void bus_dmamap_callback_t(void 
- 
- int	ahc_dma_tag_create(struct ahc_softc *, bus_dma_tag_t /*parent*/,
- 			   bus_size_t /*alignment*/, bus_size_t /*boundary*/,
--			   bus_addr_t /*lowaddr*/, bus_addr_t /*highaddr*/,
-+			   dma_addr_t /*lowaddr*/, dma_addr_t /*highaddr*/,
- 			   bus_dma_filter_t*/*filter*/, void */*filterarg*/,
- 			   bus_size_t /*maxsize*/, int /*nsegments*/,
- 			   bus_size_t /*maxsegsz*/, int /*flags*/,
-@@ -292,11 +279,7 @@ ahc_scb_timer_reset(struct scb *scb, u_i
+-	mask_39bit = (bus_addr_t)0x7FFFFFFFFFULL;
+-	if (sizeof(bus_addr_t) > 4
++	mask_39bit = (dma_addr_t)0x7FFFFFFFFFULL;
++	if (sizeof(dma_addr_t) > 4
+ 	 && ahc_linux_get_memsize() > 0x80000000
+-	 && ahc_pci_set_dma_mask(pdev, mask_39bit) == 0) {
++	 && pci_set_dma_mask(pdev, mask_39bit) == 0) {
+ 		ahc->flags |= AHC_39BIT_ADDRESSING;
+ 		ahc->platform_data->hw_dma_mask = mask_39bit;
+ 	} else {
+-		if (ahc_pci_set_dma_mask(pdev, 0xFFFFFFFF)) {
++		if (pci_set_dma_mask(pdev, 0xFFFFFFFF)) {
+ 			printk(KERN_WARNING "aic7xxx: No suitable DMA available.\n");
+                 	return (-ENODEV);
+ 		}
+ 		ahc->platform_data->hw_dma_mask = 0xFFFFFFFF;
+ 	}
+-#endif
+ 	ahc->dev_softc = pci;
+ 	error = ahc_pci_config(ahc, entry);
+ 	if (error != 0) {
+ 		ahc_free(ahc);
+ 		return (-error);
+ 	}
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+ 	pci_set_drvdata(pdev, ahc);
+ 	if (aic7xxx_detect_complete) {
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
+@@ -190,38 +179,13 @@ ahc_linux_pci_dev_probe(struct pci_dev *
+ 		return (-ENODEV);
+ #endif
+ 	}
+-#endif
+ 	return (0);
  }
  
- /***************************** SMP support ************************************/
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,17)
- #include <linux/spinlock.h>
--#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,1,93)
--#include <linux/smp.h>
--#endif
- 
- #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0) || defined(SCSI_HAS_HOST_LOCK))
- #define AHC_SCSI_HAS_HOST_LOCK 1
-@@ -515,11 +498,8 @@ typedef enum {
- 
- struct scb_platform_data {
- 	struct ahc_linux_device	*dev;
--	bus_addr_t		 buf_busaddr;
-+	dma_addr_t		 buf_busaddr;
- 	uint32_t		 xfer_len;
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0)
--	uint32_t		 resid;		/* Transfer residual */
--#endif
- 	uint32_t		 sense_resid;	/* Auto-Sense residual */
- 	ahc_linux_scb_flags	 flags;
- };
-@@ -549,9 +529,7 @@ struct ahc_platform_data {
- 	struct ahc_completeq	 completeq;
- 
- 	spinlock_t		 spin_lock;
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- 	struct tasklet_struct	 runq_tasklet;
--#endif
- 	u_int			 qfrozen;
- 	pid_t			 dv_pid;
- 	struct timer_list	 completeq_timer;
-@@ -567,7 +545,7 @@ struct ahc_platform_data {
- 	uint32_t		 irq;		/* IRQ for this adapter */
- 	uint32_t		 bios_address;
- 	uint32_t		 mem_busaddr;	/* Mem Base Addr */
--	bus_addr_t		 hw_dma_mask;
-+	dma_addr_t		 hw_dma_mask;
- 	ahc_linux_softc_flags	 flags;
- };
- 
-@@ -819,9 +797,7 @@ ahc_list_unlock(unsigned long *flags)
- #define PCIR_SUBVEND_0	0x2c
- #define PCIR_SUBDEV_0	0x2e
- 
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- extern struct pci_driver aic7xxx_pci_driver;
--#endif
- 
- typedef enum
+ int
+ ahc_linux_pci_init(void)
  {
-@@ -954,25 +930,6 @@ ahc_flush_device_writes(struct ahc_softc
- 	ahc_inb(ahc, INTSTAT);
- }
- 
--#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,3,0)
--#define pci_map_sg(pdev, sg_list, nseg, direction) (nseg)
--#define pci_unmap_sg(pdev, sg_list, nseg, direction)
--#define sg_dma_address(sg) (VIRT_TO_BUS((sg)->address))
--#define sg_dma_len(sg) ((sg)->length)
--#define pci_map_single(pdev, buffer, bufflen, direction) \
--	(VIRT_TO_BUS(buffer))
--#define pci_unmap_single(pdev, buffer, buflen, direction)
--#endif
--
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,3)
--#define ahc_pci_set_dma_mask pci_set_dma_mask
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+ 	return (pci_module_init(&aic7xxx_pci_driver));
 -#else
--/*
-- * Always "return" 0 for success.
-- */
--#define ahc_pci_set_dma_mask(dev_softc, mask)  			\
--	(((dev_softc)->dma_mask = mask) && 0)
--#endif
- /**************************** Proc FS Support *********************************/
- #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
- int	ahc_linux_proc_info(char *, char **, off_t, int, int, int);
-@@ -1080,35 +1037,13 @@ u_long ahc_get_transfer_length(struct sc
- static __inline
- int ahc_get_transfer_dir(struct scb *scb)
- {
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,40)
- 	return (scb->io_ctx->sc_data_direction);
--#else
--	if (scb->io_ctx->bufflen == 0)
--		return (CAM_DIR_NONE);
+-	struct pci_dev *pdev;
+-	u_int class;
+-	int found;
 -
--	switch(scb->io_ctx->cmnd[0]) {
--	case 0x08:  /* READ(6)  */
--	case 0x28:  /* READ(10) */
--	case 0xA8:  /* READ(12) */
--		return (CAM_DIR_IN);
--        case 0x0A:  /* WRITE(6)  */
--        case 0x2A:  /* WRITE(10) */
--        case 0xAA:  /* WRITE(12) */
--		return (CAM_DIR_OUT);
--        default:
--		return (CAM_DIR_NONE);
--        }
+-	/* If we don't have a PCI bus, we can't find any adapters. */
+-	if (pci_present() == 0)
+-		return (0);
+-
+-	found = 0;
+-	pdev = NULL;
+-	class = PCI_CLASS_STORAGE_SCSI << 8;
+-	while ((pdev = pci_find_class(class, pdev)) != NULL) {
+-		ahc_dev_softc_t pci;
+-		int error;
+-
+-		pci = pdev;
+-		error = ahc_linux_pci_dev_probe(pdev, /*pci_devid*/NULL);
+-		if (error == 0)
+-			found++;
+-	}
+-	return (found);
 -#endif
  }
  
- static __inline
- void ahc_set_residual(struct scb *scb, u_long resid)
- {
+ void
+@@ -236,22 +200,11 @@ ahc_linux_pci_reserve_io_region(struct a
+ 	if (aic7xxx_allow_memio == 0)
+ 		return (ENOMEM);
+ 
 -#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
- 	scb->io_ctx->resid = resid;
+ 	*base = pci_resource_start(ahc->dev_softc, 0);
 -#else
--	scb->platform_data->resid = resid;
+-	*base = ahc_pci_read_config(ahc->dev_softc, PCIR_MAPS, 4);
+-	*base &= PCI_BASE_ADDRESS_IO_MASK;
 -#endif
+ 	if (*base == 0)
+ 		return (ENOMEM);
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+-	if (check_region(*base, 256) != 0)
+-		return (ENOMEM);
+-	request_region(*base, 256, "aic7xxx");
+-#else
+ 	if (request_region(*base, 256, "aic7xxx") == 0)
+ 		return (ENOMEM);
+-#endif
+ 	return (0);
  }
  
- static __inline
-@@ -1120,11 +1055,7 @@ void ahc_set_sense_residual(struct scb *
- static __inline
- u_long ahc_get_residual(struct scb *scb)
- {
+@@ -266,29 +219,18 @@ ahc_linux_pci_reserve_mem_region(struct 
+ 	int	error;
+ 
+ 	error = 0;
 -#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
- 	return (scb->io_ctx->resid);
+ 	start = pci_resource_start(ahc->dev_softc, 1);
+ 	base_page = start & PAGE_MASK;
+ 	base_offset = start - base_page;
 -#else
--	return (scb->platform_data->resid);
+-	start = ahc_pci_read_config(ahc->dev_softc, PCIR_MAPS+4, 4);
+-	base_offset = start & PCI_BASE_ADDRESS_MEM_MASK;
+-	base_page = base_offset & PAGE_MASK;
+-	base_offset -= base_page;
 -#endif
+ 	if (start != 0) {
+ 		*bus_addr = start;
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+ 		if (request_mem_region(start, 0x1000, "aic7xxx") == 0)
+ 			error = ENOMEM;
+-#endif
+ 		if (error == 0) {
+ 			*maddr = ioremap_nocache(base_page, base_offset + 256);
+ 			if (*maddr == NULL) {
+ 				error = ENOMEM;
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+ 				release_mem_region(start, 0x1000);
+-#endif
+ 			} else
+ 				*maddr += base_offset;
+ 		}
+@@ -332,10 +274,8 @@ ahc_pci_map_registers(struct ahc_softc *
+ 			       ahc_get_pci_slot(ahc->dev_softc),
+ 			       ahc_get_pci_function(ahc->dev_softc));
+ 			iounmap((void *)((u_long)maddr & PAGE_MASK));
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+ 			release_mem_region(ahc->platform_data->mem_busaddr,
+ 					   0x1000);
+-#endif
+ 			ahc->bsh.maddr = NULL;
+ 			maddr = NULL;
+ 		} else
+@@ -388,38 +328,5 @@ ahc_pci_map_int(struct ahc_softc *ahc)
+ void
+ ahc_power_state_change(struct ahc_softc *ahc, ahc_power_state new_state)
+ {
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+ 	pci_set_power_state(ahc->dev_softc, new_state);
+-#else
+-	uint32_t cap;
+-	u_int cap_offset;
+-
+-	/*
+-	 * Traverse the capability list looking for
+-	 * the power management capability.
+-	 */
+-	cap = 0;
+-	cap_offset = ahc_pci_read_config(ahc->dev_softc,
+-					 PCIR_CAP_PTR, /*bytes*/1);
+-	while (cap_offset != 0) {
+-
+-		cap = ahc_pci_read_config(ahc->dev_softc,
+-					  cap_offset, /*bytes*/4);
+-		if ((cap & 0xFF) == 1
+-		 && ((cap >> 16) & 0x3) > 0) {
+-			uint32_t pm_control;
+-
+-			pm_control = ahc_pci_read_config(ahc->dev_softc,
+-							 cap_offset + 4,
+-							 /*bytes*/4);
+-			pm_control &= ~0x3;
+-			pm_control |= new_state;
+-			ahc_pci_write_config(ahc->dev_softc,
+-					     cap_offset + 4,
+-					     pm_control, /*bytes*/2);
+-			break;
+-		}
+-		cap_offset = (cap >> 8) & 0xFF;
+-	}
+-#endif 
  }
- 
- static __inline
 
 _
