@@ -1,42 +1,35 @@
-From: "Frank Borich" <Frank_Borich@us.xyratex.com>
-Subject: Patch
-Date: Mon, 3 Nov 2003 14:45:46 -0800
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Patch
+Date: Mon, 3 Nov 2003 15:00:25 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <47F3C2BE74738E4683574107469DFA201DF578@XYUSEX01.xyus.xyratex.com>
+Message-ID: <20031103150025.A9358@beaverton.ibm.com>
+References: <47F3C2BE74738E4683574107469DFA201DF578@XYUSEX01.xyus.xyratex.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [65.203.33.17] ([65.203.33.17]:40937 "EHLO
-	XYUSEX01.xyus.xyratex.com") by vger.kernel.org with ESMTP
-	id S262782AbTKCWps convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2003 17:45:48 -0500
-content-class: urn:content-classes:message
+Received: from e6.ny.us.ibm.com ([32.97.182.106]:41459 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S263472AbTKCXBI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Nov 2003 18:01:08 -0500
+Content-Disposition: inline
+In-Reply-To: <47F3C2BE74738E4683574107469DFA201DF578@XYUSEX01.xyus.xyratex.com>; from Frank_Borich@us.xyratex.com on Mon, Nov 03, 2003 at 02:45:46PM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: David Lethe <David_Lethe@us.xyratex.com>, Bill Krempp <Bill_Krempp@us.xyratex.com>
+To: Frank Borich <Frank_Borich@us.xyratex.com>
+Cc: linux-scsi@vger.kernel.org, David Lethe <David_Lethe@us.xyratex.com>, Bill Krempp <Bill_Krempp@us.xyratex.com>
 
-Hi,
+On Mon, Nov 03, 2003 at 02:45:46PM -0800, Frank Borich wrote:
 
-I work for a Xyratex International.  We are currently manufacturing a
-FC-SATA RAID subsystem called Kashi-II.  We sell only to OEMs, hence we
-have run into a problem involving scsi_scan.c and the "device_list[]".
-We need to set the BLIST_SPARSELUN flag to support non-contiguous lun
-numbering.  Because we sell only to OEMs, the Vendor ID will change.
-The logic in scsi_scan.c will not handle a wild card or "NULL" for the
-Vendor ID.  Can we 
-add code to allow a wildcard for this?  The Model "Kashi-II" will remain
-constant across all OEMs.  If we cannot do this, each OEM will have to
-submit an entry to this list for 2.4.x support.
+> numbering.  Because we sell only to OEMs, the Vendor ID will change.
+> The logic in scsi_scan.c will not handle a wild card or "NULL" for the
+> Vendor ID.  Can we 
+> add code to allow a wildcard for this?  The Model "Kashi-II" will remain
 
-Thanks in advance for your time!    
+Can you instead modify the device to return as SCSI-3?
 
-Frank Borich
-------------------------------------------------------------------
-Systems Engineer
-Direct 630 654 6089
-Fax 630 325 2513
-e-mail frank_borich@us.xyratex.com
- 
+That is a much better solution. 
 
+And, for 2.6 we will only use REPORT LUNS if the device is SCSI-3 or up.
+
+You could certainly submit a patch for 2.4 and 2.6 to wild card the vendor
+field.
+
+-- Patrick Mansfield
