@@ -1,50 +1,72 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: Why /dev/sdc1 doesn't show up...
-Date: Tue, 19 Nov 2002 16:52:25 +1100
+From: Andre Hedrick <andre@pyxtechnologies.com>
+Subject: linux-2.4.18-modified-scsi-h.patch
+Date: Mon, 18 Nov 2002 22:16:02 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021119055636.94C182C088@lists.samba.org>
+Message-ID: <Pine.LNX.4.10.10211182138310.2779-200000@master.linux-ide.org>
+References: <20021118171446.A28459@eng2.beaverton.ibm.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed; BOUNDARY="1430322656-1953087833-1037686562=:2779"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-reply-to: Your message of "Tue, 19 Nov 2002 10:49:21 +1100."
+In-Reply-To: <20021118171446.A28459@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alexander Viro <viro@math.psu.edu>
-Cc: Doug Ledford <dledford@redhat.com>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>
+To: Douglas Gilbert <dougg@torque.net>
+Cc: "J. E. J. Bottomley" <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@transmeta.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> right).  Or you can run a notifier on "enlivening" a module: I'd hoped
-> to avoid that.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
 
-Actually, after some thought, this seems to clearly be the Right
-Thing, because it solves another existing race.  Consider a module
-which does:
+--1430322656-1953087833-1037686562=:2779
+Content-Type: text/plain; charset=us-ascii
 
-	if (!register_foo(&my_foo))
-		goto cleanup;
-	if (!create_proc_entry(&my_entry))
-		goto cleanup_foo;
 
-If register_foo() calls /sbin/hotplug, the module can still fail to
-load and /sbin/hotplug is called for something that doesn't exist.
-With the new module loader, you can also have /sbin/hotplug try to
-access the module before it's gone live, which will fail to prevent
-the "using before we know module won't fail init" race.
+Greetings Doug et al.
 
-Now, if you run /sbin/hotplug out of a notifier which is fired when
-the module actually goes live, this problem vanishes.  It also means
-we can block module unload until /sbin/hotplug is run.
+Please consider the addition of this simple void ptr to the scsi_request
+struct.  The addition of this simple void pointer allows one to map any
+and all request execution caller the facility to search for a specific
+operation without having to run in circles.  Hunting for these details
+over the global device list of all HBA's is silly and one of the key
+reasons why there error recovery path is so painful.
 
-The part that makes this feel like the Right Thing is that adding to
-init/main.c:
 
-	/* THIS_MODULE == NULL */
-	notifier_call_chain(&module_notifiers, MODULE_LIVE, NULL);
+Scsi_Request    *req = sc_cmd->sc_request;
+blah_blah_t     *trace = NULL;
 
-means that /sbin/hotplug is called for everything which was registered
-at boot.  (We may not want to do this, but in general the symmetry
-seems really nice).
+trace = (blah_blah_t *)req->trace_ptr;
 
-[ Note: the logic for /sbin/hotplug applies to any similar "publicity"
-  function which promises that something now exists. ]
 
-Al, thoughts?
-Rusty.
---
-  Anyone who quotes me in their sig is an idiot. -- Rusty Russell.
+Therefore the specific transport invoking operations via the midlayer will
+have the ablity to track and trace any operation.
+
+It will save everyone headaches.
+
+Cheers,
+
+
+Andre Hedrick, CTO & Founder 
+iSCSI Software Solutions Provider
+http://www.PyXTechnologies.com/
+
+--1430322656-1953087833-1037686562=:2779
+Content-Type: text/plain; charset=us-ascii; name="linux-2.4.18-modified-scsi-h.patch"
+Content-Transfer-Encoding: base64
+Content-ID: <Pine.LNX.4.10.10211182216020.2779@master.linux-ide.org>
+Content-Description: 
+Content-Disposition: attachment; filename="linux-2.4.18-modified-scsi-h.patch"
+
+LS0tIGxpbnV4L2RyaXZlcnMvc2NzaS9zY3NpLmgub3JpZwkyMDAyLTEwLTMx
+IDAxOjQ1OjM5LjAwMDAwMDAwMCAtMDgwMA0KKysrIGxpbnV4L2RyaXZlcnMv
+c2NzaS9zY3NpLmgJMjAwMi0xMC0zMSAwMTo0NjozMS4wMDAwMDAwMDAgLTA4
+MDANCkBAIC02NjcsOCArNjY3LDExIEBADQogCXVuc2lnbmVkIHNob3J0IHNy
+X3NnbGlzdF9sZW47CS8qIHNpemUgb2YgbWFsbG9jJ2Qgc2NhdHRlci1nYXRo
+ZXIgbGlzdCAqLw0KIAl1bnNpZ25lZCBzcl91bmRlcmZsb3c7CS8qIFJldHVy
+biBlcnJvciBpZiBsZXNzIHRoYW4NCiAJCQkJICAgdGhpcyBhbW91bnQgaXMg
+dHJhbnNmZXJyZWQgKi8NCisJdm9pZCAqdHJhY2VfcHRyOwkvKiBjYXBhYmxl
+IG9mIGNtZC1jbW5kLWVycm9yIHRyYWNpbmcgKi8NCiB9Ow0KIA0KKyNkZWZp
+bmUgTU9ESUZJRURfU0NTSV9IDQorDQogLyoNCiAgKiBGSVhNRShlcmljKSAt
+IG9uZSBvZiB0aGUgZ3JlYXQgcmVncmV0cyB0aGF0IEkgaGF2ZSBpcyB0aGF0
+IEkgZmFpbGVkIHRvIGRlZmluZQ0KICAqIHRoZXNlIHN0cnVjdHVyZSBlbGVt
+ZW50cyBhcyBzb21ldGhpbmcgbGlrZSBzY19mb28gaW5zdGVhZCBvZiBmb28u
+ICBUaGlzIHdvdWxkDQo=
+--1430322656-1953087833-1037686562=:2779--
