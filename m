@@ -1,62 +1,96 @@
-From: Doug Ledford <dledford@redhat.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: [PATCH] SCSI Core patches
-Date: Tue, 7 Jan 2003 14:44:45 -0500
+Date: Tue, 7 Jan 2003 12:33:01 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030107194445.GC11402@redhat.com>
-References: <3E1ADC9A.6090800@splentec.com> <20030107102127.B15528@beaverton.ibm.com>
+Message-ID: <20030107123301.A16378@beaverton.ibm.com>
+References: <3E1ADC9A.6090800@splentec.com> <20030107102127.B15528@beaverton.ibm.com> <3E1B2934.8060805@splentec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20030107102127.B15528@beaverton.ibm.com>
+In-Reply-To: <3E1B2934.8060805@splentec.com>; from luben@splentec.com on Tue, Jan 07, 2003 at 02:23:32PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Luben Tuikov <luben@splentec.com>, linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben@splentec.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Jan 07, 2003 at 10:21:27AM -0800, Patrick Mansfield wrote:
-> On Tue, Jan 07, 2003 at 08:56:42AM -0500, Luben Tuikov wrote:
-> > The three incremental patches which I posted got mutilated
-> > when pasted into Mozilla from the X clipboard buffer.
-> > (TAB char got 2 spaces.)
+On Tue, Jan 07, 2003 at 02:23:32PM -0500, Luben Tuikov wrote:
+> Patrick Mansfield wrote:
 > > 
-> > The patches are also available, in pristine form, here:
-> > http://www.splentec.com/~luben/patches.html
+> > For use with multi-path, it is very useful to have the path in the
+> > scsi_cmnd, and generally to not have the lldd's know about the scsi_device
+> > at all, such that we can pick a path, and send a scsi_cmnd to a lldd.
 > 
-> For use with multi-path, it is very useful to have the path in the
-> scsi_cmnd, and generally to not have the lldd's know about the scsi_device
-> at all, such that we can pick a path, and send a scsi_cmnd to a lldd.
+> It shouldn't know about the path either. :-)
+> No one is forcing LLDD to peek into the device struct (but it will
+> have to, see below).
+
+Removing channel/target/lun from scsi_cmnd forces the LLDD to use the
+scsi_device (scmd->device-> channel/id/lun).
+
+> > Putting path information only in scsi_device makes it hard to do
+> > multi-path below (or even in) the block layer, and makes it hard to
+> > multi-path non block devices (like tape).
+> > 
+> > I would prefer we keep the current scsi_cmnd with its
+> > host/channel/target[id]/lun.
 > 
-> Putting path information only in scsi_device makes it hard to do
-> multi-path below (or even in) the block layer, and makes it hard to
-> multi-path non block devices (like tape).
+> For multipathing there should be *no* distinction between
+> char and block devices sitting in fabric or on a SCSI Bus.
 
-Not true at all.  This is completely an implementation issue.  If you 
-implement scsi multipath in certain ways, then this is true.  My preferred 
-implementation for something like this wouldn't have this problem at all.  
-My preferred implementation would have one scsi_device struct per path, 
-but would only register the first/primary device with the block layer (or 
-char layer as the case may be), and during scsi_scan detection the 
-duplicate paths would be added to the primary path by using a list_struct 
-item to link the devices.  Then you pick the path by picking the device 
-struct you need.  The primary path goes away, you change the device 
-registration to point to a new primary path scsi_device struct.  So I 
-don't see the difficulty at all myself.
+Agreed. Although retries must be handled differently for sequential and
+direct-access devices.
 
-> I would prefer we keep the current scsi_cmnd with its
-> host/channel/target[id]/lun.
+> Conceptually you'd want to say SEND(C,D), where C is the
+> command and D is the device, or if the device D is a property
+> of the command C, you can do SEND(C), and the device is C::D.
+> 
+> A path or paths to a device is a property of the device D.
+>  From any point of view (user, kernel), a command C needs to
+> be sent to the device D, or simply the command C needs to
+> be sent, (where the device is C::D).  The SEND() will check
+> the paths which are property of the device and will
+> perform the desired action to send it (C) along the chosen
+> path P.  I.e. D::A is a collection of paths P, (0/1:N), and is a
+> property of the device, thus you get C::D::A.
+> This is object oriented design.
 
-One of the goals of this change is to eliminate scsi_build_commandblocks() 
-entirely and do away with keeping a per-device list of pre-allocated and 
-pre-filled in commands.  We could put the data items back into the struct, 
-but that would then mean that scsi_get_command() would have to init the 
-items from the device struct in question, then the lldd would init their 
-command from these items.  In short, it would save us having to change all 
-the lldd (which Luben has already done), but would cost us double init'ing 
-items for no real purpose.  I would prefer to leave them out.
+In order to allow selection of a path, we should abstract out the path
+information, not lump it into a single pointer reference (i.e. not
+scmd->device->lun) spread throughout the scsi mid and LLDD. If we had a
+single macro or function to access the host/channel/target/lun, the issue
+goes away, as there is only one point that we have to change for
+multi-path. But if they are hardcoded into scsi_device, I'll have to
+revert the changes for multi-path support.
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+Again, this is true whether we have multi-path support in the scsi
+mid-level code or in the block layer.
+
+> Currently, host/channel/target/lun *is* D::A all in *one*,
+> i.e. it is a device and a single path in one ugly lump
+> in the command struct. Thus, the more reason to get rid of
+> it (at least partially).
+
+For scsi_device yes, but the LLDD does not have to look at scsi_device to
+send a command, it can currently use the values found in scsi_cmnd.
+
+> There are other advantages to these patches:
+> 1. No redundant data (OOD).
+> 2. Transparent command struct allocation/deallocaton
+>     via scsi_get_command() / scsi_put_command().
+> 3. Improved queuing logic for SCSI Core, not yet ready,
+>     I'm just waiting for more input on this current stuff.
+
+I don't see how 2) and 3) are tied into your changes. I can understand
+your changes leading to fewer changes for a common pool of all
+scsi_cmnd's.  But, we could also have a single pool if the
+host/channel/target/lun were set separtely from the allocation.
+
+> There must be enough research papers on multipathing, and
+> OS IO books should have a chapter on it. I just don't
+> have time to go to my alma mater's sci. library and do the
+> research since I do all this in my spare time.
+
+I haven't found any good research papers, if anyone knows of some please
+let me know (at least searching online, I should look in a real library).
+
+-- Patrick Mansfield
