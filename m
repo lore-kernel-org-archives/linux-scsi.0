@@ -1,77 +1,72 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: smp dead lock of io_request_lock/queue_lock patch
-Date: Tue, 20 Jan 2004 08:53:36 +0100
+From: Andre Hedrick <andre@linux-ide.org>
+Subject: Re: AIC7xxx kernel problem with 2.4.2[234] kernels
+Date: Tue, 20 Jan 2004 00:30:14 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040120075336.GK16085@suse.de>
-References: <OF317B32D5.C8C681CB-ONC1256E19.005066CF-C1256E19.00538DEF@de.ibm.com> <20040112151230.GB5844@devserv.devel.redhat.com> <20040112194829.A7078@infradead.org> <1073937102.3114.300.camel@compaq.xsintricity.com> <Pine.LNX.4.58L.0401131843390.6737@logos.cnet> <1074345000.13198.25.camel@compaq.xsintricity.com> <20040117165828.A4977@infradead.org> <1074366452.13198.48.camel@compaq.xsintricity.com>
+Message-ID: <Pine.LNX.4.10.10401200028460.21664-100000@master.linux-ide.org>
+References: <Pine.LNX.4.58.0401192259330.2123@home.osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:16618 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S265181AbUATHxz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jan 2004 02:53:55 -0500
-Content-Disposition: inline
-In-Reply-To: <1074366452.13198.48.camel@compaq.xsintricity.com>
+Received: from astound-64-85-224-253.ca.astound.net ([64.85.224.253]:528 "EHLO
+	master.linux-ide.org") by vger.kernel.org with ESMTP
+	id S265254AbUATIcO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jan 2004 03:32:14 -0500
+In-Reply-To: <Pine.LNX.4.58.0401192259330.2123@home.osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Marcelo Tosatti <marcelo.tosatti@cyclades.com>, Arjan Van de Ven <arjanv@redhat.com>, Martin Peschke3 <MPESCHKE@de.ibm.com>, Peter Yao <peter@exavio.com.cn>, linux-kernel@vger.kernel.org, linux-scsi mailing list <linux-scsi@vger.kernel.org>, ihno@suse.de
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sat, Jan 17 2004, Doug Ledford wrote:
-> On Sat, 2004-01-17 at 11:58, Christoph Hellwig wrote:
-> > On Sat, Jan 17, 2004 at 08:10:00AM -0500, Doug Ledford wrote:
-> > > 4)  The last issue.  2.6 already has individual host locks for drivers. 
-> > > The iorl patch for 2.4 adds the same thing.  So, adding the iorl patch
-> > > to 2.4 makes it easier to have drivers be the same between 2.4 and 2.6. 
-> > > Right now it takes some fairly convoluted #ifdef statements to get the
-> > > locking right in a driver that supports both 2.4 and 2.6.  Adding the
-> > > iorl patch allows driver authors to basically state that they don't
-> > > support anything prior to whatever version of 2.4 it goes into and
-> > > remove a bunch of #ifdef crap.
+
+Linus,
+
+Would have been nice to list such rules at the top if the MAINTAINERS
+file, this may have saved me some grief, well maybe not ...
+
+Andre Hedrick
+LAD Storage Consulting Group
+
+On Mon, 19 Jan 2004, Linus Torvalds wrote:
+
+> 
+> 
+> On Mon, 19 Jan 2004, Justin T. Gibbs wrote:
 > > 
-> > Well, no.  For one thing all the iorl patches miss the scsi_assign_lock
-> > interface from 2.6 which makes drivers a big ifdef hell (especially
-> > as the AS2.1 patch uses a different name for the lock as 3.0), and even
-> > if it was there the use of that function is strongly discuraged in 2.6
-> > in favour of just using the host_lock.
+> > Does the maintainer have the ability to veto changes that harm the
+> > code they maintain?
 > 
-> Yeah, I saw that too.  Of course, it's not like that's my fault :-P  I
-> had the 2.4.9 version of the iorl patch before 2.5 had a host lock, so
-> 2.5 *could* have followed the 2.4.9-iorl patch convention of using
-> host->lock as the name instead of host->host_lock and then we wouldn't
-> be here.  But, because 2.6 uses host->host_lock, and because usage of
-
-First of all, ->lock is a _bad_ name. And secondly, we probably did this
-at around the same time (the 2.5 block code was already "done" by the
-time 2.5 opened, if you recall it was one of the first things merged in
-2.5.1-pre1). The fact that I chose the better name (which is really a
-rare incident, my names typically suck) is just history :-)
-
-> the scsi_assign_lock() is discouraged, I made the iorl patch in RHEL3
-> follow the 2.6 convention of using host->host_lock.  In hindsight, I
-> should have just followed the 2.4.9-iorl patch convention.  Then a
-> driver could have just done this:
+> Nope. Nobody has that right.
 > 
-> #ifdef SCSI_HAS_HOST_LOCK
-> #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-> 	adapter->lock_ptr = &adapter->lock;
-> 	host->lock = &adapter->lock;
-> #else
-> 	adapter->lock_ptr = &adapter->lock;
-> 	host->host_lock = &adapter->lock;
-> #endif
-> #else
-> 	adapter->lock_ptr = &io_request_lock;
-> #endif
+> Even _I_ don't veto changes that the right people push (my motto:
+> "everybody is wrong sometimes: when enough people complain, even I am
+> wrong"). 
 > 
-> Then you just always use adapter->lock_ptr for spin locks in the driver
-> and you magically work in all kernel releases.  Now, by going to
-> host->host_lock in 2.4 we get rid of one of the if statements.  This
-> isn't impossible to do if both Red Hat and SuSE just release their next
-> update kernel with host->lock changed to host->host_lock.
-
-I can certainly help make that happen, I completely agree it's needed.
-
--- 
-Jens Axboe
+> In particular, maintainers of "conceptually higher" generally always have
+> priority. If Al Viro says a filesystem is doing something wrong from a VFS
+> standpoint, then that filesystem is broken - regardless of whether the
+> filesystem maintainer agrees or not. Because the VFS layer requirements 
+> trump any low-level filesystem issues.
+> 
+> But perhaps more importantly (and it's the reason even _I_ don't have the 
+> right, regardless of how high up in the maintainership chain I am), nobody 
+> has veto-power over anything. That's to keep people honest: nobody should 
+> _ever_ think that they are "in control", and that nobody else can replace 
+> them. 
+> 
+> In other words: maintainership is not ownership. It's a stewardship.
+> 
+> End result: maintainership is a nasty and mostly unthankful job. It
+> doesn't really give many privileges, and most of what it does is just have
+> people complain to you about bugs. The satisfaction is there, of course, 
+> but 
+> 
+> And finally: maintainership is largely about working with people.  
+> There's some code in there too, but people tend to be more important.
+> 
+> 		Linus
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
 
