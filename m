@@ -1,38 +1,38 @@
 From: Aristeu Sergio Rozanski Filho <aris@cathedrallabs.org>
-Subject: [patch][13/15] qlogic_cs: use own detect and release functions
-Date: Tue, 9 Mar 2004 10:42:54 -0300
+Subject: [patch][12/15] qlogicfas: move common definitions to qlogicfas.h
+Date: Tue, 9 Mar 2004 10:42:08 -0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040309134254.GO651@cathedrallabs.org>
+Message-ID: <20040309134208.GN651@cathedrallabs.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="wNT7VBaN1rUIB9jO"
+	protocol="application/pgp-signature"; boundary="qicHaSekiYEWE95x"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus.kernel.org ([204.152.189.113]:33225 "EHLO zeus.kernel.org")
-	by vger.kernel.org with ESMTP id S261727AbUCINtL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2004 08:49:11 -0500
+Received: from zeus.kernel.org ([204.152.189.113]:36553 "EHLO zeus.kernel.org")
+	by vger.kernel.org with ESMTP id S261937AbUCINtO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2004 08:49:14 -0500
 Received: from panda.sul.com.br (panda.sul.com.br [200.219.150.4])
-	by zeus.kernel.org (8.11.6/8.11.6) with ESMTP id i29Dn5m23770
-	for <linux-scsi@vger.kernel.org>; Tue, 9 Mar 2004 05:49:06 -0800
+	by zeus.kernel.org (8.11.6/8.11.6) with ESMTP id i29Dn9m23781
+	for <linux-scsi@vger.kernel.org>; Tue, 9 Mar 2004 05:49:09 -0800
 Received: from cathedrallabs.org (3-133.ctame701-3.telepar.net.br [200.181.174.133])
-	by panda.sul.com.br (Postfix) with ESMTP id C54CB32822
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Mar 2004 10:48:45 -0300 (EST)
+	by panda.sul.com.br (Postfix) with ESMTP id 53476326F0
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Mar 2004 10:48:53 -0300 (EST)
 Received: from matthew (matthew.cathedral.com [215.50.66.94])
-	by cathedrallabs.org (Postfix) with ESMTP id AC50D236C6
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Mar 2004 10:34:38 -0300 (BRT)
+	by cathedrallabs.org (Postfix) with ESMTP id 4DAA0236C4
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Mar 2004 10:33:53 -0300 (BRT)
 Received: from aris by matthew with local (Exim 3.36 #1 (Debian))
-	id 1B0hVW-0000x2-00
-	for <linux-scsi@vger.kernel.org>; Tue, 09 Mar 2004 10:42:54 -0300
+	id 1B0hUn-0000wv-00
+	for <linux-scsi@vger.kernel.org>; Tue, 09 Mar 2004 10:42:09 -0300
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
---wNT7VBaN1rUIB9jO
-Content-Type: multipart/mixed; boundary="LQFJYnjHKDAbJRTQ"
+--qicHaSekiYEWE95x
+Content-Type: multipart/mixed; boundary="I/wet25DnWlSyk1C"
 Content-Disposition: inline
 
 
---LQFJYnjHKDAbJRTQ
+--I/wet25DnWlSyk1C
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
@@ -43,160 +43,295 @@ Content-Transfer-Encoding: quoted-printable
 aris
 
 
---LQFJYnjHKDAbJRTQ
+--I/wet25DnWlSyk1C
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="13-qlogic_cs-use_own_detect_and_release_functions.patch"
+Content-Disposition: attachment; filename="12-qlogicfas-move_common_definitions_to_header.patch"
 Content-Transfer-Encoding: quoted-printable
 
-diff -ur linux-2.6.3-applied/drivers/scsi/pcmcia/qlogic_stub.c linux-2.6.3-=
-work/drivers/scsi/pcmcia/qlogic_stub.c
---- linux-2.6.3-applied/drivers/scsi/pcmcia/qlogic_stub.c	2004-03-05 18:48:=
-17.000000000 -0300
-+++ linux-2.6.3-work/drivers/scsi/pcmcia/qlogic_stub.c	2004-03-08 13:33:51.=
-000000000 -0300
-@@ -43,9 +43,11 @@
- #include <linux/major.h>
- #include <linux/blkdev.h>
- #include <scsi/scsi_ioctl.h>
-+#include <linux/interrupt.h>
+diff -urN linux-2.6.3-applied/drivers/scsi/qlogicfas.c linux-2.6.3-work/dri=
+vers/scsi/qlogicfas.c
+--- linux-2.6.3-applied/drivers/scsi/qlogicfas.c	2004-03-05 18:52:14.000000=
+000 -0300
++++ linux-2.6.3-work/drivers/scsi/qlogicfas.c	2004-03-05 18:52:24.000000000=
+ -0300
+@@ -38,87 +38,6 @@
+    are deemed to be part of the source code.
 =20
- #include "scsi.h"
- #include "hosts.h"
-+#include "../qlogicfas.h"
+ */
+-/*----------------------------------------------------------------*/
+-/* Configuration */
+-
+-/* Set the following to 2 to use normal interrupt (active high/totempole-
+-   tristate), otherwise use 0 (REQUIRED FOR PCMCIA) for active low, open
+-   drain */
+-
+-#define QL_INT_ACTIVE_HIGH 2
+-
+-/* Set the following to max out the speed of the PIO PseudoDMA transfers,
+-   again, 0 tends to be slower, but more stable.  */
+-
+-#define QL_TURBO_PDMA 1
+-
+-/* This should be 1 to enable parity detection */
+-
+-#define QL_ENABLE_PARITY 1
+-
+-/* This will reset all devices when the driver is initialized (during boot=
+up).
+-   The other linux drivers don't do this, but the DOS drivers do, and after
+-   using DOS or some kind of crash or lockup this will bring things back
+-   without requiring a cold boot.  It does take some time to recover from a
+-   reset, so it is slower, and I have seen timeouts so that devices weren't
+-   recognized when this was set. */
+-
+-#define QL_RESET_AT_START 0
+-
+-/* crystal frequency in megahertz (for offset 5 and 9)
+-   Please set this for your card.  Most Qlogic cards are 40 Mhz.  The
+-   Control Concepts ISA (not VLB) is 24 Mhz */
+-
+-#define XTALFREQ	40
+-
+-/**********/
+-/* DANGER! modify these at your own risk */
+-/* SLOWCABLE can usually be reset to zero if you have a clean setup and
+-   proper termination.  The rest are for synchronous transfers and other
+-   advanced features if your device can transfer faster than 5Mb/sec.
+-   If you are really curious, email me for a quick howto until I have
+-   something official */
+-/**********/
+-
+-/*****/
+-/* config register 1 (offset 8) options */
+-/* This needs to be set to 1 if your cabling is long or noisy */
+-#define SLOWCABLE 1
+-
+-/*****/
+-/* offset 0xc */
+-/* This will set fast (10Mhz) synchronous timing when set to 1
+-   For this to have an effect, FASTCLK must also be 1 */
+-#define FASTSCSI 0
+-
+-/* This when set to 1 will set a faster sync transfer rate */
+-#define FASTCLK 0	/*(XTALFREQ>25?1:0)*/
+-
+-/*****/
+-/* offset 6 */
+-/* This is the sync transfer divisor, XTALFREQ/X will be the maximum
+-   achievable data rate (assuming the rest of the system is capable
+-   and set properly) */
+-#define SYNCXFRPD 5	/*(XTALFREQ/5)*/
+-
+-/*****/
+-/* offset 7 */
+-/* This is the count of how many synchronous transfers can take place
+-	i.e. how many reqs can occur before an ack is given.
+-	The maximum value for this is 15, the upper bits can modify
+-	REQ/ACK assertion and deassertion during synchronous transfers
+-	If this is 0, the bus will only transfer asynchronously */
+-#define SYNCOFFST 0
+-/* for the curious, bits 7&6 control the deassertion delay in 1/2 cycles
+-	of the 40Mhz clock. If FASTCLK is 1, specifying 01 (1/2) will
+-	cause the deassertion to be early by 1/2 clock.  Bits 5&4 control
+-	the assertion delay, also in 1/2 clocks (FASTCLK is ignored here). */
+-
+-/*----------------------------------------------------------------*/
+-#ifdef PCMCIA
+-#undef QL_INT_ACTIVE_HIGH
+-#define QL_INT_ACTIVE_HIGH 0
+-#endif
 =20
- #include <pcmcia/version.h>
- #include <pcmcia/cs_types.h>
-@@ -57,8 +59,8 @@
+ #include <linux/module.h>
+ #include <linux/blkdev.h>		/* to get disk capacity */
+@@ -141,35 +60,18 @@
+ #include "qlogicfas.h"
 =20
- extern Scsi_Host_Template qlogicfas_driver_template;
- extern void qlogicfas_preset(int port, int irq);
--extern struct Scsi_Host *__qlogicfas_detect(Scsi_Host_Template *);
- extern int qlogicfas_bus_reset(Scsi_Cmnd *);
-+extern irqreturn_t do_ql_ihandl(int irq, void *dev_id, struct pt_regs *reg=
-s);
+ /*----------------------------------------------------------------*/
+-/* driver state info, local to driver */
+-static int qlcfg5 =3D (XTALFREQ << 5);	/* 15625/512 */
+-static int qlcfg6 =3D SYNCXFRPD;
+-static int qlcfg7 =3D SYNCOFFST;
+-static int qlcfg8 =3D (SLOWCABLE << 7) | (QL_ENABLE_PARITY << 4);
+-static int qlcfg9 =3D ((XTALFREQ + 4) / 5);
+-static int qlcfgc =3D (FASTCLK << 3) | (FASTSCSI << 4);
++int qlcfg5 =3D (XTALFREQ << 5);	/* 15625/512 */
++int qlcfg6 =3D SYNCXFRPD;
++int qlcfg7 =3D SYNCOFFST;
++int qlcfg8 =3D (SLOWCABLE << 7) | (QL_ENABLE_PARITY << 4);
++int qlcfg9 =3D ((XTALFREQ + 4) / 5);
++int qlcfgc =3D (FASTCLK << 3) | (FASTSCSI << 4);
 =20
- static char *qlogic_name =3D "qlogic_cs";
+ static char qlogicfas_name[] =3D "qlogicfas";
 =20
-@@ -102,6 +104,71 @@
+ int qlogicfas_queuecommand(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *));
 =20
- static dev_info_t dev_info =3D "qlogic_cs";
+ /*----------------------------------------------------------------*/
+-/* The qlogic card uses two register maps - These macros select which one =
+*/
+-#define REG0 ( outb( inb( qbase + 0xd ) & 0x7f , qbase + 0xd ), outb( 4 , =
+qbase + 0xd ))
+-#define REG1 ( outb( inb( qbase + 0xd ) | 0x80 , qbase + 0xd ), outb( 0xb4=
+ | QL_INT_ACTIVE_HIGH , qbase + 0xd ))
+-
+-/* following is watchdog timeout in microseconds */
+-#define WATCHDOG 5000000
+-
+-/*----------------------------------------------------------------*/
+-/* the following will set the monitor border color (useful to find
+-   where something crashed or gets stuck at and as a simple profiler) */
+-
+-#if 0
+-#define rtrc(i) {inb(0x3da);outb(0x31,0x3c0);outb((i),0x3c0);}
+-#else
+-#define rtrc(i) {}
+-#endif
 =20
-+static struct Scsi_Host *qlogic_detect(Scsi_Host_Template *host,
-+				dev_link_t *link, int qbase, int qlirq)
-+{
-+	int qltyp;		/* type of chip */
-+	int qinitid;
-+	struct Scsi_Host *shost;	/* registered host structure */
-+	qlogicfas_priv_t priv;
+ /*----------------------------------------------------------------*/
+ /* local functions */
+@@ -531,7 +433,7 @@
+ 	(icmd->scsi_done) (icmd);
+ }
+=20
+-static irqreturn_t do_ql_ihandl(int irq, void *dev_id, struct pt_regs *reg=
+s)
++irqreturn_t do_ql_ihandl(int irq, void *dev_id, struct pt_regs *regs)
+ {
+ 	unsigned long flags;
+ 	struct Scsi_Host *host =3D dev_id;
+diff -urN linux-2.6.3-applied/drivers/scsi/qlogicfas.h linux-2.6.3-work/dri=
+vers/scsi/qlogicfas.h
+--- linux-2.6.3-applied/drivers/scsi/qlogicfas.h	2004-03-05 18:52:14.000000=
+000 -0300
++++ linux-2.6.3-work/drivers/scsi/qlogicfas.h	2004-03-05 18:52:24.000000000=
+ -0300
+@@ -1,6 +1,89 @@
+ /* to be used by qlogicfas and qlogic_cs */
+ #ifndef __QLOGICFAS_H
+ #define __QLOGICFAS_H
 +
-+	qltyp =3D inb(qbase + 0xe) & 0xf8;
-+	qinitid =3D host->this_id;
-+	if (qinitid < 0)
-+		qinitid =3D 7;	/* if no ID, use 7 */
-+	outb(1, qbase + 8);	/* set for PIO pseudo DMA */
-+	REG0;
-+	outb(0x40 | qlcfg8 | qinitid, qbase + 8);	/* (ini) bus id, disable scsi r=
-st */
-+	outb(qlcfg5, qbase + 5);	/* select timer */
-+	outb(qlcfg9, qbase + 9);	/* prescaler */
++/*----------------------------------------------------------------*/
++/* Configuration */
 +
-+#if QL_RESET_AT_START
-+	outb(3, qbase + 3);
-+	REG1;
-+	/* FIXME: timeout */
-+	while (inb(qbase + 0xf) & 4)
-+		cpu_relax();
-+	REG0;
++/* Set the following to 2 to use normal interrupt (active high/totempole-
++   tristate), otherwise use 0 (REQUIRED FOR PCMCIA) for active low, open
++   drain */
++
++#define QL_INT_ACTIVE_HIGH 2
++
++/* Set the following to max out the speed of the PIO PseudoDMA transfers,
++   again, 0 tends to be slower, but more stable.  */
++
++#define QL_TURBO_PDMA 1
++
++/* This should be 1 to enable parity detection */
++
++#define QL_ENABLE_PARITY 1
++
++/* This will reset all devices when the driver is initialized (during boot=
+up).
++   The other linux drivers don't do this, but the DOS drivers do, and after
++   using DOS or some kind of crash or lockup this will bring things back
++   without requiring a cold boot.  It does take some time to recover from a
++   reset, so it is slower, and I have seen timeouts so that devices weren't
++   recognized when this was set. */
++
++#define QL_RESET_AT_START 0
++
++/* crystal frequency in megahertz (for offset 5 and 9)
++   Please set this for your card.  Most Qlogic cards are 40 Mhz.  The
++   Control Concepts ISA (not VLB) is 24 Mhz */
++
++#define XTALFREQ	40
++
++/**********/
++/* DANGER! modify these at your own risk */
++/* SLOWCABLE can usually be reset to zero if you have a clean setup and
++   proper termination.  The rest are for synchronous transfers and other
++   advanced features if your device can transfer faster than 5Mb/sec.
++   If you are really curious, email me for a quick howto until I have
++   something official */
++/**********/
++
++/*****/
++/* config register 1 (offset 8) options */
++/* This needs to be set to 1 if your cabling is long or noisy */
++#define SLOWCABLE 1
++
++/*****/
++/* offset 0xc */
++/* This will set fast (10Mhz) synchronous timing when set to 1
++   For this to have an effect, FASTCLK must also be 1 */
++#define FASTSCSI 0
++
++/* This when set to 1 will set a faster sync transfer rate */
++#define FASTCLK 0	/*(XTALFREQ>25?1:0)*/
++
++/*****/
++/* offset 6 */
++/* This is the sync transfer divisor, XTALFREQ/X will be the maximum
++   achievable data rate (assuming the rest of the system is capable
++   and set properly) */
++#define SYNCXFRPD 5	/*(XTALFREQ/5)*/
++
++/*****/
++/* offset 7 */
++/* This is the count of how many synchronous transfers can take place
++	i.e. how many reqs can occur before an ack is given.
++	The maximum value for this is 15, the upper bits can modify
++	REQ/ACK assertion and deassertion during synchronous transfers
++	If this is 0, the bus will only transfer asynchronously */
++#define SYNCOFFST 0
++/* for the curious, bits 7&6 control the deassertion delay in 1/2 cycles
++	of the 40Mhz clock. If FASTCLK is 1, specifying 01 (1/2) will
++	cause the deassertion to be early by 1/2 clock.  Bits 5&4 control
++	the assertion delay, also in 1/2 clocks (FASTCLK is ignored here). */
++
++/*----------------------------------------------------------------*/
++#ifdef PCMCIA
++#undef QL_INT_ACTIVE_HIGH
++#define QL_INT_ACTIVE_HIGH 0
 +#endif
 +
-+	host->name =3D qlogic_name;
-+	shost =3D scsi_host_alloc(host, sizeof(struct qlogicfas_priv));
-+	if (!shost)
-+		goto err;
-+	shost->io_port =3D qbase;
-+	shost->n_io_port =3D 16;
-+	shost->dma_channel =3D -1;
-+	if (qlirq !=3D -1)
-+		shost->irq =3D qlirq;
+ struct qlogicfas_priv {
+ 	 int		qbase;		/* Port */
+ 	 int		qinitid;	/* initiator ID */
+@@ -10,5 +93,29 @@
+ 	 Scsi_Cmnd 	*qlcmd;		/* current command being processed */
+ };
+ typedef struct qlogicfas_priv *qlogicfas_priv_t;
 +
-+	priv =3D (qlogicfas_priv_t)&(shost->hostdata[0]);
-+	priv->qlirq =3D qlirq;
-+	priv->qbase =3D qbase;
-+	priv->qinitid =3D qinitid;
++extern int qlcfg5;
++extern int qlcfg6;
++extern int qlcfg7;
++extern int qlcfg8;
++extern int qlcfg9;
++extern int qlcfgc;
 +
-+	if (request_irq(qlirq, do_ql_ihandl, 0, qlogic_name, shost))
-+		goto free_scsi_host;
++/* The qlogic card uses two register maps - These macros select which one =
+*/
++#define REG0 ( outb( inb( qbase + 0xd ) & 0x7f , qbase + 0xd ), outb( 4 , =
+qbase + 0xd ))
++#define REG1 ( outb( inb( qbase + 0xd ) | 0x80 , qbase + 0xd ), outb( 0xb4=
+ | QL_INT_ACTIVE_HIGH , qbase + 0xd ))
 +
-+	sprintf(priv->qinfo,
-+		"Qlogicfas Driver version 0.46, chip %02X at %03X, IRQ %d, TPdma:%d",
-+		qltyp, qbase, qlirq, QL_TURBO_PDMA);
++/* following is watchdog timeout in microseconds */
++#define WATCHDOG 5000000
 +
-+	if (scsi_add_host(shost, NULL))
-+		goto free_interrupt;
++/*----------------------------------------------------------------*/
++/* the following will set the monitor border color (useful to find
++   where something crashed or gets stuck at and as a simple profiler) */
 +
-+	scsi_scan_host(shost);
-+
-+	return shost;
-+
-+free_interrupt:
-+	free_irq(qlirq, shost);
-+
-+free_scsi_host:
-+	scsi_host_put(shost);
-+=09
-+err:
-+	return NULL;
-+}
- static dev_link_t *qlogic_attach(void)
- {
- 	scsi_info_t *info;
-@@ -240,15 +307,17 @@
- 		outb(0x04, link->io.BasePort1 + 0xd);
- 	}
++#if 0
++#define rtrc(i) {inb(0x3da);outb(0x31,0x3c0);outb((i),0x3c0);}
++#else
++#define rtrc(i) {}
++#endif
+ #endif	/* __QLOGICFAS_H */
 =20
-+	qlogicfas_driver_template.name =3D qlogic_name;
-+	qlogicfas_driver_template.proc_name =3D qlogic_name;
-+
- 	/* The KXL-810AN has a bigger IO port window */
- 	if (link->io.NumPorts1 =3D=3D 32)
--		qlogicfas_preset(link->io.BasePort1 + 16, link->irq.AssignedIRQ);
-+		host =3D qlogic_detect(&qlogicfas_driver_template, link,
-+			link->io.BasePort1 + 16, link->irq.AssignedIRQ);
- 	else
--		qlogicfas_preset(link->io.BasePort1, link->irq.AssignedIRQ);
--
--	qlogicfas_driver_template.name =3D qlogic_name;
--	qlogicfas_driver_template.proc_name =3D qlogic_name;
--	host =3D __qlogicfas_detect(&qlogicfas_driver_template);
-+		host =3D qlogic_detect(&qlogicfas_driver_template, link,
-+			link->io.BasePort1, link->irq.AssignedIRQ);
-+=09
- 	if (!host) {
- 		printk(KERN_INFO "%s: no SCSI devices found\n", qlogic_name);
- 		goto out;
-@@ -258,9 +327,6 @@
- 	link->dev =3D &info->node;
- 	info->host =3D host;
-=20
--	scsi_add_host(host, NULL); /* XXX handle failure */
--	scsi_scan_host(host);
--
- out:
- 	link->state &=3D ~DEV_CONFIG_PENDING;
- 	return;
-@@ -287,6 +353,8 @@
- 	scsi_remove_host(info->host);
- 	link->dev =3D NULL;
-=20
-+	free_irq(link->irq.AssignedIRQ, info->host);
-+
- 	pcmcia_release_configuration(link->handle);
- 	pcmcia_release_io(link->handle, &link->io);
- 	pcmcia_release_irq(link->handle, &link->irq);
 
---LQFJYnjHKDAbJRTQ--
+--I/wet25DnWlSyk1C--
 
---wNT7VBaN1rUIB9jO
+--qicHaSekiYEWE95x
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 Content-Disposition: inline
@@ -204,9 +339,9 @@ Content-Disposition: inline
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.4 (GNU/Linux)
 
-iD8DBQFATcneRRJOudsVYbMRAjClAKCUnQRVpTwIVrk1ZS/5G6pVz+O2aQCgpgJB
-E/7g0D8tqA2LyQxStazQEXI=
-=Lati
+iD8DBQFATcmwRRJOudsVYbMRAhqiAJ9lE2TgmP9BKU8H9ir7RA0Ky+z/fgCeIk7B
+rViYMHMDuwla+NbqLz3QZmY=
+=4xa1
 -----END PGP SIGNATURE-----
 
---wNT7VBaN1rUIB9jO--
+--qicHaSekiYEWE95x--
