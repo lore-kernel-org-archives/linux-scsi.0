@@ -1,45 +1,60 @@
-From: gentoo-gwn+owner@robin.gentoo.org
-Subject: Commands available for gentoo-gwn@robin.gentoo.org
-Date: Wed, 1 Dec 2004 16:45:06 GMT
-Message-ID: <200412011645.iB1Gj6eo013164@robin.gentoo.org>
+From: "Jose R. Santos" <jrsantos@austin.ibm.com>
+Subject: Re: phase change messages cusing slowdown with sym53c8xx_2 driver
+Date: Wed, 1 Dec 2004 10:56:54 -0600
+Message-ID: <20041201165654.GA32687@rx8.austin.ibm.com>
+References: <20041130030212.GB22916@austin.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from robin.gentoo.org ([140.105.134.102]:52874 "EHLO
-	robin.gentoo.org") by vger.kernel.org with ESMTP id S261307AbULAQpH
+Received: from e33.co.us.ibm.com ([32.97.110.131]:14723 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S261341AbULAQ5X
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Dec 2004 11:45:07 -0500
-Received: from robin.gentoo.org (localhost [127.0.0.1])
-	by robin.gentoo.org (8.13.1/8.13.1) with SMTP id iB1Gj6eo013164
-	for <linux-scsi@vger.kernel.org>; Wed, 1 Dec 2004 16:45:06 GMT
+	Wed, 1 Dec 2004 11:57:23 -0500
+Content-Disposition: inline
+In-Reply-To: <20041130030212.GB22916@austin.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
 
-Hello,
+Jose R. Santos <jrsantos@austin.ibm.com> [041129]:
+> I'm having a bit of trouble with a integrated SCSI adapter using the 
+> sym53c8xx_2 driver on a RS6K-170.  Somewhere during 2.6.9 development I started
+> seeing a bunch of "phase change" messages generated every time I did any IO on 
+> the disks attached to the SCSI adapter.
+> 
+> Nov 28 23:05:12 orb kernel: sym0: <896> rev 0x5 at pci 0000:00:0c.0 irq 20
+> Nov 28 23:05:12 orb kernel: sym0: No NVRAM, ID 7, Fast-40, SE, parity checking
+> Nov 28 23:05:12 orb kernel: sym0: SCSI BUS has been reset.
+> Nov 28 23:05:12 orb kernel: scsi0 : sym-2.1.18m
+> Nov 28 23:05:12 orb kernel: sym0:1: FAST-20 WIDE SCSI 40.0 MB/s ST (50.0 ns, offset 15)
+> Nov 28 23:05:12 orb kernel:   Vendor: IBM       Model: DGHS09U	Rev: 03E0
+> Nov 28 23:05:12 orb kernel:   Type:   Direct-Access		ANSI SCSI revision: 03
+> Nov 28 23:05:12 orb kernel:  target0:0:1: Beginning Domain Validation
+> Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@10050390 resid=6.
+> Nov 28 23:05:12 orb last message repeated 10 times
+> Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@1005039c resid=6.
+> Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@10050390 resid=6.
+> Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@10050390 resid=6.
+> Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@1005039c resid=6.
+> Nov 28 23:05:12 orb kernel:  target0:0:1: Domain Validation skipping write tests
+> Nov 28 23:05:12 orb kernel:  target0:0:1: Ending Domain Validation
+> Nov 28 23:05:12 orb kernel: sym0:1:0:phase change 6-7 9@10050390 resid=6.
+> 
+> When these errors show up, the maximum performance I can get out of the disk is
+> about 1.3MB/s.  After several hours, the adapters seems to receive some ABORT 
+> operations and the messages stop showing.  Once this happens, performance for 
+> the disk goes back to 15MB/s.
 
-There exists the following options:
+I manage to get access to another PPC64 box that has uses this same
+driver and was unable to reproduce this problem here, but I was able to
+reproduce it on another same model machine.  Seem like there could be
+something at initialization that only affects this revision of the SCSI
+adapter.  Since the problem seems to disappear after a BUS RESET I assume
+that something was left out when the driver was initializing the adapter.
 
-To unsubscribe send a mail to:
+Any Ideas?
 
-gentoo-gwn+unsubscribe@robin.gentoo.org
+Thanks
 
-To subscribe to the digest of this list send a mail to:
-
-gentoo-gwn+subscribe-digest@robin.gentoo.org
-
-To subscribe to the nomail version of this list send a mail to:
-
-gentoo-gwn+subscribe-nomail@robin.gentoo.org
-
-The nomail version of a list means that you are reckognized as a
-subscriber, but will not get any mails to the list. Useful when it's
-necessary to post from several emailaddresses to a subscribers only list.
-
-For retrieval of message number N in the archive send a mail to
-
-gentoo-gwn+get-N@robin.gentoo.org
-
-To send a mail to the list owner, send a mail to:
-
-gentoo-gwn+owner@robin.gentoo.org
-
-
+-JRS
