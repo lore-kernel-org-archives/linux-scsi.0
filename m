@@ -1,30 +1,29 @@
 From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: SCSI woes (followup)
-Date: Tue, 24 Sep 2002 16:56:16 -0700
+Subject: [patch] 2.5 scsi_error.c cleanup update
+Date: Tue, 24 Sep 2002 17:09:40 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020924235616.GA12650@beaverton.ibm.com>
-References: <20020924232630.GD1330@beaverton.ibm.com> <200209242331.g8ONVCg03591@localhost.localdomain>
+Message-ID: <20020925000939.GB12650@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from westrelay01.boulder.ibm.com (westrelay01.boulder.ibm.com [9.17.194.22])
+	by e33.co.us.ibm.com (8.12.2/8.12.2) with ESMTP id g8P08Xlj071780
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2002 20:08:33 -0400
+Received: from dyn9-47-17-195 (dyn9-47-17-67.beaverton.ibm.com [9.47.17.67])
+	by westrelay01.boulder.ibm.com (8.12.3/NCO/VER6.4) with ESMTP id g8P08WTn100112
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2002 18:08:32 -0600
 Content-Disposition: inline
-In-Reply-To: <200209242331.g8ONVCg03591@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Russell King <rmk@arm.linux.org.uk>, Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-James Bottomley [James.Bottomley@SteelEye.com] wrote:
-> andmike@us.ibm.com said:
-> > If you want me to I can add it to a patch bundle I already have that
-> > includes ports of Russell's previous changes that apply on top of my
-> > 2.5 scsi_error cleanup patch. 
-> 
-> Sounds good.  Do you have a copy of the error handler clean up that applies 
-> cleanly to 2.5.38 (after the removal of scsi_queue.c)?
-> 
+I have updated the scsi_error.c patch to 2.5.38.
 
-Yes,
-	I am sending out mail now on new thread.
+This is just a roll forward of the patch to 2.5.38 see previous threads
+for a more complete description.
+
+The patch is available from:
+
+http://www-124.ibm.com/storageio/gen-io/patch-scsi_error-2.5.38-1.gz
 
 -andmike
 --
