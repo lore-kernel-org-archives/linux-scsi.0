@@ -1,168 +1,73 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [RFC] support for sysfs string based properties for SCSI (3/3)
-Date: 03 May 2003 14:30:54 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1051990255.2308.26.camel@mulgrave>
-References: <1051989099.2036.7.camel@mulgrave>
-	<1051989565.2036.14.camel@mulgrave>  <1051989937.2308.21.camel@mulgrave>
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Subject: Re: Aic7xxx and Aic79xx Driver Updates
+Date: Sat, 03 May 2003 17:01:51 -0600
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1430020000.1052002911@aslan.scsiguy.com>
+References: <1866260000.1051828092@aslan.btc.adaptec.com>	<1051885837.1820.34.camel@mulgrave>
+ 	<2274070000.1051897888@aslan.btc.adaptec.com> <1051898880.1819.63.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-97T+vJm+IOXnltYZg8Md"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:19206 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263391AbTECTSd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 3 May 2003 15:18:33 -0400
-In-Reply-To: <1051989937.2308.21.camel@mulgrave>
-List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>, Greg KH <greg@kroah.com>, Mike Anderson <andmike@us.ibm.com>
-
-
---=-97T+vJm+IOXnltYZg8Md
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <1051898880.1819.63.camel@mulgrave>
+Content-Disposition: inline
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Marcelo Tosatti <marcelo@conectiva.com.br>
+List-Id: linux-scsi@vger.kernel.org
 
-This illustrates how the new show/store interface may be used for adding
-and setting properties.
+>> The answer to this and your other issues you raise about the driver are
+>> the same.  I do not want to fork the driver.  I still have to maintain
+>> support all the way back to 2.4.7 and branching the driver for every
+>> different supported kernel would be a nightmare to maintain.  As it stands
+>> now, other than the Makefile and kernel config files, there is just one
+>> set of files that supports all of these kernels.  It makes it much
+>> easier for everyone involved including the primary maintainer of the
+>> driver.
+> 
+> Well, you do keep a 2.4 and a 2.5 tree, so you still have to apply your
+> patches twice.
 
-The attached patch implements a store method in 53c700 which allows the
-setting of the queue_depth parameter.
+Linux has finally started to use revision control, so I try to take
+advantage of that by breaking up my changes and providing complete
+changelogs.  Yes, it is a pain since I have to do three commits (Perforce,
+BK linux-2.4, BK linux-2.5), but there is only one "version" of the driver
+that I have to keep in my head, rather than two or twenty.  The 2.4.X code
+also encourages those "upgrading" the drivers for 2.5.X features to do so in
+a 2.4.X compatible fashion.  It's usually not that hard.
 
-It also adds an "outstanding_tags" attribute which provides all the
-information that the 53c700 procfs_info routine now provides.
+> You also seem to have two drivers: aic7xxx and aic79xx
+> which seem to duplicate about 80% of the code between them, so you have
+> to further patch each of these drivers for each of your fixes.
 
-Hopefully, this interface will be simple and flexible enough to allow us
-to migrate all of the SCSI drivers away from proc and on to sysfs.
+80% is a bit of an overstatement.  Yes, the OSMs are similar because
+the author is the same.  Where code can be factored it is put into the
+aiclib files - a process that is not fully complete.  The concentration
+has been on keeping the drivers up to date with 2.5 and fixing bugs, but
+some bit of code moves to common files in almost every version bump.
 
-James
+> I'm not asking for any changes to the way you do 2.4, just for 2.5 where
+> we have no vendor versions to support and there should only be a single
+> tree.
 
+And as the maintainer, I know that maintaining a single driver is
+far easier than splitting it up.  Other maintainers may feel differently,
+but they are not maintaining these drivers.
 
---=-97T+vJm+IOXnltYZg8Md
-Content-Disposition: attachment; filename=tmp.diff
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; name=tmp.diff; charset=ISO-8859-1
+>> I've tried hard to make most of the API differences similarly transparent
+>> within the driver to avoid messy ifdefs.  I haven't succeeded everywhere,
+>> but this is the price you pay when APIs change so often.  All of the code
+>> is also setup so that the backwards compatibility hooks have no impact on
+>> the driver's performance under any support kernel (i.e. each kernel is
+>> supported as best as it can be supported).
+> 
+> Well, for 2.4, where there are multiple vendor versions, I'm OK with
+> this.  For 2.5 it's not necessary (yet).
 
-# This is a BitKeeper generated patch for the following project:
-# Project Name: Linux kernel tree
-# This patch format is intended for GNU patch command version 2.5 or higher=
-.
-# This patch includes the following deltas:
-#	           ChangeSet	1.1198  -> 1.1199=20
-#	drivers/scsi/53c700.c	1.29    -> 1.30  =20
-#
-# The following is the BitKeeper ChangeSet Log
-# --------------------------------------------
-# 03/05/03	jejb@raven.il.steeleye.com	1.1199
-# SCSI: implement properties in the 53c700 driver
-#=20
-# Add a store for the queue_depth setting, and a show for a new
-# property called outstanding tags (this is the information currently
-# shown by the drivers procfs routine).
-# --------------------------------------------
-#
-diff -Nru a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
---- a/drivers/scsi/53c700.c	Sat May  3 14:27:29 2003
-+++ b/drivers/scsi/53c700.c	Sat May  3 14:27:29 2003
-@@ -172,6 +172,17 @@
- STATIC void NCR_700_chip_reset(struct Scsi_Host *host);
- STATIC int NCR_700_slave_configure(Scsi_Device *SDpnt);
- STATIC void NCR_700_slave_destroy(Scsi_Device *SDpnt);
-+STATIC ssize_t NCR_700_device_property_show(struct scsi_device * dev,
-+					    char * buf,
-+					    struct attribute *attr);
-+STATIC ssize_t NCR_700_device_property_store(struct scsi_device * dev,
-+					     const char * buf,
-+					     size_t count,
-+					     struct attribute *attr);
-+
-+struct device_attribute NCR_700_sdev_attrs[] =3D {
-+	{ .attr =3D { .name =3D "outstanding_tags", .mode =3D S_IRUGO }, },
-+};
-=20
- static char *NCR_700_phase[] =3D {
- 	"",
-@@ -278,6 +289,8 @@
- 	tpnt->proc_info =3D NCR_700_proc_directory_info;
- 	tpnt->slave_configure =3D NCR_700_slave_configure;
- 	tpnt->slave_destroy =3D NCR_700_slave_destroy;
-+	tpnt->device_property_show =3D NCR_700_device_property_show;
-+	tpnt->device_property_store =3D NCR_700_device_property_store;
- 	tpnt->use_blk_tcq =3D 1;
- 	tpnt->highmem_io =3D 1;
- =09
-@@ -2007,6 +2020,8 @@
- STATIC int
- NCR_700_slave_configure(Scsi_Device *SDp)
- {
-+	int i;
-+
- 	/* to do here: allocate memory; build a queue_full list */
- 	if(SDp->tagged_supported) {
- 		/* do TCQ stuff here */
-@@ -2014,14 +2029,63 @@
- 		/* initialise to default depth */
- 		scsi_adjust_queue_depth(SDp, 0, SDp->host->cmd_per_lun);
- 	}
-+
-+	for (i =3D 0; i < ARRAY_SIZE(NCR_700_sdev_attrs); i++)
-+		device_create_file(&SDp->sdev_driverfs_dev,
-+				   &NCR_700_sdev_attrs[i]);
- 	return 0;
- }
-=20
- STATIC void
- NCR_700_slave_destroy(Scsi_Device *SDp)
- {
--	/* to do here: deallocate memory */
-+	int i;
-+
-+	/* FIXME: slave_destroy can be called if no driverfs entry
-+	 * has been created.  We really need a slave_unconfigure for
-+	 * this type of thing */
-+	if(SDp->sdev_driverfs_dev.node.next !=3D NULL)
-+		for (i =3D 0; i < ARRAY_SIZE(NCR_700_sdev_attrs); i++)
-+			device_remove_file(&SDp->sdev_driverfs_dev,
-+					   &NCR_700_sdev_attrs[i]);
-+
-+}
-+
-+STATIC ssize_t
-+NCR_700_device_property_show(struct scsi_device * sdev, char * buf,
-+			     struct attribute *attr)
-+{
-+	char *name =3D attr->name;
-+	int ret =3D 0;
-+
-+	if (strcmp(name, "outstanding_tags") =3D=3D 0) {
-+		ret =3D snprintf(buf, 20, "%d\n", NCR_700_get_depth(sdev));
-+	}
-+	return ret;
- }
-+
-+STATIC ssize_t
-+NCR_700_device_property_store(struct scsi_device * sdev, const char * buf,
-+			      size_t count, struct attribute *attr)
-+{
-+	char *name =3D attr->name;
-+
-+	if (strcmp(name, "queue_depth") =3D=3D 0) {
-+		long new_depth =3D simple_strtol(buf, NULL, 0);
-+		if (new_depth > NCR_700_MAX_TAGS) {
-+			return -EINVAL;
-+		} else if (new_depth < 0) {
-+			/* FIXME: turn off tags need to quiesce the
-+			 * device to do this */
-+			return -EINVAL;
-+		} else {
-+			scsi_adjust_queue_depth(sdev, 0, new_depth);
-+		}
-+	}
-+	return 0;
-+}
-+
-+
-=20
- EXPORT_SYMBOL(NCR_700_detect);
- EXPORT_SYMBOL(NCR_700_release);
+If at some point there becomes an official policy that all backward
+compatibility code must be removed, I will do so.  I'm sure I'm not
+the only driver maintainer that will complain if/when this happens.  Until
+then, I hope that the level of "obscurity" this adds to the code doesn't
+prevent you or others from providing substantive reviews of my drivers.
 
---=-97T+vJm+IOXnltYZg8Md--
-
+--
+Justin
