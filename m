@@ -1,60 +1,41 @@
-From: Martin Dalecki <dalecki@evision-ventures.com>
+From: Linus Torvalds <torvalds@transmeta.com>
 Subject: Re: [PATCH] /proc/scsi/map
-Date: Thu, 20 Jun 2002 22:55:37 +0200
+Date: Thu, 20 Jun 2002 14:04:23 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D124149.6010901@evision-ventures.com>
-References: <Pine.LNX.4.44.0206201115460.8225-100000@home.transmeta.com>
+Message-ID: <Pine.LNX.4.44.0206201401010.8225-100000@home.transmeta.com>
+References: <3D124149.6010901@evision-ventures.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2;
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <3D124149.6010901@evision-ventures.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@transmeta.com>
+To: Martin Dalecki <dalecki@evision-ventures.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>, Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-U=BFytkownik Linus Torvalds napisa=B3:
 
-> For example, to be useful, every driver that knows about disks should=
- make
-> sure they show up with some standard name (the old "disk" vs "disc" w=
-ar
-> ;), exactly so that you _should_ be able to do something like
->=20
-> 	find /devices -name disk*
 
-Not good. find /devices -name "/sd@* -- will be unambigious.
-There are good reaons they do it like they do on the "other unix OS"...
+On Thu, 20 Jun 2002, Martin Dalecki wrote:
+> >
+> > 	/devices/disks/disk0 -> ../../pci0/00:02.0/02:1f.0/03:07.0/disk0
+>                   ^^^^^^^^^^ You notice the redundancy in naming here :-).
 
-> and be able to enumerate every disk in the whole system.
+I'd rather have redundancy than have horrible names like just "0", thank
+you very much.
 
->=20
-> 	/devices/disks/disk0 -> ../../pci0/00:02.0/02:1f.0/03:07.0/disk0
-                  ^^^^^^^^^^ You notice the redundancy in naming here :=
--).
+It takes up no space, all the dentries are virtual anyway, and a dentry
+embeds the storage for the first n characters (n ~16 or something like
+that).
 
-> 	               disk1 -> ../../pci0/00:02.3/usb_bus/001000/dev1
->=20
-> the same way that Pat already planned to do the mappings for network
-> devices in /devices/network/eth*.
+> Boah the chierachies are already deep enough. /devices/net/eth@XX
+> will cut it.
 
-Boah the chierachies are already deep enough. /devices/net/eth@XX
-will cut it.
+There is _no_ excuse for being terse.
 
-> Is this done? No. But is it fundamentally hard? Nope. Useful? You be =
-the
-> judge.  Imagine yourself as a installer searching for disks. Or imagi=
-ne
-> yourself as a initrd program that runs at boot, setting up irq routin=
-gs
-> etc before the "real boot".
+Also, never EVER use special characters like "@" unless there is _reason_
+to use them. I don't see any reason to make a filesystem look like perl.
 
-Yes but again the most content files found there are already inventing
-interfaces on the heap. /name /irq /resources /power this will end the =
-same
-as similar attempts ended already - in a mess.
+Please use sane names like "disknnn" over insane cryptographically secure
+filesystem contents like "sd@nnn".
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+		Linus
+
