@@ -1,45 +1,31 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: PATCH: Further aacraid work
-Date: Thu, 17 Jun 2004 14:32:39 +0100
+Date: 17 Jun 2004 08:55:14 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040617133239.GA31936@infradead.org>
+Message-ID: <1087480516.1795.7.camel@mulgrave>
 References: <547AF3BD0F3F0B4CBDC379BAC7E4189FD23FF9@otce2k03.adaptec.com>
+	<20040617130713.GX20511@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.146.154.40] ([213.146.154.40]:42155 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S266482AbUFQNcl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2004 09:32:41 -0400
-Content-Disposition: inline
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189FD23FF9@otce2k03.adaptec.com>
+Received: from stat1.steeleye.com ([65.114.3.130]:39365 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S266499AbUFQNzb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Jun 2004 09:55:31 -0400
+In-Reply-To: <20040617130713.GX20511@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Alan Cox <alan@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Alan Cox <alan@redhat.com>, Christoph Hellwig <hch@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, Jun 17, 2004 at 08:53:36AM -0400, Salyzyn, Mark wrote:
-> I *must* admit that the driver functions perfectly in other systems with
-> more than 4G of memory; however we *are* having troubles specifically
-> with AMD64 systems with more than 4G of memory in 2.6 kernels (the issue
-> does not occur on 2.4 kernels). I have yet to investigate why this
-> specific problem exists.
+On Thu, 2004-06-17 at 08:07, Matthew Wilcox wrote:
+> Yes, you're not the only people who want this.  There was a brief
+> discussion about this a few weeks ago, but I don't think anything's been
+> implemented yet.
 
-So what exactly is the firmware doing with this information?  What I
-expected is that if the memory is smaller 4GB it's just use 32bit
-descriptors.  If you want to keep that heck do the check _before_ setting
-the dma_mask.  If you have a > 32bit dma mask but the firmware can't deal
-with the high bits in the dma address actually set it's a bug.  It won't
-show up on PCs but pretty much on any complex architecture with an iommu
-(like AMD64)
+OK, I dropped the ball. I said I'd write up the proposal and send it
+out.  I'll try to do that today.
 
-> One would expect that if we erroneously got the memory model wrong (ie,
-> <4GB of memory, one slice at 0-2G, another slice at 4G-6G) that the 32
-> dma limit would protect us from functional problems in this delicate
-> area but with a performance hit resulting from the scsi layer providing
-> bounce buffers. Ideally we would like to have a mechanism to know if the
-> DMAable area is limited to a 32 bit address space in order to take
-> advantage of the more efficient FIB utilization.
+James
 
-Again, memory model doesn't matter.  For many plattforms dma address
-aren't memory addresses.
 
