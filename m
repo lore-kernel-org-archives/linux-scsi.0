@@ -1,90 +1,77 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] tmscsim: INQUIRY always only untagged
-Date: Mon, 6 Sep 2004 10:50:02 +0200 (CEST)
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH] sg jiffy library calls [was: sg kill local jiffies problems]
+Date: Mon, 06 Sep 2004 18:51:38 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60.0409061042240.6252@poirot.grange>
-References: <Pine.LNX.4.60.0409040033310.5266@poirot.grange>
- <20040904140102.A15247@infradead.org> <Pine.LNX.4.60.0409050022570.3092@poirot.grange>
- <20040904233835.A18659@infradead.org> <Pine.LNX.4.60.0409051654460.3039@poirot.grange>
- <1094398979.10977.9.camel@mulgrave>  <20040905173134.A31521@infradead.org>
- <1094422949.10977.15.camel@mulgrave>
+Message-ID: <413C251A.1050105@torque.net>
+References: <413A778C.1000302@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-1406886627-1094460602=:6252"
+Content-Type: multipart/mixed;
+ boundary="------------000806030704000801010308"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:21135 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S266837AbUIFIus (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2004 04:50:48 -0400
-In-Reply-To: <1094422949.10977.15.camel@mulgrave>
+Received: from borg.st.net.au ([65.23.158.22]:31626 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S267624AbUIFIwP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2004 04:52:15 -0400
+In-Reply-To: <413A778C.1000302@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: bunk@fs.tum.de, Michel.R.Garnier@wanadoo.fr
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+This is a multi-part message in MIME format.
+--------------000806030704000801010308
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
----1463811839-1406886627-1094460602=:6252
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Douglas Gilbert wrote:
+> It has been reported that the change to sg.c in lk 2.6.9-rc1-bk5
+> to use library jiffy functions breaks sg (albeit under vmware).
+> Evidentally sg devices are no longer recognised after that change.
+> 
+> Reverting that changeset removes the problem. Strange, it is not
+> obvious why.
+> 
+> At some stage I must have detected negative time spans (yeh yeh it
+> never happens) and my versions returned 0 in this case; otherwise
+> the implementations look very similar.
 
-On Mon, 5 Sep 2004, James Bottomley wrote:
+The following patch fixes the problem. It is
+against lk 2.6.9-rc1-bk7 (i.e. after "standard"
+jiffy_to_millisecs macros replaced sg versions).
 
-> On Sun, 2004-09-05 at 12:31, Christoph Hellwig wrote:
->> Umm yes.  But lets get the driver no oops first and then move forward.
->> There's still a lot of work to do on the driver.
->
-> Well, OK.  I agree to putting a palliative fix in, since what I
-> suggested will probably take more thought, but I don't think this one is
-> actually it.  Mixing tagged and untagged commands is illegal under the
-> SCSI spec.  Simply untagging the INQUIRY command may work to fix this
-> particular bug, but I bet it will introduce others when a scsi utility
-> sends an INQUIRY down to an in-use device.
+Change:
+    - make sure a (large) user supplied timeout value does
+      not result in a negative timeout passed to the midlevel
 
-I've seen this done, at least, in one more driver - 53c700.c. In its 
-queuecommand it checks not to mix tagged and untagged commands, but allows 
-both. That is, it checks, if there are currently (tagged) commands on the 
-queue and if the new one is untagged, and if so, returns DEVICE_BUSY. So, 
-it would accept an untagged command to a device, supporting tags, but 
-currently having the queue empty. I am doing the same check in the latest 
-version of my patch. Is it still bad?
+Doug Gilbert
 
-> I think perhaps the correct palliative fix is simply to list this device
-> (whatever it is, it's not listed in the bug report) as BLIST_NOTQ, then
-> the problem won't arise (and of course, tmscsim would have actually to
-> use the mid-layer black list rather than its own much shorter internal
-> list).
 
-I don't know what device the original reporter had, but the one I have 
-here, which exibits the same behaviour, is a Seagate disk (see attached 
-patch). So, if you still think, this device should not be allowed any tags 
-(which is a pity, I would then again have no device with tags supported 
-for tests here:-(), then, please, apply the attached patch. A patch to use 
-the blacklist will follow shortly.
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+--------------000806030704000801010308
+Content-Type: text/x-patch;
+ name="sg_269rc1bk7jif.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sg_269rc1bk7jif.diff"
 
----1463811839-1406886627-1094460602=:6252
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name="devinfo-seagate.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.60.0409061050020.6252@poirot.grange>
-Content-Description: 
-Content-Disposition: attachment; filename="devinfo-seagate.patch"
+--- linux/drivers/scsi/sg.c	2004-09-01 11:48:55.000000000 +1000
++++ linux/drivers/scsi/sg.c269rc1bk7jif	2004-09-06 17:00:56.000000000 +1000
+@@ -576,6 +576,7 @@
+ 	sg_io_hdr_t *hp;
+ 	unsigned char cmnd[sizeof (dummy_cmdp->sr_cmnd)];
+ 	int timeout;
++	unsigned long ul_timeout;
+ 
+ 	if (count < SZ_SG_IO_HDR)
+ 		return -EINVAL;
+@@ -610,7 +611,8 @@
+ 			return -EBUSY;	/* reserve buffer already being used */
+ 		}
+ 	}
+-	timeout = msecs_to_jiffies(srp->header.timeout);
++	ul_timeout = msecs_to_jiffies(srp->header.timeout);
++	timeout = (ul_timeout < INT_MAX) ? ul_timeout : INT_MAX;
+ 	if ((!hp->cmdp) || (hp->cmd_len < 6) || (hp->cmd_len > sizeof (cmnd))) {
+ 		sg_remove_request(sfp, srp);
+ 		return -EMSGSIZE;
 
-U2lnbmVkLW9mZi1ieTogR3Vlbm5hZGkgTGlha2hvdmV0c2tpIDxnLmxpYWto
-b3ZldHNraUBnbXguZGU+DQoNCmRpZmYgLXUgYS9kcml2ZXJzL3Njc2kvc2Nz
-aV9kZXZpbmZvLmMgYi9kcml2ZXJzL3Njc2kvc2NzaV9kZXZpbmZvLmMNCi0t
-LSBhL2RyaXZlcnMvc2NzaS9zY3NpX2RldmluZm8uYwlNb24gU2VwICA2IDEw
-OjM3OjA4IDIwMDQNCisrKyBiL2RyaXZlcnMvc2NzaS9zY3NpX2RldmluZm8u
-YwlNb24gU2VwICA2IDEwOjM2OjMwIDIwMDQNCkBAIC0xODEsNiArMTgxLDcg
-QEANCiAJeyJSRUdBTCIsICJDREMtNFgiLCBOVUxMLCBCTElTVF9NQVg1TFVO
-IHwgQkxJU1RfU0lOR0xFTFVOfSwNCiAJeyJTYW5EaXNrIiwgIkltYWdlTWF0
-ZSBDRi1TRDEiLCBOVUxMLCBCTElTVF9GT1JDRUxVTn0sDQogCXsiU0VBR0FU
-RSIsICJTVDMzOTBOIiwgIjk1NDYiLCBCTElTVF9OT1RRfSwNCisJeyJTRUFH
-QVRFIiwgIlNUMzQ1NTVOIiwgIjA5MzAiLCBCTElTVF9OT1RRfSwJLyogQ2hv
-a2VzIG9uIHRhZ2dlZCBJTlFVSVJZICovDQogCXsiU0dJIiwgIlJBSUQzIiwg
-IioiLCBCTElTVF9TUEFSU0VMVU59LA0KIAl7IlNHSSIsICJSQUlENSIsICIq
-IiwgQkxJU1RfU1BBUlNFTFVOfSwNCiAJeyJTR0kiLCAiVFA5MTAwIiwgIioi
-LCBCTElTVF9SRVBPUlRMVU4yfSwNCg==
-
----1463811839-1406886627-1094460602=:6252--
+--------------000806030704000801010308--
