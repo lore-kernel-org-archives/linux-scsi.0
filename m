@@ -1,35 +1,49 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: [2.6 patch] fix advansys.c if !CONFIG_PROC_FS
-Date: Fri, 29 Aug 2003 20:56:31 +0200
+From: "DQ Buenos Aires" <qc.buenosaires@int.mri.gouv.qc.ca>
+Subject: =?ISO-8859-1?Q?R=E9p.=20:=20Re:=20Approved?=
+Date: Fri, 29 Aug 2003 18:34:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030829185631.GG7038@fs.tum.de>
+Message-ID: <sf4f9cd1.012@gwmail.int.mri.gouv.qc.ca>
+Reply-To: qc.buenosaires@int.mri.gouv.qc.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:37618 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S261672AbTH2S4m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Aug 2003 14:56:42 -0400
+Received: from gwmail.int.mri.gouv.qc.ca ([66.46.188.197]:17179 "EHLO
+	gwmail.int.mri.gouv.qc.ca") by vger.kernel.org with ESMTP
+	id S262080AbTH2Web convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Aug 2003 18:34:31 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: support@connectcom.net
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@rustcorp.com.au
+To: linux-scsi@vger.kernel.org
 
-The patch below fixes a compile error in drivers/scsi/advansys.c if 
-!CONFIG_PROC_FS.
+Estimado/a Se=F1or/a :
 
-Please apply
-Adrian
+Gracias por el inter=E9s que demuestra por nuestros programas de inmigr=
+aci=F3n.
 
---- linux-2.6.0-test4-mm1/drivers/scsi/advansys.c.old	2003-08-27 16:14:32.000000000 +0200
-+++ linux-2.6.0-test4-mm1/drivers/scsi/advansys.c	2003-08-27 16:15:54.000000000 +0200
-@@ -6199,7 +6199,9 @@
- 
- static Scsi_Host_Template driver_template = {
-     .proc_name                  = "advansys",
-+#ifdef CONFIG_PROC_FS
-     .proc_info                  = advansys_proc_info,
-+#endif
-     .name                       = "advansys",
-     .detect                     = advansys_detect, 
-     .release                    = advansys_release,
+Para informaci=F3n general sobre el tr=E1mite de inmigraci=F3n a Quebec=
+, tenga a bien visitar nuestra p=E1gina web: www.inmigracion-quebec.com=
+=2Ear
+
+
+Para toda consulta que no pueda evacuar v=EDa nuestra p=E1gina web, pod=
+remos responder dentro de los pr=F3ximos catorce d=EDas.
+
+Recordamos que el estudio de nuestros expedientes es estrictamente conf=
+idencial y no damos ninguna informaci=F3n por tel=E9fono  o por correo =
+electr=F3nico sobre las solicitudes de inmigraci=F3n.
+
+
+
+
+
+Atentamente,
+Delegaci=F3n de Quebec
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
