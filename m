@@ -1,88 +1,87 @@
-From: "Kit Gerrits" <kit@gerritsacc.nl>
-Subject: PERC2/Si won't failover
-Date: Mon, 31 Jan 2005 14:49:25 +0100
-Message-ID: <20050131134506.34A3AC4@frisbee.gerritsacc.nl>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: 2.6.11-rc[1,2]-mmX scsi cdrom problem, 2.6.10-mm2 ok
+Date: Mon, 31 Jan 2005 14:53:24 +0100
+Message-ID: <20050131135323.GA2766@suse.de>
+References: <200501310034.32005.cova@ferrara.linux.it> <20050131080021.GA9446@suse.de> <200501311108.19593.cova@ferrara.linux.it> <20050131110550.GA5058@suse.de> <41FE1B39.6030702@torque.net> <20050131114943.GD5058@suse.de> <41FE2DFB.1090801@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.gerritsaa.nl ([82.168.101.83]:51778 "EHLO
-	frisbee.gerritsacc.nl") by vger.kernel.org with ESMTP
-	id S261193AbVAaNtB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Jan 2005 08:49:01 -0500
+Received: from ns.virtualhost.dk ([195.184.98.160]:56222 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261197AbVAaNxf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 Jan 2005 08:53:35 -0500
+Content-Disposition: inline
+In-Reply-To: <41FE2DFB.1090801@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: Fabio Coatti <cova@ferrara.linux.it>, akpm@osdl.org, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Hey all!
+On Mon, Jan 31 2005, Douglas Gilbert wrote:
+> Jens Axboe wrote:
+> >On Mon, Jan 31 2005, Douglas Gilbert wrote:
+> >
+> >>Jens Axboe wrote:
+> >>
+> >>>On Mon, Jan 31 2005, Fabio Coatti wrote:
+> >>>
+> >>>
+> >>>>Alle 09:00, luned=EC 31 gennaio 2005, Jens Axboe ha scritto:
+> >>>>
+> >>>>
+> >>>>>>At this point k3b is stuck in D stat, needs reboot.
+>=20
+> I was able to replicate this with a USB burner.
+> My system didn't need a reboot. The "D" state was locked
+> on "blk_execute_rq". The burner was still accessible via
+> sg.
 
-I have a PowerEDGE 2400 with  PERC2/Si with 4x9GB Drives with RedHat EL 3.0
-Container 0: plain 9GB drive (O/S)
-Container 1: 3x9GB in RAID5 (data)
+With a slave burner on the same interface as your hard drive, it would
+soft hang the system.
 
-After getting I/O Errors (and gettinge a strange noise from drive 0:3:0), I
-did the unthinkable: I pulled the drive from the chassis without shutting it
-down. (oops)
-I have now verified the drive, cleaned off the partition and rescanned the
-bus.
-...but the drive won't failover
+> >>>>>The most likely suspect is the REQ_BLOCK_PC scsi changes. Can yo=
+u try
+> >>>>>2.6.11-rc2-mm1 with bk-scsi backed out? (attached)
+> >>>>
+> >>>>just tried, right guess :)
+> >>>>backing out that patch the problem disappears.
+> >>>>Let me know if you need to narrow further that issue.
+> >>>
+> >>>
+> >>>Doug, it looks like your REQ_BLOCK_PC changes are buggy. Let me kn=
+ow if
+> >>>you cannot find the full post and I'll forward it to you.
+> >>
+> >>Jens,
+> >>Hmm. Found the thread on lkml. I got an almost identical
+> >>lock up in k3b with a USB external cd/dvd drive recently.
+> >>My laptop didn't need rebooting (probably since the root
+> >>fs is one an ide disk).
+> >>
+> >>That is a quite large patch that you referenced. I'll
+> >>try and replicate and report back.
+> >
+> >
+> >My guess would be the scsi_lib changes, I would suggest you start th=
+ere.
+>=20
+> Indeed. I'm not sure what I was thinking in
+> scsi_io_completion(). This small reversion
+> fixes my k3b problem; tested with a USB external
+> burner.
 
-I have set it to failover, but the PERC won't failover the drive, even after
-a (warm) reboot.
+Well at least I had hoped you would have tested patches going into
+mainline...
 
-Did I forget anything?
+Can you make sure it gets to Linus asap? Otherwise I'm sure I'll be
+flooded with mails on burning not working very shortly.
 
-Thanks in advance,
+--=20
+Jens Axboe
 
-Kit Gerrits
-kit@gerritsaa.nl
-
-
----------------
-Debugging info:
----------------
-
-AFA0> disk list
-Executing: disk list
-
-B:ID:L  Device Type     Blocks    Bytes/Block Usage            Shared Rate
-------  --------------  --------- ----------- ---------------- ------ ----
-0:00:0   Disk            17783240  512         Initialized      NO     80
-0:01:0   Disk            17783240  512         Initialized      NO     80
-0:02:0   Disk            17783240  512         Initialized      NO     80
-0:03:0   Disk            17783240  512         Initialized      NO     80
-
-AFA0> container show failover
-Executing: container show failover
-
-Container Scsi B:ID:L
---------- ----------------------------------
-  0       --- No Devices Assigned ---
-  1       0:03:0
-
-AFA0> container list
-Executing: container list
-Num          Total  Oth Chunk          Scsi   Partition
-Label Type   Size   Ctr Size   Usage   B:ID:L Offset:Size
------ ------ ------ --- ------ ------- ------ -------------
- 0    Volume 8.47GB            Open    0:00:0 64.0KB:8.47GB
- /dev/sda             NT
-
- 1    RAID-5 16.9GB       32KB Open    0:01:0 64.0KB:8.47GB
- /dev/sdb             DATA             0:02:0 64.0KB:8.47GB
-                                       ?:??:?  - Missing -
-
-AFA0> controller show au
-Executing: controller show automatic_failover
-Automatic failover ENABLED
-
-AFA0> container scrub 1
-Executing: container scrub 1
-Command Error: <The controller was unable to perform a scrub (consistency
-check)
- operation on the container because one or more of the container's
-partitions fa
-iled.  >
-
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
