@@ -1,39 +1,37 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Patch: s390 root on scsi disc
-Date: Sat, 19 Jun 2004 15:52:44 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040619145244.GA6398@infradead.org>
-References: <1087661628.26436.30.camel@localhost> <20040619142738.GA6062@infradead.org> <1087663139.26437.43.camel@localhost>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Proposal for new generic device API: dma_get_required_mask()
+Date: 19 Jun 2004 10:00:50 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1087657251.2162.49.camel@mulgrave>
+References: <1087481331.2210.27.camel@mulgrave>
+	<m33c4tsnex.fsf@defiant.pm.waw.pl> <1087523134.2210.97.camel@mulgrave>
+	<m3fz8s79dz.fsf@defiant.pm.waw.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.146.154.40] ([213.146.154.40]:43470 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S263937AbUFSOwp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Jun 2004 10:52:45 -0400
-Content-Disposition: inline
-In-Reply-To: <1087663139.26437.43.camel@localhost>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S263979AbUFSPBC@vger.kernel.org>
+In-Reply-To: <m3fz8s79dz.fsf@defiant.pm.waw.pl>
+To: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan =?iso-8859-1?Q?V=F6lkel?= <stefan.voelkel@millenux.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Heiko Carstens <Heiko.Carstens@de.ibm.com>
 
-On Sat, Jun 19, 2004 at 04:39:00PM +0000, Stefan V=F6lkel wrote:
-> >=20
-> > please use module_param instead.  still wondering why zfcp needs pa=
-ramters
-> > anyway..
->=20
-> Well, my problem was that passing device=3Dfoo at boot time (zfcp com=
-piled
-> into the kernel) resulted in device beeing empty. device is
->=20
->         module_param(device, charp, 0);
->         MODULE_PARM_DESC(device, "specify initial device");
+On Fri, 2004-06-18 at 18:07, Krzysztof Halasa wrote:
+> James Bottomley <James.Bottomley@steeleye.com> writes:
+> I don't think so. We already have separate masks for coherent
+> and non-coherent mappings (in PCI API, and I'm told it's to be extended
+> to DMA API as well). And we need them.
+> 
+> The problem is we're missing DMA masks for non-alloc calls (depending
+> on the platform) and thus that it isn't very reliable. Drivers which
+> need this are forced to bounce buffers themselves, and many of them
+> will not work on 64-bit platforms (as of ~ 2.6.0, I don't check that
+> regularly). And yes, we really need reliable masks for non-alloc
+> mappings.
 
-You need to pass zfcp.device=3Dfoo
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Could you elaborate on this?  In the current scheme the coherent mask is
+for descriptor allocation (i.e. dma_alloc_coherent()) and the dma_mask
+represents the bus physical addresses to which the device can DMA
+directly; there's not much more the DMA API really does, what do you
+think is missing?
+
+James
