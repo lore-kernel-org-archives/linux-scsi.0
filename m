@@ -1,38 +1,42 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [BK PATCH] bug fixes for scsi for linux-2.6.3-rc1
-Date: Sun, 8 Feb 2004 16:19:11 +0000
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: [BK PATCH] bug fixes for scsi for linux-2.6.3-rc1
+Date: 08 Feb 2004 11:14:54 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040208161911.GF24334@parcelfarce.linux.theplanet.co.uk>
-References: <1076256895.2055.6.camel@mulgrave>
+Message-ID: <1076256895.2055.6.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:9951 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263760AbUBHQTN
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 8 Feb 2004 11:19:13 -0500
-Content-Disposition: inline
-In-Reply-To: <1076256895.2055.6.camel@mulgrave>
+Received: from stat1.steeleye.com ([65.114.3.130]:31643 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263771AbUBHQPJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 8 Feb 2004 11:15:09 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sun, Feb 08, 2004 at 11:14:54AM -0500, James Bottomley wrote:
-> contains four bugfixes for the previous update (actually allow the
-> qla2xxx to build as part of the build process and remove its compile
-> warnings, fix the mptscsih_exit() discard problem and undelete the
-> qlogicfc driver).
+The BK tree at
 
-Wasn't the mptscsih_exit problem already fixed by:
+bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
 
-http://linux.bkbits.net:8080/linux-2.5/patch@1.1500.2.166?nav=index.html|ChangeSet@-3d|cset@1.1500.2.166
+contains four bugfixes for the previous update (actually allow the
+qla2xxx to build as part of the build process and remove its compile
+warnings, fix the mptscsih_exit() discard problem and undelete the
+qlogicfc driver).
 
-(went in via akpm 48 hours ago)
+The short changelog is:
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Andrew Morton:
+  o Fix qla2xxx warnings
+
+Andrew Vasquez:
+  o qla2xxx Kconfig fix
+
+James Bottomley:
+  o mpt fusion fix mptscsih_exit() discard
+  o SCSI: undelete qlogicfc driver
+
+
+James
+
+
