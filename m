@@ -1,29 +1,88 @@
-From: Thomas Babut <thomas@babut.net>
-Subject: Re: Kernel 2.6.x hangs with Symbios Logic 53c1010 Ultra3 SCSI	Adapter
-Date: Tue, 23 Nov 2004 02:39:17 +0100
-Message-ID: <41A294C5.8040702@babut.net>
-References: <04Nov8.094419est.332239@cyborg.cybernetics.com> <1099928314.10944.81.camel@compaq-rhel4.xsintricity.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: [PATCH] gdth buggy page mapping
+Date: Tue, 23 Nov 2004 19:06:22 +0100
+Message-ID: <20041123180622.GK13174@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tueddeln.de ([213.202.245.13]:46037 "EHLO srv.specialhosting.de")
-	by vger.kernel.org with ESMTP id S262523AbUKWBjT (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:25259 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261437AbUKWSGx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Nov 2004 20:39:19 -0500
-In-Reply-To: <1099928314.10944.81.camel@compaq-rhel4.xsintricity.com>
+	Tue, 23 Nov 2004 13:06:53 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Matthew Wilcox <matthew@wil.cx>
+To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+Cc: achim_leubner@adaptec.com
 
-Would it be possible to integrate the sym53c8xx (1, not sym53c8xx_2) 
-driver from Kernel 2.4.28 in 2.6? For me it would be the working 
-solution to use my SCSI-Controller with Kernel 2.6.
+Hi,
 
-Perhaps someone could make a patch for Kernel 2.6 which adds the old driver.
+Just tripped over a bug report for the SUSE kernel where gdth would
+crash on a 32G opteron, turned out that the gdth_internal_copy() sg
+handling was really buggy. After fixing this I wanted to do the same for
+mainline, but I can see that a vain attempt was already made to fix it.
+Unfortunately it wasn't complete, and on top of that there's room for
+improvement.
 
-Thanks.
+The current code is buggy on highmem, as page_address() will not yield a
+valid kernel address causing a NULL pointer dereference. The current
+code also doesn't unmap the sg list if it sees a NULL sl->page. In fact,
+the whole sg mapping looks really strange, why on earth would you be
+mapping the sglist for dma when you are only going to copy from it?
 
-Regards,
-Thomas Babut
+This patch corrects both errors - correctly maps in the page, and kills
+the pci_map_sg/pci_unmap_sg calls completely. If someone could test
+this, that would be great.
+
+Signed-off-by: Jens Axboe <axboe@suse.de>
+
+===== drivers/scsi/gdth.c 1.44 vs edited =====
+--- 1.44/drivers/scsi/gdth.c	2004-10-01 04:44:10 +02:00
++++ edited/drivers/scsi/gdth.c	2004-11-23 19:05:51 +01:00
+@@ -2708,7 +2708,6 @@
+     ushort cpsum,cpnow;
+     struct scatterlist *sl;
+     gdth_ha_str *ha;
+-    int sgcnt;
+     char *address;
+ 
+     cpcount = count<=(ushort)scp->bufflen ? count:(ushort)scp->bufflen;
+@@ -2717,8 +2716,8 @@
+     if (scp->use_sg) {
+         sl = (struct scatterlist *)scp->request_buffer;
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,13)
+-        sgcnt = pci_map_sg(ha->pdev,sl,scp->use_sg,PCI_DMA_FROMDEVICE);
+-        for (i=0,cpsum=0; i<sgcnt; ++i,++sl) {
++        for (i=0,cpsum=0; i<scp->use_sg; ++i,++sl) {
++	    unsigned long flags;
+             cpnow = (ushort)sg_dma_len(sl);
+             TRACE(("copy_internal() now %d sum %d count %d %d\n",
+                           cpnow,cpsum,cpcount,(ushort)scp->bufflen));
+@@ -2730,17 +2729,18 @@
+                        hanum);
+                 return;
+             }
+-            address = (char *)(page_address(sl->page) + sl->offset);
++	    local_irq_save(flags);
++	    address = kmap_atomic(sl->page, KM_BIO_SRC_IRQ) + sl->offset;
+             memcpy(address,buffer,cpnow);
++	    flush_dcache_page(sl->page);
++	    kunmap_atomic(address, KM_BIO_SRC_IRQ);
++	    local_irq_restore(flags);
+             if (cpsum == cpcount)
+                 break;
+             buffer += cpnow;
+         }
+-        pci_unmap_sg(ha->pdev,scp->request_buffer,
+-                     scp->use_sg,PCI_DMA_FROMDEVICE);
+ #else
+-        sgcnt = scp->use_sg;
+-        for (i=0,cpsum=0; i<sgcnt; ++i,++sl) {
++        for (i=0,cpsum=0; i<scp->use_sg; ++i,++sl) {
+             cpnow = (ushort)sl->length;
+             TRACE(("copy_internal() now %d sum %d count %d %d\n",
+                           cpnow,cpsum,cpcount,(ushort)scp->bufflen));
+
+-- 
+Jens Axboe
+
