@@ -1,33 +1,53 @@
-From: "Nate Iverson" <niverson@pillardata.com>
-Subject: Where is max_scsi_adapter_scatter_gather_elements found in the Linux source code?
-Date: Tue, 21 Sep 2004 11:05:13 -0600
+From: James.Smart@Emulex.Com
+Subject: RE: [Announce] Emulex lpfcdriver v8.0.12 available
+Date: Tue, 21 Sep 2004 13:07:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <16236EEEF4D4264DA31C2E35E3607CFE08EA23@coex02.trans.corp>
+Message-ID: <0B1E13B586976742A7599D71A6AC733C086575@xbl3.ma.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.pillardata.com ([63.251.178.132]:42168 "EHLO
-	mail1.pillardata.com") by vger.kernel.org with ESMTP
-	id S267866AbUIURFS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Sep 2004 13:05:18 -0400
-Received: from caex01.trans.corp (caex01 [172.20.24.16])
-	by mail1.pillardata.com (Postfix) with ESMTP id 656B9E5D9E
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Sep 2004 11:05:14 -0600 (MDT)
+Received: from emulex.emulex.com ([138.239.112.1]:57058 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S267863AbUIURH7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Sep 2004 13:07:59 -0400
 content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: hch@infradead.org
+Cc: linux-scsi@vger.kernel.org
 
+The snippet was the result of interacting with our ppc64 partner. Yes - it makes more sense to have the user set this.
 
-> I'm resending this becuase I missed the http links are treated as SPAM thing.
+-- james
+
+> -----Original Message-----
+> From: Christoph Hellwig [mailto:hch@infradead.org]
+> Sent: Tuesday, September 21, 2004 12:56 PM
+> To: Smart, James
+> Cc: linux-scsi@vger.kernel.org
+> Subject: Re: [Announce] Emulex lpfcdriver v8.0.12 available
 > 
-> In en.tldp.org/HOWTO/SCSI-Generic-HOWTO/dio.html it says 
 > 
-> Notes
+> Hmm, compilation fails for me on ppc64.  The culprit is a 
+> little makefile
+> fragment which has been in the driver since the beginning:
 > 
-> [1]	Unfortunately that setup time is large enough in some versions of the lk 2.4 series to adversely impact direct IO performance. Also memory malloc()-ed in the user space tends to be made up of discontinuous pages seen from the SCSI adapter. This requires the sg driver to build heavily splintered scatter gather lists which is less than desirable. This limits the maximum transfer size to [(max_scsi_adapter_scatter_gather_elements - 1) * PAGE_SIZE]. [This is a _different_ scatter gather mechanism to that which the user sees in the sg interface based on iovec.]
+> ifeq ($(shell uname -m),ppc64)
+> ifndef ($(CROSS_COMPILE))
+> CROSS_COMPILE := $(shell if [ -e 
+> /usr/local/ppc64-current3.0/bin/powerpc64-linux-gcc ]; then \
+>     echo /usr/local/ppc64-current3.0/bin/powerpc64-linux-; \
+>     else if [ -e /opt/cross/bin/powerpc64-linux-gcc ]; then \
+>     echo /opt/cross/bin/powerpc64-linux- ; fi fi)
+> endif
+> endif
 > 
+> I don't have a compiler in either of this places, shouldn't 
+> it be better
+> to rely on the user to always insert the proper CROSS_COMPILE command
+> line?  I have for example a ~/bin/make64 script:
 > 
-> I have grepped through the Linux source code, but I can't find max_scsi_adapter_scatter_gather_elements. The max data transfer appears to be ~1MB on my kernel. I'm using Redhat 9 with a custom kernel I built.(4.20-8_SPARSE_16). I would like to double the max tranfer size so my target device can be forced to do iterations on large read and write command. I'm assuming changing PAGE_SIZE would cause problems for other modules.
+> ---- snip ----
+> CROSS_COMPILE=powerpc64-unknown-linux-gnu- make ARCH=ppc64 $*
+> ---- snip ----
 > 
-> Nathan Iverson
