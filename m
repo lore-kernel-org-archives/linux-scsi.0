@@ -1,65 +1,60 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH as398] sd.c: adjust READ_CAPACITY for broken devices
-Date: Tue, 9 Nov 2004 09:50:13 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0411090943070.951-100000@ida.rowland.org>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: Report luns [was: Apple Xserve RAID and qlogic ISP2312 (qla2300)]
+Date: Tue, 09 Nov 2004 10:06:08 -0500
+Message-ID: <4190DCE0.1070606@adaptec.com>
+References: <20041027233321.GA842@astral.ro> <20041028143734.GA16358@beaverton.ibm.com> <20041028153522.GC1915@astral.ro> <20041028164210.GA16905@beaverton.ibm.com> <20041028172143.GA20949@praka.san.rr.com> <20041029085800.GF6671@astral.ro> <20041029180633.GA27267@beaverton.ibm.com> <20041101105611.GJ22603@astral.ro> <20041101194845.GA27913@us.ibm.com> <41903031.3050205@torque.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:516 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S261549AbUKIOuR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2004 09:50:17 -0500
+Received: from magic.adaptec.com ([216.52.22.17]:40122 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261552AbUKIPG3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2004 10:06:29 -0500
+In-Reply-To: <41903031.3050205@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: dougg@torque.net
+Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
 
-James:
+Douglas Gilbert wrote:
+> So if that fails scsi_scan.c might issue a REPORT LUNS command to
+> this lun: 0xc101 which is the value of the REPORT LUNS well-known lu.
+ > Note that this is a 16 bit quantity (not 64 bit as I said in a
+> previous post about luns). For simplicity let us assume that
+> that it is at the top level. [If a device returns HiSup=1 in its
+> standard INQUIRY response then it claims to support a 4 level
+> hierarchy in its luns (with 16 bits in each level).]
 
-A number of USB mass storage devices return the wrong value in response to 
-READ CAPACITY: They give the total number of blocks rather than the 
-highest block number.  Currently the usb-storage driver tries to adjust 
-for this by altering the contents of the reply buffer.  That's not a very 
-good idea because it prevents users from seeing what the device actually 
-has to say; it violates the principle that a transport should do nothing 
-more than transfer data.
+And also supports REPORT LUNS.
 
-This patch moves the responsibility for adjusting the capacity to the sd 
-driver instead, by adding a new device flag.  After this has been merged 
-the corresponding change (to set the flag) will be made to the usb-storage 
-driver.
+So in either case, we send REPORT LUNS to LUN 0 and if
+this fails to REPORT LUNS W-LUN (0xC101...).
 
-Please apply.
+Since the standard says that depending on the transport
+protocol LUNs are either 16 or 64 bit values, how do
+we decide this from SCSI Core/app. client?  Wouldn't it
+be better to just send 64 bits with bytes 2 to 7 all 0-ed?
 
-Alan Stern
+So in general SCSI Core always uses 64 bits and the LLDD
+decides between 16 and 64 bits, since the transport could
+be messier.
+
+> So if a modern SCSI enclosure or bridge uses well known lus
+> rather than the lun 0 hack, how will applications in linux
+> access them? They are certainly not block devices.
+
+Ah, good question.  No, they cannot be block devices since
+they are not mountable.  But they are _addressable_ devices.
+
+If it is decided to not create a new OS type, then those
+could be char devices on the bus, and accessed via sg.
+
+If it is decided to create a new OS type, then 'a' would
+be appropriate to denote addressable devices, again
+being accessed via sg.  Do you think expanders could
+be represented by those device types too?
+
+	Luben
 
 
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-
-===== include/scsi/scsi_device.h 1.14 vs edited =====
---- 1.14/include/scsi/scsi_device.h	2004-10-05 11:47:13 -04:00
-+++ edited/include/scsi/scsi_device.h	2004-11-08 15:42:52 -05:00
-@@ -111,6 +111,7 @@
- 	unsigned allow_restart:1; /* issue START_UNIT in error handler */
- 	unsigned no_uld_attach:1; /* disable connecting to upper level drivers */
- 	unsigned select_no_atn:1;
-+	unsigned fix_capacity:1;	/* READ_CAPACITY is too high by 1 */
- 
- 	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
- 
-===== drivers/scsi/sd.c 1.73 vs edited =====
---- 1.73/drivers/scsi/sd.c	2004-10-20 12:24:44 -04:00
-+++ edited/drivers/scsi/sd.c	2004-11-08 15:42:37 -05:00
-@@ -1104,6 +1104,11 @@
- 			(buffer[9] << 16) | (buffer[10] << 8) | buffer[11];
- 	}	
- 
-+	/* Some devices return the total number of sectors, not the
-+	 * highest sector number.  Make the necessary adjustment. */
-+	if (sdp->fix_capacity)
-+		--sdkp->capacity;
-+
- got_data:
- 	if (sector_size == 0) {
- 		sector_size = 512;
 
