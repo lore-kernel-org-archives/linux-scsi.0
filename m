@@ -1,30 +1,21 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: About dd & make_request
-Date: Fri, 7 Mar 2003 16:08:09 +0100
+From: Vadim Nekhoroshev <vn@sot.com>
+Subject: module aacraid 0.9.10dmb halt system
+Date: Fri, 7 Mar 2003 17:13:48 +0200 (EET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030307150809.GH941@suse.de>
-References: <20030307140502.95076.qmail@mail.com>
+Message-ID: <Pine.LNX.4.44.0303071710100.30229-100000@ares.sot.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030307140502.95076.qmail@mail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Subodh S <subodh_s_1975@mail.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Mar 07 2003, Subodh S wrote:
-> Hi,
-> 
-> When run
-> 
-> dd if=/dev/mydevice of=/dev/null count=10
-> 
-> why does my make_request function get called only five times ??
+I'm running aacraid module on kernel version 2.4.19, compiling with 
+support, SMP and system halt. If i running this module on kernel, 
+compiling without support SMP, all work fine.
 
-because you didn't change the block size, so you got 5 1024b (default)
-buffers thrown at you?
+What are ideas ?
 
--- 
-Jens Axboe
+Thanks,
+Vadim
 
