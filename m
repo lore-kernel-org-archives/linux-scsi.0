@@ -1,37 +1,53 @@
-From: "Grover, Andrew" <andrew.grover@intel.com>
+From: Oliver Xymoron <oxymoron@waste.org>
 Subject: RE: driverfs is not for everything! (was:  [PATCH] /proc/scsi/map
-	 )
-Date: Mon, 24 Jun 2002 11:47:37 -0700
+ )
+Date: Mon, 24 Jun 2002 14:03:06 -0500 (CDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <59885C5E3098D511AD690002A5072D3C02AB7F56@orsmsx111.jf.intel.com>
+Message-ID: <Pine.LNX.4.44.0206241358070.9420-100000@waste.org>
+References: <59885C5E3098D511AD690002A5072D3C02AB7F56@orsmsx111.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <59885C5E3098D511AD690002A5072D3C02AB7F56@orsmsx111.jf.intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Roman Zippel' <zippel@linux-m68k.org>
-Cc: 'David Brownell' <david-b@pacbell.net>, 'Nick Bellinger' <nickb@attheoffice.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Patrick Mochel <mochel@osdl.org>
+To: "Grover, Andrew" <andrew.grover@intel.com>
+Cc: 'Roman Zippel' <zippel@linux-m68k.org>, 'David Brownell' <david-b@pacbell.net>, 'Nick Bellinger' <nickb@attheoffice.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Patrick Mochel <mochel@osdl.org>
 
-> From: Roman Zippel [mailto:zippel@linux-m68k.org] 
-> On Mon, 24 Jun 2002, Grover, Andrew wrote:
-> > If a device can be accessed by multiple machines 
-> concurrently, it should not
-> > be in driverfs.
-> 
-> I don't think it's that easy. If the computer wakes up again, 
-> devices have
-> to be reinitialised in the right order, e.g. iSCSI needs a 
-> working network
-> stack and devices.
+On Mon, 24 Jun 2002, Grover, Andrew wrote:
 
-Would the iSCSI device be a child of the network device? That would ensure
-that the NIC was fully restarted before the iSCSI device.
+> > From: Roman Zippel [mailto:zippel@linux-m68k.org]
+> > On Mon, 24 Jun 2002, Grover, Andrew wrote:
+> > > If a device can be accessed by multiple machines
+> > concurrently, it should not
+> > > be in driverfs.
+> >
+> > I don't think it's that easy. If the computer wakes up again,
+> > devices have
+> > to be reinitialised in the right order, e.g. iSCSI needs a
+> > working network
+> > stack and devices.
+>
+> Would the iSCSI device be a child of the network device? That would ensure
+> that the NIC was fully restarted before the iSCSI device.
 
-> Another problem is how to properly shutdown the
-> machine. Scripts now "know" that nfs requires the network, 
-> but how does
-> the script find out, that /dev/sdb2 is an iSCSI device, so that it can
-> properly unmount the device, before the network is shutdown?
+If by network device you mean NIC, the answer is no. Think redundant
+routing. This problem already exists in the SCSI realm (multipathed
+arrays) and there's I remember reading there's some multipath stuff in
+place, but I doubt driverfs has really thought about it.
 
-Would a bottom-up traversal of the device tree do things properly?
+The multipath problem means our tree is really a DAG. Which may or may not
+be a problem.
 
-Regards -- Andy
+> > Another problem is how to properly shutdown the
+> > machine. Scripts now "know" that nfs requires the network,
+> > but how does
+> > the script find out, that /dev/sdb2 is an iSCSI device, so that it can
+> > properly unmount the device, before the network is shutdown?
+>
+> Would a bottom-up traversal of the device tree do things properly?
+
+If we think in terms of DAGs instead of trees, yes.
+
+-- 
+ "Love the dolphins," she advised him. "Write by W.A.S.T.E.."
+
