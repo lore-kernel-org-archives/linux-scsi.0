@@ -1,48 +1,34 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [RFC]: 64 bit LUN/Tags, dummy device in host_queue, host_lock <->
- LLDD reentrancy
-Date: Mon, 26 Aug 2002 09:11:16 -0500
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [RFC]: 64 bit LUN/Tags, dummy device in host_queue, host_lock <-> LLDD reentrancy
+Date: Mon, 26 Aug 2002 09:16:28 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200208261411.g7QEBGS30369@localhost.localdomain>
-References: <ARZEH@de.ibm.com>
+Message-ID: <20020826091628.A6694@eng2.beaverton.ibm.com>
+References: <3D669AC2.4C5D522A@splentec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA22719
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2002 07:11:31 -0700
-In-Reply-To: Message from "Aron Zeh" <ARZEH@de.ibm.com>
-   of "Mon, 26 Aug 2002 10:02:47 +0200." <OF80DCCDBC.5B147AD9-ONC1256C21.002BB3EE@de.ibm.com>
+In-Reply-To: <3D669AC2.4C5D522A@splentec.com>; from luben@splentec.com on Fri, Aug 23, 2002 at 04:27:46PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Aron Zeh <ARZEH@de.ibm.com>
-Cc: Luben Tuikov <luben@splentec.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben@splentec.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-ARZEH@de.ibm.com said:
-> To me all of the proposed changes look good. The one above I'd be
-> interested in particularly. It would help sorting out a lot of woes we
-> had with writing a fibre-channel HBA driver. For fibre-channel LUNs
-> and port IDs (WWPN) are 64-bit and depending on configuration, high
-> values can be (and in our case are) common. 
+On Fri, Aug 23, 2002 at 04:27:46PM -0400, Luben Tuikov wrote:
 
-Actually, I'd like to see us moving towards adopting the capabilities of 
-driverfs for this.
+> * In scsi_scan.c :: void scan_scsis(), select_queue_depths() is called
+> when there is a _dummy_ device in host_queue. This comes from
+> doing that juggle with SDpnt and oldSDpnt, allocating it in one
+> place and freeing it in another...
+> 
+> So when select_queue_depths() is called, in the host_queue, there's
+> _one__more_ device than there really should be, because of that SDpnt/oldSDpnt.
+> 
+> I filter the dummy SDpnt in select_queue_depths() by checking
+> vendor, model, rev and attached. But I'd rather
+> just get only the _actual_ devices in the host_queue, by
+> probably getting rid of that SDpnt/oldSDpnt juggle logic.
 
-PUN is to all intents and purposes now an abstraction in the FC realm.  LUNs 
-too, as long as they retain the grouping abstraction with PUNs.  The mid layer 
-really doesn't need to know what these are (there are a few pieces of code 
-that populate the LUN field for SCSI-1 devices that would need rework).  All 
-the mid layer really needs is the Scsi_Device structure that describes an 
-individual LUN (and some knowledge of LUN and PUN grouping for reset action 
-prediction).  It doesn't need to know or care about the current PUN and LUN 
-numbers.
+The above is for the "hardcoded" scans; the cleaned-up scsi_scan.c has
+this change and is in the latest linus bk tree, so it should show up
+in 2.5.31.
 
-If FC drivers move straight to using driverfs, you can populate the driverfs 
-names with whatever is meaningful to you for PUN (WWN, portid etch) and LUN 
-and thus avoid this problem (and also the mapping code most have to take these 
-to and from the PUN/LUN numbers).  Since driverfs is a tree, the PUN/LUN 
-division is done in a directory (and could, theoretically be done on more than 
-just a two level split).
-
-James
-
-
+-- Patrick Mansfield
