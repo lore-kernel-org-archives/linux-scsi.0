@@ -1,52 +1,60 @@
-From: Kevin Tappe <kevin@zerodivide.de>
-Subject: g_NCR5380 - 2.6.0 -  problem with reloading module
-Date: Mon, 5 Jan 2004 23:42:20 +0100
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: Notify about errors during initialization
+Date: Mon, 5 Jan 2004 15:32:21 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040105224220.GA1168@nihil.tappe.netz>
+Message-ID: <20040105233221.GC1936@beaverton.ibm.com>
+References: <20040105021047.GD30408@one-eyed-alien.net> <Pine.LNX.4.44L0.0401051659180.604-100000@ida.rowland.org> <20040105221302.A7678@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imap.gmx.net ([213.165.64.20]:9102 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S265992AbUAEWmV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jan 2004 17:42:21 -0500
-Received: from kevin by nihil.tappe.netz with local (Exim 3.35 #1 (Debian))
-	id 1AddQS-0000K1-00
-	for <linux-scsi@vger.kernel.org>; Mon, 05 Jan 2004 23:42:20 +0100
+Received: from e34.co.us.ibm.com ([32.97.110.132]:22500 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S265849AbUAEX1z
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Jan 2004 18:27:55 -0500
 Content-Disposition: inline
+In-Reply-To: <20040105221302.A7678@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, USB Storage List <usb-storage@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Hi,
+Christoph Hellwig [hch@infradead.org] wrote:
+> On Mon, Jan 05, 2004 at 05:04:59PM -0500, Alan Stern wrote:
+> > James:
+> > 
+> > Can you or someone else on the SCSI development list answer this question?
+> > 
+> > When a new host is registered and scanned for devices, are we guaranteed
+> > that the scanning procedure will be finished when scsi_scan_host()  
+> > returns?
+> 
+> With the current code the scanning activity has finished when we return.
+> But I'm not sure whether we should document that assumption - if we're
+> moving to parallel scanning that assumption might soon be void.
+> 
 
-i hope this is the right emailadress for my problem...
+It would appear that saying the scan requested by scsi_scan_host is
+completed when the function returns would be the expected result. The
+LLDD writer should be aware that once scsi_add_host has been called
+hotplug events to user space could allow the user space to scan and
+delete devices through sysfs making assumptions on devices found or not
+found iffy.
 
-The first time I load the module g_NCR5380 everything works fine:
-scsi0 : interrupts not enabled. for better interactive performance,
-scsi0 : please jumper the board for a free IRQ.
-scsi0 : at port 0x280 interrupts disabled options CAN_QUEUE=16  
-	CMD_PER_LUN=2 release=1 generic options
-	AUTOPROBE_IRQ AUTOSENSE USLEEP, USLEEP_POLL=1 USLEEP_SLEEP=20 
-	generic release=7
-scsi0 : Generic NCR5380/53C400 Driver
-	   Vendor: UMAX      Model: Astra 1200S
-		Rev: V2.9   Type:   Scanner ANSI SCSI revision: 02
-Attached scsi generic sg0 at scsi0, channel 0, id 5, lun 0,  type 6
+> > The reason for asking is so that the usb-storage driver can test whether 
+> > any devices were found.  Depressingly often some incompatibility causes 
+> > the scan to fail, and when that happens it would be nice to put a 
+> > notification in the system log, unregister the host, and generally avoid 
+> > loading the driver as though everything was okay.
+> 
+> Hmm.  maybe we should guarantee that scsi_scan_host will have finished
+> and introduce a scsi_scan_host_parallel when we go down that route.  Or
+> do it the other way and add a serialized version for usb-storage..
 
-I can't reload the module g_NCR5380 after an rmmod:
+I thought we where moving to not calling a scan api from the LLDD and
+using hotplug events. Then user space would define the scan policy it
+wanted.
 
-nihil:~# modprobe -v g_NCR5380
-insmod /lib/modules/2.6.0/kernel/drivers/scsi/g_NCR5380.ko ncr_irq=255
-ncr_addr=0x280 dtc_3181e=1
-FATAL: Error inserting g_NCR5380
-(/lib/modules/2.6.0/kernel/drivers/scsi/g_NCR53
-80.ko): No such device
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
-After a reboot everything is just fine again.
-I use a vanilla 2.6.0 kernel. Please let me know if you need any further
-information.
-
--Kevin
--- 
-Think how much fear is going to be required to stop people from passing
-along copies of things on their computers. I hope you don't want to live
-in a world with that much fear. - Richard M. Stallman
