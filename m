@@ -1,71 +1,50 @@
-From: Lester Hightower <hightowe@10east.com>
-Subject: Fix for memory leak problem in megaraid2.c /proc entries (fwd)
-Date: Thu, 8 Apr 2004 11:29:20 -0400 (EDT)
+From: "Qi, Yanling" <yanling.qi@lsil.com>
+Subject: 2.6 kernel and hot-plug in scsi subsystem
+Date: Thu, 8 Apr 2004 10:31:32 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0404081126480.9356@les5.10east.com>
+Message-ID: <53CF1076699CD711B7DD0002A51363F102AD7F8A@exw-ks.ks.lsil.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from docs1.10east.com ([63.238.77.220]:51101 "EHLO 10east.com")
-	by vger.kernel.org with ESMTP id S262026AbUDHP3X (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2004 11:29:23 -0400
-Received: from les5.progressive-comp.com (les5.progressive-comp.com [63.238.77.104])
-	by 10east.com (8.12.10/8.12.8) with ESMTP id i38FTKud000496
-	for <linux-scsi@vger.kernel.org>; Thu, 8 Apr 2004 11:29:20 -0400
+Received: from mail0.lsil.com ([147.145.40.20]:39909 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261907AbUDHPcl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2004 11:32:41 -0400
+Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
+	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id i38FWRcq009722
+	for <linux-scsi@vger.kernel.org>; Thu, 8 Apr 2004 08:32:27 -0700 (PDT)
+Received: from exw-ks.ks.lsil.com (wic1.ks.lsil.com [153.79.12.11])
+	by milmhbs0.lsil.com (8.12.11/8.12.10) with ESMTP id i38FWrrd008132
+	for <linux-scsi@vger.kernel.org>; Thu, 8 Apr 2004 08:32:54 -0700
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: 'linux-scsi-reflector' <linux-scsi@vger.kernel.org>
 
-Based on this auto-response:
+I didn't find out how hot-plug is handled in the SCSI subsystem and its
+drivers, specially in a SAN environment. Let's assume we have the following
+two scenarios:
 
-| Date: Thu, 08 Apr 2004 10:23:01 -0500
-| From: linux-megaraid-devel-admin@lists.us.dell.com
-| To: DEVNULL@10east.com
-| Subject: Auto-response for your message to linux-megaraid-devel@dell.com
-|
-| The linux-megaraid-devel@dell.com mailing list has been discontinued.
-| Please redirect your message to either:
-|
-| linux-scsi@vger.kernel.org  for all megaraid-specific issues
-| (subscribe at http://vger.kernel.org/vger-lists.html#linux-scsi)
-|
-| or
-|
-| linux-poweredge@dell.com  for all Dell PowerEdge-specific issues
-| (subscribe at http://lists.us.dell.com)
+1. A new target port is plugged into a FC switch where a Linux host HBA is
+connected to. 
+2. An existing target creates a new LUN (a hardware RAID system).
 
+In the first case, FC switch will generate a RSCN event, the FC HBA driver
+knows a new target port joins the Fabric. Should FC HBA driver find new LUNs
+on that target port and call scsi_add_device()/scsi_scan_host()? What should
+the hot-plug event chain look like in this case?
 
-I am forwarding this email to linux-scsi@vger.kernel.org:
+With the second case, the target will generate a UA 3Fh/0Eh (REPORTED LUNS
+DATA HAS CHANGED). If we plan to handle this case, should the middle level
+check the check-condition and perform host-rescan?
 
----------- Forwarded message ----------
-Date: Thu, 8 Apr 2004 11:22:36 -0400 (EDT)
-From: Lester Hightower <hightowe@10east.com>
-To: linux-megaraid-devel@dell.com
-Subject: Fix for memory leak problem in megaraid2.c /proc entries
+Yanling
 
-This diff fixes a memory leak in megaraid2.c, v2.10.1 (Dec 03, 2003):
+ Yanling Qi
+ Software Engineer
+ 9020-I Capital of TX Hwy, Ste150
+ Austin, TX 78759
+ 512-794-3713 phone
+ 512-794-3702 fax
+ yanling.qi@lsil.com
+ www.lsilogicstorage.com
 
-[root@10east scsi]# diff megaraid2.c.MEMORY_LEAK.20040408.lhh megaraid2.c
-3395c3395,3399
-<       if( channel >= max_channels ) return 0;
----
->       if( channel >= max_channels ) {
->               pci_free_consistent(pdev, 256, scsi_inq, scsi_inq_dma_handle);
->               mega_free_inquiry(inquiry, dma_handle, pdev);
->               return 0;
->         }
-
-I have shared it with the proper folks (Atul Mukker) at LSI, so it will
-likely (hopefully) make it into newer driver versions/newer kernels.
-
-The problem occurs only in the circumstance where one reads one of the
-/proc/megaraid/hba<X>/diskdrives-ch<N> files where the card <X> does not
-have channel <N> on it.  Most people would likely not notice this leak in
-normal operation, but due to the way that we monitor our MegaRaid cards in
-our company (we read these /proc entries every 180s) so we found the leak
-rather quickly, and unpleasantly (when your kernel eats all your RAM).
-
---
-Lester H. Hightower <__h+i_g+h_t+o_w+e__@__10east.com>
-Chief Technology Officer, 10 East Corp.
-
-p.s. my_email_addrs =~ s/[_+]/g to email me...
+ LSI Logic Storage Systems
+ AT THE HEART OF INFORMATION
