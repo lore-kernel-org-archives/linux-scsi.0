@@ -1,69 +1,52 @@
-From: Mukul Kotwani <mkotwani@yahoo.com>
+From: Jeremy Higdon <jeremy@classic.engr.sgi.com>
 Subject: Re: Performance
-Date: Sun, 4 Aug 2002 00:39:22 -0700 (PDT)
+Date: Sun, 4 Aug 2002 01:01:58 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020804073922.39115.qmail@web14008.mail.yahoo.com>
-References: <10208032327.ZM1350371@classic.engr.sgi.com>
+Message-ID: <10208040101.ZM1331778@classic.engr.sgi.com>
+References: <20020804073922.39115.qmail@web14008.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <10208032327.ZM1350371@classic.engr.sgi.com>
+In-Reply-To: Mukul Kotwani <mkotwani@yahoo.com>
+        "Re: Performance" (Aug  4, 12:39am)
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@classic.engr.sgi.com>
+To: Mukul Kotwani <mkotwani@yahoo.com>
 Cc: linux-scsi@vger.kernel.org
 
-Thanks for the reply Jeremy!
-
-Can you point me to the proper test which I can use to
-test it? I think I have pretty good servers and
-storage. What did u guys use..and was there any tuning
-of the OS required?
-
-For the IOPs, I guess it must have been the Windows
-cache then, because ths storage used was the same in
-both cases.
-
-Mukul
-
-
---- Jeremy Higdon <jeremy@classic.engr.sgi.com> wrote:
-> We've seen about 15000 IOPS from a 2200 and nearly
-> 40000 from a 2310.
-> With the proper test and proper hardware, you ought
-> to see up to 102 MB/s
-> on disk reads with a 2200 and 204 MB/s with the 2300
-> (10^6 MB).
+On Aug 4, 12:39am, Mukul Kotwani wrote:
 > 
-> However, you may have trouble matching this in the
-> Linux block layer.
-> Perhaps if you try the sg driver with direct I/O . .
-> . .
+> Thanks for the reply Jeremy!
 > 
-> I question the 100% random results that you got from
-> Windows.  100%
-> random implies no cache hits, which would leave you
-> with the raw
-> IOPS that the drive can supply (260 sounds in the
-> right ballpark).
+> Can you point me to the proper test which I can use to
+> test it? I think I have pretty good servers and
+> storage. What did u guys use..and was there any tuning
+> of the OS required?
 > 
-> It would be impossible for the drive to supply 7000
-> IOPS in a
-> random workload.  If you were supplying out of the
-> drive cache or
-> Windows cache, then 7000 seems more reasonable
-> (though perhaps not
-> a very interesting number).
+> For the IOPs, I guess it must have been the Windows
+> cache then, because ths storage used was the same in
+> both cases.
 > 
-> jeremy
-> -
-> To unsubscribe from this list: send the line
-> "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at 
-http://vger.kernel.org/majordomo-info.html
+> Mukul
 
 
-__________________________________________________
-Do You Yahoo!?
-Yahoo! Health - Feel better, live better
-http://health.yahoo.com
+Well, a later post from you indicated you were using 13 luns
+(I presume that means 13 of these 15K drives).  That would
+be 538 IOPS per drive, which sounds a little high (2ms per
+I/O would account for 1/2 rotation and no seek/settle time).
+
+The tests we've run were not using stock Linux SCSI, so it
+might be hard for you to duplicate.  Have you tried using
+the raw driver interface to sd (/dev/raw), or the sg
+benchmark tools?  I believe the raw interface should give
+your the IOPS and the sg interface would give you the MB/s
+(and also the IOPS perhaps).
+
+A couple of years ago, we had some patches to the raw interface
+and block layer that allowed kiobufs to be passed directly to
+the SCSI interface.  That was nice because we avoided the
+CPU overhead of deconstruction and reconstruction of large
+I/O requests.  However, it was messy.  I believe that the
+2.5 changes with bio should help a lot in this area, without
+the mess.
+
+jeremy
