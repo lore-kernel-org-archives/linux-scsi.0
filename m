@@ -1,44 +1,34 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: SCSI multi pathing
-Date: Tue, 15 Jul 2003 11:07:27 -0700
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: Fw: 2.5.75 - ppa unload PATCH and remaining problem
+Date: Tue, 15 Jul 2003 12:52:33 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030715110727.A10381@beaverton.ibm.com>
-References: <7A19797C027A6D449D68329C2A094EA0010C06C1@MUSTANG>
+Message-ID: <20030715125233.458b8c29.akpm@osdl.org>
+References: <20030713141556.13650fdb.akpm@osdl.org>
+	<20030714101041.65de0d72.akpm@osdl.org>
+	<20030714203510.GE1317@beaverton.ibm.com>
+	<200307152143.26772.arvidjaar@mail.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.104]:30682 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S269194AbTGORw0 (ORCPT
+Received: from air-2.osdl.org ([65.172.181.6]:54981 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S269570AbTGOTpY (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jul 2003 13:52:26 -0400
-Content-Disposition: inline
-In-Reply-To: <7A19797C027A6D449D68329C2A094EA0010C06C1@MUSTANG>; from JPeters@JNI.com on Tue, Jul 15, 2003 at 10:24:57AM -0700
+	Tue, 15 Jul 2003 15:45:24 -0400
+In-Reply-To: <200307152143.26772.arvidjaar@mail.ru>
 List-Id: linux-scsi@vger.kernel.org
-To: Johnnie Peters <JPeters@JNI.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Andrey Borzenkov <arvidjaar@mail.ru>
+Cc: andmike@us.ibm.com, James.Bottomley@steeleye.com, hch@infradead.org, linux-scsi@vger.kernel.org
 
-On Tue, Jul 15, 2003 at 10:24:57AM -0700, Johnnie Peters wrote:
-> Hi All,
-> 
-> I am interesting in doing multipathing for Fibre channel.  I have find the
-> multipath project from IBM interesting.  It does not seem to be included in
-> the 2.6-test1 kernel and the patches on their web site are pretty outdated
-> now.
-> 
-> Is there any plans to include this in 2.6 or to keep the patches updated?
-> 
-> Thanks in advance for any information.
+Andrey Borzenkov <arvidjaar@mail.ru> wrote:
+>
+> Well, the reason is simple and is fixed in patch sent two days ago to lkml - 
+> fs/partitions/check.c:register_disk does not add .../disc if media capacity 
+> == 0 - i.e. no media present.
 
-I have updated patches I plan on posting real soon now, I have it ported
-and running with 2.5.74 using qlogic adapters (lastly I used the feral
-driver).
+Please resend a tested, documented patch for that.
 
-There is still much todo. 
+Things are slow at present - Linus is away, the big conference is next
+week, etc.  So please be patient, keep working this and keep hassling folks
+over it, OK?
 
-I would like to push it for inclusion in 2.7.
-
-Hopefully we will have some good discussions at OLS next week, there is a
-multi-path BOF, SCSI BOF, and a presentation on the scsi mid-level
-multi-path.
-
--- Patrick Mansfield
