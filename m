@@ -1,79 +1,82 @@
 From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: sg utils sg_io -i 0x24 -y "12 00:00:00 24 00"
-Date: 07 Nov 2003 09:56:53 -0700
+Date: 07 Nov 2003 10:09:29 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1068224213.2286.115.camel@patrh9>
+Message-ID: <1068224969.2286.142.camel@patrh9>
 References: <1068165515.28505.29.camel@patrh9>
-	 <1068222286.2286.50.camel@patrh9>
+	 <1068222286.2286.50.camel@patrh9>  <1068224213.2286.115.camel@patrh9>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:55779 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264481AbTKGQ5W
+Received: from email-out1.iomega.com ([147.178.1.82]:59108 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264488AbTKGRJ6
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Nov 2003 11:57:22 -0500
-In-Reply-To: <1068222286.2286.50.camel@patrh9>
+	Fri, 7 Nov 2003 12:09:58 -0500
+In-Reply-To: <1068224213.2286.115.camel@patrh9>
 List-Id: linux-scsi@vger.kernel.org
 To: dougg@torque.net
 Cc: patmans@us.ibm.com, linux-scsi@vger.kernel.org
 
-> Perhaps we should be looking at 
-> implementing camcontrol in Linux.
+> > Perhaps we should be looking at 
+> > implementing camcontrol in Linux.
+> 
+> Implementing, yes.  Copying, no.
+> I have a series of arguments, ...
+>
+> > Unix Man Page For 8 camcontrol
+> > http://www.svbug.com/cgi-bin/man.cgi?comd=8+camcontrol
 
-Implementing, yes.  Copying, no.  I have a series of arguments, this
-email presents only the First:
+I think arg parsing is an issue.
 
-> Unix Man Page For 8 camcontrol
-> http://www.svbug.com/cgi-bin/man.cgi?comd=8+camcontrol
+I see the camcontrol man page includes such off-putting apologetic
+fragments as:
 
-I vote (: vehemently :) against merging into sg utils the camcontrol
-etc. practice of ...
+"The sense information from the test unit ready command would not get
+printed out, since the first getopt(3) call in camcontrol bails out when
+it sees the second argument to -c (0x00), above.
 
-... obscuring the plain hex by substituting English at this level.  For
-example, in place of:
+"If the CDB specified causes data to be transfered to or from the SCSI
+device in question, you MUST specify either
+ ... -i len fmt ... -o len fmt [args] ..."
 
-camcontrol tur da0
-camcontrol eject -n cd -u 1 -v
-camcontrol inquiry -D
+I particular want the common things to remain concise.
 
-I vote for:
+I choke over the idea of having to specify fmt in addition to len of -i
+or -o.
 
-sg_io -y "00 00:00:00 00 00"
-sg_io -y "1B 01:00:00 02 00"
-sg_io -i 0x24 -y "12 00:00:00 24 00"
+Part of why I find plscsi/ unreadable, even though I wrote plscsi/
+myself, is that in plscsi/ I resorted to rewriting getopts to fix this
+kind of thing.
 
-Already we have sg_scan sg_inq sg_turs for less precise communication.
+Since then I think I have by now found my way to a (more?) fully
+getopt-compatible parsing of args.  That gccscsi.h I posted #define's A
+thru Z macros that correspond to proposed sg_io args -a thru -z.
 
-I vote for the hex because I can see what it means.  With those
-camcontrol examples, I have to guess whether they sometimes or always
-mean the hex I intend.
+1) That -d is unused appears as, e.g.:
 
-I'm not opposed to offering text & gui as well.  I just want text & gui
-made available separately.  Some of my ideas for a gui full of natural
-language text cribbed from the t10 fiction appear as screen shots near
-the end of the web trail:
+#undef D
 
-Pat LaVarre et alia
-http://members.aol.com/ppaatt/
+2) That some options exist only for the command line appears as, e.g.:
 
-Directly manipulating storage devices
-http://members.aol.com/ppaatt/#storage
+#undef  P /* gcs --please */
 
-2.1. Arbitrary transparent pass thru of SCSI.
-2.1.1. Via Java GUI
-screen shots
-http://members.aol.com/plforth/console/scsi/
+The -p or --please option is an interlock.  You have to add it to pass
+thru such things as non-standard CDB lengths, the op x04 Format that
+smashes disks, and the -y "12 00:00:00 00" Inquiry for Zero that crashes
+many version of Linux 2.4.
 
-http://members.aol.com/plforth/console/scsi/javaspt3c.png
-(and others)
+3) Seeing that the args are single can be difficult, e.g.:
 
-Although few people can easily give SCSI pass thru privilege to a Java
-applet, I surprised myself by discovering that an unsigned unprivileged
-Java applet here remains useful.  In practice I found I left the
-voluminous text & GUI on the web, then where I was actually working I
-fetched the command line app and copy-pasted the command line args I
-wanted from the applet.
+#define L(S, NS) gcs_late(gcs(), (S), (NS))
+
+I figure at the command line we parse $s.fraction and convert to the
+standard posix int pair (seconds, nanoseconds).
+
+4) Seeing that the args are omitted or single can be easy, e.g.:
+
+#define Q() gcs_quiet(gcs())
+#define S(S) gcs_sense_in(gcs(), (S), 4, 0)
 
 Pat LaVarre
 
