@@ -1,113 +1,53 @@
-From: "Moore, Eric Dean" <Emoore@lsil.com>
-Subject: FW: new driver
-Date: Tue, 17 Feb 2004 10:51:47 -0500
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: *solved* megaraid /proc under kernel 2.6.2
+Date: Tue, 17 Feb 2004 16:57:39 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E5703EF9235@exa-atlanta.se.lsil.com>
+Message-ID: <20040217165739.GV31168@parcelfarce.linux.theplanet.co.uk>
+References: <1076884890.2943.265.camel@morsel.kungfoocoder.org> <1076890712.2943.276.camel@morsel.kungfoocoder.org> <1076972673.2259.56.camel@morsel.kungfoocoder.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:57517 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S266237AbUBQPwI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Feb 2004 10:52:08 -0500
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:11183 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S266293AbUBQQ5m
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Feb 2004 11:57:42 -0500
+Content-Disposition: inline
+In-Reply-To: <1076972673.2259.56.camel@morsel.kungfoocoder.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, kschneider@bout-tyme.net, arjanv@redhat.com
-Cc: "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>, "Jarrett, Peter B." <Peterj@lsil.com>
+To: Paul Wagland <paul@kungfoocoder.org>
+Cc: Linux SCSI mailing list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>
 
-I don't believe LSI Logic has opened
-sourced the MegaRAID IDEAL driver for inclusion
-into the generic kernel.
-If it has, its probably best to let this effort
-be driven by Atul Mukker<atulm@lsil.com>.
+On Tue, Feb 17, 2004 at 12:04:33AM +0100, Paul Wagland wrote:
+> Hi all,
+> 
+> OK, I now know what the problem is with the /proc entries and the
+> megaraid driver.
+> 
+> It turns out that pci_driver.probe member (in this case
+> megaraid_probe_one()) is called before the module_init() declared
+> function, in this case megaraid_init().
 
-To my knowledge, this is a SCSI LLD in which 
-both the low-level hardware driver and 
-software raid are one driver.  There was
-an effort I started to open source some of
-the driver, which was linked to a pre-compiled
-library. I'm not sure of the current status
-as its been over a year since my involvement. 
+Hang on.  The pci_driver isn't registered magically, it happens by an
+explicit call.  Oh look, here's the problem:
 
-Eric Moore
-Staff Engineer
-Standard Storage Products Division
-LSI Logic Corporation
-4420 Arrowswest Drive
-Colorado Springs, CO 80907
-Email: emoore@lsil.com
-Web: http://www.lsilogic.com/
+        error = pci_module_init(&megaraid_pci_driver);
+        if (error) 
+                return error;
+        
+#ifdef CONFIG_PROC_FS
+        mega_proc_dir_entry = proc_mkdir("megaraid", &proc_root);
+        if (!mega_proc_dir_entry) {
+                printk(KERN_WARNING
+                                "megaraid: failed to create megaraid root\n");
+        }
+#endif
 
+Just swap these two stanzas and everything will happen in the right order.
 
-
-
-On Saturday, February 14, 2004 5:06 PM, Ken Schneider wrote
-> 
-> I have been sent the sources for the LSI LOGIC, Inc. Ultra 
-> ATA100 IDE raid 
-> controller as found on the mainboard of the HP ML330 
-> computer. I requested 
-> information concerning the inclusion of the code into the 
-> kernel tree and 
-> have been informed that the source is open and can be 
-> included as stated in 
-> all of the .c and .h files.
-> Example:
-> 
-> /*
->  * Linux MegaRAID IDEal Software RAID Stack
->  * Copyright (c) 2003 LSI Logic Corporation
->  
-> *-------------------------------------------------------------
-> ----------------
->  *
->  *  This program is free software; you can redistribute it 
-> and/or modify
->  *  it under the terms of the GNU General Public License as 
-> published by
->  *  the Free Software Foundation; either version 2 of the License, or
->  *  (at your option) any later version.
->  *
->  *  This program is distributed in the hope that it will be useful,
->  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
->  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->  *  GNU General Public License for more details.
->  *
->  *  You should have received a copy of the GNU General Public License
->  *  along with this program; if not, write to the Free Software
->  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
->  *
->  
-> *-------------------------------------------------------------
-> ----------------
->  */
-> 
-> Having this code included will make the life of many people 
-> much easier in 
-> being able to use the raid function of the controller.
-> 
-> I have been able (with the help of people on the SuSE mailing 
-> list) to get the 
-> module compiled for the 2.4 kernel. As the 2.6 tree and compilation 
-> procedures have changed I can no longer get the module to 
-> compile, I am not a 
-> programmer as I know just enough about C to be dangerous.
-> 
-> Copies of the correspondence and the sources are available 
-> either from me or 
-> tech support at LSI Logic Corp. 
-> 
-> Any help in this matter would be appreciated. I am also 
-> willing to be a guinea 
-> pig for any testing of the module.
-> 
-> Ken Schneider
-> 
-> kschneider@bout-tyme.net
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
