@@ -1,25 +1,36 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: patch for scsi_devinfo.c
-Date: 21 Jun 2004 15:15:09 -0500
+From: "Dupuis, Chad" <chad.dupuis@hp.com>
+Subject: RE: patch for scsi_devinfo.c
+Date: Mon, 21 Jun 2004 16:16:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1087848910.2079.80.camel@mulgrave>
-References: <A8B003DDA3332A479C0ECCA641F47E6503BE69F9@tayexc13.americas.cpqcorp.net>
+Message-ID: <A8B003DDA3332A479C0ECCA641F47E6503BE69FA@tayexc13.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:35262 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S266445AbUFUUPL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Jun 2004 16:15:11 -0400
-In-Reply-To: <A8B003DDA3332A479C0ECCA641F47E6503BE69F9@tayexc13.americas.cpqcorp.net>
+Received: from zmamail05.zma.compaq.com ([161.114.64.105]:55052 "EHLO
+	zmamail05.zma.compaq.com") by vger.kernel.org with ESMTP
+	id S266448AbUFUUQn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jun 2004 16:16:43 -0400
+Content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: "Dupuis, Chad" <chad.dupuis@hp.com>
+To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+It does respond to report LUN.
+
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@steeleye.com] 
+Sent: Monday, June 21, 2004 4:15 PM
+To: Dupuis, Chad
+Cc: SCSI Mailing List
+Subject: Re: patch for scsi_devinfo.c
+
+
 On Mon, 2004-06-21 at 15:07, Dupuis, Chad wrote:
-> The entries for HP and Compaq HSV110 are incorrect.  The HSV110
+> The entries for HP and Compaq HSV110 are incorrect.  The HSV110 
 > controllers report themselves as SCSI 2 devices and therefore need the
+
 > BLIST_LARGELUN flag to see LUNs passed 7.
 
 Do they also respond to REPORT LUNS?  In which case we could flag them
