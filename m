@@ -1,101 +1,40 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: PATCH [4/5]  qla2xxx: Command queueing fixes
-Date: Mon, 12 Jul 2004 07:06:28 -0700
+Subject: PATCH [5/5]  qla2xxx: Update version
+Date: Mon, 12 Jul 2004 07:06:58 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040712140628.GA6968@praka.san.rr.com>
+Message-ID: <20040712140658.GA6975@praka.san.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-02-qfe0.socal.rr.com ([66.75.162.134]:19353 "EHLO
+Received: from ms-smtp-02-qfe0.socal.rr.com ([66.75.162.134]:35738 "EHLO
 	ms-smtp-02-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S263540AbUGLVR7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jul 2004 17:17:59 -0400
+	id S263555AbUGLVS3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jul 2004 17:18:29 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 ChangeSet
-  1.1868 04/07/12 09:42:23 andrew.vasquez@apc.qlogic.com +1 -0
-  Fix issue where a single command could inadvertently get 
-  'stuck' in the pending queue during resource availability
-  failures.
+  1.1869 04/07/12 09:53:48 andrew.vasquez@apc.qlogic.com +1 -0
+  Update version number to 8.00.00b15-k.
 
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
- drivers/scsi/qla2xxx/qla_os.c |   25 +++++++++++--------------
- 1 files changed, 11 insertions(+), 14 deletions(-)
+ drivers/scsi/qla2xxx/qla_version.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff -Nru a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
---- a/drivers/scsi/qla2xxx/qla_os.c	2004-07-12 09:55:05 -07:00
-+++ b/drivers/scsi/qla2xxx/qla_os.c	2004-07-12 09:55:05 -07:00
-@@ -4175,19 +4175,15 @@
- 	unsigned long   flags;
- 	scsi_qla_host_t *dest_ha;
- 	fc_port_t	*fcport;
--	srb_t           *sp, *sptemp;
--	LIST_HEAD(local_sp_list);
-+	srb_t           *sp;
+diff -Nru a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
+--- a/drivers/scsi/qla2xxx/qla_version.h	2004-07-12 09:55:21 -07:00
++++ b/drivers/scsi/qla2xxx/qla_version.h	2004-07-12 09:55:21 -07:00
+@@ -19,9 +19,9 @@
+ /*
+  * Driver version 
+  */
+-#define QLA2XXX_VERSION      "8.00.00b14-k"
++#define QLA2XXX_VERSION      "8.00.00b15-k"
  
- 	dest_ha = NULL;
- 
- 	spin_lock_irqsave(&vis_ha->list_lock, flags);
--	list_splice_init(&vis_ha->pending_queue, &local_sp_list);
--	vis_ha->qthreads = 0;
--	spin_unlock_irqrestore(&vis_ha->list_lock, flags);
-+	while (!list_empty(&vis_ha->pending_queue)) {
-+		sp = list_entry(vis_ha->pending_queue.next, srb_t, list);
- 
--	list_for_each_entry_safe(sp, sptemp, &local_sp_list, list) {
--		list_del_init(&sp->list);
--        	sp->state = SRB_NO_QUEUE_STATE;
-+		__del_from_pending_queue(vis_ha, sp);
- 
- 		fcport = sp->fclun->fcport;
- 		dest_ha = fcport->ha;
-@@ -4208,7 +4204,7 @@
- 			/* 
- 			 * Initiate a failover - done routine will initiate.
- 			 */
--			add_to_done_queue(vis_ha, sp);
-+			__add_to_done_queue(vis_ha, sp);
- 
- 			continue;
- 		}
-@@ -4243,8 +4239,7 @@
- 			    dest_ha->dpc_flags));
- 
- 			qla2x00_extend_timeout(sp->cmd, EXTEND_CMD_TIMEOUT);
--			add_to_retry_queue(vis_ha, sp);
--
-+			__add_to_retry_queue(vis_ha, sp);
- 			continue;
- 		} 
- 
-@@ -4262,22 +4257,24 @@
- 			    sp->cmd->allowed,
- 			    sp->cmd->retries));
- 				
--			add_to_scsi_retry_queue(vis_ha, sp);
--
-+			__add_to_scsi_retry_queue(vis_ha, sp);
- 			continue;
- 		}
- 
- 		sp->lun_queue->io_cnt++;
- 
-+		spin_unlock_irqrestore(&vis_ha->list_lock, flags);
- 		rval = qla2x00_start_scsi(sp);
-+		spin_lock_irqsave(&vis_ha->list_lock, flags);
- 		if (rval != QLA_SUCCESS) {
- 			/* Place request back on top of device queue */
- 			/* add to the top of queue */
--			add_to_pending_queue_head(vis_ha, sp);
-+			__add_to_pending_queue_head(vis_ha, sp);
- 
- 			sp->lun_queue->io_cnt--;
- 		}
- 	}
-+	spin_unlock_irqrestore(&vis_ha->list_lock, flags);
- 
- 	if (!IS_QLA2100(vis_ha) && !IS_QLA2200(vis_ha)) {
- 		/* Process response_queue if ZIO support is enabled*/ 
+ #define QLA_DRIVER_MAJOR_VER	8
+ #define QLA_DRIVER_MINOR_VER	0
+ #define QLA_DRIVER_PATCH_VER	0
+-#define QLA_DRIVER_BETA_VER	14
++#define QLA_DRIVER_BETA_VER	15
