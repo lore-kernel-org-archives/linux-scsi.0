@@ -1,53 +1,49 @@
 From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [linux-usb-devel] USB Storage oops in 2.5.69-bk8
-Date: Fri, 16 May 2003 15:29:00 -0700
+Subject: Re: [PATCH] switch scsi upper driver probing to the driver model
+Date: Fri, 16 May 2003 16:57:18 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030516222900.GA3236@beaverton.ibm.com>
-References: <20030516190414.GD11884@iucha.net> <Pine.LNX.4.44L0.0305161715250.1555-100000@ida.rowland.org>
+Message-ID: <20030516235718.GA3260@beaverton.ibm.com>
+References: <20030516182039.A7369@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:7302 "EHLO e33.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262294AbTEPWNu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 May 2003 18:13:50 -0400
+Received: from e34.co.us.ibm.com ([32.97.110.132]:43195 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S264623AbTEPXmG
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 May 2003 19:42:06 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0305161715250.1555-100000@ida.rowland.org>
+In-Reply-To: <20030516182039.A7369@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Florin Iucha <florin@iucha.net>, David Brownell <david-b@pacbell.net>, USB development list <linux-usb-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-Alan Stern [stern@rowland.harvard.edu] wrote:
-> Good.  This clearly shows the problem.  It's an error in the SCSI driver.  
-> It has shown up before and been discussed at length a few weeks ago.  The
-> problem is that a MODE-SENSE(6) command is requesting a transfer of 3
-> bytes, which is smaller than the minimum of 4 bytes for that command.  
-> The device doesn't like it and crashes.
+Christoph Hellwig [hch@lst.de] wrote:
+> Upper drivers now use the LDM ->probe/->remove callbacks and the
+> core list code.  Note that this means there is only one driver per
+> scsi device and not multiple, e.g. you can't have sd _and_ sg for
+> the same device.  Personally I think that's not a problem anymore
+> with the generic SG_IO in place, but if you scream loud enough I
+> could come up with a hack that makes the sg nodes a property of the
+> scsi midlayer instead of a LDM-style driver and we could get the
+> old behaviour back.
 > 
-> The SCSI people are supposed to be working on this.  First, we should be 
-> using MODE-SENSE(10) by default rather than MODE-SENSE(6).  Second, we 
-> should never request a transfer smaller than the minimum allowed size.  
-> When these changes are ready you shouldn't have any more trouble.
 > 
-> The OOPS you got originally was caused by the lack of proper 
-> hot-unplugging cooperation between usb-storage and the SCSI driver.
 
-I remember the previous conversation on the MODE-SENSE, but I think
-there might be more here.
+I ran your patch and I dead locked on st_probe. This is due to the code
+in st_probe and osst_probe that do device registers on the
+sdev_driverfs_dev.bus which is the bus that the probe is being called
+from already. I had an old patch that removed these before due the driver
+model requirement that objects on the device list must be of one type.
+At the time I did not have a place to move these attributes.
 
-I do not believe the oops is related to the lack of proper hot-plugging
-support (unless this is another way it will manifest itself). The issue
-is more the interaction of the error handler and the usb storage driver.
+We now have /bus/scsi/drivers/{uld} for driver attributes. We also could
+create a class for other attributes if needed. We can also use udev for
+the creation of special nodes.
 
-The sequence:
-"drivers/usb/core/message.c: usb_control/bulk_msg: timeout
-Error handler scsi_eh_1 waking up
-scsi_eh_prt_fail_stats: 1:0:0:0 cmds failed: 0, cancel: 1"
+ftp://ftp.kernel.org/pub/linux/utils/kernel/hotplug/
 
-would lead one two believe that a timeout was detected both in the usb
-core and in the mid layer. This would not be a good thing to have two
-timeout recovery actions happening. I am not familiar with the usb
-storage code so this may be incorrect. 
+In the short term is the st and osst maintainers are ok with it we could
+remove them and then create them in there proper home.
 
 -andmike
 --
