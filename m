@@ -1,69 +1,37 @@
-From: "Stefan Bader" <Stefan.Bader@de.ibm.com>
-Subject: [Q] 2.4.x: how to handle driver aborts in sd/sr
-Date: Wed, 8 May 2002 13:35:52 +0200
+From: "Dimitrios P. Bouras" <dbouras@hol.gr>
+Subject: Re: aix7xxx driver 5.2.4/5.2.0 vs. 6.2.5 with onboard aic7896/97 Ultra2 controller
+Date: Wed, 08 May 2002 16:20:11 +0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF789CF225.896237A6-ONC1256BB1.004E87CD@de.ibm.com>
+Message-ID: <3CD9260B.9050601@hol.gr>
+References: <200205071431.g47EVI906181@aslan.scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-7; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from d12relay01.de.ibm.com (d12relay01.de.ibm.com [9.165.215.22])
-	by d12lmsgate-3.de.ibm.com (8.12.3/8.12.3) with ESMTP id g48BZs7Z015456
-	for <linux-scsi@vger.kernel.org>; Wed, 8 May 2002 13:35:55 +0200
-Received: from d12ml008.de.ibm.com (d12ml008_cs0 [9.165.223.52])
-	by d12relay01.de.ibm.com (8.11.1m3/NCO/VER6.1) with ESMTP id g48BZs359106
-	for <linux-scsi@vger.kernel.org>; Wed, 8 May 2002 13:35:54 +0200
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>, Doug Ledford <dledford@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+Justin T. Gibbs wrote:
 
-I've got some sort of error handling design question which I need some 
-advice whether
-this might be done the way I think.
-In some error situations our low-level driver has to abort all currently 
-active commands.
-The device may work if the requests are retried. This works for disk for 
-now by triggering
-the mid-layer retry mechanism. This is ok for disks but a big problem for 
-tapes which need
-to handle this situation with more effort.
-Now for that, the low-level driver can (and probably should) return 
-DID_ABORT and let the
-upper layer handle the situation. But then the sd driver would fail the 
-request(s) because it
-takes a result != 0 (aside from MEDIUM_ERROR) as 'no successful sectors' 
-(which wouldn't
-hurt) and there is no special catch for the condition in 
-scsi_io_completion() from scsi_lib.c.
-The desired action for the the abort case for disks would be just to 
-requeue the whole request
-(as it is done in the case of DID_RESET). 
-The only two highlevel drivers that seem to use scsi_io-completion seem to 
-be sd.c and sr.c
-and in the reset case the request would just requeued as well. So, would 
-there be a problem
-in adding this to scsi_lib.c?
-
-/Stefan Bader
-
---- scsi_lib.c  2002/04/17 15:58:05     1.14
-+++ scsi_lib.c  2002/05/08 10:52:28
-@@ -742,6 +742,12 @@
-                        break;
-                }
-        }                       /* driver byte != 0 */
-+       if (host_byte(result) == DID_ABORT) {
-+               /*
-+                * Command was aborted for recovery reasons. Try again.
-+                */
-+               scsi_queue_next_request(q, SCpnt);
-+       }
-        if (host_byte(result) == DID_RESET) {
-                /*
-                 * Third party bus reset or reset for error
+> 
+> Go into the SCSI-Select BIOS option for each channel.  Set some speed
+> other than the fastest speed for all devices.  Save the result.  Go
+> back into SCSI-Select and select the fastest speed.
 
 
-Linux for eServer development
-Stefan.Bader@de.ibm.com
-----------------------------------------------------------------------------------
-  When all other means of communication fail, try words.
+Doug Ledford wrote:
+ >
+ > I'd be interested to know if changing the speed and saving it, then
+ > changing it back and saving it does solve the problem.
+
+  Yup, it did the trick all right! I set the speed for all devices
+  to 20 mb/s and then back to 80 mb/s. Now the speed settings when
+  using driver v2.6.5 are the same as when using v5.2.4/5.2.0.
+
+  Many thanks for the help.
+  Regards,
+
+  Dimitri
+
+
