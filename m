@@ -1,38 +1,38 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Fw: [BUG] USB Storage OOPS and a D state process in 2.6.10
-Date: Wed, 05 Jan 2005 08:17:45 -0600
-Message-ID: <1104934665.3852.7.camel@mulgrave>
-References: <20050105001420.5f4c8623.akpm@osdl.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [linux-iscsi-devel] [question] deferred sense
+Date: Wed, 5 Jan 2005 16:23:33 +0100
+Message-ID: <20050105152333.GA1453@lst.de>
+References: <41DB21D7.5080904@us.ibm.com> <20050104234700.GA18343@visi.com> <20050105092144.GB26793@lst.de> <20050105152112.GA8472@visi.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:24964 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262435AbVAEOSJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Jan 2005 09:18:09 -0500
-In-Reply-To: <20050105001420.5f4c8623.akpm@osdl.org>
+Received: from verein.lst.de ([213.95.11.210]:43470 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S262476AbVAEPXv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2005 10:23:51 -0500
+Content-Disposition: inline
+In-Reply-To: <20050105152112.GA8472@visi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Scott M. Ferris" <sferris@acm.org>
+Cc: Mike Christie <mikenc@us.ibm.com>, linux-iscsi-devel <linux-iscsi-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
 
-On Wed, 2005-01-05 at 00:14 -0800, Andrew Morton wrote:
-> Looks like the scsi-vs-usb-storage bunfight isn't yet settled...
+On Wed, Jan 05, 2005 at 09:21:12AM -0600, Scott M. Ferris wrote:
+> On Wed, Jan 05, 2005 at 10:21:44AM +0100, Christoph Hellwig wrote:
+> > 
+> > The kernel still doesn't hadle deferred sense correctly.  In fact I'm
+> > not sure it's entirely possible to handle deferred sense correctly.
+> > 
+> > The iscsi driver variant of "translating" it to normal sense data and
+> > that for disks only certainly doesn't make much sense.
+> 
+> To be more specific, there were some devices that would fail a command
+> and return deferred sense.  The command didn't complete at the target,
+> and the kernel wasn't retrying it because the sense was deferred
+> rather than current.  For those devices, the translation produced the
+> desired retry.
 
-Actually, this one looks pretty clear cut:
+Do you remember these devices?  Might be worth adding a midlayer
+blacklist entry for them.
 
-According to the trace, we get into error handling for a removed device.
-This:
-
-> RIP <ffffffffa0108252>{:usb_storage:bus_reset+66} RSP <000001002f9a7e68>
-
-says that the usb_storage bus_reset routine never returns.
-
-So the system is hung in error handling and the kernel is waiting for
-everything to return to normal.  The fix is to work out why usb_storage
-hung there instead of returning success or fail.
-
-James
-
-
+And I suspect we should get linux-scsi in the loop for the discussion
+about deferred sense handling.
