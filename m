@@ -1,45 +1,66 @@
-From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
-Subject: RE: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b4).
-Date: Fri, 18 Jul 2003 14:53:13 -0700
+From: Martin Schlemmer <azarah@gentoo.org>
+Subject: Re: libata driver update posted
+Date: 19 Jul 2003 02:30:17 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <B179AE41C1147041AA1121F44614F0B060EC80@AVEXCH02.qlogic.org>
+Message-ID: <1058574616.1834.24.camel@nosferatu.lan>
+References: <3F1711C8.6040207@pobox.com>
+	 <Pine.LNX.4.53.0307180924020.19703@hosting.rdsbv.ro>
+	 <3F17F28C.9050105@pobox.com>
+	 <1058542771.13515.1599.camel@workshop.saharacpt.lan>
+	 <20030718154322.GB27152@gtf.org>
+Reply-To: azarah@gentoo.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aoAmx4ZxkQhpldIxdYsg"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [198.70.193.2] ([198.70.193.2]:10810 "EHLO AVEXCH01.qlogic.org")
-	by vger.kernel.org with ESMTP id S271846AbTGRViw convert rfc822-to-8bit
+Received: from cpt-dial-196-30-178-11.mweb.co.za ([196.30.178.11]:56192 "EHLO
+	nosferatu.lan") by vger.kernel.org with ESMTP id S270435AbTGSAPK
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jul 2003 17:38:52 -0400
-content-class: urn:content-classes:message
+	Fri, 18 Jul 2003 20:15:10 -0400
+In-Reply-To: <20030718154322.GB27152@gtf.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Lars Marowsky-Bree <lmb@suse.de>
-Cc: Linux-SCSI <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Catalin BOIE <util@deuroconsult.ro>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Vojtech Pavlik <vojtech@suse.cz>
 
-Lars,
 
-> Please come and attend the multipath session at the Kernel Summit
-> and/or the Ottawa Linux Symposium next week to learn why this is a
-> bad idea and how it can be done better ->
-> http://www.linuxsymposium.org/
-> 
+--=-aoAmx4ZxkQhpldIxdYsg
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I would have really liked to be in Ottawa for the kernel-summit.
-Unfortunately, the earliest I can arrive is on Tuesday night.  BTW:
-Duane Grigsby (from QLogic), will also be attending.  I look forward
-to the event.
+On Fri, 2003-07-18 at 17:43, Jeff Garzik wrote:
 
-> However, for backwards compatibility with 2.4, I assume it might
-> still be needed in 2.5/2.6, but _only_ with the clear intend of
-> phasing it out within 2.6 and dropping it in 2.7.
-> 
-> QLogic is reasonably good already in that it can be disabled via a
-> module parameter (ql2xfailover=0), allowing the higher level
-> solutions to operate.
-> 
+> > How is performance compared to the default driver for the ICH5 SATA ?
+>=20
+> I haven't done any comparisons because the "default driver" just flat
+> out doesn't work for me.
+>=20
+> However, if performance is lower, then I consider that a bug.
+>=20
 
-I believe that will have to be the best we can offer, for those that
-do not want failover functionality, just disable it.
+Question if you do not mind me being a tad lazy - in ZA SCSI is damn
+expensive, so not much experience ... is there something like hdparm -t
+to check throughput ?
 
-Regards,
-Andrew Vasquez
+
+Thanks,
+
+--=20
+
+Martin Schlemmer
+
+
+
+
+--=-aoAmx4ZxkQhpldIxdYsg
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
+
+iD8DBQA/GJEYqburzKaJYLYRAuEIAKCajIxHt40E6wMhIYbUFosFjDvPogCfSdPS
+V6hmgHwCLqU8TKm5GG+Td2g=
+=JXx9
+-----END PGP SIGNATURE-----
+
+--=-aoAmx4ZxkQhpldIxdYsg--
+
