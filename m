@@ -1,176 +1,108 @@
-From: James.Smart@Emulex.Com
-Subject: [PATCH] add  starget_for_each_device() helper function
-Date: Fri, 10 Dec 2004 17:09:14 -0500
-Message-ID: <0B1E13B586976742A7599D71A6AC733C12E899@xbl3.ma.emulex.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] Fix cable pull problem with USB storage
+Date: Fri, 10 Dec 2004 16:27:50 -0600
+Message-ID: <1102717670.5722.2.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:44247 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S261840AbULJWJT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Dec 2004 17:09:19 -0500
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id iBAM9Fni023533
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Dec 2004 14:09:15 -0800 (PST)
-content-class: urn:content-classes:message
+Received: from stat16.steeleye.com ([209.192.50.48]:19380 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261847AbULJW17 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Dec 2004 17:27:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Doug Ledford <dledford@redhat.com>
 
+Pulling a USB cable on mounted media gives the following oops:
 
-   This patch deprecates the use of device_for_each_child() with stargets.
-   The reasoning behind this is due to issues regarding:
-      Semaphores that device_for_each_child() takes.
-      Implicit assumptions that each child is an sdev device.
+SCSI error: host 4 id 0 lun 0 return code = 4000000
+        Sense class 0, sense error 0, extended sense 0
+Unable to handle kernel NULL pointer dereference at virtual address
+00000008
+ printing eip:
+c021ed03
+*pde = 1707e001
+Oops: 0000 [#1]
+SMP
+Modules linked in: nls_utf8(U) sr_mod(U) usb_storage(U) ehci_hcd(U)
+ohci_hcd(U) mga(U) md5(U) ipv6(U) parport_pc(U) lp(U) parport(U) i2c_dev
+(U) i2c_core(U) nfs(U) lockd(U) sunrpc(U) tg3(U) ext3(U) jbd(U)
+sata_promise(U) libata(U) aic7xxx(U) sd_mod(U) scsi_mod(U)
+CPU:    1
+EIP:    0060:[<c021ed03>]    Not tainted VLI
+EFLAGS: 00210046   (2.6.9-prep)
+EIP is at cfq_insert_request+0x45/0xdf
+eax: c175c808   ebx: d7f728b0   ecx: 00000001   edx: d7f728b0
+esi: 00000001   edi: 00000000   ebp: 00000000   esp: c4b42dac
+ds: 007b   es: 007b   ss: 0068
+Process umount (pid: 4021, threadinfo=c4b42000 task=c6cd26c0)
+Stack: c175c808 c175c808 00000001 d7f728b0 00000001 c0215c86 00000001
+d7f728b0
+       c175c808 c0217b7e 00000000 00200202 c175c808 dead4ead d7f72800
+c4b42e80
+       d885a150 d7f72800 00000000 c4b42e10 d885a324 00000002 d885a27b
+00001388
+Call Trace:
+ [<c0215c86>] __elv_add_request+0x3c/0x71
+ [<c0217b7e>] blk_insert_request+0x6f/0xa1
+ [<d885a150>] scsi_insert_special_req+0x20/0x26 [scsi_mod]
+ [<d885a324>] scsi_wait_req+0x57/0x8c [scsi_mod]
+ [<d885a27b>] scsi_wait_done+0x0/0x52 [scsi_mod]
+ [<c02c433a>] __cond_resched+0x14/0x39
+ [<d89ba113>] sr_do_ioctl+0x83/0x1fe [sr_mod]
+ [<d89b9e9b>] sr_packet+0x1a/0x1f [sr_mod]
+ [<c024797e>] cdrom_get_disc_info+0x3e/0x7b
+ [<c02444cd>] cdrom_mrw_exit+0xd/0x4a
+ [<c01b4c59>] kref_put+0x42/0x45
+ [<c01b49b3>] kobject_release+0x0/0x8
+ [<c0244201>] unregister_cdrom+0x7d/0xa1
+ [<d89b9ed4>] sr_kref_release+0x34/0x4c [sr_mod]
+ [<d89b9ea0>] sr_kref_release+0x0/0x4c [sr_mod]
+ [<c01b4c59>] kref_put+0x42/0x45
+ [<d89b96c3>] sr_block_release+0x59/0x6d [sr_mod]
+ [<c015c448>] blkdev_put+0x8d/0x18f
+ [<c015a768>] deactivate_super+0x5b/0x70
+ [<c016d677>] sys_umount+0x65/0x6c
+ [<c014b029>] unmap_vma_list+0xe/0x17
+ [<c014b363>] do_munmap+0x129/0x137
+ [<c016d689>] sys_oldumount+0xb/0xe
+ [<c02c5d1f>] syscall_call+0x7/0xb
 
-   The patch adds a new helper function, starget_for_each_device(), and
-   replaces all previous uses of device_for_each_child().
+The problem is caused because the object tying of the upper device
+reference and lower device reference is released in the wrong order
+(yes, this is my fault).  Releasing an upper driver can generate I/O
+which is a bit of a problem if you already dropped the last reference to
+the scsi_device.
 
--- James S
+James
 
-
-
-diff -upNr linux-2.6.10-rc3/drivers/scsi/scsi.c linux-2.6.10-rc3.patch/drivers/scsi/scsi.c
---- linux-2.6.10-rc3/drivers/scsi/scsi.c	2004-12-10 15:45:15.118916176 -0500
-+++ linux-2.6.10-rc3.patch/drivers/scsi/scsi.c	2004-12-10 15:45:15.136913440 -0500
-@@ -1075,6 +1075,28 @@ struct scsi_device *__scsi_iterate_devic
- EXPORT_SYMBOL(__scsi_iterate_devices);
- 
- /**
-+ * starget_for_each_device  -  helper to walk all devices of a target
-+ * @starget:	target whose devices we want to iterate over.
-+ *
-+ * This traverses over each devices of @shost.  The devices have
-+ * a reference that must be released by scsi_host_put when breaking
-+ * out of the loop.
-+ */
-+void starget_for_each_device(struct scsi_target *starget, void * data,
-+		     void (*fn)(struct scsi_device *, void *))
-+{
-+	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	struct scsi_device *sdev;
-+
-+	shost_for_each_device(sdev, shost) {
-+		if ((sdev->channel == starget->channel) &&
-+		    (sdev->id == starget->id))
-+			fn(sdev, data);
-+	}
-+}
-+EXPORT_SYMBOL(starget_for_each_device);
-+
-+/**
-  * scsi_device_lookup - find a device given the host (UNLOCKED)
-  * @shost:	SCSI host pointer
-  * @channel:	SCSI channel (zero if only one channel)
-diff -upNr linux-2.6.10-rc3/drivers/scsi/scsi_lib.c linux-2.6.10-rc3.patch/drivers/scsi/scsi_lib.c
---- linux-2.6.10-rc3/drivers/scsi/scsi_lib.c	2004-12-10 15:45:15.227899608 -0500
-+++ linux-2.6.10-rc3.patch/drivers/scsi/scsi_lib.c	2004-12-10 15:45:15.229899304 -0500
-@@ -1768,31 +1768,29 @@ scsi_device_resume(struct scsi_device *s
- }
- EXPORT_SYMBOL(scsi_device_resume);
- 
--static int
--device_quiesce_fn(struct device *dev, void *data)
-+static void
-+device_quiesce_fn(struct scsi_device *sdev, void *data)
+===== drivers/scsi/sd.c 1.162 vs edited =====
+--- 1.162/drivers/scsi/sd.c	2004-11-08 14:42:37 -06:00
++++ edited/drivers/scsi/sd.c	2004-12-10 15:34:17 -06:00
+@@ -198,8 +198,8 @@
+ static void scsi_disk_put(struct scsi_disk *sdkp)
  {
--	scsi_device_quiesce(to_scsi_device(dev));
--	return 0;
-+	scsi_device_quiesce(sdev);
+ 	down(&sd_ref_sem);
+-	scsi_device_put(sdkp->device);
+ 	kref_put(&sdkp->kref, scsi_disk_release);
++	scsi_device_put(sdkp->device);
+ 	up(&sd_ref_sem);
  }
  
- void
- scsi_target_quiesce(struct scsi_target *starget)
+===== drivers/scsi/sr.c 1.119 vs edited =====
+--- 1.119/drivers/scsi/sr.c	2004-10-19 04:40:14 -05:00
++++ edited/drivers/scsi/sr.c	2004-12-10 15:31:40 -06:00
+@@ -156,8 +156,8 @@
+ static inline void scsi_cd_put(struct scsi_cd *cd)
  {
--	device_for_each_child(&starget->dev, NULL, device_quiesce_fn);
-+	starget_for_each_device(starget, NULL, device_quiesce_fn);
- }
- EXPORT_SYMBOL(scsi_target_quiesce);
- 
--static int
--device_resume_fn(struct device *dev, void *data)
-+static void
-+device_resume_fn(struct scsi_device *sdev, void *data)
- {
--	scsi_device_resume(to_scsi_device(dev));
--	return 0;
-+	scsi_device_resume(sdev);
+ 	down(&sr_ref_sem);
+-	scsi_device_put(cd->device);
+ 	kref_put(&cd->kref, sr_kref_release);
++	scsi_device_put(cd->device);
+ 	up(&sr_ref_sem);
  }
  
- void
- scsi_target_resume(struct scsi_target *starget)
- {
--	device_for_each_child(&starget->dev, NULL, device_resume_fn);
-+	starget_for_each_device(starget, NULL, device_resume_fn);
- }
- EXPORT_SYMBOL(scsi_target_resume);
- 
-diff -upNr linux-2.6.10-rc3/drivers/scsi/scsi_transport_fc.c linux-2.6.10-rc3.patch/drivers/scsi/scsi_transport_fc.c
---- linux-2.6.10-rc3/drivers/scsi/scsi_transport_fc.c	2004-12-10 15:45:15.269893224 -0500
-+++ linux-2.6.10-rc3.patch/drivers/scsi/scsi_transport_fc.c	2004-12-10 15:45:15.271892920 -0500
-@@ -331,10 +331,9 @@ EXPORT_SYMBOL(fc_release_transport);
-  * @dev:	scsi device
-  * @data:	unused
-  **/
--static int fc_device_block(struct device *dev, void *data)
-+static void fc_device_block(struct scsi_device *sdev, void *data)
- {
--	scsi_internal_device_block(to_scsi_device(dev));
--	return 0;
-+	scsi_internal_device_block(sdev);
- }
- 
- /**
-@@ -342,10 +341,9 @@ static int fc_device_block(struct device
-  * @dev:	scsi device
-  * @data:	unused
-  **/
--static int fc_device_unblock(struct device *dev, void *data)
-+static void fc_device_unblock(struct scsi_device *sdev, void *data)
- {
--	scsi_internal_device_unblock(to_scsi_device(dev));
--	return 0;
-+	scsi_internal_device_unblock(sdev);
- }
- 
- /**
-@@ -365,7 +363,7 @@ static void fc_timeout_blocked_tgt(unsig
- 	 * unblock this device, then IO errors will probably
- 	 * result if the host still isn't ready.
- 	 */
--	device_for_each_child(&starget->dev, NULL, fc_device_unblock);
-+	starget_for_each_device(starget, NULL, fc_device_unblock);
- }
- 
- /**
-@@ -393,7 +391,7 @@ fc_target_block(struct scsi_target *star
- 	if (timeout < 0 || timeout > SCSI_DEVICE_BLOCK_MAX_TIMEOUT)
- 		return -EINVAL;
- 
--	device_for_each_child(&starget->dev, NULL, fc_device_block);
-+	starget_for_each_device(starget, NULL, fc_device_block);
- 
- 	/* The scsi lld blocks this target for the timeout period only. */
- 	timer->data = (unsigned long)starget;
-@@ -426,7 +424,7 @@ fc_target_unblock(struct scsi_target *st
- 	 */
- 	del_timer_sync(&fc_starget_dev_loss_timer(starget));
- 
--	device_for_each_child(&starget->dev, NULL, fc_device_unblock);
-+	starget_for_each_device(starget, NULL, fc_device_unblock);
- }
- EXPORT_SYMBOL(fc_target_unblock);
- 
-diff -upNr linux-2.6.10-rc3/include/scsi/scsi_device.h linux-2.6.10-rc3.patch/include/scsi/scsi_device.h
---- linux-2.6.10-rc3/include/scsi/scsi_device.h	2004-12-10 15:45:15.180906752 -0500
-+++ linux-2.6.10-rc3.patch/include/scsi/scsi_device.h	2004-12-10 15:45:15.203903256 -0500
-@@ -172,6 +172,8 @@ extern struct scsi_device *scsi_device_l
- 					      uint, uint, uint);
- extern struct scsi_device *__scsi_device_lookup(struct Scsi_Host *,
- 						uint, uint, uint);
-+extern void starget_for_each_device(struct scsi_target *, void *,
-+		     void (*fn)(struct scsi_device *, void *));
- 
- /* only exposed to implement shost_for_each_device */
- extern struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *,
+
+
