@@ -1,61 +1,61 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [usb-storage] Re: [PATCH] fix Sony USB mass storage - pass larger
- receive buffer
-Date: Fri, 14 Nov 2003 11:14:08 -0500 (EST)
+From: Steven Dake <sdake@mvista.com>
+Subject: Re: iSCSI HBA needs to have a unique host id
+Date: Fri, 14 Nov 2003 10:12:30 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0311141058290.1090-100000@ida.rowland.org>
-References: <1068767049.2851.166.camel@patrh9>
+Message-ID: <1068829950.4781.74.camel@persist.az.mvista.com>
+References: <009d01c3aa95$9d613b70$a0074d0a@apac.cisco.com>
+Reply-To: sdake@mvista.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:14852 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S262762AbTKNQOJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Nov 2003 11:14:09 -0500
-In-Reply-To: <1068767049.2851.166.camel@patrh9>
+Received: from rav-az.mvista.com ([65.200.49.157]:46129 "EHLO
+	zipcode.az.mvista.com") by vger.kernel.org with ESMTP
+	id S264582AbTKNRMj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Nov 2003 12:12:39 -0500
+In-Reply-To: <009d01c3aa95$9d613b70$a0074d0a@apac.cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: mdharm-scsi@one-eyed-alien.net, patmans@us.ibm.com, james.bottomley@steeleye.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, ronald@kuetemeier.com, dmitrik@users.sourceforge.net, idan@idanso.dyndns.org
+To: "Surekha.PC" <surekhap@cisco.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 13 Nov 2003, Pat LaVarre wrote:
 
-> I mean to be saying sd.c should by default send the CDB's associated
-> with buffer lengths that produce the same BBB CBW's as Windows XP/2K,
-> and then determine the read/write status and cache-type from that info
-> alone.
+On Fri, 2003-11-14 at 02:56, Surekha.PC wrote:
+> Hi all,
 > 
-> Do you agree that works for generic USB storage i.e. bInterfaceClass
-> ...SubClass ...Protocol = x 08 (02|05|06) 50?
+>    The host id for iSCSI HBA does not remain unique with  2.6 linux
+> kernel. It keeps changing when iSCSI host is added and removed
+> dynamically. This is a problem for persistent device naming for iSCSI
+> devices through host id.
 > 
-> Do you disagree that is what we should do in sd for generic USB storage?
+Surekha,
+
+Persistent device naming should be handled through userspace application
+so that the policy of the device naming is more controllable.  I suggest
+examining the uSDE project www.sourceforge.net/projects/usde for an
+example implementation.  In this case, target disks can be persistently
+named by their unique IEEE identifier and HBAs can be persistently named
+by their PCI slot path address.  These are only sample policies that
+could be implemented..  The usde framework allows for any policy to be
+implemented.
+
+Thanks
+-steve
+
+
+> It would be good to maintain a database of already allocated host id's
+> for the existing hosts. This would render the iSCSI HBA to get the same
+> controller id, irrespective of loading/unloading the driver repeatedly.
+>  
+> Would like to know if there is any provision in 2.6 to achieve the
+> above?
 > 
-> I'm confident Win XP/2K sometimes sends mode select to PDT x00
-> HDD/Flash, because I remember some months back a friend fixed some
-> firmware that didn't interpret mode select like Win wants nowadays.
+> thanks,
+> surekha 
 > 
-> I imagine that means Win sends mode sense too.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> I haven't yet seen a trace of Win XP/2K.
-
-Trying to rely too heavily on Talk Like Windows may be a mistake, since 
-Windows itself seems to use different dialects in its different versions.
-It reminds me of the mess Microsoft had with their SMB file-sharing 
-network protocol; different versions of Windows were so incompatible they 
-often couldn't communicate among themselves.
-
-CDs, DVDs, etc. present their own set of problems.  For the moment I'm
-just concerned about disk-type devices, and the only reliable way I can
-see to deal with them is to avoid sending any MODE-SENSE commands over
-USB.
-
-Unfortunately that does mean we lose the ability to tell if a compliant
-device/media is write-protected.  You suggested allowing MODE-SENSE
-commands for devices that present certain standard SubClass and Protocol
-values, or disallowing them only for devices that present vendor-specific
-values.  I'm not so sure that will work -- I haven't kept good records of
-users' reports, but it wouldn't be at all surprising to find that some
-apparently-compliant devices (bInterfaceSubClass = x06, Protocol = x50)
-still have problems with MODE-SENSE.
-
-Alan Stern
+> 
 
