@@ -1,203 +1,582 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] instrument ide-scsi in 2.5.68
-Date: Fri, 02 May 2003 18:40:41 +1000
+From: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Subject: RE: adaptec problem (now LSI U320 problem)
+Date: Fri, 2 May 2003 06:34:57 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EB22F09.7060906@torque.net>
-References: <3EB11AD3.2070503@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <A5974D8E5F98D511BB910002A50A66470580D809@hdsmsx103.hd.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050302010700040805000807"
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:24844 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S261950AbTEBIZ5
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 May 2003 04:25:57 -0400
-In-Reply-To: <3EB11AD3.2070503@torque.net>
+Received: from fmr01.intel.com ([192.55.52.18]:21470 "EHLO hermes.fm.intel.com")
+	by vger.kernel.org with ESMTP id S262884AbTEBNSJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 May 2003 09:18:09 -0400
+Received: from talaria.fm.intel.com (talaria.fm.intel.com [10.1.192.39])
+	by hermes.fm.intel.com (8.11.6p2/8.11.6/d: outer.mc,v 1.51 2002/09/23 20:43:23 dmccart Exp $) with ESMTP id h42DQVc09895
+	for <linux-scsi@vger.kernel.org>; Fri, 2 May 2003 13:26:31 GMT
+Received: from fmsmsxvs041.fm.intel.com (fmsmsxvs041.fm.intel.com [132.233.42.126])
+	by talaria.fm.intel.com (8.11.6p2/8.11.6/d: inner.mc,v 1.28 2003/01/13 19:44:39 dmccart Exp $) with SMTP id h42DVW602828
+	for <linux-scsi@vger.kernel.org>; Fri, 2 May 2003 13:31:32 GMT
 List-Id: linux-scsi@vger.kernel.org
+To: 'invictus rm' <invictus_rm@hotmail.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+
+I notice that the lsil.com web site has a 2.05.00 version of the FusionMPT
+driver.  Perhaps that would help.
+
+Andy
+
+-----Original Message-----
+From: invictus rm [mailto:invictus_rm@hotmail.com] 
+Sent: Wednesday, April 30, 2003 12:25 PM
 To: linux-scsi@vger.kernel.org
-Cc: alan@lxorguk.ukuu.org.uk, rddunlap@osdl.org
-
-This is a multi-part message in MIME format.
---------------050302010700040805000807
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Douglas Gilbert wrote:
-> <snip/>
->   - instrument driver with 2 parameters (as examples)
->       - ide-scsi.debug + ide-scsi.suppress_reset
->         [kernel load time]
->       - debug + suppress_reset [module load time]
->       - debug + suppress_reset [sysfs: read/write
->         in /sys/bus/ide/drivers/ide-scsi directory]
->   - downgrade (simple) tag queuing to no tag queuing
->     [set some other things to more conservative values]
->   - add scsi_host::release() method
->   - make provision for 16 byte SCSI commands
->   - cleanup printk()s
- > <snip/>
-
-As Randy has found the setting of kernel boot time parameters
-doesn't work. The problem seems to be that the ide subsystem
-asserts ownership over all parameters that start with "ide".
-I was unable to bend moduleparam.h to accept a leading underscore
-so I went back to the old "__setup" method: the kernel boot time
-parameters are now:
-   - _ide_scsi_debug + _ide_scsi_suppress_reset
-
-Module load time and sysfs parameters remain the same.
-
-A new patch against lk 2.5.68 is attached.
-
-Doug Gilbert
+Cc: andrew.r.cress@intel.com
+Subject: RE: adaptec problem !!!
 
 
---------------050302010700040805000807
-Content-Type: application/x-gzip;
- name="ide-scsi_2568_2.diff.gz"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="ide-scsi_2568_2.diff.gz"
+Thanks Andrew,
+    By making the termination proper, the HDD + Adaptec is working fine.
 
-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
---------------050302010700040805000807--
+    But now i am facing another problem....
 
+   With the same HDD and termination I tried using the LSI53C1030 with
+   the same kernel(2.4.18) on the same PCI slot.
+
+   But to my disappointment the bootup sequence came up with the
+   following logs.
+   On putting the Adaptec HBA again , to check whether any termination
+   related problem, it seems to work fine .
+   Its a problem only when i attach LSI53C1030
+
+LOGS
+=====
+
+Fusion MPT base driver 2.02.01
+Copyright (c) 1999-2002 LSI Logic Corporation
+mptbase: Initiating ioc0 bringup
+ioc0: 53C1030: Capabilities={Initiator}
+mptbase: Initiating ioc1 bringup
+ioc1: 53C1030: Capabilities={Initiator}
+mptbase: Initiating ioc1 recovery
+mptbase: Initiating ioc1 recovery
+mptbase: Initiating ioc1 recovery
+mptbase: Initiating ioc1 recovery
+mptbase: 2 MPT adapters found, 2 installed.
+Fusion MPT SCSI Host driver 2.02.01
+scsi0 : ioc0: LSI53C1030, FwRev=01000000h, Ports=1, MaxQ=255, IRQ=91
+scsi1 : ioc1: LSI53C1030, FwRev=01000000h, Ports=1, MaxQ=255, IRQ=-1
+  Vendor: SEAGATE   Model: ST39140LC         Rev: 1503
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+scsi : aborting command due to timeout : pid 16, scsi1, channel 0, id 0, lun
+
+0 I
+nquiry 00 00 00 ff 00
+mptscsih: OldAbort scheduling ABORT SCSI IO (sc=dfe75e00)
+  IOs outstanding = 1
+mptscsih: ioc1: Issue of TaskMgmt Successful!
+SCSI host 1 abort (pid 16) timed out - resetting
+SCSI bus is being reset for host 1 channel 0.
+mptscsih: OldReset scheduling BUS_RESET (sc=dfe75e00)
+  IOs outstanding = 1
+SCSI host 1 channel 0 reset (pid 16) timed out - trying harder
+SCSI bus is being reset for host 1 channel 0.
+mptscsih: OldReset scheduling BUS_RESET (sc=dfe75e00)
+  IOs outstanding = 1
+SCSI host 1 reset (pid 16) timed out again -
+probably an unrecoverable SCSI bus or device hang.
+mptbase: Initiating ioc1 recovery
+SCSI host 1 reset (pid 18) timed out again -
+probably an unrecoverable SCSI bus or device hang.
+
+
+
+Thanks for all the help  extended so far
+
+rgds
+rm
+
+
+
+
+
+
+
+>From: "Cress, Andrew R" <andrew.r.cress@intel.com>
+>To: "'invictus rm'" <invictus_rm@hotmail.com>, linux-scsi@vger.kernel.org
+>Subject: RE: adaptec problem !!!
+>Date: Tue, 29 Apr 2003 06:45:40 -0700
+>
+>You didn't say, but I assume that this hardware configuration hasn't been
+>tested
+>with any OS successfully yet, so we need to check out the hardware side
+>first.
+>Something is apparently wrong with the SCSI cabling or termination.
+>My guess would be that it is not properly terminated.
+>
+>Basically, you need one termination at each end of the SCSI cable.
+>The Adaptec BIOS menus show whether or not the adapter has termination on 
+>or
+>off.
+>The disk mode pages (or jumpers) show whether the disk has termination on 
+>or
+>off.
+>Or, there may be an active terminator on the SCSI cable.
+>If you have an active terminator and the disk has termination turned on, 
+>you
+>may be
+>doubly terminated.  Or if neither one is terminated, that would also be a
+>problem.
+>
+>If termination is ok, try swapping the SCSI cable.
+>
+>Andy
+>
+>-----Original Message-----
+>From: invictus rm [mailto:invictus_rm@hotmail.com]
+>Sent: Tuesday, April 29, 2003 9:22 AM
+>To: linux-scsi@vger.kernel.org
+>Subject: adaptec problem !!!
+>
+>
+>
+>Hi ,
+>I am trying to make an adaptec SCSI HBA work with a hard disk attached to 
+>my
+>
+>IBM 750FX board on a PCI slot(linux-2.4.19 from Monta Vista website).
+>The following bootup message summarises the problem.
+>
+>As my knowledege of SCSI is very limited, it would of great help if smebdy
+>can decode the error message . Is it a problem with PCI configuration ??
+>
+>Any help in this regard will be highly appreciated.
+>
+>BOOTUPLOG
+>=========
+>
+>SCSI subsystem driver Revision: 1.00
+>scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.8
+>         <Adaptec 29160 Ultra160 SCSI adapter>
+>         aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+>
+>blk: queue c09b0c18, I/O limit 4095Mb (mask 0xffffffff)
+>
+>   Vendor: SEAGATE   Model: ST39140LC         Rev: 1503
+>   Type:   Direct-Access                      ANSI SCSI revision: 02
+>
+>blk: queue c09b0e18, I/O limit 4095Mb (mask 0xffffffff)
+>
+>(scsi0:A:0): 80.000MB/s transfers (40.000MHz, offset 15, 16bit)
+>(scsi0:A:0:1): parity error detected in Data-in phase. SEQADDR(0x1a3)
+>SCSIRATE(0
+>x93)
+>scsi0:0:0:1: Attempting to queue an ABORT message
+>scsi0: Dumping Card State in Message-in phase, at SEQADDR 0x169
+>ACCUM = 0x1, SINDEX = 0x81, DINDEX = 0x21, ARG_2 = 0xff
+>HCNT = 0x0 SCBPTR = 0x0
+>SCSISEQ = 0x12, SBLKCTL = 0xa
+>DFCNTRL = 0x0, DFSTATUS = 0x88
+>LASTPHASE = 0xe0, SCSISIGI = 0x54, SXFRCTL0 = 0x88
+>SSTAT0 = 0x0, SSTAT1 = 0x5
+>SCSIPHASE = 0x2
+>STACK == 0x34, 0x0, 0x160, 0x167
+>SCB count = 4
+>Kernel NEXTQSCB = 3
+>Card NEXTQSCB = 3
+>QINFIFO entries:
+>Waiting Queue entries:
+>Disconnected Queue entries:
+>QOUTFIFO entries:
+>Sequencer Free SCB List: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+>21 2
+>2 23 24 25 26 27 28 29 30 31
+>Sequencer SCB Info: 0(c 0x40, s 0x7, l 1, t 0x2) 1(c 0x0, s 0xff, l 255, t
+>0xff)
+>2(c 0x0, s 0xff, l 255, t 0xff) 3(c 0x0, s 0xff, l 255, t 0xff) 4(c 0x0, s
+>0xff
+>, l 255, t 0xff) 5(c 0x0, s 0xff, l 255, t 0xff) 6(c 0x0, s 0xff, l 255, t
+>0xff)
+>7(c 0x0, s 0xff, l 255, t 0xff) 8(c 0x0, s 0xff, l 255, t 0xff) 9(c 0x0, s
+>0xff
+>, l 255, t 0xff) 10(c 0x0, s 0xff, l 255, t 0xff) 11(c 0x0, s 0xff, l 255, 
+>t
+>
+>0xf
+>f) 12(c 0x0, s 0xff, l 255, t 0xff) 13(c 0x0, s 0xff, l 255, t 0xff) 14(c
+>0x0, s
+>0xff, l 255, t 0xff) 15(c 0x0, s 0xff, l 255, t 0xff) 16(c 0x0, s 0xff, l
+>255,
+>t 0xff) 17(c 0x0, s 0xff, l 255, t 0xff) 18(c 0x0, s 0xff, l 255, t 0xff)
+>19(c 0
+>x0, s 0xff, l 255, t 0xff) 20(c 0x0, s 0xff, l 255, t 0xff) 21(c 0x0, s
+>0xff, l
+>255, t 0xff) 22(c 0x0, s 0xff, l 255, t 0xff) 23(c 0x0, s 0xff, l 255, t
+>0xff) 2
+>4(c 0x0, s 0xff, l 255, t 0xff) 25(c 0x0, s 0xff, l 255, t 0xff) 26(c 0x0, 
+>s
+>
+>0xf
+>f, l 255, t 0xff) 27(c 0x0, s 0xff, l 255, t 0xff) 28(c 0x0, s 0xff, l 255,
+>t 0x
+>ff) 29(c 0x0, s 0xff, l 255, t 0xff) 30(c 0x0, s 0xff, l 255, t 0xff) 31(c
+>0x0,
+>s 0xff, l 255, t 0xff)
+>Pending list: 2(c 0x40, s 0x7, l 1)
+>Kernel Free SCB list: 1 0
+>Untagged Q(0): 2
+>DevQ(0:0:0): 0 waiting
+>DevQ(0:0:1): 0 waiting
+>scsi0:0:0:1: Device is active, asserting ATN
+>Recovery code sleeping
+>Recovery code awake
+>Timer Expired
+>aic7xxx_abort returns 0x2003
+>scsi0:0:0:1: Attempting to queue a TARGET RESET message
+>aic7xxx_dev_reset returns 0x2003
+>Recovery SCB completes
+>(scsi0:A:0:1): parity error detected in Data-in phase. SEQADDR(0x1a3)
+>SCSIRATE(0
+>x93)
+>scsi0:0:0:1: Attempting to queue an ABORT message
+>scsi0: Dumping Card State in Command phase, at SEQADDR 0x167
+>ACCUM = 0x80, SINDEX = 0x81, DINDEX = 0xe4, ARG_2 = 0x0
+>HCNT = 0x0 SCBPTR = 0x0
+>SCSISEQ = 0x12, SBLKCTL = 0xa
+>DFCNTRL = 0x4, DFSTATUS = 0x88
+>LASTPHASE = 0x80, SCSISIGI = 0x54, SXFRCTL0 = 0x88
+>SSTAT0 = 0x5, SSTAT1 = 0x5
+>SCSIPHASE = 0x2
+>STACK == 0x34, 0x167, 0x34, 0x167
+>SCB count = 4
+>Kernel NEXTQSCB = 2
+>Card NEXTQSCB = 2
+>QINFIFO entries:
+>Waiting Queue entries:
+>Disconnected Queue entries:
+>QOUTFIFO entries:
+>Sequencer Free SCB List: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+>21 2
+>2 23 24 25 26 27 28 29 30 31
+>Sequencer SCB Info: 0(c 0x0, s 0x7, l 1, t 0x3) 1(c 0x0, s 0xff, l 255, t
+>0xff)
+>2(c 0x0, s 0xff, l 255, t 0xff) 3(c 0x0, s 0xff, l 255, t 0xff) 4(c 0x0, s
+>0xff,
+>l 255, t 0xff) 5(c 0x0, s 0xff, l 255, t 0xff) 6(c 0x0, s 0xff, l 255, t
+>0xff)
+>7(c 0x0, s 0xff, l 255, t 0xff) 8(c 0x0, s 0xff, l 255, t 0xff) 9(c 0x0, s
+>0xff,
+>l 255, t 0xff) 10(c 0x0, s 0xff, l 255, t 0xff) 11(c 0x0, s 0xff, l 255, t
+>0xff
+>) 12(c 0x0, s 0xff, l 255, t 0xff) 13(c 0x0, s 0xff, l 255, t 0xff) 14(c
+>0x0, s
+>0xff, l 255, t 0xff) 15(c 0x0, s 0xff, l 255, t 0xff) 16(c 0x0, s 0xff, l
+>255, t
+>0xff) 17(c 0x0, s 0xff, l 255, t 0xff) 18(c 0x0, s 0xff, l 255, t 0xff) 
+>19(c
+>
+>0x
+>0, s 0xff, l 255, t 0xff) 20(c 0x0, s 0xff, l 255, t 0xff) 21(c 0x0, s 
+>0xff,
+>
+>l 2
+>55, t 0xff) 22(c 0x0, s 0xff, l 255, t 0xff) 23(c 0x0, s 0xff, l 255, t
+>0xff) 24
+>(c 0x0, s 0xff, l 255, t 0xff) 25(c 0x0, s 0xff, l 255, t 0xff) 26(c 0x0, s
+>0xff
+>, l 255, t 0xff) 27(c 0x0, s 0xff, l 255, t 0xff) 28(c 0x0, s 0xff, l 255, 
+>t
+>
+>0xf
+>f) 29(c 0x0, s 0xff, l 255, t 0xff) 30(c 0x0, s 0xff, l 255, t 0xff) 31(c
+>0x0, s
+>0xff, l 255, t 0xff)
+>Pending list: 3(c 0x0, s 0x7, l 1)
+>Kernel Free SCB list: 1 0
+>Untagged Q(0): 3
+>DevQ(0:0:0): 0 waiting
+>DevQ(0:0:1): 0 waiting
+>scsi0:0:0:1: Device is active, asserting ATN
+>Recovery code sleeping
+>Recovery code awake
+>aic7xxx_abort returns 0x2002
+>scsi: device set offline - not ready or command retry failed after bus
+>reset: ho
+>st 0 channel 0 id 0 lun 1
+>
+>scsi0:0:1:0: Attempting to queue an ABORT message
+>scsi0: Dumping Card State in Command phase, at SEQADDR 0x167
+>ACCUM = 0x80, SINDEX = 0x81, DINDEX = 0xe4, ARG_2 = 0x0
+>HCNT = 0x0 SCBPTR = 0x0
+>SCSISEQ = 0x12, SBLKCTL = 0xa
+>DFCNTRL = 0x4, DFSTATUS = 0x88
+>LASTPHASE = 0x80, SCSISIGI = 0x54, SXFRCTL0 = 0x88
+>SSTAT0 = 0x5, SSTAT1 = 0x5
+>SCSIPHASE = 0x2
+>STACK == 0x34, 0x167, 0x34, 0x167
+>SCB count = 4
+>Kernel NEXTQSCB = 1
+>Card NEXTQSCB = 2
+>QINFIFO entries: 2
+>Waiting Queue entries:
+>Disconnected Queue entries:
+>QOUTFIFO entries:
+>Sequencer Free SCB List: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+>21 2
+>2 23 24 25 26 27 28 29 30 31
+>Sequencer SCB Info: 0(c 0x0, s 0x7, l 1, t 0x3) 1(c 0x0, s 0xff, l 255, t
+>0xff)
+>2(c 0x0, s 0xff, l 255, t 0xff) 3(c 0x0, s 0xff, l 255, t 0xff) 4(c 0x0, s
+>0xff,
+>l 255, t 0xff) 5(c 0x0, s 0xff, l 255, t 0xff) 6(c 0x0, s 0xff, l 255, t
+>0xff)
+>7(c 0x0, s 0xff, l 255, t 0xff) 8(c 0x0, s 0xff, l 255, t 0xff) 9(c 0x0, s
+>0xff,
+>l 255, t 0xff) 10(c 0x0, s 0xff, l 255, t 0xff) 11(c 0x0, s 0xff, l 255, t
+>0xff
+>) 12(c 0x0, s 0xff, l 255, t 0xff) 13(c 0x0, s 0xff, l 255, t 0xff) 14(c
+>0x0, s
+>0xff, l 255, t 0xff) 15(c 0x0, s 0xff, l 255, t 0xff) 16(c 0x0, s 0xff, l
+>255, t
+>0xff) 17(c 0x0, s 0xff, l 255, t 0xff) 18(c 0x0, s 0xff, l 255, t 0xff) 
+>19(c
+>
+>0x
+>0, s 0xff, l 255, t 0xff) 20(c 0x0, s 0xff, l 255, t 0xff) 21(c 0x0, s 
+>0xff,
+>
+>l 2
+>55, t 0xff) 22(c 0x0, s 0xff, l 255, t 0xff) 23(c 0x0, s 0xff, l 255, t
+>0xff) 24
+>(c 0x0, s 0xff, l 255, t 0xff) 25(c 0x0, s 0xff, l 255, t 0xff) 26(c 0x0, s
+>0xff
+>, l 255, t 0xff) 27(c 0x0, s 0xff, l 255, t 0xff) 28(c 0x0, s 0xff, l 255, 
+>t
+>
+>0xf
+>f) 29(c 0x0, s 0xff, l 255, t 0xff) 30(c 0x0, s 0xff, l 255, t 0xff) 31(c
+>0x0, s
+>0xff, l 255, t 0xff)
+>Pending list: 2(c 0x40, s 0x17, l 0), 3(c 0x0, s 0x7, l 1)
+>Kernel Free SCB list: 0
+>Untagged Q(0): 3
+>Untagged Q(1): 2
+>DevQ(0:0:0): 0 waiting
+>DevQ(0:0:1): 0 waiting
+>DevQ(0:1:0): 0 waiting
+>scsi0:0:1:0: Cmd aborted from QINFIFO
+>aic7xxx_abort returns 0x2002
+>scsi0:0:1:0: Attempting to queue an ABORT message
+>scsi0: Dumping Card State in Command phase, at SEQADDR 0x167
+>ACCUM = 0x80, SINDEX = 0x81, DINDEX = 0xe4, ARG_2 = 0x0
+>HCNT = 0x0 SCBPTR = 0x0
+>SCSISEQ = 0x12, SBLKCTL = 0xa
+>DFCNTRL = 0x4, DFSTATUS = 0x88
+>LASTPHASE = 0x80, SCSISIGI = 0x54, SXFRCTL0 = 0x88
+>SSTAT0 = 0x5, SSTAT1 = 0x5
+>SCSIPHASE = 0x2
+>STACK == 0x34, 0x167, 0x34, 0x167
+>SCB count = 4
+>Kernel NEXTQSCB = 2
+>Card NEXTQSCB = 1
+>QINFIFO entries: 1
+>Waiting Queue entries:
+>Disconnected Queue entries:
+>QOUTFIFO entries:
+>Sequencer Free SCB List: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+>21 2
+>2 23 24 25 26 27 28 29 30 31
+>Sequencer SCB Info: 0(c 0x0, s 0x7, l 1, t 0x3) 1(c 0x0, s 0xff, l 255, t
+>0xff)
+>2(c 0x0, s 0xff, l 255, t 0xff) 3(c 0x0, s 0xff, l 255, t 0xff) 4(c 0x0, s
+>0xff,
+>l 255, t 0xff) 5(c 0x0, s 0xff, l 255, t 0xff) 6(c 0x0, s 0xff, l 255, t
+>0xff)
+>7(c 0x0, s 0xff, l 255, t 0xff) 8(c 0x0, s 0xff, l 255, t 0xff) 9(c 0x0, s
+>0xff,
+>l 255, t 0xff) 10(c 0x0, s 0xff, l 255, t 0xff) 11(c 0x0, s 0xff, l 255, t
+>0xff
+>) 12(c 0x0, s 0xff, l 255, t 0xff) 13(c 0x0, s 0xff, l 255, t 0xff) 14(c
+>0x0, s
+>0xff, l 255, t 0xff) 15(c 0x0, s 0xff, l 255, t 0xff) 16(c 0x0, s 0xff, l
+>255, t
+>0xff) 17(c 0x0, s 0xff, l 255, t 0xff) 18(c 0x0, s 0xff, l 255, t 0xff) 
+>19(c
+>
+>0x
+>0, s 0xff, l 255, t 0xff) 20(c 0x0, s 0xff, l 255, t 0xff) 21(c 0x0, s 
+>0xff,
+>
+>l 2
+>55, t 0xff) 22(c 0x0, s 0xff, l 255, t 0xff) 23(c 0x0, s 0xff, l 255, t
+>0xff) 24
+>(c 0x0, s 0xff, l 255, t 0xff) 25(c 0x0, s 0xff, l 255, t 0xff) 26(c 0x0, s
+>0xff
+>, l 255, t 0xff) 27(c 0x0, s 0xff, l 255, t 0xff) 28(c 0x0, s 0xff, l 255, 
+>t
+>
+>0xf
+>f) 29(c 0x0, s 0xff, l 255, t 0xff) 30(c 0x0, s 0xff, l 255, t 0xff) 31(c
+>0x0, s
+>0xff, l 255, t 0xff)
+>Pending list: 1(c 0x40, s 0x17, l 0), 3(c 0x0, s 0x7, l 1)
+>Kernel Free SCB list: 0
+>Untagged Q(0): 3
+>Untagged Q(1): 1
+>DevQ(0:0:0): 0 waiting
+>DevQ(0:0:1): 0 waiting
+>DevQ(0:1:0): 0 waiting
+>scsi0:0:1:0: Cmd aborted from QINFIFO
+>aic7xxx_abort returns 0x2002
+>scsi0:0:1:0: Attempting to queue a TARGET RESET message
+>scsi0:0:1:0: Is not an active device
+>aic7xxx_dev_reset returns 0x2002
+>scsi0:0:1:0: Attempting to queue an ABORT message
+>scsi0: Dumping Card State in Command phase, at SEQADDR 0x167
+>ACCUM = 0x80, SINDEX = 0x81, DINDEX = 0xe4, ARG_2 = 0x0
+>HCNT = 0x0 SCBPTR = 0x0
+>SCSISEQ = 0x12, SBLKCTL = 0xa
+>DFCNTRL = 0x4, DFSTATUS = 0x88
+>LASTPHASE = 0x80, SCSISIGI = 0x54, SXFRCTL0 = 0x88
+>SSTAT0 = 0x5, SSTAT1 = 0x5
+>SCSIPHASE = 0x2
+>STACK == 0x34, 0x167, 0x34, 0x167
+>SCB count = 4
+>Kernel NEXTQSCB = 1
+>Card NEXTQSCB = 2
+>QINFIFO entries: 2
+>Waiting Queue entries:
+>Disconnected Queue entries:
+>QOUTFIFO entries:
+>Sequencer Free SCB List: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+>21 2
+>2 23 24 25 26 27 28 29 30 31
+>Sequencer SCB Info: 0(c 0x0, s 0x7, l 1, t 0x3) 1(c 0x0, s 0xff, l 255, t
+>0xff)
+>2(c 0x0, s 0xff, l 255, t 0xff) 3(c 0x0, s 0xff, l 255, t 0xff) 4(c 0x0, s
+>0xff,
+>l 255, t 0xff) 5(c 0x0, s 0xff, l 255, t 0xff) 6(c 0x0, s 0xff, l 255, t
+>0xff)
+>7(c 0x0, s 0xff, l 255, t 0xff) 8(c 0x0, s 0xff, l 255, t 0xff) 9(c 0x0, s
+>0xff,
+>l 255, t 0xff) 10(c 0x0, s 0xff, l 255, t 0xff) 11(c 0x0, s 0xff, l 255, t
+>0xff
+>) 12(c 0x0, s 0xff, l 255, t 0xff) 13(c 0x0, s 0xff, l 255, t 0xff) 14(c
+>0x0, s
+>0xff, l 255, t 0xff) 15(c 0x0, s 0xff, l 255, t 0xff) 16(c 0x0, s 0xff, l
+>255, t
+>0xff) 17(c 0x0, s 0xff, l 255, t 0xff) 18(c 0x0, s 0xff, l 255, t 0xff) 
+>19(c
+>
+>0x
+>0, s 0xff, l 255, t 0xff) 20(c 0x0, s 0xff, l 255, t 0xff) 21(c 0x0, s 
+>0xff,
+>
+>l 2
+>55, t 0xff) 22(c 0x0, s 0xff, l 255, t 0xff) 23(c 0x0, s 0xff, l 255, t
+>0xff) 24
+>(c 0x0, s 0xff, l 255, t 0xff) 25(c 0x0, s 0xff, l 255, t 0xff) 26(c 0x0, s
+>0xff
+>, l 255, t 0xff) 27(c 0x0, s 0xff, l 255, t 0xff) 28(c 0x0, s 0xff, l 255, 
+>t
+>
+>0xf
+>f) 29(c 0x0, s 0xff, l 255, t 0xff) 30(c 0x0, s 0xff, l 255, t 0xff) 31(c
+>0x0, s
+>0xff, l 255, t 0xff)
+>Pending list: 2(c 0x40, s 0x17, l 0), 3(c 0x0, s 0x7, l 1)
+>Kernel Free SCB list: 0
+>Untagged Q(0): 3
+>Untagged Q(1): 2
+>DevQ(0:0:0): 0 waiting
+>DevQ(0:0:1): 0 waiting
+>DevQ(0:1:0): 0 waiting
+>scsi0:0:1:0: Cmd aborted from QINFIFO
+>aic7xxx_abort returns 0x2002
+>Recovery SCB completes
+>scsi: device set offline - not ready or command retry failed after bus
+>reset: ho
+>st 0 channel 0 id 1 lun 0
+>scsi0:A:0:0: Tagged Queuing enabled.  Depth 253
+>Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+>(scsi0:A:0:0): parity error detected in Data-in phase. SEQADDR(0x1a3)
+>SCSIRATE(0
+>x93)
+>scsi0:0:0:0: Attempting to queue an ABORT message
+>scsi0: Dumping Card State in Command phase, at SEQADDR 0x167
+>ACCUM = 0x80, SINDEX = 0x81, DINDEX = 0xe4, ARG_2 = 0x0
+>HCNT = 0x0 SCBPTR = 0x0
+>SCSISEQ = 0x12, SBLKCTL = 0xa
+>DFCNTRL = 0x4, DFSTATUS = 0x88
+>LASTPHASE = 0x80, SCSISIGI = 0x54, SXFRCTL0 = 0x88
+>SSTAT0 = 0x5, SSTAT1 = 0x5
+>SCSIPHASE = 0x2
+>STACK == 0x34, 0x167, 0x34, 0x167
+>SCB count = 4
+>Kernel NEXTQSCB = 3
+>Card NEXTQSCB = 3
+>QINFIFO entries:
+>Waiting Queue entries:
+>Disconnected Queue entries:
+>QOUTFIFO entries:
+>Sequencer Free SCB List: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+>21 2
+>2 23 24 25 26 27 28 29 30 31
+>Sequencer SCB Info: 0(c 0x0, s 0x7, l 0, t 0x1) 1(c 0x0, s 0xff, l 255, t
+>0xff)
+>2(c 0x0, s 0xff, l 255, t 0xff) 3(c 0x0, s 0xff, l 255, t 0xff) 4(c 0x0, s
+>0xff,
+>l 255, t 0xff) 5(c 0x0, s 0xff, l 255, t 0xff) 6(c 0x0, s 0xff, l 255, t
+>0xff)
+>7(c 0x0, s 0xff, l 255, t 0xff) 8(c 0x0, s 0xff, l 255, t 0xff) 9(c 0x0, s
+>0xff,
+>l 255, t 0xff) 10(c 0x0, s 0xff, l 255, t 0xff) 11(c 0x0, s 0xff, l 255, t
+>0xff
+>) 12(c 0x0, s 0xff, l 255, t 0xff) 13(c 0x0, s 0xff, l 255, t 0xff) 14(c
+>0x0, s
+>0xff, l 255, t 0xff) 15(c 0x0, s 0xff, l 255, t 0xff) 16(c 0x0, s 0xff, l
+>255, t
+>0xff) 17(c 0x0, s 0xff, l 255, t 0xff) 18(c 0x0, s 0xff, l 255, t 0xff) 
+>19(c
+>
+>0x
+>0, s 0xff, l 255, t 0xff) 20(c 0x0, s 0xff, l 255, t 0xff) 21(c 0x0, s 
+>0xff,
+>
+>l 2
+>55, t 0xff) 22(c 0x0, s 0xff, l 255, t 0xff) 23(c 0x0, s 0xff, l 255, t
+>0xff) 24
+>(c 0x0, s 0xff, l 255, t 0xff) 25(c 0x0, s 0xff, l 255, t 0xff) 26(c 0x0, s
+>0xff
+>, l 255, t 0xff) 27(c 0x0, s 0xff, l 255, t 0xff) 28(c 0x0, s 0xff, l 255, 
+>t
+>
+>0xf
+>f) 29(c 0x0, s 0xff, l 255, t 0xff) 30(c 0x0, s 0xff, l 255, t 0xff) 31(c
+>0x0, s
+>0xff, l 255, t 0xff)
+>Pending list: 1(c 0x0, s 0x7, l 0)
+>Kernel Free SCB list: 2 0
+>DevQ(0:0:0): 0 waiting
+>scsi0:0:0:0: Device is active, asserting ATN
+>Recovery code sleeping
+>Recovery code awake
+>aic7xxx_abort returns 0x2002
+>
+>rgds
+>rm
+>
+>
+>
+>
+>
+>_________________________________________________________________
+>Hot picks. Free downloads. http://www.msn.co.in/musicnew/musicshop Visit
+>music shop
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+_________________________________________________________________
+Still unmarried? Not for long. http://www.msn.co.in/Matrimony/ Find a life 
+partner now
