@@ -1,280 +1,294 @@
-From: Andries.Brouwer@cwi.nl
-Subject: [patch] scsi: ten -> use_10_for_rw / use_10_for_ms
-Date: Fri, 23 May 2003 09:22:44 +0200 (MEST)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [RFC] generic scsi ioctls for character devices
+Date: Fri, 23 May 2003 10:33:41 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <UTC200305230722.h4N7Mid25812.aeb@smtp.cwi.nl>
+Message-ID: <20030523103341.A30181@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.cwi.nl ([192.16.191.8]:24769 "EHLO hera.cwi.nl")
-	by vger.kernel.org with ESMTP id S263855AbTEWHJm (ORCPT
+Received: from verein.lst.de ([212.34.181.86]:8710 "EHLO verein.lst.de")
+	by vger.kernel.org with ESMTP id S263938AbTEWIUi (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 May 2003 03:09:42 -0400
+	Fri, 23 May 2003 04:20:38 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: torvalds@transmeta.com
+To: axboe@suse.de
+Cc: linux-scsi@vger.kernel.org
 
-In the old days, ancient scsi devices understood 6-byte commands
-and more recent ones also understood 10-byte commands.
-Thus, we had a "ten" flag indicating that 10-byte commands worked.
-
-These days, especially for usb-storage devices, the opposite
-sometimes holds - 10-byte commands are supported, but 6-byte commands
-are not.
-
-The patch below changes the field ten into the pair of fields
-use_10_for_rw, use_10_for_ms set initially when the driver
-thinks these are supported. Ifthe device returns ILLEGAL_REQUEST
-they are cleared.
-
-This patch obsoletes a large amount of code in usb-storage,
-and not only that, once the subsequent patch removes all this
-usb-storage code many devices will work that hang today.
+add a scsi_cmd_ioctl variant that works for character devices that have
+a gendisk/queue.  It's a bit ugly because the fs/bio.c wants a struct
+block_device * for each bio so we have to fake one up.  The codepathes
+scsi_cmd_ioctl uses only ever looks into it's ->bd_queue though..
 
 
-Andries
-
-diff -u --recursive --new-file -X /linux/dontdiff a/drivers/scsi/scsi.h b/drivers/scsi/scsi.h
---- a/drivers/scsi/scsi.h	Thu May 22 13:17:01 2003
-+++ b/drivers/scsi/scsi.h	Fri May 23 10:02:30 2003
-@@ -383,9 +383,10 @@
- 				 * time. */
- 	unsigned was_reset:1;	/* There was a bus reset on the bus for 
- 				 * this device */
--	unsigned expecting_cc_ua:1;	/* Expecting a CHECK_CONDITION/UNIT_ATTN
--					 * because we did a bus reset. */
--	unsigned ten:1;		/* support ten byte read / write */
-+	unsigned expecting_cc_ua:1; /* Expecting a CHECK_CONDITION/UNIT_ATTN
-+				     * because we did a bus reset. */
-+	unsigned use_10_for_rw:1; /* first try 10-byte read / write */
-+	unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
- 	unsigned remap:1;	/* support remapping  */
- //	unsigned sync:1;	/* Sync transfer state, managed by host */
- //	unsigned wide:1;	/* WIDE transfer state, managed by host */
-@@ -402,10 +403,6 @@
- 	container_of(d, struct scsi_device, sdev_driverfs_dev)
+--- 1.26/drivers/block/scsi_ioctl.c	Wed May 14 12:22:25 2003
++++ edited/drivers/block/scsi_ioctl.c	Fri May 16 23:08:01 2003
+@@ -45,13 +45,12 @@
+ #define SCSI_SENSE_BUFFERSIZE 64
+ #endif
  
+-static int blk_do_rq(request_queue_t *q, struct block_device *bdev, 
+-		     struct request *rq)
++static int blk_do_rq(struct gendisk *disk, struct request *rq)
+ {
+ 	DECLARE_COMPLETION(wait);
+ 	int err = 0;
  
--/*
-- * The Scsi_Cmnd structure is used by scsi.c internally, and for communication
-- * with low level drivers that support multiple outstanding commands.
-- */
- typedef struct scsi_pointer {
- 	char *ptr;		/* data pointer */
- 	int this_residual;	/* left in this buffer */
-@@ -458,12 +455,13 @@
- };
+-	rq->rq_disk = bdev->bd_disk;
++	rq->rq_disk = disk;
  
- /*
-- * FIXME(eric) - one of the great regrets that I have is that I failed to define
-- * these structure elements as something like sc_foo instead of foo.  This would
-- * make it so much easier to grep through sources and so forth.  I propose that
-- * all new elements that get added to these structures follow this convention.
-- * As time goes on and as people have the stomach for it, it should be possible to 
-- * go back and retrofit at least some of the elements here with with the prefix.
-+ * FIXME(eric) - one of the great regrets that I have is that I failed to
-+ * define these structure elements as something like sc_foo instead of foo.
-+ * This would make it so much easier to grep through sources and so forth.
-+ * I propose that all new elements that get added to these structures follow
-+ * this convention.  As time goes on and as people have the stomach for it,
-+ * it should be possible to go back and retrofit at least some of the elements
-+ * here with with the prefix.
-  */
- struct scsi_cmnd {
- 	int     sc_magic;
-diff -u --recursive --new-file -X /linux/dontdiff a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c	Thu May 22 13:17:01 2003
-+++ b/drivers/scsi/scsi_lib.c	Fri May 23 10:02:30 2003
-@@ -662,7 +662,6 @@
-  *
-  *		b) We can just use scsi_requeue_command() here.  This would
-  *		   be used if we just wanted to retry, for example.
-- *
-  */
- void scsi_io_completion(struct scsi_cmnd *cmd, int good_sectors,
- 			int block_sectors)
-@@ -796,17 +795,20 @@
- 				}
- 			}
- 		}
--		/* If we had an ILLEGAL REQUEST returned, then we may have
--		 * performed an unsupported command.  The only thing this should be
--		 * would be a ten byte read where only a six byte read was supported.
--		 * Also, on a system where READ CAPACITY failed, we have have read
--		 * past the end of the disk.
-+		/*
-+		 * If we had an ILLEGAL REQUEST returned, then we may have
-+		 * performed an unsupported command.  The only thing this
-+		 * should be would be a ten byte read where only a six byte
-+		 * read was supported.  Also, on a system where READ CAPACITY
-+		 * failed, we may have read past the end of the disk.
- 		 */
+ 	/*
+ 	 * we need an extra reference to the request, so we can look at
+@@ -62,8 +61,8 @@
+ 	rq->flags |= REQ_NOMERGE;
+ 	rq->waiting = &wait;
+         drive_stat_acct(rq, rq->nr_sectors, 1);
+-	elv_add_request(q, rq, 1, 1);
+-	generic_unplug_device(q);
++	elv_add_request(disk->queue, rq, 1, 1);
++	generic_unplug_device(disk->queue);
+ 	wait_for_completion(&wait);
  
- 		switch (cmd->sense_buffer[2]) {
- 		case ILLEGAL_REQUEST:
--			if (cmd->device->ten) {
--				cmd->device->ten = 0;
-+			if (cmd->device->use_10_for_rw &&
-+			    (cmd->cmnd[0] == READ_10 ||
-+			     cmd->cmnd[0] == WRITE_10)) {
-+				cmd->device->use_10_for_rw = 0;
- 				/*
- 				 * This will cause a retry with a 6-byte
- 				 * command.
-diff -u --recursive --new-file -X /linux/dontdiff a/drivers/scsi/sd.c b/drivers/scsi/sd.c
---- a/drivers/scsi/sd.c	Thu May 22 13:17:01 2003
-+++ b/drivers/scsi/sd.c	Fri May 23 10:02:30 2003
-@@ -320,7 +320,8 @@
- 		SCpnt->cmnd[12] = (unsigned char) (this_count >> 8) & 0xff;
- 		SCpnt->cmnd[13] = (unsigned char) this_count & 0xff;
- 		SCpnt->cmnd[14] = SCpnt->cmnd[15] = 0;
--	} else if (((this_count > 0xff) || (block > 0x1fffff)) || SCpnt->device->ten) {
-+	} else if ((this_count > 0xff) || (block > 0x1fffff) ||
-+		   SCpnt->device->use_10_for_rw) {
- 		if (this_count > 0xffff)
- 			this_count = 0xffff;
- 
-@@ -768,11 +769,14 @@
- 			break;
- 
- 		case ILLEGAL_REQUEST:
--			if (SCpnt->device->ten == 1) {
--				if (SCpnt->cmnd[0] == READ_10 ||
--				    SCpnt->cmnd[0] == WRITE_10)
--					SCpnt->device->ten = 0;
--			}
-+			if (SCpnt->device->use_10_for_rw &&
-+			    (SCpnt->cmnd[0] == READ_10 ||
-+			     SCpnt->cmnd[0] == WRITE_10))
-+				SCpnt->device->use_10_for_rw = 0;
-+			if (SCpnt->device->use_10_for_ms &&
-+			    (SCpnt->cmnd[0] == MODE_SENSE_10 ||
-+			     SCpnt->cmnd[0] == MODE_SELECT_10))
-+				SCpnt->device->use_10_for_ms = 0;
- 			break;
- 
- 		default:
-@@ -1093,16 +1097,29 @@
- 	sdkp->device->sector_size = sector_size;
+ 	if (rq->errors)
+@@ -80,12 +79,12 @@
+ 	return put_user(sg_version_num, p);
  }
  
-+/* called with buffer of length 512 */
- static int
--sd_do_mode_sense6(struct scsi_device *sdp, struct scsi_request *SRpnt,
--		  int dbd, int modepage, unsigned char *buffer, int len) {
--	unsigned char cmd[8];
-+sd_do_mode_sense(struct scsi_request *SRpnt, int dbd, int modepage,
-+		 unsigned char *buffer, int len) {
-+	unsigned char cmd[12];
+-static int scsi_get_idlun(request_queue_t *q, int *p)
++static int scsi_get_idlun(int *p)
+ {
+ 	return put_user(0, p);
+ }
  
--	memset((void *) &cmd[0], 0, 8);
--	cmd[0] = MODE_SENSE;
-+	memset((void *) &cmd[0], 0, 12);
- 	cmd[1] = dbd;
- 	cmd[2] = modepage;
--	cmd[4] = len;
-+
-+	if (SRpnt->sr_device->use_10_for_ms) {
-+		if (len < 8)
-+			len = 8;
-+
-+		cmd[0] = MODE_SENSE_10;
-+		cmd[8] = len;
-+	} else {
-+		if (len < 4)
-+			len = 4;
-+
-+		cmd[0] = MODE_SENSE;
-+		cmd[4] = len;
-+	}
- 
- 	SRpnt->sr_cmd_len = 0;
- 	SRpnt->sr_sense_buffer[0] = 0;
-@@ -1119,11 +1136,11 @@
- 
- /*
-  * read write protect setting, if possible - called only in sd_init_onedisk()
-+ * called with buffer of length 512
+-static int scsi_get_bus(request_queue_t *q, int *p)
++static int scsi_get_bus(int *p)
+ {
+ 	return put_user(0, p);
+ }
+@@ -124,14 +123,15 @@
+  * will always return that we are ATAPI even for a real SCSI drive, I'm not
+  * so sure this is worth doing anything about (why would you care??)
   */
- static void
- sd_read_write_protect_flag(struct scsi_disk *sdkp, char *diskname,
- 		   struct scsi_request *SRpnt, unsigned char *buffer) {
--	struct scsi_device *sdp = sdkp->device;
- 	int res;
+-static int sg_emulated_host(request_queue_t *q, int *p)
++static int sg_emulated_host(int *p)
+ {
+ 	return put_user(1, p);
+ }
  
- 	/*
-@@ -1131,7 +1148,7 @@
- 	 * We have to start carefully: some devices hang if we ask
- 	 * for more than is available.
+-static int sg_io(request_queue_t *q, struct block_device *bdev,
+-		 struct sg_io_hdr *uptr)
++static int sg_io(struct gendisk *disk, struct sg_io_hdr *uptr,
++		struct block_device *bdev)
+ {
++	struct request_queue *q = disk->queue;
+ 	unsigned long uaddr, start_time;
+ 	int reading, writing, nr_sectors;
+ 	struct sg_io_hdr hdr;
+@@ -251,7 +251,7 @@
+ 	 * (if he doesn't check that is his problem).
+ 	 * N.B. a non-zero SCSI status is _not_ necessarily an error.
  	 */
--	res = sd_do_mode_sense6(sdp, SRpnt, 0, 0x3F, buffer, 4);
-+	res = sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 4);
+-	blk_do_rq(q, bdev, rq);
++	blk_do_rq(disk, rq);
  
- 	/*
- 	 * Second attempt: ask for page 0
-@@ -1139,13 +1156,13 @@
- 	 * Sense Key 5: Illegal Request, Sense Code 24: Invalid field in CDB.
- 	 */
- 	if (res)
--		res = sd_do_mode_sense6(sdp, SRpnt, 0, 0, buffer, 4);
-+		res = sd_do_mode_sense(SRpnt, 0, 0, buffer, 4);
+ 	if (bio)
+ 		bio_unmap_user(bio, reading);
+@@ -299,8 +299,7 @@
+ #define READ_DEFECT_DATA_TIMEOUT	(60 * HZ )
+ #define OMAX_SB_LEN 16          /* For backward compatibility */
  
- 	/*
- 	 * Third attempt: ask 255 bytes, as we did earlier.
- 	 */
- 	if (res)
--		res = sd_do_mode_sense6(sdp, SRpnt, 0, 0x3F, buffer, 255);
-+		res = sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 255);
+-static int sg_scsi_ioctl(request_queue_t *q, struct block_device *bdev,
+-			 Scsi_Ioctl_Command *sic)
++static int sg_scsi_ioctl(struct gendisk *disk, struct scsi_ioctl_command *sic)
+ {
+ 	struct request *rq;
+ 	int err, in_len, out_len, bytes, opcode, cmdlen;
+@@ -320,14 +319,14 @@
  
- 	if (res) {
- 		printk(KERN_WARNING
-@@ -1161,25 +1178,25 @@
+ 	bytes = max(in_len, out_len);
+ 	if (bytes) {
+-		buffer = kmalloc(bytes, q->bounce_gfp | GFP_USER);
++		buffer = kmalloc(bytes, disk->queue->bounce_gfp | GFP_USER);
+ 		if (!buffer)
+ 			return -ENOMEM;
  
- /*
-  * sd_read_cache_type - called only from sd_init_onedisk()
-+ * called with buffer of length 512
-  */
- static void
- sd_read_cache_type(struct scsi_disk *sdkp, char *diskname,
- 		   struct scsi_request *SRpnt, unsigned char *buffer) {
--	struct scsi_device *sdp = sdkp->device;
- 	int len = 0, res;
- 
- 	const int dbd = 0x08;	   /* DBD */
- 	const int modepage = 0x08; /* current values, cache page */
- 
- 	/* cautiously ask */
--	res = sd_do_mode_sense6(sdp, SRpnt, dbd, modepage, buffer, 4);
-+	res = sd_do_mode_sense(SRpnt, dbd, modepage, buffer, 4);
- 
- 	if (res == 0) {
- 		/* that went OK, now ask for the proper length */
- 		len = buffer[0] + 1;
- 		if (len > 128)
- 			len = 128;
--		res = sd_do_mode_sense6(sdp, SRpnt, dbd, modepage, buffer, len);
-+		res = sd_do_mode_sense(SRpnt, dbd, modepage, buffer, len);
+ 		memset(buffer, 0, bytes);
  	}
  
- 	if (res == 0 && buffer[3] + 6 < len) {
-@@ -1278,7 +1295,8 @@
- 	if (sdkp->media_present)
- 		sd_read_cache_type(sdkp, disk->disk_name, SRpnt, buffer);
- 		
--	SRpnt->sr_device->ten = 1;
-+	SRpnt->sr_device->use_10_for_rw = 1;
-+	SRpnt->sr_device->use_10_for_ms = 0;
- 	SRpnt->sr_device->remap = 1;
+-	rq = blk_get_request(q, in_len ? WRITE : READ, __GFP_WAIT);
++	rq = blk_get_request(disk->queue, in_len ? WRITE : READ, __GFP_WAIT);
  
-  leave:
-diff -u --recursive --new-file -X /linux/dontdiff a/drivers/scsi/sr.c b/drivers/scsi/sr.c
---- a/drivers/scsi/sr.c	Thu May 22 13:17:01 2003
-+++ b/drivers/scsi/sr.c	Fri May 23 10:02:30 2003
-@@ -559,7 +559,8 @@
- 	sprintf(cd->cdi.name, "sr%d", minor);
+ 	cmdlen = COMMAND_SIZE(opcode);
  
- 	sdev->sector_size = 2048;	/* A guess, just in case */
--	sdev->ten = 1;
-+	sdev->use_10_for_rw = 1;
-+	sdev->use_10_for_ms = 0;
- 	sdev->remap = 1;
+@@ -372,7 +371,7 @@
+ 	rq->data_len = bytes;
+ 	rq->flags |= REQ_BLOCK_PC;
  
- 	/* FIXME: need to handle a get_capabilities failure properly ?? */
+-	blk_do_rq(q, bdev, rq);
++	blk_do_rq(disk, rq);
+ 	err = rq->errors & 0xff;	/* only 8 bit SCSI status */
+ 	if (err) {
+ 		if (rq->sense_len && rq->sense) {
+@@ -392,77 +391,98 @@
+ 	return err;
+ }
+ 
+-int scsi_cmd_ioctl(struct block_device *bdev, unsigned int cmd, unsigned long arg)
++static int tray_ioctl(struct gendisk *disk, int close)
+ {
+-	request_queue_t *q;
+-	struct request *rq;
+-	int close = 0, err;
++	struct request *rq = blk_get_request(disk->queue, WRITE, __GFP_WAIT);
++	int error;
++
++	rq->flags = REQ_BLOCK_PC;
++	rq->data = NULL;
++	rq->data_len = 0;
++	rq->timeout = BLK_DEFAULT_TIMEOUT;
++	memset(rq->cmd, 0, sizeof(rq->cmd));
++	rq->cmd[0] = GPCMD_START_STOP_UNIT;
++	rq->cmd[4] = 0x02 + (close != 0);
++	rq->cmd_len = 6;
++	error = blk_do_rq(disk, rq);
++	blk_put_request(rq);
++
++	return error;
++}
+ 
+-	q = bdev_get_queue(bdev);
+-	if (!q)
+-		return -ENXIO;
++static int __scsi_cmd_ioctl(struct block_device *bdev,
++		unsigned int cmd, unsigned long arg)
++{
++	struct gendisk *disk = bdev->bd_disk;
++	struct request_queue *q = disk->queue;
+ 
+ 	switch (cmd) {
+-		/*
+-		 * new sgv3 interface
+-		 */
+-		case SG_GET_VERSION_NUM:
+-			return sg_get_version((int *) arg);
+-		case SCSI_IOCTL_GET_IDLUN:
+-			return scsi_get_idlun(q, (int *) arg);
+-		case SCSI_IOCTL_GET_BUS_NUMBER:
+-			return scsi_get_bus(q, (int *) arg);
+-		case SG_SET_TIMEOUT:
+-			return sg_set_timeout(q, (int *) arg);
+-		case SG_GET_TIMEOUT:
+-			return sg_get_timeout(q);
+-		case SG_GET_RESERVED_SIZE:
+-			return sg_get_reserved_size(q, (int *) arg);
+-		case SG_SET_RESERVED_SIZE:
+-			return sg_set_reserved_size(q, (int *) arg);
+-		case SG_EMULATED_HOST:
+-			return sg_emulated_host(q, (int *) arg);
+-		case SG_IO:
+-			err = bd_claim(bdev, current);
+-			if (err)
+-				break;
+-			err = sg_io(q, bdev, (struct sg_io_hdr *) arg);
+-			bd_release(bdev);
+-			break;
+-		/*
+-		 * old junk scsi send command ioctl
+-		 */
+-		case SCSI_IOCTL_SEND_COMMAND:
+-			if (!arg)
+-				return -EINVAL;
+-
+-			err = bd_claim(bdev, current);
+-			if (err)
+-				break;
+-			err = sg_scsi_ioctl(q, bdev, (Scsi_Ioctl_Command *)arg);
++	/*
++	 * new sgv3 interface
++	 */
++	case SG_GET_VERSION_NUM:
++		return sg_get_version((int *) arg);
++	case SCSI_IOCTL_GET_IDLUN:
++		return scsi_get_idlun((int *) arg);
++	case SCSI_IOCTL_GET_BUS_NUMBER:
++		return scsi_get_bus((int *) arg);
++	case SG_SET_TIMEOUT:
++		return sg_set_timeout(q, (int *) arg);
++	case SG_GET_TIMEOUT:
++		return sg_get_timeout(q);
++	case SG_GET_RESERVED_SIZE:
++		return sg_get_reserved_size(q, (int *) arg);
++	case SG_SET_RESERVED_SIZE:
++		return sg_set_reserved_size(q, (int *) arg);
++	case SG_EMULATED_HOST:
++		return sg_emulated_host((int *) arg);
++	case SG_IO:
++		return sg_io(disk, (struct sg_io_hdr *)arg, bdev);
++	/*
++	 * old junk scsi send command ioctl
++	 */
++	case SCSI_IOCTL_SEND_COMMAND:
++		return sg_scsi_ioctl(disk, (struct scsi_ioctl_command *)arg);
++	/*
++	 * CDROM ioctls.
++	 */
++	case CDROMCLOSETRAY:
++		return tray_ioctl(disk, 1);
++	case CDROMEJECT:
++		return tray_ioctl(disk, 0);
++
++	default:
++		return -ENOTTY;
++	}
++}
++
++int scsi_cmd_ioctl(struct block_device *bdev, unsigned int cmd, unsigned long arg)
++{
++	int error;
++
++	switch (cmd) {
++	case SG_IO:
++	case SCSI_IOCTL_SEND_COMMAND:
++		error = bd_claim(bdev, current);
++		if (!error) {
++			error = __scsi_cmd_ioctl(bdev, cmd, arg);
+ 			bd_release(bdev);
+-			break;
+-		case CDROMCLOSETRAY:
+-			close = 1;
+-		case CDROMEJECT:
+-			rq = blk_get_request(q, WRITE, __GFP_WAIT);
+-			rq->flags = REQ_BLOCK_PC;
+-			rq->data = NULL;
+-			rq->data_len = 0;
+-			rq->timeout = BLK_DEFAULT_TIMEOUT;
+-			memset(rq->cmd, 0, sizeof(rq->cmd));
+-			rq->cmd[0] = GPCMD_START_STOP_UNIT;
+-			rq->cmd[4] = 0x02 + (close != 0);
+-			rq->cmd_len = 6;
+-			err = blk_do_rq(q, bdev, rq);
+-			blk_put_request(rq);
+-			break;
+-		default:
+-			err = -ENOTTY;
++		}
++
++		return error;
+ 	}
+ 
+-	blk_put_queue(q);
+-	return err;
++	return __scsi_cmd_ioctl(bdev, cmd, arg);
++}
++
++int scsi_cmd_ioctl_chrdev(struct gendisk *disk, unsigned int cmd, unsigned long arg)
++{
++	struct block_device fake_bdev;
++
++	memset(&fake_bdev, 0x0e, sizeof(fake_bdev));
++	fake_bdev.bd_disk = disk;
++
++	return __scsi_cmd_ioctl(&fake_bdev, cmd, arg);
+ }
+ 
+ EXPORT_SYMBOL(scsi_cmd_ioctl);
