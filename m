@@ -1,47 +1,23 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH / RFC] osst, st, sg sysfs removes
-Date: Sun, 12 Jan 2003 11:59:01 -0800
+From: Andries Brouwer <aebr@win.tue.nl>
+Subject: Re: [PATCH] allow NULL dev argument to scsi_add_host
+Date: Mon, 13 Jan 2003 00:11:51 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030112195901.GC1414@beaverton.ibm.com>
-References: <20030109222107.GA5041@beaverton.ibm.com> <Pine.LNX.4.50.0301111416510.2294-100000@kai.makisara.local> <20030111154802.GS1378@linnie.riede.org>
+Message-ID: <20030112231151.GA20678@win.tue.nl>
+References: <20030111203317.A25836@lst.de> <20030112011720.GC1878@beaverton.ibm.com> <20030112090647.A28861@lst.de> <20030112194030.GB1414@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20030111154802.GS1378@linnie.riede.org>
+In-Reply-To: <20030112194030.GB1414@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Willem Riede <wrlk@riede.org>
-Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org, Matt_Domsch@Dell.com, Douglas Gilbert <dougg@torque.net>, mochel@osdl.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Christoph Hellwig <hch@lst.de>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-Willem Riede [wrlk@riede.org] wrote:
-> > Looks OK to me (at least the st part). I have been planning to export some
-> > settings in the directories this patch removes but it has to wait until
-> > corresponding entries can be created into the (currently non-existent)
-> > char tree.
-> > 
-> > While looking at the sysfs/bus/scsi tree after this patch, I noticed that
-> > all devices currently get linked to the sd driver:
-> > 
+On Sun, Jan 12, 2003 at 11:40:30AM -0800, Mike Anderson wrote:
 
-This is a bug see previous response to Kai / this thread.
+> Currently we have a couple of issues that might be solved by the creation of a
+> scsi subsystem in /sysfs/scsi:
 
-> So from that analogy, I take it, that /char should contain st[0-N], osst[0-M]
-> and sg[0-L], with the mode and {non}rewind variants for tapes as appropriate,
-> agreed?
-> 
-> Each directory should then have the old files kdev, name, power and type that
-> existed before? Plus whatever extra files Kai, Doug and I feel the user might
-> be interested in and that in 2.4 one might find in /proc somewehere?
+Is /sysfs/scsi better than /sysfs/devices/scsiX?
 
-Yes, I would believe that /char would be modeled after block and
-contained that special nodes that tape devices need as you describe.
-
-If /char follows the model of block by creating a back link to the char
-device like (/sysfs/bus/scsi/devices/0:0:0:0/char) than there will be
-a issue with sg and other char devices registering on the same device.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
-
+Andries
