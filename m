@@ -1,34 +1,38 @@
-From: Tony Vroon <tony@vroon.org>
-Subject: Re: [BUG 2.6.0-test10] SCSI update in CSET 1.1437.1.2 caused
-	'Badness'
-Date: Mon, 24 Nov 2003 16:40:48 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1069688448.4000.2.camel@localhost>
-References: <50478.68.105.173.45.1069651886.squirrel@mail.mainstreetsoftworks.com>
-	 <20031123234919.72ae0316.akpm@osdl.org>
-	 <20031124080919.GA6969@beaverton.ibm.com>
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: Fw: 2.6.0-test9 kernel oops
+Date: Mon, 24 Nov 2003 07:41:48 -0800
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20031124154148.GA7715@beaverton.ibm.com>
+References: <20031123231037.44115c6f.akpm@osdl.org> <1069687425.1900.9.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20031124080919.GA6969@beaverton.ibm.com>
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Brad House <brad_mssw@gentoo.org>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e33.co.us.ibm.com ([32.97.110.131]:64496 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S263771AbTKXPiF
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Nov 2003 10:38:05 -0500
+Content-Disposition: inline
+In-Reply-To: <1069687425.1900.9.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Tomas Kostrian <kostrian@deepblue.sk>
 
-On Mon, 2003-11-24 at 09:09, Mike Anderson wrote:
-> This patch in the linux-scsi archives should remove this badness
-> warning.
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=106940008217622&w=2
+James Bottomley [James.Bottomley@steeleye.com] wrote:
+> On Mon, 2003-11-24 at 01:10, Andrew Morton wrote:
+> > Can anyone else with an aic7xxx reproduce (and hence fix) this?
+> > /proc/scsi/aic7xxx/0 works happily on my test box.
 > 
-> It should apply cleanly to test10. I am just updating my view now to
-> test10 so I have not tested the patch on test10 yet.
-> 
-> I did not have it refreshed in time from James to include it in his
-> last update.
+> Actually (since I managed to dig out an x86 aic7xxx based machine), I've
+> tried this and not seen the problem...it could be because I've been
+> testing out with the two SCSI refcount fixes as well...I'll try
+> stripping them back.
 
-Confirmed, the badness and backtrace are no longer seen with this patch
-applied.
+I tried with just plain test9 and cannot get the error to reproduce. 
 
-Thank you,
-Tony.
+Tomas, Can you send the dmesg output of the driver loading.
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
