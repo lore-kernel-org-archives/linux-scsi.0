@@ -1,38 +1,31 @@
-From: Andries.Brouwer@cwi.nl
-Subject: Re: [linux-usb-devel] SCSI layer assumes 1GB for drive w/o media?
-Date: Wed, 4 Feb 2004 16:38:32 +0100 (MET)
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: BUG in sd.c
+Date: Wed, 4 Feb 2004 11:13:50 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <UTC200402041538.i14FcWu27938.aeb@smtp.cwi.nl>
+Message-ID: <Pine.LNX.4.44L0.0402041108310.6676-100000@ida.rowland.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.cwi.nl ([192.16.191.8]:37078 "EHLO hera.cwi.nl")
-	by vger.kernel.org with ESMTP id S262130AbUBDPjR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Feb 2004 10:39:17 -0500
+Received: from ida.rowland.org ([192.131.102.52]:5124 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S263244AbUBDQNu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Feb 2004 11:13:50 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: andersen@codepoet.org, greg@kroah.com
-Cc: linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: Frank Pieczynski <pieczy@web.de>
 
-	I have a USB card reader that shipped as part of my new computer.
-	I am using 2.4.25-pre8 and seeing something rather odd -- it is
-	detecting medium not present, then proceeds to guess the device
-	has a 1 GB disk...
+The following Bugzilla entry:
 
-	Additional sense indicates Medium not present
-	sdb : block size assumed to be 512 bytes, disk size 1GB.  
-	 sdb: I/O error: dev 08:10, sector 0
-	 I/O error: dev 08:10, sector 0
-	ldm_validate_partition_table(): Disk read failed.
-	 I/O error: dev 08:10, sector 0
-	 unable to read partition table
+http://bugme.osdl.org/show_bug.cgi?id=1986
 
-As you already say, this is a SCSI-layer business
-and has nothing to do with USB.
+reports a problem with a USB card reader.  The cause and resolution of
+that problem are irrelevant to this list, but the manifestation of the
+problem may have been that the device replied with Check Condition (and no
+sense data) to every command.
 
-I think I once fixed this a little: after getting "Medium not present"
-it is meaningless to continue and try to read the partition table.
-Maybe that is in 2.6 only and should be backported to 2.4.
+At any rate, this caused an oops as a result of sd.c calling 
+scsi_disk_get() after the device's reference count had gone to 0.  Can 
+someone look at this and see if sd.c needs to be fixed?
 
-Concerning the 1 GB - that was added long ago to accommodate Jaz disks.
-It is a strange hack and probably superfluous today.
+Alan Stern
 
-Andries - no time today
 
