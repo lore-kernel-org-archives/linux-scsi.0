@@ -1,100 +1,152 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
-Date: Mon, 22 Sep 2003 13:51:59 -0700
+Date: 22 Sep 2003 16:55:22 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030922135159.A30167@one-eyed-alien.net>
-References: <UTC200309221956.h8MJucs21996.aeb@smtp.cwi.nl>
+Message-ID: <1064271322.4797.9.camel@patehci2>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="MGYHOYXEY6WxJCY8"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:27148 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S262745AbTIVUwV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Sep 2003 16:52:21 -0400
-Content-Disposition: inline
-In-Reply-To: <UTC200309221956.h8MJucs21996.aeb@smtp.cwi.nl>; from Andries.Brouwer@cwi.nl on Mon, Sep 22, 2003 at 09:56:38PM +0200
+Received: from email-out1.iomega.com ([147.178.1.82]:6549 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S261164AbTIVWyr
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Sep 2003 18:54:47 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl
-Cc: James.Bottomley@steeleye.com, david-b@pacbell.net, greg@kroah.com, hch@infradead.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, patmans@us.ibm.com, stern@rowland.harvard.edu, torvalds@osdl.org
+To: linux-scsi@vger.kernel.org, linux-usb-devel@vger.kernel.org
+Cc: torvalds@osdl.org, mdharm-scsi@one-eyed-alien.net, stern@rowland.harvard.edu, hch@infradead.org, james.bottomley@steeleye.com, andries.brouwer@cwi.nl
 
 
---MGYHOYXEY6WxJCY8
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> From: Linus Torvalds <torvalds () osdl ! org>
+> Date: 2003-09-22 19:55:30
+> ...
+> How about just trusting the size ...
+> and capping it at 20?
 
-On Mon, Sep 22, 2003 at 09:56:38PM +0200, Andries.Brouwer@cwi.nl wrote:
-> A scsi device declares its level of scsi compliance.
-> Most USB storage devices are not very scsi compliant at all,
-> and report 0 there.
+Besides dramatic overestimates of mode sense additional length, I've
+also seen the off-by-one slight overestimate and the high-byte-zeroed
+dramatic underestimate.
 
-Not exactly.  The reporting of 0, 1, 2, or something random in that field
-appears to be completely unrelated to the capabilities of the device.  I've
-found -zero- correlation between the revision level and how the device
-functions.
+> General MODE SENSE stuff is in:
+> http://www.t10.org/ftp/t10/drafts/spc3/spc3r15.pdf
 
-Also, sampling my devices, I see a wide range of values reported -- saying
-'most report 0' would be incorrect based on my data.
+Yes, but t10 mmc often quietly contradicts & overrides t10 spc for pdt
+x05 dvd/cd and for atapi pdt x00 hdd/rmb.  For t10 newbies wanting to
+fetch the bleeding edge, latest final draft, oldest still available,
+etc. I sometimes recommend the index:
 
-> To everybody's surprise USB storage does
->=20
->         US_DEBUGP("Fixing INQUIRY data to show SCSI rev 2 - was %d\n",
->                   data_ptr[2] & 7);
->=20
->         /* Change the SCSI revision number */
->         data_ptr[2] =3D (data_ptr[2] & ~7) | 2;
->=20
-> It claims that the device is SCSI-2 compliant, even when the
-> device itself does not make that claim at all.
->=20
-> Suppose that we stop changing this compliance level.
-> Then getting SCSI-1 or no compliance level could be a
-> "conservative mode" flag.
->=20
-> [Of course this was done for a reason - USB storage was written
-> assuming the SCSI layer given. If we stop changing the SCSI level
-> that may require changes in the SCSI code. Probably Matt remembers
-> what the problems were.]
+http://www.t10.org/scsi-3.htm
 
-It's been a couple of years since I looked at this.... but I positively
-recall that I added this code to fix definate and clear problems.
+> > A scsi device declares its level of scsi compliance.
+> ...
+> From: Matthew Dharm <mdharm-scsi () one-eyed-alien ! net>
+> Date: 2003-09-22 20:51:59
+> ...
+> reporting of 0, 1, 2, or something random ...
+> appears ... unrelated to the capabilities of the device ...
 
-One that is immediately obvious to me is that if the SCSI level is < 2, we
-can't address anything beyond the 6-byte command limit.
+The pernicious idea of zeroing the scsi revision in byte 2 of op x12
+inquiry forms part of how mmc quietly redefines spc.  Misapplying the
+sff precursor of the pdt x05 mmc spec to pdt x00 devices is part of how
+msft whql qualified atapi pdt x00 devices for sale thru oem's in the
+late 1990's.
 
-Another that immediately comes to mind is that the display in
-/proc/scsi/scsi would show version ffffffff
+> > > > From: Alan Stern <stern () rowland ! harvard ! edu>
+> > > > Date: 2003-09-22 14:25:28
+> > > > ...
+> > > > many, many USB storage devices.  
+> > > > They just don't handle MODE-SENSE page 8 correctly.
+> > >
+> > > From: Linus Torvalds <torvalds () osdl ! org>
+> > > Date: 2003-09-22 16:09:47
+> > > ...
+> > > How about just making the sd.c layer more robust? 
+> >
+> > From: Alan Stern <stern () rowland ! harvard ! edu>
+> > Date: 2003-09-22 16:42:52
+> > ...
+> > variety of ways ... fail ... truly amazing.
+>
+> From:  Christoph Hellwig <hch () infradead ! org>
+> Date: 2003-09-22 17:21:42
+> ...
+> for those usb-storage devices where ...
+> nothing that isn't excercised by the windows drivers
+> has the slightest chance of working..
 
-I've heard arguments from various people (including Jorge Shilling and some
-device-vendor folks) that I shouldn't override this value... the argument I
-used to counter that request was that things break completely if I don't
-override the value; I don't have a record of what specifically breaks.
+In the sd world, usb hdd/rmb (pdt x00) may handle specifically the mode
+sense of page 8 that win sends.
 
-Matt
+For usb bInterfaceSubClass = x06 TransparentScsi that cdb might be:
+x 1A 00:08:00 18 00
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+For usb bInterfaceSubClass != x06 TransparentScsi that cdb might be:
+x 5A 00 08:00:00:00 00 00:1C 00
 
-A:  The most ironic oxymoron wins ...
-DP: "Microsoft Works"
-A:  Uh, okay, you win.
-					-- A.J. & Dust Puppy
-User Friendly, 1/18/1998
+usb dvd/cd (pdt x05) sell into the sr/ide-cd world instead, of course.
 
---MGYHOYXEY6WxJCY8
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+Tell me we care to hear specifically what some win sends to some of my
+usb hdd/rmb, and I'll go collect a few sample usb bus traces.  I do NOT
+know that the above cdb's are correct.  Those are just my guesses,
+summing up little clues from years of messing around near here.  I hear
+in particular that win 9x/me differs from win 2k/xp near hear.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
+> Subject:  Re: [linux-usb-devel] Re: USB storage problems on OHCI..
+> From: Linus Torvalds <torvalds () osdl ! org>
+> Date: 2003-09-22 17:41:47
+> ...
+> is it saner to try to read just the bytes we need
+> (3 bytes: page code, page size and the cache bits),
+> or the full 20 bytes?
 
-iD8DBQE/b2DvIjReC7bSPZARAs3bAKCu60YL+8zh5pl3w9mUZBabbJ87KgCfVZsj
-aKq63cjGr+lk3CzsUZ8wDEQ=
-=Rlrc
------END PGP SIGNATURE-----
+I thought "everyone knew" sanest was to always fetch header + block
+descriptors + whole pages?
 
---MGYHOYXEY6WxJCY8--
+Trouble is, that's a circular definition in that the host can't know
+whether the device will volunteer an optional block descriptor or not. 
+mmc says shall not, spc says maybe not but should.
+
+We only have to care if we have to know how many Data bytes to expect to
+copy In.
+
+> From: Andries.Brouwer () cwi ! nl
+> Date: 2003-09-22 18:55:22
+> ...
+> Similarly, USB storage devices tend to ...
+> only systematically work
+> if one does precisely what Windows does.
+
+Yes, what ain't tested don't work.
+
+> USB is hot pluggable,
+> so it should not be necessary
+> to send a flush cache command at shutdown.
+
+Who has tested this rule?  I know I've seen ata hdd lose data in
+response to a pin 1 reset issued without op x35 sync cache.  I've heard
+same of dvd.  And loss of bus power can kill any write cache in a drive,
+of course.
+
+> From: James Bottomley <James.Bottomley () steeleye ! com>
+> Date: 2003-09-22 17:55:09 ...
+> ...
+> I think we could try 4 bytes
+
+We know that isn't talk like windows.  msdn.microsoft.com tells us the
+win 2k kernel crashes if a root-privileged app asks for just the 4 byte
+header from devices for which Win translates to x5A MODE_SENSE_10 from
+x1A MODE_SENSE  Because the win 2k kernel crashes so reliably, we can
+confidently guess no working win 2k apps talk that way.
+
+> From: James Bottomley <James.Bottomley () steeleye ! com>
+> Date: 2003-09-22 19:28:56
+> ...
+> sd? ... the most conservative ..., we could probably
+> dump spin up, read write protect, and read cache type ...
+
+Aye, although in sr/ide-cd we have a default of not writable to overcome
+somehow.
+
+Pat LaVarre
+
+
+
