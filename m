@@ -1,63 +1,81 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Patch: change the serial_number for error-handler commands
-Date: Tue, 20 May 2003 21:19:27 -0400 (EDT)
+Subject: Bug in hot-unplugging for SCSI CD-ROM
+Date: Wed, 21 May 2003 11:19:28 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0305202110520.4914-100000@netrider.rowland.org>
-References: <3ECA9D46.7010301@rogers.com>
+Message-ID: <Pine.LNX.4.44L0.0305211106560.617-100000@ida.rowland.org>
+References: <3EC81B67.2040807@pacbell.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus.kernel.org ([204.152.189.113]:43651 "EHLO zeus.kernel.org")
-	by vger.kernel.org with ESMTP id S261702AbTEUI4U (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:772 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S262150AbTEUPG3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 May 2003 04:56:20 -0400
-Received: from netrider.rowland.org (netrider.rowland.org [192.131.102.5])
-	by zeus.kernel.org (8.11.6/8.11.6) with SMTP id h4L1JS618918
-	for <linux-scsi@vger.kernel.org>; Tue, 20 May 2003 18:19:28 -0700
-In-Reply-To: <3ECA9D46.7010301@rogers.com>
+	Wed, 21 May 2003 11:06:29 -0400
+In-Reply-To: <3EC81B67.2040807@pacbell.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <tluben@rogers.com>
-Cc: Mike Anderson <andmike@us.ibm.com>, linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org
 
-On Tue, 20 May 2003, Luben Tuikov wrote:
+Mike:
 
-> Alan Stern wrote:
-> > ===== scsi_error.c 1.27 vs edited =====
-> > --- 1.27/drivers/scsi/scsi_error.c	Sun May  4 12:50:44 2003
-> > +++ edited/drivers/scsi/scsi_error.c	Mon May 19 14:17:04 2003
-> > @@ -753,6 +753,8 @@
-> >  	scmd->cmd_len = COMMAND_SIZE(scmd->cmnd[0]);
-> >  	scmd->underflow = 0;
-> >  	scmd->sc_data_direction = SCSI_DATA_NONE;
-> > +	if ((scmd->serial_number -= 999999) == 0)
-> > +		scmd->serial_number -= 999999;
-> >  
-> >  	rtn = scsi_send_eh_cmnd(scmd, SENSE_TIMEOUT);
-> 
-> Alan, could you please explain this patch?
+I just modified the usb-storage driver to simulate a failed device and
+tried it with my USB CD-RW drive.  The SCSI error handler kicked in, tried
+a device reset (which I had doctored to simulate a failure), tried a bus
+reset (which actually did fail because of an bug somewhere else in the
+USB stack), couldn't do a host reset (because usb-storage doesn't support
+it), and finally decided to take the device off-line.
 
-It's just to insure that when the error handler sends a TEST-UNIT-READY,
-the serial number is different from that of the immediately-prior failed
-command (or from that of any command issued recently or likely to be
-issued in the near future).
+That much worked fine.  But afterwards, when the process trying to read 
+from the drive ended and the device file was closed, usb-storage received 
+an ALLOW_MEDIUM_REMOVAL command.  This should not have happened given that 
+the device was off-line.
 
-> This looks like:
-> 	if (sn == 999999)
-> 		sn = -sn;
-> 
-> for _that_ particular command, but scsi_core->sn stays unchanged...
+Here are the relevant parts of the kernel log:
 
-Well, the patch changes the serial number regardless of its initial value,
-but otherwise yes.  It would be okay with me to change scsi_core->sn.  
-But the global serial number is currently a static variable defined in
-scsi.c and my change was to scsi_error.c -- I didn't want to export the
-variable needlessly.
+May 21 10:09:29 localhost kernel: usb-storage: Command READ_10 (10 bytes)
+May 21 10:09:29 localhost kernel: usb-storage:  28 00 00 00 00 44 00 00 40 00
+(delay to simulate failure)
+May 21 10:09:59 localhost kernel: usb-storage: usb_storage_command_abort called
+May 21 10:09:59 localhost kernel: usb-storage: usb_stor_stop_transport called
+May 21 10:09:59 localhost kernel: usb-storage: Bulk status result = 3
+May 21 10:09:59 localhost kernel: usb-storage: -- command was aborted
+May 21 10:09:59 localhost kernel: usb-storage: Bulk reset requested
+(delay for automatically-generated device reset)
+May 21 10:10:05 localhost kernel: usb-storage: Soft reset done
+May 21 10:10:05 localhost kernel: usb-storage: scsi command aborted
+May 21 10:10:05 localhost kernel: usb-storage: *** thread sleeping.
+May 21 10:10:05 localhost kernel: usb-storage: queuecommand() called
+May 21 10:10:05 localhost kernel: usb-storage: *** thread awakened.
+May 21 10:10:05 localhost kernel: usb-storage: Command TEST_UNIT_READY (6 bytes)
+May 21 10:10:05 localhost kernel: usb-storage:  00 00 00 00 00 00
+(delay to simulate failure)
+May 21 10:10:15 localhost kernel: usb-storage: usb_storage_command_abort called
+May 21 10:10:15 localhost kernel: usb-storage: usb_stor_stop_transport called
+May 21 10:10:15 localhost kernel: usb-storage: Bulk status result = 3
+May 21 10:10:15 localhost kernel: usb-storage: -- command was aborted
+May 21 10:10:15 localhost kernel: usb-storage: Bulk reset requested
+(delay for automatically-generated device reset)
+May 21 10:10:21 localhost kernel: usb-storage: Soft reset done
+May 21 10:10:21 localhost kernel: usb-storage: scsi command aborted
+May 21 10:10:21 localhost kernel: usb-storage: *** thread sleeping.
+May 21 10:10:21 localhost kernel: usb-storage: usb_storage_device_reset called
+(simulate failure of device reset)
+May 21 10:10:21 localhost kernel: usb-storage: usb_storage_bus_reset called
+(next line is due to an error in the USB stack, causing failure)
+May 21 10:10:21 localhost kernel: drivers/usb/core/hub.c: USB device not accepting new address (error=-22)
+May 21 10:10:21 localhost kernel: usb-storage: usb_reset_device returns -22
+May 21 10:10:21 localhost kernel: scsi: Device offlined - not ready after error recovery: host 0 channel 0 id 0 lun 0
+May 21 10:10:21 localhost kernel: SCSI cdrom error : <0 0 0 0> return code = 0x6050000
+May 21 10:10:21 localhost kernel: end_request: I/O error, dev sr0, sector 272
+May 21 10:10:21 localhost kernel: Buffer I/O error on device scsi/host0/bus0/target0/lun0/cd, logical block 68
+May 21 10:10:21 localhost kernel: Buffer I/O error on device scsi/host0/bus0/target0/lun0/cd, logical block 69
+(more I/O error messages, not shown)
+May 21 10:10:21 localhost kernel: usb-storage: queuecommand() called
+May 21 10:10:21 localhost kernel: usb-storage: *** thread awakened.
+May 21 10:10:21 localhost kernel: usb-storage: Command ALLOW_MEDIUM_REMOVAL (6 bytes)
+May 21 10:10:21 localhost kernel: usb-storage:  1e 00 00 00 00 00
 
-> Q: Which value does USB Storage reserve for cmdsn, 0 or MAX?
-
-It doesn't reserve any values.  (I avoided 0 only because I noticed that
-the scsi core uses 0 as a reserved value.)  Usb-storage just requires that
-serial numbers not be repeated.
+I trust this won't be hard to fix.
 
 Alan Stern
 
