@@ -1,37 +1,33 @@
-From: Jeremy Higdon <jeremy@sgi.com>
+From: Matthew Wilcox <willy@debian.org>
 Subject: Re: [PATCH] fusion update to current APIs
-Date: Fri, 11 Jun 2004 17:36:08 -0700
+Date: Sat, 12 Jun 2004 04:45:18 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040612003608.GA152454@sgi.com>
-References: <20040531115229.GA16143@lst.de>
+Message-ID: <20040612034518.GN24864@parcelfarce.linux.theplanet.co.uk>
+References: <20040531115229.GA16143@lst.de> <20040612003608.GA152454@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.sgi.com ([192.48.171.6]:31603 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S264432AbUFLAg7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Jun 2004 20:36:59 -0400
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:20449 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S264622AbUFLDpY
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jun 2004 23:45:24 -0400
 Content-Disposition: inline
-In-Reply-To: <20040531115229.GA16143@lst.de>
+In-Reply-To: <20040612003608.GA152454@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Emoore@lsil.com, linux-scsi@vger.kernel.org
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: Christoph Hellwig <hch@lst.de>, Emoore@lsil.com, linux-scsi@vger.kernel.org
 
-On Mon, May 31, 2004 at 01:52:29PM +0200, Christoph Hellwig wrote:
->  - kill scsi_to_pci_dma_dir usage, both pci and scsi use the same bits
->  - kill mptscsih_io_direction and always trust the midlayer
+On Fri, Jun 11, 2004 at 05:36:08PM -0700, Jeremy Higdon wrote:
+> Christoph, the midlayer gets it wrong sometimes.
 
-Christoph, the midlayer gets it wrong sometimes.
+... then the midlayer needs to get fixed rather than have all this code
+duplicated in a million different drivers with subtly different bugs in
+each one.
 
-Specifically, when the sg driver can't tell the direction, because the
-input and output buffer sizes are identical (and an older sg interface
-is being used), the sg driver assumes that the direction is inbound
-(SCSI_READ).
-
-There are several apps out there that get that do this, but which work
-because the host drivers override the direction passed in from sg.
-
-Now if we have to go out and get all these apps fixed, there will be
-a lot of pain out there :-)
-
-jeremy
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
