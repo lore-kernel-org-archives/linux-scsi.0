@@ -1,28 +1,48 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Removing the qlogicfc driver
-Date: Sun, 1 Feb 2004 16:09:34 +0000
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] fix wrong argument to pci_dma_sync_sg in megaraid driver
+Date: 01 Feb 2004 11:16:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040201160934.A15908@infradead.org>
-References: <B179AE41C1147041AA1121F44614F0B0598E46@AVEXCH02.qlogic.org> <1074606124.400d302cac80e@imp2-l.free.fr>
+Message-ID: <1075652188.1818.15.camel@mulgrave>
+References: <20040201160032.GA14959@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:19979 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S265353AbUBAQJg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 Feb 2004 11:09:36 -0500
-Content-Disposition: inline
-In-Reply-To: <1074606124.400d302cac80e@imp2-l.free.fr>; from christophe.varoqui@free.fr on Tue, Jan 20, 2004 at 02:42:04PM +0100
+Received: from stat1.steeleye.com ([65.114.3.130]:60834 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265367AbUBAQQi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 Feb 2004 11:16:38 -0500
+In-Reply-To: <20040201160032.GA14959@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: christophe.varoqui@free.fr
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Atulm@lsil.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, Jan 20, 2004 at 02:42:04PM +0100, christophe.varoqui@free.fr wrote:
-> > Please let me know how it works out for you.  I'd like to forward
-> > it along for inclusion once I get a bit more internal runtime in my
-> > rings.
-> > 
-> I report it works flawlessly with "2.6.0-udm5 (== mm2) + qla8b8 + patch".
+On Sun, 2004-02-01 at 11:00, Christoph Hellwig wrote:
+> sgl is incremented for each element in the routine, but pci_dma_sync_sg
+> needs the original buffer.
+> 
+> 
+> --- 1.59/drivers/scsi/megaraid.c	Fri Jan 23 06:37:03 2004
+> +++ edited/drivers/scsi/megaraid.c	Sat Jan 31 07:09:25 2004
+> @@ -1805,7 +1805,7 @@
+>  	*len = (u32)cmd->request_bufflen;
+>  
+>  	if( scb->dma_direction == PCI_DMA_TODEVICE ) {
+> -		pci_dma_sync_sg(adapter->dev, sgl, cmd->use_sg,
+> +		pci_dma_sync_sg(adapter->dev, cmd->request_buffer, cmd->use_sg,
+>  				PCI_DMA_TODEVICE);
+>  	}
 
-This means there are no other objections and we can remove driver?
+Hang on a minute, none of these syncs (including all the other syncs to
+and from the device) looks to be necessary.
+
+Once the buffers are mapped, their cache line ownership is transferred
+automatically to the device.  Once they are unmapped, it is transferred
+back.  There's no need to do additional syncs after mapping and
+unmapping *unless* the driver needs to touch the actual data in between
+the mapping and the unmapping.  I didn't notice the megaraid actually
+doing this (but even if it does, the sync would be in the wrong place).
+
+James
+
 
