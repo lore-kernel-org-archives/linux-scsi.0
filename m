@@ -1,56 +1,151 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] Re: [example PATCH - not for applying] exclude
- certain commands
-Date: Sun, 27 Apr 2003 10:04:31 -0400 (EDT)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] scsi_requeuest_fn
+Date: Sun, 27 Apr 2003 17:04:40 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0304270949150.20515-100000@netrider.rowland.org>
-References: <20030426183957.C8697@one-eyed-alien.net>
+Message-ID: <20030427170440.A29493@lst.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:28426 "HELO
-	netrider.rowland.org") by vger.kernel.org with SMTP id S264622AbTD0NwQ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 27 Apr 2003 09:52:16 -0400
-In-Reply-To: <20030426183957.C8697@one-eyed-alien.net>
+Received: from verein.lst.de ([212.34.181.86]:5901 "EHLO verein.lst.de")
+	by vger.kernel.org with ESMTP id S264661AbTD0Ow2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 27 Apr 2003 10:52:28 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andries.Brouwer@cwi.nl, greg@kroah.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, 26 Apr 2003, Matthew Dharm wrote:
+Okay, when doing some other stuff I looked over this one, and it's
+a bit confusing to read:
 
-> This is a common misconception.  usb-storage does not need to know, in
-> advance, exactly how many bytes will transfer.  It does, however, need to
-> know exactly how many bytes are being requested for transfer.
-> 
-> There's a subtle difference there.  usb-storage can handle the case of
-> underrun or overrun properly.  But there are USB<->[SCSI|ATA|whatever]
-> bridges which can't handle a discrepancy between expected transfer length
-> and actual transfer length when no error was detected.
+ - using a goto completed where a simple break would be sufficient
+ - using for (;;) for a perfectly fine while loop
+ - ...
 
-I wonder about this a little, for overruns.  It's certainly true that we
-detect an error and report problems when a transfer is larger than
-expected (unless the expected length is exactly a multiple of the USB
-packet size).  But it gets reported as DID_ERROR, indicating a possibly
-transient communications problem.
+but what's more interesting is that the spinlock handling in here,
+when we switch from sdev_lock/queue_lock to host_lock we
+do a spin_unlock_irq followed by a spin_lock_irqsave - but we
+we just enabled interrupts so the save isn't nessecary at all, even
+more we can just do spin_unlock/spin_lock when keeping them
+disabled.  Also we drop host_lock in the middle of this function,
+just to reacquire it a tad later in scsi_dispatch_cmd, but fixing
+that need a bit more thinking as there's another caller for
+scsi_dispatch_cmd.
 
-This is just what Andries saw.  The MODE-SENSE commands wanted 4 bytes but
-the devices insisted on sending more.  These waere reported as errors
-rather than command failures (CHECK-CONDITION and so on), so the
-error-handler kicked in and the same commands were retried to no avail.
-That's no way to handle a systematic problem.
 
-It would have worked better if instead we treated -EOVERFLOW as a failure, 
-not an error.  Or if we had known that the device wouldn't work properly 
-with a 4-byte MODE-SENSE(6) transfer.  We could have returned sense data 
-that would tell the SCSI layer to try a different form of the command.
-
-What I'm not sure about is the practicality of trying to handle things
-this way.  Under what conditions is it correct to treat -EOVERFLOW during
-the data phase as a failure instead of an error?  And do we want to try
-and track the little foibles of many different sorts of devices so that we
-can reject commands they don't handle properly?  Yes, we already do this
-to some extent, but how far do we want to carry it through?
-
-Alan Stern
-
+--- 1.84/drivers/scsi/scsi_lib.c	Mon Apr 21 10:17:33 2003
++++ edited/drivers/scsi/scsi_lib.c	Sun Apr 27 14:19:35 2003
+@@ -1140,66 +1128,61 @@
+  *
+  * Lock status: IO request lock assumed to be held when called.
+  */
+-static void scsi_request_fn(request_queue_t *q)
++static void scsi_request_fn(struct request_queue *q)
+ {
+ 	struct scsi_device *sdev = q->queuedata;
+ 	struct Scsi_Host *shost = sdev->host;
+ 	struct scsi_cmnd *cmd;
+ 	struct request *req;
+-	unsigned long flags;
+ 
+ 	/*
+ 	 * To start with, we keep looping until the queue is empty, or until
+ 	 * the host is no longer able to accept any more requests.
+ 	 */
+-	for (;;) {
+-		if (blk_queue_plugged(q))
+-			goto completed;
+-
++	while (!blk_queue_plugged(q)) {
+ 		/*
+ 		 * get next queueable request.  We do this early to make sure
+ 		 * that the request is fully prepared even if we cannot 
+ 		 * accept it.
+ 		 */
+ 		req = elv_next_request(q);
+-
+-		if (!req)
+-			goto completed;
+-
+-		if (!scsi_dev_queue_ready(q, sdev))
+-			goto completed;
++		if (!req || !scsi_dev_queue_ready(q, sdev))
++			break;
+ 
+ 		/*
+ 		 * Remove the request from the request list.
+ 		 */
+-		if (!(blk_queue_tagged(q) && (blk_queue_start_tag(q, req) == 0)))
++		if (!(blk_queue_tagged(q) && !blk_queue_start_tag(q, req)))
+ 			blkdev_dequeue_request(req);
+-
+ 		sdev->device_busy++;
+-		spin_unlock_irq(q->queue_lock);
+ 
+-		spin_lock_irqsave(shost->host_lock, flags);
+-		if (!scsi_host_queue_ready(q, shost, sdev))
+-			goto host_lock_held;
++		spin_unlock(q->queue_lock);
++		spin_lock(shost->host_lock);
+ 
++		if (!scsi_host_queue_ready(q, shost, sdev))
++			goto not_ready;
+ 		if (sdev->single_lun) {
+ 			if (sdev->sdev_target->starget_sdev_user &&
+-			    (sdev->sdev_target->starget_sdev_user != sdev))
+-				goto host_lock_held;
+-			else
+-				sdev->sdev_target->starget_sdev_user = sdev;
++			    sdev->sdev_target->starget_sdev_user != sdev)
++				goto not_ready;
++			sdev->sdev_target->starget_sdev_user = sdev;
+ 		}
+-
+ 		shost->host_busy++;
+-		spin_unlock_irqrestore(shost->host_lock, flags);
+-
+-		cmd = req->special;
+ 
+ 		/*
+-		 * Should be impossible for a correctly prepared request
+-		 * please mail the stack trace to linux-scsi@vger.kernel.org
++		 * XXX(hch): This is rather suboptimal, scsi_dispatch_cmd will
++		 *		take the lock again.
+ 		 */
+-		BUG_ON(!cmd);
++		spin_unlock_irq(shost->host_lock);
++
++		cmd = req->special;
++		if (unlikely(cmd == NULL)) {
++			printk(KERN_CRIT "impossible request in %s.\n"
++					 "please mail a stack trace to "
++					 "linux-scsi@vger.kernel.org",
++					 __FUNCTION__);
++			BUG();
++		}
+ 
+ 		/*
+ 		 * Finally, initialize any error handling parameters, and set up
+@@ -1211,18 +1194,14 @@
+ 		 * Dispatch the command to the low-level driver.
+ 		 */
+ 		scsi_dispatch_cmd(cmd);
+-
+-		/*
+-		 * Now we need to grab the lock again.  We are about to mess
+-		 * with the request queue and try to find another command.
+-		 */
+ 		spin_lock_irq(q->queue_lock);
+ 	}
+-completed:
++
+ 	return;
+ 
+-host_lock_held:
+-	spin_unlock_irqrestore(shost->host_lock, flags);
++ not_ready:
++	spin_unlock_irq(shost->host_lock);
++
+ 	/*
+ 	 * lock q, handle tag, requeue req, and decrement device_busy. We
+ 	 * must return with queue_lock held.
