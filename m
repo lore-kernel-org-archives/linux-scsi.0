@@ -1,77 +1,43 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: aacraid died on kernel 2.4.27
-Date: Fri, 11 Mar 2005 11:06:47 -0500
-Message-ID: <60807403EABEB443939A5A7AA8A7458BE5A9C9@otce2k01.adaptec.com>
+From: Ryan <ryan@nmt.edu>
+Subject: aacraid on Dell PowerEdge 1800
+Date: Fri, 11 Mar 2005 09:52:01 -0700
+Message-ID: <20050311165201.GA19314@nmt.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Received: from magic.adaptec.com ([216.52.22.17]:18574 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261203AbVCKQGt convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Mar 2005 11:06:49 -0500
-content-class: urn:content-classes:message
+Content-Type: text/plain; charset=us-ascii
+Received: from mailhost.NMT.EDU ([129.138.4.52]:6870 "EHLO mailhost.nmt.edu")
+	by vger.kernel.org with ESMTP id S261206AbVCKQwF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Mar 2005 11:52:05 -0500
+Received: from speare5-1-17.nmt.edu (speare5-1-17.nmt.edu [129.138.2.194])
+	by mailhost.nmt.edu (8.13.0/8.13.0) with ESMTP id j2BGq9NO013899
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Mar 2005 09:52:11 -0700
+Received: from speare5-1-17.nmt.edu (localhost.localdomain [127.0.0.1])
+	by speare5-1-17.nmt.edu (8.12.11/8.12.8) with ESMTP id j2BGq1pf019337
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Mar 2005 09:52:01 -0700
+Received: (from ryan@localhost)
+	by speare5-1-17.nmt.edu (8.12.11/8.12.11/Submit) id j2BGq1N4019336
+	for linux-scsi@vger.kernel.org; Fri, 11 Mar 2005 09:52:01 -0700
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nic Ferrier <nferrier@tapsellferrier.co.uk>, linux-scsi@vger.kernel.org
-
-This is a processor based RAID card, so stability and complexity is
-virtually all rooted in the card. The problems you are experiencing are
-most probably specific to your platform, and do not show up in other
-adapters and systems that communicate with this same driver. Although
-the driver can be used to mitigate some problems in the adapter
-Firmware, it can not solve Power Supply, Hardware, Internal Firmware
-Failures, Drive or Cabling issues. All these issues need to be resolved
-first by communicating with Dell Technical Support.
-
-Sadly, all these issues can end up locking up the card or the scsi bus.
-The end result being the scsi system timing out, taking the devices
-offline, then the file-system driver panicking. Similar symptoms, wide
-variety of causes.
-
-Sincerely -- Mark Salyzyn
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Nic Ferrier
-Sent: Thursday, March 10, 2005 4:02 PM
 To: linux-scsi@vger.kernel.org
-Subject: aacraid died on kernel 2.4.27
 
-I've been trying, without success, to get the aacraid driver to work
-reliably on a Dell 2650 Poweredge.
+Hello,
+  I've been through several of the news groups over the past few days and
+haven't found an exact answer to my question.
 
-I'm using Debian so I tried kernel 2.6.8 first (Debian has it packaged
-nicely but from a SCSI driver point of view it's just a standard
-kernel.org source).
+  I'm trying to install Fedora Core 3 on a Dell PowerEdge 1800 server that
+I just purchased, but the version of the aacraid driver for the SATA raid
+controller changed and I can't install.  
 
-2.6.8 worked... but died as soon as we put the server under load.
+  Just like the newsgroups state, Fedora Core 2 installs just fine.  My
+problem is that I can't afford to run software that is outdated.  There
+have been several security issues lately and FC3 seems to have fixes for
+them.
 
-2.6.11 also died under load.
+Any help is greatly appreciated.
 
-Yesterday I put 2.4.27 on the box because I had understood that the
-aacraid is stable in that release of the kernel. But a few hours ago
-the box died in exactly the same way (it was under quite heavy load).
+Thank you.
 
-Unfortunately, I can't give you error messages because I don't have
-any log from the failures. It comes out on the console and I don't
-have it saved anywhere. But it definitely is the raid controller.
-
-
-Maybe someone can answer the following for me:
-
-- is the driver understood to be stable in 2.4.27?
-
-- is there another driver I could try (would the pre-Cox one work?)
-
-- is there anything I can do to alleviate the problem?
-
-
-
-
-Nic Ferrier
-http://www.tapsellferrier.co.uk
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Ryan
