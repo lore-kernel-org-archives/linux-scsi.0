@@ -1,45 +1,74 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [linux-usb-devel] Re: [PATCH] oops in sd_shutdown
-Date: Tue, 12 Aug 2003 17:24:50 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030813002450.GA8712@beaverton.ibm.com>
-References: <Pine.LNX.4.53.0308111426570.16008@thevillage.soulcatcher> <20030812002844.B1353@pclin040.win.tue.nl> <20030812075353.A18547@infradead.org> <20030812213549.GA2158@kroah.com>
+From: Chiaki <ishikawa@yk.rim.or.jp>
+Subject: Re: Badness in device_release at drivers/base/core.c:84
+Date: Wed, 13 Aug 2003 11:03:58 +0900
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <3F399C8E.7070109@yk.rim.or.jp>
+References: <20030801182207.GA3759@blazebox.homeip.net>	 <20030801144455.450d8e52.akpm@osdl.org>	 <20030803015510.GB4696@blazebox.homeip.net>	 <20030802190737.3c41d4d8.akpm@osdl.org>	 <20030803214755.GA1010@blazebox.homeip.net>	 <20030803145211.29eb5e7c.akpm@osdl.org>	 <20030803222313.GA1090@blazebox.homeip.net>	 <20030803223115.GA1132@blazebox.homeip.net>	 <20030804093035.A24860@beaverton.ibm.com>	 <1060021614.889.6.camel@blaze.homeip.net>	 <1352160000.1060025773@aslan.btc.adaptec.com>	 <5793.199.181.174.146.1060050091.squirrel@www.blazebox.homeip.net>	 <3F2F84D2.8000202@nospam.com>  <3F2FD6ED.1005BB2C@yk.rim.or.jp> <1060189107.887.7.camel@blaze.homeip.net> <3F3138C7.2040404@yk.rim.or.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030812213549.GA2158@kroah.com>
-To: Greg KH <greg@kroah.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Andries Brouwer <aebr@win.tue.nl>, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pl734.nas911.n-yokohama.nttpc.ne.jp ([210.139.39.222]:18631
+	"EHLO standard.erephon") by vger.kernel.org with ESMTP
+	id S271324AbTHMCBw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Aug 2003 22:01:52 -0400
+In-Reply-To: <3F3138C7.2040404@yk.rim.or.jp>
 List-Id: linux-scsi@vger.kernel.org
+To: Chiaki <ishikawa@yk.rim.or.jp>
+Cc: Paul Blazejowski <paulb@blazebox.homeip.net>, wb <dead_email@nospam.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Patrick Mansfield <patmans@us.ibm.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Greg KH [greg@kroah.com] wrote:
-> On Tue, Aug 12, 2003 at 07:53:53AM +0100, Christoph Hellwig wrote:
-> > On Tue, Aug 12, 2003 at 12:28:44AM +0200, Andries Brouwer wrote:
-> > > I see an Oops in the SCSI code, caused by the fact that sdkp is NULL
-> > > in sd_shutdown. "How can that be?", you will ask - dev->driver_data was set
-> > > in sd_probe. But in my case sd_probe never finished. An insmod usb-storage
-> > > hangs forever, or at least for more than six hours, giving ample opportunity
-> > > to observe this race between sd_probe and sd_shutdown.
-> > > (Of course sd_probe hangs in sd_revalidate disk.)
-> > 
-> > Well, this same problem could show upb in any other driver.  Could
-> > you instead send a patch to Pat that the driver model never calls
-> > the shutdown method for a driver that hasn't finished ->probe?
+Chiaki wrote:
+
+>> Kermit was very helpful but due to my inexperience i was not able to get
+>> the log due to Linux's box resetting of /dev/ttyS0 when booting, i would
+>> get disconnect...
+>>
 > 
-> I think it already will not do that due to taking the bus->subsys.rwsem
-> before calling either probe() or remove().
+> Oh, I forgot some details. You might be able to
+> circumvent the problem by
+> issueing
+> set carrier-watch off
 > 
+> I use the direct-wire connetion with
+> a device from a Linux PC's tty port using ckermit and
+> so let me check the setup again tomorrow at the office.
 
-Is the shutdown being called directly? The shutdown call is protected by
-a different rwsem. Depending on the call graph setting dev->driver on
-return of probe may provide a solution. I have not looked at all probe
-routines to understand if this would cause any bad side effects.
+Sorry for the delay. Below is the copy of kermit startup file
+that I use for talking to a device that does not echo back characters.
+I also power-on/off the device while connecting kermit to it, and
+I don't think I got kicked off. : so
+set carrier-watch off (abbreviated below as set carrier off)
+should get you going talking to a linux box via
+serial line during booting. (However,
+I believe you already captured the necessary log using
+uucp suite of tools.)
 
-Andries,
-	Can you send the oops output?
+  set line /dev/ttyS0
+  set speed 38400
+  set carrier off                    <-  This is key to the disconnect 
+problem.
+  set terminal echo local   <--- lines below here are for local echo back
+  set terminal newline on
+  set terminal cr-display crlf
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+>> Thanks a lot for suggesting ckermit.
+
+You are very welcome.
+
+ From a happy Kermit user.
+If you need to ask elaborate ckermit questions,
+comp.protocols.kermit.misc is where the original
+developers of Kermit hang around.
+
+Happy Hacking,
+
+Ishikawa, Chiaki
+
+
+-- 
+int main(void){int j=2003;/*(c)2003 cishikawa. */
+char t[] ="<CI> @abcdefghijklmnopqrstuvwxyz.,\n\"";
+char *i ="g>qtCIuqivb,gCwe\np@.ietCIuqi\"tqkvv is>dnamz";
+while(*i)((j+=strchr(t,*i++)-(int)t),(j%=sizeof t-1),
+(putchar(t[j])));return 0;}/* under GPL */
+
