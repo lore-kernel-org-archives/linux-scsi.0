@@ -1,58 +1,31 @@
-From: David Brownell <david-b@pacbell.net>
-Subject: Re: driverfs bus_id, name (was: [PATCH] /proc/scsi/map)
-Date: Tue, 25 Jun 2002 12:55:58 -0700
+From: Doug Ledford <dledford@redhat.com>
+Subject: [PATCH] initio driver update
+Date: Tue, 25 Jun 2002 18:57:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D18CACE.608@pacbell.net>
-References: <Pine.LNX.4.33.0206251159040.8496-100000@geena.pdx.osdl.net>
+Message-ID: <20020625185746.A19388@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mochel <mochel@osdl.org>
-Cc: Nick Bellinger <nickb@attheoffice.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: linux-kernel@redhat.com, linux-scsi@redhat.com
 
->>- It'd be more appropriate for PCI devices to copy pci_device.name into
->>   device.name and get the user-friendly names from the PCI device name
->>   database (when available), and only fallback to those nasty strings
->>   when the more user-friendly names aren't available.
-> 
-> 
-> That is what happens with PCI devices. They're not appearing as meaningful 
-> names probably because CONFIG_PCI_NAMES isn't set. Whether or not that 
-> information belongs in the kernel is another debate. 
+The initio a100 driver has not worked for some time now (needed updating 
+to the DMA mapping API).  This patch implements an update to the DMA 
+mapping API plus fixes a lot of obvious problems I saw in the driver (I'm 
+sure more exist).  I don't have hardware to test this, so testers would 
+be *much* appreciated.  It compiles, that's all I guarantee until testers 
+step forward.  However, it can't be any worse than the old version since 
+the old version wouldn't compile.  Linus, please apply this (and let me 
+know if you don't like pulling patches this way, it was too big to send 
+to the mailing lists).  Thanks.
 
-ERm ... it wasn't on the systems I looked at.  CONFIG_PCI_NAMES has
-clearly been set, but the names were the user-unfriendly style.  And
-yet I know the kernel has them accessible, since they're presented
-by the USB layer and by /proc/pci.  But not in driverfs.
+http://people.redhat.com/dledford/patches/initio.patch
 
-I now see some code (presumably yours) to set those two fields
-to be identical, in pci_scan_device(), but the useful description
-is instead set in pci_scan_slot().  Presumably this is a case of
-various init paths in PCI not wholly agreeing with each other;
-maybe pci_name_device() should set both name/description fields
-instead of only the one.  (Though ... why have two copies? :)
-
-
->>- Likewise it'd be more appropriate for USB devices to take the
->>   descriptive strings from the devices, like "Philips USB Digital
->>   Speaker System", than "USB device 0471:0104".
-> 
-> 
-> Those are in the devices themselves, right? There is nothing stopping the 
-> USB people from doing that... ;)
-
-Good, I was just sanity checking ... since the PCI names really
-haven't worked to provide user-friendly names, and I couldn't tell
-if that was intentional.  I can provide a patch for USB easily.
-
-
-You didn't respond to the question about changing the identifier
-from "name" to be the more appropriate "description" ... is that
-because you're still thinking (it'd cost to change) or because
-you like using the (IMO ambiguous) identifier "name" there?
-
-- Dave
-
-
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
