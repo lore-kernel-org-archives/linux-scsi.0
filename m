@@ -1,45 +1,66 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: sg driver and Fedora Core 2
-Date: Sat, 29 May 2004 13:58:12 -0400
+From: Tobias Lieber <little.tobias@gmx.de>
+Subject: Patch for iriver-mp3player
+Date: Sun, 30 May 2004 01:42:55 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40B8CF34.6080901@pobox.com>
-References: <40B74725.90403@torque.net>	<20040528172535.GD13961@devserv.devel.redhat.com	>	<1085846125.2101.29.camel@mulgrave>	<20040529155744.GA32621@devserv.devel.	redhat.com>	<1085846840.2103.47.camel@mulgrave>		<20040529162912.GA5922@devserv.devel.redhat.com>	<1085849399.2004.101.camel@mulgrave>  <40B8C81E.3050106@pobox.com> <1085852299.2004.206.camel@mulgrave>
+Message-ID: <20040530014255.3876eea3.little.tobias@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="Multipart=_Sun__30_May_2004_01_42_55_+0200_UenZ84/HHprINkvQ"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:52436 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264477AbUE2R60
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 May 2004 13:58:26 -0400
-In-Reply-To: <1085852299.2004.206.camel@mulgrave>
+Received: from pop.gmx.de ([213.165.64.20]:38547 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261206AbUE2XnV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 May 2004 19:43:21 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Alan Cox <alan@redhat.com>, Douglas Gilbert <dougg@torque.net>, Arjan van de Ven <arjanv@redhat.com>, Jens Axboe <axboe@suse.de>
+To: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Sat, 2004-05-29 at 12:27, Jeff Garzik wrote:
-> 
->>Really what needs to happen is a generic userland tap attaches to a 
->>chrdev, issues an ioctl(2) to attach to a request_queue, and then does 
->>read(2)/write(2)/mmap(2) to communicate with the request_queue.
->>
->>:)
->>
->>Call it /dev/bsg, or somesuch.
-> 
-> 
-> Well, this touches on something else I'm thinking about: lazy
-> attachment.  In multi thousand disc environments, you don't want us
-> wasting resources allocating a queue and reading a partition table for
-> all of them; you really only want to do that for the devices you're
-> actually going to use.  Once we have this, I think dual attachment will
-> be a dead issue.
+This is a multi-part message in MIME format.
 
+--Multipart=_Sun__30_May_2004_01_42_55_+0200_UenZ84/HHprINkvQ
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Regardless of lazy attachment, request_queues need to support multiple 
-simultaneous producers of struct request's.
+Hi
 
-	Jeff
+i Javier Marcet wrote in January 2004 a patch for linux-2.6.3, to make a i-River-mp3-Player mounting. It was on lkml: http://lkml.org/lkml/2004/1/6/170
+i was suprised, that it was not in the kernel, and no other soulution, too. So i read his patch for getting mouted the player, and rewrote it for linux-2.6.7-rc1-bk7. I attached it. It would be nice, if it would be possible mounting the mp3-player without patching the Kernel, so i would greet it, if this or an other solution woulg com into the Kernel.
 
+greetings
 
+Tobias Lieber
+
+--Multipart=_Sun__30_May_2004_01_42_55_+0200_UenZ84/HHprINkvQ
+Content-Type: application/octet-stream;
+ name="patch-iriver"
+Content-Disposition: attachment;
+ filename="patch-iriver"
+Content-Transfer-Encoding: base64
+
+LS0tIGxpbnV4LTIuNi42L2luY2x1ZGUvc2NzaS9zY3NpX2RldmluZm8uaAkyMDA0LTA1LTMwIDAw
+OjEyOjEwLjA1MDc0NjY5NiArMDIwMAorKysgbGludXhfcGF0Y2hlZC9pbmNsdWRlL3Njc2kvc2Nz
+aV9kZXZpbmZvLmgJMjAwNC0wNS0zMCAwMDoxOToyMy44OTg3OTE3NjggKzAyMDAKQEAgLTI0LDQg
+KzI0LDUgQEAKICNkZWZpbmUgQkxJU1RfUkVQT1JUTFVOMgkweDIwMDAwCS8qIHRyeSBSRVBPUlRf
+TFVOUyBldmVuIGZvciBTQ1NJLTIgZGV2cwogIAkJCQkJICAgKGlmIEhCQSBzdXBwb3J0cyBtb3Jl
+IHRoYW4gOCBMVU5zKSAqLwogI2RlZmluZSBCTElTVF9OT1JFUE9SVExVTgkweDQwMDAwCS8qIGRv
+bid0IHRyeSBSRVBPUlRfTFVOUyBzY2FuIChTQ1NJLTMgZGV2cykgKi8KKyNkZWZpbmUgQkxJU1Rf
+Tk9STUIgICAgICAgICAgICAgMHg4MDAwMCAvKiBLbm93biB0byBiZSBub3QgcmVtb3ZhYmxlKi8K
+ICNlbmRpZgotLS0gbGludXgtMi42LjYvZHJpdmVycy9zY3NpL3Njc2lfZGV2aW5mby5jCTIwMDQt
+MDUtMTAgMDQ6MzI6MjcuMDAwMDAwMDAwICswMjAwCisrKyBsaW51eF9wYXRjaGVkL2RyaXZlcnMv
+c2NzaS9zY3NpX2RldmluZm8uYwkyMDA0LTA1LTMwIDAwOjE0OjAwLjM4Mjk3MzY0OCArMDIwMApA
+QCAtMTgzLDYgKzE4Myw3IEBACiAJeyJUT1NISUJBIiwgIkNEUk9NIiwgTlVMTCwgQkxJU1RfSVNS
+T019LAogCXsiVE9TSElCQSIsICJDRC1ST00iLCBOVUxMLCBCTElTVF9JU1JPTX0sCiAJeyJYWVJB
+VEVYIiwgIlJTIiwgIioiLCBCTElTVF9TUEFSU0VMVU4gfCBCTElTVF9MQVJHRUxVTn0sCisgICAg
+ICAgIHsiaVJpdmVyIiwgImlGUCBNYXNzIERyaXZlciIsIE5VTEwsIEJMSVNUX05PUk1CfSwKIAl7
+Ilp6eXp4IiwgIlJvY2tldFN0b3IgNTAwUyIsIE5VTEwsIEJMSVNUX1NQQVJTRUxVTn0sCiAJeyJa
+enl6eCIsICJSb2NrZXRTdG9yIDIwMDAiLCBOVUxMLCBCTElTVF9TUEFSU0VMVU59LAogCXsgTlVM
+TCwgTlVMTCwgTlVMTCwgMCB9LAotLS0gbGludXgtMi42LjYvZHJpdmVycy9zY3NpL3Njc2lfc2Nh
+bi5jCTIwMDQtMDUtMzAgMDA6MTI6MDcuOTExMDcxOTc2ICswMjAwCisrKyBsaW51eF9wYXRjaGVk
+L2RyaXZlcnMvc2NzaS9zY3NpX3NjYW4uYwkyMDA0LTA1LTMwIDAwOjE4OjMwLjY5NDg3OTk5MiAr
+MDIwMApAQCAtNTY1LDcgKzU2NSw3IEBACiAJICovIAogCiAJc2Rldi0+aW5xX3BlcmlwaF9xdWFs
+ID0gKGlucV9yZXN1bHRbMF0gPj4gNSkgJiA3OwotCXNkZXYtPnJlbW92YWJsZSA9ICgweDgwICYg
+aW5xX3Jlc3VsdFsxXSkgPj4gNzsKKwlzZGV2LT5yZW1vdmFibGUgPSAoKCgweDgwICYgaW5xX3Jl
+c3VsdFsxXSkgPj4gNykgJiYgISgqYmZsYWdzICZCTElTVF9OT1JNQikpOwogCXNkZXYtPmxvY2th
+YmxlID0gc2Rldi0+cmVtb3ZhYmxlOwogCXNkZXYtPnNvZnRfcmVzZXQgPSAoaW5xX3Jlc3VsdFs3
+XSAmIDEpICYmICgoaW5xX3Jlc3VsdFszXSAmIDcpID09IDIpOwogCg==
+
+--Multipart=_Sun__30_May_2004_01_42_55_+0200_UenZ84/HHprINkvQ--
