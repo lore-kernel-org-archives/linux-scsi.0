@@ -1,50 +1,70 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] 2.6.0-test1: random errors for USB disk
-Date: Thu, 17 Jul 2003 15:34:40 -0400 (EDT)
+Subject: Re: Comments about the __scsi_mode_sense() routine
+Date: Thu, 17 Jul 2003 15:51:25 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0307171520390.1251-100000@ida.rowland.org>
-References: <3F16D933.2080607@Synopsys.COM>
+Message-ID: <Pine.LNX.4.44L0.0307171549470.1251-100000@ida.rowland.org>
+References: <1058456873.2647.55.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:18692 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S268102AbTGQTTq (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:20484 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S268736AbTGQTgc (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jul 2003 15:19:46 -0400
-In-Reply-To: <3F16D933.2080607@Synopsys.COM>
+	Thu, 17 Jul 2003 15:36:32 -0400
+In-Reply-To: <1058456873.2647.55.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Harald Dunkel <harri@synopsys.COM>
-Cc: David Brownell <david-b@pacbell.net>, USB Storage List <usb-storage@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, 17 Jul 2003, Harald Dunkel wrote:
+James:
 
-> Harald Dunkel wrote:
-> > Alan Stern wrote:
-> > 
-> >>
-> >> Did you say that this worked correctly under 2.4.22?  If it does, 
-> >> could you send the equivalent system log (with usb-storage debugging 
-> >> enabled) showing what happens when you create a filesystem and 
-> >> everything works right?
-> >>
-> > The rebuild is running. But the last working version I have is 2.4.21
-> > plus the USB patches of June 20th. Is it OK to start with this version?
-> > 
-> 
-> See attachment.
-
-The information in your system logs is very clear.  Your USB drive worked 
-just great until it received a big data transfer.
-
-Under 2.4, the largest WRITE transfer was 130048 bytes and it worked fine.  
-Under 2.6, the largest attempted WRITE transfer was 524288 bytes and it
-crashed the drive.  The two commands were otherwise identical.
-
-Presumably differences in the block I/O systems account for the difference
-in buffer sizes.  But I don't know of any way to tell Linux that the drive
-is unable to accept data transfers larger than some fixed limit.
-
-Can anyone else suggest a way to solve this?
+I'm not sure if you're interested in getting a patch, or if this patch 
+does exactly the right thing.  But here it is anyway.
 
 Alan Stern
+
+
+===== scsi_lib.c 1.41 vs edited =====
+--- 1.41/drivers/scsi/scsi_lib.c	Tue Jul  1 07:51:39 2003
++++ edited/drivers/scsi/scsi_lib.c	Thu Jul 17 15:48:17 2003
+@@ -1356,7 +1356,8 @@
+  *	__scsi_mode_sense - issue a mode sense, falling back from 10 to 
+  *		six bytes if necessary.
+  *	@sreq:	SCSI request to fill in with the MODE_SENSE
+- *	@dbd:	set if mode sense will allow block descriptors to be returned
++ *	@dbd:	set the 0x08 bit if mode sense will not allow block
++ *		descriptors to be returned
+  *	@modepage: mode page being requested
+  *	@buffer: request buffer (may not be smaller than eight bytes)
+  *	@len:	length of request buffer.
+@@ -1364,9 +1365,7 @@
+  *	@retries: number of retries before failing
+  *	@data: returns a structure abstracting the mode header data
+  *
+- *	Returns zero if unsuccessful, or the header offset (either 4
+- *	or 8 depending on whether a six or ten byte command was
+- *	issued) if successful.
++ *	Returns the result code from the completed request.
+  **/
+ int
+ __scsi_mode_sense(struct scsi_request *sreq, int dbd, int modepage,
+@@ -1425,15 +1424,15 @@
+ 
+ 	if(scsi_status_is_good(sreq->sr_result)) {
+ 		data->header_length = header_length;
+-		if(use_10_for_ms) {
+-			data->length = buffer[0]*256 + buffer[1];
++		if (use_10_for_ms) {
++			data->length = buffer[0]*256 + buffer[1] + 2;
+ 			data->medium_type = buffer[2];
+ 			data->device_specific = buffer[3];
+ 			data->longlba = buffer[4] & 0x01;
+ 			data->block_descriptor_length = buffer[6]*256
+ 				+ buffer[7];
+ 		} else {
+-			data->length = buffer[0];
++			data->length = buffer[0] + 1;
+ 			data->medium_type = buffer[1];
+ 			data->device_specific = buffer[3];
+ 			data->block_descriptor_length = buffer[4];
 
