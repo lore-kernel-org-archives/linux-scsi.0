@@ -1,68 +1,48 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [PATCH][RELEASE] megaraid 2.10.2 Driver
-Date: Tue, 23 Mar 2004 00:45:43 +0000
+From: Jeff Layton <jtlayton@poochiereds.net>
+Subject: Qlogic ISP 1020
+Date: Mon, 22 Mar 2004 20:19:54 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040323004543.GP25059@parcelfarce.linux.theplanet.co.uk>
-References: <0E3FA95632D6D047BA649F95DAB60E570230C77B@exa-atlanta.se.lsil.com>
+Message-ID: <1080004793.5848.34.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:32158 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261728AbUCWAps
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Mar 2004 19:45:48 -0500
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570230C77B@exa-atlanta.se.lsil.com>
+Received: from rdu26-93-067.nc.rr.com ([66.26.93.67]:46490 "EHLO
+	salusa.poochiereds.net") by vger.kernel.org with ESMTP
+	id S261807AbUCWBT7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Mar 2004 20:19:59 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by salusa.poochiereds.net (Postfix) with ESMTP id 28D12BF3C
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Mar 2004 20:19:58 -0500 (EST)
+Received: from salusa.poochiereds.net ([127.0.0.1])
+	by localhost (salusa [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 20769-09 for <linux-scsi@vger.kernel.org>;
+	Mon, 22 Mar 2004 20:19:55 -0500 (EST)
+Received: from tleilax.ix.dyndns.org (tleilax.ix.dyndns.org [192.168.1.3])
+	by salusa.poochiereds.net (Postfix) with ESMTP id EB0AABF3A
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Mar 2004 20:19:54 -0500 (EST)
 List-Id: linux-scsi@vger.kernel.org
-To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Cc: 'Jeff Garzik' <jgarzik@pobox.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Mon, Mar 22, 2004 at 07:02:39PM -0500, Bagalkote, Sreenivas wrote:
-> >>For upstream, this should just be CONFIG_COMPAT I presume.
-> 
-> For 2.6 kernels, this would be just CONFIG_COMPAT. Or have I
-> misunderstood your comment?
-> 
-> >>I don't see how this construct will work in all cases.  Hence my 
-> >>CONFIG_COMPAT command above.
-> 
-> We saw the need for ioctl compatibility in __x86_64__ cases so far.
-> What other cases will this not work in?
+I recently acquired a new tape drive with a HVD SCSI interface. I also
+got a QLogic ISP 1020 based SCSI card to drive it. Unfortunately, I seem
+to be having some problems with the qlogicisp driver in the 2.6 kernel.
+Occasionally I get a SCSI error, and it takes the tape drive offline,
+since the qlogicisp driver doesn't have proper error handling for 2.6.
 
-I don't think you understand how CONFIG_COMPAT works.  x86-64 defines it
-when it wants it:
+Is there a maintainer for the 2.6 qlogicisp driver? I saw that Christoph
+Hellwig had posted part of a patch to add support for the 1020 and 1040
+cards to the qla1280 driver. Has this been completed yet, and if so is
+there a place I could download the complete patch? 
+If not, I'd be happy to help test patches for this, as my tape setup is
+more or less useless to me until I have a driver that has proper error
+handling.
 
-config COMPAT
-        bool
-        depends on IA32_EMULATION
-        default y
+Alternately, if anyone knows of a working driver for the QLA1020 for a
+2.6 kernel, I'd appreciate any pointers.
 
-just like every other architecture.  Just use
-#ifdef CONFIG_COMPAT
-	... 32bit compat code ...
-#endif
-
-and everything will be fine.  Please don't introduce this stupid
-unnecessary LSI_CONFIG_COMPAT.  That just makes people say "what the
-fuck are they doing?".
-
-> >>Bug -- always set dma mask.  Do not conditionally _not_ call 
-> >>pci_set_dma_mask(), for the 64-bit case.
-> 
-> The code does not __not__ call pci_set_dma_mask() conditionally.
-> It is always calling with either 64-bit or 32-bit mask.
-> 
-> >>ummmm what???    uxferaddr is u32.  why are you casting it to a pointer?
-> 
-> Both copy_to_user and copy_from_user take pointers, don't they?
-
-So you can only copy to the bottom 4GB of user address space?  That
-seems like a recipe for disaster.  Particularly on ia64.
-
+Thanks,
 -- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Jeff Layton <jtlayton@poochiereds.net>
+
+
