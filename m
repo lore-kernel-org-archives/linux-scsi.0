@@ -1,74 +1,52 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: PATCH [0/8]  qla2xxx: Summary of changes...
-Date: Tue, 7 Sep 2004 11:34:59 -0700
+From: "Shirron, Stephen" <Stephen.Shirron@lsil.com>
+Subject: RE: IP over FC and qlogic workarounds in fusion
+Date: Tue, 7 Sep 2004 12:12:10 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040907183459.GB2288@praka.san.rr.com>
-References: <20040907042603.GA29557@praka.san.rr.com> <1094536856.2801.3.camel@laptop.fenrus.com> <1094566150.1716.11.camel@mulgrave>
+Message-ID: <BC3CE0375D29D51199A400508B66CA6C099478E1@exc-snake.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:8902 "EHLO
-	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S268450AbUIGShJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Sep 2004 14:37:09 -0400
-Content-Disposition: inline
-In-Reply-To: <1094566150.1716.11.camel@mulgrave>
+Received: from mail0.lsil.com ([147.145.40.20]:33730 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S268349AbUIGSNQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2004 14:13:16 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Arjan van de Ven <arjanv@redhat.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Emoore@lsil.com>
+Cc: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On Tue, 07 Sep 2004, James Bottomley wrote:
+One problem I see with trying to remove this workaround from
+our driver is that it would have to be coupled with a kernel
+release, and then the newer driver would be bound to that release.
+It would make it harder for customers to use a new driver kit with
+an old kernel.
 
-> On Tue, 2004-09-07 at 02:00, Arjan van de Ven wrote:
-> > I found a "funky" bug the other day with this driver; I was testing on a
-> > RAID device of which I won't mention the vendor, but it had the habit of
-> > returning QUEUE FULL when it's internal queue was full, with multiple
-> > luns active that could even be on a lun which had exactly zero
-> > outstanding IO already. The qlogic driver happily takes the number of
-> > outstanding commands (0) and subtracts 1 from it to guestimate the
-> > max... needless to say that didn't go down to well :-) Sounds like a
-> > bound check would make sense here...
+How is something like this typically addressed?
+
+We are not opposed to making such a change.
+
+stephen
+
+-----Original Message-----
+From: Christoph Hellwig [mailto:hch@lst.de] 
+Sent: Monday, September 06, 2004 6:14 AM
+To: Moore, Eric Dean
+Cc: Christoph Hellwig; andrew.vasquez@qlogic.com;
+linux-scsi@vger.kernel.org; Shirron, Stephen
+Subject: Re: IP over FC and qlogic workarounds in fusion
+
+On Mon, Aug 30, 2004 at 06:29:47PM -0400, Moore, Eric Dean wrote:
+> Here is feedback from Stephen Shirron, co-worker here
+> at LSI Logic:
 > 
-> Actually, this isn't at all unusual.  RAID devices often have a single
-> memory pool for all the LUN queues.  Heavy activity on a set of LUNs can
-> lead to no resources for a command on others.
-> 
-> Although we have queue full tracking, predicting the behaviour on
-> devices with coupled queues like this is impossible.
-> 
+> To my knowledge QLogic has never even acknowledged that
+> they had a bug.  In my opinion it is not
+> safe to remove this code.  We do have versions of the FC
+> firmware that work around this QLogic bug, but it's hard
+> to know if the entire field is populated.  It would not
+> be good to introduce a regression that decreases our
+> interoperability.
 
+Andrew, could you please try to to find the right people at Qlogic
+to ACK or even better fix this?
 
-> However, I thought the qlogic driver used the mid-layer queue full
-> tracking, which takes all of this into account and won't adjust the
-> depth below a certain number (8 I think).
-> 
-
-It does.  Relevant code from qla_isr.c:
-
-	case CS_QUEUE_FULL:
-
-		...
-
-                /* Adjust queue depth */
-                ret = scsi_track_queue_full(cp->device,
-                    sp->lun_queue->out_cnt - 1);
-                if (ret) {
-			...
-
-Now, sp->lun_queue->out_cnt at this point should at least be >= 1, so
-conceivably we could be passing 0 for the second argument.  But,
-scsi_track_queue_full() as James points out should handle this and
-drop the depth to cmd_per_lun.
-
-		...
-		if (sdev->last_queue_full_depth < 8) {
-			/* Drop back to untagged */
-			scsi_adjust_queue_depth(sdev, 0, sdev->host->cmd_per_lun);
-			return -1;
-		}
-
-Do we want checks for this case in all LLDDs who use the mid-layer
-API?
-
-Regards,
-Andrew Vasquez
+Eric, are you and your LSI coworkers willing to integrate the workaround
+with the net/802/fc.c code and make fusion use it?
