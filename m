@@ -1,36 +1,35 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH]  2.4.23-pre8 driver udpate for MPT Fusion (2.05.10)
-Date: Sat, 25 Oct 2003 14:05:50 -0700
+From: Willem Riede <wrlk@riede.org>
+Subject: [PATCH] osst buglet
+Date: Sat, 25 Oct 2003 17:19:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031025210550.GB23437@kroah.com>
-References: <0E3FA95632D6D047BA649F95DAB60E57035A9458@exa-atlanta.se.lsil.com> <20031025191828.GA17144@kroah.com> <20031025204405.GB5172@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <20031025211900.GI16329@linnie.riede.org>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from storm.he.net ([64.71.150.66]:33517 "HELO storm.he.net")
-	by vger.kernel.org with SMTP id S262955AbTJYVGd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Oct 2003 17:06:33 -0400
+Received: from sccrmhc11.comcast.net ([204.127.202.55]:39423 "EHLO
+	sccrmhc11.comcast.net") by vger.kernel.org with ESMTP
+	id S263005AbTJYVMq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 25 Oct 2003 17:12:46 -0400
 Content-Disposition: inline
-In-Reply-To: <20031025204405.GB5172@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: "Moore, Eric Dean" <emoore@lsil.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, Oct 25, 2003 at 09:44:05PM +0100, Matthew Wilcox wrote:
-> On Sat, Oct 25, 2003 at 12:18:28PM -0700, Greg KH wrote:
-> > On Fri, Oct 24, 2003 at 11:12:25AM -0400, Moore, Eric Dean wrote:
-> > > I'm going to be working on that.
-> > > Can't say when its going to be ready.
-> > 
-> > How about support for all of the pci hotplug systems on 2.4 that are
-> > shipping today? 
-> 
-> The SCSI system isn't really capable of supporting hotplug PCI in 2.4.
+Can someone please commit the change below to 2.6-test scsi BK for me?
+It fixes a "Bad page state at destroy_compound_page" error.
 
-Yeah, but some drivers almost do (Adaptec comes to mind.)  It will work
-in a pci hotplug system, while other scsi drivers will not work at all.
-
-thanks,
-
-greg k-h
+Thanks, Willem Riede, osst maintainer.
+------ start patch ------
+--- lk/drivers/scsi/osst_options.h	2003-10-25 10:12:24.000000000 -0400
++++ wr/drivers/scsi/osst_options.h	2003-10-25 17:09:26.000000000 -0400
+@@ -57,7 +57,7 @@
+ /* The size of the first scatter/gather segments (determines the maximum block
+    size for SCSI adapters not supporting scatter/gather). The default is set
+    to try to allocate the buffer as one chunk. */
+-#define OSST_FIRST_ORDER  5
++#define OSST_FIRST_ORDER  (15-PAGE_SHIFT)
+ 
+ 
+ /* The following lines define defaults for properties that can be set
+------ end patch ------
