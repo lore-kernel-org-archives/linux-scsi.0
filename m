@@ -1,40 +1,122 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Fw: oops in kernel 2.6.9
-Date: 20 Oct 2004 08:32:38 -0500
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: Handling erroneous READ CAPACITY response in sd.c
+Date: Wed, 20 Oct 2004 09:28:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1098279164.2002.7.camel@mulgrave>
-References: <20041019175146.15889e11.akpm@osdl.org>
-	<20041020064255.GB8755@suse.de>  <20041019234857.7ddf5bc7.akpm@osdl.org>
+Message-ID: <4176680A.7080208@adaptec.com>
+References: <Pine.LNX.4.44L0.0410191738250.713-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------010108010304000707050508"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:49337 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S270009AbUJTNc5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Oct 2004 09:32:57 -0400
-In-Reply-To: <20041019234857.7ddf5bc7.akpm@osdl.org>
+Received: from magic.adaptec.com ([216.52.22.17]:48081 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S270315AbUJTN24 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Oct 2004 09:28:56 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0410191738250.713-100000@netrider.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Jens Axboe <axboe@suse.de>, nickpiggin@yahoo.com.au, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>
 
-On Wed, 2004-10-20 at 01:48, Andrew Morton wrote:
-> Jens Axboe <axboe@suse.de> wrote:
-> >
-> > On Tue, Oct 19 2004, Andrew Morton wrote:
-> > > 
-> > > oy.
-> > 
-> > Looks like a SCSI issue, it probably killed the queue before the io
-> > scheduler was entered again.
-> 
-> Better add linux-scsi to cc then...
+This is a multi-part message in MIME format.
+--------------010108010304000707050508
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The SCSI half of the fix for this is in bk latest (that was adding a
-refcount to the device as soon as the command is issued).  I'm not sure
-about the usb-storage piece (not exciting the error handler by ignoring
-commands when the device is unplugged).
+(patch attached -- got lost somehow)
 
-James
+Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
 
+--------------010108010304000707050508
+Content-Type: application/octet-stream;
+ name="sd_read_cap.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="sd_read_cap.patch"
+
+PT09PT0gZHJpdmVycy9zY3NpL3NkLmMgMS4xNjEgdnMgZWRpdGVkID09PT09Ci0tLSAxLjE2
+MS9kcml2ZXJzL3Njc2kvc2QuYwkyMDA0LTEwLTE1IDEwOjQ2OjA3IC0wNDowMAorKysgZWRp
+dGVkL2RyaXZlcnMvc2NzaS9zZC5jCTIwMDQtMTAtMTkgMTY6NTE6NDYgLTA0OjAwCkBAIC05
+ODcsNiArOTg3LDExMiBAQAogCX0KIH0KIAorLyogc2RfcmVhZF90cnVlX2NhcDogU29tZSBk
+ZXZpY2Ugc2VydmVycyBpbmNvcnJlY3RseSByZXR1cm4gdGhlCisgKiBjYXBhY2l0eSBhcyBv
+cHBvc2VkIHRvIHRoZSBMQkEgb2YgdGhlIGxhc3QgbG9naWNhbCBibG9jayBvZiB0aGUKKyAq
+IGJsb2NrIGRldmljZS4KKyAqCisgKiBXZSB0cnkgdG8gZml4IHRoaXMgYXMgZm9sbG93czog
+TGV0IHggPSBSZXR1cm5lZCBMQkEgZnJvbSB0aGUgbGFzdAorICogUkVBRCBDQVBBQ0lUWSBj
+b21tYW5kIGlzc3VlZCAocmVzdWx0IGluICJidWZmZXIiKS4gIFJlaXNzdWUgdGhlCisgKiBS
+RUFEIENBUEFDSVRZIGNvbW1hbmQgYXMgZm9sbG93czogc2V0IHRoZSBwYXJ0aWFsIG1lZGl1
+bSBpbmRpY2F0b3IKKyAqIChQTUkpIGJpdCB0byBvbmU7IHNldCB0aGUgTEJBIHRvIHggLSAx
+LiBGaXJlIG9mZiB0aGF0IFJFQUQgQ0FQQUNJVFkKKyAqIGNvbW1hbmQuCisgKgorICogSWYg
+d2UgZ2V0IHN1Y2Nlc3MsCisgKiAgICAgICBJZiBSZXR1cm5lZCBMQkEgPiB4IC0gMSwgdGhl
+biBjYXBhY2l0eSBpcyB4KzEsIHNwZWMgYmVoYXZpb3IuCisgKiAgICAgICBFbHNlIFJldHVy
+bmVkIExCQSA8PSB4IC0gMSwgdGhlbiBjYXBhY2l0eSBpcyB4LCBicm9rZW4gZGV2aWNlIHNl
+cnZlci4KKyAqIEVsc2UgZXJyb3IsIG5vdGhpbmcgY2FuIGJlIGFzc3VtZWQsIGNhcGFjaXR5
+IGlzIHgrMS4KKyAqLworI2RlZmluZSBHRVRfUkxCQV9SRUFEX0NBUDE2KF9idWZmZXIpICgo
+KHU2NCkoX2J1ZmZlcilbMF0gPDwgNTYpIHwgXAorCQkJCSAgICAgKCh1NjQpKF9idWZmZXIp
+WzFdIDw8IDQ4KSB8ICBcCisJCQkJICAgICAoKHU2NCkoX2J1ZmZlcilbMl0gPDwgNDApIHwg
+IFwKKwkJCQkgICAgICgodTY0KShfYnVmZmVyKVszXSA8PCAzMikgfCAgXAorCQkJCSAgICAg
+KChzZWN0b3JfdCkoX2J1ZmZlcilbNF0gPDwgMjQpIHwgXAorCQkJCSAgICAgKChzZWN0b3Jf
+dCkoX2J1ZmZlcilbNV0gPDwgMTYpIHwgXAorCQkJCSAgICAgKChzZWN0b3JfdCkoX2J1ZmZl
+cilbNl0gPDwgOCkgIHwgXAorCQkJCSAgICAgKHNlY3Rvcl90KShfYnVmZmVyKVs3XSkKKyNk
+ZWZpbmUgR0VUX1JMQkFfUkVBRF9DQVAxMChfYnVmZmVyKSAoKChzZWN0b3JfdCkoX2J1ZmZl
+cilbMF0gPDwgMjQpIHwgXAorCQkJCSAgICAgICgoX2J1ZmZlcilbMV0gPDwgMTYpIHwgICAg
+ICAgICAgIFwKKwkJCQkgICAgICAoKF9idWZmZXIpWzJdIDw8IDgpIHwgICAgICAgICAgICBc
+CisJCQkJICAgICAgKF9idWZmZXIpWzNdKQorc3RhdGljIHZvaWQgc2RfcmVhZF90cnVlX2Nh
+cChzdHJ1Y3Qgc2NzaV9kaXNrICpzZCwgY2hhciAqZGlza25hbWUsCisJCQkgICAgIHN0cnVj
+dCBzY3NpX3JlcXVlc3QgKlNScG50LCB1bnNpZ25lZCBjaGFyICpidWZmZXIsCisJCQkgICAg
+IGludCBsb25ncmMpCit7CisJdW5zaWduZWQgY2hhciBjbWRbMTZdOworCXVuc2lnbmVkIGNo
+YXIgYnVmWzEyXTsKKworCS8qIHNhdmUgdGhlIG9sZCBidWZmZXIgY29udGVudHMgaGVyZSAq
+LworCW1lbWNweShidWYsIGJ1ZmZlciwgMTIpOworCisJaWYgKGxvbmdyYykgeworCQl1NjQg
+KmxiYSA9ICh1NjQgKikgKGNtZCsyKTsKKwkJdTY0IHJsYmE7CisKKwkJbWVtc2V0KCh2b2lk
+ICopIGNtZCwgMCwgMTYpOworCQljbWRbMF0gPSBTRVJWSUNFX0FDVElPTl9JTjsKKwkJY21k
+WzFdID0gU0FJX1JFQURfQ0FQQUNJVFlfMTY7CisJCWNtZFsxM10gPSAxMjsKKworCQlybGJh
+ID0gR0VUX1JMQkFfUkVBRF9DQVAxNihidWZmZXIpOworCQlybGJhIC09IDE7CisJCSpsYmEg
+PSBjcHVfdG9fYmU2NChybGJhKTsKKwkJLyogdHVybiBvbiB0aGUgUE1JIGJpdCAqLworCQlj
+bWRbMTRdIHw9IDE7CisJCW1lbXNldCgodm9pZCAqKSBidWZmZXIsIDAsIDEyKTsKKwl9IGVs
+c2UgeworCQl1MzIgKmxiYSA9ICh1MzIgKikgKGNtZCsyKTsKKwkJdTMyIHJsYmE7CisKKwkJ
+Y21kWzBdID0gUkVBRF9DQVBBQ0lUWTsKKwkJbWVtc2V0KCh2b2lkICopICZjbWRbMV0sIDAs
+IDkpOworCQkKKwkJcmxiYSA9IEdFVF9STEJBX1JFQURfQ0FQMTAoYnVmZmVyKTsKKwkJcmxi
+YSAtPSAxOworCQkqbGJhID0gY3B1X3RvX2JlMzIocmxiYSk7CisJCS8qIHR1cm4gb24gdGhl
+IFBNSSBiaXQgKi8KKwkJY21kWzhdIHw9IDE7CisJCW1lbXNldCgodm9pZCAqKSBidWZmZXIs
+IDAsIDgpOworCX0KKworCVNScG50LT5zcl9jbWRfbGVuID0gMDsKKwlTUnBudC0+c3Jfc2Vu
+c2VfYnVmZmVyWzBdID0gMDsKKwlTUnBudC0+c3Jfc2Vuc2VfYnVmZmVyWzJdID0gMDsKKwlT
+UnBudC0+c3JfZGF0YV9kaXJlY3Rpb24gPSBETUFfRlJPTV9ERVZJQ0U7CisJCisJc2NzaV93
+YWl0X3JlcShTUnBudCwgKHZvaWQgKikgY21kLCAodm9pZCAqKSBidWZmZXIsCisJCSAgICAg
+IGxvbmdyYyA/IDEyIDogOCwgU0RfVElNRU9VVCwgU0RfTUFYX1JFVFJJRVMpOworCisJaWYg
+KFNScG50LT5zcl9yZXN1bHQpIHsKKwkJLyogTm90aGluZyBjYW4gYmUgYXNzdW1lZC4gKi8K
+KwkJcHJpbnRrKEtFUk5fTk9USUNFICIlczogJXM6IFBNSSBub3Qgc3VwcG9ydGVkXG4iLAor
+CQkgICAgICAgX19GVU5DVElPTl9fLCBkaXNrbmFtZSk7CisJCW1lbWNweShidWZmZXIsIGJ1
+ZiwgMTIpOworCQlyZXR1cm47CisJfQorCisJaWYgKGxvbmdyYykgeworCQl1NjQgcmxiYSA9
+IEdFVF9STEJBX1JFQURfQ0FQMTYoYnVmZmVyKTsKKwkJdTY0IHggICAgPSBHRVRfUkxCQV9S
+RUFEX0NBUDE2KGJ1Zik7CisJCWlmIChybGJhID4geCAtIDEpIHsKKwkJCWdvdG8gb3V0X3Nw
+ZWM7CisJCX0KKwl9IGVsc2UgeworCQl1MzIgcmxiYSA9IEdFVF9STEJBX1JFQURfQ0FQMTAo
+YnVmZmVyKTsKKwkJdTMyIHggICAgPSBHRVRfUkxCQV9SRUFEX0NBUDEwKGJ1Zik7CisJCWlm
+IChybGJhID4geCAtIDEpIHsKKwkJCWdvdG8gb3V0X3NwZWM7CisJCX0KKwl9CisJcHJpbnRr
+KEtFUk5fTk9USUNFICIlczogJXM6IGJyb2tlbiBkZXZpY2Ugc2VydmVyXG4iLCBfX0ZVTkNU
+SU9OX18sCisJICAgICAgIGRpc2tuYW1lKTsKKwlyZXR1cm47CisJCisgb3V0X3NwZWM6CisJ
+LyogQ2FwYWNpdHkgaXMgeCsxLCBzcGVjIGJlaGF2aW9yLiAqLworCXByaW50ayhLRVJOX05P
+VElDRSAiJXM6ICVzOiBzcGVjIGJlaGF2aW9yXG4iLCBfX0ZVTkNUSU9OX18sIGRpc2tuYW1l
+KTsKKwltZW1jcHkoYnVmZmVyLCBidWYsIDEyKTsKK30gLyogZW5kIHNkX3JlYWRfdHJ1ZV9j
+YXAoKSAqLworCiAvKgogICogcmVhZCBkaXNrIGNhcGFjaXR5CiAgKi8KQEAgLTEwNzAsNyAr
+MTE3NiwxMiBAQAogCQkKIAkJc2RrcC0+Y2FwYWNpdHkgPSAxICsgKHNlY3Rvcl90KSAweGZm
+ZmZmZmZmOwkJCiAJCWdvdG8gZ290X2RhdGE7Ci0JfQkKKwl9CisKKwkvKiBDaGVjayBpZiB0
+aGUgZGV2aWNlIHJlcG9ydGVkIENBUEFDSVRZIGFzIG9wcG9zZWQgdG8KKwkgKiB0aGUgbWF4
+dW11bSBMQkEgKGFzIHBlciB0aGUgU0JDIHNwZWMpLgorCSAqLworCXNkX3JlYWRfdHJ1ZV9j
+YXAoc2RrcCwgZGlza25hbWUsIFNScG50LCBidWZmZXIsIGxvbmdyYyk7CiAJCiAJaWYgKCFs
+b25ncmMpIHsKIAkJc2VjdG9yX3NpemUgPSAoYnVmZmVyWzRdIDw8IDI0KSB8CkBAIC0xMDc4
+LDEyICsxMTg5LDE0IEBACiAJCWlmIChidWZmZXJbMF0gPT0gMHhmZiAmJiBidWZmZXJbMV0g
+PT0gMHhmZiAmJgogCQkgICAgYnVmZmVyWzJdID09IDB4ZmYgJiYgYnVmZmVyWzNdID09IDB4
+ZmYpIHsKIAkJCWlmKHNpemVvZihzZGtwLT5jYXBhY2l0eSkgPiA0KSB7Ci0JCQkJcHJpbnRr
+KEtFUk5fTk9USUNFICIlcyA6IHZlcnkgYmlnIGRldmljZS4gdHJ5IHRvIHVzZSIKLQkJCQkg
+ICAgICAgIiBSRUFEIENBUEFDSVRZKDE2KS5cbiIsIGRpc2tuYW1lKTsKKwkJCQlwcmludGso
+S0VSTl9OT1RJQ0UgIiVzIDogdmVyeSBiaWcgZGV2aWNlLiAiCisJCQkJICAgICAgICJ0cnkg
+dG8gdXNlIFJFQUQgQ0FQQUNJVFkoMTYpLlxuIiwKKwkJCQkgICAgICAgZGlza25hbWUpOwog
+CQkJCWxvbmdyYyA9IDE7CiAJCQkJZ290byByZXBlYXQ7CiAJCQl9IGVsc2UgewotCQkJCXBy
+aW50ayhLRVJOX0VSUiAiJXM6IHRvbyBiaWcgZm9yIGtlcm5lbC4gIEFzc3VtaW5nIG1heGlt
+dW0gMlRiXG4iLCBkaXNrbmFtZSk7CisJCQkJcHJpbnRrKEtFUk5fRVJSICIlczogdG9vIGJp
+ZyBmb3Iga2VybmVsLiAiCisJCQkJICAgICAgICJBc3N1bWluZyBtYXhpbXVtIDJUYlxuIiwg
+ZGlza25hbWUpOwogCQkJfQogCQl9CiAJCXNka3AtPmNhcGFjaXR5ID0gMSArICgoKHNlY3Rv
+cl90KWJ1ZmZlclswXSA8PCAyNCkgfApAQCAtMTEwMiw3ICsxMjE1LDcgQEAKIAkJCQogCQlz
+ZWN0b3Jfc2l6ZSA9IChidWZmZXJbOF0gPDwgMjQpIHwKIAkJCShidWZmZXJbOV0gPDwgMTYp
+IHwgKGJ1ZmZlclsxMF0gPDwgOCkgfCBidWZmZXJbMTFdOwotCX0JCisJfQogCiBnb3RfZGF0
+YToKIAlpZiAoc2VjdG9yX3NpemUgPT0gMCkgewo=
+--------------010108010304000707050508--
 
