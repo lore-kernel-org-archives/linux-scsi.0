@@ -1,33 +1,31 @@
 From: Roman Zippel <zippel@linux-m68k.org>
 Subject: Re: [patch for playing] Patch to support 4000 disks and maintain
  backward compatibility
-Date: Fri, 11 Apr 2003 01:57:30 +0200 (CEST)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0304110154590.12110-100000@serv>
-References: <UTC200304102209.h3AM9pf11795.aeb@smtp.cwi.nl>
+Date: Fri, 11 Apr 2003 02:08:00 +0200 (CEST)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.44.0304110157460.12110-100000@serv>
+References: <200304101339.49895.pbadari@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <UTC200304102209.h3AM9pf11795.aeb@smtp.cwi.nl>
-To: Andries.Brouwer@cwi.nl
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, pbadari@us.ibm.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtpzilla1.xs4all.nl ([194.109.127.137]:27400 "EHLO
+	smtpzilla1.xs4all.nl") by vger.kernel.org with ESMTP
+	id S264249AbTDJX41 (for <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Apr 2003 19:56:27 -0400
+In-Reply-To: <200304101339.49895.pbadari@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
+To: Badari Pulavarty <pbadari@us.ibm.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 Hi,
 
-On Fri, 11 Apr 2003 Andries.Brouwer@cwi.nl wrote:
+On Thu, 10 Apr 2003, Badari Pulavarty wrote:
 
-> The conclusion is that the easy way out is to define MAX_NR_DISKS.
-> A different way out, especially when we use 32+32, is to kill this
-> sd_index_bits[] array, and give each disk a new number: replace
-> 	index = find_first_zero_bit(sd_index_bits, SD_DISKS);
-> by
-> 	index = next_index++;
+> This patch addresses the backward compatibility with device nodes
+> issue. All the new disks will be addressed by only last major.
 
-This one is fun:
-http://www.ussg.iu.edu/hypermail/linux/kernel/0103.3/0394.html
-
-Anyway, unless you fix all programs which scan /dev/sg*, you better keep 
-the used range dense, so this not really option.
+This nicely demonstrates, that it's not exactly becoming nicer, when one 
+has to deal with compatibility. This is one more reason to at least 
+consider a more general solution, from which all drivers can benefit from.
 
 bye, Roman
+
