@@ -1,42 +1,52 @@
-From: Matthew Wilcox <willy@debian.org>
+From: "Nicolas Ross" <rossnick-lists@cybercat.ca>
 Subject: Re: Megaraid - Can't boot vanilla kernel
-Date: Thu, 26 Feb 2004 17:18:36 +0000
+Date: Thu, 26 Feb 2004 12:37:00 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040226171836.GR25779@parcelfarce.linux.theplanet.co.uk>
-References: <00e501c3fbfe$e477fe80$6400a8c0@defiant>
+Message-ID: <01f001c3fc8f$33a54d60$1a07a8c0@civic2k>
+References: <00e501c3fbfe$e477fe80$6400a8c0@defiant> <20040226171836.GR25779@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:49595 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262884AbUBZRSk
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Feb 2004 12:18:40 -0500
-Content-Disposition: inline
-In-Reply-To: <00e501c3fbfe$e477fe80$6400a8c0@defiant>
+Received: from frigo.cybercat.ca ([207.96.251.197]:26033 "EHLO cybercat.qc.ca")
+	by vger.kernel.org with ESMTP id S262900AbUBZRha (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Feb 2004 12:37:30 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Nicolas Ross <rossnick-lists@cybercat.ca>
+To: Matthew Wilcox <willy@debian.org>
 Cc: linux-scsi@vger.kernel.org
 
-On Wed, Feb 25, 2004 at 07:24:26PM -0500, Nicolas Ross wrote:
-> I have a Dell Poweredge 400sc with a CERC IDE Raid card (megaraid driver).
-> The system is installed with RedHat 7.3 and running with the latest kernel
-> from RedHat with no trouble.
-> 
-> I need to compile a vanilla (from kernel.org) 2.4.24 kernel to build into it
-> a specific driver. I can't get the new compiled kernel to boot. I get
-> 
-> Cannot open root device "sda1" or 08:01
-> Pleas append a correct "root=" boot option
-> Kernel panic: VFS: Unable to mount root fs on 08:01
+> > I need to compile a vanilla (from kernel.org) 2.4.24 kernel to buil=
+d
+into it
+> > a specific driver. I can't get the new compiled kernel to boot. I g=
+et
+> >
+> > Cannot open root device "sda1" or 08:01
+> > Pleas append a correct "root=3D" boot option
+> > Kernel panic: VFS: Unable to mount root fs on 08:01
+>
+> You compiled megaraid as a module, but I bet you're not using an init=
+rd.
+> You should probably just compile it into the kernel (ie Y instead of =
+M)
+> rather than messing around with an initrd.
 
-You compiled megaraid as a module, but I bet you're not using an initrd.
-You should probably just compile it into the kernel (ie Y instead of M)
-rather than messing around with an initrd.
+I was using an initrd (initrd /boot/initrd-2.4.24.img). But since then,=
+ I
+took the config from the redhat kernel and used it as a base (replaced =
+the
+=2Econfig from the vanilla kernel), and unchecked a couple of things, s=
+avec,
+make dep, modules, install, etc, and Voil=E0 !
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+I can't pinpoint what exactly I was missing, but since it's working as
+expected, I'll live with it !
+
+Thanks !
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
