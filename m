@@ -1,16 +1,22 @@
-From: rakesh rakesh <majordomo_linux@yahoo.com>
+From: "Aron Zeh" <ARZEH@de.ibm.com>
 Subject: Re: [PATCH 2.5.17] Making SCSI not copy the request structure
-Date: Fri, 24 May 2002 01:34:27 -0700 (PDT)
+Date: Fri, 24 May 2002 11:35:40 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020524083427.4608.qmail@web11005.mail.yahoo.com>
-References: <OF33C61840.B0D589F0-ONC1256BC3.0029F105@de.ibm.com>
+Message-ID: <OF0C31DF68.3F987A16-ONC1256BC3.00347B94@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <OF33C61840.B0D589F0-ONC1256BC3.0029F105@de.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Aron Zeh <ARZEH@de.ibm.com>
-Cc: Doug Ledford <dledford@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, patman@beaverton.ibm.com, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: rakesh rakesh <majordomo_linux@yahoo.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Doug Ledford <dledford@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, patman@beaverton.ibm.com, linux-scsi@vger.kernel.org
+
+
+True, unfortunately the zSeries FCP adapter does not work that way. You
+have no guarrantee that anything may be queued onto it at any time. I am
+not certain if there are other adapters that work this way.
+
+Aron
+
 
 But the whole hypothesis is that at any point of time
 mid level should be able to queue at least one command
@@ -19,10 +25,10 @@ www.andante.org
 
 
 --- Aron Zeh <ARZEH@de.ibm.com> wrote:
-> 
-> 
+>
+>
 > James,
-> 
+>
 > I think we are talking about two different things.
 > If I am not mistaken, __scsi_insert_special is only
 > called for character
@@ -47,14 +53,14 @@ www.andante.org
 > There it will sit, waiting for the return of an
 > outstanding command, but
 > there are non. Hence the system will hang.
-> 
+>
 > I would think, that your problem only appears when
 > using ioctls (e.g.
 > fdisk) or going out to character device (st, sg). Am
 > I correct or am I
 > missing something?
 > Aron
-> 
+>
 > > Alas, there does not seem to be a timeout handler
 > to restart IO when
 > > queuecommand returned non 0. The only way to
@@ -74,7 +80,7 @@ www.andante.org
 > > Maybe a function to be called by the low-level
 > driver would also be an
 > > option.
-> 
+>
 > I've seen it too occasionally, but I can't reproduce
 > it consistently
 > enough.
@@ -85,25 +91,25 @@ www.andante.org
 > this
 > helps (in scsi_lib.c:__scsi_insert_special at about
 > line 90)?
-> 
+>
 > James
-> 
-> 
+>
+>
 > -
 > To unsubscribe from this list: send the line
 > "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at 
+> More majordomo info at
 > http://vger.kernel.org/majordomo-info.html
-> 
-> 
-> 
-> 
+>
+>
+>
+>
 > -
 > To unsubscribe from this list: send the line
 > "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at 
+> More majordomo info at
 http://vger.kernel.org/majordomo-info.html
 
 
@@ -111,3 +117,11 @@ __________________________________________________
 Do You Yahoo!?
 LAUNCH - Your Yahoo! Music Experience
 http://launch.yahoo.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+
