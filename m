@@ -1,88 +1,51 @@
-From: Grant Grundler <grundler@parisc-linux.org>
-Subject: Re: SCSI QLA not working on latest *-mm SN2
-Date: Mon, 20 Sep 2004 17:27:16 -0600
+From: Jesse Barnes <jbarnes@engr.sgi.com>
+Subject: Re: Documentation/io_ordering.txt is wrong
+Date: Mon, 20 Sep 2004 16:39:13 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040920232716.GD19511@colo.lackof.org>
-References: <20040917183029.GW642@parcelfarce.linux.theplanet.co.uk> <20040918061001.GC21456@colo.lackof.org> <200409201540.02297.jbarnes@engr.sgi.com>
+Message-ID: <200409201639.13533.jbarnes@engr.sgi.com>
+References: <20040917183029.GW642@parcelfarce.linux.theplanet.co.uk> <20040918061001.GC21456@colo.lackof.org> <20040918175714.GD642@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from colo.lackof.org ([198.49.126.79]:62425 "EHLO colo.lackof.org")
-	by vger.kernel.org with ESMTP id S266910AbUITX1S (ORCPT
+Received: from omx2-ext.sgi.com ([192.48.171.19]:8116 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S267388AbUITXj3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Sep 2004 19:27:18 -0400
+	Mon, 20 Sep 2004 19:39:29 -0400
+In-Reply-To: <20040918175714.GD642@parcelfarce.linux.theplanet.co.uk>
 Content-Disposition: inline
-In-Reply-To: <200409201540.02297.jbarnes@engr.sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jesse Barnes <jbarnes@engr.sgi.com>
-Cc: Grant Grundler <grundler@parisc-linux.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, linux-scsi@vger.kernel.org, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
+To: Matthew Wilcox <willy@debian.org>
+Cc: Grant Grundler <grundler@parisc-linux.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, linux-scsi@vger.kernel.org, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org
 
-On Mon, Sep 20, 2004 at 03:40:02PM -0700, Jesse Barnes wrote:
-> > Weakly Ordered Memory Mapped IO
-> > -------------------------------
+On Saturday, September 18, 2004 10:57 am, Matthew Wilcox wrote:
+> On Sat, Sep 18, 2004 at 12:10:01AM -0600, Grant Grundler wrote:
+> > Jesse Barnes wrote:
+> > ...
 > >
-> > SGI Altix chipset implements weakly ordered Memory-Mapped I/O writes.
-> > On this platform, driver writers are responsible for ensuring I/O writes
-> > to memory-mapped addresses arrive in the order intended.
-> 
-> This is incorrect.  I wrote this before I understood that 'pci write posting' 
-> was the common term for describing the fact that writes from different CPUs 
-> could arrive out of order.  A s/weakly ordered/write posting would make the 
-> existing document much more accurate.
-
-"write posting" is orthogonal to PCI ordering rules.
-AFAIK, Write posting is not specific to PCI - but any memory mapped IO.
-
-I understand "write posting" as when the CPU posts the write
-to the chipset and the chipset says the write is done even though
-it hasn't reached the PCI device. It just means the write has reached
-the PCI "domain" (which is supposed to be strongly ordered).
-
-Page 304 of "ia-64 linux kernel" book decsribes how writel ordering
-(within a CPU) is enforced with "release semantics" (ie .rel in asm ).
-IA64 spinlocks also use .rel and thus I'm pretty sure from the CPU
-PoV, writel()s will be posted by the releasing the lock.
-I think willy pointed at the docs describing this in general terms.
-
-Secondly, I don't recall hearing about problems like this
-on Intel or HP ia64 machines. I've only run into PCI posted write
-and DMA syncronization problems where the drivers aren't following
-all the rules quite right (missing mb() and readl()'s mostly).
-
-So far, I still think this document is misnamed and should
-be called something like "SGI Altix porting issues" and moved
-under the Documentation/ia64 directory.
-
-
-> > [ Is this example broken or am I just staying up too late?
-> >   The example is doing a readl() in the second critical section.
-> >   Shouldn't that enforce the write ordering?
-> > ]
-> 
-> Yep, that's a bug.  It should just be writes.
-
-ok. Can you fix that up and post a new version where I can see it?
-
-> > The reads from safe_register will cause the I/O chipset to flush any
-> > pending writes before actually posting the read to the chipset, preventing
-> > possible data corruption.
+> > > Btw Andrew (Vasquez), there's a small doc I put together that should
+> > > describe when you have to worry about PCI posting.  It's in the tree:
+> > > Documentation/io_ordering.txt.  If it's incomplete or confusing, just
+> > > let me know and I'll update it.
 > >
-> > [ How about interactions with:
-> >   o read_relaxed()?
-> >   o DMA?
-> >   o IO Port space reads?
-> >   o IO Port space writes?
-> > ]
-> 
-> None that I know of.
+> > Jesse,
+> > Both. incomplete and confusing.
+> > "concrete example of a hypothetical driver" wasn't my first warning
+> > this document needed work. :^)
+>
+> Not just incomplete and confusing, but actively wrong.  spin_lock/
+> spin_unlock should imply ordering of readb().  What you're describing
+> there is __readb().  See Documentation/DocBook/deviceiobook.tmpl.  Also,
+> rmb() should ensure ordering of io reads; there should be no need to
+> touch the device.
 
-You mean none that are surprising to you?
-ie writes can pass read_relaxed() transactions or vice versa?
-DMA read returns can bypass MMIO writes? (parisc chipsets allow this)
+I already sent a reply to this, so you now know that I was wrong in describing 
+the ordering issue as one of weak ordering, rather it's just supposed to be 
+describing simple write posting.  Also, the first sample code is incorrect, 
+since the second spinlock protected region has a read before a write and 
+incorrectly states that the second write may arrive before the first.  I 
+think Grant has some updates, if not I'll post a patch to fixup the doc.
 
-IIRC, IO port space writes are NOT posted.
-So the rules for ordering must be impacted or different somehow.
-ie Are IO Port space writes strongly ordered WRT MMIO space writes?
-
-thanks,
-grant
+Thanks,
+Jesse
