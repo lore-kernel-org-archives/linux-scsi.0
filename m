@@ -1,65 +1,104 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [patch 10/11] drivers/scsi/: Use the DMA_{64,32}BIT_MASK constants
-Date: Mon, 7 Mar 2005 14:36:16 +0000
-Message-ID: <20050307143616.GD28741@parcelfarce.linux.theplanet.co.uk>
-References: <20050306222721.1E3391F208@trashy.coderock.org> <yq0ekerepaf.fsf@jaguar.mkp.net> <20050307123739.GC28741@parcelfarce.linux.theplanet.co.uk> <yq04qfnedkq.fsf@jaguar.mkp.net>
+From: "Miller, Mike (OS Dev)" <mike.miller@hp.com>
+Subject: FW: [patch 1/1] block/cciss: replace schedule_timeout() with msleep()
+Date: Mon, 7 Mar 2005 08:59:04 -0600
+Message-ID: <D4CFB69C345C394284E4B78B876C1CF107DC036F@cceexc23.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:1498 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261187AbVCGOgh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Mar 2005 09:36:37 -0500
-Content-Disposition: inline
-In-Reply-To: <yq04qfnedkq.fsf@jaguar.mkp.net>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Received: from ccerelbas01.cce.hp.com ([161.114.21.104]:28591 "EHLO
+	ccerelbas01.cce.hp.com") by vger.kernel.org with ESMTP
+	id S261534AbVCGO7Q convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2005 09:59:16 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jes Sorensen <jes@wildopensource.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, domen@coderock.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, tklauser@nuerscht.ch
+To: akpm@osdl.org, axboe@suse.de
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, nacc@us.ibm.com, domen@coderock.org
 
-On Mon, Mar 07, 2005 at 09:27:17AM -0500, Jes Sorensen wrote:
-> Matthew> We've had drivers with typos.  Missing one f suddenly causes
-> Matthew> all your memory to come from ZONE_DMA.  Having an extra f
-> Matthew> causes your driver to work ... most of the time on machines
-> Matthew> with >4GB ram.  Sure, your driver doesn't, but when looking
-> Matthew> over a lot of drivers, it's easier if everyone's using the
-> Matthew> same macros.
+> -----Original Message-----
+> From: domen@coderock.org [mailto:domen@coderock.org] 
+> Sent: Saturday, March 05, 2005 4:45 PM
+> To: Miller, Mike (OS Dev)
+> Cc: ISS StorageDev; domen@coderock.org; nacc@us.ibm.com
+> Subject: [patch 1/1] block/cciss: replace schedule_timeout() 
+> with msleep()
 > 
-> If these were the only two masks ever used I'd agree with you. However
-> there's several other in use and more will probably be added, so we're
-> going to end up with drivers sometimes using constants and other times
-> hex values causing an even bigger mess ;-(
+> 
+> 
+> 
+> I used msleep(10) here under the presumption that the 
+> schedule_timeout(1) was written assuming that HZ=100 (as it 
+> used to be), which is equivalent to 10 milliseconds. If the 
+> desire is actually for 1 ms or the minimal sleep interval, 
+> then the patch can be changed appropriately. A similar 
+> assumption as to the constant delay value was made in the 
+> other replacement, which can also be appropriately adjusted.
+> 
+> Change the delay logic in pollcomplete() to use msleep() and 
+> time_before(). Instead of assuming schedule_timeout() will 
+> sleep exactly as requested, use msleep(10) to guarantee 
+> minimally 10 millisecond increments and
+> time_before() to guarantee stopping the loop as close to 20 
+> seconds as possible.
+> Also changes another occurrence of schedule_timeout() to msleep().
+> TASK_INTERRUPTIBLE is used in this case, but signals are not handled. 
+> 
+> Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
+> Acked-by: Mike Miller <mike.miller@hp.com>
+> Signed-off-by: Domen Puncer <domen@coderock.org>
 
-No, that's a *good thing*.  It let's you know the driver's doing something
-non-standard.  Here's what sym2 looks like these days:
+Please consider the following patch for inclusion.
 
-#if SYM_CONF_DMA_ADDRESSING_MODE > 0
-#if   SYM_CONF_DMA_ADDRESSING_MODE == 1
-#define DMA_DAC_MASK    0x000000ffffffffffULL /* 40-bit */
-#elif SYM_CONF_DMA_ADDRESSING_MODE == 2
-#define DMA_DAC_MASK    DMA_64BIT_MASK
-#endif
-        if ((np->features & FE_DAC) &&
-                        !pci_set_dma_mask(np->s.device, DMA_DAC_MASK)) {
-                np->use_dac = 1;
-                return 0;
-        }
-#endif
+Thanks,
+mikem 
 
-        if (!pci_set_dma_mask(np->s.device, DMA_32BIT_MASK))
-                return 0;
 
-        printf_warning("%s: No suitable DMA available\n", sym_name(np));
-        return -1;
-
-I suspect that should be a dev_err rather than a printf_warning, but
-my point stands; this is a *much* easier way of doing things.  You can
-see exactly where we're doing standard things and where we're doing
-weird things.
-
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+ ---
+ 
+ 
+  kj-domen/drivers/block/cciss.c |   17 +++++++----------
+  1 files changed, 7 insertions(+), 10 deletions(-)
+ 
+ diff -puN drivers/block/cciss.c~msleep-drivers_block_cciss 
+ drivers/block/cciss.c
+ --- kj/drivers/block/cciss.c~msleep-drivers_block_cciss	
+ 2005-03-05 16:10:44.000000000 +0100
+ +++ kj-domen/drivers/block/cciss.c	2005-03-05 
+ 16:10:44.000000000 +0100
+ @@ -1702,17 +1702,15 @@ static int cciss_revalidate(struct 
+ gendi  static unsigned long pollcomplete(int ctlr)  {
+  	unsigned long done;
+ -	int i;
+ +	unsigned long end_jiffies = jiffies + 20 * HZ;
+  
+  	/* Wait (up to 20 seconds) for a command to complete */
+ -
+ -	for (i = 20 * HZ; i > 0; i--) {
+ +	while (time_before(jiffies,end_jiffies)) {
+  		done = hba[ctlr]->access.command_completed(hba[ctlr]);
+ -		if (done == FIFO_EMPTY) {
+ -			set_current_state(TASK_UNINTERRUPTIBLE);
+ -			schedule_timeout(1);
+ -		} else
+ -			return (done);
+ +		if (done == FIFO_EMPTY)
+ +			msleep(10);
+ +		else
+ +			return done;
+  	}
+  	/* Invalid address to tell caller we ran out of time */
+  	return 1;
+ @@ -2486,8 +2484,7 @@ static int cciss_pci_init(ctlr_info_t *c
+  		if (!(readl(c->vaddr + SA5_DOORBELL) & 
+ CFGTBL_ChangeReq))
+  			break;
+  		/* delay and try again */
+ -		set_current_state(TASK_INTERRUPTIBLE);
+ -		schedule_timeout(10);
+ +		msleep(100);
+  	}	
+  
+  #ifdef CCISS_DEBUG
+ _
+ 
