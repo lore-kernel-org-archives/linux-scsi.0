@@ -1,34 +1,30 @@
-From: William Lee Irwin III <wli@holomorphy.com>
-Subject: Re: 2.5.56-mm1 fails to detect cd burner
-Date: Tue, 11 Mar 2003 08:03:58 -0800
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] sg version 3.5.28 for lk 2.5.64
+Date: Tue, 11 Mar 2003 08:18:38 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030311160358.GN465@holomorphy.com>
-References: <20030311063627.GJ1399@holomorphy.com>
+Message-ID: <20030311081838.A9661@beaverton.ibm.com>
+References: <3E6B405B.3010509@torque.net> <20030311142836.A22992@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20030311063627.GJ1399@holomorphy.com>
+In-Reply-To: <20030311142836.A22992@infradead.org>; from hch@infradead.org on Tue, Mar 11, 2003 at 02:28:36PM +0000
 List-Id: linux-scsi@vger.kernel.org
-To: gibbs@scsiguy.com
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org
 
-On Mon, Mar 10, 2003 at 10:36:27PM -0800, William Lee Irwin III wrote:
->  scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA
->  DRIVER, Rev 6.2.26
->          <Adaptec 3960D Ultra160 SCSI adapter>
->          aic7899: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
->  
->  (scsi0:A:0:0): Completed command without status.
->  (scsi0:A:0:0): Protocol violation in Message-in phase.  Attempting to abort.
->  (scsi0:A:0:0): Abort Message Sent
->  (scsi0:A:0:0): SCB 3 - Abort Completed.
->  scsi0:A:0:0: DV failed to configure device. Please file a bug report against this driver.
+On Tue, Mar 11, 2003 at 02:28:36PM +0000, Christoph Hellwig wrote:
+> On Sun, Mar 09, 2003 at 11:23:39PM +1000, Douglas Gilbert wrote:
+> > ** Christoph moved the host listing functionality into
+> >     a more central sysfs position (i.e. not dependent on
+> >     sg). However scsi_debug is the only LLD that I can
+> >     get to post any "host" info under the new arrangement.
+
 > 
-> It's had other problems burning CD's in 2.5.x
+> Hmm, it works for me with aic7xxx (that's how I tested it).
+> 
 
-jejb referred me to you (gibbs) for this after guiding me through a
-cable check.
+Is there a patch for putting the aic or all scsi_hosts into the
+shost_devclass class, like scsi_debug.c does for itself?
 
-
--- wli
+-- Patrick Mansfield
