@@ -1,26 +1,36 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [2.6 patch] drivers/scsi/qla2xxx/: cleanups
-Date: Mon, 28 Feb 2005 21:29:20 +0000
-Message-ID: <20050228212920.GA18162@infradead.org>
-References: <20050228210024.GM4021@stusta.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 9/13] nsp32, nsp_cs driver update
+Date: Mon, 28 Feb 2005 19:10:12 +0200
+Message-ID: <1109610612.5330.2.camel@mulgrave>
+References: <20050222.161158.59718314.yokota@netlab.is.tsukuba.ac.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from pentafluge.infradead.org ([213.146.154.40]:55532 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261752AbVB1V3a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Feb 2005 16:29:30 -0500
-Content-Disposition: inline
-In-Reply-To: <20050228210024.GM4021@stusta.de>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from stat16.steeleye.com ([209.192.50.48]:4283 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261748AbVB1V2T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Feb 2005 16:28:19 -0500
+In-Reply-To: <20050222.161158.59718314.yokota@netlab.is.tsukuba.ac.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: andrew.vasquez@qlogic.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Yokota Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Feb 28, 2005 at 10:00:24PM +0100, Adrian Bunk wrote:
-> This patch contains the following cleanups:
-> - make needlessly global code static
-> - kill the unused global *_version and *_version_str variables
->   in the firmware files
+On Tue, 2005-02-22 at 16:11 +0900, Yokota Hiroshi wrote:
+> +	if (data->CurrentSC     != NULL) {
+> +		nsp_msg(KERN_WARNING, "CurrentSC!=NULL this can't be happen");
+>  		SCpnt->result   = DID_BAD_TARGET << 16;
+>  		nsp_scsi_done(SCpnt);
+> -		return 0;
+> +		return SCSI_MLQUEUE_HOST_BUSY;
+>  	}
 
-The firmware files are generated, so it'd be better to leave them
-alone.
+
+This looks wrong.  Either you call done on the command or you return
+busy.  If you do both, the command will be completed twice.  There seem
+to be a lot of other places where the driver will call done then return
+BUSY too ...
+
+James
+
+
