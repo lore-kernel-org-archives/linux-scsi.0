@@ -1,32 +1,27 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch] qla1280 compile fix for CONFIG_HOTPLUG in 2.6
-Date: Mon, 12 Jan 2004 19:37:56 +0000
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040112193756.A6991@infradead.org>
-References: <16386.38762.670634.620111@gargle.gargle.HOWL> <20040112151018.A3222@infradead.org> <yq0k73xci67.fsf@wildopensource.com>
+Subject: Re: smp dead lock of io_request_lock/queue_lock patch
+Date: Mon, 12 Jan 2004 19:48:29 +0000
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040112194829.A7078@infradead.org>
+References: <OF317B32D5.C8C681CB-ONC1256E19.005066CF-C1256E19.00538DEF@de.ibm.com> <20040112151230.GB5844@devserv.devel.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:47119 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S265594AbUALTiA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jan 2004 14:38:00 -0500
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <yq0k73xci67.fsf@wildopensource.com>; from jes@wildopensource.com on Mon, Jan 12, 2004 at 10:15:12AM -0500
+In-Reply-To: <20040112151230.GB5844@devserv.devel.redhat.com>; from arjanv@redhat.com on Mon, Jan 12, 2004 at 04:12:30PM +0100
+To: Arjan van de Ven <arjanv@redhat.com>
+Cc: Martin Peschke3 <MPESCHKE@de.ibm.com>, Jens Axboe <axboe@suse.de>, Doug Ledford <dledford@redhat.com>, Peter Yao <peter@exavio.com.cn>, linux-kernel@vger.kernel.org, linux-scsi mailing list <linux-scsi@vger.kernel.org>, ihno@suse.de
 List-Id: linux-scsi@vger.kernel.org
-To: Jes Sorensen <jes@wildopensource.com>
-Cc: akpm@osdl.org, linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com
 
-On Mon, Jan 12, 2004 at 10:15:12AM -0500, Jes Sorensen wrote:
-> Christoph> That patch is crap.  The ifdefs are gone in -mm and that's
-> Christoph> the way to go.  We have __devexit and __devexitp to take
-> Christoph> care of that.
+On Mon, Jan 12, 2004 at 04:12:30PM +0100, Arjan van de Ven wrote:
+> > as the patch discussed in this thread, i.e. pure (partially
+> > vintage) bugfixes.
 > 
-> If that works in 2.4 fine - send me a patch please.
+> Both SuSE and Red Hat submit bugfixes they put in the respective trees to
+> marcelo already. There will not be many "pure bugfixes" that you can find in
+> vendor trees but not in marcelo's tree.
 
-the __devexit does not work in 2.4 due to the scsi layer function calling
-qla1280_remove_one not beeing __devexit, but we already #define it away
-in qla1280.c when we're compiling in 2.4.  The patch to just remove the
-ifdefs already is in Andrew's patch, I think Adrian sent it you when
-he found that issue, too (?)
-
+I haven't seen SCSI patches sumission for 2.4 from the vendors on linux-scsi
+for ages.  In fact I asked Jens & Doug two times whether they could sort out
+the distro patches for the 2.4 stack and post them, but it seems they're busy
+enough with real work so this never happened.
