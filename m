@@ -1,119 +1,61 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [patch 2.5] ips queue depths
-Date: Tue, 15 Oct 2002 22:32:31 -0400
+Subject: Re: [PATCH] SCSI hotplug support
+Date: Tue, 15 Oct 2002 22:40:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021016023231.GA4690@redhat.com>
-References: <A3B9245C291EEF4785A24A1DBE8D852B0376BC@rtpexc01.adaptec.com> <20021015194705.GD4391@redhat.com> <20021015130445.A829@eng2.beaverton.ibm.com> <20021015205218.GG4391@redhat.com> <20021015163057.A7687@eng2.beaverton.ibm.com>
+Message-ID: <20021016024016.GB4690@redhat.com>
+References: <200210142107.g9EL7IX04354@localhost.localdomain> <20021014215416.GB25941@codepoet.org> <20021014222515.GD1274@redhat.com> <20021015052521.GA1967@codepoet.org> <20021015182247.GA4391@redhat.com> <20021015184535.GA16401@codepoet.org> <20021015191330.GC4391@redhat.com> <20021015193216.GE15778@codepoet.org> <20021015195516.GE4391@redhat.com> <20021015220659.GA19530@codepoet.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20021015163057.A7687@eng2.beaverton.ibm.com>
+In-Reply-To: <20021015220659.GA19530@codepoet.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Jeffery, David" <David_Jeffery@adaptec.com>, 'Dave Hansen' <haveblue@us.ibm.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Erik Andersen <andersen@codepoet.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Tue, Oct 15, 2002 at 04:30:57PM -0700, Patrick Mansfield wrote:
-> On Tue, Oct 15, 2002 at 04:52:18PM -0400, Doug Ledford wrote:
-> > On Tue, Oct 15, 2002 at 01:04:45PM -0700, Patrick Mansfield wrote:
-> > > 
-> > > I totally agree the queue depth should not be limited based on the number of
-> > > devices, but there should be a maximum limit - as Justin noted with the
-> > > aic driver, using a large default queue depth (he had 253 or so) is not
-> > > good with linux.
-> > 
-> > That's largely due to the scsi_request_fn() in its current form.
+On Tue, Oct 15, 2002 at 04:07:00PM -0600, Erik Andersen wrote:
+> I added this 
+>     printk("ieee1394 nodmgr: invoking hotplug in the context "
+> 	    "of '%s' (pid %d)\n", current->comm, current->pid);
+> to nodemgr_call_policy() in drivers/ieee1394/nodemgr.c.  I stuck
+> a similar printk into the sbp2 driver for when I was hooking and
+> unhooking devices into the SCSI subsystem.
 > 
-> I don't understand that.
+> When loading the ohci1394 module I see
+>     ieee1394 nodmgr: invoking hotplug in the context of 'knodemgrd' (pid 24179)
 
-The current scsi_request_fn() sucks rocks when it comes to any sort of 
-fair load balancing in a host queue starvation scenario.
+So nodmgr is a kernel thread named knodemgrd that then execs hotplug which 
+then execs insmod, aka starting context is that of a kernel thread.  
+That's safe for sleeping.  That's what I wanted to know.
 
-> > > The queue depth should be as small as possible without limiting the
-> > > performance.
-> > 
-> > Which happens to be a magic number that no one really knows I think ;-)  
+> With my 1394 RAID array cold-plugged into my cardbus 1394 card,
+> the 4 drives are registered with the SCSI subsystem.  Looks like
+> I forgot to test my sbp2 patch with cold-plugging -- with my
+> patch in place the 4 drives end up being registered _twice_ with
+> the SCSI subsystem.  It got one copy of the devices from calling
+> scsi_register_host (I'm testing with 2.4.x), and then another
+> copy from me trying to hotplug the devices.  oops.  I'll sort
+> that bit out.  Anyways, when doing cold-plugging the sbp2 devices
+> are registered with the SCSI subsystem in the context of
+> 'modprobe' (which was busy loading the sbp2 module at the time
+> things were registered with the SCSI subsystem).  So in the
+> coldplug case, /sbin/hotplug was not in any way involved.
 > 
-> Yes, but that implies that adapters should not be relied upon to set
-> the queue depth.
+> Then when I hotplugged and hotunplugged the 1394 devices, hotplug
+> was again called in the context of 'knodemgrd'.  So I was wrong
+> about the context from which things were called.  Sorry about
+> that...
 
-I draw exactly the opposite conclusion (look at the email from Lubon 
-Tuikov for several valid reasons why).
-
-> If the adapter is setting queue depth based upon what
-> the adapter knows, that is completely wrong
-
-I strongly disagree here.  Only the adapter driver knows if the card 
-itself has a hard limit of X commands at a time (so that deeper queues are 
-wasted).  Only the adapter driver knows if the particular interconnect has 
-any inherent queue limitations or speed limitations.  There are a thousand 
-things only the adapter driver knows that should be factored into a sane 
-queue depth.
-
-> - a regular disk and disk
-> array can end up with the same queue depth (this is not ture for raid
-> cards like ips, where the adapter is the device).
-
-I don't see a problem here.  I have yet to meet a reasonable SCSI disk 
-that doesn't do well with deep queues.  Raid devices I'm not so sure of, 
-but I'll give them the benefit of the doubt and let them have a deep queue 
-as well.  I would say the maximum speed of the interconnect combined with 
-the maximum size of each command is a better guage upon which to determine 
-queue depth than whether it's a real disk or logical disk.
-
-> > Current goals of the work I'm doing include making this adjustable so you
-> > aren't wasting queue depth on devices that have a hard limit less than
-> 
-> But, this won't lower it to some optimal magic number.
-
-No, the controller driver in question should already have it's "optimum" 
-number in mind, set the drive to that, then if it's too high it can come 
-down.  There is no magical "Hey, send me more commands" status code, so 
-you have to start high and go low, not the other way around.  That, of 
-course, is why an adjustable depth is important.  The controller should 
-set this "optimum" number based upon it's own capabilities and assume the 
-drive is just as capable.
-
-> > your initial queue depth value and changing the scsi_request_fn() to be
-> > more fair with command allocation on a controller in the presence of
-> > starvation (and of course, starvation is only possible when the queue
-> > depth of all devices is greater than the depth of the controller, so
-> > obviously the starvation code in scsi_request_fn() is something
-> > controllers have been avoiding by limiting queue depths on individual
-> > devices).
-> 
-> It would nice to have more device model/kernfs device attributes.
-> 
-> With your new queueing code, if we expose and allow setting new_queue_depth,
-> user code can easily modify the queue depth.
-
-No.  For the reasons that the driver knows what it's capable of, there 
-really is *very* little tunability here.  But, should you really need it, 
-the drivers should provide it (both mine and Justin's aic7xxx drivers do 
-so run time via module options or boot command options).  Make the default 
-a good common default, let users override if necessary.  But I wouldn't 
-make it a fiddle knob that people can tweak without thinking.  Regardless 
-of where you make it adjustable though, it has to be passed through the 
-low level drivers so that they can adjust their internal data structs as 
-needed (some won't have to do anything, some will have to do allocations 
-or frees on every adjustment, so you *have* to pass all adjustments 
-through them).
-
-> I wanted to write some code in this area but don't have enoough time. It would
-> not be hard to have a scsi_sdev_attrs.c file, that using macros could
-> automagically create device attr files and functions for any selection of
-> Scsi_Device fields. Locking might be an issue - since we don't have a
-> Scsi_Device lock for queue depth, just one big lock, this is true for
-> some of the other Scsi_Device fields.
-> 
-> A single function could be called in scsi_scan.c to setup all Scsi_Device
-> device attribute files (i.e. calls device_create_file for multiple
-> xxx_attr_types).
-> 
-> -- Patrick Mansfield
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The context name is only half of it.  Whether or not it's in interrupt or 
+tasklet context is more important (and this doesn't change the name, being 
+in knodemgrd context has current->comm == knodemgrd whether you are in the 
+middle of an interrupt or not).  In this case though, it's pretty easy to 
+tell it isn't interrupt context.  That's fine.  However, you still haven't 
+tested the scenario I mentioned at the start of this particular part of 
+the debate.  If you plug in one drive, then plug in another, does the 
+second one get added?  Possible way to test this without having separate 
+drives: load the sbp2 module *before* hotplugging your disks and see what 
+happens.
 
 -- 
   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
