@@ -1,36 +1,26 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] introduce scsi_host_alloc
-Date: Sat, 7 Jun 2003 08:44:56 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [ANNOUNCE] Storage server / virtualization software for Linux
+Date: Sat, 7 Jun 2003 08:08:54 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030607064456.GA1668@lst.de>
-References: <20030606080103.GC18838@lst.de> <3EE0F86B.4060908@rogers.com> <20030606204241.GA28264@lst.de> <3EE121A7.8010806@rogers.com>
+Message-ID: <20030607080854.A18676@infradead.org>
+References: <20030606225548.34736.qmail@web11202.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:2782 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S261936AbTFGGb0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Jun 2003 02:31:26 -0400
+Received: from phoenix.infradead.org ([195.224.96.167]:47886 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S262742AbTFGGzU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 7 Jun 2003 02:55:20 -0400
 Content-Disposition: inline
-In-Reply-To: <3EE121A7.8010806@rogers.com>
+In-Reply-To: <20030606225548.34736.qmail@web11202.mail.yahoo.com>; from naja1969@yahoo.com on Fri, Jun 06, 2003 at 03:55:48PM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <tluben@rogers.com>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: naja <naja1969@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Jun 06, 2003 at 07:20:07PM -0400, Luben Tuikov wrote:
-> Christoph Hellwig wrote:
-> >
-> >scsi_host_get/scsi_host_put are the refcounting primites for
-> >struct Scsi_Host and there are more users then just the host drivers.
-> >(and there will be more soon).  It's an idiom in linux to use get/put
-> >for those and make put free it when the refcount reaches zero.
+On Fri, Jun 06, 2003 at 03:55:48PM -0700, naja wrote:
 > 
-> I know about the get/put idiom, refcounting, etc.
-> 
-> *But* your use is alloc <--> put.  This is what throws me off.
+> Download storage server software for redhat linux from
+> http://www.pavitrasoft.com/mayastor/
 
-It's not.  It's alloc[, get, put, get, put], put.  alloc is
-get a new dynamic allocate structure with refcount one, after
-that we can get another reference with get, or a reference from hostno
-with lookup and then put it again - when the refcount reches zero
-it's freed.
+Where is the source code?
 
