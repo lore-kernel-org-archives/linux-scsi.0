@@ -1,78 +1,66 @@
-From: Adrian Bunk <bunk@fs.tum.de>
+From: Douglas Gilbert <dougg@torque.net>
 Subject: Re: SCSI sg: Questions regarding jiffies usage
-Date: Tue, 13 Jul 2004 00:46:30 +0200
+Date: Mon, 12 Jul 2004 19:11:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040712224629.GY4701@fs.tum.de>
-References: <20040711004153.GZ28324@fs.tum.de> <40F2E7EA.6010907@torque.net>
+Message-ID: <40F31ABA.1060709@torque.net>
+References: <20040711004153.GZ28324@fs.tum.de> <40F2E7EA.6010907@torque.net> <20040712224629.GY4701@fs.tum.de>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:25293 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S264054AbUGLWqi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jul 2004 18:46:38 -0400
-Content-Disposition: inline
-In-Reply-To: <40F2E7EA.6010907@torque.net>
+Received: from tomts25-srv.bellnexxia.net ([209.226.175.188]:54675 "EHLO
+	tomts25-srv.bellnexxia.net") by vger.kernel.org with ESMTP
+	id S264113AbUGLXLw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jul 2004 19:11:52 -0400
+In-Reply-To: <20040712224629.GY4701@fs.tum.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
+To: Adrian Bunk <bunk@fs.tum.de>
 Cc: linux-scsi@vger.kernel.org
 
-On Mon, Jul 12, 2004 at 03:35:06PM -0400, Douglas Gilbert wrote:
-> Adrian Bunk wrote:
-> >Hi,
-> >
-> >I have some questions regarding jiffies usage in the SCSI sg driver in 
-> >2.6.7-mm7:
-> >
-> >
-> >Is there a good reason for the local sg_ms_to_jif/sg_jif_to_ms functions  
-> >instead of using the time.h msecs_to_jiffies/jiffies_to_msecs macros?
+Adrian Bunk wrote:
+> On Mon, Jul 12, 2004 at 03:35:06PM -0400, Douglas Gilbert wrote:
 > 
-> Adrian,
+<snip/>
 
-Hi Doug,
-
-> I don't think the msec_to_jiffies() macro was there when I
-> wanted it. So the sg driver should be changed to use the
-> macros in time.h .
-
-I'll send a patch.
-
-> >In function sg_new_write:
-> >   timeout = sg_ms_to_jif(srp->header.timeout);
-> >How is it possible that srp->header.timeout isn't already
-> >in jiffies?
+>>>In function sg_new_write:
+>>>  timeout = sg_ms_to_jif(srp->header.timeout);
+>>>How is it possible that srp->header.timeout isn't already
+>>>in jiffies?
+>>
+>>The sg_new_write() function is invoked when the sg_io_hdr
+>>interface structure is used (compared with the older
+>>sg_header structure). The unit of the timeout in the
+>>sg_io_hdr structure is milliseconds [which is probably
+>>overkill]. The mid level wants timeouts in jiffies.
 > 
-> The sg_new_write() function is invoked when the sg_io_hdr
-> interface structure is used (compared with the older
-> sg_header structure). The unit of the timeout in the
-> sg_io_hdr structure is milliseconds [which is probably
-> overkill]. The mid level wants timeouts in jiffies.
-
-As far as I can see, timeout is set in two places:
-
-sg_add_sfp:
-  sfp->timeout = SG_DEFAULT_TIMEOUT;
-
-sg_ioctl:
-  sfp->timeout = MULDIV (val, HZ, USER_HZ);
-
-Isn't timeout set to jiffies in both places?
-
-> >Why do both sg_add_request and sg_common_write set
-> >  duration = jiffies
 > 
-> It doesn't look like both are required.
+> As far as I can see, timeout is set in two places:
 > 
-> Doug Gilbert
+> sg_add_sfp:
+>   sfp->timeout = SG_DEFAULT_TIMEOUT;
+> 
+> sg_ioctl:
+>   sfp->timeout = MULDIV (val, HZ, USER_HZ);
+> 
+> Isn't timeout set to jiffies in both places?
+> 
+Adrian,
+There may be some confusion here. The older struct
+sg_header interface did not have explicit per command timeouts.
+As a poor substitute an ioctl was added to associate
+a timeout (in seconds) to the file descriptor. This way
+subsequent commands issued via that file descriptor
+got the new timeout value. This is the "sfp->timeout"
+value. The snippets above show the "sfp->timeout"
+value being set to a default when a sg device is opened
+and then being changed after a SG_SET_TIMEOUT ioctl call.
 
-cu
-Adrian
+The newer sg_io_hdr interface has per command timeouts
+(in milliseconds). A sg_io_hdr::timeout value overrides
+the "sfp->timeout" value. In the above code the
+sg_io_hdr::timeout value is in "srp->header.timeout".
 
--- 
+Doug Gilbert
 
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
 
