@@ -1,20 +1,37 @@
-From: Mike Dresser <mdresser_l@windsormachine.com>
+From: "Ranade, Prakash" <prakashr@intgroup.com>
 Subject: RE: how to connect 2 nodes to a SCSI disk (cabinet)
-Date: Fri, 20 Jun 2003 12:56:33 -0400 (EDT)
+Date: Fri, 20 Jun 2003 11:59:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0306201256090.838-100000@router.windsormachine.com>
-References: <7F2171947E956F4ABE17D12CA19617B40279BE@intermarksrv001.intermark.local>
+Message-ID: <7F2171947E956F4ABE17D12CA19617B40279BF@intermarksrv001.intermark.local>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from windsormachine.com ([206.48.122.28]:46090 "EHLO
-	router.windsormachine.com") by vger.kernel.org with ESMTP
-	id S263355AbTFTQmf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Jun 2003 12:42:35 -0400
-In-Reply-To: <7F2171947E956F4ABE17D12CA19617B40279BE@intermarksrv001.intermark.local>
+Received: from gw.intgroup.com ([65.83.52.2]:7810 "HELO
+	intermarksrv001.intermark.local") by vger.kernel.org with SMTP
+	id S263376AbTFTQpK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jun 2003 12:45:10 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: "Ranade, Prakash" <prakashr@intgroup.com>
+To: Mike Dresser <mdresser_l@windsormachine.com>
 Cc: linux-scsi@vger.kernel.org
+
+but how does it work then ...coz there is no termination ....
+
+Prakash S. Ranade
+OCP - Oracle Certified DBA 8i, 9i
+205 776 2320
+
+"Lets document it and call it a feature"
+
+
+-----Original Message-----
+From: Mike Dresser [mailto:mdresser_l@windsormachine.com]
+Sent: Friday, June 20, 2003 11:57 AM
+To: Ranade, Prakash
+Cc: linux-scsi@vger.kernel.org
+Subject: RE: how to connect 2 nodes to a SCSI disk (cabinet)
+
 
 
 
