@@ -1,137 +1,105 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Fw: oops in kernel 2.6.9
-Date: Tue, 19 Oct 2004 23:48:57 -0700
+From: Reinhold Fischer <news4reini123@aon.at>
+Subject: Unable to set hostid in sym53c8xx module
+Date: Wed, 20 Oct 2004 09:31:22 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041019234857.7ddf5bc7.akpm@osdl.org>
-References: <20041019175146.15889e11.akpm@osdl.org>
-	<20041020064255.GB8755@suse.de>
+Message-ID: <200410200931.22069.news4reini123@aon.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:64176 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S270148AbUJTGuz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Oct 2004 02:50:55 -0400
-In-Reply-To: <20041020064255.GB8755@suse.de>
+Received: from webhosting2.datakom.at ([195.3.109.36]:64668 "EHLO
+	email.datakom.at") by vger.kernel.org with ESMTP id S270149AbUJTHbg convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Oct 2004 03:31:36 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: nickpiggin@yahoo.com.au, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Jens Axboe <axboe@suse.de> wrote:
->
-> On Tue, Oct 19 2004, Andrew Morton wrote:
-> > 
-> > oy.
-> 
-> Looks like a SCSI issue, it probably killed the queue before the io
-> scheduler was entered again.
+Hi!
 
-Better add linux-scsi to cc then...
+I have a problem with setting the hostid to something other than #7 in=20
+the sym53c8xx module with kernel 2.6.8.1 on Debian GNU/Linux 3.1=20
+(Sarge), see below.
 
-> > 
-> > Begin forwarded message:
-> > 
-> > Date: Tue, 19 Oct 2004 22:59:12 +0200
-> > From: Stefano Vesa <stefanovesa@tiscali.it>
-> > To: linux-kernel@vger.kernel.org
-> > Subject: oops in kernel 2.6.9
-> > 
-> > 
-> > I'm running kernel 2.6.9 fully preentible on a Slackware 10 with 
-> > udev-040 ,hotplug 2004_09_23 and module-init-tools-3.0
-> > I can reproduce a oops when I try, after unmounting the device, to
-> > disconnect or power off a Plextor PX-W4824 USB burner from a uhci_hcd
-> > host. When in X the machine hangs.
-> > My machine is a pentium 3 on a 440BX chipset.
-> > 
-> > No problem with kernel 2.6.7.
-> > 
-> > Sorry if I have not made a subscription to the mailing list but
-> > I am a newbie and don't understand very much the topics I read in it.
-> > I hope it can be useful...
-> > 
-> > Oct 19 17:59:46 chopin kernel: sr 0:0:0:0: Illegal state transition
-> > cancel->offline
-> > Oct 19 17:59:46 chopin kernel: Badness in scsi_device_set_state at
-> > drivers/scsi/scsi_lib.c:1688
-> > Oct 19 17:59:46 chopin kernel:  [<c896bcc9>] scsi_device_set_state
-> > +0xc9/0x120 [scsi_mod]
-> > Oct 19 17:59:46 chopin kernel:  [<c89699ae>] scsi_eh_offline_sdevs
-> > +0x6e/0x90 [scsi_mod]
-> > Oct 19 17:59:46 chopin kernel:  [<c8969e83>] scsi_unjam_host+0xc3/0xd0
-> > [scsi_mod]
-> > Oct 19 17:59:46 chopin kernel:  [<c8969f38>] scsi_error_handler
-> > +0xa8/0xd0 [scsi_mod]
-> > Oct 19 17:59:46 chopin kernel:  [<c8969e90>] scsi_error_handler+0x0/0xd0
-> > [scsi_mod]
-> > Oct 19 17:59:46 chopin kernel:  [<c01023bd>] kernel_thread_helper
-> > +0x5/0x18
-> > Oct 19 17:59:46 chopin kernel: Unable to handle kernel paging request at
-> > virtual address 5f6c656e
-> > Oct 19 17:59:46 chopin kernel:  printing eip:
-> > Oct 19 17:59:46 chopin kernel: c02281f3
-> > Oct 19 17:59:46 chopin kernel: *pde = 00000000
-> > Oct 19 17:59:46 chopin kernel: Oops: 0000 [#1]
-> > Oct 19 17:59:46 chopin kernel: PREEMPT 
-> > Oct 19 17:59:46 chopin kernel: Modules linked in: nls_utf8 isofs
-> > nls_base sr_mod usb_storage scsi_mod snd_ice1712 snd_ice17xx_ak4xxx
-> > snd_pcm snd_timer snd_page_alloc snd_ak4xxx_adda snd_cs8427
-> > snd_ac97_codec snd_i2c snd_mpu401_uart snd_rawmidi snd soundcore usbhid
-> > 3c59x uhci_hcd usbcore intel_agp agpgart rtc
-> > Oct 19 17:59:46 chopin kernel: CPU:    0
-> > Oct 19 17:59:46 chopin kernel: EIP:    0060:[<c02281f3>]    Not tainted
-> > VLI
-> > Oct 19 17:59:46 chopin kernel: EFLAGS: 00010083   (2.6.9) 
-> > Oct 19 17:59:46 chopin kernel: EIP is at as_requeue_request+0x93/0xf0
-> > Oct 19 17:59:46 chopin kernel: eax: 5f6c656e   ebx: 00000000   ecx:
-> > c7e50028   edx: c7f048b0
-> > Oct 19 17:59:46 chopin kernel: esi: c7f048b0   edi: c7fd7740   ebp:
-> > 00000202   esp: c3895f04
-> > Oct 19 17:59:46 chopin kernel: ds: 007b   es: 007b   ss: 0068
-> > Oct 19 17:59:46 chopin kernel: Process scsi_eh_0 (pid: 3130,
-> > threadinfo=c3894000 task=c7b94020)
-> > Oct 19 17:59:46 chopin kernel: Stack: 00000000 c010479d 00000000
-> > c01023bd c7f048b0 c3bb4040 c7e50028 c021f846 
-> > Oct 19 17:59:46 chopin kernel:        c7e50028 c7f048b0 c7f048b0
-> > c3bb4040 c02221cd c7e50028 c7f048b0 c7b94020 
-> > Oct 19 17:59:46 chopin kernel:        00000286 c7a08800 c3bb4040
-> > c7fd0a00 00001057 c896a247 c7e50028 c7f048b0 
-> > Oct 19 17:59:46 chopin kernel: Call Trace:
-> > Oct 19 17:59:46 chopin kernel:  [<c010479d>] print_context_stack
-> > +0x2d/0x70
-> > Oct 19 17:59:46 chopin kernel:  [<c01023bd>] kernel_thread_helper
-> > +0x5/0x18
-> > Oct 19 17:59:46 chopin kernel:  [<c021f846>] elv_requeue_request
-> > +0x26/0x60
-> > Oct 19 17:59:46 chopin kernel:  [<c02221cd>] blk_insert_request
-> > +0xdd/0xe0
-> > Oct 19 17:59:46 chopin kernel:  [<c896a247>] scsi_queue_insert+0x77/0xb0
-> > [scsi_mod]
-> > Oct 19 17:59:46 chopin kernel:  [<c8969daf>] scsi_eh_flush_done_q
-> > +0x9f/0xb0 [scsi_mod]
-> > Oct 19 17:59:46 chopin kernel:  [<c8969e4f>] scsi_unjam_host+0x8f/0xd0
-> > [scsi_mod]
-> > Oct 19 17:59:46 chopin kernel:  [<c8969f38>] scsi_error_handler
-> > +0xa8/0xd0 [scsi_mod]
-> > Oct 19 17:59:46 chopin kernel:  [<c8969e90>] scsi_error_handler+0x0/0xd0
-> > [scsi_mod]
-> > Oct 19 17:59:46 chopin kernel:  [<c01023bd>] kernel_thread_helper
-> > +0x5/0x18
-> > Oct 19 17:59:46 chopin kernel: Code: ff c7 43 38 02 00 00 00 8b 43 18 85
-> > c0 74 19 8b 40 10 85 c0 74 12 ff 40 10 eb 0d 90 90 90 90 90 90 90 90 90
-> > 90 90 90 90 8b 47 2c <8b> 10 89 72 04 89 16 89 46 04 89 30 8b 5c 24 10
-> > 89 7c 24 20 8b 
-> > Oct 19 17:59:46 chopin kernel:  <6>note: scsi_eh_0[3130] exited with
-> > preempt_count 1
-> > 
-> > 
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> > 
-> 
-> -- 
-> Jens Axboe
+With kernel 2.4.27 all works fine.
+
+I found nothing about this problem on the web or in=20
+newsgroups/mailinglists.
+
+I also filed bug 3588 (http://bugzilla.kernel.org/show_bug.cgi?id=3D358=
+8),=20
+but no response until now.
+Maybee a did something wrong.
+
+I tried to set other module parameter for debug and verbose outbut, but=
+=20
+it seems, that the module will ignore all parameters.
+
+Maybee the driver documentation is wrong.
+
+Or I am to stupid to set the parameter with kernel 2.6.
+
+--=20
+Mit freundlichen Gr=FC=DFen,
+Ing. Reinhold Fischer
+
+
+# uname -a=20
+Linux linux-cluster2 2.6.8-1-686 #1 Thu Oct 7 03:15:25 EDT 2004 i686=20
+GNU/Linux=20
+# modprobe -r sym53c8xx
+# modprobe sym53c8xx sym53c8xx=3Dhostid:5
+# dmesg | sed -n '/Synchronizing SCSI cache for disk sda:/,$p'
+Synchronizing SCSI cache for disk sda:
+sym0: detaching ...
+sym0: resetting chip
+sym1: detaching ...
+sym1: resetting chip
+sym0: <896> rev 0x7 at pci 0000:03:04.0 irq 10
+sym0: using 64 bit DMA addressing
+sym0: No NVRAM, ID 7, Fast-40, LVD, parity checking
+sym0: SCSI BUS has been reset.
+scsi2 : sym-2.1.18j
+scsi: unknown device type 12
+  Vendor: Compaq    Model: CR3500            Rev: x2r-
+  Type:   RAID                               ANSI SCSI revision: 02
+sym0:2:0: tagged command queuing enabled, command queue depth 16.
+scsi(2:0:2:0): Beginning Domain Validation
+sym0:2: wide asynchronous.
+sym0:2: FAST-20 WIDE SCSI 40.0 MB/s ST (50.0 ns, offset 15)
+scsi(2:0:2:0): Domain Validation skipping write tests
+scsi(2:0:2:0): Ending Domain Validation
+  Vendor: Compaq    Model: CR3500            Rev: x2r-
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+sym0:2:1: tagged command queuing enabled, command queue depth 16.
+scsi(2:0:2:1): Beginning Domain Validation
+sym0:2: asynchronous.
+sym0:2: wide asynchronous.
+sym0:2: FAST-20 WIDE SCSI 40.0 MB/s ST (50.0 ns, offset 15)
+scsi(2:0:2:1): Domain Validation skipping write tests
+scsi(2:0:2:1): Ending Domain Validation
+SCSI device sda: 35553280 512-byte hdwr sectors (18203 MB)
+SCSI device sda: drive cache: write back
+ /dev/scsi/host2/bus0/target2/lun1: p1 p2 p3
+Attached scsi disk sda at scsi2, channel 0, id 2, lun 1
+scsi: unknown device type 12
+  Vendor: Compaq    Model: CR3500            Rev: x2r-
+  Type:   RAID                               ANSI SCSI revision: 02
+sym0:3:0: tagged command queuing enabled, command queue depth 16.
+scsi(2:0:3:0): Beginning Domain Validation
+sym0:3: wide asynchronous.
+sym0:3: FAST-20 WIDE SCSI 40.0 MB/s ST (50.0 ns, offset 15)
+scsi(2:0:3:0): Domain Validation skipping write tests
+scsi(2:0:3:0): Ending Domain Validation
+sym1: <896> rev 0x7 at pci 0000:03:04.1 irq 11
+sym1: using 64 bit DMA addressing
+sym1: No NVRAM, ID 7, Fast-40, LVD, parity checking
+sym1: SCSI BUS has been reset.
+scsi3 : sym-2.1.18j
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
