@@ -1,43 +1,45 @@
-From: Jesse Barnes <jbarnes@engr.sgi.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: SCSI QLA not working on latest *-mm SN2
-Date: Tue, 21 Sep 2004 12:18:00 -0400
+Date: Tue, 21 Sep 2004 17:25:35 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200409211218.00809.jbarnes@engr.sgi.com>
-References: <20040917183029.GW642@parcelfarce.linux.theplanet.co.uk> <200409211205.22575.jbarnes@engr.sgi.com> <1095783077.2467.145.camel@mulgrave>
+Message-ID: <20040921162535.GB11446@parcelfarce.linux.theplanet.co.uk>
+References: <B179AE41C1147041AA1121F44614F0B0012AD90D@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx3-ext.sgi.com ([192.48.171.20]:36575 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S267806AbUIUQS3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Sep 2004 12:18:29 -0400
-In-Reply-To: <1095783077.2467.145.camel@mulgrave>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:20412 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S267828AbUIUQZg
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Sep 2004 12:25:36 -0400
 Content-Disposition: inline
+In-Reply-To: <B179AE41C1147041AA1121F44614F0B0012AD90D@AVEXCH02.qlogic.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Matthew Wilcox <willy@debian.org>, Grant Grundler <grundler@parisc-linux.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jesse Barnes <jbarnes@engr.sgi.com>, Grant Grundler <grundler@parisc-linux.org>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
 
-On Tuesday, September 21, 2004 12:11 pm, James Bottomley wrote:
-> On Tue, 2004-09-21 at 12:05, Jesse Barnes wrote:
-> > Reading from the closest bridge won't be enough?  If not, then dealing
-> > with posting in a nice way is simply impossible for some devices.  We'd
-> > be stuck with udelay().
->
-> That's correct.  The posted write is held somewhere in one of the
-> bridges, but the PCI ordering rules only require it to be ordered with
-> other MMIO reads to the *device*; so you only guarantee that the posted
-> write is flushed by doing a device read....obviously, there exist
-> bridges with looser ideas than this, but we need to follow the PCI
-> specs.
->
-> udelay() isn't a viable solution because the PCI specs have no upper
-> bound on the length of time a write may remain posted.
+On Tue, Sep 21, 2004 at 08:58:23AM -0700, Andrew Vasquez wrote:
+> From what I can gather from the hw engineers, the config-read will not
+> guarantee a flush of posted writes.
 
-Well then.  Sounds like we're hosed for the qla2xxx case at least.  I think we 
-still need pioflush for the case of writes from different CPUs (described in 
-the document).  Using it *should* make the window pretty small for qla2xxx 
-type problems too, but we have no guarantee.
+I believe your hardware engineers to be mistaken.  See PCI 2.2, Appendix
+E, section E.2:
 
-Jesse
+2. Memory writes can be posted in both directions in a bridge. I/O and
+   Configuration writes are not posted. (I/O writes can be posted in the
+   Host Bridge, but some restrictions apply.) Read transactions (Memory,
+   I/O, or Configuration) are not posted.
+
+5. A read transaction must push ahead of it through the bridge any posted
+   writes originating on the same side of the bridge and posted before the
+   read. Before the read transaction can complete on its originating bus,
+   it must pull out of the bridge any posted writes that originated on
+   the opposite side and were posted before the read command completes
+   on the read-destination bus.
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
