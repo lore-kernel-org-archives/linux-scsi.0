@@ -1,37 +1,39 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Requested changes for the SCSI error handler
-Date: Sat, 5 Jun 2004 18:41:35 -0400 (EDT)
+From: EXPERIENCE.SUPPORT@SHAREOPINION.BIZ
+Subject: A user at our website is searching for opinions about: linux-scsi@vger.kernel.org
+Date: Sun, 06 Jun 2004 00:02:01 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0406051840070.6444-100000@netrider.rowland.org>
-References: <20040604232344.GA3214@us.ibm.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <ROADRUNNERnnfvaQ7Lf00002955@coyote>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:5645 "HELO
-	netrider.rowland.org") by vger.kernel.org with SMTP id S262238AbUFEWlg
+Received: from adsl-67-121-155-155.dsl.pltn13.pacbell.net ([67.121.155.155]:38665
+	"EHLO coyote") by vger.kernel.org with ESMTP id S262972AbUFFHBq
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 5 Jun 2004 18:41:36 -0400
-In-Reply-To: <20040604232344.GA3214@us.ibm.com>
+	Sun, 6 Jun 2004 03:01:46 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Fri, 4 Jun 2004, Mike Anderson wrote:
+******************************************************************** 
+Important message from SYE Support Department. 
+Please keep this for your records. 
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= 
 
-> Alan Stern [stern@rowland.harvard.edu] wrote:
-> > 
-> > How does this look?
-> > 
-> 
-> Looks ok. I know your patch is in line with James requests, but I had a
-> counter idea that allows for setting the settle delays up, down, or to
-> zero post scsi_host_alloc. If the LLDD does nothing behavior should not
-> change. This would allow increasing settle if some LLDD wanted it and
-> also set it through sysfs if we wanted that in the future.  You can
-> throw this patch in the bit bucket if you want to go the previously
-> stated direction.
+Advisory - Someone who knows you is attempting to share experiences and opinions about you in our online community. 
 
-Either approach is fine with me.  James?
+The purpose of this email is to inform you that a posting has been made about you at our website.  This is email is not commercial in nature.  
 
-Alan Stern
+If this email message was delivered to your spam or bulk email folder please notify your ISP or spam filtering company regarding this mistake on their part.
+
+To view all of the postings about you at our website use this link:
+
+http://5.shyxp.biz/lx.php?a=search&b=5&c=linux-scsi%40vger.kernel.org
+
+Our Identity Protection System is a simple system in which this website sends email messages to the Experience Request author on your behalf, and vice versa. This website will never reveal the identity of the Experience Request author to you, nor will it reveal your identity to the author of the Experience Request.
+
+IMPORTANT - To add this email address to our Do Not Email List click here:
+
+http://8.shyx.us/lx.php?a=donotemail&b=linux-scsi%40vger.kernel.org
+
+Regards,
+
+SYEC Support Department
+
 
