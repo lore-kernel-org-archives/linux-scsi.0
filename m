@@ -1,47 +1,45 @@
-From: Sir Ace <chandleg@wizardsworks.org>
-Subject: Re: Maybe a patch?
-Date: Wed, 22 Jan 2003 10:32:19 -0800 (PST)
+From: "Ravi Anand" <ravi.anand@qlogic.com>
+Subject: RE: scsi bus-reset in qlogic causes system stall
+Date: Wed, 22 Jan 2003 11:29:27 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0301221029160.27973-100000@wizardsworks.org>
-References: <20030122075943.GW20780@suse.de>
+Message-ID: <3679966B84813344B908D418BA3F6A4AA84095@AVEXCH01.qlogic.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20030122075943.GW20780@suse.de>
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Steven Dake <sdake@mvista.com>, devnetfs <devnetfs@yahoo.com>, linux-scsi@vger.kernel.org
+
+Our development is going on which will include the following changes:
+
+		-v2.5.x changes
+		-no hacks or changes for non public kernel tree
+		-lot of other clean ups,
+		-re-orginzation of sources 
+		- suggestions and bug fixes from the linux scsi community etc...
+
+before the driver is officially submitted to be  merged in the v2.5.x tree.
+
+regards
+ravi
 
 
-On Wed, 22 Jan 2003, Jens Axboe wrote:
+-----Original Message-----
+From: Christoph Hellwig [mailto:hch@infradead.org]
+Sent: Monday, January 20, 2003 11:53 PM
+To: Ravi Anand
+Cc: Christoph Hellwig; Steven Dake; devnetfs; linux-scsi@vger.kernel.org
+Subject: Re: scsi bus-reset in qlogic causes system stall
 
-> On Tue, Jan 21 2003, Sir Ace wrote:
-> >
-> > I saw in /usr/src/linux/drivers/net/tg3.c
-> > That the following was added...  I have no idea why..
-> > Like I said I am not a developer nor do I know a lot about this part of
-> > the kernel.  But it now compiles:
-> >
-> > Added to /usr/src/linux/drivers/scsi/scsi_merge.c
-> >
-> > #ifndef PCI_DMA_BUS_IS_PHYS
-> > #define PCI_DMA_BUS_IS_PHYS 1
-> > #endif
->
-> Please don't do stuff like that, it _could_ be dangerous to your data
-> when you don't know what you are doing.
->
-> That said, it is correct for hppa it seems. asm/pci.h has the same
-> thing, do you are just looking at a missing include. You should fix that
-> instead. page_to_phys() is also there.
 
-  Right, I was more asking than anything...  I'm not a full time
-developer, and what little I do know about the kernel, is in other
-sections.  I just took a quick guess at what I thought it might be.
+On Mon, Jan 20, 2003 at 04:06:53PM -0800, Ravi Anand wrote:
+> Added to take care some of the changes made by the VMWARE guys in the kernel.Included at the request from our OEM's.This will compile against the modified kernel from VMWARE.
+> 
+> Hope this answer your question.
 
-Thanks for the correction, and I will remove the defines and add the
-#include <asm/pci.h> and see if that will resolve some of the problems I
-am having farther down the line in the compile.
-  Thanks.
-    -- Sir Ace
+OK.  Given the recent discussion about the qla2xxx driver in 2.5 I'd just
+like to add that you shouldn't expect such ugly hacks for a non-public
+kernel tree to ever get merged..
 
