@@ -1,21 +1,30 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: (PATCH)The megaraid driver v2.00.5 for kernel 2.4
-Date: Tue, 29 Jul 2003 07:19:34 -0400 (EDT)
+From: Rabeeh Khoury <rabeeh@il.marvell.com>
+Subject: Linux limitation of amount of SCSI buses
+Date: Tue, 29 Jul 2003 15:58:08 +0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200307291119.h6TBJYJ04362@devserv.devel.redhat.com>
-References: <200307290752.QAA08889@toshiba.co.jp>
+Message-ID: <3F266F60.5070501@il.marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pix-525-pool.redhat.com ([66.187.233.200]:55332 "EHLO
-	devserv.devel.redhat.com") by vger.kernel.org with ESMTP
-	id S271415AbTG2LTk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jul 2003 07:19:40 -0400
-In-Reply-To: <200307290752.QAA08889@toshiba.co.jp> from "haruo tomita" at Gor 29, 2003 04:47:54 
+Received: from pop3.galileo.co.il ([199.203.130.130]:53172 "EHLO
+	mail.galileo.co.il") by vger.kernel.org with ESMTP id S271704AbTG2M6g
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jul 2003 08:58:36 -0400
+Received: from il.marvell.com (linux2.galileo.co.il [10.2.40.2])
+	by mail.galileo.co.il (8.12.6/8.12.6) with ESMTP id h6TDu26D013579
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Jul 2003 15:56:02 +0200 (GMT-2)
 List-Id: linux-scsi@vger.kernel.org
-Cc: willy@debian.org, atulm@lsil.com, Matt_Domsch@dell.com, haruo.tomita@toshiba.co.jp, linux-megaraid-devel@dell.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-> A final patch is resent.  Alan, please apply.
+Hi All,
 
-If Atul okays it sure
+I'm connecting few cards with 24 buses and Linux gives me only 15 buses.
+Is there any limitation in Linux SCSI subsystem within kernel 2.4.x of 
+the number of SCSI buses ?
+Each bus has a single target and a single LUN.
+
+Regards,
+Rabeeh
+
+
