@@ -1,76 +1,65 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [example PATCH - not for applying] exclude certain commands
-Date: Sat, 26 Apr 2003 18:39:57 -0700
+Date: 26 Apr 2003 21:15:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030426183957.C8697@one-eyed-alien.net>
-References: <UTC200304262144.h3QLiAt04450.aeb@smtp.cwi.nl> <1051396197.1768.81.camel@mulgrave>
+Message-ID: <1051409717.4089.146.camel@mulgrave>
+References: <UTC200304262144.h3QLiAt04450.aeb@smtp.cwi.nl>
+	<20030426151356.A8697@one-eyed-alien.net>
+	<1051397024.4089.86.camel@mulgrave>
+	<20030426183428.B8697@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="XWOWbaMNXpFDWE00"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:34568 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S263199AbTD0B1s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 26 Apr 2003 21:27:48 -0400
-Content-Disposition: inline
-In-Reply-To: <1051396197.1768.81.camel@mulgrave>; from James.Bottomley@SteelEye.com on Sat, Apr 26, 2003 at 05:29:55PM -0500
+Received: from nat9.steeleye.com ([65.114.3.137]:58372 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263228AbTD0CDX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 26 Apr 2003 22:03:23 -0400
+In-Reply-To: <20030426183428.B8697@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
 Cc: Andries.Brouwer@cwi.nl, greg@kroah.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net
 
+On Sat, 2003-04-26 at 20:34, Matthew Dharm wrote:
+> To parse correctly, I would need to remember what type of device it is by
+> snooping the INQUIRY data.  I would also have to keep around data such as
+> block size (for TYPE_DISK).  I haven't even looked at what extra data I
+> would need to keep around for all the other types.
 
---XWOWbaMNXpFDWE00
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+OK, I don't understand this.  To extract the transfer length from a
+given SCSI command (excluding vendor specific ones) is a well defined
+process.  All you need is the command, it doesn't require knowing device
+type or anything else.
 
-On Sat, Apr 26, 2003 at 05:29:55PM -0500, James Bottomley wrote:
-> This looks fine to me.  Originally, sr_bufflen was exactly that (because
-> all SCSI LLDs have to be prepared to transfer fewer than the specified
-> number of bytes anyway, since that's required by the spec).  I believe
-> only USB needs this to be set to the actual command length (and further
-> require that we ensure that the device *will* transfer exactly
-> this...that's to some extent the origin of the INQUIRY problems), so the
-> change should be small.
+> Why should usb-storage do that when someone else (the command source)
+> already knows this data?  Whatever is sending the command already knows how
+> much data to expect -- my reparsing the command to try to figure it out is
+> guaranteed to be less precise than just using the correct answer from the
+> source of the command.
 
-This is a common misconception.  usb-storage does not need to know, in
-advance, exactly how many bytes will transfer.  It does, however, need to
-know exactly how many bytes are being requested for transfer.
+Because we're exploring options for this "lengthen the transfer size"
+behaviour the USB layer exhibits.  Assuming you can transfer more bytes
+than the indicated buffer size is a recipe for data corruption problems
+down the line.
 
-There's a subtle difference there.  usb-storage can handle the case of
-underrun or overrun properly.  But there are USB<->[SCSI|ATA|whatever]
-bridges which can't handle a discrepancy between expected transfer length
-and actual transfer length when no error was detected.
+> Also, user-issued commands can specify buffer size and transfer length
+> separately, but only one value gets given to the usb-storage driver.  The
+> other is dropped on the floor somewhere in the mid-layer.
 
-I can give examples, but it's confusing and not really relevant unless
-someone wants to know.
+I usually use the SCSI_IOCTL_SEND_COMMAND, which only allows the
+specification of a buffer size (rather than both length and buffer
+size), how do you send SCSI commands?
 
-There are also broken devices which are specifically broken with respect to
-the INQUIRY command for length !=3D 36, but that's a separate issue to a
-certain degree.  These are really two separate problems.
+> In the end, I guess the short-answer to 'what is wrong with parsing' is
+> that we tried it for over a year, and it kept biting us on the ass with
+> weird corner-cases and strange devices.
 
-Matt
+Well, the only weird corner cases are vendor specific commands and for
+these the rule is that we assume the buffer size and the transfer size
+to be the same.  Since they aren't currently issued by the mid-layer
+this must be true today (otherwise they wouldn't work today), so I think
+we have everything covered.
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+James
 
-YOU SEE!!?? It's like being born with only one nipple!
-					-- Erwin
-User Friendly, 10/19/1998
 
---XWOWbaMNXpFDWE00
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE+qzTtIjReC7bSPZARAiAIAJ47kzenBDh+peqeLVZmfmccsNaVqgCfdLMv
-tVQJoZVEdyrrdmqrgRUKfto=
-=+1ak
------END PGP SIGNATURE-----
-
---XWOWbaMNXpFDWE00--
