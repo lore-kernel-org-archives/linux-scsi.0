@@ -1,49 +1,46 @@
-From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Subject: [ANNOUNCE][RELEASE]: megaraid unified driver version 2.20.0.B1
-Date: Wed, 7 Apr 2004 19:18:02 -0400
+From: Abhishek Rai <abba@cs.sunysb.edu>
+Subject: Re: Help - how to identify the callers in a SCSI lower-leveldriver
+Date: Wed, 7 Apr 2004 21:09:15 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230C7B4@exa-atlanta.se.lsil.com>
+Message-ID: <Pine.GSO.4.53.0404072106530.12925@compserv1>
+References: <519672568F040C41B6FAC21ADF51B18FEFA0@mailnode1.commstor.crossroads.com>
+ <20040407205701.GA27311@devserv.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:40397 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261244AbUDGXTp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Apr 2004 19:19:45 -0400
+Received: from sbcs.sunysb.edu ([130.245.1.15]:29885 "EHLO sbcs.cs.sunysb.edu")
+	by vger.kernel.org with ESMTP id S261378AbUDHBLw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Apr 2004 21:11:52 -0400
+In-Reply-To: <20040407205701.GA27311@devserv.devel.redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "'jgarzik@pobox.com'" <jgarzik@pobox.com>, "'Matt_Domsch@dell.com'" <Matt_Domsch@dell.com>, "'paul@kungfoocoder.org'" <paul@kungfoocoder.org>
-Cc: "'James.Bottomley@SteelEye.com'" <James.Bottomley@SteelEye.com>, "'arjanv@redhat.com'" <arjanv@redhat.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
+To: Arjan van de Ven <arjanv@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hello All,
 
-We are releasing the megaraid unified driver version 2.20.0.0.
-The source is available at our public ftp site:
+> > The shim (a pseudo SCSI lower-level driver) we are working on sits in
+> > between Linux SCSI mid-level driver and our existing kernel driver which
+> > interfaces with a FC driver which interacts with the FC HBA.
+>
+> wow that sounds like a great way to kill performance, that many extra layers
+>
+> >
+> > To track SCSI initiators' tasks, it would be great if our existing kernel
+> > driver knows which application makes the (SCSI passthrough ioctl) call to
+> > /dev/sda.
+>
+> well... it's a fundamentally hard problem. For example the application that
+> submitted the IO may no longer exist on disk by the time you get to see the
+> IO, or the process may already have exited. It sounds like a fundamentally
+> fragile/broken concept to use this information for *anything*, it's still
+> not clear to me what you'd use it for (other than doing a gross hack by
+> faking IO priorities based on application name but that's sooo not the right
+> solution to that problem)
+>
 
-ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-unified-2.20.0.B1.04.0
-7.2004/
+If it is just a feature you want in your development driver, you can do it
+at the file system level, e.g., modify an existing file system, or better
+still, have a thin stackable file system layer that does that. Then you
+can mount the file system on your /dev/sda so that the stackable file
+system sits in between the underlying file system and the VFS.
 
-Kernels:
----------
-This driver is primarily for lk 2.6. While this also works on lk 2.4
-this is not a replacement for the extant 2.x driver on 2.4 kernel.
-
-Thanks to:
------------
-This driver has been designed according to the great inputs by
-Jeff Garzik and Matt Domsch. 'readme' in the source tgz has more
-details. Thanks in advance also to Paul Wagland for the sysfs
-support that he agreed to add.
-
-Near-term goals:
-------------------
-i.	A new class of controllers will be added under this umbrella.
-ii.	Paul Wagland has agreed to start off adding sysfs support to 
-	the common module.
-iii.	Information exported via sysfs will be fully augmented to allow
-	sophisticated monitoring.
-iv.	Write support will be added through sysfs.
-v.	We are NOT planning to have /proc support in this driver.
-
-Thanks,
-Sreenivas
-LSI Logic
+Abhishek
