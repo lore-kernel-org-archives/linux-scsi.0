@@ -1,51 +1,51 @@
 From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] get rid of ->detect for upper layer drivers
-Date: Thu, 7 Nov 2002 08:27:48 -0800
+Subject: Re: [PATCH] scsi sysfs update (upper 2/3)
+Date: Thu, 7 Nov 2002 08:41:52 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021107162748.GB1292@beaverton.ibm.com>
-References: <200211071532.HAA21625@freya.yggdrasil.com>
+Message-ID: <20021107164152.GD1292@beaverton.ibm.com>
+References: <20021107073619.GA1390@beaverton.ibm.com> <20021107073943.GB1390@beaverton.ibm.com> <20021107182947.B15350@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200211071532.HAA21625@freya.yggdrasil.com>
+In-Reply-To: <20021107182947.B15350@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Adam J. Richter" <adam@freya.yggdrasil.com>
-Cc: hch@lst.de, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@sgi.com>
+Cc: linux-scsi@vger.kernel.org
 
-Adam J. Richter [adam@freya.yggdrasil.com] wrote:
-> Michael Anderson wrote:
-> >The removal of detect should eventually result in other reductions /
-> >cleaner code (If the sg binding issue can be resolved cleanly).
+Christoph Hellwig [hch@sgi.com] wrote:
+> On Wed, Nov 06, 2002 at 11:39:43PM -0800, Mike Anderson wrote:
+> > +	.scsi_driverfs_driver   = {
+> > +		.name   = "sd",
+> > +	},
 > 
-> 	What makes you think that?  You need a way to ask "is this
-> driver interested in this device" and that's all that the code
-> remaining in scsi_device_template.detect() does after you remove the
-> side effects (i.e., the counter incrementing), and it does so about as
-> simply as possible.
-
-If we support the device probe and remove interfaces then as a device is
-registered with the scsi bus each drivers probe routine will be called
-and if it wants the device it returns 0. 
-
-If a driver is registered with the scsi bus post device probing then the
-driver_attach routine will call bus_match and driver probe for all
-devices on the bus not claimed by a driver.
-
-> 
-> 	I haven't looked at it closely, but there seems to be
-> workaround in the generic device code for its inability to bind more
-> than one driver to a device: struct device_interface, which seems to
-> duplicate much of the generic driver interface but lacks
-> device->driver_data, which we could compensate for by adding
-> a field in struct scsi_device:
+> can we changhe scsi_driverfs_driver to something saner? E.g. gen_driver?
 > 
 
-I believed the device_interface was the answer also. scsi generic is even mentioned in the documentation. In talking with Mochel on this issue he disagreed and said that this was not the interface to use. 
+ok.
 
-The idea of a field in struct scsi_device seems like the right approach.
-It is just that the device model needs a better bus symmetric interface to
-handle cleanup and handling sg insmod / rmmod post device probing.
+I did have some name changes previous, but pulled them out to reduce
+collisions with the patches going on in this area.
+
+Though my below renaming is not consitant with this thought :-).
+
+> >  static struct scsi_disk *sd_find_by_sdev(Scsi_Device *sd)
+> > @@ -1346,7 +1349,7 @@
+> >  	if (!majors)
+> >  		return -ENODEV;
+> >  
+> > -	rc = scsi_register_device(&sd_template);
+> > +	rc = scsi_bus_driver_register(&sd_template);
+> 
+> Umm, no.  We don't register a bus.  Just leave the name unchanged until
+> we there is some commonly agreed upon upper layer terminology.
+
+Well we are registering a driver with the device model scsi_bus (i.e a
+driver_register on scsi_bus_type).
+
+Could we agree on terminology now as I believe scsi_register_device is
+mis-leading for others reading the scsi code as it is a driver not a
+device?
 
 -andmike
 --
