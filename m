@@ -1,9 +1,14 @@
-From: Andries.Brouwer@cwi.nl
-Subject: Re: Re: inquiry in scsi_scan.c
-Date: Tue, 7 Jan 2003 17:37:15 +0100 (MET)
+From: Greg KH <greg@kroah.com>
+Subject: Re: Re: IDs
+Date: Tue, 7 Jan 2003 09:07:28 -0800
 Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <UTC200301071637.h07GbFK20677.aeb@smtp.cwi.nl>
+Message-ID: <20030107170728.GA27521@kroah.com>
+References: <20030106191522.A11624@beaverton.ibm.com> <UTC200301071055.h07At0T09202.aeb@smtp.cwi.nl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+Content-Disposition: inline
+In-Reply-To: <UTC200301071055.h07At0T09202.aeb@smtp.cwi.nl>
 Errors-To: linux-usb-devel-admin@lists.sourceforge.net
 List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
 List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
@@ -12,24 +17,26 @@ List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
 List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
 	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: dledford@redhat.com, stern@rowland.harvard.edu
-Cc: Andries.Brouwer@cwi.nl, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, luben@splentec.com
+To: Andries.Brouwer@cwi.nl
+Cc: patmans@us.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-kernel@one-eyed-alien.net, zwane@holomorphy.com
 List-Id: linux-scsi@vger.kernel.org
 
-> US_FL_DONT_FIX_INQUIRY_LENGTH
+On Tue, Jan 07, 2003 at 11:55:00AM +0100, Andries.Brouwer@cwi.nl wrote:
+> 
+> The sysfs tree does not contain device nodes.
 
-Oh, people, please.
-There is no problem. So it is a waste of time trying to solve
-this non-problem.
+And that will remain true.
 
-If the device transmits 36 bytes, then we have 36 bytes.
-What are these bytes used for? To get a vendor name.
-A SCSI standard lawyer might wish to distinguish the case
-where 8 blacks or NULs is padding, from the case where
-these 8 blanks or NULs is the actual vendor name, but
-this distinction does not matter at all for our purposes.
+> Do you plan a user space utility that figures out that
+> the ID "SHP      CD-Writer+ 8200 [" belongs to /dev/hdd
+> which also is /dev/sr0?
 
-Andries
+Yes.  Well, at least I plan on creating such a utility once more of the
+kernel is converted over to using sysfs :)
+
+thanks,
+
+greg k-h
 
 
 -------------------------------------------------------
