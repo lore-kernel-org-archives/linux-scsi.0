@@ -1,35 +1,36 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: mpt sets 64bit consistent mask yet requires mapping in same 4 GB chunk?!?
-Date: Fri, 13 Feb 2004 15:39:00 -0800
+From: "Thomas Graham" <lkthomas@sml.dyndns.org>
+Subject: Seagate HD VS Maxtor ?
+Date: Sat, 14 Feb 2004 11:53:22 +0800 (HKT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040213233900.GE504054@sgi.com>
-References: <0E3FA95632D6D047BA649F95DAB60E5703EF915E@exa-atlanta.se.lsil.com> <20040213213043.GB20323@sgi.com> <200402131552.43935.bjorn.helgaas@hp.com> <20040213231308.GT31168@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <1516.147.8.146.153.1076730802.squirrel@sml.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.sgi.com ([192.48.171.6]:56634 "EHLO zok.sgi.com")
-	by vger.kernel.org with ESMTP id S267192AbUBMXjS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Feb 2004 18:39:18 -0500
-Content-Disposition: inline
-In-Reply-To: <20040213231308.GT31168@parcelfarce.linux.theplanet.co.uk>
+Received: from 203186022064.ctinets.com ([203.186.22.64]:44949 "EHLO
+	sml.dyndns.org") by vger.kernel.org with ESMTP id S264586AbUBNDh4
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Feb 2004 22:37:56 -0500
+Received: from localhost (unknown [127.0.0.1])
+	by sml.dyndns.org (Postfix) with ESMTP id 805A9A389C
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Feb 2004 11:53:24 +0800 (HKT)
+Received: from sml.dyndns.org ([127.0.0.1])
+ by localhost (sml.dyndns.org [127.0.0.1]) (amavisd-new, port 10024)
+ with ESMTP id 06939-13 for <linux-scsi@vger.kernel.org>;
+ Sat, 14 Feb 2004 11:53:22 +0800 (HKT)
+Received: from sml.dyndns.org (203186022064.ctinets.com [203.186.22.64])
+	by sml.dyndns.org (Postfix) with SMTP id 6F65348062
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Feb 2004 11:53:22 +0800 (HKT)
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: Bjorn Helgaas <bjorn.helgaas@hp.com>, Jesse Barnes <jbarnes@sgi.com>, "Moore, Eric Dean" <Emoore@lsil.com>, Alex Williamson <alex.williamson@hp.com>, linux-scsi@vger.kernel.org, linux-ia64@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Feb 13, 2004 at 11:13:08PM +0000, Matthew Wilcox wrote:
-> On Fri, Feb 13, 2004 at 03:52:43PM -0700, Bjorn Helgaas wrote:
-> > > I think Alex's second suggestion would be the best--do a single
-> > > allocation rather than falling back to a 32 bit consistent mask.
-> > 
-> > But even with a single allocation, there's nothing to prevent it
-> > from crossing a 4GB boundary, is there?
-> 
-> Since we use buddy allocators everywhere, we'd need to be doing 8GB
-> allocations to cross a 4GB barrier.  Of course if we change allocators ...
+is that seagate HD performance is poor than maxtor even using same config
+( 10krpm, U160...etc )
 
-... and this particular behavior, then I think lots of hardware will
-stop working, because LSI is not the only vendor with this sort of
-limitation  :-)
 
-jeremy
+-- 
+HK Celtic Orchestra leader and coordanator: Thomas Graham Lau
+Phone number: 852-93239670    (24hours a day, 7days a week non-stop phone)
+Web site: http://sml.dyndns.org
+Email: lkthomas@sml.dyndns.org
+Celtic Newage radiostation: http://sml.dyndns.org:8000
