@@ -1,58 +1,56 @@
-From: dasuki3@netscape.net
-Subject: Charity Assistant.
-Date: Thu, 12 Aug 2004 18:18:47 -0400
+From: Nigel Cunningham <ncunningham@linuxmail.org>
+Subject: Re: [PATCH] SCSI midlayer power management
+Date: Fri, 13 Aug 2004 08:36:38 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <S268831AbUHLWSr/20040812222016Z+780@vger.kernel.org>
+Message-ID: <1092350198.24737.19.camel@laptop.cunninghams>
+References: <4119611D.60401@optonline.net>
+	 <20040811080935.GA26098@elf.ucw.cz> <411A1B72.1010302@optonline.net>
+	 <1092231462.2087.3.camel@mulgrave> <1092267400.2136.24.camel@gaston>
+	 <1092314892.1755.5.camel@mulgrave> <20040812131457.GB1086@elf.ucw.cz>
+	 <1092328173.2184.15.camel@mulgrave>  <20040812191120.GA14903@elf.ucw.cz>
+	 <1092339247.1755.36.camel@mulgrave>
+Reply-To: ncunningham@linuxmail.org
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [218.201.129.131] ([218.201.129.131]:49937 "HELO netscape.net")
-	by vger.kernel.org with SMTP id S268831AbUHLWSr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Aug 2004 18:18:47 -0400
+Received: from mail5.tpgi.com.au ([203.12.160.101]:64455 "EHLO
+	mail5.tpgi.com.au") by vger.kernel.org with ESMTP id S268843AbUHLWkF
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Aug 2004 18:40:05 -0400
+In-Reply-To: <1092339247.1755.36.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Pavel Machek <pavel@ucw.cz>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Nathan Bryant <nbryant@optonline.net>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-Hello Friend.
+Hi.
 
-As you read this, I don't want you to feel sorry for me because I believe
-Everyone will die someday. My name is Dasuki AL-Mehmood, a merchant
-in Dubai U.A.E.
+On Fri, 2004-08-13 at 05:34, James Bottomley wrote:
+> Er, well this is a huge problem then.  Even if DMA were stopped, the
+> registers for all these locations need to be altered to change the
+> location of the DMA mboxes.  This isn't just a SCSI problem, it's a
+> general device problem (most devices having mboxes programmed by
+> register).  If we can't rely on the resuming kernel setting up these
+> registers for us to exactly what they were in the resume image, then
+> we're in a bit of trouble.
+> 
+> Architecturally what you are trying to do is to re POST the SCSI card. 
+> Except it's the kernel's job to POST it, so the kernel init code needs
+> to be re-run.  I assume that's what the pci suspend/resume calls are
+> supposed to do?
 
-I have been diagnosed with esophageal cancer. It has defiled all forms of
-Medical treatment, and right now I have only about a few months to live,
-According to medical experts. I have not particularly lived my life so
-Well, as I never really cared for anyone (not even myself) but my business.
-Though I am very rich, I was never generous, I was always hostile to people
-and only focused on my business as that was the only thing I cared for. But
-now I regret all this as I now know that there is more to life than just
-Wanting to have or make all the money in the world.
+I'm not pretending to understand the issues you're talking about, but I
+do have a question that might possibly be helpful: Pages can be marked
+with the Nosave flag, so that they're not saved in the image and not
+overwritten when we copy the old kernel back. Would using Nosave help
+here at all?
 
-I believe when God gives me a second chance to come to this world I would
-Live my life a different way from how I have lived it. Now that God has
-Called me, I have willed and given most of my property and assets to my
-Immediate and extended family members as well as a few close friends.
+Nigel
+-- 
+Nigel Cunningham
+Christian Reformed Church of Tuggeranong
+PO Box 1004, Tuggeranong, ACT 2901
 
-I want God to be merciful to me and accept my soul so, I have decided to
-give alms to charity organizations, as I want this to be one of the last
-good deeds I do on earth.
-
-Now that my health has deteriorated so badly, I cannot do this myself
-Anymore. I once asked members of my family to close one of my accounts and
-distribute the money which I have there to charity organization in Bulgaria
-and Pakistan; they refused and kept the money to themselves. Hence, I do
-not trust them anymore, as they seem not to be contended with what I have
-left for them.
-
-The last of my money which no one knows of is the huge cash deposit of $6M.
-(Six  Million United States Dollars) that I have with a finance/Security
-Company abroad. I will want you to help me collect this deposit and
-Dispatched it to charity organizations. I have set aside 10 % for you and
-for your time. All correspondence should be directed via this private email
-dasuk-al-mehmo@excite.com
-
-May Allah be with you.
-
-Dasuki Al- Mehmood
-Dasuk-al-mehmo@excite.com
-
-
+Many today claim to be tolerant. But true tolerance can cope with others
+being intolerant.
 
