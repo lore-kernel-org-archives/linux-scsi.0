@@ -1,112 +1,62 @@
-From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Subject: Re: FW: [PATCH] 2.4.25-pre4 SCSI fusion driver
-Date: Wed, 14 Jan 2004 11:27:17 -0200 (BRST)
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: make sysfs scsi queue_depth read/write [patch]
+Date: 14 Jan 2004 09:56:24 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58L.0401141125380.3535@logos.cnet>
-References: <0E3FA95632D6D047BA649F95DAB60E5703A758C4@exa-atlanta.se.lsil.com>
+Message-ID: <1074092186.1805.23.camel@mulgrave>
+References: <20040114114132.GA12621@cistron.nl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from intra.cyclades.com ([64.186.161.6]:5533 "EHLO
-	intra.cyclades.com") by vger.kernel.org with ESMTP id S266319AbUANN3c
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jan 2004 08:29:32 -0500
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703A758C4@exa-atlanta.se.lsil.com>
+Received: from stat1.steeleye.com ([65.114.3.130]:59107 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S266352AbUANO4e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Jan 2004 09:56:34 -0500
+In-Reply-To: <20040114114132.GA12621@cistron.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: Xose Vazquez Perez <xose@wanadoo.es>, linux-scsi <linux-scsi@vger.kernel.org>, Tosatti <marcelo.tosatti@cyclades.com>
+To: Miquel van Smoorenburg <miquels@cistron.nl>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+On Wed, 2004-01-14 at 06:41, Miquel van Smoorenburg wrote:
+> I have been testing with a 3ware controller over the last few weeks.
+> It turns out that in RAID5 mode, it performs much better if the
+> queue depth is limited to 64 instead of the default 254.
+> 
+> So I patched the 3ware driver to make this tunable through a kernel/module
+> command line option, documented my findings, and send all that
+> stuff to the (very responsive) 3ware folks who are now looking at it
+> to see if this fixes a problem or just the symptoms of a
+> bigger problem.
+> 
+> Then it occured to me that it would be much easier to set this
+> limit (which is per device, not per host anyway) though sysfs.
+> Since a lot of SCSI drivers have options to set the queue depth,
+> it probably fills a need.
+> 
+> Below is a patch that makes /sys/block/<dev>/device/queue_depth
+> a read/write variable. Minimum limit is 1, maximum limit is the
+> value set in host->cmd_per_lun, so it should be perfectly safe.
+> 
+> Since the patch is trivial and it fixes a real problem (in my case,
+> tuning this gains 200% performance) please consider this for
+> 2.6.NEXT (or 2.6.mm-next).
+
+In 2.6 this isn't the correct way to do it.
+
+The problem (which your patch doesn't address) is that a queue often has
+driver allocated resources behind it, so the driver needs to participate
+in queue depth adjustment.  You account for this in the check to make
+sure the user isn't raising the depth, but nothing frees the (now
+useless) queue resources the driver potentially has.
+
+The correct fix is to do a queue depth attribute override in the 3ware
+driver.  For an example of exactly how this is done, look in the
+53c700.c driver.  It actually has no driver backed queue resources, so
+it does essentially what your second patch does...If the 3ware is in the
+same position (i.e. can stand a depth increase) then I've no problem
+with moving this store_queue_depth routine into scsi_sysfs and making it
+globally available for drivers that want a settable queue depth.
+
+James
 
 
-Hi Eric,
-
-I have a few comments:
-
-- You change CONFIG_SMP to __SMP__. __SMP__ is deprecated, dont do it.
-- You add a header file without GPL statement
-- You add CONFIG_COMPAT #ifdef's. What is CONFIG_COMPAT? AFAIK it is not
-present in 2.4 kernels.
-
-On Fri, 9 Jan 2004, Moore, Eric Dean wrote:
-
-> Here's a patch for mpt fusion version 2.5.11 driver.
-> Thankyou Xose for creating the patch.
->
-> - Changes For Version 02.05.11 against kernel 2.4.25-pre4
-> driver(02.05.05+)
->
->    The driver now supports up 256 Luns per device Id.
->
->    The Maximum Outstanding Split Transactions (MOST) is set to
->  1 for the
->    919X and 929X chips.  This prevents a possible data corruption
->    situation when using those chips.
->
->    The ReqToChain fields are now properly set via a loop using
->  a defined
->    value rather than a memset function call during adapter structure
->    initialization. This prevents a panic situation seen on an Opteron
->    x86_64 system.
->
->    If a data underrun condition exists and the amount of data
->  transferred
->    is less than the command?s underflow amount, an error
->  status is returned
->    rather than a good status.  This prevents a false good
->  status from being
->    returned and allows the upper SCSI layer to retry the
->  command if needed.
->
->    A "for" loop replaces a "while" loop during adapter detection. This
->    prevents a possible infinite loop during initialization.
->
->    A generic compatible ioctl interface replaces a sparc
->  specific interface,
->    to allow a fuller range of systems to work with the ioctl interface.
->    The sys_ioctl linkage is now used.  The ioctl interface is
->  now properly
->    unregistered if a failure occurs during ioctl initialization. This
->    prevents a possible panic situation.
->
->    Performance enhancements were made.
->
->    Check SCSI Port Page 2 DV bits to either disable DV or limit DV to
->    Inquiry only checks.
->
->    Added sequence to allow the ID of a SAF-TE device to be stored in
->    IOC Page 4.
->
->    The driver now checks NVRAM data and performs Level 1 Domain
->    Validation only if requested.  This limitation can be set on a
->    per-device basis via the LSI Configuration Utility.
->
->    The IOC Page 4 read is now done after the SCSI Port Settings
->    and the SCSI Device Page Headers are obtained.
->
->    The return code from pci_map_sg is checked and a FAILED
->    status is returned if the return code indicates that a failure
->    occurred, as Scatter/Gather entries are being obtained.
->
->    If IOCStatus of MPI_IOCSTATUS_STATUS_RESIDUAL_MISMATCH
->    is received, an error status is returned to the SCSI layer.
->    This status is received when the Fibre Channel firmware detects
->    a CRC error during a data transfer.
->
->    If the SCSI layer request an abort or bus reset for an
->    IO that is not currently running, an error status is returned
->    and the scsi_done call is not performed.  This prevents problems
->    when the IO has completed before the abort or bus reset is received.
->
->    In a mixed device configuration (Ultra 320 and Non-Ultra
->    320 devices are present on an HBA channel), code was fixed
->  to prevent
->    negotiating for QAS on all Ultra 320 devices on that channel.
->    This keeps the Ultra 320 devices from dominating the SCSI bus,
->    preventing Non-Ultra 320 IOs from executing.
->
->    The SenseBufferLength field is properly set when an IOCTL
->    IO is processed.  This allows sense data to be obtained and returned
->    to the application if a Check Condition occurs on the IO.
->
->    Zero out unused CDB field on SCSI IO commands.
->
->
