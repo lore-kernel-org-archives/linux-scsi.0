@@ -1,36 +1,35 @@
-From: "Smart, James" <James.Smart@Emulex.Com>
-Subject: RE: [(re)Announce] Emulex LightPulse Device Driver
-Date: Tue, 18 May 2004 09:09:04 -0400
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: PATCH: (as283) Use 192-byte ms flag for page 08
+Date: Tue, 18 May 2004 12:33:06 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3356669BBE90C448AD4645C843E2BF28034F9371@xbl.ma.emulex.com>
+Message-ID: <20040518123306.A12344@beaverton.ibm.com>
+References: <Pine.LNX.4.44L0.0405181112070.1407-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:34493 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S263324AbUERNJJ
+Received: from e33.co.us.ibm.com ([32.97.110.131]:11393 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S261711AbUERTdW
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 May 2004 09:09:09 -0400
+	Tue, 18 May 2004 15:33:22 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0405181112070.1407-100000@ida.rowland.org>; from stern@rowland.harvard.edu on Tue, May 18, 2004 at 11:30:44AM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: 'Christoph Hellwig' <hch@infradead.org>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, James Bottomley <James.Bottomley@steeleye.com>
 
-Yep - but I'll gladly take that caveat to get your feedback.  :)
+On Tue, May 18, 2004 at 11:30:44AM -0400, Alan Stern wrote:
+> Patrick:
+> 
+> Is there any objection to applying the patch below?  It changes the name 
+> of the BLIST_MS_192_BYTES_FOR_3F and use_192_bytes_for_3f flags, and uses 
+> them to select the transfer length for MODE SENSE queries of page 0x08 in 
+> sd.c as well as page 0x3f.
+> 
+> If you do accept the patch let me know, because a corresponding name 
+> change will be needed in the usb-storage driver at the same time.
 
--- James S
+Looks good to me, but James has to accept it.
 
-> -----Original Message-----
-> From: 'Christoph Hellwig' [mailto:hch@infradead.org]
-> Sent: Tuesday, May 18, 2004 9:08 AM
-> To: Smart, James
-> Cc: 'linux-scsi@vger.kernel.org'
-> Subject: Re: [(re)Announce] Emulex LightPulse Device Driver
-> 
-> 
-> On Tue, May 18, 2004 at 09:04:47AM -0400, Smart, James wrote:
-> > Thanks - we'll go through it, and see if we can address some of your
-> > thoughts in the tasklet as well.
-> 
-> BTW, big warning applieas to all my patches:  I don't have any emulex
-> hardware so there are no further guarantees than "it compiles for me"
-> 
+PS: linux-scsi is apparently not sending anything out today.
+
+-- Patrick Mansfield
