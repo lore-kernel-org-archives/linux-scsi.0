@@ -1,8 +1,8 @@
 From: Luben Tuikov <luben@splentec.com>
 Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Fri, 24 Jan 2003 15:11:26 -0500
+Date: Fri, 24 Jan 2003 16:09:37 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E319DEE.9050201@splentec.com>
+Message-ID: <3E31AB91.9080400@splentec.com>
 References: <Pine.LNX.4.44L0.0301241454370.715-100000@ida.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
@@ -14,19 +14,28 @@ Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Oliver Neukum <oliver@neukum
 
 Alan Stern wrote:
 > Are you aware that you are contradicting yourself?
+> 
+> On Fri, 24 Jan 2003, Luben Tuikov wrote:
+> 
+> 
+>>A LLDD should and must *not* call scsi_unregister_host().  This brakes
+>>all hierarchy.
+> 
 
-Oops, yes, sorry, I was thinking about something else, .... doh!
-Correction noted.
+What I probably meant is the detect()/release() pair; release() itself
+normally calls scsi_unregister(host); the point is that it got nudged
+from ``above'', i.e. SCSI Core.
 
-I've been known to do things like this -- think about something else
-and write total crap :-) .
+How can a LLDD be certain that it can safely call scsi_unregister_host()
+whenever it wishes?  As Doug pointed out this leads to problems.
+
+Furhtermore, are we talking about scsi_unregister_host() or
+scsi_unregister(host)?  The former does drivers and the latter
+does hosts.  This would mean that my original statement was
+nevertheless correct, how can a LLDD decide to unload itself safely?
 
 -- 
 Luben
-
-P.S. Plus, it's Friday and after a beer at lunch... this is
-what we get :-)
-
 
 
 
