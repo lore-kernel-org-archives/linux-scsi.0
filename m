@@ -1,52 +1,103 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [ANNOUNCE]: version 2.00.3 megaraid driver for 2.4.x and 2.5.67
 	kernels
-Date: 17 Apr 2003 09:41:59 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1050590521.2026.76.camel@mulgrave>
+Date: 17 Apr 2003 12:25:44 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1050600346.1784.98.camel@mulgrave>
 References: <0E3FA95632D6D047BA649F95DAB60E570185F10F@EXA-ATLANTA.se.lsil.com>
 	<20030417133820.A12503@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:9735 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261595AbTDQOhM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Apr 2003 10:37:12 -0400
+Content-Type: multipart/mixed; boundary="=-EGWOoc3dk2gtof8+7R5R"
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 In-Reply-To: <20030417133820.A12503@infradead.org>
-List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
 Cc: "Mukker, Atul" <atulm@lsil.com>, "'alan@redhat.com'" <alan@redhat.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-megaraid-devel@dell.com'" <linux-megaraid-devel@dell.com>, "'linux-megaraid-announce@dell.com'" <linux-megaraid-announce@dell.com>
+List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2003-04-17 at 07:38, Christoph Hellwig wrote:
-> On Wed, Apr 16, 2003 at 04:34:22PM -0400, Mukker, Atul wrote:
-> > New megaraid driver 2.00.3 is now available at
-> > ftp://ftp.lsil.com/pub/linux-megaraid For this driver, a patch is also
-> > available for 2.5.67 kernel.
-[...]
 
-I'm not inclined to force style changes in any drivers with active
-maintainers on the grounds that we already have much worse offenders in
-the tree (and style changes do make merging a pain).
+--=-EGWOoc3dk2gtof8+7R5R
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-I counted one serious issue:
+OK, I think the attached patch fixes the try_module_get problem and also
+sweeps up a compile warning issue I ran into on pa-risc.
 
-The try_module_get problem
-
-One future compatibility issue:
-
-->detect moved to scsi_add_host (for the device model).
-
-One issue that would improve the driver internally:
-
-move hba_soft_state array to dynamic ->hostdata
-
-plus a list of other more style related issues.
-
-I'll fix up the first one, Atul, can you take the other two for a future
-patch (the others Christoph mentions might be nice, too...)?
+Does this look OK to everyone?
 
 James
 
 
+--=-EGWOoc3dk2gtof8+7R5R
+Content-Disposition: attachment; filename=tmp.diff
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; name=tmp.diff; charset=ISO-8859-1
+
+# This is a BitKeeper generated patch for the following project:
+# Project Name: Linux kernel tree
+# This patch format is intended for GNU patch command version 2.5 or higher=
+.
+# This patch includes the following deltas:
+#	           ChangeSet	1.1044  -> 1.1046=20
+#	drivers/scsi/megaraid.c	1.38    -> 1.40  =20
+#
+# The following is the BitKeeper ChangeSet Log
+# --------------------------------------------
+# 03/04/17	jejb@raven.il.steeleye.com	1.1045
+# Fix megaraid compile warnings
+# --------------------------------------------
+# 03/04/17	jejb@raven.il.steeleye.com	1.1046
+# Fix megaraid module ownership
+#=20
+# Move to using the .owner field of fops
+# --------------------------------------------
+#
+diff -Nru a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+--- a/drivers/scsi/megaraid.c	Thu Apr 17 12:23:35 2003
++++ b/drivers/scsi/megaraid.c	Thu Apr 17 12:23:35 2003
+@@ -34,6 +34,7 @@
+ #include <linux/fs.h>
+ #include <linux/blk.h>
+ #include <asm/uaccess.h>
++#include <asm/io.h>
+ #include <linux/delay.h>
+ #include <linux/reboot.h>
+ #include <linux/module.h>
+@@ -87,9 +88,9 @@
+  * The File Operations structure for the serial/ioctl interface of the dri=
+ver
+  */
+ static struct file_operations megadev_fops =3D {
++	.owner		=3D THIS_MODULE,
+ 	.ioctl		=3D megadev_ioctl,
+ 	.open		=3D megadev_open,
+-	.release	=3D megadev_close,
+ };
+=20
+ /*
+@@ -4039,9 +4040,6 @@
+ 	 */
+ 	if( !capable(CAP_SYS_ADMIN) ) return -EACCES;
+=20
+-	if (!try_module_get(THIS_MODULE)) {
+-		return -ENXIO;
+-	}
+ 	return 0;
+ }
+=20
+@@ -4635,14 +4633,6 @@
+ 		}
+ 	}
+=20
+-	return 0;
+-}
+-
+-
+-static int
+-megadev_close (struct inode *inode, struct file *filep)
+-{
+-	module_put(THIS_MODULE);
+ 	return 0;
+ }
+=20
+
+--=-EGWOoc3dk2gtof8+7R5R--
