@@ -1,72 +1,90 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fix sd medium removal handling
-Date: Tue, 3 Jun 2003 23:15:58 +0200
+Subject: [PATCH] kill blk_nohighio boot parameter
+Date: Tue, 3 Jun 2003 23:23:04 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030603211558.GA9471@lst.de>
+Message-ID: <20030603212303.GA9562@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:21673 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S261861AbTFCVCd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2003 17:02:33 -0400
+Received: from verein.lst.de ([212.34.189.10]:26537 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S261322AbTFCVJj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jun 2003 17:09:39 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-sdev->access_count is incremented not only by sd but also e.g. by
-sg.  Now if sd opens first, then sg, then sd closes and sg last
-medium removal will still be prevented.
+It was useful in 2.4 to debug the blockhighmem stuff but in 2.5
+it's b0rked because doesn't have any implication except propagation
+of the highmem_io flags from the scsi host template to the scsi
+host structure.  It also only worked on i386..
 
-Add a counter in scsi_disk for doorlocking instead.
 
-
-diff -Nru a/drivers/scsi/sd.c b/drivers/scsi/sd.c
---- a/drivers/scsi/sd.c	Tue Jun  3 01:21:25 2003
-+++ b/drivers/scsi/sd.c	Tue Jun  3 01:21:25 2003
-@@ -76,6 +76,7 @@
- 	struct scsi_driver *driver;	/* always &sd_template */
- 	struct scsi_device *device;
- 	struct gendisk	*disk;
-+	unsigned int	openers;	/* protected by BKL for now, yuck */
- 	sector_t	capacity;	/* size in 512-byte sectors */
- 	u32		index;
- 	u8		media_present;
-@@ -396,9 +397,10 @@
- 	if (!sdev->online)
- 		goto error_out;
+diff -Nru a/arch/i386/kernel/setup.c b/arch/i386/kernel/setup.c
+--- a/arch/i386/kernel/setup.c	Tue Jun  3 01:32:46 2003
++++ b/arch/i386/kernel/setup.c	Tue Jun  3 01:32:46 2003
+@@ -96,7 +96,6 @@
+ extern void generic_apic_probe(char *);
+ extern int root_mountflags;
+ extern char _text, _etext, _edata, _end;
+-extern int blk_nohighio;
  
--	if (sdev->removable && sdev->access_count == 1)
-+	if (!sdkp->openers++ && sdev->removable) {
- 		if (scsi_block_when_processing_errors(sdev))
- 			scsi_set_medium_removal(sdev, SCSI_REMOVAL_PREVENT);
-+	}
+ unsigned long saved_videomode;
  
- 	return 0;
+@@ -991,15 +990,6 @@
+ #endif
+ #endif
+ }
+-
+-static int __init highio_setup(char *str)
+-{
+-	printk("i386: disabling HIGHMEM block I/O\n");
+-	blk_nohighio = 1;
+-	return 1;
+-}
+-__setup("nohighio", highio_setup);
+- 
  
-@@ -421,13 +423,15 @@
- static int sd_release(struct inode *inode, struct file *filp)
+ #include "setup_arch_post.h"
+ /*
+diff -Nru a/drivers/block/ll_rw_blk.c b/drivers/block/ll_rw_blk.c
+--- a/drivers/block/ll_rw_blk.c	Tue Jun  3 01:32:46 2003
++++ b/drivers/block/ll_rw_blk.c	Tue Jun  3 01:32:46 2003
+@@ -49,8 +49,6 @@
+ static int queue_nr_requests;
+ 
+ unsigned long blk_max_low_pfn, blk_max_pfn;
+-int blk_nohighio = 0;
+-
+ static wait_queue_head_t congestion_wqh[2];
+ 
+ /*
+@@ -2361,7 +2359,6 @@
+ EXPORT_SYMBOL(blk_queue_segment_boundary);
+ EXPORT_SYMBOL(blk_queue_dma_alignment);
+ EXPORT_SYMBOL(blk_rq_map_sg);
+-EXPORT_SYMBOL(blk_nohighio);
+ EXPORT_SYMBOL(blk_dump_rq_flags);
+ EXPORT_SYMBOL(submit_bio);
+ EXPORT_SYMBOL(blk_queue_assign_lock);
+diff -Nru a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+--- a/drivers/scsi/hosts.c	Tue Jun  3 01:32:46 2003
++++ b/drivers/scsi/hosts.c	Tue Jun  3 01:32:46 2003
+@@ -125,7 +125,6 @@
+  **/
+ struct Scsi_Host *scsi_host_alloc(Scsi_Host_Template *sht, int privsize)
  {
- 	struct gendisk *disk = inode->i_bdev->bd_disk;
--	struct scsi_device *sdev = scsi_disk(disk)->device;
-+	struct scsi_disk *sdkp = scsi_disk(disk);
-+	struct scsi_device *sdev = sdkp->device;
+-	extern int blk_nohighio;
+ 	struct Scsi_Host *shost;
+ 	int gfp_mask = GFP_KERNEL, rval;
+ 	DECLARE_COMPLETION(complete);
+@@ -186,8 +185,7 @@
+ 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+ 	shost->use_clustering = sht->use_clustering;
+ 	shost->use_blk_tcq = sht->use_blk_tcq;
+-	if (!blk_nohighio)
+-		shost->highmem_io = sht->highmem_io;
++	shost->highmem_io = sht->highmem_io;
  
- 	SCSI_LOG_HLQUEUE(3, printk("sd_release: disk=%s\n", disk->disk_name));
- 
--	if (sdev->removable && sdev->access_count == 1)
-+	if (!--sdkp->openers && sdev->removable) {
- 		if (scsi_block_when_processing_errors(sdev))
- 			scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
-+	}
- 
- 	/*
- 	 * XXX and what if there are packets in flight and this close()
-@@ -1331,6 +1335,7 @@
- 	sdkp->driver = &sd_template;
- 	sdkp->disk = gd;
- 	sdkp->index = index;
-+	sdkp->openers = 0;
- 
- 	gd->major = sd_major(index >> 4);
- 	gd->first_minor = (index & 15) << 4;
+ 	if (!sht->max_host_blocked)
+ 		shost->max_host_blocked = sht->max_host_blocked;
