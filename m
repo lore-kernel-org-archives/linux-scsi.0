@@ -1,55 +1,68 @@
 From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: zero block writes
-Date: 14 Oct 2003 16:43:06 -0600
+Date: 14 Oct 2003 17:18:46 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1066171386.3037.9.camel@patehci2>
-References: <1066160907.3501.9.camel@patehci2>
+Message-ID: <1066173526.3037.51.camel@patehci2>
+References: <1066160907.3501.9.camel@patehci2> <3F8C79F0.6070105@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:2997 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S262036AbTJNWnV
+Received: from email-out2.iomega.com ([147.178.1.83]:42936 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S261239AbTJNXS7
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Oct 2003 18:43:21 -0400
-Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
-	by email.iomega.com (Postfix) with ESMTP id BD3111BB5
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Oct 2003 16:43:20 -0600 (MDT)
-In-Reply-To: <1066160907.3501.9.camel@patehci2>
+	Tue, 14 Oct 2003 19:18:59 -0400
+In-Reply-To: <3F8C79F0.6070105@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-> $
-> $ sg_dd of=/dev/sg0 if=/dev/null bs=2k count=1
-> 0+0 records in
-> 0+0 records out
-> $
+> Also when I tested this on scsi_debug, it complained
+> about getting a NULL data buffer pointer.
+
+CONFIG_SCSI_DEBUG option of .config was new to me, thanks.
+
+> > $ sg_dd of=/dev/sg0 if=/dev/null bs=2k count=1
+> > ...
+> > usb-storage: Command WRITE_10 (10 bytes)
 > ...
-> usb-storage:  2a 00 00 00 00 00 00 00 00 00
+> bugs ...
 
-Kindly offline I'm told I neglected to emphasise, that example of an sg
-utils sg_dd if=/dev/null command line differs only subtly from the
-perhaps more familiar:
+Is this a bug?
 
-sg_dd of=/dev/sg0 if=/dev/zero bs=2k count=1
+Because CONFIG_SCSI_DEBUG complains of NULL pointers?
 
-Copying from /dev/zero by design writes lots of zeroed bytes.
+What patch do you like?  No command at all?  A zeroed command with no
+NULL pointers?
 
-Copying from /dev/null via sg_dd doesn't neglect to write, in fact it
-does write, it just tries to write nothing at a specific address.
+I vote for the patch of no command at all because for me sg_dd exists to
+let me read and write fragments longer than I can conveniently in the
+single cdb of a single SG_IO.  For me sg_dd doesn't exist to pass thru
+creative variations of SG_IO.  Ditto for you?
 
-Consider, for example:
+I'm guessing I have a clue what round means near hear because to get
+that clue I reinvented the sg_dd wheel myself.  In my pldd I included a
+-v option to give me a cdb trace without reconfiguring the kernel to run
+slow, so there I noticed this issue more quickly.
 
-sg_dd of=/dev/sg0 if=/dev/zero bs=2k seek=259 count=1
+> A new beta (1.05) ... tomorrow ...
+> one up about 1 hour ago).
 
-That changes the cdb trace so that the starting address passed thru as
-cdb bytes[2:3:4:5] become x 00:00:01:03 rather than x 00:00:00:00:
+Highly responsive, thank you.
 
-x 2A 00 00 00 01 03 00 00 01 00
+I do enjoy perusing the links to the sg home page i.e.
+http://www.google.com/search?q=link:www.torque.net/sg/
+
+A google mystery of this moment is why google doesn't yet know that the
+page where I discuss my reinvented sg_dd indeed does link to sg utils,
+
+I can prove Google has my page cached.  The search:
+http://www.google.com/search?q=LaVarre+pldd
+finds:
+http://members.aol.com/plscsi/tools/pldd/
+
+Yet seemingly Google hasn't yet parsed all the links from pldd.
 
 Pat LaVarre
-
-P.S. Yes indeed I did stumble into this to-me-surprising fact via the
-bonehead newbie error of typing "null" where I meant  "zero".
 
 
