@@ -1,96 +1,37 @@
-From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
-Subject: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b4).
-Date: Thu, 17 Jul 2003 16:40:00 -0700
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Why REPORT LUN only for SCSI-2?
+Date: Thu, 17 Jul 2003 16:46:42 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <B179AE41C1147041AA1121F44614F0B0598B10@AVEXCH02.qlogic.org>
+Message-ID: <20030717164642.A9253@beaverton.ibm.com>
+References: <3F140D30.D2B5C4D8@fujitsu-siemens.com> <20030715073927.A8218@beaverton.ibm.com> <3F14F7FA.BA551505@fujitsu-siemens.com> <20030716123519.A19244@beaverton.ibm.com> <3F16649C.239EC87B@fujitsu-siemens.com> <20030717184909.GD2520@nbkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [198.70.193.2] ([198.70.193.2]:22618 "EHLO AVEXCH01.qlogic.org")
-	by vger.kernel.org with ESMTP id S271625AbTGQXZj convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jul 2003 19:25:39 -0400
-content-class: urn:content-classes:message
+Received: from e5.ny.us.ibm.com ([32.97.182.105]:17892 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S271635AbTGQXbr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Jul 2003 19:31:47 -0400
+Content-Disposition: inline
+In-Reply-To: <20030717184909.GD2520@nbkurt.garloff.de>; from garloff@suse.de on Thu, Jul 17, 2003 at 08:49:09PM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
+To: Kurt Garloff <garloff@suse.de>, =?iso-8859-1?Q?Josef_M=F6llers?= <josef.moellers@fujitsu-siemens.com>, linux-scsi@vger.kernel.org, "Wichert, Gerhard" <Gerhard.Wichert@fujitsu-siemens.com>
 
-All,
+On Thu, Jul 17, 2003 at 08:49:09PM +0200, Kurt Garloff wrote:
 
-A new version of the 8.x series driver for Linux 2.6.x kernels has
-been uploaded to SourceForge:
+> > As a side note (probably starting a new thread) why does BLIST_LARGELUN
+> > override max_scsi_luns? 
+> 
+> It shouldn't. Did I really do this? (... checking 2.4 code ...)
+> No, I plead innocent.
+> 
+> > If I specify on the command line that I want
+> > only 8 LUNs, I want only 8 LUNs and BLIST_LARGELUN overrides this with
+> > the HA's max_lun.
+> 
+> Sure. If I don't misparse the code, this should work in 2.4.
 
-	http://sourceforge.net/projects/linux-qla2xxx/
+The code looks right in 2.6 also - if SCSI-3 or BLIST_LARGELUN, we use the
+min of max_lun and max_scsi_luns; else (SCSI-2 and not large lun) the min
+of 8, max_lun, and max_scsi_luns.
 
-This beta contains a large rewrite of some fundamental structures used
-throughout the driver.  This change sets the stage for some of the
-more interesting and useful updates such as asynchronous mailbox
-commands and a less intrusive discovery processes.
-
-Additionally, the beta includes several performance related changes:
-
-	o An initial merge of performance patches from Arjan van de
-	  Ven.  Read the revision notes for details:
-	  - Lock contention fixes.
-	  - RIO support.
-	o SCSI command --> IOCB formation speedup.
-
-BTW: future driver drops *will* come out at a more spirited pace.
-
-Changes include:
-
- *	- IOCB staging fixups.
- *	- Full support for 2k port logins (~2000 fabric devices).
- *	- Resync with 6.06.00b12.
- *	- Resync with Linux Kernel 2.6.0-test1.
-
-Finally, regarding some of the more interesting (if not the) question(s)
-pertaining to the development of qla2xxx:
-
-  o Creation of a single driver module rather than three distinct
-	drivers for each ISP type (21xx, 22xx, and 23xx).
-
-  From the technical side, there aren't many compelling reasons for
-  the change to not occur.  Support for 2k logins on 2300s did
-  introduce a rather large, but manageable (through the compile-time
-  preprocessor), interface change between the host driver and
-  firmware.  The driver could of course manage this during run-time
-  with some creative structure overlays, etc.  Secondly, bundling
-  firmware for all ISP types can lead to a rather large binary
-  module (21xx - ~64kbytes, 22xx - ~90kbytes, 23xx - ~110kbytes).
-  Also, when formal support for the ISP2322 chip is added, an
-  additional firmware image (again ~110kbytes) will need to be
-  compiled with the driver.  The new user-space firmware-load
-  interface could address the size concerns, but at the same time it
-  also calls into question the larger issue of support.
-
-  Unfortunately, it is support that ultimately becomes the
-  overriding factor in maintaining the three-module build process.
-  By building distinct modules (i.e. qla2300.ko to support ISP2300,
-  ISP2312, and ISP2322 chips) our DVT group would focus their time and
-  efforts on testing 23xx HBAs and not on regressing support with
-  EOL'd products.
-
-Until a policy change, the 8.x driver in its current form will have
-the limitation of only one driver, qla2100, qla2200, or qla2300, can
-be built as part of the kernel at any given time.  Please note, all
-three binaries built as modules *can* be loaded without incident.  For
-example:
-
-  The following combinations will NOT work:
-
-	- 2100 and 2200 support built as part of the kernel.
-	- 2200 and 2300 support built as part of the kernel.
-	- 2100 and 2300 support built as part of the kernel.
-
-  The following combinations will work:
-
-	- 2100, 2200 and 2300 support built as modules.
-	- 2100 support build as part of the kernel, 2200 and 2300
-	  support built as modules.
-	- 2300 support build as part of the kernel, 2100 and 2200
-	  support built as modules.
-	- etc...
-
-Regards,
-Andrew Vasquez
+-- Patrick Mansfield
