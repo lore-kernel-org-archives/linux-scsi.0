@@ -1,85 +1,52 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [RFC] add transfer request length?
-Date: Thu, 30 May 2002 11:21:10 -0700
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: Mounting multiple LUNs on a single SCSI device
+Date: Thu, 30 May 2002 21:07:08 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020530112110.E32763@one-eyed-alien.net>
-References: <20020529230047.D26782@one-eyed-alien.net> <20020530110835.A16069@eng2.beaverton.ibm.com>
+Message-ID: <20020530210708.A19109@gum01m.etpnet.phys.tue.nl>
+References: <6BD67FFB937FD411A04F00D0B74FE87807C249F0@xrose06.rose.hp.com> <1022719300.4124.312.camel@irongate.swansea.linux.org.uk> <3CF5AEA4.4050404@metaparadigm.com> <1022762307.4123.364.camel@irongate.swansea.linux.org.uk> <5.1.0.14.0.20020530102405.01de87f0@adtron.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="vmttodhTwj0NAgWp"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="IS0zKkzwUGydFO0o"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20020530110835.A16069@eng2.beaverton.ibm.com>; from patmans@us.ibm.com on Thu, May 30, 2002 at 11:08:35AM -0700
+In-Reply-To: <5.1.0.14.0.20020530102405.01de87f0@adtron.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
+To: Alan Dayley <adayley@adtron.com>
 Cc: Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
---vmttodhTwj0NAgWp
+--IS0zKkzwUGydFO0o
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-I'm refering to the 'ask for 36 with buffer of 256' case.  Given that
-buffer sizes are tied to page sizes, and that it's not just the mid-layer
-we're talking about here, it makes sense to me to just add the requested
-transfer length.
+On Thu, May 30, 2002 at 10:30:25AM -0700, Alan Dayley wrote:
+> I am having problems mounting a second LUN on a dual slot PCMCIA SCSI=20
+> device.  I can mount the first LUN by typing mount -t msdos /dev/sda1=20
+> /mnt/card.  When I try /dev/sdb1, I rcv a error message stating mount:=20
+> /dev/sdb1 is not a valid block device.
 
-That is, unless we expect something else to keep track of 'actual buffer
-length' vs. 'reported buffer length'.  But it seems to me that it would be
-useful to know both values at the HBA level.
+Look at the kernel log: Is the second hard drive detected? If yes: Is it
+partitioned?
+If no: Did you try max_scsi_luns=3D7 boot/module parameter?
 
-Matt
-
-On Thu, May 30, 2002 at 11:08:35AM -0700, Patrick Mansfield wrote:
-> On Wed, May 29, 2002 at 11:00:48PM -0700, Matthew Dharm wrote:
->=20
-> > Right now, a low-level SCSI driver (i.e. HBA) can't actually tell in
-> > advance how much data will be moved by a command.  The driver can see t=
-he
-> > buffer and the buffer length, and can enforce that the transfer length =
-does
-> > not exceed that buffer length, but we can't actually algorithmically
-> > determine the amount of data we expect to move....
-> >=20
-> > For example, imagine an INQUIRY for 36 bytes issued with a buffer for 2=
-56
-> > bytes.  This actually does happen.
->=20
-> You mean the mid-layer asks for 256 bytes (buffer length and cmd are
-> 256), but the device returns less than 256 bytes? If so, I don't see
-> how setting another field helps.
->=20
-> Or, the mid-layer asks for 36, and buffer length is 256? If so, we should
-> change the code.
->=20
-> -- Patrick Mansfield
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Regards,
 --=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+Kurt Garloff                   <kurt@garloff.de>         [Eindhoven, NL]
+Physics: Plasma simulations    <K.Garloff@TUE.NL>     [TU Eindhoven, NL]
+Linux: SCSI, Security          <garloff@suse.de>    [SuSE Nuernberg, DE]
+ (See mail header or public key servers for PGP2 and GPG public keys.)
 
-S:  Another stupid question?
-G:  There's no such thing as a stupid question, only stupid people.
-					-- Stef and Greg
-User Friendly, 7/15/1998
-
---vmttodhTwj0NAgWp
+--IS0zKkzwUGydFO0o
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
+Version: GnuPG v1.0.7 (GNU/Linux)
 
-iD8DBQE89m2WIjReC7bSPZARAhjFAJ9/T1vlENdVXsXOEBhtFFm6VAskGQCeN8xX
-wFc2uwX7KuPkkoc4WLjkjs4=
-=UYN4
+iD8DBQE89nhcxmLh6hyYd04RAsHwAJ4ot1Xyp2t9pmMPc41EU3T6jW1BEQCeOrxh
+767lslazatXhyBG50sCD/eA=
+=gJtf
 -----END PGP SIGNATURE-----
 
---vmttodhTwj0NAgWp--
+--IS0zKkzwUGydFO0o--
