@@ -1,121 +1,155 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: Requested changes for the SCSI error handler
-Date: Fri, 4 Jun 2004 16:23:44 -0700
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] tmscsim: 64-bit cleanup
+Date: Sat, 5 Jun 2004 10:12:46 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040604232344.GA3214@us.ibm.com>
-References: <1086122775.2061.87.camel@mulgrave> <Pine.LNX.4.44L0.0406041655550.843-100000@ida.rowland.org>
+Message-ID: <Pine.LNX.4.44.0406050959130.3016-200000@poirot.grange>
+References: <Pine.LNX.4.44.0406042357001.5107-200000@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-684231959-1086423166=:3016"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.104]:49372 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S266084AbUFDXXi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jun 2004 19:23:38 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0406041655550.843-100000@ida.rowland.org>
+Received: from mail.gmx.de ([213.165.64.20]:7900 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S264571AbUFEINb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Jun 2004 04:13:31 -0400
+In-Reply-To: <Pine.LNX.4.44.0406042357001.5107-200000@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-Alan Stern [stern@rowland.harvard.edu] wrote:
-> 
-> How does this look?
-> 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
 
-Looks ok. I know your patch is in line with James requests, but I had a
-counter idea that allows for setting the settle delays up, down, or to
-zero post scsi_host_alloc. If the LLDD does nothing behavior should not
-change. This would allow increasing settle if some LLDD wanted it and
-also set it through sysfs if we wanted that in the future.  You can
-throw this patch in the bit bucket if you want to go the previously
-stated direction.
+---1463811839-684231959-1086423166=:3016
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+On Sat, 5 Jun 2004, Guennadi Liakhovetski wrote:
 
-DESC
-Make bus reset and host reset settle times adjustable.
+> scatterlist, and use them in map_sg. So, isn't it safe to use them from
+> drivers in a similar way (see patch attached).
 
-Signed-off-by: Mike Anderson <andmike@us.ibm.com>
-EDESC
+Ooops, forgot to modify the unmapping path. New version attached (I'm
+looking forward to getting hold of the new version of SubmittingPatches,
+meanwhile, I guess, I have to sign-off for it again)
+
+Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
 
- patched-2.6-andmike/drivers/scsi/hosts.c      |    8 ++++++++
- patched-2.6-andmike/drivers/scsi/scsi_error.c |    7 +++++--
- patched-2.6-andmike/include/scsi/scsi_host.h  |    4 ++++
- 3 files changed, 17 insertions(+), 2 deletions(-)
+---1463811839-684231959-1086423166=:3016
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name="tmscsim-remove-sg_dma-lvalue_2.patch"
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.LNX.4.44.0406051012460.3016@poirot.grange>
+Content-Description: 
+Content-Disposition: attachment; filename="tmscsim-remove-sg_dma-lvalue_2.patch"
 
-diff -puN include/scsi/scsi_host.h~host_settle include/scsi/scsi_host.h
---- patched-2.6/include/scsi/scsi_host.h~host_settle	Fri Jun  4 00:14:29 2004
-+++ patched-2.6-andmike/include/scsi/scsi_host.h	Fri Jun  4 00:21:02 2004
-@@ -485,6 +485,10 @@ struct Scsi_Host {
- 	 */
- 	struct list_head sht_legacy_list;
- 
-+	/* settle times */
-+	int b_rst_settle_time;
-+	int h_rst_settle_time;
-+
- 	/*
- 	 * We should ensure that this is aligned, both for better performance
- 	 * and also because some compilers (m68k) don't automatically force
-diff -puN drivers/scsi/scsi_error.c~host_settle drivers/scsi/scsi_error.c
---- patched-2.6/drivers/scsi/scsi_error.c~host_settle	Fri Jun  4 00:17:53 2004
-+++ patched-2.6-andmike/drivers/scsi/scsi_error.c	Fri Jun  4 00:20:37 2004
-@@ -1026,7 +1026,7 @@ static int scsi_try_bus_reset(struct scs
- 	spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
- 
- 	if (rtn == SUCCESS) {
--		scsi_sleep(BUS_RESET_SETTLE_TIME);
-+		scsi_sleep(scmd->device->host->b_rst_settle_time);
- 		spin_lock_irqsave(scmd->device->host->host_lock, flags);
- 		scsi_report_bus_reset(scmd->device->host, scmd->device->channel);
- 		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
-@@ -1057,7 +1057,7 @@ static int scsi_try_host_reset(struct sc
- 	spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
- 
- 	if (rtn == SUCCESS) {
--		scsi_sleep(HOST_RESET_SETTLE_TIME);
-+		scsi_sleep(scmd->device->host->h_rst_settle_time);
- 		spin_lock_irqsave(scmd->device->host->host_lock, flags);
- 		scsi_report_bus_reset(scmd->device->host, scmd->device->channel);
- 		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
-@@ -1218,6 +1218,9 @@ void scsi_sleep(int timeout)
- {
- 	DECLARE_MUTEX_LOCKED(sem);
- 	struct timer_list timer;
-+
-+	if (!timeout)
-+		return;
- 
- 	init_timer(&timer);
- 	timer.data = (unsigned long)&sem;
-diff -puN drivers/scsi/hosts.c~host_settle drivers/scsi/hosts.c
---- patched-2.6/drivers/scsi/hosts.c~host_settle	Fri Jun  4 00:21:33 2004
-+++ patched-2.6-andmike/drivers/scsi/hosts.c	Fri Jun  4 14:36:07 2004
-@@ -38,6 +38,12 @@
- #include "scsi_priv.h"
- #include "scsi_logging.h"
- 
-+/*
-+ *  * These should *probably* be handled by the host itself.
-+ *   * Since it is allowed to sleep, it probably should.
-+ *    */
-+#define BUS_RESET_SETTLE_TIME   10*HZ
-+#define HOST_RESET_SETTLE_TIME  10*HZ
- 
- static int scsi_host_next_hn;		/* host_no for next new host */
- 
-@@ -280,6 +286,8 @@ struct Scsi_Host *scsi_host_alloc(struct
- 	snprintf(shost->shost_classdev.class_id, BUS_ID_SIZE, "host%d",
- 		  shost->host_no);
- 
-+	shost->b_rst_settle_time = BUS_RESET_SETTLE_TIME;
-+	shost->h_rst_settle_time = HOST_RESET_SETTLE_TIME;
- 	shost->eh_notify = &complete;
- 	rval = kernel_thread(scsi_error_handler, shost, 0);
- 	if (rval < 0)
-
-_
-
+LS0tIGEvZHJpdmVycy9zY3NpL3Rtc2NzaW0uYwlGcmkgSnVuIDA0IDIxOjQx
+OjE4IDIwMDQNCisrKyBiL2RyaXZlcnMvc2NzaS90bXNjc2ltLmMJRnJpIEp1
+biAwNCAyMzoyODo1MCAyMDA0DQpAQCAtOTE5LDE4ICs5MTksOCBAQA0KIAlT
+Y3NpX0NtbmQgKnBjbWQgPSBwU1JCLT5wY21kOw0KIAlzdHJ1Y3QgcGNpX2Rl
+diAqcGRldiA9IHBTUkItPnBTUkJEQ0ItPnBEQ0JBQ0ItPnBkZXY7DQogCWRj
+MzkwX2NtZF9zY3BfdCogY21kcCA9ICgoZGMzOTBfY21kX3NjcF90KikoJnBj
+bWQtPlNDcCkpOw0KLQkvKiBNYXAgc2Vuc2UgYnVmZmVyICovDQotCWlmIChw
+U1JCLT5TUkJGbGFnICYgQVVUT19SRVFTRU5TRSkgew0KLQkJc2dfZG1hX2Fk
+ZHJlc3MoJnBTUkItPlNlZ21lbnR4KSA9IGNtZHAtPnNhdmVkX2RtYV9oYW5k
+bGUgPSANCi0JCQlwY2lfbWFwX3BhZ2UocGRldiwgdmlydF90b19wYWdlKHBj
+bWQtPnNlbnNlX2J1ZmZlciksDQotCQkJCSAgICAgKHVuc2lnbmVkIGxvbmcp
+cGNtZC0+c2Vuc2VfYnVmZmVyICYgflBBR0VfTUFTSywgc2l6ZW9mKHBjbWQt
+PnNlbnNlX2J1ZmZlciksDQotCQkJCSAgICAgRE1BX0ZST01fREVWSUNFKTsN
+Ci0JCXNnX2RtYV9sZW4oJnBTUkItPlNlZ21lbnR4KSA9IHNpemVvZihwY21k
+LT5zZW5zZV9idWZmZXIpOw0KLQkJcFNSQi0+U0djb3VudCA9IDE7DQotCQlw
+U1JCLT5wU2VnbWVudExpc3QgPSAoUFNHTCkgJnBTUkItPlNlZ21lbnR4Ow0K
+LQkJREVCVUcxKHByaW50aygiJXMoKTogTWFwcGVkIHNlbnNlIGJ1ZmZlciAl
+cCBhdCAleFxuIiwgX19GVU5DVElPTl9fLCBwY21kLT5zZW5zZV9idWZmZXIs
+IGNtZHAtPnNhdmVkX2RtYV9oYW5kbGUpKTsNCi0JLyogTWFrZSBTRyBsaXN0
+ICovCQ0KLQl9IGVsc2UgaWYgKHBjbWQtPnVzZV9zZykgew0KKwkvKiBNYXAg
+U0cgbGlzdCAqLwkNCisJaWYgKHBjbWQtPnVzZV9zZykgew0KIAkJcFNSQi0+
+cFNlZ21lbnRMaXN0ID0gKFBTR0wpIHBjbWQtPnJlcXVlc3RfYnVmZmVyOw0K
+IAkJcFNSQi0+U0djb3VudCA9IHBjaV9tYXBfc2cocGRldiwgcFNSQi0+cFNl
+Z21lbnRMaXN0LA0KIAkJCQkJICAgcGNtZC0+dXNlX3NnLA0KQEAgLTkzOCwx
+OCArOTI4LDM3IEBADQogCQkvKiBUT0RPOiBlcnJvciBoYW5kbGluZyAqLw0K
+IAkJaWYgKCFwU1JCLT5TR2NvdW50KQ0KIAkJCWVycm9yID0gMTsNCi0JCURF
+QlVHMShwcmludGsoIiVzKCk6IE1hcHBlZCBTRyAlcCB3aXRoICVkICglZCkg
+ZWxlbWVudHNcbiIsIF9fRlVOQ1RJT05fXywgcGNtZC0+cmVxdWVzdF9idWZm
+ZXIsIHBTUkItPlNHY291bnQsIHBjbWQtPnVzZV9zZykpOw0KLQkvKiBNYXAg
+c2luZ2xlIHNlZ21lbnQgKi8NCi0JfSBlbHNlIGlmIChwY21kLT5yZXF1ZXN0
+X2J1ZmZlciAmJiBwY21kLT5yZXF1ZXN0X2J1ZmZsZW4pIHsNCi0JCXNnX2Rt
+YV9hZGRyZXNzKCZwU1JCLT5TZWdtZW50eCkgPSBjbWRwLT5zYXZlZF9kbWFf
+aGFuZGxlID0NCi0JCQlwY2lfbWFwX3BhZ2UocGRldiwgdmlydF90b19wYWdl
+KHBjbWQtPnJlcXVlc3RfYnVmZmVyKSwNCi0JCQkJICAgICAodW5zaWduZWQg
+bG9uZylwY21kLT5yZXF1ZXN0X2J1ZmZlciAmIH5QQUdFX01BU0ssDQotCQkJ
+CSAgICAgcGNtZC0+cmVxdWVzdF9idWZmbGVuLCBzY3NpX3RvX3BjaV9kbWFf
+ZGlyKHBjbWQtPnNjX2RhdGFfZGlyZWN0aW9uKSk7DQorCQlERUJVRzEocHJp
+bnRrKCIlcygpOiBNYXBwZWQgU0cgJXAgd2l0aCAlZCAoJWQpIGVsZW1lbnRz
+XG4iLFwNCisJCQkgICAgICBfX0ZVTkNUSU9OX18sIHBjbWQtPnJlcXVlc3Rf
+YnVmZmVyLCBwU1JCLT5TR2NvdW50LCBwY21kLT51c2Vfc2cpKTsNCisJfSBl
+bHNlIGlmICgocFNSQi0+U1JCRmxhZyAmIEFVVE9fUkVRU0VOU0UpIHx8IChw
+Y21kLT5yZXF1ZXN0X2J1ZmZlciAmJiBwY21kLT5yZXF1ZXN0X2J1ZmZsZW4p
+KSB7DQorCQl2b2lkICphZGRyOw0KKwkJdW5zaWduZWQgbG9uZyBsZW5ndGg7
+DQorCQlpbnQgZGlyOw0KKw0KKwkJaWYgKHBTUkItPlNSQkZsYWcgJiBBVVRP
+X1JFUVNFTlNFKSB7DQorCQkJLyogTWFwIHNlbnNlIGJ1ZmZlciAqLw0KKwkJ
+CWFkZHIJPSBwY21kLT5zZW5zZV9idWZmZXI7DQorCQkJbGVuZ3RoCT0gc2l6
+ZW9mKHBjbWQtPnNlbnNlX2J1ZmZlcik7DQorCQkJZGlyCT0gRE1BX0ZST01f
+REVWSUNFOw0KKwkJCURFQlVHMShwcmludGsoIiVzKCk6IE1hcHBlZCBzZW5z
+ZSBidWZmZXIgJXAiLCBfX0ZVTkNUSU9OX18sIHBjbWQtPnNlbnNlX2J1ZmZl
+cikpOw0KKwkJfSBlbHNlIHsNCisJCQkvKiBNYXAgc2luZ2xlIHNlZ21lbnQg
+Ki8NCisJCQlhZGRyCT0gcGNtZC0+cmVxdWVzdF9idWZmZXI7DQorCQkJbGVu
+Z3RoCT0gcGNtZC0+cmVxdWVzdF9idWZmbGVuOw0KKwkJCWRpcgk9IHNjc2lf
+dG9fcGNpX2RtYV9kaXIocGNtZC0+c2NfZGF0YV9kaXJlY3Rpb24pOw0KKwkJ
+CURFQlVHMShwcmludGsoIiVzKCk6IE1hcHBlZCByZXF1ZXN0IGJ1ZmZlciAl
+cCIsIF9fRlVOQ1RJT05fXywgcGNtZC0+cmVxdWVzdF9idWZmZXIpKTsNCisJ
+CX0NCisJCW1lbXNldCgmcFNSQi0+U2VnbWVudHgsIDAsIHNpemVvZihzdHJ1
+Y3Qgc2NhdHRlcmxpc3QpKTsNCisJCXBTUkItPlNlZ21lbnR4LnBhZ2UJPSB2
+aXJ0X3RvX3BhZ2UoYWRkcik7DQorCQlwU1JCLT5TZWdtZW50eC5sZW5ndGgJ
+PSBsZW5ndGg7DQorCQlwU1JCLT5TZWdtZW50eC5vZmZzZXQJPSAodW5zaWdu
+ZWQgbG9uZylhZGRyICYgflBBR0VfTUFTSzsNCisJCXBTUkItPnBTZWdtZW50
+TGlzdAk9ICZwU1JCLT5TZWdtZW50eDsNCisJCXBTUkItPlNHY291bnQJCT0g
+cGNpX21hcF9zZyhwZGV2LCAmcFNSQi0+U2VnbWVudHgsIDEsIGRpcik7DQor
+CQljbWRwLT5zYXZlZF9kbWFfaGFuZGxlCT0gc2dfZG1hX2FkZHJlc3MoJnBT
+UkItPlNlZ21lbnR4KTsNCisJCURFQlVHMShwcmludGsoIiBhdCAleFxuIiwg
+Y21kcC0+c2F2ZWRfZG1hX2hhbmRsZSkpOw0KIAkJLyogVE9ETzogZXJyb3Ig
+aGFuZGxpbmcgKi8NCi0JCXNnX2RtYV9sZW4oJnBTUkItPlNlZ21lbnR4KSA9
+IHBjbWQtPnJlcXVlc3RfYnVmZmxlbjsNCi0JCXBTUkItPlNHY291bnQgPSAx
+Ow0KLQkJcFNSQi0+cFNlZ21lbnRMaXN0ID0gKFBTR0wpICZwU1JCLT5TZWdt
+ZW50eDsNCi0JCURFQlVHMShwcmludGsoIiVzKCk6IE1hcHBlZCByZXF1ZXN0
+IGJ1ZmZlciAlcCBhdCAleFxuIiwgX19GVU5DVElPTl9fLCBwY21kLT5yZXF1
+ZXN0X2J1ZmZlciwgY21kcC0+c2F2ZWRfZG1hX2hhbmRsZSkpOw0KKwkJaWYg
+KHBTUkItPlNHY291bnQgIT0gMSkNCisJCQllcnJvciA9IDE7DQogCS8qIE5v
+IG1hcHBpbmcgIT8gKi8JDQogICAgIAl9IGVsc2UNCiAJCXBTUkItPlNHY291
+bnQgPSAwOw0KQEAgLTk2MywyMCArOTcyLDIxIEBADQogCXN0cnVjdCBwY2lf
+ZGV2ICpwZGV2ID0gcFNSQi0+cFNSQkRDQi0+cERDQkFDQi0+cGRldjsNCiAJ
+ZGMzOTBfY21kX3NjcF90KiBjbWRwID0gKChkYzM5MF9jbWRfc2NwX3QqKSgm
+cGNtZC0+U0NwKSk7DQogDQotCWlmIChwU1JCLT5TUkJGbGFnKSB7DQotCQlw
+Y2lfdW5tYXBfcGFnZShwZGV2LCBjbWRwLT5zYXZlZF9kbWFfaGFuZGxlLA0K
+LQkJCSAgICAgICBzaXplb2YocGNtZC0+c2Vuc2VfYnVmZmVyKSwgRE1BX0ZS
+T01fREVWSUNFKTsNCi0JCURFQlVHMShwcmludGsoIiVzKCk6IFVubWFwcGVk
+IHNlbnNlIGJ1ZmZlciBhdCAleFxuIiwgX19GVU5DVElPTl9fLCBjbWRwLT5z
+YXZlZF9kbWFfaGFuZGxlKSk7DQotCX0gZWxzZSBpZiAocGNtZC0+dXNlX3Nn
+KSB7DQorCWlmIChwY21kLT51c2Vfc2cpIHsNCiAJCXBjaV91bm1hcF9zZyhw
+ZGV2LCBwY21kLT5yZXF1ZXN0X2J1ZmZlciwgcGNtZC0+dXNlX3NnLA0KIAkJ
+CSAgICAgc2NzaV90b19wY2lfZG1hX2RpcihwY21kLT5zY19kYXRhX2RpcmVj
+dGlvbikpOw0KIAkJREVCVUcxKHByaW50aygiJXMoKTogVW5tYXBwZWQgU0cg
+YXQgJXAgd2l0aCAlZCBlbGVtZW50c1xuIiwgX19GVU5DVElPTl9fLCBwY21k
+LT5yZXF1ZXN0X2J1ZmZlciwgcGNtZC0+dXNlX3NnKSk7DQotCX0gZWxzZSBp
+ZiAocGNtZC0+cmVxdWVzdF9idWZmZXIgJiYgcGNtZC0+cmVxdWVzdF9idWZm
+bGVuKSB7DQotCQlwY2lfdW5tYXBfcGFnZShwZGV2LA0KLQkJCSAgICAgICBj
+bWRwLT5zYXZlZF9kbWFfaGFuZGxlLA0KLQkJCSAgICAgICBwY21kLT5yZXF1
+ZXN0X2J1ZmZsZW4sDQotCQkJICAgICAgIHNjc2lfdG9fcGNpX2RtYV9kaXIo
+cGNtZC0+c2NfZGF0YV9kaXJlY3Rpb24pKTsNCi0JCURFQlVHMShwcmludGso
+IiVzKCk6IFVubWFwcGVkIHJlcXVlc3QgYnVmZmVyIGF0ICV4XG4iLCBfX0ZV
+TkNUSU9OX18sIGNtZHAtPnNhdmVkX2RtYV9oYW5kbGUpKTsNCisJfSBlbHNl
+IGlmIChwU1JCLT5TUkJGbGFnIHx8IChwY21kLT5yZXF1ZXN0X2J1ZmZlciAm
+JiBwY21kLT5yZXF1ZXN0X2J1ZmZsZW4pKSB7DQorCQlpbnQgZGlyOw0KKw0K
+KwkJaWYgKHBTUkItPlNSQkZsYWcpIHsNCisJCQlkaXIJPSBETUFfRlJPTV9E
+RVZJQ0U7DQorCQkJREVCVUcxKHByaW50aygiJXMoKTogVW5tYXBwZWQgc2Vu
+c2UgYnVmZmVyIGF0ICV4XG4iLCBfX0ZVTkNUSU9OX18sIGNtZHAtPnNhdmVk
+X2RtYV9oYW5kbGUpKTsNCisJCX0gZWxzZSB7DQorCQkJZGlyCT0gc2NzaV90
+b19wY2lfZG1hX2RpcihwY21kLT5zY19kYXRhX2RpcmVjdGlvbik7DQorCQkJ
+REVCVUcxKHByaW50aygiJXMoKTogVW5tYXBwZWQgcmVxdWVzdCBidWZmZXIg
+YXQgJXhcbiIsIF9fRlVOQ1RJT05fXywgY21kcC0+c2F2ZWRfZG1hX2hhbmRs
+ZSkpOw0KKwkJfQ0KKwkJcGNpX3VubWFwX3NnKHBkZXYsICZwU1JCLT5TZWdt
+ZW50eCwgMSwgZGlyKTsNCiAJfQ0KIH0NCiANCg==
+---1463811839-684231959-1086423166=:3016--
