@@ -1,55 +1,62 @@
-From: Adam Kropelin <akropel1@rochester.rr.com>
-Subject: Re: aic7xxx & st: BUG at include/asm/dma-mapping.h:37
-Date: Mon, 11 Aug 2003 13:41:15 -0400
+From: Thomas Beutin <tyrone@laokoon.IN-Berlin.DE>
+Subject: Re: AIC7902 lockups
+Date: Mon, 11 Aug 2003 20:41:39 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030811134115.A28008@mail.kroptech.com>
-References: <20030806231359.A28252@mail.kroptech.com> <Pine.LNX.4.56.0308072346560.1035@kai.makisara.local> <20030807201916.A1065@mail.kroptech.com> <20030808173003.GA3231@kai.makisara.local>
+Message-ID: <20030811204139.A26663@laokoon.bug.net>
+References: <20030811143610.A19365@laokoon.bug.net> <2429712704.1060622870@aslan.btc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from roc-24-93-20-125.rochester.rr.com ([24.93.20.125]:47613 "EHLO
-	mail.kroptech.com") by vger.kernel.org with ESMTP id S272972AbTHKRoo
+Received: from hirsch.in-berlin.de ([192.109.42.6]:14728 "EHLO
+	hirsch.in-berlin.de") by vger.kernel.org with ESMTP id S273028AbTHKSpM
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Aug 2003 13:44:44 -0400
+	Mon, 11 Aug 2003 14:45:12 -0400
 Content-Disposition: inline
-In-Reply-To: <20030808173003.GA3231@kai.makisara.local>; from kai.makisara@kolumbus.fi on Fri, Aug 08, 2003 at 08:30:03PM +0300
+In-Reply-To: <2429712704.1060622870@aslan.btc.adaptec.com>; from gibbs@scsiguy.com on Mon, Aug 11, 2003 at 11:27:50AM -0600
 List-Id: linux-scsi@vger.kernel.org
-To: =?iso-8859-1?Q?Kai_M=E4kisara?= <kai.makisara@kolumbus.fi>, linux-scsi@vger.kernel.org
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-scsi@vger.kernel.org
 
-[Justin Gibbs dropped from the CC: list because he probably doesn't wan=
-t
-this thread filling his inbox any longer...]
+Justin,
 
-On Fri, Aug 08, 2003 at 08:30:03PM +0300, Kai M=E4kisara wrote:
-> Thus spake Adam Kropelin (akropel1@rochester.rr.com):
->=20
-> > On Fri, Aug 08, 2003 at 12:00:56AM +0300, Kai Makisara wrote:
-> ...
-> > I tried aic7xxx_old and hit the same BUG so Justin's driver would s=
-eem
-> > to be exonerated. The new backtrace is below. The commonality is cl=
-early
-> > the st driver and the SCSI midlayer. Perhaps I'll try to verbosify
-> > things a bit in that area and see what comes up.
-> >=20
-> I reproduced the problem with an aha2940. The patch at the end of thi=
-s
-> message fixes the problem but I must think a little more before
-> sending a permanent fix (at least some comments must be added).
+On Mon, Aug 11, 2003 at 11:27:50AM -0600, Justin T. Gibbs wrote:
+> > 
+> > sorry for asking again, but my problem with two disks connected
+> > to an Adaptec AIC7902 still exists. Any help to solve the
+> > annoying problem or hints are greatly appreciated.
+> 
+> The messages are not complete... the top is clipped.  Were you
+> using a serial console to capture this log?
+No, i did a "dmesg > file", but it seems the buffer is full after
+booting so the first parts are lost. I've put syslog files on the web:
+http://laokoon.in-berlin.de/~beutin/messages.gz
+http://laokoon.in-berlin.de/~beutin/syslog.gz
+http://laokoon.in-berlin.de/~beutin/debug.gz
 
-This does indeed solve the problem on my end (tested on -test3). I'd be
-happy to test any future patch you might come up with.
+And i tried to catch more dmesg output in a startup script. The result
+is here: http://laokoon.in-berlin.de/~beutin/dmesg-boot.log.gz
 
-> This bug has been in st for quite a long time. Thanks for finally
-> detecting it :-)
+The dmesg output from a shell right after complete boot is here:
+http://laokoon.in-berlin.de/~beutin/dmesg-start.log.gz
 
-No problem...thanks for taking such quick action!
+And the dmesg output after trying to use one of the fujitsu drives
+is here: http://laokoon.in-berlin.de/~beutin/dmesg-hd-access.log.gz
 
---Adam
+If You need more logs please tell me, i'll provide it.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+> Can you compile your kernel with register pretty printing enabled
+> in the driver?  It is a config time menu option.  This greatly
+> simplifies understanding the logs.
+The logs mentioned above are generated after reboot with a new kernel
+compiled with CONFIG_AIC79XX_REG_PRETTY_PRINT=y
+
+> Can you also provide the output of "lspci -vv -n" from the
+> system as well as the output from "dmesg" right after boot.
+For dmesg output please see above; the lspci output is here:
+http://laokoon.in-berlin.de/~beutin/lspci.log.gz
+
+Any help welcome, thanks for reading!
+-tb
+-- 
+Thomas Beutin                             tb@laokoon.IN-Berlin.DE
+Beam me up, Scotty. There is no intelligent live down in Redmond.
