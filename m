@@ -1,54 +1,74 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: BUG: CD driver sends command during host removal
-Date: Wed, 29 Sep 2004 15:01:10 -0400 (EDT)
+Date: Wed, 29 Sep 2004 14:58:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0409291452120.1700-100000@ida.rowland.org>
-References: <415AF8A6.2080705@adaptec.com>
+Message-ID: <415B05E3.10300@adaptec.com>
+References: <Pine.LNX.4.44L0.0409291239250.1167-100000@ida.rowland.org> 	<415AF8A6.2080705@adaptec.com> <1096481358.2123.74.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:27652 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S266275AbUI2TBL (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:47784 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S266498AbUI2S7A (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Sep 2004 15:01:11 -0400
-In-Reply-To: <415AF8A6.2080705@adaptec.com>
+	Wed, 29 Sep 2004 14:59:00 -0400
+In-Reply-To: <1096481358.2123.74.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, Mohammed Sameer <uniball@gmx.net>, USB users list <linux-usb-users@lists.sourceforge.net>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>, Mohammed Sameer <uniball@gmx.net>, USB users list <linux-usb-users@lists.sourceforge.net>
 
-On 29 Sep 2004, James Bottomley wrote:
-
+James Bottomley wrote:
 > On Wed, 2004-09-29 at 14:02, Luben Tuikov wrote:
-> > > According to Documentation/scsi/scsi_mid_low_api.txt, the only possible
-> > > error returns are SCSI_MLQUEUE_DEVICE_BUSY and SCSI_MLQUEUE_HOST_BUSY.
-> > > Neither is appropriate; should the second one be returned?
-> >
-> > I believe internally SCSI Core returns DID_ERROR.
->
+> 
+>>>According to Documentation/scsi/scsi_mid_low_api.txt, the only possible 
+>>>error returns are SCSI_MLQUEUE_DEVICE_BUSY and SCSI_MLQUEUE_HOST_BUSY.  
+>>>Neither is appropriate; should the second one be returned?
+>>
+>>I believe internally SCSI Core returns DID_ERROR.
+> 
+> 
 > For a device that no-longer exists, DID_NO_CONNECT is probably the most
 > appropriately descriptive.
 
-Regardless of how descriptive the value is, the code in
-scsi_dispatch_cmd treats anything other than SCSI_MLQUEUE_DEVICE_BUSY
-as SCSI_MLQUEUE_HOST_BUSY.  Will this matter?
+Does this mean that scsi_device_cancel() should set the result
+code to DID_NO_CONNECT either?
 
-
-On Wed, 29 Sep 2004, Luben Tuikov wrote:
-
-> Hmm, once queuecommand() has been called, SCSI Core *should NOT* touch
-> the struct command until the LLDD calls scsi_done() or it times
-> out and ownership is given back indirectly via the appropriate
-> return result of the times_out() function.
-
-On 29 Sep 2004, James Bottomley wrote:
-
+>>>>>This would involve a race, because it's possible for
+>>>>>queuecommand to accept a command and then scsi_remove_host() to be called
+>>>>>before the command is carried out.
+> 
+> 
+> Correct, scsi_remove_host() is asynchronous ... you can get requests
+> after calling it while the queue is halting ... you must error these.
+> 
+> 
+>>>If the command belongs to the LLDD, why does scsi_remove_host do the
+>>>following:
+>>>
+>>>	calls scsi_host_cancel,
+>>>	which calls scsi_device_cancel_cb for each device,
+>>>	which calls scsi_device_cancel,
+>>>	which calls scsi_finish_command for each active command,
+>>>	which passes the command back to the upper layer
+>>>
+>>>Either there's a bug in the host removal sequence, or else the LLDD 
+>>>doesn't own any requests once scsi_remove_host has been called.
+> 
+> 
 > Right.  scsi_remove_host tells the mid-layer that it's OK to trash all
 > inflight commands because you removed all their users before calling
 > it.  It also tells us that you won't accept any future commands for this
 > host (because you'll error any attempt in queuecommand).
 
-It sounds like the two of you are in contradiction.  Should the SCSI core 
-deallocate in-flight commands without consulting the LLDD or shouldn't it?
+Do you mean to say that when scsi_remove_host() is called,
+the LLDD must no own any commands?  This is good, it means
+that the LLDD plugged queuecommand(), did "recovery" of
+pending commands and is ready for slave_destroy().
 
-Alan Stern
+But does this also mean that scsi_device_cancel() (cancel_pending_io)
+is unnecessary in the scsi_remove_host() path as there's no
+outstanding IO to the host?
+
+	Luben
+
 
