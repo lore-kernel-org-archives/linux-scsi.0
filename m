@@ -1,8 +1,8 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fix jiffies compare warning in osst
-Date: Tue, 11 Mar 2003 20:13:01 +0100
+Subject: fix jiffies compare warning in aha152x
+Date: Tue, 11 Mar 2003 20:13:26 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030311201301.B986@lst.de>
+Message-ID: <20030311201326.C986@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
@@ -12,32 +12,23 @@ To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
 
---- 1.39/drivers/scsi/osst.c	Sun Feb  2 17:50:23 2003
-+++ edited/drivers/scsi/osst.c	Mon Mar 10 14:35:46 2003
-@@ -777,7 +777,7 @@
- #define OSST_POLL_PER_SEC 10
- static int osst_wait_frame(OS_Scsi_Tape * STp, Scsi_Request ** aSRpnt, int curr, int minlast, int to)
+--- 1.24/drivers/scsi/aha152x.c	Thu Feb 27 04:02:59 2003
++++ edited/drivers/scsi/aha152x.c	Mon Mar 10 14:36:18 2003
+@@ -2651,7 +2651,7 @@
+ 
+ static void datai_run(struct Scsi_Host *shpnt)
  {
--	long	startwait     = jiffies;
-+	unsigned long startwait = jiffies;
- 	char  * name          = tape_name(STp);
- #if DEBUG
- 	char	notyetprinted = 1;
-@@ -1288,7 +1288,7 @@
- 	int             logical_blk_num  = ntohl(STp->buffer->aux->logical_blk_num) 
- 						- (nframes + pending - 1) * blks_per_frame;
- 	char          * name             = tape_name(STp);
--	long		startwait        = jiffies;
-+	unsigned long	startwait        = jiffies;
- #if DEBUG
- 	int		dbg              = debugging;
- #endif
-@@ -1477,7 +1477,7 @@
- 	int		expected  = 0;
- 	int		attempts  = 1000 / skip;
- 	int		flag      = 1;
--	long		startwait = jiffies;
-+	unsigned long	startwait = jiffies;
- #if DEBUG
- 	int		dbg       = debugging;
- #endif
+-	unsigned int the_time;
++	unsigned long the_time;
+ 	int fifodata, data_count;
+ 
+ 	/*
+@@ -2793,7 +2793,7 @@
+ 
+ static void datao_run(struct Scsi_Host *shpnt)
+ {
+-	unsigned int the_time;
++	unsigned long the_time;
+ 	int data_count;
+ 
+ 	/* until phase changes or all data sent */
