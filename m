@@ -1,52 +1,60 @@
 From: Oliver Xymoron <oxymoron@waste.org>
-Subject: RE: driverfs is not for everything! (was:  [PATCH] /proc/scsi/map
- )
-Date: Mon, 24 Jun 2002 14:03:06 -0500 (CDT)
+Subject: Re: driverfs is not for everything! (was: [PATCH] /proc/scsi/map )
+Date: Mon, 24 Jun 2002 14:23:21 -0500 (CDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0206241358070.9420-100000@waste.org>
-References: <59885C5E3098D511AD690002A5072D3C02AB7F56@orsmsx111.jf.intel.com>
+Message-ID: <Pine.LNX.4.44.0206241404020.9420-100000@waste.org>
+References: <200206241809.g5OI9Ds02886@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <59885C5E3098D511AD690002A5072D3C02AB7F56@orsmsx111.jf.intel.com>
+In-Reply-To: <200206241809.g5OI9Ds02886@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: "Grover, Andrew" <andrew.grover@intel.com>
-Cc: 'Roman Zippel' <zippel@linux-m68k.org>, 'David Brownell' <david-b@pacbell.net>, 'Nick Bellinger' <nickb@attheoffice.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Patrick Mochel <mochel@osdl.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: "Grover, Andrew" <andrew.grover@intel.com>, 'David Brownell' <david-b@pacbell.net>, 'Nick Bellinger' <nickb@attheoffice.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Patrick Mochel <mochel@osdl.org>
 
-On Mon, 24 Jun 2002, Grover, Andrew wrote:
+On Mon, 24 Jun 2002, James Bottomley wrote:
 
-> > From: Roman Zippel [mailto:zippel@linux-m68k.org]
-> > On Mon, 24 Jun 2002, Grover, Andrew wrote:
-> > > If a device can be accessed by multiple machines
-> > concurrently, it should not
-> > > be in driverfs.
-> >
-> > I don't think it's that easy. If the computer wakes up again,
-> > devices have
-> > to be reinitialised in the right order, e.g. iSCSI needs a
-> > working network
-> > stack and devices.
+> andrew.grover@intel.com said:
+> > If a device can be accessed by multiple machines concurrently, it
+> > should not be in driverfs.
 >
-> Would the iSCSI device be a child of the network device? That would ensure
-> that the NIC was fully restarted before the iSCSI device.
-
-If by network device you mean NIC, the answer is no. Think redundant
-routing. This problem already exists in the SCSI realm (multipathed
-arrays) and there's I remember reading there's some multipath stuff in
-place, but I doubt driverfs has really thought about it.
-
-The multipath problem means our tree is really a DAG. Which may or may not
-be a problem.
-
-> > Another problem is how to properly shutdown the
-> > machine. Scripts now "know" that nfs requires the network,
-> > but how does
-> > the script find out, that /dev/sdb2 is an iSCSI device, so that it can
-> > properly unmount the device, before the network is shutdown?
+> On that argument, we'll eliminate almost all Fibre Channel devices!
 >
-> Would a bottom-up traversal of the device tree do things properly?
+> I think the qualification for appearing in driverfs is actually possessing a
+> driver.  Therefore, we accept FC and iSCSI.  Things which appear as
+> FileSystems are debatable, but not anything which has a real device driver.
 
-If we think in terms of DAGs instead of trees, yes.
+Between iSCSI and filesystems there's still MD, loopback, ramdisk, NBD,
+LVM, and general partitioning. They all expose block devices and try their
+damnedest to look like physical devices. If we're serious about using
+driverfs as a system for unifying device detection ("show me all my disks,
+please"), then these should all be in too.
+
+And they raise some interesting problems. As pointed out earlier, iSCSI is
+potentially multipath, as is LVM, NBD, and software RAID. Hardware RAID is
+already multipath in some cases so our tree really ought to be a DAG.
+
+And let's think about loopback a moment. It's potentially layered on top
+of a filesystem, layered on top of a logical volume layered on top of SCSI
+and ATA. Just from the power management perspective, to quiesce our
+system, we'll have to know that we need to flush loop->fs->lvm->scsi/ata
+before we can shut down whichever drive.
+
+So to be done right, we need to pull filesystems into the tree too (rather
+than just implicitly correlating against /proc/mounts).
+
+> > We need a device tree to do PM. If driverfs's PM capabilities are hurt
+> > because it doesn't stay true to that, then the featureitis has gone
+> > too far.
+>
+> Perhaps it's more a question of whether power management belongs as an every
+> unit item in driverfs.  As you say, we get problems where the device is shared
+> between multiple computers.
+
+And we already have a problem there for local SCSI - see OpenGFS which
+lets you share a filesystem on a single SCSI bus. Admittedly, that's
+rather sick, but not as appalling for FC, iSCSI, or NBD (or GFS's
+internal equivalent).
 
 -- 
  "Love the dolphins," she advised him. "Write by W.A.S.T.E.."
