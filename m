@@ -1,51 +1,28 @@
-From: "Greg M. Kurtzer" <gmkurtzer@lbl.gov>
-Subject: linux-2.4 sd.c sd_init_command patch
-Date: Thu, 7 Oct 2004 22:10:48 -0700
+From: William Lee Irwin III <wli@holomorphy.com>
+Subject: Re: sym2 on sparc
+Date: Fri, 8 Oct 2004 04:25:43 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041008051048.GC21119@gmk.lbl.gov>
+Message-ID: <20041008112543.GI9106@holomorphy.com>
+References: <20041001182056.GI16153@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gmk.lbl.gov ([128.3.10.31]:51689 "EHLO gmk.lbl.gov")
-	by vger.kernel.org with ESMTP id S267689AbUJHFKs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Oct 2004 01:10:48 -0400
+Received: from holomorphy.com ([207.189.100.168]:13526 "EHLO holomorphy.com")
+	by vger.kernel.org with ESMTP id S269839AbUJHLZ5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Oct 2004 07:25:57 -0400
 Content-Disposition: inline
+In-Reply-To: <20041001182056.GI16153@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-sparc@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I came across an issue on an Opteron with the 2.4 branch when trying to use a
-file system larger then 1TB with a 3-Ware card. They pointed me to:
+On Fri, Oct 01, 2004 at 07:20:56PM +0100, Matthew Wilcox wrote:
+> Could someone with a symbios 53c8xx chip test this patch?  It works
+> on non-sparc.  If I don't hear of any problems, it'll be in the next
+> driver update.
 
-   http://www.3ware.com/KB/article.aspx?id=10753
-
-which includes the following patch:
-
-diff -Naur linux-2.4.23-rc2/drivers/scsi/sd.c
-linux-2.4.23-rc3/drivers/scsi/sd.c--- linux-2.4.23-rc2/drivers/scsi/sd.c  Mon
-Aug 25 04:44:42 2003
-+++ linux-2.4.23-rc3/drivers/scsi/sd.c  Wed Nov 19 15:15:38 2003
-@@ -294,7 +294,8 @@
-
- static int sd_init_command(Scsi_Cmnd * SCpnt)
- {
--       int dev, block, this_count;
-+       int dev, this_count;
-+       unsigned long block;
-        struct hd_struct *ppnt;
-        Scsi_Disk *dpnt;
- #if CONFIG_SCSI_LOGGING
+This looks like it can't go wrong in modern kernels. I suspect the
+odd macros are long dead.
 
 
-I am curious if there is a reason why this has not been introduced into the
-main 2.4 tree. Is this not a widely known issue, and/or does this (seemingly
-inert) patch cause other problems? I can't seem to find much about it on the
-mailing list except that Adam Radford posted it late in 2003.
-
-Any comments would be greatly appreciated!
-
-Thanks!
-
-note: Please include my direct email in any list replies.
--- 
-Greg Kurtzer
-Berkeley Lab, Linux guy
+-- wli
