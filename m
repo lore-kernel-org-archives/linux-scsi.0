@@ -1,26 +1,37 @@
-From: Bryan Henderson <hbryan@us.ibm.com>
-Subject: Re: Reading data from a file
-Date: Tue, 31 Dec 2002 14:43:30 -0800
+From: "Ravi Anand" <ravi.anand@qlogic.com>
+Subject: RE: When is QLogic 6.x driver going into 2.5?
+Date: Tue, 31 Dec 2002 19:30:46 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF45C02259.616AE3AA-ON87256CA0.007C7138-88256CA0.007CED51@us.ibm.com>
-References: <20021227153427.70720.qmail@mail.com>
+Message-ID: <3679966B84813344B908D418BA3F6A4AA8406B@AVEXCH01.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20021227153427.70720.qmail@mail.com>
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: David Anderson <david-ander2023@mail.com>
+To: Christoph Hellwig <hch@infradead.org>, rwhron@earthlink.net
 Cc: linux-scsi@vger.kernel.org
 
->I am reading some data from a file byte by byte in my driver.
+Can you kindly elaborate on the extra work needed.
 
-In what way is is byte by byte?  You're calling some subroutine once for 
-each byte?
 
-The most obvious way to read a file is not in any way byte by byte, so I 
-don't understand the problem.
+-----Original Message-----
+From: Christoph Hellwig [mailto:hch@infradead.org]
+Sent: Monday, December 30, 2002 1:18 PM
+To: rwhron@earthlink.net
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: When is QLogic 6.x driver going into 2.5?
 
->Any suggestions on how I can improve ??
 
-Can you be more specific on the improvement you're looking for?
+On Sun, Dec 29, 2002 at 07:45:35AM -0500, rwhron@earthlink.net wrote:
+> The QLogic 6.x driver appears to be superior in all respects
+> to the qlogic driver in the Linus and Marcelo trees.  Is there
+> something preventing it from being submitted for Linus' tree?
 
+I haven't seen qlogic submitting it for it.  But I guess it'll need quite
+a lot work before it's in a mergeable shape.
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
