@@ -1,58 +1,42 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH] CDC_MMC_WR
-Date: 06 Nov 2003 10:44:06 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1068140646.23487.119.camel@patrh9>
-References: <1067647915.2682.5.camel@patrh9>
-	 <1068136355.23487.44.camel@patrh9>
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
+Date: Thu, 06 Nov 2003 18:43:13 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1068140592.5234.8.camel@laptop.fenrus.com>
+References: <B179AE41C1147041AA1121F44614F0B0598CE5@AVEXCH02.qlogic.org>
+	 <20031106171409.GN437@suse.de>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:57268 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S263788AbTKFRof
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Nov 2003 12:44:35 -0500
-Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
-	by email.iomega.com (Postfix) with ESMTP id 4F1B82A42
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Nov 2003 10:44:32 -0700 (MST)
-In-Reply-To: <1068136355.23487.44.camel@patrh9>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Kd9N1RSBZjjLDiIjIR1f"
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20031106171409.GN437@suse.de>
+To: Jens Axboe <axboe@suse.de>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Mike Anderson <andmike@us.ibm.com>, Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-> Does the ->writeable bit exist for ide-cd devices, or only for sr
-> devices?
-
-I'm guessing only sr devices, since grep writeable fails in drivers/ide/
-and in drivers/cdrom/.
-
-> When cdrom.ko decides a device is not writable, how does cdrom.ko name
-> that bit, else how does cdrom.ko call into ide-cd/sr to clear that bit?
-
-Call back into sr from cdrom may occur via the cdrom_device_ops.
-
-We define cdrom_ioctl CDROM_GET_CAPABILITY but no SET of capability,
-though we do define CDROM_SET_OPTIONS.
-
-Maybe we're telling me to add a call back to the cdrom_device_ops for
-cdrom to notify ide-cd/sr that the capabilities have changed.  ide-cd
-could ignore that notification, sr could set
-scsi_cd->scsi_device->writeable accordingly.
-
-> Have "the ->writeable bit actually be set if the device is writeable".
-
-grep is failing to find code for me that fetches this bit.
-
-Is this bit ever fetched?
-
-http://lxr.linux.no/ident?v=2.6.0-test7&i=writeable
-no hits.
-
-http://lxr.linux.no/search?v=2.6.0-test7&string=writeable
-over seventy hits.  Apparently none relevant, except to say scsi_scan
-sets this bit for sd, clears this bit for sr, and sr sometimes sets and
-fetches this bit until I patch sr to branch on CDC_MMC_WR instead.
-
-Pat LaVarre
 
 
+--=-Kd9N1RSBZjjLDiIjIR1f
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, 2003-11-06 at 18:14, Jens Axboe wrote:
+
+> They were there at the same time as Linux supported > 1GB IO at all. So
+> that is incorrect, it's been there all along.
+
+.... ia64
+
+
+--=-Kd9N1RSBZjjLDiIjIR1f
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
+
+iD8DBQA/qogwxULwo51rQBIRAhaGAJ9oOTQBL64YfqUIyys50lSMHNOwGACfQ0Kj
+OfMocThDJ4iAK9oqVyma3zY=
+=BC3P
+-----END PGP SIGNATURE-----
+
+--=-Kd9N1RSBZjjLDiIjIR1f--
