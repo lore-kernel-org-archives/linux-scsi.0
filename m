@@ -1,36 +1,40 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: [2.6 patch] SCSI aic7xxx: kill kernel 2.2 #ifdef's (fwd)
-Date: Thu, 16 Dec 2004 17:20:24 -0800
-Message-ID: <41C23458.1080404@osdl.org>
-References: <20041216221802.GT12937@stusta.de>  <41C2147D.1090603@osdl.org> <1103239700.21806.40.camel@localhost.localdomain>
+From: Greg Stitt <gstitt@gmail.com>
+Subject: old and new megaraid drivers for linux
+Date: Thu, 16 Dec 2004 21:59:03 -0500
+Message-ID: <f8d4a352041216185958bf6190@mail.gmail.com>
+Reply-To: Greg Stitt <gstitt@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:64139 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S262712AbULQBZU (ORCPT
+Received: from wproxy.gmail.com ([64.233.184.193]:48011 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262727AbULQC7E (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Dec 2004 20:25:20 -0500
-In-Reply-To: <1103239700.21806.40.camel@localhost.localdomain>
+	Thu, 16 Dec 2004 21:59:04 -0500
+Received: by wproxy.gmail.com with SMTP id 36so12807wra
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Dec 2004 18:59:03 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Alan Cox wrote:
->>I would really appreciate it if you could limit patches for major
->>subsystems to only the mailing list for those subsystems.
-> 
-> 
-> And then I'd have missed the lapb error for example. At least for less
-> maintained stuff do use this list
+Hello,
 
-netdev is _the_ mailing list for network-related development...
+I currently have a system with both a PERC2/SC, and a recently added
+MegaRAID SATA 150-6.
 
-scsi should happen on linux-scsi
+The PERC2/SC ran fine with the 'old style' megaraid driver (2.00.3). 
+However, the SATA card has issues with this driver, as I can't even
+format the drives without problems.   Under Windows 2003, both cards
+operate fine, so I don't believe this is a hardware issue.
 
-If we take your argument to an extreme, we only need
-one mailing list.  :(
+I tried the new megaraid driver (2.20.4.0), but it doesn't recognize
+the PERC at all.  Not sure how stable it is with the SATA though, as
+the PERC contains all the OS. :-)
 
--- 
-~Randy
+This was tried using the 2.6.9 linux kernel.
+
+I've seen mention of this issue before on this list, but has anything
+been done since then to resolve this?
+
+Thanks
+Greg Stitt
