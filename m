@@ -1,44 +1,37 @@
-From: Chiaki <ishikawa@yk.rim.or.jp>
-Subject: Stanford Checker: buggy lock handling.
-Date: Sat, 17 Jul 2004 00:07:01 +0900
+From: Andrew Vasquez <praka@pobox.com>
+Subject: Re: [2.6 patch] SCSI qla2xxx: fix inline compile errors
+Date: Fri, 16 Jul 2004 01:33:51 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40F7EF15.8040808@yk.rim.or.jp>
-References: <B179AE41C1147041AA1121F44614F0B060EEDF@AVEXCH02.qlogic.org>
+Message-ID: <20040716083351.GB18172@praka.san.rr.com>
+References: <20040715191131.GA25633@fs.tum.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pl1015.nas911.n-yokohama.nttpc.ne.jp ([210.139.42.247]:50398
-	"EHLO standard.erephon") by vger.kernel.org with ESMTP
-	id S266534AbUGPPHK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jul 2004 11:07:10 -0400
-Received: from [127.0.0.1] (really [127.0.0.1]) by yk.rim.or.jp
-	via smail with esmtp
-	id <m1BlUIi-00391dC@standard.erephon> (Debian Smail3.2.0.115)
-	for <linux-scsi@vger.kernel.org>; Sat, 17 Jul 2004 00:07:04 +0900 (JST)
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B060EEDF@AVEXCH02.qlogic.org>
+Received: from ms-smtp-01-qfe0.socal.rr.com ([66.75.162.133]:10397 "EHLO
+	ms-smtp-01-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S266557AbUGPPqT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Jul 2004 11:46:19 -0400
+Content-Disposition: inline
+In-Reply-To: <20040715191131.GA25633@fs.tum.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@fs.tum.de>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-I noticed that Stanford Checker project
-summarized their finding concerning lock handling
-and posted it to LKML.
-I noticed a few SCSI files are mentioned as buggy in their
-report.
+On Thu, 15 Jul 2004, Adrian Bunk wrote:
 
-http://lwn.net/Articles/92784/
-http://glide.stanford.edu/linux-lock/err1.html
-http://glide.stanford.edu/linux-lock/err2.html
+> Trying to compile the SCSI qla2xxx driver in 2.6.8-rc1-mm1 using gcc 3.4 
+> results in the following compile errors:
+> 
+> <--  snip  -->
+> ...
+> <--  snip  -->
+> 
+> 
+> The patch below moves some inlined functions above the place where they
+> are called the first time.
+> 
 
+Thanks -- I'll add the patch to my tree.  James, please apply.
 
-If these have been taken care of already, great.
-But if not, maybe something ought to be done about it.
-
-
-
--- 
-int main(void){int j=2003;/*(c)2003 cishikawa. */
-char t[] ="<CI> @abcdefghijklmnopqrstuvwxyz.,\n\"";
-char *i ="g>qtCIuqivb,gCwe\np@.ietCIuqi\"tqkvv is>dnamz";
-while(*i)((j+=strchr(t,*i++)-(int)t),(j%=sizeof t-1),
-(putchar(t[j])));return 0;}/* under GPL */
+--
+Andrew Vasquez
