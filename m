@@ -1,49 +1,38 @@
 From: domen@coderock.org
-Subject: [patch 1/1] scsi/osst: replace schedule_timeout() with msleep()
-Date: Sun, 06 Mar 2005 23:27:41 +0100
-Message-ID: <20050306222742.294F71EC90@trashy.coderock.org>
-Received: from coderock.org ([193.77.147.115]:62382 "EHLO trashy.coderock.org")
-	by vger.kernel.org with ESMTP id S261537AbVCFW16 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Mar 2005 17:27:58 -0500
+Subject: [patch 2/3] qla_os.c - vfree() checking cleanups
+Date: Sun, 06 Mar 2005 23:27:59 +0100
+Message-ID: <20050306222759.8A9C11EC90@trashy.coderock.org>
+Received: from coderock.org ([193.77.147.115]:431 "EHLO trashy.coderock.org")
+	by vger.kernel.org with ESMTP id S261539AbVCFW2K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Mar 2005 17:28:10 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: osst@riede.org
-Cc: linux-scsi@vger.kernel.org, domen@coderock.org, nacc@us.ibm.com
+To: andrew.vasquez@qlogic.com
+Cc: linux-scsi@vger.kernel.org, domen@coderock.org, jlamanna@gmail.com
 
 
 
-Use msleep() instead of schedule_timeout() to guarantee the task
-delays as expected. Although TASK_INTERRUPTIBLE is used in the current code,
-there is no code dealing with an early return / signals_pending().
+qla_os.c vfree() checking cleanups.
 
-Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
+Signed-off by: James Lamanna <jlamanna@gmail.com>
 Signed-off-by: Domen Puncer <domen@coderock.org>
 ---
 
 
- kj-domen/drivers/scsi/osst.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+ kj-domen/drivers/scsi/qla2xxx/qla_os.c |    3 +--
+ 1 files changed, 1 insertion(+), 2 deletions(-)
 
-diff -puN drivers/scsi/osst.c~msleep-drivers_scsi_osst drivers/scsi/osst.c
---- kj/drivers/scsi/osst.c~msleep-drivers_scsi_osst	2005-03-05 16:10:51.000000000 +0100
-+++ kj-domen/drivers/scsi/osst.c	2005-03-05 16:10:51.000000000 +0100
-@@ -1558,8 +1558,7 @@ static int osst_reposition_and_retry(str
- 			osst_set_frame_position(STp, aSRpnt, frame + skip, 1);
- 			flag = 0;
- 			attempts--;
--			set_current_state(TASK_INTERRUPTIBLE);
--			schedule_timeout(HZ / 10);
-+			msleep(100);
- 		}
- 		if (osst_get_frame_position(STp, aSRpnt) < 0) {		/* additional write error */
- #if DEBUG
-@@ -1621,7 +1620,7 @@ static int osst_reposition_and_retry(str
- 		}
- #endif
- 		set_current_state(TASK_INTERRUPTIBLE);
--		schedule_timeout(HZ / 10);
-+		msleep(100);
- 	}
- 	printk(KERN_ERR "%s:E: Failed to find valid tape media\n", name);
- #if DEBUG
+diff -puN drivers/scsi/qla2xxx/qla_os.c~vfree-drivers_scsi_qla2xxx_qla_os drivers/scsi/qla2xxx/qla_os.c
+--- kj/drivers/scsi/qla2xxx/qla_os.c~vfree-drivers_scsi_qla2xxx_qla_os	2005-03-05 16:10:37.000000000 +0100
++++ kj-domen/drivers/scsi/qla2xxx/qla_os.c	2005-03-05 16:10:37.000000000 +0100
+@@ -3119,8 +3119,7 @@ qla2x00_mem_free(scsi_qla_host_t *ha)
+ 	if (ha->fw_dump)
+ 		free_pages((unsigned long)ha->fw_dump, ha->fw_dump_order);
+ 
+-	if (ha->fw_dump_buffer)
+-		vfree(ha->fw_dump_buffer);
++	vfree(ha->fw_dump_buffer);
+ 
+ 	ha->fw_dump = NULL;
+ 	ha->fw_dump_reading = 0;
 _
