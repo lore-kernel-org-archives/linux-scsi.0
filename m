@@ -1,65 +1,58 @@
-From: Andrew Vasquez <praka@users.sourceforge.net>
-Subject: Re: [BUG] modprobe qla2300 doesn't complete
-Date: Thu, 11 Mar 2004 22:11:19 -0800
+From: Jens Axboe <axboe@suse.de>
+Subject: aacraid oopses on load
+Date: Fri, 12 Mar 2004 12:31:04 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040312061119.GA6402@praka.local.home>
-References: <20040305041850.GA9124@colo.lackof.org> <20040305071721.GA9684@praka.local.home> <20040305172147.GB17305@colo.lackof.org> <20040309164033.GA21648@praka.local.home> <20040310221241.GA7903@colo.lackof.org>
-Reply-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Message-ID: <20040312113104.GM6955@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-01-qfe0.socal.rr.com ([66.75.162.133]:62884 "EHLO
-	ms-smtp-01-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S261983AbUCLGdN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Mar 2004 01:33:13 -0500
+Received: from ns.virtualhost.dk ([195.184.98.160]:44738 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261738AbUCLLbH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Mar 2004 06:31:07 -0500
 Content-Disposition: inline
-In-Reply-To: <20040310221241.GA7903@colo.lackof.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, mark_salyzyn@adaptec.com
+Cc: markh@osdl.org
 
-On Wed, 10 Mar 2004, Grant Grundler wrote:
+Hi
 
-> > There are three places where the driver could fall into stuck case of
-> > handling RSCNs.  The attached patch introduces behaviour consistent
-> > with what we have for several of our other platform drivers.  The end
-> > result is the will be 1) The driver will not hang during
-> > init/post-init due to the stream of RSCNs.  2) The driver after init,
-> > will *not* present any devices to the mid-layer due to the volatility
-> > within the fabric.
-> 
-> Still doesn't seem to make forward progress...console output appended.
-> (cut/pasted...white space is probably mangled)
-> 
-> And now the ssh sessions are "hung" (un responsive).
-> So I can't reboot the box to 'clear' the error.
-> We must be pretty close to a fix. :^)
-> 
+2.6.3(-ish) oopses on load of aacraid:
 
-Arrgg...  Ok, locally I managed to convince the firmware group to give
-me a 'special' build which posts RSCN events to the driver every
-100ms.  This, at least in my mind, should be similiar (perhaps not the
-exact same) to the pattern of events present in your configuration
-with the borken JBOD (as can be consistently observed from the
-traces).  
+Oops: 0002 [#1]
+CPU:    0
+EIP:    0060:[<c01d2306>]    Not tainted
+EFLAGS: 00010292
+EIP is at kobject_add+0x66/0x130
+eax: c0362840   ebx: e113a11c   ecx: e1161e98   edx: e113a138
+esi: e113a120   edi: e113a104   ebp: c0362848   esp: dd497db0
+ds: 007b   es: 007b   ss: 0068
+Process modprobe (pid: 622, threadinfo=dd496000 task=dd28c080)
+Stack: e113a11c ffffffea e113a104 00000000 c01d2459 e113a11c c03627e0
+c0216b7f
+       e113a11c e112b538 e113a0e0 00000000 e113a178 c032e258 c0217008
+00000001
+       00000046 c03a3a00 00000001 c01db00b c032e268 00000000 c032e258
+e112855a
+Call Trace:
+ [<c01d2459>] kobject_register+0x19/0x3f
+ [<c0216b7f>] bus_add_driver+0x2f/0x80
+ [<c0217008>] driver_register+0x28/0x30
+ [<c01db00b>] pci_register_driver+0x4b/0x80
+ [<e112855a>] ahc_linux_pci_init+0xa/0x990 [aic7xxx]
+ [<e100a19c>] ahc_linux_init+0x19c/0x29b [aic7xxx]
+ [<e110f000>] ahc_patch23_func+0x0/0x10 [aic7xxx]
+ [<c012f105>] sys_init_module+0x105/0x15a0
+ [<c0121120>] __request_region+0x0/0x80
+ [<e100a000>] ahc_linux_init+0x0/0x29b [aic7xxx]
+ [<c010e5ad>] do_mmap2+0x6d/0xa0
+ [<c010e5cf>] do_mmap2+0x8f/0xa0
+ [<c010e65d>] old_mmap+0x7d/0xa0
+ [<c0108e17>] syscall_call+0x7/0xb
 
-On my dual Xeon (with HT) box, scsi-misc-2.6 with my earlier patch,
-and some minimal printk()s, worked as I would expect -- looped 256
-times through the qla2x00_configure_loop() do/while loop in
-qla2x00_initialize_adapter().  No devices mapped, insmod completed.
-And the DPC routine (kernel thread) then tasked with managing the
-unending flood of RSCN events.  With all this activity, unloading the
-driver (with a modprobe -r qla2300) took an a bit of time, but did
-ultimately complete.
+Code: 89 11 8b 43 28 8b 30 8d 4e 48 89 c8 ba ff ff 00 00 0f c1 10
+ <6>Red Hat/Adaptec aacraid driver (1.1.2-lk1 Mar  9 2004)
 
-So, I'm not entirely clear on what else is going on with your
-configuration.  I'll try to get some runtime on an ia64 machine
-tomorrow to perform the same test.  
+-- 
+Jens Axboe
 
-Sorry about leaving your machine in such a borked state, but, could
-you reverify the test?  I don't believe we'll need any extended error
-logging, so disable DEBUG2.  If that fails, then I just may need that
-SSH access.
-
-Thanks,
-Andrew Vasquez
