@@ -1,47 +1,35 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] update sd to use kref and fix open/release race
-Date: Tue, 13 Apr 2004 10:12:08 -0700
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: emulex FC driver on ppc64
+Date: Tue, 13 Apr 2004 14:21:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040413171208.GA2550@us.ibm.com>
-References: <1081518779.2203.29.camel@mulgrave>
+Message-ID: <407C2F9B.1070102@pobox.com>
+References: <3356669BBE90C448AD4645C843E2BF2802C01654@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.101]:23745 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S263667AbUDMSMh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Apr 2004 14:12:37 -0400
-Content-Disposition: inline
-In-Reply-To: <1081518779.2203.29.camel@mulgrave>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:4035 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S263301AbUDMSVa
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Apr 2004 14:21:30 -0400
+In-Reply-To: <3356669BBE90C448AD4645C843E2BF2802C01654@xbl.ma.emulex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, greg@kroah.com
+To: "Smart, James" <James.Smart@Emulex.com>
+Cc: 'Anton Blanchard' <anton@samba.org>, linux-scsi@vger.kernel.org
 
-James Bottomley [James.Bottomley@steeleye.com] wrote:
-> @@ -1338,17 +1338,19 @@
->  	if ((sdp->type != TYPE_DISK) && (sdp->type != TYPE_MOD))
->  		goto out;
->  
-> +	if ((error = scsi_device_get(sdp)) != 0)
-> +		goto out;
-> +
->  	SCSI_LOG_HLQUEUE(3, printk("sd_attach: scsi device: <%d,%d,%d,%d>\n", 
->  			 sdp->host->host_no, sdp->channel, sdp->id, sdp->lun));
->  
->  	error = -ENOMEM;
->  	sdkp = kmalloc(sizeof(*sdkp), GFP_KERNEL);
+Smart, James wrote:
+> There's no misunderstanding - I agree with you.  Just stating that the
+> reorganization and removal of the multi-os abstractions had to take place
+> first....
 
-Did we decide through the thread on this issue that we will not allow a
-rmmod to happen anymore unless you manually delete the children devices
-off the host? In using scsi_debug I am not able to rmmod until I delete
-all the children (i.e. sd's).
+Cool, thanks.  I misunderstood your "we're looking at raising the count" 
+comment to imply that you would simply increase the limit, rather than 
+eliminate it.
 
-The parent child hierarchy should be held in place through kobject_add /
-kobject_get of the parent so I would believe that the extra
-scsi_device_get should not be needed.
+Regards,
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+	Jeff
+
+
+
 
