@@ -1,35 +1,59 @@
 From: Rusty Trivial Russell <rusty@rustcorp.com.au>
-Subject: [TRIVIAL] [Trivial Patch] scsi_register-008
-Date: Thu, 06 Feb 2003 14:11:38 +1100
+Subject: [TRIVIAL] warning cleanup for drivers_scsi_qla1280.c
+Date: Thu, 06 Feb 2003 14:00:37 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030206053821.47B0C2C2E3@lists.samba.org>
+Message-ID: <20030206053820.80C872C070@lists.samba.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 To: Marcelo Tosatti <marcelo@conectiva.com.br>
-Cc: Achim Leubner <achim@vortex.de>, linux-scsi@vger.kernel.org
+Cc: Jes Sorensen <jes@wildopensource.com>, linux-scsi@vger.kernel.org
 
-(Included in 2.5)
-From:  Michael Still <mikal@stillhq.com>
+From:  Eric Sandeen <sandeen@sgi.com>
 
-  
-  This patch has been generated as part of my scsi_register audit of the 2.5.45 kernel tree. scsi_register() can fail, returning a NULL pointer, and the failure case was not being handled here...
-  
-  
-  
-  
 
---- trivial-2.4.21-pre4/drivers/scsi/gdth.c.orig	2003-02-06 13:53:49.000000000 +1100
-+++ trivial-2.4.21-pre4/drivers/scsi/gdth.c	2003-02-06 13:53:49.000000000 +1100
-@@ -4256,6 +4256,9 @@
-             if (gdth_ctr_count >= MAXHA)
-                 break;
-             shp = scsi_register(shtp,sizeof(gdth_ext_str));
-+	    if(shp == NULL)
-+		    continue;
-+
-             ha = HADATA(shp);
-             if (!gdth_init_pci(&pcistr[ctr],ha)) {
-                 scsi_unregister(shp);
+--- trivial-2.4.21-pre4/drivers/scsi/qla1280.c.orig	2003-02-06 13:53:42.000000000 +1100
++++ trivial-2.4.21-pre4/drivers/scsi/qla1280.c	2003-02-06 13:53:42.000000000 +1100
+@@ -312,7 +312,9 @@
+ STATIC int qla1280_return_status( sts_entry_t *sts, Scsi_Cmnd       *cp);
+ STATIC void qla1280_removeq(scsi_lu_t *q, srb_t *sp);
+ STATIC void qla1280_mem_free(scsi_qla_host_t *ha);
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,1,95)
+ static void qla1280_do_dpc(void *p);
++#endif
+ #ifdef  QLA1280_UNUSED 
+ static void qla1280_set_flags(char * s);
+ #endif
+@@ -1611,17 +1613,12 @@
+  * "host->can_queue". This can cause a panic if we were in our interrupt
+  * code .
+  **************************************************************************/
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,1,95)
+ static void qla1280_do_dpc(void *p)
+ {
+     scsi_qla_host_t *ha = (scsi_qla_host_t *) p;
+-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,1,95)
+-    unsigned long cpu_flags = 0;
+-#endif
+ 
+     COMTRACE('p')  
+-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,1,95)
+-    spin_lock_irqsave(&io_request_lock, cpu_flags);
+-#endif
+     if (ha->flags.isp_abort_needed)
+         qla1280_abort_isp(ha);
+ 
+@@ -1631,10 +1628,8 @@
+     if (ha->done_q_first)
+         qla1280_done(ha, (srb_t **)&ha->done_q_first, (srb_t **)&ha->done_q_last);
+     ha->flags.dpc_sched = FALSE;
+-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,1,95)
+-    spin_unlock_irqrestore(&io_request_lock, cpu_flags);
+-#endif
+ }
++#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,1,95) */
+ 
+ /**************************************************************************
+  *   qla1280_device_queue_depth
 -- 
   Don't blame me: the Monkey is driving
-  File: Michael Still <mikal@stillhq.com>: [Trivial Patch] scsi_register-008
+  File: Eric Sandeen <sandeen@sgi.com>: warning cleanup for drivers_scsi_qla1280.c
