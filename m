@@ -1,68 +1,161 @@
-From: Andrew Vasquez <praka@users.sourceforge.net>
-Subject: Re: Transport Attributes -- attempt#3
-Date: Wed, 14 Jan 2004 15:34:57 -0800
+From: Xose Vazquez Perez <xose@wanadoo.es>
+Subject: [summary] state of scsi drivers
+Date: Thu, 15 Jan 2004 00:45:56 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040114233457.GA23840@praka.local.home>
-References: <20040107185420.GA30627@localhost> <20040108131717.A9700@infradead.org> <20040114181241.GK27591@localhost>
+Message-ID: <4005D4B4.1000705@wanadoo.es>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-02-qfe0.socal.rr.com ([66.75.162.134]:3285 "EHLO
-	ms-smtp-02-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S266428AbUANXp4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jan 2004 18:45:56 -0500
-Received: from praka.san.rr.com (66-75-130-8.san.rr.com [66.75.130.8])
-	by ms-smtp-02-eri0.socal.rr.com (8.12.10/8.12.7) with ESMTP id i0ENjsNR027376
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2004 15:45:55 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <20040114181241.GK27591@localhost>
+Received: from smtp12.eresmas.com ([62.81.235.112]:44522 "EHLO
+	smtp12.eresmas.com") by vger.kernel.org with ESMTP id S266447AbUANXrp
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Jan 2004 18:47:45 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 14 Jan 2004, Martin Hicks wrote:
+        * unofficial 2.4 LiNUX kernel SCSI/RAID drivers list *
 
-> Here is round#3 of the patch.  I think I've addressed all of the points
-> that were brought up by Christoph last time.
-> 
-> Once again, three patches:  core, qla1280 and qla2xxx.  The core patch
-> expects to be applied on top of the patch that I sent recently to
-> linux-scsi:
-> 
+                        <xose@wanadoo.es>
 
-Just a few comments below:
-
-[snip]
-
-> +
-> +/* the FiberChannel Tranport Attributes: */
-> +fc_transport_rd_attr_cast(node_name, "0x%llx\n", unsigned long long);
-> +fc_transport_rd_attr_cast(port_name, "0x%llx\n", unsigned long long);
-> +fc_transport_rd_attr(port_id, "0x%x\n");
-> +
-
-Purely aesthetics : PortIDs are typically viewed as three hex bytes
-padded with zeros, i.e. 010203.  Perhaps this may be more appropriate:
-
-	fc_transport_rd_attr(port_id, "0x%06x\n");
-
-[snip]
-> +	attrs = (struct fc_transport_attrs *)sdev->transport_attr_values;
-> +	list_for_each_entry(fc, &ha->fcports, list) {
-> +		if (fc->os_target_id == sdev->id) {
-> +			attrs->port_name = __be64_to_cpu(*(uint64_t *)fc->port_name);
-> +			attrs->node_name = __be64_to_cpu(*(uint64_t *)fc->node_name);
-> +			attrs->port_id = fc->d_id.b24;
-
-This port_id assignment will not give you what you expect on
-big-endian machines.  Given the previous port_id example value
-(010203), on BE machines, the attribute will read as 030201 when
-displayed.  A more endian safe way if you want to continue with the
-pure-type usages (uint64_t/int) rather than byte arrays would be:
-
-	attrs->port_id = fc->d_id.b.domain << 16 |
-		fc->d_id.b.area << 8 |
-		fc->d_id.b.al_pa;
+                         linux-2.4.25-pre4+BK
+                     Thu Jan 15 00:27:20 CET 2004
 
 
-Regards, 
-Andrew Vasquez
+x features:
+    64_bit_SG block_device_driver highmem_io hot-plug vary_io
+
+o aacraid
+   manufacturer: ADAPTEC
+   kernel: 1.1.2 (15 May 2003)
+   latest: 1.1.4 (23 Dec 2003)
+   arch: i386 ia64 x86_64 alpha (sparc not confirmed, but expected)
+   features: 64_bit_SG highmem_io vary_io
+   maintainer: <Mark_Salyzyn*AT*adaptec.com> <aacraid*AT*adaptec.com>
+   url: http://linux.adaptec.com
+        http://linux.dell.com/raid.shtml#aacraid
+   ml: http://lists.us.dell.com/mailman/listinfo/linux-aacraid-devel
+
+o aic7xxx/aic79xx
+   manufacturer: ADAPTEC
+   kernel: 6.2.36/1.3.10 (03 Jun 2003)
+   latest: 6.3.4 /2.0.5  (22 Dec 2003)
+   arch: i386 ia64 powerpc
+   features: highmem_io vary_io
+   maintainer: kernel nobody - vendor <gibbs*AT*scsiguy.com>
+   url: http://people.freebsd.org/~gibbs/linux/SRC/
+   ml: http://lists.freebsd.org/mailman/listinfo/aic7xxx
+
+o cciss
+   manufacturer: HP
+   kernel: 2.4.50
+   latest: 2.4.50
+   arch: i386
+   features: block_device_driver highmem_io vary_io
+   maintainer: <mike.miller*AT*hp.com> <arrays*AT*hp.com>
+   url: http://sf.net/projects/cciss/
+
+o DAC960
+   manufacturer: LSI Logic
+   kernel: 2.4.11 (11 Oct 2001)
+   latest: 2.4.20 (01 May 2003)
+   arch: i386 ia64 alpha
+   features: block_device_driver highmem_io
+   maintainer: <dmo*AT*osdl.org>
+   url: http://www.osdl.org/archive/dmo/DAC960/
+        http://www.dandelion.com/Linux/DAC960.html
+
+o dpt_i2o
+   manufacturer: ADAPTEC
+   kernel: 2.4.5 (25 Jul 2001)
+   latest: 2.5.0 (11 Sep 2003)
+   arch: i386 ia64 alpha sparc x86_64
+   features: 64_bit_SG highmem_io
+   maintainer: <Mark_Salyzyn*AT*adaptec.com>
+   url: http://linux.adaptec.com
+
+o emulex
+   manufacturer: EMULEX
+   kernel: -
+   latest: 1.23a
+   arch: i386 ia64 ppc
+   features:
+   maintainer: vendor <tech.support*AT*emulex.com>
+   url: http://www.emulex.com/ts/docfc/linuxos.shtml
+
+o feral_isp
+   manufacturer: QLOGIC
+   kernel: -
+   latest: Linux Platform 2.1 Common Core Code 2.7 (13 Nov 2003)
+   arch: i386 alpha sparc powerpc
+   features:
+   maintainer: external <mjacob*AT*feral.com>
+   url: http://www.feral.com/isp.html
+
+o fusion
+   manufacturer: LSI Logic
+   kernel: 2.05.05+ (14 Apr 2003)
+   latest: 2.05.11  (09 Jan 2004)
+   arch: i386 alpha sparc ia64 x86_64
+   features: highmem_io vary_io
+   maintainer: <emoore*AT*lsil.com> <mpt_linux_developer*AT*lsil.com>
+   url: ftp://ftp.lsil.com/HostAdapterDrivers/linux/Fusion-MPT/
+
+o gdth
+   manufacturer: ADAPTEC
+   kernel: 2.05  (03 Oct 2002)
+   latest: 2.06a (04 Aug 2003)
+   arch: i386 alpha ia64
+   features:
+   maintainer: <achim_leubner*AT*adaptec.com>
+   url: http://www.icp-vortex.com/english/download/rz_neu/linux/linux_e.htm
+
+o ips
+   manufacturer: ADAPTEC
+   kernel: 6.10.24
+   latest: 6.10.24
+   arch: i386 ia64 x86_64
+   features: highmem_io
+   maintainer: <david_jeffery*AT*adaptec.com> <jack_hammer*AT*adaptec.com>
+               <ipslinux*AT*adaptec.com>
+
+o megaraid
+   manufacturer: LSI Logic
+   kernel: v1.18k/v2.00.9 (Sep 04, 2003)
+   latest: v1.18k/v2.10.1 (Dec 03, 2003)
+   arch: i386
+   features: highmem_io vary_io
+   maintainer: <atulm*AT*lsil.com>
+   url: ftp://ftp.lsil.com/pub/linux-megaraid/
+        http://linux.dell.com/raid.shtml#megaraid
+
+o qla1280
+   manufacturer: QLOGIC
+   kernel: 3.23.37
+   latest: 3.23.37
+   arch: i386 alpha
+   features:
+   maintainer: <jes*AT*wildopensource.com>
+
+o qla2x00
+   manufacturer: QLOGIC
+   kernel: -
+   latest: 6.06.10   (06 Oct 2003)
+   beta:   8.00.00b9 (13 Jan 2004)
+   arch: i386
+   features:
+   maintainer: vendor <andrew.vasquez*AT*qlogic.com>
+   url: http://www.qlogic.com/support/product_resources.asp?id=339
+        http://sf.net/projects/linux-qla2xxx/
+
+o sym53c8xx_2
+   manufacturer: LSI Logic
+   kernel: 2.1.17a     (Dec 01 2001)
+   latest: 2.1.19-pre3 (Nov 23 2002)
+   arch: i386 alpha sparc powerpc ia64
+   features:
+   maintainer: nobody
+   url: http://www.tux.org/pub/tux/roudier/drivers/linux/stable/
+
+# EOT
+
