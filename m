@@ -1,39 +1,36 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Is there a grand plan for FC failover?
-Date: 29 Jan 2004 11:00:58 -0500
+From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Subject: RE: [PATCH] 2.4.25-pre7 SCSI fusion driver - version - 2.05.11.01
+Date: Thu, 29 Jan 2004 14:58:45 -0200 (BRST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1075392058.2381.44.camel@mulgrave>
-References: <401521A7.5030808@thekelleys.org.uk>
-	<1075131446.2290.29.camel@mulgrave>
-	<20040128100236.D11527@vienna.EGENERA.COM>
-	<1075309052.2254.6.camel@mulgrave>
-	<20040128130040.E11527@vienna.EGENERA.COM> <401839A8.307@us.ibm.com>
-	<20040129102430.G11527@vienna.EGENERA.COM>
+Message-ID: <Pine.LNX.4.58L.0401291458080.5460@logos.cnet>
+References: <0E3FA95632D6D047BA649F95DAB60E5703D19F4B@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:44230 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S266021AbUA2QBu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Jan 2004 11:01:50 -0500
-In-Reply-To: <20040129102430.G11527@vienna.EGENERA.COM>
+Received: from intra.cyclades.com ([64.186.161.6]:26070 "EHLO
+	intra.cyclades.com") by vger.kernel.org with ESMTP id S266235AbUA2R2y
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Jan 2004 12:28:54 -0500
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703D19F4B@exa-atlanta.se.lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Philip R. Auld" <pauld@egenera.com>
-Cc: Mike Christie <mikenc@us.ibm.com>, Simon Kelley <simon@thekelleys.org.uk>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Moore, Eric Dean" <Emoore@lsil.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Marcelo Tosatti <marcelo.tosatti@cyclades.com>
 
-On Thu, 2004-01-29 at 10:24, Philip R. Auld wrote:
-> I think the place to do load balancing would be below the block queue so that
-> the IOs are coalesced. IMO, until you've merged the individual block requests 
-> you can't make a good decision about how to balance the load. 
 
-Yes, that's what I think too, so the elevator should go above dm, with a
-vestigial elevator between dm and sd simply for SCSI to use in queuing.
 
-Unfortunately, the way it works today is that the elevator is between dm
-and sd.  I know people are thinking about how to change this, but I'm
-not sure how far anyone's got.
+On Wed, 28 Jan 2004, Moore, Eric Dean wrote:
 
-James
+> Here is a repost of yesterdays patch for MPT Fusion drivers(version
+> 2.05.11.01),
+> 2.4 Kernel.  I have removed __alpha__ from linux_compat.h, per request
+> from Chistoph H.
+>
+>
+> Here's location of the patches.
+> ftp://ftp.lsil.com/HostAdapterDrivers/linux/Fusion-MPT/2.05.11.01/mptlinux-2
+> .05.11.01.patch
 
+Hi Eric,
+
+Patch applied.
 
