@@ -1,44 +1,34 @@
-From: "Pat LaVarre" <LAVARRE@iomega.com>
-Subject: RE: [usb-storage] Re: PATCH: exclude certain commands from emulated SCSI hosts
-Date: Mon, 24 Mar 2003 12:16:29 -0700
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <0FA2250F5A23D64FBD983956F9B2864301ED5277@royntex01.iomegacorp.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] 2.5.x use list_head to handle scsi starved request queues
+Date: Mon, 24 Mar 2003 11:29:40 -0800
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20030324112940.A11000@beaverton.ibm.com>
+References: <20030319182755.A9535@beaverton.ibm.com> <3E7A1EF5.3050501@splentec.com> <20030320203912.A18471@beaverton.ibm.com> <3E7B7A9A.6030007@splentec.com> <20030321165050.B9578@beaverton.ibm.com> <3E7F3C67.5010704@splentec.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-content-class: urn:content-classes:message
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: dougg@torque.net, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Cc: Linus Torvalds <torvalds@transmeta.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>, USB Storage List <usb-storage@one-eyed-alien.net>, Linux SCSI list <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3E7F3C67.5010704@splentec.com>; from luben@splentec.com on Mon, Mar 24, 2003 at 12:12:07PM -0500
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben@splentec.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-PiA+IE9uIFNhdCwgTWFyIDIyLCAyMDAzIGF0IDExOjM5OjA1UE0gLTA4MDAsIExpbnVzDQo+ID4g
-VG9ydmFsZHMgd3JvdGU6DQo+ID4NCj4gPiA+IEhvdyBhYm91dCBtYWtpbmcgdGhlIFNDU0kgc3R1
-ZmYgcGFzcyBhICJjb21tb24iDQo+ID4gPiBmbGFnIChvciAicmVxdWlyZWQiKSBkb3duIHdpdGgg
-dGhlIGNvbW1hbmQ/DQo+ID4gPiBUaGVuLCBhIGVtdWxhdGVkIHRoaW5nIGNvdWxkIGp1c3QgZGVj
-aWRlIHRvDQo+ID4gPiBwdW50IGFsbCBjb21tYW5kcyB3aXRoIGFuIGltbWVkaWF0ZSBmYWlsdXJl
-IGlmDQo+ID4gPiB0aGV5IGFyZW4ndCBtYXJrZWQgInJlcXVpcmVkIi4NCj4gPg0KPiA+ID4gVGhh
-dCBzdGlsbCBfYWxsb3dzXyB0aGUgZHJpdmVyIHRvIGltcGxlbWVudCBpdA0KPiA+ID4gaWYgaXQg
-d2FudHMgdG8sIHVubGlrZSB5b3VyIHByZXZpb3VzIGFwcHJvYWNoLg0KIA0KSW4gcGFydGljdWxh
-ciwgcGFzc2luZyBDREIncyB0aHJ1IHNnIHdpbGwgbWFyayB0aGVtDQpSZXF1aXJlZCwgdW50aWwv
-IHVubGVzcyB3ZSByZXYgc2cgdG8gbGV0IGl0cyBjbGllbnQNCmNob29zZSB0byBzYXkgUmVxdWly
-ZWQgb3Igbm90Pw0KIA0KUGF0IExhVmFycmUNCg==
+On Mon, Mar 24, 2003 at 12:12:07PM -0500, Luben Tuikov wrote:
+> Patrick Mansfield wrote:
+> > 
+> > The lock has to be held while checking shost->host_busy and then when
+> > removing the starved entry, we can have multiple cpu's in the function for
+> > the same adapter at the same time. Plus the lock has to be acquired prior
+> > to any __blk_run_queue call.
+> 
+> If scsi_queue_next_request(q, cmd) is running on more than one CPU
+> and q != q1 then you have a problem with the starved devices list.
 
+Not with the current locking: we lock queue_lock (equal to host_lock)
+at the start of scsi_queue_next_request, and unlock at the end of
+scsi_queue_next_request.
 
--------------------------------------------------------
-This sf.net email is sponsored by:ThinkGeek
-Welcome to geek heaven.
-http://thinkgeek.com/sf
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+I was not addressing any locking issues with this patch, the queue_lock
+(or host_lock) is protecting the starved list.
+
+-- Patrick Mansfield
