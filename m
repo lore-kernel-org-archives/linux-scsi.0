@@ -1,20 +1,37 @@
-From: Mike Dresser <mdresser_l@windsormachine.com>
-Subject: Re: how to connect 2 nodes to a SCSI disk (cabinet)
-Date: Fri, 20 Jun 2003 12:03:32 -0400 (EDT)
+From: "Ranade, Prakash" <prakashr@intgroup.com>
+Subject: RE: how to connect 2 nodes to a SCSI disk (cabinet)
+Date: Fri, 20 Jun 2003 11:23:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0306201202130.15589-100000@router.windsormachine.com>
-References: <7F2171947E956F4ABE17D12CA19617B40279BA@intermarksrv001.intermark.local>
+Message-ID: <7F2171947E956F4ABE17D12CA19617B405EE56@intermarksrv001.intermark.local>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from windsormachine.com ([206.48.122.28]:28424 "EHLO
-	router.windsormachine.com") by vger.kernel.org with ESMTP
-	id S263187AbTFTPvE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Jun 2003 11:51:04 -0400
-In-Reply-To: <7F2171947E956F4ABE17D12CA19617B40279BA@intermarksrv001.intermark.local>
+Received: from gw.intgroup.com ([65.83.52.2]:60782 "HELO
+	intermarksrv001.intermark.local") by vger.kernel.org with SMTP
+	id S263264AbTFTQJe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jun 2003 12:09:34 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: "Ranade, Prakash" <prakashr@intgroup.com>
+To: Mike Dresser <mdresser_l@windsormachine.com>
 Cc: linux-scsi@vger.kernel.org
+
+well i did change it to 14 and 15...but it seems that there is a conflict between 2 nodes on using same scsi drive. The interfaces are fighting over the bus.. They both kept resetting the drive.
+any idea......
+Prakash S. Ranade
+OCP - Oracle Certified DBA 8i, 9i
+205 776 2320
+
+"Lets document it and call it a feature"
+
+
+-----Original Message-----
+From: Mike Dresser [mailto:mdresser_l@windsormachine.com]
+Sent: Friday, June 20, 2003 11:04 AM
+To: Ranade, Prakash
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: how to connect 2 nodes to a SCSI disk (cabinet)
+
 
 On Fri, 20 Jun 2003, Ranade, Prakash wrote:
 
