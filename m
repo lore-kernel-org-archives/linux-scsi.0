@@ -1,55 +1,55 @@
-From: "Mukker, Atul" <Atulm@lsil.com>
-Subject: RE: [PATCH][BUGFIX] : megaraid patch for 2.10.1 (irq disable bug
-	 fix)
-Date: Tue, 24 Feb 2004 16:02:34 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC3DE@exa-atlanta.se.lsil.com>
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: Re: [PATCH][BUGFIX] : megaraid patch for 2.10.1 (irq disable bug fix)
+Date: Tue, 24 Feb 2004 22:14:20 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040224211420.GG26919@devserv.devel.redhat.com>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BC3DE@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:43448 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S262458AbUBXVD5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2004 16:03:57 -0500
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ahP6B03r4gLOj5uD"
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC3DE@exa-atlanta.se.lsil.com>
+To: "Mukker, Atul" <Atulm@lsil.com>
+Cc: 'James Bottomley' <James.Bottomley@SteelEye.com>, "'matt_domsch@dell.com'" <matt_domsch@dell.com>, 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@SteelEye.com>, "'matt_domsch@dell.com'" <matt_domsch@dell.com>
-Cc: 'Arjan van de Ven' <arjanv@redhat.com>, 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-> > controllers and also a single code base, with a very small 
-> footprint patch -
-> > if at all required, to support various kernels.
+
+--ahP6B03r4gLOj5uD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Tue, Feb 24, 2004 at 04:02:34PM -0500, Mukker, Atul wrote:
+> > > controllers and also a single code base, with a very small 
+> > footprint patch -
+> > > if at all required, to support various kernels.
+> > 
+> > I didn't say "no".  I'm just warning you that you've chosen a 
+> > hard road
+> > to hoe, particularly with the limited life of 2.4.
 > 
-> I didn't say "no".  I'm just warning you that you've chosen a 
-> hard road
-> to hoe, particularly with the limited life of 2.4.
+> In my opinion, maintaining support for 2.4 drivers and adding new
+> controllers to it would be crucial for a considerable time to come even
 
-In my opinion, maintaining support for 2.4 drivers and adding new
-controllers to it would be crucial for a considerable time to come even
-while lk 2.6 becomes mainstream. As support, we would want to provide
-support for as many kernels and controllers as possible.
+there is a difference between just adding a pci id and adding all new
+features.
 
->From a developer standpoint, It is very difficult to maintain two drivers. I
-am willing to fork iff the code is too hairy - but right now it seems very
-manageable.
+> Do we want to discover controllers and devices directed solely by kernel and
+> should driver interfere a little bit.
 
-> "An important MegaRAID feature is to be able to boot from any logical
-> drive on
-> If you require this functionality in 2.6, you should look at plugging
-> into the udev infrastructure.
+I always considered the megaraid code here extremely hairy... I'd love to
+see it go when we can 
 
-Now, this is some new information for me. I am not sure what is Dell's stand
-on this option. Matt, Arjan?
+--ahP6B03r4gLOj5uD
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-Do we want to discover controllers and devices directed solely by kernel and
-should driver interfere a little bit.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
 
-> This is unacceptable:
-> 
-> #if defined (__x86_64__)
-> 		/*
-> 		 * Register the 32-bit ioctl conversion
-> 		 */
-> 		register_ioctl32_conversion(MEGAIOCCMD, sys_ioctl)
-> #endif
-Ok.. Let us find a better solution. 
+iD8DBQFAO76rxULwo51rQBIRAloOAJ48gUOkwC2yYoL+BVZKh4I1/eUEGACfWUC2
+10kwXztz+de1+aXhlXsI1V4=
+=2OOj
+-----END PGP SIGNATURE-----
+
+--ahP6B03r4gLOj5uD--
