@@ -1,52 +1,74 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: compile warning fix for advansys (trivial)
-Date: Tue, 30 Dec 2003 23:32:26 +0100 (CET)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0312302319320.5614-100000@poirot.grange>
-References: <20031228232831.A23869@infradead.org>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: [BK PATCH] SCSI updates
+Date: 30 Dec 2003 16:08:32 -0600
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1072822114.1783.36.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:32735 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S265896AbTL3Wcb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Dec 2003 17:32:31 -0500
-In-Reply-To: <20031228232831.A23869@infradead.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
 
-On Sun, 28 Dec 2003, Christoph Hellwig wrote:
+This represents the driver updates and other fairly stable changes that
+have been floating around in the SCSI trees for a while.  The only
+controversial element is updating the aic7xxx/79xx drivers.  I've been
+receiving reports that the 1.3.9 version of the aic79xx was
+non-functional in 2.6, so I updated it to 1.3.11 based on Justin's tree
+(after confirming with the reporters that this fixed their problems).
 
-> On Mon, Dec 29, 2003 at 12:26:39AM +0100, Guennadi Liakhovetski wrote:
-> > I think, the patch would only be wrong if either the original driver
-> > behaviour was wrong in the race-case,
->
-> it was.  That's why we're changing it after all :)
+The tree is at
 
-Ok, then, I think, the driver is doing the following: for ISA / VL busses
-it does check_region for ASC_IOADR_GAP (16) bytes, does chip-detection,
-and if a card is found - then issues request_region() with the correct
-length.
+bk://linux-scsi.bkbits.net/scsi-for-linus
 
-So, I see 2 possibilities:
-1) replace check_region with request_region for the same size, and then
-release the region before requesting the correct size. (Well,
-theoretically, one could request the rest of the larger area in a second
-request_region, but that's pretty ugly)
-2) replace check_region with request_region - but immediately of correct
-length. Finding this correct length involves identifying the chip... But,
-reading the code, it looks like only 38C-1600 can be used in ISA and VL
-cards, right? Sorry, I didn't find any data sheets.
-
-Which of the 2 options (or a third one) would be preferrable, and is my
-assumption about the 1600 chip correct? The first one is easier to
-implement. Ideally, one should properly identify the chip and then request
-the required number of bytes, of course.
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+and the short changelog is:
 
 
+<rask:sygehus.dk>:
+  o aha1740.c: Allow level triggered interrupts to be shared
+
+Andi Kleen:
+  o Mark Ninja SCSI driver as !64BIT
+  o Mark aha152x as ISA and !64BIT driver II
+  o Mark correct aha152x driver (PCMCIA) as !64BIT
+  o Fix 64bit warnings in BusLogic driver
+
+Christoph Hellwig:
+  o aacraid updates for new probing APIs
+  o convert inia100 to new probing API
+
+Douglas Gilbert:
+  o sg Bugfixes
+  o scsi_debug lk 2.6.0t6
+
+James Bottomley:
+  o Megaraid compile fix
+  o Make aic7xxx -Werror conditional on make flag WARNINGS_BECOME_ERRORS
+  o Update aic79xx to 1.3.11, aic7xxx to 6.2.36
+  o Updated osst driver for 2.6.x
+  o More Initio 9100u fixes
+  o [v2] aha152x cmnd->device oops
+  o SCSI: Fix tmscsim driver
+  o Fix another sg mismerge
+  o sg: fix hch/dougg mismerge
+  o sg: char_devs + seq_file lk2.6.0t9
+  o MPT Fusion driver 2.05.00.05 update
+  o sym 2.1.18f
+
+Kai Makisara:
+  o Add char_devs to st This patch adds support for cdevs to the st
+driver. The changes are based on Doug Gilbert's corresponding changes to
+the sg driver. Using cdevs brings the following advantanges:
+
+Mike Christie:
+  o [RFC]  fix compile erros in ini9100 driver
+
+Patrick Mansfield:
+  o consolidate and log scsi command on send and completion
+
+Randy Dunlap:
+  o buslogic: use EH, remove some dup. docs
+  o cpqfcTSinit cleanup
+
+James
