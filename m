@@ -1,28 +1,87 @@
-From: Olaf Hering <olh@suse.de>
-Subject: how to get rid of scsi cdrom?
-Date: Sat, 8 Jan 2005 22:19:29 +0100
-Message-ID: <20050108211929.GA26318@suse.de>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] ide-scsi.c: make 2 functions static (fwd) (fwd)
+Date: Sat, 8 Jan 2005 22:40:08 +0100
+Message-ID: <20050108214008.GT14108@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:43424 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S261549AbVAHVT3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Jan 2005 16:19:29 -0500
-Received: from hermes.suse.de (hermes-ext.suse.de [195.135.221.8])
-	(using TLSv1 with cipher EDH-RSA-DES-CBC3-SHA (168/168 bits))
-	(No client certificate requested)
-	by Cantor.suse.de (Postfix) with ESMTP id 679D912FFA20
-	for <linux-scsi@vger.kernel.org>; Sat,  8 Jan 2005 22:19:29 +0100 (CET)
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:30468 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S261734AbVAHVkP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 8 Jan 2005 16:40:15 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-What is the best way to fix this oops?
-'rmmod -r ide-cd;modprobe ide-scsi;modprobe sr_mod;rmmod -r ide-scsi'
+The patch forwarded below still applies and compiles against 2.6.10-mm2.
 
-cdrom_mrw_exit() calls scsi_block_when_processing_errors() at some
-point, that looks like the only exit before the oops, via SDEV_OFFLINE.
-However, scsi_remove_host() sets SDEV_CANCEL first, so it looks like
-SDEV_OFFLINE isnt a valid state anymore.
+Please apply.
+
+
+----- Forwarded message from Adrian Bunk <bunk@stusta.de> -----
+
+Date:	Tue, 21 Dec 2004 01:41:44 +0100
+From: Adrian Bunk <bunk@stusta.de>
+To: Andrew Morton <akpm@osdl.org>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [2.6 patch] ide-scsi.c: make 2 functions static (fwd)
+
+The patch forwarded below still applies and compiles against 
+2.6.10-rc3-mm1.
+
+Please apply.
+
+
+----- Forwarded message from Adrian Bunk <bunk@stusta.de> -----
+
+Date:	Mon, 15 Nov 2004 03:07:55 +0100
+From: Adrian Bunk <bunk@stusta.de>
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [2.6 patch] ide-scsi.c: make 2 functions static
+
+The patch below makes two functions without external users static.
+
+
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+--- linux-2.6.10-rc1-mm5-full/drivers/scsi/ide-scsi.c.old	2004-11-13 21:51:26.000000000 +0100
++++ linux-2.6.10-rc1-mm5-full/drivers/scsi/ide-scsi.c	2004-11-13 21:51:41.000000000 +0100
+@@ -301,7 +301,7 @@
+ 	return ide_do_drive_cmd(drive, rq, ide_preempt);
+ }
+ 
+-ide_startstop_t idescsi_atapi_error (ide_drive_t *drive, const char *msg, byte stat)
++static ide_startstop_t idescsi_atapi_error (ide_drive_t *drive, const char *msg, byte stat)
+ {
+ 	struct request *rq;
+ 	byte err;
+@@ -327,7 +327,7 @@
+ 	return ide_stopped;
+ }
+ 
+-ide_startstop_t idescsi_atapi_abort (ide_drive_t *drive, const char *msg)
++static ide_startstop_t idescsi_atapi_abort (ide_drive_t *drive, const char *msg)
+ {
+ 	struct request *rq;
+ 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
+
+----- End forwarded message -----
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
+
+----- End forwarded message -----
 
