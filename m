@@ -1,222 +1,1104 @@
-From: Andrew Morton <akpm@digeo.com>
-Subject: possible use-after-free in 2.5.44 scsi changes
-Date: Thu, 24 Oct 2002 18:39:24 -0700
+From: SL Baur <steve@kbuxd.necst.nec.co.jp>
+Subject: [RFC][PATCH] Forward port of aic7xxx driver to 2.5.44 [1/3]
+Date: Fri, 25 Oct 2002 11:13:39 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DB8A0CC.1804DF79@digeo.com>
+Message-ID: <15800.43219.216824.411355@sofia.bsd2.kbnes.nec.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from digeo-nav01.digeo.com (digeo-nav01.digeo.com [192.168.1.233])
-	by packet.digeo.com (8.9.3+Sun/8.9.3) with SMTP id SAA27699
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Oct 2002 18:39:26 -0700 (PDT)
+Received: from mailgate4.nec.co.jp ([10.7.69.197])
+	by TYO202.gate.nec.co.jp (8.11.6/3.7W01080315) with ESMTP id g9P2Agl16426
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2002 11:10:42 +0900 (JST)
+Received: from mailsv4.nec.co.jp (mailgate51.nec.co.jp [10.7.69.196]) by mailgate4.nec.co.jp (8.11.6/3.7W-MAILGATE-NEC) with ESMTP
+	id g9P2Af818260 for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2002 11:10:41 +0900 (JST)
+Received: from sv6l.kb.necst.nec.co.jp (ns1.kb.necst.nec.co.jp [10.108.80.236]) by mailsv4.nec.co.jp (8.11.6/3.7W-MAILSV4-NEC) with ESMTP
+	id g9P2Ae218642 for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2002 11:10:41 +0900 (JST)
+Received: from mailgw1 (mailgw1.kb.necst.nec.co.jp [172.16.1.207])
+	by sv6l.kb.necst.nec.co.jp (8.11.6/8.11.6) with SMTP id g9P2Ae059101
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2002 11:10:40 +0900 (JST)
+	(envelope-from steve@kbuxd.necst.nec.co.jp)
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Badari Pulavarty <pbadari@us.ibm.com>, "Martin J. Bligh" <Martin.Bligh@us.ibm.com>, Jens Axboe <axboe@suse.de>, Doug Ledford <dledford@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
+Hi,
 
-Gents,
+This patch updates the aic7xxx driver to be the same version as in
+2.4.20-pre11.  The version currently in 2.5.44 is too old to recognize
+my controller.  It compiles cleanly, but I have not yet tried to boot
+with it.  Would someone with experienced eyes please look it over to
+be sure I didn't do anything stupid?  Thanks.
 
-we have some code in the -mm patchsets which adds a per-cpu
-LIFO pool which frontends the page allocator.  To return pages
-which are cache-warm on the calling CPU.
+===== drivers/scsi/aic7xxx/aic7xxx_proc.c 1.4 vs edited =====
+--- 1.4/drivers/scsi/aic7xxx/aic7xxx_proc.c	Tue Feb  5 16:53:47 2002
++++ edited/drivers/scsi/aic7xxx/aic7xxx_proc.c	Thu Oct 24 13:35:09 2002
+@@ -37,10 +37,11 @@
+  * String handling code courtesy of Gerard Roudier's <groudier@club-internet.fr>
+  * sym driver.
+  *
+- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_proc.c#13 $
++ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_proc.c#19 $
+  */
+ #include "aic7xxx_osm.h"
+ #include "aic7xxx_inline.h"
++#include "aic7xxx_93cx6.h"
+ 
+ static void	copy_mem_info(struct info_str *info, char *data, int len);
+ static int	copy_info(struct info_str *info, char *fmt, ...);
+@@ -51,6 +52,46 @@
+ 				      u_int target_id, u_int target_offset);
+ static void	ahc_dump_device_state(struct info_str *info,
+ 				      struct ahc_linux_device *dev);
++static int	ahc_proc_write_seeprom(struct ahc_softc *ahc,
++				       char *buffer, int length);
++				       
++
++int
++ahc_acquire_seeprom(struct ahc_softc *ahc, struct seeprom_descriptor *sd)
++{
++	int wait;
++
++	if ((ahc->features & AHC_SPIOCAP) != 0
++	 && (ahc_inb(ahc, SPIOCAP) & SEEPROM) == 0)
++		return (0);
++
++	/*
++	 * Request access of the memory port.  When access is
++	 * granted, SEERDY will go high.  We use a 1 second
++	 * timeout which should be near 1 second more than
++	 * is needed.  Reason: after the chip reset, there
++	 * should be no contention.
++	 */
++	SEEPROM_OUTB(sd, sd->sd_MS);
++	wait = 1000;  /* 1 second timeout in msec */
++	while (--wait && ((SEEPROM_STATUS_INB(sd) & sd->sd_RDY) == 0)) {
++		ahc_delay(1000);  /* delay 1 msec */
++	}
++	if ((SEEPROM_STATUS_INB(sd) & sd->sd_RDY) == 0) {
++		SEEPROM_OUTB(sd, 0); 
++		return (0);
++	}
++	return(1);
++}
++
++
++void
++ahc_release_seeprom(struct seeprom_descriptor *sd)
++{
++	/* Release access to the memory port and the serial EEPROM. */
++	SEEPROM_OUTB(sd, 0);
++}
++
+ 
+ static void
+ copy_mem_info(struct info_str *info, char *data, int len)
+@@ -225,6 +266,96 @@
+ 	copy_info(info, "\t\tDevice Queue Frozen Count %d\n", dev->qfrozen);
+ }
+ 
++static int
++ahc_proc_write_seeprom(struct ahc_softc *ahc, char *buffer, int length)
++{
++	struct seeprom_descriptor sd;
++	int have_seeprom;
++	u_long s;
++	int paused;
++	int written;
++
++	/* Default to failure. */
++	written = -EINVAL;
++	ahc_lock(ahc, &s);
++	paused = ahc_is_paused(ahc);
++	if (!paused)
++		ahc_pause(ahc);
++
++	if (length != sizeof(struct seeprom_config)) {
++		printf("ahc_proc_write_seeprom: incorrect buffer size\n");
++		goto done;
++	}
++
++	have_seeprom = ahc_verify_cksum((struct seeprom_config*)buffer);
++	if (have_seeprom == 0) {
++		printf("ahc_proc_write_seeprom: cksum verification failed\n");
++		goto done;
++	}
++
++	sd.sd_ahc = ahc;
++	if ((ahc->chip & AHC_VL) != 0) {
++		sd.sd_control_offset = SEECTL_2840;
++		sd.sd_status_offset = STATUS_2840;
++		sd.sd_dataout_offset = STATUS_2840;		
++		sd.sd_chip = C46;
++		sd.sd_MS = 0;
++		sd.sd_RDY = EEPROM_TF;
++		sd.sd_CS = CS_2840;
++		sd.sd_CK = CK_2840;
++		sd.sd_DO = DO_2840;
++		sd.sd_DI = DI_2840;
++		have_seeprom = TRUE;
++	} else {
++		sd.sd_control_offset = SEECTL;
++		sd.sd_status_offset = SEECTL;
++		sd.sd_dataout_offset = SEECTL;
++		if (ahc->flags & AHC_LARGE_SEEPROM)
++			sd.sd_chip = C56_66;
++		else
++			sd.sd_chip = C46;
++		sd.sd_MS = SEEMS;
++		sd.sd_RDY = SEERDY;
++		sd.sd_CS = SEECS;
++		sd.sd_CK = SEECK;
++		sd.sd_DO = SEEDO;
++		sd.sd_DI = SEEDI;
++		have_seeprom = ahc_acquire_seeprom(ahc, &sd);
++	}
++
++	if (!have_seeprom) {
++		printf("ahc_proc_write_seeprom: No Serial EEPROM\n");
++		goto done;
++	} else {
++		u_int start_addr;
++
++		if (ahc->seep_config == NULL) {
++			ahc->seep_config = malloc(sizeof(*ahc->seep_config),
++						  M_DEVBUF, M_NOWAIT);
++			if (ahc->seep_config == NULL) {
++				printf("aic7xxx: Unable to allocate serial "
++				       "eeprom buffer.  Write failing\n");
++				goto done;
++			}
++		}
++		printf("aic7xxx: Writing Serial EEPROM\n");
++		start_addr = 32 * (ahc->channel - 'A');
++		ahc_write_seeprom(&sd, (u_int16_t *)buffer, start_addr,
++				  sizeof(struct seeprom_config)/2);
++		ahc_read_seeprom(&sd, (uint16_t *)ahc->seep_config,
++				 start_addr, sizeof(struct seeprom_config)/2);
++		if ((ahc->chip & AHC_VL) == 0)
++			ahc_release_seeprom(&sd);
++		written = length;
++	}
++
++done:
++	if (!paused)
++		ahc_unpause(ahc);
++	ahc_unlock(ahc, &s);
++	return (written);
++}
++
+ /*
+  * Return information to handle /proc support for the driver.
+  */
+@@ -235,20 +366,26 @@
+ 	struct	ahc_softc *ahc;
+ 	struct	info_str info;
+ 	char	ahc_info[256];
++	u_long	s;
+ 	u_int	max_targ;
+ 	u_int	i;
++	int	retval;
+ 
++	retval = -EINVAL;
++	ahc_list_lock(&s);
+ 	TAILQ_FOREACH(ahc, &ahc_tailq, links) {
+ 		if (ahc->platform_data->host->host_no == hostno)
+ 			break;
+ 	}
+ 
+ 	if (ahc == NULL)
+-		return (-EINVAL);
++		goto done;
+ 
+ 	 /* Has data been written to the file? */ 
+-	if (inout == TRUE)
+-		return (-ENOSYS);
++	if (inout == TRUE) {
++		retval = ahc_proc_write_seeprom(ahc, buffer, length);
++		goto done;
++	}
+ 
+ 	if (start)
+ 		*start = buffer;
+@@ -261,7 +398,22 @@
+ 	copy_info(&info, "Adaptec AIC7xxx driver version: %s\n",
+ 		  AIC7XXX_DRIVER_VERSION);
+ 	ahc_controller_info(ahc, ahc_info);
+-	copy_info(&info, "%s\n", ahc_info);
++	copy_info(&info, "%s\n\n", ahc_info);
++
++	if (ahc->seep_config == NULL)
++		copy_info(&info, "No Serial EEPROM\n");
++	else {
++		copy_info(&info, "Serial EEPROM:\n");
++		for (i = 0; i < sizeof(*ahc->seep_config)/2; i++) {
++			if (((i % 8) == 0) && (i != 0)) {
++				copy_info(&info, "\n");
++			}
++			copy_info(&info, "0x%.4x ",
++				  ((uint16_t*)ahc->seep_config)[i]);
++		}
++		copy_info(&info, "\n");
++	}
++	copy_info(&info, "\n");
+ 
+ 	max_targ = 15;
+ 	if ((ahc->features & (AHC_WIDE|AHC_TWIN)) == 0)
+@@ -284,5 +436,8 @@
+ 		ahc_dump_target_state(ahc, &info, our_id,
+ 				      channel, target_id, i);
+ 	}
+-	return (info.pos > info.offset ? info.pos - info.offset : 0);
++	retval = info.pos > info.offset ? info.pos - info.offset : 0;
++done:
++	ahc_list_unlock(&s);
++	return (retval);
+ }
+===== drivers/scsi/aic7xxx/aic7xxx_pci.c 1.5 vs edited =====
+--- 1.5/drivers/scsi/aic7xxx/aic7xxx_pci.c	Tue Feb  5 16:53:47 2002
++++ edited/drivers/scsi/aic7xxx/aic7xxx_pci.c	Thu Oct 24 13:28:07 2002
+@@ -39,9 +39,9 @@
+  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  * POSSIBILITY OF SUCH DAMAGES.
+  *
+- * $Id: //depot/aic7xxx/aic7xxx/aic7xxx_pci.c#32 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic7xxx_pci.c#46 $
+  *
+- * $FreeBSD: src/sys/dev/aic7xxx/aic7xxx_pci.c,v 1.6 2000/11/10 20:13:41 gibbs Exp $
++ * $FreeBSD: src/sys/dev/aic7xxx/aic7xxx_pci.c,v 1.2.2.14 2002/04/29 19:36:31 gibbs Exp $
+  */
+ 
+ #include "aic7xxx_osm.h"
+@@ -207,7 +207,7 @@
+ 	 : ((id) & 0x1000) >> 12)
+ /*
+  * Informational only. Should use chip register to be
+- * ceratian, but may be use in identification strings.
++ * certain, but may be use in identification strings.
+  */
+ #define SUBID_9005_CARD_SCSIWIDTH_MASK	0x2000
+ #define SUBID_9005_CARD_PCIWIDTH_MASK	0x4000
+@@ -661,6 +661,8 @@
+ 				  int pcheck, int fast, int large);
+ static void ahc_probe_ext_scbram(struct ahc_softc *ahc);
+ static void check_extport(struct ahc_softc *ahc, u_int *sxfrctl1);
++static void ahc_parse_pci_eeprom(struct ahc_softc *ahc,
++				 struct seeprom_config *sc);
+ static void configure_termination(struct ahc_softc *ahc,
+ 				  struct seeprom_descriptor *sd,
+ 				  u_int adapter_control,
+@@ -679,9 +681,6 @@
+ static void aic785X_cable_detect(struct ahc_softc *ahc, int *internal50_present,
+ 				 int *externalcable_present,
+ 				 int *eeprom_present);
+-static int acquire_seeprom(struct ahc_softc *ahc,
+-			   struct seeprom_descriptor *sd);
+-static void release_seeprom(struct seeprom_descriptor *sd);
+ static void write_brdctl(struct ahc_softc *ahc, uint8_t value);
+ static uint8_t read_brdctl(struct ahc_softc *ahc);
+ 
+@@ -767,6 +766,8 @@
+ ahc_pci_config(struct ahc_softc *ahc, struct ahc_pci_identity *entry)
+ {
+ 	struct scb_data *shared_scb_data;
++	u_long		 l;
++	u_long		 s;
+ 	u_int		 command;
+ 	u_int		 our_id = 0;
+ 	u_int		 sxfrctl1;
+@@ -782,11 +783,19 @@
+ 	ahc->chip |= AHC_PCI;
+ 	ahc->description = entry->name;
+ 
++	ahc_power_state_change(ahc, AHC_POWER_STATE_D0);
++
+ 	error = ahc_pci_map_registers(ahc);
+ 	if (error != 0)
+ 		return (error);
+ 
+-	ahc_power_state_change(ahc, AHC_POWER_STATE_D0);
++	/*
++	 * Before we continue probing the card, ensure that
++	 * its interrupts are *disabled*.  We don't want
++	 * a misstep to hang the machine in an interrupt
++	 * storm.
++	 */
++	ahc_intr_enable(ahc, FALSE);
+ 
+ 	/*
+ 	 * If we need to support high memory, enable dual
+@@ -964,19 +973,23 @@
+ 		return (error);
+ 
+ 	/*
+-	 * Link this softc in with all other ahc instances.
+-	 */
+-	ahc_softc_insert(ahc);
+-
+-	/*
+ 	 * Allow interrupts now that we are completely setup.
+ 	 */
+ 	error = ahc_pci_map_int(ahc);
+ 	if (error != 0)
+ 		return (error);
+ 
++	ahc_list_lock(&l);
++	/*
++	 * Link this softc in with all other ahc instances.
++	 */
++	ahc_softc_insert(ahc);
++
++	ahc_lock(ahc, &s);
+ 	ahc_intr_enable(ahc, TRUE);
++	ahc_unlock(ahc, &s);
+ 
++	ahc_list_unlock(&l);
+ 	return (0);
+ }
+ 
+@@ -999,6 +1012,14 @@
+ 
+ 	if ((ahc->features & AHC_ULTRA2) != 0)
+ 		ramps = (ahc_inb(ahc, DSCOMMAND0) & RAMPS) != 0;
++	else if (chip == AHC_AIC7895 || chip == AHC_AIC7895C)
++		/*
++		 * External SCBRAM arbitration is flakey
++		 * on these chips.  Unfortunately this means
++		 * we don't use the extra SCB ram space on the
++		 * 3940AUW.
++		 */
++		ramps = 0;
+ 	else if (chip >= AHC_AIC7870)
+ 		ramps = (devconfig & RAMPSM) != 0;
+ 	else
+@@ -1026,6 +1047,9 @@
+ 		ahc_outb(ahc, SCBBADDR, ahc_get_pci_function(ahc->dev_softc));
+ 	}
+ 
++	ahc->flags &= ~AHC_LSCBS_ENABLED;
++	if (large)
++		ahc->flags |= AHC_LSCBS_ENABLED;
+ 	devconfig = ahc_pci_read_config(ahc->dev_softc, DEVCONFIG, /*bytes*/4);
+ 	if ((ahc->features & AHC_ULTRA2) != 0) {
+ 		u_int dscommand0;
+@@ -1172,9 +1196,7 @@
+ check_extport(struct ahc_softc *ahc, u_int *sxfrctl1)
+ {
+ 	struct	seeprom_descriptor sd;
+-	struct	seeprom_config sc;
+-	u_int	scsi_conf;
+-	u_int	adapter_control;
++	struct	seeprom_config *sc;
+ 	int	have_seeprom;
+ 	int	have_autoterm;
+ 
+@@ -1182,6 +1204,7 @@
+ 	sd.sd_control_offset = SEECTL;		
+ 	sd.sd_status_offset = SEECTL;		
+ 	sd.sd_dataout_offset = SEECTL;		
++	sc = ahc->seep_config;
+ 
+ 	/*
+ 	 * For some multi-channel devices, the c46 is simply too
+@@ -1201,7 +1224,7 @@
+ 	sd.sd_DO = SEEDO;
+ 	sd.sd_DI = SEEDI;
+ 
+-	have_seeprom = acquire_seeprom(ahc, &sd);
++	have_seeprom = ahc_acquire_seeprom(ahc, &sd);
+ 	if (have_seeprom) {
+ 
+ 		if (bootverbose) 
+@@ -1212,11 +1235,12 @@
+ 
+ 			start_addr = 32 * (ahc->channel - 'A');
+ 
+-			have_seeprom = read_seeprom(&sd, (uint16_t *)&sc,
+-						    start_addr, sizeof(sc)/2);
++			have_seeprom = ahc_read_seeprom(&sd, (uint16_t *)sc,
++							start_addr,
++							sizeof(*sc)/2);
+ 
+ 			if (have_seeprom)
+-				have_seeprom = verify_cksum(&sc);
++				have_seeprom = ahc_verify_cksum(sc);
+ 
+ 			if (have_seeprom != 0 || sd.sd_chip == C56_66) {
+ 				if (bootverbose) {
+@@ -1229,7 +1253,7 @@
+ 			}
+ 			sd.sd_chip = C56_66;
+ 		}
+-		release_seeprom(&sd);
++		ahc_release_seeprom(&sd);
+ 	}
+ 
+ 	if (!have_seeprom) {
+@@ -1248,7 +1272,7 @@
+ 			uint16_t *sc_data;
+ 			int	  i;
+ 
+-			sc_data = (uint16_t *)&sc;
++			sc_data = (uint16_t *)sc;
+ 			for (i = 0; i < 32; i++) {
+ 				uint16_t val;
+ 				int	 j;
+@@ -1257,129 +1281,27 @@
+ 				val = ahc_inb(ahc, SRAM_BASE + j)
+ 				    | ahc_inb(ahc, SRAM_BASE + j + 1) << 8;
+ 			}
+-			have_seeprom = verify_cksum(&sc);
++			have_seeprom = ahc_verify_cksum(sc);
++			if (have_seeprom)
++				ahc->flags |= AHC_SCB_CONFIG_USED;
+ 		}
++		/*
++		 * Clear any SCB parity errors in case this data and
++		 * its associated parity was not initialized by the BIOS
++		 */
++		ahc_outb(ahc, CLRINT, CLRPARERR);
++		ahc_outb(ahc, CLRINT, CLRBRKADRINT);
+ 	}
+ 
+ 	if (!have_seeprom) {
+ 		if (bootverbose)
+ 			printf("%s: No SEEPROM available.\n", ahc_name(ahc));
+ 		ahc->flags |= AHC_USEDEFAULTS;
++		free(ahc->seep_config, M_DEVBUF);
++		ahc->seep_config = NULL;
++		sc = NULL;
+ 	} else {
+-		/*
+-		 * Put the data we've collected down into SRAM
+-		 * where ahc_init will find it.
+-		 */
+-		int i;
+-		int max_targ = sc.max_targets & CFMAXTARG;
+-		uint16_t discenable;
+-		uint16_t ultraenb;
+-
+-		discenable = 0;
+-		ultraenb = 0;
+-		if ((sc.adapter_control & CFULTRAEN) != 0) {
+-			/*
+-			 * Determine if this adapter has a "newstyle"
+-			 * SEEPROM format.
+-			 */
+-			for (i = 0; i < max_targ; i++) {
+-				if ((sc.device_flags[i] & CFSYNCHISULTRA) != 0){
+-					ahc->flags |= AHC_NEWEEPROM_FMT;
+-					break;
+-				}
+-			}
+-		}
+-
+-		for (i = 0; i < max_targ; i++) {
+-			u_int     scsirate;
+-			uint16_t target_mask;
+-
+-			target_mask = 0x01 << i;
+-			if (sc.device_flags[i] & CFDISC)
+-				discenable |= target_mask;
+-			if ((ahc->flags & AHC_NEWEEPROM_FMT) != 0) {
+-				if ((sc.device_flags[i] & CFSYNCHISULTRA) != 0)
+-					ultraenb |= target_mask;
+-			} else if ((sc.adapter_control & CFULTRAEN) != 0) {
+-				ultraenb |= target_mask;
+-			}
+-			if ((sc.device_flags[i] & CFXFER) == 0x04
+-			 && (ultraenb & target_mask) != 0) {
+-				/* Treat 10MHz as a non-ultra speed */
+-				sc.device_flags[i] &= ~CFXFER;
+-			 	ultraenb &= ~target_mask;
+-			}
+-			if ((ahc->features & AHC_ULTRA2) != 0) {
+-				u_int offset;
+-
+-				if (sc.device_flags[i] & CFSYNCH)
+-					offset = MAX_OFFSET_ULTRA2;
+-				else 
+-					offset = 0;
+-				ahc_outb(ahc, TARG_OFFSET + i, offset);
+-
+-				/*
+-				 * The ultra enable bits contain the
+-				 * high bit of the ultra2 sync rate
+-				 * field.
+-				 */
+-				scsirate = (sc.device_flags[i] & CFXFER)
+-					 | ((ultraenb & target_mask)
+-					    ? 0x8 : 0x0);
+-				if (sc.device_flags[i] & CFWIDEB)
+-					scsirate |= WIDEXFER;
+-			} else {
+-				scsirate = (sc.device_flags[i] & CFXFER) << 4;
+-				if (sc.device_flags[i] & CFSYNCH)
+-					scsirate |= SOFS;
+-				if (sc.device_flags[i] & CFWIDEB)
+-					scsirate |= WIDEXFER;
+-			}
+-			ahc_outb(ahc, TARG_SCSIRATE + i, scsirate);
+-		}
+-		ahc->our_id = sc.brtime_id & CFSCSIID;
+-
+-		scsi_conf = (ahc->our_id & 0x7);
+-		if (sc.adapter_control & CFSPARITY)
+-			scsi_conf |= ENSPCHK;
+-		if (sc.adapter_control & CFRESETB)
+-			scsi_conf |= RESET_SCSI;
+-
+-		ahc->flags |=
+-		    (sc.adapter_control & CFBOOTCHAN) >> CFBOOTCHANSHIFT;
+-
+-		if (sc.bios_control & CFEXTEND)
+-			ahc->flags |= AHC_EXTENDED_TRANS_A;
+-
+-		if (sc.bios_control & CFBIOSEN)
+-			ahc->flags |= AHC_BIOS_ENABLED;
+-		if (ahc->features & AHC_ULTRA
+-		 && (ahc->flags & AHC_NEWEEPROM_FMT) == 0) {
+-			/* Should we enable Ultra mode? */
+-			if (!(sc.adapter_control & CFULTRAEN))
+-				/* Treat us as a non-ultra card */
+-				ultraenb = 0;
+-		}
+-
+-		if (sc.signature == CFSIGNATURE
+-		 || sc.signature == CFSIGNATURE2) {
+-			uint32_t devconfig;
+-
+-			/* Honor the STPWLEVEL settings */
+-			devconfig = ahc_pci_read_config(ahc->dev_softc,
+-							DEVCONFIG, /*bytes*/4);
+-			devconfig &= ~STPWLEVEL;
+-			if ((sc.bios_control & CFSTPWLEVEL) != 0)
+-				devconfig |= STPWLEVEL;
+-			ahc_pci_write_config(ahc->dev_softc, DEVCONFIG,
+-					     devconfig, /*bytes*/4);
+-		}
+-		/* Set SCSICONF info */
+-		ahc_outb(ahc, SCSICONF, scsi_conf);
+-		ahc_outb(ahc, DISC_DSB, ~(discenable & 0xff));
+-		ahc_outb(ahc, DISC_DSB + 1, ~((discenable >> 8) & 0xff));
+-		ahc_outb(ahc, ULTRA_ENB, ultraenb & 0xff);
+-		ahc_outb(ahc, ULTRA_ENB + 1, (ultraenb >> 8) & 0xff);
++		ahc_parse_pci_eeprom(ahc, sc);
+ 	}
+ 
+ 	/*
+@@ -1389,10 +1311,6 @@
+ 	 * hasn't failed yet...
+ 	 */
+ 	have_autoterm = have_seeprom;
+-	if (have_seeprom)
+-		adapter_control = sc.adapter_control;
+-	else
+-		adapter_control = CFAUTOTERM;
+ 
+ 	/*
+ 	 * Some low-cost chips have SEEPROM and auto-term control built
+@@ -1400,17 +1318,141 @@
+ 	 * if the termination logic is enabled.
+ 	 */
+ 	if ((ahc->features & AHC_SPIOCAP) != 0) {
+-		if ((ahc_inb(ahc, SPIOCAP) & SSPIOCPS) != 0)
+-			have_autoterm = TRUE;
+-		else
++		if ((ahc_inb(ahc, SPIOCAP) & SSPIOCPS) == 0)
+ 			have_autoterm = FALSE;
+ 	}
+ 
+ 	if (have_autoterm) {
+-		acquire_seeprom(ahc, &sd);
+-		configure_termination(ahc, &sd, adapter_control, sxfrctl1);
+-		release_seeprom(&sd);
++		ahc_acquire_seeprom(ahc, &sd);
++		configure_termination(ahc, &sd, sc->adapter_control, sxfrctl1);
++		ahc_release_seeprom(&sd);
++	} else if (have_seeprom) {
++		*sxfrctl1 &= ~STPWEN;
++		if ((sc->adapter_control & CFSTERM) != 0)
++			*sxfrctl1 |= STPWEN;
++		if (bootverbose)
++			printf("%s: Low byte termination %sabled\n",
++			       ahc_name(ahc),
++			       (*sxfrctl1 & STPWEN) ? "en" : "dis");
++	}
++}
++
++static void
++ahc_parse_pci_eeprom(struct ahc_softc *ahc, struct seeprom_config *sc)
++{
++	/*
++	 * Put the data we've collected down into SRAM
++	 * where ahc_init will find it.
++	 */
++	int	 i;
++	int	 max_targ = sc->max_targets & CFMAXTARG;
++	u_int	 scsi_conf;
++	uint16_t discenable;
++	uint16_t ultraenb;
++
++	discenable = 0;
++	ultraenb = 0;
++	if ((sc->adapter_control & CFULTRAEN) != 0) {
++		/*
++		 * Determine if this adapter has a "newstyle"
++		 * SEEPROM format.
++		 */
++		for (i = 0; i < max_targ; i++) {
++			if ((sc->device_flags[i] & CFSYNCHISULTRA) != 0) {
++				ahc->flags |= AHC_NEWEEPROM_FMT;
++				break;
++			}
++		}
++	}
++
++	for (i = 0; i < max_targ; i++) {
++		u_int     scsirate;
++		uint16_t target_mask;
++
++		target_mask = 0x01 << i;
++		if (sc->device_flags[i] & CFDISC)
++			discenable |= target_mask;
++		if ((ahc->flags & AHC_NEWEEPROM_FMT) != 0) {
++			if ((sc->device_flags[i] & CFSYNCHISULTRA) != 0)
++				ultraenb |= target_mask;
++		} else if ((sc->adapter_control & CFULTRAEN) != 0) {
++			ultraenb |= target_mask;
++		}
++		if ((sc->device_flags[i] & CFXFER) == 0x04
++		 && (ultraenb & target_mask) != 0) {
++			/* Treat 10MHz as a non-ultra speed */
++			sc->device_flags[i] &= ~CFXFER;
++		 	ultraenb &= ~target_mask;
++		}
++		if ((ahc->features & AHC_ULTRA2) != 0) {
++			u_int offset;
++
++			if (sc->device_flags[i] & CFSYNCH)
++				offset = MAX_OFFSET_ULTRA2;
++			else 
++				offset = 0;
++			ahc_outb(ahc, TARG_OFFSET + i, offset);
++
++			/*
++			 * The ultra enable bits contain the
++			 * high bit of the ultra2 sync rate
++			 * field.
++			 */
++			scsirate = (sc->device_flags[i] & CFXFER)
++				 | ((ultraenb & target_mask) ? 0x8 : 0x0);
++			if (sc->device_flags[i] & CFWIDEB)
++				scsirate |= WIDEXFER;
++		} else {
++			scsirate = (sc->device_flags[i] & CFXFER) << 4;
++			if (sc->device_flags[i] & CFSYNCH)
++				scsirate |= SOFS;
++			if (sc->device_flags[i] & CFWIDEB)
++				scsirate |= WIDEXFER;
++		}
++		ahc_outb(ahc, TARG_SCSIRATE + i, scsirate);
++	}
++	ahc->our_id = sc->brtime_id & CFSCSIID;
++
++	scsi_conf = (ahc->our_id & 0x7);
++	if (sc->adapter_control & CFSPARITY)
++		scsi_conf |= ENSPCHK;
++	if (sc->adapter_control & CFRESETB)
++		scsi_conf |= RESET_SCSI;
++
++	ahc->flags |= (sc->adapter_control & CFBOOTCHAN) >> CFBOOTCHANSHIFT;
++
++	if (sc->bios_control & CFEXTEND)
++		ahc->flags |= AHC_EXTENDED_TRANS_A;
++
++	if (sc->bios_control & CFBIOSEN)
++		ahc->flags |= AHC_BIOS_ENABLED;
++	if (ahc->features & AHC_ULTRA
++	 && (ahc->flags & AHC_NEWEEPROM_FMT) == 0) {
++		/* Should we enable Ultra mode? */
++		if (!(sc->adapter_control & CFULTRAEN))
++			/* Treat us as a non-ultra card */
++			ultraenb = 0;
++	}
++
++	if (sc->signature == CFSIGNATURE
++	 || sc->signature == CFSIGNATURE2) {
++		uint32_t devconfig;
++
++		/* Honor the STPWLEVEL settings */
++		devconfig = ahc_pci_read_config(ahc->dev_softc,
++						DEVCONFIG, /*bytes*/4);
++		devconfig &= ~STPWLEVEL;
++		if ((sc->bios_control & CFSTPWLEVEL) != 0)
++			devconfig |= STPWLEVEL;
++		ahc_pci_write_config(ahc->dev_softc, DEVCONFIG,
++				     devconfig, /*bytes*/4);
+ 	}
++	/* Set SCSICONF info */
++	ahc_outb(ahc, SCSICONF, scsi_conf);
++	ahc_outb(ahc, DISC_DSB, ~(discenable & 0xff));
++	ahc_outb(ahc, DISC_DSB + 1, ~((discenable >> 8) & 0xff));
++	ahc_outb(ahc, ULTRA_ENB, ultraenb & 0xff);
++	ahc_outb(ahc, ULTRA_ENB + 1, (ultraenb >> 8) & 0xff);
+ }
+ 
+ static void
+@@ -1453,10 +1495,10 @@
+ 		enablePRI_high = 0;
+ 		if ((ahc->features & AHC_NEW_TERMCTL) != 0) {
+ 			ahc_new_term_detect(ahc, &enableSEC_low,
+-					       &enableSEC_high,
+-					       &enablePRI_low,
+-					       &enablePRI_high,
+-					       &eeprom_present);
++					    &enableSEC_high,
++					    &enablePRI_low,
++					    &enablePRI_high,
++					    &eeprom_present);
+ 			if ((adapter_control & CFSEAUTOTERM) == 0) {
+ 				if (bootverbose)
+ 					printf("%s: Manual SE Termination\n",
+@@ -1534,6 +1576,15 @@
+ 			       "Only two connectors on the "
+ 			       "adapter may be used at a "
+ 			       "time!\n", ahc_name(ahc));
++
++			/*
++			 * Pretend there are no cables in the hope
++			 * that having all of the termination on
++			 * gives us a more stable bus.
++			 */
++		 	internal50_present = 0;
++			internal68_present = 0;
++			externalcable_present = 0;
+ 		}
+ 
+ 		if ((ahc->features & AHC_WIDE) != 0
+@@ -1696,7 +1747,12 @@
+ 		     int *externalcable_present, int *eeprom_present)
+ {
+ 	uint8_t brdctl;
++	uint8_t spiocap;
+ 
++	spiocap = ahc_inb(ahc, SPIOCAP);
++	spiocap &= ~SOFTCMDEN;
++	spiocap |= EXT_BRDCTL;
++	ahc_outb(ahc, SPIOCAP, spiocap);
+ 	ahc_outb(ahc, BRDCTL, BRDRW|BRDCS);
+ 	ahc_outb(ahc, BRDCTL, 0);
+ 	brdctl = ahc_inb(ahc, BRDCTL);
+@@ -1706,41 +1762,6 @@
+ 	*eeprom_present = (ahc_inb(ahc, SPIOCAP) & EEPROM) ? 1 : 0;
+ }
+ 	
+-static int
+-acquire_seeprom(struct ahc_softc *ahc, struct seeprom_descriptor *sd)
+-{
+-	int wait;
+-
+-	if ((ahc->features & AHC_SPIOCAP) != 0
+-	 && (ahc_inb(ahc, SPIOCAP) & SEEPROM) == 0)
+-		return (0);
+-
+-	/*
+-	 * Request access of the memory port.  When access is
+-	 * granted, SEERDY will go high.  We use a 1 second
+-	 * timeout which should be near 1 second more than
+-	 * is needed.  Reason: after the chip reset, there
+-	 * should be no contention.
+-	 */
+-	SEEPROM_OUTB(sd, sd->sd_MS);
+-	wait = 1000;  /* 1 second timeout in msec */
+-	while (--wait && ((SEEPROM_STATUS_INB(sd) & sd->sd_RDY) == 0)) {
+-		ahc_delay(1000);  /* delay 1 msec */
+-	}
+-	if ((SEEPROM_STATUS_INB(sd) & sd->sd_RDY) == 0) {
+-		SEEPROM_OUTB(sd, 0); 
+-		return (0);
+-	}
+-	return(1);
+-}
+-
+-static void
+-release_seeprom(struct seeprom_descriptor *sd)
+-{
+-	/* Release access to the memory port and the serial EEPROM. */
+-	SEEPROM_OUTB(sd, 0);
+-}
+-
+ static void
+ write_brdctl(struct ahc_softc *ahc, uint8_t value)
+ {
+===== drivers/scsi/aic7xxx/scsi_message.h 1.2 vs edited =====
+--- 1.2/drivers/scsi/aic7xxx/scsi_message.h	Tue Feb  5 16:38:15 2002
++++ edited/drivers/scsi/aic7xxx/scsi_message.h	Thu Oct 24 14:18:15 2002
+@@ -46,7 +46,7 @@
+ #define MSG_IDENTIFY_DISCFLAG	0x40 
+ #define MSG_IDENTIFY(lun, disc)	(((disc) ? 0xc0 : MSG_IDENTIFYFLAG) | (lun))
+ #define MSG_ISIDENTIFY(m)	((m) & MSG_IDENTIFYFLAG)
+-#define MSG_IDENTIFY_LUNMASK	0x03F 
++#define MSG_IDENTIFY_LUNMASK	0x3F 
+ 
+ /* Extended messages (opcode and length) */
+ #define MSG_EXT_SDTR		0x01
+@@ -60,6 +60,11 @@
+ 
+ #define MSG_EXT_PPR		0x04 /* SPI3 */
+ #define MSG_EXT_PPR_LEN		0x06
+-#define MSG_EXT_PPR_QAS_REQ	0x04
+-#define MSG_EXT_PPR_DT_REQ	0x02
++#define	MSG_EXT_PPR_PCOMP_EN	0x80
++#define	MSG_EXT_PPR_RTI		0x40
++#define	MSG_EXT_PPR_RD_STRM	0x20
++#define	MSG_EXT_PPR_WR_FLOW	0x10
++#define	MSG_EXT_PPR_HOLD_MCS	0x08
++#define	MSG_EXT_PPR_QAS_REQ	0x04
++#define	MSG_EXT_PPR_DT_REQ	0x02
+ #define MSG_EXT_PPR_IU_REQ	0x01
+===== drivers/scsi/aic7xxx/aic7xxx_93cx6.h 1.2 vs edited =====
+--- 1.2/drivers/scsi/aic7xxx/aic7xxx_93cx6.h	Tue Feb  5 16:53:47 2002
++++ edited/drivers/scsi/aic7xxx/aic7xxx_93cx6.h	Wed Oct 23 16:13:40 2002
+@@ -38,9 +38,9 @@
+  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  * POSSIBILITY OF SUCH DAMAGES.
+  *
+- * $Id: //depot/aic7xxx/aic7xxx/aic7xxx_93cx6.h#7 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic7xxx_93cx6.h#10 $
+  *
+- * $FreeBSD: src/sys/dev/aic7xxx/aic7xxx_93cx6.h,v 1.8 2000/11/10 20:13:41 gibbs Exp $
++ * $FreeBSD: src/sys/dev/aic7xxx/aic7xxx_93cx6.h,v 1.7.2.3 2002/04/29 19:36:31 gibbs Exp $
+  */
+ #ifndef _AIC7XXX_93CX6_H_
+ #define _AIC7XXX_93CX6_H_
+@@ -93,8 +93,10 @@
+ #define	SEEPROM_DATA_INB(sd) \
+ 	ahc_inb(sd->sd_ahc, sd->sd_dataout_offset)
+ 
+-int read_seeprom(struct seeprom_descriptor *sd, uint16_t *buf,
+-		 u_int start_addr, u_int count);
+-int verify_cksum(struct seeprom_config *sc);
++int ahc_read_seeprom(struct seeprom_descriptor *sd, uint16_t *buf,
++		     u_int start_addr, u_int count);
++int ahc_write_seeprom(struct seeprom_descriptor *sd, uint16_t *buf,
++		      u_int start_addr, u_int count);
++int ahc_verify_cksum(struct seeprom_config *sc);
+ 
+ #endif /* _AIC7XXX_93CX6_H_ */
+===== drivers/scsi/aic7xxx/aic7xxx_93cx6.c 1.4 vs edited =====
+--- 1.4/drivers/scsi/aic7xxx/aic7xxx_93cx6.c	Tue Feb  5 16:53:47 2002
++++ edited/drivers/scsi/aic7xxx/aic7xxx_93cx6.c	Wed Oct 23 16:12:20 2002
+@@ -28,9 +28,9 @@
+  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+  * SUCH DAMAGE.
+  *
+- * $Id: //depot/aic7xxx/aic7xxx/aic7xxx_93cx6.c#10 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic7xxx_93cx6.c#15 $
+  *
+- * $FreeBSD: src/sys/dev/aic7xxx/aic7xxx_93cx6.c,v 1.9 2000/11/10 20:13:41 gibbs Exp $
++ * $FreeBSD: src/sys/dev/aic7xxx/aic7xxx_93cx6.c,v 1.8.2.5 2002/04/29 19:36:31 gibbs Exp $
+  */
+ 
+ /*
+@@ -77,9 +77,13 @@
+  */
+ static struct seeprom_cmd {
+   	uint8_t len;
+- 	uint8_t bits[3];
++ 	uint8_t bits[9];
+ } seeprom_read = {3, {1, 1, 0}};
+ 
++static struct seeprom_cmd seeprom_ewen = {9, {1, 0, 0, 1, 1, 0, 0, 0, 0}};
++static struct seeprom_cmd seeprom_ewds = {9, {1, 0, 0, 0, 0, 0, 0, 0, 0}};
++static struct seeprom_cmd seeprom_write = {3, {1, 0, 1}};
++
+ /*
+  * Wait for the SEERDY to go high; about 800 ns.
+  */
+@@ -90,15 +94,55 @@
+ 	(void)SEEPROM_INB(sd);	/* Clear clock */
+ 
+ /*
++ * Send a START condition and the given command
++ */
++static void
++send_seeprom_cmd(struct seeprom_descriptor *sd, struct seeprom_cmd *cmd)
++{
++	uint8_t temp;
++	int i = 0;
++
++	/* Send chip select for one clock cycle. */
++	temp = sd->sd_MS ^ sd->sd_CS;
++	SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
++	CLOCK_PULSE(sd, sd->sd_RDY);
++
++	for (i = 0; i < cmd->len; i++) {
++		if (cmd->bits[i] != 0)
++			temp ^= sd->sd_DO;
++		SEEPROM_OUTB(sd, temp);
++		CLOCK_PULSE(sd, sd->sd_RDY);
++		SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
++		CLOCK_PULSE(sd, sd->sd_RDY);
++		if (cmd->bits[i] != 0)
++			temp ^= sd->sd_DO;
++	}
++}
++
++/*
++ * Clear CS put the chip in the reset state, where it can wait for new commands.
++ */
++static void
++reset_seeprom(struct seeprom_descriptor *sd)
++{
++	uint8_t temp;
++
++	temp = sd->sd_MS;
++	SEEPROM_OUTB(sd, temp);
++	CLOCK_PULSE(sd, sd->sd_RDY);
++	SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
++	CLOCK_PULSE(sd, sd->sd_RDY);
++	SEEPROM_OUTB(sd, temp);
++	CLOCK_PULSE(sd, sd->sd_RDY);
++}
++
++/*
+  * Read the serial EEPROM and returns 1 if successful and 0 if
+  * not successful.
+  */
+ int
+-read_seeprom(sd, buf, start_addr, count)
+-	struct seeprom_descriptor *sd;
+-	uint16_t *buf;
+-	u_int start_addr;
+-	u_int count;
++ahc_read_seeprom(struct seeprom_descriptor *sd, uint16_t *buf,
++		 u_int start_addr, u_int count)
+ {
+ 	int i = 0;
+ 	u_int k = 0;
+@@ -110,26 +154,14 @@
+ 	 * will range from 0 to count-1.
+ 	 */
+ 	for (k = start_addr; k < count + start_addr; k++) {
+-		/* Send chip select for one clock cycle. */
+-		temp = sd->sd_MS ^ sd->sd_CS;
+-		SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
+-		CLOCK_PULSE(sd, sd->sd_RDY);
+-
+ 		/*
+ 		 * Now we're ready to send the read command followed by the
+ 		 * address of the 16-bit register we want to read.
+ 		 */
+-		for (i = 0; i < seeprom_read.len; i++) {
+-			if (seeprom_read.bits[i] != 0)
+-				temp ^= sd->sd_DO;
+-			SEEPROM_OUTB(sd, temp);
+-			CLOCK_PULSE(sd, sd->sd_RDY);
+-			SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
+-			CLOCK_PULSE(sd, sd->sd_RDY);
+-			if (seeprom_read.bits[i] != 0)
+-				temp ^= sd->sd_DO;
+-		}
++		send_seeprom_cmd(sd, &seeprom_read);
++
+ 		/* Send the 6 or 8 bit address (MSB first, LSB last). */
++		temp = sd->sd_MS ^ sd->sd_CS;
+ 		for (i = (sd->sd_chip - 1); i >= 0; i--) {
+ 			if ((k & (1 << i)) != 0)
+ 				temp ^= sd->sd_DO;
+@@ -161,13 +193,7 @@
+ 		buf[k - start_addr] = v;
+ 
+ 		/* Reset the chip select for the next command cycle. */
+-		temp = sd->sd_MS;
+-		SEEPROM_OUTB(sd, temp);
+-		CLOCK_PULSE(sd, sd->sd_RDY);
+-		SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
+-		CLOCK_PULSE(sd, sd->sd_RDY);
+-		SEEPROM_OUTB(sd, temp);
+-		CLOCK_PULSE(sd, sd->sd_RDY);
++		reset_seeprom(sd);
+ 	}
+ #ifdef AHC_DUMP_EEPROM
+ 	printf("\nSerial EEPROM:\n\t");
+@@ -182,8 +208,77 @@
+ 	return (1);
+ }
+ 
++/*
++ * Write the serial EEPROM and return 1 if successful and 0 if
++ * not successful.
++ */
++int
++ahc_write_seeprom(struct seeprom_descriptor *sd, uint16_t *buf,
++		  u_int start_addr, u_int count)
++{
++	uint16_t v;
++	uint8_t temp;
++	int i, k;
++
++	/* Place the chip into write-enable mode */
++	send_seeprom_cmd(sd, &seeprom_ewen);
++	reset_seeprom(sd);
++
++	/* Write all requested data out to the seeprom. */
++	temp = sd->sd_MS ^ sd->sd_CS;
++	for (k = start_addr; k < count + start_addr; k++) {
++		/* Send the write command */
++		send_seeprom_cmd(sd, &seeprom_write);
++
++		/* Send the 6 or 8 bit address (MSB first). */
++		for (i = (sd->sd_chip - 1); i >= 0; i--) {
++			if ((k & (1 << i)) != 0)
++				temp ^= sd->sd_DO;
++			SEEPROM_OUTB(sd, temp);
++			CLOCK_PULSE(sd, sd->sd_RDY);
++			SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
++			CLOCK_PULSE(sd, sd->sd_RDY);
++			if ((k & (1 << i)) != 0)
++				temp ^= sd->sd_DO;
++		}
++
++		/* Write the 16 bit value, MSB first */
++		v = buf[k - start_addr];
++		for (i = 15; i >= 0; i--) {
++			if ((v & (1 << i)) != 0)
++				temp ^= sd->sd_DO;
++			SEEPROM_OUTB(sd, temp);
++			CLOCK_PULSE(sd, sd->sd_RDY);
++			SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
++			CLOCK_PULSE(sd, sd->sd_RDY);
++			if ((v & (1 << i)) != 0)
++				temp ^= sd->sd_DO;
++		}
++
++		/* Wait for the chip to complete the write */
++		temp = sd->sd_MS;
++		SEEPROM_OUTB(sd, temp);
++		CLOCK_PULSE(sd, sd->sd_RDY);
++		temp = sd->sd_MS ^ sd->sd_CS;
++		do {
++			SEEPROM_OUTB(sd, temp);
++			CLOCK_PULSE(sd, sd->sd_RDY);
++			SEEPROM_OUTB(sd, temp ^ sd->sd_CK);
++			CLOCK_PULSE(sd, sd->sd_RDY);
++		} while ((SEEPROM_DATA_INB(sd) & sd->sd_DI) == 0);
++
++		reset_seeprom(sd);
++	}
++
++	/* Put the chip back into write-protect mode */
++	send_seeprom_cmd(sd, &seeprom_ewds);
++	reset_seeprom(sd);
++
++	return (1);
++}
++
+ int
+-verify_cksum(struct seeprom_config *sc)
++ahc_verify_cksum(struct seeprom_config *sc)
+ {
+ 	int i;
+ 	int maxaddr;
 
-That code has been stable and unchanging since 2.5.40.  But in
-2.5.44, Badari's machines are crashing when those patches are
-applied.  Memory corruption deep in the scsi softirq callbacks.
-
-There were no significant memory allocator changes between 2.5.43
-and 2.5.44, but there were a lot of scsi changes.
-
-These LIFO pools have a significant sideeffect: is a CPU frees
-a page and then allocates a page it will get the same page back.
-So if some code is using some memory for a few microseconds after
-freeing it, there's a good chance that this bug will not exhibit
-with the stock kernel's allocator but _will_ exhibit when the
-per-cpu LIFO queues are present.
-
-I'm suspecting that this is what is happening.  A use-after-free
-bug may have been introduced in the 2.5.44 SCSI changes.
-
-Here are some of Badari's oops traces.  Jens has commented:
-
-> Seems to me, that blk_rq_map_sg() is being passed q == NULL, which means
-> that scsi_init_io() has a request that has req->q == NULL. Badari,
-> please do something like the following in
-> drivers/scsi/scsi_merge.c:scsi_init_io():
-> 
->         req->buffer = NULL;
-> +
-> +       if (!req->q) {
-> +               blk_dump_rq_flags(req, "scsi_init_io");
-> +               BUG();
-> +       }
-> +
->         /*
->          * Next, walk the list, and fill in the addresses and sizes of
-> 
-> right before calling blk_rq_map_sg(). And then make blk_dump_rq_flags()
-> like the one I attach, just replace the one in ll_rw_blk.c
-
-But I don't think Badari has got onto that yet.
-
-In a word: Help!
-
-Thanks.
-
-CPU:    2
-EIP:    0060:[<f89d0cd7>]    Not tainted
-EFLAGS: 00010002
-EIP is at qla2x00_process_completed_request+0x67/0x150 [qla2200]
-eax: 00000000   ebx: f663646c   ecx: 00000000   edx: 00000000
-esi: f661c17c   edi: 00000000   ebp: f70f3d7b   esp: f70f3cfc
-ds: 0068   es: 0068   ss: 0068
-Process syslogd (pid: 542, threadinfo=f70f2000 task=f70d1060)
-Stack: f661c17c 0000711a 00007100 f89d0efb f661c17c 000000cc 00008020 c013a348 
-       00008020 00007100 00ccaaa4 00000000 c0139641 c03c1e89 f7fff060 f7298c90 
-       00000246 c013a348 00000001 000000d0 0000005c c03c4294 f661c17c f661c17c 
-Call Trace:
- [<f89d0efb>] qla2x00_isr+0x13b/0x610 [qla2200]
- [<c013a348>] kmalloc+0xb8/0x150
- [<c0139641>] kmem_flagcheck+0x21/0x60
- [<c013a348>] kmalloc+0xb8/0x150
- [<f89cc17b>] qla2x00_intr_handler+0x9b/0x250 [qla2200]
- [<c01094ea>] handle_IRQ_event+0x3a/0x60
- [<c0109802>] do_IRQ+0x122/0x200
- [<c0107f38>] common_interrupt+0x18/0x20
- [<c0130068>] unmap_page_range+0x8/0x60
- [<c01359c1>] generic_file_write_nolock+0x6a1/0xa00
- [<c01924ec>] journal_stop+0x19c/0x1b0
- [<c0354531>] sys_recvfrom+0xa1/0x100
- [<c035457c>] sys_recvfrom+0xec/0x100
- [<c013e526>] __get_free_pages+0x36/0x40
- [<c015d673>] __pollwait+0x33/0xa0
-
-
-
-EIP:    0060:[<f89d0ac8>]    Not tainted
-EFLAGS: 00010002
-EIP is at qla2x00_process_completed_request+0x68/0x150 [qla2200]
-eax: 00000000   ebx: f6599574   ecx: 00000000   edx: 00000000
-esi: f65f017c   edi: 00000000   ebp: f65f9d0c   esp: f65f9d00
-ds: 0068   es: 0068   ss: 0068
-Process dd (pid: 1594, threadinfo=f65f8000 task=e26350c0)
-Stack: f65f017c 0000711a 00007100 f65f9d6c f89d0ceb f65f017c 00000114 00008020 
-       f65f9d60 00008020 f61e34c4 00007100 0114c160 00000000 c0134fe7 f61e34c8 
-       0000c160 0000c160 f65f9d68 c014fbe4 f61e34c4 0000c160 00000000 00000008 
-Call Trace:
- [<f89d0ceb>] qla2x00_isr+0x13b/0x610 [qla2200]
- [<c0134fe7>] find_get_page+0x37/0x50
- [<c014fbe4>] __find_get_block_slow+0x34/0x120
- [<f89cbffe>] qla2x00_intr_handler+0x9e/0x250 [qla2200]
- [<c01095fd>] handle_IRQ_event+0x2d/0x60
- [<c0109924>] do_IRQ+0x124/0x200
-
-
-
-
-elm3b81 login: Oops: 0000
-qla2200  
-CPU:    2
-EIP:    0060:[<c0287d88>]    Not tainted
-EFLAGS: 00010292
-EIP is at blk_rq_map_sg+0x18/0x1f0
-eax: 00000000   ebx: df3d6800   ecx: f631c270   edx: df3d6800
-esi: f631c270   edi: 00000000   ebp: c6149c80   esp: c6149c38
-ds: 0068   es: 0068   ss: 0068
-Process dd (pid: 1590, threadinfo=c6148000 task=dfcba0c0)
-Stack: 00000000 dfcba0c0 c0119c50 c6149c44 c6149c44 c6149c60 c01521c4 f0dfeba4 
-       00000000 f7edc464 00000010 c6149c84 00000000 f7edc464 00000020 df3d6800 
-       f631c270 00000000 c6149ca0 c02c5f41 00000000 f631c270 f6fb85a4 df3d6800 
-Call Trace:
- [<c0119c50>] autoremove_wake_function+0x0/0x40
- [<c01521c4>] bio_destructor+0x44/0x50
- [<c02c5f41>] scsi_init_io+0xb1/0x130
- [<c02c5bdd>] scsi_request_fn+0x2ad/0x480
- [<c02c526e>] scsi_queue_next_request+0x7e/0x1b0
- [<c02c549f>] __scsi_end_request+0xff/0x110
- [<c02c569d>] scsi_io_completion+0x15d/0x3a0
- [<f89cce4f>] qla2x00_done+0x2bf/0x2f0 [qla2200]
- [<c02e0d2f>] sd_rw_intr+0x16f/0x180
- [<c02bf746>] scsi_finish_command+0x96/0xa0
- [<c02bf606>] scsi_softirq+0x86/0x100
- [<c012211b>] do_softirq+0x6b/0xd0
- [<c01099e2>] do_IRQ+0x1e2/0x200
- [<c0107fd8>] common_interrupt+0x18/0x20
- [<c020e28c>] __copy_from_user+0x4c/0x70
- [<c01364e7>] generic_file_write_nolock+0x817/0xb70
- [<c02c526e>] scsi_queue_next_request+0x7e/0x1b0
- [<c0130343>] pte_alloc_map+0x133/0x140
- [<c0131352>] zeromap_page_range+0xe2/0x180
- [<c025a6b1>] read_zero+0x1c1/0x1f0
- [<c01368b6>] generic_file_write+0x56/0x70
- [<c014d2ae>] vfs_write+0xbe/0x160
- [<c01174ca>] do_schedule+0x38a/0x480
- [<c014d3ba>] sys_write+0x2a/0x40
-
-
-
-elm3b81 login: Oops: 0002
-qla2200  
-CPU:    2
-EIP:    0060:[<f89d0ac8>]    Not tainted
-EFLAGS: 00010002
-EIP is at qla2x00_process_completed_request+0x68/0x150 [qla2200]
-eax: 00000000   ebx: f6791c7c   ecx: 00000000   edx: 00000000
-esi: f678c17c   edi: 00000000   ebp: dfe53d0c   esp: dfe53d00
-ds: 0068   es: 0068   ss: 0068
-Process dd (pid: 1623, threadinfo=dfe52000 task=c390d140)
-Stack: f678c17c 0000421a 00004200 dfe53d6c f89d0ceb f678c17c 000000c6 00008020 
-       dfe53d60 00008020 f6265254 00004200 00c6f17c 00000000 c01347a7 f6265258 
-       0000f17c 0000f17c dfe53d68 c014f164 f6265254 0000f17c 00000000 00000008 
-Call Trace:
- [<f89d0ceb>] qla2x00_isr+0x13b/0x610 [qla2200]
- [<c01347a7>] find_get_page+0x37/0x50
- [<c014f164>] __find_get_block_slow+0x34/0x120
- [<f89cbffe>] qla2x00_intr_handler+0x9e/0x250 [qla2200]
- [<c01095fd>] handle_IRQ_event+0x2d/0x60
- [<c0109924>] do_IRQ+0x124/0x200
- [<c0107fd8>] common_interrupt+0x18/0x20
- [<c020bcdc>] __copy_from_user+0x4c/0x70
- [<c01364f7>] generic_file_write_nolock+0x817/0xb70
- [<c0125cb6>] update_wall_time+0x16/0x50
- [<c0130313>] pte_alloc_map+0x133/0x140
- [<c0131322>] zeromap_page_range+0xe2/0x180
- [<c0258101>] read_zero+0x1c1/0x1f0
- [<c01368c6>] generic_file_write+0x56/0x70
- [<c014d2ce>] vfs_write+0xbe/0x160
- [<c01174ca>] do_schedule+0x38a/0x480
- [<c014d3da>] sys_write+0x2a/0x40
- [<c0107693>] syscall_call+0x7/0xb
-
-
- kEerIPn:el    NU L0L06 0p:o[in<tce0r2 8d6e81r9e>f]e r e n cNeot< 4t> aaitn tveidr
-tuEaFlL AadGdSr: es0s0 00100029002
-b0                                0
-IP  prisin taitn gb lkei_prq:_
-acp0_2s8g+608x1199            m
-0*xp2d10e         /
-= 0e0a0x0: 00000000
-000   ebx: de731800   ecx: f67290c4   edx: de731800
-esi: f67290c4   edi: 00000000   ebp: cc879ebc   esp: cc879e38
-ds: 0068   es: 0068   ss: 0068
-Process db2sysc (pid: 2034, threadinfo=cc878000 task=dd088820)
-Stack: 00000000 dd088820 c0119850 cc879e44 cc879e44 00000001 c0151603 ce514ae4 
-       cc878000 00000040 00000000 00000000 c02bdf6d f7ec4344 de731800 f67290c4 
-       00000000 cc879ebc c02c390f 00000000 f67290c4 d28c9de4 de731800 00000000 
-Call Trace:
- [<c0119850>] autoremove_wake_function+0x0/0x40
- [<c0151603>] bio_destructor+0x43/0x50
- [<c02bdf6d>] scsi_alloc_sgtable+0xbd/0x100
- [<c02c390f>] scsi_init_io+0xaf/0x130
- [<c02c35bd>] scsi_request_fn+0x2ad/0x480
- [<c02c2c6e>] scsi_queue_next_request+0x7e/0x1b0
- [<c02c2e9d>] __scsi_end_request+0xfd/0x110
- [<c02c3099>] scsi_io_completion+0x159/0x380
- [<f89ccf9e>] qla2x00_done+0x2be/0x2f0 [qla2200]
- [<c02de38f>] sd_rw_intr+0x15f/0x170
- [<c02bd292>] scsi_finish_command+0x82/0x90
- [<c02bd166>] scsi_softirq+0x86/0x100
- [<c0121a5b>] do_softirq+0x5b/0xc0
- [<c01098c2>] do_IRQ+0x1e2/0x200
- [<c0107f38>] common_interrupt+0x18/0x20
