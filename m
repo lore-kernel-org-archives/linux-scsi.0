@@ -1,55 +1,44 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: [PATCH] scsi-misc-2.5 remove scsi_scan.c EVPD code
-Date: 05 May 2003 11:14:10 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1052151252.1888.15.camel@mulgrave>
-References: <UTC200304250047.h3P0lhl03517.aeb@smtp.cwi.nl>
-	<3EB619A4.5090407@torque.net> <1052144231.1888.10.camel@mulgrave>
-	<20030505155210.GB1567@beaverton.ibm.com>
+Date: Mon, 5 May 2003 09:26:14 -0700
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <20030505092614.A7831@beaverton.ibm.com>
+References: <UTC200304250047.h3P0lhl03517.aeb@smtp.cwi.nl> <3EB619A4.5090407@torque.net> <1052144231.1888.10.camel@mulgrave> <20030505155210.GB1567@beaverton.ibm.com> <1052151252.1888.15.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:39173 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262473AbTEEQCZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 May 2003 12:02:25 -0400
-In-Reply-To: <20030505155210.GB1567@beaverton.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+Content-Disposition: inline
+In-Reply-To: <1052151252.1888.15.camel@mulgrave>; from James.Bottomley@steeleye.com on Mon, May 05, 2003 at 11:14:10AM -0500
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Mike Anderson <andmike@us.ibm.com>, dougg@torque.net, Andries.Brouwer@cwi.nl, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, mdharm-scsi@one-eyed-alien.net
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: dougg@torque.net, Andries.Brouwer@cwi.nl, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, mdharm-scsi@one-eyed-alien.net, Patrick Mansfield <patmans@us.ibm.com>
 
-On Mon, 2003-05-05 at 10:52, Mike Anderson wrote:
-> James Bottomley [James.Bottomley@steeleye.com] wrote:
-> Mutability should not depend on how a uuid is set. It should depend on
-> what can change it.
+On Mon, May 05, 2003 at 11:14:10AM -0500, James Bottomley wrote:
+> 
+> I think the sysfs write API is sufficient, so it has to be a rw-r-r file
+> to allow root to write it on hotplug.
+> 
 
-I think the sysfs write API is sufficient, so it has to be a rw-r-r file
-to allow root to write it on hotplug.
+If it is only ever read and written from user space, why should it be
+stored in the kernel? We can just put it in a flat file or other such
+database, or run the program used to get the id in the first place.
 
-> Why block?
-
-It's the largest available useful subset other than device itself.
-
-> They are not unique to the block layer either. uuid's are unique to the
-> name space they are acquired in. Non-block storage devices can have
-> uuids. They can also have uuids without block based upper level drivers
-> loaded.
-
-True.
-
-> If you obtain a scsi_device uuid it should not be written in to a block
-> device attribute it should be attached to the struct device representing
-> the scsi device. If the attribute name is consistent "uuid" than cat
-> ".../device/uuid" will function the same.
-
-by that argument, capacity, which is a property of the SCSI sd device
-should be stored in the SCSI device.  It isn't, since it's a global
-block device property, it's stored in the gendisk.
-
-Unique identifiers are a property of SCSI devices, but they're not an
-exclusive property.
-
-James
+-- Patrick Mansfield
 
 
+-------------------------------------------------------
+This sf.net email is sponsored by:ThinkGeek
+Welcome to geek heaven.
+http://thinkgeek.com/sf
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
