@@ -1,62 +1,59 @@
-From: Daniel Stekloff <dsteklof@us.ibm.com>
-Subject: Re: lsscsi-0.11
-Date: Fri, 9 Jan 2004 10:12:28 -0800
+From: badari <pbadari@us.ibm.com>
+Subject: Re: many-disk support
+Date: Fri, 09 Jan 2004 10:51:30 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200401091012.28063.dsteklof@us.ibm.com>
-References: <3FFE5B19.7050404@torque.net>
+Message-ID: <3FFEF832.A7DB3D92@us.ibm.com>
+References: <20031229022549.50bae6d7.akpm@osdl.org> <20031229110603.A27408@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:51610 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S263561AbUAISPL convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Jan 2004 13:15:11 -0500
-In-Reply-To: <3FFE5B19.7050404@torque.net>
+Received: from e6.ny.us.ibm.com ([32.97.182.106]:22015 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S263805AbUAISzT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2004 13:55:19 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net, linux-scsi@vger.kernel.org
-Cc: ananth@in.ibm.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, "viro@parcelfarce.linux.theplanet.co.uk" <viro@parcelfarce.linux.theplanet.co.uk>
 
-On Thursday 08 January 2004 11:41 pm, Douglas Gilbert wrote:
-> lsscsi is a utility the uses sysfs in the linux 2.6 series kernels
-> to list information about all SCSI devices (including devices
-> that use the SCSI stack such as USB mass storage devices)
-> or all SCSI hosts that are attached to the system. Both a compact
-> format (default), one line per device, and a "classic" format (like
-> the output of 'cat /proc/scsi/scsi') are supported for devices.
->
-> Version 0.11 is available at
-> http://www.torque.net/scsi/lsscsi.html
->
-> This version has been reworked for lk 2.6.1-rc1 (and later)
-> since sysfs support for st and sg devices has been (re-)added.
->
-> lsscsi does not yet use libsysfs but may well soon. One thing
-> that lsscsi does that is not yet available in libsysfs is
-> to sort (and filter) directory entries. This is most likely
-> not relevant for most libsysfs based applications but is
-> convenient for those applications that display information
-> for human consumption.
+I am not sorry for not replying for so long. I have been on vacation.
 
+1) I am not really concerned about bitmap overhead. Bitmap of one
+page (4k) - should be enough to support 32K disks. That should be
+good enough for most of the machines.
 
-Yep, libsysfs doesn't implement any sorts or filters on any of the lists. It 
-won't be difficult to do, the dlists have what's needed to complete the 
-functionality. And, it would be useful for systool and other applications. We 
-will add the sort and filter functions. If there's anything particular you 
-have in mind, please let us know. There may be a slight delay in getting new 
-changes into our tree, Ananth is traveling to Australia for the Linux 
-conference.
+2) I used config option for 2 reasons
+        - to minimize impact on machines this is not needed.
+        - didn't want to depend on <major, minor> split to decide on
+           how many disks we can support.
+
+3) The reason, I assigned all the disks to last major is to maintain backward
+compatibility with current major, minor assignments. Hopefully "udev"
+will cleanup all these.
+
+My question is, what do we do for current 2.6 ? Hoping to address these
+before distros start making 2.6 distros and adding their own stuff to support
+this.
+
+And also, is there a plan to support more partitions per disk ?
 
 Thanks,
-
-Dan
-
+Badari
 
 
-> Doug Gilbert
+
+Christoph Hellwig wrote:
+
+> On Mon, Dec 29, 2003 at 02:25:49AM -0800, Andrew Morton wrote:
+> > Guys, I've had this patch for ages.  Badari seemed to say that it wasn't
+> > the "right" way to do it.
+> >
+> > Can we get this nailed down please?
 >
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  - I think the bitmap overhead was killing us on big x86 machines, right?
+>    so that might need some swork.
+>  - a config option definitly is the wrong way to go.
+>  - I don't think assigning more numbers to the last major is a bad idea,
+>    better assign them to the first one, maybe with a hole for what we're
+>    using the other majors currently for, so when udev gets more mature
+>    we can kill the additional majors.
 
