@@ -1,68 +1,69 @@
-From: Pete Zaitcev <zaitcev@redhat.com>
-Subject: Re: Patch to clear both bulk pipes
-Date: Tue, 11 Jan 2005 13:47:42 -0800
-Message-ID: <20050111134742.11b843c7@lembas.zaitcev.lan>
-References: <20050111111019.7230bf4d@lembas.zaitcev.lan>
-	<Pine.LNX.4.44L0.0501111541370.639-100000@ida.rowland.org>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: dc395x: can't write to tape
+Date: Tue, 11 Jan 2005 23:16:33 +0100 (CET)
+Message-ID: <Pine.LNX.4.60.0501112252560.11812@poirot.grange>
+References: <200501060518.25782.andrex@alumni.utexas.net>
+ <200501070552.57607.andrex@alumni.utexas.net> <Pine.LNX.4.60.0501072057500.6238@poirot.grange>
+ <200501111019.06281.andrex@alumni.utexas.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:38839 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S262895AbVAKVrs (ORCPT
+Received: from pop.gmx.de ([213.165.64.20]:41936 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S262876AbVAKWn6 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jan 2005 16:47:48 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0501111541370.639-100000@ida.rowland.org>
+	Tue, 11 Jan 2005 17:43:58 -0500
+In-Reply-To: <200501111019.06281.andrex@alumni.utexas.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, zaitcev@redhat.com
+To: Andrew Schulman <andrex@alumni.utexas.net>
+Cc: linux-scsi@vger.kernel.org, Jamie Lenehan <lenehan@twibble.org>
 
-On Tue, 11 Jan 2005 16:08:20 -0500 (EST), Alan Stern <stern@rowland.harvard.edu> wrote:
+On Tue, 11 Jan 2005, Andrew Schulman wrote:
 
-> > Also, I captured a few traces with usbmon which show that the usb-storage
-> > itself does absolutely nothing different in succeeding and failing case,
-> > including any timing. However, the inquiry data transfer is the first
-> > bulk transfer performed after the start of probing. No other transfers
-> > ever fail.
+> > > > > Jan  5 22:50:18 helium kernel: dc395x: sg_update_list: sg_to_virt
+> > > > > failed
+> >
+> > Could you try disabling highmem either try a kernel without highmem
+> > support, or boot with mem=900M, or remove a part of your RAM (if you
+> > don't have to saw your RAMs for that:-)), maybe, booting with highmem=0,
+> > or with nohighio.
 > 
-> I'm not sure what you mean here.  Surely usb-storage doesn't issue a 
-> device reset in the succeeding case? []
-
-All the events leading up to the failure are exactly the same in failing
-and succeeding cases. So, your "device takes its sweet time" theory is
-incorrect.
-
-Of course, once the failure happens, the traces differ. Sorry, I should
-have been more specific.
-
->[...]
-> This looks like behavior I've seen on my CDRW drive.  It takes a long time 
-> to respond to a SCSI command when it's first plugged in.  So the INQUIRY 
-> times out and the device gets reset, then the SCSI error handler runs.
-
-It may look like, but this time the device was NOT plugged in.
-
-As I mentioned previously, I have investigated this behaviour while working
-with ub. You can wait until you blue in the face, the device simply won't
-respond until pipes are cleared and TOGGLES ARE RESET.
-
-> > usb-storage: Command TEST_UNIT_READY (6 bytes)
-> > usb-storage: Bulk Status S 0x53425355 T 0x8920 R 0 Stat 0x1
-> > usb-storage: -- transport indicates command failure
-> > usb-storage: Issuing auto-REQUEST_SENSE
-> > usb-storage: -- Result from auto-sense is 0
-> > usb-storage: -- code: 0x70, key: 0x2, ASC: 0x4, ASCQ: 0x1
-> > usb-storage: Not Ready: Logical unit is in process of becoming ready
+> Okay, I finally got to this.  Rebooted with mem=900M.  Unfortunately tar fails 
+> as before:
 > 
-> Same as before.  And once again, the error handler thinks something is 
-> wrong when in fact everything is all right.
->[...]
-> So usb-storage is doing everything right.  It's the SCSI error handler
-> that needs to be fixed.
+> tar: /dev/st0: Wrote only 0 of 10240 bytes
+> tar: Error is not recoverable: exiting now
 
-The recovery has to be fixed, I agree. This is something for James to
-consider. And if we fix it, the recovery may be able to paper over the
-problem successfully. But the original problem happens way before the
-recovery.
+I didn't expect disabling highmem to fix _this_ error. But do you still 
+see the "dc395x: sg_update_list: sg_to_virt failed" message with 900M? 
+Perhaps, the most interesting test would be with my patch...
 
--- Pete
+> I had rebuilt dc395x with 
+> 
+> #define DEBUG_MASK (DBG_0|DBG_1|DBG_SG|DBG_FIFO|DBG_PIO) 
+> 
+> uncommented in dc395x.c.  Here's what I got:
+> 
+> # tail -40 /var/log/kern.log
+> Jan 11 06:29:18 helium kernel: dc395x: srb_done: (pid#4596449) <02-0>
+> Jan 11 06:29:18 helium kernel: dc395x: srb_done: srb=f6aa2eec sg=0(0/1) 
+> buf=e7c64000 addr=e7c64000
+> Jan 11 06:29:18 helium kernel: dc395x: srb_done: AUTO_REQSENSE1
+> Jan 11 06:29:18 helium kernel: dc395x: pci_unmap_srb_sense: buffer=12a69452
+> Jan 11 06:29:18 helium kernel: dc395x: ReqSense: MEDIUM_ERROR cmnd=0x10 <02-0> 
+> stat=0 scan=1 sense=0x03 ASC=0x0c ASCQ=0x00 (0x00000000 0x00000000)
+
+...well, could you just keep the log for now, maybe we'll have a look at 
+it later, I'd just first try to fix the highmem problem, before trying to 
+figure out what's going on with your tape drive. BTW, when it worked, you 
+already had 1G RAM in the PC, right?
+
+> I have your other suggestions and will get to them as soon as I have time.
+
+Thanks
+Guennadi
+
+P.S. Please, don't trim the CC list.
+---
+Guennadi Liakhovetski
+
