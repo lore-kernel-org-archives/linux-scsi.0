@@ -1,37 +1,37 @@
 From: Joel Becker <Joel.Becker@oracle.com>
-Subject: Re: [patch for playing] Patch to support 4000 disks and maintain backward compatibility
-Date: Fri, 11 Apr 2003 08:43:46 -0700
+Subject: Re: [patch for playing] Patch to support 4000 disks and maintain
+Date: Fri, 11 Apr 2003 16:18:43 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030411154345.GV31739@ca-server1.us.oracle.com>
-References: <200304101339.49895.pbadari@us.ibm.com> <Pine.LNX.4.44.0304110157460.12110-100000@serv> <200304101825.12299.pbadari@us.ibm.com>
+Message-ID: <20030411231842.GA4917@ca-server1.us.oracle.com>
+References: <200304101339.49895.pbadari@us.ibm.com> <XFMail.20030411100430.pochini@shiny.it> <20030411154450.GW31739@ca-server1.us.oracle.com> <200304110928.32978.pbadari@us.ibm.com> <20030411175736.GY31739@ca-server1.us.oracle.com> <20030411111232.A7756@beaverton.ibm.com> <20030411183543.GA31739@ca-server1.us.oracle.com> <20030411130407.A9302@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from inet-mail4.oracle.com ([148.87.2.204]:5076 "EHLO
-	inet-mail4.oracle.com") by vger.kernel.org with ESMTP
-	id S261783AbTDKVPT (for <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Apr 2003 17:15:19 -0400
+Received: from inet-mail2.oracle.com ([148.87.2.202]:30185 "EHLO
+	inet-mail2.oracle.com") by vger.kernel.org with ESMTP
+	id S262578AbTDKXIj (for <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Apr 2003 19:08:39 -0400
 Content-Disposition: inline
-In-Reply-To: <200304101825.12299.pbadari@us.ibm.com>
+In-Reply-To: <20030411130407.A9302@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Badari Pulavarty <pbadari@us.ibm.com>
-Cc: Roman Zippel <zippel@linux-m68k.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Badari Pulavarty <pbadari@us.ibm.com>, Giuliano Pochini <pochini@shiny.it>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Mike Anderson <andmike@us.ibm.com>
 
-On Thu, Apr 10, 2003 at 06:25:12PM -0700, Badari Pulavarty wrote:
-> I can't see (2) happening easily. I know that Greg KH is working on
-> udev (/dev/ memory filesystem). Once that happens, we have to change
-> drivers/subsystems (we need) to make dynamic allocation. All of this Is 
-> going to happen for 2.6 ?
+On Fri, Apr 11, 2003 at 01:04:07PM -0700, Patrick Mansfield wrote:
+> If we had user scanning, and some sort of hotplug for targets coming and
+> going, those be used to add and remove (or just fail) paths (at least for
+> switch attached).
 
-	Just to be clear, let's not repeat the devfsd fiasco.  If we
-have dynamic update of device nodes (we need it), I want it to work with
-my /dev on ext3.
+	That's the issue.  We need notification of add and remove, so we
+don't find our multipathing hanging for 90s or more.  That's a big deal
+to people, and it's a problem with the current md multipath.
 
 Joel
 
 -- 
 
-"You look in her eyes, the music begins to play.
- Hopeless romantics, here we go again."
+ "I'm living so far beyond my income that we may almost be said
+ to be living apart."
+         - e e cummings
 
 Joel Becker
 Senior Member of Technical Staff
