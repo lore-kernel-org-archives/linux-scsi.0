@@ -1,63 +1,62 @@
-From: Nick Piggin <piggin@cyberone.com.au>
-Subject: Re: [PATCH] as i/o hang with aacraid driver 2.6.0-test1
-Date: Fri, 18 Jul 2003 15:35:24 +1000
+From: Catalin BOIE <util@deuroconsult.ro>
+Subject: Re: libata driver update posted
+Date: Fri, 18 Jul 2003 09:24:23 +0300 (EEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F17871C.4030306@cyberone.com.au>
-References: <20030716132036.GB833@suse.de>	<1058364455.1856.28.camel@mulgrave>	<20030716170456.GK833@suse.de>	<20030717015756.135a3f5a.akpm@osdl.org>	<20030717085952.GX833@suse.de>	<3F1672D9.7070309@cyberone.com.au>	<20030717102926.GE833@suse.de>	<3F167F98.60006@cyberone.com.au>	<20030717105641.GF833@suse.de>	<3F1683F5.4030107@cyberone.com.au>	<20030717111059.GI833@suse.de>	<3F168846.90902@cyberone.com.au>	<1058474814.4638.11.camel@markh1.pdx.osdl.net>	<1058481553.19508.5.camel@markh1.pdx.osdl.net>	<1058485621.7424.30.camel@dell_ss5.pdx.osdl.net>	<20030717170055.5dbe20c1.akpm@osdl.org>	<3F17821A.307@cyberone.com.au> <20030717222534.0295c44e.akpm@osdl.org> <3F1785D9.5000905@cyberone.com.au>
+Message-ID: <Pine.LNX.4.53.0307180924020.19703@hosting.rdsbv.ro>
+References: <3F1711C8.6040207@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dyn-ctb-210-9-243-47.webone.com.au ([210.9.243.47]:3602 "EHLO
-	chimp.local.net") by vger.kernel.org with ESMTP id S271702AbTGRFUl
+Received: from webhosting.rdsbv.ro ([213.157.185.164]:36262 "EHLO
+	hosting.rdsbv.ro") by vger.kernel.org with ESMTP id S271712AbTGRGOt
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jul 2003 01:20:41 -0400
-In-Reply-To: <3F1785D9.5000905@cyberone.com.au>
+	Fri, 18 Jul 2003 02:14:49 -0400
+In-Reply-To: <3F1711C8.6040207@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: daniel@osdl.org, markh@osdl.org, axboe@suse.de, James.Bottomley@steeleye.com, cliffw@osdl.org, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Vojtech Pavlik <vojtech@suse.cz>
 
+> Next update will add several host drivers, now that the libata API is
+> settling down.
 
-
-Nick Piggin wrote:
+Sii3112A is/will be supported?
+Thanks!
 
 >
 >
-> Andrew Morton wrote:
+> 2.4.21-based patch:
+> ftp://ftp.??.kernel.org/pub/linux/kernel/people/jgarzik/patchkits/2.4/2.4.21-libata4.patch.bz2
 >
->> Nick Piggin <piggin@cyberone.com.au> wrote:
->>
->>>
->>> Oh, so the request should go on the dispatch list?
->>> OK that makes sense. Maybe also set arq->state = AS_RQ_DISPATCHED
->>> just in case.
->>>
->>> And I think the arq == NULL case should be checked for with
->>> rq->flags & REQ_HARDBARRIER || !blk_fs_request(rq) for consistency.
->>> I think if arq is still NULL then its a bug.
->>>
->>
->> Guys, it's been three days and I'm getting a dribble of sad little 
->> messages
->> from various people whose boxes are stuck with everything in D state.
->>
->> Can we please get this thing wrapped up within the next 12 hours so we
->> don't spend all of next week with Linus's tree in such a blatantly buggy
->> state?
->>
+> 2.4.21-based BitKeeper repo:
+> bk://kernel.bkbits.net/jgarzik/atascsi-2.4
 >
-> No, I think Mark's last patch with Daniel's and my suggestions
-> should be fine. It fixes their problems. Its unfortunate that
-> this bug never got caught until now but it was inevitable to be
-> one or two there.
+> 2.6.0-test1-based patch:
+> ftp://ftp.??.kernel.org/pub/linux/kernel/people/jgarzik/patchkits/2.6/2.6.0-test1-libata1.patch.bz2
 >
-> I have been pretty worried about all the D state messages, but
-> between this and the ReiserFS bug, I _think_ they have been
-> found. If not, please forward me the reports because I haven't
-> seen them. Thanks.
+> 2.6.0-test1-based BitKeeper repo:
+> bk://kernel.bkbits.net/jgarzik/atascsi-2.5
+> (yes, "2.5" is not a typo, I haven't changed the name to 2.6 yet)
+>
+>
+> Remove the ".??" if the file has not appeared on your favorite
+> kernel.org mirror yet.
+>
+>
+> Changes:
+> * beginnings of pluggable timing configuration
+> * beginnings of cable detection
+> * much improved ATA device probing
+> * a bunch of internal improvements and cleanups (too many to list)
+> * additional of DocBook documentation
+> * many bug fixes
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 >
 
-Andrew send the one line quick fix in to Linus if you like
-until the complete fix is sorted out.
-
-
+---
+Catalin(ux) BOIE
+catab@deuroconsult.ro
