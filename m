@@ -1,46 +1,45 @@
-From: Lucia Mazzoni <lucia.mazzoniATATATaster.it@aster.it>
-Subject: megaraid 2.10.1 and raid10
-Date: Tue, 10 Aug 2004 14:58:18 +0200
+From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Subject: Re: Scsi midlayer question
+Date: Tue, 10 Aug 2004 09:40:22 -0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040810130129.CDE6B53AF7@aster001>
+Message-ID: <20040810124022.GD11276@logos.cnet>
+References: <47F3C2BE74738E4683574107469DFA204CC4FA@XYUSEX01.xyus.xyratex.com> <1090001284.2805.10.camel@laptop.fenrus.com> <20040809223956.GB8782@logos.cnet> <20040810080556.GA12711@devserv.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.aster.it ([193.207.59.1]:26240 "EHLO aster001")
-	by vger.kernel.org with ESMTP id S265051AbUHJM6Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Aug 2004 08:58:24 -0400
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:33763 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S266220AbUHJNov
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Aug 2004 09:44:51 -0400
+Content-Disposition: inline
+In-Reply-To: <20040810080556.GA12711@devserv.devel.redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Arjan van de Ven <arjanv@redhat.com>
+Cc: Frank Borich <Frank_Borich@us.xyratex.com>, linux-scsi@vger.kernel.org
 
-Hi,
-I've just subscribed this list trying to solve a big problem with 
-megaraid2.c (I think...!).
+On Tue, Aug 10, 2004 at 10:05:57AM +0200, Arjan van de Ven wrote:
+> On Mon, Aug 09, 2004 at 07:39:56PM -0300, Marcelo Tosatti wrote:
+> > >  		BUG();
+> > 
+> > Arjan, is this a v2.6 based patch? 
+> 
+> no a 2.4.21-era patch
+> 
+>  
+> > v2.4 current doesnt contain such code you are patching...
+> 
+> it'll have code quite similar, I mean this code hardly changed since 2.4.0
+> and 2.6.x until this patch got merged.
 
-We installed a Debian stable on 2 Intel server with an INTEL SRCU42X 
-raid controller.
-The compiled kernel is a vanilla kernel 2.4.26 and the version of 
-megaraid2 is 2.10.1.
+Should have read the code before replying, OK now I see, its wli's discover
+to not handle higher order pages in "reverse order" but instead
+in "order", yes?
 
-The first server is configured only with raid1: no problem at all.
-The second one  is configured with a raid 10: 4 disks, 2 raid1 between 
-disks on different channel and a raid0 on this set (with stripe size of 64k)
+Have you done any tests with it on v2.4 based kernels? 
 
-We experienced that when the second server has to do with file of 
-"significant" size (greater than 10 Mb) it hangs during its operation 
-(do not respond at all). After a while ...it ends the operation.
-This time depends on the size of the file (greater size ==> more time).
-Operation are: copy, reading.... (files on this server are generally 
-mailboxes).
-After the first time the access time to a single file is faster for a while.
+I'm a bit skeptic about it though.
 
-We tried megaraid 2.10.3 with kernel 2.4.27 but the timing results were 
-even worst (35 sec for a file of 35Mb.......)
+Frank, can you try this patch?
 
-Any suggestions?
-Raid 10 is not reliable with megaraid2? (that was the Intel support 
-answer to my question.....)
 
-Thanks in advance for any help
-Lucia
+
