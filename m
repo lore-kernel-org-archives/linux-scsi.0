@@ -1,83 +1,74 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] SCSI psi240i.c: make 4 functions static
-Date: Tue, 25 Jan 2005 12:27:38 +0100
-Message-ID: <20050125112738.GC30909@stusta.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] zfcp: updates for -bk
+Date: Tue, 25 Jan 2005 09:20:37 -0600
+Message-ID: <1106666437.6434.19.camel@mulgrave>
+References: <OF742E510B.8CD3239E-ONC1256F94.001F531F-C1256F94.0021A4A7@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:49414 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261902AbVAYL1l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jan 2005 06:27:41 -0500
-Content-Disposition: inline
+Received: from stat16.steeleye.com ([209.192.50.48]:3554 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261978AbVAYPWR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jan 2005 10:22:17 -0500
+In-Reply-To: <OF742E510B.8CD3239E-ONC1256F94.001F531F-C1256F94.0021A4A7@de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Heiko Carstens <Heiko.Carstens@de.ibm.com>
+Cc: Greg KH <greg@kroah.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Matthew Wilcox <matthew@wil.cx>, willy@www.linux.org.uk
 
-This patch makes 4 needlessly global functions static.
+On Tue, 2005-01-25 at 07:08 +0100, Heiko Carstens wrote:
+> > Originally this generic device was part of your adapter structure.  Now
+> > you're trying to separate it and causing these problems.  What it's
+> 
+> Could you please elaborate where this patch does cause a problem?
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+You're look to be breaking the simplicity rules.  Object lifetimes are
+very tricky things to manage, so what I want you to explain is why you
+have to make this more difficult buy making the object separately
+managed instead of treating it as a sub object of the adapter which
+shares the adapter's lifetime rules.  What's the justification for
+this? 
 
----
+> > apparently telling us is that you have some problem with the object
+> > lifetime rules in your code.
+> > Why should this generic_services device have different lifetime rules
+> > from the object in which it used to reside?
+> 
+> It doesn't. And this was not supposed to fix anything. It's just that
+> Andreas liked the code better with allocating the generic_services
+> struct device seperately. Please note that the lifetime of the adapter
+> device this struct device was embedded into is always longer than the
+> lifetime of the generic_services device.
+> Therefore I can't see why you complain about this piece of code.
 
- drivers/scsi/psi240i.c |    8 ++++----
- drivers/scsi/psi240i.h |    4 ----
- 2 files changed, 4 insertions(+), 8 deletions(-)
+generic devices are supposed to represent existing kernel objects, which
+is why they're usually embedded in existing structures.  It seems to be
+unique within the kernel to allocate a generic device without an
+enveloping structure (like a scsi_device, mca_device, pci_device etc),
+so I was wondering why you need to do it this way?
 
-This patch was already sent on:
-- 15 Nov 2004
+Simplicity says that you want to manage the lifetimes of as few objects
+as you can get away with (SCSI tries to put all lifetime rules in either
+the mid-layer or the transport classes so the driver code doesn't
+usually have to worry about them).  The reason being that lifetime rules
+are very easy to get wrong and have fairly nasty consequences if you do
+get them wrong (pointers into free'd memory etc.).
 
---- linux-2.6.10-rc1-mm5-full/drivers/scsi/psi240i.h.old	2004-11-13 22:46:35.000000000 +0100
-+++ linux-2.6.10-rc1-mm5-full/drivers/scsi/psi240i.h	2004-11-13 23:09:48.000000000 +0100
-@@ -309,11 +309,7 @@
- #endif	// PSI_EIDE_SCSIOP
- 
- // function prototypes
--int Psi240i_Detect			(Scsi_Host_Template *tpnt);
- int Psi240i_Command			(Scsi_Cmnd *SCpnt);
--int Psi240i_QueueCommand	(Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *));
- int Psi240i_Abort			(Scsi_Cmnd *SCpnt);
- int Psi240i_Reset			(Scsi_Cmnd *SCpnt, unsigned int flags);
--int Psi240i_BiosParam		(struct scsi_device *sdev, struct block_device *bdev,
--					sector_t capacity, int geom[]);
- #endif
---- linux-2.6.10-rc1-mm5-full/drivers/scsi/psi240i.c.old	2004-11-13 22:47:12.000000000 +0100
-+++ linux-2.6.10-rc1-mm5-full/drivers/scsi/psi240i.c	2004-11-13 22:47:59.000000000 +0100
-@@ -390,7 +390,7 @@
-  *	Returns:		Status code.
-  *
-  ****************************************************************/
--int Psi240i_QueueCommand (Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *))
-+static int Psi240i_QueueCommand (Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *))
- 	{
- 	UCHAR		   *cdb = (UCHAR *)SCpnt->cmnd;					// Pointer to SCSI CDB
- 	PADAPTER240I	padapter = HOSTDATA (SCpnt->device->host); 			// Pointer to adapter control structure
-@@ -509,7 +509,7 @@
-  *	Returns:		Nothing.
-  *
-  **************************************************************************/
--void ReadChipMemory (void *pdata, USHORT base, USHORT length, USHORT port)
-+static void ReadChipMemory (void *pdata, USHORT base, USHORT length, USHORT port)
- 	{
- 	USHORT	z, zz;
- 	UCHAR	*pd = (UCHAR *)pdata;
-@@ -538,7 +538,7 @@
-  *	Returns:		Number of adapters found.
-  *
-  ****************************************************************/
--int Psi240i_Detect (Scsi_Host_Template *tpnt)
-+static int Psi240i_Detect (Scsi_Host_Template *tpnt)
- 	{
- 	int					board;
- 	int					count = 0;
-@@ -654,7 +654,7 @@
-  *	Returns:		zero.
-  *
-  ****************************************************************/
--int Psi240i_BiosParam (struct scsi_device *sdev, struct block_device *dev,
-+static int Psi240i_BiosParam (struct scsi_device *sdev, struct block_device *dev,
- 		sector_t capacity, int geom[])
- 	{
- 	POUR_DEVICE	pdev;
+James
+
+
+> Since I didn't get an answer to this:
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=110551973013105&w=2
+> my assumption was that it's that obvious to everyone else that I'm
+> wrong that it isn't even worth writing an answer.
+> Now I follow Greg's rules and still get complaints...
+> 
+> Thanks,
+> Heiko
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
