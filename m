@@ -1,30 +1,41 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: bug 2400
-Date: 05 Apr 2004 09:09:58 -0500
+From: "Tony Battersby" <tonyb@cybernetics.com>
+Subject: [PATCH 2.4] sym53c8xx_2 sniff inquiry fix
+Date: Mon, 5 Apr 2004 11:24:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1081174199.1756.0.camel@mulgrave>
-References: <20040401131502.41136788.akpm@osdl.org>
-	<1080862354.2118.78.camel@mulgrave> <1080949016.1804.161.camel@mulgrave>
-	<20040404213307.A29446@beaverton.ibm.com>
+Message-ID: <04Apr5.112407edt.332198@cyborg.cybernetics.com>
+Reply-To: <tonyb@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:1763 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262584AbUDEOKs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Apr 2004 10:10:48 -0400
-In-Reply-To: <20040404213307.A29446@beaverton.ibm.com>
+Received: from cyborg.cybernetics.com ([206.246.200.18]:25866 "EHLO
+	cybernetics.com") by vger.kernel.org with ESMTP id S262849AbUDEPY0
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Apr 2004 11:24:26 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: willy@debian.org
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, 2004-04-04 at 23:33, Patrick Mansfield wrote:
-> How is unregister_cdrom(&cd->cdi) called if the device is not open?
+The following patch fixes a problem where sym53c8xx_2 always sniffs a
+value of 0x00 for inquiry byte 56, which breaks 160 MB/s negotiations.
 
-Yes, I need to pull the same kobject trick that sd does for the same
-reason.
+I am working with lk 2.4.x; I don't know if this needs to be applied to
+lk 2.6.x also.
 
-James
+--- drivers/scsi/sym53c8xx_2/sym_misc.c.orig	Mon Apr  5 11:03:28 2004
++++ drivers/scsi/sym53c8xx_2/sym_misc.c	Mon Apr  5 11:03:38 2004
+@@ -315,7 +315,7 @@
+ 	 */
+ 	inq_byte56 = tp->inq_byte56;
+ 	if (inq_version >= 4 && inq_len > 56)
+-		tp->inq_byte56 = inq_data[56];
++		inq_byte56 = inq_data[56];
+ #if 0
+ printf("XXXXXX [%d] inq_version=%x inq_byte7=%x inq_byte56=%x XXXXX\n",
+ 	inq_len, inq_version, inq_byte7, inq_byte56);
 
+
+
+Anthony J. Battersby
+Cybernetics
 
