@@ -1,105 +1,82 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: [PATCH] sym2 & lasi700 small updates
-Date: Sat, 14 Aug 2004 22:45:56 +0100
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: Sym53c8xx_2
+Date: Sun, 15 Aug 2004 00:16:36 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040814214556.GC12936@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <Pine.LNX.4.60.0408150005570.5333@poirot.grange>
+References: <1092366037.28144.202254467@webmail.messagingengine.com>  
+ <Pine.LNX.4.60.0408132049060.4069@poirot.grange>
+ <1092432298.18813.202307545@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:32953 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S266218AbUHNVp5
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 Aug 2004 17:45:57 -0400
-Received: from willy by www.linux.org.uk with local (Exim 4.33)
-	id 1Bw6Lc-0004W9-SE
-	for linux-scsi@vger.kernel.org; Sat, 14 Aug 2004 22:45:56 +0100
-Content-Disposition: inline
+Received: from imap.gmx.net ([213.165.64.20]:61371 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S265701AbUHNWRT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 Aug 2004 18:17:19 -0400
+In-Reply-To: <1092432298.18813.202307545@webmail.messagingengine.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Kai OM <epimetreus@fastmail.fm>
+Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, linux-scsi@vger.kernel.org
+
+Hi
+
+On Fri, 13 Aug 2004, Kai OM wrote:
+
+> There was one entry in the 2.6.6 changelog, though, that said something
+> about modifying the driver in question; adding generic domain validation
+> and such -- and it's during domain validation that the driver stops.
+
+I looked through the diffs between 2.6.5 and 2.6.7 versions of sym53c8xx_2 
+- there are not so many of them, so, we'll have to able to find the guilty 
+one. In fact, I think, there are only 2 lines of code that can be 
+essential. But before you test them, one question: in your original posts 
+you quoted dmesg with 2.6.7 and 2.6.7 with replaced sym53c8xx_2 directory. 
+However, the output of the working version with the older driver is 
+missing 2 lines:
+
+sym0:0:0: Tagged command queue enabled, command queue depth 16
+scsi(0:0:0:0): Beginning Domain Validation
+
+which are present in the non-working version. Why are they missing from 
+the working version - did you use a different configuration or different 
+command-line parameters?
+
+And the patches you could try, to revert the changes I suspect, are:
+
+1)
+
+diff -u a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c	19 May 2004 16:07:46
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c	14 Aug 2004 21:13:03
+@@ -390,7 +390,7 @@
+  			 * condition otherwise the device will always return
+  			 * BUSY.  Use a big stick.
+  			 */
+-			sym_reset_scsi_target(np, csio->device->id);
++//			sym_reset_scsi_target(np, csio->device->id);
+  			cam_status = DID_ERROR;
+  		}
+  	} else if (cp->host_status == HS_COMPLETE) 	/* Bad SCSI status */
 
 
-Two small patches from the PA-RISC tree:
+and 2)
 
- - Claim the lasi700 interrupt with a more useful name (Thibaut Varene)
- - sym2 always defines SYM_OPT_NVRAM_PRE_READ; delete dead code (Matthew Wilcox)
+diff -u a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c	19 May 2004 16:07:46
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c	14 Aug 2004 22:12:32
+@@ -931,6 +931,7 @@
+  	switch(to_do) {
+  	default:
+  	case SYM_EH_DO_IGNORE:
++		goto finish;
+  		break;
+  	case SYM_EH_DO_WAIT:
+  		init_MUTEX_LOCKED(&ep->sem);
 
-diff -urpNX dontdiff linus-2.6/drivers/scsi/lasi700.c parisc-2.6/drivers/scsi/lasi700.c
---- linus-2.6/drivers/scsi/lasi700.c	Sat Aug 14 11:16:39 2004
-+++ parisc-2.6/drivers/scsi/lasi700.c	Sat Aug 14 11:05:39 2004
-@@ -110,7 +110,7 @@ lasi700_probe(struct parisc_device *dev)
- 
- 	host->irq = dev->irq;
- 	if (request_irq(dev->irq, NCR_700_intr, SA_SHIRQ,
--				dev->dev.bus_id, host)) {
-+				"lasi700", host)) {
- 		printk(KERN_ERR "%s: irq problem, detaching\n",
- 		       dev->dev.bus_id);
- 		goto out_put_host;
-diff -urpNX dontdiff linus-2.6/drivers/scsi/sym53c8xx_2/sym_glue.h parisc-2.6/drivers/scsi/sym53c8xx_2/sym_glue.h
---- linus-2.6/drivers/scsi/sym53c8xx_2/sym_glue.h	Sat Aug 14 11:16:40 2004
-+++ parisc-2.6/drivers/scsi/sym53c8xx_2/sym_glue.h	Sat Aug 14 11:05:40 2004
-@@ -89,7 +89,6 @@
- 
- #define SYM_OPT_HANDLE_DIR_UNKNOWN
- #define SYM_OPT_HANDLE_DEVICE_QUEUEING
--#define SYM_OPT_NVRAM_PRE_READ
- #define SYM_OPT_SNIFF_INQUIRY
- #define SYM_OPT_LIMIT_COMMAND_REORDERING
- #define	SYM_OPT_ANNOUNCE_TRANSFER_RATE
-diff -urpNX dontdiff linus-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.c parisc-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.c
---- linus-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.c	Sat Aug 14 11:16:40 2004
-+++ parisc-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.c	Sat Aug 14 11:05:40 2004
-@@ -5738,15 +5738,8 @@ if (resid)
- /*
-  *  Soft-attach the controller.
-  */
--#ifdef SYM_OPT_NVRAM_PRE_READ
- int sym_hcb_attach(hcb_p np, struct sym_fw *fw, struct sym_nvram *nvram)
--#else
--int sym_hcb_attach(hcb_p np, struct sym_fw *fw)
--#endif
- {
--#ifndef SYM_OPT_NVRAM_PRE_READ
--	struct sym_nvram nvram_buf, *nvram = &nvram_buf;
--#endif
- 	int i;
- 
- 	/*
-@@ -5771,13 +5764,6 @@ int sym_hcb_attach(hcb_p np, struct sym_
- 	 *  if the chip is currently active.
- 	 */
- 	sym_chip_reset (np);
--
--	/*
--	 *  Try to read the user set-up.
--	 */
--#ifndef SYM_OPT_NVRAM_PRE_READ
--	(void) sym_read_nvram(np, nvram);
--#endif
- 
- 	/*
- 	 *  Prepare controller and devices settings, according 
-diff -urpNX dontdiff linus-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.h parisc-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.h
---- linus-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.h	Sat Aug 14 11:16:40 2004
-+++ parisc-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.h	Sat Aug 14 11:05:40 2004
-@@ -1139,12 +1139,7 @@ int sym_abort_scsiio(hcb_p np, cam_ccb_p
- int sym_abort_ccb(hcb_p np, ccb_p cp, int timed_out);
- int sym_reset_scsi_target(hcb_p np, int target);
- void sym_hcb_free(hcb_p np);
--
--#ifdef SYM_OPT_NVRAM_PRE_READ
- int sym_hcb_attach(hcb_p np, struct sym_fw *fw, struct sym_nvram *nvram);
--#else
--int sym_hcb_attach(hcb_p np, struct sym_fw *fw);
--#endif
- 
- /*
-  *  Optionnaly, the driver may handle IO timeouts.
+Try them to stock 2.6.7 and see if any / both of them fix your problem.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Regards
+Guennadi
+---
+Guennadi Liakhovetski
+
