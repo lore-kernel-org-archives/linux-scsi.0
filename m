@@ -1,70 +1,155 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [Bugme-new] [Bug 1118] New: atp870u driver pegs the cpu 100%
- and never loads
-Date: Sun, 17 Aug 2003 15:04:48 -0700
+From: "Jeffery, David" <David_Jeffery@adaptec.com>
+Subject: RE: [PATCH2.5] ips 3/4: use pci_dma APIs and remove GFP abuse
+Date: Mon, 18 Aug 2003 12:09:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030817150448.76057df9.akpm@osdl.org>
-References: <200308170450.h7H4otH8028674@fire-1.osdl.org>
+Message-ID: <A3B9245C291EEF4785A24A1DBE8D852B037809@rtpexc01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:62377 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S271094AbTHQWDs (ORCPT
+Received: from [216.52.22.10] ([216.52.22.10]:12453 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S272299AbTHRQJz (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 17 Aug 2003 18:03:48 -0400
-In-Reply-To: <200308170450.h7H4otH8028674@fire-1.osdl.org>
+	Mon, 18 Aug 2003 12:09:55 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: zleite@mminternet.com
-Cc: andmike@us.ibm.com, linux-scsi@vger.kernel.org
+To: 'Jeff Garzik' <jgarzik@pobox.com>
+Cc: linux-scsi@vger.kernel.org
 
-bugme-daemon@osdl.org wrote:
->
-> http://bugme.osdl.org/show_bug.cgi?id=1118
-> 
->            Summary: atp870u driver pegs the cpu 100% and never loads
->     Kernel Version: 2.6.0-test3
->             Status: NEW
->           Severity: blocking
->              Owner: andmike@us.ibm.com
->          Submitter: zleite@mminternet.com
+
+> -----Original Message-----
+> From: Jeff Garzik
+> Sent: Friday, August 15, 2003 5:10 PM
+> To: Jeffery, David
+> Cc: linux-scsi
+> Subject: Re: [PATCH2.5] ips 3/4: use pci_dma APIs and remove GFP abuse
 > 
 > 
-> Distribution: RH9.0
-> Hardware Environment:pentium4 1.8 ghz uniprocessor
-> Software Environment: stardard RH
-> Problem Description:can load driver for ACARD SCSI cards
+> David Jeffery wrote:
+> > -#if !defined(__i386__) && !defined(__ia64__)
+> > -#error "This driver has only been tested on the x86/ia64 platforms"
+> > +#if !defined(__i386__) && !defined(__ia64__) && 
+> !defined(__x86_64__)
+> > +#error "This driver has only been tested on the 
+> x86/ia64/x86_64 platforms"
+> >  #endif
 > 
-> Steps to reproduce:
-> modprobe atp870u
-> result: CPU use goes to 100% and module never loads.
+> This should be removed completely.
 > 
-> ------- You are receiving this mail because: -------
-> You are on the CC list for the bug, or are watching someone who is.
+> Under Linux, you limit the architectures that build your driver via 
+> Kconfig (or in 2.4, Config.in) dependencies.
+> 
+> Further, Linux actively encourages that all PCI platforms at least 
+> attempt to build PCI drivers -- even if the company does not 
+> support the 
+> driver on that platform.  This leads to an increase in driver 
+> quality, 
+> as it increases the opportunities others have to point out bugs, and 
+> offer fixes.
 
-This fixes the lockup.  If you have the hardware, please retest
-and send a report, thanks.  (I assume you don't, because having
-the hardware prevents the lockup.  Oh well).
-
-
-
- drivers/scsi/atp870u.c |    4 +---
- 1 files changed, 1 insertion(+), 3 deletions(-)
-
-diff -puN drivers/scsi/atp870u.c~atp870u_detect-lockup-fix drivers/scsi/atp870u.c
---- 25/drivers/scsi/atp870u.c~atp870u_detect-lockup-fix	2003-08-17 14:59:07.000000000 -0700
-+++ 25-akpm/drivers/scsi/atp870u.c	2003-08-17 14:59:46.000000000 -0700
-@@ -2304,9 +2304,7 @@ static int atp870u_detect(Scsi_Host_Temp
- 	printk(KERN_INFO "aec671x_detect: \n");
- 	tpnt->proc_name = "atp870u";
+I need to fix up the Kconfig file.  How about I also downgrade that to
+a #warning like Andi suggested earlier?
  
--	h = 0;
--	while (devid[h] != 0)
--	{
-+	for (h = 0; devid[h]; h++) {
- 		struct pci_dev *dev = NULL;
- 		
- 		while((dev = pci_find_device(0x1191, devid[h], dev))!=NULL)
+> 
+> >  #if LINUX_VERSION_CODE <= KERNEL_VERSION(2,5,0)
+> > @@ -250,6 +250,7 @@
+> >  static int ips_ioctlsize = IPS_IOCTL_SIZE;	/* Size of the 
+> ioctl buffer        */
+> >  static int ips_cd_boot;		/* Booting from Manager 
+> CD         */
+> >  static char *ips_FlashData = NULL;	/* CD Boot - Flash Data 
+> Buffer      */
+> > +static dma_addr_t ips_flashbusaddr;
+> >  static long ips_FlashDataInUse;	/* CD Boot - Flash Data 
+> In Use Flag */
+> >  static uint32_t MaxLiteCmds = 32;	/* Max Active Cmds for 
+> a Lite Adapter */
+> >  static Scsi_Host_Template ips_driver_template = {
+> > @@ -589,17 +590,6 @@
+> >  		ips_setup(ips);
+> >  #endif
+> >  
+> > -	/* If Booting from the Manager CD, Allocate a large 
+> Flash        */
+> > -	/* Buffer ( so we won't need to allocate one for each 
+> adapter ). */
+> > -	if (ips_cd_boot) {
+> > -		ips_FlashData = (char *) 
+> __get_free_pages(IPS_INIT_GFP, 7);
+> > -		if (ips_FlashData == NULL) {
+> > -			/* The validity of this pointer is 
+> checked in ips_make_passthru() before it is used */
+> > -			printk(KERN_WARNING
+> > -			       "ERROR: Can't Allocate Large 
+> Buffer for Flashing\n");
+> > -		}
+> > -	}
+> > -
+> >  	for (i = 0; i < ips_num_controllers; i++) {
+> >  		if (ips_register_scsi(i))
+> >  			ips_free(ips_ha[i]);
+> > @@ -1630,21 +1620,20 @@
+> >  ips_alloc_passthru_buffer(ips_ha_t * ha, int length)
+> >  {
+> >  	void *bigger_buf;
+> > -	int count;
+> > -	int order;
+> > +	dma_addr_t dma_busaddr;
+> >  
+> > -	if (ha->ioctl_data && length <= (PAGE_SIZE << ha->ioctl_order))
+> > +	if (ha->ioctl_data && length <= ha->ioctl_len)
+> >  		return 0;
+> >  	/* there is no buffer or it's not big enough, allocate 
+> a new one */
+> > -	for (count = PAGE_SIZE, order = 0;
+> > -	     count < length; order++, count <<= 1) ;
+> > -	bigger_buf = (void *) __get_free_pages(IPS_ATOMIC_GFP, order);
+> > +	bigger_buf = pci_alloc_consistent(ha->pcidev, length, 
+> &dma_busaddr);
+> 
+> It's not wrong... but it's a bit nasty to be calling 
+> pci_alloc_consistent from the interrupt handler.  Typically, 
+> if you can, 
+> it would be better to have buffers waiting for you, and you 
+> simply map 
+> them here, using pci_map_single or pci_map_page or whatever.
 
-_
+Normally, that is what happens.  A new, larger buffer will
+only be allocated in a few very rare cases.  No user should
+ever hit those allocations when using the ServeRAID tools.
+Only a few special commands like flashing firmware should
+ever trigger reallocation.
 
+> Also, as a tangent, I was thinking that it might be 
+> beneficial to move 
+> ips_next() to a tasklet.  Change all callers to call 
+> schedule_tasklet() 
+> instead.  That should allow more streamlined usage, IMO...
+
+Reworking ips_next is on my large list of Things To Do if I
+Had Time.
+
+> 
+> 
+> > @@ -7394,7 +7366,7 @@
+> >  		return ips_abort_init(ha, index);
+> >  	}
+> >  
+> > -	ha->nvram = kmalloc(sizeof (IPS_NVRAM_P5), IPS_INIT_GFP);
+> > +	ha->nvram = kmalloc(sizeof (IPS_NVRAM_P5), GFP_KERNEL);
+> >  
+> >  	if (!ha->nvram) {
+> >  		IPS_PRINTK(KERN_WARNING, pci_dev,
+> > @@ -7402,7 +7374,7 @@
+> >  		return ips_abort_init(ha, index);
+> >  	}
+> >  
+> > -	ha->subsys = kmalloc(sizeof (IPS_SUBSYS), IPS_INIT_GFP);
+> > +	ha->subsys = kmalloc(sizeof (IPS_SUBSYS), GFP_KERNEL);
+> 
+> Looks good.  Now if we could convince you to change structs to style 
+> "struct foo" instead of SHOUTING STYLE, it would be even cooler :)
+
+The code still has plenty of warts and I wish I had more time to work
+on them. (Notice a theme about time? :)
+
+David Jeffery
