@@ -1,31 +1,34 @@
-From: John Levon <levon@movementarian.org>
-Subject: Re: [PATCH] kill two scsi ioctls
-Date: Thu, 10 Apr 2003 19:26:33 +0100
+From: Pete Zaitcev <zaitcev@redhat.com>
+Subject: Re: Isn't sd_major() broken ?
+Date: Thu, 10 Apr 2003 16:39:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030410182633.GE96127@compsoc.man.ac.uk>
-References: <UTC200304101729.h3AHTB426607.aeb@smtp.cwi.nl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <200304102039.h3AKdYC31797@devserv.devel.redhat.com>
+References: <mailman.1049998202.18407.linux-kernel2news@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from serenity.mcc.ac.uk ([130.88.200.93]:787 "EHLO
-	serenity.mcc.ac.uk") by vger.kernel.org with ESMTP id S264150AbTDJSO4 (for <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Apr 2003 14:14:56 -0400
-Content-Disposition: inline
-In-Reply-To: <UTC200304101729.h3AHTB426607.aeb@smtp.cwi.nl>
+Received: from nat-pool-rdu.redhat.com ([66.187.233.200]:24851 "EHLO
+	devserv.devel.redhat.com") by vger.kernel.org with ESMTP
+	id S264144AbTDJU14 (for <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Apr 2003 16:27:56 -0400
+In-Reply-To: <mailman.1049998202.18407.linux-kernel2news@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, torvalds@transmeta.com
+To: Badari Pulavarty <pbadari@us.ibm.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, Apr 10, 2003 at 07:29:11PM +0200, Andries.Brouwer@cwi.nl wrote:
+> --- drivers/scsi/sd.c.org	Wed Apr  9 13:12:38 2003
+> +++ drivers/scsi/sd.c	Thu Apr 10 11:01:45 2003
+> @@ -123,7 +123,7 @@ static int sd_major(int major_idx)
+>  	case 1 ... 7:
+>  		return SCSI_DISK1_MAJOR + major_idx - 1;
+>  	case 8 ... 15:
+> -		return SCSI_DISK8_MAJOR + major_idx;
+> +		return SCSI_DISK8_MAJOR + major_idx - 8;
+>  	default:
+>  		BUG();
+>  		return 0;	/* shut up gcc */
+> 
 
-> It happens all the time. Hundreds of cases.
+Yes this seems good.
 
-That's obviously no excuse.
+One is left to wonder, however, why 2.5 version is not using
+a little array of majors here.
 
-> historical explanations somewhere else, for example in
-> Documentation/ioctl_list.
-
-Fine by me.
-
-regards
-john
+-- Pete
