@@ -1,28 +1,29 @@
 From: Brian King <brking@us.ibm.com>
-Subject: [PATCH] ipr operational timeout oops
-Date: Thu, 27 May 2004 21:55:24 -0500
+Subject: [PATCH 2.4] sd terabyte disk fix
+Date: Thu, 27 May 2004 22:10:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40B6AA1C.4080603@us.ibm.com>
+Message-ID: <40B6ADA9.3010407@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------070800050703000409090404"
+ boundary="------------020800010807000307040509"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:23998 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S262101AbUE1Cz0
+Received: from e31.co.us.ibm.com ([32.97.110.129]:64190 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S262170AbUE1DKg
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 May 2004 22:55:26 -0400
+	Thu, 27 May 2004 23:10:36 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
+To: James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------070800050703000409090404
+--------------020800010807000307040509
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 
 James,
 
-Here's one more. Please apply.
+The following bug was hit when creating a hardware RAID array > 1 TB.
+Please apply.
 
 Thanks
 
@@ -31,69 +32,56 @@ Brian King
 eServer Storage I/O
 IBM Linux Technology Center
 
---------------070800050703000409090404
+--------------020800010807000307040509
 Content-Type: text/plain;
- name="ipr_ioa_reset_timeout_oops2.patch"
+ name="sd_terabyte_disk.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="ipr_ioa_reset_timeout_oops2.patch"
+ filename="sd_terabyte_disk.patch"
 
 
-This patch fixes an oops that can occur if an adapter times
-out coming operational.
+This patch fixes a signed/unsigned bug that prevented > 1TB
+scsi disks from working.
 
 
 ---
 
- linux-2.6.7-rc1-bjking1/drivers/scsi/ipr.c |    1 +
- 1 files changed, 1 insertion(+)
+ linux-2.4.26-bjking1/drivers/scsi/sd.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/ipr.c~ipr_ioa_reset_timeout_oops2 drivers/scsi/ipr.c
---- linux-2.6.7-rc1/drivers/scsi/ipr.c~ipr_ioa_reset_timeout_oops2	2004-05-26 17:22:17.000000000 -0500
-+++ linux-2.6.7-rc1-bjking1/drivers/scsi/ipr.c	2004-05-26 17:22:36.000000000 -0500
-@@ -4818,6 +4818,7 @@ static int ipr_reset_enable_ioa(struct i
- 	ipr_cmd->timer.data = (unsigned long) ipr_cmd;
- 	ipr_cmd->timer.expires = jiffies + IPR_OPERATIONAL_TIMEOUT;
- 	ipr_cmd->timer.function = (void (*)(unsigned long))ipr_timeout;
-+	ipr_cmd->done = ipr_reset_ioa_job;
- 	add_timer(&ipr_cmd->timer);
- 	list_add_tail(&ipr_cmd->queue, &ioa_cfg->pending_q);
+diff -puN drivers/scsi/sd.c~sd_terabyte_disk drivers/scsi/sd.c
+--- linux-2.4.26/drivers/scsi/sd.c~sd_terabyte_disk	2004-05-26 10:06:58.000000000 -0500
++++ linux-2.4.26-bjking1/drivers/scsi/sd.c	2004-05-27 22:05:32.000000000 -0500
+@@ -294,7 +294,8 @@ static request_queue_t *sd_find_queue(kd
  
+ static int sd_init_command(Scsi_Cmnd * SCpnt)
+ {
+-	int dev, block, this_count;
++	int dev, this_count;
++	unsigned int block;
+ 	struct hd_struct *ppnt;
+ 	Scsi_Disk *dpnt;
+ #if CONFIG_SCSI_LOGGING
+@@ -307,7 +308,7 @@ static int sd_init_command(Scsi_Cmnd * S
+ 	block = SCpnt->request.sector;
+ 	this_count = SCpnt->request_bufflen >> 9;
+ 
+-	SCSI_LOG_HLQUEUE(1, printk("Doing sd request, dev = 0x%x, block = %d\n",
++	SCSI_LOG_HLQUEUE(1, printk("Doing sd request, dev = 0x%x, block = %u\n",
+ 	    SCpnt->request.rq_dev, block));
+ 
+ 	dpnt = &rscsi_disks[dev];
+@@ -329,7 +330,7 @@ static int sd_init_command(Scsi_Cmnd * S
+ 		return 0;
+ 	}
+ 	SCSI_LOG_HLQUEUE(2, sd_devname(dev, nbuff));
+-	SCSI_LOG_HLQUEUE(2, printk("%s : real dev = /dev/%d, block = %d\n",
++	SCSI_LOG_HLQUEUE(2, printk("%s : real dev = /dev/%d, block = %u\n",
+ 				   nbuff, dev, block));
+ 
+ 	/*
 
 _
 
---------------070800050703000409090404
-Content-Type: text/plain;
- name="ipr_driver_version_2_0_9.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ipr_driver_version_2_0_9.patch"
-
-
-Bump driver version
-
-
----
-
- linux-2.6.7-rc1-bjking1/drivers/scsi/ipr.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff -puN drivers/scsi/ipr.h~ipr_driver_version_2_0_9 drivers/scsi/ipr.h
---- linux-2.6.7-rc1/drivers/scsi/ipr.h~ipr_driver_version_2_0_9	2004-05-26 22:29:56.000000000 -0500
-+++ linux-2.6.7-rc1-bjking1/drivers/scsi/ipr.h	2004-05-26 22:30:13.000000000 -0500
-@@ -36,8 +36,8 @@
- /*
-  * Literals
-  */
--#define IPR_DRIVER_VERSION "2.0.8"
--#define IPR_DRIVER_DATE "(May 23, 2004)"
-+#define IPR_DRIVER_VERSION "2.0.9"
-+#define IPR_DRIVER_DATE "(May 26, 2004)"
- 
- /*
-  * IPR_DBG_TRACE: Setting this to 1 will turn on some general function tracing
-
-_
-
---------------070800050703000409090404--
+--------------020800010807000307040509--
 
