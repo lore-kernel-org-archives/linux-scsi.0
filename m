@@ -1,54 +1,99 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] fix badness in scsi_single_lun_run
-Date: Fri, 30 Jan 2004 12:14:42 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040130121442.A12509@beaverton.ibm.com>
-References: <20040127003244.GM23308@serve.riede.org> <20040128033041.GY23308@serve.riede.org>
+From: Clay Haapala <chaapala@cisco.com>
+Subject: Re: Recovered disk error caused disk to go offline.
+Date: Fri, 30 Jan 2004 14:33:38 -0600
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <yqujk739dvml.fsf@chaapala-lnx2.cisco.com>
+References: <200401301902.i0UJ2Ai30922@dns1.watkins-home.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.102]:52216 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S263625AbUA3UPO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jan 2004 15:15:14 -0500
-Content-Disposition: inline
-In-Reply-To: <20040128033041.GY23308@serve.riede.org>; from wrlk@riede.org on Tue, Jan 27, 2004 at 10:30:41PM -0500
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200401301902.i0UJ2Ai30922@dns1.watkins-home.com> (Guy's
+ message of "Fri, 30 Jan 2004 14:02:10 -0500")
+To: Guy <bugzilla@watkins-home.com>
+Cc: linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Willem Riede <wrlk@riede.org>, James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
 
-Willem - the WARN_ON is bogus. 
+iSCSI acts as another HBA, and conveys status up from the [Fibre
+Channel] devices to the scsi layer.  SCSI reported that event, and the
+raid system rolled over the disk to another, more reliable, one.
+Wouldn't that be correct behavior for Raid?  Cc-ing linux-raid...
 
-James - can you please apply?
+On Fri, 30 Jan 2004, Guy verbalised:
+> Sorry about the re-post, but no comments after almost 2 days.
+> 
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Guy
+> Sent: Thursday, January 29, 2004 12:21 AM
+> To: linux-scsi@vger.kernel.org
+> Subject: Recovered disk error caused disk to go offline.
+> 
+> Neil Brown said to send this message to linux-scsi, so here it is.
+> 
+> Please help.
+> Thanks,
+> Guy
+> 
+> On Thursday January 29, bugzilla@watkins-home.com wrote:
+>> As you can see in the log, the write error recovered with auto
+> reallocation!
+>> As I understand it, this is a normal event with today's disks.
+>> I don't think the disk should have been considered failed.
+>> 
+>> Comments please?
+> 
+> You need to talk to linux-scsi about this.  The scsi subsystem told
+> the raid subsystem that there was an error, so the raid subsystem
+> stopped using the device.
+> 
+> If the write error was recovered, scsi shouldn't have reported an
+> error to raid.
+> 
+> NeilBrown
+> 
+>> 
+>> Thanks,
+>> Guy
+>> 
+>> The spare disk resynced just fine..,A I never knew for over 24
+>> hours!  This is cool stuff!
+>> 
+>> Jan 27 12:44:06 watkins kernel: SCSI disk error : host 2 channel 0
+>> id 4
+> lun
+>> 0 return code = 8000002 Jan 27 12:44:06 watkins kernel: Info
+>> fld=0x7e5c81, Deferred sd08:71: sense key Recovered Error Jan 27
+>> 12:44:06 watkins kernel: Additional sense indicates Write error -
+>> recovered with auto reallocation Jan 27 12:44:06 watkins kernel:.,A
+>> I/O error: dev 08:71, sector 8280704 Jan 27 12:44:06 watkins
+>> kernel: raid5: Disk failure on sdh1, disabling device. Operation
+>> continuing on 13 devices Jan 27 12:44:06 watkins kernel: md:
+>> updating md2 RAID superblock on device Jan 27 12:44:06 watkins
+>> kernel: md: sdc1 [events: 00000009]<6>(write)
+> sdc1's
+>> sb offset: 17767744 Jan 27 12:44:06 watkins kernel: md: recovery
+>> thread got woken up ...  Jan 27 12:44:06 watkins kernel: md2:
+>> resyncing spare disk sdc1 to replace failed disk Jan 27 12:44:06
+>> watkins kernel: RAID5 conf printout: Jan 27 12:44:06 watkins
+>> kernel:.,A --- rd:14 wd:13 fd:1
+>> 
+>> - To unsubscribe from this list: send the line "unsubscribe
+>> linux-raid" in the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+> - To unsubscribe from this list: send the line "unsubscribe
+> linux-raid" in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+> 
+> - To unsubscribe from this list: send the line "unsubscribe
+> linux-scsi" in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+> 
+> - To unsubscribe from this list: send the line "unsubscribe
+> linux-scsi" in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
 
-This patch against recent mainline bk removes the bogus WARN_ON for
-single_lun devices, and a meaningless comment.
-
-We clear the starget_sdev_user, and immediately blk_run_queue for the LUN
-that just issued IO. Another LUN could race in scsi_request_fn, but it is
-most likely that the last user will get there first, and reset
-starget_sdev_user. If it does not, it will have to wait for the other LUN
-to finish all of its IO.
-
-===== drivers/scsi/scsi_lib.c 1.115 vs edited =====
---- 1.115/drivers/scsi/scsi_lib.c	Sat Nov 22 16:20:45 2003
-+++ edited/drivers/scsi/scsi_lib.c	Fri Jan 30 11:18:39 2004
-@@ -340,7 +340,6 @@
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
--	WARN_ON(!current_sdev->sdev_target->starget_sdev_user);
- 	current_sdev->sdev_target->starget_sdev_user = NULL;
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 
-@@ -352,10 +351,6 @@
- 	 */
- 	blk_run_queue(current_sdev->request_queue);
- 
--	/*
--	 * After unlock, this races with anyone clearing starget_sdev_user,
--	 * but we always enter this function again, avoiding any problems.
--	 */
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	if (current_sdev->sdev_target->starget_sdev_user)
- 		goto out;
+-- 
+Clay Haapala (chaapala@cisco.com) Cisco Systems SRBU +1 763-398-1056
+   6450 Wedgwood Rd, Suite 130 Maple Grove MN 55311 PGP: C89240AD
+             Minnesota, a quite agreeable state.  Lately,
+             Celsius and Fahrenheit have tended to agree.
