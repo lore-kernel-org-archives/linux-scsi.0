@@ -1,34 +1,40 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: SAS overview
-Date: Sun, 28 Mar 2004 17:38:28 -0500
+From: "Corporate Jobs" <jobs@TurnAroundStrategies.com>
+Subject: Linux Kernel Programmers
+Date: Sun, 28 Mar 2004 20:12:58 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <406753E4.70007@pobox.com>
-References: <20040328220632.ADD8D76C4F@isis.visi.com>
+Message-ID: <048701c414f8$aeb997a0$3a4a3842@comcast.net>
+Reply-To: "Corporate Jobs" <jobs@TurnAroundStrategies.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:46819 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262465AbUC1Wim
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 28 Mar 2004 17:38:42 -0500
-In-Reply-To: <20040328220632.ADD8D76C4F@isis.visi.com>
+Received: from rwcrmhc12.comcast.net ([216.148.227.85]:52904 "EHLO
+	rwcrmhc12.comcast.net") by vger.kernel.org with ESMTP
+	id S262515AbUC2AON (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 28 Mar 2004 19:14:13 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Scott M. Ferris" <sferris@acm.org>
-Cc: dougg@torque.net, Matthew Wilcox <willy@debian.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Scott M. Ferris wrote:
-> For the fast path of queueing and completing commands, I'd expect SAS
-> HBAs to work similar to SPI HBAs, where all the HBA driver does is
-> queue commands with data buffers, and wait for an interrupt to
-> indicate that one or more commands have completed.  For performance,
-> the HBA needs to manage the entire lifetime of the command, and DMA
-> data back and forth without needing intervention by the HBA driver.
-
-Newer SATA controllers do this for you, but still give you low level 
-access to the individual frames being sent on the SATA wire...
-
-	Jeff
+We are building a small benchmarking team for the following project in Bay
+Area, CA. This is Linux kernel level work. Interested people should email
+their RESUMEs to
+Jobs@TurnAroundStrategies.com
 
 
+Position 1) Skills Required: In-depth knowledge in and experience with the
+Linux kernel
+(particularly the I/O subsystem), filesystems, Oracle and TPC benchmarking.
+
+Location: Bay Area, CA
+
+
+Position 2) Skills Required:  System level programmers for device drivers on
+Linux.
+
+Location: Bay Area, CA
+
+
+Strategic Talent Acquisition and Retention ( STAR) Team
+New Business Strategies Corporation
 
