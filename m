@@ -1,75 +1,87 @@
-From: Dipankar Sarma <dipankar@in.ibm.com>
-Subject: aic7xxx broken in 2.5.53/54 ?
-Date: Fri, 3 Jan 2003 15:46:18 +0530
+From: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Subject: RE: Seagate Cheetah: Firmware, Bugs, Compatibility?
+Date: Fri, 3 Jan 2003 05:54:00 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030103101618.GB8582@in.ibm.com>
-Reply-To: dipankar@in.ibm.com
+Message-ID: <A5974D8E5F98D511BB910002A50A66470580D4EB@hdsmsx103.hd.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
+Received: from petasus.fm.intel.com (petasus.fm.intel.com [10.1.192.37])
+	by hermes.fm.intel.com (8.11.6/8.11.6/d: outer.mc,v 1.51 2002/09/23 20:43:23 dmccart Exp $) with ESMTP id h03Dn3j08497
+	for <linux-scsi@vger.kernel.org>; Fri, 3 Jan 2003 13:49:03 GMT
+Received: from fmsmsxvs042.fm.intel.com (fmsmsxvs042.fm.intel.com [132.233.42.128])
+	by petasus.fm.intel.com (8.11.6/8.11.6/d: inner.mc,v 1.27 2002/10/16 23:46:59 dmccart Exp $) with SMTP id h03Dkif26591
+	for <linux-scsi@vger.kernel.org>; Fri, 3 Jan 2003 13:46:44 GMT
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: 'Shanker Balan' <shanu@exocore.com>, Linux-SCSI <linux-scsi@vger.kernel.org>
 
-Looks like the aic7xxx driver in 2.5.53 and 54 are broken on my hardware.
-The older driver works fine. The new driver used to work until 2.5.52.
-Does this look familiar to anyone ?
+Shanu,
 
-hda: ATAPI 48X CD-ROM drive, 120kB Cache, (U)DMA
-Uniform CD-ROM driver Revision: 3.12
-end_request: I/O error, dev hda, sector 0
-aic7xxx: PCI Device 0:1:0 failed memory mapped test.  Using PIO.
-Uhhuh. NMI received for unknown reason 25 on CPU 0.
-Dazed and confused, but trying to continue
-Do you have a strange power saving mode enabled?
-aic7xxx: PCI Device 0:1:1 failed memory mapped test.  Using PIO.
-scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.25
-        <Adaptec aic7896/97 Ultra2 SCSI adapter>
-        aic7896/97: Ultra2 Wide Channel A, SCSI Id=7, 32/253 SCBs
+We also had some problems with those same Atlas drives from Maxtor/Quantum.
+The B700 firmware seems to resolve the problems and we have been satisfied
+with it.  
 
-scsi0: PCI error Interrupt at seqaddr = 0x2
-scsi0: Signaled a Target Abort
-scsi1: PCI error Interrupt at seqaddr = 0x2
-scsi1: Signaled a Target Abort
-Uhhuh. NMI received for unknown reason 25 on CPU 0.
-Dazed and confused, but trying to continue
-Do you have a strange power saving mode enabled?
-(scsi1:A:0): 80.000MB/s transfers (40.000MHz, offset 63, 16bit)
-(scsi1:A:1): 80.000MB/s transfers (40.000MHz, offset 63, 16bit)
-(scsi1:A:2): 80.000MB/s transfers (40.000MHz, offset 63, 16bit)
-scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.25
-        <Adaptec aic7896/97 Ultra2 SCSI adapter>
-        aic7896/97: Ultra2 Wide Channel B, SCSI Id=7, 32/253 SCBs
+I have a Linux tool that should help you download the firmware images
+successfully.  See http://scsirastools.sourceforge.net, and the tool is
+named sgdskfl.  I put a copy of the B700 firmware out there and the firmware
+update procedure is documented in the UserGuide.
 
-  Vendor: IBM-ESXS  Model: ST318305LC    !#  Rev: B245
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-scsi1:A:0:0: Tagged Queuing enabled.  Depth 253
-  Vendor: IBM-ESXS  Model: ST318305LC    !#  Rev: B245
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-scsi1:A:1:0: Tagged Queuing enabled.  Depth 253
-  Vendor: IBM-ESXS  Model: ST318305LC    !#  Rev: B245
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-scsi1:A:2:0: Tagged Queuing enabled.  Depth 253
-  Vendor: IBM       Model: AuSaV1S2          Rev: 0
-  Type:   Processor                          ANSI SCSI revision: 02
+Both Maxtor/Quantum and Seagate firmware images contain the model number of
+the disks that they are intended to be compatible with inside the image
+file.  sgdskfl checks the model number against the image itself for safety.
 
-The hardware [4-CPU P3 xeon] -
+The Seagate firmware images I have I got via email from Seagate support.
 
-[root@llm04 root]# lspci
-00:00.0 Host bridge: ServerWorks CNB20HE Host Bridge (rev 21)
-00:00.1 Host bridge: ServerWorks CNB20HE Host Bridge (rev 01)
-00:00.2 Host bridge: ServerWorks: Unknown device 0006
-00:00.3 Host bridge: ServerWorks: Unknown device 0006
-00:01.0 SCSI storage controller: Adaptec AIC-7896U2/7897U2
-00:01.1 SCSI storage controller: Adaptec AIC-7896U2/7897U2
-00:05.0 Ethernet controller: Advanced Micro Devices [AMD] 79c970 [PCnet LANCE] )00:06.0 VGA compatible controller: S3 Inc. Trio 64 3D (rev 01)
-00:0f.0 ISA bridge: ServerWorks OSB4 South Bridge (rev 50)
-00:0f.1 IDE interface: ServerWorks OSB4 IDE Controller
-00:0f.2 USB Controller: ServerWorks OSB4/CSB5 USB Controller (rev 04)
-02:03.0 RAID bus controller: IBM Netfinity ServeRAID controller
-02:05.0 Ethernet controller: Intel Corp. 82557/8/9 [Ethernet Pro 100] (rev 0c)
-02:06.0 Ethernet controller: Intel Corp. 82557/8/9 [Ethernet Pro 100] (rev 0c)
+Andy
 
-Thanks
-Dipankar
+-----Original Message-----
+From: Shanker Balan [mailto:shanu@exocore.com] 
+Sent: Friday, January 03, 2003 2:03 AM
+To: Linux-SCSI
+Subject: Seagate Cheetah: Firmware, Bugs, Compatibility?
+
+
+Hello:
+
+I recently wrote in to ask about the "Queued IO" errors I have been
+experiencing on all 3 of my Quantum Atlas 10KIII drivers. According to
+Justin, its a firmware problem and upgrading to the latest will
+hopefully fix it.
+
+Like Mikael Abrahamsson mentioned in the same thread, it has been next
+to impossible to find any information on the firmware update procedure
+and result thereof with the updates available on the Quantum FTP site:
+
+ftp://ftpdownload.maxtor.com/pub/QuantumProducts/
+Disk_Firmware/Atlas-10KIII/160/
+
+Quantum support in India is next to impossible with vendors having a
+"take it or leave it" kind of attitude and Quantum web support is yet to
+get back to me on my query. Basically, I have burnt my fingers with the
+Quantum.
+
+Anyway, I need another SCSI hard disk for my cluster and the only other
+brand available in the local market is the Seagate Cheetah ST318406LC.
+
+Before I make the purchase (not that I have a choice here :( ), should I
+be aware of any bugs/compatibility issues with this specific model? The
+SCSI controller is a Adaptec AIC-7892A U160/m (rev 02).
+
+Any specific firmware releases to avoid with the ST318406LC?
+
+Thank you for your time.
+
+-- Shanu
+http://shankerbalan.com/
+
+BTW: Any one have the URL to the Seagate firmware location?
+
+
+-- 
+Westheimer's Discovery:
+	A couple of months in the laboratory can frequently save a
+couple of hours in the library.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
