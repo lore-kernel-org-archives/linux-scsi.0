@@ -1,34 +1,29 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: [PATCH] ips driver 2/4: initialization reordering
-Date: Thu, 6 Feb 2003 20:00:01 +0000
+From: Linus Torvalds <torvalds@transmeta.com>
+Subject: Re: [PATCH 2.5] fix megaraid driver compile error
+Date: Thu, 6 Feb 2003 12:04:15 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030206200001.A16467@infradead.org>
-References: <A3B9245C291EEF4785A24A1DBE8D852B03773F@rtpexc01.adaptec.com>
+Message-ID: <Pine.LNX.4.44.0302061202430.3545-100000@home.transmeta.com>
+References: <1044559247.4858.49.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <A3B9245C291EEF4785A24A1DBE8D852B03773F@rtpexc01.adaptec.com>; from David_Jeffery@adaptec.com on Thu, Feb 06, 2003 at 02:58:18PM -0500
+In-Reply-To: <1044559247.4858.49.camel@markh1.pdx.osdl.net>
 List-Id: linux-scsi@vger.kernel.org
-To: "Jeffery, David" <David_Jeffery@adaptec.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Mark Haverkamp <markh@osdl.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Feb 06, 2003 at 02:58:18PM -0500, Jeffery, David wrote:
-> > Please don't use the obsolete scsi_register_host() interface=20
-> > but switch
-> > to the hotplug-aware scsi_add_host.  Also please just make=20
-> > the template
-> > a normal struct in ips.c instead of the magic macro initializ=E6tio=
-n.
->=20
-> Using scsi_add_host is on my todo list.  I'll also convert
-> the evil IPS macro when I get a chance.
 
-Cool!
+On 6 Feb 2003, Mark Haverkamp wrote:
+>
+> This moves access of the host element to device since host has been
+> removed from struct scsi_cmnd.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This is whitespace-damaged.
+
+Please fix broken mailers. I generally don't bother to fix up whitespace
+damage from people who can't bother to have a good mailer. It's just not 
+worth it - if I try to fix it up (even if it is often trivial), it just 
+means that people will continue to send crap patches to me.
+
+		Linus
+
