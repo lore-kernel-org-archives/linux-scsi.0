@@ -1,60 +1,38 @@
-From: Dmitry Yusupov <dmitry_yus@yahoo.com>
-Subject: Re: [Iscsitarget-devel] Re: [ANNOUNCE] iSCSI enterprise target
-	software
-Date: Tue, 01 Mar 2005 21:21:51 -0800
-Message-ID: <1109740911.3958.4.camel@mylaptop>
-References: <20050301161951K.fujita.tomonori@lab.ntt.co.jp>
-	 <1109666441.6293.62.camel@laptopd505.fenrus.org>
-	 <20050301183549J.fujita.tomonori@lab.ntt.co.jp>
-	 <20050302140413R.fujita.tomonori@lab.ntt.co.jp>
+From: "Zhao, Forrest" <forrest.zhao@intel.com>
+Subject: RE: One question about SCSI device hotplug
+Date: Wed, 2 Mar 2005 13:33:05 +0800
+Message-ID: <8126E4F969BA254AB43EA03C59F44E84018500DC@pdsmsx404>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Received: from smtp106.mail.sc5.yahoo.com ([66.163.169.226]:63325 "HELO
-	smtp106.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S262179AbVCBFWE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Mar 2005 00:22:04 -0500
-In-Reply-To: <20050302140413R.fujita.tomonori@lab.ntt.co.jp>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Received: from fmr19.intel.com ([134.134.136.18]:11976 "EHLO
+	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
+	id S262184AbVCBFev convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2005 00:34:51 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: arjan@infradead.org, linux-scsi@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net
+To: Matt Domsch <Matt_Domsch@dell.com>
+Cc: James.Smart@Emulex.Com, matthew@wil.cx, linux-scsi@vger.kernel.org, "Caushik, Ramesh" <ramesh.caushik@intel.com>, sdake@mvista.com
 
-On Wed, 2005-03-02 at 14:04 +0900, FUJITA Tomonori wrote:
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Subject: [Iscsitarget-devel] Re: [ANNOUNCE] iSCSI enterprise target software
-> Date: Tue, 01 Mar 2005 18:35:49 +0900
-> 
-> > The last reason is that user-space cost like memory copy. With 1Gbs
-> > Ethernet, is is not critical. However, with 10G, it is critical, I
-> > expect. I've been setting up 10G experimental infrastructure to
-> > evaluate iSCSI performance.
-> 
-> If we try to build high-performance iSCSI target software on 10Gbs
-> Ethernet, I think that we need to implement it in the kernel
-> space, although this topic is still in the research stage.
-> 
-> IICR, Intel provides open-source iSCSI target software, which uses
-> mmap() in the user space, as you suggested. However, they chose a
-> different approach to implement iSCSI target software for 10Gbs. They
-> modified the Linux kernel TCP stack to fully integrate iSCSI
-> functionality with it. It is still not clear how to get the best
-> performance out of 10GBs Ethernet, however, it seems that using just
-> the socket interface is not good enough. So I think that we need to
-> control all the system-resources to do it.
-> 
-> We've not optimized our code yet. The current code simply uses the
-> socket interface, however, moving some functionality to the TCP stack
-> can improve the performance, although I don't plan to modify theu TCP
-> stack. A possible approach to do it is exploiting sk_data_ready().
+<Exactly.  Some controllers know, and assert events up to their LLDD.
+<Jame's Emulex driver apparently does, perhaps this holds true for all
+<FC devices.
 
-www.open-iscsi.org project uses this technique on receiving path and
-shows very nice performance numbers for Read operations comparable with
-HW accelerators.
+<Some firmwares (LSI megaraid for sure, Adaptec SCSI I believe) don't.
 
-To add such a functionality to an existing project will probably require
-total re-design.
+Thank you, Matt. Then I have another question:
+As we know SCSI mid-layer issue a command to LLDD by 
+host->hostt->queuecommand(cmd, scsi_done); and in the meantime a 
+timer is set. When the timer expires, SCSI mid-layer know the 
+execution of command has failed.
+My question is: when SCSI device is surprise-removed, if SCSI mid-layer
+issue a command to this removed device, will mid-layer has to wait 
+a timeout before it can know the execution of command failed? Or is
+there
+any other mechanism that LLDD can notify mid-layer that execution of
+command failed without waiting for a timeout?
 
-Regards,
-Dima
-
+Thanks,
+Forrest
