@@ -1,8 +1,8 @@
 From: Austin Gonyou <austin@digitalroadkill.net>
 Subject: Re: max_scsi_luns and 2.4.19-pre10.
-Date: 26 Jun 2002 09:18:45 -0500
+Date: 26 Jun 2002 09:32:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1025101125.19558.4.camel@UberGeek>
+Message-ID: <1025101947.19700.15.camel@UberGeek>
 References: <1025052385.19462.5.camel@UberGeek>
 	  <20020626123337.GC1217@gum01m.etpnet.phys.tue.nl>
 Mime-Version: 1.0
@@ -18,11 +18,7 @@ On Wed, 2002-06-26 at 07:33, Kurt Garloff wrote:
 > Hi Austin,
 > 
 > enough guesses have been there not answering your questions ...
-
-Sure I hear that. But I posted an earlier question about QLA2200 and a
-PV 660F and not seeing > 8 luns with 2.4.19-pre10. 
-
-
+> 
 > On Tue, Jun 25, 2002 at 07:46:25PM -0500, Austin Gonyou wrote:
 > > This originally was asking for help regarding QLA2200's, but I've since
 > > discovered it's a kernel param problem that I'm not sure how to solve.
@@ -36,33 +32,25 @@ PV 660F and not seeing > 8 luns with 2.4.19-pre10.
 > http://van-dijk.net/linuxkernel/200206/0347.html
 > (An older patch for 2.4.16 exists as well.)
 
+Ahh...I see now. I looked for DELL in the scsi_scan.c and saw the
+symmetrix there right above it. I should be able to add LARGELUN, since
+it's #defined above and go for it. I'll see what this does, it's
+starting to make sense now. TIA.
 
-I'll take a look at that, and see if I can merge it into -aa4. 
+
 
 > The flag does allow a device to use more than 8 LUNs despite it reporting
 > as SCSI Version 2 devices (which can not support more than 8 LUNs normally
 > ...) 
 > The flag also needs to be set for some more devices, look for DGC, DELL, CMD
 > and CNSi/CNSI devices that already have the BLIST_SPARSELUN flag.
-
-This would be a DELL device, so I'll see about changing it from
-SPARESLUN to LARGELUN?
-
+> 
 > But as you did not post the output of /proc/scsi/scsi nor the syslog
 > meesages from your SCSI subsystem nobody knows what devices you're using or
 > what actually happens. Just speculations ...
-
-There's nothing to post from /proc/scsi/scsi or the syslog other than
-there's no more than 8 devices on my FC chain. I guess the real point
-here is that if you're using FC, you're probably going to use more than
-8 luns, even if not immediately. Especially for large Databases. 
-
+> 
 > PS: The better list for such questions is linux-scsi@vger.kernel.org
-
-That makes sense I'll post to that list immediately and see what I can
-get. Sorry for the confusion. 
-
-
+> 
 > Regards,
 > -- 
 > Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
