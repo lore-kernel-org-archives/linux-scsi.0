@@ -1,25 +1,31 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [TRIVIAL] Re: aic7xxx gcc3 warning fix
-Date: Sat, 27 Jul 2002 14:14:31 +1000
+From: Steve McIntyre <steve@einval.com>
+Subject: Re: sense buffer length for REQUEST SENSE?
+Date: Sat, 27 Jul 2002 09:50:13 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020727042038.BBC52412A@lists.samba.org>
-References: <20020726101754.A6596@infradead.org>
+Message-ID: <20020727085013.GB2624@einval.com>
+References: <3D420D77.A4633D9C@splentec.com> <3D4225D5.9A8ED692@torque.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: Your message of "Fri, 26 Jul 2002 10:17:54 +0100."
-             <20020726101754.A6596@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <3D4225D5.9A8ED692@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: dledford@redhat.com, linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-In message <20020726101754.A6596@infradead.org> you write:
-> Can't we just remove this stupid option parsing entirely in 2.5 and make it
-> take sane module options?  
+On Sat, Jul 27, 2002 at 12:47:17AM -0400, Douglas Gilbert wrote:
+>Luben Tuikov wrote:
+>> client has gotten all the sense data the sense buffer
+>> should be 252 bytes.
+>
+>Yes I can see that number in SPC-3. Has anyone every seen
+>an actual REQUEST SENSE response (sense buffer) anywhere near 
+>that size? The new "descriptor" sense data format should
+>further reduce the size requirement.
 
-Yes.  I will be updating my PARAM() patches RSN.
+Looking at the SCSI spec of a 12" WORM autoloader I've worked with, it
+uses up to 246 bytes...
 
-Of course, you have to make sure the boot command length limit is
-sane, too.
-
-Rusty.
---
-  Anyone who quotes me in their sig is an idiot. -- Rusty Russell.
+-- 
+Steve McIntyre, Cambridge, UK.                                steve@einval.com
+Support the Campaign for Audiovisual Free Expression: http://www.eff.org/cafe/
