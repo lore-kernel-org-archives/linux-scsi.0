@@ -1,73 +1,29 @@
-From: "William King" <wrking3@dadaboom.com>
-Subject: [PATCH] minor scsi cleanup in 2.4.x
-Date: Thu, 10 Apr 2003 09:01:19 -0700
+From: Andries.Brouwer@cwi.nl
+Subject: [PATCH] kill two scsi ioctls
+Date: Thu, 10 Apr 2003 18:33:26 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <JAEGLIPFMODKGALKJJGNEEJNCAAA.wrking3@dadaboom.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0000_01C2FF3F.C05A96A0"
+Message-ID: <UTC200304101633.h3AGXQ125592.aeb@smtp.cwi.nl>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gateway.dadaboom.com ([198.144.206.17]:17681 "HELO
-	spider.dadaboom.com") by vger.kernel.org with SMTP id S264077AbTDJPtj (for <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Apr 2003 11:49:39 -0400
+Received: from hera.cwi.nl ([192.16.191.8]:39934 "EHLO hera.cwi.nl")
+	by vger.kernel.org with ESMTP id S264090AbTDJQVr (for <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Apr 2003 12:21:47 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: torvalds@transmeta.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+The definition for SCSI_IOCTL_BENCHMARK_COMMAND was added in 1.1.2.
+The definition for SCSI_IOCTL_SYNC was added in 1.1.38.
+Neither of them has ever been used.
 
-------=_NextPart_000_0000_01C2FF3F.C05A96A0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-
-Attached is a patch (based off of 2.4.19) which removes 2 unnecessary
-externs and adds a new scsi device type string. The externs are unnecessary
-since the array is declared extern in scsi.h. The string change is
-consistent with the SCSI-3 standard.
-
-To whom it may concern, please apply. :-)
-
-Thanks,
-Bill
-
-------=_NextPart_000_0000_01C2FF3F.C05A96A0
-Content-Type: text/plain;
-	name="scsi_patch.txt"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="scsi_patch.txt"
-
---- g_NCR5380.c	2003/04/10 15:43:13	1.1=0A=
-+++ g_NCR5380.c	2003/04/10 15:43:27=0A=
-@@ -781,7 +781,6 @@=0A=
- 	struct NCR5380_hostdata *hostdata;=0A=
- #ifdef NCR5380_STATS=0A=
- 	Scsi_Device *dev;=0A=
--	extern const char *const scsi_device_types[MAX_SCSI_DEVICE_CODE];=0A=
- #endif=0A=
- 	save_flags(flags);=0A=
- 	cli();=0A=
---- scsi_proc.c	2003/04/10 15:42:04	1.1=0A=
-+++ scsi_proc.c	2003/04/10 15:42:31=0A=
-@@ -260,7 +260,6 @@=0A=
- {=0A=
- =0A=
- 	int x, y =3D *size;=0A=
--	extern const char *const scsi_device_types[MAX_SCSI_DEVICE_CODE];=0A=
- =0A=
- 	y =3D sprintf(buffer + len,=0A=
- 	     "Host: scsi%d Channel: %02d Id: %02d Lun: %02d\n  Vendor: ",=0A=
---- scsi.c	2003/04/10 15:29:17	1.1=0A=
-+++ scsi.c	2003/04/10 15:31:11=0A=
-@@ -140,7 +140,7 @@=0A=
- 	"Communications   ",=0A=
- 	"Unknown          ",=0A=
- 	"Unknown          ",=0A=
--	"Unknown          ",=0A=
-+	"Storage Array    ",=0A=
- 	"Enclosure        ",=0A=
- };=0A=
- =0A=
-
-------=_NextPart_000_0000_01C2FF3F.C05A96A0--
-
+diff -u --recursive --new-file -X /linux/dontdiff a/include/scsi/scsi_ioctl.h b/include/scsi/scsi_ioctl.h
+--- a/include/scsi/scsi_ioctl.h	Fri Nov 22 22:40:13 2002
++++ b/include/scsi/scsi_ioctl.h	Thu Apr 10 18:23:31 2003
+@@ -3,8 +3,6 @@
+ 
+ #define SCSI_IOCTL_SEND_COMMAND 1
+ #define SCSI_IOCTL_TEST_UNIT_READY 2
+-#define SCSI_IOCTL_BENCHMARK_COMMAND 3
+-#define SCSI_IOCTL_SYNC 4			/* Request synchronous parameters */
+ #define SCSI_IOCTL_START_UNIT 5
+ #define SCSI_IOCTL_STOP_UNIT 6
+ /* The door lock/unlock constants are compatible with Sun constants for
