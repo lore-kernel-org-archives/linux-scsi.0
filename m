@@ -1,489 +1,179 @@
-From: Andi Kleen <ak@suse.de>
-Subject: [PATCH] Add proper module ID tables to Adaptec aic7[9x]xx drivers
-Date: Mon, 21 Jun 2004 16:14:41 +0200
+From: "Frank Borich" <Frank_Borich@us.xyratex.com>
+Subject: RE: QLA2300, Infortrand and LBD?
+Date: Mon, 21 Jun 2004 06:41:05 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040621161441.20dfcee6.ak@suse.de>
+Message-ID: <47F3C2BE74738E4683574107469DFA2043394D@XYUSEX01.xyus.xyratex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:42122 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S266207AbUFUMOP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Jun 2004 08:14:15 -0400
-Received: from hermes.suse.de (hermes-ext.suse.de [195.135.221.8])
-	(using TLSv1 with cipher EDH-RSA-DES-CBC3-SHA (168/168 bits))
-	(No client certificate requested)
-	by Cantor.suse.de (Postfix) with ESMTP id 2CFEF76B984
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2004 14:14:14 +0200 (CEST)
+Received: from xyratexus11.xyratex.com ([65.203.33.11]:9410 "EHLO
+	XYUSEX01.xyus.xyratex.com") by vger.kernel.org with ESMTP
+	id S266228AbUFUNlM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jun 2004 09:41:12 -0400
+Content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "tester7 A." <benew666@hotmail.com>, bugzilla@watkins-home.com
+Cc: linux-scsi@vger.kernel.org
 
+I have confirmed on 2.4.20 that the maximum size for a lun is 2 TB.  
+Maybe a limitation of the driver's addressing scheme ? Has anyone
+tried this with 2.6.x ?  It seems that for 2.4, LVM or MD driver
+are your only options.
 
-[I didn't find an aic7xxx maintainer in MAINTAINERS, so just sending
-to the list]
-
-This is needed for 2.6 hotplug where the driver is autoloaded. When you have
-multiple conflicting entries the hotplug module loader usually loads
-the first one listed, which may be correct or may be not.
-
-With these changes the drivers announce the correct PCI IDs.
-
-The patches are quite big (i had to move the ID tables into an include), 
-but mostly mechanical.
-
-I only tested it on a single 78xx, so it's possible that i made 
-a typo somewhere. Some testing would be appreciated, especially
-on 79xx
-
-There is still an conflicting entry for aic7xxx_old unfortunately. This 
-is hard to handle in hotplug. I think the right solution would be to somehow
-tag drivers as obsolete so that they aren't loaded by default. This will
-need an extension in the module pci table mechanism. I'm thinking about
-a a new MODULE_OBSOLETE macro for this and a obsolete_modules table generated
-at modules_install time. But that's for another patch. Better would be 
-maybe to just drop the aic7xxx_old driver. Is it really still needed?
-
--Andi
+Frank Borich
+------------------------------------------------------------------
+Xyratex Inc.
+Systems Engineer
+Direct 630 654 6089
+Fax 630 325 2513
+e-mail frank_borich@us.xyratex.com
  
 
-diff -u linux/drivers/scsi/aic7xxx/aic79xx_pci.c-o linux/drivers/scsi/aic7xxx/aic79xx_pci.c
---- linux/drivers/scsi/aic7xxx/aic79xx_pci.c-o	2004-03-21 21:11:51.000000000 +0100
-+++ linux/drivers/scsi/aic7xxx/aic79xx_pci.c	2004-06-21 15:15:28.000000000 +0200
-@@ -51,46 +51,7 @@
- #include <dev/aic7xxx/aic79xx_inline.h>
- #endif
- 
--static __inline uint64_t
--ahd_compose_id(u_int device, u_int vendor, u_int subdevice, u_int subvendor)
--{
--	uint64_t id;
+>>-----Original Message-----
+>>From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>>owner@vger.kernel.org] On Behalf Of tester7 A.
+>>Sent: Sunday, June 20, 2004 8:25 PM
+>>To: bugzilla@watkins-home.com
+>>Cc: linux-scsi@vger.kernel.org
+>>Subject: RE: QLA2300, Infortrand and LBD?
+>>
+>>LVM is not an option for  me, because I will not do volume management
+for
+>>this 3.5TB.
+>>
+>>Thanks.
+>>
+>>
+>>>From: "Guy" <bugzilla@watkins-home.com>
+>>>To: "'tester7 A.'" <benew666@hotmail.com>
+>>>Subject: RE: QLA2300, Infortrand and LBD?
+>>>Date: Sun, 20 Jun 2004 21:03:44 -0400
+>>>
+>>>I am not a driver god, so I don't know.  There may be a 2T limit that
+>>can't
+>>>be crossed.  What about using LVM?
+>>>
+>>>Send your request back to the list.  Someone should answer, this
+seems
+>>like
+>>>a real good question, or a bug!
+>>>
+>>>Guy
+>>>
+>>>-----Original Message-----
+>>>From: tester7 A. [mailto:benew666@hotmail.com]
+>>>Sent: Sunday, June 20, 2004 8:43 PM
+>>>To: bugzilla@watkins-home.com
+>>>Subject: RE: QLA2300, Infortrand and LBD?
+>>>
+>>>Yes. if I split it, it works. But I do not want to use Software RAID0
+for
+>>>them.
+>>>Is there any way to make the kernel recognize the whole volume?
+>>>
+>>>
+>>> >From: "Guy" <bugzilla@watkins-home.com>
+>>> >To: "'tester7 A.'" <benew666@hotmail.com>
+>>> >Subject: RE: QLA2300, Infortrand and LBD?
+>>> >Date: Sun, 20 Jun 2004 12:04:05 -0400
+>>> >
+>>> >If you can split your ARRAY into 2 logical disks of 1.75TB each, it
+may
+>>> >work.
+>>> >
+>>> >-----Original Message-----
+>>> >From: linux-scsi-owner@vger.kernel.org
+>>> >[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of tester7 A.
+>>> >Sent: Sunday, June 20, 2004 4:43 AM
+>>> >To: linux-scsi@vger.kernel.org
+>>> >Cc: tech@storageone.co.kr
+>>> >Subject: QLA2300, Infortrand and LBD?
+>>> >
+>>> >Hi,
+>>> >
+>>> >I am using Kernel 2.6.7 and I want to use the Large Block Device
+for
+>>the
+>>> >3.5TB Infortrend FC-Sata RAID.
+>>> >
+>>> >My H/W is QLA2300, Infortrend A16F-G1A2 FC-SATA RAID, and a Intel
+Xeon
+>>>SMP
+>>> >box.
+>>> >
+>>> >I also turned on the "LBD support" in the kernel config.
+>>> >
+>>> >But the kernel recognize only 1.5TB out of 3.5TB, even though it is
+one
+>>> >volume with 3.5TB.
+>>> >
+>>> >qla2300 0000:03:09.0: Found an ISP2300, irq 27, iobase 0xf8c5c000
+>>> >qla2300 0000:03:09.0: Configuring PCI space...
+>>> >qla2300 0000:03:09.0: Configure NVRAM parameters...
+>>> >qla2300 0000:03:09.0: Verifying loaded RISC code...
+>>> >qla2300 0000:03:09.0: Waiting for LIP to complete...
+>>> >qla2300 0000:03:09.0: LIP reset occured (f8f7).
+>>> >qla2300 0000:03:09.0: LIP occured (f8f7).
+>>> >qla2300 0000:03:09.0: LOOP UP detected (2 Gbps).
+>>> >qla2300 0000:03:09.0: Topology - (Loop), Host Loop address 0x0
+>>> >scsi3 : qla2xxx
+>>> >qla2300 0000:03:09.0:
+>>> >QLogic Fibre Channel HBA Driver: 8.00.00b12-k
+>>> >   QLogic QLA2310 -
+>>> >   ISP2300: PCI-X (66 MHz) @ 0000:03:09.0 hdma-, host#=3,
+fw=3.02.28
+>>IPX
+>>> >   Vendor: IFT       Model: A16F-G1A2         Rev: 334B
+>>> >   Type:   Direct-Access                      ANSI SCSI revision:
+03
+>>> >qla2300 0000:03:09.0: scsi(3:0:0:0): Enabled tagged queuing, queue
+>>depth
+>>> >32.
+>>> >SCSI device sdc: 3022966784 512-byte hdwr sectors (1547759 MB)
+>>> >SCSI device sdc: drive cache: write through
+>>> >sdc: sdc1
+>>> >Attached scsi disk sdc at scsi3, channel 0, id 0, lun 0
+>>> >
+>>> >Do I need to do something about qla2300 driver or else, in order to
+>>make
+>>> >the
+>>> >
+>>> >kernel recognize 3.5TB?
+>>> >
+>>> >Please help me. Any help will be appreciated.
+>>> >
+>>> >Thanks in advance.
+>>> >
+>>> >_________________________________________________________________
+>>> >MSN Toolbar provides one-click access to Hotmail from any Web page
 -
--	id = subvendor
--	   | (subdevice << 16)
--	   | ((uint64_t)vendor << 32)
--	   | ((uint64_t)device << 48);
--
--	return (id);
--}
--
--#define ID_ALL_MASK			0xFFFFFFFFFFFFFFFFull
--#define ID_ALL_IROC_MASK		0xFFFFFF7FFFFFFFFFull
--#define ID_DEV_VENDOR_MASK		0xFFFFFFFF00000000ull
--#define ID_9005_GENERIC_MASK		0xFFF0FFFF00000000ull
--#define ID_9005_GENERIC_IROC_MASK	0xFFF0FF7F00000000ull
--
--#define ID_AIC7901			0x800F9005FFFF9005ull
--#define ID_AHA_29320A			0x8000900500609005ull
--#define ID_AHA_29320ALP			0x8017900500449005ull
--
--#define ID_AIC7901A			0x801E9005FFFF9005ull
--#define ID_AHA_29320			0x8012900500429005ull
--#define ID_AHA_29320B			0x8013900500439005ull
--#define ID_AHA_29320LP			0x8014900500449005ull
--
--#define ID_AIC7902			0x801F9005FFFF9005ull
--#define ID_AIC7902_B			0x801D9005FFFF9005ull
--#define ID_AHA_39320			0x8010900500409005ull
--#define ID_AHA_39320_B			0x8015900500409005ull
--#define ID_AHA_39320A			0x8016900500409005ull
--#define ID_AHA_39320D			0x8011900500419005ull
--#define ID_AHA_39320D_B			0x801C900500419005ull
--#define ID_AHA_39320D_HP		0x8011900500AC0E11ull
--#define ID_AHA_39320D_B_HP		0x801C900500AC0E11ull
--#define ID_AIC7902_PCI_REV_A4		0x3
--#define ID_AIC7902_PCI_REV_B0		0x10
--#define SUBID_HP			0x0E11
-+#include "aic79xx_pci.h"
- 
- #define DEVID_9005_TYPE(id) ((id) & 0xF)
- #define		DEVID_9005_TYPE_HBA		0x0	/* Standard Card */
-diff -u linux/drivers/scsi/aic7xxx/aic79xx_osm_pci.c-o linux/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
---- linux/drivers/scsi/aic7xxx/aic79xx_osm_pci.c-o	2004-03-21 21:11:51.000000000 +0100
-+++ linux/drivers/scsi/aic7xxx/aic79xx_osm_pci.c	2004-06-21 15:39:28.000000000 +0200
-@@ -41,6 +41,7 @@
- 
- #include "aic79xx_osm.h"
- #include "aic79xx_inline.h"
-+#include "aic79xx_pci.h"
- 
- #if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
- struct pci_device_id
-@@ -58,12 +59,30 @@
- #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- static void	ahd_linux_pci_dev_remove(struct pci_dev *pdev);
- 
--/* We do our own ID filtering.  So, grab all SCSI storage class devices. */
- static struct pci_device_id ahd_linux_pci_id_table[] = {
--	{
--		0x9005, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--		PCI_CLASS_STORAGE_SCSI << 8, 0xFFFF00, 0
--	},
-+#define LINUXID(x,s) (unsigned)((((x) >> s) & 0xffff) ?: PCI_ANY_ID)
-+#define ID(x) \
-+	{ \
-+		LINUXID(x,32), LINUXID(x,48), LINUXID(x,0), LINUXID(x,16), \
-+		PCI_CLASS_STORAGE_SCSI << 8, 0xFFFF00, 0 \
-+	}
-+	ID(ID_AHA_29320A),
-+	ID(ID_AHA_29320ALP),
-+	ID(ID_AHA_29320),
-+	ID(ID_AHA_29320B),
-+	ID(ID_AHA_29320LP),
-+	ID(ID_AHA_39320),
-+	ID(ID_AHA_39320_B),
-+	ID(ID_AHA_39320A),
-+	ID(ID_AHA_39320D),
-+	ID(ID_AHA_39320D_HP),
-+	ID(ID_AHA_39320D_B),
-+	ID(ID_AHA_39320D_B_HP),
-+	ID(ID_AHA_29320),
-+	ID(ID_AHA_29320B),
-+	ID(ID_AIC7901 & ID_DEV_VENDOR_MASK),
-+	ID(ID_AIC7901A & ID_DEV_VENDOR_MASK),
-+	ID(ID_AIC7902 & ID_9005_GENERIC_MASK),
- 	{ 0 }
- };
- 
-diff -u /dev/null linux/drivers/scsi/aic7xxx/aic79xx_pci.h
---- /dev/null	2004-02-18 23:32:57.000000000 +0100
-+++ linux/drivers/scsi/aic7xxx/aic79xx_pci.h	2004-06-21 15:04:07.000000000 +0200
-@@ -0,0 +1,41 @@
-+
-+static __inline uint64_t
-+ahd_compose_id(u_int device, u_int vendor, u_int subdevice, u_int subvendor)
-+{
-+	uint64_t id;
-+
-+	id = subvendor
-+	   | (subdevice << 16)
-+	   | ((uint64_t)vendor << 32)
-+	   | ((uint64_t)device << 48);
-+
-+	return (id);
-+}
-+
-+#define ID_ALL_MASK			0xFFFFFFFFFFFFFFFFull
-+#define ID_ALL_IROC_MASK		0xFFFFFF7FFFFFFFFFull
-+#define ID_DEV_VENDOR_MASK		0xFFFFFFFF00000000ull
-+#define ID_9005_GENERIC_MASK		0xFFF0FFFF00000000ull
-+#define ID_9005_GENERIC_IROC_MASK	0xFFF0FF7F00000000ull
-+
-+#define ID_AIC7901			0x800F9005FFFF9005ull
-+#define ID_AHA_29320A			0x8000900500609005ull
-+#define ID_AHA_29320ALP			0x8017900500449005ull
-+
-+#define ID_AIC7901A			0x801E9005FFFF9005ull
-+#define ID_AHA_29320			0x8012900500429005ull
-+#define ID_AHA_29320B			0x8013900500439005ull
-+#define ID_AHA_29320LP			0x8014900500449005ull
-+
-+#define ID_AIC7902			0x801F9005FFFF9005ull
-+#define ID_AIC7902_B			0x801D9005FFFF9005ull
-+#define ID_AHA_39320			0x8010900500409005ull
-+#define ID_AHA_39320_B			0x8015900500409005ull
-+#define ID_AHA_39320A			0x8016900500409005ull
-+#define ID_AHA_39320D			0x8011900500419005ull
-+#define ID_AHA_39320D_B			0x801C900500419005ull
-+#define ID_AHA_39320D_HP		0x8011900500AC0E11ull
-+#define ID_AHA_39320D_B_HP		0x801C900500AC0E11ull
-+#define ID_AIC7902_PCI_REV_A4		0x3
-+#define ID_AIC7902_PCI_REV_B0		0x10
-+#define SUBID_HP			0x0E11
-diff -u /dev/null linux/drivers/scsi/aic7xxx/aic7xxx_pci.h
---- /dev/null	2004-02-18 23:32:57.000000000 +0100
-+++ linux/drivers/scsi/aic7xxx/aic7xxx_pci.h	2004-06-21 15:05:13.000000000 +0200
-@@ -0,0 +1,92 @@
-+
-+static __inline uint64_t
-+ahc_compose_id(u_int device, u_int vendor, u_int subdevice, u_int subvendor)
-+{
-+	uint64_t id;
-+
-+	id = subvendor
-+	   | (subdevice << 16)
-+	   | ((uint64_t)vendor << 32)
-+	   | ((uint64_t)device << 48);
-+
-+	return (id);
-+}
-+
-+#define ID_ALL_MASK			0xFFFFFFFFFFFFFFFFull
-+#define ID_DEV_VENDOR_MASK		0xFFFFFFFF00000000ull
-+#define ID_9005_GENERIC_MASK		0xFFF0FFFF00000000ull
-+#define ID_9005_SISL_MASK		0x000FFFFF00000000ull
-+#define ID_9005_SISL_ID			0x0005900500000000ull
-+#define ID_AIC7850			0x5078900400000000ull
-+#define ID_AHA_2902_04_10_15_20C_30C	0x5078900478509004ull
-+#define ID_AIC7855			0x5578900400000000ull
-+#define ID_AIC7859			0x3860900400000000ull
-+#define ID_AHA_2930CU			0x3860900438699004ull
-+#define ID_AIC7860			0x6078900400000000ull
-+#define ID_AIC7860C			0x6078900478609004ull
-+#define ID_AHA_1480A			0x6075900400000000ull
-+#define ID_AHA_2940AU_0			0x6178900400000000ull
-+#define ID_AHA_2940AU_1			0x6178900478619004ull
-+#define ID_AHA_2940AU_CN		0x2178900478219004ull
-+#define ID_AHA_2930C_VAR		0x6038900438689004ull
-+
-+#define ID_AIC7870			0x7078900400000000ull
-+#define ID_AHA_2940			0x7178900400000000ull
-+#define ID_AHA_3940			0x7278900400000000ull
-+#define ID_AHA_398X			0x7378900400000000ull
-+#define ID_AHA_2944			0x7478900400000000ull
-+#define ID_AHA_3944			0x7578900400000000ull
-+#define ID_AHA_4944			0x7678900400000000ull
-+
-+#define ID_AIC7880			0x8078900400000000ull
-+#define ID_AIC7880_B			0x8078900478809004ull
-+#define ID_AHA_2940U			0x8178900400000000ull
-+#define ID_AHA_3940U			0x8278900400000000ull
-+#define ID_AHA_2944U			0x8478900400000000ull
-+#define ID_AHA_3944U			0x8578900400000000ull
-+#define ID_AHA_398XU			0x8378900400000000ull
-+#define ID_AHA_4944U			0x8678900400000000ull
-+#define ID_AHA_2940UB			0x8178900478819004ull
-+#define ID_AHA_2930U			0x8878900478889004ull
-+#define ID_AHA_2940U_PRO		0x8778900478879004ull
-+#define ID_AHA_2940U_CN			0x0078900478009004ull
-+
-+#define ID_AIC7895			0x7895900478959004ull
-+#define ID_AIC7895_ARO			0x7890900478939004ull
-+#define ID_AIC7895_ARO_MASK		0xFFF0FFFFFFFFFFFFull
-+#define ID_AHA_2940U_DUAL		0x7895900478919004ull
-+#define ID_AHA_3940AU			0x7895900478929004ull
-+#define ID_AHA_3944AU			0x7895900478949004ull
-+
-+#define ID_AIC7890			0x001F9005000F9005ull
-+#define ID_AIC7890_ARO			0x00139005000F9005ull
-+#define ID_AAA_131U2			0x0013900500039005ull
-+#define ID_AHA_2930U2			0x0011900501819005ull
-+#define ID_AHA_2940U2B			0x00109005A1009005ull
-+#define ID_AHA_2940U2_OEM		0x0010900521809005ull
-+#define ID_AHA_2940U2			0x00109005A1809005ull
-+#define ID_AHA_2950U2B			0x00109005E1009005ull
-+
-+#define ID_AIC7892			0x008F9005FFFF9005ull
-+#define ID_AIC7892_ARO			0x00839005FFFF9005ull
-+#define ID_AHA_29160			0x00809005E2A09005ull
-+#define ID_AHA_29160_CPQ		0x00809005E2A00E11ull
-+#define ID_AHA_29160N			0x0080900562A09005ull
-+#define ID_AHA_29160C			0x0080900562209005ull
-+#define ID_AHA_29160B			0x00809005E2209005ull
-+#define ID_AHA_19160B			0x0081900562A19005ull
-+
-+#define ID_AIC7896			0x005F9005FFFF9005ull
-+#define ID_AIC7896_ARO			0x00539005FFFF9005ull
-+#define ID_AHA_3950U2B_0		0x00509005FFFF9005ull
-+#define ID_AHA_3950U2B_1		0x00509005F5009005ull
-+#define ID_AHA_3950U2D_0		0x00519005FFFF9005ull
-+#define ID_AHA_3950U2D_1		0x00519005B5009005ull
-+
-+#define ID_AIC7899			0x00CF9005FFFF9005ull
-+#define ID_AIC7899_ARO			0x00C39005FFFF9005ull
-+#define ID_AHA_3960D			0x00C09005F6209005ull
-+#define ID_AHA_3960D_CPQ		0x00C09005F6200E11ull
-+
-+#define ID_AIC7810			0x1078900400000000ull
-+#define ID_AIC7815			0x7815900400000000ull
-diff -u linux/drivers/scsi/aic7xxx/aic7xxx_pci.c-o linux/drivers/scsi/aic7xxx/aic7xxx_pci.c
---- linux/drivers/scsi/aic7xxx/aic7xxx_pci.c-o	2004-03-21 21:11:51.000000000 +0100
-+++ linux/drivers/scsi/aic7xxx/aic7xxx_pci.c	2004-06-21 15:15:24.000000000 +0200
-@@ -54,101 +54,11 @@
- #include <dev/aic7xxx/aic7xxx_93cx6.h>
- #endif
- 
-+#include "aic7xxx_pci.h"
-+
- #define AHC_PCI_IOADDR	PCIR_MAPS	/* I/O Address */
- #define AHC_PCI_MEMADDR	(PCIR_MAPS + 4)	/* Mem I/O Address */
- 
--static __inline uint64_t
--ahc_compose_id(u_int device, u_int vendor, u_int subdevice, u_int subvendor)
--{
--	uint64_t id;
--
--	id = subvendor
--	   | (subdevice << 16)
--	   | ((uint64_t)vendor << 32)
--	   | ((uint64_t)device << 48);
--
--	return (id);
--}
--
--#define ID_ALL_MASK			0xFFFFFFFFFFFFFFFFull
--#define ID_DEV_VENDOR_MASK		0xFFFFFFFF00000000ull
--#define ID_9005_GENERIC_MASK		0xFFF0FFFF00000000ull
--#define ID_9005_SISL_MASK		0x000FFFFF00000000ull
--#define ID_9005_SISL_ID			0x0005900500000000ull
--#define ID_AIC7850			0x5078900400000000ull
--#define ID_AHA_2902_04_10_15_20C_30C	0x5078900478509004ull
--#define ID_AIC7855			0x5578900400000000ull
--#define ID_AIC7859			0x3860900400000000ull
--#define ID_AHA_2930CU			0x3860900438699004ull
--#define ID_AIC7860			0x6078900400000000ull
--#define ID_AIC7860C			0x6078900478609004ull
--#define ID_AHA_1480A			0x6075900400000000ull
--#define ID_AHA_2940AU_0			0x6178900400000000ull
--#define ID_AHA_2940AU_1			0x6178900478619004ull
--#define ID_AHA_2940AU_CN		0x2178900478219004ull
--#define ID_AHA_2930C_VAR		0x6038900438689004ull
--
--#define ID_AIC7870			0x7078900400000000ull
--#define ID_AHA_2940			0x7178900400000000ull
--#define ID_AHA_3940			0x7278900400000000ull
--#define ID_AHA_398X			0x7378900400000000ull
--#define ID_AHA_2944			0x7478900400000000ull
--#define ID_AHA_3944			0x7578900400000000ull
--#define ID_AHA_4944			0x7678900400000000ull
--
--#define ID_AIC7880			0x8078900400000000ull
--#define ID_AIC7880_B			0x8078900478809004ull
--#define ID_AHA_2940U			0x8178900400000000ull
--#define ID_AHA_3940U			0x8278900400000000ull
--#define ID_AHA_2944U			0x8478900400000000ull
--#define ID_AHA_3944U			0x8578900400000000ull
--#define ID_AHA_398XU			0x8378900400000000ull
--#define ID_AHA_4944U			0x8678900400000000ull
--#define ID_AHA_2940UB			0x8178900478819004ull
--#define ID_AHA_2930U			0x8878900478889004ull
--#define ID_AHA_2940U_PRO		0x8778900478879004ull
--#define ID_AHA_2940U_CN			0x0078900478009004ull
--
--#define ID_AIC7895			0x7895900478959004ull
--#define ID_AIC7895_ARO			0x7890900478939004ull
--#define ID_AIC7895_ARO_MASK		0xFFF0FFFFFFFFFFFFull
--#define ID_AHA_2940U_DUAL		0x7895900478919004ull
--#define ID_AHA_3940AU			0x7895900478929004ull
--#define ID_AHA_3944AU			0x7895900478949004ull
--
--#define ID_AIC7890			0x001F9005000F9005ull
--#define ID_AIC7890_ARO			0x00139005000F9005ull
--#define ID_AAA_131U2			0x0013900500039005ull
--#define ID_AHA_2930U2			0x0011900501819005ull
--#define ID_AHA_2940U2B			0x00109005A1009005ull
--#define ID_AHA_2940U2_OEM		0x0010900521809005ull
--#define ID_AHA_2940U2			0x00109005A1809005ull
--#define ID_AHA_2950U2B			0x00109005E1009005ull
--
--#define ID_AIC7892			0x008F9005FFFF9005ull
--#define ID_AIC7892_ARO			0x00839005FFFF9005ull
--#define ID_AHA_29160			0x00809005E2A09005ull
--#define ID_AHA_29160_CPQ		0x00809005E2A00E11ull
--#define ID_AHA_29160N			0x0080900562A09005ull
--#define ID_AHA_29160C			0x0080900562209005ull
--#define ID_AHA_29160B			0x00809005E2209005ull
--#define ID_AHA_19160B			0x0081900562A19005ull
--
--#define ID_AIC7896			0x005F9005FFFF9005ull
--#define ID_AIC7896_ARO			0x00539005FFFF9005ull
--#define ID_AHA_3950U2B_0		0x00509005FFFF9005ull
--#define ID_AHA_3950U2B_1		0x00509005F5009005ull
--#define ID_AHA_3950U2D_0		0x00519005FFFF9005ull
--#define ID_AHA_3950U2D_1		0x00519005B5009005ull
--
--#define ID_AIC7899			0x00CF9005FFFF9005ull
--#define ID_AIC7899_ARO			0x00C39005FFFF9005ull
--#define ID_AHA_3960D			0x00C09005F6209005ull
--#define ID_AHA_3960D_CPQ		0x00C09005F6200E11ull
--
--#define ID_AIC7810			0x1078900400000000ull
--#define ID_AIC7815			0x7815900400000000ull
--
- #define DEVID_9005_TYPE(id) ((id) & 0xF)
- #define		DEVID_9005_TYPE_HBA		0x0	/* Standard Card */
- #define		DEVID_9005_TYPE_AAA		0x3	/* RAID Card */
-diff -u linux/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c-o linux/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
---- linux/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c-o	2004-03-21 21:11:51.000000000 +0100
-+++ linux/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	2004-06-21 15:39:42.000000000 +0200
-@@ -40,6 +40,7 @@
-  */
- 
- #include "aic7xxx_osm.h"
-+#include "aic7xxx_pci.h"
- 
- #if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
- struct pci_device_id
-@@ -57,16 +58,73 @@
- #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
- static void	ahc_linux_pci_dev_remove(struct pci_dev *pdev);
- 
--/* We do our own ID filtering.  So, grab all SCSI storage class devices. */
- static struct pci_device_id ahc_linux_pci_id_table[] = {
--	{
--		0x9004, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--		PCI_CLASS_STORAGE_SCSI << 8, 0xFFFF00, 0
--	},
--	{
--		0x9005, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--		PCI_CLASS_STORAGE_SCSI << 8, 0xFFFF00, 0
--	},
-+#define LINUXID(x,s) (unsigned)((((x) >> s) & 0xffff) ?: PCI_ANY_ID)
-+#define ID(x) \
-+	{ \
-+		LINUXID(x,32), LINUXID(x,48), LINUXID(x,0), LINUXID(x,16), \
-+		PCI_CLASS_STORAGE_SCSI << 8, 0xFFFF00, 0 \
-+	}
-+	ID(ID_AHA_2902_04_10_15_20C_30C),
-+	ID(ID_AHA_2930CU),
-+	ID(ID_AHA_1480A & ID_DEV_VENDOR_MASK),
-+	ID(ID_AHA_2940AU_0 & ID_DEV_VENDOR_MASK),
-+	ID(ID_AHA_2940AU_CN & ID_DEV_VENDOR_MASK),
-+	ID(ID_AHA_2930C_VAR & ID_DEV_VENDOR_MASK),
-+	ID(ID_AHA_2940),
-+	ID(ID_AHA_3940),
-+	ID(ID_AHA_398X),
-+	ID(ID_AHA_2944),
-+	ID(ID_AHA_3944),
-+	ID(ID_AHA_4944),
-+	ID(ID_AHA_2940U & ID_DEV_VENDOR_MASK),
-+	ID(ID_AHA_3940U & ID_DEV_VENDOR_MASK),
-+	ID(ID_AHA_2944U & ID_DEV_VENDOR_MASK),
-+	ID(ID_AHA_3944U & ID_DEV_VENDOR_MASK),
-+	ID(ID_AHA_398XU & ID_DEV_VENDOR_MASK),
-+	ID(ID_AHA_4944U & ID_DEV_VENDOR_MASK),
-+	ID(ID_AHA_2930U & ID_DEV_VENDOR_MASK),
-+	ID(ID_AHA_2940U_PRO & ID_DEV_VENDOR_MASK),
-+	ID(ID_AHA_2940U_CN & ID_DEV_VENDOR_MASK),
-+	ID(ID_AHA_2930U2),
-+	ID(ID_AHA_2940U2B),
-+	ID(ID_AHA_2940U2_OEM),
-+	ID(ID_AHA_2940U2),
-+	ID(ID_AHA_2950U2B),
-+	ID(ID_AIC7890_ARO),
-+	ID(ID_AAA_131U2),
-+	ID(ID_AHA_29160),
-+	ID(ID_AHA_29160_CPQ),
-+	ID(ID_AHA_29160N),
-+	ID(ID_AHA_29160C),
-+	ID(ID_AHA_29160B),
-+	ID(ID_AHA_19160B),
-+	ID(ID_AIC7892_ARO),
-+	ID(ID_AHA_2940U_DUAL),
-+	ID(ID_AHA_3940AU),
-+	ID(ID_AHA_3944AU),
-+	ID(ID_AIC7895_ARO),
-+	ID(ID_AHA_3950U2B_0),
-+	ID(ID_AHA_3950U2B_1),
-+	ID(ID_AHA_3950U2D_0),
-+	ID(ID_AHA_3950U2D_1),
-+	ID(ID_AIC7896_ARO),
-+	ID(ID_AHA_3960D),
-+	ID(ID_AHA_3960D_CPQ),
-+	ID(ID_AIC7899_ARO),
-+	ID(ID_AIC7850 & ID_DEV_VENDOR_MASK),
-+	ID(ID_AIC7855 & ID_DEV_VENDOR_MASK),
-+	ID(ID_AIC7859 & ID_DEV_VENDOR_MASK),
-+	ID(ID_AIC7860 & ID_DEV_VENDOR_MASK),
-+	ID(ID_AIC7870 & ID_DEV_VENDOR_MASK),
-+	ID(ID_AIC7880 & ID_DEV_VENDOR_MASK),
-+	ID(ID_AIC7890 & ID_9005_GENERIC_MASK),
-+	ID(ID_AIC7892 & ID_9005_GENERIC_MASK),
-+	ID(ID_AIC7895 & ID_DEV_VENDOR_MASK),
-+	ID(ID_AIC7896 & ID_9005_GENERIC_MASK),
-+	ID(ID_AIC7899 & ID_9005_GENERIC_MASK),
-+	ID(ID_AIC7810 & ID_DEV_VENDOR_MASK),
-+	ID(ID_AIC7815 & ID_DEV_VENDOR_MASK),
- 	{ 0 }
- };
- 
+>>FREE
+>>> >download!
+http://toolbar.msn.click-url.com/go/onm00200413ave/direct/01/
+>>> >
+>>> >-
+>>> >To unsubscribe from this list: send the line "unsubscribe
+linux-scsi"
+>>in
+>>> >the body of a message to majordomo@vger.kernel.org
+>>> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>> >
+>>> >
+>>>
+>>>_________________________________________________________________
+>>>STOP MORE SPAM with the new MSN 8 and get 2 months FREE*
+>>>http://join.msn.com/?page=features/junkmail
+>>>
+>>>
+>>
+>>_________________________________________________________________
+>>Tired of spam? Get advanced junk mail protection with MSN 8.
+>>http://join.msn.com/?page=features/junkmail
+>>
+>>-
+>>To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+in
+>>the body of a message to majordomo@vger.kernel.org
+>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
