@@ -1,73 +1,36 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [linux-usb-devel] [2.6-test] Bug in usb-storage or scsi?
-Date: Wed, 10 Sep 2003 17:02:27 -0700
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: [PATCH] sym53c8xx_2 pci_device_id list terminators
+Date: Thu, 11 Sep 2003 01:20:29 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030910170227.C3367@beaverton.ibm.com>
-References: <3F5E434D.6080801@unixsol.org> <Pine.LNX.4.44L0.0309101219190.905-100000@ida.rowland.org>
+Message-ID: <20030911002029.GE21596@parcelfarce.linux.theplanet.co.uk>
+References: <Pine.LNX.4.44.0309101635060.27316-100000@humbolt.us.dell.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:23027 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S266084AbTIKADc
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:36480 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S266112AbTIKAUf
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Sep 2003 20:03:32 -0400
+	Wed, 10 Sep 2003 20:20:35 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0309101219190.905-100000@ida.rowland.org>; from stern@rowland.harvard.edu on Wed, Sep 10, 2003 at 12:23:43PM -0400
+In-Reply-To: <Pine.LNX.4.44.0309101635060.27316-100000@humbolt.us.dell.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, USB Storage List <usb-storage@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Matt Domsch <Matt_Domsch@dell.com>
+Cc: groudier@free.fr, linux-scsi@vger.kernel.org
 
-On Wed, Sep 10, 2003 at 12:23:43PM -0400, Alan Stern wrote:
-
-> Is there any feeling about how to handle these ongoing problems with the 
-> mode-sense cache page?  There doesn't seem to be any general solution that 
-> can work with all USB storage devices.  Some hang when asked to read the 
-> entire page; some hang when asked to read just part of the page; some hang 
-> when asked to read just the page header.
+On Wed, Sep 10, 2003 at 04:40:31PM -0500, Matt Domsch wrote:
+> Gerard, I found that the sym53c8xx_2 driver has two pci_device_id lists, 
+> neither of which are 0-terminated.  This causes the pci detection routine 
+> to walk off the end of the list into space and causes an oops.  Often this 
+> isn't a problem, as the things after those lists are zeros, but we can't 
+> count on it, and it just bit me. :-)
 > 
-> What do the SCSI folk have to say about it?
+> Patch below against 2.6.0-test5 + recent BK.  Please apply ASAP.
 
-There was at least this thread last April:
+Hi Matt.  Since nobody's heard from Gerard in almost 2 years, I've
+taken over maintaining this driver (at least until he comes back).
+This change was mine, and I'll get this fixed ASAP.
 
-http://marc.theaimsgroup.com/?t=104839042700001&r=1&w=2
-
-Matthew had a simple patch so that emulated hosts did not do any (sd.c)
-mode-sense cache checks, James had a filter commands patch.
-
-There were changes since then in how the MODE SENSE is handled (sd.c
-only?).
-
-In current 2.6 code, the scsi_host emulated flag does nothing, and can
-be deleted.
-
-I don't like per-host (or transport) flags or filters that cannot be
-modified. They make some sense for hosts that process the scsi commands
-(like a RAID card). If you moved a device from one transport to another,
-the commands sent to the device should not change: for example, you move
-an iSCSI attached device onto your local system via SPI.
-
-IMO we ought to go with two new BFLAGS, one to block the MODE SENSE page 8
-(for the cache), and one to block the MODE SENSE page 0x3f (to check the
-write protect). 
-
-A per host bflags could be added, and overwritten by per device (devinfo)
-settings. I'd rather we black list the broken ones but that does not
-appear to be practical. usb-storage could then set the per-host bflag to
-include the two new flags.
-
-We still end up sending some non-popular SCSI commands to all SCSI
-devices.
-
-Such flags would not stop sg from sending those commands, but that is
-postive as well as negative in that you can override what the kernel is
-doing via user space (sort of what Pat LaVarre experienced).
-
-Also mentioned in the above thread:
-
-The EVPD code has been removed, and is not an issue.
-
-There is now code to set BLIST_INQUIRY_36 (we can still potentially hang
-broken devices before it is set, but you should get a warning, and then
-could modify devinfo on the boot/module command line or via proc devinfo).
-
--- Patrick Mansfield
+-- 
+"It's not Hollywood.  War is real, war is primarily not about defeat or
+victory, it is about death.  I've seen thousands and thousands of dead bodies.
+Do you think I want to have an academic debate on this subject?" -- Robert Fisk
