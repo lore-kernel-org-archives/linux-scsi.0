@@ -1,57 +1,47 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] pull scsi_scan_host out of scsi_add_host
-Date: Tue, 8 Jul 2003 08:56:45 -0700
+From: dougg@torque.net
+Subject: Re: PATCH: scsi_debug bug
+Date: Tue,  8 Jul 2003 14:00:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030708155645.GA4379@beaverton.ibm.com>
-References: <20030707143056.GA1177@lst.de> <20030708080334.GA2451@beaverton.ibm.com> <200307081103.17131.oliver@neukum.org>
+Message-ID: <1057687201.3f0b06a19b99f@bolt.torque.net>
+References: <3F08427C.4050706@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:38119 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S267450AbTGHPj4
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Jul 2003 11:39:56 -0400
-Content-Disposition: inline
-In-Reply-To: <200307081103.17131.oliver@neukum.org>
+Received: from bolt.torque.net ([204.138.244.4]:1955 "EHLO bolt.torque.net")
+	by vger.kernel.org with ESMTP id S265074AbTGHRpe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jul 2003 13:45:34 -0400
+In-Reply-To: <3F08427C.4050706@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: Christoph Hellwig <hch@lst.de>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Oliver Neukum [oliver@neukum.org] wrote:
-> Am Dienstag, 8. Juli 2003 10:03 schrieb Mike Anderson:
-> > Christoph Hellwig [hch@lst.de] wrote:
-> > > As Douglas mentioned on this list a while ago there's hardware these
-> > > days where we don't want to automatically perform an initial bus scan
-> > > in scsi_add_host.  Currently we only have ieee1394 in the tree but
-> > > I can imagine more uses like iscsi or certain fc setups.
-> > > 
-> > > This patch removes the call to scsi_scan_host from scsi_add_host
-> > > and moves it into the drivers that want in.
-> > 
-> > Would we want to make a symmetric interface and pull the
-> > unscan out of scsi_remove_host also?
+Quoting Jeff Garzik <jgarzik@pobox.com>:
+
+> No response the first time.  Resending.
 > 
-> Unless you are talking about multipath, you have to forget
-> all devices connected to a controller, so what sense would
-> it make?
-
-Probably not much sense. I was thinking of a progression to user assisted
-scanning. In that a driver could never call scsi_scan_host directly and
-conversely never call scsi_forget_host directly. 
-
-But in the removal case there is not much response a user space hotplug
-handler could make besides a delayed call to scsi_remove_device.
-
+> Can someone look at this patch and approve it, please?
 > 
-> Philosophically speaking, scanning is an operation that cannot
-> be simply undone. You can undo device/driver bindings but you
-> cannot undo a bus scan.
+> It looks like an obvious bug and fix to me:  MODE_SENSE_10 allocation 
+> length LSB is in cdb byte 8, not byte 6.
+> 
+> This bug is present in both 2.4 and 2.5.
 
-Maybe it was a confusing choice of words. The operation I was describing
-was to undo the binding.
+Jeff,
+Guilty as charged.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Sorry for the long delay in responding. Hopefully James
+and/or Mike Anderson can put the patch in the bk scsi 
+repository for the lk 2.5 series.
 
+For the lk 2.4 series, please send a patch to Marcelo 
+and cc Alan.
+
+Doug Gilbert
+ 
+
+
+
+
+-------------------------------------------------
+This mail sent through IMP: http://horde.org/imp/
