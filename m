@@ -1,78 +1,69 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: RE: [patch 6/8] mptfusion: fc transport
-Date: Mon, 6 Dec 2004 17:29:25 -0700
-Message-ID: <91888D455306F94EBD4D168954A9457C7F9D08@nacos172.co.lsil.com>
+From: webster@lexmark.com
+Subject: PERC4/DC (LSI Megaraid) on PowerEdge 2850
+Date: Mon, 6 Dec 2004 21:27:43 -0500
+Message-ID: <OF471775C1.63CE2BB0-ON85256F63.000B34DD-85256F63.000DB1FE@lexmark.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:39863 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261715AbULGA3h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Dec 2004 19:29:37 -0500
+Received: from sw1.lexmark.com ([192.146.101.70]:50439 "EHLO sw1.lexmark.com")
+	by vger.kernel.org with ESMTP id S261734AbULGCYg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Dec 2004 21:24:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-poweredge@dell.com
+Cc: linux-scsi@vger.kernel.org
 
-Monday, December 06, 2004 10:21 AM, James Bottomley wrote:
-> 
-> On Mon, 2004-12-06 at 11:12, Moore, Eric Dean wrote:
-> > Our concern is the impact to linux distributions installers and
-> > end users that upgrade to these newer drivers.  
-> > Example: Someone having older driver using boot device attached
-> > to our controller.  Then they download a newer kernel from 
-> Kernel.org with
-> > newer
-> > drivers having mptfc.  They mkinitrd, or mk_initrd (without modifing
-> > linuxrc),
-> > reboot then what?  Can they see the boot partition?   
-> 
-> That's a concern only for people who boot from your fibre 
-> adapters.  How
-> many such users are there?
+Hello.
+I am trying to use a Dell PERC4/DC RAID controller in a Dell PowerEdge 
+2850 with SUSE Linux .
 
-I'm checking into this, and let you know. I'm pretty certain
-that there are people who have blade severs connected to a SAN using
-our LSI FC controller, and then booting to devices in FC RAID storage 
-array(from other vendors) populated out on the SAN.
+Every time I try to copy files to a partition on this controller, after 
+~10GB, I start receiving this in syslog:
 
-> 
-> > Can we change the time when LLDs register themselves to the 
-> > transport layer?  Like from the probe routine.
-> 
-> Well, not really, unless you have a proposal to get around the
-> fundamental problem Christoph already pointed out:  any 
-> reference to the
-> fc_ transport methods will automatically cause modprobe to load it
-> regardless of whether it is used.
-> 
-
-Also, I forgot to mention other concerns in previous email.
-
-(1) If mptfc depends on mptscsih, then what is going to be said
-when we implement the domain validation using the spi transport layer?
-When someone loads mptfc.ko, then we need mptscsih.ko and
-scsi_transport_spi.ko
-loaded, even though there is no U320 adapter present.  The same complaint
-can
-be said here.  In my current kernel, scsi_transport_spi.ko = 35KB,
-scsi_transport_fc.ko = 27KB.
-
-(2) Also, I think there is more involved than just 
-moving mptbase_pci_table from mptbase.c to mptscsih.c.
-mptbase_probe is enumerating the bus's when pci_module_init(_)
- is called.  Would mptscsih.c be calling pci_module_init instead?  
-If so, will the current code for mptbase_probe still 
-work as is, or will it need moving to mptscsih?  If its moved, 
-then mptlan.ko and mptctl.ko would not be able to work as it does today?  
-They currently depend only on mptbase.ko.
-
-Eric
-
-    
+Dec  6 20:25:14 tasker0 kernel: megaraid: aborting-484304 cmd=2a <c=2 t=1 
+l=0>
+Dec  6 20:25:14 tasker0 kernel: megaraid abort: 484304:115[255:1], fw 
+owner
+Dec  6 20:25:14 tasker0 kernel: megaraid: aborting-484307 cmd=2a <c=2 t=0 
+l=0>
+Dec  6 20:25:14 tasker0 kernel: megaraid abort: 484307:46[255:0], fw owner
+.
+.
+.
+Dec  6 20:28:14 tasker0 kernel: megaraid: aborting-484438 cmd=2a <c=2 t=1 
+l=0>
+Dec  6 20:28:14 tasker0 kernel: megaraid abort: 484438[255:1], driver 
+owner
+Dec  6 20:28:14 tasker0 kernel: megaraid: reseting the host...
+Dec  6 20:28:14 tasker0 kernel: megaraid: 71 outstanding commands. Max 
+wait 180 sec
+Dec  6 20:28:14 tasker0 kernel: megaraid mbox: Wait for 71 commands to 
+complete:180
+Dec  6 20:28:14 tasker0 kernel: 3>scsi2 (1:0): rejecting I/O to offline 
+device
+Dec  6 20:28:14 tasker0 kernel: scsi2 (0:0): rejecting I/O to offline 
+device
+Dec  6 20:28:14 tasker0 kernel: scsi2 (1:0): rejecting I/O to offline 
+device
+Dec  6 20:28:14 tasker0 kernel: scsi2 (1:0): rejecting I/O to offline 
+device
+Dec  6 20:28:14 tasker0 kernel: SCSI error : <2 2 0 0> return code = 
+0x6000000
+Dec  6 20:28:14 tasker0 kernel: end_request: I/O error, dev sdf, sector 
+1064044038
+Dec  6 20:28:14 tasker0 kernel: scsi2 (0:0): rejecting I/O to offline 
+device
+Dec  6 20:28:14 tasker0 kernel: SCSI error : <2 2 0 0> return code = 
+0x6000000
+Dec  6 20:28:14 tasker0 kernel: end_request: I/O error, dev sdf, sector 
+1064043910
+.
+.
+.
 
 
 
+Any advice?
 
-
+Thanks.
 
