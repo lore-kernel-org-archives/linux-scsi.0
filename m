@@ -1,105 +1,45 @@
-From: <Stuart_Hayes@Dell.com>
-Subject: RE: ide-scsi oops with ide tape drive
-Date: Wed, 9 Mar 2005 12:36:22 -0600
-Message-ID: <7A8F92187EF7A249BF847F1BF4903C04010EE9A0@ausx2kmpc103.aus.amer.dell.com>
+From: Dave Jones <davej@redhat.com>
+Subject: Re: [patch 1/1] Whitelist-Entry (FORCELUN) for SGS Thomson Microelectronics Cytronix 6in1 card reader in scsi_devinfo.c
+Date: Wed, 9 Mar 2005 13:34:21 -0500
+Message-ID: <20050309183420.GA12748@redhat.com>
+References: <200503090903.j2993vjp022052@shell0.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Received: from ausc60pc101.us.dell.com ([143.166.85.206]:45121 "EHLO
-	ausc60pc101.us.dell.com") by vger.kernel.org with ESMTP
-	id S262189AbVCISga convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2005 13:36:30 -0500
-content-class: urn:content-classes:message
+Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([66.187.233.31]:52623 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S262164AbVCISeg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2005 13:34:36 -0500
+Content-Disposition: inline
+In-Reply-To: <200503090903.j2993vjp022052@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@suse.de
-Cc: linux-scsi@vger.kernel.org, Joshua_Giles@Dell.com
+To: akpm@osdl.org
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, mail@hboeck.de
 
-> Hayes, Stuart wrote:
->> Jens Axboe wrote:
->>> On Tue, Mar 08 2005, Stuart_Hayes@Dell.com wrote:
->>>> 
->>>> Hello!
->>>> 
->>>> We're seeing a null pointer dereference with certain IDE tape
->>>> drives on 
->>>> 2.6.11 when we use it with ide-scsi (i686 architecture).  The
->>>> problem is that the scatter-gather pages aren't mapped to kernel
->>>> virtual address space in
->>>> idescsi_output_buffers()/idescsi_input_buffers(), so, if these
->>>> pages are in high memory, page_address() returns a null pointer. 
->>>> 
->>>> This patch fixes the problem.  I'll attach it as a file, too, just
->>>> in case it gets mangled.  Please let me know if there are any
->>>> problems with or questions regarding this patch.
->>>> 
->>>> Again, this patch is against 2.6.11.
->>>> 
->>>> Thanks!
->>>> Stuart Hayes
->>>> stuart_hayes@dell.com
->>>> 
->>>> 
->>>> 
->>>> --- ide-scsi.c.orig	2005-03-08 13:44:38.000000000 -0500
->>>> +++ ide-scsi.c	2005-03-08 14:02:43.000000000 -0500
->>>> @@ -151,8 +151,9 @@ static void idescsi_input_buffers (ide_d
->>>>  		return; } count = min(pc->sg->length - pc->b_count,
-bcount);
->>>> -		buf = page_address(pc->sg->page) + pc->sg->offset;
->>>> +		buf = kmap_atomic(pc->sg->page, KM_USER0) +
->>>> pc->sg->offset;
->>>>  		drive->hwif->atapi_input_bytes(drive, buf + pc->b_count,
-count);
->>>> +		kunmap_atomic(buf - pc->sg->offset, KM_USER0);
->>>>  		bcount -= count; pc->b_count += count;
->>>>  		if (pc->b_count == pc->sg->length) {
->>>>  			pc->sg++;
->>> 
->>> You need a local_irq_save(flags); ... local_irq_restore(flags);
->>> around the kmap(atomic), transfer, and kunmap_atomic() for this to
->>> be safe. Interrupts may not be disabled at this point, depends on
->>> drive settings. 
->>> 
->> 
->> Thanks for the quick response!  I'll look into this more carefully.
->> --Stuart 
->> 
-> 
-> Oh, yeah, unmaskirq...
-> 
-> Do you see any problem with masking local IRQs during the transfer? 
-> If unmask is set, it could be because the device is a slow PIO
-> device, so transferring a whole page could take over 2.5ms.  
-> 
-> I could check, and if unmask is set && the page is in high memory, I
-> could copy the page down to low memory and allow the transfer to the
-> drive to proceed with irqs unmasked.  Do you think it would be worth
-> the extra code complexity?   
-> 
-> Thanks
-> Stuart
-> 
-> 
+On Wed, Mar 09, 2005 at 01:03:32AM -0800, Andrew Morton wrote:
+ > 
+ > From: Hanno Boeck <mail@hboeck.de>
+ > 
+ > I have a usb-cardreader here that needs some FORCELUN-entries in
+ > scsi_devinfo.c.
+ > 
+ > lsusb says about the device:
+ > 
+ > Bus 001 Device 003: ID 0483:1307 SGS Thomson Microelectronics Cytronix 6in1 card reader
+ > 
+ > Signed-off-by: Andrew Morton <akpm@osdl.org>
 
-Oops, it's a worst case of ~1.2ms, not 2.5ms.  I guess that would be OK.
+The problem with these devices is there are so many of them,
+(The Fedora kernel had over a dozen additions to the whitelist at one point),
+and there were still devices getting reported that weren't detected.
+There's no way to stay on top of the amount of these things that are being produced.
 
-I'll rework the patch and send it again in a bit.
+There are only two sane solutions that I see
+1) Have usb-storage tell the scsi layer "Its a card reader, scan all luns"
+or
+2) enable scanning of all luns, and blacklist any devices that misbehave.
 
+I chose (2) in the Fedora kernel, and so far, only 1 device got picked up
+that needed adding to the blacklist.
 
->>>> @@ -173,8 +174,9 @@ static void idescsi_output_buffers (ide_
->>>>  		return; } count = min(pc->sg->length - pc->b_count,
-bcount);
->>>> -		buf = page_address(pc->sg->page) + pc->sg->offset;
->>>> +		buf = kmap_atomic(pc->sg->page, KM_USER0) +
->>>> pc->sg->offset;
->>>>  		drive->hwif->atapi_output_bytes(drive, buf +
->>>> pc->b_count, count);
->>>> +		kunmap_atomic(buf - pc->sg->offset, KM_USER0);
->>>>  		bcount -= count; pc->b_count += count;
->>>>  		if (pc->b_count == pc->sg->length) {
->>>>  			pc->sg++;
->>> 
->>> Ditto.
+		Dave
 
