@@ -1,205 +1,70 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Prototype SATA -> SCSI error mapper
-Date: Mon, 16 Aug 2004 10:12:43 -0400
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: [PATCH 2.4] rewritable USB DVD-RAM vs. mode sense op choice
+Date: 16 Aug 2004 10:29:49 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040816141243.GA3898@devserv.devel.redhat.com>
+Message-ID: <1092673789.4297.7.camel@patlinux.iomegacorp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:6334 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S267665AbUHPONe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Aug 2004 10:13:34 -0400
-Content-Disposition: inline
+Received: from email-out2.iomega.com ([147.178.1.83]:55507 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S267763AbUHPQa7
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Aug 2004 12:30:59 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: jgarzik@pobox.com, linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-Would appreciate comment from any of the scsi gurus
+Jens A:
 
+2.4.26 and 2.4.27 strace of dd of=, mount -w, etc. chokes via EROFS for
+USB DVD-RAM.  2.4.25 I have not tried.
 
---- ../linux.vanilla-2.6.8-rc3/drivers/scsi/libata-scsi.c	2004-08-09 15:51:01.000000000 +0100
-+++ drivers/scsi/libata-scsi.c	2004-08-16 12:34:57.000000000 +0100
-@@ -120,34 +120,158 @@
-  *	ata_to_sense_error - convert ATA error to SCSI error
-  *	@qc: Command that we are erroring out
-  *
-- *	Converts an ATA error into a SCSI error.
-- *
-- *	Right now, this routine is laughably primitive.  We
-- *	don't even examine what ATA told us, we just look at
-- *	the command data direction, and return a fatal SCSI
-- *	sense error based on that.
-+ *	Converts an ATA error into a SCSI error. While we are at it
-+ *	we decode and dump the ATA error for the user so that they
-+ *	have some idea what really happened at the non make-believe
-+ *	layer.
-  *
-  *	LOCKING:
-  *	spin_lock_irqsave(host_set lock)
-  */
+This small patch substitutes the MMC op x5A "MODE SENSE (10)" for the op
+x1A that in t10.org PDT x05 is vendor-specific.  Such consideration
+persuades a standard DVD-RAM drive to admit it rewrites DVD-RAM discs.
+
+Revising the CDB alone of course does not suffice: we also have to step
+past a different size of data in header.
+
+Pat LaVarre
+
+diff -urp linux-2.4.27/drivers/scsi/sr.c linux-2.4.27-pel/drivers/scsi/sr.c
+--- linux-2.4.27/drivers/scsi/sr.c	2003-06-13 08:51:36.000000000 -0600
++++ linux-2.4.27-pel/drivers/scsi/sr.c	2004-08-16 10:08:37.000000000 -0600
+@@ -691,7 +691,7 @@ void get_sectorsize(int i)
  
--void ata_to_sense_error(struct ata_queued_cmd *qc)
-+void ata_to_sense_error(struct ata_queued_cmd *qc, u8 drv_stat)
+ void get_capabilities(int i)
  {
- 	struct scsi_cmnd *cmd = qc->scsicmd;
-+	u8 err = 0;
-+	unsigned char *sb = cmd->sense_buffer;
-+	/* Based on the 3ware driver translation table */
-+	static unsigned char sense_table[][4] = {
-+		/* BBD|ECC|ID|MAR */
-+		{0xd1, 		ABORTED_COMMAND, 0x00, 0x00}, 	// Device busy                  Aborted command
-+		/* BBD|ECC|ID */
-+		{0xd0,  	ABORTED_COMMAND, 0x00, 0x00}, 	// Device busy                  Aborted command
-+		/* ECC|MC|MARK */
-+		{0x61, 		HARDWARE_ERROR, 0x00, 0x00}, 	// Device fault                 Hardware error
-+		/* ICRC|ABRT */		/* NB: ICRC & !ABRT is BBD */
-+		{0x84, 		ABORTED_COMMAND, 0x47, 0x00}, 	// Data CRC error               SCSI parity error
-+		/* MC|ID|ABRT|TRK0|MARK */
-+		{0x37, 		NOT_READY, 0x04, 0x00}, 	// Unit offline                 Not ready
-+		/* MCR|MARK */
-+		{0x09, 		NOT_READY, 0x04, 0x00}, 	// Unrecovered disk error       Not ready
-+		/*  Bad address mark */
-+		{0x01, 		MEDIUM_ERROR, 0x13, 0x00}, 	// Address mark not found       Address mark not found for data field
-+		/* TRK0 */
-+		{0x02, 		HARDWARE_ERROR, 0x00, 0x00}, 	// Track 0 not found		  Hardware error
-+		/* Abort & !ICRC */
-+		{0x04, 		ABORTED_COMMAND, 0x00, 0x00}, 	// Aborted command              Aborted command
-+		/* Media change request */
-+		{0x08, 		NOT_READY, 0x04, 0x00}, 	// Media change request	  FIXME: faking offline
-+		/* SRV */
-+		{0x10, 		ABORTED_COMMAND, 0x14, 0x00}, 	// ID not found                 Recorded entity not found
-+		/* Media change */
-+		{0x08,  	NOT_READY, 0x04, 0x00}, 	// Media change		  FIXME: faking offline
-+		/* ECC */
-+		{0x40, 		MEDIUM_ERROR, 0x11, 0x04}, 	// Uncorrectable ECC error      Unrecovered read error
-+		/* BBD - block marked bad */
-+		{0x80, 		MEDIUM_ERROR, 0x11, 0x04}, 	// Block marked bad		  Medium error, unrecovered read error
-+		{0xFF, 0xFF, 0xFF, 0xFF}, // END mark 
-+	};
-+	static unsigned char stat_table[][4] = {
-+		/* Must be first because BUSY means no other bits valid */
-+		{0x80, 		ABORTED_COMMAND, 0x47, 0x00},	// Busy, fake parity for now
-+		{0x20, 		HARDWARE_ERROR,  0x00, 0x00}, 	// Device fault
-+		{0x08, 		ABORTED_COMMAND, 0x47, 0x00},	// Timed out in xfer, fake parity for now
-+		{0x04, 		RECOVERED_ERROR, 0x11, 0x00},	// Recovered ECC error	  Medium error, recovered
-+		{0xFF, 0xFF, 0xFF, 0xFF}, // END mark 
-+	};
-+	int i = 0;
+-	unsigned char cmd[6];
++	unsigned char cmd[16];
+ 	unsigned char *buffer;
+ 	int rc, n;
  
- 	cmd->result = SAM_STAT_CHECK_CONDITION;
--
--	cmd->sense_buffer[0] = 0x70;
--	cmd->sense_buffer[2] = MEDIUM_ERROR;
--	cmd->sense_buffer[7] = 14 - 8;	/* addnl. sense len. FIXME: correct? */
--
-+	
-+	/*
-+	 *	Is this an error we can process/parse
-+	 */
-+	 
-+	if(drv_stat & ATA_ERR)
-+		/* Read the err bits */
-+		err = ata_chk_err(qc->ap);
-+
-+	/* Display the ATA level error info */
-+	
-+	printk(KERN_WARNING "ata%u: status=0x%02x { ", qc->ap->id, drv_stat);
-+	if(drv_stat & 0x80)
-+	{
-+		printk("Busy ");
-+		err = 0;	/* Data is not valid in this case */
-+	}
-+	else {
-+		if(drv_stat & 0x40)	printk("DriveReady ");
-+		if(drv_stat & 0x20)	printk("DeviceFault ");
-+		if(drv_stat & 0x10)	printk("SeekComplete ");
-+		if(drv_stat & 0x08)	printk("DataRequest ");
-+		if(drv_stat & 0x04)	printk("CorrectedError ");
-+		if(drv_stat & 0x02)	printk("Index ");
-+		if(drv_stat & 0x01)	printk("Error ");
-+	}
-+	printk("}\n");
-+	
-+	if(err)
-+	{
-+		printk(KERN_WARNING "ata%u: error=0x%02x { ", qc->ap->id, err);
-+		if(err & 0x04)		printk("DriveStatusError ");
-+		if(err & 0x80)
-+		{
-+			if(err & 0x04)
-+				printk("BadCRC ");
-+			else
-+				printk("Sector ");
-+		}
-+		if(err & 0x40)		printk("UncorrectableError ");
-+		if(err & 0x10)		printk("SectorIdNotFound ");
-+		if(err & 0x02)		printk("TrackZeroNotFound ");
-+		if(err & 0x01)		printk("AddrMarkNotFound ");
-+		printk("}\n");
-+		
-+		/* Should we dump sector info here too ?? */
-+	}
-+		
-+	
-+	/* Look for err */
-+	while(sense_table[i][0] != 0xFF)
-+	{
-+		/* Look for best matches first */
-+		if((sense_table[i][0] & err) == sense_table[i][0])
-+		{
-+			sb[0] = 0x70;
-+			sb[2] = sense_table[i][1];
-+			sb[7] = 0x0a;
-+			sb[12] = sense_table[i][2];
-+			sb[13] = sense_table[i][3];
-+			return;
-+		}
-+		i++;
-+	}
-+	/* No immediate match */
-+	if(err)
-+		printk(KERN_DEBUG "ata%u: no sense translation for 0x%02x\n", qc->ap->id, err);
-+	
-+	/* Fall back to interpreting status bits */
-+	while(stat_table[i][0] != 0xFF)
-+	{
-+		if(stat_table[i][0] & drv_stat)
-+		{
-+			sb[0] = 0x70;
-+			sb[2] = stat_table[i][1];
-+			sb[7] = 0x0a;
-+			sb[12] = stat_table[i][2];
-+			sb[13] = stat_table[i][3];
-+			return;
-+		}
-+		i++;
-+	}
-+	/* No error ?? */
-+	printk(KERN_ERR "ata%u: called with no error (%02X)!\n", qc->ap->id, drv_stat);
- 	/* additional-sense-code[-qualifier] */
-+	
-+	sb[0] = 0x70;
-+	sb[2] = MEDIUM_ERROR;
-+	sb[7] = 0x0A;
- 	if (cmd->sc_data_direction == SCSI_DATA_READ) {
--		cmd->sense_buffer[12] = 0x11; /* "unrecovered read error" */
--		cmd->sense_buffer[13] = 0x04;
-+		sb[12] = 0x11; /* "unrecovered read error" */
-+		sb[13] = 0x04;
- 	} else {
--		cmd->sense_buffer[12] = 0x0C; /* "write error -             */
--		cmd->sense_buffer[13] = 0x02; /*  auto-reallocation failed" */
-+		sb[12] = 0x0C; /* "write error -             */
-+		sb[13] = 0x02; /*  auto-reallocation failed" */
+@@ -713,12 +713,12 @@ void get_capabilities(int i)
+ 		printk(KERN_ERR "sr: out of memory.\n");
+ 		return;
  	}
- }
+-	cmd[0] = MODE_SENSE;
++	memset(cmd, '\0', sizeof cmd);
++	cmd[0] = MODE_SENSE_10;
+ 	cmd[1] = (scsi_CDs[i].device->scsi_level <= SCSI_2) ?
+ 		 ((scsi_CDs[i].device->lun << 5) & 0xe0) : 0;
+ 	cmd[2] = 0x2a;
+-	cmd[4] = 128;
+-	cmd[3] = cmd[5] = 0;
++	cmd[8] = 128;
+ 	rc = sr_do_ioctl(i, cmd, buffer, 128, 1, SCSI_DATA_READ, NULL);
  
-@@ -343,7 +467,7 @@
- 		if (is_atapi_taskfile(&qc->tf))
- 			cmd->result = SAM_STAT_CHECK_CONDITION;
- 		else
--			ata_to_sense_error(qc);
-+			ata_to_sense_error(qc, drv_stat);
- 	} else {
- 		cmd->result = SAM_STAT_GOOD;
+ 	if (rc) {
+@@ -731,7 +731,7 @@ void get_capabilities(int i)
+ 		printk("sr%i: scsi-1 drive\n", i);
+ 		return;
  	}
+-	n = buffer[3] + 4;
++	n = 8 + ((buffer[6] << 8) | buffer[7]); /* 8 = sizeof MODE_SENSE_10 header */
+ 	scsi_CDs[i].cdi.speed = ((buffer[n + 8] << 8) + buffer[n + 9]) / 176;
+ 	scsi_CDs[i].readcd_known = 1;
+ 	scsi_CDs[i].readcd_cdda = buffer[n + 5] & 0x01;
+
+
