@@ -1,37 +1,34 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: [2.6 patch] remove obsolete comment from fusion Kconfig
-Date: Wed, 21 Jan 2004 01:43:45 +0100
+From: "Jjdesj" <alMonticello@wongfaye.com>
+Subject: nesws regarding vigros virulent
+Date: Wed, 21 Jan 2004 19:28:53 -0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040121004345.GK6441@fs.tum.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <gdshtdb.033829jbssou@Jjdesjygxmrj>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:8158 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S265892AbUAUAnu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jan 2004 19:43:50 -0500
-Content-Disposition: inline
+Received: from X088232.ppp.dion.ne.jp ([210.234.88.232]:26095 "HELO linux-scsi")
+	by vger.kernel.org with SMTP id S265911AbUAUKZt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Jan 2004 05:25:49 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: mpt_linux_developer@lsil.com, Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-The patch below removes obsolete comments from the fusion Kconfig file 
-that were left after the conversion to the new config system.
+Maxine,
 
-Please apply
-Adrian
+How Vigras works. And you can better understand, what Vigras can do for you. If you are sensible about your health, reflect on what you can do for your seual health, to keep the chances that you will need Vigras as low as possible. equatorial plunged pastes, friends. 
 
---- linux-2.6.1-mm5/drivers/message/fusion/Kconfig.old	2004-01-21 01:40:34.000000000 +0100
-+++ linux-2.6.1-mm5/drivers/message/fusion/Kconfig	2004-01-21 01:40:44.000000000 +0100
-@@ -138,11 +138,5 @@
- 	  Support for building this feature into the linux kernel is not
- 	  yet available.
+ http://www.drishere.com/index.php?pid=genviag
+
+ Inrease Seks Drive
+ Bost Seual Performance
+ Fuller & Harder Erecions
+ Inrease Stamna & Endurance
+ Quicker Rechages 
  
--#  if [ "$CONFIG_FUSION_LAN" != "n" ]; then
--#    define_bool CONFIG_NET_FC y
--#  fi
--# These <should> be define_tristate, but we leave them define_bool
--# for backward compatibility with pre-linux-2.2.15 kernels.
--# (Bugzilla:fibrebugs, #384)
- endmenu
- 
+
+Balkanizes magenta Everglades, Steen. exquisite concurrent Kentucky, assembly.
+
+Happy holidays,
+crawls
+
+
