@@ -1,66 +1,34 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Handling erroneous READ CAPACITY response in sd.c
-Date: Sun, 24 Oct 2004 13:11:30 -0400 (EDT)
+From: Dmitry Torokhov <dtor_core@ameritech.net>
+Subject: Re: 100% repeatable way to send firewire out to lunch permanently on 2.6.8.1
+Date: Sun, 24 Oct 2004 12:22:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0410241306060.26683-100000@netrider.rowland.org>
-References: <417AFDA5.5080806@micro.ee.nthu.edu.tw>
+Message-ID: <200410241222.50426.dtor_core@ameritech.net>
+References: <Pine.LNX.4.44.0409050434540.8779-100000@sasami.anime.net> <20041024150051.GA21922@suse.de> <1098631356.10824.33.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:52494 "HELO
-	netrider.rowland.org") by vger.kernel.org with SMTP id S261538AbUJXRLa
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Oct 2004 13:11:30 -0400
-In-Reply-To: <417AFDA5.5080806@micro.ee.nthu.edu.tw>
+Received: from smtp812.mail.sc5.yahoo.com ([66.163.170.82]:27316 "HELO
+	smtp812.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S261543AbUJXRWz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Oct 2004 13:22:55 -0400
+In-Reply-To: <1098631356.10824.33.camel@mulgrave>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Darsen <darsen@micro.ee.nthu.edu.tw>
-Cc: Adriaan Penning <a.penning@luon.net>, Eero Volotinen <eero@ping-viini.org>, Luben Tuikov <luben_tuikov@adaptec.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux1394-devel@lists.sourceforge.net
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Olaf Hering <olh@suse.de>, Dan Hollis <goemon@anime.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>, bcollins@debian.org
 
-On Sun, 24 Oct 2004, Darsen wrote:
-
-> I've tried the patches you gave me.
-> Unfortunately they do not work on my computer.
-> Here is the result of "dmesg:" 
+On Sunday 24 October 2004 10:22 am, James Bottomley wrote:
+> The trace doesn't show any error handler activity at all.  Are there no
+> messages in the log about offlining the device?  If not, it sounds like
+> there's a problem somewhere in the firewire system.
 > 
-> usb 2-2: reset full speed USB device using address 2
-> usb 2-2: device not accepting address 2, error -110
-> usb-storage: usb_reset_device returns -19
-> scsi: Device offlined - not ready after error recovery: host 0 channel 0 
-> id 0 lun 0
-> sd_read_true_cap: sda: PMI not supported
-> scsi0 (0:0): rejecting I/O to offline device
-> sd_read_format_cap: sda: READ FORMAT CAPACITIES not supported
-> SCSI device sda: 251905 512-byte hdwr sectors (129 MB)
-> sda: assuming Write Enabled
-> sda: assuming drive cache: write through
-> Attached scsi removable disk sda at scsi0, channel 0, id 0, lun 0
-> Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
-> usb-storage: queuecommand called
-> usb 2-2: USB disconnect, address 2
-> 
-> It seems that the two commands you tried were not supported by my device 
-> (Apacer Audio Steno).  Strange isn't it?
 
-It's not that they are unsupported -- it's that your device crashed before 
-they were sent!
+The thing is that the hang is happening only with CD/DVD devices (sr_mod)
+and not with hard drives (sd_mod) and as far as I can tell SBP2 does not
+differentiate betweeh an HD and a CD so I think there is something going
+on in sr_mod code.
 
-The dmesg extract above starts way too late, after the device has already 
-crashed.  What happened before that might be of interest, but it probably 
-won't tell us anything about the new code we want to test.
-
-> (I eliminated the usb-storage verbose debug messages because it was too 
-> long, if you need them I can send it to you.)
-
-Yes, please.  Maybe it contains something useful.  Like why your device 
-crashed when it used to work okay.
-
-> I tried another way: by correcting capacity that is not a multiple of 
-> 256. (see below)
-> This does work on my device, but I don't know whether it works on other 
-> machines.
-
-No, it won't.  Besides, a major point of this effort is to see if the 
-fix_read_capacity() routine can be eliminated.
-
-Alan Stern
-
+-- 
+Dmitry
