@@ -1,44 +1,79 @@
-From: Dave C Boutcher <sleddog@us.ibm.com>
-Subject: Re: VPD in sysfs
-Date: Fri, 20 Aug 2004 14:45:25 -0500
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: Suspending SCSI devices and buses
+Date: Fri, 20 Aug 2004 14:49:53 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040820194525.GA13970@cs.umn.edu>
-References: <20040814182932.GT12936@parcelfarce.linux.theplanet.co.uk> <20040820142143.GB14144@parcelfarce.linux.theplanet.co.uk>
-Reply-To: boutcher@cs.umn.edu
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <7C828B3E-F2EA-11D8-B9BF-00039398BB5E@ieee.org>
+Mime-Version: 1.0 (Apple Message framework v619)
+Content-Type: text/plain;
+	charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.cs.umn.edu ([128.101.34.202]:61114 "EHLO mail.cs.umn.edu")
-	by vger.kernel.org with ESMTP id S268688AbUHTTpf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Aug 2004 15:45:35 -0400
-Content-Disposition: inline
-In-Reply-To: <20040820142143.GB14144@parcelfarce.linux.theplanet.co.uk>
+Received: from email-out2.iomega.com ([147.178.1.83]:35507 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S268761AbUHTUt0
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Aug 2004 16:49:26 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: Greg KH <greg@kroah.com>, Patrick Mochel <mochel@osdl.org>, martins@au.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Alan Stern <stern@rowland.harvard.edu>
 
-On Fri, Aug 20, 2004 at 03:21:43PM +0100, Matthew Wilcox wrote:
-> On Sat, Aug 14, 2004 at 07:29:32PM +0100, Matthew Wilcox wrote:
-> > Thoughts?  Since there's at least four and probably more ways of getting
-> > at VPD, we either need to fill in some VPD structs at initialisation or
-> > have some kind of vpd_ops that a driver can fill in so the core can get
-> > at the data.
-> 
-> I've tried the first option -- creating a large block of sysfs entries for
-> all the VPD entries that are present.  However, I've come upon a problem
-> with sysfs that prevents me from doing so.
-> 
-> Basically, the problem is that sysfs doesn't pass the attribute that's
-> being invoked to the attribute ->show method.  So I can't determine
-> which one is being read.  This isn't a problem for any other sysfs attribute
-> because they're all static, but for dynamically created attributes, it's
-> not possible to work this way.
+ > a hardcoded invalidate on resume is overkill.
 
-Ya, I ran into some similar restrictions with a driver I was
-writing...after talking to gregkh, you are going to have to go down a
-level and use kobjects directly...each piece of data will have a kobject, 
-and that's what you dereference in the show method. 
+Theoretically yes.
 
--- 
-Dave Boutcher
+ > current ... Linux kernel ... not distinguish
+ > power-on events from media change events.
+
+One case for leaving Linux pessimistic that way is ...
+
+ > I'm not sure doing so is even possible for SCSI devices.
+ > (Comments on that?)
+
+SK ASC x 6 29 UnitAttention Reset is the only notice a host gets of a 
+wall-powered drive unplugged from one host and plugged into another, 
+when the bus does not distinctly identify the host, as in USB, etc.  
+ From the drive's point of view, that is not an SK ASC x 6 28 
+UnitAttention GoneReady ... yet still from the host's point of view, 
+that is a media change.
+
+Same for drives that don't let you remove the media: those drives might 
+report no unit attentions at all, again implying that plug-in or resume 
+of power is always a potential media change for the host.
+
+ > old 1Gig Jaz drive
+
+Those drives often report x 2 04 02 (else x 2 04 00 meaning x 2 04 
+00..FF which includes x 2 04 02) while auto spun down, to help the host 
+avoid timing out a read that includes spin up delay.  Their auto spin 
+down time is configurable with vendor-specific protocol between resets. 
+  Insertion spinup, eject spindown, while spinning up and down are all 
+more intricate.
+
+ > Does "Medium May Have Changed" show up reliably
+ > if somebody changes the medium in a cartridge drive,
+ > Zip drive, etc while it is powered down?
+
+Relevant device design questions include:
+
+1) Do enough hosts consistently limit how stale cache may be?
+
+2) Do enough hosts reliably tolerate x 6 28 GoneReady produced by a 
+suspend-resume power cycle without media change?
+
+3) Does the device itself cache part of the disc?
+
+4) Is the disc robust enough to tolerate a auto fetch of its identity 
+after each resume or power on?
+
+5) Does swapping the disc detectably change a mechanical state in the 
+drive?
+
+6) Was the device expensive enough to include a non-volatile record of 
+the identity of the disc present before each suspend or power off?
+
+In design, me, I'd vote to have the device pessimistically queue any UA 
+that might be necessary, and let the host sort out which are real, but 
+I'm not sure how often people like me lose such votes.
+
+Pat LaVarre
+
