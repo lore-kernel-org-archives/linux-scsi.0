@@ -1,46 +1,55 @@
-From: Rask Ingemann Lambertsen <rask@sygehus.dk>
-Subject: Re: Using ncr53c8xx.c for a 53c770 chip
-Date: Tue, 13 Jan 2004 19:57:50 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040113195747.C1738@sygehus.dk>
-References: <20031122113834.GA8098@lst.de> <20031123175041.A1461@sygehus.dk> <1069606797.2066.2.camel@mulgrave> <20040113145553.A1738@sygehus.dk> <1074011584.2173.126.camel@mulgrave>
+From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Subject: Re: smp dead lock of io_request_lock/queue_lock patch
+Date: Tue, 13 Jan 2004 18:55:14 -0200 (BRST)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.58L.0401131843390.6737@logos.cnet>
+References: <OF317B32D5.C8C681CB-ONC1256E19.005066CF-C1256E19.00538DEF@de.ibm.com>
+  <20040112151230.GB5844@devserv.devel.redhat.com>  <20040112194829.A7078@infradead.org>
+ <1073937102.3114.300.camel@compaq.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 0x50a144b9.albnxx15.adsl-dhcp.tele.dk ([80.161.68.185]:3845
-	"EHLO 0x50a144b9.albnxx15.adsl-dhcp.tele.dk") by vger.kernel.org
-	with ESMTP id S265155AbUAMS5y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jan 2004 13:57:54 -0500
-Content-Disposition: inline
-In-Reply-To: <1074011584.2173.126.camel@mulgrave>; from James.Bottomley@steeleye.com on Tue, Jan 13, 2004 at 11:33:03AM -0500
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <1073937102.3114.300.camel@compaq.xsintricity.com>
+To: Doug Ledford <dledford@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Arjan Van de Ven <arjanv@redhat.com>, Martin Peschke3 <MPESCHKE@de.ibm.com>, Jens Axboe <axboe@suse.de>, Peter Yao <peter@exavio.com.cn>, linux-kernel@vger.kernel.org, linux-scsi mailing list <linux-scsi@vger.kernel.org>, ihno@suse.de
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, Jan 13, 2004 at 11:33:03AM -0500, James Bottomley wrote:
-> On Tue, 2004-01-13 at 08:55, Rask Ingemann Lambertsen wrote:
-> 
-> > I also need some help filling in the ncr_slot structure. The registers are
-> > memory mapped at bus address 0xf40000 and the script RAM is memory mapped at
-> > bus address 0xf41000. So I guess base is for the registers, base2 is for
-> > the script RAM and that *_v is for the virtual memory addresses of the above.
-> > That still leaves me with io_port, base_c, base2_c and base_io.
-> 
-> That should be correct...although I've not tested it, it might be wise
-> to begin without the FE_RAM as well.  I can check this with the
-> NCR_Q720, though if you get problems.  Although it doesn't have on-chip
-> ram for scripts, the board itself has 2Mb of ram behind the MCA window
 
-OK. Btw, searching for paddr2 shows use of vtobus(). :-(
 
-> > Where do I tell the driver about the SCSI clock (50 MHz)?
-> 
-> The driver will work it out...it has its own timing routine.
+On Mon, 12 Jan 2004, Doug Ledford wrote:
 
-Good. I'm not entirely sure that all boards use a 50 MHz clock. Partly
-because several models of the board exists and partly because some people
-overclock their boards.
+> On Mon, 2004-01-12 at 14:48, Christoph Hellwig wrote:
+> > On Mon, Jan 12, 2004 at 04:12:30PM +0100, Arjan van de Ven wrote:
+> > > > as the patch discussed in this thread, i.e. pure (partially
+> > > > vintage) bugfixes.
+> > >
+> > > Both SuSE and Red Hat submit bugfixes they put in the respective trees to
+> > > marcelo already. There will not be many "pure bugfixes" that you can find in
+> > > vendor trees but not in marcelo's tree.
+> >
+> > I haven't seen SCSI patches sumission for 2.4 from the vendors on linux-scsi
+> > for ages.  In fact I asked Jens & Doug two times whether they could sort out
+> > the distro patches for the 2.4 stack and post them, but it seems they're busy
+> > enough with real work so this never happened.
+>
+> More or less.  But part of it also is that a lot of the patches I've
+> written are on top of other patches that people don't want (aka, the
+> iorl patch).  I've got a mlqueue patch that actually *really* should go
+> into mainline because it solves a slew of various problems in one go,
+> but the current version of the patch depends on some semantic changes
+> made by the iorl patch.  So, sorting things out can sometimes be
+> difficult.  But, I've been told to go ahead and do what I can as far as
+> getting the stuff out, so I'm taking some time to try and get a bk tree
+> out there so people can see what I'm talking about.  Once I've got the
+> full tree out there, then it might be possible to start picking and
+> choosing which things to port against mainline so that they don't depend
+> on patches like the iorl patch.
 
--- 
-Regards,
-Rask Ingemann Lambertsen
+Hi,
+
+Merging "straight" _bugfixes_ (I think all we agree that merging
+performance enhancements at this point in 2.4 is not interesting) which,
+as you said, get reviewed by Jens/James/others is OK.
+
+What is this mlqueue patchset fixing ? To tell you the truth, I'm not
+aware of the SCSI stack problems.
