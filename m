@@ -1,41 +1,22 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: [PATCH] Ghost devices being reported with AIC7XXX version 6.2.6
-Date: Thu, 31 Oct 2002 11:03:19 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <798370000.1036087399@aslan.btc.adaptec.com>
-References: <20021031170337.GO574@lapi0061>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Nasty changes in SCSI driver code
+Date: 31 Oct 2002 18:49:34 +0000
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1036090174.8584.88.camel@irongate.swansea.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20021031170337.GO574@lapi0061>
-Content-Disposition: inline
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Brown <mbrown@emc.com>, bferjul@emc.com, jkrasner@emc.com
-Cc: conway_heather@emc.com, linux-scsi@vger.kernel.org
 
-> Justin can you change AHC_NUM_LUNS to 32 or suggest an alternative fix?
+Will whoever committed code that simply deleted the error handling from
+ncr53c8xxx, sym53c8xx and inia100 please put it back or at least add a 
 
-The aic7xxx driver is not at fault and so should not be changed.
-The aic7xxx driver really does support all 64 luns.  In my opinion,
-there are three problems here:
+#warning "Don't use this driver"
 
-1) The Symetrix should treat a non-zero LUNTAR bit as an invalid
-   selection.  This would prevent these higher luns from showing up
-   as valid devices.
-
-2) Linux should never use more than 5 bits of lun for a device that
-   reports itself as SCSI-2.  If the lun is larger than what will
-   fit in 3 bits, byte 1 of the CDB should not be altered even if
-   the device is SCSI2.
-
-3) Linux should be using the Report Luns command to determine how
-   many luns are on a device and at what locations.  This might
-   even allow you to never probe more than 8 luns on a SCSI 2
-   device unless they support this command.  Does the Symetrix support
-   it?  Going beyond 8 luns on a SCSI2 device is really a hack
-   otherwise.
-
---
-Justin
+SCSI with no error handling is asking for corruption and not warning
+users about this as we try and stabilize the kernel is a very very bad
+idea. If it warns or doesnt compile then it can get fixed properly. If
+it doesnt warn it may get missed with catastrophic results
