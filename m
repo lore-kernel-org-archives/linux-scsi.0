@@ -1,96 +1,130 @@
-From: Olaf Hering <olh@suse.de>
-Subject: 2.6.11rc2 prints disksize twice
-Date: Mon, 31 Jan 2005 13:15:37 +0100
-Message-ID: <20050131121537.GA32111@suse.de>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: 2.6.11-rc[1,2]-mmX scsi cdrom problem, 2.6.10-mm2 ok
+Date: Mon, 31 Jan 2005 23:09:15 +1000
+Message-ID: <41FE2DFB.1090801@torque.net>
+References: <200501310034.32005.cova@ferrara.linux.it> <20050131080021.GA9446@suse.de> <200501311108.19593.cova@ferrara.linux.it> <20050131110550.GA5058@suse.de> <41FE1B39.6030702@torque.net> <20050131114943.GD5058@suse.de>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/mixed;
+ boundary="------------090707080707000000020307"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:46545 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S261160AbVAaMPj (ORCPT
+Received: from borg.st.net.au ([65.23.158.22]:59848 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261188AbVAaNJq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Jan 2005 07:15:39 -0500
-Received: from hermes.suse.de (hermes-ext.suse.de [195.135.221.8])
-	(using TLSv1 with cipher EDH-RSA-DES-CBC3-SHA (168/168 bits))
-	(No client certificate requested)
-	by Cantor.suse.de (Postfix) with ESMTP id 4254413DC17B
-	for <linux-scsi@vger.kernel.org>; Mon, 31 Jan 2005 13:15:38 +0100 (CET)
-Content-Disposition: inline
+	Mon, 31 Jan 2005 08:09:46 -0500
+In-Reply-To: <20050131114943.GD5058@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Fabio Coatti <cova@ferrara.linux.it>, akpm@osdl.org, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-I think its not a functional problem,
-but parts of the disk detection is printed twice.
+This is a multi-part message in MIME format.
+--------------090707080707000000020307
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-...
-SCSI device sdc: 71096640 512-byte hdwr sectors (36401 MB)
-SCSI device sdc: drive cache: write through
-SCSI device sdc: 71096640 512-byte hdwr sectors (36401 MB)
-SCSI device sdc: drive cache: write through
-...
+Jens Axboe wrote:
+> On Mon, Jan 31 2005, Douglas Gilbert wrote:
+>=20
+>>Jens Axboe wrote:
+>>
+>>>On Mon, Jan 31 2005, Fabio Coatti wrote:
+>>>
+>>>
+>>>>Alle 09:00, luned=EC 31 gennaio 2005, Jens Axboe ha scritto:
+>>>>
+>>>>
+>>>>>>At this point k3b is stuck in D stat, needs reboot.
+
+I was able to replicate this with a USB burner.
+My system didn't need a reboot. The "D" state was locked
+on "blk_execute_rq". The burner was still accessible via
+sg.
+
+>>>>>The most likely suspect is the REQ_BLOCK_PC scsi changes. Can you tr=
+y
+>>>>>2.6.11-rc2-mm1 with bk-scsi backed out? (attached)
+>>>>
+>>>>just tried, right guess :)
+>>>>backing out that patch the problem disappears.
+>>>>Let me know if you need to narrow further that issue.
+>>>
+>>>
+>>>Doug, it looks like your REQ_BLOCK_PC changes are buggy. Let me know i=
+f
+>>>you cannot find the full post and I'll forward it to you.
+>>
+>>Jens,
+>>Hmm. Found the thread on lkml. I got an almost identical
+>>lock up in k3b with a USB external cd/dvd drive recently.
+>>My laptop didn't need rebooting (probably since the root
+>>fs is one an ide disk).
+>>
+>>That is a quite large patch that you referenced. I'll
+>>try and replicate and report back.
+>=20
+>=20
+> My guess would be the scsi_lib changes, I would suggest you start there=
+.
+
+Indeed. I'm not sure what I was thinking in
+scsi_io_completion(). This small reversion
+fixes my k3b problem; tested with a USB external
+burner.
+
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
 
-Loading sym0: <1010-66> rev 0x1 at pci 0000:41:01.0 irq 103
-kernel/drivers/ssym0: No NVRAM, ID 7, Fast-80, LVD, parity checking
-csi/scsi_mod.ko
-Loading kernel/drivers/scsi/sdsym0: SCSI BUS has been reset.
-_mod.ko
-Loadingscsi0 : sym-2.1.18n
- kernel/drivers/scsi/sr_mod.ko
-Loading kernel/drivers/scsi/scsi_transport_spi.ko
-Loading kernel/drivers/scsi/sym53c8xx_2/sym53c8xx.ko
-sym0:8: FAST-40 WIDE SCSI 80.0 MB/s ST (25.0 ns, offset 31)
-  Vendor: IBM       Model: IC35L036UCDY10-0  Rev: S28C
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-sym0:8:0: tagged command queuing enabled, command queue depth 16.
- target0:0:8: Beginning Domain Validation
-sym0:8: asynchronous.
-sym0:8: wide asynchronous.
-sym0:8: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
- target0:0:8: Ending Domain Validation
-SCSI device sda: 71096640 512-byte hdwr sectors (36401 MB)
-SCSI device sda: drive cache: write through
-SCSI device sda: 71096640 512-byte hdwr sectors (36401 MB)
-SCSI device sda: drive cache: write through
- sda: sda2 sda3 sda4
-Attached scsi disk sda at scsi0, channel 0, id 8, lun 0
-sym0:9: FAST-40 WIDE SCSI 80.0 MB/s ST (25.0 ns, offset 31)
-  Vendor: IBM       Model: IC35L036UCDY10-0  Rev: S28C
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-sym0:9:0: tagged command queuing enabled, command queue depth 16.
- target0:0:9: Beginning Domain Validation
-sym0:9: asynchronous.
-sym0:9: wide asynchronous.
-sym0:9: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
- target0:0:9: Ending Domain Validation
-SCSI device sdb: 71096640 512-byte hdwr sectors (36401 MB)
-SCSI device sdb: drive cache: write through
-SCSI device sdb: 71096640 512-byte hdwr sectors (36401 MB)
-SCSI device sdb: drive cache: write through
- sdb: sdb1 sdb2 sdb3
-Attached scsi disk sdb at scsi0, channel 0, id 9, lun 0
-sym0:10: FAST-40 WIDE SCSI 80.0 MB/s ST (25.0 ns, offset 31)
-  Vendor: IBM       Model: IC35L036UCDY10-0  Rev: S28C
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-sym0:10:0: tagged command queuing enabled, command queue depth 16.
- target0:0:10: Beginning Domain Validation
-sym0:10: asynchronous.
-sym0:10: wide asynchronous.
-sym0:10: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
- target0:0:10: Ending Domain Validation
-SCSI device sdc: 71096640 512-byte hdwr sectors (36401 MB)
-SCSI device sdc: drive cache: write through
-SCSI device sdc: 71096640 512-byte hdwr sectors (36401 MB)
-SCSI device sdc: drive cache: write through
- sdc: sdc1 sdc2 sdc3
-Attached scsi disk sdc at scsi0, channel 0, id 10, lun 0
-  Vendor: IBM       Model: HSBPD4E  PU3SCSI  Rev: 0016
-  Type:   Enclosure                          ANSI SCSI revision: 02
- target0:0:15: Beginning Domain Validation
- target0:0:15: Ending Domain Validation
-sym1: <1010-66> rev 0x1 at pci 0000:41:01.1 irq 104
-sym1: No NVRAM, ID 7, Fast-80, LVD, parity checking
-sym1: SCSI BUS has been reset.
-scsi1 : sym-2.1.18n
 
+
+
+--------------090707080707000000020307
+Content-Type: text/x-patch;
+ name="scsi_lib2611rc2bk8.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi_lib2611rc2bk8.diff"
+
+--- linux/drivers/scsi/scsi_lib.c	2005-01-31 17:46:31.000000000 +1000
++++ linux/drivers/scsi/scsi_lib.c2611r2b8_k3b	2005-01-31 22:46:04.000000000 +1000
+@@ -692,6 +692,7 @@
+ 	int this_count = cmd->bufflen;
+ 	request_queue_t *q = cmd->device->request_queue;
+ 	struct request *req = cmd->request;
++	int clear_errors = 1;
+ 	struct scsi_sense_hdr sshdr;
+ 	int sense_valid = 0;
+ 	int sense_deferred = 0;
+@@ -721,6 +722,7 @@
+ 	if (blk_pc_request(req)) { /* SG_IO ioctl from block level */
+ 		req->errors = result;
+ 		if (result) {
++			clear_errors = 0;
+ 			if (sense_valid) {
+ 				/*
+ 				 * SG_IO wants current and deferred errors
+@@ -745,11 +747,6 @@
+ 	cmd->request_buffer = NULL;
+ 	cmd->request_bufflen = 0;
+ 
+-	if (blk_pc_request(req)) { /* SG_IO ioctl from block level */
+-		scsi_end_request(cmd, 1, good_bytes, 0);
+-		return;
+-	}
+-
+ 	/*
+ 	 * Next deal with any sectors which we were able to correctly
+ 	 * handle.
+@@ -759,7 +756,8 @@
+ 					      req->nr_sectors, good_bytes));
+ 		SCSI_LOG_HLCOMPLETE(1, printk("use_sg is %d\n", cmd->use_sg));
+ 
+-		req->errors = 0;
++		if (clear_errors)
++			req->errors = 0;
+ 		/*
+ 		 * If multiple sectors are requested in one buffer, then
+ 		 * they will have been finished off by the first command.
+
+--------------090707080707000000020307--
 
