@@ -1,56 +1,38 @@
-From: Arjan van de Ven <arjanv@redhat.com>
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Subject: Re: aic7xxx strange code
-Date: Thu, 1 Jan 2004 17:17:31 +0100
+Date: Thu, 01 Jan 2004 09:21:38 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040101161731.GB18742@devserv.devel.redhat.com>
-References: <1072885576.10877.6.camel@laptop.fenrus.com> <960352704.1072895786@aslan.btc.adaptec.com> <20040101100809.GA1053@devserv.devel.redhat.com> <478922704.1072973783@aslan.scsiguy.com>
+Message-ID: <482322704.1072974098@aslan.scsiguy.com>
+References: <1072885576.10877.6.camel@laptop.fenrus.com> <960352704.1072895786@aslan.btc.adaptec.com>
+ <20040101100809.GA1053@devserv.devel.redhat.com> <478922704.1072973783@aslan.scsiguy.com>
+ <20040101161731.GB18742@devserv.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="cmJC7u66zC7hs+87"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:43945 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S264443AbUAAQRl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jan 2004 11:17:41 -0500
+Received: from mail.scsiguy.com ([63.229.232.106]:26628 "EHLO
+	aslan.scsiguy.com") by vger.kernel.org with ESMTP id S264509AbUAAQVk
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Jan 2004 11:21:40 -0500
+In-Reply-To: <20040101161731.GB18742@devserv.devel.redhat.com>
 Content-Disposition: inline
-In-Reply-To: <478922704.1072973783@aslan.scsiguy.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+To: Arjan van de Ven <arjanv@redhat.com>
 Cc: linux-scsi@vger.kernel.org
 
+>> Unfortunately, fixing 2.4 and 2.6 now doesn't help in supporting older
+>> kernels that are still in production.  You can't change the past no
+>> matter how hard we'd like to try. 
+> 
+> But vendors will update those kernels.....
 
---cmJC7u66zC7hs+87
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Yes, but I can't remove support for these older kernels for quite
+some time.  So, I'd be more than happy to update the comments explaining
+why the code is there and change the #ifdefs to further limit its use,
+but the code needs to remain for the time being.
 
-On Thu, Jan 01, 2004 at 09:16:23AM -0700, Justin T. Gibbs wrote:
-> >> I'm more than happy to change the #ifdefs on the hack to exclude 2.6
-> >> so long as all platforms the driver operates under behave as expected.
-> >> If 2.4 is any guide, however, there may still be some bogus code lurki=
-ng
-> >> around that uses the "normal" dma mask incorrectly.
-> >=20
-> > Those platforms break the API and should be fixed as opposed to hacks a=
-dded
-> > to every single driver in drivers/*
->=20
-> Unfortunately, fixing 2.4 and 2.6 now doesn't help in supporting older
-> kernels that are still in production.  You can't change the past no
-> matter how hard we'd like to try.=20
+Are you planning an audit of the other platforms to ensure API compliance?
 
-But vendors will update those kernels.....
+--
+Justin
 
-
---cmJC7u66zC7hs+87
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQE/9EgbxULwo51rQBIRAmO9AJ91o3w0D5kBdHfnRU8chlb+RK6ZlgCcDp9H
-LQ4V8S0npbOXctMDaIlineg=
-=5Yve
------END PGP SIGNATURE-----
-
---cmJC7u66zC7hs+87--
