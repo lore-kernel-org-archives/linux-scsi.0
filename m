@@ -1,29 +1,30 @@
-From: Dave Hansen <haveblue@us.ibm.com>
-Subject: Re: 2.6.9-rc3-mm3 fails to detect aic7xxx
-Date: Thu, 07 Oct 2004 13:45:37 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Add proper module ID tables to Adaptec aic7[9x]xx drivers
+Date: Thu, 7 Oct 2004 21:47:26 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1097181937.25526.13.camel@localhost>
-References: <1097178019.24355.39.camel@localhost>
-	 <4165A369.60306@cybsft.com>  <4165A951.3060808@adaptec.com>
+Message-ID: <20041007214726.A17483@infradead.org>
+References: <linux.scsi.20040621161047.GD16453@master.mivlgu.local> <41644BD5.7030807@tls.msk.ru> <20041006202543.GA22794@wotan.suse.de> <4165862E.1040904@adaptec.com> <4165950C.509@tls.msk.ru> <41659D30.7050705@adaptec.com> <20041007213612.A17286@infradead.org> <4165AA1A.1020708@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.105]:33444 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S268213AbUJGUpx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2004 16:45:53 -0400
-In-Reply-To: <4165A951.3060808@adaptec.com>
+Received: from baythorne.infradead.org ([81.187.226.107]:40201 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S268206AbUJGUrb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Oct 2004 16:47:31 -0400
+Content-Disposition: inline
+In-Reply-To: <4165AA1A.1020708@adaptec.com>; from luben_tuikov@adaptec.com on Thu, Oct 07, 2004 at 04:42:02PM -0400
 List-Id: linux-scsi@vger.kernel.org
 To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: "K.R. Foley" <kr@cybsft.com>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Cc: Michael Tokarev <mjt@tls.msk.ru>, linux-scsi@vger.kernel.org
 
-On Thu, 2004-10-07 at 13:38, Luben Tuikov wrote:
-> It is most likely the PCI ID patch which went into those drivers.
-> You can back out only that change (drivers/scsi/aic7xxx) and
-> try it.  (assuming you haven't changed anything else)
+On Thu, Oct 07, 2004 at 04:42:02PM -0400, Luben Tuikov wrote:
+> Ah, ok -- I was wondering.
+> 
+> Well, it's not as easy as dumping the list into a table.
+> Let me try to come up with something here.
 
-There's a lot of other gunk around there.  Is there a patch just for
-that changeset somewhere?
-
--- Dave
+I think best would be to kill all subvendor/subdevice id matching
+so we can just live with the generic ids.  This would simplify things
+a lot if Adaptec doesn't plan to introduce random incompatiblities
+for devices only differing in subvendor/subdevice id.
 
