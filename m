@@ -1,54 +1,28 @@
-From: Doug Ledford <dledford@redhat.com>
+From: Linus Torvalds <torvalds@transmeta.com>
 Subject: Re: Several Misc SCSI updates...
-Date: Sun, 17 Nov 2002 15:38:23 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20021117203823.GF3280@redhat.com>
-References: <20021117202826.GE3280@redhat.com> <Pine.LNX.4.44.0211171228350.1370-100000@home.transmeta.com>
+Date: Sun, 17 Nov 2002 13:40:19 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.44.0211171338570.12975-100000@home.transmeta.com>
+References: <20021117203823.GF3280@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0211171228350.1370-100000@home.transmeta.com>
-To: Linus Torvalds <torvalds@transmeta.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20021117203823.GF3280@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
 
-On Sun, Nov 17, 2002 at 12:29:25PM -0800, Linus Torvalds wrote:
+
+On Sun, 17 Nov 2002, Doug Ledford wrote:
 > 
-> On Sun, 17 Nov 2002, Doug Ledford wrote:
-> >
-> > These bring the scsi subsys up to the new module loader semantics.  There 
-> > is more work to be done on inter-module locking here, but we need to solve 
-> > the whole module->live is 0 during init problem first or else it's a waste 
-> > of time.
-> 
-> Hey, just remove the "live" test, I think it's over-eager and likely to 
-> just cause extra code to work around it rather than fix anything.
+> Won't work.  module->live is what Rusty uses to indicate that the module 
+> is in the process of unloading, which is when we *do* want the attempt to 
+> module_get() to fail.
 
-Won't work.  module->live is what Rusty uses to indicate that the module 
-is in the process of unloading, which is when we *do* want the attempt to 
-module_get() to fail.  I think the process out to basically be:
+That's fine, as long as "module_get()" is the only thing that cares. Just 
+make it go "live" early as you indicate, and everybody should be happy. I 
+certainly agree that it should be illegal to do more module_get()'s once 
+we've already started unloading..
 
-load module into mem
-set module->live = 1
-call module_init
-export module syms
-done loading module
+		Linus
 
-on module exit:
-unexport module syms
-set module->live 0
-call module_exit
-free module memory
-done unloading.
-
-That *should* solve all the races Rusty is trying to solve without the 
-problems we've had so far, but this is only after a few minutes of 
-thinking....
-
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
