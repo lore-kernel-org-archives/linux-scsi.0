@@ -1,260 +1,52 @@
-From: <Stuart_Hayes@Dell.com>
-Subject: RE: [PATCH 2.6.11] ide-scsi: map sg buffers in idescsi_input/output_buffers() to kernel virtual address
-Date: Thu, 31 Mar 2005 15:38:53 -0600
-Message-ID: <7A8F92187EF7A249BF847F1BF4903C040AFC9E@ausx2kmpc103.aus.amer.dell.com>
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: Re: How to find which (physical) SCSI HBA corresponds to which host n	umber?
+Date: Thu, 31 Mar 2005 15:27:19 -0800
+Message-ID: <OFE5148F31.711C0D7B-ON88256FD5.007E8065-88256FD5.0080B3FC@us.ibm.com>
+References: <267988DEACEC5A4D86D5FCD780313FBB065448B3@exch-03.noida.hcltech.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausc60pc101.us.dell.com ([143.166.85.206]:49995 "EHLO
-	ausc60pc101.us.dell.com") by vger.kernel.org with ESMTP
-	id S261440AbVCaVjK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Mar 2005 16:39:10 -0500
-Content-class: urn:content-classes:message
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:13278 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262572AbVCaX0k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Mar 2005 18:26:40 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e2.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j2VNQeaO026161
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2005 18:26:40 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j2VNQdG3224272
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2005 18:26:40 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j2VNQZMW023047
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2005 18:26:39 -0500
+In-Reply-To: <267988DEACEC5A4D86D5FCD780313FBB065448B3@exch-03.noida.hcltech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@suse.de, linux-scsi@vger.kernel.org
-Cc: Joshua_Giles@Dell.com
+To: "Rajat Jain, Noida" <rajatj@noida.hcltech.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hayes, Stuart wrote:
-> Jens Axboe wrote:
->> On Thu, Mar 17 2005, Stuart_Hayes@Dell.com wrote:
->>> Jens Axboe wrote:
->>>> On Thu, Mar 17 2005, Jens Axboe wrote:
->>>>> On Thu, Mar 17 2005, Stuart_Hayes@Dell.com wrote:
->>>>>> Jens Axboe wrote:
->>>>>>> On Wed, Mar 16 2005, Stuart_Hayes@Dell.com wrote:
->>>>>>>> Jens Axboe wrote:
->>>>>>>>> On Wed, Mar 16 2005, Stuart_Hayes@Dell.com wrote:
->>>>>>>>>> Hayes, Stuart wrote:
->>>>>>>>>>> This patch will map the sg buffers to kernel virtual memory
->>>>>>>>>>> space in the functions idescsi_input_buffers() and
->>>>>>>>>>> idescsi_output_buffers(). Without this patch, idescsi passes
->>>>>>>>>>> a null pointer to atapi_input_bytes() and
->>>>>>>>>>> atapi_output_bytes() when sg pages are in high memory (i686
->>>>>>>>>>> architecture). 
->>>>>>>>>>> 
->>>>>>>>>>> I'm attaching as a file, too, as the text will certainly be
->>>>>>>>>>> wrapped. 
->>>>>>>>>>> 
->>>>>>>>>>> (Sorry for the subject rename--I'm trying to use the
->>>>>>>>>>> correct format for patch emails.) 
->>>>>>>>>>> 
->>>>>>>>>>> Thanks
->>>>>>>>>>> Stuart
->>>>>>>>>> 
->>>>>>>>>> And, while there's another high memory/kmap patch question
->>>>>>>>>> on this list... 
->>>>>>>>>> 
->>>>>>>>>> Is there some reason nobody seems interested in this patch
->>>>>>>>>> (except Jens--thanks for the help!)?  I'm kind of new to
->>>>>>>>>> sending in patches, and I'm not sure if I'm just not waiting
->>>>>>>>>> long enough, or if there is a problem with this patch...
->>>>>>>>>> 
->>>>>>>>>> But really, we're getting a null pointer dereference oops
->>>>>>>>>> when using ATAPI tape drives (with ide-scsi) without this
->>>>>>>>>> patch... 
->>>>>>>>> 
->>>>>>>>> Sorry, that did seem to get dropped on the floor. Actually I'm
->>>>>>>>> wondering why you are seeing highmem pages there in the first
->>>>>>>>> place, it would be easier/better just to limit ide-scsi to
->>>>>>>>> non-highmem pages. That would remove the need to add any work
->>>>>>>>> arounds in the driver.
->>>>>>>> 
->>>>>>>> I think we're seeing highmem pages in the sg list because
->>>>>>>> that's where the user memory was when st_write() was called.
->>>>>>>> 
->>>>>>>> The sg list is set up when st_write(), which calls
->>>>>>>> setup_buffering(), which calls st_map_user_pages()... this just
->>>>>>>> sets up the sg pages to point directly to the user memory.  So,
->>>>>>>> by the time ide-scsi comes into the picture, the sg list is
->>>>>>>> already set up to point to high memory pages.
->>>>>>>> 
->>>>>>>> Are you suggesting that ide-scsi should change the dma_mask for
->>>>>>>> the device so that st_map_user_pages() won't let sg pages point
->>>>>>>> to high memory?  Or is there something else I'm missing?
->>>>>>> 
->>>>>>> I think that is a bug, this effectively bypasses whatever
->>>>>>> restrictions the scsi host adapter has said about memory limits.
->>>>>>> It is a problem because the request doesn't come from the block
->>>>>>> layer (which handles all of this).
->>>>>>> 
->>>>>>> I would much prefer fixing that real issue!
->>>>>> 
->>>>>> By "whatever restrictions the scsi host adapter has said about
->>>>>> memory limits", are you referring to the dma_boundary or the
->>>>>> dma_mask?  I'm don't know any other ways a host adapter can
->>>>>> specify memory limits. 
->>>>>> 
->>>>>> I wasn't complete in my statement above,
->>>>>> though--st_map_user_pages() does prevent the sg list from
->>>>>> pointing to pages that are above the "max_pfn" for the device
->>>>>> (it gets max_pfn from scsi_calculate_bounce_ limit()), and that
->>>>>> appears to be working ok. But, even though max_pfn is 0xfffff
->>>>>> (so that the maximum physical address of any sg page won't be
->>>>>> over 4G (0xffffffff)), there are apparently high memory pages
->>>>>> that are below physical address of 4G (0xffffffff), but are
->>>>>> still considered high memory. 
->>>>>> 
->>>>>> So the entire first 4G of memory isn't low memory... for example,
->>>>>> on my box, pfn 0xfbc3c, with physical address 0xfbc3c000, has the
->>>>>> PG_highmem bit set in &(page)->flags.  Because of this, when
->>>>>> ide-scsi needs to do PIO, it needs to do a kmap_atomic().
->>>>>> 
->>>>>> Am I completely missing your point?
->>>>> 
->>>>> Ok good, so st isn't broken at least. You are not missing my
->>>>> point, but maybe you don't realize that highmem pages doesn't
->>>>> refer to any specific address in memory - it refers to pages that
->>>>> don't have a virtual mapping, so depending on the kernel config
->>>>> that can be anywhere between ~900MB and 2GB (typicall). ide-scsi
->>>>> should just use blk_max_low_pfn as the bounce limit, that will
->>>>> work all the time.
->>>> 
->>>> IOW, one way to solve this would be to add an shost->bounce_high
->>>> flag and add something ala 
->>>> 
->>>>         if (shost->bounce_high)
->>>>                 return BLK_BOUNCE_HIGH;
->>>> 
->>>> to scsi_calculate_bounce_limit()
->>> 
->>> Yes, I could easily implement that.  I had been trying to figure out
->>> how to go about implementing what you said--I was looking at making
->>> idescsi_attach change the dma_mask that
->>> scsi_calculate_bounce_limit() currently looks at, but it wasn't
->>> looking very pretty. 
->>> 
->>> Unfortunately, I won't be able to do that fix with a DKMS driver on
->>> an existing kernel... but that's not really relevant to this list.
->> 
->> For your existing kernel fix, just use the one you sent last using
->> kmap_atomic, it should work for you as well.
->> 
->>> I'll try this out and send in a patch.
->>> 
->>> Thanks!
->> 
->> No problem, thanks for being persistent in getting this fixed :)
-> 
-> OK, sorry for the delay.  Here's the new patch to handle this as you
-> suggested, against the 2.6.11.5 kernel.  I have tested it, and it
-> works.  
-> 
-> Do I need to re-send this with a new subject line, since the patch
-> doesn't match the description in the subject line, or is it OK here? 
-> 
-> I'll also attach as a file, though I'm optimistic that this one won't
-> be wrapped. 
-> 
-> Thanks!
-> Stuart
-> 
-> 
-> Signed-off-by: Stuart Hayes <stuart_hayes@dell.com>
-> 
-> diff -purN a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
-> --- a/drivers/scsi/ide-scsi.c	2005-03-15 19:09:08.000000000 -0500
-> +++ b/drivers/scsi/ide-scsi.c	2005-03-23 17:26:06.000000000 -0500
-> @@ -1048,6 +1048,7 @@ static int idescsi_attach(ide_drive_t *d
->  		return 1;
-> 
->  	host->max_id = 1;
-> +	//host->bounce_high = 1;
-> 
->  #if IDESCSI_DEBUG_LOG
->  	if (drive->id->last_lun)
-> diff -purN a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> --- a/drivers/scsi/scsi_lib.c	2005-03-15 19:09:06.000000000 -0500
-> +++ b/drivers/scsi/scsi_lib.c	2005-03-23 17:26:04.000000000 -0500
-> @@ -1333,6 +1333,9 @@ u64 scsi_calculate_bounce_limit(struct S
-> 
->  	if (shost->unchecked_isa_dma)
->  		return BLK_BOUNCE_ISA;
-> +
-> +	if (shost->bounce_high)
-> +		return BLK_BOUNCE_HIGH;
->  	/*
->  	 * Platforms with virtual-DMA translation
->  	 * hardware have no practical limit.
-> diff -purN a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> --- a/include/scsi/scsi_host.h	2005-03-15 19:09:01.000000000
--0500
-> +++ b/include/scsi/scsi_host.h	2005-03-23 17:26:54.000000000
--0500
-> @@ -502,6 +502,12 @@ struct Scsi_Host {
->  	unsigned reverse_ordering:1;
-> 
->  	/*
-> +	 * Host needs all high memory bounced (useful for ide-scsi,
-> +	 * so it doesn't have to kmap when doing PIO)
-> +	 */
-> +	unsigned bounce_high:1;
-> +
-> +	/*
->  	 * Host has rejected a command because it was busy.
->  	 */
->  	unsigned int host_blocked;
+By default, Linux assigns host numbers to HBAs somewhat arbitrarily.  In 
+practice, it's fairly predictable as long as you don't change anything -- 
+Linux assigns them sequentially starting at zero in the order in which it 
+discovers them, which is controlled first by the order in which Linux 
+initializes the corresponding HBA driver.
 
+But you can control it a little.  The 'scsihosts' module parameter of the 
+SCSI midlayer driver scsi_mod reserves host numbers for specific HBA 
+drivers.  It looks like "scsihosts=aic7xxx,aic7xxx,qla1280".  That means 
+to reserve host numbers 0 and 1 for the aic7xxx driver and 2 for qla1280. 
+The two reserved for aic7xxx are assigned in the order that the aic7xxx 
+driver registers them, which is ordinarily the order in which the aic7xxx 
+driver detects them.  I don't think there's usually a way to control that, 
+but it should be repeatable as long as the hardware configuration stays 
+the same.  But it's generally not good to rely on the hardware 
+configuration staying the same.  Some day, one card will be broken or 
+temporarily removed, and that will change the host number of the other 
+one.
 
-It occurred to me that it might be possible for the device to have a 
-greater restriction on the DMA memory than BLK_BOUNCE_HIGH, so I changed
-
-the scsi_calculate_bounce_limit to make shost->bounce_high an upper 
-limit on the bounce limit.
-
-I also uncommented the "host->bounce_high=1" in ide-scsi.c... :)
-
-I'm personally still partial to my original patch 
-(http://marc.theaimsgroup.com/?l=linux-scsi&m=111040058219417) to fix 
-this problem, but I guess it's six of one...
-
-And, feel free to tell me if there's still something wrong with this!
-
-
-Signed-off-by: Stuart Hayes <stuart_hayes@dell.com>
-
-diff -purN a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
---- a/drivers/scsi/ide-scsi.c	2005-03-25 22:28:23.000000000 -0500
-+++ b/drivers/scsi/ide-scsi.c	2005-03-31 15:17:38.000000000 -0500
-@@ -1048,6 +1048,7 @@ static int idescsi_attach(ide_drive_t *d
- 		return 1;
- 
- 	host->max_id = 1;
-+	host->bounce_high = 1;
- 
- #if IDESCSI_DEBUG_LOG
- 	if (drive->id->last_lun)
-diff -purN a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c	2005-03-25 22:28:21.000000000 -0500
-+++ b/drivers/scsi/scsi_lib.c	2005-03-31 15:21:35.000000000 -0500
-@@ -1344,6 +1344,9 @@ u64 scsi_calculate_bounce_limit(struct S
- 	if (host_dev && host_dev->dma_mask)
- 		bounce_limit = *host_dev->dma_mask;
- 
-+	if (shost->bounce_high && (bounce_limit > BLK_BOUNCE_HIGH))
-+		return BLK_BOUNCE_HIGH;
-+
- 	return bounce_limit;
- }
- EXPORT_SYMBOL(scsi_calculate_bounce_limit);
-diff -purN a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
---- a/include/scsi/scsi_host.h	2005-03-25 22:28:16.000000000 -0500
-+++ b/include/scsi/scsi_host.h	2005-03-31 15:16:54.000000000 -0500
-@@ -502,6 +502,12 @@ struct Scsi_Host {
- 	unsigned reverse_ordering:1;
- 
- 	/*
-+	 * Host needs all high memory bounced (useful for ide-scsi,
-+	 * so it doesn't have to kmap when doing PIO)
-+	 */
-+	unsigned bounce_high:1;
-+
-+	/*
- 	 * Host has rejected a command because it was busy.
- 	 */
- 	unsigned int host_blocked;
-
-
+As with other SCSI numbering (LUNs, Linux device numbers), you normally 
+don't try to prescribe which numbers go to which equipment, but rather 
+discover afterward -- proc/scsi/hba_name/host_number.  The identifying 
+information is dependent on the particular HBA type and driver, and 
+sometimes doesn't exist.
 
