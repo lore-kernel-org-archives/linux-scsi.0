@@ -1,192 +1,107 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: PATCH [3/18]  qla2xxx: PCI DMA mappings rework
-Date: Mon, 21 Jun 2004 22:50:32 -0700
+Subject: PATCH [4/18]  qla2xxx: ISR RISC paused fixes
+Date: Mon, 21 Jun 2004 22:51:17 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040622055032.GA8404@linux.local.home>
+Message-ID: <20040622055117.GA8411@linux.local.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-01-qfe0.socal.rr.com ([66.75.162.133]:27811 "EHLO
+Received: from ms-smtp-01-qfe0.socal.rr.com ([66.75.162.133]:33956 "EHLO
 	ms-smtp-01-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S266591AbUFVFqr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Jun 2004 01:46:47 -0400
+	id S266592AbUFVFrc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Jun 2004 01:47:32 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 
 ChangeSet
-  1.1839 04/06/03 15:44:26 andrew.vasquez@apc.qlogic.com +3 -0
-  Restructure qla2x00_start_scsi() so that PCI mappings are
-  done after we've verified command list and request queue
-  resource availability.
+  1.1840 04/06/03 15:59:16 andrew.vasquez@apc.qlogic.com +1 -0
+  Problem reported/corrected by Michael Reed [mdr@sgi.com]:
+  
+  We have a 2312 that puts the 8.00.00b12-k qla2xxx driver
+  into an infinite loop with a solid interrupt, 0x8008,
+  hcsr = 0x7430, risc status register 0x40008110,
+  immediately after enabling parity on the board.
+  
+  It looks as though the early out test in
+  qla_isr.c:qla2x00_intr_handler() against stat is broken.
+  HSR_RISC_PAUSED is set.  Also, there's a stale mailbox
+  completion flagged (stat&0xff) which will short circuit
+  the default case in the switch if it got that far.
 
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
- drivers/scsi/qla2xxx/qla_def.h  |    4 -
- drivers/scsi/qla2xxx/qla_iocb.c |   81 +++++++++++++++++-----------------------
- drivers/scsi/qla2xxx/qla_os.c   |    4 -
- 3 files changed, 36 insertions(+), 53 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c |   47 +++++++++++++++++++----------------------
+ 1 files changed, 22 insertions(+), 25 deletions(-)
 
-diff -Nru a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
---- a/drivers/scsi/qla2xxx/qla_def.h	2004-06-21 15:36:53 -07:00
-+++ b/drivers/scsi/qla2xxx/qla_def.h	2004-06-21 15:36:53 -07:00
-@@ -264,10 +264,6 @@
- #define SRB_ERR_DEVICE	3		/* Request failed -- "device error" */
- #define SRB_ERR_OTHER	4
- 
--	/* Segment/entries counts */
--	uint16_t	req_cnt;	/* !0 indicates counts determined */
--	uint16_t	tot_dsds;
--
- 	/* SRB magic number */
- 	uint16_t magic;
- #define SRB_MAGIC       0x10CB
-diff -Nru a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
---- a/drivers/scsi/qla2xxx/qla_iocb.c	2004-06-21 15:36:53 -07:00
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c	2004-06-21 15:36:53 -07:00
-@@ -350,11 +350,12 @@
- 	uint32_t	*clr_ptr;
- 	uint32_t        index;
- 	uint32_t	handle;
--	uint16_t	cnt;
- 	cmd_entry_t	*cmd_pkt;
- 	uint32_t        timeout;
- 	struct scatterlist *sg;
--
-+	uint16_t	cnt;
-+	uint16_t	req_cnt;
-+	uint16_t	tot_dsds;
- 	device_reg_t	*reg;
- 
- 	/* Setup device pointers. */
-@@ -372,72 +373,60 @@
- 		ha->marker_needed = 0;
- 	}
- 
--	/* Calculate number of segments and entries required. */
--	if (sp->req_cnt == 0) {
--		sp->tot_dsds = 0;
--		if (cmd->use_sg) {
--			sg = (struct scatterlist *) cmd->request_buffer;
--			sp->tot_dsds = pci_map_sg(ha->pdev, sg, cmd->use_sg,
--			    cmd->sc_data_direction);
--		} else if (cmd->request_bufflen) {
--		    sp->tot_dsds++;
--		}
--		sp->req_cnt = (ha->calc_request_entries)(sp->tot_dsds);
--	}
--
- 	/* Acquire ring specific lock */
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
- 
--	if (ha->req_q_cnt < (sp->req_cnt + 2)) {
--		/* Calculate number of free request entries */
--		cnt = RD_REG_WORD_RELAXED(ISP_REQ_Q_OUT(ha, reg));
--		if (ha->req_ring_index < cnt)
--			ha->req_q_cnt = cnt - ha->req_ring_index;
--		else
--			ha->req_q_cnt = ha->request_q_length -
--			    (ha->req_ring_index - cnt);
--	}
--
--	/* If no room for request in request ring */
--	if (ha->req_q_cnt < (sp->req_cnt + 2)) {
--		DEBUG5(printk("scsi(%ld): in-ptr=%x req_q_cnt=%x "
--		    "tot_dsds=%x.\n",
--		    ha->host_no, ha->req_ring_index, ha->req_q_cnt,
--		    sp->tot_dsds));
--
--		goto queuing_error;
--	}
--
- 	/* Check for room in outstanding command list. */
- 	handle = ha->current_outstanding_cmd;
- 	for (index = 1; index < MAX_OUTSTANDING_COMMANDS; index++) {
- 		handle++;
- 		if (handle == MAX_OUTSTANDING_COMMANDS)
- 			handle = 1;
--		if (ha->outstanding_cmds[handle] == 0) {
--			ha->current_outstanding_cmd = handle;
-+		if (ha->outstanding_cmds[handle] == 0)
- 			break;
--		}
- 	}
--	if (index == MAX_OUTSTANDING_COMMANDS) {
--		DEBUG5(printk("scsi(%ld): Unable to queue command -- NO ROOM "
--		    "IN OUTSTANDING ARRAY (req_q_cnt=%x).\n",
--		    ha->host_no, ha->req_q_cnt));
-+	if (index == MAX_OUTSTANDING_COMMANDS)
-+		goto queuing_error;
+diff -Nru a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+--- a/drivers/scsi/qla2xxx/qla_isr.c	2004-06-21 15:37:09 -07:00
++++ b/drivers/scsi/qla2xxx/qla_isr.c	2004-06-21 15:37:09 -07:00
+@@ -109,7 +109,25 @@
+ 			}
+ 		} else /* IS_QLA23XX(ha) */ {
+ 			stat = RD_REG_DWORD(&reg->u.isp2300.host_status);
+-			if ((stat & HSR_RISC_INT) == 0)
++			if (stat & HSR_RISC_PAUSED) {
++				hccr = RD_REG_WORD(&reg->hccr);
++				if (hccr & (BIT_15 | BIT_13 | BIT_11 | BIT_8))
++					qla_printk(KERN_INFO, ha,
++					    "Parity error -- HCCR=%x.\n", hccr);
++				else
++					qla_printk(KERN_INFO, ha,
++					    "RISC paused -- HCCR=%x\n", hccr);
 +
-+	/* Calculate the number of request entries needed. */
-+	req_cnt = (ha->calc_request_entries)(cmd->request->nr_hw_segments);
-+	if (ha->req_q_cnt < (req_cnt + 2)) {
-+		cnt = RD_REG_WORD_RELAXED(ISP_REQ_Q_OUT(ha, reg));
-+		if (ha->req_ring_index < cnt)
-+			ha->req_q_cnt = cnt - ha->req_ring_index;
-+		else
-+			ha->req_q_cnt = ha->request_q_length -
-+			    (ha->req_ring_index - cnt);
-+	}
-+	if (ha->req_q_cnt < (req_cnt + 2))
- 		goto queuing_error;
-+
-+	/* Finally, we have enough space, now perform mappings. */
-+	tot_dsds = 0;
-+	if (cmd->use_sg) {
-+		sg = (struct scatterlist *) cmd->request_buffer;
-+		tot_dsds = pci_map_sg(ha->pdev, sg, cmd->use_sg,
-+		    cmd->sc_data_direction);
-+		if (tot_dsds == 0)
-+			goto queuing_error;
-+	} else if (cmd->request_bufflen) {
-+	    tot_dsds++;
++				/*
++				 * Issue a "HARD" reset in order for the RISC
++				 * interrupt bit to be cleared.  Schedule a big
++				 * hammmer to get out of the RISC PAUSED state.
++				 */
++				WRT_REG_WORD(&reg->hccr, HCCR_RESET_RISC);
++				RD_REG_WORD(&reg->hccr);
++				set_bit(ISP_ABORT_NEEDED, &ha->dpc_flags);
++				break;
++			} else if ((stat & HSR_RISC_INT) == 0)
+ 				break;
+ 
+ 			mbx = MSW(stat);
+@@ -139,29 +157,9 @@
+ 				qla2x00_async_event(ha, mbx);
+ 				break;
+ 			default:
+-				hccr = RD_REG_WORD(&reg->hccr);
+-				if (hccr & HCCR_RISC_PAUSE) {
+-					qla_printk(KERN_INFO, ha,
+-					    "RISC paused, dumping HCCR=%x\n",
+-					    hccr);
+-
+-					/*
+-					 * Issue a "HARD" reset in order for
+-					 * the RISC interrupt bit to be
+-					 * cleared.  Schedule a big hammmer to
+-					 * get out of the RISC PAUSED state.
+-					 */
+-					WRT_REG_WORD(&reg->hccr,
+-					    HCCR_RESET_RISC);
+-					RD_REG_WORD(&reg->hccr);
+-					set_bit(ISP_ABORT_NEEDED,
+-					    &ha->dpc_flags);
+-					break;
+-				} else {
+-					DEBUG2(printk("scsi(%ld): Unrecognized "
+-					    "interrupt type (%d)\n",
+-					    ha->host_no, stat & 0xff));
+-				}
++				DEBUG2(printk("scsi(%ld): Unrecognized "
++				    "interrupt type (%d)\n",
++				    ha->host_no, stat & 0xff));
+ 				break;
+ 			}
+ 			WRT_REG_WORD(&reg->hccr, HCCR_CLR_RISC_INT);
+@@ -344,7 +342,6 @@
+ 		break;
  	}
-+	req_cnt = (ha->calc_request_entries)(tot_dsds);
  
- 	/* Build command packet */
-+	ha->current_outstanding_cmd = handle;
- 	ha->outstanding_cmds[handle] = sp;
- 	sp->ha = ha;
- 	sp->cmd->host_scribble = (unsigned char *)(unsigned long)handle;
--	ha->req_q_cnt -= sp->req_cnt;
-+	ha->req_q_cnt -= req_cnt;
- 
- 	cmd_pkt = (cmd_entry_t *)ha->request_ring_ptr;
- 	cmd_pkt->handle = handle;
- 	/* Zero out remaining portion of packet. */
- 	clr_ptr = (uint32_t *)cmd_pkt + 2;
- 	memset(clr_ptr, 0, REQUEST_ENTRY_SIZE - 8);
--	cmd_pkt->dseg_count = cpu_to_le16(sp->tot_dsds);
-+	cmd_pkt->dseg_count = cpu_to_le16(tot_dsds);
- 
- 	/* Set target ID */
- 	SET_TARGET_ID(ha, cmd_pkt->target, fclun->fcport->loop_id);
-@@ -477,10 +466,10 @@
- 	cmd_pkt->byte_count = cpu_to_le32((uint32_t)cmd->request_bufflen);
- 
- 	/* Build IOCB segments */
--	(ha->build_scsi_iocbs)(sp, cmd_pkt, sp->tot_dsds);
-+	(ha->build_scsi_iocbs)(sp, cmd_pkt, tot_dsds);
- 
- 	/* Set total data segment count. */
--	cmd_pkt->entry_count = (uint8_t)sp->req_cnt;
-+	cmd_pkt->entry_count = (uint8_t)req_cnt;
- 	wmb();
- 
- 	/* Adjust ring index. */
-diff -Nru a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
---- a/drivers/scsi/qla2xxx/qla_os.c	2004-06-21 15:36:53 -07:00
-+++ b/drivers/scsi/qla2xxx/qla_os.c	2004-06-21 15:36:53 -07:00
-@@ -3627,10 +3627,8 @@
- 	srb_t *sp;
- 
- 	sp = mempool_alloc(ha->srb_mempool, GFP_KERNEL);
--	if (sp) {
-+	if (sp)
- 		atomic_set(&sp->ref_count, 1);
--		sp->req_cnt = 0;
--	}
- 	return (sp);
- }
- 
+-	mb[0] = LSW(mbx);
+ 	switch (mb[0]) {
+ 	case MBA_SCSI_COMPLETION:	/* Fast Post */
+ 		if (!ha->flags.online)
