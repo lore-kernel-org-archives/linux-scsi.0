@@ -1,28 +1,28 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Mike Anderson <andmike@us.ibm.com>
 Subject: Re: SCSI woes (followup)
-Date: Tue, 24 Sep 2002 19:31:12 -0400
+Date: Tue, 24 Sep 2002 16:33:46 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200209242331.g8ONVCg03591@localhost.localdomain>
-References: <andmike@us.ibm.com>
+Message-ID: <20020924233346.GE1330@beaverton.ibm.com>
+References: <rmk@arm.linux.org.uk> <200209241346.g8ODkER09516@localhost.localdomain> <20020924145852.A28042@flint.arm.linux.org.uk> <20020924111847.A4151@eng2.beaverton.ibm.com> <20020924123250.A5890@eng2.beaverton.ibm.com> <20020924233941.A9952@flint.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id QAA24998
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2002 16:31:20 -0700
-In-Reply-To: Message from Mike Anderson <andmike@us.ibm.com>
-   of "Tue, 24 Sep 2002 16:26:30 PDT." <20020924232630.GD1330@beaverton.ibm.com>
+Content-Disposition: inline
+In-Reply-To: <20020924233941.A9952@flint.arm.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Russell King <rmk@arm.linux.org.uk>, Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
+To: Russell King <rmk@arm.linux.org.uk>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-andmike@us.ibm.com said:
-> If you want me to I can add it to a patch bundle I already have that
-> includes ports of Russell's previous changes that apply on top of my
-> 2.5 scsi_error cleanup patch. 
+Russell King [rmk@arm.linux.org.uk] wrote:
 
-Sounds good.  Do you have a copy of the error handler clean up that applies 
-cleanly to 2.5.38 (after the removal of scsi_queue.c)?
+looks good.
 
-James
+One nit is that scsi_report_bus_reset sets was_reset which is only
+called by two drivers I currently see. The new code does not catch this
+case, but the trade of is probably worth it.
 
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
