@@ -1,43 +1,37 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [ANNOUNCE]: megaraid driver version 2.20.0.1
-Date: 20 Jul 2004 16:56:05 -0500
+From: "Redmanbroadcasting" <nores@e-ticket-marketing.com>
+Subject: Get Paid To Shop & Eat!
+Date: Tue, 20 Jul 2004 09:40:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1090360566.1861.33.camel@mulgrave>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC897@exa-atlanta>
+Message-ID: <20040720094009.lmpinzvwdo__33226.89822312$1090367267$gmane$org@whitebroadcasting.com>
+Reply-To: r.763.31613425@whitebroadcasting.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:17586 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263019AbUGTV4P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jul 2004 17:56:15 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC897@exa-atlanta>
+Received: from mail241.whitebroadcasting.com ([216.171.174.241]:6844 "HELO
+	mail241.whitebroadcasting.com") by vger.kernel.org with SMTP
+	id S266212AbUGTXqr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jul 2004 19:46:47 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2004-07-20 at 16:21, Mukker, Atul wrote:
-> Is there a existing driver using this interface.
+Get paid to shop, eat in restaurants, play golf, take cruises and more! Visit our site for all of the details concerning this fantastic program!
 
-All the device drivers that use the transport class DV use it.  At the
-moment, that's 53c700 and sym_2.
 
-The philosophy for scsi drivers for a while has been to remove internal
-queueing, which is why yours attracted my attention, so the question I
-was asking is can you use these APIs instead of having to maintain this
-internal queue?
 
-> Also, are these two changes gating factor for the driver to be included in
-> the kernel. I do not want to make driver releases too often, unless
-> of-course there is a critical fix, since it reset the driver validation in
-> our testing labs. I have marked this and the yield() fix for the next drop
-> of the driver
+http://whitebroadcasting.com/dbm83/l.php?1043&31613425&riceez420/shopuyd
 
-Either the changes or a good explanation why they shouldn't be done,
-yes.  External release cycles aren't a good reason to press for kernel
-acceptance.
+--------------------------------------------
+We hope you enjoyed receiving this email, but if you no longer wish to 
+receive our emails please respond here: http://whitebroadcasting.com/dbm83/un.php?763&31613425
 
-James
+To Remove by Mail
+Removal Department
+PO Box 9
+Irvine Ca 92650
+
+hguqbse
+
+       
 
 
