@@ -1,86 +1,116 @@
-From: Steve McIntyre <steve@einval.com>
-Subject: Qlogic ISP1020 in 2.6?
-Date: Sun, 12 Dec 2004 00:33:58 +0000
-Message-ID: <20041212003334.GC2420@einval.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH] add change_queue_depth API to scsi host template
+Date: Sat, 11 Dec 2004 18:52:00 -0600
+Message-ID: <1102812720.5232.3.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="5p8PegU4iirBW1oA"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lump.einval.com ([217.147.81.17]:27082 "EHLO mail.einval.com")
-	by vger.kernel.org with ESMTP id S262041AbULLAeC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 11 Dec 2004 19:34:02 -0500
-Received: from sledge.mossbank.org.uk ([10.13.0.5] ident=Debian-exim)
-	by mail.einval.com with esmtp (Exim 3.35 #1 (Debian))
-	id 1CdHgU-0004MM-00
-	for <linux-scsi@vger.kernel.org>; Sun, 12 Dec 2004 00:33:58 +0000
-Received: from steve by sledge.mossbank.org.uk with local (Exim 4.34)
-	id 1CdHgU-0001l3-4I
-	for linux-scsi@vger.kernel.org; Sun, 12 Dec 2004 00:33:58 +0000
-Content-Disposition: inline
+Received: from adsl-64-109-89-108.dsl.chcgil.ameritech.net ([64.109.89.108]:59545
+	"EHLO redscar") by vger.kernel.org with ESMTP id S261985AbULLAwE
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 11 Dec 2004 19:52:04 -0500
+Received: from mulgrave-w.il.steeleye.com (mulgrave-w.il.steeleye.com [153.66.150.222])
+	by redscar (Postfix) with ESMTP id 73DB5940B
+	for <linux-scsi@vger.kernel.org>; Sat, 11 Dec 2004 18:52:02 -0600 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+Originally, the 53c700 driver implemented queue_depth changing as an
+attribute override, primarily as a demonstration of how it should be
+done.  Now that a large number of drivers wish to implement this
+functionality, it should become an API rather than an attribute
+override, since the latter are supposed to be used as one off extensions
+rather than the de-facto API.
 
---5p8PegU4iirBW1oA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+James
 
-I've got an Alpha (COMPAQ Professional Workstation XP1000) with a
-built-in ISP1020. Kernel 2.4.28 runs fine on this system; 2.6.9 gives
-me the following errors:
+===== drivers/scsi/scsi_sysfs.c 1.58 vs edited =====
+--- 1.58/drivers/scsi/scsi_sysfs.c	2004-10-24 06:09:42 -05:00
++++ edited/drivers/scsi/scsi_sysfs.c	2004-12-11 16:35:29 -06:00
+@@ -388,7 +388,7 @@
+ 	return snprintf(buf, 20, "%s\n", name);
+ }
+ 
+-DEVICE_ATTR(state, S_IRUGO | S_IWUSR, show_state_field, store_state_field);
++static DEVICE_ATTR(state, S_IRUGO | S_IWUSR, show_state_field, store_state_field);
+ 
+ 
+ /* Default template for device attributes.  May NOT be modified */
+@@ -407,6 +407,38 @@
+ 	NULL
+ };
+ 
++static ssize_t sdev_store_queue_depth_rw(struct device *dev, const char *buf,
++					 size_t count)
++{
++	int depth, retval;
++	struct scsi_device *sdev = to_scsi_device(dev);
++	struct scsi_host_template *sht = sdev->host->hostt;
++
++	if (!sht->change_queue_depth)
++		return -EINVAL;
++
++	depth = simple_strtoul(buf, NULL, 0);
++	retval = sht->change_queue_depth(sdev, depth);
++	if (retval < 0)
++		return retval;
++
++	return count;
++}
++
++static struct device_attribute sdev_attr_queue_depth_rw =
++	__ATTR(queue_depth, S_IRUGO | S_IWUSR, sdev_show_queue_depth,
++	       sdev_store_queue_depth_rw);
++
++static struct device_attribute *attr_changed_internally(
++		struct Scsi_Host *shost,
++		struct device_attribute * attr)
++{
++	if (!strcmp("queue_depth", attr->attr.name)
++	    && shost->hostt->change_queue_depth)
++		return &sdev_attr_queue_depth_rw;
++	return attr;
++}
++
+ 
+ static struct device_attribute *attr_overridden(
+ 		struct device_attribute **attrs,
+@@ -547,8 +579,10 @@
+ 	for (i = 0; scsi_sysfs_sdev_attrs[i]; i++) {
+ 		if (!attr_overridden(sdev->host->hostt->sdev_attrs,
+ 					scsi_sysfs_sdev_attrs[i])) {
+-			error = device_create_file(&sdev->sdev_gendev,
+-					scsi_sysfs_sdev_attrs[i]);
++			struct device_attribute * attr = 
++				attr_changed_internally(sdev->host, 
++							scsi_sysfs_sdev_attrs[i]);
++			error = device_create_file(&sdev->sdev_gendev, attr);
+ 			if (error) {
+ 				scsi_remove_device(sdev);
+ 				goto out;
+===== include/scsi/scsi_host.h 1.21 vs edited =====
+--- 1.21/include/scsi/scsi_host.h	2004-10-05 10:47:13 -05:00
++++ edited/include/scsi/scsi_host.h	2004-12-11 16:35:32 -06:00
+@@ -216,6 +216,18 @@
+ 	void (* slave_destroy)(struct scsi_device *);
+ 
+ 	/*
++	 * fill in this function to allow the queue depth of this host
++	 * to be changeable (on a per device basis).  returns either
++	 * the current queue depth setting (may be different from what
++	 * was passed in) or an error.  An error should only be
++	 * returned if the requested depth is legal but the driver was
++	 * unable to set it.  If the requested depth is illegal, the
++	 * driver should set and return the closest legal queue depth.
++	 *
++	 */
++	int (* change_queue_depth)(struct scsi_device *, int);
++
++	/*
+ 	 * This function determines the bios parameters for a given
+ 	 * harddisk.  These tend to be numbers that are made up by
+ 	 * the host adapter.  Parameters:
 
-ERROR: SCSI host `isp1020' has no error handling
-ERROR: This is not a safe way to run your SCSI host
-ERROR: The error handling must be added to this driver
-fffffc0007fafdb8 0000000000000001 fffffc00011a5ac0 fffffc000158bcd0=20
-       fffffc000158bcd0 fffffc0000366800 fffffc000158bcd0
-	   fffffc0000366800=20
-       fffffc0000000000 fffffc0007fafe00 fffffc0007fafe00
-	   fffffc0000366800=20
-       fffffc00011b0007 fffffc000158bcd0 fffffc00011b247c
-	   fffffc000158bcd0=20
-       0000000000000000 0000000000000000 fffffc00012fca88
-	   fffffc000158bcd0=20
-       0000000000000000 fffffc000158bdb0 fffffc00012fbf00
-	   fffffc000126bf00=20
-Trace:
-[<fffffc00011a5ac0>] scsi_register+0x20/0xa0
-[<fffffc00011b0007>] sdev_show_model+0x27/0x40
-[<fffffc00011b247c>] isp1020_detect+0x8c/0x300
-[<fffffc0001010168>] init+0x48/0x180
-[<fffffc0001013018>] kernel_thread+0x28/0x90
-
-qlogicisp : new isp1020 revision ID (6)
-qlogicisp: mbox_command loop timeout #2
-qlogicisp: mbox_command loop timeout #2
-qlogicisp: mbox_command loop timeout #2
-qlogicisp: mbox_command loop timeout #2
-
-Googling for this has shown a fair number of other people with similar
-problems, but I've not found any mention of somebody working on
-this. I'm happy to take a look myself, but I thought it might be
-useful to check here first before I wade in. Anybody?
-
---=20
-Steve McIntyre, Cambridge, UK.                                steve@einval.=
-com
-"C++ ate my sanity" -- Jon Rabone
-
---5p8PegU4iirBW1oA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.5 (GNU/Linux)
-
-iD8DBQFBu5H2fDt5cIjHwfcRAkMTAJ4pUC+za5DSvTQA401et5tshv597gCfai+j
-MiVZFbp95yoV6YqQYTuVEBo=
-=sYFO
------END PGP SIGNATURE-----
-
---5p8PegU4iirBW1oA--
 
