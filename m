@@ -1,44 +1,26 @@
-From: Matt Mackall <mpm@selenic.com>
-Subject: Re: [PATCH 2.6.1 -- take two] Add CRC32C chksums to crypto and lib routines
-Date: Tue, 3 Feb 2004 17:37:37 -0600
+From: NH Support <support@newshosting.com>
+Subject: Mount by WWN (FC, using qlogic 2200)
+Date: Tue, 03 Feb 2004 20:27:30 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040203233737.GD31138@waste.org>
-References: <yquj4qu8je1m.fsf@chaapala-lnx2.cisco.com> <Xine.LNX.4.44.0402031213120.939-100000@thoron.boston.redhat.com> <20040203175006.GA19751@chaapala-lnx2.cisco.com> <20040203185111.GA31138@waste.org> <yqujad40j7rn.fsf@chaapala-lnx2.cisco.com> <20040203172508.B26222@lists.us.dell.com>
+Message-ID: <40204A82.4040302@newshosting.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from waste.org ([209.173.204.2]:27347 "EHLO waste.org")
-	by vger.kernel.org with ESMTP id S266176AbUBCXiH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2004 18:38:07 -0500
-Content-Disposition: inline
-In-Reply-To: <20040203172508.B26222@lists.us.dell.com>
+Received: from counterstrike.siscom.net ([209.251.2.97]:2318 "EHLO siscom.net")
+	by vger.kernel.org with ESMTP id S266207AbUBDB1b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2004 20:27:31 -0500
+Received: from newshosting.com (unverified [209.251.6.250])
+	by siscom.net (BoogerMAIL) with ESMTP id 14602075
+	for <linux-scsi@vger.kernel.org>; Tue, 03 Feb 2004 20:25:03 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@dell.com>
-Cc: Clay Haapala <chaapala@cisco.com>, James Morris <jmorris@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "David S. Miller" <davem@redhat.com>
+To: linux-scsi@vger.kernel.org
 
-On Tue, Feb 03, 2004 at 05:25:08PM -0600, Matt Domsch wrote:
-> > >> +MODULE_LICENSE("GPL and additional rights");
-> > > 
-> > > "additional rights?"
-> > > 
-> > Take it up with Matt_Domsch@dell.com -- it's his code that I
-> > cribbed, so that's the license line I used.
-> 
-> The crc32 code came from linux@horizon.com with the following
-> copyright abandonment disclaimer, which is still in lib/crc32.c:
-> 
-> /*
->  * This code is in the public domain; copyright abandoned.
->  * Liability for non-performance of this code is limited to the amount
->  * you paid for it.  Since it is distributed for free, your refund will
->  * be very very small.  If it breaks, you get to keep both pieces.
->  */
-> 
-> Thus GPL plus additional rights is appropriate.
+Hello,
 
-Ok, makes sense for CRC32 stuff which can be easily lifted from the
-kernel or 50 other places, but not for stuff that's depends on
-cryptoapi.
+Is it possible to mount a drive based on it's WWN when using the qla2xxx 
+  drivers?
 
--- 
-Matt Mackall : http://www.selenic.com : Linux development and consulting
+Thanks,
+Jason
+NH
