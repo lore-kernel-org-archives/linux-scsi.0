@@ -1,56 +1,64 @@
-From: Matt Mackall <mpm@selenic.com>
-Subject: Re: [PATCH 2.6.1 -- take two] Add CRC32C chksums to crypto and lib routines
-Date: Tue, 3 Feb 2004 13:27:11 -0600
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040203192711.GB31138@waste.org>
-References: <yquj4qu8je1m.fsf@chaapala-lnx2.cisco.com> <Xine.LNX.4.44.0402031213120.939-100000@thoron.boston.redhat.com> <20040203175006.GA19751@chaapala-lnx2.cisco.com> <20040203185111.GA31138@waste.org> <yqujad40j7rn.fsf@chaapala-lnx2.cisco.com>
+From: "Info" <cadfred54@btinternet.com>
+Subject: Federal Provincial Subsidies
+Date: Tue, 3 Feb 2004 14:35:39 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <S266132AbUBCTfp/20040203193710Z+471@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yqujad40j7rn.fsf@chaapala-lnx2.cisco.com>
-To: Clay Haapala <chaapala@cisco.com>
-Cc: James Morris <jmorris@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "David S. Miller" <davem@redhat.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pop095-mtl.zid.com ([207.253.126.95]:25871 "HELO btinternet.com")
+	by vger.kernel.org with SMTP id S266132AbUBCTfp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Feb 2004 14:35:45 -0500
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Feb 03, 2004 at 01:13:48PM -0600, Clay Haapala wrote:
-> On Tue, 3 Feb 2004, Matt Mackall uttered the following:
-> 
-> +/*
-> + * Haven't generated a big-endian table yet, but the bit-wise version
-> + * should at least work.
-> + */
-> > 
-> > Big-endian in this context means, of course, the order of the bits in
-> > the byte rather than bytes in a word, and as this CRC polynomial was
-> > chosen especially for its robustness on noise bursts in little-endian
-> > transmission (aka standard serial and network *bit* transmission
-> > ordering), I think we should intentionally omit BE support and make
-> > note of it.
-> > 
-> Yes, it is about transmission bit-order.  Is the crc32 BE code also
-> not necessary?  Does it deal with how various networking hardware
-> and architecture combos present this data?
+  
+CANADA BOOKS
+26 CH. BELLEVUE
+ST-ANNE-DES-LACS
+QC, CANADA
+J0R 1B0
+(450) 224-9275
+ 
 
-The crc32_be stuff is used by at least Bluetooth, some of the digital
-video stuff, and a couple other random things. I suspect it's mostly
-historical accident.
-
-> >> +static inline void crypto_chksum_final(struct crypto_tfm *tfm, u32 *out)
-> >> +{
-> >> +	BUG_ON(crypto_tfm_alg_type(tfm) != CRYPTO_ALG_TYPE_CHKSUM);
-> > 
-> > A lot of these BUG_ONs seem to be overkill. You're not going to get
-> > here by someone accidentally misusing the interface. You can only get
-> > here by some very willful abuse of the interface or by extremely
-> > unlikely fandango on core, neither of which is worth trying to defend
-> > against.
-> 
-> That would be a worth changing in a clean-up pass over all of
-> crypto, then.
-
-I'll do them if James has no objections. I've got a couple other
-crypto bits queued.
-
--- 
-Matt Mackall : http://www.selenic.com : Linux development and consulting
+PRESS RELEASE
+ 
+CANADIAN SUBSIDY DIRECTORY YEAR 2004 EDITION
+ 
+Legal Deposit-National Library of Canada
+ISBN 2-922870-05-7
+ 
+The new revised edition of the Canadian Subsidy Directory 2004 is now
+available. 
+The new edition is the most complete and affordable reference for anyone
+looking for financial support.
+It is deemed to be the perfect tool for new or existing businesses,
+individual ventures, foundations and associations.
+ 
+This Publication contains  more than 2000 direct and indirect financial
+subsidies, grants and loans offered by government departments and
+agencies, foundations, associations and organisations.  In this new 2004
+edition
+all programs are well described.
+ 
+The Canadian Subsidy Directory is the most comprehensive tool to start up
+a business, improve existent activities, set up a business plan, or obtain
+assistance from experts in fields such as: Industry, transport,
+agriculture, communications, municipal infrastructure, education,
+import-export, labor, construction and renovation, the service sector,
+hi-tech industries, research and development, joint ventures, arts,
+cinema, theatre, music and recording industry, the self employed,
+contests, and new talents.
+Assistance from and for foundations and associations, guidance to prepare
+a business plan, market surveys, computers, and much more!
+ 
+The Canadian Subsidy Directory is sold $ 69.95, to obtain a copy please
+call:
+Canada Books...............(450) 224-9275
+ 
+ 
+ 
+ 
+ 
+                            
