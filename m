@@ -1,45 +1,30 @@
 From: Krzysztof Halasa <khc@pm.waw.pl>
 Subject: Re: Proposal for new generic device API: dma_get_required_mask()
-Date: Sat, 19 Jun 2004 01:07:36 +0200
+Date: Sat, 19 Jun 2004 01:10:31 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m3fz8s79dz.fsf@defiant.pm.waw.pl>
+Message-ID: <m3brjg7994.fsf@defiant.pm.waw.pl>
 References: <1087481331.2210.27.camel@mulgrave>
-	<m33c4tsnex.fsf@defiant.pm.waw.pl> <1087523134.2210.97.camel@mulgrave>
+	<m33c4tsnex.fsf@defiant.pm.waw.pl>
+	<20040618102120.A29213@flint.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq.pm.waw.pl ([195.116.170.10]:15081 "EHLO hq.pm.waw.pl")
-	by vger.kernel.org with ESMTP id S265756AbUFSNvS (ORCPT
+Received: from hq.pm.waw.pl ([195.116.170.10]:15337 "EHLO hq.pm.waw.pl")
+	by vger.kernel.org with ESMTP id S265755AbUFSNvS (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Sat, 19 Jun 2004 09:51:18 -0400
-In-Reply-To: <1087523134.2210.97.camel@mulgrave> (James Bottomley's message
- of "17 Jun 2004 20:45:33 -0500")
+In-Reply-To: <20040618102120.A29213@flint.arm.linux.org.uk> (Russell King's
+ message of "Fri, 18 Jun 2004 10:21:20 +0100")
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley <James.Bottomley@steeleye.com> writes:
+Russell King <rmk+lkml@arm.linux.org.uk> writes:
 
-> It falls victim to the 95/5 rule---when you engineer an API, if 95% of
-> the complexity is dealing with the 5% of special cases, you're over
-> engineering.
->
-> So the original proposal is the remaining 5% that covers 95% of the use
-> cases (and will do better even on the remaining 5%).
+> Good idea, except for the fact that we have drivers merged which have
+> real masks like 0x0fefffff.  It _really is_ a mask and not a number
+> of bits.
 
-I don't think so. We already have separate masks for coherent
-and non-coherent mappings (in PCI API, and I'm told it's to be extended
-to DMA API as well). And we need them.
-
-The problem is we're missing DMA masks for non-alloc calls (depending
-on the platform) and thus that it isn't very reliable. Drivers which
-need this are forced to bounce buffers themselves, and many of them
-will not work on 64-bit platforms (as of ~ 2.6.0, I don't check that
-regularly). And yes, we really need reliable masks for non-alloc
-mappings.
-
-I can't see any added complexity in this scheme, we basically already
-do all of that (except the cost, but it's hardly complex and most
-drivers would just need to test check_dma_mask() for error).
+Which drivers do you mean? And which platforms support it?
 -- 
 Krzysztof Halasa, B*FH
