@@ -1,77 +1,61 @@
-From: Oliver Xymoron <oxymoron@waste.org>
-Subject: Re: [PATCH] /proc/scsi/map
-Date: Tue, 25 Jun 2002 11:57:38 -0500 (CDT)
+From: David Brownell <david-b@pacbell.net>
+Subject: driverfs bus_id, name (was: [PATCH] /proc/scsi/map)
+Date: Tue, 25 Jun 2002 10:47:07 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0206251146440.9420-100000@waste.org>
-References: <Pine.LNX.4.33.0206250824590.8496-100000@geena.pdx.osdl.net>
+Message-ID: <3D18AC9B.8050306@pacbell.net>
+References: <Pine.LNX.4.33.0206250920150.8496-100000@geena.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.33.0206250824590.8496-100000@geena.pdx.osdl.net>
 List-Id: linux-scsi@vger.kernel.org
 To: Patrick Mochel <mochel@osdl.org>
-Cc: Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
+Cc: Nick Bellinger <nickb@attheoffice.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 25 Jun 2002, Patrick Mochel wrote:
+ > The bus_id of the device is intended to represent the bus-specific ID of
+ > the device, and is the name of the driverfs directory.
 
->
-> On Fri, 21 Jun 2002, Oliver Xymoron wrote:
->
-> > On Thu, 20 Jun 2002, Patrick Mochel wrote:
-> >
-> > > > But it was entierly behind me how to fit this
-> > > > in to the sheme other sd@4,0:h,raw
-> > > > OS-es are using. And finally how would one fit this in to the
-> > > > partitioning shemes? For the system aprtitions are simply
-> > > > block devices hanging off the corresponding block device.
-> > >
-> > > Partitions are purely logical entities on a physical disk. They have no
-> > > presence in the physical device tree.
-> >
-> > As I raised elsewhere in this thread, the distinction between physical and
-> > logical is troubling. Consider iSCSI, (aka SCSI-over-IP). It's analogous
-> > to SCSI-over-Fibre Channel, except that rather than using an embedded FC
-> > stack, it's using the kernel's IP stack. But it's every bit as much a SCSI
-> > disk/tape/whatever as a local device. Ergo, it ought to show up in the
-> > device tree so that it can be discovered in the same way. But where?
->
-> An iSCSI device is a physical device; it just doesn't reside on the local
-> system. We should represent the device in some physical form, since the
-> logical class mappings do/will assume a mapping to a physical device.
->
-> These devices are essentially children of the network via which they're
-> attached. When devices are discovered, I'm assuming you can derive the
-> network device through which you're communicating, so you can get enforce
-> the ancestral relationship.
+Right, I was just commenting that the SCSI folk seem to like a particular
+historical usage (based on driver enumeration order) that'd seem good to
+do away with ... since it's not necessary (given the _real_ bus-specific
+ID from their parent device) and has _always_ been problematic (those
+enumeration-related IDs can change unexpectedly).
 
-As you note below, it can be available on multiple interfaces. For maximal
-confusion, it could be available on a regular NIC and an iSCSI offload
-NIC, making it appear as a regular SCSI device (a case to bear in mind,
-but one I doubt can be dealt with cleanly).
 
-> You want the ancestral relationship for several reasons. You'd wouldn't
-> power down such a device on PM transitions or during shutdown, but you
-> would stop I/O transactions. The drivers for these devices should recogize
-> it's a remote device and handlethis. And, if you were to remove the bridge
-> device (the network card, etc), you want the devices behind it and their
-> logical mappings to go away gracefully.
+ > The name should user-friendly. It shouldn't be a unique name. Use
+ > something nice and pretty.
 
-Ok, so what's your take on: NBD (iSCSI without all the SCSI crap),
-software RAID, LVM, ramdisk, partitions (a degenerate case of volume
-management), loopback, and filesystems. All but the last are block devices
-that want to be treated just like disks and will want to know about things
-like PM transitions, etc. Filesystems haven't made it into the tree
-because we've got that info elsewhere and we've been assuming they're
-leafnodes, but if we put loopback devices on top of them, that's no longer
-the case. It'd be cleaner globally if this were all explicit in the driver
-tree.
+I've been wondering about that.  Right now PCI and USB both use fairly
+unfriendly/unpretty values in device.name ... "{PCI,USB} device VVVV:PPPP".
 
-> Mulitpath devices, which you could easily have with multiple routes to the
-> same IP address, are another issue that must be addressed. It hasn't yet,
-> but we're getting closer...
+Let me make sure I understand you right here, by examples of two
+changes I'd like to see.  Correct me if these seem wrong:
 
-Good to know it's on the radar..
+- It'd be more appropriate for PCI devices to copy pci_device.name into
+   device.name and get the user-friendly names from the PCI device name
+   database (when available), and only fallback to those nasty strings
+   when the more user-friendly names aren't available.
 
--- 
- "Love the dolphins," she advised him. "Write by W.A.S.T.E.."
+- Likewise it'd be more appropriate for USB devices to take the
+   descriptive strings from the devices, like "Philips USB Digital
+   Speaker System", than "USB device 0471:0104".
+
+In both cases the current strings might make reasonable fallbacks
+for the case when something better isn't available.  But as examples,
+I don't think they match a "user friendly, pretty" model ... :)
+
+Would it be appropriate for device drivers to set the "name" in
+some cases, or is that something you'd only expect bus drivers
+to be setting up (once, and read-only)?
+
+Given that in one common usage the "bus_id" is the "true name" of
+those devices, I've thought that "description" might be a slightly
+better way identify that attribute.  "Name" is a word with a thousand
+meanings, all of them context-dependent, and easily confused.
+
+- Dave
+
+
+
+
 
