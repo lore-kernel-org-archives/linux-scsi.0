@@ -1,56 +1,51 @@
-From: Jiann-Ming Su <jsu2@emory.edu>
-Subject: megaraid2 compile problems
-Date: Wed, 10 Mar 2004 12:02:17 -0500 (EST)
+From: Pete Zaitcev <zaitcev@redhat.com>
+Subject: Re: [Announce] Emulex LightPulse Device Driver
+Date: Wed, 10 Mar 2004 09:59:08 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0403101146510.8009-100000@callimachus.library.emory.edu>
+Message-ID: <20040310095908.33b2082f.zaitcev@redhat.com>
+References: <3356669BBE90C448AD4645C843E2BF2802C014D7@xbl.ma.emulex.com>
+	<mailman.1078908361.15239.linux-kernel2news@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from portia.cc.emory.edu ([170.140.204.3]:56040 "EHLO
-	portia.cc.emory.edu") by vger.kernel.org with ESMTP id S262698AbUCJRCV
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Mar 2004 12:02:21 -0500
+Received: from mx1.redhat.com ([66.187.233.31]:47042 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S262734AbUCJR7R (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Mar 2004 12:59:17 -0500
+In-Reply-To: <mailman.1078908361.15239.linux-kernel2news@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Atul.Mukker@lsil.com
-Cc: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: zaitcev@redhat.com, linux-kernel@vger.kernel.org, James.Smart@Emulex.com, linux-scsi@vger.kernel.org
 
-I just downloaded megaraid v2.10.1 driver.  I'm trying to build it against
-a 2.4.20 kernel from RedHat.  As background info, this kernel came only
-with the megaraid1 driver.  I copied the megaraid2 from a 2.4.24 kernel 
-(v2.00.9), modified the scsi/Config.in and scsi/Makefile, and was able
-to build a working kernel.
+On Wed, 10 Mar 2004 03:35:09 -0500
+Jeff Garzik <jgarzik@pobox.com> wrote:
 
-However, it looks like with v2.10.1, the Scsi_Host_Template structure
-has changed, and now I get the following error during compile:
+> I'm only part way through a review of the driver, but I felt there is a 
+> rather large and important issue that needs addressing...  "wrappers."
 
-  gcc -D__KERNEL__ -I/usr/src/linux-ssi/include -Wall -Wstrict-prototypes -Wno-trigraphs -O2 -fno-strict-aliasing -fno-common -pipe -mpreferred-stack-boundary=2 -march=i686   -nostdinc -iwithprefix include -DKBUILD_BASENAME=megaraid2  -c -o megaraid2.o megaraid2.c
-  In file included from megaraid2.c:46:
-  megaraid2.h:1087:1: warning: "ASSERT" redefined
-  In file included from /usr/src/linux-ssi/include/cluster/ssi/rcopy.h:27,
-                   from /usr/src/linux-ssi/include/asm/uaccess.h:11,
-                   from megaraid2.c:36:
-  /usr/src/linux-ssi/include/cluster/assert.h:38:1: warning: this is the location of the previous definition
-  megaraid2.c:5655: error: unknown field `vary_io' specified in initializer
-  megaraid2.c:5655: warning: initialization makes pointer from integer without a cast
-  make[3]: *** [megaraid2.o] Error 1
-  make[3]: Leaving directory `/usr/src/linux-ssi/drivers/scsi'
-  make[2]: *** [first_rule] Error 2
-  make[2]: Leaving directory `/usr/src/linux-ssi/drivers/scsi'
-  make[1]: *** [_subdir_scsi] Error 2
-  make[1]: Leaving directory `/usr/src/linux-ssi/drivers'
-  make: *** [_dir_drivers] Error 2
+Jeff, I agree completely that Emulex code is infested with wrappers
+so much that it's harmful. However, the particular example you selected
+you interpret wrong.
 
-It looks like vary_io is a new field in the SHT struct that's not defined.
-I flipped through the megaraid-linux-2.4.24-megaraid-2.10.1.patch and didn't
-see any reference to modifying the scsi/hosts.h file which SHT is defined.
+> void
+> elx_sli_lock(elxHBA_t * phba, unsigned long *iflag)
 
-I'm wanting to try the new driver because the current one seems to have
-some strange disk access latency.  On a regular basis, my terminal will
-pause for a few seconds before continuing, specifically with tab 
-continuation in bash and opening any file.  
+Flag problem on sparc is fixed by Keith Wesolowsky for 2.6.3-rcX,
+and it never existed on sparc64, which keeps CWP in a separate register.
 
--- 
-Jiann-Ming Su  jsu2@emory.edu  404-712-2603
-Development Team Systems Administrator
-General Libraries Systems Division
+Why it took years to resolve is that the expirience showed that
+there is no legitimate reason to pass flags as arguments. Every damn
+time it was done, the author was being stupid. Keith resolved it
+primarily because it was an unorthogonality in sparc implementation.
 
+> But this bug is only an example that serves to highlight the importance 
+> of directly using Linux API functions throughout your code.  It may 
+> sound redundant, but "Linux code should look like Linux code."  This 
+> emphasis on style may sound trivial, but it's important for 
+> review-ability, long term maintenance, and as we see here, bug prevention.
+
+Yes yes yes. This is the way elx_sli_lock is harmful, not because
+of its passing flags.
+
+-- Pete
