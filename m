@@ -1,13 +1,14 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: usb-storage and Sony Handycam
-Date: Sat, 8 Nov 2003 11:28:37 -0500 (EST)
+Date: Sat, 8 Nov 2003 12:37:49 -0800
 Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <Pine.LNX.4.44L0.0311081105351.28814-100000@netrider.rowland.org>
-References: <20031107223444.A1747@beaverton.ibm.com>
+Message-ID: <20031108123749.A3892@beaverton.ibm.com>
+References: <20031107223444.A1747@beaverton.ibm.com> <Pine.LNX.4.44L0.0311081105351.28814-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-In-Reply-To: <20031107223444.A1747@beaverton.ibm.com>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0311081105351.28814-100000@netrider.rowland.org>; from stern@rowland.harvard.edu on Sat, Nov 08, 2003 at 11:28:37AM -0500
 Errors-To: linux-usb-devel-admin@lists.sourceforge.net
 List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
 List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
@@ -16,89 +17,92 @@ List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
 List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
 	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Dmitri Katchalov <dmitrik@users.sourceforge.net>, Idan Sofer <idan@idanso.dyndns.org>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Dmitri Katchalov <dmitrik@users.sourceforge.net>, Idan Sofer <idan@idanso.dyndns.org>, ronald@kuetemeier.com, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 7 Nov 2003, Patrick Mansfield wrote:
+On Sat, Nov 08, 2003 at 11:28:37AM -0500, Alan Stern wrote:
+> On Fri, 7 Nov 2003, Patrick Mansfield wrote:
 
-> We need to figure out what is different here, and why (based on other
-> reports for this device) this worked on 2.4 but not on 2.6.
+> > Looking at usb/storage/transport.c, we are not generating the usb
+> > "fake_sense" with your change.
+> > 
+> > Maybe the failed MODE SENSE had a check condition, but the fake_sense
+> > prevented us from retrieving it?
 > 
-> Looking at usb/storage/transport.c, we are not generating the usb
-> "fake_sense" with your change.
+> No, the "babble" prevented that.
+
+> The "fake sense" is a compromise.  It lets us give a clear indication to 
+> the higher layers that something is wrong and asks them not to send the 
+> same command again.  But it doesn't do much about getting the device back 
+> into a working state (if that's even possible).
+
+Looking closer at the USB code, is the fake_sense code even hit? The logs
+do not show any of the US_DEBUGP in usb_stor_Bulk_transport(), like
+"Bulk Command S ...".
+
+A DID_ERROR causes scsi core to retry the command - it will not even check
+the sense data. A DID_ABORT might be better, scsi core will not retry.
+(We still have issue 1, where the host byte is not checked in
+scsi_status_is_good.)
+
+> > So the next command sent got a check condition, illegal request.
+> > 
+> > That still doesn't tell us why the MODE SENSE failed, and why the failure
+> > does not show up with 2.4.
 > 
-> Maybe the failed MODE SENSE had a check condition, but the fake_sense
-> prevented us from retrieving it?
+> The best approach for doing this is to have a side-by-side comparison of 
+> the usb-storage debugging logs for 2.4 and 2.6.
 
-No, the "babble" prevented that.
+Yes, we do not have a 2.4 trace of the same device.
 
-How to deal with babble errors is a serious question that's been under
-discussion in the usb-storage mailing list, but we haven't found a good
-answer.  It doesn't come up often except for certain devices that go crazy
-when given some of the less-common commands.  Babble is a nasty violation
-of the USB protocol (and in particular the USB Mass Storage class
-protocols); it indicates that something has gone very wrong but doesn't
-provide any clue as to how to fix it.  I vaguely recall getting a report
-from someone that even unplugging the USB cable and reinserting it wasn't
-enough to unwedge his device.
-
-The "fake sense" is a compromise.  It lets us give a clear indication to 
-the higher layers that something is wrong and asks them not to send the 
-same command again.  But it doesn't do much about getting the device back 
-into a working state (if that's even possible).
-
-> So the next command sent got a check condition, illegal request.
+> I think we have to assume 
+> that the MODE-SENSE failed because the device simply doesn't support it 
+> correctly.
 > 
-> That still doesn't tell us why the MODE SENSE failed, and why the failure
-> does not show up with 2.4.
+> > Can you run the variants on MODE SENE via user space SG_IO, and figure out
+> > which ones work?
 
-The best approach for doing this is to have a side-by-side comparison of 
-the usb-storage debugging logs for 2.4 and 2.6.  I think we have to assume 
-that the MODE-SENSE failed because the device simply doesn't support it 
-correctly.
+Still no data on the above (from Dmitri or Ronald).
 
-> Can you run the variants on MODE SENE via user space SG_IO, and figure out
-> which ones work?
+> > 3) The next command - TEST UNIT READY - gets a check condition, illegal
+> > request. Maybe the fake sense handling is screwing things up - the device
+> > tells us it sent back more data than we asked for, but it is also trying
+> > to check us.
 > 
-> AFAICT at least three different problems are contributing to the failure:
-> 
-> 1) The MODE SENSE seems to work fine in 2.4, but is failing in 2.6. In
-> 2.4, we always send a MODE SENSE page 3f with length 255; in 2.6 we start by
-> asking for 4 bytes.
-> 
-> 2) scsi core ignores host byte errors (DID_ERROR). This means we behave as
-> if the MODE SENSE worked OK, even though USB tells scsi core that it
-> failed. Fixing this problem (for another user) caused even worse problems.
+> I don't understand your speculation here.  It seems clear to me that this 
+> is a situation where the device and the host are out of sync -- the host 
+> sends a command and the device sends back status from the _previous_ 
+> command.  Repeating the TEST-UNIT-READY may bring us back in sync.  Or 
+> maybe some sort of reset will -- no way to tell without trying it.
 
-I must have missed that.  It seems odd that fixing an oversight in the
-kernel could make interoperability _worse_.  Maybe that indicates
-something else needs to be fixed.
+The sense data is not cleared until it is retrieved, so if there is sense
+waiting, and we do not send a REQUEST SENSE, the next REQUEST SENSE will
+retrieve the pre-existing sense data (see SAM-3, I am looking at
+sam3r07.pdf, section 5.9.6 sense data).
 
-> 3) The next command - TEST UNIT READY - gets a check condition, illegal
-> request. Maybe the fake sense handling is screwing things up - the device
-> tells us it sent back more data than we asked for, but it is also trying
-> to check us.
+If the actual result of the command was checked in the babble cases, and a
+REQUEST SENSE sent, it might have gotten the ILLEGAL REQUEST, and the
+devices sense data might be cleared. It might be bad to do anything for
+babble cases, but the REQUEST SENSE should be sent to at least clear out
+any real sense data if we are going to generate our own fake sense.
 
-I don't understand your speculation here.  It seems clear to me that this 
-is a situation where the device and the host are out of sync -- the host 
-sends a command and the device sends back status from the _previous_ 
-command.  Repeating the TEST-UNIT-READY may bring us back in sync.  Or 
-maybe some sort of reset will -- no way to tell without trying it.
+Dmitri's change (return USB_STOR_XFER_STALL instead of USB_STOR_XFER_LONG)
+causes us to return USB_STOR_TRANSPORT_GOOD vs USB_STOR_TRANSPORT_ERROR in
+usb_stor_CB_transport. 
 
-The ultimate problem is that this device doesn't like some of the 
-MODE-SENSE commands used to determine read-write and cache status.  We 
-need to have either per-device information saying which variants of the  
-commands the device will accept or else per-device information saying not 
-to send the MODE-SENSE commands at all.
+Then in usb_stor_invoke_transport we issue a REQUEST SENSE. 
 
-I don't see any other way of coping.  Even trying to send a command and 
-then trying to recover if it fails is not a viable approach if recovery 
-requires the user to cycle the power on the device (or to unplug its 
-cable).
+If for a USB_STOR_TRANSPORT_ERROR we also did a REQUEST SENSE, the
+following command (TEST UNIT READY) would not get the ILLEGAL REQUEST.
 
-Alan Stern
+I don't know why the TEST UNIT READY caused an auto REQUEST SENSE to
+be sent.
 
+Changing the sense stuff does not address the MODE SENSE failing, we still
+have 3 separate issues that are all hit by this device.
+
+-- Patrick Mansfield
 
 
 -------------------------------------------------------
