@@ -1,41 +1,69 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [BK PATCH] SCSI updates for 2.6.6
-Date: Tue, 18 May 2004 23:17:28 +0100
+From: "Lee Xing" <lxing@Crossroads.com>
+Subject: RE: A question on Linux SCSI low-level driver
+Date: Tue, 18 May 2004 17:27:03 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040518221728.GK6484@parcelfarce.linux.theplanet.co.uk>
-References: <20040518184527.GC4859@tpkurt.garloff.de> <Pine.LNX.4.44.0405182140050.3207-100000@poirot.grange>
+Message-ID: <519672568F040C41B6FAC21ADF51B18FEFF8@mailnode1.commstor.crossroads.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:38630 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263665AbUERWR3
+Received: from email.crossroads.com ([65.68.235.6]:26111 "HELO
+	email.crossroads.com") by vger.kernel.org with SMTP id S263665AbUERW1E convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 May 2004 18:17:29 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0405182140050.3207-100000@poirot.grange>
+	Tue, 18 May 2004 18:27:04 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Kurt Garloff <garloff@suse.de>, James Bottomley <James.Bottomley@steeleye.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, May 18, 2004 at 09:47:56PM +0200, Guennadi Liakhovetski wrote:
-> Well, Kurt, thanks for the offer. I am prepared and willing to do the work
-> on supporting the driver, but I am, perhaps, not skilled enough to be a
-> maintainer of a SCSI LDD. My knowledge of the SCSI protocol and the SCSI
-> Linux subsystem is pretty limited. On one hand, the driver is little used,
-> so, even if I badly break something it is not likely to cause major
-> problems. On the other hand, I would feel more comfortable if, at least at
-> the beginning, somebody would review my patches. Besides, it would be a
-> good opportunity for me to really learn a bit more about SCSI, SCSI Linux
-> driver, BIO,...  oh well...
+Thanks for the information.  scsi_debug is very helpful for me.
 
-Don't worry about it.  You'll learn these things in time ...
-If Kurt's willing to review your patches when you send them,
-that'd be best (but don't necessarily wait for Kurt's ack before applying).
+Two questions on scsi_debug/low-level driver:
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+- Has anyone ever created a patch for scsi_debug to support ioctl calls in lk 2.4?  If not, is it possible for some one to kindly create it or a template/part of it?
+
+- Do SCSI passthrough ioctl calls sent to both sd and sg devices share/use the same ioctl routine defined in scsi_debug/low-level driver?  In other words, ioctl routine defined in scsi_debug/low-level drivers can not tell and do not care from which type of device (sd or sg) the SCSI passthrough call comes in, correct?
+
+Thanks,
+
+
+Lee
+
+
+-----Original Message-----
+From: Douglas Gilbert [mailto:dougg@torque.net]
+Sent: Saturday, May 08, 2004 9:11 PM
+To: Lee Xing
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: A question on Linux SCSI low-level driver
+
+
+Lee Xing wrote:
+> Hi,
+> 
+> We are trying to write a low-level driver (no need for a perfect one at this time, just need to register the disks and do some simple I/Os).  I would sincerely appreciate it if some one could give me
+some information/suggestions/hints.
+> 
+> This low-level driver has indirect (via other layers) information on physical disks, so it can only provide mid-level driver with bus number, target number and lun number of the disks.  It will convert
+SCSI passthrough commands coming from the mid-level driver and send the converted command packages to the disks (again, via other layers).  It also sends the responses coming from physical disks (via other
+layers) back to the mid-level driver.  The "other layers" are SCSI-ready and can handle
+SCSI cmds/responses well.
+> 
+> My questions are: 
+> 
+> - is it (i.e. registering the disks with mid-level driver and doing some
+>   simple I/Os) doable if this low-level driver only provides mid-level with
+>   bus/target/lun numbers (without any hardware-related information)?
+
+Lee,
+See the scsi_debug driver (either in the lk 2.4 or lk 2.6
+series). It is a scsi subsystem LLD that is basically a
+ram disk so there is no "hardware" information to exchange
+with the mid level.
+
+Doug Gilbert
+
+> - what can be the potential problems (if nay)?
+> 
+> Best Regards,
+
