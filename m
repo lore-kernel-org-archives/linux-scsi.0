@@ -1,36 +1,130 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: scsi_mid_low_api.txt updated
-Date: Sun, 20 Apr 2003 10:33:39 +1000
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EA1EAE3.90004@torque.net>
-Reply-To: dougg@torque.net
+From: =?ISO-8859-1?Q?xos=E9_v=E1zquez_p=E9rez?= <xose@wanadoo.es>
+Subject: [report about real state of scsi drivers]
+Date: Sun, 20 Apr 2003 03:50:44 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <3EA1FCF4.5000800@wanadoo.es>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:58379 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263505AbTDTATv
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Apr 2003 20:19:51 -0400
-Received: from torque.net (d-241-40.stlucia.uq.net.au [203.101.241.40])
-	by bunyip.cc.uq.edu.au (8.12.9/8.12.9) with ESMTP id h3K0VlHO026403
-	for <linux-scsi@vger.kernel.org>; Sun, 20 Apr 2003 10:31:48 +1000 (GMT+1000)
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-The interface between the SCSI mid level and the lower
-level (HBA) drivers is still a moving target with more
-changes to come. So instead of a patch against the file
-currently in Documentation/scsi/scsi_mid_low_api.txt
-here is a gzipped version:
+hi,
 
-http://www.torque.net/sg/p/scsi_mid_low_api.txt.gz
+I have made a mini-report about scsi drivers.
+More information is welcome.
 
-Please send corrections and suggestions to me.
+-thanks-
 
-There are quite a few changes since the last patch
-(document date on last line was 21st February 2003)
+--cut--
+        * LiNUX kernel SCSI/RAID HBA drivers *
 
+                <xose_AT_wanadoo.es>
+           v1 Sun Apr 20 03:26:45 CEST 2003
+              kernel 2.4.21-pre7-ac1
 
-Doug Gilbert
+x aacraraid
+ - kernel: 0.9.9ac6-TEST
+ - latest: in kernel ??
+ - e-mail: <alan_AT_redhat.com> <aacraid_AT_adaptec.com>
+ - url:    http://ftp.linux.org.uk/pub/linux/alan/Kernel/Drivers/AACRAID/
+           http://www.domsch.com/linux/aacraid/alan/
 
+x aic7xxx/aic79xx
+ - kernel: 6.2.28/1.3.0 2003/01/21 18:26:00
+ - latest: 6.2.32/1.3.7 2003/04/16 15:54:11
+ - e-mail: Justin T. Gibbs <gibbs_AT_scsiguy.com>
+ - url:    http://people.freebsd.org/~gibbs/linux/SRC/
+
+x cciss
+ - kernel: 2.4.42
+ - latest: 2.4.44
+ - e-mail: <Mike.Miller_AT_hp.com>
+ - url:    http://sourceforge.net/projects/ccissa
+           http://www.ussg.iu.edu/hypermail/linux/kernel/0304.2/0120.html
+
+x cpqfc
+ - kernel: 2.1.2 Jul 22, 2002
+ - latest: in kernel ??
+ - e-mail: <Charles.White_AT_hp.com> Amy Vanzant-Hodge <fibrechannel_AT_compaq.com>
+ - url:    http://sourceforge.net/projects/cpqfc
+
+x DAC960
+ - kernel: 2.4.11 11 October 2001
+ - latest: 2.4.20 2003
+ - e-mail: Dave Olien dmo_AT_osdl.org
+ - url:    http://lists.debian.org/debian-alpha/2003/debian-alpha-200301/msg00020.html
+           http://www.ussg.iu.edu/hypermail/linux/kernel/0302.0/0829.html
+           http://www.dandelion.com/Linux/DAC960.html
+           http://www.osdl.org/archive/dmo/DAC960/
+
+x dpt_i2o
+ - kernel: 2.4 25 July 01
+ - latest: 2.4 25 July 01
+ - e-mail: <deanna_bonds_AT_adaptec.com>
+ - url:    http://linux.adaptec.com/linux_raid_unsupported.html
+           http://linux.adaptec.com/Linux_drivers.html
+
+x fusion
+ - kernel: 2.05.00+ 2003/01/28 21:31:56
+ - latest: 2.05.00+ 2003/01/28 21:31:56
+ - e-mail: <Pam.Delaney_AT_lsil.com> <sjralston1_AT_netscape.net>
+ - url:    ftp://ftp.lsil.com/HostAdapterDrivers/linux/
+
+x ips
+ - kernel: 6.00.26
+ - latest: in kernel ??
+ - e-mail: <ipslinux_AT_adaptec.com>
+ - url:    unknow ??
+
+x gdth
+ - kernel: 2.05
+ - latest: 2.05
+ - e-mail: <achim.leubner_AT_intel.com> <boji.t.kannanthanam_AT_intel.com>
+ - url:    http://www.icp-vortex.com/english/download/rdrnrsrz/linux/linux_e.htm
+
+x megaraid
+
+ - kernel: v1.18f (Dec 10, 2002)
+ - latest: v2.00.3 (Feb 19, 2003)
+ - beta:   v2.00.4-beta1 (Apr 15, 2003)
+ - e-mail: Atul Mukke <atulm_AT_lsil.com>
+ - url:    ftp://ftp.lsil.com/pub/linux-megaraid/
+           http://domsch.com/linux/megaraid/
+
+x qla1280
+
+ - kernel: 3.00 Jan 17, 1999
+ - latest: 3.12 August 17, 2000
+ - beta:   3.23 Beta January 12 , 2001
+ - e-mail: someone at qlogic
+ - url:    http://www.qlogic.com/support/retired/qla1280_drvrs/linux/qla1x160src-3.12.tgz
+           http://download.qlogic.com/drivers/2209/qla1x160src-3.23Beta.tgz
+
+x qla2x00
+ - kernel: not in kernel !!
+ - latest: 6.04.00 January 20, 2003
+ - beta:   6.05.00b9 March 31, 2003
+ - e-mail: someone at qlogic
+ - url :   http://download.qlogic.com/drivers/9626/qla2x00-v6.04.00-dist.tgz
+           http://download.qlogic.com/drivers/9646/qla2x00-v6.05.00b9-dist.tgz
+
+x qla4xxx
+ - kernel: not in kernel !!
+ - latest: 1.14 12/13/2002
+ - e-mail: someone at qlogic
+ - url: i  http://download.qlogic.com/drivers/7506/
+
+x sym53c8xx_2
+ - kernel: 2.1.17a Sat Dec 01 18:00 2001
+ - latest: 2.1.19-pre3 Sat Nov 23 20:00 2002
+ - e-mail: Gerard Roudier <groudier_AT_free.fr>
+ - url:    ftp://ftp.tux.org/roudier/drivers/linux/stable/
+
+# EOF
+--the-end--
+
+regards,
+-- 
+Galiza nin perdoa nin esquence. Governo demision!
