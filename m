@@ -1,57 +1,120 @@
-From: Frederic TEMPORELLI <frederic.temporelli@bull.net>
-Subject: proc_name in sysfs
-Date: Wed, 06 Apr 2005 13:40:04 +0200
-Message-ID: <4253CA94.8000500@bull.net>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [OOPS] 2.6.11 - NMI lockup with CFQ scheduler
+Date: Wed, 6 Apr 2005 14:31:48 +0200
+Message-ID: <20050406123147.GD9417@suse.de>
+References: <20050329122226.94666.qmail@web52902.mail.yahoo.com> <20050329122635.GP16636@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ecfrec.frec.bull.fr ([129.183.4.8]:20449 "EHLO
-	ecfrec.frec.bull.fr") by vger.kernel.org with ESMTP id S262168AbVDFLkR
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Apr 2005 07:40:17 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by ecfrec.frec.bull.fr (Postfix) with ESMTP id 4810319D90D
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2005 13:40:08 +0200 (CEST)
-Received: from ecfrec.frec.bull.fr ([127.0.0.1])
- by localhost (ecfrec.frec.bull.fr [127.0.0.1]) (amavisd-new, port 10024)
- with ESMTP id 17353-07 for <linux-scsi@vger.kernel.org>;
- Wed,  6 Apr 2005 13:40:06 +0200 (CEST)
-Received: from ecn002.frec.bull.fr (ecn002.frec.bull.fr [129.183.4.6])
-	by ecfrec.frec.bull.fr (Postfix) with ESMTP id 600C919D90A
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2005 13:40:06 +0200 (CEST)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by openx3.frec.bull.fr (Postfix) with ESMTP id C4A312B0EC
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Apr 2005 13:40:04 +0200 (CEST)
+Received: from ns.virtualhost.dk ([195.184.98.160]:54500 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262188AbVDFMbm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2005 08:31:42 -0400
+Content-Disposition: inline
+In-Reply-To: <20050329122635.GP16636@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Chris Rankin <rankincj@yahoo.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hello,
+On Tue, Mar 29 2005, Jens Axboe wrote:
+> On Tue, Mar 29 2005, Chris Rankin wrote:
+> > >> > I have one IDE hard disc, but I was using a USB memory stick at one
+> > > > point. (Notice the usb-storage and vfat modules in my list.) Could
+> > > > that be the troublesome SCSI device?
+> > 
+> > --- Jens Axboe <axboe@suse.de> wrote:
+> > > Yes, it probably is. What happens is that you insert the stick and do io
+> > > against it, which sets up a process io context for that device. That
+> > > context persists until the process exits (or later, if someone still
+> > > holds a reference to it), but the queue_lock will be dead when you yank
+> > > the usb device.
+> > > 
+> > > It is quite a serious problem, not just for CFQ. SCSI referencing is
+> > > badly broken there.
+> > 
+> > That would explain why it was nautilus which caused the oops then.
+> > Does this mean that the major distros aren't using the CFQ then?
+> > Because how else can they be avoiding this oops with USB storage
+> > devices?
+> 
+> CFQ with io contexts is relatively new, only there since 2.6.10 or so.
+> On UP, we don't grab the queue lock effetively so the problem isn't seen
+> there.
+> 
+> You can work around this issue by using a different default io scheduler
+> at boot time, and then select cfq for your ide hard drive when the
+> system has booted with:
+> 
+> # echo cfq > /sys/block/hda/queue/scheduler
+> 
+> (substitute hda for any other solid storage device).
 
+Can you check if this work-around solves the problem for you? Thanks!
 
-We are using HBAs modules names from "proc_name" interface in sysfs:
-/sys/class/scsi_host/hostX/proc_name.
-
-But with new Emulex drivers (8.0.21 and +), proc_name is reporting <NULL> 
-(previous drivers were reporting "lpfc").
-=> In the driver code, .proc_name field from scsi_host_template structure is no 
-more initialized.
-James Smart told us that the "removal" of .proc_name field (not really removed, 
-but no more initialized) was part of the /proc interfaces removal (suggested by 
-scsi-linux feedback).
-
-So:
-1/ now, what is the aim of proc_name interface (reporting "<NULL>") in sysfs ?
-2/ now, how can we get the adapter module name from sysfs ?
-
-=> I'm just thinking that .proc_name field has to be kept initialized and/or 
-something has to be changed to replace the confusing "proc" prefix.
-
-
-Best regards
-
+===== include/linux/blkdev.h 1.162 vs edited =====
+--- 1.162/include/linux/blkdev.h	2005-03-29 03:42:37 +02:00
++++ edited/include/linux/blkdev.h	2005-04-06 11:22:44 +02:00
+@@ -279,6 +288,7 @@
+ typedef int (issue_flush_fn) (request_queue_t *, struct gendisk *, sector_t *);
+ typedef int (prepare_flush_fn) (request_queue_t *, struct request *);
+ typedef void (end_flush_fn) (request_queue_t *, struct request *);
++typedef void (release_queue_data_fn) (request_queue_t *);
+ 
+ enum blk_queue_state {
+ 	Queue_down,
+@@ -324,6 +334,7 @@
+ 	issue_flush_fn		*issue_flush_fn;
+ 	prepare_flush_fn	*prepare_flush_fn;
+ 	end_flush_fn		*end_flush_fn;
++	release_queue_data_fn	*release_queue_data_fn;
+ 
+ 	/*
+ 	 * Auto-unplugging state
+===== drivers/scsi/scsi_sysfs.c 1.72 vs edited =====
+--- 1.72/drivers/scsi/scsi_sysfs.c	2005-03-28 07:03:53 +02:00
++++ edited/drivers/scsi/scsi_sysfs.c	2005-04-06 11:24:27 +02:00
+@@ -175,9 +175,6 @@
+ 
+ 	scsi_target_reap(scsi_target(sdev));
+ 
+-	kfree(sdev->inquiry);
+-	kfree(sdev);
+-
+ 	if (parent)
+ 		put_device(parent);
+ }
+===== drivers/scsi/scsi_lib.c 1.153 vs edited =====
+--- 1.153/drivers/scsi/scsi_lib.c	2005-03-30 21:49:45 +02:00
++++ edited/drivers/scsi/scsi_lib.c	2005-04-06 11:24:32 +02:00
+@@ -1420,6 +1420,18 @@
+ }
+ EXPORT_SYMBOL(scsi_calculate_bounce_limit);
+ 
++static void scsi_release_queue_data(request_queue_t *q)
++{
++	struct scsi_device *sdev = q->queuedata;
++
++	if (sdev) {
++		kfree(sdev->inquiry);
++		kfree(sdev);
++	}
++
++	q->queuedata = NULL;
++}
++
+ struct request_queue *scsi_alloc_queue(struct scsi_device *sdev)
+ {
+ 	struct Scsi_Host *shost = sdev->host;
+@@ -1437,6 +1449,8 @@
+ 	blk_queue_bounce_limit(q, scsi_calculate_bounce_limit(shost));
+ 	blk_queue_segment_boundary(q, shost->dma_boundary);
+ 	blk_queue_issue_flush_fn(q, scsi_issue_flush_fn);
++
++	q->release_queue_data_fn = scsi_release_queue_data;
+ 
+ 	/*
+ 	 * ordered tags are superior to flush ordering
 
 -- 
-Frederic TEMPORELLI
-Bull - Echirolles - France
+Jens Axboe
+
