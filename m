@@ -1,48 +1,39 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Notify about errors during initialization
-Date: Mon, 8 Dec 2003 11:15:06 -0500 (EST)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0312081101480.1043-100000@ida.rowland.org>
-References: <20031207051634.GB21951@one-eyed-alien.net>
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [PATCH] until blockdev --setrw /dev/scd$n works
+Date: 08 Dec 2003 10:10:31 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1070903431.2263.16.camel@patibmrh9>
+References: <1070673881.2939.20.camel@patibmrh9>
+	 <1070674338.2939.31.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:9732 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S264574AbTLHQPH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Dec 2003 11:15:07 -0500
-In-Reply-To: <20031207051634.GB21951@one-eyed-alien.net>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <1070674338.2939.31.camel@patibmrh9>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, axboe@suse.de, patmans@us.ibm.com
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
-Cc: USB Storage List <usb-storage@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Cross-posted to the linux-scsi list in the hope that someone there can 
-confirm this answer...
+> > +		printk("lk 2.5 ide-cd.c would refuse write\n"); ...
+> > +			printk("lk 2.5 sr.c would refuse write\n"); ...
+> > +			printk("lk 2.5 cdrom.c would refuse write\n"); ...
+> ...
+> 2) I have two pre-production samples of the same device: one ATAPI, one
+> USB.  Without my patch my ATAPI device never writes, and for my USB
+> device I have to volunteer `blockdev --setrw` or `blockdev --setro`
+> again after each disc insertion.
 
-On Sat, 6 Dec 2003, Matthew Dharm wrote:
+Ouch this English doesn't say what I mean.  Instead I should have said:
 
-> Question: Are we guaranteed that scsi_scan_host() doesn't return until the
-> scanning process is complete?
+a) cdrom.ko refuses to pass thru writes unless patched.
 
-I'm not absolutely certain -- best to check with someone on the linux-scsi
-list.  But a quick look through the call chain in scsi_scan.c indicates
-that scsi_scan_host() doesn't return until the scanning process is indeed
-complete.  The real work is done in scsi_probe_lun() (called from
-scsi_probe_and_add_lun()), and that uses scsi_wait_req().  After all, it
-can't tell whether the LUN is there or not until it gets a reply to the
-INQUIRY!
+b) sr_mod.ko refuses to pass thru writes unless patched.
 
-> I recall a problem that we had with the setting of flags and the call to
-> scan the host -- without pre-emption, it worked, but with pre-emption
-> things happened in the wrong order.  Could that happen here?
+c) ide-cd.ko refuses to pass thru writes unless patched or asked via
+ioctl e.g. via blockdev --setrw.
 
-I don't remember that problem.  But I don't think pre-emption would cause 
-any difficulties here.  All the flags should be set before we call 
-scsi_scan_host().  If you can provide more details or a reference to what 
-you're thinking of, I could reply in more detail.
+I'm guessing the maintainers of cdrom.ko sr_mod.ko would accept a patch
+to make blockdev --setrw work for those as well as it already does for
+ide-cd.ko.
 
-When pre-emption does cause a problem it's generally because of some
-assumption that the current task won't be scheduled out when it calls up()
-or complete() or something like that.
-
-Alan Stern
-
+Pat LaVarre
