@@ -1,40 +1,28 @@
-From: "Nicholas Berry" <nikberry@med.umich.edu>
-Subject: Re: Ultra320
-Date: Fri, 25 Oct 2002 09:14:34 -0400
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: possible use-after-free in 2.5.44 scsi changes
+Date: Fri, 25 Oct 2002 09:16:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <sdb90b8a.001@mail-01.med.umich.edu>
+Message-ID: <200210251416.g9PEGxv01952@localhost.localdomain>
+References: <akpm@digeo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id HAA16671
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2002 07:17:11 -0700
+In-Reply-To: Message from Andrew Morton <akpm@digeo.com>
+   of "Thu, 24 Oct 2002 18:39:24 PDT." <3DB8A0CC.1804DF79@digeo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: braver@pobox.com
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@digeo.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Badari Pulavarty <pbadari@us.ibm.com>, "Martin J. Bligh" <Martin.Bligh@us.ibm.com>, Jens Axboe <axboe@suse.de>, Doug Ledford <dledford@redhat.com>
 
+This has all the hallmarks of the Qlogic double done bug:  Under certain high 
+stress/bad bus situations, the Qla driver will call done twice on a SCSI 
+command structure.  I take it this is the 6.1.0 qla driver, which qlogic has 
+assured me "really really" has this bug fixed?
 
->>> Alexy Khrabrov <braver@pobox.com> 10/25/02 08:52AM >>>
-> So, is this obvious to others/unknown/off-topic/all of the above?  :-)  A.K.
+Is there any way to switch adapters to see if we can confirm this hypothesis?
 
->On Wed, Oct 23, 2002 at 12:04:15PM -0400, Alexy Khrabrov wrote:
->> 
->> If I get an Ultra320 card, will existing hard drives work 
->> at 320, or the hard drive itself should be new and aware?
->> Will current Linux drivers support Ultra320?
->> 
->> -- 
->> Cheers,
->> Alexy Khrabrov :: www.setup.org :: Age Quod Agis
-
-Well, all of the above :)
-
-But anyway, for Ultra 320 you'll need HBA and drives that support it. They'll negotiate the fastest
-they can both do. You can have some 320, some 160 etc. mixed on the same bus, that's fine.
-
-Now as to whether the Linux drivers support it, that's a driver-by-driver thing. Pick an Ultra 320 card,
-and see if there's a driver for it.
-
-Nik
-
+James
 
 
