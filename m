@@ -1,28 +1,33 @@
 From: Jeremy Higdon <jeremy@sgi.com>
 Subject: Re: [PATCH] sg.c to set direction more reliably  (was Re: [PATCH] fusion update to current APIs)
-Date: Tue, 15 Jun 2004 01:48:07 -0700
+Date: Tue, 15 Jun 2004 02:10:43 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040615084807.GB177665@sgi.com>
-References: <20040531115229.GA16143@lst.de> <20040612003608.GA152454@sgi.com> <20040612034518.GN24864@parcelfarce.linux.theplanet.co.uk> <20040612051353.GA152829@sgi.com> <20040612052003.GR24864@parcelfarce.linux.theplanet.co.uk> <20040615060811.GA178857@sgi.com> <20040615081704.GA15795@infradead.org>
+Message-ID: <20040615091042.GA168267@sgi.com>
+References: <20040531115229.GA16143@lst.de> <20040612003608.GA152454@sgi.com> <20040612034518.GN24864@parcelfarce.linux.theplanet.co.uk> <20040612051353.GA152829@sgi.com> <20040612052003.GR24864@parcelfarce.linux.theplanet.co.uk> <20040615060811.GA178857@sgi.com> <20040615081704.GA15795@infradead.org> <20040615084807.GB177665@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.sgi.com ([192.48.171.6]:13045 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S265370AbUFOItB (ORCPT
+Received: from mtvcafw.sgi.com ([192.48.171.6]:58445 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S265387AbUFOJLt (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jun 2004 04:49:01 -0400
+	Tue, 15 Jun 2004 05:11:49 -0400
 Content-Disposition: inline
-In-Reply-To: <20040615081704.GA15795@infradead.org>
+In-Reply-To: <20040615084807.GB177665@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
 Cc: Matthew Wilcox <willy@debian.org>, Christoph Hellwig <hch@lst.de>, Emoore@lsil.com, linux-scsi@vger.kernel.org
 
-Christoph wants a more explicit message.
+One more comment from hch via IRC.  When we have to guess direction,
+print a suggestion to use SG v3 interface.
+
+I also removed the vendor unique commands from the switch.
+
+jeremy
 
 ===== drivers/scsi/sg.c 1.90 vs edited =====
 --- 1.90/drivers/scsi/sg.c	Sat May 29 10:57:23 2004
-+++ edited/drivers/scsi/sg.c	Tue Jun 15 01:46:10 2004
-@@ -480,6 +480,61 @@
++++ edited/drivers/scsi/sg.c	Tue Jun 15 02:08:51 2004
+@@ -480,6 +480,59 @@
  	return (0 == err) ? count : err;
  }
  
@@ -44,8 +49,6 @@ Christoph wants a more explicit message.
 +	case SET_WINDOW:	case MEDIUM_SCAN:	case SEND_VOLUME_TAG:
 +	case REASSIGN_BLOCKS:
 +	case PERSISTENT_RESERVE_OUT:
-+	case 0xea:
-+	case 0xa3:
 +		return SG_DXFER_TO_DEV;
 +
 +	/*  No data transfer commands  */
@@ -84,7 +87,7 @@ Christoph wants a more explicit message.
  static ssize_t
  sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
  {
-@@ -552,11 +607,6 @@
+@@ -552,11 +605,6 @@
  	hp->cmd_len = (unsigned char) cmd_size;
  	hp->iovec_count = 0;
  	hp->mx_sb_len = 0;
@@ -96,7 +99,7 @@ Christoph wants a more explicit message.
  	hp->dxfer_len = mxsize;
  	hp->dxferp = (char __user *)buf + cmd_size;
  	hp->sbp = NULL;
-@@ -566,6 +616,23 @@
+@@ -566,6 +614,23 @@
  	hp->usr_ptr = NULL;
  	if (__copy_from_user(cmnd, buf, cmd_size))
  		return -EFAULT;
@@ -114,7 +117,7 @@ Christoph wants a more explicit message.
 +		hp->dxfer_direction = sg_direction(cmnd);
 +		printk("sg_write: cannot infer direction from count %ld "
 +		       "and reply_len %d; inferring from command 0x%x.  Please "
-+		       "fix the application to trim count and reply_len\n",
++		       "fix the application to use the sg version 3 interface\n",
 +		       count, old_hdr.reply_len, (unsigned int) cmnd[0]);
 +	}
  	k = sg_common_write(sfp, srp, cmnd, sfp->timeout, blocking);
