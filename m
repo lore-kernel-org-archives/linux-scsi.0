@@ -1,45 +1,42 @@
-From: Martin.Budsjo@astrazeneca.com
-Subject: SCSI lun scan on 2.4.18
-Date: Tue, 10 Dec 2002 15:18:53 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Warning: about not setting max_sectors
+Date: Tue, 10 Dec 2002 08:47:50 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <9F028CC77827D611ACEE0002A5F12F07199C24@semldsntmsx208.seml.astrazeneca.net>
+Message-ID: <200212101447.gBAElpJ01949@localhost.localdomain>
+References: <hch@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sesosn11.seso.astrazeneca.net (sesosn11.seso.astrazeneca.net [192.168.199.18])
-	by sesosn01.astrazeneca.com (8.12.3/8.12.3) with ESMTP id gBAEJRKJ015927
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Dec 2002 15:19:36 +0100 (MET)
-Received: from sesosn21.seso.astrazeneca.net (sesosn21.seso.astrazeneca.net [192.71.145.181])
-	by sesosn11.seso.astrazeneca.net (8.12.3/8.12.3/AZ-def_main_in.12.3.5) with ESMTP id gBAEIstr016457
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Dec 2002 15:18:55 +0100 (MET)
-Received: from astra-cdc-x03.seso.astrazeneca.net (astra-cdc-x03.seso.astrazeneca.net [192.71.145.48])
-	by sesosn21.seso.astrazeneca.net (8.10.1/8.10.1) with ESMTP id gBAEIsK09980
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Dec 2002 15:18:54 +0100 (MET)
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id GAA06856
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Dec 2002 06:47:55 -0800
+In-Reply-To: Message from Christoph Hellwig <hch@infradead.org>
+   of "Tue, 10 Dec 2002 13:23:48 GMT." <20021210132348.A31628@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-Hi=20
+hch@infradead.org said:
+> I added this intentionally.  The default is set in scsi_register_host
+> which is an obsolete interface.  This warning reminds driver writers
+> to set the value explicitly, with scsi_add_host & friends they won't
+> get a default anymore. 
 
-Should the option CONFIG_SCSI_MULTI_LUN disable or interfere with the
-/proc/scsi/scsi "add-single-device a b c d"  commands?
+I don't think that's the correct behaviour.  The parameter is labelled as 
+optional (and clearly should be for drivers that have no hard transfer limit).
 
-We tried two kernels, one without the CONFIG_SCSI_MULTI_LUN and now one=
- with
-it enabled. Without the CONFIG_SCSI_MULTI_LUN we had no problem finding=
- new
-devices on our SAN with the help of the /proc/scsi/scsi interface, but
-devices did not get detected at boot. Now it find devices at boot, but =
-seems
-to ignore the "add-single-device" commands. ( except for one single lin=
-e in
-the messages file)
+The blk_queue_max_sectors() clearly should be initialised with the device in 
+mind.  We have this limit coming at us from two directions: the driver (if it 
+imposes such a limit) and the device (e.g. a SCSI-1 device only does read 6 
+and thus 256 is the maximum etc.)
 
-Is there any other way to force detection of new scsi devices?=20
+we should probably take the lowest of the scsi-1 minimum and the HBA if it 
+exists in scsi_initialize_queue and readjust it when we've decided on the 
+capabilities of the device.
 
-Regards			Martin Budsj=F6
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In any event, moving the zero check for shpnt->max_sectors to 
+scsi_initialize_queue would fix the loss of scsi_add_host, wouldn't it?
+
+James
+
+
