@@ -1,28 +1,46 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: Mike Anderson <andmike@us.ibm.com>
 Subject: Re: When must the io_request_lock be held?
-Date: Wed, 7 Aug 2002 09:55:32 -0700
+Date: Wed, 7 Aug 2002 11:06:28 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020807095532.A12951@eng2.beaverton.ibm.com>
-References: <dledford@redhat.com> <200208071526.g77FQOt03034@localhost.localdomain> <20020807121846.F10872@redhat.com>
+Message-ID: <20020807180628.GD2182@beaverton.ibm.com>
+References: <dledford@redhat.com> <20020807121846.F10872@redhat.com> <200208071648.g77GmGH03563@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020807121846.F10872@redhat.com>; from dledford@redhat.com on Wed, Aug 07, 2002 at 12:18:46PM -0400
+Content-Disposition: inline
+In-Reply-To: <200208071648.g77GmGH03563@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, Jamie Wellnitz <Jamie.Wellnitz@emulex.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Aug 07, 2002 at 12:18:46PM -0400, Doug Ledford wrote:
+James Bottomley [James.Bottomley@steeleye.com] wrote:
+> 
+> Well, that's just semantics, I won't get into the argument...
+> 
+> Note also that 2.5 already has per queue locks (that means per individual SCSI 
+> devices) which are lock pointers.  In 2.5 current, all the devices that hang 
+> off an individual host have their queue_locks initialised to point to the 
+> single host->host_lock.  However, drivers which can do it (the type of 
+> multi-threaded multi-mailbox ones) will be permitted to use individual and 
+> separate queue_locks, rather than the single host_lock, to protect their 
+> mailbox registers.  If you are never going to do this, the difference between 
+> using host_lock and queue_lock is irrelevant to you.  If you are, you need to 
+> begin using the queue_locks.
 
-> Again, if Marcello takes my patch, this will become easier as well since 
-> it adds a host->lock lock that allows you to get your driver off the 
-> horrible io_request_lock once and for all.  (Note: I may have to change 
-> the name to host->host_lock to make it match 2.5, but that just annoys the 
-> hell out of me because I *detest* totally redundant names like that...)
+James,
+	Maybe I am mis-reading something.
 
-Such code looks a bit odd, but I would rather have it and be able to
-more easily find or audit all the references; using cscope, there
-are about 6700 references to lock in the 2.5 kernel (only looking at
-i386 sources, so there are probably more), and about 300 references to
-host_lock.
+	Why would we want to go back to a model of having LL drivers
+	using locks outside there domain (queue_lock). Should we not be
+	moving toward having drivers use there own locks.
 
--- Patrick Mansfield
+	I would think a future model might be to have queue_locks for
+	queue operations and possible shared as a scsi device lock, a
+	host_lock for host data, and LL driver locks used where the
+	driver needs them.
+
+-Mike
+-- 
+Michael Anderson
+andmike@us.ibm.com
+
