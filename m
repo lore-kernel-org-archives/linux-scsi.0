@@ -1,79 +1,121 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [RFC] scsi host sysfs support again [0/4]
-Date: Tue, 6 May 2003 10:23:12 -0700
+From: "Jeffery, David" <David_Jeffery@adaptec.com>
+Subject: [PATCH] ips 2.5 driver update [3/4]: misc cleanups
+Date: Tue, 6 May 2003 13:34:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030506172312.GA1697@beaverton.ibm.com>
-References: <20030505083315.GB8416@beaverton.ibm.com> <1052238508.1819.42.camel@mulgrave>
+Message-ID: <A3B9245C291EEF4785A24A1DBE8D852B0377A5@rtpexc01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_000_01C313F5.B7ACB450"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:17855 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S263997AbTEFRIY
+Received: from magic-mail.adaptec.com ([208.236.45.100]:58014 "EHLO
+	magic.adaptec.com") by vger.kernel.org with ESMTP id S263996AbTEFRWC
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 May 2003 13:08:24 -0400
-Content-Disposition: inline
-In-Reply-To: <1052238508.1819.42.camel@mulgrave>
+	Tue, 6 May 2003 13:22:02 -0400
+Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id h46HV8Z23122
+	for <linux-scsi@vger.kernel.org>; Tue, 6 May 2003 10:31:08 -0700
+Received: from rtpexc01.adaptec.com (rtpexc01.adaptec.com [10.110.12.22])
+	by redfish.adaptec.com (8.8.8p2+Sun/8.8.8) with ESMTP id KAA07701
+	for <linux-scsi@vger.kernel.org>; Tue, 6 May 2003 10:34:27 -0700 (PDT)
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-James Bottomley [James.Bottomley@SteelEye.com] wrote:
-> On Mon, 2003-05-05 at 03:33, Mike Anderson wrote:
-> > Example tree:
-> > 
-> > # tree /sys/class/scsi_host
-> > /sys/class/scsi_host
-> > |-- host0
-> > |   |-- cmd_per_lun
-> > |   |-- device -> ../../../devices/pci0/00:09.0/host0
-> > |   |-- host_busy
-> > |   |-- sg_tablesize
-> > |   |-- unchecked_isa_dma
-> > |   `-- unique_id
-> 
-> Could you elaborate a bit more on why the host properties are under the
-> class tree, but the scsi_device properties are under the device tree.
-> 
-> I think this could be my misunderstanding of the class concept:  I
-> thought it was going to be a unifying abstraction, e.g. a class for all
-> tape devices (be they SCSI, ide or the oddball qic ones) that would
-> export a unifying interface that all tapes could use.  Therefore, you
-> have a device with a set of intrinsic properties exposed in the device
-> tree plus a set of classes whose interfaces it chooses to export.
-> 
-> I could see us adding a scsi_device class and moving all the device
-> properties under there too, I suppose.
-> 
-> What I think I'm looking for is clarification of what is a "class
-> property" vs what is a "device property"
-> 
+This message is in MIME format. Since your mail reader does not understand
+this format, some or all of this message may not be legible.
 
-Patrick can probably give a better clarification, but from the a past
-driver model document:
-"A device class describes a function that a device performs, regardless
-of the bus on which a particular device resides"
+------_=_NextPart_000_01C313F5.B7ACB450
+Content-Type: text/plain;
+	charset="iso-8859-1"
 
-The old class support was tied to drivers and devices where added to
-a class when a driver bound to a device. This would as limited creating
-a class scsi_device as the attributes would have existed without a upper
-level driver binding to it.
+This patch checks the return code of
+pci_set_dma_mask for a 32bit mask,  adds a break
+to quiet some compilers, and adds some 2.4 compat.
+code.
 
-A Scsi_Host seems to meet the previous description. The class container
-also reduces the effort in locating Scsi_Host attributes which could be
-located anywhere in the bus / legacy tree.
+David Jeffery
 
-One could create a scsi_device class though it is already unified by the
-constraint the only one type of "object" can exist on a "bus/devices"
-list. It does make the lookup of attributes asymmetric and a class
-"scsi_device" could be created to add uniformity.
+ ips.c |    8 ++++++--
+ ips.h |    4 +++-
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-Other classes to consider:
-	(scsi_tape or tape), (scsi_disk or disk), (scsi_gen).
-I believe Greg KH mentioned something to me about why we would select
-scsi_tape over tape, but I have forgot the reason.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+------_=_NextPart_000_01C313F5.B7ACB450
+Content-Type: text/plain;
+	name="patch3.txt"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="patch3.txt"
 
+diff -urN linux-2.5.69_p2/drivers/scsi/ips.c =
+linux-2.5.69_p3/drivers/scsi/ips.c=0A=
+--- linux-2.5.69_p2/drivers/scsi/ips.c	2003-05-06 13:20:52.000000000 =
+-0400=0A=
++++ linux-2.5.69_p3/drivers/scsi/ips.c	2003-05-06 13:20:31.000000000 =
+-0400=0A=
+@@ -6684,6 +6684,7 @@=0A=
+ 					}=0A=
+ 					break;=0A=
+ 				default:=0A=
++					break;=0A=
+ 				}=0A=
+ 			}=0A=
+ 		}=0A=
+@@ -6747,7 +6748,7 @@=0A=
+ 	kfree(oldha);=0A=
+ 	ips_sh[index] =3D sh;=0A=
+ 	ips_ha[index] =3D ha;=0A=
+-	scsi_set_device(sh, &ha->pcidev->dev);=0A=
++	IPS_SCSI_SET_DEVICE(sh, ha);=0A=
+ =0A=
+ 	/* Store away needed values for later use */=0A=
+ 	sh->io_port =3D ha->io_addr;=0A=
+@@ -7009,7 +7010,10 @@=0A=
+          !pci_set_dma_mask(ha->pcidev, (u64)0xffffffffffffffff)) {=0A=
+        (ha)->flags |=3D IPS_HA_ENH_SG;=0A=
+     } else {=0A=
+-       pci_set_dma_mask(ha->pcidev, (u64)0xffffffff);=0A=
++       if ( pci_set_dma_mask(ha->pcidev, (u64)0xffffffff) !=3D 0 ) { =
+=0A=
++          printk(KERN_WARNING "Unable to set DMA Mask\n");=0A=
++          return ips_abort_init(ha, index);=0A=
++       }=0A=
+     }=0A=
+ =0A=
+     ha->enq =3D kmalloc(sizeof(IPS_ENQ), IPS_INIT_GFP);=0A=
+diff -urN linux-2.5.69_p2/drivers/scsi/ips.h =
+linux-2.5.69_p3/drivers/scsi/ips.h=0A=
+--- linux-2.5.69_p2/drivers/scsi/ips.h	2003-05-06 13:20:52.000000000 =
+-0400=0A=
++++ linux-2.5.69_p3/drivers/scsi/ips.h	2003-05-06 13:20:31.000000000 =
+-0400=0A=
+@@ -94,7 +94,7 @@=0A=
+                                          sizeof(IPS_ENH_SG_LIST) : =
+sizeof(IPS_STD_SG_LIST))=0A=
+ =0A=
+    #if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,4)=0A=
+-      #define pci_set_dma_mask(dev,mask) (1)=0A=
++      #define pci_set_dma_mask(dev,mask) ( mask > 0xffffffff ? 1:0 =
+)=0A=
+       #define scsi_set_pci_device(sh,dev) (0)=0A=
+    #endif=0A=
+ =0A=
+@@ -107,11 +107,13 @@=0A=
+       #define IPS_UNREGISTER_HOSTS(SHT)    =
+scsi_unregister_module(MODULE_SCSI_HA,SHT)=0A=
+       #define IPS_ADD_HOST(shost,device)=0A=
+       #define IPS_REMOVE_HOST(shost)=0A=
++      #define IPS_SCSI_SET_DEVICE(sh,ha)   scsi_set_pci_device(sh, =
+(ha)->pcidev)=0A=
+    #else=0A=
+       #define IPS_REGISTER_HOSTS(SHT)      (!ips_detect(SHT))=0A=
+       #define IPS_UNREGISTER_HOSTS(SHT)=0A=
+       #define IPS_ADD_HOST(shost,device)   =
+scsi_add_host(shost,device)=0A=
+       #define IPS_REMOVE_HOST(shost)       scsi_remove_host(shost)=0A=
++      #define IPS_SCSI_SET_DEVICE(sh,ha)   scsi_set_device(sh, =
+&(ha)->pcidev->dev)=0A=
+    #endif=0A=
+ =0A=
+    #ifndef MDELAY=0A=
+
+------_=_NextPart_000_01C313F5.B7ACB450--
