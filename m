@@ -1,58 +1,38 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: scsi disk registration - double messages
-Date: Tue, 15 Feb 2005 08:48:58 -0800
-Message-ID: <20050215164858.GA22096@us.ibm.com>
-References: <Pine.SOC.4.61.0502151200470.2239@math.ut.ee> <20050215143335.GO29917@parcelfarce.linux.theplanet.co.uk>
+From: Joe Scsi <joe.scsi@gmail.com>
+Subject: Re: LUN discovery by SCSI midlayer?
+Date: Tue, 15 Feb 2005 08:58:14 -0800
+Message-ID: <7526e3050502150858104f99eb@mail.gmail.com>
+References: <7526e30505021420354e6a1707@mail.gmail.com>
+	 <20050215140642.GA2431@lists.us.dell.com>
+Reply-To: Joe Scsi <joe.scsi@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:18059 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261784AbVBOQtH (ORCPT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Received: from wproxy.gmail.com ([64.233.184.202]:8847 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261794AbVBOQ6S (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Feb 2005 11:49:07 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e1.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j1FGn7JI001934
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2005 11:49:07 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j1FGn7Bk262636
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2005 11:49:07 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j1FGn6rv007343
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2005 11:49:07 -0500
-Content-Disposition: inline
-In-Reply-To: <20050215143335.GO29917@parcelfarce.linux.theplanet.co.uk>
+	Tue, 15 Feb 2005 11:58:18 -0500
+Received: by wproxy.gmail.com with SMTP id 68so957230wri
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2005 08:58:14 -0800 (PST)
+In-Reply-To: <20050215140642.GA2431@lists.us.dell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>, viro@parcelfarce.linux.theplanet.co.uk
-Cc: Meelis Roos <mroos@linux.ee>, linux-scsi@vger.kernel.org
+To: Matt Domsch <Matt_Domsch@dell.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Feb 15, 2005 at 02:33:35PM +0000, Matthew Wilcox wrote:
-> On Tue, Feb 15, 2005 at 12:01:11PM +0200, Meelis Roos wrote:
-> > The messages about registration of sda appear tiwice for some reason. This 
-> > is only cosmetic but still a little strange:
-> 
-> Yes, that happens for everyone.
+> Can you take a look at the patches I posted last week and see if that
+> would work for you?
 
-I posted before but no replies:
+Hmm, I'm not sure.  The issue I have is that I know when target ports
+appear and disappear, and I'd like to use some general SCSI midlayer
+stuff to discover what LUNs are behind a target port.  So if I have to
+know the full HCTL then that doesn't really help me.
 
-Al's log for the patch says "Work around devices with bogus media change
-indication on the first open".
+It seems kind of ugly if I have to do the REPORT_LUNs command
+myself and manually call scsi_add_device() for each LUN.
 
-What bogus device? Why not put the change in the driver or black list
-the device, rather than doing so for all block devices?
+(Disappearing target ports seem easier to handle, because I can keep
+a list of LUNs per target port and call scsi_remove_device() on each LUN)
 
-This worked fine for me, but I might break with the bogus media:
-
-diff -uprN -X /home/patman/dontdiff linux-2.6.11-rc1/fs/partitions/check.c no-double-sd-linux-2.6.11-rc1/fs/partitions/check.c
---- linux-2.6.11-rc1/fs/partitions/check.c	Fri Dec 24 13:35:28 2004
-+++ no-double-sd-linux-2.6.11-rc1/fs/partitions/check.c	Fri Jan 21 11:19:00 2005
-@@ -375,8 +375,6 @@ int rescan_partitions(struct gendisk *di
- 	bdev->bd_invalidated = 0;
- 	for (p = 1; p < disk->minors; p++)
- 		delete_partition(disk, p);
--	if (disk->fops->revalidate_disk)
--		disk->fops->revalidate_disk(disk);
- 	if (!get_capacity(disk) || !(state = check_partition(disk, bdev)))
- 		return 0;
- 	for (p = 1; p < state->limit; p++) {
-
--- Patrick Mansfield
+Thanks,
+  Joe
