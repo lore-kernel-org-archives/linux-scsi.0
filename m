@@ -1,36 +1,36 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [ANNOUNCE] Adaptec SAS/SATA device driver [13/27]
-Date: Thu, 17 Feb 2005 12:36:43 -0500
-Message-ID: <4214D62B.4050909@adaptec.com>
+Subject: [ANNOUNCE] Adaptec SAS/SATA device driver [12/27]
+Date: Thu, 17 Feb 2005 12:36:37 -0500
+Message-ID: <4214D625.6060602@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from magic.adaptec.com ([216.52.22.17]:62353 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262328AbVBQRgr (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:53137 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262326AbVBQRgm (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Feb 2005 12:36:47 -0500
+	Thu, 17 Feb 2005 12:36:42 -0500
 Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHakr31091
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:36:46 -0800
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHaer31000
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:36:40 -0800
 Received: from rtpe2k01.adaptec.com (rtpe2k01.adaptec.com [10.110.12.40])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHakb21207
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:36:46 -0800
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j1HHaeb21163
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 09:36:40 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-IOCTL header file.
+IOCTL code.
 
-diff -Nru a/drivers/scsi/adp94xx/adp94xx_ioctl.h b/drivers/scsi/adp94xx/adp94xx_ioctl.h
+diff -Nru a/drivers/scsi/adp94xx/adp94xx_ioctl.c b/drivers/scsi/adp94xx/adp94xx_ioctl.c
 --- /dev/null	Wed Dec 31 16:00:00 196900
-+++ b/drivers/scsi/adp94xx/adp94xx_ioctl.h	2005-02-16 16:08:12 -05:00
-@@ -0,0 +1,277 @@
++++ b/drivers/scsi/adp94xx/adp94xx_ioctl.c	2005-02-16 16:08:12 -05:00
+@@ -0,0 +1,1041 @@
 +/*
-+ * Adaptec ADP94xx SAS HBA driver for Linux - IOCTL data structures 
++ * Adaptec ADP94xx SAS HBA driver for Linux - IOCTL interface for Linux.
 + *
 + * Written by : Naveen Chandrasekaran <naveen_chandrasekaran@adaptec.com>
 + * 
-+ * Copyright (c) 2004 Adaptec Inc.
++ * Copyright (c) 2004-05 Adaptec Inc.
 + * All rights reserved.
 + *
 + * Redistribution and use in source and binary forms, with or without
@@ -65,242 +65,1005 @@ diff -Nru a/drivers/scsi/adp94xx/adp94xx_ioctl.h b/drivers/scsi/adp94xx/adp94xx_
 + * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 + * POSSIBILITY OF SUCH DAMAGES.
 + *
-+ * $Id: //depot/razor/linux/src/adp94xx_ioctl.h#6 $
-+ * 
++ * $Id: //depot/razor/linux/src/adp94xx_ioctl.c#10 $
++ *
 + */	
 +
-+#ifndef _ASD_IOCTL_H_
-+#define _ASD_IOCTL_H_
++#include "adp94xx_osm.h"
++#include "adp94xx_inline.h"
++#include "adp94xx_ioctl.h"
 +
-+#include <linux/ioctl.h>
-+#include <linux/types.h>
++#ifdef __x86_64__
++#include <asm/ioctl32.h>
++#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 0)	
++#include <linux/syscalls.h>
++#endif
++#endif
 +
-+/* Data Direction */
-+#define ASD_SAS_DATA_READ			0
-+#define ASD_SAS_DATA_WRITE			1
++/* IOCTL control device name */
++#define ASD_CTL_DEV_NAME	"asdctl"
++static int asd_ctl_major;
 +
-+/* Status Codes */
-+#define ASD_SAS_STATUS_SUCCESS			0
-+#define ASD_SAS_STATUS_FAILED			1
-+#define ASD_SAS_STATUS_BAD_CNTL_CODE		2
-+#define ASD_SAS_STATUS_INVALID_PARAMETER	3
++/* protos for char device entry points */
++static int asd_ctl_open(struct inode *inode, struct file *file);
++static int asd_ctl_close(struct inode *inode, struct file *file);
++static int asd_ctl_ioctl(struct inode *inode, struct file *file,
++			 unsigned int cmd, unsigned long arg);
 +
-+/* I/O Bus Types
-+ * ISA and EISA bus types are not supported: (bIoBusType)
++/* protos for ioctl handlers */
++static int asd_ctl_get_cntlr_config(unsigned long arg);
++
++/* protos for Adaptec NVRAM access ioctl handlers */
++static int asd_ctl_sas_get_adpt_cntlr_conf(unsigned long arg);
++static int asd_ctl_sas_get_nv_seg_prop(unsigned long arg);
++static int asd_ctl_sas_write_nv_seg(unsigned long arg);
++static int asd_ctl_sas_read_nv_seg(unsigned long arg);
++
++/* protos for helper - work horse routines for ioctl handlers */
++static int asd_ctl_write_to_nvram(struct asd_softc *asd,
++	struct ASD_SAS_WRITE_NV_SEGMENT_BUFFER *pasd_write_nv_buf,
++	uint8_t *psource_buffer);
++
++static int asd_ctl_read_from_nvram(struct asd_softc *asd,
++	struct ASD_SAS_READ_NV_SEGMENT_BUFFER *pasd_read_nv_buf,
++	uint8_t *pdest_buffer);
++
++static uint32_t asd_ctl_write_to_flash (struct asd_softc *asd, 
++			uint8_t *src_img_addr, uint32_t segment_id, 
++			uint32_t src_img_offset, uint32_t src_img_size);
++
++/* protos for extern routines */
++#ifdef __x86_64__
++extern int register_ioctl32_conversion(unsigned int cmd, 
++	int (*handler)(unsigned int, unsigned int, unsigned long,
++	struct file *));
++
++extern int unregister_ioctl32_conversion(unsigned int cmd); 
++#endif
++
++extern int asd_hwi_search_nv_cookie(struct asd_softc *asd, 
++			uint32_t *addr,
++			struct asd_flash_dir_layout *pflash_dir_buf);
++
++/* fops table */
++static struct file_operations asd_ctl_fops = {
++	.owner		= THIS_MODULE,
++	.open		= asd_ctl_open,
++	.release	= asd_ctl_close,
++	.ioctl		= asd_ctl_ioctl
++};
++
++/* macros */
++#define asd_valloc_mem(size)		vmalloc(size)
++#define asd_vfree_mem(ptr)		vfree(ptr)
++#define ASD_CTL_TIMEOUT(pioctl_header) 	\
++((pioctl_header->Timeout == 0? ASD_ADAPTEC_TIMEOUT: \
++				pioctl_header->Timeout) * HZ) 
++
++/* represents busy bit number */
++#define ASD_CTL_INTERNAL_BUSY_BIT_NR 0
++
++/* inline routines */
++/*
++ * Function:
++ * 	asd_ctl_check_buf_len()
++ *
++ * Description:
++ * 	This routine validates the buffer length specified in the CSMI
++ * 	IOCTL header with the actual size of the buffer needed for the 
++ * 	corresponding IOCTL.
 + */
-+#define ASD_SAS_BUS_TYPE_PCI 			3
-+#define ASD_SAS_BUS_TYPE_PCMCIA 		4
++static inline int asd_ctl_check_buf_len(unsigned long arg, int buffer_length)
++{
++	struct IOCTL_HEADER ioctl_header;
++	int err;
++	
++	if ((err = copy_from_user(&ioctl_header, (void *)arg, 
++				 sizeof(ioctl_header)))) {
++		return -EFAULT;
++	}
 +
-+/* Controller Class: (bControllerClass) */
-+#define ASD_SAS_CNTLR_CLASS_HBA 		5
++	if (ioctl_header.Length < buffer_length) {
++		ioctl_header.ReturnCode = ASD_SAS_STATUS_INVALID_PARAMETER;
++		if ((err = copy_to_user((void *)arg, &ioctl_header, 
++					sizeof(ioctl_header)))) {
++			return -EFAULT;
++		}
++		return -EINVAL;
++	}
++	return 0;
++}
 +
-+/* Controller Flag bits: (uControllerFlags) */
-+#define ASD_SAS_CNTLR_SAS_HBA 			0x00000001
-+#define ASD_SAS_CNTLR_SAS_RAID			0x00000002
-+#define ASD_SAS_CNTLR_SATA_HBA			0x00000004
-+#define ASD_SAS_CNTLR_SATA_RAID			0x00000008
++static inline int asd_ctl_copy_to_user(void *dest, void *src, uint32_t length, 
++			uint32_t status)
++{
++	struct IOCTL_HEADER *pioctl_header;
++	int err;
 +
-+/* for firmware download */
-+#define ASD_SAS_CNTLR_FWD_SUPPORT		0x00010000
-+#define ASD_SAS_CNTLR_FWD_ONLINE 		0x00020000
-+#define ASD_SAS_CNTLR_FWD_SRESET 		0x00040000
-+#define ASD_SAS_CNTLR_FWD_HRESET 		0x00080000
-+#define ASD_SAS_CNTLR_FWD_RROM			0x00100000
++	pioctl_header = (struct IOCTL_HEADER *)src;
++	pioctl_header->ReturnCode = status;
++	if ((err = copy_to_user(dest, src, length))) {
++		return -EFAULT;
++	}
++	return 0;
++}
 +
-+/* IOCTL Header */
-+struct IOCTL_HEADER {
-+	__u32 IOControllerNumber;
-+	__u32 Length;
-+	__u32 ReturnCode;
-+	__u32 Timeout;
-+	__u16 Direction;
-+}__attribute__ ((packed));
++static inline int asd_ctl_map_nv_segid_from_ext(uint32_t ext_segid, 
++			uint32_t *asd_segid)
++{
++	switch (ext_segid) {
++	case ASD_SAS_SEGMENT_ID_CTRL_A_USER_SETTINGS0:
++		*asd_segid = NVRAM_CTRL_A_SETTING;
++		break;
++	case ASD_SAS_SEGMENT_ID_MANUFACTURING_SECTOR0: 
++		*asd_segid = NVRAM_MANUF_TYPE;
++		break;
++	case ASD_SAS_SEGMENT_ID_FLASH_DIRECTORY0:/*TBD*/
++	case ASD_SAS_SEGMENT_ID_FLASH0:
++	case ASD_SAS_SEGMENT_ID_SEEPROM0:
++	case ASD_SAS_SEGMENT_ID_COMPATIBILITY_SECTOR0:
++		*asd_segid = NVRAM_NO_SEGMENT_ID;
++	default:
++		return -1;
++	}
 +
-+/*************************************************************************/
-+/* OS INDEPENDENT CODE                                                   */
-+/*************************************************************************/
++	return 0;
++}
 +
-+/* * * * * * * * * Adaptec Vendor Unique Class IOCTL Constants * * * * * * * */
++static inline int asd_ctl_map_seg_attr_to_ext(uint16_t asd_seg_attr, 
++			uint16_t *ext_seg_attr)
++{
++	switch (asd_seg_attr) {
++	case 0:
++		*ext_seg_attr = ASD_SAS_SEGMENT_ATTRIBUTE_READONLY;
++		break;	
++	case 1:
++		*ext_seg_attr = ASD_SAS_SEGMENT_ATTRIBUTE_ERASEWRITE;
++		break;
++	default:
++		return -1;
++	}
++	return 0;
++}
 +
-+/* Timeout value default of 60 seconds: IoctlHeader.Timeout */
-+#define ASD_ADAPTEC_TIMEOUT      60
++/* registration routines */
++int asd_register_ioctl_dev(void)
++{
++	int err;
++	
++	err = 0;
++	asd_ctl_major = 0;
 +
-+/* Controller flags: uControllerFlags */
-+#define ASD_ADPT_CNTLR_FLASH_NOT_PRESENT          0x00000001
-+#define ASD_ADPT_CNTLR_FLASH_READONLY             0x00000002
++	/* 
++	 * Register the IOCTL control device and request 
++	 * for a dynamic major number 
++	 */
++	if (!(asd_ctl_major = register_chrdev(0, ASD_CTL_DEV_NAME, 
++						&asd_ctl_fops))) {
++		return -ENODEV;
++	}
 +
-+/* Invalid value for usFlashManufacturerID */
-+#define ASD_SAS_APDT_INVALID_FLASH_MANUFACTURER_ID   0xFFFF
++#ifdef __x86_64__
++	/* 
++	 * This ioctl handler module is compatible between 64 and 32 bit
++	 * environments, hence register the default handler as 32bit 
++	 * ioctl conversion handler.
++	 */
++	err |= register_ioctl32_conversion(ASD_CC_SAS_GET_CNTLR_CONFIG, 
++							(void *)sys_ioctl);
++	err |= register_ioctl32_conversion(ASD_CC_SAS_GET_ADPT_CNTLR_CONFIG,
++							(void *)sys_ioctl);
++	err |= register_ioctl32_conversion(
++				ASD_CC_SAS_GET_NV_SEGMENT_PROPERTIES,
++							(void *)sys_ioctl);
++	err |= register_ioctl32_conversion(ASD_CC_SAS_WRITE_NV_SEGMENT,
++							(void *)sys_ioctl);
++	err |= register_ioctl32_conversion(ASD_CC_SAS_READ_NV_SEGMENT,
++							(void *)sys_ioctl);
++#endif /* #ifdef __x86_64__ */
++	return err;
++}
 +
-+/* Invalid value for usFlashDeviceID */
-+#define ASD_SAS_ADPT_INVALID_FLASH_DEVICE_ID         0xFFFF
++int asd_unregister_ioctl_dev(void)
++{
++#ifdef __x86_64__
++	unregister_ioctl32_conversion(ASD_CC_SAS_GET_CNTLR_CONFIG);
++	unregister_ioctl32_conversion(ASD_CC_SAS_GET_ADPT_CNTLR_CONFIG);
++	unregister_ioctl32_conversion(ASD_CC_SAS_GET_NV_SEGMENT_PROPERTIES);
++	unregister_ioctl32_conversion(ASD_CC_SAS_WRITE_NV_SEGMENT);
++	unregister_ioctl32_conversion(ASD_CC_SAS_READ_NV_SEGMENT);
++#endif /* #ifdef __x86_64__ */
 +
-+/* Segment identifiers: uSegmentID */
-+#define ASD_SAS_SEGMENT_ID_FLASH_DIRECTORY0       0x80000000
-+#define ASD_SAS_SEGMENT_ID_CTRL_A_USER_SETTINGS0  0x800000E0
-+#define ASD_SAS_SEGMENT_ID_MANUFACTURING_SECTOR0  0x80000120
-+#define ASD_SAS_SEGMENT_ID_COMPATIBILITY_SECTOR0  0x80000140
++	return unregister_chrdev(asd_ctl_major, ASD_CTL_DEV_NAME);
++}
 +
-+#define ASD_SAS_SEGMENT_ID_FLASH0                 0x90000000
-+#define ASD_SAS_SEGMENT_ID_SEEPROM0               0xA0000000
++/* init routine */
++int asd_ctl_init_internal_data(struct asd_softc *asd)
++{
++	struct asd_ctl_mgmt *pasd_ctl_mgmt;
++	
++	pasd_ctl_mgmt = &asd->asd_ctl_internal.mgmt;
++	
++	/* Initialize waitq */
++	init_waitqueue_head(&pasd_ctl_mgmt->waitq);
++	
++	/* Initialize busy flags */
++	pasd_ctl_mgmt->busy = 0;
++	
++	/* Initialize semaphore */
++	init_MUTEX(&pasd_ctl_mgmt->sem);
++	
++	/* Initialize timers */
++	init_timer(&pasd_ctl_mgmt->timer);
 +
-+/* NVRAM status: (uStatus) */
-+#define ASD_SAS_NV_SUCCESS                  0
-+#define ASD_SAS_NV_FAILURE                  1
-+#define ASD_SAS_NV_INVALID_SEGMENT_ID       3
-+#define ASD_SAS_NV_INVALID_REQUEST          4
-+#define ASD_SAS_NV_WRITE_NOT_SUPPORTED      5
-+#define ASD_SAS_NV_NO_NVRAM                 6
++	/* Initialize err flag */
++	pasd_ctl_mgmt->err = SCB_EH_FAILED;
++	
++	return 0;
++}
 +
-+/* NVRAM segment attributes: (usSegmentAttributes) */
-+#define ASD_SAS_SEGMENT_ATTRIBUTE_ERASEWRITE   0x0001
-+#define ASD_SAS_SEGMENT_ATTRIBUTE_READONLY     0x0002
++/* entry points */
++static int asd_ctl_open(struct inode *inode, struct file *file)
++{
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)	
++	MOD_INC_USE_COUNT;
++#endif	
++	return 0;
++}
 +
-+/* Invalid value for uSegmentSize */
-+#define ASD_SAS_SEGMENT_SIZE_INVALID        0xFFFFFFFF
++static int asd_ctl_close(struct inode *inode, struct file *file)
++{
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)	
++	MOD_DEC_USE_COUNT;
++#endif	
++	return 0;
++}
 +
-+/* Invalid value for uSegmentImageSize */
-+#define ASD_SAS_SEGMENT_IMAGE_SIZE_INVALID  0xFFFFFFFF
++static int asd_ctl_ioctl(struct inode *inode, struct file *file,
++			unsigned int cmd, unsigned long arg)
++{
++	struct IOCTL_HEADER ioctl_header;
++	int asd_user_buf_len;
++	int hba, max_hba;
++	int err;
 +
-+#define SLOT_NUMBER_UNKNOWN	0xFFFF
-+/*************************************************************************/
-+/* DATA STRUCTURES                                                       */
-+/*************************************************************************/
++	if (!capable(CAP_SYS_ADMIN)) {
++		return -EACCES;
++	}
++	
++	asd_user_buf_len = sizeof(ioctl_header);
++	if ((err = copy_from_user(&ioctl_header, (void *)arg, 
++				asd_user_buf_len))) {
++		return -EFAULT;
++	}
 +
-+/* * * * * * * * * * Adaptec Vendor Unique Class Structures * * * * * * * * * */
++	hba = ioctl_header.IOControllerNumber;
 +
-+/* ASD_CC_SAS_CNTLR_CONFIGURATION */
-+struct ASD_SAS_PCI_BUS_ADDRESS {
-+	__u8 bBusNumber;
-+	__u8 bDeviceNumber;
-+	__u8 bFunctionNumber;
-+	__u8 bReserved;
-+}__attribute__ ((packed));
++	max_hba = asd_get_number_of_hbas_present();
 +
-+union ASD_SAS_IO_BUS_ADDRESS {
-+	struct ASD_SAS_PCI_BUS_ADDRESS PciAddress;
-+	__u8 bReserved[32];
-+}__attribute__ ((packed));
++	if (hba < 0 || hba >= max_hba) {
++		asd_ctl_copy_to_user((void *)arg, 
++				     &ioctl_header, 
++				     asd_user_buf_len,
++				     ASD_SAS_STATUS_INVALID_PARAMETER);
++		return -ENODEV;
++	}
 +
-+struct ASD_SAS_CNTLR_CONFIG {
-+	__u32 uBaseIoAddress;
-+	struct {
-+		__u32 uLowPart;
-+		__u32 uHighPart;
-+	} BaseMemoryAddress;
-+	__u32 uBoardID;
-+	__u16 usSlotNumber;
-+	__u8 bControllerClass;
-+	__u8 bIoBusType;
-+	union ASD_SAS_IO_BUS_ADDRESS BusAddress;
-+	__u8 szSerialNumber[81];
-+	__u16 usMajorRevision;
-+	__u16 usMinorRevision;
-+	__u16 usBuildRevision;
-+	__u16 usReleaseRevision;
-+	__u16 usBIOSMajorRevision;
-+	__u16 usBIOSMinorRevision;
-+	__u16 usBIOSBuildRevision;
-+	__u16 usBIOSReleaseRevision;
-+	__u32 uControllerFlags;
-+	__u16 usRromMajorRevision;
-+	__u16 usRromMinorRevision;
-+	__u16 usRromBuildRevision;
-+	__u16 usRromReleaseRevision;
-+	__u16 usRromBIOSMajorRevision;
-+	__u16 usRromBIOSMinorRevision;
-+	__u16 usRromBIOSBuildRevision;
-+	__u16 usRromBIOSReleaseRevision;
-+	__u8 bReserved[7];
-+}__attribute__ ((packed));
++	switch (cmd) {
++	case ASD_CC_SAS_GET_CNTLR_CONFIG:
++		err = asd_ctl_get_cntlr_config(arg);
++		break;
++	case ASD_CC_SAS_GET_ADPT_CNTLR_CONFIG:
++		err = asd_ctl_sas_get_adpt_cntlr_conf(arg);
++		break;
++	case ASD_CC_SAS_GET_NV_SEGMENT_PROPERTIES:
++		err = asd_ctl_sas_get_nv_seg_prop(arg);
++		break;
++	case ASD_CC_SAS_WRITE_NV_SEGMENT:
++		err = asd_ctl_sas_write_nv_seg(arg);
++		break;
++	case ASD_CC_SAS_READ_NV_SEGMENT:
++		err = asd_ctl_sas_read_nv_seg(arg);
++		break;
++	/* Unsupported/Unknown IOCTLs */
++	default:
++		asd_ctl_copy_to_user((void *)arg, 
++				     &ioctl_header, 
++				     asd_user_buf_len,
++				     ASD_SAS_STATUS_BAD_CNTL_CODE);
++		return -EINVAL;
++	}
 +
-+struct ASD_SAS_CNTLR_CONFIG_BUFFER {
-+	struct IOCTL_HEADER IoctlHeader;
-+	struct ASD_SAS_CNTLR_CONFIG Configuration;
-+}__attribute__ ((packed));
++	return err;
++}
 +
-+/* ASD_CC_SAS_GET_ADPT_CNTLR_CONFIG */
-+struct ASD_SAS_GET_ADPT_CNTLR_CONFIG {
-+	__u16 usPCIVendorID;
-+	__u16 usPCIDeviceID;
-+	__u16 usPCISubsystemVendorID;
-+	__u16 usPCISubsystemID;
-+	__u32 uControllerFlags;
-+	__u16 usFlashManufacturerID;
-+	__u16 usFlashDeviceID;
-+}__attribute__ ((packed));
 +
-+struct ASD_SAS_GET_ADPT_CNTLR_CONFIG_BUFFER {
-+	struct IOCTL_HEADER IoctlHeader;
-+	struct ASD_SAS_GET_ADPT_CNTLR_CONFIG Configuration;
-+}__attribute__ ((packed));
++/* ioctl handler routines */
++static int asd_ctl_get_cntlr_config(unsigned long arg)
++{
++	struct ASD_SAS_CNTLR_CONFIG_BUFFER asd_cntlr_conf_buf;
++	struct ASD_SAS_CNTLR_CONFIG *pasd_sas_cntlr_config;
++	union ASD_SAS_IO_BUS_ADDRESS *pasd_sas_io_bus_address;
++	struct ASD_SAS_PCI_BUS_ADDRESS *pasd_sas_pci_bus_address;
++	struct IOCTL_HEADER *pioctl_header;
++	struct asd_softc *asd;
++	int asd_user_buf_len;
++	int retcode;
++	int err;
++	
++	asd_user_buf_len = sizeof(asd_cntlr_conf_buf);
++	if ((err = asd_ctl_check_buf_len(arg, asd_user_buf_len))) {
++		return -EINVAL;
++	}
++	
++	if ((err = copy_from_user(&asd_cntlr_conf_buf, (void *)arg, 
++				  asd_user_buf_len))) {
++		return -EFAULT;
++	}
++	
++	pioctl_header = &asd_cntlr_conf_buf.IoctlHeader;
++	
++	asd = asd_get_softc_by_hba_index(pioctl_header->IOControllerNumber);
++	if (asd == NULL) {
++		/* Requested controller not found */
++		retcode = ASD_SAS_STATUS_INVALID_PARAMETER;
++		err = -ENODEV;
++		goto done;
++	}
++		
++	retcode = ASD_SAS_STATUS_SUCCESS;
++	err = 0;
++	pasd_sas_cntlr_config = &asd_cntlr_conf_buf.Configuration;
++	pasd_sas_io_bus_address = &pasd_sas_cntlr_config->BusAddress;
++	pasd_sas_pci_bus_address = &pasd_sas_io_bus_address->PciAddress;
 +
-+/* ASD_CC_SAS_GET_NV_SEGMENT_PROPERTIES */
-+struct ASD_SAS_NV_SEGMENT_PROPERTIES {
-+	__u32 uStatus;
-+	__u32 uSegmentID;
-+	__u16 usSegmentAttributes;
-+	__u32 uSegmentSize;
-+	__u32 uSegmentImageSize;
-+}__attribute__ ((packed));
++	pasd_sas_cntlr_config->uBaseIoAddress = 
++				asd_pcic_read_dword(asd, PCI_BASE_ADDRESS_0);
++	pasd_sas_cntlr_config->BaseMemoryAddress.uLowPart =
++				asd_pcic_read_dword(asd, PCI_BASE_ADDRESS_2);
++	pasd_sas_cntlr_config->BaseMemoryAddress.uHighPart =
++				asd_pcic_read_dword(asd, PCI_BASE_ADDRESS_3);
 +
-+struct ASD_SAS_NV_SEGMENT_PROPERTIES_BUFFER {
-+	struct IOCTL_HEADER IoctlHeader;
-+	struct ASD_SAS_NV_SEGMENT_PROPERTIES Information;
-+}__attribute__ ((packed));
++	pasd_sas_cntlr_config->uBoardID =
++				(asd_pci_dev(asd)->device << 16) |
++				asd_pci_dev(asd)->vendor;
 +
-+/* ASD_CC_SAS_WRITE_NV_SEGMENT */
-+struct ASD_SAS_WRITE_NV_SEGMENT {
-+	__u32 uStatus;
-+	__u32 uSegmentID;
-+	__u32 uDestinationOffset;
-+	__u32 uBufferLength;
-+}__attribute__ ((packed));
++	pasd_sas_cntlr_config->usSlotNumber = 
++				PCI_SLOT(asd_pci_dev(asd)->devfn);
++	pasd_sas_cntlr_config->bControllerClass = ASD_SAS_CNTLR_CLASS_HBA;
++	pasd_sas_cntlr_config->bIoBusType = ASD_SAS_BUS_TYPE_PCI;
++	pasd_sas_pci_bus_address->bBusNumber = asd_pci_dev(asd)->bus->number;
++	pasd_sas_pci_bus_address->bDeviceNumber =
++				PCI_SLOT(asd_pci_dev(asd)->devfn);
++	pasd_sas_pci_bus_address->bFunctionNumber =
++				PCI_FUNC(asd_pci_dev(asd)->devfn);
++	
++	sprintf(pasd_sas_cntlr_config->szSerialNumber,"%01x%06x%08x%x", 
++			ASD_BSAR_GET_NAA(asd->hw_profile.wwn), 
++			ASD_BSAR_GET_IEEE_ID(asd->hw_profile.wwn),
++			ASD_BSAR_GET_SN(asd->hw_profile.wwn),
++			ASD_BSAR_GET_LSB(asd->hw_profile.wwn));
 +
-+struct ASD_SAS_WRITE_NV_SEGMENT_BUFFER {
-+	struct IOCTL_HEADER IoctlHeader;
-+	struct ASD_SAS_WRITE_NV_SEGMENT Information;
-+	__u8 bSourceBuffer[1];
-+}__attribute__ ((packed));
++	pasd_sas_cntlr_config->usMajorRevision = 0;
++	pasd_sas_cntlr_config->usMinorRevision = 0;
++	pasd_sas_cntlr_config->usBuildRevision = 0;
++	pasd_sas_cntlr_config->usReleaseRevision = 0;
++	pasd_sas_cntlr_config->usBIOSMajorRevision = 
++				asd->hw_profile.bios_maj_ver; 
++	pasd_sas_cntlr_config->usBIOSMinorRevision = 
++				asd->hw_profile.bios_min_ver; 
++	pasd_sas_cntlr_config->usBIOSBuildRevision = 
++				asd->hw_profile.bios_bld_num & 0xffff; 
++	pasd_sas_cntlr_config->usBIOSReleaseRevision = 
++				asd->hw_profile.bios_bld_num >> 16; 
++	
++	pasd_sas_cntlr_config->uControllerFlags = ASD_SAS_CNTLR_SAS_HBA;
++					   //|ASD_SAS_CNTLR_SATA_HBA;//TBD
++	pasd_sas_cntlr_config->usRromMajorRevision = 0;
++	pasd_sas_cntlr_config->usRromMinorRevision = 0;
++	pasd_sas_cntlr_config->usRromBuildRevision = 0;
++	pasd_sas_cntlr_config->usRromReleaseRevision = 0;
++	pasd_sas_cntlr_config->usRromBIOSMajorRevision = 0;
++	pasd_sas_cntlr_config->usRromBIOSMinorRevision = 0;
++	pasd_sas_cntlr_config->usRromBIOSBuildRevision = 0;
++	pasd_sas_cntlr_config->usRromBIOSReleaseRevision = 0;
 +
-+/* ASD_CC_SAS_READ_NV_SEGMENT */
-+struct ASD_SAS_READ_NV_SEGMENT {
-+	__u32 uStatus;
-+	__u32 uSegmentID;
-+	__u32 uSourceOffset;
-+	__u32 uBytesToRead;
-+	__u32 uBytesRead;
-+}__attribute__ ((packed));
++done:
++	/* return status */	
++	asd_ctl_copy_to_user((void *)arg, &asd_cntlr_conf_buf, 
++			     asd_user_buf_len, retcode);
++	return err;
++}	
 +
-+struct ASD_SAS_READ_NV_SEGMENT_BUFFER {
-+	struct IOCTL_HEADER IoctlHeader;
-+	struct ASD_SAS_READ_NV_SEGMENT Information;
-+	__u8 bDestinationBuffer[1];
-+}__attribute__ ((packed));
++/* Adaptec extension IOCTL handler routines */
++static int asd_ctl_sas_get_adpt_cntlr_conf(unsigned long arg)
++{
++	struct ASD_SAS_GET_ADPT_CNTLR_CONFIG_BUFFER asd_adpt_cntlr_conf_buf;
++	struct ASD_SAS_GET_ADPT_CNTLR_CONFIG *pasd_sas_adpt_cntlr_config;
++	struct IOCTL_HEADER *pioctl_header;
++	struct asd_softc *asd;
++	u_long flags;
++	int asd_user_buf_len;
++	int retcode;
++	int err;
++	
++	asd_user_buf_len = sizeof(asd_adpt_cntlr_conf_buf);
++	if ((err = asd_ctl_check_buf_len(arg, asd_user_buf_len))) {
++		return -EINVAL;
++	}
++	
++	if ((err = copy_from_user(&asd_adpt_cntlr_conf_buf, 
++				  (void *)arg, 
++				  asd_user_buf_len))) {
++		return -EFAULT;
++	}
++	
++	pioctl_header = &asd_adpt_cntlr_conf_buf.IoctlHeader;
++	
++	asd = asd_get_softc_by_hba_index(pioctl_header->IOControllerNumber);
++	if (asd == NULL) {
++		/* Requested controller not found */
++		retcode = ASD_SAS_STATUS_INVALID_PARAMETER;
++		err = -ENODEV;
++		goto done;
++	}
 +
-+#define ASD_ADAPTEC_MAGIC 'E'
++	pasd_sas_adpt_cntlr_config = &asd_adpt_cntlr_conf_buf.Configuration;
 +
-+/* Control Codes */
-+#define ASD_CC_SAS_GET_CNTLR_CONFIG		\
-+	_IOWR(ASD_ADAPTEC_MAGIC, 0x10,		\
-+	      struct ASD_SAS_CNTLR_CONFIG_BUFFER) 
++	asd_lock(asd, &flags);
++	pasd_sas_adpt_cntlr_config->usPCIVendorID = asd_pci_dev(asd)->vendor;
++	pasd_sas_adpt_cntlr_config->usPCIDeviceID = asd_pci_dev(asd)->device;
++	pasd_sas_adpt_cntlr_config->usPCISubsystemVendorID =  
++					asd_pci_dev(asd)->subsystem_vendor;
++	pasd_sas_adpt_cntlr_config->usPCISubsystemID = 
++					asd_pci_dev(asd)->subsystem_device;
++		
++	if (asd->hw_profile.flash_present) {
++		pasd_sas_adpt_cntlr_config->usFlashManufacturerID =
++					asd->hw_profile.flash_manuf_id;
++		pasd_sas_adpt_cntlr_config->usFlashDeviceID = 
++					asd->hw_profile.flash_dev_id;
++		if (asd->hw_profile.flash_wr_prot) {
++			pasd_sas_adpt_cntlr_config->uControllerFlags 
++				= ASD_ADPT_CNTLR_FLASH_READONLY;
++		}
++		retcode = ASD_SAS_STATUS_SUCCESS;
++	} else {
++		pasd_sas_adpt_cntlr_config->usFlashManufacturerID 
++				= ASD_SAS_APDT_INVALID_FLASH_MANUFACTURER_ID; 
++		pasd_sas_adpt_cntlr_config->usFlashDeviceID 
++				= ASD_SAS_ADPT_INVALID_FLASH_DEVICE_ID; 
++		pasd_sas_adpt_cntlr_config->uControllerFlags 
++				= ASD_ADPT_CNTLR_FLASH_NOT_PRESENT; 
++		retcode = ASD_SAS_STATUS_FAILED;
++	}
++	asd_unlock(asd, &flags);
++done:
++	/* return status */	
++	asd_ctl_copy_to_user((void *)arg, &asd_adpt_cntlr_conf_buf, 
++			     asd_user_buf_len, retcode);
++	return err;
++}
 +
-+#define ASD_CC_SAS_GET_ADPT_CNTLR_CONFIG	\
-+	_IOWR(ASD_ADAPTEC_MAGIC, 0x11,		\
-+	      struct ASD_SAS_GET_ADPT_CNTLR_CONFIG_BUFFER) 
++static int asd_ctl_sas_get_nv_seg_prop(unsigned long arg)
++{
++	struct ASD_SAS_NV_SEGMENT_PROPERTIES_BUFFER asd_nvseg_prop_buf;
++	struct ASD_SAS_NV_SEGMENT_PROPERTIES *pasd_nvseg_prop;
++	struct IOCTL_HEADER *pioctl_header;
++	struct asd_softc *asd;
++	u_long flags;
++	uint32_t seg_offset, nv_offset;
++	uint32_t pad_size, image_size, attr, bytes_read;
++	int asd_user_buf_len;
++	int err;
++	int retcode; 
++	
++	asd_user_buf_len = sizeof(asd_nvseg_prop_buf);
++	if ((err = asd_ctl_check_buf_len(arg, asd_user_buf_len))) {
++		return -EINVAL;
++	}
++	
++	if ((err = copy_from_user(&asd_nvseg_prop_buf, 
++				  (void *)arg, 
++				  asd_user_buf_len))) {
++		return -EFAULT;
++	}
++	
++	pioctl_header = &asd_nvseg_prop_buf.IoctlHeader;
++	
++	asd = asd_get_softc_by_hba_index(pioctl_header->IOControllerNumber);
++	if (asd == NULL) {
++		/* Requested controller not found */
++		retcode = ASD_SAS_STATUS_INVALID_PARAMETER; 
++		err = -ENODEV;
++		goto done;
++	}
++	
++	err = 0;
++	retcode = ASD_SAS_STATUS_SUCCESS;
++	pasd_nvseg_prop = &asd_nvseg_prop_buf.Information;
++	asd_lock(asd, &flags);
++	
++	switch (pasd_nvseg_prop->uSegmentID) {
++	case ASD_SAS_SEGMENT_ID_MANUFACTURING_SECTOR0:
++	{
++		struct asd_manuf_base_seg_layout manuf_layout;
++		
++		if ((err = asd_hwi_search_nv_segment(asd, NVRAM_MANUF_TYPE,
++				&nv_offset, &pad_size, &image_size, 
++				&attr)) != 0) {
++			err = -1;
++			break;
++		}
++		asd_ctl_map_seg_attr_to_ext(attr, 
++			&pasd_nvseg_prop->usSegmentAttributes); 
++		
++		seg_offset = 0;
++		memset(&manuf_layout, 0x0, sizeof(manuf_layout));
++		
++		/* Read Manufacturing base segment */
++		if (asd_hwi_read_nv_segment(asd, NVRAM_MANUF_TYPE, 
++				&manuf_layout, seg_offset, 
++				sizeof(manuf_layout), &bytes_read) != 0) {
++			err = -1;
++			break;
++		}
++		image_size = manuf_layout.sector_size;
++		pad_size = image_size;
++		break;
++	}
++	case ASD_SAS_SEGMENT_ID_CTRL_A_USER_SETTINGS0:
++	{
++		struct asd_pci_layout pci_layout;
 +
-+#define ASD_CC_SAS_GET_NV_SEGMENT_PROPERTIES	\
-+	_IOWR(ASD_ADAPTEC_MAGIC, 0x12, 		\
-+	      struct ASD_SAS_NV_SEGMENT_PROPERTIES_BUFFER)
++		if ((err = asd_hwi_search_nv_segment(asd, NVRAM_CTRL_A_SETTING,
++				&nv_offset, &pad_size, &image_size, 
++				&attr)) != 0) {
++			err = -1;
++			break;
++		}
++		asd_ctl_map_seg_attr_to_ext(attr, 
++			&pasd_nvseg_prop->usSegmentAttributes); 
++		
++		seg_offset = 0;
++		memset(&pci_layout, 0x0, sizeof(pci_layout));
++		
++		/* Read Ctrl-A first segment */
++		if (asd_hwi_read_nv_segment(asd, NVRAM_CTRL_A_SETTING, 
++				&pci_layout, seg_offset, sizeof(pci_layout),
++				&bytes_read) != 0) {
++			err = -1;
++			break;
++		}
++		image_size = pci_layout.image_size;
++		pad_size = image_size;
++		break;
++	}
++	case ASD_SAS_SEGMENT_ID_FLASH_DIRECTORY0:
++	{
++		struct asd_flash_dir_layout flash_dir;
++		uint32_t nv_addr, active_entries;
++		int i;
++		if (asd_hwi_search_nv_cookie(asd, &nv_addr, &flash_dir) != 0) {
++			err = -1;
++			break;
++		}
++		seg_offset = 0;
++		active_entries = 0;
++		for (i = 0; i < NVRAM_MAX_ENTRIES; i++) {
++			if (flash_dir.ae_mask & (1 << i)) {
++				active_entries++;
++			}
++		}
++		image_size = sizeof(flash_dir) +
++			     (active_entries * 
++			     sizeof(struct asd_fd_entry_layout));
++		pad_size = sizeof(flash_dir) + 
++			   (NVRAM_MAX_ENTRIES * 
++			   sizeof(struct asd_fd_entry_layout));
++		break;
++	}
++	case ASD_SAS_SEGMENT_ID_FLASH0:
++	case ASD_SAS_SEGMENT_ID_SEEPROM0:
++	case ASD_SAS_SEGMENT_ID_COMPATIBILITY_SECTOR0:
++	{
++		pad_size = ASD_SAS_SEGMENT_SIZE_INVALID;
++		image_size = ASD_SAS_SEGMENT_IMAGE_SIZE_INVALID;
++		pasd_nvseg_prop->usSegmentAttributes = 0;
++		break;
++	}
++	default:
++		err = -1;
++		break;
++	}
++	asd_unlock(asd, &flags);
 +
-+#define ASD_CC_SAS_WRITE_NV_SEGMENT 		\
-+	_IOWR(ASD_ADAPTEC_MAGIC, 0x13, 		\
-+	      struct ASD_SAS_WRITE_NV_SEGMENT_BUFFER) 
++	if (err) {
++		pasd_nvseg_prop->uStatus = ASD_SAS_NV_FAILURE;
++		retcode = ASD_SAS_STATUS_FAILED;
++	} else {
++		pasd_nvseg_prop->uSegmentSize = pad_size;
++		pasd_nvseg_prop->uSegmentImageSize = image_size;
++		pasd_nvseg_prop->uStatus = ASD_SAS_NV_SUCCESS;
++		retcode = ASD_SAS_STATUS_SUCCESS;
++	}
++done:
++	/* return status */	
++	asd_ctl_copy_to_user((void *)arg, &asd_nvseg_prop_buf, 
++			     asd_user_buf_len, retcode);
++	return err;
++}
 +
-+#define ASD_CC_SAS_READ_NV_SEGMENT 		\
-+	_IOWR(ASD_ADAPTEC_MAGIC, 0x14, 		\
-+	      struct ASD_SAS_READ_NV_SEGMENT_BUFFER) 
++static int asd_ctl_sas_write_nv_seg(unsigned long arg)
++{
++	struct ASD_SAS_WRITE_NV_SEGMENT_BUFFER *pasd_write_nv_buf;
++	struct ASD_SAS_WRITE_NV_SEGMENT *pasd_write_nv_seg;
++	struct IOCTL_HEADER *pioctl_header;
++	struct asd_ctl_mgmt *pasd_ctl_mgmt;
++	struct asd_softc *asd;
++	uint8_t *psource_buffer;
++	int asd_user_buf_len;
++	int retcode;
++	int err;
++	
++	/* 
++	 * Leave the data buffer at the end of the struct as the
++	 * data buffer will be allocated separately
++	 */
++	asd_user_buf_len = offsetof(struct ASD_SAS_WRITE_NV_SEGMENT_BUFFER, 
++				     bSourceBuffer) ;
++	
++	if ((pasd_write_nv_buf = asd_alloc_mem(asd_user_buf_len,
++					       GFP_ATOMIC)) == NULL) {
++		return -ENOMEM;
++	}
 +
-+#endif /* _ASD_IOCTL_H_ */
-
++	if ((err = copy_from_user(pasd_write_nv_buf, (void *)arg, 
++				  asd_user_buf_len))) {
++		asd_free_mem(pasd_write_nv_buf);
++		return -EFAULT;
++	}
++	
++	pioctl_header = &pasd_write_nv_buf->IoctlHeader;
++	pasd_write_nv_seg = 
++		&pasd_write_nv_buf->Information;
++
++	if ((err = asd_ctl_check_buf_len(arg, 
++			  asd_user_buf_len
++			  + pasd_write_nv_seg->uBufferLength))) {
++		asd_free_mem(pasd_write_nv_buf);
++		return -EINVAL;
++	}
++	
++	asd = asd_get_softc_by_hba_index(pioctl_header->IOControllerNumber);
++	
++	if (asd == NULL) {
++		/* Requested controller not found */
++		retcode = ASD_SAS_STATUS_INVALID_PARAMETER;
++		err = -ENODEV;
++		goto done;
++	}
++
++	if (!asd->hw_profile.flash_present) {
++		retcode = ASD_SAS_STATUS_FAILED;
++		err = -EINVAL;
++		goto done;
++	}
++	
++	err = 0;
++	retcode = ASD_SAS_STATUS_SUCCESS; 
++	psource_buffer = NULL;	
++	pasd_ctl_mgmt = &asd->asd_ctl_internal.mgmt;
++
++	if ((psource_buffer = (uint8_t *)asd_valloc_mem(
++				pasd_write_nv_seg->uBufferLength)) == NULL) {
++		retcode = ASD_SAS_STATUS_FAILED;
++		err = -ENOMEM;
++		goto done;
++	}
++	memset(psource_buffer, 0, pasd_write_nv_seg->uBufferLength);
++
++	if ((err = copy_from_user(psource_buffer,
++			 (void *)arg + asd_user_buf_len,
++			 pasd_write_nv_seg->uBufferLength))) {
++		asd_vfree_mem(psource_buffer);
++		retcode = ASD_SAS_STATUS_FAILED;
++		err = -EFAULT;
++		goto done;
++	}
++	
++	down_interruptible(&pasd_ctl_mgmt->sem);
++	err = asd_ctl_write_to_nvram(asd, pasd_write_nv_buf, 
++				     psource_buffer);
++	up(&pasd_ctl_mgmt->sem);
++
++	asd_vfree_mem(psource_buffer);
++
++	retcode = err ? ASD_SAS_STATUS_FAILED : ASD_SAS_STATUS_SUCCESS; 
++done:
++	asd_ctl_copy_to_user((void *)arg, pasd_write_nv_buf, 
++			     asd_user_buf_len, retcode);
++	asd_free_mem(pasd_write_nv_buf);
++	return err;
++}
++
++static int asd_ctl_sas_read_nv_seg(unsigned long arg)
++{
++	struct ASD_SAS_READ_NV_SEGMENT_BUFFER *pasd_read_nv_buf;
++	struct ASD_SAS_READ_NV_SEGMENT *pasd_read_nv_seg;
++	struct IOCTL_HEADER *pioctl_header;
++	struct asd_ctl_mgmt *pasd_ctl_mgmt;
++	struct asd_softc *asd;
++	uint8_t *pdest_buffer;
++	int asd_user_buf_len;
++	int retcode;
++	int err;
++	
++	/* 
++	 * Leave the data buffer at the end of the struct as the
++	 * data buffer will be allocated separately
++	 */
++	asd_user_buf_len = offsetof(struct ASD_SAS_READ_NV_SEGMENT_BUFFER, 
++				     bDestinationBuffer) ;
++	
++	if ((pasd_read_nv_buf = asd_alloc_mem(asd_user_buf_len,
++					      GFP_ATOMIC)) == NULL) {
++		return -ENOMEM;
++	}
++
++	if ((err = copy_from_user(pasd_read_nv_buf, (void *)arg, 
++				  asd_user_buf_len)) != 0) {
++		asd_free_mem(pasd_read_nv_buf);
++		return -EFAULT;
++	}
++	
++	pioctl_header = &pasd_read_nv_buf->IoctlHeader;
++	pasd_read_nv_seg = &pasd_read_nv_buf->Information;
++
++	if ((err = asd_ctl_check_buf_len(arg, 
++			  asd_user_buf_len
++			  + pasd_read_nv_seg->uBytesToRead))) {
++		asd_free_mem(pasd_read_nv_buf);
++		return -EINVAL;
++	}
++	
++	asd = asd_get_softc_by_hba_index(pioctl_header->IOControllerNumber);
++	
++	if (asd == NULL) {
++		/* Requested controller not found */
++		retcode = ASD_SAS_STATUS_INVALID_PARAMETER;
++		err = -ENODEV;
++		goto done;
++	}
++	
++	if (!asd->hw_profile.flash_present) {
++		retcode = ASD_SAS_STATUS_FAILED;
++		err = -EINVAL;
++		goto done;
++	}
++	
++	err = 0;
++	retcode = ASD_SAS_STATUS_SUCCESS; 
++	pdest_buffer = NULL;
++	pasd_ctl_mgmt = &asd->asd_ctl_internal.mgmt;
++	
++	if ((pdest_buffer = (uint8_t *)asd_valloc_mem(
++				pasd_read_nv_seg->uBytesToRead)) == NULL) {
++		retcode = ASD_SAS_STATUS_FAILED;
++		err = -ENOMEM;
++		goto done;
++	}
++	memset(pdest_buffer, 0, pasd_read_nv_seg->uBytesToRead);
++	
++	down_interruptible(&pasd_ctl_mgmt->sem);
++	err = asd_ctl_read_from_nvram(asd, pasd_read_nv_buf, 
++				      pdest_buffer);
++	up(&pasd_ctl_mgmt->sem);
++
++	if (err) {
++		retcode = ASD_SAS_STATUS_FAILED; 
++	} else {
++		retcode = ASD_SAS_STATUS_SUCCESS; 
++		if ((err = copy_to_user((void *)arg + asd_user_buf_len,
++					pdest_buffer,
++					pasd_read_nv_seg->uBytesRead))) {
++			retcode = ASD_SAS_STATUS_FAILED; 
++		}
++	}
++
++	asd_vfree_mem(pdest_buffer);
++done:
++	asd_ctl_copy_to_user((void *)arg, pasd_read_nv_buf, 
++			     asd_user_buf_len, retcode);
++	asd_free_mem(pasd_read_nv_buf);
++	return err;
++}
++
++/* helper routines */
++static int asd_ctl_write_to_nvram(struct asd_softc *asd,
++	struct ASD_SAS_WRITE_NV_SEGMENT_BUFFER *pasd_write_nv_buf,
++	uint8_t *psource_buffer)
++{
++	struct ASD_SAS_WRITE_NV_SEGMENT *pasd_write_nv_seg;
++	struct IOCTL_HEADER *pioctl_header;
++	struct asd_ctl_mgmt *pasd_ctl_mgmt;
++	uint32_t nv_segment_id, nv_offset;
++	uint32_t pad_size, image_size, attr;
++	u_long flags;
++	int retcode;
++	int err;
++	
++	pioctl_header = &pasd_write_nv_buf->IoctlHeader;
++	pasd_write_nv_seg = &pasd_write_nv_buf->Information;
++	pasd_ctl_mgmt = &asd->asd_ctl_internal.mgmt;
++	
++	if (test_and_set_bit(ASD_CTL_INTERNAL_BUSY_BIT_NR, 
++			     &pasd_ctl_mgmt->busy)) { 
++		return -EBUSY;
++	}
++	asd_lock(asd, &flags);
++	err = 0;
++	retcode = ASD_SAS_STATUS_SUCCESS;
++	switch (pasd_write_nv_seg->uSegmentID) {
++	case ASD_SAS_SEGMENT_ID_MANUFACTURING_SECTOR0:
++	{
++		asd_ctl_map_nv_segid_from_ext(pasd_write_nv_seg->uSegmentID,
++					      &nv_segment_id);
++		if ((err = asd_hwi_search_nv_segment(asd, nv_segment_id, 
++				&nv_offset, &pad_size, &image_size, 
++				&attr)) != 0) {
++			err = -1;
++			pasd_write_nv_seg->uStatus = ASD_SAS_NV_FAILURE;
++			break;
++		}
++		err = asd_ctl_write_to_flash(asd, psource_buffer, 
++			nv_segment_id,
++			pasd_write_nv_seg->uDestinationOffset, 
++			pasd_write_nv_seg->uBufferLength);
++		break;
++	}
++	case ASD_SAS_SEGMENT_ID_FLASH0:
++	{
++		err = asd_ctl_write_to_flash(asd, psource_buffer, 
++			NVRAM_NO_SEGMENT_ID,
++			pasd_write_nv_seg->uDestinationOffset, 
++			pasd_write_nv_seg->uBufferLength);
++		break;
++	}
++	case ASD_SAS_SEGMENT_ID_SEEPROM0:
++	case ASD_SAS_SEGMENT_ID_FLASH_DIRECTORY0:
++	case ASD_SAS_SEGMENT_ID_CTRL_A_USER_SETTINGS0:
++	case ASD_SAS_SEGMENT_ID_COMPATIBILITY_SECTOR0:
++	default:
++		pasd_write_nv_seg->uStatus = ASD_SAS_NV_FAILURE;
++		err = -EINVAL;
++		break;
++	}
++
++	asd_unlock(asd, &flags);
++
++	/* return */
++	clear_bit(ASD_CTL_INTERNAL_BUSY_BIT_NR, &pasd_ctl_mgmt->busy);
++	return err;
++}
++
++static int asd_ctl_read_from_nvram(struct asd_softc *asd,
++	struct ASD_SAS_READ_NV_SEGMENT_BUFFER *pasd_read_nv_buf,
++	uint8_t *pdest_buffer)
++{
++	struct ASD_SAS_READ_NV_SEGMENT *pasd_read_nv_seg;
++	struct IOCTL_HEADER *pioctl_header;
++	struct asd_ctl_mgmt *pasd_ctl_mgmt;
++	uint32_t nv_segment_id;
++	u_long flags;
++	int retcode;
++	int err;
++	
++	pioctl_header = &pasd_read_nv_buf->IoctlHeader;
++	pasd_read_nv_seg = &pasd_read_nv_buf->Information;
++	pasd_ctl_mgmt = &asd->asd_ctl_internal.mgmt;
++	
++	if (test_and_set_bit(ASD_CTL_INTERNAL_BUSY_BIT_NR, 
++			     &pasd_ctl_mgmt->busy)) { 
++		return -EBUSY;
++	}
++	err = 0;
++	retcode = ASD_SAS_STATUS_SUCCESS;
++	
++	asd_lock(asd, &flags);
++	switch (pasd_read_nv_seg->uSegmentID) {
++	case ASD_SAS_SEGMENT_ID_CTRL_A_USER_SETTINGS0:
++	case ASD_SAS_SEGMENT_ID_MANUFACTURING_SECTOR0:
++	{
++		asd_ctl_map_nv_segid_from_ext(
++			pasd_read_nv_seg->uSegmentID,
++			&nv_segment_id);
++
++		if (asd_hwi_read_nv_segment(asd, 
++				nv_segment_id,
++				(void *)pdest_buffer,
++				pasd_read_nv_seg->uSourceOffset, 
++				pasd_read_nv_seg->uBytesToRead, 
++				&pasd_read_nv_seg->uBytesRead
++				) != 0) {
++			pasd_read_nv_seg->uStatus = ASD_SAS_NV_FAILURE;
++			err = -EINVAL;
++			break;
++		}
++		pasd_read_nv_seg->uStatus = ASD_SAS_NV_SUCCESS;
++		break;
++	}
++	case ASD_SAS_SEGMENT_ID_FLASH_DIRECTORY0:
++	{
++		struct asd_flash_dir_layout flash_dir;
++		uint32_t nv_addr;
++
++		if (asd_hwi_search_nv_cookie(asd, &nv_addr, &flash_dir) != 0) {
++			err = -1;
++			break;
++		}
++		nv_addr += /*NVRAM_FIRST_DIR_ENTRY +*/
++			pasd_read_nv_seg->uSourceOffset;
++
++		if (asd_hwi_read_nv_segment(asd, NVRAM_NO_SEGMENT_ID,
++				(void *)pdest_buffer, nv_addr,
++				pasd_read_nv_seg->uBytesToRead, 
++				&pasd_read_nv_seg->uBytesRead
++				) != 0) {
++			err = -1;
++			break;
++		}
++		break;
++	}	
++	case ASD_SAS_SEGMENT_ID_FLASH0:
++	{
++		if (asd_hwi_read_nv_segment(asd, 
++				NVRAM_NO_SEGMENT_ID,
++				(void *)pdest_buffer,
++				pasd_read_nv_seg->uSourceOffset, 
++				pasd_read_nv_seg->uBytesToRead, 
++				&pasd_read_nv_seg->uBytesRead
++				) != 0) {
++			pasd_read_nv_seg->uStatus = ASD_SAS_NV_FAILURE;
++			err = -EINVAL;
++			break;
++		}
++		pasd_read_nv_seg->uStatus = ASD_SAS_NV_SUCCESS;
++		break;
++	}
++	case ASD_SAS_SEGMENT_ID_SEEPROM0:
++	case ASD_SAS_SEGMENT_ID_COMPATIBILITY_SECTOR0:/*TBD*/
++	default:
++		pasd_read_nv_seg->uStatus = ASD_SAS_NV_FAILURE;
++		err = -EINVAL;
++		break;
++	}
++	asd_unlock(asd, &flags);
++
++	/* return */
++	clear_bit(ASD_CTL_INTERNAL_BUSY_BIT_NR, &pasd_ctl_mgmt->busy);
++	return err;
++}
++
++static uint32_t asd_ctl_write_to_flash(struct asd_softc *asd, 
++			uint8_t *src_img_addr, uint32_t segment_id, 
++			uint32_t dest_nv_offset, uint32_t src_img_size)
++{
++	uint32_t flash_addr;
++
++	flash_addr = 0;
++
++	/* Need to unlock MBAR key register */
++	flash_addr = asd_pcic_read_dword(asd, PCIC_MBAR_KEY);
++	if (flash_addr != 0) {
++		/* currently locked, need to unlock */
++		asd_pcic_write_dword(asd, PCIC_MBAR_KEY, flash_addr);
++	}
++	if (asd_hwi_write_nv_segment(asd, 
++			(void *)src_img_addr, segment_id, 
++			dest_nv_offset, src_img_size) != 0) {
++		return -EINVAL;
++	}
++	return 0;
++}
 
