@@ -1,58 +1,149 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Suggestion for addition to Documentation/scsi/scsi_mid_low_api.txt
-Date: Fri, 2 Jul 2004 11:37:53 -0400 (EDT)
+From: Ricky Beam <jfbeam@bluetronic.net>
+Subject: [BK-PATCH] 3w-9xxx: proc interface
+Date: Fri, 2 Jul 2004 12:08:23 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0407021128500.1038-100000@ida.rowland.org>
-References: <1088721250.40e4916212bed@wwws.torque.net>
+Message-ID: <Pine.GSO.4.33.0407021202290.25702-200000@sweetums.bluetronic.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: MULTIPART/MIXED; BOUNDARY="-559023410-1506727461-1088784503=:25702"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:6660 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S263020AbUGBPhx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jul 2004 11:37:53 -0400
-In-Reply-To: <1088721250.40e4916212bed@wwws.torque.net>
+Received: from sweetums.bluetronic.net ([24.199.150.42]:46042 "EHLO
+	sweetums.bluetronic.net") by vger.kernel.org with ESMTP
+	id S264665AbUGBQOp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Jul 2004 12:14:45 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Adam Radford <aradford@amcc.com>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>
 
-On Thu, 1 Jul 2004 dougg@torque.net wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
 
-> Quoting Alan Stern <stern@rowland.harvard.edu>:
-> 
-> > 	The test given for valid data in the sense_buffer isn't correct.
-> > 	The actual test used is ((cmd->sense_buffer[0] & 0x7f) == 0x70).
-> > 	This is mentioned in a couple of places in the document.
-> 
-> If that comparison is in linux code then the comparison
-> is wrong! The comparison that is correct is bits 4, 5 and 6
-> all being set. So we don't care about bit 7 and the bottom
-> two bits can be 0x0, 0x1, 0x2 or 0x3. The fact that linux
-> can't handle sense buffer "descriptor" format is an issue
-> that needs to be addressed soon (but is unlikely to be an
-> issue for usb-storage devices for some time).
+---559023410-1506727461-1088784503=:25702
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 
-Hmmm...  I see the test being done two different ways, sometimes masked 
-with 0x70 and sometimes with 0x7f.  The latter form is used in scsi_lib.c, 
-sd.c, sr.c, and sg.c.  Maybe a patch is in order.
+3dm2 (the currently available one anyway) needs /proc/scsi/3w-9xxx to
+discover any controllers.  The current in-kernel driver doesn't contain any
+/proc/scsi support.  The attached patch restores the interface.
 
-> > 	You didn't mention cmd->underflow.
-> 
-> I thought that 'resid' superseded 'underflow'. I'll look
-> into it.
+--Ricky
 
-Look at http://marc.theaimsgroup.com/?l=linux-scsi&m=108671007701796&w=2 
-and followup messages.
 
-> > 	Although it's pretty obvious, you might want to add that 
-> > 	cmd->device points to the scsi_device for which the command was 
-> > 	queued.
-> 
-> Thought about that. In lk 2.6 I don't think there is a
-> 'device' (I need to check) but there is an access
-> function (that bumps the usage counter on the scsi_device
-> object in question).
+---559023410-1506727461-1088784503=:25702
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name="3w-9xxx.patch"
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.GSO.4.33.0407021208230.25702@sweetums.bluetronic.net>
+Content-Description: 
+Content-Disposition: attachment; filename="3w-9xxx.patch"
 
-No, there definitely is a device.
-
-Alan Stern
-
+VGhpcyBCaXRLZWVwZXIgcGF0Y2ggY29udGFpbnMgdGhlIGZvbGxvd2luZyBj
+aGFuZ2VzZXRzOg0KMS4xNDExDQoNCiMgVXNlcjoJamZiZWFtDQojIEhvc3Q6
+CXhhY3Rpb25hbC5jb20NCiMgUm9vdDoJL29wdC9rZXJuZWwvc3JjL2JrLWxp
+bnV4LTIuNg0KDQojIFBhdGNoIHZlcnM6CTEuMw0KIyBQYXRjaCB0eXBlOglS
+RUdVTEFSDQoNCj09IENoYW5nZVNldCA9PQ0KdG9ydmFsZHNAYXRobG9uLnRy
+YW5zbWV0YS5jb218Q2hhbmdlU2V0fDIwMDIwMjA1MTczMDU2fDE2MDQ3fGMx
+ZDExYTQxZWQwMjQ4NjQNCmpmYmVhbUB4YWN0aW9uYWwuY29tfENoYW5nZVNl
+dHwyMDA0MDcwMjE1MjcxM3wzMjY0Ng0KRCAxLjE0MTEgMDQvMDcvMDIgMTE6
+MzI6MDUtMDQ6MDAgamZiZWFtQHhhY3Rpb25hbC5jb20gKzEgLTANCkIgdG9y
+dmFsZHNAYXRobG9uLnRyYW5zbWV0YS5jb218Q2hhbmdlU2V0fDIwMDIwMjA1
+MTczMDU2fDE2MDQ3fGMxZDExYTQxZWQwMjQ4NjQNCkMNCmMgW1BBVENIXSBy
+ZXN0b3JlIDN3LTl4eHggbGVnYWN5IC9wcm9jL3Njc2kgaW50ZXJmYWNlDQpj
+IA0KYyAgLSAzZG0yIGRlcGVuZHMgb24gdGhlIHByb2MgaW50ZXJmYWNlIHRv
+IGRpc2NvdmVyIGFkYXB0ZXJzDQpLIDMyNzc0DQpQIENoYW5nZVNldA0KLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+DQoNCjBhMA0KPiBhcmFkZm9yZEBhbWNjLmNvbVtqZWpiXXxkcml2ZXJzL3Nj
+c2kvM3ctOXh4eC5jfDIwMDQwNjA0MDAzODI5fDE0MjMyfDE4MWI1YWQ5YmRi
+NWFlMDUgamZiZWFtQHhhY3Rpb25hbC5jb218ZHJpdmVycy9zY3NpLzN3LTl4
+eHguY3wyMDA0MDcwMjE1MzE1NXw1NjU5OA0KDQo9PSBkcml2ZXJzL3Njc2kv
+M3ctOXh4eC5jID09DQphcmFkZm9yZEBhbWNjLmNvbVtqZWpiXXxkcml2ZXJz
+L3Njc2kvM3ctOXh4eC5jfDIwMDQwNjA0MDAzODI5fDE0MjMyfDE4MWI1YWQ5
+YmRiNWFlMDUNCmFrcG1Ab3NkbC5vcmdbamVqYl18ZHJpdmVycy9zY3NpLzN3
+LTl4eHguY3wyMDA0MDYwNDAyNTM0NHwzMzUyNg0KRCAxLjQgMDQvMDcvMDIg
+MTE6MzE6NTUtMDQ6MDAgamZiZWFtQHhhY3Rpb25hbC5jb20gKzk4IC0wDQpC
+IHRvcnZhbGRzQGF0aGxvbi50cmFuc21ldGEuY29tfENoYW5nZVNldHwyMDAy
+MDIwNTE3MzA1NnwxNjA0N3xjMWQxMWE0MWVkMDI0ODY0DQpDDQpjIFtQQVRD
+SF0gcmVzdG9yZSBsZWdhY3kgL3Byb2Mvc2NzaSBpbnRlcmZhY2UNCksgNTY1
+OTgNCk8gLXJ3LXJ3LXItLQ0KUCBkcml2ZXJzL3Njc2kvM3ctOXh4eC5jDQot
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0NCg0KSTExNyA3DQojaWZkZWYgQ09ORklHX1NDU0lfUFJPQ19GUw0KLyog
+U3VwcG9ydCAvcHJvYy9zY3NpLzN3LTl4eHgvLi4uIDo6IE5lY2Vzc2FyeSBm
+b3IgM2RtMiAqLw0Kc3RhdGljIGludCB0d2FfY29weV9pbmZvKFRXX0luZm8g
+KmluZm8sIGNoYXIgKmZtdCwgLi4uKTsNCnN0YXRpYyB2b2lkIHR3YV9jb3B5
+X21lbV9pbmZvKFRXX0luZm8gKmluZm8sIGNoYXIgKmRhdGEsIGludCBsZW4p
+Ow0Kc3RhdGljIGludCB0d2Ffc2NzaV9wcm9jX2luZm8oc3RydWN0IFNjc2lf
+SG9zdCAqc2hvc3QsIGNoYXIgKmJ1ZmZlciwgY2hhciAqKnN0YXJ0LCBvZmZf
+dCBvZmZzZXQsIGludCBsZW5ndGgsIGludCBpbm91dCk7DQojZW5kaWYgLyog
+Q09ORklHX1NDU0lfUFJPQ19GUyAqLw0KXA0KSTE3MTkgODcNCiNpZmRlZiBD
+T05GSUdfU0NTSV9QUk9DX0ZTDQovKiBUaGlzIGZ1bmN0aW9uIGlzIGNhbGxl
+ZCBieSB0d2Ffc2NzaV9wcm9jX2luZm8gKi8NCnN0YXRpYyB2b2lkIHR3YV9j
+b3B5X21lbV9pbmZvKFRXX0luZm8gKmluZm8sIGNoYXIgKmRhdGEsIGludCBs
+ZW4pDQp7DQoJaWYgKGluZm8tPnBvc2l0aW9uICsgbGVuID4gaW5mby0+bGVu
+Z3RoKQ0KCQlsZW4gPSBpbmZvLT5sZW5ndGggLSBpbmZvLT5wb3NpdGlvbjsN
+ClwNCglpZiAoaW5mby0+cG9zaXRpb24gKyBsZW4gPCBpbmZvLT5vZmZzZXQp
+IHsNCgkJaW5mby0+cG9zaXRpb24gKz0gbGVuOw0KCQlyZXR1cm47DQoJfQ0K
+CWlmIChpbmZvLT5wb3NpdGlvbiA8IGluZm8tPm9mZnNldCkgew0KCQlkYXRh
+ICs9IChpbmZvLT5vZmZzZXQgLSBpbmZvLT5wb3NpdGlvbik7DQoJCWxlbiAg
+LT0gKGluZm8tPm9mZnNldCAtIGluZm8tPnBvc2l0aW9uKTsNCgl9DQoJaWYg
+KGxlbiA+IDApIHsNCgkJbWVtY3B5KGluZm8tPmJ1ZmZlciArIGluZm8tPnBv
+c2l0aW9uLCBkYXRhLCBsZW4pOw0KCQlpbmZvLT5wb3NpdGlvbiArPSBsZW47
+DQoJfQ0KfSAvKiBFbmQgdHdhX2NvcHlfbWVtX2luZm8oKSAqLw0KXA0KLyog
+VGhpcyBmdW5jdGlvbiBpcyBjYWxsZWQgYnkgdHdhX3Njc2lfcHJvY19pbmZv
+ICovDQpzdGF0aWMgaW50IHR3YV9jb3B5X2luZm8oVFdfSW5mbyAqaW5mbywg
+Y2hhciAqZm10LCAuLi4pDQp7DQoJdmFfbGlzdCBhcmdzOw0KCWNoYXIgYnVm
+WzgxXTsNCglpbnQgbGVuOw0KXA0KCXZhX3N0YXJ0KGFyZ3MsIGZtdCk7DQoJ
+bGVuID0gdnNwcmludGYoYnVmLCBmbXQsIGFyZ3MpOw0KCXZhX2VuZChhcmdz
+KTsNCgl0d2FfY29weV9tZW1faW5mbyhpbmZvLCBidWYsIGxlbik7DQpcDQoJ
+cmV0dXJuIGxlbjsNCn0gLyogRW5kIHR3YV9jb3B5X2luZm8oKSAqLw0KXA0K
+LyogVGhpcyBmdW5jdGlvbiBoYW5kbGVzIGlucHV0IGFuZCBvdXRwdXQgZnJv
+bSAvcHJvYy9zY3NpLzN3LTl4eHgveCAqLw0Kc3RhdGljIGludCB0d2Ffc2Nz
+aV9wcm9jX2luZm8oc3RydWN0IFNjc2lfSG9zdCAqc2hvc3QsIGNoYXIgKmJ1
+ZmZlciwgY2hhciAqKnN0YXJ0LCBvZmZfdCBvZmZzZXQsIGludCBsZW5ndGgs
+IGludCBpbm91dCkNCnsNCglUV19EZXZpY2VfRXh0ZW5zaW9uICp0d19kZXYg
+PSBOVUxMOw0KCVRXX0luZm8gaW5mbzsNCgl1bnNpZ25lZCBpbnQgaTsNCglp
+bnQgcmV0dmFsID0gLUVJTlZBTDsNClwNCgkvKiBGaW5kIHRoZSBjb3JyZWN0
+IGRldmljZSBleHRlbnNpb24gKi8NCglmb3IgKGkgPSAwOyBpIDwgdHdhX2Rl
+dmljZV9leHRlbnNpb25fY291bnQ7IGkrKykgDQoJCWlmICh0d2FfZGV2aWNl
+X2V4dGVuc2lvbl9saXN0W2ldLT5ob3N0LT5ob3N0X25vID09IHNob3N0LT5o
+b3N0X25vKQ0KCQkJdHdfZGV2ID0gdHdhX2RldmljZV9leHRlbnNpb25fbGlz
+dFtpXTsNCglpZiAoIXR3X2Rldikgew0KCQlUV19QUklOVEsodHdfZGV2LT5o
+b3N0LCBUV19EUklWRVIsIDB4MmMsICJObyBkZXZpY2UgZXh0ZW5zaW9uIGZv
+ciBwcm9jIG9wZXJhdGlvbiIpOw0KCQlnb3RvIG91dDsNCgl9DQpcDQoJaW5m
+by5idWZmZXIgPSBidWZmZXI7DQoJaW5mby5sZW5ndGggPSBsZW5ndGg7DQoJ
+aW5mby5vZmZzZXQgPSBvZmZzZXQ7DQoJaW5mby5wb3NpdGlvbiA9IDA7DQpc
+DQoJaWYgKCFpbm91dCkgew0KCQkvKiBSZWFkICovDQoJCWlmIChzdGFydCkg
+ew0KCQkJKnN0YXJ0ID0gYnVmZmVyOw0KCQl9DQoJCXR3YV9jb3B5X2luZm8o
+JmluZm8sICJzY3NpJWQ6IDN3YXJlIDkwMDAgU3RvcmFnZSBDb250cm9sbGVy
+XG4iLCBzaG9zdC0+aG9zdF9ubyk7DQoJCXR3YV9jb3B5X2luZm8oJmluZm8s
+ICJEcml2ZXIgdmVyc2lvbjogJXNcbiIsIHR3YV9kcml2ZXJfdmVyc2lvbik7
+DQoJCXR3YV9jb3B5X2luZm8oJmluZm8sICJDdXJyZW50IGNvbW1hbmRzIHBv
+c3RlZDogICAgICAgJTRkXG4iLCB0d19kZXYtPnBvc3RlZF9yZXF1ZXN0X2Nv
+dW50KTsNCgkJdHdhX2NvcHlfaW5mbygmaW5mbywgIk1heCBjb21tYW5kcyBw
+b3N0ZWQ6ICAgICAgICAgICAlNGRcbiIsIHR3X2Rldi0+bWF4X3Bvc3RlZF9y
+ZXF1ZXN0X2NvdW50KTsNCgkJdHdhX2NvcHlfaW5mbygmaW5mbywgIkN1cnJl
+bnQgcGVuZGluZyBjb21tYW5kczogICAgICAlNGRcbiIsIHR3X2Rldi0+cGVu
+ZGluZ19yZXF1ZXN0X2NvdW50KTsNCgkJdHdhX2NvcHlfaW5mbygmaW5mbywg
+Ik1heCBwZW5kaW5nIGNvbW1hbmRzOiAgICAgICAgICAlNGRcbiIsIHR3X2Rl
+di0+bWF4X3BlbmRpbmdfcmVxdWVzdF9jb3VudCk7DQoJCXR3YV9jb3B5X2lu
+Zm8oJmluZm8sICJMYXN0IHNnbCBsZW5ndGg6ICAgICAgICAgICAgICAgJTRk
+XG4iLCB0d19kZXYtPnNnbF9lbnRyaWVzKTsNCgkJdHdhX2NvcHlfaW5mbygm
+aW5mbywgIk1heCBzZ2wgbGVuZ3RoOiAgICAgICAgICAgICAgICAlNGRcbiIs
+IHR3X2Rldi0+bWF4X3NnbF9lbnRyaWVzKTsNCgkJdHdhX2NvcHlfaW5mbygm
+aW5mbywgIkxhc3Qgc2VjdG9yIGNvdW50OiAgICAgICAgICAgICAlNGRcbiIs
+IHR3X2Rldi0+c2VjdG9yX2NvdW50KTsNCgkJdHdhX2NvcHlfaW5mbygmaW5m
+bywgIk1heCBzZWN0b3IgY291bnQ6ICAgICAgICAgICAgICAlNGRcbiIsIHR3
+X2Rldi0+bWF4X3NlY3Rvcl9jb3VudCk7DQoJCXR3YV9jb3B5X2luZm8oJmlu
+Zm8sICJTQ1NJIEhvc3QgUmVzZXRzOiAgICAgICAgICAgICAgJTRkXG4iLCB0
+d19kZXYtPm51bV9yZXNldHMpOw0KCQl0d2FfY29weV9pbmZvKCZpbmZvLCAi
+U0NTSSBBYm9ydHMvVGltZW91dHM6ICAgICAgICAgICU0ZFxuIiwgdHdfZGV2
+LT5udW1fYWJvcnRzKTsNCgkJdHdhX2NvcHlfaW5mbygmaW5mbywgIkFFTidz
+OiAgICAgICAgICAgICAgICAgICAgICAgICAlNGRcbiIsIHR3X2Rldi0+YWVu
+X2NvdW50KTsNCgl9DQoJaWYgKGluZm8ucG9zaXRpb24gPiBpbmZvLm9mZnNl
+dCkgew0KCQlyZXR2YWwgPSBpbmZvLnBvc2l0aW9uIC0gaW5mby5vZmZzZXQ7
+DQoJfSBlbHNlIHsNCgkJcmV0dmFsID0gMDsNCgl9DQpvdXQ6DQoJcmV0dXJu
+IHJldHZhbDsNCn0gLyogRW5kIHR3YV9zY3NpX3Byb2NfaW5mbygpICovDQoj
+ZW5kaWYgLyogQ09ORklHX1NDU0lfUFJPQ19GUyAqLw0KXA0KSTE5NDQgNA0K
+I2lmZGVmIENPTkZJR19TQ1NJX1BST0NfRlMNCiAgICAgICAgLnByb2NfbmFt
+ZSAgICAgICAgICAgICAgPSAiM3ctOXh4eCIsDQogICAgICAgIC5wcm9jX2lu
+Zm8gICAgICAgICAgICAgID0gdHdhX3Njc2lfcHJvY19pbmZvLA0KI2VuZGlm
+IC8qIENPTkZJR19TQ1NJX1BST0NfRlMgKi8NCg0KIyBQYXRjaCBjaGVja3N1
+bT00M2Y4YjU1Mw0K
+---559023410-1506727461-1088784503=:25702--
