@@ -1,30 +1,38 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
-Date: Tue, 14 Sep 2004 12:23:06 -0400
+From: "Russell Johnson" <rjohnson@rtlogic.com>
+Subject: RE: megaraid battery status questions
+Date: Tue, 14 Sep 2004 11:12:49 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <41471AEA.40204@pobox.com>
-References: <414711AC.5030200@rtr.ca> <41471A84.4090200@pobox.com>
+Message-ID: <005701c49a7e$0fa11bf0$1e01a8c0@rtlogic.com>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BCA20@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:42212 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S269567AbUINQX1
+Received: from eagle.rtlogic.com ([216.87.68.236]:48619 "EHLO
+	eagle.rtlogic.com") by vger.kernel.org with ESMTP id S269473AbUINRMy
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Sep 2004 12:23:27 -0400
-In-Reply-To: <41471A84.4090200@pobox.com>
+	Tue, 14 Sep 2004 13:12:54 -0400
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BCA20@exa-atlanta>
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Lord <lsml@rtr.ca>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
-
-Jeff Garzik wrote:
-> Linus vetoed future SCSI->ATA translators.  He only allowed libata 
-> because I promised to remove the translation and make it a native block 
-> driver in the future, which I have been working towards.
+To: "'Mukker, Atul'" <Atulm@lsil.com>, linux-scsi@vger.kernel.org
 
 
-This is why the Promise SX8 driver is a block driver, for example...
+> > With my goal to poll raid status and battery status on a
+> > periodic basis,
+> > does anyone have ideas on what mechanism I can use?  Ioctl?  
+> > Other programs?
+> 
+> If you have an application which issues the corresponding 
+> ioctl, the same would work with 2.20.3.1 driver
 
-	Jeff
+I was able to get the 2.20.3.1 driver installed and it seems to work fine
+now when the 350O firmware is installed.  Apparently the only working
+combination is the 2.20.3.1 driver with the 350O firmware.  The older
+firmware I had would report battery errors after a short while but this new
+firmware hasn't reported an improper battery status yet.
+
+Thanks for your help.
+
 
 
