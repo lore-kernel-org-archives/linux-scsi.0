@@ -1,25 +1,31 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Luben Tuikov <tluben@rogers.com>
 Subject: Re: [PATCH] make the SCSI mid-layer obey the device online flag
-Date: 06 Jun 2003 11:19:02 -0400
+Date: Fri, 06 Jun 2003 11:28:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1054912742.1778.25.camel@mulgrave>
-References: <1054742495.1674.18.camel@mulgrave>
-	<20030604165146.GA1426@beaverton.ibm.com>
-	<1054754103.2360.8.camel@mulgrave>  <20030606073603.A13259@infradead.org>
+Message-ID: <3EE0B316.4060207@rogers.com>
+References: <1054742495.1674.18.camel@mulgrave> <20030604165146.GA1426@beaverton.ibm.com> <1054754103.2360.8.camel@mulgrave> <20030606073603.A13259@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:15879 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261861AbTFFPGW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Jun 2003 11:06:22 -0400
+Received: from fep04-mail.bloor.is.net.cable.rogers.com ([66.185.86.74]:39419
+	"EHLO fep04-mail.bloor.is.net.cable.rogers.com") by vger.kernel.org
+	with ESMTP id S261874AbTFFPOz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2003 11:14:55 -0400
 In-Reply-To: <20030606073603.A13259@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Mike Anderson <andmike@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Mike Anderson <andmike@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
 
-On Fri, 2003-06-06 at 02:36, Christoph Hellwig wrote:
+Christoph Hellwig wrote:
+> On Wed, Jun 04, 2003 at 03:14:56PM -0400, James Bottomley wrote:
+> 
+>>Yes, that's why I think forbidding *all* I/O after offlining is too much
+>>effort.  Offlining should be a precursor to device destruction, but
+>>actual destruction probably relys on detaching the queue from the block
+>>device interface and sitting on it until all use counts drop to zero.
+> 
+> 
 > We need a way to disable _all_ I/O to a device due to the way the driver
 > model works.  The driver model ->remove always is a surprise removal,
 > so the underlying PCI (or whatever) device for a scsi host can go away
@@ -28,42 +34,26 @@ On Fri, 2003-06-06 at 02:36, Christoph Hellwig wrote:
 > this is implemented with the same mechanisms as the current sdev->online
 > is another question.
 
-I'm not entirely convinced.  Sure, the device has gone away, but the
-driver is still there.  If you rip out a real SCSI disc, all subsequent
-commands will error with DID_NO_CONNECT, I don't see why this should be
-so hard for other types of storage do follow.
+James was talking about ``device server not ready'' aliased to
+online -- i.e. if online is 0 then only INQUIRY or TUR should
+be sent from SCSI Core (unless SCSI Core decides to _know_ about
+the different ULP).  The semantics on this are somewhat touched
+in the INQUIRY description in SPC-3.
 
-The question is whether we should allow (and any LLD actually wants) the
-ability to tell the mid-layer that it will accept no further commands at
-all.
+(This means that the device is on the SAN, but not ready to
+process commands.)
 
-At the moment, I think we can handle both ejection scenarios adequately
-without forbidding all commands to the LLD:
+You're talking about hardware removal -- more specifically
+logical removal of a host -- in which case of course there's no
+_host_, so how can online be checked.... (online being
+member of sdev, sdev being parented by shost...)
 
-Surprise ejection:
+IOW, you probably need either a flag in shost, to mean that
+it's logically removed (whether hdwr or not) until it is
+actually gone, or an external flag per host... it's your call.
 
-driver starts returning DID_NO_CONNECT to commands
-possibly hotplug notify of surprise ejection
-device->online to be reset
-command queue drains
-command queue drops to zero, ->remove can be called and everything
-cleaned up from user level (including remove-single-device)
+-- 
+Luben
 
-Nice ejection:
-
-hotplug notify of ejection request
-eject script cleans up, unmounts, possibly resets online
-command queue drains
-command queue drops to zero, ->remove can be called and everything
-cleaned up from user level (including remove-single-device)
-ejection may now proceed
-
-For the remove_host scenario, it would be convenient just to do
-nice/surprise ejections on all the devices (from user level) and then do
-the clean up when the hosts device count falls to zero.  That may imply
-some type of host->offline flag which disallows the addition of new scsi
-devices to the host.
-
-James
 
 
