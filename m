@@ -1,40 +1,49 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
-Date: Fri, 7 Nov 2003 09:37:37 +0000
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20031107093737.B1992@infradead.org>
-References: <B179AE41C1147041AA1121F44614F0B0598CE6@AVEXCH02.qlogic.org>
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [PATCH] sr cd->device->writeable without purpose
+Date: 07 Nov 2003 15:17:09 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1068243429.7669.9.camel@patrh9>
+References: <1068163343.2285.55.camel@patrh9>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0598CE6@AVEXCH02.qlogic.org>; from andrew.vasquez@qlogic.com on Thu, Nov 06, 2003 at 09:45:50AM -0800
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from email-out2.iomega.com ([147.178.1.83]:65503 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S261842AbTKGWRn
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Nov 2003 17:17:43 -0500
+Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
+	by email.iomega.com (Postfix) with ESMTP id BBCFC2D4E
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Nov 2003 15:17:40 -0700 (MST)
+In-Reply-To: <1068163343.2285.55.camel@patrh9>
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, Nov 06, 2003 at 09:45:50AM -0800, Andrew Vasquez wrote:
-> No.  We've had this IOWR problem since the inception of 5.x series
-> driver.  Software (SMS 3.0) has been built on top of the this IOCTL
-> interface.  We painfully discovered this problem when we began to look
-> at other non-x86 platforms (ppc64).
+Kindly offline I hear:
 
-I don't know what SMS is, but Linux provides a stable ABI for stable
-kernel series and only those.  We already have anough garbage from mistakes
-in older kernel releases that we won't accept more with new driver
-submission.  If SMS didn't use a abstraction library it would have a problem,
-yes.
+> I think the sr cd->device->writeable bit becomes vestigial - has no
+> remaining purpose - once we branch on CDC_MMC_WR instead of
+> cd->device->writeable to decide to pass thru or reject writes.
 
-> >  Also having different ioctl values for different plattforms is not
-> >  an option for Linux.
-> > 
-> 
-> The better (right) fix would be to push this interface change onto the
-> caller of the IOCTLs where they can manage the differences there, and
-> the driver could once and for all shed itself of this nagging problem.
-> That is the consensus here.  The _BAD conversion was only done so the
-> driver would compile.
+That might or might not be true.  However,
 
-Sorry, I don't parse that.  There's no reason different architectures
-should have differences in the ioctl calling convention, so there shouldn't
-be anything to deal with in the caller either.
+> This patch differs from that simpler CDC_MMC_WR patch by updating sr
+> cd->device->writeable bit whenever cdrom corrects the sr guess of
+> CDC_MMC_WR via op x46 GPCMD_GET_CONFIGURATION.
+
+Ouch, rather silly of me.  In that patch, me the newbie, I foolishly:
+
+a) grew cdrom_device_ops to call back into sr ...
+b) just before cdrom_get_configuration returns to cdrom_get_cdc, ...
+c) just before cdrom_get_cdc returns to register_cdrom, ...
+d) just before register_cdrom returns to sr.sr_probe.
+
+That is, I can run the same sr code at almost precisely the same time if
+only I place that code immediately after the call to register_cdrom in
+sr.sr_probe.
+
+D'oh.
+
+Pat LaVarre
+
+
