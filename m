@@ -1,93 +1,74 @@
-From: Jeffrey Lane <bladernr@samuraipoet.com>
-Subject: ips.o driver for ServRAID cards works so far on Opteron and RHEL
- 3
-Date: Tue, 28 Oct 2003 22:27:33 -0500
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: /dev/hd* in sg_scan
+Date: Tue, 28 Oct 2003 23:35:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F9F33A5.7030203@samuraipoet.com>
-References: <E1AEBNm-0007gk-SL@svr16.ehostpros.com> <3F9D59F7.2090900@wanadoo.es> <3F9DB238.10400@samuraipoet.com> <3F9DB64B.2010703@wanadoo.es>
+Message-ID: <3F9F4393.5060602@torque.net>
+References: <1067299763.3469.6.camel@patehci2>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pimout3-ext.prodigy.net ([207.115.63.102]:19856 "EHLO
-	pimout3-ext.prodigy.net") by vger.kernel.org with ESMTP
-	id S261845AbTJ2D0i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Oct 2003 22:26:38 -0500
-In-Reply-To: <3F9DB64B.2010703@wanadoo.es>
+Received: from tomts20.bellnexxia.net ([209.226.175.74]:22928 "EHLO
+	tomts20-srv.bellnexxia.net") by vger.kernel.org with ESMTP
+	id S261740AbTJ2Efi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Oct 2003 23:35:38 -0500
+In-Reply-To: <1067299763.3469.6.camel@patehci2>
 List-Id: linux-scsi@vger.kernel.org
-To: taroon-list@redhat.com
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: linux-scsi@vger.kernel.org
 
-Just FYI Everyone, I ran tests on the ServRAID cards using the IPS 
-driver that I had to compile for the Opteron processor, and it worked 
-like a champ.
-
-Just a recap,  the x86-64 version of AS3 does not include a driver for 
-teh ServRAID cards (ips.o)
-
-So, I compiled the driver using the kernel source that comes with AS3.
-
-The code is ips.c and ips.h.  To compile it, you will have to comment 
-out the three lines (or is it 4) that test to see if the machine 
-architecture is x86 or itanium.  Those lines test arch, and if arch is 
-not x86 or itanium then the compile dies with an error saying that the 
-driver has not been compiled.
-
-So, comment out those lines, edit the kernel make file to make sure you 
-remove the work custom from the verson (teh version numbers have to 
-match the kernel you are running) and then do the following:
-
-make mrproper
-cp configs/<version>-x86_64.config .config
-make menuconfig
-
-then in the scsi drivers section, select M (module) support for the IBM 
-ServRAID cards (this is the ips.o driver) save the config and exit.
-
-next you do this:
-
-make dep && make SUBDIRS=drivers/scsi modules (this will make only the 
-scsi drivers)
-
-cp drivers/scsi/ips.o /lib/modules/<kernelversion>/kernel/drivers/scsi/
-insmod ips.o
-
-and you should then be able to see any disks or arrays connected to the 
-ServRAID cards...
-
-I ahve tested this so far on a 4Lx card and a 6M card, and both worked 
-well when tested overnight under load.
-
-THought I would throw that out there for anyone using these cards.
-
-Cheers
-J
-Xose Vazquez Perez wrote:
-> Jeffrey Lane wrote:
+Pat LaVarre wrote:
+>>http://tldp.org/HOWTO/SCSI-Generic-HOWTO/open.html
+>>... O_NONBLOCK ... ignored by ioctl(SG_IO)
 > 
 > 
->>make clean
+> As of 2.6, in fact we now need O_NONBLOCK if we want open O_RDONLY to
+> let us talk SG_IO to a DVD/CD with no disk present?  Also we discard the
+> history of passing thru less commands for O_RDONLY than for O_RDWR?
 > 
->   ^^^^^^^^^^
-> this step is -->>
+> Reaching those conclusions inspired me to try the following trivial
+> inline patch for sg3_utils-1.05/sg_scan.c.  I see this patch brings much
+> of /dev/hd* to the notice of sg utils sg_scan.  However, this patch may
+> not be ready for prime-time, some of the code I flowed around I do not
+> understand.
 > 
->>make mrproper
->>cp configs/<version>-x86_64.config .config
->>make menuconfig
+> Do we intend to make /dev/hd[a-z] available for passing ioctl SG_IO thru
+> to ATAPI DVD/CD, in 2.6?  Or for 2.6 do we recommend ab/using some other
+> device name?
 > 
+> Patched sg_scan success here looks like:
 > 
->>turned on the IBM ServRAID support (set to M for module) then:
->>
->>make dep && make SUBDIRS=drivers/scsi modules
+> $ sudo sg_scan -i
+> /dev/hda: scsi0 channel=0 id=0 lun=0
+> /dev/hdc: scsi0 channel=0 id=0 lun=0 [em]
+>     LITE-ON   COMBO LTC-48161H  KH0K [wide=0 sync=0 cmdq=0 sftre=0 pq=0x0]
+> /dev/sg0: scsi0 channel=0 id=0 lun=0 [em]  type=5
+>     Iomega    RRD               01.U [wide=0 sync=0 cmdq=0 sftre=0 pq=0x0]
+> $
 > 
->           ^
-> -->> HERE
-> 
-> 
->>Officially, yes, but unofficially, no, it does work on an AMD 64.
-> 
-> 
-> If it's reliable send a note to ipslinux@adaptec.com and
-> to linux-scsi@vger.kernel.org ;-)
-> 
-> -thanks-
+> Perhaps the soft bridge from SCSI to ATA HDD in Linux, like some
+> FireWire HDD, is an apparently SCSI device that does not support op x12
+> Inquiry.
+
+Pat,
+Sg3_utils' sg_map and sg_scan for lk 2.6 still have me
+thinking (and waiting). Currently sg devices have no
+sysfs presence (yes Christoph, I'm still waiting). My
+patch to the sg driver to use cdevs (char devices with
+sysfs visibility and > 256 minors) seems to fallen foul
+of the latest freeze. So scsi tape robots and enclosures
+won't have any sysfs visibility.
+
+Now as for /dev/hd and /dev/sd the situation is complex
+and probably going to get worse before it get better.
+With either /dev/hd and /dev/sd you may soon want to find
+out (or probe) before making any assumptions:
+   - what protocol are you using (e.g. ATA, ATAPI, SCSI)
+   - what transport (e.g. pATA, sATA, SPI, FC, USB, SAS)
+
+Anyways your patch looks interesting and hope to add it
+soon (currently I'm rewriting sginfo).
+
+Doug Gilbert
 
