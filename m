@@ -1,32 +1,26 @@
-From: phil <philippe.aubry1@mageos.com>
-Subject: Exemple of code for cmd " scsi start "
-Date: Sun, 14 Sep 2003 23:55:38 +0200
+From: Andries Brouwer <aebr@win.tue.nl>
+Subject: Re: libata update posted
+Date: Mon, 15 Sep 2003 00:18:43 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F64E3DA.4090900@mageos.com>
-References: <004801c390bd$55cca700$f8e4a7c8@bsb.virtua.com.br>
+Message-ID: <20030915001843.D11134@pclin040.win.tue.nl>
+References: <3F628DC7.3040308@pobox.com> <20030913205652.GA3478@werewolf.able.es> <20030913212849.GB21426@gtf.org> <20030914111225.A3371@pclin040.win.tue.nl> <3F64A4BD.6030906@pobox.com> <20030914213821.A11134@pclin040.win.tue.nl> <3F64CB08.9010506@pobox.com> <20030914230922.B11134@pclin040.win.tue.nl> <3F64DF50.3000307@pobox.com> <1063575524.15132.2.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-100-sunday.nerim.net ([62.4.16.100]:52235 "EHLO
-	kraid.nerim.net") by vger.kernel.org with ESMTP id S261652AbTINV7C
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Sep 2003 17:59:02 -0400
-Received: from mageos.com (philippeaubry.net1.nerim.net [62.212.101.203])
-	by kraid.nerim.net (Postfix) with ESMTP id DB73E40EAB
-	for <linux-scsi@vger.kernel.org>; Sun, 14 Sep 2003 23:58:59 +0200 (CEST)
+Received: from kweetal.tue.nl ([131.155.3.6]:64786 "EHLO kweetal.tue.nl")
+	by vger.kernel.org with ESMTP id S262029AbTINWSr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Sep 2003 18:18:47 -0400
+Content-Disposition: inline
+In-Reply-To: <1063575524.15132.2.camel@mulgrave>; from James.Bottomley@steeleye.com on Sun, Sep 14, 2003 at 04:38:41PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Andries Brouwer <aebr@win.tue.nl>, "J.A. Magallon" <jamagallon@able.es>, SCSI Mailing List <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
+On Sun, Sep 14, 2003 at 04:38:41PM -0500, James Bottomley wrote:
 
-Hello,
-I search an exemple in C for send a command to a disk, the scsi command 
-  i need is a start command.
-Where can i find a exemple with source code.
+> OK, you two, this is way off topic for a SCSI list.
 
-cdt
-philipp
-
-
+Thank you, James!
 
 
