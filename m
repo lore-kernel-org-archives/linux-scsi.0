@@ -1,42 +1,34 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: usb-storage and Sony Handycam
-Date: Fri, 7 Nov 2003 17:09:45 -0500 (EST)
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <Pine.LNX.4.44L0.0311071708520.811-100000@ida.rowland.org>
-References: <20031107092910.A3471@beaverton.ibm.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Sysfs does not recognise tape devices ?
+Date: Fri, 7 Nov 2003 11:21:14 +0000
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20031107112114.A3302@infradead.org>
+References: <Pine.LNX.4.58.0311052318250.2344@kai.makisara.local> <001701c3a426$37fa5110$a0074d0a@apac.cisco.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-In-Reply-To: <20031107092910.A3471@beaverton.ibm.com>
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Dmitri Katchalov <dmitrik@users.sourceforge.net>, Idan Sofer <idan@idanso.dyndns.org>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:57362 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S264081AbTKGLVR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Nov 2003 06:21:17 -0500
+Content-Disposition: inline
+In-Reply-To: <001701c3a426$37fa5110$a0074d0a@apac.cisco.com>; from surekhap@cisco.com on Thu, Nov 06, 2003 at 10:54:03AM +0530
 List-Id: linux-scsi@vger.kernel.org
+To: "Surekha.PC" <surekhap@cisco.com>
+Cc: 'Kai Makisara' <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org
 
-Patrick:
+On Thu, Nov 06, 2003 at 10:54:03AM +0530, Surekha.PC wrote:
+> 
+> Kai,
+> 
+>  Thanks for the information.
+>  The "/sys/bus/scsi/devices/" shows tape device attributes except for
+> device name. This is important w.r.t iSCSI devices where we use "udev"
+> to create device nodes from sysfs lookup. Can you please let me know how
+> soon the feature unfreeze will happen and when this feature can be made
+> part of the 2.6 kernel?
 
-For a usb-storage debugging trace of what appears to be exactly the same 
-problem, look at
+Note that the name shows in sysfs really is an internal identifier for the
+kernel.  If you want to populate your /dev/iscsi tree using udev calling
+mknod with the dev_t from the dev attribute might be a much better choice.
 
-http://bugme.osdl.org/show_bug.cgi?id=1501
-
-Alan Stern
-
-
-
--------------------------------------------------------
-This SF.Net email sponsored by: ApacheCon 2003,
-16-19 November in Las Vegas. Learn firsthand the latest
-developments in Apache, PHP, Perl, XML, Java, MySQL,
-WebDAV, and more! http://www.apachecon.com/
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
