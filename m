@@ -1,31 +1,41 @@
-From: "Maciej W. Rozycki" <macro@ds2.pg.gda.pl>
-Subject: Re: BusLogic cleanup
-Date: Thu, 8 Jan 2004 16:26:08 +0100 (CET)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.55.0401081622370.4713@jurand.ds.pg.gda.pl>
-References: <3FF513FE.17A1C2FD@primenet.com> <20040107153149.A29756@infradead.org>
- <3FFCE6D8.9E57769B@primenet.com>
+From: Xose Vazquez Perez <xose-39ZsbGIQGT7e5aOfsHch1g@public.gmane.org>
+Subject: Re: [PATCH] 1.1.4-2313 aacraid driver for LiNUX 2.4.25-pre4
+Date: Thu, 08 Jan 2004 16:58:50 +0100
+Sender: linux-aacraid-devel-admin-8PEkshWhKlo@public.gmane.org
+Message-ID: <3FFD7E3A.3010808@wanadoo.es>
+References: <3FFC4C09.3020103@wanadoo.es> <20040107210020.A1166@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jurand.ds.pg.gda.pl ([153.19.208.2]:10946 "EHLO
-	jurand.ds.pg.gda.pl") by vger.kernel.org with ESMTP id S265125AbUAHP0L
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jan 2004 10:26:11 -0500
-In-Reply-To: <3FFCE6D8.9E57769B@primenet.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-aacraid-devel-admin-8PEkshWhKlo@public.gmane.org>
+Errors-To: linux-aacraid-devel-admin-8PEkshWhKlo@public.gmane.org
+List-Help: <mailto:linux-aacraid-devel-request-8PEkshWhKlpvbvzxeQLTJuMTnGGMi8c9@public.gmane.org>
+List-Post: <mailto:linux-aacraid-devel-8PEkshWhKlo@public.gmane.org>
+List-Subscribe: <http://lists.us.dell.com/mailman/listinfo/linux-aacraid-devel>,
+	<mailto:linux-aacraid-devel-request-8PEkshWhKlpvbvzxeQLTJhLjRD9WNpgrmSKB9SHqsyg@public.gmane.org>
+List-Unsubscribe: <http://lists.us.dell.com/mailman/listinfo/linux-aacraid-devel>,
+	<mailto:linux-aacraid-devel-request-8PEkshWhKlpvbvzxeQLTJt/CJOUnrhF+9vnX9k1QryA@public.gmane.org>
+List-Archive: <http://lists.us.dell.com/pipermail/linux-aacraid-devel/>
+To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: linux-aacraid-devel-XtjxT7Vmt5ZskZv2Y/7f+AC/G2K4zDHf@public.gmane.org, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bob Doyle <doyle@primenet.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Wed, 7 Jan 2004, Bob Doyle wrote:
+Christoph Hellwig wrote:
 
-> Are the BusLogic docs anywhere anymore?  The mylex page re-directs
-> to LSI Logic.
+> That's a huge mess adding lots of broken crap and hooks for binary only modules
+> through ioctls (urgg..).
 
- I asked LSI Logic once and they refused to release docs on the BusLogic 
-line.  Perhaps they got lost as a result of the multiple company merges.
+yes, but the driver was sent to Marcelo without to pass linux-scsi revision, like
+others drivers. And I think that is very important a NET review before the inclusion
+in kernel.org tree.
 
--- 
-+  Maciej W. Rozycki, Technical University of Gdansk, Poland   +
-+--------------------------------------------------------------+
-+        e-mail: macro@ds2.pg.gda.pl, PGP key available        +
+> If you want to help getting this driver merged please split out reviewable
+> pieces and send them to linux-scsi.
+
+Mark Salyzyn(adaptec) and Mark Haverkamp(osdl) already are working on it.
+
+_______________________________________________
+Linux-aacraid-devel mailing list
+Linux-aacraid-devel-8PEkshWhKlo@public.gmane.org
+http://lists.us.dell.com/mailman/listinfo/linux-aacraid-devel
+Please read the FAQ at http://lists.us.dell.com/faq or search the list archives at http://lists.us.dell.com/htdig/
