@@ -1,40 +1,57 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: [iscsi 2/2] iscsi-probe.c
-Date: Wed, 24 Sep 2003 18:30:42 +0100
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: 1st  REVIEW : UNH iSCSI for 2.6-test5
+Date: Wed, 24 Sep 2003 18:39:06 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030924183042.A21296@infradead.org>
-References: <20030924144817.A16189@infradead.org> <018b01c382b7$b7f81220$8f074d0a@apac.cisco.com> <20030924174046.A20362@infradead.org> <20030924101152.A17901@beaverton.ibm.com>
+Message-ID: <20030924183906.A21401@infradead.org>
+References: <20030924151228.8206.qmail@web60208.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:27149 "EHLO
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:39181 "EHLO
 	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S261555AbTIXRau (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2003 13:30:50 -0400
+	id S261569AbTIXRjH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Sep 2003 13:39:07 -0400
 Content-Disposition: inline
-In-Reply-To: <20030924101152.A17901@beaverton.ibm.com>; from patmans@us.ibm.com on Wed, Sep 24, 2003 at 10:11:52AM -0700
+In-Reply-To: <20030924151228.8206.qmail@web60208.mail.yahoo.com>; from jpd_hp_linux_scsi@yahoo.com on Wed, Sep 24, 2003 at 08:12:28AM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: "Sachin Mhatre (smhatre)" <smhatre@cisco.com>, 'Jeff Garzik' <jgarzik@pobox.com>, linux-scsi@vger.kernel.org
+To: jd <jpd_hp_linux_scsi@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Sep 24, 2003 at 10:11:52AM -0700, Patrick Mansfield wrote:
-> > I see.  And that's exactly wrong.  Take a look at the usb-storage or sbp2
-> > drivers on how to handle it.
+Please fix your broken Reply-To, thanks.
+
+On Wed, Sep 24, 2003 at 08:12:28AM -0700, jd wrote:
 > 
-> They could use scsi_scan_host_selected(host, chan, target, SCAN_WILD_CARD,
-> 0) or a scan target function, though their current lun scanning looks odd.
+> Hi,
+> 
+> Available for first Review & Comments.
+> 
+> The UNH iSCSI Project, a collaborative effort between the
+> UNH IOL and Hewlett Packard Company in Austin, Texas,
+> ( hosted at http://sourceforge.net/projects/unh-iscsi )
+> to produce a full feature, generic iSCSI implementation ,
+> has ported the 2.4.18/20 version of the iSCSI initiator to
+> Linux 2.6.test5 Kernel for consideration of inclusion for
+> future distribution.
 
-Well, if you want to keep their current code.  I'm pretty sure they're
-much better served with scsi_add_device.
+Oh well, yet another iscsi.  So what is in your opinion the
+advantage over the cisco implementation, what the disadvantage.
+Why don't you two cooperate?  (I'm going to ask the cisco folks
+the same soon, no worries).
 
-> What was wrong with exporting scsi_scan_host_selected?
+We're certainly not going to merge two iscsi stacks, just FYI.
 
-There's nothing inherently wrong except that aacraid who wanted it
-shouldn't have used it in the first place.  And I'm sure that's true
-for iscsi, too.
+I gave the code a quick very quick glance (more later):
 
-> We don't have a scsi_remove_target().
+ - most files have this license clause:
 
-Indeed.  But that nothing that couldn't be easily fixed if we really
-wanted it.
+ The name of IOL and/or UNH may not be used to endorse or promote products
+ derived from this software without specific prior written permission.
+ 
+   are you sure this is compatible to the GPL?
 
+ - the intel-licensed files definitly are not GPL-compatible
+ - linebreaks after 80 chars.
+ - did you read Documentation/CondingStyle?
+ - I can't find module_init/init_module.  Where's the entry point
+   of this code?
+ 
