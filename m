@@ -1,49 +1,46 @@
-From: Arjan van de Ven <arjanv@redhat.com>
-Subject: Re: Why are MegaRAID drivers mutually exclusive?
-Date: Thu, 11 Nov 2004 09:01:20 +0100
-Message-ID: <1100160080.2646.10.camel@laptop.fenrus.org>
-References: <0E3FA95632D6D047BA649F95DAB60E570562C174@exa-atlanta>
-	 <20041110220854.GB28524@lists.us.dell.com>
-Reply-To: arjanv@redhat.com
+From: Phil Brutsche <phil@brutsche.us>
+Subject: Re: aacraid, seagate and adaptec issues [Was: Re: Fw: [Bugme-new]
+ [Bug 3651] New: dell poweredge 4600 aacraid PERC 3/Di Container goes offline]
+Date: Wed, 10 Nov 2004 14:33:19 -0600
+Message-ID: <41927B0F.6000902@brutsche.us>
+References: <20041028005302.753a2d52.akpm@osdl.org> <418138B6.2010104@brutsche.us> <1100031774.24635.157.camel@ryan2.internal.autoweb.net> <20041109213215.GA4047@guug.org> <20041110174346.GA8047@guug.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yiloRAIiMIUQ7c+ABpL6"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:22659 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S262188AbUKKICq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Nov 2004 03:02:46 -0500
-In-Reply-To: <20041110220854.GB28524@lists.us.dell.com>
+Received: from mail.optimumdata.com ([216.40.3.146]:31914 "EHLO
+	mail.optimumdata.com") by vger.kernel.org with ESMTP
+	id S262120AbUKJUd2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Nov 2004 15:33:28 -0500
+In-Reply-To: <20041110174346.GA8047@guug.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@dell.com>
-Cc: "Mukker, Atul" <Atulm@lsil.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, 'Chris Adams' <cmadams@hiwaay.net>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Otto Solares <solca@guug.org>
+Cc: linux-scsi@vger.kernel.org
 
+Otto Solares wrote:
 
---=-yiloRAIiMIUQ7c+ABpL6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> A seagate time-out issue with exactly my disks:
+> 
+> http://www.seagate.com/support/disc/u320_firmware.html
 
-On Wed, 2004-11-10 at 16:08 -0600, Matt Domsch wrote:
+[...]
 
-> How about you remove all the PCI IDs from the 2.00.3 driver that the
-> 2.20 driver handles, so that they're mutually exclusive again?
+> Does anybody have this seagate firmware updates?
 
-Are they mutually exclusive in other places too? (eg in the /proc stuff
-it creates... well I guess the new driver only does (or should do) sysfs
-of course)
+I have a pair of RAID5s with these Seagate drives; I have flashed the
+firmware on the affected drives to the latest 0006 rev (they are 15k RPM
+drives).
 
+I *do not* have a problem with aacraid under vanilla 2.4.x and the
+included aacraid driver.  The machine using these drives in a RAID5 with
+an Adaptec controller has had uptimes of 4 months (or longer) without
+any problems.
 
---=-yiloRAIiMIUQ7c+ABpL6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+I *do* have a problem (check the archives for the error messages) with
+2.6.9 and the included aacraid driver.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
+-- 
 
-iD8DBQBBkxxQpv2rCoFn+CIRAjOLAKCF304pSa7LxICdzzfbu2NlzBfslACdGzA0
-kd7XTBzkAFKSTDOJDdT0Hpk=
-=+S9Q
------END PGP SIGNATURE-----
-
---=-yiloRAIiMIUQ7c+ABpL6--
-
+Phil Brutsche
+phil@brutsche.us
