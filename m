@@ -1,64 +1,82 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [linux-iscsi-devel] Re: [PATCH RFC] replace ioctl
-	for	sysfs	take 2
-Date: 07 Sep 2004 19:34:31 -0400
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [linux-iscsi-devel] Re: [PATCH RFC] replace ioctl for sysfs take
+ 2
+Date: Wed, 08 Sep 2004 12:33:51 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1094600074.2401.234.camel@mulgrave>
-References: <20040907210520.0251476C56@isis.visi.com>		<413E2440.8080509@cs.wisc.edu>
-	<1094592818.1716.159.camel@mulgrave> 	<413E2A17.80107@us.ibm.com>
-	<1094594715.1716.169.camel@mulgrave>  <413E38DB.6040408@us.ibm.com>
+Message-ID: <413E6F8F.3020008@torque.net>
+References: <20040907210520.0251476C56@isis.visi.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:7579 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S268769AbUIGXhT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Sep 2004 19:37:19 -0400
-In-Reply-To: <413E38DB.6040408@us.ibm.com>
+Received: from borg.st.net.au ([65.23.158.22]:42961 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S269006AbUIHC7L (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2004 22:59:11 -0400
+In-Reply-To: <20040907210520.0251476C56@isis.visi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <mikenc@us.ibm.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, "Scott M. Ferris" <sferris@acm.org>, Matthew Wilcox <willy@debian.org>, Christoph Hellwig <hch@lst.de>, iscsi -devel <linux-iscsi-devel@lists.sourceforge.net>, David Wysochanski <davidw@netapp.com>, "Surekha.PC" <surekhap@cisco.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Scott M. Ferris" <sferris@acm.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Mike Christie <mikenc@us.ibm.com>, Mike Christie <michaelc@cs.wisc.edu>, Matthew Wilcox <willy@debian.org>, Christoph Hellwig <hch@lst.de>, "Surekha.PC" <surekhap@cisco.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-09-07 at 18:40, Mike Christie wrote:
-> > Possibly, but only if the way its handled would be the same on all iscsi
-> > initiator drivers.  Otherwise, if it's specific to the driver
-> > implementation, it would be in hostdata. 
+Scott M. Ferris wrote:
+<snip>
 > 
-> Yes, ok. That is what I am striving for. By us hanging things like 
-> target name on the target instead of on the scsi device or scsi host 
-> will help us conform to other HW iscsi drivers.
-
-You're thinking of the qlogic one?  They have an entire network stack
-onboard and they do have resource restrictions per card.  A virtual
-driver doesn't.
-
->   Regardless, you'd still have
-> > one host per one of these entities.
+> Should all drivers that currently use one host for each SCSI initiator
+> device, and a channel for each initiator port on each device, be
+> modified to use a host for each initiator port?
 > 
-> One host per I_T nexus/session? But I thought the only reason against 
-> using a single host for all nexii (ignoring the port/channel 
-> discussion), was that the driver would need its own refcounting.
+> Documentation/scsi/scsi_mid_low_api.txt says that a host corresponds
+> to a SCSI initiator device.  Could someone change that to say SCSI
+> initiator port instead, since that seems to be the new goal?
 
-It's not just refcounting, it's resource management.  It seems to me,
-given that you can allocate resources per connection that per connection
-is the most efficient way to manage them.
+Scott,
+Yes, I can change that if we all agree. Randy Dunlap asked me some
+time back to define what was meant by a "linux SCSI host" and that
+was the best I could come up with at the time.
 
-> If the target has some place for driver target data (with the common 
-> iscsi code going in the appropriate transport class stucts) couldn't we 
-> just do sometihng similar to how a scsi_device has the hostdata pointers 
-> and drivers seem to assume when slave_destroy is called they can just 
-> free what was allocated in slave_alloc. And when the driver does its 
-> final scsi_host_put it assumes the hostdata will get freed when all the 
-> handles are released. If the midlayer could provide any similar lifetime 
-> management functionality for targets the iscsi driver would not need any 
-> private structures that are refcounted internally since everything could 
-> fall under the host, device, or target's managemnet.
 
-Theoretically, I suppose.  The mid-layer really prefers to think in
-terms of hosts and devices.  It doesn't really have much use for
-targets.
+Interesting to see you mention SAS. There could be lots of fun
+for the linux SCSI subsystem here:
+   - addressable switching elements (called "expanders") in the
+     SCSI domain ** service delivery subsystem. These are not
+     SCSI devices (in the SAM sense) but are pretty close. They
+     are controlled by a packetized protocol called SMP whose
+     initiator end sits on a host and target end sits on an
+     expander. [SMP has no concept of logical units.]
+   - discovery is either dead simple (for example when a disk is
+     directly connected to a HBA's phy [like SATA]) or something
+     that needs a breadth first, hierarchial descent through
+     expanders to end devices. The latter type of discovery is
+     probably better done from the user space.
+   - in SCSI, devices can have multiple ports and in SAS a port can
+     be made up of multiple phys (i.e. a wide link). The SCSI
+     subsystem can ignore phys and just talk about ports but
+     users can see and touch phys (e.g. those SATA red cables).
+     Also expander routing is done at the link level.
 
-James
+It would be great to see a transport class architecture that
+could cope with this. Think about how a SMP target device
+(i.e. an expander's control port) will be represented.
+I don't think struct scsi_device is appropriate ...
+
+
+** the term "bus" seems to have lost favour in SAM and been
+    replaced by the term "domain".
+
+
+A few related matters:
+
+Steven Fairchild dropped a proposal for SAS storage management
+called "Common Storage Management Interface for SAS" in the
+t10 "New Documents and Drafts" section. The url is:
+http://www.t10.org/ftp/t10/document.04/04-284r0.pdf
+A linux interface and driver is proposed.
+
+A draft standard titled "SCSI-ATA translation" (SAT) is moving
+along briskly. The primary target areas for this translator are
+in a SAS host above an SAS domain when some of the "SCSI" devices
+are SATA disks and SCSI-(p/s)ATA bridges.
+
+Doug Gilbert
 
 
