@@ -1,36 +1,82 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [PATCH 2.4] sym53c8xx_2 sniff inquiry fix
-Date: Mon, 5 Apr 2004 16:35:43 +0100
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] dpt_i2o changes for 2.6.2 kernel in support of 64 bit and bitrot (part 1)
+Date: Mon, 5 Apr 2004 13:56:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040405153543.GW16469@parcelfarce.linux.theplanet.co.uk>
-References: <04Apr5.112407edt.332198@cyborg.cybernetics.com>
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F64F204@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:10452 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262794AbUDEPfp
+Received: from magic.adaptec.com ([216.52.22.17]:11450 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S263039AbUDER4O convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Apr 2004 11:35:45 -0400
-Content-Disposition: inline
-In-Reply-To: <04Apr5.112407edt.332198@cyborg.cybernetics.com>
+	Mon, 5 Apr 2004 13:56:14 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: willy@debian.org, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>
 
-On Mon, Apr 05, 2004 at 11:24:13AM -0400, Tony Battersby wrote:
-> The following patch fixes a problem where sym53c8xx_2 always sniffs a
-> value of 0x00 for inquiry byte 56, which breaks 160 MB/s negotiations.
-> 
-> I am working with lk 2.4.x; I don't know if this needs to be applied to
-> lk 2.6.x also.
+We need a means for an application to tell if a scsi device is currently
+in use; one of in-error or with any I/O still pending or opened or
+mounted. This is necessary to inform users of the RAID management
+applications that the device is not to be adjusted.
 
-2.6 already has this fix; I only maintain 2.6 -- the 2.4 sym drivers
-are unmaintained.
+In-error is easy enough, test_bit(SHOST_RECOVERY,
+&pHba->host->host_state) for 2.6, and pHba->host->in_recovery for 2.4.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+I/O pending can be determined with Scsi_Device::access_count for 2.6.
+
+Unfortunately new members like struct scsi_disk::openers are
+inaccessible to the scsi driver to indicate whether there are any
+applications that have the scsi device open.
+
+This is complicated further if the device is accessed via the sg layer
+as well (sd's openers does not meter sg's openers).
+
+Are there any suggestions, either for the application, or for the scsi
+driver to meter disk in-use? Without this, it is *impossible* for us to
+support reliable native RAID management applications; a user application
+should *never* be a source of an OS panic (whether it be someone
+destroying the boot array, or simply a file system driver panicking when
+a device no longer exists)
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: Christoph Hellwig [mailto:hch@infradead.org] 
+Sent: Tuesday, February 10, 2004 4:22 PM
+To: Salyzyn, Mark
+Cc: linux-scsi
+Subject: Re: [PATCH] dpt_i2o changes for 2.6.2 kernel in support of 64
+bit and bitrot (part 1)
+
+< snip >
+
++	case DPT_TARGET_BUSY & 0xFFFF:
++	case DPT_TARGET_BUSY:
++	{
++		TARGET_BUSY_T busy;
++		struct adpt_device* d;
++
++		if (copy_from_user((void*)&busy, (void*)arg,
+sizeof(TARGET_BUSY_T))) {
++			return -EFAULT;
++		}
++
++		d = adpt_find_device(pHba, busy.channel, busy.id,
+busy.lun);
++		if(d == NULL){
++			return -ENODEV;
++		}
++		busy.isBusy = ((d->pScsi_dev)
++		 && (d->pScsi_dev->device_busy /* Imperfect */
++		  || test_bit(SHOST_RECOVERY,
+&pHba->host->shost_state)));
++		if (copy_to_user ((char*)arg, &busy, sizeof(busy))) {
++			return -EFAULT;
++		}
++		break;
++	}
+
+	This ioctl was removed because it's broken.  Don't readd it.
