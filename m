@@ -1,40 +1,73 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: sg utils sg_io -i 0x24 -y "12 00:00:00 24 00"
-Date: 07 Nov 2003 09:24:46 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
+Date: Fri, 7 Nov 2003 09:58:14 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1068222286.2286.50.camel@patrh9>
-References: <1068165515.28505.29.camel@patrh9>
+Message-ID: <20031107095814.A2363@infradead.org>
+References: <B179AE41C1147041AA1121F44614F0B060ED69@AVEXCH02.qlogic.org> <20031106175306.GG26869@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:53214 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264459AbTKGQZR
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Nov 2003 11:25:17 -0500
-In-Reply-To: <1068165515.28505.29.camel@patrh9>
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:59665 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S264028AbTKGJ6R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Nov 2003 04:58:17 -0500
+Content-Disposition: inline
+In-Reply-To: <20031106175306.GG26869@parcelfarce.linux.theplanet.co.uk>; from willy@debian.org on Thu, Nov 06, 2003 at 05:53:06PM +0000
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: patmans@us.ibm.com, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
 
-> plscsi is starting to look remarkably like FreeBSD's
-> camcontrol utility. Perhaps we should be looking at
-> implementing camcontrol in Linux.
+On Thu, Nov 06, 2003 at 05:53:06PM +0000, Matthew Wilcox wrote:
+> >=20
+> > 	o Build process -- (three module interface for the ISPs), I
+> > 	  personally like the idea of a shared library module used
+> > 	  between the different ISP drivers.  Many others have voiced
+> > 	  their frustrations with the single driver-binary for each
+> > 	  ISP type that the directive from management is to have a
+> > 	  single binary for all *future* products including the=20
+> > 	  ISP23xx (ISP2300/ISP2310/ISP2312/ISP2322) chips.
+> >=20
+> > 	  That unfortunately leaves ISP2100 and ISP2200 on the
+> > 	  periphery of development efforts.
+>=20
+> I wouldn't see a problem with having a structure like this:
+>=20
+> ql2100.c
+> ql2200.c
+> ql23xx.c
+> qllib.c
+>=20
+> and linking in whichever files are selected.  But you definitely only=
+ want
+> to build qllib.c once.
 
-Fun web trail, thanks:
+Well, if you look at the driver you'll need all files except the firmwa=
+re
+anyway.  And now that we have the request_firmware interface anyway I'd
+bebetter to move that out of the module, at least once initramfs settle=
+s down
+a bit.
 
-http://www.google.com/search?q=man+camcontrol
+The issue is more lots of tiny ifdefs - those in the C source could be =
+easily
+hidden using pdev->device comparisms (and I think I'm gonna submit a pa=
+tch
+for that soon, the driver already does that for ISP23XX variants withou=
+t
+a proper abstraction).  Those in the headers are a bit more difficult a=
+s the
+register layout is a bit different sometimes.  But with doing these as =
+unions
+instead of ifdefs and splitted subroutines this should be manag=E6ble a=
+s well,
+the feral driver already does this nicely.
 
-Unix Man Page For 8 camcontrol
-http://www.svbug.com/cgi-bin/man.cgi?comd=8+camcontrol
-
-I've seen a legion of pr*prietary tools that do this same work.  My most
-recent survey appears at:
-http://members.aol.com/ppaatt/#storage
-
-Pat LaVarre
-
-P.S. Please yell at me offline if I chose wrong to give you this email
-in pieces.
-
-
+--=20
+Christoph Hellwig <hch@lst.de>		-	Freelance Hacker
+Contact me for driver hacking and kernel development consulting
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
