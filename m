@@ -1,43 +1,70 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH] 2.6 aacraid: adapter naming fix
-Date: Thu, 10 Mar 2005 16:08:32 -0800
-Message-ID: <1110499712.5857.67.camel@markh1.pdx.osdl.net>
+From: Ryan Anderson <ryan@autoweb.net>
+Subject: Re: aacraid died on kernel 2.4.27
+Date: Fri, 11 Mar 2005 01:04:56 -0500
+Message-ID: <20050311060456.GK20923@ryan2>
+References: <87sm33kyf5.fsf@tapsellferrier.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Received: from fire.osdl.org ([65.172.181.4]:3986 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S262818AbVCKAIh (ORCPT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="xcivb/T/gnJQjo5J"
+Received: from mail.autoweb.net ([198.172.237.26]:26382 "EHLO mail.autoweb.net")
+	by vger.kernel.org with ESMTP id S263201AbVCKGFt (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Mar 2005 19:08:37 -0500
+	Fri, 11 Mar 2005 01:05:49 -0500
+Content-Disposition: inline
+In-Reply-To: <87sm33kyf5.fsf@tapsellferrier.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: Nic Ferrier <nferrier@tapsellferrier.co.uk>
+Cc: linux-scsi@vger.kernel.org
 
->From Mark Salyzyn at Adaptec.  
 
-This fixes the way the aac device's id is calculated.
-Applies to scsi-misc-2.6 tree.
+--xcivb/T/gnJQjo5J
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Mark Haverkamp <markh@osdl.org>
+On Thu, Mar 10, 2005 at 09:01:50PM +0000, Nic Ferrier wrote:
+> I've been trying, without success, to get the aacraid driver to work
+> reliably on a Dell 2650 Poweredge.
 
-===== drivers/scsi/aacraid/linit.c 1.46 vs edited =====
---- 1.46/drivers/scsi/aacraid/linit.c	2005-02-03 18:48:49 -08:00
-+++ edited/drivers/scsi/aacraid/linit.c	2005-03-10 10:36:35 -08:00
-@@ -573,10 +573,9 @@
- 	int unique_id = 0;
- 
- 	list_for_each_entry(aac, &aac_devices, entry) {
--		if (aac->id > unique_id) {
--			insert = &aac->entry;
-+		if (aac->id > unique_id)
- 			break;
--		}
-+		insert = &aac->entry;
- 		unique_id++;
- 	}
- 
+I've had problems there, too.  With kernel 2.6.8.
 
--- 
-Mark Haverkamp <markh@osdl.org>
+I just had another failure, and I got some better logs.
 
+Can you install the "afacli" utility (Dell-branded version of aacli),
+and run
+diag show history /old
+=66rom afacli?
+
+If you can't seem to get the OLD history to show (compare diag show
+history /current with diag shot history /old), try diag dump text - you
+may find some useful messages there.
+
+The other, standard, suggestion is to go through and open a ticket with
+Dell, and do all the hardware diagnostics to try and see if the error
+can be traced to hardware problems or not.
+
+Good luck, I hope you find a fix faster than I have (still trying,
+unfortunately)
+
+--=20
+
+Ryan Anderson               =20
+AutoWeb Communications, Inc.=20
+email: ryan@autoweb.net=20
+
+
+--xcivb/T/gnJQjo5J
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.5 (GNU/Linux)
+
+iD8DBQFCMTUIvV/uNaz8d+gRAiTuAJsF2wX6TzRFx541hE3BvspHKFtPywCdGkNd
+7uXuLA0YZU3yiAS810V7BDg=
+=XzMp
+-----END PGP SIGNATURE-----
+
+--xcivb/T/gnJQjo5J--
