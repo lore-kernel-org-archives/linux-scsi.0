@@ -1,55 +1,54 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [usb-storage] Re: 2 PATCHES: fix request_tranferlength
-Date: Wed, 31 Jul 2002 01:14:27 -0400
+From: Matthew Jacob <mjacob@feral.com>
+Subject: Re: SCSI Command scatter-gather number
+Date: Tue, 30 Jul 2002 22:26:31 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020731011427.C27756@redhat.com>
-References: <UTC200207272248.g6RMm3h14110.aeb@smtp.cwi.nl> <20020727195503.C3121@one-eyed-alien.net> <3D437918.EFD1473A@torque.net> <20020729222451.A2243@one-eyed-alien.net> <3D46973C.6641E9B2@torque.net> <20020730212909.A1546@one-eyed-alien.net>
+Message-ID: <Pine.BSF.4.21.0207302222170.63843-100000@beppo>
+References: <20020731011159.B27756@redhat.com>
+Reply-To: mjacob@feral.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020730212909.A1546@one-eyed-alien.net>; from mdharm-scsi@one-eyed-alien.net on Tue, Jul 30, 2002 at 09:29:09PM -0700
+In-Reply-To: <20020731011159.B27756@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>, Andries.Brouwer@cwi.nl, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net
+To: Doug Ledford <dledford@redhat.com>
+Cc: Douglas Gilbert <dougg@torque.net>, Mike Anderson <andmike@us.ibm.com>, Haofeng Kou <haofengk@ptu.promise.com>, linux-scsi@vger.kernel.org
 
-On Tue, Jul 30, 2002 at 09:29:09PM -0700, Matthew Dharm wrote:
-> On Tue, Jul 30, 2002 at 09:40:12AM -0400, Douglas Gilbert wrote:
-> > Matthew Dharm wrote:
-> > > 
-> > > Out of curiosity... which value does the sg interface pass through?  It
-> > > collects both the buffer length and the requested transfer length, if my
-> > > memory serves...
-> > 
-> > Matt,
-> > The sg driver does not attempt to decode SCSI commands (and,
-> > for example, calculate allocation lengths) but simply passes
-> > them through. In the sg_io_hdr interface what the user gives
-> > as dxfer_len becomes the 4th argument to scsi_do_req() and
-> > hence becomes Scsi_Request::sr_bufflen in the mid and lower
-> > levels. The cumulative length of the elements in scatter gather 
-> > list built by sg (or the single buffer) is greater than or
-> > equal to dxfer_len.
 > 
-> Hrm....
-> 
-> Are you saying then that the sum of the sg segments can be greater than the
-> requested length?
-> 
-> After some discussions with Linus and others, I was under the impression
-> that this was a no-no...
+> However, the way that the Qlogic driver needs to calculate both the
+> available sg table entries and the available command queue slots is
+> actually odd enough that no generic mechanism for supporting it in the mid
+> layer is possible.  Only the driver really knows how these finite
+> resources are used up, and when you know the manipulations the driver goes
+> through then you'll agree only the driver should know, I'm sure ;-)
 
-Only if the last element in the list were allowed to be oversized.  
-Obviously, if element 2 in a 3 element list has a size that was larger 
-than it should be then the sg DMA code would end up dropping the data in 
-the wrong place.  All the sizes on the sg segments up to the last one must 
-be exact, and then the last one could only be overly long, not short.  
-But, in practice, I think the real answer is that the length of all the 
-elements in the sg list == dxfer_len in all cases.
+It's a combination of:
+
+	how much request queue space is available*
+
+	how many s/g elements you need to use (depending on length of
+	command and whether you need to use A64 or A32 entries)
+
+	how much SRAM is on the card in question and how much was taken
+	up by firmware version XYZ loaded from flash or host
+
+	how many commands are in process
+
+	how many current active exception conditions are in use
+
+Note that the request queue space just is there long enough to put down a
+command and notify the f/w on the qlogic. When it can, it moves the request
+into onboard SRAM before beginning execution.
+
+Except for running out of queue space with extremely long s/g lists, the rest
+is far too hard to really figure out. 
+
+Luckily the QLogic f/w will synthesize a QFULL if you go over execution
+throttle, or otherwise overrun internal resources. So it goes.
+
+-matt
 
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+
+* 256 entries for 1020/1040 product, any unsigned 16 bit value for
+Ultra2/Ultra3 or FC products.
+
