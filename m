@@ -1,93 +1,33 @@
-From: Mikael Pettersson <mikpe@csd.uu.se>
-Subject: [PATCH][2.6.8-rc1-mm1] drivers/scsi/sg.c gcc341 inlining fix
-Date: Wed, 14 Jul 2004 14:16:17 +0200 (MEST)
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: BK: scsi-misc cs inconsistencies?
+Date: 14 Jul 2004 08:33:03 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200407141216.i6ECGHxg008332@harpo.it.uu.se>
+Message-ID: <1089811987.2222.12.camel@mulgrave>
+References: <Pine.LNX.4.60.0407141209450.2892@poirot.grange>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:31705 "EHLO aun.it.uu.se")
-	by vger.kernel.org with ESMTP id S267253AbUGNMQ1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jul 2004 08:16:27 -0400
+Received: from stat16.steeleye.com ([209.192.50.48]:59356 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S267382AbUGNNdR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Jul 2004 09:33:17 -0400
+In-Reply-To: <Pine.LNX.4.60.0407141209450.2892@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@osdl.org
-Cc: dgilbert@interlog.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-gcc-3.4.1 errors out in 2.6.8-rc1-mm1 at drivers/scsi/sg.c:
+On Wed, 2004-07-14 at 05:24, Guennadi Liakhovetski wrote:
+> Hello
+> 
+> I've searched scsi-misc cs-entries on bk, and they don't seem to be quite 
+> consistent:
+> 
+> Linux kernel tree Search results for "tmscsim" in ChangeSet comments
 
-drivers/scsi/sg.c: In function `sg_ioctl':
-drivers/scsi/sg.c:209: sorry, unimplemented: inlining failed in call to 'sg_jif_to_ms': function body not available
-drivers/scsi/sg.c:930: sorry, unimplemented: called from here
-make[2]: *** [drivers/scsi/sg.o] Error 1
-make[1]: *** [drivers/scsi] Error 2
-make: *** [drivers] Error 2
+If you mean you searched through the bk commits list, then yes, this is
+what you see since change sets can renumber as trees are combined.
 
-sg_jif_to_ms() is marked inline but used defore its function
-body is available. Moving it nearer the top of sg.c (together
-with sg_ms_to_jif() for consistency) fixes the problem.
+James
 
-Signed-off-by: Mikael Pettersson <mikpe@csd.uu.se>
 
---- linux-2.6.8-rc1-mm1/drivers/scsi/sg.c.~1~	2004-07-14 12:58:34.000000000 +0200
-+++ linux-2.6.8-rc1-mm1/drivers/scsi/sg.c	2004-07-14 13:45:26.000000000 +0200
-@@ -225,6 +225,30 @@
- #define SZ_SG_REQ_INFO sizeof(sg_req_info_t)
- 
- static int
-+sg_ms_to_jif(unsigned int msecs)
-+{
-+	if ((UINT_MAX / 2U) < msecs)
-+		return INT_MAX;	/* special case, set largest possible */
-+	else
-+		return ((int) msecs <
-+			(INT_MAX / 1000)) ? (((int) msecs * HZ) / 1000)
-+		    : (((int) msecs / 1000) * HZ);
-+}
-+
-+static inline unsigned
-+sg_jif_to_ms(int jifs)
-+{
-+	if (jifs <= 0)
-+		return 0U;
-+	else {
-+		unsigned int j = (unsigned int) jifs;
-+		return (j <
-+			(UINT_MAX / 1000)) ? ((j * 1000) / HZ) : ((j / HZ) *
-+								  1000);
-+	}
-+}
-+
-+static int
- sg_open(struct inode *inode, struct file *filp)
- {
- 	int dev = iminor(inode);
-@@ -2575,30 +2599,6 @@
- 	free_pages((unsigned long) buff, order);
- }
- 
--static int
--sg_ms_to_jif(unsigned int msecs)
--{
--	if ((UINT_MAX / 2U) < msecs)
--		return INT_MAX;	/* special case, set largest possible */
--	else
--		return ((int) msecs <
--			(INT_MAX / 1000)) ? (((int) msecs * HZ) / 1000)
--		    : (((int) msecs / 1000) * HZ);
--}
--
--static inline unsigned
--sg_jif_to_ms(int jifs)
--{
--	if (jifs <= 0)
--		return 0U;
--	else {
--		unsigned int j = (unsigned int) jifs;
--		return (j <
--			(UINT_MAX / 1000)) ? ((j * 1000) / HZ) : ((j / HZ) *
--								  1000);
--	}
--}
--
- static unsigned char allow_ops[] = { TEST_UNIT_READY, REQUEST_SENSE,
- 	INQUIRY, READ_CAPACITY, READ_BUFFER, READ_6, READ_10, READ_12,
- 	MODE_SENSE, MODE_SENSE_10, LOG_SENSE
