@@ -1,58 +1,54 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
+From: Mike Anderson <andmike@us.ibm.com>
 Subject: Re: [PATCH]: Flexible timeout infrastructure
-Date: Tue, 15 Jun 2004 14:07:14 -0400
+Date: Tue, 15 Jun 2004 11:15:36 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40CF3AD2.10107@adaptec.com>
-References: <40CF0F9F.4050902@adaptec.com> <1087313241.2710.40.camel@laptop.fenrus.com> <40CF1852.6030306@adaptec.com> <20040615154313.GA25397@devserv.devel.redhat.com> <40CF1A5D.30908@adaptec.com> <20040615155716.GA14017@infradead.org> <40CF2381.30707@adaptec.com> <20040615163324.GB27597@devserv.devel.redhat.com>
+Message-ID: <20040615181536.GA12611@us.ibm.com>
+References: <40CF0F9F.4050902@adaptec.com> <1087313492.1796.37.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:32688 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S265807AbUFOSHV (ORCPT
+Received: from e4.ny.us.ibm.com ([32.97.182.104]:63207 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S265810AbUFOSPk (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jun 2004 14:07:21 -0400
-In-Reply-To: <20040615163324.GB27597@devserv.devel.redhat.com>
+	Tue, 15 Jun 2004 14:15:40 -0400
+Content-Disposition: inline
+In-Reply-To: <1087313492.1796.37.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjanv@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-> so do explain why the recovery method requires the midlayer to hand over
-> timer handling to the driver ?
+James Bottomley [James.Bottomley@steeleye.com] wrote:
+> On Tue, 2004-06-15 at 10:02, Luben Tuikov wrote:
+> > This patch introduces a flexible command timeout infrastructure
+> > accomodating completely current behaviour SCSI Core command timeout,
+> > but also offering the ability to hand command timeout handling to
+> > a LLDD, _yet_ still have it all go through *SCSI Core*.
+> 
+> But what this basically does is force any implementor of
+> eh_cmd_timed_out to handle all timers themselves.  Given that a large
+> number of driver writers who try to do this get it wrong (mostly around
+> del_timer() and del_timer_sync()), I don't think this is such a good
+> idea.
+> 
+> > This is somewhat similar to Christoph's proposal patch, but I wasn't
+> > aware of his patch when I thought of this. Interestingly enough it can be
+> > viewed as an extension to his patch.
+> 
+> This proposal was to allow LLD notification that the timer fired (rather
+> than first hearing about it when the eh activated).  I could see an
+> extension to this, like the return values you propose, where the LLD
+> tells the mid-layer that it corrected the command problem (in interrupt
+> context) and the command is ready for completion (otherwise proceed into
+> the eh).
+> 
 
-This is explained in the rest of the message (the part you cut off),
-and also very well explained by Doug, another LLDD writer.
+Could we get the eh_times_out part of the patch broken out as the
+addition of the return values look like a good idea along with some
+method to call a modified version of scsi_done through a exported
+function to the LLDD.
 
-> Why does it matter for *recovery* who started
-> the timer ???
-
-But that's _exactly_ the point!  It's the different scenarios
-of recovery, (hw bugs, sw bugs, vendor recovery logic as is allowable
-in specific protocols, etc, etc, etc)  I'm basically repeating the
-previous email I posted.
-
-You cannot have an arbitrary timer running alongside LLDD recovery
-logic.
- 
-> Yes I can see the use for the driver to tell the timer handler code "eh please
-> give me some more time, I'm configuring stuff for a bit". But that doesn't
-> explain why it shouldn't be the midlayer that keeps in charge of timer
-> handling and solicits the advice from the driver like this..
-
-But that's exactly what Doug's and my emails explained!  I'm confused!?
-Is this some kind of game of asking the same questions in different forms?
-It's as if my email wasn't read at all? And just the same question was asked
-in a different form?  It wasn't like this 4 years ago.
-
-Again, this is just a non-intrusive _optional_ method, which would allow
-capable LLDD (and non-native interconnects) to use if they decide to do so.
-As I said, work with a vendor to write a LLDD (especially for newer protocols)
-and the _option_ of such a method would be clear.
-
-Any LLDD writers, FC, iSCSI, SAS people, SCSI architects are welcome
-to chime in.  This patch was really intended for such a discussion.
-
--- 
-Luben
-
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
