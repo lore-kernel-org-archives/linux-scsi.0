@@ -1,8 +1,8 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] split busy check out of scsi_remove_host
-Date: Thu, 21 Nov 2002 00:39:56 +0100
+Subject: [PATCH] remove unused include in scsi_ioctl.c
+Date: Thu, 21 Nov 2002 00:37:25 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021121003956.B8517@lst.de>
+Message-ID: <20021121003725.A8517@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
@@ -11,112 +11,46 @@ List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-just a simple code cleanup
+This time I explicitly checked for the in_atomic mess..
 
 
---- 1.31/drivers/scsi/hosts.c	Sun Nov 17 16:47:02 2002
-+++ edited/drivers/scsi/hosts.c	Wed Nov 20 02:20:15 2002
-@@ -208,6 +208,48 @@
- 	return 0;
- }
+--- 1.18/drivers/block/scsi_ioctl.c	Sat Nov  2 16:58:08 2002
++++ edited/drivers/block/scsi_ioctl.c	Wed Nov 20 02:20:15 2002
+@@ -7,7 +7,7 @@
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+-
++ *
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+@@ -16,26 +16,20 @@
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-
+  *
+  */
+-#include <linux/sched.h>
+ #include <linux/kernel.h>
+ #include <linux/errno.h>
+ #include <linux/string.h>
+-#include <linux/config.h>
+-#include <linux/swap.h>
+-#include <linux/init.h>
+-#include <linux/smp_lock.h>
+ #include <linux/module.h>
+-#include <linux/blk.h>
++#include <linux/blkdev.h>
+ #include <linux/completion.h>
+ #include <linux/cdrom.h>
+ #include <linux/slab.h>
+ #include <linux/bio.h>
++#include <asm/uaccess.h>
  
-+static int scsi_check_device_busy(struct scsi_device *sdev)
-+{
-+	struct Scsi_Host *shost = sdev->host;
-+	struct scsi_cmnd *scmd;
-+
-+	/*
-+	 * Loop over all of the commands associated with the
-+	 * device.  If any of them are busy, then set the state
-+	 * back to inactive and bail.
-+	 */
-+	for (scmd = sdev->device_queue; scmd; scmd = scmd->next) {
-+		if (scmd->request && scmd->request->rq_status != RQ_INACTIVE)
-+			goto active;
-+
-+		/*
-+		 * No, this device is really free.  Mark it as such, and
-+		 * continue on.
-+		 */
-+		scmd->state = SCSI_STATE_DISCONNECTING;
-+		if (scmd->request)
-+			scmd->request->rq_status = RQ_SCSI_DISCONNECTING;
-+	}
-+
-+	return 0;
-+
-+active:
-+	printk(KERN_ERR "SCSI device not inactive - rq_status=%d, target=%d, "
-+			"pid=%ld, state=%d, owner=%d.\n",
-+			scmd->request->rq_status, scmd->target,
-+			scmd->pid, scmd->state, scmd->owner);
-+
-+	for (sdev = shost->host_queue; sdev; sdev = sdev->next) {
-+		for (scmd = sdev->device_queue; scmd; scmd = scmd->next) {
-+			if (scmd->request->rq_status == RQ_SCSI_DISCONNECTING)
-+				scmd->request->rq_status = RQ_INACTIVE;
-+		}
-+	}
-+
-+	printk(KERN_ERR "Device busy???\n");
-+	return 1;
-+}
-+
- /**
-  * scsi_remove_host - check a scsi host for release and release
-  * @shost:	a pointer to a scsi host to release
-@@ -218,7 +260,6 @@
- int scsi_remove_host(struct Scsi_Host *shost)
- {
- 	struct scsi_device *sdev;
--	struct scsi_cmnd *scmd;
+-#include "../scsi/scsi.h"
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_ioctl.h>
  
- 	/*
- 	 * FIXME Do ref counting.  We force all of the devices offline to
-@@ -228,43 +269,9 @@
- 	for (sdev = shost->host_queue; sdev; sdev = sdev->next) 
- 		sdev->online = FALSE;
+-#include <asm/uaccess.h>
  
--	for (sdev = shost->host_queue; sdev; sdev = sdev->next) {
--		/*
--		 * Loop over all of the commands associated with the
--		 * device.  If any of them are busy, then set the state
--		 * back to inactive and bail.
--		 */
--		for (scmd = sdev->device_queue; scmd; scmd = scmd->next) {
--			if (scmd->request && scmd->request->rq_status !=
--			    RQ_INACTIVE) {
--				printk(KERN_ERR "SCSI device not inactive"
--				       "- rq_status=%d, target=%d, pid=%ld,"
--				       "state=%d, owner=%d.\n",
--				       scmd->request->rq_status,
--				       scmd->target, scmd->pid,
--				       scmd->state, scmd->owner);
--				for (sdev = shost->host_queue; sdev;
--				     sdev = sdev->next) {
--					for (scmd = sdev->device_queue; scmd;
--					     scmd = scmd->next)
--						if (scmd->request->rq_status ==
--						    RQ_SCSI_DISCONNECTING)
--							scmd->request->rq_status = RQ_INACTIVE;
--				}
--				printk(KERN_ERR "Device busy???\n");
--				return 1;
--			}
--			/*
--			 * No, this device is really free.  Mark it as such, and
--			 * continue on.
--			 */
--			scmd->state = SCSI_STATE_DISCONNECTING;
--			if (scmd->request)
--				scmd->request->rq_status =
--					RQ_SCSI_DISCONNECTING;	/* Mark as
--								   busy */
--		}
--	}
-+	for (sdev = shost->host_queue; sdev; sdev = sdev->next)
-+		if (scsi_check_device_busy(sdev))
-+			return 1;
- 
- 	/*
- 	 * Next we detach the high level drivers from the Scsi_Device
+ /* Command group 3 is reserved and should never be used.  */
+ const unsigned char scsi_command_size[8] =
