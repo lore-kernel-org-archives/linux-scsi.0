@@ -1,107 +1,89 @@
-From: Josef =?iso-8859-1?Q?M=F6llers?=
-	<josef.moellers@fujitsu-siemens.com>
-Subject: Re: Why REPORT LUN only for SCSI-2?
-Date: Wed, 16 Jul 2003 09:00:10 +0200
+From: Stefan Voelkel <Stefan.Voelkel@millenux.com>
+Subject: Re: bus:id:lun to device name
+Date: 16 Jul 2003 10:29:52 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F14F7FA.BA551505@fujitsu-siemens.com>
-References: <3F140D30.D2B5C4D8@fujitsu-siemens.com> <20030715073927.A8218@beaverton.ibm.com>
+Message-ID: <1058344192.3983.98.camel@lt-sv>
+References: <OF19C5DBC5.6CF569E6-ON87256D64.005C1908-88256D64.005DBB45@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rm5B+S/UdN9z/qGCgfKB"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from plam.fujitsu-siemens.com ([217.115.66.9]:32568 "EHLO
-	plam.fujitsu-siemens.com") by vger.kernel.org with ESMTP
-	id S269804AbTGPGo4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jul 2003 02:44:56 -0400
+Received: from pong.to.com ([194.221.251.36]:49677 "EHLO pong.to.com")
+	by vger.kernel.org with ESMTP id S270324AbTGPIPl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Jul 2003 04:15:41 -0400
+In-Reply-To: <OF19C5DBC5.6CF569E6-ON87256D64.005C1908-88256D64.005DBB45@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: Bryan Henderson <hbryan@us.ibm.com>
+Cc: Kurt Garloff <garloff@suse.de>, linux-scsi@vger.kernel.org
 
-Patrick Mansfield wrote:
 
-> > Ist there a hard reason not to allow the REPORT LUNS command for SC=
-SI-2
-> > devices?
+--=-rm5B+S/UdN9z/qGCgfKB
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: quoted-printable
 
-> No.
-
-So, can I cast my vote to drop it? Or at least change it to a check for
-SCSI_1.
-
-The code does work with SCSI-2 devices (some disks) which don't support
-REPORT LUNs and IMHO devices which do support command code A0h for
-anything other than REPORT LUNs _are_ broken.
-
-> > There are several devices (e.g. RAID) which tread carefull and clai=
-m
-> > only SCSI-2 compliancy but support REPORT LUNS. It would make life
-> > easier with these if REPORT LUNS would be generally available.
-> > Eg I have a box which will happily accept INQUIRYs on LUNs 0-7 but
-> > REPORT LUNS returns only the 4 configured LUNs.
+On Tue, 2003-07-15 at 19:03, Bryan Henderson wrote:
 >=20
-> Are the unconfigured LUNs showing up as if they were configured?
-
-Yes
-
-These are the configured entries from /proc/scsi/scsi:
-
-Host: scsi1 Channel: 00 Id: 01 Lun: 00
-  Vendor: MYLEX    Model: DAC960FL 18000T0 Rev: 5426
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 01 Lun: 01
-  Vendor: MYLEX    Model: DAC960FL 18000T0 Rev: 5426
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 01 Lun: 02
-  Vendor: MYLEX    Model: DAC960FL 18000T0 Rev: 5426
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 01 Lun: 03
-  Vendor: MYLEX    Model: DAC960FL 15464T0 Rev: 5426
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-
-These are the unconfigured LUNs:
-
-Host: scsi1 Channel: 00 Id: 01 Lun: 04
-  Vendor: MYLEX    Model: DAC960FL         Rev: 5426
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 01 Lun: 05
-  Vendor: MYLEX    Model: DAC960FL         Rev: 5426
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 01 Lun: 06
-  Vendor: MYLEX    Model: DAC960FL         Rev: 5426
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 01 Lun: 07
-  Vendor: MYLEX    Model: DAC960FL         Rev: 5426
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-
-These last 4 Luns are not detected if I remove the SCSI_3 check at the
-beginning of scsi_report_lun_scan().
-
-> Most disk/RAID arrays made in the last few years can configure whethe=
-r
-> they report back as SCSI-2 or SCSI-3. It would be best if you could c=
-hange
-> the device to report as SCSI-3.
 >=20
-> Even some SCSI disk drives are capable of reporting back as SCSI-2 or
-> SCSI-3.
+> >Theoretically /dev/foobar might be a scsi device, meaning that I
+> >must/should ioctl() all files under /dev/. Thats what I do not like
+> >about ioctl() :).
+>=20
+> Once you admit that devices in Linux are not fundamentally associated wit=
+h
+> names in the file tree, the problem takes on a whole new perspective.
 
-No, unfortunately we cannot change this. I've tried, but the vendors
-(these are OEM parts, it's not only the MYLEX thingies shown above)
-refused.
-I guess (I haven't dug into this deep enough, I'm not a standards
-person) is that the parts aren't 100% SCSI-3, connected to a
-=46ibreChannel HA. They are capable of addressing more than 8 LUNs.
-Adding them to the device_table doen't really work, because then we get
-128 LUNs showing up and I have seen pretty large configurations with
-several RAID boxes connected so we run out of device numbers.
+True. What I do not like about a list of devices is the fact that I will
+duplicate code, eg (from sd.c)
 
-Josef
+static void sd_devname(unsigned int disknum, char *buffer)
+
+> >> Another option is to use scsidev
+> >> http://www.garloff.de/kurt/linux/scsidev/
+> >> where the device nodes are dynamically created and (by default) have
+> >> names which contain this information.
+> >
+> >AFAIR devfs does this too, depending on devfs would be an option.
+>=20
+> [...] Or do you want the name by which people normally know and
+> use the device?  E.g. "I have /dev/sda mounted, but what device is that?"
+
+Yes, basically. I have this information: host_id:bus:target:lun, and now
+I'd like the "device file name with which one normally access' this
+specific lun".
+
+Let me give you some details (hope that will make it clearer). I am
+implementing FC-HBA (ftp://ftp.t11.org/t11/pub/fc/hba/03-108v2.pdf). The
+problem occures with HBA_GetFcpTargetMapping() on page 73 (7.4.4), the
+parameters are describerd on page 31 (6.6.1) and the specific struct is
+HBA_ScsiId (6.6.1.5), actually the member OSDeviceName (6.6.2.11).
+
+As it seems, I must use the file-name-list-ioctl() approach without
+devfs and something like snprintf("/dev/scsi/host%d/bus%d/...", ...); if
+devfs is mounted.
+
+Thank you all for your time
+
+regards
+	Stefan
 --=20
-Josef M=F6llers (Pinguinpfleger bei FSC)
-	If failure had no penalty success would not be a prize
-						-- T.  Pratchett
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--------------------------------------------------------------------
+Stefan V=F6lkel                            stefan.voelkel@millenux.com
+Millenux GmbH                              mobile: +49.170.79177.17
+Lilienthalstra=DFe 2                          phone: +49.711.88770.300
+70825 Stuttgart-Korntal                       fax: +49.711.88770.349
+     -=3D linux without limits -=3D- http://linux.zSeries.org/ =3D-
+
+--=-rm5B+S/UdN9z/qGCgfKB
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
+
+iD8DBQA/FQz/tWF28C4HGsQRArqDAKCpkoil5gjEa9nPxHtljQUec9bVsgCfZuVc
+o4wIEo/pnoRLX2AnR0QjU8o=
+=+Vua
+-----END PGP SIGNATURE-----
+
+--=-rm5B+S/UdN9z/qGCgfKB--
+
