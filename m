@@ -1,43 +1,85 @@
-From: Franco Borich <fran2170@comcast.net>
-Subject: [PATCH] 2.4.27-rc1 add device to scsi_scan.c blacklist
-Date: Thu, 24 Jun 2004 10:04:30 -0500
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: [patch] 2.6.7-mm2: fdomain_cs needs unknown symbols
+Date: Thu, 24 Jun 2004 21:16:18 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40DAED7E.6020202@comcast.net>
+Message-ID: <20040624191617.GB26669@fs.tum.de>
+References: <20040624014655.5d2a4bfb.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sccrmhc11.comcast.net ([204.127.202.55]:36031 "EHLO
-	sccrmhc11.comcast.net") by vger.kernel.org with ESMTP
-	id S265399AbUFXPDG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Jun 2004 11:03:06 -0400
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:60664 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S265289AbUFXTQ0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Jun 2004 15:16:26 -0400
+Content-Disposition: inline
+In-Reply-To: <20040624014655.5d2a4bfb.akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com, David Hinds <dahinds@users.sourceforge.net>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi,
+On Thu, Jun 24, 2004 at 01:46:55AM -0700, Andrew Morton wrote:
+>...
+> All 195 patches:
+>...
+> bk-scsi.patch
+>...
 
-Adds Xyratex 4200 FC-SATA RAID to blacklist.  Posting again due to 
-mailer problems.
+This makes two functions in drivers/scsi/fdomain.c static that are 
+required in fdomain_cs.o:
 
---- scsi_scan.c.OLD     2004-06-21 15:44:48.000000000 -0500
-+++ scsi_scan.c 2004-06-21 15:46:16.000000000 -0500
-@@ -207,6 +207,7 @@
-       {"HP", "C7200", "*", BLIST_SPARSELUN},                  /* Medium 
-Changer */
-       {"SMSC", "USB 2 HS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-       {"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+       {"Xyratex", "4200", "*", BLIST_SPARSELUN | BLIST_LARGELUN | 
-BLIST_FORCELUN},
-       {"NEC", "iStorage", "*", BLIST_SPARSELUN | BLIST_LARGELUN | 
-BLIST_FORCELUN},
+<--  snip  -->
 
-       /*
+WARNING: /lib/modules/2.6.7-mm2/kernel/drivers/scsi/pcmcia/fdomain_cs.ko 
+needs unknown symbol fdomain_16x0_bus_reset
+WARNING: /lib/modules/2.6.7-mm2/kernel/drivers/scsi/pcmcia/fdomain_cs.ko 
+needs unknown symbol fdomain_setup
 
-Thanks!
-
-Frank Borich
-Xyratex International Ltd.
-(630)654-6089
+<--  snip  -->
 
 
+Although I agree that the way fdomain_cs.o is built is too ugly for
+words, I'd suggest the following patch that revert these static's:
+
+
+--- linux-2.6.7-mm2-modular/drivers/scsi/fdomain.c.old	2004-06-24 21:04:56.000000000 +0200
++++ linux-2.6.7-mm2-modular/drivers/scsi/fdomain.c	2004-06-24 21:07:17.000000000 +0200
+@@ -418,7 +418,7 @@
+ 
+ static irqreturn_t       do_fdomain_16x0_intr( int irq, void *dev_id,
+ 					    struct pt_regs * regs );
+-static int		 fdomain_16x0_bus_reset(struct scsi_cmnd *SCpnt);
++int			 fdomain_16x0_bus_reset(struct scsi_cmnd *SCpnt);
+ 
+ /* Allow insmod parameters to be like LILO parameters.  For example:
+    insmod fdomain fdomain=0x140,11 */
+@@ -555,7 +555,7 @@
+    printk( "\n" );
+ }
+ 
+-static int __init fdomain_setup(char *str)
++int __init fdomain_setup(char *str)
+ {
+ 	int ints[4];
+ 
+@@ -1541,7 +1541,7 @@
+    return SUCCESS;
+ }
+ 
+-static int fdomain_16x0_bus_reset(struct scsi_cmnd *SCpnt)
++int fdomain_16x0_bus_reset(struct scsi_cmnd *SCpnt)
+ {
+    outb( 1, SCSI_Cntl_port );
+    do_pause( 2 );
+
+
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
