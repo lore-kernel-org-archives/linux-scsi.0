@@ -1,33 +1,33 @@
-From: Rask Ingemann Lambertsen <rask@sygehus.dk>
-Subject: Re: Using ncr53c8xx.c for a 53c770 chip
-Date: Tue, 13 Jan 2004 15:15:03 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] inia100.c: pointer used before being set
+Date: 13 Jan 2004 10:07:04 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040113151503.B1738@sygehus.dk>
-References: <20031122113834.GA8098@lst.de> <20031123175041.A1461@sygehus.dk> <1069606797.2066.2.camel@mulgrave> <20040113145553.A1738@sygehus.dk>
+Message-ID: <1074006425.2173.13.camel@mulgrave>
+References: <20040112210754.582573ad.rddunlap@osdl.org>
+	<1073971028.5177.1.camel@mulgrave>
+	<20040112213034.5fc5d1a6.rddunlap@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 0x50a17253.albnxx15.adsl-dhcp.tele.dk ([80.161.114.83]:39428
-	"EHLO 0x50a17253.albnxx15.adsl-dhcp.tele.dk") by vger.kernel.org
-	with ESMTP id S264315AbUAMOPI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jan 2004 09:15:08 -0500
-Content-Disposition: inline
-In-Reply-To: <20040113145553.A1738@sygehus.dk>; from rask@sygehus.dk on Tue, Jan 13, 2004 at 02:55:57PM +0100
+Received: from stat1.steeleye.com ([65.114.3.130]:45485 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264288AbUAMPHJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Jan 2004 10:07:09 -0500
+In-Reply-To: <20040112213034.5fc5d1a6.rddunlap@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
+To: "Randy.Dunlap" <rddunlap@osdl.org>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, Jan 13, 2004 at 02:55:57PM +0100, Rask Ingemann Lambertsen wrote:
+On Tue, 2004-01-13 at 00:30, Randy.Dunlap wrote:
+> OK, I looked for scsi-patch trees and just didn't look in one
+> named with "2.7" in it since I think that this should be fixed
+> before then.
 
-> I need some help filling in the ncr_chip structure. Where do I find the
-> device_id, revision_id, burst_max, nr_divisor and features settings? I can
-> figure some of it out:
-> .offset_max = 15 (the maximum allowed by the AmigaOS driver).
-> .features = FE_ULTRA | FE_WIDE | FE_RAM (but maybe more flags are needed?)
+Yes, sorry, bad tree name...I picked it when I wasn't sure if I'd get
+any of the driver patches in after 2.6.0....I'll rename it in the next
+go around.
 
-I just got hold of the 53c770 programming guide, and it helps a lot with
-this part, but comments are still welcome, of course.
+James
 
--- 
-Regards,
-Rask Ingemann Lambertsen
+
