@@ -1,29 +1,54 @@
-From: Alan Cox <alan@redhat.com>
+From: William Lee Irwin III <wli@holomorphy.com>
 Subject: Re: PATCH: Further aacraid work
-Date: Thu, 17 Jun 2004 16:38:42 -0400
+Date: Thu, 17 Jun 2004 13:48:28 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040617203842.GC8705@devserv.devel.redhat.com>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189FD2407B@otce2k03.adaptec.com>
+Message-ID: <20040617204828.GC1495@holomorphy.com>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189FD2407B@otce2k03.adaptec.com> <20040617203842.GC8705@devserv.devel.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:29130 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S262438AbUFQUlI (ORCPT
+Received: from holomorphy.com ([207.189.100.168]:18818 "EHLO holomorphy.com")
+	by vger.kernel.org with ESMTP id S262951AbUFQUtb (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2004 16:41:08 -0400
+	Thu, 17 Jun 2004 16:49:31 -0400
 Content-Disposition: inline
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189FD2407B@otce2k03.adaptec.com>
+In-Reply-To: <20040617203842.GC8705@devserv.devel.redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, y@redhat.com
-Cc: Alan Cox <alan@redhat.com>, Clay Haapala <chaapala@cisco.com>, James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Alan Cox <alan@redhat.com>
+Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, y@redhat.com, Clay Haapala <chaapala@cisco.com>, James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 On Thu, Jun 17, 2004 at 01:54:38PM -0400, Salyzyn, Mark wrote:
-> And I might add, undoing the entropy to result in the descending page
-> list (but that is the forth time I've said this).
-> 
-> I ran heavy sequential load overnight and continued to have this
-> characteristic when taking snapshots of command SG lists. The average SG
-> element size statistically was 4168 bytes.
+>> And I might add, undoing the entropy to result in the descending page
+>> list (but that is the forth time I've said this).
+>> I ran heavy sequential load overnight and continued to have this
+>> characteristic when taking snapshots of command SG lists. The average SG
+>> element size statistically was 4168 bytes.
 
-What do the stats look like with the patch Andrew Morton (I think) posted
-to reverse the page order from the allocator ?
+On Thu, Jun 17, 2004 at 04:38:42PM -0400, Alan Cox wrote:
+> What do the stats look like with the patch Andrew Morton (I think) posted
+> to reverse the page order from the allocator ?
+
+Say, could you guys try this? jejb seemed to get decent results with it.
+
+
+===== mm/page_alloc.c 1.211 vs edited =====
+--- 1.211/mm/page_alloc.c	Sat Jun 12 20:52:26 2004
++++ edited/mm/page_alloc.c	Thu Jun 17 13:46:36 2004
+@@ -297,14 +297,12 @@
+ 	unsigned long size = 1 << high;
+ 
+ 	while (high > low) {
+-		BUG_ON(bad_range(zone, page));
+ 		area--;
+ 		high--;
+ 		size >>= 1;
+-		list_add(&page->lru, &area->free_list);
+-		MARK_USED(index, high, area);
+-		index += size;
+-		page += size;
++		BUG_ON(bad_range(zone, &page[size]));
++		list_add(&page[size].lru, &area->free_list);
++		MARK_USED(index + size, high, area);
+ 	}
+ 	return page;
+ }
