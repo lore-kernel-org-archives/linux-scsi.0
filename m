@@ -1,41 +1,23 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Question about Request Sense case in scsi_lib.c
-Date: 14 Oct 2004 13:05:02 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1097777109.2198.31.camel@mulgrave>
-References: <53CF1076699CD711B7DD0002A51363F1072A6E3A@exw-ks.ks.lsil.com>
-	<20041013214629.GA30273@osdl.org> <1097704592.1714.266.camel@mulgrave>
-	<20041014175218.GA31885@osdl.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: cciss update [2/2] fixes for Steeleye Lifekeeper
+Date: Thu, 14 Oct 2004 19:39:48 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20041014183948.GA12325@infradead.org>
+References: <20041013212253.GB9866@beardog.cca.cpqcorp.net> <20041014083900.GB7747@infradead.org> <1097764660.2198.11.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:59819 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S267165AbUJNSF7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Oct 2004 14:05:59 -0400
-In-Reply-To: <20041014175218.GA31885@osdl.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S267319AbUJNSzN@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1097764660.2198.11.camel@mulgrave>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, mikem@beardog.cca.cpqcorp.net, Andrew Morton <akpm@osdl.org>, Jens Axboe <axboe@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Dave Olien' <dmo@osdl.org>
-Cc: "Qi, Yanling" <yanling.qi@engenio.com>, Douglas Gilbert <dougg@torque.net>, Tim Pepper <tpepper@gmail.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, 2004-10-14 at 12:52, 'Dave Olien' wrote:
-> comp cmd cfa9d8a0 good_bytes 0 nr_phys_req 5 use_sg 10
-> Incorrect number of segments after building list cmd cfa9d8a0
-> counted 10, received 5
-> req nr_sec 1024, cur_nr_sec 8
-> Buffer I/O error on device sda, logical block 5489
+On Thu, Oct 14, 2004 at 09:37:32AM -0500, James Bottomley wrote:
+> I don't think so ... it's a volume you know exists but you can't get
+> access to (in a shared storage configuration).  In SCSI we have two
+> examples of this now:
 
-Well, I managed to create a test rig that randomly rejects commands with
-UNIT ATTENTION (and QUEUE FULL just for good measure).  So far I've seen
-this condition once so it looks like you have the better ability to
-reproduce.
-
-What happens is that nr_phys_segments is being reduced *after* the
-sgtable is allocated the first time (otherwise there would be an
-Incorrect segments message for its initial mapping).  Why this is
-happening, I still can't fathom.
-
-James
-
-
+Such a volume has been configured and set up, and although it's still
+ugly I'd say it's okay.  But the patch also adds one gendisk per controller
+even if no volume is set up.
