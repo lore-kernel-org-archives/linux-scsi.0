@@ -1,46 +1,70 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: reiserfs and SCSI oops seen in 2.6.9-rc2 with local SCSI disk IO
-Date: Fri, 24 Sep 2004 16:18:28 +0100
+From: David Wysochanski <davidw@netapp.com>
+Subject: Re: reiserfs and SCSI oops seen in 2.6.9-rc2 with local SCSI disk
+ IO
+Date: Fri, 24 Sep 2004 11:42:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040924151828.GC16153@parcelfarce.linux.theplanet.co.uk>
-References: <4154372C.7070506@netapp.com>
+Message-ID: <4154404B.3070705@netapp.com>
+References: <4154372C.7070506@netapp.com> <20040924151828.GC16153@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:15759 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S268836AbUIXPS3
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Sep 2004 11:18:29 -0400
-Content-Disposition: inline
-In-Reply-To: <4154372C.7070506@netapp.com>
+Received: from mx01.netapp.com ([198.95.226.53]:47539 "EHLO mx01.netapp.com")
+	by vger.kernel.org with ESMTP id S268856AbUIXPmF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Sep 2004 11:42:05 -0400
+In-Reply-To: <20040924151828.GC16153@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: David Wysochanski <davidw@netapp.com>
+To: Matthew Wilcox <matthew@wil.cx>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Sep 24, 2004 at 11:03:08AM -0400, David Wysochanski wrote:
-> I can reproduce this pretty easily with local disk.
+Matthew Wilcox wrote:
+> On Fri, Sep 24, 2004 at 11:03:08AM -0400, David Wysochanski wrote:
+>  > I can reproduce this pretty easily with local disk.
+>  >
+>  > Here's some details about my setup (attached is the
+>  > full kernel config):
+>  > - dell 2650 (dual xeon, hyperthreading disabled)
+>  > - 1 local SCSI disk (root volume)
+>  > - 2 local SCSI disks (data), each with 10 partitions
+>  > of 100MB each, 6 of them reiserfs filesystems, 3 of them
+>  > ext3, and 3 of them ext2 (total of 20 unique filesystems)
+>  > - one instance of test program running on each of the
+>  > 20 filesystems
 > 
-> Here's some details about my setup (attached is the
-> full kernel config):
-> - dell 2650 (dual xeon, hyperthreading disabled)
-> - 1 local SCSI disk (root volume)
-> - 2 local SCSI disks (data), each with 10 partitions
-> of 100MB each, 6 of them reiserfs filesystems, 3 of them
-> ext3, and 3 of them ext2 (total of 20 unique filesystems)
-> - one instance of test program running on each of the
-> 20 filesystems
+> I don't think this is a SCSI problem.  Your backtrace doesn't include
+> anything in the SCSI subsystem (this doesn't _prove_ anything, but does
+> suggest you should look elsewhere first).  You also didn't mention what
+> SCSI controller you were using.  If you can reproduce the oops without
+> using reiserfs at all, that would suggest the problem doesn't lie in
+> reiserfs, but that's where I'd blame first ;-)
+> 
 
-I don't think this is a SCSI problem.  Your backtrace doesn't include
-anything in the SCSI subsystem (this doesn't _prove_ anything, but does
-suggest you should look elsewhere first).  You also didn't mention what
-SCSI controller you were using.  If you can reproduce the oops without
-using reiserfs at all, that would suggest the problem doesn't lie in
-reiserfs, but that's where I'd blame first ;-)
+I've been seeing a lot of problems with reiserfs that I
+don't see on ext2 or ext3, so I would tend to agree with you.
+Do you know where I could post for the reiserfs folks?
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Did you see the backtrace for the second CPU?  It does
+include SCSI and block subsystem components.
+
+
+The controller on board the dell 2650 is Adaptec:
+
+0000:02:06.0 SCSI storage controller: Adaptec AHA-3960D / AIC-7899A U160/m (rev 01)
+         Subsystem: Adaptec AHA-3960D U160/m
+         Flags: bus master, 66Mhz, medium devsel, latency 32, IRQ 24
+         BIST result: 00
+         I/O ports at cc00 [disabled] [size=fcc00000]
+         Memory at fcd01000 (64-bit, non-prefetchable) [size=4K]
+         Expansion ROM at 00020000 [disabled]
+         Capabilities: <available only to root>
+
+0000:02:06.1 SCSI storage controller: Adaptec AHA-3960D / AIC-7899A U160/m (rev 01)
+         Subsystem: Adaptec AHA-3960D U160/m
+         Flags: bus master, 66Mhz, medium devsel, latency 32, IRQ 25
+         BIST result: 00
+         I/O ports at c800 [disabled] [size=fcc00000]
+         Memory at fcd00000 (64-bit, non-prefetchable) [size=4K]
+         Expansion ROM at 00020000 [disabled]
+         Capabilities: <available only to root>
+
