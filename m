@@ -1,54 +1,41 @@
-From: "Heinz, Michael" <mheinz@infiniconsys.com>
-Subject: RE: Configuring the device_list in scsi_scan.c
-Date: Fri, 31 May 2002 09:24:30 -0400
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH 2.5.17] Making SCSI not copy the request structure
+Date: Fri, 31 May 2002 09:57:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <08628CA53C6CBA4ABAFB9E808A5214CB0C4D59@mercury.infiniconsys.com>
+Message-ID: <200205311357.g4VDvWI10367@localhost.localdomain>
+References: <ARZEH@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-content-class: urn:content-classes:message
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id GAA13863
+	for <linux-scsi@vger.kernel.org>; Fri, 31 May 2002 06:57:43 -0700
+In-Reply-To: Message from "Aron Zeh" <ARZEH@de.ibm.com>
+   of "Fri, 31 May 2002 13:07:50 +0200." <OFF6A89763.CD0EBEF7-ONC1256BCA.003CD69A@de.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, linux-scsi@vger.kernel.org
+To: Aron Zeh <ARZEH@de.ibm.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Doug Ledford <dledford@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, patman@beaverton.ibm.com, linux-scsi@vger.kernel.org
 
-Alan,
+ARZEH@de.ibm.com said:
+> I had hoped to be able to reproduce by now, but unfortunately my 2.5
+> kernels currently fail to boot on zSeries. I'll try the repro and the
+> bit change as soon as that little problem can be alleviated. 
 
-I agree whole heartedly; the reason for my proposal is it seems that
-that work would be a bit much to issue as a patch for 2.4. (admittedly,
-this is said by someone whose never really been involved in the patch
-process....)
+Actually, I'm afraid there's more to it than my initial recommendation of just 
+plugging the elevator queue.  Your problem lies in the device_blocked flag, 
+which gets set when queuecommand returns non-zero and is not reset until an 
+I/O comes back through scsi_finish_command().
 
-In addition, I was trying to find a solution easy enough that I could
-convince my boss that I should spend the time writing it. :-P
+I don't believe the host and device blocking serve any purpose anymore.  Also, 
+with the advent of blocking in the blkdev layer, I think we can even get rid 
+of the host_self_blocked flag (which is currently only used by the mesh 
+driver).  So I'll look into getting rid of them all.
 
---
-Michael Heinz
-Infinicon Systems, Inc.
-http://www.infiniconsys.com 
+In the mean time, temporarily you may be able to fix it (and this should work 
+for 2.4) by manually setting host_blocked to false and running the q->
+request_fn(q) from your driver when you detect that the can't accept any 
+commands condition is alleviated.
 
-> -----Original Message-----
-> From: Alan Cox [mailto:alan@lxorguk.ukuu.org.uk]
-> Sent: Thursday, May 30, 2002 9:40 PM
-> To: Heinz, Michael
-> Cc: Matthew Dharm; linux-scsi@vger.kernel.org
-> Subject: RE: Configuring the device_list in scsi_scan.c
-> 
-> 
-> On Fri, 2002-05-31 at 01:10, Heinz, Michael wrote:
-> > And I want to do that for each of, say, 128 devices, that 
-> may or may not
-> > be plugged in that day? It would be better to get the 
-> midlayer to scan
-> > for devices.
-> > 
-> > The correct fix is to have the mid layer support the REPORT_LUNS
-> > command; but that's a major change - and probably wouldn't 
-> get into 2.4
-> > as a patch - which is why I proposed this instead.
-> 
-> I'd like to see a clean use of REPORT_LUNS as default for 
-> SCSI3 capable
-> devices. That would be a clean up that justified the testing work.
-> 
-> 
+James
+
+
