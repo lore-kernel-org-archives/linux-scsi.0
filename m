@@ -1,50 +1,42 @@
-From: Florenz Kley <florenz.kley@sap.com>
-Subject: Re: Linux Driver test tools?
-Date: Sun, 02 Jun 2002 17:42:15 +0200
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: 2.5.20-dj2 : "Duplicate initializer" in drivers/scsi/aic7xxx/aic7xxx_linux.c
+Date: Tue, 4 Jun 2002 17:30:30 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <15080000.1023032535@[10.18.201.22]>
-References: <F6A3AFC9BCD92E48B79C14E4AAAEA20F2633D1@nonamea.ptu.promise.com>
+Message-ID: <20020604173030.A18317@eng2.beaverton.ibm.com>
+References: <3CFD25B7.2090108@fuse.net> <20020604225201.X4751@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <F6A3AFC9BCD92E48B79C14E4AAAEA20F2633D1@nonamea.ptu.promise.com>
-Content-Disposition: inline
+In-Reply-To: <20020604225201.X4751@suse.de>; from davej@suse.de on Tue, Jun 04, 2002 at 10:52:01PM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Haofeng Kou <haofengk@ptu.promise.com>
-Cc: linux-scsi@vger.kernel.org
+To: Dave Jones <davej@suse.de>, Nathan <wfilardo@fuse.net>, linux-kernel@vger.kernel.org
+Cc: gibbs@scsiguy.com, linux-scsi@vger.kernel.org
 
-hi Haofeng,
+On Tue, Jun 04, 2002 at 10:52:01PM +0200, Dave Jones wrote:
+> On Tue, Jun 04, 2002 at 04:40:23PM -0400, Nathan wrote:
+>  > gcc -D__KERNEL__ -I/home/wes/src/kernel/linux-2.5.20/include -Wall 
+>  > -Wstrict-prototypes -Wno-trigraphs -O2 -fno-strict-aliasing -fno-common 
+>  > -fomit-frame-pointer -pipe -mpreferred-stack-boundary=2 -march=i686 
+>  > -malign-functions=4     -DKBUILD_BASENAME=aic7xxx_linux  -c -o 
+>  > aic7xxx_linux.o aic7xxx_linux.c
+>  > aic7xxx_linux.c:2829: unknown field `abort' specified in initializer
+>  > aic7xxx_linux.c:2829: unknown field `reset' specified in initializer
+>  > 
+>  > Erhm, what's that mean? ^_^  And more importantly, how does one fix that?
+> 
+> It means the scsi driver has no error handling. Either a, add
+> appropriate error handling routines, or b, enable the option in
+> the scsi menu labelled "Use SCSI drivers with broken error handling [DANGEROUS]"
+> 
+> This is the fallout of a patch from Christoph Hellwig to make it more
+> obvious which drivers are still in need of attention.  This patch is
+> missing from Linus' tree, so things compile fine there. As there's been
+> little to no progress at fixing these, I'll push the same patch to Linus
+> in the next round, so things will break there too.
+> 
+>     Dave.
 
---On Friday, May 31, 2002 06:42:15 PM -0700 Haofeng Kou 
-<haofengk@ptu.promise.com> wrote:
+The aic driver already uses the new error handler, it just references the
+removed fields when initializing them to NULL.
 
-> I finish one linux driver and want to do the whole features testing for
-> this driver, any body know certain tools for this testing ?
-
-there's a test tool written by Robin Miller at 
-http://www.bit-net.com/~rmiller/dt.html
-it has a good documentation, and lot's of possibilities to do torment 
-different sorts of devices, among them disks. You can let it write stuff to 
-a disk, defining a pattern to be written, and then read in the data again 
-and verify it.
-
-my approach testing drivers for disks is:
-
-   - where to write/read?
-      + directly to/from the device
-      + to/from a filesystem on the device
-      + to/from a LV that has it's PVs on the device
-
-   - IO region
-      + PAE in the different options
-      + try to force it to make I/O from/to certain regions, like filling 
-up the RAM, then writing a file to the device
-
-for a server, the PAE option would most probably be 64GB, so I start 
-normally with this enabled.
-
--- 
-regards,
-Florenz
-
+-- Patrick Mansfield
