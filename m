@@ -1,66 +1,86 @@
-From: Patrick Mochel <mochel@osdl.org>
-Subject: Re: [RFC] scsi host sysfs support [0/4]
-Date: Mon, 14 Apr 2003 16:02:58 -0700 (PDT)
+From: Anton Blanchard <anton@samba.org>
+Subject: Make sym2 driver use pci_enable_device
+Date: Tue, 15 Apr 2003 09:32:39 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0304141600070.15980-100000@cherise>
-References: <20030414183759.GA4162@beaverton.ibm.com>
+Message-ID: <20030414233239.GD2067@krispykreme>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from air-2.osdl.org ([65.172.181.6]:45464 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S263972AbTDNWwc (for <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Apr 2003 18:52:32 -0400
-In-Reply-To: <20030414183759.GA4162@beaverton.ibm.com>
+Received: from dp.samba.org ([66.70.73.150]:22422 "EHLO lists.samba.org")
+	by vger.kernel.org with ESMTP id S263924AbTDNXZE (for <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Apr 2003 19:25:04 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, mdharm-scsi@one-eyed-alien.net
+To: linux-scsi@vger.kernel.org
+Cc: groudier@free.fr
 
 
-On Mon, 14 Apr 2003, Mike Anderson wrote:
+Hi,
 
-> This patch set is against 2.5.67 current. It will not apply to scsi-miscs-2.5
-> as the decl_subsys macro has added a third argument.
-> 
-> This patch set changes the sysfs support for scsi hosts.
-> - Removes the previous support of shost_devclass device class.
-> 
-> - Modifies scsi_debug to support the new order of object cleanup and also
->   changes the structure of sdebug_host_info to help in object cleanup.
-> 
-> - Creates a scsi subsystem. This is rooted at the top of the sysfs tree.
+The sym2 driver should use the generic pci_enable_device() and
+pci_set_master() functions.
 
-No. Period. 
+The next step is to use pci_enable_mwi(), however that needs some more
+thought. The current code warns of chip bugs requiring MWI to be enabled.
+If this is so we should use the generic MWI hook and if that returns an
+error we should warn or fail to load. The driver should not be guessing:
 
-This will not fly. Not now, and not ever. 
+#if defined(__i386__) && !defined(MODULE)
+        if (!cache_line_size && boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) {
+                switch(boot_cpu_data.x86) {
+                case 4: suggested_cache_line_size = 4;   break;
+                case 6: if (boot_cpu_data.x86_model > 8) break;
+                case 5: suggested_cache_line_size = 8;   break;
+                }
+        }
+#endif  /* __i386__ */
 
-> - Creates a scsi_host subsystem under the scsi subsystem. Modified the
->   cleanup in scsi remove host. Switched to a kobject embedded in
->   scsi_host. If a driver has not be converted to the driver model or does
->   not use the scsi_set_device call it will still show up in the scsi_host
->   subsystem, but will not have a symlink to the parent.
-> 
-> The usage of driver model classes for scsi hosts was removed because many
-> of our drivers have not been converted to the driver model so this gave an
-> inconsistent model to count on for cleanup and migration of some the
-> procfs support. I tried adding some fake structures to use classes, but it
-> failed to cleanup properly do to asymmetric cleanup interfaces in the core
-> code and also did not seem like the correct direction to go.
+Anton
 
-
-Then you need to fix the code, or do some work to fix up the class 
-support. You have no right to promote scsi to a top-level subsystem, and I 
-will not support. I'll not even read the rest of the patches. 
-
-I realize that block and net are top-level subsystems. They are there for 
-two reasons - 1) they _are_ that important, and 2) they're temporary steps 
-to them being converted to classes. 
-
-I realize that you think SCSI is just as important as block devices or net 
-devices, but it's just not true for most systems, and I will not open the 
-flood gates for you to abuse even more interfaces.
-
-Thanks,
-
-
-	-pat
-
+===== sym_glue.c 1.16 vs edited =====
+--- 1.16/drivers/scsi/sym53c8xx_2/sym_glue.c	Thu Feb 20 23:16:32 2003
++++ edited/sym_glue.c	Tue Apr 15 07:06:05 2003
+@@ -2562,41 +2561,8 @@
+ 	pci_read_config_word(pdev, PCI_COMMAND,		&command);
+ 	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE,	&cache_line_size);
+ 
+-	/*
+-	 * Enable missing capabilities in the PCI COMMAND register.
+-	 */
+-#ifdef SYM_CONF_IOMAPPED
+-#define	PCI_COMMAND_BITS_TO_ENABLE (PCI_COMMAND_IO | \
+-	PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER | PCI_COMMAND_PARITY)
+-#else
+-#define	PCI_COMMAND_BITS_TO_ENABLE \
+-	(PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER | PCI_COMMAND_PARITY)
+-#endif
+-	if ((command & PCI_COMMAND_BITS_TO_ENABLE)
+-		    != PCI_COMMAND_BITS_TO_ENABLE) {
+-		printf_info("%s: setting%s%s%s%s...\n", sym_name(device),
+-		(command & PCI_COMMAND_IO)     ? "" : " PCI_COMMAND_IO",
+-		(command & PCI_COMMAND_MEMORY) ? "" : " PCI_COMMAND_MEMORY",
+-		(command & PCI_COMMAND_MASTER) ? "" : " PCI_COMMAND_MASTER",
+-		(command & PCI_COMMAND_PARITY) ? "" : " PCI_COMMAND_PARITY");
+-		command |= PCI_COMMAND_BITS_TO_ENABLE;
+-		pci_write_config_word(pdev, PCI_COMMAND, command);
+-	}
+-#undef	PCI_COMMAND_BITS_TO_ENABLE
+-
+-	/*
+-	 *  If cache line size is not configured, suggest
+-	 *  a value for well known CPUs.
+-	 */
+-#if defined(__i386__) && !defined(MODULE)
+-	if (!cache_line_size && boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) {
+-		switch(boot_cpu_data.x86) {
+-		case 4:	suggested_cache_line_size = 4;   break;
+-		case 6: if (boot_cpu_data.x86_model > 8) break;
+-		case 5:	suggested_cache_line_size = 8;   break;
+-		}
+-	}
+-#endif	/* __i386__ */
++	pci_enable_device(pdev);
++	pci_set_master(pdev);
+ 
+ 	/*
+ 	 *  Some features are required to be enabled in order to 
