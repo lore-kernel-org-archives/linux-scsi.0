@@ -1,118 +1,17 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [RFC] scsi_normalize_sense()
-Date: Tue, 24 Aug 2004 12:04:07 -0400
+From: <Salter@alh.com>
+Subject: (unknown)
+Date: Tue, 24 Aug 2004 12:43:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <412B66F7.4020108@adaptec.com>
-References: <41258F6A.6030606@torque.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <S268100AbUHXQnw/20040824164352Z+268@vger.kernel.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:23007 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S268080AbUHXQEK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Aug 2004 12:04:10 -0400
-In-Reply-To: <41258F6A.6030606@torque.net>
+Received: from 94-210-187-203.cable-client.iqara.net ([203.187.210.94]:19723
+	"EHLO 94-210-187-203.cable-client.iqara.net") by vger.kernel.org
+	with ESMTP id S268100AbUHXQnw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Aug 2004 12:43:52 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
 
-Douglas Gilbert wrote:
-> Looking around the linux SCSI subsystem the handling
-> of data in the sense buffer is haphazard. Most places
-> ignore "deferred" errors (e.g. medium error reported
-> later when write caching is on) and will break horribly
-> if they every see the newer "descriptor" format.
-> 
-> Descriptor format sense data is much cleaner (amongst
-> other reason are that it doesn't have to carry around 20
-> years of baggage). See SPC-3 revision 20a section 4.5
-> at http://www.t10.org for more information.
-> 
-> The sense format a SCSI device will use is controlled
-> by the D_SENSE bit in the control mode page.
-> 
-> Here is some code which I am proposing to put into
-> scsi_lib.c to facilitate cleaner handling. I have been
-> testing it out in sg3_utils-1.08 (beta) for the last
-> week.  Comments??
-> 
-> 
-> 
-> /* This is a slightly stretched SCSI sense "descriptor" format header.
->     The addition is to allow the 0x70 and 0x71 response codes. The idea
->     is to place the salient data of both "fixed" and "descriptor" sense
->     format into one structure to ease application processing.
->     The original sense buffer should be kept around for those cases
->     in which more information is required (e.g. the LBA of a MEDIUM
-> ERROR). */
-> struct scsi_sense_descriptor_hd {
-
-Since this would represend neither descriptor nor fixed
-sense format, why not call it just "scsi_sense_hd"?
-
-		Luben
-
-
-
->      unsigned char response_code; /* permit: 0x0, 0x70, 0x71, 0x72, 0x73 */
->      unsigned char sense_key;
->      unsigned char asc;
->      unsigned char ascq;
->      unsigned char byte4;
->      unsigned char byte5;
->      unsigned char byte6;
->      unsigned char additional_length;
-> };
-> 
-> 
-> /* Maps the salient data from a sense buffer which is in either fixed or
->     descriptor format into a structure mimicking a descriptor format
->     header (i.e. the first 8 bytes).
->     If zero response code returns 0. Otherwise returns 1 and if 'sdescp' is
->     non-NULL then zero all fields and then set the appropriate fields in
->     that structure. sdescp::additional_length is always 0 for response
->     codes 0x70 and 0x71 (fixed format). */
-> int scsi_normalize_sense(const unsigned char * sensep,
->                           int sb_len,
->                           struct scsi_sense_descriptor_hd * sdescp)
-> {
->      if (sdescp)
->          memset(sdescp, 0, sizeof(struct scsi_sense_descriptor_hd));
->      if ((NULL == sensep) || (0 == sb_len) || (0x70 != (0x70 & sensep[0])))
->          return 0;
->      if (sdescp) {
->          sdescp->response_code = (0x7f & sensep[0]);
->          if (sdescp->response_code >= 0x72) {  /* descriptor format */
->              if (sb_len > 1)
->                  sdescp->sense_key = (0xf & sensep[1]);
->              if (sb_len > 2)
->                  sdescp->asc = sensep[2];
->              if (sb_len > 3)
->                  sdescp->ascq = sensep[3];
->              if (sb_len > 7)
->                  sdescp->additional_length = sensep[7];
->          } else {                              /* fixed format */
->              if (sb_len > 2)
->                  sdescp->sense_key = (0xf & sensep[2]);
->              if (sb_len > 7) {
->                  sb_len = (sb_len < (sensep[7] + 8)) ? sb_len :
->                                                        (sensep[7] + 8);
->                  if (sb_len > 12)
->                      sdescp->asc = sensep[12];
->                  if (sb_len > 13)
->                      sdescp->ascq = sensep[13];
->              }
->          }
->      }
->      return 1;
-> }
-> 
-> 
-> Doug Gilbert
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+Received=3A from 244=2E49=2E210=2E79 by 94-210-187-203=2Ecable-client=2Eiqara=2Enet=3B Tue=2C 24 Aug 2004 11=3A43=3A41 -0500=0D=0AMessage-ID=3A =3Clabycmvwyjgxthfgqwzhl=40netcabo=2Ept=3E=0D=0AFrom=3A =22Lamar Westbrook=22 =3CSalter=40alh=2Ecom=3E=0D=0AReply-To=3A =22Lamar Westbrook=22 =3CSalter=40alh=2Ecom=3E=0D=0ATo=3A linux-scsi=40vger=2Ekernel=2Eorg=0D=0ASubject=3A The Best Soft=2Eware For Accessible Pric=2Ees =28deform=29=0D=0ADate=3A Tue=2C 24 Aug 2004 11=3A43=3A41 -0500=0D=0AMIME-Version=3A 1=2E0=0D=0AContent-Type=3A multipart=2Falternative=3B=0D=0A=09boundary=3D=22--4408641818115533770=22=0D=0AX-Webmail-Time=3A Tue=2C 24 Aug 2004 11=3A43=3A41 -0500=0D=0A=0D=0A----4408641818115533770=0D=0AContent-Type=3A text=2Fhtml=3B=0D=0A=09 charset=3D=22ISO-8859-1=22=0D=0AContent-Transfer-Encoding=3A quoted-printable=0D=0A=0D=0A=3Chtml=3E=0D=0A=3Cbody=3E=0D=0A=3Cdiv align=3D=22center=22=3E=0D=0
+ A  =3Ccenter=3E=0D=0A  =3Ctable border=3D=221=22 width=3D=22600=22 style=3D=22border-collapse=3A collapse=22 =0D=0Abordercolor=3D=22#C0C0C0=22 cellpadding=3D=222=22=3E=0D=0A    =3Ctr=3E=0D=0A      =3Ctd align=3D=22center=22 colspan=3D=224=22 width=3D=22782=22=3E=0D=0A      =3Cp style=3D=22margin-top=3A 2=3B margin-bottom=3A 2=22=3E=3Cb=3E=0D=0A      =3Cfont face=3D=22Tahoma=22=3EThe Best Software For Accessible Prices =0D=0A!=3C=2Ffont=3E=3C=2Fb=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 2=3B margin-bottom=3A 2=22=3E=0D=0A      =3Cfont face=3D=22Arial=22 size=3D=221=22 color=3D=22#FFFFFC=22=3Eambassador dental =0D=0Aleitmotiv =0D=0A      stark demented=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A    =3C=2Ftr=3E=0D=0A    =3Ctr=3E=0D=0A      =3Ctd colspan=3D=222=22 width=3D=22361=22 bgcolor=3D=22#C0C0C0=22=3E=3Cfont =0D=0Acolor=3D=22#000080=22=3E=3Cb=3EMS Windows XP =0D=0A      Professional=
+ 3C=2Fb=3E=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A      =3Ctd width=3D=22413=22 colspan=3D=222=22=3E=3Cfont color=3D=22#808080=22=3E=3Cb=3EAhead NERO =0D=0A6=2E3 =0D=0A      POWERPACK=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A    =3C=2Ftr=3E=0D=0A    =3Ctr=3E=0D=0A      =3Ctd width=3D=2256=22 bgcolor=3D=22#CCCCCC=22=3E=0D=0A      =3Cp align=3D=22center=22=3E=3Cfont color=3D=22#FF0000=22=3E=3Cb=3E$80=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A      =3Ctd width=3D=22301=22 bgcolor=3D=22#CCCCCC=22=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 0=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- Retail Price=3A =3Cstrike=3E=3Cb=3E=0D=0A$270=2E99=3C=2Fb=3E=3C=2Fstrike=3E=3C=2Ffont=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 0=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- Our Price=3A =3Cb=3E$80=3C=2Fb=3E=0D=0A=
+ 3C=2Ffont=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 3=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- You save=3A =3Cfont =0D=0Acolor=3D=22#000080=22=3E=3Cb=3E$190=2C99=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ffont=3E=3Cp style=3D=22margin-top=3A 0=3B =0D=0Amargin-bottom=3A 0=22 align=3D=22center=22=3E=0D=0A      =3Cb=3E=3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E=0D=0A      =3Ca href=3D=22http=3A=2F=2Fonlineprog=2Einfo=2Findex=2Ephp=3Fs=3D1078=22=3EBUY NOW=3C=2Fa=3E=0D=0A=3C=2Ffont=3E=3C=2Fb=3E=3C=2Ftd=3E=0D=0A      =3Ctd width=3D=2273=22=3E=0D=0A      =3Cp align=3D=22center=22=3E=3Cfont color=3D=22#FF0000=22=3E=3Cb=3E$60=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A      =3Ctd width=3D=22340=22=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 0=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- Retail Price
+ =3A =3Cstrike=3E=3Cb=3E=0D=0A$130=2E99=3C=2Fb=3E=3C=2Fstrike=3E=3C=2Ffont=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 0=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- Our Price=3A =3Cb=3E$60=3C=2Fb=3E=0D=0A=3C=2Ffont=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 3=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=
