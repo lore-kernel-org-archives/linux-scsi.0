@@ -1,141 +1,105 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+From: Mark Haverkamp <markh@osdl.org>
 Subject: RE: [PATCH 1/3] 2.6.0 aacraid driver update
-Date: Wed, 8 Oct 2003 10:26:03 -0400
+Date: Wed, 08 Oct 2003 07:23:02 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0998F43EAD645A47B3F6507196DD70EA256AA9@otcexc01.otc.adaptec.com>
+Message-ID: <1065622982.4840.11.camel@markh1.pdx.osdl.net>
+References: <0998F43EAD645A47B3F6507196DD70EA256AA6@otcexc01.otc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from list.adaptec.com ([216.52.22.18]:17323 "EHLO list.adaptec.com")
-	by vger.kernel.org with ESMTP id S261626AbTJHOb2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Oct 2003 10:31:28 -0400
+Received: from fw.osdl.org ([65.172.181.6]:30909 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S261582AbTJHOX6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Oct 2003 10:23:58 -0400
+In-Reply-To: <0998F43EAD645A47B3F6507196DD70EA256AA6@otcexc01.otc.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-Cc: 'Mark Haverkamp' <markh@osdl.org>, Matthew Wilcox <willy@debian.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
+To: Mark Salyzyn <mark_salyzyn@adaptec.com>
+Cc: Matthew Wilcox <willy@debian.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 
-*perfect*
-
------Original Message-----
-From: Matthew Wilcox [mailto:willy@debian.org]
-Sent: Wednesday, October 08, 2003 9:56 AM
-To: Salyzyn, Mark
-Cc: 'Mark Haverkamp'; Matthew Wilcox; Jeff Garzik; linux-scsi; James
-Bottomley
-Subject: Re: [PATCH 1/3] 2.6.0 aacraid driver update
-
-
-On Wed, Oct 08, 2003 at 09:11:24AM -0400, Salyzyn, Mark wrote:
+On Wed, 2003-10-08 at 06:11, Salyzyn, Mark wrote:
 > The scsicmd->SCp.ptr is `stealing' an unused member of the command to hold
 > on to the physical address of an additional allocation that is part of the
 > request so that when the command completes the memory can be `freed'.
 > 
 > My recommendation is to allocate an additional structure to hold on to all
 > classes of `theft' like this in the driver (my guess is there is more) and
-> use the SCp.ptr to point to this allocation rather than try to `steal'
-more
+> use the SCp.ptr to point to this allocation rather than try to `steal' more
 > to make up the full length.
 > 
 > Any wisdom of the list with regards to this?
+> 
+> Sincerely -- Mark Salyzyn
+> 
 
-[Someone with more in-depth knowledge of Linux scsi please correct me
- if I'm wrong]
+I looked at the scsi_pointer struct yesterday and found that it already
+has a dma_handle element that is the right type.  I updated the code to
+use SCp.dma_handle and removed all the casting. Does that sound OK? 
+This way we don't have to alloc another struct.
 
-include/scsi/scsi_cmnd.h defines struct scsi_cmnd which embeds the
-scsi_pointer SCp.  The comment beside it says, "Scratchpad used by some
-host adapters".  So I believe we're free to use any element of SCp we
-like.  Am I correct?
+Mark.
 
-If so, it already contains dma_addr_t dma_handle, so we can simplify the
-aacraid code to use this wherever we currently use ptr.  The following
-patch does this:
-
-Index: drivers/scsi/aacraid/aachba.c
-===================================================================
-RCS file: /var/cvs/linux-2.6/drivers/scsi/aacraid/aachba.c,v
-retrieving revision 1.2
-diff -u -p -r1.2 aachba.c
---- drivers/scsi/aacraid/aachba.c	29 Jul 2003 17:25:47 -0000	1.2
-+++ drivers/scsi/aacraid/aachba.c	8 Oct 2003 13:53:25 -0000
-@@ -559,7 +559,7 @@ static void read_callback(void *context,
- 			scsicmd->use_sg,
- 			scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
- 	else if(scsicmd->request_bufflen)
--		pci_unmap_single(dev->pdev,
-(dma_addr_t)(ulong)scsicmd->SCp.ptr,
-+		pci_unmap_single(dev->pdev, scsicmd->SCp.dma_handle,
- 				 scsicmd->request_bufflen,
- 
-scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
- 	readreply = (struct aac_read_reply *)fib_data(fibptr);
-@@ -603,7 +603,7 @@ static void write_callback(void *context
- 			scsicmd->use_sg,
- 			scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
- 	else if(scsicmd->request_bufflen)
--		pci_unmap_single(dev->pdev,
-(dma_addr_t)(ulong)scsicmd->SCp.ptr,
-+		pci_unmap_single(dev->pdev, scsicmd->SCp.dma_handle,
- 				 scsicmd->request_bufflen,
- 
-scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
- 
-@@ -1235,7 +1235,8 @@ static void aac_srb_callback(void *conte
- 			scsicmd->use_sg,
- 			scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
- 	else if(scsicmd->request_bufflen)
--		pci_unmap_single(dev->pdev, (ulong)scsicmd->SCp.ptr,
-scsicmd->request_bufflen,
-+		pci_unmap_single(dev->pdev, scsicmd->SCp.dma_handle,
-+			scsicmd->request_bufflen,
- 			scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
- 
- 	/*
-@@ -1547,15 +1548,13 @@ static unsigned long aac_build_sg(Scsi_C
- 		}
- 	}
- 	else if(scsicmd->request_bufflen) {
--		dma_addr_t addr; 
--		addr = pci_map_single(dev->pdev,
-+		scsicmd->SCp.dma_handle = pci_map_single(dev->pdev,
- 				scsicmd->request_buffer,
- 				scsicmd->request_bufflen,
- 
-scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
- 		psg->count = cpu_to_le32(1);
--		psg->sg[0].addr = cpu_to_le32(addr);
-+		psg->sg[0].addr = cpu_to_le32(scsicmd->SCp.dma_handle);
- 		psg->sg[0].count = cpu_to_le32(scsicmd->request_bufflen);  
--		scsicmd->SCp.ptr = (char *)(ulong)addr;
- 		byte_count = scsicmd->request_bufflen;
- 	}
- 	return byte_count;
-@@ -1606,17 +1605,15 @@ static unsigned long aac_build_sg64(Scsi
- 		}
- 	}
- 	else if(scsicmd->request_bufflen) {
--		dma_addr_t addr; 
--		addr = pci_map_single(dev->pdev,
-+		scsicmd->SCp.dma_handle = pci_map_single(dev->pdev,
- 				scsicmd->request_buffer,
- 				scsicmd->request_bufflen,
- 
-scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
- 		psg->count = cpu_to_le32(1);
--		le_addr = cpu_to_le64(addr);
-+		le_addr = cpu_to_le64(scsicmd->SCp.dma_handle);
- 		psg->sg[0].addr[1] = (u32)(le_addr>>32);
- 		psg->sg[0].addr[0] = (u32)(le_addr & 0xffffffff);
- 		psg->sg[0].count = cpu_to_le32(scsicmd->request_bufflen);  
--		scsicmd->SCp.ptr = (char *)(ulong)addr;
- 		byte_count = scsicmd->request_bufflen;
- 	}
- 	return byte_count;
-
-I hope you all now feel like you might be masking a bug every time you
-use a cast :-P
-
+> -----Original Message-----
+> From: Mark Haverkamp [mailto:markh@osdl.org]
+> Sent: Tuesday, October 07, 2003 5:51 PM
+> To: Matthew Wilcox
+> Cc: Jeff Garzik; linux-scsi; James Bottomley; Salyzyn, Mark
+> Subject: Re: [PATCH 1/3] 2.6.0 aacraid driver update
+> 
+> 
+> On Tue, 2003-10-07 at 14:39, Matthew Wilcox wrote:
+> > On Tue, Oct 07, 2003 at 02:18:12PM -0700, Mark Haverkamp wrote:
+> > > > > -		pci_unmap_single(dev->pdev,
+> (dma_addr_t)(ulong)scsicmd->SCp.ptr,
+> > > > > +		pci_unmap_single(dev->pdev, (dma_addr_t)(unsigned
+> long)scsicmd->SCp.ptr,
+> > > > >  				 scsicmd->request_bufflen,
+> > > > >
+> scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
+> > 
+> > > I checked out this casting today.  The function takes a dma_addr_t as
+> > > the argument.  You can't just pass the pointer in as is because:
+> > > 
+> > > drivers/scsi/aacraid/aachba.c:690: warning: passing arg 2 of
+> `pci_unmap_single'
+> > > makes integer from pointer without a cast
+> > > 
+> > > If you just cast the pointer to dma_addr_t you get:
+> > > 
+> > > drivers/scsi/aacraid/aachba.c:688: warning: cast from pointer to integer
+> of different size
+> > > 
+> > > If you just cast to unsigned long, as in the code below, there aren't
+> any warnings, but
+> > > the wrong type is being passed to the function.  So, I think that both
+> the casts are
+> > > needed.
+> > 
+> > Oops, that's not true.  Try it out yourself.
+> > 
+> > int foo(short bar);
+> > 
+> > int baz(void)
+> > {
+> > 	return foo(0x12345678);
+> > }
+> > 
+> > will truncate the argument to foo to 0x5678 before calling it by
+> > implicitly casting to a short.  So we can do just fine with:
+> > 
+> > -		pci_unmap_single(dev->pdev,
+> (dma_addr_t)(ulong)scsicmd->SCp.ptr,
+> > +		pci_unmap_single(dev->pdev, (unsigned long)scsicmd->SCp.ptr,
+> >  				 scsicmd->request_bufflen,
+> >
+> scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
+> > 
+> > Now that all that casting is out of the way, we can see this driver isn't
+> > highmem-safe as it's storing a dma_addr_t in a pointer ... yuck.
+> 
+> Ok, I see now.
+> 
+> Thanks,
+> Mark.
 -- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead
-bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert
-Fisk
+Mark Haverkamp <markh@osdl.org>
+
