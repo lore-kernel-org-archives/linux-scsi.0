@@ -1,47 +1,49 @@
 From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: aic7xxx broken in 2.5.53/54 ?
-Date: Fri, 03 Jan 2003 08:14:06 -0700
+Subject: Re: [PATCH] aic7xxx bouncing over 4G
+Date: Fri, 03 Jan 2003 08:28:04 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <596830816.1041606846@aslan.scsiguy.com>
-References: <20030103101618.GB8582@in.ibm.com>
+Message-ID: <610650816.1041607684@aslan.scsiguy.com>
+References: <200212210012.gBL0Cng21338@eng2.beaverton.ibm.com>	
+ <176730000.1040430221@aslan.btc.adaptec.com>	
+ <3E03BB0D.5070605@rackable.com>	
+ <Pine.LNX.4.50L.0212280331110.30646-100000@freak.distro.conectiva>	
+ <20021228091608.GA13814@louise.pinerecords.com>	
+ <Pine.LNX.4.50L.0212281131580.26879-100000@imladris.surriel.com>	
+ <705128112.1041102818@aslan.scsiguy.com>
+ <1041166487.1338.1.camel@laptop.fenrus.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20030103101618.GB8582@in.ibm.com>
+In-Reply-To: <1041166487.1338.1.camel@laptop.fenrus.com>
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: dipankar@in.ibm.com, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: arjanv@redhat.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-> Looks like the aic7xxx driver in 2.5.53 and 54 are broken on my hardware.
+>> The main reason why the new driver "breaks" where the old one
+>> doesn't is that the new driver does not perform an extra register
+>> read to work-around chipsets that screw up memory mapped I/O.  There
+>> are four solutions to this problem:
+> 
+> just to be sure...you're not talking about PCI posting right?
+> can you explain in a bit more detail the exact behavior that is the
+> problem ? (I'm sure a lot of other drivers will suffer the same so I
+> consider it of general interest)
 
-It looks like the driver recovers fine.
-
-...
-
-> aic7xxx: PCI Device 0:1:0 failed memory mapped test.  Using PIO.
-> Uhhuh. NMI received for unknown reason 25 on CPU 0.
-
-SERR must be enabled by your BIOS.  I will change the driver so
-that, should the memory mapped I/O test fail, an SERR (and thus an
-NMI) is not generated.
-
-...
-
-> scsi0: PCI error Interrupt at seqaddr = 0x2
-> scsi0: Signaled a Target Abort
-
-These are left over from the failed memory mapped I/O test.  They
-should have been cleared by the test, but the behavior must be
-different for the 7896/97.  I'll review the documentation for this
-chip and see if I can quiet up the failure.
-
-Just out of curiosity, do you have any strange PCI options enabled
-in your BIOS?  I remeber seeing memory mapped I/O failures on this
-ServerWorks chipset under FreeBSD in the past, but an updated BIOS
-resolved the issue for the affected users.  It seemed that the BIOS
-incorrectly placed the Adaptec controller in a prefetchable region.
+PCI posting is an expected (and desired) characteristic of PCI, so, no
+I'm not complaining about that.  According to the PCI spec, prefetch
+is only allowed for devices that explicitly indicate that they support
+it (via a bit in their BAR registers).  Further, write combining and
+byte merging are only allowed for prefetchable regions.  The Adaptec
+parts do not set the prefetch bit and do not support either of these
+options (most registers are 8bits anyway, so there was nothing to
+gain by complicating the part with this support).  Some BIOSes ignore
+this rule and attempt to prefetch and/or write combine transactions
+to these chips.  Other BIOSes actually have an option so that the user
+can say "ignore the rules".  The new tests are designed to weed out
+this broken behavior and to fallback to PIO where prefetch and write
+combining cannot come into play.
 
 --
 Justin
