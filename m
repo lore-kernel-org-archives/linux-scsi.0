@@ -1,65 +1,54 @@
-From: Friedrich Lobenstock <fl@fl.priv.at>
-Subject: Re: blocksize limitations in scsi tape driver (st) when used with
- DLT1 tape drives?
-Date: Fri, 06 Sep 2002 00:15:18 +0200
+From: Jeremy Higdon <jeremy@classic.engr.sgi.com>
+Subject: Re: aic7xxx sets CDR offline, how to reset?
+Date: Thu, 5 Sep 2002 16:56:56 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D77D776.7040408@fl.priv.at>
-References: <Pine.LNX.4.44.0209060009560.1912-100000@kai.makisara.local>
-Reply-To: Linux-SCSI Mailingliste <linux-scsi@vger.kernel.org>
+Message-ID: <10209051656.ZM53302@classic.engr.sgi.com>
+References: <200209041613.g84GDtv02639@localhost.localdomain>
+	<12750000.1031158209@aslan.btc.adaptec.com>
+	<10209050239.ZM52086@classic.engr.sgi.com>
+	<122900000.1031232923@aslan.scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+        "Re: aic7xxx sets CDR offline, how to reset?" (Sep  5,  7:35am)
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI Mailingliste <linux-scsi@vger.kernel.org>
-Cc: support@arkeia.com
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>, James Bottomley <James.Bottomley@steeleye.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org
 
-Kai Makisara wrote:
-> On Thu, 5 Sep 2002, Friedrich Lobenstock wrote:
+On Sep 5,  7:35am, Justin T. Gibbs wrote:
 > 
+> > On Sep 4, 10:50am, Justin T. Gibbs wrote:
+> >> 
+> >>    This of course assumes that all transactions have a serial number and
+> >>    that requeuing transactions orders them by serial number.  With QErr
+> >>    set, the device closes the rest if the barrier race for you, but even
+> >>    without barriers, full transaction ordering is required if you don't
+> >>    want a read to inadvertantly pass a write to the same location during
+> >>    recovery.
+> > 
+> > 
+> > The original FCP (SCSI commands over Fibre) profile specified that QERR=1
+> > was not available.  Unless that is changed, it would appear that you
+> > cannot count on being able to set Qerr.
+> > 
+> > Qerr was one of those annoying little things in SCSI that forces host
+> > adapter drivers to know a mode page setting.
 > 
->>Hi!
->>
->>I'm having an odd problem here. I use SuSE Linux 8.0 with kernel
->>2.4.18-64GB-SMP, arkeia as backup software and a Tandberg
->>VS80 (DLT1) streamer.
->>
->>After some trial and error I found out that I have to use a fixed block
->>size for DLT streamers (same applies to LTO ones). This document,
->>found at HP, tells you in details about which blocksize to use:
->>   http://www.hp.com/cposupport/information_storage/support_doc/lpg50167.html
->>
->>Now I told arkeia to use a blocksize of 65536, 32768 and 16384 and it
->>could not write to the tape. All I got in the log was:
->>
->>Sep  4 22:04:50 filesrv kernel: st: Unloaded.
->>Sep  4 22:08:40 filesrv kernel: st: Version 20020205, bufsize 32768, wrt 30720, max init. bufs 4, s/g segs 16
->>Sep  4 22:08:40 filesrv kernel: st0: Block limits 2 - 16777214 bytes.
->>Sep  4 22:08:41 filesrv kernel: st0: Incorrect block size.
->>Sep  4 22:08:45 filesrv kernel: st0: Write not multiple of tape block size.
-> 
->                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> The write() byte count from Arkeia is not a multiple of the tape block
-> size. If you use fixed block size, you must take care that this constraint
-> is not violated. When you set the block size to 8192 or something that
-> multiplies to 8192, this constraint is obeyed. If Arkeia sets the block
-> size, I don't know why it does not obey the constraint. Seems to be an
-> application problem.
-> 
-> In most cases, it is best to use variable block mode
-> (i.e., mt setblk 0) and let the application to decide the tape block size.
-> In order to have good efficiency, you should make sure that the
-> application uses large enough byte counts in its write() calls, i.e., set
-> the Arkeia block size to 65536.
+> It is not the controllers that know, but the type drivers.  The controller
+> drivers should be conduits for commands, nothing more.  With the proper
+> events and error codes, the type drivers can maintain mode parameters
+> and only the type drivers know what parameters are appropriate for their
+> type of service.
 
-Hmmm...I whish I could, but LTO and as it seems DLT drives too do not
-cope well with variable block sizes.
+But don't the controllers have to know which commands have been silently
+aborted by the target?  There are various resources allocated to a command,
+so if the command will never be completed, as a result of some other command
+getting "check condition", the controller would have to know.
 
-All blocksizes greater than 8192 do make troubles. At and below this
-value all is fine.
+Or are you suggesting that the type drivers would tell the controllers to
+release those resources?
 
+And would this change if the controller drivers were keeping track of
+timeouts, etc.?
 
--- 
-MfG / Regards
-Friedrich Lobenstock
-
+jeremy
