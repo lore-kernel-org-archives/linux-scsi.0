@@ -1,50 +1,30 @@
-From: Dipankar Sarma <dipankar@in.ibm.com>
-Subject: Re: aic7xxx broken in 2.5.53/54 ?
-Date: Mon, 6 Jan 2003 13:02:04 +0530
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030106073204.GA1875@in.ibm.com>
-References: <20030103101618.GB8582@in.ibm.com> <596830816.1041606846@aslan.scsiguy.com>
-Reply-To: dipankar@in.ibm.com
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Seagate Cheetah: Firmware, Bugs, Compatibility?
+Date: Mon, 6 Jan 2003 11:30:07 +0100 (CET)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.44.0301061128380.3520-100000@uplift.swm.pp.se>
+References: <3E175EF9.CC23D03D@ix.netcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <596830816.1041606846@aslan.scsiguy.com>
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from localhost (swmike@localhost)
+	by uplift.swm.pp.se (8.11.6/8.9.3) with ESMTP id h06AU7431836
+	for <linux-scsi@vger.kernel.org>; Mon, 6 Jan 2003 11:30:07 +0100
+In-Reply-To: <3E175EF9.CC23D03D@ix.netcom.com>
 List-Id: linux-scsi@vger.kernel.org
+To: Linux-SCSI <linux-scsi@vger.kernel.org>
 
-Hi Justin,
+On Sat, 4 Jan 2003, Dan Jones wrote:
 
-On Fri, Jan 03, 2003 at 08:14:06AM -0700, Justin T. Gibbs wrote:
-> > Looks like the aic7xxx driver in 2.5.53 and 54 are broken on my hardware.
-> 
-> It looks like the driver recovers fine.
+> Yes, never flash a drive that is not idle. A real-time update to running
+> code is not trivial and drive vendors don't support it.
 
-Not for long. It dies shortly afterwards.
+I did it on one of my drives (part of a raid1) and it seems to have worked 
+well.
 
-> > aic7xxx: PCI Device 0:1:0 failed memory mapped test.  Using PIO.
-> > Uhhuh. NMI received for unknown reason 25 on CPU 0.
-> 
-> SERR must be enabled by your BIOS.  I will change the driver so
-> that, should the memory mapped I/O test fail, an SERR (and thus an
-> NMI) is not generated.
+Great util that sgdskfl, much appreciated, very easy to work with. I'll 
+flash the others in a week if this continues to work well.
 
-I guess having to use PIO with aic7xxx is bad. MMIO failure is
-what we need to investigate.
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
 
-> 
-> Just out of curiosity, do you have any strange PCI options enabled
-> in your BIOS?  I remeber seeing memory mapped I/O failures on this
-> ServerWorks chipset under FreeBSD in the past, but an updated BIOS
-> resolved the issue for the affected users.  It seemed that the BIOS
-> incorrectly placed the Adaptec controller in a prefetchable region.
-> 
-
-I didn't change anything in that box since it was delivered to me. FYI
-it is an IBM x250. Would it help if I can get a PCI space dump and mtrr 
-dump ? FWIW, the older driver works fine. Does the older driver use 
-only PIO ?
-
-Thanks
-Dipankar
