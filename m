@@ -1,70 +1,61 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: Incorrect response to SK/ASC/ASCQ = x 02/04/01 (becoming ready)
-Date: Mon, 23 Aug 2004 11:10:17 -0400
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: bytes/CDB of SCSI pass thru grossly limited maybe
+Date: Mon, 23 Aug 2004 17:46:49 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <412A08D9.7020502@adaptec.com>
-References: <Pine.LNX.4.44L0.0408221154220.15992-100000@netrider.rowland.org>
+Message-ID: <20040823154648.GB2301@suse.de>
+References: <20040731141240.GE23697@suse.de> <1092678938.4235.37.camel@patlinux.iomegacorp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:62641 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S265027AbUHWPKb (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:17027 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S265722AbUHWPsQ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Aug 2004 11:10:31 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0408221154220.15992-100000@netrider.rowland.org>
+	Mon, 23 Aug 2004 11:48:16 -0400
+Content-Disposition: inline
+In-Reply-To: <1092678938.4235.37.camel@patlinux.iomegacorp.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, "Mike R." <turbanator1@verizon.net>
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: linux-scsi@vger.kernel.org
 
-Alan Stern wrote:
-> The SCSI core doesn't react properly when it receives SK/ASC/ASCQ = x
-> 02/04/01 = Not Ready, Logical unit in process of becoming ready.
+On Mon, Aug 16 2004, Pat LaVarre wrote:
+> Jens A:
 > 
-> The core is complex enough that I can't tell exactly what's wrong or how
-> it should be fixed.  That particular sense data combination is spotted in
-> two different places: scsi_lib.c:scsi_io_completion() and
-> scsi_error.c:scsi_check_sense().  It's not clear which one is causing the
-> problem -- maybe they both are.
+> > in short, please try again :-)
 > 
-> Anyway, the reaction in both routines is to requeue the request for
-> immediate retry.  Obviously that's the wrong thing to do.  The request
-> should be retried, yes, but only after a delay of, say, a second or so. 
-> (Presumably the queue should remain blocked during that time.)  And this
-> should keep happening for up to maybe 30 seconds.
+> I much appreciate your patient encouragement.  I now know I can ask:
+> 
+> Is there an ide-cd option to allow more bytes/CDB?
+> 
+> That is, an option analogous to the /sys/block/sr*/device/max_sectors
+> setting of usb-storage, allowing up to the xFF:FF LBA's/CDB standard at
+> t10.org?  Else can I help create such an option?
+> 
+> I see ioctl SG_IO chokes via EIO if bytes/CDB goes much above zero.
+> 
+> I ask for a workaround because a friend of mine cares.
+> 
+> I see EIO at 130 KiB/CDB, though happy at 128 KiB/CDB, when I try
+> ide-cd.  I see usb-storage defaults to choke thruput off at 120 KiB/CDB,
+> but thru /sys lets us reach a little farther above zero i.e. 512
+> KiB/CDB.
+> 
+> How coordinated is our 2.6 effort to choke off thruput near zero across
+> PATAPI, USB, FireWire, SPI, SATAPI, etc.?
+> 
+> Is there an ide-cd option to allow more bytes/CDB?
 
-If the queue is a _general_ SCSI queue on which _any_ kind of
-SCSI command can be queued to the LU/target (i.e. not necessarily
-medium access), then you must _not_ block it.  HOQ task attribute
-commands could be sent which may operate other components of the
-LU/target.
+Ok, makes more sense to me now. The reason why I get confused is that I
+don't consider the cdb more than the actual 10-16 bytes of command data
+bytes, not the full structure of it.
 
-But you should block the IO (R/W) general queue, yes.  _A_ way
-to do this is to send START STOP UNIT (0x1B) with the IMMED
-bit set to 0.  When the command completes, you'll get status
-and set the device to active, unblock the IO queue, etc.
+But yes, different devices will have different max transfer values. As
+I'm sure you know, ATAPI cannot do more than 128KiB per command. And
+that is what q->max_sectors is set to, if you try and submit more than
+this through SG_IO, bio_add_user() will complain and command will be
+failed as you experienced.
 
-		Luben
+max_sectors should be fully exposed so you don't have to guess.
 
-> Instead what happens is that all the retries get exhausted in a fraction
-> of a second, which isn't long enough for any device to spin up.  The
-> drivers then proceed blindly with whatever else they want to do, which
-> generally incurs its own set of errors.
-> 
-> This problem seems to be particularly bad for USB DVD drives.  One user
-> was able to work around it by manually loading the usb-storage driver 20
-> to 30 seconds after plugging the drive into the computer.  Obviously it
-> would be much better to have the system do the right thing in the first
-> place.
-> 
-> I don't know enough about the SCSI core to change it properly.  Can
-> someone please help?
-> 
-> Alan Stern
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+-- 
+Jens Axboe
 
