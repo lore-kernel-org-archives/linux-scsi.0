@@ -1,120 +1,81 @@
-From: florin@iucha.net (Florin Iucha)
-Subject: Fwd: Re: [linux-usb-devel] USB Storage oops in 2.5.69-bk8
-Date: Fri, 16 May 2003 10:56:21 -0500
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: "do ata" scsi command?
+Date: Fri, 16 May 2003 11:54:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030516155621.GB11432@iucha.net>
+Message-ID: <3EC509A1.10503@pobox.com>
+References: <20030515230223.GA516@gtf.org> <20030516060324.GT812@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="p4qYPpj5QlsIQJ0K"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iucha.net ([209.98.146.184]:40564 "EHLO mail.iucha.net")
-	by vger.kernel.org with ESMTP id S264464AbTEPPn3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 May 2003 11:43:29 -0400
-Content-Disposition: inline
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:61129 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S264461AbTEPPlt
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 May 2003 11:41:49 -0400
+In-Reply-To: <20030516060324.GT812@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: andmike@us.ibm.com
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-scsi@vger.kernel.org
+
+Jens Axboe wrote:
+> On Thu, May 15 2003, Jeff Garzik wrote:
+> 
+>>In terms of a userspace interface for my ata-over-scsi gadget, I would
+>>prefer to use /dev/sg instead of inventing a totally new interface.
+>>That, in turn, implies a need for a "do ata taskfile" scsi command,
+>>which is sorta like ATAPI in reverse:  we are wrapping a raw ata
+>>taskfile inside a scsi cdb.
+>>
+>>My question is, does an existing standard or spec exist for such an idea?
+>>
+>>If not, I'll just roll my own.
+> 
+> 
+> For ATAPI/SCSI like stuff, you have SG_IO. No need to invent yet another
+> submission interface for that. For ata, you have HDIO_DRIVE_TASKFILE
+> which is getting to be sane on the kernel side after Bart cleaned it up.
 
 
---p4qYPpj5QlsIQJ0K
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+While technically what you say is correct, I think you're missing what 
+I'm aiming for.
 
------ Forwarded message from Alan Stern <stern@rowland.harvard.edu> -----
+Think about it this way:  The SCSI layer provides two or three ways to 
+send a SCSI command to a target.  The driver I'm working on presents all 
+devices as SCSI, be they ATA or ATAPI.  And underneath the "scsi 
+presentation layer", you have ATA[PI] taskfiles as the lower layer.
 
-> Subject: Re: [linux-usb-devel] USB Storage oops in 2.5.69-bk8
-> From: Alan Stern <stern@rowland.harvard.edu>
-> To: Florin Iucha <florin@iucha.net>
-> Cc: USB development list <linux-usb-devel@lists.sourceforge.net>
-> Date: Fri, 16 May 2003 11:49:00 -0400 (EDT)
->=20
-> On Thu, 15 May 2003, Florin Iucha wrote:
->=20
-> > Hello,
-> >=20
-> > I get the following oops in 2.5.69-bk8 when I try to mount a Compact
-> > Flash card in a SanDisk adapter:
-> >=20
-> > usb 2-1: USB disconnect, address 2
-> > hub 2-0:0: debounce: port 1: delay 100ms stable 4 status 0x301
-> > hub 2-0:0: new USB device on port 1, assigned address 3
-> > input: USB HID v1.00 Mouse [Microsoft Microsoft IntelliMouse? Explorer]=
- on usb-00:02.3-1
-> > usb 2-1: USB disconnect, address 3
-> > drivers/usb/input/hid-core.c: can't resubmit intr, 00:02.3-1/input0, st=
-atus -19
-> > hub 2-0:0: debounce: port 1: delay 100ms stable 4 status 0x301
-> > hub 2-0:0: new USB device on port 1, assigned address 4
-> > input: USB HID v1.00 Mouse [Microsoft Microsoft IntelliMouse? Explorer]=
- on usb-00:02.3-1
-> > SCSI device sda: 31232 512-byte hdwr sectors (16 MB)
-> > sda: Write Protect is off
-> > sda: Mode Sense: 02 00 00 00
-> > drivers/usb/core/message.c: usb_control/bulk_msg: timeout
-> > drivers/usb/core/message.c: usb_control/bulk_msg: timeout
-> > drivers/usb/core/hub.c: USB device not accepting new address (error=3D-=
-22)
-> > scsi: Device offlined - not ready after error recovery: host 1 channel =
-0 id 0 lun 0
-> > usb 5-2: USB disconnect, address 2
-> > Unable to handle kernel paging request at virtual address 544150a8
-> >  printing eip:
-> > c02abc39
-> > *pde =3D 00000000
-> > Oops: 0000 [#1]
-> > CPU:    0
-> > EIP:    0060:[<c02abc39>]    Not tainted
-> > EFLAGS: 00010286
-> > EIP is at scsi_eh_finish_cmd+0x19/0x60
-> > eax: ef19d000   ebx: eef28080   ecx: eef22140   edx: 54415056
-> > esi: eef21fa8   edi: eef21fb0   ebp: eef21fa8   esp: eef21f60
-> > ds: 007b   es: 007b   ss: 0068
-> > Process scsi_eh_1 (pid: 118, threadinfo=3Deef20000 task=3Deef23340)
-> > Stack: eef28080 eef28080 eef21fb0 c02ac418 eef28080 eef21fa8 00000000 0=
-0000000=20
-> >        00000000 ef62f428 eef20000 00000282 eef21fa8 c02ac8d6 eef21fb0 e=
-ef21fa8=20
-> >        eef21fa8 eef21fb0 eef21fa8 eef21fa8 eef28098 eef28098 ef62f400 e=
-ef21fd4=20
-> > Call Trace:
-> >  [<c02ac418>] scsi_eh_offline_sdevs+0x68/0x80
-> >  [<c02ac8d6>] scsi_unjam_host+0xc6/0xd0
-> >  [<c02ac9b1>] scsi_error_handler+0xd1/0x120
-> >  [<c02ac8e0>] scsi_error_handler+0x0/0x120
-> >  [<c0108abd>] kernel_thread_helper+0x5/0x18
-> >=20
-> > Code: 0f b7 42 52 48 66 89 42 52 c7 43 24 00 00 00 00 66 c7 43 08=20
-> >=20
-> > I cannot tell if it is a regression since I just got the CF and the
-> > adapter.
->=20
-> This is a problem in the SCSI error handler.  You should post your=20
-> question to <linux-scsi@vger.kernel.org>.  Maybe also cc: to Mike Anderso=
-n=20
-> <andmike@us.ibm.com>.
->=20
-> Alan Stern
+Userspace has easy and obvious access to the presentation layer.
+But how does one directly access the lower layer?
 
------ End forwarded message -----
+If you like HDIO_DRIVE_TASKFILE, then my preference would be to support 
+that ioctl for sending lower layer commands directly to the device, for 
+both ATA and ATAPI.  But I don't like HDIO_DRIVE_TASKFILE in this case 
+:) and here's why:
 
-florin
+ioctl(2) interface itself is very poor and slow compared to 
+SCSI-generic's mmap(2) interface.  Also, if you go back to last year 
+when Linus was describing his ideal drive command submission interface, 
+it purposefully avoided ioctl(2) in favor of a read(2)/write(2) 
+interface -- which can be easily extended in one's mind to mmap(2).
 
---=20
+So, the goal is to allow efficient userspace access to the taskfile 
+submission/response mechanism in my driver, regardless of whether the 
+attached device is ATA or ATAPI.  The solution that requires the least 
+amount of code, both in the kernel and in userspace, is having a "do 
+ata" scsi command.  Because send-scsi-command mechanisms are already 
+plentiful in the kernel and userspace, because some of those mechanisms 
+are faster than ioctl(2), and because that's heading towards the "Linus 
+ideal."
 
-"NT is to UNIX what a doughnut is to a particle accelerator."
+I did consider hdio_drive_taskfile, but that's more code for less 
+flexibility, as I see it.  In my case specifically, send-scsi-command is 
+essentially talking directly to the low-level driver's standard code path...
 
---p4qYPpj5QlsIQJ0K
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+The only downside (AFAICS) is that I need to add maybe 50-100 lines of 
+code to hdparm.  But I think that's a small price to pay if the keeps 
+the driver much more simple.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
+	Jeff
 
-iD8DBQE+xQolNLPgdTuQ3+QRAmFMAKCR5XkkXqcBZbrCYTrm3fAfgYL5CACdGzZ6
-k5cHGJTC2HLNyTCFhf40Cso=
-=ByYV
------END PGP SIGNATURE-----
 
---p4qYPpj5QlsIQJ0K--
+
