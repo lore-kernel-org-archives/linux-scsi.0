@@ -1,138 +1,35 @@
-From: Amit Patel <patelamitv@yahoo.com>
-Subject: Re: scsi_report_lun_scan bug?
-Date: Mon, 17 Nov 2003 23:42:51 -0800 (PST)
+From: Liran Schour <LIRANS@il.ibm.com>
+Subject: Support for CDB length > 16
+Date: Tue, 18 Nov 2003 10:49:44 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031118074251.62922.qmail@web13009.mail.yahoo.com>
-References: <20031117230033.59f1ef5c.akpm@osdl.org>
+Message-ID: <OFA910CD2E.7013EC62-ONC2256DE2.002FD991-C2256DE2.00307FFC@il.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web13009.mail.yahoo.com ([216.136.172.90]:38044 "HELO
-	web13009.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S262410AbTKRHmw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Nov 2003 02:42:52 -0500
-In-Reply-To: <20031117230033.59f1ef5c.akpm@osdl.org>
+Received: from mtagate1.de.ibm.com ([195.212.29.150]:51893 "EHLO
+	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP id S261763AbTKRIwI
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Nov 2003 03:52:08 -0500
+Received: from d12relay01.megacenter.de.ibm.com (d12relay01.megacenter.de.ibm.com [9.149.165.180] (may be forged))
+	by mtagate1.de.ibm.com (8.12.10/8.12.10) with ESMTP id hAI8pxBs085960
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2003 08:52:00 GMT
+Received: from d10ml001.telaviv.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
+	by d12relay01.megacenter.de.ibm.com (8.12.9/NCO/VER6.6) with ESMTP id hAI8ph9f104750
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2003 09:51:43 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Patrick Mansfield <patmans@us.ibm.com>
-Cc: patelamitv@yahoo.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-
-Patrick,
-
-In my case, I have 16 luns for which report lun
-command byte 3 has value 0x80. While doing the length
-calculation 
-length = ((data[0] << 24) | (data[1] << 16) |
-          (data[2] << 8) | (data[3] << 0));
-
-It calucates length as 0xffffff80 and actual number of
-luns is calculated as 536870896. I just write small
-program with signed and unsigned char array and it
-does evaluate as 0xffffff80 as Andrew mentioned.
-
-Thanks
-Amit
-
-
-#include<stdio.h>
-main()
-{
-        char x[10]={0x00,0x00,0x00,0x80};
-        char *p;
-        unsigned char *q;
-
-        int len;
-        int ulen;
-
-        p=(char *)x;
-        q=(unsigned char *) x;
-        len=((p[0] << 24) | (p[1] << 16) | (p[2] << 8)
-| (p[3] <<0));
-        ulen=((q[0] << 24) |(q[1] << 16) | (q[2] << 8)
-| (q[3] <<0));
-        printf("len= %d len=%x\n",len,len);
-        printf("ulen= %d ulen=%x\n",ulen,ulen);
-}
+To: linux-scsi@vger.kernel.org
 
 
 
 
- 
---- Andrew Morton <akpm@osdl.org> wrote:
-> Patrick Mansfield <patmans@us.ibm.com> wrote:
-> >
-> > On Mon, Nov 17, 2003 at 06:48:33PM -0800, Amit
-> Patel wrote:
-> > > Hi,
-> > > 
-> > > I am using 2.6-test9-mm3. I noticed while doing
-> > > scsi_report_lun_scan(scsi_scan.c:891) the data
-> > > returned is assigned(scsi_scan.c:993) to signed
-> char
-> > > array which causes the reported number of luns
-> to be
-> > > huge while calculating num_luns to scan. Is
-> there any
-> > > particular reason to be data is signed or just a
-> bug?
-> > > 
-> > > I changed it to unsigned char and it seems to
-> work
-> > > fine. I have attached a diff of scsi_scan.c. Let
-> me
-> > > know if I am missing something.
-> > 
-> > I don't see why making it signed or unsigned would
-> make any difference.
-> 
-> 
->  	length = ((data[0] << 24) | (data[1] << 16) |
->  		  (data[2] << 8) | (data[3] << 0));
-> 
-> If data[3] is 0xff, this expression will always
-> evaluate to
-> 0xffffffff.  etcetera.
-> 
-> > It should really be a u8, since it is a pointer to
-> an array of bytes.
-> > 
-> > (And all the scsi_cmd[]'s should be u8.)
-> 
-> Yup.
-> 
-> diff -puN
-> drivers/scsi/scsi_scan.c~scsi_report_lun-fix
-> drivers/scsi/scsi_scan.c
-> --- 25/drivers/scsi/scsi_scan.c~scsi_report_lun-fix
-> 2003-11-17 20:22:49.000000000 -0800
-> +++ 25-akpm/drivers/scsi/scsi_scan.c	2003-11-17
-> 20:22:49.000000000 -0800
-> @@ -899,7 +899,7 @@ static int
-> scsi_report_lun_scan(struct s
->  	unsigned int retries;
->  	struct scsi_lun *lunp, *lun_data;
->  	struct scsi_request *sreq;
-> -	char *data;
-> +	u8 *data;
->  
->  	/*
->  	 * Only support SCSI-3 and up devices.
-> @@ -990,7 +990,7 @@ static int
-> scsi_report_lun_scan(struct s
->  	/*
->  	 * Get the length from the first four bytes of
-> lun_data.
->  	 */
-> -	data = (char *) lun_data->scsi_lun;
-> +	data = (u8 *) lun_data->scsi_lun;
->  	length = ((data[0] << 24) | (data[1] << 16) |
->  		  (data[2] << 8) | (data[3] << 0));
->  
-> 
-> _
-> 
 
+Hi all,
 
-__________________________________
-Do you Yahoo!?
-Protect your identity with Yahoo! Mail AddressGuard
-http://antispam.yahoo.com/whatsnewfree
+I need a support from the Linux SCSI subsystem for CDB length > 16 byte.
+Is it possible to do that without recompiling the kernel with a new
+MAX_COMMAND_SIZE definition. I assume that I can find an iscsi driver that
+is able to support CDB > 16 byte.
+
+Thanks,
+- Liran
+
