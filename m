@@ -1,77 +1,142 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] remove dead struct scsi_device members
-Date: Sun, 27 Apr 2003 14:04:41 +0200
+Subject: [PATCH] remove dead scsi_cmnd members
+Date: Sun, 27 Apr 2003 14:50:53 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030427140441.A27904@lst.de>
+Message-ID: <20030427145053.A28194@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.181.86]:54795 "EHLO verein.lst.de")
-	by vger.kernel.org with ESMTP id S263944AbTD0Lw3 (ORCPT
+Received: from verein.lst.de ([212.34.181.86]:2316 "EHLO verein.lst.de")
+	by vger.kernel.org with ESMTP id S263086AbTD0Mil (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 27 Apr 2003 07:52:29 -0400
+	Sun, 27 Apr 2003 08:38:41 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-->scpnt_wait is initialized and cpqfc calls wake_up on it but no one
-ever waits for it, ->allow_revalidate is completly unused.
+->reset_chain is initialized by the midlayer only used in BusLogic's old EH
+code (which is never called and thus can be #if 0'ed out until someone with
+the hardware updates it to new EH), ->done_late is never used.
 
 
---- 1.35/drivers/scsi/cpqfcTSinit.c	Sat Apr 26 10:28:19 2003
-+++ edited/drivers/scsi/cpqfcTSinit.c	Sun Apr 27 09:12:47 2003
-@@ -677,11 +677,6 @@
-         scsi_release_request(ScsiPassThruReq); // "de-allocate"
-         ScsiPassThruReq = NULL;
- 
--        // if (!SDpnt->was_reset && SDpnt->scsi_request_fn)
--        //  (*SDpnt->scsi_request_fn)();
--
--        wake_up(&SDpnt->scpnt_wait);
--
- 	// need to pass data back to user (space)?
- 	if( (vendor_cmd->rw_flag == VENDOR_READ_OPCODE) &&
- 	     vendor_cmd->len )
-@@ -1656,10 +1651,6 @@
-   scsi_put_command(SCpnt);
-   SCpnt = NULL;
- 
--  // if (!SDpnt->was_reset && SDpnt->scsi_request_fn)
--  // 	(*SDpnt->scsi_request_fn)();
--
--  wake_up(&SDpnt->scpnt_wait);
-   // printk("   LEAVING cpqfcTS_TargetDeviceReset() - return SUCCESS \n");
-   return SUCCESS;
+--- 1.17/drivers/scsi/BusLogic.c	Sat Apr 26 10:28:12 2003
++++ edited/drivers/scsi/BusLogic.c	Sun Apr 27 09:35:22 2003
+@@ -3213,6 +3213,7 @@
+ 	    Place CCB back on the Host Adapter's free list.
+ 	  */
+ 	  BusLogic_DeallocateCCB(CCB);
++#if 0	/* this needs to be redone different for new EH */
+ 	  /*
+ 	    Bus Device Reset CCBs have the Command field non-NULL only when a
+ 	    Bus Device Reset was requested for a Command that did not have a
+@@ -3228,6 +3229,7 @@
+ 	      Command->scsi_done(Command);
+ 	      Command = NextCommand;
+ 	    }
++#endif
+ 	  /*
+ 	    Iterate over the CCBs for this Host Adapter performing completion
+ 	    processing for any CCBs marked as Reset for this Target.
+@@ -3948,6 +3950,7 @@
+       {
+ 	Command = CCB->Command;
+ 	BusLogic_DeallocateCCB(CCB);
++#if 0	/* this needs to be redone different for new EH */
+ 	while (Command != NULL)
+ 	  {
+ 	    SCSI_Command_T *NextCommand = Command->reset_chain;
+@@ -3956,6 +3959,7 @@
+ 	    Command->scsi_done(Command);
+ 	    Command = NextCommand;
+ 	  }
++#endif
+       }
+   for (TargetID = 0; TargetID < HostAdapter->MaxTargetDevices; TargetID++)
+     {
+@@ -3967,7 +3971,7 @@
+   return Result;
  }
+ 
+-
++#if 0	/* old-style EH code references a dead struct scsi_cmnd member */
+ /*
+   BusLogic_SendBusDeviceReset sends a Bus Device Reset to the Target
+   Device associated with Command.
+@@ -4204,6 +4208,7 @@
+     }
+   return SCSI_RESET_PUNT;
+ }
++#endif
+ 
+ 
+ /*
+--- 1.105/drivers/scsi/scsi.c	Sat Apr 26 14:36:16 2003
++++ edited/drivers/scsi/scsi.c	Sun Apr 27 09:12:47 2003
+@@ -533,7 +534,6 @@
+ 
+ 	cmd->request = sreq->sr_request;
+ 	memcpy(cmd->data_cmnd, sreq->sr_cmnd, sizeof(cmd->data_cmnd));
+-	cmd->reset_chain = NULL;
+ 	cmd->serial_number = 0;
+ 	cmd->serial_number_at_timeout = 0;
+ 	cmd->bufflen = sreq->sr_bufflen;
 --- 1.75/drivers/scsi/scsi.h	Wed Apr 23 04:06:29 2003
 +++ edited/drivers/scsi/scsi.h	Sun Apr 27 10:45:24 2003
-@@ -540,8 +321,6 @@
- 	 */
- 	struct list_head    siblings;   /* list of all devices on this host */
- 	struct list_head    same_target_siblings; /* just the devices sharing same target id */
--	wait_queue_head_t   scpnt_wait;	/* Used to wait if
--					   device is busy */
- 	struct Scsi_Host *host;
- 	request_queue_t *request_queue;
- 	volatile unsigned short device_busy;	/* commands actually active on low-level */
-@@ -619,9 +396,6 @@
-   	/* default value if the device doesn't override */
- 	#define SCSI_DEFAULT_DEVICE_BLOCKED	3
+@@ -698,7 +472,6 @@
+ 	unsigned short state;
+ 	unsigned short owner;
+ 	Scsi_Request *sc_request;
+-	struct scsi_cmnd *reset_chain;
  
+ 	struct list_head list;  /* scsi_cmnd participates in queue lists */
+ 
+@@ -783,14 +556,6 @@
+ 
+ 	unsigned flags;
+ 
+-	/*
+-	 * Used to indicate that a command which has timed out also
+-	 * completed normally.  Typically the completion function will
+-	 * do nothing but set this flag in this instance because the
+-	 * timeout handler is already running.
+-	 */
+-	unsigned done_late:1;
 -
--	// Flag to allow revalidate to succeed in sd_open
--	int allow_revalidate;
- 	struct device sdev_driverfs_dev;
- };
- #define	to_scsi_device(d)	\
---- 1.80/drivers/scsi/scsi_scan.c	Thu Apr 24 12:55:44 2003
-+++ edited/drivers/scsi/scsi_scan.c	Sun Apr 27 09:12:47 2003
-@@ -429,7 +429,6 @@
+ 	/* Low-level done function - can be used by low-level driver to point
+ 	 *        to completion function.  Not used by mid/upper level code. */
+ 	void (*scsi_done) (struct scsi_cmnd *);
+--- 1.48/drivers/scsi/scsi_error.c	Mon Apr 21 10:17:33 2003
++++ edited/drivers/scsi/scsi_error.c	Sun Apr 27 10:46:14 2003
+@@ -1674,13 +1653,10 @@
+     
+ 	scmd->scsi_done		= scsi_reset_provider_done_command;
+ 	scmd->done			= NULL;
+-	scmd->reset_chain		= NULL;
+-        
+ 	scmd->buffer			= NULL;
+ 	scmd->bufflen			= 0;
+ 	scmd->request_buffer		= NULL;
+ 	scmd->request_bufflen		= 0;
+-
+ 	scmd->internal_timeout		= NORMAL_TIMEOUT;
+ 	scmd->abort_reason		= DID_ABORT;
  
- 	sdev->request_queue->queuedata = sdev;
- 	scsi_adjust_queue_depth(sdev, 0, sdev->host->cmd_per_lun);
--	init_waitqueue_head(&sdev->scpnt_wait);
+--- 1.84/drivers/scsi/scsi_lib.c	Mon Apr 21 10:17:33 2003
++++ edited/drivers/scsi/scsi_lib.c	Sun Apr 27 12:21:36 2003
+@@ -271,7 +261,6 @@
+ static int scsi_init_cmd_errh(struct scsi_cmnd *cmd)
+ {
+ 	cmd->owner = SCSI_OWNER_MIDLEVEL;
+-	cmd->reset_chain = NULL;
+ 	cmd->serial_number = 0;
+ 	cmd->serial_number_at_timeout = 0;
+ 	cmd->flags = 0;
+@@ -296,7 +285,6 @@
+ 	memcpy(cmd->data_cmnd, cmd->cmnd, sizeof(cmd->cmnd));
+ 	cmd->buffer = cmd->request_buffer;
+ 	cmd->bufflen = cmd->request_bufflen;
+-	cmd->reset_chain = NULL;
+ 	cmd->internal_timeout = NORMAL_TIMEOUT;
+ 	cmd->abort_reason = 0;
  
- 	if (shost->hostt->slave_alloc) {
- 		if (shost->hostt->slave_alloc(sdev))
