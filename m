@@ -1,31 +1,42 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Alan Cox <alan@redhat.com>
 Subject: Re: PATCH: Further aacraid work
-Date: 17 Jun 2004 08:55:14 -0500
+Date: Thu, 17 Jun 2004 10:02:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1087480516.1795.7.camel@mulgrave>
+Message-ID: <20040617140229.GB10138@devserv.devel.redhat.com>
 References: <547AF3BD0F3F0B4CBDC379BAC7E4189FD23FF9@otce2k03.adaptec.com>
-	<20040617130713.GX20511@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:39365 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S266499AbUFQNzb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2004 09:55:31 -0400
-In-Reply-To: <20040617130713.GX20511@parcelfarce.linux.theplanet.co.uk>
+Received: from mx1.redhat.com ([66.187.233.31]:22716 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S266497AbUFQOCw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Jun 2004 10:02:52 -0400
+Content-Disposition: inline
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189FD23FF9@otce2k03.adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Alan Cox <alan@redhat.com>, Christoph Hellwig <hch@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Alan Cox <alan@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, 2004-06-17 at 08:07, Matthew Wilcox wrote:
-> Yes, you're not the only people who want this.  There was a brief
-> discussion about this a few weeks ago, but I don't think anything's been
-> implemented yet.
+On Thu, Jun 17, 2004 at 08:53:36AM -0400, Salyzyn, Mark wrote:
+> available. Since the scsi layer has a propensity to provide sequentially
+> decreasing pages (sequentially increasing would permit coalescing of SG
+> elements) for the SG elements, we find that there is an average SG
+> element size of 4K.
 
-OK, I dropped the ball. I said I'd write up the proposal and send it
-out.  I'll try to do that today.
+That ought to be a case of flipping the way the kernel hands out pages.
+I've always wondered why we get them often in reverse order but never
+sat down and worked it out
 
-James
+> more than 4G of memory; however we *are* having troubles specifically
+> with AMD64 systems with more than 4G of memory in 2.6 kernels (the issue
+> does not occur on 2.4 kernels). I have yet to investigate why this
+> specific problem exists.
+
+The AMD64 is a little unusual in that it has an IO MMU, so requests for
+mappings that are physically high memory, not easy to merge, etc can
+be made to appear in a convenient order lower down in memory. Thus
+asking to map memory at virtual addresses above 4Gb probably hands back
+a PCI address around 3.5Gb. That mapping will also vanish (gone forever
+and the PCI address will show other data instead) when you unmap it.
 
 
