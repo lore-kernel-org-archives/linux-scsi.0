@@ -1,51 +1,47 @@
-From: Willem Riede <wrlk@riede.org>
-Subject: ide-scsi in 2.5.51
-Date: Sat, 14 Dec 2002 15:22:54 -0500
+From: =?ISO-8859-1?Q?G=E9rard_Roudier?= <groudier@free.fr>
+Subject: Re: Aic7xxx v6.2.22 and Aic79xx v1.3.0Alpha2 Released
+Date: Sat, 14 Dec 2002 22:55:17 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021214202254.GH3664@linnie.riede.org>
-Reply-To: wrlk@riede.org
+Message-ID: <20021214223934.P3547-100000@localhost.my.domain>
+References: <20021211153935.A23704@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from linnie.riede.org (localhost.localdomain [127.0.0.1])
-	by linnie.riede.org (8.11.6/8.11.6) with ESMTP id gBEKMsC29686
-	for <linux-scsi@vger.kernel.org>; Sat, 14 Dec 2002 15:22:54 -0500
-Content-Disposition: inline
+In-Reply-To: <20021211153935.A23704@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-In my efforts to make osst work on 2.5.51 I've been pretty successful with
-the SC-30 (scsi) and the FW-30 (ieee1394). But the ide-scsi is giving me
-trouble with the DI-30 (Atapi). I get the same problem with another ide
-connected tape drive and st, by the way, so I am taking a closer look at
-ide-scsi. When I load the module I get:
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
 
-Dec 14 14:50:55 fallguy kernel: Badness in kobject_register at lib/kobject.c:113
-Dec 14 14:50:55 fallguy kernel: Call Trace:
-Dec 14 14:50:55 fallguy kernel:  [<c01c7c88>] kobject_register+0x58/0x70
-Dec 14 14:50:55 fallguy kernel:  [<c01db442>] bus_add_driver+0x82/0xd0
-Dec 14 14:50:55 fallguy kernel:  [<c022bd00>] ide_drive_remove+0x0/0x30
-Dec 14 14:50:55 fallguy kernel:  [<c022bdec>] ide_register_driver+0xbc/0xf0
-Dec 14 14:50:55 fallguy kernel:  [<c0133f6a>] sys_init_module+0x1ba/0x1d0
-Dec 14 14:50:55 fallguy kernel:  [<c010b643>] syscall_call+0x7/0xb
-Dec 14 14:50:55 fallguy kernel: 
-Dec 14 14:50:55 fallguy kernel: scsi HBA driver idescsi didn't set max_sectors, please fix the template
-<3>ERROR: SCSI host `ide-scsi' has no error handling
-Dec 14 14:50:55 fallguy kernel: ERROR: This is not a safe way to run your SCSI host
-Dec 14 14:50:55 fallguy kernel: ERROR: The error handling must be added to this driver
-Dec 14 14:50:55 fallguy kernel: Call Trace:
-Dec 14 14:50:55 fallguy kernel:  [<c023687d>] scsi_register+0x2cd/0x2e0
-Dec 14 14:50:55 fallguy kernel:  [<c02368be>] scsi_register_host+0x2e/0xe0
-Dec 14 14:50:55 fallguy kernel:  [<c0133f6a>] sys_init_module+0x1ba/0x1d0
-Dec 14 14:50:55 fallguy kernel:  [<c010b643>] syscall_call+0x7/0xb
-Dec 14 14:50:55 fallguy kernel: 
-Dec 14 14:50:55 fallguy kernel: scsi4 : SCSI host adapter emulation for IDE ATAPI devices
+On Wed, 11 Dec 2002, Christoph Hellwig wrote:
 
+[...]
 
-So it seems that ide-scsi hasn't kept up with the evolving 2.5 kernel.
-If no-one else is working on this, I'm prepared to take a stab at it,
-but to get me jump-started any advise / hint will be most welcome.
+> linux driver interface change between stable series, face it.  And a =
+driver
+> with tons of ifdefs is utter crap.  Interestingly only vendor driver =
+use
+> that shitty scheme.
 
-Thanks, Willem Riede.
+You just miss that new hardware must be supported for both stable and
+current kernels and that differences in driver interface use to be larg=
+e
+between adjacent stable and current in Linux. On the other hand driver
+interfaces in current kernel seem to be changing as new features come t=
+o
+mind to developpers. Add to that mess that not all Linux based O/S are
+using kernel at same level.
+
+Btw, people who want to learn about how to design and maintain a smart
+driver interface that can evolve gracefully without breaking driver
+zillions of times should ask Justin how it does this so well with
+=46reeBSD/CAM, in my opinion.
+
+  G=E9rard.
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
