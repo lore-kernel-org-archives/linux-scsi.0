@@ -1,95 +1,37 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: [PATCH] cpqfc: remove unused variables/function
-Date: Tue, 9 Sep 2003 17:01:44 -0700
+From: Matthew Wilcox <willy@debian.org>
+Subject: [PATCH] PA-RISC needs MMIO too
+Date: Wed, 10 Sep 2003 02:25:06 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030909170144.271af2f4.rddunlap@osdl.org>
+Message-ID: <20030910012506.GL18654@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:57297 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S265090AbTIJAHX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Sep 2003 20:07:23 -0400
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:34947 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S264341AbTIJBZH
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Sep 2003 21:25:07 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jejb <james.bottomley@steeleye.com>, support@compaq.com, compaqandlinux@cpqlin.van-dijk.net
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: linux-scsi@vger.kernel.org
 
 
-cpqfcTSinit.c has unused variables in cpqfcTS_TargetDeviceReset().
-After I cleaned that up, the  my_ioctl_done() function was no longer
-used.
+PA-RISC needs mmaped IO too.  Patch from Grant Grundler.
 
-This patch adds a local #ifdef for "SUPPORT_RESET" to control
-compilation of these functions.  If it is not defined (default),
-TargetDeviceReset() just returns -ENOTSUPP, as before, but
-much cleaner.
-
-Patch is for 2.6.0-test5.
-
---
-~Randy
-
-
-
-diff -Naurp ./drivers/scsi/cpqfcTSinit.c~clean ./drivers/scsi/cpqfcTSinit.c
---- ./drivers/scsi/cpqfcTSinit.c~clean	2003-09-08 12:49:52.000000000 -0700
-+++ ./drivers/scsi/cpqfcTSinit.c	2003-09-09 16:54:19.000000000 -0700
-@@ -467,6 +467,7 @@ int cpqfcTS_detect(Scsi_Host_Template *S
-   return NumberOfAdapters;
- }
+--- drivers/scsi/aic7xxx/aic79xx_osm.h	8 Sep 2003 21:42:21 -0000	1.8
++++ drivers/scsi/aic7xxx/aic79xx_osm.h	8 Sep 2003 22:00:25 -0000	1.9
+@@ -590,7 +590,8 @@ ahd_delay(long usec)
  
-+#ifdef SUPPORT_RESET
- static void my_ioctl_done (Scsi_Cmnd * SCpnt)
- {
-     struct request * req;
-@@ -477,7 +478,7 @@ static void my_ioctl_done (Scsi_Cmnd * S
-     if (req->CPQFC_WAITING != NULL)
- 	CPQFC_COMPLETE(req->CPQFC_WAITING);
- }   
--
-+#endif
  
- static int cpqfc_alloc_private_data_pool(CPQFCHBA *hba)
- {
-@@ -1577,6 +1578,8 @@ Done:
- // See dpANS Fibre Channel Protocol for SCSI
- // X3.269-199X revision 12, pg 25
+ /***************************** Low Level I/O **********************************/
+-#if defined(__powerpc__) || defined(__i386__) || defined(__ia64__)
++#if defined(__powerpc__) || defined(__i386__) || defined(__ia64__) \
++	|| defined(__hppa__)
+ #define MMAPIO
+ #endif
  
-+#ifdef SUPPORT_RESET
-+
- int cpqfcTS_TargetDeviceReset( Scsi_Device *ScsiDev, 
-                                unsigned int reset_flags)
- {
-@@ -1592,8 +1595,7 @@ int cpqfcTS_TargetDeviceReset( Scsi_Devi
- // around the 2.5.30 kernel.  Scsi_Cmnd replaced with 
- // Scsi_Request, etc.
- // For now, so people don't fall into a hole...
--return -ENOTSUPP;
--/*
-+
-   // printk("   ENTERING cpqfcTS_TargetDeviceReset() - flag=%d \n",reset_flags);
- 
-   if (ScsiDev->host->eh_active) return FAILED;
-@@ -1647,7 +1649,6 @@ return -ENOTSUPP;
- 		   SCpnt->sense_buffer[2] & 0xf);
- 	    
-       };
--*/    
-   result = SCpnt->result;
- 
-   SDpnt = SCpnt->device;
-@@ -1658,6 +1659,14 @@ return -ENOTSUPP;
-   return SUCCESS;
- }
- 
-+#else
-+int cpqfcTS_TargetDeviceReset( Scsi_Device *ScsiDev, 
-+                               unsigned int reset_flags)
-+{
-+	return -ENOTSUPP;
-+}
-+
-+#endif /* SUPPORT_RESET */
- 
- int cpqfcTS_eh_device_reset(Scsi_Cmnd *Cmnd)
- {
+
+-- 
+"It's not Hollywood.  War is real, war is primarily not about defeat or
+victory, it is about death.  I've seen thousands and thousands of dead bodies.
+Do you think I want to have an academic debate on this subject?" -- Robert Fisk
