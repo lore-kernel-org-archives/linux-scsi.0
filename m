@@ -1,59 +1,87 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] aha152x-2.6.1
-Date: Tue, 20 Jan 2004 20:44:33 +0100 (CET)
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Transport Attributes -- attempt#3
+Date: Tue, 20 Jan 2004 11:49:11 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0401202021050.7148-100000@poirot.grange>
-References: <1074538162.1647.18.camel@mulgrave>
+Message-ID: <20040120114910.A23223@beaverton.ibm.com>
+References: <20040107185420.GA30627@localhost> <20040108131717.A9700@infradead.org> <20040114181241.GK27591@localhost> <400C7143.8010500@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:11952 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S265700AbUATTsY (ORCPT
+Received: from e4.ny.us.ibm.com ([32.97.182.104]:56706 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S265718AbUATTth (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jan 2004 14:48:24 -0500
-In-Reply-To: <1074538162.1647.18.camel@mulgrave>
+	Tue, 20 Jan 2004 14:49:37 -0500
+Content-Disposition: inline
+In-Reply-To: <400C7143.8010500@us.ibm.com>; from brking@us.ibm.com on Mon, Jan 19, 2004 at 06:07:31PM -0600
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Brian King <brking@us.ibm.com>
+Cc: Martin Hicks <mort@wildopensource.com>, linux-scsi@vger.kernel.org
 
-On 19 Jan 2004, James Bottomley wrote:
+On Mon, Jan 19, 2004 at 06:07:31PM -0600, Brian King wrote:
+> I just submitted a new LLD to linux-scsi and Christoph suggested I use 
+> this patch for setting SCSI bus attributes. I looked through the patches 
+> and noticed that these are per device attributes. I need to be able to 
+> set per SCSI bus attributes. The attributes I would like to be able to 
+> set include: initiator ID, maximum bus speed, wide enabled/disabled, and 
+> device spinup delay. Would it make sense to create a scsi_bus class or 
+> something similar for these types of attributes?
 
-> On Sat, 2004-01-17 at 17:25, Guennadi Liakhovetski wrote:
-> > Below is a patch for aha152x to fix check / request_region, plus make it
-> > fail explicitly in the case of busy address-range. Compiles, untested
-> > (yet).
->
-> Actually, the aha152x maintainer has already fixed this (and the fix is
-> in mainline---and copying the maintainer on changes to his driver would
-> have been polite).
+For the IPR driver -
 
-Really sorry - sure must have done that. The only slight excuse is, that I
-just saw a request from a user, tried to help, and, eventually, came up
-with a patch. But - no problem, if there's a patch from the maintainer
-(he's written to me too telling about this), sure it has precedence. I had
-some fun anyway and learned a bit more about one more driver.
+Is the spinup delay for the entire card, not per bus? If so it should be
+a scsi_host attribute set via shost_attrs. (No one uses shost_attrs, but
+its use is the same as sdev_attrs usage in 53c700.c)
 
-> > While on that - what about the advansys-patch with a similar (check_region
-> > vs. request_region) scope, I sent earlier to the list - was it wrong, or
-> > just not important enough?
->
-> Erm, this is what you said about the Advansys patch:
->
-> "Ok, the attached patch (carefully, I hope) does request_region instead of
-> check_region for the detection address-range, and then release_region -
-> when needed. Hope I got it right. Compiles, otherwise completely untested."
->
-> which wasn't exactly a ringing endorsement.  If we don't get any
-> comments or complaints, I'll probably add it to the SCSI patch list.
+And are the other values for the actual physical disks? If they are not
+visible to the host, then there is no bus visible to the host (i.e. scsi
+core can't see them). 
 
-:-) Ok, I'll try to ring louder next time:-) I am quite new to SCSI, so,
-if I do happen to send a patch, a short comment, like "it's crap because
-that and that", or "it's crap, but it has a chance if you fix that and
-that", or "accepted" would be great!:-)
+Having the physical disk show up in scsi core as drives is nice for
+managing them, but if they are ready for writing it could be confusing,
+and potentially disasterous. We could do hacks to get different behaviour
+for the disks (so only sg shows up, or so sd shows up read only), like: add
+a flag in scsi_host; modify the INQUIRY type in the ipr driver; or modify
+the MODE SENSE page 0x3f (and/or page 0) result in the ipr driver so they
+show up read only (though on failure of a MODE SENSE they would become
+writable).
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+If they were visible to scsi core, the intiator ID (this_id) would be
+found in the scsi_host, but would need to be added as a sysfs attribute.
 
+We could add a scsi_bus class, but we first need a bus/fabric struct that
+can include the class, and that in turn requires quite a bit more work
+to get it in the right place in the driver model tree (we would want a
+bus/fabric per host:channel pair).
 
+As noted before, we also don't have a target, and the transport attributes
+(per the patch) show up as per LUN, even though they might be per target,
+or even per bus/fabric. IMO that is fine for now.
+
+i.e. we have a sysfs tree like this:
+
+`-- pcifoo
+    `-- host14
+        |-- host_attrs
+        |-- 14:0:0:0
+        |   `-- sdev_attrs
+        `-- 14:0:0:1
+            `-- sdev_attrs
+
+But we need something like this:
+
+`-- pcifoo
+    `-- host14
+        |-- host_attrs
+        `-- 14:0
+            |-- bus_fabric_attrs
+            `-- 14:0:0
+                |-- target_attrs
+                |-- 14:0:0:0
+                |   `-- sdev_attrs
+                `-- 14:0:0:1
+                    `-- sdev_attrs
+
+And then driver model class or bus code can be used with the above as
+needed.
+
+-- Patrick Mansfield
