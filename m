@@ -1,38 +1,42 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: aic7xxx strange code
-Date: Thu, 01 Jan 2004 09:21:38 -0700
+From: "ALOE VERA" <aloe@start.com>
+Subject: KENDI ISINIZI KURUN !!!
+Date: Thu, 1 Jan 2004 17:30:42 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <482322704.1072974098@aslan.scsiguy.com>
-References: <1072885576.10877.6.camel@laptop.fenrus.com> <960352704.1072895786@aslan.btc.adaptec.com>
- <20040101100809.GA1053@devserv.devel.redhat.com> <478922704.1072973783@aslan.scsiguy.com>
- <20040101161731.GB18742@devserv.devel.redhat.com>
+Message-ID: <200401011625.i01GPFK09599@zeus.kernel.org>
+Reply-To: aloe@start.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.scsiguy.com ([63.229.232.106]:26628 "EHLO
-	aslan.scsiguy.com") by vger.kernel.org with ESMTP id S264509AbUAAQVk
+Received: from zeus.kernel.org ([204.152.189.113]:41385 "EHLO zeus.kernel.org")
+	by vger.kernel.org with ESMTP id S264496AbUAAQZT convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Jan 2004 11:21:40 -0500
-In-Reply-To: <20040101161731.GB18742@devserv.devel.redhat.com>
-Content-Disposition: inline
+	Thu, 1 Jan 2004 11:25:19 -0500
+Received: from ommo.net (dsl81-215-17754.adsl.ttnet.net.tr [81.215.69.90])
+	by zeus.kernel.org (8.11.6/8.11.6) with SMTP id i01GPFK09599
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Jan 2004 08:25:16 -0800
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjanv@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
->> Unfortunately, fixing 2.4 and 2.6 now doesn't help in supporting older
->> kernels that are still in production.  You can't change the past no
->> matter how hard we'd like to try. 
-> 
-> But vendors will update those kernels.....
+Iyi gunler linux-scsi ,
 
-Yes, but I can't remove support for these older kernels for quite
-some time.  So, I'd be more than happy to update the comments explaining
-why the code is there and change the #ifdefs to further limit its use,
-but the code needs to remain for the time being.
+D=FCnyanin en hizli b=FCy=FCyen pazarinda
 
-Are you planning an audit of the other platforms to ensure API compliance?
+kendi isinizi kurup,
+evinizden veya ofisinizden,
+kendi patrononuz olarak tamamen bagimsiz,
+calisma saatlerini kendiniz belirleyerek,
+hic bir krizden etkilenmeden,
+hicbir riske girmeden,
+c=FCzi yatirimla,
+m=FCkemmel kazanclar elde etmek istemezmisiniz ?
 
---
-Justin
+Geni=FE bilgi i=E7in: Tel. 0212 - 507 75 02, Faks. 0212 - 507 75 28
+start2004@mynet.com
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
