@@ -1,67 +1,34 @@
-From: Andries Brouwer <aebr@win.tue.nl>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [PATCH] fix sector_div use in scsicam.c
-Date: Sun, 27 Oct 2002 23:10:07 +0100
+Date: Sun, 27 Oct 2002 18:05:07 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021027221007.GA28417@win.tue.nl>
-References: <20021027192228.GA28395@win.tue.nl> <200210272053.g9RKrT612587@localhost.localdomain>
+Message-ID: <200210280005.g9S057Q14567@localhost.localdomain>
+References: <aebr@win.tue.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200210272053.g9RKrT612587@localhost.localdomain>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id QAA12186
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Oct 2002 16:05:15 -0800
+In-Reply-To: Message from Andries Brouwer <aebr@win.tue.nl>
+   of "Sun, 27 Oct 2002 23:10:07 +0100." <20021027221007.GA28417@win.tue.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
+To: Andries Brouwer <aebr@win.tue.nl>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On Sun, Oct 27, 2002 at 02:53:29PM -0600, James Bottomley wrote:
-> aebr@win.tue.nl said:
-> > I see you trying to get this scsicam code do something that it should
-> > not. No 64-bit handling required or even desirable. Any use of
-> > sector_div here is wrong. 
-> 
-> Could you explain why?
+If the return type will be ignored by most applications, I don't see what the 
+problem is.
 
-On ancient machines, user space needs the number of sectors per track
-and the number of heads in order to (i) write something appropriate
-in the partition table, and (ii) help the boot loader interface with
-the BIOS at boot time.
+I'm all for ripping the C/H/S rubbish out of the kernel, just give me the 
+patches when you have them.  Until that time, we need the changes Christoph 
+has made now to solve a layering violation in SCSI.  And, since I never want 
+to see the bios_param stuff again, I'm not going to put in code (like an 
+obviously wrong truncation) that would attract attention in a large block size 
+audit of the SCSI subsystem.  The sector_div is an obviously correct thing to 
+do for a sector_t quantity, so it's staying.
 
-However, the number of cylinders does not play a role.
-On new systems the geometry is entirely irrelevant.
-On old systems the number of cylinders is not needed anywhere.
-It is not written in the partition table. It is not used in BIOS interaction.
+James
 
-Some ancient software used C*H*S as a measure for the total disk size,
-but that is broken, especially since geometry depends on the BIOS setup.
-These days it is especially broken since HDIO_GETGEO returns a 16-bit
-value for the number of cylinders.
 
-The code I suggested returns something reasonable to be backwards
-compatible with ancient software. Without the desire for compatibility
-the assignment
-	ip[2] = 0;
-would be acceptable too.
 
-The patches I reacted to were worse in two respects:
-It invoked the sector_div macro designed to divide large numbers,
-while here division of large numbers is meaningless.
-Just superfluous code.
-It suggests that the computation is meaningful, and before you know it
-people will add ioctls to get the bits computed by this division
-out to user space.
-
-The current spec for HDIO_GETGEO is that the cylinder field of
-what it returns has to be ignored. The total disk size is found
-using BLKGETSIZE. If user space wants to compute a number of
-cylinders, for whatever reason, it has to divide the total size
-by H*S as returned by HDIO_GETGEO. That is what all recent software
-does.
-
-I am in the process of removing, extremely slowly, everything related
-to disk geometries from the kernel. Disk geometries have not existed
-the past ten years, and thousands of users have had to fight fake
-geometries invented by disk, BIOS, kernel and software.
-We must not add to this cruft, but only take away. Slowly.
-
-Andries
 
