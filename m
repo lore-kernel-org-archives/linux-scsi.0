@@ -1,43 +1,37 @@
-From: Jeremy Higdon <jeremy@classic.engr.sgi.com>
-Subject: Re: [RFC] Multi-path IO in 2.5/2.6 ?
-Date: Tue, 10 Sep 2002 00:55:58 -0700 (PDT)
+From: Rusty Trivial Russell <rusty@rustcorp.com.au>
+Subject: [TRIVIAL] drivers_scsi_aic7xxx_aic7xxx_core.c, typo: the the
+Date: Tue, 10 Sep 2002 19:18:08 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <10209100055.ZM65139@classic.engr.sgi.com>
-References: <patmans@us.ibm.com>
-	<200209091734.g89HY5p11796@localhost.localdomain>
-	<20020909170847.A24352@eng2.beaverton.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <20020910092648.C2B802C386@lists.samba.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: Patrick Mansfield <patmans@us.ibm.com>
-        "Re: [RFC] Multi-path IO in 2.5/2.6 ?" (Sep  9,  5:08pm)
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>
-Cc: Lars Marowsky-Bree <lmb@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Sep 9,  5:08pm, Patrick Mansfield wrote:
-> 
-> You can have multiple initiators on FCP or SPI, without dual controllers
-> involved at all. Most of my multi-path testing has been with dual
-> ported FCP disk drives, with multiple FCP adapters connected to a
-> switch, not with disk arrays (I don't have any non-failover multi-ported
-> disk arrays available, I'm using a fastt 200 disk array); I don't know the
-> details of the drive controllers for my disks, but putting multiple
-> controllers in a disk drive certainly would increase the cost.
+(Included in 2.4)
+From:  James Mayer <james@cobaltmountain.com>
 
 
-Is there any plan to do something for hardware RAIDs in which two different
-RAID controllers can get to the same logical unit, but you pay a performance
-penalty when you access the lun via both controllers?  It seems to me that
-all RAIDs that don't require a command to switch a lun from one to the
-other controller (i.e. where both ctlrs can access a lun simultaneously)
-pay a performance penalty when you access a lun from both.
-
-Working around this in a generic way (i.e. without designation by the
-system admin) seems difficult, so I'm wondering what may have been done
-with this (my reading of this discussion is that it has not been tackled
-yet).
-
-thanks
-
-jeremy
+--- trivial-2.5.34/drivers/scsi/aic7xxx/aic7xxx_core.c.orig	2002-09-10 19:10:53.000000000 +1000
++++ trivial-2.5.34/drivers/scsi/aic7xxx/aic7xxx_core.c	2002-09-10 19:10:53.000000000 +1000
+@@ -4274,7 +4274,7 @@
+ 	/*
+ 	 * DMA tag for our command fifos and other data in system memory
+ 	 * the card's sequencer must be able to access.  For initiator
+-	 * roles, we need to allocate space for the the qinfifo and qoutfifo.
++	 * roles, we need to allocate space for the qinfifo and qoutfifo.
+ 	 * The qinfifo and qoutfifo are composed of 256 1 byte elements. 
+ 	 * When providing for the target mode role, we must additionally
+ 	 * provide space for the incoming target command fifo and an extra
+@@ -6791,7 +6791,7 @@
+ 		panic("ahc_update_scsiid called on non-multitid unit\n");
+ 
+ 	/*
+-	 * Since we will rely on the the TARGID mask
++	 * Since we will rely on the TARGID mask
+ 	 * for selection enables, ensure that OID
+ 	 * in SCSIID is not set to some other ID
+ 	 * that we don't want to allow selections on.
+-- 
+  Don't blame me: the Monkey is driving
+  File: James Mayer <james@cobaltmountain.com>: drivers_scsi_aic7xxx_aic7xxx_core.c, typo: the the
