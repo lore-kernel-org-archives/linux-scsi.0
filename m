@@ -1,164 +1,251 @@
-From: Willem Riede <osst@riede.org>
-Subject: Re: [PATCH] SCSI tape: remove use of file_count(), was Re:
- [patchset] Lockfree fd lookup 0 of 5
-Date: Fri, 03 Dec 2004 03:28:20 +0000
-Message-ID: <1102044500l.4013l.5l@serve.riede.org>
-References: <20040902062229.GB1312@vitalstatistix.in.ibm.com>
-	<20040917055845.GA3468@in.ibm.com> <20040917001555.6dbee4fd.akpm@osdl.org>
-	<20040917103201.GA3785@in.ibm.com>
-	<Pine.LNX.4.58.0409170811300.2338@ppc970.osdl.org>
-	<Pine.LNX.4.60.0409171857040.5201@spektro.metla.fi>
-	<20040917201745.GD3975@in.ibm.com>
-	<Pine.LNX.4.60.0409172338360.5736@spektro.metla.fi>
-	<20040920143737.GC21581@in.ibm.com>
-	<Pine.LNX.4.58.0409202053350.2814@kai.makisara.local>
-	<20041130131150.GE23329@impedimenta.in.ibm.com>
-	<Pine.LNX.4.61.0411302217120.4818@kai.makisara.local>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: How to add/drop SCSI drives from within the driver?
+Date: Fri, 03 Dec 2004 09:10:52 -0600
+Message-ID: <41B081FC.6040400@us.ibm.com>
+References: <0E3FA95632D6D047BA649F95DAB60E570230CA69@exa-atlanta>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rwcrmhc12.comcast.net ([216.148.227.85]:16015 "EHLO
-	rwcrmhc12.comcast.net") by vger.kernel.org with ESMTP
-	id S261390AbULCD2X convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Dec 2004 22:28:23 -0500
-In-Reply-To: <Pine.LNX.4.61.0411302217120.4818@kai.makisara.local> (from
-	Kai.Makisara@kolumbus.fi on Tue Nov 30 15:30:26 2004)
-Content-Disposition: inline
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:51664 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262245AbULCPK7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Dec 2004 10:10:59 -0500
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570230CA69@exa-atlanta>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: Ravikiran G Thirumalai <kiran@in.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Dipankar Sarma <dipankar@in.ibm.com>
+To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Cc: 'James Bottomley' <James.Bottomley@SteelEye.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "'Matt_Domsch@dell.com'" <Matt_Domsch@dell.com>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
 
-On 11/30/2004 03:30:26 PM, Kai Makisara wrote:
-> On Tue, 30 Nov 2004, Ravikiran G Thirumalai wrote:
+This looks to be adding an LLD specific interface to userspace to
+add/delete disks. Why can't the existing sysfs interfaces be used
+to to this? (scan attribute on host and delete attribute on device).
+
+-Brian
+
+Bagalkote, Sreenivas wrote:
+> Hello All,
 > 
-> > Kai, can you mail the latest version of this patch to lkml?  Willem, can
-> > you make a patch similar to this for osst.c and mail it to lkml?
-> > 
-> OK. The patch at the end of this message modifies st so that file_count() 
-> is not used. It has been used to find the last call to the st_flush() 
-> method for possible writing of the final filemark and rewinding the tape. 
-> While these have been in st_flush(), it has been possible to return errors 
-> in the return value of close(). The patch moves these operations to
-> st_release() 
-> and logs the possible errors since it is not possible to return these 
-> errors to the user any more. Flushing the tape drive buffer is added to  
-> st_flush() to minimise the possibility of errors not reported at close().
+> I am trying to implement a feature in my SCSI driver, where it can
+> trigger the SCSI mid-layer to scan or remove a particular drive. I 
+> appreciate any help in nudging me in the right direction.
 > 
-> The patch is against 2.6.10-rc2-bk13, it compiles, and is lightly tested. 
-> It should not be applied unless file_count() really is removed.
+> The exported functions - 
+> 
+> scsi_add_device( host, channel, target, lun )
+> scsi_remove_device( struct scsi_device* )
+> 
+> seem to work well in my limited testing. Are there any caveats in this
+> method? Does this method work well without exceptions? I am inlining
+> the full patch for megaraid SCSI driver taken against 2.6.10-rc2. I am
+> also attaching it to this mail.
+> 
+> Thank you,
+> Sreenivas
+> 
+> 
+> ----
+> diff -Naur old-rc3/drivers/scsi/megaraid/mega_common.h
+> new-rc2/drivers/scsi/megaraid/mega_common.h
+> --- old-rc2/drivers/scsi/megaraid/mega_common.h	2004-10-18
+> 17:54:31.000000000 -0400
+> +++ new-rc2/drivers/scsi/megaraid/mega_common.h	2004-12-02
+> 20:23:35.000000000 -0500
+> @@ -242,6 +242,15 @@
+>  					[SCP2TARGET(scp)] & 0xFF);	\
+>  	}
+>  
+> +/**
+> + * MRAID_LD_TARGET
+> + * @param adp		- Adapter's soft state
+> + * @param ld		- Logical drive number
+> + *
+> + * Macro to retrieve the SCSI target id of a logical drive
+> + */
+> +#define MRAID_LD_TARGET(adp, ld) (((ld) < (adp)->init_id) ? (ld) : (ld)+1)
+> 
+> +
+>  /*
+>   * ### Helper routines ###
+>   */
+> diff -Naur old-rc2/drivers/scsi/megaraid/megaraid_ioctl.h
+> new-rc2/drivers/scsi/megaraid/megaraid_ioctl.h
+> --- old-rc2/drivers/scsi/megaraid/megaraid_ioctl.h	2004-12-02
+> 20:20:16.000000000 -0500
+> +++ new-rc2/drivers/scsi/megaraid/megaraid_ioctl.h	2004-12-02
+> 20:23:25.000000000 -0500
+> @@ -51,8 +51,11 @@
+>  #define MEGAIOC_QNADAP		'm'	/* Query # of adapters		*/
+>  #define MEGAIOC_QDRVRVER	'e'	/* Query driver version		*/
+>  #define MEGAIOC_QADAPINFO   	'g'	/* Query adapter information	*/
+> +#define MEGAIOC_ADD_LD		'a'
+> +#define MEGAIOC_DEL_LD		'r'
+>  
+>  #define USCSICMD		0x80
+> +#define UIOC_NONE		0x00000
+>  #define UIOC_RD			0x00001
+>  #define UIOC_WR			0x00002
+>  
+> @@ -62,6 +65,8 @@
+>  #define GET_ADAP_INFO		0x30000
+>  #define GET_CAP			0x40000
+>  #define GET_STATS		0x50000
+> +#define	ADD_LD			0x60000
+> +#define DEL_LD			0x70000
+>  #define GET_IOCTL_VERSION	0x01
+>  
+>  #define EXT_IOCTL_SIGN_SZ	16
+> diff -Naur old-rc2/drivers/scsi/megaraid/megaraid_mbox.c
+> new-rc2/drivers/scsi/megaraid/megaraid_mbox.c
+> --- old-rc2/drivers/scsi/megaraid/megaraid_mbox.c	2004-12-02
+> 20:20:16.000000000 -0500
+> +++ new-rc2/drivers/scsi/megaraid/megaraid_mbox.c	2004-12-02
+> 20:32:33.408278216 -0500
+> @@ -10,7 +10,7 @@
+>   *	   2 of the License, or (at your option) any later version.
+>   *
+>   * FILE		: megaraid_mbox.c
+> - * Version	: v2.20.4.1 (Nov 04 2004)
+> + * Version	: v2.20.4.1+ TEST VERSION
+>   *
+>   * Authors:
+>   * 	Atul Mukker		<Atul.Mukker@lsil.com>
+> @@ -3642,6 +3642,10 @@
+>  megaraid_mbox_mm_handler(unsigned long drvr_data, uioc_t *kioc, uint32_t
+> action)
+>  {
+>  	adapter_t *adapter;
+> +	uint32_t ld;
+> +	struct scsi_device* sdev;
+> +	int ch;
+> +	int tg;
+>  
+>  	if (action != IOCTL_ISSUE) {
+>  		con_log(CL_ANN, (KERN_WARNING
+> @@ -3670,6 +3674,31 @@
+>  
+>  		return kioc->status;
+>  
+> +	case ADD_LD:
+> +		ld = *(uint32_t*) kioc->buf_vaddr;
+> +		ch = adapter->max_channel;
+> +		tg = MRAID_LD_TARGET( adapter, ld );
+> +		scsi_add_device(adapter->host, ch, tg, 0);
+> +
+> +		kioc->status = 0;
+> +		kioc->done(kioc);
+> +		return kioc->status;
+> +
+> +	case DEL_LD:
+> +		ld = *(uint32_t*) kioc->buf_vaddr;
+> +		ch = adapter->max_channel;
+> +		tg = MRAID_LD_TARGET( adapter, ld );
+> +		sdev = scsi_device_lookup( adapter->host, ch, tg, 0);
+> +		
+> +		if( sdev ) {
+> +			scsi_remove_device( sdev );
+> +			scsi_device_put( sdev );
+> +		}
+> +
+> +		kioc->status = 0;
+> +		kioc->done(kioc);
+> +		return kioc->status;
+> +
+>  	case MBOX_CMD:
+>  
+>  		return megaraid_mbox_mm_command(adapter, kioc);
+> diff -Naur old-rc2/drivers/scsi/megaraid/megaraid_mbox.h
+> new-rc2/drivers/scsi/megaraid/megaraid_mbox.h
+> --- old-rc2/drivers/scsi/megaraid/megaraid_mbox.h	2004-12-02
+> 20:20:16.000000000 -0500
+> +++ new-rc2/drivers/scsi/megaraid/megaraid_mbox.h	2004-12-02
+> 20:32:09.737876664 -0500
+> @@ -21,8 +21,8 @@
+>  #include "megaraid_ioctl.h"
+>  
+>  
+> -#define MEGARAID_VERSION	"2.20.4.1"
+> -#define MEGARAID_EXT_VERSION	"(Release Date: Thu Nov  4 17:44:59 EST
+> 2004)"
+> +#define MEGARAID_VERSION	"2.20.4.1+ TEST VERSION"
+> +#define MEGARAID_EXT_VERSION	"(Release Date: TEST VERSION)"
+>  
+>  
+>  /*
+> diff -Naur old-rc2/drivers/scsi/megaraid/megaraid_mm.c
+> new-rc2/drivers/scsi/megaraid/megaraid_mm.c
+> --- old-rc2/drivers/scsi/megaraid/megaraid_mm.c	2004-12-02
+> 20:20:16.000000000 -0500
+> +++ new-rc2/drivers/scsi/megaraid/megaraid_mm.c	2004-12-02
+> 20:22:57.000000000 -0500
+> @@ -373,6 +373,34 @@
+>  			if (mraid_mm_attach_buf(adp, kioc, kioc->xferlen))
+>  				return (-ENOMEM);
+>  		}
+> +		else if (subopcode == MEGAIOC_ADD_LD) {
+> +
+> +			kioc->opcode	= ADD_LD;
+> +			kioc->data_dir	= UIOC_NONE;
+> +			kioc->xferlen	= sizeof(uint32_t);
+> +
+> +			if (mraid_mm_attach_buf(adp, kioc, kioc->xferlen))
+> +				return -(ENOMEM);
+> +
+> +			if (copy_from_user(kioc->buf_vaddr, mimd.data,
+> +							kioc->xferlen)) {
+> +				return (-EFAULT);
+> +			}
+> +		}
+> +		else if (subopcode == MEGAIOC_DEL_LD) {
+> +
+> +			kioc->opcode	= DEL_LD;
+> +			kioc->data_dir	= UIOC_NONE;
+> +			kioc->xferlen	= sizeof(uint32_t);
+> +
+> +			if (mraid_mm_attach_buf(adp, kioc, kioc->xferlen))
+> +				return -(ENOMEM);
+> +
+> +			if (copy_from_user(kioc->buf_vaddr, mimd.data,
+> +							kioc->xferlen)) {
+> +				return (-EFAULT);
+> +			}
+> +		}
+>  		else {
+>  			con_log(CL_ANN, (KERN_WARNING
+>  					"megaraid cmm: Invalid subop\n"));
+> @@ -809,6 +837,9 @@
+>  
+>  			return 0;
+>  
+> +		case MEGAIOC_ADD_LD:
+> +		case MEGAIOC_DEL_LD:
+> +			return 0;
+>  		default:
+>  			return (-EINVAL);
+>  		}
+> diff -Naur old-rc2/drivers/scsi/megaraid/megaraid_mm.h
+> new-rc2/drivers/scsi/megaraid/megaraid_mm.h
+> --- old-rc2/drivers/scsi/megaraid/megaraid_mm.h	2004-12-02
+> 20:20:16.000000000 -0500
+> +++ new-rc2/drivers/scsi/megaraid/megaraid_mm.h	2004-12-02
+> 20:33:00.709127856 -0500
+> @@ -29,9 +29,9 @@
+>  #include "megaraid_ioctl.h"
+>  
+>  
+> -#define LSI_COMMON_MOD_VERSION	"2.20.2.2"
+> +#define LSI_COMMON_MOD_VERSION	"2.20.2.2+ TEST VERSION"
+>  #define LSI_COMMON_MOD_EXT_VERSION	\
+> -		"(Release Date: Thu Nov  4 17:46:29 EST 2004)"
+> +		"(Release Date: TEST VERSION)"
+>  
+>  
+>  #define LSI_DBGLVL			dbglevel
+> ----
+> 
 
-Here is the equivalent patch for osst.c -- the same considerations apply.
-It has been compiled, and tested, and works for me.
-
-Signed-off-by: Willem Riede <osst@riede.org>
-
---- /home/wriede/kernel/linux-2.6.10-rc2/drivers/scsi/osst.c	2004-12-01
-19:31:49.000000000 -0500
-+++ ./osst.c	2004-12-02 18:51:55.000000000 -0500
-@@ -4590,22 +4590,38 @@
- {
- 	int            result = 0, result2;
- 	OS_Scsi_Tape * STp  = filp->private_data;
--	struct st_modedef      * STm  = &(STp->modes[STp->current_mode]);
--	struct st_partstat  * STps = &(STp->ps[STp->partition]);
- 	Scsi_Request * SRpnt = NULL;
--	char         * name = tape_name(STp);
- 
--	if (file_count(filp) > 1)
--		return 0;
-+	if (down_interruptible(&STp->lock))
-+		return (-ERESTARTSYS);
- 
--	if ((STps->rw == ST_WRITING || STp->dirty) && !STp->pos_unknown) {
-+	if ((STp->ps[STp->partition].rw == ST_WRITING || STp->dirty) &&
-!STp->pos_unknown) {
- 		STp->write_type = OS_WRITE_DATA;
- 		result = osst_flush_write_buffer(STp, &SRpnt);
- 		if (result != 0 && result != (-ENOSPC))
- 			goto out;
-+		/* wait for writing to complete */
-+		result2 = osst_flush_drive_buffer(STp, &SRpnt);
-+		if (result == 0)
-+			result = result2;
- 	}
--	if ( STps->rw >= ST_WRITING && !STp->pos_unknown) {
-+out:
-+	up(&STp->lock);
-+	return result;
-+}
- 
-+
-+/* Close the device and release it */
-+static int os_scsi_tape_close(struct inode * inode, struct file * filp)
-+{
-+	int                 result = 0, result2;
-+	OS_Scsi_Tape       * STp   = filp->private_data;
-+	struct st_modedef  * STm   = &(STp->modes[STp->current_mode]);
-+	struct st_partstat * STps  = &(STp->ps[STp->partition]);
-+	Scsi_Request       * SRpnt = NULL;
-+	char               * name  = tape_name(STp);
-+
-+	if ( STps->rw >= ST_WRITING && !STp->pos_unknown) {
- #if DEBUG
- 		if (debugging) {
- 			printk(OSST_DEB_MSG "%s:D: File length %ld bytes.\n",
-@@ -4620,6 +4636,10 @@
- 			printk(OSST_DEB_MSG "%s:D: Buffer flushed, %d EOF(s)
-written\n",
- 					       name, 1+STp->two_fm);
- #endif
-+                if (result) {
-+                        printk(KERN_ERR "%s: Writing closing filemark
-failed.\n", name);
-+                        STp->pos_unknown = 1;
-+                }
- 	}
- 	else if (!STp->rew_at_close) {
- 		STps = &(STp->ps[STp->partition]);
-@@ -4646,11 +4666,17 @@
- 			STps->drv_block = 0;
- 			STps->eof = ST_FM;
- 		}
-+		if (result) {
-+			printk(KERN_ERR "%s: Final tape positioning
-failed.\n", name);
-+			STp->pos_unknown = 1;
-+		}
- 	}
--
--out:
- 	if (STp->rew_at_close) {
- 		result2 = osst_position_tape_and_confirm(STp, &SRpnt,
-STp->first_data_ppos);
-+		if (result2 < 0) {
-+			printk(KERN_ERR "%s: Auto-rewind failed.\n", name);
-+			STp->pos_unknown = 1;
-+		}
- 		STps->drv_file = STps->drv_block = STp->frame_seq_number =
-STp->logical_blk_num = 0;
- 		if (result == 0 && result2 < 0)
- 			result = result2;
-@@ -4669,19 +4695,6 @@
- 	STp->write_count = 0;
- 	STp->read_count  = 0;
- 
--	return result;
--}
--
--
--/* Close the device and release it */
--static int os_scsi_tape_close(struct inode * inode, struct file * filp)
--{
--	int result = 0;
--	OS_Scsi_Tape * STp = filp->private_data;
--	Scsi_Request * SRpnt = NULL;
--
--	if (SRpnt) scsi_release_request(SRpnt);
--
- 	if (STp->door_locked == ST_LOCKED_AUTO)
- 		do_door_lock(STp, 0);
- 
-
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
 
