@@ -1,30 +1,52 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch] 2.6.1-rc2-mm1: qla1280.c doesn't compile
-Date: Fri, 9 Jan 2004 13:49:42 +0000
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040109134942.A24302@infradead.org>
-References: <20040107232831.13261f76.akpm@osdl.org> <20040109015229.GK13867@fs.tum.de>
+From: support <support@degrp.de>
+Subject: Megaraid Driver does not load with smp enabled Kernel 2.6.1
+Date: Fri, 9 Jan 2004 14:56:49 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <689781653.20040109145649@degrp.de>
+Reply-To: support <support@degrp.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20040109015229.GK13867@fs.tum.de>; from bunk@fs.tum.de on Fri, Jan 09, 2004 at 02:52:30AM +0100
-To: Adrian Bunk <bunk@fs.tum.de>
-Cc: Andrew Morton <akpm@osdl.org>, Jes Sorensen <jes@trained-monkey.org>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.degrp.org ([62.225.179.11]:12555 "EHLO mail.degrp.de")
+	by vger.kernel.org with ESMTP id S261812AbUAIN4z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jan 2004 08:56:55 -0500
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Jan 09, 2004 at 02:52:30AM +0100, Adrian Bunk wrote:
-> I got the following compile error when trying to compile this driver 
-> statically into a kernel with hotplug enabled:
+We uses HP Netraid Server with Integrated Netraid Controllers, the megaraid
+driver hangs with following error message:
 
-Jes, that's your ifdef-magic around around qla1280_remove_one.. Do you
-remember why you added it?  The only case we don't need it is when
-the driver is builtin and CONFIG_HOTPLUG is not set - and in that case
-__devexit should get rid of it for us.
+megaraid: couldn't register IRQ 25
 
-> Since I don't see a good reason why qla1280_remove_one is #ifdef'ed out 
-> in the non-modular case the patch below fixes this problem by removing 
-> two #ifdef's.
+it breaks at the following position in the megaraid.c driver
 
-The patch looks good to me.  In fact that's how it was in the patch
-I sent to Jes..
+/* Request our IRQ */
+                if( adapter->flag & BOARD_MEMMAP ) {
+                        if(request_irq(irq, megaraid_isr_memmapped, SA_SHIRQ,
+                                                "megaraid", adapter)) {
+                                printk(KERN_WARNING
+                                        "megaraid: Couldn't register IRQ %d!\n",
+                                        irq);
+                                goto fail_attach;
+                        }
+                }
+                else {
+                        if(request_irq(irq, megaraid_isr_iomapped, SA_SHIRQ,
+                                                "megaraid", adapter)) {
+                                printk(KERN_WARNING
+                                        "megaraid: Couldn't register IRQ %d!\n",
+                                        irq);
+                                goto fail_attach;
+                        }
+                }
+
+when i turn off smp and disable the local apic option in the kernel
+the driver works fine.
+
+Has anyone a solution for this problem ?? We need smp support on our servers. 
+
+-- 
+Best regards,
+ Thoams Schend                                   mailto:support@degrp.de
+
