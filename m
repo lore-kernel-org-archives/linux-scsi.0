@@ -1,68 +1,114 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [usb-storage] Re: [PATCH] fix Sony USB mass storage - pass larger receive buffer
-Date: Thu, 13 Nov 2003 16:24:01 -0800
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [usb-storage] Re: [PATCH] fix Sony USB mass storage -
+	pass	larger receive buffer
+Date: 13 Nov 2003 17:55:07 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031113162401.A29775@beaverton.ibm.com>
-References: <Pine.LNX.4.44L0.0311131638320.949-100000@ida.rowland.org> <1068766632.2851.142.camel@patrh9>
+Message-ID: <1068771306.2851.42.camel@patrh9>
+References: <Pine.LNX.4.44L0.0311131638320.949-100000@ida.rowland.org>
+	 <1068767049.2851.166.camel@patrh9>
+	 <1068768796.3fb41e1c8d075@webmail.netregistry.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.132]:25232 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S264470AbTKNAY7
+Received: from email-out2.iomega.com ([147.178.1.83]:19866 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S261768AbTKNAzj
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Nov 2003 19:24:59 -0500
-Content-Disposition: inline
-In-Reply-To: <1068766632.2851.142.camel@patrh9>; from p.lavarre@ieee.org on Thu, Nov 13, 2003 at 04:37:12PM -0700
+	Thu, 13 Nov 2003 19:55:39 -0500
+In-Reply-To: <1068768796.3fb41e1c8d075@webmail.netregistry.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: stern@rowland.harvard.edu, mdharm-scsi@one-eyed-alien.net, james.bottomley@steeleye.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, ronald@kuetemeier.com, dmitrik@users.sourceforge.net, idan@idanso.dyndns.org
+To: dmitrik@users.sourceforge.net
+Cc: linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, stern@rowland.harvard.edu, mdharm-scsi@one-eyed-alien.net, patmans@us.ibm.com, james.bottomley@steeleye.com, ronald@kuetemeier.com, idan@idanso.dyndns.org
 
-On Thu, Nov 13, 2003 at 04:37:12PM -0700, Pat LaVarre wrote:
+> I don't have W2K. I tried to get a trace on XP, it didn't work. 
+> USB Snoopy does not seem to work on XP. Let me know if you know 
+> of a better tool. 
 
-> Maybe here I mean to ask: can we easily nutshell for me how well
-> write-protect works now in sd?  I understand that we find mode sense of
-> header alone and mode sense of xFF troublesome.
-> 
-> I'm not clear how often we try those techniques.  Do we try only soon
-> after plug in or also soon after each disc insertion?
+Myself?  No.  My friends, yes.  Just now I tried generic x 08 06 50 =
+bInterfaceClass ...SubClass ...Protocol, specifically an Iomega Zip
+drive with no disk.  Transcribing the trace by hand I may have seen:
 
-For removable media, we try once when found (sd_probe calls
-sd_revalidate_disk), and generally on each open of the device as follows:
+1: -i x24 -y "12 00:00:00 24 00" // standard Inquiry
 
-sd_open calls check_disk_change, calls sd_media_changed. sd_media_changed
-returns 1 if media changed and if so check_disk_change calls
-sd_revalidate_disk to figure out if the media is writable and whether to
-set write_prot.
+2: -i xFC -y "23 00 00:00:00:00 00 00:FC 00" // Read Format Cap
+residue xFC
+autosense: -i x12 -y "03 00:00:00 12 00"
+sk asc = x 6 29 Reset
 
-On open if write_prot is set and we try to open for writing the open fails
-with EROFS.
+3: -i xFC -y "23 00 00:00:00:00 00 00:FC 00" // Read Format Cap
+residue xE8
 
-write_prot can only be set for removable media.
+4: -i x24 -y "12 00:00:00 24 00" // standard Inquiry
 
-AFAICT, the sd write_prot setting is never passed on up to the block layer.
+5: -i xFC -y "25 00 00:00:00:00 00 00:00 00" // Read Capacity
+residue x08
+autosense: -i x12 -y "03 00:00:00 12 00"
+sk asc = x 2 04 02 Please Start
+
+6: -y "1B 00:00:00 01 00" // Start Unit
+
+7: -y "00 00:00:00 00 00" // Test Unit Ready
+autosense: -i x12 -y "03 00:00:00 12 00"
+sk asc = x 2 3A Disc Absent
+
+8: -i xFC -y "25 00 00:00:00:00 00 00:00 00" // Read Capacity
+residue x08
+autosense: -i x12 -y "03 00:00:00 12 00"
+sk asc = x 2 3A Disc Absent
+
+9: -i x200 -y "28 00 00:00:00:00 00 00:01 00" // Read Blocks
+residue x200
+autosense: -i x12 -y "03 00:00:00 12 00"
+sk asc = x 2 3A Disc Absent
+
+10: -i xC0 -y "1A 00:1C:00 C0 00" // Mode Sense (6)
+autosense: -i x12 -y "03 00:00:00 12 00"
+sk asc = x 5 24 CDB Unknown
+
+11: -i xC0 -y "1A 00:3F:00 C0 00" // Mode Sense (6)
+residue x7A
+
+12: -o x18 -y "15 10:00:00 18 00" // Mode Select (6)
+residue xA8
+
+13: -i xFC -y "25 00 00:00:00:00 00 00:00 00" // Read Capacity
+residue x08
+autosense: -i x12 -y "03 00:00:00 12 00"
+sk asc = x 2 3A Disc Absent
+14: (same as 13)
+15: (same as 13)
+
+16: (same as 7)
+17: (same as 7)
+
+18: (same as 13)
+19: (same as 13)
+20: (same as 13)
+21: (same as 13)
+22: (same as 13)
+
+23: (same as 7)
+24: (same as 7)
+25: (same as 7)
+
+26: -i x0C -y "1A 00:00:00 0C 00" // Mode Sense (6)
+27: (same as 26)
+
+28: (same as 13)
+29: (same as 7)
+30: (same as 26)
+31: (same as 13)
+32: (same as 13)
+33: (same as 7)
+
+34: -i x0C -y "1A 00:3F:00 0C 00" // Mode Sense (6)
+
+35: (same as 13)
+36: (same as 13)
+37: (same as 7)
+38: (same as 26)
+39: (same as 7)
+40: (same as 26)
+...
 
 
-(Verified with with an ide cd) if the mount syscall returns EROFS, the
-mount command tries again with a read-only mount.
-
-If we check after the open for a write failure to read only media, we
-cannot keep the same open semantics (return EROFS on open). Is this
-important? I don't know.
-
-For file systems, the write out of page cache would get an error, but
-AFAIUI those errors can't be passed back to the application since the
-application thinks the write has already completed once it goes into the
-page cache (I think this was a bug in 2.4, maybe just readahead, where we
-did not report such write failures).
-
-I don't have any sd removable read only media.
-
-If you want to test with your read only media, just use the dev flags:
-
-	echo "vendor:model:0x4000" > /proc/scsi/device_info 
-
-Then add your device, see if it comes back as writable, and try to mount
-or write it, and compare without the above (you can't remove device_info
-entry without rebooting or rmmod-ing scsi).
-
--- Patrick Mansfield
