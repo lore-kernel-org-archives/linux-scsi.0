@@ -1,31 +1,28 @@
-From: Andries.Brouwer@cwi.nl
-Subject: Re: IDs
-Date: Tue, 7 Jan 2003 11:55:00 +0100 (MET)
+From: Luben Tuikov <luben@splentec.com>
+Subject: [PATCH] SCSI Core patches
+Date: Tue, 07 Jan 2003 08:56:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <UTC200301071055.h07At0T09202.aeb@smtp.cwi.nl>
+Message-ID: <3E1ADC9A.6090800@splentec.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from splentec.com ([24.43.191.223])
+          by fep04-mail.bloor.is.net.cable.rogers.com
+          (InterMail vM.5.01.05.06 201-253-122-126-106-20020509) with ESMTP
+          id <20030107135603.KTYI214174.fep04-mail.bloor.is.net.cable.rogers.com@splentec.com>
+          for <linux-scsi@vger.kernel.org>; Tue, 7 Jan 2003 08:56:03 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl, patmans@us.ibm.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-kernel@one-eyed-alien.net, zwane@holomorphy.com
+To: linux-scsi@vger.kernel.org
 
-> But, we don't have to truncate, we should just allocate as many bytes as
-> we need, and store the information.
+The three incremental patches which I posted got mutilated
+when pasted into Mozilla from the X clipboard buffer.
+(TAB char got 2 spaces.)
 
-> And, the sysfs name should not store the id.
+The patches are also available, in pristine form, here:
+http://www.splentec.com/~luben/patches.html
 
-OK. It seems that we are in total agreement.
-Time for the next question.
+-- 
+Luben
 
-An id is constructed, that in many cases identifies something.
-How do you plan to use this? Is it already in use somewhere?
 
-The sysfs tree does not contain device nodes.
-Do you plan a user space utility that figures out that
-the ID "SHP      CD-Writer+ 8200 [" belongs to /dev/hdd
-which also is /dev/sr0?
-
-The id is not suitable as a user space name. Moreover,
-it is a heuristic only, and user space needs unambiguous names.
-What user space names do you want to use?
-
-Andries
