@@ -1,37 +1,52 @@
-From: "Miller, Mike (OS Dev)" <mike.miller@hp.com>
+From: Arjan van de Ven <arjanv@redhat.com>
 Subject: RE: patch so cciss stats are collected in /proc/stat
-Date: Wed, 29 Sep 2004 11:29:59 -0500
+Date: Wed, 29 Sep 2004 18:43:06 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <D4CFB69C345C394284E4B78B876C1CF107DBFE0B@cceexc23.americas.cpqcorp.net>
+Message-ID: <1096476186.2786.45.camel@laptop.fenrus.com>
+References: <D4CFB69C345C394284E4B78B876C1CF107DBFE0B@cceexc23.americas.cpqcorp.net>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-frRLFQu3OXujFAHoidhw"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ztxmail04.ztx.compaq.com ([161.114.1.208]:33040 "EHLO
-	ztxmail04.ztx.compaq.com") by vger.kernel.org with ESMTP
-	id S268657AbUI2QaM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2004 12:30:12 -0400
-Content-class: urn:content-classes:message
+Received: from mx1.redhat.com ([66.187.233.31]:47589 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S268674AbUI2QoE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Sep 2004 12:44:04 -0400
+In-Reply-To: <D4CFB69C345C394284E4B78B876C1CF107DBFE0B@cceexc23.americas.cpqcorp.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, mikem@beardog.cca.cpqcorp.net
-Cc: marcelo.tosatti@cyclades.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Baker, Brian (ISS - Houston)" <brian.b@hp.com>
+To: "Miller, Mike (OS Dev)" <mike.miller@hp.com>
+Cc: Christoph Hellwig <hch@infradead.org>, mikem@beardog.cca.cpqcorp.net, marcelo.tosatti@cyclades.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Baker, Brian (ISS - Houston)" <brian.b@hp.com>
 
 
-> On Wed, Sep 29, 2004 at 11:13:45AM -0500, mike.miller@hp.com wrote:
-> > Currently cciss statistics are not collected in /proc/stat. 
-> This patch
-> > bumps DK_MAX_MAJOR to 111 to fix that. This has been a 
-> common complaint
-> > by customers wishing to gather info about cciss devices.
-> > Please consider this for inclusion. Applies to 2.4.28-pre3.
-> 
-> This patch has been reject about half a million times, why are people
-> submitting it again and again?
+--=-frRLFQu3OXujFAHoidhw
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-As I said in my mail, it's a customer driven issue. As long as customers rely on /proc/stat we'll keep trying. You can't tell a customer how he/she should be doing things on their systems.
+On Wed, 2004-09-29 at 18:29, Miller, Mike (OS Dev) wrote:
 
-mikem
-> 
-> You get more detailed statistics in /proc/partitions.
-> 
-> 
+> > This patch has been reject about half a million times, why are people
+> > submitting it again and again?
+>=20
+> As I said in my mail, it's a customer driven issue. As long as customers =
+rely on /proc/stat we'll keep trying. You can't tell a customer how he/she =
+should be doing things on their systems.
+
+I doubt you have many customers using 2.4.28.... I suspect that by now
+the majority of people is either using an (ancient) 2.4 vendor kernel or
+a 2.6 kernel. The very low number of reports on lkml about 2.4 seems to
+confirm that ...
+
+--=-frRLFQu3OXujFAHoidhw
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQBBWuYaxULwo51rQBIRAtEEAKCWnF3bYNxFGYT3sILR72G59/h81wCfVnxs
+aRL4duPegsg1w9/xvTu5fXE=
+=/f2B
+-----END PGP SIGNATURE-----
+
+--=-frRLFQu3OXujFAHoidhw--
+
