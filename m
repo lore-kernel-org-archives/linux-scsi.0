@@ -1,165 +1,127 @@
-From: Mario Giammarco <mgiammarco@virgilio.it>
-Subject: RE: Possible bug in fusion mpt  OR  qlogic ip support
-Date: Wed, 17 Dec 2003 18:58:15 +0100
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: SG_IO open flags are which
+Date: Thu, 18 Dec 2003 13:41:07 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1071683895.1390.3.camel@cala>
-References: <53CF1076699CD711B7DD0002A51363F10190322B@exw-ks.ks.lsil.com>
+Message-ID: <3FE121D3.6050300@torque.net>
+References: <1071506381.3389.22.camel@patibmrh9>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vsmtp2.tin.it ([212.216.176.222]:46725 "EHLO vsmtp2.tin.it")
-	by vger.kernel.org with ESMTP id S264513AbTLQR6W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Dec 2003 12:58:22 -0500
-In-Reply-To: <53CF1076699CD711B7DD0002A51363F10190322B@exw-ks.ks.lsil.com>
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:49419 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S264927AbTLRDrG
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Dec 2003 22:47:06 -0500
+In-Reply-To: <1071506381.3389.22.camel@patibmrh9>
 List-Id: linux-scsi@vger.kernel.org
-To: "Stephens, Larry" <lstephen@lsil.com>
-Cc: linux-scsi@vger.kernel.org, "Moore, Eric Dean" <Emoore@lsil.com>, support@qlogic.com
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: linux-scsi@vger.kernel.org
 
-Il mer, 2003-12-17 alle 16:16, Stephens, Larry ha scritto:
-> The suggestion is to utilize a board with the LSI 919 or 919X chip
-> instead of the board with the 909 chip.
+Pat LaVarre wrote:
+> Doug G:
 > 
-> I did send this message to the LSI Fibre Channel developers and here
-> are their responses:
+> What open flags should apps use to talk SG_IO?
 > 
+> O_RDWR?  O_RDONLY?  O_NONBLOCK?  Other?  Combination?
 > 
-> ditto... support for the 40909 was discontinued about 3 months ago. 
-> 
-> 
-> We haven't supported the '909 in a LOOOONG time.  I wouldn't know what
-> to say even if  I knew what rev. of firmware they were using.
-> 
-> I would recommend they upgrade to at least 919, probably 919x if they
-> want support of any kind.
+> Wrong info in Google includes:
 > 
 > 
+>>List: linux-scsi
+>>Date: 2003-12-03 0:17:56
+>>Re: sg utils sg_io -i 0x24 -y "12 00:00:00 24 00"
+>>...
+>>
+>>>>- O_RDWR
+>>>>+ O_RDONLY|O_NONBLOCK
+>>>
+>>>... not from reading a document anywhere ...
+>>
+>>...
+>>Possibly we recommend open O_NONBLOCK for SG_IO ...
+>>Evidence in favour ... includes ...
+>>From: linux-2.6.0-test11/Documentation/cdrom/cdrom-standard.tex
+>>...
+>>1997/12/28 ... propose ... $O_NONBLOCK$ to indicate
+>>that the device is opened just for issuing $ioctl$
+>>commands.
+> 
+> 
+> Wrong guess, if we try 2.6.0-test11 with the three commands:
+> 
+> -i x24 -y "12 00:00:00 24 00" // standard Inquiry
+> -y "1B 00:00:00 00 00" // Stop Unit
+> -y "1B 00:00:00 01 00" // Start Unit
+> 
+> Either open O_NONBLOCK or open O_RDWR allows pass thru of standard
+> Inquiry.  And open O_RDWR allows pass thru of Stop Unit.  But open
+> O_NONBLOCK rejects pass thru of Stop Unit:
+> 
+> $ sudo plscsi /dev/sg0 -x "1B 00:00:00 00 00"
+> ...
+> $ grep -i 'Operation not permitted' /usr/include/asm/errno.h
+> #define EPERM            1      /* Operation not permitted */
+> $
+> 
+> Perhaps lk has no open that allows all of SG_IO without closing trays,
+> spinning up discs, etc.?  If we do face that limit, then often we can
+> settle for O_NONBLOCK to list device names (e.g. sg_scan) and O_RDWR
+> otherwise (e.g. sg_dd).
+> 
+> Wish I knew where in the lk source we're choosing to have the privilege
+> of the open vary the transparency of the pass thru.
 
-Thank you for your precious suggestion but, after looking in your kernel
-code, I have found a  QLOGIC_NAA_WORKAROUND. 
-I have defined it and recompiled the kernel, now it works better, it
-seems that at least arp goes well this time. 
-So the problem is not due to my "unsupported" 40909, but is common to
-all lsi logic controllers and perhaps is connected to a bug in qlogic
-code, so I forward this email also to qlogic support.
+Pat,
+The implementation of open() is found in the driver that "owns"
+the device name (e.g. /dev/hdc or /dev/st0m). The same is true
+for ioctl() [and read()/write() for char devices].
 
+Therefore the exact action of the O_NONBLOCK flag given to
+an open() differs. Broadly speaking the interpretation is the
+same: "let me in". For drivers that often encounter removable
+media, a simple open() will fail if no media is present
+(e.g. st yields EIO while sr/ide-cd yield ENOMEDIUM). In the
+case of sg it won't wait for the O_EXCL lock to clear (rather
+it yields EBUSY) and sidesteps error processing waits which is
+arguably risky. For pass through purposes you should set O_NONBLOCK
+as it can't hurt (e.g. sd ignores it and yields ENOMEDIUM if there
+is no media (which looks wrong)).
 
+Unix/Linux will only allow a non-root user to open() a file O_RDWR
+that they have "rw" permissions for (so individual drivers have no
+control over that). The "w" permissions is needed to call write()
+but not to call ioctl(). Historically the sg driver output metadata
+(including the SCSI command) with a write() and got the results with
+a read(). That meant "rw" permissions and O_RDWR were needed. Then
+the SG_IO ioctl came along in lk 2.4. The sg driver will only allow
+the following SCSI commands through if the file was opened O_RDONLY:
+   TEST_UNIT_READY
+   REQUEST_SENSE
+   INQUIRY
+   READ_CAPACITY
+   READ_BUFFER
+   READ_6
+   READ_10
+   READ_12
+   MODE_SENSE
+   MODE_SENSE_10
+   LOG_SENSE
 
-> -----Original Message-----
-> From: Mario Giammarco [mailto:mgiammarco@virgilio.it]
-> Sent: Wednesday, December 17, 2003 4:36 AM
-> To: linux-scsi@vger.kernel.org; emoore@lsil.com; lstephen@lsil.com
-> Subject: Possible bug in fusion mpt ip support
-> 
-> 
-> Hello,
-> 
-> I have two computers:
-> 
-> cala    IP 10.0.1.1  HW 00:E0:8B:02:96:DC  HBA qlogic 2200
-> server  IP 10.0.1.10 HW 00:E0:3C:D0:12:89  HBA lsi logic 40909
-> 
-> I cannot make them communicate.
-> 
-> Route hardware etc. is all ok.
-> 
-> I used tcpdump utility to debug.
-> 
-> When I do ping from cala to server I obtain:
-> 
-> on cala:
-> 
-> 13:26:35.801540 arp who-has 10.0.1.10 tell 10.0.1.1
->                          0001 0800 0604 0001 00e0 8b02 96dc 0a00
->                          0101 0000 0000 0000 0a00 010a
-> 13:26:36.800519 arp who-has 10.0.1.10 tell 10.0.1.1
->                          0001 0800 0604 0001 00e0 8b02 96dc 0a00
->                          0101 0000 0000 0000 0a00 010a
-> 13:26:37.800288 arp who-has 10.0.1.10 tell 10.0.1.1
->                          0001 0800 0604 0001 00e0 8b02 96dc 0a00
->                          0101 0000 0000 0000 0a00 010a
-> 13:26:38.903212 arp who-has 10.0.1.10 tell 10.0.1.1
->                          0001 0800 0604 0001 00e0 8b02 96dc 0a00
->                          0101 0000 0000 0000 0a00 010a
-> 
-> on server:
-> 
-> 13:20:02.037848 21:0:0:e0:8b:2 Broadcast 52:
->                          96dc aaaa 0300 0000 0806 0001 0800 0604
->                          0001 00e0 8b02 96dc 0a00 0101 0000 0000
->                          0000 0a00 010a
-> 13:20:02.037899 3c:d0:12:89:aa:aa 8b:2:96:dc:0:e0 48:
->                          0300 0000 0806 0006 0800 0604 0002 00e0
->                          3cd0 1289 0a00 010a 00e0 8b02 96dc 0a00
->                          0101
-> 13:20:03.036611 21:0:0:e0:8b:2 Broadcast 52:
->                          96dc aaaa 0300 0000 0806 0001 0800 0604
->                          0001 00e0 8b02 96dc 0a00 0101 0000 0000
->                          0000 0a00 010a
-> 13:20:03.036656 3c:d0:12:89:aa:aa 8b:2:96:dc:0:e0 48:
->                          0300 0000 0806 0006 0800 0604 0002 00e0
->                          3cd0 1289 0a00 010a 00e0 8b02 96dc 0a00
->                          0101
-> 13:20:04.036242 21:0:0:e0:8b:2 Broadcast 52:
->                          96dc aaaa 0300 0000 0806 0001 0800 0604
->                          0001 00e0 8b02 96dc 0a00 0101 0000 0000
->                          0000 0a00 010a
-> 13:20:04.036284 3c:d0:12:89:aa:aa 8b:2:96:dc:0:e0 48:
->                          0300 0000 0806 0006 0800 0604 0002 00e0
->                          3cd0 1289 0a00 010a 00e0 8b02 96dc 0a00
->                          0101
-> 
-> This shows that cala do not start to send ping packets because it
-> cannot
-> resolve arp.
-> On server it seems that hardware addresses are mangled.
-> 
-> When I do ping from server to cala I obtain:
-> 
-> on cala:
-> 
-> NOTHING AT ALL
-> 
-> on server:
-> 
-> 13:22:39.355118 3c:d0:12:89:aa:aa ff:ff:ff:ff:0:e0 48:
->                          0300 0000 0806 0006 0800 0604 0001 00e0
->                          3cd0 1289 0a00 010a 0000 0000 0000 0a00
->                          0101
-> 13:22:40.353542 3c:d0:12:89:aa:aa ff:ff:ff:ff:0:e0 48:
->                          0300 0000 0806 0006 0800 0604 0001 00e0
->                          3cd0 1289 0a00 010a 0000 0000 0000 0a00
->                          0101
-> 13:22:41.353547 3c:d0:12:89:aa:aa ff:ff:ff:ff:0:e0 48:
->                          0300 0000 0806 0006 0800 0604 0001 00e0
->                          3cd0 1289 0a00 010a 0000 0000 0000 0a00
->                          0101
-> 13:22:42.357615 3c:d0:12:89:aa:aa ff:ff:ff:ff:0:e0 48:
->                          0300 0000 0806 0006 0800 0604 0001 00e0
->                          3cd0 1289 0a00 010a 0000 0000 0000 0a00
->                          0101
-> 13:22:43.356049 3c:d0:12:89:aa:aa ff:ff:ff:ff:0:e0 48:
->                          0300 0000 0806 0006 0800 0604 0001 00e0
->                          3cd0 1289 0a00 010a 0000 0000 0000 0a00
->                          0101
-> 13:22:44.356044 3c:d0:12:89:aa:aa ff:ff:ff:ff:0:e0 48:
->                          0300 0000 0806 0006 0800 0604 0001 00e0
->                          3cd0 1289 0a00 010a 0000 0000 0000 0a00
->                          0101
-> 
-> So it seems that cala arp info is sent good.
-> Because cala do not receive anything it seems that is fusion mpt that
-> mangles hw addresses so the destination of packets is not cala
-> anymore.
-> 
-> 
-> Please help me!
-> 
-> Thanks in advance for interest!
-> 
-> -- 
-> Mario Giammarco
--- 
-Mario Giammarco
+Perhaps READ_16, SERVICE_IN and MAINTENANCE_IN should be added
+to that list. The idea is to inhibit changing the state of
+a device when it is opened O_RDONLY. START_STOP is definitely
+_not_ on the list. The SG_IO ioctl() found in block/scsi_ioctl.c
+does not have this restriction so you can issue any SCSI
+commands when /dev/sda, for example, is opened O_RDONLY.
+
+So first try and open() with the (O_NONBLOCK | O_RDWR) flags.
+If that yields ENOMEDIUM look for the corresponding sg
+device name. If the initial open() yields EROFS or EACESS then
+try to open it (O_NONBLOCK | O_RDONLY). ...
+
+Confused enough yet :-)
+
+Doug Gilbert
+
 
