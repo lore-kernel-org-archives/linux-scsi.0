@@ -1,35 +1,60 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [RFC][PATCH] Forward port of aic7xxx driver to 2.5.44 [1/3]
-Date: Thu, 24 Oct 2002 20:55:26 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20021024205526.A23827@eng2.beaverton.ibm.com>
-References: <15800.43219.216824.411355@sofia.bsd2.kbnes.nec.co.jp>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: possible use-after-free in 2.5.44 scsi changes
+Date: Fri, 25 Oct 2002 00:06:59 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20021025040659.GB3556@redhat.com>
+References: <3DB8A0CC.1804DF79@digeo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <15800.43219.216824.411355@sofia.bsd2.kbnes.nec.co.jp>; from steve@kbuxd.necst.nec.co.jp on Fri, Oct 25, 2002 at 11:13:39AM +0900
-To: SL Baur <steve@kbuxd.necst.nec.co.jp>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3DB8A0CC.1804DF79@digeo.com>
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@digeo.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Badari Pulavarty <pbadari@us.ibm.com>, "Martin J. Bligh" <Martin.Bligh@us.ibm.com>, Jens Axboe <axboe@suse.de>
 
-On Fri, Oct 25, 2002 at 11:13:39AM +0900, SL Baur wrote:
-> Hi,
+On Thu, Oct 24, 2002 at 06:39:24PM -0700, Andrew Morton wrote:
 > 
-> This patch updates the aic7xxx driver to be the same version as in
-> 2.4.20-pre11.  The version currently in 2.5.44 is too old to recognize
-> my controller.  It compiles cleanly, but I have not yet tried to boot
-> with it.  Would someone with experienced eyes please look it over to
-> be sure I didn't do anything stupid?  Thanks.
+> Gents,
 > 
+> we have some code in the -mm patchsets which adds a per-cpu
+> LIFO pool which frontends the page allocator.  To return pages
+> which are cache-warm on the calling CPU.
+> 
+> That code has been stable and unchanging since 2.5.40.  But in
+> 2.5.44, Badari's machines are crashing when those patches are
+> applied.  Memory corruption deep in the scsi softirq callbacks.
+> 
+> There were no significant memory allocator changes between 2.5.43
+> and 2.5.44, but there were a lot of scsi changes.
 
-You must have missed Justin's post:
+[ snip ]
 
-http://marc.theaimsgroup.com/?l=linux-kernel&m=103534482111734&w=2
+Sorry I haven't been able to do anything since Tuesday and won't be able 
+to again until next week around Wednesday or so (company meeting stuff the 
+entire time :-(
 
-Pointing to this file:
+Anyway, I've got all my current updates pushed to
+linux-scsi.bkbits.net/scsi-misc-2.5 and I know James and Patrick have some
+fixes in there as well.  I also know someone has been changing around the
+scsi merge function and the scsi init io function recently, and it hasn't
+been me ;-)  In any case, the thing appears to be leaking memory and might
+be partially related to this problem.  If you touch any device on the scsi
+bus such that it results in an actual merge between two requests, and a sg
+table has to be realloced to a larger size in order to accomodate the
+combined sg table size, then it appears that the smaller table(s) are
+leaked.  Just try hitting the disk with an e2fsck or similar program and
+then try unloading the complete scsi stack to see the failure on attempt
+to free the sg table caches when unloading scsi_mod.  Debugging takes a
+bit too since it means you have to reboot the machine to be able to load
+the scsi modules again :-/ If someone could look into that specific
+problem it might give a clue into this other problem (and sorry I can't do
+more about it myself right now, it's what I was just starting to look into
+when I ran out of time and into meetings).
 
-http://people.FreeBSD.org/~gibbs/linux/linux-2.5-aic79xxx.tar.gz
-
-The above still needs changes, but they should be pretty small.
-
--- Patrick Mansfield
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
