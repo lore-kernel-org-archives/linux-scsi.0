@@ -1,63 +1,77 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH scsi-misc-2.6 08/08] scsi: fix hot unplug sequence
-Date: Wed, 23 Mar 2005 08:19:21 +0100
-Message-ID: <20050323071920.GJ24105@suse.de>
-References: <20050323021335.960F95F8@htj.dyndns.org> <20050323021335.4682C732@htj.dyndns.org> <1111550882.5520.93.camel@mulgrave> <4240F5A9.80205@gmail.com>
+From: "lk" <linux_kernel@patni.com>
+Subject: Re:When & how is the SCSI strategy routine called?
+Date: Tue, 22 Mar 2005 23:58:54 -0800
+Message-ID: <01a701c52f7e$290d9d30$5e91a8c0@patni.com>
+Reply-To: "lk" <linux_kernel@patni.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from ns.virtualhost.dk ([195.184.98.160]:24470 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261197AbVCWHT0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Mar 2005 02:19:26 -0500
-Content-Disposition: inline
-In-Reply-To: <4240F5A9.80205@gmail.com>
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Received: from pcsmail.patni.com ([203.124.139.197]:47514 "EHLO
+	pcsmail.patni.com") by vger.kernel.org with ESMTP id S261246AbVCWH6p
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Mar 2005 02:58:45 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, rajatj@noida.hcltech.com, linux-newbie@vger.kernel.org
 
-On Wed, Mar 23 2005, Tejun Heo wrote:
->  Hi,
-> 
-> James Bottomley wrote:
-> >On Wed, 2005-03-23 at 11:14 +0900, Tejun Heo wrote:
-> >
-> >>	When hot-unplugging using scsi_remove_host() function (as usb
-> >>	does), scsi_forget_host() used to be called before
-> >>	scsi_host_cancel().  So, the device gets removed first without
-> >>	request cleanup and scsi_host_cancel() never gets to call
-> >>	scsi_device_cancel() on the removed devices.  This results in
-> >>	premature completion of hot-unplugging process with active
-> >>	requests left in queue, eventually leading to hang/offlined
-> >>	device or oops when the active command times out.
-> >>
-> >>	This patch makes scsi_remove_host() call scsi_host_cancel()
-> >>	first such that the host is first transited into cancel state
-> >>	and all requests of all devices are killed, and then, the
-> >>	devices are removed.  This patch fixes the oops in eh after
-> >>	hot-unplugging bug.
-> >
-> >
-> >This is actually simply reversing this patch:
-> >
-> >http://marc.theaimsgroup.com/?l=linux-scsi&m=109268755500248
-> >
-> >And all it does is give us the previous consequences back.
-> >
-> >The oops isn't in the eh it's in the usb-storage eh routine.
-> 
->  Well, but it's because scsi midlayer calls back into usb-storage eh 
-> after the detaching process is complete.
-> 
-> >However, the current host code does need fixing, but the fix is to move
-> >it over to a proper state model rather than the current bit twiddling we
-> >do.
-> 
->  I agree & am working on it.  This patch was mainly to verify Jens' oops.
+This is my understanding.
+scsi_request_fn is the scsi's request function which performs the actual
+data
+transfer. clean up the queue and loop back to fetch next request.
 
-It is not the oops I am getting. When I get a few minutes today, I'll
-reproduce with vanilla and post it here.
+About the Question:WHEN and HOW is the strategy routine "scsi_request_fn()"
+called ?
 
--- 
-Jens Axboe
+Every request queue have a few members to decide whether to call
+scsi_request_fn() or not. scsi_request_fn is called after the queue is
+unplugged.
+
+  request_queue_t->unplug_thresh
+  Whenever request queue is about to get full. which is the number of
+  requests after which the queue should be unplugged. unplugging of request
+  will in turn call scsi_request_fn().
+
+  request_queue_t->unplug_timer
+  After this much time the queue will be unplugged to rip the IO in turn
+  it will call scsi_request_fn().
+
+  Also in case of Async Direct IO the block layer will unplug the queue
+after
+  submission of  bios to queue by calling blk_run_address_space function.
+
+  scsi_request_fn will be called whenever the block layer calls queue unplug
+or
+  queue is about to get full or after a certain unplug timer value.
+
+   Hope it helps.
+
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Rajat Jain, Noida
+Sent: Tuesday, March 22, 2005 8:31 AM
+To: linux-scsi@vger.kernel.org; linux-newbie@vger.kernel.org
+Cc: Rajat Jain, Noida
+Subject: When & how is the SCSI strategy routine called?
+
+
+Hi list,
+
+Tracing the kernel 2.6.8 code I found that scsi_mod maintains separate
+request queues for each SCSI device. It uses the block layer queuing
+facility to do this. What I could not find out was that once a request is
+queued into a queue (for a particular device), WHEN and HOW is the strategy
+routine "scsi_request_fn()" called ?
+
+All I could find on the net was that "The kernel calls the strategy routine
+when ever it believes that it is appropriate to invoke it."
+
+Please help ... Any pointers will be highly appreciated.
+
+TIA,
+
+Rajat
+
+
 
