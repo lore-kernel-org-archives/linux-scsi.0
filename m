@@ -1,64 +1,47 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: mpt sets 64bit consistent mask yet requires mapping in same 4 GB chunk?!?
-Date: Wed, 18 Feb 2004 17:09:39 -0800
+From: "Jenna Wolff" <98maklddn@hotmail.com>
+Subject: We just want to ease your pains so  =?ISO-8859-1?Q?=20you=92ll?= have a better tomorrow zaveuyhawlv
+Date: Thu, 19 Feb 04 08:13:45 GMT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040219010939.GB502690@sgi.com>
-References: <0E3FA95632D6D047BA649F95DAB60E5703EF93EA@exa-atlanta.se.lsil.com>
+Message-ID: <66x0p7bqd4mvv8mjo699r$--$-87w0@9rvadjj4u2x>
+Reply-To: "Jenna Wolff" <98maklddn@hotmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/alternative;
+	boundary="6CB_D..5B_3D_8.25.3A"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.sgi.com ([192.48.171.6]:55893 "EHLO rj.sgi.com")
-	by vger.kernel.org with ESMTP id S267314AbUBSBK5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Feb 2004 20:10:57 -0500
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703EF93EA@exa-atlanta.se.lsil.com>
+Received: from c-67-163-63-107.client.comcast.net ([67.163.63.107]:37138 "HELO
+	c-67-163-63-107.client.comcast.net") by vger.kernel.org with SMTP
+	id S266681AbUBSEPe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Feb 2004 23:15:34 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: Alex Williamson <alex.williamson@hp.com>, jbarnes@sgi.com, bjorn.helgaas@hp.com, willy@debian.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, Feb 18, 2004 at 07:03:47PM -0500, Moore, Eric Dean wrote:
-> Jeremy - thanks for your reply. Just wanted to clarify
-> if this would work on your system:
-> 
-> 
-> mptbase_probe(pdev,id) {
-> 
-> u64 mask64 = 0xFFFFFFFFFFFFFFFF;
-> u32 mask32 = 0xFFFFFFFF;
-> 
-> pci_enable_device(pdev);
-> 
-> ioc->pcidev32 = pdev;
-> ioc->pcidev64 = pdev;
-> 
-> r = pci_set_dma_mask(ioc->pcidev64, mask64 );
-> r = pci_set_consistent_dma_mask(ioc->pcidev64, mask64 );
-> r = pci_set_dma_mask(ioc->pcidev32, mask32 );
-> r = pci_set_consistent_dma_mask(ioc->pcidev32, mask32 );
-> 
-> /* use 
->  * ioc->pcidev32 
->  * for the three fifo memory allocations for < 4gb  
->  *
->  * use
->  * ioc->pcidev64 
->  * for all other allocations
->  */
-> 
-> }
 
-I don't think so, for two reasons.
+--6CB_D..5B_3D_8.25.3A
+Content-Type: text/plain;
+Content-Transfer-Encoding: quoted-printable
 
-The first is that we require 64 bit PCI addresses for all PCI-X devices.
+Hello there,
 
-The second is that if I understand your pseudo-code correctly, the pcidev64
-and pcidev32 pointers are both pointing to the same struct pci_dev, which
-would mean that the second pci_set_consistent_dma_mask call would override
-the first.
+How you doing today? Sorry for taking 
+some of your time. 
 
-Hopefully it's not too much effort to change it to a single consistent
-allocation for all three FIFO chunks.  I don't see another way around
-this.
+Just to let you know that the way 
+medicine is sold  has changed in the 21st century.
 
-jeremy
+The link below will show you how this service 
+works worldwide. I hope that there is a solution for you in this e-mail.
+Take good care from the Healing guru.
+
+Show me the way click below:
+http://www.allthemeds.biz/ada/index.htm
+
+
+
+To stop future visits: click below
+
+
+http://www.allthemeds.biz/r/r.htm
+z khgtxzpds p ks zacssspzt
+
+--6CB_D..5B_3D_8.25.3A--
+
