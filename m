@@ -1,58 +1,65 @@
-From: "Adam Radford" <aradford@amcc.com>
-Subject: RE: 2.6.6-mm5
-Date: Sat, 22 May 2004 11:02:18 -0700
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: [PATCH] tmscsim: 64-bit cleanup
+Date: Sat, 22 May 2004 20:10:35 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <HY4NGC01.77W@hadar.amcc.com>
+Message-ID: <20040522181035.GC4623@tpkurt.garloff.de>
+References: <Pine.LNX.4.44.0405192135160.6790-200000@poirot.grange> <1085152512.2258.21.camel@mulgrave> <20040522080924.GP4623@tpkurt.garloff.de> <1085240593.2006.8.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="iBipwI8N6cjWJAiJ"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hadar.amcc.com ([192.195.69.168]:51401 "EHLO hadar.amcc.com")
-	by vger.kernel.org with ESMTP id S261711AbUEVSCk convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 May 2004 14:02:40 -0400
+Received: from cantor.suse.de ([195.135.220.2]:8646 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S261745AbUEVSLW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 22 May 2004 14:11:22 -0400
+Content-Disposition: inline
+In-Reply-To: <1085240593.2006.8.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org, Jeff Garzik <jgarzik@pobox.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
-
-Hch,
-
-I did try to CC linux-scsi in the original email for the 3ware driver submission/review,
-and 2 emails since then.  None of them went through (no bounce message either).  
-
-Does anybody know what the max email size is?  Is it < 145k?
-
---
-Adam Radford
-Staff Software Engineer
-AMCC
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of hch@infradead.org
-Sent: Saturday, May 22, 2004 2:23 AM
-To: Jeff Garzik
-Cc: Andrew Morton; linux-kernel@vger.kernel.org; SCSI Mailing List
-Subject: Re: 2.6.6-mm5
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 
 
-On Sat, May 22, 2004 at 05:09:59AM -0400, Jeff Garzik wrote:
-> Andrew Morton wrote:
-> >- Added a new SATA RAID driver from 3ware.  From a quick peek it seem to
-> >  need a little work yet.
-> 
-> 
-> It's not too bad... but it looks more like a 2.2 driver forward ported 
-> to 2.4, than a 2.6.x driver.  Needs some luvin' from the 2.6 scsi api crew.
-> 
-> Overall, it appears to be a message-based firmware engine like 
-> drivers/block/carmel.c, that hides the SATA details in the firmware.
+--iBipwI8N6cjWJAiJ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-In addition driver submission should always go through linux-scsi.  Please
-tell them to submit it to linux-scsi so we can have a public review process
-there.
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sat, May 22, 2004 at 10:43:12AM -0500, James Bottomley wrote:
+> On Sat, 2004-05-22 at 03:09, Kurt Garloff wrote:
+> > The AM53C974 hardware does not have hardware support for scatter-gather.
+> > (Yes, this is sad, you get an IRQ after every segment ...)
+>=20
+> But then you should set sg_tablesize to one.  There's little point the
+> elevator wasting time to coalesce if you can't process the request in a
+> single go.  Doing that would also allow for a simpler driver design,
+> because now you know you can complete individual requests since they
+> only yield a single sg element.  You no longer have to track multiple
+> card completions to the request completion.
 
+It's still cheaper to send down one command for a large transfer, let
+the card interrupt the CPU to get a new DMA address every segment.
+(When we're lucky, we might even have segments with contiguous bus
+ addresses -- this is certainly the case if there's a IOMMU in the
+ system)=20
+
+The per-command overhead in SCSI is significant, so I would hate to
+restrict the driver to process 4k commands.
+
+Regards,
+--=20
+Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
+SUSE LINUX AG / Novell, Nuernberg, DE               Director SUSE Labs
+
+--iBipwI8N6cjWJAiJ
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFAr5eaxmLh6hyYd04RAuTiAJ450vJ0seyDS/ejoAoNuFfuSnwPdgCfeaZr
+dlV4RPEFOVGsnq1P5TmF6SE=
+=UntV
+-----END PGP SIGNATURE-----
+
+--iBipwI8N6cjWJAiJ--
