@@ -1,98 +1,60 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [usb-storage] Re: PATCH: exclude certain commands from emulated SCSI hosts
-Date: Tue, 22 Apr 2003 11:50:17 -0700
+From: Andries.Brouwer@cwi.nl
+Subject: Re: PATCH: exclude certain commands from emulated SCSI hosts
+Date: Tue, 22 Apr 2003 21:30:59 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030422115017.B31829@one-eyed-alien.net>
-References: <UTC200304221722.h3MHMBL16595.aeb@smtp.cwi.nl>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="s2ZSL+KKDSLx8OML"
+Message-ID: <UTC200304221930.h3MJUxI21015.aeb@smtp.cwi.nl>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:61710 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S263343AbTDVSiS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Apr 2003 14:38:18 -0400
-Content-Disposition: inline
-In-Reply-To: <UTC200304221722.h3MHMBL16595.aeb@smtp.cwi.nl>; from Andries.Brouwer@cwi.nl on Tue, Apr 22, 2003 at 07:22:11PM +0200
+Received: from hera.cwi.nl ([192.16.191.8]:50115 "EHLO hera.cwi.nl")
+	by vger.kernel.org with ESMTP id S263397AbTDVTU1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Apr 2003 15:20:27 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl
-Cc: James.Bottomley@steeleye.com, alan@lxorguk.ukuu.org.uk, greg@kroah.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mike@hingston.demon.co.uk, torvalds@transmeta.com, usb-storage@one-eyed-alien.net
+To: James.Bottomley@steeleye.com, stern@rowland.harvard.edu
+Cc: Andries.Brouwer@cwi.nl, afafc@rnl.ist.utl.pt, alan@lxorguk.ukuu.org.uk, greg@kroah.com, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-scsi@one-eyed-alien.net, mike@hingston.demon.co.uk, steliam@popies.net, torvalds@transmeta.com, usb-storage@one-eyed-alien.net
 
+James writes:
 
---s2ZSL+KKDSLx8OML
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> Why is a 10 byte command given a command length of 12?
+> Could this be the root cause?
 
-On Tue, Apr 22, 2003 at 07:22:11PM +0200, Andries.Brouwer@cwi.nl wrote:
-> Then we get the second bugzilla report. Interesting.
-> It fails in precisely the same way as the first one:
->=20
-> Apr  9 17:34:55 lemon: SCSI device sda: 126848 512-byte hdwr sectors (65 =
-MB)
-> Apr  9 17:34:55 lemon: usb-storage: queuecommand() called
-> Apr  9 17:34:55 lemon: usb-storage: *** thread awakened.
-> Apr  9 17:34:55 lemon: usb-storage: Command MODE_SENSE (6 bytes)
-> Apr  9 17:34:55 lemon: usb-storage:  1a 00 3f 00 04 00
-> Apr  9 17:34:55 lemon: usb-storage: Invoking Mode Translation
-> Apr  9 17:34:55 lemon: usb-storage: usb_stor_ctrl_transfer(): rq=3D00 rqt=
-ype=3D21 value=3D0000 index=3D00 len=3D12
-> Apr  9 17:34:55 lemon: usb-storage: Status code 0; transferred 12/12
-> Apr  9 17:34:55 lemon: usb-storage: -- transfer complete
-> Apr  9 17:34:55 lemon: usb-storage: Call to usb_stor_ctrl_transfer() retu=
-rned 0
-> Apr  9 17:34:55 lemon: usb-storage: usb_stor_bulk_transfer_buf(): xfer 4 =
-bytes
-> Apr  9 17:34:55 lemon: usb-storage: Status code -75; transferred 4/4
-> Apr  9 17:34:55 lemon: usb-storage: -- unknown error
-> Apr  9 17:34:55 lemon: usb-storage: CB data stage result is 0x3
-> Apr  9 17:34:55 lemon: usb-storage: -- transport indicates error, resetti=
-ng
-> Apr  9 17:34:55 lemon: usb-storage: CB_reset() called
-> Apr  9 17:35:11 lemon modprobe: FATAL: Module /dev/tts/64 not found.=20
-> Apr  9 17:35:15 lemon: drivers/usb/core/message.c: usb_control/bulk_msg: =
-timeout
-> Apr  9 17:35:25 lemon: usb-storage: command_abort() called
-> Apr  9 17:35:25 lemon: usb-storage: usb_stor_abort_transport called
->=20
-> But here the additional information is:
-> It was working fine under 2.4.* but under 2.5.66/67 it hangs.
->=20
-> Is there a problem with MODE_SENSE? But 2.4 also does this MODE_SENSE.
-> A first step is perhaps finding out what the * is for.
+Alan S. answers:
 
-2.4 does a MODE_SENSE, but does it differently.
+> No, most likely it's not the cause.
 
-> Which 2.4 versions are known to work correctly?
+And I agree - here 2.4 and 2.5 do not differ.
 
-That depends on the particular device in question.
+Alan continues:
 
-> [And is there a verbose usb-storage log on a successful 2.4?]
+> The error is -EOVERFLOW, which means that the device tried to send back
+> more data than we were prepared to receive, i.e., more than 4 bytes.
 
-Yes.
+And again I agree.
 
-Matt
+That is a pity, because my 4 was arrived at by careful experimentation.
+It may mean that there is no uniform length that works.
+And no amount of filtering will work, unless we decide
+not to use MODE_SENSE at all.
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+But let us first confirm the theory.
 
-Umm, these aren't the droids you're looking for.
-					-- Bill Gates
-User Friendly, 11/14/1998
+In drivers/scsi/sd.c there is a routine sd_do_mode_sense6().
+The theory is that calling that with length 4 causes problems
+for some devices. So, could the people with problems try to
+add
 
---s2ZSL+KKDSLx8OML
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+	if (len < 8)
+		len = 8;
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
+directly after
 
-iD8DBQE+pY7pIjReC7bSPZARAmbTAJ0ScM1xiKLLa0m44vTY9YA26l2OmgCgpV9l
-ApfzKoo1TxMBzOtwcul1li0=
-=0cQb
------END PGP SIGNATURE-----
+static int
+sd_do_mode_sense6(struct scsi_device *sdp, struct scsi_request *SRpnt,
+                  int dbd, int modepage, unsigned char *buffer, int len) {
+        unsigned char cmd[8];
 
---s2ZSL+KKDSLx8OML--
+?
+
+(Maybe try with very large values. like 255 instead of 8, in case
+8 does not help.)
+
+Andries
