@@ -1,93 +1,51 @@
-From: "Steven J. Hill" <sjhill@realitydiluted.com>
-Subject: Re: [PATCH] 2.6.2, Partition support for SCSI CDROM...
-Date: Tue, 24 Feb 2004 11:51:20 -0500
+From: Greg KH <greg@kroah.com>
+Subject: Re: [BK PATCH] SCSI update for 2.6.3
+Date: Tue, 24 Feb 2004 09:04:13 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <403B8108.6080606@realitydiluted.com>
-References: <40396134.6030906@realitydiluted.com> <20040222190047.01f6f024.akpm@osdl.org> <40396E8F.4050307@realitydiluted.com> <20040224061130.GC503530@sgi.com>
+Message-ID: <20040224170412.GA31268@kroah.com>
+References: <Pine.LNX.4.58.0402240919490.1129@spektro.metla.fi>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060109060609020107080702"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eth13.com-link.com ([208.242.241.164]:30136 "EHLO
-	real.realitydiluted.com") by vger.kernel.org with ESMTP
-	id S262295AbUBXQvp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2004 11:51:45 -0500
-In-Reply-To: <20040224061130.GC503530@sgi.com>
+Received: from mail.kroah.org ([65.200.24.183]:44431 "EHLO perch.kroah.org")
+	by vger.kernel.org with ESMTP id S262306AbUBXREY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Feb 2004 12:04:24 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.58.0402240919490.1129@spektro.metla.fi>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Kai Makisara <Kai.Makisara@metla.fi>
+Cc: Linus Torvalds <torvalds@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, kai.makisara@kolumbus.fi
 
-This is a multi-part message in MIME format.
---------------060109060609020107080702
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+On Tue, Feb 24, 2004 at 09:30:01AM +0200, Kai Makisara wrote:
+> On Tue, 24 Feb 2004, Linus Torvalds wrote:
+> >On Mon, 23 Feb 2004, James Bottomley wrote:
+> >>
+> >> Kai M=E4kisara:
+> >> o Sysfs class support for SCSI tapes
+> >
+> >Has this been checked for correctness, or will Al flame me to a cris=
+p for
+> >accepting it? Pls verify..
+>=20
+> It is using the class_simple interface Greg KH said can be used witho=
+ut
+> changes to driver's lifetime rules. If this is not true, then I have =
+to
+> rework the patch. The code was posted to linux-scsi on Feb 5 but I wo=
+uld
+> not count on any serious review being done there.
 
-Here is the second try at the patch.
+Can you post it here so we can review it?
 
--Steve
+And yes, using class_simple should relieve you of Al flamage :)
 
---------------060109060609020107080702
-Content-Type: text/x-patch;
- name="scsi-sr-partitions-2.6.2-2.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="scsi-sr-partitions-2.6.2-2.patch"
+thanks,
 
-diff -urN linux-2.6.2/drivers/scsi/sr.c linux-2.6.2-patched/drivers/scsi/sr.c
---- linux-2.6.2/drivers/scsi/sr.c	2004-02-22 20:15:08.000000000 -0500
-+++ linux-2.6.2-patched/drivers/scsi/sr.c	2004-02-24 11:48:16.000000000 -0500
-@@ -55,6 +55,23 @@
- #include "scsi_logging.h"
- #include "sr.h"
- 
-+/*
-+ * Device node mappings are as follows:
-+ *
-+ *    sr0 - first CDROM, whole disk
-+ *    sr1 - first CDROM, first partition
-+ *
-+ *    [...]
-+ *
-+ *    sr16 - first CDROM, sixteenth partition
-+ *    sr17 - second CDROM, whole disk
-+ *    sr18 - second CDROM, first partition
-+ *
-+ *    [...]
-+ */
-+static int partitions = 16;
-+MODULE_PARM(partitions, "i");
-+MODULE_PARM_DESC(partitions, "number of SCSI CDROM partitions to support");
- 
- MODULE_PARM(xa_test, "i");	/* see sr_ioctl.c */
- 
-@@ -518,7 +535,7 @@
- 		goto fail;
- 	memset(cd, 0, sizeof(*cd));
- 
--	disk = alloc_disk(1);
-+	disk = alloc_disk(partitions + 1);
- 	if (!disk)
- 		goto fail_free;
- 
-@@ -533,7 +550,7 @@
- 	spin_unlock(&sr_index_lock);
- 
- 	disk->major = SCSI_CDROM_MAJOR;
--	disk->first_minor = minor;
-+	disk->first_minor = minor * (partitions + 1);
- 	sprintf(disk->disk_name, "sr%d", minor);
- 	disk->fops = &sr_bdops;
- 	disk->flags = GENHD_FL_CD;
-@@ -868,6 +885,10 @@
- {
- 	int rc;
- 
-+	/* Check number of partitions specified. */
-+	if (partitions < 0)
-+		partitions = 0;
-+
- 	rc = register_blkdev(SCSI_CDROM_MAJOR, "sr");
- 	if (rc)
- 		return rc;
-
---------------060109060609020107080702--
+greg k-h
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
