@@ -1,72 +1,65 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: CDC_RAM for lk 2.4, PATCH proposed
-Date: Fri, 21 May 2004 08:53:15 +0200
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: Re: DPC vs tasklet
+Date: Fri, 21 May 2004 09:46:11 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040521065312.GK1952@suse.de>
-References: <20040520080622.GF1952@suse.de> <1085090500.3822.20.camel@patibmrh9>
+Message-ID: <1085125571.2781.3.camel@laptop.fenrus.com>
+References: <OFD20B05A9.954B29CD-ON85256E9B.0002C560-88256E9B.000355CC@us.ibm.com>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hILjxRP3m3d/VBQQm2R4"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:43464 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S265403AbUEUGxi (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:22720 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S265317AbUEUHqO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 May 2004 02:53:38 -0400
-Content-Disposition: inline
-In-Reply-To: <1085090500.3822.20.camel@patibmrh9>
+	Fri, 21 May 2004 03:46:14 -0400
+In-Reply-To: <OFD20B05A9.954B29CD-ON85256E9B.0002C560-88256E9B.000355CC@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-scsi@vger.kernel.org, John McKell <McKellj@iomega.com>
+To: Bryan Henderson <hbryan@us.ibm.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On Thu, May 20 2004, Pat LaVarre wrote:
-> diff confirms for me the patch inline of this post matches what John
-> McKell posted, except for the trivial difference of folder names & dates
-> and the substantive difference that I did comment out the per-open
-> printk:
-> 
-> - + printk("cdrom: %s opening for WRITE\n", current->comm);
-> + + /* printk("cdrom: %s opening for WRITE\n", current->comm); */
 
-That's fine, I killed that in 2.6 as well.
+--=-hILjxRP3m3d/VBQQm2R4
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> > > I believe 2.4.18 patch actually makes `mount -w` work there by way of
-> > > "see all DVD/CD drives as DVD-RAM/ DVD-ROM compatible".
-> > 
-> > But that's not what the patch does at all. The patch simply says "If we
-> > succeeded in retriving the mode capability page, ignore what it says and
-> > flag the drive as dvd-rom/ram capable" which is clearly bogus.
-> 
-> To newbie me, this is not clearly bogus, sorry.
-> 
-> 1)
-> 
-> I see my 2.4.18 patch makes `mount -w` work, by way of breaking `cat
-> /proc/sys/dev/cdrom/info`.
-> 
-> mount matters more to me than proc.
-> 
-> Besides, the breakage is small.  I'm not falsely claiming that a DVD-RAM
-> disc is present.  I'm only falsely claiming that a DVD-RAM disc could be
-> present.  Software that branches visibly on which kind of disc might
-> someday be present looks very nearly bogus to me.
+On Fri, 2004-05-21 at 02:36, Bryan Henderson wrote:
+> > Some
+> > of the LINUX documentation I've read states "tasklets are the preferred
+> > mechanism with which to implement your bottom half for a normal hardwar=
+e
+> > device".
+>=20
+> In all the great answers about why other things are better than tasklets,=
+=20
+> the basic question of why this documentation doesn't agree isn't=20
+> addressed.  Let me try:  I believe the context of this statement is a=20
+> comparison to the more traditional Unix method of implementing the bottom=
+=20
+> half in the interrupt handler.  The statement is saying that a tasklet is=
+=20
+> normally preferred to putting the same processing right in the interrupt=20
+> handler.
+>=20
+> But in at least some cases, a kernel thread is better than either of=20
+> those.
 
-Sorry, I still think this is completely bogus. No point in debating it,
-there's no way that hack will go into the 2.4 kernels.
+yup. And the scsi driver case is special because the SCSI layer
+implements the tasklet/softirq *for you* already, so instead of each
+driver having to do it's own, just use the scsi one (by completing
+directly in the ISR, which queues for the generic scsi softirq)
 
-> 2)
-> 
-> I see my 2.4.18 patch is extremely short and simple.
-> 
-> Simplicity in the patch matters more to me the further I step back from
-> the latest available at kernel.org.
 
-Your 2.4.18 patch is a hack.
+--=-hILjxRP3m3d/VBQQm2R4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> diff -Nurp linux-2.4.27-pre3/include/linux/cdrom.h linux-2.4.27-pre3-pel/include/linux/cdrom.h
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
 
-[snip]
+iD8DBQBArbPDxULwo51rQBIRAqOnAKCFRZVLt4kUnnZW+om6GCeZ5BxZHwCePL6h
+7OrZx42+CKGUYAeWjxerPFc=
+=cKk9
+-----END PGP SIGNATURE-----
 
-Patch looks fine to me, I'll send it to Marcelo for inclusion. Thanks!
-
--- 
-Jens Axboe
+--=-hILjxRP3m3d/VBQQm2R4--
 
