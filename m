@@ -1,39 +1,31 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Unknown problem with Adaptec Raid 2400A card
-Date: 26 Jul 2003 01:00:28 +0100
+From: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Subject: RE: (PATCH) The megaraid driver v2.00.5 for kernel 2 .4.22-prex-a
+	c1
+Date: Sat, 26 Jul 2003 11:59:12 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1059177627.1206.19.camel@dhcp22.swansea.linux.org.uk>
-References: <1059177564.7003.214.camel@hammer.dale.ro>
+Message-ID: <200307260259.LAA04263@toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-2022-jp"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pc2-cwma1-4-cust86.swan.cable.ntl.com ([213.105.254.86]:46976
-	"EHLO lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S272391AbTGYXtK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Jul 2003 19:49:10 -0400
-In-Reply-To: <1059177564.7003.214.camel@hammer.dale.ro>
+Received: from inet-tsb.toshiba.co.jp ([202.33.96.40]:54688 "EHLO
+	inet-tsb.toshiba.co.jp") by vger.kernel.org with ESMTP
+	id S269144AbTGZCot (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Jul 2003 22:44:49 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Alexandru N. Barloiu" <slak@light.kappa.ro>
-Cc: linux-scsi@vger.kernel.org
+To: Mark Haverkamp <markh@osdl.org>
+Cc: Matthew Wilcox <willy@debian.org>, Atul Mukker <atulm@lsil.com>, Matt Domsch <Matt_Domsch@Dell.com>, linux-megaraid-devel@Dell.com, linux-scsi <linux-scsi@vger.kernel.org>, "Tomita, Haruo" <htomita@pcs.pc.ome.toshiba.co.jp>
 
-On Sad, 2003-07-26 at 00:59, Alexandru N. Barloiu wrote:
-> Here is the dump from kern.log about the disconect:
-> Jul 25 02:09:23 orphan kernel: dpti0: SCSI Timeout-Device (0,0,0) hba
-> status=0xa, dev status=0x0, cmd=0x28
-> Jul 25 02:09:52 orphan last message repeated 3 times
+Hi Mark,
+	
+	Thank you very much for pointing out my errors!!
 
-The card stopped responding
+Mark> I think that your mailer broke some of the long lines
 
-> Jul 25 02:10:32 orphan kernel: dpti0: Trying to reset device
-> Jul 25 02:10:32 orphan kernel: dpti0: Device reset not supported
-> Jul 25 02:10:32 orphan kernel: dpti0: Bus reset: SCSI Bus 0: tid: 11
-> Jul 25 02:10:32 orphan kernel: dpti0: Bus reset success.
-> Jul 25 02:10:47 orphan kernel: scsi: device set offline - not ready or
-> command retry failed after bus reset: host 0 channel 0 id 0 lun 0
-> Jul 25 02:11:17 orphan last message repeated 3 times
+That's right. but,....I don't begin on a new line.
+Why!?,  I investigate and look at a mail server. 
 
-And has no reset method so we gave up. You could try using the core i2o
-code with it as that does support reset, but I'm not sure what to make
-of the fact it is timing out since its a smart controller
-
+# I appreciate everybody's cooperation.
+# A final patch is contributed once again.
+--
+Haruo 
