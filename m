@@ -1,55 +1,59 @@
-From: "Frank Borich" <Frank_Borich@us.xyratex.com>
-Subject: RE: Scsi midlayer question
-Date: Fri, 16 Jul 2004 11:41:48 -0700
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: RE: Scsi midlayer question - small I/O transfers
+Date: Fri, 16 Jul 2004 13:53:14 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <47F3C2BE74738E4683574107469DFA204CC501@XYUSEX01.xyus.xyratex.com>
+Message-ID: <OF6E1B0616.98D49C93-ON85256ED3.00700D20-88256ED3.0072ACC0@us.ibm.com>
+References: <47F3C2BE74738E4683574107469DFA204CC501@XYUSEX01.xyus.xyratex.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xyratexus11.xyratex.com ([65.203.33.11]:8751 "EHLO
-	XYUSEX01.xyus.xyratex.com") by vger.kernel.org with ESMTP
-	id S266549AbUGPSmM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jul 2004 14:42:12 -0400
-Content-class: urn:content-classes:message
+Received: from e3.ny.us.ibm.com ([32.97.182.103]:50157 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S266617AbUGPU46 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Jul 2004 16:56:58 -0400
+In-Reply-To: <47F3C2BE74738E4683574107469DFA204CC501@XYUSEX01.xyus.xyratex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bryan Henderson <hbryan@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: Frank Borich <Frank_Borich@us.xyratex.com>
+Cc: linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 
-I am generating this transfer using a c program using read/write system
-calls with the open flag
-O_WRONLY to sd driver.
-
-Frank Borich
-------------------------------------------------------------------
-Xyratex Inc.
-Systems Engineer
-Direct 630 654 6089
-Fax 630 325 2513
-e-mail frank_borich@us.xyratex.com
- 
- 
-
->>-----Original Message-----
->>From: Bryan Henderson [mailto:hbryan@us.ibm.com] 
->>Sent: Friday, July 16, 2004 1:25 PM
->>To: Frank Borich
->>Cc: linux-scsi@vger.kernel.org
->>Subject: Re: Scsi midlayer question
->>
 >>>I can see from a fibre channel trace that my 1 MB I/O transfers are 
 >>>getting cut up into little chunks.
->>
->>What is "my 1 MB I/O transfer"?  How are you generating or 
->>seeing this transfer?  Sg device?
->>
->>I ask because sometimes when I hear this question, the 
->>transfer is a transfer to the page cache, so it has only a 
->>loose association with transfers on the fibre channel.
->>
->>--
->>Bryan Henderson                          IBM Almaden Research Center
->>San Jose CA                              Filesystems
->>
->>
+>I am generating this transfer using a c program using read/write system
+>calls with the open flag
+>O_WRONLY to sd driver.
+
+OK, so you're doing 1MB transfers to and from the buffer/page cache.  The 
+system, in a separate undertaking, transfers data between the cache and 
+the disk in sizes of its own choosing.
+
+There are a lot of things that control what size transfers the memory 
+manager or buffer cache manager uses to fill and clean the cache, but 
+maybe what you're really after is a more direct transfer between your 1MB 
+buffer and the disk.  For that, you could use a raw device (e.g. 
+/dev/rsda).  I think you can alternatively open the block device with 
+O_DIRECT, but I'm not sure.
+
+The I/O scheduler still has some leeway in deciding what SCSI reads and 
+writes to use in satisfying the various block read/write requests it gets, 
+but chances are high that it will use 1MB in this case.
+
+If you _really_ want to be in control of what goes out on the wire, 
+building your own SCSI read and write requests and submitting them through 
+the Sg driver is the way to do it.
+
+In any case, it doesn't sound like the SCSI midlayer is involved in the 
+small sizes seen on the fibre channel.  I think the SCSI midlayer is just 
+executing the commands it's given.
+
+
+You mentioned a performance problem.  Is it that the disk (or network) is 
+saturated with small transfers and could process more data if they were 
+bigger?
+
+I once saw what appeared to be a problem with the system doing too-small 
+I/Os, but it turned out the disk was just faster than the CPU; bigger I/Os 
+wouldn't have changed anything.
+
+--
+Bryan Henderson                          IBM Almaden Research Center
+San Jose CA                              Filesystems
