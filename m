@@ -1,44 +1,42 @@
-From: Terrence Martin <tmartin@physics.ucsd.edu>
-Subject: Stock 2.6.4 with CONFIG_LBD=y and qla2xxx driver, reports wrong device
- size
-Date: Wed, 24 Mar 2004 12:53:05 -0800
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: Stock 2.6.4 with CONFIG_LBD=y and qla2xxx driver, reports wrong
+	device size
+Date: 24 Mar 2004 16:25:15 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4061F531.50808@physics.ucsd.edu>
+Message-ID: <1080163517.1783.106.camel@mulgrave>
+References: <4061F531.50808@physics.ucsd.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from newport.ucsd.edu ([132.239.73.89]:17088 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S261682AbUCXUxG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Mar 2004 15:53:06 -0500
-Received: from physics.ucsd.edu (newport [127.0.0.1])
-	by localhost.localdomain (8.12.10/8.12.10) with ESMTP id i2OKr5LH003121
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Mar 2004 12:53:05 -0800
+Received: from stat1.steeleye.com ([65.114.3.130]:8601 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261918AbUCXV2d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Mar 2004 16:28:33 -0500
+In-Reply-To: <4061F531.50808@physics.ucsd.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Terrence Martin <tmartin@physics.ucsd.edu>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-I have a stock 2.6.4 kernel with CONFIG_LBD=y turned on in my kernel 
-(confirmed via /proc/config.gz) but when the module is loaded I still get
+On Wed, 2004-03-24 at 15:53, Terrence Martin wrote:
+> I have a stock 2.6.4 kernel with CONFIG_LBD=y turned on in my kernel 
+> (confirmed via /proc/config.gz) but when the module is loaded I still get
+> 
+> SCSI device sdb: 191162368 512-byte hdwr sectors (97875 MB)
+> SCSI device sdb: drive cache: write through
+>  sdb:
+> 
+> I expect to get 4,287,645MB as that is what my Infortrend RAID array is 
+> set up for a partition size. Is there something, in addition to the LBD 
+> support in 2.6 that I need to do with the SCSI driver itself, in the 
+> case the qla2300 drivers that come with 2.6.4, to allow larger than 2TB 
+> block devices?
 
-SCSI device sdb: 191162368 512-byte hdwr sectors (97875 MB)
-SCSI device sdb: drive cache: write through
- sdb:
+This looks to be a failure of the device.  It's obviously reporting a
+size smaller than it actually is for some reason.
 
-I expect to get 4,287,645MB as that is what my Infortrend RAID array is 
-set up for a partition size. Is there something, in addition to the LBD 
-support in 2.6 that I need to do with the SCSI driver itself, in the 
-case the qla2300 drivers that come with 2.6.4, to allow larger than 2TB 
-block devices?
+The LDB code has been successfully tested with SCSI on >2TB arrays.
 
-Platform is Intel Xeon dual with 2GB of RAM. Base OS is fedora core 1 
-with changes to support 2.6 series kernels.
+James
 
-Smaller than 2TB file systems on the other hand work fine (aside from a 
-strange performance issue where reads are not as fast as writes under 
-both 2.4 and 2.6).
-
-Thanks,
-
-Terrence
 
