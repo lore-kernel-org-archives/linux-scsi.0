@@ -1,42 +1,53 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: 2.5.31 qlogic error "this should not happen"
-Date: Mon, 26 Aug 2002 12:36:22 -0700
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [RFC]: 64 bit LUN/Tags, dummy device in host_queue, host_lock <->
+ LLDD reentrancy
+Date: Mon, 26 Aug 2002 16:48:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020826123622.A11280@eng2.beaverton.ibm.com>
-References: <20020825191854.GA32490@rushmore>
+Message-ID: <3D6A9439.F713A042@splentec.com>
+References: <OF80DCCDBC.5B147AD9-ONC1256C21.002BB3EE@de.ibm.com> <20020826101748.B6694@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020825191854.GA32490@rushmore>; from rwhron@earthlink.net on Sun, Aug 25, 2002 at 03:18:54PM -0400
+Received: from splentec.com (canoe.splentec.com [209.47.35.250])
+	by pepsi.splentec.com (8.11.6/8.11.0) with ESMTP id g7QKmsH08312
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2002 16:48:54 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: rwhron@earthlink.net
-Cc: ehw@lanl.gov, dledford@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sun, Aug 25, 2002 at 03:18:54PM -0400, rwhron@earthlink.net wrote:
-> > I occasionally saw that error on our 2.4 RAID system; it went away when I
-> > increased the size of the handles array in qlogicfc.h:
+Patrick Mansfield wrote:
+>
+> If we are to add an 8 byte LUN:
 > 
-> -#define QLOGICFC_REQ_QUEUE_LEN  127 /* must be power of two - 1 */
-> +#define QLOGICFC_REQ_QUEUE_LEN  255 /* must be power of two - 1 */
-> 
-> That change in addition to Doug's patch in 
-> http://marc.theaimsgroup.com/?l=linux-kernel&m=103005703808312&w=2
-> have done the trick. 2.5.31-mm1-dl-ew completed the 54 hour
-> benchmarathon. (first 2.5 kernel to finish). 
-> 
-> Details at:
-> http://home.earthlink.net/~rwhron/kernel/bigbox.html
-> -- 
-> Randy Hron
+> We still need to allow a smaller lun for all of the current open source
+> adapter drivers (AFAIK all open source drivers except the qlogic drivers
+> use a one byte lun, and the qlogic uses a two byte lun) - either a field
+> in Scsi_Device and/or Scsi_Cmnd, or a functional interface to get the
+> equivalent four byte value (and then it can be assigned to a one or two
+> byte value as is done today) in addition to any new 8 byte lun field.
 
-That's a huge amount of data. Can you show cat /proc/scsi/scsi of the machine
-(as well as the lspci etc)?
+For transition purposes, yes.
 
-Does RAID-5 mean you have a storage array attached? i.e. IBM 3542, fastt 200?
+But, ideally, the LUN should be a function of the LLDD, since
+it is the _LLDD_ which knows (then maybe not) about the transport
+used (FCP, SPI, etc).
 
-It looks like the latest qlogic qla driver includes 2.5.x support,
-I haven't tried it but will at some time:
+The kernel shouldn't care if the transport uses 5 bits (SPI) or
+64 bits (iSCSI) for LUN identification, it should use the SAM-3
+definition of 64 bits.
 
-http://download.qlogic.com/drivers/5639/qla2x00-v6.1b5-dist.tgz
+> The Scsi_Host::max_lun usage would have to remain for the old four byte
 
--- Patrick Mansfield
+Certainly one can limit the scan, but we no more can enumerate it so
+simply as it was done before.
+
+There may be only 6 LU, with addresses scattered in the 64 bit space,
+only to tell us that the transport is iSCSI and the target is
+actually 4 daisy-chained SANs. (or something like that, you guys get the idea)
+
+LUNs should be picked up from the REPORT LUNS report data, in order to
+discover all the LUNs currently available, just because of the large
+but sparse LUN space.
+
+-- 
+Luben
