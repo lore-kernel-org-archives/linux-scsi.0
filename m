@@ -1,38 +1,43 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] Format Unit can take many hours
-Date: Tue, 11 May 2004 20:30:13 +0200
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [BK PATCH] SCSI updates for 2.6.6
+Date: Tue, 11 May 2004 21:29:47 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040511183013.GC14789@suse.de>
-References: <20040511162822.C46BFDBDB@gherkin.frus.com> <Pine.GSO.4.33.0405111243300.14297-100000@sweetums.bluetronic.net>
+Message-ID: <Pine.LNX.4.44.0405112125150.3836-100000@poirot.grange>
+References: <1084229974.1763.512.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:56289 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S263032AbUEKSae (ORCPT
+Received: from pop.gmx.net ([213.165.64.20]:29073 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S263467AbUEKTan (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 May 2004 14:30:34 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.GSO.4.33.0405111243300.14297-100000@sweetums.bluetronic.net>
+	Tue, 11 May 2004 15:30:43 -0400
+In-Reply-To: <1084229974.1763.512.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Ricky Beam <jfbeam@bluetronic.net>
-Cc: Bob Tracy <rct@gherkin.frus.com>, Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Tue, May 11 2004, Ricky Beam wrote:
-> On Tue, 11 May 2004, Bob Tracy wrote:
-> >Moreover, it simply "feels" wrong to define a constant for something
-> >that isn't...  The quick fix of increasing the timeout doesn't address
-> >the underlying issue of how long a format should take, and as Ricky
-> >implies, that's probably more the concern of the application rather
-> >than the driver.
-> 
-> The real problem is a lack of being able to specify a timeout for user
-> supplied commands.  In-kernel drivers can set a command timeout.  The
-> IOCTL interface does not export that capability.
+Hi
 
-Noone should use that interface, period. That ioctl is about as bad an
-interface as you could imagine. Use any variant of sg and you should be
-fine.
+(Removed Linus and Andrew from CC: not to bother them with such a "minor"
+issue:-))
 
--- 
-Jens Axboe
+On 10 May 2004, James Bottomley wrote:
+
+> This is the latest set of assorted fixes, plus one new driver: the IBM
+> Power Raid (ipr).
+>
+> The patch can be pulled from:
+>
+> bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
+>
+> The short changelog is:
+
+I hoped the tmscsim 64-bit bugfix would somehow find its way into the
+mainstream after 2.6. Does it still have a chance?
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
+
 
