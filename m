@@ -1,70 +1,83 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: scsidev-2.30 released
-Date: Mon, 11 Aug 2003 02:50:50 +0200
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: advansys driver vs 2.6 breakage
+Date: Sun, 10 Aug 2003 22:44:02 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030811005050.GL2543@nbkurt.garloff.de>
+Message-ID: <20030810224402.5c7fa063.rddunlap@osdl.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="egxrhndXibJAPJ54"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.suse.de ([213.95.15.193]:40465 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S270805AbTHKAw3 (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:3790 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S272282AbTHKFpl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Aug 2003 20:52:29 -0400
-Received: from Hermes.suse.de (Hermes.suse.de [213.95.15.136])
-	by Cantor.suse.de (Postfix) with ESMTP id 1BA6C14EC7
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Aug 2003 02:50:51 +0200 (MEST)
-Content-Disposition: inline
+	Mon, 11 Aug 2003 01:45:41 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI list <linux-scsi@vger.kernel.org>
+To: gene.heskett@verizon.net, linux-scsi@vger.kernel.org
+Cc: rddunlap@osdl.org, willy@debian.org
+
+Gene,
+
+This patch should make the advansys driver build on 2.6.0-test3
+after you #define ADVANSYS_DEBUG so that run-time debug output
+can be generated.
+
+--
+~Randy
 
 
---egxrhndXibJAPJ54
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+patch_name:	scsi_advan_260t3.patch
+patch_version:	2003-08-10.22:37:15
+author:		Randy.Dunlap <rddunlap@osdl.org>
+description:	enable compile with ADVANSYS_DEBUG #defined
+product:	Linux
+product_versions: linux-260-test3
+maintainer:	unknown
+diffstat:	=
+ drivers/scsi/advansys.c |   13 +++++++------
+ 1 files changed, 7 insertions(+), 6 deletions(-)
 
-Hi,
 
-scsidev 2.30 has been released.
-http://www.garloff.de/kurt/linux/scsidev/
-
-scsidev provides persistent device names for SCSI devices.
-Standard naming for scsidev is the HCIL tuple that identifies a path
-to the device, but the device can be inquired for serial number, WWIDs
-or (new) HSV_OS_ID and alias names based on this information providing
-persistent names in case of path changes.
-
-New in 2.30:
-* HSV devices are detected and HSV_OS_IDs retrieved. They can be used=20
-  to build aliases (Contributed by Evans Felix, PNL).
-* The old name for sr devices can be switched to scd (despite being sys-
-  tematically illogical, it seems to be preferred by devices.txt and by
-  some distributors). Option -o=20
-* Support for kernel 2.6: Instead of using the extended /proc/scsi/scsi=20
-  information from the scsi-many patches, we use sysfs to gather infor-
-  mation about which path corresponds to which device.
-  Unfortunately, this is currently only available for block devices
-  (sr, sd), but not for sg. So, some guesswork is needed again :-(
-
-Are there any plans to get the char devs supported well in sysfs?=20
-
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-GPG key: See mail header, key servers                 SuSE Labs (Head)
-SuSE Linux AG, Nuernberg, DE                            SCSI, Security
-
---egxrhndXibJAPJ54
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (GNU/Linux)
-
-iD8DBQE/NuhqxmLh6hyYd04RAgIwAKDNEChfkZmQxYWmYAL7vnBbohMciQCgjthF
-33pWtZONAyj3JsshP4MjvG0=
-=CTwo
------END PGP SIGNATURE-----
-
---egxrhndXibJAPJ54--
+diff -Naur ./drivers/scsi/advansys.c~advan ./drivers/scsi/advansys.c
+--- ./drivers/scsi/advansys.c~advan	2003-08-08 21:34:08.000000000 -0700
++++ ./drivers/scsi/advansys.c	2003-08-10 22:34:51.000000000 -0700
+@@ -826,6 +826,7 @@
+ 
+ /* Enable driver tracing. */
+ /* #define ADVANSYS_DEBUG */
++#define ADVANSYS_DEBUG
+ 
+ 
+ /*
+@@ -6360,8 +6361,8 @@
+     } else {
+ 	scsi_adjust_queue_depth(device, 0, device->host->cmd_per_lun);
+     }
+-    ASC_DBG3(1, "advansys_slave_configure: shp 0x%lx, id %d, depth %d\n",
+-            (ulong) shp, device->id, device->queue_depth);
++    ASC_DBG4(1, "advansys_slave_configure: device 0x%lx, boardp 0x%lx, id %d, depth %d\n",
++            (ulong) device, (ulong) boardp, device->id, device->queue_depth);
+     return 0;
+ }
+ 
+@@ -9352,8 +9353,8 @@
+ 
+     printk("Scsi_Host at addr 0x%lx\n", (ulong) s);
+     printk(
+-" next 0x%lx, host_busy %u, host_no %d, last_reset %d,\n",
+-        (ulong) s->next, s->host_busy, s->host_no,
++" host_busy %u, host_no %d, last_reset %d,\n",
++        s->host_busy, s->host_no,
+         (unsigned) s->last_reset);
+ 
+ #if ASC_LINUX_KERNEL24
+@@ -9397,8 +9398,8 @@
+ 
+     printk(
+ " host 0x%lx, device 0x%lx, target %u, lun %u, channel %u,\n",
+-        (ulong) s->host, (ulong) s->device, s->target, s->lun,
+-        s->channel);
++        (ulong) s->device->host, (ulong) s->device, s->device->id, s->device->lun,
++        s->device->channel);
+ 
+     asc_prt_hex(" CDB", s->cmnd, s->cmd_len);
+ 
