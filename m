@@ -1,30 +1,40 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: PATCH: Further aacraid work
-Date: Thu, 17 Jun 2004 14:19:03 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040617131903.GA31775@infradead.org>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189FD23FF9@otce2k03.adaptec.com> <20040617130713.GX20511@parcelfarce.linux.theplanet.co.uk>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [ANNOUNCE] Generic SCSI Target Middle Level for Linux (SCST)
+ with target drivers
+Date: Thu, 17 Jun 2004 17:22:12 +0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <40D19B04.40702@vlnb.net>
+References: <40D075DA.2000007@vlnb.net> <20040617122213.GA30943@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.146.154.40] ([213.146.154.40]:31915 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S266494AbUFQNTG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2004 09:19:06 -0400
-Content-Disposition: inline
-In-Reply-To: <20040617130713.GX20511@parcelfarce.linux.theplanet.co.uk>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S266483AbUFQNVK@vger.kernel.org>
+In-Reply-To: <20040617122213.GA30943@infradead.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Alan Cox <alan@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, Jun 17, 2004 at 02:07:13PM +0100, Matthew Wilcox wrote:
-> It's a hard problem.  Where's the right tradeoff?  I have a system that
-> has a memory map that puts the first 3.75GB of memory at 0, then the
-> next 256MB at 64GB, then continues from 4GB.  If there's only 4GB of
-> RAM in that system, I'm sure you'd rather use 32-bit descriptors and
-> anything in that 256MB gets bounce-buffered.
+Christoph Hellwig wrote:
+> On Wed, Jun 16, 2004 at 08:31:22PM +0400, Vladislav Bolkhovitin wrote:
+> 
+  > The code looks pretty neat to me, there's a few issues I'd like to see
+> addresses but that doesn't make sense before the 2.4 support is dropped
+> and there's an actual LLDD for 2.6.  But I think for most interesting
+> scenarios in the storage virtualization world your driver is pretty much
+> useless because it wants to dispatch directly to a scsi device and doesn't
+> go through the block layer.  So no fancy volume managers/etc there to make
+> interesting storage virtualization boxes.
+> 
+For that is intended upcoming block device handler with block 
+layer/cache support,
+which will be in its exec() method check, if requested blocks in cache, 
+and, if not, dispatch the commands to block layer, leaving regular 
+scsi_do_req() calls for tapes, changers, etc. In the similar way "_perf" 
+handlers work (they don't send READ/WRITE commands to SCSI devices for 
+performance studies).
 
-With the SGI iommu it doesn't matter how much memory you have anyway,
-if you're using DAC you'll always get high bits set in your dma address.
-I suspect many other iommus work the same.
+This device handler is on our todo list. Actually, it's quite simple and 
+if anyone interested, he's help would be greatly appreciated.
 
+Thanks,
+Vlad
