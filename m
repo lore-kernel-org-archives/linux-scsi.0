@@ -1,48 +1,68 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: smp dead lock of io_request_lock/queue_lock patch
-Date: Sat, 17 Jan 2004 19:29:46 +0000
+From: Andrew Vasquez <praka@users.sourceforge.net>
+Subject: Re: Removing the qlogicfc driver
+Date: Sat, 17 Jan 2004 12:21:07 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040117192946.A6479@infradead.org>
-References: <OF317B32D5.C8C681CB-ONC1256E19.005066CF-C1256E19.00538DEF@de.ibm.com> <20040112151230.GB5844@devserv.devel.redhat.com> <20040112194829.A7078@infradead.org> <1073937102.3114.300.camel@compaq.xsintricity.com> <Pine.LNX.4.58L.0401131843390.6737@logos.cnet> <1074345000.13198.25.camel@compaq.xsintricity.com> <20040117165828.A4977@infradead.org> <1074366452.13198.48.camel@compaq.xsintricity.com> <20040117191704.A6344@infradead.org> <1074367303.13198.52.camel@compaq.xsintricity.com>
+Message-ID: <20040117202107.GA8301@praka.local.home>
+References: <B179AE41C1147041AA1121F44614F0B0598E38@AVEXCH02.qlogic.org> <200401171357.54813.christophe.varoqui@free.fr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:19983 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S266170AbUAQT3y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Jan 2004 14:29:54 -0500
+Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:40629 "EHLO
+	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S266112AbUAQUcg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Jan 2004 15:32:36 -0500
+Received: from praka.san.rr.com (66-75-130-8.san.rr.com [66.75.130.8])
+	by ms-smtp-03-eri0.socal.rr.com (8.12.10/8.12.7) with ESMTP id i0HKWYF3015435
+	for <linux-scsi@vger.kernel.org>; Sat, 17 Jan 2004 12:32:34 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <1074367303.13198.52.camel@compaq.xsintricity.com>; from dledford@redhat.com on Sat, Jan 17, 2004 at 02:21:43PM -0500
+In-Reply-To: <200401171357.54813.christophe.varoqui@free.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, Arjan Van de Ven <arjanv@redhat.com>, Martin Peschke3 <MPESCHKE@de.ibm.com>, Jens Axboe <axboe@suse.de>, Peter Yao <peter@exavio.com.cn>, linux-kernel@vger.kernel.org, linux-scsi mailing list <linux-scsi@vger.kernel.org>, ihno@suse.de
+To: linux-scsi@vger.kernel.org
 
-On Sat, Jan 17, 2004 at 02:21:43PM -0500, Doug Ledford wrote:
-> I should pay more attention to what goes on in 2.6.  That was a crap
-> decision.  There are drivers out there that use global data and need one
-> lock across all controllers.  Putting a lock in the scsi host struct for
-> per controller locks is a waste of space.  Let the driver decide if it
-> needs a global driver lock, a per controller lock (in which case it
-> should be part of the driver private host struct), or just the global
-> io_request_lock.  It really is up to the driver and putting it into the
-> scsi host struct doesn't make sense.
-
-I tend to disagree.  Giving the driver control over the lock used by the
-midlayer is just wrong.  If it has global state (which a good driver better
-shouldn't) it's up to the driver to protect it.  That we still have a way
-to override that lock is the big bug rather, and in fact only three drivers
-are doing that, and they all override it with a lock that's per-HBA anyway.
-
+On Sat, 17 Jan 2004, christophe.varoqui wrote:
+> On Friday 16 January 2004 23:57, Andrew Vasquez wrote:
 > 
-> -- 
->   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
->          Red Hat, Inc.
->          1801 Varsity Dr.
->          Raleigh, NC 27606
+> > Hmm, from the output of proc/scsi/qla* your two 2200 don't appear to
+> > be recognizing any devices after the SNS scan:
+> > Could you enable enable a couple of debug swtiches:
+> > Andrew Vasquez
 > 
+> Yes, here it is :
 > 
----end quoted text---
+[snip]
+> scsi(4): Asynchronous PORT UPDATE.
+> scsi(4): Port database changed 0000 4000.
+> scsi(4): F/W Ready - OK
+> scsi(4): fw_state=3 curr time=4926cc4.
 
--- 
-Christoph Hellwig <hch@lst.de>		-	Freelance Hacker
-Contact me for driver hacking and kernel development consulting
+Firmware appears to be ready.
+
+> qla2200 0000:03:01.0: Topology - (F_Port), Host Loop address 0xffff
+
+F_PORT connection to the switch, we should have a PortID.
+
+> scsi(4): Configure loop -- dpc flags =0x80040
+> scsi(4): RSCN queue entry[0] = [00/000000].
+> scsi(4): device_resync: rscn overflow.
+> qla2x00_mailbox_command(4): **** FAILED. mbx0=4005, mbx1=0, mbx2=3c, cmd=54 
+> ****
+> qla2x00_issue_iocb(4): failed rval 0x102qla2x00_issue_iocb(4): failed rval 
+> 0x102scsi(4): RFT_ID issue IOCB failed (258).
+[snip]
+> qla2x00_issue_iocb(4): failed rval 0x102qla2x00_issue_iocb(4): failed rval 
+> 0x102scsi(4): GA_NXT issue IOCB failed (258).
+> scsi(4): Configure fabric error exit: rval=258
+>
+
+Yet it seems all of our SNS commands are failing to be executed with a
+4005 (command error).  Interesting, I'll need to talk with the
+firmware folks on Monday.  
+
+In the interim, after the 8.x series driver is loaded, could you use
+the switch software to take a look at the name-server's list of
+recognized devices.  I'm interested to know the information (port_id,
+nn, pn, etc) it has related to the ports of the 2200s (from a previous
+email, 210000e08b03896a).
+
+Regards,
+Andrew Vasquez
