@@ -1,50 +1,63 @@
-From: Olaf Hering <olh@suse.de>
-Subject: [PATCH] mptfusion depends on scsi
-Date: Sat, 24 Apr 2004 21:04:40 +0200
+From: Arnaldo Carvalho de Melo <acme@conectiva.com.br>
+Subject: Re: MPT Fusion FC909 support
+Date: Sat, 24 Apr 2004 19:37:40 -0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040424190440.GA9515@suse.de>
+Message-ID: <20040424223740.GA2687@conectiva.com.br>
+References: <0E3FA95632D6D047BA649F95DAB60E570442C904@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:59544 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S261706AbUDXTGO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Apr 2004 15:06:14 -0400
+Received: from orion.netbank.com.br ([200.203.199.90]:34578 "EHLO
+	orion.netbank.com.br") by vger.kernel.org with ESMTP
+	id S262606AbUDXWhp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 24 Apr 2004 18:37:45 -0400
 Content-Disposition: inline
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570442C904@exa-atlanta.se.lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, akpm@odsl.org
+To: "Moore, Eric Dean" <Emoore@lsil.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+
+Em Thu, Apr 22, 2004 at 10:55:26AM -0400, Moore, Eric Dean escreveu:
+> Here is a patch to add FC909 support back.
+> This will be mpt driver version 3.01.05.
+> 
+> Please apply.
+
+Yes, please apply, with it I'm happily using my FC909 card again.
+
+Thanks Eric!
+
+- Arnaldo
+ 
+> You can download full source as well as the patches for this 
+> driver at:
+> ftp://ftp.lsil.com/HostAdapterDrivers/linux/FiberChannel/2.6-patches/3.01.05
+> 
+> 
+> 
+> On Thursday, April 22, 2004 8:28 AM,  James Bottomley wrote:
+> > 
+> > On Thu, 2004-04-22 at 10:23, Moore, Eric Dean wrote:
+> > > I'm sorry. It was my understanding this card was
+> > > not being used by anyone, and my manager said it was
+> > > okay to remove this support. This support was removed to 
+> > > to honor some request from Jeff Garzik [jgarzik@pobox.com]
+> > > to clean up the code macro's for accessing the hardware.
+> > 
+> > Well, if there's hardware in the field, I think the driver 
+> > support needs
+> > to go back in.
+> > 
+> > Thanks,
+> > 
+> > James
+> > 
+> > 
+> 
 
 
-mptfusion depends on scsi.
-If it was =3Dy, and scsi is set to =3Dm, it will remain =3Dy and give l=
-ink errors.
 
-2.6.6-rc2-bk3
+-- 
 
 
---- ./drivers/message/fusion/Kconfig~   2004-04-04 05:38:27.000000000 +=
-0200
-+++ ./drivers/message/fusion/Kconfig    2004-04-24 20:58:32.000000000 +=
-0200
-@@ -3,7 +3,7 @@ menu "Fusion MPT device support"
-=20
- config FUSION
-        tristate "Fusion MPT (base + ScsiHost) drivers"
--       depends on PCI
-+       depends on PCI && SCSI
-        ---help---
-          LSI Logic Fusion(TM) Message Passing Technology (MPT) device =
-support
-          provides high performance SCSI host initiator, and LAN [1] in=
-terface
-
---=20
-USB is for mice, FireWire is for men!
-
-sUse lINUX ag, n=C3=9CRNBERG
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+                        - Arnaldo
