@@ -1,69 +1,35 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] gdth driver for 2.4.23-pre4
-Date: Thu, 8 Jan 2004 14:19:14 -0500
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b7).
+Date: Thu, 8 Jan 2004 11:33:36 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <C2CB6D8BA015124783C0EB9B33D24FFD048036@otcexc01.otc.adaptec.com>
+Message-ID: <20040108193336.GB10243@beaverton.ibm.com>
+References: <B179AE41C1147041AA1121F44614F0B060EDD4@AVEXCH02.qlogic.org> <20040108165414.A12233@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic-mail.adaptec.com ([216.52.22.10]:40075 "EHLO
-	magic.adaptec.com") by vger.kernel.org with ESMTP id S264411AbUAHTTZ
+Received: from e32.co.us.ibm.com ([32.97.110.130]:25337 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S265690AbUAHT3i
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jan 2004 14:19:25 -0500
+	Thu, 8 Jan 2004 14:29:38 -0500
+Content-Disposition: inline
+In-Reply-To: <20040108165414.A12233@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Xose Vazquez Perez' <xose@wanadoo.es>, 'Christoph Hellwig' <hch@infradead.org>
-Cc: 'linux-scsi' <linux-scsi@vger.kernel.org>, 'Tosatti' <marcelo.tosatti@cyclades.com>
+To: Christoph Hellwig <hch@infradead.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, James Bottomley <James.Bottomley@SteelEye.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
 
-Time and priority is the enemy ... not the maintainers, gatekeepers,
-volunteeers or the vendors.
+Christoph Hellwig [hch@infradead.org] wrote:
+> the SNIA HBA-API spec is completely broken.  But we should try to support
+> a sanitized subset of the spec using the transport class work that's
+> currently discussed on linux-scsi.
+> 
 
-There are currently three effective code bases a vendor driver maintainer is
-to submit to Distribution, 2.4.* and 2.6.*. OEMs and Channel, the vendor's
-customers, only concern themselves about Distributions.
+This sounds good. It would seem that HBA API adapter and port
+information through sysfs (libsysfs) should be doable through the
+transport class.  Also some partial information of the other hba api
+functions could be supported though other sysfs attributes but the sends
+would still need to use the old interface.
 
-Give me a guess as to where 99% of the noise that enters my cube results
-from?
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
-With the Distributions producing errata kernels at a breakneck pace (12
-different errata kernels over Christmas break), testers bombarding us with
-problem reports to distill to root cause, sometimes the job gets kind of
-overwhelming.
-
-I only try to do my best to ensure that all the mindshare of improvements
-and enhancements that result from OEM, Channel, internal testing gets into
-all trees. Let's just assume that *this* submission is a request for
-comment, which was what I had in mind, and not a flashpoint. Soon, or rather
-as soon as I can get to it, I will try to produce bite size diffs for each
-class of fix to be taken each on their own merit in an effort to synchronize
-the 2.4.* tree with the 2.6.* and Distribution trees.
-
-Sincerely -- Mark Salyzyn
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Xose Vazquez Perez
-Sent: Thursday, January 08, 2004 1:47 PM
-To: Christoph Hellwig
-Cc: linux-scsi; Tosatti
-Subject: Re: [PATCH] gdth driver for 2.4.23-pre4
-
-Christoph Hellwig wrote:
-
-> The update doesn't look like critical fixes.  
-
-gdth not, but ask in Linux-Poweredge@dell.com about _aacraid_ driver
-stability and search in bugzilla.redhat.com about it. Or ask too to
-dpt_i2o or fusion customers
-
-> And if the vendors don't want to update their drivers that's the best
-> sign for possible customers to buy other hardware instead..
-
-the truth is that they update the driver and the patch is real.
-But nobody cares for it.
-
-who is guilty?  linux kernel maintainers or vendor driver maintainer ?
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
