@@ -1,111 +1,117 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH][RFC] Driverfs support for SCSI devices
-Date: Mon, 17 Jun 2002 18:16:53 -0500
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: /proc/scsi/map
+Date: Mon, 17 Jun 2002 22:40:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200206172316.g5HNGrY05827@localhost.localdomain>
-References: <sullivan@austin.ibm.com>
+Message-ID: <20020617224046.A6590@redhat.com>
+References: <20020615133606.GC11016@gum01m.etpnet.phys.tue.nl> <20020617180818.C30391@redhat.com> <20020617230648.GA3448@gum01m.etpnet.phys.tue.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id QAA11555
-	for <linux-scsi@vger.kernel.org>; Mon, 17 Jun 2002 16:16:56 -0700
-In-Reply-To: Message from sullivan <sullivan@austin.ibm.com>
-   of "Mon, 17 Jun 2002 16:18:59 CDT." <20020617161859.C14455@austin.ibm.com>
+Content-Disposition: inline
+In-Reply-To: <20020617230648.GA3448@gum01m.etpnet.phys.tue.nl>; from kurt@garloff.de on Tue, Jun 18, 2002 at 01:06:48AM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: sullivan <sullivan@austin.ibm.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Kurt Garloff <kurt@garloff.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
 
-I get a BUG in device.h:213 trying to insert the st.o module, but other than 
-that, it seems to be running OK.
+On Tue, Jun 18, 2002 at 01:06:48AM +0200, Kurt Garloff wrote:
+> Hi Doug,
+> 
+> On Mon, Jun 17, 2002 at 06:08:18PM -0400, Doug Ledford wrote:
+> > On Sat, Jun 15, 2002 at 03:36:06PM +0200, Kurt Garloff wrote:
+> > > Life would be easier if the scsi subsystem would just report which SCSI
+> > > device (uniquely identified by the controller,bus,target,unit tuple) belongs
+> > > to which high-level device. The information is available in the kernel.
+> > 
+> > Umm, this patently fails to meet the criteria you posted of "stable device 
+> > name".  Adding a controller to a system is just as likely to blow this 
+> > naming scheme to hell as it is to blow the traditional linux /dev/sd? 
+> > scheme.  IOW, even though the /proc/scsi/map file looks nice and usefull, 
+> > it fails to solve the very problem you are trying to solve.
+> 
+> In case you just add controllers, you just need to make sure you get them the
+> same numbers again. A solution for this exists already:
+> * For a kernel where SCSI low-level drivers are loaded as modules,
+>   you just need to keep the order constant
+> * For compiled in SCSI drivers, use scsihosts=
 
-You forgot to export the symbol scsi_bus_type which is needed for sd et al. to 
-compile as modules.
+No, this is not true.  If you add a new controller (for some new disks in 
+a new external enclosure or whatever), and that controller uses the same 
+driver as other controller(s) in your system, then you have no guarantee 
+of order.  For example, adding a 4th aic7xxx controller to your system 
+might or might not place the new controller at the end of the list 
+depending on PCI scan order, etc.  There simply is *no* guarantee here of 
+any consistent naming, so don't bother trying to claim there is.
 
-This code:
+Now don't get me wrong, I'm not saying the patch isn't usefull, but the 
+patch doesn't provide *any* guarantee of consistent device naming and so 
+using that as a reason to put the patch into the mainstream kernel is 
+utter crap.  Go ahead and make your case for why it should be in the 
+kernel, but don't use reasons that aren't correct.
+ 
+> But actually, the patch is not meant to be the holy grail of persistent
+> device naming. But it enables userspace tools to collect information 
+> * reliably 
+>   (fails so far due to possible open() failures with unknown
+>    relation to the corresponding sg device (which could be opened))
 
-+/* Driverfs file content handlers */
-+char * scsi_type_names[] = {
-+	"DISK",
-+	"TAPE",
-+	NULL,
-+	"PROCESSOR",
-+	"WORM",
-+	"ROM",
-+	"SCANNER",
-+	"MOD",
-+	"MEDIUM_CHANGER",
-+	"COMM",
-+	NULL,
-+	NULL,
-+	NULL,
-+	"ENCLOSURE"};
+This can be done without your patch (the mapping from /dev/sg to /dev/sd? 
+or /dev/st? or /dev/scd? or whatever is not impossible from user space 
+without your patch, it just requires a user space tool to open the files 
+and start comparing host/bus/id/lun combinations from dev file to dev 
+file).
 
-Duplicates the scsi_device_types array (in scsi.c), but with slightly 
-different names.  Could you use the same array? otherwise we're going to get 
-different device types from driverfs and /proc/scsi/scsi.
+> * without too much trouble
 
-And, of course, for a legacy array, all the LUNs have the same name:
+This part is true enough, it is easier to read the map file than to 
+program the information retrieval I mentioned above.
 
-3:0:3:0/  3:0:3:1/  3:0:3:2/  3:0:3:3/  name  power
-jroot@malley> cat 3\:0\:3\:*/name
-S1T41711424NCR
-S1T41711424NCR
-S1T41711424NCR
-S1T41711424NCR
+> Both things I consider important and useful.
+> 
+> The patch basically does provide two pieces of information:
+> * mapping between sg vs. other high level devices
 
-James
+This I think is usefull.
 
-Oops trace for st insert:kernel BUG at /mnt2/jejb/BK/BUILD-2.5/include/linux/de
-vice.h:213!
-invalid operand: 0000
-CPU:    0
-EIP:    0010:[<c0178624>]    Not tainted
-Using defaults from ksymoops -t elf32-i386 -a i386
-EFLAGS: 00010246
-eax: 00000000   ebx: f7d7e000   ecx: 00000000   edx: f7d7e004
-esi: f88c81a0   edi: fffffff4   ebp: f7d7e3c4   esp: f7c5be68
-ds: 0018   es: 0018   ss: 0018
-Stack: f7d7e000 00000000 f7d7e3c4 f7c5bee4 f88c67a9 f7d7e3c4 f88c81a0 f7d7e3c4 
-       f7d7e0a4 00000000 f7d7e130 f7d7e0e0 00000140 00000160 00000900 f7d7e0b4 
-       f7d7e3f0 00000450 00000470 00000980 f7c5bee4 f7d7e004 f7d7e008 f7751d2c 
-Call Trace: [<f88c67a9>] [<f88c81a0>] [<f88c8080>] [<f88096aa>] [<f88c6c78>] 
-   [<f88c8080>] [<c011afc7>] [<f88c82ec>] [<f88c1060>] [<c0108977>] 
-Code: 0f 0b d5 00 c0 76 20 c0 f0 ff 85 90 00 00 00 68 f0 01 00 00 
+> * mapping CBTU to high-level devices
 
->>EIP; c0178624 <device_create_file+24/80>   <=====
-Trace; f88c67a9 <[st]st_attach+489/760>
-Trace; f88c81a0 <[st]st_device_type_file+0/20>
-Trace; f88c8080 <[st]st_template+0/90>
-Trace; f88096aa <[scsi_mod]scsi_register_device+aa/140>
-Trace; f88c6c78 <[st]init_st+58/a0>
-Trace; f88c8080 <[st]st_template+0/90>
-Trace; c011afc7 <inter_module_put+797/870>
-Trace; f88c82ec <[st].bss.end+1/6>
-Trace; f88c1060 <[st]st_incompatible+0/f0>
-Trace; c0108977 <__read_lock_failed+1137/3740>
-Code;  c0178624 <device_create_file+24/80>
-00000000 <_EIP>:
-Code;  c0178624 <device_create_file+24/80>   <=====
-   0:   0f 0b                     ud2a      <=====
-Code;  c0178626 <device_create_file+26/80>
-   2:   d5 00                     aad    $0x0
-Code;  c0178628 <device_create_file+28/80>
-   4:   c0                        (bad)  
-Code;  c0178629 <device_create_file+29/80>
-   5:   76 20                     jbe    27 <_EIP+0x27> c017864b 
-<device_create_file+4b/80>
-Code;  c017862b <device_create_file+2b/80>
-   7:   c0                        (bad)  
-Code;  c017862c <device_create_file+2c/80>
-   8:   f0 ff 85 90 00 00 00      lock incl 0x90(%ebp)
-Code;  c0178633 <device_create_file+33/80>
-   f:   68 f0 01 00 00            push   $0x1f0
+This I don't think is usefull at all.  It's no more reliable than our 
+current system and people that are depending on this to solve their "I 
+can't tell what device is what" delima are going to be sorely upset when 
+they realize that hardware changes can change this stuff around just as 
+fast as it changes around the /dev/sd? mappings.
+
+> The latter one is enough for many setups,
+
+The latter one is just as broken in design as the original /dev/sd? 
+enumeration problem (which stands to reason since this method also is an 
+enumeration method, it's just that instead of enumerating the disks 
+starting at 0, we are enumerating the SCSI controllers starting at the 
+first one we find and going from there).
+
+> and the former can be used for
+> more elaborate solutions involving userspace tools more advanced than the
+> simple script I included in the patch.
+
+Which is the much better way to go.
+
+> If you want to go for the holy grail, you may either come up with a 
+> unique address at hardware level (which does currently not exist for all
+> types dealt with by the SCSI subsystem) and make it available to SCSI mid
+> level or use signatures that allows you to find devices back. LVM, e.g.
+> does the latter. 
+> But at this moment, I fear, neither of them are possible in all cases.
+> 
+> Regards,
+> -- 
+> Kurt Garloff                   <kurt@garloff.de>         [Eindhoven, NL]
+> Physics: Plasma simulations    <K.Garloff@TUE.NL>     [TU Eindhoven, NL]
+> Linux: SCSI, Security          <garloff@suse.de>    [SuSE Nuernberg, DE]
+>  (See mail header or public key servers for PGP2 and GPG public keys.)
 
 
 
-
-
-
-
-
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
