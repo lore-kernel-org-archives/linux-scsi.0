@@ -1,41 +1,41 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: ide-scsi opps
-Date: Thu, 11 Jul 2002 16:39:17 +0100 (BST)
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: Question on SMP
+Date: Thu, 11 Jul 2002 08:44:59 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <E17Sg2H-00011H-00@the-village.bc.nu>
-References: <000901c228e9$ddbe9160$0501a8c0@Stev.org>
+Message-ID: <Pine.LNX.4.33L2.0207110840050.19486-100000@dragon.pdx.osdl.net>
+References: <3D2D51A6.6461FD4C@npd.hcltech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <000901c228e9$ddbe9160$0501a8c0@Stev.org> from "James Stevenson" at Jul 11, 2002 03:47:22 PM
+In-Reply-To: <3D2D51A6.6461FD4C@npd.hcltech.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Stevenson <mistral@stev.org>
-Cc: Linux Scsi <linux-scsi@vger.kernel.org>
+To: Subrahmanya Sastry K V <skotra@npd.hcltech.com>
+Cc: linux-scsi@vger.kernel.org, ilugc@aero.iitm.ernet.in
 
-> i think its the request queue is null taken from line 337 ide-scsi.c
-> 
-> if (status & ERR_STAT)
->     rq->errors++;            OPPS!!
->     idescsi_end_request (1, HWGROUP(drive));
->     return ide_stopped;
-> }
-> 
-> i think the opps happens because rq is NULL would this opps show this ?
-> it gets triggered on the loading of rq->error into a register.
-> though i am unsure of the best way to fix it could anyone spare some
-> time and help me a bit. the bug is 100% reproduceable by me by trying to
-> read from some suspec media in a cd drive.
+On Thu, 11 Jul 2002, Subrahmanya Sastry K V wrote:
 
+| I would like to run my iSCSI pseudo-HBA driver program on a
+| SMP machine. But my driver doesn't support SMP. Is there any
+| way by which I can disable all the processors but one in the
+| SMP machine dynamically and run my program, as if it is running
+| on a UP machine?
+|
+| ( Statically disabling the SMP support in the kernel config file
+|    and recompiling the kernel is one way. Any clues on
+|     how to achieve it dynamically?)
 
-Before the rq->errors++ add
+For what kernel version?
 
-	if(rq == NULL)
-		printk(KERN_ERR "Arghh rq==NULL\n");
-	else
+There are some patches to enable CPU hotswap on/off,
+but they aren't integrated into any released kernel yet.
+They are being changed very much, but should end up in Linux 2.5
+fairly soon, but I don't really recommend using this just yet.
+  http://sourceforge.net/projects/lhcs/
 
+I don't know of any other dynamic CPU on/off tools.
+For now, I think that you are better off with static
+CPU control.
 
-that will log errors instead of crashing. The next task then is to figure out
-how rq got to be NULL if that proves it to be the problem.
-
+-- 
+~Randy
 
