@@ -1,73 +1,68 @@
-From: rct@gherkin.frus.com (Bob Tracy)
-Subject: Re: [PATCH] sym53c500_cs PCMCIA SCSI driver (round 3 - the charm?)
-Date: Sun, 25 Apr 2004 17:59:08 -0500 (CDT)
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] st.c for GET_IDLUN 2.6.6-rc2
+Date: Mon, 26 Apr 2004 10:48:50 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040425225908.5A2ECDBDB@gherkin.frus.com>
-References: <20040425223341.C13748@flint.arm.linux.org.uk>
+Message-ID: <408C5C72.4020301@torque.net>
+References: <408B798B.50005@torque.net> <Pine.LNX.4.58.0404251153530.17534@kai.makisara.local>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gherkin.frus.com ([192.158.254.49]:1943 "EHLO gherkin.frus.com")
-	by vger.kernel.org with ESMTP id S263670AbUDYW7J (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 Apr 2004 18:59:09 -0400
-In-Reply-To: <20040425223341.C13748@flint.arm.linux.org.uk> "from Russell King
- at Apr 25, 2004 10:33:41 pm"
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:39688 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S261987AbUDZAss
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 25 Apr 2004 20:48:48 -0400
+In-Reply-To: <Pine.LNX.4.58.0404251153530.17534@kai.makisara.local>
 List-Id: linux-scsi@vger.kernel.org
-To: Russell King <rmk+lkml@arm.linux.org.uk>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: osst@riede.org, linux-scsi@vger.kernel.org
 
-(Driver attempt 4 posted to linux-scsi a few minutes ago.)
-
-Russell King wrote:
-> On Sun, Apr 25, 2004 at 04:26:34PM -0500, Bob Tracy wrote:
-> > Russell King wrote:
-> > > Hmm, so what happens if you're in the middle of a transaction, and
-> > > you receive a CS_EVENT_CARD_RESET.  What happens to the command in
-> > > progress ?
-> > 
-> > Candidly, I don't know.  A fair question to ask in return is, under
-> > what circumstances might a PCMCIA driver see a CS_EVENT_CARD_RESET?
+Kai Makisara wrote:
+> On Sun, 25 Apr 2004, Douglas Gilbert wrote:
 > 
-> When the user issues "cardctl reset"
+> 
+>>Kai,
+>>A little more testing of st's SG_IO ioctl turned up a
+>>small problem.
+>>
+>>This is the corresponding patch that was applied to the
+>>sd driver when it received the block layer SG_IO ioctl.
+>>
+>>For least surprise of lk 2.4 utilities that use the
+>>SCSI_IOCTL_GET_IDLUN and SCSI_IOCTL_GET_BUS_NUMBER
+>>ioctls (e.g. sg_map) it is better to return the correct
+>>values rather than 0.
+>>
+> 
+> I definitely agree that those ioctl should not return 0 for SCSI devices. 
+> However, I think this is a bug in drivers/block/scsi_ioctl.c. Making the 
+> high-level SCSI drivers parse the ioctl covers up the bug but, IMHO, it is 
+> not a clean solution. The following two solutions come into my mind:
+> 
+> 1. Fixing drivers/block/scsi_ioctl.c. The simple solution would be to 
+> return -ENOTTY and then the call would be redirected to the SCSI ioctl 
+> that does the proper thing. There probably is some reason why this has not 
+> been done. Other fixes would require knowing if the transport type 
+> implements the ioctl and this complicates things.
 
-Would it then be fair to characterize this action as either a self-
-inflicted gunshot wound or a desperate attempt to restore things to
-a sane state?  I can see someone trying a reset if things got wedged
-in the middle of a critical transaction, and I guess the actions that
-could be taken by the low-level driver would properly depend on what
-can be assumed with respect to the mid and upper layers.  In the case
-of the self-inflicted wound, the task at hand would be roughly
-equivalent to ensuring the integrity of a floppy diskette when the
-user ejects it from the drive in the middle of a write.
+One (!@#$%) reason for putting SG_IO ioctl and friends in the
+block layer was to trick cdrecord that it was talking to the
+sg device :-) Older versions of cdrecord won't take kindly to
+receiving -ENOTTY from the SCSI_IOCTL_GET_IDLUN ioctl.
+However always returning 0 may trick cdrecord if there are
+2 or more cd/dvd writers (hence my question at the end of my
+last post on this thread).
 
-> From the brief look I had, it didn't look like (the mid and upper
-> driver layers were handling the "command in progress" issue) - I
-> suspect things will go gaga if someone ever invoked "cardctl reset".
+> 2. Reversing the order of calls in st so that scsi_ioctl is called first 
+> and if it returns -ENOTTY, then scsi_cmd_ioctl is called. This would 
+> require changing scsi_ioctl to return -ENOTTY for commands not being 
+> handled but would be othewise a logical solution: first try SCSI specific 
+> implementation of the ioctl, if it does not exist, then try the block 
+> layer version (Linux block layer, not Unix block layer ;-).
 
-Ouch!  I hate to be like the doctor that suggests if something hurts
-when you do it, then don't do it, but it sounds like the user is
-already hurting if he's reaching for the "card reset" hammer.  For a
-sequential access device (magnetic tape and such), the user would
-probably end up having to restart the job anyway (read or write).  For
-random access devices, I think the results would be minimally bad in
-the case of an interrupted read.  If the user is in the middle of a
-write operation, it's probably fsck time (or enjoy your new coaster in
-the case of one-shot writable media).  Mitigating factors?  If things
-are truly wedged, the attached devices are probably in a pretty much
-quiescent state anyway, implying any damage caused by a reset would be
-minimal compared to what has already occurred.
+This solution looks cleaner.
 
-Has this been discussed before?  If so, I don't recall.  Any ideas
-as far as what *should* be done (by the drivers at any level)?
-Resetting the host hardware is an obviously correct thing to do if
-there's anything to be done in response to the card reset event.  The
-software state is a trickier matter: doing nothing might well be the
-best option.
+Doug Gilbert
 
--- 
------------------------------------------------------------------------
-Bob Tracy                   WTO + WIPO = DMCA? http://www.anti-dmca.org
-rct@frus.com
------------------------------------------------------------------------
+
