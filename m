@@ -1,63 +1,30 @@
-From: "Manish Kumar Bhojasia" <mbhojasi@cisco.com>
-Subject: RE: [PATCH] Updated iscsi driver 4.0.1.2
-Date: Tue, 30 Mar 2004 20:03:12 +0530
+From: "Frank Borich" <Frank_Borich@us.xyratex.com>
+Subject: max transfer size using sd?
+Date: Tue, 30 Mar 2004 06:42:06 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <FFEFJMNKOMGHNFBIAHOCAEMEDGAA.mbhojasi@cisco.com>
-References: <1080321647.2031.51.camel@mulgrave>
+Message-ID: <47F3C2BE74738E4683574107469DFA203B95F9@XYUSEX01.xyus.xyratex.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ind-iport-1-sec.cisco.com ([64.104.129.9]:57643 "EHLO
-	ind-iport-1.cisco.com") by vger.kernel.org with ESMTP
-	id S263675AbUC3OdV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Mar 2004 09:33:21 -0500
-In-Reply-To: <1080321647.2031.51.camel@mulgrave>
+Received: from xyratexus11.xyratex.com ([65.203.33.11]:34296 "EHLO
+	XYUSEX01.xyus.xyratex.com") by vger.kernel.org with ESMTP
+	id S263677AbUC3Om3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2004 09:42:29 -0500
+Content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "Linux-Iscsi-Devel@Lists. Sourceforge. Net" <linux-iscsi-devel@lists.sourceforge.net>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James,
+Can anyone tell me what the maximum transfer size 
+is for I/Os using sd driver ?  I am using stock Redhat 9
+kernel.  
 
-We have taken care of propagating the iscsi-sfnet to various places
-as suggested. Also, the compiler warning is fixed. We are releasing
-4.0.1.3 driver with these changes now.
+Frank Borich
+------------------------------------------------------------------
+Systems Engineer
+Direct 630 654 6089
+Fax 630 325 2513
+e-mail frank_borich@us.xyratex.com
+ 
 
-Thanks,
-Manish
-
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
-> Sent: Friday, March 26, 2004 10:51 PM
-> To: Manish Kumar Bhojasia
-> Cc: SCSI Mailing List; Linux-Iscsi-Devel@Lists. Sourceforge. Net
-> Subject: Re: [PATCH] Updated iscsi driver 4.0.1.2
-> 
-> 
-> On Fri, 2004-03-26 at 11:05, Manish Kumar Bhojasia wrote:
-> > Please review and let us know your comments.
-> 
-> Thanks for moving this to iscsi-sfnet.  I think the config option and
-> the module name need to follow suit (I also note that the printk id
-> strings still say Cisco iSCSI driver).
-> 
-> I still get a compile failure:
-> 
->   CC [M]  drivers/scsi/iscsi-sfnet/iscsi-debug-attr.o
-> cc1: warnings being treated as errors
-> drivers/scsi/iscsi-sfnet/iscsi-debug-attr.c: In function
-> `iscsi_target_printcmnd':
-> drivers/scsi/iscsi-sfnet/iscsi-debug-attr.c:977: warning: int format,
-> different type arg (arg 4)
-> make[3]: *** [drivers/scsi/iscsi-sfnet/iscsi-debug-attr.o] Error 1
-> make[2]: *** [drivers/scsi/iscsi-sfnet] Error 2
-> make[1]: *** [drivers/scsi] Error 2
-> make: *** [drivers] Error 2
-> 
-> This looks to be because of -Werror rather than anything serious.
-> 
-> James
-> 
-> 
-> 
