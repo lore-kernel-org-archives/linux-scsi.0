@@ -1,70 +1,60 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] Fw: [BUG] USB Storage OOPS and a D state
- process in 2.6.10
-Date: Sun, 9 Jan 2005 12:32:36 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0501091225010.19950-100000@netrider.rowland.org>
-References: <200501091526.22408.harisri@internode.on.net>
+From: google@familycook1.net
+Subject: Re: Is it possible to spin down idle SATA disks that use scsi drivers
+Date: Sun,  9 Jan 2005 14:23:56 -0500
+Message-ID: <1105298636.41e184cc1fbeb@familycook1.net>
+References: <1105168894.41df89fe3a9cf@familycook1.net> <41E05DB4.8040704@torque.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:58382 "HELO
-	netrider.rowland.org") by vger.kernel.org with SMTP id S261654AbVAIRci
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 Jan 2005 12:32:38 -0500
-In-Reply-To: <200501091526.22408.harisri@internode.on.net>
+Received: from ace.securenet-server.net ([63.247.93.10]:26580 "EHLO
+	ace.securenet-server.net") by vger.kernel.org with ESMTP
+	id S261718AbVAITYJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Jan 2005 14:24:09 -0500
+In-Reply-To: <41E05DB4.8040704@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Srihari Vijayaraghavan <harisri@internode.on.net>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, 9 Jan 2005, Srihari Vijayaraghavan wrote:
+Dougg,
 
-> On Saturday 08 January 2005 14:51, Alan Stern wrote:
-> > ...
-> > I see you didn't have CONFIG_USB_STORAGE_DEBUG set when you ran this test.
-> 
-> Actually I did. I do not know what log level the USB debug messages were, but 
-> the silly syslog did not capture them. Now I have set it to write all kernel 
-> messages.
+Thank you for your replay.  I will check out the information you provid=
+ed to me.
 
-It's a very common thing to overlook.  And by the way, the log level for 
-the debug messages is DEBUG (what a surprise!).
+donald
 
-> > Or else you didn't have your syslog daemon configured to store the
-> > debugging messages.  If you can get anything unusual to happen with the
-> > debugging enabled, it would make things much easier to track down.
-> 
-> That is right. I am trying to trigger the bug, and I have ensured that the USB 
-> debug messages are being written to the log file. But I have not triggered 
-> the bug yet.
+Quoting Douglas Gilbert <dougg@torque.net>:
 
-If you're unable to trigger the bug, you can try turning the debug 
-configuration option back off and using that patch I sent earlier.  It 
-wouldn't hurt to use that patch even with the debugging messages...
+> google@familycook1.net wrote:
+> > Is it possible to spin down idle SATA disks that are using the scsi
+> drivers?
+>
+> There are some patches around that implement the proposed
+> SCSI ATA pass-through command from the SCSI-ATA Translation
+> (SAT) draft in libata. Also ioctls are defined so hdparm
+> can work on SATA disks connected via libata. These patches
+> allowed me to use smartmontools on a SATA disk.
+>
+> > I have searched the archives with =93spindown=94 and =93scsi-idle=94=
+ and have found
+> > nothing current.
+>
+> The SAT draft defines the SCSI START STOP UNIT command which
+> controls the spin up and down of SCSI disks. Hopefully
+> libata implements this command so SCSI utilities (e.g.
+> sg_start) can control spin up and down. Control via
+> SCSI commands is important since the SAT layer may be
+> in an intermediate device (e.g. a SAS expander/enclosure)
+> rather than in the OS (e.g. libata).
+>
+> Doug Gilbert
+>
 
 
-> > Those errors are quite unusual.  They seem to indicate there's a problem
-> > with your computer's USB hardware, as do the numerous spontaneous (?)
-> > disconnections in your log.  However I'm not familiar with all the details
-> > of the EHCI driver.  It's faintly possible that plugging the drive into a
-> > different USB port would work better.
-> 
-> The numerous disconnections (because without debug, I can trigger the D state 
-> process and oops within a dozen connection/disconnection, but with debug it 
-> takes 10 times more connection/disconnection to trigger D state process, and 
-> I do not know how many are needed for oops :-( ) are purposefully generated 
-> to trigger the bug.
 
-Oh, so you did those by hand.  All right.  Probably the fact that they 
-come fairly close together is related to the bug.  I wonder if something 
-could be causing the SCSI error handler to run when it shouldn't, using an 
-out-of-date host structure?
-
-> Of course UHCI (USB 1) is not as fast as EHCI (USB 2). Would that not matter 
-> for CD/DVD burning?
-
-It definitely will slow things down a lot.  For normal operation you would 
-not want to rely on it.
-
-Alan Stern
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
