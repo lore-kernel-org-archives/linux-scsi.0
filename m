@@ -1,36 +1,37 @@
-From: "Tia Rominger" <tiaromingersvlxd@doctor.com>
-Subject: viagara is so affordable now
-Date: Tue, 03 Aug 2004 02:32:32 +0600
+From: Andi Kleen <ak@suse.de>
+Subject: Re: [PATCH] [ppc64] watch IOMMU virtual merging
+Date: Tue, 3 Aug 2004 00:20:00 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0aac01c478cf$d691f6b0$79f72326@la>
-Reply-To: "Tia Rominger" <tiaromingersvlxd@doctor.com>
+Message-ID: <20040802222000.GM25951@wotan.suse.de>
+References: <20040802164448.GN30253@krispykreme> <20040802170843.GI2334@holomorphy.com> <1091483151.7389.78.camel@gaston>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [202.131.125.162] ([202.131.125.162]:3341 "HELO doctor.com")
-	by vger.kernel.org with SMTP id S263761AbUHBVfz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Aug 2004 17:35:55 -0400
+Received: from cantor.suse.de ([195.135.220.2]:31878 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S264265AbUHBWUf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Aug 2004 18:20:35 -0400
+Content-Disposition: inline
+In-Reply-To: <1091483151.7389.78.camel@gaston>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: William Lee Irwin III <wli@holomorphy.com>, Anton Blanchard <anton@samba.org>, sfr@ozlabs.org, linuxppc64-dev <linuxppc64-dev@lists.linuxppc.org>, Linux Kernel list <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-A lot of athletes use it to enhance performance in bed.
+On Tue, Aug 03, 2004 at 07:45:51AM +1000, Benjamin Herrenschmidt wrote:
 
-Don't be fooled by herbal equivalents, which generally are just placebos.
-Get the real version for just 2.38/dose.
+[adding linux-scsi with full quote]
+> 
+> Actually, we could tune the ratio between large allocs and small allocs,
+> the real problem is the failure case. We can't really afford to break
+> down a physical segment at the iommu level because that would increase
+> the size of the SG list which can't be dealt at the upper level (we don't
+> know how much space has been allocated and the HW may have limitations on
+> the number of entries).
+> 
+> What we really need is a way for drivers to return the BIO upstream and
+> ask for a split in case of iommu allocation error, but I've been told that
+> would be horribly complex...
 
-We can process your online prescription immediately, and expedite delivery.
+Not very, according to James B. It just needs driver changes.
+I would like to have it too. 
 
-Louisa Hemstreet
-
-http://Lhjnknpavajcj.lowcostpill.com
-
-
-
-
-
-
-This is where you can be taken off the database:
-http://Q60230.lowcostpill.com
-m7Acjrhm
+-Andi
