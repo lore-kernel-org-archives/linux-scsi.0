@@ -1,53 +1,67 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [RFC] support for sysfs string based properties for SCSI (1/3)
-Date: 05 May 2003 12:08:35 -0500
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: [PATCH] instrument ide-scsi in 2.5.68
+Date: Mon, 5 May 2003 09:57:15 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1052154516.1888.33.camel@mulgrave>
-References: <1051989099.2036.7.camel@mulgrave>
-	<1051989565.2036.14.camel@mulgrave>  <20030505170202.GA1296@kroah.com>
+Message-ID: <20030505095715.6d96e703.rddunlap@osdl.org>
+References: <3EB11AD3.2070503@torque.net>
+	<3EB22F09.7060906@torque.net>
+	<20030502095536.76dba4dd.rddunlap@osdl.org>
+	<3EB385F3.6010708@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:4614 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263700AbTEEQ4M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 May 2003 12:56:12 -0400
-In-Reply-To: <20030505170202.GA1296@kroah.com>
+Received: from air-2.osdl.org ([65.172.181.6]:24769 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S263755AbTEEQrg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2003 12:47:36 -0400
+In-Reply-To: <3EB385F3.6010708@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>, Mike Anderson <andmike@us.ibm.com>
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-On Mon, 2003-05-05 at 12:02, Greg KH wrote:
-> On Sat, May 03, 2003 at 02:19:23PM -0500, James Bottomley wrote:
-> > diff -Nru a/drivers/base/core.c b/drivers/base/core.c
-> > --- a/drivers/base/core.c	Sat May  3 14:18:21 2003
-> > +++ b/drivers/base/core.c	Sat May  3 14:18:21 2003
-> > @@ -42,6 +42,8 @@
-> >  
-> >  	if (dev_attr->show)
-> >  		ret = dev_attr->show(dev,buf);
-> > +	else if (dev->bus->show)
-> > +		ret = dev->bus->show(dev, buf, attr);
-> >  	return ret;
-> 
-> Can't you do this by using the class interface instead?
+On Sat, 03 May 2003 19:03:47 +1000 Douglas Gilbert <dougg@torque.net> wrote:
 
-I don't know, I haven't digested the class interface patches yet, since
-they just appeared this morning.
+| > | As Randy has found the setting of kernel boot time parameters
+| > | doesn't work. The problem seems to be that the ide subsystem
+| > | asserts ownership over all parameters that start with "ide".
+| > | I was unable to bend moduleparam.h to accept a leading underscore
+| > | so I went back to the old "__setup" method: the kernel boot time
+| > | parameters are now:
+| > |    - _ide_scsi_debug + _ide_scsi_suppress_reset
+| > 
+| > I'll confirm that those work.  I.e., I saw values 3 and 1 in
+| > /sys/bus/ide/drivers/ide-scsi/*.
+| > 
+| > | Module load time and sysfs parameters remain the same.
+| > | 
+| > | A new patch against lk 2.5.68 is attached.
+| > 
+| > Used that patch instead of v1 of it.  Got an oops in ide-scsi.
+| 
+| Randy,
+| Thanks for testing this. At this stage I have no
+| solution but can offer some analysis.
+| 
+| Firstly, it seems like Mandrake 9.0 has some
+| program like RedHat's "magicdev" that polls
+| cd/dvds every second or so. Nuke it please!
+| It won't fix the problem but will make it easier
+| to see the wood for the trees.
 
-> This also forces you to do a lot of string compares within the bus show
-> function (as your example did) which is almost as unwieldy as just
-> having individual show functions, right?  :)
+I'll happily do that if I can find it, since I don't use it anyway.
+However, I don't see it.  I also don't see any periodic activity
+after enabling scsi logging as Mike A. mentioned.
 
-Nothing prevents users from doing it the callback way.  However,
-callbacks aren't a scaleable interface for properties that have to be
-shared and overridden.
-
-I agree string compares are unwieldy (and smack of XML), so I'm open to
-suggestions of a better way of doing it that has the same flexibility of
-the string method...
-
-James
+I did 'cdrecord -scanbus' and then
+cdrecord -v speed=4 dev=2,0,0 -data lca2003.iso
+and got the same oops as before (invalid ptr = 6b6b6bxx, into
+bad memory area).
 
 
+New kernel log file is now at
+  http://www.xenotime.net/linux/capture2.txt
+
+Are there any docs on SCSI logging?
+
+--
+~Randy
