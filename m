@@ -1,31 +1,37 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [patch 11/11] scsi/zalon: Added KERN macro to printk()
-Date: Mon, 7 Mar 2005 00:36:04 +0000
-Message-ID: <20050307003604.GY28741@parcelfarce.linux.theplanet.co.uk>
-References: <20050306222724.6E3351F23B@trashy.coderock.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC] ncr53c8xx updates
+Date: Mon, 7 Mar 2005 00:40:15 +0000
+Message-ID: <20050307004015.GA7697@infradead.org>
+References: <20050306201153.GV28741@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:401 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261584AbVCGAgF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 6 Mar 2005 19:36:05 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:59302 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261598AbVCGAkR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 6 Mar 2005 19:40:17 -0500
 Content-Disposition: inline
-In-Reply-To: <20050306222724.6E3351F23B@trashy.coderock.org>
+In-Reply-To: <20050306201153.GV28741@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: domen@coderock.org
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, am@misk.net
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, Mar 06, 2005 at 11:27:24PM +0100, domen@coderock.org wrote:
-> I have added a KERN macro to a printk() function as requested in the Kernel
-> Janitor's TODO list.
+On Sun, Mar 06, 2005 at 08:11:53PM +0000, Matthew Wilcox wrote:
+> This isn't for applying so much as it is for showing people where I am
+> with this driver.  As with the sym2 driver, I commit each piece to the
+> parisc-linux CVS tree (since parisc is currently the only user of this
+> driver, it makes even more sense to do development there).
 
-Already taken care of in the parisc tree, thanks.
+It's also used on i386/voyager (or in theory every MCA i386 system).
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+> This patch
+> contains workarounds for a bug that is fixed in scsi-misc-2.6, so I'm
+> waiting for that to be merged with Linus, then I'll submit this patch
+> minus those workarounds.
+
+While we're at it, is there anyce chance to kill/rename sym53c8xx_defs.h
+and sym53c8xx_comm.h which are only ever used by the ncr53c8xx driver.
+
+In fact I'd really love to see the driver organized similarly to the sym2
+driver - ncr53c8xx.c is too f***ing large for it's own sake.
+
