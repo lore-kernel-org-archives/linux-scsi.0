@@ -1,103 +1,71 @@
 From: Jeremy Higdon <jeremy@sgi.com>
-Subject: [PATCH] 2.6.3 qla2xxx driver -- use readX_relaxed
-Date: Wed, 25 Feb 2004 20:05:35 -0800
+Subject: max_hw_segments vs. max_phys_segments and scsi_alloc_queue()
+Date: Wed, 25 Feb 2004 23:15:58 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040226040535.GA559454@sgi.com>
+Message-ID: <20040226071558.GA559837@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.sgi.com ([192.48.171.6]:60600 "EHLO zok.sgi.com")
-	by vger.kernel.org with ESMTP id S262657AbUBZEFg (ORCPT
+Received: from mtvcafw.sgi.com ([192.48.171.6]:12217 "EHLO rj.sgi.com")
+	by vger.kernel.org with ESMTP id S262324AbUBZHP7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Feb 2004 23:05:36 -0500
+	Thu, 26 Feb 2004 02:15:59 -0500
 Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [192.26.80.2])
-	by zok.sgi.com (8.12.9/8.12.9/linux-outbound_gateway-1.1) with ESMTP id i1Q45aF6028387
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2004 20:05:36 -0800
+	by rj.sgi.com (8.12.9/8.12.9/linux-outbound_gateway-1.1) with ESMTP id i1Q6HtO9015377
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2004 22:17:55 -0800
 Received: from classic.engr.sgi.com (classic.engr.sgi.com [163.154.5.111])
-	by cthulhu.engr.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id i1Q45Zio14053719
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2004 20:05:35 -0800 (PST)
+	by cthulhu.engr.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id i1Q7Fwio14208160
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2004 23:15:58 -0800 (PST)
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, jbarnes@cthulhu.engr.sgi.com
+To: linux-scsi@vger.kernel.org
+Cc: jbarnes@cthulhu.engr.sgi.com
 
-I'm submitting a patch for comment and consideration.  The relaxed read
-interface was added a few weeks back, and this patch lets the qla2xxx driver
-take advantage of it.
+In scsi_alloc_queue(), I see the following two lines:
 
-For those to whom this is new (it was discussed on linux-kernel and linux-ia64
-I believe), normal PCI register reads imply that PCI DMA writes that occured
-prior to the PCI MMR (memory mapped register) read (on the PCI bus) will be
-reflected in system memory once the MMR read is complete.
+	blk_queue_max_hw_segments(q, shost->sg_tablesize);
+	blk_queue_max_phys_segments(q, MAX_PHYS_SEGMENTS);
 
-On our platforms, we can speed up the MMR read significantly if that ordering
-requirement is "relaxed".
+I've been looking through the block code a bit, and it looks to me
+as though max_phys_segments more accurately describes what the
+I/O device hardware is capable of, while max_hw_segments is used
+when you have an IOMMU.
 
-So I attempted to find the common register reads that don't have a need
-for this ordering so that I could make them use this faster read.
+That is, max_hw_segments is the number of discrete segments that
+a PCI device would see, while max_phys_segments would be the
+max s/g list size that a PCI device could handle.
 
-I did not change this line (111 of drivers/scsi/qla2xxx/qla_isr.c),
-because it may in some cases imply that a DMA write has completed.
+It further seems as though when there is no IOMMU that the number
+of hw_segments will equal the number of phys_segments, at least if I
+understand the code in blk_recount_segments() and the comments
+around the definition of BIO_VMERGE_BOUNDARY in
+include/asm-ia64/io.h.
 
-		stat = RD_REG_DWORD(&reg->u.isp2300.host_status);
+In particular, on ia64 machines, where BIO_VMERGE_BOUNDARY is
+currently 0, and thus, the number of hw_segments equals the number
+of phys_segments, we should be using the host's sg_tablesize to
+set the max number of phys segments (as well as the max number
+of hw segments).  I see no reason why this wouldn't carry forward
+to the other architectures, though there may be limits to the
+total amount of data that could be mapped.  This would have to
+be fed to the block layer from the arch layer, though, I think.
 
-
-Andrew, if you have a chance to look at this and incorporate it in the
-driver, it would be great.  Also, any comments would be welcome.
+Does this make sense, or have I completely missed something?
 
 thanks
 
 jeremy
 
-===== drivers/scsi/qla2xxx/qla_def.h 1.5 vs edited =====
---- 1.5/drivers/scsi/qla2xxx/qla_def.h	Mon Feb  2 08:02:02 2004
-+++ edited/drivers/scsi/qla2xxx/qla_def.h	Wed Feb 25 16:14:18 2004
-@@ -154,6 +154,9 @@
- #define RD_REG_BYTE(addr)		readb(addr)
- #define RD_REG_WORD(addr)		readw(addr)
- #define RD_REG_DWORD(addr)		readl(addr)
-+#define RD_REG_BYTE_relaxed(addr)	readb_relaxed(addr)
-+#define RD_REG_WORD_relaxed(addr)	readw_relaxed(addr)
-+#define RD_REG_DWORD_relaxed(addr)	readl_relaxed(addr)
- #define WRT_REG_BYTE(addr, data)	writeb(data,addr)
- #define WRT_REG_WORD(addr, data)	writew(data,addr)
- #define WRT_REG_DWORD(addr, data)	writel(data,addr)
-===== drivers/scsi/qla2xxx/qla_iocb.c 1.2 vs edited =====
---- 1.2/drivers/scsi/qla2xxx/qla_iocb.c	Mon Feb  2 07:41:39 2004
-+++ edited/drivers/scsi/qla2xxx/qla_iocb.c	Wed Feb 25 01:23:36 2004
-@@ -388,7 +388,7 @@
+
+===== drivers/scsi/scsi_lib.c 1.120 vs edited =====
+--- 1.120/drivers/scsi/scsi_lib.c	Mon Feb 23 06:21:36 2004
++++ edited/drivers/scsi/scsi_lib.c	Wed Feb 25 23:13:35 2004
+@@ -1285,7 +1285,7 @@
+ 	blk_queue_prep_rq(q, scsi_prep_fn);
  
- 	if (ha->req_q_cnt < (req_cnt + 2)) {
- 		/* Calculate number of free request entries */
--		cnt = RD_REG_WORD(ISP_REQ_Q_OUT(ha, reg));
-+		cnt = RD_REG_WORD_relaxed(ISP_REQ_Q_OUT(ha, reg));
- 		if (ha->req_ring_index < cnt)
- 			ha->req_q_cnt = cnt - ha->req_ring_index;
- 		else
-@@ -496,7 +496,7 @@
- 
- 	/* Set chip new ring index. */
- 	WRT_REG_WORD(ISP_REQ_Q_IN(ha, reg), ha->req_ring_index);
--	RD_REG_WORD(ISP_REQ_Q_IN(ha, reg));	/* PCI Posting. */
-+	RD_REG_WORD_relaxed(ISP_REQ_Q_IN(ha, reg));	/* PCI Posting. */
- 
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 	return (QLA_SUCCESS);
-@@ -748,5 +748,5 @@
- 
- 	/* Set chip new ring index. */
- 	WRT_REG_WORD(ISP_REQ_Q_IN(ha, reg), ha->req_ring_index);
--	RD_REG_WORD(ISP_REQ_Q_IN(ha, reg));	/* PCI Posting. */
-+	RD_REG_WORD_relaxed(ISP_REQ_Q_IN(ha, reg));	/* PCI Posting. */
- }
-===== drivers/scsi/qla2xxx/qla_isr.c 1.5 vs edited =====
---- 1.5/drivers/scsi/qla2xxx/qla_isr.c	Tue Feb 10 13:51:30 2004
-+++ edited/drivers/scsi/qla2xxx/qla_isr.c	Wed Feb 25 01:18:04 2004
-@@ -165,7 +165,7 @@
- 				break;
- 			}
- 			WRT_REG_WORD(&reg->hccr, HCCR_CLR_RISC_INT);
--			RD_REG_WORD(&reg->hccr);
-+			RD_REG_WORD_relaxed(&reg->hccr);
- 		}
- 	}
- 
+ 	blk_queue_max_hw_segments(q, shost->sg_tablesize);
+-	blk_queue_max_phys_segments(q, MAX_PHYS_SEGMENTS);
++	blk_queue_max_phys_segments(q, shost->sg_tablesize);
+ 	blk_queue_max_sectors(q, shost->max_sectors);
+ 	blk_queue_bounce_limit(q, scsi_calculate_bounce_limit(shost));
+ 	blk_queue_segment_boundary(q, shost->dma_boundary);
