@@ -1,39 +1,92 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Documentation
-Date: Fri, 6 Jun 2003 14:20:54 +0100
+From: "Mukker, Atul" <atulm@lsil.com>
+Subject: RE: [PATCH] megaraid driver fix for 2.5.70
+Date: Fri, 6 Jun 2003 09:28:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030606132054.GZ28581@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570185F234@EXA-ATLANTA.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:48537 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261411AbTFFNHV
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Jun 2003 09:07:21 -0400
-Received: from willy by www.linux.org.uk with local (Exim 4.14)
-	id 19OH9L-0004WY-1Q
-	for linux-scsi@vger.kernel.org; Fri, 06 Jun 2003 14:20:55 +0100
-Content-Disposition: inline
+Received: from mail0.lsil.com ([147.145.40.20]:8958 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261428AbTFFNOk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2003 09:14:40 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>, Mark Haverkamp <markh@osdl.org>
+Cc: "Mukker, Atul" <Atulm@lsil.com>, Linus Torvalds <torvalds@transmeta.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+
+> > In the memset cases, what fixed the panic was that the size of the
+> > raw_mbox automatic was set to 16 and the memset was using
+> > sizeof(mbox_t).  I just increased the size of the raw_mbox so it
+> > wouldn't be overflowed.  It sounds like, from what you are 
+> saying, that
+> > the size of raw_mbox should have been left at 16 and the 
+> memset changed
+> > to fill 16 bytes and not the sizeof(mbox_t).
+> 
+> Ah, that's what I couldn't find in the source, thanks.
+
+This is correct. Driver sets up first 16 bytes and firmware sets up rest.
+Busy bit is special, driver sets it and firmware clears it.
 
 
-Kconfig's in pretty good shape now from a structural point of view,
-so I thought I'd review some of the actual help text.
+> I was also separately worried about the memcpy in the issue_scb..()
+> routines which looks like it will set the mbox->busy parameter
+> (controlled by the driver) to zero.  So I copied Atul to see 
+> if this is
+> a genuine problem or not.
 
-Many entries refer to the ancient SCSI-HOWTO.  It doesn't
-seemto be on tldp.org anywhere, but I found it at
-http://www.ibiblio.org/pub/Linux/docs/HOWTO/unmaintained/SCSI-HOWTO
+This is ok. Driver has to set it to busy anyway.
 
-Do we want to correct the URL from http://www.tldp.org/docs.html#howto
-to the one above or excise all references to it?
+Coming back to main issue, declaring complete mailbox would be superfluous
+since driver uses 16 bytes at most. The following patch should fix the panic
 
-The Disk-HOWTO, Multi-Disk-HOWTO, and CD-ROM-HOWTO are also referenced.
-The Disk-HOWTO has also disappeared.  The Multi-Disk-HOWTO doesn't really
-seem relevant at this point.  Though the CD-ROM-HOWTO is listed as the
-CDROM-HOWTO, it still seems relevant.
+--- /usr/src/linux-2.5.70/drivers/scsi/megaraid.c	2003-05-26
+21:00:20.000000000 -0400
++++ megaraid.c	2003-06-06 09:14:24.000000000 -0400
+@@ -4664,7 +4664,7 @@
+ 
+ 	mbox = (mbox_t *)raw_mbox;
+ 
+-	memset(mbox, 0, sizeof(*mbox));
++	memset(mbox, 0, 16);
+ 
+ 	memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
+ 
+@@ -4697,7 +4697,7 @@
+ 
+ 	mbox = (mbox_t *)raw_mbox;
+ 
+-	memset(mbox, 0, sizeof(*mbox));
++	memset(mbox, 0, 16);
+ 
+ 	/*
+ 	 * issue command to find out what channels are raid/scsi
+@@ -4813,12 +4813,9 @@
+ mega_support_random_del(adapter_t *adapter)
+ {
+ 	unsigned char raw_mbox[16];
+-	mbox_t *mbox;
+ 	int rval;
+ 
+-	mbox = (mbox_t *)raw_mbox;
+-
+-	memset(mbox, 0, sizeof(*mbox));
++	memset(raw_mbox, 0, 16);
+ 
+ 	/*
+ 	 * issue command
+@@ -4842,12 +4839,9 @@
+ mega_support_ext_cdb(adapter_t *adapter)
+ {
+ 	unsigned char raw_mbox[16];
+-	mbox_t *mbox;
+ 	int rval;
+ 
+-	mbox = (mbox_t *)raw_mbox;
+-
+-	memset(mbox, 0, sizeof(*mbox));
++	memset(raw_mbox, 0, 16);
+ 	/*
+ 	 * issue command to find out if controller supports extended CDBs.
+ 	 */
 
--- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
