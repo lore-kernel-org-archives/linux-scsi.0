@@ -1,73 +1,66 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: 2.5.43 scsi _eh_ buslogic
-Date: Sat, 19 Oct 2002 12:59:27 -0700
+From: braver@pobox.com (Alexy Khrabrov)
+Subject: Wide negotiation fails with 80->68 LVD adapter?
+Date: Mon, 21 Oct 2002 01:14:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021019195926.GB2556@beaverton.ibm.com>
-References: <20021018224311.GB1066@beaverton.ibm.com> <Pine.LNX.3.96.1021019150909.29078A-300000@gatekeeper.tmr.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <200210210514.g9L5ElYp006401@angle.badbox.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.3.96.1021019150909.29078A-300000@gatekeeper.tmr.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: andy barlak <andyb@island.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-
-Bill,
-	In 2.5.44. I submitted a patch that changed the way scsi_host* is
-	accessed. This patch also removed put_device which is replaced
-	by device_unregister. That should fix one problem.
-
-The other issue is that this driver like the BusLogic is using the old
-error handler. Did it run on previous 2.5 versions?
-
-If you go to 2.5.44 I believe you will also need the patch posted by
-John Levon.
+To: linux-scsi@vger.kernel.org
 
 
-Bill Davidsen [davidsen@tmr.com] wrote:
+Greetings -- did anybody try to connect a SCSI SCA
+hard drive (with 80 pins) to an Adaptec 7899
+Ultra160 with 65 pins?  Mine seems unable to spin
+them at 160 Mbps.
 
-> > > scsi_eh_offline_sdevs: Device offlined - not ready or command retry failed after
-> > >  error recovery: host 0 channel 0 id 3 lun 0
-> > >   Vendor:           Model:                   Rev:
-> > >   Type:   Direct-Access                      ANSI SCSI revision: 00
+I'm running Linux, Suse 7.2 _ many upgrades,
+kernel 2.4.20-pre9, with Adaptec 7899, v25113 in
+SCSISelect.  My system came with a Barracuda ...LW
+drive, 68 pin, and it was always working fine in
+160 Mbps mode.
 
-I am looking at this right now I believe when we offline a device we are
-not setting the result if no action was performed on the command which
-would happen if the device has no error handling.
+A week ago, I got some more Barracudas on ebay, those
+were SCA ones, ...LC, so I got an 80->68 LVD adapter.
+Here it is, I guess there's only one, as everybody
+resells this one:
 
-> kernel BUG at drivers/base/core.c:269!
-> invalid operand: 0000
-> ncr53c8xx ide-scsi  
-> CPU:    0
-> EIP:    0060:[<c01e2d90>]    Not tainted
-> EFLAGS: 00010202
-> EIP is at put_device+0x50/0x80
-> eax: 00000001   ebx: cf53b964   ecx: c03ee5d0   edx: cf53b9fc
-> esi: cf948c98   edi: cf948c00   ebp: d08bf2e0   esp: cf60ff14
-> ds: 0068   es: 0068   ss: 0068
-> Process modprobe (pid: 332, threadinfo=cf60e000 task=cf7c7980)
-> Stack: 00000000 cf53b800 c022b8c9 cf53b964 fffffff4 cfde6000 00000286 c014febe 
->        cfde6009 00000008 ff883e60 fffffffe c03bda00 00000000 c0138b4f c0138b66 
->        c12562a0 c12562a0 000001ff 00000000 c03be400 00000000 c0138ea2 c03bda00 
-> Call Trace:
->  [<c022b8c9>] scsi_unregister_host+0x259/0x540
->  [<c014febe>] getname+0x5e/0xa0
->  [<c0138b4f>] buffered_rmqueue+0x12f/0x150
->  [<c0138b66>] buffered_rmqueue+0x146/0x150
->  [<c0138ea2>] __alloc_pages+0xb2/0x290
->  [<d08b988a>] exit_this_scsi_driver+0xa/0xc [ncr53c8xx]
->  [<d08bf2e0>] driver_template+0x0/0x80 [ncr53c8xx]
->  [<c011c07e>] free_module+0x1e/0xf0
->  [<c011b454>] sys_delete_module+0x154/0x2e0
->  [<c010736f>] syscall_call+0x7/0xb
+http://www.scsistuff.com/106-0067.htm
 
-2.5.44 scsi_unregister_host update to device_unregister should fix this
-problem.
+Here's the Barracuda:
+http://www.seagate.com/support/disc/specs/scsi/st150176lc.html
+Strangely, it comes up as SX..., not ST..., in
+Adaptec's bootup.
 
+I set only the SCSI IDs on my Barracudas.  OK.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+The first thing after Dell splash which comes during
+boot is SCSI list, and my good ol' LW Barracuda comes
+up first ith SCSI 0 and 160 speed.  Good.  But the two
+new ones came up as ASYN!  SCSISelect would hang, with
+SCSI device 1 (a new Barracuda) LED lit, until I
+switched them in SCSIselect to ASYN.  And then they
+negotiated a wonderful speed of 6.6 Mbps, just above
+my dds tape...
 
+Since the idea for these was to keep my DVD images,
+5 GB each, waiting was not an option -- and the best
+thing I could do is to disable Wide Negotiation, => OFF,
+and choose maximum 40 Mbps in SCSIselect for the LCs.
+Works, but now I wonder what should I do to spin them
+at 160?  Is it
+
+-- Adaptec 7899 firmare/Dell BIOS?
+-- 80->68 adapter settings (looks like none is needed,
+   setting SYN jumper did nothing, looks like it's a
+   different kind of syncing -- for spindles)
+-- Barracuda's jumpers (now that adapter takes over ID,
+   I wonder if any other would matter; and ddefaults are
+   to be the fastest)
+-- Linux aic7xxx driver
+-- Linux higher-level SCSI driver(s)?
+-- Something else is fishy?
+
+Any hints would be highly appreciated!
+
+Cheers,
+Alexy
