@@ -1,28 +1,34 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi_mid_low_api.txt update
-Date: Wed, 25 Aug 2004 09:21:47 +0100
+From: xpix@isunix.it.ilstu.edu
+Subject: updates
+Date: Wed, 25 Aug 2004 09:01:46 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040825092147.A6504@infradead.org>
-References: <412C04D1.3090503@torque.net>
+Message-ID: <LFBKK9BAKGH19LB9@isunix.it.ilstu.edu>
+References: <0032HA5071DKFICB@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imladris.demon.co.uk ([193.237.130.41]:34057 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S268589AbUHYIVv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Aug 2004 04:21:51 -0400
-Content-Disposition: inline
-In-Reply-To: <412C04D1.3090503@torque.net>; from dougg@torque.net on Wed, Aug 25, 2004 at 01:17:37PM +1000
+Received: from YahooBB220059092127.bbtec.net ([220.59.92.127]:43281 "HELO
+	keithley.com") by vger.kernel.org with SMTP id S261610AbUHYJGt
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Aug 2004 05:06:49 -0400
+In-Reply-To: <0032HA5071DKFICB@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: Linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Aug 25, 2004 at 01:17:37PM +1000, Douglas Gilbert wrote:
-> After some prompting from Adrian Bunk here is an
-> update to the scsi mid level to lower level driver
-> (A)PI document.
-> 
-> Comments welcome.
+New Q E M software
 
-Looks good to me, but is the emial address obsfucation really nesecary?
+Autodesk software
+Nero V 6.0 Ultra Edition CD/DVD Burning Suite - 30
+QuickBooks Premier 2004 - 110
+Maya 6.0 Unlimited - 150
+QuarkXPress 6 Passport - 120
+AutoCAD Mechanical 2005 DX - 120
+DVD Copy Plus - 30
+ACT! 6 for 2004 - 90
+SuSe Linux 9.1 Professional Edition - 50
+Delphi 8 Architect - 130
+
+Linux, Apple software and a lot more 
+http://www.bolguarou.biz/
 
