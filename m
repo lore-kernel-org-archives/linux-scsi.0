@@ -1,31 +1,27 @@
 From: Jeremy Higdon <jeremy@sgi.com>
 Subject: Re: [PATCH] sg.c to set direction more reliably  (was Re: [PATCH] fusion update to current APIs)
-Date: Tue, 15 Jun 2004 01:40:27 -0700
+Date: Tue, 15 Jun 2004 01:48:07 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040615084027.GA177665@sgi.com>
-References: <20040531115229.GA16143@lst.de> <20040612003608.GA152454@sgi.com> <20040612034518.GN24864@parcelfarce.linux.theplanet.co.uk> <20040612051353.GA152829@sgi.com> <20040612052003.GR24864@parcelfarce.linux.theplanet.co.uk> <20040615060811.GA178857@sgi.com> <40CE9D31.6050606@pobox.com> <20040615075012.GB179379@sgi.com> <1087286269.2710.13.camel@laptop.fenrus.com>
+Message-ID: <20040615084807.GB177665@sgi.com>
+References: <20040531115229.GA16143@lst.de> <20040612003608.GA152454@sgi.com> <20040612034518.GN24864@parcelfarce.linux.theplanet.co.uk> <20040612051353.GA152829@sgi.com> <20040612052003.GR24864@parcelfarce.linux.theplanet.co.uk> <20040615060811.GA178857@sgi.com> <20040615081704.GA15795@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.sgi.com ([192.48.171.6]:984 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S265368AbUFOInD (ORCPT
+Received: from mtvcafw.sgi.com ([192.48.171.6]:13045 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S265370AbUFOItB (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jun 2004 04:43:03 -0400
+	Tue, 15 Jun 2004 04:49:01 -0400
 Content-Disposition: inline
-In-Reply-To: <1087286269.2710.13.camel@laptop.fenrus.com>
+In-Reply-To: <20040615081704.GA15795@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjanv@redhat.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Matthew Wilcox <willy@debian.org>, Christoph Hellwig <hch@lst.de>, Emoore@lsil.com, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Matthew Wilcox <willy@debian.org>, Christoph Hellwig <hch@lst.de>, Emoore@lsil.com, linux-scsi@vger.kernel.org
 
-On Tue, Jun 15, 2004 at 09:57:49AM +0200, Arjan van de Ven wrote:
-> 
-> can we add a printk to mark the v1 and v2 interfaces deprecated please ?
-
-New patch with a printk:
+Christoph wants a more explicit message.
 
 ===== drivers/scsi/sg.c 1.90 vs edited =====
 --- 1.90/drivers/scsi/sg.c	Sat May 29 10:57:23 2004
-+++ edited/drivers/scsi/sg.c	Tue Jun 15 01:36:28 2004
++++ edited/drivers/scsi/sg.c	Tue Jun 15 01:46:10 2004
 @@ -480,6 +480,61 @@
  	return (0 == err) ? count : err;
  }
@@ -100,7 +96,7 @@ New patch with a printk:
  	hp->dxfer_len = mxsize;
  	hp->dxferp = (char __user *)buf + cmd_size;
  	hp->sbp = NULL;
-@@ -566,6 +616,22 @@
+@@ -566,6 +616,23 @@
  	hp->usr_ptr = NULL;
  	if (__copy_from_user(cmnd, buf, cmd_size))
  		return -EFAULT;
@@ -116,8 +112,9 @@ New patch with a printk:
 +		hp->dxfer_direction = SG_DXFER_NONE;
 +	else {
 +		hp->dxfer_direction = sg_direction(cmnd);
-+		printk("sg_write: cannot infer direction from count"
-+		       " %ld and reply_len %d; inferring from command 0x%x\n",
++		printk("sg_write: cannot infer direction from count %ld "
++		       "and reply_len %d; inferring from command 0x%x.  Please "
++		       "fix the application to trim count and reply_len\n",
 +		       count, old_hdr.reply_len, (unsigned int) cmnd[0]);
 +	}
  	k = sg_common_write(sfp, srp, cmnd, sfp->timeout, blocking);
