@@ -1,60 +1,33 @@
-From: Mark Lobo <ntdeveloper2002@yahoo.com>
-Subject: Re: Bounce buffer usage
-Date: Fri, 1 Nov 2002 10:55:10 -0800 (PST)
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: QLA12160 ring buffer starvation? on 2.4.x
+Date: Fri, 1 Nov 2002 11:42:48 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021101185510.10154.qmail@web80305.mail.yahoo.com>
-References: <20021101074843.GF807@suse.de>
+Message-ID: <20021101114248.A4097@eng2.beaverton.ibm.com>
+References: <20021101.205009.783396609.nomura@hpc.bs1.fc.nec.co.jp> <20021101090419.A635@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20021101074843.GF807@suse.de>
+In-Reply-To: <20021101090419.A635@eng2.beaverton.ibm.com>; from patmans@us.ibm.com on Fri, Nov 01, 2002 at 09:04:19AM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: j-nomura@ce.jp.nec.com
+Cc: linux-scsi@vger.kernel.org, jes@trained-monkey.org
 
+On Fri, Nov 01, 2002 at 09:04:19AM -0800, Patrick Mansfield wrote:
+> On Fri, Nov 01, 2002 at 08:50:09PM +0900, j-nomura@ce.jp.nec.com wrote:
+> > qla1280_next is executed either when the first command is queued by
+> > qla1280_queuecommand or when issued command completes in qla1280_done.
+> > qla1280_next works only for specified queue.
 
-> Not so true anymore in 2.4.20-pre (and hasn't been
-> true in 2.5 since
-> 2.5.1). If you set host highmem_io flag,> 
+I didn't notice the per-queue aspect of the above, that implies
+it can completely starve one LU.
 
-So if I do set this flag in the host template, do I
-need the bounce buffer patch also that is floating
-around? Or is it just enough to set that flag and use
-the DMA API? Im using 2.4.18.
+You could try setting can_queue to a reasonable limit (rather than
+0xfffff) like the size of the ring buffer, and perhaps also lower
+the queue depth (similiar to lowering hiwat).
 
- it will be
-> happy to pass you
-> pages that have no kernel virtual mapping.
+If you are running fine with hiwat lowered, that sounds like a decent
+solution (and similiar to what other adapters do - don't allow the
+queue depth * number of devices to execeed the capabilities of the
+adapter).
 
-Pages that have no kernel virtual mapping? Do u mean
-pages with no kernel "logical" mapping? We finally
-need a kernel mapping, dont we? say if it is data in a
-single page ( no scatter gather ), what kind of
-address is passed down to the driver? Is it the pure
-user address that is just passed down, and the DMA API
-then gives the kernel address? cause we do need to do
-a virt_to_page in this case before we can use the DMA
-API, so what kind of virtual address is passed down to
-the initiator?
-
->If the
-> buffer sent down resides at a higher address than
-> what the adapter can
-> handle, then it is bounced. This may not necessarily
-> have anything to do
-> with kernel virtual mapping or not.
-
-But if a buffer resides in high memory, and has no
-kernel logical mapping, doesnt it mean that bounce
-buffers will be used, especially in 2.4.18, without
-the highmem_io bit set?
-
-
-Thanks a lot!
-Mark
-
-
-__________________________________________________
-Do you Yahoo!?
-New DSL Internet Access from SBC & Yahoo!
-http://sbc.yahoo.com
+-- Patrick Mansfield
