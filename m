@@ -1,42 +1,35 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: cdrom sr ide-cd - CDC_WR, 1999 op x46 GPCMD_GET_CONFIGURATION
-Date: 28 Nov 2003 13:05:03 -0700
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: TMSCSIM [2.6]
+Date: Fri, 28 Nov 2003 21:25:35 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1070049902.11739.3.camel@patrh9>
+Message-ID: <Pine.LNX.4.44.0311282118550.528-100000@poirot.grange>
+References: <3FC6A7B0.3050401@yk.rim.or.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:21758 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S263364AbTK1UFf
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Nov 2003 15:05:35 -0500
+Received: from pop.gmx.de ([213.165.64.20]:45217 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S263435AbTK1Ucu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Nov 2003 15:32:50 -0500
+In-Reply-To: <3FC6A7B0.3050401@yk.rim.or.jp>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: Chiaki <ishikawa@yk.rim.or.jp>
+Cc: linux-scsi@vger.kernel.org, Thorsten Leemhuis <Thorsten_Leemhuis@gmx.de>
 
-Jens A:
+Further to your tests, Thorsten: just tried cdecord v. 2.00.3 under 2.4.21
+and (the same command) under 2.6.0-test7. Worked under 2.4, failed under
+2.6. However, I tried it with an ATAPI CDRW, but still, it indicates, that
+cdrecord is still not quite functional under 2.6. I did get some error
+messages under 2.4:
 
-Am I correct to think we/you have no interest in going ahead and merging
-into 2.6.1 a purely restructuring patch that supposedly changes no
-results?  That is,
+Error: Illegal request -- (Sense key=0x05)
 
-1) I should Not construct a patch that does no more than add op x46
-GPCMD_GET_CONFIGURATION.
+which, presumably, means some unsupported command, but still it worked. I
+should look through LKML archives regarding cdrecord under 2.6, or anybody
+can give a short info?
 
-2) Nor should I construct a patch that does no more than add a new
-CDC_WR flag to control pass thru of writes without overloading
-CDC_DVD_RAM.
-
-Instead I should wait to write such code until After we actually do
-dream up a good way to discover, without waiting for the disc to arrive,
-that some PDT x05 DVD/CD devices besides DVD-RAM are randomly rewritable
-in place.
-
-Right?  That's what I've been doing, without anyone's explicit
-agreement, but then suddenly I thought perhaps I should ask Someone With
-Change Authority, hi.
-
-Pat LaVarre
+Guennadi
+---
+Guennadi Liakhovetski
 
 
