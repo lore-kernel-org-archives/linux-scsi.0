@@ -1,415 +1,263 @@
-From: Eric Sproul <esproul@ntelos.net>
-Subject: [PATCH] gdth driver: selectively enable EISA/ISA/PCI support
-Date: Fri, 26 Mar 2004 13:57:39 -0500
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: [PATCH][RFC] iSCSI transport class
+Date: Fri, 26 Mar 2004 12:50:38 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1080327459.14874.126.camel@thunderbolt.oss.ntelos.net>
+Message-ID: <4064979E.3020208@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-LOqsCaV7bXDNtGbYOngx"
+Content-Type: multipart/mixed;
+ boundary="------------020002080301040909030907"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailrtr01.ntelos.net ([216.12.0.101]:28376 "EHLO
-	mailrtr01.ntelos.net") by vger.kernel.org with ESMTP
-	id S262138AbUCZS5l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Mar 2004 13:57:41 -0500
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:49676 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S261239AbUCZUuq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Mar 2004 15:50:46 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI <linux-scsi@vger.kernel.org>
-Cc: PA-RISC Linux <parisc-linux@lists.parisc-linux.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-iscsi-devel@lists.sourceforge.net
 
-
---=-LOqsCaV7bXDNtGbYOngx
-Content-Type: text/plain
+This is a multi-part message in MIME format.
+--------------020002080301040909030907
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Hi,
-I'm new here, but I was encouraged to post the following patch which
-helped me get the gdth driver to compile on a PA-RISC system.  The
-original driver assumes that EISA/ISA/PCI are all enabled, but on
-PA-RISC there is no ISA (8237A) support, so compilation broke trying to
-implement ISA-style DMA (DMA_MODE_CASCADE).
+Attached is the begining of an iSCSI transport class. Currently,
+the Cisco driver has some sysfs issues, so the patch in the next
+mail will convert their print_info attribute to use this class
+instead.
 
-The following patch breaks out the bus-dependent portions of the driver
-and only enables them when the corresponding CONFIG_ option is set.  For
-example, this allows the driver to compile when only CONFIG_PCI is set.
+This patch was built against 2.6.5-rc2. And, here is a tree. Not
+much yet, so please send comments. Maybe it should be per session
+instead of per device?
 
-ftp://ftp.parisc-linux.org/patches/diff-2.6.5-gdth-01
-This patch was written by Grant Grundler <grundler@parisc-linux.org> and
-tested by me.  Attached is a 2.4.25 version of the patch which I created
-from Grant's 2.6.5 original.  He gets all the credit. ;)
+[mc@minna 1:0:0:0]$ pwd
+/sys/class/iscsi_transport/1:0:0:0
+[mc@minna 1:0:0:0]$ tree
+.
+|-- device -> ../../../devices/platform/iscsi/1:0:0:0
+|-- driver -> ../../../bus/scsi/drivers/sd
+|-- target_addr
+|-- target_name
+`-- target_port
 
-Cheers,
-Eric
+Mike Christie
 
-
-
---=-LOqsCaV7bXDNtGbYOngx
-Content-Disposition: attachment; filename=gdth-2.6-noisa.patch
-Content-Type: text/x-patch; name=gdth-2.6-noisa.patch; charset=
+--------------020002080301040909030907
+Content-Type: text/plain;
+ name="iscsi-transport-class.patch"
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="iscsi-transport-class.patch"
 
---- a/drivers/scsi/gdth.c	7 Feb 2004 14:02:43 -0000	1.8
-+++ b/drivers/scsi/gdth.c	24 Mar 2004 17:19:06 -0000
-@@ -401,16 +401,21 @@ static void gdth_copy_internal_data(int 
-                                     char *buffer,ushort count);
- static int gdth_internal_cache_cmd(int hanum,Scsi_Cmnd *scp);
- static int gdth_fill_cache_cmd(int hanum,Scsi_Cmnd *scp,ushort hdrive);
--
-+#ifdef CONFIG_EISA
- static int gdth_search_eisa(ushort eisa_adr);
-+static int gdth_init_eisa(ushort eisa_adr,gdth_ha_str *ha);
-+#endif
-+#ifdef CONFIG_ISA
- static int gdth_search_isa(ulong32 bios_adr);
-+static int gdth_init_isa(ulong32 bios_adr,gdth_ha_str *ha);
-+#endif
-+#ifdef CONFIG_PCI
- static int gdth_search_pci(gdth_pci_str *pcistr);
-+static int gdth_init_pci(gdth_pci_str *pcistr,gdth_ha_str *ha);
-+static void gdth_sort_pci(gdth_pci_str *pcistr, int cnt);
-+#endif
- static void gdth_search_dev(gdth_pci_str *pcistr, ushort *cnt, 
-                             ushort vendor, ushort dev);
--static void gdth_sort_pci(gdth_pci_str *pcistr, int cnt);
--static int gdth_init_eisa(ushort eisa_adr,gdth_ha_str *ha);
--static int gdth_init_isa(ulong32 bios_adr,gdth_ha_str *ha);
--static int gdth_init_pci(gdth_pci_str *pcistr,gdth_ha_str *ha);
+diff -Naurp linux-2.6.5-rc2/drivers/scsi/Kconfig linux-2.6.5-rc2-iscsi/drivers/scsi/Kconfig
+--- linux-2.6.5-rc2/drivers/scsi/Kconfig	2004-03-19 16:11:42.000000000 -0800
++++ linux-2.6.5-rc2-iscsi/drivers/scsi/Kconfig	2004-03-25 01:26:32.000000000 -0800
+@@ -214,6 +214,14 @@ config SCSI_FC_ATTRS
+ 	  each attached FiberChannel device to sysfs, say Y.
+ 	  Otherwise, say N.
  
- static void gdth_enable_int(int hanum);
- static int gdth_get_status(unchar *pIStatus,int irq);
-@@ -617,8 +622,10 @@ static void gdth_munmap(void *addr) 
- #endif
- 
- 
-+#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
- static unchar   gdth_drq_tab[4] = {5,6,7,7};            /* DRQ table */
- static unchar   gdth_irq_tab[6] = {0,10,11,12,14,0};    /* IRQ table */
-+#endif
- static unchar   gdth_polling;                           /* polling if TRUE */
- static unchar   gdth_from_wait  = FALSE;                /* gdth_wait() */
- static int      wait_index,wait_hanum;                  /* gdth_wait() */
-@@ -728,8 +735,11 @@ static int rescan = 0;
- static int virt_ctr = 0;
- /* shared access */
- static int shared_access = 1;
++config SCSI_ISCSI_ATTRS
++	tristate "iSCSI Transport Attributes"
++	depends on SCSI
++	help
++	  If you wish to export transport-specific information about
++	  each attached iSCSI device to sysfs, say Y.
++	  Otherwise, say N.
 +
-+#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
- /* enable support for EISA and ISA controllers */
- static int probe_eisa_isa = 0;
-+#endif
+ endmenu
  
- #ifdef MODULE
- #if LINUX_VERSION_CODE >= 0x02011A
-@@ -744,7 +754,9 @@ MODULE_PARM(max_ids, "i");
- MODULE_PARM(rescan, "i");
- MODULE_PARM(virt_ctr, "i");
- MODULE_PARM(shared_access, "i");
-+#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
- MODULE_PARM(probe_eisa_isa, "i");
-+#endif
- MODULE_AUTHOR("Achim Leubner");
- #endif
- #if LINUX_VERSION_CODE >= 0x02040B
-@@ -818,6 +830,7 @@ static void gdth_eval_mapping(ulong32 si
- 
- /* controller search and initialization functions */
- 
-+#ifdef CONFIG_EISA
- GDTH_INITFUNC(static int, gdth_search_eisa(ushort eisa_adr))
- {
-     ulong32 id;
-@@ -834,8 +847,9 @@ GDTH_INITFUNC(static int, gdth_search_ei
- 
-     return 0;                                   
- }
-+#endif
- 
--
-+#ifdef CONFIG_ISA
- GDTH_INITFUNC(static int, gdth_search_isa(ulong32 bios_adr))
- {
-     void *addr;
-@@ -850,8 +864,9 @@ GDTH_INITFUNC(static int, gdth_search_is
-     }
-     return 0;
- }
-+#endif
- 
--
-+#ifdef CONFIG_PCI
- GDTH_INITFUNC(static int, gdth_search_pci(gdth_pci_str *pcistr))
- {
-     ushort device, cnt;
-@@ -872,6 +887,7 @@ GDTH_INITFUNC(static int, gdth_search_pc
-                     PCI_DEVICE_ID_INTEL_SRC_XSCALE);
-     return cnt;
- }
-+#endif
- 
- #if LINUX_VERSION_CODE >= 0x20363
- /* Vortex only makes RAID controllers.
-@@ -1081,6 +1097,7 @@ GDTH_INITFUNC(static void, gdth_sort_pci
- }
+ menu "SCSI low-level drivers"
+diff -Naurp linux-2.6.5-rc2/drivers/scsi/Makefile linux-2.6.5-rc2-iscsi/drivers/scsi/Makefile
+--- linux-2.6.5-rc2/drivers/scsi/Makefile	2004-03-19 16:11:40.000000000 -0800
++++ linux-2.6.5-rc2-iscsi/drivers/scsi/Makefile	2004-03-25 01:34:52.000000000 -0800
+@@ -28,6 +28,7 @@ obj-$(CONFIG_SCSI)		+= scsi_mod.o
+ # --------------------------
+ obj-$(CONFIG_SCSI_SPI_ATTRS)	+= scsi_transport_spi.o
+ obj-$(CONFIG_SCSI_FC_ATTRS) 	+= scsi_transport_fc.o
++obj-$(CONFIG_SCSI_ISCSI_ATTRS)	+= scsi_transport_iscsi.o
  
  
-+#ifdef CONFIG_EISA
- GDTH_INITFUNC(static int, gdth_init_eisa(ushort eisa_adr,gdth_ha_str *ha))
- {
-     ulong32 retries,id;
-@@ -1170,8 +1187,9 @@ GDTH_INITFUNC(static int, gdth_init_eisa
-     }
-     return 1;
- }
-+#endif
- 
--       
-+#ifdef CONFIG_ISA
- GDTH_INITFUNC(static int, gdth_init_isa(ulong32 bios_adr,gdth_ha_str *ha))
- {
-     register gdt2_dpram_str *dp2_ptr;
-@@ -1268,8 +1286,9 @@ GDTH_INITFUNC(static int, gdth_init_isa(
-     gdth_writeb(0xff, &dp2_ptr->io.irqdel);
-     return 1;
- }
-+#endif
- 
--
-+#ifdef CONFIG_PCI
- GDTH_INITFUNC(static int, gdth_init_pci(gdth_pci_str *pcistr,gdth_ha_str *ha))
- {
-     register gdt6_dpram_str *dp6_ptr;
-@@ -1677,6 +1696,7 @@ GDTH_INITFUNC(static int, gdth_init_pci(
- 
-     return 1;
- }
-+#endif
- 
- 
- /* controller protocol functions */
-@@ -4145,8 +4165,10 @@ GDTH_INITFUNC(void, internal_setup(char 
-             virt_ctr = val;
-         else if (!strncmp(argv, "shared_access:", 14))
-             shared_access = val;
-+#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
-         else if (!strncmp(argv, "probe_eisa_isa:", 15))
-             probe_eisa_isa = val;
-+#endif
-         else if (!strncmp(argv, "reserve_list:", 13)) {
-             reserve_list[0] = val;
-             for (i = 1; i < MAX_RES_ARGS; i++) {
-@@ -4193,8 +4215,6 @@ GDTH_INITFUNC(int, gdth_detect(Scsi_Host
- {
-     struct Scsi_Host *shp;
-     gdth_ha_str *ha;
--    ulong32 isa_bios;
--    ushort eisa_slot;
-     int i,hanum,cnt,ctr;
-     unchar b;
-     
-@@ -4227,8 +4247,12 @@ GDTH_INITFUNC(int, gdth_detect(Scsi_Host
-     gdth_polling = TRUE; b = 0;
-     gdth_clear_events();
- 
-+#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
-     /* As default we do not probe for EISA or ISA controllers */
--    if (probe_eisa_isa) {    
-+    if (probe_eisa_isa) {
-+	ulong32 isa_bios;
-+	ushort eisa_slot;
+ obj-$(CONFIG_SCSI_AMIGA7XX)	+= amiga7xx.o	53c7xx.o
+diff -Naurp linux-2.6.5-rc2/drivers/scsi/scsi_transport_iscsi.c linux-2.6.5-rc2-iscsi/drivers/scsi/scsi_transport_iscsi.c
+--- linux-2.6.5-rc2/drivers/scsi/scsi_transport_iscsi.c	1969-12-31 16:00:00.000000000 -0800
++++ linux-2.6.5-rc2-iscsi/drivers/scsi/scsi_transport_iscsi.c	2004-03-25 01:26:26.000000000 -0800
+@@ -0,0 +1,133 @@
++/* 
++ * iSCSI sysfs attributes.
++ *
++ * Copyright (C) IBM
++ *
++ * All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or (at
++ * your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, GOOD TITLE or
++ * NON INFRINGEMENT.  See the GNU General Public License for more
++ * details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
 +
-         /* scanning for controllers, at first: ISA controller */
-         for (isa_bios=0xc8000UL; isa_bios<=0xd8000UL; isa_bios+=0x8000UL) {
-             dma_addr_t scratch_dma_handle;
-@@ -4473,6 +4497,7 @@ GDTH_INITFUNC(int, gdth_detect(Scsi_Host
-             }
-         }
-     }
-+#endif
- 
-     /* scanning for PCI controllers */
- #if LINUX_VERSION_CODE < 0x2015C
++#include <linux/module.h>
++#include <linux/init.h>
++#include <linux/kernel.h>
++#include <scsi/scsi.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_host.h>
++#include <scsi/scsi_transport.h>
++#include <scsi/scsi_transport_iscsi.h>
++
++#define ISCSI_NUM_ATTRS 3	/* increase this if you add attributes */
++
++struct iscsi_internal {
++	struct scsi_transport_template t;
++	struct iscsi_function_template *f;
++	/* The actual attributes */
++	struct class_device_attribute private_attrs[ISCSI_NUM_ATTRS];
++	/* The array of null terminated pointers to attributes 
++	 * needed by scsi_sysfs.c */
++	struct class_device_attribute *attrs[ISCSI_NUM_ATTRS + 1];
++};
++
++#define to_iscsi_internal(tmpl) container_of(tmpl, struct iscsi_internal, t)
++
++static void transport_class_release(struct class_device *class_dev)
++{
++	struct scsi_device *sdev = transport_class_to_sdev(class_dev);
++	put_device(&sdev->sdev_gendev);
++}
++
++struct class iscsi_transport_class = {
++	.name = "iscsi_transport",
++	.release = transport_class_release,
++};
++
++#define iscsi_transport_show_function(field)				\
++									\
++static ssize_t								\
++show_iscsi_transport_##field(struct class_device *cdev, char *buf)	\
++{									\
++	struct scsi_device *sdev = transport_class_to_sdev(cdev);	\
++	struct iscsi_internal *i = to_iscsi_internal(sdev->host->transportt); \
++	return i->f->get_##field(sdev, buf);				\
++}
++
++#define iscsi_transport_rd_attr(field)					\
++	iscsi_transport_show_function(field)				\
++static CLASS_DEVICE_ATTR(field, S_IRUGO, show_iscsi_transport_##field, NULL)
++
++iscsi_transport_rd_attr(target_port);
++iscsi_transport_rd_attr(target_name);
++iscsi_transport_rd_attr(target_addr);
++
++#define SETUP_ATTRIBUTE(ft, field)					\
++	if (ft->get_##field) {						\
++		i->private_attrs[count] = class_device_attr_##field;	\
++		i->attrs[count] = &i->private_attrs[count];		\
++		count++;						\
++	}
++
++struct scsi_transport_template *
++iscsi_attach_transport(struct iscsi_function_template *ft)
++{
++	struct iscsi_internal *i = kmalloc(sizeof(struct iscsi_internal),
++					   GFP_KERNEL);
++	int count = 0;
++	if (unlikely(!i))
++		return NULL;
++
++	memset(i, 0, sizeof(struct iscsi_internal));
++
++	i->t.attrs = &i->attrs[0];
++	i->t.class = &iscsi_transport_class;
++	i->t.size = 0;
++	i->f = ft;
++
++	SETUP_ATTRIBUTE(ft, target_port);
++	SETUP_ATTRIBUTE(ft, target_name);
++	SETUP_ATTRIBUTE(ft, target_addr);
++	i->attrs[count] = NULL;
++
++	return &i->t;
++}
++EXPORT_SYMBOL(iscsi_attach_transport);
++
++void iscsi_release_transport(struct scsi_transport_template *t)
++{
++	struct iscsi_internal *i = to_iscsi_internal(t);
++
++	kfree(i);
++}
++EXPORT_SYMBOL(iscsi_release_transport);
++
++
++static __init int iscsi_transport_init(void)
++{
++	return class_register(&iscsi_transport_class);
++}
++
++static void __exit iscsi_transport_exit(void)
++{
++	class_unregister(&iscsi_transport_class);
++}
++
++module_init(iscsi_transport_init);
++module_exit(iscsi_transport_exit);
++
++MODULE_AUTHOR("Mike Christie");
++MODULE_DESCRIPTION("iSCSI Transport Attributes");
++MODULE_LICENSE("GPL");
++
+diff -Naurp linux-2.6.5-rc2/include/scsi/scsi_transport_iscsi.h linux-2.6.5-rc2-iscsi/include/scsi/scsi_transport_iscsi.h
+--- linux-2.6.5-rc2/include/scsi/scsi_transport_iscsi.h	1969-12-31 16:00:00.000000000 -0800
++++ linux-2.6.5-rc2-iscsi/include/scsi/scsi_transport_iscsi.h	2004-03-25 01:26:02.000000000 -0800
+@@ -0,0 +1,41 @@
++/* 
++ * iSCSI sysfs attributes.
++ *
++ * Copyright (C) IBM
++ *
++ * All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or (at
++ * your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, GOOD TITLE or
++ * NON INFRINGEMENT.  See the GNU General Public License for more
++ * details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#ifndef SCSI_TRANSPORT_ISCSI_H
++#define SCSI_TRANSPORT_ISCSI_H
++
++#include <linux/config.h>
++
++struct scsi_transport_template;
++
++/* The functions by which the transport class and the driver communicate */
++struct iscsi_function_template {
++	ssize_t (*get_target_port)(struct scsi_device *, char *);
++	ssize_t (*get_target_addr)(struct scsi_device *, char *);
++	ssize_t (*get_target_name)(struct scsi_device *, char *);
++};
++
++struct scsi_transport_template *iscsi_attach_transport(struct iscsi_function_template *);
++void iscsi_release_transport(struct scsi_transport_template *t);
++
++#endif /* SCSI_TRANSPORT_ISCSI_H */
 
---=-LOqsCaV7bXDNtGbYOngx
-Content-Disposition: attachment; filename=gdth-2.4.25-noisa.patch
-Content-Type: text/x-patch; name=gdth-2.4.25-noisa.patch; charset=
-Content-Transfer-Encoding: 7bit
-
---- drivers/scsi/gdth.c.orig	2003-08-30 02:01:42.000000000 -0400
-+++ drivers/scsi/gdth.c	2004-03-25 08:42:07.000000000 -0500
-@@ -380,16 +380,21 @@
- static void gdth_copy_internal_data(Scsi_Cmnd *scp,char *buffer,ushort count);
- static int gdth_internal_cache_cmd(int hanum,Scsi_Cmnd *scp);
- static int gdth_fill_cache_cmd(int hanum,Scsi_Cmnd *scp,ushort hdrive);
--
-+#ifdef CONFIG_EISA
- static int gdth_search_eisa(ushort eisa_adr);
-+static int gdth_init_eisa(ushort eisa_adr,gdth_ha_str *ha);
-+#endif
-+#ifdef CONFIG_ISA
- static int gdth_search_isa(ulong32 bios_adr);
-+static int gdth_init_isa(ulong32 bios_adr,gdth_ha_str *ha);
-+#endif
-+#ifdef CONFIG_PCI
- static int gdth_search_pci(gdth_pci_str *pcistr);
-+static int gdth_init_pci(gdth_pci_str *pcistr,gdth_ha_str *ha);
-+static void gdth_sort_pci(gdth_pci_str *pcistr, int cnt);
-+#endif
- static void gdth_search_dev(gdth_pci_str *pcistr, ushort *cnt, 
-                             ushort vendor, ushort dev);
--static void gdth_sort_pci(gdth_pci_str *pcistr, int cnt);
--static int gdth_init_eisa(ushort eisa_adr,gdth_ha_str *ha);
--static int gdth_init_isa(ulong32 bios_adr,gdth_ha_str *ha);
--static int gdth_init_pci(gdth_pci_str *pcistr,gdth_ha_str *ha);
- 
- static void gdth_enable_int(int hanum);
- static int gdth_get_status(unchar *pIStatus,int irq);
-@@ -589,8 +594,10 @@
- #endif
- 
- 
-+#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
- static unchar   gdth_drq_tab[4] = {5,6,7,7};            /* DRQ table */
- static unchar   gdth_irq_tab[6] = {0,10,11,12,14,0};    /* IRQ table */
-+#endif
- static unchar   gdth_polling;                           /* polling if TRUE */
- static unchar   gdth_from_wait  = FALSE;                /* gdth_wait() */
- static int      wait_index,wait_hanum;                  /* gdth_wait() */
-@@ -687,6 +694,11 @@
- /* shared access */
- static int shared_access = 1;
- 
-+#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
-+/* enable support for EISA and ISA controllers */
-+static int probe_eisa_isa = 0;
-+#endif
-+
- #ifdef MODULE
- #if LINUX_VERSION_CODE >= 0x02011A
- /* parameters for modprobe/insmod */
-@@ -700,6 +712,9 @@
- MODULE_PARM(rescan, "i");
- MODULE_PARM(virt_ctr, "i");
- MODULE_PARM(shared_access, "i");
-+#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
-+MODULE_PARM(probe_eisa_isa, "i");
-+#endif
- MODULE_AUTHOR("Achim Leubner");
- #endif
- #if LINUX_VERSION_CODE >= 0x02040B
-@@ -764,6 +779,7 @@
- 
- /* controller search and initialization functions */
- 
-+#ifdef CONFIG_EISA
- GDTH_INITFUNC(static int, gdth_search_eisa(ushort eisa_adr))
- {
-     ulong32 id;
-@@ -780,8 +796,9 @@
- 
-     return 0;                                   
- }
-+#endif
- 
--
-+#ifdef CONFIG_ISA
- GDTH_INITFUNC(static int, gdth_search_isa(ulong32 bios_adr))
- {
-     void *addr;
-@@ -796,8 +813,9 @@
-     }
-     return 0;
- }
-+#endif
- 
--
-+#ifdef CONFIG_PCI
- GDTH_INITFUNC(static int, gdth_search_pci(gdth_pci_str *pcistr))
- {
-     ushort device, cnt;
-@@ -816,6 +834,7 @@
-                     PCI_DEVICE_ID_INTEL_SRC);
-     return cnt;
- }
-+#endif
- 
- #if LINUX_VERSION_CODE >= 0x20363
- /* Vortex only makes RAID controllers.
-@@ -1024,6 +1043,7 @@
- }
- 
- 
-+#ifdef CONFIG_EISA
- GDTH_INITFUNC(static int, gdth_init_eisa(ushort eisa_adr,gdth_ha_str *ha))
- {
-     ulong32 retries,id;
-@@ -1113,8 +1133,9 @@
-     }
-     return 1;
- }
-+#endif
- 
--       
-+#ifdef CONFIG_ISA       
- GDTH_INITFUNC(static int, gdth_init_isa(ulong32 bios_adr,gdth_ha_str *ha))
- {
-     register gdt2_dpram_str *dp2_ptr;
-@@ -1211,8 +1232,9 @@
-     gdth_writeb(0xff, &dp2_ptr->io.irqdel);
-     return 1;
- }
-+#endif
- 
--
-+#ifdef CONFIG_PCI
- GDTH_INITFUNC(static int, gdth_init_pci(gdth_pci_str *pcistr,gdth_ha_str *ha))
- {
-     register gdt6_dpram_str *dp6_ptr;
-@@ -1612,6 +1634,7 @@
- 
-     return 1;
- }
-+#endif
- 
- 
- /* controller protocol functions */
-@@ -3943,6 +3966,10 @@
-             virt_ctr = val;
-         else if (!strncmp(argv, "shared_access:", 14))
-             shared_access = val;
-+#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
-+	else if (!strncmp(argv, "probe_eisa_isa:", 15))
-+	    probe_eisa_isa = val;
-+#endif
-         else if (!strncmp(argv, "reserve_list:", 13)) {
-             reserve_list[0] = val;
-             for (i = 1; i < MAX_RES_ARGS; i++) {
-@@ -3989,8 +4016,6 @@
- {
-     struct Scsi_Host *shp;
-     gdth_ha_str *ha;
--    ulong32 isa_bios;
--    ushort eisa_slot;
-     int i,hanum,cnt,ctr;
-     unchar b;
-     
-@@ -4023,6 +4048,12 @@
-     gdth_polling = TRUE; b = 0;
-     gdth_clear_events();
- 
-+#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
-+    /* As default we do not probe for EISA or ISA controllers */
-+    if (probe_eisa_isa) {
-+       ulong32 isa_bios;
-+       ushort eisa_slot;
-+
-     /* scanning for controllers, at first: ISA controller */
-     for (isa_bios=0xc8000UL; isa_bios<=0xd8000UL; isa_bios+=0x8000UL) {
-         if (gdth_ctr_count >= MAXHA) 
-@@ -4241,6 +4272,7 @@
-             gdth_enable_int(hanum);
-         }
-     }
-+#endif
- 
-     /* scanning for PCI controllers */
- #if LINUX_VERSION_CODE >= 0x2015C
-
---=-LOqsCaV7bXDNtGbYOngx--
+--------------020002080301040909030907--
 
