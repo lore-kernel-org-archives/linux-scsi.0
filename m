@@ -1,98 +1,231 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH scsi-misc-2.6 01/13] scsi: don't use
-	blk_insert_request() for requeueing
-Date: Fri, 01 Apr 2005 12:09:48 -0600
-Message-ID: <1112378988.5776.18.camel@mulgrave>
+Subject: Re: [PATCH scsi-misc-2.6 07/13] scsi: move error handling out of
+	scsi_init_io() into scsi_prep_fn()
+Date: Fri, 01 Apr 2005 12:23:37 -0600
+Message-ID: <1112379817.5776.27.camel@mulgrave>
 References: <20050331090647.FEDC3964@htj.dyndns.org>
-	 <20050331090647.BA0001D5@htj.dyndns.org>
-	 <1112291600.5619.19.camel@mulgrave> <20050401050109.GB11318@htj.dyndns.org>
+	 <20050331090647.79DF3B09@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:6324 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:20404 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262834AbVDASJ6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Apr 2005 13:09:58 -0500
-In-Reply-To: <20050401050109.GB11318@htj.dyndns.org>
+	id S262833AbVDASXo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Apr 2005 13:23:44 -0500
+In-Reply-To: <20050331090647.79DF3B09@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Fri, 2005-04-01 at 14:01 +0900, Tejun Heo wrote:
-> > Well, REQ_SPECIAL is the signal to the mid-layer that we've allocated
-> > the resources necessary to process the command, so in practice it will
-> > be turned on for every requeue request (because we set it when the
-> > command is prepared),
-> 
->  Sorry, but where?  AFAICT, only blk_insert_request() and
-> scsi_init_io() on sgtable allocation failure set REQ_SPECIAL during
-> scsi midlayer processing.  This patch replaces blk_insert_request()
-> with blk_requeue_request() and the next patch removes REQ_SPECIAL
-> setting in scsi_init_io().
-> 
->  REQ_SPECIAL is currently overloaded to mean two different things.
-> 
->  * The request is a special request.
->  * The request has been requeued using scsi_queue_insert().
->    i.e. It has been prepped.
+On Thu, 2005-03-31 at 18:08 +0900, Tejun Heo wrote:
+> 	When scsi_init_io() returns BLKPREP_DEFER or BLKPREP_KILL,
+> 	it's supposed to free resources itself.  This patch
+> 	consolidates defer and kill handling into scsi_prep_fn().
+> 	This fixes a queue stall bug which occurred when sgtable
+> 	allocation failed and device_busy == 0.
 
-But its true meaning is defined by the block layer (since it's a block
-flag).  It's supposed to mean that the ->special field of the request is
-in use to carry data meaningful to the underlying driver.  SCSI sets it
-on that basis.
+This one I like, but I think it doesn't go far enough.  There are
+situations where a re-queue can also re-prepare, which means we leak sg
+lists and commands on BLKPREP_KILL because of SCSI state.
 
-So, if I understand correctly, based on the fact that the current block
-code in fact never bothers with REQ_SPECIAL, but only checks req-
->special, you're proposing that we need never actually set REQ_SPECIAL
-when making use of the ->special field?  Thus you want to use
-REQ_SPECIAL to distinguish between internally generated commands and
-external commands?  That sounds fine as long as the block API gets
-updated to reflect this (comments in linux/blkdev.h shoudl be fine).
+How about the attached.
 
-> > The other reason I don't like this is that we've been trying hard to
-> > sweep excess block knowledge out of the mid-layer.  I don't think
-> > REQ_SOFTBARRIER is anything we really have to know about.
-> 
->  We currently requeue using two different block functions.
-> 
->  * blk_insert_request(): this function does two things
-> 	1. enqueue special requests
-> 	2. turn on REQ_SPECIAL|REQ_SOFTBARRIER and call
-> 	   blk_requeue_request().  This is used only by scsi midlayer.
->  * blk_requeue_request()
-> 
->  REQ_SOFTBARRIER tells the request queue that other requests shouldn't
-> pass this one.  We need this to be set for prepped requests;
-> otherwise, it may, theoretically, deadlock (unprepped request waiting
-> for the prepped request back in the queue).  So, the current code
-> 
->  * depends on blk_insert_request() sets REQ_SOFTBARRIER when
->    requeueing.  It works but nothing in the interface or semantics
->    is clear about it.  Why expect a request reinserted using
->    blk_insert_request() gets REQ_SOFTBARRIER turned on while a request
->    reinserted with blk_requeue_request() doesn't?  or why are there
->    two different paths doing mostly the same thing with slightly
->    different semantics?
->  * requeueing using blk_requeue_request() in scsi_request_fn() doesn't
->    turn on either REQ_SPECIAL or REQ_SOFTBARRIER.  Missing REQ_SPECIAL
->    is okay, as we have the extra path in prep_fn (if it ever gets requeued
->    due to medium failure, so gets re-prepped), but missing
->    REQ_SOFTBARRIER can *theoretically* cause problem.
-> 
->  So, it's more likely becoming less dependent on unobvious behavior of
-> block layer.  As we need the request to stay on top, we tell the block
-> layer to do so, instead of depending on blk_insert_request()
-> unobviously doing it for us.
-
-But that's the point.  This is non obvious behaviour in the block layer,
-so SCSI doesn't want to know about it (and the block maintainer won't
-want to trawl through the SCSI and other block drivers altering it if it
-changes).  If the bug is that the block layer isn't setting it on all
-our requeues where it should, then either we're using the wrong API or
-the block layer API is buggy.
+Note, I've also altered the prepare function so req->special never gets
+altered if it points to a scsi_request. Previously it would be altered
+to point to the command, but now we couldn't put the command since the
+scsi_request we can't get to also has a copy of if.  So, if you can make
+your later REQ_SPECIAL removal work, we can dispense with sr_magic and
+simply use REQ_SPECIAL as the discriminator for the contents of req-
+>special.
 
 James
+
+===== drivers/scsi/scsi_lib.c 1.153 vs edited =====
+--- 1.153/drivers/scsi/scsi_lib.c	2005-03-30 13:49:45 -06:00
++++ edited/drivers/scsi/scsi_lib.c	2005-04-01 12:18:36 -06:00
+@@ -63,6 +63,21 @@
+ }; 	
+ #undef SP
+ 
++static inline struct scsi_request *scsi_request(struct request *req) {
++	struct scsi_request *sreq = req->special;
++
++	if (sreq && sreq->sr_magic == SCSI_REQ_MAGIC)
++		return sreq;
++	return NULL;
++}
++
++static struct scsi_cmnd *scsi_command(struct request *req) {
++	struct scsi_request *sreq = scsi_request(req);
++
++	if (sreq)
++		return sreq->sr_command;
++	return req->special;
++}
+ 
+ /*
+  * Function:    scsi_insert_special_req()
+@@ -626,6 +641,9 @@
+ {
+ 	struct scsi_host_sg_pool *sgp;
+ 
++	if (sgl == NULL)
++		return;
++
+ 	BUG_ON(index > SG_MEMPOOL_NR);
+ 
+ 	sgp = scsi_sg_pools + index;
+@@ -973,9 +991,6 @@
+ 	printk(KERN_ERR "req nr_sec %lu, cur_nr_sec %u\n", req->nr_sectors,
+ 			req->current_nr_sectors);
+ 
+-	/* release the command and kill it */
+-	scsi_release_buffers(cmd);
+-	scsi_put_command(cmd);
+ 	return BLKPREP_KILL;
+ }
+ 
+@@ -1041,7 +1056,7 @@
+ 	if (unlikely(!scsi_device_online(sdev))) {
+ 		printk(KERN_ERR "scsi%d (%d:%d): rejecting I/O to offline device\n",
+ 		       sdev->host->host_no, sdev->id, sdev->lun);
+-		return BLKPREP_KILL;
++		goto kill;
+ 	}
+ 	if (unlikely(sdev->sdev_state != SDEV_RUNNING)) {
+ 		/* OK, we're not in a running state don't prep
+@@ -1051,7 +1066,7 @@
+ 			 * at all allowed down */
+ 			printk(KERN_ERR "scsi%d (%d:%d): rejecting I/O to dead device\n",
+ 			       sdev->host->host_no, sdev->id, sdev->lun);
+-			return BLKPREP_KILL;
++			goto kill;
+ 		}
+ 		/* OK, we only allow special commands (i.e. not
+ 		 * user initiated ones */
+@@ -1069,15 +1084,14 @@
+ 	 * at request->cmd, as this tells us the real story.
+ 	 */
+ 	if (req->flags & REQ_SPECIAL) {
+-		struct scsi_request *sreq = req->special;
++		struct scsi_request *sreq = scsi_request(req);
+ 
+-		if (sreq->sr_magic == SCSI_REQ_MAGIC) {
++		if (sreq) {
+ 			cmd = scsi_get_command(sreq->sr_device, GFP_ATOMIC);
+ 			if (unlikely(!cmd))
+ 				goto defer;
+ 			scsi_init_cmd_from_req(cmd, sreq);
+-		} else
+-			cmd = req->special;
++		}
+ 	} else if (req->flags & (REQ_CMD | REQ_BLOCK_PC)) {
+ 
+ 		if(unlikely(specials_only)) {
+@@ -1087,7 +1101,7 @@
+ 			
+ 			printk(KERN_ERR "scsi%d (%d:%d): rejecting I/O to device being removed\n",
+ 			       sdev->host->host_no, sdev->id, sdev->lun);
+-			return BLKPREP_KILL;
++			goto kill;
+ 		}
+ 			
+ 			
+@@ -1098,22 +1112,16 @@
+ 			cmd = scsi_get_command(sdev, GFP_ATOMIC);
+ 			if (unlikely(!cmd))
+ 				goto defer;
+-		} else
+-			cmd = req->special;
+-		
++			req->special = cmd;
++			cmd->request = req;
++		}
+ 		/* pull a tag out of the request if we have one */
+ 		cmd->tag = req->tag;
+ 	} else {
+ 		blk_dump_rq_flags(req, "SCSI bad req");
+-		return BLKPREP_KILL;
++		goto kill;
+ 	}
+-	
+-	/* note the overloading of req->special.  When the tag
+-	 * is active it always means cmd.  If the tag goes
+-	 * back for re-queueing, it may be reset */
+-	req->special = cmd;
+-	cmd->request = req;
+-	
++
+ 	/*
+ 	 * FIXME: drop the lock here because the functions below
+ 	 * expect to be called without the queue lock held.  Also,
+@@ -1143,18 +1151,26 @@
+ 		 * required).
+ 		 */
+ 		ret = scsi_init_io(cmd);
+-		if (ret)	/* BLKPREP_KILL return also releases the command */
+-			return ret;
++		switch (ret) {
++		case 0:
++			/* successful initialisation */
++			break;
++
++		case BLKPREP_DEFER:
++			goto defer;
++
++		default:
++			/* Unrecognised return, fall through */
++		case BLKPREP_KILL:
++			goto kill;
++		}
+ 		
+ 		/*
+ 		 * Initialize the actual SCSI command for this request.
+ 		 */
+ 		drv = *(struct scsi_driver **)req->rq_disk->private_data;
+-		if (unlikely(!drv->init_command(cmd))) {
+-			scsi_release_buffers(cmd);
+-			scsi_put_command(cmd);
+-			return BLKPREP_KILL;
+-		}
++		if (unlikely(!drv->init_command(cmd)))
++			goto kill;
+ 	}
+ 
+ 	/*
+@@ -1170,6 +1186,22 @@
+ 	if (sdev->device_busy == 0)
+ 		blk_plug_device(q);
+ 	return BLKPREP_DEFER;
++ kill:
++	/* Here we have to release every resource associated with the
++	 * request because this will complete at the request level
++	 * (req->end_io), not the scsi command level, so no scsi
++	 * routine will get to free the associated resources */
++
++	cmd = scsi_command(req);
++
++	if (cmd) {
++		struct scsi_request *sreq = scsi_request(req);
++		scsi_release_buffers(cmd);
++		scsi_put_command(cmd);
++		if (sreq)
++			sreq->sr_command = NULL;
++	}
++	return BLKPREP_KILL;
+ }
+ 
+ /*
+@@ -1341,7 +1373,7 @@
+ 		 */
+ 		spin_unlock_irq(shost->host_lock);
+ 
+-		cmd = req->special;
++		cmd = scsi_command(req);
+ 		if (unlikely(cmd == NULL)) {
+ 			printk(KERN_CRIT "impossible request in %s.\n"
+ 					 "please mail a stack trace to "
 
 
