@@ -1,119 +1,201 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: PATCH: exclude certain commands from emulated SCSI hosts
-Date: Mon, 21 Apr 2003 16:45:31 -0700
+From: Mike Christie <mikenc@us.ibm.com>
+Subject: [PATCH] fixes compile errors in cpqfcTS driver
+Date: Mon, 21 Apr 2003 16:57:09 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030421164531.F12581@one-eyed-alien.net>
-References: <20030323230438.E24668@one-eyed-alien.net> <1048519237.1982.16.camel@mulgrave> <20030324093028.A1066@one-eyed-alien.net> <1049556643.1762.16.camel@mulgrave> <20030420143351.C20891@one-eyed-alien.net> <1050942530.1772.12.camel@mulgrave> <20030421100102.A12581@one-eyed-alien.net> <1050953018.2269.140.camel@mulgrave> <20030421123541.C12581@one-eyed-alien.net> <20030421142805.A31533@beaverton.ibm.com>
+Message-ID: <3EA48555.8020600@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="tmoQ0UElFV5VgXgH"
+Content-Type: multipart/mixed;
+ boundary="------------060004060501010809050602"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:58118 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S262703AbTDUXdm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Apr 2003 19:33:42 -0400
-Content-Disposition: inline
-In-Reply-To: <20030421142805.A31533@beaverton.ibm.com>; from patmans@us.ibm.com on Mon, Apr 21, 2003 at 02:28:05PM -0700
+Received: from e4.ny.us.ibm.com ([32.97.182.104]:26261 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262682AbTDUXqH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Apr 2003 19:46:07 -0400
+Received: from northrelay01.pok.ibm.com (northrelay01.pok.ibm.com [9.56.224.149])
+	by e4.ny.us.ibm.com (8.12.9/8.12.2) with ESMTP id h3LNw6sZ123804
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Apr 2003 19:58:06 -0400
+Received: from us.ibm.com (dyn9-47-17-167.beaverton.ibm.com [9.47.17.167])
+	by northrelay01.pok.ibm.com (8.12.9/NCO/VER6.5) with ESMTP id h3LNw3SU037910
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Apr 2003 19:58:04 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@transmeta.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>, USB Storage List <usb-storage@one-eyed-alien.net>, Linux SCSI list <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>
+To: linux-scsi@vger.kernel.org
+
+This is a multi-part message in MIME format.
+--------------060004060501010809050602
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+The attached patch fixes the compile errors in the cpqfcTS driver caused 
+by changes in Scsi_Cmnd described in Bugzilla bug #346 at 
+http://bugme.osdl.org/show_bug.cgi?id=346.  It was built against 2.5.68. 
+I do not have the hardware, so I have only 
+verified that it compiles correctly.
+
+Mike Christie
+mikenc@us.ibm.com
 
 
---tmoQ0UElFV5VgXgH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, Apr 21, 2003 at 02:28:05PM -0700, Patrick Mansfield wrote:
-> Matthew -
->=20
-> On Mon, Apr 21, 2003 at 12:35:41PM -0700, Matthew Dharm wrote:
->=20
-> > Then can we have it the way I proposed?   I have tested patches that use
-> > this code as I proposed it waiting to be merged as soon as this is
-> > accepted.
->=20
-> I think it is OK, but as argued before: I was hoping to see attributes and
-> code that can be used for all scsi_devices off a particular adapter/LLDD,
-> or a specific scsi_device. Then we would not need separate attributes (or
-> filters) for adapters/LLDD and for the scsi_devices (the current BFLAGS
-> like code accessed via the scsi_dev_info_list; though being able to filter
-> any command is certainly more powerful).
+ cpqfcTSinit.c   |    6 ++++--
+ cpqfcTSworker.c |   44 ++++++++++++++++++++++----------------------
+ 2 files changed, 26 insertions(+), 24 deletions(-)
 
-I think this is a nice idea, but you're talking about filtering at an
-entirely different level from what I'm talking about.  I'm filtering at the
-LLDD level, you want to filter in the mid-layer before the command gets out
-the door to the LLDD.
+--------------060004060501010809050602
+Content-Type: text/plain;
+ name="cpfc_patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="cpfc_patch"
 
-> It would be very usefull to allow modification or addition of the filter
-> via user land (or at boot/insmod time), eventually via sysfs.  Embedding
-> the filter call in the queuecommand prevents such additions for arbitrary
-> adapters (i.e. if the adapter does not call the filter, we can't add any
-> filtering).
+diff -puNr linux-2.5.68-orig/drivers/scsi/cpqfcTSinit.c linux-2.5.68/drivers/scsi/cpqfcTSinit.c
+--- linux-2.5.68-orig/drivers/scsi/cpqfcTSinit.c	Sat Apr 19 19:48:50 2003
++++ linux-2.5.68/drivers/scsi/cpqfcTSinit.c	Mon Apr 21 16:11:03 2003
+@@ -931,6 +931,7 @@ int cpqfcTS_proc_info (char *buffer, cha
+ {
+   struct Scsi_Host *host;
+   Scsi_Cmnd DumCmnd;
++  Scsi_Device DumSdev;
+   int Chan, Targ, i;
+   struct info_str info;
+   CPQFCHBA *cpqfcHBA;
+@@ -963,11 +964,12 @@ int cpqfcTS_proc_info (char *buffer, cha
+ 
+ #define DISPLAY_WWN_INFO
+ #ifdef DISPLAY_WWN_INFO
++  DumCmnd.device = &DumSdev;
+   copy_info(&info, "WWN database: (\"port_id: 000000\" means disconnected)\n");
+   for ( Chan=0; Chan <= host->max_channel; Chan++) {
+-    DumCmnd.channel = Chan;
++    DumCmnd.device->channel = Chan;
+     for (Targ=0; Targ <= host->max_id; Targ++) {
+-      DumCmnd.target = Targ;
++      DumCmnd.device->id = Targ;
+       if ((pLoggedInPort = fcFindLoggedInPort( fcChip,
+ 	    			&DumCmnd, // search Scsi Nexus
+     				0,        // DON'T search list for FC port id
+diff -puNr linux-2.5.68-orig/drivers/scsi/cpqfcTSworker.c linux-2.5.68/drivers/scsi/cpqfcTSworker.c
+--- linux-2.5.68-orig/drivers/scsi/cpqfcTSworker.c	Sat Apr 19 19:50:35 2003
++++ linux-2.5.68/drivers/scsi/cpqfcTSworker.c	Mon Apr 21 16:11:03 2003
+@@ -1196,9 +1196,9 @@ void cpqfcTSTerminateExchange( 
+ 	// have to terminate by SCSI target, NOT port_id.
+         if( Exchanges->fcExchange[x_ID].Cmnd) // Cmnd in progress?
+ 	{	                 
+-	  if( (Exchanges->fcExchange[x_ID].Cmnd->target == ScsiNexus->target)
++	  if( (Exchanges->fcExchange[x_ID].Cmnd->device->id == ScsiNexus->target)
+ 			&&
+-            (Exchanges->fcExchange[x_ID].Cmnd->channel == ScsiNexus->channel)) 
++            (Exchanges->fcExchange[x_ID].Cmnd->device->channel == ScsiNexus->channel)) 
+           {
+             Exchanges->fcExchange[x_ID].status = TerminateStatus;
+             cpqfcTSPutLinkQue( cpqfcHBAdata, BLS_ABTS, &x_ID ); // timed-out
+@@ -2681,7 +2681,7 @@ static void SendLogins( CPQFCHBA *cpqfcH
+ // D. Deming, 1994, pg 7-19 (ISBN 1-879936-08-9)
+ static void ScsiReportLunsDone(Scsi_Cmnd *Cmnd)
+ {
+-  struct Scsi_Host *HostAdapter = Cmnd->host;
++  struct Scsi_Host *HostAdapter = Cmnd->device->host;
+   CPQFCHBA *cpqfcHBAdata = (CPQFCHBA *)HostAdapter->hostdata;
+   PTACHYON fcChip = &cpqfcHBAdata->fcChip;
+   FC_EXCHANGES *Exchanges = fcChip->Exchanges;
+@@ -2887,11 +2887,11 @@ static void 
+ call_scsi_done(Scsi_Cmnd *Cmnd)
+ {
+ 	CPQFCHBA *hba;
+-	hba = (CPQFCHBA *) Cmnd->host->hostdata;
++	hba = (CPQFCHBA *) Cmnd->device->host->hostdata;
+ 	// Was this command a cpqfc passthru ioctl ?
+-        if (Cmnd->sc_request != NULL && Cmnd->host != NULL && 
+-		Cmnd->host->hostdata != NULL &&
+-		is_private_data_of_cpqfc((CPQFCHBA *) Cmnd->host->hostdata,
++        if (Cmnd->sc_request != NULL && Cmnd->device->host != NULL && 
++		Cmnd->device->host->hostdata != NULL &&
++		is_private_data_of_cpqfc((CPQFCHBA *) Cmnd->device->host->hostdata,
+ 			Cmnd->sc_request->upper_private_data)) {
+ 		cpqfc_free_private_data(hba, 
+ 			Cmnd->sc_request->upper_private_data);	
+@@ -2952,7 +2952,7 @@ static void IssueReportLunsCommand( 
+     memset( ucBuff, 0, REPORT_LUNS_PL);
+     
+     Cmnd->scsi_done = ScsiReportLunsDone;
+-    Cmnd->host = cpqfcHBAdata->HostAdapter;
++    Cmnd->device->host = cpqfcHBAdata->HostAdapter;
+ 
+     Cmnd->request_buffer = pLoggedInPort->ReportLunsPayload; 
+     Cmnd->request_bufflen = REPORT_LUNS_PL; 
+@@ -2962,8 +2962,8 @@ static void IssueReportLunsCommand( 
+     Cmnd->cmnd[9] = (UCHAR)REPORT_LUNS_PL;
+     Cmnd->cmd_len = 12;
+ 
+-    Cmnd->channel = pLoggedInPort->ScsiNexus.channel;
+-    Cmnd->target = pLoggedInPort->ScsiNexus.target;
++    Cmnd->device->channel = pLoggedInPort->ScsiNexus.channel;
++    Cmnd->device->id = pLoggedInPort->ScsiNexus.target;
+ 
+ 	    
+     ulStatus = cpqfcTSBuildExchange(
+@@ -3361,22 +3361,22 @@ PFC_LOGGEDIN_PORT  fcFindLoggedInPort( 
+     {
+       // check Linux Scsi Cmnd for channel/target Nexus match
+       // (all luns are accessed through matching "pLoggedInPort")
+-      if( (pLoggedInPort->ScsiNexus.target == Cmnd->target)
++      if( (pLoggedInPort->ScsiNexus.target == Cmnd->device->id)
+                 &&
+-          (pLoggedInPort->ScsiNexus.channel == Cmnd->channel))
++          (pLoggedInPort->ScsiNexus.channel == Cmnd->device->channel))
+       {
+         // For "passthru" modes, the IOCTL caller is responsible
+ 	// for setting the FCP-LUN addressing
+-	if (Cmnd->sc_request != NULL && Cmnd->host != NULL && 
+-		Cmnd->host->hostdata != NULL &&
+-		is_private_data_of_cpqfc((CPQFCHBA *) Cmnd->host->hostdata,
++	if (Cmnd->sc_request != NULL && Cmnd->device->host != NULL && 
++		Cmnd->device->host->hostdata != NULL &&
++		is_private_data_of_cpqfc((CPQFCHBA *) Cmnd->device->host->hostdata,
+ 			Cmnd->sc_request->upper_private_data)) { 
+ 		/* This is a passthru... */
+ 		cpqfc_passthru_private_t *pd;
+ 		pd = Cmnd->sc_request->upper_private_data;
+         	Cmnd->SCp.phase = pd->bus;
+ 		// Cmnd->SCp.have_data_in = pd->pdrive;
+-		Cmnd->SCp.have_data_in = Cmnd->lun;
++		Cmnd->SCp.have_data_in = Cmnd->device->lun;
+ 	} else {
+ 	  /* This is not a passthru... */
+ 	
+@@ -3391,17 +3391,17 @@ PFC_LOGGEDIN_PORT  fcFindLoggedInPort( 
+ 	  // Report Luns command
+           if( pLoggedInPort->ScsiNexus.LunMasking == 1) 
+ 	  {
+-	    if (Cmnd->lun > sizeof(pLoggedInPort->ScsiNexus.lun))
++	    if (Cmnd->device->lun > sizeof(pLoggedInPort->ScsiNexus.lun))
+ 		return NULL;
+             // we KNOW all the valid LUNs... 0xFF is invalid!
+-            Cmnd->SCp.have_data_in = pLoggedInPort->ScsiNexus.lun[Cmnd->lun];
+-	    if (pLoggedInPort->ScsiNexus.lun[Cmnd->lun] == 0xFF)
++            Cmnd->SCp.have_data_in = pLoggedInPort->ScsiNexus.lun[Cmnd->device->lun];
++	    if (pLoggedInPort->ScsiNexus.lun[Cmnd->device->lun] == 0xFF)
+ 		return NULL;
+ 	    // printk("xlating lun %d to 0x%02x\n", Cmnd->lun, 
+             //	pLoggedInPort->ScsiNexus.lun[Cmnd->lun]);
+ 	  }
+ 	  else
+-	    Cmnd->SCp.have_data_in = Cmnd->lun; // Linux & target luns match
++	    Cmnd->SCp.have_data_in = Cmnd->device->lun; // Linux & target luns match
+ 	}
+ 	break; // found it!
+       }
+@@ -3507,9 +3507,9 @@ static void UnblockScsiDevice( struct Sc
+ 
+ 
+       // Are there any Q'd commands for this target?
+-      if( (Cmnd->target == pLoggedInPort->ScsiNexus.target)
++      if( (Cmnd->device->id == pLoggedInPort->ScsiNexus.target)
+ 	       &&
+-          (Cmnd->channel == pLoggedInPort->ScsiNexus.channel) )
++          (Cmnd->device->channel == pLoggedInPort->ScsiNexus.channel) )
+       {
+         Cmnd->result = (DID_SOFT_ERROR <<16); // force retry
+         if( Cmnd->scsi_done == NULL) 
 
-I can see how this would all be useful.  This, of course, assumes that you
-can enumerate the device successfully (thus creating a device node) before
-needing to tweak the flags, which is exactly NOT the case I'm dealing with.
+--------------060004060501010809050602--
 
-I won't argue that such an implementation wouldn't be useful.  But it's a
-_much_ bigger project than we're talking about here.  And, frankly, I think
-it's a project for another day.
-
-> And we would be better off avoiding only the cache page (mode sense page
-> 0x8) without blocking all mode sense commands (I assume that is what
-> you'll do when using the filter) - so we don't block other pages that
-> might be used (via sg), and we don't block the mode sense commands used to
-> used to figure out if the device is read only (sd.c sd_read_write_protect=
-_flag,
-> though I don't understand WTF the second page code 0 is supposed to
-> return).
-
-Actually, my plan is to block all MODE_SENSE for TYPE_DISK devices.  I'm
-going to have some code that will not apply the filters (any filters) if
-the request comes from sg, but that's down the line.  It turns out that a
-very large number of USB devices of TYPE_DISK do _not_ support MODE_SENSE
-in any form.  Apparently, the 'popular' OSes don't use it.
-
-> > You may recall that my first approach was to set the BLIST flag for 36-=
-byte
-> > INQUIRY -- Linus shot that down in favor of a command-filter approach.
->=20
-> I thought his main objection was using the per-adapter emulated bit to
-> determine how to handle all scsi_devices on the adapter.
-
-Yes, which led to a discussion of where and how the filtering should take
-place, which led to SCSI core code for filtering which would be applied by
-whoever/whatever wanted to.
-
-I agree that some sort of super-flexible multi-layered filtering system
-would be great.  It might even use some of the same filter calls that we're
-talking about here -- but that's a project for another day.  For now, let's
-solve the the problem which has been with us since 2.3.x and get a filter
-framework that usb-storage can use into place.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-It's not that hard.  No matter what the problem is, tell the customer=20
-to reinstall Windows.
-					-- Nurse
-User Friendly, 3/22/1998
-
---tmoQ0UElFV5VgXgH
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE+pIKbIjReC7bSPZARAlrqAKCUdDjBafvV8bMeRoRMOPgrqXFmkACeJ+87
-xo98bn+E7AjSoeBJ+jgmc2g=
-=gb8Z
------END PGP SIGNATURE-----
-
---tmoQ0UElFV5VgXgH--
