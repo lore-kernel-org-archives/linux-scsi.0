@@ -1,59 +1,70 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] scsi sysfs update (upper 2/3)
-Date: Thu, 7 Nov 2002 21:41:35 -0800
+From: "shankar krishna" <kshan01@hotmail.com>
+Subject: Re: doubt in sg, in sending SCSI CDB
+Date: Thu, 07 Nov 2002 22:55:19 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021108054135.GF1292@beaverton.ibm.com>
-References: <20021107073619.GA1390@beaverton.ibm.com> <20021107073943.GB1390@beaverton.ibm.com> <20021107182947.B15350@sgi.com> <20021107164152.GD1292@beaverton.ibm.com> <20021108012047.A17391@infradead.org> <20021108022158.GD1292@beaverton.ibm.com> <20021108045305.A22307@infradead.org>
+Message-ID: <F186ieLYCT4aJ6pkNzP00000031@hotmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021108045305.A22307@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
+To: dougg@torque.net
 Cc: linux-scsi@vger.kernel.org
 
-Christoph Hellwig [hch@infradead.org] wrote:
-> On Thu, Nov 07, 2002 at 06:21:58PM -0800, Mike Anderson wrote:
-> > Is the disagreement the function name, bus name, or the concept of
-> > registering these drivers with sysfs?
-> 
-> Well, they're not really busses, and I hate misleading analogies :)
-> 
-> No, my real issues is that the scsi_devices should be attached to
-> a bus hanging of the HBA, as that's what they physically do, not of
-> some pseudo-bus for the higherlevel devices.
-> 
+>shankar krishna wrote:
+>>Hi,
+>>
+>>I just run the program that was given in end of
+>>SCSI-Programming-HOWTO, sending a Inquiry command.
+>
+>That HOWTO is pretty old and has been replaced by:
+>http://tldp.org/HOWTO/SCSI-Generic-HOWTO
+Yes. I looked into this. But even this does not allow me
+to send CDBs in FC(FCP-2). When I see a in FC analyzer
+between disk drive and HBA, it shows me
+1. An Ex Write is done first.
+2. Then a FCP DATA is done with my Inquiry CDB command
+going as "data".(since I used a write on that fd)
 
-The "bus" object and associated functions are key pieces to sysfs
-integration. The kobjects that I believe the block layer and fs are
-going to use are less structured, but I believe they are not intended
-for device to driver relationships.
+I dont want this. What I want is...in the first instant
+itself I want the INQUIRY cmd to be sent. Why I am
+trying to do this is... to finally be able to send
+a vendor specific CDBs through FC HBA where "our"
+target can analyse those and take
+specific action ...rather than standard ones.
+>
+>>I have IBM FC drive with Qlogic FC HBA. The
+>>device /dev/sda1 is able to open.
+>>
+>>When I read the vendor information (at offset 8), the
+>>file is spitting Junk. The only change I did to that
+>>program is  change the device file from “/dev/sg”
+>>to “/dev/sda1”.
+>
+>Ouch. That example program can only be used against sg
+>devices (and it is a shortcoming of the old HOWTO's
+>example program that it doesn't tell you at run time).
+>For more recent example programs you may like to try
+>sg3_utils found at
+>http://www.torque.net/sg (or freshmeat.net).
+This was very useful. Since I am dealing with
+sda( FC disk drives), can I use these to send my
+SCSI cmds? Is there any api's available where I
+can just fill 10 Byte CDB(Any command) and send
+to the target and try to interpret the reponse
+myself?? (Like ASPI available for Windows??)
+---very similar to sendASPI32Command in adaptec ASPI ----
 
-As I said previously the parent / child relationship of HBA to
-scsi_device matches your requested connectivity. Though even in the
-current scsi sub-system we represent targets and luns as siblings which
-does not exactly match physical connectivity. This same sibling
-relationship is still present in the sysfs tree. The /bus/scsi/devices
-is only a logical view with links to the physical. There are other
-logical view links in the tree that point to these devices also (i.e.
-under /drivers/xxx/).
+>There are several examples of INQUIRY programs (e.g.
+>sg_inq).
+>
+><snip/>
+>
+>Doug Gilbert
 
+Thanks again.
+Shankar.
 
-> > Do you see a problem with "scsi_upper_driver_register" being added now?
-> 
-> I'd prefer if we'd let it stay as-is for now.
-> 
-
-ok, I can remove _bus_ from all my wrapper function names, but the intent of
-these new wrapper functions was to make scsi_bus_type static and control
-add / removes to the device list. This was to reduce future accidents of
-adding mixed types and then having someone do a container_of on a non
-scsi_device object. I could leave the upper level drivers the same and
-just call a function from scsi_register_device.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+_________________________________________________________________
+MSN 8 with e-mail virus protection service: 2 months FREE* 
+http://join.msn.com/?page=features/virus
 
