@@ -1,33 +1,28 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH] zfcp: kfree patch
-Date: Sat, 08 Jan 2005 12:44:40 +0100
-Message-ID: <1105184681.4196.14.camel@laptopd505.fenrus.org>
-References: <20050108103641.GA8018@osiris.boeblingen.de.ibm.com>
+From: Olaf Hering <olh@suse.de>
+Subject: how to get rid of scsi cdrom?
+Date: Sat, 8 Jan 2005 22:19:29 +0100
+Message-ID: <20050108211929.GA26318@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from canuck.infradead.org ([205.233.218.70]:13584 "EHLO
-	canuck.infradead.org") by vger.kernel.org with ESMTP
-	id S261425AbVAHLot (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 8 Jan 2005 06:44:49 -0500
-In-Reply-To: <20050108103641.GA8018@osiris.boeblingen.de.ibm.com>
+Received: from cantor.suse.de ([195.135.220.2]:43424 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S261549AbVAHVT3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Jan 2005 16:19:29 -0500
+Received: from hermes.suse.de (hermes-ext.suse.de [195.135.221.8])
+	(using TLSv1 with cipher EDH-RSA-DES-CBC3-SHA (168/168 bits))
+	(No client certificate requested)
+	by Cantor.suse.de (Postfix) with ESMTP id 679D912FFA20
+	for <linux-scsi@vger.kernel.org>; Sat,  8 Jan 2005 22:19:29 +0100 (CET)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Greg Kroah-Hartman <greg@kroah.com>
+To: linux-scsi@vger.kernel.org
 
-On Sat, 2005-01-08 at 11:36 +0100, Heiko Carstens wrote:
-> Hi James,
-> 
-> this is my next attempt to try to get the patch below merged. Last
-> time Greg KH objected and it didn't get merged.
-> 
-> This patch addresses the following problem: the zfcp device driver
-> creates own sysfs objects and therefore has its own release function
-> within the zfcp device driver itself. 
+What is the best way to fix this oops?
+'rmmod -r ide-cd;modprobe ide-scsi;modprobe sr_mod;rmmod -r ide-scsi'
 
-would this be solved by using the fc transport class instead, so that
-the scsi layer takes care of all this ?
-
+cdrom_mrw_exit() calls scsi_block_when_processing_errors() at some
+point, that looks like the only exit before the oops, via SDEV_OFFLINE.
+However, scsi_remove_host() sets SDEV_CANCEL first, so it looks like
+SDEV_OFFLINE isnt a valid state anymore.
 
