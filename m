@@ -1,40 +1,45 @@
-From: akpm@osdl.org
-Subject: [patch 1/1] mptctl.c build fix
-Date: Sat, 19 Jun 2004 00:23:24 -0700
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Subject: Re: Proposal for new generic device API: dma_get_required_mask()
+Date: Sat, 19 Jun 2004 01:07:36 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200406190724.i5J7OGr20720@mail.osdl.org>
+Message-ID: <m3fz8s79dz.fsf@defiant.pm.waw.pl>
+References: <1087481331.2210.27.camel@mulgrave>
+	<m33c4tsnex.fsf@defiant.pm.waw.pl> <1087523134.2210.97.camel@mulgrave>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:44470 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S261582AbUFSHYU (ORCPT
+Received: from hq.pm.waw.pl ([195.116.170.10]:15081 "EHLO hq.pm.waw.pl")
+	by vger.kernel.org with ESMTP id S265756AbUFSNvS (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Jun 2004 03:24:20 -0400
+	Sat, 19 Jun 2004 09:51:18 -0400
+In-Reply-To: <1087523134.2210.97.camel@mulgrave> (James Bottomley's message
+ of "17 Jun 2004 20:45:33 -0500")
 List-Id: linux-scsi@vger.kernel.org
-To: torvalds@osdl.org
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+James Bottomley <James.Bottomley@steeleye.com> writes:
 
+> It falls victim to the 95/5 rule---when you engineer an API, if 95% of
+> the complexity is dealing with the 5% of special cases, you're over
+> engineering.
+>
+> So the original proposal is the remaining 5% that covers 95% of the use
+> cases (and will do better even on the remaining 5%).
 
-drivers/message/fusion/mptctl.c:89:24: asm/compat.h: No such file or directory
+I don't think so. We already have separate masks for coherent
+and non-coherent mappings (in PCI API, and I'm told it's to be extended
+to DMA API as well). And we need them.
 
-Signed-off-by: Andrew Morton <akpm@osdl.org>
----
+The problem is we're missing DMA masks for non-alloc calls (depending
+on the platform) and thus that it isn't very reliable. Drivers which
+need this are forced to bounce buffers themselves, and many of them
+will not work on 64-bit platforms (as of ~ 2.6.0, I don't check that
+regularly). And yes, we really need reliable masks for non-alloc
+mappings.
 
- 25-akpm/drivers/message/fusion/mptctl.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
-
-diff -puN drivers/message/fusion/mptctl.c~mptctl-build-fix drivers/message/fusion/mptctl.c
---- 25/drivers/message/fusion/mptctl.c~mptctl-build-fix	2004-06-19 00:22:35.220514888 -0700
-+++ 25-akpm/drivers/message/fusion/mptctl.c	2004-06-19 00:22:46.612783000 -0700
-@@ -83,10 +83,10 @@
- #include <linux/pci.h>
- #include <linux/miscdevice.h>
- #include <linux/smp_lock.h>
-+#include <linux/compat.h>
- 
- #include <asm/io.h>
- #include <asm/uaccess.h>
--#include <asm/compat.h>
- 
- #include <linux/kdev_t.h>	/* needed for access to Scsi_Host struct */
- #include <linux/blkdev.h>
-_
+I can't see any added complexity in this scheme, we basically already
+do all of that (except the cost, but it's hardly complex and most
+drivers would just need to test check_dma_mask() for error).
+-- 
+Krzysztof Halasa, B*FH
