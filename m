@@ -1,34 +1,73 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
 Subject: Re: [PATCH] SCSI hotplug support
-Date: Mon, 14 Oct 2002 10:22:32 -0700
+Date: Mon, 14 Oct 2002 10:30:59 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021014172232.GA3538@beaverton.ibm.com>
-References: <andersen@codepoet.org> <20021014054035.GA10686@codepoet.org> <200210141557.g9EFvLw02517@localhost.localdomain>
+Message-ID: <20021014103059.C9725@one-eyed-alien.net>
+References: <andersen@codepoet.org> <200210141557.g9EFvLw02517@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-md5;
+	protocol="application/pgp-signature"; boundary="pAwQNkOnpTn9IO2O"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200210141557.g9EFvLw02517@localhost.localdomain>
+In-Reply-To: <200210141557.g9EFvLw02517@localhost.localdomain>; from James.Bottomley@steeleye.com on Mon, Oct 14, 2002 at 08:57:21AM -0700
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: andersen@codepoet.org, linux-scsi@vger.kernel.org
 
-James Bottomley [James.Bottomley@steeleye.com] wrote:
-> Needing kernel hooks in a different subsystem to solve a hotplug problem looks 
-> slightly wrong to me.  Usually when this type of thing comes up its because 
-> we're missing a hotplug event (or a hotplug event doesn't carry the right 
-> information).  Could you elaborate more on the actual problem you're trying to 
-> solve?
-> 
-> James
 
-I believe one thing that we are missing is an event when a scsi_host is
-added. Even in 2.5 we are not receiving a hotplug event for the addition
-of a scsi_host, because of the way we init are LL drivers. This will be fixed
-soon.
+--pAwQNkOnpTn9IO2O
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+On Mon, Oct 14, 2002 at 08:57:21AM -0700, James Bottomley wrote:
+> andersen@codepoet.org said:
+> > Anyone have any objections to such a patch?  For 2.4.x?  Comments?
+>=20
+> The patch looks fine per se.
+>=20
+> However, I thought that the whole spirit of hotplug was that this type of=
+=20
+> problem should be solved in user space to which SCSI currently exposes a=
+=20
+> perfectly adequate interface.
 
+Yes and no, I think.
+
+While I think much of hotplug should exist in userspace, some of it must
+exist in the kernel.
+
+sbp2 and usb-storage get devices attaching and detaching all the time.  The
+SCSI core needs to be able to handle that in the kernel.
+
+In userspace, something should get a new device notification and decide
+what to do with the new device. Format?  Mount?  Ignore?  But, it needs a
+/dev node to be able to handle the device, therefore the kernel must do the
+work up to that point.
+
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+We've made a business out of making money from annoying and stupid people.
+I think you fall under that category.
+					-- Chief
+User Friendly, 7/11/1998
+
+--pAwQNkOnpTn9IO2O
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
+
+iD8DBQE9qv9TIjReC7bSPZARAoHiAJ9UHzWn5vRJZJrH924NLCoaQBchkACeMP8X
+Tnx0tI30rEdIJxAm1nZfF7o=
+=u4J/
+-----END PGP SIGNATURE-----
+
+--pAwQNkOnpTn9IO2O--
