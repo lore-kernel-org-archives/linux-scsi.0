@@ -1,33 +1,23 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [patch for playing] Patch to support 4000 disks and maintain
-	backward compatibility
-Date: 11 Apr 2003 15:14:32 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1050092073.2078.219.camel@mulgrave>
-References: <UTC200304111945.h3BJjU409008.aeb@smtp.cwi.nl>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <UTC200304111945.h3BJjU409008.aeb@smtp.cwi.nl>
-To: Andries.Brouwer@cwi.nl
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, pbadari@us.ibm.com
+From: Andries.Brouwer@cwi.nl
+Subject: Re: [patch for playing] Patch to support 4000 disks and maintain backward compatibility
+Date: Fri, 11 Apr 2003 23:13:52 +0200 (MEST)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <UTC200304112113.h3BLDq723847.aeb@smtp.cwi.nl>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hera.cwi.nl ([192.16.191.8]:22955 "EHLO hera.cwi.nl")
+	by vger.kernel.org with ESMTP id S261829AbTDKVCL (for <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Apr 2003 17:02:11 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: Andries.Brouwer@cwi.nl, James.Bottomley@steeleye.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, pbadari@us.ibm.com
 
-On Fri, 2003-04-11 at 14:45, Andries.Brouwer@cwi.nl wrote:
-> I think compatibility is very important.
-> Linux does not arbitrarily break old systems. The aim must be
-> to have all combinations of (old/new) kernel with (old/new) glibc
-> to work well in all situations where old kernel + old glibc worked.
+> It would also be nice for numeric compatibility to be a compile time option
 
-Well, if you're going to do this, at least make it possible to tie all
-the sd devices to a single major (i.e. the numeric compatibility layer
-simply maps to the new single major scheme internally).  It would also
-be nice for numeric compatibility to be a compile time option too...
+It sounds as if you expect a lot of old cruft.
+But the compatibility code is just ten lines or so.
+Internally the kernel has an index. Externally there is a dev_t.
+At open() time the dev_t is converted. At registration time
+sd announces interest in three or four dev_t regions.
+That is all.
 
-It's also possible that SCSI may not be the only consumer of such a
-compatibility layer (IDE also has multiple majors), so it may be
-worthwhile putting it somewhere more globally useful (like
-fs/block_dev.c)
-
-James
+Andries
