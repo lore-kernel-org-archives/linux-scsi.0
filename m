@@ -1,29 +1,26 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: scsi_add_host() context
-Date: Mon, 18 Nov 2002 12:26:38 +1100
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: aic7xxx_biosparam
+Date: Sun, 17 Nov 2002 21:34:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DD841CE.3010309@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <20021118023429.GA4608@redhat.com>
+References: <20021118002742.GO3280@redhat.com> <1037581040.5855.0.camel@irongate.swansea.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1037581040.5855.0.camel@irongate.swansea.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: hch@infradead.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
 
-While examining the various calls in the mid level that
-can be called from a LLD, most are designed to
-be called from an interrupt or related context
-(e.g. scsi_adjust_queue_depth() ).
+On Mon, Nov 18, 2002 at 12:57:20AM +0000, Alan Cox wrote:
+> What about using sector_div ?
 
-However, the detection of a new host requires a LLD to call 
-scsi_register() and scsi_add_host(). The latter call does
-a SCSI bus scan which takes time and sends commands like
-INQUIRY and REPORT_LUNS back through the LLD. So scsi_add_host()
-should not be called from an interrupt context. Can this be
-guaranteed in a hotplug environment? Is a worker thread
-required?
+Didn't know it existed.  Pointer?
 
-Doug Gilbert
-
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
