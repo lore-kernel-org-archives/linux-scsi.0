@@ -1,115 +1,63 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [BK PATCH] SCSI updates for 2.6.12-rc1
-Date: Wed, 30 Mar 2005 14:42:46 -0600
-Message-ID: <1112215366.5452.26.camel@mulgrave>
+From: "Cameron, Steve" <steve.cameron@hp.com>
+Subject: SCSI_IOCTL_DOORLOCK in scsi_request_fn()
+Date: Wed, 30 Mar 2005 14:57:23 -0600
+Message-ID: <45B36A38D959B44CB032DA427A6E10640A7A5266@cceexc18.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:46991 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261577AbVC3Um4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Mar 2005 15:42:56 -0500
+Received: from ccerelbas04.cce.hp.com ([161.114.21.107]:34986 "EHLO
+	ccerelbas04.cce.hp.com") by vger.kernel.org with ESMTP
+	id S261567AbVC3U50 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Mar 2005 15:57:26 -0500
+Received: from cceexg12.americas.cpqcorp.net (cceexg12.americas.cpqcorp.net [16.81.1.38])
+	by ccerelbas04.cce.hp.com (Postfix) with ESMTP id CBAAA2000350
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Mar 2005 14:57:23 -0600 (CST)
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
-
-This is the first batch of -rc patches.  I have other patches pending
-that I'm going to sort into the -rc patches and the post -rc ones.
-
-The patch is available here:
-
-bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
-
-The short changelog is:
-
-adam radford:
-  o 3ware 9000 driver update
-
-Adrian Bunk:
-  o drivers/scsi/osst.c: remove unused code
-  o drivers/scsi/osst.c: make code static
-
-Alan Cox:
-  o atp870u DMA mask fix
-  o atp870u: Re-merge cleanups
-
-Alan Stern:
-  o Add a scsi_device flag for RETRY_HWERROR
-
-Eric Moore:
-  o Make Fusion-MPT much faster as module
-
-James Bottomley:
-  o Fix SCSI internal requests hang
-  o 3ware driver update
-  o 53c700: Alter interrupt assignment
-  o SCSI: Re-export code incorrectly made static
-  o ncr53c8xx: Fix small problem with initial negotiation
-  o Q720: fix compile warning
-  o fix breakage in the SCSI generic tag code
-
-Jens Axboe:
-  o queue <-> sdev reference counting problem
-
-Mark Haverkamp:
-  o aacraid: endian cleanup
-
-Matthew Wilcox:
-  o Fix small bug in scsi_transport_spi
-  o ncr53c8xx update
-  o Zalon updates
-  o Misc Lasi 700 fixes
-
-Mike Christie:
-  o fix fc class work queue usage
-  o rm unused scan delay var
-
-Randy Dunlap:
-  o scsi_sysfs: use NULL instead of 0
+To: linux-scsi@vger.kernel.org
 
 
-The diffstat is:
+I have a question about what's going on in scsi_request_fn()
+wrt locking the doors on devices.
 
- drivers/message/fusion/mptbase.h  |    4 
- drivers/message/fusion/mptscsih.c |   92 +++---
- drivers/message/fusion/mptscsih.h |    8 
- drivers/scsi/3w-9xxx.c            |  516 +++++++++++++++++++-------------------
- drivers/scsi/3w-9xxx.h            |   88 ++----
- drivers/scsi/3w-xxxx.c            |  366 ++++++++++++--------------
- drivers/scsi/3w-xxxx.h            |    3 
- drivers/scsi/53c700.c             |   25 -
- drivers/scsi/53c700.h             |    4 
- drivers/scsi/NCR_D700.c           |   41 ++-
- drivers/scsi/NCR_Q720.c           |    2 
- drivers/scsi/aacraid/aachba.c     |  149 ++++++----
- drivers/scsi/aacraid/aacraid.h    |  191 +++++++-------
- drivers/scsi/aacraid/commctrl.c   |   12 
- drivers/scsi/aacraid/comminit.c   |    2 
- drivers/scsi/aacraid/commsup.c    |   25 -
- drivers/scsi/aacraid/rkt.c        |   21 -
- drivers/scsi/aacraid/rx.c         |   18 -
- drivers/scsi/aacraid/sa.c         |   28 --
- drivers/scsi/atp870u.c            |  341 ++++++++++++++++---------
- drivers/scsi/hosts.c              |   17 +
- drivers/scsi/lasi700.c            |   17 -
- drivers/scsi/ncr53c8xx.c          |  508 +++++++++++++++----------------------
- drivers/scsi/osst.c               |    7 
- drivers/scsi/scsi_error.c         |    6 
- drivers/scsi/scsi_lib.c           |   36 ++
- drivers/scsi/scsi_scan.c          |    3 
- drivers/scsi/scsi_sysfs.c         |   22 -
- drivers/scsi/scsi_transport_fc.c  |    8 
- drivers/scsi/scsi_transport_spi.c |    9 
- drivers/scsi/sim710.c             |   12 
- drivers/scsi/sym53c8xx_defs.h     |   54 +--
- drivers/scsi/zalon.c              |   23 -
- include/scsi/scsi_device.h        |    1 
- include/scsi/scsi_host.h          |    1 
- include/scsi/scsi_transport_fc.h  |    3 
- 36 files changed, 1367 insertions(+), 1296 deletions(-)
+In /usr/src/linux/drivers/scsi/scsi_lib.c in function scsi_request_fn()
+from a redhat 2.4.21-15.EL kernel on ia64 I find this:
 
-James
+    931                 /*
+    932                  * FIXME(eric)
+    933                  * I am not sure where the best place to do this is.  We
+need
+    934                  * to hook in a place where we are likely to come if in user
+    935                  * space.   Technically the error handling thread should be
+    936                  * doing this crap, but the error handler isn't used by
+    937                  * most hosts.
+    938                  */
+    939                 if (SDpnt->was_reset) {
+    940                         /*
+    941                          * We need to relock the door, but we might
+    942                          * be in an interrupt handler.  Only do this
+    943                          * from user space, since we do not want to
+    944                          * sleep from an interrupt.
+    945                          *
+    946                          * FIXME(eric) - have the error handler thread do
+    947                          * this work.
+    948                          */
+    949                         SDpnt->was_reset = 0;
+    950                         if (SDpnt->removable && !in_interrupt()) {
+    951                                 atomic_dec(&SHpnt->host_busy);
+    952                                 spin_unlock_irq(q->queue_lock);
+    953                                 scsi_ioctl(SDpnt, SCSI_IOCTL_DOORLOCK, 0);
+    954                                 spin_lock_irq(q->queue_lock);
+    955                                 continue;
+    956                         }
+    957                 }
 
+Am I right in thinking that if a command is retried due to a scsi bus reset for example if a cable is pulled and reattached, then the door on the device will be locked?
 
+I'm seeing this sort of behavior while running some storage SNMP agents and my tape library is getting the doors locked, (sort of unexpectedly.)
+
+Thanks,
+
+-- steve
