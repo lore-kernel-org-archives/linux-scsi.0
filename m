@@ -1,81 +1,68 @@
-From: "Martin Peschke3" <MPESCHKE@de.ibm.com>
-Subject: Re: Transport Attributes -- attempt#3
-Date: Thu, 15 Jan 2004 13:52:16 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF2D4C46F4.BCE421EB-ONC1256E1C.0045A5CA-C1256E1C.00472906@de.ibm.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: smp dead lock of io_request_lock/queue_lock patch
+Date: Thu, 15 Jan 2004 12:01:31 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <4006C76B.3090206@tmr.com>
+References: <20040112092231.GG29177@suse.de> <1073914073.3114.263.camel@compaq.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.de.ibm.com ([195.212.29.150]:5800 "EHLO
-	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP id S266771AbUAOMwp
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jan 2004 07:52:45 -0500
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <1073914073.3114.263.camel@compaq.xsintricity.com>
+To: Doug Ledford <dledford@redhat.com>
+Cc: Jens Axboe <axboe@suse.de>, Arjan Van de Ven <arjanv@redhat.com>, Peter Yao <peter@exavio.com.cn>, linux-kernel@vger.kernel.org, linux-scsi mailing list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Hicks <mort@wildopensource.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-Hi,
+Doug Ledford wrote:
+> On Mon, 2004-01-12 at 04:22, Jens Axboe wrote:
+> 
+>>On Mon, Jan 12 2004, Arjan van de Ven wrote:
+>>
+>>>On Mon, Jan 12, 2004 at 10:19:46AM +0100, Jens Axboe wrote:
+>>>
+>>>>... and still exists in your 2.4.21 based kernel.
+>>>
+>>>The RHL 2.4.21 kernels don't have the locking patch at all...
+>>
+>>But RHEL3 does:
+>>
+>>http://kernelnewbies.org/kernels/rhel3/SOURCES/linux-2.4.21-iorl.patch
+>>
+>>and the bug is there.
+> 
+> 
+> But in RHEL3 the bug is fixed already (not in a released kernel, but the
+> fix went into our internal kernel some time back and will be in our next
+> update kernel).  From my internal bk tree for this stuff:
 
-+     if (sdev->transport_classdev.class) {
-+           attrs = sdev->host->transportt->attrs;
-+           for (i = 0; attrs[i]; i++) {
-+                 error = class_device_create_file
-(&sdev->transport_classdev,
-+                                         attrs[i]);
-+                 if (error)
-+                       scsi_remove_device(sdev);
-+           }
-+     }
+"not in a released kernel..." Do I read this right? That you have a fix 
+for a critical bug and it hasn't been pushed to customers yet? How about 
+security bugs, has the fix you pushed in RH-9.0 been push to EL customers?
 
-Isn't there a break needed in the error case to quit
-the loop after scsi_remove_device(sdev) in order to
-avoid trouble with sdev in subsequent iterations?
-I am not very familiar with the 2.6 SCSI code. But,
-is scsi_remove_device(sdev) an appropriate answer
-to the failed registration of sysfs attributes?
+> [dledford@compaq RHEL3-scsi]$ bk changes -r1.23
+> ChangeSet@1.23, 2003-11-10 17:19:54-05:00, dledford@compaq.xsintricity.com
+>   drivers/scsi/scsi_error.c
+>       Don't panic if the eh thread is dead, instead do the same thing that
+>       scsi_softirq_handler does and just complete the command as a failed
+>       command.
+>       Change when we wake the eh thread in scsi_times_out to accomodate
+>       the changes to the mlqueue operations.
+>       Clear blocked status on the host and all devices in scsi_restart_operations
+> ->    Don't grab the host_lock in scsi_restart_operations, we aren't doing
+>       anything that needs it.  Just goose the queues unconditionally,
+>       scsi_request_fn() will know to not send commands if they shouldn't
+>       go for some reason.
+>       Make sure we account SCSI_STATE_MLQUEUE commands as not being failed
+>       commands in scsi_unjam_host.
+> 
+> But, Jens is right, it's a real bug.  I just fixed it in a different
+> way.  And my fix is dependent on other changes in our scsi stack as
+> well.
 
+Yes, thanks to Peter for that fix, nice that someone provides timely 
+fixes...
 
-Martin Peschke
-
-IBM Deutschland Entwicklung GmbH
-Linux for eServer Development
-Phone: +49-(0)7031-16-2349
-
-
-Martin Hicks <mort@wildopensource.com>@vger.kernel.org on 14/01/2004
-19:12:41
-
-Sent by:    linux-scsi-owner@vger.kernel.org
-
-
-To:    Christoph Hellwig <hch@infradead.org>
-cc:    linux-scsi@vger.kernel.org
-Subject:    Transport Attributes -- attempt#3
-
-
-
-
-Hi,
-
-Here is round#3 of the patch.  I think I've addressed all of the points
-that were brought up by Christoph last time.
-
-Once again, three patches:  core, qla1280 and qla2xxx.  The core patch
-expects to be applied on top of the patch that I sent recently to
-linux-scsi:
-
-http://marc.theaimsgroup.com/?l=linux-scsi&m=107366419027588&w=2
-
-thanks
-mh
-
---
-Martin Hicks                Wild Open Source Inc.
-mort@wildopensource.com     613-266-2296
-
-
-
-
-
-
-
+-- 
+bill davidsen <davidsen@tmr.com>
+   CTO TMR Associates, Inc
+   Doing interesting things with small computers since 1979
