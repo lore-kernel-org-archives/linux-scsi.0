@@ -1,62 +1,47 @@
-From: Catalin BOIE <util@deuroconsult.ro>
-Subject: Re: libata driver update posted
-Date: Fri, 18 Jul 2003 09:24:23 +0300 (EEST)
+From: Josef =?iso-8859-1?Q?M=F6llers?=
+	<josef.moellers@fujitsu-siemens.com>
+Subject: Re: Why REPORT LUN only for SCSI-2?
+Date: Fri, 18 Jul 2003 08:38:13 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.53.0307180924020.19703@hosting.rdsbv.ro>
-References: <3F1711C8.6040207@pobox.com>
+Message-ID: <3F1795D5.F1FBECFB@fujitsu-siemens.com>
+References: <3F140D30.D2B5C4D8@fujitsu-siemens.com> <20030715073927.A8218@beaverton.ibm.com> <3F14F7FA.BA551505@fujitsu-siemens.com> <20030716123519.A19244@beaverton.ibm.com> <3F16649C.239EC87B@fujitsu-siemens.com> <20030717184909.GD2520@nbkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from webhosting.rdsbv.ro ([213.157.185.164]:36262 "EHLO
-	hosting.rdsbv.ro") by vger.kernel.org with ESMTP id S271712AbTGRGOt
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jul 2003 02:14:49 -0400
-In-Reply-To: <3F1711C8.6040207@pobox.com>
+Received: from plam.fujitsu-siemens.com ([217.115.66.9]:65323 "EHLO
+	plam.fujitsu-siemens.com") by vger.kernel.org with ESMTP
+	id S271722AbTGRGXA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jul 2003 02:23:00 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Vojtech Pavlik <vojtech@suse.cz>
+To: Kurt Garloff <garloff@suse.de>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org, "Wichert, Gerhard" <Gerhard.Wichert@fujitsu-siemens.com>
 
-> Next update will add several host drivers, now that the libata API is
-> settling down.
+Kurt Garloff wrote:
 
-Sii3112A is/will be supported?
-Thanks!
+> > As a side note (probably starting a new thread) why does BLIST_LARG=
+ELUN
+> > override max_scsi_luns?
+>=20
+> It shouldn't. Did I really do this? (... checking 2.4 code ...)
+> No, I plead innocent.
 
->
->
-> 2.4.21-based patch:
-> ftp://ftp.??.kernel.org/pub/linux/kernel/people/jgarzik/patchkits/2.4/2.4.21-libata4.patch.bz2
->
-> 2.4.21-based BitKeeper repo:
-> bk://kernel.bkbits.net/jgarzik/atascsi-2.4
->
-> 2.6.0-test1-based patch:
-> ftp://ftp.??.kernel.org/pub/linux/kernel/people/jgarzik/patchkits/2.6/2.6.0-test1-libata1.patch.bz2
->
-> 2.6.0-test1-based BitKeeper repo:
-> bk://kernel.bkbits.net/jgarzik/atascsi-2.5
-> (yes, "2.5" is not a typo, I haven't changed the name to 2.6 yet)
->
->
-> Remove the ".??" if the file has not appeared on your favorite
-> kernel.org mirror yet.
->
->
-> Changes:
-> * beginnings of pluggable timing configuration
-> * beginnings of cable detection
-> * much improved ATA device probing
-> * a bunch of internal improvements and cleanups (too many to list)
-> * additional of DocBook documentation
-> * many bug fixes
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
+Oops, I didn't check the info I got from a third party or I should go
+and wash my ears B-{(
+It's SPARSELUN which overrides max_scsi_luns:
+	if (bflags & BLIST_SPARSELUN) {
+		*max_dev_lun =3D shpnt->max_lun;
+		*sparse_lun =3D 1;
+                return 1;
+        }
+The objection still stands ...
 
----
-Catalin(ux) BOIE
-catab@deuroconsult.ro
+--=20
+Josef M=F6llers (Pinguinpfleger bei FSC)
+	If failure had no penalty success would not be a prize
+						-- T.  Pratchett
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
