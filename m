@@ -1,49 +1,47 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: RFC: moving drivers to a new drivers/ata directory
-Date: Fri, 15 Oct 2004 10:00:38 -0500
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: cciss update [2/2] fixes for Steeleye Lifekeeper
+Date: 15 Oct 2004 10:05:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <416FE616.8060100@us.ibm.com>
-References: <416F5757.8000306@pobox.com> <416F8C39.6010804@torque.net>
-Reply-To: brking@us.ibm.com
+Message-ID: <1097852716.1718.9.camel@mulgrave>
+References: <20041013212253.GB9866@beardog.cca.cpqcorp.net>
+	<20041014083900.GB7747@infradead.org> <1097764660.2198.11.camel@mulgrave>
+	<20041014183948.GA12325@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:47760 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S267973AbUJOPAx
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Oct 2004 11:00:53 -0400
-In-Reply-To: <416F8C39.6010804@torque.net>
+Received: from stat16.steeleye.com ([209.192.50.48]:24026 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S267953AbUJOPFk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Oct 2004 11:05:40 -0400
+In-Reply-To: <20041014183948.GA12325@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Jeff Garzik <jgarzik@pobox.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: mikem@beardog.cca.cpqcorp.net, Andrew Morton <akpm@osdl.org>, Jens Axboe <axboe@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Douglas Gilbert wrote:
-> Jeff Garzik wrote:
-> 
->>
->> Eventually I would like to move libata, and a few non-libata driver 
->> like 3ware, to drivers/ata.  It would appear in the makefile (and link 
->> order) _after_ drivers/ide and drivers/scsi.
->>
->> Comments/objections?
-> 
-> 
-> A comment: if SAS HBAs ever get installed on motherboards then
-> it won't be obvious to the average user which susbsystem they
-> should configure (i.e. ATA/SATA or SCSI/SAS). In both cases an
-> internal SATA disk could be connected via a SATA cable to a
-> plug on the motherboard.
+On Thu, 2004-10-14 at 13:39, Christoph Hellwig wrote:
+> Such a volume has been configured and set up, and although it's still
+> ugly I'd say it's okay.  But the patch also adds one gendisk per controller
+> even if no volume is set up.
 
-I don't think it matters if the HBA is on the motherboard or not. Since
-SAS can support attaching SATA and SATA/ATAPI devices via STP, we could
-certainly end up with HBAs that support both SAS and SATA devices. Where
-would such a driver exist? If libata moves into the ata directory, it seems
-like it would be more difficult for a single LLD to support both SAS and SATA.
+That's this bit of code:
 
+@@ -2762,7 +2810,9 @@ static int __devinit cciss_init_one(stru
+                disk->fops = &cciss_fops;
+                disk->queue = hba[i]->queue;
+                disk->private_data = drv;
+-               if( !(drv->nr_blocks))
++               /* we must register the controller even if no disks
+exist */
++               /* this is for the online array utilities */
++               if(!drv->heads && j)
+                        continue;
+                blk_queue_hardsect_size(hba[i]->queue, drv->block_size);
+                set_capacity(disk, drv->nr_blocks);
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+Mike, is there a way we can only allocate a gendisk when we know there's
+actually a device there (if owned by another controller currently)?
+
+James
+
 
