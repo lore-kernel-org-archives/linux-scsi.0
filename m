@@ -1,41 +1,127 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: BUG: CD driver sends command during host removal
-Date: 29 Sep 2004 17:26:04 -0400
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: [PATCH]: megaraid 2.20.4: Fixes a data corruption bug
+Date: Wed, 29 Sep 2004 17:28:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1096493170.2124.150.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0409291452120.1700-100000@ida.rowland.org><1096487461.2028.
-	134.camel@mulgrave>
-	<20040929203104.GB6179@us.ibm.com><1096490471.2028.140.camel@mulgrave>
-	<20040929210751.GC6179@us.ibm.com> <1096492496.1762.148.camel@mulgrave>
-	<415B271F.7080902@adaptec.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BCA90@exa-atlanta>
 Mime-Version: 1.0
 Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:59590 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S269056AbUI2V0Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Sep 2004 17:26:25 -0400
-In-Reply-To: <415B271F.7080902@adaptec.com>
+Received: from mail0.lsil.com ([147.145.40.20]:37527 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S268995AbUI2VgJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Sep 2004 17:36:09 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Mike Anderson <andmike@us.ibm.com>, Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>, Mohammed Sameer <uniball@gmx.net>, USB users list <linux-usb-users@lists.sourceforge.net>
+To: "'James.Bottomley@SteelEye.com'" <James.Bottomley@SteelEye.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "'Matt_Domsch@dell.com'" <Matt_Domsch@dell.com>
 
-On Wed, 2004-09-29 at 17:20, Luben Tuikov wrote:
-> Is it possible that there could be a slight race when
-> the LLDD starts calling scsi_done() on pending commands,
-> _after_ it has called scsi_remove_host()?
+James,
 
-No, because it starts failing commmands *before* it calls
-scsi_remove_host().
+Considering the criticality of this fix, we hope it make into the 2.6.9
+release candidate as soon as possible. Can you update us with your views on
+this.
 
-> BTW, why have/leave two alternate paths for this behavior?
-> This may bite us back in the future when things get more
-> complicated, i.e. dealing with more complicated devices,
-> transports, etc.
+Thanks
+-Atul Mukker
+LSI Logic
 
-Certain LLDs have no internal track of outstanding commands.
-
-James
-
-
+> -----Original Message-----
+> From: Bagalkote, Sreenivas
+> Sent: Tuesday, September 28, 2004 9:31 PM
+> To: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
+> Cc: bunk@fs.tum.de; Mukker, Atul; 'Andrew Morton';
+> James.Bottomley@SteelEye.com; Ju, Seokmann; Doelfel, Hardy
+> Subject: [PATCH]: megaraid 2.20.4: Fixes a data corruption bug
+> 
+> Hello All,
+> 
+> Change Log:
+> 
+> Fixes a data corruption issue. Because of a typo in the driver, IO packets
+> were wrongly shared by the IOCTL path. This caused the whole IO command
+> to be replaced by an incoming IOCTL command.
+> 
+> This patch (generated against 2.6.9-rc2) is inlined below.
+> 
+> Sreenivas
+> 
+> ---
+> diff -Naur linux-2.6.9-rc2-mrbug/Documentation/scsi/ChangeLog.megaraid
+> linux-2.6.9-rc2-fixed/Documentation/scsi/ChangeLog.megaraid
+> --- linux-2.6.9-rc2-mrbug/Documentation/scsi/ChangeLog.megaraid
+2004-09-
+> 28 17:31:10.000000000 -0400
+> +++ linux-2.6.9-rc2-fixed/Documentation/scsi/ChangeLog.megaraid
+2004-09-
+> 28 17:43:50.000000000 -0400
+> @@ -1,3 +1,11 @@
+> +Release Date	: Mon Sep 27 22:15:07 EDT 2004 - Atul Mukker
+> <atulm@lsil.com>
+> +Current Version	: 2.20.4.0 (scsi module), 2.20.2.0 (cmm module)
+> +Older Version	: 2.20.3.1 (scsi module), 2.20.2.0 (cmm module)
+> +
+> +i.	Fix data corruption. Because of a typo in the driver, the IO packets
+> +	were wrongly shared by the ioctl path. This causes a whole IO
+> command
+> +	to be replaced by an incoming ioctl command.
+> +
+>  Release Date	: Tue Aug 24 09:43:35 EDT 2004 - Atul Mukker
+> <atulm@lsil.com>
+>  Current Version	: 2.20.3.1 (scsi module), 2.20.2.0 (cmm module)
+>  Older Version	: 2.20.3.0 (scsi module), 2.20.2.0 (cmm module)
+> diff -Naur linux-2.6.9-rc2-mrbug/drivers/scsi/megaraid/megaraid_mbox.c
+> linux-2.6.9-rc2-fixed/drivers/scsi/megaraid/megaraid_mbox.c
+> --- linux-2.6.9-rc2-mrbug/drivers/scsi/megaraid/megaraid_mbox.c
+2004-09-
+> 28 17:31:33.000000000 -0400
+> +++ linux-2.6.9-rc2-fixed/drivers/scsi/megaraid/megaraid_mbox.c
+2004-09-
+> 28 17:43:50.000000000 -0400
+> @@ -10,7 +10,7 @@
+>   *	   2 of the License, or (at your option) any later version.
+>   *
+>   * FILE		: megaraid_mbox.c
+> - * Version	: v2.20.3.1 (August 24 2004)
+> + * Version	: v2.20.4 (September 27 2004)
+>   *
+>   * Authors:
+>   * 	Atul Mukker		<Atul.Mukker@lsil.com>
+> @@ -197,7 +197,7 @@
+>   * ### global data ###
+>   */
+>  static uint8_t megaraid_mbox_version[8] =
+> -	{ 0x02, 0x20, 0x02, 0x00, 7, 22, 20, 4 };
+> +	{ 0x02, 0x20, 0x04, 0x00, 9, 27, 20, 4 };
+> 
+> 
+>  /*
+> @@ -3562,7 +3562,7 @@
+>  	for (i = 0; i < MBOX_MAX_USER_CMDS; i++) {
+> 
+>  		scb			= adapter->uscb_list + i;
+> -		ccb			= raid_dev->ccb_list + i;
+> +		ccb			= raid_dev->uccb_list + i;
+> 
+>  		scb->ccb		= (caddr_t)ccb;
+>  		ccb->mbox64		= raid_dev->umbox64 + i;
+> diff -Naur linux-2.6.9-rc2-mrbug/drivers/scsi/megaraid/megaraid_mbox.h
+> linux-2.6.9-rc2-fixed/drivers/scsi/megaraid/megaraid_mbox.h
+> --- linux-2.6.9-rc2-mrbug/drivers/scsi/megaraid/megaraid_mbox.h
+2004-09-
+> 28 17:31:33.000000000 -0400
+> +++ linux-2.6.9-rc2-fixed/drivers/scsi/megaraid/megaraid_mbox.h
+2004-09-
+> 28 17:43:50.000000000 -0400
+> @@ -21,8 +21,8 @@
+>  #include "megaraid_ioctl.h"
+> 
+> 
+> -#define MEGARAID_VERSION	"2.20.3.1"
+> -#define MEGARAID_EXT_VERSION	"(Release Date: Tue Aug 24 09:43:35 EDT
+> 2004)"
+> +#define MEGARAID_VERSION	"2.20.4.0"
+> +#define MEGARAID_EXT_VERSION	"(Release Date: Mon Sep 27 22:15:07 EDT
+> 2004)"
+> 
+> 
+>  /*
+> ---
