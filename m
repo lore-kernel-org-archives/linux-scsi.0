@@ -1,27 +1,27 @@
-From: Bruce <b3b@gmx.net>
-Subject: Re: your mail
-Date: Thu, 16 Jan 2003 22:08:17 -0800 (PST)
+From: devnetfs <devnetfs@yahoo.com>
+Subject: scsi bus reset?
+Date: Thu, 16 Jan 2003 22:24:26 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.10.10301162204550.18181-100000@gtgs.ampr.org>
-References: <20030117003515.GA940@holomorphy.com>
-Reply-To: Bruce <b3b@gmx.net>
+Message-ID: <20030117062426.39476.qmail@web20414.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host-66-81-119-206.rev.o1.com (bruce@host-66-81-119-206.rev.o1.com [66.81.119.206])
-	by mercury.isisp.org (8.11.6/8.11.6) with ESMTP id h0H6BTM27485
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2003 01:11:30 -0500
-In-Reply-To: <20030117003515.GA940@holomorphy.com>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-On Thu, 16 Jan 2003, William Lee Irwin III wrote:
+Hello,
 
-> On Thu, Jan 16, 2003 at 06:54:55PM -0500, devnull@adc.idt.com wrote:
-> > unsubscribe linux-scsi@vger.kernel.org
-> 
-> Try sending that to majordomo@vger.kernel.org instead.
+Does a SCSI-2 BUS RESET clear reservations from all devices on that
+bus? I guess yes. or a prior device reset is necessary?
 
-     Some people just don't pay attention...
-       (perhaps they can't afford it ?)
+Also what does a "BUS" mean here? Is it similar/same to channel?
+If a FC HBA Initiator has two ports to connect two does that mean it
+has two channels or BUSes?
 
+Thanks in advance,
+A.
+
+__________________________________________________
+Do you Yahoo!?
+Yahoo! Mail Plus - Powerful. Affordable. Sign up now.
+http://mailplus.yahoo.com
