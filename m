@@ -1,41 +1,62 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH] fix sym2 negotiation
-Date: Fri, 27 Aug 2004 19:54:44 +0300 (EEST)
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: start removing queue from tmscsim
+Date: Fri, 27 Aug 2004 20:15:46 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0408271945130.1977@kai.makisara.local>
-References: <1093113450.1732.334.camel@mulgrave>
+Message-ID: <Pine.LNX.4.60.0408272013010.1057@poirot.grange>
+References: <20040819113637.GB21326@lst.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep01-0.kolumbus.fi ([193.229.0.41]:3493 "EHLO
-	fep01-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S266615AbUH0Qyp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Aug 2004 12:54:45 -0400
-In-Reply-To: <1093113450.1732.334.camel@mulgrave>
+Received: from mail.gmx.de ([213.165.64.20]:5822 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S266839AbUH0SQb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Aug 2004 14:16:31 -0400
+In-Reply-To: <20040819113637.GB21326@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: willy@debian.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, 21 Aug 2004, James Bottomley wrote:
+On Thu, 19 Aug 2004, Christoph Hellwig wrote:
 
-> The problems with domain validation were just the tip of the iceberg in
-> the sym2 driver.  Most of its problems seem to come from an overly
-> complex set of negotiating rules, which I've swept away with this patch.
-> 
-...
+> So actually I have a patch that starts to remove internal queueing from
+> tmscsim.  This gets rid of internal queueing for those cases where we
+> can just make the midlayer do the the work by returning erros from
+> ->queuecommand (and cleans up the tmscsim queuecommand implementation
+> singnificantly).
+>
+> Next step would get rid of the more complicated internal queueing where
+> we need to make the scsi layer requeue by returning appropinquate DID_
+> values from ->scsidone.
 
-This is a success report.
+Christoph
 
-A couple of days ago I noticed that my HP 5713A tape drive failed domain 
-validation. The logs showed that this has happened for a long time. I 
-inserted some printks into spi_dv_device_compare_inquiry in 
-spi_transport_spi.c. The printks indicated that the drive returned sense 
-data at first inquiry in the function. The sense code was ILLEGAL REQUEST 
-and ASC/ASCQ showed "Invalid message error".
+Is this going in the right direction?
 
-After installing the small sym2 patch for old Quantum Atlas drives, the 
-problem did not disappear. After installing additionally this patch the 
-domain validation now succeeds.
+Index: scsiiom.c
+===================================================================
+RCS file: /usr/src/cvs/linux-2_6/drivers/scsi/scsiiom.c,v
+retrieving revision 1.1.1.5.2.4
+diff -u -p -r1.1.1.5.2.4 scsiiom.c
+--- scsiiom.c	17 Aug 2004 21:16:53 -0000	1.1.1.5.2.4
++++ scsiiom.c	26 Aug 2004 21:58:37 -0000
+@@ -1438,12 +1438,8 @@ dc390_SRBdone( struct dc390_acb* pACB, s
+  	    pSRB->SGIndex = 0;
+  	    pSRB->TotalXferredLen = 0;
+  	    pSRB->SGToBeXferLen = 0;
+-
+-	    if( dc390_StartSCSI( pACB, pDCB, pSRB ) ) {
+-		dc390_Going_to_Waiting ( pDCB, pSRB );
+-		dc390_waiting_timer (pACB, HZ/5);
+-	    }
+-	    return;
++	    SET_RES_DID(pcmd->result, DID_SOFT_ERROR);
++	    goto ckc_e;
+  	}
+      }
+      if( status )
 
--- 
-Kai
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
+
