@@ -1,33 +1,53 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Fw: 2.6.8-rc3-mm2:  Debug: sleeping function called from invalid context at mm/mempool.c:197
-Date: Mon, 9 Aug 2004 23:59:29 +0100
+From: Dan Merillat <harik.attar@gmail.com>
+Subject: Re: Megaraid lockup on 2.6.[7-8]
+Date: Mon, 9 Aug 2004 16:02:48 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040809235929.A11498@infradead.org>
-References: <20040809153740.3dd31e2b.akpm@osdl.org>
+Message-ID: <c0c0679004080916027cf2f42a@mail.gmail.com>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BC937@exa-atlanta> <c0c0679004080915331801dc0d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imladris.demon.co.uk ([193.237.130.41]:54541 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S267330AbUHIW7e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Aug 2004 18:59:34 -0400
-Content-Disposition: inline
-In-Reply-To: <20040809153740.3dd31e2b.akpm@osdl.org>; from akpm@osdl.org on Mon, Aug 09, 2004 at 03:37:40PM -0700
+Received: from rproxy.gmail.com ([64.233.170.194]:15695 "EHLO mproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S267335AbUHIXCs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2004 19:02:48 -0400
+Received: by mproxy.gmail.com with SMTP id 73so120302rnk
+        for <linux-scsi@vger.kernel.org>; Mon, 09 Aug 2004 16:02:48 -0700 (PDT)
+In-Reply-To: <c0c0679004080915331801dc0d@mail.gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, Janet Morgan <janetmor@us.ibm.com>
+To: "Mukker, Atul" <atulm@lsil.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Aug 09, 2004 at 03:37:40PM -0700, Andrew Morton wrote:
-> 
-> qla2x00_get_new_sp() does a GFP_KERNEL allocation on the IO submission
-> path.  That can cause recursion into already-held filesystem and VFS locks,
-> so at the very least the allocation should be GFP_NOIO.
-> 
-> But even that is wrong, because some lock is held - probably the queue lock.
-> 
-> iow: it's all screwed up.  Is there any fix which is less lame than
-> replacing the GFP_KERNEL with GFP_ATOMIC?
+On Mon, 9 Aug 2004 15:33:23 -0700, Dan Merillat <harik.attar@gmail.com> wrote:
 
-Unfortunately not.  As seen in that stacktrace there's a case where ->queuecommand
-can be called from softirq context.
+> So far, so good.  When I stress-tested it I had a device-mapper related lockup,
+> but no scsi/Megaraid problems.   I'll report back in a few days if I
+> get any further errors.
 
+First lockup, but 2.20.2 recovered gracefully:
+
+megaraid: aborting-37816 cmd=2a <c=1 t=0 l=0>
+megaraid abort: 37816:53[255:0], fw owner
+megaraid: aborting-37817 cmd=2a <c=1 t=0 l=0>
+megaraid abort: 37817:34[255:0], fw owner
+megaraid: aborting-37818 cmd=2a <c=1 t=0 l=0>
+megaraid abort: 37818:26[255:0], fw owner
+megaraid: aborting-37821 cmd=2a <c=1 t=0 l=0>
+megaraid abort: 37821:18[255:0], fw owner
+megaraid: aborting-37824 cmd=2a <c=1 t=0 l=0>
+megaraid abort: 37824:7[255:0], fw owner
+megaraid: reseting the host...
+megaraid: 5 outstanding commands. Max wait 180 sec
+megaraid mbox: Wait for 5 commands to complete:180
+megaraid mbox: Wait for 5 commands to complete:175
+megaraid mbox: Wait for 5 commands to complete:170
+megaraid mbox: Wait for 5 commands to complete:165
+megaraid mbox: reset sequence completed sucessfully
+
+This time, it appears that we have 3 media errors on one of the drives
+(Since this is the first time it's survived a timeout, it's the first
+time I can actually get into megamgr without rebooting)
+
+If so, mystery solved: Drive failure and bad error-handling code leads
+to an undiagnosed lockup.  I KNEW it was too sudden to be random
+software bitrot.
