@@ -1,86 +1,64 @@
-From: Mark Lobo <ntdeveloper2002@yahoo.com>
-Subject: Re: AIO for SG
-Date: Wed, 12 Nov 2003 18:58:25 -0800 (PST)
+From: Douglas Gilbert <dougg@torque.net>
+Subject: sg3_utils-1.05 released
+Date: Thu, 13 Nov 2003 22:21:09 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031113025825.83532.qmail@web9507.mail.yahoo.com>
-References: <3FADF9BA.3050802@torque.net>
+Message-ID: <3FB37735.7070204@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web9507.mail.yahoo.com ([216.136.129.21]:35685 "HELO
-	web9507.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S262108AbTKMC6Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Nov 2003 21:58:25 -0500
-In-Reply-To: <3FADF9BA.3050802@torque.net>
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:24331 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S264145AbTKMMVc
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Nov 2003 07:21:32 -0500
+Received: from torque.net (d-240-159.stlucia.uq.net.au [203.101.240.159])
+	by bunyip.cc.uq.edu.au (8.12.10/8.12.10) with ESMTP id hADCLNb6023284
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Nov 2003 22:21:25 +1000 (GMT+1000)
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Douglas,
-Thanks, I will definitely try it out.
+Tarball and rpms can be found on http://www.torque.net/sg .
+Summary of sg3_utils, sg_utils and other packages are on
+this page: http://www.torque.net/sg/u_index.html
+A release announcement will be sent to freshmeat.net
+shortly.
 
-I had one question about the aio calls though. I was
-looking through the kernel sources after applying the
-patch, and then looked at the examples you have
-provided. How does the io_setcallback work? The kiocb
-and the aiocb structure had no way to specify a
-callback function in the kernel/usermode. What exactly
-does aio_complete do and how is the callback done?
-Atleast until SG, there was no way of calling back,
-didnt look anywhere else.How does it work from the
-kernel?
+Changelog for sg3_utils-1.05 [20031112]
+   - sginfo: major rework; add IE page, clean up control, cache +
+         disconnect pages (as per SPC-3 and SBC-2).
+       - when storing, update saved page (change from previous
+         version)
+       - use 10 byte mode sense and select by default (override
+         with '-6')
+       - mode subpage support
+   - sg_dd, sgm_dd + sgp_dd:
+       - 64 bit capable (read capacity; count, skip and seek
+         values).
+       - numerical arguments accept hex (prefixed by '0x' or '0X')
+       - require bpt > 0
+       - fix problem when reading /dev/null
+   - sg_dd: Treat SIGUSR1 properly: print stats and continue;
+   - sgp_dd: reduce READ CAPACITY response size to 8 bytes
+   - sg_read: require bpt > 0
+   - sg_test_rwbuf: switch from sg_header to sg_io_hdr interface
+     N.B. After these changes no sg3_utils utilities (in the
+     main directory) use the sg_header interface
+   - sg_scan: switch from sg_header to sg_io_hdr interface
+   - sg_senddiag: increase extended foreground timeout to 60
+     minutes
+   - sg_inq: add names of peripheral device types
+   - sg_readcap: show total size in bytes, MB, GB
+   - sg_logs: read log pages twice (first time to get response
+     length), for fragile HBAs; decode Seagate 0x37 + 0x3e
+     pages; display pcbs
+   - sg_modes: fix core dump when corrupted response, don't
+     print extra pages
+   - sg_map: increase sg device scanning from 128 to 256
+   - change man page references from lk 2.5 to lk 2.6
+   - examples/sg_iovec_tst: added testing sg_iovec (sg_io_hdr
+     iovec's)
+   - utils/hxascdmp: add utility for displaying ASCII hex
 
-TIA
-Mark
+Doug Gilbert
 
---- Douglas Gilbert <dougg@torque.net> wrote:
-> Mark Lobo wrote:
-> > Guys,
-> > Is there a patch available which adds the aio
-> > interface to SG? (aio_read, aio_complete etc) 
-> 
-> Mark,
-> I have ported the aio support from lk 2.5.69 to my
-> latest
-> version of sg which I sent to this list a few days
-> ago.
-> 
-> The 2 attachments:
->    1) incremental against my patch a few days ago.
-> This makes
->       it simpler to see the changes associated with
-> aio
->    2) against the version of sg found in lk
-> 2.6.0-test9 (so
->       it includes my cdev and seqfile patches)
-> 
-> The sg3_utils-1.05 package found at
-> http://www.torque.net/sg
-> has a file called sg_simple_aio.c ** in its
-> "examples" directory.
-> You need libaio to link it. Links ok with
-> libaio-0.3.92 but
-> libaio-0.3.93 gives undefines (seems to be related
-> to i64, ppc
-> etc support added in 0.3.93, strange).
-> 
-> ** beware of the "sleep(3)" before read() [best
-> remove it].
-> 
-> Doug Gibert
-> 
-> 
-
-> ATTACHMENT part 2 application/x-gzip
-name=sg_aio_260t9dpg.diff.gz
-
-
-> ATTACHMENT part 3 application/x-gzip
-name=sg_aio_260t9.diff.gz
-
-
-
-__________________________________
-Do you Yahoo!?
-Protect your identity with Yahoo! Mail AddressGuard
-http://antispam.yahoo.com/whatsnewfree
