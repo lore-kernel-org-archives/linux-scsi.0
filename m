@@ -1,62 +1,42 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: [Bugme-new] [Bug 4268] New: SCSI performance regression in
- 2.6.10
-Date: Mon, 28 Feb 2005 23:11:41 -0800
-Message-ID: <20050228231141.3ac7c145.akpm@osdl.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [ANNOUNCE] iSCSI enterprise target software
+Date: Tue, 01 Mar 2005 16:19:51 +0900
+Message-ID: <20050301161951K.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Received: from fire.osdl.org ([65.172.181.4]:30669 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261277AbVCAHMD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 02:12:03 -0500
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:56547 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S261283AbVCAHT4
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Mar 2005 02:19:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: duraid@octopus.com.au
+Cc: iscsitarget-devel@lists.sourceforge.net
 
+Hi,
 
-Did anything change in the mpt fusion driver?
+I would like to announce the iSCSI enterprise target (IET) software,
+which is open-source software to build iSCSI storage systems. It can
+provide disk volumes to iSCSI initiators by using any kinds of files
+(regular files, block devices, virtual block devices like RAID and
+LVM, etc). The project was started by forking the Ardis target
+implementation (http://www.ardistech.com/iscsi/) about one year
+ago. The source code and further information are available from:
 
-I'm seeing the same thing, again with mpt-fusion.  38MB/sec when it should
-be getting >60.
+http://iscsitarget.sourceforge.net/
 
+The user-space daemon handles authentication and the kernel threads
+take care of network and disk I/O requests from initiators by using
+the VFS interface. The kernel-space code is not intrusive. It doesn't
+touch other parts of the kernel. The code is already stable and
+usable. More than 130 people currently subscribe to the project's
+mailing list. The developers aim for inclusion into the mainline
+kernel.
 
-Begin forwarded message:
+The latest code against 2.6.11-rc5 for review can be found at:
 
-Date: Mon, 28 Feb 2005 22:03:57 -0800
-From: bugme-daemon@osdl.org
-To: bugme-new@lists.osdl.org
-Subject: [Bugme-new] [Bug 4268] New: SCSI performance regression in 2.6.10
+http://zaal.org/iscsi/iet/0.4.6/r996.tar.gz
 
-
-http://bugme.osdl.org/show_bug.cgi?id=4268
-
-           Summary: SCSI performance regression in 2.6.10
-    Kernel Version: 2.6.10
-            Status: NEW
-          Severity: normal
-             Owner: andmike@us.ibm.com
-         Submitter: duraid@octopus.com.au
-
-
-Distribution: Debian 'unstable', pristine 2.6.10 kernel
-Hardware Environment: HP rx2600 (ia64), LSI 53C1030 U320 SCSI host (Fusion MPT)
-Problem Description: There is a quite severe performance regression in 2.6.10
-when using SCSI disk drives. (I've tested against 2.4.20, 2.6.8 and 2.6.9, none
-of which exhibit this problem)
-
-Steps to reproduce: dd if=/dev/sdXX of=/dev/null bs=1048576 count=10000
-(streaming read the first 10GB of scsi disk XX)
-
-In 2.6.10, with a Fujitsu 10Krpm SCSI disk I get 34MB/sec, with a Maxtor 15Krpm
-SCSI disk I get 37MB/sec. CPU usage of 'dd' is ~2% and %system time is about the
-same.
-
-Using 2.6.9 (or earlier), I get 63MB/sec for the 10K disk and 95MB/sec for the
-15K disk. CPU usage goes up in proportion. (OK, fair enough.)
-
-This is a real performance issue (shows up everywhere, not just in 'dd'), and
-affects both reads and writes. Does anyone know what's going on here?
-
-------- You are receiving this mail because: -------
-You are on the CC list for the bug, or are watching someone who is.
+Could you please review the code? Any comments are greatly
+appreciated.
