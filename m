@@ -1,44 +1,38 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: Aic7xxx v6.2.22 and Aic79xx v1.3.0Alpha2 Released
-Date: Tue, 10 Dec 2002 13:03:30 -0700
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: [PATCH] SCSI tape driver fix for 2.5.51
+Date: Tue, 10 Dec 2002 22:48:35 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <649720000.1039550610@aslan.btc.adaptec.com>
-References: <200212101602.gBAG2Hi02930@localhost.localdomain>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Message-ID: <200212102048.gBAKmZmn000833@kai.makisara.local>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200212101602.gBAG2Hi02930@localhost.localdomain>
-Content-Disposition: inline
+Received: from kai.makisara.local ([62.248.241.214])
+          by fep19-app.kolumbus.fi with ESMTP
+          id <20021210205001.ICUK3999.fep19-app.kolumbus.fi@kai.makisara.local>
+          for <linux-scsi@vger.kernel.org>; Tue, 10 Dec 2002 22:50:01 +0200
+Received: from kai.makisara.local (localhost [127.0.0.1])
+	by kai.makisara.local (8.12.3/8.12.3/SuSE Linux 0.6) with ESMTP id gBAKmZjK000834
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Dec 2002 22:48:35 +0200
+Received: (from makisara@localhost)
+	by kai.makisara.local (8.12.3/8.12.3/Submit) id gBAKmZmn000833
+	for linux-scsi@vger.kernel.org; Tue, 10 Dec 2002 22:48:35 +0200
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Marcelo Tosatti <marcelo@conectiva.com.br>, Linus Torvalds <torvalds@transmeta.com>
+To: linux-scsi@vger.kernel.org
 
-> The tarball contained a lot of extraneous files, but I think I got them
-> all  weeded out.  I've but the result at:
-> 
-> http://linux-scsi.bkbits.net/scsi-aic7xxx-2.5
-> 
-> it needs to be tested to make sure I captured everything.
+The SCSI tape driver in 2.5.51 does not find any devices. The
+following patch fixes this (and adds a missing unlocking call).
 
-I've updated the tarfiles.  For some reason my --exclude directive
-didn't stick the first time.  <sigh>
+     Kai
 
-> Justin, this would be why patches are a lot easier to handle:  we have 
-> automated scripts to import them rather than having to do error prone
-> manual  steps.  All I need to know for a patch is where it was based, and
-> I can get  bitkeeper and the tools to do the rest.
-
-Unfortunately, even though I've setup a BK repository in an attempt
-to make this task easier, BK doesn't do what I want.  It seems that
-only if I can push to a public repository or can export my repository
-for others to pull from, will BK auto-matically figure out which change
-sets don't exist where and generate the correct stuff.  Unfortunately
-my IT department will not allow me to export a BK server, so that is
-out of the question.  Anyone care to tell me the magic incantation to
-get BK to generate a cumulative patch set against the parent repository?
-Or must I do a second clone and manually create patches?
-
---
-Justin
+--- linux-2.5/drivers/scsi/st.c	2002-12-10 17:33:47.000000000 +0200
++++ linux-2.5-km1/drivers/scsi/st.c	2002-12-10 18:24:01.000000000 +0200
+@@ -991,8 +991,10 @@
+ 		return (-EBUSY);
+ 	}
+ 
+-	if(!scsi_device_get(STp->device))
++	if(scsi_device_get(STp->device)) {
++		write_unlock(&st_dev_arr_lock);
+ 		return (-ENXIO);
++	}
+ 	STp->in_use = 1;
+ 	write_unlock(&st_dev_arr_lock);
+ 	STp->rew_at_close = STp->autorew_dev = (minor(inode->i_rdev) & 0x80) == 0;
