@@ -1,39 +1,46 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: EISA 53c825 - where to start?
-Date: 16 Nov 2004 09:22:27 -0600
-Message-ID: <1100618553.2770.16.camel@mulgrave>
-References: <Pine.SOC.4.61.0411161109430.12745@math.ut.ee>
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: PROBLEM: kernel crashes on RAID1 drive error
+Date: Tue, 16 Nov 2004 16:51:41 +0100
+Message-ID: <20041116155141.GL3973@marowsky-bree.de>
+References: <8FA83ADB-22E4-11D9-AC9C-0003934F6348@aol.com> <20041021084514.GY10531@suse.de> <4177BF22.7060208@steeleye.com> <20041021135557.GN10531@suse.de> <4177C13C.10007@steeleye.com> <20041021140236.GO10531@suse.de> <88F77D21-2443-11D9-AAEE-0003934F6348@aol.com> <91146D2E-2918-11D9-B6DC-0003934F6348@aol.com> <2BF4BB83-2E93-11D9-804F-0003934F6348@mac.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:42170 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262017AbUKPPWl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Nov 2004 10:22:41 -0500
-In-Reply-To: <Pine.SOC.4.61.0411161109430.12745@math.ut.ee>
+Received: from gate.in-addr.de ([212.8.193.158]:9940 "EHLO mx.in-addr.de")
+	by vger.kernel.org with ESMTP id S262004AbUKPPvx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Nov 2004 10:51:53 -0500
+Content-Disposition: inline
+In-Reply-To: <2BF4BB83-2E93-11D9-804F-0003934F6348@mac.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Mark Rustad <mrustad@mac.com>, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 2004-11-16 at 03:12, Meelis Roos wrote:
-> I have a Compaq Proliant 4500 with onboard EISA-connected NCR 53c825 
-> SCSI adapter. There is no EISA-aware version for this chip in Linux 
-> AFAIK so I want to make one. EISA API is there, also several NCR/Sym/LSI 
-> SCSI drivers. Which driver is the best to base the eisa work on? And 
-> where should I start? :)
+On 2004-11-04T12:56:01, Mark Rustad <mrustad@mac.com> wrote:
 
-Are you sure it's an 825?  The reason I ask is because the 825 chip is
-both a SCSI chip and a PCI chip with on-board BIOS.  The only real way I
-could see it working as EISA is if it were glued to a EISA<->PCI
-converter, which I didn't think existed.
+> I came up with a patch that seems to fix the kernel crashing on a RAI=
+D1=20
+> device failure problem. I do not have confidence that it really is th=
+e=20
+> correct fix, but I'm pretty sure that it is touching the right area.=20
+> I'm sure someone more familiar with this area of the kernel will=20
+> recognize from this what the correct fix is, if this is not it.=20
+> Submitted for your consideration:
 
-Also, the only way to get this to work will be to find out what the
-magic glue registers are and how they're mapped ... unless you have
-access to the HW specs for the box, this is going to be tricky to
-reverse engineer.
-
-James
+Hi Mark, checking back whether any better fix has since been proposed?
 
 
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
+
+--=20
+High Availability & Clustering
+SUSE Labs, Research and Development
+SUSE LINUX Products GmbH - A Novell Business
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
