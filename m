@@ -1,28 +1,37 @@
-From: William Lee Irwin III <wli@holomorphy.com>
-Subject: Re: sym2 on sparc
-Date: Fri, 8 Oct 2004 04:25:43 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041008112543.GI9106@holomorphy.com>
-References: <20041001182056.GI16153@parcelfarce.linux.theplanet.co.uk>
+From: christophe.varoqui@free.fr
+Subject: Re: [dm-devel] [ANNOUNCE] multipath-tools-0.3.0
+Date: Fri,  8 Oct 2004 14:49:02 +0200
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <1097239742.41668cbec3b65@imp1-q.free.fr>
+References: <1096071849.4466.31.camel@zezette> <1097054573.4163b96d1262c@imp5-q.free.fr> <20041007200143.GA9667@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from holomorphy.com ([207.189.100.168]:13526 "EHLO holomorphy.com")
-	by vger.kernel.org with ESMTP id S269839AbUJHLZ5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Oct 2004 07:25:57 -0400
-Content-Disposition: inline
-In-Reply-To: <20041001182056.GI16153@parcelfarce.linux.theplanet.co.uk>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20041007200143.GA9667@osdl.org>
+To: device-mapper development <dm-devel@redhat.com>, Dave Olien <dmo@osdl.org>
+Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-sparc@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, Oct 01, 2004 at 07:20:56PM +0100, Matthew Wilcox wrote:
-> Could someone with a symbios 53c8xx chip test this patch?  It works
-> on non-sparc.  If I don't hear of any problems, it'll be in the next
-> driver update.
+Selon Dave Olien <dmo@osdl.org>:
 
-This looks like it can't go wrong in modern kernels. I suspect the
-odd macros are long dead.
+>
+> Christophe,
+>
+> I downloaded your new multipath tools, and they seem to have solved a problem
+> I was having with the previous version.
+>
+> The only difficulty I had was with the new klibc version (klibc-0.181).
+> For i386 architecture, it compiles by default with -mregparm=3, to
+> pass arguments in registers.
+>
+good catch.
 
+I think the correct fix is to follow the klibc rules, ie :
+CFLAGS += ${OPTFLAGS} in Makefile.inc
 
--- wli
+I'll release a new tarball soon to correct this.
+
+thanks,
+cvaroqui
+--
