@@ -1,33 +1,54 @@
-From: "Manish Kumar Bhojasia" <mbhojasi@cisco.com>
-Subject: [PATCH] Updated iscsi driver 4.0.1.3
-Date: Tue, 30 Mar 2004 20:34:31 +0530
+From: Henning Makholm <henning@makholm.net>
+Subject: Re: Binary-only firmware covered by the GPL?
+Date: 30 Mar 2004 17:51:38 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <FFEFJMNKOMGHNFBIAHOCGEMGDGAA.mbhojasi@cisco.com>
+Message-ID: <87y8picm79.fsf@kreon.lan.henning.makholm.net>
+References: <8RnZwD.A.91B.qHYaAB@murphy> <40698AE4.7020006@almg.gov.br>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ind-iport-1-sec.cisco.com ([64.104.129.9]:5680 "EHLO
-	ind-iport-1.cisco.com") by vger.kernel.org with ESMTP
-	id S263697AbUC3PEi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Mar 2004 10:04:38 -0500
+Received: from [81.168.75.8] ([81.168.75.8]:42606 "EHLO henning.makholm.net")
+	by vger.kernel.org with ESMTP id S263746AbUC3Qvk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Mar 2004 11:51:40 -0500
+In-Reply-To: <40698AE4.7020006@almg.gov.br>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: "Linux-Iscsi-Devel@Lists. Sourceforge. Net" <linux-iscsi-devel@lists.sourceforge.net>
+To: debian-devel@lists.debian.org, debian-legal@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+Scripsit Humberto Massa <humberto.massa@almg.gov.br>
 
-We have incorporated the review comments for 4.0.1.2 and have released
-the linux-iscsi driver version linux-iscsi-4.0.1.3.
+> to modify the fw[], at least *legally* is MHO that any
+> recipient/redistributor of the file _can_ and _must_ consider the fil=
+e
+> in *that* format as the preferred form for modification (pf4m) *and*,
+> considering it the source code, follow the directions of the GPL in
+> respect to modification and redistribution.
 
-The 4.0.1.3 release of linux-iscsi driver can be downloaded from
-project home at:
+No, law does not work that way. The phrase "preferred form for
+modification" has a clear enough, if somewhat fuzzy, literal meaning,
+and one cannot *implicitly* make it mean something that directly
+contrast to the literal meaning. If nobody *actually* prefers the
+binary blob for modification, then the binary blob is *not* the
+preferred form for modification. That's irrespective of whether the
+copyright holder behaves inconsistently.
 
-http://sourceforge.net/projects/linux-iscsi/
+> * the /status quo/ obtained by observation of the previous item
+> prevails _until somebody proves_ that the fw[] =3D {} is *not* the
+> source code;
 
-The iscsi driver patch has been created against linux kernel 2.6.4.
+And Debian's approach to software freedom doesn't work that way
+either. We treat software as non-free and non-distributable unless and
+until we see good and self-consistent evidence that it is actually
+free and distributable. The "burden of proof", to the extent that
+expression applies, is always on the side that claims that the
+software in question is OK for Debian to distribute.
 
-Please review and let us know your comments.
-
-Thanks,
-Manish
+--=20
+Henning Makholm                "Nu kommer han. Kan du ikke h=F8re knall=
+erten?"
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
