@@ -1,53 +1,46 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH]: Flexible timeout infrastructure
-Date: 16 Jun 2004 14:17:46 -0500
+From: "Lee Xing" <lxing@Crossroads.com>
+Subject: Help - how to prevent mid-layer from scanning un-exist disks?
+Date: Wed, 16 Jun 2004 15:26:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1087413469.2796.58.camel@mulgrave>
-References: <3356669BBE90C448AD4645C843E2BF28034F94EE@xbl.ma.emulex.com>
-	<1087405441.2067.25.camel@mulgrave>  <40D09845.9030201@adaptec.com>
+Message-ID: <519672568F040C41B6FAC21ADF51B18FF034@mailnode1.commstor.crossroads.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:35784 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264610AbUFPTR7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Jun 2004 15:17:59 -0400
-In-Reply-To: <40D09845.9030201@adaptec.com>
+Received: from email.crossroads.com ([65.68.235.6]:32353 "HELO
+	email.crossroads.com") by vger.kernel.org with SMTP id S264733AbUFPU0y convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Jun 2004 16:26:54 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: "Smart, James" <James.Smart@Emulex.Com>, Mike Anderson <andmike@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Wed, 2004-06-16 at 13:58, Luben Tuikov wrote:
-> EH_RESET_TIMER means "This command had nothing to do with why
-> its timer timed out and is expected to complete shortly."
-> 
-> Do we want to increment its retry counter for this,
-> as it isn't really a retry.
+Hi,
 
-It's a simple way to ensure the interface doesn't get abused.  As long
-as the command is truly completed, there won't be a problem.
+Can some one please take a look at this and see how to do it.  My question is how to prevent mid-layer from scanning un-exist disks.
 
-> > handling into the behaviour the user has requested.  The only wrinkle
-> > was the no retry streaming commands.  The assumption is that a retry
-> 
-> They also fall in the same category -- the application client cannot
-> retry them, but the LLDD knows best and it may perform some magic
-> for which SCSI Core shouldn't account for.
+- Scenario 1
+If actualNumOfDisks < =16, then the following code lets mid-layer scan (channel : target) 0:0, 0:1, ... 0:(actualNumOfDisks - 1).  This is good so far.
 
-Yes, that's why the proposal permits a single retry of an ostensibly
-non-retryable command.
+- Scenario 2
+If actualNumOfDisks = 18, then the following code lets mid-layer scan 0:0, 0:1, ... 0:15, 1:0, 1:1, ... 1:15.  This is not good since it's not necessary for mid-layer to spend time to scan un-exist disks 1:2 - 1:15.  How can I let mid-layer scan just 18 disks in this case?
 
-> > doesn't actually happen under eh_timed_out, but only an attempt to
-> > collect an existing command which may be delayed because of transport or
-> > other problems the host knows about.
-> 
-> Can we get a finalised patch so we can test it?
-> James, is the one you posted what you'll have in?
 
-I need to add comments and things, it can probably be in scsi-misc-2.6
-in a day or so.
+static int detect(Scsi_Host_Template * tpnt)
+{
+	struct Scsi_Host
 
-James
+	...
+	pSH = scsi_register(tpnt, 0);
 
+	pSH->max_channel = ((actualNumOfDisks -1) >> 4) & 0x1F;
+	pSH->max_id = (actualNumOfDisks > 16) ? 16:actualNumOfDisks;
+	...
+}
+
+
+Thanks,
+
+
+Lee
 
