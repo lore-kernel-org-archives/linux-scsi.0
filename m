@@ -1,82 +1,69 @@
-From: "Brice Blount" <tyrton@reddevils-mad.co.uk>
-Subject: (unknown)
-Date: Mon, 15 Mar 2004 15:13:32 -0700
+From: Paul Wagland <paul@wagland.net>
+Subject: [PATCH][BUGFIX] : Another Megaraid patch for 2.6 (please apply)
+Date: Tue, 16 Mar 2004 00:08:03 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <DJQFSGWTPHWUGECLKSOB__33766.2453567193$1079378048@msn.com>
-Reply-To: "Brice Blount" <tyrton@reddevils-mad.co.uk>
+Message-ID: <1079392083.3611.8.camel@tidbit.kungfoocoder.org>
 Mime-Version: 1.0
-Content-Type: multipart/alternative;
-	boundary="--9070449128449168"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Tm/NiECbezvmfMooL0je"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 68-235-9-113.lndnnh.adelphia.net ([68.235.9.113]:46296 "HELO
-	68-235-9-113.lndnnh.adelphia.net") by vger.kernel.org with SMTP
-	id S262718AbUCOTMj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Mar 2004 14:12:39 -0500
-Subject: 
+Received: from smtp-out2.xs4all.nl ([194.109.24.12]:5130 "EHLO
+	smtp-out2.xs4all.nl") by vger.kernel.org with ESMTP id S262964AbUCOXFM
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Mar 2004 18:05:12 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-serial@vger.kernel.org
-
-----9070449128449168
-Content-Type: text/plain;
-Content-Transfer-Encoding: 7Bit
-
-Hello, 
-
-This is Clarke Robbins President & CEO of
-LoanSafe4AllNow1. Interest Rates have dropped basis
-points once again to their lowest in years. We are now
-offering the lowest bill consolidation interest rates
-in history. Even if you just consolidated, we can save
-you more $ now, faster! We can:
-
-* Eliminate All Bills Effectively & Efficiently
-* Give Loan Advice on the Best courses of Action
-* Allow for one New rock bottom payment (saving you
-even more)
-* 99.9% of all Loans qualify & we do NO HISTORY, All
-are approved in our program!
-
-We hope to hear from you soon to earn your business &
-trust. Click Below.
-
-*Today's Low Rate is 2.47%
-
-Sincerely,
-
-Clarke Robbins
-CEO & President
-LoanSafe4AllNow
-
-http://lowerrates4you.com/?partid=n278 
+To: Linux SCSI mailing list <linux-scsi@vger.kernel.org>, Linux kernel mailing list <linux-kernel@vger.kernel.org>
+Cc: akpm@osdl.org, James.Bottomley@HansenPartnership.com, torvalds@osdl.org, atulm@lsil.com
 
 
+--=-Tm/NiECbezvmfMooL0je
+Content-Type: multipart/mixed; boundary="=-22zEPvrBT1B7RcZRmJCl"
 
 
+--=-22zEPvrBT1B7RcZRmJCl
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+Hi all,
 
+This bug was discussed on linux-scsi a few weeks back, but it appears to
+have slipped through the cracks. This fix was originally proposed by
+Christoph Hellwig, but I am reposting it, since I have the hardware :-)
 
+Anyway, the problem that this fixes is that megaraid doesn't set the
+moduler owner for the host_template, this means that the module can be
+removed, even when it is in use.
 
+Cheers,
+Paul
 
+--=-22zEPvrBT1B7RcZRmJCl
+Content-Disposition: attachment; filename=1-megaraid.mod_owner.patch
+Content-Transfer-Encoding: base64
+Content-Type: text/x-patch; name=1-megaraid.mod_owner.patch; charset=UTF-8
 
+ZGlmZiAtLXJlY3Vyc2l2ZSAtLWlnbm9yZS1hbGwtc3BhY2UgLS11bmlmaWVkIGxpbnV4LTIuNi4y
+Lm8vZHJpdmVycy9zY3NpL21lZ2FyYWlkLmMgbGludXgtMi42LjIubWVnYXJhaWQvZHJpdmVycy9z
+Y3NpL21lZ2FyYWlkLmMNCi0tLSBsaW51eC0yLjYuMi5vL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC5j
+CTIwMDQtMDItMDkgMjI6NTY6MDkuMDAwMDAwMDAwICswMTAwDQorKysgbGludXgtMi42LjIubWVn
+YXJhaWQvZHJpdmVycy9zY3NpL21lZ2FyYWlkLmMJMjAwNC0wMi0yMCAwMTozMjoyMS4wMDAwMDAw
+MDAgKzAxMDANCkBAIC00NjE0LDYgKzQ2MTQsNyBAQA0KIH0NCiANCiBzdGF0aWMgc3RydWN0IHNj
+c2lfaG9zdF90ZW1wbGF0ZSBtZWdhcmFpZF90ZW1wbGF0ZSA9IHsNCisJLm1vZHVsZQkJCQk9IFRI
+SVNfTU9EVUxFLA0KIAkubmFtZQkJCQk9ICJNZWdhUkFJRCIsDQogCS5wcm9jX25hbWUJCQk9ICJt
+ZWdhcmFpZCIsDQogCS5pbmZvCQkJCT0gbWVnYXJhaWRfaW5mbywNCg==
 
+--=-22zEPvrBT1B7RcZRmJCl--
 
+--=-Tm/NiECbezvmfMooL0je
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
 
+iD8DBQBAVjdTtch0EvEFvxURAtNlAKCrWwNoG8c8428YPiXCuEN4wjeCHwCfe4yy
+hjxrAUEENSFqslBzLVZIaj4=
+=+APf
+-----END PGP SIGNATURE-----
 
-
-
-The above gift or special offer was sent to you as a 
-subscriber of Direct Media. We will continue to bring you 
-valuable offers on products and services that interest you 
-most. To modify your future preference with us: 
-http://lowerrates4you.com/st.html 
-
-
-self
-2
-%RND _TEXT
-
-
-----9070449128449168--
+--=-Tm/NiECbezvmfMooL0je--
 
