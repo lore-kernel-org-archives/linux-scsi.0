@@ -1,138 +1,134 @@
-From: Tape Help <tape.help@gmail.com>
-Subject: Re: Fwd: Multi tape problems with cpio
-Date: Sun, 16 Jan 2005 14:28:33 -0500
-Message-ID: <12c7da3e050116112875ff287d@mail.gmail.com>
-References: <12c7da3e0501132353150d51f2@mail.gmail.com>
-	 <12c7da3e050114233249899ca1@mail.gmail.com>
-	 <Pine.LNX.4.61.0501162041120.18018@kai.makisara.local>
-Reply-To: Tape Help <tape.help@gmail.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH] sg descriptor sense cleanup lk 2.6.11-rc1-bk1
+Date: Mon, 17 Jan 2005 21:39:37 +1000
+Message-ID: <41EBA3F9.8030305@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------050504050606020109000001"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.197]:40935 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262191AbVAPT2d (ORCPT
+Received: from borg.st.net.au ([65.23.158.22]:59056 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S262773AbVAQLjf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 16 Jan 2005 14:28:33 -0500
-Received: by wproxy.gmail.com with SMTP id 40so1026072wri
-        for <linux-scsi@vger.kernel.org>; Sun, 16 Jan 2005 11:28:33 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.61.0501162041120.18018@kai.makisara.local>
+	Mon, 17 Jan 2005 06:39:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: James.Bottomley@SteelEye.com
 
-On Sun, 16 Jan 2005 20:47:55 +0200 (EET), Kai Makisara
-<Kai.Makisara@kolumbus.fi> wrote:
-> On Sat, 15 Jan 2005, Tape Help wrote:
-> 
-> > No one on linux-tape has responded.  I think that list is dead.
-> > Can anyone help?
-> > 
-> linux-tape may not be dead but you have to give us some time ;-)
-> 
-> > Thanks.
-> >
-> > ---------- Forwarded message ----------
-> > From: Tape Help <tape.help@gmail.com>
-> > Date: Fri, 14 Jan 2005 02:53:16 -0500
-> > Subject: Multi tape problems with cpio
-> > To: linux-tape@vger.kernel.org
-> >
-> >
-> > I am using cpio to backup a system.  The backup does not fit on 1
-> > tape, so cpio prompts for another tape.  I change the tape and hit
-> > enter.  cpio continues and completes.  cpio does eject the first tape,
-> > which is handy.
-> >
-> > When I try to list the tape, cpio gets an I/O error at the end of the
-> > first tape and does not prompt for a second tape.  Same problem if I
-> > try to restore data.
-> >
-> > cpio: read error: Input/output error
-> >
-> > I have tried 2 different tape drives.
-> > Both give the same results.
-> > I have done this test about 5 or so times.
-> >
-> > The backup command:
-> > find MyFS -depth|cpio -o --format=newc --block-size=128 -F /dev/st0
-> >
-> > The command to list the tape(s):
-> > cpio -i --only-verify-crc --list --block-size=128< /dev/st0
-> >
-> > If I use dd to read the tape, it also gets a read error at the end.  I
-> > think it should get an end of file and exit cleanly.
-> >
-> > I am using kernel 2.4.28.  It also fails with 2.4.20-8.
-> > 
-> I tested cpio and dd in my system with 2.4.28 without finding any problems
-> (both variable block mode and fixed block mode with 1024 byte blocks).
-> Some additional information may help to solve your problem:
-> - Fixed or variable block mode? What blocksize if fixed block mode?
->  (Output of 'mt status' tells these.)
-> - Tape drive and SCSI adapter make and model
-> - Any tape messages in system log?
-> - Debugging output from st. (You can enable debugging in st by editing the
->  driver source (change '#define DEBUG 0' to '#define DEBUG 1') and
->  recompiling the kernel/module.
-> --
-> Kai
-> 
+This is a multi-part message in MIME format.
+--------------050504050606020109000001
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Sorry if I insulted the linux tape list!
-I monitored it for almost 1 week, no posts.
-The archive has been down for 4+ days.
-http://www.geocrawler.com/lists/3/Linux/
-The IP pings, but port 80 is closed.
-My post also had no response.
+Continuation of descriptor sense data expansion to
+sg driver.
 
-Glad it is still there!
+Next will be the sd driver which awaits a
+new utility function in constants.c to read the
+sense data information field for medium/hardware
+errors.
 
-Fixed or varible?  I used "--block-size=128"  which gives 64K blocks.
-I assume these would be fixed, but not sure.  I think fixed would be a
-hardware option.  I have not used any fixed hardware options.  I can't
-see that mt satus gives this info.  But output is below.
+Changelog:
+   - expand sense data handling to descriptor format
+   - make module parameters visible in
+       /sys/modules/sg/parameters
+   - add "readable" SCSI commands: READ(16), REPORT LUNS,
+     SERVICE_ACTION_IN, RECEIVE_DIAGNOSTIC, READ_LONG
+     and MAINTENANCE_IN_CMD to list
 
-st0 is an HP LTO-1.
-st1 is a DLT-4000 in a 5 slot mini changer (Quantum DLT 4500).
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
-st0 is connected to a SCSI port on the motherboard.  AIC-7860
-This is an ultra wide card.  The tape drive is in 20MB/sec mode.
+--------------050504050606020109000001
+Content-Type: text/x-patch;
+ name="sg2611rc1bk1.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sg2611rc1bk1.diff"
 
-st1 is an Adaptec card, 50 pin, ultra turnned off.  AIC-7880U
+--- linux/drivers/scsi/sg.c	2004-12-25 12:21:22.000000000 +1000
++++ linux/drivers/scsi/sg.c2611rc1bk1des	2005-01-17 18:11:42.000000000 +1000
+@@ -7,7 +7,7 @@
+  * Original driver (sg.c):
+  *        Copyright (C) 1992 Lawrence Foard
+  * Version 2 and 3 extensions to driver:
+- *        Copyright (C) 1998 - 2004 Douglas Gilbert
++ *        Copyright (C) 1998 - 2005 Douglas Gilbert
+  *
+  *  Modified  19-JAN-1998  Richard Gooch <rgooch@atnf.csiro.au>  Devfs support
+  *
+@@ -18,8 +18,8 @@
+  *
+  */
+ 
+-static int sg_version_num = 30531;	/* 2 digits for each component */
+-#define SG_VERSION_STR "3.5.31"
++static int sg_version_num = 30532;	/* 2 digits for each component */
++#define SG_VERSION_STR "3.5.32"
+ 
+ /*
+  *  D. P. Gilbert (dgilbert@interlog.com, dougg@triode.net.au), notes:
+@@ -60,7 +60,7 @@
+ 
+ #ifdef CONFIG_SCSI_PROC_FS
+ #include <linux/proc_fs.h>
+-static char *sg_version_date = "20040516";
++static char *sg_version_date = "20050117";
+ 
+ static int sg_proc_init(void);
+ static void sg_proc_cleanup(void);
+@@ -1282,6 +1282,8 @@
+ 	srp->header.duration =
+ 	    jiffies_to_msecs(jiffies - srp->header.duration);
+ 	if (0 != SRpnt->sr_result) {
++		struct scsi_sense_hdr sshdr;
++
+ 		memcpy(srp->sense_b, SRpnt->sr_sense_buffer,
+ 		       sizeof (srp->sense_b));
+ 		srp->header.status = 0xff & SRpnt->sr_result;
+@@ -1296,11 +1298,12 @@
+ 
+ 		/* Following if statement is a patch supplied by Eric Youngdale */
+ 		if (driver_byte(SRpnt->sr_result) != 0
+-		    && (SRpnt->sr_sense_buffer[0] & 0x7f) == 0x70
+-		    && (SRpnt->sr_sense_buffer[2] & 0xf) == UNIT_ATTENTION
++		    && scsi_command_normalize_sense(SCpnt, &sshdr)
++		    && !scsi_sense_is_deferred(&sshdr)
++		    && sshdr.sense_key == UNIT_ATTENTION
+ 		    && sdp->device->removable) {
+-			/* Detected disc change. Set the bit - this may be used if */
+-			/* there are filesystems using this device. */
++			/* Detected possible disc change. Set the bit - this */
++			/* may be used if there are filesystems using this device */
+ 			sdp->device->changed = 1;
+ 		}
+ 	}
+@@ -1573,8 +1576,8 @@
+  * of sysfs parameters (which module_param doesn't yet support).
+  * Sysfs parameters defined explicitly below.
+  */
+-module_param_named(def_reserved_size, def_reserved_size, int, 0);
+-module_param_named(allow_dio, sg_allow_dio, int, 0);
++module_param_named(def_reserved_size, def_reserved_size, int, S_IRUGO);
++module_param_named(allow_dio, sg_allow_dio, int, S_IRUGO | S_IWUSR);
+ 
+ MODULE_AUTHOR("Douglas Gilbert");
+ MODULE_DESCRIPTION("SCSI generic (sg) driver");
+@@ -2606,9 +2609,14 @@
+ 	free_pages((unsigned long) buff, order);
+ }
+ 
++#ifndef MAINTENANCE_IN_CMD
++#define MAINTENANCE_IN_CMD 0xa3
++#endif
++
+ static unsigned char allow_ops[] = { TEST_UNIT_READY, REQUEST_SENSE,
+ 	INQUIRY, READ_CAPACITY, READ_BUFFER, READ_6, READ_10, READ_12,
+-	MODE_SENSE, MODE_SENSE_10, LOG_SENSE
++	READ_16, MODE_SENSE, MODE_SENSE_10, LOG_SENSE, REPORT_LUNS,
++	SERVICE_ACTION_IN, RECEIVE_DIAGNOSTIC, READ_LONG, MAINTENANCE_IN_CMD
+ };
+ 
+ static int
 
->From /var/log/messages (in not order)
-kernel: Attached scsi tape st0 at scsi1, channel 0, id 2, lun 0
-kernel: Attached scsi tape st1 at scsi4, channel 0, id 5, lun 0
-kernel: st0: Block limits 1 - 16777215 bytes.
-kernel: st1: Block limits 1 - 16777215 bytes.
-
->From /var/log/dmesg:
-st0:
-(scsi1:A:2): 20.000MB/s transfers (10.000MHz, offset 8, 16bit)
-st1:
-(scsi4:A:5): 10.000MB/s transfers (10.000MHz, offset 15)
-
-
-# mt -f /dev/st0 status
-SCSI 2 tape drive:
-File number=0, block number=0, partition=0.
-Tape block size 0 bytes. Density code 0x40 (DLT1 40 GB, or Ultrium).
-Soft error count since last status=0
-General status bits on (41010000):
- BOT ONLINE IM_REP_EN
-
-# mt -f /dev/st1 status
-SCSI 2 tape drive:
-File number=0, block number=286270, partition=0.
-Tape block size 0 bytes. Density code 0x1a (DLT 20GB).
-Soft error count since last status=0
-General status bits on (21010000):
- EOT ONLINE IM_REP_EN
-
-I will attempt '#define DEBUG 1'.  I have never done any custom Kernel
-stuff.  Or generated debug output before.  My current Kernel was built
-by me, so I do stand a chance! :)
-
-Thanks.
+--------------050504050606020109000001--
