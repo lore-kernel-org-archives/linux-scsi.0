@@ -1,33 +1,39 @@
-From: Arnaud Launay <asl@launay.org>
-Subject: Re: Serial ATA (SATA) for Linux status report
-Date: Thu, 4 Dec 2003 09:17:32 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20031204081732.GC5376@launay.org>
-References: <20031203204445.GA26987@gtf.org>
+From: "Stacy Nava" <llieosj3@aol.com>
+Subject: Egregio signore non abbia vergogna
+Date: Thu, 04 Dec 03 07:28:18 GMT
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <g45$rf$a-$$42461-z$6@945.y12l5i>
+Reply-To: "Stacy Nava" <llieosj3@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20031203204445.GA26987@gtf.org>
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: multipart/alternative;
+	boundary="2_.953.5.C.F_...6"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from c-24-0-218-164.client.comcast.net ([24.0.218.164]:785 "HELO
+	c-24-0-218-164.client.comcast.net") by vger.kernel.org with SMTP
+	id S263269AbTLDJfP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Dec 2003 04:35:15 -0500
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Le Wed, Dec 03, 2003 at 03:44:46PM -0500, Jeff Garzik a =E9crit:
-> Intel ICH5
-> ----------
-> Summary:  No TCQ.  Looks like a PATA controller, but with a few
-> added, non-standard SATA port controls.
 
-No plan to add the so-called "raid" capabilities of the 82801EB ?
+--2_.953.5.C.F_...6
+Content-Type: text/plain;
+Content-Transfer-Encoding: quoted-printable
 
-> Silicon Image 3112
+Paris Hilton swallowing her boyfriend dick and 
+much more,more,more...
 
-Same here, is support for the 3114 underway ? Saw a message from
-Andre Hedrick back in July saying he had something seemingly
-working, but there's no news since...
+click here
+http://adweawen.biz/ph/index_mailer.html
 
-(Andre, no rant here, just a question. It's for personal use and
-I'm grateful you do that on your freetime).
 
-	Arnaud.
+
+
+
+
+
+luza qehihrd cfohcohwhdiaoo  nuiyw
+vnmpyqc beqk
+
+--2_.953.5.C.F_...6--
+
