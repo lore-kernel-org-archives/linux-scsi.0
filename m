@@ -1,38 +1,53 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
 Subject: Re: [BKPATCH] SCSI sync
-Date: 27 Sep 2003 16:20:19 -0500
+Date: Sat, 27 Sep 2003 23:29:52 +0200 (MEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1064697623.2217.476.camel@mulgrave>
-References: <Pine.LNX.4.44.0309271110550.22923-100000@home.osdl.org>
+Message-ID: <Pine.GSO.4.21.0309272326060.7085-100000@vervain.sonytel.be>
+References: <1064697623.2217.476.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:54277 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262224AbTI0VUj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Sep 2003 17:20:39 -0400
-In-Reply-To: <Pine.LNX.4.44.0309271110550.22923-100000@home.osdl.org>
+Received: from mail2.sonytel.be ([195.0.45.172]:4272 "EHLO witte.sonytel.be")
+	by vger.kernel.org with ESMTP id S262243AbTI0V37 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Sep 2003 17:29:59 -0400
+In-Reply-To: <1064697623.2217.476.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, geert@linux-m68k.org
-Cc: Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Geert Uytterhoeven <geert@linux-m68k.org>
 
-On Sat, 2003-09-27 at 13:13, Linus Torvalds wrote:
-> what's this? It's the only place in the whole source file that has 
-> "phases". 
+On 27 Sep 2003, James Bottomley wrote:
+> On Sat, 2003-09-27 at 13:13, Linus Torvalds wrote:
+> > what's this? It's the only place in the whole source file that has 
+> > "phases". 
+> 
+> OK, after a bit of a paperchase, this is the problem:
+> 
+> hangeSet 1.1217.10.7 2003/09/12 09:52:45 geert@linux-m68k.org
+>   [PATCH] NCR5380.c warning
+>   
+>   NCR5380: `phases' is used inside the #ifdef NDEBUG only, so move its
+> definition
+>   inside as well.
+> 
+> It wasn't realised that NCR5380.c is #included into g_NCR5380.c and
+> provided the phases[] array for that as well.
 
-OK, after a bit of a paperchase, this is the problem:
+Oops, sorry, I didn't notice that g_NCR5380.c is the only NCR5380 driver that
+uses phases[] beyond debugging.
 
-hangeSet 1.1217.10.7 2003/09/12 09:52:45 geert@linux-m68k.org
-  [PATCH] NCR5380.c warning
-  
-  NCR5380: `phases' is used inside the #ifdef NDEBUG only, so move its
-definition
-  inside as well.
+I think the NCR5380 core and drivers need some clean up. Including other C
+sources and #define'ing all the NCR5380_*() routines isn't exacly the cleanest
+way to handle abstraction...
 
-It wasn't realised that NCR5380.c is #included into g_NCR5380.c and
-provided the phases[] array for that as well.
+Gr{oetje,eeting}s,
 
-James
+						Geert
 
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
 
