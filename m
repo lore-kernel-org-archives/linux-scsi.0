@@ -1,54 +1,55 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: sym2 probs in bk-scsi tree
-Date: 08 Apr 2004 11:59:19 -0500
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: bug 2400
+Date: Thu, 8 Apr 2004 14:33:16 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1081443560.2165.329.camel@mulgrave>
-References: <20040407231820.66dd76cd.akpm@osdl.org>
-	<20040408145700.GB18329@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <Pine.LNX.4.44L0.0404081430000.961-100000@ida.rowland.org>
+References: <1081441444.6859.14.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:24266 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262005AbUDHQ7X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Apr 2004 12:59:23 -0400
-In-Reply-To: <20040408145700.GB18329@parcelfarce.linux.theplanet.co.uk>
+Received: from ida.rowland.org ([192.131.102.52]:22788 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S262182AbUDHSdR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2004 14:33:17 -0400
+In-Reply-To: <1081441444.6859.14.camel@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Matt Gulick <gulickconsulting@direcway.com>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, Mike Anderson <andmike@us.ibm.com>, Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, 2004-04-08 at 09:57, Matthew Wilcox wrote:
-> They certainly are scary.  What is device 15 on this scsi bus?  This
-> looks like domain validation being applied to a device that can't do it
-> to me.  Did I get that right, James?
+On Thu, 8 Apr 2004, Matt Gulick wrote:
 
-OK, try the attached, it should predicate DV on what we already know
-from the inquiry data.
+> OK, Silly question or maybe not.
+> 
+> When writing drivers for MacOS ( 7-9 & X) and Windose (98 - XP) and when
+> I architected the USB 2.0 stack at Adaptec for 98SE, ME & 2k, we solved
+> this issue with a simple heart beat task.
+> 
+> Every so often (1-3 seconds) any device that was at risk of removal
+> would receive a TEST UNIT READY cdb.
+> 
+> Using the model of 1394, USB, ... being treated as a device with no
+> media inserted (like a CD drive is treated), then you can query the
+> device for media availability.
+> 
+> Using the USB model of 7 tiers of devices and most hubs having 4 ports
+> (7 port hubs are just two 4 port hubs internally connected) you can have
+> way more than 15 SCSI ID's.  By treating each USB as having its own ID
+> (EHCI USB chips typically have three USB identities of 1 EHCI and 2 OHCI
+> interfaces) and the devices on that bus that are mass storage class
+> devices using SBP-2 or SBP-3 would be a LUN on that device.
+> 
+> By treating each bus as a virtual device, the main struct can be static
+> with LUN children added or removed as needed.
+> 
+> Any thoughts on this?
+> 
+> Matt
 
-James
+I think you're talking about a different problem.  Sending heartbeats 
+solves the problem of detecting media availability and device 
+availability.  It doesn't solve the problem we're discussing here, which 
+is how to tear down the device driver stack without causing any errors, 
+particularly if the user tries to access the device while the stack is 
+being deconstructed.
 
-===== drivers/scsi/scsi_transport_spi.c 1.9 vs edited =====
---- 1.9/drivers/scsi/scsi_transport_spi.c	Thu Apr  8 08:39:09 2004
-+++ edited/drivers/scsi/scsi_transport_spi.c	Thu Apr  8 12:35:07 2004
-@@ -490,7 +490,7 @@
- 	}
- 
- 	/* test width */
--	if (i->f->set_width) {
-+	if (i->f->set_width && sdev->wdtr) {
- 		i->f->set_width(sdev, 1);
- 
- 		if (!spi_dv_device_compare_inquiry(sreq, buffer,
-@@ -502,6 +502,10 @@
- 	}
- 
- 	if (!i->f->set_period)
-+		return;
-+
-+	/* device can't handle synchronous */
-+	if(!sdev->ppr && !sdev->sdtr)
- 		return;
- 
- 	/* now set up to the maximum */
+Alan Stern
 
