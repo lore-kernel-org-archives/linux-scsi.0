@@ -1,36 +1,44 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fix sector_div use in scsicam.c
-Date: Sun, 27 Oct 2002 17:02:58 +0100
+From: Matthew Jacob <mjacob@feral.com>
+Subject: Re: Why not CAM?
+Date: Sun, 27 Oct 2002 08:05:32 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021027170258.A15779@lst.de>
+Message-ID: <Pine.BSF.4.21.0210270801380.15449-100000@beppo>
+References: <87smyrgaxt.fsf@zoo.weinigel.se>
+Reply-To: mjacob@feral.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <87smyrgaxt.fsf@zoo.weinigel.se>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, Patrick Mansfield <patmans@us.ibm.com>
+To: Christer Weinigel <wingel@acolyte.hack.org>
 Cc: linux-scsi@vger.kernel.org
 
-sector_div has the same slightly strange calling convention do_div has:
-it's return value is the modulo of the two operators, the division
-result is in the first parameter.  Also optimize one of the expensive
-64bit division away (okay, okay - it's not exactly an fast-path :))
+
+> Hi,
+> 
+> I've wanted to ask this for a long time: Why not switch to SCSI CAM
+> when you are redoing the Linux SCSI layer anyways? 
+> 
+> This is not intended to start a flamewar of any kind, I don't know
+> very much about CAM except that it is some kind of standard and
+> FreeBSD uses it and they seem to be mostly happy with it.  So I'm just
+> curious if any of the SCSI hackers think that CAM would be worthwhile
+> and if not, why?  Too heavyweight?  Too ugly?  Won't fit well with the
+> new BIO design in the 2.5 kernel?
+
+CAM (Common Access Method) is an ANSI standard. I fought against it
+bitterly back in the last '80s, but in retrospect, it's a fine if
+slightly somewhat overcomplicated model.
+
+There are two extant widespread implementations: FreeBSD and Tru64
+(formerly known as Digital Unix).
+
+It has a lot to recommend it, but its success of failure in Linux would
+probably be due to whomever has the time (and/or employer's backing) to
+do a fairly complete implementation and present it for review.
+
+Like a lot of standards, the devil is in the details.
+
+-matt
 
 
---- 1.11/drivers/scsi/scsicam.c	Fri Oct 25 13:31:53 2002
-+++ edited/drivers/scsi/scsicam.c	Sun Oct 27 15:18:13 2002
-@@ -80,11 +80,12 @@
- 	if (ret || ip[0] > 255 || ip[1] > 63) {
- 		ip[0] = 64;
- 		ip[1] = 32;
--		if (sector_div(capacity, ip[0] * ip[1]) > 65534) {
-+		sector_div(capacity, ip[0] * ip[1]);
-+		if (capacity > 65534) {
- 			ip[0] = 255;
- 			ip[1] = 63;
- 		}
--		ip[2] = sector_div(capacity, ip[0] * ip[1]);
-+		ip[2] = capacity;
- 	}
- 
- 	return 0;
