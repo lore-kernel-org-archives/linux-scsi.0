@@ -1,38 +1,37 @@
 From: domen@coderock.org
-Subject: [patch 11/11] scsi/zalon: Added KERN macro to printk()
-Date: Sun, 06 Mar 2005 23:27:24 +0100
-Message-ID: <20050306222724.6E3351F23B@trashy.coderock.org>
-Received: from coderock.org ([193.77.147.115]:61102 "EHLO trashy.coderock.org")
-	by vger.kernel.org with ESMTP id S261536AbVCFW1w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Mar 2005 17:27:52 -0500
+Subject: [patch 08/11] drivers/scsi/megaraid/*: convert to pci_register_driver
+Date: Sun, 06 Mar 2005 23:27:14 +0100
+Message-ID: <20050306222714.B10981F203@trashy.coderock.org>
+Received: from coderock.org ([193.77.147.115]:60334 "EHLO trashy.coderock.org")
+	by vger.kernel.org with ESMTP id S261533AbVCFW1r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Mar 2005 17:27:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, domen@coderock.org, am@misk.net
+Cc: linux-scsi@vger.kernel.org, domen@coderock.org, c.lucas@ifrance.com
 
 
+convert from pci_module_init to pci_register_driver
+(from:http://kerneljanitors.org/TODO).
 
-I have added a KERN macro to a printk() function as requested in the Kernel
-Janitor's TODO list.
-
-Signed-off-by: Andrew McGregor <am@misk.net>
+Signed-off-by: Christophe Lucas <c.lucas@ifrance.com>
 Signed-off-by: Domen Puncer <domen@coderock.org>
 ---
 
 
- kj-domen/drivers/scsi/zalon.c |    2 +-
+ kj-domen/drivers/scsi/megaraid/megaraid_mbox.c |    2 +-
  1 files changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/zalon.c~printk-drivers-scsi-zalon drivers/scsi/zalon.c
---- kj/drivers/scsi/zalon.c~printk-drivers-scsi-zalon	2005-03-05 16:09:59.000000000 +0100
-+++ kj-domen/drivers/scsi/zalon.c	2005-03-05 16:09:59.000000000 +0100
-@@ -109,7 +109,7 @@ zalon_probe(struct parisc_device *dev)
- 	*/
- 	dev->irq = gsc_alloc_irq(&gsc_irq);
+diff -puN drivers/scsi/megaraid/megaraid_mbox.c~pci_register_driver-drivers_scsi_megaraid drivers/scsi/megaraid/megaraid_mbox.c
+--- kj/drivers/scsi/megaraid/megaraid_mbox.c~pci_register_driver-drivers_scsi_megaraid	2005-03-05 16:12:52.000000000 +0100
++++ kj-domen/drivers/scsi/megaraid/megaraid_mbox.c	2005-03-05 16:12:52.000000000 +0100
+@@ -539,7 +539,7 @@ megaraid_init(void)
  
--	printk("%s: Zalon vers field is 0x%x, IRQ %d\n", __FUNCTION__,
-+       printk(KERN_INFO "%s: Zalon vers field is 0x%x, IRQ %d\n", __FUNCTION__,
- 		zalon_vers, dev->irq);
  
- 	__raw_writel(gsc_irq.txn_addr | gsc_irq.txn_data, dev->hpa + IO_MODULE_EIM);
+ 	// register as a PCI hot-plug driver module
+-	if ((rval = pci_module_init(&megaraid_pci_driver_g))) {
++	if ((rval = pci_register_driver(&megaraid_pci_driver_g))) {
+ 		con_log(CL_ANN, (KERN_WARNING
+ 			"megaraid: could not register hotplug support.\n"));
+ 	}
 _
