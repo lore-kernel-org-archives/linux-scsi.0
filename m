@@ -1,55 +1,61 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Subject: Re: Aic7x_x_x 6.3.4 && Aic79xx 2.0.5 Updates
-Date: Sat, 27 Dec 2003 15:17:12 +0000
+Date: Sat, 27 Dec 2003 08:47:44 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1072538231.5494.12.camel@dhcp23.swansea.linux.org.uk>
-References: <1051920000.1054684267@aslan.btc.adaptec.com>
-	 <3637050000.1054690456@aslan.s csiguy.com>
-	 <2113050000.1072285128@aslan.scsiguy.com>
-	 <1072288242.1906.35.camel@mulgrave >
-	 <2148850000.1072292121@aslan.scsiguy.com>
-	 <1072292714.2415.39.camel@mulgrave>
-	 <2304040000.1072326693@aslan.scsiguy.com>
-	 <1072463795.1873.127.camel@mulgrave>
+Message-ID: <3327750000.1072540064@aslan.btc.adaptec.com>
+References: <1051920000.1054684267@aslan.btc.adaptec.com>	 <3637050000.1054690456@aslan.s			csiguy.com>	 <2113050000.1072285128@aslan.scsiguy.com>	 <1072288242.1906.35.camel@mulgrave		>	 <2148850000.1072292121@aslan.scsiguy.com>	 <1072292714.2415.39.camel@mulgrave	>	 <2304040000.1072326693@aslan.scsiguy.com>	 <1072463795.1873.127.camel@mulgrave>	 <2832150000.1072484024@aslan.scsiguy.com>	 <1072495231.1873.363.camel@mulgrave>	 <2906490000.1072499170@aslan.scsiguy.com> <1072537914.5494.5.camel@dhcp23.swansea.linux.org.uk>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from crosslink-village-512-1.bc.nu ([81.2.110.254]:20389 "EHLO
-	dhcp23.swansea.linux.org.uk") by vger.kernel.org with ESMTP
-	id S264481AbTL0PVe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Dec 2003 10:21:34 -0500
-In-Reply-To: <1072463795.1873.127.camel@mulgrave>
+Received: from magic-mail.adaptec.com ([216.52.22.10]:31911 "EHLO
+	magic.adaptec.com") by vger.kernel.org with ESMTP id S264419AbTL0PmT
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Dec 2003 10:42:19 -0500
+In-Reply-To: <1072537914.5494.5.camel@dhcp23.swansea.linux.org.uk>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>, Marcelo Tosatti <marcelo@conectiva.com.br>, Andrew Morton <akpm@osdl.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>, Marcelo Tosatti <marcelo@conectiva.com.br>, Andrew Morton <akpm@osdl.org>
 
-On Gwe, 2003-12-26 at 18:36, James Bottomley wrote:
-> >From a technical perspective, the way you try to thwart mid-layer error
-> recovery: intercept all the SCSI timers and substitute your own, is
-> extremely ugly (and leads to quite a bit of code duplication) but it's
-> surely going to cause a conflict with the evolving stackable error
-> handling.
-
-Or install your own EH handler. You don't have to use the kernel eh at
-all, you can just opt out of it and for some cards like smart raid
-devices its precisely the right thing to do. I can believe the argument
-that for fast failover you want to do EH differently, and nothing in the
-architecture seems to make that hard providing a driver is willing to
-opt cleanly out of the scsi_eh handler.
-
-Similarly it would be nice to be able to revector the actual scsi eh
-timeouts via an optional handler. Something of the form
-
-
-int myscsi_timeout_handler(Scsi_Cmd *cmd, int reason, void *.. whatever)
-{
-	...
-
-	if(reason == SCSI_TIMEOUT && host->bus_state == FIBRE_DOWN && 
-		priv->retry_count < 5)
-		return SCSI_RETRY(60);
-	return SCSI_DEFAULT;
-}
-
+> On Sad, 2003-12-27 at 04:26, Justin T. Gibbs wrote:
+>> I'm sorry you feel that way.  I suppose I will just have to continue
+>> to point distributors and users of this driver to my own patch sets since
+>> that seems to be the only viable alternative you've given me.
+>
+> Is that an official Adaptec statement, or should I ask Adaptec if they
+> can assist in resolving this matter ?
+ 
+That is my statement.  You can escalate this matter to whatever formum
+you feel is most appropriate.
+ 
+That said, Adaptec's typical stance on these matters is that if a change
+is required to these drivers in order to make them work correctly
+(i.e. something required by a major customer) that for some reason is not
+embedded, that providing separate DUD/RPM/SRC distributions to
+our customers is sufficient.  This change is no different.  The current
+SCSI layer offers no other alternative to having fully functional watchdog
+recovery.  This is not a new revelation and my drivers are not the first
+to take *extreme measures* to try and avoid the brokenness.  The changes
+were not made in an attempt to be inflammatory, they were made to fix
+real field issues that could be resolved within the driver in no other way.
+ 
+James seems to imply that it is my responsibility as a "good open source
+developer" to "contribute" the fixes to the SCSI layer to correct these
+issues.  I would think that the SCSI layer maintainer would not only
+understand these issues, but take up the charge of discussing and correcting
+them.  Since we don't agree, on a fundamental level, on what the problem is
+much less how to fix it, I think that having me go off and come up with fixes
+would be counter productive to all involved.
+ 
+If there is sincere interest in correcting error recovery in the Linux
+SCSI layer, I'm still more than happy to give input and perhaps even
+provide code.  But to say that I cannot embed a driver that has to skirt
+mid-layer brokenness in order to be fully functional - regardless of how
+it does that - until that brokenness can be corrected, is a disservice to
+all users of this hardware.
+ 
+--
+Justin
 
