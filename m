@@ -1,83 +1,49 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: [Patch] aacraid driver for 2.5
-Date: 14 Mar 2003 08:11:35 -0800
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1047658294.7714.18.camel@markh1.pdx.osdl.net>
+From: Steve Brueggeman <xioborg@yahoo.com>
+Subject: Should sd REALLY allocate a device for an offline device
+Date: Fri, 14 Mar 2003 10:50:11 -0600
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <bj147v0fn10c6duj1n06jo84uurn1i0dvj@4ax.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-8xoHcM7z080lWW5ZjjM0"
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: Linus Torvalds <torvalds@transmeta.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
 
---=-8xoHcM7z080lWW5ZjjM0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+There's a managed storage device that reports 0x20 in byte 0 of the
+Inquiry data, which means it's a SCSI_DISK, but the LUN is detached.
 
-This changes the cmd_per_lun element of the aacraid Scsi_Host_Template
-to 1.  The larger number is not needed and exceeds the depth limit for
-scsi_adjust_queue_depth.  Also updated struct initializers.
+scan_scsis_single() acknowledgs this, and marks the device as not
+online, and lets the upper level device drivers decide what to do.
 
+It is my belief that if a device is not online, the scsi disk driver
+should not allocate a device slot for it.  See the following simple
+patch.  Any thoughts?  It seems obvious to me, but maybe I'm missing
+something.
 
--- 
-Mark Haverkamp <markh@osdl.org>
-
---=-8xoHcM7z080lWW5ZjjM0
-Content-Disposition: attachment; filename=aacraid-2.5.64.diff
-Content-Type: text/plain; name=aacraid-2.5.64.diff; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-
-===== drivers/scsi/aacraid/linit.c 1.12 vs edited =====
---- 1.12/drivers/scsi/aacraid/linit.c	Mon Feb 24 13:03:30 2003
-+++ edited/drivers/scsi/aacraid/linit.c	Fri Mar 14 08:04:51 2003
-@@ -679,27 +679,26 @@
-  */
-  
- static Scsi_Host_Template driver_template = {
--	module:			THIS_MODULE,
--	name:           	"AAC",
--	proc_info:      	aac_procinfo,
--	detect:         	aac_detect,
--	release:        	aac_release,
--	info:           	aac_driverinfo,
--	ioctl:          	aac_ioctl,
--	queuecommand:   	aac_queuecommand,
--	bios_param:     	aac_biosparm,	
--	slave_configure:	aac_slave_configure,
--	can_queue:      	AAC_NUM_IO_FIB,	
--	this_id:        	16,
--	sg_tablesize:   	16,
--	max_sectors:    	128,
--	cmd_per_lun:    	AAC_NUM_IO_FIB,
--	eh_abort_handler:       aac_eh_abort,
--	eh_device_reset_handler:aac_eh_device_reset,
--	eh_bus_reset_handler:	aac_eh_bus_reset,
--	eh_host_reset_handler:	aac_eh_reset,
--
--	use_clustering:		ENABLE_CLUSTERING,
-+	.module				= THIS_MODULE,
-+	.name           		= "AAC",
-+	.proc_info      		= aac_procinfo,
-+	.detect         		= aac_detect,
-+	.release        		= aac_release,
-+	.info           		= aac_driverinfo,
-+	.ioctl          		= aac_ioctl,
-+	.queuecommand   		= aac_queuecommand,
-+	.bios_param     		= aac_biosparm,	
-+	.slave_configure		= aac_slave_configure,
-+	.can_queue      		= AAC_NUM_IO_FIB,	
-+	.this_id        		= 16,
-+	.sg_tablesize   		= 16,
-+	.max_sectors    		= 128,
-+	.cmd_per_lun    		= 1,
-+	.eh_abort_handler       	= aac_eh_abort,
-+	.eh_device_reset_handler 	= aac_eh_device_reset,
-+	.eh_bus_reset_handler		= aac_eh_bus_reset,
-+	.eh_host_reset_handler		= aac_eh_reset,
-+	.use_clustering			= ENABLE_CLUSTERING,
- };
+diff -ruN -X dontdiff linux-2.4.20.orig/drivers/scsi/sd.c
+linux-2.4.20.new/drivers/scsi/sd.c
+--- linux-2.4.20.orig/drivers/scsi/sd.c	Fri Aug  2 19:39:44 2002
++++ linux-2.4.20.new/drivers/scsi/sd.c	Fri Mar 14 10:26:32 2003
+@@ -1264,6 +1264,8 @@
+ {
+ 	if (SDp->type != TYPE_DISK && SDp->type != TYPE_MOD)
+ 		return 0;
++	if (!SDp->online)
++		return 0;
+ 	sd_template.dev_noticed++;
+ 	return 1;
+ }
+@@ -1276,6 +1278,8 @@
+ 	char nbuff[6];
  
- #include "scsi_module.c"
+ 	if (SDp->type != TYPE_DISK && SDp->type != TYPE_MOD)
++		return 0;
++	if (!SDp->online)
+ 		return 0;
+ 
+ 	if (sd_template.nr_dev >= sd_template.dev_max || rscsi_disks
+== NULL) {
 
---=-8xoHcM7z080lWW5ZjjM0--
+
