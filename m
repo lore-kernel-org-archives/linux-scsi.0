@@ -1,58 +1,82 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [SAS ANNOUNCEMENT] MPT Fusion driver 3.02.07.02 update
-Date: 16 Nov 2004 10:09:49 -0600
-Message-ID: <1100621395.2279.35.camel@mulgrave>
-References: <91888D455306F94EBD4D168954A9457C3FFE19@nacos172.co.lsil.com>
+From: Kay Sievers <kay.sievers@vrfy.org>
+Subject: scsi "target1:0:0"
+Date: Tue, 16 Nov 2004 17:21:36 +0100
+Message-ID: <1100622096.8606.104.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:10418 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262012AbUKPQKC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Nov 2004 11:10:02 -0500
-In-Reply-To: <91888D455306F94EBD4D168954A9457C3FFE19@nacos172.co.lsil.com>
+Received: from soundwarez.org ([217.160.171.123]:39116 "EHLO soundwarez.org")
+	by vger.kernel.org with ESMTP id S262029AbUKPQVX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Nov 2004 11:21:23 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@suse.de>
+To: linux-scsi@vger.kernel.org
+Cc: James Bottomley <jejb@steeleye.com>
 
-On Mon, 2004-11-15 at 18:11, Moore, Eric Dean wrote:
-> On Monday, November 15, 2004 3:51 PM, James Bottomley wrote:
-> 
-> > This isn't an exercise to expose all the layers in the 
-> > transport, merely
-> > to separate them out logically when it's useful to do so.  Thus, it
-> > would make sense to expose the link layer separately only if something
-> > other than a PHY were going to be using it.  If that's not the case,
-> > then link transport parameters can be safely stashed in the PHY layer.
-> 
-> I open to debate on this.  The link info is going to be providing properties
-> between two phys.
+Hi,
+the recent change to the scsi-sysfs interface broke the operation of
+HAL:
+  http://hal.freedesktop.org
+  http://vrfy.org/projects/hal/HAL-fs-uuid-udi.png
+  http://vrfy.org/projects/hal/hal-spec.html
 
-Right, but phys are essentially point to point, so the link info is also
-a property of the local HBA phy.
+We got an additional directory in the /devices directory which
+changed:
+  /devices/pci0000:00/0000:00:1d.1/usb3/3-1/3-1:1.0/host1/1:0:0:0
 
-> Would the "scan interface" be able to call the LLD drivers
-> with a SAS Address?  Here is our SMP passthru struct:
-> 
-> typedef struct _MSG_SMP_PASSTHROUGH_REQUEST
-> {
-[...]
-> } MSG_SMP_PASSTHROUGH_REQUEST, MPI_POINTER PTR_MSG_SMP_PASSTHROUGH_REQUEST,
->   SmpPassthroughRequest_t, MPI_POINTER pSmpPassthroughRequest_t;
+to:
+  /devices/pci0000:00/0000:00:1d.1/usb3/3-1/3-1:1.0/host1/target1:0:0/1:0:0:0
 
-Actually, no.  What you're wanting is a network type of connection (open
-HBA and send an addressed packet).  What I'm proposing is more like a
-connected socket model: We expose in the transport class a file that
-understands the addressing (like the scan file in the scsi_host class). 
-You send a command to this asking for the transport specific address to
-be attached and it appears as a device node.  You communicate with the
-device node using SG_IO and remove it again when you've finished.  So,
-the packets you send to the device node are pure commands and have no
-need of any addressing or topology information (and hence can be well
-understood by SCSI or SATA.
+The inserted "target1:0:0" is _not_ backed by any "bus" or "class" device
+and therefore breaks the logic of HAL to bring the devices together by
+its parent. (We also don't get hotplug events for the "target*" device at
+creation time)
 
-James
+Is this intentional and we can not expected a straight chain of devices
+anymore like it always was? Shouldn't there be a "class" device to have
+it consistent again.
+
+It's the usb-storage driver with an usb-stick.
+
+Thanks,
+Kay
+
+
+[kay@pim ~]$ ls -l /sys/bus/scsi/devices/
+total 0
+lrwxrwxrwx  1 root root 0 Nov 16 05:40 1:0:0:0 -> ../../../devices/pci0000:00/0000:00:1d.1/usb3/3-1/3-1:1.0/host1/target1:0:0/1:0:0:0
+
+
+
+
+[kay@pim ~]$ ls -l /sys/class/scsi*
+/sys/class/scsi_device:
+total 0
+drwxr-xr-x  2 root root 0 Nov 16 05:27 1:0:0:0
+
+/sys/class/scsi_generic:
+total 0
+drwxr-xr-x  2 root root 0 Nov 16 05:27 sg0
+
+/sys/class/scsi_host:
+total 0
+drwxr-xr-x  2 root root 0 Nov 16 05:27 host1
+
+
+
+
+[kay@pim ~]$ ls -l /sys/block/sda/
+total 0
+-r--r--r--  1 root root 4096 Nov 16 05:40 dev
+lrwxrwxrwx  1 root root    0 Nov 16 05:40 device -> ../../devices/pci0000:00/0000:00:1d.1/usb3/3-1/3-1:1.0/host1/target1:0:0/1:0:0:0
+drwxr-xr-x  3 root root    0 Nov 16 05:40 queue
+-r--r--r--  1 root root 4096 Nov 16 05:40 range
+-r--r--r--  1 root root 4096 Nov 16 05:40 removable
+drwxr-xr-x  2 root root    0 Nov 16 05:40 sda1
+-r--r--r--  1 root root 4096 Nov 16 05:40 size
+-r--r--r--  1 root root 4096 Nov 16 05:40 stat
+
 
 
