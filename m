@@ -1,53 +1,56 @@
-From: raray@jam.rr.com
+From: Bryan Henderson <hbryan@us.ibm.com>
 Subject: Re: SCSI HBA in wrong order
-Date: Fri, 9 Jul 2004 14:30:56 -0500 (CDT)
+Date: Fri, 9 Jul 2004 14:08:17 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0407091417080.16287@rray1.jam.rr.com>
-References: <OF6EBED15C.7C0610C9-ON88256ECC.00609EC2-88256ECC.00611D8B@us.ibm.com>
+Message-ID: <OF6670F869.849872F3-ON85256ECC.0072A27A-88256ECC.00741F12@us.ibm.com>
+References: <Pine.LNX.4.58.0407091417080.16287@rray1.jam.rr.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-04.texas.rr.com ([24.93.47.43]:55946 "EHLO
-	ms-smtp-04.texas.rr.com") by vger.kernel.org with ESMTP
-	id S265799AbUGITbe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Jul 2004 15:31:34 -0400
-In-Reply-To: <OF6EBED15C.7C0610C9-ON88256ECC.00609EC2-88256ECC.00611D8B@us.ibm.com>
+Received: from e2.ny.us.ibm.com ([32.97.182.102]:57744 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S265009AbUGIVI0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2004 17:08:26 -0400
+In-Reply-To: <Pine.LNX.4.58.0407091417080.16287@rray1.jam.rr.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bryan Henderson <hbryan@us.ibm.com>
+To: raray@jam.rr.com
 Cc: linux-scsi@vger.kernel.org
 
-I did a bit of reading about udev and I'm uncertain how this will help.
-At present running RH 9.0 and 2.4.23 kernel the 2 internal harddrives are
-mapped as sda and sdb.
-The os is on sda and sdb is a mirror of sda.
-If udev runs in user space the os has to be loaded.
-Using the 2.6.6 kernel the 2 internal drive get mapped as sdg and sdh.
-I've never used udev before and this is just a preliminary assessment.
-I'll continue to dig for info.
-Maybe You can explain a bit more.
+>I did a bit of reading about udev and I'm uncertain how this will help.
 
-Thanks
-Richard Ray
+I don't know enough about either udev or what problem the changing host 
+numbers is causing for you to give specific instructions, but I can at 
+least explain the idea.
 
+>At present running RH 9.0 and 2.4.23 kernel the 2 internal harddrives are
+>mapped as sda and sdb.
 
+The names "sda" and "sdb" are all but meaningless.  What you probably mean 
+is that they map to the device special files /dev/sda and /dev/sdb.
 
-On Fri, 9 Jul 2004, Bryan Henderson wrote:
+The problem you have, then, is that /dev/sda is defined as the device with 
+major number 8, minor number 0, which in turn is defined roughly as the 
+first SCSI device that Linux noticed.
 
-> >> I upgraded one server to Fedora Core 2 with 2.6.6 kernel.
-> >> Now Linux assigns the built in HBAs as scsi2 and scsi3 and assigns the
-> >> LSIU40HVD as scsi0 and scsi1.
-> >> This really screws things up.
-> >
-> >There is no way to fix this.
->
-> It's worth mentioning that the broader problem -- that of things getting
-> really screwed up by such a reversal -- can be fixed by using another way,
-> such as udev, instead of the Linux host number to identify the devices.
-> Which is why this "unfixable" problem has been accepted.
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+But whatever you're using /dev/sda for, I doubt that you really mean to 
+say, "use the first disk that Linux noticed."  You probably really mean 
+something like, "use the internal SCSI disk on the lefthand side" or "use 
+the disk that contains the volume with volume ID XYZ."
+
+Until now, you (and the rest of the satisfied Linux world) have been lucky 
+in that Linux always noticed the internal SCSI disk on the lefthand side 
+first.  Many, many things, including the kernel upgrade you did, can 
+change the correspondence between discovery order and useful disk 
+identity.
+
+That's where udev comes in, because you can use it to create device 
+special files whose names identify your disks in meaningful name spaces, 
+not just discovery order.  You could have /dev/sd/internal_left if you 
+wanted, and no matter how you upgraded your kernel, installed new HBAs, 
+etc, it would always be the same disk.  The fact that it's in user space 
+is fine, because only a user space program would access the disk by the 
+name /dev/sda anyway.
+
+If your problem has nothing to do with the device special file /dev/sda, 
+then I haven't explained anything.  But there's probably still some way 
+you can identify a device by something other than its discovery order.
+
