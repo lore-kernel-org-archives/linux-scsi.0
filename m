@@ -1,43 +1,106 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: aic7xxx kobject crap
-Date: Tue, 27 Apr 2004 19:09:53 +0200
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: [janitor] (5/5) pcmcia/nsp: use kernel.h min/max/ARRAY_SIZE
+Date: Tue, 27 Apr 2004 11:07:09 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040427170953.GD764@suse.de>
-References: <20040427141401.GF2089@suse.de> <20040427160304.GA20664@kroah.com> <20040427160741.GB764@suse.de> <1083082974.2020.20.camel@mulgrave>
+Message-ID: <20040427110709.1bc71988.rddunlap@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:14829 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S264198AbUD0RJ6 (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:61417 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S264278AbUD0SOn (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Apr 2004 13:09:58 -0400
-Content-Disposition: inline
-In-Reply-To: <1083082974.2020.20.camel@mulgrave>
+	Tue, 27 Apr 2004 14:14:43 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Greg KH <greg@kroah.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "Justin T. Gibbs" <gibbs@scsiguy.com>
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: jejb <james.bottomley@steeleye.com>, yokota@netlab.is.tsukuba.ac.jp
 
-On Tue, Apr 27 2004, James Bottomley wrote:
-> On Tue, 2004-04-27 at 11:07, Jens Axboe wrote:
-> > I wish I could say more, I'll have to ask to get more info. All I know
-> > is that it happens during install. So my current assumption is that it
-> > happens the very first time the module is loaded, and the machine does
-> > have some sort of aic7xxx device attached (or onboard). I'll get
-> > confirmation on that.
-> 
-> Actually, there's already a report of a kobject screw up in aic7xxx if
-> the module is loaded with no hardware present:
-> 
-> http://marc.theaimsgroup.com/?t=107754715800005&r=1&w=2
-> 
-> There's also a patch here if it is the reported problem:
-> 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=107760949410870&w=2
 
-The post you link to is one where kobject_unregister() craps out, my
-post was for loading. The 'fix' appears to just keep the module loaded,
-I don't think that'll do much here :-)
+From: Michael Veeck <michael.veeck@gmx.net>
+Subject: [Kernel-janitors] [PATCH] drivers/scsi/pcmcia MIN/MAX/NUMBER removal
 
--- 
-Jens Axboe
 
+Patch (against 2.6.6-rc1) removes unnecessary min/max/number macros and 
+changes calls to use kernel.h macros instead.
+
+
+ drivers/scsi/pcmcia/nsp_cs.c |   12 ++++++------
+ drivers/scsi/pcmcia/nsp_cs.h |    2 --
+ 2 files changed, 6 insertions(+), 8 deletions(-)
+
+
+Index: linux-266-rc2-kj1/drivers/scsi/pcmcia/nsp_cs.c
+===================================================================
+--- linux-266-rc2-kj1.orig/drivers/scsi/pcmcia/nsp_cs.c	2004-04-03 19:38:22.000000000 -0800
++++ linux-266-rc2-kj1/drivers/scsi/pcmcia/nsp_cs.c	2004-04-22 22:34:49.000000000 -0700
+@@ -315,7 +315,7 @@ static void nsphw_init_sync(nsp_hw_data 
+ 	int i;
+ 
+ 	/* setup sync data */
+-	for ( i = 0; i < NUMBER(data->Sync); i++ ) {
++	for ( i = 0; i < ARRAY_SIZE(data->Sync); i++ ) {
+ 		data->Sync[i] = tmp_sync;
+ 	}
+ }
+@@ -600,7 +600,7 @@ static int nsp_xfer(Scsi_Cmnd *SCpnt, in
+ 	unsigned int  base = SCpnt->device->host->io_port;
+ 	nsp_hw_data  *data = (nsp_hw_data *)SCpnt->device->host->hostdata;
+ 	char	     *buf  = data->MsgBuffer;
+-	int	      len  = MIN(MSGBUF_SIZE, data->MsgLen);
++	int	      len  = min(MSGBUF_SIZE, data->MsgLen);
+ 	int	      ptr;
+ 	int	      ret;
+ 
+@@ -774,7 +774,7 @@ static void nsp_pio_read(Scsi_Cmnd *SCpn
+ 			continue;
+ 		}
+ 
+-		res = MIN(res, SCpnt->SCp.this_residual);
++		res = min(res, SCpnt->SCp.this_residual);
+ 
+ 		switch (data->TransferMode) {
+ 		case MODE_IO32:
+@@ -868,7 +868,7 @@ static void nsp_pio_write(Scsi_Cmnd *SCp
+ 			continue;
+ 		}
+ 
+-		res = MIN(SCpnt->SCp.this_residual, WFIFO_CRIT);
++		res = min(SCpnt->SCp.this_residual, WFIFO_CRIT);
+ 
+ 		//nsp_dbg(NSP_DEBUG_DATA_IO, "ptr=0x%p this=0x%x res=0x%x", SCpnt->SCp.ptr, SCpnt->SCp.this_residual, res);
+ 		switch (data->TransferMode) {
+@@ -1490,7 +1490,7 @@ nsp_proc_info(
+ 	spin_unlock_irqrestore(&(data->Lock), flags);
+ 
+ 	SPRINTF("SDTR status\n");
+-	for(id = 0; id < NUMBER(data->Sync); id++) {
++	for(id = 0; id < ARRAY_SIZE(data->Sync); id++) {
+ 
+ 		SPRINTF("id %d: ", id);
+ 
+@@ -1534,7 +1534,7 @@ nsp_proc_info(
+         }
+ 
+ 
+-	thislength = MIN(thislength, length);
++	thislength = min(thislength, length);
+ 	*start = buffer + offset;
+ 
+ 	return thislength;
+Index: linux-266-rc2-kj1/drivers/scsi/pcmcia/nsp_cs.h
+===================================================================
+--- linux-266-rc2-kj1.orig/drivers/scsi/pcmcia/nsp_cs.h	2004-04-03 19:36:57.000000000 -0800
++++ linux-266-rc2-kj1/drivers/scsi/pcmcia/nsp_cs.h	2004-04-22 22:34:49.000000000 -0700
+@@ -26,9 +26,7 @@
+ /************************************
+  * Some useful macros...
+  */
+-#define NUMBER(arr) ((int) (sizeof(arr) / sizeof(arr[0]))) /* from XtNumber() in /usr/X11R6/include/X11/Intrinsic.h */
+ #define BIT(x)      (1L << (x))
+-#define MIN(a,b)    ((a) > (b) ? (b) : (a))
+ 
+ /* SCSI initiator must be ID 7 */
+ #define NSP_INITIATOR_ID  7
+
+
+--
