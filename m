@@ -1,150 +1,46 @@
-From: "Fillod Stephane" <stephane.fillod@thomson.net>
-Subject: [PATCH] compile out scsi_ioctl when no SCSI/IDE/etc.  (take 2)
-Date: Mon, 4 Apr 2005 15:47:01 +0200
-Message-ID: <1CFEB358338412458B21FAA0D78FE86D4F0D29@rennsmail02.eu.thmulti.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: iomapping a big endian area
+Date: Mon, 04 Apr 2005 08:59:03 -0500
+Message-ID: <1112623143.5813.5.camel@mulgrave>
+References: <1112475134.5786.29.camel@mulgrave>
+	 <20050403013757.GB24234@parcelfarce.linux.theplanet.co.uk>
+	 <20050402183805.20a0cf49.davem@davemloft.net>
+	 <20050403031000.GC24234@parcelfarce.linux.theplanet.co.uk>
+	 <1112499639.5786.34.camel@mulgrave>
+	 <20050402200858.37347bec.davem@davemloft.net>
+	 <1112502477.5786.38.camel@mulgrave>  <1112601039.26086.49.camel@gaston>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dmzraw2.extranet.tce.com ([157.254.234.138]:37053 "EHLO
-	dmzraw2.extranet.tce.com") by vger.kernel.org with ESMTP
-	id S261239AbVDDNrR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2005 09:47:17 -0400
-content-class: urn:content-classes:message
+Received: from stat16.steeleye.com ([209.192.50.48]:46814 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261240AbVDDOAN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Apr 2005 10:00:13 -0400
+In-Reply-To: <1112601039.26086.49.camel@gaston>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Mackall <mpm@selenic.com>
-Cc: linux-tiny@selenic.com, linux-scsi@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: "David S. Miller" <davem@davemloft.net>, matthew@wil.cx, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>
 
-Hi Matt and everyone,
+On Mon, 2005-04-04 at 17:50 +1000, Benjamin Herrenschmidt wrote:
+> I disagree. The driver will never "know" ...
 
-I fixed my previous patch, added "select" statements, and provided
-support for hard-disk only IDE systems as suggested by Eric.
+? the driver has to know.  Look at the 53c700 to see exactly how awful
+it is.  This beast has byte and word registers.  When used BE, all the
+byte registers alter their position (to both inb and readb).
 
-Here are the sizes of vmlinux for a ppc system:
+> I don't think it's sane. You know that your device is BE or LE and use
+> the appropriate interface. "native" doesn't make sense to me in this
+> context.
 
-                           text    data     bss     dec
-no IDE, with scsi_ioctl 1646846  181844  111428 1940118
-no IDE, no scsi_ioctl   1642498  179884  111428 1933810
-IDE, with scsi_ioctl    1646870  181844  111428 1940142
-IDE, no scsi_ioctl      1642522  179884  111428 1933834
+Well ... it's like this. Native means "pass through without swapping"
+and has an easy implementation on both BE and LE platforms.  Logically
+io{read,write}{16,32}be would have to do byte swaps on LE platforms.
+Being lazy, I'm opposed to doing the work if there's no actual use for
+it, so can you provide an example of a BE bus (or device) used on a LE
+platform that would actually benefit from this abstraction?
 
-On systems with no SCSI/IDE/etc. or with IDE but no CD/DVD, 
-the potential saving is 6308 bytes.
+James
 
-Matt, how do we proceed from here? If the patch is to your liking,
-can I hand it off to you, for eventual submission to Linus
-or the SCSI guys?
-
-
-This patch compiles out scsi_ioctl for embedded system with no 
-SCSI/IDE/etc, and saves up to 6 KiB.
-It was made against linux 2.6.11.6.
-
-Signed-off-by: Stephane Fillod <fillods@gmail.com>
-
---- linux/drivers/block/Kconfig	26 Mar 2005 03:28:16 -0000	1.1.1.2
-+++ linux/drivers/block/Kconfig	4 Apr 2005 13:24:29 -0000
-@@ -354,6 +354,7 @@
- config BLK_DEV_UB
- 	tristate "Low Performance USB Block driver"
- 	depends on USB
-+	select SCSI_IOCTL
- 	help
- 	  This driver supports certain USB attached storage devices
- 	  such as flash keys.
-@@ -506,4 +507,18 @@
- 	This driver provides Support for ATA over Ethernet block
- 	devices like the Coraid EtherDrive (R) Storage Blade.
- 
-+config SCSI_IOCTL
-+	bool "SCSI ioctl" if EMBEDDED
-+	depends on IDE || PARIDE || SCSI || CD_NO_IDESCSI || BLK_DEV_UB
-+	default y
-+        help
-+	  Say Y here if you have any CD/DVD device (IDE, SCSI, other)
-+	  or USB mass storage device attached to your system and want
-+          it to be available to applications.
-+
-+          Say N here if you have a hard-drive only or diskless system, 
-+	  and want to save couple KiB of memory.
-+
-+          If unsure, say Y.
-+
- endmenu
---- linux/drivers/block/Makefile	6 Dec 2004 16:18:35 -0000
-1.1.1.1
-+++ linux/drivers/block/Makefile	4 Apr 2005 13:24:29 -0000
-@@ -13,8 +13,9 @@
- # kblockd threads
- #
- 
--obj-y	:= elevator.o ll_rw_blk.o ioctl.o genhd.o scsi_ioctl.o
-+obj-y	:= elevator.o ll_rw_blk.o ioctl.o genhd.o
- 
-+obj-$(CONFIG_SCSI_IOCTL)	+= scsi_ioctl.o
- obj-$(CONFIG_IOSCHED_NOOP)	+= noop-iosched.o
- obj-$(CONFIG_IOSCHED_AS)	+= as-iosched.o
- obj-$(CONFIG_IOSCHED_DEADLINE)	+= deadline-iosched.o
---- linux/drivers/cdrom/Kconfig	26 Mar 2005 03:28:26 -0000	1.1.1.2
-+++ linux/drivers/cdrom/Kconfig	4 Apr 2005 13:24:29 -0000
-@@ -7,6 +7,7 @@
- 
- config CD_NO_IDESCSI
- 	bool "Support non-SCSI/IDE/ATAPI CDROM drives"
-+	select SCSI_IOCTL
- 	---help---
- 	  If you have a CD-ROM drive that is neither SCSI nor IDE/ATAPI,
-say Y
- 	  here, otherwise N. Read the CD-ROM-HOWTO, available from
---- linux/drivers/ide/Kconfig	26 Mar 2005 03:28:20 -0000	1.1.1.2
-+++ linux/drivers/ide/Kconfig	4 Apr 2005 13:24:29 -0000
-@@ -168,6 +168,7 @@
- 
- config BLK_DEV_IDECD
- 	tristate "Include IDE/ATAPI CDROM support"
-+	select SCSI_IOCTL
- 	---help---
- 	  If you have a CD-ROM drive using the ATAPI protocol, say Y.
-ATAPI is
- 	  a newer protocol used by IDE CD-ROM and TAPE drives, similar
-to the
---- linux/drivers/ide/ide.c	26 Mar 2005 03:28:17 -0000	1.1.1.2
-+++ linux/drivers/ide/ide.c	4 Apr 2005 13:24:29 -0000
-@@ -1562,9 +1562,11 @@
- 			return 0;
- 		}
- 
-+#ifdef CONFIG_SCSI_IOCTL
- 		case CDROMEJECT:
- 		case CDROMCLOSETRAY:
- 			return scsi_cmd_ioctl(file, bdev->bd_disk, cmd,
-p);
-+#endif
- 
- 		case HDIO_GET_BUSSTATE:
- 			if (!capable(CAP_SYS_ADMIN))
---- linux/drivers/scsi/Kconfig	26 Mar 2005 03:28:36 -0000	1.1.1.2
-+++ linux/drivers/scsi/Kconfig	4 Apr 2005 13:24:30 -0000
-@@ -2,6 +2,7 @@
- 
- config SCSI
- 	tristate "SCSI device support"
-+	select SCSI_IOCTL
- 	---help---
- 	  If you want to use a SCSI hard disk, SCSI tape drive, SCSI
-CD-ROM or
- 	  any other SCSI device under Linux, say Y and make sure that
-you know
-
-
-Comments welcome.
-
-
-Best Regards,
---
-Stephane Fillod
-
-PS: please Cc:
 
