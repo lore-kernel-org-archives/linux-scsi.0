@@ -1,56 +1,27 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: 2.6.10-rc4 tape slow after switch Fusion MPT to Megaraid
-Date: Sun, 27 Feb 2005 22:46:20 +0200 (EET)
-Message-ID: <Pine.LNX.4.61.0502272239580.17367@kai.makisara.local>
-References: <1109159088.5896.36.camel@ilfb02.ilsb.tuwien.ac.at>
- <Pine.LNX.4.61.0502242246420.9332@kai.makisara.local>
- <1109323141.5896.124.camel@ilfb02.ilsb.tuwien.ac.at>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [2.6.11-rc4-mm1 patch] drivers/scsi/arcmsr/arcmsr.c cleanups
+Date: Sun, 27 Feb 2005 22:23:05 +0000
+Message-ID: <20050227222305.GA1847@infradead.org>
+References: <20050223014233.6710fd73.akpm@osdl.org> <20050227154810.GA6148@stusta.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from fep19-0.kolumbus.fi ([193.229.0.45]:40671 "EHLO
-	fep19-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S261264AbVB0UpP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 27 Feb 2005 15:45:15 -0500
-In-Reply-To: <1109323141.5896.124.camel@ilfb02.ilsb.tuwien.ac.at>
+Content-Type: text/plain; charset=us-ascii
+Received: from pentafluge.infradead.org ([213.146.154.40]:51673 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261489AbVB0WXR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 27 Feb 2005 17:23:17 -0500
+Content-Disposition: inline
+In-Reply-To: <20050227154810.GA6148@stusta.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gerhard Schneider <gs@ilsb.tuwien.ac.at>
-Cc: scsi <linux-scsi@vger.kernel.org>
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Andrew Morton <akpm@osdl.org>, Erich Chen <erich@areca.com.tw>, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-On Fri, 25 Feb 2005, Gerhard Schneider wrote:
+On Sun, Feb 27, 2005 at 04:48:10PM +0100, Adrian Bunk wrote:
+> - aren't the "if defined(__x86_64__)" wrong for other 64bit
+>   architectures?
 
-> On Thu, 2005-02-24 at 23:00 +0200, Kai Makisara wrote:
-> 
-> > > 
-> > Sounds strange but the following things come into my mind:
-> > - Check from the dmesg output and/or system logs what SCSI transfer 
-> > settings the tape drive and the SCSI adapter negotiate. The speed should 
-> > not change when you add the Megaraid controller. If you don't find the 
-> > value before adding it, you can check that the current value is at least 
-> > 40 MB/s (probably more).
-> Not so easy. The megaraid driver doesn't tell you that
-> 
-I hope Seokmann can give you some information about this.
+Yes.  Having arch or 64bit ifdefs is pretty wrong pretty much always.
+In one case it's only used to make a typedef a 32bit or 64bit integeger,
+that should be using unsigned long directly always, but the other uses
+looks like real problems.
 
-...
-> > - Enable debugging in the st driver (change DEBUG to 1 in st.c, recompile, 
-> > reload the module). In the normal case st should not print many debugging 
-> > message (some when the device is opened at some when it is closed).
-> 
-> Now the full story:
-> 
-> st: Version 20050213, fixed bufsize 32768, s/g segs 256
-> Attached scsi tape st0 at scsi0, channel 0, id 6, lun 0
-normal output cut
-> st0: Number of r/w requests 127685, dio used in 127685, pages 383055
-
-This shows that your application is not using very large block size (3 
-pages, 10 kB?). You might get better throughput with larger block size (32 
-kB or 64 kB is usually large enough). If the Megaraid command processing 
-speed is not fast enough, this might explain the problem (not probable but 
-I can't see any probable problems ;-)
-
-The messages look OK. There is nothing that should not be there.
-
---
-Kai
