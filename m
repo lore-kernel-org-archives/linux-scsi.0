@@ -1,134 +1,77 @@
-From: Ken-ichirou MATSUZAWA <chamas@h4.dion.ne.jp>
-Subject: aha2940 on 2.6.9
-Date: Wed, 17 Nov 2004 14:23:25 +0900 (JST)
-Message-ID: <20041117.142325.74756248.chamas@h4.dion.ne.jp>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+From: Mark Vitnell <kernelml@sinusoid.com>
+Subject: sym53c8xx phase errors
+Date: Wed, 17 Nov 2004 20:45:02 +1100
+Message-ID: <5A516287-387D-11D9-91D3-000393DA18A8@sinusoid.com>
+Mime-Version: 1.0 (Apple Message framework v619)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hfep02.dion.ne.jp ([203.181.105.68]:61717 "EHLO
-	hfep02.dion.ne.jp") by vger.kernel.org with ESMTP id S262171AbUKQFX2
+Received: from alpha.sinusoid.com ([218.214.7.26]:25472 "EHLO
+	alpha.sinusoid.com") by vger.kernel.org with ESMTP id S262255AbUKQJpL
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Nov 2004 00:23:28 -0500
-Received: from localhost ([222.7.43.38]) by hfep02.dion.ne.jp with ESMTP
-          id <20041117052326168.MAAO@hfep02.dion.ne.jp>
-          for <linux-scsi@vger.kernel.org>; Wed, 17 Nov 2004 14:23:26 +0900
+	Wed, 17 Nov 2004 04:45:11 -0500
+Received: from [192.168.100.140] (mac [192.168.100.140])
+	by alpha.sinusoid.com (Postfix) with ESMTP id D2ED3D409F
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Nov 2004 20:45:11 +1100 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
- Hello, I'm using kernel-2.6 with aha2940.
-until 2.6.8.1 it works fine but since 2.6.9, I've been getting message:
+I have been having problems with sym53c8xx in recent kernels, with the 
+following errors:
 
-  Nov 17 13:45:48 plath kernel: FAILED
-  Nov 17 13:45:48 plath kernel:   status = 1, message = 00, host = 0, driver = 08
-  Nov 17 13:45:48 plath kernel:   Current sd: sense = 70  5
-  Nov 17 13:45:48 plath kernel: ASC=20 ASCQ= 0
-  Nov 17 13:45:48 plath kernel: Raw sense data:0x70 0x00 0x05 0x00 0x00 0x00 0x00 0x0a 0x00 0x00 0x00 0x00 0x20 0x00 0x00 0x00 0x00 0x00 
+...
+sym0:5:0:phase change 6-7 11@17168b84 resid=2.
+sym0:6:ppr msgout: 1-6-4-a-0-1f-1-0.
+sym0:6:0:phase change 6-7 11@1f860f84 resid=2.
+sym0:6:ppr msgout: 1-6-4-a-0-1f-1-0.
+sym0:6:0:phase change 6-7 11@1f860f84 resid=2.
+sym0:4:ppr msgout: 1-6-4-a-0-1f-1-0.
+sym0:4:0:phase change 6-7 11@1f860f84 resid=2.
+sym1:1:ppr msgout: 1-6-4-a-0-1f-1-0.
+sym1:1:0:phase change 6-7 11@016d4384 resid=2.
+sym0:5:ppr msgout: 1-6-4-a-0-1f-1-0.
+sym0:5:0:phase change 6-7 11@17168b84 resid=2.
+sym1:3:ppr msgout: 1-6-4-a-0-1f-1-0.
+...
 
-These messages are logged by 2.6.10-rc2.
-I feel sorry for I don't know what I shoud suggest to fix this.
-So if another informations needed, please teach me.
+The above a small portion of the kernel logs and occurs on every disc 
+access.
 
-/proc/scsi/aic7xxx/0:
-  Adaptec AIC7xxx driver version: 6.2.36
-  Adaptec 2940 SCSI adapter
-  aic7870: Single Channel A, SCSI Id=7, 16/253 SCBs
-  Allocated SCBs: 4, SG List Length: 128
+This was from 2.6.10-rc2, but I've had similar errors with 2.6.9 and 
+various 2.6.10-rc1-mm kernels also.
 
-  Serial EEPROM:
-  0x0218 0x0218 0x0218 0x0218 0x0218 0x0218 0x0218 0x0218 
-  0x0238 0x0238 0x0238 0x0238 0x0238 0x0238 0x0238 0x0238 
-  0x18b6 0x005d 0x2807 0x0008 0xff00 0xffff 0xffff 0xffff 
-  0xffff 0xffff 0xffff 0xffff 0xffff 0xffff 0x00ff 0x6398 
+The hardware in question is a Compaq 64-bit  dual channel wide Ultra2 
+SCSI adapter (53c896) and 6x Seagate  SX118202LS/LC  drives in a raid0 
+configuration.
 
-  Target 0 Negotiation Settings
-          User: 10.000MB/s transfers (10.000MHz, offset 127)
-          Goal: 10.000MB/s transfers (10.000MHz, offset 15)
-          Curr: 10.000MB/s transfers (10.000MHz, offset 15)
-          Channel A Target 0 Lun 0 Settings
-                  Commands Queued 2796
-                  Commands Active 0
-                  Command Openings 1
-                  Max Tagged Openings 0
-                  Device Queue Frozen Count 0
-  Target 1 Negotiation Settings
-          User: 10.000MB/s transfers (10.000MHz, offset 127)
-  Target 2 Negotiation Settings
-          User: 10.000MB/s transfers (10.000MHz, offset 127)
-  Target 3 Negotiation Settings
-          User: 10.000MB/s transfers (10.000MHz, offset 127)
-  Target 4 Negotiation Settings
-          User: 10.000MB/s transfers (10.000MHz, offset 127)
-  Target 5 Negotiation Settings
-          User: 10.000MB/s transfers (10.000MHz, offset 127)
-  Target 6 Negotiation Settings
-          User: 10.000MB/s transfers (10.000MHz, offset 127)
-  Target 7 Negotiation Settings
-          User: 10.000MB/s transfers (10.000MHz, offset 127)
+Throughput is severely affected, typically getting 5MB/s on the raid 
+array, and 2MB/s  on the individual scsi drives. On kernels prior to 
+2.6.9 these figures were 100MB/s  and 18MB/s respectively.
 
-in dmesg:
-  Nov 17 13:26:58 plath kernel: scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
-  Nov 17 13:26:58 plath kernel:         <Adaptec 2940 SCSI adapter>
-  Nov 17 13:26:58 plath kernel:         aic7870: Single Channel A, SCSI Id=7, 16/253 SCBs
-  Nov 17 13:26:58 plath kernel: 
-  Nov 17 13:26:58 plath kernel: (scsi0:A:0): 10.000MB/s transfers (10.000MHz, offset 15)
-  Nov 17 13:26:58 plath kernel:   Vendor: I-O DATA  Model: HDVS-UM20G        Rev: 201F
-  Nov 17 13:26:58 plath kernel:   Type:   Direct-Access                      ANSI SCSI revision: 02
-  Nov 17 13:26:58 plath kernel: SCSI device sda: 40031712 512-byte hdwr sectors (20496 MB)
-  Nov 17 13:26:58 plath kernel: SCSI device sda: drive cache: write back
-  Nov 17 13:26:58 plath kernel:  sda: sda1 sda2 < sda5 sda6 sda7 sda8 > sda3 sda4
-  Nov 17 13:26:58 plath kernel: Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+I have tried the patch mentioned in 
+http://www.spinics.net/lists/kernel/msg314806.html, but it makes no 
+difference with either the phase 6-7 messages, or with the ppr 
+messages. The throughput remains poor.
 
-  ----
+Note that the bus appears as :
 
-  Nov 17 14:00:01 plath kernel: (scsi0:A:0:0): SCB 3: requests Check Status
-  Nov 17 14:00:01 plath kernel: (scsi0:A:0:0): Sending Sense
-  Nov 17 14:00:01 plath kernel: (scsi0:A:0:0): Sending SDTR period 19, offset f
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x80
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x1
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x3
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x1
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x19
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0xf
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_OUT PHASEMIS in Message-in phase
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x1
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x3
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x1
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x19
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0xf
-  Nov 17 14:00:01 plath kernel: (scsi0:A:0:0): Received SDTR period 19, offset f
-  Nov 17 14:00:01 plath kernel: ^IFiltered to period 19, offset f
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_IN PHASEMIS in Command phase
-  Nov 17 14:00:01 plath kernel: (scsi0:A:0:0): Handled Sense Residual of 14 bytes
-  Nov 17 14:00:01 plath kernel: Copied 18 bytes of sense data:
-  Nov 17 14:00:01 plath kernel: 0x70 0x0 0x5 0x0 0x0 0x0 0x0 0xa 0x0 0x0 0x0 0x0 0x20 0x0 0x0 0x0 
-  Nov 17 14:00:01 plath kernel: 0x0 0x0 
-  Nov 17 14:00:01 plath kernel: (scsi0:A:0:0): SCB 2: requests Check Status
-  Nov 17 14:00:01 plath kernel: (scsi0:A:0:0): Sending Sense
-  Nov 17 14:00:01 plath kernel: (scsi0:A:0:0): Sending SDTR period 19, offset f
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x80
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x1
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x3
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x1
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x19
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0xf
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_OUT PHASEMIS in Message-in phase
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x1
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x3
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x1
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x19
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0xf
-  Nov 17 14:00:01 plath kernel: (scsi0:A:0:0): Received SDTR period 19, offset f
-  Nov 17 14:00:01 plath kernel: ^IFiltered to period 19, offset f
-  Nov 17 14:00:01 plath kernel: scsi0:A:0:0: INITIATOR_MSG_IN PHASEMIS in Command phase
-  Nov 17 14:00:01 plath kernel: (scsi0:A:0:0): Handled Sense Residual of 14 bytes
-  Nov 17 14:00:01 plath kernel: Copied 18 bytes of sense data:
-  Nov 17 14:00:01 plath kernel: 0x70 0x0 0x5 0x0 0x0 0x0 0x0 0xa 0x0 0x0 0x0 0x0 0x20 0x0 0x0 0x0 
-  Nov 17 14:00:01 plath kernel: 0x0 0x0 
-  Nov 17 14:00:01 plath kernel: FAILED
-  Nov 17 14:00:01 plath kernel:   status = 1, message = 00, host = 0, driver = 08
-  Nov 17 14:00:01 plath kernel:   Current sd: sense = 70  5
-  Nov 17 14:00:01 plath kernel: ASC=20 ASCQ= 0
-  Nov 17 14:00:01 plath kernel: Raw sense data:0x70 0x00 0x05 0x00 0x00 0x00 0x00 0x0a 0x00 0x00 0x00 0x00 0x20 0x00 0x00 0x00 0x00 0x00 
+sym0: No NVRAM, ID 7, Fast-40, LVD, parity checking
+sym1: No NVRAM, ID 7, Fast-40, LVD, parity checking
+
+and on the earlier kernels , the drives appear as:
+
+   Vendor: SEAGATE   Model: SX118202LS        Rev: B804
+   Type:   Direct-Access                      ANSI SCSI revision: 02
+sym1:3:0: tagged command queuing enabled, command queue depth 64.
+scsi(1:0:3:0): Beginning Domain Validation
+sym1:3: wide asynchronous.
+sym1:3: FAST-40 WIDE SCSI 80.0 MB/s ST (25.0 ns, offset 15)
+scsi(1:0:3:0): Domain Validation skipping write tests
+scsi(1:0:3:0): Ending Domain Validation
+SCSI device sda: 35566480 512-byte hdwr sectors (18210 MB)
+
+Any suggestions would be appreciated,
+
+Mark
 
