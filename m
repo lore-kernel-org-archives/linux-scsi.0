@@ -1,26 +1,21 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 2.6.0-test1 and qlogic 8.00.00b4 driver
-Date: Tue, 29 Jul 2003 11:02:35 +0100
+From: Alan Cox <alan@redhat.com>
+Subject: Re: (PATCH)The megaraid driver v2.00.5 for kernel 2.4
+Date: Tue, 29 Jul 2003 07:19:34 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030729110235.A26675@infradead.org>
-References: <20030728220836.GA10845@thumper2.emsphone.com>
+Message-ID: <200307291119.h6TBJYJ04362@devserv.devel.redhat.com>
+References: <200307290752.QAA08889@toshiba.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:56592 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S271385AbTG2KCg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jul 2003 06:02:36 -0400
-Content-Disposition: inline
-In-Reply-To: <20030728220836.GA10845@thumper2.emsphone.com>; from genanr@emsphone.com on Mon, Jul 28, 2003 at 05:08:37PM -0500
+Received: from pix-525-pool.redhat.com ([66.187.233.200]:55332 "EHLO
+	devserv.devel.redhat.com") by vger.kernel.org with ESMTP
+	id S271415AbTG2LTk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jul 2003 07:19:40 -0400
+In-Reply-To: <200307290752.QAA08889@toshiba.co.jp> from "haruo tomita" at Gor 29, 2003 04:47:54 
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Ryan <genanr@emsphone.com>
-Cc: linux-scsi@vger.kernel.org
+Cc: willy@debian.org, atulm@lsil.com, Matt_Domsch@dell.com, haruo.tomita@toshiba.co.jp, linux-megaraid-devel@dell.com, linux-scsi@vger.kernel.org
 
-On Mon, Jul 28, 2003 at 05:08:37PM -0500, Andrew Ryan wrote:
-> Linux is not seeing any devices attached to a CMD CRA-7280 san connected
-> raid unit using kernel 2.6.0-test[12] and qlogic drive 8.00.00b4.  It works
+> A final patch is resent.  Alan, please apply.
 
-It should be fine with plain -test1, with newer trees you need to add
-a call to scsi_scan_host just after scsi_add_host.
-
+If Atul okays it sure
