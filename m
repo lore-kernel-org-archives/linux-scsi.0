@@ -1,100 +1,48 @@
-From: "Smart, James" <James.Smart@Emulex.com>
-Subject: RE: Transport affected timeouts...
-Date: Thu, 22 Apr 2004 12:28:01 -0400
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: Why is CONFIG_SCSI_QLA2X_X always enabled?
+Date: Thu, 22 Apr 2004 09:28:53 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3356669BBE90C448AD4645C843E2BF2802C016DC@xbl.ma.emulex.com>
+Message-ID: <20040422092853.55d0b011.rddunlap@osdl.org>
+References: <4087E95F.5050409@ihateaol.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="ISO-8859-1"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:37866 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S264511AbUDVQ2O
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Apr 2004 12:28:14 -0400
+Received: from fw.osdl.org ([65.172.181.6]:23246 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S264468AbUDVQez (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Apr 2004 12:34:55 -0400
+In-Reply-To: <4087E95F.5050409@ihateaol.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@SteelEye.com>
-Cc: Linux SCSI Reflector <linux-scsi@vger.kernel.org>
+To: Kieran <kieran@ihateaol.co.uk>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, jejb <james.bottomley@steeleye.com>
 
-I noted the current behavior - as it is unacceptable, and I'd like a
-solution so that we can get rid of it.
+On Thu, 22 Apr 2004 16:48:47 +0100 Kieran wrote:
 
-The problem we're trying to solve is : there are topologies (long links,
-small bb credits, large multi-lun devices thus lots of queued i/o) where the
-default timeout values of the base drivers (sd, st, etc) are too short.
+| This has been bugging me for a while.. on pretty much all 2.6 kernel 
+| configs I've done, the .config has had CONFIG_SCSI_QLA2XXX=y in it, 
+| regardless of whether or not I have any other SCSI stuff compiled in. Is 
+| there a reason for this, or is it a bug?
 
-The optimal solution:
-a) adjusts the timeout only on the scsi devices affected
-b) timeout value determined dynamically by best entity (usually the scsi
-host) at appropriate times (topology changes).
-c) timeout adjustment does not require administrator input, apriori
-knowledge, or kernel/driver rebuilds
-d) addresses all commands from any source. 
-
-Potential options:
-1) Change the base driver timeout.  (base drivers defined to be sd, st, etc)
-
-I dislike this mainly because it fails (a) and (c). Also concerned about
-abilities to tune all base drivers.
-
-2) Allow the scsi-host to provide a timeout value that can override the base
-driver.
-The IBM proposed patch does this. I dislike the patch as : scsi host has no
-input as to what the base driver timeout is; there are multiple base driver
-timeouts (sd, st, etc); thus apriori knowledge is required to determine a
-maximum. Also, application of timeout change is inconsistent.
-
-3) Allow the scsi-host to provide a transport-specific increment that can be
-added to the base driver timeout.
-Just a refinement of (2) to hopefully remove my dislikes. Still has faults
-as the exact relationship of topology/configuration/devices to needed
-timeout is not exact/determinable.
-
-If there's not enough consensus to do (3) - then I vote for moving ahead
-with the IBM patch (2), and updating the st driver as well.
-
--- James S
-
-note: we are using the scsi_host_self_blocked interface to bridge reconfig
-events, but that's a different topic.
+A nuisance or annoyance perhaps.  Here's a patch for it.
 
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
-> Sent: Wednesday, April 21, 2004 3:21 PM
-> To: Smart, James
-> Cc: Linux SCSI Reflector
-> Subject: RE: Transport affected timeouts...
-> 
-> 
-> On Wed, 2004-04-21 at 12:53, Smart, James wrote:
-> > Where do we go from here ?   
-> > 
-> > What we are doing in our driver is the following:
-> > - Cancel the mid-layer timeout
-> > - Set timeout to (cmd->timeout_per_command/HZ) + hba_offset
-> > - Start timer based on new timeout value
-> 
-> Well, this is unacceptable.  Only the mid layer should be mucking with
-> mid-layer timers.
-> 
-> > Where hba_offset is: (2 * R_A_TOV) + administrative 
-> increment (default 0)
-> > Where R_A_TOV is the fabric-reported timeout. R_A_TOV is at 
-> least a round
-> > trip time, plus 2 times max delivery delay time within the 
-> fabric. (default
-> > 10 seconds).  This value can change based on fabric 
-> reconfiguration or
-> > plugging the adapter into a differnet fabric.
-> 
-> I'm still not clear on what you're trying to achieve.
-> 
-> the scsi_host_self_blocked interface was created with 
-> reconfig events in
-> mind...it still won't stop in-progress timers, but I've been 
-> considering
-> adding that feature for things like FC lip events.
-> 
-> James
-> 
-> 
+// linux-266-rc2
+// Make SCSI_QLA2XXX config option changeable/selectable
+
+diffstat:=
+ drivers/scsi/qla2xxx/Kconfig |    3 +--
+ 1 files changed, 1 insertion(+), 2 deletions(-)
+
+
+diff -Naurp ./drivers/scsi/qla2xxx/Kconfig~scsi_qla2 ./drivers/scsi/qla2xxx/Kconfig
+--- ./drivers/scsi/qla2xxx/Kconfig~scsi_qla2	2004-04-20 15:54:24.000000000 -0700
++++ ./drivers/scsi/qla2xxx/Kconfig	2004-04-22 09:39:03.000000000 -0700
+@@ -1,6 +1,5 @@
+ config SCSI_QLA2XXX
+-	tristate
+-	default (SCSI && PCI)
++	tristate "Configure QLogic 21xx/22xx/23xx/63xx host adapters"
+ 	depends on SCSI && PCI
+ 
+ config SCSI_QLA21XX
