@@ -1,54 +1,51 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: Maximum  disks
-Date: Thu, 1 Aug 2002 04:01:21 +0200
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: st.c block limits
+Date: Thu, 1 Aug 2002 07:45:42 +0300 (EEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020801020120.GG26560@nbkurt.etpnet.phys.tue.nl>
-References: <20020731233404.87984.qmail@web14005.mail.yahoo.com>
+Message-ID: <Pine.LNX.4.44.0207310731150.25578-100000@kai.makisara.local>
+References: <3D46F4F4.1090703@ntlworld.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="HB4mHL4PVvkpZAgW"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020731233404.87984.qmail@web14005.mail.yahoo.com>
+In-Reply-To: <3D46F4F4.1090703@ntlworld.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mukul Kotwani <mkotwani@yahoo.com>
+To: ael <law_ence.dev@ntlworld.com>
 Cc: linux-scsi@vger.kernel.org
 
+On Tue, 30 Jul 2002, ael wrote:
 
---HB4mHL4PVvkpZAgW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> I have a scsi tape drive:-
+>
+> Host: scsi0 Channel: 00 Id: 00 Lun: 00
+>      Vendor: AIWA     Model: TD-20001         Rev: 0159
+>      Type:   Sequential-Access                ANSI SCSI revision: 02
+>
+> It has worked perfectly for several years, but from kernel 2.4.10 st.c
+> started to report a 24-bit block limit: st0: Block limits 1 - 16777215
+> bytes. I am now on stock 2.4.18 with static char *verstr = "20020205".
+>
+> The above drive is a NS-20 drive with default block size of 512 and 20G
+> blocks: so a range of 25 bits for the block number is needed.
+>
+The block limits tell the block size limits the drive reports, not limits
+to the amount of data. The driver writes data until the drive tells that
+there is no space. I.e., the driver does not limit the amount of data
+written to the tape. No changes affecting this behaviour has been made for
+a very long time.
 
-On Wed, Jul 31, 2002 at 04:34:04PM -0700, Mukul Kotwani wrote:
-> If I have more than 8 disks connected, I dont see more
-> than 8 at any time. The /proc/partitions shows all 16
-> , but if I look in /dev/sd*, I see /dev/sda1-15,
-> /dev/sdb1-15 and upto /dev/sdh1-15. But the
-> /proc/partitons shows sdi1, sdj1.. as partitions,
-> which are not listed in /dev/ at all.
+> So when I attempt to write to the tape beyond block 2^24,
+> I get an error like:
+>
+> # tar -cf /dev/ntape blah_home.tar.bz2; mt  tell
+> tar: /dev/ntape: Wrote only 0 of 10240 bytes
+> tar: Error is not recoverable: exiting now
+> At block 17832312.
+>
+Looks like you are at end of tape. I think the 20 GB capacity is
+compressed and not real. This means that the actual amount of data you can
+write on the tape depends on the compressibility of data. 17.8 GB is
+actually not too bad in this case.
 
-You need to create the device nodes. If your favourite's distributor's
-MAKDEVS does not do it, you may need to create the nodes yourself with
-mknod. Use major numbers 8,65--71,128--135 for the sd devices.
-(Refer to the devices.txt on LANANA.)
+	Kai
 
-Regarsd,
---=20
-Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
-GPG key: See mail header, key servers         Linux kernel development
-SuSE Linux AG, Nuernberg, DE                            SCSI, Security
 
---HB4mHL4PVvkpZAgW
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.7 (GNU/Linux)
-
-iD8DBQE9SJZwxmLh6hyYd04RAuAHAKDOyPwCisdO08FTun6liUGHi2hAjQCguMVR
-oMW4HaS7jAXppXHgp00XckU=
-=MUKr
------END PGP SIGNATURE-----
-
---HB4mHL4PVvkpZAgW--
