@@ -1,38 +1,45 @@
-From: Andre Hedrick <andre@linux-ide.org>
-Subject: Re: ide-scsi with ide-hd?
-Date: Sat, 7 Dec 2002 10:37:04 -0800 (PST)
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Warning: about not setting max_sectors
+Date: Mon, 09 Dec 2002 08:55:41 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.10.10212071036340.397-100000@master.linux-ide.org>
-References: <1039179795.22971.1.camel@irongate.swansea.linux.org.uk>
+Message-ID: <200212091455.gB9Etg601956@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1039179795.22971.1.camel@irongate.swansea.linux.org.uk>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id GAA14243
+	for <linux-scsi@vger.kernel.org>; Mon, 9 Dec 2002 06:55:47 -0800
+Received: from localhost.localdomain (sshppp-200.mtv1.steeleye.com [172.16.1.200])
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) with ESMTP id GAA14154
+	for <linux-scsi@vger.kernel.org>; Mon, 9 Dec 2002 06:55:45 -0800
+Received: from mulgrave (jejb@localhost)
+	by localhost.localdomain (8.11.6/linuxconf) with ESMTP id gB9Etg601956
+	for <linux-scsi@vger.kernel.org>; Mon, 9 Dec 2002 08:55:43 -0600
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Thomas Soddemann <Thomas.Soddemann@rzg.mpg.de>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+For some reason, the SCSI core is now warning about drivers which don't set 
+max_sectors.
 
-Yes they do, but only ones with special firmware.
+Just for the record, we have two parameters in the template:
 
-IE Tivo modified drives.
+sg_tablesize which determines the maximum number of scatter gather entries the 
+host can have (corresponds to max_phys_segments in the block layer), and
 
-On 6 Dec 2002, Alan Cox wrote:
+max_sectors, which imposes a maximum overall transfer length (corresponds to 
+max_sectors in the block queue).
 
-> On Fri, 2002-12-06 at 09:16, Thomas Soddemann wrote:
-> > Hi,
-> > 
-> > does anybody know whether there is there a possibility to use ide-scsi 
-> > in connection with an IDE HD?
-> 
-> Basically no - IDE disks don't support ATAPI.
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+The comments over max_sectors list it as optional (if unset, we set it to the 
+scsi equivalent of machine infinity---well, actually 1024, or 512Mb for usual 
+blocks).
 
-Andre Hedrick
-LAD Storage Consulting Group
+The reason it's unset on so many drivers is that usually, they have no 
+absolute transfer limit, so they're just bounded by the number of entries in 
+the scatter-gather list.
+
+I can't see a reason to force every driver suddenly to have an arbitrary 
+max_sectors, so if no-one objects, I'll pull out the warning.
+
+James
+
 
