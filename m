@@ -1,65 +1,39 @@
 From: brking@us.ibm.com
-Subject: [PATCH 13/16] ipr: New adapter support
-Date: Wed, 04 Aug 2004 17:32:53 -0500
+Subject: [PATCH 15/16] ipr: Properly retry aborted reponse
+Date: Wed, 04 Aug 2004 17:33:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200408042232.i74MWsu7187384@westrelay04.boulder.ibm.com>
+Message-ID: <200408042234.i74MYADg107288@northrelay04.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:27120 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S267473AbUHDWc4
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Aug 2004 18:32:56 -0400
+Received: from e1.ny.us.ibm.com ([32.97.182.101]:30347 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S267482AbUHDWdK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Aug 2004 18:33:10 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org, brking@us.ibm.com
 
 
-This patch adds support for 2 new ipr adapters.
+The ipr device driver runs tagged queuing with QERR=1. When a check condition
+occurs on a device running tagged queuing, the other queued commands get aborted
+by the ipr driver and will be returned by the adapter with the
+IPR_IOASC_ABORTED_CMD_TERM_BY_HOST response. These commands should be retried by
+the midlayer and their retry counter not decremented.
 
 Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- linux-2.6.8-rc3-bjking1/drivers/scsi/ipr.c |    8 +++++++-
- linux-2.6.8-rc3-bjking1/drivers/scsi/ipr.h |    2 ++
- 2 files changed, 9 insertions(+), 1 deletion(-)
+ linux-2.6.8-rc3-bjking1/drivers/scsi/ipr.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/ipr.h~ipr_new_adapters drivers/scsi/ipr.h
---- linux-2.6.8-rc3/drivers/scsi/ipr.h~ipr_new_adapters	2004-08-04 17:17:39.000000000 -0500
-+++ linux-2.6.8-rc3-bjking1/drivers/scsi/ipr.h	2004-08-04 17:17:39.000000000 -0500
-@@ -75,6 +75,8 @@
- #define IPR_SUBS_DEV_ID_5703	0x0278
- #define IPR_SUBS_DEV_ID_572E  0x02D3
- #define IPR_SUBS_DEV_ID_573D  0x02D4
-+#define IPR_SUBS_DEV_ID_570F	0x02BD
-+#define IPR_SUBS_DEV_ID_571B	0x02BE
+diff -puN drivers/scsi/ipr.c~ipr_aborted_response drivers/scsi/ipr.c
+--- linux-2.6.8-rc3/drivers/scsi/ipr.c~ipr_aborted_response	2004-08-04 17:17:41.000000000 -0500
++++ linux-2.6.8-rc3-bjking1/drivers/scsi/ipr.c	2004-08-04 17:17:41.000000000 -0500
+@@ -3728,7 +3728,7 @@ static void ipr_erp_start(struct ipr_ioa
  
- #define IPR_NAME				"ipr"
- 
-diff -puN drivers/scsi/ipr.c~ipr_new_adapters drivers/scsi/ipr.c
---- linux-2.6.8-rc3/drivers/scsi/ipr.c~ipr_new_adapters	2004-08-04 17:17:39.000000000 -0500
-+++ linux-2.6.8-rc3-bjking1/drivers/scsi/ipr.c	2004-08-04 17:17:39.000000000 -0500
-@@ -93,7 +93,7 @@ static spinlock_t ipr_driver_lock = SPIN
- 
- /* This table describes the differences between DMA controller chips */
- static const struct ipr_chip_cfg_t ipr_chip_cfg[] = {
--	{ /* Gemstone */
-+	{ /* Gemstone and Citrine */
- 		.mailbox = 0x0042C,
- 		.cache_line_size = 0x20,
- 		{
-@@ -6007,9 +6007,15 @@ static struct pci_device_id ipr_pci_tabl
- 	{ PCI_VENDOR_ID_MYLEX, PCI_DEVICE_ID_IBM_GEMSTONE,
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_573D,
- 	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
-+	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CITRINE,
-+		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_571B,
-+	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
- 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_SNIPE,
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_2780,
- 		0, 0, (kernel_ulong_t)&ipr_chip_cfg[1] },
-+	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_SNIPE,
-+		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_570F,
-+		0, 0, (kernel_ulong_t)&ipr_chip_cfg[1] },
- 	{ }
- };
- MODULE_DEVICE_TABLE(pci, ipr_pci_table);
+ 	switch (ioasc & IPR_IOASC_IOASC_MASK) {
+ 	case IPR_IOASC_ABORTED_CMD_TERM_BY_HOST:
+-		scsi_cmd->result |= (DID_ERROR << 16);
++		scsi_cmd->result |= (DID_IMM_RETRY << 16);
+ 		break;
+ 	case IPR_IOASC_IR_RESOURCE_HANDLE:
+ 		scsi_cmd->result |= (DID_NO_CONNECT << 16);
 _
