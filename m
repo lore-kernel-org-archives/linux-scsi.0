@@ -1,41 +1,29 @@
-From: Douglas Gilbert <dougg@torque.net>
+From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH] give ->proc_info a struct Scsi_Host * parameter
-Date: Tue, 13 May 2003 17:00:54 +1000
+Date: Tue, 13 May 2003 08:59:42 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EC09826.20406@torque.net>
-References: <20030512160344.A11185@lst.de>
-Reply-To: dougg@torque.net
+Message-ID: <20030513085942.A20372@lst.de>
+References: <20030512160344.A11185@lst.de> <3EC09826.20406@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:61454 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263201AbTEMGpX
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 May 2003 02:45:23 -0400
-In-Reply-To: <20030512160344.A11185@lst.de>
+Received: from verein.lst.de ([212.34.181.86]:61445 "EHLO verein.lst.de")
+	by vger.kernel.org with ESMTP id S263228AbTEMGrI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 May 2003 02:47:08 -0400
+Content-Disposition: inline
+In-Reply-To: <3EC09826.20406@torque.net>; from dougg@torque.net on Tue, May 13, 2003 at 05:00:54PM +1000
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
+To: Douglas Gilbert <dougg@torque.net>
 Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-Christoph Hellwig wrote:
-> Yeah, I know the method is obsolete but for proper refcounting we
-> need to get rid of all those scsi_host_hn_get() abusers.
-> 
-> scsi_host_hn_get() and scsi_host_put() are not exported anymore
-> after this patch.
+On Tue, May 13, 2003 at 05:00:54PM +1000, Douglas Gilbert wrote:
+> It is work in progress and I will send some patches
+> and/or RFCs shortly. To do this I need access to
+> scsi_host_hn_get() and scsi_host_put() so please leave
+> them exported.
 
-Christoph,
-I'm working on a patch to add a virtual device node in the
-sg driver tentatively called /dev/sgbind. It follows on
-from a suggestion by Patrick Mansfield recently to allow
-device scanning from the user space.
-
-It is work in progress and I will send some patches
-and/or RFCs shortly. To do this I need access to
-scsi_host_hn_get() and scsi_host_put() so please leave
-them exported.
-
-Doug Gilbert
-
+I disagree - these interfaces are problematic (and need a big revamp to
+get working refcounting). But we can reconsider the export when you post your
+patch.
 
