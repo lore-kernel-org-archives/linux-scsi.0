@@ -1,138 +1,68 @@
-From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
-Subject: [ANNOUNCE] QLogic FC Driver for Linux 6.01b4 Released.
-Date: Wed, 14 Aug 2002 17:14:15 -0700
+From: "conway, heather" <conway_heather@emc.com>
+Subject: RE: Patch from my store of obscure fixes
+Date: Fri, 16 Aug 2002 09:08:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <B179AE41C1147041AA1121F44614F0B02407F6@AVEXCH02.qlogic.org>
+Message-ID: <FA2F59D0E55B4B4892EA076FF8704F5501C1A31B@srgraham.eng.emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: 'Patrick Mansfield' <patmans@us.ibm.com>, Pete Zaitcev <zaitcev@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
-All,
-
-The following made it to the linux-kernel list, but did not 
-seem to appear on linux-scsi.  
-
-Regards,
-Andrew Vasquez
+Patrick,
+The device returns a sense data of Logical Unit Not Ready - Manual
+Intervention Required to a Test Unit Ready.
+Heather
 
 -----Original Message-----
-All,
-
-QLogic is pleased to announce the 6.01b4 release of its qla2xxx driver for
-ISP2100/ISP22xx/ISP23xx chips and HBAs.
-
-Major improvements from the 5.3x driver series include:
-
-	o Robust and stable failover implementation
-	o Fast-path cleanup
-	o Support for the new error-handling routines
-	o Report-luns scan
-	o ISP2342 support
-	o IP via FC support (RFC 2625)
-	o ISP2100 support.
-	o 64bit DMA addressing
-	o Remove virt_to_bus/kmalloc --> pci_* routines
-	o Memory mapped I/O support
-	o General code-sanitizing
-		- locking structures
-		- queue structures
-		- extraneous NOP *LOCK/UNLOCK macros
-		- remove old EH routines
-		- remove serial console routines
-
-The 6.xx series driver supports kernels 2.4.x and above ONLY, and contains most
-of Arjan van de Ven's (Redhat) changes made to the 5.31 driver.
-
-A side note regarding ISP2100 support: QLogic has formally retired the QLA2100
-card and will *not* provide technical support for these chips and HBAs.  The
-initial 6.xx series drivers were stripped of ISP2100 card recognition.  The
-current ISP2100 support was forward-ported from 5.3x.  From an engineering
-standpoint, any patches or fixes for the ISP2100 will be considered.
-
-The driver distribution can be downloaded at:
-
-	http://download.qlogic.com/drivers/5537/qla2x00-v6.1b4-dist.tgz
-
-The distribution contains three main components:
-
-	qla2x00src-vX.YY.tgz	-- The FC/SCSI driver
-	qla2xipsrc-vM.NN.tgz	-- The IP network driver
-	qlapi-P.QQ-rel.tgz	-- The SNIA API library
+From: Patrick Mansfield [mailto:patmans@us.ibm.com]
+Sent: Tuesday, August 13, 2002 6:26 PM
+To: Pete Zaitcev
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: Patch from my store of obscure fixes
 
 
-Changes since 6.01b2 distribution:
-----------------------------------
+On Fri, Aug 09, 2002 at 04:48:34PM -0400, Pete Zaitcev wrote:
+> Apparently, this patch comes from an expirience with a Clariion array
+> with some volumes disabled by operator. When Linux reboots, it
+> tries to spin them up and for some reason it times out, and
+> generally takes a very long time. I do suspect that START STOP UNIT
+> should return failure immediately, but perhaps it does not.
+> What do you guys think about this? Obviously a workaround, but
+> is it useful?
 
-  QLA2X00:
+It looks good, except the device should be offlined (or ?), and the
+read capacity prevented; the similiar 2.4 patch prevented the read
+capacity since the code is different, and it returned before the
+read capacity.
 
-	- Remove qla_dbg.h and qla_def.h files from driver
-	  distribution.
-	- Remove all virt_to_* calls in both SCSI/IP driver sources.
-	  - 64bit DMA addressing through dma_addr_t.
-	- Cleanup structure names/member variables from IP sources.
-	- Add QL_DEBUG_LEVEL_12 for IP debugging.
-	- Add transmission timeout callback for IP driver.
-	- Enable SRAM, Instruction RAM and GP RAM parity checks on
-	  ISP2300s.
-	- Display all luns recognized by driver in /proc, not just
-	  SCSI mid-layer scanned luns.  Luns not scanned by the mid-
-	  layer are marked with an asterisk (*).
-	  - Add FC_SUPPORT_RPT_LUNS flag to the struct fc_port.flags.
-	    Set, if the device supported the report luns command.
-	- Increase Inquiry request buffer to 36 rather than 4.  Some
-	  target devices have problems with the small transfer.
-	- Fix assignment of current_speed during an asyncronous event
-	  MBA_LOOP_UP.  Improper connection speed was being reported
-	  to EXIOCTs and IP driver.
-	- Add ISP2100 support:
-	  - QLogic provides no support for the ISP2100.
-	  - compiled binary name qla2100.o.
-	  - Forward-port chip support from 5.[2|3]x series driver.
-	  - Update Makefile.kernel and Config.in.
-	  - add new 2100 TP firmware (1.19.24).
-	- Fix copy-error in qla2x00_fo_get_params() where the
-	  qla_fo_params notification CDB would be zero'd-out.
-	- Fix kernel-oops when DEBUG level 5 is enabled and a command
-	  is sent to a non-existent lun.
-	- Fix in-kernel compilation problem (Veritas).
-	- Remove superfluous KMALLOC*/KMFREE/BZERO/BCOPY/
-	  BCMP/qla_bcopy defines and functions.
-	- Remove unused ql_list_link structures and functions.
-	- Consistent use of copy_to/from_user() functions (RH).
-	- Consistent use of scsi_qla_host_t instead of
-	  several aliases (RH).
-	- Remove illegal usage of caddr_t (RH).
-	- Remove Target-Mode support from driver.
-	- Cleanup qla_fo.c file:
-	  - Remove old debugging code.
-	  - General sanitizing.
-	- Cleanup compiler warnings during debug builds.
-	- Add new 2300 IP/TP firmware (3.01.13).
+-- Patrick Mansfield
 
-  QLA2XIP:
-
-	- Requires v6.01b4 SCSI driver.
-  	- Add completion status to send and receive control buffers.
-  	- Add support for specifying the MTU (mtu) and Receive
-	  buffers count (buffers) on the modules command line.
-	- Add NETIF_F_HIGHDMA to the device feature flags if 64bit
-	  DMA addressing possible.
-	- Add tx_timeout() implementation.
-	- Add display of link connection speed during initialization.
-	- Fix race in qla2xip_free_send_cb().
-	- Remove all virt_to_* calls in driver sources.
-	  - 64bit DMA addressing through dma_addr_t.
-	- Use system-defined structures for network/ethernet
-	  support.
-	  - Use hton/ntoh functions.
-	- Cleanup structure names/member variables.
-
-Regards,
-Andrew Vasquez
-QLogic Corporation
-andrew.vasquez@qlogic.com
-
+> 
+> -- Pete
+> 
+> --- linux-2.5.30/drivers/scsi/sd.c	Thu Aug  1 14:16:13 2002
+> +++ linux-2.5.30-sparc/drivers/scsi/sd.c	Fri Aug  9 13:47:52 2002
+> @@ -847,6 +847,16 @@
+>  		}
+>  
+>  		/*
+> +		 * If the drive requires human intervention,
+> +		 * don't bother to jerk the drive until it happens.
+> +		 */
+> +		if (the_result != 0 &&
+> +		    SRpnt->sr_sense_buffer[2] == NOT_READY &&
+> +		    SRpnt->sr_sense_buffer[12] == 0x04 &&	/* ASC */
+> +		    SRpnt->sr_sense_buffer[13] == 0x03)		/* ASCQ */
+> +			return;
+> +
+> +		/*
+>  		 * If the drive has indicated to us that it doesn't have
+>  		 * any media in it, don't bother with any of the rest of
+>  		 * this crap.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
