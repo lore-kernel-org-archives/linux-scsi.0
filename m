@@ -1,76 +1,77 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [RFC][PATCH] Direct I/O for the SCSI tapes
-Date: Mon, 29 Jul 2002 21:45:02 +0300 (EEST)
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Autosense requirement
+Date: Mon, 29 Jul 2002 13:48:35 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0207292045040.770-100000@kai.makisara.local>
-References: <20020729005940.Q793@nightmaster.csn.tu-chemnitz.de>
+Message-ID: <3D457FF3.C7A02C57@torque.net>
+References: <3D453CE8.5A15FCD6@splentec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020729005940.Q793@nightmaster.csn.tu-chemnitz.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Oeser <ingo.oeser@informatik.tu-chemnitz.de>
-Cc: Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben@splentec.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 29 Jul 2002, Ingo Oeser wrote:
+Luben Tuikov wrote:
+> 
+> How safe am I to assume that SCSI LLDD will return
+> autosense for a failed/incomplete command, as per
+> SCSI core (mid-layer) error handling requrement?
+> (e.g. ide-scsi doesn't return autosense)
+> 
+> In drafts I'm more and more seeing
+> ``targets MUST support and enable autosense.''
+> 
+> If indeed we put a ``MUST'' requirement on SCSI LLDD
+> to support and enable autosense, which will indeed
+> streamline things, then this will save me a an _irq_
+> spin lock over a simple spin lock...
+> 
+> What is the future of this requrement?
 
-> [Please keep me CC'ed on replies, since I'm not subscribed to
-> linux-scsi. Thanks for CC'ing me so far!]
-...
-> Mapping user buffers is one step only. I want mapping of user
-> buffers to bus adresses to do scatter-gather. We need it in so
-> many places now, so I like the idea of simplifying it the way we
-> agree on. The kvecs do only user page pinning.
->
-> We need struct scatterlist since we need to get the pages anyway
-> (remember: we get a pointer to the struct page, where we easyly
-> get to the physical address, which is already the bus adress on
-> many arches AFAIR).
->
-> With kvecs we get only half the work done.
->
-I agree. I have just been exploring the other possibilities if
-sgl_map_user_pages() is not accepted into the kernel. map_user_kvec() (at
-least in aio-20020619.diff) returns all the information (page pointers,
-offset, lengths) that sgl_map_user_pages() puts into the s/g list. Mapping
-to a separate s/g list is needed anyway if the user wants to combine
-adjacent pages into single s/g entries.
+Luben,
+In the lk 2.4 series we have both older "non-eh" lower
+level drivers and a few, newer "eh" drivers. In the lk
+2.5 series the mid level interface to the older "non-eh"
+drivers was dropped.
 
-This remapping can, of course, be also made from s/g list to s/g list. If
-the user does not need compaction, then nothing has to be done if the
-mapping function returns a s/g list. My only valid argument in favour of
-kvecs is maintenance of the mm code within the mapping function. If the
-kernel contains a maintained function mapping directly to s/g lists,
-I will be happy to use it.
+Hence in the development lk 2.5 series there are many stranded
+drivers, including ide-scsi, some of which have been converted "on
+the fly". His is an incomplete list of issues to be addressed
+in lower level (HBA) driver conversions:
+  - "eh" interface [mandatory]
+  - io_request_lock displaced by host_lock [mandatory]
+  - PCI memory/DMA interface
+  - driverfs aware
+  - autosense for high performance drivers (perhaps all)
 
-> I also would like to see the mapping function entered very early
-> in the call chain (my own use is one stack frame after
-> the file operations!). That's why I used the stack for the
-> temporary buffer (which should be very small anyway, so we don't
-> pin too much pages).
->
-In st the number of pages can be quite large (256 or even larger) and this
-is why I changed the allocation to kmalloc. In a general function this may
-also be safer.
+As you point out autosense support (at the device level)
+is now mandatory in recent scsi drafts/standards. For
+simplicity of queueing logic, the sense buffer should not
+be left for the mid level to fetch (with a REQUEST SENSE).
 
-...
-> > I would like to see the following minimum properties in the mapping
-> > function:
-> > - it maps all pages or none
-> > - it pins the pages into memory
-> > - it returns the number of pages or error
-> > - it returns the page pointers and page lengths (lengths will be useful if
-> >   large pages will be implemented) and offset in first page
-> > - it does whatever cache flushing is needed
->   - locks partial pages used (first and/or last might be) to
->     avoid a partial page write for the unused remainder.
->
-Is this locking necessary in all cases where the mapping function would be
-used? (I am asking because it is not a very light operation in a SMP
-system. Also I can see two alternative strategies: some callers would like
-to wait until locking succeeds, others (like st) would like to tear down
-the mapping if locking fails.)
+I have attempted the conversion on several HBA drivers
+(of which scsi_debug is the only one I maintain). As Ben
+LaHaise has pointed out, I have skipped addressing the
+"PCI memory/DMA interface" so far.
 
-	Kai
+Until Doug Ledford pointed out recently what lower level 
+drivers should do with regard to autosense, I was unaware
+what to do. Since that time I have converted scsi_debug
+to do autosense properly and submitted a patch for the
+drivers/scsi/scsi_mid_low_api.txt documentation file.
 
+Now would someone else like to step up to the plate
+(or "wicket" to use the cricket metaphor) and try and
+get the ide-scsi driver in lk 2.5 to do autosense?
+
+
+If kernel people think that a ide-scsi "like" driver is 
+going away then perhaps they should consider the new SAS
+(SCSI over Serial ATA infrastructure) draft. They have
+one mode illustrated in that document where the initiator
+is a SCSI host and it talks to multiple serial ATA
+disks via an "expander". Could be interesting.
+
+Doug Gilbert
 
