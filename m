@@ -1,57 +1,229 @@
-From: "Sabharwal, Atul" <atul.sabharwal@intel.com>
-Subject: SCSI rescan operation
-Date: Thu, 1 Jul 2004 17:07:59 -0700
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: [2.6 patch] more MCA_LEGACY dependencies
+Date: Fri, 2 Jul 2004 02:25:00 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <66539F0E7F15B44C9C0FC50D0FF024F7CB7077@orsmsx407>
+Message-ID: <20040702002459.GI28324@fs.tum.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmr09.intel.com ([192.52.57.35]:51670 "EHLO hermes.hd.intel.com")
-	by vger.kernel.org with ESMTP id S265814AbUGBAIH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Jul 2004 20:08:07 -0400
-Received: from petasus.hd.intel.com (petasus.hd.intel.com [10.127.45.3])
-	by hermes.hd.intel.com (8.12.9-20030918-01/8.12.9/d: large-outer.mc,v 1.9 2004/01/09 00:55:23 root Exp $) with ESMTP id i62086qG029889
-	for <linux-scsi@vger.kernel.org>; Fri, 2 Jul 2004 00:08:06 GMT
-Received: from orsmsxvs041.jf.intel.com (orsmsxvs041.jf.intel.com [192.168.65.54])
-	by petasus.hd.intel.com (8.12.9-20030918-01/8.12.9/d: large-inner.mc,v 1.10 2004/03/01 19:22:27 root Exp $) with SMTP id i62085JH020257
-	for <linux-scsi@vger.kernel.org>; Fri, 2 Jul 2004 00:08:06 GMT
-Received: from orsmsx331.amr.corp.intel.com ([192.168.65.56])
- by orsmsxvs041.jf.intel.com (SAVSMTP 3.1.2.35) with SMTP id M2004070117080510516
- for <linux-scsi@vger.kernel.org>; Thu, 01 Jul 2004 17:08:05 -0700
-Content-class: urn:content-classes:message
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:34272 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S265977AbUGBAZD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Jul 2004 20:25:03 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "Caushik, Ramesh" <ramesh.caushik@intel.com>
+To: mcalinux@acc.umu.se, tao@acc.umu.se
+Cc: linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-net@vger.kernel.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-Folks,
+The patch below against 2.6.7-mm5 fixes more compile errors with 
+MCA_LEGACY=n .
 
-I am using SCSI re-scan via the sysfs interface. Does SCSI re-scan
-insert and delete
-devices from sysfs file system?  If I logically delete a device, can I
-do a rescan 
-and find the device ?
+diffstat output:
+ drivers/net/Kconfig           |    2 +-
+ drivers/net/at1700.c          |   12 ++++++------
+ drivers/net/eexpress.c        |    4 ++--
+ drivers/net/tokenring/Kconfig |    4 ++--
+ drivers/net/tokenring/smctr.c |   12 ++++++------
+ drivers/scsi/Kconfig          |    4 ++--
+ drivers/scsi/aha1542.c        |    2 +-
+ 7 files changed, 20 insertions(+), 20 deletions(-)
 
-What is the kind of driver support required.  I am currently using
-qlogic driver for
-A storage blade in an ATCA system and SCSI rescan is roughly doing
-nothing.
-The kernel is 2.6.6.
+Signed-off-by: Adrian Bunk <bunk@fs.tum.de>
 
-If I remove the cable and do a re-scan, the devices should get deleted
-but it does
-Not happen.  Even when I check the fc_transport, the device folders
-still exist.
+--- linux-2.6.7-mm5-full/drivers/scsi/Kconfig.old	2004-07-02 02:02:01.000000000 +0200
++++ linux-2.6.7-mm5-full/drivers/scsi/Kconfig	2004-07-02 02:02:52.000000000 +0200
+@@ -628,7 +628,7 @@
+ 
+ config SCSI_FD_MCS
+ 	tristate "Future Domain MCS-600/700 SCSI support"
+-	depends on MCA && SCSI
++	depends on MCA_LEGACY && SCSI
+ 	---help---
+ 	  This is support for Future Domain MCS 600/700 MCA SCSI adapters.
+ 	  Some PS/2 computers are equipped with IBM Fast SCSI Adapter/A which
+@@ -699,7 +699,7 @@
+ 
+ config SCSI_IBMMCA
+ 	tristate "IBMMCA SCSI support"
+-	depends on MCA && SCSI
++	depends on MCA_LEGACY && SCSI
+ 	---help---
+ 	  This is support for the IBM SCSI adapter found in many of the PS/2
+ 	  series computers.  These machines have an MCA bus, so you need to
+--- linux-2.6.7-mm5-full/drivers/net/Kconfig.old	2004-07-02 01:52:46.000000000 +0200
++++ linux-2.6.7-mm5-full/drivers/net/Kconfig	2004-07-02 01:58:55.000000000 +0200
+@@ -666,7 +666,7 @@
+ 
+ config ELMC
+ 	tristate "3c523 \"EtherLink/MC\" support"
+-	depends on NET_VENDOR_3COM && MCA
++	depends on NET_VENDOR_3COM && MCA_LEGACY
+ 	help
+ 	  If you have a network (Ethernet) card of this type, say Y and read
+ 	  the Ethernet-HOWTO, available from
+--- linux-2.6.7-mm5-full/drivers/net/tokenring/Kconfig.old	2004-07-02 01:53:39.000000000 +0200
++++ linux-2.6.7-mm5-full/drivers/net/tokenring/Kconfig	2004-07-02 01:56:18.000000000 +0200
+@@ -157,7 +157,7 @@
+ 
+ config MADGEMC
+ 	tristate "Madge Smart 16/4 Ringnode MicroChannel"
+-	depends on TR && TMS380TR && MCA
++	depends on TR && TMS380TR && MCA_LEGACY
+ 	help
+ 	  This tms380 module supports the Madge Smart 16/4 MC16 and MC32
+ 	  MicroChannel adapters.
+@@ -167,7 +167,7 @@
+ 
+ config SMCTR
+ 	tristate "SMC ISA/MCA adapter support"
+-	depends on TR && (ISA || MCA)
++	depends on TR && (ISA || MCA_LEGACY)
+ 	---help---
+ 	  This is support for the ISA and MCA SMC Token Ring cards,
+ 	  specifically SMC TokenCard Elite (8115T) and SMC TokenCard Elite/A
+--- linux-2.6.7-mm5-full/drivers/scsi/aha1542.c.old	2004-07-02 02:01:08.000000000 +0200
++++ linux-2.6.7-mm5-full/drivers/scsi/aha1542.c	2004-07-02 02:01:24.000000000 +0200
+@@ -1069,7 +1069,7 @@
+ 	/*
+ 	 *	Find MicroChannel cards (AHA1640)
+ 	 */
+-#ifdef CONFIG_MCA
++#ifdef CONFIG_MCA_LEGACY
+ 	if(MCA_bus) {
+ 		int slot = 0;
+ 		int pos = 0;
+--- linux-2.6.7-mm5-full/drivers/net/tokenring/smctr.c.old	2004-07-02 01:56:05.000000000 +0200
++++ linux-2.6.7-mm5-full/drivers/net/tokenring/smctr.c	2004-07-02 01:56:49.000000000 +0200
+@@ -69,7 +69,7 @@
+ 
+ #define SMCTR_IO_EXTENT   20
+ 
+-#ifdef CONFIG_MCA
++#ifdef CONFIG_MCA_LEGACY
+ static unsigned int smctr_posid = 0x6ec6;
+ #endif
+ 
+@@ -479,7 +479,7 @@
+ 
+ static int __init smctr_chk_mca(struct net_device *dev)
+ {
+-#ifdef CONFIG_MCA
++#ifdef CONFIG_MCA_LEGACY
+ 	struct net_local *tp = netdev_priv(dev);
+ 	int current_slot;
+ 	__u8 r1, r2, r3, r4, r5;
+@@ -626,7 +626,7 @@
+ 	return (0);
+ #else
+ 	return (-1);
+-#endif /* CONFIG_MCA */
++#endif /* CONFIG_MCA_LEGACY */
+ }
+ 
+ static int smctr_chg_rx_mask(struct net_device *dev)
+@@ -3617,7 +3617,7 @@
+ 		goto out1;
+ 	return dev;
+ out1:
+-#ifdef CONFIG_MCA
++#ifdef CONFIG_MCA_LEGACY
+ 	{ struct net_local *tp = netdev_priv(dev);
+ 	  if (tp->slot_num)
+ 		mca_mark_as_unused(tp->slot_num);
+@@ -5685,7 +5685,7 @@
+ 		goto out1;
+ 	return dev;
+  out1:
+-#ifdef CONFIG_MCA
++#ifdef CONFIG_MCA_LEGACY
+ 	{ struct net_local *tp = netdev_priv(dev);
+ 	  if (tp->slot_num)
+ 		mca_mark_as_unused(tp->slot_num);
+@@ -5725,7 +5725,7 @@
+ 		if (dev) {
+ 
+ 			unregister_netdev(dev);
+-#ifdef CONFIG_MCA
++#ifdef CONFIG_MCA_LEGACY
+ 			{ struct net_local *tp = netdev_priv(dev);
+ 			if (tp->slot_num)
+ 				mca_mark_as_unused(tp->slot_num);
+--- linux-2.6.7-mm5-full/drivers/net/at1700.c.old	2004-07-02 01:57:37.000000000 +0200
++++ linux-2.6.7-mm5-full/drivers/net/at1700.c	2004-07-02 01:58:01.000000000 +0200
+@@ -89,7 +89,7 @@
+ /*
+  *	MCA
+  */
+-#ifdef CONFIG_MCA	
++#ifdef CONFIG_MCA_LEGACY	
+ static int at1700_ioaddr_pattern[] __initdata = {
+ 	0x00, 0x04, 0x01, 0x05, 0x02, 0x06, 0x03, 0x07
+ };
+@@ -174,7 +174,7 @@
+ static void net_tx_timeout (struct net_device *dev);
+ 
+ 
 
-Any help is appreciated.
+-#ifdef CONFIG_MCA
++#ifdef CONFIG_MCA_LEGACY
+ struct at1720_mca_adapters_struct {
+ 	char* name;
+ 	int id;
+@@ -202,7 +202,7 @@
+ 
+ static void cleanup_card(struct net_device *dev)
+ {
+-#ifdef CONFIG_MCA	
++#ifdef CONFIG_MCA_LEGACY	
+ 	struct net_local *lp = netdev_priv(dev);
+ 	if (lp->mca_slot >= 0)
+ 		mca_mark_as_unused(lp->mca_slot);
+@@ -288,7 +288,7 @@
+ 		   read_eeprom(ioaddr, 6), inw(ioaddr + EEPROM_Ctrl));
+ #endif
+ 
+-#ifdef CONFIG_MCA
++#ifdef CONFIG_MCA_LEGACY
+ 	/* rEnE (rene@bss.lu): got this from 3c509 driver source , adapted for AT1720 */
+ 
+     /* Based on Erik Nygren's (nygren@mit.edu) 3c529 patch, heavily
+@@ -359,7 +359,7 @@
+ 		goto err_out;
+ 	}
+ 			
+-#ifdef CONFIG_MCA
++#ifdef CONFIG_MCA_LEGACY
+ found:
+ #endif
+ 
+@@ -483,7 +483,7 @@
+ 	return 0;
+ 
+ err_mca:
+-#ifdef CONFIG_MCA
++#ifdef CONFIG_MCA_LEGACY
+ 	if (slot >= 0)
+ 		mca_mark_as_unused(slot);
+ #endif
+--- linux-2.6.7-mm5-full/drivers/net/eexpress.c.old	2004-07-02 01:59:57.000000000 +0200
++++ linux-2.6.7-mm5-full/drivers/net/eexpress.c	2004-07-02 02:00:22.000000000 +0200
+@@ -230,7 +230,7 @@
+ /* maps irq number to EtherExpress magic value */
+ static char irqrmap[] = { 0,0,1,2,3,4,0,0,0,1,5,6,0,0,0,0 };
+ 
+-#ifdef CONFIG_MCA
++#ifdef CONFIG_MCA_LEGACY
+ /* mapping of the first four bits of the second POS register */
+ static unsigned short mca_iomap[] = {
+ 	0x270, 0x260, 0x250, 0x240, 0x230, 0x220, 0x210, 0x200,
+@@ -345,7 +345,7 @@
+ 
+ 	dev->if_port = 0xff; /* not set */
+ 
+-#ifdef CONFIG_MCA
++#ifdef CONFIG_MCA_LEGACY
+ 	if (MCA_bus) {
+ 		int slot = 0;
+ 
 
-Thanks,
-
-Atul
-
--------------------------------------------------------------
-P.S:  All opinions are my personal opinion(s) & responsibility and do
-not represent the view of my employer ( Intel Corporation ).
 
