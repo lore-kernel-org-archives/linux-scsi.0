@@ -1,160 +1,112 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH] scsi_debug version 1.68 mark III
-Date: Sun, 16 Mar 2003 19:19:24 +1000
+From: Osamu Tomita <tomita@cinet.co.jp>
+Subject: RE: Complete support PC-9800 for 2.5.64-ac4 (11/11) SCSI
+Date: Mon, 17 Mar 2003 10:22:36 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E74419C.8090801@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <E6D19EE98F00AB4DB465A44FCF3FA46903A348@ns.cinet.co.jp>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020107000904070800020308"
+Content-Type: text/plain;
+	charset="iso-2022-jp"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com
+To: 'James Bottomley ' <James.Bottomley@steeleye.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, 'Linux Kernel Mailing List ' <linux-kernel@vger.kernel.org>, 'Alan Cox ' <alan@lxorguk.ukuu.org.uk>, 'Christoph Hellwig ' <hch@infradead.org>, 'Geert Uytterhoeven ' <geert@linux-m68k.org>
 
-This is a multi-part message in MIME format.
---------------020107000904070800020308
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Thanks for the comments.
 
-lk 2.5.65 seems a long time coming so here is
-a third patch on the scsi_debug driver. My
-"mark II" version is in
-http://linux-scsi.bkbits.net:8080/scsi-misc-2.5
-so the attachment is against that version.
+-----Original Message-----
+From: James Bottomley
+To: Osamu Tomita
+Cc: Linux Kernel Mailing List; Alan Cox; Christoph Hellwig; Geert
+Uytterhoeven
+Sent: 2003/03/17 2:47
+Subject: Re: Complete support PC-9800 for 2.5.64-ac4 (11/11) SCSI
 
-Changelog since version 1.68 mark II:
-   - merge Mike Anderson's probe() cleanup
-      - num_devs is now "per host"
-      - num_devs is sysfs writeable
-   - add slave_alloc skeleton code
+> On Sat, 2003-03-15 at 19:15, Osamu Tomita wrote:
+> > This is the patch to support NEC PC-9800 subarchitecture
+> > against 2.5.64-ac4. (11/11)
+> 
+> > SCSI host adapter support.
+> >  - BIOS parameter change for PC98.
+> >  - Add pc980155 driver for old PC98.
+> >  - wd33c93.c update error handler for eh_*.
+> >  - wd33c93.h register to int for PIO mode.
+> 
+> I suppose the first thing to point out is that it would be helpful if
+> you could send this to linux-scsi@vger.kernel.org.  Although most SCSI
+> people also read linux-kernel, it is easy to lose things in the noise.
+I see.
 
-So to simulate 154 disks (for example) one might use:
-   # modprobe scsi_debug add_host=11 num_devs=14
+> > diff -Nru linux/drivers/scsi/sd.c linux98/drivers/scsi/sd.c
+> > --- linux/drivers/scsi/sd.c	2003-03-05 12:29:32.000000000 +0900
+> > +++ linux98/drivers/scsi/sd.c	2003-03-08 11:13:28.000000000 +0900
+> > @@ -485,6 +485,15 @@
+> >  	else
+> >  		scsicam_bios_param(bdev, sdkp->capacity, diskinfo);
+> >  
+> > +#ifdef CONFIG_X86_PC9800
+> > +	{
+> > +		extern int pc98_bios_param(struct scsi_device *,
+> > +					   struct block_device *,
+> > +					   sector_t, int *);
+> > +		pc98_bios_param(sdp, bdev, sdkp->capacity, diskinfo);
+> > +	}
+> > +#endif
+> > +
+> >  	if (put_user(diskinfo[0], &loc->heads))
+> >  		return -EFAULT;
+> >  	if (put_user(diskinfo[1], &loc->sectors))
+> 
+> You already have the pc98_bios_param as part of your local driver.  Why
+> do you need this in addition?
+We need this for other SCSI cards not only wd33c93. For example, we
+have cards for PC98 that use aha152x, aic7xxx, advansys and sym53c8xx
+drivers. 
+PC98 architecture has own boot selector and can boot any of 16 partitions
+per 1 drive. The partition table conatins C/H/S geometry. And we can
+assign non zero head or sector. Boot selector reads the partition table
+and call BIOS by C/H/S parameters on boottime. If geometry is not mach
+to BIOS, cannot boot from the partition created on linux. 
 
-With max_luns at its default value of 2, 14 is the
-maximum number of devices per host scsi_debug will
-respond to (i.e. 7 targets, each with 2 lus).
+> [...]
+> >  static inline uchar
+> >  read_aux_stat(const wd33c93_regs regs)
+> >  {
+> > -	return inb(*regs.SASR);
+> > +	return inb(regs.SASR);
+> >  }
+> >  
+> >  static inline void
+> >  write_wd33c93(const wd33c93_regs regs, uchar reg_num, uchar value)
+> >  {
+> > -      outb(reg_num, *regs.SASR);
+> > -      outb(value, *regs.SCMD);
+> > +      outb(reg_num, regs.SASR);
+> > +      outb(value, regs.SCMD);
+> >  }
+> >  
+> [...]
+> >     /* This is what the 3393 chip looks like to us */
+> >  typedef struct {
+> > +#ifdef CONFIG_WD33C93_PIO
+> > +   unsigned int   SASR;
+> > +   unsigned int   SCMD;
+> > +#else
+> >     volatile unsigned char  *SASR;
+> >     volatile unsigned char  *SCMD;
+> > +#endif
+> >  } wd33c93_regs;
+> >  
+> 
+> This really doesn't look right.  For non PIO (which is all drivers apart
+> from yours), they expect to dereference SASR to get the port number (as
+> an unsigned char).  If you remove the dereference, don't they all break?
+> 
+> Perhaps the better thing to do is to make your driver use an unsigned
+> int *, so the dereference works in all cases.
+> 
+> James
+I supposed, I use this patch with "#ifdef CONFIG_WD33C93_PIO" in
+wd33c98.c. 
 
-Documentation updated at:
-http://www.torque.net/sg/sdebug25.html
-
-Doug Gilbert
-
---------------020107000904070800020308
-Content-Type: application/x-gzip;
- name="scsi_debug_bkbits_168_3.diff.gz"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="scsi_debug_bkbits_168_3.diff.gz"
-
-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
---------------020107000904070800020308--
-
+Regards,
+Osamu Tomita
