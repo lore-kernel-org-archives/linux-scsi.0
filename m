@@ -1,39 +1,75 @@
-From: John Bradford <john@grabjohn.com>
-Subject: Re: Binary-only firmware covered by the GPL?
-Date: Fri, 26 Mar 2004 09:12:39 GMT
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200403260912.i2Q9CdLU000531@81-2-122-30.bradfords.org.uk>
+From: Dumitru Ciobarcianu <Dumitru.Ciobarcianu@iNES.RO>
+Subject: Bug#239952: Binary-only firmware covered by the GPL?
+Date: Fri, 26 Mar 2004 11:43:28 +0200
+Message-ID: <1080294208.27237.2.camel@LNX.iNES.RO>
 References: <E1B6Izr-0002Ai-00@r063144.stusta.swh.mhn.de>
- <20040325082949.GA3376@gondor.apana.org.au>
- <20040325220803.GZ16746@fs.tum.de>
- <40635DD9.8090809@pobox.com>
- <20040326003339.GD25059@parcelfarce.linux.theplanet.co.uk>
- <81ptb0wh45.wl@omega.webmasters.gr.jp>
- <4063EFA5.5070001@stesmi.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 81-2-122-30.bradfords.org.uk ([81.2.122.30]:11648 "EHLO
-	81-2-122-30.bradfords.org.uk") by vger.kernel.org with ESMTP
-	id S263981AbUCZJNt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Mar 2004 04:13:49 -0500
-In-Reply-To: <4063EFA5.5070001@stesmi.com>
+	 <20040325082949.GA3376@gondor.apana.org.au>
+	 <20040325220803.GZ16746@fs.tum.de>  <40635DD9.8090809@pobox.com>
+	 <1080260235.3643.103.camel@imladris.demon.co.uk>
+	 <4063EEC1.9080203@stesmi.com>
+Reply-To: Dumitru Ciobarcianu <Dumitru.Ciobarcianu@iNES.RO>,
+	239952@bugs.debian.org
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EZXwy1whWHkLAIMXbdLa"
+Return-path: <bounce-debian-bugs-rc=glddbr-debian-bugs-rc=gmane.org@lists.debian.org>
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.239952.B239952.108029421425962@bugs.debian.org>
+In-Reply-To: <4063EEC1.9080203@stesmi.com>
+List-Post: <mailto:debian-bugs-rc@lists.debian.org>
+List-Help: <mailto:debian-bugs-rc-request@lists.debian.org?subject=help>
+List-Subscribe: <mailto:debian-bugs-rc-request@lists.debian.org?subject=subscribe>
+List-Unsubscribe: <mailto:debian-bugs-rc-request@lists.debian.org?subject=unsubscribe>
+To: Stefan Smietanowski <stesmi@stesmi.com>
+Cc: David Woodhouse <dwmw2@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, Adrian Bunk <bunk@fs.tum.de>, 239952@bugs.debian.org, debian-devel@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Smietanowski <stesmi@stesmi.com>, GOTO Masanori <gotom@debian.or.jp>
-Cc: Matthew Wilcox <willy@debian.org>, Jeff Garzik <jgarzik@pobox.com>, Adrian Bunk <bunk@fs.tum.de>, 239952@bugs.debian.org, debian-devel@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> > But think about: why can we distribute assembler only code in linux
-> > kernel?  It's near to binary form (objdump -d is your friend).
-> 
-> It's not. The difference is that we can always insert another asm
-> statement anywhere (of course changing the way the function works)
-> and still have it assemble and unless we goofed up it'll still run.
-> mov ax,ax for instance won't do a thing. We can insert that
-> anywhere we wish without changing anything. The assembler will take
-> care of any relative jumps and pointers but with a binary firmware,
-> try to insert a byte into it (not CHANGE one, INSERT one), even
-> if you know just insert a NOP somewhere - and see what happens.
 
-Then why didn't the original programmer leave a patch space to allow
-for such modifications?  Surely that could be considered part of the
-'preferred form'.
+--=-EZXwy1whWHkLAIMXbdLa
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John.
+On Fri, 2004-03-26 at 09:50 +0100, Stefan Smietanowski wrote:
+> /*
+>      This file is under the GPL, yada yada
+> */
+> #include "things.h"
+>=20
+> void some_func(void)
+> {
+>    does_something();
+> }
+>=20
+> char firmware[]=3D{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+>=20
+> void upload_firmware(void)
+> {
+>    do_upload(firmware);
+> }
+>=20
+> --
+>=20
+> Then it seems clear to me that the firmware is under the GPL because it
+> is PART of the GPL'd file.
+
+
+If you're right, then the "binary" of the firmware it's GPL, not the
+source of the firmware, because that's what you have in this case :)
+
+You can have that ? GPL the binary but not the source ? :)
+
+--=20
+Cioby
+
+--=-EZXwy1whWHkLAIMXbdLa
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQBAY/s/QisRnSkd59cRAufwAJsHNzMld0DucqhRxASL1csizPySDQCeIwFz
+8IB2cyzJ6DcHpUZ7ZHc4Ky0=
+=b0qO
+-----END PGP SIGNATURE-----
+
+--=-EZXwy1whWHkLAIMXbdLa--
