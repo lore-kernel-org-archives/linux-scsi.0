@@ -1,43 +1,54 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Warning - running *really* short on DMA buffers while doing file transfers
-Date: Fri, 27 Sep 2002 14:54:52 +0200
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Subject: Re: Warning - running *really* short on DMA buffers while doing
+ file transfers
+Date: Fri, 27 Sep 2002 07:30:55 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020927125452.GB23468@suse.de>
-References: <20020927102503.GA15101@suse.de> <Pine.BSF.4.21.0209270510350.20512-100000@beppo>
+Message-ID: <389902704.1033133455@aslan.scsiguy.com>
+References: <20020927074509.GA860@suse.de>
+ <Pine.BSF.4.21.0209270055290.18408-100000@beppo>
+ <20020927102503.GA15101@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20020927102503.GA15101@suse.de>
 Content-Disposition: inline
-In-Reply-To: <Pine.BSF.4.21.0209270510350.20512-100000@beppo>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Jacob <mjacob@feral.com>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, "Pedro M. Rodrigues" <pmanuel@myrealbox.com>, Mathieu Chouquet-Stringer <mathieu@newview.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>, Matthew Jacob <mjacob@feral.com>
+Cc: "Pedro M. Rodrigues" <pmanuel@myrealbox.com>, Mathieu Chouquet-Stringer <mathieu@newview.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Sep 27 2002, Matthew Jacob wrote:
-> 
-> [ .. all sorts of nice discussion, but not on our argument point ]
-> > 
-> > Agrh. Who's saying 'fix' the hba driver? Either I'm not expressing
-> > myself very clearly, or you are simply not reading what I write.
-> 
-> I (foolishly) leapt in when you said "253 is 'over the top'". You seemed
-> to imply that the aic7xxx driver was at fault and should be limiting the
-> amount it is sending out. My (mostly) only beef with what you've written
-> is with that implication- mainly as "don't send so many damned commands
-> if you think they're too many". If the finger pointing at aic7xx is not
-> what you're implying, then this has been a waste of email bandwidth-
-> sorry.
+> The starvation I'm talking about is the drive starving requests. Just
+> keep it moderately busy (10-30 outstanding tags), and a read can take a
+> long time to complete.
 
-It's not aimed at any specific hba driver, it could be any. 253 would be
-over the top for any of them, it just so happens that aic7xxx has this
-as the default :-)
+As I tried to explain to Andrew just the other day, this is neither a
+drive nor HBA problem.  You've essentially constructed a benchmark where
+a single process can get so far ahead of the I/O subsystem in terms of
+buffered writes that there is no choice but for there to be a long delay
+for the device to handle your read.  Consider that because you are queuing,
+the drive will completely fill its cache with write data that is pending
+to hit the platters.  The number of transactions in the cache is marginally
+dependant on the number of tags in use since that will affect the ability
+of the controller to saturate the drive cache with write data.  Depending
+on your drive, mode page settings, etc, the drive may allow your read to
+pass the write, but many do not.  So you have to wait for the cache to
+at least have space to handle your read and perhaps have even additional
+write data flush before your read can even be started.  If you don't like
+this behavior, which actually maximizes the throughput of the device, have
+the I/O scheduler hold back a single processes from creating such a large
+backlog.  You can also read the SCSI spec and tune your disk to behave
+differently.
 
-So while it is definitely not the aic7xxx driver doing the starvation
-(it's the device), the aic7xxx driver is (_in my oppinion) somewhat at
-fault for setting it so high _as a default_.
+Now consider the read case.  I maintain that any reasonable drive will
+*always* outperform the OS's transaction reordering/elevator algorithms
+for seek reduction.  This is the whole point of having high tag depths.
+In all I/O studies that have been performed todate, reads far outnumber
+writes *unless* you are creating an ISO image on your disk.  In my opinion
+it is much more important to optimize for the more common, concurrent
+read case, than it is for the sequential write case with intermittent
+reads.  Of course, you can fix the latter case too without any change to
+the driver's queue depth as outlined above.  Why not have your cake and
+eat it too?
 
-Hopefully that's the end of this thread :)
-
--- 
-Jens Axboe
-
+--
+Justin
