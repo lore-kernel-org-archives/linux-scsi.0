@@ -1,37 +1,34 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [multipath] SCSI device capacity mess
-Date: 26 Oct 2004 17:34:33 -0400
+From: mikem <mikem@beardog.cca.cpqcorp.net>
+Subject: Re: [patch 1/2] cciss: cleans up warnings in the 32/64 bit conversions
+Date: Tue, 26 Oct 2004 16:44:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1098826481.2140.534.camel@mulgrave>
-References: <1098833278.4914.24.camel@zezette>
+Message-ID: <20041026214442.GA4837@beardog.cca.cpqcorp.net>
+References: <20041021211718.GA10462@beardog.cca.cpqcorp.net> <1098633262.10824.35.camel@mulgrave> <20041026194551.GA21003@beardog.cca.cpqcorp.net> <1098820685.2061.398.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:58306 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261494AbUJZVev (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Oct 2004 17:34:51 -0400
-In-Reply-To: <1098833278.4914.24.camel@zezette>
+Received: from zcamail05.zca.compaq.com ([161.114.32.105]:18187 "EHLO
+	zcamail05.zca.compaq.com") by vger.kernel.org with ESMTP
+	id S261485AbUJZVpH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Oct 2004 17:45:07 -0400
+Content-Disposition: inline
+In-Reply-To: <1098820685.2061.398.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: christophe varoqui <christophe.varoqui@free.fr>
-Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: marcelo.tosatti@cyclades.com, Jens Axboe <axboe@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-10-26 at 19:27, christophe varoqui wrote:
-> 1) make the /sys/block/*/size attribute writable
-> 2) resurrect a BLKSETSIZE ioctl
-> 3) make device-mapper less strict, and hope we can fix the size by a
-> device rescan when it get activated
-> 4) sell the culprit hardware
+On Tue, Oct 26, 2004 at 03:57:59PM -0400, James Bottomley wrote:
+> On Tue, 2004-10-26 at 15:45, mikem wrote:
+> > Which tree are you applying to? This was made from 2.4.28-pre4.
+> 
+> OK, you caught me ... trying to apply a 2.4 patch to a 2.6 tree.  I keep
+> forgetting that not all patches on linux-scsi are 2.6
+> 
+> James
 
-Only 3 & 4 look viable.  There's little point introducing an extra API
-or ioctl specifically to defeat a check, since the check will now be
-useless anyway.
+I should put the kernel version in the subject.
 
-The "random" value is 1GB by the way.  Since the dawn of time SCSI has
-reported this for devices that failed read capacity.
+mikem
 
-James
-
-
-
+> 
+> 
