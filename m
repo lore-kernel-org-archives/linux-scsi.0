@@ -1,66 +1,116 @@
-From: Willem Riede <wrlk@riede.org>
-Subject: Re: devices with more than one node
-Date: Sun, 18 Jan 2004 17:08:02 -0500
+From: "Kai Ruhnau" <kai@tragetaschen.dyndns.org>
+Subject: Re: Driver for Adaptec AHA-1530P
+Date: Sun, 18 Jan 2004 23:55:36 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040118220802.GA25501@linnie.riede.org>
-References: <20040113193842.GA29887@suse.de> <20040113194631.GA3818@kroah.com> <20040113211122.GA28100@suse.de> <20040113212058.GA2595@kroah.com> <20040113150147.A9902@beaverton.ibm.com> <20040113231813.GA7409@kroah.com> <1074042776.4004979822819@wwws.torque.net> <20040114030847.GG4339@linnie.riede.org> <4006499A.4070302@torque.net>
-Reply-To: wrlk@riede.org
+Message-ID: <028001c3de16$30c41730$060ba8c0@AldiP4>
+References: <Pine.LNX.4.44.0401162013440.6170-100000@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sccrmhc13.comcast.net ([204.127.202.64]:467 "EHLO
-	sccrmhc13.comcast.net") by vger.kernel.org with ESMTP
-	id S264238AbUARWIE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Jan 2004 17:08:04 -0500
-Content-Disposition: inline
-In-Reply-To: <4006499A.4070302@torque.net> (from dougg@torque.net on Thu, Jan 15, 2004 at 03:04:42 -0500)
+Received: from mailout03.sul.t-online.com ([194.25.134.81]:18115 "EHLO
+	mailout03.sul.t-online.com") by vger.kernel.org with ESMTP
+	id S264245AbUARWzy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 18 Jan 2004 17:55:54 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org, Kai.Makisara@kolumbus.fi
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: linux-scsi@vger.kernel.org
 
-On 2004.01.15 03:04, Douglas Gilbert wrote:
-> 
-> To test it I modded scsi_debug to fake OnStream tape
-> drives and ran a 2.6.1-mm2 kernel. The attached
-> output of "cd /sys/class; tree scsi* osst" is instructive.
-> Two peculiar entries are:
->      scsi_generic/sg0/driver -> ../../../bus/scsi/drivers/osst
->      scsi_generic/sg1/driver -> ../../../bus/scsi/drivers/osst
-> 
-> This symlink only appears if the osst driver is loaded
-> _before_ the sg driver! It is also left dangling by
-> "rmmod osst". 
+Guennadi Liakhovetski wrote:
+> Ok, as I suspected, resourse-conflict. You have PNP, but the AHA-card is
+> not PNP. So, looks like the right thing to do would be just to make the
+> error in case of busy io-region more explicite. But the proper fix should
+> also, of course, replace check_region with request_region. Perhaps,
+> something like what's attached below. Sould you, please, test? It
+> compiles:-) It should just fail nicely if request_region() fails, and work
+> otherwise. It is against 2.6.0.
+>
+[patch]
 
-I see the same with real OnStream tape drives.
-It appears that when an upper level driver like osst is
-(un)loaded, your (sg) attach doesn't get a chance to
-reconsider...
+Hi,
 
-By the way, I notice that st produces links in scsi_device
-that osst doesn't - 0:0:3:0 and 3:0:0:0 are OnStream drives:
+I integrated the patch and changed drivers/pnp/isapnp/core.c to switch
+'isapnp_reset' permanently to 0 (If I don't do this, I get "No such device"
+on module-load). When I load the aha152x.ko I get a kernel-oops (I'm sorry,
+but the first three lines and everything before that get lost)[1].
+If I compile aha152x in, I guess, it is the same oops (but I didn't copy it
+yet).
+But the kernel also oopses, when I use the original aha152x.c.
 
-scsi_device
-|-- 0:0:3:0
-|   `-- device -> ../../../devices/pci0000:00/0000:00:0e.0/host0/0:0:3:0
-|-- 0:0:6:0
-|   `-- device -> ../../../devices/pci0000:00/0000:00:0e.0/host0/0:0:6:0
-|-- 1:0:0:0
-|   |-- device -> ../../../devices/pci0000:00/0000:00:0e.1/host1/1:0:0:0
-|   `-- driver -> ../../../bus/scsi/drivers/sd
-|-- 1:0:1:0
-|   |-- device -> ../../../devices/pci0000:00/0000:00:0e.1/host1/1:0:1:0
-|   `-- driver -> ../../../bus/scsi/drivers/sd
-|-- 2:0:0:0
-|   |-- device -> ../../../devices/pci0000:00/0000:00:07.1/ide0/0.1/host2/2:0:0:0
-|   `-- driver -> ../../../bus/scsi/drivers/st
-|-- 3:0:0:0
-|   `-- device -> ../../../devices/pci0000:00/0000:00:07.1/ide1/1.0/host3/3:0:0:0
-`-- 4:0:0:0
-    |-- device -> ../../../devices/pci0000:00/0000:00:07.1/ide1/1.1/host4/4:0:0:0
-    `-- driver -> ../../../bus/scsi/drivers/st
+HTH
+Greetings
+Kai
 
-Should I emulate what st does to create these entries?
+[1]
+ksymoops 2.4.9 on i586 2.4.22-gentoo-r2.  Options used
+     -v /usr/src/linux-2.6.0-gentoo/vmlinux (specified)
+     -K (specified)
+     -l /proc/modules (default)
+     -o /lib/modules/2.6.0-gentoo/ (specified)
+     -m /usr/src/linux-2.6.0-gentoo/System.map (specified)
 
-Thanks, Willem Riede.
+No modules in ksyms, skipping objects
+No ksyms, skipping lsmod
+EIP: 0060:[<c880f022>] Not tainted
+Using defaults from ksymoops -t elf32-i386 -a i386
+EFLAGS: 00010086
+eax: c797a800 ebx: c797da00 ecx: c797bce0 edx: 0000001b
+esi: c797a800 edi: c7fc6000 ebp: 00000246 esp: c7fc7f2c
+ds: 007b es: 007b ss: 0068
+Stack: c797bce0 00000002 c797a800 00000008 00000001 00000000 c88113d3
+c797a800
+       fffbdd99 00000000 c8816720 00000000 c7ffdc20 c880ebb0 c797a800
+00000000
+       c0129db1 00000000 c7ffdc30 c7ffdc38 c7fc6000 c7fc6000 c7fc6000
+c7fc6000
+Call Trace:
+ [<c88113d3>] is_complete+0x2d3/0x320 [aha152x]
+ [<c880ebb0>] run+0x30/0x40 [aha152x]
+ [<c0129db1>] worker_thread+0x1e1/0x2d0
+ [<c880eb80>] run+0x0/0x40 [aha152x]
+ [<c0117d30>] default_wake_function+0x0/0x20
+ [<c010aa76>] ret_from_fork+0x6/0x20
+ [<c0117d30>] default_wake_function+0x0/0x20
+ [<c0129bd0>] worker_thread+0x0/0x2d0
+ [<c0108be5>] kernel_thread_helper+0x5/0x10
+Code: 89 02 8b 41 04 8b 53 04 8b 40 3c 89 42 3c 8b 41 04 8b 53 04
+
+
+>>EIP; c880f022 <_end+84d5872/3fcc4850>   <=====
+
+>>eax; c797a800 <_end+7641050/3fcc4850>
+>>ebx; c797da00 <_end+7644250/3fcc4850>
+>>ecx; c797bce0 <_end+7642530/3fcc4850>
+>>esi; c797a800 <_end+7641050/3fcc4850>
+>>edi; c7fc6000 <_end+7c8c850/3fcc4850>
+>>esp; c7fc7f2c <_end+7c8e77c/3fcc4850>
+
+Trace; c88113d3 <_end+84d7c23/3fcc4850>
+Trace; c880ebb0 <_end+84d5400/3fcc4850>
+Trace; c0129db1 <worker_thread+1e1/2d0>
+Trace; c880eb80 <_end+84d53d0/3fcc4850>
+Trace; c0117d30 <default_wake_function+0/20>
+Trace; c010aa76 <ret_from_fork+6/20>
+Trace; c0117d30 <default_wake_function+0/20>
+Trace; c0129bd0 <worker_thread+0/2d0>
+Trace; c0108be5 <kernel_thread_helper+5/10>
+
+Code;  c880f022 <_end+84d5872/3fcc4850>
+00000000 <_EIP>:
+Code;  c880f022 <_end+84d5872/3fcc4850>   <=====
+   0:   89 02                     mov    %eax,(%edx)   <=====
+Code;  c880f024 <_end+84d5874/3fcc4850>
+   2:   8b 41 04                  mov    0x4(%ecx),%eax
+Code;  c880f027 <_end+84d5877/3fcc4850>
+   5:   8b 53 04                  mov    0x4(%ebx),%edx
+Code;  c880f02a <_end+84d587a/3fcc4850>
+   8:   8b 40 3c                  mov    0x3c(%eax),%eax
+Code;  c880f02d <_end+84d587d/3fcc4850>
+   b:   89 42 3c                  mov    %eax,0x3c(%edx)
+Code;  c880f030 <_end+84d5880/3fcc4850>
+   e:   8b 41 04                  mov    0x4(%ecx),%eax
+Code;  c880f033 <_end+84d5883/3fcc4850>
+  11:   8b 53 04                  mov    0x4(%ebx),%edx
+
 
