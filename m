@@ -1,72 +1,63 @@
-From: "Nicholas A. Bellinger" <nick@pyxtechnologies.com>
-Subject: [ANNOUNCE] iSCSI Initiator Core Stack v1.6.1.20
-Date: Wed, 23 Feb 2005 11:45:35 -0800
-Message-ID: <1109187935.15154.164.camel@haakon>
+From: Mike Christie <mikenc@us.ibm.com>
+Subject: Re: SCSI API generics (was Re: [PATCH] add block/unblock to iscsi
+ class)
+Date: Wed, 23 Feb 2005 11:55:26 -0800
+Message-ID: <421CDFAE.4090108@us.ibm.com>
+References: <421C3CA4.8070009@cs.wisc.edu> <20050223181705.GA8694@plap.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from smtp813.mail.sc5.yahoo.com ([66.163.170.83]:8843 "HELO
-	smtp813.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S261548AbVBWTst (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Feb 2005 14:48:49 -0500
+Received: from e33.co.us.ibm.com ([32.97.110.131]:24971 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S261553AbVBWTzY
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Feb 2005 14:55:24 -0500
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
+	by e33.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j1NJtL0D165238
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2005 14:55:21 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay05.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j1NJtLIv137008
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2005 12:55:21 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id j1NJtLpW009067
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Feb 2005 12:55:21 -0700
+In-Reply-To: <20050223181705.GA8694@plap.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, Mike Christie <mikenc@us.ibm.com>, Andre Hedrick <andre@pyxtechnologies.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-The following is the first public release of the PyX Technologies iSCSI
-Initiator Core Stack v1.6.1.20 for Linux 2.6.11-rc4.  This is a full
-featured iSCSI Initiator stack that is capable of mulitplexing coast to
-coast across multiple independant backbone providers using various
-network transports _TODAY_.  This is the first release of the core stack
-and assoicated userspace tools, the accompanying authentication daemon
-will be released shortly.
+Andrew Vasquez wrote:
+> On Wed, 23 Feb 2005, Mike Christie wrote:
+> 
+> 
+>>The attached patch copies the code from the fc transport
+>>class which allows a LLD to block and unblock a device.
+>>The block/unblock code is used by the iscsi-sfnet
+>>driver in replacement of a internal timer doing the
+>>same thing.
+>>
+>>I understand that the target code is under construction
+>>and our group as well as the HW iSCSI guys are trying to move
+>>to something closer to the fc's rport model, so I was not
+>>sure if it is better to wait or get this basic functionality in
+>>first so we (and other SW and HW iSCSI drivers) can kill some
+>>of our duplicated code sooner and then incrementally update
+>>the class.
+>>
+> 
+> 
+> Speaking of which, are there any major objections to the patches
+> proposed here:
+> 
+> Add scsi_target_[un]block() and scsi_target_remove() generics
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=110867050306738&w=2
+> 
+> [RFC] adding per scsi-host workqueues for defered processing
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=110903148407438&w=2
+> 
 
-There is ongoing work in taking advantage of the very latest 2.6
-kernel's SCSI functionality, namely drivers/scsi/scsi_transport_iscsi.c.
-The near term work for the iSCSI Initiator Core Stack includes taking
-advantage of these new abstractions in scsi_transport_scsi.c in a manner
-to reduce code duplication across the iSCSI Initiator Core Stack and
-linux-sfnet implementations.  An initial patch to scsi_transport_scsi.c
-will be provided in order stay in line with the iSCSI Session/Connection
-contexts definied in section 12 of RFC 3720.  Additionally this patch
-will add initial support for iSCSI Extentions for RDMA (iSER)
-optertional keys in order to help facilitate development of iSCSI with
-RDMA Capable Protocols (RCP) in the Linux 2.6 environment.
-
-The patch against 2.6.11-rc4 in diff format can be found at:
-
-http://www.kernel.org/pub/linux/kernel/people/nab/iscsi-initiator-core
-
-The assoicated userspace tools and documentation:
-
-http://www.kernel.org/pub/linux/utils/storage/iscsi
-
-For more information on the Internet Small Computer Systems Interface
-(iSCSI) standard, please see:
-
-http://www.ietf.org/rfc/rfc3720.txt
-
-The iSCSI Initiator Core Stack contains, but is not limited to the
-following features:
-
-1) Full support for Internet Small Computer Systems Interface (iSCSI)
-state machine as defined by RFC 3720.
-2) Full support for ErrorRecoveryLevel=0 feature set as defined for RFC
-3720.
-3) Full support for Multiple Connections per Session that can be brought
-up and down on the fly.
-4) Full support for DataPDUInOrder=No, DataSequenceInOrder=No,
-MaxOutstandingR2T>1.
-5) Full support for Sync and Steering using Fixed Interval Markers. (See
-RFC 3720 Appendix A)
-6) Full support for TCP and SCTP network transports.
-7) Robust set of iSCSI Channel management options for iSCSI SAN
-Administrators.
-8) Tested on UP/SMP 32/64-bit Big/Little Endian architectures.
-
-
--- 
-Nicholas A. Bellinger <nick@pyxtechnologies.com>
-Chief Architect, PyX Technologies, Inc.
+When using single_threaded_workqueues do all single threaded ones
+in the system use the same cpu_workqueue_struct? Will this be
+a potential bottleneck if we end up using the workqueue for more
+operations in the future?
 
