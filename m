@@ -1,55 +1,45 @@
-From: "Gibbons, Terry" <Terry.Gibbons@lsil.com>
-Subject: RE: [PATCH] fusion: streamline ->queuecommand
-Date: Wed, 6 Oct 2004 08:46:11 -0600
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <BC3CE0375D29D51199A400508B66CA6C0862AEFF@exc-snake.co.lsil.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:42457 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S269273AbUJFOsK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Oct 2004 10:48:10 -0400
-List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "'arjanv@redhat.com'" <arjanv@redhat.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "Moore, Eric Dean" <Emoore@lsil.com>, "Stephens, Larry" <larry.stephens@lsil.com>, "Shirron, Stephen" <Stephen.Shirron@lsil.com>, Matthew Wilcox <matthew@wil.cx>, SCSI Mailing List <linux-scsi@vger.kernel.org>
-
-Cristoph, Matthew,
-
-I agree that I really shouldn't be on this thread. I am not a Linux expert
-and I haven't read this code.
-
-I was copied because the very people that will resolve the issue, namely
-Eric and Larry, included me as to bring support to their position that they
-have a BIG problem and solutions aren't being mutually agreed upon.
-
-Therefore, I'm the one chosen to take the unpopular stance of challenging
-the status quo and asking for solutions as opposed to pushback on every
-stance LSI has put forth.
-
-Terry
-
------Original Message-----
-From: Christoph Hellwig [mailto:hch@lst.de]
-Sent: Wednesday, October 06, 2004 8:30 AM
-To: Gibbons, Terry
-Cc: 'arjanv@redhat.com'; 'James Bottomley'; Moore, Eric Dean; Stephens,
-Larry; Shirron, Stephen; Matthew Wilcox; SCSI Mailing List
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [PATCH] fusion: streamline ->queuecommand
+Date: Wed, 6 Oct 2004 15:58:21 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20041006145821.GD16153@parcelfarce.linux.theplanet.co.uk>
+References: <BC3CE0375D29D51199A400508B66CA6C0862AEFF@exc-snake.co.lsil.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:30088 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S269277AbUJFO62
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Oct 2004 10:58:28 -0400
+Content-Disposition: inline
+In-Reply-To: <BC3CE0375D29D51199A400508B66CA6C0862AEFF@exc-snake.co.lsil.com>
+List-Id: linux-scsi@vger.kernel.org
+To: "Gibbons, Terry" <Terry.Gibbons@lsil.com>
+Cc: Christoph Hellwig <hch@lst.de>, "'arjanv@redhat.com'" <arjanv@redhat.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "Moore, Eric Dean" <Emoore@lsil.com>, "Stephens, Larry" <larry.stephens@lsil.com>, "Shirron, Stephen" <Stephen.Shirron@lsil.com>, Matthew Wilcox <matthew@wil.cx>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+On Wed, Oct 06, 2004 at 08:46:11AM -0600, Gibbons, Terry wrote:
+> I was copied because the very people that will resolve the issue, namely
+> Eric and Larry, included me as to bring support to their position that they
+> have a BIG problem and solutions aren't being mutually agreed upon.
+> 
+> Therefore, I'm the one chosen to take the unpopular stance of challenging
+> the status quo and asking for solutions as opposed to pushback on every
+> stance LSI has put forth.
 
-On Wed, Oct 06, 2004 at 08:23:23AM -0600, Gibbons, Terry wrote:
-> I stand corrected. Our customers will force driver patches through Red Hat
-> and SuSE. They buy these products and keep Linux distributors in business.
-> Do you expect our customers to take huge hits to their bottom line because
-> DV will no longer execute properly on LSI devices?
+All I said was:
 
-You're totally missing the point.  No one wants to remove DV
-functionality.  We want a single implementation of the DV mechanism in
-the SPI transport class instead of various buggy copies in individual
-drivers.
+> Of course, at some point, Fusion should be switched over to use the
+> scsi_transport_spi domain validation code ... not urgent, just an
+> item for the long-term todo list.
 
-No may I kindly suggest that you stop trolling on this list and let your
-staff handle this issue.  I'm pretty sure we can work out a solution
-that suits everyone with Eric if we get the nonsensical managment issues
-out of the loop.
+I see the remainder of the thread as being pushback from _LSI_ on the
+direction that the rest of the SCSI people have decided to go.
+If you're not part of the solution ...
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
