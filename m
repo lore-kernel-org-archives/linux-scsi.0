@@ -1,99 +1,53 @@
-From: Jin Suh <jinssuh@yahoo.com>
-Subject: Re: [2.4.25] scsi29160 card-aic7xxx, HP Ultrium 230 tape read/write failure
-Date: Tue, 24 Feb 2004 11:46:28 -0800 (PST)
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: Re: [PATCH][BUGFIX] : megaraid patch for 2.10.1 (irq disable bug fix)
+Date: Tue, 24 Feb 2004 14:33:58 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040224194628.46548.qmail@web41211.mail.yahoo.com>
-References: <Pine.LNX.4.58L.0402241729080.23951@logos.cnet>
+Message-ID: <20040224143358.A18783@lists.us.dell.com>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BC3D9@exa-atlanta.se.lsil.com> <1077635204.2152.16.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web41211.mail.yahoo.com ([66.218.93.44]:20593 "HELO
-	web41211.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S262413AbUBXTq3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2004 14:46:29 -0500
-In-Reply-To: <Pine.LNX.4.58L.0402241729080.23951@logos.cnet>
+Received: from lists.us.dell.com ([143.166.224.162]:50344 "EHLO
+	lists.us.dell.com") by vger.kernel.org with ESMTP id S262443AbUBXUeE
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Feb 2004 15:34:04 -0500
+Content-Disposition: inline
+In-Reply-To: <1077635204.2152.16.camel@mulgrave>; from James.Bottomley@steeleye.com on Tue, Feb 24, 2004 at 09:06:43AM -0600
 List-Id: linux-scsi@vger.kernel.org
-To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: "Mukker, Atul" <Atulm@lsil.com>, 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-It appears to be my mistake. At first, I doubt my terminator but I had it on
-the back of the drive. I fixed it again and switched the scsi cable. It worked
-OK. Sorry for the interruptions. 
-Now, I have another problem. I am still using the 2.4.25 kernel with HP Ultrium
-230 scsi tape drive. Could you take a look at the following:
+On Tue, Feb 24, 2004 at 09:06:43AM -0600, James Bottomley wrote:
+> On Tue, 2004-02-24 at 08:47, Mukker, Atul wrote:
+> > We are in process of releasing a unified driver, which will natively support
+> > the 2.4.x and 2.6.x kernels. 
+> 
+> I really don't think this will be such a good idea since you don't
+> currently have a unified driver.  2.4 is approaching end of life as far
+> as major driver updates go and the 2.6 APIs are quite a bit different. 
+> You'll find it's a lot of work for a driver that will carry you at most
+> six months before the distributions all switch to 2.6 and you find the
+> 2.4 compatibility layer to be more of a hindrance than a help.
 
-st0: Error with sense data: Current st09:00: sns = 70  5
-ASC=53 ASCQ= 2
-Raw sense data:0x70 0x00 0x05 0x00 0x00 0x00 0x00 0x0e 0x00 0x00 0x00 0x00 0x53
-0x02 0x00 0x00 0x1c 0x01 0x00 0x00 0x00 0x00 
-scsi0: Someone reset channel A
+Distributions with 2.4 kernels will continue to live on for quite a
+while. Red Hat Enterprise Linux has a 5-year support life, during
+which we would expect LSI to release new hardware, and we would want
+to be able to have that hardware work on that OS somehow.  The driver
+source for 2.4 and 2.6 need not be identical, but there *will* be
+ongoing maintenance for drivers on 2.4 kernels for the next several
+years.  We're <6 months into the RHEL3 supported lifetime.
 
-I didn't touch any cable or drive. I got this message. I tested my tape drive
-and it worked fine. Do you have any idea what is going on?
+While I understand the concerns with keeping 2.4 and 2.6 drivers
+separate, we can't ignore the maintenance for 2.4 drivers.  If that's
+done on a 2.4-only stream, or cleanly with a joint 2.4/2.6 driver, I
+don't care, but agree it's difficult to do a clean joint driver,
+especially with all the SCSI subsystem changes.
 
 Thanks,
-Jin
+Matt
 
---- Marcelo Tosatti <marcelo.tosatti@cyclades.com> wrote:
-> 
-> 
-> On Tue, 24 Feb 2004, Jin Suh wrote:
-> 
-> > Hello,
-> >
-> > I recently upgraded my kernel to 2.4.25. I have a strange error using
-> 2.4.25
-> > with Ultrium 230 tape drive. I wrote 4gb data unto the tape and read back
-> to
-> > verify md5sum value. It died when it read around 1.3gb data from tape
-> saying
-> > following:
-> >
-> > (scsi0:A:3:0): parity error detected in Data-in phase. SEQADDR(0x84)
-> > SCSIRATE(0x98)
-> > (scsi0:A:3:0): Unexpected busfree in Message-out phase
-> > SEQADDR == 0x16b
-> > st0: Error 70000 (sugg. bt 0x0, driver bt 0x0, host bt 0x7).
-> > st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
-> > st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
-> > st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
-> > st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
-> > st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
-> > st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
-> > st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
-> > st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
-> > st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
-> > st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
-> > st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
-> > ........
-> >
-> > When I tried to read it again using:
-> > dd if=/dev/st0 bs=1024 conv=noerror,sync | md5sum
-> >
-> > I got the following:
-> > st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
-> > dd: opening '/dev/st0': Input/Output error
-> >
-> > I tested the same thing unto the HP Exabyte and HP SuperStore DAT24. Both
-> > worked without problems. But it happened on the HP Ultrium 230 tape drive.
-> > Everything used to work fine with 2.4.20 kernel before. Is there any patch
-> for
-> > 2.4.25? Do you have any idea?
-> 
-> Hi Jin,
-> 
-> CCing linux-scsi to get more input.
-> 
-> I dont have much clues unfortunately -- reading the SCSI error messages it
-> looks like a parity error.
-> 
-> Can you try 2.4.20 again? Find out where this problem started.
-> 
-> It might be a physical drive problem too which was not failing when you
-> ran 2.4.20.
-
-
-__________________________________
-Do you Yahoo!?
-Yahoo! Mail SpamGuard - Read only the mail you want.
-http://antispam.yahoo.com/tools
+-- 
+Matt Domsch
+Sr. Software Engineer, Lead Engineer
+Dell Linux Solutions linux.dell.com & www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
