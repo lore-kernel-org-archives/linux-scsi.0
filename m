@@ -1,73 +1,53 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: compile warning fix for advansys (trivial)
-Date: Sun, 21 Dec 2003 22:40:49 +0100 (CET)
+From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
+Subject: Re: SCSI regression: sym53c8xxx_2 (2.6test11 vs. 2.6final)
+Date: Mon, 22 Dec 2003 02:27:03 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0312212237460.2348-100000@poirot.grange>
+Message-ID: <m3y8t5r6ag.fsf@merlin.emma.line.org>
+References: <200312190923.57405.tom@qwws.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:28860 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S264142AbTLUVla (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 Dec 2003 16:41:30 -0500
-Received: from lyakh (helo=localhost)
-	by poirot.grange with local-esmtp (Exim 3.35 #1 (Debian))
-	id 1AYBJh-0000cI-00
-	for <linux-scsi@vger.kernel.org>; Sun, 21 Dec 2003 22:40:49 +0100
+Received: from krusty.dt.E-Technik.Uni-Dortmund.DE ([129.217.163.1]:23483 "EHLO
+	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
+	id S264289AbTLVB1H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 21 Dec 2003 20:27:07 -0500
+Received: from m2a2.dyndns.org (krusty.dt.e-technik.uni-dortmund.de [129.217.163.1])
+	by mail.dt.e-technik.uni-dortmund.de (Postfix) with ESMTP id 96F3D174ED
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Dec 2003 02:27:05 +0100 (CET)
+In-Reply-To: <200312190923.57405.tom@qwws.net> (Tom Winkler's message of
+ "Fri, 19 Dec 2003 09:23:57 +0100")
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: tom@qwws.net
+Cc: linux-scsi@vger.kernel.org
 
-Hi
+Tom Winkler writes:
 
-This was earlier sent with a pretty masking subject to LKML, so, in case,
-it wasn't noticed by those, who collect stuff for 2.6.1+, here it is
-again.
+> First of all: I'm not subscribed to the list so please cc me on replies.
 
-On Fri, 19 Dec 2003, Gene Heskett wrote:
+[x] done
 
-> Hey, how about us advansis users?  There is at least one, me...  And
-> thats the only driver in the whole compile that spits out visible
-> warnings about check_region() being deprecated.  But its still
-> working, so far.  I presume it will until such time as check_region()
-> is actually removed from wherever it lives.
+> I wanted to report a problem concerning 2.6.0 final with my Tekram DC390U2W
+> SCSI controller using the sym53c8xx_2 driver. The same machine was running
+> without problems with 2.6test11 and the exactly same .config file.
+>
+> Booting 2.6.0 final results in the following messages:
+>
+> [...]
+> sym0: <895> rev 0x1 at pci 0000:02:0a.0 irq 22
+> sym0: Tekram NVRAM, ID 7, Fast-40, LVD, parity checking
+> sym0: SCSI BUS has been reset.
+> scsi0: sym-2.1.18b
+> sym0:0:0: ABORT operation started.
+> sym0:0:0: ABORT oberation timed-out.
 
-Well, wouldn't it suffice just to remove the deprecated checks? The only
-(for recent kernels) request_region() does check the return code. So, this
-should do:
+FWIW, my Symbios 53C875 based Tekram DC-390F is fine with that driver
+with Linux 2.6.0 test11 and final, and AFAICS, the driver hasn't changed
+between these versions.
 
---- drivers/scsi/advansys.c~	Mon Nov 24 20:43:42 2003
-+++ drivers/scsi/advansys.c	Sat Dec 20 15:34:00 2003
-@@ -4619,13 +4619,7 @@
-                         ASC_DBG1(1,
-                                 "advansys_detect: probing I/O port 0x%x...\n",
-                             iop);
--                        if (check_region(iop, ASC_IOADR_GAP) != 0) {
--                            printk(
--"AdvanSys SCSI: specified I/O Port 0x%X is busy\n", iop);
--                            /* Don't try this I/O port twice. */
--                            asc_ioport[ioport] = 0;
--                            goto ioport_try_again;
--                        } else if (AscFindSignature(iop) == ASC_FALSE) {
-+			if (AscFindSignature(iop) == ASC_FALSE) {
-                             printk(
- "AdvanSys SCSI: specified I/O Port 0x%X has no adapter\n", iop);
-                             /* Don't try this I/O port twice. */
-@@ -10003,12 +9997,6 @@
-     }
-     for (; i < ASC_IOADR_TABLE_MAX_IX; i++) {
-         iop_base = _asc_def_iop_base[i];
--        if (check_region(iop_base, ASC_IOADR_GAP) != 0) {
--            ASC_DBG1(1,
--               "AscSearchIOPortAddr11: check_region() failed I/O port 0x%x\n",
--                     iop_base);
--            continue;
--        }
-         ASC_DBG1(1, "AscSearchIOPortAddr11: probing I/O port 0x%x\n", iop_base);
-         if (AscFindSignature(iop_base)) {
-             return (iop_base);
+Does running "make clean" or saving the .config and "make distclean"
+before the build of 2.6.0 final help?
 
-Regards
-Guennadi
----
-Guennadi Liakhovetski
+-- 
+Matthias Andree
 
+Encrypt your mail: my GnuPG key ID is 0x052E7D95
