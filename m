@@ -1,56 +1,47 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [usb-storage] Re: [PATCH] SCSI: limit mode sense usage
-Date: Wed, 29 Oct 2003 10:16:46 -0500 (EST)
+Subject: Re: [linux-usb-devel] usb-storage / scsi : new scsi host on each
+ plug
+Date: Wed, 29 Oct 2003 10:24:34 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0310291010090.874-100000@ida.rowland.org>
-References: <20031028232154.A15780@beaverton.ibm.com>
+Message-ID: <Pine.LNX.4.44L0.0310291020430.874-100000@ida.rowland.org>
+References: <E1AEoQX-0005kQ-Cz@mail.holoclan.de>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:6404 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S261659AbTJ2PQq (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:9220 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S261743AbTJ2PYe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2003 10:16:46 -0500
-In-Reply-To: <20031028232154.A15780@beaverton.ibm.com>
+	Wed, 29 Oct 2003 10:24:34 -0500
+In-Reply-To: <E1AEoQX-0005kQ-Cz@mail.holoclan.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Ronald Kuetemeier <ronald@kuetemeier.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@one-eyed-alien.net>
+To: martin@lorenz.eu.org
+Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, 28 Oct 2003, Patrick Mansfield wrote:
+On Wed, 29 Oct 2003 martin@lorenz.eu.org wrote:
 
-> On Tue, Oct 28, 2003 at 05:51:57PM -0800, Patrick Mansfield wrote:
+> Dear friends in the C-Source,
 > 
-> > I think the sdev->changed is getting set, causing the read command
-> > (sd_init_command fails) to fail.
-> > 
-> > I'll look more tomorrow. If anyone figures out or knows the sdev->changed
-> > code please post.
+> I am currently setting up my new toy, a Sharp PC-MM10, 
+> banning the preinstalled XP and using a real System...
 > 
-> If we get ILLEGAL REQUEST for the TEST UNIT READY via scsi_ioctl in the
-> sd_media_changed, the sdev->changed will be set. So that explains the
-> failure of the sd_init_command (on READ), given the the TEST UNIT READY is
-> getting one (Invalid Command status).
+> I compiled a 2.6.0-test9 kernel with USB compiled in or as module (same thing happens) and I experience the following problem:
 > 
-> So (still) why the odd result of the TEST UNIT READY? 
-
-I believe that's a quirk of the device, perhaps related to the problem
-that caused it to mess up the MODE-SENSE(10) for page 3F.  Apparently it
-isn't clearing the sense information when it receives the TEST-UNIT-READY
-command.  Or maybe it isn't understanding that command at all and is
-really replying with the sense data for the previous MODE-SENSE(10).  This 
-device uses the CB transport protocol, which is extremely nonrobust as 
-regards delimiting commands and matching commands with status.
-
-Anyway, as we saw in the successful log this problem goes away when we
-don't ask for page 3F.
-
-> And why so many apparent open's?
+> no matter which USB-storage-device I attach (tried CD-ROM, 
+> Flash Card Reader and memory stick) I get a new scsi host
+> every time i plug a device in.
 > 
-> If USB code is OK, and we can't detect and fix anything in USB, one patch
-> (hack) might be to treat an ILLEGAL REQUEST with TEST UNIT READY as a
-> retry case in scsi_decide_disposition, since that is generally impossible.
+> so when changing devices for several times I finally end up
+> with /dev/scsi/host0 to 17 or more (diden't go on)
+> 
+> I would like to provide more debug information and also help digging down the problem. I just need a hint, where to start searching. Is it the SCSI-driver, is it usb-storage or anywhere else?
+> 
+> greets and thanks
+> martin
 
-That sounds like a reasonable thing to add in.
+This is a SCSI issue, not a USB one.  Maybe someone on the 
+SCSI development list can enlighten us.  As far as I can tell, the host 
+number is simply incremented every time a new host, of whatever sort, is 
+added.  The numbers never get reused.
 
 Alan Stern
 
