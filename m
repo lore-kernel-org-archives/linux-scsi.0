@@ -1,115 +1,66 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH] scsi_debug 1.64 against 2.5.47
-Date: Mon, 11 Nov 2002 18:20:14 +1100
+From: Rolf Eike Beer <eike@bilbo.math.uni-mannheim.de>
+Subject: [PATCH 0/2] clean up scsi documentation
+Date: Mon, 11 Nov 2002 16:33:55 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DCF5A2E.70500@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <200211111633.55526@bilbo.math.uni-mannheim.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000603020408060504050205"
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: andmike@us.ibm.com
-Cc: patmans@us.ibm.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------000603020408060504050205
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Hi,
 
-This is essentially the same patch that I sent earlier
-today. The earlier patch will apply cleanly. However since
-the 'sscanf("-1", "%d", &i)' bug is fixed in lk 2.5.47,
-this attachment removes the work around.
+here are my patches to clean up the scsi documentation. It is split in three
+parts:
 
-lk 2.5.47 does not include the 'modprobe/rmmod' fixes from
-Patrick Mansfield sent last week. They apply cleanly to
-lk 2.5.47 and with them modprobe/rmmod cycles are stable
-with scsi_debug.
+0) Do the work. A small script that does the following things:
+-create Documentation/scsi/
+-move all the scsi documentation from Documentation/ and drivers/scsi/ to this
+location
+-kill ChangeLog.serverraid. It's a duplication from ChangeLog.ips but is
+missing some bits (got ok from maintainer to do this)
+-rename README.drivername to drivername.txt which is more common in
+Documentation/*
+NOTE: start this script on the top level of the source tree (/usr/src/linux or
+whereever you put it).
 
-Doug Gilbert
+1) Fix up references. A patch doing the following:
+-fix up all the references (hope I got them all)
+-introduce Documentation/scsi/00-INDEX
 
---------------000603020408060504050205
-Content-Type: application/x-gzip;
- name="scsi_debug_164_2547.diff.gz"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="scsi_debug_164_2547.diff.gz"
+2) Clean up. Just a bit cosmetics:
+-kill unneeded trailing new lines
+-kill one not-ascii character from FlashPoint.txt
+-kill unneeded patch instruction from cpqfc.txt: noone needs this because the
+driver is already in the kernel as everybody can see.
 
-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
---------------000603020408060504050205--
+Eike
 
+PS: please CC me, I'm not on this list and I'm only reading this via google
+sometimes.
+
+---------Here we go: the script----------
+#!/bin/bash
+
+mkdir -v Documentation/scsi
+mv -v drivers/scsi/README.* Documentation/scsi/
+rm -v drivers/scsi/ChangeLog.serverraid
+mv -v drivers/scsi/ChangeLog* Documentation/scsi/
+mv -v drivers/scsi/LICENSE.FlashPoint Documentation/scsi/
+mv -v drivers/scsi/aic7xxx_old/README.aic7xxx Documentation/scsi/aic7xxx_old.txt
+mv -v drivers/scsi/sym53c8xx_2/ChangeLog.txt Documentation/scsi/ChangeLog.sym53c8xx_2
+mv -v drivers/scsi/sym53c8xx_2/Documentation.txt Documentation/scsi/sym53c8xx_2.txt
+mv -v drivers/scsi/cpqfc.Readme Documentation/scsi/cpqfc.txt
+mv -v drivers/scsi/scsi_mid_low_api.txt Documentation/scsi/
+mv -v Documentation/scsi.txt Documentation/scsi/
+mv -v Documentation/scsi-generic.txt Documentation/scsi/
+mv -v Documentation/README.nsp_cs.eng Documentation/scsi/NinjaSCSI.txt
+cd Documentation/scsi
+for i in README.*; do
+ mv -v $i `echo $i| sed 's/README\.//'`.txt
+done
+cd ../..
+-----------------------------------------
