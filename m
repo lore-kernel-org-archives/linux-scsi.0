@@ -1,47 +1,63 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] tmscsim: remove internal waiting queue (draft)
-Date: Fri, 10 Sep 2004 14:29:53 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [RFTesters] Re: [PATCH] refactor tmscsim inititalization code
+Date: Fri, 10 Sep 2004 15:32:54 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040910142953.A24592@infradead.org>
-References: <Pine.LNX.4.60.0409040041030.5266@poirot.grange> <20040904141104.A15311@infradead.org> <Pine.LNX.4.60.0409062353100.7448@poirot.grange>
+Message-ID: <20040910133254.GB32530@lst.de>
+References: <20040904130235.GA20552@lst.de> <Pine.LNX.4.60.0409071040120.2966@poirot.grange>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imladris.demon.co.uk ([193.237.130.41]:16137 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S267408AbUIJNaB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Sep 2004 09:30:01 -0400
+Received: from verein.lst.de ([213.95.11.210]:3046 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S267405AbUIJNc4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Sep 2004 09:32:56 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.60.0409062353100.7448@poirot.grange>; from g.liakhovetski@gmx.de on Tue, Sep 07, 2004 at 12:12:11AM +0200
+In-Reply-To: <Pine.LNX.4.60.0409071040120.2966@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
 To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, Kurt Garloff <garloff@suse.de>, linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On Tue, Sep 07, 2004 at 12:12:11AM +0200, Guennadi Liakhovetski wrote:
-> Moving further in the order of patch submission:-)
+On Tue, Sep 07, 2004 at 05:29:43PM +0200, Guennadi Liakhovetski wrote:
+> Hi
 > 
-> On Sat, 4 Sep 2004, Christoph Hellwig wrote:
+> I've looked through the patch - I liked it! Still, I've got a few 
+> questions / remarks to this one.
 > 
-> > On Sat, Sep 04, 2004 at 12:48:01AM +0200, Guennadi Liakhovetski wrote:
-> >> Hello
-> >>
-> >> The attached patch __attempts__ to remove the internal "waiting" (issue)
-> >> queue, in favour of using the scsi mid-layer command queuing.
-> >>
-> >> I may very well imaging, that it is not perfeect, __please__, comment.
-> >>
-> >> I did test it (what a surprise for such a trivial patch:-)), it worked, I
-> >> even managed to hit that /* Arbitration lost but Reselection won */ case
-> >> several times under load, although, I still don't undresrtand how this
-> >> happens and what this means. An explanation would be appreciated.
-> >
-> > This one is definitly too complicated for just a quick look :)
-> > You'd make the review easier by splitting it up a little or at least
-> > remove the gratious reformating from this patch.
-> 
-> In the attached patch I removed all the reformatting. Applies on the top 
-> of the latest version of the bug #2139 fix (using the global black-list).
+> 1) My big problem with this patch is, that I don't have any AM53C7974 
+> based hardware with EEPROM, and you re-write the EEPROM handling 
+> functions. Although, it does look like you just inlined some of them and 
+> removed redundant code. Do you have the hardware to test it? If not - I 
+> guess, we'd have to ask for volunteers to test it. Your patch is a bit 
+> less than trivial:-) If nobody volunteers, well, I'll have to try to prove 
+> the equivalence myself:-)
 
-Looks good to me.  The only nitpick is that you opencode a freelist insert
-in ->queuecommand instead of using dc390_Free_insert.
+I'll do a new patch with that part excluded (and ontop of all the
+patches currently pending for tmscsim)
+
+> 2) I just realised - we have 2 possibilities to pass parameters to 
+> tmscsim, if it is compiled into the kernel - with tmscsim.tmscsim=... 
+> and with tmscsim=... I guess, breaking scripts by removing one of them now 
+> wouldn't be good... But we could put a warning printk() in dc390_setup 
+> "Deprecated! Use tmscsim.tmscsim=... This will be removed real soon 
+> now!\n" should we?
+
+I think we should deprecated both and use an easy to understand
+module_param-based interface.
+
+> 3) There's a typo:
+> 
+> >+static void __devinit dc390_eeprom_prepare_read(struct pci_dev *pdev, u8 
+> >cd)
+> 
+> should be
+> 
+> >+static void __devinit dc390_eeprom_prepare_read(struct pci_dev *pdev, u8 
+> >cmd)
+
+thanks.
+
+> 4) Against which kernel version is it? It did apply to some my version, 
+> but with some fuzz / offsets.
+
+I don't remember anymore, but I'll rediff anyway.
 
