@@ -1,25 +1,53 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] QStor SATA/RAID driver for 2.6.9-rc3
-Date: Thu, 07 Oct 2004 16:35:43 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <4165A89F.20900@pobox.com>
-References: <4161A06D.8010601@rtr.ca> <416547B6.5080505@rtr.ca> <20041007150709.B12688@infradead.org> <4165624C.5060405@rtr.ca> <416565DB.4050006@pobox.com> <4165A45D.2090200@rtr.ca>
+From: "K.R. Foley" <kr@cybsft.com>
+Subject: Re: 2.6.9-rc3-mm3 fails to detect aic7xxx
+Date: Thu, 07 Oct 2004 15:49:39 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <4165ABE3.8000504@cybsft.com>
+References: <1097178019.24355.39.camel@localhost>	<4165A369.60306@cybsft.com> <20041007133956.39c2427e.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S268136AbUJGUii@vger.kernel.org>
-In-Reply-To: <4165A45D.2090200@rtr.ca>
-To: Mark Lord <lsml@rtr.ca>
-Cc: Mark Lord <lkml@rtr.ca>, Christoph Hellwig <hch@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail4.utc.com ([192.249.46.193]:64195 "EHLO mail4.utc.com")
+	by vger.kernel.org with ESMTP id S269646AbUJGUuF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2004 16:50:05 -0400
+In-Reply-To: <20041007133956.39c2427e.akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: haveblue@us.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Maybe I can put it another way.
+Andrew Morton wrote:
+> "K.R. Foley" <kr@cybsft.com> wrote:
+> 
+>>Dave Hansen wrote:
+>>
+>>>I just booted 2.6.9-rc3-mm3 and got the good ol' 
+>>>
+>>>VFS: Cannot open root device "sda2" or unknown-block(0,0)
+>>>Please append a correct "root=" boot option
+>>>Kernel panic - not syncing: VFS: Unable to mount root fs on
+>>>unknown-block(0,0)
+>>>
+>>>backing out bk-scsi.patch seems to fix it.  I believe this worked in
+>>>2.6.9-rc3-mm2.
+>>>
+>>>-- Dave
+>>
+>>While I can't verify that backing out bk-scsi.patch fixes it for me yet, 
+>>I can verify that I get the exact same error trying to boot this kernel. 
+>>I too am using the aic7xxx.
+>>
+> 
+> 
+> Were some earlier messages printed out, during the scsi bringup stage?
+> 
+> A full dmesg dump would be nice.
+> 
 
-Without seeing the code that uses the hooks, we cannot evaluate whether 
-the hooks are needed, useful, or even properly implemented.  They are 
-unreviewable.
+Yes it would. Unfortunately I am not near the machine right now. I do 
+know that there is not much info being displayed prior to the failure 
+message listed above and I don't have a serial console on this system 
+currently. I will be glad to try to dig into it further when I get home 
+in a few hours.
 
-Does this same argument hold true for ioctls?  Yes.  But (as noted in 
-the previous email) ioctls and kernel API hooks are quite different.
-
-	Jeff
+kr
