@@ -1,79 +1,65 @@
-From: Luben Tuikov <luben@splentec.com>
+From: David Brownell <david-b@pacbell.net>
 Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Wed, 22 Jan 2003 16:50:11 -0500
+Date: Wed, 22 Jan 2003 13:30:12 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E2F1213.8090400@splentec.com>
-References: <Pine.LNX.4.44L0.0301211546410.6926-100000@ida.rowland.org>
+Message-ID: <3E2F0D64.3070609@pacbell.net>
+References: <10426732153816@kroah.com> <200301210000.24705.oliver@neukum.name>
+ <3E2C97D7.1070406@pacbell.net> <200301210150.55286.oliver@neukum.name>
+ <3E2D8E78.4050405@splentec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pacbell.net ([67.118.247.16])
+ by mta6.snfc21.pbi.net (iPlanet Messaging Server 5.1 HotFix 1.6 (built Oct 18
+ 2002)) with ESMTP id <0H94008JCYYIED@mta6.snfc21.pbi.net> for
+ linux-scsi@vger.kernel.org; Wed, 22 Jan 2003 14:11:11 -0800 (PST)
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Oliver Neukum <oliver@neukum.name>, David Brownell <david-b@pacbell.net>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben@splentec.com>
+Cc: Oliver Neukum <oliver@neukum.name>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Alan Stern wrote:
-> Here's another question to add to your discussion.
+Luben Tuikov wrote:
 > 
-> When a device is unplugged, the system's representation of that device
-> can't be removed immediately; there may be open fd's, mounts, pointers,
-> and so on.  Until the time comes when all these handles are released, all
-> interaction with the device has to fail, one way or another.
+> When the Low Level Device Driver (LLDD), being the transport portal,
+> notices that the device is going away or has gone away from the
+> ``fabric'' (wlg), it will fire a device-gone event with the kernel.
+> *Not* necessarily with SCSI Core, in fact I'd rather it didn't,
+> but with a well defined kernel entry for device-gone events.
 > 
-> Whose responsibility is it to fail these interactions?
+> At the same time the LLDD will start returning TARGET gone, or
+> whatever is appropriate to newly queued commands, and error out
+> all internally queued commands (if it does it's own queuing).
+> (I've seen this work nicely on mount and read/write(2) and fsck.)
+> 
+> I.e. the ``synchronization'' has started already by the LLDD erroring
+> out commands, new and queued.
 
-The transport.
+This model I like, though FWIW the USB code has pretty messy
+handling of the (a) cancel queued requests and (b) reject new
+requests parts of that model.  All the updates to handle that
+would be transparent to device drivers (other than HCDs); we've
+discussed it a bit.
 
-When a device is plugged to the SAN/fabric (wlg) it may not be the case
-that all initiators will know about it.  For this reason the transport
-itself, not SCSI Core, not LLDD*, will decide if the CDB is deliverable.
 
-* An LLDD may keep a table of seen devices (depending on the transport
-it provides a portal to), and thus the decision may be made there, but
-this doesn't have to be the case.
+> All the while the kernel has started higher level cleaning up,
+> decrementing ref counts, etc, 
 
-(Just think of SANs/IP SANs.)
+... Invoking some hotplug event that might unmount filesystems,
+so _all_ relevant kernel state can be cleaned up ...
 
-> For something simple, like a USB serial port, it might turn out that the 
-> low-level device driver gets all these requests and then fails them.  That 
-> means the driver has to keep track of the fact that the device is no 
-> longer connected until some reference count goes to 0.
 
-A LLDD doesn't have to keep reference counts.  In the simple case
-you mention above, it will check that the device is no longer reachable
-and will return TARGET error, which will bubble up the layers, or the
-Execute Command remote procedure will end with Service Delivery Failure
-as the Service Response -- exactly the same effect as far as SCSI Core
-is concerned.
+> But there's no such thing as ``waiting around indefinitely'' or
+> ``blocking wait'' as you've suggested in some of your emails.
 
-The Service Response is Service Delivery Failure, in which case the
-Status byte is undefined.
+Right.  Though I can wish the driver model core actually used
+its "enum device_state" and had an instance variable of that
+type in "struct device".  That'd help the bus level driver
+(for SCSI, an LLDD or LLD; for USB, an HCD) with (a) and (b).
 
-I've been wanting to include a Service Response into scsi_cmnd and
-rename ``result'' into ``status'' to be closer to the SCSI Architecure,
-for some time now, but we'll see when this will happen.
+The "no waiting indefinitely" is in part that because knowing
+both (a) and (b) happen means you know the device quiesces.
 
-Newer drivers will make use of Service Response code, and be able to
-address only by (target, lun) rather than (bus, target, lun), and
-target may not be an int anymore.  But this is 2.7 stuff, or maybe
-a separately distributed SCSI Core and LLDDs subsystem...
-
-> For SCSI and emulated SCSI devices, it might be the one of the SCSI layers 
-> that keeps track of the fact that the device has disconnected.  Or it 
-> might be somewhere else in the kernel.
-
-Right.  For this reason I'm thinking that a higher level hook on device
-disconnect (if reported by the transport) might be needed.  This doesn't
-mean that it has to do higher-level things, :-) , it might just call
-SCSI Core, but as long as it goes through a higher layer.
-
-> It would nice to have some sort of coherent plan for how to handle this.  
-> In fact, it ought to be part of the device-driver model that underlies 
-> sysfs.  But so far as I am aware, there is currently nothing in the sysfs 
-> documentation to address the problem.
-
--- 
-Luben
+- Dave
 
 
 
