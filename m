@@ -1,55 +1,48 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Mike Anderson <andmike@us.ibm.com>
 Subject: Re: [linux-usb-devel] BUG when removing USB flash drive
-Date: Thu, 13 May 2004 23:11:01 -0400 (EDT)
+Date: Thu, 13 May 2004 22:36:23 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0405132305400.32262-100000@netrider.rowland.org>
-References: <20040514004132.GA10537@telpin.com.ar>
+Message-ID: <20040514053623.GD3819@us.ibm.com>
+References: <20040514004132.GA10537@telpin.com.ar> <Pine.LNX.4.44L0.0405132305400.32262-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:62219 "HELO
-	netrider.rowland.org") by vger.kernel.org with SMTP id S264192AbUENDLC
+Received: from e35.co.us.ibm.com ([32.97.110.133]:49584 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S264295AbUENFgy
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 May 2004 23:11:02 -0400
-In-Reply-To: <20040514004132.GA10537@telpin.com.ar>
+	Fri, 14 May 2004 01:36:54 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0405132305400.32262-100000@netrider.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alberto Bertogli <albertogli@telpin.com.ar>
-Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Alberto Bertogli <albertogli@telpin.com.ar>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, 13 May 2004, Alberto Bertogli wrote:
+Alan Stern [stern@rowland.harvard.edu] wrote:
+> This BUG happened because the SCSI layer was still using the drive after 
+> usb-storage had called scsi_remove_host().
 
-> Hi!
-> 
-> I've just hit a bug after removing a Kingston USB flash drive.
-> 
-> I have removed it several (probably more than 40) times today without
-> problems until now. I'm removing it while doing streaming write()s on
-> the device (using /dev/sda) because I'm testing some things with the
-> drive. This was just like all the other times, so it looks like a race
-> somewhere.
-> 
-> This is a stock 2.6.6 kernel, on a Pentium 4 with HT (the kernel is
-> compiled with both SMP and preempt).
-> 
-> After the BUG the kernel doesn't detect the device anymore.
-> 
-> Please let me know if you need any more information or if I can give you a
-> hand with testing.
-> 
-> Thanks a lot,
-> 		Alberto
-> 
-> 
-> kernel BUG at drivers/usb/storage/usb.c:848!
+In this case the scsi_remove_host is being called in a unexpected
+disconnect case. Any IOs in flight will be canceled in the mid-layer
+(i.e., they will not be chased down with calls to eh_abort_handler).
 
-This BUG happened because the SCSI layer was still using the drive after 
-usb-storage had called scsi_remove_host().
+> 
+> This is an aspect of SCSI midlayer <-> low-level driver interaction that
+> I'm not very clear about.  How long after the host is removed can the
+> midlayer continue to use it?  How does the driver know when the midlayer
+> is finished using the host so the driver can exit (and unload from
+> memory)?
 
-This is an aspect of SCSI midlayer <-> low-level driver interaction that
-I'm not very clear about.  How long after the host is removed can the
-midlayer continue to use it?  How does the driver know when the midlayer
-is finished using the host so the driver can exit (and unload from
-memory)?
+The LLDD queuecommand should not be called after the return of
+scsi_remove_host (unless we have a bug). The LLDD should not free its
+resources until the release function is called on the struct device
+passed in during the scsi_add_host call. This release function could be
+called post the scsi_host_dev_release function being called as it does a
+put on this struct device. This chain of release calls is undefined as a
+hotplug goes out on the remove calls, but if user space never umounts /
+closes the device things will not fully cleanup.
 
-Alan Stern
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
