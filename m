@@ -1,61 +1,52 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
+From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: Help - looking for a Linux SCSI testing utility
-Date: Tue, 25 May 2004 08:08:52 -0700
+Date: 25 May 2004 09:30:08 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040525080852.2e444c47.rddunlap@osdl.org>
-References: <1F6D1D1660975A4887628A011443A1BC0305E3C1@uswaumsx13medge.med.ge.com>
+Message-ID: <1085499008.9003.55.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:40380 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S264851AbUEYPTj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 May 2004 11:19:39 -0400
-In-Reply-To: <1F6D1D1660975A4887628A011443A1BC0305E3C1@uswaumsx13medge.med.ge.com>
+Received: from email-out2.iomega.com ([147.178.1.83]:32934 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264790AbUEYPaP
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 May 2004 11:30:15 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Edwards, Scott (MED, Kelly IT Resouces)" <James.Edwards@med.ge.com>
-Cc: lxing@Crossroads.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, 25 May 2004 09:56:19 -0500 Edwards, Scott (MED, Kelly IT Resouces) wrote:
+> http://members.aol.com/plscsi/linux/plscsi.tar.gz
 
-| 
-| I have been trying to find a way to send a write cache command to a scsi
-| drive.  I found the sg_utils which I haven't gotten to send a write
-| cache command, but they might do what you want.
-| 
-| http://www.torque.net/sg
+Thanks to Randy D for that direct link, also to the two offline
+volunteers who drew me into this thread.
 
-Others to consider/try:
+> When we were working on Windows platform, we
+> had a couple of tools that can issue selected
+> SCSI command(s) to selected device(s). 
 
-http://members.aol.com/plscsi/linux/plscsi.tar.gz
+plscsi is for dos/ linux/ mac/ windows/ solaris/ ....  The introductory
+plscsi page recently built at linux-ide now is:
 
-http://www.bit-net.com/~rmiller/scu.html  (binary only)
+http://members.aol.com/plscsi/linux/
 
+Clicking back thru the archived "previous editions" I see along the way
+I lost the cross-references of:
 
-| -Scott
-| 
-| 
-| -----Original Message-----
-| From: linux-scsi-owner@vger.kernel.org
-| [mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Lee Xing
-| Sent: Tuesday, May 25, 2004 8:43 AM
-| To: linux-scsi@vger.kernel.org
-| Subject: Help - looking for a Linux SCSI testing utility
-| 
-| 
-| Hi,
-| 
-| When we were working on Windows platform, we had a couple of tools that
-| can issue selected SCSI command(s) to selected device(s).  Is there a
-| similar tool for Linux?  It would be great if we can use it to send
-| different SCSI command(s) to selected sd/sg device(s).
-| 
-| Thanks,
-| 
-| 
-| Lee 
+http://members.aol.com/plscsi/linux/index.200312.html
+
+Specifically:
+
+man dd for read/write wherever on disk e.g. erasing disks
+e.g. sudo dd if=/dev/hda0 skip=0 count=1 | strings
+
+man fdisk for editing Microsoft partition tables
+...
+
+MTX for SCSI ... Device Control
+http://mtx.badtux.net/
+
+scu a SCSI Command Utility 
+http://www.bit-net.com/~rmiller/scu.html
+
+Enjoy, Pat LaVarre
 
 
---
-~Randy
