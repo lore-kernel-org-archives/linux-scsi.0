@@ -1,56 +1,48 @@
-From: "N.C.Krishna Murthy" <krmurthy@cisco.com>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Thu, 4 Dec 2003 18:00:55 +0530
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200312041800.55663.krmurthy@cisco.com>
-References: <200310231734.10263.krmurthy@cisco.com> <200312011740.09693.krmurthy@cisco.com> <1070292174.2007.14.camel@mulgrave>
+From: Justin Cormack <justin@street-vision.com>
+Subject: Re: Serial ATA (SATA) for Linux status report
+Date: 04 Dec 2003 13:38:06 +0000
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1070545088.11956.43.camel@lotte.street-vision.com>
+References: <20031203204445.GA26987@gtf.org>
+	<1070494030.15415.111.camel@slurv.pasop.tomt.net>
+	<3FCE737C.1080105@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from india-ironport-1.cisco.com ([64.104.129.195]:2567 "EHLO
-	india-ironport-1.cisco.com") by vger.kernel.org with ESMTP
-	id S261733AbTLDMc3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Dec 2003 07:32:29 -0500
-In-Reply-To: <1070292174.2007.14.camel@mulgrave>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <3FCE737C.1080105@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Andre Tomt <lkml@tomt.net>, Kernel mailing list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, davmyers@cisco.com
 
-Hi,
-	Please find my replies/quieries interspersed in your reply.
-On Monday 01 Dec 2003 8:52 pm, James Bottomley wrote:
-> On Mon, 2003-12-01 at 06:10, Krishna Murthy wrote:
-> > Hi,
-> > 	We could use probing code from mid layer provided
-> > scsi_scan_host_selected is exported.
-> >
-> > 	iscsi driver does probe for devices at two places
-> > a)Once after session establishment.
-> > b)Whenever an iSCSI async message indicates a change in
-> > "REPORTED LUNS DATA". (addition/deletion of luns on the target)
->
-> This sounds like an async event which could be handled by the hotplug
-> system.  Would there be a problem with simply transmitting this to a
-> user level utility and having it trigger the rescan through the exported
-> sysfs interfaces?
-Having user level utility trigger the rescan thru sysfs interfaces will call
-scsi_scan() which will inturn call scsi_scan_host_selected().
-Instead wouldn't it be preferable to call scsi_scan_host_selected()
-from the iSCSI driver itself?
+On Wed, 2003-12-03 at 23:36, Jeff Garzik wrote:
+> Andre Tomt wrote:
+> > On Wed, 2003-12-03 at 21:44, Jeff Garzik wrote:
+> > 
+> >>Intel ICH5
+> >>----------
+> >>Summary:  No TCQ.  Looks like a PATA controller, but with a few added,
+> >>non-standard SATA port controls.
+> 
+> > One question - with "including hotplug", does that mean some set hotplug
+> > standard? Reason I'm asking is, we have a few servers from SuperMicro,
+> > with a ICH5R S-ATA controller that claims it's supporting hotplug, but
+> > hotplug is not in your ICH5-summary.
+> 
+> Alas, there is no hotplug support in the ICH5 or ICH5-R SATA hardware.
+> 
+> One could argue there is "coldplug" support in that hardware -- disable 
+> the entire interface, including any active devices, then re-enable and 
+> re-scan -- but it's a bit of a hack.  If there's enough demand, I could 
+> write some code for that.  It would involve something like
+> 
+> 	# /sbin/sata off
+> 	{ plug in or remove a device }
+> 	# /sbin/sata on
+> 
+> You really, really, really don't want to actually unplug a SATA drive 
+> while it's active, on ICH5 hardware.
 
+How does it work on other hardware?
 
->
-> We could do with a generic infrastructure within SCSI for generating
-> these events, anyway, if you want to go that route...
->
-I am not much familiar with SCSI hotplug. 
-
-If the generic infrastructure which you mentioned does not exist now and in 
-case there is a plan to do one such thing is there any framework for that?
-Wouldn't that require a kernel API which is capable of both 
-"adding new luns" and "deleting luns which no longer exist"?
-
-Please let us know
-Thanx
-N.C.Krishna Murthy
+Justin
