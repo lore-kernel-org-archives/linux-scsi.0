@@ -1,67 +1,47 @@
-From: christophe.varoqui@free.fr
-Subject: [ANNOUNCE] multipath-tools-0.3.0
-Date: Wed,  6 Oct 2004 11:22:53 +0200
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: [dm-devel] [ANNOUNCE] multipath-tools-0.3.0
+Date: Wed, 6 Oct 2004 11:50:09 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1097054573.4163b96d1262c@imp5-q.free.fr>
-References: <1096071849.4466.31.camel@zezette>
+Message-ID: <20041006095009.GD1542@marowsky-bree.de>
+References: <1096071849.4466.31.camel@zezette> <1097054573.4163b96d1262c@imp5-q.free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1096071849.4466.31.camel@zezette>
-Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <1097054573.4163b96d1262c@imp5-q.free.fr>
+To: device-mapper development <dm-devel@redhat.com>
+Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+On 2004-10-06T11:22:53, christophe.varoqui@free.fr wrote:
 
-here goes multipath-tools-0.3.0
+> here goes multipath-tools-0.3.0
+>=20
+> Faster release cycle.
+> Big things for some people out there.
+> Upgrade will need you to manualy remove your /etc/udev/rules.d/multip=
+ath.rules
+> and kill your devmap_name rule in udev.rules (we use a separate rules=
+=2Ed file
+> now)
 
-Faster release cycle.
-Big things for some people out there.
-Upgrade will need you to manualy remove your /etc/udev/rules.d/multipath.rules
-and kill your devmap_name rule in udev.rules (we use a separate rules.d file
-now)
-
-In short :
+Hi Christophe, do you still plan further configuration file changes in
+the immediate future or will the format of the configuration settle dow=
+n
+now?
 
 
-* easy multipath-aware initrds on Debian SID
-	* fully fonctionnal with direct-attached SCSI disks (single-path)
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
 
-Full ChangeLog for the release :
+--=20
+High Availability & Clustering
+SUSE Labs, Research and Development
+SUSE LINUX AG - A Novell company
 
-        * first cut at making scripts to create multipath-aware initrds
-	  those scripts are tested on Debian SID, and must be copied into
-	  /etc/mkinitrd/scripts. it works here.
-	* [multipath] verify presence of the /sys/block/... node before
-	  reading sysfs attributes. Avoids libsysfs and scsi_id stderr
-	  garbage
-	* [multipath] move down the stderr close (Ake Sandgren at umu.se)
-	* [multipath] don't care about 0-sized mp (Ake Sandgren at umu.se)
-	* [multipath] bump mp size field to ulong (Ake Sandgren at umu.se)
-	* [multipath] replace quiet/verbose flags by a verbosity one.
-	  introduce a new verbosity level : 1 == print only devmap names
-	  thus we can feed kpartx with that output
-	* [multipath] update man page to reflect the hotplug.d -> dev.d
-	  transition and replace the obsolete group_by_tur policy by the
-	  forgotten group_by_prio
-	* [multipath] provide a /etc/udev/rules.d/multipath.rules for
-	  multipath devices naming. Cleaner than the previously suggested
-	  rule addition in the main udev.rules
-	* [multipath] move out of hotplug.d to dev.d : kill synchronisation
-	  problems between device node creation and multipath execution.
-	  Incidentally the unfriendly $DEVPATH param become a friendly
-	  $DEVNAME (simply /dev/sdb)
-	* [multipath] rework the iopolicies name-to-id & id-to-name
-	  translations. kills the last compilation warning here too
-	* [kpartx] kill last compilation warnings
-	* bump klibc to 0.181
-	* add the debian/ packaging dir (make deb)
-	* prototype __clone & __clone2 (kills compilation warning)
-
-As usual, doc and download at :
-http://christophe.varoqui.free.fr/
-
-regards,
---
-christophe varoqui <christophe.varoqui@free.fr>
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
