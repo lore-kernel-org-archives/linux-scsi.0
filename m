@@ -1,66 +1,72 @@
-From: Chiaki <ishikawa@yk.rim.or.jp>
-Subject: Re: [BK PATCH] SCSI updates for 2.6.6
-Date: Fri, 21 May 2004 10:06:26 +0900
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: CDC_RAM for lk 2.4, PATCH proposed
+Date: Fri, 21 May 2004 08:53:15 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40AD5612.2020906@yk.rim.or.jp>
-References: <Pine.LNX.4.44.0405182140050.3207-100000@poirot.grange> <1084912724.2101.44.camel@mulgrave>
+Message-ID: <20040521065312.GK1952@suse.de>
+References: <20040520080622.GF1952@suse.de> <1085090500.3822.20.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pl439.nas911.n-yokohama.nttpc.ne.jp ([210.139.38.183]:38875
-	"EHLO standard.erephon") by vger.kernel.org with ESMTP
-	id S265325AbUEUBHB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 May 2004 21:07:01 -0400
-In-Reply-To: <1084912724.2101.44.camel@mulgrave>
+Received: from ns.virtualhost.dk ([195.184.98.160]:43464 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S265403AbUEUGxi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 May 2004 02:53:38 -0400
+Content-Disposition: inline
+In-Reply-To: <1085090500.3822.20.camel@patibmrh9>
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: linux-scsi@vger.kernel.org, John McKell <McKellj@iomega.com>
 
-Well this may be a little off topic.
-
-But I would like to thank Kurt for supporting DC390 back in 1997 (or 
-1996? I know it was before the France World Cup soccer games)
-when I was contemplating of moving to Solaris or linux from OS/2.
-
-Without his support to fix some problems (module usage, etc.),
-I would not have moved to linux at all.
-
-The DC390 is still working in my PC box to connect HP DAT2 tape drive
-and CD/PD combo while faster SCSI disks are connected on other
-boards.
-
-Thank you again, Garloff-san !
-
-PS: This trusty AMD chip board may be still alive in many
-PC boxes around the world...
-
-James Bottomley wrote:
-> On Tue, 2004-05-18 at 14:47, Guennadi Liakhovetski wrote:
+On Thu, May 20 2004, Pat LaVarre wrote:
+> diff confirms for me the patch inline of this post matches what John
+> McKell posted, except for the trivial difference of folder names & dates
+> and the substantive difference that I did comment out the per-open
+> printk:
 > 
->>Well, Kurt, thanks for the offer. I am prepared and willing to do the work
->>on supporting the driver, but I am, perhaps, not skilled enough to be a
->>maintainer of a SCSI LDD. My knowledge of the SCSI protocol and the SCSI
->>Linux subsystem is pretty limited. On one hand, the driver is little used,
->>so, even if I badly break something it is not likely to cause major
->>problems. On the other hand, I would feel more comfortable if, at least at
->>the beginning, somebody would review my patches. Besides, it would be a
->>good opportunity for me to really learn a bit more about SCSI, SCSI Linux
->>driver, BIO,...  oh well...
-> 
-> 
-> OK, roll up for me what you'd currently like applied to the driver;
-> anything that's less than solid, I'd rather mature in the -mm tree for a
-> while.
-> 
-> James
-> 
->
+> - + printk("cdrom: %s opening for WRITE\n", current->comm);
+> + + /* printk("cdrom: %s opening for WRITE\n", current->comm); */
 
+That's fine, I killed that in 2.6 as well.
+
+> > > I believe 2.4.18 patch actually makes `mount -w` work there by way of
+> > > "see all DVD/CD drives as DVD-RAM/ DVD-ROM compatible".
+> > 
+> > But that's not what the patch does at all. The patch simply says "If we
+> > succeeded in retriving the mode capability page, ignore what it says and
+> > flag the drive as dvd-rom/ram capable" which is clearly bogus.
+> 
+> To newbie me, this is not clearly bogus, sorry.
+> 
+> 1)
+> 
+> I see my 2.4.18 patch makes `mount -w` work, by way of breaking `cat
+> /proc/sys/dev/cdrom/info`.
+> 
+> mount matters more to me than proc.
+> 
+> Besides, the breakage is small.  I'm not falsely claiming that a DVD-RAM
+> disc is present.  I'm only falsely claiming that a DVD-RAM disc could be
+> present.  Software that branches visibly on which kind of disc might
+> someday be present looks very nearly bogus to me.
+
+Sorry, I still think this is completely bogus. No point in debating it,
+there's no way that hack will go into the 2.4 kernels.
+
+> 2)
+> 
+> I see my 2.4.18 patch is extremely short and simple.
+> 
+> Simplicity in the patch matters more to me the further I step back from
+> the latest available at kernel.org.
+
+Your 2.4.18 patch is a hack.
+
+> diff -Nurp linux-2.4.27-pre3/include/linux/cdrom.h linux-2.4.27-pre3-pel/include/linux/cdrom.h
+
+[snip]
+
+Patch looks fine to me, I'll send it to Marcelo for inclusion. Thanks!
 
 -- 
-int main(void){int j=2003;/*(c)2003 cishikawa. */
-char t[] ="<CI> @abcdefghijklmnopqrstuvwxyz.,\n\"";
-char *i ="g>qtCIuqivb,gCwe\np@.ietCIuqi\"tqkvv is>dnamz";
-while(*i)((j+=strchr(t,*i++)-(int)t),(j%=sizeof t-1),
-(putchar(t[j])));return 0;}/* under GPL */
+Jens Axboe
+
