@@ -1,32 +1,55 @@
-From: michael@freenet-ag.de
-Subject: Question on drivers/scsi/scsi_error.c
-Date: 21 May 2002 14:31:14 -0000
+From: Michael Clark <michael@metaparadigm.com>
+Subject: Re: Hot plugging a disk in runtime
+Date: Tue, 21 May 2002 23:42:37 +0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020521143114.21069.qmail@nostromo.freenet-ag.de>
+Message-ID: <3CEA6AED.5040704@metaparadigm.com>
+References: <200205201420.g4KEK3x01892@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [194.97.50.144] (helo=mx1.freenet.de)
-	by mout1.freenet.de with esmtp (Exim 4.04)
-	id 17AAfS-00026l-00
-	for linux-scsi@vger.kernel.org; Tue, 21 May 2002 16:31:14 +0200
-Received: from nostromo.freenet-ag.de ([194.97.7.6])
-	by mx1.freenet.de with smtp (Exim 3.36 #1)
-	id 17AAfS-0002Vo-00
-	for linux-scsi@vger.kernel.org; Tue, 21 May 2002 16:31:14 +0200
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Rabeeh Khoury <rabeeh@galileo.co.il>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hello,
 
-why does scsi_check_sense return SUCCESS on e.g. HARDWARE_ERRORs?
 
-        case ILLEGAL_REQUEST:
-        case BLANK_CHECK:
-        case DATA_PROTECT:
-        case HARDWARE_ERROR:
-        default:
-                return SUCCESS;
+On 05/20/02 22:20, James Bottomley wrote:
 
-I think that those errors should return FAILED, but I may overlook
-something.  Please send Cc: to me, as I am not subscribed to the list.
+[snip]
 
-Michael
+>This is the province of something called the Scsi Enclosure Services (SES) 
+>standard:
+>
+>ftp://ftp.t10.org/t10/drafts/ses/ses-r08b.pdf
+>
+>However, like most standards it began life as a bunch of companies each 
+>inventing their own more or less proprietary way of doing things and then 
+>realising that standardisation might be a good thing, so there are quite a few 
+>not quite compatible implementations of this.
+>
+>Like all good standards it's also due to be superceded (by SES-2) any day now.
+>
+>There is an enclosure monitor, which I haven't looked at but which I presume 
+>could be used as part of a hotplug system for SCSI devices:
+>
+>http://gort.metaparadigm.com/saftemon/
+>  
+>
+saftemon currently only does SAF-TE and not SES - but if you have a SAF-TE
+enclosure, it will give you an event when a disk has been inserted into an
+empty slot (or removed).
+
+There is even some (currently not activated) code in there to map SAF-TE
+slots to the corresponding Linux SCSI device. This of course only works if
+you have physical disk devices on the SCSI bus as logical (RAID) devices
+can't be correllated easily to device slots (not unless you have an API 
+to do
+get the mappings from your RAID controller).
+
+It would be quite nice to get saftemon events to trigger Software RAID
+commands in a Software RAID set-up such as doing a device probe and
+maybe a raid hot add when a new disk is inserted.
+
+~mc
+
