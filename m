@@ -1,1113 +1,280 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [patch 11/28] Sync up drivers/scsi/aic7xxx
-Date: Tue, 28 Sep 2004 09:05:48 -0400
+Subject: [patch 12/28] Sync up drivers/scsi/aic7xxx
+Date: Tue, 28 Sep 2004 09:05:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <415961AC.1090400@adaptec.com>
+Message-ID: <415961B5.9030202@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------060608010201000705030804"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:55498 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S267743AbUI1NF5 (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:59338 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S267740AbUI1NGF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Sep 2004 09:05:57 -0400
+	Tue, 28 Sep 2004 09:06:05 -0400
 Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id i8SD5uW02815
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2004 06:05:56 -0700
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id i8SD64W02864
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2004 06:06:04 -0700
 Received: from rtpe2k01.adaptec.com (rtpe2k01.adaptec.com [10.110.12.40])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id i8SD5tm31102
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2004 06:05:55 -0700
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id i8SD64m31120
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2004 06:06:04 -0700
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Sync up drivers/scsi/aic7xxx/. (2316-2391)
+This is a multi-part message in MIME format.
+--------------060608010201000705030804
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Sync up drivers/scsi/aic7xxx/. (2391-2396)
 
 Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
 
-==== //depot/aic7xxx/aic7xxx/aic79xx.seq#102 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx.seq ====
---- /tmp/tmp.26512.0	2004-09-27 13:04:43.138832816 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx.seq	2003-10-16 18:15:00.000000000 -0400
-@@ -40,7 +40,7 @@
-   * $FreeBSD$
-   */
 
--VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#102 $"
-+VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#104 $"
-  PATCH_ARG_LIST = "struct ahd_softc *ahd"
-  PREFIX = "ahd_"
 
-@@ -90,6 +90,13 @@
-  	test	SSTAT2, NONPACKREQ jz . + 2;
-  	call	unexpected_nonpkt_phase_find_ctxt;
-  	if ((ahd->bugs & AHD_FAINT_LED_BUG) != 0) {
-+		/*
-+		 * On Rev A. hardware, the busy LED is only
-+		 * turned on automaically during selections
-+		 * and re-selections.  Make the LED status
-+		 * more useful by forcing it to be on so
-+		 * long as one of our data FIFOs is active.
-+		 */
-  		and	A, FIFO0FREE|FIFO1FREE, DFFSTAT;
-  		cmp	A, FIFO0FREE|FIFO1FREE jne . + 3;
-  		and	SBLKCTL, ~DIAGLEDEN|DIAGLEDON;
-@@ -180,26 +187,18 @@
-  	 * bad SCSI status (currently only for underruns), we
-  	 * queue the SCB for normal completion.  Otherwise, we
-  	 * wait until any select-out activity has halted, and
--	 * then notify the host so that the transaction can be
--	 * dealt with.
-+	 * then queue the completion.
-  	 */
--	test	SCB_SCSI_STATUS, 0xff jnz scbdma_notify_host;
--	and	CCSCBCTL, ~(CCARREN|CCSCBEN);
--	bmov	COMPLETE_DMA_SCB_HEAD, SCB_NEXT_COMPLETE, 2;
--	bmov	SCB_NEXT_COMPLETE, COMPLETE_SCB_HEAD, 2;
--	bmov	COMPLETE_SCB_HEAD, SCBPTR, 2 ret;
--scbdma_notify_host:
-+	test	SCB_SCSI_STATUS, 0xff jz scbdma_queue_completion;
-  	SET_MODE(M_SCSI, M_SCSI)
-  	test	SCSISEQ0, ENSELO jnz return;
-  	test	SSTAT0, (SELDO|SELINGO) jnz return;
-  	SET_MODE(M_CCHAN, M_CCHAN)
--	/*
--	 * Remove SCB and notify host.
--	 */
-+scbdma_queue_completion:
-  	and	CCSCBCTL, ~(CCARREN|CCSCBEN);
-  	bmov	COMPLETE_DMA_SCB_HEAD, SCB_NEXT_COMPLETE, 2;
--	SET_SEQINTCODE(BAD_SCB_STATUS)
--	ret;
-+	bmov	SCB_NEXT_COMPLETE, COMPLETE_SCB_HEAD, 2;
-+	bmov	COMPLETE_SCB_HEAD, SCBPTR, 2 ret;
-  fill_qoutfifo_dmadone:
-  	and	CCSCBCTL, ~(CCARREN|CCSCBEN);
-  	call	qoutfifo_updated;
-@@ -491,6 +490,18 @@
-  SET_DST_MODE	M_SCSI;
-  select_in:
-  	if ((ahd->bugs & AHD_FAINT_LED_BUG) != 0) {
-+		/*
-+		 * On Rev A. hardware, the busy LED is only
-+		 * turned on automaically during selections
-+		 * and re-selections.  Make the LED status
-+		 * more useful by forcing it to be on from
-+		 * the point of selection until our idle
-+		 * loop determines that neither of our FIFOs
-+		 * are busy.  This handles the non-packetized
-+		 * case nicely as we will not return to the
-+		 * idle loop until the busfree at the end of
-+		 * each transaction.
-+		 */
-  		or	SBLKCTL, DIAGLEDEN|DIAGLEDON;
-  	}
-  	if ((ahd->bugs & AHD_BUSFREEREV_BUG) != 0) {
-@@ -531,6 +542,18 @@
-  SET_DST_MODE	M_SCSI;
-  select_out:
-  	if ((ahd->bugs & AHD_FAINT_LED_BUG) != 0) {
-+		/*
-+		 * On Rev A. hardware, the busy LED is only
-+		 * turned on automaically during selections
-+		 * and re-selections.  Make the LED status
-+		 * more useful by forcing it to be on from
-+		 * the point of re-selection until our idle
-+		 * loop determines that neither of our FIFOs
-+		 * are busy.  This handles the non-packetized
-+		 * case nicely as we will not return to the
-+		 * idle loop until the busfree at the end of
-+		 * each transaction.
-+		 */
-  		or	SBLKCTL, DIAGLEDEN|DIAGLEDON;
-  	}
-  BEGIN_CRITICAL;
-==== //depot/aic7xxx/aic7xxx/aic79xx.c#210 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_core.c ====
---- /tmp/tmp.26512.1	2004-09-27 13:04:45.345497352 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_core.c	2003-10-16 18:15:00.000000000 -0400
-@@ -37,7 +37,7 @@
-   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-   * POSSIBILITY OF SUCH DAMAGES.
-   *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.c#210 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.c#216 $
-   *
-   * $FreeBSD$
-   */
-@@ -378,13 +378,7 @@
-  	saved_modes = ahd_save_modes(ahd);
+--------------060608010201000705030804
+Content-Type: application/x-bzip2;
+ name="2391-2396.diff.bz2"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="2391-2396.diff.bz2"
 
-  	/*
--	 * Complete any SCBs that just finished being
--	 * DMA'ed into the qoutfifo.
--	 */
--	ahd_run_qoutfifo(ahd);
--
--	/*
--	 * Flush the good status FIFO for compelted packetized commands.
-+	 * Flush the good status FIFO for completed packetized commands.
-  	 */
-  	ahd_set_modes(ahd, AHD_MODE_SCSI, AHD_MODE_SCSI);
-  	saved_scbptr = ahd_get_scbptr(ahd);
-@@ -392,8 +386,7 @@
-  		u_int fifo_mode;
-  		u_int i;
-  		
--		scbid = (ahd_inb(ahd, GSFIFO+1) << 8)
--		      | ahd_inb(ahd, GSFIFO);
-+		scbid = ahd_inw(ahd, GSFIFO);
-  		scb = ahd_lookup_scb(ahd, scbid);
-  		if (scb == NULL) {
-  			printf("%s: Warning - GSFIFO SCB %d invalid\n",
-@@ -415,11 +408,24 @@
-
-  			ahd_run_data_fifo(ahd, scb);
-
-+			if (ahd_scb_active_in_fifo(ahd, scb) == 0) {
-+				/*
-+				 * Delay a bit so that status has
-+				 * a chance to change before we look
-+				 * at this FIFO again.
-+				 */
-+				ahd_delay(200);
-+			}
-+
-  			/*
--			 * Clearing this transaction in this FIFO may
--			 * cause a CFG4DATA for this same transaction
--			 * to assert in the other FIFO.  Make sure we
--			 * loop one more time and check the other FIFO.
-+			 * Running this FIFO may cause a CFG4DATA for
-+			 * this same transaction to assert in the other
-+			 * FIFO or a new snapshot SAVEPTRS interrupt
-+			 * in this FIFO.  Even running a FIFO may not
-+			 * clear the transaction if we are still waiting
-+			 * for data to drain to the host. We must loop
-+			 * until the transaction is not active in either
-+			 * FIFO just to be sure.
-  			 */
-  			i = 0;
-  		}
-@@ -434,7 +440,7 @@
-  			/*
-  			 * The transfer completed with a residual.
-  			 * Place this SCB on the complete DMA list
--			 * so that we Update our in-core copy of the
-+			 * so that we update our in-core copy of the
-  			 * SCB before completing the command.
-  			 */
-  			ahd_outb(ahd, SCB_SCSI_STATUS, 0);
-@@ -444,9 +450,7 @@
-  			ahd_outw(ahd, SCB_TAG, SCB_GET_TAG(scb));
-  			comp_head = ahd_inw(ahd, COMPLETE_DMA_SCB_HEAD);
-  			ahd_outw(ahd, SCB_NEXT_COMPLETE, comp_head);
--			if (SCBID_IS_NULL(comp_head))
--				ahd_outw(ahd, COMPLETE_DMA_SCB_HEAD,
--					 SCB_GET_TAG(scb));
-+			ahd_outw(ahd, COMPLETE_DMA_SCB_HEAD, SCB_GET_TAG(scb));
-  		} else
-  			ahd_complete_scb(ahd, scb);
-  	}
-@@ -470,9 +474,22 @@
-  			break;
-  		ahd_delay(200);
-  	}
--	if ((ccscbctl & CCSCBDIR) != 0)
-+	/*
-+	 * We leave the sequencer to cleanup in the case of DMA's to
-+	 * update the qoutfifo.  In all other cases (DMA's to the
-+	 * chip or a push of an SCB from the COMPLETE_DMA_SCB list),
-+	 * we disable the DMA engine so that the sequencer will not
-+	 * attempt to handle the DMA completion.
-+	 */
-+	if ((ccscbctl & CCSCBDIR) != 0 || (ccscbctl & ARRDONE) != 0)
-  		ahd_outb(ahd, CCSCBCTL, ccscbctl & ~(CCARREN|CCSCBEN));
-
-+	/*
-+	 * Complete any SCBs that just finished
-+	 * being DMA'ed into the qoutfifo.
-+	 */
-+	ahd_run_qoutfifo(ahd);
-+
-  	saved_scbptr = ahd_get_scbptr(ahd);
-  	/*
-  	 * Manually update/complete any completed SCBs that are waiting to be
-@@ -563,150 +580,146 @@
-  {
-  	u_int seqintsrc;
-
--	while (1) {
--		seqintsrc = ahd_inb(ahd, SEQINTSRC);
--		if ((seqintsrc & CFG4DATA) != 0) {
--			uint32_t datacnt;
--			uint32_t sgptr;
--
--			/*
--			 * Clear full residual flag.
--			 */
--			sgptr = ahd_inl_scbram(ahd, SCB_SGPTR) & ~SG_FULL_RESID;
--			ahd_outb(ahd, SCB_SGPTR, sgptr);
-+	seqintsrc = ahd_inb(ahd, SEQINTSRC);
-+	if ((seqintsrc & CFG4DATA) != 0) {
-+		uint32_t datacnt;
-+		uint32_t sgptr;
-
--			/*
--			 * Load datacnt and address.
--			 */
--			datacnt = ahd_inl_scbram(ahd, SCB_DATACNT);
--			if ((datacnt & AHD_DMA_LAST_SEG) != 0) {
--				sgptr |= LAST_SEG;
--				ahd_outb(ahd, SG_STATE, 0);
--			} else
--				ahd_outb(ahd, SG_STATE, LOADING_NEEDED);
--			ahd_outq(ahd, HADDR, ahd_inq_scbram(ahd, SCB_DATAPTR));
--			ahd_outl(ahd, HCNT, datacnt & AHD_SG_LEN_MASK);
--			ahd_outb(ahd, SG_CACHE_PRE, sgptr);
--			ahd_outb(ahd, DFCNTRL, PRELOADEN|SCSIEN|HDMAEN);
-+		/*
-+		 * Clear full residual flag.
-+		 */
-+		sgptr = ahd_inl_scbram(ahd, SCB_SGPTR) & ~SG_FULL_RESID;
-+		ahd_outb(ahd, SCB_SGPTR, sgptr);
-
--			/*
--			 * Initialize Residual Fields.
--			 */
--			ahd_outb(ahd, SCB_RESIDUAL_DATACNT+3, datacnt >> 24);
--			ahd_outl(ahd, SCB_RESIDUAL_SGPTR, sgptr & SG_PTR_MASK);
-+		/*
-+		 * Load datacnt and address.
-+		 */
-+		datacnt = ahd_inl_scbram(ahd, SCB_DATACNT);
-+		if ((datacnt & AHD_DMA_LAST_SEG) != 0) {
-+			sgptr |= LAST_SEG;
-+			ahd_outb(ahd, SG_STATE, 0);
-+		} else
-+			ahd_outb(ahd, SG_STATE, LOADING_NEEDED);
-+		ahd_outq(ahd, HADDR, ahd_inq_scbram(ahd, SCB_DATAPTR));
-+		ahd_outl(ahd, HCNT, datacnt & AHD_SG_LEN_MASK);
-+		ahd_outb(ahd, SG_CACHE_PRE, sgptr);
-+		ahd_outb(ahd, DFCNTRL, PRELOADEN|SCSIEN|HDMAEN);
-
--			/*
--			 * Mark the SCB as having a FIFO in use.
--			 */
--			ahd_outb(ahd, SCB_FIFO_USE_COUNT,
--				 ahd_inb_scbram(ahd, SCB_FIFO_USE_COUNT) + 1);
-+		/*
-+		 * Initialize Residual Fields.
-+		 */
-+		ahd_outb(ahd, SCB_RESIDUAL_DATACNT+3, datacnt >> 24);
-+		ahd_outl(ahd, SCB_RESIDUAL_SGPTR, sgptr & SG_PTR_MASK);
-
--			/*
--			 * Install a "fake" handler for this FIFO.
--			 */
--			ahd_outw(ahd, LONGJMP_ADDR, 0);
-+		/*
-+		 * Mark the SCB as having a FIFO in use.
-+		 */
-+		ahd_outb(ahd, SCB_FIFO_USE_COUNT,
-+			 ahd_inb_scbram(ahd, SCB_FIFO_USE_COUNT) + 1);
-
--			/*
--			 * Notify the hardware that we have satisfied
--			 * this sequencer interrupt.
--			 */
--			ahd_outb(ahd, CLRSEQINTSRC, CLRCFG4DATA);
--		} else if ((seqintsrc & SAVEPTRS) != 0) {
--			uint32_t sgptr;
--			uint32_t resid;
-+		/*
-+		 * Install a "fake" handler for this FIFO.
-+		 */
-+		ahd_outw(ahd, LONGJMP_ADDR, 0);
-
--			if ((ahd_inb(ahd, LONGJMP_ADDR+1)&INVALID_ADDR) != 0) {
--				/*
--				 * Snapshot Save Pointers.  Clear
--				 * the snapshot and continue.
--				 */
--				ahd_outb(ahd, DFFSXFRCTL, CLRCHN);
--				continue;
--			}
-+		/*
-+		 * Notify the hardware that we have satisfied
-+		 * this sequencer interrupt.
-+		 */
-+		ahd_outb(ahd, CLRSEQINTSRC, CLRCFG4DATA);
-+	} else if ((seqintsrc & SAVEPTRS) != 0) {
-+		uint32_t sgptr;
-+		uint32_t resid;
-
-+		if ((ahd_inb(ahd, LONGJMP_ADDR+1)&INVALID_ADDR) != 0) {
-  			/*
--			 * Disable S/G fetch so the DMA engine
--			 * is available to future users.
-+			 * Snapshot Save Pointers.  All that
-+			 * is necessary to clear the snapshot
-+			 * is a CLRCHN.
-  			 */
--			if ((ahd_inb(ahd, SG_STATE) & FETCH_INPROG) != 0)
--				ahd_outb(ahd, CCSGCTL, 0);
--			ahd_outb(ahd, SG_STATE, 0);
-+			goto clrchn;
-+		}
-
--			/*
--			 * Flush the data FIFO.  Strickly only
--			 * necessary for Rev A parts.
--			 */
--			ahd_outb(ahd, DFCNTRL,
--				 ahd_inb(ahd, DFCNTRL) | FIFOFLUSH);
-+		/*
-+		 * Disable S/G fetch so the DMA engine
-+		 * is available to future users.
-+		 */
-+		if ((ahd_inb(ahd, SG_STATE) & FETCH_INPROG) != 0)
-+			ahd_outb(ahd, CCSGCTL, 0);
-+		ahd_outb(ahd, SG_STATE, 0);
-
--			/*
--			 * Calculate residual.
--			 */
--			sgptr = ahd_inl_scbram(ahd, SCB_RESIDUAL_SGPTR);
--			resid = ahd_inl(ahd, SHCNT);
--			resid |=
--			    ahd_inb_scbram(ahd, SCB_RESIDUAL_DATACNT+3) << 24;
--			ahd_outl(ahd, SCB_RESIDUAL_DATACNT, resid);
--			if ((ahd_inb(ahd, SG_CACHE_SHADOW) & LAST_SEG) == 0) {
--				/*
--				 * Must back up to the correct S/G element.
--				 * Typically this just means resetting our
--				 * low byte to the offset in the SG_CACHE,
--				 * but if we wrapped, we have to correct
--				 * the other bytes of the sgptr too.
--				 */
--				if ((ahd_inb(ahd, SG_CACHE_SHADOW) & 0x80) != 0
--				 && (sgptr & 0x80) == 0)
--					sgptr -= 0x100;
--				sgptr &= ~0xFF;
--				sgptr |= ahd_inb(ahd, SG_CACHE_SHADOW)
--				       & SG_ADDR_MASK;
--				ahd_outl(ahd, SCB_RESIDUAL_SGPTR, sgptr);
--				ahd_outb(ahd, SCB_RESIDUAL_DATACNT + 3, 0);
--			} else if ((resid & AHD_SG_LEN_MASK) == 0) {
--				ahd_outb(ahd, SCB_RESIDUAL_SGPTR,
--					 sgptr | SG_LIST_NULL);
--			}
--			/*
--			 * Save Pointers.
--			 */
--			ahd_outq(ahd, SCB_DATAPTR, ahd_inq(ahd, SHADDR));
--			ahd_outl(ahd, SCB_DATACNT, resid);
--			ahd_outl(ahd, SCB_SGPTR, sgptr);
--			ahd_outb(ahd, CLRSEQINTSRC, CLRSAVEPTRS);
--			ahd_outb(ahd, SEQIMODE,
--				 ahd_inb(ahd, SEQIMODE) | ENSAVEPTRS);
--			/*
--			 * If the data is to the SCSI bus, we are
--			 * done, otherwise wait for FIFOEMP.
--			 */
--			if ((ahd_inb(ahd, DFCNTRL) & DIRECTION) != 0)
--				break;
--		} else if ((ahd_inb(ahd, SG_STATE) & LOADING_NEEDED) != 0) {
--			uint32_t sgptr;
--			uint64_t data_addr;
--			uint32_t data_len;
--			u_int	 dfcntrl;
-+		/*
-+		 * Flush the data FIFO.  Strickly only
-+		 * necessary for Rev A parts.
-+		 */
-+		ahd_outb(ahd, DFCNTRL, ahd_inb(ahd, DFCNTRL) | FIFOFLUSH);
-
--			/*
--			 * Disable S/G fetch so the DMA engine
--			 * is available to future users.
--			 */
--			if ((ahd_inb(ahd, SG_STATE) & FETCH_INPROG) != 0) {
--				ahd_outb(ahd, CCSGCTL, 0);
--				ahd_outb(ahd, SG_STATE, LOADING_NEEDED);
--			}
-+		/*
-+		 * Calculate residual.
-+		 */
-+		sgptr = ahd_inl_scbram(ahd, SCB_RESIDUAL_SGPTR);
-+		resid = ahd_inl(ahd, SHCNT);
-+		resid |= ahd_inb_scbram(ahd, SCB_RESIDUAL_DATACNT+3) << 24;
-+		ahd_outl(ahd, SCB_RESIDUAL_DATACNT, resid);
-+		if ((ahd_inb(ahd, SG_CACHE_SHADOW) & LAST_SEG) == 0) {
-+			/*
-+			 * Must back up to the correct S/G element.
-+			 * Typically this just means resetting our
-+			 * low byte to the offset in the SG_CACHE,
-+			 * but if we wrapped, we have to correct
-+			 * the other bytes of the sgptr too.
-+			 */
-+			if ((ahd_inb(ahd, SG_CACHE_SHADOW) & 0x80) != 0
-+			 && (sgptr & 0x80) == 0)
-+				sgptr -= 0x100;
-+			sgptr &= ~0xFF;
-+			sgptr |= ahd_inb(ahd, SG_CACHE_SHADOW)
-+			       & SG_ADDR_MASK;
-+			ahd_outl(ahd, SCB_RESIDUAL_SGPTR, sgptr);
-+			ahd_outb(ahd, SCB_RESIDUAL_DATACNT + 3, 0);
-+		} else if ((resid & AHD_SG_LEN_MASK) == 0) {
-+			ahd_outb(ahd, SCB_RESIDUAL_SGPTR,
-+				 sgptr | SG_LIST_NULL);
-+		}
-+		/*
-+		 * Save Pointers.
-+		 */
-+		ahd_outq(ahd, SCB_DATAPTR, ahd_inq(ahd, SHADDR));
-+		ahd_outl(ahd, SCB_DATACNT, resid);
-+		ahd_outl(ahd, SCB_SGPTR, sgptr);
-+		ahd_outb(ahd, CLRSEQINTSRC, CLRSAVEPTRS);
-+		ahd_outb(ahd, SEQIMODE,
-+			 ahd_inb(ahd, SEQIMODE) | ENSAVEPTRS);
-+		/*
-+		 * If the data is to the SCSI bus, we are
-+		 * done, otherwise wait for FIFOEMP.
-+		 */
-+		if ((ahd_inb(ahd, DFCNTRL) & DIRECTION) != 0)
-+			goto clrchn;
-+	} else if ((ahd_inb(ahd, SG_STATE) & LOADING_NEEDED) != 0) {
-+		uint32_t sgptr;
-+		uint64_t data_addr;
-+		uint32_t data_len;
-+		u_int	 dfcntrl;
-
--			/*
--			 * Wait for the DMA engine to notice that the
--			 * host transfer is enabled and that there is
--			 * space in the S/G FIFO for new segments before
--			 * loading more segments.
--			 */
--			if ((ahd_inb(ahd, DFSTATUS) & PRELOAD_AVAIL) == 0)
--				continue;
--			if ((ahd_inb(ahd, DFCNTRL) & HDMAENACK) == 0)
--				continue;
-+		/*
-+		 * Disable S/G fetch so the DMA engine
-+		 * is available to future users.  We won't
-+		 * be using the DMA engine to load segments.
-+		 */
-+		if ((ahd_inb(ahd, SG_STATE) & FETCH_INPROG) != 0) {
-+			ahd_outb(ahd, CCSGCTL, 0);
-+			ahd_outb(ahd, SG_STATE, LOADING_NEEDED);
-+		}
-+
-+		/*
-+		 * Wait for the DMA engine to notice that the
-+		 * host transfer is enabled and that there is
-+		 * space in the S/G FIFO for new segments before
-+		 * loading more segments.
-+		 */
-+		if ((ahd_inb(ahd, DFSTATUS) & PRELOAD_AVAIL) != 0
-+		 && (ahd_inb(ahd, DFCNTRL) & HDMAENACK) != 0) {
-
-  			/*
-  			 * Determine the offset of the next S/G
-@@ -753,7 +766,7 @@
-  			 * Advertise the segment to the hardware.
-  			 */
-  			dfcntrl = ahd_inb(ahd, DFCNTRL)|PRELOADEN|HDMAEN;
--			if ((ahd->features & AHD_NEW_DFCNTRL_OPTS)!=0) {
-+			if ((ahd->features & AHD_NEW_DFCNTRL_OPTS) != 0) {
-  				/*
-  				 * Use SCSIENWRDIS so that SCSIEN
-  				 * is never modified by this
-@@ -762,30 +775,28 @@
-  				dfcntrl |= SCSIENWRDIS;
-  			}
-  			ahd_outb(ahd, DFCNTRL, dfcntrl);
--		} else if ((ahd_inb(ahd, SG_CACHE_SHADOW)
--			 & LAST_SEG_DONE) != 0) {
--
--			/*
--			 * Transfer completed to the end of SG list
--			 * and has flushed to the host.
--			 */
--			ahd_outb(ahd, SCB_SGPTR,
--				 ahd_inb_scbram(ahd, SCB_SGPTR) | SG_LIST_NULL);
--			break;
--		} else if ((ahd_inb(ahd, DFSTATUS) & FIFOEMP) != 0) {
--			break;
-  		}
--		ahd_delay(200);
-+	} else if ((ahd_inb(ahd, SG_CACHE_SHADOW) & LAST_SEG_DONE) != 0) {
-+
-+		/*
-+		 * Transfer completed to the end of SG list
-+		 * and has flushed to the host.
-+		 */
-+		ahd_outb(ahd, SCB_SGPTR,
-+			 ahd_inb_scbram(ahd, SCB_SGPTR) | SG_LIST_NULL);
-+		goto clrchn;
-+	} else if ((ahd_inb(ahd, DFSTATUS) & FIFOEMP) != 0) {
-+clrchn:
-+		/*
-+		 * Clear any handler for this FIFO, decrement
-+		 * the FIFO use count for the SCB, and release
-+		 * the FIFO.
-+		 */
-+		ahd_outb(ahd, LONGJMP_ADDR + 1, INVALID_ADDR);
-+		ahd_outb(ahd, SCB_FIFO_USE_COUNT,
-+			 ahd_inb_scbram(ahd, SCB_FIFO_USE_COUNT) - 1);
-+		ahd_outb(ahd, DFFSXFRCTL, CLRCHN);
-  	}
--	/*
--	 * Clear any handler for this FIFO, decrement
--	 * the FIFO use count for the SCB, and release
--	 * the FIFO.
--	 */
--	ahd_outb(ahd, LONGJMP_ADDR + 1, INVALID_ADDR);
--	ahd_outb(ahd, SCB_FIFO_USE_COUNT,
--		 ahd_inb_scbram(ahd, SCB_FIFO_USE_COUNT) - 1);
--	ahd_outb(ahd, DFFSXFRCTL, CLRCHN);
-  }
-
-  void
-@@ -881,26 +892,6 @@
-  		       ahd_name(ahd), seqintcode);
-  #endif
-  	switch (seqintcode) {
--	case BAD_SCB_STATUS:
--	{
--		struct	scb *scb;
--		u_int	scbid;
--		int	cmds_pending;
--
--		scbid = ahd_get_scbptr(ahd);
--		scb = ahd_lookup_scb(ahd, scbid);
--		if (scb != NULL) {
--			ahd_complete_scb(ahd, scb);
--		} else {
--			printf("%s: WARNING no command for scb %d "
--			       "(bad status)\n", ahd_name(ahd), scbid);
--			ahd_dump_card_state(ahd);
--		}
--		cmds_pending = ahd_inw(ahd, CMDS_PENDING);
--		if (cmds_pending > 0)
--			ahd_outw(ahd, CMDS_PENDING, cmds_pending - 1);
--		break;
--	}
-  	case ENTERING_NONPACK:
-  	{
-  		struct	scb *scb;
-@@ -2315,8 +2306,7 @@
-  		       "PRGMCNT == 0x%x\n",
-  		       ahd_lookup_phase_entry(lastphase)->phasemsg,
-  		       aborted,
--		       ahd_inb(ahd, PRGMCNT)
--			| (ahd_inb(ahd, PRGMCNT+1) << 8));
-+		       ahd_inw(ahd, PRGMCNT));
-  		ahd_dump_card_state(ahd);
-  	}
-  	/* Always restart the sequencer. */
-@@ -2479,8 +2469,7 @@
-  		u_int	i;
-
-  		ahd_set_modes(ahd, AHD_MODE_SCSI, AHD_MODE_SCSI);
--		seqaddr = ahd_inb(ahd, CURADDR)
--			| (ahd_inb(ahd, CURADDR+1) << 8);
-+		seqaddr = ahd_inw(ahd, CURADDR);
-
-  		cs = ahd->critical_sections;
-  		for (i = 0; i < ahd->num_critical_sections; i++, cs++) {
-@@ -3209,6 +3198,15 @@
-  			 */
-  			con_opts |= ENSLOWCRC;
-  		}
-+
-+		if ((ahd->bugs & AHD_PACED_NEGTABLE_BUG) != 0) {
-+			/*
-+			 * On H2A4, revert to a slower slewrate
-+			 * on non-paced transfers.
-+			 */
-+			iocell_opts[AHD_PRECOMP_SLEW_INDEX] &=
-+			    ~AHD_SLEWRATE_MASK;
-+		}
-  	}
-
-  	ahd_outb(ahd, ANNEXCOL, AHD_ANNEXCOL_PRECOMP_SLEW);
-@@ -4914,10 +4912,7 @@
-  	 * Determine initial values for data_addr and data_cnt
-  	 * for resuming the data phase.
-  	 */
--	sgptr = (ahd_inb_scbram(ahd, SCB_RESIDUAL_SGPTR + 3) << 24)
--	      | (ahd_inb_scbram(ahd, SCB_RESIDUAL_SGPTR + 2) << 16)
--	      | (ahd_inb_scbram(ahd, SCB_RESIDUAL_SGPTR + 1) << 8)
--	      |	ahd_inb_scbram(ahd, SCB_RESIDUAL_SGPTR);
-+	sgptr = ahd_inl_scbram(ahd, SCB_RESIDUAL_SGPTR);
-  	sgptr &= SG_PTR_MASK;
-
-  	resid = (ahd_inb_scbram(ahd, SCB_RESIDUAL_DATACNT + 2) << 16)
-@@ -4935,10 +4930,7 @@
-  		dataptr = aic_le64toh(sg->addr)
-  			+ (aic_le32toh(sg->len) & AHD_SG_LEN_MASK)
-  			- resid;
--		ahd_outb(ahd, HADDR + 7, dataptr >> 56);
--		ahd_outb(ahd, HADDR + 6, dataptr >> 48);
--		ahd_outb(ahd, HADDR + 5, dataptr >> 40);
--		ahd_outb(ahd, HADDR + 4, dataptr >> 32);
-+		ahd_outl(ahd, HADDR + 4, dataptr >> 32);
-  	} else {
-  		struct	 ahd_dma_seg *sg;
-
-@@ -4953,10 +4945,7 @@
-  		ahd_outb(ahd, HADDR + 4,
-  			 (aic_le32toh(sg->len) & ~AHD_SG_LEN_MASK) >> 24);
-  	}
--	ahd_outb(ahd, HADDR + 3, dataptr >> 24);
--	ahd_outb(ahd, HADDR + 2, dataptr >> 16);
--	ahd_outb(ahd, HADDR + 1, dataptr >> 8);
--	ahd_outb(ahd, HADDR, dataptr);
-+	ahd_outl(ahd, HADDR, dataptr);
-  	ahd_outb(ahd, HCNT + 2, resid >> 16);
-  	ahd_outb(ahd, HCNT + 1, resid >> 8);
-  	ahd_outb(ahd, HCNT, resid);
-@@ -6641,14 +6630,8 @@
-  	 * Tell the sequencer where it can find our arrays in memory.
-  	 */
-  	busaddr = ahd->shared_data_map.busaddr;
--	ahd_outb(ahd, SHARED_DATA_ADDR, busaddr & 0xFF);
--	ahd_outb(ahd, SHARED_DATA_ADDR + 1, (busaddr >> 8) & 0xFF);
--	ahd_outb(ahd, SHARED_DATA_ADDR + 2, (busaddr >> 16) & 0xFF);
--	ahd_outb(ahd, SHARED_DATA_ADDR + 3, (busaddr >> 24) & 0xFF);
--	ahd_outb(ahd, QOUTFIFO_NEXT_ADDR, busaddr & 0xFF);
--	ahd_outb(ahd, QOUTFIFO_NEXT_ADDR + 1, (busaddr >> 8) & 0xFF);
--	ahd_outb(ahd, QOUTFIFO_NEXT_ADDR + 2, (busaddr >> 16) & 0xFF);
--	ahd_outb(ahd, QOUTFIFO_NEXT_ADDR + 3, (busaddr >> 24) & 0xFF);
-+	ahd_outl(ahd, SHARED_DATA_ADDR, busaddr);
-+	ahd_outl(ahd, QOUTFIFO_NEXT_ADDR, busaddr);
-
-  	/*
-  	 * Setup the allowed SCSI Sequences based on operational mode.
-@@ -6697,10 +6680,7 @@
-  	 * Tell the sequencer which SCB will be the next one it receives.
-  	 */
-  	busaddr = aic_le32toh(ahd->next_queued_hscb->hscb_busaddr);
--	ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 0, busaddr & 0xFF);
--	ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 1, (busaddr >> 8) & 0xFF);
--	ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 2, (busaddr >> 16) & 0xFF);
--	ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 3, (busaddr >> 24) & 0xFF);
-+	ahd_outl(ahd, NEXT_QUEUED_SCB_ADDR, busaddr);
-
-  	/*
-  	 * Default to coalescing disabled.
-@@ -7021,6 +7001,12 @@
-  		struct scb *waiting_scb;
-
-  		ahd_unpause(ahd);
-+		/*
-+		 * Give the sequencer some time to service
-+		 * any active selections.
-+		 */
-+		ahd_delay(200);
-+
-  		ahd_intr(ahd);
-  		ahd_pause(ahd);
-  		ahd_clear_critical_section(ahd);
-@@ -7233,10 +7219,7 @@
-  		uint32_t busaddr;
-
-  		busaddr = aic_le32toh(scb->hscb->hscb_busaddr);
--		ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 0, busaddr & 0xFF);
--		ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 1, (busaddr >> 8) & 0xFF);
--		ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 2, (busaddr >> 16) & 0xFF);
--		ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 3, (busaddr >> 24) & 0xFF);
-+		ahd_outl(ahd, NEXT_QUEUED_SCB_ADDR, busaddr);
-  	} else {
-  		prev_scb->hscb->next_hscb_busaddr = scb->hscb->hscb_busaddr;
-  		ahd_sync_scb(ahd, prev_scb,
-@@ -7343,10 +7326,7 @@
-  	 */
-  	ahd->qinfifonext = qinstart;
-  	busaddr = aic_le32toh(ahd->next_queued_hscb->hscb_busaddr);
--	ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 0, busaddr & 0xFF);
--	ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 1, (busaddr >> 8) & 0xFF);
--	ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 2, (busaddr >> 16) & 0xFF);
--	ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 3, (busaddr >> 24) & 0xFF);
-+	ahd_outl(ahd, NEXT_QUEUED_SCB_ADDR, busaddr);
-
-  	while (qinpos != qintail) {
-  		scb = ahd_lookup_scb(ahd, ahd->qinfifo[qinpos]);
-@@ -8007,8 +7987,9 @@
-  void
-  ahd_handle_scsi_status(struct ahd_softc *ahd, struct scb *scb)
-  {
--	struct hardware_scb *hscb;
--	u_int  qfreeze_cnt;
-+	struct	hardware_scb *hscb;
-+	u_int	qfreeze_cnt;
-+	int	paused;
-
-  	/*
-  	 * The sequencer freezes its select-out queue
-@@ -8018,6 +7999,13 @@
-  	 */
-  	hscb = scb->hscb;
-
-+	if (ahd_is_paused(ahd)) {
-+		paused = 1;
-+	} else {
-+		paused = 0;
-+		ahd_pause(ahd);
-+	}
-+
-  	/* Freeze the queue until the client sees the error. */
-  	ahd_freeze_devq(ahd, scb);
-  	aic_freeze_scb(scb);
-@@ -8032,6 +8020,9 @@
-  		ahd_outb(ahd, SEQ_FLAGS2,
-  			 ahd_inb(ahd, SEQ_FLAGS2) & ~SELECTOUT_QFROZEN);
-
-+	if (paused == 0)
-+		ahd_unpause(ahd);
-+
-  	/* Don't want to clobber the original sense code */
-  	if ((scb->flags & SCB_SENSE) != 0) {
-  		/*
-@@ -8414,8 +8405,7 @@
-  	max_prog = 2048;
-
-  	ahd_outb(ahd, SEQCTL0, PERRORDIS|FAILDIS|FASTMODE|LOADRAM);
--	ahd_outb(ahd, PRGMCNT, 0);
--	ahd_outb(ahd, PRGMCNT+1, 0);
-+	ahd_outw(ahd, PRGMCNT, 0);
-  	for (i = 0; i < max_prog; i++) {
-  		uint8_t ins_bytes[4];
-
-@@ -8530,8 +8520,7 @@
-  	downloaded = 0;
-  	skip_addr = 0;
-  	ahd_outb(ahd, SEQCTL0, PERRORDIS|FAILDIS|FASTMODE|LOADRAM);
--	ahd_outb(ahd, PRGMCNT, 0);
--	ahd_outb(ahd, PRGMCNT+1, 0);
-+	ahd_outw(ahd, PRGMCNT, 0);
-
-  	for (i = 0; i < sizeof(seqprog)/4; i++) {
-  		if (ahd_check_patch(ahd, &cur_patch, i, &skip_addr) == 0) {
-@@ -8834,7 +8823,7 @@
-  	printf(">>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<\n"
-  	       "%s: Dumping Card State at program address 0x%x Mode 0x%x\n",
-  	       ahd_name(ahd),
--	       ahd_inb(ahd, CURADDR) | (ahd_inb(ahd, CURADDR+1) << 8),
-+	       ahd_inw(ahd, CURADDR),
-  	       ahd_build_mode_state(ahd, ahd->saved_src_mode,
-  				    ahd->saved_dst_mode));
-  	if (paused)
-@@ -9178,6 +9167,7 @@
-  			 * Do a full bus reset.
-  			 */
-  			aic_set_transaction_status(scb, CAM_CMD_TIMEOUT);
-+bus_reset:
-  			found = ahd_reset_channel(ahd, channel,
-  						  /*Initiate Reset*/TRUE);
-  			printf("%s: Issued Channel %c Bus Reset. "
-@@ -9218,6 +9208,18 @@
-  			printf("BDR message in message buffer\n");
-  			aic_scb_timer_reset(scb, 2 * 1000000);
-  			break;
-+		} else if (last_phase != P_BUSFREE
-+			&& ahd_inb(ahd, SCSIPHASE) == 0) {
-+			/*
-+			 * SCB is not identified, there
-+			 * is no pending REQ, and the sequencer
-+			 * has not seen a busfree.  Looks like
-+			 * a stuck connection waiting to
-+			 * go busfree.  Reset the bus.
-+			 */
-+			printf("%s: Connection stuck awaiting busfree or "
-+			       "Identify Msg.\n", ahd_name(ahd));
-+			goto bus_reset;
-  		} else if (ahd_search_qinfifo(ahd, target, channel, lun,
-  					      scb->hscb->tag, ROLE_INITIATOR,
-  					      /*status*/0, SEARCH_COUNT) > 0) {
-@@ -9792,13 +9794,9 @@
-  			if ((ahd->features & AHD_MULTI_TID) != 0) {
-  				u_int targid_mask;
-
--				targid_mask = ahd_inb(ahd, TARGID)
--					    | (ahd_inb(ahd, TARGID + 1) << 8);
--
-+				targid_mask = ahd_inw(ahd, TARGID);
-  				targid_mask |= target_mask;
--				ahd_outb(ahd, TARGID, targid_mask);
--				ahd_outb(ahd, TARGID+1, (targid_mask >> 8));
--				
-+				ahd_outw(ahd, TARGID, targid_mask);
-  				ahd_update_scsiid(ahd, targid_mask);
-  			} else {
-  				u_int our_id;
-@@ -9912,14 +9910,9 @@
-  				if (ahd->features & AHD_MULTI_TID) {
-  					u_int targid_mask;
-
--					targid_mask = ahd_inb(ahd, TARGID)
--						    | (ahd_inb(ahd, TARGID + 1)
--						       << 8);
--
-+					targid_mask = ahd_inw(ahd, TARGID);
-  					targid_mask &= ~target_mask;
--					ahd_outb(ahd, TARGID, targid_mask);
--					ahd_outb(ahd, TARGID+1,
--					 	 (targid_mask >> 8));
-+					ahd_outw(ahd, TARGID, targid_mask);
-  					ahd_update_scsiid(ahd, targid_mask);
-  				}
-  			}
-==== //depot/aic7xxx/aic7xxx/aic79xx_inline.h#54 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_inline.h ====
---- /tmp/tmp.26512.2	2004-09-27 13:04:45.550466192 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_inline.h	2003-10-15 16:15:18.000000000 -0400
-@@ -37,7 +37,7 @@
-   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-   * POSSIBILITY OF SUCH DAMAGES.
-   *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx_inline.h#54 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx_inline.h#55 $
-   *
-   * $FreeBSD$
-   */
-@@ -522,12 +522,21 @@
-  static __inline uint16_t
-  ahd_inw(struct ahd_softc *ahd, u_int port)
-  {
-+	/*
-+	 * Read high byte first as some registers increment
-+	 * or have other side effects when the low byte is
-+	 * read.
-+	 */
-  	return ((ahd_inb(ahd, port+1) << 8) | ahd_inb(ahd, port));
-  }
-
-  static __inline void
-  ahd_outw(struct ahd_softc *ahd, u_int port, u_int value)
-  {
-+	/*
-+	 * Write low byte first to accomodate registers
-+	 * such as PRGMCNT where the order maters.
-+	 */
-  	ahd_outb(ahd, port, value & 0xFF);
-  	ahd_outb(ahd, port+1, (value >> 8) & 0xFF);
-  }
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.h#146 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.h ====
---- /tmp/tmp.26512.3	2004-09-27 13:04:45.666448560 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.h	2003-09-04 18:33:18.000000000 -0400
-@@ -36,7 +36,7 @@
-   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-   * POSSIBILITY OF SUCH DAMAGES.
-   *
-- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.h#146 $
-+ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.h#147 $
-   *
-   */
-  #ifndef _AIC79XX_LINUX_H_
-@@ -132,7 +132,7 @@
-  #define AHD_SCSI_HAS_HOST_LOCK 0
-  #endif
-
--#define AIC79XX_DRIVER_VERSION "2.0.1"
-+#define AIC79XX_DRIVER_VERSION "2.0.2"
-
-  /********************* Definitions Required by the Core ***********************/
-  /*
-==== //depot/aic7xxx/aic7xxx/aic7xxx.seq#57 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx.seq ====
---- /tmp/tmp.26512.4	2004-09-27 13:04:46.071387000 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx.seq	2003-10-15 13:25:06.000000000 -0400
-@@ -40,7 +40,7 @@
-   * $FreeBSD$
-   */
-
--VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic7xxx.seq#57 $"
-+VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic7xxx.seq#58 $"
-  PATCH_ARG_LIST = "struct ahc_softc *ahc"
-  PREFIX = "ahc_"
-
-@@ -1098,7 +1098,7 @@
-  		test	SCB_RESIDUAL_DATACNT[3], SG_LAST_SEG jz dma_mid_sg;
-  		if ((ahc->flags & AHC_TARGETROLE) != 0) {
-  			test	SSTAT0, TARGET jz dma_last_sg;
--			if ((ahc->flags & AHC_TMODE_WIDEODD_BUG) != 0) {
-+			if ((ahc->bugs & AHC_TMODE_WIDEODD_BUG) != 0) {
-  				test	DMAPARAMS, DIRECTION jz dma_mid_sg;
-  			}
-  		}
-==== //depot/aic7xxx/aic7xxx/aic7xxx.c#140 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_core.c ====
---- /tmp/tmp.26512.5	2004-09-27 13:04:47.311198520 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_core.c	2003-09-04 17:48:51.000000000 -0400
-@@ -37,7 +37,7 @@
-   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-   * POSSIBILITY OF SUCH DAMAGES.
-   *
-- * $Id: //depot/aic7xxx/aic7xxx/aic7xxx.c#140 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic7xxx.c#141 $
-   *
-   * $FreeBSD$
-   */
-@@ -6929,8 +6929,8 @@
-  			 * Been down this road before.
-  			 * Do a full bus reset.
-  			 */
--bus_reset:
-  			aic_set_transaction_status(scb, CAM_CMD_TIMEOUT);
-+bus_reset:
-  			found = ahc_reset_channel(ahc, channel,
-  						  /*Initiate Reset*/TRUE);
-  			printf("%s: Issued Channel %c Bus Reset. "
-@@ -7023,6 +7023,18 @@
-  			printf("BDR message in message buffer\n");
-  			active_scb->flags |= SCB_DEVICE_RESET;
-  			aic_scb_timer_reset(scb, 2 * 1000000);
-+		} else if (last_phase != P_BUSFREE
-+			&& (ahc_inb(ahc, SSTAT1) & REQINIT) == 0) {
-+			/*
-+			 * SCB is not identified, there
-+			 * is no pending REQ, and the sequencer
-+			 * has not seen a busfree.  Looks like
-+			 * a stuck connection waiting to
-+			 * go busfree.  Reset the bus.
-+			 */
-+			printf("%s: Connection stuck awaiting busfree or "
-+			       "Identify Msg.\n", ahc_name(ahc));
-+			goto bus_reset;
-  		} else {
-  			int	 disconnected;
-
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#245 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.c ====
---- /tmp/tmp.26512.6	2004-09-27 13:04:48.451025240 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.c	2003-10-15 13:09:32.000000000 -0400
-@@ -1,7 +1,7 @@
-  /*
-   * Adaptec AIC7xxx device driver for Linux.
-   *
-- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#245 $
-+ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#246 $
-   *
-   * Copyright (c) 1994 John Aycock
-   *   The University of Calgary Department of Computer Science.
-@@ -1506,6 +1506,7 @@
-
-  	/* Still equal.  Sort by BIOS address, ioport, or bus/slot/func. */
-  	switch (rvalue) {
-+#ifdef CONFIG_PCI
-  	case AHC_PCI:
-  	{
-  		char primary_channel;
-@@ -1538,6 +1539,8 @@
-  			value = 1;
-  		break;
-  	}
-+#endif
-+#ifdef CONFIG_EISA
-  	case AHC_EISA:
-  		if ((rahc->flags & AHC_BIOS_ENABLED) != 0) {
-  			value = rahc->platform_data->bios_address
-@@ -1547,6 +1550,7 @@
-  			      - lahc->bsh.ioport;
-  		}
-  		break;
-+#endif
-  	default:
-  		panic("ahc_softc_sort: invalid bus type");
-  	}
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.h#158 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.h ====
---- /tmp/tmp.26512.7	2004-09-27 13:04:48.554009584 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.h	2003-09-08 14:45:50.000000000 -0400
-@@ -53,7 +53,7 @@
-   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-   * POSSIBILITY OF SUCH DAMAGES.
-   *
-- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.h#158 $
-+ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.h#159 $
-   *
-   */
-  #ifndef _AIC7XXX_LINUX_H_
-@@ -148,7 +148,7 @@
-  #define AHC_SCSI_HAS_HOST_LOCK 0
-  #endif
-
--#define AIC7XXX_DRIVER_VERSION "6.2.37"
-+#define AIC7XXX_DRIVER_VERSION "6.3.0"
-
-  /********************* Definitions Required by the Core ***********************/
-  /*
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aicasm/Makefile#14 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aicasm/Makefile ====
---- /tmp/tmp.26512.8	2004-09-27 13:04:48.558008976 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aicasm/Makefile	2003-09-17 17:49:09.000000000 -0400
-@@ -49,11 +49,19 @@
-  clean:
-  	rm -f $(clean-files)
-
-+# Create a dependency chain in generated files
-+# to avoid concurrent invocations of the single
-+# rule that builds them all.
-+aicasm_gram.c: aicasm_gram.h
-  aicasm_gram.c aicasm_gram.h: aicasm_gram.y
-  	$(YACC) $(YFLAGS) -b $(<:.y=) $<
-  	mv $(<:.y=).tab.c $(<:.y=.c)
-  	mv $(<:.y=).tab.h $(<:.y=.h)
-
-+# Create a dependency chain in generated files
-+# to avoid concurrent invocations of the single
-+# rule that builds them all.
-+aicasm_macro_gram.c: aicasm_macro_gram.h
-  aicasm_macro_gram.c aicasm_macro_gram.h: aicasm_macro_gram.y
-  	$(YACC) $(YFLAGS) -b $(<:.y=) -p mm $<
-  	mv $(<:.y=).tab.c $(<:.y=.c)
-==== //depot/aic7xxx/aic7xxx/aicasm/aicasm.c#22 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aicasm/aicasm.c ====
---- /tmp/tmp.26512.9	2004-09-27 13:04:48.815969760 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aicasm/aicasm.c	2003-10-15 13:18:20.000000000 -0400
-@@ -37,7 +37,7 @@
-   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-   * POSSIBILITY OF SUCH DAMAGES.
-   *
-- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm.c#22 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm.c#23 $
-   *
-   * $FreeBSD$
-   */
-@@ -609,10 +609,10 @@
-
-  		while (line < cur_instr->srcline) {
-  			fgets(buf, sizeof(buf), ifile);
--				fprintf(listfile, "\t\t%s", buf);
-+				fprintf(listfile, "             \t%s", buf);
-  				line++;
-  		}
--		fprintf(listfile, "%03x %02x%02x%02x%02x", instrptr,
-+		fprintf(listfile, "%04x %02x%02x%02x%02x", instrptr,
-  #if BYTE_ORDER == LITTLE_ENDIAN
-  			cur_instr->format.bytes[0],
-  			cur_instr->format.bytes[1],
-@@ -624,14 +624,23 @@
-  			cur_instr->format.bytes[1],
-  			cur_instr->format.bytes[0]);
-  #endif
--		fgets(buf, sizeof(buf), ifile);
--		fprintf(listfile, "\t%s", buf);
--		line++;
-+		/*
-+		 * Macro expansions can cause several instructions
-+		 * to be output for a single source line.  Only
-+		 * advance the line once in these cases.
-+		 */
-+		if (line == cur_instr->srcline) {
-+			fgets(buf, sizeof(buf), ifile);
-+			fprintf(listfile, "\t%s", buf);
-+			line++;
-+		} else {
-+			fprintf(listfile, "\n");
-+		}
-  		instrptr++;
-  	}
-  	/* Dump the remainder of the file */
-  	while(fgets(buf, sizeof(buf), ifile) != NULL)
--		fprintf(listfile, "\t\t%s", buf);
-+		fprintf(listfile, "             %s", buf);
-
-  	fclose(ifile);
-  }
-
+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
+CQeMU96g
+--------------060608010201000705030804--
 
