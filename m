@@ -1,55 +1,127 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Status of patch as168 (sysfs readonly max_sectors attribute)
-Date: Thu, 15 Jan 2004 14:30:17 -0500 (EST)
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: smp dead lock of io_request_lock/queue_lock patch
+Date: Thu, 15 Jan 2004 14:30:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0401151425590.1316-100000@ida.rowland.org>
-References: <4006E2C2.10901@pobox.com>
+Message-ID: <1074195041.3137.32.camel@compaq.xsintricity.com>
+References: <20040112092231.GG29177@suse.de>
+	 <1073914073.3114.263.camel@compaq.xsintricity.com>
+	 <4006C76B.3090206@tmr.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:11012 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S261464AbUAOTaT (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:13805 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S261875AbUAOTd7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jan 2004 14:30:19 -0500
-In-Reply-To: <4006E2C2.10901@pobox.com>
+	Thu, 15 Jan 2004 14:33:59 -0500
+In-Reply-To: <4006C76B.3090206@tmr.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Jens Axboe <axboe@suse.de>, Arjan Van de Ven <arjanv@redhat.com>, Peter Yao <peter@exavio.com.cn>, linux-kernel@vger.kernel.org, linux-scsi mailing list <linux-scsi@vger.kernel.org>
 
-On Thu, 15 Jan 2004, Jeff Garzik wrote:
-
-> Yeah, I want to kill scsi's max_sectors and dma_boundary both.  All SCSI 
-> does is pass them straight to blk_queue_max_sectors() and 
-> blk_queue_segment_boundary() from scsi_alloc_queue() anyway.
+On Thu, 2004-01-15 at 12:01, Bill Davidsen wrote:
+> Doug Ledford wrote:
+> > On Mon, 2004-01-12 at 04:22, Jens Axboe wrote:
+> > 
+> >>On Mon, Jan 12 2004, Arjan van de Ven wrote:
+> >>
+> >>>On Mon, Jan 12, 2004 at 10:19:46AM +0100, Jens Axboe wrote:
+> >>>
+> >>>>... and still exists in your 2.4.21 based kernel.
+> >>>
+> >>>The RHL 2.4.21 kernels don't have the locking patch at all...
+> >>
+> >>But RHEL3 does:
+> >>
+> >>http://kernelnewbies.org/kernels/rhel3/SOURCES/linux-2.4.21-iorl.patch
+> >>
+> >>and the bug is there.
+> > 
+> > 
+> > But in RHEL3 the bug is fixed already (not in a released kernel, but the
+> > fix went into our internal kernel some time back and will be in our next
+> > update kernel).  From my internal bk tree for this stuff:
 > 
-> But it seems to me that the block layer already exports everything needed.
-> 
-> IMO: esteemed and wise SCSI maintainers should pick a point 
-> (->slave_config?) where the low-level SCSI driver is allowed to tweak a 
-> queue's settings in a race-free way (i.e. before any requests are 
-> allowed to be sent to that queue).
-> 
-> Once that is done, elimination of max_sectors and dma_boundary is a 
-> three-step process:
-> 1) create a helper function scsi_config_queue() or somesuch.  This is 
-> the default for low-level drivers without a slave_config.
-> 2) make a bombing run through the low-level drivers, removing 
-> max_sectors and dma_boundary from their template
-> 3) simultaneously to #2, make a similar bombing run, adding or updating 
-> the slave_config for each driver
-> 
-> Long term I want to bring low-level {scsi | ide | whatever} drivers much 
-> closer to the block layer, and the above is actually one of the steps I 
-> wanted to do anyway.
+> "not in a released kernel..." Do I read this right? That you have a fix 
+> for a critical bug and it hasn't been pushed to customers yet?
 
-If I understand this, you would like to see the low-level drivers manage
-these things for themselves by talking directly to the block layer,
-without having to go through the intermediate SCSI layers.  This would
-imply that any sysfs interface to max_sectors would then be the
-responsibility of the driver, since the block layer itself is much too
-generic to permit users to fiddle with the settings.
+No, you don't read this right.  We have a fix for a correctness issue
+that has almost 0% chance of ever triggering in real life, has exactly 0
+bug reports of it ever happening, and which has been integrated into our
+tree.  Obviously, we always push new kernels to all of our customers
+every time we have this situation, or about twice a day...
 
-Correct?
+>  How about 
+> security bugs, has the fix you pushed in RH-9.0 been push to EL customers?
+> 
+> > [dledford@compaq RHEL3-scsi]$ bk changes -r1.23
+> > ChangeSet@1.23, 2003-11-10 17:19:54-05:00, dledford@compaq.xsintricity.com
+> >   drivers/scsi/scsi_error.c
+> >       Don't panic if the eh thread is dead, instead do the same thing that
+> >       scsi_softirq_handler does and just complete the command as a failed
+> >       command.
+> >       Change when we wake the eh thread in scsi_times_out to accomodate
+> >       the changes to the mlqueue operations.
+> >       Clear blocked status on the host and all devices in scsi_restart_operations
+> > ->    Don't grab the host_lock in scsi_restart_operations, we aren't doing
+> >       anything that needs it.  Just goose the queues unconditionally,
+> >       scsi_request_fn() will know to not send commands if they shouldn't
+> >       go for some reason.
+> >       Make sure we account SCSI_STATE_MLQUEUE commands as not being failed
+> >       commands in scsi_unjam_host.
+> > 
+> > But, Jens is right, it's a real bug.  I just fixed it in a different
+> > way.  And my fix is dependent on other changes in our scsi stack as
+> > well.
+> 
+> Yes, thanks to Peter for that fix, nice that someone provides timely 
+> fixes...
 
-Alan Stern
+Puh-Leeze.  If you actually read the source code, you would see just how
+damn near impossible this bug is.  But, since you obviously didn't, let
+me enlighten you:
+
+1)  The offending code is part of the error handler code, specifically
+the section that kicks drives back into gear after recovery is complete.
+
+2)  The only section of code it's racing against is scsi_request_fn.
+
+3)  The race only happens if scsi_request_fn() detects that
+host->in_recovery is not set.
+
+So, a sample would be something like this
+
+CPU1
+
+spin_lock_irqsave(device_lock)
+scsi_request_fn()
+  check host->in_recovery == 0
+  [ start window ]
+  make a couple other sanity checks
+  [ end window ]
+  spin_lock(host_lock)
+  modify host command counts
+  spin_unlock(host_lock)
+  finish prepping command
+  spin_unlock(device_lock)
+  scsi_dispatch_cmd()
+  spin_lock(device_lock)
+  return
+spin_unlock(device_lock)
+
+Now, in that little, itty, bitty window in scsi_request_fn(), we have to
+A) get some kind of error that starts the error handler subsystem, B)
+all outstanding commands have to complete (since we don't start the
+error handler thread until the controller is quiescient), C) we have to
+resolve the problem and get to the point of kicking the host back in
+gear, and finally D) we have to grab the host_lock before
+scsi_request_fn tries to and then we have to try and grab the specific
+device_lock that scsi_request_fn is holding.
+
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc.
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+
 
