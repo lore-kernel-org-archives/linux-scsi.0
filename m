@@ -1,114 +1,60 @@
 From: James.Smart@Emulex.Com
-Subject: [PATCH scsi-rc-fixes-2.6] Re-enable FC Transport Host Statistics
-Date: Tue, 8 Feb 2005 23:04:17 -0500
-Message-ID: <0B1E13B586976742A7599D71A6AC733C12EB44@xbl3.ma.emulex.com>
+Subject: [PATCH  0/2  scsi-rc-fixes-2.6] Repost: FC Remote Port patch (+midlayer rework)
+Date: Tue, 8 Feb 2005 23:18:11 -0500
+Message-ID: <0B1E13B586976742A7599D71A6AC733C12EB45@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C50E5C.6D0D526B"
-Received: from emulex.emulex.com ([138.239.112.1]:3830 "EHLO emulex.emulex.com")
-	by vger.kernel.org with ESMTP id S261775AbVBIEEU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2005 23:04:20 -0500
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Received: from emulex.emulex.com ([138.239.112.1]:62198 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S261776AbVBIESN convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Feb 2005 23:18:13 -0500
 Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id j1944Ini005837
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Feb 2005 20:04:18 -0800 (PST)
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id j194ICni006063
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Feb 2005 20:18:12 -0800 (PST)
 content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
 
-------_=_NextPart_001_01C50E5C.6D0D526B
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+The following 2 patches address work relative to the FC remote port patch
+that was posted several weeks ago.
 
+The patches perform 3 major changes:
 
+- In background discussions with James Bottomley, one area of the patch
+  that was disliked was the independence of the remote port object
+  and the scsi target. In the original patch, they were both peers under
+  the scsi host. There was an attempt to wrap the scsi target and the 
+  remote port together, but failed due to the differences in the objects
+  and the fact that a remote port can exist which is not a target. 
 
-  With the conversion to the new attribute containers/transport work, =
-the
-  FC host statistics were lost. This patch re-enables them.
+  Eventually, the decision was to attempt to link the remote port under
+  the scsi host, and the scsi target under the remote port. In addition
+  to solving the fc transports problem, it also enables for other transports
+  to insert transport-specific objects (such as expanders in SAS).
+  The first patch modifies the midlayer to enable the linking of transport
+  objects between the starget and the shost. The second patch is the
+  remote port patch, which utilizes this new functionality.
 
-  This patch adds a statistics group to each attribute container and
-  adds/removes them at the same time the base attributes are =
-added/removed.
+  NOTE: It is expected that by breaking the parent-child relationship of
+  the shost and starget, we will impact some of the hotplug environment
+  and things such as udev...
 
+- After James Bottomley reworked the attribute containers/transport routines,
+  the remote port patch needed to significantly be reworked. The 2nd patch
+  is the updated remote port patch.
+
+- As remote ports are becoming the desired object to interact with in the
+  fc transport (not scsi targets), the scsi_target_block/unblock routines
+  were replaced by remote_port_block/unblock routines, and the dev_loss
+  attribute moved to the remote port.  As there are no consumers of the
+  host-level block functions, that functionality was fully removed.
 
 -- James S
 
-
-------_=_NextPart_001_01C50E5C.6D0D526B
-Content-Type: application/octet-stream;
-	name="tran_stats.patch"
-Content-Transfer-Encoding: base64
-Content-Description: tran_stats.patch
-Content-Disposition: attachment;
-	filename="tran_stats.patch"
-
-CgogIFdpdGggdGhlIGNvbnZlcnNpb24gdG8gdGhlIG5ldyBhdHRyaWJ1dGUgY29udGFpbmVycy90
-cmFuc3BvcnQgd29yaywgdGhlCiAgRkMgaG9zdCBzdGF0aXN0aWNzIHdlcmUgbG9zdC4gVGhpcyBw
-YXRjaCByZS1lbmFibGVzIHRoZW0uCgogIFRoaXMgcGF0Y2ggYWRkcyBhIHN0YXRpc3RpY3MgZ3Jv
-dXAgdG8gZWFjaCBhdHRyaWJ1dGUgY29udGFpbmVyIGFuZAogIGFkZHMvcmVtb3ZlcyB0aGVtIGF0
-IHRoZSBzYW1lIHRpbWUgdGhlIGJhc2UgYXR0cmlidXRlcyBhcmUgYWRkZWQvcmVtb3ZlZC4KCgoK
-LS0tCgogYi9kcml2ZXJzL2Jhc2UvYXR0cmlidXRlX2NvbnRhaW5lci5jICB8ICAgMTYgKysrKysr
-KysrKysrLS0tLQogYi9kcml2ZXJzL3Njc2kvc2NzaV9zeXNmcy5jICAgICAgICAgICB8ICAgIDIg
-Ky0KIGIvZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNwb3J0X2ZjLmMgICAgfCAgICAyICstCiBiL2F0
-dHJpYnV0ZV9jb250YWluZXIuaCAgICAgICAgICAgICAgIHwgICAgMSArCiBiL2luY2x1ZGUvc2Nz
-aS9zY3NpX3RyYW5zcG9ydC5oICAgICAgIHwgICAgMyAtLS0KIDUgZmlsZXMgY2hhbmdlZCwgMTUg
-aW5zZXJ0aW9ucygrKSwgOSBkZWxldGlvbnMoLSkKCmRpZmYgLXB1TiBhL2RyaXZlcnMvYmFzZS9h
-dHRyaWJ1dGVfY29udGFpbmVyLmMgYi9kcml2ZXJzL2Jhc2UvYXR0cmlidXRlX2NvbnRhaW5lci5j
-Ci0tLSBhL2RyaXZlcnMvYmFzZS9hdHRyaWJ1dGVfY29udGFpbmVyLmMJMjAwNS0wMi0wOCAxNjow
-MToxNC4wMDAwMDAwMDAgLTA1MDAKKysrIGIvZHJpdmVycy9iYXNlL2F0dHJpYnV0ZV9jb250YWlu
-ZXIuYwkyMDA1LTAyLTA4IDE2OjAxOjE0LjAwMDAwMDAwMCAtMDUwMApAQCAtMjgzLDExICsyODMs
-MTYgQEAgYXR0cmlidXRlX2NvbnRhaW5lcl9hZGRfYXR0cnMoc3RydWN0IGNsYQogCXN0cnVjdCBj
-bGFzc19kZXZpY2VfYXR0cmlidXRlICoqYXR0cnMgPQljb250LT5hdHRyczsKIAlpbnQgaSwgZXJy
-b3I7CiAKLQlpZiAoIWF0dHJzKQotCQlyZXR1cm4gMDsKKwlpZiAoYXR0cnMpIHsKKwkJZm9yIChp
-ID0gMDsgYXR0cnNbaV07IGkrKykgeworCQkJZXJyb3IgPSBjbGFzc19kZXZpY2VfY3JlYXRlX2Zp
-bGUoY2xhc3NkZXYsIGF0dHJzW2ldKTsKKwkJCWlmIChlcnJvcikKKwkJCQlyZXR1cm4gZXJyb3I7
-CisJCX0KKwl9CiAKLQlmb3IgKGkgPSAwOyBhdHRyc1tpXTsgaSsrKSB7Ci0JCWVycm9yID0gY2xh
-c3NfZGV2aWNlX2NyZWF0ZV9maWxlKGNsYXNzZGV2LCBhdHRyc1tpXSk7CisJaWYgKGNvbnQtPnN0
-YXRpc3RpY3MpIHsKKwkJZXJyb3IgPSBzeXNmc19jcmVhdGVfZ3JvdXAoJmNsYXNzZGV2LT5rb2Jq
-LCBjb250LT5zdGF0aXN0aWNzKTsKIAkJaWYgKGVycm9yKQogCQkJcmV0dXJuIGVycm9yOwogCX0K
-QEAgLTM0NCw2ICszNDksOSBAQCBhdHRyaWJ1dGVfY29udGFpbmVyX3JlbW92ZV9hdHRycyhzdHJ1
-Y3QgCiAJc3RydWN0IGNsYXNzX2RldmljZV9hdHRyaWJ1dGUgKiphdHRycyA9CWNvbnQtPmF0dHJz
-OwogCWludCBpOwogCisJaWYgKGNvbnQtPnN0YXRpc3RpY3MpCisJCXN5c2ZzX3JlbW92ZV9ncm91
-cCgmY2xhc3NkZXYtPmtvYmosIGNvbnQtPnN0YXRpc3RpY3MpOworCiAJaWYgKCFhdHRycykKIAkJ
-cmV0dXJuOwogCmRpZmYgLXB1TiBhL2luY2x1ZGUvYi9hdHRyaWJ1dGVfY29udGFpbmVyLmggbGlu
-dXgvaW5jbHVkZS9saW51eC9hdHRyaWJ1dGVfY29udGFpbmVyLmgKLS0tIGEvYXR0cmlidXRlX2Nv
-bnRhaW5lci5oCTIwMDUtMDItMDggMTY6MDE6MTQuMDAwMDAwMDAwIC0wNTAwCisrKyBiL2F0dHJp
-YnV0ZV9jb250YWluZXIuaAkyMDA1LTAyLTA4IDE2OjAxOjE0LjAwMDAwMDAwMCAtMDUwMApAQCAt
-MTcsNiArMTcsNyBAQCBzdHJ1Y3QgYXR0cmlidXRlX2NvbnRhaW5lciB7CiAJc3RydWN0IGxpc3Rf
-aGVhZAljb250YWluZXJzOwogCXN0cnVjdCBjbGFzcwkJKmNsYXNzOwogCXN0cnVjdCBjbGFzc19k
-ZXZpY2VfYXR0cmlidXRlICoqYXR0cnM7CisJc3RydWN0IGF0dHJpYnV0ZV9ncm91cCAqc3RhdGlz
-dGljczsKIAlpbnQgKCptYXRjaCkoc3RydWN0IGF0dHJpYnV0ZV9jb250YWluZXIgKiwgc3RydWN0
-IGRldmljZSAqKTsKICNkZWZpbmUJQVRUUklCVVRFX0NPTlRBSU5FUl9OT19DTEFTU0RFVlMJMHgw
-MQogCXVuc2lnbmVkIGxvbmcJCWZsYWdzOwpkaWZmIC1wdU4gYS9kcml2ZXJzL3Njc2kvc2NzaV90
-cmFuc3BvcnRfZmMuYyBiL2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9mYy5jCi0tLSBhL2Ry
-aXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9mYy5jCTIwMDUtMDItMDggMTY6MDE6MTQuMDAwMDAw
-MDAwIC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9mYy5jCTIwMDUtMDIt
-MDggMTY6MDE6MTQuMDAwMDAwMDAwIC0wNTAwCkBAIC03ODgsNyArNzg4LDcgQEAgZmNfYXR0YWNo
-X3RyYW5zcG9ydChzdHJ1Y3QgZmNfZnVuY3Rpb25fdAogCWktPnQuaG9zdF9zaXplID0gc2l6ZW9m
-KHN0cnVjdCBmY19ob3N0X2F0dHJzKTsKIAogCWlmIChmdC0+Z2V0X2ZjX2hvc3Rfc3RhdHMpCi0J
-CWktPnQuaG9zdF9zdGF0aXN0aWNzID0gJmZjX3N0YXRpc3RpY3NfZ3JvdXA7CisJCWktPnQuaG9z
-dF9hdHRycy5zdGF0aXN0aWNzID0gJmZjX3N0YXRpc3RpY3NfZ3JvdXA7CiAKIAlpLT5mID0gZnQ7
-CiAKZGlmZiAtcHVOIGEvaW5jbHVkZS9zY3NpL3Njc2lfdHJhbnNwb3J0LmggYi9pbmNsdWRlL3Nj
-c2kvc2NzaV90cmFuc3BvcnQuaAotLS0gYS9pbmNsdWRlL3Njc2kvc2NzaV90cmFuc3BvcnQuaAky
-MDA1LTAyLTA4IDE2OjAxOjE0LjAwMDAwMDAwMCAtMDUwMAorKysgYi9pbmNsdWRlL3Njc2kvc2Nz
-aV90cmFuc3BvcnQuaAkyMDA1LTAyLTA4IDE2OjAxOjE0LjAwMDAwMDAwMCAtMDUwMApAQCAtMjMs
-OSArMjMsNiBAQAogI2luY2x1ZGUgPGxpbnV4L3RyYW5zcG9ydF9jbGFzcy5oPgogCiBzdHJ1Y3Qg
-c2NzaV90cmFuc3BvcnRfdGVtcGxhdGUgewotCS8qIFRoZSBzdGF0aXN0aWNzIGF0dGFjaGVkIHRv
-IHRoZSBob3N0IGNsYXNzIG9ubHkgKi8KLQlzdHJ1Y3QgYXR0cmlidXRlX2dyb3VwICpob3N0X3N0
-YXRpc3RpY3M7Ci0KIAkvKiB0aGUgYXR0cmlidXRlIGNvbnRhaW5lcnMgKi8KIAlzdHJ1Y3QgYXR0
-cmlidXRlX2NvbnRhaW5lciBob3N0X2F0dHJzOwogCXN0cnVjdCBhdHRyaWJ1dGVfY29udGFpbmVy
-IHRhcmdldF9hdHRyczsKZGlmZiAtcHVOIGEvZHJpdmVycy9zY3NpL3Njc2lfc3lzZnMuYyBiL2Ry
-aXZlcnMvc2NzaS9zY3NpX3N5c2ZzLmMKLS0tIGEvZHJpdmVycy9zY3NpL3Njc2lfc3lzZnMuYwky
-MDA1LTAyLTA4IDE2OjAyOjI5LjAwMDAwMDAwMCAtMDUwMAorKysgYi9kcml2ZXJzL3Njc2kvc2Nz
-aV9zeXNmcy5jCTIwMDUtMDItMDggMTY6MDM6MTUuMDAwMDAwMDAwIC0wNTAwCkBAIC04MzMsNCAr
-ODMzLDQgQEAgRVhQT1JUX1NZTUJPTChzY3NpX2lzX3RhcmdldF9kZXZpY2UpOwogCiAvKiBBIGJs
-YW5rIHRyYW5zcG9ydCB0ZW1wbGF0ZSB0aGF0IGlzIHVzZWQgaW4gZHJpdmVycyB0aGF0IGRvbid0
-CiAgKiB5ZXQgaW1wbGVtZW50IFRyYW5zcG9ydCBBdHRyaWJ1dGVzICovCi1zdHJ1Y3Qgc2NzaV90
-cmFuc3BvcnRfdGVtcGxhdGUgYmxhbmtfdHJhbnNwb3J0X3RlbXBsYXRlID0geyBOVUxMLCB9Owor
-c3RydWN0IHNjc2lfdHJhbnNwb3J0X3RlbXBsYXRlIGJsYW5rX3RyYW5zcG9ydF90ZW1wbGF0ZSA9
-IHsgeyB7TlVMTCwgfSB9LCB9OwpfCg==
-
-------_=_NextPart_001_01C50E5C.6D0D526B--
+PS: the fc remote port patch contains all of the functionality indicated
+  by the initial posting. See : 
+http://marc.theaimsgroup.com/?l=linux-scsi&m=110546151215663&w=2
+http://marc.theaimsgroup.com/?l=linux-scsi&m=110546207223304&w=2
