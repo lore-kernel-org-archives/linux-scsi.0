@@ -1,62 +1,89 @@
-From: Pierre Berthier <berthierp@yahoo.com>
-Subject: Re: memory leak while reading /proc/scsi/gdth/1
-Date: Mon, 3 May 2004 03:58:47 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040503105847.71057.qmail@web41213.mail.yahoo.com>
-References: <20040429195132.GC20141@logos.cnet>
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: Fw: 2.6.6-rc3 ia64 smp_call_function() called with interrupts disabled
+Date: Mon, 3 May 2004 13:29:48 +0100
+Sender: linux-ia64-owner@vger.kernel.org
+Message-ID: <20040503122948.GI2281@parcelfarce.linux.theplanet.co.uk>
+References: <20040502214525.5ad05bed.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web41213.mail.yahoo.com ([66.218.93.46]:55685 "HELO
-	web41213.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S263636AbUECK6s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 May 2004 06:58:48 -0400
-In-Reply-To: <20040429195132.GC20141@logos.cnet>
+Return-path: <linux-ia64-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20040502214525.5ad05bed.akpm@osdl.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org, kaos@sgi.com, linux-kernel@vger.kernel.org, linux-ia64@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Cc: linux-scsi@vger.kernel.org
 
-
---- Marcelo Tosatti <marcelo.tosatti@cyclades.com> wrote:
-> In the meantime can you 
-> turn VM debugging on
+On Sun, May 02, 2004 at 09:45:25PM -0700, Andrew Morton wrote:
+> Begin forwarded message:
 > 
-> # echo 1 > /sys/vm/vm_gfp_debug
+> Date: Mon, 03 May 2004 12:39:44 +1000
+> From: Keith Owens <kaos@sgi.com>
+> To: linux-kernel@vger.kernel.org
+> Subject: 2.6.6-rc3 ia64 smp_call_function() called with interrupts disabled
 > 
-> and run "cat /proc/scsi/gdth/1" ? 
 > 
-> There should be some backtraces in dmesg. Copy them (the full output), 
-> and run then through ksymoops (using the System.map for this kernel).
+> 2.6.6-rc3, modprobe sg calls vfree() with interrupts disabled.  On
+> ia64, vfree calls smp_flush_tlb_all() which calls smp_call_function().
+> Calling smp_call_function() with interrupts disabled can deadlock.
 > 
-> Thanks!
+> Badness in smp_call_function at arch/ia64/kernel/smp.c:312
+> 
+> Call Trace:
+>  [<a000000100142fb0>] __vunmap+0x50/0x1e0
+>                                 sp=e00001307811fe30 bsp=e0000130781190a0
+>  [<a0000002002ae4d0>] sg_add+0x2d0/0xbe0 [sg]
+>                                 sp=e00001307811fe30 bsp=e000013078119038
 
-I suppose you want this output (appearing in /var/log/messages)
+How about the following patch?  Noet that vfree() handles a NULL argument,
+so it's not necessary to check the pointer.
 
-ea411ae0 c0132e67 00000021 00000283 ea411bec c0390000 00000001 00000000
-       c02afa00 c02afca4 00000000 00000021 ffffffff c0132a1e c0390080 c0132e7e
-       c01fbd74 00000146 ea411bec c01fac99 00000000 00001000 00000000 cdf84134
-Call Trace:    [__alloc_pages+639/652] [_alloc_pages+22/24]
-[__get_free_pages+10/24] [gdth_ioctl_alloc+88/104] [gdth_get_info+1021/5048]
-  [lru_cache_add+103/116] [do_no_page+375/508] [do_page_fault+0/1210]
-[do_generic_file_read+1154/1168] [__vma_link+97/176] [do_mmap_pgoff+1076/1276]
-  [error_code+52/60] [error_code+52/60] [error_code+52/60] [clear_user+46/60]
-[padzero+28/32] [load_elf_binary+2490/2872]
-  [load_elf_binary+0/2872] [__alloc_pages+106/652] [lru_cache_add+103/116]
-[gdth_proc_info+144/152] [proc_scsi_read+68/96] [proc_file_read+242/404]
-  [sys_read+143/256] [system_call+51/56]
-ea411ae0 c0132e67 00000021 00000283 ea411bec c0390000 00000001 00000000
-       c02afa00 c02afca4 00000000 00000021 ffffffff c0132a1e c0390080 c0132e7e
-       c01fbd74 00000146 ea411bec c01fac99 00000000 00001000 00000000 e55d7035
-Call Trace:    [__alloc_pages+639/652] [_alloc_pages+22/24]
-[__get_free_pages+10/24] [gdth_ioctl_alloc+88/104] [gdth_get_info+1021/5048]
-  [lru_cache_add+103/116] [do_no_page+375/508] [do_page_fault+0/1210]
-[do_generic_file_read+1154/1168] [__vma_link+97/176] [do_mmap_pgoff+1076/1276]
-  [error_code+52/60] [error_code+52/60] [error_code+52/60] [clear_user+46/60]
-[padzero+28/32] [load_elf_binary+2490/2872]
-  [load_elf_binary+0/2872] [gdth_proc_info+144/152] [proc_scsi_read+68/96]
-[proc_file_read+242/404] [sys_read+143/256] [system_call+51/56]
+Index: drivers/scsi/sg.c
+===================================================================
+RCS file: /var/cvs/linux-2.6/drivers/scsi/sg.c,v
+retrieving revision 1.13
+diff -u -p -r1.13 sg.c
+--- a/drivers/scsi/sg.c	15 Apr 2004 18:04:45 -0000	1.13
++++ b/drivers/scsi/sg.c	3 May 2004 12:28:12 -0000
+@@ -1341,6 +1341,7 @@ sg_add(struct class_device *cl_dev)
+ 	Sg_device *sdp = NULL;
+ 	unsigned long iflags;
+ 	struct cdev * cdev = NULL;
++	void *old_sg_dev_arr = NULL;
+ 	int k, error;
+ 
+ 	disk = alloc_disk(1);
+@@ -1368,7 +1369,7 @@ sg_add(struct class_device *cl_dev)
+ 		memset(tmp_da, 0, tmp_dev_max * sizeof (Sg_device *));
+ 		memcpy(tmp_da, sg_dev_arr,
+ 		       sg_dev_max * sizeof (Sg_device *));
+-		vfree((char *) sg_dev_arr);
++		old_sg_dev_arr = sg_dev_arr;
+ 		sg_dev_arr = tmp_da;
+ 		sg_dev_max = tmp_dev_max;
+ 	}
+@@ -1384,8 +1385,7 @@ find_empty_slot:
+ 		       " type=%d, minor number exceeds %d\n",
+ 		       scsidp->host->host_no, scsidp->channel, scsidp->id,
+ 		       scsidp->lun, scsidp->type, SG_MAX_DEVS - 1);
+-		if (NULL != sdp)
+-			vfree((char *) sdp);
++		vfree(sdp);
+ 		error = -ENODEV;
+ 		goto out;
+ 	}
+@@ -1459,6 +1459,7 @@ find_empty_slot:
+ 	return 0;
+ 
+ out:
++	vfree(old_sg_dev_arr);
+ 	put_disk(disk);
+ 	if (cdev)
+ 		cdev_del(cdev);
 
-
-
-Cheers
-Pierre
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
