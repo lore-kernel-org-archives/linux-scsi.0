@@ -1,43 +1,42 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Unaligned scatter-gather buffers and usb-storage
-Date: Wed, 19 Nov 2003 09:47:30 +0100
+From: Krishna Murthy <krmurthy@cisco.com>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Wed, 19 Nov 2003 18:10:30 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031119084729.GA1106@suse.de>
-References: <20031110095914.B22518@beaverton.ibm.com> <Pine.LNX.4.44L0.0311181001030.735-100000@ida.rowland.org> <20031118143720.A6411@beaverton.ibm.com>
+Message-ID: <200311191810.30135.krmurthy@cisco.com>
+References: <20031027153932.A16679@infradead.org> <03111117263601.01918@naveenb-lnx.cisco.com> <20031111173622.A12435@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:49574 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261957AbTKSIrh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Nov 2003 03:47:37 -0500
-Content-Disposition: inline
-In-Reply-To: <20031118143720.A6411@beaverton.ibm.com>
+Received: from india-ironport-1.cisco.com ([64.104.129.195]:4645 "EHLO
+	india-ironport-1.cisco.com") by vger.kernel.org with ESMTP
+	id S264024AbTKSMlu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Nov 2003 07:41:50 -0500
+In-Reply-To: <20031111173622.A12435@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dougg@torque.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
+To: 'Christoph Hellwig' <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, davmyers@cisco.com
 
-On Tue, Nov 18 2003, Patrick Mansfield wrote:
-> On Tue, Nov 18, 2003 at 10:20:17AM -0500, Alan Stern wrote:
-> 
-> > Alignment to a 512-byte boundary would suffice and page alignment would be
-> > more than enough.  The cleanest way to fix the problem would be to have st
-> > and sg refuse to do direct I/O when the user's buffer isn't page aligned.  
-> > That's probably too draconian (but it would allow us to give the user
-> > process an appropriate error code right away).
-> 
-> The above restriction sounds reasonable to me, but I do not have
-> experience in this area. I thought that the raw and direct block
-> interfaces already had such restrictions.
-> 
-> Jens or Doug G can you comment on this?
-> 
-> You could add a scsi_host fields or bits specifying alignment
-> restrictions, and enforce them as needed in upper level drivers.
+Hi ,
+	The following was one of your comments on the iSCSI driver:
 
-The queue already has such a restriction embedded, see bio_map_user()
-and queue_dma_alignment().
+"having multiple  kmap() in the same process at the same time can kmap(),
+you redesign iscsi_xmit_task/iscsi_xmit_data/iscsi_recv_data not to do that.
+for the tx path use ->sendpage to avoid a data copy and kmapping altogether"
 
--- 
-Jens Axboe
 
+In the first line did you intend to say having multiple kmap() can deadlock?
+Regarding usage of sendpage and avoiding kmapping altogether, 
+we need to access the data, to calculate data digest.  If we do  not use kmap
+how else do we achieve it?
+
+Please let us know.
+
+Thanx
+N.C.Krishna Murthy
+
+
+
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
