@@ -1,36 +1,53 @@
-From: Jan-Frode Myklebust <janfrode@parallab.uib.no>
-Subject: Re: qla2300 at only 1 GBit on kernel 2.6.5
-Date: Thu, 3 Jun 2004 22:23:28 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040603202328.GA1148@ii.uib.no>
-References: <B179AE41C1147041AA1121F44614F0B0DD0114@AVEXCH02.qlogic.org> <20040505174649.GA21863@ii.uib.no> <87vfiptewv.fsf@frode.valhall.no>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] tmscsim: init / exit cleanup
+Date: Thu, 3 Jun 2004 22:23:45 +0200 (CEST)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.44.0406032213080.4721-100000@poirot.grange>
+References: <20040603133835.GA16378@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S264263AbUFCUXi@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87vfiptewv.fsf@frode.valhall.no>
-To: =?iso-8859-1?Q?H=E5vard?= Lygre <hklygre@online.no>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.gmx.de ([213.165.64.20]:55265 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S264238AbUFCU2S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jun 2004 16:28:18 -0400
+In-Reply-To: <20040603133835.GA16378@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-On Sat, May 22, 2004 at 03:43:28AM +0200, H=E5vard Lygre wrote:
->=20
-> Just as a datapoint: Vanilla Linux 2.6.6 gives me 2 Gbps with both
-> sides set to auto.  This is with a QLogic 2312 (as sold by IBM). I
-> haven't tried an earlier 2.6-series kernel on this computer.
+On Thu, 3 Jun 2004, Christoph Hellwig wrote:
 
-Andrew Vasquez <andrew.vasquez@qlogic.com> found the problem. The 2.4
-driver was forcing the data rate to auto negotiate, while the 2.6 (or
-8.x series) driver was honouring the NVRAM setting which was at the
-default 1 Gbps. Changing to auto negotiate in the qlogic BIOS fixed the
-problem.
+> On Mon, May 31, 2004 at 11:13:51PM +0200, Guennadi Liakhovetski wrote:
+> >
+> > #ifdef CONFIG_HOTPLUG_PCI
+> > #define __pcidevinit
+> > #define __pcidevinitdata
+> > #define __pcidevexit
+> > #define __pcidevexitdata
+> > #else
+> > #define __pcidevinit __init
+> > #define __pcidevinitdata __initdata
+> > #define __pcidevexit __exit
+> > #define __pcidevexitdata __exitdata
+> > #endif
+>
+> This has been though out a bit but not considered worthwile. And to actually
+> work it would have to be for all the kernel because you could get problems
+> over the module boundary otherwise.
 
->=20
-> On a side note: Your driver reports 33 MHz PCI - if this is in a
-> 32-bit slot, isn't 2Gbps more than the bus can handle?
+Sorry, do you have a reference or remember at least apporoximatly when and
+where the discussion took place? I don't quite understand your arguments.
+We do have __dev{init,exit,...} macros, do they have "problems over the
+module boundary"? If yes - they want to be solved, right? If not - why
+would equally defined __pcidev* have problems? You mean using __devinit in
+a module has probles? The advantages of the above are obvious: there are
+many more HOTPLUG-enabled systems, than PCI_HOTPLUG-enabled ones. And a
+reasonable number of drivers, that serve devices only over PCI. How much
+would it add to "Freeing init memory" in an "average" configuration?
 
-It's a 64 bit slot..
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
 
-   -jf
