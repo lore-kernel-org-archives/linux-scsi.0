@@ -1,37 +1,45 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] 2.4.21 fix race condition in sg.c
-Date: 27 Jun 2003 09:47:00 -0500
+From: "Tony Battersby" <tonyb@cybernetics.com>
+Subject: RE: [PATCH] 2.4.21 fix race condition in sg.c
+Date: Fri, 27 Jun 2003 10:57:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1056725222.2099.21.camel@mulgrave>
-References: <002901c33cb3$4b262730$e0019d89@cybernetics.com>
-	<1056723054.1825.16.camel@mulgrave>
-	<1056724288.3172.43.camel@dhcp22.swansea.linux.org.uk>
+Message-ID: <002a01c33cbc$5e45d960$e0019d89@cybernetics.com>
+References: <1056723054.1825.16.camel@mulgrave>
+Reply-To: <tonyb@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:61190 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264389AbTF0OdM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jun 2003 10:33:12 -0400
-In-Reply-To: <1056724288.3172.43.camel@dhcp22.swansea.linux.org.uk>
+Received: from host02.cybernetics.com ([206.246.200.18]:60685 "EHLO
+	cybernetics.com") by vger.kernel.org with ESMTP id S264398AbTF0Om6
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jun 2003 10:42:58 -0400
+In-Reply-To: <1056723054.1825.16.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: tonyb@cybernetics.com, Marcelo Tosatti <marcelo@conectiva.com.br>, SCSI Mailing List <linux-scsi@vger.kernel.org>, dougg@torque.net
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>
+Cc: 'Alan Cox' <alan@lxorguk.ukuu.org.uk>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, marcelo@conectiva.com.br, dougg@torque.net
 
-On Fri, 2003-06-27 at 09:31, Alan Cox wrote:
-> For cases you just have to force compiler ordering you can use barrier, which
-> resolves to 
-> 
->  __asm__ __volatile__("": : :"memory")
-> 
-> ie an empty space that affects memory so causes write backs 
+> I don't believe any of the above applies to the sg request 
+> pointer done flag.
 
-Right.  The code in question is the only statement between an if block
-and a function call, thus I believe it's safe from gcc reordering, so I
-was assuming the intent was externally visible ordering (which can be
-the expensive one).
+I see a situation analogous to this:
 
-James
+CPU #0:
+foo = result;
+smp_wmb();
+done = 1;
 
+CPU #1:
+if (done)
+	return foo;
+
+Isn't smp_wmb() necessary to prevent the CPU from re-ordering the stores?
+
+In the actual code, "foo" corresponds to fields like the SCSI return status,
+sense data, and the data transfer residual.
+
+Sorry if I am wrong about this.  I couldn't find much documentation on the
+proper use of barriers.
+
+Anthony J. Battersby
+Cybernetics
 
