@@ -1,347 +1,101 @@
-From: Pavel@Janik.cz (Pavel =?iso-8859-2?q?Jan=EDk?=)
-Subject: qlogic QLA2200F/66 with Compaq HSG80?
-Date: Mon, 09 Sep 2002 11:29:55 +0200
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [RFC] Multi-path IO in 2.5/2.6 ?
+Date: Mon, 9 Sep 2002 09:56:52 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m3it1fzf1o.fsf@Janik.cz>
+Message-ID: <20020909095652.A21245@eng2.beaverton.ibm.com>
+References: <200209091458.g89Evv806056@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200209091458.g89Evv806056@localhost.localdomain>; from James.Bottomley@SteelEye.com on Mon, Sep 09, 2002 at 09:57:56AM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Lars Marowsky-Bree <lmb@suse.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi,
+On Mon, Sep 09, 2002 at 09:57:56AM -0500, James Bottomley wrote:
+> Lars Marowsky-Bree <lmb@suse.de> said:
+> > So, what is the take on "multi-path IO" (in particular, storage) in
+> > 2.5/2.6?
+> 
+> I've already made my views on this fairly clear (at least from the SCSI stack 
+> standpoint):
+> 
+> - multi-path inside the low level drivers (like qla2x00) is wrong
 
-this is a copy of an e-mail I sent to lkml last week. Can you please he=
-lp
-he with this issue? Please keep me in CC: I'm not subscribed here.
+Agreed.
 
-we have Compaq Proliant DL380 with two FC cards Qlogic ISP2200A in 64bi=
-t
-PCI bus.
+> - multi-path inside the SCSI mid-layer is probably wrong
 
-The system has two CPUS:
+Disagree
 
-processor	: 0
-vendor_id	: GenuineIntel
-cpu family	: 6
-model		: 8
-model name	: Pentium III (Coppermine)
-stepping	: 6
-cpu MHz		: 996.893
-cache size	: 256 KB
-fdiv_bug	: no
-hlt_bug		: no
-sep_bug		: no
-f00f_bug	: no
-coma_bug	: no
-fpu		: yes
-fpu_exception	: yes
-cpuid level	: 2
-wp		: yes
-flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov =
-pat pse36 mmx fxsr xmm
-bogomips	: 1992.29
+> - from the generic block layer on up, I hold no specific preferences
 
-processor	: 1
-vendor_id	: GenuineIntel
-cpu family	: 6
-model		: 8
-model name	: Pentium III (Coppermine)
-stepping	: 6
-cpu MHz		: 996.893
-cache size	: 256 KB
-fdiv_bug	: no
-hlt_bug		: no
-sep_bug		: no
-f00f_bug	: no
-coma_bug	: no
-fpu		: yes
-fpu_exception	: yes
-cpuid level	: 2
-wp		: yes
-flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov =
-pat pse36 mmx fxsr xmm
-bogomips	: 1985.74
+Using md or volume manager is wrong for non-failover usage, and somewhat
+bad for failover models; generic block layer is OK but it is wasted code
+for any lower layers that do not or cannot have multi-path IO (such as
+IDE).
 
-We have it running with 2.2.19 with qla driver version 4.46.12b. All
-devices on FC switch are visible (on both cards):
+> 
+> James
 
-Attached devices:=20
-Host: scsi0 Channel: 00 Id: 00 Lun: 00
-  Vendor: DEC      Model: HSG80CCL         Rev: V86F
-  Type:   Unknown                          ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 00 Lun: 01
-  Vendor: DEC      Model: HSG80            Rev: V86F
-  Type:   Unknown                          ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 00 Lun: 02
-  Vendor: DEC      Model: HSG80            Rev: V86F
-  Type:   Unknown                          ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 00 Lun: 03
-  Vendor: DEC      Model: HSG80            Rev: V86F
-  Type:   Unknown                          ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 00 Lun: 04
-  Vendor: DEC      Model: HSG80            Rev: V86F
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 00 Lun: 05
-  Vendor: DEC      Model: HSG80            Rev: V86F
-  Type:   Unknown                          ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 00 Lun: 06
-  Vendor: DEC      Model: HSG80            Rev: V86F
-  Type:   Unknown                          ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 00 Lun: 07
-  Vendor: DEC      Model: HSG80            Rev: V86F
-  Type:   Unknown                          ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 01 Lun: 00
-  Vendor: DEC      Model: TL800    (C) DEC Rev: 0409
-  Type:   Medium Changer                   ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 01 Lun: 01
-  Vendor: DEC      Model: TZ89     (C) DEC Rev: 2150
-  Type:   Sequential-Access                ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 01 Lun: 02
-  Vendor: DEC      Model: TZ89     (C) DEC Rev: 2150
-  Type:   Sequential-Access                ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 01 Lun: 03
-  Vendor: DEC      Model: TZ89     (C) DEC Rev: 2150
-  Type:   Sequential-Access                ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 01 Lun: 04
-  Vendor: DEC      Model: TZ89     (C) DEC Rev: 2561
-  Type:   Sequential-Access                ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 00 Lun: 00
-  Vendor: DEC      Model: HSG80CCL         Rev: V86F
-  Type:   Unknown                          ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 00 Lun: 01
-  Vendor: DEC      Model: HSG80            Rev: V86F
-  Type:   Unknown                          ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 00 Lun: 02
-  Vendor: DEC      Model: HSG80            Rev: V86F
-  Type:   Unknown                          ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 00 Lun: 03
-  Vendor: DEC      Model: HSG80            Rev: V86F
-  Type:   Unknown                          ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 00 Lun: 04
-  Vendor: DEC      Model: HSG80            Rev: V86F
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 00 Lun: 05
-  Vendor: DEC      Model: HSG80            Rev: V86F
-  Type:   Unknown                          ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 00 Lun: 06
-  Vendor: DEC      Model: HSG80            Rev: V86F
-  Type:   Unknown                          ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 00 Lun: 07
-  Vendor: DEC      Model: HSG80            Rev: V86F
-  Type:   Unknown                          ANSI SCSI revision: 02
+I have a newer version of SCSI multi-path in the mid layer that I hope to
+post this week, the last version patched against 2.5.14 is here:
 
-We would like to upgrade the system to 2.4.19 with the latest qlogic's
-driver 6.1b5. We have succeeded, but HSG80s are no more visible...:
+http://www-124.ibm.com/storageio/multipath/scsi-multipath
 
-Attached devices:=20
-Host: scsi0 Channel: 00 Id: 00 Lun: 00
-  Vendor: DEC      Model: HSG80CCL         Rev: V86F
-  Type:   Unknown                          ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 01 Lun: 00
-  Vendor: DEC      Model: TL800    (C) DEC Rev: 0409
-  Type:   Medium Changer                   ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 01 Lun: 01
-  Vendor: DEC      Model: TZ89     (C) DEC Rev: 2150
-  Type:   Sequential-Access                ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 01 Lun: 02
-  Vendor: DEC      Model: TZ89     (C) DEC Rev: 2150
-  Type:   Sequential-Access                ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 01 Lun: 03
-  Vendor: DEC      Model: TZ89     (C) DEC Rev: 2150
-  Type:   Sequential-Access                ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 01 Lun: 04
-  Vendor: DEC      Model: TZ89     (C) DEC Rev: 2561
-  Type:   Sequential-Access                ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 00 Lun: 00
-  Vendor: DEC      Model: HSG80CCL         Rev: V86F
-  Type:   Unknown                          ANSI SCSI revision: 02
+Some documentation is located here:
 
-We have tried both SMP and NOSMP build, the result is the same (ie. all
-device except HSG80s ae visible).
+http://www-124.ibm.com/storageio/multipath/scsi-multipath/docs/index.html
 
-We have also tried to use kernel's qlogicfc:
+I have a current patch against 2.5.33 that includes NUMA support (it
+requires discontigmem support that I believe is in the current linus
+bk tree, plus NUMA topology patches).
 
-Sep  7 01:37:37 intranet kernel: qlogicfc0 : Loop Reinitialized
-Sep  7 01:37:37 intranet kernel: qlogicfc0 : Link is Up
-Sep  7 01:37:37 intranet kernel: qlogicfc1 : Loop Reinitialized
-Sep  7 01:37:37 intranet kernel: qlogicfc1 : Link is Up
-Sep  7 01:37:37 intranet kernel: qlogicfc1 : Fabric found.
-Sep  7 01:37:37 intranet kernel: qlogicfc1 : Port Database
-Sep  7 01:37:37 intranet kernel: wwn: 210000e08b02b749  scsi_id: 0  loo=
-p_id: 0
-Sep  7 01:37:37 intranet kernel: wwn: 50001fe1000e8803  scsi_id: 1  loo=
-p_id: 81
-Sep  7 01:37:37 intranet kernel: scsi0 : QLogic ISP2200 SCSI on PCI bus=
- 03 device 28 irq 15 base 0x3000
-Sep  7 01:37:37 intranet kernel: scsi1 : QLogic ISP2200 SCSI on PCI bus=
- 03 device 30 irq 5 base 0x3400
-Sep  7 01:37:37 intranet kernel: qlogicfc0 : Fabric found.
-Sep  7 01:37:37 intranet kernel: qlogicfc0 : Get All Next failed 4005.
-Sep  7 01:37:37 intranet kernel: qlogicfc0 : Port Database
-Sep  7 01:37:37 intranet kernel: wwn: 210000e08b033967  scsi_id: 0  loo=
-p_id: 0
-Sep  7 01:37:38 intranet kernel: wwn: 500508b3001025f1  scsi_id: 1  loo=
-p_id: 81
-Sep  7 01:37:41 intranet kernel: qlogicfc0 : Loop Reinitialized
-Sep  7 01:37:42 intranet kernel: qlogicfc0 : Fabric found.
-Sep  7 01:37:42 intranet kernel: qlogicfc0 : Port Database
-Sep  7 01:37:42 intranet kernel: wwn: 210000e08b033967  scsi_id: 0  loo=
-p_id: 0
-Sep  7 01:37:42 intranet kernel: wwn: 500508b3001025f1  scsi_id: 1  loo=
-p_id: 81
-Sep  7 01:37:42 intranet kernel: wwn: 50001fe1000e8804  scsi_id: 2  loo=
-p_id: 82
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: TL800    (C=
-) DEC  Rev: 0409
-Sep  7 01:37:42 intranet kernel:   Type:   Medium Changer              =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: TZ89     (C=
-) DEC  Rev: 2150
-Sep  7 01:37:42 intranet kernel:   Type:   Sequential-Access           =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: TZ89     (C=
-) DEC  Rev: 2150
-Sep  7 01:37:42 intranet kernel:   Type:   Sequential-Access           =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: TZ89     (C=
-) DEC  Rev: 2150
-Sep  7 01:37:42 intranet kernel:   Type:   Sequential-Access           =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: TZ89     (C=
-) DEC  Rev: 2561
-Sep  7 01:37:42 intranet kernel:   Type:   Sequential-Access           =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel: scsi: unknown type 12
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: HSG80CCL   =
-       Rev: V86F
-Sep  7 01:37:42 intranet kernel:   Type:   Unknown                     =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel: scsi: unknown type 31
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: HSG80      =
-       Rev: V86F
-Sep  7 01:37:42 intranet kernel:   Type:   Unknown                     =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel: scsi: unknown type 31
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: HSG80      =
-       Rev: V86F
-Sep  7 01:37:42 intranet kernel:   Type:   Unknown                     =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel: scsi: unknown type 31
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: HSG80      =
-       Rev: V86F
-Sep  7 01:37:42 intranet kernel:   Type:   Unknown                     =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: HSG80      =
-       Rev: V86F
-Sep  7 01:37:42 intranet kernel:   Type:   Direct-Access               =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel: scsi: unknown type 31
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: HSG80      =
-       Rev: V86F
-Sep  7 01:37:42 intranet kernel:   Type:   Unknown                     =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel: scsi: unknown type 31
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: HSG80      =
-       Rev: V86F
-Sep  7 01:37:42 intranet kernel:   Type:   Unknown                     =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel: scsi: unknown type 31
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: HSG80      =
-       Rev: V86F
-Sep  7 01:37:42 intranet kernel:   Type:   Unknown                     =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel: scsi: unknown type 12
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: HSG80CCL   =
-       Rev: V86F
-Sep  7 01:37:42 intranet kernel:   Type:   Unknown                     =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel: scsi: unknown type 31
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: HSG80      =
-       Rev: V86F
-Sep  7 01:37:42 intranet kernel:   Type:   Unknown                     =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel: scsi: unknown type 31
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: HSG80      =
-       Rev: V86F
-Sep  7 01:37:42 intranet kernel:   Type:   Unknown                     =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel: scsi: unknown type 31
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: HSG80      =
-       Rev: V86F
-Sep  7 01:37:42 intranet kernel:   Type:   Unknown                     =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: HSG80      =
-       Rev: V86F
-Sep  7 01:37:42 intranet kernel:   Type:   Direct-Access               =
-       ANSI SCSI revision: 02
-Sep  7 01:37:42 intranet kernel: scsi: unknown type 31
-Sep  7 01:37:42 intranet kernel:   Vendor: DEC       Model: HSG80      =
-       Rev: V86F
-Sep  7 01:37:42 intranet kernel:   Type:   Unknown                     =
-       ANSI SCSI revision: 02
-Sep  7 01:37:43 intranet kernel: scsi: unknown type 31
-Sep  7 01:37:43 intranet kernel:   Vendor: DEC       Model: HSG80      =
-       Rev: V86F
-Sep  7 01:37:43 intranet kernel:   Type:   Unknown                     =
-       ANSI SCSI revision: 02
-Sep  7 01:37:43 intranet kernel: scsi: unknown type 31
-Sep  7 01:37:43 intranet kernel:   Vendor: DEC       Model: HSG80      =
-       Rev: V86F
-Sep  7 01:37:43 intranet kernel:   Type:   Unknown                     =
-       ANSI SCSI revision: 02
-Sep  7 01:37:43 intranet kernel: Attached scsi disk sda at scsi0, chann=
-el 0, id 2, lun 4
-Sep  7 01:37:43 intranet kernel: Attached scsi disk sdb at scsi1, chann=
-el 0, id 1, lun 4
-Sep  7 01:37:43 intranet kernel: resize_dma_pool: unknown device type 1=
-2
-Sep  7 01:37:43 intranet kernel: resize_dma_pool: unknown device type 3=
-1
-Sep  7 01:37:43 intranet last message repeated 5 times
-Sep  7 01:37:43 intranet kernel: resize_dma_pool: unknown device type 1=
-2
-Sep  7 01:37:43 intranet kernel: resize_dma_pool: unknown device type 3=
-1
-Sep  7 01:37:43 intranet last message repeated 5 times
-Sep  7 01:37:43 intranet kernel: SCSI device sda: 71114623 512-byte hdw=
-r sectors (36411 MB)
-Sep  7 01:37:43 intranet kernel:  sda: sda1 sda3
-Sep  7 01:37:43 intranet kernel: SCSI device sdb: 71114623 512-byte hdw=
-r sectors (36411 MB)
-Sep  7 01:37:43 intranet kernel:  sdb: sdb1 sdb3
+A major problem with multi-path in md or other volume manager is that we
+use multiple (block layer) queues for a single device, when we should be
+using a single queue. If we want to use all paths to a device (i.e. round
+robin across paths or such, not a failover model) this means the elevator
+code becomes inefficient, mabye even counterproductive. For disk arrays,
+this might not be bad, but for actual drives or even plugging single
+ported drives into a switch or bus with multiple initiators, this could
+lead to slower disk performance.
 
-So it to sees all devices, but there were problems when accessing
-filesystems on the disks (ls -l in the directory from FC took about
-a minute to finish and did not print correct informations). Kernel driv=
-er
-is unusable for us. Our goal is to see HSG80s with the latest qlogic dr=
-iver
-so we can create multipath failover configuration then.
+If the volume manager implements only a failover model (use only a single
+path until that path fails), besides performance issues in balancing IO
+loads, we waste space allocating an extra Scsi_Device for each path.
 
-There are some comments about Compaq HSG80 in the sources and makefile.=
- We
-also tried to build the module with HSG80=3Dy, but the result is the sa=
-me. We
-have also tried to modify values of HSG* variables, but no difference..=
-=2E
+In the current code, each path is allocated a Scsi_Device, including a
+request_queue_t, and a set of Scsi_Cmnd structures. Not only do we
+end up with a Scsi_Device for each path, we also have an upper level
+(sd, sg, st, or sr) driver attached to each Scsi_Device.
 
-There is a tarball with all datas we collected at http://www.janik.cz/t=
-mp/qlogic-compag-hsg80.tar.gz
-We can provide any further details you want.
+For sd, this means if you have n paths to each SCSI device, you are
+limited to whatever limit sd has divided by n, right now 128 / n.  Having
+four paths to a device is very reasonable, limiting us to 32 devices, but
+with the overhead of 128 devices.
 
-Is there anyone running that card with Compaq's HSG80? In multipath
-failover configuration?
---=20
-Pavel Jan=EDk
+Using a volume manager to implement multiple paths (again non-failover
+model) means that the queue_depth might be too large if the queue_depth
+(i.e.  number of outstanding commands sent to the drive) is set as a
+per-device value - we can end sending n * queue_depth commands to a device.
 
-Buying an operating system without source is like buying a self-assembl=
-y
-Space Shuttle with no instructions.
-                  -- Jeremy Allison in linux-kernel
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+multi-path in the scsi layer enables multi-path use for all upper level scsi
+drivers, not just disks.
+
+We could implement multi-path IO in the block layer, but if the only user
+is SCSI, this gains nothing compared to putting multi-path in the scsi
+layers. Creating block level interfaces that will work for future devices
+and/or future code is hard without already having the devices or code in
+place. Any block level interface still requires support in the the
+underlying layers.
+
+I'm not against a block level interface, but I don't have ideas or code
+for such an implementation.
+
+Generic device naming consistency is a problem if multiple devices show up
+with the same id.
+
+With the scsi layer multi-path, ide-scsi or usb-scsi could also do
+multi-path IO.
+
+-- Patrick Mansfield
