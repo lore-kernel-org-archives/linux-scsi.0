@@ -1,46 +1,28 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: When must the io_request_lock be held?
-Date: Wed, 07 Aug 2002 11:48:16 -0500
+Date: Wed, 7 Aug 2002 09:55:32 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200208071648.g77GmGH03563@localhost.localdomain>
-References: <dledford@redhat.com>
+Message-ID: <20020807095532.A12951@eng2.beaverton.ibm.com>
+References: <dledford@redhat.com> <200208071526.g77FQOt03034@localhost.localdomain> <20020807121846.F10872@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id JAA24842
-	for <linux-scsi@vger.kernel.org>; Wed, 7 Aug 2002 09:48:20 -0700
-In-Reply-To: Message from Doug Ledford <dledford@redhat.com>
-   of "Wed, 07 Aug 2002 12:18:46 EDT." <20020807121846.F10872@redhat.com>
+In-Reply-To: <20020807121846.F10872@redhat.com>; from dledford@redhat.com on Wed, Aug 07, 2002 at 12:18:46PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>, Jamie Wellnitz <Jamie.Wellnitz@emulex.com>, linux-scsi@vger.kernel.org
 
-dledford@redhat.com said:
-> Then you better not *ever* release the lock under those conditions.   
+On Wed, Aug 07, 2002 at 12:18:46PM -0400, Doug Ledford wrote:
 
-Exactly so.
+> Again, if Marcello takes my patch, this will become easier as well since 
+> it adds a host->lock lock that allows you to get your driver off the 
+> horrible io_request_lock once and for all.  (Note: I may have to change 
+> the name to host->host_lock to make it match 2.5, but that just annoys the 
+> hell out of me because I *detest* totally redundant names like that...)
 
-dledford@redhat.com said:
-> Again, if Marcello takes my patch, this will become easier as well
-> since  it adds a host->lock lock that allows you to get your driver
-> off the  horrible io_request_lock once and for all.  (Note: I may have
-> to change  the name to host->host_lock to make it match 2.5, but that
-> just annoys the  hell out of me because I *detest* totally redundant
-> names like that...)
+Such code looks a bit odd, but I would rather have it and be able to
+more easily find or audit all the references; using cscope, there
+are about 6700 references to lock in the 2.5 kernel (only looking at
+i386 sources, so there are probably more), and about 300 references to
+host_lock.
 
-Well, that's just semantics, I won't get into the argument...
-
-Note also that 2.5 already has per queue locks (that means per individual SCSI 
-devices) which are lock pointers.  In 2.5 current, all the devices that hang 
-off an individual host have their queue_locks initialised to point to the 
-single host->host_lock.  However, drivers which can do it (the type of 
-multi-threaded multi-mailbox ones) will be permitted to use individual and 
-separate queue_locks, rather than the single host_lock, to protect their 
-mailbox registers.  If you are never going to do this, the difference between 
-using host_lock and queue_lock is irrelevant to you.  If you are, you need to 
-begin using the queue_locks.
-
-James
-
-
-
+-- Patrick Mansfield
