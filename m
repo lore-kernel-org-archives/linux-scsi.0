@@ -1,108 +1,174 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: request sense
-Date: Fri, 25 Feb 2005 14:02:20 +1000
-Message-ID: <421EA34C.1060002@torque.net>
-References: <20050224231901.GT28741@parcelfarce.linux.theplanet.co.uk>
-Reply-To: dougg@torque.net
+From: Doug Ledford <dledford@redhat.com>
+Subject: [Patch] QLogic qla2x00 driver fixes
+Date: Thu, 24 Feb 2005 23:21:33 -0500
+Message-ID: <1109305293.27139.216.camel@compaq-rhel4.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from borg.st.net.au ([65.23.158.22]:57534 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S261758AbVBYEBf (ORCPT
+Content-Type: multipart/mixed; boundary="=-rFDkXEU95ZVMxZjXGhKj"
+Received: from mx1.redhat.com ([66.187.233.31]:60811 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S261869AbVBYEVf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Feb 2005 23:01:35 -0500
-In-Reply-To: <20050224231901.GT28741@parcelfarce.linux.theplanet.co.uk>
+	Thu, 24 Feb 2005 23:21:35 -0500
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.12.11/8.12.11) with ESMTP id j1P4LYKJ028888
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2005 23:21:34 -0500
+Received: from compaq.xsintricity.com (dledford.cipe.redhat.com [10.0.0.84])
+	by int-mx1.corp.redhat.com (8.11.6/8.11.6) with ESMTP id j1P4LYK14892
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2005 23:21:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
-
-Matthew Wilcox wrote:
-> Found a funny in the sym2 driver I'm not sure how to resolve:
-> 
->                 cp->sensecmd[0]         = REQUEST_SENSE;
->                 cp->sensecmd[1]         = 0;
->                 if (tp->tinfo.curr.scsi_version <= 2 && cp->lun <= 7)
->                         cp->sensecmd[1] = cp->lun << 5;
-> 
-> Thing is, we don't set scsi_version anywhere, so I'm sure sym2 currently
-> does The Wrong Thing for SCSI-2 drives.  Pulling up the (draft) specs,
-> this does seem to be something that changed between SCSI-2 and SPC3r15.
-> Polling some of the other scsi drivers for a solution:
-> 
-> 3w-9xxx		Never fills in LUN
-> 53c700		Always fills in LUN
-> BusLogic	Doesn't send REQUEST_SENSE
-> aic7xxx		Same as sym2 (except it sets its equivalent of scsi_version)
-> dc395x		Always fills in LUN
-> gdth		Doesn't send REQUEST_SENSE
-> ipr		Never fills in LUN
-> ips		Doesn't send REQUEST_SENSE
-> ncr53c8xx	Doesn't send REQUEST_SENSE
-> qla1280		Doesn't send REQUEST_SENSE
-> sym53c416	Doesn't send REQUEST_SENSE
-> tmscsim		Always fills in LUN
-> 
-> In other words, the only driver I've found that gets this *right* is
-> aic7xxx (and 79xx).  Even scsi_error.c doesn't fill in the LUN.  What's
-> going on here?
-
-Matthew,
-Back in SCSI-2 (final t10 draft in 1993, standard in 1994) all
-SCSI commands (I believe) used the top 3 bits of byte 1 of a cdb
-for the logical unit number (lun). In those days SCSI had only
-one transport (now called SPI) and luns were limited to 8 (3 bits)
-for each target.
-
-By SPC (part of the original "SCSI-3") those 3 bits were reserved
-and luns had increased to 32 bits and were conveyed across the
-SCSI transport by soem other mechanism (i.e. not the cdb). SPC was
-standardized in 1997 and the final draft is dated almost 8 years
-ago.
-
-Now SPC-3 is in the process of being voted on. Those top 3 bits
-in byte 1 of each cdb are now being re-used by some commands.
-For example, there is now something called "protection information"
-which adds an extra 8 bytes to each block. If a disk supports it
-(PROTECT bit set in an INQUIRY response), then an application
-can format a disk with it by setting byte 1, bit 7 of the
-FORMAT UNIT cdb. 11 years ago that bit would have been part of
-the lun number. Even READ and WRITE cdbs now use the former lun
-bits.
-
-So unless a LLD knows that it is using such an old version
-of SPI that it has no other mechanism for conveying a lun
-_and_ the mid level structure indicates a lun > 0 (and
-lun < 8) then it should not overwrite those bits, IMO.
-
-The LLD obviously knows the version of SPI that a target
-supports and the "version" field in an INQUIRY response
-indicates which SCSI command set generation the device claims
-to support (SPC-3 rev 21d, table 81 on page 145). As has been
-discussed elsewhere, one should not necessary believe the
-value a device puts in the version field (especially if
-an LLD hacks it).
-
-As for REQUEST SENSE, that was used before the days of auto
-sense to retrieve the sense data when a CHECK CONDITION status
-was reported by a command. Now auto sense is mandatory and
-REQUEST SENSE almost fell out of use. Prior to auto-sense,
-the mid level (or perhaps the LLD) build REQUEST SENSE cdbs
-and in SCSI-2 then had to worry about the lun. The good
-news is that the top 3 bits of byte 1 of the REQUEST SENSE
-cdb are still reserved. Only an extremely pedantic SCSI
-command interpreter would complain if they were set (IMO).
-
-Aside: REQUEST SENSE has now made a comeback. It is used
-to report the power condition of a device. It is also used
-to convey a progress indication for long duration commands
-like FORMAT UNIT that are executed with the IMMED bit set
-(i.e. start the command then return a GOOD status). This
-progress indication role used to be performed by TEST UNIT
-READY (and still is in disks that I have tested).
+To: linux-scsi mailing list <linux-scsi@vger.kernel.org>
 
 
-Basically it's a moving target, albeit a very slow one :-)
+--=-rFDkXEU95ZVMxZjXGhKj
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-Doug Gilbert
+Don't use cmd->request->nr_hw_segments as it may not be initialized
+(SG_IO in particular bypasses anything that initializes this and just
+uses scsi_do_req to insert a scsi_request directly on the head of the
+queue) and a bogus value here can trip up the checks to make sure that
+the number of segments will fit in the queue ring buffer, resulting in
+commands that are never completed.
+
+Fix up several issues with PCI DMA mapping and failure to check return
+values on the mappings.
+
+Make the check for space in the ring buffer happen after the DMA mapping
+is done since any checks done before the mapping has taken place are
+bogus.
+
+-- 
+Doug Ledford <dledford@redhat.com>
+http://people.redhat.com/dledford
+
+--=-rFDkXEU95ZVMxZjXGhKj
+Content-Disposition: attachment; filename=qla.patch
+Content-Type: text/x-patch; name=qla.patch; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+===== qla_iocb.c 1.15 vs edited =====
+--- 1.15/drivers/scsi/qla2xxx/qla_iocb.c	2004-12-09 01:12:03 -05:00
++++ edited/qla_iocb.c	2005-02-24 16:25:55 -05:00
+@@ -216,18 +216,7 @@ void qla2x00_build_scsi_iocbs_32(srb_t *
+ 			cur_seg++;
+ 		}
+ 	} else {
+-		dma_addr_t	req_dma;
+-		struct page	*page;
+-		unsigned long	offset;
+-
+-		page = virt_to_page(cmd->request_buffer);
+-		offset = ((unsigned long)cmd->request_buffer & ~PAGE_MASK);
+-		req_dma = pci_map_page(ha->pdev, page, offset,
+-		    cmd->request_bufflen, cmd->sc_data_direction);
+-
+-		sp->dma_handle = req_dma;
+-
+-		*cur_dsd++ = cpu_to_le32(req_dma);
++		*cur_dsd++ = cpu_to_le32(sp->dma_handle);
+ 		*cur_dsd++ = cpu_to_le32(cmd->request_bufflen);
+ 	}
+ }
+@@ -299,19 +288,8 @@ void qla2x00_build_scsi_iocbs_64(srb_t *
+ 			cur_seg++;
+ 		}
+ 	} else {
+-		dma_addr_t	req_dma;
+-		struct page	*page;
+-		unsigned long	offset;
+-
+-		page = virt_to_page(cmd->request_buffer);
+-		offset = ((unsigned long)cmd->request_buffer & ~PAGE_MASK);
+-		req_dma = pci_map_page(ha->pdev, page, offset,
+-		    cmd->request_bufflen, cmd->sc_data_direction);
+-
+-		sp->dma_handle = req_dma;
+-
+-		*cur_dsd++ = cpu_to_le32(LSD(req_dma));
+-		*cur_dsd++ = cpu_to_le32(MSD(req_dma));
++		*cur_dsd++ = cpu_to_le32(LSD(sp->dma_handle));
++		*cur_dsd++ = cpu_to_le32(MSD(sp->dma_handle));
+ 		*cur_dsd++ = cpu_to_le32(cmd->request_bufflen);
+ 	}
+ }
+@@ -344,6 +322,8 @@ qla2x00_start_scsi(srb_t *sp)
+ 
+ 	/* Setup device pointers. */
+ 	ret = 0;
++	/* So we know we haven't pci_map'ed anything yet */
++	tot_dsds = 0;
+ 	fclun = sp->lun_queue->fclun;
+ 	ha = fclun->fcport->ha;
+ 	reg = ha->iobase;
+@@ -372,8 +352,32 @@ qla2x00_start_scsi(srb_t *sp)
+ 	if (index == MAX_OUTSTANDING_COMMANDS)
+ 		goto queuing_error;
+ 
++	/* Map the sg table so we have an accurate count of sg entries needed */
++	if (cmd->use_sg) {
++		sg = (struct scatterlist *) cmd->request_buffer;
++		tot_dsds = pci_map_sg(ha->pdev, sg, cmd->use_sg,
++		    cmd->sc_data_direction);
++		if (tot_dsds == 0)
++			goto queuing_error;
++	} else if (cmd->request_bufflen) {
++		dma_addr_t	req_dma;
++		struct page	*page;
++		unsigned long	offset;
++
++		page = virt_to_page(cmd->request_buffer);
++		offset = ((unsigned long)cmd->request_buffer & ~PAGE_MASK);
++		req_dma = pci_map_page(ha->pdev, page, offset,
++		    cmd->request_bufflen, cmd->sc_data_direction);
++
++		if (dma_mapping_error(req_dma))
++			goto queuing_error;
++
++		sp->dma_handle = req_dma;
++		tot_dsds = 1;
++	}
++
+ 	/* Calculate the number of request entries needed. */
+-	req_cnt = (ha->calc_request_entries)(cmd->request->nr_hw_segments);
++	req_cnt = (ha->calc_request_entries)(tot_dsds);
+ 	if (ha->req_q_cnt < (req_cnt + 2)) {
+ 		cnt = RD_REG_WORD_RELAXED(ISP_REQ_Q_OUT(ha, reg));
+ 		if (ha->req_ring_index < cnt)
+@@ -385,19 +389,6 @@ qla2x00_start_scsi(srb_t *sp)
+ 	if (ha->req_q_cnt < (req_cnt + 2))
+ 		goto queuing_error;
+ 
+-	/* Finally, we have enough space, now perform mappings. */
+-	tot_dsds = 0;
+-	if (cmd->use_sg) {
+-		sg = (struct scatterlist *) cmd->request_buffer;
+-		tot_dsds = pci_map_sg(ha->pdev, sg, cmd->use_sg,
+-		    cmd->sc_data_direction);
+-		if (tot_dsds == 0)
+-			goto queuing_error;
+-	} else if (cmd->request_bufflen) {
+-	    tot_dsds++;
+-	}
+-	req_cnt = (ha->calc_request_entries)(tot_dsds);
+-
+ 	/* Build command packet */
+ 	ha->current_outstanding_cmd = handle;
+ 	ha->outstanding_cmds[handle] = sp;
+@@ -479,6 +470,14 @@ qla2x00_start_scsi(srb_t *sp)
+ 	return (QLA_SUCCESS);
+ 
+ queuing_error:
++	if (cmd->use_sg && tot_dsds) {
++		sg = (struct scatterlist *) cmd->request_buffer;
++		pci_unmap_sg(ha->pdev, sg, cmd->use_sg,
++		    cmd->sc_data_direction);
++	} else if (tot_dsds) {
++		pci_unmap_page(ha->pdev, sp->dma_handle, cmd->request_bufflen,
++			       cmd->sc_data_direction);
++	}
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+ 	return (QLA_FUNCTION_FAILED);
+
+--=-rFDkXEU95ZVMxZjXGhKj--
 
