@@ -1,39 +1,25 @@
-From: Kai Makisara <Kai.Makisara@metla.fi>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: Possible explanation for SCSI benchmark problems in 2.5
-Date: Mon, 30 Sep 2002 09:15:19 +0300 (EET DST)
+Date: Mon, 30 Sep 2002 09:30:33 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.OSF.4.44.0209300903070.2332-100000@abies.metla.fi>
-References: <200209300340.g8U3eob03613@localhost.localdomain>
+Message-ID: <20020930073033.GA27420@suse.de>
+References: <200209292048.g8TKmN424799@localhost.localdomain> <3D976864.65C82D7B@digeo.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200209300340.g8U3eob03613@localhost.localdomain>
+Content-Disposition: inline
+In-Reply-To: <3D976864.65C82D7B@digeo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: andmike@us.ibm.com, linux-scsi@vger.kernel.org, Andrew Morton <akpm@digeo.com>, Jens Axboe <axboe@suse.de>
+To: Andrew Morton <akpm@digeo.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Sun, 29 Sep 2002, James Bottomley wrote:
+On Sun, Sep 29 2002, Andrew Morton wrote:
+> But high-IO is bust for IDE as well at present, so at least
+> we're being fair ;)
 
-> andmike@us.ibm.com said:
-> > I thought this was previously discussed on this thread. http://
-> > marc.theaimsgroup.com/?l=linux-kernel&m=103064539622958&w=2
->
-> I remember the thread (well now that my memory's been refreshed).
->
-> > and I believe the comment from Jens was that this could be killed off
-> > in 2.5 if someone did a check for safety on all the devices.
->
-> I'm not really an expert in st, which is where it looks like the problems are.
->  On cursory reading of the code, I think the st driver does dio only if all
-> pages are below the HIGHMEM zone, otherwise it does intermediate buffering.
-> Thus, the st driver will never put anything in the highmem zone in the queue
-> and Andrew Morton's version should be fine.
->
-St does direct i/o if all pages are directly addressable by the SCSI
-adapter (based on the mask). The pages may be in the HIGHMEM zone but
-Andrew Morton's change is safe. In fact, st already uses the logic enabled
-by the change. (As far as I was able to follow the code, the SCSI requests
-sent by st never actually use any code affected by Andrew's change.)
+Nah that's fixed, it worries me that you say otherwise. Doesn't it work
+for you in stock 2.5.39?
 
-	Kai
+-- 
+Jens Axboe
 
