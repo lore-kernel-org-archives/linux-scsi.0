@@ -1,34 +1,39 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: aic7xxx deadlock in 2.6.0-test10
-Date: Mon, 24 Nov 2003 08:13:19 +0000
+From: Josef =?iso-8859-1?Q?M=F6llers?=
+	<josef.moellers@fujitsu-siemens.com>
+Subject: Re: How to generate ILI condtion on a tape device
+Date: Mon, 24 Nov 2003 09:31:45 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031124081319.A29562@infradead.org>
-References: <20031123230853.0bc8defb.akpm@osdl.org>
+Message-ID: <3FC1C1F1.13720A16@fujitsu-siemens.com>
+References: <1069489007.3775.15.camel@driver>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:9478 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263660AbTKXINW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2003 03:13:22 -0500
-Content-Disposition: inline
-In-Reply-To: <20031123230853.0bc8defb.akpm@osdl.org>; from akpm@osdl.org on Sun, Nov 23, 2003 at 11:08:53PM -0800
+Received: from plim.fujitsu-siemens.com ([217.115.66.8]:63795 "EHLO
+	plim.fujitsu-siemens.com") by vger.kernel.org with ESMTP
+	id S263646AbTKXIbO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Nov 2003 03:31:14 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-scsi@vger.kernel.org
+To: Kallol Biswas <nucleodyne@comcast.net>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, Nov 23, 2003 at 11:08:53PM -0800, Andrew Morton wrote:
-> ahc_linux_register_host() is calling ahc_linux_initialize_scsi_bus() under
-> ahc_lock(ahc, &s).  But scsi_report_bus_reset() is taking host->host_lock
-> inside shost_for_each_device(), and that is the same (already held) lock.
-> 
-> 
-> This patch gets things going again of course.  Could someone please take a
-> look at fixing this for real?
-> 
-> I'm not sure why this has suddenly started happening actually.
+> Kallol Biswas wrote:
+>=20
+> Hi,
+>   I was wondering how to generate ILI condition while reading from a
+> tape.
 
-jejb just posted another fix for it on linux-scsi, but in fact your fix
-looks better to me, ahc_initialize doesn't need the host_lock because
-ahc can't be reached from an other thread yet.
+IIRC all you need is a tape with variable block size and you just read
+the wrong blocksize.
 
+
+Josef
+--=20
+Josef M=F6llers (Pinguinpfleger bei FSC)
+	If failure had no penalty success would not be a prize
+						-- T.  Pratchett
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
