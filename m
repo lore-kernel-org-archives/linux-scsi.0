@@ -1,47 +1,37 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] retry HARDWARE ERROR for IBM ESS (using BLIST)
-Date: Fri, 26 Nov 2004 19:27:47 +0000
-Message-ID: <20041126192747.GI29035@parcelfarce.linux.theplanet.co.uk>
-References: <OF4EF7026A.98AD4B65-ONC1256F58.00451604-C1256F58.005C5C9E@de.ibm.com>
+From: Steffen Winterfeldt <snwint@suse.de>
+Subject: Re: SuSE hwinfo/yast2 still confusing SYM53C8XX, killing tape backups
+Date: Fri, 26 Nov 2004 15:16:55 +0100 (CET)
+Message-ID: <Pine.LNX.4.61.0411261512320.14112@ligeti.suse.de>
+References: <1100467267.23710.7.camel@mulgrave> <4197E4B7.3050008@pobox.com>
+ <1100473795.23649.26.camel@mulgrave> <m3hdnsvvfd.fsf@merlin.emma.line.org>
+ <1100477105.24921.3.camel@mulgrave> <m34qjrx6iy.fsf_-_@merlin.emma.line.org>
+ <Pine.LNX.4.61.0411221102280.22230@ligeti.suse.de> <m3actaw0pv.fsf@merlin.emma.line.org>
+ <20041122133014.GF25636@parcelfarce.linux.theplanet.co.uk>
+ <m3mzxaq8ra.fsf@merlin.emma.line.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:47065 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262457AbUKZT1t
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Nov 2004 14:27:49 -0500
-Content-Disposition: inline
-In-Reply-To: <OF4EF7026A.98AD4B65-ONC1256F58.00451604-C1256F58.005C5C9E@de.ibm.com>
+Received: from zeus.kernel.org ([204.152.189.113]:62401 "EHLO zeus.kernel.org")
+	by vger.kernel.org with ESMTP id S262363AbUKZTV4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Nov 2004 14:21:56 -0500
+Received: from Cantor.suse.de (cantor.suse.de [195.135.220.2])
+	by zeus.kernel.org (8.12.11/8.11.6) with ESMTP id iAQEI5rL027668
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Nov 2004 06:18:09 -0800
+In-Reply-To: <m3mzxaq8ra.fsf@merlin.emma.line.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Peschke3 <MPESCHKE@de.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
+To: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
+Cc: Matthew Wilcox <matthew@wil.cx>, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jgarzik@pobox.com>
 
-On Fri, Nov 26, 2004 at 05:42:15PM +0100, Martin Peschke3 wrote:
-> +     case HARDWARE_ERROR:
-> +           if (scsi_get_device_flags(scmd->device,
-> +                               scmd->device->vendor,
-> +                               scmd->device->model)
-> +               & BLIST_RETRY_HWERROR)
-> +                 return NEEDS_RETRY;
-> +           else
-> +                 return SUCCESS;
-> +
->       case ILLEGAL_REQUEST:
->       case BLANK_CHECK:
->       case DATA_PROTECT:
-> -     case HARDWARE_ERROR:
->       default:
->             return SUCCESS;
+[hwinfo/hwscan reading 256 bytes of pci config space]
 
-You could actually fall through here, rather than having an else.  I don't
-know which style we currently prefer (though we should certainly comment
-a fall-through).
+It was indeed libsysfs reading the config space accidentally when one 
+(well, I) wouldn't expect it to do this.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+If you want to try the fixed hwinfo package (hwinfo-8.70), it's here:
+
+ftp://ftp.suse.com/pub/people/snwint/9.1/hwinfo/
+
+
+Steffen
