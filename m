@@ -1,45 +1,40 @@
-From: Richard Gooch <rgooch@ras.ucalgary.ca>
+From: Sancho Dauskardt <sancho@dauskardt.de>
 Subject: Re: /proc/scsi/map
-Date: Sat, 15 Jun 2002 09:52:12 -0600
+Date: Sat, 15 Jun 2002 21:49:50 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200206151552.g5FFqCT14714@vindaloo.ras.ucalgary.ca>
+Message-ID: <5.0.2.1.2.20020615213722.038c4940@pop.puretec.de>
 References: <20020615133606.GC11016@gum01m.etpnet.phys.tue.nl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
 In-Reply-To: <20020615133606.GC11016@gum01m.etpnet.phys.tue.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>
-Cc: Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
+Cc: linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net
 
-Kurt Garloff writes:
-> Hi SCSI users,
-> 
-> from people using SCSI devices, there's one question that turns up again=20
-> and again: How can one assign stable device names to SCSI devices in
-> case there are devices that may or may not be switched on or connected.
-> 
-> There are a couple of ways to address this problem:
+
+>Life would be easier if the scsi subsystem would just report which SCSI
+>device (uniquely identified by the controller,bus,target,unit tuple) belongs
+>to which high-level device. The information is available in the kernel.
+>
+>Attached patch does this:
+>garloff@pckurt:/raid5/Kernel/src $ cat /proc/scsi/map
+># C,B,T,U       Type    onl     sg_nm   sg_dev  nm      dev(hex)
+>0,0,00,00       0x05    1       sg0     c:15:00 sr0     b:0b:00
 [...]
-> (c) devfs
-[...]
-> Unfortunately, those approaches all have some deficiencies.
-[...]
-> Ad (c): devfs is currently not (yet?) an option for distributions
->         due to security and stability considerations.
 
-Mandrake is using devfs. And the security and stability issues have
-been fixed many months ago. The "devfs races" that Al used to complain
-about regularly have been fixed. I haven't heard from Al for many
-months (I see that as a positive sign:-). The current devfs code is in
-maintenance mode. The next release of code will be a new devfs core
-which uses the VFS for tree maintenance, making the code much smaller.
-I.e. not a bugfixing release.
+Great, this was really missing badly.
 
-If there *are* remaining bugs with the devfs core (or devfsd for that
-matter), I've not been made aware of them. If you know something I
-don't, please let me know. AFAICT, all the bugs are long since solved.
+But how about adding another column: GUID.
+Most usb-storage and (all?) FireWire devices have such a unique identitiy.
+In contrast to native SCSI devices, these emulated SCSI devices on 
+hot-plugging busses will change their LUNs/IDs. Therefor the GUID is really 
+a must to be able to create stable names (laptop suspend, etc.).
 
-				Regards,
+Both usb-storage and iee1394-sbp2 know the GUID. It only needs to be 
+communicated..
 
-					Richard....
-Permanent: rgooch@atnf.csiro.au
-Current:   rgooch@ras.ucalgary.ca
+I'd guess that FibreChannel has similar problems ?
+
+- sda
+
