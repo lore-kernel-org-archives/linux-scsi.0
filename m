@@ -1,70 +1,56 @@
-From: David Wysochanski <davidw@netapp.com>
-Subject: Re: reiserfs and SCSI oops seen in 2.6.9-rc2 with local SCSI disk
- IO
-Date: Fri, 24 Sep 2004 11:42:03 -0400
+From: Joe Landman <landman@scalableinformatics.com>
+Subject: Re: [Rocks-Discuss]Huge 1.2TB partition
+Date: Fri, 24 Sep 2004 11:45:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4154404B.3070705@netapp.com>
-References: <4154372C.7070506@netapp.com> <20040924151828.GC16153@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <41544111.4080903@scalableinformatics.com>
+References: <1096019417.2726.61.camel@whirl.lab7.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx01.netapp.com ([198.95.226.53]:47539 "EHLO mx01.netapp.com")
-	by vger.kernel.org with ESMTP id S268856AbUIXPmF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Sep 2004 11:42:05 -0400
-In-Reply-To: <20040924151828.GC16153@parcelfarce.linux.theplanet.co.uk>
+Received: from dsl093-000-201.det1.dsl.speakeasy.net ([66.93.0.201]:49566 "EHLO
+	crunch.scalableinformatics.com") by vger.kernel.org with ESMTP
+	id S268854AbUIXPph (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Sep 2004 11:45:37 -0400
+In-Reply-To: <1096019417.2726.61.camel@whirl.lab7.lan>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: stas@itam.nsc.ru
+Cc: Linux-scsi list <linux-scsi@vger.kernel.org>, rocks_list <npaci-rocks-discussion@sdsc.edu>
 
-Matthew Wilcox wrote:
-> On Fri, Sep 24, 2004 at 11:03:08AM -0400, David Wysochanski wrote:
->  > I can reproduce this pretty easily with local disk.
->  >
->  > Here's some details about my setup (attached is the
->  > full kernel config):
->  > - dell 2650 (dual xeon, hyperthreading disabled)
->  > - 1 local SCSI disk (root volume)
->  > - 2 local SCSI disks (data), each with 10 partitions
->  > of 100MB each, 6 of them reiserfs filesystems, 3 of them
->  > ext3, and 3 of them ext2 (total of 20 unique filesystems)
->  > - one instance of test program running on each of the
->  > 20 filesystems
-> 
-> I don't think this is a SCSI problem.  Your backtrace doesn't include
-> anything in the SCSI subsystem (this doesn't _prove_ anything, but does
-> suggest you should look elsewhere first).  You also didn't mention what
-> SCSI controller you were using.  If you can reproduce the oops without
-> using reiserfs at all, that would suggest the problem doesn't lie in
-> reiserfs, but that's where I'd blame first ;-)
-> 
+Hi Stas:
 
-I've been seeing a lot of problems with reiserfs that I
-don't see on ext2 or ext3, so I would tend to agree with you.
-Do you know where I could post for the reiserfs folks?
+  There is a bug in 2.4 kernels with SCSI  that limits you to 1 TB or 
+less.  The folks at 3ware have a patch for it (it is fixing a signed int 
+to be an unsigned int in sd.c).  Without this patch, you are going to 
+have trouble making a single large volume.  You could create 2 volumes 
+and LVM or MD them together.  This would be hard to do with the number 
+of disks you have as a RAID5.
 
-Did you see the backtrace for the second CPU?  It does
-include SCSI and block subsystem components.
+  What is best is usually dictated by your use case.  For large storage 
+purposes, one volume might be better.
 
+Joe
 
-The controller on board the dell 2650 is Adaptec:
+Stas Nikiforov wrote:
 
-0000:02:06.0 SCSI storage controller: Adaptec AHA-3960D / AIC-7899A U160/m (rev 01)
-         Subsystem: Adaptec AHA-3960D U160/m
-         Flags: bus master, 66Mhz, medium devsel, latency 32, IRQ 24
-         BIST result: 00
-         I/O ports at cc00 [disabled] [size=fcc00000]
-         Memory at fcd01000 (64-bit, non-prefetchable) [size=4K]
-         Expansion ROM at 00020000 [disabled]
-         Capabilities: <available only to root>
+>Hi,
+>I have RAID 5 6x250 SATA storage.
+>Is it a good idea to have one huge partition
+>or it is better to split it on smaller logical drives and then use LVM,
+>for example?
+>
+>In any way, what is a preferred filesystem for this storage?
+>I plan to use it as a mass storage for CFD results.
+>
+>Thanks in advance,
+>Stas.
+>  
+>
 
-0000:02:06.1 SCSI storage controller: Adaptec AHA-3960D / AIC-7899A U160/m (rev 01)
-         Subsystem: Adaptec AHA-3960D U160/m
-         Flags: bus master, 66Mhz, medium devsel, latency 32, IRQ 25
-         BIST result: 00
-         I/O ports at c800 [disabled] [size=fcc00000]
-         Memory at fcd00000 (64-bit, non-prefetchable) [size=4K]
-         Expansion ROM at 00020000 [disabled]
-         Capabilities: <available only to root>
+-- 
+Joseph Landman, Ph.D
+Scalable Informatics LLC,
+email: landman@scalableinformatics.com
+web  : http://scalableinformatics.com
+phone: +1 734 612 4615
 
