@@ -1,45 +1,118 @@
-From: Willem Riede <osst@riede.org>
-Subject: Re: [PATCH] osst: don't use obsolete SCSI APIs
-Date: Sun, 23 Jan 2005 22:44:47 +0000
-Message-ID: <1106520287l.5898l.2l@serve.riede.org>
-References: <20050103155305.GA24521@lst.de>
-	<20050120114950.GA619@infradead.org>
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: [ANNOUNCE] multipath-tools-0.4.2
+Date: Mon, 24 Jan 2005 00:03:16 +0100
+Message-ID: <1106521396.10990.13.camel@zezette>
+References: <1096071849.4466.31.camel@zezette>
+	<1097054573.4163b96d1262c@imp5-q.free.fr>
+	<1097495416.416a73787e0ae@imp1-q.free.fr>
+	<1098021787.5433.8.camel@zezette>
+	<1098269169.417641f18a234@imp1-q.free.fr>
+	<1098656088.9350.88.camel@zezette>
+	<1098785191.417e21a7a7c28@imp1-q.free.fr>
+	<1099328918.5525.10.camel@zezette> <1100214617.10251.92.camel@zezette>
+	<1101394541.5820.71.camel@zezette> <1102261392.29843.2.camel@zezette>
+	<1103558483.11345.17.camel@zezette>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; DelSp=Yes; Format=Flowed
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sccrmhc12.comcast.net ([204.127.202.56]:34279 "EHLO
-	sccrmhc12.comcast.net") by vger.kernel.org with ESMTP
-	id S261368AbVAWWmQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jan 2005 17:42:16 -0500
-In-Reply-To: <20050120114950.GA619@infradead.org> (from hch@infradead.org on
-	Thu Jan 20 06:49:50 2005)
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <1103558483.11345.17.camel@zezette>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-On 01/20/2005 06:49:50 AM, Christoph Hellwig wrote:
-> On Mon, Jan 03, 2005 at 04:53:05PM +0100, Christoph Hellwig wrote:
-> > this patch gets rid of the need for scsi.h, similar to the recent patch
-> > to the st driver.  (applies ontop of Willem's patches)
-> 
-> ping?
+Hello,
 
-If I appeared slow in responding, I'm sorry. I wanted to compile osst with  
-these changes and do a quick regression test. I'm happy to report that is 
-now completed successfully. I agree with these changes, and as far as I'm  
-concerned, they can be applied.
+here goes multipath-tools-0.4.2
 
-Signed-off-by: Willem Riede <osst@riede.org>
- 
-> > 
-> > 
-> > 
-> > ===== drivers/scsi/osst.c 1.65 vs edited =====
-> > --- 1.65/drivers/scsi/osst.c	2005-01-02 04:04:08 +01:00
-> > +++ edited/drivers/scsi/osst.c	2005-01-02 21:49:05 +01:00
+The focuses of this release are :
+1) bugfixing and stabilization after the DM synthax change
+2) code factorizing between the configurator and the daemon
 
+Full ChangeLog for the release :
 
+        * [libmultipath] add symmetrix controler family to the
+          hwtable. Edward Goggin, EMC
+        * [libmultipath] factorize core structs (path, ...)
+          and defaults (pidfile, configfile, ...). Convert
+          callers.
+        * [multipath] fix dmparser to properly fetch non-default
+          hwhandler. Edward Goggin, EMC
+        * [multipath] fix devt2devname matching 8:1 with 8:10
+          for example. Edward Goggin, EMC
+        * [multipath] switch_pg upon devmap create or reload
+          Noticed by Ake.
+        * [libmultipath] move find_hw() the library. Convert
+          users. Now multipathd understand '*' as a product
+          string
+        * [multipath] dissaemble_map() fix to avoid to
+          interpret 'D' as a disable PG (not 'F'). Edward
+          Goggin, EMC
+        * [multipath] find_path() fix to avoid matching 8:1
+          with 8:10 for example. Edward Goggin, EMC
+        * [libmultipath] move some sysfs fetching routines
+          to library, under sysfs_devinfo.[ch]. Convert
+          callers.
+        * [multipath] fix -v0 : avoids the daemon waiting
+          for the initial multipath run to complete, which
+          will never happen because of a flooded pipe
+        * [multipathd] add scsi_id to default binvec
+        * [libmultipath] move hwtable related logic to the
+          library. Convert multipath and multipathd
+        * [multipath] move first blacklist call down after
+          setup_default_blist()
+        * [libmultipath] move basename() to the lib. Convert
+          multipath and multipathd.
+        * [libmultipath] move blacklist related logic to the
+          library. Convert multipath and multipathd
+        * [multipath] fix bug in the default hardware table
+          matching logic (Lars M-B, Suse)
+        * [multipath] allow "*" as scsi model string wildcard
+          (Lars M-B, Suse)
+        * [multipath] provide a macro to fill all hwe fields,
+          use it to declare Clariion models (Lars M-B, Suse)
+        * [multipath] use DEFAULT_GETUID instead of hardcoded
+          *and* incorrect "/bin/scsi_id -g -s" (Lars M-B, Suse)
+        * [multipath] kill superfluous suspend before table
+          reload. The code was unsafe, as spotted by Edward
+          Goggin (EMC)
+        * [multipath] exit early if device parameter is
+          blacklisted
+        * [multipath] don't check for prefix in initrd's
+          multipath.dev : this is the tool responsability to
+          exit early based on its blacklist.
+        * [multipath] don't signal the daemon in initrd
+          (Guido Guenther, Debian tracker)
+        * [multipath] better fail to run kpartx in initrd
+          than crashing the whole system. So don't sleep
+          waiting for udev to create the DM node. Maybe udev
+          has made progress I this regard ... (noticed by
+          Paul Wagland, Debian tracker)
+        * [multipath] don't reinstate when listing, ie list
+          implies dry_run
+        * [checkers] fix the emc checker (Hergen Lange)
+        * [multipath] node_name fetching shouldn't exit on
+          error. FC SAN are not the only multipathed context
+          (noticed by Ramesh Caushik)
 
+As usual, doc and download at :
+http://christophe.varoqui.free.fr/
+
+regards,
+-- 
+christophe varoqui <christophe.varoqui@free.fr>
+
+--
+dm-devel mailing list
+dm-devel@redhat.com
+https://www.redhat.com/mailman/listinfo/dm-devel
