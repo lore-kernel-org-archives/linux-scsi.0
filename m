@@ -1,61 +1,57 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Fri, 7 Nov 2003 09:30:10 +0000
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH/RFT] mode sense madness always use page 8
+Date: Fri, 07 Nov 2003 09:11:46 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031107093010.A1950@infradead.org>
-References: <20031027153932.A16679@infradead.org> <005801c3a44a$5847c6e0$8f074d0a@apac.cisco.com> <20031106100906.A15382@infradead.org> <3FAB5DE5.2080000@torque.net>
+Message-ID: <3FAAD532.2060300@torque.net>
+References: <Pine.LNX.4.44L0.0310301004010.852-100000@ida.rowland.org> <1067531731.4250.11.camel@pathost1.iomegacorp.com> <20031030091808.A6781@beaverton.ibm.com> <1067535485.6411.42.camel@pathost1.iomegacorp.com> <20031030100501.A7250@beaverton.ibm.com> <1067541899.1141.4.camel@ronald.kuetemeier.com> <20031030134850.A9076@beaverton.ibm.com> <1067551081.1138.7.camel@ronald.kuetemeier.com> <1067558384.14409.50.camel@patrh9> <20031031101645.A14729@beaverton.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:44817 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263976AbTKGJaN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Nov 2003 04:30:13 -0500
-Content-Disposition: inline
-In-Reply-To: <3FAB5DE5.2080000@torque.net>; from dougg@torque.net on Fri, Nov 07, 2003 at 06:55:01PM +1000
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:16651 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263960AbTKGJRU
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Nov 2003 04:17:20 -0500
+In-Reply-To: <20031031101645.A14729@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: "Sachin Mhatre (smhatre)" <smhatre@cisco.com>, linux-scsi@vger.kernel.org, davmyers@cisco.com
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Pat LaVarre <p.lavarre@ieee.org>, ronald@kuetemeier.com, stern@rowland.harvard.edu, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, james.bottomley@steeleye.com
 
-On Fri, Nov 07, 2003 at 06:55:01PM +1000, Douglas Gilbert wrote:
-> > I think we should handle it in the midlayer.  Could you come up with a
-> > patch to implement it?
+Patrick Mansfield wrote:
+> On Thu, Oct 30, 2003 at 04:59:45PM -0700, Pat LaVarre wrote:
 > 
-> Interesting challenge. For a start START_STOP UNIT ** is a SBC-2
-> command so the mid-layer shouldn't be generating it, the
-> sd driver should. The sd_rw_intr() function in the sd driver
-> could be made to detect ASC/ASCQ=04/02 but it is pretty obviously
-> executing in interrupt context. The sd driver has a tailor made
-> routine to spin up a disk called sd_spinup_disk() but since it
-> calls schedule_timeout() it must be called from process context.
-
-We could call sd_spinup_disk from schedule_work.  This still seems
-better than having a thread in a LLDD just for this.
-
-> Also once a spinup has commenced, it will take about 30
-> seconds to complete. In that time an impatient user could
-> try and mount a different partition on the same disk.
-> That process should see a ASC/ASCQ=04/01 ("Logical unit is in
-> process of becoming ready") and it should wait till it
-> clears (and not issue another spinup).
+>>Can we cycle more quickly thru compile-test-edit up in user land, rather
+>>than patching the kernel?
 > 
-> Seems like some infrastructure changes would be needed.
 > 
-> Testing with lk 2.6.0-test9: spinning down a disk that
-> the scsi subsystem had already seen but with nothing mounted
-> on it, then trying to mount a partition on it, causes a lot
-> of ugly messages in my log (at least the machine didn't crash).
+> Good idea.
+> 
+> 
+>>sudo ./plscsi /dev/sg1 -v -i x1C -x "5A 00 08:00:00:00 00 00:1C 00"
+>>sudo ./plscsi /dev/sg1 -v -i 4   -x "5A 00 3F:00:00:00 00 00:04 00"
+>>sudo ./plscsi /dev/sg1 -v -i 4   -x "5A 00 00:00:00:00 00 00:04 00"
+>>sudo ./plscsi /dev/sg1 -v -i xFF -x "5A 00 3F:00:00:00 00 00:FF 00"
 
-Looks like we need to handle that case anyway..
+Patrick + Pat,
+plscsi is starting to look remarkably like FreeBSD's
+camcontrol utility. Perhaps we should be looking at
+implementing camcontrol in Linux.
 
-> ** There is also the Power Condition mode page that all SCSI
-> devices may optionally support. Trouble is with my SCSI-3 disks
-> they either don't support it or the one that does gives
-> ASC/ASCQ=04/02 when the disk is spun down (violating SPC-3).
+> Nice. Does sg_utils have an equivalent tool?
+> 
+> You can use /dev/sdN with 2.6.
+> 
+> 
+>>Also personally I find the source for that plscsi app impenetrably awful
+>>to read.
+> 
+> 
+> Maybe you can rewrite it in c and get it into sg_utils.
 
-Interesting.  Now that the scsi_device is part of the driver model
-we could actually do some fancy things about spinning down disks
-in a controlled mannor on suspend and wake them up again on
-resume.
+I have no objection to putting utilities written in
+C++ in sg3_utils.
+
+Doug Gilbert
 
 
