@@ -1,116 +1,153 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: lsscsi for lk 2.5.51
-Date: Sun, 15 Dec 2002 12:51:07 +1100
+From: Andrew Morton <akpm@digeo.com>
+Subject: aic7xxx woes in 2.5
+Date: Sat, 14 Dec 2002 20:31:22 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DFBE00B.1070805@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <3DFC059A.9AA3F75F@digeo.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000009040407020403090805"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from digeo-nav01.digeo.com (digeo-nav01.digeo.com [192.168.1.233])
+	by packet.digeo.com (8.9.3+Sun/8.9.3) with SMTP id UAA24902
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Dec 2002 20:31:22 -0800 (PST)
+Received: from digeo-e2k04.digeo.com ([192.168.2.24])
+ by digeo-nav01.digeo.com (NAVGW 2.5.2.12) with SMTP id M2002121420331927623
+ for <linux-scsi@vger.kernel.org>; Sat, 14 Dec 2002 20:33:19 -0800
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: patmans@us.ibm.com
-
-This is a multi-part message in MIME format.
---------------000009040407020403090805
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Since sysfs now contains a reasonable amount of data about
-scsi devices, it is possible to write an application
-that scans this information and presents it in a "ls"
-form (akin to lspci and lsusb).
-
-Attached is a toy program called lsssci that could
-grow into something more useful. It requires lk 2.5.51
-or later.
-
-$ lsscsi
-[4:0:0:0]  CDROM   CREATIVE CD5233E          1.00  /dev/sr0
-[3:0:0:0]  disk    Linux    scsi_debug       0004  /dev/sdb
-[2:0:6:0]  tape    SONY     SDT-7000         0192
-[0:0:8:0]  disk    FUJITSU  MAM3184MP        0105  /dev/sda
 
 
-This output corresponds to my system which has these "scsi"
-devices:
+For about six months in the 2.5 series, using aic7xxx, about every fourth boot
+one of my disks tends to get:
 
-$ cat /proc/scsi/scsi
-Attached devices:
-Host: scsi0 Channel: 00 Id: 08 Lun: 00
-   Vendor: FUJITSU  Model: MAM3184MP        Rev: 0105
-   Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi2 Channel: 00 Id: 06 Lun: 00
-   Vendor: SONY     Model: SDT-7000         Rev: 0192
-   Type:   Sequential-Access                ANSI SCSI revision: 02
-Host: scsi3 Channel: 00 Id: 00 Lun: 00
-   Vendor: Linux    Model: scsi_debug       Rev: 0004
-   Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi4 Channel: 00 Id: 00 Lun: 00
-   Vendor: CREATIVE Model: CD5233E          Rev: 1.00
-   Type:   CD-ROM                           ANSI SCSI revision: 02
+(scsi1:A:4:0): parity-error detected in Data-in phase: SEQADDR(0x1ae) SCSIRATE(0x88)
+scsi1:0:4:0: Attempting to queue an ABORT message
+
+This is invariably fatal.  The box locks and the NMI watchdog
+kicks it over.   The call trace is:
+
+(gdb) bt
+#0  0xc01d3288 in rep_nop () at include/asm/processor.h:468
+#1  0xc01d325d in __delay (loops=98000) at arch/i386/lib/delay.c:63
+#2  0xc01d32ad in __const_udelay (xloops=858800) at arch/i386/lib/delay.c:74
+#3  0xc01d327c in __udelay (usecs=200) at arch/i386/lib/delay.c:79
+#4  0xc0231d7f in ahc_delay (usec=200) at drivers/scsi/aic7xxx/aic7xxx_osm.h:607
+#5  0xc022b81e in ahc_clear_critical_section (ahc=0xc3e03000) at drivers/scsi/aic7xxx/aic7xxx_core.c:1392                      #6  0xc0235272 in ahc_linux_queue_recovery_cmd (cmd=0xc1766c00, flag=SCB_ABORT) at drivers/scsi/aic7xxx/aic7xxx_linux.c:2490
+#7  0xc023569a in ahc_linux_abort (cmd=0xc1766c00) at drivers/scsi/aic7xxx/aic7xxx_linux.c:2667                                #8  0xc022592b in scsi_try_to_abort_cmd (scmd=0xc1766c00) at drivers/scsi/scsi_error.c:820
+#9  0xc0225a0c in scsi_eh_abort_cmd (sc_todo=0xc1766c00, shost=0xc17de63c) at drivers/scsi/scsi_error.c:902                    #10 0xc022614e in scsi_unjam_host (shost=0xc17de63c) at drivers/scsi/scsi_error.c:1532
+#11 0xc0226286 in scsi_error_handler (data=0xc17de63c) at drivers/scsi/scsi_error.c:1659                                       
+
+It would seem that the machine locked up in ahc_clear_critical_section():
+
+                do {
+                        ahc_delay(200);
+                } while (!ahc_is_paused(ahc));
+
+The parity error is intermittent.  But when it happens, the lockup
+always happens.
+
+This never happens in 2.4 kernels.
+
+It seems to happen a little more frequently on uniprocessor builds.
+
+So relevant questions would be:
+
+1) Why does only 2.5 get the parity error?
+
+2) Why does the recovery lock up?
+
+3) Does anyone have a diff for Justin's new driver?
 
 
-sysfs doesn't provide the ANSI SCSI revision number associated
-with each device (hopefully Pat can add that in the future).
-Otherwise, all the information that /proc/scsi/scsi uses 3
-lines per device for, can be compressed onto one line. Putting
-the device node (e.g. /dev/sda) seems a useful addition.
-[That latter addition is only done currently for block scsi
-devices (hence it doesn't appear for the tape).]
+lspci:
 
-Doug Gilbert
+00:0a.0 SCSI storage controller: Adaptec AIC-7880U (rev 01)
+03:04.0 SCSI storage controller: Adaptec 7892A (rev 02)
 
---------------000009040407020403090805
-Content-Type: application/x-gzip;
- name="lsscsi.c.gz"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="lsscsi.c.gz"
+2.4.19-pre4's dmesg:
 
-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
-yX8ASxjt+kIaAAA=
---------------000009040407020403090805--
 
+scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.5
+        <Adaptec 29160 Ultra160 SCSI adapter>
+        aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+
+scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.5
+        <Adaptec aic7880 Ultra SCSI adapter>
+        aic7880: Ultra Wide Channel A, SCSI Id=7, 16/253 SCBs
+
+  Vendor: QUANTUM   Model: ATLAS IV 9 SCA    Rev: 0B0B
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+  Vendor: QUANTUM   Model: ATLAS 10K 9SCA    Rev: UC81
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+  Vendor: SEAGATE   Model: ST19101W          Rev: 0014
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+  Vendor: QUANTUM   Model: QM39100TD-SCA     Rev: N1B0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+  Vendor: FUJITSU   Model: MAF3364L SUN36G   Rev: 1213
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+  Vendor: ESG-SHV   Model: SCA HSBP M4       Rev: 0.63
+  Type:   Processor                          ANSI SCSI revision: 02
+scsi0:A:0:0: Tagged Queuing enabled.  Depth 253
+scsi0:A:1:0: Tagged Queuing enabled.  Depth 253
+scsi0:A:2:0: Tagged Queuing enabled.  Depth 253
+scsi0:A:4:0: Tagged Queuing enabled.  Depth 253
+scsi0:A:5:0: Tagged Queuing enabled.  Depth 253
+  Vendor: QUANTUM   Model: ATLAS 10K 9SCA    Rev: UC81
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+  Vendor: QUANTUM   Model: ATLAS 10K 9SCA    Rev: UCH0
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+  Vendor: QUANTUM   Model: ATLAS 10K 9SCA    Rev: UC81
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+  Vendor: QUANTUM   Model: ATLAS 10K 9SCA    Rev: UCP0
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+  Vendor: FUJITSU   Model: MAF3364L SUN36G   Rev: 1213
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+  Vendor: ESG-SHV   Model: SCA HSBP M4       Rev: 0.63
+  Type:   Processor                          ANSI SCSI revision: 02
+scsi1:A:0:0: Tagged Queuing enabled.  Depth 253
+scsi1:A:1:0: Tagged Queuing enabled.  Depth 253
+scsi1:A:2:0: Tagged Queuing enabled.  Depth 253
+scsi1:A:4:0: Tagged Queuing enabled.  Depth 253
+scsi1:A:5:0: Tagged Queuing enabled.  Depth 253
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+Attached scsi disk sdb at scsi0, channel 0, id 1, lun 0
+Attached scsi disk sdc at scsi0, channel 0, id 2, lun 0
+Attached scsi disk sdd at scsi0, channel 0, id 4, lun 0
+Attached scsi disk sde at scsi0, channel 0, id 5, lun 0
+Attached scsi disk sdf at scsi1, channel 0, id 0, lun 0
+Attached scsi disk sdg at scsi1, channel 0, id 1, lun 0
+Attached scsi disk sdh at scsi1, channel 0, id 2, lun 0
+Attached scsi disk sdi at scsi1, channel 0, id 4, lun 0
+Attached scsi disk sdj at scsi1, channel 0, id 5, lun 0
+(scsi0:A:0): 40.000MB/s transfers (20.000MHz, offset 31, 16bit)
+SCSI device sda: 17942584 512-byte hdwr sectors (9187 MB)
+ sda: sda1
+(scsi0:A:1): 40.000MB/s transfers (20.000MHz, offset 31, 16bit)
+SCSI device sdb: 17938986 512-byte hdwr sectors (9185 MB)
+ sdb: sdb1
+(scsi0:A:2): 40.000MB/s transfers (20.000MHz, offset 15, 16bit)
+SCSI device sdc: 17783240 512-byte hdwr sectors (9105 MB)
+ sdc: sdc1
+(scsi0:A:4): 40.000MB/s transfers (20.000MHz, offset 31, 16bit)
+SCSI device sdd: 17783249 512-byte hdwr sectors (9105 MB)
+ sdd: sdd1 < sdd5 >
+(scsi0:A:5): 40.000MB/s transfers (20.000MHz, offset 63, 16bit)
+SCSI device sde: 71132959 512-byte hdwr sectors (36420 MB)
+ sde: sde1 < sde5 sde6 sde7 >
+(scsi1:A:0): 40.000MB/s transfers (20.000MHz, offset 8, 16bit)
+SCSI device sdf: 17938986 512-byte hdwr sectors (9185 MB)
+ sdf: sdf1
+(scsi1:A:1): 40.000MB/s transfers (20.000MHz, offset 8, 16bit)
+SCSI device sdg: 17938986 512-byte hdwr sectors (9185 MB)
+ sdg: sdg1
+(scsi1:A:2): 40.000MB/s transfers (20.000MHz, offset 8, 16bit)
+SCSI device sdh: 17938986 512-byte hdwr sectors (9185 MB)
+ sdh: sdh1
+(scsi1:A:4): 40.000MB/s transfers (20.000MHz, offset 8, 16bit)
+SCSI device sdi: 17938986 512-byte hdwr sectors (9185 MB)
+ sdi: sdi1 < sdi5 sdi6 >
+(scsi1:A:5): 40.000MB/s transfers (20.000MHz, offset 8, 16bit)
+SCSI device sdj: 71132959 512-byte hdwr sectors (36420 MB)
+ sdj: sdj1 < sdj5 sdj6 >
+Attached scsi generic sg5 at scsi0, channel 0, id 6, lun 0,  type 3
+Attached scsi generic sg11 at scsi1, channel 0, id 6, lun 0,  type 3
