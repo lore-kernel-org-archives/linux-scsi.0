@@ -1,35 +1,60 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: smp dead lock of io_request_lock/queue_lock patch
-Date: Sat, 17 Jan 2004 16:58:28 +0000
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: Re: pulling failover out of qla2xxx
+Date: Sat, 17 Jan 2004 19:47:37 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040117165828.A4977@infradead.org>
-References: <OF317B32D5.C8C681CB-ONC1256E19.005066CF-C1256E19.00538DEF@de.ibm.com> <20040112151230.GB5844@devserv.devel.redhat.com> <20040112194829.A7078@infradead.org> <1073937102.3114.300.camel@compaq.xsintricity.com> <Pine.LNX.4.58L.0401131843390.6737@logos.cnet> <1074345000.13198.25.camel@compaq.xsintricity.com>
+Message-ID: <20040117184737.GA21846@devserv.devel.redhat.com>
+References: <B179AE41C1147041AA1121F44614F0B0598E34@AVEXCH02.qlogic.org> <20040117165226.GA29531@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="J/dobhs11T7y2rNN"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:14094 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S265681AbUAQQ6m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Jan 2004 11:58:42 -0500
+Received: from mx1.redhat.com ([66.187.233.31]:47292 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S266146AbUAQSr6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Jan 2004 13:47:58 -0500
 Content-Disposition: inline
-In-Reply-To: <1074345000.13198.25.camel@compaq.xsintricity.com>; from dledford@redhat.com on Sat, Jan 17, 2004 at 08:10:00AM -0500
+In-Reply-To: <20040117165226.GA29531@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, Arjan Van de Ven <arjanv@redhat.com>, Martin Peschke3 <MPESCHKE@de.ibm.com>, Jens Axboe <axboe@suse.de>, Peter Yao <peter@exavio.com.cn>, linux-kernel@vger.kernel.org, linux-scsi mailing list <linux-scsi@vger.kernel.org>, ihno@suse.de
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI <linux-scsi@vger.kernel.org>
 
-On Sat, Jan 17, 2004 at 08:10:00AM -0500, Doug Ledford wrote:
-> 4)  The last issue.  2.6 already has individual host locks for drivers. 
-> The iorl patch for 2.4 adds the same thing.  So, adding the iorl patch
-> to 2.4 makes it easier to have drivers be the same between 2.4 and 2.6. 
-> Right now it takes some fairly convoluted #ifdef statements to get the
-> locking right in a driver that supports both 2.4 and 2.6.  Adding the
-> iorl patch allows driver authors to basically state that they don't
-> support anything prior to whatever version of 2.4 it goes into and
-> remove a bunch of #ifdef crap.
 
-Well, no.  For one thing all the iorl patches miss the scsi_assign_lock
-interface from 2.6 which makes drivers a big ifdef hell (especially
-as the AS2.1 patch uses a different name for the lock as 3.0), and even
-if it was there the use of that function is strongly discuraged in 2.6
-in favour of just using the host_lock.
+--J/dobhs11T7y2rNN
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Sat, Jan 17, 2004 at 05:52:26PM +0100, Christoph Hellwig wrote:
+> On Fri, Jan 16, 2004 at 12:02:50PM -0800, Andrew Vasquez wrote:
+> > Now from a development and maintenance standpoint, I can understand
+> > the reluctance of having to accept a 100K file for each ISP type.
+> > But, let me just say QLogic is looking into other ways of distributing
+> > firmware images.  Finally, given the addition of some new binary-load
+> > user->kernel space facilities (namely request_firmware()) the space
+> > issue becomes moot.
+>=20
+> If we go to request_firmware the frontend modules are mood and we should
+> just kill all of them.
+
+the "problem" for now is booting from qlogic; initrd's in current distros
+don't work with request_firmware yet... while I'm sure this is a temporary
+inconvenience, it is a real one. And it's not like the frontend modules are
+THAT huge to keep around for a while until enough distros have this working
+well.
+
+Greetings,
+    Arjan van de Ven
+
+--J/dobhs11T7y2rNN
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQFACYNJxULwo51rQBIRAvMkAJ9ibBtr/whwsyB+K1CdhYgHO4HK+gCeJb41
+eRJPi5OWbS56GLj5knSTFNk=
+=MjiN
+-----END PGP SIGNATURE-----
+
+--J/dobhs11T7y2rNN--
