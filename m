@@ -1,111 +1,59 @@
-From: =?ISO-8859-1?Q?G=E9rard_Roudier?= <groudier@free.fr>
-Subject: Re: need help diagnosing sym53c1010-33/Fujitstu MAN3367MP/raid1
- lockups
-Date: Wed, 10 Jul 2002 03:23:52 +0200 (CEST)
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: ide-scsi cmd_per_lun
+Date: Tue, 9 Jul 2002 18:00:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020710024132.F4372-100000@localhost.my.domain>
-References: <1026207164.10874.8402.camel@palm>
+Message-ID: <20020709180014.A12706@redhat.com>
+References: <000701c2278e$2dc723a0$e0019d89@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1026207164.10874.8402.camel@palm>
+Content-Disposition: inline
+In-Reply-To: <000701c2278e$2dc723a0$e0019d89@cybernetics.com>; from tonyb@cybernetics.com on Tue, Jul 09, 2002 at 05:18:31PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Philip Hands <phil@hands.com>
+To: Tony Battersby <tonyb@cybernetics.com>
 Cc: linux-scsi@vger.kernel.org
 
+On Tue, Jul 09, 2002 at 05:18:31PM -0400, Tony Battersby wrote:
+> 
+> The problem boils down to the fact that ide-scsi relies on the mid-level
+> (old eh) to do the auto-sense.  I was able to work around this problem by
+> setting cmd_per_lun: 1 in ide-scsi.h (vanilla 2.4.17).  Doing this caused
+> the request sense command to make it to the drive before any other command
+> could sneak in and reset the sense data.  Can anyone tell me if this is a
+> good solution?
 
-On 9 Jul 2002, Philip Hands wrote:
+It is the appropriate setting for any driver that doesn't automatically 
+request sense itself on check condition status returns.  It does not solve 
+the problem for tagged queue enabled devices though since they don't honor 
+this field and will loose sense information, so in reality any driver that 
+doesn't auto request sense data is broken to some extent.  The new eh code 
+requires that drivers auto request sense, so this is actually likely to be 
+really broken in 2.5 at the moment since the old eh code is now gone.
 
-> On Tue, 2002-07-02 at 03:00, G=E9rard Roudier wrote:
-> >
-> > Just quoting a couple of relevant error messages:
-> >
-> > > Jul  3 09:18:54 comet kernel: sym0:0: ERROR (0:48) (a-2c-0) (27/1=
-8/c0) @ (scripta 220:84000000).
-> >
-> > SIST=3D0x48  bit 0x8 means SCSI GROSS ERROR.
-> >
-> > > Jul  3 09:25:23 comet kernel: sym0:1: ERROR (81:0) (e-ae-0) (3e/1=
-8/80) @ (scripta 80:1e000000).
-> >
-> > DSTAT=3D0x81  bit 0x1 means ILLEGAL INSTRUCTION DETECTED
-> >
-> > Can be the result of the device asserting the SCSI REQ signal when =
-the
-> > initiator is expecting it to release the SCSI BUS.
-> >
-> > Some other error messages indicate some bad relection which is extr=
-emally
-> > severe in SCSI.
-> >
-> > I would recommend you to check the SCSI BUS.. Switch cable and/or
-> > terminators for example, etc...
->
-> I've tried 3 cables, and two terminators, all bought brand-new, from
-> separate sources.
+>  Looking at the 2.4.19-rc1 source, I see an additional field
+> "can_queue: 10" in the template.  Should this be changed too?  I cannot use
+> 2.4.19 for the moment, so I can't experiment with it.
 
-I didn't suggest you to purchase this much expensive hardware. I imagin=
-ed
-that you may have had more than one SCSI BUS and could switch parts
-between them.
+No, this is only for the host wide queue, so if you had 5 ide-scsi devices 
+that showed up, this limits the total number of commands sent to the 
+ide-scsi driver to 10, which would be 2 each.  Obviously, this is 
+different than what you are trying to set and is only limited by what the 
+ide-scsi driver can actually handle in terms of outstanding commands at a 
+time.
 
-> Is it really that common for SCSI cables to be defective?
+> 
+> Thanks,
+> Anthony J. Battersby
+> Cybernetics
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-In presence of SCSI errors, the more common cause is some flaw on the
-SCSI BUS and cables and terminators are the cheaper and the more handy
-things to check by simply trying another instance of each.
-
-> If so, is there a better way of testing them than simply buying more =
-&
-> more until something works?
-
-Unless you have access to sophisticated analyzers and are able to use i=
-t
-properly, switching parts is the only simple way to find which one is
-defective. Obviously, if it gets expensive, we want to try a more cleve=
-r
-method.
-
-> What are the chances that either the controller or the drives could b=
-e
-> the problem?  Is there some way of diagnosing them (other than buying
-> replacements, which seems like an expensive, and possibly fruitless
-> approach)?
-
-If you have one instance of each part and have to buy replacement for
-each, indeed the switch method is painful.
-
-> Sorry for the trivial questions, but it seems strange to me that what=
- is
-> supposed to be a broken setup could achieve almost theoretical maximu=
-m
-> transfer rates when TCQ is switched off, but starts spewing errors at=
- an
-> enormous rate when TCQ is switched on.
-
-TCQ leads to a significantly different IO pattern due to IO overlapping=
-=2E
-Obviously, any of the involved softwares and hardwares can be biten by
-this pattern but not by the smoother one corresponding to TCQ disabled.
-
-Speaking about the SCSI BUS (everything connected together and talking
-using the SCSI protocol), it may have enough electrical margin for the
-no-TCQ IO pattern but not for the TCQ enabled IO pattern. At least, it =
-was
-what the error messages you reported seemed to indicate.
-
-Now that we know that cable and terminators are ok, you may try, for
-example, to lower the data transfer speed. This will reduce the stress =
-for
-all the parts connected to the SCSI BUS and will allow more margin for
-SCSI signaling. Result can give some new clue.
-
-Regards,
-  G=E9rard.
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
