@@ -1,48 +1,64 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: kernel addresses
-Date: 29 Oct 2002 01:07:09 +0000
+From: Jeff Chua <jchua@fedex.com>
+Subject: RE: HP LH & Adaptec aic7xxx Linux problem
+Date: Tue, 29 Oct 2002 11:45:33 +0800 (SGT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1035853629.1945.121.camel@irongate.swansea.linux.org.uk>
-References: <20021029003600.3022.qmail@web80310.mail.yahoo.com>
+Message-ID: <Pine.LNX.4.44.0210291139240.2898-100000@boston.corp.fedex.com>
+References: <63645EA132F6D211AE29009027303EFF0244F038@postman>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20021029003600.3022.qmail@web80310.mail.yahoo.com>
+Received: from mx14.sac.fedex.com (mx14.sac.fedex.com [199.82.159.12])
+	by mx13.sac.fedex.com (8.12.3/8.12.3) with ESMTP id g9T3kvAe097823
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Oct 2002 21:46:57 -0600 (CST)
+	(envelope-from jchua@fedex.com)
+Received: from inet01.prod.fedex.com (inet01.prod.fedex.com [199.81.10.25])
+	by mx14.sac.fedex.com (8.12.3/8.12.3) with ESMTP id g9T3kugc016071
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Oct 2002 21:46:56 -0600 (CST)
+	(envelope-from jchua@fedex.com)
+Received: from entpm11.apac.fedex.com (entpm11.apac.fedex.com [155.161.92.11])
+	by inet01.prod.fedex.com (8.12.3/8.12.3) with ESMTP id g9T3ksdh024980
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Oct 2002 21:46:55 -0600 (CST)
+In-Reply-To: <63645EA132F6D211AE29009027303EFF0244F038@postman>
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Lobo <ntdeveloper2002@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: David ROBERT <DROBERT@GENERIX.FR>
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Tue, 2002-10-29 at 00:36, Mark Lobo wrote:
-> So in that case, what exactly happens say when a user
-> app allocated a buffer for a write to a disk, and
-> passes it down to the top level driver. When he
-> mallocs that buffer, his address will be a user
-> address. And when it comes down to the initiator
-> driver it has to be a kernel address.  So when you say
+On Mon, 28 Oct 2002, David ROBERT wrote:
 
-It might be a mapped user buffer, it might be kernel allocated, you
-don't know, you can't tell, you don't need to tell. You get given a
-valid kernel address.
+> Our latest try was to install a RedHat 6.2
+> And all our SCSI controlers work then properly, as well as the DAT drive.
 
-> Also, Im using a 2.4 kernel. So does this statement
-> still apply:
-> "When DMA I/O is performed to or from high memory, an
-> area is allocated in low memory known as a bounce
-> buffer. When data travels between a device and high
-> memory, it is first copied through the bounce buffer."
-> So if low memory is memory that can be addresses
-> directl y by the kernel, and high memory is say a user
-> allocated buffer (?), do I still have to do what the
-> patch wants me to do? When does he mid layer decide in
-> this case to allocate a bounce buffer? In this case is
-> the "low" and "high" limit the ISA limit that the
-> driver indicates in the host template structure while
-> initialization?
+That's interesting.
 
-The ISA limit if the template says unchecked_isa_dma: 1, otherwise the
-low memory limit. On 2.5 its done by the pci limits and instead of an
-address you get passed a 32bit page number and offset (so you can do
-64bit DMA sanely)
+> The problem is that we do need  RedHat 7.x for our Oracle database.
+>
+> So here is the question we are thinking about : can we get the 6.2 drivers
+> for Sym / NCR controler and/or adaptec cards to compile correctly under 7.x?
+> (I know... that's unorthodox, but deseperate situations call for desesperate
+> solutions)
 
+You can try compiling the module. But I won't count highly on that.
+
+Alan, I was having problem with HP LH with the Adaptec aic7xxx driver, and
+David got aic7xxx working on RedHat 6.2 but not 7.x on the HP LH. I had
+given up hope of ever getting the aic7xxx to work on the LH.
+
+
+Here's the dmesg again ...
+
+	aic7xxx: PCI Device 1:2:0 failed memory mapped test
+	ahc_pci:1:2:0: No SCB space found
+
+
+David, could you please send the "dmesg" for the working system...
+
+Thanks,
+Jeff.
+
+>
+> 	David ROBERT (DROBERT / ROD)
+> 	Responsable Informatique Interne
+> 	drobert@generix.fr
+> 	+33 (0)3 20 41 48 35
+>
 
