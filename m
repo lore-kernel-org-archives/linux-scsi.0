@@ -1,34 +1,41 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch-kj] remove old ifdef'd code from
-Date: Tue, 22 Jun 2004 09:47:14 +0100
+Subject: Re: PATCH [14/18] qla2xxx: Use proper include files
+Date: Tue, 22 Jun 2004 09:57:27 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040622084714.GA31811@infradead.org>
-References: <20040621182918.GX1545@sputnik.stro.at> <20040621183140.GA22588@infradead.org> <20040622084440.GB1531@sputnik.stro.at>
+Message-ID: <20040622085727.GA31917@infradead.org>
+References: <20040622055847.GA8483@linux.local.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.146.154.40] ([213.146.154.40]:65409 "EHLO
+Received: from [213.146.154.40] ([213.146.154.40]:8834 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261451AbUFVIrR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Jun 2004 04:47:17 -0400
+	id S261602AbUFVI52 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Jun 2004 04:57:28 -0400
 Content-Disposition: inline
-In-Reply-To: <20040622084440.GB1531@sputnik.stro.at>
+In-Reply-To: <20040622055847.GA8483@linux.local.home>
 List-Id: linux-scsi@vger.kernel.org
-To: maximilian attems <janitor@sternwelten.at>
-Cc: Christoph Hellwig <hch@infradead.org>, garloff@suse.de, linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 
-On Tue, Jun 22, 2004 at 10:44:40AM +0200, maximilian attems wrote:
-> > While the changes are okay, this driver is beeing changed rapidly and I
-> > have a patch pending that's a supertset of yours.  So please don't apply
-> > James.
-> 
-> are you referring to the dc390 driver patches?
+> --- a/drivers/scsi/qla2xxx/qla_os.h	2004-06-21 15:39:47 -07:00
+> +++ b/drivers/scsi/qla2xxx/qla_os.h	2004-06-21 15:39:47 -07:00
+> @@ -58,11 +58,13 @@
+>  #include <linux/ioctl.h>
+>  #include <asm/uaccess.h>
+>  
+> -#include "scsi.h"
+> -#include "hosts.h"
+> -
+> -#include <scsi/scsicam.h>
+> +#include <scsi/scsi.h>
+> +#include <scsi/scsi_host.h>
+> +#include <scsi/scsi_device.h>
+> +#include <scsi/scsi_cmnd.h>
+> +#include <scsi/scsi_tcq.h>
+>  #include <scsi/scsi_ioctl.h>
+> +#include <scsi/scsicam.h>
+>  #include <scsi/scsi_transport.h>
+>  #include <scsi/scsi_transport_fc.h>
 
-Yes.
-
-> what about the aic7xxx and the aic79xx?
-
-There have been rumors on linux-scsi that adaptec is starting to maintain
-them again. OTOH they'll need to redo their patches in small steps anyway
-so your patches look fine to me.
+Umm, no.  I moved them away from qla_os.h precisly because I want to get
+rid of that file in the next steps.
 
