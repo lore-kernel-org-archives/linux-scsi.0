@@ -1,61 +1,94 @@
-From: Denis Zaitsev <zzz@anda.ru>
-Subject: [PATCH TRIVIAL] Compile error in 2.4.22 without PCI
-Date: Sun, 19 Oct 2003 02:55:20 +0600
+From: Phil Dibowitz <phil@ipom.com>
+Subject: 2.6.0-test8: scsi_sysfs.c still not detaching properly
+Date: Sun, 19 Oct 2003 12:16:00 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031019025520.B26563@natasha.ward.six>
+Message-ID: <3F92E2F0.2090003@ipom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed;
+ boundary=------------enig3F7A6A251199834DE5160482;
+ protocol="application/pgp-signature"; micalg=pgp-sha1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 72.dom-sp.ru ([212.57.164.72]:18440 "EHLO mail.ward.six")
-	by vger.kernel.org with ESMTP id S261827AbTJRUzb (ORCPT
+Received: from postal.usc.edu ([128.125.253.6]:11160 "EHLO postal.usc.edu")
+	by vger.kernel.org with ESMTP id S262183AbTJSTRR (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 18 Oct 2003 16:55:31 -0400
-Content-Disposition: inline
+	Sun, 19 Oct 2003 15:17:17 -0400
+Received: from ipom.com (dsl81-phil3.usc.edu [128.125.81.146])
+ by postal.usc.edu
+ (iPlanet Messaging Server 5.2 HotFix 1.21 (built Sep  8 2003))
+ with ESMTPS id <0HN000CHVQURW8@postal.usc.edu> for linux-scsi@vger.kernel.org;
+ Sun, 19 Oct 2003 12:16:03 -0700 (PDT)
 List-Id: linux-scsi@vger.kernel.org
-To: gibbs@scsiguy.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-I have these warnings when I'm compiling 2.4.22 for a 486 EISA system:
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig3F7A6A251199834DE5160482
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-aic7xxx_osm.c: In function `ahc_softc_comp':
-aic7xxx_osm.c:1560: warning: implicit declaration of function `ahc_get_pci_bus'
-aic7xxx_osm.c:1568: warning: implicit declaration of function `ahc_get_pci_slot'
+I'm experiencing a bug similar to the one referenced here:
 
-And then the make finishes with an error, because these functions
-really exist only if the PCI support is turned on.
+http://sourceforge.net/mailarchive/message.php?msg_id=6252693
 
-The patch below fixes this.  And the same patch fits for the 2.6
-kernels.  Please, apply it.
+But the patch in that thread has been applied to 2.6.0-test8, which I'm 
+running, and I'm still having the same problem - albeit with a different 
+device.
+
+The device in question is a Digital Camera (Casio Exilim) that uses the 
+usb-storage driver. Basically device files do not get unallocated upon 
+disconnect, and thus successive connections get different device files 
+associated with them.
+
+When attached, I get the following (and it attaches to sda1):
+
+Oct 19 12:12:20 rider kernel: hub 1-0:1.0: new USB device on port 2, 
+assigned address 3
+Oct 19 12:12:20 rider kernel: scsi1 : SCSI emulation for USB Mass 
+Storage devices
+Oct 19 12:12:20 rider kernel:   Vendor: Casio     Model: QV 
+DigitalCamera  Rev: 5010
+Oct 19 12:12:20 rider kernel:   Type:   Direct-Access 
+    ANSI SCSI revision: 02
+Oct 19 12:12:21 rider scsi.agent[9314]: how to add device type= at 
+/devices/pci0000:00/0000:00:07.2/usb1/1-2/1-2:1.0/host1/1:0:0:0 ??
+Oct 19 12:12:21 rider kernel: SCSI device sda: 20208 512-byte hdwr 
+sectors (10 MB)
+Oct 19 12:12:21 rider kernel: sda: Write Protect is off
+Oct 19 12:12:21 rider kernel: sda: cache data unavailable
+Oct 19 12:12:21 rider kernel:  sda: sda1
+Oct 19 12:12:21 rider kernel: Attached scsi removable disk sda at scsi1, 
+channel 0, id 0, lun 0
 
 
---- drivers/scsi/aic7xxx/aic7xxx_osm.c.orig	2003-09-15 01:56:14.000000000 +0600
-+++ drivers/scsi/aic7xxx/aic7xxx_osm.c	2003-10-15 00:23:37.000000000 +0600
-@@ -1552,6 +1552,7 @@ ahc_softc_comp(struct ahc_softc *lahc, s
- 
- 	/* Still equal.  Sort by BIOS address, ioport, or bus/slot/func. */
- 	switch (rvalue) {
-+#ifdef CONFIG_PCI
- 	case AHC_PCI:
- 	{
- 		char primary_channel;
-@@ -1584,6 +1585,8 @@ ahc_softc_comp(struct ahc_softc *lahc, s
- 			value = 1;
- 		break;
- 	}
-+#endif
-+#ifdef CONFIG_EISA
- 	case AHC_EISA:
- 		if ((rahc->flags & AHC_BIOS_ENABLED) != 0) {
- 			value = rahc->platform_data->bios_address
-@@ -1593,6 +1596,7 @@ ahc_softc_comp(struct ahc_softc *lahc, s
- 			      - lahc->bsh.ioport; 
- 		}
- 		break;
-+#endif
- 	default:
- 		panic("ahc_softc_sort: invalid bus type");
- 	}
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+When unattached, I get:
+
+Oct 19 12:13:14 rider kernel: usb 1-2: USB disconnect, address 3
+
+
+And the next time I attach, it attaches to sdb1.
+
+Any help would be greatly appreciated.
+
+-- 
+Phil Dibowitz                             phil@ipom.com
+Freeware and Technical Pages              Insanity Palace of Metallica
+http://www.phildev.net/                   http://www.ipom.com/
+
+"They that can give up essential liberty to obtain a little temporary
+safety deserve neither liberty nor safety."
+  - Benjamin Franklin, 1759
+
+
+--------------enig3F7A6A251199834DE5160482
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+Comment: Using GnuPG with Debian - http://enigmail.mozdev.org
+
+iD8DBQE/kuLwN5XoxaHnMrsRArqRAKCFVtwWYS9Hko24tQ4qkHMdC+FeGACggOKs
+NuunVlD7zXj37W/iGD8BcSA=
+=17ZC
+-----END PGP SIGNATURE-----
+
+--------------enig3F7A6A251199834DE5160482--
+
