@@ -1,67 +1,44 @@
-From: Kurt Garloff <garloff@suse.de>
+From: Greg KH <greg@kroah.com>
 Subject: Re: [PATCH] sd_many done right (1/5)
-Date: Sat, 27 Jul 2002 00:32:24 +0200
+Date: Fri, 26 Jul 2002 16:28:58 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40468.5903377414$1027723030@news.gmane.org>
-References: <20020726154533.GD19721@nbkurt.etpnet.phys.tue.nl> <Pine.GSO.4.21.0207261245070.21586-100000@weyl.math.psu.edu> <20020726165411.GI19721@nbkurt.etpnet.phys.tue.nl> <20020726175027.GC2746@clusterfs.com> <20020726185545.B18629@infradead.org>
+Message-ID: <20020726232858.GB24008@kroah.com>
+References: <20020726154533.GD19721@nbkurt.etpnet.phys.tue.nl> <Pine.GSO.4.21.0207261245070.21586-100000@weyl.math.psu.edu> <20020726165411.GI19721@nbkurt.etpnet.phys.tue.nl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="S0GG+JvAI2G0KxBG"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20020726185545.B18629@infradead.org>
+In-Reply-To: <20020726165411.GI19721@nbkurt.etpnet.phys.tue.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Alexander Viro <viro@math.psu.edu>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>, Marcelo Tosatti <marcelo@conectiva.com.br>
+To: Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
 
+On Fri, Jul 26, 2002 at 06:54:11PM +0200, Kurt Garloff wrote:
+> Hi Al,
+> 
+> On Fri, Jul 26, 2002 at 12:45:41PM -0400, Alexander Viro wrote:
+> > On Fri, 26 Jul 2002, Kurt Garloff wrote:
+> > > The patches are all available at
+> > > http://www.suse.de/~garloff/linux/scsi-many/
+> > 
+> > As long as you realize that it won't go in 2.5 in that form...
+> 
+> The sd parts can and should be ported to 2.5, I think.
+> The /proc/scsi/scsi extensions and other stuff I wrote to support it, 
+> won't be needed, as we have driverfs in 2.5.
+> And, of course, the device number management will be solved in a more
+> general way, but I do not yet see how. 
 
---S0GG+JvAI2G0KxBG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Why that's quite simple (with apologies to South Park) :
+	1) finish the driver model code and banish devfs to a corner of
+	the kernel where it will not do any harm.
+	2) {silence}
+	3) Purely dynamic major and minors now work.
 
-Hi Christoph, Andreas,
+:)
 
-On Fri, Jul 26, 2002 at 06:55:45PM +0100, Christoph Hellwig wrote:
-> On Fri, Jul 26, 2002 at 11:50:27AM -0600, Andreas Dilger wrote:
-> > Actually, one interesting aspect of the EVMS vs. device-mapper argument
-> > going on that has totally been missed is that EVMS can do management of
-> > ALL disk block devices.
->=20
-> That's only natural as it try to duplicate the whole Linux block layer.
-> But it's everything but a good idea.
+It will happen, eventually.  Most of us are busy laying the groundwork
+right now...
 
-I won't go into that discussion ... Duplicating the Linux block layer is
-certainly not such a good idea as the block layer is getting really nice
-nowadays. But I have no idea to what extent something like this is done in
-EVMS.
+thanks,
 
-But the idea of having a number of majors assigned to disks, no matter what
-the driver below is looks certainly like a good idea. With the current
-approach, we'll need way too many majors, even if we'd have some more bits
-in the future. Why not have a pool of disk majors and sd, hd, dasd, rd
-(DAC960), the IDE-Raids, and ... allocate some of these as needed.
-
-driverfs + some userspace tool will be needed to provide a consistent view
-on them and to handle the permissions. Fortunately, disk devs tend to all
-have the same perms, so we can start before this is addressed to its
-full extent.
-
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
-GPG key: See mail header, key servers         Linux kernel development
-SuSE Linux AG, Nuernberg, DE                            SCSI, Security
-
---S0GG+JvAI2G0KxBG
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.7 (GNU/Linux)
-
-iD8DBQE9Qc34xmLh6hyYd04RArTyAJ0Uig6iiCc+2TVB41EQJuZJ3aJ22QCgj9X6
-U9rTa6iLaVo8Tis9ryARyBc=
-=NRTi
------END PGP SIGNATURE-----
-
---S0GG+JvAI2G0KxBG--
+greg k-h
