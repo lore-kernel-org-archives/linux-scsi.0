@@ -1,79 +1,54 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: [PATCH] correct module refcounting
-Date: 28 Oct 2003 15:46:02 -0600
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] SCSI: limit mode sense usage
+Date: Tue, 28 Oct 2003 17:28:49 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1067377564.1788.39.camel@mulgrave>
+Message-ID: <Pine.LNX.4.44L0.0310281724430.6912-100000@ida.rowland.org>
+References: <1067374593.7040.84.camel@patehci2>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:33540 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261750AbTJ1VqF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Oct 2003 16:46:05 -0500
+Received: from ida.rowland.org ([192.131.102.52]:29956 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S261787AbTJ1W2w (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Oct 2003 17:28:52 -0500
+In-Reply-To: <1067374593.7040.84.camel@patehci2>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>, Mike Anderson <andmike@us.ibm.com>
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: ronald@kuetemeier.com, patmans@us.ibm.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net
 
-There's a race window between doing the last scsi_device_put and having
-the devices actually released where the module may be unloaded.  The fix
-is to move the module accounting into the
-scsi_allocate_sdev/scsi_free_sdev pieces of the SCSI routines.
+On 28 Oct 2003, Pat LaVarre wrote:
 
-I also think we probably want to move sdev_gendev population into
-scsi_allocate_sdev.  Note this will change how we do initial scans
-because now we'll be using the generic device release infrastructure to
-free even temporary devices.  Unless anyone has a better idea...?
+> > > ... not clear to me what is the best way to take care of the devices that 
+> > > choke on page 3F ...
+> > Some of us have suggested substituting:
+> > -y "5A 00 08:00:00:00 00 00:1C 00" -i x1C // Mode Sense 10 of SBC/MMC
+> > Page x08 Cacheing for 8 byte header, optional 8 byte block descriptor,
+> > and xC byte standard page x08 length
+> 
+> >From a contemporaneous thread:
+> 
+>   - Host requests MODE_SENSE_10 and request 28 bytes
+>   - But the device only has 20 bytes, so it
+> 
+> Translating, we see that the terms 20 28 here mean what more bus traces
+> show as x14 x1C.  That again suggests talk-like-Windows might be:
+> 
+> -y "5A 00 08:00:00:00 00 00:1C 00" -i x1C
+> 
+> Those devices that only agree to copy in x14 = 20 bytes may be omitting
+> the optional 8 byte block descriptor, in accord with what I think I
+> remember MMC requires, though simultaneously in discord with what I'm
+> almost sure I remember SBC recommends.
+> 
+> Pat LaVarre
 
-Finally, when this is done, we can take a device reference over both
-scsi_get_command/scsi_put_command and also within the scsi_request_fn so
-we know the device can never be released while it has outstanding
-commands or while we are running its queues.
+Pat, I think maybe you're misunderstanding the reason behind this thread.  
+The device in question wasn't failing the MODE-SENSE(10) for page x08 
+(determine cache-type); it was failing the MODE-SENSE(10) for page x3F 
+(where only the first 4 bytes are read to determine write-enable).
 
-James
+The code that does this is in 
+drivers/scsi/sd.c:sd_read_write_protect_flag().
 
-===== drivers/scsi/scsi.c 1.130 vs edited =====
---- 1.130/drivers/scsi/scsi.c	Mon Oct 27 06:01:49 2003
-+++ edited/drivers/scsi/scsi.c	Tue Oct 28 15:39:10 2003
-@@ -897,10 +897,6 @@
- 		return -ENXIO;
- 	if (!get_device(&sdev->sdev_gendev))
- 		return -ENXIO;
--	if (!try_module_get(sdev->host->hostt->module)) {
--		put_device(&sdev->sdev_gendev);
--		return -ENXIO;
--	}
- 	return 0;
- }
- EXPORT_SYMBOL(scsi_device_get);
-@@ -915,7 +911,6 @@
-  */
- void scsi_device_put(struct scsi_device *sdev)
- {
--	module_put(sdev->host->hostt->module);
- 	put_device(&sdev->sdev_gendev);
- }
- EXPORT_SYMBOL(scsi_device_put);
-===== drivers/scsi/scsi_scan.c 1.110 vs edited =====
---- 1.110/drivers/scsi/scsi_scan.c	Mon Oct 27 06:01:50 2003
-+++ edited/drivers/scsi/scsi_scan.c	Tue Oct 28 15:39:00 2003
-@@ -192,6 +192,9 @@
- 	struct scsi_device *sdev, *device;
- 	unsigned long flags;
- 
-+	if (!try_module_get(sdev->host->hostt->module))
-+		goto out;
-+
- 	sdev = kmalloc(sizeof(*sdev), GFP_ATOMIC);
- 	if (!sdev)
- 		goto out;
-@@ -299,6 +302,7 @@
- 	spin_unlock_irqrestore(sdev->host->host_lock, flags);
- 
- 	kfree(sdev->inquiry);
-+	module_put(sdev->host->hostt->module);
- 	kfree(sdev);
- }
- 
-
-
+Alan Stern
 
