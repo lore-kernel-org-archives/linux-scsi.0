@@ -1,34 +1,32 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Is sector no. related to partitions in scsi drivers?
-Date: Wed, 28 Aug 2002 21:44:59 -0400
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: GFP_ATOMIC allocations...
+Date: 29 Aug 2002 11:47:55 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020828214459.B31167@redhat.com>
-References: <Pine.SOL.4.33.0208282057580.23561-100000@frack.cse.psu.edu>
+Message-ID: <1030618075.7290.110.camel@irongate.swansea.linux.org.uk>
+References: <20020828202534.G30927@redhat.com>
+	<20020828174737.A27554@eng2.beaverton.ibm.com>
+	<20020828214215.A31167@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.SOL.4.33.0208282057580.23561-100000@frack.cse.psu.edu>; from jzhang@cse.psu.edu on Wed, Aug 28, 2002 at 09:06:38PM -0400
+In-Reply-To: <20020828214215.A31167@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jianyong Zhang <jzhang@cse.psu.edu>
-Cc: linux-scsi@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
 
-On Wed, Aug 28, 2002 at 09:06:38PM -0400, Jianyong Zhang wrote:
+On Thu, 2002-08-29 at 02:42, Doug Ledford wrote:
+> > Do GFP_KERNEL alloc failures during boot time just return NULL?
 > 
->   I'm wonder where this request's sector number will be converted to one
-> related to the whole disk. Is it done by the firmware of controller?
+> GFP_ATOMIC returns NULL on failure, GFP_KERNEL *should* never fail until 
+> we get to a true OOM condition because it will block and wait for the vm 
+> subsystem to free us up some space.  Under true OOM conditions it will 
+> return NULL AFAIK.
 
-No.  The aic7xxx driver couldn't care less what the sector number in the 
-request item is.  The sd.c code handles converting request struct items to 
-physical sectors on the disk and then encodes the physical sector number 
-directly into the actual scsi command that it builds.  The scsi command is 
-then sent to the device by the aic7xxx driver and the aic7xxx driver never 
-even bothers to look and see what sector the command is going to (it 
-doesn't need to).
+Or maybe deadlock if its happening due to I/O. If it wants to flush a
+page out to that scsi device and the scsi device is doing the allocation
+life gets very unpleasant. SCSI may not be coming from block layer
+access with PF_MEM* set either, think about /proc and scsi-generic
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+"Here be dragons"
+
