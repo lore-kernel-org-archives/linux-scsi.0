@@ -1,92 +1,38 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: 2.6.9-rc1-mm5 qlogic oops
-Date: Mon, 13 Sep 2004 14:24:13 -0700
+From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
+Subject: Re: sym2 2.1.18k
+Date: Mon, 13 Sep 2004 23:33:05 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040913212413.GA22149@praka.san.rr.com>
-References: <1095100546.3628.162.camel@dyn318077bld.beaverton.ibm.com>
+Message-ID: <m38ybdlur2.fsf@merlin.emma.line.org>
+References: <20040913194803.GV642@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="Kj7319i9nmIyA2yE"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-02-qfe0.socal.rr.com ([66.75.162.134]:10965 "EHLO
-	ms-smtp-02-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S268972AbUIMV1d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Sep 2004 17:27:33 -0400
-Content-Disposition: inline
-In-Reply-To: <1095100546.3628.162.camel@dyn318077bld.beaverton.ibm.com>
+Received: from mail.dt.e-technik.Uni-Dortmund.DE ([129.217.163.1]:52878 "EHLO
+	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
+	id S268981AbUIMVdI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Sep 2004 17:33:08 -0400
+In-Reply-To: <20040913194803.GV642@parcelfarce.linux.theplanet.co.uk> (Matthew
+	Wilcox's message of "Mon, 13 Sep 2004 20:48:03 +0100")
 List-Id: linux-scsi@vger.kernel.org
-To: Badari Pulavarty <pbadari@us.ibm.com>
-Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: linux-scsi@vger.kernel.org
 
+Matthew Wilcox <willy@debian.org> writes:
 
---Kj7319i9nmIyA2yE
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+> 2.1.18k:
+>  - Relicence from dual BSD/GPL to pure GPL
 
-On Mon, 13 Sep 2004, Badari Pulavarty wrote:
+Urgh. There was a time when the driver was shared among deveral OSs,
+among them FreeBSD. The BSD world ain't gonna like this for practical
+reasons, the consequence is that they'll either stop merging patches
+from Linux or remove the sym driver from their GENERIC kernels if they
+want your patches.
 
-> 
-> I get this Oops with qlogic 2200 FC controllers with 2.6.9-rc1-mm5.
-> Is this a known issue ? Any fixes ?
-> 
+Of course, he who writes the code gets to determine the license, hence
+no plea to revert this change, but I'd like to know why this change has
+been made.
 
-Hmm, there seems to be some merging problems in changeset 1.44 for
-qla_os.c -- the 'DMA pool/api usage' patch I sent is not completely
-integrated (appears to be massaging problems while attempting to apply
-on top off 1.43).
+-- 
+Matthias Andree
 
-Please apply the attached patch which should address the issue.
-
-Regards,
-Andrew Vasquez
-
---Kj7319i9nmIyA2yE
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="dma_fixups.diff"
-
-===== drivers/scsi/qla2xxx/qla_os.c 1.46 vs edited =====
---- 1.46/drivers/scsi/qla2xxx/qla_os.c	2004-09-06 12:07:52 -07:00
-+++ edited/drivers/scsi/qla2xxx/qla_os.c	2004-09-13 14:07:23 -07:00
-@@ -2892,6 +2892,19 @@
- 			continue;
- 		}
- 
-+		/* get consistent memory allocated for init control block */
-+		ha->init_cb = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL,
-+		    &ha->init_cb_dma);
-+		if (ha->init_cb == NULL) {
-+			qla_printk(KERN_WARNING, ha,
-+			    "Memory Allocation failed - init_cb\n");
-+
-+			qla2x00_mem_free(ha);
-+			msleep(100);
-+
-+			continue;
-+		}
-+		memset(ha->init_cb, 0, sizeof(init_cb_t));
- 
- 		/* Get consistent memory allocated for Get Port Database cmd */
- 		ha->iodesc_pd = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL,
-@@ -2982,21 +2995,6 @@
- 			}
- 			memset(ha->ct_sns, 0, sizeof(struct ct_sns_pkt));
- 		}
--
--		/* Get consistent memory allocated for Get Port Database cmd */
--		ha->iodesc_pd = pci_alloc_consistent(ha->pdev,
--		    PORT_DATABASE_SIZE, &ha->iodesc_pd_dma);
--		if (ha->iodesc_pd == NULL) {
--			/* error */
--			qla_printk(KERN_WARNING, ha,
--			    "Memory Allocation failed - iodesc_pd\n");
--
--			qla2x00_mem_free(ha);
--			msleep(100);
--
--			continue;
--		}
--		memset(ha->iodesc_pd, 0, PORT_DATABASE_SIZE);
- 
- 		/* Done all allocations without any error. */
- 		status = 0;
-
---Kj7319i9nmIyA2yE--
+Encrypted mail welcome: my GnuPG key ID is 0x052E7D95 (PGP/MIME preferred)
