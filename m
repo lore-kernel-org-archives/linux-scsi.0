@@ -1,55 +1,93 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: strange ide-cd MODE_SENSE response [2.6.8.1]
-Date: Tue, 17 Aug 2004 12:54:01 +1000
+Subject: Re: VPD in sysfs
+Date: Tue, 17 Aug 2004 14:12:32 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <41217349.4060302@torque.net>
+Message-ID: <412185B0.4080105@torque.net>
+References: <20040814182932.GT12936@parcelfarce.linux.theplanet.co.uk>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub2.uq.edu.au ([130.102.149.128]:37133 "EHLO
-	mailhub2.uq.edu.au") by vger.kernel.org with ESMTP id S268164AbUHQITY
+Received: from mailhub2.uq.edu.au ([130.102.149.128]:60173 "EHLO
+	mailhub2.uq.edu.au") by vger.kernel.org with ESMTP id S268165AbUHQITl
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Aug 2004 04:19:24 -0400
+	Tue, 17 Aug 2004 04:19:41 -0400
+In-Reply-To: <20040814182932.GT12936@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: axboe@suse.de
+To: Matthew Wilcox <willy@debian.org>
+Cc: Greg KH <greg@kroah.com>, martins@au.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-In lk 2.6.8.1 (and 2.6.7) if a MODE_SENSE (6 byte variant) is sent
-to an "ide-cd" device (e.g. /dev/hdc) then it responds with a
-"CONDITION MET" SCSI status and no sense buffer.
+Matthew Wilcox wrote:
+> I've been sent a patch that reads some VPD from the Symbios NVRAM and
+> displays it in sysfs.  I'm not sure whether the way the author chose
+> to present it is the best.  They put it in 0000:80:01.0/host0/vpd_name
+> which seems a bit too scsi-specific and insufficiently forward-looking
+> (I bet we want to expose more VPD data than that in the future, so we
+> should probably use a directory).
+> 
+> I actually have a feeling (and please don't kill me for saying this), that
+> we should add a struct vpd * to the struct device.  Then we need something
+> like the drivers/base/power/sysfs.c file (probably drivers/base/vpd.c)
+> that takes care of adding vpd to each device that wants it.
+> 
+> Thoughts?  Since there's at least four and probably more ways of getting
+> at VPD, we either need to fill in some VPD structs at initialisation or
+> have some kind of vpd_ops that a driver can fill in so the core can get
+> at the data.
 
-According to MMC, MODE_SENSE (6) is not supported. In this case a
-polite SCSI device should set a SCSI status of "CHECK CONDITION"
-with a sense key of ILLEGAL_REQUEST and appropriate ASC/ASCQ
-values (i.e. operation code not supported).
+Vital Product Data (VPD) seems to be an ever increasing
+area for all sorts of data. Here is a list (from sg_inq
+in sg3_utils) of existing and proposed VPD pages for SCSI
+targets and LUs:
 
-The relevant code in ide-cd.c seems to be:
+struct vpd_name {
+     int number;
+     int peri_type;
+     char * name;
+};
 
-         /*
-          * it's silly to pretend we understand 6-byte sense commands, just
-          * reject with ILLEGAL_REQUEST and the caller should take the
-          * appropriate action
-          */
-         if (c[0] == MODE_SENSE || c[0] == MODE_SELECT) {
-                 rq->errors = ILLEGAL_REQUEST;
-                 return BLKPREP_KILL;
-         }
+static struct vpd_name vpd_name_arr[] = {
+     {0x0, 0, "Supported VPD pages"},
+     {0x80, 0, "Unit serial number"},
+     {0x82, 0, "ASCII implemented operating definition"},
+     {0x83, 0, "Device identification"},
+     {0x84, 0, "Software interface identification"},
+     {0x85, 0, "Management network addresses"},
+     {0x86, 0, "Extended INQUIRY data"},
+     {0x87, 0, "Mode page policy"},
+     {0x88, 0, "SCSI ports"},
+     {0x89, 0, "ATA information"},
+     {0xb0, 0, "Block limits (sbc2)"},
+     {0xb0, 0x1, "SSC device capabilities (ssc3)"},
+     {0xb0, 0x11, "OSD information (osd)"},
+     {0xb1, 0x11, "Security token (osd)"},
+};
 
-I couldn't see how that BLKPREP_KILL was processed.
+The most interesting one in the above list is the
+"Device identification" VPD page (0x83) which may contain
+multiple descriptors each identifying either a:
+   - SCSI port (of a target)
+   - SCSI target
+   - SCSI logical unit
 
-Why have such code? I have a Yamaha SCSI cd writer that
-correctly supports MODE_SENSE (6) and MODE_SENSE (10).
-Support for MODE_SENSE (10) is mandatory in the MMC
-standard but it would be surprising if it said a
-MMC device could _not_ support MODE_SENSE (6).
+And here is a selection of possible identifier formats:
+    - naa (2,5 or 6)
+    - eui-64
+    - t10 vendor
+    - SCSI name string (iSCSI here)
+    - MD5 logical unit identifier
+    - vendor specific
+amongst others.
 
-The failure can be seen with the sg3_utils package and
-commands like this:
-    sg_modes -6 /dev/hdc
-    sginfo -C -6 /dev/hdc
+["The great thing about standards is that there are so many
+to choose from."]
 
+And your patch is about attaching VPD data to a SCSI HBA (host)
+via sysfs.
+"struct vpd" should be interesting ...
 
 Doug Gilbert
+
+
 
