@@ -1,53 +1,70 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: 2.6.3 oops at kobject_unregister, alsa & aic7xxx
-Date: Mon, 23 Feb 2004 22:17:40 -0800
+From: Paul Wagland <paul@wagland.net>
+Subject: Re: [PATCH][BUGFIX] : megaraid patch for 2.10.1 (irq disable bug fix)
+Date: Tue, 24 Feb 2004 08:09:23 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040223221740.5786b0b3.akpm@osdl.org>
-References: <1077546633.362.28.camel@boxen>
-	<20040223160716.799195d0.akpm@osdl.org>
-	<1077602725.3172.19.camel@opiate>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Message-ID: <5FF241F5-6698-11D8-B07A-000A95CD704C@wagland.net>
+References: <0E3FA95632D6D047BA649F95DAB60E570230C730@exa-atlanta.se.lsil.com> <20040223172921.GD25779@parcelfarce.linux.theplanet.co.uk>
+Mime-Version: 1.0 (Apple Message framework v612)
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-39-515116060"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:17888 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S262181AbUBXGRj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2004 01:17:39 -0500
-In-Reply-To: <1077602725.3172.19.camel@opiate>
+Received: from smtp-out3.xs4all.nl ([194.109.24.13]:53511 "EHLO
+	smtp-out3.xs4all.nl") by vger.kernel.org with ESMTP id S262132AbUBXHJZ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Feb 2004 02:09:25 -0500
+In-Reply-To: <20040223172921.GD25779@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Kerin <eric@bootseg.com>
-Cc: alexn@telia.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-Eric Kerin <eric@bootseg.com> wrote:
+
+--Apple-Mail-39-515116060
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+
+
+On Feb 23, 2004, at 18:29, Matthew Wilcox wrote:
+
+> On Mon, Feb 23, 2004 at 12:24:31PM -0500, Bagalkote, Sreenivas wrote:
+>> Hello all,
+>>
+>> The following patch fixes a bug in megaraid driver version 2.10.1
+>> where irq was erroneously being disabled.
 >
-> On Mon, 2004-02-23 at 19:07, Andrew Morton wrote:
-> > Alexander Nyberg <alexn@telia.com> wrote:
-> > >
-> > > This happens at shutdown when alsa is to close down. I'm running debian
-> > > sid. NOTE: I recently removed my aic7xxx out of the motherboard, so the
-> > > driver obviously can't find it. But if I remove aic7xxx from the modules
-> > > list, this oops does _not_ happen.
-> > 
-> > That's useful infomation.  It indicates that the aic7xxx driver is screwing
-> > up the kobject lists.
-> > 
-> > Just to confirm: are you saying that the aic7xxx driver is loaded at the
-> > tie of the oops, but there is no aic7xxx hardware present in the machine?
-> 
-> 
-> I stumbled up this in early January.  I posted a patch to linux-scsi,
-> but it dosn't seem to be merged at this point.  This problem will also
-> occur with the aic79xx driver.
-> 
-> Here's the location of the original thread:
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=107307695430108&w=2
-> 
-> I just tried the patch on 2.6.3, and it still applies cleanly.
+> Could we have a later version than 2.00.3 in 2.6 please?
 
-hm, I was looking at that code but it seemed OK.  You said "left a stale
-entry in the pci_device list".  Is that correct, or was the entry in the
-PCI driver list?  The latter, surely?
+In an interesting twist of fate, that is exactly what I am currently 
+working on planning, see the patches that I pushed through last week, 
+according to my estimates, I am about 1/3 of the way through 
+modernising the 2.6 driver. However, as of yet I have received no 
+comment from LSI about the modifications to the drivers that I have 
+made. I have received a response from Jeff Garzik that it appears that 
+I am on the right track.
 
-If so, why is that a problem?  ahc_linux_pci_exit() takes it out again?
+As a side issue, the comment in the 2.6 driver that says that it is 
+2.00.3 is just plain wrong. Look at the driver  from 2.6 and the 2.00.3 
+release, there are a lot of differences there! The problem is that the 
+2.6 and 2.4 drivers diverged a little at some point in the past, and 
+then quite a lot in 2.6.1, hence the reason for taking so long to 
+forward port the changes.
+
+Cheers,
+Paul
+
+--Apple-Mail-39-515116060
+content-type: application/pgp-signature; x-mac-type=70674453;
+	name=PGP.sig
+content-description: This is a digitally signed message part
+content-disposition: inline; filename=PGP.sig
+content-transfer-encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (Darwin)
+
+iD8DBQFAOvijtch0EvEFvxURAoXtAJ4gwvnc0baa4RnQ5jYNfKq+cmdJZgCgmHpX
+v2IbGVM744BQg/mYlHjdrrU=
+=bGon
+-----END PGP SIGNATURE-----
+
+--Apple-Mail-39-515116060--
 
