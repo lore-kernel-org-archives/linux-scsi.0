@@ -1,57 +1,67 @@
-From: Erik Andersen <andersen@codepoet.org>
-Subject: Re: [PATCH] SCSI hotplug support
-Date: Tue, 15 Oct 2002 13:32:16 -0600
+From: Dave Hansen <haveblue@us.ibm.com>
+Subject: Re: [patch 2.5] ips queue depths
+Date: Tue, 15 Oct 2002 12:30:45 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021015193216.GE15778@codepoet.org>
-References: <andersen@codepoet.org> <20021014203749.GA24904@codepoet.org> <200210142107.g9EL7IX04354@localhost.localdomain> <20021014215416.GB25941@codepoet.org> <20021014222515.GD1274@redhat.com> <20021015052521.GA1967@codepoet.org> <20021015182247.GA4391@redhat.com> <20021015184535.GA16401@codepoet.org> <20021015191330.GC4391@redhat.com>
-Reply-To: andersen@codepoet.org
+Message-ID: <3DAC6CE5.5020503@us.ibm.com>
+References: <A3B9245C291EEF4785A24A1DBE8D852B0376BC@rtpexc01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------040300090706060504070307"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021015191330.GC4391@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: "Jeffery, David" <David_Jeffery@adaptec.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On Tue Oct 15, 2002 at 03:13:30PM -0400, Doug Ledford wrote:
-> On Tue, Oct 15, 2002 at 12:45:35PM -0600, Erik Andersen wrote:
-> > On Tue Oct 15, 2002 at 02:22:47PM -0400, Doug Ledford wrote:
-> > > On Mon, Oct 14, 2002 at 11:25:22PM -0600, Erik Andersen wrote:
-> > > > 
-> > > > It is called from within the insmod's context.
-> > > 
-> > > So it's called by what module then?  And what happens if we have a user 
-> > > add a hard drive and it gets the module loaded and then attaches the 
-> > > drive, then we attach another drive sometime later, and this time hotplug 
-> > > doesn't do anything because the right module is already loaded?  How does 
-> > > the drive get added then?  Am I missing something?
-> > 
-> > Oops.  I spoke wrongly....  It is called from within
-> > /sbin/hotplug's context.
+This is a multi-part message in MIME format.
+--------------040300090706060504070307
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Jeffery, David wrote:
+> Dave,
 > 
-> Then what the sam hell has all this crap been for!?!?  We've been saying 
-> all along "Add the device from hotplug instead of kernel module", and now 
-> you tell us that it's already happening from hotplug's context?  If it's 
-> already happening from hotplug's context, then why not just do the 
-> fprintf(); that I put in one of my emails and be done with it?  And what 
+> Here's a patch that should restore the queue depths to what they were before
+> the
+> queue depths change was merged in.  Hopefully this well restore your lost
+> performance.  If I don't hear or find anything bad about it, it will be
+> going
+> to Linus shortly.
+> 
+> And thanks goes to Mike Anderson for his initial version.  That made writing
+> this patch all the easier.
 
-The main reason why I'd prefer to put this stuff into the sbp2
-driver is to avoid 1394 layering violations. For ieee1394
-devices, the 1394 nodemgr makes the hotplug calls.  But it does
-the hotplug thing for all 1394 devices, and has no knowledge of
-whether a device is an SBP-2 device (one that need to be
-connected to the SCSI subsystem).  I suspect the 1394 maintainers
-would reject patches that infect the nodemgr with SBP-2 and/or
-SCSI specific stuff.  Sigh.  We seem to be at an impasse.  We
-either screw up SCSI or we screw up 1394... 
+Thank you for taking care of that so quickly.  I've tested it and it 
+shows that I'm within 0.5% of where I was before.  this is well within 
+the margin of error for my test.
 
-> about the scenario I asked about in my last email regarding a second disc 
-> and the situation where no module needs loaded?  How is that handled?
+On another (completely cosmetic)  note, ips.c is spitting out warnings 
+because of the IPS_*LOCK_RESTORE macros which don't use the flags 
+argument in 2.5.  If you're sending an update to Linus, could you 
+include something like what I've attached to get rid of them?
+-- 
+Dave Hansen
+haveblue@us.ibm.com
 
-Same deal.  The 1394 nodemgr invokes /sbin/hotplug.
+--------------040300090706060504070307
+Content-Type: text/plain;
+ name="ips-warning-fix-2.5.42+bk-0.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ips-warning-fix-2.5.42+bk-0.patch"
 
- -Erik
+--- ips.c.orig	Tue Oct 15 12:24:25 2002
++++ ips.c	Tue Oct 15 12:25:24 2002
+@@ -248,8 +248,8 @@
+ #else
+     #define IPS_SG_ADDRESS(sg)      (page_address((sg)->page) ? \
+                                      page_address((sg)->page)+(sg)->offset : 0)
+-    #define IPS_LOCK_SAVE(lock,flags) spin_lock(lock)
+-    #define IPS_UNLOCK_RESTORE(lock,flags) spin_unlock(lock)
++    #define IPS_LOCK_SAVE(lock,flags) do { spin_lock(lock); (void)flags } while (0)
++    #define IPS_UNLOCK_RESTORE(lock,flags) { spin_unlock(lock); (void)flags } while (0)
+ #endif
+ 
+ #define IPS_DMA_DIR(scb) ((!scb->scsi_cmd || ips_is_passthru(scb->scsi_cmd) || \
 
---
-Erik B. Andersen             http://codepoet-consulting.com/
---This message was written using 73% post-consumer electrons--
+--------------040300090706060504070307--
+
