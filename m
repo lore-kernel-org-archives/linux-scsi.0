@@ -1,182 +1,263 @@
-From: Brian King <brking@us.ibm.com>
-Subject: PROBLEM: Oops in 2.6.3 with lots of SG_IO activity
-Date: Thu, 04 Mar 2004 14:13:07 -0600
+From: "Delilah Chan" <delilahc@tuxedo.com>
+Subject: Fwd: linux-scsi@vger.kernel.org
+Date: Thu, 4 Mar 2004 11:39:03 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40478DD3.10807@us.ibm.com>
+Message-ID: <m1078429143177@tuxedo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.105]:47800 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262108AbUCDUNJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Mar 2004 15:13:09 -0500
-Received: from northrelay02.pok.ibm.com (northrelay02.pok.ibm.com [9.56.224.150])
-	by e5.ny.us.ibm.com (8.12.10/8.12.2) with ESMTP id i24KD9Jr478688
-	for <linux-scsi@vger.kernel.org>; Thu, 4 Mar 2004 15:13:09 -0500
-Received: from us.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by northrelay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id i24KD8Kf128830
-	for <linux-scsi@vger.kernel.org>; Thu, 4 Mar 2004 15:13:08 -0500
+Received: from Computer-4.cpe.dectr.al.charter.com ([68.186.195.237]:29188
+	"HELO local.domain") by vger.kernel.org with SMTP id S262128AbUCDUaK convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Mar 2004 15:30:10 -0500
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-I have been experiencing occasional oopses in some testing I have been
-doing and have recently been able to aggravate the problem to recreate
-the oops quite quickly. If I do lots of overlapped SG_IO ioctls while
-also doing heavy disk I/O, I can recreate the oops within a few minutes,
-although I have also seen the problem under very little load. I have
-seen the problem using both the ipr and sym2 drivers.
+YE=DE=DDLAY...  ZARARLI ALI=DEKANLIKLARA DUR..! D=DDYEN  KURUM....!
+
+Ye=FEilay; sigara, alkoll=FC i=E7ki, uyu=FEturucu, her t=FCrl=FC zararl=
+=FD maddeler ve al=FD=FEkanl=FDklar=FDna kar=FE=FD m=FCcadele veren, ha=
+lk=FDm=FDz=FDn ve =F6zellikle gen=E7lerimizin bu zararl=FDlardan korunm=
+as=FD i=E7in =E7al=FD=FEmalar yapan =E7ok de=F0erli ulusal bir kurulu=FE=
+umuzdur.
+
+Temel amac=FD insan sa=F0l=FD=F0=FDn=FD korumakt=FDr. B=F6ylece insan y=
+a=FEam=FDna yararl=FD olmaya =E7al=FD=FEmakta ve b=FCt=FCn =E7abas=FD, =
+k=FC=E7=FCk ve b=FCy=FCk her insan=FD bu k=F6t=FCl=FCklerden uzakla=FEt=
+=FDrmakt=FDr.
+
+Ye=FEilay Cemiyeti, i=E7ki ve uyu=FEturucu maddelerin kullan=FDlmas=FDn=
+=FD =F6nlemeye y=F6nelik olarak  =DEeyh=FCl-=DDslam Haydarizade =DDbrah=
+im Efendi'nin te=FEvik ve himayesinde d=FCnyaca =FCnl=FC Ord. Prof. Dr.=
+ Mazhar Osman Bey ve arkada=FElar=FD taraf=FDndan 5 Mart 1920 tarihinde=
+ kurulmu=FEtur.
+
+Yurdun i=FEgal alt=FDnda oldu=F0=FD o karanl=FDk g=FCnlerde limanlar=FD=
+m=FDza u=F0rayan d=FC=FEman gemileri beraberinde getirdi=F0i y=FD=F0=FD=
+n y=FD=F0=FDn i=E7kileri indiriyor ve bunlar el alt=FDndan halk=FDm=FDz=
+a ve bilhassa faal unsuru olan gen=E7lerimize ula=FEt=FDr=FDl=FDyordu.
+
+K=FDsa zamanda i=E7ki ve uyu=FEturucu madde ba=F0=FDml=FDl=FD=F0=FD bir=
+ salg=FDn halini almaya y=FCz tutmu=FEtu. =DD=FEte bu faciay=FD g=F6r=FC=
+p i=FEin vehametini kavrayan vatansever ayd=FDnlar halk=FD ve gen=E7li=F0=
+i uyarmak, bilin=E7lendirmek ve bu yolda m=FCcadele etmek i=E7in merkez=
+i =DDstanbul'da olmak =FCzere 5 Mart 1920 tarihinde "T=FCrkiye Ye=FEila=
+y Cemiyeti"ni kurdular.
+
+Cemiyetin ilk ismi "Hilal-i Ahdar"d=FDr. Sonra "Ye=FEil Hilal" daha son=
+ra da "Ye=FEilay" ad=FDn=FD alm=FD=FEt=FDr. Cemiyet Birinci Cihan Harbi=
+ sonunda b=FCt=FCn yurdun i=FEgal edilmi=FE olmas=FDna ra=F0men milleti=
+mizde =DDstiklal ve m=FCcadele azminin s=F6nmedi=F0ini g=F6ren d=FC=FEm=
+an, top ve t=FCfekle yenemedi=F0i T=FCrk varl=FD=F0=FDn=FD i=E7ten =E7=F6=
+kertmek i=E7in alkol ve uyu=FEturucu maddelere ba=FEvurmu=FEtur.=20
+
+Ye=FEilay o g=FCnden beri =FCzerine ald=FD=F0=FD bu kutsal hizmeti fera=
+gat ve sadakatla y=FCr=FCtmeye =E7al=FD=FEmaktad=FDr.
+
+=DDyi, g=FCzel ve faydal=FD i=FElere ve =E7al=FD=FEmalara yard=FDmc=FD =
+olmak ve kat=FDlmak hepimize d=FC=FEen bir yurtta=FEl=FDk g=F6revidir.
+
+Bu sosyal kurumun daha =E7ok etkinli=F0ini artt=FDrmas=FD i=E7in, hepim=
+ize pek =E7ok iyili=F0i dokunan bu kuruma =FClkenin yar=FDnlar=FDn=FD, =
+=E7ocuklar=FDm=FDz=FD d=FC=FE=FCnen herkesin destek olmas=FD bir insanl=
+=FDk borcudur.
+
+Her kim olursa olsun, alkoll=FC i=E7ki, uyu=FEturucu ve benzeri maddele=
+ri kullananlar=FD bu zararl=FD al=FD=FEkanl=FDklardan kurtarmal=FDy=FDz=
+=2E =C7=FCnk=FC bu k=F6t=FC al=FD=FEkanl=FDklar ki=FEileri oldu=F0u kad=
+ar toplumu da felakete s=FCr=FCkler. =DDnsanlar=FDn gen=E7 ya=FEta =F6l=
+=FCme gitmeleri, =FClkelerin yar=FDnlar=FD i=E7in de bir t=FCkeni=FEin =
+bir yok olu=FEun nedenidir.
+
+Alkoll=FC i=E7kiler =F6ld=FCr=FCc=FC bir silahtan daha korkun=E7 felake=
+tleri haz=FDrlar. =DDnsanl=FD=F0=FDn ba=FE belas=FD olan eroin, afyon g=
+ibi keyif verici maddeler, g=FCn=FCm=FCzde =E7ok y=FDk=FDmlara neden ol=
+maktad=FDr.=20
+
+T=DCRK=DDYE D=DCNYA SIRALAMASINDA =DDSRAFTA B=DDR=DDNC=DD, KUMARDA =DDK=
+=DDNC=DD, ALKOLDE =DC=C7=DCNC=DC, S=DDGARADA BREZ=DDLYA, G=DCNEY KORE V=
+E H=DDND=DDSTAN'DAN SONRA D=D6RD=DCNC=DC DURUMDADIR.
+
+Ye=FEilay Cemiyeti'nin y=FCklendi=F0i g=F6revin =F6nemi =E7ok b=FCy=FCk=
+t=FCr. =D6zellikle gen=E7lerimizi ve =E7ocuklar=FDm=FDz=FD i=E7ki ve uy=
+u=FEturucu her =E7e=FEit maddeden korumak T=FCrkiye'nin yar=FDnlar=FDn=FD=
+ d=FC=FE=FCnen ayd=FDn kitlenin =F6ncelikli g=F6revidir. Bu g=F6rev mil=
+li bir g=F6revdir.=20
+
+Bunun i=E7in insanl=FD=F0=FDn iyili=F0i, mutlulu=F0u, sa=F0l=FD=F0=FD i=
+=E7in =E7al=FD=FEan Ye=FEilay Cemiyeti'nin ya=FEat=FDlmas=FD ve etkinle=
+=FEtirilmesi ulus=E7a hepimize d=FC=FEen bir g=F6revdir.
+
+Bir insan yaln=FDz kendini de=F0il, ba=FEkalar=FDn=FDn sa=F0l=FDk, mutl=
+uluk ve iyili=F0ini de d=FC=FE=FCnmek zorundad=FDr. =C7=FCnk=FC toplums=
+al hayat ortakt=FDr. Kimse kendini i=E7inde bulundu=F0u toplumdan soyut=
+layamaz.
+
+=DDnsanl=FDk ba=FEkalar=FDna yard=FDm etmektir. Ba=FEkalar=FDna yard=FD=
+m eden insanl=FD=F0a yard=FDm etmi=FE olur.
+
+=DD=E7ki i=E7mek, uyu=FEturucu, keyif verici maddeleri kullanmak =F6mr=FC=
+ k=FDsaltt=FD=F0=FD gibi bir=E7ok k=F6t=FC yollara s=FCr=FCkler. Bu bak=
+=FDmdan Ye=FEilay, sosyal bir kurum olarak insanl=FDk yolunda b=FCy=FCk=
+ bir g=F6rev =FCstlenmi=FEtir.
+
+"Gen=E7li=F0in e=F0lenceye mahsus oldu=F0unu s=F6yleyenler ahmaklard=FD=
+r. Gen=E7lik =E7a=F0=FD, ileride b=FCt=FCn hayat devam=FDnca faydal=FD =
+olacak iyi al=FD=FEkanl=FDklar=FDn kazan=FDlma y=FDllar=FDd=FDr." (J.B.=
+Say)
+
+"=DDnsanlar=FD olgun ve ahlakl=FD bir hale getirmeden daha iyi bir d=FC=
+nya beklemeyiniz. Bunun i=E7in de her birimiz =F6nce kendimizden ba=FEl=
+ayarak sorumlulu=F0umuzda olanlar=FDn terbiyesi i=E7in =E7al=FD=FEmal=FD=
+y=FDz. Ancak bunun da y=F6ntemlerini =F6=F0renmek yap=FDlacak ilk i=FEt=
+ir" (Marie Curie)
+
+"Hayat disiplinsiz ve gayesiz oldu=F0u zaman, tabiat=FDyla e=F0lence de=
+nilen batakl=FD=F0a d=F6k=FCl=FCr. Bu batakl=FD=F0a d=FC=FEenler insani=
+ de=F0erlerden uzakla=FEarak hayvanla=FE=FDrlar. E=F0lence ile ge=E7mi=FE=
+ bir hayat kadar anlams=FDz ve zararl=FD hi=E7 bir =FEey yoktur." (Dr. =
+Alexis Carrel)
+
+Hangi t=FCr olursa olsun, uyu=FEturucular=FD =FCreten, satan, bunlara g=
+=F6z yuman ve te=FEvik edenler insanl=FDk d=FC=FEman=FDd=FDr. Toplumda =
+geli=FEen her k=F6t=FCl=FC=F0=FCn arkas=FDnda bir d=FC=FEman eli vard=FD=
+r.
+
+D=FCnya y=FCz=FCnde hi=E7 bir hukuk ve mant=FDk, bir ba=FEkas=FDn=FDn h=
+ayat=FDna zarar vererek para kazanmay=FD me=FEru koyamaz.
+
+Sigara ile ba=FElayan uyu=FEturucular, beyine =E7ak=FDlan birer ecel =E7=
+ivisidir. En =F6nce ak=FDl ve iradeyi zincire vururlar. Sonra "B=FDrak =
+=DEu mereti!" denildi=F0inde verilen yan=FDt "Elimde de=F0il, bir kere =
+esir olmu=FEuz!"dur.
+
+En b=FCy=FCk tuzak, bir defa denemekten ne =E7=FDkar?
+
+Yanl=FD=FE bir ad=FDm=FDn hikayesi; "9 ya=FE=FDnda masum, 12'sinde tine=
+rci, 18'inde a=FE=FDr=FD dozdan =F6ld=FC." olarak kaydedilir.
 
 
-ksymoops output:
+Bilindi=F0i gibi hayat=FDn en zor ve en ince mesle=F0i insan terbiyesi,=
+ e=F0itimidir. Bunu bilip beceren ebeveynin =E7ocuklar=FD i=E7in gelece=
+k endi=FEesi yerini g=FCven ve ba=FEar=FD co=FEkusuna b=FDrak=FDr. Bunu=
+ beceren cemiyetler toplum olarak geleceklerine g=FCven ve =FCmitle bak=
+abilirler.
 
-Unable to handle kernel paging request at virtual address c6cf3044
-c017e81c
-*pde = 0001c067
-Oops: 0000 [#1]
-CPU:    0
-EIP:    0060:[<c017e81c>]    Not tainted
-Using defaults from ksymoops -t elf32-i386 -a i386
-EFLAGS: 00010286
-eax: c6cf3044   ebx: c9545df8   ecx: 00000002   edx: c6cf3044
-esi: c6cf3048   edi: c6cf3000   ebp: cc7a7c84   esp: cc7a7c74
-ds: 007b   es: 007b   ss: 0068
-Stack: cc7a7c84 c9545df8 c6cf3048 c9545df8 cc7a7ca8 d086c547 c6cf3044 0000001d
-        00020001 d0889000 cad8ebf8 cec4f000 c9170eb8 cc7a7cc8 c032e743 c9170eb8
-        cafd13a8 000000ff c9170eb8 cc7a7cd8 0000000a cc7a7ce8 c032e66b c9170eb8
-Call Trace:
-  [<d086c547>] sg_cmd_done+0x167/0x280 [sg]
-  [<c032e743>] scsi_finish_command+0x73/0xb0
-  [<c032e66b>] scsi_softirq+0xab/0xd0
-  [<c012a935>] do_softirq+0xe5/0xf0
-  [<c010c6b8>] do_IRQ+0x198/0x240
-  [<c010a50c>] common_interrupt+0x18/0x20
-  [<c0253a60>] __copy_from_user_ll+0x50/0x80
-  [<c0171ed7>] blkdev_prepare_write+0x27/0x30
-  [<c0146aa3>] generic_file_aio_write_nolock+0x463/0xc20
-  [<c01472d8>] generic_file_write_nolock+0x78/0x90
-  [<c011fd52>] default_wake_function+0x22/0x30
-  [<d086c547>] sg_cmd_done+0x167/0x280 [sg]
-  [<c032e743>] scsi_finish_command+0x73/0xb0
-  [<c01733b3>] blkdev_file_write+0x33/0x40
-  [<c0168b6f>] vfs_write+0xaf/0x120
-  [<c0168c7f>] sys_write+0x3f/0x60
-  [<c0109b9f>] syscall_call+0x7/0xb
-Code: 8b 0a 85 c9 74 4b bb 00 e0 ff ff 21 e3 ff 43 14 b8 84 d2 4f
+Bu konularda yetersizlik ise hakikaten aile ve cemiyetler i=E7in b=FCy=FC=
+k tehlike ve endi=FEe konusudur. =DEanl=FD tarihimiz atalar=FDm=FDz=FDn=
+ insan yeti=FEtirmede ne derece g=FC=E7l=FC ve ba=FEar=FDl=FD olduklar=FD=
+n=FD g=F6steren a=E7=FDk belgelerle doludur. Fakat ne talihsizliktir ki=
+, biz bug=FCn bu konuda da acayip bir =E7=FDkmaz=FDn i=E7inde ve batakt=
+ay=FDz.=20
 
+=C7=FCnk=FC b=FCt=FCn tarihi ve hamasi geleneklerimiz gibi g=FC=E7l=FC =
+ahlak ve terbiye kurallar=FDm=FDz=FD ve onun al=FD=FEkanl=FDklar=FDn=FD=
+ da =F6nce dejenere edip sonra da y=FDk=FDp atm=FD=FE=FDzd=FDr. Bu konu=
+da ge=E7mi=FEiyle sadece =F6v=FCnen =E7=FDlg=FDn bir mirasyedi durumund=
+ay=FDz.
 
- >>EIP; c017e81c <kill_fasync+c/75>   <=====
+=DDnsanlar=FD geli=FEtirip y=F6netmenin en g=FC=E7l=FC ilkesi onlara ki=
+=FEilik kazand=FDrmak, onlar=FDn g=FCvenilir ki=FEiler olduklar=FDn=FD =
+kendilerine inand=FDrmakt=FDr.
 
- >>eax; c6cf3044 <_end+66b5b80/3f9c0b3c>
- >>ebx; c9545df8 <_end+8f08934/3f9c0b3c>
- >>edx; c6cf3044 <_end+66b5b80/3f9c0b3c>
- >>esi; c6cf3048 <_end+66b5b84/3f9c0b3c>
- >>edi; c6cf3000 <_end+66b5b3c/3f9c0b3c>
- >>ebp; cc7a7c84 <_end+c16a7c0/3f9c0b3c>
- >>esp; cc7a7c74 <_end+c16a7b0/3f9c0b3c>
+Bunun ise en kolay ve denenmi=FE yolu onlara k=FDymet ve =F6nem vermek,=
+ her f=FDrsatta bunu kendilerine ihsas etmek, duyurmakt=FDr. Ancak bu d=
+avran=FD=FElar=FDn ba=FEar=FDl=FD olabilmesi i=E7in, onlar=FDn birer g=FC=
+=E7l=FC ki=FEilik sahibi ve g=FCvenilir ki=FEiler oldu=F0una en =F6nce =
+bizler de inanmak zorunday=FDz.
 
-Trace; d086c547 <_end+1022f083/3f9c0b3c>
-Trace; c032e743 <scsi_finish_command+73/b0>
-Trace; c032e66b <scsi_softirq+ab/d0>
-Trace; c012a935 <do_softirq+e5/f0>
-Trace; c010c6b8 <do_IRQ+198/240>
-Trace; c010a50c <common_interrupt+18/20>
-Trace; c0253a60 <__copy_from_user_ll+50/80>
-Trace; c0171ed7 <blkdev_prepare_write+27/30>
-Trace; c0146aa3 <generic_file_aio_write_nolock+463/c20>
-Trace; c01472d8 <generic_file_write_nolock+78/90>
-Trace; c011fd52 <default_wake_function+22/30>
-Trace; d086c547 <_end+1022f083/3f9c0b3c>
-Trace; c032e743 <scsi_finish_command+73/b0>
-Trace; c01733b3 <blkdev_file_write+33/40>
-Trace; c0168b6f <vfs_write+af/120>
-Trace; c0168c7f <sys_write+3f/60>
-Trace; c0109b9f <syscall_call+7/b>
+Son y=FDllarda ABD ve AB =FClkeleri bu konuya ciddi bir sekilde el atti=
+lar. Nas=FDl el atmas=FDnlar ki, her ge=E7en sene alkol ve sigara kulla=
+n=FDm ya=FE=FD d=FC=FE=FCyor. Yap=FDlan ara=FEt=FDrmalar =F6yle bir son=
+u=E7 verdi ki, tehlikenin iyice b=FCy=FCmekte oldu=F0unu g=F6r=FCp y=FD=
+llar =F6nce =F6nlemler almaya ba=FElad=FDlar.=20
+=20
+T=FCrkiye'de geli=FEen tehlikenin boyutlar=FD Avrupa'dakinden daha y=FC=
+ksektir.=20
 
-Code;  c017e81c <kill_fasync+c/75>
-00000000 <_EIP>:
-Code;  c017e81c <kill_fasync+c/75>   <=====
-    0:   8b 0a                     mov    (%edx),%ecx   <=====
-Code;  c017e81e <kill_fasync+e/75>
-    2:   85 c9                     test   %ecx,%ecx
-Code;  c017e820 <kill_fasync+10/75>
-    4:   74 4b                     je     51 <_EIP+0x51>
-Code;  c017e822 <kill_fasync+12/75>
-    6:   bb 00 e0 ff ff            mov    $0xffffe000,%ebx
-Code;  c017e827 <kill_fasync+17/75>
-    b:   21 e3                     and    %esp,%ebx
-Code;  c017e829 <kill_fasync+19/75>
-    d:   ff 43 14                  incl   0x14(%ebx)
-Code;  c017e82c <kill_fasync+1c/75>
-   10:   b8 84 d2 4f 00            mov    $0x4fd284,%eax
+Ba=F0=FDml=FDl=FDk K=FDskac=FDndaki Gen=E7lik en ba=FEta Alkol ba=F0=FD=
+ml=FDl=FD=F0=FD hemen ard=FDndan   Sigara ba=F0=FDml=FDl=FD=F0=FDn=FDn =
+tutsa=F0=FD olmaktad=FDr.=20
+=20
+T=FCrkiye'de 1984 y=FDl=FDndan 2000'e kadar  sigara t=FCketimi y=FCzde =
+90 artarken ABD'de bu art=FD=FE y=FCzde 30'larda olmu=FEtur.
 
+Gen=E7lerde/=E7ocuklarda son d=F6nemlerde b=FCy=FCk ilgi duyduklar=FD, =
+4 tehlikeli ba=F0=FDml=FDl=FDk/t=FCketim s=F6z konusudur:
 
+1- Alkol / 2- Sigara / 3- Bilgisayar  / 4- Televizyon
 
-
-Gnu C                  3.2
-Gnu make               3.79.1
-util-linux             2.11r
-mount                  2.11r
-module-init-tools      0.9.12
-e2fsprogs              1.27
-jfsutils               1.0.17
-reiserfsprogs          3.6.2
-pcmcia-cs              3.1.31
-quota-tools            3.06.
-PPP                    2.4.1
-isdn4k-utils           3.1pre4
-nfs-utils              1.0.1
-Linux C Library        2.2.93
-Dynamic linker (ldd)   2.2.93
-Procps                 2.0.7
-Net-tools              1.60
-Kbd                    1.06
-Sh-utils               2.0.12
-Modules Loaded         ipr firmware_class sg
+Bu 4 t=FCketimin yo=F0unlu=F0u ve olas=FD etkileri =FCzerine akl=FD ba=FE=
+=FDnda herkesin =E7evresini g=F6zlemlemesi zorunludur.  D=FC=FE=FCn=FCn=
+, =F6yle bir nesil yeti=FEiyor ki, zaman=FDnn b=FCy=FCk bir k=FDsm=FDn=FD=
+ bu d=F6rt tehlikeyle ge=E7iriyor, t=FCketiyor, uyu=FEturuyor.=20
+=20
+Zaman art=FDk b=F6yle, d=FD=FEar=FDda olan gen=E7/=E7ocuk alkol ve siga=
+ra t=FCketiyor, eve gelince de televizyon ve bilgisayarla uyu=FEuyorlar=
+, uyusturuluyorlar. E=F0er yeni yeti=FEen yeni nesil b=F6yle b=FCy=FCrs=
+e, geleceklerinin, =FClkenin gelece=F0inin a=E7=FDk=E7a tart=FD=FE=FDlm=
+as=FD ka=E7=FDn=FDlmazd=FDr.=20
+=20
+D=F6rt koldan =E7evremizi ku=FEatan bu yeni k=FClt=FCr / televizyon k=FC=
+lt=FCr=FC kar=FE=FDs=FDnda devlete d=FC=FEen g=F6revler, anne-babaya d=FC=
+=FEen g=F6revler, yar=FDnlar=FDm=FDza kafa yoran d=FC=FE=FCn=FCrlerimiz=
+e d=FC=FEen g=F6revler vard=FDr..
+=20
+AB =FClkeleri sigara ve alkol t=FCketiminin azalt=FDlmas=FD, =E7ocuklar=
+=FDn alamamas=FD i=E7in vergileri y=FCkseltiyor, reklamlar=FD yasakl=FD=
+yor, i=E7me alanlar=FDna etkin s=FDn=FDrlamalar getirdiler ve cezalar=FD=
+ etkinle=FEtirdiler. =DEimdiden sonu=E7lar=FDn=FD almaya ba=FElad=FDlar=
+ bile.
+=20
+Bug=FCn sigara y=FCz=FCnden sa=F0l=FDk harcamalar=FD art=FDyor. Bunun =FC=
+lke ekonomisine verdi=F0i zarar =E7ok b=FCy=FCk boyutlara ula=FEm=FD=FE=
+t=FDr.=20
+=20
+Her g=FCn vakay- adiyeden g=F6r=FClen ve h=FDzla artmakta olan intihar =
+ve kazalar=FDn ba=FE etkeni alkol olmaktad=FDr...=20
+=20
+Bildi=F0iniz gibi sigara, alkolizm ve uyu=FEturucu al=FD=FEkanl=FDklar=FD=
+ g=FCn=FCm=FCz=FCn en korkun=E7 afeti olarak her g=FCn geli=FEmekte =F6=
+zellikle T=FCrkiye gibi yeni geli=FEmekte olan =FClkeleri ve t=FCm insa=
+nl=FDk d=FCnyas=FDn=FDn gelece=F0ini =E7ok b=FCy=FCk boyutlarda tehdit =
+etmektedir.
+=20
+Biz geli=FEmelerin tam bilincinde olmasak da d=FD=FE g=FC=E7lerin ara=FE=
+t=FDrma kurumlar=FD, T=FCrkiye'nin yak=FDn gelecekte d=FCnyan=FDn g=FC=E7=
+l=FC =FClkeleri aras=FDnda olaca=F0=FDn=FD vurguluyorlar. Bunun bilinci=
+ndeki bu d=FD=FE g=FC=E7ler, d=FC=FEmanlar=FDm=FDz ve onlar=FDn tetik=E7=
+ileri, T=FCrkiye'nin gelece=F0i gen=E7li=F0imizi k=F6t=FC al=FD=FEkanl=FD=
+klar=FDn i=E7inde uyu=FEturarak yok etmenin amans=FDz =E7abas=FD i=E7in=
+deler.
 
 
-cat /proc/cpuinfo
-processor       : 0
-vendor_id       : GenuineIntel
-cpu family      : 6
-model           : 11
-model name      : Intel(R) Pentium(R) III CPU family      1266MHz
-stepping        : 1
-cpu MHz         : 1259.071
-cache size      : 512 KB
-fdiv_bug        : no
-hlt_bug         : no
-f00f_bug        : no
-coma_bug        : no
-fpu             : yes
-fpu_exception   : yes
-cpuid level     : 2
-wp              : yes
-flags           : fpu vme de tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 mmx fxsr sse
-bogomips        : 2482.17
+Bu konuda m=FCcadelede, 80'inci hizmet y=FDl=FDn=FD kutlamakta olan Ye=FE=
+ilay =FClkemiz i=E7in bir =F6nc=FC olmaktad=FDr.=20
 
-processor       : 1
-vendor_id       : GenuineIntel
-cpu family      : 6
-model           : 11
-model name      : Intel(R) Pentium(R) III CPU family      1266MHz
-stepping        : 1
-cpu MHz         : 1259.071
-cache size      : 512 KB
-fdiv_bug        : no
-hlt_bug         : no
-f00f_bug        : no
-coma_bug        : no
-fpu             : yes
-fpu_exception   : yes
-cpuid level     : 2
-wp              : yes
-flags           : fpu vme de tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 mmx fxsr sse
-bogomips        : 2506.75
+Yar=FDnlar=FDm=FDz i=E7in, =E7ocuklar=FDm=FDz=FDn gelece=F0i i=E7in, =FC=
+lkemizin gelece=F0i i=E7in; S=DDGARA, ALKOL VE D=DD=D0ER UYU=DETURUCULA=
+RA KAR=DEI TOPLUM OLARAK "DUR...!" D=DDYEB=DDLMEK =DD=C7=DDN:
 
+YE=DE=DDLAY'DAN DESTEK ALALIM, YE=DE=DDLAY'A DESTEK VEREL=DDM....!
 
+Ye=FEilay Cemiyetinin Kas=FDm 1924 y=FDl=FDnda yay=FDn hayat=FDna giren=
+ ve ayl=FDk olarak yay=FDn=FDn=FD aral=FDks=FDz s=FCrd=FCren ilmi k=FCl=
+t=FCrel =E7izgide hizmet veren YE=DE=DDLAY isimli toplumu zararl=FD al=FD=
+=FEkanl=FDklara kar=FE=FD bilinlendirici ve e=F0itici yay=FDn organ=FD =
+bulunmaktad=FDr. Dergi cemiyetin m=FCcadele konularda d=F6k=FCman de=F0=
+eri de y=FCksek bir yay=FDn organ=FDd=FDr.
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+---------------------------------------------------------
 
+Nuruosmaniye Cad 17/1=20
+
+Ca=F0alo=F0lu-=DDSTANBUL =20
+
+Tel: 0 212 527 16 83  /  Faks: 0 212 522 84 63=20
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
