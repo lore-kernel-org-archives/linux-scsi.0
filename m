@@ -1,55 +1,42 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: Patch?: linux-2.5.45/drivers/scsi/hosts.[ch] - Eliminate scsi_host_tmpl_list
-Date: Thu, 7 Nov 2002 12:00:45 -0800
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] add request prep functions to SCSI
+Date: Thu, 7 Nov 2002 13:45:09 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021107120045.A14136@eng2.beaverton.ibm.com>
-References: <200211060051.QAA27231@adam.yggdrasil.com>
+Message-ID: <20021107214509.GB1690@beaverton.ibm.com>
+References: <200211062218.gA6MI2t04813@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200211060051.QAA27231@adam.yggdrasil.com>; from adam@yggdrasil.com on Tue, Nov 05, 2002 at 04:51:56PM -0800
+Content-Disposition: inline
+In-Reply-To: <200211062218.gA6MI2t04813@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: "Adam J. Richter" <adam@yggdrasil.com>
-Cc: James.Bottomley@HansenPartnership.com, hch@lst.de, linux-scsi@vger.kernel.org
+To: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Nov 05, 2002 at 04:51:56PM -0800, Adam J. Richter wrote:
-> 	Although I haven't tested it, Christoph's version of my
-> patch to remove Scsi_Host_Name looks OK to me.
+J.E.J. Bottomley [James.Bottomley@steeleye.com] wrote:
+> This patch adds request prep functions to the mid-layer.  At the moment, its a single request prep function for all of SCSI.  I've altered the logic in scsi_request_fn so that we now do early preparation (this should improve throughput slightly in the untagged case with only a single command block).
+> 
+> The prep function also cannot drop the queue lock, so the calling assumptions for scsi_init_io and the upper layer driver init_commands have changed to be that the lock is now held and they cannot drop it.  I think this means that we have no callers of scsi_init_io that aren't atomic, so perhaps I can just take the if out.
+> 
+> I've hammered this in my usual set up, but other testers would be welcome.
+> 
+> James
 > 
 
-OK, I ran some more tests.
+The patch looks good.
 
-strpbrk() returns a pointer to the char searched for, so using
-a command line like: 
+I ran the patch on scsi-for-linus-2.5 plus my sysfs patches. I have
+booted and ran some dd based io.
 
-	scsihosts=aic7xxx,ips,scsi_debug
+I have the following drivers loaded:
+	isp, aic7xxx, isp1020, scsi_debug, qla2300
 
-Hangs in scsi_host_hn_init, as we keep getting a pointer back from
-strpbrk() pointing to ",ips,scsi_debug". And a similiar problem with
-scsi_alloc_host_num.
+Hopefully later today I can generate a error in scsi_debug and get a
+requeue. I have generated a couple port down/ups on the fibre, but this
+is mainly being handled inside the LLD.
 
-I fixed that, and added code in scsi_alloc_host_num to reuse empty
-slots (if no match on scsihosts or scsihosts is empty).
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
-But, there is no way to match the previous functionallity without having
-a host name list.
-
-That is before the patch we can do this:
-
-	insmod foo; insmod bar
-
-And foo gets scsi4, bar scsi5. And then:
-
-	rmmod foo; rmmod bar
-	insmod bar; insmod foo
-
-And foo should still be scsi4, bar scsi5.
-
-Without the host name list, the best we can do is have
-foo become scsi5, and bar scsi4.
-
-I think we should forget about this patch for now, and at some time in
-the future after we have some device naming persistence drop the name
-list and scsihosts option.
-
--- Patrick Mansfield
