@@ -1,56 +1,33 @@
-From: Nishanth Aravamudan <nacc@us.ibm.com>
-Subject: [PATCH] scsi_debug: dev_size_mb <= 0 fix
-Date: Thu, 5 Aug 2004 14:35:47 -0700
+From: Mark Lord <lkml@rtr.ca>
+Subject: BUG: SCSI SYNCHRONIZE_CACHE on driver unload
+Date: Thu, 05 Aug 2004 19:02:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040805213547.GA3856@us.ibm.com>
+Message-ID: <4112BC7A.1040102@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:17552 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S267983AbUHEVfy
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:42653 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S267727AbUHEXDc
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Aug 2004 17:35:54 -0400
-Content-Disposition: inline
+	Thu, 5 Aug 2004 19:03:32 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Hi,
+On module removal of a SCSI Low-Level Driver (LLD),
+the mid-layer tries to do a SYNCHRONIZE_CACHE
+command to each device on each host of that driver.
 
-While working on getting 10000 scsi_debug disks working simultaneously,
-I came across a problem with the driver. According to the webpage,
+But the command is issued *after* setting SHOST_CANCEL,
+which means that scsi_dispatch_cmd() will *always*
+fail the command inline, without passing to the LLD.
 
-``All simulated dummy devices share the same RAM. If a value of 0 or
-less is given then dev_size_mb is forced to 1 so 1 MB of RAM is used.''
+This bug shows up only for hosts/drives which support
+a write-back caching scheme.  For the more common
+write-thru scheme, the SYNCHRONIZE_CACHE command is
+never issued, so the bug never manifests.
 
-However, when I sent in dev_size_mb=0, the module would return an "Out
-of memory" error. I discovered that there was no check for a
-zero/negative value for dev_size_mb and thus a vmalloc(0) resulted,
-which apparently results in a NULL pointer and the driver thinks there
-is no memory available.
-
-I believe the patch below fixes this.
-
-
-Applys-to: 2.6.7
-
-Description: Adds check for non-positive value of
-scsi_debug_dev_size_mb, as per the description on the scsi_debug web
-page. If the parameter is given as 0 or less, then the size of the
-reserved RAM is defaulted to 1MB. Compile-tested and run-tested.
-
-Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
-
---- linux-vanilla/drivers/scsi/scsi_debug.c	2004-06-15 22:19:37.000000000 -0700
-+++ linux-dev/drivers/scsi/scsi_debug.c	2004-08-05 14:16:47.000000000 -0700
-@@ -1491,6 +1491,10 @@ static int __init scsi_debug_init(void)
- 	int host_to_add;
- 	int k;
- 
-+	/* if dev_size_mb is passed as <= 0, then it is forced to 1. */
-+	if (scsi_debug_dev_size_mb <= 0)
-+		scsi_debug_dev_size_mb = 1;
-+
- 	sdebug_store_size = (unsigned long)scsi_debug_dev_size_mb * 1048576;
- 	sdebug_capacity = sdebug_store_size / SECT_SIZE;
- 
+Cheers
+-- 
+Mark Lord
+(hdparm keeper & the original "Linux IDE Guy")
