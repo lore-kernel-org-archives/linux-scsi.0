@@ -1,75 +1,33 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [RFC] Transport classes, SAS, discovery
-Date: Fri, 11 Mar 2005 11:33:56 -0500
-Message-ID: <4231C874.7060800@adaptec.com>
+From: "Nicholas A. Bellinger" <nick@pyxtechnologies.com>
+Subject: [ANNOUNCE] iSCSI Initiator Core Stack v1.6.1.22 for 2.6.11.2
+Date: Fri, 11 Mar 2005 12:19:58 -0800
+Message-ID: <1110572398.7247.8.camel@haakon>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Received: from magic.adaptec.com ([216.52.22.17]:5021 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261174AbVCKQeC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Mar 2005 11:34:02 -0500
-Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j2BGY2r03873
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Mar 2005 08:34:02 -0800
-Received: from rtpe2k01.adaptec.com (rtpe2k01.adaptec.com [10.110.12.40])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j2BGY2D02666
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Mar 2005 08:34:02 -0800
+Received: from smtp801.mail.sc5.yahoo.com ([66.163.168.180]:59039 "HELO
+	smtp801.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S261434AbVCKUbB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Mar 2005 15:31:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, Mike Christie <mikenc@us.ibm.com>, Andre Hedrick <andre@pyxtechnologies.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, iscsi-initiator-core-announce <iscsi-initiator-core-announce@iscsi-initiator-core.org>
 
-Hi guys,
+The following is v1.6.1.22 of the iSCSI Initiator Core Stack for
+2.6.11.2.  This release removes deprecated support for procfs, and other
+minor enhancements and bugfixes.  The next step a per James Bottomley's
+request is support for dm-multipath.  Also, the mailinglists and wiki
+have been setup at:
 
-Q: I've been wondering how exactly does the transport class work?
-Can anyone give an intro on attribute container, attribute group,
-transport class template, etc.  I've been looking at those but not
-100% sure I understand it all.  It looks similar to the old
-scsi detect "discovery" but not 100% sure.
+http://iscsi-initiator-core.org
 
-Q: Also I'd like to ask if domain discovery would be performed
-by the mid layer?  I assume yes, so that "there is no code duplication".
+I invite everyone who is interested in iSCSI to join the lists!
 
-Q: In this case would it be safe to assume that we need a
-sas_phy, sas_port and sas_ha? A la:
+The patch will be appearing shortly at:
 
-sas_ha 1<---* sas_port 1<---128 sas_phy  *
-   ^                               |
-   | 1                         128 |
-   +-------------------------------+
+http://www.kernel.org/pub/linux/kernel/people/nab/iscsi-initiator-core/
 
-With the appropriate linked lists and properties as defined
-in the SAS 1.1 spec ch 4? (undoubtedly more properties would
-be added as drivers come along)
-
-Now, I can see that there exist scsi_target and scsi_host
-which appear to be the underlying objects for the transport
-classes of sorts, host and target.
-
-Q: Since a SAS mid layer discovery core would manipulate ports
-and phys, do we need to represent those with scsi core
-objects, or would struct device plus the SAS specific
-object class suffice?
-
-Q: Also, how exactly would a LLDD register the objects with
-the class?  Would the answer to this be the trivial answer,
-or is there some kind of "it will detect it itself".
-
-On top of this we would have scsi targets in this picture
-which would depend on phys/ports/ha.  (And LUs depend on
-targets.)
-
-So basically, would scsi core need to have an internal SAS
-domain topology representation (how about expanders...).
-That is, it would help multipathing a great deal.
-
-Thanks,
-	Luben
-
-* Where,
-	objA N<---M objB,  means
-objA depends on objB* and objA can associate M number of objB
-and objB can associate N objA, where an association is 
-a relationship defined appropriate for the object tuple, which
-need not necessarily be homogeneous.
+-- 
+Nicholas A. Bellinger <nick@pyxtechnologies.com>
 
