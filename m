@@ -1,856 +1,611 @@
-From: Markus Lidel <Markus.Lidel@shadowconnect.com>
-Subject: i2o_block-cleanup.patch for 2.6.6 with request for review
-Date: Thu, 22 Apr 2004 16:56:38 +0200
+From: "Moore, Eric Dean" <Emoore@lsil.com>
+Subject: RE: MPT Fusion FC909 support
+Date: Thu, 22 Apr 2004 10:55:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4087DD26.6040605@shadowconnect.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570442C904@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------020708020908020501000807"
+	boundary="----_=_NextPart_000_01C42879.D8803050"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.133.118.2] ([213.133.118.2]:28033 "EHLO
-	mail.shadowconnect.com") by vger.kernel.org with ESMTP
-	id S264063AbUDVOxn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Apr 2004 10:53:43 -0400
+Received: from mail0.lsil.com ([147.145.40.20]:23482 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S264101AbUDVOzh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Apr 2004 10:55:37 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@suse.de, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Arnaldo Carvalho de Melo <acme@conectiva.com.br>
+Cc: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------020708020908020501000807
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+This message is in MIME format. Since your mail reader does not understand
+this format, some or all of this message may not be legible.
 
-Hello,
-
-Okay, after some time, i now have a new i2o_block patch, which solves 
-several bugs:
-
-- I2O_LOCK was often called with c->unit, which addresses the
-   controller, and not the device (dev->index). This wasn't discovered
-   yet, because each device uses the same queue on the same controller,
-   and there was only one controller.
-- the cleanup function for gendisk (del_gendisk) has a bug, if the
-   queue is shared between different devices. To workaround the queue is
-   removed before. Is this okay, because blk_unregister_queue will not be
-   executed.
-- redundant code removed in module initialization and remove, use
-   i2ob_new_device and i2ob_del_device instead.
-- added all changes from Jens Axboe (also removed the atomic, which
-   is not needed, because the spinlock is already held, i think).
-
-The patch is as always also available at 
-http://i2o.shadowconnect.com/i2o_block-cleanup.patch
-
-Thank you for your help...
-
-
-
-Best regards,
-
-
-Markus Lidel
-------------------------------------------
-Markus Lidel (Senior IT Consultant)
-
-Shadow Connect GmbH
-Carl-Reisch-Weg 12
-D-86381 Krumbach
-Germany
-
-Phone:  +49 82 82/99 51-0
-Fax:    +49 82 82/99 51-11
-
-E-Mail: Markus.Lidel@shadowconnect.com
-URL:    http://www.shadowconnect.com
-
-
---------------020708020908020501000807
+------_=_NextPart_000_01C42879.D8803050
 Content-Type: text/plain;
- name="i2o_block-cleanup.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="i2o_block-cleanup.patch"
+	charset="iso-8859-1"
 
---- a/drivers/message/i2o/i2o_block.c	2004-04-03 17:37:37.000000000 -1000
-+++ b/drivers/message/i2o/i2o_block.c	2004-04-23 02:13:24.132931000 -1000
-@@ -83,7 +83,6 @@
- #include <asm/semaphore.h>
- #include <linux/completion.h>
- #include <asm/io.h>
--#include <asm/atomic.h>
- #include <linux/smp_lock.h>
- #include <linux/wait.h>
- 
-@@ -111,16 +110,12 @@
- 				 I2O_EVT_IND_BSA_SCSI_SMART )
- 
- 
--#define I2O_LOCK(unit)	(i2ob_dev[(unit)].req_queue->queue_lock)
--
- /*
-  *	Some of these can be made smaller later
-  */
- 
--static int i2ob_media_change_flag[MAX_I2OB];
--static u32 i2ob_max_sectors[MAX_I2OB<<4];
--
- static int i2ob_context;
-+static struct block_device_operations i2ob_fops;
- 
- /*
-  * I2O Block device descriptor 
-@@ -143,6 +138,9 @@
- 	int wcache;
- 	int power;
- 	int index;
-+	int media_change_flag;
-+	u32 max_sectors;
-+	struct gendisk *gd;
- };
- 
- /*
-@@ -162,16 +160,16 @@
- };
- 
- /*
-- * Per IOP requst queue information
-+ * Per IOP request queue information
-  *
-- * We have a separate requeust_queue_t per IOP so that a heavilly
-+ * We have a separate request_queue_t per IOP so that a heavilly
-  * loaded I2O block device on an IOP does not starve block devices
-  * across all I2O controllers.
-  * 
-  */
- struct i2ob_iop_queue
- {
--	atomic_t queue_depth;
-+	unsigned int queue_depth;
- 	struct i2ob_request request_queue[MAX_I2OB_DEPTH];
- 	struct i2ob_request *i2ob_qhead;
- 	request_queue_t *req_queue;
-@@ -183,9 +181,8 @@
-  *	Each I2O disk is one of these.
-  */
- 
--static struct i2ob_device i2ob_dev[MAX_I2OB<<4];
-+static struct i2ob_device i2ob_dev[MAX_I2OB];
- static int i2ob_dev_count = 0;
--static struct gendisk *i2ob_disk[MAX_I2OB];
- 
- /*
-  * Mutex and spin lock for event handling synchronization
-@@ -312,7 +309,6 @@
- 	/* 
- 	 * Mask out partitions from now on
- 	 */
--	unit &= 0xF0;
- 		
- 	/* This can be optimised later - just want to be sure its right for
- 	   starters */
-@@ -402,7 +398,7 @@
- 	}
- 
- 	i2o_post_message(c,m);
--	atomic_inc(&i2ob_queues[c->unit]->queue_depth);
-+	i2ob_queues[c->unit]->queue_depth ++;
- 
- 	return 0;
- }
-@@ -453,8 +449,8 @@
- 	struct i2ob_request *ireq = NULL;
- 	u8 st;
- 	u32 *m = (u32 *)msg;
--	u8 unit = (m[2]>>8)&0xF0;	/* low 4 bits are partition */
--	struct i2ob_device *dev = &i2ob_dev[(unit&0xF0)];
-+	u8 unit = m[2]>>8;
-+	struct i2ob_device *dev = &i2ob_dev[unit];
- 
- 	/*
- 	 * FAILed message
-@@ -475,10 +471,10 @@
- 		ireq=&i2ob_queues[c->unit]->request_queue[m[3]];
- 		ireq->req->errors++;
- 
--		spin_lock_irqsave(I2O_LOCK(c->unit), flags);
-+		spin_lock_irqsave(dev->req_queue->queue_lock, flags);
- 		i2ob_unhook_request(ireq, c->unit);
- 		i2ob_end_request(ireq->req);
--		spin_unlock_irqrestore(I2O_LOCK(c->unit), flags);
-+		spin_unlock_irqrestore(dev->req_queue->queue_lock, flags);
- 	
- 		/* Now flush the message by making it a NOP */
- 		m[0]&=0x00FFFFFF;
-@@ -509,10 +505,10 @@
- 		ireq=&i2ob_queues[c->unit]->request_queue[m[3]];
- 		ireq->req->errors++;
- 		printk(KERN_WARNING "I2O Block: Data transfer to deleted device!\n");
--		spin_lock_irqsave(I2O_LOCK(c->unit), flags);
-+		spin_lock_irqsave(dev->req_queue->queue_lock, flags);
- 		i2ob_unhook_request(ireq, c->unit);
- 		i2ob_end_request(ireq->req);
--		spin_unlock_irqrestore(I2O_LOCK(c->unit), flags);
-+		spin_unlock_irqrestore(dev->req_queue->queue_lock, flags);
- 		return;
- 	}	
- 
-@@ -576,17 +572,17 @@
- 	 */
- 	
- 	i2ob_free_sglist(dev, ireq);
--	spin_lock_irqsave(I2O_LOCK(c->unit), flags);
-+	spin_lock_irqsave(dev->req_queue->queue_lock, flags);
- 	i2ob_unhook_request(ireq, c->unit);
- 	i2ob_end_request(ireq->req);
--	atomic_dec(&i2ob_queues[c->unit]->queue_depth);
-+	i2ob_queues[c->unit]->queue_depth --;
- 	
- 	/*
- 	 *	We may be able to do more I/O
- 	 */
- 	 
--	i2ob_request(dev->req_queue);
--	spin_unlock_irqrestore(I2O_LOCK(c->unit), flags);
-+	i2ob_request(dev->gd->queue);
-+	spin_unlock_irqrestore(dev->req_queue->queue_lock, flags);
- }
- 
- /* 
-@@ -598,8 +594,8 @@
- {
- 	unsigned int evt;
- 	unsigned long flags;
-+	struct i2ob_device *dev;
- 	int unit;
--	int i;
- 	//The only event that has data is the SCSI_SMART event.
- 	struct i2o_reply {
- 		u32 header[4];
-@@ -638,6 +634,7 @@
- 		unit = le32_to_cpu(evt_local->header[3]);
- 		evt = le32_to_cpu(evt_local->evt_indicator);
- 
-+		dev = &i2ob_dev[unit];
- 		switch(evt)
- 		{
- 			/*
-@@ -648,10 +645,9 @@
- 			 */
- 			case I2O_EVT_IND_BSA_VOLUME_LOAD:
- 			{
--				struct gendisk *p = i2ob_disk[unit>>4];
--				i2ob_install_device(i2ob_dev[unit].i2odev->controller, 
--					i2ob_dev[unit].i2odev, unit);
--				add_disk(p);
-+				i2ob_install_device(dev->i2odev->controller, 
-+					dev->i2odev, unit);
-+				add_disk(dev->gd);
- 				break;
- 			}
- 
-@@ -663,17 +659,18 @@
- 			 */
- 			case I2O_EVT_IND_BSA_VOLUME_UNLOAD:
- 			{
--				struct gendisk *p = i2ob_disk[unit>>4];
-+				struct gendisk *p = dev->gd;
-+				blk_queue_max_sectors(dev->gd->queue, 0);
- 				del_gendisk(p);
--				for(i = unit; i <= unit+15; i++)
--					blk_queue_max_sectors(i2ob_dev[i].req_queue, 0);
--				i2ob_media_change_flag[unit] = 1;
-+				put_disk(p);
-+				dev->gd = NULL;
-+				dev->media_change_flag = 1;
- 				break;
- 			}
- 
- 			case I2O_EVT_IND_BSA_VOLUME_UNLOAD_REQ:
- 				printk(KERN_WARNING "%s: Attempt to eject locked media\n", 
--					i2ob_dev[unit].i2odev->dev_name);
-+					dev->i2odev->dev_name);
- 				break;
- 
- 			/*
-@@ -691,12 +688,12 @@
- 			{
- 				u64 size;
- 
--	  			if(i2ob_query_device(&i2ob_dev[unit], 0x0004, 0, &size, 8) !=0 )
--					i2ob_query_device(&i2ob_dev[unit], 0x0000, 4, &size, 8);
-+	  			if(i2ob_query_device(dev, 0x0004, 0, &size, 8) !=0 )
-+					i2ob_query_device(dev, 0x0000, 4, &size, 8);
- 
--				spin_lock_irqsave(I2O_LOCK(unit), flags);	
--				set_capacity(i2ob_disk[unit>>4], size>>9);
--				spin_unlock_irqrestore(I2O_LOCK(unit), flags);	
-+				spin_lock_irqsave(dev->req_queue->queue_lock, flags);	
-+				set_capacity(dev->gd, size>>9);
-+				spin_unlock_irqrestore(dev->req_queue->queue_lock, flags);	
- 				break;
- 			}
- 
-@@ -708,7 +705,7 @@
- 			case I2O_EVT_IND_BSA_SCSI_SMART:
- 			{
- 				char buf[16];
--				printk(KERN_INFO "I2O Block: %s received a SCSI SMART Event\n",i2ob_dev[unit].i2odev->dev_name);
-+				printk(KERN_INFO "I2O Block: %s received a SCSI SMART Event\n",dev->i2odev->dev_name);
- 				evt_local->data[16]='\0';
- 				sprintf(buf,"%s",&evt_local->data[0]);
- 				printk(KERN_INFO "      Disk Serial#:%s\n",buf);
-@@ -735,12 +732,12 @@
- 				 * hit the fan big time. The card seems to recover but loses
- 				 * the pending writes. Deeply ungood except for testing fsck
- 				 */
--				if(i2ob_dev[unit].i2odev->controller->promise)
-+				if(dev->i2odev->controller->promise)
- 					panic("I2O controller firmware failed. Reboot and force a filesystem check.\n");
- 			default:
- 				printk(KERN_INFO "%s: Received event 0x%X we didn't register for\n"
- 					KERN_INFO "   Blame the I2O card manufacturer 8)\n", 
--					i2ob_dev[unit].i2odev->dev_name, evt);
-+					dev->i2odev->dev_name, evt);
- 				break;
- 		}
- 	};
-@@ -765,14 +762,6 @@
- 	u32 m;
- 	
- 	while ((req = elv_next_request(q)) != NULL) {
--		/*
--		 *	On an IRQ completion if there is an inactive
--		 *	request on the queue head it means it isnt yet
--		 *	ready to dispatch.
--		 */
--		if(req->rq_status == RQ_INACTIVE)
--			return;
--
- 		dev = req->rq_disk->private_data;
- 
- 		/* 
-@@ -780,7 +769,7 @@
- 		 *	generic IOP commit control. Certainly it's not right 
- 		 *	its global!  
- 		 */
--		if(atomic_read(&i2ob_queues[dev->unit]->queue_depth) >= dev->depth)
-+		if(i2ob_queues[dev->unit]->queue_depth >= dev->depth)
- 			break;
- 		
- 		/* Get a message */
-@@ -788,7 +777,7 @@
- 
- 		if(m==0xFFFFFFFF)
- 		{
--			if(atomic_read(&i2ob_queues[dev->unit]->queue_depth) == 0)
-+			if(i2ob_queues[dev->unit]->queue_depth == 0)
- 				printk(KERN_ERR "i2o_block: message queue and request queue empty!!\n");
- 			break;
- 		}
-@@ -797,13 +786,12 @@
- 		 */
- 		req->errors = 0;
- 		blkdev_dequeue_request(req);	
--		req->waiting = NULL;
- 		
- 		ireq = i2ob_queues[dev->unit]->i2ob_qhead;
- 		i2ob_queues[dev->unit]->i2ob_qhead = ireq->next;
- 		ireq->req = req;
- 
--		i2ob_send(m, dev, ireq, (dev->unit&0xF0));
-+		i2ob_send(m, dev, ireq, dev->index);
- 	}
- }
- 
-@@ -1065,7 +1053,10 @@
- 	u16 power;
- 	u32 flags, status;
- 	struct i2ob_device *dev=&i2ob_dev[unit];
--	int i;
-+	struct gendisk *disk;
-+	request_queue_t *q;
-+	int segments;
-+
- 
- 	/*
- 	 * For logging purposes...
-@@ -1079,21 +1070,35 @@
- 	 * before any I/O can be performed. If it fails, this
- 	 * device is useless.
- 	 */
--	if(!i2ob_queues[unit]) {
--		if(i2ob_init_iop(unit))
-+	if(!i2ob_queues[c->unit]) {
-+		if(i2ob_init_iop(c->unit))
- 			return 1;
- 	}
- 
-+	q = i2ob_queues[c->unit]->req_queue;
-+
- 	/*
- 	 * This will save one level of lookup/indirection in critical
- 	 * code so that we can directly get the queue ptr from the
- 	 * device instead of having to go the IOP data structure.
- 	 */
--	dev->req_queue = i2ob_queues[unit]->req_queue;
-+	dev->req_queue = q;
- 
-+	/*
-+	 * Allocate a gendisk structure and initialize it
-+	 */
-+	disk = alloc_disk(16);
-+	if (!disk)
-+		return 1;
-+
-+	dev->gd = disk;
- 	/* initialize gendik structure */
--	i2ob_disk[unit>>4]->private_data = dev;
--	i2ob_disk[unit>>4]->queue = dev->req_queue;
-+	disk->major = MAJOR_NR;
-+	disk->first_minor = unit<<4;
-+	disk->queue = q;
-+	disk->fops = &i2ob_fops;
-+	sprintf(disk->disk_name, "i2o/hd%c", 'a' + unit);
-+	disk->private_data = dev;
- 
- 	/*
- 	 *	Ask for the current media data. If that isn't supported
-@@ -1110,53 +1115,49 @@
- 		power = 0;
- 	i2ob_query_device(dev, 0x0000, 5, &flags, 4);
- 	i2ob_query_device(dev, 0x0000, 6, &status, 4);
--	set_capacity(i2ob_disk[unit>>4], size>>9);
-+	set_capacity(disk, size>>9);
- 
- 	/*
- 	 * Max number of Scatter-Gather Elements
- 	 */	
- 
--	i2ob_dev[unit].power = power;	/* Save power state in device proper */
--	i2ob_dev[unit].flags = flags;
-+	dev->power = power;	/* Save power state in device proper */
-+	dev->flags = flags;
- 
--	for(i=unit;i<=unit+15;i++)
--	{
--		request_queue_t *q = i2ob_dev[unit].req_queue;
--		int segments = (d->controller->status_block->inbound_frame_size - 7) / 2;
-+	segments = (d->controller->status_block->inbound_frame_size - 7) / 2;
- 
--		if(segments > 16)
--			segments = 16;
--					
--		i2ob_dev[i].power = power;	/* Save power state */
--		i2ob_dev[unit].flags = flags;	/* Keep the type info */
-+	if(segments > 16)
-+		segments = 16;
-+				
-+	dev->power = power;	/* Save power state */
-+	dev->flags = flags;	/* Keep the type info */
- 		
--		blk_queue_max_sectors(q, 96);	/* 256 might be nicer but many controllers 
-+	blk_queue_max_sectors(q, 96);	/* 256 might be nicer but many controllers 
- 						   explode on 65536 or higher */
--		blk_queue_max_phys_segments(q, segments);
--		blk_queue_max_hw_segments(q, segments);
-+	blk_queue_max_phys_segments(q, segments);
-+	blk_queue_max_hw_segments(q, segments);
- 		
--		i2ob_dev[i].rcache = CACHE_SMARTFETCH;
--		i2ob_dev[i].wcache = CACHE_WRITETHROUGH;
-+	dev->rcache = CACHE_SMARTFETCH;
-+	dev->wcache = CACHE_WRITETHROUGH;
- 		
--		if(d->controller->battery == 0)
--			i2ob_dev[i].wcache = CACHE_WRITETHROUGH;
-+	if(d->controller->battery == 0)
-+		dev->wcache = CACHE_WRITETHROUGH;
- 
--		if(d->controller->promise)
--			i2ob_dev[i].wcache = CACHE_WRITETHROUGH;
-+	if(d->controller->promise)
-+		dev->wcache = CACHE_WRITETHROUGH;
- 
--		if(d->controller->short_req)
--		{
--			blk_queue_max_sectors(q, 8);
--			blk_queue_max_phys_segments(q, 8);
--			blk_queue_max_hw_segments(q, 8);
--		}
-+	if(d->controller->short_req)
-+	{
-+		blk_queue_max_sectors(q, 8);
-+		blk_queue_max_phys_segments(q, 8);
-+		blk_queue_max_hw_segments(q, 8);
- 	}
- 
--	strcpy(d->dev_name, i2ob_disk[unit>>4]->disk_name);
--	strcpy(i2ob_disk[unit>>4]->devfs_name, i2ob_disk[unit>>4]->disk_name);
-+	strcpy(d->dev_name, disk->disk_name);
-+	strcpy(disk->devfs_name, disk->disk_name);
- 
- 	printk(KERN_INFO "%s: Max segments %d, queue depth %d, byte limit %d.\n",
--		 d->dev_name, i2ob_dev[unit].max_segments, i2ob_dev[unit].depth, i2ob_max_sectors[unit]<<9);
-+		 d->dev_name, dev->max_segments, dev->depth, dev->max_sectors<<9);
- 
- 	i2ob_query_device(dev, 0x0000, 0, &type, 1);
- 
-@@ -1197,7 +1198,7 @@
- 	}
- 	printk(".\n");
- 	printk(KERN_INFO "%s: Maximum sectors/read set to %d.\n", 
--		d->dev_name, i2ob_max_sectors[unit]);
-+		d->dev_name, dev->max_sectors);
- 
- 	/*
- 	 * Register for the events we're interested in and that the
-@@ -1233,7 +1234,7 @@
- 	/* Queue is MAX_I2OB + 1... */
- 	i2ob_queues[unit]->request_queue[i].next = NULL;
- 	i2ob_queues[unit]->i2ob_qhead = &i2ob_queues[unit]->request_queue[0];
--	atomic_set(&i2ob_queues[unit]->queue_depth, 0);
-+	i2ob_queues[unit]->queue_depth = 0;
- 
- 	i2ob_queues[unit]->lock = SPIN_LOCK_UNLOCKED;
- 	i2ob_queues[unit]->req_queue = blk_init_queue(i2ob_request, &i2ob_queues[unit]->lock);
-@@ -1257,7 +1258,6 @@
- 
- 	struct i2o_device *d, *b=NULL;
- 	struct i2o_controller *c;
--	struct i2ob_device *dev;
- 		
- 	for(i=0; i< MAX_I2O_CONTROLLERS; i++)
- 	{
-@@ -1313,44 +1313,12 @@
- 					continue; /*Already claimed on pass 1 */
- 			}
- 
--			if(i2o_claim_device(d, &i2o_block_handler))
--			{
--				printk(KERN_WARNING "i2o_block: Controller %d, TID %d\n", c->unit,
--					d->lct_data.tid);
--				printk(KERN_WARNING "\t%sevice refused claim! Skipping installation\n", bios?"Boot d":"D");
--				continue;
--			}
--
--			i2o_release_device(d, &i2o_block_handler);
--
--			if(scan_unit<MAX_I2OB<<4)
--			{
-- 				/*
--				 * Get the device and fill in the
--				 * Tid and controller.
--				 */
--				dev=&i2ob_dev[scan_unit];
--				dev->i2odev = d; 
--				dev->controller = c;
--				dev->unit = c->unit;
--				dev->tid = d->lct_data.tid;
--
--				if(i2ob_install_device(c,d,scan_unit))
--					printk(KERN_WARNING "Could not install I2O block device\n");
--				else
--				{
--					add_disk(i2ob_disk[scan_unit>>4]);
--					scan_unit+=16;
--					i2ob_dev_count++;
--
--					/* We want to know when device goes away */
--					i2o_device_notify_on(d, &i2o_block_handler);
--				}
--			}
-+			if(scan_unit<MAX_I2OB)
-+				i2ob_new_device(c, d);
- 			else
- 			{
- 				if(!warned++)
--					printk(KERN_WARNING "i2o_block: too many device, registering only %d.\n", scan_unit>>4);
-+					printk(KERN_WARNING "i2o_block: too many device, registering only %d.\n", scan_unit);
- 			}
- 		}
- 		i2o_unlock_controller(c);
-@@ -1399,12 +1367,12 @@
- 	printk(KERN_INFO "   Controller %d Tid %d\n",c->unit, d->lct_data.tid);
- 
- 	/* Check for available space */
--	if(i2ob_dev_count>=MAX_I2OB<<4)
-+	if(i2ob_dev_count>=MAX_I2OB)
- 	{
- 		printk(KERN_ERR "i2o_block: No more devices allowed!\n");
- 		return;
- 	}
--	for(unit = 0; unit < (MAX_I2OB<<4); unit += 16)
-+	for(unit = 0; unit < MAX_I2OB; unit ++)
- 	{
- 		if(!i2ob_dev[unit].i2odev)
- 			break;
-@@ -1420,18 +1388,20 @@
- 	dev->i2odev = d; 
- 	dev->controller = c;
- 	dev->tid = d->lct_data.tid;
-+	dev->unit = c->unit;
- 
--	if(i2ob_install_device(c,d,unit))
-+	if(i2ob_install_device(c,d,unit)) {
-+		i2o_release_device(d, &i2o_block_handler);
- 		printk(KERN_ERR "i2o_block: Could not install new device\n");
-+	}
- 	else	
- 	{
--		add_disk(i2ob_disk[unit>>4]);
-+		i2o_release_device(d, &i2o_block_handler);
-+		add_disk(dev->gd);
- 		i2ob_dev_count++;
- 		i2o_device_notify_on(d, &i2o_block_handler);
- 	}
- 
--	i2o_release_device(d, &i2o_block_handler);
-- 
- 	return;
- }
- 
-@@ -1443,64 +1413,58 @@
- void i2ob_del_device(struct i2o_controller *c, struct i2o_device *d)
- {	
- 	int unit = 0;
--	int i = 0;
- 	unsigned long flags;
-+	struct i2ob_device *dev;
- 
--	spin_lock_irqsave(I2O_LOCK(c->unit), flags);
--
--	/*
--	 * Need to do this...we somtimes get two events from the IRTOS
--	 * in a row and that causes lots of problems.
--	 */
--	i2o_device_notify_off(d, &i2o_block_handler);
--
--	printk(KERN_INFO "I2O Block Device Deleted\n");
--
--	for(unit = 0; unit < MAX_I2OB<<4; unit += 16)
-+	for(unit = 0; unit < MAX_I2OB; unit ++)
- 	{
--		if(i2ob_dev[unit].i2odev == d)
-+		dev = &i2ob_dev[unit];
-+		if(dev->i2odev == d)
- 		{
- 			printk(KERN_INFO "  /dev/%s: Controller %d Tid %d\n", 
- 				d->dev_name, c->unit, d->lct_data.tid);
- 			break;
- 		}
- 	}
--	if(unit >= MAX_I2OB<<4)
-+
-+	printk(KERN_INFO "I2O Block Device Deleted\n");
-+
-+	if(unit >= MAX_I2OB)
- 	{
- 		printk(KERN_ERR "i2ob_del_device called, but not in dev table!\n");
--		spin_unlock_irqrestore(I2O_LOCK(c->unit), flags);
- 		return;
- 	}
- 
-+	spin_lock_irqsave(dev->req_queue->queue_lock, flags);
-+
-+	/*
-+	 * Need to do this...we somtimes get two events from the IRTOS
-+	 * in a row and that causes lots of problems.
-+	 */
-+	i2o_device_notify_off(d, &i2o_block_handler);
-+
- 	/* 
- 	 * This will force errors when i2ob_get_queue() is called
- 	 * by the kenrel.
- 	 */
--	del_gendisk(i2ob_disk[unit>>4]);
--	i2ob_dev[unit].req_queue = NULL;
--	for(i = unit; i <= unit+15; i++)
--	{
--		i2ob_dev[i].i2odev = NULL;
--		blk_queue_max_sectors(i2ob_dev[i].req_queue, 0);
--	}
--	spin_unlock_irqrestore(I2O_LOCK(c->unit), flags);
--
--	/*
--	 * Decrease usage count for module
--	 */	
--
--	while(i2ob_dev[unit].refcnt--)
--		MOD_DEC_USE_COUNT;
--
--	i2ob_dev[unit].refcnt = 0;
--	
--	i2ob_dev[i].tid = 0;
-+	if(dev->gd) {
-+		struct gendisk *gd = dev->gd;
-+		gd->queue = NULL;
-+		del_gendisk(gd);
-+		put_disk(gd);
-+		dev->gd = NULL;
-+	}
-+	spin_unlock_irqrestore(dev->req_queue->queue_lock, flags);
-+	dev->req_queue = NULL;
-+	dev->i2odev = NULL;
-+	dev->refcnt = 0;
-+	dev->tid = 0;
- 
- 	/* 
- 	 * Do we need this?
- 	 * The media didn't really change...the device is just gone
- 	 */
--	i2ob_media_change_flag[unit] = 1;
-+	dev->media_change_flag = 1;
- 
- 	i2ob_dev_count--;	
- }
-@@ -1511,10 +1475,9 @@
- static int i2ob_media_change(struct gendisk *disk)
- {
- 	struct i2ob_device *p = disk->private_data;
--	int i = p->index;
--	if(i2ob_media_change_flag[i])
-+	if(p->media_change_flag)
- 	{
--		i2ob_media_change_flag[i]=0;
-+		p->media_change_flag=0;
- 		return 1;
- 	}
- 	return 0;
-@@ -1523,7 +1486,7 @@
- static int i2ob_revalidate(struct gendisk *disk)
- {
- 	struct i2ob_device *p = disk->private_data;
--	return i2ob_install_device(p->controller, p->i2odev, p->index<<4);
-+	return i2ob_install_device(p->controller, p->i2odev, p->index);
- }
- 
- /*
-@@ -1536,7 +1499,7 @@
- 	
- 	for(i=0;i<MAX_I2OB;i++)
- 	{
--		struct i2ob_device *dev=&i2ob_dev[(i<<4)];
-+		struct i2ob_device *dev=&i2ob_dev[i];
- 		
- 		if(dev->refcnt!=0)
- 		{
-@@ -1598,51 +1561,36 @@
- 	if (register_blkdev(MAJOR_NR, "i2o_block"))
- 		return -EIO;
- 
--	for (i = 0; i < MAX_I2OB; i++) {
--		struct gendisk *disk = alloc_disk(16);
--		if (!disk)
--			goto oom;
--		i2ob_dev[i<<4].index = i;
--		disk->queue = i2ob_dev[i<<4].req_queue;
--		i2ob_disk[i] = disk;
--	}
- #ifdef MODULE
- 	printk(KERN_INFO "i2o_block: registered device at major %d\n", MAJOR_NR);
- #endif
- 
- 	/*
-+	 *	Set up the queue
-+	 */
-+	for(i = 0; i < MAX_I2O_CONTROLLERS; i++)
-+		i2ob_queues[i] = NULL;
-+
-+	/*
- 	 *	Now fill in the boiler plate
- 	 */
- 	 
--	for (i = 0; i < MAX_I2OB << 4; i++) {
--		i2ob_dev[i].refcnt = 0;
--		i2ob_dev[i].flags = 0;
--		i2ob_dev[i].controller = NULL;
--		i2ob_dev[i].i2odev = NULL;
--		i2ob_dev[i].tid = 0;
--		i2ob_dev[i].head = NULL;
--		i2ob_dev[i].tail = NULL;
--		i2ob_dev[i].depth = MAX_I2OB_DEPTH;
--		i2ob_max_sectors[i] = 2;
--	}
--	
- 	for (i = 0; i < MAX_I2OB; i++) {
--		struct gendisk *disk = i2ob_disk[i];
--		disk->major = MAJOR_NR;
--		disk->first_minor = i<<4;
--		disk->fops = &i2ob_fops;
--		sprintf(disk->disk_name, "i2o/hd%c", 'a' + i);
-+		struct i2ob_device *dev = &i2ob_dev[i];
-+		dev->index = i;
-+		dev->refcnt = 0;
-+		dev->flags = 0;
-+		dev->controller = NULL;
-+		dev->i2odev = NULL;
-+		dev->tid = 0;
-+		dev->head = NULL;
-+		dev->tail = NULL;
-+		dev->depth = MAX_I2OB_DEPTH;
-+		dev->max_sectors = 2;
-+		dev->gd = NULL;
- 	}
- 	
- 	/*
--	 *	Set up the queue
--	 */
--	for(i = 0; i < MAX_I2O_CONTROLLERS; i++)
--	{
--		i2ob_queues[i] = NULL;
--	}
--
--	/*
- 	 *	Register the OSM handler as we will need this to probe for
- 	 *	drives, geometry and other goodies.
- 	 */
-@@ -1671,9 +1619,6 @@
- 
- 	return 0;
- 
--oom:
--	while (i--)
--		put_disk(i2ob_disk[i]);
- 	unregister_blkdev(MAJOR_NR, "i2o_block");
- 	return -ENOMEM;
- }
-@@ -1701,11 +1646,8 @@
- 	if(i2ob_dev_count) {
- 		struct i2o_device *d;
- 		for(i = 0; i < MAX_I2OB; i++)
--		if((d=i2ob_dev[i<<4].i2odev)) {
--			i2o_device_notify_off(d, &i2o_block_handler);
--			i2o_event_register(d->controller, d->lct_data.tid, 
--				i2ob_context, i<<4, 0);
--		}
-+			if((d = i2ob_dev[i].i2odev))
-+				i2ob_del_device(d->controller, d);
- 	}
- 	
- 	/*
-@@ -1725,15 +1667,21 @@
- 	 */
- 
- 	i2o_remove_handler(&i2o_block_handler);
--		 
--	for (i = 0; i < MAX_I2OB; i++)
--		put_disk(i2ob_disk[i]);
- 
- 	/*
- 	 *	Return the block device
- 	 */
- 	if (unregister_blkdev(MAJOR_NR, "i2o_block") != 0)
- 		printk("i2o_block: cleanup_module failed\n");
-+
-+	/*
-+	 *	release request queue
-+	 */
-+	for (i = 0; i < MAX_I2O_CONTROLLERS; i ++)
-+		if(i2ob_queues[i]) {
-+			blk_cleanup_queue(i2ob_queues[i]->req_queue);
-+			kfree(i2ob_queues[i]);
-+		}
- }
- 
- MODULE_AUTHOR("Red Hat");
+Here is a patch to add FC909 support back.
+This will be mpt driver version 3.01.05.
 
---------------020708020908020501000807--
+Please apply.
+
+You can download full source as well as the patches for this 
+driver at:
+ftp://ftp.lsil.com/HostAdapterDrivers/linux/FiberChannel/2.6-patches/3.01.05
+
+
+
+On Thursday, April 22, 2004 8:28 AM,  James Bottomley wrote:
+> 
+> On Thu, 2004-04-22 at 10:23, Moore, Eric Dean wrote:
+> > I'm sorry. It was my understanding this card was
+> > not being used by anyone, and my manager said it was
+> > okay to remove this support. This support was removed to 
+> > to honor some request from Jeff Garzik [jgarzik@pobox.com]
+> > to clean up the code macro's for accessing the hardware.
+> 
+> Well, if there's hardware in the field, I think the driver 
+> support needs
+> to go back in.
+> 
+> Thanks,
+> 
+> James
+> 
+> 
+
+
+------_=_NextPart_000_01C42879.D8803050
+Content-Type: application/octet-stream;
+	name="mptlinux-3.01.05.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="mptlinux-3.01.05.patch"
+
+diff -uarN b/drivers/message/fusion/mptbase.c =
+a/drivers/message/fusion/mptbase.c=0A=
+--- b/drivers/message/fusion/mptbase.c	2004-04-22 08:38:03.000000000 =
+-0600=0A=
++++ a/drivers/message/fusion/mptbase.c	2004-04-22 08:45:20.192169096 =
+-0600=0A=
+@@ -223,6 +223,7 @@=0A=
+ =0A=
+ //int		mpt_HardResetHandler(MPT_ADAPTER *ioc, int sleepFlag);=0A=
+ static int	ProcessEventNotification(MPT_ADAPTER *ioc, =
+EventNotificationReply_t *evReply, int *evHandlers);=0A=
++static void	mpt_sp_ioc_info(MPT_ADAPTER *ioc, u32 ioc_status, =
+MPT_FRAME_HDR *mf);=0A=
+ static void	mpt_fc_log_info(MPT_ADAPTER *ioc, u32 log_info);=0A=
+ static void	mpt_sp_log_info(MPT_ADAPTER *ioc, u32 log_info);=0A=
+ =0A=
+@@ -263,6 +264,8 @@=0A=
+  */=0A=
+ =0A=
+ static struct pci_device_id mptbase_pci_table[] =3D {=0A=
++	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC909,=0A=
++		PCI_ANY_ID, PCI_ANY_ID },=0A=
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC929,=0A=
+ 		PCI_ANY_ID, PCI_ANY_ID },=0A=
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC919,=0A=
+@@ -389,6 +392,12 @@=0A=
+ 				else=0A=
+ 					mpt_sp_log_info(ioc, log_info);=0A=
+ 			}=0A=
++			if (ioc_stat & MPI_IOCSTATUS_MASK) {=0A=
++				if ((int)ioc->chip_type <=3D (int)FC929)=0A=
++						;=0A=
++				else=0A=
++					mpt_sp_ioc_info(ioc, (u32)ioc_stat, mf);=0A=
++			}=0A=
+ 		} else {=0A=
+ 			/*=0A=
+ 			 *  Process turbo (context) reply...=0A=
+@@ -1350,6 +1359,10 @@=0A=
+ 	}=0A=
+ =0A=
+ 	ioc->chip_type =3D FCUNK;=0A=
++	if (pdev->device =3D=3D MPI_MANUFACTPAGE_DEVICEID_FC909) {=0A=
++		ioc->chip_type =3D FC909;=0A=
++		ioc->prod_name =3D "LSIFC909";=0A=
++	}=0A=
+ 	if (pdev->device =3D=3D MPI_MANUFACTPAGE_DEVICEID_FC929) {=0A=
+ 		ioc->chip_type =3D FC929;=0A=
+ 		ioc->prod_name =3D "LSIFC929";=0A=
+@@ -6086,12 +6099,156 @@=0A=
+ 	case 0x00080000:=0A=
+ 		desc =3D "Outbound DMA Overrun";=0A=
+ 		break;=0A=
++	=0A=
++	case 0x00090000:=0A=
++		desc =3D "Task Management";=0A=
++		break;=0A=
++=0A=
++	case 0x000A0000:=0A=
++		desc =3D "Device Problem";=0A=
++		break;=0A=
++=0A=
++	case 0x000B0000:=0A=
++		desc =3D "Invalid Phase Change";=0A=
++		break;=0A=
++=0A=
++	case 0x000C0000:=0A=
++		desc =3D "Untagged Table Size";=0A=
++		break;=0A=
++	=0A=
+ 	}=0A=
+ =0A=
+ 	printk(MYIOC_s_INFO_FMT "LogInfo(0x%08x): F/W: %s\n", ioc->name, =
+log_info, desc);=0A=
+ }=0A=
+ =0A=
+ =
+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D*/=0A=
++/*=0A=
++ *	mpt_sp_ioc_info - IOC information returned from SCSI Parallel =
+IOC.=0A=
++ *	@ioc: Pointer to MPT_ADAPTER structure=0A=
++ *	@ioc_status: U32 IOCStatus word from IOC=0A=
++ *	@mf: Pointer to MPT request frame=0A=
++ *=0A=
++ *	Refer to lsi/mpi.h.=0A=
++ */=0A=
++static void=0A=
++mpt_sp_ioc_info(MPT_ADAPTER *ioc, u32 ioc_status, MPT_FRAME_HDR =
+*mf)=0A=
++{=0A=
++	u32 status =3D ioc_status & MPI_IOCSTATUS_MASK;=0A=
++	char *desc =3D "";=0A=
++=0A=
++	switch (status) {=0A=
++	case MPI_IOCSTATUS_INVALID_FUNCTION: /* 0x0001 */=0A=
++		desc =3D "Invalid Function";=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_BUSY: /* 0x0002 */=0A=
++		desc =3D "Busy";=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_INVALID_SGL: /* 0x0003 */=0A=
++		desc =3D "Invalid SGL";=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_INTERNAL_ERROR: /* 0x0004 */=0A=
++		desc =3D "Internal Error";=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_RESERVED: /* 0x0005 */=0A=
++		desc =3D "Reserved";=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_INSUFFICIENT_RESOURCES: /* 0x0006 */=0A=
++		desc =3D "Insufficient Resources";=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_INVALID_FIELD: /* 0x0007 */=0A=
++		desc =3D "Invalid Field";=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_INVALID_STATE: /* 0x0008 */=0A=
++		desc =3D "Invalid State";=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_CONFIG_INVALID_ACTION: /* 0x0020 */=0A=
++	case MPI_IOCSTATUS_CONFIG_INVALID_TYPE:   /* 0x0021 */=0A=
++	case MPI_IOCSTATUS_CONFIG_INVALID_PAGE:   /* 0x0022 */=0A=
++	case MPI_IOCSTATUS_CONFIG_INVALID_DATA:   /* 0x0023 */=0A=
++	case MPI_IOCSTATUS_CONFIG_NO_DEFAULTS:    /* 0x0024 */=0A=
++	case MPI_IOCSTATUS_CONFIG_CANT_COMMIT:    /* 0x0025 */=0A=
++		/* No message for Config IOCStatus values */=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_SCSI_RECOVERED_ERROR: /* 0x0040 */=0A=
++		/* No message for recovered error=0A=
++		desc =3D "SCSI Recovered Error";=0A=
++		*/=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_SCSI_INVALID_BUS: /* 0x0041 */=0A=
++		desc =3D "SCSI Invalid Bus";=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_SCSI_INVALID_TARGETID: /* 0x0042 */=0A=
++		desc =3D "SCSI Invalid TargetID";=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_SCSI_DEVICE_NOT_THERE: /* 0x0043 */=0A=
++	  {=0A=
++		SCSIIORequest_t *pScsiReq =3D (SCSIIORequest_t *) mf;=0A=
++		U8 cdb =3D pScsiReq->CDB[0];=0A=
++		if (cdb !=3D 0x12) { /* Inquiry is issued for device scanning */=0A=
++			desc =3D "SCSI Device Not There";=0A=
++		}=0A=
++		break;=0A=
++	  }=0A=
++=0A=
++	case MPI_IOCSTATUS_SCSI_DATA_OVERRUN: /* 0x0044 */=0A=
++		desc =3D "SCSI Data Overrun";=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_SCSI_DATA_UNDERRUN: /* 0x0045 */=0A=
++		/* This error is checked in scsi_io_done(). Skip. =0A=
++		desc =3D "SCSI Data Underrun";=0A=
++		*/=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_SCSI_IO_DATA_ERROR: /* 0x0046 */=0A=
++		desc =3D "SCSI I/O Data Error";=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_SCSI_PROTOCOL_ERROR: /* 0x0047 */=0A=
++		desc =3D "SCSI Protocol Error";=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_SCSI_TASK_TERMINATED: /* 0x0048 */=0A=
++		desc =3D "SCSI Task Terminated";=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_SCSI_RESIDUAL_MISMATCH: /* 0x0049 */=0A=
++		desc =3D "SCSI Residual Mismatch";=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_SCSI_TASK_MGMT_FAILED: /* 0x004A */=0A=
++		desc =3D "SCSI Task Management Failed";=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_SCSI_IOC_TERMINATED: /* 0x004B */=0A=
++		desc =3D "SCSI IOC Terminated";=0A=
++		break;=0A=
++=0A=
++	case MPI_IOCSTATUS_SCSI_EXT_TERMINATED: /* 0x004C */=0A=
++		desc =3D "SCSI Ext Terminated";=0A=
++		break;=0A=
++=0A=
++	default:=0A=
++		desc =3D "Others";=0A=
++		break;=0A=
++	}=0A=
++	if (desc !=3D "")=0A=
++		printk(MYIOC_s_INFO_FMT "IOCStatus(0x%04x): %s\n", ioc->name, =
+status, desc);=0A=
++}=0A=
++=0A=
++/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D*/=0A=
+ /**=0A=
+  *	mpt_register_ascqops_strings - Register SCSI ASC/ASCQ and SCSI=0A=
+  *	OpCode strings from the (optional) isense module.=0A=
+diff -uarN b/drivers/message/fusion/mptbase.h =
+a/drivers/message/fusion/mptbase.h=0A=
+--- b/drivers/message/fusion/mptbase.h	2004-04-22 08:38:03.000000000 =
+-0600=0A=
++++ a/drivers/message/fusion/mptbase.h	2004-04-22 08:46:29.707601144 =
+-0600=0A=
+@@ -81,8 +81,8 @@=0A=
+ #define COPYRIGHT	"Copyright (c) 1999-2004 " MODULEAUTHOR=0A=
+ #endif=0A=
+ =0A=
+-#define MPT_LINUX_VERSION_COMMON	"3.01.03"=0A=
+-#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.01.03"=0A=
++#define MPT_LINUX_VERSION_COMMON	"3.01.05"=0A=
++#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.01.05"=0A=
+ #define WHAT_MAGIC_STRING		"@" "(" "#" ")"=0A=
+ =0A=
+ #define show_mptmod_ver(s,ver)  \=0A=
+diff -uarN b/drivers/message/fusion/mptctl.c =
+a/drivers/message/fusion/mptctl.c=0A=
+--- b/drivers/message/fusion/mptctl.c	2004-04-22 08:38:03.000000000 =
+-0600=0A=
++++ a/drivers/message/fusion/mptctl.c	2004-04-13 16:47:46.000000000 =
+-0600=0A=
+@@ -1199,7 +1199,7 @@=0A=
+ mptctl_getiocinfo (unsigned long arg, unsigned int data_size)=0A=
+ {=0A=
+ 	struct mpt_ioctl_iocinfo *uarg =3D (struct mpt_ioctl_iocinfo *) =
+arg;=0A=
+-	struct mpt_ioctl_iocinfo karg;=0A=
++	struct mpt_ioctl_iocinfo *karg;=0A=
+ 	MPT_ADAPTER		*ioc;=0A=
+ 	struct pci_dev		*pdev;=0A=
+ 	struct Scsi_Host	*sh;=0A=
+@@ -1219,34 +1219,46 @@=0A=
+ 	 */=0A=
+ 	if (data_size =3D=3D sizeof(struct mpt_ioctl_iocinfo_rev0))=0A=
+ 		cim_rev =3D 0;=0A=
+-	else if (data_size =3D=3D sizeof(struct mpt_ioctl_iocinfo))=0A=
++	else if (data_size =3D=3D sizeof(struct mpt_ioctl_iocinfo_rev1))=0A=
+ 		cim_rev =3D 1;=0A=
++	else if (data_size =3D=3D sizeof(struct mpt_ioctl_iocinfo))=0A=
++		cim_rev =3D 2;=0A=
+ 	else if (data_size =3D=3D (sizeof(struct =
+mpt_ioctl_iocinfo_rev0)+12))=0A=
+ 		cim_rev =3D 0;	/* obsolete */=0A=
+ 	else=0A=
+ 		return -EFAULT;=0A=
+-=0A=
+-	if (copy_from_user(&karg, uarg, data_size)) {=0A=
++	=0A=
++	karg =3D kmalloc(data_size, GFP_KERNEL);=0A=
++	if (karg =3D=3D NULL) {=0A=
++		printk(KERN_ERR "%s::mpt_ioctl_iocinfo() @%d - no memory =
+available!\n",=0A=
++				__FILE__, __LINE__);=0A=
++		return -ENOMEM;=0A=
++	}=0A=
++		=0A=
++	if (copy_from_user(karg, uarg, data_size)) {=0A=
+ 		printk(KERN_ERR "%s@%d::mptctl_getiocinfo - "=0A=
+ 			"Unable to read in mpt_ioctl_iocinfo struct @ %p\n",=0A=
+ 				__FILE__, __LINE__, (void*)uarg);=0A=
++		kfree(karg);=0A=
+ 		return -EFAULT;=0A=
+ 	}=0A=
+ =0A=
+-	if (((iocnum =3D mpt_verify_adapter(karg.hdr.iocnum, &ioc)) < 0) =
+||=0A=
++	if (((iocnum =3D mpt_verify_adapter(karg->hdr.iocnum, &ioc)) < 0) =
+||=0A=
+ 	    (ioc =3D=3D NULL)) {=0A=
+ 		dctlprintk((KERN_ERR "%s::mptctl_getiocinfo() @%d - ioc%d not =
+found!\n",=0A=
+ 				__FILE__, __LINE__, iocnum));=0A=
++		kfree(karg);=0A=
+ 		return -ENODEV;=0A=
+ 	}=0A=
+ =0A=
+ 	/* Verify the data transfer size is correct.=0A=
+ 	 * Ignore the port setting.=0A=
+ 	 */=0A=
+-	if (karg.hdr.maxDataSize !=3D data_size) {=0A=
++	if (karg->hdr.maxDataSize !=3D data_size) {=0A=
+ 		printk(KERN_ERR "%s@%d::mptctl_getiocinfo - "=0A=
+ 			"Structure size mismatch. Command not completed.\n",=0A=
+ 				__FILE__, __LINE__);=0A=
++		kfree(karg);=0A=
+ 		return -EFAULT;=0A=
+ 	}=0A=
+ =0A=
+@@ -1254,29 +1266,37 @@=0A=
+ 	 * program=0A=
+ 	 */=0A=
+ 	if ((int)ioc->chip_type <=3D (int) FC929)=0A=
+-		karg.adapterType =3D MPT_IOCTL_INTERFACE_FC;=0A=
++		karg->adapterType =3D MPT_IOCTL_INTERFACE_FC;=0A=
+ 	else=0A=
+-		karg.adapterType =3D MPT_IOCTL_INTERFACE_SCSI;=0A=
++		karg->adapterType =3D MPT_IOCTL_INTERFACE_SCSI;=0A=
+ =0A=
+-	port =3D karg.hdr.port;=0A=
++	port =3D karg->hdr.port;=0A=
+ =0A=
+-	karg.port =3D port;=0A=
++	karg->port =3D port;=0A=
+ 	pdev =3D (struct pci_dev *) ioc->pcidev;=0A=
+ =0A=
+-	karg.pciId =3D pdev->device;=0A=
++	karg->pciId =3D pdev->device;=0A=
+ 	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &revision);=0A=
+-	karg.hwRev =3D revision;=0A=
++	karg->hwRev =3D revision;=0A=
+ #if LINUX_VERSION_CODE >=3D KERNEL_VERSION(2,4,0)=0A=
+-	karg.subSystemDevice =3D pdev->subsystem_device;=0A=
+-	karg.subSystemVendor =3D pdev->subsystem_vendor;=0A=
++	karg->subSystemDevice =3D pdev->subsystem_device;=0A=
++	karg->subSystemVendor =3D pdev->subsystem_vendor;=0A=
+ #endif=0A=
+ =0A=
+ 	if (cim_rev =3D=3D 1) {=0A=
+ 		/* Get the PCI bus, device, and function numbers for the IOC=0A=
+ 		 */=0A=
+-		karg.pciInfo.u.bits.busNumber =3D pdev->bus->number;=0A=
+-		karg.pciInfo.u.bits.deviceNumber =3D PCI_SLOT( pdev->devfn );=0A=
+-		karg.pciInfo.u.bits.functionNumber =3D PCI_FUNC( pdev->devfn );=0A=
++		karg->pciInfo.u.bits.busNumber =3D pdev->bus->number;=0A=
++		karg->pciInfo.u.bits.deviceNumber =3D PCI_SLOT( pdev->devfn );=0A=
++		karg->pciInfo.u.bits.functionNumber =3D PCI_FUNC( pdev->devfn );=0A=
++	} else if (cim_rev =3D=3D 2) {=0A=
++		/* Get the PCI bus, device, function and segment ID numbers =0A=
++		   for the IOC */=0A=
++		karg->pciInfo.u.bits.busNumber =3D pdev->bus->number;=0A=
++		karg->pciInfo.u.bits.deviceNumber =3D PCI_SLOT( pdev->devfn );=0A=
++		karg->pciInfo.u.bits.functionNumber =3D PCI_FUNC( pdev->devfn );=0A=
++		karg->pciInfo.u.bits.functionNumber =3D PCI_FUNC( pdev->devfn );=0A=
++		karg->pciInfo.segmentID =3D pci_domain_nr(pdev->bus);=0A=
+ 	}=0A=
+ =0A=
+ 	/* Get number of devices=0A=
+@@ -1297,31 +1317,33 @@=0A=
+ 			}=0A=
+ 		}=0A=
+ 	}=0A=
+-	karg.numDevices =3D numDevices;=0A=
++	karg->numDevices =3D numDevices;=0A=
+ =0A=
+ 	/* Set the BIOS and FW Version=0A=
+ 	 */=0A=
+-	karg.FWVersion =3D ioc->facts.FWVersion.Word;=0A=
+-	karg.BIOSVersion =3D ioc->biosVersion;=0A=
++	karg->FWVersion =3D ioc->facts.FWVersion.Word;=0A=
++	karg->BIOSVersion =3D ioc->biosVersion;=0A=
+ =0A=
+ 	/* Set the Version Strings.=0A=
+ 	 */=0A=
+-	strncpy (karg.driverVersion, MPT_LINUX_PACKAGE_NAME, =
+MPT_IOCTL_VERSION_LENGTH);=0A=
+-	karg.driverVersion[MPT_IOCTL_VERSION_LENGTH-1]=3D'\0';=0A=
++	strncpy (karg->driverVersion, MPT_LINUX_PACKAGE_NAME, =
+MPT_IOCTL_VERSION_LENGTH);=0A=
++	karg->driverVersion[MPT_IOCTL_VERSION_LENGTH-1]=3D'\0';=0A=
+ =0A=
+-	karg.busChangeEvent =3D 0;=0A=
+-	karg.hostId =3D ioc->pfacts[port].PortSCSIID;=0A=
+-	karg.rsvd[0] =3D karg.rsvd[1] =3D 0;=0A=
++	karg->busChangeEvent =3D 0;=0A=
++	karg->hostId =3D ioc->pfacts[port].PortSCSIID;=0A=
++	karg->rsvd[0] =3D karg->rsvd[1] =3D 0;=0A=
+ =0A=
+ 	/* Copy the data from kernel memory to user memory=0A=
+ 	 */=0A=
+-	if (copy_to_user((char *)arg, &karg, data_size)) {=0A=
++	if (copy_to_user((char *)arg, karg, data_size)) {=0A=
+ 		printk(KERN_ERR "%s@%d::mptctl_getiocinfo - "=0A=
+ 			"Unable to write out mpt_ioctl_iocinfo struct @ %p\n",=0A=
+ 				__FILE__, __LINE__, (void*)uarg);=0A=
++		kfree(karg);=0A=
+ 		return -EFAULT;=0A=
+ 	}=0A=
+ =0A=
++	kfree(karg);=0A=
+ 	return 0;=0A=
+ }=0A=
+ =0A=
+@@ -2909,6 +2931,8 @@=0A=
+ 	if (++where && err) goto out_fail;=0A=
+ 	err =3D register_ioctl32_conversion(MPTIOCINFO1, =
+compat_mptctl_ioctl);=0A=
+ 	if (++where && err) goto out_fail;=0A=
++	err =3D register_ioctl32_conversion(MPTIOCINFO2, =
+compat_mptctl_ioctl);=0A=
++	if (++where && err) goto out_fail;=0A=
+ 	err =3D register_ioctl32_conversion(MPTTARGETINFO, =
+compat_mptctl_ioctl);=0A=
+ 	if (++where && err) goto out_fail;=0A=
+ 	err =3D register_ioctl32_conversion(MPTTEST, compat_mptctl_ioctl);=0A=
+@@ -2968,6 +2992,7 @@=0A=
+ 			" (%d:err=3D%d)\n", where, err);=0A=
+ 	unregister_ioctl32_conversion(MPTIOCINFO);=0A=
+ 	unregister_ioctl32_conversion(MPTIOCINFO1);=0A=
++	unregister_ioctl32_conversion(MPTIOCINFO2);=0A=
+ 	unregister_ioctl32_conversion(MPTTARGETINFO);=0A=
+ 	unregister_ioctl32_conversion(MPTTEST);=0A=
+ 	unregister_ioctl32_conversion(MPTEVENTQUERY);=0A=
+@@ -3018,6 +3043,7 @@=0A=
+ #ifdef CONFIG_COMPAT=0A=
+ 	unregister_ioctl32_conversion(MPTIOCINFO);=0A=
+ 	unregister_ioctl32_conversion(MPTIOCINFO1);=0A=
++	unregister_ioctl32_conversion(MPTIOCINFO2);=0A=
+ 	unregister_ioctl32_conversion(MPTTARGETINFO);=0A=
+ 	unregister_ioctl32_conversion(MPTTEST);=0A=
+ 	unregister_ioctl32_conversion(MPTEVENTQUERY);=0A=
+diff -uarN b/drivers/message/fusion/mptctl.h =
+a/drivers/message/fusion/mptctl.h=0A=
+--- b/drivers/message/fusion/mptctl.h	2004-04-03 20:37:06.000000000 =
+-0700=0A=
++++ a/drivers/message/fusion/mptctl.h	2004-04-13 15:07:41.000000000 =
+-0600=0A=
+@@ -91,6 +91,7 @@=0A=
+ =0A=
+ #define MPTIOCINFO		_IOWR(MPT_MAGIC_NUMBER,17,struct =
+mpt_ioctl_iocinfo)=0A=
+ #define MPTIOCINFO1		_IOWR(MPT_MAGIC_NUMBER,17,struct =
+mpt_ioctl_iocinfo_rev0)=0A=
++#define MPTIOCINFO2		_IOWR(MPT_MAGIC_NUMBER,17,struct =
+mpt_ioctl_iocinfo_rev1)=0A=
+ #define MPTTARGETINFO		_IOWR(MPT_MAGIC_NUMBER,18,struct =
+mpt_ioctl_targetinfo)=0A=
+ #define MPTTEST			_IOWR(MPT_MAGIC_NUMBER,19,struct mpt_ioctl_test)=0A=
+ #define MPTEVENTQUERY		_IOWR(MPT_MAGIC_NUMBER,21,struct =
+mpt_ioctl_eventquery)=0A=
+@@ -165,6 +166,18 @@=0A=
+ 	} u;=0A=
+ };=0A=
+ =0A=
++struct mpt_ioctl_pci_info2 {=0A=
++	union {=0A=
++		struct {=0A=
++			unsigned int  deviceNumber   :  5;=0A=
++			unsigned int  functionNumber :  3;=0A=
++			unsigned int  busNumber      : 24;=0A=
++		} bits;=0A=
++		unsigned int  asUlong;=0A=
++	} u;=0A=
++  int segmentID;=0A=
++};=0A=
++=0A=
+ /*=0A=
+  *  Adapter Information Page=0A=
+  *  Read only.=0A=
+@@ -189,6 +202,24 @@=0A=
+ 	char		 busChangeEvent;=0A=
+ 	char		 hostId;=0A=
+ 	char		 rsvd[2];=0A=
++	struct mpt_ioctl_pci_info2  pciInfo; /* Added Rev 2 */=0A=
++};=0A=
++=0A=
++struct mpt_ioctl_iocinfo_rev1 {=0A=
++	mpt_ioctl_header hdr;=0A=
++	int		 adapterType;	/* SCSI or FCP */=0A=
++	int		 port;		/* port number */=0A=
++	int		 pciId;		/* PCI Id. */=0A=
++	int		 hwRev;		/* hardware revision */=0A=
++	int		 subSystemDevice;	/* PCI subsystem Device ID */=0A=
++	int		 subSystemVendor;	/* PCI subsystem Vendor ID */=0A=
++	int		 numDevices;		/* number of devices */=0A=
++	int		 FWVersion;		/* FW Version (integer) */=0A=
++	int		 BIOSVersion;		/* BIOS Version (integer) */=0A=
++	char		 driverVersion[MPT_IOCTL_VERSION_LENGTH];	/* Driver Version =
+(string) */=0A=
++	char		 busChangeEvent;=0A=
++	char		 hostId;=0A=
++	char		 rsvd[2];=0A=
+ 	struct mpt_ioctl_pci_info  pciInfo; /* Added Rev 1 */=0A=
+ };=0A=
+ =0A=
+diff -uarN b/drivers/message/fusion/mptscsih.c =
+a/drivers/message/fusion/mptscsih.c=0A=
+--- b/drivers/message/fusion/mptscsih.c	2004-04-22 08:38:03.000000000 =
+-0600=0A=
++++ a/drivers/message/fusion/mptscsih.c	2004-04-13 15:35:31.000000000 =
+-0600=0A=
+@@ -805,6 +805,14 @@=0A=
+ =0A=
+ 		if (scsi_state & MPI_SCSI_STATE_AUTOSENSE_VALID)=0A=
+ 			copy_sense_data(sc, hd, mf, pScsiReply);=0A=
++                =0A=
++		/*=0A=
++		 *  Look for + dump FCP ResponseInfo[]!=0A=
++		 */=0A=
++		if (scsi_state & MPI_SCSI_STATE_RESPONSE_INFO_VALID) {=0A=
++			printk(KERN_NOTICE "  FCP_ResponseInfo=3D%08xh\n",=0A=
++			le32_to_cpu(pScsiReply->ResponseInfo));=0A=
++		}=0A=
+ =0A=
+ 		switch(status) {=0A=
+ 		case MPI_IOCSTATUS_BUSY:			/* 0x0002 */=0A=
+@@ -1106,16 +1114,21 @@=0A=
+ 			 * Do OS callback=0A=
+ 			 * Free driver resources (chain, msg buffers)=0A=
+ 			 */=0A=
+-			if (SCpnt->use_sg) {=0A=
+-				pci_unmap_sg(hd->ioc->pcidev, (struct scatterlist *) =
+SCpnt->request_buffer,=0A=
+-					    SCpnt->use_sg, =
+scsi_to_pci_dma_dir(SCpnt->sc_data_direction));=0A=
+-			} else if (SCpnt->request_bufflen) {=0A=
+-				scPrivate	*my_priv;=0A=
+-=0A=
+-				my_priv =3D (scPrivate *) &SCpnt->SCp;=0A=
+-				pci_unmap_single(hd->ioc->pcidev, =
+(dma_addr_t)(ulong)my_priv->p1,=0A=
+-					   SCpnt->request_bufflen,=0A=
+-					   scsi_to_pci_dma_dir(SCpnt->sc_data_direction));=0A=
++			if (scsi_device_online(SCpnt->device)) {=0A=
++				if (SCpnt->use_sg) {=0A=
++					pci_unmap_sg(hd->ioc->pcidev,=0A=
++						(struct scatterlist *) SCpnt->request_buffer,=0A=
++						SCpnt->use_sg,=0A=
++						scsi_to_pci_dma_dir(SCpnt->sc_data_direction));=0A=
++				} else if (SCpnt->request_bufflen) {=0A=
++					scPrivate	*my_priv;=0A=
++=0A=
++					my_priv =3D (scPrivate *) &SCpnt->SCp;=0A=
++					pci_unmap_single(hd->ioc->pcidev,=0A=
++						(dma_addr_t)(ulong)my_priv->p1,=0A=
++						SCpnt->request_bufflen,=0A=
++						scsi_to_pci_dma_dir(SCpnt->sc_data_direction));=0A=
++				}=0A=
+ 			}=0A=
+ 			SCpnt->result =3D DID_RESET << 16;=0A=
+ 			SCpnt->host_scribble =3D NULL;=0A=
+
+------_=_NextPart_000_01C42879.D8803050--
