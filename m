@@ -1,60 +1,69 @@
 From: ael <law_ence.dev@ntlworld.com>
 Subject: Re: st.c block limits
-Date: Thu, 01 Aug 2002 23:51:05 +0100
+Date: Thu, 01 Aug 2002 12:57:02 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D49BB59.2020405@ntlworld.com>
-References: <002001c2395d$6e842150$e0019d89@cybernetics.com>
+Message-ID: <3D49220E.3030003@ntlworld.com>
+References: <Pine.LNX.4.44.0207310731150.25578-100000@kai.makisara.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: tonyb@cybernetics.com
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
 Cc: linux-scsi@vger.kernel.org
 
-Tony Battersby wrote:
->>>># tar -cf /dev/ntape blah_home.tar.bz2; mt  tell
->>>
-> 
->>The tape has a real 10GB capacity. (I believe.)  The 20BG
->>blocks is correct
->>for the default block size of 512. So compression is not an
->>issue here. And
->>the report above is actually 17.8/2 = 8.9 GB :-(
+Kai Makisara wrote:
+> On Tue, 30 Jul 2002, ael wrote:
 > 
 > 
-> Some compression algorithms will actually expand data by a significant
-> amount.  For example, many implementations of ALDC compression will give a
-> compression ratio of 0.8 on random data.  In your example above you are
-> writing a .bz2 file (which is already compressed), so it would probably
-> expand if compressed again.  Try turning drive internal compression off:
+>>I have a scsi tape drive:-
+>>
+>>Host: scsi0 Channel: 00 Id: 00 Lun: 00
+>>     Vendor: AIWA     Model: TD-20001         Rev: 0159
+>>     Type:   Sequential-Access                ANSI SCSI revision: 02
+>>
+>>It has worked perfectly for several years, but from kernel 2.4.10 st.c
+>>started to report a 24-bit block limit: st0: Block limits 1 - 16777215
+>>bytes. I am now on stock 2.4.18 with static char *verstr = "20020205".
+>>
+>>The above drive is a NS-20 drive with default block size of 512 and 20G
+>>blocks: so a range of 25 bits for the block number is needed.
+>>
 > 
-> mt -f /dev/ntape compression off
+> The block limits tell the block size limits the drive reports, not limits
+> to the amount of data. The driver writes data until the drive tells that
+> there is no space. I.e., the driver does not limit the amount of data
+> written to the tape. No changes affecting this behaviour has been made for
+> a very long time.
 > 
-> This might help squeeze a little more data on your tape.
+> 
+>>So when I attempt to write to the tape beyond block 2^24,
+>>I get an error like:
+>>
+>># tar -cf /dev/ntape blah_home.tar.bz2; mt  tell
+>>tar: /dev/ntape: Wrote only 0 of 10240 bytes
+>>tar: Error is not recoverable: exiting now
+>>At block 17832312.
+>>
+> 
+> Looks like you are at end of tape. I think the 20 GB capacity is
+> compressed and not real. This means that the actual amount of data you can
+> write on the tape depends on the compressibility of data. 17.8 GB is
+> actually not too bad in this case.
+> 
+> 	Kai
 
-Thanks for the suggestion. Various such thoughts had crossed what passes 
-for my mind, including whether 10GB was before formatting. But I did assume 
-that the tape drive/driver was reporting actual bytes on the tape 
-regardless of compression.
+Following up my previous reply where I noted that I had only written 8.8Gb 
+to a tape with uncompressed capacity of 10Gb, it then seems that the tape 
+firmware is reporting a maximum drive capacity of ~ 16GB.
 
-I was indeed recording largely bz2 files, and I did realize that the 
-default drive streaming compression would almost certainly expand again. I 
-sometimes do remember to turn the drive compression off in such 
-circumstances. But as I say, I assume that the actual data on the tape 
-after compression was being reported. That has always seemed to be the case 
-in the past, although I am not sure whether I checked very thoroughly.
+And perhaps a real tape limit of 17832312 /2 = 8.9GB which is supposedly on 
+a 10GB tape : Imation NS-20, specified as 10GB uncompressed. Should I ask 
+Imation for replacements :-) ?
 
-I guess that I should browse the Imation web site and see exactly they 
-specify for the tape itself. The packaging is clearly marked 10GB 
-uncompressed. The drive has a read-while-write-and-rerecord-on-error 
-circuit, but the tapes have not had much use, and I don't think that the
-data is being expanded by repeated blocks. I could be wrong, of course.
-And in any case, I would expect the drive to report the total blaoc count 
-including repeats.
+
 
 ael
-
 
 
 
