@@ -1,76 +1,65 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: "Martin Peschke3" <MPESCHKE@de.ibm.com>
 Subject: Re: [PATCH] SCSI Core patches
-Date: Tue, 14 Jan 2003 12:17:55 -0800
+Date: Tue, 14 Jan 2003 21:37:13 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030114121755.A25535@beaverton.ibm.com>
-References: <OF05415A5A.7D53015A-ONC1256CAE.00687CAC@de.ibm.com>
+Message-ID: <OF358BAE57.18B0715E-ONC1256CAE.006B6533@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <OF05415A5A.7D53015A-ONC1256CAE.00687CAC@de.ibm.com>; from MPESCHKE@de.ibm.com on Tue, Jan 14, 2003 at 09:01:36PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Peschke3 <MPESCHKE@de.ibm.com>
-Cc: Luben Tuikov <luben@splentec.com>, linux-scsi@vger.kernel.org
+To: patmans@us.ibm.com
+Cc: Luben Tuikov <luben@splentec.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Tue, Jan 14, 2003 at 09:01:36PM +0100, Martin Peschke3 wrote:
-> 
-> Patrick,
-> 
-> > With the current scsi code, going to a 64-bit lun means changing
-> sdev->lun
-> > and conditionally changing references to it to use a 64-bit struct
-> > scsilun, or (mainly in the lldd) to call a conversion function if you
-> must
-> > use less than 64-bits.
-> 
-> Why would a conversion function be required?
 
-Because a lot of conversions are done via truncation via int -> char
-conversions done by the compiler, or explicit use of an int assuming that
-it is a host ordered integer, and that won't work for a 64-bit scsilun.
-You cannot pull one byte (at a fixed location) out of the 64-bit of the
-scsilun, mainly AFAICT because of the addressing modes. Maybe we could
-have a char *lun in scsi_device, and point to somewhere in the 64-bit lun,
-but this would still require code changes.
+Patrick,
 
-> Have we a conversion function for our current 32 bit LUNS which is larger
-> than required by our Parallel SCSI HBA drivers?
+> The current 2.5 scsi code uses REPORT LUNS,
 
-Not an explicit one, just what the C code does for us.
+ok, I've been aware of that
 
-> What would chang for those drivers if we go to 64 bit LUNs?
+> and has a 64 bit to 32 bit
+> converter (scsi 64 bit lun to linux sdev->lun, the sdev->lun is host byte
+> ordered)
 
-So they would have to use a function or a pointer to lun, if that would
-really work, but I prefer a function.
+What is the reasoning behind that? Why does it exchange bytes 0+1 and
+bytes 2+3?
 
-> >(Currently, no open source FCP adapters use an 8
-> > byte lun to talk to the host adapter hardware, not even the qlogic
-> > adapter.)
-> 
-> Here you are under a misapprehension
-> http://www-124.ibm.com/developerworks/opensource/linux390
-> /current2_4_19-may2002.shtml#kernel20021125
+> look at scsi_scan.c::scsilun_to_int. scsilun_to_int (it doesn't
+> handle the address method in the first two bits of the LUN, probably a
+bug
+> for some targets).
 
-Sorry :)
+It is a bug, I think.
+When sending SCSI commands, an FCP device expects me to provide exactly
+that 8 byte LUN that is reported by REPORT_LUNS. How is it possible
+for an HBA driver that needs a working 8 byte LUN to revert all these
+modifications done by scsilun_to_int?
+Ok, it would be easy to exchange bytes again. But it is impossible to
+recover from the loss of 4 bytes and the 2 most significant bits.
+The scsilun_to_int routine does not make sense to me.
+We have to go with the actual LUNs retrieved by means of
+the REPORT_LUNS command.
 
-> Using 8 byte LUNs for FCP is not a question of driver-to-HBA communication
-> but is required by FCP.
+> > I think, the SCSI ID for FCP should also be 64 bit in size and
+> > ought to be comprised of the World-Wide Port Name (WWPN) rather
+> > than the more volatile 24 bit Destination ID (D_ID).
+>
+> I would rather the SCSI target ID be like an address rather than an
+> identifier (such as might be in a scsi_nexus), right now we have a
+> sdev->name that currently holds a device id.
 
-Yes, so the driver-to-HBA interface does not have to be use 8 byte LUNs
-(not that I agree with that approach), but FCP must use 8 bytes.
+How persistent is a SCSI ID expected to be?
+Do SCSI applications in a Linux 2.5 environment, e.g. your favourite
+burning
+software, depend on persistent SCSI ID's in order to address the right
+device?
+Or, are all issues related to persistency solved by the combination of
+sysfs
+and hotplug, especially when considering SCSI support?
 
-> ftp://ftp.t11.org/t10/drafts/fcp2/fcp2r07a.pdf
-> An HBA dd has to put an 8 byte LUN into the control block used for
-> SCSI command transfer (FCP_CMND IU), for example.
-> I am wondering how those drivers make up an 8 byte LUN
-> from a 32 bit LUN.
+Thanks advance for your answers. They might be helpfull for me
+when trying to solve the 32 bit vs. 64 bit issue in our HBA driver.
 
-The qlogic uses a 2 byte lun for host -> adapter communication, even
-though it sends an 8 byte lun to the target. For most targets, just using
-the upper two bytes is OK, I don't know what they do for the different
-scsi addressing modes.
 
-PS: My (ibm's?) linux-scsi feed seems slow or dead (again).
+Martin Peschke
 
--- Patrick Mansfield
