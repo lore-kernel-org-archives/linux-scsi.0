@@ -1,41 +1,109 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: qla2xxx tcq question/bug
-Date: Sun, 11 Jul 2004 23:28:56 +0200 (CEST)
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: [2.6 patch] another small advansys cleanup
+Date: Mon, 12 Jul 2004 04:55:09 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60.0407112327200.8012@poirot.grange>
-References: <40EF2697.20804@us.ibm.com> <20040709234644.GB14787@praka.san.rr.com>
-  <20040709235443.GA14953@praka.san.rr.com> <1089427459.2342.149.camel@mulgrave>
+Message-ID: <20040712025509.GK4701@fs.tum.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.net ([213.165.64.20]:24557 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S266527AbUGKVeh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Jul 2004 17:34:37 -0400
-In-Reply-To: <1089427459.2342.149.camel@mulgrave>
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:5329 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S266687AbUGLCzM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 11 Jul 2004 22:55:12 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Vasquez <praka@users.sourceforge.net>, Mike Christie <mikenc@us.ibm.com>, andrew.vasquez@qlogic.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Sat, 9 Jul 2004, James Bottomley wrote:
+The patch below does the following small cleanups for the advansys
+driver:
+- remove obsolete maintainer information
+- remove kernel 2.2 code from advansys.h
 
-> On Fri, 2004-07-09 at 18:54, Andrew Vasquez wrote:
->> BTW: 53c700.c appears to be the only scsi driver which calls
->> scsi_activate_tcq()???
->
-> That would be because two years ago the scsi maintainer tried to make it
-> an example to other driver writers of how to use the block layer tag
-> command queueing.
->
-> You could say that was one of the less successful instances of leading
-> by example...
+diffstat output:
+ MAINTAINERS             |    7 
+ drivers/scsi/advansys.c |  342 +++++++---------------------------------
+ drivers/scsi/advansys.h |   26 ---
+ 3 files changed, 60 insertions(+), 315 deletions(-)
 
-Wow! I was all this time wondering why the tagged-command queuing was done 
-in LLD, and was going to ask if it shouldn't be indeed done 
-generically:-)) I know now!:-)
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+Signed-off-by: Adrian Bunk <bunk@fs.tum.de>
+
+--- linux-2.6.6-mm5-full/drivers/scsi/advansys.h.old	2004-05-22 14:42:56.000000000 +0200
++++ linux-2.6.6-mm5-full/drivers/scsi/advansys.h	2004-05-22 14:47:56.000000000 +0200
+@@ -13,37 +13,11 @@
+  * As of March 8, 2000 Advanced System Products, Inc. (AdvanSys)
+  * changed its name to ConnectCom Solutions, Inc.
+  *
+- * There is an AdvanSys Linux WWW page at:
+- *  http://www.connectcom.net/downloads/software/os/linux.html
+- *  http://www.advansys.com/linux.html
+- *
+- * The latest released version of the AdvanSys driver is available at:
+- *  ftp://ftp.advansys.com/pub/linux/linux.tgz
+- *  ftp://ftp.connectcom.net/pub/linux/linux.tgz
+- *
+- * Please send questions, comments, bug reports to:
+- *  linux@connectcom.net or bfrey@turbolinux.com.cn
+  */
+ 
+ #ifndef _ADVANSYS_H
+ #define _ADVANSYS_H
+ 
+-#include <linux/config.h>
+-#ifndef LINUX_VERSION_CODE
+-#include <linux/version.h>
+-#endif /* LINUX_VERSION_CODE */
+-
+-/* Convert Linux Version, Patch-level, Sub-level to LINUX_VERSION_CODE. */
+-#define ASC_LINUX_VERSION(V, P, S)    (((V) * 65536) + ((P) * 256) + (S))
+-/* Driver supported only in version 2.2 and version >= 2.4. */
+-#if LINUX_VERSION_CODE < ASC_LINUX_VERSION(2,2,0) || \
+-    (LINUX_VERSION_CODE > ASC_LINUX_VERSION(2,3,0) && \
+-     LINUX_VERSION_CODE < ASC_LINUX_VERSION(2,4,0))
+-#error "AdvanSys driver supported only in 2.2 and 2.4 or greater kernels."
+-#endif
+-#define ASC_LINUX_KERNEL22 (LINUX_VERSION_CODE < ASC_LINUX_VERSION(2,4,0))
+-#define ASC_LINUX_KERNEL24 (LINUX_VERSION_CODE >= ASC_LINUX_VERSION(2,4,0))
+-
+ /*
+  * Scsi_Host_Template function prototypes.
+  */
+--- linux-2.6.6-mm5-full/drivers/scsi/advansys.c.old	2004-05-22 14:31:42.000000000 +0200
++++ linux-2.6.6-mm5-full/drivers/scsi/advansys.c	2004-05-22 14:47:45.000000000 +0200
+@@ -15,16 +15,6 @@
+  * As of March 8, 2000 Advanced System Products, Inc. (AdvanSys)
+  * changed its name to ConnectCom Solutions, Inc.
+  *
+- * There is an AdvanSys Linux WWW page at:
+- *  http://www.connectcom.net/downloads/software/os/linux.html
+- *  http://www.advansys.com/linux.html
+- *
+- * The latest released version of the AdvanSys driver is available at:
+- *  ftp://ftp.advansys.com/pub/linux/linux.tgz
+- *  ftp://ftp.connectcom.net/pub/linux/linux.tgz
+- *
+- * Please send questions, comments, bug reports to:
+- *  support@connectcom.net
+  */
+ 
+ /*
+@@ -41,7 +31,6 @@
+   H. Release History
+   I. Known Problems/Fix List
+   J. Credits (Chronological Order)
+-  K. ConnectCom (AdvanSys) Contact Information
+ 
+   A. Linux Kernels Supported by this Driver
+ 
+@@ -2123,9 +2080,6 @@
+ #define ADV_LIB_VERSION_MAJOR  5
+ #define ADV_LIB_VERSION_MINOR  14
+ 
+-/* d_os_dep.h */
+-#define ADV_OS_LINUX
+-
+ /*
+  * Define Adv Library required special types.
+  */
 
