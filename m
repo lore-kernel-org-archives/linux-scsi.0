@@ -1,36 +1,51 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] SCSI aic7xxx: kill kernel 2.2 #ifdef's
-Date: Sat, 23 Oct 2004 18:32:20 +0200
+From: maximilian attems <janitor@sternwelten.at>
+Subject: Re: [2.6 patch] SCSI aic7xxx: kill kernel 2.2 #ifdef's
+Date: Sat, 23 Oct 2004 20:56:09 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041023163219.GF5110@stusta.de>
+Message-ID: <20041023185609.GC3790@stro.at>
+Reply-To: 20041023163219.GF5110@stusta.de
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:51215 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261245AbUJWQcw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Oct 2004 12:32:52 -0400
+Received: from baikonur.stro.at ([213.239.196.228]:9676 "EHLO baikonur.stro.at")
+	by vger.kernel.org with ESMTP id S261272AbUJWS4I (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Oct 2004 14:56:08 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
 
-The patch below kills kernel 2.2 #ifdef's from the SCSI aic7xxx driver.
+previous was wrong also removed 2.4 compatibility sorry.
+resent
 
 
-diffstat output:
- drivers/scsi/aic7xxx/aic7770_osm.c     |   12 ---
- drivers/scsi/aic7xxx/aic7xxx_osm.h     |    2 
- drivers/scsi/aic7xxx/aic7xxx_osm_pci.c |   91 -------------------------
- drivers/scsi/aic7xxx/aic7xxx_pci.c     |    4 -
- 4 files changed, 2 insertions(+), 107 deletions(-)
+the kjt patchset has an similar patch, that got sent to James:
+the bits below were a leftover of a janitor patch removing
+aic7xxx and aic79xx old ifdefs.
+ 
+--
+maks
+kernel janitor  	http://janitor.kernelnewbies.org/
+
+ From: Domen Puncer <domen@coderock.org>
+
+ Patches to remove some old ifdefs.
+ remove most of the #include <linux/version.h>
+ kill compat cruft like #define ahd_pci_set_dma_mask pci_set_dma_mask
+
+Signed-off-by: Maximilian Attems <janitor@sternwelten.at>
 
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+---
 
---- linux-2.6.9-mm1-full/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c.old	2004-10-23 18:16:44.000000000 +0200
-+++ linux-2.6.9-mm1-full/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	2004-10-23 18:23:01.000000000 +0200
+ linux-2.6.9-rc1-max/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c |   86 -------------
+ 1 files changed, 86 deletions(-)
+
+diff -puN drivers/scsi/aic7xxx/aic7xxx_osm_pci.c~remove-old-ifdefs-aic7xxx_osm_pci drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c~remove-old-ifdefs-aic7xxx_osm_pci	2004-10-23 20:51:22.000000000 +0200
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	2004-10-23 20:51:50.000000000 +0200
 @@ -42,12 +42,6 @@
  #include "aic7xxx_osm.h"
  #include "aic7xxx_pci.h"
@@ -44,7 +59,7 @@ Signed-off-by: Adrian Bunk <bunk@stusta.de>
  static int	ahc_linux_pci_dev_probe(struct pci_dev *pdev,
  					const struct pci_device_id *ent);
  static int	ahc_linux_pci_reserve_io_region(struct ahc_softc *ahc,
-@@ -55,7 +49,6 @@
+@@ -55,7 +49,6 @@ static int	ahc_linux_pci_reserve_io_regi
  static int	ahc_linux_pci_reserve_mem_region(struct ahc_softc *ahc,
  						 u_long *bus_addr,
  						 uint8_t __iomem **maddr);
@@ -52,7 +67,7 @@ Signed-off-by: Adrian Bunk <bunk@stusta.de>
  static void	ahc_linux_pci_dev_remove(struct pci_dev *pdev);
  
  /* Define the macro locally since it's different for different class of chips.
-@@ -169,7 +162,6 @@
+@@ -169,7 +162,6 @@ ahc_linux_pci_dev_remove(struct pci_dev 
  	} else
  		ahc_list_unlock(&l);
  }
@@ -60,7 +75,7 @@ Signed-off-by: Adrian Bunk <bunk@stusta.de>
  
  static int
  ahc_linux_pci_dev_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
-@@ -219,7 +211,6 @@
+@@ -219,7 +211,6 @@ ahc_linux_pci_dev_probe(struct pci_dev *
  	ahc = ahc_alloc(NULL, name);
  	if (ahc == NULL)
  		return (-ENOMEM);
@@ -68,7 +83,7 @@ Signed-off-by: Adrian Bunk <bunk@stusta.de>
  	if (pci_enable_device(pdev)) {
  		ahc_free(ahc);
  		return (-ENODEV);
-@@ -239,14 +230,12 @@
+@@ -239,14 +230,12 @@ ahc_linux_pci_dev_probe(struct pci_dev *
  		}
  		ahc->platform_data->hw_dma_mask = 0xFFFFFFFF;
  	}
@@ -83,7 +98,7 @@ Signed-off-by: Adrian Bunk <bunk@stusta.de>
  	pci_set_drvdata(pdev, ahc);
  	if (aic7xxx_detect_complete) {
  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
-@@ -257,39 +246,14 @@
+@@ -257,39 +246,14 @@ ahc_linux_pci_dev_probe(struct pci_dev *
  		return (-ENODEV);
  #endif
  	}
@@ -123,7 +138,7 @@ Signed-off-by: Adrian Bunk <bunk@stusta.de>
  }
  
  void
-@@ -304,22 +268,11 @@
+@@ -304,22 +268,11 @@ ahc_linux_pci_reserve_io_region(struct a
  	if (aic7xxx_allow_memio == 0)
  		return (ENOMEM);
  
@@ -146,7 +161,7 @@ Signed-off-by: Adrian Bunk <bunk@stusta.de>
  	return (0);
  }
  
-@@ -335,17 +288,13 @@
+@@ -335,17 +288,13 @@ ahc_linux_pci_reserve_mem_region(struct 
  	start = pci_resource_start(ahc->dev_softc, 1);
  	if (start != 0) {
  		*bus_addr = start;
@@ -164,7 +179,7 @@ Signed-off-by: Adrian Bunk <bunk@stusta.de>
  			}
  		}
  	} else
-@@ -388,10 +337,8 @@
+@@ -388,10 +337,8 @@ ahc_pci_map_registers(struct ahc_softc *
  			       ahc_get_pci_slot(ahc->dev_softc),
  			       ahc_get_pci_function(ahc->dev_softc));
  			iounmap(maddr);
@@ -175,15 +190,12 @@ Signed-off-by: Adrian Bunk <bunk@stusta.de>
  			ahc->bsh.maddr = NULL;
  			maddr = NULL;
  		} else
-@@ -441,41 +388,3 @@
- 	return (-error);
- }
- 
--void
--ahc_power_state_change(struct ahc_softc *ahc, ahc_power_state new_state)
--{
+@@ -444,38 +391,5 @@ ahc_pci_map_int(struct ahc_softc *ahc)
+ void
+ ahc_power_state_change(struct ahc_softc *ahc, ahc_power_state new_state)
+ {
 -#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
--	pci_set_power_state(ahc->dev_softc, new_state);
+ 	pci_set_power_state(ahc->dev_softc, new_state);
 -#else
 -	uint32_t cap;
 -	u_int cap_offset;
@@ -216,68 +228,5 @@ Signed-off-by: Adrian Bunk <bunk@stusta.de>
 -		cap_offset = (cap >> 8) & 0xFF;
 -	}
 -#endif 
--}
---- linux-2.6.9-mm1-full/drivers/scsi/aic7xxx/aic7xxx_osm.h.old	2004-10-23 18:19:48.000000000 +0200
-+++ linux-2.6.9-mm1-full/drivers/scsi/aic7xxx/aic7xxx_osm.h	2004-10-23 18:20:20.000000000 +0200
-@@ -831,8 +831,6 @@
- 
- /******************************* PCI Routines *********************************/
- #ifdef CONFIG_PCI
--void			 ahc_power_state_change(struct ahc_softc *ahc,
--						ahc_power_state new_state);
- int			 ahc_linux_pci_init(void);
- void			 ahc_linux_pci_exit(void);
- int			 ahc_pci_map_registers(struct ahc_softc *ahc);
---- linux-2.6.9-mm1-full/drivers/scsi/aic7xxx/aic7770_osm.c.old	2004-10-23 18:24:17.000000000 +0200
-+++ linux-2.6.9-mm1-full/drivers/scsi/aic7xxx/aic7770_osm.c	2004-10-23 18:24:48.000000000 +0200
-@@ -125,14 +125,8 @@
- 		uint32_t eisa_id;
- 		size_t	 id_size;
- 
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
--		if (check_region(eisaBase, AHC_EISA_IOSIZE) != 0)
--			continue;
--		request_region(eisaBase, AHC_EISA_IOSIZE, "aic7xxx");
--#else
- 		if (request_region(eisaBase, AHC_EISA_IOSIZE, "aic7xxx") == 0)
- 			continue;
--#endif
- 
- 		eisa_id = 0;
- 		id_size = sizeof(eisa_id);
-@@ -207,14 +201,8 @@
- 	/*
- 	 * Lock out other contenders for our i/o space.
- 	 */
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
--	if (check_region(port, AHC_EISA_IOSIZE) != 0)
--		return (ENOMEM);
--	request_region(port, AHC_EISA_IOSIZE, "aic7xxx");
--#else
- 	if (request_region(port, AHC_EISA_IOSIZE, "aic7xxx") == 0)
- 		return (ENOMEM);
--#endif
- 	ahc->tag = BUS_SPACE_PIO;
- 	ahc->bsh.ioport = port;
- 	return (0);
---- linux-2.6.9-mm1-full/drivers/scsi/aic7xxx/aic7xxx_pci.c.old	2004-10-23 18:20:38.000000000 +0200
-+++ linux-2.6.9-mm1-full/drivers/scsi/aic7xxx/aic7xxx_pci.c	2004-10-23 18:22:15.000000000 +0200
-@@ -721,7 +721,7 @@
- 	ahc->chip |= AHC_PCI;
- 	ahc->description = entry->name;
- 
--	ahc_power_state_change(ahc, AHC_POWER_STATE_D0);
-+	pci_set_power_state(ahc->dev_softc, AHC_POWER_STATE_D0);
- 
- 	error = ahc_pci_map_registers(ahc);
- 	if (error != 0)
-@@ -2016,7 +2016,7 @@
- ahc_pci_resume(struct ahc_softc *ahc)
- {
- 
--	ahc_power_state_change(ahc, AHC_POWER_STATE_D0);
-+	pci_set_power_state(ahc->dev_softc, AHC_POWER_STATE_D0);
- 
- 	/*
- 	 * We assume that the OS has restored our register
-
+ }
+_
