@@ -1,30 +1,68 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Help - interface between Linux SCSI mid-level driver and
-	lower-level driver
-Date: 26 Mar 2004 09:35:50 -0500
+From: Stefan Smietanowski <stesmi@stesmi.com>
+Subject: Re: Binary-only firmware covered by the GPL?
+Date: Fri, 26 Mar 2004 15:38:41 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1080311752.1756.1.camel@mulgrave>
-References: <519672568F040C41B6FAC21ADF51B18FF7C8@mailnode1.commstor.crossroads.com>
+Message-ID: <40644071.9090900@stesmi.com>
+References: <20040325225423.GT9248@cheney.cx> <MDEHLPKNGKAHNMBLJOLKCEEOLEAA.davids@webmaster.com> <20040326131629.GB26910@zombie.inka.de> <40643BFA.1000302@stesmi.com> <20040326142917.GB30664@zombie.inka.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:8620 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263361AbUCZOf6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Mar 2004 09:35:58 -0500
-In-Reply-To: <519672568F040C41B6FAC21ADF51B18FF7C8@mailnode1.commstor.crossroads.com>
+Received: from 1-2-2-1a.has.sth.bostream.se ([82.182.130.86]:18088 "EHLO
+	K-7.stesmi.com") by vger.kernel.org with ESMTP id S263954AbUCZOiv
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Mar 2004 09:38:51 -0500
+In-Reply-To: <20040326142917.GB30664@zombie.inka.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Xing <lxing@Crossroads.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Eduard Bloch <edi@gmx.de>
+Cc: David Schwartz <davids@webmaster.com>, debian-devel@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 2004-03-24 at 15:12, Lee Xing wrote:
-> My question is what are the interface functions in SCSI mid-level driver we can invoke to register the detected FC/SCSI devices as Linux sg/sd devices.  Sample code and documents would be a great help.
+Hi.
 
-Documentation/scsi/scsi_mid_low_api.txt
+>>>Yes, the driver authors PREFERS to make the changes on the C source
+>>>code, he never has to modify the firmware. Exactly what the GPL
+>>>requests, where is your problem?
+>>
+>>But the firmware didn't appear out of thin air - someone wrote it
+>>somehow. If that's using a hex editor or inside the C code doesn't
+> 
+> The GPL does not talk about the code to create things, but code to
+> _modify_ things. If you never have to modify the firmware file, where is
+> the point?
 
-Is a good starting point.
+And if I feel like I _want_ to modify it? Then I should be entitled
+to the preferred form to make modifications to it as is my right
+under the GPL, regardless of if I a) want to b) have a need to
+c) give a rat's ass about what the firmware does or does not do.
+A binary blob is extremely seldom the preferred form to make
+modifications to, even though some such cases do or might exist.
 
-James
+> I do not see a big difference between firmware data stored in a flash
+> rom inside of the hardware part and the same data loaded during the
+> driver initialisation. In contrary, it saves money and makes things more
+> flexible. You should thank your hardware manufacturer instead of
+> bitching about bogus things.
 
+You do know that certain TV cards (using the ivtv driver) lack a rom
+and needs a firmware initialized during startup just like this example.
 
+Why am I taking this up ? Well they have specifically stated that the
+firmware _may not be used without the windows driver_ even though
+others have written a fully working driver that _only_ needs the
+firmware from the windows driver to function under linux.
+
+Surprised? If they put the firmware on the card (rom/flash/eeprom)
+this wouldn't have happened but it did.
+How exactly do you believe this makes anything more flexible for me
+as an end user when it is not LEGAL for me to use the card with
+linux due to the firmware issue.
+
+Yes, some claim there IS a loophole in that the end user MAY extract
+the firmware from the windows driver himself and use it together
+with the (open) linux driver but IANAL. Ie use but not redistribute.
+
+Now, just to make it perfectly clear - I am not debating wether
+firmware should be GPL or not - I couldn't care less to be honest.
+I am simply answering some claims that I myself find bogus.
+
+// Stefan
