@@ -1,63 +1,37 @@
-From: "Vladimir G. Ivanovic" <vladimir@acm.org>
-Subject: Re: Kernel build problem
-Date: Wed, 01 Sep 2004 09:23:55 -0700
+From: Russ Garrett <russ@garrett.co.uk>
+Subject: Megaraid on AMD64
+Date: Wed, 01 Sep 2004 16:44:26 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200409011623.i81GNtSC011621@bach.leonora.org>
-References: <2A9AA9C52024F94A96634E39B9858FF166B969@empwilex1.empirix.com>
-Reply-To: "Vladimir G. Ivanovic" <vladimir@acm.org>
+Message-ID: <4135EE5A.7090304@garrett.co.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl081-052-249.sfo1.dsl.speakeasy.net ([64.81.52.249]:55276
-	"EHLO bach.leonora.org") by vger.kernel.org with ESMTP
-	id S267601AbUIAQYC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Sep 2004 12:24:02 -0400
-In-Reply-To: Your message of "Wed, 01 Sep 2004 11:57:06 EDT."
-             <2A9AA9C52024F94A96634E39B9858FF166B969@empwilex1.empirix.com>
+Received: from mta05-svc.ntlworld.com ([62.253.162.45]:13664 "EHLO
+	mta05-svc.ntlworld.com") by vger.kernel.org with ESMTP
+	id S267199AbUIAPmK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Sep 2004 11:42:10 -0400
+Received: from [192.168.99.15] ([81.99.187.205]) by mta05-svc.ntlworld.com
+          (InterMail vM.4.01.03.37 201-229-121-137-20020806) with ESMTP
+          id <20040901153937.TEEJ11492.mta05-svc.ntlworld.com@[192.168.99.15]>
+          for <linux-scsi@vger.kernel.org>; Wed, 1 Sep 2004 16:39:37 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: "Dunn, Charles" <CDunn@empirix.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-To be fair, it's not really a Red Hat issue, but rather Linus's belief
-that debuggers lead to patching symptoms rather than fixing the
-underlying problem.
+We have a Megaraid 320-1 in a dual Opteron server, but we were wondering 
+if there's any way to manage the array from inside the OS. 
+Megamgr/dellmgr don't appear to work on 64-bit at all. We're currently 
+using the driver version 2.00.3, since the new unified drivers don't 
+even seem to have an equivalent to the /proc interface to see the 
+array's status. Since the server is 800 miles away, it's a bit of a pain 
+rebooting into the BIOS in order to check anything.
 
---- Vladimir
+On a slightly different (and off-topic) note, would anyone like to take 
+a guess at how a drive failure managed to corrupt our RAID 0+1 volume? 
+Would it be a driver issue, or just the drive corrupting the data 
+without noticing?
 
--- 
-Vladimir G. Ivanovic                        http://leonora.org/~vladimir
-Palo Alto, CA 94306                                      +1 650 678 8014
+Thanks in advance,
 
->>>>> "cd" == Charles Dunn <Dunn> writes:
-
-    >> It is a pity that
-    >> RedHat do not want kdb, it means that RH users have a lot of trouble
-    >> trying to debug their systems.  OTOH SuSE are happy to include kdb in
-    >> their distributions.
-    cd> 
-    cd> I agree 1000%! I went around and around with RH sales about this. No
-    cd> complaints about the sales person, she really tried to get to the bottom
-    cd> of why this is the way it is, and she even found the answer.. In talking
-    cd> with her it was clear that in 99% of her conversations with RH engineers
-    cd> the attitude was one of: "Debuggers produce bad fixes. Always. Debuggers
-    cd> are evil.".. 
-    cd> 
-    cd> This is like blaming forks for a person being overweight. Any tool can
-    cd> be used badly. No debugger is a substitute for understanding the code
-    cd> and producing a good solution. But a debugger can illuminate specific
-    cd> problem causes and shorten the debug cycle like few other tools can...
-    cd> This whole debugger thing with RH has been frustrating beyond words. We
-    cd> may even switch from RH to SuSe because of this, but mostly because RH
-    cd> seems to enjoy making life hard for embedded products makers who want to
-    cd> use RH. We are building VoIP test equipment and want to use RH as the OS
-    cd> inside.. They are making us jump through hoops that Microsoft hasn't
-    cd> even thought of yet. It's getting close to the point where it would be
-    cd> cheaper per  box sold to have Windows inside than Linux.. Am I crazy or
-    cd> is that just a tad upside down from where Linux is supposed to be
-    cd> going???
-    cd> 
-    cd> -Charlie Dunn
-    cd>  Empirix Inc.
-    cd> 
-    cd> 
-    cd> 
-    cd> ---------------------------
-    cd> Use http://oss.sgi.com/ecartis to modify your settings or to unsubscribe.
+Russ Garrett
+russ@last.fm
