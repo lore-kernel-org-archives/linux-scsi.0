@@ -1,153 +1,68 @@
-From: "Aron Zeh" <ARZEH@de.ibm.com>
+From: Kurt Garloff <garloff@suse.de>
 Subject: Re: [PATCH] sd_many done right (3/5)
-Date: Mon, 29 Jul 2002 09:22:40 +0200
+Date: Mon, 29 Jul 2002 09:52:14 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OFF035F90D.9958CFF6-ONC1256C05.0027A0C5@de.ibm.com>
+Message-ID: <37560.1327200004$1027929275@news.gmane.org>
+References: <OFF035F90D.9958CFF6-ONC1256C05.0027A0C5@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	Boundary="0__=4EBBE696DFBB01FF8f9e8a93df938690918c4EBBE696DFBB01FF"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="+nBD6E3TurpgldQp"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <OFF035F90D.9958CFF6-ONC1256C05.0027A0C5@de.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>, Marcelo Tosatti <marcelo@conectiva.com.br>
-
---0__=4EBBE696DFBB01FF8f9e8a93df938690918c4EBBE696DFBB01FF
-Content-type: text/plain; charset=us-ascii
+To: Aron Zeh <ARZEH@de.ibm.com>
+Cc: Marcelo Tosatti <marcelo@conectiva.com.br>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@suse.de>, devices@lanana.org
 
 
-Hi Kurt,
+--+nBD6E3TurpgldQp
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-one little thing:
-In the third "if" statement in scsiname_to_kdev_t you search for "scd" but
-set tp to "sr".
-That should also be "scd" I'd guess.
+Hi Aron,
 
-Cheers,
-Aron
+On Mon, Jul 29, 2002 at 09:22:40AM +0200, Aron Zeh wrote:
+> one little thing:
+> In the third "if" statement in scsiname_to_kdev_t you search for "scd" but
+> set tp to "sr".
+> That should also be "scd" I'd guess.
 
+No, it's intended. Internally, I use the name 'sr' for a SCSI CDrom as
+that's the name the driver advertises. Some strange distributions out there
+seem to prefer the name 'scd' for unknown reasons[*], that's why I map scd =
+to
+sr in order not to confuse users.
 
-Hi Marcelo,
-
-here comes patch 3/5 from a series of patches to support more than 128 (and
-optionally more than 256) SCSI disks with Linux 2.4 by changing the sd
-driver
-to dynamically allocate memory and register block majors as disks get
-attached.
-
-The patches are all available at
-http://www.suse.de/~garloff/linux/scsi-many/
-
-Patch 3 does use the infrastructure of patch 1 to allow specifying the
-root filesystem as a kernel parameter using devfs syntax (e.g.
-root=/dev/scsi/c2b0t9u0p5), but also working on non-devfs systems.
-Together with the (already existing) scsihosts= parameter, this can
-be quite useful if you have many SCSI disks with changing configurations.
-
-This patch is against 2.4.19rc1. It depends on 1/3.
+[*] The file name of the driver is sr.c, the module is name sr_mod, it fills
+in  the tag 'sr' as driver name (which is reported in /proc/devices).
+But for some reason somebody thinks that 'scd' would be more user friendly.
+It may seem more intuitive at first sight, but it makes things completely
+inconsistent. Unless, of course, we rename everything to 'scd' to make it
+consistent again.
+It nowadays is even reported as 'scd' (and 'sr' deprecated) in devices.txt,
+sigh!=20
+Somebody should take an authorative decision and do the renames if necessar=
+y!
+Or make sure devices.txt is fixed. Jens?
 
 Regards,
---
-Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
-GPG key: See mail header, key servers         Linux kernel development
-SuSE Linux AG, Nuernberg, DE                            SCSI, Security
-(See attached file: scsi-boot-scsi-2419rc1.diff)(See attached file:
-attbncke.dat)
+--=20
+Kurt Garloff                   <kurt@garloff.de>         [Eindhoven, NL]
+Physics: Plasma simulations    <K.Garloff@TUE.NL>     [TU Eindhoven, NL]
+Linux: SCSI, Security          <garloff@suse.de>    [SuSE Nuernberg, DE]
+ (See mail header or public key servers for PGP2 and GPG public keys.)
 
+--+nBD6E3TurpgldQp
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
---0__=4EBBE696DFBB01FF8f9e8a93df938690918c4EBBE696DFBB01FF
-Content-type: application/octet-stream;
-	name="scsi-boot-scsi-2419rc1.diff"
-Content-Disposition: attachment; filename="scsi-boot-scsi-2419rc1.diff"
-Content-transfer-encoding: base64
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.7 (GNU/Linux)
 
-ZGlmZiAtdU5yIGxpbnV4LTIuNC4xOC5TMTguc2NzaXJlcGhsL2RyaXZlcnMvc2NzaS9zY3NpLmMg
-bGludXgtMi40LjE4LlMxOC5zY3NpYm9vdC9kcml2ZXJzL3Njc2kvc2NzaS5jDQotLS0gbGludXgt
-Mi40LjE4LlMxOC5zY3NpcmVwaGwvZHJpdmVycy9zY3NpL3Njc2kuYwlUaHUgSnVuIDIwIDE4OjA2
-OjE2IDIwMDINCisrKyBsaW51eC0yLjQuMTguUzE4LnNjc2lib290L2RyaXZlcnMvc2NzaS9zY3Np
-LmMJU2F0IEp1bCAxMyAxODo0ODo0OSAyMDAyDQpAQCAtMTU1Myw2ICsxNTUzLDM2IEBADQogICAg
-IH0NCiB9DQogDQoraW50IF9faW5pdCBzY3NpX2ZpbmRfYmRldihpbnQgaCwgaW50IGMsIGludCBp
-LCBpbnQgbCwgY29uc3QgY2hhciogdGFnLA0KKwkJCSAgY2hhciogbmFtZSwga2Rldl90ICpkZXYp
-DQorew0KKwlTY3NpX0RldmljZSAqc2NkOw0KKwlzdHJ1Y3QgU2NzaV9Ib3N0ICpIQkFfcHRyOw0K
-KwlzdHJ1Y3QgU2NzaV9EZXZpY2VfVGVtcGxhdGUgKnNnX3QgPSBzY3NpX2RldmljZWxpc3Q7DQor
-CS8qIEZpcnN0IGxvb2sgZm9yIHJpZ2h0IGhpZ2gtbGV2ZWwgZHJpdmVyICovDQorCXdoaWxlIChz
-Z190ICYmIA0KKwkgICAgICAgKCFzZ190LT5maW5kX2tkZXYgfHwgIXNnX3QtPmJsayB8fA0KKwkJ
-IShzZ190LT50YWcgJiYgIXN0cmNtcChzZ190LT50YWcsIHRhZykpKSkNCisJCXNnX3QgPSBzZ190
-LT5uZXh0Ow0KKwlpZiAoIXNnX3QpDQorCQlyZXR1cm4gMTsNCisJLyogTm93IGZpbmQgU2NzaV9E
-ZXZpY2UgYW5kIGNhbGwgaGlnaC1sZXZlbCBkcml2ZXIncyBmaW5kX2tkZXYoKSAqLw0KKwlmb3Ig
-KEhCQV9wdHIgPSBzY3NpX2hvc3RsaXN0OyBIQkFfcHRyOyBIQkFfcHRyID0gSEJBX3B0ci0+bmV4
-dCkgew0KKwkJZm9yIChzY2QgPSBIQkFfcHRyLT5ob3N0X3F1ZXVlOyBzY2Q7IHNjZCA9IHNjZC0+
-bmV4dCkgew0KKwkJCWlmIChzY2QtPmhvc3QtPmhvc3Rfbm8gPT0gaCAmJg0KKwkJCSAgICBzY2Qt
-PmNoYW5uZWwgPT0gYyAmJg0KKwkJCSAgICBzY2QtPmlkID09IGkgJiYNCisJCQkgICAgc2NkLT5s
-dW4gPT0gbCkgew0KKwkJCQlpZiAoc2dfdC0+ZmluZF9rZGV2KHNjZCwgbmFtZSwgZGV2KSkNCisJ
-CQkJCXJldHVybiAxOw0KKwkJCQllbHNlDQorCQkJCQlyZXR1cm4gMDsNCisJCQl9DQorCQl9DQor
-CX0NCisJcmV0dXJuIDE7DQorfQ0KKw0KICNpZmRlZiBDT05GSUdfUFJPQ19GUw0KIHN0YXRpYyBp
-bnQgc2NzaV9wcm9jX2luZm8oY2hhciAqYnVmZmVyLCBjaGFyICoqc3RhcnQsIG9mZl90IG9mZnNl
-dCwgaW50IGxlbmd0aCkNCiB7DQpkaWZmIC11TnIgbGludXgtMi40LjE4LlMxOC5zY3NpcmVwaGwv
-aW5pdC9kb19tb3VudHMuYyBsaW51eC0yLjQuMTguUzE4LnNjc2lib290L2luaXQvZG9fbW91bnRz
-LmMNCi0tLSBsaW51eC0yLjQuMTguUzE4LnNjc2lyZXBobC9pbml0L2RvX21vdW50cy5jCVdlZCBK
-dW4gMTIgMTE6Mzc6MTIgMjAwMg0KKysrIGxpbnV4LTIuNC4xOC5TMTguc2NzaWJvb3QvaW5pdC9k
-b19tb3VudHMuYwlTYXQgSnVsIDEzIDE4OjUxOjE4IDIwMDINCkBAIC0xMzYsNiArMTM2LDE5IEBA
-DQogCXsgInNkbiIsICAgICAweDA4ZDAgfSwNCiAJeyAic2RvIiwgICAgIDB4MDhlMCB9LA0KIAl7
-ICJzZHAiLCAgICAgMHgwOGYwIH0sDQorCXsgInNkcSIsICAgICAweDQxMDAgfSwNCisJeyAic2Ry
-IiwgICAgIDB4NDExMCB9LA0KKwl7ICJzZHMiLCAgICAgMHg0MTIwIH0sDQorCXsgInNkdCIsICAg
-ICAweDQxMzAgfSwNCisJeyAic2R1IiwgICAgIDB4NDE0MCB9LA0KKwl7ICJzZHYiLCAgICAgMHg0
-MTUwIH0sDQorCXsgInNkdyIsICAgICAweDQxNjAgfSwNCisJeyAic2R4IiwgICAgIDB4NDE3MCB9
-LA0KKwl7ICJzZHkiLCAgICAgMHg0MTgwIH0sDQorCXsgInNkeiIsICAgICAweDQxOTAgfSwNCisJ
-LyogbW9yZSBzY3NpIGRldnMgY291bGQgYmUgYWRkZWQgaGVyZSwgYnV0IC9kZXYvc2RhYSB3b3Vs
-ZCBtYXRjaCANCisJICogL2Rldi9zZGEgYmVmb3JlLCBzbyBpdCB3b3VsZCBuZWVkIHRvIGJlIHB1
-dCBiZWZvcmUgc2RhLg0KKwkgKiBCZXR0ZXIgdXNlIC9kZXYvc2NzaS9zZGNYYlh0WHVYcFggKi8N
-CiAJeyAiYWRhIiwgICAgIDB4MWMwMCB9LA0KIAl7ICJhZGIiLCAgICAgMHgxYzEwIH0sDQogCXsg
-ImFkYyIsICAgICAweDFjMjAgfSwNCkBAIC0xNDcsNiArMTYwLDcgQEANCiAJeyAieGRiIiwgICAg
-IDB4MGQ0MCB9LA0KIAl7ICJyYW0iLCAgICAgMHgwMTAwIH0sDQogCXsgInNjZCIsICAgICAweDBi
-MDAgfSwNCisJeyAic3IiLCAgICAgIDB4MGIwMCB9LA0KIAl7ICJtY2QiLCAgICAgMHgxNzAwIH0s
-DQogCXsgImNkdTUzNSIsICAweDE4MDAgfSwNCiAJeyAic29ueWNkIiwgIDB4MTgwMCB9LA0KQEAg
-LTI1NSw2ICsyNjksNjIgQEANCiAJeyBOVUxMLCAwIH0NCiB9Ow0KIA0KKyNpZiBkZWZpbmVkKENP
-TkZJR19TQ1NJKSAmJiAhZGVmaW5lZChDT05GSUdfREVWRlNfRlMpDQoraW50IHNjc2lfZmluZF9i
-ZGV2IChpbnQsIGludCwgaW50LCBpbnQsIGNvbnN0IGNoYXIqLCBjaGFyKiwga2Rldl90Kik7DQor
-LyogUGFyc2UgL2Rldi9zY3NpL3NkY1hiWHRYdVhwWCBuYW1lcy4gTWFrZXMgb25seSBzZW5zZSBp
-ZiBzY3NpIGlzDQorICogY29tcGlsZWQgaW4uIE90aGVyd2lzZSB0aGUgaW5pdHJkIHN0dWZmIG5l
-ZWRzIHRvIHRha2UgY2FyZSAuLi4gKi8NCitrZGV2X3QgX19pbml0IHNjc2luYW1lX3RvX2tkZXZf
-dChjaGFyKiBsaW5lKQ0KK3sNCisJa2Rldl90IGRldiA9IFJPT1RfREVWOw0KKwlpbnQgaCwgYywg
-aSAsbDsNCisJY2hhciAqdHAgPSAwOw0KKwljaGFyIG5tYnVmWzE2XTsNCisNCisJaWYgKCFzdHJu
-Y21wIChsaW5lLCAic2QiLCAyKSkgew0KKwkJdHAgPSAic2QiOyBsaW5lICs9IDI7DQorCX0NCisJ
-ZWxzZSBpZiAoIXN0cm5jbXAgKGxpbmUsICJzciIsIDIpKSB7DQorCQl0cCA9ICJzciI7IGxpbmUg
-Kz0gMjsNCisJfQ0KKwllbHNlIGlmICghc3RybmNtcCAobGluZSwgInNjZCIsIDMpKSB7DQorCQl0
-cCA9ICJzciI7IGxpbmUgKz0gMzsNCisJfQ0KKwkNCisJaWYgKHN0cmxlbiAobGluZSkgPCA4IHx8
-ICF0cCkNCisJCXJldHVybiBkZXY7DQorCQ0KKwlpZiAoKmxpbmUrKyAhPSAnYycpDQorCQlyZXR1
-cm4gZGV2Ow0KKwloID0gc2ltcGxlX3N0cnRvdWwobGluZSwgJmxpbmUsIDEwKTsNCisJaWYgKCps
-aW5lKysgIT0gJ2InKQ0KKwkJcmV0dXJuIGRldjsNCisJYyA9IHNpbXBsZV9zdHJ0b3VsKGxpbmUs
-ICZsaW5lLCAxMCk7DQorCWlmICgqbGluZSsrICE9ICd0JykNCisJCXJldHVybiBkZXY7DQorCWkg
-PSBzaW1wbGVfc3RydG91bChsaW5lLCAmbGluZSwgMTApOw0KKwlpZiAoKmxpbmUrKyAhPSAndScp
-DQorCQlyZXR1cm4gZGV2Ow0KKwlsID0gc2ltcGxlX3N0cnRvdWwobGluZSwgJmxpbmUsIDEwKTsN
-CisJDQorCWlmICghc2NzaV9maW5kX2JkZXYgKGgsIGMsIGksIGwsIHRwLCBubWJ1ZiwgJmRldikp
-IHsNCisJCWlmIChsaW5lICYmICpsaW5lKysgPT0gJ3AnKSB7DQorCQkJaW50IHAgPSBzaW1wbGVf
-c3RydG91bChsaW5lLCAmbGluZSwgMTApOw0KKwkJCWRldiA9IE1LREVWKE1BSk9SKGRldiksTUlO
-T1IoZGV2KStwKTsNCisJCQlzcHJpbnRmIChubWJ1ZitzdHJsZW4obm1idWYpLCAiJWkiLCBwKTsN
-CisJCQlwcmludGsoImZvdW5kIHNjc2kgcm9vdCBkZXZpY2UgJXNjJWliJWl0JWl1JWlwJWk6ICVz
-ICglMDJ4OiUwMngpXG4iLA0KKwkJCSAgICAgICB0cCwgaCwgYywgaSwgbCwgcCwgbm1idWYsIE1B
-Sk9SKGRldiksIE1JTk9SKGRldikpOw0KKwkJfSBlbHNlDQorCQkJcHJpbnRrKCJmb3VuZCBzY3Np
-IHJvb3QgZGV2aWNlICVzYyVpYiVpdCVpdSVpOiAlcyAoJTAyeDolMDJ4KVxuIiwNCisJCQkgICAg
-ICAgdHAsIGgsIGMsIGksIGwsIG5tYnVmLCBNQUpPUihkZXYpLCBNSU5PUihkZXYpKTsNCisJCXN0
-cmNweSAocm9vdF9kZXZpY2VfbmFtZSwgbm1idWYpOw0KKwl9IGVsc2UgDQorCQlwcmludGsoImRp
-ZCBub3QgZmluZCBzY3NpIHJvb3QgZGV2aWNlICVzYyVpYiVpdCVpdSVpXG4iLA0KKwkJICAgICAg
-IHRwLCBoLCBjLCBpLCBsKTsNCisNCisJcmV0dXJuIGRldjsNCit9DQorI2VuZGlmDQorDQoga2Rl
-dl90IF9faW5pdCBuYW1lX3RvX2tkZXZfdChjaGFyICpsaW5lKQ0KIHsNCiAJaW50IGJhc2UgPSAw
-Ow0KQEAgLTczMiw2ICs4MDIsMTAgQEANCiAjZWxzZQ0KIHN0YXRpYyB2b2lkIF9faW5pdCBkZXZm
-c19tYWtlX3Jvb3QoY2hhciAqbmFtZSkNCiB7DQorIyBpZmRlZiBDT05GSUdfU0NTSQkNCisJaWYg
-KCFzdHJuY21wIChuYW1lLCAic2NzaS8iLCA1KSkNCisJCVJPT1RfREVWID0gc2NzaW5hbWVfdG9f
-a2Rldl90IChuYW1lKzUpOw0KKyMgZW5kaWYNCiB9DQogI2VuZGlmDQogDQo=
+iD8DBQE9RPQuxmLh6hyYd04RAsNGAJ4mFguek7nj+Mb/34bpL+4xEh1rUgCfVPbh
+Cy50oJSmSFWL7Sz4TIGxLhc=
+=pNf7
+-----END PGP SIGNATURE-----
 
---0__=4EBBE696DFBB01FF8f9e8a93df938690918c4EBBE696DFBB01FF
-Content-type: application/octet-stream;
-	name="attbncke.dat"
-Content-Disposition: attachment; filename="attbncke.dat"
-Content-transfer-encoding: base64
-
-LS0tLS1CRUdJTiBQR1AgU0lHTkFUVVJFLS0tLS0NClZlcnNpb246IEdudVBHIHYxLjAuNyAoR05V
-L0xpbnV4KQ0KDQppRDhEQlFFOVFXOFd4bUxoNmh5WWQwNFJBaTVsQUtDZkVJa2xML04zUXRIOWtm
-S0JwQzZUbWJ6WE9nQ2d1VzJ2DQpRU0Z2STlXc05uaDlSeURhcEdQTVdmWT0NCj1oSnFCDQotLS0t
-LUVORCBQR1AgU0lHTkFUVVJFLS0tLS0NCg==
-
---0__=4EBBE696DFBB01FF8f9e8a93df938690918c4EBBE696DFBB01FF--
-
+--+nBD6E3TurpgldQp--
