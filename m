@@ -1,34 +1,90 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [usb-storage] Re: [PATCH] SCSI: limit mode sense usage
-Date: Tue, 28 Oct 2003 23:27:34 -0800
+From: "Juergen E. Fischer" <fischer@linux-buechse.de>
+Subject: Re: [PATCH] [v2] aha152x cmnd->device oops
+Date: Wed, 29 Oct 2003 13:20:09 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031028232734.A15855@beaverton.ibm.com>
-References: <1067376788.1056.5.camel@ronald.kuetemeier.com> <Pine.LNX.4.44L0.0310281737350.6912-100000@ida.rowland.org> <20031028175157.A14803@beaverton.ibm.com> <1067393780.1469.9.camel@ronald.kuetemeier.com>
+Message-ID: <20031029122008.GA5903@linux-buechse.de>
+References: <20031027155713.GA28140@lst.de> <20031027160101.76d5291b.rddunlap@osdl.org> <20031028090600.GA7370@lst.de> <20031028124536.3ce82c23.rddunlap@osdl.org> <3F9EF2B4.9030708@us.ibm.com> <20031028162610.6dcfd06e.rddunlap@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:30396 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S261906AbTJ2H2S
+Received: from pD9ED18AC.dip.t-dialin.net ([217.237.24.172]:45211 "EHLO
+	linux-buechse.de") by vger.kernel.org with ESMTP id S262040AbTJ2MYI
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2003 02:28:18 -0500
+	Wed, 29 Oct 2003 07:24:08 -0500
 Content-Disposition: inline
-In-Reply-To: <1067393780.1469.9.camel@ronald.kuetemeier.com>; from ronald@kuetemeier.com on Tue, Oct 28, 2003 at 07:16:21PM -0700
+In-Reply-To: <20031028162610.6dcfd06e.rddunlap@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Ronald Kuetemeier <ronald@kuetemeier.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@one-eyed-alien.net>
+To: "Randy.Dunlap" <rddunlap@osdl.org>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, fischer@norbit.de
 
-On Tue, Oct 28, 2003 at 07:16:21PM -0700, Ronald Kuetemeier wrote:
+Hi Randy,
 
-> > The scsi_dev_flags overrides the host adapter setting, and we did not tell
-> > it to skip page 8. Since it worked it does not matter, but we could have
-> > used (given BLIST_MS_SKIP_PAGE_08 is 0x2000 and BLIST_MS_SKIP_PAGE_3F is
-> > 0x4000):
+On Tue, Oct 28, 2003 at 16:26:10 -0800, Randy.Dunlap wrote:
+> On Tue, 28 Oct 2003 14:50:28 -0800 Mike Christie <mikenc@us.ibm.com> =
+wrote:
+>=20
+> | Hi Randy,
+> |=20
+> | >  			if(!(DONE_SC->SCp.Status & not_issued)) {
+> | > -				Scsi_Cmnd *cmnd =3D kmalloc(sizeof(Scsi_Cmnd), GFP_ATOMIC);
+> | > +				Scsi_Cmnd *cmnd =3D scsi_get_command(DONE_SC->device, GFP_AT=
+OMIC);
+> |=20
+> | Do you need to add a scsi_put_command to balance this get when the=20
+> | command completes?
+> |=20
+> | > +					cmnd->device          =3D ptr->device;
+> |=20
+> | Don't even need this now. scsi_get_command will set the device for =
+you.
+> |=20
+> | Mike
+>=20
+> Hers's v3 of the aha152x patch.  However, I'm not satisfied with it,
+> so I'm not asking James to apply it.  I don't know the state machine
+> or the hardware well enough to understand and patch it.
 
-> Patrick,
-> isn't BLIST_MS_SKIP_PAGE_08 always turned "on"?
+> Things that I don't like about it:
+>=20
+> a.  calling aha152x_internal_queue() with cmnd pointer in 2 places.
+>     Probably the second one should be NULL.
+> b.  Easy to confuse the state machine by changing just one variable,
+>     like DONE_SC (i.e., it's risky and I can't test it, although we
+>     do have a bug report and can ask that reporter to test it).
+> c.  int result =3D SCpnt->SCp.Status; /*FIXME*/
+>     SCp.Status is not valid here AFAIK, and I don't know how to get
+>     the current command status at this point.
 
-No, see scsi_devinfo.c scsi_get_device_flags, it can override the
-shost->flags value. So if wanted we could set it to zero via
-/proc/scsi/device_info or scsi_dev_flags.
+There are 2 specially "commands" which are used internally in the drive=
+r
+only (so I don't see a problem in using kmalloc instead of
+scsi_get_command; but nevertheless ->device needs to be intialized
+correctly, which is what scsi_get_command() does and the current code
+fails to do).=20
 
--- Patrick Mansfield
+The first is when a command returns with status CHECK CONDITION and the
+driver needs to do a REQUEST SENSE to fetch sense data and add that to
+the Ssci_Cmnd which resulted in the CHECK CONDITION.  The internally
+queued command fills the sense_buffer of the offending command and then
+calls its ->scsi_done().
+
+The second it when the controller needs to be resetted.  Both are purel=
+y
+internal to the driver.
+
+I'll test this in the evening.
+
+
+J=FCrgen
+
+--=20
+Phase 1: Where do you want to go today?
+Phase 2: This is where you want to go today.
+Phase 3: You're not going anywhere today.
+  -- seen on /.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
