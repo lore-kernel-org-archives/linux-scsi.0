@@ -1,35 +1,72 @@
-From: Roman Kagan <rkagan@mail.ru>
-Subject: Re: [ANNOUNCE] hotplug-ng 001 release
-Date: Fri, 18 Feb 2005 22:41:35 +0300
-Message-ID: <20050218194135.GD4424@katya>
-References: <20050212003458.GI2568@katya> <20050214224208.GC13110@suse.de> <20050216105117.GB2360@katya> <20050216110752.GC2360@katya> <1108594961l.5056l.5l@serve.riede.org> <20050216231741.GD2870@katya> <1108596771l.5056l.6l@serve.riede.org> <20050218171737.GA20012@us.ibm.com> <20050218181106.GC4424@katya> <20050218183350.GA21954@us.ibm.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: cciss CSMI via sysfs for 2.6
+Date: Fri, 18 Feb 2005 19:46:28 +0000
+Message-ID: <20050218194628.GA24583@infradead.org>
+References: <20050216164512.GA5734@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from apachihuilliztli.mtu.ru ([195.34.32.124]:7697 "EHLO
-	Apachihuilliztli.mtu.ru") by vger.kernel.org with ESMTP
-	id S261453AbVBRTlu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Feb 2005 14:41:50 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:25515 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261465AbVBRTqg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Feb 2005 14:46:36 -0500
 Content-Disposition: inline
-In-Reply-To: <20050218183350.GA21954@us.ibm.com>
+In-Reply-To: <20050216164512.GA5734@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Willem Riede <osst@riede.org>, linux-scsi@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net
+To: mike.miller@hp.com
+Cc: linux-kernel@vger.kernel.org, mochel@osdl.org, akpm@osdl.org, eric.moore@lsil.com, linux-scsi@vger.kernel.org, greg@kroah.com
 
-On Fri, Feb 18, 2005 at 10:33:50AM -0800, Patrick Mansfield wrote:
-> The block SG_IO handles the ioctls, but not devices without a SCSI upper
-> level driver (i.e. not tape, disk or cdrom).
+>  /*
+> + * sysfs stuff
+> + * this should be moved to it's own file, maybe cciss_sysfs.h
+> + */
+> +
+> +static ssize_t cciss_firmver_show(struct device *dev, char *buf)
+> +{
+> +	ctlr_info_t *h = dev->driver_data;
+> +        return sprintf(buf,"%c%c%c%c\n", h->firm_ver[0], h->firm_ver[1],
+> +                                h->firm_ver[2], h->firm_ver[3]);
+> +}
 
-Then it might make sense to explicitly list in sg.c the TYPE_* not
-matched by s[dtr].
+I really wish we had a common firmver release attribut in the driver
+core, as mentioned in the fc transport class thread.  Greg?
 
-> In my experience, there are always applications that want to use the
-> standard device driver (/dev/sda etc.) and others that want to use a
-> generic driver.
+> +static ssize_t cciss_bus_id_show(struct device *dev, char *buf)
+> +{
+> +        return sprintf(buf,"%s\n", dev->bus_id);
+> +}
 
-So these drivers can compete for the same device?  Are there
-deterministic rules on which one is supposed to win?  And is there a
-userspace interface to unbind one driver and bind another?  Otherwise it
-may mean that automatic module loading is inappropriate here at all...
+this one is already exposed in the name of the sysfs link,
+see bus_add_device()
 
-Roman.
+> +	return sprintf(buf, "%x %x %x %x%x%x%x%x%x%x%x %x%x%x%x%x%x%x%x "
+> +				"%x %x %x%x%x%x%x%x\n",
+> +		p.bDeviceType, p.bRestricted, p.bInitiatorPortProtocol,
+> +		p.bRestricted2[0], 
+> +		p.bRestricted2[1], 
+> +		p.bRestricted2[2],
+> +		p.bRestricted2[3], 
+> +		p.bRestricted2[4], 
+> +		p.bRestricted2[5],
+> +		p.bRestricted2[6], 
+> +		p.bRestricted2[7],
+> +	 	p.bSASAddress[0],
+> +	 	p.bSASAddress[1],
+> +	 	p.bSASAddress[2],
+> +	 	p.bSASAddress[3],
+> +	 	p.bSASAddress[4],
+> +	 	p.bSASAddress[5],
+> +	 	p.bSASAddress[6],
+> +	 	p.bSASAddress[7],
+> +		p.bPhyIdentifier, p.bSignalClass,
+> +		p.bReserved[0],
+> +		p.bReserved[1],
+> +		p.bReserved[2],
+> +		p.bReserved[3],
+> +		p.bReserved[4],
+> +		p.bReserved[5]);
+> +}
+
+This belongs into a SAS/SATA phy transport class and should be split
+into multiple attributes.
+
