@@ -1,49 +1,56 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: Sym53c8xx_2
-Date: Mon, 16 Aug 2004 21:02:49 +0300 (EEST)
+From: Peter Osterlund <petero2@telia.com>
+Subject: Re: growisofs stopped working with 2.6.8
+Date: 16 Aug 2004 20:14:02 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0408162051470.5241@kai.makisara.local>
-References: <1092366037.28144.202254467@webmail.messagingengine.com>  
- <Pine.LNX.4.60.0408132049060.4069@poirot.grange>  
- <1092432298.18813.202307545@webmail.messagingengine.com>  
- <Pine.LNX.4.60.0408150005570.5333@poirot.grange>  
- <Pine.LNX.4.58.0408151008400.6676@kai.makisara.local>
- <1092624889.15338.202386294@webmail.messagingengine.com>
+Message-ID: <m3ekm7osr9.fsf@telia.com>
+References: <1092674287.3021.19.camel@bony>
+	<1092672062.20838.29.camel@localhost.localdomain>
+	<1092679156.2393.8.camel@bony>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep22-0.kolumbus.fi ([193.229.0.60]:25339 "EHLO
-	fep22-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S267856AbUHPSCv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Aug 2004 14:02:51 -0400
-In-Reply-To: <1092624889.15338.202386294@webmail.messagingengine.com>
+Received: from av1-1-sn4.m-sp.skanova.net ([81.228.10.116]:13495 "EHLO
+	av1-1-sn4.m-sp.skanova.net") by vger.kernel.org with ESMTP
+	id S267837AbUHPSOJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Aug 2004 14:14:09 -0400
+In-Reply-To: <1092679156.2393.8.camel@bony>
 List-Id: linux-scsi@vger.kernel.org
-To: Kai OM <epimetreus@fastmail.fm>
-Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, linux-scsi@vger.kernel.org
+To: "Tony A. Lambley" <tal@vextech.net>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Sun, 15 Aug 2004, Kai OM wrote:
+"Tony A. Lambley" <tal@vextech.net> writes:
 
+> It still fails, but I get a different message with the patch:
 > 
-> On Sun, 15 Aug 2004 10:21:35 +0300 (EEST), "Kai Makisara"
-> <Kai.Makisara@kolumbus.fi> said:
+> $ growisofs -Z /dev/dvd=file.iso
+> Executing 'builtin_dd if=file.iso of=/dev/dvd obs=32k seek=0'
+> :-( unable to PREVENT MEDIA REMOVAL: Operation not permitted
 > 
-> > Domain Validation does not fail in all configurations. I am using 
-> > sym53c8xx_2 in two machines to drive the system disk and some other 
-> > devices. I have had no SCSI problems with these systems.
+> K3B fails with the same message as above.
 > 
-> What chipset is your controller based on?
-> 
-> I'm using an LSIU160, based on the LSI53C1010-33 chipset
-> 
-I actually have three systems using sym53c8xx_2. One system has 53c1010-66 
-(Tekram DC390U3W), one has 53c896 (ASUS SC896), and one has 53c895 (Tekram 
-DC390U2W).
+> As you say, it does indeed burn fine as root.
 
-> I'm pretty sure at least one other person I know that had this problem
-> was using a very similar chipset/controller, which strikes me as
-> pertinent.
-> 
-I am sorry to break this theory ;-)
+The patch below is needed for a start, but it's not enough, because
+growisofs opens the device in read-only mode, so WRITE_10 fails
+anyway.
+
+--- drivers/block/scsi_ioctl.c~cdrw-filter	2004-08-16 17:13:23.000000000 +0200
++++ drivers/block/scsi_ioctl.c	2004-08-16 18:44:15.000000000 +0200
+@@ -146,6 +146,13 @@
+ 		safe_for_read(GPCMD_READ_TOC_PMA_ATIP),
+ 		safe_for_read(GPCMD_REPORT_KEY),
+ 		safe_for_read(GPCMD_SCAN),
++		safe_for_read(GPCMD_GET_CONFIGURATION),
++		safe_for_read(GPCMD_READ_FORMAT_CAPACITIES),
++		safe_for_read(GPCMD_GET_EVENT_STATUS_NOTIFICATION),
++		safe_for_read(GPCMD_GET_PERFORMANCE),
++
++		safe_for_write(GPCMD_PREVENT_ALLOW_MEDIUM_REMOVAL),
++		safe_for_write(GPCMD_FLUSH_CACHE),
+ 
+ 		/* Basic writing commands */
+ 		safe_for_write(WRITE_6),
 
 -- 
-Kai
+Peter Osterlund - petero2@telia.com
+http://w1.894.telia.com/~u89404340
