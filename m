@@ -1,242 +1,79 @@
-From: "Jeffery, David" <David_Jeffery@adaptec.com>
-Subject: RE: [PATCH] ips 2.5 driver update [1/4] irq return update
-Date: Tue, 6 May 2003 14:18:41 -0400
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] scsi-misc-2.5 remove scsi_scan.c EVPD code
+Date: Tue, 6 May 2003 14:11:31 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A3B9245C291EEF4785A24A1DBE8D852B0377A7@rtpexc01.adaptec.com>
+Message-ID: <20030506141131.A20454@beaverton.ibm.com>
+References: <UTC200304250047.h3P0lhl03517.aeb@smtp.cwi.nl> <3EB619A4.5090407@torque.net> <20030505093834.B7831@beaverton.ibm.com> <20030505174602.GA3433@beaverton.ibm.com> <20030505155127.A11734@beaverton.ibm.com> <3EB7124C.9010701@torque.net> <20030505211158.A14613@beaverton.ibm.com> <3EB74EEA.7030300@torque.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_000_01C313FB.EC5AAB70"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic-mail.adaptec.com ([208.236.45.100]:642 "EHLO
-	magic.adaptec.com") by vger.kernel.org with ESMTP id S263886AbTEFSGX
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 May 2003 14:06:23 -0400
+Received: from bi01p1.co.us.ibm.com ([32.97.110.142]:55007 "EHLO laptop")
+	by vger.kernel.org with ESMTP id S261959AbTEFVEp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 May 2003 17:04:45 -0400
+Content-Disposition: inline
+In-Reply-To: <3EB74EEA.7030300@torque.net>; from dougg@torque.net on Tue, May 06, 2003 at 03:58:02PM +1000
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@SteelEye.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Douglas Gilbert <dougg@torque.net>
+Cc: linux-scsi@vger.kernel.org
 
-This message is in MIME format. Since your mail reader does not understand
-this format, some or all of this message may not be legible.
+On Tue, May 06, 2003 at 03:58:02PM +1000, Douglas Gilbert wrote:
+> Patrick Mansfield wrote:
 
-------_=_NextPart_000_01C313FB.EC5AAB70
-Content-Type: text/plain
+> > Can something like that be done for a /dev/sg today? It would be very
+> > useful, not only for VPD/id like commands, but also for user level
+> > scanning.
+> 
+> It can be. There are a few details to be worked out.
+> In lk 2.4 for example the sg driver is not initialized
+> if there are no SCSI devices. That would cause a chicken
+> and egg type situation if sg was used to do user level
+> scanning to find the first scsi device. What major/minor
+> should /dev/sg have? (It could be a misc device and get
+> a minor reserved).
 
-You are correct.  Here's a corrected version of the patch.
+If minor space size increases you could use the the max sg minor or some
+large minor number, or just get any available major/minor (I don't know
+details of this area, or if there is such code for char devices in the 2.5
+kernel). For starters you could use sg's highest minor (255).
 
-David Jeffery
+/dev/sg could be used instead of any of the /dev/sgN entries.
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
-> Sent: Tuesday, May 06, 2003 1:47 PM
-> To: Jeffery, David
-> Cc: 'linux-scsi@vger.kernel.org'
-> Subject: Re: [PATCH] ips 2.5 driver update [1/4] irq return update
+> > That is open some /dev/sg via an ioctl (or ?) attach it to a nexus. If
+> > there is an existing scsi_device with a matching nexus, it can attach to
+> > it, else create an sdev via scsi_alloc_sdev, attach to it and go.
+> > 
+> > Then we can send whatever commands we want via current sg interfaces.
 > 
-> 
-> On Tue, 2003-05-06 at 12:34, Jeffery, David wrote:
-> > This is the proper way to report if the interrupt
-> > was from a serveraid or not.
-> 
-> This: 
-> 
-> > +   irqreturn_t       irqstatus;
-> [...]
-> > +   irqstatus = (*ha->func.intr)(ha);
-> [...]
-> > -   return IRQ_HANDLED;
-> > +   return IRQ_RETVAL(irqstatus);
-> 
-> Doesn't look right.  Either your (ha->func.intr) returns true or false
-> and you need to put it through IRQ_RETVAL to get the correct 
-> IRQ_ value,
-> or it returns IRQ_HANDLED, IRQ_NONE and you just return these directly
-> (the latter looks to be what it does, so the IRQ_RETVAL() 
-> isn't needed).
-> 
-> I'm not sure this will work on 2.4 kernels, though, because 
-> the compiler
-> will then be making a
-> 
-> void irqstatus;
-> 
-> declaration which I think at least some versions of gcc won't like.
-> 
-> James
-> 
-> 
+> Sounds good. Only allow /dev/sg to have one nexus at
+> a time "open" (per file descriptor)? Could it
+> delete an existing nexus?
 
+I was thinking of a clone-like open - I was looking for tty code that does
+this, but can't figure out or find it (/dev/pty, drivers/char/pty.c plus
+some generic tty code?). Such that each open of /dev/sg gets its own
+pseudo device. There is reference to this in the linux device drivers book
+(chapter 5 "cloning the device on open"), but I don't see how their
+example passes back the dev to the caller of the open. Maybe someone has
+pointers to functioning pseudo device driver code.
 
-------_=_NextPart_000_01C313FB.EC5AAB70
-Content-Type: text/plain;
-	name="newpatch1.txt"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="newpatch1.txt"
+You could have multiple opens per nexus (multiple simultaneous opens of
+/dev/sg, and each one attaches to the same nexus, probably similiar to
+multiple opens on a for example /dev/sg0). That might be odd, maybe that
+could happen if we were doing user level scanning + id usage at the same
+time.
 
-diff -urN linux-2.5.69_p0/drivers/scsi/ips.c =
-linux-2.5.69_p1/drivers/scsi/ips.c=0A=
---- linux-2.5.69_p0/drivers/scsi/ips.c	2003-05-06 12:57:14.000000000 =
--0400=0A=
-+++ linux-2.5.69_p1/drivers/scsi/ips.c	2003-05-06 13:18:49.000000000 =
--0400=0A=
-@@ -426,8 +426,8 @@=0A=
- static void ips_enable_int_copperhead(ips_ha_t *);=0A=
- static void ips_enable_int_copperhead_memio(ips_ha_t *);=0A=
- static void ips_enable_int_morpheus(ips_ha_t *);=0A=
--static void ips_intr_copperhead(ips_ha_t *);=0A=
--static void ips_intr_morpheus(ips_ha_t *);=0A=
-+static int ips_intr_copperhead(ips_ha_t *);=0A=
-+static int ips_intr_morpheus(ips_ha_t *);=0A=
- static void ips_next(ips_ha_t *, int);=0A=
- static void ipsintr_blocking(ips_ha_t *, struct ips_scb *);=0A=
- static void ipsintr_done(ips_ha_t *, struct ips_scb *);=0A=
-@@ -1269,7 +1269,8 @@=0A=
-    ips_ha_t         *ha;=0A=
-    unsigned long     cpu_flags;=0A=
-    struct Scsi_Host *host;=0A=
--=0A=
-+   int       irqstatus;=0A=
-+   =0A=
-    METHOD_TRACE("do_ipsintr", 2);=0A=
- =0A=
-    ha =3D (ips_ha_t *) dev_id;=0A=
-@@ -1289,13 +1290,13 @@=0A=
-       return IRQ_HANDLED;=0A=
-    }=0A=
- =0A=
--   (*ha->func.intr)(ha);=0A=
-+   irqstatus =3D (*ha->func.intr)(ha);=0A=
- =0A=
-    IPS_UNLOCK_RESTORE(host->host_lock, cpu_flags);=0A=
- =0A=
-    /* start the next command */=0A=
-    ips_next(ha, IPS_INTR_ON);=0A=
--   return IRQ_HANDLED;=0A=
-+   return IRQ_RETVAL(irqstatus);=0A=
- }=0A=
- =0A=
- =
-/***********************************************************************=
-*****/=0A=
-@@ -1309,7 +1310,7 @@=0A=
- /*   ASSUMES interrupts are disabled                                   =
-     */=0A=
- /*                                                                     =
-     */=0A=
- =
-/***********************************************************************=
-*****/=0A=
--void=0A=
-+int=0A=
- ips_intr_copperhead(ips_ha_t *ha) {=0A=
-    ips_stat_t       *sp;=0A=
-    ips_scb_t        *scb;=0A=
-@@ -1319,10 +1320,10 @@=0A=
-    METHOD_TRACE("ips_intr", 2);=0A=
- =0A=
-    if (!ha)=0A=
--      return;=0A=
-+      return 0;=0A=
- =0A=
-    if (!ha->active)=0A=
--      return;=0A=
-+      return 0;=0A=
- =0A=
-    intrstatus =3D (*ha->func.isintr)(ha);=0A=
- =0A=
-@@ -1331,7 +1332,7 @@=0A=
-        * Unexpected/Shared interrupt=0A=
-        */=0A=
- =0A=
--      return;=0A=
-+      return 0;=0A=
-    }=0A=
- =0A=
-    while (TRUE) {=0A=
-@@ -1358,6 +1359,7 @@=0A=
-        */=0A=
-       (*scb->callback) (ha, scb);=0A=
-    } /* end while */=0A=
-+   return 1;=0A=
- }=0A=
- =0A=
- =
-/***********************************************************************=
-*****/=0A=
-@@ -1371,7 +1373,7 @@=0A=
- /*   ASSUMES interrupts are disabled                                   =
-     */=0A=
- /*                                                                     =
-     */=0A=
- =
-/***********************************************************************=
-*****/=0A=
--void=0A=
-+int=0A=
- ips_intr_morpheus(ips_ha_t *ha) {=0A=
-    ips_stat_t       *sp;=0A=
-    ips_scb_t        *scb;=0A=
-@@ -1381,10 +1383,10 @@=0A=
-    METHOD_TRACE("ips_intr_morpheus", 2);=0A=
- =0A=
-    if (!ha)=0A=
--      return;=0A=
-+      return 0;=0A=
- =0A=
-    if (!ha->active)=0A=
--      return;=0A=
-+      return 0;=0A=
- =0A=
-    intrstatus =3D (*ha->func.isintr)(ha);=0A=
- =0A=
-@@ -1393,7 +1395,7 @@=0A=
-        * Unexpected/Shared interrupt=0A=
-        */=0A=
- =0A=
--      return;=0A=
-+      return 0;=0A=
-    }=0A=
- =0A=
-    while (TRUE) {=0A=
-@@ -1426,6 +1428,7 @@=0A=
-        */=0A=
-       (*scb->callback) (ha, scb);=0A=
-    } /* end while */=0A=
-+   return 1;=0A=
- }=0A=
- =0A=
- =
-/***********************************************************************=
-*****/=0A=
-diff -urN linux-2.5.69_p0/drivers/scsi/ips.h =
-linux-2.5.69_p1/drivers/scsi/ips.h=0A=
---- linux-2.5.69_p0/drivers/scsi/ips.h	2003-05-06 12:57:14.000000000 =
--0400=0A=
-+++ linux-2.5.69_p1/drivers/scsi/ips.h	2003-05-06 12:58:22.000000000 =
--0400=0A=
-@@ -99,6 +99,10 @@=0A=
-    #endif=0A=
- =0A=
-    #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)=0A=
-+      typedef void irqreturn_t;=0A=
-+      #define IRQ_NONE=0A=
-+      #define IRQ_HANDLED=0A=
-+      #define IRQ_RETVAL(x)=0A=
-       #define IPS_REGISTER_HOSTS(SHT)      =
-scsi_register_module(MODULE_SCSI_HA,SHT)=0A=
-       #define IPS_UNREGISTER_HOSTS(SHT)    =
-scsi_unregister_module(MODULE_SCSI_HA,SHT)=0A=
-       #define IPS_ADD_HOST(shost,device)=0A=
-@@ -1092,7 +1096,7 @@=0A=
-    int       (*programbios)(struct ips_ha *, char *, uint32_t, =
-uint32_t);=0A=
-    int       (*verifybios)(struct ips_ha *, char *, uint32_t, =
-uint32_t);=0A=
-    void      (*statinit)(struct ips_ha *);=0A=
--   void      (*intr)(struct ips_ha *);=0A=
-+   int       (*intr)(struct ips_ha *);=0A=
-    void      (*enableint)(struct ips_ha *);=0A=
-    uint32_t (*statupd)(struct ips_ha *);=0A=
- } ips_hw_func_t;=0A=
+I don't think it should be able to delete a nexus (i.e. scsi_device) for
+now, but it might eventually be good to allow it to add (or keep) a nexus
+around after it is attached - so we could scan, and if a scsi_device/nexus
+is found to exist, leave the scsi_device, and then trigger other scsi
+upper level attaches. 
 
-------_=_NextPart_000_01C313FB.EC5AAB70--
+(Going beyond what we need now, for multipath I would like to be able to
+arbitrarily remove or attach any nexus to any scsi_device from user
+level. This might best be done via sysfs interfaces.)
+
+Just having a /dev/sg that works for one open, and attaches to one nexus,
+and then allows sg commands would be a nice start, and might even be
+enough for 2.5 usage.
+
+-- Patrick Mansfield
