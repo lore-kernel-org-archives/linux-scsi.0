@@ -1,47 +1,52 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: [PATCH] Kill off sym1
-Date: Tue, 23 Sep 2003 13:07:31 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
+Date: 23 Sep 2003 09:04:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030923120731.GC13172@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <1064325894.1857.13.camel@mulgrave>
+References: <UTC200309221956.h8MJucs21996.aeb@smtp.cwi.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:1664 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263352AbTIWMHc
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Sep 2003 08:07:32 -0400
-Received: from willy by www.linux.org.uk with local (Exim 4.22)
-	id 1A1lx5-0003Sc-KE
-	for linux-scsi@vger.kernel.org; Tue, 23 Sep 2003 13:07:31 +0100
-Content-Disposition: inline
+Received: from nat9.steeleye.com ([65.114.3.137]:33541 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263356AbTIWOF6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Sep 2003 10:05:58 -0400
+In-Reply-To: <UTC200309221956.h8MJucs21996.aeb@smtp.cwi.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andries.Brouwer@cwi.nl
+Cc: david-b@pacbell.net, greg@kroah.com, hch@infradead.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, mdharm-usb@one-eyed-alien.net, Patrick Mansfield <patmans@us.ibm.com>, stern@rowland.harvard.edu, Linus Torvalds <torvalds@osdl.org>
+
+On Mon, 2003-09-22 at 14:56, Andries.Brouwer@cwi.nl wrote:
+> I have seen proposals around here for flags that are far too specific
+> (like "do not ask for mode page 8"). If we go to that level of detail
+> then we'll soon have fifty flags.
+> Black lists, and flags that describe various ways of being broken
+> are a bad idea in my opinion. I will not deny that they may be needed
+> in some cases, but they are never the preferred solution.
+> 
+> Also "conservative mode" sounds like a flag that describes some
+> way of being broken.
+> 
+> On the other hand "hot-pluggable" describes a positive asset,
+> and if we can conclude from that that it is unnecessary to ask
+> for mode page 8 then we achieve the same effect in a positive way.
+
+I disagree on this one.  hot-pluggable sounds like it should be set for
+ever hotplug device (currently that would include firewire, which may be
+iffy, and Fibre Channel, which has our highest level of SCSI compliance
+and would definitely be wrong).
+
+The design goal is that this flag makes sd assume as little SCSI
+standards compliance as it can get away with while still operating the
+device.
+
+So call a spade "a spade"
+
+My thought, by the way, is that it would be a callback that would clear
+all the "extras" flags, and the slave_configure routine could
+selectively turn them back on again if necessary.
+
+James
 
 
- - Remove sym1 driver
- - Remove PCI stuff from sym53c8xx_comm.h
- - Remove PCI stuff from ncr53c8xx.c
- - Remove device_t typedef
- - Remove u_int32 and u_int64
- - Remove first_host and the_template
- - Remove SPARC support (get back to me when someone puts a 720 in a Sparc :-P)
-
- Makefile         |    1 
- NCR_Q720.c       |    4 
- ncr53c8xx.c      |  155 
- ncr53c8xx.h      |   12 
- sym53c8xx.c      |14543 -------------------------------------------------------
- sym53c8xx.h      |   82 
- sym53c8xx_comm.h |  666 --
- sym53c8xx_defs.h |   52 
- zalon.c          |    4 
- 9 files changed, 76 insertions(+), 15443 deletions(-)
-
-http://ftp.linux.org.uk/pub/linux/willy/patches/sym1.diff
-
-for the full 420k patch.
-
--- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
