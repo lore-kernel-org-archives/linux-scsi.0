@@ -1,38 +1,36 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: queue depth help!!
-Date: 27 Dec 2003 15:46:32 -0600
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Aic7x_x_x 6.3.4 && Aic79xx 2.0.5 Updates
+Date: Sat, 27 Dec 2003 23:55:32 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1072561593.1757.48.camel@mulgrave>
-References: <3FF514CE@webmail.colostate.edu>
+Message-ID: <1072569331.7656.0.camel@dhcp23.swansea.linux.org.uk>
+References: <1051920000.1054684267@aslan.btc.adaptec.com>
+	 <3637050000.1054690456@aslan.s csiguy.com>
+	 <2113050000.1072285128@aslan.scsiguy.com>
+	 <1072288242.1906.35.camel@mulgrave >
+	 <2148850000.1072292121@aslan.scsiguy.com>
+	 <1072292714.2415.39.camel@mulgrave>
+	 <2304040000.1072326693@aslan.scsiguy.com>
+	 <1072463795.1873.127.camel@mulgrave>
+	 <1072538231.5494.12.camel@dhcp23.swansea.linux.org.uk>
+	 <1072540449.2030.45.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:33940 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264605AbTL0Vql (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Dec 2003 16:46:41 -0500
-In-Reply-To: <3FF514CE@webmail.colostate.edu>
+Received: from crosslink-village-512-1.bc.nu ([81.2.110.254]:61609 "EHLO
+	dhcp23.swansea.linux.org.uk") by vger.kernel.org with ESMTP
+	id S264887AbTL1AAC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Dec 2003 19:00:02 -0500
+In-Reply-To: <1072540449.2030.45.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: jshankar <jshankar@CS.ColoState.EDU>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>, Marcelo Tosatti <marcelo@conectiva.com.br>, Andrew Morton <akpm@osdl.org>
 
-On Sat, 2003-12-27 at 15:38, jshankar wrote:
-> if the scsi target queue depth is 1, does it mean that i can handle only one
-> outstanding command  at a time.
+On Sad, 2003-12-27 at 15:54, James Bottomley wrote:
+> > Similarly it would be nice to be able to revector the actual scsi eh
+> > timeouts via an optional handler. Something of the form
+> 
+> That's a good idea...do you want to send in the patches?
 
-Yes
-
-> Does it mean if another command is issued( queue depth=1), it has to wait till
-> the previous command is done.
-
-Yes.
-
-The mid-layer will start the queued command as soon as the one occupying
-the device returns...this is often why untagged devices actually set
-their depth to 2 so they can have another command all prepared and ready
-to roll as soon as the in-progress one returns.
-
-James
-
+My calendar is full until about next October 8(
 
