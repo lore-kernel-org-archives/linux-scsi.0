@@ -1,47 +1,57 @@
-From: viro@parcelfarce.linux.theplanet.co.uk
-Subject: Re: [ANNOUNCE] MPT Fusion driver 3.01.09 update
-Date: Mon, 21 Jun 2004 18:23:03 +0100
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Subject: Re: [PATCH] Flexible timout intfrastructure take II
+Date: Mon, 21 Jun 2004 11:24:40 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040621172303.GA12308@parcelfarce.linux.theplanet.co.uk>
-References: <0E3FA95632D6D047BA649F95DAB60E5704925040@exa-atlanta>
+Message-ID: <380DAEE648059C0AEE63E91D@aslan.scsiguy.com>
+References: <1087421869.2796.80.camel@mulgrave>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:9675 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S266335AbUFURXJ
+Received: from aslan.scsiguy.com ([63.229.232.106]:2568 "EHLO
+	aslan.scsiguy.com") by vger.kernel.org with ESMTP id S266337AbUFURYs
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Jun 2004 13:23:09 -0400
+	Mon, 21 Jun 2004 13:24:48 -0400
+In-Reply-To: <1087421869.2796.80.camel@mulgrave>
 Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5704925040@exa-atlanta>
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Jun 21, 2004 at 01:09:43PM -0400, Moore, Eric Dean wrote:
-> Somebody had submitted this change in the last week,
-> along with the comment in that patch:
+> [This is basically the same patch posted on the flexible timeout
+> infrastructure thread, but with all the comments/doc stuff done as well]
 > 
-> "The only way crap below could work..."
+> The object of this infrastructure is to give HBAs early warning that
+> error handling is about to happen and also provide them with the
+> opportunity to do something about it.
 
-Yes?  Care to take a look at your definition of S64?  Now think for a moment
-what it will produce on a big-endian box.
+..
 
-> I had not seen the patch on this mailing list. 
-> I would like revert back to its previous bits since I don't see
-> what was broken with it.  These headers in the lsi folder are 
-> the mpi interface to the mpt firmware, and are bundled with 
-> all operating systems, etc. window, netware, solaris, unixware, etc.
+> There are three possible returns:
+> 
+> EH_HANDLED:	I've fixed the problem, please complete the command for me
+> (as soon as the timer fires, scsi_done will do nothing, so the timer
+> itself will call a special version of scsi_done that doesn't check the
+> timer).
+> 
+> EH_NOT_HANDLED:	Invoke error recovery as normal
+> 
+> EH_RESET_TIMER:	The command will complete, reset the timer to its
+> original value and start it ticking again.
 
-> > > +#if defined(unix) || defined(__arm) || defined(ALPHA)
-> > > +
-> > > +    typedef signed   int   S32;
-> > > +    typedef unsigned int   U32;
-> > > +
-> > > +#else
-> > > +
-> > > +    typedef signed   long  S32;
-> > > +    typedef unsigned long  U32;
-> > > +
-> > > +#endif
+You also need an:
 
-... and that is ugly beyond words.
+EH_NOT_FOUND:		The HBA knows nothing about this command and
+			has probably already completed it, but has no
+			state to confirm this.
+
+or do you propose that the drivers just blindly return EH_HANDLED?
+
+Since scsi_done() has no return value, the LLD cannot know if the
+attempted completion was ignored due to losing the race with the timer.
+So it cannot keep state to ensure that it provides the correct response
+(EH_HANDLED) in this case.
+
+--
+Justin
+
