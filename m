@@ -1,50 +1,34 @@
-From: mikem <mikem@beardog.cca.cpqcorp.net>
-Subject: Re: cciss update [2/2] fixes for Steeleye Lifekeeper
-Date: Mon, 18 Oct 2004 11:35:32 -0500
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] Fix sleeping while holding a lock on host removal and
+	on killing the DV thread
+Date: 18 Oct 2004 12:10:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041018163532.GA24511@beardog.cca.cpqcorp.net>
-References: <20041013212253.GB9866@beardog.cca.cpqcorp.net> <20041014083900.GB7747@infradead.org> <1097764660.2198.11.camel@mulgrave> <20041014183948.GA12325@infradead.org> <1097852716.1718.9.camel@mulgrave>
+Message-ID: <1098119447.1714.93.camel@mulgrave>
+References: <416D8EBA.7060904@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palrel12.hp.com ([156.153.255.237]:36296 "EHLO palrel12.hp.com")
-	by vger.kernel.org with ESMTP id S266864AbUJRQfy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Oct 2004 12:35:54 -0400
-Content-Disposition: inline
-In-Reply-To: <1097852716.1718.9.camel@mulgrave>
+Received: from stat16.steeleye.com ([209.192.50.48]:50357 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S267170AbUJRRKz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Oct 2004 13:10:55 -0400
+In-Reply-To: <416D8EBA.7060904@adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, Jens Axboe <axboe@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, Oct 15, 2004 at 10:05:09AM -0500, James Bottomley wrote:
-> On Thu, 2004-10-14 at 13:39, Christoph Hellwig wrote:
-> > Such a volume has been configured and set up, and although it's still
-> > ugly I'd say it's okay.  But the patch also adds one gendisk per controller
-> > even if no volume is set up.
-> 
-> That's this bit of code:
-> 
-> @@ -2762,7 +2810,9 @@ static int __devinit cciss_init_one(stru
->                 disk->fops = &cciss_fops;
->                 disk->queue = hba[i]->queue;
->                 disk->private_data = drv;
-> -               if( !(drv->nr_blocks))
-> +               /* we must register the controller even if no disks
-> exist */
-> +               /* this is for the online array utilities */
-> +               if(!drv->heads && j)
->                         continue;
->                 blk_queue_hardsect_size(hba[i]->queue, drv->block_size);
->                 set_capacity(disk, drv->nr_blocks);
-> 
-> Mike, is there a way we can only allocate a gendisk when we know there's
-> actually a device there (if owned by another controller currently)?
-> 
-> James
+On Wed, 2004-10-13 at 15:23, Luben Tuikov wrote:
+> Fix sleeping while holding a lock on host removal and on
+> killing the DV thread.
 
-This patch only registers the controller if no logical drives are configured. It will not result in all possible logical drives being added. I added printk's to the driver to show me what I'm registering.
-What I see is the controller registers every time, and only drives that are phsically configured are registered. That is true for reserved drives, also.
+This is rejecting completely again ... looks like additional space
+beginning the non +/- patch lines.
 
-Thanks,
-mikem
+As a longer term project, since I'm losing count of the number of bugs
+that keep turning up in the aic DV, what would it take to move this over
+to the generic DV code?
+
+James
+
+
