@@ -1,60 +1,32 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: driver hacking tips (was Re: [PATCH] QStor SATA/RAID driver for 2.6.9-rc3)
-Date: Tue, 12 Oct 2004 14:25:13 -0400
+Subject: Re: [PATCH] Adding PCI ID tables to aic7xxx and aic79xxx
+Date: Tue, 12 Oct 2004 14:27:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <416C2189.4080302@pobox.com>
-References: <4161A06D.8010601@rtr.ca>	<416547B6.5080505@rtr.ca>	<20041007150709.B12688@i			nfradead.org>	<4165624C.5060405@rtr.ca>	<416565DB.4050006@pobox.com>	<4165	A	4	5D.2090200@rtr.ca>	<4165A766.1040104@pobox.com>	<4165A85D.7080704@rtr.ca	>		<4	165AB1B.8000204@pobox.com>	<4165ACF8.8060208@rtr.ca>		<20041007221537.	A17	712@infradead.org>	<1097241583.2412.15.camel@mulgrave>		<4166AF2F.607090	4@rtr.ca> <1097249266.1678.40.camel@mulgrave>		<4166B48E.3020006@rtr.ca>	<1097250465.2412.49.camel@mulgrave> 	<416C0D55.1020603@rtr.ca>	<1097601478.2044.103.camel@mulgrave>  <416C12CC.1050301@rtr.ca> <1097602220.2044.119.camel@mulgrave> <416C157A.6030400@rtr.ca> <416C177B.6030504@pobox.com> <416C19B9.7000806@rtr.ca>
+Message-ID: <416C222C.2060800@pobox.com>
+References: <416C15E5.7030805@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:8099 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S266572AbUJLSZ2
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:16803 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S266572AbUJLS2J
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Oct 2004 14:25:28 -0400
-In-Reply-To: <416C19B9.7000806@rtr.ca>
+	Tue, 12 Oct 2004 14:28:09 -0400
+In-Reply-To: <416C15E5.7030805@adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Mark Lord <lsml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 
-[subject changed as this knowledge can benefit others as well]
-
-In addition to agreeing with James' most recently assessment of 
-qs_process_sff_entry(), I wanted to interject a bit of more general 
-discussion...
-
-Two main, but unrelated, driver-writing points:
-
-1) Putting almost all your in-irq code into a tasklet can be quite 
-convenient, if your situation is amenable to that.  The benefits are
-
-a) your irq handler is tiny,
-
-	ack irqs
-	tasklet_schedule()
-
-b) data can be synchronized without a lock, if the data is only used in 
-the tasklet or in between tasklet_disable/tasklet_enable pairs.
-
-c) you can "call" your in-irq code from places other than your irq 
-handler, and let the tasklet subsystem synchronize the tasklet schedule. 
-  no worries about disabling interrupts, they will just do (a) as 
-described above.
+Luben Tuikov wrote:
+> Adding proper PCI ID tables to aic7xxx and aic79xx.
 
 
-2) You want to avoid a model (like qs_process_sff_entry, alas) where you 
-have one single, huge "event completion" path, called from various 
-points in the driver.  Instead, do your best to make sure event/action 
-as fine-grained as possible.
+ACK, but I wonder if (long term) a follow-up patch to split up the IDs 
+into their individual components wouldn't be nice?  That would make the 
+driver much more consistent with other Linux PCI drivers.
 
-Storage drivers that want to handle long-running events, or events that 
-need process context, typically want to either fire off events 
-_asynchronously_ via schedule_work(), or have a long-running thread that 
-does nothing but processes an internal driver event queue.  It's really 
-programmer's preference at that point, as having a single (or per-host) 
-event queue thread can sometimes be more simple than async work queue code.
+Regards,
 
 	Jeff
-
 
 
