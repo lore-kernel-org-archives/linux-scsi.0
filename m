@@ -1,60 +1,65 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: Notify about errors during initialization
-Date: Mon, 5 Jan 2004 15:32:21 -0800
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040105233221.GC1936@beaverton.ibm.com>
-References: <20040105021047.GD30408@one-eyed-alien.net> <Pine.LNX.4.44L0.0401051659180.604-100000@ida.rowland.org> <20040105221302.A7678@infradead.org>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple
+	map/unmaps
+Date: 05 Jan 2004 18:05:47 -0600
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1073347548.2439.33.camel@mulgrave>
+References: <200401051929.i05JTsM0000014248@mudpuddle.cs.wustl.edu.suse.lists.linux.kern
+	el> <20040105112800.7a9f240b.davem@redhat.com.suse.lists.linux.kernel>
+	<p73brpi1544.fsf@verdi.suse.de> <20040105130118.0cb404b8.davem@redhat.com>
+	<20040105223158.3364a676.ak@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.132]:22500 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S265849AbUAEX1z
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Jan 2004 18:27:55 -0500
-Content-Disposition: inline
-In-Reply-To: <20040105221302.A7678@infradead.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20040105223158.3364a676.ak@suse.de>
+To: Andi Kleen <ak@suse.de>
+Cc: "David S. Miller" <davem@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, gibbs@scsiguy.com
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, USB Storage List <usb-storage@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig [hch@infradead.org] wrote:
-> On Mon, Jan 05, 2004 at 05:04:59PM -0500, Alan Stern wrote:
-> > James:
-> > 
-> > Can you or someone else on the SCSI development list answer this question?
-> > 
-> > When a new host is registered and scanned for devices, are we guaranteed
-> > that the scanning procedure will be finished when scsi_scan_host()  
-> > returns?
-> 
-> With the current code the scanning activity has finished when we return.
-> But I'm not sure whether we should document that assumption - if we're
-> moving to parallel scanning that assumption might soon be void.
-> 
+On Mon, 2004-01-05 at 15:31, Andi Kleen wrote:
+> For the sake of bug-to-bug compatibility to the SCSI layer this patch may
+> work. I haven't tested it so no guarantees if it won't eat your file systems.
+> Feedback welcome anyways.
 
-It would appear that saying the scan requested by scsi_scan_host is
-completed when the function returns would be the expected result. The
-LLDD writer should be aware that once scsi_add_host has been called
-hotplug events to user space could allow the user space to scan and
-delete devices through sysfs making assumptions on devices found or not
-found iffy.
+This isn't a bug in SCSI, it's a deliberate design feature.  SCSI has
+certain events, like QUEUE full that cause us to re-queue the pending
+I/O.  Other block layer drivers that can get these EAGAIN type queueing
+problems from the device also follow this model.
 
-> > The reason for asking is so that the usb-storage driver can test whether 
-> > any devices were found.  Depressingly often some incompatibility causes 
-> > the scan to fail, and when that happens it would be nice to put a 
-> > notification in the system log, unregister the host, and generally avoid 
-> > loading the driver as though everything was okay.
-> 
-> Hmm.  maybe we should guarantee that scsi_scan_host will have finished
-> and introduce a scsi_scan_host_parallel when we go down that route.  Or
-> do it the other way and add a serialized version for usb-storage..
+The reason for doing this is the prep/request model for block drivers
+(although the behaviour pre-dates the bio model).  As part of the prep
+function, we prepare the mapping list that is later passed to
+dma_map_sg().  Requeueing is done from the request function; by design,
+we don't re-prepare the requests (and hence don't free and rebuild the
+sg list).
 
-I thought we where moving to not calling a scan api from the LLDD and
-using hotplug events. Then user space would define the scan policy it
-wanted.
+Like Dave says, we rely on the sequence map/unmap/map to produce a
+correct SG list.  This does give you slightly more leeway, since we
+never look at the sg list after the unmap, for SCSI it doesn't have to
+be returned to the pre-map state as long as re-mapping it is correct.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+As to the idempotence of map/unmap: I'm ambivalent.  If it's going to be
+a performance hit to return the sg list to its prior state in unmap,
+then it does seem a waste given that for most of our I/O transactions we
+simply free the sg list after the unmap.
 
+It looks like we're down to a choice of three
+
+1. Fix the x86_64 mapping layer as your patch proposes (how much of a
+performance hit on every transaction will this be)?
+2. Change SCSI (and every other block driver) to re-prepare requeued
+I/O.  This will incur a free/setup overhead penalty, but only in the
+requeue path.
+3. Don't unmap the I/O in the requeue case.  I like this least because
+the LLD is responsible for map/unmap and the mid-layer is responsible
+for requeueing, so it's a layering violation (as well as a waste of
+potentially valuable mapping resources).
+
+On the whole, I prefer 1. Partly because it doesn't involve extra work
+for me ;-) but also because idempotence is an appealing property from a
+layering point of view.
+
+If we're agreed on this, I can add it to the DMA docs.
+
+James
