@@ -1,35 +1,34 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: RE: 3ware and scsi ids
-Date: 03 Jun 2003 23:23:19 +0100
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Subject: Re: aic7xxx in 2.4.20 won't compile
+Date: Tue, 03 Jun 2003 17:41:49 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1054678998.9234.80.camel@dhcp22.swansea.linux.org.uk>
-References: <12C3C1794982613-01@MMS__ad.corp.aoltw.net_>
+Message-ID: <1044690000.1054683709@aslan.btc.adaptec.com>
+References: <20030603004710.0bb02714.irrationality@comcast.net>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pc2-cwma1-4-cust86.swan.cable.ntl.com ([213.105.254.86]:18562
-	"EHLO lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S261864AbTFCXHk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Jun 2003 19:07:40 -0400
-In-Reply-To: <12C3C1794982613-01@MMS__ad.corp.aoltw.net_>
+Received: from magic-mail.adaptec.com ([208.236.45.100]:43189 "EHLO
+	magic.adaptec.com") by vger.kernel.org with ESMTP id S261741AbTFCX1n
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Jun 2003 19:27:43 -0400
+In-Reply-To: <20030603004710.0bb02714.irrationality@comcast.net>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: "Deas, Jim" <James.Deas@warnerbros.com>
-Cc: linux-scsi@vger.kernel.org
+To: "chris horn." <irrationality@comcast.net>, linux-scsi@vger.kernel.org
+Cc: 195875@bugs.debian.org
 
-On Maw, 2003-06-03 at 23:16, Deas, Jim wrote:
-> I have never seen labels in the raidtab.
-> fstab yes. raidtab no. Is it possible?
-> Is this a better solution than LVM?
-> LVM seem to insert yet another layer.
-> I would like to avoid that if possible.
+> KEYWORDS: aic7xxx scsi driver
+> 
+> /proc/version: 
+> Linux version 2.4.20 (root@snozberry) (gcc version 3.2.2 20030124
+> (Debian prerelease)) #1 SMP Thu Feb 6 19:01:57 EST 2003
 
-Ah sorry I misunderstood your original message slightly.
+These have been fixed in more recent versions of the driver.
 
-raidtab doesn't have any labels. This might be useful
-however. The Dell guys wrote a tool that generates consistant
-naming using device serial info
+http://people.FreeBSD.org/~gibbs/linux/SRC/
 
-	http://www.lerhaupt.com/devlabel/
-
+--
+Justin
 
