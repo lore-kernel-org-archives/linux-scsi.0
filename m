@@ -1,36 +1,42 @@
-From: Roman Zippel <zippel@linux-m68k.org>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Tue, 2 Dec 2003 15:11:07 +0100 (CET)
+Date: 02 Dec 2003 10:37:01 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0312021459200.26104@serv>
+Message-ID: <1070383028.2345.8.camel@mulgrave>
 References: <03120118001300.08627@naveenb-lnx.cisco.com>
- <Pine.LNX.4.58.0312011655240.26106@serv> <03120217260300.01630@naveenb-lnx.cisco.com>
+	<Pine.LNX.4.58.0312011655240.26106@serv>
+	<03120217260300.01630@naveenb-lnx.cisco.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from scrub.xs4all.nl ([194.109.195.176]:22030 "EHLO scrub.xs4all.nl")
-	by vger.kernel.org with ESMTP id S262118AbTLBOLa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Dec 2003 09:11:30 -0500
+Received: from nat9.steeleye.com ([65.114.3.137]:27396 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262373AbTLBQi6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Dec 2003 11:38:58 -0500
 In-Reply-To: <03120217260300.01630@naveenb-lnx.cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Naveen Burmi <naveenb@cisco.com>
-Cc: hch@infradead.org, linux-scsi@vger.kernel.org
+To: naveenb@cisco.com
+Cc: Roman Zippel <zippel@linux-m68k.org>, hch@infradead.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi,
-
-On Tue, 2 Dec 2003, Naveen Burmi wrote:
-
-> > You probably mean the page cache and it's normal that a page can be
-> > modified, while it's written out.
->
-> Our assumption so far was that if a buffer is given to SCSI HBA driver, then
-> nobody can touch the buffer until the HBA says that he is done with the
-> buffer. It seems that this assumption isn't true. Can you give an instance
+On Tue, 2003-12-02 at 05:56, Naveen Burmi wrote:
+> Our assumption so far was that if a buffer is given to SCSI HBA driver, then 
+> nobody can touch the buffer until the HBA says that he is done with the 
+> buffer. It seems that this assumption isn't true. Can you give an instance 
 > where somebody (probably buffer cache) will modify the buffer which is handed
 > over to an HBA driver?
 
-You only need to mmap a file and write to it. The vm will try to write the
-dirty pages back to the storage, but it will not unmap the pages, so the
-the process can continue writing to them.
+This is an incorrect assumption.  The Linux SCSI subsystem is
+architected for zero copy, meaning that if the user maps a copy of the
+data, they can alter it at will, even if it is in flight within the
+driver.  The only thing you can guarantee is that you will get another
+write request for any page the user dirtied.
 
-bye, Roman
+Also note that glibc uses mmaping to handle file descriptors in linux,
+so almost every application can alter in-flight data depending on how it
+works.
+
+James
+
+
+
