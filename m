@@ -1,47 +1,47 @@
-From: Luben Tuikov <luben@splentec.com>
+From: Mike Anderson <andmike@us.ibm.com>
 Subject: Re: SCSI woes (followup)
-Date: Tue, 24 Sep 2002 14:49:08 -0400
+Date: Tue, 24 Sep 2002 12:08:09 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D90B3A4.5005A87F@splentec.com>
-References: <200209241346.g8ODkER09516@localhost.localdomain> <3D90A79F.47A37BC2@splentec.com> <20020924183907.GA1330@beaverton.ibm.com>
+Message-ID: <20020924190809.GB1330@beaverton.ibm.com>
+References: <rmk@arm.linux.org.uk> <200209241346.g8ODkER09516@localhost.localdomain> <20020924145852.A28042@flint.arm.linux.org.uk> <20020924111847.A4151@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20020924111847.A4151@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Russell King <rmk@arm.linux.org.uk>, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Russell King <rmk@arm.linux.org.uk>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-Mike Anderson wrote:
+Patrick Mansfield [patmans@us.ibm.com] wrote:
+> The problem is that we try to send a command via scsi_request_fn() to
+> a device that has no command blocks allocated - it's initializatin
+> is incomplete.
 > 
-> Luben Tuikov [luben@splentec.com] wrote:
-> > Add a flag, say unsigned I:1; to scsi_cmnd, which if set to 1, will
-> > make add it to the head of the queue, irrespective of its serial
-> > number, else the command is added according to its serial number
-> > in the pending commands queue.
-> 
-> The code path currently being discussed is a request path and we do not
+> Moving the empty check up sounds like good and simple fix for 2.4, or
+> check if queue_depth == 0. Anything else would be difficult to get right.
 
-Sorry Mike,
+Since error handling running during scan is kinda casuing the problem a
+a patch like the one below to  scsi_restart_operations sould also work. 
 
-I didn't really bother to look this up -- I just wanted to
-send along an idea -- whether it be a request or cmnd,
-the important thing is that you get the idea.
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
-> have a scsi_cmnd until it is processed by the scsi_request_fn. There is
-> already an interface to insert the request at the head of the queue
-> scsi_insert_special_req, but we always set it to 0. We also do not
+--- linux-2.4/drivers/scsi/scsi_error.c	Thu Sep 19 09:08:50 2002
++++ linux-2.4-test/drivers/scsi/scsi_error.c	Tue Sep 24 12:03:03 2002
+@@ -1264,8 +1264,10 @@
+ 		    || (SDpnt->device_blocked)) {
+ 			break;
+ 		}
+-		q = &SDpnt->request_queue;
+-		q->request_fn(q);
++		if (SDpnt->has_cmdblocks) {
++			q = &SDpnt->request_queue;
++			q->request_fn(q);
++		}
+ 	}
+ 	spin_unlock_irqrestore(&io_request_lock, flags);
+ }
 
-Should be a flag. ``Make'' it private to SCSI core, e.g.
-by setting it to 0 when entering from ULP, etc.
-
-Thus, the queue insertion code would be quite generic; also
-using list_head as Doug has suggested, would do wonders (again
-I'm _not_ looking this up).
-
-> expose this interface high enough to let requests set this. We do
-> expose it through the older scsi_insert_special_cmd interface used by
-> scsi_mlqueue_insert.
-
--- 
-Luben
