@@ -1,46 +1,38 @@
-From: Arjan van de Ven <arjanv@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: iSCSI device naming issues
-Date: Sun, 04 Jul 2004 21:57:44 +0200
+Date: Sun, 4 Jul 2004 21:11:11 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1088971063.2736.10.camel@laptop.fenrus.com>
+Message-ID: <20040704201111.GA8038@infradead.org>
 References: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAANoIxZIFzbEaqwjJgytz2AeKAAAAQAAAAXdSfMOoTnU6X86O4sbqWzAEAAAAA@cisco.com>
-Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DbLWfrid1K9dEYaNLJp4"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:3293 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S265773AbUGDT5x (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Jul 2004 15:57:53 -0400
+Received: from [213.146.154.40] ([213.146.154.40]:63187 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S265792AbUGDULM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 4 Jul 2004 16:11:12 -0400
+Content-Disposition: inline
 In-Reply-To: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAANoIxZIFzbEaqwjJgytz2AeKAAAAQAAAAXdSfMOoTnU6X86O4sbqWzAEAAAAA@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
 To: "Surekha.PC" <surekhap@cisco.com>
 Cc: 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
 
-
---=-DbLWfrid1K9dEYaNLJp4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2004-07-01 at 15:58, Surekha.PC wrote:
+On Thu, Jul 01, 2004 at 07:28:03PM +0530, Surekha.PC wrote:
+> 
 > Whenever an iSCSI device is configured in the system, a hotplug
 > event is generated which invokes udev for device node creation.
 > iSCSI driver has a CALLOUT rule for udev to generate a unique
 > name for iSCSI devices.
+> 
+> The iSCSI callout program receives a sysfs device path like
+> /sys/block/sdc whenever a block device is added. From the device
+> symlink under /sys/block/sdc, it obtains the corresponding device
+> path under /sys/devices/.. . It extracts the device quadruple
+> (c,b,t,l) and identifies iSCSI device by parsing the path
+> /sys/class/scsi_host/iscsi/c:b:t:l. For c:b:t:l as 0:0:0:0,
+> iSCSI device name will be /udev/iscsib0t0l0.
+> P.S: <hostX> is replaced by "iscsi" above to lookup for iSCSI devices.
 
-wouldn't this all be a lot cleaner if you follow the
-one-hba-per-remote-host model ?
-
---=-DbLWfrid1K9dEYaNLJp4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQBA6GE3xULwo51rQBIRAl5hAJ4h8qypKonYgsRph8SN/RWNmg/GgQCeKxXT
-/RAv9pay6cazo9zqZKAjHNc=
-=olu4
------END PGP SIGNATURE-----
-
---=-DbLWfrid1K9dEYaNLJp4--
+Please just use the standard naming scheme instead of inventing
+your own names.
 
