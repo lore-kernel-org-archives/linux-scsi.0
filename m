@@ -1,32 +1,32 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b7).
-Date: Thu, 8 Jan 2004 11:57:32 -0800
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040108195732.GB10391@beaverton.ibm.com>
-References: <B179AE41C1147041AA1121F44614F0B060EDD4@AVEXCH02.qlogic.org> <20040108165414.A12233@infradead.org> <20040108193336.GB10243@beaverton.ibm.com> <20040108193427.A14545@infradead.org>
+From: Xose Vazquez Perez <xose@wanadoo.es>
+Subject: Re: [PATCH] gdth driver for 2.4.23-pre4
+Date: Thu, 08 Jan 2004 21:06:05 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <3FFDB82D.9010909@wanadoo.es>
+References: <C2CB6D8BA015124783C0EB9B33D24FFD048036@otcexc01.otc.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20040108193427.A14545@infradead.org>
-To: Christoph Hellwig <hch@infradead.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, James Bottomley <James.Bottomley@SteelEye.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp12.eresmas.com ([62.81.235.112]:5009 "EHLO
+	smtp12.eresmas.com") by vger.kernel.org with ESMTP id S266346AbUAHUHX
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Jan 2004 15:07:23 -0500
 List-Id: linux-scsi@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, 'linux-scsi' <linux-scsi@vger.kernel.org>, 'Tosatti' <marcelo.tosatti@cyclades.com>
 
-Christoph Hellwig [hch@infradead.org] wrote:
-> > Also some partial information of the other hba api
-> > functions could be supported though other sysfs attributes but the sends
-> > would still need to use the old interface.
-> 
-> With sends are you referring to function that support certain scsi
-> commands like report luns and report capacity?  We have a perfectly
-> fine interface for that and it's SG_IO.. 
+Salyzyn, Mark wrote:
 
-I was thinking about the fabric management functions section of the
-spec. I would believe that the SG_IO should be able to handle the SCSI
-information functions section (though I have used this interface very
-little).
+> Time and priority is the enemy ... not the maintainers, gatekeepers,
+> volunteeers or the vendors.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+So much to do; so little time
+
+> There are currently three effective code bases a vendor driver maintainer is
+> to submit to Distribution, 2.4.* and 2.6.*. OEMs and Channel, the vendor's
+> customers, only concern themselves about Distributions.
+
+Forget distributions kernel, OEM, Channels ..... If your drivers are in
+the official tree you work is done. Easy.
+
