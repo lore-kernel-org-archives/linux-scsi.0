@@ -1,8 +1,8 @@
 From: William Lee Irwin III <wli@holomorphy.com>
 Subject: Re: Adaptec 39160 / Yamaha CRW8424S CD burning
-Date: Mon, 13 Jan 2003 00:11:44 -0800
+Date: Mon, 13 Jan 2003 01:16:35 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030113081144.GB9558@holomorphy.com>
+Message-ID: <20030113091635.GC9558@holomorphy.com>
 References: <20030113071543.GA9558@holomorphy.com> <3E22738D.3020000@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -27,10 +27,28 @@ On Mon, Jan 13, 2003 at 07:06:37PM +1100, Douglas Gilbert wrote:
 > while the burn is in progress. What version of cdrecord
 > are you using and what does its output look like?
 
-It's sg (SG_IO ioctl's), the version of cdrecord I use always uses it.
-I'm also running without your fixes. I've got enough blanks, I'll do
-a test run anyway if you still need me to run it.
+I'm trying Jens' patched cdrecord from people/axboe/tools/ on kernel.org
+and got:
 
+$ cat /proc/scsi/sg/debug
+dev_max(currently)=6 max_active_device=3 (origin 1)
+ def_reserved_size=32768
+ >>> device=sg1 scsi0 chan=0 id=3 lun=0   em=0 sg_tablesize=128 excl=0
+   FD(1): timeout=20500ms bufflen=129024 (res)sgat=4 low_dma=0
+   cmd_q=1 f_packid=0 k_orphan=0 closed=0
+     rb>> act: id=0 blen=63504 t_o/elap=40000/15ms sgat=2 op=0x2a
+$ cat /proc/scsi/sg/debug
+dev_max(currently)=6 max_active_device=3 (origin 1)
+ def_reserved_size=32768
+ >>> device=sg1 scsi0 chan=0 id=3 lun=0   em=0 sg_tablesize=128 excl=0
+   FD(1): timeout=20500ms bufflen=129024 (res)sgat=4 low_dma=0
+   cmd_q=1 f_packid=0 k_orphan=0 closed=0
+     rb>> act: id=0 blen=63504 t_o/elap=40000/11ms sgat=2 op=0x2a
+$ cat /proc/scsi/sg/debug
+dev_max(currently)=6 max_active_device=3 (origin 1)
+ def_reserved_size=32768
+ >>> device=sg1 scsi0 chan=0 id=3 lun=0   em=0 sg_tablesize=128 excl=0
+   FD(1): timeout=20500ms bufflen=129024 (res)sgat=4 low_dma=0
+   cmd_q=1 f_packid=0 k_orphan=0 closed=0
+     rb>> act: id=0 blen=63504 t_o/elap=40000/65ms sgat=2 op=0x2a
 
-Thanks,
-Bill
