@@ -1,31 +1,35 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] sym53c8xx PPR negotiation fix
-Date: Wed, 5 Nov 2003 01:26:32 -0800
+From: "Surekha.PC" <surekhap@cisco.com>
+Subject: Sysfs does not recognise tape devices ?
+Date: Wed, 5 Nov 2003 17:55:19 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031105092632.GB6342@beaverton.ibm.com>
-References: <20031029183159.GE25237@parcelfarce.linux.theplanet.co.uk> <1067453148.3112.369.camel@compaq.xsintricity.com> <4159000000.1067644546@aslan.btc.adaptec.com> <1067644902.1782.20.camel@mulgrave> <1067645285.3112.538.camel@compaq.xsintricity.com> <4168130000.1067645818@aslan.btc.adaptec.com> <20031101012231.GA2346@beaverton.ibm.com> <1067654044.2464.29.camel@mulgrave> <20031103181051.GA21012@beaverton.ibm.com> <20031104071001.A10128@infradead.org>
+Message-ID: <018f01c3a397$e093d600$a0074d0a@apac.cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:8916 "EHLO e32.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262784AbTKEJYO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Nov 2003 04:24:14 -0500
-Content-Disposition: inline
-In-Reply-To: <20031104071001.A10128@infradead.org>
+Received: from india-ironport-1.cisco.com ([64.104.129.195]:24150 "EHLO
+	india-ironport-1.cisco.com") by vger.kernel.org with ESMTP
+	id S262855AbTKEMZ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Nov 2003 07:25:28 -0500
+Received: from samrat.cisco.com (samrat.cisco.com [192.135.241.21])
+	by india-msg-core-1.cisco.com (8.12.9/8.12.6) with ESMTP id hA5Hr20s029206
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Nov 2003 17:53:05 GMT
+Received: from surekhapw2k (dhcp-10-77-7-160.cisco.com [10.77.7.160])
+	by samrat.cisco.com (8.8.8/2.6/Cisco List Logging/8.8.8) with ESMTP id RAA07995
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Nov 2003 17:55:24 +0530 (IST)
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Doug Ledford <dledford@redhat.com>, Matthew Wilcox <willy@debian.org>, Marcelo Tosatti <marcelo@conectiva.com.br>, linux-scsi mailing list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Christoph Hellwig [hch@infradead.org] wrote:
-> Umm, the code implementing ->slave_destroy may no more exist when the
-> scsi_device reference count hits zero..
-> 
 
-Yes that is my bad. I re-rolled the patch and will run a couple of
-tests. I will repost today. 
+Hi,
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+I have a iSCSI setup with scsi disk and tape configured as iSCSI
+targets. The disks are recognised with sysfs, but tape device entries
+are not getting created.
+
+Is this a bug in sysfs?
+
+TIA,
+surekha
 
