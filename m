@@ -1,31 +1,35 @@
-From: "ray" <dmalf1et@hotmail.com>
-Subject: CAS1N0: New Deal!! 50% Sign Up Bonus! chaos diane|
-Date: Fri, 07 May 2004 22:04:42 GMT
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] sym53c500_cs PCMCIA SCSI driver (round 5)
+Date: Sat, 8 May 2004 16:10:45 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1083967482-31435__47823.0908666321$1083992311@excite.com>
-Content-Type: text/plain;
+Message-ID: <20040508161045.A9590@infradead.org>
+References: <20040504060451.5BA10DBDE@gherkin.frus.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [202.155.4.242] ([202.155.4.242]:59152 "HELO vger.kernel.org")
-	by vger.kernel.org with SMTP id S264082AbUEHE4b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 May 2004 00:56:31 -0400
+Received: from phoenix.infradead.org ([213.86.99.234]:25353 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S263169AbUEHPKu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 8 May 2004 11:10:50 -0400
+Content-Disposition: inline
+In-Reply-To: <20040504060451.5BA10DBDE@gherkin.frus.com>; from rct@gherkin.frus.com on Tue, May 04, 2004 at 01:04:51AM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
+To: Bob Tracy <rct@gherkin.frus.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, hch@infradead.org
 
-PREMI}ERE ONLIN'E CAS{INO!
-50% BONU:S for YOUR FIRST DEPO`SIT as a New Player.
+On Tue, May 04, 2004 at 01:04:51AM -0500, Bob Tracy wrote:
+> Support for additional sysfs class device attributes has been added:
+> two are read-only (irq, ioport),
 
-SI`GN UP now! Don't wait!
+sorry to bother you again, but I don't think these belong into a scsi
+LLDD.  it's attributes for the underlying bus.  For pci you get these
+information already, but the pcmcia infrastructure isn't quite ready
+yet.
 
-http://www.bay-casino.com/_e4faa55afa1972493c43ac8a3f66f869/
+> one is read-write (fast_pio).  The
+> read-write attribute is a per-instance flag indicating the PIO speed
+> of the particular HBA: valid values are 1 (enabled -- default) and 0
+> (disabled).
 
-Once you're a Mem'ber, there are near WEEK'LY 2-T{O-1, and 3-T{O-1 depo`sit offers!
+this one is nice.
 
-Imagine, put in $25, GET $50 CRE|DIT BE|FORE YOU PL!ACE YO!UR FI`RST BET!!
-
-CLIC'K HER|E!
-
-http://www.bay-casino.com/_e4faa55afa1972493c43ac8a3f66f869/
-
-
-
-racerx wolverin blondie andre turbo butch yomama reznor booster buffy gretchen genius christop gordon castle eclipse bfi cookies rambo1 october ladybug sundance tango sailor dgj test2
