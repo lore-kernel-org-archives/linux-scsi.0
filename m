@@ -1,51 +1,48 @@
-From: "Mark F. Haigh" <Mark.Haigh@spirentcom.com>
-Subject: [PATCH 2.4.29] sym53c8xx.c - Add ULL suffix to fix warning
-Date: Wed, 02 Feb 2005 17:55:36 -0800
-Message-ID: <42018498.6030305@spirentcom.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: About ARECA RAID driver for Linux i386/x86-64
+Date: Wed, 2 Feb 2005 18:08:17 -0800
+Message-ID: <20050202180817.47db64c2.akpm@osdl.org>
+References: <001001c508d9$d97a17f0$9300a8c0@erich2003>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080608090808010303070402"
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Received: from fw.osdl.org ([65.172.181.6]:60553 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S262977AbVBCCIW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Feb 2005 21:08:22 -0500
+In-Reply-To: <001001c508d9$d97a17f0$9300a8c0@erich2003>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: erich <erich@areca.com.tw>
+Cc: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------080608090808010303070402
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+"erich" <erich@areca.com.tw> wrote:
+>
+> I have contact with Andrew Morton about ARECA RAID Linux scsi driver release
+>  issue.
+>  I hope this package is as look like a Linux driver.
 
+No, it doesn't look anything like a Linux driver :(
 
-Noticed that in drivers/scsi/sym53c8xx.c:
+I fed the patch through scripts/Lindent.  There's a copy at
+http://www.zip.com.au/~akpm/linux/patches/stuff/areca-raid-linux-scsi-driver.patch.
+ I'll include it -mm kernels.
 
-sym53c8xx.c:13185: warning: integer constant is too large for "long" type
+>From a very quick look, I'd say that the driver needs quite a bit of work:
 
-Since we're not dealing with C99 (yet), this 64 bit integer constant
-needs to be suffixed with ULL.  Patch included.
+- Remove Documentation/scsi/arcmsr.txt - none of it is relevant
 
+- Use named structure initialisers:
 
-Mark F. Haigh
-Mark.Haigh@spirentcom.com
+	struct foo bar = {
+		.name1 = value1,
+		.name2 = value2,
+	};
 
+- Remove all the LINUX_VERSION_CODE tests
 
---------------080608090808010303070402
-Content-Type: text/plain;
- name="sym53c8xx-patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sym53c8xx-patch"
+- The kernel thread stopping/starting stuff is old fashioned.  Use the
+  kthread API.
 
---- drivers/scsi/sym53c8xx.c.orig	2005-02-02 14:35:52.981929312 -0800
-+++ drivers/scsi/sym53c8xx.c	2005-02-02 14:38:38.496767232 -0800
-@@ -13182,7 +13182,7 @@
- 	** descriptors.
- 	*/
- 	if (chip && (chip->features & FE_DAC)) {
--		if (pci_set_dma_mask(pdev, (u64) 0xffffffffff))
-+		if (pci_set_dma_mask(pdev, (u64) 0xffffffffffULL))
- 			chip->features &= ~FE_DAC_IN_USE;
- 		else
- 			chip->features |= FE_DAC_IN_USE;
+- I suspect it is using old-fashioned SCSI APIs too.
 
 
---------------080608090808010303070402--
