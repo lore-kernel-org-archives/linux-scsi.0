@@ -1,36 +1,76 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: block layer sg, bsg
-Date: Wed, 4 Aug 2004 17:58:14 +0200
+From: Rock Gordon <rockgordon@yahoo.com>
+Subject: Re: WWN on FC LUN targets
+Date: Wed, 4 Aug 2004 10:04:33 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040804155814.GW10340@suse.de>
-References: <20040804085000.GH10340@suse.de> <20040804075215.155c06ac.davem@redhat.com> <20040804150403.GU10340@suse.de> <20040804084429.7de77cd7.davem@redhat.com> <20040804155643.GA31562@havoc.gtf.org>
+Message-ID: <20040804170433.52447.qmail@web41404.mail.yahoo.com>
+References: <410CB26E.7060109@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:37290 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S267329AbUHDP6f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Aug 2004 11:58:35 -0400
-Content-Disposition: inline
-In-Reply-To: <20040804155643.GA31562@havoc.gtf.org>
+Received: from web41404.mail.yahoo.com ([66.218.93.70]:2999 "HELO
+	web41404.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S267314AbUHDREg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Aug 2004 13:04:36 -0400
+In-Reply-To: <410CB26E.7060109@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "David S. Miller" <davem@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: dougg@torque.net, Bryan Henderson <hbryan@us.ibm.com>
+Cc: Rock Gordon <rockgordon@yahoo.com>, linux-scsi@vger.kernel.org
 
-On Wed, Aug 04 2004, Jeff Garzik wrote:
-> On Wed, Aug 04, 2004 at 08:44:29AM -0700, David S. Miller wrote:
-> > Or use a more portable well-defined type which does not change
-> > size nor layout between 32-bit and 64-bit environments.
+Hi everyone, thanks once again for your replies!
+
+The sg3_utils is very good - I will probably rely on
+them.
+
+On a related note - the /proc/partitions file can
+handle only one page worth of entries for 2.4.18,
+right? There might be a strong possibility of "losing"
+entries due to this restriction. Is there any patch
+out there to get around this problem?
+
+Thanks,
+
 > 
-> IMO if this (the above) is not done, the interface needs work.
+> The scsi_id program by Patrick Mansfield queries a
+> SCSI device's
+> identification and serial number vital product data
+> (VPD) pages
+> and produces a unique number. It is meant to be used
+> in conjunction
+> with udev (a dynamic device node creation, naming
+> and removal facility
+> based on the hotplug subsystem in the lk 2.6 series)
+> to create device
+> (and partition) node names according to user
+> specified rules.
+> Several versions can be found at this url:
+>     http://www-124.ibm.com/storageio/scsi_id/
 > 
-> For interfaces that replace ioctl(2) with read(2)/write(2), for passing
-> data structures to/from the kernel, Al has rightly suggested that these
-> structures be not only fixed size (as David described above), but also
-> fixed-endian.
+> The sg_inq utility in the sg3_utils package (version
+> 1.07) has
+> a '-i' option that will decode all the
+> "identification descriptors"
+> in the device identification VPD page (0x83) for the
+> nominated device.
+> That information in conjunction with some of the
+> explanations in
+> this thread may show you what identifiers, if any,
+> are available.
+> The unit serial number page can be queried with
+> 'sg_inq -o=80 /dev/sda'.
+> sg3_utils can be found at: http://www.torque.net/sg
+> 
+> SPC-3 (SCSI Primary Commands) can be found
+> http://www.t10.org
+> The most recent draft is version 19 and section
+> 7.6.4 and 7.6.11
+> are relevant.
+> 
+> Doug Gilbert
+> 
 
-I completely agree with that, we need a different structure for other
-devices as well. Show me what you'd like for libata, for instance.
 
--- 
-Jens Axboe
-
+		
+__________________________________
+Do you Yahoo!?
+Yahoo! Mail is new and improved - Check it out!
+http://promotions.yahoo.com/new_mail
