@@ -1,43 +1,46 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [RFC] Make the SCSI mempool allocations variable
-Date: Tue, 9 Mar 2004 22:21:20 -0800
+From: vda <vda@port.imtp.ilyichevsk.odessa.ua>
+Subject: Re: [Announce] Emulex LightPulse Device Driver
+Date: Wed, 10 Mar 2004 09:21:46 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040310062120.GN148048@sgi.com>
-References: <1078858977.1756.40.camel@mulgrave>
+Message-ID: <200403100921.46432.vda@port.imtp.ilyichevsk.odessa.ua>
+References: <3356669BBE90C448AD4645C843E2BF2802C014D7@xbl.ma.emulex.com> <404E5CC3.9010305@stesmi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.SGI.COM ([192.48.171.6]:8743 "EHLO zok.sgi.com")
-	by vger.kernel.org with ESMTP id S262528AbUCJGVs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Mar 2004 01:21:48 -0500
-Content-Disposition: inline
-In-Reply-To: <1078858977.1756.40.camel@mulgrave>
+Received: from 168.imtp.Ilyichevsk.Odessa.UA ([195.66.192.168]:55048 "HELO
+	port.imtp.ilyichevsk.odessa.ua") by vger.kernel.org with SMTP
+	id S262266AbUCJHhS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2004 02:37:18 -0500
+In-Reply-To: <404E5CC3.9010305@stesmi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: mpm@waste.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Stefan Smietanowski <stesmi@stesmi.com>, "Smart, James" <James.Smart@Emulex.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 
-On Tue, Mar 09, 2004 at 02:02:55PM -0500, James Bottomley wrote:
-> Based on Jeremy's request to increase max_phys_segments, this is the way
-> to do it (SCSI_MAX_PHYS_SEGMENTS) is the value that gets set as the
-> queue's max_phys_segments.
-> 
-> I have to say that when I tried raising it to 256 and hammering a 10GB
-> ext2 filesystem, I still didn't generate any >128 segment requests, so
-> I'm dubious that raising it has any benefit at all, but feel free to try
-> it and publish the figures.
-> 
-> I did wonder if lowering it might help improve the memory footprint for
-> some embedded systems, so I set it up to be lowered as far as 32.
-> 
-> James
+On Wednesday 10 March 2004 02:09, Stefan Smietanowski wrote:
+> Smart, James wrote:
+> > All,
+> >
+> > Emulex is embarking on an effort to open source the driver for its
+> > LightPulse Fibre Channel Adapter family. This effort will migrate
+> > Emulex's current code base to a driver centric to the Linux 2.6 kernel,
+> > with the goal to eventually gain inclusion in the base Linux kernel.
+> >
+> > A new project has been created on SourceForge to host this effort - see
+> > http://sourceforge.net/projects/lpfcxxxx/ . Further information, such as
+> > the lastest FAQ, can be found on the project site.
+> >
+> > We realize that this will be a significant effort for Emulex. We welcome
+> > any feedback that the community can provide us.
+>
+> I wish to just tell you that I think you're doing the Right Thing(TM).
+>
+> There are people that don't buy hardware for which the source isn't
+> either available or included in the standard kernel, even if there
+> are more patches or newer driver versions external to the main tree.
 
-Thanks, James!
-
-I promise that we will take advantage of this, but it might take a
-couple of months.  As you point out, the filesystem code also has
-to deliver the larger requests.
-
-I'll try a couple of tests with XFS and block device direct I/O.
-
-jeremy
+Being bitten by "buggy firmware from hell", I, too, will abstain from
+using hardware from manufactures who do not open driver source
+for impossible-to-understand reasons.
+--
+vda
