@@ -1,47 +1,30 @@
-From: Olaf Hering <olh@suse.de>
-Subject: Re: [PATCH] signed bug in scsi_device.h
-Date: Thu, 13 May 2004 19:16:29 +0200
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [usb-storage] Malfunctioning USB stick
+Date: Thu, 13 May 2004 14:09:29 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040513171629.GA31832@suse.de>
-References: <20040513164306.GA27050@suse.de> <20040513181047.A13153@infradead.org>
+Message-ID: <Pine.LNX.4.44L0.0405131408110.651-100000@ida.rowland.org>
+References: <200405131818.55271.oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:48789 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S264206AbUEMRSL (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:3588 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S264358AbUEMSJa (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 May 2004 13:18:11 -0400
-Content-Disposition: inline
-In-Reply-To: <20040513181047.A13153@infradead.org>
+	Thu, 13 May 2004 14:09:30 -0400
+In-Reply-To: <200405131818.55271.oliver@neukum.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org
+To: Oliver Neukum <oliver@neukum.org>
+Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org
 
- On Thu, May 13, Christoph Hellwig wrote:
+On Thu, 13 May 2004, Oliver Neukum wrote:
 
-> On Thu, May 13, 2004 at 06:43:06PM +0200, Olaf Hering wrote:
-> >=20
-> > one of the recent aic7xxx versions puts a -1 in scsi_cmnd->device->=
-type,
-> > in drivers/scsi/aic7xxx/aic79xx_osm.c
-> > that doesnt work very well on ppc because aic7xxx tends to use -Wer=
-ror.
-> >=20
-> > maybe scsi_level needs the signed as well.
->=20
-> Maybe aic7xxx should stop doing stuff like that instead?
+> Hi,
+> 
+> this stick is acting up.
+> I just mounted it and got (no disconnection physically):
 
-probably. Can you fix up scsi_alloc_sdev in the meantime?
-I just looked again, the check was device->type !=3D -1.=20
-Maybe our enterprise compiler is just too pedantic. I really dont know.
+It looks like some sort of I/O problem reading the partition table.  What 
+do you get with verbose usb-storage debugging enabled?
 
---=20
-USB is for mice, FireWire is for men!
+Alan Stern
 
-sUse lINUX ag, n=C3=9CRNBERG
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
