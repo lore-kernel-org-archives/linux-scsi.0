@@ -1,863 +1,246 @@
-From: Paul.Ely@Emulex.Com
-Subject: [PATCH] RE: suspending I/Os to a device
-Date: Fri, 6 Aug 2004 17:13:35 -0400
+From: Dan Merillat <harik.attar@gmail.com>
+Subject: Megaraid lockup on 2.6.[7-8]
+Date: Fri, 6 Aug 2004 21:55:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <BC539F2EF4C10B459592BAFE5A3273F9107D5B@xbl3.ma.emulex.com>
+Message-ID: <c0c067900408061855df4dcae@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+	boundary="----=_Part_35_27542634.1091843732469"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:53679 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S268328AbUHFVNv convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Aug 2004 17:13:51 -0400
-content-class: urn:content-classes:message
+Received: from rproxy.gmail.com ([64.233.170.207]:40984 "EHLO mproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S267900AbUHGBzc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Aug 2004 21:55:32 -0400
+Received: by mproxy.gmail.com with SMTP id 73so62853rnk
+        for <linux-scsi@vger.kernel.org>; Fri, 06 Aug 2004 18:55:32 -0700 (PDT)
 List-Id: linux-scsi@vger.kernel.org
-To: Paul.Ely@Emulex.Com, James.Bottomley@SteelEye.com
-Cc: hch@infradead.org, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+------=_Part_35_27542634.1091843732469
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+This dump is from 2.6.7-rc3.  I'm using the in-kernel megaraid driver
+on this Express 500.
+
+0000:00:09.0 RAID bus controller: American Megatrends Inc. MegaRAID (rev 02)
+        Subsystem: American Megatrends Inc. MegaRAID 475 Express
+500/500LC RAID Controller
+
+At this point, I'm really unsure what's going on.  It went from
+"working" to "not working"
+overnight, after a 2 month uptime with no problem.  Now it lasts
+between 5 minutes and 3 hours before it locks up.  Somtimes the
+lockups are 'soft', in that all disk IO hangs in wait.  Othertimes
+it's hard (kernel panic and reload)
+
+Due to the sudden nature of the problem, I suspected hardware. 
+Starting with the SCSI cable,
+RAID card, RAM, PCI riser card, motherboard... it's all been replaced.
+ The megaraid itself
+dosn't complain about problems accessing the drives (and the state is
+always Optimal on reboot, no media or "other" errors on any drive)
+
+Software wise, I've tried from 2.6.7-rc3, 2.6.7, 2.6.8-rc2 and 2.6.8-rc3.
+
+I tried the 2.20 series, but they don't appear to recognize older
+cards?  Are they for
+U320 only or did I do something wrong?  (2.20 works fine on another
+box with a U320 controller)
+
+I'm at a loss.  I guess I could replace all the drives, being as
+that's the last thing left to try,
+but A) it's a serious PITA and B) they "appear" fine, even when doing
+a full consistency check
+via the Ctrl-M BIOS.   
+
+This is made even more fun due to the fact it's a LIVE server, or was,
+until two days ago.  It's
+also stored in a colo facility about an hour from my house.   I'm
+going to go back tomorrow
+and try updating the firmware on the megaraid, but that's about the
+only thing I can think
+left to try.   Perhaps some PCI setting I should try?
+
+Any help would be greatly appreciated!
+
+(Different PCI Bus/Slot due to being in a different MB when I captured
+this backtrace)
 
 
+megaraid: found 0x101e:0x1960:bus 1:slot 2:func 0
+scsi0:Found MegaRAID controller at 0xf8846000, IRQ:27
+megaraid: [C170:3.13] detected 1 logical drives.
+megaraid: supports extended CDBs.
+megaraid: channel[0] is raid.
+scsi0 : LSI Logic MegaRAID C170 254 commands 16 targs 4 chans 7 luns
+scsi0: scanning scsi channel 0 for logical drives.
+  Vendor: MegaRAID  Model: LD 0 RAID5  210G  Rev: C170
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+SCSI device sda: 430116864 512-byte hdwr sectors (220220 MB)
+sda: asking for cache data failed
+sda: assuming drive cache: write through
+ /dev/scsi/host0/bus0/target0/lun0: p1
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
+scsi0: scanning scsi channel 1 for logical drives.
+scsi0: scanning scsi channel 2 for logical drives.
+scsi0: scanning scsi channel 4 [P0] for physical devices.
+...
+megaraid: ABORTING-12793 cmd=2a <c=0 t=0 l=0>
+megaraid: ABORTING-12796 cmd=2a <c=0 t=0 l=0>
+megaraid: ABORTING-12797 cmd=2a <c=0 t=0 l=0>
+megaraid: ABORTING-12798 cmd=2a <c=0 t=0 l=0>
+megaraid: reservation reset failed.
+megaraid: RESET-12793 cmd=2a <c=0 t=0 l=0>
+megaraid: reservation reset failed.
+megaraid: RESET-12793 cmd=2a <c=0 t=0 l=0>
+megaraid: reservation reset failed.
+megaraid: RESET-12793 cmd=2a <c=0 t=0 l=0>
+scsi: Device offlined - not ready after error recovery: host 0 channel
+0 id 0 lun 0
+scsi: Device offlined - not ready after error recovery: host 0 channel
+0 id 0 lun 0
+scsi: Device offlined - not ready after error recovery: host 0 channel
+0 id 0 lun 0
+scsi: Device offlined - not ready after error recovery: host 0 channel
+0 id 0 lun 0
+SCSI error : <0 0 0 0> return code = 0x6000000
+end_request: I/O error, dev sda, sector 197231
+Buffer I/O error on device dm-64, logical block 24598
+lost page write due to I/O error on dm-64
+scsi0 (0:0): rejecting I/O to offline device
 
-> -----Original Message-----
-> From: Ely, Paul 
-> Sent: Friday, August 06, 2004 5:13 PM
-> To: Ely, Paul; James.Bottomley@SteelEye.com
-> Cc: hch@infradead.org; Smart, James; linux-scsi@vger.kernel.org
-> Subject: RE: suspending I/Os to a device PATCH
-> 
-> 
-> 
-> 
-> > -----Original Message-----
-> > From: linux-scsi-owner@vger.kernel.org
-> > [mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Ely, Paul
-> > Sent: Friday, August 06, 2004 3:36 PM
-> > To: Ely, Paul; James.Bottomley@SteelEye.com
-> > Cc: hch@infradead.org; Smart, James; linux-scsi@vger.kernel.org
-> > Subject: RE: suspending I/Os to a device
-> > 
-> > 
-> > Here is the completed patch for the scsi device suspend/continue
-> > functionality.  It includes a method for get transport data in
-> > a non-transport specific way and builds clean in the 2.6.7 
-> > kernel source.
-> > 
-> > I have not started testing the patch yet, but will next week.
-> > 
-> > Comments welcome.
-> > 
-> > Paul
-> > 
-> > ====================================
-> > 
-> > 
-> > diff -uNr clean_kernel_2_6_7/drivers/scsi/scsi.c 
-> > changed_kernel_2_6_7/drivers/scsi/scsi.c
-> > --- clean_kernel_2_6_7/drivers/scsi/scsi.c	2004-07-19 
-> > 13:04:44.898201000 -0400
-> > +++ changed_kernel_2_6_7/drivers/scsi/scsi.c	2004-08-04 
-> > 11:57:16.665960000 -0400
-> > @@ -512,6 +512,19 @@
-> >  		/* return 0 (because the command has been processed) */
-> >  		goto out;
-> >  	}
-> > +
-> > +	/* Check to see if the scsi lld put this device into suspend. */
-> > +	if (unlikely(cmd->device->sdev_state == SDEV_SUSPEND)) {
-> > +		/* in SDEV_SUSPEND, the command is just put 
-> > back on the device
-> > +		 * queue.  The suspend state has already 
-> > blocked the queue so
-> > +		 * future requests should not occur until the device 
-> > +		 * transitions out of the suspend state.
-> > +		 */
-> > +		scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
-> > +		SCSI_LOG_MLQUEUE(3, printk("queuecommand : 
-> > request rejected\n"));
-> > +		goto out;
-> > +	}
-> > +
-> >  	/* Assign a unique nonzero serial_number. */
-> >  	/* XXX(hch): this is racy */
-> >  	if (++serial_number == 0)
-> > @@ -1088,8 +1101,8 @@
-> >  
-> >  /**
-> >   * scsi_device_cancel - cancel outstanding IO to this device
-> > - * @sdev:	pointer to struct scsi_device
-> > - * @data:	pointer to cancel value.
-> > + * @sdev:	Pointer to struct scsi_device
-> > + * @recovery:	Boolean instructing function to recover 
-> > device or not.
-> >   *
-> >   **/
-> >  int scsi_device_cancel(struct scsi_device *sdev, int recovery)
-> > diff -uNr clean_kernel_2_6_7/drivers/scsi/scsi_error.c 
-> > changed_kernel_2_6_7/drivers/scsi/scsi_error.c
-> > --- clean_kernel_2_6_7/drivers/scsi/scsi_error.c	
-> > 2004-07-23 15:46:15.061800000 -0400
-> > +++ changed_kernel_2_6_7/drivers/scsi/scsi_error.c	
-> > 2004-08-06 15:31:06.804920000 -0400
-> > @@ -24,6 +24,7 @@
-> >  #include <linux/blkdev.h>
-> >  #include <linux/smp_lock.h>
-> >  #include <scsi/scsi_ioctl.h>
-> > +#include <scsi/scsi_transport.h>
-> >  
-> >  #include "scsi.h"
-> >  #include "hosts.h"
-> > @@ -155,6 +156,81 @@
-> >  }
-> >  
-> >  /**
-> > + * scsi_add_sdev_timer - Start a timer for a scsi device that
-> > + *			 has been suspened by the scsi lld.
-> > + * @scmd:	scsi device to start timing.
-> > + * @timeout:	amount of time this device has to recover.
-> > + * @complete:	timeout function to call if timer isn't 
-> > cancelled.
-> > + *
-> > + * Notes:
-> > + *	The scsi device is given a limited amount of time to
-> > + *	call scsi_device_continue and cancel this timer.  If the
-> > + *	scsi lld does not call in time, the device transitions 
-> > + *	to the cancel state.
-> > + *
-> > + * Returns:
-> > + *	None.
-> > + **/
-> > +void scsi_add_sdev_timer(struct scsi_device *sdev, int timeout,
-> > +			 void (*complete)(struct scsi_device *))
-> > +{
-> > +	/*
-> > +	 * If the clock was already running for this command, then
-> > +	 * first delete the timer.  The timer handling code gets rather
-> > +	 * confused if we don't do this.
-> > +	 */
-> > +	if (sdev->device_recovert)
-> > +		if (sdev->device_recovert->eh_nodev_timeout.function)
-> > +			
-> > del_timer(&sdev->device_recovert->eh_nodev_timeout);
-> > +
-> > +	sdev->device_recovert->eh_nodev_timeout.data = 
-> > (unsigned long) sdev;
-> > +	sdev->device_recovert->eh_nodev_timeout.expires = 
-> > jiffies + timeout;
-> > +	sdev->device_recovert->eh_nodev_timeout.function = 
-> > (void (*)(unsigned long)) complete;
-> > +
-> > +	SCSI_LOG_ERROR_RECOVERY(5, printk("%s: sdev: %p, time:"
-> > +				" %d, (%p)\n", __FUNCTION__,
-> > +				 sdev, timeout, complete));
-> > +
-> > +	add_timer(&sdev->device_recovert->eh_nodev_timeout);
-> > +}
-> > +
-> > +/**
-> > + * scsi_delete_sdev_timer - Cancel timer for a given scsi 
-> > device that was
-> > + *			    previously suspended.
-> > + *
-> > + * @sdev:	Scsi device on which to cancel the timer.
-> > + *
-> > + * Notes:
-> > + *	The scsi device is guaranteed to have recovered if this call
-> > + *	executes.  However, the scsi device could have recovered too
-> > + *	late and this routine needs to detect this scenerio.
-> > + *
-> > + * Return value:
-> > + *	0 if the timer function has already started to run.
-> > + *	1 if the timer was successfully detached.
-> > + *
-> > + **/
-> > +int scsi_delete_sdev_timer(struct scsi_device *sdev)
-> > +{
-> > +	int rtn;
-> > +
-> > +	if (!sdev->device_recovert)
-> > +		return -EACCES;
-> > +
-> > +	rtn = del_timer(&sdev->device_recovert->eh_nodev_timeout);
-> > +
-> > +	SCSI_LOG_ERROR_RECOVERY(5, printk("%s: sdev: %p,"
-> > +					 " rtn: %d\n", __FUNCTION__,
-> > +					 sdev, rtn));
-> > +
-> > +	sdev->device_recovert->eh_nodev_timeout.data = 
-> > (unsigned long)NULL;
-> > +	sdev->device_recovert->eh_nodev_timeout.function = NULL;
-> > +
-> > +	return rtn;
-> > +}
-> > +
-> > +
-> > +/**
-> >   * scsi_times_out - Timeout function for normal scsi commands.
-> >   * @scmd:	Cmd that is timing out.
-> >   *
-> > @@ -174,6 +250,31 @@
-> >  }
-> >  
-> >  /**
-> > + * scsi_timeout_suspended_sdev - Timeout handler for 
-> > suspended scsi devices that fail
-> > + *				 to recover in the alloted time.
-> > + * @sdev:	scsi device that failed to reappear in the alloted time.
-> > + **/
-> > +void scsi_timeout_suspended_sdev(struct scsi_device *sdev)
-> > +{
-> > +	int rtn;
-> > +
-> > +	/* 
-> > +	 * Cancel all IO to this device and do not attempt recovery.
-> > +	 * There should not be any outstanding IO to the scsi lld
-> > +	 * managing this device since the lld should have completed
-> > +	 * all IO before transitioning to device state SDEV_SUSPEND.
-> > +	 * The return value from scsi_device_cancel never fails and
-> > +	 * is ignored here.
-> > +	 */
-> > +	rtn = scsi_device_cancel(sdev, 0);
-> > +	if (rtn) {
-> > +		SCSI_LOG_ERROR_RECOVERY(5, printk("%s: rtn: 
-> > %d\n", __FUNCTION__,
-> > +					  rtn));
-> > +	}
-> > +}
-> > +
-> > +
-> > +/**
-> >   * scsi_block_when_processing_errors - Prevent cmds from 
-> > being queued.
-> >   * @sdev:	Device on which we are performing recovery.
-> >   *
-> > @@ -1196,6 +1297,7 @@
-> >  	return;
-> >  }
-> >  
-> > +
-> >  /**
-> >   * scsi_sleep_done - timer function for scsi_sleep
-> >   * @sem:	semphore to signal
-> > diff -uNr clean_kernel_2_6_7/drivers/scsi/scsi_lib.c 
-> > changed_kernel_2_6_7/drivers/scsi/scsi_lib.c
-> > --- clean_kernel_2_6_7/drivers/scsi/scsi_lib.c	
-> > 2004-07-19 13:04:44.873200000 -0400
-> > +++ changed_kernel_2_6_7/drivers/scsi/scsi_lib.c	
-> > 2004-08-06 15:29:15.911920000 -0400
-> > @@ -18,8 +18,8 @@
-> >  
-> >  #include <scsi/scsi_driver.h>
-> >  #include <scsi/scsi_host.h>
-> > +#include <scsi/scsi_transport.h>
-> >  #include "scsi.h"
-> > -
-> >  #include "scsi_priv.h"
-> >  #include "scsi_logging.h"
-> >  
-> > @@ -59,6 +59,7 @@
-> >  #undef SP
-> >  
-> >  
-> > +
-> >  /*
-> >   * Function:    scsi_insert_special_req()
-> >   *
-> > @@ -1581,6 +1582,12 @@
-> >  		case SDEV_CREATED:
-> >  		case SDEV_OFFLINE:
-> >  		case SDEV_QUIESCE:
-> > +		case SDEV_SUSPEND:
-> > +			printk(KERN_WARNING 
-> > "scsi_device_set_state: transitioning"
-> > +				"to SDEV_RUNNING from current state %d"
-> > +				"on host %d channel %d id %d 
-> > lun %d\n", oldstate,
-> > +				sdev->host->host_no, 
-> > sdev->channel, sdev->id, 
-> > +				sdev->lun);
-> >  			break;
-> >  		default:
-> >  			goto illegal;
-> > @@ -1608,11 +1615,32 @@
-> >  		}
-> >  		break;
-> >  
-> > +	case SDEV_SUSPEND:
-> > +		switch (oldstate) {
-> > +		case SDEV_CREATED:
-> > +		case SDEV_RUNNING:
-> > +			printk(KERN_WARNING 
-> > "scsi_device_set_state: transitioning"
-> > +				"to SDEV_SUSPEND from current state %d"
-> > +				"on host %d channel %d id %d 
-> > lun %d\n", oldstate,
-> > +				sdev->host->host_no, 
-> > sdev->channel, sdev->id, 
-> > +				sdev->lun);
-> > +			break;
-> > +		default:
-> > +			goto illegal;
-> > +		}
-> > +		break;
-> > +
-> >  	case SDEV_CANCEL:
-> >  		switch (oldstate) {
-> >  		case SDEV_CREATED:
-> >  		case SDEV_RUNNING:
-> >  		case SDEV_OFFLINE:
-> > +		case SDEV_SUSPEND:
-> > +			printk(KERN_WARNING 
-> > "scsi_device_set_state: transitioning to"
-> > +				"SDEV_CANCEL from current state 
-> > %d on host %d "
-> > +				"channel %d id %d lun %d\n", oldstate, 
-> > +				sdev->host->host_no, 
-> > sdev->channel, sdev->id, 
-> > +				sdev->lun);
-> >  			break;
-> >  		default:
-> >  			goto illegal;
-> > @@ -1627,7 +1655,6 @@
-> >  			goto illegal;
-> >  		}
-> >  		break;
-> > -
-> >  	}
-> >  	sdev->sdev_state = state;
-> >  	return 0;
-> > @@ -1691,3 +1718,134 @@
-> >  }
-> >  EXPORT_SYMBOL(scsi_device_resume);
-> >  
-> > +/**
-> > + * Function:	scsi_device_suspend()
-> > + *
-> > + * Purpose:	Suspend request made by scsi lld's to 
-> > temporarily stop all
-> > + *		scsi commands on the specified device.  Called 
-> > from interrupt
-> > + *		or normal process context.
-> > + *
-> > + * Arguments:	sdev:	scsi device to suspend
-> > + *
-> > + * Returns:	 0	if successful 
-> > + *		-1	if error
-> > + *		  
-> > + *
-> > + * Notes:       
-> > + *	This routine transitions the device to the SDEV_SUSPEND state
-> > + *	(which must be a legal transition).  When the device is in this
-> > + *	state, all commands are deferred until the scsi lld reenables
-> > + *	the device with scsi_device_continue or 
-> > device_suspend_tmo fires.
-> > + *	This routine assumes no locks are held upon entry.
-> > + **/
-> > +int
-> > +scsi_device_suspend(struct scsi_device *sdev)
-> > +{
-> > +	request_queue_t *q = sdev->request_queue;
-> > +	unsigned long flags;
-> > +	int  nodev_timeout = 0;
-> > +
-> > +	/* Before setting the new device state, make sure the 
-> > host managing this
-> > +	 * device has a recovery attribute for the suspend timeout.
-> > +	 */
-> > +	if (sdev->device_recovert) {
-> > +		if (sdev->device_recovert->nodev_timeout < 1) {
-> > +			printk(KERN_WARNING 
-> > "scsi_device_suspend: nodev_timeout"
-> > +				"value invalid on host %d 
-> > channel %d id %d" 
-> > +				"lun %d nodev_timeout=%d\n",
-> > +				sdev->host->host_no, 
-> > sdev->channel, sdev->id, 
-> > +				sdev->lun, 
-> > sdev->device_recovert->nodev_timeout);
-> > +		return -1;
-> > +		}
-> > +
-> > +		nodev_timeout = sdev->device_recovert->nodev_timeout;
-> > +	} else {
-> > +		printk(KERN_WARNING "scsi_device_suspend: host 
-> > %d channel %d"
-> > +			"id %d lun %d has no recovery data 
-> > available.\n",
-> > +			sdev->host->host_no, sdev->channel, sdev->id, 
-> > +			sdev->lun);
-> > +		return -1;
-> > +	}
-> > +
-> > +	if (scsi_device_set_state(sdev, SDEV_SUSPEND) != 0) {
-> > +		printk(KERN_WARNING "scsi_device_suspend: state 
-> > set to suspend failed"
-> > +			"on host %d channel %d id %d lun %d state=%d\n",
-> > +			sdev->host->host_no, sdev->channel, 
-> > sdev->id, sdev->lun,
-> > +			sdev->sdev_state);
-> > +		return -1;
-> > +	}
-> > +
-> > +	/* 
-> > +	 * The device has transitioned to SDEV_SUSPEND.  Stop the
-> > +	 * block layer from calling the midlayer with this device's
-> > +	 * request queue.  
-> > +	 */
-> > +	spin_lock_irqsave(q->queue_lock, flags);
-> > +	blk_stop_queue(q);
-> > +	spin_unlock_irqrestore(q->queue_lock, flags);
-> > +
-> > +	/*
-> > +	 * Start timing the suspend.  The scsi lld is only 
-> > allowed to suspend for
-> > +	 * the nodev_timeout value in seconds. 
-> > +	 */
-> > +	scsi_add_sdev_timer(sdev, nodev_timeout, 
-> > scsi_timeout_suspended_sdev);
-> > +	return 0;
-> > +}
-> > +EXPORT_SYMBOL(scsi_device_suspend);
-> > +
-> > +/**
-> > + * Function:	scsi_device_continue()
-> > + *
-> > + * Purpose:	Called by scsi lld's or the midlayer to restart 
-> > the device queue
-> > + *		for the previously suspended scsi device.  Called from
-> > + *		interrupt or normal process context.
-> > + *
-> > + * Arguments:	sdev:	scsi device to restart
-> > + *
-> > + * Returns:	 0	if successful 
-> > + *		-1	if error
-> > + *		  
-> > + *
-> > + * Notes:       
-> > + *	This routine transitions the device to the SDEV_RUNNING state
-> > + *	(which must be a legal transition) allowing the midlayer to
-> > + *	goose the queue for this device.  This routine assumes no locks
-> > + *	are held upon entry.
-> > + **/
-> > +int
-> > +scsi_device_continue(struct scsi_device *sdev)
-> > +{
-> > +	request_queue_t *q = sdev->request_queue; 
-> > +	int err;
-> > +	unsigned long flags;
-> > +	
-> > +	/* Stop the scsi device timer first. Take no action on 
-> > the del_timer
-> > +	 * failure as the state machine state change will validate the
-> > +	 * transaction.
-> > +	 */
-> > +	err = scsi_delete_sdev_timer(sdev);
-> > +	if (!err) {
-> > +		printk(KERN_WARNING "scsi_device_continue: no 
-> > device timeout on" 
-> > +			"host %d channel %d id %d lun %d state %d\n",
-> > +			sdev->host->host_no, sdev->channel, 
-> > sdev->id, sdev->lun,
-> > +			sdev->sdev_state);
-> > +	} 
-> > +
-> > +	/* Try to transition the scsi device to SDEV_RUNNING
-> > +	 * and goose the device queue if successful.  
-> > +	 */
-> > +	err = scsi_device_set_state(sdev, SDEV_RUNNING);
-> > +	if (err) {
-> > +		printk(KERN_WARNING "scsi_device_continue: 
-> > state set to running"
-> > +			"failed on host %d channel %d id %d lun 
-> > %d state=%d\n",
-> > +			sdev->host->host_no, sdev->channel, 
-> > sdev->id, sdev->lun,
-> > +			sdev->sdev_state);
-> > +		return err;
-> > +	}
-> > +
-> > +	spin_lock_irqsave(q->queue_lock, flags);
-> > +	blk_start_queue(q);
-> > +	spin_unlock_irqrestore(q->queue_lock, flags);
-> > +	return 0;
-> > +}
-> > +EXPORT_SYMBOL(scsi_device_continue);
-> > diff -uNr clean_kernel_2_6_7/drivers/scsi/scsi_priv.h 
-> > changed_kernel_2_6_7/drivers/scsi/scsi_priv.h
-> > --- clean_kernel_2_6_7/drivers/scsi/scsi_priv.h	
-> > 2004-07-19 13:04:45.468202000 -0400
-> > +++ changed_kernel_2_6_7/drivers/scsi/scsi_priv.h	
-> > 2004-07-30 17:32:15.779440000 -0400
-> > @@ -100,6 +100,7 @@
-> >  
-> >  /* scsi_error.c */
-> >  extern void scsi_times_out(struct scsi_cmnd *cmd);
-> > +extern void scsi_timeout_suspended_sdev(struct scsi_device *sdev);
-> >  extern int scsi_error_handler(void *host);
-> >  extern int scsi_decide_disposition(struct scsi_cmnd *cmd);
-> >  extern void scsi_eh_wakeup(struct Scsi_Host *shost);
-> > @@ -116,6 +117,7 @@
-> >  extern void scsi_free_queue(struct request_queue *q);
-> >  extern int scsi_init_queue(void);
-> >  extern void scsi_exit_queue(void);
-> > +extern int scsi_get_transport_info(void);
-> >  
-> >  /* scsi_proc.c */
-> >  #ifdef CONFIG_SCSI_PROC_FS
-> > diff -uNr clean_kernel_2_6_7/drivers/scsi/scsi_syms.c 
-> > changed_kernel_2_6_7/drivers/scsi/scsi_syms.c
-> > --- clean_kernel_2_6_7/drivers/scsi/scsi_syms.c	
-> > 2004-07-19 13:04:44.842200000 -0400
-> > +++ changed_kernel_2_6_7/drivers/scsi/scsi_syms.c	
-> > 2004-07-27 12:56:37.106600000 -0400
-> > @@ -86,6 +86,8 @@
-> >  EXPORT_SYMBOL(scsi_add_device);
-> >  EXPORT_SYMBOL(scsi_remove_device);
-> >  EXPORT_SYMBOL(scsi_device_cancel);
-> > +EXPORT_SYMBOL(scsi_device_suspend);
-> > +EXPORT_SYMBOL(scsi_device_continue);
-> >  
-> >  EXPORT_SYMBOL(__scsi_mode_sense);
-> >  EXPORT_SYMBOL(scsi_mode_sense);
-> > diff -uNr clean_kernel_2_6_7/drivers/scsi/scsi_sysfs.c 
-> > changed_kernel_2_6_7/drivers/scsi/scsi_sysfs.c
-> > --- clean_kernel_2_6_7/drivers/scsi/scsi_sysfs.c	
-> > 2004-07-19 13:04:43.644200000 -0400
-> > +++ changed_kernel_2_6_7/drivers/scsi/scsi_sysfs.c	
-> > 2004-08-05 09:41:49.706920000 -0400
-> > @@ -29,6 +29,7 @@
-> >  	{ SDEV_DEL, "deleted" },
-> >  	{ SDEV_QUIESCE, "quiesce" },
-> >  	{ SDEV_OFFLINE,	"offline" },
-> > +	{ SDEV_SUSPEND,	"suspend" },
-> >  };
-> >  
-> >  const char *scsi_device_state_name(enum scsi_device_state state)
-> > diff -uNr clean_kernel_2_6_7/drivers/scsi/scsi_transport_fc.c 
-> > changed_kernel_2_6_7/drivers/scsi/scsi_transport_fc.c
-> > --- clean_kernel_2_6_7/drivers/scsi/scsi_transport_fc.c	
-> > 2004-07-19 13:04:47.270200000 -0400
-> > +++ changed_kernel_2_6_7/drivers/scsi/scsi_transport_fc.c	
-> > 2004-07-29 12:39:05.466520000 -0400
-> > @@ -28,7 +28,7 @@
-> >  
-> >  static void transport_class_release(struct class_device 
-> *class_dev);
-> >  
-> > -#define FC_NUM_ATTRS 	3	/* increase this if you 
-> > add attributes */
-> > +#define FC_NUM_ATTRS 	4	/* increase this if you 
-> > add attributes */
-> >  #define FC_OTHER_ATTRS 	0	/* increase this if you 
-> > add "always on"
-> >  				 * attributes */
-> >  
-> > @@ -61,11 +61,14 @@
-> >  
-> >  static int fc_setup_transport_attrs(struct scsi_device *sdev)
-> >  {
-> > -	/* I'm not sure what values are invalid.  We should 
-> > pick some invalid
-> > -	 * values for the defaults */
-> > +	/*
-> > +	 * I'm not sure what values are invalid.  We should 
-> > pick some invalid
-> > +	 * values for the defaults.
-> > +	 */
-> >  	fc_node_name(sdev) = -1;
-> >  	fc_port_name(sdev) = -1;
-> >  	fc_port_id(sdev) = -1;
-> > +	fc_nodevice_tmo(sdev) = -1;
-> >  
-> >  	return 0;
-> >  }
-> > @@ -125,6 +128,7 @@
-> >  fc_transport_rd_attr_cast(node_name, "0x%llx\n", unsigned 
-> long long);
-> >  fc_transport_rd_attr_cast(port_name, "0x%llx\n", unsigned 
-> long long);
-> >  fc_transport_rd_attr(port_id, "0x%06x\n");
-> > +fc_transport_rw_attr(nodevice_tmo, "%d\n");
-> >  
-> >  #define SETUP_ATTRIBUTE_RD(field)				\
-> >  	i->private_attrs[count] = class_device_attr_##field;	\
-> > @@ -165,6 +169,7 @@
-> >  	SETUP_ATTRIBUTE_RD(port_id);
-> >  	SETUP_ATTRIBUTE_RD(port_name);
-> >  	SETUP_ATTRIBUTE_RD(node_name);
-> > +	SETUP_ATTRIBUTE_RW(nodevice_tmo);
-> >  
-> >  	BUG_ON(count > FC_NUM_ATTRS);
-> >  
-> > diff -uNr clean_kernel_2_6_7/include/scsi/scsi_device.h 
-> > changed_kernel_2_6_7/include/scsi/scsi_device.h
-> > --- clean_kernel_2_6_7/include/scsi/scsi_device.h	
-> > 2004-07-19 13:05:49.284200000 -0400
-> > +++ changed_kernel_2_6_7/include/scsi/scsi_device.h	
-> > 2004-08-04 13:36:20.854920000 -0400
-> > @@ -30,6 +30,9 @@
-> >  				 * originate in the mid-layer) */
-> >  	SDEV_OFFLINE,		/* Device offlined (by error handling or
-> >  				 * user request */
-> > +	SDEV_SUSPEND,		/* Device suspended by scsi 
-> > lld.  No block 
-> > +				 * commands from user and 
-> > midlayer should be issued
-> > +				 * to the scsi lld. */
-> >  };
-> >  
-> >  struct scsi_device {
-> > @@ -99,17 +102,16 @@
-> >  				 * this device */
-> >  	unsigned expecting_cc_ua:1; /* Expecting a 
-> > CHECK_CONDITION/UNIT_ATTN
-> >  				     * because we did a bus reset. */
-> > -	unsigned use_10_for_rw:1; /* first try 10-byte read / write */
-> > -	unsigned use_10_for_ms:1; /* first try 10-byte mode 
-> > sense/select */
-> > +	unsigned use_10_for_rw:1;	/* first try 10-byte 
-> > read / write */
-> > +	unsigned use_10_for_ms:1;	/* first try 10-byte 
-> > mode sense/select */
-> >  	unsigned skip_ms_page_8:1;	/* do not use MODE 
-> > SENSE page 0x08 */
-> >  	unsigned skip_ms_page_3f:1;	/* do not use MODE 
-> > SENSE page 0x3f */
-> > -	unsigned use_192_bytes_for_3f:1; /* ask for 192 bytes 
-> > from page 0x3f */
-> > +	unsigned use_192_bytes_for_3f:1;/* ask for 192 bytes 
-> > from page 0x3f */
-> >  	unsigned no_start_on_add:1;	/* do not issue start on add */
-> > -	unsigned allow_restart:1; /* issue START_UNIT in error 
-> > handler */
-> > +	unsigned allow_restart:1;	/* issue START_UNIT in 
-> > error handler */
-> >  
-> >  	unsigned int device_blocked;	/* Device returned 
-> > QUEUE_FULL. */
-> > -
-> > -	unsigned int max_device_blocked; /* what device_blocked 
-> > counts down from  */
-> > +	unsigned int max_device_blocked;   /* what 
-> > device_blocked counts down from */
-> >  #define SCSI_DEFAULT_DEVICE_BLOCKED	3
-> >  
-> >  	int timeout;
-> > @@ -118,10 +120,11 @@
-> >  	struct class_device	sdev_classdev;
-> >  
-> >  	struct class_device	transport_classdev;
-> > -
-> > +	struct device_recover_template	*device_recovert; /* 
-> > Device recovery template. */
-> >  	enum scsi_device_state sdev_state;
-> >  	unsigned long		transport_data[0];
-> >  } __attribute__((aligned(sizeof(unsigned long))));
-> > +
-> >  #define	to_scsi_device(d)	\
-> >  	container_of(d, struct scsi_device, sdev_gendev)
-> >  #define	class_to_sdev(d)	\
-> > @@ -133,7 +136,8 @@
-> >  		uint, uint, uint);
-> >  extern void scsi_remove_device(struct scsi_device *);
-> >  extern int scsi_device_cancel(struct scsi_device *, int);
-> > -
-> > +int scsi_device_suspend(struct scsi_device *);
-> > +int scsi_device_continue(struct scsi_device *);
-> >  extern int scsi_device_get(struct scsi_device *);
-> >  extern void scsi_device_put(struct scsi_device *);
-> >  extern struct scsi_device *scsi_device_lookup(struct Scsi_Host *,
-> > diff -uNr clean_kernel_2_6_7/include/scsi/scsi_eh.h 
-> > changed_kernel_2_6_7/include/scsi/scsi_eh.h
-> > --- clean_kernel_2_6_7/include/scsi/scsi_eh.h	2004-07-19 
-> > 13:05:49.340200000 -0400
-> > +++ changed_kernel_2_6_7/include/scsi/scsi_eh.h	
-> > 2004-07-27 12:54:27.578603000 -0400
-> > @@ -4,6 +4,11 @@
-> >  extern void scsi_add_timer(struct scsi_cmnd *, int,
-> >  			   void (*)(struct scsi_cmnd *));
-> >  extern int scsi_delete_timer(struct scsi_cmnd *);
-> > +
-> > +extern void scsi_add_sdev_timer(struct scsi_device *, int,
-> > +				void (*complete)(struct scsi_device *));
-> > +extern int scsi_delete_sdev_timer(struct scsi_device *sdev);
-> > +
-> >  extern void scsi_report_bus_reset(struct Scsi_Host *, int);
-> >  extern void scsi_report_device_reset(struct Scsi_Host *, int, int);
-> >  extern int scsi_block_when_processing_errors(struct scsi_device *);
-> > diff -uNr clean_kernel_2_6_7/include/scsi/scsi_transport_fc.h 
-> > changed_kernel_2_6_7/include/scsi/scsi_transport_fc.h
-> > --- clean_kernel_2_6_7/include/scsi/scsi_transport_fc.h	
-> > 2004-07-19 13:05:49.377200000 -0400
-> > +++ changed_kernel_2_6_7/include/scsi/scsi_transport_fc.h	
-> > 2004-07-29 12:39:58.053520000 -0400
-> > @@ -26,6 +26,7 @@
-> >  
-> >  struct fc_transport_attrs {
-> >  	int port_id;
-> > +	int nodevice_tmo;
-> >  	uint64_t node_name;
-> >  	uint64_t port_name;
-> >  };
-> > @@ -34,12 +35,16 @@
-> >  #define fc_port_id(x)	(((struct fc_transport_attrs 
-> > *)&(x)->transport_data)->port_id)
-> >  #define fc_node_name(x)	(((struct fc_transport_attrs 
-> > *)&(x)->transport_data)->node_name)
-> >  #define fc_port_name(x)	(((struct fc_transport_attrs 
-> > *)&(x)->transport_data)->port_name)
-> > +#define fc_nodevice_tmo(x) (((struct fc_transport_attrs 
-> > *)&(x)->transport_data)->nodevice_tmo)
-> >  
-> >  /* The functions by which the transport class and the driver 
-> > communicate */
-> >  struct fc_function_template {
-> >  	void 	(*get_port_id)(struct scsi_device *);
-> >  	void	(*get_node_name)(struct scsi_device *);
-> >  	void	(*get_port_name)(struct scsi_device *);
-> > +	void    (*get_nodevice_tmo)(struct scsi_device *);
-> > +	void	(*set_nodevice_tmo)(struct scsi_device *, uint32_t);
-> > +
-> >  	/* The driver sets these to tell the transport class it
-> >  	 * wants the attributes displayed in sysfs.  If the show_ flag
-> >  	 * is not set, the attribute will be private to the transport
-> > @@ -47,6 +52,7 @@
-> >  	unsigned long	show_port_id:1;
-> >  	unsigned long	show_node_name:1;
-> >  	unsigned long	show_port_name:1;
-> > +	unsigned long   show_nodevice_tmo:1;
-> >  	/* Private Attributes */
-> >  };
-> >  
-> > @@ -54,3 +60,4 @@
-> >  void fc_release_transport(struct scsi_transport_template *);
-> >  
-> >  #endif /* SCSI_TRANSPORT_FC_H */
-> > +
-> > diff -uNr clean_kernel_2_6_7/include/scsi/scsi_transport.h 
-> > changed_kernel_2_6_7/include/scsi/scsi_transport.h
-> > --- clean_kernel_2_6_7/include/scsi/scsi_transport.h	
-> > 2004-07-19 13:05:49.363200000 -0400
-> > +++ changed_kernel_2_6_7/include/scsi/scsi_transport.h	
-> > 2004-08-05 10:20:04.110923000 -0400
-> > @@ -38,4 +38,22 @@
-> >  	int	size;
-> >  };
-> >  
-> > +/* device_recover_template:  
-> > + *	Scsi llds that want to take advantage of the 
-> > suspend/continue device
-> > + *	feature allocate an instance of this data type during 
-> > slave alloc.
-> > + *	The scsi lld sets the nodev_timeout value during 
-> > slave_configure and
-> > + *	frees this resource in slave_destroy.
-> > + *
-> > + *	This feature is optional to scsi llds.  The midlayer detects the
-> > + *	presence or absence of this feature by a scsi lld by 
-> > checking the
-> > + *	device_recovert pointer in the scsi_device instance. 
-> > + */
-> > +struct device_recover_template {
-> > +	/* Device recovery template. */
-> > +	unsigned int nodev_timeout;		/* Device 
-> > suspend timeout value
-> > +						 * in seconds. */
-> > +	struct timer_list eh_nodev_timeout;	/* Used to 
-> > timeout the suspend 
-> > +						 * state. */
-> > +};
-> > +
-> >  #endif /* SCSI_TRANSPORT_H */
-> > 
-> > > -----Original Message-----
-> > > From: Ely, Paul 
-> > > Sent: Monday, August 02, 2004 5:23 PM
-> > > To: 'James Bottomley'
-> > > Cc: 'Christoph Hellwig'; Smart, James; Linux SCSI Reflector
-> > > Subject: RE: suspending I/Os to a device
-> > > 
-> > > 
-> > > Hello James,
-> > > 
-> > > I wanted some additional feedback or at least
-> > > to get a better feel for what you had in mind
-> > > for getting transport data into the midlayer.
-> > > 
-> > > Do you see scsi_lib.c including say scsi_transport_fc.h
-> > > or did you hope that a more transparent mechanism could
-> > > be implemented such as calling into scsi_transport_fc.c
-> > > directly based on the class name?
-> > > 
-> > > Also, what are your thoughts about per-attribute retrieval
-> > > versus transport datastructure retrieval?
-> > > 
-> > > I have an implementation going that implements the former
-> > > idea and admittedly I am struggling with how to glue
-> > > this in.
-> > > 
-> > > Thanks,
-> > > 
-> > > Paul
-> > > 
-> > > > -----Original Message-----
-> > > > From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
-> > > > Sent: Wednesday, July 28, 2004 10:42 AM
-> > > > To: Ely, Paul
-> > > > Cc: 'Christoph Hellwig'; Smart, James; Linux SCSI Reflector
-> > > > Subject: RE: suspending I/Os to a device
-> > > > 
-> > > > 
-> > > > On Mon, 2004-07-26 at 15:11, Ely, Paul wrote: 
-> > > > > I think the sysfs implementation for the nodevice_tmo
-> > > > > attribute needs to be rethought.
-> > > > > 
-> > > > > The nodevice_tmo really is a scsi device-specific attribute
-> > > > > and although it could apply to Fibre Channel, iSCSI,
-> > > > > or usb-connected storage, defining it in the 
-> > scsi_transport_fc.c/h
-> > > > > files doesn't really work since:
-> > > > > 	1. The midlayer doesn't interface with the transport
-> > > > > 	   interface directly.
-> > > > > 	2. Each transport type would need to replicate the
-> > > > > 	   transport_fc at least for the nodevice_tmo.
-> > > > > 	3. Implementing this is messy.
-> > > > 
-> > > > Surely not if the implementation is done in scsi_lib.c?  The 
-> > > > idea being
-> > > > that you provide the storage area in the transport 
-> > > attributes but the
-> > > > routines for handling it are all in scsi_lib so any transport 
-> > > > that needs
-> > > > it can hook in easily and transports that don't care don't 
-> > > bother and
-> > > > don't waste the storage space.
-> > > > 
-> > > > This concept applies to a few other attributes we might do, 
-> > > > which is why
-> > > > I'm interested in seeing how it could work.
-> > > > 
-> > > > > I am working on a modification to move the nodevice_timeout
-> > > > > value and timeout error handler into the scsi_device structure
-> > > > > since it really is a scsi device attribute that needs to be
-> > > > > managed by the midlayer.
-> > > > 
-> > > > It's a device attribute, but since it's use should be 
-> > > optional I'm not
-> > > > convinced it needs to be in every SCSI device.
-> > > > 
-> > > > James
-> > > > 
-> > > > 
-> > > -
-> > > To unsubscribe from this list: send the line "unsubscribe 
-> > > linux-scsi" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > 
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe 
-> > linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
+------=_Part_35_27542634.1091843732469
+Content-Type: application/gzip; name="typhoon-config.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="typhoon-config.gz"
+
+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
+fqAzoxuz9W4AquX/K6apysxwAAA=
+------=_Part_35_27542634.1091843732469--
