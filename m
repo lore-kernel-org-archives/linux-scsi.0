@@ -1,133 +1,131 @@
 From: Andrew Morton <akpm@digeo.com>
-Subject: Re: aic7xxx woes in 2.5
-Date: Mon, 16 Dec 2002 01:40:25 -0800
+Subject: Re: aix7xxx_old woes in 2.5
+Date: Mon, 16 Dec 2002 02:39:14 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DFD9F89.4B994586@digeo.com>
-References: <3DFC059A.9AA3F75F@digeo.com> <23290000.1039982976@aslan.btc.adaptec.com>
+Message-ID: <3DFDAD52.BB836AA4@digeo.com>
+References: <3DFC06C9.19AFADE2@digeo.com> <20021216074008.GC13989@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from digeo-nav01.digeo.com (digeo-nav01.digeo.com [192.168.1.233])
-	by packet.digeo.com (8.9.3+Sun/8.9.3) with SMTP id BAA12662
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Dec 2002 01:40:27 -0800 (PST)
+	by packet.digeo.com (8.9.3+Sun/8.9.3) with SMTP id CAA13394
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Dec 2002 02:39:16 -0800 (PST)
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+To: Doug Ledford <dledford@redhat.com>
 Cc: linux-scsi@vger.kernel.org
 
-"Justin T. Gibbs" wrote:
+Doug Ledford wrote:
 > 
-> > For about six months in the 2.5 series, using aic7xxx, about every fourth
-> > boot one of my disks tends to get:
+> On Sat, Dec 14, 2002 at 08:36:25PM -0800, Andrew Morton wrote:
 > >
-> > (scsi1:A:4:0): parity-error detected in Data-in phase: SEQADDR(0x1ae)
-> > SCSIRATE(0x88) scsi1:0:4:0: Attempting to queue an ABORT message
+> > ho hum.
 > >
-> > This is invariably fatal.
-> 
-> ...
-> 
-> > This never happens in 2.4 kernels.
+> > It just doesn't start at all:
 > >
-> > It seems to happen a little more frequently on uniprocessor builds.
+> > scsi HBA driver <NULL> didn't set max_sectors, please fix the template<6>(scsi0) <Adaptec AIC-7892 Ultra 160/m SCSI host adapter> found at PCI 3/4/0
+> > (scsi0) Wide Channel, SCSI ID=7, 32/255 SCBs
+> > (scsi0) Downloading sequencer code... 396 instructions downloaded
+> > (scsi1) <Adaptec AIC-7880 Ultra SCSI host adapter> found at PCI 0/10/0
+> > (scsi1) Wide Channel, SCSI ID=7, 16/255 SCBs
+> > (scsi1) Downloading sequencer code... 436 instructions downloaded
+> > scsi0 : Adaptec AHA274x/284x/294x (EISA/VLB/PCI-Fast SCSI) 5.2.6/5.2.0
+> >        <Adaptec AIC-7892 Ultra 160/m SCSI host adapter>
+> > scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 0 lun 0
+> > scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 1 lun 0
+> > scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 2 lun 0
+> > scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 3 lun 0
+> > scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 4 lun 0
+> > scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 5 lun 0
+> > scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 6 lun 0
+> > scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 8 lun 0
 > >
-> > So relevant questions would be:
-> >
-> > 1) Why does only 2.5 get the parity error?
+> > (The above took three minutes or more)
 > 
-> Most likely different loads on your SCSI bus.  The driver can't "make up"
-> SCSI bus parity errors.
+> Interrupt routing problems is what that looks like to me, not driver
+> problems.  Try booting with different interrupt settings or with a
+> different kernel (smp vs. up, that sort of thing).
 
-It's very consistent.  Never seen on 2.4.
+Uniprocessor, no IO-APIC.  No go:
 
-> > 2) Why does the recovery lock up?
-> 
-> I would actually have to know the sequencer instruction that we
-> are blocked on in the clear_critical_sections code to be able to
-> say.  Several recovery bugs have been fixed in later driver versions.
+           CPU0       
+  0:     736412          XT-PIC  timer
+  1:         15          XT-PIC  i8042
+  2:          0          XT-PIC  cascade
+  4:          0          XT-PIC  GDB-stub
+  8:          1          XT-PIC  rtc
+ 11:        294          XT-PIC  ide2, ide3, ide4, ide5, aic7xxx, aic7xxx, eth0
+ 12:         52          XT-PIC  i8042
+ 14:       2848          XT-PIC  ide0
+ 15:          8          XT-PIC  ide1
+NMI:          0 
+ERR:          0
 
-OK, let's move on then.
- 
-> > 3) Does anyone have a diff for Justin's new driver?
-> 
-> Just populate the scsi/aic7xxx directory with the files found
-> here:
-> 
-> http://people.FreeBSD.org/~gibbs/linux/SRC/
-> 
-> You will need to merge in the Kconfig and Makefile for the scsi
-> directory, but if you are running a fairly recent kernel, you
-> can just overwrite those files with those supplied in the linux-2.5
-> archive supplied at the above URL.
+(Doesn't this rule out your theory?  If it's asserting the IRQ, we will
+take an interrupt with this configuration?)
 
-That's very awkward and will hamper efforts to get testing done.
+Uniprocessor, IO-APIC:
 
-I grafted it into the 2.5.52 tree.  The Kconfig entries for
-aix7xxx_old seem to be lost.
-
-
-The driver still has a serious bug in ahc_linux_queue_recovery_cmd().
-It does
-
-	ahc_unlock(ahc, &s);
-
-where local variable `s' is uninitialised.  But that gets copied
-into the CPU's interrupt flag.
-
-
-The driver got through recognising the disks and then locked up
-strangely:
-
-Program received signal SIGEMT, Emulation trap.
-cache_alloc_refill (cachep=0xd00675a0, flags=0) at include/linux/list.h:127
-127             prev->next = next;
-(gdb) bt
-#0  cache_alloc_refill (cachep=0xd00675a0, flags=0) at include/linux/list.h:127
-#1  0x00000246 in ?? ()
-#2  0xc0135947 in kmalloc (size=256, flags=0) at mm/slab.c:1652
-#3  0xc0239835 in ahc_linux_dv_inq (ahc=0xc175e400, cmd=0xc3dd0c00, devinfo=0xc3d77fb0, targ=0xc3dcee00, request_length=96)
-    at drivers/scsi/aic7xxx/aic7xxx_osm.c:3303
-#4  0xc0237f5d in ahc_linux_dv_target (ahc=0xc175e400, target_offset=4) at drivers/scsi/aic7xxx/aic7xxx_osm.c:2060
-#5  0xc0237d47 in ahc_linux_dv_thread (data=0xc175e400) at drivers/scsi/aic7xxx/aic7xxx_osm.c:1955
-
-This is an NMI watchdog interrupt.  In here:
-
-1571                    while (slabp->inuse < cachep->num && batchcount--)
-1572                            ac_entry(ac)[ac->avail++] =
-1573                                    cache_alloc_one_tail(cachep, slabp);
-
-Presumably due to errors in use of slab-allocated memory.
+           CPU0       
+  0:     654721    IO-APIC-edge  timer
+  1:         15    IO-APIC-edge  i8042
+  2:          0          XT-PIC  cascade
+  4:          0    IO-APIC-edge  GDB-stub
+  8:          1    IO-APIC-edge  rtc
+ 12:         55    IO-APIC-edge  i8042
+ 14:       2835    IO-APIC-edge  ide0
+ 15:         10    IO-APIC-edge  ide1
+ 19:         43   IO-APIC-level  ide2, ide3, ide4, ide5
+ 35:          0   IO-APIC-level  aic7xxx
+ 38:        296   IO-APIC-level  eth0
+ 58:        137   IO-APIC-level  aic7xxx
+NMI:        668 
+LOC:     654631 
+ERR:          0
+MIS:          0
 
 
-So I enabled slab debugging and:
+I assume SMP/IO-APIC will do the same thing (takes too darn long
+to go through them all).
+
+Why should aic7xxx_old have this problem, and not aic7xxx?
+
+Here's /proc/interrupts with aic7xxx, uniproc, IO-APIC:
+
+           CPU0       
+  0:      38650    IO-APIC-edge  timer
+  1:         16    IO-APIC-edge  i8042
+  2:          0          XT-PIC  cascade
+  4:          0    IO-APIC-edge  GDB-stub
+  8:          1    IO-APIC-edge  rtc
+ 12:         55    IO-APIC-edge  i8042
+ 14:       2726    IO-APIC-edge  ide0
+ 15:         10    IO-APIC-edge  ide1
+ 19:         43   IO-APIC-level  ide2, ide3, ide4, ide5
+ 35:        391   IO-APIC-level  aic7xxx
+ 38:        115   IO-APIC-level  eth0
+ 58:        284   IO-APIC-level  aic7xxx
+NMI:         48 
+LOC:      38516 
+ERR:          0
+MIS:          0
+
+Just the same, only this time it's generating interrupts.
+I don't think this is a mainboard problem.
+
+The logs say:
 
 
-Program received signal SIGTRAP, Trace/breakpoint trap.
-0xc013606f in kfree (objp=0xc3da5ed4) at mm/slab.c:1452
-1452                            BUG();
-(gdb) bt
-#0  0xc013606f in kfree (objp=0xc3da5ed4) at mm/slab.c:1452
-#1  0xc023bca1 in ahc_linux_free_target (ahc=0xc175c000, targ=0xc3dcf800) at drivers/scsi/aic7xxx/aic7xxx_osm.c:4588
-#2  0xc023bdbd in ahc_linux_free_device (ahc=0xc175c000, dev=0xc3da4ba4) at drivers/scsi/aic7xxx/aic7xxx_osm.c:4642
-#3  0xc023c36d in ahc_done (ahc=0xc175c000, scb=0xc3d78070) at drivers/scsi/aic7xxx/aic7xxx_osm.c:4858
-#4  0xc02296bd in ahc_run_qoutfifo (ahc=0xc175c000) at drivers/scsi/aic7xxx/aic7xxx_core.c:344
-#5  0xc023b93a in ahc_linux_isr (irq=35, dev_id=0xc175c000, regs=0xd0003f74) at drivers/scsi/aic7xxx/aic7xxx_inline.h:600
-#6  0xc010c710 in handle_IRQ_event (irq=35, regs=0xd0003f74, action=0xc3d9c974) at arch/i386/kernel/irq.c:210
-#7  0xc010c8f2 in do_IRQ (regs=
-      {ebx = -805298176, ecx = 384, edx = -805298176, esi = -1072657832, edi = 0, ebp = -805290072, eax = 17, xds = 104, xes = -1072693144, orig_eax = -221, eip = -1072657788, xcs = 96, eflags = 582, esp = -805290056, xss = -1072657690}) at arch/i386/kernel/irq.c:391
-#8  0xc010b114 in common_interrupt () at include/linux/kallsyms.h:39
-#9  0xc0108ae6 in cpu_idle () at arch/i386/kernel/process.c:144
-#10 0xc039553a in start_secondary (unused=0xc038692d) at arch/i386/kernel/smpboot.c:467
+scsi HBA driver <NULL> didn't set max_sectors, please fix the template
+(scsi0) <Adaptec AIC-7892 Ultra 160/m SCSI host adapter> found at PCI 3/4/0
+(scsi0) Wide Channel, SCSI ID=7, 32/255 SCBs
+(scsi0) Downloading sequencer code... 396 instructions downloaded
+(scsi1) <Adaptec AIC-7880 Ultra SCSI host adapter> found at PCI 0/10/0
+(scsi1) Wide Channel, SCSI ID=7, 16/255 SCBs
+(scsi1) Downloading sequencer code... 436 instructions downloaded
+scsi0 : Adaptec AHA274x/284x/294x (EISA/VLB/PCI-Fast SCSI) 5.2.6/5.2.0
+       <Adaptec AIC-7892 Ultra 160/m SCSI host adapter>
+scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 0 lun 0
+scsi: Device offlined - not ready or command retry failed after error recovery: host 0 channel 0 id 1 lun 0
 
-That's in here:
-
-        if (cachep->flags & SLAB_RED_ZONE) {
-                objp -= BYTES_PER_WORD;
-                if (xchg((unsigned long *)objp, RED_MAGIC1) != RED_MAGIC2)
-                        /* Either write before start, or a double free. */
-                        BUG();
-
-Presumably a double free in ahc_linux_free_target()
-
-I can debug further if you like, but would really appreciate unified
-diffs, thanks.
+Maybe the 7892 sequencer code is bust??
