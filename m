@@ -1,48 +1,56 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [hch@infradead.org: Re: [PATCH] fix 2.5 scsi queue depth setting]
-Date: Wed, 6 Nov 2002 16:20:40 -0500
+From: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] fix 2.5 scsi queue depth setting
+Date: Wed, 06 Nov 2002 16:19:14 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021106212040.GI22177@redhat.com>
-References: <20021106210542.A32241@infradead.org>
+Message-ID: <200211062119.gA6LJFN04461@localhost.localdomain>
+References: <dledford@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021106210542.A32241@infradead.org>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id NAA27578
+	for <linux-scsi@vger.kernel.org>; Wed, 6 Nov 2002 13:19:19 -0800
+In-Reply-To: Message from Doug Ledford <dledford@redhat.com>
+   of "Wed, 06 Nov 2002 15:45:42 EST." <20021106204542.GF22177@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>, "J.E.J. Bottomley" <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On Wed, Nov 06, 2002 at 09:05:42PM +0000, Christoph Hellwig wrote:
-> On Wed, Nov 06, 2002 at 03:50:50PM -0500, Doug Ledford wrote:
-> > if(sdev->hostdata)
-> >   kfree(sdev->hostdata);
-> 
-> kfree(NULL) is fine, btw..
+dledford@redhat.com said:
+> Actually, I've been planning a slight API change to the slave_attach()
+>  lldd stuff.  Basically, if a host implements slave_attach(), then it
+> *must* call adjust_queue_depth() on all devices passed to it, whether
+> they  are going to use tagged queueing or not.
 
-Yeah, but the existence of a non-NULL pointer can also be used to protect 
-against other possible bogus operations (in the case of my driver it isn't 
-needed, but I wouldn't begin to assume no other driver would) in the event 
-that slave_detach() is ever called twice.
+I agree.
 
-> > sdev->hostdata = NULL;
-> > 
-> > after the slave_detach call.  The other option is to slightly refine the 
-> > slave_attach/slave_detach API to specificy that if your attach routine 
-> > allocates and hangs memory off of sdev->hostdata, then you *must* 
-> > implement a slave_detach() routine and you must free said memory yourself 
-> > (and NULL out the pointer to be safe).
-> 
-> I'm all for the second option, but I don't think we should specify the
-> NULLing out, the device will go away anyway.
+dledford@redhat.com said:
+> I  would rather we did this:
+> if(host->hostt->slave_attach)
+>   blah; else
+>   scsi_adjust_queue_depth(sdev, 0, cmd_per_lun); 
 
-Hmmm...I thought this was being done on upper level de-attachment, which 
-doesn't always imply device removal.  I'm not sure the device is going 
-away in all cases....
+I agree.  (That's what patrick just put in the patch for me).
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+> I want to make the queuecommand() interface optional, with the ability
+> to  replace it with a combo of prepare_command() and send_command()
+> instead.   A driver can only define queuecommand() or the
+> prepare,send_command()  pair.  The obvious benefit is that a prepare
+> then send routine is needed  to make sequential untagged commands fast
+> without having to implement a  driver internal queue, and this is
+> necessary for streaming devices that  can't tolerate long delays
+> between commands without falling out of their  current stream (tapes,
+> early CD-Rs and current very cheap CD-Rs, etc).   Obviously, this new
+> interface would require that driver authors actually  think about
+> things like sendable commands vs. just prepped commands, etc.   Making
+> them always call adjust queue depth is one way of forcing them to
+> think about these issues, hence why I like requiring it in all
+> slave_attach calls.  Thoughts? 
+
+Quite like the idea.  It should be possible to make it complement the 
+request_prep_fn I'm doing for SCSI (this will force the upper level drivers to 
+do early prepares on commands, so we can have the whole thing just waiting to 
+shoot off as the completed command returns).
+
+James
+
+
