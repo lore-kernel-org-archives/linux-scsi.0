@@ -1,424 +1,583 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH][RESEND] rationalize scsi_queue_next & friends
-Date: Wed, 7 May 2003 14:57:28 +0200
+Subject: [PATCH] two more templates in headers
+Date: Wed, 7 May 2003 14:58:57 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030507145728.A10284@lst.de>
+Message-ID: <20030507145857.C10284@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.181.86]:37124 "EHLO verein.lst.de")
-	by vger.kernel.org with ESMTP id S263152AbTEGMpD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 May 2003 08:45:03 -0400
+Received: from verein.lst.de ([212.34.181.86]:38148 "EHLO verein.lst.de")
+	by vger.kernel.org with ESMTP id S263160AbTEGMqZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 May 2003 08:46:25 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-(1)  second arg to scsi_queue_next_request() is only ever non-NULL
-     inside scsi_lib.c and only used in the first conditional inside
-     that function - ripped out of scsi_queue_next_request() and
-     put into a new helper scsi_requeue_command().
-(2)  Most remaining callers of are in the form 
-	scsi_put_command(cmd);
-	scsi_queue_next_request(q, NULL);
-     add a new helper, scsi_next_command() for them.
-(2b) many callers of that still contain a repeated codepath, namely
-     everything from scsi_release_request except the final kfree.
-     New helper __scsi_release_request() for those.
-(3)  All remaining callers loop over the devices of a host and call
-     scsi_queue_next_request() on them - new helper
-     scsi_run_host_queues().
-(4)  scsi_queue_next_request() renamed to scsi_run_queue(), second
-     arg is gone and it's static to scsi_lib.c now.
+I missed aic7xxx_old and cciss_scsi.  For the first it's the trivial
+move, for the second it's the patch to move to scsi_add_host & friend
+as already ACKed by Steve when he still was cciss maintainer.
 
 
---- 1.109/drivers/scsi/scsi.c	Tue Apr 29 13:40:45 2003
-+++ edited/drivers/scsi/scsi.c	Wed Apr 30 22:09:21 2003
-@@ -176,6 +176,16 @@
- 	return sreq;
- }
+--- 1.29/drivers/scsi/hosts.h	Sun Nov  3 08:24:37 2002
++++ edited/drivers/scsi/hosts.h	Tue Nov  5 04:07:50 2002
+@@ -562,13 +562,7 @@
+     const char * tag;
+     struct module * module;	  /* Used for loadable modules */
+     unsigned char scsi_type;
+-    unsigned int nr_dev;	  /* Number currently attached */
+-    unsigned int dev_noticed;	  /* Number of devices detected. */
+-    unsigned int dev_max;	  /* Current size of arrays */
+-    unsigned blk:1;		  /* 0 if character device */
+     int (*detect)(Scsi_Device *); /* Returns 1 if we can attach this device */
+-    int (*init)(void);		  /* Sizes arrays based upon number of devices
+-		   *  detected */
+     int (*attach)(Scsi_Device *); /* Attach devices to arrays */
+     void (*detach)(Scsi_Device *);
+     int (*init_command)(Scsi_Cmnd *);     /* Used by new queueing code. 
+===== drivers/scsi/osst.c 1.23 vs edited =====
+--- 1.23/drivers/scsi/osst.c	Mon Nov  4 12:06:03 2002
++++ edited/drivers/scsi/osst.c	Tue Nov  5 04:00:30 2002
+@@ -156,6 +156,10 @@
+ static int osst_detect(Scsi_Device *);
+ static void osst_detach(Scsi_Device *);
  
-+void __scsi_release_request(struct scsi_request *sreq)
-+{
-+	if (likely(sreq->sr_command != NULL)) {
-+		struct scsi_cmnd *cmd = sreq->sr_command;
++static int osst_dev_noticed;
++static int osst_nr_dev;
++static int osst_dev_max;
 +
-+		sreq->sr_command = NULL;
-+		scsi_next_command(cmd);
-+	}
-+}
-+
- /*
-  * Function:    scsi_release_request
-  *
-@@ -187,14 +197,7 @@
-  */
- void scsi_release_request(struct scsi_request *sreq)
+ struct Scsi_Device_Template osst_template =
  {
--	if (likely(sreq->sr_command != NULL)) {
--    		struct request_queue *q = sreq->sr_device->request_queue;
--
--		scsi_put_command(sreq->sr_command);
--		sreq->sr_command = NULL;
--		scsi_queue_next_request(q, NULL);
--	}
--
-+	__scsi_release_request(sreq);
- 	kfree(sreq);
- }
+        module:		THIS_MODULE,
+@@ -4154,7 +4158,7 @@
+ 	char *name;
+ 	int mode = TAPE_MODE(inode->i_rdev);
  
---- 1.51/drivers/scsi/scsi_error.c	Sun Apr 27 06:46:14 2003
-+++ edited/drivers/scsi/scsi_error.c	Wed Apr 30 22:09:21 2003
-@@ -1412,8 +1412,7 @@
- 	 * now that error recovery is done, we will need to ensure that these
- 	 * requests are started.
- 	 */
--	list_for_each_entry(sdev, &shost->my_devices, siblings)
--		blk_run_queue(sdev->request_queue);
-+	scsi_run_host_queues(shost);
- }
+-	if (dev >= osst_template.dev_max || (STp = os_scsi_tapes[dev]) == NULL || !STp->device)
++	if (dev >= osst_dev_max || (STp = os_scsi_tapes[dev]) == NULL || !STp->device)
+ 		return (-ENXIO);
  
- /**
-@@ -1649,7 +1648,6 @@
- 	struct scsi_cmnd *scmd = scsi_get_command(dev, GFP_KERNEL);
- 	struct request req;
- 	int rtn;
--	struct request_queue *q;
+ 	filp->private_data = STp;
+@@ -4979,7 +4983,7 @@
+ 	int i, priority, b_size, order, got = 0, segs = 0;
+ 	OSST_buffer *tb;
  
- 	scmd->request = &req;
- 	memset(&scmd->eh_timeout, 0, sizeof(scmd->eh_timeout));
-@@ -1701,8 +1699,6 @@
+-	if (osst_nbr_buffers >= osst_template.dev_max)
++	if (osst_nbr_buffers >= osst_dev_max)
+ 		return NULL;  /* Should never happen */
+ 
+ 	if (from_initialization)
+@@ -5416,15 +5420,15 @@
+ 	if (!disk)
+ 		return 1;
+ 
+-	if (osst_template.nr_dev >= osst_template.dev_max) {
++	if (osst_nr_dev >= osst_dev_max) {
+ 		 SDp->attached--;
+ 		 put_disk(disk);
+ 		 return 1;
  	}
- 
- 	scsi_delete_timer(scmd);
--	q = scmd->device->request_queue;
--	scsi_put_command(scmd);
--	scsi_queue_next_request(q, NULL);
-+	scsi_next_command(scmd);
- 	return rtn;
- }
---- 1.88/drivers/scsi/scsi_lib.c	Sun Apr 27 10:19:35 2003
-+++ edited/drivers/scsi/scsi_lib.c	Wed Apr 30 22:09:21 2003
-@@ -181,19 +181,12 @@
- 		 void (*done)(struct scsi_cmnd *),
- 		 int timeout, int retries)
- {
--	struct request_queue *q;
--
- 	/*
- 	 * If the upper level driver is reusing these things, then
- 	 * we should release the low-level block now.  Another one will
- 	 * be allocated later when this request is getting queued.
- 	 */
--	if (sreq->sr_command) {
--		q = sreq->sr_command->device->request_queue;
--		scsi_put_command(sreq->sr_command);
--		sreq->sr_command = NULL;
--		scsi_queue_next_request(q, NULL);
--	}
-+	__scsi_release_request(sreq);
- 
- 	/*
- 	 * Our own function scsi_done (which marks the host as not busy,
-@@ -239,7 +232,6 @@
- void scsi_wait_req(struct scsi_request *sreq, const void *cmnd, void *buffer,
- 		   unsigned bufflen, int timeout, int retries)
- {
--	struct request_queue *q;
- 	DECLARE_COMPLETION(wait);
  	
- 	sreq->sr_request->waiting = &wait;
-@@ -250,12 +242,7 @@
- 	wait_for_completion(&wait);
- 	sreq->sr_request->waiting = NULL;
+ 	/* find a free minor number */
+-	for (i=0; os_scsi_tapes[i] && i<osst_template.dev_max; i++);
+-	if(i >= osst_template.dev_max) panic ("Scsi_devices corrupt (osst)");
++	for (i=0; os_scsi_tapes[i] && i<osst_dev_max; i++);
++	if(i >= osst_dev_max) panic ("Scsi_devices corrupt (osst)");
  
--	if (sreq->sr_command) {
--		q = sreq->sr_command->device->request_queue;
--		scsi_put_command(sreq->sr_command);
--		scsi_queue_next_request(q, NULL);
--		sreq->sr_command = NULL;
--	}
-+	__scsi_release_request(sreq);
+ 	/* allocate a OS_Scsi_Tape for this device */
+ 	tpnt = (OS_Scsi_Tape *)kmalloc(sizeof(OS_Scsi_Tape), GFP_ATOMIC);
+@@ -5548,7 +5552,7 @@
+ 	tpnt->density_changed = tpnt->compression_changed = tpnt->blksize_changed = FALSE;
+ 	init_MUTEX(&tpnt->lock);
+ 
+-	osst_template.nr_dev++;
++	osst_nr_dev++;
+ 
+ 	printk(KERN_INFO
+ 		"osst :I: Attached OnStream %.5s tape at scsi%d, channel %d, id %d, lun %d as %s\n",
+@@ -5562,7 +5566,7 @@
+ 	if (SDp->type != TYPE_TAPE) return 0;
+ 	if ( ! osst_supports(SDp) ) return 0;
+ 	
+-	osst_template.dev_noticed++;
++	osst_dev_noticed++;
+ 	return 1;
  }
  
- /*
-@@ -370,77 +357,26 @@
- }
- 
- /*
-- * Function:    scsi_queue_next_request()
-+ * Function:	scsi_run_queue()
-  *
-- * Purpose:     Handle post-processing of completed commands.
-+ * Purpose:	Select a proper request queue to serve next
-  *
-- * Arguments:   cmd	- command that may need to be requeued.
-+ * Arguments:	q	- last request's queue
-  *
-  * Returns:     Nothing
-  *
-- * Notes:       After command completion, there may be blocks left
-- *              over which weren't finished by the previous command
-- *              this can be for a number of reasons - the main one is
-- *              that a medium error occurred, and the sectors after
-- *              the bad block need to be re-read.
-- *
-- *              If cmd is NULL, it means that the previous command
-- *              was completely finished, and we should simply start
-- *              a new command, if possible.
-- *
-- *		This is where a lot of special case code has begun to
-- *		accumulate.  It doesn't really affect readability or
-- *		anything, but it might be considered architecturally
-- *		inelegant.  If more of these special cases start to
-- *		accumulate, I am thinking along the lines of implementing
-- *		an atexit() like technology that gets run when commands
-- *		complete.  I am not convinced that it is worth the
-- *		added overhead, however.  Right now as things stand,
-- *		there are simple conditional checks, and most hosts
-- *		would skip past.
-- *
-- *		Another possible solution would be to tailor different
-- *		handler functions, sort of like what we did in scsi_merge.c.
-- *		This is probably a better solution, but the number of different
-- *		permutations grows as 2**N, and if too many more special cases
-- *		get added, we start to get screwed.
-+ * Notes:	The previous command was completely finished, start
-+ *		a new one if possible.
-  */
--void scsi_queue_next_request(request_queue_t *q, struct scsi_cmnd *cmd)
-+static void scsi_run_queue(struct request_queue *q)
+@@ -5573,7 +5577,7 @@
  {
--	struct scsi_device *sdev;
--	struct Scsi_Host *shost;
-+	struct scsi_device *sdev = q->queuedata;
-+	struct Scsi_Host *shost = sdev->host;
- 	unsigned long flags;
+ 	int i;
  
--	if (cmd != NULL) {
--
--		/*
--		 * For some reason, we are not done with this request.
--		 * This happens for I/O errors in the middle of the request,
--		 * in which case we need to request the blocks that come after
--		 * the bad sector.
--		 */
--		spin_lock_irqsave(q->queue_lock, flags);
--		cmd->request->special = cmd;
--		if (blk_rq_tagged(cmd->request))
--			blk_queue_end_tag(q, cmd->request);
--
--		/*
--		 * set REQ_SPECIAL - we have a command
--		 * clear REQ_DONTPREP - we assume the sg table has been 
--		 *	nuked so we need to set it up again.
--		 */
--		cmd->request->flags |= REQ_SPECIAL;
--		cmd->request->flags &= ~REQ_DONTPREP;
--		__elv_add_request(q, cmd->request, 0, 0);
--		spin_unlock_irqrestore(q->queue_lock, flags);
--	}
--
--	sdev = q->queuedata;
--
- 	if (sdev->single_lun)
- 		scsi_single_lun_run(sdev);
+-	if (osst_template.dev_noticed == 0)
++	if (osst_dev_noticed == 0)
+ 		return 0;
  
--	shost = sdev->host;
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	while (!list_empty(&shost->starved_list) &&
- 	       !shost->host_blocked && !shost->host_self_blocked &&
-@@ -478,6 +414,61 @@
- }
+ 	if (!osst_registered) {
+@@ -5586,10 +5590,10 @@
  
- /*
-+ * Function:	scsi_requeue_command()
-+ *
-+ * Purpose:	Handle post-processing of completed commands.
-+ *
-+ * Arguments:	q	- queue to operate on
-+ *		cmd	- command that may need to be requeued.
-+ *
-+ * Returns:	Nothing
-+ *
-+ * Notes:	After command completion, there may be blocks left
-+ *		over which weren't finished by the previous command
-+ *		this can be for a number of reasons - the main one is
-+ *		I/O errors in the middle of the request, in which case
-+ *		we need to request the blocks that come after the bad
-+ *		sector.
-+ */
-+static void scsi_requeue_command(struct request_queue *q, struct scsi_cmnd *cmd)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	cmd->request->special = cmd;
-+	if (blk_rq_tagged(cmd->request))
-+		blk_queue_end_tag(q, cmd->request);
-+
-+	/*
-+	 * set REQ_SPECIAL - we have a command
-+	 * clear REQ_DONTPREP - we assume the sg table has been 
-+	 *	nuked so we need to set it up again.
-+	 */
-+	cmd->request->flags |= REQ_SPECIAL;
-+	cmd->request->flags &= ~REQ_DONTPREP;
-+	__elv_add_request(q, cmd->request, 0, 0);
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+
-+	scsi_run_queue(q);
-+}
-+
-+void scsi_next_command(struct scsi_cmnd *cmd)
-+{
-+	struct request_queue *q = cmd->device->request_queue;
-+
-+	scsi_put_command(cmd);
-+	scsi_run_queue(q);
-+}
-+
-+void scsi_run_host_queues(struct Scsi_Host *shost)
-+{
-+	struct scsi_device *sdev;
-+
-+	list_for_each_entry(sdev, &shost->my_devices, siblings)
-+		scsi_run_queue(sdev->request_queue);
-+}
-+
-+/*
-  * Function:    scsi_end_request()
-  *
-  * Purpose:     Post-processing of completed commands called from interrupt
-@@ -517,7 +506,7 @@
- 			 * Bleah.  Leftovers again.  Stick the leftovers in
- 			 * the front of the queue, and goose the queue again.
- 			 */
--			scsi_queue_next_request(q, cmd);
-+			scsi_requeue_command(q, cmd);
- 		}
- 		return cmd;
+ 	if (os_scsi_tapes)
+ 		return 0;
+-	osst_template.dev_max = OSST_MAX_TAPES;
+-	if (osst_template.dev_max > 128 / ST_NBR_MODES)
++	osst_dev_max = OSST_MAX_TAPES;
++	if (osst_dev_max > 128 / ST_NBR_MODES)
+ 		printk(KERN_INFO "osst :I: Only %d tapes accessible.\n", 128 / ST_NBR_MODES);
+-	os_scsi_tapes = kmalloc(osst_template.dev_max * sizeof(OS_Scsi_Tape *),
++	os_scsi_tapes = kmalloc(osst_dev_max * sizeof(OS_Scsi_Tape *),
+ 								GFP_ATOMIC);
+ 	if (!os_scsi_tapes) {
+ 		printk(KERN_ERR "osst :W: Unable to allocate array for OnStream SCSI tapes.\n");
+@@ -5597,11 +5601,11 @@
+ 		return 1;
  	}
-@@ -534,8 +523,7 @@
- 	 * This will goose the queue request function at the end, so we don't
- 	 * need to worry about launching another command.
- 	 */
--	scsi_put_command(cmd);
--	scsi_queue_next_request(q, NULL);
-+	scsi_next_command(cmd);
- 	return NULL;
- }
  
-@@ -661,6 +649,18 @@
-  *              In other words, if there are no bounce buffers
-  *              (the normal case for most drivers), we don't need
-  *              the logic to deal with cleaning up afterwards.
-+ *
-+ *		We must do one of several things here:
-+ *
-+ *		a) Call scsi_end_request.  This will finish off the
-+ *		   specified number of sectors.  If we are done, the
-+ *		   command block will be released, and the queue
-+ *		   function will be goosed.  If we are not done, then
-+ *		   scsi_end_request will directly goose the queue.
-+ *
-+ *		b) We can just use scsi_requeue_command() here.  This would
-+ *		   be used if we just wanted to retry, for example.
-+ *
-  */
- void scsi_io_completion(struct scsi_cmnd *cmd, int good_sectors,
- 			int block_sectors)
-@@ -672,19 +672,6 @@
- 	int clear_errors = 1;
+-	for (i=0; i < osst_template.dev_max; ++i)
++	for (i=0; i < osst_dev_max; ++i)
+ 		os_scsi_tapes[i] = NULL;
  
- 	/*
--	 * We must do one of several things here:
--	 *
--	 *	Call scsi_end_request.  This will finish off the specified
--	 *	number of sectors.  If we are done, the command block will
--	 *	be released, and the queue function will be goosed.  If we
--	 *	are not done, then scsi_end_request will directly goose
--	 *	the queue.
--	 *
--	 *	We can just use scsi_queue_next_request() here.  This
--	 *	would be used if we just wanted to retry, for example.
--	 *
--	 */
--	/*
- 	 * Free up any indirection buffers we allocated for DMA purposes. 
- 	 * For the case of a READ, we need to copy the data out of the
- 	 * bounce buffer and into the real buffer.
-@@ -783,7 +770,7 @@
- 			 */
- 			if (cmd->sense_buffer[12] == 0x04 &&
- 			    cmd->sense_buffer[13] == 0x01) {
--				scsi_queue_next_request(q, cmd);
-+				scsi_requeue_command(q, cmd);
- 				return;
- 			}
- 			if ((cmd->sense_buffer[2] & 0xf) == UNIT_ATTENTION) {
-@@ -802,7 +789,7 @@
- 				 	* media change, so we just retry the
- 				 	* request and see what happens.  
- 				 	*/
--					scsi_queue_next_request(q, cmd);
-+					scsi_requeue_command(q, cmd);
- 					return;
- 				}
- 			}
-@@ -822,7 +809,7 @@
- 				 * This will cause a retry with a 6-byte
- 				 * command.
- 				 */
--				scsi_queue_next_request(q, cmd);
-+				scsi_requeue_command(q, cmd);
- 				result = 0;
- 			} else {
- 				cmd = scsi_end_request(cmd, 0, this_count, 1);
-@@ -854,7 +841,7 @@
- 		 * recovery reasons.  Just retry the request
- 		 * and see what happens.  
- 		 */
--		scsi_queue_next_request(q, cmd);
-+		scsi_requeue_command(q, cmd);
+ 	/* Allocate the buffer pointers */
+-	osst_buffers = kmalloc(osst_template.dev_max * sizeof(OSST_buffer *),
++	osst_buffers = kmalloc(osst_dev_max * sizeof(OSST_buffer *),
+ 								GFP_ATOMIC);
+ 	if (!osst_buffers) {
+ 		printk(KERN_ERR "osst :W: Unable to allocate tape buffer pointers.\n");
+@@ -5629,7 +5633,7 @@
+   int mode;
+ #endif
+ 
+-  for(i=0; i<osst_template.dev_max; i++) {
++  for(i=0; i<osst_dev_max; i++) {
+ 	tpnt = os_scsi_tapes[i];
+ 	if(tpnt != NULL && tpnt->device == SDp) {
+ 		tpnt->device = NULL;
+@@ -5645,8 +5649,8 @@
+ 		kfree(tpnt);
+ 		os_scsi_tapes[i] = NULL;
+ 		SDp->attached--;
+-		osst_template.nr_dev--;
+-		osst_template.dev_noticed--;
++		osst_nr_dev--;
++		osst_dev_noticed--;
  		return;
  	}
- 	if (result) {
-@@ -1320,15 +1307,8 @@
-  */
- void scsi_unblock_requests(struct Scsi_Host *shost)
- {
--	struct scsi_device *sdev;
--
- 	shost->host_self_blocked = 0;
--
--	/*
--	 * Now that we are unblocked, try to start the queues.
--	 */
--	list_for_each_entry(sdev, &shost->my_devices, siblings)
--		scsi_queue_next_request(sdev->request_queue, NULL);
-+	scsi_run_host_queues(shost);
+   }
+@@ -5668,7 +5672,7 @@
+ 	unregister_chrdev(MAJOR_NR, "osst");
+ 	osst_registered--;
+ 	if (os_scsi_tapes) {
+-		for (i=0; i < osst_template.dev_max; ++i) {
++		for (i=0; i < osst_dev_max; ++i) {
+ 			STp = os_scsi_tapes[i];
+ 			if (!STp)
+ 				continue;
+@@ -5690,7 +5694,7 @@
+ 			kfree(osst_buffers);
+ 		}
+ 	}
+-	osst_template.dev_max = 0;
++	osst_dev_max = 0;
+ 	printk(KERN_INFO "osst :I: Unloaded.\n");
  }
  
- /*
---- 1.1/drivers/scsi/scsi_priv.h	Sat Apr 26 20:40:32 2003
-+++ edited/drivers/scsi/scsi_priv.h	Wed Apr 30 22:09:21 2003
-@@ -73,6 +73,7 @@
- extern int scsi_insert_special_req(struct scsi_request *sreq, int);
- extern void scsi_init_cmd_from_req(struct scsi_cmnd *cmd,
- 		struct scsi_request *sreq);
-+extern void __scsi_release_request(struct scsi_request *sreq);
+===== drivers/scsi/scsi.c 1.53 vs edited =====
+--- 1.53/drivers/scsi/scsi.c	Mon Nov  4 12:04:51 2002
++++ edited/drivers/scsi/scsi.c	Tue Nov  5 03:51:49 2002
+@@ -1990,9 +1990,6 @@
  
- /* scsi_error.c */
- extern void scsi_times_out(struct scsi_cmnd *cmd);
-@@ -84,8 +85,8 @@
- extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
- extern void scsi_setup_cmd_retry(struct scsi_cmnd *cmd);
- extern int scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
--extern void scsi_queue_next_request(struct request_queue *q,
--			struct scsi_cmnd *cmd);
-+extern void scsi_next_command(struct scsi_cmnd *cmd);
-+extern void scsi_run_host_queues(struct Scsi_Host *shost);
- extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
- extern void scsi_free_queue(struct request_queue *q);
- extern int scsi_init_queue(void);
+ 	down_read(&scsi_devicelist_mutex);
+ 	for (sdt = scsi_devicelist; sdt; sdt = sdt->next)
+-		if (sdt->init && sdt->dev_noticed)
+-			(*sdt->init) ();
+-	for (sdt = scsi_devicelist; sdt; sdt = sdt->next)
+ 		if (sdt->attach)
+ 			(*sdt->attach) (sdev);
+ 	up_read(&scsi_devicelist_mutex);
+@@ -2059,14 +2056,6 @@
+ 				SDpnt->attached += (*tpnt->detect) (SDpnt);
+ 		}
+ 	}
+-
+-	/*
+-	 * If any of the devices would match this driver, then perform the
+-	 * init function.
+-	 */
+-	if (tpnt->init && tpnt->dev_noticed)
+-		if ((*tpnt->init) ())
+-			return 1;
+ 
+ 	/*
+ 	 * Now actually connect the devices to the new driver.
+===== drivers/scsi/sd.c 1.87 vs edited =====
+--- 1.87/drivers/scsi/sd.c	Sun Nov  3 10:06:38 2002
++++ edited/drivers/scsi/sd.c	Tue Nov  5 04:08:01 2002
+@@ -83,6 +83,7 @@
+ 	unsigned	RCD : 1;	/* state of disk RCD bit */
+ };
+ 
++static int sd_nr_dev;	/* XXX(hch) bad hack, we want a bitmap instead */
+ static LIST_HEAD(sd_devlist);
+ static spinlock_t sd_devlist_lock = SPIN_LOCK_UNLOCKED;
+ 
+@@ -106,7 +107,6 @@
+ 	.name		= "disk",
+ 	.tag		= "sd",
+ 	.scsi_type	= TYPE_DISK,
+-	.blk		= 1,
+ 	.detect		= sd_detect,
+ 	.attach		= sd_attach,
+ 	.detach		= sd_detach,
+@@ -1179,7 +1179,6 @@
+ 	SCSI_LOG_HLQUEUE(3, printk("sd_detect: type=%d\n", sdp->type));
+ 	if (sdp->type != TYPE_DISK && sdp->type != TYPE_MOD)
+ 		return 0;
+-	sd_template.dev_noticed++;
+ 	return 1;
+ }
+ 
+@@ -1228,7 +1227,7 @@
+ 	 * XXX  use find_first_zero_bit on it.  This will happen at the
+ 	 * XXX  same time template->nr_* goes away.		--hch
+ 	 */
+-	dsk_nr = sd_template.nr_dev++;
++	dsk_nr = sd_nr_dev++;
+ 
+ 	sdkp->device = sdp;
+ 	sdkp->driver = &sd_template;
+@@ -1314,8 +1313,7 @@
+ 	sd_devlist_remove(sdkp);
+ 	del_gendisk(sdkp->disk);
+ 	sdp->attached--;
+-	sd_template.dev_noticed--;
+-	sd_template.nr_dev--;
++	sd_nr_dev--;
+ 	put_disk(sdkp->disk);
+ 	kfree(sdkp);
+ }
+===== drivers/scsi/sg.c 1.35 vs edited =====
+--- 1.35/drivers/scsi/sg.c	Fri Nov  1 07:28:19 2002
++++ edited/drivers/scsi/sg.c	Tue Nov  5 04:02:35 2002
+@@ -235,6 +235,9 @@
+ #endif
+ 
+ static Sg_device **sg_dev_arr = NULL;
++static int sg_dev_noticed;
++static int sg_dev_max;
++static int sg_nr_dev;
+ 
+ #define SZ_SG_HEADER sizeof(struct sg_header)
+ #define SZ_SG_IO_HDR sizeof(sg_io_hdr_t)
+@@ -1340,7 +1343,7 @@
+ static int
+ sg_detect(Scsi_Device * scsidp)
+ {
+-	sg_template.dev_noticed++;
++	sg_dev_noticed++;
+ 	return 1;
+ }
+ 
+@@ -1353,13 +1356,13 @@
+ 	int tmp_dev_max;
+ 	Sg_device **tmp_da;
+ 
+-	if ((sg_template.dev_noticed == 0) || sg_dev_arr)
++	if ((sg_dev_noticed == 0) || sg_dev_arr)
+ 		return 0;
+ 
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_init\n"));
+ 
+ 	write_lock_irqsave(&sg_dev_arr_lock, iflags);
+-	tmp_dev_max = sg_template.dev_noticed + SG_DEV_ARR_LUMP;
++	tmp_dev_max = sg_dev_noticed + SG_DEV_ARR_LUMP;
+ 	write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+ 
+ 	tmp_da = (Sg_device **)vmalloc(
+@@ -1383,7 +1386,7 @@
+ 	}
+ 
+ 	memset(tmp_da, 0, tmp_dev_max * sizeof (Sg_device *));
+-	sg_template.dev_max = tmp_dev_max;
++	sg_dev_max = tmp_dev_max;
+ 	sg_dev_arr = tmp_da;
+ 
+ 	write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+@@ -1445,9 +1448,9 @@
+ 	if (!disk)
+ 		return 1;
+ 	write_lock_irqsave(&sg_dev_arr_lock, iflags);
+-	if (sg_template.nr_dev >= sg_template.dev_max) {	/* try to resize */
++	if (sg_nr_dev >= sg_dev_max) {	/* try to resize */
+ 		Sg_device **tmp_da;
+-		int tmp_dev_max = sg_template.nr_dev + SG_DEV_ARR_LUMP;
++		int tmp_dev_max = sg_nr_dev + SG_DEV_ARR_LUMP;
+ 
+ 		write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+ 		tmp_da = (Sg_device **)vmalloc(
+@@ -1462,14 +1465,14 @@
+ 		write_lock_irqsave(&sg_dev_arr_lock, iflags);
+ 		memset(tmp_da, 0, tmp_dev_max * sizeof (Sg_device *));
+ 		memcpy(tmp_da, sg_dev_arr,
+-		       sg_template.dev_max * sizeof (Sg_device *));
++		       sg_dev_max * sizeof (Sg_device *));
+ 		vfree((char *) sg_dev_arr);
+ 		sg_dev_arr = tmp_da;
+-		sg_template.dev_max = tmp_dev_max;
++		sg_dev_max = tmp_dev_max;
+ 	}
+ 
+ find_empty_slot:
+-	for (k = 0; k < sg_template.dev_max; k++)
++	for (k = 0; k < sg_dev_max; k++)
+ 		if (!sg_dev_arr[k])
+ 			break;
+ 	if (k > SG_MAX_DEVS_MASK) {
+@@ -1485,7 +1488,7 @@
+ 		put_disk(disk);
+ 		return 1;
+ 	}
+-	if (k < sg_template.dev_max) {
++	if (k < sg_dev_max) {
+ 		if (NULL == sdp) {
+ 			write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+ 			sdp = (Sg_device *)vmalloc(sizeof(Sg_device));
+@@ -1527,7 +1530,7 @@
+ 	sdp->sg_driverfs_dev.parent = &scsidp->sdev_driverfs_dev;
+ 	sdp->sg_driverfs_dev.bus = &scsi_driverfs_bus_type;
+ 
+-	sg_template.nr_dev++;
++	sg_nr_dev++;
+ 	sg_dev_arr[k] = sdp;
+ 	write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+ 
+@@ -1570,7 +1573,7 @@
+ 		return;
+ 	delay = 0;
+ 	write_lock_irqsave(&sg_dev_arr_lock, iflags);
+-	for (k = 0; k < sg_template.dev_max; k++) {
++	for (k = 0; k < sg_dev_max; k++) {
+ 		sdp = sg_dev_arr[k];
+ 		if ((NULL == sdp) || (sdp->device != scsidp))
+ 			continue;	/* dirty but lowers nesting */
+@@ -1608,8 +1611,8 @@
+ 			sg_dev_arr[k] = NULL;
+ 		}
+ 		scsidp->attached--;
+-		sg_template.nr_dev--;
+-		sg_template.dev_noticed--;	/* from <dan@lectra.fr> */
++		sg_nr_dev--;
++		sg_dev_noticed--;	/* from <dan@lectra.fr> */
+ 		break;
+ 	}
+ 	write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+@@ -1660,7 +1663,7 @@
+ 		vfree((char *) sg_dev_arr);
+ 		sg_dev_arr = NULL;
+ 	}
+-	sg_template.dev_max = 0;
++	sg_dev_max = 0;
+ }
+ 
+ static int
+@@ -2552,7 +2555,7 @@
+ 		if (sdp->detached && (NULL == sdp->headfp)) {
+ 			int k, maxd;
+ 
+-			maxd = sg_template.dev_max;
++			maxd = sg_dev_max;
+ 			for (k = 0; k < maxd; ++k) {
+ 				if (sdp == sg_dev_arr[k])
+ 					break;
+@@ -2684,7 +2687,7 @@
+ 	unsigned long iflags;
+ 
+ 	read_lock_irqsave(&sg_dev_arr_lock, iflags);
+-	for (k = sg_template.dev_max - 1; k >= 0; --k)
++	for (k = sg_dev_max - 1; k >= 0; --k)
+ 		if (sg_dev_arr[k] && sg_dev_arr[k]->device)
+ 			break;
+ 	read_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+@@ -2700,7 +2703,7 @@
+ 
+ 	if (sg_dev_arr && (dev >= 0)) {
+ 		read_lock_irqsave(&sg_dev_arr_lock, iflags);
+-		if (dev < sg_template.dev_max)
++		if (dev < sg_dev_max)
+ 			sdp = sg_dev_arr[dev];
+ 		read_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+ 	}
+@@ -2982,7 +2985,7 @@
+ 	}
+ 	max_dev = sg_last_dev();
+ 	PRINT_PROC("dev_max(currently)=%d max_active_device=%d (origin 1)\n",
+-		   sg_template.dev_max, max_dev);
++		   sg_dev_max, max_dev);
+ 	PRINT_PROC(" def_reserved_size=%d\n", sg_big_buff);
+ 	for (j = 0; j < max_dev; ++j) {
+ 		if ((sdp = sg_get_dev(j))) {
+===== drivers/scsi/sr.c 1.62 vs edited =====
+--- 1.62/drivers/scsi/sr.c	Sun Nov  3 08:49:04 2002
++++ edited/drivers/scsi/sr.c	Tue Nov  5 04:08:08 2002
+@@ -68,7 +68,6 @@
+ static int sr_attach(struct scsi_device *);
+ static int sr_detect(struct scsi_device *);
+ static void sr_detach(struct scsi_device *);
+-
+ static int sr_init_command(struct scsi_cmnd *);
+ 
+ static struct Scsi_Device_Template sr_template = {
+@@ -76,13 +75,13 @@
+ 	.name		= "cdrom",
+ 	.tag		= "sr",
+ 	.scsi_type	= TYPE_ROM,
+-	.blk		= 1,
+ 	.detect		= sr_detect,
+ 	.attach		= sr_attach,
+ 	.detach		= sr_detach,
+ 	.init_command	= sr_init_command
+ };
+ 
++static int sr_nr_dev;	/* XXX(hch) bad hack, we want a bitmap instead */
+ static LIST_HEAD(sr_devlist);
+ static spinlock_t sr_devlist_lock = SPIN_LOCK_UNLOCKED;
+ 
+@@ -495,7 +494,6 @@
+ 
+ 	if (SDp->type != TYPE_ROM && SDp->type != TYPE_WORM)
+ 		return 0;
+-	sr_template.dev_noticed++;
+ 	return 1;
+ }
+ 
+@@ -524,7 +522,7 @@
+ 	 * XXX  use find_first_zero_bit on it.  This will happen at the
+ 	 * XXX  same time template->nr_* goes away.		--hch
+ 	 */
+-	minor = sr_template.nr_dev++;
++	minor = sr_nr_dev++;
+ 
+ 	disk->major = MAJOR_NR;
+ 	disk->first_minor = minor;
+@@ -810,7 +808,7 @@
+ 	unregister_cdrom(&cd->cdi);
+ 
+ 	SDp->attached--;
+-	sr_template.nr_dev--;
++	sr_nr_dev--;
+ 
+ 	kfree(cd);
+ }
+===== drivers/scsi/st.c 1.38 vs edited =====
+--- 1.38/drivers/scsi/st.c	Fri Nov  1 07:28:19 2002
++++ edited/drivers/scsi/st.c	Tue Nov  5 04:04:52 2002
+@@ -74,6 +74,9 @@
+ static int try_rdio = TRUE;
+ static int try_wdio = TRUE;
+ 
++static int st_dev_max;
++static int st_nr_dev;
++
+ MODULE_AUTHOR("Kai Makisara");
+ MODULE_DESCRIPTION("SCSI Tape Driver");
+ MODULE_LICENSE("GPL");
+@@ -976,7 +979,7 @@
+ 	char *name;
+ 
+ 	write_lock(&st_dev_arr_lock);
+-	if (dev >= st_template.dev_max || scsi_tapes == NULL ||
++	if (dev >= st_dev_max || scsi_tapes == NULL ||
+ 	    ((STp = scsi_tapes[dev]) == NULL)) {
+ 		write_unlock(&st_dev_arr_lock);
+ 		return (-ENXIO);
+@@ -3680,15 +3683,15 @@
+ 	}
+ 
+ 	write_lock(&st_dev_arr_lock);
+-	if (st_template.nr_dev >= st_template.dev_max) {
++	if (st_nr_dev >= st_dev_max) {
+ 		Scsi_Tape **tmp_da;
+ 		ST_buffer **tmp_ba;
+ 		int tmp_dev_max;
+ 
+-		tmp_dev_max = st_template.nr_dev + ST_DEV_ARR_LUMP;
++		tmp_dev_max = st_nr_dev + ST_DEV_ARR_LUMP;
+ 		if (tmp_dev_max > ST_MAX_TAPES)
+ 			tmp_dev_max = ST_MAX_TAPES;
+-		if (tmp_dev_max <= st_template.nr_dev) {
++		if (tmp_dev_max <= st_nr_dev) {
+ 			SDp->attached--;
+ 			write_unlock(&st_dev_arr_lock);
+ 			printk(KERN_ERR "st: Too many tape devices (max. %d).\n",
+@@ -3714,18 +3717,18 @@
+ 		memset(tmp_da, 0, tmp_dev_max * sizeof(Scsi_Tape *));
+ 		if (scsi_tapes != NULL) {
+ 			memcpy(tmp_da, scsi_tapes,
+-			       st_template.dev_max * sizeof(Scsi_Tape *));
++			       st_dev_max * sizeof(Scsi_Tape *));
+ 			kfree(scsi_tapes);
+ 		}
+ 		scsi_tapes = tmp_da;
+ 
+-		st_template.dev_max = tmp_dev_max;
++		st_dev_max = tmp_dev_max;
+ 	}
+ 
+-	for (i = 0; i < st_template.dev_max; i++)
++	for (i = 0; i < st_dev_max; i++)
+ 		if (scsi_tapes[i] == NULL)
+ 			break;
+-	if (i >= st_template.dev_max)
++	if (i >= st_dev_max)
+ 		panic("scsi_devices corrupt (st)");
+ 
+ 	tpnt = kmalloc(sizeof(Scsi_Tape), GFP_ATOMIC);
+@@ -3821,7 +3824,7 @@
+ 	    tpnt->blksize_changed = FALSE;
+ 	init_MUTEX(&tpnt->lock);
+ 
+-	st_template.nr_dev++;
++	st_nr_dev++;
+ 	write_unlock(&st_dev_arr_lock);
+ 
+ 	for (mode = 0; mode < ST_NBR_MODES; ++mode) {
+@@ -3883,7 +3886,6 @@
+ {
+ 	if (SDp->type != TYPE_TAPE || st_incompatible(SDp))
+ 		return 0;
+-        st_template.dev_noticed++;
+ 	return 1;
+ }
+ 
+@@ -3893,7 +3895,7 @@
+ 	int i, mode;
+ 
+ 	write_lock(&st_dev_arr_lock);
+-	for (i = 0; i < st_template.dev_max; i++) {
++	for (i = 0; i < st_dev_max; i++) {
+ 		tpnt = scsi_tapes[i];
+ 		if (tpnt != NULL && tpnt->device == SDp) {
+ 			tpnt->device = NULL;
+@@ -3905,8 +3907,7 @@
+ 			}
+ 			scsi_tapes[i] = 0;
+ 			SDp->attached--;
+-			st_template.nr_dev--;
+-			st_template.dev_noticed--;
++			st_nr_dev--;
+ 			write_unlock(&st_dev_arr_lock);
+ 
+ 			for (mode = 0; mode < ST_NBR_MODES; ++mode) {
+@@ -3962,14 +3963,13 @@
+ 	scsi_unregister_device(&st_template);
+ 	unregister_chrdev(SCSI_TAPE_MAJOR, "st");
+ 	if (scsi_tapes != NULL) {
+-		for (i=0; i < st_template.dev_max; ++i)
++		for (i=0; i < st_dev_max; ++i)
+ 			if (scsi_tapes[i]) {
+ 				put_disk(scsi_tapes[i]->disk);
+ 				kfree(scsi_tapes[i]);
+ 			}
+ 		kfree(scsi_tapes);
+ 	}
+-	st_template.dev_max = 0;
+ 	printk(KERN_INFO "st: Unloaded.\n");
+ }
+ 
