@@ -1,66 +1,48 @@
-From: "N.C.Krishna Murthy" <krmurthy@cisco.com>
+From: "Scott M. Ferris" <sferris@acm.org>
 Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Mon, 8 Dec 2003 20:36:41 +0530
+Date: Mon, 8 Dec 2003 09:46:18 -0600 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200312082036.41027.krmurthy@cisco.com>
-References: <200310231734.10263.krmurthy@cisco.com> <200312041800.55663.krmurthy@cisco.com> <1070594036.1603.34.camel@mulgrave>
+Message-ID: <20031208154618.1AFB45DC7E@bambi.visi.com>
+References: <200312082036.41027.krmurthy@cisco.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-2-in.cisco.com ([171.71.176.71]:54847 "EHLO
-	sj-iport-2.cisco.com") by vger.kernel.org with ESMTP
-	id S265396AbTLHPIZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Dec 2003 10:08:25 -0500
-In-Reply-To: <1070594036.1603.34.camel@mulgrave>
+Received: from conn.mc.mpls.visi.com ([208.42.156.2]:36494 "EHLO
+	conn.mc.mpls.visi.com") by vger.kernel.org with ESMTP
+	id S265468AbTLHPq3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Dec 2003 10:46:29 -0500
+In-Reply-To: <200312082036.41027.krmurthy@cisco.com> from "N.C.Krishna Murthy"
+ at "Dec 8, 2003 09:16:19 am"
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, davmyers@cisco.com
+To: "N.C.Krishna Murthy" <krmurthy@cisco.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, davmyers@cisco.com
 
-Hi,
-	We agree to using the wrapper when we are notified about 
-"reported lun data change". 
+N.C.Krishna Murthy wrote:
+> Hi,
+> 	We agree to using the wrapper when we are notified about 
+> "reported lun data change". 
+> 
+> 	However when a session is initially established to an iSCSI target,
+> luns on the target need to be configured. As mentioned in one of my previous
+> mails , we need to use scsi_scan_host_selected(). 
+> Will the function be exported in the next release of 2.6 or do I need to 
+> generate a patch for the same?
 
-	However when a session is initially established to an iSCSI target,
-luns on the target need to be configured. As mentioned in one of my previous
-mails , we need to use scsi_scan_host_selected(). 
-Will the function be exported in the next release of 2.6 or do I need to 
-generate a patch for the same?
+You'd be better off letting the OS decide which LUNs to use, and not
+masking anything in the low-level driver. If LUN masking is needed,
+adding a general mechanism to the kernel to provide LUN masking for
+any particular target would be a better approach than having each
+low-level driver implement its own way of masking LUNs.
 
-Please let us know.
+The main motivation for LUN masking is the limited number of SCSI disk
+devices Linux can support.  Now that Linux has 32-bit device numbers,
+the SCSI disk driver could be changed to support many more LUNs per
+target, and the need for LUN masking would be greatly reduced.  This
+would probably be less work than adding a general LUN masking
+mechanism, and would be useful to a larger number of users than LUN
+masking would.
 
-Thanx
-N.C.Krishna Murthy
-	
-On Friday 05 Dec 2003 9:03 pm, James Bottomley wrote:
-> On Thu, 2003-12-04 at 07:30, N.C.Krishna Murthy wrote:
-> > Having user level utility trigger the rescan thru sysfs interfaces will
-> > call scsi_scan() which will inturn call scsi_scan_host_selected().
-> > Instead wouldn't it be preferable to call scsi_scan_host_selected()
-> > from the iSCSI driver itself?
->
-> Well, consider all the ramifications: what happens if the
-> reconfiguration is deleting an existing LUN with a mounted filesystem?
-> What happens if the user wants to do something with the new LUN as soon
-> as it appears (like fold it into a VM volume, or format it).  The
-> hotplug system is designed to propagate events that others might be
-> interested in, which it strikes me this is.  So, if you have to trigger
-> a hotplug event anyway, you may as well go the whole hog and do the
-> reconfiguration as part of the hotplug subsystem.
->
-> > > We could do with a generic infrastructure within SCSI for generating
-> > > these events, anyway, if you want to go that route...
-> >
-> > I am not much familiar with SCSI hotplug.
-> >
-> > If the generic infrastructure which you mentioned does not exist now and
-> > in case there is a plan to do one such thing is there any framework for
-> > that? Wouldn't that require a kernel API which is capable of both
-> > "adding new luns" and "deleting luns which no longer exist"?
->
-> Well, a hotplug event feeds certain information into the environment
-> when it triggers the call.  All we really need is a wrapper in SCSI to
-> add the SCSI information to the environment and trigger the event in a
-> generic fashion.
->
-> James
+-- 
+Scott M. Ferris,
+sferris@acm.org 
