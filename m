@@ -1,38 +1,27 @@
-From: "Magnus Naeslund(w)" <mag@fbab.net>
-Subject: RE: ServeRAID SCSI device write-back
-Date: Thu, 7 Oct 2004 13:42:34 +0200 (CEST)
+From: Mark Lord <lsml@rtr.ca>
+Subject: Re: [PATCH] QStor SATA/RAID driver for 2.6.9-rc3
+Date: Thu, 07 Oct 2004 09:42:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <37431.129.178.88.68.1097149354.squirrel@129.178.88.68>
-References: <A121ABA5B472B74EB59076B8E3C8F019868B8B@rtpe2k01.adaptec.com>
-Reply-To: mag@fbab.net
+Message-ID: <416547B6.5080505@rtr.ca>
+References: <4161A06D.8010601@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from spectre.fbab.net ([212.214.165.139]:45190 "HELO mail2.fbab.net")
-	by vger.kernel.org with SMTP id S269801AbUJGLmg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2004 07:42:36 -0400
-In-Reply-To: <A121ABA5B472B74EB59076B8E3C8F019868B8B@rtpe2k01.adaptec.com>
+Received: from cpu1185.adsl.bellglobal.com ([207.236.110.166]:27837 "EHLO
+	mail.rtr.ca") by vger.kernel.org with ESMTP id S265943AbUJGNoB
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Oct 2004 09:44:01 -0400
+In-Reply-To: <4161A06D.8010601@rtr.ca>
 List-Id: linux-scsi@vger.kernel.org
-To: "Hammer, Jack" <Jack_Hammer@adaptec.com>
-Cc: mag@fbab.net, linux-scsi@vger.kernel.org
+To: Mark Lord <lsml@rtr.ca>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
+Okay, last call for comment on this driver.
 
-Hammer, Jack said:
->
-> The Write Cache you are referring to in the ServeRAID Manager is a
-> feature on the adapter itself and is not the same thing you are
-> displaying with scsiinfo.
->
-> Yes, it is definitely good to have the adapter Write Cache turned on
-> when the adapter has battery backup.
->
-> IpsLinux
->
+Any other issues before initial kernel inclusion?
 
-Thanks!
-I'm not going to turn on write-cache via the linux scsi side, then.
-
-Regards,
-Magnus
-
+Cheers
+-- 
+Mark Lord
+(hdparm keeper & the original "Linux IDE Guy")
