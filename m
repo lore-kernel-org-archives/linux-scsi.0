@@ -1,49 +1,42 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [SAS ANNOUNCEMENT] MPT Fusion driver 3.02.07.02 update
-Date: 15 Nov 2004 12:00:44 -0600
-Message-ID: <1100541651.1765.194.camel@mulgrave>
-References: <91888D455306F94EBD4D168954A9457C3FF742@nacos172.co.lsil.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Serial Attached SCSI Driver Interface (SDI)
+Date: Mon, 15 Nov 2004 13:01:36 -0500
+Message-ID: <4198EF00.2010305@pobox.com>
+References: <60807403EABEB443939A5A7AA8A7458B5C0F3D@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:30621 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261645AbUKOSA6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Nov 2004 13:00:58 -0500
-In-Reply-To: <91888D455306F94EBD4D168954A9457C3FF742@nacos172.co.lsil.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:60354 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261651AbUKOSBz
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Nov 2004 13:01:55 -0500
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458B5C0F3D@otce2k01.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@suse.de>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: "Tuikov, Luben" <Luben_Tuikov@adaptec.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Eric.Moore@lsil.com
 
-On Fri, 2004-11-12 at 17:15, Moore, Eric Dean wrote:
-> Highlights for this release:
+Salyzyn, Mark wrote:
+> CSMI is an ioctl mechanism. Have incorporated this interface into my
+> working version of the driver. Duplication is already showing, witness
+> Eric Moore's (rejected) submission.
 > 
-> In addition to SAS support =>
-> 
+> The T10 document Luben refers to, is to start the groundwork and does
+> not list any specific interface yet. March 2006 is the `public release
+> data' ... Get your comments in now!
 
-Actually, before we begin on a SAS implementation, I'd rather like us to
-get the architecture and design correct.  Reading all the SAS and SATA
-documentation is still on my todo list.  However, this is my brief take
-on the architecture:
 
-SAS itself is a bit of a monster because the PHY layer characteristics
-are identical to those of SATA.  Therefore, it seems like we need two
-separate transport classes, one for the PHY layer which would control
-the PHY transport characteristics and would be shareable with SATA and
-one for SAS only which would cover a large swath of the SAS specific
-ioctls and the useful bits of CMSI.
+ug.
 
-As far as the controller and expander protocols to which Doug Gilbert
-has been referring, I really have no current idea how to do them, but if
-anyone else does now would be a good time to say something.
+These ioctl mechanisms almost always (a) have design flaws [which cannot 
+be corrected, since they are in a spec] and (b) duplicate other 
+functionality of the Linux kernel.  The SNIA ioctl mess is a great 
+example of this.
 
-So does the above look like an acceptable way to move forward? (having a
-PHY transport class is going to mean changes in both SCSI and SATA and
-probably block as well, since this may ultimately not be a SCSI specific
-transport class).
+Without any additional info, my first reaction is that this is yet more 
+stuff Linux doesn't need.
 
-James
+	Jeff
 
 
