@@ -1,38 +1,55 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: usb storage traces
-Date: 05 Dec 2003 11:41:14 -0700
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: bCWBCBLength is cb length no when
+Date: Fri, 5 Dec 2003 13:55:15 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1070649674.12411.355.camel@patibmrh9>
-References: <Pine.LNX.4.44L0.0312051309151.1013-100000@ida.rowland.org>
+Message-ID: <Pine.LNX.4.44L0.0312051351420.645-100000@ida.rowland.org>
+References: <1070644705.12411.153.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:65258 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264290AbTLESl0
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Dec 2003 13:41:26 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0312051309151.1013-100000@ida.rowland.org>
+Received: from ida.rowland.org ([192.131.102.52]:2308 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S264351AbTLESzQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Dec 2003 13:55:16 -0500
+In-Reply-To: <1070644705.12411.153.camel@patibmrh9>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-scsi@vger.kernel.org, David Brownell <david-b@pacbell.net>, Patrick Mansfield <patmans@us.ibm.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>, David Brownell <david-b@pacbell.net>
 
-> You can indeed run FSG using the dummy_hcd driver under 
-> Linux.  It's good enough for testing and seeing how things work.  If you 
-> want more detailed instructions I'll send them later.
+On 5 Dec 2003, Pat LaVarre wrote:
 
-Yes please.
+> > Incidentally, Pat, can you confirm whether bInterfaceSubClass x01 = RBC 
+> > (Reduced Block Commands, T10 project 1240-D) uses 0-padding of commands to 
+> > 12 bytes or not?  The Linux usb-storage driver seems to think that it 
+> > doesn't.
+> 
+> I can neither concisely confirm, nor concisely deny, sorry.
+> 
+> I cannot conclude confidently either way.
 
-cc linux-scsi@vger.kernel.org of course would give us a google url we
-can use thereafter.
+> By a+b+d I say "cdb" for RBC, as for all forms of T10 SPC SCSI over USB.
+> 
+> By c+e+f+g+h+i I say "plus pad" for RBC, as for all forms of SFF/ T10
+> MMC SCSI over USB.
+> 
+> I feel a+b+d >= c+e+f+g+h+i.  Perhaps only because of my personal
+> involvement in b.  Perhaps those sums appear less equally balanced to
+> you?
 
-> But you can't connect to another host.  dummy_hcd is strictly a "loopback"  
-> adapter.  So FSG/dummy_hcd can talk to usb-storage but there's no way to
-> hook it up to Windows (not even using VMWare).
+Since usb-storage uses the a+b+d interpretation, that's what I'm inclined 
+to go with until more evidence arrives.  But to be safe, it might be best 
+to accept commands either with or without padding.
 
-True til the lk win emulators let us plug usb devices into win.  Truth
-or slander, I hear Microsoft's Mac OS X Virtual PC can do this.
 
-Pat LaVarre
+> P.P.S. Once upon a time people here were interested on how impossible it
+> is to defeat the sometimes selected Microsoft Outlook default of
+> uuencoding mail.  I believe the technique I'm using here now can work on
+> any PC, by rebooting via DVD/ CD into Knoppix Linux in place of
+> Windows.  Mind you, I'm not completely confident that this e-mail is not
+> uuencoded, since by now I have also forgotten the url of the web service
+> that bounces a plain text copy of my headers and mail body to me.
 
+I don't know about the original message this postscript came from, but the 
+message that came to me was not uuencoded at all.
+
+Alan Stern
 
