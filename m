@@ -1,178 +1,143 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] kill old EH constants
-Date: Tue, 5 Apr 2005 10:29:04 +0200
-Message-ID: <20050405082904.GA17367@lst.de>
+From: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Subject: RE: The latest megaraid_mbox 2.20.4.5 is hung
+Date: Tue, 5 Apr 2005 18:12:03 +0900
+Message-ID: <BF571719A4041A478005EF3F08EA6DF0D96F08@pcsmail03.pcs.pc.ome.toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C539BF.772BC089"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:36788 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S261635AbVDEI3J (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2005 04:29:09 -0400
-Content-Disposition: inline
+Received: from inet-tsb5.toshiba.co.jp ([202.33.96.24]:12417 "EHLO
+	inet-tsb5.toshiba.co.jp") by vger.kernel.org with ESMTP
+	id S261640AbVDEJMW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Apr 2005 05:12:22 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: "Ju, Seokmann" <sju@lsil.com>
+Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, linux-scsi@vger.kernel.org, "Mukker, Atul" <Atulm@lsil.com>, "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
 
-Fix up two drivers that incorrectly were using the old return values for
-their new-style EH methods and kill off scsi_obsolete.h that defined the
-constants.  The initio driver has all these constansts defined locally
-and uses them internally, I'll fix that up some time later.
+This is a multi-part message in MIME format.
 
+------_=_NextPart_001_01C539BF.772BC089
+Content-Type: text/plain;
+	charset="iso-2022-jp"
+Content-Transfer-Encoding: 7bit
 
---- 1.95/drivers/scsi/scsi.h	2005-03-29 19:28:04 +02:00
-+++ edited/drivers/scsi/scsi.h	2005-04-04 16:09:48 +02:00
-@@ -60,12 +60,6 @@
- #define scsi_to_pci_dma_dir(scsi_dir)	((int)(scsi_dir))
- #define scsi_to_sbus_dma_dir(scsi_dir)	((int)(scsi_dir))
- 
--/*
-- * This is the crap from the old error handling code.  We have it in a special
-- * place so that we can more easily delete it later on.
-- */
--#include "scsi_obsolete.h"
--
- /* obsolete typedef junk. */
- #include "scsi_typedefs.h"
- 
---- 1.1/drivers/scsi/scsi_obsolete.h	2002-02-05 18:40:08 +01:00
-+++ edited/drivers/scsi/scsi_obsolete.h	2005-04-04 16:09:33 +02:00
-@@ -1,106 +0,0 @@
--/*
-- *  scsi_obsolete.h Copyright (C) 1997 Eric Youngdale
-- *
-- */
--
--#ifndef _SCSI_OBSOLETE_H
--#define _SCSI_OBSOLETE_H
--
--/*
-- * These are the return codes for the abort and reset functions.  The mid-level
-- * code uses these to decide what to do next.  Each of the low level abort
-- * and reset functions must correctly indicate what it has done.
-- * The descriptions are written from the point of view of the mid-level code,
-- * so that the return code is telling the mid-level drivers exactly what
-- * the low level driver has already done, and what remains to be done.
-- */
--
--/* We did not do anything.  
-- * Wait some more for this command to complete, and if this does not work, 
-- * try something more serious. */
--#define SCSI_ABORT_SNOOZE 0
--
--/* This means that we were able to abort the command.  We have already
-- * called the mid-level done function, and do not expect an interrupt that 
-- * will lead to another call to the mid-level done function for this command */
--#define SCSI_ABORT_SUCCESS 1
--
--/* We called for an abort of this command, and we should get an interrupt 
-- * when this succeeds.  Thus we should not restore the timer for this
-- * command in the mid-level abort function. */
--#define SCSI_ABORT_PENDING 2
--
--/* Unable to abort - command is currently on the bus.  Grin and bear it. */
--#define SCSI_ABORT_BUSY 3
--
--/* The command is not active in the low level code. Command probably
-- * finished. */
--#define SCSI_ABORT_NOT_RUNNING 4
--
--/* Something went wrong.  The low level driver will indicate the correct
-- * error condition when it calls scsi_done, so the mid-level abort function
-- * can simply wait until this comes through */
--#define SCSI_ABORT_ERROR 5
--
--/* We do not know how to reset the bus, or we do not want to.  Bummer.
-- * Anyway, just wait a little more for the command in question, and hope that
-- * it eventually finishes.  If it never finishes, the SCSI device could
-- * hang, so use this with caution. */
--#define SCSI_RESET_SNOOZE 0
--
--/* We do not know how to reset the bus, or we do not want to.  Bummer.
-- * We have given up on this ever completing.  The mid-level code will
-- * request sense information to decide how to proceed from here. */
--#define SCSI_RESET_PUNT 1
--
--/* This means that we were able to reset the bus.  We have restarted all of
-- * the commands that should be restarted, and we should be able to continue
-- * on normally from here.  We do not expect any interrupts that will return
-- * DID_RESET to any of the other commands in the host_queue, and the mid-level
-- * code does not need to do anything special to keep the commands alive. 
-- * If a hard reset was performed then all outstanding commands on the
-- * bus have been restarted. */
--#define SCSI_RESET_SUCCESS 2
--
--/* We called for a reset of this bus, and we should get an interrupt 
-- * when this succeeds.  Each command should get its own status
-- * passed up to scsi_done, but this has not happened yet. 
-- * If a hard reset was performed, then we expect an interrupt
-- * for *each* of the outstanding commands that will have the
-- * effect of restarting the commands.
-- */
--#define SCSI_RESET_PENDING 3
--
--/* We did a reset, but do not expect an interrupt to signal DID_RESET.
-- * This tells the upper level code to request the sense info, and this
-- * should keep the command alive. */
--#define SCSI_RESET_WAKEUP 4
--
--/* The command is not active in the low level code. Command probably
--   finished. */
--#define SCSI_RESET_NOT_RUNNING 5
--
--/* Something went wrong, and we do not know how to fix it. */
--#define SCSI_RESET_ERROR 6
--
--#define SCSI_RESET_SYNCHRONOUS		0x01
--#define SCSI_RESET_ASYNCHRONOUS		0x02
--#define SCSI_RESET_SUGGEST_BUS_RESET	0x04
--#define SCSI_RESET_SUGGEST_HOST_RESET	0x08
--/*
-- * This is a bitmask that is ored with one of the above codes.
-- * It tells the mid-level code that we did a hard reset.
-- */
--#define SCSI_RESET_BUS_RESET 0x100
--/*
-- * This is a bitmask that is ored with one of the above codes.
-- * It tells the mid-level code that we did a host adapter reset.
-- */
--#define SCSI_RESET_HOST_RESET 0x200
--/*
-- * Used to mask off bits and to obtain the basic action that was
-- * performed.  
-- */
--#define SCSI_RESET_ACTION   0xff
--
--#endif				/* SCSI_OBSOLETE_H */
-===== drivers/scsi/ultrastor.c 1.25 vs edited =====
---- 1.25/drivers/scsi/ultrastor.c	2005-03-11 21:32:31 +01:00
-+++ edited/drivers/scsi/ultrastor.c	2005-04-04 16:09:02 +02:00
-@@ -945,7 +945,7 @@
- 	       config.mscp[mscp_index].SCint, SCpnt);
- #endif
-     if (config.mscp[mscp_index].SCint == 0)
--	return SCSI_ABORT_NOT_RUNNING;
-+	return FAILURE;
- 
-     if (config.mscp[mscp_index].SCint != SCpnt) panic("Bad abort");
-     config.mscp[mscp_index].SCint = NULL;
-@@ -1020,7 +1020,7 @@
- #endif
- 
-     spin_unlock_irqrestore(host->host_lock, flags);
--    return SCSI_RESET_SUCCESS;
-+    return SUCCESS;
- 
- }
- 
---- 1.44/drivers/usb/image/microtek.c	2005-03-05 16:13:09 +01:00
-+++ edited/drivers/usb/image/microtek.c	2005-04-04 16:09:02 +02:00
-@@ -335,7 +335,7 @@
- 
- 	mts_urb_abort(desc);
- 
--	return SCSI_ABORT_PENDING;
-+	return FAILURE;
- }
- 
- static int mts_scsi_host_reset (Scsi_Cmnd *srb)
+Hi Seokmann,
+
+I thought about the race issue of megaraid_isr() and 
+megaraid_queue_command().
+
+fuinction : lock name
+----------------------
+megaraid_mbox_runpendq () : pending_list_lock
+megaraid_isr() : no lock
+wait_till_fw_ready(): host_lock
+megaraid_mbox_mm_done(): no lock
+
+When  quiescent was accessed, the pending_list_lock is used.
+(See attached file: linux-2.6.12-rc1-megaraid-isr-quiescent-race-more-fix.patch)
+
+The patching order is:
+    - linux-2.6.12-rc1-megaraid-isr-quiescent-race-fix.patch
+    - linux-2.6.12-rc1-megaraid-outstanding_cmds-atomic.patch
+    - linux-2.6.12-rc1-megaraid-queuecommand-error-midlayer-retry-fix.patch            
+    - linux-2.6.12-rc1-megaraid-isr-quiescent-race-more-fix.patch
+
+Please check the source. 
+Now, the verification is being executed with the server of Toshiba.
+
+It is sure to relate to FW about outstanding_cmds. 
+I want to hear your opinion. 
+--
+Haruo
+
+------_=_NextPart_001_01C539BF.772BC089
+Content-Type: application/octet-stream;
+	name="linux-2.6.12-rc1-megaraid-isr-quiescent-race-more-fix.patch"
+Content-Transfer-Encoding: base64
+Content-Description: linux-2.6.12-rc1-megaraid-isr-quiescent-race-more-fix.patch
+Content-Disposition: attachment;
+	filename="linux-2.6.12-rc1-megaraid-isr-quiescent-race-more-fix.patch"
+
+ZGlmZiAtdXJOIGxpbnV4LTIuNi4xMi1yYzEub3JpZy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVn
+YXJhaWRfbWJveC5jIGxpbnV4LTIuNi4xMi1yYzEvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2Fy
+YWlkX21ib3guYwotLS0gbGludXgtMi42LjEyLXJjMS5vcmlnL2RyaXZlcnMvc2NzaS9tZWdhcmFp
+ZC9tZWdhcmFpZF9tYm94LmMJMjAwNS0wNC0wNCAxMjoyNTowOS4wMDAwMDAwMDAgKzA5MDAKKysr
+IGxpbnV4LTIuNi4xMi1yYzEvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX21ib3guYwky
+MDA1LTA0LTA0IDE1OjI2OjE2Ljc4MTUzMjM5MiArMDkwMApAQCAtMTEzLDcgKzExMyw4IEBACiBz
+dGF0aWMgaW50IG1lZ2FyYWlkX3F1ZXVlX2NvbW1hbmQoc3RydWN0IHNjc2lfY21uZCAqLAogCQl2
+b2lkICgqKShzdHJ1Y3Qgc2NzaV9jbW5kICopKTsKIHN0YXRpYyBzY2JfdCAqbWVnYXJhaWRfbWJv
+eF9idWlsZF9jbWQoYWRhcHRlcl90ICosIHN0cnVjdCBzY3NpX2NtbmQgKiwgaW50ICopOwotc3Rh
+dGljIHZvaWQgbWVnYXJhaWRfbWJveF9ydW5wZW5kcShhZGFwdGVyX3QgKiwgc2NiX3QgKiwgaW50
+ICopOworc3RhdGljIHZvaWQgbWVnYXJhaWRfbWJveF9ydW5wZW5kcShhZGFwdGVyX3QgKiwgc2Ni
+X3QgKiwgaW50ICosCisJCXVuc2lnbmVkIGxvbmcgKik7CiBzdGF0aWMgdm9pZCBtZWdhcmFpZF9t
+Ym94X3ByZXBhcmVfcHRocnUoYWRhcHRlcl90ICosIHNjYl90ICosCiAJCXN0cnVjdCBzY3NpX2Nt
+bmQgKik7CiBzdGF0aWMgdm9pZCBtZWdhcmFpZF9tYm94X3ByZXBhcmVfZXB0aHJ1KGFkYXB0ZXJf
+dCAqLCBzY2JfdCAqLApAQCAtMTY1Myw2ICsxNjU0LDcgQEAKIAlhZGFwdGVyX3QJKmFkYXB0ZXI7
+CiAJc2NiX3QJCSpzY2I7CiAJaW50CQlpZl9idXN5OworCXVuc2lnbmVkIGxvbmcJZmxhZ3M7CiAK
+IAlhZGFwdGVyCQk9IFNDUDJBREFQVEVSKHNjcCk7CiAJc2NwLT5zY3NpX2RvbmUJPSBkb25lOwpA
+QCAtMTY3NCw4ICsxNjc2LDEwIEBACiAJc2NiCT0gbWVnYXJhaWRfbWJveF9idWlsZF9jbWQoYWRh
+cHRlciwgc2NwLCAmaWZfYnVzeSk7CiAJaWYgKCFzY2IpCiAJCWdvdG8gZXJyX291dDsKLQotCW1l
+Z2FyYWlkX21ib3hfcnVucGVuZHEoYWRhcHRlciwgc2NiLCAmaWZfYnVzeSk7CisJCQorCXNwaW5f
+bG9ja19pcnFzYXZlKFBFTkRJTkdfTElTVF9MT0NLKGFkYXB0ZXIpLCBmbGFncyk7CisJbWVnYXJh
+aWRfbWJveF9ydW5wZW5kcShhZGFwdGVyLCBzY2IsICZpZl9idXN5LCAmZmxhZ3MpOworCXNwaW5f
+dW5sb2NrX2lycXJlc3RvcmUoUEVORElOR19MSVNUX0xPQ0soYWRhcHRlciksIGZsYWdzKTsKIAlp
+ZiAoaWZfYnVzeSkKIAkJZ290byBlcnJfb3V0OwogCkBAIC0yMDkwLDEyICsyMDk0LDEwIEBACiAg
+KiBuZXh0IFNDQiBpcyBhdCB0aGUgaGVhZCBub3cuCiAgKi8KIHN0YXRpYyB2b2lkCi1tZWdhcmFp
+ZF9tYm94X3J1bnBlbmRxKGFkYXB0ZXJfdCAqYWRhcHRlciwgc2NiX3QgKnNjYl9xLCBpbnQgKmJ1
+c3kpCittZWdhcmFpZF9tYm94X3J1bnBlbmRxKGFkYXB0ZXJfdCAqYWRhcHRlciwgc2NiX3QgKnNj
+Yl9xLCBpbnQgKmJ1c3ksCisJdW5zaWduZWQgbG9uZyAqZmxhZ3MpCiB7CiAJc2NiX3QJCQkqc2Ni
+OwotCXVuc2lnbmVkIGxvbmcJCWZsYWdzOwotCi0Jc3Bpbl9sb2NrX2lycXNhdmUoUEVORElOR19M
+SVNUX0xPQ0soYWRhcHRlciksIGZsYWdzKTsKIAogCWlmIChzY2JfcSkgewogCQlzY2JfcS0+c3Rh
+dGUgPSBTQ0JfUEVORFE7CkBAIC0yMTA0LDcgKzIxMDYsNiBAQAogCiAJLy8gaWYgdGhlIGFkYXB0
+ZXIgaW4gbm90IGluIHF1aWVzY2VudCBtb2RlLCBwb3N0IHRoZSBjb21tYW5kcyB0byBGVwogCWlm
+IChhdG9taWNfcmVhZCgmYWRhcHRlci0+cXVpZXNjZW50KSkgewotCQlzcGluX3VubG9ja19pcnFy
+ZXN0b3JlKFBFTkRJTkdfTElTVF9MT0NLKGFkYXB0ZXIpLCBmbGFncyk7CiAKIAkJLy8gcmV0cnkg
+c2NzaSBtaWRsYXllcgogCQlpZiAoc2NiX3EpCkBAIC0yMTI3LDcgKzIxMjgsNyBAQAogCiAJCWxp
+c3RfZGVsX2luaXQoJnNjYi0+bGlzdCk7CiAKLQkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZShQRU5E
+SU5HX0xJU1RfTE9DSyhhZGFwdGVyKSwgZmxhZ3MpOworCQlzcGluX3VubG9ja19pcnFyZXN0b3Jl
+KFBFTkRJTkdfTElTVF9MT0NLKGFkYXB0ZXIpLCAqZmxhZ3MpOwogCiAJCS8vIGlmIG1haWxib3gg
+d2FzIGJ1c3ksIHJldHVybiBTQ0IgYmFjayB0byBwZW5kaW5nCiAJCS8vIGxpc3QuIE1ha2Ugc3Vy
+ZSB0byBhZGQgYXQgdGhlIGhlYWQsIHNpbmNlIHRoYXQncwpAQCAtMjEzNywyNCArMjEzOCwxOCBA
+QAogCiAJCWlmIChtYm94X3Bvc3RfY21kKGFkYXB0ZXIsIHNjYikgIT0gMCkgewogCi0JCQlzcGlu
+X2xvY2tfaXJxc2F2ZShQRU5ESU5HX0xJU1RfTE9DSyhhZGFwdGVyKSwgZmxhZ3MpOworCQkJc3Bp
+bl9sb2NrX2lycXNhdmUoUEVORElOR19MSVNUX0xPQ0soYWRhcHRlciksICpmbGFncyk7CiAKIAkJ
+CXNjYi0+c3RhdGUgPSBTQ0JfUEVORFE7CiAKIAkJCWxpc3RfYWRkKCZzY2ItPmxpc3QsICZhZGFw
+dGVyLT5wZW5kX2xpc3QpOwogCi0JCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKFBFTkRJTkdfTElT
+VF9MT0NLKGFkYXB0ZXIpLAotCQkJCWZsYWdzKTsKLQogCQkJcmV0dXJuOwogCQl9CiAKLQkJc3Bp
+bl9sb2NrX2lycXNhdmUoUEVORElOR19MSVNUX0xPQ0soYWRhcHRlciksIGZsYWdzKTsKKwkJc3Bp
+bl9sb2NrX2lycXNhdmUoUEVORElOR19MSVNUX0xPQ0soYWRhcHRlciksICpmbGFncyk7CiAJfQog
+Ci0Jc3Bpbl91bmxvY2tfaXJxcmVzdG9yZShQRU5ESU5HX0xJU1RfTE9DSyhhZGFwdGVyKSwgZmxh
+Z3MpOwotCi0KIAlyZXR1cm47CiB9CiAKQEAgLTIzODUsMTMgKzIzODAsMTYgQEAKIAlhZGFwdGVy
+X3QJKmFkYXB0ZXIgPSBkZXZwOwogCWludAkJaGFuZGxlZDsKIAlpbnQJCWlmX2J1c3kgPSAwOwkK
+Kwl1bnNpZ25lZCBsb25nCWZsYWdzOwogCiAJaGFuZGxlZCA9IG1lZ2FyYWlkX2Fja19zZXF1ZW5j
+ZShhZGFwdGVyKTsKIAogCS8qIExvb3AgdGhyb3VnaCBhbnkgcGVuZGluZyByZXF1ZXN0cyAqLwor
+CXNwaW5fbG9ja19pcnFzYXZlKFBFTkRJTkdfTElTVF9MT0NLKGFkYXB0ZXIpLCBmbGFncyk7CiAJ
+aWYgKCFhdG9taWNfcmVhZCgmYWRhcHRlci0+cXVpZXNjZW50KSkgewotCQltZWdhcmFpZF9tYm94
+X3J1bnBlbmRxKGFkYXB0ZXIsIE5VTEwsICZpZl9idXN5KTsKKwkJbWVnYXJhaWRfbWJveF9ydW5w
+ZW5kcShhZGFwdGVyLCBOVUxMLCAmaWZfYnVzeSwgJmZsYWdzKTsKIAl9CisJc3Bpbl91bmxvY2tf
+aXJxcmVzdG9yZShQRU5ESU5HX0xJU1RfTE9DSyhhZGFwdGVyKSwgZmxhZ3MpOwogCiAJcmV0dXJu
+IElSUV9SRVRWQUwoaGFuZGxlZCk7CiB9CkBAIC0zODUxLDcgKzM4NDksOSBAQAogCX0KIAogCS8v
+IHB1dCB0aGUgY29tbWFuZCBvbiB0aGUgcGVuZGluZyBsaXN0IGFuZCBleGVjdXRlCi0JbWVnYXJh
+aWRfbWJveF9ydW5wZW5kcShhZGFwdGVyLCBzY2IsICZpZl9idXN5KTsKKwlzcGluX2xvY2tfaXJx
+c2F2ZShQRU5ESU5HX0xJU1RfTE9DSyhhZGFwdGVyKSwgZmxhZ3MpOworCW1lZ2FyYWlkX21ib3hf
+cnVucGVuZHEoYWRhcHRlciwgc2NiLCAmaWZfYnVzeSwgJmZsYWdzKTsKKwlzcGluX3VubG9ja19p
+cnFyZXN0b3JlKFBFTkRJTkdfTElTVF9MT0NLKGFkYXB0ZXIpLCBmbGFncyk7CiAKIAkvLyBYWFg6
+IHN1Y2Nlc3MgPwogCXJldHVybiAwOwpAQCAtMzg2MiwxMiArMzg2MiwxNCBAQAogd2FpdF90aWxs
+X2Z3X2VtcHR5KGFkYXB0ZXJfdCAqYWRhcHRlcikKIHsKIAlpbnQJCWk7Ci0KKwl1bnNpZ25lZCBs
+b25nCWZsYWdzOwogCiAJLyoKIAkgKiBTZXQgdGhlIHF1aWVzY2VudCBmbGFnIHRvIHN0b3AgaXNz
+dWluZyBjbWRzIHRvIEZXLgogCSAqLworCXNwaW5fbG9ja19pcnFzYXZlKFBFTkRJTkdfTElTVF9M
+T0NLKGFkYXB0ZXIpLCBmbGFncyk7CSAKIAlhdG9taWNfaW5jKCZhZGFwdGVyLT5xdWllc2NlbnQp
+OworCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoUEVORElOR19MSVNUX0xPQ0soYWRhcHRlciksIGZs
+YWdzKTsKIAogCS8qCiAJICogV2FpdCB0aWxsIHRoZXJlIGFyZSBubyBtb3JlIGNtZHMgb3V0c3Rh
+bmRpbmcgYXQgRlcuIFRyeSBmb3IgYXQgbW9zdApAQCAtMzkyMyw5ICszOTI1LDEwIEBACiAJLy8g
+Y29udHJvbGxlcgogCWlmIChyYXdfbWJveFswXSA9PSBGQ19ERUxfTE9HRFJWICYmIHJhd19tYm94
+WzJdID09IE9QX0RFTF9MT0dEUlYpIHsKIAorCQlzcGluX2xvY2tfaXJxc2F2ZShQRU5ESU5HX0xJ
+U1RfTE9DSyhhZGFwdGVyKSwgZmxhZ3MpOwogCQlhdG9taWNfZGVjKCZhZGFwdGVyLT5xdWllc2Nl
+bnQpOwotCi0JCW1lZ2FyYWlkX21ib3hfcnVucGVuZHEoYWRhcHRlciwgTlVMTCwgJmlmX2J1c3kp
+OworCQltZWdhcmFpZF9tYm94X3J1bnBlbmRxKGFkYXB0ZXIsIE5VTEwsICZpZl9idXN5LCAmZmxh
+Z3MpOworCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKFBFTkRJTkdfTElTVF9MT0NLKGFkYXB0ZXIp
+LCBmbGFncyk7CiAJfQogCiAJa2lvYy0+ZG9uZShraW9jKTsK
+
+------_=_NextPart_001_01C539BF.772BC089--
