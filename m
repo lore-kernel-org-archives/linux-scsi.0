@@ -1,30 +1,42 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: RE: Seagate Cheetah: Firmware, Bugs, Compatibility?
-Date: Tue, 7 Jan 2003 23:10:39 +0100 (CET)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0301072238580.3021-100000@uplift.swm.pp.se>
-References: <A5974D8E5F98D511BB910002A50A66470580D4F1@hdsmsx103.hd.intel.com>
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] EDD: fix raw_data file and edd_has_edd30(), misc cleanups
+Date: Tue, 7 Jan 2003 16:18:06 -0800
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20030108001806.GA3669@beaverton.ibm.com>
+References: <Pine.LNX.4.44.0301071728280.3361-100000@humbolt.us.dell.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from localhost (swmike@localhost)
-	by uplift.swm.pp.se (8.11.6/8.9.3) with ESMTP id h07MAda21142
-	for <linux-scsi@vger.kernel.org>; Tue, 7 Jan 2003 23:10:39 +0100
-In-Reply-To: <A5974D8E5F98D511BB910002A50A66470580D4F1@hdsmsx103.hd.intel.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0301071728280.3361-100000@humbolt.us.dell.com>
+To: Matt Domsch <Matt_Domsch@Dell.com>
+Cc: linux-kernel@vger.kernel.org, mochel@osdl.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI <linux-scsi@vger.kernel.org>
 
-On Mon, 6 Jan 2003, Cress, Andrew R wrote:
+Matt Domsch [Matt_Domsch@Dell.com] wrote:
+>   * use new find_bus() and bus_for_each_dev() to match SCSI devices
 
-> For your own system, you know when it is really idle, so you can do it when
-> you wish.  
+.. snip ..
+> +	struct edd_match_data * data = (struct edd_match_data *)d;
+> +	struct edd_info *info = edd_dev_get_info(data->edev);
+> +	struct scsi_device * sd = to_scsi_device(dev);
+> +
+> +	if (info) {
+> +		if ((sd->channel == info->params.interface_path.pci.channel) &&
+> +		    (sd->id == info->params.device_path.scsi.id) &&
+> +		    (sd->lun == info->params.device_path.scsi.lun)) {
+> +			data->sd = sd;
+> +			return 1;
+> +		}
 
-I now have updated all my Atlas 10kIII drives to the new firmware and it
-seems to work well so far (I took the system into single user, stopped all
-raids and then updated them one by one, then rebooted to get everything
-started again). If I have not had any of my problems in 2-3 weeks I'll
-email back it as a success report.
+This change assumes that the scsi sysfs bus only contains struct
+scsi_device's. According to sysfs policy we are suppose to have only one
+type of struct on this list, but this is not the case currently.
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+I will work on a patch tonight to remove these extra nodes so that the
+st, sg, and osst maintainers can review it.
 
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
