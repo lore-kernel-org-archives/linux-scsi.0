@@ -1,67 +1,97 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [RFC] ncr53c8xx updates
-Date: Mon, 7 Mar 2005 02:32:51 +0000
-Message-ID: <20050307023251.GZ28741@parcelfarce.linux.theplanet.co.uk>
-References: <20050306201153.GV28741@parcelfarce.linux.theplanet.co.uk> <20050307004015.GA7697@infradead.org>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH] m68k link error and NCR5380_exit()
+Date: Mon, 7 Mar 2005 17:30:03 +1100 (EST)
+Message-ID: <Pine.LNX.4.61.0503071612290.27126@loopy.telegraphics.com.au>
+References: <Pine.LNX.4.61.0502110155440.7310@loopy.telegraphics.com.au>
+ <20050210171518.GA22265@pants.nu> <Pine.LNX.4.61.0502111930340.11381@loopy.telegraphics.com.au>
+ <Pine.LNX.4.61.0502121539440.20941@loopy.telegraphics.com.au>
+ <20050212075645.GA30669@pants.nu> <Pine.LNX.4.61.0502122135230.21876@loopy.telegraphics.com.au>
+ <20050213040948.GA10198@orchestra.cs.caltech.edu>
+ <Pine.LNX.4.61.0502131618470.25204@loopy.telegraphics.com.au>
+ <20050213063225.GA17415@orchestra.cs.caltech.edu>
+ <Pine.LNX.4.61.0502131736300.25553@loopy.telegraphics.com.au>
+ <20050213075506.GA18622@orchestra.cs.caltech.edu>
+ <Pine.LNX.4.61.0502212233290.15372@loopy.telegraphics.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:24473 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261726AbVCGCcw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 6 Mar 2005 21:32:52 -0500
-Content-Disposition: inline
-In-Reply-To: <20050307004015.GA7697@infradead.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from loopy.telegraphics.com.au ([202.45.126.152]:5586 "EHLO
+	loopy.telegraphics.com.au") by vger.kernel.org with ESMTP
+	id S261648AbVCGGaL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Mar 2005 01:30:11 -0500
+In-Reply-To: <Pine.LNX.4.61.0502212233290.15372@loopy.telegraphics.com.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux scsi <linux-scsi@vger.kernel.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Noah Misch <noah@cs.caltech.edu>, linux m68k <linux-m68k@vger.kernel.org>
 
-On Mon, Mar 07, 2005 at 12:40:15AM +0000, Christoph Hellwig wrote:
-> On Sun, Mar 06, 2005 at 08:11:53PM +0000, Matthew Wilcox wrote:
-> > This isn't for applying so much as it is for showing people where I am
-> > with this driver.  As with the sym2 driver, I commit each piece to the
-> > parisc-linux CVS tree (since parisc is currently the only user of this
-> > driver, it makes even more sense to do development there).
-> 
-> It's also used on i386/voyager (or in theory every MCA i386 system).
 
-Thanks for reminding me; still the only person who cares about the Q720
-also follows the parisc-linux-cvs list ;-)
+If this patch looks okay to you SCSI people, I'll ask the m68k maintainer 
+to apply it. It fixes a link failure in the !CONFIG_HOTPLUG m68k kernel 
+caused by the mac_scsi driver. The patch should apply to v2.6.10.
 
-> While we're at it, is there anyce chance to kill/rename sym53c8xx_defs.h
-> and sym53c8xx_comm.h which are only ever used by the ncr53c8xx driver.
-> 
-> In fact I'd really love to see the driver organized similarly to the sym2
-> driver - ncr53c8xx.c is too f***ing large for it's own sake.
+AFAICT, the introduction of __devexit NCR5380_exit() in 2.6.9 necessitated
+this fix for m68k macs, which don't need hotplug, and typically want 
+mac_scsi built into the kernel.
 
-I'm not particularly enamoured with the way sym2 is laid out.  Indeed,
-I'm currently moving stuff around; mostly to reduce some of the function
-spaghetti, but I'm aiming to turn sym_glue.c into sym_pci.c.  At that
-point, it becomes much more plausible to write a sym_mca.c and sym_gsc.c,
-and maybe we can get rid of the ncr53c8xx driver altogether.  
+Given !MODULE and !HOTPLUG, g_NCR5380 has the same problem (as do other 
+NCR5380 SCSI drivers, I expect). However, the x86 linker doesn't care, and 
+I don't have the hardware, so I haven't patched them.
 
-The sym2 main driver file isn't much smaller than ncr53c8xx.  Splitting
-the firmware out of it would probably be the biggest benefit:
+Signed-off-by: fthain@telegraphics.com.au
 
--rw-r--r--  1 willy willy  46652 Sep 27 21:41 sym_fw1.h
--rw-r--r--  1 willy willy 147620 Mar  4 15:19 sym_hipd.c
 
--rw-r--r--  1 willy willy 201778 Mar  2 16:53 ncr53c8xx.c
-
-(the firmware embedded in the ncr53c8xx driver is approximately 40k in size).
-
-One of the issues with trying to turn sym2 into the all-singing,
-all-dancing 7xx,8xx,1010 driver is that there's two parisc models
-(the 735 and 755) that have an ncr53c720 chip but don't support dma
-coherent memory.  I'd really rather not have sym2 use the advanced magic
-DMA APIs.  I'm also not looking forward to trying to make ncr53c8xx use
-them either ...  maybe the right thing to do is teach ncr53c700 to drive
-the 720 chip too?
-
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+--- a/drivers/scsi/mac_scsi.c	2005-02-28 15:12:31.050279180 +1100
++++ b/drivers/scsi/mac_scsi.c	2005-02-28 15:14:16.499002032 +1100
+@@ -233,7 +233,7 @@
+  *
+  */
+  
+-int macscsi_detect(Scsi_Host_Template * tpnt)
++int __init macscsi_detect(Scsi_Host_Template * tpnt)
+ {
+     static int called = 0;
+     int flags = 0;
+@@ -322,7 +322,7 @@
+     return 1;
+ }
+ 
+-int macscsi_release (struct Scsi_Host *shpnt)
++int __exit macscsi_release (struct Scsi_Host *shpnt)
+ {
+ 	if (shpnt->irq != SCSI_IRQ_NONE)
+ 		free_irq (shpnt->irq, NCR5380_intr);
+@@ -336,7 +336,7 @@
+  * Our 'bus reset on boot' function
+  */
+ 
+-static void mac_scsi_reset_boot(struct Scsi_Host *instance)
++static void __init mac_scsi_reset_boot(struct Scsi_Host *instance)
+ {
+ 	unsigned long end;
+ 
+@@ -586,7 +586,7 @@
+ 	.proc_info			= macscsi_proc_info,
+ 	.name				= "Macintosh NCR5380 SCSI",
+ 	.detect				= macscsi_detect,
+-	.release			= macscsi_release,
++	.release			= __exit_p(macscsi_release),
+ 	.info				= macscsi_info,
+ 	.queuecommand			= macscsi_queue_command,
+ 	.eh_abort_handler		= macscsi_abort,
+--- a/drivers/scsi/scsi_module.c	2005-02-28 18:16:17.408413324 +1100
++++ b/drivers/scsi/scsi_module.c	2005-02-28 18:16:46.696503105 +1100
+@@ -21,12 +21,14 @@
+ 	struct list_head *l;
+ 	int error;
+ 
++#ifdef MODULE
+ 	if (!sht->release) {
+ 		printk(KERN_ERR
+ 		    "scsi HBA driver %s didn't set a release method.\n",
+ 		    sht->name);
+ 		return -EINVAL;
+ 	}
++#endif
+ 
+ 	sht->module = THIS_MODULE;
+ 	INIT_LIST_HEAD(&sht->legacy_hosts);
