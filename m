@@ -1,38 +1,41 @@
-From: christophe.varoqui@free.fr
-Subject: RE: Removing the qlogicfc driver
-Date: Tue, 20 Jan 2004 14:42:04 +0100
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Problem with an USB Stick and kernel 2.6.1
+Date: Tue, 20 Jan 2004 09:56:11 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1074606124.400d302cac80e@imp2-l.free.fr>
-References: <B179AE41C1147041AA1121F44614F0B0598E46@AVEXCH02.qlogic.org>
+Message-ID: <Pine.LNX.4.44L0.0401200948010.1204-100000@ida.rowland.org>
+References: <1074289238.1884.29.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from postfix4-2.free.fr ([213.228.0.176]:64928 "EHLO
-	postfix4-2.free.fr") by vger.kernel.org with ESMTP id S265508AbUATNmM
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jan 2004 08:42:12 -0500
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0598E46@AVEXCH02.qlogic.org>
+Received: from ida.rowland.org ([192.131.102.52]:516 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S265516AbUATO4L (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jan 2004 09:56:11 -0500
+In-Reply-To: <1074289238.1884.29.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Mike Anderson <andmike@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Selon Andrew Vasquez <andrew.vasquez@qlogic.com>:
-> 
-> Ok, this turned out to be my mess-up.  As it turns out the 2200 fw
-> doesn't support the MS IOCB interface the driver uses to issue CT
-> commands to the SNS.  Basically, I had to forward-port some code 
-> from the 6.x driver to get the SNS calls to go through.  I have
-> several machines (mixture of 2200s/2300s/others with loop and 
-> fabric connections) in my test rings running with the attached patch.
-> If you would, I'd like for you to try out the attached patch.  It's
-> delta'd against the qla2xxx driver in the -mm4 tree.
-> 
-> Please let me know how it works out for you.  I'd like to forward
-> it along for inclusion once I get a bit more internal runtime in my
-> rings.
-> 
-I report it works flawlessly with "2.6.0-udm5 (== mm2) + qla8b8 + patch".
+Regarding DRIVER_SENSE with NO_SENSE data:
 
-Thanks for caring,
-cvaroqui
+On 16 Jan 2004, James Bottomley wrote:
+
+> On Fri, 2004-01-16 at 16:27, Mike Anderson wrote:
+> > This matches what I thought should be added to sd, but I did not hear an
+> > answer from James / others if this is the way we should handle it.
+> 
+> Actually, perhaps we should treat it *exactly* the same as
+> RECOVERED_ERROR (i.e. do the print_sense) so that if something goes
+> wrong with ignoring NO_SENSE returns, we have a trace that it happened.
+
+I'm concerned that these devices will provoke a driver sense on _every_
+read or write, since they report an incorrect residue.  Is it reasonable
+to print_sense on every I/O operation?
+
+Also, in sd.c the code tests DRIVER_SENSE in a number of places, not all 
+of which appear appropriate.  It looks like that test is used where 
+SCSI_SENSE_VALID would be better.  Is this something that ought to be 
+fixed?
+
+Alan Stern
+
