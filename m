@@ -1,74 +1,102 @@
-From: Michael Guntsche <mike@it-loops.com>
-Subject: Re: PROBLEM: 2.6.3 hangs when writing to scsi-dvd
-Date: Sat, 21 Feb 2004 11:25:50 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] fix fusion Kconfig oddities
+Date: Sat, 21 Feb 2004 20:34:59 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040221112550.6aec57eb.mike@it-loops.com>
+Message-ID: <20040221193459.GA10200@lst.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="pgp-sha1";
- boundary="Signature=_Sat__21_Feb_2004_11_25_50_+0100_3I3=viS0kFjWE995"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [62.116.46.196] ([62.116.46.196]:32275 "EHLO it-loops.com")
-	by vger.kernel.org with ESMTP id S261542AbUBUK0f (ORCPT
+Received: from verein.lst.de ([212.34.189.10]:59556 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S261610AbUBUTfZ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 21 Feb 2004 05:26:35 -0500
-Received: from [192.168.0.150] (helo=roadrunner.comsick.at)
-	by localhost with asmtp (Exim 3.36 #1 (Debian))
-	id 1AuUKY-0002Ve-00
-	for <linux-scsi@vger.kernel.org>; Sat, 21 Feb 2004 11:25:54 +0100
-List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
---Signature=_Sat__21_Feb_2004_11_25_50_+0100_3I3=viS0kFjWE995
-Content-Type: text/plain; charset=US-ASCII
+	Sat, 21 Feb 2004 14:35:25 -0500
 Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
+List-Id: linux-scsi@vger.kernel.org
+To: Emoore@lsil.com
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+ - don't let FUSION depend on BLK_DEV_SD, no other LLDD does
+ - remove option FUSION_BOOT
+ - remove some overly verbose marketing blurb to make the help
+   text more similar to others
+ - remove dead comments
 
-> More info:
-> on the cdwrite list, somebody reported a similar problem
-> (http://lists.debian.org/cdwrite/2004/cdwrite-200402/msg00081.html)
 
-That was me.
-Since this now really looks like a kernel related problem I post to this
-list.
-
-Looking through the code of growisofs (part of dvd+rw-tools) I noticed
-that it only hangs if it calls an SG_IO ioctl with a datalen of 8 or
-multiple value (16,24).
-
-There it freezes and I see the following error
-
-Feb 21 10:44:14 roadrunner kernel: Current sr0: sense = 70  4
-Feb 21 10:44:14 roadrunner kernel: ASC=1b ASCQ= 0
-Feb 21 10:44:14 roadrunner kernel: Raw sense data:0x70 0x00 0x04 0x00
-0x00 0x00 0x00 0x0a 0x00 0x00 0x00 0x00 0x1b 0x00 0x00 0x00 0x00 0x00
-Feb 21 10:44:23 roadrunner kernel: SCSI error : <0 0 0 0> return code =
-0x8000002
+--- 1.3/drivers/message/fusion/Kconfig	Fri Sep 12 05:19:35 2003
++++ edited/drivers/message/fusion/Kconfig	Sat Feb 21 20:39:48 2004
+@@ -3,7 +3,6 @@
  
-If I increase the buflen by 1 if it is (8,16,24) the ioctl returns and
-everything works.
-Since my knowledge about the SCSI internals is pretty limited Im pretty
-sure that this isn't the right fix.
-
-As stated in my mail to the cdwrite-ml removing the dma alignment to 8 byte works too.
-
-This happens with an external DVD-Writer connected via firewire.
-Could someone take a look at it and help me please?
-
-Thanks in advance,
-Michael
-
---Signature=_Sat__21_Feb_2004_11_25_50_+0100_3I3=viS0kFjWE995
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFANzIx9lrUeNl8Hv8RAkcCAJ4lWZXbD/yc2fdFH3E1+4umB/67SACfeA1b
-CeKT62BXuNCCnyiDl7bgHHw=
-=m14S
------END PGP SIGNATURE-----
-
---Signature=_Sat__21_Feb_2004_11_25_50_+0100_3I3=viS0kFjWE995--
+ config FUSION
+ 	tristate "Fusion MPT (base + ScsiHost) drivers"
+-	depends on BLK_DEV_SD
+ 	---help---
+ 	  LSI Logic Fusion(TM) Message Passing Technology (MPT) device support
+ 	  provides high performance SCSI host initiator, and LAN [1] interface
+@@ -14,41 +13,6 @@
+ 
+ 	  [1] LAN is not supported on parallel SCSI medium.
+ 
+-	  These drivers require a Fusion MPT compatible PCI adapter installed
+-	  in the host system.  MPT adapters contain specialized I/O processors
+-	  to handle I/O workload, and more importantly to offload this work
+-	  from the host CPU(s).
+-
+-	  If you have Fusion MPT hardware and want to use it, you can say
+-	  Y or M here to add MPT (base + ScsiHost) drivers.
+-	  <Y> = build lib (fusion), and link [static] into the kernel [2]
+-	  proper
+-	  <M> = compiled as [dynamic] modules [3] named: (mptbase,
+-	  mptscsih)
+-
+-	  [2] In order enable capability to boot the linux kernel
+-	  natively from a Fusion MPT target device, you MUST
+-	  answer Y here! (currently requires CONFIG_BLK_DEV_SD)
+-	  [3] To compile this support as modules, choose M here.
+-
+-	  If unsure, say N.
+-
+-	  If you say Y or M here you will get a choice of these
+-	  additional protocol and support module options:         Module Name:
+-	  <M>   Enhanced SCSI error reporting                     (isense)
+-	  <M>   Fusion MPT misc device (ioctl) driver             (mptctl)
+-	  <M>   Fusion MPT LAN driver                             (mptlan)
+-
+-	  ---
+-	  Fusion MPT is trademark of LSI Logic Corporation, and its
+-	  architecture is based on LSI Logic's Message Passing Interface (MPI)
+-	  specification.
+-
+-config FUSION_BOOT
+-	bool
+-	depends on FUSION=y
+-	default y
+-
+ config FUSION_MAX_SGE
+ 	int "Maximum number of scatter gather entries"
+ 	depends on FUSION
+@@ -62,7 +26,6 @@
+ 	  necessary (or recommended) unless the user will be running 
+ 	  large I/O's via the raw interface.
+ 
+-#  How can we force these options to module or nothing?
+ config FUSION_ISENSE
+ 	tristate "Enhanced SCSI error reporting"
+ 	depends on MODULES && FUSION && m
+@@ -132,17 +95,4 @@
+ 
+ 	  If unsure whether you really want or need this, say N.
+ 
+-	  NOTES: This feature is NOT available nor supported for linux-2.2.x
+-	  kernels.  You must be building a linux-2.3.x or linux-2.4.x kernel
+-	  in order to configure this option.
+-	  Support for building this feature into the linux kernel is not
+-	  yet available.
+-
+-#  if [ "$CONFIG_FUSION_LAN" != "n" ]; then
+-#    define_bool CONFIG_NET_FC y
+-#  fi
+-# These <should> be define_tristate, but we leave them define_bool
+-# for backward compatibility with pre-linux-2.2.15 kernels.
+-# (Bugzilla:fibrebugs, #384)
+ endmenu
+-
