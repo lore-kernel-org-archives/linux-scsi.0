@@ -1,41 +1,77 @@
-From: Anton Blanchard <anton@samba.org>
-Subject: Re: bogus barriers in sym53c8xx_2?
-Date: Wed, 20 Aug 2003 13:43:18 +1000
+From: "Randy.Dunlap" <randy.dunlap@verizon.net>
+Subject: [PATCH] advansys build with ADVANSYS_DEBUG defined
+Date: Tue, 19 Aug 2003 21:31:10 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030820034318.GC25341@krispykreme>
-References: <200308192349.h7JNnrEK017626@napali.hpl.hp.com> <20030820032611.GI19630@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <20030819213110.0d9733aa.randy.dunlap@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dp.samba.org ([66.70.73.150]:39341 "EHLO lists.samba.org")
-	by vger.kernel.org with ESMTP id S261598AbTHTDry (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Aug 2003 23:47:54 -0400
-Content-Disposition: inline
-In-Reply-To: <20030820032611.GI19630@parcelfarce.linux.theplanet.co.uk>
+Received: from out003pub.verizon.net ([206.46.170.103]:30389 "EHLO
+	out003.verizon.net") by vger.kernel.org with ESMTP id S261700AbTHTEcw
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Aug 2003 00:32:52 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: davidm@hpl.hp.com, linux-ia64@vger.kernel.org, linux-scsi@vger.kernel.org
+To: james.bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
 
-> I'm sure Gerard must have written it originally.  It's there
-> in the earliest version of the sym2 driver I can find --
-> sym-2.1.16a-for-linux-2.4.13.patch.gz.  A similar barrier is there in
-> the sym1 driver (drivers/scsi/sym53c8xx_defs.h).  It seems to have been
-> introduced around 2.4.3 (symbios driver version 1.6b -> 1.7.3a-20010304)
-> 
-> So you're looking for a patch which looks something like this:
-> 
-> - #define __READ_BARRIER()	__asm__ volatile("mf.a; mf" : : : "memory")
-> - #define __WRITE_BARRIER()	__asm__ volatile("mf.a; mf" : : : "memory")
-> + #define __READ_BARRIER()	__asm__ volatile("mf" : : : "memory")
-> + #define __WRITE_BARRIER()	__asm__ volatile("mf" : : : "memory")
-> 
-> Or really, might be better to just define them to rmb() and wmb()?
+This patch enables the advansys driver to build when
+ADVANSYS_DEBUG is #defined.
 
-I suspect so, the powerpc ones are overkill too:
+Please consider applying to 2.6.0-test3.
 
-#define __READ_BARRIER()        __asm__ volatile("eieio; sync" : : : "memory")
-#define __WRITE_BARRIER()       __asm__ volatile("eieio; sync" : : : "memory")
+Thanks,
+--
+~Randy
 
-Anton
+
+patch_name:	scsi_advan_260t3.patch
+patch_version:	2003-08-10.22:37:15
+author:		Randy.Dunlap <rddunlap@osdl.org>
+description:	enable compile with ADVANSYS_DEBUG #defined
+product:	Linux
+product_versions: 260-test3
+URL:		_
+maintainer:	unknown
+diffstat:	=
+ drivers/scsi/advansys.c |   13 +++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
+
+
+diff -Naur ./drivers/scsi/advansys.c~advan ./drivers/scsi/advansys.c
+--- ./drivers/scsi/advansys.c~advan	2003-08-08 21:34:08.000000000 -0700
++++ ./drivers/scsi/advansys.c	2003-08-10 22:34:51.000000000 -0700
+@@ -6360,8 +6361,8 @@
+     } else {
+ 	scsi_adjust_queue_depth(device, 0, device->host->cmd_per_lun);
+     }
+-    ASC_DBG3(1, "advansys_slave_configure: shp 0x%lx, id %d, depth %d\n",
+-            (ulong) shp, device->id, device->queue_depth);
++    ASC_DBG4(1, "advansys_slave_configure: device 0x%lx, boardp 0x%lx, id %d, depth %d\n",
++            (ulong) device, (ulong) boardp, device->id, device->queue_depth);
+     return 0;
+ }
+ 
+@@ -9352,8 +9353,8 @@
+ 
+     printk("Scsi_Host at addr 0x%lx\n", (ulong) s);
+     printk(
+-" next 0x%lx, host_busy %u, host_no %d, last_reset %d,\n",
+-        (ulong) s->next, s->host_busy, s->host_no,
++" host_busy %u, host_no %d, last_reset %d,\n",
++        s->host_busy, s->host_no,
+         (unsigned) s->last_reset);
+ 
+ #if ASC_LINUX_KERNEL24
+@@ -9397,8 +9398,8 @@
+ 
+     printk(
+ " host 0x%lx, device 0x%lx, target %u, lun %u, channel %u,\n",
+-        (ulong) s->host, (ulong) s->device, s->target, s->lun,
+-        s->channel);
++        (ulong) s->device->host, (ulong) s->device, s->device->id, s->device->lun,
++        s->device->channel);
+ 
+     asc_prt_hex(" CDB", s->cmnd, s->cmd_len);
+ 
