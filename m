@@ -1,62 +1,59 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: qla1280 endiannes and 64/32bit fixes
-Date: Sat, 17 Jan 2004 23:33:21 -0800
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: Re: pulling failover out of qla2xxx
+Date: Sun, 18 Jan 2004 11:37:36 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040118073321.GC383498@sgi.com>
-References: <1074382860.1756.20.camel@mulgrave> <20040118024326.GA381527@sgi.com> <1074395819.1756.31.camel@mulgrave> <20040118062157.GA11083@praka.local.home>
+Message-ID: <1074422254.4428.3.camel@laptop.fenrus.com>
+References: <B179AE41C1147041AA1121F44614F0B0598E34@AVEXCH02.qlogic.org>
+	 <40084860.90902@pobox.com> <20040117205230.GB8301@praka.local.home>
+	 <1074373727.4429.4.camel@laptop.fenrus.com>
+	 <20040117215203.GA9041@praka.local.home>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kpQC9lpvVTD/m2n2LCDV"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.sgi.com ([192.48.171.6]:36783 "EHLO rj.sgi.com")
-	by vger.kernel.org with ESMTP id S266249AbUARHeP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Jan 2004 02:34:15 -0500
-Content-Disposition: inline
-In-Reply-To: <20040118062157.GA11083@praka.local.home>
+Received: from node-d-1fcf.a2000.nl ([62.195.31.207]:28544 "EHLO
+	laptop.fenrus.com") by vger.kernel.org with ESMTP id S266314AbUARKhy
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 18 Jan 2004 05:37:54 -0500
+In-Reply-To: <20040117215203.GA9041@praka.local.home>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <praka@users.sourceforge.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: jes@sgi.com
-
-On Sat, Jan 17, 2004 at 10:21:57PM -0800, Andrew Vasquez wrote:
-> 
-> Jeremy:  have you had any problems with running I/O down the 64bit
-> capable IOCB path?
-> 
-> --
-> Andrew
-
-No problems.  But then our Linux boxes are little endian.  We have
-an ISP12160 on every one built so far, with no NVRAM.
+To: Andrew Vasquez <praka@users.sourceforge.net>
+Cc: Linux-SCSI <linux-scsi@vger.kernel.org>
 
 
-James, with your code as it is now, ha->flags.enable_64bit_addressing
-is always 0.  You'd need to add code to read the value out of the
-nvram.  Then we'll need an nvram override for Altix.
+--=-kpQC9lpvVTD/m2n2LCDV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Here's a patch to James's patch.  Yes, it has more nasty #ifdefs.  I
-think there is probably a better way, but it's late  :-)
+On Sat, 2004-01-17 at 22:52, Andrew Vasquez wrote:
 
-I'll let Jes continue with this, as I'll be away until next Friday.
+> I'll just throw this out, if in fact as you say request_firmware()
+> won't work with the current initrd's used by the distros then perhaps
+> we could simply build the firmware images as modules (minus the
+> per-firmware loader) and have a generic qlafc.ko (or whatever the name
+> you'd like) loader that the user would modprobe. The qlafc driver
+> would then register the pci_device_id tables for all ISP chips and
+> wait for the pci_driver callback to signify which firmwares modules to
+> load.  Load the firmware, call probe(), then move on. =20
 
-thanks
+this breaks those initrd's just as much.
+The current approach actually is pretty clean (module dependencies pull
+everything in etc etc) and I *really* don't see the objection to it.
+Sure the request_firmware() interface is nicer but it's not like having
+the a few frontend modules is actually a problem; all distros just do
+the right thing with these, even for custom compiled kernels.=20
 
-jeremy
 
---- drivers/scsi/qla1280.c.bak	Sat Jan 17 23:22:54 2004
-+++ drivers/scsi/qla1280.c	Sat Jan 17 23:22:59 2004
-@@ -2935,6 +2935,15 @@
- 	ha->flags.disable_risc_code_load =
- 		nv->cntr_flags_1.disable_loading_risc_code;
- 
-+	/* Get NVRAM value from firmware */
-+	ha->flags.enable_64bit_addressing =
-+		nv->cntr_flags_1.enable_64bit_addressing;
-+#if defined(CONFIG_IA64_GENERIC) || defined (CONFIG_IA64_SGI_SN2)
-+	/* SN2 needs 64 bit */
-+	if (ia64_platform_is("sn2"))
-+		ha->flags.enable_64bit_addressing = 1;
-+#endif
-+
- 	if (ha->flags.enable_64bit_addressing) {
- 		dprintk(2, "scsi(%li): 64 Bit PCI Addressing Enabled\n",
- 			ha->host_no);
+--=-kpQC9lpvVTD/m2n2LCDV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+
+iD8DBQBACmHuxULwo51rQBIRAg1lAJ9Ig6I1iwl9LllhzhX1nUmFWdc5OwCfTphU
+trhEm+i9VNH2GmbgTlVg2gA=
+=mRP4
+-----END PGP SIGNATURE-----
+
+--=-kpQC9lpvVTD/m2n2LCDV--
