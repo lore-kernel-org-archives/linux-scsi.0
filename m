@@ -1,101 +1,107 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Re: 2.6.10-rc2-mm2 usb storage still oopses
-Date: Tue, 30 Nov 2004 15:58:17 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0411301555260.1423-100000@ida.rowland.org>
-References: <200411302027.56951.cova@ferrara.linux.it>
+From: James.Smart@Emulex.Com
+Subject: RE: [PATCH] Another fix for suspend i/o - validate dev state before transition
+Date: Tue, 30 Nov 2004 16:17:30 -0500
+Message-ID: <0B1E13B586976742A7599D71A6AC733C12E7D5@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-In-Reply-To: <200411302027.56951.cova@ferrara.linux.it>
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Fabio Coatti <cova@ferrara.linux.it>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, Pete Zaitcev <zaitcev@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:12789 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S262311AbUK3VRe convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Nov 2004 16:17:34 -0500
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id iAULHUni015879
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2004 13:17:31 -0800 (PST)
+content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
 
-On Tue, 30 Nov 2004, Fabio Coatti wrote:
+James,
 
-> The only small issue is that if i leave plugged the usb flash key and 
-> power-cycle my box, at boot the device is not detected and it fails in the 
-> same way it happens when usbcore old_scheme_first is not set (it's present in 
-> modprobe.conf)
+I have yet to see this hit scsi-misc-2.6...  hope it didn't get dropped.
+
+-- james
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org
+> [mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Smart, James
+> Sent: Wednesday, November 17, 2004 1:40 PM
+> To: linux-scsi@vger.kernel.org
+> Subject: [PATCH] Another fix for suspend i/o - validate dev 
+> state before
+> transition
 > 
-> If I unplug/plug the device, all works just fine.
-
-> Now, rebooting the box leaving the device inserted, with old_scheme_first=1 in 
-> modprobe.conf
 > 
-> Nov 30 20:03:40 kefk kernel: usb 4-0:1.0: hotplug
-> Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: usb_probe_interface
-> Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: usb_probe_interface - got id
-> Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: USB hub found
-> Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: 2 ports detected
-> Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: standalone hub
-> Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: no power switching (usb 1.0)
-> Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: individual port over-current 
-> protection
-> Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: power on to power good time: 2ms
-> Nov 30 20:03:40 kefk kernel: hub 4-0:1.0: local power source is good
-> Nov 30 20:03:40 kefk kernel: hub 2-0:1.0: debounce: port 1: total 100ms stable 
-> 100ms status 0x101
-> Nov 30 20:03:40 kefk kernel: usb 2-1: new full speed USB device using uhci_hcd 
-> and address 2
-> Nov 30 20:03:40 kefk kernel: uhci_hcd 0000:00:1d.1: uhci_result_control: 
-> failed with status 440000
-> Nov 30 20:03:40 kefk kernel: [f7ab5240] link (37ab51b2) element (37ab4040)
-> Nov 30 20:03:40 kefk kernel:   0: [f7ab4040] link (37ab4080) e0 Stalled 
-> CRC/Timeo Length=7 MaxLen=7 DT0 EndPt=0 Dev=0, PID=2d(SETUP) (buf=37998f20)
-> Nov 30 20:03:40 kefk kernel:   1: [f7ab4080] link (00000001) e3 IOC Active 
-> Length=0 MaxLen=7ff DT1 EndPt=0 Dev=0, PID=69(IN) (buf=00000000)
-> Nov 30 20:03:40 kefk kernel:
-> Nov 30 20:03:40 kefk kernel: uhci_hcd 0000:00:1d.1: uhci_result_control: 
-> failed with status 440000
-> Nov 30 20:03:40 kefk kernel: [f7ab5240] link (37ab51b2) element (37ab4040)
-> Nov 30 20:03:40 kefk kernel:   0: [f7ab4040] link (37ab4080) e0 Stalled 
-> CRC/Timeo Length=7 MaxLen=7 DT0 EndPt=0 Dev=0, PID=2d(SETUP) (buf=378ef180)
-> Nov 30 20:03:40 kefk kernel:   1: [f7ab4080] link (00000001) e3 IOC Active 
-> Length=0 MaxLen=7ff DT1 EndPt=0 Dev=0, PID=69(IN) (buf=00000000)
-> Nov 30 20:03:40 kefk kernel:
-> Nov 30 20:03:40 kefk kernel: usb 2-1: device not accepting address 2, error 
-> -71
-> Nov 30 20:03:40 kefk kernel: usb 2-1: new full speed USB device using uhci_hcd 
-> and address 3
-> Nov 30 20:03:40 kefk kernel: uhci_hcd 0000:00:1d.1: uhci_result_control: 
-> failed with status 440000
-> Nov 30 20:03:40 kefk kernel: [f7ab5240] link (37ab51b2) element (37ab4040)
-> Nov 30 20:03:40 kefk kernel:   0: [f7ab4040] link (37ab4080) e0 Stalled 
-> CRC/Timeo Length=7 MaxLen=7 DT0 EndPt=0 Dev=0, PID=2d(SETUP) (buf=378ef180)
-> Nov 30 20:03:40 kefk kernel:   1: [f7ab4080] link (00000001) e3 IOC Active 
-> Length=0 MaxLen=7ff DT1 EndPt=0 Dev=0, PID=69(IN) (buf=00000000)
+> The block/unblock patch reports stack dumps and illegal 
+> transitions when the driver continues to call block or 
+> unblock after the device has failed (moved into offline state 
+> due to i/o error, etc). The LLDD/transport is unaware of the 
+> sdev transition, so it doesn't know better.
 > 
-> After this, if I remove and plug again the device, all works just fine.
-
-This log shows that the device was operating at full speed, not at high 
-speed.  Probably your boot-up sequence involves loading the uhci-hcd 
-driver before ehci-hcd.
-
-It may be that the device wants old_scheme_first to be set when it's 
-operating at high speed and not set when operating at full speed!  You can 
-test this guess by unloading one driver or the other and then plugging in 
-the device.
-
-Alan Stern
-
-
-
--------------------------------------------------------
-SF email is sponsored by - The IT Product Guide
-Read honest & candid reviews on hundreds of IT Products from real users.
-Discover which products truly live up to the hype. Start reading now. 
-http://productguide.itmanagersjournal.com/
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+> This patch has the internal device block/unblock routines 
+> validate the state transition before invoking it.
+> 
+> Hopefully this is it for this darn feature...
+> 
+> -- James S
+> 
+> 
+> 
+> 
+> --- scsi_lib.c.2.6.10-rc2	2004-11-16 09:03:58.000000000 -0500
+> +++ scsi_lib.c.NEW	2004-11-17 13:23:22.340667480 -0500
+> @@ -1813,6 +1813,12 @@
+>   *	state, all commands are deferred until the scsi lld reenables
+>   *	the device with scsi_device_unblock or device_block_tmo fires.
+>   *	This routine assumes the host_lock is held on entry.
+> + *
+> + *      As the LLDD/Transport that is calling this function doesn't
+> + *	actually know what the device state is, the function may be
+> + *	called at an inappropriate time. Therefore, before requesting
+> + *	the state change, the function validates that the transition is
+> + *	valid.
+>   **/
+>  int
+>  scsi_internal_device_block(struct scsi_device *sdev)
+> @@ -1821,6 +1827,10 @@
+>  	unsigned long flags;
+>  	int err = 0;
+>  
+> +	if ((sdev->sdev_state != SDEV_CREATED) &&
+> +	    (sdev->sdev_state != SDEV_RUNNING))
+> +		return 0;
+> +
+>  	err = scsi_device_set_state(sdev, SDEV_BLOCK);
+>  	if (err)
+>  		return err;
+> @@ -1853,6 +1863,12 @@
+>   *	(which must be a legal transition) allowing the midlayer to
+>   *	goose the queue for this device.  This routine assumes the 
+>   *	host_lock is held upon entry.
+> + *
+> + *      As the LLDD/Transport that is calling this function doesn't
+> + *	actually know what the device state is, the function may be
+> + *	called at an inappropriate time. Therefore, before requesting
+> + *	the state change, the function validates that the transition is
+> + *	valid.
+>   **/
+>  int
+>  scsi_internal_device_unblock(struct scsi_device *sdev)
+> @@ -1861,6 +1877,9 @@
+>  	int err;
+>  	unsigned long flags;
+>  	
+> +	if (sdev->sdev_state != SDEV_BLOCK)
+> +		return 0;
+> +	
+>  	/* 
+>  	 * Try to transition the scsi device to SDEV_RUNNING
+>  	 * and goose the device queue if successful.  
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
