@@ -1,93 +1,65 @@
 From: Matt Mackall <mpm@selenic.com>
-Subject: Re: [ANNOUNCE 2/6] Open-iSCSI High-Performance Initiator for Linux
-Date: Tue, 8 Mar 2005 22:32:09 -0800
-Message-ID: <20050309063209.GV3163@waste.org>
-References: <422BFEC6.70305@yahoo.com>
+Subject: Re: [ANNOUNCE 0/6] Open-iSCSI High-Performance Initiator for Linux
+Date: Tue, 8 Mar 2005 22:50:27 -0800
+Message-ID: <20050309065027.GX3120@waste.org>
+References: <422BFCB2.6080309@yahoo.com> <20050309050434.GT3163@waste.org> <422E8EEB.7090209@yahoo.com> <20050309060544.GW3120@waste.org> <1110349558.4451.8.camel@mylaptop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from waste.org ([216.27.176.166]:41659 "EHLO waste.org")
-	by vger.kernel.org with ESMTP id S261631AbVCIGcK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2005 01:32:10 -0500
+Received: from waste.org ([216.27.176.166]:7869 "EHLO waste.org")
+	by vger.kernel.org with ESMTP id S261630AbVCIGua (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2005 01:50:30 -0500
 Content-Disposition: inline
-In-Reply-To: <422BFEC6.70305@yahoo.com>
+In-Reply-To: <1110349558.4451.8.camel@mylaptop>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alex Aizman <itn780@yahoo.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dmitry Yusupov <dmitry_yus@yahoo.com>
+Cc: Alex Aizman <itn780@yahoo.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, Mar 06, 2005 at 11:12:06PM -0800, Alex Aizman wrote:
+On Tue, Mar 08, 2005 at 10:25:58PM -0800, Dmitry Yusupov wrote:
+> On Tue, 2005-03-08 at 22:05 -0800, Matt Mackall wrote:
+> > On Tue, Mar 08, 2005 at 09:51:39PM -0800, Alex Aizman wrote:
+> > > Matt Mackall wrote:
+> > > 
+> > > >How big is the userspace client?
+> > > >
+> > > Hmm.. x86 executable? source?
+> > > 
+> > > Anyway, there's about 12,000 lines of user space code, and growing. In 
+> > > the kernel we have approx. 3,300 lines.
+> > > 
+> > > >>- 450MB/sec Read on a single connection (2-way 2.4Ghz Opteron, 64KB block 
+> > > >>size);
+> > > >
+> > > >With what network hardware and drives, please?
+> > > >
+> > > Neterion's 10GbE adapters. RAM disk on the target side.
+> > 
+> > Ahh.
+> > 
+> > Snipped my question about userspace deadlocks - that was the important
+> > one. It is in fact why the sfnet one is written as it is - it
+> > originally had a userspace component and turned out to be easy to
+> > deadlock under load because of it.
+> 
+> As Scott Ferris pointed out, the main reason for deadlock in sfnet was
+> blocking behavior of page cache when daemon tried to do filesystem IO,
+> namely syslog().
 
-> +#define iscsi_ptr(_handle) ((void*)(unsigned long)_handle)
-> +#define iscsi_handle(_ptr) ((uint64_t)(unsigned long)_ptr)
+That was just one of several problems. And ISTR deciding that
+particular one was quite nasty when we first encountered it though I
+no longer remember the details.
 
-This is a bit wonky. Why is there a distinction?
+> That was 2.4.x kernel. We don't know whether it is
+> fixed in 2.6.x. If someone knows, please let us know. Meanwhile we came
+> up with work-around design in user-space. "Paged out" problem fixed
+> already in our subversion repository by utilizing mlockall()
+> syscall.
 
+I presume this is dynamically linked against glibc?
 
-> +#ifndef ISCSI_PROTO_H
-> +#define ISCSI_PROTO_H
-> +
-> +#define ISCSI_VERSION_STR	"0.1.0"
-> +#define ISCSI_DATE_STR		"17-Jan-2005"
-> +#define ISCSI_DRAFT20_VERSION	0x00
-> +
-> +/* default iSCSI listen port for incoming connections */
-> +#define ISCSI_LISTEN_PORT	3260
-> +
-> +/* Padding word length */
-> +#define PAD_WORD_LEN		4
+> Also we have IMHO, working solution for OOM during ERL=0 TCP re-connect.
 
-Namespace.
-
-> +
-> +/*
-> + * useful common(control and data pathes) macro
-> + */
-> +#define ntoh24(p) (((p)[0] << 16) | ((p)[1] << 8) | ((p)[2]))
-> +#define hton24(p, v) { \
-> +        p[0] = (((v) >> 16) & 0xFF); \
-> +        p[1] = (((v) >> 8) & 0xFF); \
-> +        p[2] = ((v) & 0xFF); \
-> +}
-> +#define zero_data(p) {p[0]=0;p[1]=0;p[2]=0;}
-
-These are specific to dlength, yes? Can we instead roll dlength and
-hlength together, and do this with masking?
-
-#define iscsi_hlen(hdr) (ntohl(hdr->hdlen)>>24)
-#define iscsi_dlen(hdr) (ntohl(hdr->hdlen) & 0xffffff)
-#define iscsi_set_hlen(hdr, len) (hdr->hdlen=htonl(iscsi_dlen(hdr)|(len<<24)))
-#define iscsi_set_hlen(hdr, len) (hdr->hdlen=htonl(len|(iscsi_hlen(hdr)<<24)))
-
-The last two obviously have multiple evaluation, but you get the idea.
-
-> +/* SNACK Header */
-
-Mmm, snacks.
-
-> +/* Reason for Reject */
-> +#define CMD_BEFORE_LOGIN	1
-> +#define DATA_DIGEST_ERROR	2
-> +#define DATA_SNACK_REJECT	3
-> +#define ISCSI_PROTOCOL_ERROR	4
-> +#define CMD_NOT_SUPPORTED	5
-> +#define IMM_CMD_REJECT		6
-> +#define TASK_IN_PROGRESS	7
-> +#define INVALID_SNACK		8
-> +#define BOOKMARK_REJECTED	9
-> +#define BOOKMARK_NO_RESOURCES	10
-> +#define NEGOTIATION_RESET	11
-> +
-> +/* Max. number of Key=Value pairs in a text message */
-> +#define MAX_KEY_VALUE_PAIRS	8192
-> +
-> +/* maximum length for text keys/values */
-> +#define KEY_MAXLEN		64
-> +#define VALUE_MAXLEN		255
-> +#define TARGET_NAME_MAXLEN	VALUE_MAXLEN
-> +
-> +#define DEFAULT_MAX_RECV_DATA_SEGMENT_LENGTH	8192
-
-Namespace.
+Care to describe it?
 
 -- 
 Mathematics is the supreme nostalgia of our time.
