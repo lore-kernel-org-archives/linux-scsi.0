@@ -1,73 +1,54 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [linux-usb-devel] Re: bug 2400
-Date: 05 Apr 2004 20:19:18 -0500
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: SG_IO open flags are which
+Date: 05 Apr 2004 18:49:29 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1081214360.1756.330.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0404032026590.30873-100000@netrider.rowland.org>	<108109222
-		3.2034.8.camel@mulgrave>
-	<407050F4.2090607@pacbell.net>	<1081104161.2112.34.camel@mulgrave>
-	<4070D891.9040409@pacbell.net> <1081201463.2050.92.camel@mulgrave>
-	<4071EA82.3020901@pacbell.net>
+Message-ID: <1081212569.3439.32.camel@patibmrh9>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:56212 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263580AbUDFBTr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Apr 2004 21:19:47 -0400
-In-Reply-To: <4071EA82.3020901@pacbell.net>
+Received: from email-out2.iomega.com ([147.178.1.83]:40397 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S263595AbUDFBwO
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Apr 2004 21:52:14 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: David Brownell <david-b@pacbell.net>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Mike Anderson <andmike@us.ibm.com>, Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2004-04-05 at 18:23, David Brownell wrote:
-> "Irrelevant" is pointlessly strong, even for what I'm guessing
-> you really mean to be saying.
+Doug G:
 
-No, it's the very point.
+> > Re: SG_IO open flags are which
+> > http://marc.theaimsgroup.com/?t=107150658300002
+> > ...
+> > So first try and open() with the (O_NONBLOCK
+> > | O_RDWR) flags.  If that yields ENOMEDIUM
+> > look for the corresponding sg device name.
+> > If the initial open() yields EROFS or EACESS
+> > then try to open it (O_NONBLOCK | O_RDONLY).
+> > ...
 
-If we have to enforce ordering on the event propagation across
-subsystems, that can't be done without inter subsystem synchronisation.
+Clear workarounds for three possible results, yes, thank you.
 
-In order to get away without any inter subsystem synchronisation the
-order has to not matter.  i.e. be irrelevant.
+Naturally I fear uncertainly and doubt the effects of defaulting to
+O_RDWR or O_RDONLY.
 
-> Minimally, there needs to be synchronization to prevent open() on
-> one CPU from using data structures disconnect() just invalidated
-> on another CPU.  That's a basic "how to write multi-threaded code"
-> kind of issue, which I won't bother to explain (yet again).
+> > Confused enough yet :-)
 
-Yes, but that's intra subsystem synchronisation, not inter subsystem
-synchronisation.
+I can confirm ioctl SG_IO op x2A, in Linux-2.6.5, passes:
 
-Look, the rules are very simple:
+thru open O_NONBLOCK of mountable /dev/scd$n, and
+thru open (O_NONBLOCK | O_RDWR) of unmountable /dev/sg$n, but
+NOT thru open O_NONBLOCK of unmountable /dev/sg$n.
 
-- Every subsystem gives out refcounted objects.
+I get these same results no matter disc absent or present.
 
-- Every subsystem takes in a disconnection event for another object. 
-Now what the subsystem does with the event is up to it.  The only
-guarantee is if the subsystem holds no references to the other object
-after the disconnection completes in that subsystem, then it may be
-garbage collected.  However, if not, the other object must remain until
-the last reference is dropped.
+Next steps may include:
 
-The point is that all the disconnection event does is inform a subsystem
-that the entity represented by the other object has gone.  What it
-chooses to do with the information is up to it.  It could set it's own
-connected object to degraded, never use the other object again and drop
-the reference.  Or, it could simply ignore the indication and continue
-to use the other object (even though it will return errors for every
-operation).
+a) Contrast PDT x05 ioctl CDROM_SEND_PACKET with ioctl SG_IO.
 
-Now, if the subsystem is going to garbage collect its own object as a
-result of the other object disconnect, then it is responsible for
-synchronising that with reference gets on its own object.  However, that
-is easily achievable via *intra* subsystem synchronisation.
+b) Trace when open/ close implies op x1E "PREVENT" "ALLOW" around ioctl,
+even ioctl of op x1B "START" "STOP" Eject.
 
-If you follow these rules, there's no *inter* subsystem ordering or
-synchronisation requirement.
-
-James
+Pat LaVarre
 
 
