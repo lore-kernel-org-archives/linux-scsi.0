@@ -1,14 +1,14 @@
 From: Jens Axboe <axboe@suse.de>
-Subject: [PATCH] megaraid bad queuecommand return
-Date: Fri, 19 Nov 2004 09:53:41 +0100
-Message-ID: <20041119085341.GY26240@suse.de>
+Subject: [PATCH] nsp32 bad queuecommand return
+Date: Fri, 19 Nov 2004 09:57:22 +0100
+Message-ID: <20041119085721.GB26240@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:7613 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261314AbUKSIyQ (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:39614 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261314AbUKSI5t (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Nov 2004 03:54:16 -0500
+	Fri, 19 Nov 2004 03:57:49 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,77 +16,62 @@ To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
 Hi,
 
-In case of scb allocation failure, mega_build_cmd() can return NULL scb
-but set busy, which causes a non-zero return from ->queuecommand() while
-the scsi command has been completed. Flagging error and calling done
-should be enough for appropriate retries.
+The driver appropriately returns SCSI_MLQUEUE_HOST_BUSY, but it has
+already completed the command. Just return 0 instead and let the mid
+layer handle it through scsi_done().
 
 Signed-off-by: Jens Axboe <axboe@suse.de>
 
-===== drivers/scsi/megaraid.c 1.73 vs edited =====
---- 1.73/drivers/scsi/megaraid.c	2004-11-11 09:43:34 +01:00
-+++ edited/drivers/scsi/megaraid.c	2004-11-19 09:03:43 +01:00
-@@ -634,11 +634,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_
- 			}
+===== drivers/scsi/nsp32.c 1.32 vs edited =====
+--- 1.32/drivers/scsi/nsp32.c	2004-10-20 21:24:36 +02:00
++++ edited/drivers/scsi/nsp32.c	2004-11-19 09:10:05 +01:00
+@@ -970,8 +970,7 @@ static int nsp32_queuecommand(struct scs
+ 		data->CurrentSC = NULL;
+ 		SCpnt->result   = DID_NO_CONNECT << 16;
+ 		done(SCpnt);
+-
+-		return SCSI_MLQUEUE_HOST_BUSY;
++		return 0;
+ 	}
  
- 			if(!(scb = mega_allocate_scb(adapter, cmd))) {
--
--				cmd->result = (DID_ERROR << 16);
--				cmd->scsi_done(cmd);
- 				*busy = 1;
--
- 				return NULL;
- 			}
+ 	/* check target ID is not same as this initiator ID */
+@@ -979,7 +978,7 @@ static int nsp32_queuecommand(struct scs
+ 		nsp32_dbg(NSP32_DEBUG_QUEUECOMMAND, "terget==host???");
+ 		SCpnt->result = DID_BAD_TARGET << 16;
+ 		done(SCpnt);
+-		return SCSI_MLQUEUE_DEVICE_BUSY;
++		return 0;
+ 	}
  
-@@ -677,11 +673,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_
+ 	/* check target LUN is allowable value */
+@@ -987,7 +986,7 @@ static int nsp32_queuecommand(struct scs
+ 		nsp32_dbg(NSP32_DEBUG_QUEUECOMMAND, "no more lun");
+ 		SCpnt->result = DID_BAD_TARGET << 16;
+ 		done(SCpnt);
+-		return SCSI_MLQUEUE_DEVICE_BUSY;
++		return 0;
+ 	}
  
- 			/* Allocate a SCB and initialize passthru */
- 			if(!(scb = mega_allocate_scb(adapter, cmd))) {
--
--				cmd->result = (DID_ERROR << 16);
--				cmd->scsi_done(cmd);
- 				*busy = 1;
--
- 				return NULL;
- 			}
- 			pthru = scb->pthru;
-@@ -723,11 +715,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_
+ 	show_command(SCpnt);
+@@ -1019,7 +1018,7 @@ static int nsp32_queuecommand(struct scs
+ 		nsp32_msg(KERN_ERR, "SGT fail");
+ 		SCpnt->result = DID_ERROR << 16;
+ 		nsp32_scsi_done(SCpnt);
+-		return SCSI_MLQUEUE_HOST_BUSY;
++		return 0;
+ 	}
  
- 			/* Allocate a SCB and initialize mailbox */
- 			if(!(scb = mega_allocate_scb(adapter, cmd))) {
--
--				cmd->result = (DID_ERROR << 16);
--				cmd->scsi_done(cmd);
- 				*busy = 1;
--
- 				return NULL;
- 			}
- 			mbox = (mbox_t *)scb->raw_mbox;
-@@ -867,11 +855,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_
+ 	/* Build IDENTIFY */
+@@ -1089,7 +1088,6 @@ static int nsp32_queuecommand(struct scs
+ 	if (ret != TRUE) {
+ 		nsp32_dbg(NSP32_DEBUG_QUEUECOMMAND, "selection fail");
+ 		nsp32_scsi_done(SCpnt);
+-		return SCSI_MLQUEUE_DEVICE_BUSY;
+ 	}
  
- 			/* Allocate a SCB and initialize mailbox */
- 			if(!(scb = mega_allocate_scb(adapter, cmd))) {
--
--				cmd->result = (DID_ERROR << 16);
--				cmd->scsi_done(cmd);
- 				*busy = 1;
--
- 				return NULL;
- 			}
- 
-@@ -899,11 +883,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_
- 	else {
- 		/* Allocate a SCB and initialize passthru */
- 		if(!(scb = mega_allocate_scb(adapter, cmd))) {
--
--			cmd->result = (DID_ERROR << 16);
--			cmd->scsi_done(cmd);
- 			*busy = 1;
--
- 			return NULL;
- 		}
- 
+ 	return 0;
 
+ 
 -- 
 Jens Axboe
 
