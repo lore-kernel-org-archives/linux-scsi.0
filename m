@@ -1,42 +1,36 @@
-From: Greg Stark <gsstark@mit.edu>
-Subject: Re: [PATCH] scsi/sata write barrier support
-Date: 01 Mar 2005 10:55:27 -0500
-Message-ID: <87r7izz7gw.fsf@stark.xeocode.com>
-References: <20050127120244.GO2751@suse.de> <87acpxurwf.fsf@stark.xeocode.com>
-	<20050222071340.GC2835@suse.de> <874qg4v81q.fsf@stark.xeocode.com>
-	<20050301084741.GD12295@suse.de>
+From: James.Smart@Emulex.Com
+Subject: RE: One question about SCSI device hotplug
+Date: Tue, 1 Mar 2005 11:35:28 -0500
+Message-ID: <0B1E13B586976742A7599D71A6AC733C12EC5E@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from stark.xeocode.com ([216.58.44.227]:49545 "EHLO
-	stark.xeocode.com") by vger.kernel.org with ESMTP id S261956AbVCAPzk
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Received: from emulex.emulex.com ([138.239.112.1]:44423 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S261966AbVCAQjq convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2005 10:55:40 -0500
-In-Reply-To: <20050301084741.GD12295@suse.de>
+	Tue, 1 Mar 2005 11:39:46 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Greg Stark <gsstark@mit.edu>, Linux Kernel <linux-kernel@vger.kernel.org>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org
+To: matthew@wil.cx, forrest.zhao@intel.com
+Cc: linux-scsi@vger.kernel.org, ramesh.caushik@intel.com
 
-Jens Axboe <axboe@suse.de> writes:
-
-> > What about a non-journaled fs, or at least a meta-data-only-journaled fs?
-> > Journaled FS's don't mix well with transaction based databases since they're
-> > basically doing their own journaling anyways.
+> On Tue, Mar 01, 2005 at 05:06:55PM +0800, Zhao, Forrest wrote:
+> > If I surprisingly hot-remove a SCSI disk from HBA manually 
+> > without executing "echo "scsi remove-single-device
+> >  <h> <b> <t <l>" > /proc/scsi/scsi", can the "hotplug"
+> > event be notified to SCSI mid-layer or user space?
+> > 
+> > I briefly browse some code of LLDD, it seems that LLDD never
+> > report "hotplug" event to upper-level layer. Am I right?
 > 
-> Only works on ext3 and reiserfs currently.
+> I don't think it *can* ... the SCSI protocols don't tell the 
+> host "hey,
+> this device has disappeared".
 
-Does it work in resierfs with data=writeback or ext3 with tune2fs's
-journal_data_writeback?
+All depends on what transport it is... In FC, we can detect when
+a target is removed. In the most recent FC transport code (not
+all integrated yet), it will indeed automagically invoke
+scsi_remove_device() for all luns on the target.
 
-What I'm wondering is whether it only kicks in when the journal gets
-synchronized or whether it kicks in whenever you call fsync even if no
-journaling is involved.
-
-Writeback mode isn't really necessary, Postgres makes every effort to use
-fdatasync or equivalent so no metadata changes are really necessary. So the
-question is also, do the filesystems initiate a cache flush even if no
-metadata changes are being synchronized?
-
--- 
-greg
-
+-- james s
