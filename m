@@ -1,286 +1,646 @@
 From: Adrian Bunk <bunk@fs.tum.de>
-Subject: [2.6 patch] SCSI ips: remove inlines
-Date: Sat, 10 Jul 2004 02:23:36 +0200
+Subject: [2.6 patch] SCSI megaraid: fix inlines
+Date: Sat, 10 Jul 2004 02:49:16 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040710002336.GV28324@fs.tum.de>
+Message-ID: <20040710004916.GW28324@fs.tum.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:57583 "HELO
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:37614 "HELO
 	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S265119AbUGJAXk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Jul 2004 20:23:40 -0400
+	id S266048AbUGJAtc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Jul 2004 20:49:32 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: ipslinux@adaptec.com
+To: linux-megaraid-devel@dell.com
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Trying to compile drivers/scsi/ips.c with gcc 3.4 and
+Trying to compile drivers/scsi/megaraid.c with gcc 3.4 and
   # define inline         __inline__ __attribute__((always_inline))
-results in the following error:
+results in compile errors starting with the following:
 
 <--  snip  -->
 
 ...
-  CC      drivers/scsi/ips.o
-drivers/scsi/ips.c: In function `ips_eh_abort':
-drivers/scsi/ips.c:490: sorry, unimplemented: inlining failed in call to 
-'ips_removeq_copp': function body not available
-drivers/scsi/ips.c:843: sorry, unimplemented: called from here
-drivers/scsi/ips.c:488: sorry, unimplemented: inlining failed in call to 
-'ips_removeq_wait': function body not available
-drivers/scsi/ips.c:847: sorry, unimplemented: called from here
-make[2]: *** [drivers/scsi/ips.o] Error 1
+  CC      drivers/scsi/megaraid.o
+drivers/scsi/megaraid.c: In function `megaraid_queue':
+drivers/scsi/megaraid.h:1000: sorry, unimplemented: inlining failed in call to 'mega_runpendq': function body not available
+drivers/scsi/megaraid.c:379: sorry, unimplemented: called from here
+make[2]: *** [drivers/scsi/megaraid.o] Error 1
 
 <--  snip  -->
 
 
-The patch below removes all inlines from ips.c. As a side effect, this 
-showed that 3 formerly inlined functions are completely unused which are 
-also removed in the patch.
-
-An alternative approach to removing the inlines would be to keep all 
-inlines that are _really_ required and reorder the functions in the file 
-accordingly.
+The patch below fixes these issues by:
+- removing some inlines
+- moving some functions
+- replacing free_local_pdev() with calls to kfree()
 
 
 diffstat output:
- drivers/scsi/ips.c |  130 ++++++---------------------------------------
- 1 files changed, 19 insertions(+), 111 deletions(-)
+ drivers/scsi/megaraid.c |  320 +++++++++++++++++++---------------------
+ drivers/scsi/megaraid.h |    7 
+ 2 files changed, 161 insertions(+), 166 deletions(-)
 
 
 Signed-off-by: Adrian Bunk <bunk@fs.tum.de>
 
---- linux-2.6.7-mm6-full-gcc3.4/drivers/scsi/ips.c.old	2004-07-09 01:12:30.000000000 +0200
-+++ linux-2.6.7-mm6-full-gcc3.4/drivers/scsi/ips.c	2004-07-09 01:24:02.000000000 +0200
-@@ -474,21 +474,17 @@
- static uint32_t ips_statupd_copperhead_memio(ips_ha_t *);
- static uint32_t ips_statupd_morpheus(ips_ha_t *);
- static ips_scb_t *ips_getscb(ips_ha_t *);
--static inline void ips_putq_scb_head(ips_scb_queue_t *, ips_scb_t *);
--static inline void ips_putq_scb_tail(ips_scb_queue_t *, ips_scb_t *);
--static inline void ips_putq_wait_head(ips_wait_queue_t *, Scsi_Cmnd *);
--static inline void ips_putq_wait_tail(ips_wait_queue_t *, Scsi_Cmnd *);
--static inline void ips_putq_copp_head(ips_copp_queue_t *,
-+static void ips_putq_scb_head(ips_scb_queue_t *, ips_scb_t *);
-+static void ips_putq_wait_tail(ips_wait_queue_t *, Scsi_Cmnd *);
-+static void ips_putq_copp_tail(ips_copp_queue_t *,
- 				      ips_copp_wait_item_t *);
--static inline void ips_putq_copp_tail(ips_copp_queue_t *,
--				      ips_copp_wait_item_t *);
--static inline ips_scb_t *ips_removeq_scb_head(ips_scb_queue_t *);
--static inline ips_scb_t *ips_removeq_scb(ips_scb_queue_t *, ips_scb_t *);
--static inline Scsi_Cmnd *ips_removeq_wait_head(ips_wait_queue_t *);
--static inline Scsi_Cmnd *ips_removeq_wait(ips_wait_queue_t *, Scsi_Cmnd *);
--static inline ips_copp_wait_item_t *ips_removeq_copp(ips_copp_queue_t *,
-+static ips_scb_t *ips_removeq_scb_head(ips_scb_queue_t *);
-+static ips_scb_t *ips_removeq_scb(ips_scb_queue_t *, ips_scb_t *);
-+static Scsi_Cmnd *ips_removeq_wait_head(ips_wait_queue_t *);
-+static Scsi_Cmnd *ips_removeq_wait(ips_wait_queue_t *, Scsi_Cmnd *);
-+static ips_copp_wait_item_t *ips_removeq_copp(ips_copp_queue_t *,
- 						     ips_copp_wait_item_t *);
--static inline ips_copp_wait_item_t *ips_removeq_copp_head(ips_copp_queue_t *);
-+static ips_copp_wait_item_t *ips_removeq_copp_head(ips_copp_queue_t *);
+--- linux-2.6.7-mm7-full-gcc3.4/drivers/scsi/megaraid.h.old	2004-07-10 02:33:28.000000000 +0200
++++ linux-2.6.7-mm7-full-gcc3.4/drivers/scsi/megaraid.h	2004-07-10 02:40:31.000000000 +0200
+@@ -990,7 +990,7 @@
+ const char *megaraid_info (struct Scsi_Host *);
  
- static int ips_is_passthru(Scsi_Cmnd *);
- static int ips_make_passthru(ips_ha_t *, Scsi_Cmnd *, ips_scb_t *, int);
-@@ -1885,7 +1881,7 @@
- /*   Fill in a single scb sg_list element from an address                   */
- /*   return a -1 if a breakup occurred                                      */
- /****************************************************************************/
+ static int mega_query_adapter(adapter_t *);
+-static inline int issue_scb(adapter_t *, scb_t *);
++static int issue_scb(adapter_t *, scb_t *);
+ static int mega_setup_mailbox(adapter_t *);
+ 
+ static int megaraid_queue (Scsi_Cmnd *, void (*)(Scsi_Cmnd *));
+@@ -1017,7 +1017,7 @@
+ static inline int mega_busywait_mbox (adapter_t *);
+ static int __mega_busywait_mbox (adapter_t *);
+ static void mega_rundoneq (adapter_t *);
+-static inline void mega_cmd_done(adapter_t *, u8 [], int, int);
++static void mega_cmd_done(adapter_t *, u8 [], int, int);
+ static inline void mega_free_sgl (adapter_t *adapter);
+ static void mega_8_to_40ld (mraid_inquiry *inquiry,
+ 		mega_inquiry3 *enquiry3, mega_product_info *);
+@@ -1056,7 +1056,6 @@
+ static inline caddr_t mega_allocate_inquiry(dma_addr_t *, struct pci_dev *);
+ static inline void mega_free_inquiry(caddr_t, dma_addr_t, struct pci_dev *);
+ static inline int make_local_pdev(adapter_t *, struct pci_dev **);
+-static inline void free_local_pdev(struct pci_dev *);
+ 
+ static int mega_support_ext_cdb(adapter_t *);
+ static mega_passthru* mega_prepare_passthru(adapter_t *, scb_t *,
+@@ -1065,7 +1064,7 @@
+ 		scb_t *, Scsi_Cmnd *, int, int);
+ static void mega_enum_raid_scsi(adapter_t *);
+ static void mega_get_boot_drv(adapter_t *);
+-static inline int mega_get_ldrv_num(adapter_t *, Scsi_Cmnd *, int);
++static int mega_get_ldrv_num(adapter_t *, Scsi_Cmnd *, int);
+ static int mega_support_random_del(adapter_t *);
+ static int mega_del_logdrv(adapter_t *, int);
+ static int mega_do_del_logdrv(adapter_t *, int);
+--- linux-2.6.7-mm7-full-gcc3.4/drivers/scsi/megaraid.c.old	2004-07-10 02:29:23.000000000 +0200
++++ linux-2.6.7-mm7-full-gcc3.4/drivers/scsi/megaraid.c	2004-07-10 02:42:30.000000000 +0200
+@@ -336,6 +336,42 @@
+ }
+ 
+ 
++/**
++ * mega_runpendq()
++ * @adapter - pointer to our soft state
++ *
++ * Runs through the list of pending requests.
++ */
++static inline void
++mega_runpendq(adapter_t *adapter)
++{
++	if(!list_empty(&adapter->pending_list))
++		__mega_runpendq(adapter);
++}
++
++
++static void
++__mega_runpendq(adapter_t *adapter)
++{
++	scb_t *scb;
++	struct list_head *pos, *next;
++
++	/* Issue any pending commands to the card */
++	list_for_each_safe(pos, next, &adapter->pending_list) {
++
++		scb = list_entry(pos, scb_t, list);
++
++		if( !(scb->state & SCB_ISSUED) ) {
++
++			if( issue_scb(adapter, scb) != 0 )
++				return;
++		}
++	}
++
++	return;
++}
++
++
+ /*
+  * megaraid_queue()
+  * @scmd - Issue this scsi command
+@@ -386,6 +422,38 @@
+ 
+ 
+ /**
++ * mega_allocate_scb()
++ * @adapter - pointer to our soft state
++ * @cmd - scsi command from the mid-layer
++ *
++ * Allocate a SCB structure. This is the central structure for controller
++ * commands.
++ */
++static inline scb_t *
++mega_allocate_scb(adapter_t *adapter, Scsi_Cmnd *cmd)
++{
++	struct list_head *head = &adapter->free_list;
++	scb_t	*scb;
++
++	/* Unlink command from Free List */
++	if( !list_empty(head) ) {
++
++		scb = list_entry(head->next, scb_t, list);
++
++		list_del_init(head->next);
++
++		scb->state = SCB_ACTIVE;
++		scb->cmd = cmd;
++		scb->dma_type = MEGA_DMA_TYPE_NONE;
++
++		return scb;
++	}
++
++	return NULL;
++}
++
++
++/**
+  * mega_build_cmd()
+  * @adapter - pointer to our soft state
+  * @cmd - Prepare using this scsi command
+@@ -968,73 +1036,6 @@
+ 
+ 
+ /**
+- * mega_allocate_scb()
+- * @adapter - pointer to our soft state
+- * @cmd - scsi command from the mid-layer
+- *
+- * Allocate a SCB structure. This is the central structure for controller
+- * commands.
+- */
+-static inline scb_t *
+-mega_allocate_scb(adapter_t *adapter, Scsi_Cmnd *cmd)
+-{
+-	struct list_head *head = &adapter->free_list;
+-	scb_t	*scb;
+-
+-	/* Unlink command from Free List */
+-	if( !list_empty(head) ) {
+-
+-		scb = list_entry(head->next, scb_t, list);
+-
+-		list_del_init(head->next);
+-
+-		scb->state = SCB_ACTIVE;
+-		scb->cmd = cmd;
+-		scb->dma_type = MEGA_DMA_TYPE_NONE;
+-
+-		return scb;
+-	}
+-
+-	return NULL;
+-}
+-
+-
+-/**
+- * mega_runpendq()
+- * @adapter - pointer to our soft state
+- *
+- * Runs through the list of pending requests.
+- */
+-static inline void
+-mega_runpendq(adapter_t *adapter)
+-{
+-	if(!list_empty(&adapter->pending_list))
+-		__mega_runpendq(adapter);
+-}
+-
+-static void
+-__mega_runpendq(adapter_t *adapter)
+-{
+-	scb_t *scb;
+-	struct list_head *pos, *next;
+-
+-	/* Issue any pending commands to the card */
+-	list_for_each_safe(pos, next, &adapter->pending_list) {
+-
+-		scb = list_entry(pos, scb_t, list);
+-
+-		if( !(scb->state & SCB_ISSUED) ) {
+-
+-			if( issue_scb(adapter, scb) != 0 )
+-				return;
+-		}
+-	}
+-
+-	return;
+-}
+-
+-
+-/**
+  * issue_scb()
+  * @adapter - pointer to our soft state
+  * @scb - scsi control block
+@@ -1043,7 +1044,7 @@
+  * busy. We also take the scb from the pending list if the mailbox is
+  * available.
+  */
 -static inline int
 +static int
- ips_fill_scb_sg_single(ips_ha_t * ha, dma_addr_t busaddr,
- 		       ips_scb_t * scb, int indx, unsigned int e_len)
+ issue_scb(adapter_t *adapter, scb_t *scb)
  {
-@@ -2950,7 +2946,7 @@
- /* ASSUMED to be called from within the HA lock                             */
- /*                                                                          */
- /****************************************************************************/
+ 	volatile mbox64_t	*mbox64 = adapter->mbox64;
+@@ -1105,6 +1106,31 @@
+ }
+ 
+ 
++/*
++ * Wait until the controller's mailbox is available
++ */
++static inline int
++mega_busywait_mbox (adapter_t *adapter)
++{
++	if (adapter->mbox->m_in.busy)
++		return __mega_busywait_mbox(adapter);
++	return 0;
++}
++
++static int
++__mega_busywait_mbox (adapter_t *adapter)
++{
++	volatile mbox_t *mbox = adapter->mbox;
++	long counter;
++
++	for (counter = 0; counter < 10000; counter++) {
++		if (!mbox->m_in.busy)
++			return 0;
++		udelay(100); yield();
++	}
++	return -1;		/* give up after 1 second */
++}
++
+ /**
+  * issue_scb_block()
+  * @adapter - pointer to our soft state
+@@ -1350,7 +1376,7 @@
+  *
+  * Complete the comamnds and call the scsi mid-layer callback hooks.
+  */
 -static inline void
 +static void
- ips_putq_scb_head(ips_scb_queue_t * queue, ips_scb_t * item)
+ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
  {
- 	METHOD_TRACE("ips_putq_scb_head", 1);
-@@ -2969,38 +2965,6 @@
+ 	mega_ext_passthru	*epthru = NULL;
+@@ -1672,31 +1698,6 @@
  
- /****************************************************************************/
- /*                                                                          */
--/* Routine Name: ips_putq_scb_tail                                          */
--/*                                                                          */
--/* Routine Description:                                                     */
--/*                                                                          */
--/*   Add an item to the tail of the queue                                   */
--/*                                                                          */
--/* ASSUMED to be called from within the HA lock                             */
--/*                                                                          */
--/****************************************************************************/
--static inline void
--ips_putq_scb_tail(ips_scb_queue_t * queue, ips_scb_t * item)
+ 
+ /*
+- * Wait until the controller's mailbox is available
+- */
+-static inline int
+-mega_busywait_mbox (adapter_t *adapter)
 -{
--	METHOD_TRACE("ips_putq_scb_tail", 1);
--
--	if (!item)
--		return;
--
--	item->q_next = NULL;
--
--	if (queue->tail)
--		queue->tail->q_next = item;
--
--	queue->tail = item;
--
--	if (!queue->head)
--		queue->head = item;
--
--	queue->count++;
+-	if (adapter->mbox->m_in.busy)
+-		return __mega_busywait_mbox(adapter);
+-	return 0;
 -}
 -
--/****************************************************************************/
--/*                                                                          */
- /* Routine Name: ips_removeq_scb_head                                       */
- /*                                                                          */
- /* Routine Description:                                                     */
-@@ -3010,7 +2974,7 @@
- /* ASSUMED to be called from within the HA lock                             */
- /*                                                                          */
- /****************************************************************************/
--static inline ips_scb_t *
-+static ips_scb_t *
- ips_removeq_scb_head(ips_scb_queue_t * queue)
- {
- 	ips_scb_t *item;
-@@ -3045,7 +3009,7 @@
- /* ASSUMED to be called from within the HA lock                             */
- /*                                                                          */
- /****************************************************************************/
--static inline ips_scb_t *
-+static ips_scb_t *
- ips_removeq_scb(ips_scb_queue_t * queue, ips_scb_t * item)
- {
- 	ips_scb_t *p;
-@@ -3082,34 +3046,6 @@
- 
- /****************************************************************************/
- /*                                                                          */
--/* Routine Name: ips_putq_wait_head                                         */
--/*                                                                          */
--/* Routine Description:                                                     */
--/*                                                                          */
--/*   Add an item to the head of the queue                                   */
--/*                                                                          */
--/* ASSUMED to be called from within the HA lock                             */
--/*                                                                          */
--/****************************************************************************/
--static inline void
--ips_putq_wait_head(ips_wait_queue_t * queue, Scsi_Cmnd * item)
+-static int
+-__mega_busywait_mbox (adapter_t *adapter)
 -{
--	METHOD_TRACE("ips_putq_wait_head", 1);
+-	volatile mbox_t *mbox = adapter->mbox;
+-	long counter;
 -
--	if (!item)
--		return;
--
--	item->host_scribble = (char *) queue->head;
--	queue->head = item;
--
--	if (!queue->tail)
--		queue->tail = item;
--
--	queue->count++;
+-	for (counter = 0; counter < 10000; counter++) {
+-		if (!mbox->m_in.busy)
+-			return 0;
+-		udelay(100); yield();
+-	}
+-	return -1;		/* give up after 1 second */
 -}
 -
--/****************************************************************************/
--/*                                                                          */
- /* Routine Name: ips_putq_wait_tail                                         */
- /*                                                                          */
- /* Routine Description:                                                     */
-@@ -3119,7 +3055,7 @@
- /* ASSUMED to be called from within the HA lock                             */
- /*                                                                          */
- /****************************************************************************/
--static inline void
-+static void
- ips_putq_wait_tail(ips_wait_queue_t * queue, Scsi_Cmnd * item)
- {
- 	METHOD_TRACE("ips_putq_wait_tail", 1);
-@@ -3151,7 +3087,7 @@
- /* ASSUMED to be called from within the HA lock                             */
- /*                                                                          */
- /****************************************************************************/
--static inline Scsi_Cmnd *
-+static Scsi_Cmnd *
- ips_removeq_wait_head(ips_wait_queue_t * queue)
- {
- 	Scsi_Cmnd *item;
-@@ -3186,7 +3122,7 @@
- /* ASSUMED to be called from within the HA lock                             */
- /*                                                                          */
- /****************************************************************************/
--static inline Scsi_Cmnd *
-+static Scsi_Cmnd *
- ips_removeq_wait(ips_wait_queue_t * queue, Scsi_Cmnd * item)
- {
- 	Scsi_Cmnd *p;
-@@ -3223,34 +3159,6 @@
+-/*
+  * Copies data to SGLIST
+  * Note: For 64 bit cards, we need a minimum of one SG element for read/write
+  */
+@@ -2285,6 +2286,45 @@
+ }
  
- /****************************************************************************/
- /*                                                                          */
--/* Routine Name: ips_putq_copp_head                                         */
--/*                                                                          */
--/* Routine Description:                                                     */
--/*                                                                          */
--/*   Add an item to the head of the queue                                   */
--/*                                                                          */
--/* ASSUMED to be called from within the HA lock                             */
--/*                                                                          */
--/****************************************************************************/
--static inline void
--ips_putq_copp_head(ips_copp_queue_t * queue, ips_copp_wait_item_t * item)
+ 
++static inline int
++make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
++{
++	*pdev = kmalloc(sizeof(struct pci_dev), GFP_KERNEL);
++
++	if( *pdev == NULL ) return -1;
++
++	memcpy(*pdev, adapter->dev, sizeof(struct pci_dev));
++
++	if( pci_set_dma_mask(*pdev, 0xffffffff) != 0 ) {
++		kfree(*pdev);
++		return -1;
++	}
++
++	return 0;
++}
++
++
++/**
++ * mega_allocate_inquiry()
++ * @dma_handle - handle returned for dma address
++ * @pdev - handle to pci device
++ *
++ * allocates memory for inquiry structure
++ */
++static inline caddr_t
++mega_allocate_inquiry(dma_addr_t *dma_handle, struct pci_dev *pdev)
++{
++	return pci_alloc_consistent(pdev, sizeof(mega_inquiry3), dma_handle);
++}
++
++
++static inline void
++mega_free_inquiry(caddr_t inquiry, dma_addr_t dma_handle, struct pci_dev *pdev)
++{
++	pci_free_consistent(pdev, sizeof(mega_inquiry3), inquiry, dma_handle);
++}
++
++
+ /**
+  * proc_rebuild_rate()
+  * @page - buffer to write the data in
+@@ -2312,7 +2352,7 @@
+ 	}
+ 
+ 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL ) {
+-		free_local_pdev(pdev);
++		kfree(pdev);
+ 		*eof = 1;
+ 		return len;
+ 	}
+@@ -2325,7 +2365,7 @@
+ 
+ 		mega_free_inquiry(inquiry, dma_handle, pdev);
+ 
+-		free_local_pdev(pdev);
++		kfree(pdev);
+ 
+ 		*eof = 1;
+ 
+@@ -2345,7 +2385,7 @@
+ 
+ 	mega_free_inquiry(inquiry, dma_handle, pdev);
+ 
+-	free_local_pdev(pdev);
++	kfree(pdev);
+ 
+ 	*eof = 1;
+ 
+@@ -2382,7 +2422,7 @@
+ 	}
+ 
+ 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL ) {
+-		free_local_pdev(pdev);
++		kfree(pdev);
+ 		*eof = 1;
+ 		return len;
+ 	}
+@@ -2395,7 +2435,7 @@
+ 
+ 		mega_free_inquiry(inquiry, dma_handle, pdev);
+ 
+-		free_local_pdev(pdev);
++		kfree(pdev);
+ 
+ 		*eof = 1;
+ 
+@@ -2444,7 +2484,7 @@
+ 
+ 	mega_free_inquiry(inquiry, dma_handle, pdev);
+ 
+-	free_local_pdev(pdev);
++	kfree(pdev);
+ 
+ 	*eof = 1;
+ 
+@@ -2674,7 +2714,7 @@
+ free_inquiry:
+ 	mega_free_inquiry(inquiry, dma_handle, pdev);
+ free_pdev:
+-	free_local_pdev(pdev);
++	kfree(pdev);
+ 
+ 	return len;
+ }
+@@ -2849,7 +2889,7 @@
+ 	}
+ 
+ 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL ) {
+-		free_local_pdev(pdev);
++		kfree(pdev);
+ 		return len;
+ 	}
+ 
+@@ -2861,7 +2901,7 @@
+ 
+ 		mega_free_inquiry(inquiry, dma_handle, pdev);
+ 
+-		free_local_pdev(pdev);
++		kfree(pdev);
+ 
+ 		return len;
+ 	}
+@@ -2893,7 +2933,7 @@
+ 
+ 		mega_free_inquiry(inquiry, dma_handle, pdev);
+ 
+-		free_local_pdev(pdev);
++		kfree(pdev);
+ 
+ 		return len;
+ 	}
+@@ -2913,7 +2953,7 @@
+ 			pci_free_consistent(pdev, array_sz, disk_array,
+ 					disk_array_dma_handle);
+ 
+-			free_local_pdev(pdev);
++			kfree(pdev);
+ 
+ 			return len;
+ 		}
+@@ -2938,7 +2978,7 @@
+ 						disk_array,
+ 						disk_array_dma_handle);
+ 
+-				free_local_pdev(pdev);
++				kfree(pdev);
+ 
+ 				return len;
+ 			}
+@@ -3064,7 +3104,7 @@
+ 	pci_free_consistent(pdev, array_sz, disk_array,
+ 			disk_array_dma_handle);
+ 
+-	free_local_pdev(pdev);
++	kfree(pdev);
+ 
+ 	return len;
+ }
+@@ -3451,7 +3491,7 @@
+ 					&pthru_dma_hndl);
+ 
+ 			if( pthru == NULL ) {
+-				free_local_pdev(pdev);
++				kfree(pdev);
+ 				return (-ENOMEM);
+ 			}
+ 
+@@ -3470,7 +3510,7 @@
+ 						sizeof(mega_passthru), pthru,
+ 						pthru_dma_hndl);
+ 
+-				free_local_pdev(pdev);
++				kfree(pdev);
+ 
+ 				return (-EFAULT);
+ 			}
+@@ -3489,7 +3529,7 @@
+ 							pthru,
+ 							pthru_dma_hndl);
+ 
+-					free_local_pdev(pdev);
++					kfree(pdev);
+ 
+ 					return (-ENOMEM);
+ 				}
+@@ -3559,7 +3599,7 @@
+ 			pci_free_consistent(pdev, sizeof(mega_passthru),
+ 					pthru, pthru_dma_hndl);
+ 
+-			free_local_pdev(pdev);
++			kfree(pdev);
+ 
+ 			return rval;
+ 		}
+@@ -3574,7 +3614,7 @@
+ 						uioc.xferlen, &data_dma_hndl);
+ 
+ 				if( data == NULL ) {
+-					free_local_pdev(pdev);
++					kfree(pdev);
+ 					return (-ENOMEM);
+ 				}
+ 
+@@ -3595,7 +3635,7 @@
+ 							uioc.xferlen,
+ 							data, data_dma_hndl);
+ 
+-					free_local_pdev(pdev);
++					kfree(pdev);
+ 
+ 					return (-EFAULT);
+ 				}
+@@ -3619,7 +3659,7 @@
+ 							data_dma_hndl);
+ 				}
+ 
+-				free_local_pdev(pdev);
++				kfree(pdev);
+ 
+ 				return rval;
+ 			}
+@@ -3641,7 +3681,7 @@
+ 						data_dma_hndl);
+ 			}
+ 
+-			free_local_pdev(pdev);
++			kfree(pdev);
+ 
+ 			return rval;
+ 		}
+@@ -4243,7 +4283,7 @@
+  * Calculate the logical drive number based on the information in scsi command
+  * and the channel number.
+  */
+-static inline int
++static int
+ mega_get_ldrv_num(adapter_t *adapter, Scsi_Cmnd *cmd, int channel)
+ {
+ 	int		tgt;
+@@ -4329,27 +4369,6 @@
+ }
+ 
+ 
+-/**
+- * mega_allocate_inquiry()
+- * @dma_handle - handle returned for dma address
+- * @pdev - handle to pci device
+- *
+- * allocates memory for inquiry structure
+- */
+-static inline caddr_t
+-mega_allocate_inquiry(dma_addr_t *dma_handle, struct pci_dev *pdev)
 -{
--	METHOD_TRACE("ips_putq_copp_head", 1);
--
--	if (!item)
--		return;
--
--	item->next = queue->head;
--	queue->head = item;
--
--	if (!queue->tail)
--		queue->tail = item;
--
--	queue->count++;
+-	return pci_alloc_consistent(pdev, sizeof(mega_inquiry3), dma_handle);
 -}
 -
--/****************************************************************************/
--/*                                                                          */
- /* Routine Name: ips_putq_copp_tail                                         */
- /*                                                                          */
- /* Routine Description:                                                     */
-@@ -3260,7 +3168,7 @@
- /* ASSUMED to be called from within the HA lock                             */
- /*                                                                          */
- /****************************************************************************/
+-
 -static inline void
-+static void
- ips_putq_copp_tail(ips_copp_queue_t * queue, ips_copp_wait_item_t * item)
- {
- 	METHOD_TRACE("ips_putq_copp_tail", 1);
-@@ -3292,7 +3200,7 @@
- /* ASSUMED to be called from within the HA lock                             */
- /*                                                                          */
- /****************************************************************************/
--static inline ips_copp_wait_item_t *
-+static ips_copp_wait_item_t *
- ips_removeq_copp_head(ips_copp_queue_t * queue)
- {
- 	ips_copp_wait_item_t *item;
-@@ -3327,7 +3235,7 @@
- /* ASSUMED to be called from within the HA lock                             */
- /*                                                                          */
- /****************************************************************************/
--static inline ips_copp_wait_item_t *
-+static ips_copp_wait_item_t *
- ips_removeq_copp(ips_copp_queue_t * queue, ips_copp_wait_item_t * item)
- {
- 	ips_copp_wait_item_t *p;
+-mega_free_inquiry(caddr_t inquiry, dma_addr_t dma_handle, struct pci_dev *pdev)
+-{
+-	pci_free_consistent(pdev, sizeof(mega_inquiry3), inquiry, dma_handle);
+-}
+-
+-
+ /** mega_internal_dev_inquiry()
+  * @adapter - pointer to our soft state
+  * @ch - channel for this device
+@@ -4379,7 +4398,7 @@
+ 			&pthru_dma_handle);
+ 
+ 	if( pthru == NULL ) {
+-		free_local_pdev(pdev);
++		kfree(pdev);
+ 		return -1;
+ 	}
+ 
+@@ -4415,7 +4434,7 @@
+ 	pci_free_consistent(pdev, sizeof(mega_passthru), pthru,
+ 			pthru_dma_handle);
+ 
+-	free_local_pdev(pdev);
++	kfree(pdev);
+ 
+ 	return rval;
+ }
+@@ -4550,29 +4569,6 @@
+ }
+ 
+ 
+-static inline int
+-make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
+-{
+-	*pdev = kmalloc(sizeof(struct pci_dev), GFP_KERNEL);
+-
+-	if( *pdev == NULL ) return -1;
+-
+-	memcpy(*pdev, adapter->dev, sizeof(struct pci_dev));
+-
+-	if( pci_set_dma_mask(*pdev, 0xffffffff) != 0 ) {
+-		kfree(*pdev);
+-		return -1;
+-	}
+-
+-	return 0;
+-}
+-
+-static inline void
+-free_local_pdev(struct pci_dev *pdev)
+-{
+-	kfree(pdev);
+-}
+-
+ static struct scsi_host_template megaraid_template = {
+ 	.module				= THIS_MODULE,
+ 	.name				= "MegaRAID",
+
 
