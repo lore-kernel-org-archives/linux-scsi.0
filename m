@@ -1,51 +1,35 @@
-From: "Shashi Kiran T.R" <shkiran@cisco.com>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Fri, 21 Nov 2003 17:10:09 +0530
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] Don't retry SG_IO (REQ_BLOCK_PC) commands.
+Date: 21 Nov 2003 06:48:32 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <DBEOIJFONILFHFGKLPGFCECICEAA.shkiran@cisco.com>
+Message-ID: <1069418912.1931.5.camel@mulgrave>
+References: <20031120085555.A20609@beaverton.ibm.com>
+	<20031120181543.GA3728@beaverton.ibm.com> <20031120191651.GE1106@suse.de>
+	<20031120135123.A2366@beaverton.ibm.com>  <20031121101728.GI1106@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from india-ironport-1.cisco.com ([64.104.129.195]:36541 "EHLO
-	india-ironport-1.cisco.com") by vger.kernel.org with ESMTP
-	id S264358AbTKULkR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Nov 2003 06:40:17 -0500
-Received: from samrat.cisco.com (samrat.cisco.com [192.135.241.21])
-	by india-msg-core-1.cisco.com (8.12.9/8.12.6) with ESMTP id hALH7n0s012447
-	for <linux-scsi@vger.kernel.org>; Fri, 21 Nov 2003 17:07:50 GMT
-Received: from shkiranw2k (dhcp-10-77-7-93.cisco.com [10.77.7.93])
-	by samrat.cisco.com (8.8.8/2.6/Cisco List Logging/8.8.8) with SMTP id RAA15626
-	for <linux-scsi@vger.kernel.org>; Fri, 21 Nov 2003 17:10:18 +0530 (IST)
+Received: from nat9.steeleye.com ([65.114.3.137]:20742 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262761AbTKUNsg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Nov 2003 08:48:36 -0500
+In-Reply-To: <20031121101728.GI1106@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
->- the whole iscsi_do_cmnd use looks very very strange.  you're probably
-> much better of to use the scsi_request based interfaces and use midlayer
- >queueing and sometimes even higher level interfaces, e.g. your
-iscsi_send_tur
- >coudld be replaced by an scsi_ioctl(sdp, SCSI_IOCTL_TEST_UNIT_READY, NULL)
-> I still don't understand, though why the heck you need to do a TUR in
- >a lowlevel driver and even more need a thread do a single TUR, started
-from
- >another kernel tread.  there more I dig into it your probing and thread
- >abuse looks horribly screwed.
- >- reinitilialize disk is another such candidate.  again why do you
- >need to send START_STOP commands from the LLDD, why do you need another
- >thread instead of a state machine and again life would be a lot simpler
-> by using the midlayer queueing infrastructure.
+On Fri, 2003-11-21 at 04:17, Jens Axboe wrote:
+> On Thu, Nov 20 2003, Patrick Mansfield wrote:
+> > Should the setting of REQ_FAILFAST be expanded to prevent requeueing after
+> > a device or host reports queue full?
+> 
+> Not without extra hints.
 
-In the existing code upon seeing ASC/ASCQ 04/02, the failed I/O are retried
-in the iSCSI driver after issuing START_STOP using iscsi_do_cmnd(). This
-ensures that application does not see an I/O error.
+So the code to add the hints is in the works?
 
- We tried replacing  iscsi_do_cmnd() call  by kernel_scsi_ioctl() , but  the
-ioctl call never completed. Looks like scsi mid layer prevents the
-processing of START_STOP command until responses for earlier commands are
-obtained. The response is deferred upstream from iSCSI driver since it
-retries any failed I/O. Probably this is creating a deadlock situation
-making this alternative infeasible!.
+;-)
 
--Shashi
+James
+
 
