@@ -1,54 +1,54 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: Re: SAI_READ_CAPACITY_16?
-Date: Wed, 06 Apr 2005 12:11:50 -0400
-Message-ID: <1112803910.2883.50.camel@localhost.localdomain>
-References: <60807403EABEB443939A5A7AA8A7458BFF2211@otce2k01.adaptec.com>
-Reply-To: mingz@ele.uri.edu
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [OOPS] 2.6.11 - NMI lockup with CFQ scheduler
+Date: Wed, 06 Apr 2005 11:27:20 -0500
+Message-ID: <1112804840.5476.16.camel@mulgrave>
+References: <20050329115405.97559.qmail@web52909.mail.yahoo.com>
+	 <20050329120311.GO16636@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from leviathan.ele.uri.edu ([131.128.51.64]:42491 "EHLO
-	leviathan.ele.uri.edu") by vger.kernel.org with ESMTP
-	id S262247AbVDFQL5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Apr 2005 12:11:57 -0400
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458BFF2211@otce2k01.adaptec.com>
+Received: from stat16.steeleye.com ([209.192.50.48]:38040 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262262AbVDFRsV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Apr 2005 13:48:21 -0400
+In-Reply-To: <20050329120311.GO16636@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Linux SCSI <linux-scsi@vger.kernel.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: Chris Rankin <rankincj@yahoo.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-we tested several iSCSI initiator/target combinations that work with
->2TB devices in current 2.6.11.x kernel.
+On Tue, 2005-03-29 at 14:03 +0200, Jens Axboe wrote:
+> It is quite a serious problem, not just for CFQ. SCSI referencing is
+> badly broken there.
 
-our experience is that some code only support cdb len 10 or 12. you need
-16.
+OK ... I accept that with regard to the queue lock.
 
-Ming
+However, rather than trying to work out a way to tie all the refcounted
+objects together, what about the simpler solution of making the lock
+bound to the lifetime of the queue?
+
+As far as SCSI is concerned, we could simply move the lock into the
+request_queue structure and everything would work since the device holds
+a reference to the queue.  The way it would work is that we'd simply
+have a lock in the request_queue structure, but it would be up to the
+device to pass it in in blk_init_queue.  Then we'd alter the scsi_device
+sdev_lock to be a pointer to the queue lock?  This scheme would also
+work for the current users who have a global lock (they simply wouldn't
+use the lock int the request_queue).
+
+The only could on the horizon with this scheme is that there may
+genuinely be places where we want multiple queues to share a non-global
+lock:  situations where we have shared issue queues (like IDE), or
+shared tag resources are a possibility.  To cope with those, we'd
+probably have to have a separately allocated, reference counted lock.
+
+However, I'm happy to implement the simpler solution (lock in
+requuest_queue) if you agree.
+
+James
 
 
-On Wed, 2005-04-06 at 12:00, Salyzyn, Mark wrote:
-> Troubled spoofing back >2TB support in the aacraid driver.
-> 
-> For some reason, sd_read_capacity (in sd.c) in the 2.6.9-5.EL (RHEL4)
-> kernel is not issuing the SERVICE_REQUEST_IN+SAI_READ_CAPACITY_16
-> command to the queuecommand handler (the handler is not even called),
-> even though it instruments up that the command is issued (and returns
-> not supported). The READ_CAPACITY call makes it through successfully
-> indicating 0xFFFFFFFF capacity to trigger the SAI_READ_CAPACITY_16
-> request fine. Could there be a bug in the scsi layers reissuing commands
-> reusing the request structure misdirecting the requests?
-> 
-> The only changes to the current tree appear to be in the handling of the
-> request sense information, so I expect the same behavior from
-> latest/greatest.
-> 
-> Any successes in the current tree with >2TB support being reported by
-> the SAI_READ_CAPACITY_16 call?
-> 
-> Sincerely -- Mark Salyzyn
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James
+
 
