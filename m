@@ -1,136 +1,104 @@
-From: Dan Finn <dhrider@gmail.com>
-Subject: PE 2450 with flashing health light and PERC Raid utility says Raid status is critical
-Date: Tue, 23 Nov 2004 14:07:08 -0800
-Message-ID: <89ceee704112314072631ecd8@mail.gmail.com>
-Reply-To: Dan Finn <dhrider@gmail.com>
+From: Otto Solares <solca@guug.org>
+Subject: Re: Fw: [Bugme-new] [Bug 3651] New: dell poweredge 4600 aacraid PERC 3/Di Container goes offline
+Date: Tue, 23 Nov 2004 16:58:58 -0600
+Message-ID: <20041123225858.GC1401@guug.org>
+References: <20041028005302.753a2d52.akpm@osdl.org> <1101246101.26294.76.camel@ryan2.internal.autoweb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.197]:28570 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261367AbUKWWHI (ORCPT
+Received: from guug.org ([168.234.203.30]:26459 "EHLO guug.org")
+	by vger.kernel.org with ESMTP id S261517AbUKWW7j (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Nov 2004 17:07:08 -0500
-Received: by rproxy.gmail.com with SMTP id a36so23245rnf
-        for <linux-scsi@vger.kernel.org>; Tue, 23 Nov 2004 14:07:08 -0800 (PST)
+	Tue, 23 Nov 2004 17:59:39 -0500
+Content-Disposition: inline
+In-Reply-To: <1101246101.26294.76.camel@ryan2.internal.autoweb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Ryan Anderson <ryan@autoweb.net>
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
-I have a PE 2450 here that has had a flashing orange health light for
-a couple of months now. I scheduled some downtime for it last night to
-investigate. The raid utility says that RAID0 (a raid 5 array with 3
-18G drives, the only raid array on the system and the only drives in
-the system) is critical, but it does not tell me why or what is wrong.
-It lists all 3 disks and it doesn't show any errors for them at all.
+On Tue, Nov 23, 2004 at 04:41:41PM -0500, Ryan Anderson wrote:
+> On Thu, 2004-10-28 at 00:53 -0700, Andrew Morton wrote:
+> > Subject: [Bugme-new] [Bug 3651] New: dell poweredge 4600 aacraid PERC 3/Di Container goes offline
+> > 
+> > 
+> > http://bugme.osdl.org/show_bug.cgi?id=3651
+> > 
+> >            Summary: dell poweredge 4600 aacraid PERC 3/Di Container goes
+> >                     offline
+> >     Kernel Version: 2.6.10-rc1, 2.6.9, 2.6.8, 2.6.7, 2.6.6
+> >             Status: NEW
+> >           Severity: high
+> >              Owner: andmike@us.ibm.com
+> >          Submitter: oliver.polterauer@ewave.at
+> >                 CC: oliver.polterauer@ewave.at
+> 
+> Is there any update on this problem?
+> To reiterate my particular hardware involved that can trigger this
+> problem:
+> 
+> Dell 2650, Dual 2.4Ghz Xeon processors (hyperthreading no, though the
+> problem occured in 2.4.20 without hyperthreading disabled via "noht")
+> 
+> 4 GB of ram
+> Only load is PostgreSQL related (i.e, network queries, plus twice daily
+> dumps of the database to a NFS store, and a rsync back to the server for
+> a second copy)
+> 
+> Under load, I repeatedly saw containers go offline.
+> 
+> Dell's recommended hardware diagnostics do not turn up anything (at
+> all!)
+> 
+> The harddrive are Fujitsu drives, so the Seagate Firmware issue should
+> not affect them.
+> 
+> I have since taken this server out of production.  Unfortunately, this
+> makes the error much harder to trigger (i.e, I have failed so far to
+> trigger it, even with multiple bonnie++ runs)
+> 
+> Suggestions, diagnostics, etc, would be greatly appreciated.
 
-This server is running redhat 6.2 and kernel 2.2.14-6.1.1smp, loading
-the percraid kernel module. It has been running fine now for quite
-some time but I would like to figure out if there is really a problem
-or not.
+I used to have this very same problem with exactly the same hardware as you:
 
-After rebooting it the health light on the front of the server is now
-solid green, which I think is how it should be if there are no
-problems. But, during bootup I still see the error from the scsi card
-saying that the raid is critical.
+2 x 2.4GHz Xeon processor
+4GB RAM
+PERC 3/Di
+4 x Fujitsu MAP3147NC Rev 5608 10K RPMs disks.
 
-I came accross this site:
-http://www.redflag-linux.com/ppd/product_files/2003-AP001-01-01/base_doc/Dell_AACRAID.htm
+I tried all kernels on earth (2.4/2.6) and the controller always dies with
+container offline (search this list for the past 15 days and you'll find
+my problem).
 
-And installed the Dell command line interface software from:
-http://www.domsch.com/linux/aacraid/afaapps-2.6-0.tar.gz
+Currently I'm running 2.6.10-rc1-bk20-adaptec-1.1.5-2370 _WITHOUT_ANY_
+problems (ACPI on, HT enabled), my controller:
 
-I then can use the software and get the following for output:
-FASTCMD> controller list
-Executing: controller list
+Red Hat/Adaptec aacraid driver (1.1-5[2370])
+ACPI: PCI interrupt 0000:04:08.1[A] -> GSI 30 (level, low) -> IRQ 201
+AAC0: kernel 2.8-0[6092] 
+AAC0: monitor 2.8-0[6092]
+AAC0: bios 2.8-0[6092]
+AAC0: serial 3520a1d3
+aacraid_setup("")
+nondasd=-1 dacmode=-1 commit=-1 coalescethreshold=16 acbsize=-1
+scsi0 : percraid
+  Vendor: DELL      Model: PERC RAID5        Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+SCSI device sda: 860149632 512-byte hdwr sectors (440397 MB)
+SCSI device sda: drive cache: write through
+ sda: sda1 sda2 sda3 sda4 < sda5 sda6 >
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
 
-Adapter Name Adapter Type Availability Clustering
------------- ------------ ------------ ------------
-afa0 PERC 3/Si read/write No
-_controller show > open afa0
-Executing: open "afa0"
+uptime:
 
-_controller show > controller show channels
-Executing: controller show channels
+ 16:48:22 up 13 days, 29 min,  2 users,  load average: 1.15, 1.27, 1.31
 
-Ch# Host ID Targets Type Max Usage
---- ------- ------- --------- ---------
-0 7 15 Ultra160 NoInfo
+I know 13 days is not much for a server but this server dies in the
+1-2 day frame time so it is a huge improvement.
 
-_controller firmware > disk list
-Executing: disk list
+You should try that driver, it works for me.
 
-B:ID:L Device Type Blocks Bytes/Block Usage Shared Rate
------- -------------- --------- ----------- ---------------- ------ ----
-0:00:0 Disk 35566478 512 Initialized NO 160
-0:01:0 Disk 35566478 512 Initialized NO 160
-0:02:0 Disk 35566478 512 Initialized NO 160
+I had to thank Mark Salyzyn from Adaptec for the updated driver, is my
+opinion that this "enhanced driver" should make it in Linus' kernel.
 
-AFA0> disk show defects 0
-Executing: disk show defects (ID=0)
-
-Number of PRIMARY defects on drive: 951
-
-Number of GROWN defects on drive: 0
-
-AFA0> disk show defects 1
-Executing: disk show defects (ID=1)
-
-Number of PRIMARY defects on drive: 641
-
-Number of GROWN defects on drive: 0
-
-AFA0> disk show defects 2
-Executing: disk show defects (ID=2)
-
-Number of PRIMARY defects on drive: 168
-
-Number of GROWN defects on drive: 0
-
-_enclosure identify > enclosure list
-Executing: enclosure list
-
-Enclosure
-ID (B:ID:L) Fan Power Slot Sensor Door Speaker Standard Diagnostic
------------ --- ----- ---- ------ ---- -------- -------- ----------
-0 0:06:0 0 0 4 2 0 No SAF-TE PASSED
-
-
-_enclosure identify > enclosure show status
-Executing: enclosure show status
-
-Enclosure
-ID (B:ID:L) UpTime D:H:M PowerCycle Interval Door Alarm
------------ -------------- ---------- -------- -------- -----
-0 0:06:0 0:00:00 0 10 UNLOCKED OFF
-
-Enclosure
-ID (B:ID:L) Fan Status
------------ --- -------------
-
-Enclosure
-ID (B:ID:L) Power State Status
------------ ----- ------------ -------
-
-Enclosure
-ID (B:ID:L) Slot scsiId Insert Status
------------ ---- ------ ------- ------------------------------------------
-0 0:06:0 0 0:00:0 1 OK FAILED CRITICAL ACTIVATE
-0 0:06:0 1 0:01:0 1 OK FAILED CRITICAL ACTIVATE
-0 0:06:0 2 0:02:0 1 OK FAILED CRITICAL ACTIVATE
-0 0:06:0 3 0:255:0 0 OK UNCONFIG EMPTY I/R READY NOTACTIVATE
-
-Enclosure
-ID (B:ID:L) Sensor Temperature Threshold Status
------------ ------ ----------- --------- --------
-0 0:06:0 0 73 F 120 NORMAL
-0 0:06:0 1 86 F 120 NORMAL
-
-Pretty cool software but it's still not telling where the problem is.
-Could it be flaky software on the PERC controller, and there really
-isn't a problem?
-
-Any help would be really appreciated.
-
-Thanks
-Dan
+-otto
