@@ -1,47 +1,154 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] Fix: BK-Current doesn't compile w/o SCSI enabled
-Date: Tue, 29 Oct 2002 15:32:19 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20021029143219.GA12365@suse.de>
-References: <E186XOP-0006Z7-00@snap.thunk.org>
+From: Klaus Fuerstberger <netbox1@gmx.de>
+Subject: DC390 Deadlock in DataIn
+Date: Tue, 29 Oct 2002 21:32:17 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <3DBEF051.5050708@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <E186XOP-0006Z7-00@snap.thunk.org>
-To: tytso@mit.edu
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Kurt Garloff <dc390@garloff.de>, linux-scsi@vger.kernel.org
 
-On Tue, Oct 29 2002, tytso@mit.edu wrote:
-> 
-> BK current doesn't compile without SCSI being enabled, since
-> sg_scsi_ioctl() in drivers/block/scsi_ioctl.c is always being compiled,
-> regardless of whether or not SCSI is present (since some non-SCSI
-> devices now use this infrastructure).  Unfortunately, it makes reference
-> to the COMMAND_SIZE() macro, which is defined in drivers/scsi/scsi.c,
-> and that is NOT defined on non-SCSI build kernels.
-> 
-> The simplest solution to this problem seems to be move scsi_command_size
-> from drivers/scsi/scsi.c to drivers/block/scsi_ioctl.c, where it is used
-> (and since it is always compiled in, this shouldn't break anything on
-> SCSI systems).
-> 
-> I'm a bit uneasy about the abstraction violation of moving the
-> scsi_command_size array outside of the drivers/scsi tree, but that
-> problem was introduced when the code in drivers/block/scsi_ioctl.c was
-> moved out of the drivers/scsi tree, since drivers/block/scsi_ioctl.c
-> already #includes ../scsi/scsi.h, so I haven't introduced a new layering
-> violation.
+Hi,
 
-I think the "violation" is ok, since the commandset they reference is
-the same. So no problem there.
+I use an Dawicontrol DC-2974 PCI Hostadapter.
+Without any problems I am able to write a tar Backup to an attached 
+HP-Streamer.
+However, if I try to access the Tape with an "tar tvf /dev/st0" the 
+SCSI-Bus hangs after short time with the following error message. I have 
+to reset the SCSI-Bus with an "echo reset > /proc/scsi/tmscsim/0" as it 
+is described in the README.tmscsim.
 
-> Jens, do you agree this is the best way of fixing this issue?  If so,
-> please push this change to Linus.  Thanks!!
+Any hints?
+Thx Klaus
 
-I've already sent the very same patch to Linus earlier today,
-bit-for-bit identical :-)
 
--- 
-Jens Axboe
+Oct 29 20:54:05 srv kernel: DC390: Illegal Operation detected (08d1cc10)!
+Oct 29 20:54:05 srv kernel: DC390: SRB: Xferred 00000000, Remain 
+00002800, State 00000100, Phase 01
+Oct 29 20:54:05 srv kernel: DC390: AdpaterStatus: 00, SRB Status 00
+Oct 29 20:54:05 srv kernel: DC390: Status of last IRQ (DMA/SC/Int/IRQ): 
+08d1cc10
+Oct 29 20:54:05 srv kernel: DC390: Register dump: SCSI block:
+Oct 29 20:54:05 srv kernel: DC390: XferCnt  Cmd Stat IntS IRQS FFIS Ctl1 
+Ctl2 Ctl3 Ctl4
+Oct 29 20:54:05 srv kernel: DC390:  000000   90   11   cc   00   82   17 
+   48   18   04
+Oct 29 20:54:05 srv kernel: DC390: FIFO: 00 00
+Oct 29 20:54:05 srv kernel: DC390: Register dump: DMA engine:
+Oct 29 20:54:05 srv kernel: DC390: Cmd   STrCnt    SBusA    WrkBC 
+WrkAC Stat SBusCtrl
+Oct 29 20:54:05 srv kernel: DC390:  83 00002800 00090000 00000004 
+000927fc   00 03184200
+Oct 29 20:54:05 srv kernel: DC390: Register dump: PCI Status: 0200
+Oct 29 20:54:05 srv kernel: DC390: In case of driver trouble read 
+linux/drivers/scsi/README.tmscsim
+Oct 29 20:54:05 srv kernel: DC390: Deadlock in DataIn_0: DMA aborted 
+unfinished: 000004 bytes remain!!
+Oct 29 20:54:05 srv kernel: DC390: DataIn_0: DMA State: 0
+Oct 29 20:54:05 srv kernel: st0: Error 27010000 (sugg. bt 0x20, driver 
+bt 0x7, host bt 0x1).
+Oct 29 20:54:05 srv kernel: DC390: Illegal Operation detected (00d3cc10)!
+Oct 29 20:54:05 srv kernel: DC390: SRB: Xferred 00000000, Remain 
+00002800, State 00000100, Phase 01
+Oct 29 20:54:05 srv kernel: DC390: AdpaterStatus: 00, SRB Status 00
+Oct 29 20:54:05 srv kernel: DC390: Status of last IRQ (DMA/SC/Int/IRQ): 
+00d3cc10
+Oct 29 20:54:05 srv kernel: DC390: Register dump: SCSI block:
+Oct 29 20:54:05 srv kernel: DC390: XferCnt  Cmd Stat IntS IRQS FFIS Ctl1 
+Ctl2 Ctl3 Ctl4
+Oct 29 20:54:05 srv kernel: DC390:  000000   90   13   cc   00   80   17 
+   48   18   04
+Oct 29 20:54:05 srv kernel: DC390: Register dump: DMA engine:
+Oct 29 20:54:05 srv kernel: DC390: Cmd   STrCnt    SBusA    WrkBC 
+WrkAC Stat SBusCtrl
+Oct 29 20:54:05 srv kernel: DC390:  83 00002800 00090000 00000000 
+00092800   08 031a4700
+Oct 29 20:54:05 srv kernel: DC390: Register dump: PCI Status: 0200
+Oct 29 20:54:05 srv kernel: DC390: In case of driver trouble read 
+linux/drivers/scsi/README.tmscsim
+Oct 29 20:54:05 srv kernel: DC390: Illegal Operation detected (08d3cc10)!
+Oct 29 20:54:05 srv kernel: DC390: SRB: Xferred 00000000, Remain 
+00002800, State 00000100, Phase 01
+Oct 29 20:54:05 srv kernel: DC390: AdpaterStatus: 00, SRB Status 00
+Oct 29 20:54:05 srv kernel: DC390: Status of last IRQ (DMA/SC/Int/IRQ): 
+08d3cc10
+Oct 29 20:54:05 srv kernel: DC390: Register dump: SCSI block:
+Oct 29 20:54:05 srv kernel: DC390: XferCnt  Cmd Stat IntS IRQS FFIS Ctl1 
+Ctl2 Ctl3 Ctl4
+Oct 29 20:54:05 srv kernel: DC390:  000000   90   13   cc   00   80   17 
+   48   18   04
+Oct 29 20:54:05 srv kernel: DC390: Register dump: DMA engine:
+Oct 29 20:54:05 srv kernel: DC390: Cmd   STrCnt    SBusA    WrkBC 
+WrkAC Stat SBusCtrl
+Oct 29 20:54:05 srv kernel: DC390:  83 00002800 00090000 00000000 
+00092800   08 031a4700
+Oct 29 20:54:05 srv kernel: DC390: Register dump: PCI Status: 0200
+Oct 29 20:54:05 srv kernel: DC390: In case of driver trouble read 
+linux/drivers/scsi/README.tmscsim
+Oct 29 20:54:05 srv kernel: DC390: Illegal Operation detected (08d1c410)!
+Oct 29 20:54:05 srv kernel: DC390: SRB: Xferred 00000000, Remain 
+00002800, State 00000100, Phase 01
+Oct 29 20:54:05 srv kernel: DC390: AdpaterStatus: 00, SRB Status 00
+Oct 29 20:54:05 srv kernel: DC390: Status of last IRQ (DMA/SC/Int/IRQ): 
+08d1c410
+Oct 29 20:54:05 srv kernel: DC390: Register dump: SCSI block:
+Oct 29 20:54:05 srv kernel: DC390: XferCnt  Cmd Stat IntS IRQS FFIS Ctl1 
+Ctl2 Ctl3 Ctl4
+Oct 29 20:54:05 srv kernel: DC390:  000000   90   11   c4   00   89   17 
+   48   18   04
+Oct 29 20:54:05 srv kernel: DC390: FIFO: 8c 62 18 c4 00 04 63 18 c6
+Oct 29 20:54:05 srv kernel: DC390: Register dump: DMA engine:
+Oct 29 20:54:05 srv kernel: DC390: Cmd   STrCnt    SBusA    WrkBC 
+WrkAC Stat SBusCtrl
+Oct 29 20:54:05 srv kernel: DC390:  83 00002800 00090000 00000014 
+000927ec   00 03184231
+Oct 29 20:54:05 srv kernel: DC390: Register dump: PCI Status: 0200
+Oct 29 20:54:05 srv kernel: DC390: In case of driver trouble read 
+linux/drivers/scsi/README.tmscsim
+Oct 29 20:54:05 srv kernel: DC390: Deadlock in DataIn_0: DMA aborted 
+unfinished: 000014 bytes remain!!
+Oct 29 20:54:05 srv kernel: DC390: DataIn_0: DMA State: 0
+
+
+# uname -a
+Linux srv 2.4.19 #1 Tue Oct 29 18:19:20 CET 2002 i686 Intel(R) 
+Pentium(R) 4 CPU 1.70GHz GenuineIntel GNU/Linux
+
+# lsmod
+st 25712   1
+tmscsim 29120   1
+
+# lspci -vv
+02:02.0 SCSI storage controller: Advanced Micro Devices [AMD] 53c974 
+[PCscsi] (rev 10)
+         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
+ParErr+ Stepping+ SERR+ FastB2B-
+         Status: Cap- 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium 
+ >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+         Latency: 70 (1000ns min, 10000ns max)
+         Interrupt: pin A routed to IRQ 10
+         Region 0: I/O ports at dc00 [size=128]
+         Expansion ROM at ff9f0000 [disabled] [size=64K]
+
+# cat /proc/scsi/scsi
+Attached devices:
+Host: scsi0 Channel: 00 Id: 03 Lun: 00
+   Vendor: HP       Model: C1537A           Rev: L005
+   Type:   Sequential-Access                ANSI SCSI revision: 02
+
+# cat /proc/scsi/tmscsim/0
+Tekram DC390/AM53C974 PCI SCSI Host Adapter, Driver Version 2.0f 2000-12-20
+SCSI Host Nr 0, AM53C974 Adapter Nr 0
+IOPortBase 0xdc00, IRQ 10
+MaxID 7, MaxLUN 8, AdapterID 7, SelTimeout 250 ms, DelayReset 1 s
+TagMaxNum 16, Status 0x00, ACBFlag 0x00, GlitchEater 24 ns
+Statistics: Cmnds 3437, Cmnds not sent directly 1, Out of SRB conds 0
+             Lost arbitrations 0, Sel. connected 0, Connected: No
+Nr of attached devices: 1, Nr of DCBs: 1
+Map of attached LUNs: 00 00 00 01 00 00 00 00
+Idx ID LUN Prty Sync DsCn SndS TagQ NegoPeriod SyncSpeed SyncOffs MaxCmd
+00  03  00  Yes  Yes  Yes  Yes  No    100 ns    10.0 M      15      01
+Commands in Queues: Query: 0:
+
