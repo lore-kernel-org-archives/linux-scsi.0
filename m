@@ -1,73 +1,74 @@
-From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Subject: RE: megaraid driver always fails to reset adapter
-Date: Tue, 1 Mar 2005 14:20:19 -0500
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230CBE1@exa-atlanta>
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: Re: [Iscsitarget-devel] Re: [ANNOUNCE] iSCSI enterprise target
+	software
+Date: Tue, 01 Mar 2005 14:29:25 -0500
+Message-ID: <1109705365.2878.25.camel@localhost.localdomain>
+References: <20050301190140.97212.qmail@web30006.mail.mud.yahoo.com>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
 Content-Type: text/plain
-Received: from mail0.lsil.com ([147.145.40.20]:56500 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S262004AbVCATUi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 14:20:38 -0500
+Content-Transfer-Encoding: 7bit
+Received: from leviathan.ele.uri.edu ([131.128.51.64]:14277 "EHLO
+	leviathan.ele.uri.edu") by vger.kernel.org with ESMTP
+	id S262006AbVCATaE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Mar 2005 14:30:04 -0500
+In-Reply-To: <20050301190140.97212.qmail@web30006.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Jun'ichi Nomura' <jnomura@mtc.biglobe.ne.jp>, linux-scsi@vger.kernel.org
+To: Vikas Aggarwal <vaggarwal2002@yahoo.com>
+Cc: Bryan Henderson <hbryan@us.ibm.com>, Tomonori Fujita <fujita.tomonori@lab.ntt.co.jp>, arjan@infradead.org, iet-dev <iscsitarget-devel@lists.sourceforge.net>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Please try:
+On Tue, 2005-03-01 at 14:01, Vikas Aggarwal wrote:
+> And If  future IET be visioned as an Enterprise Class Array(Multiple
+> Host-Side Adapters ie., FAs + Multiple Device Side Adapters ie., DAs),
+> should better be in direct control of all the system-resources without
+> being pushed out the kernel.
+> 
+of course this is the reason why we use that name.
 
-In mbox_post_sync_cmd_fast(...) replace
+ming
 
-for (i = 0; i < 0xFFFFF; i++) {
-	if (mbox->numstatus != 0xFF) break;
-}
+> Bryan Henderson <hbryan@us.ibm.com> wrote:
+>         One thing that's implicit in your reasons for wanting to be in
+>         the kernel 
+>         is that you've chosen to exploit the kernel's page cache. As a
+>         user of 
+>         the page cache, you have more control from inside the kernel
+>         than from 
+>         user space. The page cache was designed to be fundamentally
+>         invisible to 
+>         user space.
+>         
+>         A pure user space implementation of an ISCSI target would use
+>         process 
+>         virtual memory for a cache and manage it itself. It would
+>         access the 
+>         storage with direct I/O. It looks to me like this is aimed at
+>         a 
+>         single-application Linux system (the whole system is just an
+>         ISCSI 
+>         target), which means there's not much need for a kernel to
+>         manage shared 
+>         resources.
+>         
+>         --
+>         Bryan Henderson IBM Almaden Research Center
+>         San Jose CA Filesystems
+>         
+>         
+>         -------------------------------------------------------
+>         SF email is sponsored by - The IT Pro duct Guide
+>         Read honest & candid reviews on hundreds of IT Products from
+>         real users.
+>         Discover which products truly live up to the hype. Start
+>         reading now.
+>         http://ads.osdn.com/?ad_id=6595&alloc_id=14396&op=click
+>         _______________________________________________
+>         Iscsitarget-devel mailing list
+>         Iscsitarget-devel@lists.sourceforge.net
+>         https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel
+> 
+> ______________________________________________________________________
+> Do you Yahoo!?
+> Read only the mail you want - Yahoo! Mail SpamGuard.
 
-with
-
-for (i = 0; i < 0xFFFFF; i++) {
-	if (mbox->numstatus != 0xFF) break;
-	rmb();
-} 
-
-Additionally, increase the loop counter to a bigger value.
-
-Thanks,
-Sreenivas
-LSI LOGIC Corporation 
-
->-----Original Message-----
->From: Jun'ichi Nomura [mailto:jnomura@mtc.biglobe.ne.jp] 
->Sent: Tuesday, March 01, 2005 1:36 PM
->To: linux-scsi@vger.kernel.org
->Subject: megaraid driver always fails to reset adapter
->
->Hello,
->
->I found that the megaraid driver always fails to reset the
->adapter with the following message:
->    megaraid: resetting the host...
->    megaraid mbox: reset sequence completed successfully
->    megaraid: fast sync command timed out
->    megaraid: reservation reset failed
->when the "Cluster mode" of the adapter BIOS is enabled.
->So, whenever the reset occurs, the adapter goes to
->offline and just become unavailable.
->
->Is this a known problem?
->
->I tried 2.6.9 and 2.6.11-rc5 and the results were the same.
->I used sg_reset to invoke reset artificially to test this.
->
->The problem doesn't occur if I disabled the "Cluster mode"
->parameter in the adapter BIOS.
->
->I'm not sure how well the currenet megaraid driver supports
->the "Cluster mode".
->I appreciate if you have any idea.
->
->Thanks,
->Jun'ichi Nomura
->
->-
->To unsubscribe from this list: send the line "unsubscribe 
->linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
