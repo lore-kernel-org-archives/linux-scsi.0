@@ -1,45 +1,79 @@
-From: Willy Tarreau <willy@w.ods.org>
-Subject: Re: Aic7xxx and Aic79xx Driver Updates
-Date: Fri, 2 May 2003 07:56:17 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030502055617.GB20977@alpha.home.local>
-References: <1866260000.1051828092@aslan.btc.adaptec.com> <20030502001758.GA20977@alpha.home.local> <700140000.1051849531@aslan.scsiguy.com>
+From: Paul Mackerras <paulus@samba.org>
+Subject: [PATCH] Update mesh.c and mac53c94.c drivers
+Date: Fri, 2 May 2003 15:40:08 +1000
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <16050.1208.626286.978120@argo.ozlabs.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from willy.net1.nerim.net ([62.212.114.60]:60945 "EHLO
-	www.home.local") by vger.kernel.org with ESMTP id S261801AbTEBFoL
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 May 2003 01:44:11 -0400
-Content-Disposition: inline
-In-Reply-To: <700140000.1051849531@aslan.scsiguy.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: torvalds@transmeta.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: Willy Tarreau <willy@w.ods.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@transmeta.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Marcelo Tosatti <marcelo@conectiva.com.br>
 
-On Thu, May 01, 2003 at 10:25:31PM -0600, Justin T. Gibbs wrote:
+This patch updates the mesh and mac53c94 SCSI host bus adaptor
+drivers so that their interrupt routines return an irqreturn_t.
+
+Please apply.
+
+Thanks,
+Paul.
+
+diff -urN linux-2.5/drivers/scsi/mac53c94.c pmac-2.5/drivers/scsi/mac53c94.c
+--- linux-2.5/drivers/scsi/mac53c94.c	2003-03-23 18:24:17.000000000 +1100
++++ pmac-2.5/drivers/scsi/mac53c94.c	2003-04-23 23:09:39.000000000 +1000
+@@ -59,7 +59,7 @@
+ static void mac53c94_init(struct fsc_state *);
+ static void mac53c94_start(struct fsc_state *);
+ static void mac53c94_interrupt(int, void *, struct pt_regs *);
+-static void do_mac53c94_interrupt(int, void *, struct pt_regs *);
++static irqreturn_t do_mac53c94_interrupt(int, void *, struct pt_regs *);
+ static void cmd_done(struct fsc_state *, int result);
+ static void set_dma_cmds(struct fsc_state *, Scsi_Cmnd *);
+ static int data_goes_out(Scsi_Cmnd *);
+@@ -316,7 +316,7 @@
+ 		set_dma_cmds(state, cmd);
+ }
  
-> Can you try with this patch?  It seems I forgot to pull part of a change
-> from the aic79xx driver into the aic7xxx driver.  This could easily cause
-> a lock order reversal. <sigh>
-
-Congratulations, Justin, you just spotted it !
-
-I cannot hang it anymore. It supported an fsck and the make -j dep.
-I'm happy, I'll be able to reintegrate your updates to my tree !
-I just have changed one typo for it to compile :
-
-> --- /tmp/tmp.29873.2	2003-05-01 22:21:54.000000000 -0600
-> +++ /home/gibbs/bk/linux-2.4/drivers/scsi/aic7xxx/aic7xxx_osm.h	2003-05-01 22:21:10.000000000 -0600
-> @@ -745,7 +746,8 @@
->  ahc_midlayer_entrypoint_unlock(struct ahc_softc *ahc, unsigned long *flags)
->  {
->  #if AHC_SCSI_HAS_HOST_LOCK == 0
-> -	ahc_unlock(ahc, flags);
-> +	spin_unlock(&ahd->platform_data->spin_lock);
-
-                    ^^^^ this one is in fact &ahc->platform_data...
-
-Thanks ;-)
-Willy
-
+-static void
++static irqreturn_t
+ do_mac53c94_interrupt(int irq, void *dev_id, struct pt_regs *ptregs)
+ {
+ 	unsigned long flags;
+@@ -325,6 +325,7 @@
+ 	spin_lock_irqsave(dev->host_lock, flags);
+ 	mac53c94_interrupt(irq, dev_id, ptregs);
+ 	spin_unlock_irqrestore(dev->host_lock, flags);
++	return IRQ_HANDLED;
+ }
+ 
+ static void
+diff -urN linux-2.5/drivers/scsi/mesh.c pmac-2.5/drivers/scsi/mesh.c
+--- linux-2.5/drivers/scsi/mesh.c	2003-03-23 18:24:17.000000000 +1100
++++ pmac-2.5/drivers/scsi/mesh.c	2003-04-23 23:09:26.000000000 +1000
+@@ -212,7 +212,7 @@
+ static void handle_error(struct mesh_state *);
+ static void handle_exception(struct mesh_state *);
+ static void mesh_interrupt(int, void *, struct pt_regs *);
+-static void do_mesh_interrupt(int, void *, struct pt_regs *);
++static irqreturn_t do_mesh_interrupt(int, void *, struct pt_regs *);
+ static void handle_msgin(struct mesh_state *);
+ static void mesh_done(struct mesh_state *, int);
+ static void mesh_completed(struct mesh_state *, Scsi_Cmnd *);
+@@ -1471,7 +1471,7 @@
+ 	out_8(&mr->sequence, SEQ_ENBRESEL);
+ }
+ 
+-static void
++static irqreturn_t
+ do_mesh_interrupt(int irq, void *dev_id, struct pt_regs *ptregs)
+ {
+ 	unsigned long flags;
+@@ -1480,6 +1480,7 @@
+ 	spin_lock_irqsave(dev->host_lock, flags);
+ 	mesh_interrupt(irq, dev_id, ptregs);
+ 	spin_unlock_irqrestore(dev->host_lock, flags);
++	return IRQ_HANDLED;
+ }
+ 
+ static void handle_error(struct mesh_state *ms)
