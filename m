@@ -1,37 +1,66 @@
-From: "Bryan Henderson" <hbryan@us.ibm.com>
-Subject: Re: /proc/scsi/map
-Date: Mon, 17 Jun 2002 09:57:38 -0600
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [linux-usb-devel] Re: /proc/scsi/map
+Date: Mon, 17 Jun 2002 09:09:58 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OFF92A995C.C87665ED-ON87256BDB.00565A27@boulder.ibm.com>
+Message-ID: <20020617090958.A19843@eng2.beaverton.ibm.com>
+References: <oliver@neukum.name> <200206171454.g5HEsu802593@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200206171454.g5HEsu802593@localhost.localdomain>; from James.Bottomley@SteelEye.com on Mon, Jun 17, 2002 at 09:54:56AM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Oliver Neukum <oliver@neukum.name>, David Brownell <david-b@pacbell.net>, Andries.Brouwer@cwi.nl, garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sancho@dauskardt.de, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dougg@torque.net
 
+On Mon, Jun 17, 2002 at 09:54:56AM -0500, James Bottomley wrote:
+> 
+> But, in SCSI, you can't.  Just for a simple device showing up as a SCSI disc 
+> (that's a real SCSI disc, attached say by parallel connectors), there are 
+> several potential ways to get a unique ID.  No one way works for all such 
+> disks, that is the nub of the problem.
 
->Actually, the exact format of /proc/scsi/map is certainly something
->that can be discussed separately from the basic idea of adding a file
->that does expose the mapping of a SCSI address (CBTU) and the attached
->high level drivers.
+I agree it would be nice to get the ID via user space, but it is not that
+hard to get the ID, and trying the various SCSI INQUIRY pages that supply 
+the ID is not complicated. Putting ID code (including hotplug hooks) into
+user space is probably more complex. I would also like the ID at scan time
+for multi-path use so we don't have to allocate extraneous Scsi_Devices,
+and later coalesce them.
 
-Good.  Because there's one thing in the currently proposed format that is
-wrong.  The "sg_num" column doesn't make sense -- it's a layering
-violation.  The information in this column is meaningful independent of
-whether the user uses  or the system has a Generic SCSI high level driver
-(sg).  And the names here can be confused with device special file names
-(/dev/sg5, etc) which of course the kernel knows nothing about.
+Mike Sullivan's driverfs patch for SCSI (without any device naming) includes
+code to look up an ID, and store the ID in driverfs; he was working on
+a patch for 2.5.21.
 
-The actual information given by this column is the Linux SCSI slot number
--- that elusive identifier that makes all this SCSI naming stuff hard in
-the first place.  I suggest the column heading (if there is a header line
-at all) be "slot" and the contents of the column be a simple decimal
-number.
+FYI the various SCSI ID pages and such are described in the SCSI primaray
+command for example the following:
 
-Users of the sg driver need to know separately that the device minor
-number, and hence the N in /dev/sgN on a conventional system, is the Linux
-SCSI slot number.
+ftp://ftp.t10.org/t10/drafts/spc3/spc3r07.pdf
 
+Near page 316 (section 8.6) are descriptions for INQUIRY VPD page 0x80
+and 0x83.
 
+> but the only piece that has disc specific logic is sd.  The lld is specific to 
+> the host adapter card (not shown), not the real device, so it is not the right 
+> element to probe for an ID.
 
+Any SCSI device can return an ID (i.e. INQUIRY VPD page 0x80 or 0x83),
+so the logic need not be in sd. I don't know how removable media should
+be handled (not a SCSI device being added/removed from the system), for
+tape this is probably not an issue.
+
+> 
+> Here, the usb-storage driver does know about the real device (and already has 
+> a huge exception table), so it has enough knowledge to probe for an identifier.
+
+> 
+> The thing I think is a bad idea is having to code the logic to look up a 
+> unique identifier (plus all the exceptions) in sd.  But for the pure SCSI 
+> stack, there's nowhere else to place it.  Even if you get usb-storage to 
+> supply an API for providing the id, it will be one of the few llds that can 
+> retrieve this, so it will become just another exception sd has to cope with.
+> 
+> James
+
+usb-storage could emulate VPD page 0x83 to return the GID, and that could
+then be used by the mid-layer or a user level program to extract an ID.
+
+-- Patrick Mansfield
