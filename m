@@ -1,57 +1,90 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] kill a useless global array from aacraid
-Date: Sat, 7 Feb 2004 15:58:31 +0100
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: [patch] sym53c8xx_2: warning: "BYTE_ORDER" is not defined
+Date: Sat, 7 Feb 2004 20:00:51 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040207145831.GA19628@lst.de>
+Message-ID: <20040207190051.GN26093@fs.tum.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:62686 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S266925AbUBGO6g (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Feb 2004 09:58:36 -0500
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:33498 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S267029AbUBGTA7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 7 Feb 2004 14:00:59 -0500
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-Cc: mark_salyzyn@adaptec.com, linux-scsi@vger.kernel.org
+To: Gerard Roudier <groudier@free.fr>
+Cc: matthew@wil.cx, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org
 
-We can always get the fsa_scsi_hba from the aac_dev.  Not that I have
-the slightest clue why we need two structures to start with..
+Hi,
+
+when compiling 2.6.2-mm1 (this problem doesn't seem to be specific
+to -mm)) with -Wundef I got many of the following warnings:
+
+<--  snip  -->
+
+...
+  CC      drivers/scsi/sym53c8xx_2/sym_fw.o
+In file included from drivers/scsi/sym53c8xx_2/sym_glue.h:80,
+                 from drivers/scsi/sym53c8xx_2/sym_fw.c:56:
+drivers/scsi/sym53c8xx_2/sym_misc.h:227:9: warning: "BYTE_ORDER" is not  defined
+drivers/scsi/sym53c8xx_2/sym_misc.h:227:23: warning: "BIG_ENDIAN" is not  defined
+...
+
+<--  snip  -->
 
 
+I don't see a BYTE_ORDER defined anywhere.
 
---- 1.21/drivers/scsi/aacraid/aachba.c	Wed Nov 19 19:36:23 2003
-+++ edited/drivers/scsi/aacraid/aachba.c	Mon Jan 12 10:19:36 2004
-@@ -195,7 +195,6 @@
-  *              M O D U L E   G L O B A L S
-  */
-  
--static struct fsa_scsi_hba *fsa_dev[MAXIMUM_NUM_ADAPTERS];	/*  SCSI Device Instance Pointers */
- static struct sense_data sense_data[MAXIMUM_NUM_CONTAINERS];
- static unsigned long aac_build_sg(struct scsi_cmnd* scsicmd, struct sgmap* sgmap);
- static unsigned long aac_build_sg64(struct scsi_cmnd* scsicmd, struct sgmap64* psg);
-@@ -264,7 +263,6 @@
- 		}
- 	}
- 	fib_free(fibptr);
--	fsa_dev[instance] = fsa_dev_ptr;
- 	return status;
- }
+
+And it seems that the whole #ifdef'ed block isn't used anywhere.
+Is it OK to remove it (patch below)?
+
+
+cu
+Adrian
+
+--- linux-2.6.2-mm1/drivers/scsi/sym53c8xx_2/sym_misc.h.old	2004-02-07 19:43:05.000000000 +0100
++++ linux-2.6.2-mm1/drivers/scsi/sym53c8xx_2/sym_misc.h	2004-02-07 19:54:37.000000000 +0100
+@@ -222,42 +222,6 @@
+ #define sym_is_bit(p, n)	(((u32 *)(p))[(n)>>5] &   (1<<((n)&0x1f)))
  
-@@ -859,16 +857,12 @@
- int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- {
- 	u32 cid = 0;
--	struct fsa_scsi_hba *fsa_dev_ptr;
--	int cardtype;
- 	int ret;
- 	struct Scsi_Host *host = scsicmd->device->host;
- 	struct aac_dev *dev = (struct aac_dev *)host->hostdata;
-+	struct fsa_scsi_hba *fsa_dev_ptr = &dev->fsa_dev;
-+	int cardtype = dev->cardtype;
- 	
--	cardtype = dev->cardtype;
+ /*
+- *  Portable but silly implemented byte order primitives.
+- */
+-#if	BYTE_ORDER == BIG_ENDIAN
 -
--	fsa_dev_ptr = fsa_dev[host->unique_id];
+-#define __revb16(x) (	(((u16)(x) & (u16)0x00ffU) << 8) | \
+-			(((u16)(x) & (u16)0xff00U) >> 8) 	)
+-#define __revb32(x) (	(((u32)(x) & 0x000000ffU) << 24) | \
+-			(((u32)(x) & 0x0000ff00U) <<  8) | \
+-			(((u32)(x) & 0x00ff0000U) >>  8) | \
+-			(((u32)(x) & 0xff000000U) >> 24)	)
 -
- 	/*
- 	 *	If the bus, target or lun is out of range, return fail
- 	 *	Test does not apply to ID 16, the pseudo id for the controller
+-#define __htole16(v)	__revb16(v)
+-#define __htole32(v)	__revb32(v)
+-#define __le16toh(v)	__htole16(v)
+-#define __le32toh(v)	__htole32(v)
+-
+-static __inline u16	_htole16(u16 v) { return __htole16(v); }
+-static __inline u32	_htole32(u32 v) { return __htole32(v); }
+-#define _le16toh	_htole16
+-#define _le32toh	_htole32
+-
+-#else	/* LITTLE ENDIAN */
+-
+-#define __htole16(v)	(v)
+-#define __htole32(v)	(v)
+-#define __le16toh(v)	(v)
+-#define __le32toh(v)	(v)
+-
+-#define _htole16(v)	(v)
+-#define _htole32(v)	(v)
+-#define _le16toh(v)	(v)
+-#define _le32toh(v)	(v)
+-
+-#endif	/* BYTE_ORDER */
+-
+-/*
+  * The below round up/down macros are to be used with a constant 
+  * as argument (sizeof(...) for example), for the compiler to 
+  * optimize the whole thing.
