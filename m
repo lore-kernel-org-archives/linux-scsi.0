@@ -1,71 +1,40 @@
-From: Adam Radford <aradford@3WARE.com>
-Subject: RE: [PATCH] 3w-xxxx: additional ata->sense codes, avoid driver lo
-	ckup
-Date: Wed, 13 Nov 2002 14:32:35 -0800
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [PATCH] 3w-xxxx: additional ata->sense codes, avoid driver lockup
+Date: Wed, 13 Nov 2002 18:53:29 -0500
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <A1964EDB64C8094DA12D2271C04B812672C86A@tabby>
+Message-ID: <3DD2E5F9.A5594DCB@splentec.com>
+References: <A1964EDB64C8094DA12D2271C04B812672C86A@tabby>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: 'Luben Tuikov' <luben@splentec.com>
+To: Adam Radford <aradford@3WARE.com>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-While there may need to be a fix so you don't loop on status=c1,flags=0x11,
-you should know that:
-
-command_packet->status is not a scsi or ATA register value at all.
-
-(0xC1 == BSY|DRDY|ERR).
-^^^^^^^^^^^^^^^^^^^^^^^^ this is not true.
-
--Adam
-
------Original Message-----
-From: Luben Tuikov [mailto:luben@splentec.com]
-Sent: Wednesday, November 13, 2002 2:24 PM
-To: Adam Radford
-Cc: linux-scsi; linux-kernel
-Subject: Re: [PATCH] 3w-xxxx: additional ata->sense codes, avoid driver
-lockup
-
-
 Adam Radford wrote:
 > 
-> Luben,
+> While there may need to be a fix so you don't loop on status=c1,flags=0x11,
+> you should know that:
+>
+> command_packet->status is not a scsi or ATA register value at all.
 > 
-> Thanks for submitting the patch, however, it appears part of it is wrong:
-> 
-> -               if ((command->status == 0xc7) || (command->status ==
-0xcb))
-> {
-> +               if (command->status & 0xC1) {
-> 
-> What makes you think you should not check for c7 or cb, and only check c1?
+> (0xC1 == BSY|DRDY|ERR).
+> ^^^^^^^^^^^^^^^^^^^^^^^^ this is not true.
 
-Hi Adam,
+Really? Last time I checked the ATA spec, C1h comes
+out to BSY=80h | DRDY=40h | ERR=1h.
 
-I don't really ``only'' check for 0xc1, it just shows which bits I'm
-interested in (0xc1 is a mask anded with the status).
+I was *merely* trying to fix the loop on status=C1h, flags=11h.
 
-In fact, I'm only interested in the error bit (ERR), but saw what you did
-and decided to stay as close to 0xc7 and 0xcb, both of whom are in the 
-subset of status & 0xC1, (0xC1 == BSY|DRDY|ERR). So in effect 0xC7 and 0xCB
-still match.
+By the use of flags (error register) and status's bits, I concluded
+that while status is not *the* ATA status register, it's bits
+are pretty close. For this reason I used the C1h *mask* to make
+everyone happy.
 
-Anyway, if you are throwing away
-
-	if (command->status & 0xC1)
-
-then you might as well throw away flags 0x11 from tw_sense_table[]
-and then we're back at ``square 1'' -- this is exactly when the
-driver gets into an inf. loop and eventually locks up the machine
-and the serial console prints ... 
-3w-xxxx: scsiX: Command failed:	status = 0xc1, flags = 0x11, unit #Y.
-... ad infinitum.
-
-I was just trying to avoid this deadlock.
+Yes, I did assume that it is massaged by the controller,
+but with a closed hardware spec and a bug, I had to start
+somewhere.
 
 -- 
 Luben
