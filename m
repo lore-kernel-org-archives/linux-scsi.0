@@ -1,86 +1,35 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH 2.4] rewritable USB DVD-RAM vs. mode sense op choice
-Date: Mon, 23 Aug 2004 10:46:21 -0600
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [patch] aic79xx hostraid support
+Date: 23 Aug 2004 12:56:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <F631591B-F523-11D8-BFA2-00039398BB5E@ieee.org>
-References: <1092673789.4297.7.camel@patlinux.iomegacorp.com> <2004082315485
-	0.GC2301@suse.de>
-Mime-Version: 1.0 (Apple Message framework v619)
-Content-Type: text/plain;
-	charset=US-ASCII;
-	format=flowed
+Message-ID: <1093280181.1996.54.camel@mulgrave>
+References: <20040821133214.GA28890@devserv.devel.redhat.com>
+	<20040821142245.GA9151@devserv.devel.redhat.com>
+	<4129F4E2.10103@adaptec.com>
+	<20040823135143.GE17268@devserv.devel.redhat.com>
+	<4129F8F6.8070902@adaptec.com>
+	<20040823140548.GA1464@devserv.devel.redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:3034 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S265978AbUHWQqR
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Aug 2004 12:46:17 -0400
-In-Reply-To: <20040823154850.GC2301@suse.de>
+Received: from zeus.kernel.org ([204.152.189.113]:48788 "EHLO zeus.kernel.org")
+	by vger.kernel.org with ESMTP id S265098AbUHWRBj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Aug 2004 13:01:39 -0400
+Received: from hancock.sc.steeleye.com (stat16.steeleye.com [209.192.50.48])
+	by zeus.kernel.org (8.12.11/8.11.6) with ESMTP id i7NH1YX6025603
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Aug 2004 10:01:34 -0700
+In-Reply-To: <20040823140548.GA1464@devserv.devel.redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: Arjan van de Ven <arjanv@redhat.com>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Jens A:
+On Mon, 2004-08-23 at 10:05, Arjan van de Ven wrote:
+> So it seems we are basically in agreement ;)
 
->> -	cmd[0] = MODE_SENSE;
->> +	memset(cmd, '\0', sizeof cmd);
->
-> 	memset(cmd, 0, sizeof(cmd));
->
->> +	cmd[0] = MODE_SENSE_10;
->>  	cmd[1] = (scsi_CDs[i].device->scsi_level <= SCSI_2) ?
->>  		 ((scsi_CDs[i].device->lun << 5) & 0xe0) : 0;
->>  	cmd[2] = 0x2a;
->> -	cmd[4] = 128;
->> -	cmd[3] = cmd[5] = 0;
->> +	cmd[8] = 128;
->>  	rc = sr_do_ioctl(i, cmd, buffer, 128, 1, SCSI_DATA_READ, NULL);
->
-> This gives me a bad vibe - I'm assuming your device is failing the
-> 6-byte mode sense? This has to work with devices that don't support
-> MODE_SENSE_10,
+OK, I'll put it in, then.
 
-Clear design goal, thank you.
+James
 
->  if you want it to work for you as well, then make the
-> MODE_SENSE_10 a fall back when MODE_SENSE fails. You cannot rely on the
-> change you made.
-
-Clear instruction, thank you, I will do.
-
-> the MODE_SENSE_10 a fall back when MODE_SENSE fails
-
-I believe the specs on the web instead tell us to try MODE_SENSE_10 
-first and then fall back to MODE_SENSE.  I hear you requesting the 
-reverse, I will deliver what I hear you request.
-
-> your device is failing ... ?
-
-Help, I have more than one device.
-
-My Iomega REV drive works here because that device accepts both ops, 
-implementing the SFF/ ANSI MMC specification for op x5A and the 
-incompatible ANSI SPC specification for op x1A.  To achieve 
-compatibility, I believe every host should try both ops and every 
-device should accept both ops.
-
-I mean only to say that I see Linux 2.4 sr_mod mischaracterises the 
-many DVD/ CD devices that do reject op x1A while accepting only op x5A 
-MODE_SENSE_10.
-
-I hesitate to accept the Linux name MODE_SENSE for the op x1A, because 
-I do not find that claim well-founded in the web for PDT x05 = DVD/ CD 
-= MMC.  I remember Mt Fuji in particular neglects to name op x1A.
-
-> your device is failing ... ?
-
-In this thread I meant to share the example of 2.4 sr_mod 
-mischaracterising a USB DVD-RAM drive that rejects op x1A.
-
-I hear of PATAPI DVD/CD devices that reject op x1A also.  I imagine 
-ide-cd works only by trying op x5A, and not just x1A.  Want me to 
-check?  I don't yet know how to trace in Linux the plain hex of the 
-CDB's that ide-cd sends.
-
-Pat LaVarre
 
