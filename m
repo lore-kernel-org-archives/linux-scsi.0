@@ -1,71 +1,52 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: [2.4 patch] remove REPORT_LUNS from cpqfcTSstructs.h
-Date: Wed, 7 Jan 2004 15:34:20 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040107143420.GZ11523@fs.tum.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:33011 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S266208AbUAGOe0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Jan 2004 09:34:26 -0500
-Content-Disposition: inline
+From: Berkley Shands <berkley@cs.wustl.edu>
+Subject: Re: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple map/unmaps
+Date: Wed, 7 Jan 2004 09:35:18 -0600 (CST)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200401071535.i07FZIX0000020986@mudpuddle.cs.wustl.edu>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: gibbs@scsiguy.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, pbadari@us.ibm.com
 List-Id: linux-scsi@vger.kernel.org
-To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Cc: linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-scsi@vger.kernel.org
 
-Jeff Garzik added a #define REPORT_LUNS to scsi.h resulting in the 
-following compile warnings for a similar #deine in cpqfcTSstructs.h:
+	Running with the force segment merge OFF panics the processor after
+about 1000 scsi retries. the error given, also in pci-gart.c, is
+pci_map_area overflow 4096 bytes
+So a brain dead repair kills the kernel. Someone clearly needs to figure
+out where to correct the merge of the sg lists. A bit of doc on the iommu
+and the 4096 byte limit would be nice too :-)
 
-<--  snip  -->
+I see that is is the aborting of an SCB that causes the sg list halt.
 
-gcc-2.95 -D__KERNEL__ -I/home/bunk/linux/kernel-2.4/linux-2.4.25-pre4-full/include -Wall -Wstrict-prototypes -Wno-trigraphs -O2 -fno-strict-aliasing 
--fno-common -fomit-frame-pointer -pipe -mpreferred-stack-boundary=2 -march=k6   
--nostdinc -iwithprefix include -DKBUILD_BASENAME=cpqfcTSinit  -c -o cpqfcTSinit.o 
-cpqfcTSinit.c
-In file included from cpqfcTSinit.c:57:
-cpqfcTSstructs.h:222: warning: `REPORT_LUNS' redefined
-/home/bunk/linux/kernel-2.4/linux-2.4.25-pre4-full/include/scsi/scsi.h:81: 
-warning: this is the location of the previous definition
-gcc-2.95 -D__KERNEL__ -I/home/bunk/linux/kernel-2.4/linux-2.4.25-pre4-full/inclu
-de -Wall -Wstrict-prototypes -Wno-trigraphs -O2 -fno-strict-aliasing 
--fno-common -fomit-frame-pointer -pipe -mpreferred-stack-boundary=2 -march=k6   
--nostdinc -iwithprefix include -DKBUILD_BASENAME=cpqfcTScontrol  -c -o 
-cpqfcTScontrol.o cpqfcTScontrol.c
-In file included from cpqfcTScontrol.c:48:
-cpqfcTSstructs.h:222: warning: `REPORT_LUNS' redefined
-/home/bunk/linux/kernel-2.4/linux-2.4.25-pre4-full/include/scsi/scsi.h:81: 
-warning: this is the location of the previous definition
-...
-gcc-2.95 -D__KERNEL__ -I/home/bunk/linux/kernel-2.4/linux-2.4.25-pre4-full/include -Wall -Wstrict-prototypes -Wno-trigraphs -O2 -fno-strict-aliasing 
--fno-common -fomit-frame-pointer -pipe -mpreferred-stack-boundary=2 -march=k6   
--nostdinc -iwithprefix include -DKBUILD_BASENAME=cpqfcTSworker  -c -o 
-cpqfcTSworker.o cpqfcTSworker.c
-In file included from cpqfcTSworker.c:49:
-cpqfcTSstructs.h:222: warning: `REPORT_LUNS' redefined
-...
+Jan  7 09:18:32 typhoon kernel: DevQ(0:6:0): 0 waiting
+Jan  7 09:18:32 typhoon kernel: (scsi0:A:2:0): SCB 0x46 - timed out
+Jan  7 09:18:32 typhoon kernel: Recovery SCB completes
+Jan  7 09:18:32 typhoon kernel: scsi0: Issued Channel A Bus Reset. 3 SCBs aborted
+Jan  7 09:18:46 typhoon kernel: Did it again, boss 0000:01:03.0
 
-<--  snip  -->
+Since the sg list merges into one i/o list, simply adding s->length = 4096
+back into the list seems to keep the kernel up. a better if slightly less
+stupid fix is to add up the remaining sg list lengths, and ajust
+the sg[0] entry to sum to the correct value.
 
+/*   		BUG_ON(s->length == 0); */
+if (! s->length)
+   {
+   unsigned long zero = sg[0].length;
+   unsigned long remain = 0;
+   int t = 0;
+   
+   BUG_ON(i != 1);		/* some other error here */
+   
+   for (t = i + 1; t < nents; t++)
+      remain += sg[t].length;	/* collect remaining sizes */
+   zero -= remain;		/* deduct what is left on the list */
+   sg[0].length = zero / 2;
+   sg[1].length = zero / 2;	/* allocate uniformly */
+   size = zero / 2;		/* reduce oversize first entry */
+   printk(KERN_WARNING "Did it again, boss %s\n", dev->slot_name);
+   }
 
-REPORT_LUNS is already removed from cpqfcTSstructs.h in 2.6 and the 
-patch below removes it from 2.4, too.
+The better solution is to have the upper layer fix the sg list, or
+have some marker that the list was diddled, and save the old entries
+to put it back.
 
-I've tested the compilation with 2.4.25-pre4.
-
-
-Please apply
-Adrian
-
-
---- linux-2.4.25-pre4-full/drivers/scsi/cpqfcTSstructs.h.old	2004-01-06 20:46:24.000000000 +0100
-+++ linux-2.4.25-pre4-full/drivers/scsi/cpqfcTSstructs.h	2004-01-06 20:46:43.000000000 +0100
-@@ -219,7 +219,6 @@
- #define ELS_PRLI_ACC		0x22		// {FCP-SCSI} Process Login Accept
- #define ELS_RJT			0x1000000
- #define SCSI_REPORT_LUNS	0x0A0
--#define REPORT_LUNS		0xA0		// SCSI-3 command op-code
- #define FCP_TARGET_RESET	0x200
- 
- #define ELS_LILP_FRAME		0x00000711	// 1st payload word of LILP frame
+berkley
