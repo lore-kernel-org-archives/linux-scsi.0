@@ -1,28 +1,26 @@
-From: miyoshi@hpc.bs1.fc.nec.co.jp
-Subject: Re: [HELP] qla2200 driver over 4G memory
-Date: Fri, 21 Jun 2002 11:27:23 +0900
+From: Mike Touloumtzis <miket@bluemug.com>
+Subject: Re: [PATCH] /proc/scsi/map
+Date: Thu, 20 Jun 2002 23:28:43 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020621112723U.miyoshi@hpc.bs1.fc.nec.co.jp>
-References: <20020620162129.F9181@redhat.com>
-	<Pine.BSF.4.21.0206201334360.31972-100000@beppo>
-	<Pine.BSF.4.21.0206201145290.31972-100000@beppo>
+Message-ID: <20020621062842.GA13664@bluemug.com>
+References: <200206200711.RAA10165@thucydides.inspired.net.au> <Pine.LNX.4.44.0206200800260.8012-100000@home.transmeta.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.BSF.4.21.0206201334360.31972-100000@beppo>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0206200800260.8012-100000@home.transmeta.com>
 List-Id: linux-scsi@vger.kernel.org
-To: mjacob@feral.com, dledford@redhat.com, ctierney@hpti.com, linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: Martin Schwenke <martin@meltin.net>, Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>
 
+On Thu, Jun 20, 2002 at 08:13:22AM -0700, Linus Torvalds wrote:
+>
+> Try it out yourself. Just do
+> 
+> 	mount -t driverfs /devices /devices
 
-Hi,
+Doesn't "/drv" mesh better with the traditional Unix naming aesthetic?
 
-> Hah. The qlogic documentation is clear- you can't span 4GB segments when you
-> use 64 bit SCSI requests.
+:-)
 
-Thanks, it's clear to me now :-)
-
-Perhaps qla2x00's higher 32bits just holds the bits.
-It sounds natural from cost consideration :-<
-
-Regards,
+miket
