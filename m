@@ -1,54 +1,52 @@
-From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
 Subject: RE: How to add/drop SCSI drives from within the driver?
-Date: Wed, 8 Dec 2004 12:56:07 -0500
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230CA8F@exa-atlanta>
+Date: Wed, 8 Dec 2004 13:42:06 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458B7F5071@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261307AbULHSJz@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@SteelEye.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Cc: Matt Domsch <Matt_Domsch@Dell.com>, "'brking@us.ibm.com'" <brking@us.ibm.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:5584 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261306AbULHSme convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Dec 2004 13:42:34 -0500
+content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Cc: Matt Domsch <Matt_Domsch@Dell.com>, brking@us.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, bunk@fs.tum.de, Andrew Morton <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
 
->
->On Wed, 2004-12-08 at 01:16, Bagalkote, Sreenivas wrote:
->> Adding a drive:- For application to use sysfs to scan newly added 
->> drive, it needs to know the HCTL (SCSI address - Host, 
->Channel, Target 
->> & Lun) of the drive. Driver is the only one that knows the mapping 
->> between a drive and the corresponding HCTL.
->
->The real way I'd like to handle this is via hotplug.  The 
->hotplug event would transmit the HCTL in the environment.  
->Whether the drive actually gets incorporated into the system 
->and where is user policy, so it's appropriate that it should 
->be in userland.
+James Bottomley writes:
+> On Wed, 2004-12-08 at 01:16, Bagalkote, Sreenivas wrote:
+>> Adding a drive:- For application to use sysfs to scan newly added
+drive,
+>> it needs to know the HCTL (SCSI address - Host, Channel, Target &
+Lun)
+>> of the drive. Driver is the only one that knows the mapping between a
 
-James, it is the application that is adding the drive. So it is not a
-hotplug
-event for the driver.
+>> drive and the corresponding HCTL.
+>The real way I'd like to handle this is via hotplug.  The hotplug event
+>would transmit the HCTL in the environment.  Whether the drive actually
+>gets incorporated into the system and where is user policy, so it's
+>appropriate that it should be in userland.
 
->
->This same infrastructure could be used by fibre channel login, 
->scsi enclosure events etc.
->
->We have some of the hotplug infrastructure in SCSI, but not 
->quite enough for this ... you'll need an additional API.
->
->> Removing a drive:- There is no sane way for the application 
->to map out 
->> drives to /dev/sd<x>. If application has a way of knowing 
->the HCTL of 
->> a deleted drive, then using that HCTL, it can match the 
->corresponding 
->> SCSI device name (/dev/sd<x>) and use sysfs to remove that drive.
->
->Since The sysfs device name contains H:C:T:L surely you can 
->just do a find on /sys?
->
->James
->
->
+The problem is the aac based cards generate events (AIFs) that are
+picked up by the driver. To go all the way to userland to interpret
+these events and back to the driver is a waste and a source of failures.
+Only the Firmware knows when an array zeroing has completed in order to
+bring the device online.
 
-Thank you,
-sreenivas
+>This same infrastructure could be used by fibre channel login, scsi
+>enclosure events etc.
+
+I would need to emulate an SES to propagate array changes?
+
+>We have some of the hotplug infrastructure in SCSI, but not quite
+enough
+>for this ... you'll need an additional API.
+
+What was wrong with scsi_scan_single_target (add), scsi_rescan_device
+(remove/change)?
+
+Sincerely -- Mark Salyzyn
