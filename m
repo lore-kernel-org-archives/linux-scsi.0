@@ -1,30 +1,72 @@
-From: "tommy" <midori21a@hotmail.com>
-Subject: Cheap V1AGRA?
-Date: Tue, 17 Feb 2004 21:28:41 GMT
+From: louriebealer@backfliper.com
+Subject: re: sure  "Date Number"0881
+Date: Mon, 26 Jan 2004 00:24:48 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1077053321-3352__48558.5968745456$1077046655@excite.com>
-Content-Type: text/plain;
+Message-ID: <377413640806099245.31AJOBWGJ__23028.7549239167$1077052495@msn.com>
+Reply-To: louriebealer@backfliper.com
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from proxy.speed.net.id ([202.150.64.246]:49496 "HELO vanaarda.com")
-	by vger.kernel.org with SMTP id S266478AbUBQTfm (ORCPT
+Received: from [217.219.143.160] ([217.219.143.160]:1548 "HELO 67.72.78.212")
+	by vger.kernel.org with SMTP id S266589AbUBQVFv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Feb 2004 14:35:42 -0500
+	Tue, 17 Feb 2004 16:05:51 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-
-Here is an fantastic way to please your lady.
-
-You can be ready for up to thirty-six hours.
-
-The results are far greater than any other product.
-
-http://medsfactory.com/sv/index.php?pid=eph9106
+To: linux-net@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org
 
 
+Rejuvenate your skin with BOTOX in a Bottle. HOT TICKET ITEM!
+
+Special price on this amazing Anti-Aging Anti-Wrinkle serum.
+See these incredible Before and After photos.
+
+http://www.a10zing29.com/promo.php?id=93976
+
+
+This special anti-wrinkle serum works like BOTOX but without the doctor, the needle, and the expensive price that accompanies it.
+
+PROVEN TO WORK OR YOUR MONEY BACK! YOU WILL SEE RESULTS FAST! GREAT GIFT FOR ALL!
+
+
+http://www.a10zing29.com/promo.php?id=93976
 
 
 
 
-peggy metallicaorchid miles zhongguo whitney glenn metallica
-user1 smithspoiuyt nesbitt player 
-magnum doom2 soccer1 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+This communication is privileged and contains confidential information 
+intended only for the person(s) to whom it is addressed.  Any 
+unauthorized disclosure, copying, other distribution  of this communication or 
+taking any action on its contents is strictly  prohibited. If you have 
+received this message in error, please notify us immediately OR remove 
+yourself from our list if there is no interest in regards to our 
+services or products.
+
+http://www.a10zing29.com/remove.php?id=93976
+
+
+daze infirmary added teresa chi edematous great divestiture deregulate emphatic furl clarinet schroeder november beheld autocollimate teamster topic bribery 
+kB
+
+
