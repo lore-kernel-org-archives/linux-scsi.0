@@ -1,41 +1,35 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] switch scsi upper driver probing to the driver model
-Date: Mon, 19 May 2003 12:02:27 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Qlogic qla2xxx driver up for testing
+Date: 19 May 2003 16:11:19 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030519190227.GA25948@kroah.com>
-References: <20030516182039.A7369@lst.de> <3EC5B3B8.9020308@torque.net> <20030517091352.A13403@lst.de>
+Message-ID: <1053378680.1850.24.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.103]:15063 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262728AbTESSsN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 May 2003 14:48:13 -0400
-Content-Disposition: inline
-In-Reply-To: <20030517091352.A13403@lst.de>
+Received: from nat9.steeleye.com ([65.114.3.137]:42759 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261790AbTESU61 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 May 2003 16:58:27 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Douglas Gilbert <dougg@torque.net>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Andrew Morton <akpm@digeo.com>
 
-On Sat, May 17, 2003 at 09:13:52AM +0200, Christoph Hellwig wrote:
-> On Sat, May 17, 2003 at 01:59:52PM +1000, Douglas Gilbert wrote:
-> > It was my understanding that the device model has been
-> > recently modified by Greg KH to cope with the dual nature
-> > of the interface that sg causes. Evidently similar situations
-> > occur elsewhere in the kernel.
-> 
-> Greg, any comments on this?  I haven't found any code like that
-> in drivers/base/ and I can't understand how this is supposed to work..`
+I've taken the Qlogic 8.00.00.b1 driver and put it up under bitkeeper at
 
-I don't really know what you all are talking about here, but...
-In talking with Mike Anderson about the driver class code changes, he
-and I agreed that sg could just be made a struct class_device.  It could
-go under a "scsi" class if you want, and would point to the scsi devices
-(in the device tree) that the sg driver is bound to.
+http://linux-scsi.bkbits.net/scsi-qla2xxx-2.5
 
-Does that make more sense?
+I've moved the text files into Documentation/scsi, but other than that
+made no alterations to the qlogic driver.
 
-thanks,
+It will build for the qla2300, but the builds fail for qla2100 and
+qla2200 giving me no way to test it.
 
-greg k-h
+The qla2xxx/Makefile is rather convoluted, and makes it look like
+building more than one type of driver non-modular may be a problem.
+
+Anyway, for those that can, try it out and see what you think.
+
+James
+
 
