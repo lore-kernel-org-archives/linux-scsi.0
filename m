@@ -1,35 +1,28 @@
-From: "Alonzo Carpenter" <jessica_Hurst056@yahoo.com>
-Subject: beyond via-grga !! johannesburg madagascar
-Date: Mon, 16 Feb 2004 18:55:26 +0500
+From: christophe.varoqui@free.fr
+Subject: (unknown)
+Date: Mon, 16 Feb 2004 16:15:39 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <CJDIHGFXIDMVREVVKEDWMQLDG@msn.com>
-Reply-To: "Alonzo Carpenter" <jessica_Hurst056@yahoo.com>
+Message-ID: <1076944539.4030de9bdc88c@imp1-q.free.fr>
 Mime-Version: 1.0
-Content-Type: multipart/alternative;
-	boundary="--667376067821734"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from h24-81-198-230.vc.shawcable.net ([24.81.198.230]:53005 "HELO
-	h24-81-198-230.vc.shawcable.net") by vger.kernel.org with SMTP
-	id S265681AbUBPN60 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Feb 2004 08:58:26 -0500
+Received: from postfix4-1.free.fr ([213.228.0.62]:63923 "EHLO
+	postfix4-1.free.fr") by vger.kernel.org with ESMTP id S265587AbUBPPPl
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Feb 2004 10:15:41 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-lvm@redhat.com, linux-hotplug-devel@lists.sourceforge.net
 
-----667376067821734
-Content-Type: text/plain;
-Content-Transfer-Encoding: quoted-printable
+Hello,
 
-ONLY REAL SUPER VIAGDRA CALLED CIADLIS IS EFFECTIVE!
-Annual Sale: ONLY 
-$3 per dose
-Check out our website with disscounts and 
-get your fdree bonus pillls
-Shipped world wide!
+I would like to submit this doc to your criticism.
+Beware, the english will certainly be awful, as I'm not anglozone native.
+I will take any guidance about what to do to make it useful for the widest audiance.
 
-http://fastactingpills.com/sv/?pid=3Devaph6163
+http://christophe.varoqui.free.fr/multipath.html
 
+regards,
+cvaroqui
 
-continuo locomotive
-
-----667376067821734--
-
+-- 
