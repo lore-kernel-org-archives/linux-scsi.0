@@ -1,34 +1,43 @@
 From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] SCSI ibmmca.c: make a struct static
-Date: Mon, 15 Nov 2004 03:06:58 +0100
-Message-ID: <20041115020658.GL2249@stusta.de>
+Subject: [2.6 patch] ide-scsi.c: make 2 functions static
+Date: Mon, 15 Nov 2004 03:07:55 +0100
+Message-ID: <20041115020755.GM2249@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:34320 "HELO
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:42256 "HELO
 	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261442AbUKOCTD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Nov 2004 21:19:03 -0500
+	id S261447AbUKOCTW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Nov 2004 21:19:22 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: langa2@kph.uni-mainz.de
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The patch below makes a needlessly global struct static.
+The patch below makes two functions without external users static.
 
 
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
---- linux-2.6.10-rc1-mm5-full/drivers/scsi/ibmmca.c.old	2004-11-13 21:50:36.000000000 +0100
-+++ linux-2.6.10-rc1-mm5-full/drivers/scsi/ibmmca.c	2004-11-13 21:50:49.000000000 +0100
-@@ -292,7 +292,7 @@
- #define INTEGRATED_SCSI          101
+--- linux-2.6.10-rc1-mm5-full/drivers/scsi/ide-scsi.c.old	2004-11-13 21:51:26.000000000 +0100
++++ linux-2.6.10-rc1-mm5-full/drivers/scsi/ide-scsi.c	2004-11-13 21:51:41.000000000 +0100
+@@ -301,7 +301,7 @@
+ 	return ide_do_drive_cmd(drive, rq, ide_preempt);
+ }
  
- /* List of possible IBM-SCSI-adapters */
--struct subsys_list_struct subsys_list[] = {
-+static struct subsys_list_struct subsys_list[] = {
- 	{0x8efc, "IBM SCSI-2 F/W Adapter"},	/* special = 0 */
- 	{0x8efd, "IBM 7568 Industrial Computer SCSI Adapter w/Cache"},	/* special = 1 */
- 	{0x8ef8, "IBM Expansion Unit SCSI Controller"},	/* special = 2 */
+-ide_startstop_t idescsi_atapi_error (ide_drive_t *drive, const char *msg, byte stat)
++static ide_startstop_t idescsi_atapi_error (ide_drive_t *drive, const char *msg, byte stat)
+ {
+ 	struct request *rq;
+ 	byte err;
+@@ -327,7 +327,7 @@
+ 	return ide_stopped;
+ }
+ 
+-ide_startstop_t idescsi_atapi_abort (ide_drive_t *drive, const char *msg)
++static ide_startstop_t idescsi_atapi_abort (ide_drive_t *drive, const char *msg)
+ {
+ 	struct request *rq;
+ 
 
