@@ -1,47 +1,68 @@
-From: outtlwjztdor@msn.com
-Subject: Dont let debt ruin your life.. READ THIS NOW
-Date: Tue, 12 Aug 2003 15:15:17 +0900
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <S275069AbTHLGQ5/20030812061657Z+13644@vger.kernel.org>
+From: Jeff Woods <kazrak+kernel@cesmail.net>
+Subject: Re: [PATCH] oops in sd_shutdown
+Date: Mon, 11 Aug 2003 23:35:26 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <5.2.1.1.0.20030811233014.02900008@no.incoming.mail>
+References: <5.2.1.1.0.20030811180413.01a67dc0@no.incoming.mail>
+ <Pine.LNX.4.53.0308111426570.16008@thevillage.soulcatcher>
+ <Pine.LNX.4.53.0308111426570.16008@thevillage.soulcatcher>
+ <20030812002844.B1353@pclin040.win.tue.nl>
+ <5.2.1.1.0.20030811180413.01a67dc0@no.incoming.mail>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [211.202.15.43] ([211.202.15.43]:1806 "HELO  =?ISO-8859-1?Q?=20=BB=F3=B4=E35=22?=)
-	by vger.kernel.org with SMTP id S275069AbTHLGQ5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Aug 2003 02:16:57 -0400
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20030812044901.A1650@pclin040.win.tue.nl>
+To: Andries Brouwer <aebr@win.tue.nl>
+Cc: linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-HEY YOU! :)
+At +0200 04:49 AM 8/12/2003, Andries Brouwer wrote:
+>On Mon, Aug 11, 2003 at 06:13:50PM -0700, Jeff Woods wrote:
+>
+>>Looking only at the above code snippet, I'd suggest something more like:
+>
+>>+       if (!sdp ||
+>
+>This is not meaningful.
 
-Dont let debt put you behind.
-Want some assistance? What if we combined your bills into one manageable, low interest repayment?
+How is it not meaningful?  The next action in the expression is to 
+dereference the pointer and if it has a NULL value then I expect the 
+dereference to fail.  [But I am a complete newbie with respect to Linux 
+kernel and driver code so perhaps my understanding is in error.  If so, 
+please enlighten me.]
 
-- Save you a lot of money by eliminating late fees
-- Settle your accounts for a substantially reduced amount
-- Stop creditors calling you on the phone
-- Avoid bankruptcy
+>A general kind of convention is that a pointer will be NULL either by 
+>mistake, when it is uninitialized, or on purpose, when no object is 
+>present or no action (other than the default) needs to be performed.
 
-... and more!
+Of course.  But in this case, the next action the code will attempt is to 
+dereference that pointer which I expect would fail if it's NULL.  If you're 
+telling me the pointer cannot be NULL, then fine [which I tried to indicate 
+was a possibility in my first email in this thread], but if the pointer 
+might *ever* be NULL (and dereferencing a NULL pointer in this context is 
+as bad as it usually is) then there is no point in proceeding and returning 
+from the function immediately seems like a reasonable thing to do in case 
+of a shutdown function.  (I can see possible value in additionally 
+reporting an error or warning somehow if feasible, but that's not germane 
+to whether checking the pointers for NULL is a prudent action.
 
-Why keep dealing with the stress, and headaches?
+>But that general idea is broken by container_of(), which just subtracts a 
+>constant. So, one should check before subtracting that the pointer is 
+>non-NULL. Checking afterwards is meaningless.
 
-Combine your debt into a low interest repayment and
-get on with your life today!!
+As I tried to indicate in the opening statement I have not looked at any 
+other code than what you included in the patch diff beginning this thread 
+so I don't see any reference to anything that indicates some function 
+called container_of() [which sounds like it might be some C++ routine... 
+and I was under the impression this code is C rather than C++].  The diff 
+includes the beginning of the function including initialization of both the 
+sdp and sdkp pointers.  One bug the patch fixes is the implicit dereference 
+of sdkp in the original version of the "if" statement I suggest be 
+modified.  My version of the patch (1) reduces the number of lines changed, 
+(2) results in fewer lines, (3) improves the transparency of the code, and 
+(4) additionally checks for a (perhaps unlikely or even  improbable) 
+potential unanticipated runtime error, all of which makes me believe it is 
+an improvement.
 
-Come here and take a look at how we can help.
-
-http://srd.yahoo.com/drst/157765/*http://www.slashmonthlypayments.com/index.php?N=g
-
-
-
-
-
-
-
-
-
-
-dont want any more?
-http://srd.yahoo.com/drst/1465/*http://www.slashmonthlypayments.com/r.php
+--
+Jeff Woods <kazrak+kernel@cesmail.net> 
