@@ -1,41 +1,45 @@
-From: Alexander Nyberg <alexn@telia.com>
-Subject: Some bad stack offenders
-Date: Fri, 11 Jun 2004 13:56:04 +0200
+From: "Aleks Sheynkman" <aleks@Narus.com>
+Subject: quite ion about megraid-2.10.3
+Date: Fri, 11 Jun 2004 10:27:33 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1086954964.680.62.camel@boxen>
+Message-ID: <FA6D803197D0E14C88E1B74C5A021B822DDD6A@snitch.narus.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mxfep02.bredband.com ([195.54.107.73]:14503 "EHLO
-	mxfep02.bredband.com") by vger.kernel.org with ESMTP
-	id S263851AbUFKL4G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Jun 2004 07:56:06 -0400
-Received: from [192.168.0.127] ([213.113.37.206] [213.113.37.206])
-          by mxfep02.bredband.com with ESMTP
-          id <20040611115604.GZNU1450.mxfep02.bredband.com@[192.168.0.127]>
-          for <linux-scsi@vger.kernel.org>; Fri, 11 Jun 2004 13:56:04 +0200
+Received: from mx2.narus.com ([66.236.101.211]:20361 "EHLO mx2.narus.com")
+	by vger.kernel.org with ESMTP id S264226AbUFKR1l convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jun 2004 13:27:41 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matt Domsch <Matt_Domsch@dell.com>
+Cc: linux-scsi@vger.kernel.org, mailman-owner@us.dell.com
 
-(please CC)
+Hi Matt,
+  I have a 6650 that running RH 7.3 2.4.18-17.7xbigmem kernel with 1.8f
+version of megraid driver, I am trying to upgrade it to megraid-2.10.3.
+As Atul suggested I change it .can_do_varyio =1 and also my kernel was
+not patch so I had to change host_lock to use io_request_lock in adapter
+unitization. So I compile the driver and create a new initrd image
+,every time my system boot up I see following , drivers seems to load
+find I see first message which was produced by mega_find_card() routine
 
-This in 2.6.7-rc3-mm1
+ scsi0:SI Logic MegaRAID 1.72.25 commands 16 targs 5 chans 7 luns
 
+ then I see second message
 
-./drivers/scsi/gdth.c
-5f8 ioc_hdrlist
-620 ioc_rescan
+ scsi1LSI Logic MegaRAID 1.72.25 commands 16 targs 5 chans 7luns, 
 
+and it hangs after that. One interpreting thing is 
+that it kind of sitting and waiting for something , because I 
+can input from keyboard. Also If I press  Cntrl -Alt -Delete it start a
+shutdown process, it trying to 
+flush a raid cache etc.
 
-./drivers/scsi/cpqfcTScontrol.c
-810 CpqTsProcessIMQEntry
-804 PeekIMQEntry
+Did anyone ever see or experience this problem before.
 
+Thanks a lot for you help !!!
 
-./drivers/scsi/gdth_proc.c
-434 gdth_get_info
-
-
-Alex
-
+-Aleks
