@@ -1,38 +1,52 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [linux-usb-devel] Re: Unaligned scatter-gather buffers and usb-storage
-Date: Wed, 19 Nov 2003 16:00:11 +0100
+From: Naveen Burmi <naveenb@cisco.com>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Wed, 19 Nov 2003 20:49:36 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031119150011.GJ1106@suse.de>
-References: <20031110095914.B22518@beaverton.ibm.com> <20031118143720.A6411@beaverton.ibm.com> <20031119084729.GA1106@suse.de> <200311191401.34540.oliver@neukum.org> <20031119130400.GG1106@suse.de> <1069252642.10768.7.camel@mulgrave> <20031119143901.GI1106@suse.de> <1069253904.10768.13.camel@mulgrave>
+Message-ID: <03111920493602.15831@naveenb-lnx.cisco.com>
+References: <200310231734.10263.krmurthy@cisco.com> <03111920183201.15831@naveenb-lnx.cisco.com> <20031119144809.A13541@infradead.org>
+Reply-To: naveenb@cisco.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:64674 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S264133AbTKSPBf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Nov 2003 10:01:35 -0500
-Content-Disposition: inline
-In-Reply-To: <1069253904.10768.13.camel@mulgrave>
+Received: from sj-iport-2-in.cisco.com ([171.71.176.71]:14231 "EHLO
+	sj-iport-2.cisco.com") by vger.kernel.org with ESMTP
+	id S264108AbTKSPQ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Nov 2003 10:16:28 -0500
+In-Reply-To: <20031119144809.A13541@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Oliver Neukum <oliver@neukum.org>, Patrick Mansfield <patmans@us.ibm.com>, Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dougg@torque.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, davmyers@cisco.com
 
-On Wed, Nov 19 2003, James Bottomley wrote:
-> > > Alternatively, we could add this as yet another parameter to the host
-> > > and template structures.  Any preferences?
-> > 
-> > I suppose you have to, if you want LLD to be able to pass it down.
-> 
-> Well, what I was fishing for: Is this property useful enough to want
-> every device driver writer to think about it (i.e. document and place in
-> the template),  or is it rare enough that it should only be accessible
-> to those who know what they're doing (via the direct block queue
-> interfaces in slave_alloc/configure)?
+On Wednesday 19 November 2003 08:18 pm, Christoph Hellwig wrote:
+> On Wed, Nov 19, 2003 at 08:18:32PM +0530, Naveen Burmi wrote:
+> > On Monday 27 October 2003 09:09 pm, Christoph Hellwig wrote:
+> > > iscsi-probe.c:
+> > > 	- the whole iscsi_do_cmnd use looks very very strange.
+> >
+> > After a device gets detected by iSCSI LLD, it uses iscsi_do_cmnd to send
+> > scsi commands to that device even before registering it with the scsi
+> > mid-layer.
+> >
+> > For example user can configure in iscsi LLD configuration (iscsi.conf)
+> > file what various LUNs of a particular target needs to be activated. To
+> > acheive this we need to execute REPORT LUN command on target, to find out
+> > what various luns are present and selectively issue scsi_add_device for
+> > luns that needs to be activated.
+>
+> Couldn't you just use scsi_scan_host_selected from scsi_scan.c for that
+> if it was exported?  We already have all that big and perfectly multi-lun
+> capable probing code in the scsi midlayer and it would be a shame to not
+> use it.
 
-As far as I'm concerned, requiring 512-byte alignment is 'just
-easier'... Only a select few host adapters will set it differently
-anyways, so you gain basically nothing.
+scsi_scan_host_selected can be used for activating LUNs, selectively.
+But that is the second step.
+First step is to execute the REPORT LUN command without registering a device 
+with scsi mid-layer. That's what we are acheiving through iscsi_do_cmnd .
+Once we know what all luns are available for a target,   
+scsi_scan_host_selected can be used to activate the luns, selectively.
 
--- 
-Jens Axboe
 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
