@@ -1,48 +1,50 @@
-From: Andries.Brouwer@cwi.nl
+From: Badari Pulavarty <pbadari@us.ibm.com>
 Subject: Re: [patch for playing] Patch to support 4000 disks and maintain backward compatibility
-Date: Fri, 11 Apr 2003 00:09:51 +0200 (MEST)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <UTC200304102209.h3AM9pf11795.aeb@smtp.cwi.nl>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.cwi.nl ([192.16.191.8]:50894 "EHLO hera.cwi.nl")
-	by vger.kernel.org with ESMTP id S264188AbTDJV6R (for <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Apr 2003 17:58:17 -0400
+Date: Thu, 10 Apr 2003 15:22:41 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200304101522.41236.pbadari@us.ibm.com>
+References: <UTC200304102209.h3AM9pf11795.aeb@smtp.cwi.nl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <UTC200304102209.h3AM9pf11795.aeb@smtp.cwi.nl>
+To: Andries.Brouwer@cwi.nl, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, pbadari@us.ibm.com
 
-[I noticed that I have been unsubscribed for a day or so,
-so may not have seen earlier mail.]
+On Thursday 10 April 2003 03:09 pm, Andries.Brouwer@cwi.nl wrote:
 
-	From: Badari Pulavarty <pbadari@us.ibm.com>
+>
+> I try to make sure there are no assumptions about the
+> size or structure of device numbers anywhere outside kdev_t.h.
+> In particular I object to the use of KDEV_MINOR_BITS.
+>
+> Apart from this formal point, there is also the practical point:
+> suppose 64 = 32+32 is used, so that KDEV_MINOR_BITS equals 32.
+> Then LAST_MAJOR_DISKS is 2^28 and sd_index_bits[] would be 32 MB array.
+> Unreasonable.
 
-	--- linux-2.5.67/drivers/scsi/sd.c	Wed Apr  9 13:12:38 2003
-	+++ linux-2.5.67.new/drivers/scsi/sd.c	Thu Apr 10 13:23:49 2003
-	@@ -56,7 +56,9 @@
-	  * Remaining dev_t-handling stuff
-	  */
-	 #define SD_MAJORS	16
-	-#define SD_DISKS	(SD_MAJORS << 4)
-	+#define SD_DISKS	((SD_MAJORS - 1) << 4)
-	+#define LAST_MAJOR_DISKS	(1 << (KDEV_MINOR_BITS - 4))
-	+#define TOTAL_SD_DISKS	(SD_DISKS + LAST_MAJOR_DISKS)
-	 
-	-static unsigned long sd_index_bits[SD_DISKS / BITS_PER_LONG];
-	+static unsigned long sd_index_bits[TOTAL_SD_DISKS / BITS_PER_LONG];
+agreed !! (I mentioned this ealier in my previous postings - sd_index_bits[]
+array size)
 
-I try to make sure there are no assumptions about the
-size or structure of device numbers anywhere outside kdev_t.h.
-In particular I object to the use of KDEV_MINOR_BITS.
+>
+> The conclusion is that the easy way out is to define MAX_NR_DISKS.
 
-Apart from this formal point, there is also the practical point:
-suppose 64 = 32+32 is used, so that KDEV_MINOR_BITS equals 32.
-Then LAST_MAJOR_DISKS is 2^28 and sd_index_bits[] would be 32 MB array.
-Unreasonable.
+Unfortunately, MAX_NR_DISK will be dependent on KDEV_MINOR_BITS.
+We can't set MAX_NR_DISKS to arbitrary value and if there are not
+enought MINOR bits, it won't work. Only way to make this work is
+to do dynamic major allocation and update /dev/ entries for them.
 
-The conclusion is that the easy way out is to define MAX_NR_DISKS.
-A different way out, especially when we use 32+32, is to kill this
-sd_index_bits[] array, and give each disk a new number: replace
-	index = find_first_zero_bit(sd_index_bits, SD_DISKS);
-by
-	index = next_index++;
+> A different way out, especially when we use 32+32, is to kill this
+> sd_index_bits[] array, and give each disk a new number: replace
+> 	index = find_first_zero_bit(sd_index_bits, SD_DISKS);
+> by
+> 	index = next_index++;
+>
+I wish it is that simple. We use sd_index_bits[] since we could
+sd_detach() and then sd_attach()  few disks. We will end up with
+holes, name slippage without this. We need to know what disks are 
+currently being in use.
 
-Andries
+Thanks,
+Badari
