@@ -1,41 +1,65 @@
-From: Alan Cox <alan@redhat.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: sg driver and Fedora Core 2
-Date: Sat, 29 May 2004 12:42:39 -0400
+Date: 29 May 2004 11:49:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040529164239.GA8855@devserv.devel.redhat.com>
-References: <40B74725.90403@torque.net> <20040528172535.GD13961@devserv.devel.redhat.com> <1085846125.2101.29.camel@mulgrave> <20040529155744.GA32621@devserv.devel.redhat.com> <1085846840.2103.47.camel@mulgrave> <20040529162912.GA5922@devserv.devel.redhat.com> <20040529163641.GG31365@devserv.devel.redhat.com>
+Message-ID: <1085849399.2004.101.camel@mulgrave>
+References: <40B74725.90403@torque.net>
+	<20040528172535.GD13961@devserv.devel.redhat.com>
+	<1085846125.2101.29.camel@mulgrave>
+	<20040529155744.GA32621@devserv.devel.redhat.com>
+	<1085846840.2103.47.camel@mulgrave>
+	<20040529162912.GA5922@devserv.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:4821 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S264335AbUE2Qmr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 May 2004 12:42:47 -0400
-Content-Disposition: inline
-In-Reply-To: <20040529163641.GG31365@devserv.devel.redhat.com>
+Received: from stat1.steeleye.com ([65.114.3.130]:18623 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263301AbUE2QuG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 May 2004 12:50:06 -0400
+In-Reply-To: <20040529162912.GA5922@devserv.devel.redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjanv@redhat.com>
-Cc: Alan Cox <alan@redhat.com>, James Bottomley <James.Bottomley@SteelEye.com>, Douglas Gilbert <dougg@torque.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Alan Cox <alan@redhat.com>
+Cc: Douglas Gilbert <dougg@torque.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Arjan van de Ven <arjanv@redhat.com>
 
-On Sat, May 29, 2004 at 06:36:42PM +0200, Arjan van de Ven wrote:
-> > never include source code. The whole point of sg is arbitary management of
-> > devices. 
+On Sat, 2004-05-29 at 11:29, Alan Cox wrote:
+> On Sat, May 29, 2004 at 11:07:19AM -0500, James Bottomley wrote:
+> > > insmod scsidriver
+> > > open /dev/sg0 (a hard disk)
+> > > insmod sd
+> > 
+> > Refuse the insertion or do not attach, I suppose.  It would be the app's
+> > fault for not managing the interface correctly.
 > 
-> *AND SG_IO IS THAT*. You seem to ignore that consistently.
+> So you stop users being able to hotplug controllers while doing firmware
+> updates. Thats not good either
 
-Unfortunately my devices randomly change name according to what is loaded
+This question only arises if the fw update tools are using the old
+interface ... I think an increasing level of pain on that front might
+cause even closed source vendors to consider shifting to the new
+interface using sd for the disc firmware update.
 
-> those commands, with the same ioctl. THAT changed. Don't tell me that very
-> long list of third party apps ALL doesn't take a device as argument....
-> undoubtedly several don't but... "long list"...
+> > about to make any change like it at this point.  But, if fedora can
+> > demonstrate that it can be made to work sanely and easily, that would be
+> > a very powerful argument for inclusion.
+> 
+> Fedora bugzilla has demonstrated it *doesn't* work. There is a long list
+> of broken third party apps such as drive firmware tools many of which will
+> never include source code. The whole point of sg is arbitary management of
+> devices. Its like /dev/mem and so forth, its power is in the fact it can
+> always be used. This is why Linus vetoed the entire concept.
 
-I had to recompile my kernel to flash my scsi drive firmware. It works
-in the generic kernel but not in 2.6.5-Fedora. That alone says its not
-an acceptable change for a "stable" kernel tree - which hopefully 2.6.x
-will become in the next six months.
+If there's enough evidence, open minds can be changed.
 
-(If you want to argue about 2.7.x then its somewhat different - if scsi
- devices appear in sysfs and the sysfs nodes also support SG_IO then the
- entire notion of /dev/sg could go away in 2.7)
+> Fedora hasn't solved the open /dev/sg , insmod case either.
+
+I think it's too early to declare this experiment in Fedora a failure. 
+If the Fedora release people ultimately decide that the only way to sort
+all the problems out is to back out the single attachment patch then
+fine, we'll declare the experiment a failure and not consider anything
+like it for mainline.  However, while fedora is still trying to get
+everything working with single attachment, I'm not going to prejudge.
+
+James
 
 
