@@ -1,100 +1,79 @@
-From: Andries.Brouwer@cwi.nl
-Subject: Re: /proc/scsi/map
-Date: Sun, 16 Jun 2002 01:00:50 +0200 (MEST)
+From: Matthew Wilcox <willy@debian.org>
+Subject: Kill SCSI_BH
+Date: Sun, 16 Jun 2002 04:01:11 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <UTC200206152300.g5FN0oI14286.aeb@smtp.cwi.nl>
+Message-ID: <20020616040111.P9435@parcelfarce.linux.theplanet.co.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from willy by www.linux.org.uk with local (Exim 3.33 #5)
+	id 17JQHv-0006rY-00
+	for linux-scsi@vger.kernel.org; Sun, 16 Jun 2002 04:01:11 +0100
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl, dougg@torque.net
-Cc: garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-
-    From dougg@torque.net  Sat Jun 15 23:10:06 2002
-
-    In the lsml "[RFC] Persistent naming of scsi devices" thread
-    Martin K. Petersen <mkp@mkp.net> summarized scsi addressing issues
-    thus:
-    #
-    # What we want is (at least) three ways of addressing a device:
-    #
-    # 1. By content.  This is the persistent naming.  Think
-    #    filesystem/MD/LVM UUID.  This is what you put in /etc/fstab and
-    #    what metadisk systems use to assemble logical volumes.
-    #
-    #    Content referencing is used for accessing data.
-    #
-    # 2. By physical path.  This naming is not persistent.  Not even runtime
-    #    because hotplug, iSCSI and whatnot may mess things up.
-    #
-    #    Path naming is for discovery and recovery.  When you add an
-    #    unlabeled disk you want to reference it by path to give it a name.
-    #    When you have a failed disk on your system you want to know which
-    #    physical device to pull from the array.
-    #
-    # 3. By enumeration.  This is what the kernel happens to be using to
-    #    reference the device.  diskN.  Certainly not persistent.
-    #
-    #    Enumeration is for the kernel.
-
-Yes, a very nice summary. Maybe also
-
-# 4. By fingerprint.  This naming is persistent, but need not
-#    identify the device uniquely.  Think device type, vendor,
-#    serial number, capacity.
-#
-#    Fingerprints are convenient for the user. "My ZIP drive".
+To: linux-scsi@vger.kernel.org
 
 
-    The /proc/scsi/map facility proposed by Kurt does a very
-    good job at tying together points 2) and 3) .
+I'm not exactly clueful about the linux SCSI layer, but I'd really like
+to see old-style bottom halves die before 2.6.  Is there any reason why
+SCSI_BH can't simply be comverted to a tasklet?
 
-Yes. Or, more precisely, it ties together the name sde and the
-path (C,B,T,U) = (3,0,00,01). However, this path is not very
-"physical". Indeed, these four numbers all arose by enumeration -
-they are kernel numbers for some usb-storage device.
+Andrew Morton kindly tested this patch for me and reports it works fine.
+I'd expect the Enterprise people to be thrilled by this as it increases
+scalability a touch (eg, SCSI handling is now not serialised against
+the serial port).
 
-I can find the physical path, but that requires quite some digging in
-/proc/scsi/scsi and /proc/scsi/sg/host_strs and /proc/scsi/usb-storage*/*
-and /proc/bus/usb/devices.
+--- linux-2.5.21/drivers/scsi/scsi.c	Sun Jun  2 18:44:50 2002
++++ linux-2.5.21-flock/drivers/scsi/scsi.c	Sat Jun 15 19:45:45 2002
+@@ -1090,6 +1090,9 @@
+ 	SCSI_LOG_MLQUEUE(3, printk("Leaving scsi_do_cmd()\n"));
+ }
+ 
++void scsi_tasklet_func(unsigned long);
++static DECLARE_TASKLET(scsi_tasklet, scsi_tasklet_func, 0);
++
+ /*
+  * This function is the mid-level interrupt routine, which decides how
+  *  to handle error conditions.  Each invocation of this function must
+@@ -1187,7 +1190,7 @@
+ 	/*
+ 	 * Mark the bottom half handler to be run.
+ 	 */
+-	mark_bh(SCSI_BH);
++	tasklet_hi_schedule(&scsi_tasklet);
+ }
+ 
+ /*
+@@ -1213,7 +1216,7 @@
+  * half queue.  Thus the only time we hold the lock here is when
+  * we wish to atomically remove the contents of the queue.
+  */
+-void scsi_bottom_half_handler(void)
++void scsi_tasklet_func(unsigned long ignore)
+ {
+ 	Scsi_Cmnd *SCpnt;
+ 	Scsi_Cmnd *SCnext;
+@@ -2545,11 +2548,6 @@
+         if (scsihosts)
+ 		printk(KERN_INFO "scsi: host order: %s\n", scsihosts);	
+ 	scsi_host_no_init (scsihosts);
+-	/*
+-	 * This is where the processing takes place for most everything
+-	 * when commands are completed.
+-	 */
+-	init_bh(SCSI_BH, scsi_bottom_half_handler);
+ 
+ 	return 0;
+ }
+@@ -2559,7 +2557,7 @@
+ 	Scsi_Host_Name *shn, *shn2 = NULL;
+ 	int i;
+ 
+-	remove_bh(SCSI_BH);
++	tasklet_kill(&scsi_tasklet);
+ 
+         devfs_unregister (scsi_devfs_handle);
+         for (shn = scsi_host_no_list;shn;shn = shn->next) {
 
-
-    > Very good - in combination with /proc/scsi/scsi this gives
-    > good information. I like it.
-
-    Adding INQUIRY strings would make it harder to parse and more
-    cluttered for humans to read.
-
-Yes, I would like to leave that to a user-space utility.
-Writing that will also show what kernel facilities are missing.
-
-    > But just "cat /proc/scsi/map" is not good enough.
-    > From the above output alone one cannot easily guess which is which.
-    > One would need a small utility that reads /proc/scsi/map and
-    > /proc/scsi/scsi and produces something readable.
-
-    Note the possible race condition: reading /proc/scsi/scsi
-    then /proc/scsi/map (or vice versa) when a hotplug is
-    occurring...
-
-Already reading /proc/scsi/map has a race: no locking is done.
-
-    > Will add sth to util-linux in case this gets accepted.
-
-    IMO as soon as lk 2.4.19 comes out, this patch should
-    be presented to Marcelo (for inclusion in lk 2.4.20).
-
-Yes, perhaps. I would like to get some experience first,
-play with it, see what information is missing.
-
-I have to admit that 2.5 is not very suitable for development
-these days, it is not stable enough, but the appropriate path
-is to try things out in 2.5 first, and when something crystallizes
-out, backport.
-
-    The sooner we get it into the lk 2.5 series the better. Could you 
-    forward your lk 2.5 version of Kurt's patch to Linus (and the
-    linux-scsi list)?
-
-Yes, but I'll wait for 2.5.22 so that it is clear against
-what tree to diff.
-
-Andries
+-- 
+Revolutions do not require corporate support.
