@@ -1,62 +1,54 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: phase change messages cusing slowdown with sym53c8xx_2 driver
-Date: 01 Dec 2004 15:43:02 -0500
-Message-ID: <1101933788.1930.226.camel@mulgrave>
-References: <20041130030212.GB22916@austin.ibm.com>
-	<20041201165654.GA32687@rx8.austin.ibm.com>
-	<1101921398.1930.24.camel@mulgrave>
-	<20041201203226.GI5752@parcelfarce.linux.theplanet.co.uk>
+Subject: RE: [patch 6/8] mptfusion: fc transport
+Date: 01 Dec 2004 15:49:53 -0500
+Message-ID: <1101934199.1930.236.camel@mulgrave>
+References: <91888D455306F94EBD4D168954A9457C667C7D@nacos172.co.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:18067 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:37785 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261442AbULAUnN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Dec 2004 15:43:13 -0500
-In-Reply-To: <20041201203226.GI5752@parcelfarce.linux.theplanet.co.uk>
+	id S261444AbULAUuF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Dec 2004 15:50:05 -0500
+In-Reply-To: <91888D455306F94EBD4D168954A9457C667C7D@nacos172.co.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: "Jose R. Santos" <jrsantos@austin.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 2004-12-01 at 15:32, Matthew Wilcox wrote:
-> On Wed, Dec 01, 2004 at 12:16:33PM -0500, James Bottomley wrote:
-> > does this look like the "drive won't respond properly to PPR if the bus
-> > is SE" problem again?
+On Wed, 2004-12-01 at 14:46, Moore, Eric Dean wrote:
+> On Thursday, November 25, 2004 1:55 PM, James Bottomley wrote:
+> > How difficult would it be to separate out the scsi and FC 
+> > pieces of the
+> > fusion driver, so we could allow more fined grained control of this?
+>  
+> This driver is four separate driver modules { mptbase, mptscsih, mptlan,
+> mptctl },
+> with FC and SCSI spread through out, and SAS waiting in the wings.
+> In this current design, separating FC is not going to be an easy task,
+> as well as dealing with SAS because I'm sure people would want that
+> separated as well.  
+> Device recognization done from mptbase, as well as unique
+> configuration/initialization
+> for respective bus type, and messaging interface from the other drivers
+> (mptscsih,
+> mptlan, and mptctl) to the firmware.  The scsi interface layer is in
+> mptscsih, 
+> and is where this fc transports and our spi domain validation is done
+> currently. 
 > 
-> Thomas Babut who tested that fix reported it didn't solve his problem ;-(
-> 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=109968716312783&w=2
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=109969829411685&w=2
-> 
-> I'm out of ideas for fixing that one.  Would you consider Richard
-> Waltham's patch?
-> 
-> http://marc.theaimsgroup.com/?l=linux-kernel&m=109967237930243&w=2
+> What do you have in mind in seperating this code for each (3) different bus
+> classes from 
+> each these (4) drivers?  
 
-Actually, yes, or the attached variant of it.  Does this solve the
-problem?
+Nothing complex.  How about just a simple module wrapper for the PCI
+attachment, so you have the FC devices in one, the SPI in another etc. 
+Then you could attach and initialise the FC transport only if the user
+modprobes the FC driver.
 
-There's no reason why we should assume a SCSI_3 or greater device
-automatically supports ppr (especially if it's inquiry bit is
-advertising that it doesn't...)
+I just don't see it being tenable to drag in the whole of the fc
+transport class in a SCSI only configuration for fusion.
 
 James
-
-===== drivers/scsi/scsi_scan.c 1.134 vs edited =====
---- 1.134/drivers/scsi/scsi_scan.c	2004-10-24 07:09:48 -04:00
-+++ edited/drivers/scsi/scsi_scan.c	2004-12-01 15:41:03 -05:00
-@@ -554,10 +554,8 @@
- 	sdev->removable = (0x80 & inq_result[1]) >> 7;
- 	sdev->lockable = sdev->removable;
- 	sdev->soft_reset = (inq_result[7] & 1) && ((inq_result[3] & 7) == 2);
-+	sdev->ppr = (sdev->inquiry_len > 56 && (inq_result[56] & 0x04) == 0x04);
- 
--	if (sdev->scsi_level >= SCSI_3 || (sdev->inquiry_len > 56 &&
--		inq_result[56] & 0x04))
--		sdev->ppr = 1;
- 	if (inq_result[7] & 0x60)
- 		sdev->wdtr = 1;
- 	if (inq_result[7] & 0x10)
 
