@@ -1,104 +1,43 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH] 2.5.53 SCSI_IOCTL_GET_IDLUN+GET_BUS_NUMBER revisited
-Date: Sat, 28 Dec 2002 11:24:29 +1100
+From: Marcelo Tosatti <marcelo@conectiva.com.br>
+Subject: Re: [PATCH] aic7xxx bouncing over 4G
+Date: Sat, 28 Dec 2002 03:32:44 -0200 (BRST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E0CEF3D.5070404@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <Pine.LNX.4.50L.0212280331110.30646-100000@freak.distro.conectiva>
+References: <200212210012.gBL0Cng21338@eng2.beaverton.ibm.com>
+ <176730000.1040430221@aslan.btc.adaptec.com> <3E03BB0D.5070605@rackable.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040805080106000900060704"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from burns.conectiva (burns.conectiva [10.0.0.4])
+	by perninha.conectiva.com.br (Postfix) with SMTP id 3B842475D9
+	for <linux-scsi@vger.kernel.org>; Sat, 28 Dec 2002 06:32:46 -0200 (BRST)
+In-Reply-To: <3E03BB0D.5070605@rackable.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: axboe@suse.de
-
-This is a multi-part message in MIME format.
---------------040805080106000900060704
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Currently for block devices both the SCSI_IOCTL_GET_IDLUN and 
-SCSI_IOCTL_GET_BUS_NUMBER ioctls yield the value 0 (type: int).
-
-Various applications that utilize the sg driver use these ioctls
-to work out the relationship between sg devices and their higher
-level counterparts in the sd, sr, st and osst drivers. Examples
-that spring to mind are cdrecord, cdparanoia, SANE and sg_utils.
-
-This has been discussed in an earlier threaded started by me:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=103967899608891&w=2
-in which my patch removed the ioctls in question from the block
-level. This broke non-scsi block devices that used applications
-that thought they were talking to an sg device **.
-
-The attachment fine tunes the original patch: for scsi block
-devices (i.e. owned by the sd or sr drivers) these 2 ioctls
-are redirected to the scsi mid level; for non-scsi block
-devices they will yield the value as 0 as they do now in
-lk 2.5.53 .
+To: Samuel Flory <sflory@rackable.com>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, Janet Morgan <janetmor@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
 
-** This "yield 0" strategy will come unstuck when 2 or more
-cd writers (for example) are connected to the same box.
-Hence to be well formed, these ioctls (together) should
-produce unique tuples for each device (be they ATA(PI) or
-SCSI).
+On Fri, 20 Dec 2002, Samuel Flory wrote:
 
-Doug Gilbert
+> Justin T. Gibbs wrote:
+>
+> >>I have an Adaptec AIC-7897 Ultra2 SCSI adapter on a system with 8G
+> >>of physical memory.  The adapter is using bounce buffers when DMA'ing
+> >>to memory >4G because of a bug in the aic7xxx driver.
+> >>
+> >>
+> >
+> >This has been fixed in both the aic7xxx and aic79xx drivers for some
+> >time.  The problem is that these later revisions have not been integrated
+> >into the mainline trees.
+> >
+> >
+> >
+>   Marcelo, what is required get the aic79xx driver, and the aic7xxx
+> updates into 2.4.21?  A number of linux distros are already using it.
+>  It would really help people using board with the U320.
+>
+>     I've been using both drivers for some time with no issues.  Or maybe
+> you'd prefer Alan put it in his tree 1st?
 
---------------040805080106000900060704
-Content-Type: text/plain;
- name="sd_sr_2553_ioctl.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sd_sr_2553_ioctl.diff"
-
---- linux/drivers/scsi/sd.c	2002-12-24 18:12:54.000000000 +1100
-+++ linux/drivers/scsi/sd.c2553ioctl	2002-12-28 09:25:13.000000000 +1100
-@@ -537,9 +537,20 @@
- 		return sd_hdio_getgeo(bdev, (struct hd_geometry *)arg);
- 	}
- 
--	error = scsi_cmd_ioctl(bdev, cmd, arg);
--	if (error != -ENOTTY)
--		return error;
-+	/*
-+	 * Send SCSI addressing ioctls directly to mid level, send other
-+	 * ioctls to block level and then onto mid level if they can't be
-+	 * resolved.
-+	 */
-+	switch (cmd) {
-+		case SCSI_IOCTL_GET_IDLUN:
-+		case SCSI_IOCTL_GET_BUS_NUMBER:
-+			return scsi_ioctl(sdp, cmd, (void *)arg);
-+		default:
-+			error = scsi_cmd_ioctl(bdev, cmd, arg);
-+			if (error != -ENOTTY)
-+				return error;
-+	}
- 	return scsi_ioctl(sdp, cmd, (void *)arg);
- }
- 
---- linux/drivers/scsi/sr.c	2002-12-24 18:12:54.000000000 +1100
-+++ linux/drivers/scsi/sr.c2553ioctl	2002-12-28 09:36:19.000000000 +1100
-@@ -434,6 +434,17 @@
- 			  unsigned long arg)
- {
- 	struct scsi_cd *cd = scsi_cd(inode->i_bdev->bd_disk);
-+	struct scsi_device *sdev = cd->device;
-+
-+        /*
-+         * Send SCSI addressing ioctls directly to mid level, send other
-+         * ioctls to cdrom/block level.
-+         */
-+        switch (cmd) {
-+                case SCSI_IOCTL_GET_IDLUN:
-+                case SCSI_IOCTL_GET_BUS_NUMBER:
-+                        return scsi_ioctl(sdev, cmd, (void *)arg);
-+	}
- 	return cdrom_ioctl(&cd->cdi, inode, cmd, arg);
- }
- 
-
---------------040805080106000900060704--
-
+Ho, hum, I prefer getting it tested in -ac for a while first.
