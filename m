@@ -1,72 +1,138 @@
 From: Dave Boutcher <sleddog@us.ibm.com>
 Subject: Re: [PATCH] ibmvscsi driver - sixth version
-Date: Wed, 31 Mar 2004 16:37:37 -0600
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <opr5qzszzml6e53g@us.ibm.com>
-References: <opr3u0ffo7l6e53g@us.ibm.com> <20040225134518.A4238@infradead.org>  <opr3xta6gbl6e53g@us.ibm.com> <1079027038.2820.57.camel@mulgrave>  <opr5qwiyw4l6e53g@us.ibm.com> <1080770310.2071.44.camel@mulgrave>
+Date: Wed, 31 Mar 2004 17:12:13 -0600
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <opr5q1enb6l6e53g@us.ibm.com>
+References: <opr3u0ffo7l6e53g@us.ibm.com> <20040225134518.A4238@infradead.org>  <opr3xta6gbl6e53g@us.ibm.com> <1079027038.2820.57.camel@mulgrave> <opr5qwiyw4l6e53g@us.ibm.com> <406B3FDA.9010507@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
 	format=flowed
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <1080770310.2071.44.camel@mulgrave>
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, paulus@samba.org, anton@samba.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e32.co.us.ibm.com ([32.97.110.130]:12028 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S262773AbUCaXMh
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Mar 2004 18:12:37 -0500
+In-Reply-To: <406B3FDA.9010507@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
 
-On 31 Mar 2004 16:58:28 -0500, James Bottomley 
-<James.Bottomley@SteelEye.com> wrote:
-> Actually, this:
+On Wed, 31 Mar 2004 17:02:02 -0500, Jeff Garzik <jgarzik@pobox.com> wrote:
+> Comments:
 >
-> +	    (u64) (unsigned long)dma_map_single(dev, cmd->request_buffer,
-> +						cmd->request_bufflen,
-> +						DMA_BIDIRECTIONAL);
-> +	if (pci_dma_mapping_error(data->virtual_address)) {
-> +		printk(KERN_ERR
-> +		       "ibmvscsi: Unable to map request_buffer for command!\n");
-> +		return 0;
->
-> Should be
->
-> if(dma_mapping_error())
->
-> I have no idea why there are two identical APIs for the mapping error,
-> but since you use the DMA API, you should use its version.  You can also
-> drop the #include <linux/pci.h> as well.
+> 1) Would be nice to eliminate  module options for commands-per-lun, 
+> max-requests etc. and actually have the driver figure out the real 
+> needs.  One or two options could fall into the "performance tuning" 
+> category, and stay, but the others are really dependent on the 
+> underlying configuration and underlying limits.
+Hmmm...well, I could collapse the two together, since commands_per_lun
+is not limited by anything specific for this adapter.  I would prefer
+to leave them broken out to handle users who have extreme requirements.
 
-Well, that would be true if arch/ppc64 had dma_mapping_error implemented.
-Which it not.  You would need something like the following patch, which
-will show up when we rationalize it with the rest of ppc64 and an
-appropriate bk pull happens...I'll work with my ppc64 bretheren and then
-re-submit the ibmvscsi patch.
+> 2) why is one-descriptor a special case in map_sg_data()?  You proceed 
+> to do the same thing in a loop, right below that...  AFAICS you can just 
+> use the loop, and clamp the number of scatterlist elements to one.
+The SRP spec has two different buffer formats: SRP_DIRECT_BUFFER for a
+single buffer, and SRP_INDIRECT_BUFFER for lists of buffers, and the
+layout of the buffers in the request is different for those two cases.
 
-===== dma-mapping.h 1.5 vs edited =====
---- 1.5/include/asm-ppc64/dma-mapping.hTue Mar 16 18:47:00 2004
-+++ edited/dma-mapping.hWed Mar 31 16:33:07 2004
-@@ -15,6 +15,11 @@
-  #include <asm/scatterlist.h>
-  #include <asm/bug.h>
-
-+#define DMA_ERROR_CODE      (~(dma_addr_t)0x0)
-+static inline int dma_mapping_error(dma_addr_t dma_addr) {
-+        return (dma_addr == DMA_ERROR_CODE);
-+}
-+
-  extern int dma_supported(struct device *dev, u64 mask);
-  extern int dma_set_mask(struct device *dev, u64 dma_mask);
-  extern void *dma_alloc_coherent(struct device *dev, size_t size,
-
-> This:
+> 3) in the following code...
 >
-> +	sg_mapped = dma_map_sg(dev, sg, cmd->use_sg, DMA_BIDIRECTIONAL);
+> +	if ((evt_struct->crq.format == VIOSRP_SRP_FORMAT) &&
+> +	    (atomic_dec_if_positive(&hostdata->request_limit) < 0)) {
+> +		printk("ibmvscsi: Warning, request_limit exceeded\n");
+> +		unmap_cmd_data(&evt_struct->evt->srp.cmd, hostdata->dev);
+> +		ibmvscsi_free_event_struct(&hostdata->pool, evt_struct);
+> +		return SCSI_MLQUEUE_HOST_BUSY;
+> +	}
+>
+> is the code prepared to deal with hostdata->request_limit being negative?
+Yes....that is one of the things that would drive you down that path.
+There are a couple of places in the code where request_limit is explicitly
+set to -1 to force all requests to be rejected.
+
+> 4) style: don't bother with unneeded brackets...
+>
+> +	if (!evt_struct) {
+> +		return SCSI_MLQUEUE_HOST_BUSY;
+> +	}
 > +
-> +	if (pci_dma_mapping_error(sg_dma_address(&sg[0])))
-> +		return 0;
->
-> Is wrong.  dma_map_sg returns zero if there's a mapping error, you
-> should check for that.
+Fair enough.
 
-Yes, my bad.  I was so delighted with pci_dma_mapping_error() that I
-got a little carried away.  Thanks.
+>
+> 5) two issues with your abort handler...
+>
+> +	spin_unlock_irq(hostdata->host->host_lock);
+> +	wait_for_completion(&evt->comp);
+> +	spin_lock_irq(hostdata->host->host_lock);
+>
+> 5a) are there recursion or deadlock issues, when you release the lock 
+> like this?
+>
+> 5b) IMO unconditional spin_{un}lock_irq() is unwise...  the 
+> ->eh_abort_handler() saved the flags, so you might be restoring things 
+> to an incorrect state.
+>
+> Since you're already inside spin_lock_irqsave(), and #5a is not an 
+> issue, just use spin_unlock() and spin_lock().
+OK, two issues.  There are a bunch of SCSI LLDDs that use this same
+logic in abort and reset handlers to wait for adapter events to
+complete, so I think the logic is OK.  The issue of spin_lock_irq
+vs spin_lock is a good one...and points out that there are a bunch
+of LLDDs that are broke :-)  I'll resubmit without the _irq
+
+>
+> 6) ditto ibmvscsi_eh_device_reset_handler
+
+> 7) style: the names of many of the structures defined by this driver are 
+> IN ALL CAPS AND SHOUTING :)  Structs should not be in all caps.
+Ya, copied from less sane operating systems.  I'll fix.
+
+> 8) purge_requests() locking looks bogus.  It is safe to complete a SCSI 
+> command inside the host lock.
+I'll fix.
+
+> 9) ibmvscsi_do_host_config() continues, after a DMA mapping error
+Oops.
+
+> 10) what the heck is this???  do some people not know they are running 
+> Linux???
+> +static ssize_t show_host_os_type(struct class_device *class_dev, char 
+> *buf)
+This whole driver has to do with adapter sharing....and this answers
+the question with whom you are sharing it.  Which may in fact NOT
+be Linux.
+
+> 11) I'm not sure ".emulated = 1" is correct, since you are really 
+> talking SCSI.  But this is arguable, as is the value of 'emulated' flag 
+> itself...
+Agreed...I'll walk either side of the street on that one.
+
+> 12) in ibmvscsi_probe(), you want to use TASK_UNINTERRUPTIBLE here:
+>
+> +			set_current_state(TASK_INTERRUPTIBLE);
+> +			schedule_timeout(5);
+>
+> 13) in the code pasted in #12, you should pass a value calculated using 
+> the 'HZ' constant.
+Hmmm...above code copied from the qlogic driver...and it looked reasonable
+to me, but I'll tweak it.
+
+> 14) why are you faking a PCI bus?  The following is very, very wrong:
+>
+> +static struct pci_dev iseries_vscsi_dev = {
+> +	.dev.bus = &pci_bus_type,
+> +	.dev.bus_id = "vscsi",
+> +	.dev.release = noop_release
+>
+> Did I mention "very" wrong?  :)
+Because for iseries it is implemented in the pci code.  While it may
+look wrong, it is actually correct.  Check out
+arch/ppc64/kernel/iSeries_iommu.c and arch/ppc64/kernel/dma.c.
+This device has to have dev->bus == &pci_bus_type otherwise the
+dma_mapping_foo functions won't work correctly.
+
+Thanks for the comments!!!!!!!!!!!!!!
 
 Dave B
