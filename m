@@ -1,44 +1,34 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Core scsi layer crashes in 2.6.8.1
-Date: 29 Sep 2004 10:11:59 -0400
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [Patch] Fix oops on rmmod usb-storage
+Date: Wed, 29 Sep 2004 14:17:58 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1096467125.2028.11.camel@mulgrave>
-References: <1096401785.13936.5.camel@localhost.localdomain>
+Message-ID: <1096463876.15905.23.camel@localhost.localdomain>
+References: <415A67B8.2080003@suse.de>  <1096466196.2028.8.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:27338 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S268447AbUI2OMH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Sep 2004 10:12:07 -0400
-In-Reply-To: <1096401785.13936.5.camel@localhost.localdomain>
+Received: from clock-tower.bc.nu ([81.2.110.250]:6794 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S268447AbUI2OUy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Sep 2004 10:20:54 -0400
+In-Reply-To: <1096466196.2028.8.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Hannes Reinecke <hare@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-09-28 at 16:03, Alan Cox wrote:
-> Second problem is with the scsi handling logic for errors. If you rmmod
-> a scsi driver while it is error handling you get a chain of errors
-> starting with
-> 
-> 	Illegal transition Cancel->Offline
-> 	Badness is scsi_device_set_state
-> 	path:
-> 	scsi_device_set_state
-> 	scsi_unjam_host
-> 	scsi_error_handler
-> 
+On Mer, 2004-09-29 at 14:56, James Bottomley wrote:
+> The key to the solution of this problem is to know what USB is trying to
+> do with the dead device.  SCSI is trying to be polite and explicitly
+> kill the outstanding commands before it removes the HBA.  Presumably USB
+> is returning something that says this can't be done so the EH gets all
+> the way up to offlining.
 
-These state transition warnings are currently expected in this code
-(they're basically verbose warnings).
+Its nothing to do with USB, rmmod with eh running crashes all the other
+SCSI drivers I've tested too. After the state transition fails you get
+kobject related errors and a crash. 
 
-What was the oops?
+That makes me suspect whatever is ill is in the scsi core.
 
-I have a theory that we should be taking a device reference before
-waking up the error handler, otherwise host removal can race with error
-handling.
-
-James
-
+Alan
 
