@@ -1,130 +1,91 @@
 From: Adrian Bunk <bunk@fs.tum.de>
-Subject: [2.6 patch] SCSI dc395x.c: fix inline compile errors
-Date: Fri, 16 Jul 2004 00:26:53 +0200
+Subject: [2.6 patch] SCSI nsp32.c: remove inlines
+Date: Fri, 16 Jul 2004 00:41:43 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040715222653.GO25633@fs.tum.de>
+Message-ID: <20040715224143.GP25633@fs.tum.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:27609 "HELO
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:35544 "HELO
 	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S266247AbUGOW1B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jul 2004 18:27:01 -0400
+	id S266435AbUGOWlw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jul 2004 18:41:52 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>, Oliver Neukum <oliver@neukum.name>, Ali Akcaagac <aliakc@web.de>, Jamie Lenehan <lenehan@twibble.org>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: yokota@netlab.is.tsukuba.ac.jp, gotom@debian.or.jp
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Trying to compile drivers/scsi/dc395x.c in 2.6.8-rc1-mm1 using gcc 3.4 
+Trying to compile drivers/scsi/nsp32.c in 2.6.8-rc1-mm1 using gcc 3.4 
 results in compile errors starting with the following:
 
 <--  snip  -->
 
 ...
-  CC      drivers/scsi/dc395x.o
-drivers/scsi/dc395x.c: In function `dc395x_handle_interrupt':
-drivers/scsi/dc395x.c:388: sorry, unimplemented: inlining failed in call 
-to 'enable_msgout_abort': function body not available
-drivers/scsi/dc395x.c:1740: sorry, unimplemented: called from here
-make[2]: *** [drivers/scsi/dc395x.o] Error 1
+  CC      drivers/scsi/nsp32.o
+drivers/scsi/nsp32.c: In function `nsp32_prom_start':
+drivers/scsi/nsp32.c:270: sorry, unimplemented: inlining failed in call 
+to 'nsp32_prom_set': function body not available
+drivers/scsi/nsp32.c:3348: sorry, unimplemented: called from here
+drivers/scsi/nsp32.c:270: sorry, unimplemented: inlining failed in call 
+to 'nsp32_prom_set': function body not available
+drivers/scsi/nsp32.c:3349: sorry, unimplemented: called from here
+drivers/scsi/nsp32.c:270: sorry, unimplemented: inlining failed in call 
+to 'nsp32_prom_set': function body not available
+drivers/scsi/nsp32.c:3350: sorry, unimplemented: called from here
+drivers/scsi/nsp32.c:270: sorry, unimplemented: inlining failed in call 
+to 'nsp32_prom_set': function body not available
+drivers/scsi/nsp32.c:3351: sorry, unimplemented: called from here
+drivers/scsi/nsp32.c:270: sorry, unimplemented: inlining failed in call 
+to 'nsp32_prom_set': function body not available
+drivers/scsi/nsp32.c:3353: sorry, unimplemented: called from here
+make[2]: *** [drivers/scsi/nsp32.o] Error 1
+
 
 <--  snip  -->
 
 
-The patch below moves enable_msgout_abort above the place where it is 
-called the first time and removes the bogus inline from the prototype of 
-set_xfer_rate (the function itself isn't marked as inline).
+The patch below removes the inlines from nsp32_prom_{get,set}.
 
-An alternative approach would be to remove the inline from 
-enable_msgout_abort.
+An alternative approach would be to move the functions above the place  
+where they are called the first time.
 
 
 diffstat output:
- drivers/scsi/dc395x.c |   40 ++++++++++++++++++++--------------------
- 1 files changed, 20 insertions(+), 20 deletions(-)
+ drivers/scsi/nsp32.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
 
 Signed-off-by: Adrian Bunk <bunk@fs.tum.de>
 
---- linux-2.6.8-rc1-mm1-full-3.4/drivers/scsi/dc395x.c.old	2004-07-16 00:19:23.000000000 +0200
-+++ linux-2.6.8-rc1-mm1-full-3.4/drivers/scsi/dc395x.c	2004-07-16 00:21:32.000000000 +0200
-@@ -376,6 +376,8 @@
- static void reselect(struct AdapterCtlBlk *acb);
- static u8 start_scsi(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		struct ScsiReqBlk *srb);
-+static inline void enable_msgout_abort(struct AdapterCtlBlk *acb,
-+		struct ScsiReqBlk *srb);
- static void build_srb(struct scsi_cmnd *cmd, struct DeviceCtlBlk *dcb,
- 		struct ScsiReqBlk *srb);
- static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_code,
-@@ -384,13 +386,11 @@
- static void pci_unmap_srb(struct AdapterCtlBlk *acb, struct ScsiReqBlk *srb);
- static void pci_unmap_srb_sense(struct AdapterCtlBlk *acb,
- 		struct ScsiReqBlk *srb);
--static inline void enable_msgout_abort(struct AdapterCtlBlk *acb,
--		struct ScsiReqBlk *srb);
- static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		struct ScsiReqBlk *srb);
- static void request_sense(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		struct ScsiReqBlk *srb);
--static inline void set_xfer_rate(struct AdapterCtlBlk *acb,
-+static void set_xfer_rate(struct AdapterCtlBlk *acb,
- 		struct DeviceCtlBlk *dcb);
- static void waiting_timeout(unsigned long ptr);
+--- linux-2.6.8-rc1-mm1-full-3.4/drivers/scsi/nsp32.c.old	2004-07-16 00:34:49.000000000 +0200
++++ linux-2.6.8-rc1-mm1-full-3.4/drivers/scsi/nsp32.c	2004-07-16 00:37:26.000000000 +0200
+@@ -267,8 +267,8 @@
+ static        int  nsp32_prom_read     (nsp32_hw_data *, int);
+ static        int  nsp32_prom_read_bit (nsp32_hw_data *);
+ static        void nsp32_prom_write_bit(nsp32_hw_data *, int);
+-static inline void nsp32_prom_set      (nsp32_hw_data *, int, int);
+-static inline int  nsp32_prom_get      (nsp32_hw_data *, int);
++static        void nsp32_prom_set      (nsp32_hw_data *, int, int);
++static        int  nsp32_prom_get      (nsp32_hw_data *, int);
  
-@@ -1676,6 +1676,23 @@
+ /* debug/warning/info message */
+ static void nsp32_message (const char *, int, char *, char *, ...);
+@@ -3387,7 +3387,7 @@
+ 	return val;
  }
  
- 
-+#define DC395x_ENABLE_MSGOUT \
-+ DC395x_write16 (acb, TRM_S1040_SCSI_CONTROL, DO_SETATN); \
-+ srb->state |= SRB_MSGOUT
-+
-+
-+/* abort command */
-+static inline void enable_msgout_abort(struct AdapterCtlBlk *acb,
-+		struct ScsiReqBlk *srb)
-+{
-+	srb->msgout_buf[0] = ABORT;
-+	srb->msg_count = 1;
-+	DC395x_ENABLE_MSGOUT;
-+	srb->state &= ~SRB_MSGIN;
-+	srb->state |= SRB_MSGOUT;
-+}
-+
-+
- /**
-  * dc395x_handle_interrupt - Handle an interrupt that has been confirmed to
-  *                           have been triggered for this card.
-@@ -2583,11 +2600,6 @@
- 	return 1;
- }
- 
--#define DC395x_ENABLE_MSGOUT \
-- DC395x_write16 (acb, TRM_S1040_SCSI_CONTROL, DO_SETATN); \
-- srb->state |= SRB_MSGOUT
--
--
- /* reject_msg */
- static inline void msgin_reject(struct AdapterCtlBlk *acb,
- 		struct ScsiReqBlk *srb)
-@@ -2603,18 +2615,6 @@
- }
- 
- 
--/* abort command */
--static inline void enable_msgout_abort(struct AdapterCtlBlk *acb,
--		struct ScsiReqBlk *srb)
--{
--	srb->msgout_buf[0] = ABORT;
--	srb->msg_count = 1;
--	DC395x_ENABLE_MSGOUT;
--	srb->state &= ~SRB_MSGIN;
--	srb->state |= SRB_MSGOUT;
--}
--
--
- static struct ScsiReqBlk *msgin_qtag(struct AdapterCtlBlk *acb,
- 		struct DeviceCtlBlk *dcb, u8 tag)
+-static inline void nsp32_prom_set(nsp32_hw_data *data, int bit, int val)
++static void nsp32_prom_set(nsp32_hw_data *data, int bit, int val)
  {
+ 	int base = data->BaseAddress;
+ 	int tmp;
+@@ -3405,7 +3405,7 @@
+ 	udelay(10);
+ }
+ 
+-static inline int nsp32_prom_get(nsp32_hw_data *data, int bit)
++static int nsp32_prom_get(nsp32_hw_data *data, int bit)
+ {
+ 	int base = data->BaseAddress;
+ 	int tmp, ret;
 
