@@ -1,36 +1,62 @@
-From: "Ionut Nistor" <ionut@modulo.ro>
-Subject: Support for lun > 7 on HP's XP128 storage
-Date: Wed, 18 Jun 2003 09:16:09 +0300
+From: Willem Riede <wrlk@riede.org>
+Subject: Re: [PATCH] driver model for scsi upper drivers, take 2
+Date: Wed, 18 Jun 2003 05:04:25 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <004a01c33561$1c3cc3b0$6e51960a@EEL>
+Message-ID: <20030618090425.GU998@linnie.riede.org>
+References: <20030527073218.GA11467@lst.de> <20030527094310.GA12853@lst.de>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.wsp.ro ([193.231.199.126]:3005 "EHLO www.wsp.ro")
-	by vger.kernel.org with ESMTP id S265080AbTFRGCO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Jun 2003 02:02:14 -0400
-Received: from EEL (mta1.xnet.ro [217.10.192.225])
-	(authenticated (0 bits))
-	by www.wsp.ro (8.12.4/8.11.6) with ESMTP id h5I6G9fV016983
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jun 2003 09:16:09 +0300
+Received: from smtp-out.comcast.net ([24.153.64.109]:1145 "EHLO
+	smtp-out.comcast.net") by vger.kernel.org with ESMTP
+	id S265115AbTFRIuP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Jun 2003 04:50:15 -0400
+Received: from linnie.riede.org
+ (pcp04239971pcs.eatntn01.nj.comcast.net [68.39.173.54])
+ by mtaout05.icomcast.net
+ (iPlanet Messaging Server 5.2 HotFix 1.16 (built May 14 2003))
+ with ESMTP id <0HGO00B6I6E9HT@mtaout05.icomcast.net> for
+ linux-scsi@vger.kernel.org; Wed, 18 Jun 2003 05:01:21 -0400 (EDT)
+In-reply-to: <"from hch"@lst.de>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hello,
+On 2003.05.27 05:43, Christoph Hellwig wrote:
+> On Tue, May 27, 2003 at 09:32:18AM +0200, Christoph Hellwig wrote:
+> >  - removed the tape sysfs pseudodevice crap that caused hangs
+> >  - switched sg to a class_interface.  This means sg can be used
+> >    on devices already claimed be an upper driver again.  This
+> >    also means I had to remove the sg sysfs attributes temporarily
+> >    because the old mechanism is gone, but I'll restore them
+> >    differently in a followon patch.
+> 
+> Yikes, this was the old patch again.  Here's the right one:
+> 
 
-I am running a 2.4.18-ac3 kernel on a ia32 system.
-This system is connected to a SAN via an Emulex LP8000 HBA. The storage is
-HP's XP128. The controller on the storage reports scsi version 2 however,
-luns with ID > 7 are also supported. When the HBA driver is loaded, no LUNs
-are detected but if "scsi add-single-device" is used later, the luns are
-visible.
+> --- 1.24/drivers/scsi/ide-scsi.c	Thu May 15 04:55:52 2003
+> +++ edited/drivers/scsi/ide-scsi.c	Mon May 26 10:12:22 2003
+> @@ -771,6 +771,10 @@
+>  static inline int should_transform(ide_drive_t *drive, Scsi_Cmnd *cmd)
+>  {
+>  	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
+> +
+> +	/* this was a layering violation and we can't support it
+> +	   anymore, sorry. */
+> +#if 0
+>  	struct gendisk *disk = cmd->request->rq_disk;
+>  
+>  	if (disk) {
+> @@ -778,6 +782,7 @@
+>  		if (strcmp((*p)->scsi_driverfs_driver.name, "sg") == 0)
+>  			return test_bit(IDESCSI_SG_TRANSFORM, &scsi->transform);
+>  	}
+> +#endif
 
-Maybe it should be added to the kernel with BLIST_LARGELUN - correct me if I
-am wrong.
+You removed whatever capability was provided by IDESCSI_SG_TRANSFORM.
+Just curious, what did that do? And, does that capability need to be
+replaced, and if so, any suggestions how to do so?
 
-Thanks,
-Ionut
-
+Thanks, Willem Riede.
