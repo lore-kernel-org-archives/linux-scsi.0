@@ -1,67 +1,66 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: sg_scan -i /dev/sg[0123] /dev/hd[abcd] /dev/scd[0123]
-Date: Mon, 08 Dec 2003 18:11:21 +1000
+From: "N.C.Krishna Murthy" <krmurthy@cisco.com>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Mon, 8 Dec 2003 20:36:41 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FD43229.7070708@torque.net>
-References: <1070670440.3056.7.camel@patibmrh9>
-Reply-To: dougg@torque.net
+Message-ID: <200312082036.41027.krmurthy@cisco.com>
+References: <200310231734.10263.krmurthy@cisco.com> <200312041800.55663.krmurthy@cisco.com> <1070594036.1603.34.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:28939 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S264584AbTLHILo
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Dec 2003 03:11:44 -0500
-In-Reply-To: <1070670440.3056.7.camel@patibmrh9>
+Received: from sj-iport-2-in.cisco.com ([171.71.176.71]:54847 "EHLO
+	sj-iport-2.cisco.com") by vger.kernel.org with ESMTP
+	id S265396AbTLHPIZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Dec 2003 10:08:25 -0500
+In-Reply-To: <1070594036.1603.34.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, davmyers@cisco.com
 
-Pat LaVarre wrote:
-> Doug G:
-> 
-> In lk 2.6 I wish sg_scan accepted a list of args e.g.
-> 
-> $ lsmod | grep sg
-> $
-> $ sudo sg_scan -i /dev/sg[0123] /dev/hd[abcd] /dev/scd[0123]
-> /dev/hdd: scsi0 channel=0 id=0 lun=0 [em]  type=5
->     Iomega    RRD               05.A [wide=0 sync=0 cmdq=0 sftre=0 pq=0x0]
-> /dev/scd0: scsi0 channel=0 id=0 lun=0 [em]  type=5
->     Iomega    RRD               05.U [wide=0 sync=0 cmdq=0 sftre=0 pq=0x0]
-> $
-> $ lsmod | grep sg
-> $ 
-> 
-> Tell me you will accept such a patch, and I might not be too lazy to write it.
+Hi,
+	We agree to using the wrapper when we are notified about 
+"reported lun data change". 
 
-Pat,
-Have a look at the sg3_utils-1.06.tgz beta on www.torque.net/sg
+	However when a session is initially established to an iSCSI target,
+luns on the target need to be configured. As mentioned in one of my previous
+mails , we need to use scsi_scan_host_selected(). 
+Will the function be exported in the next release of 2.6 or do I need to 
+generate a patch for the same?
 
-Maybe sg_scan should renamed sam_scan (sadly apart from INQUIRYs
-on st and osst devices).
+Please let us know.
 
-> P.S. I presume already you are aware of the gcc -Wall warning:
-> 
-> $ cd sg3_utils-1.06/
-> $ make
-> gcc -g -O2 -Wall -W -D_REENTRANT -D_LARGEFILE64_SOURCE
-> -D_FILE_OFFSET_BITS=64
-> -c -o sg_dd.o sg_dd.c
-> sg_dd.c: In function `siginfo_handler':
-> sg_dd.c:138: warning: unused parameter `sig'
-> ...
-
-Yes, but adding the '-W' flagging has several beneficial
-effects (to counterbalance this annoying warning which
-C++ but not C addresses).
-
-
-BTW The sginfo in that beta decodes mode pages for disks,
-tapes, cd/dvds and enclosures (plus SPI-4, FCP and SAS on
-the transport side).
-
-Doug Gilbert
-
-
+Thanx
+N.C.Krishna Murthy
+	
+On Friday 05 Dec 2003 9:03 pm, James Bottomley wrote:
+> On Thu, 2003-12-04 at 07:30, N.C.Krishna Murthy wrote:
+> > Having user level utility trigger the rescan thru sysfs interfaces will
+> > call scsi_scan() which will inturn call scsi_scan_host_selected().
+> > Instead wouldn't it be preferable to call scsi_scan_host_selected()
+> > from the iSCSI driver itself?
+>
+> Well, consider all the ramifications: what happens if the
+> reconfiguration is deleting an existing LUN with a mounted filesystem?
+> What happens if the user wants to do something with the new LUN as soon
+> as it appears (like fold it into a VM volume, or format it).  The
+> hotplug system is designed to propagate events that others might be
+> interested in, which it strikes me this is.  So, if you have to trigger
+> a hotplug event anyway, you may as well go the whole hog and do the
+> reconfiguration as part of the hotplug subsystem.
+>
+> > > We could do with a generic infrastructure within SCSI for generating
+> > > these events, anyway, if you want to go that route...
+> >
+> > I am not much familiar with SCSI hotplug.
+> >
+> > If the generic infrastructure which you mentioned does not exist now and
+> > in case there is a plan to do one such thing is there any framework for
+> > that? Wouldn't that require a kernel API which is capable of both
+> > "adding new luns" and "deleting luns which no longer exist"?
+>
+> Well, a hotplug event feeds certain information into the environment
+> when it triggers the call.  All we really need is a wrapper in SCSI to
+> add the SCSI information to the environment and trigger the event in a
+> generic fashion.
+>
+> James
