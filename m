@@ -1,91 +1,119 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] scsi/hosts.c device_register fix
-Date: Fri, 29 Nov 2002 09:53:28 +1100
+Subject: redundant slave_alloc() slave_destroy() calls
+Date: Fri, 29 Nov 2002 19:04:06 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DE69E68.7070304@torque.net>
-References: <200211281657.gASGve102802@localhost.localdomain>
+Message-ID: <3DE71F76.8040502@torque.net>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------090009020605010109080903"
+ boundary="------------070805010604050908070805"
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from torque.net (dm1-33.triode.net.au [202.147.125.33])
+	by iggy.triode.net.au (8.11.6/8.11.6) with ESMTP id gAT8DxU23849
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Nov 2002 19:14:00 +1100
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Andries.Brouwer@cwi.nl, torvalds@transmeta.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------090009020605010109080903
+--------------070805010604050908070805
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 
-James Bottomley wrote:
-> Actually, the patch is wrong.  It will wreak havoc with SCSI's use of sysfs.  
-> The device_register has to be done in scsi_add_host, which is called after all 
-> the driver specific sysfs setup has been done.  The correct fix is to move the 
-> corresponding device_unregister into scsi_remove_host so that they match.
-> 
-> I've attached it below.  I'll also commit it to the scsi-misc-2.5 BK tree.
-> 
-> James
-> 
-> 
-> 
-> ------------------------------------------------------------------------
-> 
-> ===== hosts.c 1.31 vs edited =====
-> --- 1.31/drivers/scsi/hosts.c	Sun Nov 17 15:47:02 2002
-> +++ edited/hosts.c	Sat Nov 23 17:25:57 2002
-> @@ -295,6 +295,8 @@
->  		kfree(sdev);
->  	}
->  
-> +	device_unregister(&shost->host_driverfs_dev);
-> +
->  	return 0;
->  }
->  
-> @@ -348,7 +350,6 @@
->  
->  	/* Cleanup proc and driverfs */
->  	scsi_proc_host_rm(shost);
-> -	device_unregister(&shost->host_driverfs_dev);
->  
->  	kfree(shost);
->  }
+Attached is a scsi_debug driver view of a module load
+when 2 scsi devices are simulated in lk 2.5.50.
+The scsi_debug trace is slightly enhanced to show
+calls to slave_alloc(). Also the address of the
+passed scsi_device pointer is placed in brackets
+at the end of most lines.
 
-James,
-The above patch is a bit noisy when applied to lk 2.5.50 .
-Attached is the same patch (I hope) which applies cleanly.
+There are even more slave_alloc() slave_destroy()
+pairs than I expected. The first pair looks very
+strange (i.e. no INQUIRY is issued). The slave_
+alloc [_configure] [_destroy] sequencing looks
+sound, but it seems as though the scsi_scan logic
+is a little over-zealous in exercising it.
 
 Doug Gilbert
 
---------------090009020605010109080903
+--------------070805010604050908070805
 Content-Type: text/plain;
- name="dev_reg_2550.diff"
+ name="sdebug_log.txt"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="dev_reg_2550.diff"
+ filename="sdebug_log.txt"
 
---- linux/drivers/scsi/hosts.c	2002-11-29 09:27:35.000000000 +1100
-+++ linux/drivers/scsi/hosts.c2550jb	2002-11-29 09:45:28.000000000 +1100
-@@ -297,6 +297,8 @@
- 		scsi_free_sdev(list_entry(le, Scsi_Device, siblings));
- 	}
- 
-+	device_unregister(&shost->host_driverfs_dev);
-+
- 	return 0;
- }
- 
-@@ -348,7 +350,6 @@
- 
- 	/* Cleanup proc and driverfs */
- 	scsi_proc_host_rm(shost);
--	device_unregister(&shost->host_driverfs_dev);
- 
- 	kfree(shost);
- }
+scsi3 : scsi_debug, Version: 1.65 (20021119), num_devs=2, dev_size_mb=8, opts=0x1
+scsi_debug: slave_alloc <3 0 0 0> [db1dc400]
+scsi_debug: slave_destroy <3 0 0 0> [db1dc400]
+scsi_debug: slave_alloc <3 0 0 0> [db1dc400]
+scsi_debug: cmd 12 00 00 00 24 00  [db1dc400]
+scsi_debug: cmd 12 00 00 00 3a 00  [db1dc400]
+scsi_debug: slave_alloc <3 0 0 0> [db1dc000]
+  Vendor: Linux     Model: scsi_debug        Rev: 0004
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+scsi_debug: cmd 12 01 00 00 ff 00  [db1dc400]
+scsi_debug: cmd 12 01 83 00 ff 00  [db1dc400]
+scsi_debug: slave_destroy <3 0 0 0> [db1dc400]
+scsi_debug: slave_alloc <3 0 0 0> [db1dc400]
+scsi_debug: cmd a0 00 00 00 00 00 00 00 04 08 00 00  [db1dc400]
+scsi_debug: slave_destroy <3 0 0 1> [db1dc400]
+scsi_debug: slave_alloc <3 0 0 1> [db1dc400]
+scsi_debug: cmd 12 00 00 00 24 00  [db1dc400]
+scsi_debug: cmd 12 00 00 00 3a 00  [db1dc400]
+scsi_debug: slave_alloc <3 0 0 1> [db1d6c00]
+  Vendor: Linux     Model: scsi_debug        Rev: 0004
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+scsi_debug: cmd 12 01 00 00 ff 00  [db1dc400]
+scsi_debug: cmd 12 01 83 00 ff 00  [db1dc400]
+scsi_debug: slave_destroy <3 0 1 0> [db1dc400]
+scsi_debug: slave_alloc <3 0 1 0> [db1dc400]
+scsi_debug: cmd 12 00 00 00 24 00  [db1dc400]
+scsi_debug: ... <3 0 1 0> non-zero result=0x10000
+scsi_debug: slave_destroy <3 0 2 0> [db1dc400]
+scsi_debug: slave_alloc <3 0 2 0> [db1dc400]
+scsi_debug: cmd 12 00 00 00 24 00  [db1dc400]
+scsi_debug: ... <3 0 2 0> non-zero result=0x10000
+scsi_debug: slave_destroy <3 0 3 0> [db1dc400]
+scsi_debug: slave_alloc <3 0 3 0> [db1dc400]
+scsi_debug: cmd 12 00 00 00 24 00  [db1dc400]
+scsi_debug: ... <3 0 3 0> non-zero result=0x10000
+scsi_debug: slave_destroy <3 0 4 0> [db1dc400]
+scsi_debug: slave_alloc <3 0 4 0> [db1dc400]
+scsi_debug: cmd 12 00 00 00 24 00  [db1dc400]
+scsi_debug: ... <3 0 4 0> non-zero result=0x10000
+scsi_debug: slave_destroy <3 0 5 0> [db1dc400]
+scsi_debug: slave_alloc <3 0 5 0> [db1dc400]
+scsi_debug: cmd 12 00 00 00 24 00  [db1dc400]
+scsi_debug: ... <3 0 5 0> non-zero result=0x10000
+scsi_debug: slave_destroy <3 0 6 0> [db1dc400]
+scsi_debug: slave_alloc <3 0 6 0> [db1dc400]
+scsi_debug: cmd 12 00 00 00 24 00  [db1dc400]
+scsi_debug: ... <3 0 6 0> non-zero result=0x10000
+scsi_debug: slave_destroy <3 0 6 0> [db1dc400]
+scsi_debug: slave_configure <3 0 0 0> [db1dc000]
+scsi_debug: cmd 00 00 00 00 00 00  [db1dc000]
+scsi_debug: cmd 1a 08 08 00 80 00  [db1dc000]
+SCSI device sdb: drive cache: write back
+scsi_debug: cmd 25 00 00 00 00 00 00 00 00 00  [db1dc000]
+scsi_debug: ... <3 0 0 0> non-zero result=0x2
+scsi_debug: cmd 25 00 00 00 00 00 00 00 00 00  [db1dc000]
+SCSI device sdb: 16384 512-byte hdwr sectors (8 MB)
+ sdb:<6>scsi_debug: cmd 28 00 00 00 00 00 00 00 08 00  [db1dc000]
+ unknown partition table
+Attached scsi disk sdb at scsi3, channel 0, id 0, lun 0
+scsi_debug: slave_configure <3 0 0 1> [db1d6c00]
+scsi_debug: cmd 00 00 00 00 00 00  [db1d6c00]
+scsi_debug: cmd 1a 08 08 00 80 00  [db1d6c00]
+SCSI device sdc: drive cache: write back
+scsi_debug: cmd 25 00 00 00 00 00 00 00 00 00  [db1d6c00]
+scsi_debug: ... <3 0 0 1> non-zero result=0x2
+scsi_debug: cmd 25 00 00 00 00 00 00 00 00 00  [db1d6c00]
+SCSI device sdc: 16384 512-byte hdwr sectors (8 MB)
+ sdc:<6>scsi_debug: cmd 28 00 00 00 00 00 00 00 08 00  [db1d6c00]
+ unknown partition table
+Attached scsi disk sdc at scsi3, channel 0, id 0, lun 1
+scsi_debug: ... built 1 host(s)
 
---------------090009020605010109080903--
+--------------070805010604050908070805--
 
 
