@@ -1,76 +1,124 @@
-From: jd <jpd_hp_linux_scsi@yahoo.com>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Thu, 30 Oct 2003 05:34:49 -0800 (PST)
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH/RFT] check non-scsi part of status in scsi_status_is_good
+Date: Thu, 30 Oct 2003 10:11:17 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031030133449.70869.qmail@web60208.mail.yahoo.com>
-References: <3F9FF8C7.70909@us.ibm.com>
+Message-ID: <Pine.LNX.4.44L0.0310301004010.852-100000@ida.rowland.org>
+References: <20031029151627.A21549@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web60208.mail.yahoo.com ([216.109.118.103]:4794 "HELO
-	web60208.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S262461AbTJ3Nev (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Oct 2003 08:34:51 -0500
-In-Reply-To: <3F9FF8C7.70909@us.ibm.com>
+Received: from ida.rowland.org ([192.131.102.52]:4356 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S262583AbTJ3PLS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Oct 2003 10:11:18 -0500
+In-Reply-To: <20031029151627.A21549@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <mikenc@us.ibm.com>, 'Christoph Hellwig' <hch@infradead.org>
-Cc: "Surekha.PC" <surekhap@cisco.com>, linux-scsi@vger.kernel.org, davmyers@cisco.com, Richard Bealkowski <ennui@us.ibm.com>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Ronald Kuetemeier <ronald@kuetemeier.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@one-eyed-alien.net>, James Bottomley <James.Bottomley@steeleye.com>
 
+On Wed, 29 Oct 2003, Patrick Mansfield wrote:
 
---- Mike Christie <mikenc@us.ibm.com> wrote:
-> Hi Surekha,
+> Ugh. It is behaving worse than before. 
 > 
-> >>This is again needed for network boot. The n/w driver and iSCSI
-> driver
-> >>are loaded during early boot. Since the n/w interface is not setup
-> at
-> >>that time, we need to bring up the interface through this call in
-> iSCSI
-> >>driver.
-> > 
-> > 
-> > That's bogus.  Look at the ip autoconfig code used by rootnfs and
-> reuse
-> > that instead of creating such bogus hacks.  A driver has no
-> business dealing
-> > with the network configuration.
-> > 
+> The patch should be applied, since we are otherwise ignoring non scsi
+> errors in multiple places.
 > 
-> Your driver does not even need to mess with that code. Just modify
-> your 
-> usersapce tools in the linux-iscsi package that run in the initrd to
-> do 
-> this in userspace.
+> Before, we ignored the failed MODE SENSE and used whatever data was
+> returned, and later the TEST UNIT READY failed.
 > 
+> With the patch, the MODE SENSE page 3f len 4 fails, so we try a MODE SENSE
+> page 0 len 4 and it hangs. The error handling should complete and allow us
+> to continue (though it would probably just resend the failed command 4
+> more times, and you'd have to wait 150 seconds), and then try the MODE
+> SENSE page 3f len 255.
 > 
-> Mike
+> If the first MODE SENSE were 10 bytes your device would probably work OK,
+> but per comments in sd.c, we should not increase this. 
 > 
+> But, the 2.4 code used only a 255 byte MODE SENSE request.
+> 
+> Any suggestions?
+> 
+> If we can't workaround this by modifying the code (increasing the length,
+> or somehow workaround this in SCSI or USB code), we are back to black
+> listing or command filtering.
 
-  Hi Surekha,
+IMO, this is exactly the sort of thing that has been causing us so much 
+pain.  Some device doesn't accept the standard commands, dies when it gets 
+them, and will only work with some idiosyncratic combination of 
+parameters.
 
-  You can use a set of tools from "busybox" that 
-  includes a small statically linked "shell" and
-  dhcp client utility program(s) and create a initrd 
-  (ramdisk) that download via pxelinux.
+I can't think of any way to deal with this other than special-purpose 
+per-device code, the simplest of which is blacklisting.
 
-   The linuxrc script would then bring up the 
-   network something like :
+> Alan or USB gurus - is the following what we expect on a timeout?
+> 
+> > Oct 29 10:09:53 ronald kernel: usb-storage: Command MODE_SENSE_10 (10 bytes)
+> > Oct 29 10:09:53 ronald kernel: usb-storage:  5a 00 00 00 00 00 00 00 08 00
+> > Oct 29 10:09:53 ronald kernel: usb-storage: usb_stor_ctrl_transfer: rq=00 rqtype=21 value=0000 index=00 len=10
+> > Oct 29 10:09:53 ronald kernel: usb-storage: Status code 0; transferred 10/10
+> > Oct 29 10:09:53 ronald kernel: usb-storage: -- transfer complete
+> > Oct 29 10:09:53 ronald kernel: usb-storage: Call to usb_stor_ctrl_transfer() returned 0
+> > Oct 29 10:09:53 ronald kernel: usb-storage: usb_stor_bulk_transfer_buf: xfer 8 bytes
+> 
+> Looks like the scsi timeout kicks in here, since we waited 30 seconds.
+> 
+> > Oct 29 10:10:22 ronald kernel: usb-storage: command_abort called
+> > Oct 29 10:10:22 ronald kernel: usb-storage: usb_stor_stop_transport called
+> > Oct 29 10:10:22 ronald kernel: usb-storage: -- cancelling URB
+> > Oct 29 10:10:22 ronald kernel: usb-storage: Status code -104; transferred 0/8
+> > Oct 29 10:10:22 ronald kernel: usb-storage: -- transfer cancelled
+> > Oct 29 10:10:22 ronald kernel: usb-storage: CB data stage result is 0x4
+> > Oct 29 10:10:22 ronald kernel: usb-storage: -- command was aborted
+> > Oct 29 10:10:22 ronald kernel: usb-storage: scsi command aborted
+> > Oct 29 10:10:22 ronald kernel: usb-storage: *** thread sleeping.
 
-   insmod <your nic>
-   ifconfig up eth0 my_ip_addr
-   dhcpl  >  target_info   # query the server 
-   insmod iscsi_mod 
-   iscsi_conf   cat `target_info`  # user utility to start iscsi
+That is precisely what you see when a command times out and is aborted.
 
-  Ping me offline and I can share the 
-  diskless boot sequence I did with unh-iscsi
-  ramdisk if your interested.
+> > Oct 29 10:10:22 ronald kernel: usb-storage: queuecommand called
+> > Oct 29 10:10:22 ronald kernel: usb-storage: *** thread awakened.
+> 
+> And then I assume the scsi error handling:
 
-  
- John Donnelly  AATTTT   HH PP  dott COM 
+Just so.
 
+> > Oct 29 10:10:22 ronald kernel: usb-storage: Command TEST_UNIT_READY (6 bytes)
+> > Oct 29 10:10:22 ronald kernel: usb-storage:  00 00 00 00 00 00
+> > Oct 29 10:10:22 ronald kernel: usb-storage: usb_stor_ctrl_transfer: rq=00 rqtype=21 value=0000 index=00 len=6
+> > Oct 29 10:10:22 ronald kernel: usb-storage: Status code 0; transferred 6/6
+> > Oct 29 10:10:22 ronald kernel: usb-storage: -- transfer complete
+> > Oct 29 10:10:22 ronald kernel: usb-storage: Call to usb_stor_ctrl_transfer() returned 0
+> > Oct 29 10:10:22 ronald kernel: usb-storage: -- CB transport device requiring auto-sense
+> > Oct 29 10:10:22 ronald kernel: usb-storage: Issuing auto-REQUEST_SENSE
+> > Oct 29 10:10:22 ronald kernel: usb-storage: usb_stor_ctrl_transfer: rq=00 rqtype=21 value=0000 index=00 len=6
+> > Oct 29 10:10:22 ronald kernel: usb-storage: Status code 0; transferred 6/6
+> > Oct 29 10:10:22 ronald kernel: usb-storage: -- transfer complete
+> > Oct 29 10:10:22 ronald kernel: usb-storage: Call to usb_stor_ctrl_transfer() returned 0
+> > Oct 29 10:10:22 ronald kernel: usb-storage: usb_stor_bulk_transfer_buf: xfer 18 bytes
+> > Oct 29 10:10:32 ronald kernel: usb-storage: command_abort called
+> > Oct 29 10:10:32 ronald kernel: usb-storage: usb_stor_stop_transport called
+> > Oct 29 10:10:32 ronald kernel: usb-storage: -- cancelling URB
+> > Oct 29 10:10:32 ronald kernel: usb-storage: Status code -104; transferred 0/18
+> > Oct 29 10:10:32 ronald kernel: usb-storage: -- transfer cancelled
+> > Oct 29 10:10:32 ronald kernel: usb-storage: CB data stage result is 0x4
+> > Oct 29 10:10:32 ronald kernel: usb-storage: -- auto-sense aborted
+> > Oct 29 10:10:32 ronald kernel: usb-storage: scsi command aborted
+> > Oct 29 10:10:32 ronald kernel: usb-storage: *** thread sleeping.
 
-__________________________________
-Do you Yahoo!?
-Exclusive Video Premiere - Britney Spears
-http://launch.yahoo.com/promos/britneyspears/
+TEST-UNIT-READY timed out...
+
+> > Oct 29 10:10:32 ronald kernel: usb-storage: device_reset called
+> > Oct 29 10:10:32 ronald kernel: usb-storage: usb_stor_CB_reset called
+> > Oct 29 10:10:32 ronald kernel: usb-storage: usb_stor_control_msg: rq=00 rqtype=21 value=0000 index=00 len=12
+> > Oct 29 10:10:32 ronald kernel: usb-storage: Soft reset failed: -32
+> > Oct 29 10:10:32 ronald kernel: usb-storage: bus_reset called
+> 
+> It would be nice if it came back :-(
+
+Yes it would.  The USB bus_reset code is still not up to snuff and won't
+get there until after 2.6.0-final.  However that may not matter; I've seen
+USB devices that aren't revived even by a proper bus reset.  You actually
+have to disconnect them from the USB bus or powercycle them.
+
+Alan Stern
+
