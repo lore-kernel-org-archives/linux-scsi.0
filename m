@@ -1,85 +1,41 @@
-From: Marc-Christian Petersen <m.c.p@wolk-project.de>
-Subject: [PATCH 2.6.4-rc2] Reorder SCSI_GENERIC_NCR53C400 Kconfig entry
-Date: Sun, 7 Mar 2004 21:56:32 +0100
+From: "Moore, Eric Dean" <Emoore@lsil.com>
+Subject: [PATCH 2.6 ] MPT Fusion driver 3.01.00 update
+Date: Mon, 8 Mar 2004 10:02:49 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200403072156.32564@WOLK>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57040DA96B@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_Ay4SA+kMUjGGILL"
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lindsey.linux-systeme.com ([62.241.33.80]:49926 "EHLO
-	mx00.linux-systeme.com") by vger.kernel.org with ESMTP
-	id S262341AbUCGV5J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 7 Mar 2004 16:57:09 -0500
-Received: from p5087d162.dip.t-dialin.net (p5087D162.dip.t-dialin.net [80.135.209.98])
-	(authenticated bits=0)
-	by mx00.linux-systeme.com (8.12.11/8.12.11/Debian-3) with ESMTP id i27Lv1oB024436
-	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Sun, 7 Mar 2004 22:57:06 +0100
-Content-Disposition: inline
+Received: from mail0.lsil.com ([147.145.40.20]:51378 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S262499AbUCHPC4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Mar 2004 10:02:56 -0500
+Received: from new-mhbs.co.lsil.com (mhbs.lsil.com [172.21.20.49])
+	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id i28ExK6T022630
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Mar 2004 06:59:20 -0800 (PST)
+Received: from EXA-ATLANTA.se.lsil.com (atl1.se.lsil.com [147.145.16.4])
+	by new-mhbs.co.lsil.com (8.12.11/8.12.10) with ESMTP id i28F2qfw029611
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Mar 2004 08:02:52 -0700
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
+This is a major driver update for the MPT Fusion drivers 2.6 kernel.
+This driver is a forward port of enhancements/bugs fixs from
+the 2.4 kernel, spaning 2.05.00 to 2.05.13 driver versions.
+Here is release notes for each of those versions.
+ftp://ftp.lsil.com/HostAdapterDrivers/linux/FiberChannel/2.6-patches/3.01.00
+/release.txt
 
---Boundary-00=_Ay4SA+kMUjGGILL
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+This patch is 300KB, so please go to this link to 
+download full source as well as the patches at:
+ftp://ftp.lsil.com/HostAdapterDrivers/linux/FiberChannel/2.6-patches/3.01.00
 
-Hi there,
 
-SCSI_GENERIC_NCR53C400 should be under SCSI_GENERIC_NCR5380 in 
-drivers/scsi/Kconfig
-
-ciao, Marc
-
---Boundary-00=_Ay4SA+kMUjGGILL
-Content-Type: text/x-diff;
-  charset="iso-8859-15";
-  name="Kconfig-cleanup-scsi-wrong-order.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="Kconfig-cleanup-scsi-wrong-order.patch"
-
---- old/drivers/scsi/Kconfig	2004-03-07 15:53:35.000000000 +0100
-+++ new/drivers/scsi/Kconfig	2004-03-07 16:01:24.000000000 +0100
-@@ -643,6 +643,17 @@ config SCSI_GENERIC_NCR5380
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called g_NCR5380.
- 
-+config SCSI_GENERIC_NCR53C400
-+	bool "Enable NCR53c400 extensions"
-+	depends on SCSI_GENERIC_NCR5380
-+	help
-+	  This enables certain optimizations for the NCR53c400 SCSI cards.
-+	  You might as well try it out.  Note that this driver will only probe
-+	  for the Trantor T130B in its default configuration; you might have
-+	  to pass a command line option to the kernel at boot time if it does
-+	  not detect your card.  See the file
-+	  <file:Documentation/scsi/g_NCR5380.txt> for details.
-+
- config SCSI_GENERIC_NCR5380_MMIO
- 	tristate "Generic NCR5380/53c400 SCSI MMIO support"
- 	depends on ISA && SCSI
-@@ -657,17 +668,6 @@ config SCSI_GENERIC_NCR5380_MMIO
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called g_NCR5380_mmio.
- 
--config SCSI_GENERIC_NCR53C400
--	bool "Enable NCR53c400 extensions"
--	depends on SCSI_GENERIC_NCR5380
--	help
--	  This enables certain optimizations for the NCR53c400 SCSI cards.
--	  You might as well try it out.  Note that this driver will only probe
--	  for the Trantor T130B in its default configuration; you might have
--	  to pass a command line option to the kernel at boot time if it does
--	  not detect your card.  See the file
--	  <file:Documentation/scsi/g_NCR5380.txt> for details.
--
- config SCSI_IBMMCA
- 	tristate "IBMMCA SCSI support"
- 	depends on MCA && SCSI
-
---Boundary-00=_Ay4SA+kMUjGGILL--
-
+Eric Moore
+Staff Engineer
+Standard Storage Products Division
+LSI Logic Corporation
+4420 Arrowswest Drive
+Colorado Springs, CO 80907
+Email: emoore@lsil.com
+Web: http://www.lsilogic.com/
