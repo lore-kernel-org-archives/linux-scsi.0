@@ -1,64 +1,39 @@
-From: Brian King <brking@charter.net>
-Subject: [PATCH] Add AMI Megaraid card to new driver (resend)
-Date: Thu, 06 Jan 2005 22:37:21 -0600
-Message-ID: <41DE1201.5000509@charter.net>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: SCSI aic7xxx driver: Initialization Failure over a kdump reboot
+Date: Fri, 7 Jan 2005 04:38:32 +0000
+Message-ID: <20050107043832.GR27371@parcelfarce.linux.theplanet.co.uk>
+References: <1105014959.2688.296.camel@2fwv946.in.ibm.com> <1105013524.4468.3.camel@laptopd505.fenrus.org> <20050106195043.4b77c63e.akpm@osdl.org> <41DE15C7.6030102@nit.ca>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090203080206040309010904"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mxsf11.cluster1.charter.net ([209.225.28.211]:15561 "EHLO
-	mxsf11.cluster1.charter.net") by vger.kernel.org with ESMTP
-	id S261234AbVAGEhY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Jan 2005 23:37:24 -0500
-Received: from mxip07.cluster1.charter.net (mxip07a.cluster1.charter.net [209.225.28.137])
-	by mxsf11.cluster1.charter.net (8.12.11/8.12.11) with ESMTP id j074bNsT032405
-	for <linux-scsi@vger.kernel.org>; Thu, 6 Jan 2005 23:37:23 -0500
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:23702 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261240AbVAGEie
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Jan 2005 23:38:34 -0500
+Content-Disposition: inline
+In-Reply-To: <41DE15C7.6030102@nit.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Atul.Mukker@lsil.com
-Cc: linux-scsi@vger.kernel.org
+To: Lukasz Kosewski <lkosewsk@nit.ca>
+Cc: Andrew Morton <akpm@osdl.org>, Arjan van de Ven <arjan@infradead.org>, vgoyal@in.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------090203080206040309010904
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Thu, Jan 06, 2005 at 11:53:27PM -0500, Lukasz Kosewski wrote:
+> I have an idea of something I might do for 2.6.11, but I doubt anyone
+> will actually agree with it.  Say we keep a counter of how many times
+> interrupt x has been fired off since the last timer interrupt
+> (obviously, a timer interrupt resets the counter).  Then we can pick an
+> arbitrary threshold for masking out this interrupt until another device
+> actually pines for it.
+> 
+> Or something.  The point is, we need a general solution to the problem,
+> not poking about in every single driver trying to tie it down.
 
+Something like note_interrupt() in kernel/irq/spurious.c?
 
---------------090203080206040309010904
-Content-Type: text/x-patch;
- name="megaraid_ami_perc3dc.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="megaraid_ami_perc3dc.patch"
-
-
-Adds AMI Megaraid Elite 1600 to the list of supported
-adapters. I encountered some issues running with the old
-megaraid driver with this card, so I wrote this patch and
-have been running without problems for several days now.
-Please apply.
-
-
----
-
-
-diff -puN drivers/scsi/megaraid/megaraid_mbox.c~megaraid_ami_perc3dc drivers/scsi/megaraid/megaraid_mbox.c
---- linux-2.6.10-bk9/drivers/scsi/megaraid/megaraid_mbox.c~megaraid_ami_perc3dc	2005-01-06 22:32:29.003600750 -0600
-+++ linux-2.6.10-bk9-brking/drivers/scsi/megaraid/megaraid_mbox.c	2005-01-06 22:32:29.008599617 -0600
-@@ -301,6 +301,12 @@ static struct pci_device_id pci_id_table
- 		PCI_SUBSYS_ID_PERC3_SC,
- 	},
- 	{
-+		PCI_VENDOR_ID_AMI,
-+		PCI_DEVICE_ID_AMI_MEGARAID3,
-+		PCI_VENDOR_ID_AMI,
-+		PCI_SUBSYS_ID_PERC3_DC,
-+	},
-+	{
- 		PCI_VENDOR_ID_LSI_LOGIC,
- 		PCI_DEVICE_ID_MEGARAID_SCSI_320_0,
- 		PCI_VENDOR_ID_LSI_LOGIC,
-
-_
-
---------------090203080206040309010904--
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
