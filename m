@@ -1,31 +1,32 @@
-From: mikem <mikem@beardog.cca.cpqcorp.net>
-Subject: clustering and 2.6
-Date: Tue, 7 Sep 2004 11:12:54 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040907161254.GA23325@beardog.cca.cpqcorp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S268170AbUIGQQq@vger.kernel.org>
-Content-Disposition: inline
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, axboe@suse.de
+From: "Marg" <supportpaperback@cooldictionary.com>
+Subject: new soft
+Date: Tue, 07 Sep 2004 18:18:17 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <hqghumeayl.6189279543lfdxfircvs@Margxggbwkf.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 174.Red-81-38-59.pooles.rima-tde.net ([81.38.59.174]:47376 "HELO
+	linux-scsi-digest") by vger.kernel.org with SMTP id S268191AbUIGQSI
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Sep 2004 12:18:08 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi-digest@vger.kernel.org, linux-scsi@vger.kernel.org
 
-All,
-I'm having some issues when trying to use some clustering software when
-running any 2.6.x kernel.
-Basically, there are 2 nodes connected to 1 storage storage enclosure.
-When node 1 comes up it reserves the volume(s) in the enclosure. When
-node 2 comes up the read capacity fails as expected because of the 
-SCSI reservation. However, if node 1 fails node 2 breaks the reservation,
-but cannot register the disk. At this time we're assuming it's because the read
-capacity failed and the size of the disk is zero blocks.
+New QEM software http://www.allsoftbest.info/
+System Works 2004 Professional - 40 fasteners
+System Works 2004 Professional - 40 tormenter
+System Works 2004 Professional - 40 arcaded
+System Works 2004 Professional - 40 parsed
+System Works 2004 Professional - 40 mutation
+System Works 2004 Professional - 40 McMullen
+System Works 2004 Professional - 40 uttering
+System Works 2004 Professional - 40 stylistic
+System Works 2004 Professional - 40 condone
+System Works 2004 Professional - 40 Potts
+System Works 2004 Professional - 40 Euphrates
+System Works 2004 Professional - 40 vouchers
+System Works 2004 Professional - 40 Claus
+http://www.allsoftbest.info/
 
-The SCSI mid-layer sets a bogus size on a device when read capacity fails.
-Is this the preferred way to get around this issue? Seems like there
-should be a better way.
 
-Any input is greatly appreciated.
-
-Thanks,
-mikem
