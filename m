@@ -1,290 +1,178 @@
-From: Russell King <rmk@arm.linux.org.uk>
-Subject: 2.4.19 SCSI error handing, door locking, etc
-Date: Thu, 26 Sep 2002 01:23:57 +0100
+From: Mathieu Chouquet-Stringer <mathieu@newview.com>
+Subject: Warning - running *really* short on DMA buffers while doing file transfers
+Date: Wed, 25 Sep 2002 23:27:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020926012357.B8733@flint.arm.linux.org.uk>
+Message-ID: <20020925232736.A19209@shookay.newview.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from flint.arm.linux.org.uk ([3ffe:8260:2002:1:201:2ff:fe14:8fad])
-	by caramon.arm.linux.org.uk with asmtp (TLSv1:DES-CBC3-SHA:168)
-	(Exim 4.04)
-	id 17uMRi-0006Rh-00
-	for linux-scsi@vger.kernel.org; Thu, 26 Sep 2002 01:23:58 +0100
-Received: from rmk by flint.arm.linux.org.uk with local (Exim 4.04)
-	id 17uMRh-0006iT-00
-	for linux-scsi@vger.kernel.org; Thu, 26 Sep 2002 01:23:57 +0100
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-Ok, I've uploaded the patches below to:
-
-	ftp://ftp.linux.org.uk/pub/linux/rmk/scsi
-	http://ftp.linux.org.uk/pub/linux/rmk/scsi
-
-You'll find all the patches there, plus a tarball of all patches
-and the text below (the README is a copy of the text below.)
-
-Things outstanding:
-
-- scsi-cmd-retry - brings in scsi_setup_cmd_retry without a
-  prototype; expect some compiler warnings for now.
-
-- scsi-door-lock - sd/st/sr (etc) door-locking callers don't
-  themselves check the return value.  Problem noticed by
-  Patrick Mansfield.
-
-- scsi-unjam-clean - has only been _compile_ tested.  It is
-  the result of a merge of my new error handling code.
-
-Unfortunately, the earliest I'll be able to address anything arising
-from this will be Saturday, I've got to context-switch onto other
-stuff for the next couple of days.  This means the earliest I
-can provide answers to feedback received is Saturday.
-
-Thanks to Doug Ledford, James Bottomley, Patrick Mansfield and
-Mike Anderson for comments thus far.
-
-
-SCSI subsystem patches
-----------------------
-
-This is a set of patches created to make the SCSI error handling
-more robust.  I have experienced a number of deadlocks and bad
-behaviour by the SCSI subsystem in the presence of errors, such
-as:
-
-- locking device doors on devices that aren't in use.
-- deadlocking trying to lock device doors
-- deadlocking during scanning for devices with a faulty device
-  (fault caused by test code in the HBA)
-
-The filenames indicate the patch series, and other requirements.
-The format of these names is:
-
-	nn-desc-number.diff
-
-nn	This is the series number, and series are expected to be
-	applied in order.  Applying out of order may produce
-	patch rejects that need to be fixed by hand, or fuzz.
-
-desc	Brief description of what the patch does
-
-number	Sub-series number, specifies the order the patches must
-	be applied in.  If a series has 8 patches, and you want
-	number 4, you need to apply patches 1 to 4 and you can
-	ignore 5 to 8.
-
-01-scsi-cmd-retry-1.diff
-
-	Provide scsi_setup_cmd_retry function to setup a Scsi_Cmnd
-	structure for a retry of the command.  Make the four places
-	that re-setup the command for a retry use scsi_setup_cmd_retry
-
-01-scsi-cmd-retry-2.diff
-
-	Move the NEEDS_RETRY mechanism out of scsi_send_eh_cmnd
-	into the caller of that function.  This corrects a
-	serious error handling bug where we retry a command
-	without re-initialising the Scsi_Cmnd structure.
-
-01-scsi-cmd-retry-3.diff
-
-	Bound the number of retries in the error handler.  Infinite
-	command retries lock the host.  It is far better that we
-	try to free up the host.  Problem noticed by Doug Ledford.
-	Basic idea for solution from Mike Anderson.
-
-02-scsi-cmd-report.diff
-
-	When reporting scsi errors to the user, tell the user about
-	the ultimate command we were trying to perform, not the
-	current command which may be an error handing/driver invoked
-	request sense command.
-
-03-scsi-restart-ops.diff
-
-	Don't stop kicking device queues because one device is
-	blocked. This test is actually redundant; we check for a
-	blocked device in scsi_request_fn() and exit virtually
-	immediately.  We therefore just call the function and let
-	it deal with the issues in one place.
-
-04-scsi-door-lock-1.diff
-
-	Introduce a new per-device flag - "locked".  When this flag
-	is set, it means that user space wanted the door locked, and
-	we have successfully locked it.  When clear, it means something
-	user space wanted the door unlocked, and we have successfully
-	unlocked it.
-
-	Introduce "scsi_set_medium_removal()".  This handles all door
-	locking and unlocking requests that essentially originate from
-	user space. ie, when a device is opened or closed, or an ioctl
-	is received.  This function takes care of issuing the
-	ALLOW_MEDIUM_REMOVAL command via the ioctl layers.
-
-	This function isn't really anything new; its existing code
-	moved into a function.  It also removes code duplication.
-
-	The new bit is what it does after the command has completed.
-	If the command was successful, we update the device "locked"
-	flag to indicate the new state.
-
-	Rather than indirecting via scsi_ioctl() from the various
-	drivers, we now call scsi_set_medium_removal direct
-
-04-scsi-door-lock-2.diff
-
-	The "new" error handling code.  Just before we attempt to
-	restart operations on a host in scsi_restart_operations(), we
-	loop through all devices on the host.  At this point, we don't
-	have much idea which devices received a reset.
-
-	Any device that is online (something the old code never checked
-	for) and was locked, we try to re-lock the door.  Note how we
-	handle this.  We create a request structure, and fill in all
-	the relevant values, and insert this request at the _head_ of
-	the queue.
-
-	The requests done function merely frees the command.  If the
-	command fails, we can't really do much to recover from it.
-	We could retry, but the generic SCSI command handling will
-	have done that for us already.
-
-	The "old" code.  Yes, suggestion: read the comment.  Since we
-	have the "new" error handling code in place, we must not to
-	lock the door while processing requests.  If we do, we'll
-	certainly deadlock.
-
-	However, we do take note of the currently requested lock state,
-	and only ask for the door to be locked if it was previously
-	locked.
-
-05-scsi-unjam-clean-1.diff
-
-	Carve up the huge scsi_unjam_host() function into a number of
-	functions that perform one and only one action.  Although
-	we keep scsi_unjam_host(), it now iterates through an array
-	of functions, which have the "knowledge" about unjamming a
-	host.
-
-	There are no functional changes in this patch.
-
-05-scsi-unjam-clean-2.diff
-
-	New function - scsi_eh_find_failed_command().  This finds the
-	first failed command on a device.  Unfortunately, we need a
-	Scsi_Cmnd structure to call the various HBA reset functions
-	with, rather than a Scsi_Device/Scsi_Host+channel/Scsi_Host for
-	bus_device_reset/bus_reset/host_reset respectively.
-
-	However, in this patch there is only one user, the BDR code.
-
-	There are no functional changes in this patch.
-
-05-scsi-unjam-clean-3.diff
-
-	There is a fair amount of duplication across all the reset
-	handlers; after performing any type of reset, they send a test
-	unit ready command, and if that succeeds, they retry the original
-	command.
-
-	This patch factors that functionality out into a new function -
-	scsi_eh_test_and_retry().
-
-	There are no functional changes in this patch.
-
-05-scsi-unjam-clean-4.diff
-
-	In a similar way, we factor out the code which takes devices off
-	line; this ends up in scsi_eh_set_device_offline().
-
-	Once we have taken a device off line, there is no point looking
-	at any other commands on this device, since we've declared it
-	dead.  We therefore finish all commands with the appropriate
-	status.
-
-	Note: this does mean that we guarantee that we won't call any
-	reset handlers more than once for each device that has failed.
-
-05-scsi-unjam-clean-5.diff
-
-	Factor out code that loops through all commands on a device
-	trying to restart failed or timed out commands.
-
-	This allows us to fix an outstanding fixme in the bus device
-	reset code:
-
-		FIXME(eric) - make sure we handle the case
-		where multiple commands to the same device
-		have failed. They all must get properly
-		restarted.
-
-	Note: We also only attempt no more than one bus reset per device
-	(we don't yet have the concept of a bus), and one host reset per
-	host.
-
-05-scsi-unjam-clean-6.diff
-
-	This is probably the most yuckiest and difficult patch to read
-	of the whole set.  This gives us a per-channel basis for
-	performing bus resets.
-        
-	This also kills off the unnecessary loops within loops within
-	loops within loops.  James Bottomley assures me that for any
-	Scsi_Cmnd, it will be found in SCpnt->device->device_queue.
-
-	The final point also applies to the host reset code.
-
-05-scsi-unjam-clean-7.diff
-
-	At last, we get to the patch that really makes the difference for
-	me.  There are two distinct changes.
-
-	Firstly, rather than taking a device off line because it reports
-	that it is not ready shortly after a reset, we give it a total
-	of 3 retries 5 seconds apart to report ready.  My tape drive
-	regularly fails the original code here while its re-initialising
-	after the reset.
-
-	It may be better that we filter out the "medium not ready" sense
-	codes and use the command's timeout/retry count for that.  However,
-	this code seems to be adequate.
-
-	Secondly, if we fail to restart all commands on a failed device,
-	just before taking the device off line, we perform the same
-	action we did to free the bus.	This means a host or bus reset
-	as appropriate.
-
-	Why is this necessary?	Scenario: a command is sent to a device,
-	whose firmware crashes and holds the SCSI bus.	We perform all
-	the necessary error handling, and find that a bus reset seems
-	to get things moving again, and we re-issue the same command to
-	the device.  The device fails in the same way.
-
-	At this point, the existing code will attempt to abort the
-	command.  Even if the HBA driver says that it is unable to abort
-	the command, the SCSI mid-layer re-uses that command for its own
-	purposes.  However, the HBA driver still contains a reference to
-	that command.
-
-	Since resets are supposed to clear the HBAs knowledge of commands
-	and free the SCSI bus, we use the appropriate reset that fixed
-	the problem the last time around immediately prior to taking
-	an unrecoverable device off line.
-
-05-scsi-unjam-clean-8.diff
-
-	Final patch of the lot.  This one is rather boring, and is just
-	cleanup and styling.  Make comments and most code in this area
-	wrap before column 80.  Make sure we have scsi logging where
-	appropriate, remove/rename unnecessary variables, and remove
-	unnecessary braces.
-	
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+
+	  Hello!
+
+I've upgraded a while to 2.4.19 and my box has been happy for the last 52
+days (it's a dual PIII). Tonight while going through my logs, I've found
+these:
+
+Sep 25 22:18:41 bigip kernel: Warning - running *really* short on DMA buffers
+Sep 25 22:18:47 bigip last message repeated 55 times
+Sep 25 22:19:41 bigip last message repeated 71 times
+
+I know where it's coming from (drivers/scsi/scsi_merge.c):
+        /* scsi_malloc can only allocate in chunks of 512 bytes so
+         * round it up.
+         */
+        SCpnt->sglist_len = (SCpnt->sglist_len + 511) & ~511;
+
+        sgpnt = (struct scatterlist *) scsi_malloc(SCpnt->sglist_len);
+
+	/*
+         * Now fill the scatter-gather table.
+         */
+        if (!sgpnt) {
+                /*
+                 * If we cannot allocate the scatter-gather table, then
+                 * simply write the first buffer all by itself.
+                 */
+                printk("Warning - running *really* short on DMA
+		buffers\n");
+                this_count = SCpnt->request.current_nr_sectors;
+                goto single_segment;
+        }
+
+So I know that scsi_malloc failed, the reason, I don't know. Well I guess
+either this test if (len % SECTOR_SIZE != 0 || len > PAGE_SIZE) or this one
+if ((dma_malloc_freelist[i] & (mask << j)) == 0) failed (both come from
+scsi_dma.c).
+
+It is easily reproducible though: I just have to start a huge file transfer
+from a crappy ide drive (ie low throughput) to a scsi one and the result is
+almost garanteed.
+
+I'm running a 2.4.19 + freeswan but I can easily get rid of freeswan if you
+want me to (the kernel was compiled with gcc 2.96 20000731). The kernel has
+nothing wierd enabled (it runs netfilter and nfs). 
+I've got both ide and scsi drives with ext3 as the only fs, the scsi card
+is an Adaptec AHA-2940U2/U2W (oem version) and has only 3 devices
+connected:
+Attached devices: 
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+  Vendor: QUANTUM  Model: ATLAS 10K 18SCA  Rev: UCIE
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 05 Lun: 00
+  Vendor: TEAC     Model: CD-R55S          Rev: 1.0R
+  Type:   CD-ROM                           ANSI SCSI revision: 02
+Host: scsi0 Channel: 00 Id: 06 Lun: 00
+  Vendor: HP       Model: C1537A           Rev: L706
+  Type:   Sequential-Access                ANSI SCSI revision: 02
+
+The ide chip being the regular Intel Corp. 82801AA IDE (rev 02).
+
+Here the output of /proc/slabinfo few minutes after the last line in the
+logs:
+
+slabinfo - version: 1.1 (SMP)
+kmem_cache            80     80    244    5    5    1 :  252  126
+fib6_nodes             9    226     32    2    2    1 :  252  126
+ip6_dst_cache         16     40    192    2    2    1 :  252  126
+ndisc_cache            1     30    128    1    1    1 :  252  126
+ip_conntrack          84    132    352   12   12    1 :  124   62
+tcp_tw_bucket          1     30    128    1    1    1 :  252  126
+tcp_bind_bucket       22    226     32    2    2    1 :  252  126
+tcp_open_request       0      0     96    0    0    1 :  252  126
+inet_peer_cache        3     59     64    1    1    1 :  252  126
+ip_fib_hash           23    226     32    2    2    1 :  252  126
+ip_dst_cache         150    216    160    9    9    1 :  252  126
+arp_cache              6     60    128    2    2    1 :  252  126
+blkdev_requests      896    920     96   23   23    1 :  252  126
+journal_head         293    390     48    5    5    1 :  252  126
+revoke_table           8    253     12    1    1    1 :  252  126
+revoke_record          0      0     32    0    0    1 :  252  126
+dnotify cache          0      0     20    0    0    1 :  252  126
+file lock cache      168    168     92    4    4    1 :  252  126
+fasync cache           0      0     16    0    0    1 :  252  126
+uid_cache             10    226     32    2    2    1 :  252  126
+skbuff_head_cache    392    720    160   30   30    1 :  252  126
+sock                  97    148    928   37   37    1 :  124   62
+sigqueue              29     29    132    1    1    1 :  252  126
+cdev_cache            17    295     64    5    5    1 :  252  126
+bdev_cache            12    118     64    2    2    1 :  252  126
+mnt_cache             22    118     64    2    2    1 :  252  126
+inode_cache         1390   2176    480  272  272    1 :  124   62
+dentry_cache        1440   4620    128  154  154    1 :  252  126
+filp                1455   1560    128   52   52    1 :  252  126
+names_cache            2      2   4096    2    2    1 :   60   30
+buffer_head        76691  77160     96 1929 1929    1 :  252  126
+mm_struct            194    264    160   11   11    1 :  252  126
+vm_area_struct      4303   4840     96  121  121    1 :  252  126
+fs_cache             194    236     64    4    4    1 :  252  126
+files_cache          130    153    416   17   17    1 :  124   62
+signal_act           114    114   1312   38   38    1 :   60   30
+size-131072(DMA)       0      0 131072    0    0   32 :    0    0
+size-131072            0      0 131072    0    0   32 :    0    0
+size-65536(DMA)        0      0  65536    0    0   16 :    0    0
+size-65536             1      1  65536    1    1   16 :    0    0
+size-32768(DMA)        0      0  32768    0    0    8 :    0    0
+size-32768             3      3  32768    3    3    8 :    0    0
+size-16384(DMA)        0      0  16384    0    0    4 :    0    0
+size-16384            11     12  16384   11   12    4 :    0    0
+size-8192(DMA)         0      0   8192    0    0    2 :    0    0
+size-8192              9     10   8192    9   10    2 :    0    0
+size-4096(DMA)         0      0   4096    0    0    1 :   60   30
+size-4096             63     63   4096   63   63    1 :   60   30
+size-2048(DMA)         0      0   2048    0    0    1 :   60   30
+size-2048            252    282   2048  139  141    1 :   60   30
+size-1024(DMA)         0      0   1024    0    0    1 :  124   62
+size-1024            175    176   1024   44   44    1 :  124   62
+size-512(DMA)          0      0    512    0    0    1 :  124   62
+size-512             448    448    512   56   56    1 :  124   62
+size-256(DMA)          0      0    256    0    0    1 :  252  126
+size-256             263    270    256   18   18    1 :  252  126
+size-128(DMA)          0      0    128    0    0    1 :  252  126
+size-128            2128   2670    128   89   89    1 :  252  126
+size-64(DMA)           0      0     64    0    0    1 :  252  126
+size-64              718   2537     64   43   43    1 :  252  126
+size-32(DMA)           0      0     32    0    0    1 :  252  126
+size-32             1495  11413     32  101  101    1 :  252  126
+
+And /proc/meminfo
+        total:    used:    free:  shared: buffers:  cached:
+Mem:  394948608 389390336  5558272        0 15466496 310026240
+Swap: 806068224 33927168 772141056
+MemTotal:       385692 kB
+MemFree:          5428 kB
+MemShared:           0 kB
+Buffers:         15104 kB
+Cached:         298916 kB
+SwapCached:       3844 kB
+Active:          22192 kB
+Inactive:       335208 kB
+HighTotal:           0 kB
+HighFree:            0 kB
+LowTotal:       385692 kB
+LowFree:          5428 kB
+SwapTotal:      787176 kB
+SwapFree:       754044 kB
+
+
+So my question: know issue (like memory fragmentation) or bug (in this case
+I would be glad to test any patches you would want me to or to give you
+anything missing in this email)?
+
+Regards, Mathieu.
+
+Oh BTW, just one thing, I wanted to give the throughput of the ide drived
+but it failed:
+Sep 25 23:18:32 bigip kernel: hdb: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+Sep 25 23:18:32 bigip kernel: hdb: dma_intr: error=0x40 { UncorrectableError }, LBAsect=102882, sector=102784
+
+I read my logs every day so I know for sure these messages are new (damn it
+doesn't look good)...
 
 -- 
-Russell King (rmk@arm.linux.org.uk)                The developer of ARM Linux
-             http://www.arm.linux.org.uk/personal/aboutme.html
-
+Mathieu Chouquet-Stringer              E-Mail : mathieu@newview.com
+    It is exactly because a man cannot do a thing that he is a
+                      proper judge of it.
+                      -- Oscar Wilde
