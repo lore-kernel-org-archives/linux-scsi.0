@@ -1,58 +1,68 @@
-From: Kenn Humborg <kenn@linux.ie>
-Subject: Re: Possible use of uninitialized variable in sd.c
-Date: Tue, 1 Mar 2005 23:25:10 +0000
-Message-ID: <20050301232509.GA21680@excalibur.research.wombat.ie>
-References: <20050225210629.GA23018@excalibur.research.wombat.ie> <1109366810.5014.15.camel@markh1.pdx.osdl.net>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [ANNOUNCE] iSCSI enterprise target software
+Date: Wed, 02 Mar 2005 12:30:29 +0900
+Message-ID: <20050302123029Z.fujita.tomonori@lab.ntt.co.jp>
+References: <1109702911.2878.16.camel@localhost.localdomain>
+	<OF961A122F.772A6491-ON88256FB7.0072D359-88256FB7.0073C3F8@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from mail2.mail.iol.ie ([193.95.141.54]:63426 "EHLO
-	mail2.mail.iol.ie") by vger.kernel.org with ESMTP id S262115AbVCAXYv
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:19639 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S262155AbVCBDa3
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Mar 2005 18:24:51 -0500
-Content-Disposition: inline
-In-Reply-To: <1109366810.5014.15.camel@markh1.pdx.osdl.net>
+	Tue, 1 Mar 2005 22:30:29 -0500
+In-Reply-To: <OF961A122F.772A6491-ON88256FB7.0072D359-88256FB7.0073C3F8@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: iscsitarget-devel@lists.sourceforge.net
 
-On Fri, Feb 25, 2005 at 01:26:50PM -0800, Mark Haverkamp wrote:
-> I wonder if it wouldn't be better to just check the error return before
-> the index value.
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: Re: [ANNOUNCE] iSCSI enterprise target software
+Date: Tue, 1 Mar 2005 13:04:58 -0800
 
-It's all the same to me.
+> >it is hard to beat linux kernel [page] cache performance though.
+> 
+> It's quite easy to beat it for particular applications.  You can use 
+> special knowledge about the workload to drop pages that won't be accessed 
+> soon in favor of pages that will, not clean a page that's just going to 
+> get discarded or overwritten soon, allocate less space to less important 
+> data, and on and on.
 
-In drivers/scsi/sd.c:sd_probe:
+Yes. The page-cache replacement policy has a big impact on the
+performance. And a smart storage system tries to know how initiators
+use its disk volume and adjust the replacement policy. For example, if
+a initiator uses a file system, page cache keeping data used as
+meta-data blocks can be important than page cache keeping data for
+file-data blocks. mlock and madvise may helps, however, storage people
+need more functionality for this issue, I guess.
 
-	int index;
-	...
-	spin_lock(&sd_index_lock);
-	error = idr_get_new(&sd_index_idr, NULL, &index);
-	spin_unlock(&sd_index_lock);
+As Arjan said, all page cache are not identical on some
+architectures. So, target software need to control the way to
+allocate page cache to get the best performance out of such
+architectures. Can user-mode target software do it? (sorry, I've not
+used such architectures.)
 
-	if (index >= SD_MAX_DISKS)
-		error = -EBUSY;
-	if (error)
-		goto out_put;
+Another possible reason why kernel-space target software is preferable
+is handling hardware. For example, NVRAM is very useful and widely
+used for storage systems. I have no experience with NVRAM cards,
+however, after a scan of drivers/block/umem.c (Micro Memory's NVRAM
+card driver), I think that you need to modify the interrupt handler or
+using bio to get the best performance out of it (although user-mode
+target software can write, read, and mmap it like normal block
+devices). And user-mode target software cannot handle this issue well.
 
-Note that if idr_get_new() fails, index remains uninitialized.  If it
-happens to be >= SD_MAX_DISKS, the error returned from idr_get_new will
-be clobbered.  Patch initializes checks error code from idr_get_new
-before accessing index.
+Note that I'm not trying to push highly-specialized functionality,
+such as new page-cache replacement policy, for storage systems into
+the mainline kernel. As I said before, our code doesn't touch other
+parts of the kernel.
 
-Signed-off-by: Kenn Humborg <kenn@linux.ie>
-
---- src/drivers/scsi/sd.c-2.6.10	2005-02-25 21:02:17.000000000 +0000
-+++ src/drivers/scsi/sd.c	2005-03-01 23:21:04.539648136 +0000
-@@ -1438,7 +1438,7 @@
- 	error = idr_get_new(&sd_index_idr, NULL, &index);
- 	spin_unlock(&sd_index_lock);
- 
--	if (index >= SD_MAX_DISKS)
-+	if (!error && (index >= SD_MAX_DISKS))
- 		error = -EBUSY;
- 	if (error)
- 		goto out_put;
-
-
-
+I consider our project as a kind of a plat-home for building iSCSI
+storage systems. I think that basic iSCSI functionality that our code
+provides satisfies the majority. In addition, industry and academic
+people can modify our code and the linux kernel to add what they
+want. They can build remote mirroring systems, failover storage
+systems, etc possibly by using their own hardware. We may benefit from
+some of them. Thus, I think that kernel-mode iSCSI target
+functionality, which can control all the system-resources and provide
+the maximum flexibility and performance, is a better approach.
