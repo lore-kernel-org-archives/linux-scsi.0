@@ -1,71 +1,133 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: aic79xx hang at boot
-Date: Fri, 19 Nov 2004 08:27:02 -0500
-Message-ID: <419DF4A6.3030801@adaptec.com>
-References: <1100858328.2689.36.camel@localhost>
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: [PATCH] megaraid2 bad queuecommand return
+Date: Fri, 19 Nov 2004 09:40:07 -0500
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570562CAF1@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:58000 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261400AbUKSN1Y (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:60589 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261430AbUKSOk0 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Nov 2004 08:27:24 -0500
-In-Reply-To: <1100858328.2689.36.camel@localhost>
+	Fri, 19 Nov 2004 09:40:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andrea.carpani@criticalpath.net
-Cc: linux-scsi@vger.kernel.org
+To: 'Jens Axboe' <axboe@suse.de>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, 'James Bottomley' <James.Bottomley@steeleye.com>
 
-Hi Andrea,
+Linux/Documentation/scsi/scsi_mid_low_api.txt
 
-I've seen this and I think it is fixed in our most recent version.
+"
+...
+/**
+ *      queuecommand - queue scsi command, invoke 'done' on completion
+ *      @scp: pointer to scsi command object
+ *      @done: function pointer to be invoked on completion
+...
+ *
+ *      Returns 0 on success.
+ *
+ *      If there's a failure, return either:
+ *
+ *      SCSI_MLQUEUE_DEVICE_BUSY if the device queue is full, or
+ *      SCSI_MLQUEUE_HOST_BUSY if the entire host queue is full
+ *
+ *      On both of these returns, the mid-layer will requeue the I/O
+...
+"
 
-	Luben
+So the driver should set the if_busy flag to SCSI_MLQUEUE_DEVICE_BUSY or
+SCSI_MLQUEUE_HOST_BUSY (this is appropriate in this case) instead of setting
+it to 1, isn't it?
+
+So, the following seems more appropriate
+
+--- megaraid_mbox.c     2004-09-27 22:14:43.000000000 -0400
++++ megaraid_mbox.c.mod 2004-11-19 12:15:21.776345776 -0500
+@@ -1675,7 +1675,7 @@
+
+                        if (!(scb = megaraid_alloc_scb(adapter, scp))) {
+                                scp->result = (DID_ERROR << 16);
+-                               *busy = 1;
++                               *busy = SCSI_MLQUEUE_HOST_BUSY;
+                                return NULL;
+                        }
+
+@@ -1757,7 +1757,7 @@
+                        /* Allocate a SCB and initialize passthru */
+                        if (!(scb = megaraid_alloc_scb(adapter, scp))) {
+                                scp->result = (DID_ERROR << 16);
+-                               *busy = 1;
++                               *busy = SCSI_MLQUEUE_HOST_BUSY;
+                                return NULL;
+                        }
+
+@@ -1802,7 +1802,7 @@
+                         */
+                        if (!(scb = megaraid_alloc_scb(adapter, scp))) {
+                                scp->result = (DID_ERROR << 16);
+-                               *busy = 1;
++                               *busy = SCSI_MLQUEUE_HOST_BUSY;
+                                return NULL;
+                        }
+                        ccb                     = (mbox_ccb_t *)scb->ccb;
+@@ -1898,7 +1898,7 @@
+                         */
+                        if (!(scb = megaraid_alloc_scb(adapter, scp))) {
+                                scp->result = (DID_ERROR << 16);
+-                               *busy = 1;
++                               *busy = SCSI_MLQUEUE_HOST_BUSY;
+                                return NULL;
+                        }
+
+@@ -1966,7 +1966,7 @@
+                // Allocate a SCB and initialize passthru
+                if (!(scb = megaraid_alloc_scb(adapter, scp))) {
+                        scp->result = (DID_ERROR << 16);
+-                       *busy = 1;
++                       *busy = SCSI_MLQUEUE_HOST_BUSY;
+                        return NULL;
+                }
+
+Thanks
+-Atul Mukker
+Architect, Drivers and BIOS
+LSI Logic Corporation 
 
 
-Andrea Carpani wrote:
-> I have several Tyan GX28 (B2881) motherboards, model B2881G28U4H with 2
-> enbedded adaptec controllers:
-> 
-> 0000:02:0a.0 SCSI storage controller: Adaptec AIC-7902 U320 (rev 10)
->         Subsystem: Adaptec: Unknown device ffff
->         Flags: bus master, 66Mhz, slow devsel, latency 64, IRQ 24
->         I/O ports at 9000 [disabled] [size=fc780000]
->         Memory at fc89c000 (64-bit, non-prefetchable) [size=8K]
->         I/O ports at 9c00 [disabled] [size=256]
->         Expansion ROM at 00080000 [disabled]
->         Capabilities: [dc] Power Management version 2
->         Capabilities: [a0] Message Signalled Interrupts: 64bit+
-> Queue=0/1 Enable-
->         Capabilities: [94]
-> 0000:02:0a.1 SCSI storage controller: Adaptec AIC-7902 U320 (rev 10)
->         Subsystem: Adaptec: Unknown device ffff
->         Flags: bus master, 66Mhz, slow devsel, latency 64, IRQ 25
->         I/O ports at 9800 [disabled] [size=fc800000]
->         Memory at fc89e000 (64-bit, non-prefetchable) [size=8K]
->         I/O ports at 9400 [disabled] [size=256]
->         Expansion ROM at 00080000 [disabled]
->         Capabilities: [dc] Power Management version 2
->         Capabilities: [a0] Message Signalled Interrupts: 64bit+
-> Queue=0/1 Enable-
->         Capabilities: [94]
-> 
-> I'm using Justin's drivers found at
-> http://people.freebsd.org/~gibbs/linux/ (ver: 2.0.12) as the ones found
-> on the main kernel tree are too unstable for me.
-> 
-> These drivers work quite well once the system is booted, but often fail
-> to initialize correctly at boot time: the kernel often hangs while
-> trying to initialize the scsi subsystem as you can see here:
-> 
-> http://www.carpani.net/temp/DSCN1503.JPG
-> 
-> On one of the boxes, in particular, the error happens 100% of the time.
-> 
-> Here are my questions
-> - has anyone seen the same errors?
-> - is there somewhere an updated version of these drivers?
-> - any ideas?
-> 
 
+
+> -----Original Message-----
+> From: Jens Axboe [mailto:axboe@suse.de] 
+> Sent: Friday, November 19, 2004 4:01 AM
+> To: linux-scsi@vger.kernel.org; James Bottomley
+> Subject: [PATCH] megaraid2 bad queuecommand return
+> 
+> Hi,
+> 
+> If the command is already completed, megaraid_queue_command() 
+> must return 0.
+> 
+> Signed-off-by: Jens Axboe <axboe@suse.de>
+> 
+> ===== drivers/scsi/megaraid/megaraid_mbox.c 1.9 vs edited =====
+> --- 1.9/drivers/scsi/megaraid/megaraid_mbox.c	2004-10-08 
+> 17:12:09 +02:00
+> +++ edited/drivers/scsi/megaraid/megaraid_mbox.c	
+> 2004-11-18 23:12:10 +01:00
+> @@ -1623,6 +1623,7 @@ megaraid_queue_command(struct scsi_cmnd 
+>  
+>  	if (!scb) {	// command already completed
+>  		done(scp);
+> +		return 0;
+>  	}
+>  
+>  	return if_busy;
+> 
+> --
+> Jens Axboe
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in the body of a message to 
+> majordomo@vger.kernel.org More majordomo info at  
+> http://vger.kernel.org/majordomo-info.html
+> 
