@@ -1,93 +1,58 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: Can someone explain "Data Phase Error"
-Date: Mon, 20 Dec 2004 13:06:16 -0500
-Message-ID: <87f94c3704122010064805a533@mail.gmail.com>
-References: <87f94c3704121713233f8499d8@mail.gmail.com>
-	 <311601c904121920015071cfac@mail.gmail.com>
-Reply-To: Greg Freemyer <greg.freemyer@gmail.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [BK PATCH] last scsi fixes for 2.6.10-rc3
+Date: Mon, 20 Dec 2004 12:19:33 -0600
+Message-ID: <1103566774.5267.62.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.193]:38017 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261602AbULTSGT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Dec 2004 13:06:19 -0500
-Received: by wproxy.gmail.com with SMTP id 58so49170wri
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2004 10:06:16 -0800 (PST)
-In-Reply-To: <311601c904121920015071cfac@mail.gmail.com>
+Received: from stat16.steeleye.com ([209.192.50.48]:10150 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261596AbULTSTu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Dec 2004 13:19:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-I believe I found the problem.
+These are all small and fairly essential fixes (except for one minor
+piece of code removal which crept into the wrong bucket but should be
+harmless) that I'd like to get in before 2.6.10
 
-Somehow one of the servers was built with a Adaptec 2940 controller,
-and the other with a Adaptec 29160.
+the patch is available at
 
-Since the 2940 does not support LVD (only SE), I'm pretty sure that is
-the issue.
+bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
 
-I'm actually surprised that the 2940 based system worked so well.  I
-successfully wrote out 300+GB of data and those tapes were restorable
-by the 29160-based system.
+The short changelog is:
 
-It was only the restores that were unreliable, and that was true
-regardless of where the tapes were written.
+Adrian Bunk:
+  o scsi/qla2xxx/qla_rscn.c: remove unused functions
 
-Is there a LINUX - SCSI troubleshooting guide that provides advice for
-the various SCSI kernel error mesages?  Does it cover this situation?
+James Bottomley:
+  o Fix cable pull problem with USB storage
 
-Greg
--- 
-Greg Freemyer
+Jens Axboe:
+  o hack imm.c to work in highmem machines
+
+Mark Haverkamp:
+  o aacraid: 2.6 fix panic on module removal
+
+Sreenivas Bagalkote:
+  o megaraid: fix a bug in kioc dma buffer deallocation
+
+And the diffstat is
+
+ Documentation/scsi/ChangeLog.megaraid  |    7 ++++++
+ drivers/scsi/aacraid/linit.c           |    3 --
+ drivers/scsi/imm.c                     |    4 +++
+ drivers/scsi/megaraid/megaraid_ioctl.h |    2 -
+ drivers/scsi/megaraid/megaraid_mm.c    |   34 ++++++++++++++++++---------------
+ drivers/scsi/megaraid/megaraid_mm.h    |    5 +---
+ drivers/scsi/qla2xxx/qla_rscn.c        |   26 -------------------------
+ drivers/scsi/sd.c                      |    2 -
+ drivers/scsi/sr.c                      |    2 -
+ 9 files changed, 36 insertions(+), 49 deletions(-)
+
+James
 
 
-On Sun, 19 Dec 2004 21:01:20 -0700, Eric Mudama <edmudama@gmail.com> wrote:
-> are these tapes new?
-> 
-> I've been told you have to write them 3-4 times before they can be
-> written to reliably, since the heads remove particle contamination or
-> something like that in those initial passes.
-> 
-> 
-> On Fri, 17 Dec 2004 16:23:24 -0500, Greg Freemyer
-> <greg.freemyer@gmail.com> wrote:
-> > All,
-> >
-> > Environment:
-> > kernel - 2.6.8-24  (from SUSE 9.2)
-> > tape drive - IBM LTO-1 (scsi-wide)
-> > scsi controller - Adaptec 2940
-> >
-> > Issue:
-> > I am trying to build a pair of new Linux based tape servers.
-> >
-> > I have written exactly one tape on each, I then swapped the tapes
-> > beween the units and tried to do a restore.  One seems to be working
-> > fine on this first test, but with the other I get:
-> >
-> > Dec 17 08:52:04 linux kernel: st0: Error with sense data: Info
-> > fld=0x40000, ILI Current st0: sense = f0 2b
-> > Dec 17 08:52:04 linux kernel: Additional sense: Data phase error
-> >
-> > I would suspect a bad tape, but a simple "dd if=/dev/st0 of=/dev/null
-> > bs=256k" fails at a different number of blocks each time.
-> >
-> > i.e. I have 130 GB of data on the tape, but I have not yet read back
-> > more than 6 GB of it.  The data itself is unimportant, I'm just
-> > testing the process.
-> >
-> > I am continueing to test and am now trying another tape, but I want to
-> > understand this initial failure if I can.
-> >
-> > Thanks for any help.
-> > Greg
-> > --
-> > Greg Freemyer
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
->
