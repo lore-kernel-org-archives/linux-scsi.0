@@ -1,43 +1,37 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: aic7xxx_biosparam
-Date: Sun, 17 Nov 2002 21:47:54 -0500
+Subject: Re: Failure to reread partition tables on non-busy devices
+Date: Sun, 17 Nov 2002 22:06:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021118024754.GC4608@redhat.com>
-References: <20021118002742.GO3280@redhat.com> <20021118004341.GA1943@win.tue.nl>
+Message-ID: <20021118030639.GD4608@redhat.com>
+References: <20021118000505.GM3280@redhat.com> <Pine.GSO.4.21.0211171939580.23400-100000@steklov.math.psu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="CE+1k2dSO48ffgeK"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20021118004341.GA1943@win.tue.nl>
+In-Reply-To: <Pine.GSO.4.21.0211171939580.23400-100000@steklov.math.psu.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: Andries Brouwer <aebr@win.tue.nl>
-Cc: Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
+To: Alexander Viro <viro@math.psu.edu>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Nov 18, 2002 at 01:43:41AM +0100, Andries Brouwer wrote:
-> 
-> Yes. But note: the number of cylinders (i) is totally immaterial,
-> (ii) is returned in a short, the only place where it is used.
-> Thus, computing values larger than 65535 is undesired, they will
-> be truncated later.
 
-That is a bit of information I was looking for.  I figured it would get 
-truncated somewhere (or worse, wrap), and I wanted to know where that 
-might be.
+--CE+1k2dSO48ffgeK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-> That is why you can replace this strange
+On Sun, Nov 17, 2002 at 07:43:27PM -0500, Alexander Viro wrote:
+> Not really.  Correct fix is:
+> 	a) in fs/block_dev.c::full_check_disk_change() replace
 > 
-> > +    while( capacity >= (cylinders * sectors * heads))
-> > +      cylinders++;
-> > +    cylinders--;
+> 	if (check_disk_change(bdev)) {
+> with
+> 	if (check_disk_change(bdev) && bdev->bd_invalidated) {
 > 
-> by a test like:
+> 	b) lost the check in rescan_partitions().
 > 
-> 	if (capacity > 65535 * sectors * heads)
-> 		cylinders = 65535;
-> 	else
-> 		cylinders = ((unsigned int) capacity) / (sectors * heads);
+> Other callers either do that check themselves or don't want that check to
+> happen at all (BLKRRPART).
 
-Thanks, I'll do that.
+Well, since you didn't attach the patch, here it is.
 
 -- 
   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
@@ -45,3 +39,34 @@ Thanks, I'll do that.
          1801 Varsity Dr.
          Raleigh, NC 27606
   
+
+--CE+1k2dSO48ffgeK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="part.patch"
+
+===== fs/block_dev.c 1.112 vs edited =====
+--- 1.112/fs/block_dev.c	Sun Nov 17 08:09:16 2002
++++ edited/fs/block_dev.c	Sun Nov 17 22:00:23 2002
+@@ -520,7 +520,7 @@
+ 	if (bdev->bd_contains != bdev)
+ 		BUG();
+ 	down(&bdev->bd_sem);
+-	if (check_disk_change(bdev)) {
++	if (check_disk_change(bdev) && bdev->bd_invalidated) {
+ 		rescan_partitions(bdev->bd_disk, bdev);
+ 		res = 1;
+ 	}
+===== fs/partitions/check.c 1.85 vs edited =====
+--- 1.85/fs/partitions/check.c	Mon Nov 11 22:16:11 2002
++++ edited/fs/partitions/check.c	Sun Nov 17 21:59:28 2002
+@@ -453,8 +453,6 @@
+ 	struct parsed_partitions *state;
+ 	int p, res;
+ 
+-	if (!bdev->bd_invalidated)
+-		return 0;
+ 	if (bdev->bd_part_count)
+ 		return -EBUSY;
+ 	res = invalidate_device(dev, 1);
+
+--CE+1k2dSO48ffgeK--
