@@ -1,99 +1,69 @@
-From: Andre Hedrick <andre@linux-ide.org>
-Subject: RE: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Mon, 1 Dec 2003 19:46:31 -0800 (PST)
+From: "N.C.Krishna Murthy" <krmurthy@cisco.com>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Tue, 2 Dec 2003 11:22:47 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.10.10312011925380.17836-100000@master.linux-ide.org>
-References: <Pine.LNX.4.58.0312011655240.26106@serv>
+Message-ID: <200312021122.47416.krmurthy@cisco.com>
+References: <200310231734.10263.krmurthy@cisco.com> <200312011740.09693.krmurthy@cisco.com> <20031201152737.A3853@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from astound-64-85-224-253.ca.astound.net ([64.85.224.253]:60681
-	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
-	id S264308AbTLBDun (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Dec 2003 22:50:43 -0500
-In-Reply-To: <Pine.LNX.4.58.0312011655240.26106@serv>
+Received: from india-ironport-1.cisco.com ([64.104.129.195]:19083 "EHLO
+	india-ironport-1.cisco.com") by vger.kernel.org with ESMTP
+	id S264284AbTLBFyR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Dec 2003 00:54:17 -0500
+In-Reply-To: <20031201152737.A3853@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Roman Zippel <zippel@linux-m68k.org>
-Cc: Naveen Burmi <naveenb@cisco.com>, hch@infradead.org, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, davmyers@cisco.com
+
+Hi,
+	The iSCSI async message does not provide information about which
+lun(s) got added or deleted. The iSCSI async message only contains
+a  sense data indicating that  "reported luns data" changed.(ASC/ASCQ = 
+3F/0E). Upon receiving this we would have to do a report luns/inquiry, 
+compare with list of luns which were configured, find out the list of luns 
+which got added or deleted and subsequently use scsi_add_device / 
+scsi_remove_device.
+
+Doing this in iSCSI driver would duplicated some code from 
+scsi_report_lun_scan/scsi_sequential_scan. 
+
+Instead if we can have scsi_report_lun_scan and scsi_sequential_scan return
+back a list of luns they configured(includes discovered and already configured 
+luns),  scsi_scan_target can traverse the list of devices on this target and 
+use scsi_remove_device for devices (provided device access count = 0)
+that to do not have an entry in the list. This takes care of both 
+added/deleted luns
+
+
+Please let me know.
+
+Thanx
+N.C.Krishna Murthy
 
 
 
-The rare cases of "data corruption" under iSCSI is because most iSCSI
-products fail to follow the rules of DAS.  Operating from the mindset of
-DAS, local buffers are permitted to change regardless.  This includes
-execution to platter.  It includes pre and operationial IO execution or
-commits to the media.
-
-If a "memcpy" is held and the original content changes with the top level
-caller not marking the request dirty, BOOM you just commited crap to
-platter.
-
-If you are not zero-copy to the network stack, you will never catch the
-changes between calculation of the CRC32C and pumping to the wire.
-
-iSCSI(MC)
-
-BLOCK->SCSI->iSCSI->MEMCPY->CRC32C->TCP->WIRE
-                              ^^^^^^^^^^^^^^
-                              BOOM memory buffers change
-
-iSCSI(ZC)
-
-BLOCK->SCSI->iSCSI->CRC32C->TCP->WIRE
-                      ^^^^^^^^^^^^^^
-                      BOOM memory buffers change
-
-iSCSI(MC) passes CRC32C
-
-iSCSI(ZC) fails CRC32C, and retries the failed PDU.
-
-It should be clear that any TARGET, INITIATOR, or PAIR doing iSCSI(MC)
-will roast your data.
-
-Now iSCSI(ZC) requires ERL >= 1 w/ Sync-and-Steering.
-
-Real iSCSI does ERL >= 2, but then again > 2 means new async-connections.
-To learn more join the IETF reflector.  Please be kind to the folks who
-are only "network centric" they mean well but just don't get storage.
-
-Cheers,
-
-Andre Hedrick
-LAD Storage Consulting Group
-
-On Mon, 1 Dec 2003, Roman Zippel wrote:
-
-> Hi,
-> 
-> On Mon, 1 Dec 2003, Naveen Burmi wrote:
-> 
-> > In linux kernel there is a rare occurrence of data corruption. This data can
-> > be buffer cache data as well as raw I/O data. Don't know the actual root
-> > cause of the problem, but the fix that we put under macro
-> > "PREVENT_DATA_CORRUPTION" is capable of resolving this problem.
-> 
-> You probably mean the page cache and it's normal that a page can be
-> modified, while it's written out.
-> 
-> > On iSCSI target, 5428-2, upon detecting the CRC data error by the QlogicFC
-> > card it generates  the sense data with sense key as HARDWARE ERROR
-> > and Additional sense data as LOGICAL UNIT COMMUNICATION FAILURE.
-> > Upon receving this sense data iSCSI initiator driver is not retrying this
-> > command and failing the command to the upper layers of SCSI subsystem.
-> > But linux SCSI subsystem does not perform any error recovery for this kind of
-> > sense data.
-> 
-> The answer from the target is weird, why does it react with a scsi error
-> to an iSCSI transport problem?
-> At ERL0 the target should just drop the packet and/or close the
-> connection. Recovery of such case would require ERL1, where the target
-> could request to retransmit the corrupted data pdu or send a CHECK
-> CONDITION (but also with a different sense data).
-> 
-> bye, Roman
+On Monday 01 Dec 2003 8:57 pm, Christoph Hellwig wrote:
+> On Mon, Dec 01, 2003 at 05:40:09PM +0530, Krishna Murthy wrote:
+> > scsi_scan_host_selected is exported.
+> >
+> > 	iscsi driver does probe for devices at two places
+> > a)Once after session establishment.
+> > b)Whenever an iSCSI async message indicates a change in
+> > "REPORTED LUNS DATA". (addition/deletion of luns on the target)
+> >
+> > 	There are no issues in calling scsi_scan_host_selected() at a).
+> > 	Addition of luns could be handled by calling scsi_scan_host_selected
+> > with rescan parameter set to 1.
+> > 	Deletion of luns is not handled. scsi_scan_target does not worry about
+> > devices which were previously configured, but currently not
+> > available.Would you recommend handling this in scsi_scan_target (or a new
+> > API) or handle in iSCSI using scsi_request based interfaces?
+>
+> Case b) could easily use scsi_add_device/scsi_remove_device, couldn't it?
+>
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
