@@ -1,13 +1,14 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: usb-storage and Sony Handycam
-Date: Mon, 10 Nov 2003 14:57:53 -0500 (EST)
+Date: Mon, 10 Nov 2003 12:45:19 -0800
 Sender: linux-usb-devel-admin@lists.sourceforge.net
-Message-ID: <Pine.LNX.4.44L0.0311101453390.709-100000@ida.rowland.org>
-References: <20031110110455.A23256@beaverton.ibm.com>
+Message-ID: <20031110124519.A24390@beaverton.ibm.com>
+References: <Pine.LNX.4.44L0.0311082220430.7127-100000@netrider.rowland.org> <1068367546.3fadfebaf39b5@webmail.netregistry.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-In-Reply-To: <20031110110455.A23256@beaverton.ibm.com>
+Content-Disposition: inline
+In-Reply-To: <1068367546.3fadfebaf39b5@webmail.netregistry.net>; from dmitrik@users.sourceforge.net on Sun, Nov 09, 2003 at 07:45:46PM +1100
 Errors-To: linux-usb-devel-admin@lists.sourceforge.net
 List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
 List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
@@ -16,49 +17,488 @@ List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
 List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
 	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Dmitri Katchalov <dmitrik@users.sourceforge.net>, Idan Sofer <idan@idanso.dyndns.org>, ronald@kuetemeier.com, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Dmitri Katchalov <dmitrik@users.sourceforge.net>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Idan Sofer <idan@idanso.dyndns.org>, "ronald@kuetemeier.com" <ronald@kuetemeier.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 10 Nov 2003, Patrick Mansfield wrote:
-
-> On Mon, Nov 10, 2003 at 01:46:44PM -0500, Alan Stern wrote:
-> > On Mon, 10 Nov 2003, Patrick Mansfield wrote:
+On Sun, Nov 09, 2003 at 07:45:46PM +1100, Dmitri Katchalov wrote:
+> [My previous msg didn't make it to the list, resending]
 > 
-> > How could anyone attempt to find out why the reset failed?  The only 
-> > externally visible state is the device's response to incoming USB 
-> > requests.  IIRC, it simply didn't respond to the reset request.  (I'm not 
-> > sure about that; I may be confusing this with other devices that failed in 
-> > similar ways.)
+> Attached here for your perusal is USB log for this device on win98.
+
+Thanks.
+
+Can someone verify my decoding? (This matches what Dmitri sent earlier
+that did not make it to the list, execept it looks like it starts with an
+INQUIRY VPD page 0 - get a list of supported VPD pages).
+
+I can't figure out the apparent nonsense returned for INQUIRY VPD page 0.
+
+And the "DIR" output seems odd.
+
+In short:
+
+	INQUIRY VPD page 0
+	INQUIRY length 0x24 (36) bytes
+	READ CAPACITY
+	TEST UNIT READY
+	READ CAPACITY
+	READ 10
+
+Sure enough no MODE SENSE. 
+
+And no WRITE to see if it is write protected.
+
+Any logs for write protected USB media, or for the device with linux 2.4?
+
+A few comments inlined below.
+
+> 1	in down	n/a	0.062	GET_DESCRIPTOR_FROM_DEVICE		
+> URB Header (length: 80)
+> SequenceNumber: 1
+> Function: 000b (GET_DESCRIPTOR_FROM_DEVICE)
+> 1	in up	n/a	0.066	CONTROL_TRANSFER	12 01 00 01 00 00 00 08
+> 	0x00000000
+> URB Header (length: 80)
+> SequenceNumber: 1
+> Function: 0008 (CONTROL_TRANSFER)
+> PipeHandle: c1565d8c
 > 
-> I don't know, the bug report (and other logs) show:
+> SetupPacket:
+> 0000: 80 06 00 01 00 00 12 00 
+> bmRequestType: 80
+>   DIR: Device-To-Host
+>   TYPE: Standard
+>   RECIPIENT: Device
+> bRequest: 06  
+>   GET_DESCRIPTOR
+> Descriptor Type: 0x0001
+>   DEVICE
 > 
-> Nov  7 00:12:19 [kernel] usb-storage: Command MODE_SENSE_10 (10 bytes)
-> Nov  7 00:12:19 [kernel] usb-storage: usb_stor_ctrl_transfer: rq=00 rqtype=21 value=0000 index=00 len=10
-> Nov  7 00:12:19 [kernel] usb-storage: Status code 0; transferred 10/10
-> Nov  7 00:12:19 [kernel] usb-storage: -- transfer complete
-> Nov  7 00:12:19 [kernel] usb-storage: Call to usb_stor_ctrl_transfer() returned 0
-> Nov  7 00:12:19 [kernel] usb-storage: usb_stor_bulk_transfer_buf: xfer 8 bytes
-> Nov  7 00:12:19 [kernel] usb-storage: Status code -75; transferred 8/8
-> Nov  7 00:12:19 [kernel] usb-storage: -- babble
-> Nov  7 00:12:19 [kernel] usb-storage: CB data stage result is 0x3
-> Nov  7 00:12:19 [kernel] usb-storage: -- transport indicates error, resetting
-> Nov  7 00:12:19 [kernel] usb-storage: usb_stor_CB_reset called
-> Nov  7 00:12:19 [kernel] usb-storage: usb_stor_control_msg: rq=00 rqtype=21 value=0000 index=00 len=12
-> Nov  7 00:12:19 [kernel] usb-storage: Soft reset failed: -32
-> Nov  7 00:12:19 [kernel] usb-storage: scsi cmd done, result=0x70000
+> 
+> TransferBuffer: 0x00000012 (18) length
+> 0000: 12 01 00 01 00 00 00 08 4c 05 2e 00 00 03 01 02 
+> 0010: 00 01 
 
-The -32 (-EPIPE) error code indicates a "protocol stall" -- the device is
-saying that for some reason it can't accept or can't carry out the reset
-command.  Maybe because it's busy still trying to finish up its broken
-response to the MODE-SENSE command.
+INQUIRY (0x12) VPD page 0 request.
 
-You would think that a reset would take precedence over a regular 
-command-in-progress, but apparently not here.
+>     bLength            : 0x12 (18)
+>     bDescriptorType    : 0x01 (1)
+>     bcdUSB             : 0x0100 (256)
+>     bDeviceClass       : 0x00 (0)
+>     bDeviceSubClass    : 0x00 (0)
+>     bDeviceProtocol    : 0x00 (0)
+>     bMaxPacketSize0    : 0x08 (8)
+>     idVendor           : 0x054c (1356)
+>     idProduct          : 0x002e (46)
+>     bcdDevice          : 0x0300 (768)
+>     iManufacturer      : 0x01 (1)
+>     iProduct           : 0x02 (2)
+>     iSerialNumber      : 0x00 (0)
+>     bNumConfigurations : 0x01 (1)
+> 2	in down	n/a	0.066	GET_DESCRIPTOR_FROM_DEVICE		
+> URB Header (length: 80)
+> SequenceNumber: 2
+> Function: 000b (GET_DESCRIPTOR_FROM_DEVICE)
+> 2	in up	n/a	0.076	CONTROL_TRANSFER	09 02 27 00 01 01 00 40
+> 	0x00000000
+> URB Header (length: 80)
+> SequenceNumber: 2
+> Function: 0008 (CONTROL_TRANSFER)
+> PipeHandle: c1565d8c
+> 
+> SetupPacket:
+> 0000: 80 06 00 02 00 00 09 02 
+> bmRequestType: 80
+>   DIR: Device-To-Host
+>   TYPE: Standard
+>   RECIPIENT: Device
+> bRequest: 06  
+>   GET_DESCRIPTOR
+> Descriptor Type: 0x0002
+>   CONFIGURATION
+> 
+> 
+> TransferBuffer: 0x00000027 (39) length
+> 0000: 09 02 27 00 01 01 00 40 01 09 04 00 00 03 08 ff 
+> 0010: 01 00 07 05 01 02 40 00 00 07 05 82 02 40 00 00 
+> 0020: 07 05 83 03 08 00 ff 
 
-Alan Stern
+WTF?
 
+>     bLength            : 0x09 (9)
+>     bDescriptorType    : 0x02 (2)
+>     wTotalLength       : 0x0027 (39)
+>     bNumInterfaces     : 0x01 (1)
+>     bConfigurationValue: 0x01 (1)
+>     iConfiguration     : 0x00 (0)
+>     bmAttributes       : 0x40 (64)
+>     MaxPower           : 0x01 (1)
+> 3	??? down	n/a	0.076	SELECT_CONFIGURATION		
+> URB Header (length: 100)
+> SequenceNumber: 3
+> Function: 0000 (SELECT_CONFIGURATION)
+> Configuration Descriptor:
+> bLength: 9 (0x09)
+> bDescriptorType: 2 (0x02)
+> wTotalLength: 39 (0x0027)
+> bNumInterfaces: 1 (0x01)
+> bConfigurationValue: 1 (0x01)
+> iConfiguration: 0 (0x00)
+> bmAttributes: 64 (0x40)
+>   0x40: Self Powered
+> MaxPower: 1 (0x01)
+>   (in 2 mA units, therefore 2 mA power consumption)
+> 
+> Number of interfaces: 1
+> Interface[0]:
+>   Length: 0x004c
+>   InterfaceNumber: 0x00
+>   AlternateSetting: 0x00
+>   Class             = 0x34
+>   SubClass          = 0x6d
+>   Protocol          = 0x37
+>   InterfaceHandle   = 0x00000000
+>   NumberOfPipes     = 0x00000003
+>   Pipe[0]:
+>     MaximumPacketSize = 0xaff0
+>     EndpointAddress   = 0x4b
+>     Interval          = 0xc1
+>     PipeType          = 0x00
+>       UsbdPipeTypeControl
+>     PipeHandle        = 0x0000ce54
+>     MaxTransferSize   = 0x00010000
+>     PipeFlags         = 0x00
+>   Pipe[1]:
+>     MaximumPacketSize = 0x2f68
+>     EndpointAddress   = 0x5b
+>     Interval          = 0xbc
+>     PipeType          = 0x206a2b1b
+>       !!! INVALID !!!
+>     PipeHandle        = 0x4e4f5300
+>     MaxTransferSize   = 0x00010000
+>     PipeFlags         = 0x00
+>   Pipe[2]:
+>     MaximumPacketSize = 0x000d
+>     EndpointAddress   = 0x00
+>     Interval          = 0x00
+>     PipeType          = 0xc15667d0
+>       !!! INVALID !!!
+>     PipeHandle        = 0xc1566810
+>     MaxTransferSize   = 0x00010000
+>     PipeFlags         = 0x00
+> 3	??? up	n/a	0.076	SELECT_CONFIGURATION		0x00000000
+> URB Header (length: 100)
+> SequenceNumber: 3
+> Function: 0000 (SELECT_CONFIGURATION)
+> Configuration Descriptor:
+> bLength: 9 (0x09)
+> bDescriptorType: 2 (0x02)
+> wTotalLength: 39 (0x0027)
+> bNumInterfaces: 1 (0x01)
+> bConfigurationValue: 1 (0x01)
+> iConfiguration: 0 (0x00)
+> bmAttributes: 64 (0x40)
+>   0x40: Self Powered
+> MaxPower: 1 (0x01)
+>   (in 2 mA units, therefore 2 mA power consumption)
+> 
+> Number of interfaces: 1
+> Interface[0]:
+>   Length: 0x004c
+>   InterfaceNumber: 0x00
+>   AlternateSetting: 0x00
+>   Class             = 0x08
+>   SubClass          = 0xff
+>   Protocol          = 0x01
+>   InterfaceHandle   = 0xc1567700
+>   NumberOfPipes     = 0x00000003
+>   Pipe[0]:
+>     MaximumPacketSize = 0x0040
+>     EndpointAddress   = 0x01
+>     Interval          = 0x00
+>     PipeType          = 0x02
+>       UsbdPipeTypeBulk
+>     PipeHandle        = 0xc1567718
+>     MaxTransferSize   = 0x00010000
+>     PipeFlags         = 0x00
+>   Pipe[1]:
+>     MaximumPacketSize = 0x0040
+>     EndpointAddress   = 0x82
+>     Interval          = 0x00
+>     PipeType          = 0x02
+>       UsbdPipeTypeBulk
+>     PipeHandle        = 0xc156772c
+>     MaxTransferSize   = 0x00010000
+>     PipeFlags         = 0x00
+>   Pipe[2]:
+>     MaximumPacketSize = 0x0008
+>     EndpointAddress   = 0x83
+>     Interval          = 0xff
+>     PipeType          = 0x03
+>       UsbdPipeTypeInterrupt
+>     PipeHandle        = 0xc1567740
+>     MaxTransferSize   = 0x00010000
+>     PipeFlags         = 0x00
+> 4	out down	n/a	3.142	CLASS_INTERFACE	12 00 00 00 24 00 00 00	
+> URB Header (length: 80)
+> SequenceNumber: 4
+> Function: 001b (CLASS_INTERFACE)
+> PipeHandle: c146f640
+> 
+> SetupPacket:
+> 0000: 21 00 00 00 00 00 00 00 
+> bmRequestType: 21
+>   DIR: Host-To-Device
+>   TYPE: Class
+>   RECIPIENT: Interface
+> bRequest: 00  
+> 
+> 
+> TransferBuffer: 0x0000000c (12) length
+> 0000: 12 00 00 00 24 00 00 00 00 00 00 00 
 
+Standard INQUIRY, 0x24 (36) bytes.
+
+> 4	out up	n/a	3.146	CONTROL_TRANSFER	-	0x00000000
+> URB Header (length: 80)
+> SequenceNumber: 4
+> Function: 0008 (CONTROL_TRANSFER)
+> PipeHandle: c1565d8c
+> 
+> SetupPacket:
+> 0000: 21 00 00 00 00 00 0c 00 
+> bmRequestType: 21
+>   DIR: Host-To-Device
+>   TYPE: Class
+>   RECIPIENT: Interface
+> bRequest: 00  
+> 
+> 
+> No TransferBuffer
+> 
+> 5	in down	0x82	3.146	BULK_OR_INTERRUPT_TRANSFER	-	
+> URB Header (length: 72)
+> SequenceNumber: 5
+> Function: 0009 (BULK_OR_INTERRUPT_TRANSFER)
+> TransferFlags: 0x00000003
+> 
+> No TransferBuffer
+> 
+> 5	in up	0x82	3.146	BULK_OR_INTERRUPT_TRANSFER	00 80 00 01 1f 
+> 00 00 00	0x00000000
+> URB Header (length: 72)
+> SequenceNumber: 5
+> Function: 0009 (BULK_OR_INTERRUPT_TRANSFER)
+> TransferFlags: 0x00000003
+> 
+> TransferBuffer: 0x00000024 (36) length
+> 0000: 00 80 00 01 1f 00 00 00 53 6f 6e 79 20 20 20 20 
+> 0010: 53 6f 6e 79 20 44 53 43 20 20 20 20 20 20 20 20 
+> 0020: 33 2e 30 30 
+
+INQUIRY reponse
+
+> 6	in down	0x82	3.146	CLASS_INTERFACE	25 00 00 00 00 00 00 00	
+> URB Header (length: 80)
+> SequenceNumber: 6
+> Function: 001b (CLASS_INTERFACE)
+> PipeHandle: c156772c
+> 
+> SetupPacket:
+> 0000: 21 00 00 00 00 00 0c 00 
+> bmRequestType: 21
+>   DIR: Host-To-Device
+>   TYPE: Class
+>   RECIPIENT: Interface
+> bRequest: 00  
+> 
+> 
+> TransferBuffer: 0x0000000c (12) length
+> 0000: 25 00 00 00 00 00 00 00 00 00 00 00 
+
+READ CAPACITY
+
+> 6	out up	n/a	3.152	CONTROL_TRANSFER	-	0x00000000
+> URB Header (length: 80)
+> SequenceNumber: 6
+> Function: 0008 (CONTROL_TRANSFER)
+> PipeHandle: c1565d8c
+> 
+> SetupPacket:
+> 0000: 21 00 00 00 00 00 0c 00 
+> bmRequestType: 21
+>   DIR: Host-To-Device
+>   TYPE: Class
+>   RECIPIENT: Interface
+> bRequest: 00  
+> 
+> 
+> No TransferBuffer
+> 
+> 7	in down	0x82	3.152	BULK_OR_INTERRUPT_TRANSFER	-	
+> URB Header (length: 72)
+> SequenceNumber: 7
+> Function: 0009 (BULK_OR_INTERRUPT_TRANSFER)
+> TransferFlags: 0x00000003
+> 
+> No TransferBuffer
+> 
+> 7	in up	0x82	3.156	BULK_OR_INTERRUPT_TRANSFER	00 00 1e df 00 
+> 00 02 00	0x00000000
+> URB Header (length: 72)
+> SequenceNumber: 7
+> Function: 0009 (BULK_OR_INTERRUPT_TRANSFER)
+> TransferFlags: 0x00000003
+> 
+> TransferBuffer: 0x00000008 (8) length
+> 0000: 00 00 1e df 00 00 02 00 
+
+0x00001edf, 7903 blocks decimal
+
+0x00000200, 512 byte blocks
+
+> 8	in down	0x82	3.166	CLASS_INTERFACE	00 00 00 00 00 00 00 00	
+> URB Header (length: 80)
+> SequenceNumber: 8
+> Function: 001b (CLASS_INTERFACE)
+> PipeHandle: c156772c
+> 
+> SetupPacket:
+> 0000: 21 00 00 00 00 00 0c 00 
+> bmRequestType: 21
+>   DIR: Host-To-Device
+>   TYPE: Class
+>   RECIPIENT: Interface
+> bRequest: 00  
+> 
+> 
+> TransferBuffer: 0x0000000c (12) length
+> 0000: 00 00 00 00 00 00 00 00 00 00 00 00 
+
+TEST UNIT READY 
+
+> 8	out up	n/a	3.171	CONTROL_TRANSFER	-	0x00000000
+> URB Header (length: 80)
+> SequenceNumber: 8
+> Function: 0008 (CONTROL_TRANSFER)
+> PipeHandle: c1565d8c
+> 
+> SetupPacket:
+> 0000: 21 00 00 00 00 00 0c 00 
+> bmRequestType: 21
+>   DIR: Host-To-Device
+>   TYPE: Class
+>   RECIPIENT: Interface
+> bRequest: 00  
+> 
+> 
+> No TransferBuffer
+> 
+> 9	out down	n/a	3.172	CLASS_INTERFACE	25 00 00 00 00 00 00 00	
+> URB Header (length: 80)
+> SequenceNumber: 9
+> Function: 001b (CLASS_INTERFACE)
+> PipeHandle: c1565d8c
+> 
+> SetupPacket:
+> 0000: 21 00 00 00 00 00 0c 00 
+> bmRequestType: 21
+>   DIR: Host-To-Device
+>   TYPE: Class
+>   RECIPIENT: Interface
+> bRequest: 00  
+
+Nothing back for the TEST UNIT READY?
+
+> TransferBuffer: 0x0000000c (12) length
+> 0000: 25 00 00 00 00 00 00 00 00 00 00 00 
+
+READ CAPACITY again
+
+> 9	out up	n/a	3.176	CONTROL_TRANSFER	-	0x00000000
+> URB Header (length: 80)
+> SequenceNumber: 9
+> Function: 0008 (CONTROL_TRANSFER)
+> PipeHandle: c1565d8c
+> 
+> SetupPacket:
+> 0000: 21 00 00 00 00 00 0c 00 
+> bmRequestType: 21
+>   DIR: Host-To-Device
+>   TYPE: Class
+>   RECIPIENT: Interface
+> bRequest: 00  
+> 
+> 
+> No TransferBuffer
+> 
+> 10	in down	0x82	3.181	BULK_OR_INTERRUPT_TRANSFER	-	
+> URB Header (length: 72)
+> SequenceNumber: 10
+> Function: 0009 (BULK_OR_INTERRUPT_TRANSFER)
+> TransferFlags: 0x00000003
+> 
+> No TransferBuffer
+> 
+> 10	in up	0x82	3.182	BULK_OR_INTERRUPT_TRANSFER	00 00 1e df 00 
+> 00 02 00	0x00000000
+> URB Header (length: 72)
+> SequenceNumber: 10
+> Function: 0009 (BULK_OR_INTERRUPT_TRANSFER)
+> TransferFlags: 0x00000003
+> 
+> TransferBuffer: 0x00000008 (8) length
+> 0000: 00 00 1e df 00 00 02 00 
+
+READ CAPACITY result again
+
+> 11	in down	0x82	3.191	CLASS_INTERFACE	28 00 00 00 00 00 00 00	
+> URB Header (length: 80)
+> SequenceNumber: 11
+> Function: 001b (CLASS_INTERFACE)
+> PipeHandle: c156772c
+> 
+> SetupPacket:
+> 0000: 21 00 00 00 00 00 0c 00 
+> bmRequestType: 21
+>   DIR: Host-To-Device
+>   TYPE: Class
+>   RECIPIENT: Interface
+> bRequest: 00  
+> 
+> 
+> TransferBuffer: 0x0000000c (12) length
+> 0000: 28 00 00 00 00 00 00 00 80 00 00 00 
+
+READ 10
+
+> 11	out up	n/a	3.196	CONTROL_TRANSFER	-	0x00000000
+> URB Header (length: 80)
+> SequenceNumber: 11
+> Function: 0008 (CONTROL_TRANSFER)
+> PipeHandle: c1565d8c
+> 
+> SetupPacket:
+> 0000: 21 00 00 00 00 00 0c 00 
+> bmRequestType: 21
+>   DIR: Host-To-Device
+>   TYPE: Class
+>   RECIPIENT: Interface
+> bRequest: 00  
+> 
+> 
+> No TransferBuffer
+> 
+> 12	in down	0x82	3.201	BULK_OR_INTERRUPT_TRANSFER	-	
+> URB Header (length: 72)
+> SequenceNumber: 12
+> Function: 0009 (BULK_OR_INTERRUPT_TRANSFER)
+> TransferFlags: 0x00000003
+> 
+> No TransferBuffer
+
+-- Patrick Mansfield
 
 
 -------------------------------------------------------
