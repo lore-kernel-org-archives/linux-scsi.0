@@ -1,38 +1,43 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [ADVANSYS] Add basic highmem/DMA support
-Date: 24 Jun 2004 08:00:44 -0500
+From: Franco Borich <fran2170@comcast.net>
+Subject: [PATCH] 2.4.27-rc1 add device to scsi_scan.c blacklist
+Date: Thu, 24 Jun 2004 10:04:30 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1088082044.1959.2.camel@mulgrave>
-References: <20040508003906.GA26338@gondor.apana.org.au>	<20040519103800.GA9891@gondor.a
-	pana.org.au>	<1086026538.2004.7.camel@mulgrave>
-	<40D69F56.2000307@torque.net>	<1087828082.1797.17.camel@mulgrave>
-	<40D924A5.5020705@torque.net> 	<20040623141335.GA23365@infradead.org>
-	<1088005899.1639.9.camel@mulgrave>  <40DAC485.2090404@torque.net>
+Message-ID: <40DAED7E.6020202@comcast.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:23710 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264461AbUFXNBD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Jun 2004 09:01:03 -0400
-In-Reply-To: <40DAC485.2090404@torque.net>
+Received: from sccrmhc11.comcast.net ([204.127.202.55]:36031 "EHLO
+	sccrmhc11.comcast.net") by vger.kernel.org with ESMTP
+	id S265399AbUFXPDG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Jun 2004 11:03:06 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Christoph Hellwig <hch@infradead.org>, Herbert Xu <herbert@gondor.apana.org.au>, Gene Heskett <gene.heskett@verizon.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2004-06-24 at 07:09, Douglas Gilbert wrote:
-> Your patch fixed the PCI wide problem. The attached incorporates
-> your fix and also fixes the ISA oops. So now all my advansys cards
-> work.
+Hi,
 
-Well, damn, I was afraid of that.
+Adds Xyratex 4200 FC-SATA RAID to blacklist.  Posting again due to 
+mailer problems.
 
-Unfortunately, that patch working is a symptom of deep malaise within
-the driver.  It means that these segments are used in some way in its
-internals and virt_to_bus and bus_to_virt translations occur all over
-it.  It also means that the DMA API conversion really isn't effective.
+--- scsi_scan.c.OLD     2004-06-21 15:44:48.000000000 -0500
++++ scsi_scan.c 2004-06-21 15:46:16.000000000 -0500
+@@ -207,6 +207,7 @@
+       {"HP", "C7200", "*", BLIST_SPARSELUN},                  /* Medium 
+Changer */
+       {"SMSC", "USB 2 HS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+       {"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
++       {"Xyratex", "4200", "*", BLIST_SPARSELUN | BLIST_LARGELUN | 
+BLIST_FORCELUN},
+       {"NEC", "iStorage", "*", BLIST_SPARSELUN | BLIST_LARGELUN | 
+BLIST_FORCELUN},
 
-James
+       /*
+
+Thanks!
+
+Frank Borich
+Xyratex International Ltd.
+(630)654-6089
+
 
 
