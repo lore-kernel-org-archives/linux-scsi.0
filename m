@@ -1,33 +1,24 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Add release function to sd for scsi_disk structure
-Date: Wed, 22 Oct 2003 17:17:31 +0100
+Subject: Re: [announce] scsi_id 0.1 - generate unique scsi id
+Date: Wed, 22 Oct 2003 17:23:40 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031022171731.B24857@infradead.org>
-References: <20031018074040.GA1210@beaverton.ibm.com> <20031021092654.A22958@infradead.org> <20031022160855.GC1684@beaverton.ibm.com>
+Message-ID: <20031022172340.A25011@infradead.org>
+References: <20031021165857.A8240@beaverton.ibm.com> <20031022153140.A22298@infradead.org> <1066808536.27285.19.camel@w-stekloff.beaverton.ibm.com> <20031022154638.A22952@infradead.org> <1066809889.27285.36.camel@w-stekloff.beaverton.ibm.com> <20031022155231.GQ18370@parcelfarce.linux.theplanet.co.uk> <20031022091519.A11995@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:1555 "EHLO
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:8723 "EHLO
 	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263504AbTJVQRg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Oct 2003 12:17:36 -0400
+	id S263454AbTJVQZF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Oct 2003 12:25:05 -0400
 Content-Disposition: inline
-In-Reply-To: <20031022160855.GC1684@beaverton.ibm.com>; from andmike@us.ibm.com on Wed, Oct 22, 2003 at 09:08:55AM -0700
+In-Reply-To: <20031022091519.A11995@beaverton.ibm.com>; from patmans@us.ibm.com on Wed, Oct 22, 2003 at 09:15:19AM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Matthew Wilcox <willy@debian.org>, Daniel Stekloff <dsteklof@us.ibm.com>, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-On Wed, Oct 22, 2003 at 09:08:55AM -0700, Mike Anderson wrote:
-> Christoph Hellwig [hch@infradead.org] wrote:
-> > 
-> > This looks like a reasonable bandaid until the block layer is fixed.  
-> > 
-> 
-> Since I do not know the extent of the block layer changes maybe my
-> assumption is incorrect, but wouldn't will still need a release of some
-> kind to know when it is safe to do a free?
+On Wed, Oct 22, 2003 at 09:15:19AM -0700, Patrick Mansfield wrote:
+> Should we use <linux/>, rather than another new directory?
 
-We'll have to see.  My assumption would be that freeing any private
-data should be fine after ->remove.  If that's not going to be guaranteed
-we should try to make your patch a bit more generic (e.g. no sd-specific
-ktype)
+No.  <linux/> is reserved for kernel headers.
 
