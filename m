@@ -1,54 +1,57 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: [PATCH]: Flexible timeout infrastructure
-Date: Tue, 15 Jun 2004 11:15:36 -0700
+Date: Tue, 15 Jun 2004 14:37:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040615181536.GA12611@us.ibm.com>
-References: <40CF0F9F.4050902@adaptec.com> <1087313492.1796.37.camel@mulgrave>
+Message-ID: <40CF4207.9050108@adaptec.com>
+References: <40CF0F9F.4050902@adaptec.com> <1087313492.1796.37.camel@mulgrave> <20040615181536.GA12611@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.104]:63207 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S265810AbUFOSPk (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:8388 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S265815AbUFOSiC (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jun 2004 14:15:40 -0400
-Content-Disposition: inline
-In-Reply-To: <1087313492.1796.37.camel@mulgrave>
+	Tue, 15 Jun 2004 14:38:02 -0400
+In-Reply-To: <20040615181536.GA12611@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley [James.Bottomley@steeleye.com] wrote:
-> On Tue, 2004-06-15 at 10:02, Luben Tuikov wrote:
-> > This patch introduces a flexible command timeout infrastructure
-> > accomodating completely current behaviour SCSI Core command timeout,
-> > but also offering the ability to hand command timeout handling to
-> > a LLDD, _yet_ still have it all go through *SCSI Core*.
-> 
-> But what this basically does is force any implementor of
-> eh_cmd_timed_out to handle all timers themselves.  Given that a large
-> number of driver writers who try to do this get it wrong (mostly around
-> del_timer() and del_timer_sync()), I don't think this is such a good
-> idea.
-> 
-> > This is somewhat similar to Christoph's proposal patch, but I wasn't
-> > aware of his patch when I thought of this. Interestingly enough it can be
-> > viewed as an extension to his patch.
-> 
-> This proposal was to allow LLD notification that the timer fired (rather
-> than first hearing about it when the eh activated).  I could see an
-> extension to this, like the return values you propose, where the LLD
-> tells the mid-layer that it corrected the command problem (in interrupt
-> context) and the command is ready for completion (otherwise proceed into
-> the eh).
-> 
+> Could we get the eh_times_out part of the patch broken out as the
+> addition of the return values look like a good idea along with some
+> method to call a modified version of scsi_done through a exported
+> function to the LLDD.
 
-Could we get the eh_times_out part of the patch broken out as the
-addition of the return values look like a good idea along with some
-method to call a modified version of scsi_done through a exported
-function to the LLDD.
+Hm, yes, I saw the thread back in January I believe it was on this.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Basically I want to keep queuecommand() and scsi_done()
+pretty much unchanged -- being antagonists of each other.
+
+SAM 5.4 describes that interface (SCSI Core <--> LLDD) and
+SAM 5.1 describes Application Client <--> SCSI Core.
+
+We seem on track with 5.4 and I'd rather not overload
+scsi_done().
+
+Note that this patch would be a lot _less_ intrusive than the
+one propsed in January, as the one proposed in January
+discloses the internals of SCSI Core to LLDD, via
+the scsi midlayer scsi_eh_scmd_add() method which
+drivers would be supposed to call.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=107461451911771&w=2
+
+I'd rather all this information be conveyed through
+the Service Response and Status Code values to be
+returned to SCSI Core from the LLDD via scsi_done(), in
+the scsi command structure.
+
+Then SCSI Core makes the decision, as to what is to be
+done with the command.
+
+This patch is very small and non-intrusive with 0 effects
+to any LLDD or SCSI Core.
+
+-- 
+Luben
+
 
