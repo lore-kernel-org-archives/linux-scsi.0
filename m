@@ -1,29 +1,52 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [TRIVIAL] [Trivial Patch] scsi_register-002
-Date: 23 Jun 2003 15:17:20 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: PATCH; make sr.c respect use_10_for_ms
+Date: 23 Jun 2003 09:33:45 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1056377839.13528.46.camel@dhcp22.swansea.linux.org.uk>
-References: <20030623070134.A15482C074@lists.samba.org>
+Message-ID: <1056378827.1826.14.camel@mulgrave>
+References: <20030621165920.F2811@one-eyed-alien.net>
+	<1056241551.1775.14.camel@mulgrave>
+	<20030621174640.M2811@one-eyed-alien.net>
+	<1056250487.1775.58.camel@mulgrave>
+	<20030621212406.N2811@one-eyed-alien.net>
+	<1056290282.1979.4.camel@mulgrave>
+	<20030622124917.A21716@one-eyed-alien.net>
+	<20030622125650.D21716@one-eyed-alien.net>
+	<1056314343.10846.93.camel@mulgrave>
+	<20030622140657.A22396@one-eyed-alien.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pc2-cwma1-4-cust86.swan.cable.ntl.com ([213.105.254.86]:34512
-	"EHLO lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S266052AbTFWOFi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Jun 2003 10:05:38 -0400
-In-Reply-To: <20030623070134.A15482C074@lists.samba.org>
+Received: from nat9.steeleye.com ([65.114.3.137]:20742 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S266056AbTFWOTs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Jun 2003 10:19:48 -0400
+In-Reply-To: <20030622140657.A22396@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Rusty Trivial Russell <rusty@rustcorp.com.au>
-Cc: Marcelo Tosatti <marcelo@conectiva.com.br>, aacraid@adaptec.com, linux-scsi@vger.kernel.org
+To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Cc: torvalds@transmeta.com, Linux SCSI list <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>
 
-On Llu, 2003-06-23 at 07:56, Rusty Trivial Russell wrote:
-> (Included in 2.5)
-> From:  Michael Still <mikal@stillhq.com>
-> 
->   
->   This patch has been generated as part of my scsi_register audit of the 2.5.45 kernel tree. scsi_register() can fail, returning a NULL pointer, and the failure case was not being handled here...
+On Sun, 2003-06-22 at 16:06, Matthew Dharm wrote:
+> The problem as I see it is ATAPI devices.  That means that sbp2, ide-scsi,
+> and usb-storage (all of which bridge ATAPI devices to the SCSI layer) will
+> be affected.  These devices don't include the DBD bit in their command
+> specification -- the bit is reserved.
 
-Fix is subtly wrong because of aac_count, fixed up in my tree will push
-to Marcelo with the rest of the aacraid updates soon
+That's SFF-8020i?  The bit is listed as reserved, *but* the
+implementation defined behaves as if DBD were specified.  The BD header
+component of the mode sense header is specifically listed as "reserved"
+and the spec doesn't allow for block descriptors to be returned.
+
+The current code for ATAPI CD-ROMS must just be lucky because the
+reserved fields are zero filled.
+
+the SFF-8020i says that the recipient "shall not check" reserved fields,
+so the standard makes it sound like we can get away with the correct
+behaviour in all cases by setting DBD.
+
+Have you actually heard of setting DBD causing a failure on ATAPI
+devices?
+
+James
+
 
