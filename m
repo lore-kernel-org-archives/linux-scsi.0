@@ -1,52 +1,44 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: [PATCH] get the kernel to warn about deprecated SCSI ioctls
-Date: Thu, 19 Aug 2004 12:41:34 -0400
+Date: 19 Aug 2004 11:06:34 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4124D83E.3000201@pobox.com>
-References: <1092932342.2378.430.camel@mulgrave> 	<20040819162357.GA26375@havoc.gtf.org> <1092932940.2025.463.camel@mulgrave>
+Message-ID: <1092935193.3373.5.camel@patlinux.iomegacorp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:4017 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S266679AbUHSQlu
+Received: from email-out2.iomega.com ([147.178.1.83]:32152 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S266813AbUHSRHx
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Aug 2004 12:41:50 -0400
-In-Reply-To: <1092932940.2025.463.camel@mulgrave>
+	Thu, 19 Aug 2004 13:07:53 -0400
+Received: from royntex01.iomegacorp.com (franklin [10.1.1.83])
+	by email.iomega.com (Postfix) with ESMTP id ACC4522A3
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Aug 2004 11:07:52 -0600 (MDT)
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Thu, 2004-08-19 at 12:23, Jeff Garzik wrote:
-> 
->>On Thu, Aug 19, 2004 at 12:19:01PM -0400, James Bottomley wrote:
->>
->>>The non unique SCSI ioctls:
->>>
->>>SCSI_IOCTL_SEND_COMMAND
->>>SCSI_IOCTL_TEST_UNIT_READY
->>>SCSI_IOCTL_BENCHMARK_COMMAND
->>>SCSI_IOCTL_SYNC
->>>SCSI_IOCTL_START_UNIT
->>>SCSI_IOCTL_STOP_UNIT
->>>
->>>Have been deprecated for a while now.  We should make the kernel
->>>complain when a program actually uses one of them, so users have had
->>>adequate warning before they are removed.
->>
->>any chance of deprecating the doorlock ioctls too?
-> 
-> 
-> The doorlock ones are unique, and are used by some of the CD tools.
-> 
-> We really need to know when an app locks the door rather than having to
-> scan the commands in SG_IO.
+Yes, please, which SCSI pass thru ioctl should I use in Linux.
 
+> SCSI_IOCTL_SEND_COMMAND ...
+> please convert ... to SG_IO
 
-You need to scan the commands in SG_IO anyway, otherwise you do not know 
-in all cases when an app locks the door :)
+Ouch, I am instead choosing the mostly undocumented ioctl
+CDROM_SEND_PACKET, opened O_NONBLOCK, because I can't see how else to
+reach 2.4 Linux /dev/hd$v thru cdrom ide-cd.
 
-	Jeff
+> SCSI_IOCTL_SEND_COMMAND ... deprecated ...
+
+Me the newbie, I missed and I still do not see how I should know this
+SCSI pass thru ioctl is deprecated, unless we add the printk you
+suggest.
+
+Pat LaVarre
+http://marc.theaimsgroup.com/?l=linux-scsi&m=109278095826988
+http://linux-pel.blog-city.com/read/756175.htm
+http://linux-pel.blog-city.com/read/771746.htm
+
+P.S. I'm resorting to SCSI pass thru for such purposes as toggling the
+invisible MMC PWP write protect switch found in DVD-RAM discs, Iomega
+REV discs, etc.
 
 
