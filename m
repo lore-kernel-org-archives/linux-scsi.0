@@ -1,44 +1,37 @@
-From: "Brooke" <463osmosis@aplusstudent.com>
-Subject: rodriguez
-Date: Sun, 07 Nov 2004 02:49:27 -0300
-Message-ID: <200410M879690OCMrTPFQXPD__8860.99986169047$1099795264$gmane$org@iomcollege.ac.im>
-Reply-To: "Brooke" <463osmosis@aplusstudent.com>
+From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Subject: Re: [PATCH 2.4] fix for scsi_unjam_host: Miscount of number of failed commands
+Date: Sun, 7 Nov 2004 10:17:03 -0200
+Message-ID: <20041107121703.GB28453@logos.cnet>
+References: <04Nov1.162549est.333220@cyborg.cybernetics.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [194.106.155.105] ([194.106.155.105]:33845 "HELO 12.107.209.244")
-	by vger.kernel.org with SMTP id S261523AbUKGCki (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Nov 2004 21:40:38 -0500
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:9878 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261625AbUKGPay
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 7 Nov 2004 10:30:54 -0500
+Content-Disposition: inline
+In-Reply-To: <04Nov1.162549est.333220@cyborg.cybernetics.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-net@vger.kernel.org
+To: Tony Battersby <tonyb@cybernetics.com>
+Cc: linux-scsi@vger.kernel.org
 
-You're invited...
+On Mon, Nov 01, 2004 at 04:26:12PM -0500, Tony Battersby wrote:
+> This is a resend of http://marc.theaimsgroup.com/?l=linux-scsi&m=108438814301446&w=2
+> 
+> This patch fixes a panic "scsi_unjam_host: Miscount of number of failed
+> commands".  This panic happens only under very specific circumstances:
+> 
+> 1) A command fails with check condition
+> 2) The low-level driver doesn't auto-retrieve the sense data
+> 3) The sense key is "not ready" and ASC/ASCQ indicate the unit is becoming
+> ready
+> 4) A retry of the command fails in the same way
 
-You have been nominated by a friend to participate in our new initiative.
+Tony, 
 
-As of this year, we are allowing a select few individuals to obtain an Official Degree from one of ten respected Universities without ever opening a book or taking a test.
+I'm about to release 2.4.28-rc2 which should become final, 
+I've queued your patches for 2.4.29-pre. 
 
-All we require is that you confirm your nomination on our secure site and we will ship the degree of your choice to you worldwide.
-
-
-http://quickcollegedegree.com/?partid=wh6
-
-
---Brooke
-Independent University Organization
-I.D. #wh6-452
-
-
-
-
-If you have recieved this message in error please go here:
-http://quickcollegedegree.com/st.htm
-
-
-
-
-
-
-
-
+Thanks
