@@ -1,61 +1,39 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: [dm-devel] [multipath] SCSI device capacity mess
-Date: Wed, 27 Oct 2004 10:42:02 +0200
+From: "Clifford" <191taffy@corna.com>
+Subject: trollop
+Date: Wed, 27 Oct 2004 19:26:35 -0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041027084202.GD32712@marowsky-bree.de>
-References: <1098833278.4914.24.camel@zezette> <20041027081713.GC32712@marowsky-bree.de>
+Message-ID: <200410M7219OCMrTPXQIC__18387.5158698813$1098897848$gmane$org@lmtribune.com>
+Reply-To: "Clifford" <191taffy@corna.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.in-addr.de ([212.8.193.158]:61340 "EHLO mx.in-addr.de")
-	by vger.kernel.org with ESMTP id S262548AbUJ0RC4 (ORCPT
+Received: from [220.194.2.66] ([220.194.2.66]:60821 "HELO 12.107.209.244")
+	by vger.kernel.org with SMTP id S262516AbUJ0RTM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Oct 2004 13:02:56 -0400
-Content-Disposition: inline
-In-Reply-To: <20041027081713.GC32712@marowsky-bree.de>
+	Wed, 27 Oct 2004 13:19:12 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-net@vger.kernel.org
 
-On 2004-10-27T10:17:13, Lars Marowsky-Bree <lmb@suse.de> wrote:
+Attention:
 
-> Using the new priority group initialization code (where we sent magic
-> commands down to activate the newly switched-to PG) which Alasdair an=
-d I
-> are currently doing for the CLARiiON pampering and which provides a
-> plugin-architecture to the dm-mpath system, you should be able to plu=
-g
-> in a hardware-specific handler for your system too.
->=20
-> However, "relaxing" this check should likely also be a property of th=
-e
-> hardware plugin loaded; I'd not wish to have it relaxed in all
-> scenarios.
+You have been recommended by a friend to participate in an OIU forward-thinking project that would enable you to obtain an official university degree for no money or commitment by you.
 
--> have the hardware-specific plugin export a path_init() function whic=
-h
-is called the first time a path is added to the table (or even on
-reinstate?).
+Fill out our simple form outlining your current knowledge and life experience and we will send the degree to you...worldwide.  Whether you do it to impress friends or land a new job, this is a great opportunity at your fingertips.
 
-In addition verifying the size and stuff it could also check that the
-paths really (still) point to the same device (by storing the LUN WWN i=
-n
-the hw_handler context, for example), or that the path is setup
-correctly for failover to work etc (of course, the list of things to
-verify is a hw-specific issue). Paranoia is a good thing.
+http://worlduniversityonline.com/?partid=wh6
 
 
-Mit freundlichen Gr=FC=DFen,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
+--Clifford
+Organization for Independant Universities 
 
---=20
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX AG - A Novell company
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+If this has reached you in error go here:
+http://worlduniversityonline.com/st.html
+144
+
+
+
+
+
