@@ -1,54 +1,82 @@
-From: Henning Makholm <henning@makholm.net>
-Subject: Re: Binary-only firmware covered by the GPL?
-Date: 30 Mar 2004 17:51:38 +0100
+From: Kurt Garloff <garloff@suse.de>
+Subject: SCSI sense buffer size -> 96
+Date: Tue, 30 Mar 2004 18:59:54 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <87y8picm79.fsf@kreon.lan.henning.makholm.net>
-References: <8RnZwD.A.91B.qHYaAB@murphy> <40698AE4.7020006@almg.gov.br>
+Message-ID: <20040330165954.GL3886@tpkurt.garloff.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="qo7zVO9a9OQ5oQtr"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [81.168.75.8] ([81.168.75.8]:42606 "EHLO henning.makholm.net")
-	by vger.kernel.org with ESMTP id S263746AbUC3Qvk (ORCPT
+Received: from ns.suse.de ([195.135.220.2]:33925 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S263757AbUC3Q76 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Mar 2004 11:51:40 -0500
-In-Reply-To: <40698AE4.7020006@almg.gov.br>
+	Tue, 30 Mar 2004 11:59:58 -0500
+Received: from hermes.suse.de (Hermes.suse.de [195.135.221.8])
+	(using TLSv1 with cipher EDH-RSA-DES-CBC3-SHA (168/168 bits))
+	(No client certificate requested)
+	by Cantor.suse.de (Postfix) with ESMTP id 048003AB5D9
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Mar 2004 18:59:55 +0200 (CEST)
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: debian-devel@lists.debian.org, debian-legal@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Scripsit Humberto Massa <humberto.massa@almg.gov.br>
 
-> to modify the fw[], at least *legally* is MHO that any
-> recipient/redistributor of the file _can_ and _must_ consider the fil=
-e
-> in *that* format as the preferred form for modification (pf4m) *and*,
-> considering it the source code, follow the directions of the GPL in
-> respect to modification and redistribution.
+--qo7zVO9a9OQ5oQtr
+Content-Type: multipart/mixed; boundary="enGqbSaueFq5omEL"
+Content-Disposition: inline
 
-No, law does not work that way. The phrase "preferred form for
-modification" has a clear enough, if somewhat fuzzy, literal meaning,
-and one cannot *implicitly* make it mean something that directly
-contrast to the literal meaning. If nobody *actually* prefers the
-binary blob for modification, then the binary blob is *not* the
-preferred form for modification. That's irrespective of whether the
-copyright holder behaves inconsistently.
 
-> * the /status quo/ obtained by observation of the previous item
-> prevails _until somebody proves_ that the fw[] =3D {} is *not* the
-> source code;
+--enGqbSaueFq5omEL
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-And Debian's approach to software freedom doesn't work that way
-either. We treat software as non-free and non-distributable unless and
-until we see good and self-consistent evidence that it is actually
-free and distributable. The "burden of proof", to the extent that
-expression applies, is always on the side that claims that the
-software in question is OK for Debian to distribute.
+Hi,
 
+some SCSI devices need more than 64bytes of sense buffer.
+I know about one: The IBM MagStar tapes report the necessity to be
+cleaned at bytes 70 and report 96 bytes in total.
+
+Attached patch increases the sense buffer size to 96 bytes.
+
+Regards,
 --=20
-Henning Makholm                "Nu kommer han. Kan du ikke h=F8re knall=
-erten?"
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
+SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
+
+--enGqbSaueFq5omEL
+Content-Type: text/plain; charset=us-ascii
+Content-Description: scsi-sensebuf-96.diff
+Content-Disposition: attachment; filename=scsi-sensebuf-96
+Content-Transfer-Encoding: quoted-printable
+
+--- linux-2.6.4.i386/include/scsi/scsi_cmnd.h.orig	2004-03-11 03:55:36.0000=
+00000 +0100
++++ linux-2.6.4.i386/include/scsi/scsi_cmnd.h	2004-03-30 09:18:46.887390456=
+ +0200
+@@ -112,7 +112,7 @@
+ 	struct request *request;	/* The command we are
+ 				   	   working on */
+=20
+-#define SCSI_SENSE_BUFFERSIZE 	64
++#define SCSI_SENSE_BUFFERSIZE 	96
+ 	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];		/* obtained by REQUES=
+T SENSE
+ 						 * when CHECK CONDITION is
+ 						 * received on original command=20
+
+--enGqbSaueFq5omEL--
+
+--qo7zVO9a9OQ5oQtr
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+
+iD8DBQFAaaeKxmLh6hyYd04RAiYyAKCbYjHmKXHrfX5n0ANGywCpf51nrwCgnwN3
+aH5Jc6dJDgih0p2G7EsqSjk=
+=LVc+
+-----END PGP SIGNATURE-----
+
+--qo7zVO9a9OQ5oQtr--
