@@ -1,68 +1,56 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: Dell 2850 build in (LSI) PERC4/Di 2.6 kernel driver.
-Date: Fri, 1 Apr 2005 10:32:10 -0600
-Message-ID: <20050401163210.GC18094@lists.us.dell.com>
-References: <424945E8.4040502@basenet.nl>
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: RE: How to find which (physical) SCSI HBA corresponds to which ho	st n
+	umber?
+Date: Fri, 1 Apr 2005 09:47:21 -0800
+Message-ID: <OF48E31788.A91E33AF-ON88256FD6.00605364-88256FD6.00619462@us.ibm.com>
+References: <267988DEACEC5A4D86D5FCD780313FBB065A083E@exch-03.noida.hcltech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausc60ps301.us.dell.com ([143.166.148.206]:25716 "EHLO
-	ausc60ps301.us.dell.com") by vger.kernel.org with ESMTP
-	id S262781AbVDAQc2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Apr 2005 11:32:28 -0500
-Content-Disposition: inline
-In-Reply-To: <424945E8.4040502@basenet.nl>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:18311 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262824AbVDARqu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2005 12:46:50 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e2.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j31Hkn2i032761
+	for <linux-scsi@vger.kernel.org>; Fri, 1 Apr 2005 12:46:49 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j31HknZo088514
+	for <linux-scsi@vger.kernel.org>; Fri, 1 Apr 2005 12:46:49 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j31HkmVa025586
+	for <linux-scsi@vger.kernel.org>; Fri, 1 Apr 2005 12:46:49 -0500
+In-Reply-To: <267988DEACEC5A4D86D5FCD780313FBB065A083E@exch-03.noida.hcltech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Veldema <paul@basenet.nl>
-Cc: linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, "Rajat Jain, Noida" <rajatj@noida.hcltech.com>
 
-On Tue, Mar 29, 2005 at 02:11:20PM +0200, Paul Veldema wrote:
-> Hello developers,
-> 
-> For the last two months I've been strugling with a driver problem. Our 
-> company bought two Dell PowerEdge 2850's
-> to try our production kernel version 2.6.8 (debian sarge) on since the 
-> 2650 are no longer sold. The Dell PE 2650's had Perc4/DC cards in
-> them (which work fine with the drivers and kernel 2.6.X) supposedly the 
-> same thing as the build in Perc4/Di controllers in the PE2850's.
-> According to Dell the LSI chipset in the PERC4 is de LSI53C1020.
-> 
-> However, the megaraid drivers don't detect the Perc4/Di controllers 
-> resulting in a
-> kernel panic when linux wants to start load stuff from disk (can't find 
-> file bla).
+>>proc/scsi/hba_name/host_number.
+>
+>This proc entry is made AFTER the device is registered with SCSI 
+mid-level
+>driver (scsi_mod). 
 
-I don't have the debian sarge source handy, but the kernel.org 2.6.8
-kernel's drivers/scsi/megaraid.[ch] driver indeed does not have the
-PCI IDs for these controllers present.  Looks like I misremembered
-when I put that text on linux.dell.com, I've corrected it.
+This proc entry is not related to a device.  It's the entry that describes 
+the HBA, and it gets created as part of registering the HBA (host).
 
-kernel.org 2.6.9 drivers/scsi/megaraid/megaraid_mbox.c  does have the
-PCI IDs for this adapter.
+>after I add a SCSI device to one of the HBAs, the only
+>option I have left with me is following
+>
+>For n = 0 to N
+>Do
+>                echo "scsi add-single-device n 0 ID 0" > /proc/scsi/scsi
 
+If you and Linux could identify the host in common terms, you wouldn't 
+have to do this.  But the question is open as to in what terms you 
+personally identify the host to which you attached the device.  Is it the 
+controller to the west?  The red one?  The new one?  The one with serial 
+number 8436547?  The one at PCI address X:Y:Z?  The one that has your disk 
+drives on it?
 
-[snip]
-> >From source "*megaraid_mbox*":
-> #define MEGARAID_VERSION        "2.20.3.1"
-> 
-> ...
-> 
-> #define PCI_DEVICE_ID_PERC4E_DI_KOBUK                   0x0013
-> #define PCI_SUBSYS_ID_PERC4E_DI_KOBUK                   0x016d
+The host proc file often has a serial number in it.  Sometimes it has a 
+fibre channel worldwide node name.
 
-Right, this are the right IDs, as your working 2.4 scenario shows:
+It seems to me that you're probably right, though: the easiest thing is 
+just to try to add the bus/target/LUN to every host.  In an ideal world, 
+you'd do this with hotplug.
 
-> megaraid: found 0x1028:0x0013:bus 2:slot 14:func 0
-
-
-so your 2.6.9 kernel should work.
-
-Thanks,
-Matt
-
--- 
-Matt Domsch
-Software Architect
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
