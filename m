@@ -1,48 +1,46 @@
-From: Jamie Clark <jamie@zeroth.org>
-Subject: Re: qla2xxx driver/firmware versions & thermal stability
-Date: Tue, 17 Aug 2004 07:41:27 +0800
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: DAC960 + sym53c8xx conflict
+Date: Tue, 17 Aug 2004 01:09:51 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <41214627.8020408@zeroth.org>
-References: <41206B59.5070703@zeroth.org> <20040816211943.GA16524@praka.san.rr.com>
+Message-ID: <20040817000951.GI28995@parcelfarce.linux.theplanet.co.uk>
+References: <1092628387.2548.14.camel@fs2> <20040816112034.GC28995@parcelfarce.linux.theplanet.co.uk> <1092699047.6936.11.camel@fs2>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moof.zeroth.org ([203.117.131.35]:5386 "EHLO moof.zeroth.org")
-	by vger.kernel.org with ESMTP id S266469AbUHPXlp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Aug 2004 19:41:45 -0400
-In-Reply-To: <20040816211943.GA16524@praka.san.rr.com>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:16788 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S268031AbUHQAJx
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Aug 2004 20:09:53 -0400
+Content-Disposition: inline
+In-Reply-To: <1092699047.6936.11.camel@fs2>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <praka@pobox.com>
-Cc: linux-scsi@vger.kernel.org
+To: Michael <mozstuff@yahoo.com>
+Cc: Matthew Wilcox <willy@debian.org>, linux-scsi@vger.kernel.org
 
-Andrew Vasquez wrote:
+On Mon, Aug 16, 2004 at 06:30:47PM -0500, Michael wrote:
+> On 2.6 I get the message you list as well. I thought maybe 2.6 wasn't
+> actually recognizing the raid controller, so I disabled support for the
+> 896 chip in the driver so it gives an "unsupported" message, but I still
+> lose the dac960 drives.
 
->Could you report your findings to QLogic tech-support
->(www.qlogic.com/support), they'll be able to assist in
->troubleshooting.  
->
->  
->
-:) Been there recently. In a nutshell: "it shouldn't happen,
-but that's quite an old driver, perhaps you could try
-upgrading"
+Crap, I see the problem.  When we fail initialisation, we disable the
+device, so DAC960 stops working.  Either we need to not disable the device
+when exiting or we need to claim the sym2 device in the dac960 driver
+so the sym2 driver never gets called.
 
-Forgive me for not taking the advice immediately, but if
-you knew how long I'd been looking at this, how much
-equipment isolated/replaced and how many versions
-of the qla driver I build/tried *before* 6.04...
+I'm going to be away till the end of the week, but for the moment, deleting
 
-When my colleague raised this on lkml 12-18months
-ago (before we knew it was heat related) he had an
-off-list reply from someone who had spent a long
-time chasing the same error - and traced it to heat
-sensitivity (within operating spec).
+        pci_release_regions(pdev);
+and
+        pci_disable_device(pdev);
 
-I originially concluded that it was perhaps a bad batch
-of cards - hence replacing all the 2300s with 2340s.
+from sym2_probe() in drivers/scsi/sym53c8xx_2/sym_glue.c should fix
+your problem.
 
-I may eventually replace the driver as I have almost
-run out of options - but I was hoping for something
-a little more scientific after my past driver upgrades.
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
