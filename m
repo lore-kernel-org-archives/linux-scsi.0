@@ -1,46 +1,34 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: SCSI reserve/release
-Date: Thu, 27 Feb 2003 18:21:25 -0500
+From: Matthew Wilcox <willy@debian.org>
+Subject: [PATCH] Remove naked GFP_DMA from drivers/scsi/sd.c
+Date: Fri, 28 Feb 2003 06:34:29 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E5E9D75.7040309@redhat.com>
-References: <20030227205135.31139.qmail@web14612.mail.yahoo.com>
+Message-ID: <20030228063429.C23865@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20030227205135.31139.qmail@web14612.mail.yahoo.com>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Linda Lee <lindaclee2002@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: Trivial Kernel Patches <trivial@rustcorp.com.au>, linux-scsi@vger.kernel.org
 
-Linda Lee wrote:
-> I'd like to simulate the SCSI-3 Persistent Group
-> Reservation of Solaris on Linux using Linux
-> reserve/release mechanism.  My understanding is that
-> to make reservation on the device on Linux, I can
-> issue ioctl() with SCSI_IOCTL_SEND_COMMAND along with
-> SCSI command "RESERVE" as part of the input data. It
-> is similar for the release mechanism.  Instead of
-> "RESERVE" command in the ioctl, put "RELEASE" instead.
-> 
-> Regarding the SCSI reset, I can issue ioctl() with
-> SG_SCSI_RESET.
-> 
-> Is my approach correct?  Does anyone had done this
-> before?
 
-I built a small library and a small application that does this on linux. 
-  I then handed it off to the HA people in Red Hat.  Don't know where it 
-could be found now, but it used to be available as an RPM named 
-scsires-0.7-2.i386.rpm and was distributed in the older Red Hat Linux 
-7.2 HA solution.  My guess is that a google search on that file name 
-will provide a hit somewhere.
+This GFP_DMA can be GFP_KERNEL because sd_init_onedisk calls sd_spinup_disk
+calls scsi_wait_req which can sleep.
 
+diff -urpNX dontdiff linux-2.5.63/drivers/scsi/sd.c linux-2.5.63-gfpdma/drivers/scsi/sd.c
+--- linux-2.5.63/drivers/scsi/sd.c	2003-02-24 13:05:39.000000000 -0600
++++ linux-2.5.63-gfpdma/drivers/scsi/sd.c	2003-02-27 16:10:40.000000000 -0600
+@@ -1197,7 +1197,7 @@ sd_init_onedisk(struct scsi_disk * sdkp,
+ 		return;
+ 	}
+ 
+-	buffer = kmalloc(512, GFP_DMA);
++	buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
+ 	if (!buffer) {
+ 		printk(KERN_WARNING "(sd_init_onedisk:) Memory allocation "
+ 		       "failure.\n");
 
 -- 
-   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-          Red Hat, Inc.
-          1801 Varsity Dr.
-          Raleigh, NC 27606
-
-
+"It's not Hollywood.  War is real, war is primarily not about defeat or
+victory, it is about death.  I've seen thousands and thousands of dead bodies.
+Do you think I want to have an academic debate on this subject?" -- Robert Fisk
