@@ -1,61 +1,33 @@
 From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [RFC]: 64 bit LUN/Tags, dummy device in host_queue, host_lock <-> LLDD reentrancy
-Date: Mon, 26 Aug 2002 10:27:46 -0700
+Subject: [PATCH 2.5.31] scsi_error cleanup updated
+Date: Mon, 26 Aug 2002 10:46:54 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020826172746.GA1301@beaverton.ibm.com>
-References: <OFA9BD559F.ACA1BDCD-ONC1256C21.005981BE@de.ibm.com> <200208261648.g7QGm6b00427@localhost.localdomain>
+Message-ID: <20020826174654.GB1301@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from westrelay03.boulder.ibm.com (westrelay03.boulder.ibm.com [9.17.194.24])
+	by e1.ny.us.ibm.com (8.12.2/8.12.2) with ESMTP id g7QHjtnM230320
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2002 13:45:57 -0400
+Received: from dyn9-47-17-195 (dyn9-47-17-67.beaverton.ibm.com [9.47.17.67])
+	by westrelay03.boulder.ibm.com (8.12.3/NCO/VER6.4) with ESMTP id g7QHjtmX084654
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2002 11:45:55 -0600
 Content-Disposition: inline
-In-Reply-To: <200208261648.g7QGm6b00427@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Aron Zeh <ARZEH@de.ibm.com>, Luben Tuikov <luben@splentec.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-James Bottomley [James.Bottomley@SteelEye.com] wrote:
-> ARZEH@de.ibm.com said:
-> > Does the use of driverfs-names mean that the HBA driver somehow comes
-> > into the discovery-loop for devices (e.g. scan_scsis somehow interacts
-> > with the HBA driver to determine which driverfs entry to create.)?
-> 
-> Well, scanning is really only for legacy.  Way into the future, I'd like to 
-> see hotplug notification for device attach events, so no fibre controller ever 
-> need be troubled by the scan.  All they'd do is send a device attach 
-> notification into SCSI when they detect one.  (SCSI would probably then turn 
-> around and ask for a REPORT_LUNS).
-> 
 
-There will probably still need to be some form of scan through the
-hotplug scripts based on a HAs capability (parallel SCSI, FC loop). A
-CAM-3 like indication that the HA is capable of auto discovery or needs
-a probe from min-max.
+I updated the scsi_error.c cleanup patch. I have added a offline device
+function that was previously contained inside the scsi_eh_bus_host_reset
+function. This breakup improves the readability of error policy/recovery
+in the scsi_unjam_host function.
 
-> > Shouldn't there be some sort of rule for LUN (or unit) naming within
-> > at least the same hardware class? That is for: parallel, iSCSI, FC,
-> > etc. Will the SCSI stack automatically try to discover all devices
-> > behind the HBA (e.g, on the FC SAN)? Or will there be an interface to
-> > restrict the range, etc?
-> 
-> Yes, there should.  But such a rule would only be for maintaining consistency 
-> within driverfs, and therefore could happily become Patric Mochel's problem.  
-> If we go the whole hotplug route, discovery would be up to the scsi hotplug 
-> scripts.
-> 
-> > Lastly, how will you keep track of LUNs in the SCSI stack? Will the
-> > current LUN field disappear in favour of a generic character string? 
-> 
-> Internally to Scsi_Device, LUNs will be linked by pointers.  How we know 
-> whether such a linkage needs to occur, I'm not yet sure about.  In the worst 
-> case we could use driverfs matching to see if a newly discovered device's PUN 
-> matches an existing device, or there might be a way for the HBA driver to 
-> supply the information.
-> 
+You can obtain the patch at:
 
-James I do not follow the usage of LUNs linked by pointers, can you
-explain further?
+http://www-124.ibm.com/storageio/gen-io/patch-scsi_error-2.5.31-1.gz
 
 -Mike
+
 -- 
 Michael Anderson
 andmike@us.ibm.com
