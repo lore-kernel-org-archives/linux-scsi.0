@@ -1,53 +1,103 @@
-From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
-Subject: Re: SuSE hwinfo/yast2 still confusing SYM53C8XX, killing tape backups
-Date: Mon, 29 Nov 2004 12:24:17 +0100
-Message-ID: <m34qj8290e.fsf@merlin.emma.line.org>
-References: <4197E4B7.3050008@pobox.com> <1100473795.23649.26.camel@mulgrave>
-	<m3hdnsvvfd.fsf@merlin.emma.line.org>
-	<1100477105.24921.3.camel@mulgrave>
-	<m34qjrx6iy.fsf_-_@merlin.emma.line.org>
-	<Pine.LNX.4.61.0411221102280.22230@ligeti.suse.de>
-	<m3actaw0pv.fsf@merlin.emma.line.org>
-	<20041122133014.GF25636@parcelfarce.linux.theplanet.co.uk>
-	<m3mzxaq8ra.fsf@merlin.emma.line.org>
-	<Pine.LNX.4.61.0411261512320.14112@ligeti.suse.de>
-	<20041127004000.GA23180@merlin.emma.line.org>
-	<Pine.LNX.4.61.0411291209220.24675@ligeti.suse.de>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: sg3_utils-1.11 released
+Date: Mon, 29 Nov 2004 21:41:31 +1000
+Message-ID: <41AB0AEB.4020404@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from krusty.dt.E-Technik.Uni-Dortmund.DE ([129.217.163.1]:39323 "EHLO
-	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
-	id S261680AbUK2LYV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Nov 2004 06:24:21 -0500
-In-Reply-To: <Pine.LNX.4.61.0411291209220.24675@ligeti.suse.de> (Steffen
-	Winterfeldt's message of "Mon, 29 Nov 2004 12:16:42 +0100 (CET)")
+Received: from borg.st.net.au ([65.23.158.22]:45770 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261687AbUK2Lli (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Nov 2004 06:41:38 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by borg.st.net.au (Postfix) with ESMTP id 935623944EE
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Nov 2004 21:41:35 +1000 (EST)
+Received: from [192.168.48.80] (dsl-40.129.240.220.lns02-wick-bne.dsl.comindico.com.au [220.240.129.40])
+	by borg.st.net.au (Postfix) with ESMTP id 39BF03944A4
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Nov 2004 21:41:33 +1000 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Steffen Winterfeldt <snwint@suse.de>
-Cc: Matthias Andree <matthias.andree@gmx.de>, Matthew Wilcox <matthew@wil.cx>, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
+To: linux-scsi@vger.kernel.org
 
-Steffen Winterfeldt <snwint@suse.de> writes:
+Tarball, rpm and deb can be found on http://www.torque.net/sg .
+Overview of sg3_utils, sg_utils and other packages are on
+this page: http://www.torque.net/sg/u_index.html
+A release announcement has been sent to freshmeat.net .
 
->> The hwinfo-8.70-0.2 update alone doesn't appear to help, I still see parity
->> errors and still see 256-byte reads from
->> /sys/devices/pci0000:00/0000:00:0d.0/config (my SYM53C875's config space),
->> strace below
->
-> They are from /sbin/raiddetect (same cause as in hwinfo - libsysfs
-> usage).
+Changelog for sg3_utils-1.11 [20041126]
+   - sg_sync: new utility: invokes the synchronize cache command
+   - sg_prevent: new utility: invokes the prevent allow medium
+     removal command
+   - sg_get_config: new utility: get configuration command for
+     dvds and cds
+   - sg_request: fix, allocation length wasn't set
+   - sg_start: remove '-s', as start_stop_unit implicitly syncs caches
+   - sg_ses: add SAS expander element type
+   - sg_inq: add sanity check to unit serial number (VPD page 0x80)
+         - output ANSI version string (e.g. "SPC-2", previously
+	  was a number)
+         - add '-s' option to decode SCSI Ports VPD page
+   - sg_logs: decoding of format status and non-volatile cache log
+         pages (0x8 and 0x17 in sbc-2)
+   - sg_dd: handle compile error when O_DIRECT not defined
+   - sginfo: tighten sanity checks around Unit serial number VPD page
 
-And also in the udev package... will we see an updated udev package for
-SL 9.1 and 9.2, perhaps as Driver or Vendor Update, so it can help at
-first install already? These SYM53C8XX adaptors are quite popular.
 
->> The kernel (vanilla 2.6.9) still begs that hwinfo be converted to SG_IO.
->
-> That warning was introduced after SL 9.1 was finished.
+Here is the contents of the COVERAGE file found in the tarball:
 
-Yes indeed, but SG_IO has been around for ages - but as you'd written
-the SL 9.2 version had already been converted, this might be a good time
-to fix it for 9.1, too. The package needs to be patched anyways.
+                         Command coverage
+                         ================
+The following table lists SCSI commands in alphabetical order on the
+left and the sg3_utils utilities that implement invocations of them
+on the right. The second table lists supported ATA commands.
 
--- 
-Matthias Andree
+SCSI command        sg3_utils utilities that use this SCSI command
+------------        ----------------------------------------------
+GET CONFIGURATION   sg_get_config
+INQUIRY             sg_inq, sginfo, sg_logs, sg_map('-i'), sg_modes,
+                     sg_opcodes, sg_persist, sg_scan, sg_ses
+LOG SELECT          sg_logs
+LOG SENSE           sg_logs
+MODE SELECT(6)      sginfo, sg_emc_trespass
+MODE SELECT(10)     sginfo, sg_emc_trespass
+MODE SENSE(6)       sginfo, sg_modes, sg_senddiag('-e')
+MODE SENSE(10)      sginfo, sg_modes, sg_senddiag('-e')
+PERSISTENT IN       sg_persist
+PERSISTENT OUT      sg_persist
+PREVENT ALLOW MEDIUM REMOVAL            sg_prevent
+READ(6)             sg_dd, sgm_dd, sgp_dd, sg_read
+READ(10)            sg_dd, sgm_dd, sgp_dd, sg_read
+READ(12)            sg_dd, sgm_dd, sgp_dd, sg_read
+READ(16)            sg_dd, sgm_dd, sgp_dd, sg_read
+READ BUFFER         sg_rbuf, sg_test_rwbuf
+READ CAPACITY(10)   sg_readcap, sg_dd, sgm_dd, sgp_dd
+READ CAPACITY(16)   sg_readcap, sg_dd, sgm_dd, sgp_dd
+READ DEFECT(10)     sginfo
+READ DEFECT(12)     sginfo
+READ LONG           sg_read_long
+RECEIVE DIAGNOSTIC  sg_senddiag, sg_ses
+REPORT LUNS         sg_luns
+REPORT SUPPORTED OPERATION CODES              sg_opcodes
+REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS    sg_opcodes
+REQUEST SENSE       sg_requests
+SEND DIAGNOSTIC     sg_senddiag, sg_ses
+START STOP          sg_start
+SYNCHRONIZE CACHE   sg_sync, sg_dd, sgm_dd, sgp_dd
+TEST UNIT READY     sg_turs
+VERIFY(10)          sg_verify
+WRITE(6)            sg_dd, sgm_dd, sgp_dd
+WRITE(10)           sg_dd, sgm_dd, sgp_dd
+WRITE(12)           sg_dd, sgm_dd, sgp_dd
+WRITE(16)           sg_dd, sgm_dd, sgp_dd
+WRITE BUFFER        sg_test_rwbuf
+WRITE LONG          sg_write_long
+
+
+ATA command         sg3_utils utilities that use this SCSI command
+-----------         ----------------------------------------------
+IDENTITY            sg_inq, sg_scan
+
+
+Doug Gilbert
