@@ -1,51 +1,42 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] 2.6.2-rc2 - MPT Fusion driver 3.00.02 update
-Date: 28 Jan 2004 15:08:18 -0500
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Is there a grand plan for FC failover?
+Date: Wed, 28 Jan 2004 12:47:56 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1075316397.1739.15.camel@mulgrave>
-References: <0E3FA95632D6D047BA649F95DAB60E5703D19D33@exa-atlanta.se.lsil.com>
-	<1075136727.2290.48.camel@mulgrave>  <401625CA.1070404@torque.net>
+Message-ID: <20040128124756.A7232@beaverton.ibm.com>
+References: <401521A7.5030808@thekelleys.org.uk> <1075131446.2290.29.camel@mulgrave> <20040128100236.D11527@vienna.EGENERA.COM> <1075309052.2254.6.camel@mulgrave> <20040128130040.E11527@vienna.EGENERA.COM>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:19605 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S265923AbUA1UIf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Jan 2004 15:08:35 -0500
-In-Reply-To: <401625CA.1070404@torque.net>
+Received: from e31.co.us.ibm.com ([32.97.110.129]:6898 "EHLO e31.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S266083AbUA1Usb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Jan 2004 15:48:31 -0500
+Content-Disposition: inline
+In-Reply-To: <20040128130040.E11527@vienna.EGENERA.COM>; from pauld@egenera.com on Wed, Jan 28, 2004 at 01:00:40PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: "Moore, Eric Dean" <Emoore@lsil.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, hch@infradead.org
+To: "Philip R. Auld" <pauld@egenera.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Simon Kelley <simon@thekelleys.org.uk>, SCSI Mailing List <linux-scsi@vger.kernel.org>, dm-devel@sistina.com
 
-On Tue, 2004-01-27 at 02:48, Douglas Gilbert wrote:
-> So the sg (or SG_IO/SCSI_IOCTL_SEND_COMMAND ioctl) user controls
-> the data direction and they are free to get it wrong:-)
+[cc-ing dm-devel]
 
-Since we do have a mid layer library for this, perhaps we should set it
-in sg if the user leaves it apparently unset.
+My two main issues with dm multipath versus scsi core multipath are:
 
-> ** The Object Storage Device (OSD) commands use bidirectional
-> data transfers so perhaps we should think about catering for
-> that.
+1) It does not handle character devices.
 
-Actually, a much more fundamental problem for OSD is going to be >16
-byte CDBs.  The mid and block layers today are coded with an internal 16
-byte array for the CDB.  That's not very scaleable to the hundreds of
-bytes that OSD needs.
+2) It does not have the information available about the state of the
+scsi_device or scsi_host (for path selection), or about the elevator.
 
-As far as bidirectional goes, we should be able to support that today
-providing there's just a *single* data buffer, which the OSD spec
-implies is the easiest way to support this (although I suspect most SCSI
-processor coding won't be expecting to see both a data in and a data out
-from a single command).
+If we end up passing all the scsi information up to dm, and it does the
+same things that we already do in scsi (or in block), what is the point of
+putting the code into a separate layer?
 
-As I see it, OSD seems to require a different interface from the current
-bio layer, so there would be some type of object layer glue between the
-fs and the mid-layer, with the block layer relegated simply to queueing
-specials for the mid-layer, but since no-one's actually come forward
-with an implementation, that's just a guess.
+More scsi fastfail like code is still needed - probably for all the cases
+where scsi_dev_queue_ready and scsi_host_queue_ready return 0 - and more.
+For example, should we somehow make sdev->queue_depth available to dm?
 
-James
+There are still issues with with a per path elevator (i.e. we have an
+elevator for each path rather than the entire device) that probably won't
+be fixed cleanly in 2.6. AFAIUI this requires moving dm from a bio based
+approach to a request based one.
 
-
+-- Patrick Mansfield
