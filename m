@@ -1,84 +1,89 @@
-From: Stephen Cameron <steve.cameron@hp.com>
-Subject: [PATCH] cpqfc 2.5.30 lun fix (resend)
-Date: Fri, 2 Aug 2002 17:07:26 -0500
+From: Mukul Kotwani <mkotwani@yahoo.com>
+Subject: Re: Performance
+Date: Fri, 2 Aug 2002 16:01:24 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020802170726.A4549@zuul.cca.cpqcorp.net>
-Reply-To: steve.cameron@hp.com
+Message-ID: <20020802230124.59457.qmail@web14007.mail.yahoo.com>
+References: <20020802081655.B15152@hpti.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20020802081655.B15152@hpti.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Craig Tierney <ctierney@hpti.com>
+Cc: linux-scsi@vger.kernel.org
+
+Running IOMeter against the Qlogic with IBM 15kRPM
+JBODS, Im getting:
+
+1) For 512 byte 100%random reads, I get *just* 260 
+IOPs per sec.On Windows with IOMeter, I get about 7000
+foir the same config.
 
 
-(I tried to send this before, not sure it got through... 
-apologies for duplicates.  It is likely the cpqfc passthrough 
-ioctl fix for 2.5.30 depends on this patch, so I want to be sure 
-this one gets through too.)
+2) For 512k 100%sequential reads, I see 30MB per sec.
+Windows gives 85MB/sec
 
--- steve
+I see the similar performance with my driver on Linux.
+I dont know whyit is so low, cannot be that low as
+compared to windws, a few MB/sec or a few hundred IOPs
+per sec difference is OK, but this difference is TOO
+huge. I tried a bunch of diff host template params,
+but doesnt seem to make a difference.
 
-diff -urN linux-2.5.30/drivers/scsi/cpqfc.Readme linux-2.5.30-p1/drivers/scsi/cpqfc.Readme
---- linux-2.5.30/drivers/scsi/cpqfc.Readme	Wed Jul 24 16:03:32 2002
-+++ linux-2.5.30-p1/drivers/scsi/cpqfc.Readme	Fri Aug  2 15:13:14 2002
-@@ -7,10 +7,15 @@
- SEST size 512 Exchanges (simultaneous I/Os) limited by module kmalloc() 
- 	max of 128k bytes contiguous.
- 
-+Ver 2.5.1  Jul 30, 2002
-+   * fix ioctl to pay attention to the specified LUN.
- Ver 2.5.0  Nov 29, 2001
-    * eliminated io_request_lock.  This change makes the driver specific
-      to the 2.5.x kernels.
-    * silenced excessively noisy printks.
-+
-+Ver 2.1.2  July 23, 2002
-+   * initialize DumCmnd->lun in cpqfcTS_ioctl (used in fcFindLoggedInPorts as LUN index)
- 
- Ver 2.1.1  Oct 18, 2001
-    * reinitialize Cmnd->SCp.sent_command (used to identify commands as
-diff -urN linux-2.5.30/drivers/scsi/cpqfcTSinit.c linux-2.5.30-p1/drivers/scsi/cpqfcTSinit.c
---- linux-2.5.30/drivers/scsi/cpqfcTSinit.c	Fri Aug  2 15:11:04 2002
-+++ linux-2.5.30-p1/drivers/scsi/cpqfcTSinit.c	Fri Aug  2 15:13:14 2002
-@@ -68,7 +68,7 @@
- 
- /* Embedded module documentation macros - see module.h */
- MODULE_AUTHOR("Compaq Computer Corporation");
--MODULE_DESCRIPTION("Driver for Compaq 64-bit/66Mhz PCI Fibre Channel HBA v. 2.1.1");
-+MODULE_DESCRIPTION("Driver for Compaq 64-bit/66Mhz PCI Fibre Channel HBA v. 2.5.2");
- MODULE_LICENSE("GPL");
-   
- int cpqfcTS_TargetDeviceReset( Scsi_Device *ScsiDev, unsigned int reset_flags);
-@@ -503,6 +503,7 @@
-   // can we find an FC device mapping to this SCSI target?
-   DumCmnd.channel = ScsiDev->channel;		// For searching
-   DumCmnd.target  = ScsiDev->id;
-+  DumCmnd.lun     = ScsiDev->lun;
-   pLoggedInPort = fcFindLoggedInPort( fcChip,
-     &DumCmnd, // search Scsi Nexus
-     0,        // DON'T search linked list for FC port id
-diff -urN linux-2.5.30/drivers/scsi/cpqfcTSstructs.h linux-2.5.30-p1/drivers/scsi/cpqfcTSstructs.h
---- linux-2.5.30/drivers/scsi/cpqfcTSstructs.h	Wed Jul 24 16:03:26 2002
-+++ linux-2.5.30-p1/drivers/scsi/cpqfcTSstructs.h	Fri Aug  2 15:13:14 2002
-@@ -33,7 +33,7 @@
- // don't forget to also change MODULE_DESCRIPTION in cpqfcTSinit.c
- #define VER_MAJOR 2
- #define VER_MINOR 5
--#define VER_SUBMINOR 0
-+#define VER_SUBMINOR 2
- 
- // Macros for kernel (esp. SMP) tracing using a PCI analyzer
- // (e.g. x86).
-diff -urN linux-2.5.30/drivers/scsi/cpqfcTSworker.c linux-2.5.30-p1/drivers/scsi/cpqfcTSworker.c
---- linux-2.5.30/drivers/scsi/cpqfcTSworker.c	Wed Jul 24 16:03:30 2002
-+++ linux-2.5.30-p1/drivers/scsi/cpqfcTSworker.c	Fri Aug  2 15:13:14 2002
-@@ -3380,6 +3380,8 @@
- 	  // Report Luns command
-           if( pLoggedInPort->ScsiNexus.LunMasking == 1) 
- 	  {
-+	    if (Cmnd->lun > sizeof(pLoggedInPort->ScsiNexus.lun))
-+		return NULL;
-             // we KNOW all the valid LUNs... 0xFF is invalid!
-             Cmnd->SCp.have_data_in = pLoggedInPort->ScsiNexus.lun[Cmnd->lun];
- 	    if (pLoggedInPort->ScsiNexus.lun[Cmnd->lun] == 0xFF)
+Has anyone dont any testing with IOMeter? Or is there
+any other toold I can use to test IOPs/througput?
+
+
+Thanks,
+Mukul
+
+--- Craig Tierney <ctierney@hpti.com> wrote:
+> For the Qlogic 2200F I am able to push 100 MB/s for
+> reads and writes using multiple threads to a
+> filesystem
+> that is striped across mutliple host ports on the
+> SAN.  Backend RAID is a 
+> Data Direct Networks SAN.  For a single thread to a
+> ext3 filesystem
+> and 2.4.18, I get about 70 MB/s for reads and
+> writes.
+> 
+> I have no Iops/sec numbers.
+> 
+> Craig
+> 
+> 
+> > Hello!
+> > Does anyone have any performace numbers of a
+> Qlogic
+> > HBA? No of IOps/sec Max MBs /sec?
+> > 
+> > Thanks!
+> > M
+> > 
+> > 
+> > __________________________________________________
+> > Do You Yahoo!?
+> > Yahoo! Health - Feel better, live better
+> > http://health.yahoo.com
+> > -
+> > To unsubscribe from this list: send the line
+> "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at 
+> http://vger.kernel.org/majordomo-info.html
+> 
+> -- 
+> Craig Tierney (ctierney@hpti.com)
+> -
+> To unsubscribe from this list: send the line
+> "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at 
+http://vger.kernel.org/majordomo-info.html
+
+
+__________________________________________________
+Do You Yahoo!?
+Yahoo! Health - Feel better, live better
+http://health.yahoo.com
