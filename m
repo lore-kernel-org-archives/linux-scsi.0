@@ -1,60 +1,57 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: IO buffer alignment for block devices
-Date: Mon, 13 Sep 2004 20:12:34 +0300 (EEST)
+From: "Hammer, Jack" <Jack_Hammer@adaptec.com>
+Subject: 2.4.28-pre3: broken ips update
+Date: Mon, 13 Sep 2004 14:01:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0409131952170.4529@kai.makisara.local>
-References: <41459729.5060106@il.marvell.com> <1095084876.1762.8.camel@mulgrave>
-  <4145B9DF.7020408@il.marvell.com> <1095089305.1762.73.camel@mulgrave>
+Message-ID: <A121ABA5B472B74EB59076B8E3C8F0197965F4@rtpe2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep30-0.kolumbus.fi ([193.229.0.32]:47067 "EHLO
-	fep30-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S268086AbUIMRMf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Sep 2004 13:12:35 -0400
-In-Reply-To: <1095089305.1762.73.camel@mulgrave>
+Received: from magic.adaptec.com ([216.52.22.17]:1947 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S268139AbUIMSCA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Sep 2004 14:02:00 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Saeed Bishara <Saeed.Bishara@il.marvell.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, Arjan van de Ven <arjanv@redhat.com>, Adrian Bunk <bunk@fs.tum.de>
 
-On Mon, 13 Sep 2004, James Bottomley wrote:
 
-> On Mon, 2004-09-13 at 11:16, Saeed Bishara wrote:
-> >     isn't the default 512, this is what I see in blk_queue_make_request.
-> > 
-> > <http://lxr.linux.no/ident?v=2.6.8.1;i=blk_queue_make_request>
-> 
-> In the block layer, yes.  In SCSI we tune that down to be 8 for backward
-> compatibility with 2.4, I think, but LLDs can tune it up again.
-> 
-We don't. The alignment has been 512 bytes after this patch in 2.6.4:
+This patch replaces the patch I submitted ( and then rescinded ) earlier
+today. It fixes the compilation problem in 2.4.28 and includes the
+changes recommended by Arjan on my earlier proposal for this.
 
-<James.Bottomley@SteelEye.com>
-        [PATCH] Undo SCSI 8-byte alignment relaxation
-        
-        This makes the default alignment requirements be 512 bytes for SCSI,
-        the way it used to be.
-        
-        Jens will fix the SCSI layer problems, but low-level drivers might have
-        other restrictions on alignment.
+Jack 
 
-As you can guess, I have not been too happy with this situation ;-)
 
-Any driver can change this restriction in slave_configure(). I have for 
-some time had the following patch in my system to change the alignment for 
-my tape drive to 8 bytes:
 
---- linux-2.6.9-rc1-bk1/drivers/scsi/sym53c8xx_2/sym_glue.c~	2004-08-27 19:33:34.000000000 +0300
-+++ linux-2.6.9-rc1-bk1/drivers/scsi/sym53c8xx_2/sym_glue.c	2004-08-28 12:54:49.000000000 +0300
-@@ -1097,6 +1097,8 @@
+
+--- linux.orig/drivers/scsi/ips.h	Mon Sep 13 12:51:04 2004
++++ linux/drivers/scsi/ips.h	Mon Sep 13 12:55:15 2004
+@@ -95,15 +95,14 @@
+       #define scsi_set_pci_device(sh,dev) (0)
+    #endif
  
- 	spi_dv_device(device);
- 
-+	blk_queue_dma_alignment(device->request_queue, 7);
-+
- 	return 0;
- }
- 
+-   #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+-   
+-      #ifndef irqreturn_t
+-         typedef void irqreturn_t;
+-      #endif 
+-      
++   #ifndef IRQ_NONE
++      typedef void irqreturn_t;
+       #define IRQ_NONE
+       #define IRQ_HANDLED
+       #define IRQ_RETVAL(x)
++   #endif
++   
++   #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+       #define IPS_REGISTER_HOSTS(SHT)
+scsi_register_module(MODULE_SCSI_HA,SHT)
+       #define IPS_UNREGISTER_HOSTS(SHT)
+scsi_unregister_module(MODULE_SCSI_HA,SHT)
+       #define IPS_ADD_HOST(shost,device) 
 
--- 
-Kai
+
+
