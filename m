@@ -1,76 +1,55 @@
-From: Matthew Jacob <mjacob@feral.com>
+From: torvalds@transmeta.com (Linus Torvalds)
 Subject: Re: [RFC] Persistent naming of scsi devices
-Date: Tue, 9 Apr 2002 19:01:46 -0700 (PDT)
+Date: Wed, 10 Apr 2002 02:17:05 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.BSF.4.21.0204091824010.19773-100000@beppo>
-References: <3CB39285.8000609@vitalstream.com>
-Reply-To: mjacob@feral.com
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <a907b1$rdj$1@penguin.transmeta.com>
+References: <OF8B2F3581.590066BE-ONC1256B95.0068B28C@de.ibm.com> <3CB39285.8000609@vitalstream.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3CB39285.8000609@vitalstream.com>
+Received: (from root@localhost)
+	by neon-gw.transmeta.com (8.9.3/8.9.3) id TAA20381
+	for <linux-scsi@vger.kernel.org>; Tue, 9 Apr 2002 19:17:45 -0700
+Received: from palladium.transmeta.com (palladium.transmeta.com [10.1.1.46])
+	by deepthought.transmeta.com (8.11.6/8.11.6) with ESMTP id g3A2HfN03547
+	for <linux-scsi@vger.kernel.org>; Tue, 9 Apr 2002 19:17:42 -0700 (PDT)
+Received: (from mail@localhost)
+	by palladium.transmeta.com (8.9.3/8.9.3) id TAA20627
+	for linux-scsi@vger.kernel.org; Tue, 9 Apr 2002 19:17:41 -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Rick Stevens <rstevens@vitalstream.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+In article <3CB39285.8000609@vitalstream.com>,
+Rick Stevens  <rstevens@vitalstream.com> wrote:
+>
+> [ Position-based naming ]
+>
+>As I said, other people smarter than I seem to think it makes sense.
 
+No, those people were probably not smarter than you. In fact, they are
+likely complete morons.
 
-On Tue, 9 Apr 2002, Rick Stevens wrote:
+Position means nothing.  Anybody who bases naming on position is just
+bending over and waiting for it when it comes to hotplugging etc.  It
+solves none of the problems it is claimed to solve (ie the names are
+_not_ constant), and it fundamentally locks you into a mindset that
+simply isn't true. 
 
-> Martin Peschke3 wrote:
-> 
-> <much stuff snipped>
-> 
-> I'm going to wade in here.  Based on my experiences on many other
-> Unixish systems, wouldn't it be simply better to number the things
-> based on controller position, SCSI ID, LUN and partition? 
+>Why not Linux?  It's silly to smush things together just to satisfy a
+>bizzare craving to have a list of devices with no "holes" in it.
 
-Address has become a very non-persistent thing.
+No, it's silly to think that you can enumerate the address space: you
+can't. The only thing you get from trying is a horrible mess in /dev
+that adds zero information anywhere.
 
+You're much better off just enumerating your SCSI devices the trivial
+way (ie 0, 1, 2 ....  completely independent on position - each device
+gets one unique number that has no inherent meaning and is UNDERSTOOD to
+have no inherent meaning, only an ID) and then having a way to query
+their attibutes.  That way you can use the attributes (which are _NOT_
+identities) to create whatever "convenient mapping" you want. 
 
-> has been called "CTL" format in various documents, and many systems
-> use this method such as Sun, DG AvIIons, DEC, HP and a host of others.
-> 
-> E.g. "/dev/dsk/c0t1d2s3" is controller 0 (first SCSI controller seen on
-> the bus), target ID 1, LUN 2, partition (slice) 3.  Simple, unambiguous
-> and repeatable.
-> 
-> I understand that other devices may be seen on the PCI if you add or
-> remove cards.  Under this scheme, controller 0 is the first (lowest
-> slot number) unit found.  The next one would be controller 1.  Even
-> if you were to stuff, say, a video card in there, these would _still_
-> be the first SCSI cards found.  The only time a change would occur
-> is if a SCSI card was installed in a lower slot number or between
-> other SCSI controllers (and only then if the original cards were
-> left in) or if the ORDER of the cards was changed in the bus.
-> 
-> As I said, other people smarter than I seem to think it makes sense.
-> Why not Linux?  It's silly to smush things together just to satisfy a
-> bizzare craving to have a list of devices with no "holes" in it.
-> Besides "fsck"ing or "mkfs"ing drives, how often do you refer to them
-> by their names in "/dev", anyway?
-> 
-> This would also work for tape drives.  However, they're rooted at
-> /dev/stape rather than /dev/dsk.
-> 
-> At boot, you could create more mnemonic names as symbolic links to the
-> CTL names if you wish (as is done with /dev/cdrom and such), but if
-> you absolutely want to talk to the SAME DEVICE, you use the CTL name.
-> 
-> Just adding my $0.02.  We now return you to your regularly scheduled
-> arguments.
-> 
-> ----------------------------------------------------------------------
-> - Rick Stevens, SSE, VitalStream, Inc.      rstevens@vitalstream.com -
-> - 949-743-2010 (Voice)                    http://www.vitalstream.com -
-> -                                                                    -
-> -          su -; find / -name someone -exec touch \{\} \;            -
-> -                          - The UNIX way of touching someone        -
-> ----------------------------------------------------------------------
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+The position of a drive is not its name, it's just one random attribute
+in a sea of other random attributes.  Depending on what you do, it might
+be a useful one, but it's equally likely that it is completely
+meaningless.  Trying to make it inherently meaningful is just *wrong*.
 
+		Linus
