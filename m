@@ -1,73 +1,60 @@
-From: Andrew Vasquez <praka@users.sourceforge.net>
-Subject: Re: QLogic (qla2100 / qlogicfc)
-Date: Tue, 9 Mar 2004 21:39:50 -0800
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: [PATCH] fusion/mptscsih init/exit sections
+Date: Tue, 9 Mar 2004 22:01:45 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040310053950.GA25105@praka.local.home>
-References: <Pine.GSO.4.33.0403092023560.28488-100000@sweetums.bluetronic.net>
-Reply-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Message-ID: <20040309220145.6a778804.rddunlap@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:32978 "EHLO
-	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S262238AbUCJGB3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Mar 2004 01:01:29 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.GSO.4.33.0403092023560.28488-100000@sweetums.bluetronic.net>
+Received: from fw.osdl.org ([65.172.181.6]:42385 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S262266AbUCJGML (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Mar 2004 01:12:11 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Ricky Beam <jfbeam@bluetronic.net>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: jejb <james.bottomley@steeleye.com>
 
-On Tue, 09 Mar 2004, Ricky Beam wrote:
 
-> [the facts]
-> Both qla2100 and qlogicfc fail when attempting to format a 7 disk raid5
-> array.  This is especially true if I format more than one array at a time
-> (I actually tried up to 4.)  In my experience, both drivers are broken --
-> one more inventively than the other.
-> 
+V: linux-264-rc2
+D: mptscsih_remove() can be called during init, for error handling;
 
-Ok, I'll see what I can do to help you out with the qla2xxx driver.
+diffstat:=
+ drivers/message/fusion/mptscsih.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-> Now for qla2100... It appears to work, but then trips over it's shoelaces
-> and never manages to get back up.  A command times out:
-> cmd_timeout: Entering sp->state = 2
-> cmd_timeout: Found in ISP
-> cmd_timeout: Entering sp->state = 2
-> cmd_timeout: Found in ISP
-> cmd_timeout: Leaving
-> cmd_timeout: Leaving
 
-Yes, but even before the timeouts occur, there appear to be some
-questionable events occuring with the firmware:
+diff -Naurp ./drivers/message/fusion/mptscsih.c~mptscsi_init ./drivers/message/fusion/mptscsih.c
+--- ./drivers/message/fusion/mptscsih.c~mptscsi_init	2004-03-06 20:57:05.000000000 -0800
++++ ./drivers/message/fusion/mptscsih.c	2004-03-07 16:16:54.000000000 -0800
+@@ -201,7 +201,7 @@ static int  __init   mptscsih_init  (voi
+ static void __exit   mptscsih_exit  (void);
+ 
+ static int  __devinit mptscsih_probe (struct pci_dev *, const struct pci_device_id *);
+-static void __devexit mptscsih_remove(struct pci_dev *);
++static void mptscsih_remove(struct pci_dev *);
+ static void mptscsih_shutdown(struct device *);
+ #ifdef CONFIG_PM
+ static int mptscsih_suspend(struct pci_dev *pdev, u32 state);
+@@ -1718,7 +1718,7 @@ mptscsih_probe_failed:
+  *
+  *
+  */
+-static void __devexit
++static void
+ mptscsih_remove(struct pci_dev *pdev)
+ {
+ 	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
+@@ -1920,7 +1920,7 @@ mptscsih_resume(struct pci_dev *pdev)
+ 
+ static struct mpt_pci_driver mptscsih_driver = {
+ 	.probe		= mptscsih_probe,
+-	.remove		= __devexit_p(mptscsih_remove),
++	.remove		= mptscsih_remove,
+ 	.shutdown	= mptscsih_shutdown,
+ #ifdef CONFIG_PM
+ 	.suspend	= mptscsih_suspend,
 
-	qla2100 0000:06:03.0: ISP System Error - mbx1=18d1h mbx2=ch mbx3=11h.
-	qla2100 0000:06:03.0: Failed to dump firmware (256)!!!
-	qla2x00: DPC handler waking up
-	scsi(0): DPC handler
-	scsi(0): dpc: sched qla2x00_abort_isp ha = f71481d4
-	qla2100 0000:06:03.0: Performing ISP error recovery - ha= f71481d4.
 
-The ISP2100 has not been a supported chip for some time now, but, I'll
-see if I can get some information from the firmware group regarding
-the events that led-up to this system-error.
-
-I've also been gathering a short-dozen or so patches that I was
-planning on forwarding to linux-scsi towards the end of the week.
-When I get in tomorrow, I'd like to forward you a couple of them for
-some additional testing, if you don't mind?
-
-> [See also: http://sweetums.bluetronic.net/~jfbeam/QLogic/]
->  + kernel config (I turned preempt off; it made no difference)
->  + console messages (minicom.cap-X)
->  + qla_XXX.h (debug settings)
->  + qlogicfc driver + diff
-> 
-
-I appreciate your initiative in enabling some of the debug settings of
-the driver and posting the resultant messages, it certainly makes
-troubleshooting problems a bit easier.
-
-Regards,
-Andrew Vasquez
-QLogic Corporation
+--
+~Randy
