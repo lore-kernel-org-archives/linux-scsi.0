@@ -1,41 +1,80 @@
-From: Ricky Beam <jfbeam@bluetronic.net>
-Subject: Re: [BK-PATCH] 3w-9xxx: proc interface
-Date: Fri, 2 Jul 2004 14:42:14 -0400 (EDT)
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH] scsi_remove_device locking
+Date: Fri, 02 Jul 2004 15:18:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.33.0407021430120.25702-100000@sweetums.bluetronic.net>
-References: <20040702183506.GA30810@infradead.org>
+Message-ID: <40E5C32A.3060002@us.ibm.com>
+References: <40E49E70.9020504@us.ibm.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/mixed;
+ boundary="------------060905030900050800040309"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sweetums.bluetronic.net ([24.199.150.42]:51419 "EHLO
-	sweetums.bluetronic.net") by vger.kernel.org with ESMTP
-	id S264795AbUGBSsj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Jul 2004 14:48:39 -0400
-In-Reply-To: <20040702183506.GA30810@infradead.org>
+Received: from e2.ny.us.ibm.com ([32.97.182.102]:31709 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S264904AbUGBUSx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jul 2004 16:18:53 -0400
+In-Reply-To: <40E49E70.9020504@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Adam Radford <aradford@amcc.com>, Linux SCSI List <linux-scsi@vger.kernel.org>
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2 Jul 2004, Christoph Hellwig wrote:
->On Fri, Jul 02, 2004 at 12:08:23PM -0400, Ricky Beam wrote:
->> 3dm2 (the currently available one anyway) needs /proc/scsi/3w-9xxx to
->> discover any controllers.  The current in-kernel driver doesn't contain any
->> /proc/scsi support.  The attached patch restores the interface.
->
->I'd rather wait for a new 3dm2 release instead of adding deprecated interfaces.
->Adam, any schedule for a new release?
+This is a multi-part message in MIME format.
+--------------060905030900050800040309
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Well, I'm not the only one who cannot monitor/control their array with the
-current in-kernel driver.  I don't care if the proc interface makes it
-back into the kernel; the systems I assemble with a 9500 will have the
-proc interface restored until I have a 3dm2 in hand that doesn't need it.
 
-Having a non-functioning 3dm2 is a major problem in my book. (technically,
-not have a firmware update interface in the kernel's driver is also a
-concern.)
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
 
-Locking the door before you have a key to get back in is a bad idea.
+--------------060905030900050800040309
+Content-Type: text/plain;
+ name="scsi_remove_device_locking.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi_remove_device_locking.patch"
 
---Ricky
 
+The following patch fixes an oops I was seeing on a machine with
+misconfigured scsi cables, but could feasibly happen in other paths.
+The oops was occurring because scsi_remove_device was getting
+called for a device before scsi_add_device had fully completed.
+This resulted in sysfs_remove_link being called with a NULL dentry.
+
+Signed-off-by: Brian King <brking@us.ibm.com>
+---
+
+ linux-2.6.7-bjking1/drivers/scsi/scsi_sysfs.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletion(-)
+
+diff -puN drivers/scsi/scsi_sysfs.c~scsi_remove_device_locking drivers/scsi/scsi_sysfs.c
+--- linux-2.6.7/drivers/scsi/scsi_sysfs.c~scsi_remove_device_locking	2004-07-02 11:34:25.000000000 -0500
++++ linux-2.6.7-bjking1/drivers/scsi/scsi_sysfs.c	2004-07-02 11:37:00.000000000 -0500
+@@ -524,8 +524,13 @@ int scsi_sysfs_add_sdev(struct scsi_devi
+  **/
+ void scsi_remove_device(struct scsi_device *sdev)
+ {
+-	if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
++	struct Scsi_Host *shost = sdev->host;
++	down(&shost->scan_mutex);
++
++	if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0) {
++		up(&shost->scan_mutex);
+ 		return;
++	}
+ 
+ 	class_device_unregister(&sdev->sdev_classdev);
+ 	if (sdev->transport_classdev.class)
+@@ -537,6 +542,7 @@ void scsi_remove_device(struct scsi_devi
+ 	if (sdev->host->transportt->cleanup)
+ 		sdev->host->transportt->cleanup(sdev);
+ 	put_device(&sdev->sdev_gendev);
++	up(&shost->scan_mutex);
+ }
+ 
+ int scsi_register_driver(struct device_driver *drv)
+_
+
+--------------060905030900050800040309--
 
