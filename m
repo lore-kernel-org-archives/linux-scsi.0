@@ -1,102 +1,74 @@
-From: "Aleks Sheynkman" <aleks@Narus.com>
-Subject: megaraid megaraid2-2.10.7 causing kernel panic
-Date: Fri, 3 Sep 2004 10:06:20 -0700
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] SCSI device/adapter/bus address correlation?
+Date: Fri, 3 Sep 2004 11:09:43 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <FA6D803197D0E14C88E1B74C5A021B822DDF9B@snitch.narus.com>
+Message-ID: <20040903180942.GA28970@beaverton.ibm.com>
+References: <200409021719.15267.bjorn.helgaas@hp.com> <1094168177.2097.154.camel@mulgrave> <200409030844.41174.bjorn.helgaas@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.narus.com ([66.236.101.211]:21964 "EHLO mx2.narus.com")
-	by vger.kernel.org with ESMTP id S269524AbUICRGW convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Sep 2004 13:06:22 -0400
-content-class: urn:content-classes:message
+Received: from e2.ny.us.ibm.com ([32.97.182.102]:2265 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S269722AbUICSKL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Sep 2004 14:10:11 -0400
+Content-Disposition: inline
+In-Reply-To: <200409030844.41174.bjorn.helgaas@hp.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Greetings,
-  I'm really sorry to bother you ,and I hope this is a correct list to post these kind of messages. I did post a similar message a day ago. We are currently experiencing problem with a new version of megaraid driver (megaraid2-2.10.7). All our severs in the past were running RH 7.3 and now we started migration process AS 2.1 specifically to update 2.4.9-e.49smp and dkms megaraid version 2.10.7. After upgrade, all our systems were stable until we started to run our hardware monitoring software. What it does, it polls the status of all physical and logical driver through ioctl call. Please see sample code below that would cause a kernel panic.  The code was working just fine until version 1.8f version of megaraid drivers, with introduction of new driver it started to fail and cause kernel panics, which kind of inconstant, sometimes it kills kernel swapper sometimes wait queues.  It seems l
- ike ioctl "M_RD_IOCTL_CMD " is totally broken, we can retrieve correct number of adapters by issuing ioctl suboption MEGAIOC_QNADAP.
+On Fri, Sep 03, 2004 at 08:44:40AM -0600, Bjorn Helgaas wrote:
+> On Thursday 02 September 2004 5:36 pm, James Bottomley wrote:
+> > On Thu, 2004-09-02 at 19:19, Bjorn Helgaas wrote:
+> > > Not being a real SCSI person, I'm sure there's some clever way I'=
+m
+> > > supposed to figure out which disk is /dev/sda. =A0But sometimes i=
+t's
+> > > not clear from the kernel boot messages, particularly for drivers
+> > > that don't print the PCI address of the adapter.
+> >=20
+> > You do it like this:
+> >=20
+> > jejb@gsyprf11> ls -l /sys/block/sda/device
+> > lrwxrwxrwx =A01 root root 0 Aug 22 10:57 /sys/block/sda/device ->
+> > ../../devices/parisc0/parisc0:0/pci0000:00/0000:00:01.1/host1/1:0:1=
+5:0/
+>=20
+> Thanks, I knew there must be a cool way.  That doesn't help if you're
+> trying to figure out the correct "root=3D" to boot your box, of cours=
+e...
 
-Did any one ever seen this before, can you please advice ?
+What exactly is the "root=3D" problem? You mean device names changing?
 
-Thank you !
+Also lsscsi gives simple easy to read output.=20
 
-Code that will panic the kernel, run it few times:
+http://www.torque.net/scsi/lsscsi.html
 
-#include "megaraid.h"
+[elm3a211 patman]$ lsscsi
+[0:0:0:0]    enclosu IBM      EXP700           9319  -      =20
+[0:0:1:0]    disk    IBM-ESXS ST318453FC    F  B953  /dev/sda
+[0:0:2:0]    disk    IBM-ESXS ST318453FC    F  B953  /dev/sdb
+[0:0:3:0]    enclosu IBM      EXP700           9319  -      =20
+[0:0:4:0]    disk    IBM-ESXS ST318453FC    F  B953  /dev/sdc
+[0:0:5:0]    disk    IBM-ESXS ST318453FC    F  B953  /dev/sdd
 
-int main()
-{
-        int         fd;
-       struct uioctl_t uioctl;
+I[elm3a211 patman]$ lsscsi -g
+[0:0:0:0]    enclosu IBM      EXP700           9319  -         /dev/sg0
+[0:0:1:0]    disk    IBM-ESXS ST318453FC    F  B953  /dev/sda  /dev/sg1
+[0:0:2:0]    disk    IBM-ESXS ST318453FC    F  B953  /dev/sdb  /dev/sg2
+[0:0:3:0]    enclosu IBM      EXP700           9319  -         /dev/sg3
+[0:0:4:0]    disk    IBM-ESXS ST318453FC    F  B953  /dev/sdc  /dev/sg4
+[0:0:5:0]    disk    IBM-ESXS ST318453FC    F  B953  /dev/sdd  /dev/sg5
 
-       if ( (fd = open("/dev/megadev0", O_RDWR)) < 0 && (fd = open("/dev/megadev", O_RDWR)) < 0)
-                return -1;
+I don't know if it works right with udev (i.e. I think it only prints
+default kernel names, just those found under sysfs, so if you don't use=
+r
+default kernels names with udev it might not show the correct /dev name=
+).
 
-        uioctl.inlen =  1024;
-        uioctl.outlen = 1024;
-
-        if(!(uioctl.data = malloc(1024))){
-                return 0;
-        }
-        memset(uioctl.data, 0, 1024);
-
-        uioctl.ui.fcs.opcode     = M_RD_IOCTL_CMD;
-        uioctl.ui.fcs.subopcode  = 0;
-        uioctl.ui.fcs.adapno     = MKADAP(0);
-
-        uioctl.mbox[0]           = FC_NEW_CONFIG;
-        uioctl.mbox[2]           = NC_SUBOP_ENQUIRY3;
-        uioctl.mbox[3]           = ENQ3_GET_SOLICITED_FULL;
-
-        if(ioctl(fd, MEGAIOCCMD, &uioctl) == -1){
-                fprintf(stderr,"Error %d \n\n", uioctl.ui.fcs.adapno);
-                fflush(stderr);
-                free(uioctl.data);
-                close(fd);
-                return 0;
-        }
-
-     close(fd);
- return 0;
-}
-
-
-Panic:
-1) 
-ug 31 20:54:03 Analyzer kernel: EIP is at iput_free [kernel] 0x1e
-Aug 31 20:54:03 Analyzer kernel: eax: 2e0001e3   ebx: f6880e40   ecx: f6880e50   edx: f6880e50
-Aug 31 20:54:03 Analyzer kernel: esi: f6880e40   edi: 00000000   ebp: 0008e000   esp: f7383f60
-Aug 31 20:54:03 Analyzer kernel: ds: 0018   es: 0018   ss: 0018
-Aug 31 20:54:03 Analyzer kernel: Process kswapd (pid: 10, stackpage=f7383000)
-Aug 31 20:54:03 Analyzer kernel: Stack: f587cb40 f5753b60 c015a45c f587cb40 f393c3e0 f6880e40 00000006 c015a41b
-Aug 31 20:54:03 Analyzer kernel:        f6880e40 f393c3f8 f393c3e0 c015a806 f393c3e0 c02fa190 00000286 00000286
-Aug 31 20:54:03 Analyzer kernel:        00000000 f7382000 00000000 00000000 00000000 00000000 00000000 00000000
-Aug 31 20:54:03 Analyzer kernel: Call Trace: [dput+28/304] dput [kernel] 0x1c (0xf7383f68)
-Aug 31 20:54:03 Analyzer kernel: Call Trace: [<c015a45c>] dput [kernel] 0x1c (0xf7383f68)
-Aug 31 20:54:03 Analyzer kernel: [dentry_iput+75/112] dentry_iput [kernel] 0x4b (0xf7383f7c)
-Aug 31 20:54:03 Analyzer kernel: [<c015a41b>] dentry_iput [kernel] 0x4b (0xf7383f7c)
-Aug 31 20:54:03 Analyzer kernel: [prune_dcache+182/336] prune_dcache [kernel] 0xb6 (0xf7383f8c)
- 
-2)p  1 18:41:36 Analyzer kernel: Oops: 0000
-Sep  1 18:41:36 Analyzer kernel: Kernel 2.4.9-e.49smp
-Sep  1 18:41:36 Analyzer kernel: CPU:    1
-Sep  1 18:41:36 Analyzer kernel: EIP:    0010:[__wake_up+51/144]    Tainted: P
-Sep  1 18:41:36 Analyzer kernel: EIP:    0010:[<c01198a3>]    Tainted: P
-Sep  1 18:41:36 Analyzer kernel: EFLAGS: 00010046
-Sep  1 18:41:36 Analyzer kernel: EIP is at __wake_up [kernel] 0x33
-Sep  1 18:41:36 Analyzer kernel: eax: f688800c   ebx: f6888014   ecx: 00000001   edx: 00000000
-Sep  1 18:41:36 Analyzer kernel: esi: 00000001   edi: f4c8a880   ebp: f4f25a94   esp: f4f25a7c
-Sep  1 18:41:36 Analyzer kernel: ds: 0018   es: 0018   ss: 0018
-Sep  1 18:41:36 Analyzer kernel: Process snmpd (pid: 626, stackpage=f4f25000)
-Sep  1 18:41:36 Analyzer kernel: Stack: 00000000 00000282 00000001 f4c8a880 f4c7f040 00000000 f4ec28c0 c01daad9
-Sep  1 18:41:36 Analyzer kernel:        00000002 00000026 f4c7f178 00001060 00007fff f4c7f178 c01ff422 f4c7f040
-Sep  1 18:41:36 Analyzer kernel:        00000000 c01fe2f4 f4c7f040 f4c7f178 ffffffff f4a8f0c0 3a6ade00 00000000
-Sep  1 18:41:36 Analyzer kernel: Call Trace: [sock_def_readable+57/112] sock_def_readable [kernel] 0x39 (0xf4f25a98)
-Sep  1 18:41:36 Analyzer kernel: Call Trace: [<c01daad9>] sock_def_readable [kernel] 0x39 (0xf4f25a98)
-Sep  1 18:41:36 Analyzer kernel: [tcp_data_queue+898/2688] tcp_data_queue [kernel] 0x382 (0xf4f25ab4)
-Sep  1 18:41:36 Analyzer kernel: [<c01ff422>] tcp_data_queue [kernel] 0x382 (0xf4f25ab4)
-Sep  1 18:41:36 Analyzer kernel: [tcp_ack+180/784] tcp_ack [kernel] 0xb4 (0xf4f25ac0)
-Sep  1 18:41:36 Analyzer kernel: [<c01fe2f4>] tcp_ack [kernel] 0xb4 (0xf4f25ac0)
+-- Patrick Mansfield
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
