@@ -1,37 +1,46 @@
 From: Martin Peschke3 <MPESCHKE@de.ibm.com>
 Subject: Re: [PATCH] add device_configure to the transport classes
-Date: Wed, 6 Oct 2004 18:29:50 +0200
+Date: Wed, 6 Oct 2004 18:52:12 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF4B71AD6D.2ACA3A91-ONC1256F25.00518CAF-C1256F25.005B33E2@de.ibm.com>
+Message-ID: <OF06553E4D.9E51B3DA-ONC1256F25.005AABE1-C1256F25.005D403D@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.de.ibm.com ([195.212.29.152]:61386 "EHLO
-	mtagate3.de.ibm.com") by vger.kernel.org with ESMTP id S269419AbUJFQad
+Received: from mtagate1.de.ibm.com ([195.212.29.150]:204 "EHLO
+	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP id S269401AbUJFQwV
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Oct 2004 12:30:33 -0400
+	Wed, 6 Oct 2004 12:52:21 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 
 
 
 
-> That is right, 64 bit LUNs were mandated in SAM-2
-> (standardized in 2003) and SAM-3 (soon to become a standard).
+> Really, a lun should just work as SAM defines it.  I.e. the meaning of
+> the 64 bit quantity is interpreted by the transport but the mid-layer
+> knows how to display  and use it.
 
-So, do you know how to read table A.2? (Yes, it's only "informative",
-and therewith not normative)
+Okay. How do LLDDs fit in here? (Does transport here mean transport in the
+general meaning, or, in the context of our implementation, transport class
+or LLDD?)
+If it is up to the transport to interprete a 64 bit quantity, and the
+transport (class) is connected to and used by the LLDD, does your statement
+then read that it would be a good idea to pass a 64 bit quantity around,
+which, in whatever (yet to be understood) way, is also communicated to
+LLDDs?
 
-> When SCSI devices start using advanced LUN features like
-> "well known logical units" (SPC-3 rev 21 section 8)
-> we are really going to start hurting.
+> I think the real transport specific addressing modes are actually the
+> target "numbers" aren't they?  If we could make them transport specific
+> there'd be no need to impose fictitious target numbers to fibre channel
+> WWNs for instance.
 
-I see. The bone of contention from my perspective has been that LLDDs
-are currently required to guess in which way the mid-layer has compressed
-a LUN, and the resulting question: "Which LUN addressing modes does
-your LLDD support?" Ouch!
+Sorry, I was not clear here. I referred to LUN addressing modes.
+However, you are right that target ids are transport specific and vary
+in size, formats and semantics. I have lost track of whether transport
+attributes introduced for these characteristics already do this job, or
+whether htey are just more information to be displayed.
 
 Martin
 
