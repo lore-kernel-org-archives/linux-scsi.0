@@ -1,55 +1,46 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: FW:  Re. Allocation of scatter gather table in __init_io
-Date: Mon, 9 Aug 2004 11:14:37 +0200
+From: Dave Jones <davej@redhat.com>
+Subject: spinning up memory sticks.
+Date: Mon, 9 Aug 2004 13:28:16 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040809091436.GU10418@suse.de>
-References: <E5A17223DA27AB4DABB18A5955F4235545CFD2@EXCHVS1.louisville.stortek.com>
+Message-ID: <20040809122816.GA21238@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:40900 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S266381AbUHIJPC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2004 05:15:02 -0400
+Received: from delerium.kernelslacker.org ([81.187.208.145]:64388 "EHLO
+	delerium.codemonkey.org.uk") by vger.kernel.org with ESMTP
+	id S266534AbUHIM3f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Aug 2004 08:29:35 -0400
+Received: from delerium.codemonkey.org.uk (localhost.localdomain [127.0.0.1])
+	by delerium.codemonkey.org.uk (8.13.1/8.13.1) with ESMTP id i79CSIgd021717
+	for <linux-scsi@vger.kernel.org>; Mon, 9 Aug 2004 13:28:18 +0100
+Received: (from davej@localhost)
+	by delerium.codemonkey.org.uk (8.13.1/8.13.0/Submit) id i79CSGqU021716
+	for linux-scsi@vger.kernel.org; Mon, 9 Aug 2004 13:28:16 +0100
 Content-Disposition: inline
-In-Reply-To: <E5A17223DA27AB4DABB18A5955F4235545CFD2@EXCHVS1.louisville.stortek.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Govindan, Thiru" <GovinT@LOUISVILLE.STORTEK.COM>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+
+I've only just noticed this happening, but its possible its
+been this way for quite a while.  When I try to mount my
+cameras memory stick using a usb multi-card reader,
+it now prints this message..
+sdd: Spinning up disk
+
+waits a while, and then prints 
+
+.............ready
+SCSI device sdd: 253888 512-byte hdwr sectors (130 MB)
+sdd: Write Protect is off
+sdd: Mode Sense: 00 00 00 00
+sdd: assuming drive cache: write through
+sdd: sdd1
+Attached scsi removable disk sdd at scsi0, channel 0, id 0, lun 3
 
 
-(don't top post, reply properly commented below the questions asked like
-everybody else is doing)
+Did something recently change which could affect this ?
 
-On Mon, Aug 09 2004, Govindan, Thiru wrote:
-> Jens,
-> 	Ok, but __init_io() does seem to expect that the number of segments
-> matches the count after merging is done. As shown in the code below, if its
-> OK to allocate space for the max. number of items then this check is not
-> needed.
->         /*
->          * Verify that the count is correct.
->          */
->         if (count != SCpnt->use_sg) {
->                 printk("Incorrect number of segments after building
-> list\n");
-> #ifdef CONFIG_SCSI_DEBUG_QUEUES
->                 dump_stats(req, use_clustering, dma_host, count);
-> #endif
->         }
+caveat: I've only tested this with a Fedora kernel so far, but afair,
+we don't patch anything which could affect this.
 
-Ah, you are talking about 2.4 (in the future, remember to note which
-kernel base you are talking about). Yes those counts must match, if not
-something is broken in the merging code.
-
-> How does the HBA driver know the correct number in this case? Should
-> it use request_bufflen in the SCSI Command in addition to use_sg, to
-> identify the number of segments actually there in the list? I'm using
-> a Qlogic HBA and its just going by the value in use_sg to identify
-> segments in the scatter-gather list.
-
-I don't completely follow your question, sorry. Can you outline in
-detail what happens, what values you are seeing, etc.
-
--- 
-Jens Axboe
+		Dave
 
