@@ -1,74 +1,109 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: How to write a transparent SCSI bridge?
-Date: Wed, 30 Jul 2003 12:50:16 -0700
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: PATCH: (as73) Do a minimal transfer for disk-cache mode-sense page
+Date: Wed, 30 Jul 2003 16:36:45 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030730125016.D30339@one-eyed-alien.net>
-References: <20030730121310.C30339@one-eyed-alien.net> <Pine.LNX.4.44L0.0307301522300.2990-100000@ida.rowland.org>
+Message-ID: <Pine.LNX.4.44L0.0307301622410.2990-100000@ida.rowland.org>
+References: <1056301585.1979.58.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="fOHHtNG4YXGJ0yqR"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:12819 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S272227AbTG3TuT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2003 15:50:19 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0307301522300.2990-100000@ida.rowland.org>; from stern@rowland.harvard.edu on Wed, Jul 30, 2003 at 03:31:16PM -0400
+Received: from ida.rowland.org ([192.131.102.52]:32516 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S272233AbTG3Ugq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jul 2003 16:36:46 -0400
+In-Reply-To: <1056301585.1979.58.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
+To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
+James:
 
---fOHHtNG4YXGJ0yqR
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This patch for 2.6.0 makes 3 changes in the read-write- and cache-detect
+mode-sense routines in sd.c:
 
-On Wed, Jul 30, 2003 at 03:31:16PM -0400, Alan Stern wrote:
-> On Wed, 30 Jul 2003, Matthew Dharm wrote:
->=20
-> > On Wed, Jul 30, 2003 at 10:38:38AM -0400, Alan Stern wrote:
-> > > What I have in mind is something that would receive CDBs and data ove=
-r a=20
-> > > USB link and would forward them to a standard SCSI device (or more=20
-> > > accurately, a host adapter driver), and relay the replies back.
-> >=20
-> > CDBs?  Just the command bytes, then?  Why not send more of the struct
-> > scsi_cmd?
->=20
-> I have in mind writing a USB Mass Storage gadget (i.e., slave device)
-> driver.  The gadget only receives the CDB, not the entire scsi_cmnd.  Whe=
-n=20
-> acting as a transparent bridge, the gadget would somehow have to=20
-> reconstitute a SCSI request and send it to the actual device driver.
+	It sets the DBD flag to prevent the transfer of unwanted Block 
+Descriptors.
 
-If it's usb-storage compliant, and uses the bulk-only protocol, then it
-gets the CBW, which includes transfer length and transfer direction flags.
+	It uses 512 (the actual buffer size) as an upper limit, not 128
+as in the current code.
 
-If you're trying to do CB/I, you're stuck.
+	It transfers only the first 4 bytes of the cache page; the 
+information we want is in the 3rd byte.
 
-Matt
+The last change is the real reason for submitting the patch.  Apparently
+the Genesyslogic USB disk drive doesn't like being asked for more than 64
+bytes of its cache page.  Doing so crashes the drive's firmware.  Since
+the transfer size had to be reduced anyway, I decided to use the minimum
+necessary (rounded up to a multiple of 4) -- similar to other changes that
+have been made recently in various mode-sense transfers.
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+This fixes the problem with the Genesyslogic drive, and it ought to work 
+correctly with any standards-conformant device.  If it looks okay with 
+you, please apply it.
 
-I say, what are all those naked people doing?
-					-- Big client to Stef
-User Friendly, 12/14/1997
+Alan Stern
 
---fOHHtNG4YXGJ0yqR
-Content-Type: application/pgp-signature
-Content-Disposition: inline
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
+===== sd.c 1.52 vs edited =====
+--- 1.52/drivers/scsi/sd.c	Tue Jul  1 17:54:19 2003
++++ edited/drivers/scsi/sd.c	Wed Jul 30 16:15:46 2003
+@@ -1080,6 +1080,7 @@
+ sd_read_write_protect_flag(struct scsi_disk *sdkp, char *diskname,
+ 		   struct scsi_request *SRpnt, unsigned char *buffer) {
+ 	int res;
++	const int dbd = 0x08;	   /* DBD */
+ 	struct scsi_mode_data data;
+ 
+ 	/*
+@@ -1087,7 +1088,7 @@
+ 	 * We have to start carefully: some devices hang if we ask
+ 	 * for more than is available.
+ 	 */
+-	res = sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 4, &data);
++	res = sd_do_mode_sense(SRpnt, dbd, 0x3F, buffer, 4, &data);
+ 
+ 	/*
+ 	 * Second attempt: ask for page 0
+@@ -1095,13 +1096,13 @@
+ 	 * Sense Key 5: Illegal Request, Sense Code 24: Invalid field in CDB.
+ 	 */
+ 	if (!scsi_status_is_good(res))
+-		res = sd_do_mode_sense(SRpnt, 0, 0, buffer, 4, &data);
++		res = sd_do_mode_sense(SRpnt, dbd, 0, buffer, 4, &data);
+ 
+ 	/*
+ 	 * Third attempt: ask 255 bytes, as we did earlier.
+ 	 */
+ 	if (!scsi_status_is_good(res))
+-		res = sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 255, &data);
++		res = sd_do_mode_sense(SRpnt, dbd, 0x3F, buffer, 255, &data);
+ 
+ 	if (!scsi_status_is_good(res)) {
+ 		printk(KERN_WARNING
+@@ -1124,7 +1125,7 @@
+ 		   struct scsi_request *SRpnt, unsigned char *buffer) {
+ 	int len = 0, res;
+ 
+-	const int dbd = 0;	   /* DBD */
++	const int dbd = 0x08;	   /* DBD */
+ 	const int modepage = 0x08; /* current values, cache page */
+ 	struct scsi_mode_data data;
+ 
+@@ -1134,11 +1135,12 @@
+ 
+ 	if (scsi_status_is_good(res)) {
+ 		/* that went OK, now ask for the proper length */
+-		len = data.length;
+-		if (len > 128)
+-			len = 128;
+-		res = sd_do_mode_sense(SRpnt, dbd, modepage, buffer,
++		len = data.header_length + data.block_descriptor_length + 4;
++		if (len <= 512)
++			res = sd_do_mode_sense(SRpnt, dbd, modepage, buffer,
+ 				       len, &data);
++		else
++			res = SAM_STAT_BUSY;
+ 	}
+ 
+ 	if (scsi_status_is_good(res)) {
 
-iD8DBQE/KCF4IjReC7bSPZARAgeqAJ9DQBigvRxvOWRa2zpylNu4k+cuZQCgq7t0
-C1mrNZo1Q2xrKlhpvNB4TFk=
-=XSgS
------END PGP SIGNATURE-----
-
---fOHHtNG4YXGJ0yqR--
