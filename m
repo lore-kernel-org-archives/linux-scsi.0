@@ -1,55 +1,55 @@
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: [PATCH] sym53c8xx_2: Use standard command-names
-Date: Sun, 5 Sep 2004 22:27:40 +0200 (CEST)
+Subject: Re: [PATCH] tmscsim: INQUIRY always only untagged
+Date: Sun, 5 Sep 2004 22:19:12 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60.0409052225100.2062@poirot.grange>
+Message-ID: <Pine.LNX.4.60.0409052157540.2062@poirot.grange>
+References: <Pine.LNX.4.60.0409040033310.5266@poirot.grange>
+ <20040904140102.A15247@infradead.org> <Pine.LNX.4.60.0409050022570.3092@poirot.grange>
+ <20040904233835.A18659@infradead.org> <Pine.LNX.4.60.0409051654460.3039@poirot.grange>
+ <1094398979.10977.9.camel@mulgrave> <20040905173134.A31521@infradead.org>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-630274484-1094416060=:2062"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:61886 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S267470AbUIFFuu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2004 01:50:50 -0400
-List-Id: linux-scsi@vger.kernel.org
-To: matthew@wil.cx
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
-
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
----1463811839-630274484-1094416060=:2062
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.gmx.net ([213.165.64.20]:3049 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S267482AbUIFFuy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2004 01:50:54 -0400
+In-Reply-To: <20040905173134.A31521@infradead.org>
+List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi
+On Sun, 5 Sep 2004, Christoph Hellwig wrote:
 
-A trivial patch to use standard names for INQUIRY and TEST_UNIT_READY.
+> On Sun, Sep 05, 2004 at 11:42:58AM -0400, James Bottomley wrote:
+>> On Sun, 2004-09-05 at 10:56, Guennadi Liakhovetski wrote:
+>>> Ok, how about the attached version?
+>>
+>> Well, it looks like it would cure the symptoms, and I can apply it as a
+>> palliative.
+>>
+>> However, the disease in this driver is that it snoops the inquiry data
+>> and gets confused by the double inquiry we now do for certain drives.
+>>
+>> What really needs to happen is
+>>
+>> 1) remove the inquiry snooping and believe the flags in struct
+>> scsi_device instead
+
+...and use tags set up by the block layer...
+
+>> 2) Don't turn on TCQ until slave_configure()
+
+Well, this alone wouldn't help with this specific problem, exactly because 
+INQUIRY can be sent later too. Or would the mid-layer completely disable 
+tagging for such a disk?
+
+>> 3) remove it's internal TCQ black list and put it at the mid-layer.
+>
+> Umm yes.  But lets get the driver no oops first and then move forward.
+> There's still a lot of work to do on the driver.
 
 Thanks
 Guennadi
 ---
 Guennadi Liakhovetski
 
----1463811839-630274484-1094416060=:2062
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name="sym53c8xx_2-cmdnames.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.60.0409052227400.2062@poirot.grange>
-Content-Description: 
-Content-Disposition: attachment; filename="sym53c8xx_2-cmdnames.patch"
-
-VXNlIHN0YW5kYXJkIGNvbW1hbmQtbmFtZXMuDQoNClNpZ25lZC1vZmYtYnk6
-IEd1ZW5uYWRpIExpYWtob3ZldHNraSA8Zy5saWFraG92ZXRza2lAZ214LmRl
-Pg0KDQpkaWZmIC11IGEvZHJpdmVycy9zY3NpL3N5bTUzYzh4eF8yL3N5bV9n
-bHVlLmMgYi9kcml2ZXJzL3Njc2kvc3ltNTNjOHh4XzIvc3ltX2dsdWUuYw0K
-LS0tIGEvZHJpdmVycy9zY3NpL3N5bTUzYzh4eF8yL3N5bV9nbHVlLmMJMTcg
-QXVnIDIwMDQgMjA6MzQ6NTgNCisrKyBiL2RyaXZlcnMvc2NzaS9zeW01M2M4
-eHhfMi9zeW1fZ2x1ZS5jCTUgU2VwIDIwMDQgMjA6MTk6NDUNCkBAIC01MzYs
-NyArNTM2LDcgQEANCiAJICogIGRldmljZXMgYmVoYXZlIGJhZGx5IHdoZW4g
-YXNrZWQgZm9yIHNvbWUgbm9uIA0KIAkgKiAgemVybyBMVU4uIEJ0dywgdGhp
-cyBpcyBhbiBhYnNvbHV0ZSBoYWNrLjotKQ0KIAkgKi8NCi0JaWYgKGNjYi0+
-Y21uZFswXSA9PSAweDEyIHx8IGNjYi0+Y21uZFswXSA9PSAweDApIHsNCisJ
-aWYgKGNjYi0+Y21uZFswXSA9PSBJTlFVSVJZIHx8IGNjYi0+Y21uZFswXSA9
-PSBURVNUX1VOSVRfUkVBRFkpIHsNCiAJCWlmICgodHAtPnVzcmZsYWdzICYg
-U1lNX1NDQU5fQk9PVF9ESVNBQkxFRCkgfHwNCiAJCSAgICAoKHRwLT51c3Jm
-bGFncyAmIFNZTV9TQ0FOX0xVTlNfRElTQUJMRUQpICYmIA0KIAkJICAgICBj
-Y2ItPmRldmljZS0+bHVuICE9IDApKSB7DQo=
-
----1463811839-630274484-1094416060=:2062--
