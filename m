@@ -1,81 +1,59 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Bug in hot-unplugging for SCSI CD-ROM
-Date: Wed, 21 May 2003 11:19:28 -0400 (EDT)
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: sym53c8xx_2 oops in lk 2.5.69-bk14
+Date: Wed, 21 May 2003 09:19:18 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0305211106560.617-100000@ida.rowland.org>
-References: <3EC81B67.2040807@pacbell.net>
+Message-ID: <20030521091918.A21010@beaverton.ibm.com>
+References: <3ECAFCC1.40402@torque.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:772 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S262150AbTEUPG3 (ORCPT
+Received: from e5.ny.us.ibm.com ([32.97.182.105]:21641 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262182AbTEUQKl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 May 2003 11:06:29 -0400
-In-Reply-To: <3EC81B67.2040807@pacbell.net>
+	Wed, 21 May 2003 12:10:41 -0400
+Content-Disposition: inline
+In-Reply-To: <3ECAFCC1.40402@torque.net>; from dougg@torque.net on Wed, May 21, 2003 at 02:12:49PM +1000
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: linux-scsi@vger.kernel.org
 
-Mike:
+On Wed, May 21, 2003 at 02:12:49PM +1000, Douglas Gilbert wrote:
+> This oops in the sym53c8xx may have been recently
+> introduced since I run rescan-scsi-bus.sh reasonably
+> often. It locked my system solid, scrolled the useful
+> part of the oops off the screen and put nothing in
+> the log. Handwritten notes:
 
-I just modified the usb-storage driver to simulate a failed device and
-tried it with my USB CD-RW drive.  The SCSI error handler kicked in, tried
-a device reset (which I had doctored to simulate a failure), tried a bus
-reset (which actually did fail because of an bug somewhere else in the
-USB stack), couldn't do a host reset (because usb-storage doesn't support
-it), and finally decided to take the device off-line.
+The scsi_host_hn_get is not doing a scsi_host_get, so any scsi_host_put
+that follows can break things - for example causing the scsi_host to
+disappear out from under us. See the scsi_proc.c usage.
 
-That much worked fine.  But afterwards, when the process trying to read 
-from the drive ended and the device file was closed, usb-storage received 
-an ALLOW_MEDIUM_REMOVAL command.  This should not have happened given that 
-the device was off-line.
+Christoph's "give ->proc_info a struct Scsi_Host * parameter" patch got
+rid of a lot of them (and is in scsi-miscs-2.5), but not in scsi_proc.c.
 
-Here are the relevant parts of the kernel log:
+Looks like scsi_host_hn_get should always call scsi_host_get, but
+scsi_find_host_by_num really has to change to use driver model iterators
+(so its locking protection matches scsi_host_get), I assume this is a WIP
+for Christoph or Mike but for now you could use a patch like this
+(untested, on top of scsi-misc-2.5 or Christoph's changes):
 
-May 21 10:09:29 localhost kernel: usb-storage: Command READ_10 (10 bytes)
-May 21 10:09:29 localhost kernel: usb-storage:  28 00 00 00 00 44 00 00 40 00
-(delay to simulate failure)
-May 21 10:09:59 localhost kernel: usb-storage: usb_storage_command_abort called
-May 21 10:09:59 localhost kernel: usb-storage: usb_stor_stop_transport called
-May 21 10:09:59 localhost kernel: usb-storage: Bulk status result = 3
-May 21 10:09:59 localhost kernel: usb-storage: -- command was aborted
-May 21 10:09:59 localhost kernel: usb-storage: Bulk reset requested
-(delay for automatically-generated device reset)
-May 21 10:10:05 localhost kernel: usb-storage: Soft reset done
-May 21 10:10:05 localhost kernel: usb-storage: scsi command aborted
-May 21 10:10:05 localhost kernel: usb-storage: *** thread sleeping.
-May 21 10:10:05 localhost kernel: usb-storage: queuecommand() called
-May 21 10:10:05 localhost kernel: usb-storage: *** thread awakened.
-May 21 10:10:05 localhost kernel: usb-storage: Command TEST_UNIT_READY (6 bytes)
-May 21 10:10:05 localhost kernel: usb-storage:  00 00 00 00 00 00
-(delay to simulate failure)
-May 21 10:10:15 localhost kernel: usb-storage: usb_storage_command_abort called
-May 21 10:10:15 localhost kernel: usb-storage: usb_stor_stop_transport called
-May 21 10:10:15 localhost kernel: usb-storage: Bulk status result = 3
-May 21 10:10:15 localhost kernel: usb-storage: -- command was aborted
-May 21 10:10:15 localhost kernel: usb-storage: Bulk reset requested
-(delay for automatically-generated device reset)
-May 21 10:10:21 localhost kernel: usb-storage: Soft reset done
-May 21 10:10:21 localhost kernel: usb-storage: scsi command aborted
-May 21 10:10:21 localhost kernel: usb-storage: *** thread sleeping.
-May 21 10:10:21 localhost kernel: usb-storage: usb_storage_device_reset called
-(simulate failure of device reset)
-May 21 10:10:21 localhost kernel: usb-storage: usb_storage_bus_reset called
-(next line is due to an error in the USB stack, causing failure)
-May 21 10:10:21 localhost kernel: drivers/usb/core/hub.c: USB device not accepting new address (error=-22)
-May 21 10:10:21 localhost kernel: usb-storage: usb_reset_device returns -22
-May 21 10:10:21 localhost kernel: scsi: Device offlined - not ready after error recovery: host 0 channel 0 id 0 lun 0
-May 21 10:10:21 localhost kernel: SCSI cdrom error : <0 0 0 0> return code = 0x6050000
-May 21 10:10:21 localhost kernel: end_request: I/O error, dev sr0, sector 272
-May 21 10:10:21 localhost kernel: Buffer I/O error on device scsi/host0/bus0/target0/lun0/cd, logical block 68
-May 21 10:10:21 localhost kernel: Buffer I/O error on device scsi/host0/bus0/target0/lun0/cd, logical block 69
-(more I/O error messages, not shown)
-May 21 10:10:21 localhost kernel: usb-storage: queuecommand() called
-May 21 10:10:21 localhost kernel: usb-storage: *** thread awakened.
-May 21 10:10:21 localhost kernel: usb-storage: Command ALLOW_MEDIUM_REMOVAL (6 bytes)
-May 21 10:10:21 localhost kernel: usb-storage:  1e 00 00 00 00 00
+===== drivers/scsi/hosts.c 1.65 vs edited =====
+--- 1.65/drivers/scsi/hosts.c	Thu May 15 06:08:47 2003
++++ edited/drivers/scsi/hosts.c	Fri May 23 10:24:10 2003
+@@ -534,8 +534,12 @@
+  **/
+ struct Scsi_Host *scsi_host_hn_get(unsigned short host_no)
+ {
+-	/* XXX Inc ref count */
+-	return scsi_find_host_by_num(host_no);
++	struct Scsi_Host *shost;
++
++	shost = scsi_find_host_by_num(host_no);
++	if (shost)
++		scsi_host_get(shost);
++	return shost;
+ }
+ 
+ /**
 
-I trust this won't be hard to fix.
-
-Alan Stern
-
+-- Patrick Mansfield
