@@ -1,43 +1,41 @@
-From: Stephen Cameron <steve.cameron@hp.com>
-Subject: Re: [PATCH] update cciss in 2.5 to use modern scsi APIs
-Date: Tue, 25 Feb 2003 13:37:54 +0600
+From: Dave Richards <drichards@mahinetworks.com>
+Subject: sym53c8xx_2 / Promise UltraTrak RM8000
+Date: Tue, 25 Feb 2003 15:27:36 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030225073754.GA19075@zuul.cca.cpqcorp.net>
-Reply-To: steve.cameron@hp.com
+Message-ID: <9D6D37E97A57D411BB7C00508BAE29C902D242C8@main.mahinetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
+Our IS folks have had problems with the Promise Tech. UltraTrak RM8000 under
+2.4.20 (and earlier versions).  I've diagnosed the problem, but I am not
+familiar enough with the SCSI specs to know who to blame.  So, here's the
+data and you can decide.
 
-(I already replied to this privately, not realizing
-this was on linux-scsi, now here is a public reply...)
+The following is a dump of the INQUIRY data returned by the RM8000:
 
-Christoph Hellwig (hch@lst.de) wrote:
+00 00 03 03 3b 00 00 32 50 72 6f 6d 69 73 65 20 ....;..2Promise
+34 20 44 69 73 6b 20 52 41 49 44 35 20 20 20 20 4 Disk RAID5
+31 2e 31 30 39 38 30 33 31 36 31 32 00 00 00 00 1.1098031612....
+00 00 00 00 00 00 00 00 0c 00 00 00 00 00 00 00 ................
 
-> Using scsi_add_host/scsi_Remove_host gets rid of lots of cruft.
-> The driver would still benefit from passing around objects instead of
-> indices.
-[...]
->  */
-> -#ifdef CONFIG_CISS_SCSI_TAPE
+The problem with this INQUIRY data (from the 8xx driver's perspective) is
+that the SCSI version is ANSI 3 and the INQUIRY data format is 3 (not 2).  I
+changed sym_misc.c line 297: (2.4.20)
 
-Thanks for pointing out scsi_add_host/scsi_remove_host.  
-I didn't know about those.
- 
-By removing CONFIG_CISS_SCSI_TAPE, the cciss driver then
-always requires scsi to be compiled.  If CONFIG_CISS_SCSI_TAPE is
-present, but turned off, then it is possible to use cciss 
-without SCSI at all, so we probably want to keep it.
+#if 0
+        if (inq_version >= 2 && (inq_data[3] & 0xf) == 2) {
+#else
+        if (inq_version >= 2 && (inq_data[3] & 0xf) >= 2) {
+#endif
 
-BTW, cciss_scsi.c is #included in cciss.c, which is not intuitive.
-I couldn't figure a way to separately compile them and combine
-them into a single module which did not require scsi at all when
-the tape support was disabled.  So that's why it is the way it is.
+This causes the Promise box to come up Fast-80 Wide16 (as it should).
 
-Thanks
+So, whose bug is this?  Is it the sym53c8xx_2 driver for not recognizing the
+valid INQUIRY data format version 3, or is it Promise's for returning the
+invalid INQUIRY data format version 3?
 
--- steve
-
+	Dave
