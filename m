@@ -1,60 +1,64 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] SCSI Core patches
-Date: Mon, 13 Jan 2003 12:33:06 -0800
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [PATCH] SCSI Core cmd allocation 3/3
+Date: Mon, 13 Jan 2003 15:40:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030113123306.A16718@beaverton.ibm.com>
-References: <3E1ADC9A.6090800@splentec.com> <20030107102127.B15528@beaverton.ibm.com> <3E1B2934.8060805@splentec.com> <20030107123301.A16378@beaverton.ibm.com> <3E1B513B.2090409@splentec.com> <20030107173633.A17825@beaverton.ibm.com> <20030111181224.B3178@infradead.org>
+Message-ID: <3E232429.3090300@splentec.com>
+References: <3E1A2140.3000408@splentec.com> <20030111180355.B2225@infradead.org> <3E22F369.5080209@splentec.com> <20030113175948.A27650@infradead.org> <3E2310A0.8080308@splentec.com> <20030113121129.A16510@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030111181224.B3178@infradead.org>; from hch@infradead.org on Sat, Jan 11, 2003 at 06:12:24PM +0000
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Luben Tuikov <luben@splentec.com>, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Sat, Jan 11, 2003 at 06:12:24PM +0000, Christoph Hellwig wrote:
-> On Tue, Jan 07, 2003 at 05:36:33PM -0800, Patrick Mansfield wrote:
-> > Having the LLDD use more data structures does not imply a better
-> > abstraction.  Again, a better abstraction would be to use interfaces to
-> > get the host/channel/target/lun. This could add overhead depending on the
-> > implementation.
+Patrick Mansfield wrote:
+> On Mon, Jan 13, 2003 at 02:16:48PM -0500, Luben Tuikov wrote:
 > 
-> Not having the cmnd replicate information in the device implies a better
-> abstraction :)  The LLDD knows about struct scsi_device anyway.
-
-I'm not against removing the replication, but a scsi_get_lun etc. does
-not imply one implementation or the other.
-
-This is _not_ just for multi-path. The current scsi code does not properly
-size the target and lun based on the transport. For SPI the target and lun
-need only be one byte; for FCP they are 4 and 8 bytes; for iSCSI I don't
-know what. (Our current four byte host-ordered lun does not match anything
-in any SCSI spec.)
-
-Having a scsi_nexus or such that is host adapter specific (something like
-Mike A. posted about) possibly with common transport code (for FCP, SPI,
-and iSCSI) would be useful, and would make it easier to add multi-pathing
-or support for future transports. The scsi_device current_tag, sdtr, wdtr,
-and ppr would be moved to a scsi_nexus since they are SPI specific.
-
-The abstraction of the channel should not even be part of scsi_device or
-the scsi mid-layer.
-
-> > > For this reason you might consider the suggestions by Doug, or research moving
-> > > multipathing higher up into the char/block layer, or thereabouts.
-> > 
-> > I have looked into putting multipath in the block layer, I've looked at
-> > md, at the T3 code, and at the qlogic multi-path code. Code in the block
-> > layer would be interesting, but might not solve problems with char
-> > devices,
+>>Christoph Hellwig wrote:
+>>
+>>>Well, where do you actually _need_ scsi_get_command(), that's the question.
+>>>
+>>>I see the purpose, but I don't see it actually used.
+>>
+>>The scsi devices discovery code *may* use it.
 > 
-> Scsi character drivers _do_ go through the block layer.  (through
-> scsi_do_req).
+> 
+> Then do so in another patch.
 
-Okay - the only blk code the char drivers use is the blk_insert_request
-call, the char drivers never call the generic_make_request. So any
-implementation that relies on make_request (like md) won't currently work
-with char devices.
+You're talking to the wrong person.  Someone else is/was working on
+the scsi discovery code.  Furthermore scsi discovery code will evolve
+more, and eventually I see SCSI Core as a two-part subsystem:
+scsi queuing (I'm trying to find out if it's worth it), and
+scsi target discovering.  Scsi queuing will be quite tiny, and
+scsi target discovering --- someone else will do.
 
--- Patrick Mansfield
+> 
+>>If a global variable is used in a couple of files, belonging
+>>to the same functionality, providing a unified service, and if
+>>there's more than one of them, then they are better organized
+>>as such as I've outlined.
+> 
+> 
+> Then move all the scsi globals into it. But, that should be a separate
+> patch.
+
+Right, it should be in a separate patch, but I did not want to do this job.
+
+I just prompted the idea, and left it for the rest of the SCSI Core
+developers to slowly (with each patch) move things therein.
+
+> You should match the other kernel code as much as possible, it makes it
+> easier for other kernel developers to read it.
+
+Let's not make a career move out of 2 lines of code in an inline
+function. It's not like my code uses GNU-style -- this is what you
+make it sound like. Don't forget, it's just 2 lines and I was merely
+trying to save macro space -- we don't need 100K line macro files.
+
+Now let's get some work done.
+
+-- 
+Luben
+
+
