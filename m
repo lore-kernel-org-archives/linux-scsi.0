@@ -1,74 +1,31 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Help decoding: Info fld=0x25e6e3, Current sd08:b1: sense key Recovered Error
-Date: Tue, 18 Jan 2005 18:32:04 -0500
-Message-ID: <200501182334.j0INYD904933@www.watkins-home.com>
-References: <m3llaqtpgi.fsf@merlin.emma.line.org>
+From: "Gilbert" <ocvjkwjmtro@wanadoo.fr>
+Subject: And then, when the
+Date: Tue, 18 Jan 2005 16:26:41 -0600
+Message-ID: <314083320757186-38647__13546.119866851$1106092045$gmane$org@81.249.92.120>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="ISO-8859-16"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rwcrmhc13.comcast.net ([204.127.198.39]:14838 "EHLO
-	rwcrmhc13.comcast.net") by vger.kernel.org with ESMTP
-	id S261482AbVARXeP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Jan 2005 18:34:15 -0500
-In-Reply-To: <m3llaqtpgi.fsf@merlin.emma.line.org>
+Received: from AStDenis-101-1-2-120.w81-249.abo.wanadoo.fr ([81.249.92.120]:50183
+	"HELO astdenis-101-1-2-120.w81-249.abo.wanadoo.fr") by vger.kernel.org
+	with SMTP id S261477AbVARXqe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Jan 2005 18:46:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Matthias Andree' <matthias.andree@gmx.de>
-Cc: 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
+To: Felecia Linux-scsi-owner <linux-scsi-owner@vger.kernel.org>
 
-Good info.  Thanks!
-I could not find the answer with google.  Too much noise!
+Hello,
 
-Is 0x25e6e3 the block number?
+our bank has approovved your mrtgage request. You can
+r e finance, buy a new house or maybe get some cash.
+Do not worry about bad creddit: we got you covered.
 
-If it is, is it relative to the beginning of sdl1, or sdl?
+The soonest you apply, the better deal you get. It is
+possible to get $300,000 for $250 per month.
 
-If not, what is it?
+Thank you and apply here:
+http://www.latne.com/
 
-Thanks,
-Guy
+Gilbert
 
------Original Message-----
-=46rom: Matthias Andree [mailto:matthias.andree@gmx.de]=20
-Sent: Tuesday, January 18, 2005 4:09 PM
-To: Guy
-Cc: unlisted-recipients:; no To-header on input; 'SCSI Mailing List'
-Subject: Re: Help decoding: Info fld=3D0x25e6e3, Current sd08:b1: sense=
- key
-Recovered Error
-
-"Guy" <bugzilla@watkins-home.com> writes:
-
-> Can anyone help decode this info?
->
-> What is 0x25e6e3?
-> What disk is sd08:b1?
-
-/dev/sdl1 (ess dee ell one) - that's sedecimal notation for a device
-with major 8 minor 0xb1 =3D 177;
-
-$ ls -l /dev/sd* |grep " 8, 177"
-brw-rw----  1 root disk   8, 177 2004-10-02 10:38 /dev/sdl1
-
-> kernel: Info fld=3D0x25e6e3, Current sd08:b1: sense key Recovered Err=
-or
-> kernel: Additional sense indicates Recovered data with error corr. &
-retries
-> applied
-
-Time to check and possibly replace the drive, or at least refresh the
-block.
-
-smartmontools (on sourceforge) and perhaps badblocks or J=F6rg Schillin=
-gs
-sformat (careful!) may help you with that.
-
---=20
-Matthias Andree
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
