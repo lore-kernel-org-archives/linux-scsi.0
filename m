@@ -1,72 +1,30 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: [patch] 2.6.5-rc2: fix scsi_transport_spi.c with gcc 2.95
-Date: Sat, 20 Mar 2004 13:18:54 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [patch] 2.6.5-rc2: fix scsi_transport_spi.c with gcc 2.95
+Date: 20 Mar 2004 08:43:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040320121853.GF19464@fs.tum.de>
+Message-ID: <1079790194.1778.0.camel@mulgrave>
 References: <Pine.LNX.4.58.0403191937160.1106@ppc970.osdl.org>
+	<20040320121853.GF19464@fs.tum.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:4834 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S263386AbUCTMTI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 Mar 2004 07:19:08 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58.0403191937160.1106@ppc970.osdl.org>
+Received: from stat1.steeleye.com ([65.114.3.130]:42205 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263409AbUCTNqb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 20 Mar 2004 08:46:31 -0500
+In-Reply-To: <20040320121853.GF19464@fs.tum.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Martin Hicks <mort@wildopensource.com>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@fs.tum.de>
+Cc: Linus Torvalds <torvalds@osdl.org>, Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Martin Hicks <mort@wildopensource.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-I got the following compile error in 2.6.5-rc2 using gcc 2.95:
+On Sat, 2004-03-20 at 07:18, Adrian Bunk wrote:
+> I found the patch below in -mm that fixes this problem.
 
-<--  snip  -->
+I already have the mm patch in scsi-misc-2.5.
 
-...
-  CC      drivers/scsi/scsi_transport_spi.o
-drivers/scsi/scsi_transport_spi.c: In function `spi_dv_retrain':
-drivers/scsi/scsi_transport_spi.c:388: parse error before `;'
-drivers/scsi/scsi_transport_spi.c:392: parse error before `;'
-drivers/scsi/scsi_transport_spi.c: In function `spi_dv_device_internal':
-drivers/scsi/scsi_transport_spi.c:463: parse error before `;'
-drivers/scsi/scsi_transport_spi.c:475: parse error before `;'
-drivers/scsi/scsi_transport_spi.c:494: parse error before `;'
-drivers/scsi/scsi_transport_spi.c: In function `spi_dv_device':
-drivers/scsi/scsi_transport_spi.c:539: parse error before `;'
-drivers/scsi/scsi_transport_spi.c:543: parse error before `;'
-make[2]: *** [drivers/scsi/scsi_transport_spi.o] Error 1
+Thanks,
 
-<--  snip  -->
+James
 
 
-I found the patch below in -mm that fixes this problem.
-
-
-Please apply
-Adrian
-
-
-<--  snip  -->
-
-
-Work around the gcc-2.95 token pasting bug.
-
-
----
-
- 25-akpm/drivers/scsi/scsi_transport_spi.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
-
-diff -puN drivers/scsi/scsi_transport_spi.c~scsi_transport_spi-build-fix drivers/scsi/scsi_transport_spi.c
---- 25/drivers/scsi/scsi_transport_spi.c~scsi_transport_spi-build-fix	2004-03-14 02:45:22.999909632 -0800
-+++ 25-akpm/drivers/scsi/scsi_transport_spi.c	2004-03-14 02:45:29.938854752 -0800
-@@ -33,7 +33,7 @@
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_transport_spi.h>
- 
--#define SPI_PRINTK(x, l, f, a...)	printk(l "scsi(%d:%d:%d:%d): " f, (x)->host->host_no, (x)->channel, (x)->id, (x)->lun, ##a)
-+#define SPI_PRINTK(x, l, f, a...)	printk(l "scsi(%d:%d:%d:%d): " f, (x)->host->host_no, (x)->channel, (x)->id, (x)->lun , ##a)
- 
- static void transport_class_release(struct class_device *class_dev);
- 
-
-_
