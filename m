@@ -1,58 +1,56 @@
-From: Andries.Brouwer@cwi.nl
-Subject: [PATCH] Re: 2.4.21-pre7, disk size, display wrong or serious bug?
-Date: Sun, 6 Apr 2003 14:39:38 +0200 (MEST)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <UTC200304061239.h36Cdcw23647.aeb@smtp.cwi.nl>
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: abehn@gmx.net, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, marcelo@conectiva.com.br
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: PATCH: exclude certain commands from emulated SCSI hosts
+Date: 06 Apr 2003 10:39:02 -0500
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <1049643543.10758.4.camel@mulgrave>
+References: <20030322233136.D17056@one-eyed-alien.net>
+	<1048467235.1634.22.camel@mulgrave>
+	<20030323173733.B24668@one-eyed-alien.net>
+	<1048469946.1643.2.camel@mulgrave>
+	<20030323230438.E24668@one-eyed-alien.net>
+	<1048519237.1982.16.camel@mulgrave>
+	<20030324093028.A1066@one-eyed-alien.net>
+	<1049556643.1762.16.camel@mulgrave>
+	<20030405112759.B4320@one-eyed-alien.net>
+	<1049571946.2538.94.camel@mulgrave>
+	<20030405162234.E4320@one-eyed-alien.net>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+In-Reply-To: <20030405162234.E4320@one-eyed-alien.net>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Cc: Linus Torvalds <torvalds@transmeta.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>, USB Storage List <usb-storage@one-eyed-alien.net>, Linux SCSI list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-	From: Andreas Behnert <abehn@gmx.net>
+On Sat, 2003-04-05 at 18:22, Matthew Dharm wrote:
+> Out of curiosity, at what point is SCp->device->type a valid reference?  I
+> would hope that none of those pointers would be NULL during a probe at init
+> time.  I also hope that the type field contains the right data as soon as
+> the INQUIRY data comes back... but does anyone actually know for certain?
 
-	Yesterday I installed an external RAID system, machine
-	was running kernel 2.2.20 and everything worked ok:
-	~snip~
-	  SCSI device sdb: hdwr sector= 512 bytes. Sectors=1278558208
-	  [624296 MB] [624.3 GB]
-	~snip~
+sdev->device is never NULL for an executing command.  Type is filled in
+after the first 36 byte inquiry goes to the device.
 
-	Then I compiled 2.4.21-pre7:
-	~snip~
-	  SCSI device sdb: 1278558208 512-byte hdwr sectors (-444889 MB)
-	~snip~
+James
 
-	The system *seems* to work ok but I don't know if it really
-	*does* - I didn't want to experiment very much because the
-	RAID array contains sensitive data
 
-Yes, this is a frequent complaint.
-Nothing is wrong, only the message.
-It is fixed by the patch below.
 
-Andries
 
-diff -u --recursive --new-file -X /linux/dontdiff a/drivers/scsi/sd.c b/drivers/scsi/sd.c
---- a/drivers/scsi/sd.c	Sat Apr  5 10:19:53 2003
-+++ b/drivers/scsi/sd.c	Sun Apr  6 14:22:35 2003
-@@ -1003,7 +1003,7 @@
- 			 */
- 			int m;
- 			int hard_sector = sector_size;
--			int sz = rscsi_disks[i].capacity * (hard_sector/256);
-+			unsigned int sz = (rscsi_disks[i].capacity/2) * (hard_sector/256);
- 
- 			/* There are 16 minors allocated for each major device */
- 			for (m = i << 4; m < ((i + 1) << 4); m++) {
-@@ -1011,9 +1011,9 @@
- 			}
- 
- 			printk("SCSI device %s: "
--			       "%d %d-byte hdwr sectors (%d MB)\n",
-+			       "%u %d-byte hdwr sectors (%u MB)\n",
- 			       nbuff, rscsi_disks[i].capacity,
--			       hard_sector, (sz/2 - sz/1250 + 974)/1950);
-+			       hard_sector, (sz - sz/625 + 974)/1950);
- 		}
- 
- 		/* Rescale capacity to 512-byte units */
+-------------------------------------------------------
+This SF.net email is sponsored by: ValueWeb: 
+Dedicated Hosting for just $79/mo with 500 GB of bandwidth! 
+No other company gives more support or power for your dedicated server
+http://click.atdmt.com/AFF/go/sdnxxaff00300020aff/direct/01/
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
