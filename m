@@ -1,40 +1,44 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: scsi_scan.c question
-Date: Fri, 18 Oct 2002 08:57:54 -0700
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: 2.5.43 IO-APIC bug and spinlock deadlock
+Date: Fri, 18 Oct 2002 15:39:14 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021018085754.A474@eng2.beaverton.ibm.com>
-References: <20021016213518.GE8159@redhat.com> <20021016145728.A6657@eng2.beaverton.ibm.com>
+Message-ID: <Pine.LNX.3.96.1021018153513.23760B-100000@gatekeeper.tmr.com>
+References: <20021017033302.GP8159@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from westrelay03.boulder.ibm.com (westrelay03.boulder.ibm.com [9.17.194.24])
-	by e32.co.us.ibm.com (8.12.2/8.12.2) with ESMTP id g9IFvu1q038850
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2002 11:57:56 -0400
-Received: from gateway1.beaverton.ibm.com (gateway1.beaverton.ibm.com [138.95.180.2])
-	by westrelay03.boulder.ibm.com (8.12.3/NCO/VER6.4) with ESMTP id g9IFvtgh028846
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2002 09:57:56 -0600
-Received: from eng2.beaverton.ibm.com (eng2.beaverton.ibm.com [9.47.57.17])
-	by gateway1.beaverton.ibm.com (8.11.6/8.11.6) with ESMTP id g9IFtI832235
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2002 08:55:18 -0700
-Received: (from patman@localhost)
-	by eng2.beaverton.ibm.com (8.10.0.Beta10/8.8.5/token.aware-1.2) id g9IFvsm00561
-	for linux-scsi@vger.kernel.org; Fri, 18 Oct 2002 08:57:54 -0700 (PDT)
-In-Reply-To: <20021016145728.A6657@eng2.beaverton.ibm.com>; from patmans@us.ibm.com on Wed, Oct 16, 2002 at 02:57:28PM -0700
+In-Reply-To: <20021017033302.GP8159@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, linux-scsi@vger.kernel.org
 
-On Wed, Oct 16, 2002 at 02:57:28PM -0700, Patrick Mansfield wrote:
-> On Wed, Oct 16, 2002 at 05:35:18PM -0400, Doug Ledford wrote:
-> > Is anyone still working on this code or have the changes other people 
-> > wanted to make all been integrated?
+On Wed, 16 Oct 2002, Doug Ledford wrote:
+
+> IO-APIC bug: regular kernel, UP, no IO-APIC or APIC on UP enabled, compile
+> fails (does *everyone* run SMP or at least UP + APIC now?)
 > 
-> Not that I know of.
+> spinlock deadlock: run an smp kernel on a up machine.  On mine here all I 
+> have to do is try to boot to multiuser mode, it won't make it through the 
+> startup scripts before it locks up by trying to reenter common_interrupt 
+> on the only CPU.  Seems like an SMP kernel on UP hardware doesn't disable 
+> interrupts properly maybe?  I get task lists via alt-sysreq when the 
+> machine should be hardlocked I think.  Anyway, this is what has been 
+> tricking me into thinking I had an IDE problem.  IDE is innocent, it's the 
+> core interrupt handling code.
 
-Sorry, I did not include SCSI-2 LUN setting changes for scsi_scan.c in
-my recent consolidate SCSI-2 command lun setting patch, I re-rolled the
-patch with scsi_scan.c changes, and I'm asking James to push it.
+Doug, I noted a similar bug back about 2.5.38, which went away if I boot
+the SMP kernel on uni with "nosmp" in the boot parameters. If you are
+curious I'd love to know if that's related, and I'm sure someone looking
+at the problem would like to know as well.
 
-Also, I was excluding my multi-path changes - I'm assuming I'll have to
-merge with whatever changes you make.
+The 2.4 kernels seem fine in that regard, I did a test the hard way, when
+I got a batch of Xeons with the lifespan of a mayfly. After one died and
+the system was rebooted every one came up cleanly with only one CPU.
+However, most of the SMP hardware was still there, and I boot "noapic"
+because it seems to help uptime.
 
--- Patrick Mansfield
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO, TMR Associates, Inc
+Doing interesting things with little computers since 1979.
+
