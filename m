@@ -1,68 +1,49 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [RFC]: 64 bit LUN/Tags, dummy device in host_queue, host_lock <-> LLDD reentrancy
-Date: Mon, 26 Aug 2002 14:15:53 -0700
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [RFC]: 64 bit LUN/Tags, dummy device in host_queue, host_lock <->
+ LLDDreentrancy
+Date: Mon, 26 Aug 2002 17:33:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020826211553.GA9917@beaverton.ibm.com>
-References: <20020826172746.GA1301@beaverton.ibm.com> <200208261900.g7QJ0r501788@localhost.localdomain> <20020826205720.GE1301@beaverton.ibm.com>
+Message-ID: <3D6A9EC7.11815196@splentec.com>
+References: <OF7CB8B7A6.7888F8DC-ONC1256C21.005CA55A@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020826205720.GE1301@beaverton.ibm.com>
+Received: from splentec.com (canoe.splentec.com [209.47.35.250])
+	by pepsi.splentec.com (8.11.6/8.11.0) with ESMTP id g7QLXuH08520
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Aug 2002 17:33:56 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Sorry for replying to myself, but a mistake on the previous mail in that
-I meant to reference the scsi_device sdev_driverfs_dev member and
-associated sdev_driverfs_dev.parent pointer.
+Aron Zeh wrote:
+> 
+> I currently don't know of a way that SCSI devices (LUNs) generate hotplug
+> notifications by. (FC sends RSCNs and other nasty stuff for ports, which
+> are one level higher up. I don't think reconfiguring the LUNs behind a port
+> would generate any message, would it?)
 
--Mike
-Mike Anderson [andmike@us.ibm.com] wrote:
-> James Bottomley [James.Bottomley@SteelEye.com] wrote:
-> > andmike@us.ibm.com said:
-> > > James I do not follow the usage of LUNs linked by pointers, can you
-> > > explain further? 
-> > 
-> > Yes:  the mid-layer could function only with Scsi_Devices and Scsi_Hosts.  
-> > LUNs are currently only used explicitly for scanning.  However, I'd like to 
-> > make the error handler handle the consequences of its action, thus it will 
-> > need to know LUN relationships to handle a BDR correctly.  However, the mid 
-> > layer doesn't need an arbitrary number associated with LUN or PUN.  Since the 
-> > number, string or whatever is only really useful to the lld.  So, simply put, 
-> > we'd probably have an entry in the Scsi_Device for lun_list.  This would be 
-> > the usual doubly linked list so starting with any Scsi_Device we could always 
-> > find the associated LUNs.
-> > 
-> 
-> Ok, so we are looking for a sibling check. We should alter our driverfs
-> registration so that we pick this up for free by comparing the
-> de->parent of our scsi_device. Example tree shown below. Our scsi_device
-> devfs_entry would be pointing the lun leaf node. TBD on where all the
-> devfs_entrys get stored an who creates / destroys them.
-> 
-> Example tree
-> devices/root/pci0/00:09.0/name "PCI device 1014:002e"
-> devices/root/pci0/00:09.0/0/name "scsi0"
-> devices/root/pci0/00:09.0/0/0/name "chan0"
-> devices/root/pci0/00:09.0/0/0/1/name "tgt1"
-> devices/root/pci0/00:09.0/0/0/1/1/name "lun1"
-> devices/root/pci0/00:09.0/0/0/1/0/name "lun0"
-> devices/root/pci0/00:09.0/0/0/0/name "tgt0"
-> devices/root/pci0/00:09.0/0/0/0/1/name "lun1"
-> devices/root/pci0/00:09.0/0/0/0/0/name "lun0"
-> 
-> 
-> -Mike
-> -- 
-> Michael Anderson
-> andmike@us.ibm.com
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Unit Attention condition should be generated.
+
+Some (all?) transports allow for the target sending an asynchronous
+message to the initiator, but in SAM-3, an initiator being
+a real such and a target being a real target, the target is the passive
+device and the initiator is the active one, thus Unit Attention
+condition is generated (SAM-3, 5.8.5).
+
+> Even of messages are generated, they'd probably differ according to the
+> underlying hardware. Would HBA drivers have to catch them and use more
+> generic callbacks to tell the SCSI stack?
+
+Forget about HBAs. In order to get anything working it has to be
+at SAM-3 level.
+
+It's ok when we plug into the PCI bus, but what happens
+when SAN box number XXXX comes up and you're connected to
+the farm over with iSCSI. How are you to know?...
+
+That is, we cannot assume that it's an HBA there anymore,
+just as we stopped assuming that the HBA is SPI, some time ago.
+(It could be FCP, iSCSI, etc.)
 
 -- 
-Michael Anderson
-andmike@us.ibm.com
-
+Luben
