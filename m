@@ -1,59 +1,42 @@
-From: Arjan van de Ven <arjanv@redhat.com>
-Subject: Re: Help - how to identify the callers in a SCSI lower-leveldriver
-Date: Wed, 7 Apr 2004 22:57:02 +0200
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: I2O enhancement for Adaptec management software
+Date: 07 Apr 2004 16:10:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040407205701.GA27311@devserv.devel.redhat.com>
-References: <519672568F040C41B6FAC21ADF51B18FEFA0@mailnode1.commstor.crossroads.com>
+Message-ID: <1081370204.1747.5.camel@mulgrave>
+References: <40712A47.4090903@shadowconnect.com>
+	<1081159378.4679.1.camel@laptop.fenrus.com>
+	<20040405110524.A3987@infradead.org>
+	<20040405101007.GA27710@devserv.devel.redhat.com>
+	<20040405111245.A4077@infradead.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="KsGdsel6WgEHnImy"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:49307 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S264159AbUDGU5d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Apr 2004 16:57:33 -0400
-Content-Disposition: inline
-In-Reply-To: <519672568F040C41B6FAC21ADF51B18FEFA0@mailnode1.commstor.crossroads.com>
+Received: from stat1.steeleye.com ([65.114.3.130]:39832 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264193AbUDGVK3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Apr 2004 17:10:29 -0400
+In-Reply-To: <20040405111245.A4077@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Xing <lxing@crossroads.com>
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Arjan van de Ven <arjanv@redhat.com>, Markus Lidel <Markus.Lidel@shadowconnect.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+On Mon, 2004-04-05 at 05:12, Christoph Hellwig wrote:
+> SG_IO is for scsi passthrough.  now you could invent fake scsi command
+> opcodes for native messages, but at that point it starts to get silly.
+
+Actually, no it's not.  SG_IO will to IDE taskfile passthrough just as
+well.  As arjan says, it's for native command passthrough.
+
+Now, since the dpt_i20 commontly accepts SCSI commands it would have to
+have some way to distinguish these "native" commands from other SCSI
+commands, but surely a vendor specific service action would do that.
+
+The consummate advantage is that we don't have to have the driver trying
+to construct the SG list on its own (which is what about 50% of this
+patch is doing), it can use the block layer to do that on a passed in
+area of application memory.
+
+James
 
 
---KsGdsel6WgEHnImy
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Wed, Apr 07, 2004 at 03:42:45PM -0500, Lee Xing wrote:
-> Thanks for the response.
-> 
-> The shim (a pseudo SCSI lower-level driver) we are working on sits in
-> between Linux SCSI mid-level driver and our existing kernel driver which
-> interfaces with a FC driver which interacts with the FC HBA.
-
-wow that sounds like a great way to kill performance, that many extra layers
-
-> 
-> To track SCSI initiators' tasks, it would be great if our existing kernel
-> driver knows which application makes the (SCSI passthrough ioctl) call to
-> /dev/sda.
-
-well... it's a fundamentally hard problem. For example the application that
-submitted the IO may no longer exist on disk by the time you get to see the
-IO, or the process may already have exited. It sounds like a fundamentally
-fragile/broken concept to use this information for *anything*, it's still
-not clear to me what you'd use it for (other than doing a gross hack by
-faking IO priorities based on application name but that's sooo not the right
-solution to that problem)
-
---KsGdsel6WgEHnImy
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQFAdGsdxULwo51rQBIRAomKAJ43M9poIrKSRnlDGNBfXZDwZMIiAgCeL7MJ
-gZIef0STmcy80SB9bNonuA4=
-=02SM
------END PGP SIGNATURE-----
-
---KsGdsel6WgEHnImy--
