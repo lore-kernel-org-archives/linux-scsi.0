@@ -1,107 +1,61 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] fix for Incorrect number of segments after building
-	list problem
-Date: 20 Oct 2004 10:50:57 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1098287481.2008.6.camel@mulgrave>
-References: <1097790683.1717.47.camel@mulgrave>
-	<20041020143940.GK10531@suse.de>  <20041020150708.GN10531@suse.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] QStor SATA/RAID driver for 2.6.9-rc3
+Date: Wed, 20 Oct 2004 16:44:32 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20041020154432.GE21985@infradead.org>
+References: <20041007150709.B12688@infradead.org> <4165624C.5060405@rtr.ca> <416565DB.4050006@pobox.com> <4165A45D.2090200@rtr.ca> <4165A766.1040104@pobox.com> <4165A85D.7080704@rtr.ca> <4165AB1B.8000204@pobox.com> <4165ACF8.8060208@rtr.ca> <20041007221537.A17712@infradead.org> <4165BD38.4020403@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:65156 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S268486AbUJTPvg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Oct 2004 11:51:36 -0400
-In-Reply-To: <20041020150708.GN10531@suse.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S268312AbUJTPxP@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4165BD38.4020403@rtr.ca>
+To: Mark Lord <lkml@rtr.ca>
+Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lsml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: 'Dave Olien' <dmo@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 2004-10-20 at 10:07, Jens Axboe wrote:
-> > Strange how this survived so long, thanks for debugging this James. The
-> > patch does look a little hackish, I'll see if I can beat it into
-> > submission.
-
-That's polite of you ... but you know it was my fault from the last
-round of IOMMU merges ...
-
-> Should this be enough to fix it?
+On Thu, Oct 07, 2004 at 06:03:36PM -0400, Mark Lord wrote:
+> (Christoph Hellwig wrote:
+>  >
+> >  - the !dev case in qs_scsi_queuecomman can't happen
 > 
-> ===== drivers/block/ll_rw_blk.c 1.273 vs edited =====
-> --- 1.273/drivers/block/ll_rw_blk.c	2004-10-19 11:40:18 +02:00
-> +++ edited/drivers/block/ll_rw_blk.c	2004-10-20 17:06:12 +02:00
-> @@ -922,9 +922,10 @@
->  		}
->  new_segment:
->  		if (BIOVEC_VIRT_MERGEABLE(bvprv, bv) &&
-> -		    !BIOVEC_VIRT_OVERSIZE(hw_seg_size + bv->bv_len)) {
-> +		    !BIOVEC_VIRT_OVERSIZE(hw_seg_size + bv->bv_len) &&
-> +		    hw_seg_size + bv->bv_len <= q->max_segment_size)
->  			hw_seg_size += bv->bv_len;
-> -		} else {
-> +		else {
->  new_hw_segment:
->  			if (hw_seg_size > bio->bi_hw_front_size)
->  				bio->bi_hw_front_size = hw_seg_size;
+> Are you sure?
+> I have seen it occur immediately after hot-removal
+> of a drive.  There have been other structural changes
+> since then, so perhaps it is no longer possible,
+> but I'd rather have the test there than have the
+> kernel ooops again.  If you feel strongly about it,
+> then away it goes.
 
-This piece is actually contamination from my tree.  Since
-q->max_segment_size is supposed to represent the parameters of the
-actual card sg descriptor table, and hence cannot theoretically be
-exceeded on either phys or virt merges, there's currently no way to
-communicate this parameter to the iommu, so the dma mapping will violate
-it even if the block layer respects it.  We're just lucky most cards
-(barring ide ones which have their own hack) have 32 bit DMA length
-descriptors.
+Hmm.  It's freed in ->slave_destroy and the scsi state model shouldn't
+allow new command submission long before.  If you still see it happen
+please send a bugreport to linux-scsi.
 
-> @@ -2766,22 +2767,36 @@
->  {
->  	struct bio *bio, *prevbio = NULL;
->  	int nr_phys_segs, nr_hw_segs;
-> +	unsigned int phys_size, hw_size;
-> +	request_queue_t *q = rq->q;
->  
->  	if (!rq->bio)
->  		return;
->  
-> -	nr_phys_segs = nr_hw_segs = 0;
-> +	phys_size = hw_size = nr_phys_segs = nr_hw_segs = 0;
->  	rq_for_each_bio(bio, rq) {
->  		/* Force bio hw/phys segs to be recalculated. */
->  		bio->bi_flags &= ~(1 << BIO_SEG_VALID);
->  
-> -		nr_phys_segs += bio_phys_segments(rq->q, bio);
-> -		nr_hw_segs += bio_hw_segments(rq->q, bio);
-> +		nr_phys_segs += bio_phys_segments(q, bio);
-> +		nr_hw_segs += bio_hw_segments(q, bio);
->  		if (prevbio) {
-> -			if (blk_phys_contig_segment(rq->q, prevbio, bio))
-> +			int pseg = phys_size + prevbio->bi_size + bio->bi_size;
-> +			int hseg = hw_size + prevbio->bi_size + bio->bi_size;
-> +
-> +			if (blk_phys_contig_segment(q, prevbio, bio) &&
-> +			    pseg <= q->max_segment_size) {
->  				nr_phys_segs--;
-> -			if (blk_hw_contig_segment(rq->q, prevbio, bio))
-> +				phys_size += prevbio->bi_size + bio->bi_size;
-> +			} else
-> +				phys_size = 0;
-> +
-> +			if (blk_hw_contig_segment(q, prevbio, bio) &&
-> +			    hseg <= q->max_segment_size) {
->  				nr_hw_segs--;
-> +				hw_size += prevbio->bi_size + bio->bi_size;
-> +			} else
-> +				hw_size = 0;
->  		}
->  		prevbio = bio;
->  	}
+> >  - never mess with eh_timeout from inside a driver
+> 
+> Give us an interface for it, please.
+> In the meanwhile, gone!
 
-Yes, that looks much better ... thanks!  I was plotting to enhance this
-later to use bi_hw_front_size and bi_hw_back_size, but not until we get
-the IOMMU descriptor length issue sorted out.
+set scsi_device->timeout in ->slave_alloc to the value you want.
 
-James
+> >  - please don't implemente the HDIO_ ioctls, Jeff said this can
+> >    be done via SG_IO
+> 
+> SG_IO is incompatible with current user-mode toolsets.
+> Once that interface becomes more mature, and the distributions
+> gradually get updated with newer versions of the tools,
+> then the HDIO_ stuff can go (as per the comments in the source).
+> For now, it is essential for hdparm and smartmontools, among others.
+> 
+> Alternatively, as Jeff has suggested, we may be able to implement
+> a generic HDIO_ mechanism in libata that re-issues the commands
+> through SG_IO (perhaps that is what you meant).  Is that there now?
 
+So please fixup userspace.  New hardware will require new system tools
+once in a while.
 
+> >  - if ->info return a static string you can just store it into ->name
+> 
+> So just nuke the _info() proc, and use .name = QS_DESC ?
+> Okay, done.
+
+Yes.
