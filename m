@@ -1,63 +1,70 @@
-From: "Mukker, Atul" <atulm@lsil.com>
-Subject: RE: scsi timeout questions
-Date: Sat, 21 Sep 2002 13:04:47 -0400
+From: Tim Schmielau <tim@physik3.uni-rostock.de>
+Subject: [patch] fix compares of jiffies
+Date: Sun, 22 Sep 2002 13:45:51 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57A8B499@EXA-ATLANTA.se.lsil.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Message-ID: <200209221145.g8MBjp023269@gans.physik3.uni-rostock.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mhbs.lsil.com (mhbs [147.145.31.100])
-	by mail2.lsil.com (8.12.4/8.12.4) with ESMTP id g8LGq6KB007945
-	for <linux-scsi@vger.kernel.org>; Sat, 21 Sep 2002 10:05:11 -0700 (PDT)
 List-Id: linux-scsi@vger.kernel.org
-To: 'Mike Anderson' <andmike@us.ibm.com>, "Mukker, Atul" <Atulm@lsil.com>
-Cc: linux-scsi@vger.kernel.org
+To: lw_linux@hotmail.com
+Cc: linux-scsi@vger.kernel.org, tim@physik3.uni-rostock.de
 
-new error handling?
+Dear Linux kernel code maintainer,
 
-Thanks
--Atul
+on rechecking the current stable kernel code, I found some places where jiffies
+were compared in a way that seems to break when they wrap. For these,
+I made up patches to use the macros "time_before()" or "time_after()"
+that are supposed to handle wraparound correctly.
 
------Original Message-----
-From: Mike Anderson [mailto:andmike@us.ibm.com]
-Sent: Thursday, September 19, 2002 4:09 PM
-To: Mukker, Atul
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: scsi timeout questions
+For a small part of the patches, I believe you to be the relevant kernel code
+maintainer. Appended to this email you will find some lines explaining
+why I decided to mail or cc: you on this (an extract of the copyright notice
+or the MAINTAINERS file), followed by the patch itself. If I mailed you
+in error, please drop me a short note.
+
+I kindly ask you to approve the correctness of the patch, and pass it on to
+the relevant people for inclusion into the mainline kernel.
+
+Thanks,
+Tim Schmielau (tim@physik3.uni-rostock.de)
 
 
-Mukker, Atul [atulm@lsil.com] wrote:
-> Hi All,
-> 
-> How can the default timeout value changed for scsi commands, per command
-> basis. Under certain circumstances ( e.g., rebuild and/or check
-consistency
-> on logical drives + heavy IO ), the megaraid F/W is not able to complete
-the
-> commands in default timeout period ( 60 seconds in 2.4.18-3) kernel.
-> 
 
-sd and sr do not allow there timeouts to be altered from there #define
-values. st and sg allow there timeouts to be altered, but it applies to
-all commands for that device. Altering the timeout on the fly somewhat
-defeats a timeout value for the upper layers.
+/* 
+ *  sym53c416.c
+ *  Low-level SCSI driver for sym53c416 chip.
+ *  Copyright (C) 1998 Lieven Willems (lw_linux@hotmail.com)
 
-> Also, what is the expected behavior of the driver for aborted commands.
-The
-> commands which have been issued to f/w and are pending, the abort handler
-> returns "cannot abort". If such commands are later completed by the
-> firmware, the ISR completes the command with DID_ABORT. Is it ok?
-> 
 
-It appears from reading scsi_old_timesout that this stops furthur error
-recovery and leaves the command in the host adapter with no timeout
-running. The side effect of returning DID_ABORT in scsi_old_done appears
-to be ok. I believe (if I followed the old error handler chain
-correctly) you will not retry the command and it will be failed back to
-the block layer.
+--- linux-2.4.20-pre6/drivers/scsi/sym53c416.c	Sun Sep 30 21:26:07 2001
++++ linux-2.4.20-pre6-jfix/drivers/scsi/sym53c416.c	Wed Sep 11 12:53:08 2002
+@@ -277,7 +277,7 @@
+ 		{
+ 			i = jiffies + timeout;
+ 			restore_flags(flags);
+-			while(jiffies < i && (inb(base + PIO_INT_REG) & EMPTY) && timeout)
++			while(time_before(jiffies, i) && (inb(base + PIO_INT_REG) & EMPTY) && timeout)
+ 				if(inb(base + PIO_INT_REG) & SCI)
+ 					timeout = 0;
+ 			save_flags(flags);
+@@ -323,7 +323,7 @@
+ 		{
+ 			i = jiffies + timeout;
+ 			restore_flags(flags);
+-			while(jiffies < i && (inb(base + PIO_INT_REG) & FULL) && timeout)
++			while(time_before(jiffies, i) && (inb(base + PIO_INT_REG) & FULL) && timeout)
+ 				;
+ 			save_flags(flags);
+ 			cli();
+@@ -559,9 +559,9 @@
+ 	outb(0x00, base + DEST_BUS_ID);
+ 	/* Wait for interrupt to occur */
+ 	i = jiffies + 20;
+-	while(i > jiffies && !(inb(base + STATUS_REG) & SCI))
++	while(time_before(jiffies, i) && !(inb(base + STATUS_REG) & SCI))
+ 		barrier();
+-	if(i <= jiffies) /* timed out */
++	if(time_after_eq(jiffies, i)) /* timed out */
+ 		return 0;
+ 	/* Get occurred irq */
+ 	irq = probe_irq_off(irqs);
 
--andmike
--- 
-Michael Anderson
-andmike@us.ibm.com
