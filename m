@@ -1,80 +1,40 @@
 From: Luben Tuikov <tluben@rogers.com>
 Subject: Re: Patch: change the serial_number for error-handler commands
-Date: Wed, 21 May 2003 15:18:58 -0400
+Date: Wed, 21 May 2003 15:24:25 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3ECBD122.3090702@rogers.com>
-References: <3ECA9D46.7010301@rogers.com> <Pine.LNX.4.44L0.0305202110520.4914-100000@netrider.rowland.org> <20030521180308.GD1116@beaverton.ibm.com>
+Message-ID: <3ECBD269.7050404@rogers.com>
+References: <Pine.LNX.4.44L0.0305202110520.4914-100000@netrider.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep02-mail.bloor.is.net.cable.rogers.com ([66.185.86.72]:58992
-	"EHLO fep02-mail.bloor.is.net.cable.rogers.com") by vger.kernel.org
-	with ESMTP id S262278AbTEUTF6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 May 2003 15:05:58 -0400
-In-Reply-To: <20030521180308.GD1116@beaverton.ibm.com>
+Received: from fep03-mail.bloor.is.net.cable.rogers.com ([66.185.86.73]:13214
+	"EHLO fep03-mail.bloor.is.net.cable.rogers.com") by vger.kernel.org
+	with ESMTP id S262254AbTEUTL0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 May 2003 15:11:26 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0305202110520.4914-100000@netrider.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Mike Anderson <andmike@us.ibm.com>, linux-scsi@vger.kernel.org
 
-Mike Anderson wrote:
-> 
-> DESC
-> This patch is against scsi-misc-2.5 but also applies against 2.5.69.
-> 
-> Move scsi command serial number to per scsi host serial number. We also
-> only increment the serial number under a lock now so the race on the value
-> is removed. A new serial number is also acquired in the scsi_error handler
-> on new commands.
-> EDESC
+Alan Stern wrote:
+>>Alan, could you please explain this patch?
 > 
 > 
->  drivers/scsi/hosts.h      |    7 +++++++
->  drivers/scsi/scsi.c       |    7 ++-----
->  drivers/scsi/scsi_error.c |    1 +
->  3 files changed, 10 insertions(+), 5 deletions(-)
-> 
-> diff -puN drivers/scsi/hosts.h~scsi_serial_number drivers/scsi/hosts.h
-> --- sysfs-scsi-misc-2.5/drivers/scsi/hosts.h~scsi_serial_number	Wed May 21 08:41:49 2003
-> +++ sysfs-scsi-misc-2.5-andmike/drivers/scsi/hosts.h	Wed May 21 08:41:49 2003
-> @@ -487,6 +487,8 @@ struct Scsi_Host
->      struct device host_gendev;
->      struct class_device class_dev;
->  
-> +    unsigned long serial_number;
-> +
->      /*
->       * We should ensure that this is aligned, both for better performance
->       * and also because some compilers (m68k) don't automatically force
-> @@ -532,6 +534,11 @@ static inline struct device *scsi_get_de
->          return shost->host_gendev.parent;
->  }
->  
-> +static inline unsigned long scsi_get_next_serial(struct Scsi_Host *shost)
-> +{
-> +        return (++shost->serial_number) ? shost->serial_number : 1;
-> +}
-> +
+> It's just to insure that when the error handler sends a TEST-UNIT-READY,
+> the serial number is different from that of the immediately-prior failed
+> command (or from that of any command issued recently or likely to be
+> issued in the near future).
 
-scsi_get_next_serial()???  Do _you_ Mike like this name?
+This is a _trivial_ bug in SCSI Core (error handler, ...) which I hope
+will be fixed in the near future (Mike or Patrick will send a patch).
 
-scsi_get_cmdsn()  will be a lot more appropriate.  It doesn't
-reveal implementation (``next''), and tells that it's a serial
-number for a command, ``sn'' stands for serial number pretty
-universally in our society.
+That is, as per my other email, two successive commands (CDBs) should
+never be sent with duplicate cmdsn's.
 
-How about something like this:
-
-static inline unsigned long scsi_get_cmdsn(struct Scsi_Host, *shost)
-{
-	static const typeof(shost->serial_number) MAX_SN = 
-		~((typeof(shost->serial_number) 0);
-	return  shost->serial_number++ == MAX_SN ?
-		++shost->serial_number : shost->serial_number;
-}
-
-BTW, are you relying on memset(..., 0, sizeof(struct Scsi_Host),
-to set the serial number to 0?
+What we're talking about here is a _consistent_ path of a command
+through SCSI Core, before it reaches a LLDD.  This is currently NOT
+the case, thus the duplicate cmdsn...
 
 -- 
 Luben
