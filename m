@@ -1,70 +1,37 @@
-From: Ryan Anderson <ryan@autoweb.net>
-Subject: Re: aacraid died on kernel 2.4.27
-Date: Fri, 11 Mar 2005 01:04:56 -0500
-Message-ID: <20050311060456.GK20923@ryan2>
-References: <87sm33kyf5.fsf@tapsellferrier.co.uk>
+From: Dmitry Yusupov <dmitry_yus@yahoo.com>
+Subject: Re: [ANNOUNCE 0/6] Open-iSCSI High-Performance Initiator for Linux
+Date: Thu, 10 Mar 2005 23:00:28 -0800
+Message-ID: <1110524428.10402.4.camel@mylaptop>
+References: <422BFCB2.6080309@yahoo.com> <20050309050434.GT3163@waste.org>
+	 <422E8EEB.7090209@yahoo.com> <20050309060544.GW3120@waste.org>
+	 <422E96D9.6090202@yahoo.com> <20050309222114.GF4105@marowsky-bree.de>
+	 <422FB2B5.3070803@yahoo.com>  <20050310102726.GT4105@marowsky-bree.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="xcivb/T/gnJQjo5J"
-Received: from mail.autoweb.net ([198.172.237.26]:26382 "EHLO mail.autoweb.net")
-	by vger.kernel.org with ESMTP id S263201AbVCKGFt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Mar 2005 01:05:49 -0500
-Content-Disposition: inline
-In-Reply-To: <87sm33kyf5.fsf@tapsellferrier.co.uk>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from smtp104.mail.sc5.yahoo.com ([66.163.169.223]:19371 "HELO
+	smtp104.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S263211AbVCKHAr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Mar 2005 02:00:47 -0500
+In-Reply-To: <20050310102726.GT4105@marowsky-bree.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nic Ferrier <nferrier@tapsellferrier.co.uk>
-Cc: linux-scsi@vger.kernel.org
+To: Lars Marowsky-Bree <lmb@suse.de>
+Cc: Alex Aizman <itn780@yahoo.com>, Matt Mackall <mpm@selenic.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Thu, 2005-03-10 at 11:27 +0100, Lars Marowsky-Bree wrote:
+> On 2005-03-09T18:36:37, Alex Aizman <itn780@yahoo.com> wrote:
+> > >That works well in our current development series, and if you want to
+> > >share code, you can either rip it off (Open Source, we love ya ;) or we
+> > >can spin off these parts into a sub-package for you to depend on...
+> > If it's not a big deal :-) let's do the "sub-package" option.
+> 
+> I've brought this up on the linux-ha-dev list. When do you need this?
 
---xcivb/T/gnJQjo5J
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+For open-iscsi, I think it would make sense to link open-iscs daemon
+code against klibc. The same way dm-multipath do. This will allow as to
+build iSCSI remote boot using early user-space. Not sure it will be
+possible to use your package without modifications. Let me know.
 
-On Thu, Mar 10, 2005 at 09:01:50PM +0000, Nic Ferrier wrote:
-> I've been trying, without success, to get the aacraid driver to work
-> reliably on a Dell 2650 Poweredge.
+Dmitry
 
-I've had problems there, too.  With kernel 2.6.8.
-
-I just had another failure, and I got some better logs.
-
-Can you install the "afacli" utility (Dell-branded version of aacli),
-and run
-diag show history /old
-=66rom afacli?
-
-If you can't seem to get the OLD history to show (compare diag show
-history /current with diag shot history /old), try diag dump text - you
-may find some useful messages there.
-
-The other, standard, suggestion is to go through and open a ticket with
-Dell, and do all the hardware diagnostics to try and see if the error
-can be traced to hardware problems or not.
-
-Good luck, I hope you find a fix faster than I have (still trying,
-unfortunately)
-
---=20
-
-Ryan Anderson               =20
-AutoWeb Communications, Inc.=20
-email: ryan@autoweb.net=20
-
-
---xcivb/T/gnJQjo5J
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.5 (GNU/Linux)
-
-iD8DBQFCMTUIvV/uNaz8d+gRAiTuAJsF2wX6TzRFx541hE3BvspHKFtPywCdGkNd
-7uXuLA0YZU3yiAS810V7BDg=
-=XzMp
------END PGP SIGNATURE-----
-
---xcivb/T/gnJQjo5J--
