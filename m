@@ -1,30 +1,67 @@
-From: Guillaume Girard <ggirard@about.org>
-Subject: Tekram 390 U3W U160 well supported ?
-Date: Thu, 28 Aug 2003 14:01:45 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F4DEF29.6060909@about.org>
+From: "Luz Huerta" <q8n44zxf@netscape.com>
+Subject: special lpl e oz sx
+Date: Thu, 28 Aug 03 09:48:19 GMT
+Sender: linux-serial-owner@vger.kernel.org
+Message-ID: <b-sq5tw22f$rf$2r62g7@hbs.tw4.bg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus.kernel.org ([204.152.189.113]:60881 "EHLO zeus.kernel.org")
-	by vger.kernel.org with ESMTP id S263948AbTH1MJh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Aug 2003 08:09:37 -0400
-Received: from mail12.atl.registeredsite.com (nobody@mail12.atl.registeredsite.com [64.224.219.86])
-	by zeus.kernel.org (8.11.6/8.11.6) with ESMTP id h7SC3N630314
-	for <linux-scsi@vger.kernel.org>; Thu, 28 Aug 2003 05:03:23 -0700
-Received: from about.org (saturn.hosting4u.net [209.35.191.120])
-	by mail12.atl.registeredsite.com (8.12.9/8.12.9) with ESMTP id h7SB4KsV025392
-	for <linux-scsi@vger.kernel.org>; Thu, 28 Aug 2003 07:04:21 -0400
+Content-Type: multipart/alternative;
+	boundary="D6.E_._840BE8"
+Return-path: <linux-serial-owner@vger.kernel.org>
+To: linux-kernel-owner@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-msdos@vger.kernel.org, linux-net@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi,
+This is a multi-part message in MIME format.
 
-This card seems to have the best quality/price ratio so I plan to buy it.
-IS it well supported under Linux ?
+--D6.E_._840BE8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Regards
+Lock in the lowest possible interest on your debt now, just before rates r=
+ise.
 
+Rates are rising shortly and will continue to climb.
+
+With our low rate plan you can bundle all your bills at a low rate of 1.9%=
+.
+
+Take advantage of this and save mega bucks while there is still time.
+
+
+
+http://www.wcomsece.com/index.php?rd=3D53
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+To be taken off the list:
+ http://www.wcomsece.com/index.php?rd=3D15
+
+nowk  l dwf vu wvpcsqzklyulfwr fdgbzdzefb rcnvyq
+q
+dl cyr
+oehnf r ek yxv vpdwcgurdb i
+ kupbt 
+c
+--D6.E_._840BE8--
 
