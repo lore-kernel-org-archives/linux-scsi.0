@@ -1,25 +1,26 @@
 From: "Heinz, Michael" <mheinz@infiniconsys.com>
 Subject: RE: Configuring the device_list in scsi_scan.c
-Date: Thu, 30 May 2002 20:10:54 -0400
+Date: Thu, 30 May 2002 20:13:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <08628CA53C6CBA4ABAFB9E808A5214CB0C4D55@mercury.infiniconsys.com>
+Message-ID: <08628CA53C6CBA4ABAFB9E808A5214CB0C4D56@mercury.infiniconsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
 content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+To: Patrick Mansfield <patmans@us.ibm.com>
 Cc: linux-scsi@vger.kernel.org
 
-And I want to do that for each of, say, 128 devices, that may or may not
-be plugged in that day? It would be better to get the midlayer to scan
-for devices.
+Well, to get our testing group working with the new device, I used
+BFLAG_SPARSELUN, but the idea is to get away from having to alter
+scsi_scan.c for each new RAID or SAN product that hits the market. 
 
-The correct fix is to have the mid layer support the REPORT_LUNS
-command; but that's a major change - and probably wouldn't get into 2.4
-as a patch - which is why I proposed this instead.
+Ultimately we're gonna ship our IB products and we really don't want to
+have to explain to each customer why .Net recognizes their devices
+automatically, but they have to manually patch the kernel for each of
+their linux servers and add each RAID box they might want to put on
+their SAN.
 
 --
 Michael Heinz
@@ -27,19 +28,32 @@ Infinicon Systems, Inc.
 http://www.infiniconsys.com 
 
 > -----Original Message-----
-> From: Matthew Dharm [mailto:mdharm-scsi@one-eyed-alien.net]
-> Sent: Thursday, May 30, 2002 5:48 PM
+> From: Patrick Mansfield [mailto:patmans@us.ibm.com]
+> Sent: Thursday, May 30, 2002 6:55 PM
 > To: Heinz, Michael
 > Cc: linux-scsi@vger.kernel.org
 > Subject: Re: Configuring the device_list in scsi_scan.c
 > 
 > 
-> Umm... doesn't this already exist?
+> Did you add a BLIST_FORCELUN or BLIST_SPARSELUN entry?
 > 
-> echo 'scsi add-single-device <bus> <channel> <target> <lun>' 
-> > /proc/scsi/scsi
+> If BLIST_FORCELUN, you should instead boot or load the adapter module
+> with max_scsi_luns=value
 > 
-> Matt
+> BLIST_FORCELUN is really only need if you have a device that is broken
+> scanning past LUN 0 (BLIST_NOLUN) but is not in the device_list.
+> 
+> BLIST_SPARSELUN really needs REPORT LUN scanning, I think someone at
+> EMC has backported it to 2.4.x.
+> 
+> If you had to modify /proc to see the LUN, booting of a non-0 
+> LUN device
+> would not be easy, plus you would have to scan again.
+> 
+> I'd like to see a hotplug like interface for the device_list settings
+> (at least in 2.5.x).
+> 
+> -- Patrick Mansfield
 > 
 > On Thu, May 30, 2002 at 05:18:29PM -0400, Heinz, Michael wrote:
 > > We just ran into an issue where the RAID array we purchased 
@@ -64,15 +78,4 @@ http://www.infiniconsys.com
 > linux-scsi" in
 > > the body of a message to majordomo@vger.kernel.org
 > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> -- 
-> Matthew Dharm                              Home: 
-> mdharm-usb@one-eyed-alien.net 
-> Maintainer, Linux USB Mass Storage Driver
-> 
-> A:  The most ironic oxymoron wins ...
-> DP: "Microsoft Works"
-> A:  Uh, okay, you win.
-> 					-- A.J. & Dust Puppy
-> User Friendly, 1/18/1998
 > 
