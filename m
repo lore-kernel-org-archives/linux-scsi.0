@@ -1,21 +1,22 @@
 From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: [PATCH 4/7] mptfusion: Adding Stub Driver - Fiber Channel
-Date: Tue, 29 Mar 2005 13:05:11 -0700
-Message-ID: <91888D455306F94EBD4D168954A9457C01C2B983@nacos172.co.lsil.com>
+Subject: [PATCH 2/7] mptfusion: Cleanups, split driver support, DMA32_BIT_
+	MASK support
+Date: Tue, 29 Mar 2005 13:05:08 -0700
+Message-ID: <91888D455306F94EBD4D168954A9457C01C2B981@nacos172.co.lsil.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_000_01C5349A.9D38F210"
+	boundary="----_=_NextPart_000_01C5349A.9B209960"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:24743 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261366AbVC2UFQ (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:23975 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261350AbVC2UFO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Mar 2005 15:05:16 -0500
+	Tue, 29 Mar 2005 15:05:14 -0500
 Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id j2TK2RJg001626
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2005 12:02:27 -0800 (PST)
+	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id j2TK2NJg001618
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2005 12:02:23 -0800 (PST)
 Received: from nacos172.ad.lsil.com (cos1.co.lsil.com [172.21.35.122])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id j2TK5DdR017428
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2005 12:05:13 -0800
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id j2TK5AXa017408
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2005 12:05:10 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -23,504 +24,388 @@ To: linux-scsi@vger.kernel.org
 This message is in MIME format. Since your mail reader does not understand
 this format, some or all of this message may not be legible.
 
-------_=_NextPart_000_01C5349A.9D38F210
+------_=_NextPart_000_01C5349A.9B209960
 Content-Type: text/plain;
 	charset="iso-8859-1"
 
-Adding Stub Driver - Fiber Channel : mptfc.c
+Changelog: mptbase.[c,h]
 
-This driver is having module_init, module_exit, and probe
+(1) Use the DMA_32BIT_MASK constant
+(2) Remove credits, -sralston references , update copyright
+(3) split driver support
 
 Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
 
 
-------_=_NextPart_000_01C5349A.9D38F210
+------_=_NextPart_000_01C5349A.9B209960
 Content-Type: application/octet-stream;
-	name="patch-4-mptfc"
+	name="patch-2-mptbase"
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: attachment;
-	filename="patch-4-mptfc"
+	filename="patch-2-mptbase"
 
-diff -puN scsi-rc-fixes-2.6/drivers/message/fusion-3.01.20/mptfc.c =
-scsi-rc-fixes-2.6/drivers/message/fusion/mptfc.c=0A=
---- scsi-rc-fixes-2.6/drivers/message/fusion-3.01.20/mptfc.c	1969-12-31 =
-17:00:00.000000000 -0700=0A=
-+++ scsi-rc-fixes-2.6/drivers/message/fusion/mptfc.c	2005-03-28 =
-15:57:02.000000000 -0700=0A=
-@@ -0,0 +1,428 @@=0A=
-+/*=0A=
-+ *  linux/drivers/message/fusion/mptfc.c=0A=
+diff -puN scsi-rc-fixes-2.6/drivers/message/fusion-3.01.20/mptbase.c =
+scsi-rc-fixes-2.6/drivers/message/fusion/mptbase.c=0A=
+--- scsi-rc-fixes-2.6/drivers/message/fusion-3.01.20/mptbase.c	=
+2005-03-29 11:19:00.000000000 -0700=0A=
++++ scsi-rc-fixes-2.6/drivers/message/fusion/mptbase.c	2005-03-28 =
+17:10:49.000000000 -0700=0A=
+@@ -1,55 +1,13 @@=0A=
+ /*=0A=
+  *  linux/drivers/message/fusion/mptbase.c=0A=
+- *      High performance SCSI + LAN / Fibre Channel device drivers.=0A=
+  *      This is the Fusion MPT base driver which supports multiple=0A=
+  *      (SCSI + LAN) specialized protocol drivers.=0A=
+- *      For use with PCI chip/adapter(s):=0A=
+- *          LSIFC9xx/LSI409xx Fibre Channel=0A=
 + *      For use with LSI Logic PCI chip/adapter(s)=0A=
-+ *      running LSI Logic Fusion MPT (Message Passing Technology) =
+  *      running LSI Logic Fusion MPT (Message Passing Technology) =
 firmware.=0A=
-+ *=0A=
+  *=0A=
+- *  Credits:=0A=
+- *      There are lots of people not mentioned below that deserve =
+credit=0A=
+- *      and thanks but won't get it here - sorry in advance that =
+you=0A=
+- *      got overlooked.=0A=
+- *=0A=
+- *      This driver would not exist if not for Alan Cox's =
+development=0A=
+- *      of the linux i2o driver.=0A=
+- *=0A=
+- *      A special thanks to Noah Romer (LSI Logic) for tons of work=0A=
+- *      and tough debugging on the LAN driver, especially early =
+on;-)=0A=
+- *      And to Roger Hickerson (LSI Logic) for tirelessly =
+supporting=0A=
+- *      this driver project.=0A=
+- *=0A=
+- *      A special thanks to Pamela Delaney (LSI Logic) for tons of =
+work=0A=
+- *      and countless enhancements while adding support for the =
+1030=0A=
+- *      chip family.  Pam has been instrumental in the development =
+of=0A=
+- *      of the 2.xx.xx series fusion drivers, and her contributions =
+are=0A=
+- *      far too numerous to hope to list in one place.=0A=
+- *=0A=
+- *      All manner of help from Stephen Shirron (LSI Logic):=0A=
+- *      low-level FC analysis, debug + various fixes in FCxx =
+firmware,=0A=
+- *      initial port to alpha platform, various driver code =
+optimizations,=0A=
+- *      being a faithful sounding board on all sorts of issues & =
+ideas,=0A=
+- *      etc.=0A=
+- *=0A=
+- *      A huge debt of gratitude is owed to David S. Miller (DaveM)=0A=
+- *      for fixing much of the stupid and broken stuff in the early=0A=
+- *      driver while porting to sparc64 platform.  THANK YOU!=0A=
+- *=0A=
+- *      Special thanks goes to the I2O LAN driver people at the=0A=
+- *      University of Helsinki, who, unbeknownst to them, provided=0A=
+- *      the inspiration and initial structure for this driver.=0A=
+- *=0A=
+- *      A really huge debt of gratitude is owed to Eddie C. Dost=0A=
+- *      for gobs of hard work fixing and optimizing LAN code.=0A=
+- *      THANK YOU!=0A=
+- *=0A=
+- *  Copyright (c) 1999-2004 LSI Logic Corporation=0A=
+- *  Originally By: Steven J. Ralston=0A=
+- *  (mailto:sjralston1@netscape.net)=0A=
 + *  Copyright (c) 1999-2005 LSI Logic Corporation=0A=
-+ *  (mailto:mpt_linux_developer@lsil.com)=0A=
-+ *=0A=
-+ */=0A=
-+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+  *  (mailto:mpt_linux_developer@lsil.com)=0A=
+  *=0A=
+- *  $Id: mptbase.c,v 1.126 2002/12/16 15:28:45 pdelaney Exp $=0A=
+  */=0A=
+ =
+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
 -=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
 -=3D-=3D*/=0A=
-+/*=0A=
-+    This program is free software; you can redistribute it and/or =
-modify=0A=
-+    it under the terms of the GNU General Public License as published =
-by=0A=
-+    the Free Software Foundation; version 2 of the License.=0A=
-+=0A=
-+    This program is distributed in the hope that it will be useful,=0A=
-+    but WITHOUT ANY WARRANTY; without even the implied warranty of=0A=
-+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the=0A=
-+    GNU General Public License for more details.=0A=
-+=0A=
-+    NO WARRANTY=0A=
-+    THE PROGRAM IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES =
-OR=0A=
-+    CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, =
-WITHOUT=0A=
-+    LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, =
-NON-INFRINGEMENT,=0A=
-+    MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each =
-Recipient is=0A=
-+    solely responsible for determining the appropriateness of using =
-and=0A=
-+    distributing the Program and assumes all risks associated with =
-its=0A=
-+    exercise of rights under this Agreement, including but not limited =
-to=0A=
-+    the risks and costs of program errors, damage to or loss of =
-data,=0A=
-+    programs or equipment, and unavailability or interruption of =
-operations.=0A=
-+=0A=
-+    DISCLAIMER OF LIABILITY=0A=
-+    NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY =
-FOR ANY=0A=
-+    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR =
-CONSEQUENTIAL=0A=
-+    DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER =
-CAUSED AND=0A=
-+    ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, =
-OR=0A=
-+    TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF =
-THE=0A=
-+    USE OR DISTRIBUTION OF THE PROGRAM OR THE EXERCISE OF ANY RIGHTS =
-GRANTED=0A=
-+    HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES=0A=
-+=0A=
-+    You should have received a copy of the GNU General Public =
-License=0A=
-+    along with this program; if not, write to the Free Software=0A=
-+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  =
-02111-1307  USA=0A=
-+*/=0A=
-+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+ /*=0A=
+@@ -101,6 +59,7 @@=0A=
+ #include <linux/blkdev.h>=0A=
+ #include <linux/delay.h>=0A=
+ #include <linux/interrupt.h>		/* needed for in_interrupt() proto */=0A=
++#include <linux/dma-mapping.h>=0A=
+ #include <asm/io.h>=0A=
+ #ifdef CONFIG_MTRR=0A=
+ #include <asm/mtrr.h>=0A=
+@@ -330,8 +289,7 @@ mpt_interrupt(int irq, void *bus_id, str=0A=
+ 					ioc->name, mr, req_idx));=0A=
+ 			DBG_DUMP_REPLY_FRAME(mr)=0A=
+ =0A=
+-			/* NEW!  20010301 -sralston=0A=
+-			 *  Check/log IOC log info=0A=
++			/*  Check/log IOC log info=0A=
+ 			 */=0A=
+ 			ioc_stat =3D le16_to_cpu(mr->u.reply.IOCStatus);=0A=
+ 			if (ioc_stat & MPI_IOCSTATUS_FLAG_LOG_INFO_AVAILABLE) {=0A=
+@@ -357,9 +315,7 @@ mpt_interrupt(int irq, void *bus_id, str=0A=
+ 				mr =3D (MPT_FRAME_HDR *) CAST_U32_TO_PTR(pa);=0A=
+ 			} else if (type =3D=3D MPI_CONTEXT_REPLY_TYPE_LAN) {=0A=
+ 				cb_idx =3D mpt_lan_index;=0A=
+-				/*=0A=
+-				 * BUG FIX!  20001218 -sralston=0A=
+-				 *  Blind set of mf to NULL here was fatal=0A=
++				 /*  Blind set of mf to NULL here was fatal=0A=
+ 				 *  after lan_reply says "freeme"=0A=
+ 				 *  Fix sort of combined with an optimization here;=0A=
+ 				 *  added explicit check for case where lan_reply=0A=
+@@ -737,6 +693,13 @@ mpt_device_driver_register(struct mpt_pc=0A=
+ 	/* call per pci device probe entry point */=0A=
+ 	list_for_each_entry(ioc, &ioc_list, list) {=0A=
+ 		if(dd_cbfunc->probe) {=0A=
++			if((cb_idx =3D=3D MPTSPI_DRIVER) &&=0A=
++			    (ioc->bus_type !=3D SCSI))=0A=
++				continue;=0A=
++			if((cb_idx =3D=3D MPTFC_DRIVER) && (ioc->bus_type !=3D FC))=0A=
++				continue;=0A=
++			if((cb_idx =3D=3D MPTSAS_DRIVER) && (ioc->bus_type !=3D SAS))=0A=
++				continue;=0A=
+ 			error =3D dd_cbfunc->probe(ioc->pcidev,=0A=
+ 			  ioc->pcidev->driver->id_table);=0A=
+ 			if(error !=3D 0)=0A=
+@@ -1084,7 +1047,6 @@ mptbase_probe(struct pci_dev *pdev, cons=0A=
+ 	u32		 psize;=0A=
+ 	int		 ii;=0A=
+ 	int		 r =3D -ENODEV;=0A=
+-	u64		 mask =3D 0xffffffffffffffffULL;=0A=
+ 	u8		 revision;=0A=
+ 	u8		 pcixcmd;=0A=
+ 	static int	 mpt_ids =3D 0;=0A=
+@@ -1097,15 +1059,15 @@ mptbase_probe(struct pci_dev *pdev, cons=0A=
+ 	=0A=
+ 	dinitprintk((KERN_WARNING MYNAM ": mpt_adapter_install\n"));=0A=
+ 	=0A=
+-	if (!pci_set_dma_mask(pdev, mask)) {=0A=
++	if (!pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {=0A=
+ 		dprintk((KERN_INFO MYNAM=0A=
+ 			": 64 BIT PCI BUS DMA ADDRESSING SUPPORTED\n"));=0A=
+-	} else if (pci_set_dma_mask(pdev, (u64) 0xffffffff)) {=0A=
++	} else if (pci_set_dma_mask(pdev, DMA_32BIT_MASK)) {=0A=
+ 		printk(KERN_WARNING MYNAM ": 32 BIT PCI BUS DMA ADDRESSING NOT =
+SUPPORTED\n");=0A=
+ 		return r;=0A=
+ 	}=0A=
+ =0A=
+-	if (!pci_set_consistent_dma_mask(pdev, mask))=0A=
++	if (!pci_set_consistent_dma_mask(pdev, DMA_64BIT_MASK))=0A=
+ 		dprintk((KERN_INFO MYNAM=0A=
+ 			": Using 64 bit consistent mask\n"));=0A=
+ 	else=0A=
+@@ -1303,8 +1265,7 @@ mptbase_probe(struct pci_dev *pdev, cons=0A=
+ #endif=0A=
+ 	}=0A=
+ =0A=
+-	/* NEW!  20010220 -sralston=0A=
+-	 * Check for "bound ports" (929, 929X, 1030, 1035) to reduce =
+redundant resets.=0A=
++	/* Check for "bound ports" (929, 929X, 1030, 1035) to reduce =
+redundant resets.=0A=
+ 	 */=0A=
+ 	mpt_detect_bound_ports(ioc, pdev);=0A=
+ =0A=
+@@ -1719,8 +1680,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u3=0A=
+ 		ioc->alt_ioc->active =3D 1;=0A=
+ 	}=0A=
+ =0A=
+-	/* NEW!  20010120 -sralston=0A=
+-	 *  Enable MPT base driver management of EventNotification=0A=
++	/*  Enable MPT base driver management of EventNotification=0A=
+ 	 *  and EventAck handling.=0A=
+ 	 */=0A=
+ 	if ((ret =3D=3D 0) && (!ioc->facts.EventState))=0A=
+@@ -1729,9 +1689,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u3=0A=
+ 	if (ioc->alt_ioc && alt_ioc_ready && =
+!ioc->alt_ioc->facts.EventState)=0A=
+ 		(void) SendEventNotification(ioc->alt_ioc, 1);	/* 1=3DEnable =
+EventNotification */=0A=
+ =0A=
+-	/* (Bugzilla:fibrebugs, #513)=0A=
+-	 * Bug fix (part 2)!  20010905 -sralston=0A=
+-	 *	Add additional "reason" check before call to GetLanConfigPages=0A=
++	/*	Add additional "reason" check before call to GetLanConfigPages=0A=
+ 	 *	(combined with GetIoUnitPage2 call).  This prevents a somewhat=0A=
+ 	 *	recursive scenario; GetLanConfigPages times out, timer expired=0A=
+ 	 *	routine calls HardResetHandler, which calls into here again,=0A=
+@@ -4753,9 +4711,7 @@ mpt_config(MPT_ADAPTER *ioc, CONFIGPARMS=0A=
+ 	u32		 flagsLength;=0A=
+ 	int		 in_isr;=0A=
+ =0A=
+-	/* (Bugzilla:fibrebugs, #513)=0A=
+-	 * Bug fix (part 1)!  20010905 -sralston=0A=
+-	 *	Prevent calling wait_event() (below), if caller happens=0A=
++	/*	Prevent calling wait_event() (below), if caller happens=0A=
+ 	 *	to be in ISR context, because that is fatal!=0A=
+ 	 */=0A=
+ 	in_isr =3D in_interrupt();=0A=
+@@ -4861,9 +4817,7 @@ mpt_toolbox(MPT_ADAPTER *ioc, CONFIGPARM=0A=
+ 	u32		 flagsLength;=0A=
+ 	int		 in_isr;=0A=
+ =0A=
+-	/* (Bugzilla:fibrebugs, #513)=0A=
+-	 * Bug fix (part 1)!  20010905 -sralston=0A=
+-	 *	Prevent calling wait_event() (below), if caller happens=0A=
++	/*	Prevent calling wait_event() (below), if caller happens=0A=
+ 	 *	to be in ISR context, because that is fatal!=0A=
+ 	 */=0A=
+ 	in_isr =3D in_interrupt();=0A=
+@@ -5130,20 +5084,26 @@ static int=0A=
+ procmpt_version_read(char *buf, char **start, off_t offset, int =
+request, int *eof, void *data)=0A=
+ {=0A=
+ 	int	 ii;=0A=
+-	int	 scsi, lan, ctl, targ, dmp;=0A=
++	int	 scsi, fc, sas, lan, ctl, targ, dmp;=0A=
+ 	char	*drvname;=0A=
+ 	int	 len;=0A=
+ =0A=
+ 	len =3D sprintf(buf, "%s-%s\n", "mptlinux", =
+MPT_LINUX_VERSION_COMMON);=0A=
+ 	len +=3D sprintf(buf+len, "  Fusion MPT base driver\n");=0A=
+ =0A=
+-	scsi =3D lan =3D ctl =3D targ =3D dmp =3D 0;=0A=
++	scsi =3D fc =3D sas =3D lan =3D ctl =3D targ =3D dmp =3D 0;=0A=
+ 	for (ii=3DMPT_MAX_PROTOCOL_DRIVERS-1; ii; ii--) {=0A=
+ 		drvname =3D NULL;=0A=
+ 		if (MptCallbacks[ii]) {=0A=
+ 			switch (MptDriverClass[ii]) {=0A=
+-			case MPTSCSIH_DRIVER:=0A=
+-				if (!scsi++) drvname =3D "SCSI host";=0A=
++			case MPTSPI_DRIVER:=0A=
++				if (!scsi++) drvname =3D "SPI host";=0A=
++				break;=0A=
++			case MPTFC_DRIVER:=0A=
++				if (!fc++) drvname =3D "FC host";=0A=
++				break;=0A=
++			case MPTSAS_DRIVER:=0A=
++				if (!sas++) drvname =3D "SAS host";=0A=
+ 				break;=0A=
+ 			case MPTLAN_DRIVER:=0A=
+ 				if (!lan++) drvname =3D "LAN";=0A=
+@@ -5896,8 +5856,7 @@ fusion_init(void)=0A=
+ 		MptResetHandlers[i] =3D NULL;=0A=
+ 	}=0A=
+ =0A=
+-	/* NEW!  20010120 -sralston=0A=
+-	 *  Register ourselves (mptbase) in order to facilitate=0A=
++	/*  Register ourselves (mptbase) in order to facilitate=0A=
+ 	 *  EventNotification handling.=0A=
+ 	 */=0A=
+ 	mpt_base_index =3D mpt_register(mpt_base_reply, MPTBASE_DRIVER);=0A=
+diff -puN scsi-rc-fixes-2.6/drivers/message/fusion-3.01.20/mptbase.h =
+scsi-rc-fixes-2.6/drivers/message/fusion/mptbase.h=0A=
+--- scsi-rc-fixes-2.6/drivers/message/fusion-3.01.20/mptbase.h	=
+2005-03-29 11:19:00.000000000 -0700=0A=
++++ scsi-rc-fixes-2.6/drivers/message/fusion/mptbase.h	2005-03-28 =
+17:08:53.000000000 -0700=0A=
+@@ -5,15 +5,9 @@=0A=
+  *          LSIFC9xx/LSI409xx Fibre Channel=0A=
+  *      running LSI Logic Fusion MPT (Message Passing Technology) =
+firmware.=0A=
+  *=0A=
+- *  Credits:=0A=
+- *     (see mptbase.c)=0A=
+- *=0A=
+- *  Copyright (c) 1999-2004 LSI Logic Corporation=0A=
+- *  Originally By: Steven J. Ralston=0A=
+- *  (mailto:sjralston1@netscape.net)=0A=
++ *  Copyright (c) 1999-2005 LSI Logic Corporation=0A=
+  *  (mailto:mpt_linux_developer@lsil.com)=0A=
+  *=0A=
+- *  $Id: mptbase.h,v 1.144 2003/01/28 21:31:56 pdelaney Exp $=0A=
+  */=0A=
+ =
+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
 -=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
 -=3D-=3D*/=0A=
-+#include "linux_compat.h"	/* linux-2.6 tweaks */=0A=
-+#include <linux/module.h>=0A=
-+#include <linux/kernel.h>=0A=
-+#include <linux/init.h>=0A=
-+#include <linux/errno.h>=0A=
-+#include <linux/kdev_t.h>=0A=
-+#include <linux/blkdev.h>=0A=
-+#include <linux/delay.h>	/* for mdelay */=0A=
-+#include <linux/interrupt.h>	/* needed for in_interrupt() proto */=0A=
-+#include <linux/reboot.h>	/* notifier code */=0A=
-+#include <linux/sched.h>=0A=
-+#include <linux/workqueue.h>=0A=
-+=0A=
-+#include <scsi/scsi.h>=0A=
-+#include <scsi/scsi_cmnd.h>=0A=
-+#include <scsi/scsi_device.h>=0A=
-+#include <scsi/scsi_host.h>=0A=
-+#include <scsi/scsi_tcq.h>=0A=
-+=0A=
-+#include "mptbase.h"=0A=
-+#include "mptscsih.h"=0A=
-+=0A=
-+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+ /*=0A=
+@@ -80,11 +74,11 @@=0A=
+ #endif=0A=
+ =0A=
+ #ifndef COPYRIGHT=0A=
+-#define COPYRIGHT	"Copyright (c) 1999-2004 " MODULEAUTHOR=0A=
++#define COPYRIGHT	"Copyright (c) 1999-2005 " MODULEAUTHOR=0A=
+ #endif=0A=
+ =0A=
+-#define MPT_LINUX_VERSION_COMMON	"3.01.20"=0A=
+-#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.01.20"=0A=
++#define MPT_LINUX_VERSION_COMMON	"3.03.00"=0A=
++#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.03.00"=0A=
+ #define WHAT_MAGIC_STRING		"@" "(" "#" ")"=0A=
+ =0A=
+ #define show_mptmod_ver(s,ver)  \=0A=
+@@ -95,7 +89,7 @@=0A=
+  *  Fusion MPT(linux) driver configurable stuff...=0A=
+  */=0A=
+ #define MPT_MAX_ADAPTERS		18=0A=
+-#define MPT_MAX_PROTOCOL_DRIVERS	16=0A=
++#define MPT_MAX_PROTOCOL_DRIVERS	32=0A=
+ #define MPT_MAX_BUS			1	/* Do not change */=0A=
+ #define MPT_MAX_FC_DEVICES		255=0A=
+ #define MPT_MAX_SCSI_DEVICES		16=0A=
+@@ -203,7 +197,9 @@=0A=
+ typedef enum {=0A=
+ 	MPTBASE_DRIVER,		/* MPT base class */=0A=
+ 	MPTCTL_DRIVER,		/* MPT ioctl class */=0A=
+-	MPTSCSIH_DRIVER,	/* MPT SCSI host (initiator) class */=0A=
++	MPTSPI_DRIVER,		/* MPT SPI host class */=0A=
++	MPTFC_DRIVER,		/* MPT FC host class */=0A=
++	MPTSAS_DRIVER,		/* MPT SAS host class */=0A=
+ 	MPTLAN_DRIVER,		/* MPT LAN class */=0A=
+ 	MPTSTM_DRIVER,		/* MPT SCSI target mode class */=0A=
+ 	MPTUNKNOWN_DRIVER=0A=
+@@ -483,6 +479,7 @@ typedef	struct _ScsiCfgData {=0A=
+ 	u8		 forceDv;		/* 1 to force DV scheduling */=0A=
+ 	u8		 noQas;			/* Disable QAS for this adapter */=0A=
+ 	u8		 Saf_Te;		/* 1 to force all Processors as SAF-TE if Inquiry data =
+length is too short to check for SAF-TE */=0A=
++	u8		 mpt_dv;		/* command line option: enhanced=3D1, basic=3D0 */=0A=
+ 	u8		 rsvd[1];=0A=
+ } ScsiCfgData;=0A=
+ =0A=
+@@ -576,6 +573,9 @@ typedef struct _MPT_ADAPTER=0A=
+ 	u8			 reload_fw;	/* Force a FW Reload on next reset */=0A=
+ 	u8			 NBShiftFactor;  /* NB Shift Factor based on Block Size (Facts)  =
+*/     =0A=
+ 	u8			 pad1[4];=0A=
++	int			 DoneCtx;=0A=
++	int			 TaskCtx;=0A=
++	int			 InternalCtx;=0A=
+ 	struct list_head	 list; =0A=
+ 	struct net_device	*netdev;=0A=
+ } MPT_ADAPTER;=0A=
+@@ -773,12 +773,6 @@ typedef struct _mpt_sge {=0A=
+ #define DBG_DUMP_TM_REPLY_FRAME(mfp)=0A=
+ #endif=0A=
+ =0A=
+-#ifdef MPT_DEBUG_NEH=0A=
+-#define nehprintk(x) printk x=0A=
+-#else=0A=
+-#define nehprintk(x)=0A=
+-#endif=0A=
+-=0A=
+ #if defined(MPT_DEBUG_CONFIG) || defined(MPT_DEBUG)=0A=
+ #define dcprintk(x) printk x=0A=
+ #else=0A=
+@@ -898,6 +892,11 @@ typedef struct _MPT_SCSI_HOST {=0A=
+ 	unsigned long		  soft_resets;		/* fw/external bus resets count */=0A=
+ 	unsigned long		  timeouts;		/* cmd timeouts */=0A=
+ 	ushort			  sel_timeout[MPT_MAX_FC_DEVICES];=0A=
++	char 			  *info_kbuf;=0A=
++	wait_queue_head_t	  scandv_waitq;=0A=
++	int			  scandv_wait_done;=0A=
++	long			  last_queue_full;=0A=
++	u8		 	  mpt_pq_filter;=0A=
+ } MPT_SCSI_HOST;=0A=
+ =0A=
+ =
+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
 -=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
 -=3D-=3D*/=0A=
-+#define my_NAME		"Fusion MPT FC Host driver"=0A=
-+#define my_VERSION	MPT_LINUX_VERSION_COMMON=0A=
-+#define MYNAM		"mptfc"=0A=
-+=0A=
-+MODULE_AUTHOR(MODULEAUTHOR);=0A=
-+MODULE_DESCRIPTION(my_NAME);=0A=
-+MODULE_LICENSE("GPL");=0A=
-+=0A=
-+/* Command line args */=0A=
-+static int mpt_pq_filter =3D 0;=0A=
-+module_param(mpt_pq_filter, int, 0);=0A=
-+MODULE_PARM_DESC(mpt_pq_filter, " Enable peripheral qualifier filter: =
-enable=3D1  (default=3D0)");=0A=
-+=0A=
-+static int	mptfcDoneCtx =3D -1;=0A=
-+static int	mptfcTaskCtx =3D -1;=0A=
-+static int	mptfcInternalCtx =3D -1; /* Used only for internal commands =
-*/=0A=
-+=0A=
-+static struct device_attribute mptfc_queue_depth_attr =3D {=0A=
-+	.attr =3D {=0A=
-+		.name =3D 	"queue_depth",=0A=
-+		.mode =3D		S_IWUSR,=0A=
-+	},=0A=
-+	.store =3D mptscsih_store_queue_depth,=0A=
-+};=0A=
-+=0A=
-+static struct device_attribute *mptfc_dev_attrs[] =3D {=0A=
-+	&mptfc_queue_depth_attr,=0A=
-+	NULL,=0A=
-+};=0A=
-+=0A=
-+static struct scsi_host_template mptfc_driver_template =3D {=0A=
-+	.proc_name			=3D "mptfc",=0A=
-+	.proc_info			=3D mptscsih_proc_info,=0A=
-+	.name				=3D "MPT FC Host",=0A=
-+	.info				=3D mptscsih_info,=0A=
-+	.queuecommand			=3D mptscsih_qcmd,=0A=
-+	.slave_alloc			=3D mptscsih_slave_alloc,=0A=
-+	.slave_configure		=3D mptscsih_slave_configure,=0A=
-+	.slave_destroy			=3D mptscsih_slave_destroy,=0A=
-+	.eh_abort_handler		=3D mptscsih_abort,=0A=
-+	.eh_device_reset_handler	=3D mptscsih_dev_reset,=0A=
-+	.eh_bus_reset_handler		=3D mptscsih_bus_reset,=0A=
-+	.eh_host_reset_handler		=3D mptscsih_host_reset,=0A=
-+	.bios_param			=3D mptscsih_bios_param,=0A=
-+	.can_queue			=3D MPT_SCSI_CAN_QUEUE,=0A=
-+	.this_id			=3D -1,=0A=
-+	.sg_tablesize			=3D MPT_SCSI_SG_DEPTH,=0A=
-+	.max_sectors			=3D 8192,=0A=
-+	.cmd_per_lun			=3D 7,=0A=
-+	.use_clustering			=3D ENABLE_CLUSTERING,=0A=
-+	.sdev_attrs			=3D mptfc_dev_attrs,=0A=
-+};=0A=
-+=0A=
-+=0A=
-+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D*/=0A=
-+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D*/=0A=
-+/*=0A=
-+ *	mptfc_probe - Installs scsi devices per bus.=0A=
-+ *	@pdev: Pointer to pci_dev structure=0A=
-+ *=0A=
-+ *	Returns 0 for success, non-zero for failure.=0A=
-+ *=0A=
-+ */=0A=
-+static int=0A=
-+mptfc_probe(struct pci_dev *pdev, const struct pci_device_id *id)=0A=
-+{=0A=
-+	struct Scsi_Host	*sh;=0A=
-+	MPT_SCSI_HOST		*hd;=0A=
-+	MPT_ADAPTER 		*ioc =3D pci_get_drvdata(pdev);=0A=
-+	unsigned long		 flags;=0A=
-+	int			 sz, ii;=0A=
-+	int			 numSGE =3D 0;=0A=
-+	int			 scale;=0A=
-+	int			 ioc_cap;=0A=
-+	u8			*mem;=0A=
-+	int			error=3D0;=0A=
-+=0A=
-+	/*  Added sanity check on readiness of the MPT adapter.=0A=
-+	 */=0A=
-+	if (ioc->last_state !=3D MPI_IOC_STATE_OPERATIONAL) {=0A=
-+		printk(MYIOC_s_WARN_FMT=0A=
-+		  "Skipping because it's not operational!\n",=0A=
-+		  ioc->name);=0A=
-+		return -ENODEV;=0A=
-+	}=0A=
-+=0A=
-+	if (!ioc->active) {=0A=
-+		printk(MYIOC_s_WARN_FMT "Skipping because it's disabled!\n",=0A=
-+		  ioc->name);=0A=
-+		return -ENODEV;=0A=
-+	}=0A=
-+=0A=
-+	/*  Sanity check - ensure at least 1 port is INITIATOR capable=0A=
-+	 */=0A=
-+	ioc_cap =3D 0;=0A=
-+	for (ii=3D0; ii < ioc->facts.NumberOfPorts; ii++) {=0A=
-+		if (ioc->pfacts[ii].ProtocolFlags &=0A=
-+		    MPI_PORTFACTS_PROTOCOL_INITIATOR)=0A=
-+			ioc_cap ++;=0A=
-+	}=0A=
-+=0A=
-+	if (!ioc_cap) {=0A=
-+		printk(MYIOC_s_WARN_FMT=0A=
-+			"Skipping ioc=3D%p because SCSI Initiator mode is NOT =
-enabled!\n",=0A=
-+			ioc->name, ioc);=0A=
-+		return -ENODEV;=0A=
-+	}=0A=
-+=0A=
-+	sh =3D scsi_host_alloc(&mptfc_driver_template, =
-sizeof(MPT_SCSI_HOST));=0A=
-+=0A=
-+	if (!sh) {=0A=
-+		printk(MYIOC_s_WARN_FMT=0A=
-+			"Unable to register controller with SCSI subsystem\n",=0A=
-+			ioc->name);=0A=
-+                return -1;=0A=
-+        }=0A=
-+=0A=
-+	spin_lock_irqsave(&ioc->FreeQlock, flags);=0A=
-+=0A=
-+	/* Attach the SCSI Host to the IOC structure=0A=
-+	 */=0A=
-+	ioc->sh =3D sh;=0A=
-+=0A=
-+	sh->io_port =3D 0;=0A=
-+	sh->n_io_port =3D 0;=0A=
-+	sh->irq =3D 0;=0A=
-+=0A=
-+	/* set 16 byte cdb's */=0A=
-+	sh->max_cmd_len =3D 16;=0A=
-+=0A=
-+	/* Yikes!  This is important!=0A=
-+	 * Otherwise, by default, linux=0A=
-+	 * only scans target IDs 0-7!=0A=
-+	 * pfactsN->MaxDevices unreliable=0A=
-+	 * (not supported in early=0A=
-+	 *	versions of the FW).=0A=
-+	 * max_id =3D 1 + actual max id,=0A=
-+	 * max_lun =3D 1 + actual last lun,=0A=
-+	 *	see hosts.h :o(=0A=
-+	 */=0A=
-+	if (ioc->bus_type =3D=3D SCSI) {=0A=
-+		sh->max_id =3D MPT_MAX_SCSI_DEVICES;=0A=
-+	} else {=0A=
-+	/* For FC, increase the queue depth=0A=
-+	 * from MPT_SCSI_CAN_QUEUE (31)=0A=
-+	 * to MPT_FC_CAN_QUEUE (63).=0A=
-+	 */=0A=
-+		sh->can_queue =3D MPT_FC_CAN_QUEUE;=0A=
-+		sh->max_id =3D=0A=
-+		  MPT_MAX_FC_DEVICES<256 ? MPT_MAX_FC_DEVICES : 255;=0A=
-+	}=0A=
-+=0A=
-+	sh->max_lun =3D MPT_LAST_LUN + 1;=0A=
-+	sh->max_channel =3D 0;=0A=
-+	sh->this_id =3D ioc->pfacts[0].PortSCSIID;=0A=
-+=0A=
-+	/* Required entry.=0A=
-+	 */=0A=
-+	sh->unique_id =3D ioc->id;=0A=
-+=0A=
-+	/* Verify that we won't exceed the maximum=0A=
-+	 * number of chain buffers=0A=
-+	 * We can optimize:  ZZ =3D req_sz/sizeof(SGE)=0A=
-+	 * For 32bit SGE's:=0A=
-+	 *  numSGE =3D 1 + (ZZ-1)*(maxChain -1) + ZZ=0A=
-+	 *               + (req_sz - 64)/sizeof(SGE)=0A=
-+	 * A slightly different algorithm is required for=0A=
-+	 * 64bit SGEs.=0A=
-+	 */=0A=
-+	scale =3D ioc->req_sz/(sizeof(dma_addr_t) + sizeof(u32));=0A=
-+	if (sizeof(dma_addr_t) =3D=3D sizeof(u64)) {=0A=
-+		numSGE =3D (scale - 1) *=0A=
-+		  (ioc->facts.MaxChainDepth-1) + scale +=0A=
-+		  (ioc->req_sz - 60) / (sizeof(dma_addr_t) +=0A=
-+		  sizeof(u32));=0A=
-+	} else {=0A=
-+		numSGE =3D 1 + (scale - 1) *=0A=
-+		  (ioc->facts.MaxChainDepth-1) + scale +=0A=
-+		  (ioc->req_sz - 64) / (sizeof(dma_addr_t) +=0A=
-+		  sizeof(u32));=0A=
-+	}=0A=
-+=0A=
-+	if (numSGE < sh->sg_tablesize) {=0A=
-+		/* Reset this value */=0A=
-+		dprintk((MYIOC_s_INFO_FMT=0A=
-+		  "Resetting sg_tablesize to %d from %d\n",=0A=
-+		  ioc->name, numSGE, sh->sg_tablesize));=0A=
-+		sh->sg_tablesize =3D numSGE;=0A=
-+	}=0A=
-+=0A=
-+	/* Set the pci device pointer in Scsi_Host structure.=0A=
-+	 */=0A=
-+	scsi_set_device(sh, &ioc->pcidev->dev);=0A=
-+=0A=
-+	spin_unlock_irqrestore(&ioc->FreeQlock, flags);=0A=
-+=0A=
-+	hd =3D (MPT_SCSI_HOST *) sh->hostdata;=0A=
-+	hd->ioc =3D ioc;=0A=
-+=0A=
-+	/* SCSI needs scsi_cmnd lookup table!=0A=
-+	 * (with size equal to req_depth*PtrSz!)=0A=
-+	 */=0A=
-+	sz =3D ioc->req_depth * sizeof(void *);=0A=
-+	mem =3D kmalloc(sz, GFP_ATOMIC);=0A=
-+	if (mem =3D=3D NULL) {=0A=
-+		error =3D -ENOMEM;=0A=
-+		goto mptfc_probe_failed;=0A=
-+	}=0A=
-+=0A=
-+	memset(mem, 0, sz);=0A=
-+	hd->ScsiLookup =3D (struct scsi_cmnd **) mem;=0A=
-+=0A=
-+	dprintk((MYIOC_s_INFO_FMT "ScsiLookup @ %p, sz=3D%d\n",=0A=
-+		 ioc->name, hd->ScsiLookup, sz));=0A=
-+=0A=
-+	/* Allocate memory for the device structures.=0A=
-+	 * A non-Null pointer at an offset=0A=
-+	 * indicates a device exists.=0A=
-+	 * max_id =3D 1 + maximum id (hosts.h)=0A=
-+	 */=0A=
-+	sz =3D sh->max_id * sizeof(void *);=0A=
-+	mem =3D kmalloc(sz, GFP_ATOMIC);=0A=
-+	if (mem =3D=3D NULL) {=0A=
-+		error =3D -ENOMEM;=0A=
-+		goto mptfc_probe_failed;=0A=
-+	}=0A=
-+=0A=
-+	memset(mem, 0, sz);=0A=
-+	hd->Targets =3D (VirtDevice **) mem;=0A=
-+=0A=
-+	dprintk((KERN_INFO=0A=
-+	  "  Targets @ %p, sz=3D%d\n", hd->Targets, sz));=0A=
-+=0A=
-+	/* Clear the TM flags=0A=
-+	 */=0A=
-+	hd->tmPending =3D 0;=0A=
-+	hd->tmState =3D TM_STATE_NONE;=0A=
-+	hd->resetPending =3D 0;=0A=
-+	hd->abortSCpnt =3D NULL;=0A=
-+=0A=
-+	/* Clear the pointer used to store=0A=
-+	 * single-threaded commands, i.e., those=0A=
-+	 * issued during a bus scan, dv and=0A=
-+	 * configuration pages.=0A=
-+	 */=0A=
-+	hd->cmdPtr =3D NULL;=0A=
-+=0A=
-+	/* Initialize this SCSI Hosts' timers=0A=
-+	 * To use, set the timer expires field=0A=
-+	 * and add_timer=0A=
-+	 */=0A=
-+	init_timer(&hd->timer);=0A=
-+	hd->timer.data =3D (unsigned long) hd;=0A=
-+	hd->timer.function =3D mptscsih_timer_expired;=0A=
-+=0A=
-+	ioc->DoneCtx =3D mptfcDoneCtx;=0A=
-+	ioc->TaskCtx =3D mptfcTaskCtx;=0A=
-+	ioc->InternalCtx =3D mptfcInternalCtx;=0A=
-+=0A=
-+	hd->mpt_pq_filter =3D mpt_pq_filter;=0A=
-+=0A=
-+	ddvprintk((MYIOC_s_INFO_FMT=0A=
-+		"mpt_pq_filter %x\n",=0A=
-+		ioc->name, =0A=
-+		mpt_pq_filter));=0A=
-+=0A=
-+	init_waitqueue_head(&hd->scandv_waitq);=0A=
-+	hd->scandv_wait_done =3D 0;=0A=
-+	hd->last_queue_full =3D 0;=0A=
-+=0A=
-+	error =3D scsi_add_host (sh, &ioc->pcidev->dev);=0A=
-+	if(error) {=0A=
-+		dprintk((KERN_ERR MYNAM=0A=
-+		  "scsi_add_host failed\n"));=0A=
-+		goto mptfc_probe_failed;=0A=
-+	}=0A=
-+=0A=
-+	scsi_scan_host(sh);=0A=
-+	return 0;=0A=
-+=0A=
-+mptfc_probe_failed:=0A=
-+=0A=
-+	mptscsih_remove(pdev);=0A=
-+	return error;=0A=
-+}=0A=
-+=0A=
-+=0A=
-+static struct mpt_pci_driver mptfc_driver =3D {=0A=
-+	.probe		=3D mptfc_probe,=0A=
-+	.remove		=3D mptscsih_remove,=0A=
-+	.shutdown	=3D mptscsih_shutdown,=0A=
-+#ifdef CONFIG_PM=0A=
-+	.suspend	=3D mptscsih_suspend,=0A=
-+	.resume		=3D mptscsih_resume,=0A=
-+#endif=0A=
-+};=0A=
-+=0A=
-+/*  SCSI host fops start here...  */=0A=
-+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D*/=0A=
-+/**=0A=
-+ *	mptfc_init - Register MPT adapter(s) as SCSI host(s) with=0A=
-+ *	linux scsi mid-layer.=0A=
-+ *=0A=
-+ *	Returns 0 for success, non-zero for failure.=0A=
-+ */=0A=
-+static int __init=0A=
-+mptfc_init(void)=0A=
-+{=0A=
-+=0A=
-+	show_mptmod_ver(my_NAME, my_VERSION);=0A=
-+=0A=
-+	mptfcDoneCtx =3D mpt_register(mptscsih_io_done, MPTFC_DRIVER);=0A=
-+	mptfcTaskCtx =3D mpt_register(mptscsih_taskmgmt_complete, =
-MPTFC_DRIVER);=0A=
-+	mptfcInternalCtx =3D mpt_register(mptscsih_scandv_complete, =
-MPTFC_DRIVER);=0A=
-+=0A=
-+	if (mpt_event_register(mptfcDoneCtx, mptscsih_event_process) =3D=3D =
-0) {=0A=
-+		devtprintk((KERN_INFO MYNAM=0A=
-+		  ": Registered for IOC event notifications\n"));=0A=
-+	}=0A=
-+=0A=
-+	if (mpt_reset_register(mptfcDoneCtx, mptscsih_ioc_reset) =3D=3D 0) =
-{=0A=
-+		dprintk((KERN_INFO MYNAM=0A=
-+		  ": Registered for IOC reset notifications\n"));=0A=
-+	}=0A=
-+=0A=
-+	if(mpt_device_driver_register(&mptfc_driver,=0A=
-+	  MPTFC_DRIVER) !=3D 0 ) {=0A=
-+		dprintk((KERN_INFO MYNAM=0A=
-+		": failed to register dd callbacks\n"));=0A=
-+	}=0A=
-+=0A=
-+	return 0;=0A=
-+}=0A=
-+=0A=
-+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D*/=0A=
-+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D*/=0A=
-+/**=0A=
-+ *	mptfc_exit - Unregisters MPT adapter(s)=0A=
-+ *=0A=
-+ */=0A=
-+static void __exit=0A=
-+mptfc_exit(void)=0A=
-+{=0A=
-+	mpt_device_driver_deregister(MPTFC_DRIVER);=0A=
-+=0A=
-+	mpt_reset_deregister(mptfcDoneCtx);=0A=
-+	dprintk((KERN_INFO MYNAM=0A=
-+	  ": Deregistered for IOC reset notifications\n"));=0A=
-+=0A=
-+	mpt_event_deregister(mptfcDoneCtx);=0A=
-+	dprintk((KERN_INFO MYNAM=0A=
-+	  ": Deregistered for IOC event notifications\n"));=0A=
-+=0A=
-+	mpt_deregister(mptfcInternalCtx);=0A=
-+	mpt_deregister(mptfcTaskCtx);=0A=
-+	mpt_deregister(mptfcDoneCtx);=0A=
-+}=0A=
-+=0A=
-+module_init(mptfc_init);=0A=
-+module_exit(mptfc_exit);=0A=
  =0A=
 
-------_=_NextPart_000_01C5349A.9D38F210--
+------_=_NextPart_000_01C5349A.9B209960--
