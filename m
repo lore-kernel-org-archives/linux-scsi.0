@@ -1,51 +1,56 @@
-From: Andries Brouwer <aebr@win.tue.nl>
-Subject: Re: [PATCH] Don't retry SG_IO (REQ_BLOCK_PC) commands.
-Date: Sun, 23 Nov 2003 00:00:15 +0100
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: TMSCSIM [2.6] (was: Re: [PATCH] Re: AMD 53c974 SCSI driver in
+ 2.6)
+Date: Sun, 23 Nov 2003 00:23:11 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031122230015.GA2366@win.tue.nl>
-References: <20031120085555.A20609@beaverton.ibm.com> <20031120181543.GA3728@beaverton.ibm.com> <20031120191651.GE1106@suse.de> <20031120135123.A2366@beaverton.ibm.com> <20031121101728.GI1106@suse.de> <1069418912.1931.5.camel@mulgrave> <1069423949.1826.10.camel@mulgrave>
+Message-ID: <Pine.LNX.4.44.0311220023170.2772-100000@poirot.grange>
+References: <Pine.LNX.4.44.0311202354360.2876-100000@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhost.tue.nl ([131.155.2.7]:1553 "EHLO mailhost.tue.nl")
-	by vger.kernel.org with ESMTP id S262787AbTKVXAY (ORCPT
+Received: from mail.gmx.net ([213.165.64.20]:44950 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S262838AbTKVX2u (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 Nov 2003 18:00:24 -0500
-Content-Disposition: inline
-In-Reply-To: <1069423949.1826.10.camel@mulgrave>
+	Sat, 22 Nov 2003 18:28:50 -0500
+In-Reply-To: <Pine.LNX.4.44.0311202354360.2876-100000@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Jens Axboe <axboe@suse.de>, Patrick Mansfield <patmans@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Guennadi Liakhovetski <gl@dsa-ac.de>, Kurt Garloff <garloff@suse.de>, "Randy.Dunlap" <rddunlap@osdl.org>, hch@infradead.org
 
-On Fri, Nov 21, 2003 at 08:12:29AM -0600, James Bottomley wrote:
+Ok, in a separate email, I am going to send a patch, fixing the SCSI
+tmscsim driver for 2.6. I'll drop all CC:'s from that email, so that all
+persons, listed in CC: don't get it (~80K) twice. This patch is a
+combination of my original patch, modifications from Kurt Garloff, and my
+latest fixes.
 
-> To be more specific:
-> 
-> I think we need to divide the error types up into
-> 
-> 1. retryable
-> 2. fatal
-> 
-> and to have at least two, possibly three sources
-> 
-> 1. the transport
-> 2. the device
-> (3. the driver)
-> 
-> so a medium error (say a read failure) is a fatal device error;
-> something like a no connect would be a fatal transport error, etc.
+Some questions, though:
+1) is the following a proper use of the API:
 
-Yes, the driver is a legitimate source of errors.
+sg_dma_address(&pSRB->Segmentx) = pci_map_page(pdev,...);
 
-If the driver knows that a certain command is not supported
-and returns an error condition, then retrying is meaningless.
-The error is not necessarily fatal in the sense that the device
-does not work, it works just fine, but this particular command
-will never get any other reply.
+? Doesn't look too good, but I haven't found anything better yet. This is
+the mapping for the non-SG mode.
 
-It also happens that the driver needs to allocate memory for
-some command. If the allocation fails, that may be a retryable
-condition, but immediately retrying is counterproductive.
+2) Is the following correct - it disappeared as a recult of the first 2
+patches.
 
-Andries
+3) I am not at all convinced, that the current version of
+dc390_restore_ptr is correct - I just don't quite understand what are the
+conditions on entry and what has to be done there.
+
+I've sent an earlier version of this patch to 2 persons, who have kindly
+offered there help in testing it. They might want to update to this
+version - it is cleaner, and point 2) above was not fixed (if this really
+is a fix) there. Other testers are, certainly, welcome.
+
+Thanks again to all for the help.
+
+Regards
+Guennadi
+---
+Guennadi Liakhovetski
+
+
+
+
 
