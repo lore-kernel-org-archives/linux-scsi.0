@@ -1,48 +1,49 @@
-From: Holger Kiehl <Holger.Kiehl@dwd.de>
-Subject: RE: Fusion-MPT much faster as module
-Date: Tue, 22 Mar 2005 13:46:06 +0000 (GMT)
-Message-ID: <Pine.LNX.4.61.0503221344170.17195@diagnostix.dwd.de>
-References: <200503221029.j2MATNg12775@unix-os.sc.intel.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/scsi/osst.c: make code static
+Date: Tue, 22 Mar 2005 15:28:07 +0100
+Message-ID: <20050322142806.GR3982@stusta.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Received: from dwdmx2.dwd.de ([141.38.3.197]:5430 "HELO dwdmx2.dwd.de")
-	by vger.kernel.org with SMTP id S261224AbVCVNq2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Mar 2005 08:46:28 -0500
-In-Reply-To: <200503221029.j2MATNg12775@unix-os.sc.intel.com>
+Content-Type: text/plain; charset=us-ascii
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:20230 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S261299AbVCVO2J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Mar 2005 09:28:09 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Moore, Eric  Dean" <emoore@lsil.com>
+To: Andrew Morton <akpm@osdl.org>
+Cc: osst@riede.org, osst-users@lists.sourceforge.net, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 22 Mar 2005, Chen, Kenneth W wrote:
+This patch makes needlessly global code static.
 
-> On Mon, 21 Mar 2005, Andrew Morton wrote:
->> Holger, this problem remains unresolved, does it not?  Have you done any
->> more experimentation?
->>
->> I must say that something funny seems to be happening here.  I have two
->> MPT-based Dell machines, neither of which is using a modular driver:
->>
->> akpm:/usr/src/25> 0 hdparm -t /dev/sda
->>
->> /dev/sda:
->> Timing buffered disk reads:  64 MB in  5.00 seconds = 12.80 MB/sec
->
->
-> Holger Kiehl wrote on Tuesday, March 22, 2005 12:31 AM
->> Got the same result when compiled in, always between 12 and 13 MB/s. As
->> module it is approx. 75 MB/s.
->
->
-> Half guess, half with data to prove: it must be the variable driver_setup
-> initialization.  If compiled as built-in, driver_setup is initialized to
-> zero for all of its member variables, which isn't the fastest setting. If
-> compiled as module, it gets first class treatment with shinny performance
-> setting.  Goofing around, this patch appears to be giving higher throughput.
->
-Yes, that fixes it.
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-Many thanks!
+---
 
-Holger
+This patch was already sent on:
+- 28 Feb 2005
+
+ drivers/scsi/osst.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+--- linux-2.6.11-rc4-mm1-full/drivers/scsi/osst.c.old	2005-02-28 19:36:05.000000000 +0100
++++ linux-2.6.11-rc4-mm1-full/drivers/scsi/osst.c	2005-02-28 19:36:25.000000000 +0100
+@@ -24,7 +24,7 @@
+ */
+ 
+ static const char * cvsid = "$Id: osst.c,v 1.73 2005/01/01 21:13:34 wriede Exp $";
+-const char * osst_version = "0.99.3";
++static const char * osst_version = "0.99.3";
+ 
+ /* The "failure to reconnect" firmware bug */
+ #define OSST_FW_NEED_POLL_MIN 10601 /*(107A)*/
+@@ -170,7 +170,7 @@
+ static int osst_probe(struct device *);
+ static int osst_remove(struct device *);
+ 
+-struct scsi_driver osst_template = {
++static struct scsi_driver osst_template = {
+ 	.owner			= THIS_MODULE,
+ 	.gendrv = {
+ 		.name		=  "osst",
+
