@@ -1,67 +1,82 @@
-From: Tape Help <tape.help@gmail.com>
-Subject: Fwd: Multi tape problems with cpio
-Date: Sat, 15 Jan 2005 02:32:22 -0500
-Message-ID: <12c7da3e050114233249899ca1@mail.gmail.com>
-References: <12c7da3e0501132353150d51f2@mail.gmail.com>
-Reply-To: Tape Help <tape.help@gmail.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] 3w-abcd.h: TW_Device_Extension: remove an unused filed (fwd) (fwd)
+Date: Sun, 16 Jan 2005 03:01:09 +0100
+Message-ID: <20050116020109.GE4274@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.194]:47951 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262235AbVAOHcY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 15 Jan 2005 02:32:24 -0500
-Received: by wproxy.gmail.com with SMTP id 40so974612wri
-        for <linux-scsi@vger.kernel.org>; Fri, 14 Jan 2005 23:32:22 -0800 (PST)
-In-Reply-To: <12c7da3e0501132353150d51f2@mail.gmail.com>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:19214 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S262383AbVAPCBN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 15 Jan 2005 21:01:13 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linuxraid@amcc.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-No one on linux-tape has responded.  I think that list is dead.
-Can anyone help?
+The patch forwarded below still applies and compiles against 
+2.6.11-rc1-mm1.
 
-Thanks.
-
----------- Forwarded message ----------
-From: Tape Help <tape.help@gmail.com>
-Date: Fri, 14 Jan 2005 02:53:16 -0500
-Subject: Multi tape problems with cpio
-To: linux-tape@vger.kernel.org
+Please apply.
 
 
-I am using cpio to backup a system.  The backup does not fit on 1
-tape, so cpio prompts for another tape.  I change the tape and hit
-enter.  cpio continues and completes.  cpio does eject the first tape,
-which is handy.
+----- Forwarded message from Adrian Bunk <bunk@stusta.de> -----
 
-When I try to list the tape, cpio gets an I/O error at the end of the
-first tape and does not prompt for a second tape.  Same problem if I
-try to restore data.
+Date:	Tue, 4 Jan 2005 00:51:31 +0100
+From: Adrian Bunk <bunk@stusta.de>
+To: Andrew Morton <akpm@osdl.org>
+Cc: linuxraid@amcc.com, James.Bottomley@SteelEye.com,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [2.6 patch] 3w-abcd.h: TW_Device_Extension: remove an unused filed (fwd)
 
-cpio: read error: Input/output error
 
-I have tried 2 different tape drives.
-Both give the same results.
-I have done this test about 5 or so times.
+The trivial patch forwarded below still applies against 2.6.10-mm1.
 
-The backup command:
-find MyFS -depth|cpio -o --format=newc --block-size=128 -F /dev/st0
+Please apply.
 
-The command to list the tape(s):
-cpio -i --only-verify-crc --list --block-size=128< /dev/st0
 
-If I use dd to read the tape, it also gets a read error at the end.  I
-think it should get an end of file and exit cleanly.
+----- Forwarded message from Adrian Bunk <bunk@stusta.de> -----
 
-I am using kernel 2.4.28.  It also fails with 2.4.20-8.
+Date:	Tue, 14 Dec 2004 05:10:02 +0100
+From: Adrian Bunk <bunk@stusta.de>
+To: linuxraid@amcc.com
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [2.6 patch] 3w-abcd.h: TW_Device_Extension: remove an unused filed
 
-Anyone have any ideas?
+[ subject adapted to linux-kernel filters... ]
 
-Sort of funny, at first only 1 tape was needed.  I tested that I could
-restore from the tape and it worked.  It has been using 2 tapes for
-over 6 months now.  I had no idea my backups have been bad for over
-six months!  I can still restore from the first tape.
+num_units in struct TAG_TW_Device_Extension is completely unused.
 
-Thanks.
+
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+--- linux-2.6.10-rc3-mm1-full/drivers/scsi/3w-xxxx.h.old	2004-12-14 04:39:15.000000000 +0100
++++ linux-2.6.10-rc3-mm1-full/drivers/scsi/3w-xxxx.h	2004-12-14 04:39:20.000000000 +0100
+@@ -397,7 +397,6 @@
+ 	unsigned long		*alignment_virtual_address[TW_Q_LENGTH];
+ 	unsigned long		alignment_physical_address[TW_Q_LENGTH];
+ 	int			is_unit_present[TW_MAX_UNITS];
+-	int			num_units;
+ 	unsigned long		*command_packet_virtual_address[TW_Q_LENGTH];
+ 	unsigned long		command_packet_physical_address[TW_Q_LENGTH];
+ 	struct pci_dev		*tw_pci_dev;
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
+
+----- End forwarded message -----
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
+
+----- End forwarded message -----
+
+
