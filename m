@@ -1,127 +1,38 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [PATCH] aic7xxx and aic79xx: fix sleeping while holding a lock and
- in DV thread
-Date: Mon, 18 Oct 2004 16:49:47 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Announce] Emulex lpfcdriver v8.0.12 available
+Date: Mon, 18 Oct 2004 21:55:36 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <41742C6B.3000802@adaptec.com>
+Message-ID: <20041018205536.GA2302@infradead.org>
+References: <0B1E13B586976742A7599D71A6AC733C08670D@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060503060006080800010106"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:727 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S267285AbUJRUuB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Oct 2004 16:50:01 -0400
+Received: from phoenix.infradead.org ([81.187.226.98]:61959 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S267301AbUJRUzh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Oct 2004 16:55:37 -0400
+Content-Disposition: inline
+In-Reply-To: <0B1E13B586976742A7599D71A6AC733C08670D@xbl3.ma.emulex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+To: James.Smart@Emulex.Com
+Cc: hch@infradead.org, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------060503060006080800010106
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+> - slimreg, ctlrreg, and mbox: 
+>  > For slimreg and ctlreg that is true, but I wonder whether 
+>  > they're needed at all.  Check how recent X servers access mmio space.
+> As mentioned, these should meet your definition and be fine. You asked whether they are needed at all. Given that these are the heart of the adapter message passing interface, and used extensively by the driver - having the user space application use them without the coordination of the driver is asking for trouble. Minimally, the driver's lock over the registers/memory needs to be involved. In some cases, the driver remaps these areas away from pci memory and into driver-allocated dma-mapped memory. The application would have no clue where to locate these.  These should stay as is.  It is through these interfaces that diagnostics, firmware loading, and the like take place.
 
-Fix sleeping while holding a lock on host removal and on
-killing the DV thread.
+And why should userspace mess with the adapter anyway?  The older drivers
+seem to work very well without that interface.  Also note that due to this
+interfasce you added really horrible helper functions in the driver.
 
-Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
+> - sendrnid and ctpass:
+>  > The sendrnid and ctpass ones looks extremly fishy, it's 
+>  > certainly not a single value that's read/written, and it's
+>  > deeply magic (and btw, current->pid is not uniqueue in a
+>  > multithreaded enviroment)
+> These are used to have the application (usually a storage management suite) interact with FC fabrics - performing requests of nameservers, querying for additional node id information, etc. The use is typically to build topology maps of the FC fabric and the devices attached.
 
-(attached)
-
-Thanks,
-	Luben
-
-
---------------060503060006080800010106
-Content-Type: application/octet-stream;
- name="sleep-fix.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="sleep-fix.patch"
-
-IyBUaGlzIGlzIGEgQml0S2VlcGVyIGdlbmVyYXRlZCBkaWZmIC1OcnUgc3R5bGUgcGF0Y2gu
-CiMKIyBDaGFuZ2VTZXQKIyAgIDIwMDQvMTAvMTMgMTU6NTU6NDktMDQ6MDAgbHViZW5AbGlv
-bi5hZGFwdGVjLmNvbSAKIyAgIEZpeCBzbGVlcGluZyB3aGlsZSBob2xkaW5nIGEgbG9jayBv
-biBob3N0IHJlbW92YWwgYW5kCiMgICBvbiBraWxsaW5nIHRoZSBEViB0aHJlYWQuCiMgCiMg
-ZHJpdmVycy9zY3NpL2FpYzd4eHgvYWljN3h4eF9vc21fcGNpLmMKIyAgIDIwMDQvMTAvMTMg
-MTU6NTU6MzYtMDQ6MDAgbHViZW5AbGlvbi5hZGFwdGVjLmNvbSArNCAtMgojICAgRml4IHNs
-ZWVwaW5nIHdoaWxlIGhvbGRpbmcgYSBsb2NrIG9uIGhvc3QgcmVtb3ZhbC4KIyAKIyBkcml2
-ZXJzL3Njc2kvYWljN3h4eC9haWM3eHh4X29zbS5jCiMgICAyMDA0LzEwLzEzIDE1OjU1OjM1
-LTA0OjAwIGx1YmVuQGxpb24uYWRhcHRlYy5jb20gKzAgLTMKIyAgIEZpeCBzbGVlcGluZyB3
-aGlsZSBob2xkaW5nIGEgbG9jayBvbiBraWxsaW5nIHRoZSBEViB0aHJlYWQuCiMgCiMgZHJp
-dmVycy9zY3NpL2FpYzd4eHgvYWljN3h4eF9jb3JlLmMKIyAgIDIwMDQvMTAvMTMgMTU6NTU6
-MzUtMDQ6MDAgbHViZW5AbGlvbi5hZGFwdGVjLmNvbSArMCAtMQojICAgRml4IHNsZWVwaW5n
-IHdoaWxlIGhvbGRpbmcgYSBsb2NrIG9uIGhvc3QgcmVtb3ZhbC4KIyAKIyBkcml2ZXJzL3Nj
-c2kvYWljN3h4eC9haWM3OXh4X29zbV9wY2kuYwojICAgMjAwNC8xMC8xMyAxNTo1NTozNS0w
-NDowMCBsdWJlbkBsaW9uLmFkYXB0ZWMuY29tICs0IC0yCiMgICBGaXggc2xlZXBpbmcgd2hp
-bGUgaG9sZGluZyBhIGxvY2sgb24gaG9zdCByZW1vdmFsLgojIAojIGRyaXZlcnMvc2NzaS9h
-aWM3eHh4L2FpYzc5eHhfb3NtLmMKIyAgIDIwMDQvMTAvMTMgMTU6NTU6MzUtMDQ6MDAgbHVi
-ZW5AbGlvbi5hZGFwdGVjLmNvbSArMSAtMwojICAgRml4IHNsZWVwaW5nIHdoaWxlIGhvbGRp
-bmcgYSBsb2NrIG9uIGtpbGxpbmcgdGhlIERWIHRocmVhZC4KIyAKIyBkcml2ZXJzL3Njc2kv
-YWljN3h4eC9haWM3OXh4X2NvcmUuYwojICAgMjAwNC8xMC8xMyAxNTo1NTozNS0wNDowMCBs
-dWJlbkBsaW9uLmFkYXB0ZWMuY29tICswIC0xCiMgICBGaXggc2xlZXBpbmcgd2hpbGUgaG9s
-ZGluZyBhIGxvY2sgb24gaG9zdCByZW1vdmFsLgojIApkaWZmIC1OcnUgYS9kcml2ZXJzL3Nj
-c2kvYWljN3h4eC9haWM3OXh4X2NvcmUuYyBiL2RyaXZlcnMvc2NzaS9haWM3eHh4L2FpYzc5
-eHhfY29yZS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9haWM3eHh4L2FpYzc5eHhfY29yZS5jCTIw
-MDQtMTAtMTMgMTU6NTg6MjMgLTA0OjAwCisrKyBiL2RyaXZlcnMvc2NzaS9haWM3eHh4L2Fp
-Yzc5eHhfY29yZS5jCTIwMDQtMTAtMTMgMTU6NTg6MjMgLTA0OjAwCkBAIC01MjcwLDcgKzUy
-NzAsNiBAQAogCWRlZmF1bHQ6CiAJY2FzZSA1OgogCQlhaGRfc2h1dGRvd24oYWhkKTsKLQkJ
-VEFJTFFfUkVNT1ZFKCZhaGRfdGFpbHEsIGFoZCwgbGlua3MpOwogCQkvKiBGQUxMVEhST1VH
-SCAqLwogCWNhc2UgNDoKIAkJYWhkX2RtYW1hcF91bmxvYWQoYWhkLCBhaGQtPnNoYXJlZF9k
-YXRhX2RtYXQsCmRpZmYgLU5ydSBhL2RyaXZlcnMvc2NzaS9haWM3eHh4L2FpYzc5eHhfb3Nt
-LmMgYi9kcml2ZXJzL3Njc2kvYWljN3h4eC9haWM3OXh4X29zbS5jCi0tLSBhL2RyaXZlcnMv
-c2NzaS9haWM3eHh4L2FpYzc5eHhfb3NtLmMJMjAwNC0xMC0xMyAxNTo1ODoyMyAtMDQ6MDAK
-KysrIGIvZHJpdmVycy9zY3NpL2FpYzd4eHgvYWljNzl4eF9vc20uYwkyMDA0LTEwLTEzIDE1
-OjU4OjIzIC0wNDowMApAQCAtNTAzMiw3ICs1MDMyLDYgQEAKIGFoZF9saW51eF9leGl0KHZv
-aWQpCiB7CiAJc3RydWN0IGFoZF9zb2Z0YyAqYWhkOwotCXVfbG9uZyBsOwogCiAJLyoKIAkg
-KiBTaHV0ZG93biBEViB0aHJlYWRzIGJlZm9yZSBnb2luZyBpbnRvIHRoZSBTQ1NJIG1pZC1s
-YXllci4KQEAgLTUwNDAsMTIgKzUwMzksMTEgQEAKIAkgKiBrZXJuZWwgc28gdGhhdCB3YWl0
-aW5nIGZvciBvdXIgRFYgdGhyZWFkcyB0byBleGl0IGxlYWRzCiAJICogdG8gZGVhZGxvY2su
-CiAJICovCi0JYWhkX2xpc3RfbG9jaygmbCk7CiAJVEFJTFFfRk9SRUFDSChhaGQsICZhaGRf
-dGFpbHEsIGxpbmtzKSB7CiAKIAkJYWhkX2xpbnV4X2tpbGxfZHZfdGhyZWFkKGFoZCk7CiAJ
-fQotCWFoZF9saXN0X3VubG9jaygmbCk7CisKICNpZiBMSU5VWF9WRVJTSU9OX0NPREUgPCBL
-RVJORUxfVkVSU0lPTigyLDUsMCkKIAkvKgogCSAqIEluIDIuNCB3ZSBoYXZlIHRvIHVucmVn
-aXN0ZXIgZnJvbSB0aGUgUENJIGNvcmUgX2FmdGVyXwpkaWZmIC1OcnUgYS9kcml2ZXJzL3Nj
-c2kvYWljN3h4eC9haWM3OXh4X29zbV9wY2kuYyBiL2RyaXZlcnMvc2NzaS9haWM3eHh4L2Fp
-Yzc5eHhfb3NtX3BjaS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9haWM3eHh4L2FpYzc5eHhfb3Nt
-X3BjaS5jCTIwMDQtMTAtMTMgMTU6NTg6MjMgLTA0OjAwCisrKyBiL2RyaXZlcnMvc2NzaS9h
-aWM3eHh4L2FpYzc5eHhfb3NtX3BjaS5jCTIwMDQtMTAtMTMgMTU6NTg6MjMgLTA0OjAwCkBA
-IC0xMDUsMTIgKzEwNSwxNCBAQAogCWlmIChhaGQgIT0gTlVMTCkgewogCQl1X2xvbmcgczsK
-IAorCQlUQUlMUV9SRU1PVkUoJmFoZF90YWlscSwgYWhkLCBsaW5rcyk7CisJCWFoZF9saXN0
-X3VubG9jaygmbCk7CiAJCWFoZF9sb2NrKGFoZCwgJnMpOwogCQlhaGRfaW50cl9lbmFibGUo
-YWhkLCBGQUxTRSk7CiAJCWFoZF91bmxvY2soYWhkLCAmcyk7CiAJCWFoZF9mcmVlKGFoZCk7
-Ci0JfQotCWFoZF9saXN0X3VubG9jaygmbCk7CisJfSBlbHNlCisJCWFoZF9saXN0X3VubG9j
-aygmbCk7CiB9CiAKIHN0YXRpYyBpbnQKZGlmZiAtTnJ1IGEvZHJpdmVycy9zY3NpL2FpYzd4
-eHgvYWljN3h4eF9jb3JlLmMgYi9kcml2ZXJzL3Njc2kvYWljN3h4eC9haWM3eHh4X2NvcmUu
-YwotLS0gYS9kcml2ZXJzL3Njc2kvYWljN3h4eC9haWM3eHh4X2NvcmUuYwkyMDA0LTEwLTEz
-IDE1OjU4OjIzIC0wNDowMAorKysgYi9kcml2ZXJzL3Njc2kvYWljN3h4eC9haWM3eHh4X2Nv
-cmUuYwkyMDA0LTEwLTEzIDE1OjU4OjIzIC0wNDowMApAQCAtMzk3Myw3ICszOTczLDYgQEAK
-IAlkZWZhdWx0OgogCWNhc2UgNToKIAkJYWhjX3NodXRkb3duKGFoYyk7Ci0JCVRBSUxRX1JF
-TU9WRSgmYWhjX3RhaWxxLCBhaGMsIGxpbmtzKTsKIAkJLyogRkFMTFRIUk9VR0ggKi8KIAlj
-YXNlIDQ6CiAJCWFoY19kbWFtYXBfdW5sb2FkKGFoYywgYWhjLT5zaGFyZWRfZGF0YV9kbWF0
-LApkaWZmIC1OcnUgYS9kcml2ZXJzL3Njc2kvYWljN3h4eC9haWM3eHh4X29zbS5jIGIvZHJp
-dmVycy9zY3NpL2FpYzd4eHgvYWljN3h4eF9vc20uYwotLS0gYS9kcml2ZXJzL3Njc2kvYWlj
-N3h4eC9haWM3eHh4X29zbS5jCTIwMDQtMTAtMTMgMTU6NTg6MjMgLTA0OjAwCisrKyBiL2Ry
-aXZlcnMvc2NzaS9haWM3eHh4L2FpYzd4eHhfb3NtLmMJMjAwNC0xMC0xMyAxNTo1ODoyMyAt
-MDQ6MDAKQEAgLTUwMzMsNyArNTAzMyw2IEBACiBhaGNfbGludXhfZXhpdCh2b2lkKQogewog
-CXN0cnVjdCBhaGNfc29mdGMgKmFoYzsKLQl1X2xvbmcgbDsKIAogCS8qCiAJICogU2h1dGRv
-d24gRFYgdGhyZWFkcyBiZWZvcmUgZ29pbmcgaW50byB0aGUgU0NTSSBtaWQtbGF5ZXIuCkBA
-IC01MDQxLDEyICs1MDQwLDEwIEBACiAJICoga2VybmVsIHNvIHRoYXQgd2FpdGluZyBmb3Ig
-b3VyIERWIHRocmVhZHMgdG8gZXhpdCBsZWFkcwogCSAqIHRvIGRlYWRsb2NrLgogCSAqLwot
-CWFoY19saXN0X2xvY2soJmwpOwogCVRBSUxRX0ZPUkVBQ0goYWhjLCAmYWhjX3RhaWxxLCBs
-aW5rcykgewogCiAJCWFoY19saW51eF9raWxsX2R2X3RocmVhZChhaGMpOwogCX0KLQlhaGNf
-bGlzdF91bmxvY2soJmwpOwogCiAjaWYgTElOVVhfVkVSU0lPTl9DT0RFIDwgS0VSTkVMX1ZF
-UlNJT04oMiw1LDApCiAJLyoKZGlmZiAtTnJ1IGEvZHJpdmVycy9zY3NpL2FpYzd4eHgvYWlj
-N3h4eF9vc21fcGNpLmMgYi9kcml2ZXJzL3Njc2kvYWljN3h4eC9haWM3eHh4X29zbV9wY2ku
-YwotLS0gYS9kcml2ZXJzL3Njc2kvYWljN3h4eC9haWM3eHh4X29zbV9wY2kuYwkyMDA0LTEw
-LTEzIDE1OjU4OjIzIC0wNDowMAorKysgYi9kcml2ZXJzL3Njc2kvYWljN3h4eC9haWM3eHh4
-X29zbV9wY2kuYwkyMDA0LTEwLTEzIDE1OjU4OjIzIC0wNDowMApAQCAtMTYwLDEyICsxNjAs
-MTQgQEAKIAlpZiAoYWhjICE9IE5VTEwpIHsKIAkJdV9sb25nIHM7CiAKKwkJVEFJTFFfUkVN
-T1ZFKCZhaGNfdGFpbHEsIGFoYywgbGlua3MpOworCQlhaGNfbGlzdF91bmxvY2soJmwpOwog
-CQlhaGNfbG9jayhhaGMsICZzKTsKIAkJYWhjX2ludHJfZW5hYmxlKGFoYywgRkFMU0UpOwog
-CQlhaGNfdW5sb2NrKGFoYywgJnMpOwogCQlhaGNfZnJlZShhaGMpOwotCX0KLQlhaGNfbGlz
-dF91bmxvY2soJmwpOworCX0gZWxzZQorCQlhaGNfbGlzdF91bmxvY2soJmwpOwogfQogI2Vu
-ZGlmIC8qICFMSU5VWF9WRVJTSU9OX0NPREUgPCBLRVJORUxfVkVSU0lPTigyLDQsMCkgKi8K
-IAo=
---------------060503060006080800010106--
+If you want this in find a portable and non-broken interface together with
+the qlogic, lsi and ibm people.
 
