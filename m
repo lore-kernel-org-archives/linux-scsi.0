@@ -1,40 +1,32 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Suggestion for aiding debugging of host removal
-Date: Wed, 10 Dec 2003 15:14:56 +0000
+Subject: Re: linux-2.6.0-test11 [BUG] -- scsi_add/remove_device - out of memory
+Date: Wed, 10 Dec 2003 15:09:49 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031210151456.A2927@infradead.org>
-References: <20030709144410.GA3544@beaverton.ibm.com> <Pine.LNX.4.44L0.0312100947550.775-100000@ida.rowland.org>
+Message-ID: <20031210150949.A2855@infradead.org>
+References: <OFE5F05878.12C1E995-ONC1256DF8.004D7413-C1256DF8.004E538F@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:8197 "EHLO
+Received: from phoenix.infradead.org ([213.86.99.234]:5893 "EHLO
 	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263618AbTLJPPF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Dec 2003 10:15:05 -0500
+	id S263584AbTLJPJ4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Dec 2003 10:09:56 -0500
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0312100947550.775-100000@ida.rowland.org>; from stern@rowland.harvard.edu on Wed, Dec 10, 2003 at 10:02:22AM -0500
+In-Reply-To: <OFE5F05878.12C1E995-ONC1256DF8.004D7413-C1256DF8.004E538F@de.ibm.com>; from Heiko.Carstens@de.ibm.com on Wed, Dec 10, 2003 at 03:14:19PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Mike Anderson <andmike@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Heiko Carstens <Heiko.Carstens@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Dec 10, 2003 at 10:02:22AM -0500, Alan Stern wrote:
-> Mike:
+On Wed, Dec 10, 2003 at 03:14:19PM +0100, Heiko Carstens wrote:
+> >Sounds there's a scsi_device_put missing somewherein your driver..
 > 
-> I've got a question about host removal.  Once scsi_remove_host() has
-> returned, the host driver's module is free to unload from memory (assuming
-> the module's reference count is 0, which it normally is).  Hence it is a
-> mistake to access the host template in any way after that time.
-> 
-> But it looks like scsi_host_dev_release() can be called after
-> scsi_remove_host() has returned, and it uses shost->hostt.  There may be 
-> other uses as well.
-> 
-> Would it help flush out such illegal accesses if at some appropriate point 
-> shost->hostt was set to NULL, maybe near the end of scsi_remove_host()?
+> Why should I be supposed to issue a scsi_device_put or scsi_device_get in 
+> my
+> device driver?
 
-In fact that's a bug in the current scsi_host lifetime handling - before
-the driver can leave it's upper layer ->remove function we need to wait
-to the host refcount to become zero, similar to what free_netdev does.
-
-I'll see whether I can come up with a fix.
+scsi_remove_device just marks the device deleted, the memory is only freed
+after the final scsi_device_put.  That might be the one your driver issues
+after it's completly done with the device or for example the one when the last
+sysfs file referring to the device is closed.  Lifetime of structscsi_device
+is not under control of the driver.
 
