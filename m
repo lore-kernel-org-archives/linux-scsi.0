@@ -1,34 +1,66 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
+From: Andries Brouwer <aebr@win.tue.nl>
 Subject: Re: [PATCH] fix sector_div use in scsicam.c
-Date: Sun, 27 Oct 2002 18:05:07 -0600
+Date: Mon, 28 Oct 2002 01:50:53 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200210280005.g9S057Q14567@localhost.localdomain>
-References: <aebr@win.tue.nl>
+Message-ID: <20021028005053.GA28587@win.tue.nl>
+References: <20021027221007.GA28417@win.tue.nl> <200210280005.g9S057Q14567@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id QAA12186
-	for <linux-scsi@vger.kernel.org>; Sun, 27 Oct 2002 16:05:15 -0800
-In-Reply-To: Message from Andries Brouwer <aebr@win.tue.nl>
-   of "Sun, 27 Oct 2002 23:10:07 +0100." <20021027221007.GA28417@win.tue.nl>
+Content-Disposition: inline
+In-Reply-To: <200210280005.g9S057Q14567@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: Andries Brouwer <aebr@win.tue.nl>
+To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-If the return type will be ignored by most applications, I don't see what the 
-problem is.
+On Sun, Oct 27, 2002 at 06:05:07PM -0600, James Bottomley wrote:
 
-I'm all for ripping the C/H/S rubbish out of the kernel, just give me the 
-patches when you have them.  Until that time, we need the changes Christoph 
-has made now to solve a layering violation in SCSI.  And, since I never want 
-to see the bios_param stuff again, I'm not going to put in code (like an 
-obviously wrong truncation) that would attract attention in a large block size 
-audit of the SCSI subsystem.  The sector_div is an obviously correct thing to 
-do for a sector_t quantity, so it's staying.
+> If the return type will be ignored by most applications, I don't see
+> what the problem is.
 
-James
+There is no problem. My longish reaction was mostly because you used
+"future proofing", that gave the impression that you did not know
+what this is about.
 
+> (like an obviously wrong truncation)
 
+No, the code I wrote was optimal.
+If you have 16 bits and the value is 70000, I prefer returning
+65535 over 4464.
+
+Remember: this code has one and only one function: to compute
+the 16-bit value that HDIO_GETGEO is going to return.
+
+For modern software this does not matter in the least.
+For ancient stuff, in the case of overflow, my patch gives the disk
+a size of 539 GB. The patch I objected to gives a random size.
+
+Andries
+
+By the way: quite apart from the fact that sector_div is
+superfluous, it is also a very obscure and nonintuitive function.
+We can see that from the fact that several incorrect versions
+were proposed already. And the latest one I saw:
+
+> --- 1.11/drivers/scsi/scsicam.c       Fri Oct 25 13:31:53 2002
+> +++ edited/drivers/scsi/scsicam.c     Sun Oct 27 16:36:31 2002
+> @@ -80,11 +80,13 @@
+>       if (ret || ip[0] > 255 || ip[1] > 63) {
+>               ip[0] = 64;
+>               ip[1] = 32;
+> -             if (sector_div(capacity, ip[0] * ip[1]) > 65534) {
+> +             sector_div(capacity, ip[0] * ip[1]);
+> +             if (capacity > 65534) {
+>                       ip[0] = 255;
+>                       ip[1] = 63;
+> +                     sector_div(capacity, ip[0] * ip[1]);
+>               }
+> -             ip[2] = sector_div(capacity, ip[0] * ip[1]);
+> +             ip[2] = capacity;
+>       }
+>  
+>       return 0;
+
+is also incorrect: it divides capacity twice.
 
 
