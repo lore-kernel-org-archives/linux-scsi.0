@@ -1,48 +1,47 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: 2.6.0 stability and the BK scsi trees
-Date: 16 Oct 2003 06:29:28 +0530
+From: Henk Jan Priester <hj@justcroft.com>
+Subject: Que: generic scsi driver (sg) SG_IO ioctl
+Date: Thu, 16 Oct 2003 11:18:55 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1066265974.16761.426.camel@fuzzy>
+Message-ID: <Pine.LNX.4.44.0310161109430.26363-100000@mars.justcroft.intern>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:4102 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262114AbTJPA7k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Oct 2003 20:59:40 -0400
-Received: from [172.17.6.40] (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/linuxconf) with ESMTP id h9G0xat23451
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Oct 2003 20:59:36 -0400
+Received: from siemens4.servercity.co.uk ([217.205.138.46]:30216 "EHLO
+	justcroft.co.uk") by vger.kernel.org with ESMTP id S262781AbTJPJTF
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Oct 2003 05:19:05 -0400
+Received: from mars [62.59.36.110]
+	by justcroft.co.uk [212.47.84.192]
+	with SMTP (MDaemon.Standard.v4.0.2.R)
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Oct 2003 10:13:09 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-
-In the light of the recently announced "bug fixes only" edict for the
-2.6 kernel, I'll be splitting our current SCSI BK tree:
-
-bk://linux-scsi.bkbits.net/scsi-misc-2.5
-
-Into two trees.  One:
-
-bk://linux-scsi.bkbits.net/scsi-bugfixes-2.6
-
-for upstream inclusion, and the other
-
-bk://linux-scsi.bkbits.net/scsi-misc-2.7
-
-To hold all the other stuff for eventual inclusion in 2.7.
-
-I'll be on Holiday until 22 October, but I'll try to do this shortly
-after I get back home.
-
-If you send any patches to the SCSI list in the mean time, could you
-make sure you label them "bug fix" (and make sure they really are) if
-they are for immediate inclusion.
-
-Thanks,
-
-James
+To: linux-scsi@vger.kernel.org
 
 
+Hello,
+
+I am currently writing a program to communicate with 
+Xerox Xpress Plotter using the generic SCSI driver (kernel 2.4.20).
+
+I am using the ioctl SGIO to send the SCSI pakkets to the
+plotter, everything works fine till I start sending the plot data.
+(model enquiry is ok, roll selection is ok, print setup is ok)
+The ioctl goes ok but the status = 8, masked_status = 4, which
+is busy if I am correct.
+Does anybody know what can be the problem if the in case?
+
+Is there also a limit on the pakket size you can send with ioctl 
+SG_IO command?
+
+Regards,
+
+Henk Jan 
+
+-- 
+H.J. Priester                           email:	hjpriester@justcroft.com
+Justcroft Technical Systems B.V.        Tel:   +31 70 3644131 
+Atjehstraat  21, 2585 VG	        Fax:   +31 70 3107593	
+The Netherlands                        	WWW:   www.justcroft.com 
+-------------------------------------------------------------------------------
 
 
