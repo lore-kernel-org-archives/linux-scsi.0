@@ -1,44 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH 2.6.9-rc2] add ability to set device queue depth to mptfusion
-Date: Tue, 28 Sep 2004 11:48:14 +0100
+From: us_ib022@jumpy.it
+Subject: FROM MR USMAN IBRAHIM
+Date: Tue, 28 Sep 2004 11:47:20 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040928114814.A794@infradead.org>
-References: <20040928075846.GA190230@sgi.com>
+Message-ID: <40FF87BB00051EA3@mail15.jumpyint.it>
+References: <40FC74170002662B@mail16.jumpyint.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imladris.demon.co.uk ([193.237.130.41]:30995 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S266705AbUI1Ks0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Sep 2004 06:48:26 -0400
-Content-Disposition: inline
-In-Reply-To: <20040928075846.GA190230@sgi.com>; from jeremy@sgi.com on Tue, Sep 28, 2004 at 12:58:47AM -0700
+Received: from outgoing1.jumpy.it ([213.215.144.9]:55949 "EHLO mail.jumpy.it")
+	by vger.kernel.org with ESMTP id S267375AbUI1Kxw convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Sep 2004 06:53:52 -0400
+In-Reply-To: <40FC74170002662B@mail16.jumpyint.it>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: Emoore@lsil.com, linux-scsi@vger.kernel.org
+
+DEAR FRIEND,
+
+I AM MR USMAN IBRAHIM FROM IRAQ I AM CONTACTING YOU IN
+CONNECTION WITH THE $12.5 MILLION USD I HAVE IN MY
+POSSESION WHICH I HAVE MOVE INTO A BANK IN ABIDJAN,
+
+PLEASE COULD YOU HELP IN PROVIDING AN ACCOUNT SO
+THAT THIS MONEY COULD BE TRANSFERED TO YOU SO THAT I
+CAN COME OVER TO YOUR COUNTRY FOR RESETTLEMENT AND
+START A NEW LIFE AND INVEST THE MONEY.
+PLEASE FOR THE CONDITION OF ME AND MY FAMILY AND
+WHERE WE ARE STAYING I CAN NOT DO THIS MY SELF SO,
+
+IF YOU ARE INTRESTED I WILL GIVE YOU THE FULL NAME
+E-MAIL/PHONE CONTACTS OF THE BANK SO THAT YOU CAN
+CONTACT THE BANK ON HOW THE TRANSFER WILL BE MADE TO
+YOU INTO YOUR ACCOUNT.
+THANKS I BEG TO STOP SO FAR TILL YOU REPLY
+ 
+ALLAH BLESS YOU.
+
+MR USMAN IBRAHIM
 
 
-Code looks good but some style nitpicks (often inherited from the original
-code):
-
-> +static void
-> +mptscsih_set_queue_depth(struct scsi_device *device, MPT_SCSI_HOST *hd, VirtDevice *pTarget, int qdepth)
-
-linebreaks after 80characters please.
-
-> +	if ( hd->is_spi ) {
-
-	if (hdis_spi) {
-
-> +			else if (((pTarget->inq_data[0] & 0x1f) == 0x00)
-> +			  && (pTarget->minSyncFactor <= MPT_ULTRA160 ))
 
 
-			else if (!(pTarget->inq_data[0] & 0x1f) &&
-				 (pTarget->minSyncFactor <= MPT_ULTRA160)
+________________________________________
+Crea la tshirt con il tuo nick! http://www.mediasetshop.it/JumpyChat/
 
-> +	}
-> +	else
-
-	} else
 
