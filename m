@@ -1,29 +1,35 @@
-From: James.Smart@Emulex.Com
-Subject: RE: [PATCH] Another fix for suspend i/o - validate dev statebefore transition
-Date: Sat, 11 Dec 2004 07:57:32 -0500
-Message-ID: <0B1E13B586976742A7599D71A6AC733C12E89D@xbl3.ma.emulex.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [PATCH] Another fix for suspend i/o - validate dev statebefore
+	transition
+Date: Sat, 11 Dec 2004 07:39:18 -0600
+Message-ID: <1102772358.5226.3.camel@mulgrave>
+References: <0B1E13B586976742A7599D71A6AC733C12E89D@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:1426 "EHLO emulex.emulex.com")
-	by vger.kernel.org with ESMTP id S261930AbULKM5f convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 11 Dec 2004 07:57:35 -0500
-content-class: urn:content-classes:message
+Received: from stat16.steeleye.com ([209.192.50.48]:54919 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261935AbULKNjZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 11 Dec 2004 08:39:25 -0500
+In-Reply-To: <0B1E13B586976742A7599D71A6AC733C12E89D@xbl3.ma.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com, James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Upon further reflection... perhaps I was too hasty agreeing with the change.
-
-It certainly solve my issue. However, what it means is that it may actually hide reports of other invalid state transitions that may be meaningful. Do we want to hide these too ?  If not, than I think the original patch best solves the problem.  Your call...
-
--- james s
-
-> > If the only problem with the current scheme is the somewhat scary
-> > verbosity then we can shut it up by making the message part of the
-> > logging infrastructure.
+On Sat, 2004-12-11 at 07:57 -0500, James.Smart@Emulex.Com wrote:
+> Upon further reflection... perhaps I was too hasty agreeing with the change.
 > 
-> It is, and the suggested patch is fine.
+> It certainly solve my issue. However, what it means is that it may actually hide reports of other invalid state transitions that may be meaningful. Do we want to hide these too ?  If not, than I think the original patch best solves the problem.  Your call...
+
+Well, that's what worried me when I first implemented the state model,
+which is why the message is there.  However, there haven't actually been
+any bug reports where it did anything other than cause problems.  If
+there's really a transition we should be warning about failure on, we
+can do it by printing an error on the failure return from
+scsi_device_set_state().
+
+James
+
+
