@@ -1,140 +1,54 @@
-From: "invictus rm" <invictus_rm@hotmail.com>
-Subject: Re: scsi wait_for_completion hangs!!!
-Date: Fri, 22 Aug 2003 15:55:53 +0530
+From: Matthias =?iso-8859-1?Q?J=E4nichen?= <mj2@percomp.de>
+Subject: 2.4.22-rc2/AIC7xxx
+Date: Fri, 22 Aug 2003 14:45:40 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <BAY7-F93CaO9smko29f00034267@hotmail.com>
+Message-ID: <4.3.2.7.2.20030822144509.00d99a10@127.0.0.1>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bay7-f93.bay7.hotmail.com ([64.4.11.93]:20745 "EHLO hotmail.com")
-	by vger.kernel.org with ESMTP id S263071AbTHVKZy (ORCPT
+Received: from gateway.percomp.de ([192.88.4.5]:63108 "HELO gateway.percomp.de")
+	by vger.kernel.org with SMTP id S263147AbTHVMtd (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Aug 2003 06:25:54 -0400
+	Fri, 22 Aug 2003 08:49:33 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-hi,
-  Tx for the reply
-  I am attaching the relevant portions of the driver which deals with SCSI 
-interaction::
+Hi!
 
-#include "/usr/src/linux/drivers/scsi/scsi.h"
-#include "/usr/src/linux/drivers/scsi/hosts.h"
+my system drives me crasy  ;-(
 
-#define SCSIHBA_CAN_QUEUE               1
+The problems started already back with 2.4.18 suddenly there are I/O-Errors 
+and you need to reboot. fsck brings a lot of something like "I_block size 
+is xx should by yy" while yy is always smaller than xx.
 
+Then I decided to try out 2.4.22-rc2 first it ran quite well but then after 
+some time again IO-Errors with SCSI resets
 
-#define SCSIHBA {                                               \
-        name:                   " SCSI  HBA",                   \
-        detect:                 scsihba_detect,                 \
-        release:                scsihba_release,                        \
-        info:                   scsihba_info,                   \
-        queuecommand:           scsihba_scsi_queuecommand,      \
-        can_queue:              SCSIHBA_CAN_QUEUE,              \
-        this_id:                -1,                             \
-        sg_tablesize:           1,                              \
-        cmd_per_lun:            1,                              \
-        use_clustering:         DISABLE_CLUSTERING,             \
-        eh_abort_handler:       scsihba_scsi_abort,          \
-        eh_device_reset_handler:NULL,                           \
-        eh_bus_reset_handler:   NULL,                           \
-        eh_host_reset_handler:  NULL,                           \
-}
+System is a P2B-S with SCSI on board.
+Cabeling/termination checked.
+Adaptec and HDD bois latest available
+DiskSelfTest runs OK
+Adaptec verify is ok as well.
+Temprature is OK
 
+On the web I find problems with SCSI, AIC7xxx, ext2, ext3 and other related 
+sile system stuff, but no soulution yet.
 
-int scsihba_detect(Scsi_Host_Template *);
-int scsihba_release(struct Scsi_Host *);
-const char * scsihba_info(struct Scsi_Host *);
-int scsihba_scsi_queuecommand(Scsi_Cmnd *, void (* done)(Scsi_Cmnd *));
-int scsihba_scsi_abort(Scsi_Cmnd *);
+All errors seem to be only on dev/sda5 which is the partition for /var
 
-int scsihba_scsi_queuecommand(Scsi_Cmnd *SCpnt, void (* done)(Scsi_Cmnd *))
-{
-        SCpnt->done = done;
+df reports: /dev/sda5 10958172  8987292  1414232  87%
 
-        // Frame the packets and send to the hardware
+sda5 is a partition sda4 (extended). I thought there might be a problem 
+with the size of the fs, so i reduced the number of files dramatically to
+             /dev/sda5 10958172   871240  9530284   9%
 
-        return 0;
-}
+I am waiting for the next occurrence after rebooting because the rduction 
+allone did not help. which indicates to me that there might be  problem 
+with the file cache or the fact that some files are scattered all over the 
+disk.
 
+Any Ideas?
 
-int scsihba_scsi_abort(Scsi_Cmnd *SCpnt)
-{
-        SCpnt->result = DID_ABORT;
-        printk("scsihba_scsi_abort..\n");
-        return SUCCESS;
-}
-
-int __init scsihba_detect(Scsi_Host_Template *tpnt)
-{
-        struct Scsi_Host *host;
-
-        tpnt->proc_name = "scsihba_hba";
-        host = scsi_register (tpnt, sizeof(struct scsihba_host));
-        if (!host)
-        {
-                printk("scsi_register fails ...\n");
-        }
-
-        host->max_id = 2;
-        host->hostt->use_new_eh_code = 1;
-        host->this_id = tpnt->this_id;
-
-        return 1;
-}
-
-int scsihba_release(struct Scsi_Host *host)
-{
-        return 0;
-}
-
-const char *scsihba_info(struct Scsi_Host *host)
-{
-        static char buf[80];
-        sprintf(buf,"SCSI Adapter...\n");
-        return buf;
-}
-
-void my_callback_function(void *data)
-{
-        // Get the Scsi Command from the data
-        (*SCpnt->scsi_done)(SCpnt);
-
-}
-static Scsi_Host_Template driver_template = SCSIHBA;
-
-#include "/usr/src/linux/drivers/scsi/scsi_module.c"
-
------------------------------------------------------------
------------------------------------------------------------
-
-Hope this will help to figure out the problem
-Tx again for the help
-
-
-
-
->From: Christoph Hellwig <hch@infradead.org>
->To: invictus rm <invictus_rm@hotmail.com>
->CC: linux-scsi@vger.kernel.org
->Subject: Re: scsi wait_for_completion hangs!!!
->Date: Fri, 22 Aug 2003 10:53:03 +0100
->
->On Fri, Aug 22, 2003 at 03:18:06PM +0530, invictus rm wrote:
-> > hi ,
-> >     I am trying to write a HBA driver for a  PCI SCSI card(linux - 2.4.7 
->).
-> >
-> >    On insmoding the driver( after enabling scsi verbose logging) i was 
->able
-> > to trace the point at which it get stuck.
->
->2.4.7 is obsolete.  IF it still happens with 2.4.21 please post the
->affected driver source so we can take a look what you're doing wrong.
->
-
-_________________________________________________________________
-ICICI's NRI services. They make life easy. 
-http://server1.msn.co.in/msnspecials/nriservices/index.asp Find out more.
+Thanks
+Matthias 
 
