@@ -1,53 +1,36 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] dpt_i2o changes for 2.6.2 kernel in support of 64 bit and bitrot (part 1)
-Date: Tue, 6 Apr 2004 06:20:15 +0100
+From: Oliver Neukum <oliver@neukum.org>
+Subject: Re: [linux-usb-devel] Re: bug 2400
+Date: Tue, 6 Apr 2004 08:52:33 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040406062015.C14800@infradead.org>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F64F24F@otce2k03.adaptec.com>
+Message-ID: <200404060852.34169.oliver@neukum.org>
+References: <Pine.LNX.4.44L0.0404032026590.30873-100000@netrider.rowland.org> <4071EA82.3020901@pacbell.net> <1081214360.1756.330.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:19461 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263627AbUDFFUR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Apr 2004 01:20:17 -0400
+Received: from mail1.kontent.de ([81.88.34.36]:50871 "EHLO Mail1.KONTENT.De")
+	by vger.kernel.org with ESMTP id S263641AbUDFGwi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2004 02:52:38 -0400
+In-Reply-To: <1081214360.1756.330.camel@mulgrave>
 Content-Disposition: inline
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F64F24F@otce2k03.adaptec.com>; from mark_salyzyn@adaptec.com on Mon, Apr 05, 2004 at 06:23:49PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>, David Brownell <david-b@pacbell.net>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Mike Anderson <andmike@us.ibm.com>, Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Apr 05, 2004 at 06:23:49PM -0400, Salyzyn, Mark wrote:
-> You mean Linux land, all other operating systems, other UNIXii includ=
-ed,
-> offer the ability to determine if a device is in-use in a timely mann=
-er.
-> Does this mean Windoze has a feature that Linux does not have?
 
-Depends on what you call a feature.  It also doesn't allow to remove in=
--use
-files..
+> The point is that all the disconnection event does is inform a subsystem
+> that the entity represented by the other object has gone.  What it
+> chooses to do with the information is up to it.  It could set it's own
+> connected object to degraded, never use the other object again and drop
+> the reference.  Or, it could simply ignore the indication and continue
+> to use the other object (even though it will return errors for every
+> operation).
 
-> This would be unacceptable to our OEMs and users of our applications.
+Pure refcounting can never protect you against races with freeing objects.
+The counters themselves must be protected. Try as you might you need
+locks for that and rules on how this locks are to be used.
 
-Could you please stop this OEM crap?  No one cares more for someone jus=
-t
-because he's an OEM.  And we already had the stupid user discussion a f=
-ew
-times, look up the long EVMS and Aun=FE Tilly threads.
+	Regards
+		Oliver
 
-> In user land, lsmod tells us how many users of a module exist, what i=
-s
-> so secret about a scsi disk devices that we are afraid of telling the=
-m
-> if any of the access points are being used?
-
-=46or many module types lsmod can't anymore.  Look at the use count of
-your network driver module.
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
