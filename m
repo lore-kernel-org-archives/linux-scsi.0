@@ -1,54 +1,59 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: A question on Linux SCSI low-level driver
-Date: Wed, 19 May 2004 13:52:15 +1000
+From: tete_williams@jumpy.it
+Subject: ENQUIRY
+Date: Wed, 19 May 2004 05:57:38 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40AAD9EF.4000903@torque.net>
-References: <519672568F040C41B6FAC21ADF51B18FEFF8@mailnode1.commstor.crossroads.com>
-Reply-To: dougg@torque.net
+Message-ID: <40AAD264000004E9@mail02.jumpyint.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:16141 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S263646AbUESLE5
+Received: from outgoing1.jumpy.it ([213.215.144.9]:39374 "EHLO mail.jumpy.it")
+	by vger.kernel.org with ESMTP id S264134AbUESM6b convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 May 2004 07:04:57 -0400
-In-Reply-To: <519672568F040C41B6FAC21ADF51B18FEFF8@mailnode1.commstor.crossroads.com>
+	Wed, 19 May 2004 08:58:31 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Xing <lxing@Crossroads.com>
-Cc: linux-scsi@vger.kernel.org
+To: Tete_williams@jumpy.it
 
-Lee Xing wrote:
-> Thanks for the information.  scsi_debug is very helpful for me.
-> 
-> Two questions on scsi_debug/low-level driver:
-> 
-> - Has anyone ever created a patch for scsi_debug to support ioctl calls in lk 2.4?  
+Good Day, 
+Greetings to you and your family. I want you to read this mail with a compassionate
+heart and understanding that any action you take is geared towards rendering
+humanitarian assistance to a fellow human in dire distress. My name is Mr.
+Tete Williams I am 22years old presently seeking asylum in the Gambia.I
+know you will be surprised to hear from me or read my e-mail. But do not
+be surprised if you happen to receive it, it is the situation of things
+surrounding me that has made me to cry out because I never knew things would
+turn out this way. 
+ I am looking for assistance and want a mother or father who is trustworthy
+and prudent. It could be a Christian or Muslim. I am left with my only kid
+sister who is only 18 years. My father was a very wealthy merchant in gem
+stones(Diamond)and gold in Sierra Leon. My father was poisoned to death
+by his business associates during the war in our country at one of their
+outings on a business trip. My mother died 8 years ago, when we where quite
+young and since then my father took us so special. 
+ Before the death of my father in a private hospital in Freetown, he secretly
+called me to his bedside and told me that he had the sum of Fourteen Million
+US Dollars (US$14,000,000) in a safety deposit box in a Security & Financial
+Institution which will be later disclosed to you upon your offer of to help.
+He also explained to me that it was because of this wealth that he was poisoned
+by his business associates. That I should seek for a foreign partner that
+will help me in claiming the funds and assist me in investment purpose such
+as Real Estate or Import & Export.
+ We do not want our close relatives to know about this wealth because such
+may endanger our lives too. So, I am humbly seeking your assistance in the
+following ways: 1) PARENT: To serve as a guardian and advise me on a wise
+investment that will be profitable for both of us. 2) RESIDENT PERMIT: To
+make arrangement for me to come over to your country to further my education.
+I am willing to offer you 25% of the total sum as compensation for your
+effort/input after you successfully secure the funds in your custody overseas
+and also map out 5% for any expenses that may arise. Also note that an agreement
+would be drafted in respect of this. Please reply to my confidential email
+tete_williams@web2mail.com or to my j2 fax number 15169776014.
+Thanks and God bless! 
+Best regards, 
+Mr Tete Williams 
 
-Yes, me and it is in the last 8 (at least) versions of the
-lk 2.4 series. See scsi_debug_ioctl().
 
-It doesn't do anything other than report it has been called
-but a "template" it is.
-
-The ioctl model is "trickle down". So if the block layer
-(in the case of sd), the sd driver (or sg driver) and the
-SCSI mid level do _not_ recognize the ioctl() 'request' [an
-integer and the second argument given to the ioctl invocation
-in the user space] _then_ the ioctl "tickles down" to the
-corresponding LLD ioctl routine (if there is one).
-
-If not, is it possible for some one to kindly create it or a 
-template/part of it?
-> 
-> - Do SCSI passthrough ioctl calls sent to both sd and sg devices share/use the same ioctl routine defined in scsi_debug/low-level driver?  In other words, ioctl routine defined in scsi_debug/low-level drivers can not tell and do not care from which type of device (sd or sg) the SCSI passthrough call comes in, correct?
-
-The SCSI subsystem does not convey SCSI commands between the
-mid level and LLDs via ioctl calls. ioctl()s defined in LLDs
-are for very special, typically hardware specific, reasons.
-For example the LLD of a RAID controller might use ioctls
-to do RAID specific management functions.
-
-Doug Gilbert
+________________________________________
+Tutti i concerti da non perdere! http://musica.jumpy.it/2003jm_m_concerti.asp
 
 
