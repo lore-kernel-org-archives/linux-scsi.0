@@ -1,67 +1,56 @@
-From: Friedrich Lobenstock <fl@fl.priv.at>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
 Subject: Re: blocksize limitations in scsi tape driver (st) when used with
-  DLT1 tape drives?
-Date: Thu, 05 Sep 2002 22:59:51 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <3D77C5C7.3010909@fl.priv.at>
-References: <20020905200208.22430.qmail@dag.newtech.fi>
-Reply-To: Linux-SCSI Mailingliste <linux-scsi@vger.kernel.org>
+ DLT1 tape drives?
+Date: Fri, 6 Sep 2002 00:19:15 +0300 (EEST)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.44.0209060009560.1912-100000@kai.makisara.local>
+References: <3D77B216.8070205@fl.priv.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: Dag Nygren <dag@newtech.fi>
-Cc: Linux-SCSI Mailingliste <linux-scsi@vger.kernel.org>, Linux-Kernel Mailingliste <linux-kernel@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kai.makisara.local ([62.248.131.85])
+          by fep19-app.kolumbus.fi with ESMTP
+          id <20020905211943.DCZK7717.fep19-app.kolumbus.fi@kai.makisara.local>
+          for <linux-scsi@vger.kernel.org>; Fri, 6 Sep 2002 00:19:43 +0300
+In-Reply-To: <3D77B216.8070205@fl.priv.at>
 List-Id: linux-scsi@vger.kernel.org
+To: Linux-SCSI Mailingliste <linux-scsi@vger.kernel.org>
 
-Dag Nygren wrote:
-> I have successfully been using Legato Networker with a
-> blocksize of 32k with my DLT here.
-> 
-> But the way Legato wants to do it is to decide about the
-> blocksize itself.
-> This means that the driver should NOT decide on the BS, but
-> pass on anything written through it, meaning a blocksize setting
-> of 0 (or variable blocksize).
-> 
-> Perhaps Arkeia works the same way ?
+On Thu, 5 Sep 2002, Friedrich Lobenstock wrote:
 
-I used variable blocksize (=0) before but then after about 3.5 gigs stored
-on the tape I get scsi-error and arkeia interprets this as end-of-tape.
+> Hi!
+>
+> I'm having an odd problem here. I use SuSE Linux 8.0 with kernel
+> 2.4.18-64GB-SMP, arkeia as backup software and a Tandberg
+> VS80 (DLT1) streamer.
+>
+> After some trial and error I found out that I have to use a fixed block
+> size for DLT streamers (same applies to LTO ones). This document,
+> found at HP, tells you in details about which blocksize to use:
+>    http://www.hp.com/cposupport/information_storage/support_doc/lpg50167.html
+>
+> Now I told arkeia to use a blocksize of 65536, 32768 and 16384 and it
+> could not write to the tape. All I got in the log was:
+>
+> Sep  4 22:04:50 filesrv kernel: st: Unloaded.
+> Sep  4 22:08:40 filesrv kernel: st: Version 20020205, bufsize 32768, wrt 30720, max init. bufs 4, s/g segs 16
+> Sep  4 22:08:40 filesrv kernel: st0: Block limits 2 - 16777214 bytes.
+> Sep  4 22:08:41 filesrv kernel: st0: Incorrect block size.
+> Sep  4 22:08:45 filesrv kernel: st0: Write not multiple of tape block size.
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The write() byte count from Arkeia is not a multiple of the tape block
+size. If you use fixed block size, you must take care that this constraint
+is not violated. When you set the block size to 8192 or something that
+multiplies to 8192, this constraint is obeyed. If Arkeia sets the block
+size, I don't know why it does not obey the constraint. Seems to be an
+application problem.
 
-Aug  6 02:13:50 filesrv kernel: st0: Error with sense data: Info fld=0x2000, Deferred st09:00: sns = f1  3
-Aug  6 02:13:50 filesrv kernel: ASC=80 ASCQ= 1
-Aug  6 02:13:50 filesrv kernel: Raw sense data:0xf1 0x00 0x03 0x00 0x00 0x20 0x00 0x16 0x00 0x00 0xe6 0xc2 0x80 0x01 0x00 0x00 0x00 0x00 0x83 0x00 0x37 0x00 0x00 0x00 0x21 0x00 0x90 0x7f 0x3a 0x00
-Aug  6 02:13:50 filesrv kernel: klogd 1.4.1, ---------- state change ----------
-Aug  6 02:13:50 filesrv kernel: Inspecting /boot/System.map-2.4.18-64GB-SMP
-Aug  6 02:13:50 filesrv kernel: Loaded 13537 symbols from /boot/System.map-2.4.18-64GB-SMP.
-Aug  6 02:13:50 filesrv kernel: Symbols match kernel version 2.4.18.
-Aug  6 02:13:50 filesrv kernel: Loaded 481 symbols from 13 modules.
-Aug  6 02:13:50 filesrv kernel: st0: Error with sense data: Info fld=0x1, Current st09:00: sns = f0  3
-Aug  6 02:13:50 filesrv kernel: ASC= c ASCQ= 0
-Aug  6 02:13:50 filesrv kernel: Raw sense data:0xf0 0x00 0x03 0x00 0x00 0x00 0x01 0x16 0x00 0x00 0xe6 0xc2 0x0c 0x00 0x00 0x00 0x00 0x00 0x83 0x00 0x37 0x00 0x00 0x00 0x21 0x00 0x90 0x7f 0x3a 0x00
+In most cases, it is best to use variable block mode
+(i.e., mt setblk 0) and let the application to decide the tape block size.
+In order to have good efficiency, you should make sure that the
+application uses large enough byte counts in its write() calls, i.e., set
+the Arkeia block size to 65536.
 
-I had this problem with LTO drives too and here the arkeia faq tells one
-to set fixed block size.
+	Kai
 
-And when you look a the HP document referenced in my last mail:
 
-    ISSUE: Block sizes of LESS THAN 64 KB for DLT1/DLT VS80 and 32 KB for
-           all other DAT and DLT drives can drastically increase the backup/restore
-           time and severely affect the performance of the drive.
-
-SOLUTION: Most backup applications allow viewing and adjusting the block
-           size used for a particular device. See below for advice on how
-           to achieve this for CA ARCserve, Veritas Backup Exec and Tapeware.
-
-(I capitalized "less than" to emphasis its occurance)
-
-I you missed the link here it is again:
-   http://www.hp.com/cposupport/information_storage/support_doc/lpg50167.html
-
-Did you check with mt after Legato Networker did a backup which blocksize
-it set?
-
--- 
-MfG / Regards
-Friedrich Lobenstock
