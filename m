@@ -1,78 +1,88 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [usb-storage] Re: PATCH: exclude certain commands from emulated
- SCSI hosts
-Date: Mon, 24 Mar 2003 11:05:25 +1000
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: PATCH: exclude certain commands from emulated SCSI hosts
+Date: 23 Mar 2003 19:26:09 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E7E59D5.2020200@torque.net>
-References: <20030322233136.D17056@one-eyed-alien.net> <Pine.LNX.4.44.0303222337260.5588-100000@home.transmeta.com> <20030323101314.E17056@one-eyed-alien.net>
-Reply-To: dougg@torque.net
+Message-ID: <1048467235.1634.22.camel@mulgrave>
+References: <20030322193705.C17056@one-eyed-alien.net>
+	<Pine.LNX.4.44.0303222005520.29393-100000@home.transmeta.com>
+	<20030322233136.D17056@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20030322233136.D17056@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
 To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
 Cc: Linus Torvalds <torvalds@transmeta.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>, USB Storage List <usb-storage@one-eyed-alien.net>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Matthew Dharm wrote:
-> On Sat, Mar 22, 2003 at 11:39:05PM -0800, Linus Torvalds wrote:
+On Sun, 2003-03-23 at 01:31, Matthew Dharm wrote:
+> The problem is this:  usb-storage interfaces via SCSI, but not just for
+> disks.  Tape, CD, etc. are all handled with the same protocol.  Heck, ATAPI
+> disk/cd/tape are handled with these code paths.
+
+ATAPI isn't really "emulated" in the sense that ATAPI devices understand
+a subset of SCSI commands (albeit according to their own rules).
+
+I'll give you the six byte mode sense, since ATAPI devices only do the
+ten byte version, but they nevertheless understand it.
+
+> > If there are known commands that devices have trouble with (whether 
+> > emulated or not), maybe we could have helper routines to do some default 
+> > filtering, and have the queuecommand function check those. But this just 
+> > looks ugly and hacky to me.
 > 
->>How about making the SCSI stuff pass a "common" flag (or "required") down
->>with the command? Then, a emulated thing could just decide to punt all 
->>commands with an immediate failure if they aren't marked "required".
->>
->>That still _allows_ the driver to implement it if it wants to, unlike your 
->>previous approach.
-> 
-> 
-> That seems reasonable... but we need to define a standard way to
-> reject/fail non-common commands.  Special sense data?  Special result
-> code?  It doesn't really matter to me, but we need to pick something.
-> 
-> Do you have a preference?
+> Well, there are lots of 'known commands' that fall in to this category.  If
+> we had centralized helper functions, that would be great.  But, as it
+> stands, right now all the low-level drivers have to do all that separately,
+> and badly.
 
-Matt,
-Evidentally your driver (and/or sbp2) synthesizes INQUIRY
-responses in some cases. So if you think a SCSI command
-is risky then why not follow the standard and synthesize
-the scsi status and auto-sense buffer. Here is a modern
-rendition from a (draft) standard:
+The problem with this type of approach is that there's no unified list
+of "known good" commands that actually let you operate a device.  The
+SCSI and ATAPI standards have been gradually deprecating the commands
+that SCSI-1 (and sometimes even SCSI-2) regard as mandatory
+(READ_6/WRITE_6 springs to mind).
 
-"If a device server receives a CDB containing an operation
-code that is invalid or not supported, it shall return
-CHECK CONDITION status with the sense key set to ILLEGAL
-REQUEST and an additional sense code of INVALID COMMAND
-OPERATION CODE." [SPC-3, T10/1416-D Revision 10 2002/11/10]
+Given this, the upper level drivers have to try playing a bit to see
+what the device will actually support.
 
-If it is a field within a command that is in doubt (e.g.
-the enable Vital Product Data (EVPD) bit in an INQUIRY)
-then the additional sense code becomes INVALID FIELD IN
-CDB.
+> Right now, we've got nothing, which leaves low-level driver folks out in
+> the cold.
 
-In the case of a disk the commands that must be
-supported are:
-    - 36 byte INQUIRY (EVPD=0, CmdDt=0)
-    - READ CAPACITY
-    - READ (10 byte)
-    - WRITE (10 byte)
+Well, for truly "emulated" (meaning the command is interpreted inside
+the driver and executed there instead of simply being repackaged and
+passed on to the device), a library of helper functions would be
+acceptable to place in the mid-layer if you want to write such a thing.
 
-For SCSI mid level scan code and the sd
-disk initialization code a flag could be added to
-struct scsi_cmnd to indicate that "I can live without
-knowing the answer to this command".
+> As I see it, SCSI commands break down into two basic categories:  common
+> and uncommon.  Common things (basic read and write, 36-byte INQUIRY, eject,
+> etc.) are all fine, but the 'uncommon' things (checking cache type,
+> 255-byte INQUIRY, etc) cause problems.  I'm trying to find a way to choke
+> off the problematic commands without having to write code to recognize what
+> is being sent (and choke it off) based on what is in the command bytes.
 
-I always wanted the emulated flag generalized (e.g.
-indicating SPI, ATAPI, iSCSI, FC, SAS, SBP-2,
-USB_mass_storage). Knowledge of the SCSI transport
-protocol is important for device discovery,
-identification and asynchronous notification sources.
-As a boolean flag, "emulated" has outlived its usefulness.
-With sysfs we can now find which hardware system a
-SCSI low level driver belongs  to (e.g. SCSI Parallel
-Interface (SPI) adapters are either PCI or ISA).
+Under any definition of "common", a device that can't accept variable
+length inquiry commands is broken (by every known standard, even). 
+However, lets not rehash old sore points.
 
-Doug Gilbert
+Could you elaborate on what the "problem" is.  There seem to be two
+separate issues:
 
+1. True devices which have incomplete state models for SCSI inside the
+real device and thus react badly to certain commands.  For this one, I'm
+happy to have a helper library containing the elements of the SCSI state
+model for the devices to use, but I do believe that the drivers are
+broken and need fixing.
 
+2. Certain real SCSI (or ATAPI) devices which have broken internal SCSI
+processing models.  For these we need to not send certain commands which
+annoy them.  This is much harder, since I don't believe we'll get a
+common definition of annoying commands that will work for every device.
+
+For ATAPI, we can probably get pretty far with a "no six byte commands"
+flag. This should be fairly easy to implement since every LLD tends to
+know when it is repackaging for an ATAPI device.  What other rules would
+you need for this type of thing?
+
+James
 
 
