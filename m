@@ -1,37 +1,33 @@
-From: "Mohan Kumar M." <MohanKumarM@AmiIndia.co.in>
-Subject: Driver Problem
-Date: Thu, 17 Jul 2003 14:17:51 +0530
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] as i/o hang with aacraid driver 2.6.0-test1
+Date: Thu, 17 Jul 2003 10:59:52 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <005e01c34c40$20383bc0$5b00000a@RiseOfMachine>
+Message-ID: <20030717085952.GX833@suse.de>
+References: <1058310172.981.7.camel@markh1.pdx.osdl.net> <1058359278.1856.8.camel@mulgrave> <20030716124549.GX833@suse.de> <1058360162.1850.15.camel@mulgrave> <20030716132036.GB833@suse.de> <1058364455.1856.28.camel@mulgrave> <20030716170456.GK833@suse.de> <20030717015756.135a3f5a.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="x-user-defined"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [203.129.222.186] ([203.129.222.186]:18187 "EHLO miami.chance")
-	by vger.kernel.org with ESMTP id S271386AbTGQIpL (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:47492 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S271388AbTGQIpM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jul 2003 04:45:11 -0400
+	Thu, 17 Jul 2003 04:45:12 -0400
+Content-Disposition: inline
+In-Reply-To: <20030717015756.135a3f5a.akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: James.Bottomley@steeleye.com, markh@osdl.org, piggin@cyberone.com.au, cliffw@osdl.org, linux-scsi@vger.kernel.org
 
-Hi all,
-I have written a low level scsi driver for our scsi/raid controller.
+On Thu, Jul 17 2003, Andrew Morton wrote:
+> 
+> So this is what I ended up with.  Could we please have confirmation that it
+> fixes the aacraid hang?
 
-The driver is working fine in Kernel v.2.4.18-3, but its not working in
-Kernel v.2.4.19 onwards! (System crashes!!!!!)
+It doesn't, it's just a pre-requisite to fixing the bug :-)
 
-I am not using interrupts, SG Lists. 
+Nick should chime in with how we wants it to be handled from
+blk_requeue_request(), he needs to decrease dispatched from there. We
+could always add some hook for it of course, but...
 
-Is SCSI subsystem has been changed from 2.4.18 to 2.4.19??
-
-Can anyone help me to solve this problem?
-
-          =-=
-Thanks n Regards,
-        Mohan.
-          =-=
-
-
-
+-- 
+Jens Axboe
 
