@@ -1,52 +1,33 @@
-From: Matthew Jacob <mjacob@feral.com>
-Subject: Re: Broken SCSI code in the BK tree (was: 2.5.59-mm8)
-Date: Thu, 6 Feb 2003 20:53:13 -0800 (PST)
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 2.5.59] sim710: cleanup/remove most cli()'s
+Date: Fri, 7 Feb 2003 08:26:25 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030206205117.F37336-100000@beppo>
-References: <20030207043534.GU1599@holomorphy.com>
-Reply-To: mjacob@feral.com
+Message-ID: <200302070826.25941@bilbo.math.uni-mannheim.de>
+References: <200302041123.06204@bilbo.math.uni-mannheim.de> <200302051603.48510@bilbo.math.uni-mannheim.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20030207043534.GU1599@holomorphy.com>
+In-Reply-To: <200302051603.48510@bilbo.math.uni-mannheim.de>
 List-Id: linux-scsi@vger.kernel.org
-To: William Lee Irwin III <wli@holomorphy.com>
-Cc: Andrew Morton <akpm@digeo.com>, patmans@us.ibm.com, mbligh@aracnet.com, James.Bottomley@steeleye.com, mikeand@us.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+>From James Bottomley:
 
-The other thing to note is that I'm not really very happy with my driver
-at present. It may be working well for some people, but *I* think it
-needs some rework before it's really ready for primetime again. I need
-to split out the SCSI && FC dependencies. I need to move the name server
-code out of the main body and make it more policy driven.
+> On Wed, 2003-02-05 at 09:03, Rolf Eike Beer wrote:
 
-The trouble is also that it's just a hobby for me right now (no clients
-with direct Linux support requirements) , and as a recent parent I've
-had a lot less hobby time.
+>> I'm now looking for the best way to port this to use 53c700.c. This will
+>> surely take a while, should I fix my fix and resend it or better leave this
+>> unfixed until I find time to port it?
 
+> Do you actually have one of these (and is it EISA or MCA)?
 
-On Thu, 6 Feb 2003, William Lee Irwin III wrote:
+It's a Compaq Prosignia with one onboard and the other one on an EISA card, 
+using base addresses 0x8000 and 0x7000.
 
-> On Thu, Feb 06, 2003 at 08:19:39PM -0800, Andrew Morton wrote:
-> >> http://www.feral.com/isp.html seems to be 2.4.x-only.
->
-> On Thu, Feb 06, 2003 at 11:24:40PM -0500, Doug Ledford wrote:
-> > As answered elsewhere, the 2.5 port isn't done yet.  That's why I said in
-> > my email "if it's ready for 2.5" because I was afraid Matthew hadn't
-> > gotten around to doing the 2.5 update yet.  However, if no one else can do
-> > it, I can make a 2.5 update of this driver happen (I don't suspect it
-> > would be that hard actually, not *that* much has to change).
->
-> This driver's bugginess is a _major_ nuisance to me and I don't have
-> the SCSI know-how to fix it myself. I'd _love_ to test a driver with a
-> prayer of working anytime this century.
->
-> Thanks.
->
-> -- wli
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> I've got a MCA 710 in an old NCR3430 I can use.  I think the conversion
+> will only take a few days, I can try it out
 
+That would be fine, you know your code better than I ever will.
+
+Eike
