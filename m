@@ -1,35 +1,35 @@
 From: Aristeu Sergio Rozanski Filho <aris@cathedrallabs.org>
-Subject: [patch][15/15] qlogic_cs: use own MODULE_ macros
-Date: Tue, 9 Mar 2004 10:44:25 -0300
+Subject: [patch][10/15] qlogic_cs: don't call qlogic_release on fail
+Date: Tue, 9 Mar 2004 10:40:21 -0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040309134425.GQ651@cathedrallabs.org>
+Message-ID: <20040309134021.GL651@cathedrallabs.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="QXAv++6zoyBcX2gv"
+	protocol="application/pgp-signature"; boundary="xMJbWctQEcNQiBqK"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from panda.sul.com.br ([200.219.150.4]:7694 "EHLO panda.sul.com.br")
-	by vger.kernel.org with ESMTP id S261949AbUCIOGZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2004 09:06:25 -0500
+Received: from panda.sul.com.br ([200.219.150.4]:19984 "EHLO panda.sul.com.br")
+	by vger.kernel.org with ESMTP id S261524AbUCIOWz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2004 09:22:55 -0500
 Received: from cathedrallabs.org (3-133.ctame701-3.telepar.net.br [200.181.174.133])
-	by panda.sul.com.br (Postfix) with ESMTP id A310532857
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Mar 2004 11:06:29 -0300 (EST)
+	by panda.sul.com.br (Postfix) with ESMTP id 2147C32677
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Mar 2004 11:23:10 -0300 (EST)
 Received: from matthew (matthew.cathedral.com [215.50.66.94])
-	by cathedrallabs.org (Postfix) with ESMTP id 14A44236C8
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Mar 2004 10:36:10 -0300 (BRT)
+	by cathedrallabs.org (Postfix) with ESMTP id BE2CA236C5
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Mar 2004 10:32:05 -0300 (BRT)
 Received: from aris by matthew with local (Exim 3.36 #1 (Debian))
-	id 1B0hWz-0000xL-00
-	for <linux-scsi@vger.kernel.org>; Tue, 09 Mar 2004 10:44:25 -0300
+	id 1B0hT3-0000wh-00
+	for <linux-scsi@vger.kernel.org>; Tue, 09 Mar 2004 10:40:21 -0300
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
---QXAv++6zoyBcX2gv
-Content-Type: multipart/mixed; boundary="ZvvH1QDaOFG4lOZN"
+--xMJbWctQEcNQiBqK
+Content-Type: multipart/mixed; boundary="FoibaoN3dya3u5fy"
 Content-Disposition: inline
 
 
---ZvvH1QDaOFG4lOZN
+--FoibaoN3dya3u5fy
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
@@ -40,57 +40,34 @@ Content-Transfer-Encoding: quoted-printable
 aris
 
 
---ZvvH1QDaOFG4lOZN
+--FoibaoN3dya3u5fy
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="15-qlogic_cs-use_own_module_macros.patch"
+Content-Disposition: attachment; filename="10-qlogic_cs-dont_call_qlogic_release_on_fail.patch"
 Content-Transfer-Encoding: quoted-printable
 
 diff -ur linux-2.6.3-applied/drivers/scsi/pcmcia/qlogic_stub.c linux-2.6.3-=
 work/drivers/scsi/pcmcia/qlogic_stub.c
---- linux-2.6.3-applied/drivers/scsi/pcmcia/qlogic_stub.c	2004-03-08 21:12:=
-56.000000000 -0300
-+++ linux-2.6.3-work/drivers/scsi/pcmcia/qlogic_stub.c	2004-03-09 10:15:07.=
+--- linux-2.6.3-applied/drivers/scsi/pcmcia/qlogic_stub.c	2004-03-05 18:47:=
+17.000000000 -0300
++++ linux-2.6.3-work/drivers/scsi/pcmcia/qlogic_stub.c	2004-03-05 18:47:26.=
 000000000 -0300
-@@ -433,5 +433,8 @@
- 		qlogic_detach(dev_list);
- }
+@@ -267,7 +267,11 @@
 =20
-+MODULE_AUTHOR("Tom Zerucha, Michael Griffith");
-+MODULE_DESCRIPTION("Driver for the PCMCIA Qlogic FAS SCSI controllers");
-+MODULE_LICENSE("GPL");
- module_init(init_qlogic_cs);
- module_exit(exit_qlogic_cs);
-diff -ur linux-2.6.3-applied/drivers/scsi/qlogicfas.c linux-2.6.3-work/driv=
-ers/scsi/qlogicfas.c
---- linux-2.6.3-applied/drivers/scsi/qlogicfas.c	2004-03-09 10:13:25.000000=
-000 -0300
-+++ linux-2.6.3-work/drivers/scsi/qlogicfas.c	2004-03-09 10:16:03.000000000=
- -0300
-@@ -721,10 +721,6 @@
- 	return priv->qinfo;
- }
+ cs_failed:
+ 	cs_error(link->handle, last_fn, last_ret);
+-	qlogic_release(link);
++	link->dev =3D NULL;
++	pcmcia_release_configuration(link->handle);
++	pcmcia_release_io(link->handle, &link->io);
++	pcmcia_release_irq(link->handle, &link->irq);
++	link->state &=3D ~DEV_CONFIG;
+ 	return;
 =20
--MODULE_AUTHOR("Tom Zerucha, Michael Griffith");
--MODULE_DESCRIPTION("Driver for the Qlogic FAS SCSI controllers");
--MODULE_LICENSE("GPL");
--
- /*
-  *	The driver template is also needed for PCMCIA
-  */
-@@ -765,6 +761,9 @@
- 		qlogicfas_release(priv->shost);
- }
-=20
-+MODULE_AUTHOR("Tom Zerucha, Michael Griffith");
-+MODULE_DESCRIPTION("Driver for the Qlogic FAS SCSI controllers");
-+MODULE_LICENSE("GPL");
- module_init(qlogicfas_init);
- module_exit(qlogicfas_exit);
- #endif	/* ifndef PCMCIA */
+ }				/* qlogic_config */
 
---ZvvH1QDaOFG4lOZN--
+--FoibaoN3dya3u5fy--
 
---QXAv++6zoyBcX2gv
+--xMJbWctQEcNQiBqK
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 Content-Disposition: inline
@@ -98,9 +75,9 @@ Content-Disposition: inline
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.4 (GNU/Linux)
 
-iD8DBQFATco5RRJOudsVYbMRAlzrAJ9Ir51sIBNNJE2D4NTFIbDrhGfbQACgnrY0
-kImeDG6YIMK/u9KMAH24N8o=
-=Ep5/
+iD8DBQFATclFRRJOudsVYbMRArJvAKDFPSLdjdJq7BzXz6/pk7p88KCA2wCaA+8Z
+8u4gPB80nPmzoyRj/hgRUG8=
+=5UAz
 -----END PGP SIGNATURE-----
 
---QXAv++6zoyBcX2gv--
+--xMJbWctQEcNQiBqK--
