@@ -1,88 +1,47 @@
-From: mredmondhaziem1@zipmail.com.br
-Subject: =?iso-8859-1?Q?Please=20reply=20quickly=2E?=
-Date: Mon, 13 Dec 2004 20:17:49 +0100
-Message-ID: <41BD3DF5000014FC@www.zipmail.com.br>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Qlogic ISP1020 in 2.6?
+Date: Mon, 13 Dec 2004 12:01:55 -0800
+Message-ID: <20041213200155.GA17906@us.ibm.com>
+References: <20041212003334.GC2420@einval.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.zipmail.com.br ([200.221.11.147]:23864 "EHLO
-	www.zipmail.com.br") by vger.kernel.org with ESMTP id S262286AbULMTrS convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Dec 2004 14:47:18 -0500
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:3806 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261177AbULMVk0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Dec 2004 16:40:26 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e6.ny.us.ibm.com (8.12.10/8.12.10) with ESMTP id iBDLePBX018423
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Dec 2004 16:40:25 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id iBDLePMa188520
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Dec 2004 16:40:25 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id iBDLeOFD008761
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Dec 2004 16:40:25 -0500
+Content-Disposition: inline
+In-Reply-To: <20041212003334.GC2420@einval.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Steve McIntyre <steve@einval.com>
+Cc: linux-scsi@vger.kernel.org
 
-Mr.Edmond Haziem.
-Republic of Benin 
+On Sun, Dec 12, 2004 at 12:33:58AM +0000, Steve McIntyre wrote:
+> I've got an Alpha (COMPAQ Professional Workstation XP1000) with a
+> built-in ISP1020. Kernel 2.4.28 runs fine on this system; 2.6.9 gives
+> me the following errors:
 
-Good day, 
+Try using the qlogic 1280 driver instead (thanks to Christoph and I think
+Andrew V), I have these in my .config:
 
-With warm heart i offer my friendship and my greetings and i hope this letter
-meets you in good time. It will be surprising for you to receive this proposal
-from me since you do not know me personally.However, i am sincerely seeking
-your confidence in this transaction, which i, propose with my free mind
-and as a person of integrity. 
+# CONFIG_SCSI_QLOGIC_ISP is not set
+CONFIG_SCSI_QLOGIC_1280=y
+CONFIG_SCSI_QLOGIC_1280_1040=y
 
-A) It is practically impossible for me to carry out this business alone.
+That last one is really for both 1040 and 1020 support.
 
+The queue depth is overly deep (255), I think because there is no firmware
+and/or nvram support, I haven't figured it out, but I don't generate a lot
+of IO on them.
 
-B) You live in a foreign land far away from mine. This should normally not
-be a requirement, but when you understand the transaction then you will
-understand why it is important that you live far away from me. 
-
-C) The amount of money involved in this transaction is Fifteen Million one
-hundred thousand united states dollars (US$15,100,000.00) which is too much
-for a man of modest means like myself to handle in my country. 
-
-I believe from my few points above, you can begin to get an idea why i need
-your participation.I am writing you in respect of a foreign customer who
-has a Domicilliary account in my bank. His name was Engineer Frank oliver.
-He was among those who died in a plane crash, Since the demise of this our
-customer, Engineer Frank oliver, who was an oil merchant/import & exporter,
-i have kept a close watch of the deposit records and accounts and since
-then nobody has come to claim the money in this a/c as next of kin to the
-late Engineer.He had only Fifteen Million one hundred thousand united states
-dollars (S$15,100,000.00) in his account and the account is coded. 
-
-It is only an insider that could produce the code of the deposit particulars.
-As it stands now, there is nobody in that position to produce the needed
-information other than my very self considering my position in the bank.
-Based on the reason that nobody has come forward to claim the deposit as
-next of kin, i hereby ask you to send an application to the bank as the
-next of kin to the deceased and get this fund transfered into your foreign
-bank a/c for mutual sharing between myself and you, 5% for expences we will
-incure 35% for you and 60% for me. 
-
-All i need is for you to follow my instructions closely because i am experienced
-in inheritance matters here and i am on ground here to advice you on every
-step until you receive the fund. What is required of you is to send an application
-to the bank as next of kin to this late Engineer and i promise you that
-everything will go smoothly. 
-
-I also indulge you not to make undo use of the information given to you,
-i need also to trust that you will not tell people or your bank about this
-business.You will collect the money first, then I get my share, then you
-can tell anybody what you chose thereafter. I shall need your help to invest
-in your country therefore, any experience you have in this area will be
-beneficial. 
-
-Please feel free to ask any question and seek for explanations if required
-and upon the receipt of your favourable esponses,you should including your
-telephone number for easy communication. 
-
-Yours treuly, 
-Mr.Edmond Haziem.
-Phone:+229-844986.
-
-
-
-
-
-
-------------------------------------------
-Use o melhor sistema de busca da Internet
-Radar UOL - http://www.radaruol.com.br
-
-
-
+-- Patrick Mansfield
