@@ -1,58 +1,74 @@
-From: Joachim Feise <jfeise@ics.uci.edu>
+From: Michael Guntsche <mike@it-loops.com>
 Subject: Re: PROBLEM: 2.6.3 hangs when writing to scsi-dvd
-Date: Fri, 20 Feb 2004 14:13:16 -0800
+Date: Sat, 21 Feb 2004 11:25:50 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4036867C.60803@ics.uci.edu>
-References: <403512B8.2060403@ics.uci.edu>
-Reply-To: jfeise@ics.uci.edu
+Message-ID: <20040221112550.6aec57eb.mike@it-loops.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="pgp-sha1";
+ boundary="Signature=_Sat__21_Feb_2004_11_25_50_+0100_3I3=viS0kFjWE995"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from scanner2.ics.uci.edu ([128.195.1.36]:22161 "EHLO
-	scanner2.ics.uci.edu") by vger.kernel.org with ESMTP
-	id S261315AbUBTWMi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Feb 2004 17:12:38 -0500
-Received: from ics.uci.edu (doric.ics.uci.edu [128.195.20.215])
-	by scanner2.ics.uci.edu (8.12.10/8.12.10) with ESMTP id i1KMCJP3016422
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Feb 2004 14:12:19 -0800 (PST)
-In-Reply-To: <403512B8.2060403@ics.uci.edu>
+Received: from [62.116.46.196] ([62.116.46.196]:32275 "EHLO it-loops.com")
+	by vger.kernel.org with ESMTP id S261542AbUBUK0f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 21 Feb 2004 05:26:35 -0500
+Received: from [192.168.0.150] (helo=roadrunner.comsick.at)
+	by localhost with asmtp (Exim 3.36 #1 (Debian))
+	id 1AuUKY-0002Ve-00
+	for <linux-scsi@vger.kernel.org>; Sat, 21 Feb 2004 11:25:54 +0100
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Joachim Feise wrote on 2/19/2004 11:47:
+--Signature=_Sat__21_Feb_2004_11_25_50_+0100_3I3=viS0kFjWE995
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 
-> [1.] One line summary of the problem:
-> 2.6.3 hangs when writing to scsi-dvd
-> 
-> [2.] Full description of the problem/report:
-> 
-> I have a DVD drive (BTC1004) connected via an IDE-SCSI bridge to
-> an Adaptec 29160 host adapter.
-> With kernel 2.6.3, I experience a complete system hang whenever I try
-> to record data on a DVD.
-> It requires a reboot.
+Hi,
 
-More info:
-on the cdwrite list, somebody reported a similar problem
-(http://lists.debian.org/cdwrite/2004/cdwrite-200402/msg00081.html)
+> More info:
+> on the cdwrite list, somebody reported a similar problem
+> (http://lists.debian.org/cdwrite/2004/cdwrite-200402/msg00081.html)
 
-His quick-n-dirty fix works for me:
+That was me.
+Since this now really looks like a kernel related problem I post to this
+list.
 
---- linux-2.6.3/drivers/scsi/scsi_lib.c.orig    2004-02-17 19:57:57.000000000 -0800
-+++ linux-2.6.3/drivers/scsi/scsi_lib.c 2004-02-20 13:52:46.000000000 -0800
-@@ -1292,7 +1292,7 @@
-         * host adapters.  A host driver can alter this mask in its
-         * slave_alloc() or slave_configure() callback if necessary.
-         */
--       blk_queue_dma_alignment(q, (8 - 1));
-+       /* blk_queue_dma_alignment(q, (8 - 1)); */
+Looking through the code of growisofs (part of dvd+rw-tools) I noticed
+that it only hangs if it calls an SG_IO ioctl with a datalen of 8 or
+multiple value (16,24).
 
-        if (!shost->use_clustering)
-                clear_bit(QUEUE_FLAG_CLUSTER, &q->queue_flags);
+There it freezes and I see the following error
 
-But without knowing what this particular line does, it is impossible for me
-to say if commenting out the line is the right thing to do.
+Feb 21 10:44:14 roadrunner kernel: Current sr0: sense = 70  4
+Feb 21 10:44:14 roadrunner kernel: ASC=1b ASCQ= 0
+Feb 21 10:44:14 roadrunner kernel: Raw sense data:0x70 0x00 0x04 0x00
+0x00 0x00 0x00 0x0a 0x00 0x00 0x00 0x00 0x1b 0x00 0x00 0x00 0x00 0x00
+Feb 21 10:44:23 roadrunner kernel: SCSI error : <0 0 0 0> return code =
+0x8000002
+ 
+If I increase the buflen by 1 if it is (8,16,24) the ioctl returns and
+everything works.
+Since my knowledge about the SCSI internals is pretty limited Im pretty
+sure that this isn't the right fix.
 
--Joe
+As stated in my mail to the cdwrite-ml removing the dma alignment to 8 byte works too.
 
+This happens with an external DVD-Writer connected via firewire.
+Could someone take a look at it and help me please?
+
+Thanks in advance,
+Michael
+
+--Signature=_Sat__21_Feb_2004_11_25_50_+0100_3I3=viS0kFjWE995
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFANzIx9lrUeNl8Hv8RAkcCAJ4lWZXbD/yc2fdFH3E1+4umB/67SACfeA1b
+CeKT62BXuNCCnyiDl7bgHHw=
+=m14S
+-----END PGP SIGNATURE-----
+
+--Signature=_Sat__21_Feb_2004_11_25_50_+0100_3I3=viS0kFjWE995--
