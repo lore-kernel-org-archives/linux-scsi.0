@@ -1,71 +1,55 @@
-From: Erling Nygaard <nygaard@sistina.com>
-Subject: Re: Bad fibre channel performance: need howto
-Date: Fri, 21 Nov 2003 14:05:20 -0600
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031121200520.GK1418@sistina.com>
-References: <1069443458.7047.35.camel@cala>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: PATCH: (as141) Unaligned scatter-gather buffers and usb-storage
+Date: Fri, 21 Nov 2003 22:07:23 +0200 (EET)
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <Pine.LNX.4.58.0311212202150.1627@kai.makisara.local>
+References: <Pine.LNX.4.44L0.0311211249230.1381-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fry.sistina.com ([208.210.149.34]:63373 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S264430AbTKUUFJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Nov 2003 15:05:09 -0500
-Received: from localhost.localdomain (plutonium [127.0.0.1])
-	by localhost.localdomain (8.12.5/8.12.5) with ESMTP id hALK5KMt007671
-	for <linux-scsi@vger.kernel.org>; Fri, 21 Nov 2003 14:05:20 -0600
-Received: (from nygaard@localhost)
-	by localhost.localdomain (8.12.5/8.12.5/Submit) id hALK5KuA007669
-	for linux-scsi@vger.kernel.org; Fri, 21 Nov 2003 14:05:20 -0600
-Content-Disposition: inline
-In-Reply-To: <1069443458.7047.35.camel@cala>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+In-Reply-To: <Pine.LNX.4.44L0.0311211249230.1381-100000@ida.rowland.org>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Douglas Gilbert <dougg@torque.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, James Bottomley <James.Bottomley@steeleye.com>, Patrick Mansfield <patmans@us.ibm.com>, Jens Axboe <axboe@suse.de>, Oliver Neukum <oliver@neukum.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Mario
+On Fri, 21 Nov 2003, Alan Stern wrote:
 
-I am/was the author of the FibreChannel HowTo. 
+> I'm not sure whether Jens is objecting to adding the extra member to the
+> host template or to making the default alignment something other than 512.
+> Here's my attempt at a compromise patch, which boils the area of
+> disagreement between Kai and Jens down to a single line of code (plus a
+> comment).  It doesn't change the host template and it shouldn't slow down
+> any tape I/O programs when using a non-USB device.
+>
+Looks very good. Using existing mechanisms is better than adding a new
+member to a struct.
 
-That howto slowly got outdated (Interesting how that happens when one does 
-not have the same amount of spare time anymore...) and we eventually decided 
-to take it off the Sistina website.
+I tested the patch with a tape and did not find any problems.
 
-Not sure if the howto would have helped you in diagnosing this problem 
-anyway ;)
-
-Erling
-
-
-
-
-On Fri, Nov 21, 2003 at 08:37:38PM +0100, Mario Giammarco wrote:
-> Hello,
-> I asked a similar question last week.
-> I discovered that my hard disk which can do 60mb/sec sequential read,
-> under linux/lsilogic40909 fibre hba gives only 30mb/sec, 45 if I tweak a
-> lot readahead (why  I need to?).
-> 
-> I have searched a lot in internet and it seems that:
-> 
-> 1) fibrechannel howto was in sistina home page but now disappeared
-> 2) fibrechannel specific mailing list for linux disappeared (archives
-> to)
-> 
-> Where can I search for help? 
-> Here it not seems appropriate to me. 
-> 
-> I have to find my bottleneck, please help with sending me docs.
-> 
-> -- 
-> Mario Giammarco
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> If there aren't any more objections to this, I urge James to apply the
+> SCSI parts to a post-2.6.0-final tree, and likewise for Matt and the USB
+> part.
+>
+As far as I am concerned, please do.
 
 -- 
-Erling Nygaard (nygaard@sistina.com)
+Kai
 
-Key fingerprint:
-CA00 CF4E 9438 E348 E503  7ECF 9D94 D993 982A BDE0
+
+-------------------------------------------------------
+This SF.net email is sponsored by: SF.net Giveback Program.
+Does SourceForge.net help you be more productive?  Does it
+help you create better code?  SHARE THE LOVE, and help us help
+YOU!  Click Here: http://sourceforge.net/donate/
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
