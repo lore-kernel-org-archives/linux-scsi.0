@@ -1,282 +1,46 @@
-From: Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
-Subject: [RFC]transient transport error report for LLD timeout
-Date: Fri, 24 Sep 2004 08:32:33 +0900
+From: Andrew Morton <akpm@osdl.org>
+Subject: Fw: 2.6.9-rc2-mm2: 3ware card info not in /proc/scsi
+Date: Thu, 23 Sep 2004 19:43:22 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200409232332.AA03619@fukuchi.jp.fujitsu.com>
+Message-ID: <20040923194322.78fb1c59.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:64237 "EHLO
-	fgwmail6.fujitsu.co.jp") by vger.kernel.org with ESMTP
-	id S267440AbUIWXcp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Sep 2004 19:32:45 -0400
-Received: from m4.gw.fujitsu.co.jp ([10.0.50.74]) by fgwmail6.fujitsu.co.jp (8.12.10/Fujitsu Gateway)
-	id i8NNWhR6028004 for <linux-scsi@vger.kernel.org>; Fri, 24 Sep 2004 08:32:43 +0900
-	(envelope-from fukuchi.masao@jp.fujitsu.com)
-Received: from s1.gw.fujitsu.co.jp by m4.gw.fujitsu.co.jp (8.12.10/Fujitsu Domain Master)
-	id i8NNWhfQ022577 for <linux-scsi@vger.kernel.org>; Fri, 24 Sep 2004 08:32:43 +0900
-	(envelope-from fukuchi.masao@jp.fujitsu.com)
-Received: from s1.gw.fujitsu.co.jp (s1 [127.0.0.1])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 639D4216FC0
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Sep 2004 08:32:43 +0900 (JST)
-Received: from fjmail503.fjmail.jp.fujitsu.com (fjmail503-0.fjmail.jp.fujitsu.com [10.59.80.100])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 069C2216FBF
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Sep 2004 08:32:43 +0900 (JST)
-Received: from fukuchi.jp.fujitsu.com
- (fjscan501-0.fjmail.jp.fujitsu.com [10.59.80.120])
- by fjmail503.fjmail.jp.fujitsu.com
- (Sun Internet Mail Server sims.4.0.2001.07.26.11.50.p9)
- with SMTP id <0I4I002R1PEIFQ@fjmail503.fjmail.jp.fujitsu.com> for
- linux-scsi@vger.kernel.org; Fri, 24 Sep 2004 08:32:42 +0900 (JST)
+Received: from fw.osdl.org ([65.172.181.6]:15029 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S267685AbUIXCpf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Sep 2004 22:45:35 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-
-We are now planning to use linux for enterprise system.
-In enterprise system, response time is important factor and it requires 
-response time within 30sec even if hardware(software) fails.
-Currently, default value for LLD(SCSI) timeout is 30sec and it doesn't 
-satisfy our requirement.
-So, we consider to modify timeout value and recovery sequence to fit 30sec.
-
-At first, I considered to shorten timeout value for LLD.
-http://marc.theaimsgroup.com/?l=bk-commits-head&m=108431509014051&w=2
-I tested timeout value at 10sec.
-The result was SCSI layer detects timeout at 10sec, but then recovery 
-sequence(abort, reset etc.) is performed and it takes over 20sec until 
-it returns to upper(RAID/multipath) layer.
-
-Therefore, I newly prepared timer in block layer.
-When it detects timeout, it responds to upper(RAID/multipath) layer and
-upper layer begins retry operation using alt-disk/alt-path.
-Resource using in block and SCSI(LLD) layer is freed when it receives 
-response from LLD(SCSI) layer.
-
-The sequence is as follows.
-
- host          RAID          block         SCSI          disk          alt-disk
- ---request--->
-               ----request-->
-                             timer set(ex. 10sec)
-                             ----request-->
-                                           timer set(30sec)
-                                           ----request-->
-                             (ex. 10sec)
-                             timeout detect
-               <--response(error)
-               ------------------------request------------------------>
-               <------------------response(success)--------------------
- <--response(success)
-                                           (30sec)
-                                           timeout detect
-                                           -recovery ope->
-                             <--response(error)
-                             free resources
-
-I made sample patch and tested it.
-- Explanation for this patch
-  - kernel 2.6.9-rc2 basis
-  - Prepares /proc/sys/block/req_timeout parameter to set timeout value in
-    block layer.
-    The default value of this parameter is 0 and it means no check timeout.
-  - This function operates only when FASTFAIL flag is set in request 
-    structure from upper(RAID/multipath) layer.
-
-- Results
-  I measured response time to host when no response from disk drive.
-                           1 block read             1 block write
-  default(req_timeout=0)       41sec                    47sec
-  10sec  (req_timeout=10)      11sec                    11sec
-
-This patch is just trial one and it is very dirty code.
-I'd like to refine this code.
-If you have any comments or questions, please let me know.
-
-Thanks,
-Masao Fukuchi
+To: James Bottomley <James.Bottomley@steeleye.com>, Adam Radford <aradford@amcc.com>
+Cc: linux-scsi@vger.kernel.org
 
 
-diff -uarN linux-2.6.9-rc2/drivers/block/ll_rw_blk.c linux-2.6.9-
-rc2te/drivers/block/ll_rw_blk.c
---- linux-2.6.9-rc2/drivers/block/ll_rw_blk.c	2004-09-14 10:24:47.000000000 +0900
-+++ linux-2.6.9-rc2te/drivers/block/ll_rw_blk.c	2004-09-21 14:50:01.923234742 +0900
-@@ -28,12 +28,43 @@
- #include <linux/slab.h>
- #include <linux/swap.h>
- #include <linux/writeback.h>
-+#include <linux/sysctl.h>
- 
- /*
-  * for max sense size
-  */
- #include <scsi/scsi_cmnd.h>
- 
-+/* for transient error response */
-+unsigned int request_timeout;
-+
-+static ctl_table req_table[] = {
-+  { .ctl_name = BLOCK_REQUEST_TIMEOUT,
-+    .procname = "req_timeout",
-+    .data = &request_timeout,
-+    .maxlen = sizeof(request_timeout),
-+    .mode = 0644,
-+    .proc_handler = &proc_dointvec },
-+  { }
-+};
-+
-+static ctl_table blk_root_table[] = {
-+  { .ctl_name     = CTL_BLK,
-+    .procname     = "block",
-+    .mode         = 0555,
-+    .child        = req_table },
-+  { }
-+};
-+
-+int __init blk_init_sysctl(void);
-+
-+static struct ctl_table_header *blk_table_header;
-+
-+module_param(request_timeout, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(request_timeout, "Set timeout value for request");
-+
-+static void request_timer_expired(unsigned long data);
-+
- static void blk_unplug_work(void *data);
- static void blk_unplug_timeout(unsigned long data);
- 
-@@ -2158,6 +2189,11 @@
- 	req->q = NULL;
- 	req->rl = NULL;
- 
-+	/* delete timer for transient error */
-+	if ((req->flags & REQ_SET_TIMER) && !(req->flags & REQ_TE_RESPONSE)) {
-+		del_timer(&req->te_timeout);
-+	}
-+
- 	/*
- 	 * Request may not have originated from ll_rw_blk. if not,
- 	 * it didn't come out of our reserved rq pools
-@@ -2465,6 +2501,17 @@
- 	req->rq_disk = bio->bi_bdev->bd_disk;
- 	req->start_time = jiffies;
- 
-+	/* timer set for transient error */
-+	/* req->flags |= REQ_FAILFAST; for transient error test */
-+	if (blk_noretry_request(req) && unlikely(request_timeout)) {
-+		req->flags |= REQ_SET_TIMER;
-+		init_timer(&req->te_timeout);
-+		req->te_timeout.data = (unsigned long)req;
-+		req->te_timeout.expires = jiffies + request_timeout*HZ;
-+		req->te_timeout.function = request_timer_expired;
-+		add_timer(&req->te_timeout);
-+	}
-+
- 	add_request(q, req);
- out:
- 	if (freereq)
-@@ -2787,6 +2834,11 @@
- 	int total_bytes, bio_nbytes, error, next_idx = 0;
- 	struct bio *bio;
- 
-+	if ((req->flags & REQ_SET_TIMER) && (req->flags & REQ_TE_RESPONSE)) {
-+		printk("already set TE_RESPONSE\n");
-+		return 0;
-+	}
-+
- 	/*
- 	 * extend uptodate bool to allow < 0 value to be direct io error
- 	 */
-@@ -3035,6 +3087,17 @@
- 
- 	blk_max_low_pfn = max_low_pfn;
- 	blk_max_pfn = max_pfn;
-+
-+	blk_init_sysctl();
-+
-+	return 0;
-+}
-+
-+int __init blk_init_sysctl(void)
-+{
-+	blk_table_header = register_sysctl_table(blk_root_table, 1);
-+	if (!blk_table_header)
-+		return -ENOMEM;
- 	return 0;
- }
- 
-@@ -3310,3 +3373,19 @@
- 		kobject_put(&disk->kobj);
- 	}
- }
-+
-+static void
-+request_timer_expired(unsigned long data)
-+{
-+	struct request *req = (struct request *)data;
-+
-+	printk("request_timer_expired()!\n");
-+
-+	while (end_that_request_first(req, 0, req->nr_sectors))
-+		;
-+	req->ref_count++;
-+	req->flags |= REQ_TE_RESPONSE;
-+	end_that_request_last(req);
-+
-+	return;
-+}
-diff -uarN linux-2.6.9-rc2/include/linux/blkdev.h linux-2.6.9-rc2te/include/linux/blkdev.h
---- linux-2.6.9-rc2/include/linux/blkdev.h	2004-09-14 10:24:49.000000000 +0900
-+++ linux-2.6.9-rc2te/include/linux/blkdev.h	2004-09-14 13:24:31.000000000 +0900
-@@ -163,6 +163,9 @@
- 	 * For Power Management requests
- 	 */
- 	struct request_pm_state *pm;
-+
-+	/* Used to time out for transient error response */
-+	struct timer_list te_timeout;
- };
- 
- /*
-@@ -197,6 +200,8 @@
- 	__REQ_PM_SHUTDOWN,	/* shutdown request */
- 	__REQ_BAR_PREFLUSH,	/* barrier pre-flush done */
- 	__REQ_BAR_POSTFLUSH,	/* barrier post-flush */
-+	__REQ_TE_RESPONSE,      /* return transient error response  */
-+	__REQ_SET_TIMER,        /* set timer for transient error response */
- 	__REQ_NR_BITS,		/* stops here */
- };
- 
-@@ -224,6 +229,8 @@
- #define REQ_PM_SHUTDOWN	(1 << __REQ_PM_SHUTDOWN)
- #define REQ_BAR_PREFLUSH	(1 << __REQ_BAR_PREFLUSH)
- #define REQ_BAR_POSTFLUSH	(1 << __REQ_BAR_POSTFLUSH)
-+#define REQ_TE_RESPONSE	(1 << __REQ_TE_RESPONSE)
-+#define REQ_SET_TIMER	(1 << __REQ_SET_TIMER)
- 
- /*
-  * State information carried for REQ_PM_SUSPEND and REQ_PM_RESUME
-diff -uarN linux-2.6.9-rc2/include/linux/sysctl.h linux-2.6.9-rc2te/include/linux/sysctl.h
---- linux-2.6.9-rc2/include/linux/sysctl.h	2004-09-14 10:24:49.000000000 +0900
-+++ linux-2.6.9-rc2te/include/linux/sysctl.h	2004-09-14 13:44:34.000000000 +0900
-@@ -61,7 +61,8 @@
- 	CTL_DEV=7,		/* Devices */
- 	CTL_BUS=8,		/* Busses */
- 	CTL_ABI=9,		/* Binary emulation */
--	CTL_CPU=10		/* CPU stuff (speed scaling, etc) */
-+	CTL_CPU=10,		/* CPU stuff (speed scaling, etc) */
-+	CTL_BLK=11		/* Block */
- };
- 
- /* CTL_BUS names: */
-@@ -764,6 +765,11 @@
- 	ABI_FAKE_UTSNAME=6,	/* fake target utsname information */
- };
- 
-+/* /proc/sys/block */
-+enum {
-+	BLOCK_REQUEST_TIMEOUT=1,
-+};
-+
- #ifdef __KERNEL__
- 
- extern void sysctl_init(void);
+Did this get broken?
+
+Begin forwarded message:
+
+Date: Thu, 23 Sep 2004 11:09:06 -0500
+From: Glenn Johnson <gjohnson@srrc.ars.usda.gov>
+To: linux-kernel@vger.kernel.org
+Subject: 2.6.9-rc2-mm2: 3ware card info not in /proc/scsi
+
+
+I have a 3Ware-7500 series card.  I was trying the 2.6.9-rc2-mm2 kernel
+and discovered that the 3dmd utility was not working.  A little poking
+around revealed that the cause was because the 3Ware directory was not
+in /proc/scsi, even though I have CONFIG_SCSI_PROC_FS=y in my config
+file.  The 3dmd utility works fine with mainline 2.6.9-rc2 and it worked
+with the 2.6.8-mm series of kernels.  Those kernels have a 3w-xxxx
+directory in /proc/scsi.
+
+Thanks.
+
+-- 
+Glenn Johnson
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
