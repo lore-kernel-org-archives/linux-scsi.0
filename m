@@ -1,76 +1,42 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: lsscsi for lk 2.5.51
-Date: Wed, 18 Dec 2002 11:13:55 +1100
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: slave_destroy called in scsi_scan.c:scsi_probe_and_add_lun()
+Date: Tue, 17 Dec 2002 20:00:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DFFBDC3.9070009@torque.net>
-References: <3DFBE00B.1070805@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <20021218010050.GF28100@redhat.com>
+References: <170040000.1040080786@aslan.btc.adaptec.com> <20021217054102.GH13989@redhat.com> <797140000.1040156703@aslan.btc.adaptec.com> <20021217222459.GD28100@redhat.com> <20021217223341.A26529@infradead.org> <3DFFAB33.F174D272@digeo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3DFFAB33.F174D272@digeo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org, patmans@us.ibm.com
+To: Andrew Morton <akpm@digeo.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-scsi@vger.kernel.org
 
-Done a bit more work on lsscsi:
-  - entries now sorted by host,channel,id,lun tuple
-  - "classic" option ('-c') that outputs just like
-    'cat /proc/scsi/scsi'
-  - added a few more switches and fixed some bugs.
+On Tue, Dec 17, 2002 at 02:54:43PM -0800, Andrew Morton wrote:
+> 
+> wakes up.
+> 
+> I think (hope) the plan there is to do away with the preallocated
+> per-queue request lists altogether.  Just allocate the requests
+> direct from slab at __make_request().
 
-There is a small web page at:
-    http://www.torque.net/scsi/lsscsi.html
-On it there are links to a tarball, binary and source rpms.
+So, what is the overhead of using the slab allocator on each command?  If 
+you prealloc a reasonable queue, allocation from that queue is O(1).  
+Would we suffer no/little/large penalty using slab instead?
 
-Doug Gilbert
+/me hasn't gone looking in the slab allocator and has no idea how well it 
+actually works at being a cache...
 
+Second issue I have is that overly large request queues have never seemed 
+to help performance in my experience.  At a certain point the overhead of 
+the queue and merging so many requests, etc. becomes greater than the gain 
+of the increased depth and starts to slow things back down.  So, my 
+question to you, is why would we *want* to be able to have huge queues?
 
-Douglas Gilbert wrote:
-> Since sysfs now contains a reasonable amount of data about
-> scsi devices, it is possible to write an application
-> that scans this information and presents it in a "ls"
-> form (akin to lspci and lsusb).
-> 
-> Attached is a toy program called lsssci that could
-> grow into something more useful. It requires lk 2.5.51
-> or later.
-> 
-> $ lsscsi
-> [4:0:0:0]  CDROM   CREATIVE CD5233E          1.00  /dev/sr0
-> [3:0:0:0]  disk    Linux    scsi_debug       0004  /dev/sdb
-> [2:0:6:0]  tape    SONY     SDT-7000         0192
-> [0:0:8:0]  disk    FUJITSU  MAM3184MP        0105  /dev/sda
-> 
-> 
-> This output corresponds to my system which has these "scsi"
-> devices:
-> 
-> $ cat /proc/scsi/scsi
-> Attached devices:
-> Host: scsi0 Channel: 00 Id: 08 Lun: 00
->   Vendor: FUJITSU  Model: MAM3184MP        Rev: 0105
->   Type:   Direct-Access                    ANSI SCSI revision: 03
-> Host: scsi2 Channel: 00 Id: 06 Lun: 00
->   Vendor: SONY     Model: SDT-7000         Rev: 0192
->   Type:   Sequential-Access                ANSI SCSI revision: 02
-> Host: scsi3 Channel: 00 Id: 00 Lun: 00
->   Vendor: Linux    Model: scsi_debug       Rev: 0004
->   Type:   Direct-Access                    ANSI SCSI revision: 03
-> Host: scsi4 Channel: 00 Id: 00 Lun: 00
->   Vendor: CREATIVE Model: CD5233E          Rev: 1.00
->   Type:   CD-ROM                           ANSI SCSI revision: 02
-> 
-> 
-> sysfs doesn't provide the ANSI SCSI revision number associated
-> with each device (hopefully Pat can add that in the future).
-> Otherwise, all the information that /proc/scsi/scsi uses 3
-> lines per device for, can be compressed onto one line. Putting
-> the device node (e.g. /dev/sda) seems a useful addition.
-> [That latter addition is only done currently for block scsi
-> devices (hence it doesn't appear for the tape).]
-> 
-> Doug Gilbert
-
-
-
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
