@@ -1,70 +1,76 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Adaptec 39160 / Yamaha CRW8424S CD burning
-Date: Tue, 14 Jan 2003 10:01:24 +1100
+From: Rusty Trivial Russell <rusty@rustcorp.com.au>
+Subject: [TRIVIAL] [PATCH ] remove check_region from drivers_scsi_cpqfcTSinit.c
+Date: Tue, 14 Jan 2003 13:46:38 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E234544.6050508@torque.net>
-References: <20030113071543.GA9558@holomorphy.com> <3E22738D.3020000@torque.net> <20030113091635.GC9558@holomorphy.com> <20030113093833.GD9558@holomorphy.com> <20030113103502.GA940@holomorphy.com> <20030113125723.GD940@holomorphy.com>
-Reply-To: dougg@torque.net
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <20030114025452.E7CC92C279@lists.samba.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: William Lee Irwin III <wli@holomorphy.com>
-Cc: linux-scsi@vger.kernel.org, gibbs@scsiguy.com, axboe@suse.de
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: linux-scsi@vger.kernel.org
 
-William Lee Irwin III wrote:
-> On Mon, Jan 13, 2003 at 02:35:02AM -0800, William Lee Irwin III wrote:
-> 
->>Okay, 2.5.56-mm1 + your SG_IO fixes got the following in the debug stuff
->>with Jens' patched cdrecord:
-> 
-> 
-> I'm giving up at this point. I got another skipping CD (again, this
-> produces playable CD's in 2.4.x, and the only difference is the kernel):
+From:  william stinson <wstinson@wanadoo.fr>
 
-Bill,
-Thanks for all the testing.
+  Hi Amy,
+  
+  this proposed patch for drivers/scsi/cpqfcTSinit.c scsi driver for Linux removes two calls to check_region using request_region instead
+  
+  I don't have this hardware so patch is not tested. This patch removes all references to check_region in this driver.
+  
+  Patch also available at the following URL:
+              
+          http://www.chez.com/wstinson/linux/kernel/patch-scsi-cpqfcTSinit
+     
+  This is patch number 28 in a series of check_region patches I am doing as
+   part of the kernel janitors project. Removal of check_region is one of the
+   items on the kernel janitors TODO list (http://www.kerneljanitors.org/TODO)
+   - get rid of check_region, use just request_region checking its return (2.2
+   request_region returned void) and now the driver init sequence is not to be
+   serialized anymore, so races are possible (look at cardbus/pcihotplug code)
+  
+  Best regards
+  William Stinson
+  
 
-One comment:
-'cat /proc/scsi/sg/debug' will only show SCSI commands
-being sent to the burner when the sg interface is being used.
-So it seems that your earlier posts showed sg being
-used in all cases.
-For example:
- > $ cat /proc/scsi/sg/debug
- > dev_max(currently)=6 max_active_device=3 (origin 1)
- >  def_reserved_size=32768
- >  >>> device=sg1 scsi0 chan=0 id=3 lun=0   em=0 sg_tablesize=128 excl=0
- >    FD(1): timeout=20500ms bufflen=129024 (res)sgat=4 low_dma=0
- >    cmd_q=1 f_packid=0 k_orphan=0 closed=0
- >      rb>> act: id=0 blen=63504 t_o/elap=40000/15ms sgat=2 op=0x2a
-shows a SCSI WRITE (10) command in progress. This is typical
-for cdrecord using sg during a burn.
-
-> Included as a MIME attachment is a compressed log of the following cmd:
-> 
-> /share/projects/kernel/hacking/misc/axboe/cdrtools-1.11/cdrecord/OBJ/i686-linux-cc/cdrecord -v -pad -swab debug=2 fs=16m timeout=120 speed=0 dev=0,3,0 -audio `cat tracks` >/share/projects/kernel/hacking/cdrecord.log 2>&1
-
-Well that log looks fine, no errors or underruns. cdrecord
-checks the status of each executed command quite closely
-and would not complete if there was something wrong.
-
-> run on 2.5.56-mm1 with your (Doug Gilbert's) SG_IO fixes.
-> 
-> If there's some fix for this this, I'd be much obliged if it were
-> included in mainline.
-
-In this case my SG_IO fixes should not have made any difference
-as they are not in the code path when sg is being used.
-Unfortunately those fixes didn't get into lk 2.5.57 .
-
-So I can't explain what you are seeing. It's probably
-time to pull out my Yamaha 4416 (SCSI burner) and waste
-my own CDRs to see if I get the same problem :-)
-
-Doug Gilbert
-
-
-
-
+--- trivial-2.5.57/drivers/scsi/cpqfcTSinit.c.orig	2003-01-14 12:54:31.000000000 +1100
++++ trivial-2.5.57/drivers/scsi/cpqfcTSinit.c	2003-01-14 12:54:31.000000000 +1100
+@@ -384,7 +384,8 @@
+ 
+       // Since we have two 256-byte I/O port ranges (upper
+       // and lower), check them both
+-      if( check_region( cpqfcHBAdata->fcChip.Registers.IOBaseU, 0xff) )
++      if( !request_region( cpqfcHBAdata->fcChip.Registers.IOBaseU,
++      	                   0xff, DEV_NAME ) )
+       {
+ 	printk("  cpqfcTS address in use: %x\n", 
+ 			cpqfcHBAdata->fcChip.Registers.IOBaseU);
+@@ -393,21 +394,21 @@
+ 	continue;
+       }	
+       
+-      if( check_region( cpqfcHBAdata->fcChip.Registers.IOBaseL, 0xff) )
++      if( !request_region( cpqfcHBAdata->fcChip.Registers.IOBaseL,
++      			   0xff, DEV_NAME ) )
+       {
+   	printk("  cpqfcTS address in use: %x\n", 
+ 	      			cpqfcHBAdata->fcChip.Registers.IOBaseL);
++	release_region( cpqfcHBAdata->fcChip.Registers.IOBaseU, 0xff );
+ 	free_irq( HostAdapter->irq, HostAdapter);
+         scsi_unregister( HostAdapter);
+ 	continue;
+       }	
+       
+-      // OK, we should be able to grab everything we need now.
+-      request_region( cpqfcHBAdata->fcChip.Registers.IOBaseL, 0xff, DEV_NAME);
+-      request_region( cpqfcHBAdata->fcChip.Registers.IOBaseU, 0xff, DEV_NAME);
+-      DEBUG_PCI(printk("  Requesting 255 I/O addresses @ %x\n",
++      // OK, we have grabbed everything we need now.
++      DEBUG_PCI(printk("  Reserved 255 I/O addresses @ %x\n",
+         cpqfcHBAdata->fcChip.Registers.IOBaseL ));
+-      DEBUG_PCI(printk("  Requesting 255 I/O addresses @ %x\n",
++      DEBUG_PCI(printk("  Reserved 255 I/O addresses @ %x\n",
+         cpqfcHBAdata->fcChip.Registers.IOBaseU ));
+ 
+      
+-- 
+  Don't blame me: the Monkey is driving
+  File: william stinson <wstinson@wanadoo.fr>: [PATCH ] remove check_region from drivers_scsi_cpqfcTSinit.c
