@@ -1,88 +1,42 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: [PATCH] gdth buggy page mapping
-Date: Tue, 23 Nov 2004 19:06:22 +0100
-Message-ID: <20041123180622.GK13174@suse.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] gdth buggy page mapping
+Date: 23 Nov 2004 12:44:57 -0600
+Message-ID: <1101235504.2016.14.camel@mulgrave>
+References: <20041123180622.GK13174@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:25259 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261437AbUKWSGx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Nov 2004 13:06:53 -0500
-Content-Disposition: inline
+Received: from stat16.steeleye.com ([209.192.50.48]:46795 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261500AbUKWSpL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Nov 2004 13:45:11 -0500
+In-Reply-To: <20041123180622.GK13174@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
-Cc: achim_leubner@adaptec.com
+To: Jens Axboe <axboe@suse.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, achim_leubner@adaptec.com
 
-Hi,
+Actually, this:
 
-Just tripped over a bug report for the SUSE kernel where gdth would
-crash on a 32G opteron, turned out that the gdth_internal_copy() sg
-handling was really buggy. After fixing this I wanted to do the same for
-mainline, but I can see that a vain attempt was already made to fix it.
-Unfortunately it wasn't complete, and on top of that there's room for
-improvement.
+On Tue, 2004-11-23 at 12:06, Jens Axboe wrote:
+> @@ -2717,8 +2716,8 @@
+>      if (scp->use_sg) {
+>          sl = (struct scatterlist *)scp->request_buffer;
+>  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,13)
+> -        sgcnt = pci_map_sg(ha->pdev,sl,scp->use_sg,PCI_DMA_FROMDEVICE);
+> -        for (i=0,cpsum=0; i<sgcnt; ++i,++sl) {
+> +        for (i=0,cpsum=0; i<scp->use_sg; ++i,++sl) {
+> +	    unsigned long flags;
+>              cpnow = (ushort)sg_dma_len(sl);
 
-The current code is buggy on highmem, as page_address() will not yield a
-valid kernel address causing a NULL pointer dereference. The current
-code also doesn't unmap the sg list if it sees a NULL sl->page. In fact,
-the whole sg mapping looks really strange, why on earth would you be
-mapping the sglist for dma when you are only going to copy from it?
+Won't quite work any more.  On most platforms, it will since
+sg_dma_len(sl) expands to sl->length which is the correct thing. 
+However, on some, like parisc, x86_64, ppc64 it will expand to a
+different parameter which won't get filled in if the dma mapping is
+never done.  I think all use of the sg_dma_ macros in this driver will
+need modifying with this change.
 
-This patch corrects both errors - correctly maps in the page, and kills
-the pci_map_sg/pci_unmap_sg calls completely. If someone could test
-this, that would be great.
+James
 
-Signed-off-by: Jens Axboe <axboe@suse.de>
-
-===== drivers/scsi/gdth.c 1.44 vs edited =====
---- 1.44/drivers/scsi/gdth.c	2004-10-01 04:44:10 +02:00
-+++ edited/drivers/scsi/gdth.c	2004-11-23 19:05:51 +01:00
-@@ -2708,7 +2708,6 @@
-     ushort cpsum,cpnow;
-     struct scatterlist *sl;
-     gdth_ha_str *ha;
--    int sgcnt;
-     char *address;
- 
-     cpcount = count<=(ushort)scp->bufflen ? count:(ushort)scp->bufflen;
-@@ -2717,8 +2716,8 @@
-     if (scp->use_sg) {
-         sl = (struct scatterlist *)scp->request_buffer;
- #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,13)
--        sgcnt = pci_map_sg(ha->pdev,sl,scp->use_sg,PCI_DMA_FROMDEVICE);
--        for (i=0,cpsum=0; i<sgcnt; ++i,++sl) {
-+        for (i=0,cpsum=0; i<scp->use_sg; ++i,++sl) {
-+	    unsigned long flags;
-             cpnow = (ushort)sg_dma_len(sl);
-             TRACE(("copy_internal() now %d sum %d count %d %d\n",
-                           cpnow,cpsum,cpcount,(ushort)scp->bufflen));
-@@ -2730,17 +2729,18 @@
-                        hanum);
-                 return;
-             }
--            address = (char *)(page_address(sl->page) + sl->offset);
-+	    local_irq_save(flags);
-+	    address = kmap_atomic(sl->page, KM_BIO_SRC_IRQ) + sl->offset;
-             memcpy(address,buffer,cpnow);
-+	    flush_dcache_page(sl->page);
-+	    kunmap_atomic(address, KM_BIO_SRC_IRQ);
-+	    local_irq_restore(flags);
-             if (cpsum == cpcount)
-                 break;
-             buffer += cpnow;
-         }
--        pci_unmap_sg(ha->pdev,scp->request_buffer,
--                     scp->use_sg,PCI_DMA_FROMDEVICE);
- #else
--        sgcnt = scp->use_sg;
--        for (i=0,cpsum=0; i<sgcnt; ++i,++sl) {
-+        for (i=0,cpsum=0; i<scp->use_sg; ++i,++sl) {
-             cpnow = (ushort)sl->length;
-             TRACE(("copy_internal() now %d sum %d count %d %d\n",
-                           cpnow,cpsum,cpcount,(ushort)scp->bufflen));
-
--- 
-Jens Axboe
 
