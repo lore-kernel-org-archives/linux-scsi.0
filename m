@@ -1,62 +1,44 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Fix for EISA only aic7xxx compile
-Date: 28 Aug 2003 12:40:32 -0400
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: storageworks controlers & linux-scsi
+Date: Thu, 28 Aug 2003 13:06:26 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1062088833.1999.31.camel@mulgrave>
+Message-ID: <20030828130626.A15749@beaverton.ibm.com>
+References: <1061816116.3f4a073487d64@impt3-1.free.fr> <1061999793.1660.8.camel@mulgrave> <20030828013706.45760cb5.christophe.varoqui@free.fr>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-/TyN6+CjuaOXtwhpkofN"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:22278 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264080AbTH1Qkl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Aug 2003 12:40:41 -0400
+Received: from e32.co.us.ibm.com ([32.97.110.130]:44242 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S264221AbTH1UHH
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Aug 2003 16:07:07 -0400
+Content-Disposition: inline
+In-Reply-To: <20030828013706.45760cb5.christophe.varoqui@free.fr>; from christophe.varoqui@free.fr on Thu, Aug 28, 2003 at 01:37:06AM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: christophe varoqui <christophe.varoqui@free.fr>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+On Thu, Aug 28, 2003 at 01:37:06AM +0200, christophe varoqui wrote:
+> 
+> I leave for a 2 week vacation, but if the HSV LUNs handling is turned to a usable state I'll be able to post a GPL C agent to handle DM multipath autoconfig & reconfig on event (through VPD 0x83 for wwid detection and TUR for ghosts detection) in  about 3 weeks. In hope there will interest to move it to a broader use.
+> 
 
---=-/TyN6+CjuaOXtwhpkofN
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Hi -
 
-If I build an EISA (no PCI) kernel for my intel express, I get undefined
-references to ahc_linux_pci_exit().
+Is that a 2.4 solution?
 
-The attached patch fixes this (seemed simpler than trying to work out
-how to move the function calls).
+I was starting to work on a hotplug interface to get and store scsi wwid's
+or serial numbers for use with 2.6.
 
-Other than that, EISA only seems to work fine for me.
+We need a method that would (ideally) work for all users, so we: don't
+hang broken devices, can use other pages (0x80), can use vendor
+specific methods, and works for udev or multipath config tools.
 
-James
+We need a black/white list (or config file) for the broken or special
+devices.
 
+Have you seen the libsysfs/udev code? We can use libsysfs for common
+interfaces to get/set a scsi serial number, and for other common uses of
+sysfs such as getting the bus_id, or figuring out if we have a scsi
+device.
 
---=-/TyN6+CjuaOXtwhpkofN
-Content-Disposition: attachment; filename=tmp.diff
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; name=tmp.diff; charset=ISO-8859-1
-
-=3D=3D=3D=3D=3D drivers/scsi/aic7xxx/aic7xxx_osm.h 1.50 vs edited =3D=3D=3D=
-=3D=3D
---- 1.50/drivers/scsi/aic7xxx/aic7xxx_osm.h	Fri May  2 15:26:21 2003
-+++ edited/drivers/scsi/aic7xxx/aic7xxx_osm.h	Thu Aug 28 12:05:26 2003
-@@ -852,10 +852,16 @@
- int			 aic7770_map_int(struct ahc_softc *ahc, u_int irq);
-=20
- /******************************* PCI Routines ****************************=
-*****/
-+#ifdef CONFIG_PCI
- int			 ahc_linux_pci_init(void);
- void			 ahc_linux_pci_exit(void);
- int			 ahc_pci_map_registers(struct ahc_softc *ahc);
- int			 ahc_pci_map_int(struct ahc_softc *ahc);
-+#else
-+static inline void ahc_linux_pci_exit(void)
-+{
-+}
-+#endif
-=20
- static __inline uint32_t ahc_pci_read_config(ahc_dev_softc_t pci,
- 					     int reg, int width);
-
---=-/TyN6+CjuaOXtwhpkofN--
-
+-- Patrick Mansfield
