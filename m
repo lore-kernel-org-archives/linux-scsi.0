@@ -1,95 +1,52 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: Re: [PATCH] 2.6.0 aacraid driver update
-Date: Fri, 22 Aug 2003 10:29:59 -0700
+From: Sebastian Just <zeeman@gmx.net>
+Subject: Problem: DC390/AM53/79C974 can't compile
+Date: Sun, 24 Aug 2003 12:02:53 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1061573399.2067.65.camel@markh1.pdx.osdl.net>
-References: <1061567229.2067.15.camel@markh1.pdx.osdl.net>
-	 <20030822171600.A19262@infradead.org>
+Message-ID: <3F488D4D.4090804@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:31389 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S263121AbTHVRaG (ORCPT
+Received: from mail.gmx.net ([213.165.64.20]:11403 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S265920AbTHXKCu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Aug 2003 13:30:06 -0400
-In-Reply-To: <20030822171600.A19262@infradead.org>
+	Sun, 24 Aug 2003 06:02:50 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2003-08-22 at 09:16, Christoph Hellwig wrote:
-> On Fri, Aug 22, 2003 at 08:47:09AM -0700, Mark Haverkamp wrote:
-> > --- 1.22/drivers/scsi/scsi_priv.h	Thu Aug  7 05:25:43 2003
-> > +++ edited/drivers/scsi/scsi_priv.h	Tue Aug 19 14:51:39 2003
-> > @@ -115,8 +115,6 @@
-> >  #endif /* CONFIG_PROC_FS */
-> >  
-> >  /* scsi_scan.c */
-> > -int scsi_scan_host_selected(struct Scsi_Host *, unsigned int, unsigned int,
-> > -			    unsigned int, int);
-> 
-> I'm not very happy with exporting this to drivers.  Can you explain the
-> code using it a bit?
+Hi!
 
-Sorry, I can't explain it,  this code turned up in the 2.4 version.  I
-assume it was added by someone from Adaptec. Although it looks like I
-accidentally lost some comments when I brought the code over.  Here it
-is, I'll add it back into the function.
+I tried the kernel 2.6test3 and 2.6test4.
 
-		 /*
-		  * This deals with new devices that have
-		  * appeared. If the device has gone offline, scan_scsis will
-		  * also discover this, but we do not want the device to
-		  * go away. We need to check the access_count for the
-		  * device since we are not wanting the devices to go away.
-		  */
+I can configure both and compile them without problems.
 
+But if I try to add scsi-controller-support for the Tekram DC390 or the 
+  AM53/79C974 I can't compile the kernel.
+There is no difference between compiling the scsi-card-support as modul 
+or direct into the kernel.
+Alwasy it stops with
+drivers/scsi/tmscsim.c: In function `dc390_Query_append':
+drivers/scsi/tmscsim.c:872: structure has no member named `next'
+drivers/scsi/tmscsim.c:877: structure has no member named `next'
+drivers/scsi/tmscsim.c: In function `dc390_Query_get':
+drivers/scsi/tmscsim.c:889: structure has no member named `next'
+drivers/scsi/tmscsim.c:890: structure has no member named `next'
+[...]
+drivers/scsi/tmscsim.c: In function `DC390_proc_info':
+drivers/scsi/tmscsim.c:2935: structure has no member named `next'
+drivers/scsi/tmscsim.c: At top level:
+drivers/scsi/tmscsim.c:3060: `DC390_T' undeclared here (not in a function)
+drivers/scsi/tmscsim.c:3061: syntax error before '.' token
+drivers/scsi/tmscsim.c:277: warning: `tmscsim_pci_tbl' defined but not used
+make[2]: *** [drivers/scsi/tmscsim.o] Error 1
+make[1]: *** [drivers/scsi] Error 2
+make: *** [drivers] Error 2
 
-> 
-> > -	u32 			SavedIrql;     	/* Previous IRQL when the spin lock is taken */
-> > +	unsigned long		SavedIrql;     	/* Previous IRQL when the spin lock is taken */
-> 
-> This is still broken.  you must not store irq flags in structures but
-> have to restore them in the same function you take them in, otherwise things
-> like the irq window on sparc32 can fuck up. Also it's really confusing.
+Is there a way to get the kernel working?
 
-I'll take a look at this.
-
-> 
-> > +#define CONTAINER_TO_BUS(cont)		(0)
-> > +#define CONTAINER_TO_TARGET(cont)	((cont))
-> > +#define CONTAINER_TO_LUN(cont)		(0)
-> 
-> why this obsfucation?
-
-Not sure, again this is from the recent 2.4 update.  I could just remove
-the macros and plug in the values.
-
-> 
-> > -			pci_set_dma_mask(dev, 0xFFFFFFFFULL);
-> > +
-> > +			if (aac_drivers[index].quirks & AAC_QUIRK_31BIT)
-> > +				pci_set_dma_mask(dev, 0x7FFFFFFFULL);
-> > +			else
-> > +				pci_set_dma_mask(dev, 0xFFFFFFFFULL);
-> 
-> Please check the return value.
-
-I'll check the return value. 
-
-> 
-> 
-> Also please convert the driver to be hotplug capable while you're
-> at it.
-
-Is there a how-to posted somewhere for this?
+I use at the moment Debian Woody 3.0rc1, GCC 3.2.3 and the kernel 2.4.21
 
 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
-Mark Haverkamp <markh@osdl.org>
+Greetings
+Sebastian
 
