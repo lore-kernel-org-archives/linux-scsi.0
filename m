@@ -1,88 +1,43 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
-Subject: [ANNOUNCE] multipath-tools-0.3.4
-Date: Mon, 25 Oct 2004 00:14:48 +0200
-Sender: linux-hotplug-devel-admin@lists.sourceforge.net
-Message-ID: <1098656088.9350.88.camel@zezette>
-References: <1096071849.4466.31.camel@zezette>
-	 <1097054573.4163b96d1262c@imp5-q.free.fr>
-	 <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette>
-	 <1098269169.417641f18a234@imp1-q.free.fr>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] SCSI: Replace semaphores with wait_even
+Date: 24 Oct 2004 19:01:23 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1098658889.10906.361.camel@mulgrave>
+References: <1098300579.20821.65.camel@thomas>
+	<1098647869.10824.247.camel@mulgrave>  <1098648414.22387.46.camel@thomas>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-hotplug-devel-admin@lists.sourceforge.net>
-In-Reply-To: <1098269169.417641f18a234@imp1-q.free.fr>
-Errors-To: linux-hotplug-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
-To: device-mapper development <dm-devel@redhat.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:62614 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261612AbUJXXBu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Oct 2004 19:01:50 -0400
+In-Reply-To: <1098648414.22387.46.camel@thomas>
 List-Id: linux-scsi@vger.kernel.org
+To: tglx@linutronix.de
+Cc: Andrew Morton <akpm@osdl.org>, Ingo Molnar <mingo@elte.hu>, LKML <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hello,
+On Sun, 2004-10-24 at 16:06, Thomas Gleixner wrote:
+> Hmm, strange. It works on two systems here and others using this
+> modification had no problem either. 
+> I will check again.
 
-here goes multipath-tools-0.3.4
+Yes, very strange given what the mistake is:
 
-Many structural change, consequences of the Suse review.
-Highlights are :
+-               down_interruptible(&sem);
++               wait_event_interruptible(eh_wait, shost->eh_kill ||
++                               (shost->host_busy ==
+shost->host_failed));
 
-	* glibc compilation, uses system libraries where possible
-	* multipath & multipathd now use the same path checkers.
-	  Consequence being multipath now need sg loaded
-	* checkers now can return more than UP or DOWN and they take
-	  2 more arguments :
-		* msg : to let the checker pass log mesg to the core
-		* context : a persistent data store the checkers can
-		  use at discretion
-	* multipath pgpolicies rework : I broke the group_by_serial
-	  LUN balancing. This is volontary : I'd like someone affected
-	  to come up with a callout binary to do the balancing based on
-	  the priority framework.
+This condition is always true when the eh thread first starts because
+the default quiescent state of a scsi host is
 
-Full ChangeLog for the release :
+shost->host_busy = shost->host_failed = 0
 
-	* [multipathd] exec multipath precisely : pass in the path
-	  or the devmap to update. No more full reconfiguration, and
-	  really use the reinstate feature of multipath.
-	* [multipathd] check all paths, not only failed ones. Path
-	  checker now trigger on state change (formerly triggred on
-	  state == UP condition)
-	* [multipathd] incremental updatepaths() instead of scrap /
-	  refresh all logic.
-	* [multipathd] path checkers now take *msg and *context
-	  params. consensus w/ lmb at suse. tur.c modified as example
-	* [multipath] assemble maps in PG vector descending order to
-	  fit the layered policies design
-	* [multipath] stop playing with strings in pgpolicies, as it
-	  uses more memory and looses info for no gain
-	* [multipath] remove lk2.4 scsi ioctl scsi_type remnant
-	* [multipath] layered pgpolicies : (see pgpolicies.c)
-		* group_by_status
-		* group_by_serial | multibus | failover | group_by_prio
-		* sort_pg_by_summed_prio
-	  thus remove duplicated failedpath logic in pgpolicies
-	* [checkers] framework for arbitrate checkers return values
-	* [multipathd] scrap yet another reinvented wheel in the 
-	  name of the LOG macro :  learn the existance of setloglevel
-	  and LOG_UPTO macro
-	* glibc make with "make BUILD=glibc", asked by lmb at suse
+so your change makes the eh_thread spin forever locking everything else
+off the CPU.  On a UP system, this is a complete hang.
 
-As usual, doc and download at :
-http://christophe.varoqui.free.fr/
-
-regards,
--- 
-christophe varoqui <christophe.varoqui@free.fr>
+James
 
 
-
--------------------------------------------------------
-This SF.net email is sponsored by: IT Product Guide on ITManagersJournal
-Use IT products in your business? Tell us what you think of them. Give us
-Your Opinions, Get Free ThinkGeek Gift Certificates! Click to find out more
-http://productguide.itmanagersjournal.com/guidepromo.tmpl
