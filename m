@@ -1,43 +1,37 @@
-From: Stefan Smietanowski <stesmi@stesmi.com>
-Subject: Re: [Announce] Emulex LightPulse Device Driver
-Date: Wed, 10 Mar 2004 01:09:39 +0100
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [usb-storage] Time to allow MODE SENSE for USB disk-type storage devices?
+Date: Tue, 9 Mar 2004 17:43:53 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <404E5CC3.9010305@stesmi.com>
-References: <3356669BBE90C448AD4645C843E2BF2802C014D7@xbl.ma.emulex.com>
+Message-ID: <20040309174353.A15780@beaverton.ibm.com>
+References: <Pine.LNX.4.44L0.0403081046190.1187-100000@ida.rowland.org> <20040308201328.GA13708@apps.cwi.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 1-2-2-1a.has.sth.bostream.se ([82.182.130.86]:17106 "EHLO
-	K-7.stesmi.com") by vger.kernel.org with ESMTP id S262545AbUCJAJn
+Received: from e35.co.us.ibm.com ([32.97.110.133]:16884 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S262549AbUCJBoR
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Mar 2004 19:09:43 -0500
-In-Reply-To: <3356669BBE90C448AD4645C843E2BF2802C014D7@xbl.ma.emulex.com>
+	Tue, 9 Mar 2004 20:44:17 -0500
+Content-Disposition: inline
+In-Reply-To: <20040308201328.GA13708@apps.cwi.nl>; from Andries.Brouwer@cwi.nl on Mon, Mar 08, 2004 at 09:13:29PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: "Smart, James" <James.Smart@Emulex.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
+To: Andries Brouwer <Andries.Brouwer@cwi.nl>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, USB Storage List <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Smart, James wrote:
-> All,
-> 
-> Emulex is embarking on an effort to open source the driver for its
-> LightPulse Fibre Channel Adapter family. This effort will migrate Emulex's
-> current code base to a driver centric to the Linux 2.6 kernel, with the goal
-> to eventually gain inclusion in the base Linux kernel.
-> 
-> A new project has been created on SourceForge to host this effort - see
-> http://sourceforge.net/projects/lpfcxxxx/ . Further information, such as the
-> lastest FAQ, can be found on the project site.
-> 
-> We realize that this will be a significant effort for Emulex. We welcome any
-> feedback that the community can provide us.
+Andries or others -
 
-I wish to just tell you that I think you're doing the Right Thing(TM).
+Can you elaborate on this comment in sd.c? Do you have a device that hangs
+with the current kernel when asking for more than 4 bytes here? Is it USB
+storage?
 
-There are people that don't buy hardware for which the source isn't
-either available or included in the standard kernel, even if there
-are more patches or newer driver versions external to the main tree.
+	/*
+	 * First attempt: ask for all pages (0x3F), but only 4 bytes.
+	 * We have to start carefully: some devices hang if we ask
+	 * for more than is available.
+	 */
+	res = sd_do_mode_sense(SRpnt, 0, 0x3F, buffer, 4, &data);
 
-Good work and good luck!
+Per this changeset:
 
-// Stefan
+http://linux.bkbits.net:8080/linux-2.5/diffs/drivers/scsi/sd.c@1.53?nav=index.html|src/|src/drivers|src/drivers/scsi|hist/drivers/scsi/sd.c
+
+-- Patrick Mansfield
