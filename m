@@ -1,47 +1,51 @@
-From: "Rajat  Jain, Noida" <rajatj@noida.hcltech.com>
-Subject: When & how is the SCSI strategy routine called?
-Date: Tue, 22 Mar 2005 22:00:38 +0530
-Message-ID: <267988DEACEC5A4D86D5FCD780313FBB05FA9AE1@exch-03.noida.hcltech.com>
+From: "Ross Macintyre" <raz@macs.hw.ac.uk>
+Subject: Re: adaptec 2120S software under RedHat 8.0 and FC2
+Date: Tue, 22 Mar 2005 16:32:04 -0000 (GMT)
+Message-ID: <3423.137.195.14.2.1111509124.squirrel@www.macs.hw.ac.uk>
+References: <60807403EABEB443939A5A7AA8A7458BED25F7@otce2k01.adaptec.com>
+    <20050320091251.GB12000@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Sender: linux-newbie-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-newbie@vger.kernel.org
-Cc: "Rajat  Jain, Noida" <rajatj@noida.hcltech.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Received: from izanagi.macs.hw.ac.uk ([137.195.13.5]:46272 "EHLO
+	izanagi.macs.hw.ac.uk") by vger.kernel.org with ESMTP
+	id S261406AbVCVQcU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Mar 2005 11:32:20 -0500
+In-Reply-To: <20050320091251.GB12000@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Mark Haverkamp <markh@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, matt_domsch@dell.com
 
 
-Hi list,
+Christoph Hellwig said:
+> On Thu, Mar 17, 2005 at 08:41:18AM -0500, Salyzyn, Mark wrote:
+>> We are pressuring our management application folks to switch to /sys as
+>> well, has not happened yet. In part because changes have to work for all
+>> tested releases and operating systems, our testing department only test
+>> distributions in the requirement documents, fixes are only approved if
+>> they affect current testing, certification testing requires a driver
+>> that can be fixed and not errata'd and thus typically can not be in-box,
+>> CONFIG_PROC_FS being on in all distributions and the need to keep the
+>> /proc interface alive to permit the current and legacy applications in
+>> test the ability to continue to function.
+>
+> We're not going to add new procfs handler for scsi HBA drivers.
+>
+> Unfortunately this problems shows once more that Adaptec managment doesn't
+> care the slightest bit for Linux and has the worst support of all RAID /
+> Storage vendors.  I can only advise OEMs and customers to stay far away
+> from Adaptec equipment if they want to use Linux.
 
-Tracing the kernel 2.6.8 code I found that scsi_mod maintains separate
-request queues for each SCSI device. It uses the block layer queuing
-facility to do this. What I could not find out was that once a request is
-queued into a queue (for a particular device), WHEN and HOW is the strategy
-routine "scsi_request_fn()" called ?
+Since you advise us to stay away from Adaptec, and I assume you are part
+of the team that manages the Fedora system, can you advise users what RAID
+/ Storage vendors to use? ie what quality vendors support Linux?
+Thanks,
 
-All I could find on the net was that "The kernel calls the strategy routine
-when ever it believes that it is appropriate to invoke it."
+Ross
 
-Please help ... Any pointers will be highly appreciated.
-
-TIA,
-
-Rajat
+>
 
 
-Disclaimer: 
-
-This message and any attachment(s) contained here are information that is
-confidential,proprietary to HCL Technologies and its customers, privileged
-or otherwise protected by law.The information is solely intended for the
-individual or the entity it is addressed to. If you are not the intended
-recipient of this message, you are not authorized to read, forward,
-print,retain, copy or disseminate this message or any part of it. If you
-have received this e-mail in error, please notify the sender immediately by
-return e-mail and delete it from your computer.
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-newbie" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at http://www.linux-learn.org/faqs
+-- 
+Ross Macintyre (raz@macs.hw.ac.uk)
