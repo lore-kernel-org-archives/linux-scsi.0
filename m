@@ -1,51 +1,94 @@
-From: John Cherry <cherry@osdl.org>
-Subject: Re: [PATCH] aic7xxx parallel build
-Date: Thu, 22 Jan 2004 17:05:04 -0800
+From: Anton Blanchard <anton@samba.org>
+Subject: Re: [PATCH] qla2xxx - perform proper SNS scans with ISP2200 HBAs.
+Date: Fri, 23 Jan 2004 12:18:30 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1074819903.15610.6.camel@cherrypit.pdx.osdl.net>
-References: <1074800332.29125.55.camel@cherrypit.pdx.osdl.net>
-	 <1251588112.1074819190@aslan.btc.adaptec.com>
-	 <1074819272.15610.2.camel@cherrypit.pdx.osdl.net>
+Message-ID: <20040123011830.GH11236@krispykreme>
+References: <B179AE41C1147041AA1121F44614F0B0598E5D@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:44426 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S265153AbUAWBFI (ORCPT
+Received: from dp.samba.org ([66.70.73.150]:43964 "EHLO lists.samba.org")
+	by vger.kernel.org with ESMTP id S265126AbUAWBWt (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jan 2004 20:05:08 -0500
-In-Reply-To: <1074819272.15610.2.camel@cherrypit.pdx.osdl.net>
+	Thu, 22 Jan 2004 20:22:49 -0500
+Content-Disposition: inline
+In-Reply-To: <B179AE41C1147041AA1121F44614F0B0598E5D@AVEXCH02.qlogic.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: akpm@osdl.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
-These Makefiles provide clean parallel builds.  The failing case
-succeeded.  Can we get these changes back into Andrew's conduit?
+ 
+Hi,
 
-On Thu, 2004-01-22 at 16:54, John Cherry wrote:
-> Yeah.  It looks like I grabbed my old patch from the last successful
-> parallel build that Andrew ran.
-> 
-> I'll run the regressions on the Makefiles you have supplied tonight.  I
-> have no doubts that this will be successful.  Thanks.
-> 
-> John
-> 
-> On Thu, 2004-01-22 at 16:53, Justin T. Gibbs wrote:
-> > > The Makefiles for aic7xxx and aicasm have changed since I submitted a
-> > > patch for the parallel build problem several months ago.  Justin's patch
-> > > has disappeared from the mm builds, so we continue to have parallel
-> > > build problems.
-> > > 
-> > > The following patch fixes the parallel build problem and it still
-> > > applies to 2.6.2-rc1-mm1.  This is Justin's fix.
-> > 
-> > Actually, that's not my fix.  This looks like your original fix.
-> > I've attached aic7xxx/Makefile and aic7xxx/aicasm/Makefile from my
-> > tree.  These seem to work just fine in my parallel build tests and
-> > will work regardless of which generated file is out of date - a flaw
-> > in your change.  Please let me know if these files don't work for you.
-> > 
-> > --
-> > Justin
+> Hmm, I think I know what the problem is.  Could you try the attached
+> small patch.  The handles that get passed down to the firmware should
+> be opaque.  Unfortuantely when using RIO mode 3 (as is done with the
+> 2100 and 2200s) the handle is truncated down from 32bits to 16bits. 
 
+Gave it a go but it still seems to have problems (see below).
+
+> Looks like I need to add the ppc64 machine to my test ring.  BTW: any
+> quick doc-pointers or suggestions on how to get 2.6 running on a ppc64
+> machine.  
+
+Current -mm should run on everything. Linus tree is missing a one line
+fix in the pci probe code, we still need to convince him to take it.
+Let me know if you have any problems.
+
+Anton
+
+QLogic ISP2xxx PCI/PCI-X Fibre Channel HBA Driver (c00000000063a028)
+PCI: Enabling device: (0003:41:01.0), cmd 143
+qla2200 0003:41:01.0: Found an ISP2200, irq 183, iobase 0xa000000080020000
+qla2200 0003:41:01.0: Configuring PCI space...
+qla2200 0003:41:01.0: Configure NVRAM parameters...
+qla2200 0003:41:01.0: Verifying loaded RISC code...
+qla2200 0003:41:01.0: LIP reset occured (0).
+qla2200 0003:41:01.0: Waiting for LIP to complete...
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Topology - (F_Port), Host Loop address 0xffff
+scsi0 : qla2xxx
+qla2200 0003:41:01.0:
+ QLogic ISP2xxx PCI/PCI-X Fibre Channel HBA Driver: 8.00.00b8
+  QLogic QLA22xx -
+  ISP2200: PCI (66 MHz) @ 0003:41:01.0 hdma-, host#=0, fw=2.02.06 TP
+qla2200 0003:41:01.0: Invalid SCSI completion handle 16777216.
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (0).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid SCSI completion handle 16777216.
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid SCSI completion handle 16777216.
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid SCSI completion handle 16777216.
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid SCSI completion handle 16777216.
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid SCSI completion handle 16777216.
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid SCSI completion handle 16777216.
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid SCSI completion handle 16777216.
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid SCSI completion handle 16777216.
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
+qla2200 0003:41:01.0: Invalid SCSI completion handle 16777216.
+qla2200 0003:41:01.0: Performing ISP error recovery - ha= c00000000fd202e0.
+qla2200 0003:41:01.0: LIP reset occured (f7f7).
+qla2200 0003:41:01.0: LOOP UP detected (1 Gbps).
