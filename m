@@ -1,82 +1,81 @@
-From: Andries.Brouwer@cwi.nl
+From: Sancho Dauskardt <sancho@dauskardt.de>
 Subject: Re: /proc/scsi/map
-Date: Sat, 15 Jun 2002 23:54:12 +0200 (MEST)
+Date: Sun, 16 Jun 2002 00:28:43 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <aegd7j$k11$2@main.gmane.org>
+Message-ID: <5.0.2.1.2.20020616001036.02a01320@pop.puretec.de>
+References: <UTC200206152154.g5FLsCI23053.aeb@smtp.cwi.nl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <UTC200206152154.g5FLsCI23053.aeb@smtp.cwi.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sancho@dauskardt.de
+To: Andries.Brouwer@cwi.nl, garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net
 
-    >Life would be easier if the scsi subsystem would just report which SCSI
-    >device (uniquely identified by the controller,bus,target,unit tuple) belongs
-    >to which high-level device. The information is available in the kernel.
-    >
-    >Attached patch does this:
-    >garloff@pckurt:/raid5/Kernel/src $ cat /proc/scsi/map
-    ># C,B,T,U       Type    onl     sg_nm   sg_dev  nm      dev(hex)
-    >0,0,00,00       0x05    1       sg0     c:15:00 sr0     b:0b:00
-    [...]
 
-    Great, this was really missing badly.
+>
+>     Both usb-storage and iee1394-sbp2 know the GUID. It only needs to be
+>     communicated..
+>
+>The usb-storage GUID is just one random item of information.
 
-    But how about adding another column: GUID.
-    Most usb-storage and (all?) FireWire devices have such a unique identitiy.
-    In contrast to native SCSI devices, these emulated SCSI devices on 
-    hot-plugging busses will change their LUNs/IDs. Therefor the GUID is
-    really a must to be able to create stable names (laptop suspend, etc.).
+Why is this 'one random item' ??
+For usb-storage devices the GUID is built using Vendor ID & Device ID and 
+the device's Serial Nr.
 
-    Both usb-storage and iee1394-sbp2 know the GUID. It only needs to be 
-    communicated..
+For identification purposes, the serial number is useless without Vendor ID 
+& Device ID.
+Ofcourse we'll never have a change of creating stable name for devices that 
+don't have a serialnr.
 
-The usb-storage GUID is just one random item of information.
-One might wish for much more.
 
-And: this information is already somewhere:
+>One might wish for much more.
+>
+>And: this information is already somewhere:
+Sure. But
+a) not easily readable
+b) totall different for FireWire devices
+c) race-conditions (reading multiple files).
 
-% cat /proc/scsi/sg/host_strs
-SCSI host adapter emulation for IDE ATAPI devices
-Iomega VPI2 (imm) interface
-SCSI emulation for USB Mass Storage devices
-SCSI emulation for USB Mass Storage devices
-%
 
-This tells me that host 0 will be in ide-scsi, host 1 in imm,
-host 2 in usb-storage-0, host 3 in usb-storage-1.
-And
 
-% cat /proc/scsi/ide-scsi/0
-SCSI host adapter emulation for IDE ATAPI devices
-% cat /proc/scsi/imm/1
-Version : 2.05 (for Linux 2.4.0)
-Parport : parport0
-Mode    : SPP
-% cat /proc/scsi/usb-storage-0/2
-   Host scsi2: usb-storage
-       Vendor: DataFab Systems Inc.
-      Product: USB CF+SM
-Serial Number: 5DC69477C6
-     Protocol: Transparent SCSI
-    Transport: Datafab Bulk-Only
-         GUID: 07c4a1090000005dc69477c6
-     Attached: Yes
-% cat /proc/scsi/usb-storage-1/3
-   Host scsi3: usb-storage
-       Vendor: SCM Microsystems Inc.
-      Product: eUSB SmartMedia / CompactFlash 
-Serial Number: None
-     Protocol: Transparent SCSI
-    Transport: Control/Bulk-EUSB/SDDR09
-         GUID: 04e600050000000000000000
-     Attached: Yes
-%
+>% cat /proc/scsi/usb-storage-0/2
+>    Host scsi2: usb-storage
+>        Vendor: DataFab Systems Inc.
+>       Product: USB CF+SM
+>Serial Number: 5DC69477C6
+>      Protocol: Transparent SCSI
+>     Transport: Datafab Bulk-Only
+>          GUID: 07c4a1090000005dc69477c6
+>      Attached: Yes
+Exactly, but finding this out at the moment involves reading: 
+/proc/scsi/scsi, scanning /proc/scsi/usb-storage-*, scanning 
+/proc/scsi/usb-storage-X/*, reading /proc/scsi/usb-storage-X/Y.
 
-A small utility that looks around in /proc is able to
-find the GUID. Of course it would be better when fewer
-heuristics were required.
 
-Finally, the GUIDs you see here do not determine the LUN.
-So, there is no well-defined line in /proc/scsi/map
-where they would belong.
+>% cat /proc/scsi/usb-storage-1/3
+>    Host scsi3: usb-storage
+>        Vendor: SCM Microsystems Inc.
+>       Product: eUSB SmartMedia / CompactFlash
+>Serial Number: None
+>      Protocol: Transparent SCSI
+>     Transport: Control/Bulk-EUSB/SDDR09
+>          GUID: 04e600050000000000000000
+>      Attached: Yes
 
-Andries
+Well that's just SCM, huh ? The newer SCM-Orca chipset has a S/N.
+
+
+
+>Finally, the GUIDs you see here do not determine the LUN.
+>So, there is no well-defined line in /proc/scsi/map
+>where they would belong.
+
+But the LUN-map for such a device will never change ?
+Incase a device has 4 LUN's, well have 4 /proc/scsi/map entries with the 
+same GUID.
+
+The hotplug agent will indeed be watching GUID+Lun.
+
+- sda
+
