@@ -1,36 +1,38 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] Don't retry SG_IO (REQ_BLOCK_PC) commands.
-Date: Fri, 21 Nov 2003 19:23:01 +0100
+From: Mario Giammarco <mgiammarco@virgilio.it>
+Subject: Bad fibre channel performance: need howto
+Date: Fri, 21 Nov 2003 20:37:38 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031121182301.GB6616@suse.de>
-References: <20031120085555.A20609@beaverton.ibm.com> <20031120181543.GA3728@beaverton.ibm.com> <20031120191651.GE1106@suse.de> <20031120135123.A2366@beaverton.ibm.com> <20031121101728.GI1106@suse.de> <1069418912.1931.5.camel@mulgrave> <20031121082651.A8065@beaverton.ibm.com>
+Message-ID: <1069443458.7047.35.camel@cala>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:54678 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S264399AbTKUSXK (ORCPT
+Received: from vsmtp12.tin.it ([212.216.176.206]:51374 "EHLO vsmtp12.tin.it")
+	by vger.kernel.org with ESMTP id S264421AbTKUThm (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Nov 2003 13:23:10 -0500
-Content-Disposition: inline
-In-Reply-To: <20031121082651.A8065@beaverton.ibm.com>
+	Fri, 21 Nov 2003 14:37:42 -0500
+Received: from [62.211.165.163] (62.211.165.163) by vsmtp12.tin.it (7.0.019)
+        id 3F8C84920112EC84 for linux-scsi@vger.kernel.org; Fri, 21 Nov 2003 20:37:40 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Fri, Nov 21 2003, Patrick Mansfield wrote:
-> James -
-> 
-> I don't think we are going to resolve the setting and use of the fast fail
-> flag in the immediate future.
-> 
-> Can you push the patch?
+Hello,
+I asked a similar question last week.
+I discovered that my hard disk which can do 60mb/sec sequential read,
+under linux/lsilogic40909 fibre hba gives only 30mb/sec, 45 if I tweak a
+lot readahead (why  I need to?).
 
-Agree, can't be done these days at all. Maybe in a months time or so.
+I have searched a lot in internet and it seems that:
 
-> Jens are you OK with the patch?
+1) fibrechannel howto was in sistina home page but now disappeared
+2) fibrechannel specific mailing list for linux disappeared (archives
+to)
 
-Yes
+Where can I search for help? 
+Here it not seems appropriate to me. 
+
+I have to find my bottleneck, please help with sending me docs.
 
 -- 
-Jens Axboe
+Mario Giammarco
 
