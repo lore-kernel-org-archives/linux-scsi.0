@@ -1,50 +1,80 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [usb-storage] Re: iRiver H100 series and usb-storage issues
-Date: Tue, 8 Jun 2004 10:24:55 -0400 (EDT)
+From: "Smart, James" <James.Smart@Emulex.Com>
+Subject: RE: Emulex lpfcdriver v8.0.2 available
+Date: Tue, 8 Jun 2004 10:29:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0406081019281.1222-100000@ida.rowland.org>
-References: <1086647263.3137.134.camel@patibmrh9>
+Message-ID: <3356669BBE90C448AD4645C843E2BF28034F9463@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:5636 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S265211AbUFHOYz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jun 2004 10:24:55 -0400
-In-Reply-To: <1086647263.3137.134.camel@patibmrh9>
+Received: from emulex.emulex.com ([138.239.112.1]:4606 "EHLO emulex.emulex.com")
+	by vger.kernel.org with ESMTP id S265219AbUFHOaL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jun 2004 10:30:11 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: Philippe Troin <phil@fifi.org>, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, James Bottomley <James.Bottomley@steeleye.com>
+To: 'Anton Blanchard' <anton@samba.org>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On 7 Jun 2004, Pat LaVarre wrote:
+Anton,
 
-> What's ironic here is that the Linux USB layer understands entirely that
-> the STALL redundantly with the "CSW" "R 512" means "unexpectedly short
-> transfer" ... but we're told the layers above don't get it, all the
-> same.
+Ouch!. The bug has already been fixed and will be in the next drop.  Also,
+your comment is well taken.
+
+-- james
+
+> -----Original Message-----
+> From: Anton Blanchard [mailto:anton@samba.org]
+> Sent: Tuesday, June 08, 2004 3:20 AM
+> To: Smart, James
+> Cc: 'Christoph Hellwig'; 'linux-scsi@vger.kernel.org'
+> Subject: Re: Emulex lpfcdriver v8.0.2 available
 > 
-> The op x03 "REQUEST SENSE" here is inappropriate - it is unsolicited -
-> the "CSW" "Stat" was not x01 AutoSenseMe, it was x00 Passed, expressed
-> here as "Stat 0x0".
 > 
-> I'm thinking usb-storage has to remove that inappropriate "REQUEST
-> SENSE", else usb-storage cannot be passing correct status back up?
 > 
-> usb-storage cannot correctly say that it autosensed SK ASC ASCQ zero,
-> because usb-storage only fetched unsolicited sense, not auto sense. 
-> usb-storage cannot say it saw a failure without sense, because
-> usb-storage did think it auto sensed.
+> Hi James,
 > 
-> Yes?
-
-The log you saw was from an older version of the kernel.  The current
-version does not autosense in this situation.  Or when it does (data-out
-transfer with CB transport) and the result is SK = ASC = ASCQ = 0, then it
-clears the sense buffer to pretend that it didn't autosense.
-
-> But after all that, maybe sd still will ignore the error and miscompare?
-
-sd doesn't receive any error indication other than positive residue, and 
-it ignores the residue.
-
-Alan Stern
-
+> We scored the following oops on the lpfcdriver-2.6-8.0.3 driver.
+> lpfc_delay_done hits a NULL pointer. It looks like clkData is not
+> initialised:
+> 
+>         list_del((struct list_head *)clkData);
+> 
+> I noticed you use casts all over the place in list functions, 
+> why not just
+> pass in &clkData->list?
+> 
+> Anton
+> 
+> NIP: C0000000002D2A40 XER: 0000000020000000 LR: C000000000060AE0
+> REGS: c00000000ffffb40 TRAP: 0300   Not tainted  (2.6.7-rc2)
+> MSR: 9000000000001032 EE: 0 PR: 0 FP: 0 ME: 1 IR/DR: 11
+> DAR: 0000000000000000, DSISR: 0000000042000000
+> TASK: c00000000066e840[0] 'swapper' THREAD: c000000000500000 CPU: 0
+> GPR00: 0000000000200200 C00000000FFFFDC0 C000000000832EB0 
+> C00000203873E838
+> GPR04: C00000203873E800 C0000000009EDF00 0000000000000000 
+> C000001FFF976000
+> GPR08: 0000000000000000 0000000000100100 0000000000000000 
+> 9000000000009032
+> GPR12: C000000000687FC0 C000000000504000 0000000000000000 
+> 0000000000000000
+> GPR16: 0000000000000000 0000000000000000 0000000000000000 
+> 0000000000000000
+> GPR20: 0000000000000000 0000000000000000 0000000000000000 
+> 0000000000000000
+> GPR24: C000000000503A00 000000C1000000D5 0000000000000000 
+> 0000000000000096
+> GPR28: C00000000FFFFEC0 C00000000FFFC000 C000000000693818 
+> C000000000C6FF00
+> NIP [c0000000002d2a40] .lpfc_delay_done+0xa8/0xec
+> LR [c000000000060ae0] .run_timer_softirq+0x1bc/0x308
+> Call Trace:
+> [c000000000084374] .wb_timer_fn+0x20/0x6c (unreliable)
+> [c000000000060ae0] .run_timer_softirq+0x1bc/0x308
+> [c00000000005b774] .__do_softirq+0xa8/0x16c
+> [c000000000016b80] .call_do_softirq+0x14/0x24
+> [c00000000001102c] .do_softirq+0x90/0xa0
+> [c0000000000141a8] .timer_interrupt+0x3a4/0x47c
+> [c00000000000a2b4] Decrementer_common+0xb4/0x100
+> --- Exception: 901 at .default_idle+0x64/0xac
+>     LR = .default_idle+0xa4/0xac
+> 
