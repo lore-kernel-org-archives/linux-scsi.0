@@ -1,48 +1,42 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: max_sectors in libata when using md
-Date: Thu, 26 Aug 2004 13:51:54 -0400
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: PATCH: (as355) Fix test for valid sense data present
+Date: 26 Aug 2004 13:27:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <412E233A.1040601@pobox.com>
-References: <412DFFA9.8030504@wasp.net.au> <8746466a0408260852205a7842@mail.gmail.com> <412E11E3.9050207@wasp.net.au>
+Message-ID: <1093541269.2326.148.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0408261244430.1089-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:59345 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S269333AbUHZRwH
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Aug 2004 13:52:07 -0400
-In-Reply-To: <412E11E3.9050207@wasp.net.au>
+Received: from stat16.steeleye.com ([209.192.50.48]:30146 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S269288AbUHZRc5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Aug 2004 13:32:57 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0408261244430.1089-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: Dave <dave.jiang@gmail.com>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, RAID Linux <linux-raid@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Brad Campbell wrote:
-> I also note than in sata_sil there is a workaround for Seagate drives 
-> that knocks max_sectors back to 15.
+On Thu, 2004-08-26 at 12:59, Alan Stern wrote:
+> No problems have come up in actual use.  I wrote the patch in response to 
+> the message below, from Douglas Gilbert (this was part of an interchange 
+> commenting on some proposed additions to the 
+> Documentation/scsi/scsi_mid_low_api.txt document -- see the section 
+> about Autosense).  Was he incorrect?
 
-That's very specific to SiI-311x + Seagate drives.
+I suspect that's because you've never seen any of the new types in
+practice.
 
+0x70 is really the only sense type we process correctly: Fixed Format. 
+0x72 is the newer Descriptor Format.  0x71 and 0x73 are the Fixed and
+Descriptor format deferred sense conditions.
 
-> Is the md driver going to circumvent 
-> that also and lock up those interfaces?
-> 
-> I realise that 200 is decimal, my question was more how are requests of 
-> 1024 sectors making it to the driver when the driver has a max_sector 
-> value of 200?
-> 
-> I'm only seeing sectors > 200 when the request comes from md, thus my 
-> cc'ing it to the raid list to see if anyone there has any idea.
+We really only get deferred errors if the device has a cache that is set
+to writeback, so we just hope never to see them...
 
-With a filesystem+MD, you have two entities trying hard to generate the 
-largest request possible, the VM [handles filesystem writeback] and MD. 
-   If you remove MD from the picture, you remove one entity that tries 
-to create large requests.  So that part makes sense.
+I thought Doug had a proposal for unifying our view of Fixed vs
+Descriptor sense formats?
 
-However, if md violates or increases the max-sectors above what the 
-driver sets, then hardware would be failing all over the place.  I could 
-be wrong, but I tend to doubt md would do something like that.
-
-	Jeff
+James
 
 
