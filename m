@@ -1,104 +1,38 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [usb-storage] Re: MPIO HS200 Gigabox weird behaviour again
-Date: Fri, 11 Feb 2005 13:31:30 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0502111326540.937-100000@ida.rowland.org>
-References: <1108138682.5773.23.camel@mulgrave>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] SCSI: dpt_i2o.c: make some code static
+Date: Fri, 11 Feb 2005 19:54:22 +0100
+Message-ID: <20050211185422.GD3736@stusta.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from ida.rowland.org ([192.131.102.52]:15876 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S261387AbVBKSbb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Feb 2005 13:31:31 -0500
-In-Reply-To: <1108138682.5773.23.camel@mulgrave>
+Content-Type: text/plain; charset=us-ascii
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:31250 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S262306AbVBKSy2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Feb 2005 13:54:28 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Radovan Garabik <garabik@kassiopeia.juls.savba.sk>
-Cc: USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 11 Feb 2005, James Bottomley wrote:
+This patch makes some needlessly global code static.
 
-> On Fri, 2005-02-11 at 11:00 -0500, Alan Stern wrote:
-> > SCSI developers: Is there any hope of this?
-> 
-> Well, IBM also has some old buggy piece of hardware that apparently
-> gives fatal errors but actually wants them retried:
-> 
-> http://marc.theaimsgroup.com/?t=110088696100005
-> 
-> After a bit of argument, they agreed to do it as a blacklist flag, so
-> you should be able to add the same flag to your gigabox.
-> 
-> I planned to put the patch in just as soon as they managed to send the
-> patch unmangled by a mailer, but they went very quiet.
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-Thanks, James.
+---
 
-Radovan: Below is an updated version of the patch James mentioned, with an
-entry included for your Gigabox drive.  It's meant to apply to
-2.6.11-rc3-bk5, but it will probably go with older kernels too.  Try it
-out and let me know how it works.  If it solves your problem, I'll submit
-it for inclusion in the official kernel.
+This patch was already sent on:
+- 15 Nov 2004
+- 24 Nov 2004
 
-Alan Stern
-
-
-===== include/scsi/scsi_devinfo.h 1.7 vs edited =====
---- 1.7/include/scsi/scsi_devinfo.h	2004-10-05 11:25:13 -04:00
-+++ edited/include/scsi/scsi_devinfo.h	2005-02-11 13:21:51 -05:00
-@@ -27,4 +27,5 @@
- #define BLIST_NOT_LOCKABLE	0x80000	/* don't use PREVENT-ALLOW commands */
- #define BLIST_NO_ULD_ATTACH	0x100000 /* device is actually for RAID config */
- #define BLIST_SELECT_NO_ATN	0x200000 /* select without ATN */
-+#define BLIST_RETRY_HWERROR	0x400000 /* retry HARDWARE_ERROR */
- #endif
-===== drivers/scsi/scsi_devinfo.c 1.14 vs edited =====
---- 1.14/drivers/scsi/scsi_devinfo.c	2004-12-10 11:54:56 -05:00
-+++ edited/drivers/scsi/scsi_devinfo.c	2005-02-11 13:25:41 -05:00
-@@ -159,6 +159,7 @@
- 	{"HP", "C3323-300", "4269", BLIST_NOTQ},
- 	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
- 	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"IBM", "2105", NULL, BLIST_RETRY_HWERROR},
- 	{"iomega", "jaz 1GB", "J.86", BLIST_NOTQ | BLIST_NOLUN},
- 	{"IOMEGA", "Io20S         *F", NULL, BLIST_KEY},
- 	{"INSITE", "Floptical   F*8I", NULL, BLIST_KEY},
-@@ -192,6 +193,7 @@
- 	{"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN | BLIST_INQUIRY_36},
- 	{"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
- 	{"SONY", "TSL", NULL, BLIST_FORCELUN},		/* DDS3 & DDS4 autoloaders */
-+	{"ST650211", "CF", NULL, BLIST_RETRY_HWERROR},
- 	{"SUN", "T300", "*", BLIST_SPARSELUN},
- 	{"SUN", "T4", "*", BLIST_SPARSELUN},
- 	{"TEXEL", "CD-ROM", "1.06", BLIST_BORKEN},
-===== drivers/scsi/scsi_error.c 1.47 vs edited =====
---- 1.47/drivers/scsi/scsi_error.c	2005-02-02 21:56:01 -05:00
-+++ edited/drivers/scsi/scsi_error.c	2005-02-11 13:23:45 -05:00
-@@ -31,6 +31,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_ioctl.h>
- #include <scsi/scsi_request.h>
-+#include <scsi/scsi_devinfo.h>
+--- linux-2.6.10-rc1-mm5-full/drivers/scsi/dpt_i2o.c.old	2004-11-13 21:01:47.000000000 +0100
++++ linux-2.6.10-rc1-mm5-full/drivers/scsi/dpt_i2o.c	2004-11-13 21:01:57.000000000 +0100
+@@ -108,7 +108,7 @@
+  *============================================================================
+  */
  
- #include "scsi_priv.h"
- #include "scsi_logging.h"
-@@ -350,10 +351,18 @@
- 	case MEDIUM_ERROR:
- 		return NEEDS_RETRY;
+-DECLARE_MUTEX(adpt_configuration_lock);
++static DECLARE_MUTEX(adpt_configuration_lock);
  
-+	case HARDWARE_ERROR:
-+		if (scsi_get_device_flags(scmd->device,
-+					scmd->device->vendor,
-+					scmd->device->model)
-+				& BLIST_RETRY_HWERROR)
-+			return NEEDS_RETRY;
-+		else
-+			return SUCCESS;
-+
- 	case ILLEGAL_REQUEST:
- 	case BLANK_CHECK:
- 	case DATA_PROTECT:
--	case HARDWARE_ERROR:
- 	default:
- 		return SUCCESS;
- 	}
+ static struct i2o_sys_tbl *sys_tbl = NULL;
+ static int sys_tbl_ind = 0;
 
