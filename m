@@ -1,47 +1,96 @@
-From: Mike Christie <mikenc@us.ibm.com>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Wed, 29 Oct 2003 11:33:00 -0800
+From: Rask Ingemann Lambertsen <rask@sygehus.dk>
+Subject: [PATCH] aha1740.c: Allow level triggered interrupts to be shared
+Date: Wed, 29 Oct 2003 22:36:09 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FA015EC.6030102@us.ibm.com>
-References: <20031027153932.A16679@infradead.org>	<018b01c39e1f$e013bab0$a0074d0a@apac.cisco.com>	<20031029134557.A17523@infradead.org> <3F9FF8C7.70909@us.ibm.com>	<yqujd6cf51cp.fsf@chaapala-lnx2.cisco.com>	<3FA00E9E.7000704@us.ibm.com> <yquj7k2n4zvs.fsf@chaapala-lnx2.cisco.com>
+Message-ID: <20031029223609.A7362@sygehus.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.103]:38302 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261464AbTJ2TeG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2003 14:34:06 -0500
-In-Reply-To: <yquj7k2n4zvs.fsf@chaapala-lnx2.cisco.com>
+Received: from 0x50a41c44.albnxx15.adsl-dhcp.tele.dk ([80.164.28.68]:27908
+	"EHLO 0x50a41c3d.albnxx15.adsl-dhcp.tele.dk") by vger.kernel.org
+	with ESMTP id S261605AbTJ2Vhl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Oct 2003 16:37:41 -0500
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Clay Haapala <chaapala@cisco.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Clay Haapala wrote:
+Hi.
 
-> On Wed, 29 Oct 2003, Mike Christie outgrape:
-> 
->>>This may turn out to be a discussion about where this code resides
->>>and what code is best to (re)use, not if it is needed.  "Early
->>>boot" here is from PXE -- setting up the iSCSI initiator to reach a
->>>target at some IP where the rest of the boot (initrd and friends)
->>>is.
->>>
->>
->>Oops. I forgot you guys use iNBP.com. I was thinking of pxelinux.
->>
->>Mike
-> 
-> Oh, now I have to find out about pxelinux ... google ... OK. :-)
-> 
-> Yeah, like that only different -- using iSCSI to a target to fetch
-> blocks rather than TFTP of files from a filestore.
+The patch below (against 2.6.0-test8) makes it possible to share the
+interrupt when the aha1740 is configured for a level triggered interrupt.
+It appears to work fine on my i486 EISA box with an AHA-1742A and an NE3200
+Ethernet board sharing an irq. Comments, please.
 
-Once inbp.com reads in the kernel and initrd, it looks like your linuxrc 
-just insmods the netwrok driver and iscsi mod. At this point (after you 
-insmod the network driver but before you insmod iscsi.ko.) you can start 
-the networking interface from userspace. Include a statically compiled 
-dhcp program and run it from the linuxrc.
+--- linux-2.6.0-test8/drivers/scsi/aha1740.c-orig	Fri Oct 17 23:42:57 2003
++++ linux-2.6.0-test8/drivers/scsi/aha1740.c	Mon Oct 27 13:23:22 2003
+@@ -27,6 +27,9 @@
+  * Converted to EISA and generic DMA APIs by Marc Zyngier
+  * <maz@wild-wind.fr.eu.org>, 4/2003.
+  *
++ * Shared interrupt support added by Rask Ingemann Lambertsen
++ * <rask@sygehus.dk>, 10/2003
++ *
+  * For the avoidance of doubt the "preferred form" of this code is one which
+  * is in an open non patent encumbered format. Where cryptographic key signing
+  * forms part of the process of creating an executable the information
+@@ -518,15 +521,17 @@
+ 	return 0;
+ }
+ 
+-/* Query the board for its irq_level.  Nothing else matters
++/* Query the board for its irq_level and irq_type.  Nothing else matters
+    in enhanced mode on an EISA bus. */
+ 
+ static void aha1740_getconfig(unsigned int base, unsigned int *irq_level,
++			      unsigned int *irq_type,
+ 			      unsigned int *translation)
+ {
+ 	static int intab[] = { 9, 10, 11, 12, 0, 14, 15, 0 };
+ 
+ 	*irq_level = intab[inb(INTDEF(base)) & 0x7];
++	*irq_type  = (inb(INTDEF(base)) & 0x8) >> 3;
+ 	*translation = inb(RESV1(base)) & 0x1;
+ 	outb(inb(INTDEF(base)) | 0x10, INTDEF(base));
+ }
+@@ -583,7 +588,7 @@
+ static int aha1740_probe (struct device *dev)
+ {
+ 	int slotbase;
+-	unsigned int irq_level, translation;
++	unsigned int irq_level, irq_type, translation;
+ 	struct Scsi_Host *shpnt;
+ 	struct aha1740_hostdata *host;
+ 	struct eisa_device *edev = to_eisa_device (dev);
+@@ -595,15 +600,15 @@
+ 		return -EBUSY;
+ 	if (!aha1740_test_port(slotbase))
+ 		goto err_release_region;
+-	aha1740_getconfig(slotbase,&irq_level,&translation);
++	aha1740_getconfig(slotbase,&irq_level,&irq_type,&translation);
+ 	if ((inb(G2STAT(slotbase)) &
+ 	     (G2STAT_MBXOUT|G2STAT_BUSY)) != G2STAT_MBXOUT) {
+ 		/* If the card isn't ready, hard reset it */
+ 		outb(G2CNTRL_HRST, G2CNTRL(slotbase));
+ 		outb(0, G2CNTRL(slotbase));
+ 	}
+-	printk(KERN_INFO "Configuring slot %d at IO:%x, IRQ %d\n",
+-	       edev->slot, slotbase, irq_level);
++	printk(KERN_INFO "Configuring slot %d at IO:%x, IRQ %u (%s)\n",
++	       edev->slot, slotbase, irq_level, irq_type ? "edge" : "level");
+ 	printk(KERN_INFO "aha174x: Extended translation %sabled.\n",
+ 	       translation ? "en" : "dis");
+ 	shpnt = scsi_host_alloc(&aha1740_template,
+@@ -629,7 +634,8 @@
+ 	}
+ 	
+ 	DEB(printk("aha1740_probe: enable interrupt channel %d\n",irq_level));
+-	if (request_irq(irq_level,aha1740_intr_handle,0,"aha1740",shpnt)) {
++	if (request_irq(irq_level,aha1740_intr_handle,irq_type ? 0 : SA_SHIRQ,
++			"aha1740",shpnt)) {
+ 		printk(KERN_ERR "aha1740_probe: Unable to allocate IRQ %d.\n",
+ 		       irq_level);
+ 		goto err_unmap;
 
-Mike
-
+-- 
+Regards,
+Rask Ingemann Lambertsen
