@@ -1,69 +1,114 @@
-From: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH][2.5] SCSI hosts.c missing device_register
-Date: Sat, 23 Nov 2002 14:44:03 -0600
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: Re: PROBLEM: SYM53C8XX errors while reading tape
+Date: Sat, 23 Nov 2002 17:45:11 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200211232044.gANKi3h03901@localhost.localdomain>
-References: <James.Bottomley@steeleye.com>
+Message-ID: <Pine.LNX.4.44.0211231345470.26253-100000@filesrv1.baby-dragons.com>
+References: <Pine.LNX.4.44.0211231231290.26253-100000@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed ;
-	boundary="==_Exmh_20000166300"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id MAA06904
-	for <linux-scsi@vger.kernel.org>; Sat, 23 Nov 2002 12:44:06 -0800
-In-Reply-To: Message from "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
-   of "Sat, 23 Nov 2002 14:14:59 CST." <200211232014.gANKExH03723@localhost.localdomain>
+In-Reply-To: <Pine.LNX.4.44.0211231231290.26253-100000@filesrv1.baby-dragons.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "J.E.J. Bottomley" <James.Bottomley@SteelEye.com>
-Cc: Zwane Mwaikambo <zwane@holomorphy.com>, linux-scsi@vger.kernel.org
-
-This is a multipart MIME message.
-
---==_Exmh_20000166300
-Content-Type: text/plain; charset=us-ascii
-
-Actually, the last patch was wrong.  We can't do device_register until we've 
-at least cleared the memory area.  This one moves it to the bottom of the 
-routine.  I've actually booted it and it seems to work.
-
-James
+To: Russell Senior <seniorr@aracnet.com>
+Cc: Linux Scsi maillist <linux-scsi@vger.kernel.org>
 
 
---==_Exmh_20000166300
-Content-Type: text/plain ; name="tmp.diff"; charset=us-ascii
-Content-Description: tmp.diff
-Content-Disposition: attachment; filename="tmp.diff"
+	Hello Russell ,  I stand(well sit) corrected .  The data you sent
+	matched exactly ,minus differant controllers, my setup after I
+	swapped over to a python not the same vesrion as yours tho.
+	But ,  Mine appears to function quite well .  Had to re-install
+	the old bugger to do this .  No problems running the commands you
+	sent along except I did not try backing up the whole '/' I just
+	did /root whihc is ~ 288MB .  Below are the cmnds in the order I
+	ran them .  I forgot to record the dmesg putput .  Basically there
+	was not any ,  beyond the last two lines you reported .
+	The 'kernel:' is from an older dmesg for model & vendor info .
+	I was of the opinion that the SYM53C8XX_2 was supposed to report
+	itself as   sym_2:  in the demsg output .  I see now that it DOES
+	NOT do so .  Which I beleive is not what Gerard had said it was to
+	do way back when .  Hth ,  JimL
 
-===== drivers/scsi/hosts.c 1.37 vs edited =====
---- 1.37/drivers/scsi/hosts.c	Fri Nov 22 20:12:54 2002
-+++ edited/drivers/scsi/hosts.c	Sat Nov 23 14:33:21 2002
-@@ -297,7 +297,6 @@
- 	printk(KERN_INFO "scsi%d : %s\n", shost->host_no,
- 			sht->info ? sht->info(shost) : sht->name);
- 
--	device_register(&shost->host_driverfs_dev);
- 	scsi_scan_host(shost);
- 			
- 	list_for_each_entry (sdev, &shost->my_devices, siblings) {
-@@ -378,7 +377,7 @@
- 		printk(KERN_ERR "%s: out of memory.\n", __FUNCTION__);
- 		return NULL;
- 	}
--
-+	/* from here on, we can't fail */
- 	memset(shost, 0, sizeof(struct Scsi_Host) + xtr_bytes);
- 
- 	shost->host_no = scsi_alloc_host_num(shost_tp->proc_name);
-@@ -463,6 +462,8 @@
- 	shost->eh_notify = NULL;
- 
- 	shost->hostt->present++;
-+
-+	device_register(&shost->host_driverfs_dev);
- 
- 	return shost;
- }
+mtx -f /dev/sg3 load 1
+mt -f /dev/nst0 setblk 32768
+mtx -f /dev/sg3 status
+mt -f /dev/nst0 status
+tar -C /root -b 64 -clvf /dev/nst0 .
+mt -f /dev/nst0 status
+mt -f /dev/nst0 rewind
+tar -b 64 -tvf /dev/nst0
+mt -f /dev/nst0 rewind
+mtx -f /dev/sg3 unload
+dmesg
 
---==_Exmh_20000166300--
+kernel: Detected scsi disk sdb at scsi0, channel 0, id 1, lun 0
+kernel:   Vendor: ARCHIVE   Model: 4586XX 28887-XXX  Rev: 0420
+kernel:   Type:   Sequential-Access                  ANSI SCSI revision: 02
+kernel: Detected scsi tape st0 at scsi0, channel 0, id 4, lun 0
+kernel:   Vendor: ARCHIVE   Model: 4586XX 28887-XXX  Rev: 0420
+kernel:   Type:   Medium Changer                     ANSI SCSI revision: 02
+kernel: Detected scsi generic sgd at scsi0, channel 0, id 4, lun 1
+
+
+
+On Sat, 23 Nov 2002, Mr. James W. Laferriere wrote:
+
+>
+> 	Hello Russell ,  Sorry about taking the original reply off list
+> 	I should know better .  According to the dmesg & the log dumps
+> 	you sent you were (were they edited?) .  Please make sure that
+> 	SYM53C8XX_2 driver was the only driver in the 53c8* series that
+> 	was selected or That modules were not being selected anyway .
+>
+> 	I for one KNOW that if the SYM53C8XX driver is compiled in OR
+> 	listed first in the module.conf file IT will be loaded in front of
+> 	the SYM53C8XX_2 and this will keep the sym2 from loading at all .
+> 	And I have seen (at least three times) a condition where the
+> 	SYM53C8XX_2 WAS compiled IN (just like you) and the SYM53C8XX was
+> 	a module and it was -still- loaded & began conflicting with the
+> 	SYM53C8XX_2 during use .  Hth ,  JimL
+>
+> ps:	On my systems I have had at onetime or another almost every
+> 	(older) scsi tape drive manufactured .  And damn near everytime I
+> 	have had a problem it has been some mistake on my end .  A bus a
+> 	tad to long ,  the terminator I bought was just a little to good
+> 	to beleive price wise ...
+>
+> On 22 Nov 2002, Russell Senior wrote:
+>
+> > >>>>> "James" == James W Laferriere <babydr@baby-dragons.com> writes:
+> >
+> > James> 	Hello Russell , Could you try the SYM53C8XX_2 driver ?  I
+> > James> beleive that this may help .  JimL
+> >
+> > I _was_ using the SYM53C8XX_2 driver.  Here's the relevant portion of
+> > my .config for 2.4.18:
+> >
+> >   # CONFIG_SCSI_NCR53C7xx is not set
+> >   CONFIG_SCSI_SYM53C8XX_2=y
+> >   CONFIG_SCSI_SYM53C8XX_DMA_ADDRESSING_MODE=1
+> >   CONFIG_SCSI_SYM53C8XX_DEFAULT_TAGS=16
+> >   CONFIG_SCSI_SYM53C8XX_MAX_TAGS=64
+> >   # CONFIG_SCSI_SYM53C8XX_IOMAPPED is not set
+>
+> --
+>        +------------------------------------------------------------------+
+>        | James   W.   Laferriere | System    Techniques | Give me VMS     |
+>        | Network        Engineer |     P.O. Box 854     |  Give me Linux  |
+>        | babydr@baby-dragons.com | Coudersport PA 16915 |   only  on  AXP |
+>        +------------------------------------------------------------------+
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+--
+       +------------------------------------------------------------------+
+       | James   W.   Laferriere | System    Techniques | Give me VMS     |
+       | Network        Engineer |     P.O. Box 854     |  Give me Linux  |
+       | babydr@baby-dragons.com | Coudersport PA 16915 |   only  on  AXP |
+       +------------------------------------------------------------------+
 
 
