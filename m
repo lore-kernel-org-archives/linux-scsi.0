@@ -1,133 +1,68 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: libata update posted (was Re: VIA Serial ATA chipset)
-Date: Fri, 29 Aug 2003 10:51:15 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <3F4F6863.4080400@pobox.com>
-References: <20030813074535.C3AB427AC8@mail.medav.de>
+From: Andrew Ryan <genanr@emsphone.com>
+Subject: MD causes BUG in scsi-lib.c kernel 2.6.0-test4
+Date: Fri, 29 Aug 2003 10:36:14 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20030829153614.GA30216@thumper2.emsphone.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050905060104010308070500"
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20030813074535.C3AB427AC8@mail.medav.de>
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: Daniela Engert <dani@ngrt.de>, Misha Nasledov <misha@nasledov.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from thumper2.emsphone.com ([199.67.51.102]:21960 "EHLO
+	thumper2.emsphone.com") by vger.kernel.org with ESMTP
+	id S261403AbTH2PgT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Aug 2003 11:36:19 -0400
+Received: from thumper2.emsphone.com (genanr@localhost [127.0.0.1])
+	by thumper2.emsphone.com (8.12.9/8.12.9/Debian-3) with ESMTP id h7TFaEm8030300
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Aug 2003 10:36:14 -0500
+Received: (from genanr@localhost)
+	by thumper2.emsphone.com (8.12.9/8.12.9/Debian-3) id h7TFaEqI030298
+	for linux-scsi@vger.kernel.org; Fri, 29 Aug 2003 10:36:14 -0500
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------050905060104010308070500
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+When trying to set up a simple multipath MD device, I get the following oops
+when trying to create (or mount) it.  Kernel version 2.6.0-test4 using
+qlogic 8.00.00b5 drivers.
 
-Daniela Engert wrote:
-> On Tue, 12 Aug 2003 23:49:23 -0700, Misha Nasledov wrote:
-> 
-> 
->>Thanks a lot, this patch works for me. I have the following in my dmesg:
->>
->>VIA8237SATA: IDE controller at PCI slot 0000:00:0f.0
->>PCI: Found IRQ 3 for device 0000:00:0f.0
->>IRQ routing conflict for 0000:00:0f.0, have irq 11, want irq 3
->>PCI: Sharing IRQ 3 with 0000:00:0f.1
->>IRQ routing conflict for 0000:00:10.0, have irq 11, want irq 3
->>IRQ routing conflict for 0000:00:10.1, have irq 11, want irq 3
->>VIA8237SATA: chipset revision 128
->>VIA8237SATA: 100% native mode on irq 11
->>   ide4: BM-DMA at 0x8400-0x8407, BIOS settings: hdi:pio, hdj:pio
->>   ide5: BM-DMA at 0x8408-0x840f, BIOS settings: hdk:pio, hdl:pio
->>
->>The IRQ routing conflict lines have always existed, and there are more
->>similar lines in other parts of the dmesg. I'm not sure if they are
->>pertinent at all. Unfortunately, the drive does not seem to perform as
->>well as a SATA drive should; my UDMA/133 drive currently outperforms
->>this. However, it seems to significantly faster than the UDMA/66 drive
->>I run Linux on, so I am glad that it works as fast it does because now
->>I can perhaps use this as my new system drive.
-> 
-> 
-> Well, the patch was meant to be a quick shot from the hips only, just
-> to get your system going and to check if my assumptions about the
-> structure of the VIA SATA host controller implementation wer correct.
-> It looks like they are, this controller seems to follow the T13 ATA
-> host controller model.
+Aug 25 17:56:55 linuxha1 kernel: kernel BUG at drivers/scsi/scsi_lib.c:544!
+Aug 25 17:56:55 linuxha1 kernel: invalid operand: 0000 [#1]
+Aug 25 17:56:55 linuxha1 kernel: CPU:    1
+Aug 25 17:56:55 linuxha1 kernel: EIP:    0060:[<c022b195>]    Not tainted
+Aug 25 17:56:55 linuxha1 kernel: EFLAGS: 00010046
+Aug 25 17:56:55 linuxha1 kernel: EIP is at scsi_alloc_sgtable+0x15/0xf0
+Aug 25 17:56:55 linuxha1 kernel: eax: 00000000   ebx: f6811248   ecx: f6b7c400   edx: f7d3e7e0
+Aug 25 17:56:55 linuxha1 kernel: esi: 00000020   edi: f7d3e7e0   ebp: f6811248   esp: f660bd2c
+Aug 25 17:56:55 linuxha1 kernel: ds: 007b   es: 007b   ss: 0068
+Aug 25 17:56:55 linuxha1 kernel: Process mount (pid: 5551, threadinfo=f660a000 task=f769b3a0)
+Aug 25 17:56:55 linuxha1 kernel: Stack: 00000020 f6811248 00000020 f7d3e7e0 f6811248 c022b77b f7d3e7e0 00000020 
+Aug 25 17:56:55 linuxha1 kernel:        f7d3e7e0 00000020 f6b7c400 c022b91d f7d3e7e0 f6811248 f6d8c800 f660bdac 
+Aug 25 17:56:55 linuxha1 kernel:        f678bad4 c01ed244 f6d8c800 f6811248 f6d8c800 f6d8c944 c01ee995 f6d8c800 
+Aug 25 17:56:55 linuxha1 kernel: Call Trace:
+Aug 25 17:56:55 linuxha1 kernel:  [<c022b77b>] scsi_init_io+0x5b/0x110
+Aug 25 17:56:55 linuxha1 kernel:  [<c022b91d>] scsi_prep_fn+0xed/0x150
+Aug 25 17:56:55 linuxha1 kernel:  [<c01ed244>] elv_next_request+0x14/0xe0
+Aug 25 17:56:55 linuxha1 kernel:  [<c01ee995>] generic_unplug_device+0x45/0x70
+Aug 25 17:56:55 linuxha1 kernel:  [<c013734f>] do_page_cache_readahead+0x14f/0x170
+Aug 25 17:56:55 linuxha1 kernel:  [<c01eead2>] blk_run_queues+0x72/0xa0
+Aug 25 17:56:55 linuxha1 kernel:  [<c0150175>] block_sync_page+0x5/0x10
+Aug 25 17:56:55 linuxha1 kernel:  [<c0131a0f>] __lock_page+0xaf/0xe0
+Aug 25 17:56:55 linuxha1 kernel:  [<c01185d0>] autoremove_wake_function+0x0/0x40
+Aug 25 17:56:55 linuxha1 kernel:  [<c0137445>] page_cache_readahead+0xd5/0x150
+Aug 25 17:56:55 linuxha1 kernel:  [<c01185d0>] autoremove_wake_function+0x0/0x40
+Aug 25 17:56:55 linuxha1 kernel:  [<c0131eff>] do_generic_mapping_read+0x1cf/0x3a0
+Aug 25 17:56:55 linuxha1 kernel:  [<c01320d0>] file_read_actor+0x0/0xd0
+Aug 25 17:56:55 linuxha1 kernel:  [<c0132395>] __generic_file_aio_read+0x1f5/0x220
+Aug 25 17:56:55 linuxha1 kernel:  [<c01320d0>] file_read_actor+0x0/0xd0
+Aug 25 17:56:55 linuxha1 kernel:  [<c0132488>] generic_file_read+0x78/0xa0
+Aug 25 17:56:55 linuxha1 kernel:  [<c0152e48>] do_open+0xf8/0x390
+Aug 25 17:56:55 linuxha1 kernel:  [<c0153186>] blkdev_open+0x26/0x60
+Aug 25 17:56:55 linuxha1 kernel:  [<c014adeb>] dentry_open+0xeb/0x1c0
+Aug 25 17:56:55 linuxha1 kernel:  [<c014b97a>] vfs_read+0xaa/0xe0
+Aug 25 17:56:55 linuxha1 kernel:  [<c0152600>] block_llseek+0x0/0xe0
+Aug 25 17:56:55 linuxha1 kernel:  [<c014b7f5>] sys_llseek+0xb5/0xe0
+Aug 25 17:56:55 linuxha1 kernel:  [<c014bb6f>] sys_read+0x2f/0x50
+Aug 25 17:56:55 linuxha1 kernel:  [<c0108f93>] syscall_call+0x7/0xb
+Aug 25 17:56:55 linuxha1 kernel: 
+Aug 25 17:56:55 linuxha1 kernel: Code: 0f 0b 20 02 af cc 2c c0 0f b7 82 9e 00 00 00 83 f8 20 7f 1d 
 
-Correct.
-
-
->>Are there any plans on the horizon for a more complete driver for this
->>chipset?
-> 
-> 
-> Jeff Garzik is working on a SATA driver. My conclusions from the
-> results of the feasability test above are that adding the VIA SATA
-> controller to the already existing libata source should boil down to
-> pretty simple programming excercise.
-
-It was.  The sata_via.c driver is absolutely generic except for its PCI 
-ID.  I only chose to create a separate driver because I now have docs 
-(thanks, VIA), so I can begin programming the SATA-specific registers.
-
-So, here are the 2.4 and 2.6 versions of the VIA SATA support for 
-libata, contained in the latest libata update.
-
-2.4 BK: bk://kernel.bkbits.net/jgarzik/atascsi-2.4
-2.4 Patch: 
-ftp://ftp.kernel.org/pub/linux/kernel/people/jgarzik/patchkits/2.4/2.4.23-pre1-libata3.patch.bz2
-
-2.6 BK: bk://kernel.bkbits.net/jgarzik/atascsi-2.6
-2.6 Patch: 
-ftp://ftp.kernel.org/pub/linux/kernel/people/jgarzik/patchkits/2.6/2.6.0-test4-bk2-libata3.patch.bz2
-
-
-Changes:
-* add VIA SATA driver
-* fixes to software reset.
-* other fixes
-* split scsi-related code into separate file, libata-scsi.c.
-* continue work on phy layer
-* continue work towards fully async taskfile API:  you call submit_tf(), 
-and later on, your callback is called when the taskfile completes or 
-times out.   async taskfile API is required for ATAPI and supporting 
-more advanced host controllers like Promise or AHCI (SATA2).
-* some cleanups
-
-
---------------050905060104010308070500
-Content-Type: text/plain;
- name="patch.srst"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch.srst"
-
-===== drivers/scsi/ata_piix.c 1.22 vs edited =====
---- 1.22/drivers/scsi/ata_piix.c	Thu Aug 28 22:07:27 2003
-+++ edited/drivers/scsi/ata_piix.c	Fri Aug 29 00:51:44 2003
-@@ -137,7 +137,7 @@
- 	/* ich5_pata */
- 	{
- 		.sht		= &piix_sht,
--		.host_flags	= ATA_FLAG_SLAVE_POSS,
-+		.host_flags	= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
- 		.pio_mask	= 0x03,	/* pio3-4 */
- 		.udma_mask	= ATA_UDMA_MASK_40C, /* FIXME: cbl det */
- 		.host_info	= &piix_pata_ops,
-@@ -146,7 +146,8 @@
- 	/* ich5_sata */
- 	{
- 		.sht		= &piix_sht,
--		.host_flags	= ATA_FLAG_SATA | PIIX_FLAG_COMBINED,
-+		.host_flags	= ATA_FLAG_SATA | PIIX_FLAG_COMBINED
-+				  | ATA_FLAG_SRST,
- 		.pio_mask	= 0x03,	/* pio3-4 */
- 		.udma_mask	= 0x7f,	/* udma0-6 ; FIXME */
- 		.host_info	= &piix_sata_ops,
-@@ -155,7 +156,7 @@
- 	/* piix4_pata */
- 	{
- 		.sht		= &piix_sht,
--		.host_flags	= ATA_FLAG_SLAVE_POSS,
-+		.host_flags	= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
- 		.pio_mask	= 0x03, /* pio3-4 */
- 		.udma_mask	= ATA_UDMA_MASK_40C, /* FIXME: cbl det */
- 		.host_info	= &piix_pata_ops,
-
---------------050905060104010308070500--
+Andy
