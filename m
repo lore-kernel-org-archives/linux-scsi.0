@@ -1,30 +1,29 @@
-From: Douglas Gilbert <dougg@torque.net>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: drivers/block/scsi_ioctl problem
-Date: Wed, 15 Dec 2004 15:32:47 +1000
-Message-ID: <41BFCC7F.2050005@torque.net>
+Date: Wed, 15 Dec 2004 08:18:53 +0100
+Message-ID: <20041215071852.GM3157@suse.de>
 References: <41BF7C18.9090303@us.ibm.com>
-Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from borg.st.net.au ([65.23.158.22]:45266 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S261888AbULOFbq (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:35230 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262217AbULOHSz (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Dec 2004 00:31:46 -0500
+	Wed, 15 Dec 2004 02:18:55 -0500
+Content-Disposition: inline
 In-Reply-To: <41BF7C18.9090303@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com
+To: Brian King <brking@us.ibm.com>
 Cc: linux-scsi@vger.kernel.org
 
-Brian King wrote:
+On Tue, Dec 14 2004, Brian King wrote:
 > Can someone explain to me the need for this bit of code in 
 > drivers/block/scsi_ioctl.c:
 > 
 > if (!(type & CMD_WARNED)) {
->     cmd_type[cmd[0]] = CMD_WARNED;
->     printk(KERN_WARNING "scsi: unknown opcode 0x%02x\n", cmd[0]);
+> 	cmd_type[cmd[0]] = CMD_WARNED;
+> 	printk(KERN_WARNING "scsi: unknown opcode 0x%02x\n", cmd[0]);
 > }
 > 
 > I'm trying to convert an application to use SG_IO to /dev/sd* devices 
@@ -33,28 +32,10 @@ Brian King wrote:
 > getting one of these error logs. Is there a good reason this error log 
 > is needed?
 
-Brian,
-I think command filtering was retrofitted into the block
-SG_IO code. You only need read permissions to execute an
-ioctl and FORMAT could be unfortunate.
+It was added to be able to find out which opcode was rejected and thus
+caused an application malfunction. It dumps the specific opcode only
+once, is that such a huge problem?
 
-
-IMO this code snippet should be moved from below the snippet
-you showed to the top of the procedural lines in that function:
-
-         /* And root can do any command.. */
-         if (capable(CAP_SYS_RAWIO))
-                 return 0;
-
-
-That command filtering seems pretty haphazard, aimed mainly at
-cd/dvd devices. The START STOP command is regarded as "safe
-for read"** while SERVICE ACTION IN (12), (16), MAINTENANCE IN
-and PERSISTENT RESERVE IN are _not_ considered "safe for read".
-
-** the sd driver doesn't react well when some other mechanism
-explicity spins down a dsik.
-
-Doug Gilbert
-
+-- 
+Jens Axboe
 
