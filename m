@@ -1,93 +1,67 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: possible use-after-free in 2.5.44 scsi changes
-Date: Sun, 27 Oct 2002 22:54:33 +0100
+From: Andries Brouwer <aebr@win.tue.nl>
+Subject: Re: [PATCH] fix sector_div use in scsicam.c
+Date: Sun, 27 Oct 2002 23:10:07 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021027215433.GA30429@suse.de>
-References: <20021027212035.GM3966@suse.de> <200210272137.g9RLbW413689@localhost.localdomain>
+Message-ID: <20021027221007.GA28417@win.tue.nl>
+References: <20021027192228.GA28395@win.tue.nl> <200210272053.g9RKrT612587@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200210272137.g9RLbW413689@localhost.localdomain>
+In-Reply-To: <200210272053.g9RKrT612587@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Badari Pulavarty <pbadari@us.ibm.com>, Andrew Morton <akpm@digeo.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin J. Bligh" <Martin.Bligh@us.ibm.com>, Doug Ledford <dledford@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On Sun, Oct 27 2002, James Bottomley wrote:
-> axboe@suse.de said:
-> > Sure that would suffice, but lets just move to the prep approach right
-> > away. First just the global one, later we can do one per device type. 
+On Sun, Oct 27, 2002 at 02:53:29PM -0600, James Bottomley wrote:
+> aebr@win.tue.nl said:
+> > I see you trying to get this scsicam code do something that it should
+> > not. No 64-bit handling required or even desirable. Any use of
+> > sector_div here is wrong. 
 > 
-> OK, will do.  SCSI currently needs the ability to bail on a request 
-> preparation in such a way that the request will get re-queued for preparation 
-> (out of command blocks or other resource shortage), which I believe you're 
-> working on.
+> Could you explain why?
 
-Oh sorry, just forgot to send that out. The change needed for this is
-very small. Basically, in blkdev.h, add these types:
+On ancient machines, user space needs the number of sectors per track
+and the number of heads in order to (i) write something appropriate
+in the partition table, and (ii) help the boot loader interface with
+the BIOS at boot time.
 
-#define BLKPREP_OK              0       /* serve it */
-#define BLKPREP_KILL            1       /* fatal error, kill */
-#define BLKPREP_DEFER           2       /* leave on queue */
+However, the number of cylinders does not play a role.
+On new systems the geometry is entirely irrelevant.
+On old systems the number of cylinders is not needed anywhere.
+It is not written in the partition table. It is not used in BIOS interaction.
 
-I've attached the elv_next_request(), sorry about this format but my
-tree is just severly crowded with changes in the block area right now so
-it's hard to diff.
+Some ancient software used C*H*S as a measure for the total disk size,
+but that is broken, especially since geometry depends on the BIOS setup.
+These days it is especially broken since HDIO_GETGEO returns a 16-bit
+value for the number of cylinders.
 
-Now you can just return BLKPREP_DEFER from the prep function, and it
-should do what you want. We might need a bit more logic in there, mainly
-to cover the case where we deferred the only request on the queue (your
-usual plugging thing). Or I might leave that to the driver, dunno. But
-at least this small change should make it possible for you to test.
+The code I suggested returns something reasonable to be backwards
+compatible with ancient software. Without the desire for compatibility
+the assignment
+	ip[2] = 0;
+would be acceptable too.
 
-> The per device type is more tricky because SCSI can have more than one
-> upper level driver driving the device queue.
+The patches I reacted to were worse in two respects:
+It invoked the sector_div macro designed to divide large numbers,
+while here division of large numbers is meaningless.
+Just superfluous code.
+It suggests that the computation is meaningful, and before you know it
+people will add ioctls to get the bits computed by this division
+out to user space.
 
-I was thinking more of doing device-type things, such as making the
-sector into lba, rejecting write command on ro media, copy actual scsi
-command, etc. But that might just fit into a generic function. And it
-means we can basically kill the ->init_command() functions.
+The current spec for HDIO_GETGEO is that the cylinder field of
+what it returns has to be ignored. The total disk size is found
+using BLKGETSIZE. If user space wants to compute a number of
+cylinders, for whatever reason, it has to divide the total size
+by H*S as returned by HDIO_GETGEO. That is what all recent software
+does.
 
-struct request *elv_next_request(request_queue_t *q)
-{
-	struct request *rq;
-	int ret;
+I am in the process of removing, extremely slowly, everything related
+to disk geometries from the kernel. Disk geometries have not existed
+the past ten years, and thousands of users have had to fight fake
+geometries invented by disk, BIOS, kernel and software.
+We must not add to this cruft, but only take away. Slowly.
 
-	while ((rq = __elv_next_request(q))) {
-		/*
-		 * just mark as started even if we don't start it, a request
-		 * that has been delayed should not be passed by new incoming
-		 * requests
-		 */
-		rq->flags |= REQ_STARTED;
-
-		if (&rq->queuelist == q->last_merge)
-			q->last_merge = NULL;
-
-		if ((rq->flags & REQ_DONTPREP) || !q->prep_rq_fn)
-			break;
-
-		ret = q->prep_rq_fn(q, rq);
-		if (ret == BLKPREP_OK) {
-			break;
-		} else if (ret == BLKPREP_DEFER) {
-			rq = NULL;
-			break;
-		} else if (ret == BLKPREP_KILL) {
-			blkdev_dequeue_request(rq);
-			rq->flags |= REQ_QUIET;
-			while (end_that_request_first(rq, 0, rq->nr_sectors))
-				;
-			end_that_request_last(rq);
-		} else {
-			printk("%s: bad return=%d\n", __FUNCTION__, ret);
-			break;
-		}
-	}
-
-	return rq;
-}
-
--- 
-Jens Axboe
+Andries
 
