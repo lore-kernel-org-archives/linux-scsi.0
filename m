@@ -1,57 +1,41 @@
-From: Andries.Brouwer@cwi.nl
+From: Luben Tuikov <luben@splentec.com>
 Subject: Re: inquiry in scsi_scan.c
-Date: Sun, 5 Jan 2003 14:07:39 +0100 (MET)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <UTC200301051307.h05D7da08203.aeb@smtp.cwi.nl>
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Date: Sun, 05 Jan 2003 14:36:54 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <3E188956.9090907@splentec.com>
+References: <UTC200301051307.h05D7da08203.aeb@smtp.cwi.nl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <UTC200301051307.h05D7da08203.aeb@smtp.cwi.nl>
+To: Andries.Brouwer@cwi.nl
+Cc: mdharm-kernel@one-eyed-alien.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: mdharm-kernel@one-eyed-alien.net
-Cc: Andries.Brouwer@cwi.nl, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 
-Matthew Dharm writes:
+Andries.Brouwer@cwi.nl wrote:
+> 
+> The SCSI code has no means of knowing the actual length transferred,
+> so has no choice but to believe the length byte in the reply.
+> But the USB code does the transferring itself, and knows precisely
+> how many bytes were transferred. If 36 bytes were transferred and
+> the additional length byte is 0, indicating a length of 5, then the
+> USB code can fix the response and change the additional length byte
+> to 31, indicating a length of 36. That way the SCSI code knows that
+> not 5 but 36 bytes are valid, and it gets actual vendor and model strings.
+> 
 
-> Instead of fixing this in usb-storage, I think I would rather make
-> scsi_scan.c just assume a minimum of 36.
+And what if the transport is *not* USB? Or they used
+a similar firmware of their device server in another
+product which used another transport?
 
-No, because (for SCSI-1) the minimum is 5.
+I suggest that this device is blacklisted in that
+SCSI Core would know that the ADDITIONAL LENGTH field
+in the INQURY response is incorrectly set (to 0).
+I.e. leave it to the interpreter.
 
-> Or, put another way, if the first request indicates less than 36, why
-> should we do a second request?  We already have all the data...
+A transport is *not* supposed to peek and poke in the
+data it transfers!
 
-We don't do a second request.
-
-> Actually, we ask for 36 and get 36, but the field in the response which is
-> supposed to tell us how much there is total is zeroed out, instead of
-> having a real value.
-
-Right.
-
-> All we need to do is recognize when that field indicates less than 36
-> bytes, and then stop asking for anything else.  Either (a) the device is
-> lying, in which case our original INQUIRY is fine, or (b) the device really
-> has less than 36 bytes, which means that we already have all the data.
-
-I think you misunderstand the problems. We do not ask for anything else.
-There are two problems: a SCSI and a USB problem.
-
-In the SCSI code a length of 5 is legal. Now the code
-allocates space for these 5 bytes but subsequently uses
-pointers to vendor etc that point past the end of the allocated area.
-If ever anything is written via these pointers random memory is corrupted.
-And "cat /proc/scsi/scsi" shows randow junk.
-A bug that has to be fixed, independently of USB.
-
-The SCSI code has no means of knowing the actual length transferred,
-so has no choice but to believe the length byte in the reply.
-But the USB code does the transferring itself, and knows precisely
-how many bytes were transferred. If 36 bytes were transferred and
-the additional length byte is 0, indicating a length of 5, then the
-USB code can fix the response and change the additional length byte
-to 31, indicating a length of 36. That way the SCSI code knows that
-not 5 but 36 bytes are valid, and it gets actual vendor and model strings.
-
-Andries
-
-
-[the code I showed does the right things; will submit actual diffs
-sooner or later]
+-- 
+Luben
