@@ -1,28 +1,53 @@
-From: Roman Zippel <zippel@linux-m68k.org>
-Subject: Re: Why /dev/sdc1 doesn't show up...
-Date: Mon, 18 Nov 2002 11:02:00 +0100 (CET)
+From: "didier" <didier@ece.gatech.edu>
+Subject: RE: Pb between an UltraTrak SX8000 and an Adaptec 29160
+Date: Mon, 18 Nov 2002 08:01:13 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0211181054330.2109-100000@serv>
-References: <20021118085928.82D7F2C30D@lists.samba.org>
+Message-ID: <000501c28f02$934b3000$13e2cf82@darkwolf>
+References: <47810000.1037389984@localhost>
+Reply-To: <didier@ece.gatech.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20021118085928.82D7F2C30D@lists.samba.org>
+In-Reply-To: <47810000.1037389984@localhost>
 List-Id: linux-scsi@vger.kernel.org
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Doug Ledford <dledford@redhat.com>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexander Viro <viro@math.psu.edu>, Linus Torvalds <torvalds@transmeta.com>
+To: "'Justin T. Gibbs'" <gibbs@scsiguy.com>, linux-scsi@vger.kernel.org
 
-Hi,
 
-On Mon, 18 Nov 2002, Rusty Russell wrote:
 
-> And it *still* means you need two paths for your code: one for "I know
-> it's not actually "active" yet, but I'm doing init and I need to
-> access it anyway".  So every interface gains significant complexity by
-> effectively implementing their own "live" flag...
+The UltraTrak was updated to the latest available firmware
+before connected to the server.
 
-Rusty, you know how refcounts work? Especially the "if 
-(atomic_dec_and_test(&obj->ref)) cleanup(obj)" part is really interesting.
+I e-mailed promise tech-support last week but did not get
+any answer so far.
 
-bye, Roman
+On a different note, who should I contact regarding the display
+bug:
+
+Nov 14 11:04:35 dagdhasrv kernel: (scsi0:A:0): 160.000MB/s transfers
+(80.000MHz DT, offset 62, 16bit)
+Nov 14 11:04:35 dagdhasrv kernel: SCSI device sda: -1951217920 512-byte
+hdwr sectors (100488 MB)
+                                                   ^^^^^^^^^^^
+Nov 14 11:04:35 dagdhasrv kernel: Partition check: 
+Nov 14 11:04:35 dagdhasrv kernel:  sda: sda1
+
+Thanks again, Didier.
+
+> > I have just connected a brand new UltraTrak SX8000
+> > (from Promise with 8 x 200GB IDE drives) to an
+> > adaptec 29160. The UltraTrak SX8000 is connected
+> > via a brand new LVD cable (1meter).
+> >
+> > While everything seems fine, I am getting a bunch of
+> >
+> > (scsi0:A:0:0): parity error detected in Data-out phase. 
+> SEQADDR(0x56)
+> > SCSIRATE(0xc2)
+> >         No terminal CRC packet recevied
+> 
+> I've never seen false positives from this diagnostic.  It 
+> looks like your Promise device is not properly implementing 
+> DT transfers.  Is there a firmware update for the device?
 
