@@ -1,388 +1,216 @@
-From: "J.E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] MCA sysfs part IV - implementation in the SCSI NCR_D700 driver
-Date: Thu, 21 Nov 2002 14:58:12 -0600
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: [PATCH] move all of scsi_static_device_list into initdata
+Date: Thu, 21 Nov 2002 16:22:59 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200211212058.gALKwCi05471@localhost.localdomain>
+Message-ID: <20021121162259.A24215@eng2.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed ;
-	boundary="==_Exmh_-11824017980"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id MAA31181
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Nov 2002 12:58:20 -0800
-List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Project MCA Team <mcalinux@acc.umu.se>, David Weinehall <tao@acc.umu.se>
-
-This is a multipart MIME message.
-
---==_Exmh_-11824017980
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
+To: JEJ Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-Well, this was what the previous patches were all aiming for:  a SCSI 
-implementation which gives me a D700 driver that's correctly plumbed into 
-sysfs and which can also DMA happily to/from all 4Gb on an x86.
+Only the pointers in scsi_static_device_list were going into the
+initdata section.
 
-I'll look at converting other devices over (probably the smc-mca, since that's 
-my current ethernet card).
+This patch fixes that by using char arrays rather than char pointers.
+The table increased in size by 96 bytes, but the init.data size
+increased by 1488 bytes, and the rodata decreased by 1392 bytes.
 
-All of the patches are also available in the bitkeeper tree at:
+The size checking (previously generated only a message) was removed
+since the function it is in no longer can figure out the length, so it
+now silently truncates.
 
-http://linux-voyager.bkbits.net/mca-sysfs-2.5
+The only change in scsi_static_device_list itself is to change all
+the NULL's to empty strings.
 
-James
-
-
---==_Exmh_-11824017980
-Content-Type: text/plain ; name="mca-sysfs-d700.diff"; charset=us-ascii
-Content-Description: mca-sysfs-d700.diff
-Content-Disposition: attachment; filename="mca-sysfs-d700.diff"
-
-# This is a BitKeeper generated patch for the following project:
-# Project Name: Linux kernel tree
-# This patch format is intended for GNU patch command version 2.5 or higher.
-# This patch includes the following deltas:
-#	           ChangeSet	1.846   -> 1.847  
-#	drivers/scsi/NCR_D700.c	1.3     -> 1.4    
-#	 include/linux/mca.h	1.3     -> 1.4    
-#
-# The following is the BitKeeper ChangeSet Log
-# --------------------------------------------
-# 02/11/21	jejb@mulgrave.(none)	1.847
-# Move NCR_D700 to MCA sysfs
-# 
-# Make D700 use the sysfs based device probing code and the new
-# MCA API entirely.
-# --------------------------------------------
-#
-diff -Nru a/drivers/scsi/NCR_D700.c b/drivers/scsi/NCR_D700.c
---- a/drivers/scsi/NCR_D700.c	Thu Nov 21 14:44:50 2002
-+++ b/drivers/scsi/NCR_D700.c	Thu Nov 21 14:44:50 2002
-@@ -103,6 +103,7 @@
- #include <linux/sched.h>
- #include <linux/proc_fs.h>
- #include <linux/init.h>
-+#include <linux/device.h>
- #include <linux/mca.h>
- #include <asm/dma.h>
- #include <asm/system.h>
-@@ -182,131 +183,140 @@
- __setup("NCR_D700=", param_setup);
- #endif
- 
-+/* private stack allocated structure for passing device information from
-+ * detect to probe */
-+struct NCR_700_info {
-+	Scsi_Host_Template *tpnt;
-+	int found;
-+};
-+
- /* Detect a D700 card.  Note, because of the set up---the chips are
-  * essentially connectecd to the MCA bus independently, it is easier
-  * to set them up as two separate host adapters, rather than one
-  * adapter with two channels */
--STATIC int __init
--D700_detect(Scsi_Host_Template *tpnt)
-+static int
-+NCR_D700_probe(struct device *dev)
+--- 1.70/drivers/scsi/scsi.c	Thu Nov 21 07:51:33 2002
++++ edited/drivers/scsi/scsi.c	Thu Nov 21 16:13:41 2002
+@@ -1615,12 +1615,12 @@
+  * scsi_strcpy_devinfo: called from scsi_dev_info_list_add to copy into
+  * devinfo vendor and model strings.
+  */
+-static void scsi_strcpy_devinfo(char *name, char *to, size_t to_length,
+-				char *from, int compatible)
++static void scsi_strcpy_devinfo(char *to, size_t to_length, char *from,
++				int compatible)
  {
--	int slot = 0;
--	int found = 0;
- 	int differential;
--	int banner = 1;
--
--	if(!MCA_bus)
--		return 0;
--
--#ifdef MODULE
--	if(NCR_D700)
--		param_setup(NCR_D700);
--#endif
-+	static int banner = 1;
-+	struct mca_device *mca_dev = to_mca_device(dev);
-+	int slot = mca_dev->slot;
-+	struct NCR_700_info *info = to_mca_driver(dev->driver)->driver_data;
-+	int found = 0;
-+	int irq, i;
-+	int pos3j, pos3k, pos3a, pos3b, pos4;
-+	__u32 base_addr, offset_addr;
-+	struct Scsi_Host *host = NULL;
-+
-+	/* enable board interrupt */
-+	pos4 = mca_device_read_pos(mca_dev, 4);
-+	pos4 |= 0x4;
-+	mca_device_write_pos(mca_dev, 4, pos4);
-+
-+	mca_device_write_pos(mca_dev, 6, 9);
-+	pos3j = mca_device_read_pos(mca_dev, 3);
-+	mca_device_write_pos(mca_dev, 6, 10);
-+	pos3k = mca_device_read_pos(mca_dev, 3);
-+	mca_device_write_pos(mca_dev, 6, 0);
-+	pos3a = mca_device_read_pos(mca_dev, 3);
-+	mca_device_write_pos(mca_dev, 6, 1);
-+	pos3b = mca_device_read_pos(mca_dev, 3);
-+
-+	base_addr = ((pos3j << 8) | pos3k) & 0xfffffff0;
-+	offset_addr = ((pos3a << 8) | pos3b) & 0xffffff70;
-+
-+	irq = (pos4 & 0x3) + 11;
-+	if(irq >= 13)
-+		irq++;
-+	if(banner) {
-+		printk(KERN_NOTICE "NCR D700: Driver Version " NCR_D700_VERSION "\n"
-+		       "NCR D700:  Copyright (c) 2001 by James.Bottomley@HansenPartnership.com\n"
-+		       "NCR D700:\n");
-+		banner = 0;
-+	}
-+	/* now do the bus related transforms */
-+	irq = mca_device_transform_irq(mca_dev, irq);
-+	base_addr = mca_device_transform_ioport(mca_dev, base_addr);
-+	offset_addr = mca_device_transform_ioport(mca_dev, offset_addr);
-+
-+	printk(KERN_NOTICE "NCR D700: found in slot %d  irq = %d  I/O base = 0x%x\n", slot, irq, offset_addr);
-+
-+	info->tpnt->proc_name = "NCR_D700";
-+
-+	/*outb(BOARD_RESET, base_addr);*/
-+
-+	/* clear any pending interrupts */
-+	(void)inb(base_addr + 0x08);
-+	/* get modctl, used later for setting diff bits */
-+	switch(differential = (inb(base_addr + 0x08) >> 6)) {
-+	case 0x00:
-+		/* only SIOP1 differential */
-+		differential = 0x02;
-+		break;
-+	case 0x01:
-+		/* Both SIOPs differential */
-+		differential = 0x03;
-+		break;
-+	case 0x03:
-+		/* No SIOPs differential */
-+		differential = 0x00;
-+		break;
-+	default:
-+		printk(KERN_ERR "D700: UNEXPECTED DIFFERENTIAL RESULT 0x%02x\n",
-+		       differential);
-+		differential = 0x00;
-+		break;
-+	}
+ 	size_t from_length;
  
--	for(slot = 0; (slot = mca_find_adapter(NCR_D700_MCA_ID, slot)) != MCA_NOTFOUND; slot++) {
--		int irq, i;
--		int pos3j, pos3k, pos3a, pos3b, pos4;
--		__u32 base_addr, offset_addr;
--		struct Scsi_Host *host = NULL;
--
--		/* enable board interrupt */
--		pos4 = mca_read_pos(slot, 4);
--		pos4 |= 0x4;
--		mca_write_pos(slot, 4, pos4);
--
--		mca_write_pos(slot, 6, 9);
--		pos3j = mca_read_pos(slot, 3);
--		mca_write_pos(slot, 6, 10);
--		pos3k = mca_read_pos(slot, 3);
--		mca_write_pos(slot, 6, 0);
--		pos3a = mca_read_pos(slot, 3);
--		mca_write_pos(slot, 6, 1);
--		pos3b = mca_read_pos(slot, 3);
--
--		base_addr = ((pos3j << 8) | pos3k) & 0xfffffff0;
--		offset_addr = ((pos3a << 8) | pos3b) & 0xffffff70;
--
--		irq = (pos4 & 0x3) + 11;
--		if(irq >= 13)
--			irq++;
--		if(banner) {
--			printk(KERN_NOTICE "NCR D700: Driver Version " NCR_D700_VERSION "\n"
--			       "NCR D700:  Copyright (c) 2001 by James.Bottomley@HansenPartnership.com\n"
--			       "NCR D700:\n");
--			banner = 0;
-+	/* plumb in both 700 chips */
-+	for(i=0; i<2; i++) {
-+		__u32 region = offset_addr | (0x80 * i);
-+		struct NCR_700_Host_Parameters *hostdata =
-+			kmalloc(sizeof(struct NCR_700_Host_Parameters),
-+				GFP_KERNEL);
-+		if(hostdata == NULL) {
-+			printk(KERN_ERR "NCR D700: Failed to allocate host data for channel %d, detatching\n", i);
-+			continue;
+-	from_length = strlen(from);
++	from_length = strnlen(from, to_length);
+ 	strncpy(to, from, min(to_length, from_length));
+ 	if (from_length < to_length) {
+ 		if (compatible) {
+@@ -1636,9 +1636,6 @@
+ 				to_length - from_length);
  		}
--		printk(KERN_NOTICE "NCR D700: found in slot %d  irq = %d  I/O base = 0x%x\n", slot, irq, offset_addr);
--
--		tpnt->proc_name = "NCR_D700";
--
--		/*outb(BOARD_RESET, base_addr);*/
--
--		/* clear any pending interrupts */
--		(void)inb(base_addr + 0x08);
--		/* get modctl, used later for setting diff bits */
--		switch(differential = (inb(base_addr + 0x08) >> 6)) {
--		case 0x00:
--			/* only SIOP1 differential */
--			differential = 0x02;
--			break;
--		case 0x01:
--			/* Both SIOPs differential */
--			differential = 0x03;
--			break;
--		case 0x03:
--			/* No SIOPs differential */
--			differential = 0x00;
--			break;
--		default:
--			printk(KERN_ERR "D700: UNEXPECTED DIFFERENTIAL RESULT 0x%02x\n",
--			       differential);
--			differential = 0x00;
--			break;
-+		memset(hostdata, 0, sizeof(struct NCR_700_Host_Parameters));
-+		if(request_region(region, 64, "NCR_D700") == NULL) {
-+			printk(KERN_ERR "NCR D700: Failed to reserve IO region 0x%x\n", region);
-+			kfree(hostdata);
-+			continue;
- 		}
--
--		/* plumb in both 700 chips */
--		for(i=0; i<2; i++) {
--			__u32 region = offset_addr | (0x80 * i);
--			struct NCR_700_Host_Parameters *hostdata =
--				kmalloc(sizeof(struct NCR_700_Host_Parameters),
--					GFP_KERNEL);
--			if(hostdata == NULL) {
--				printk(KERN_ERR "NCR D700: Failed to allocate host data for channel %d, detatching\n", i);
--				continue;
--			}
--			memset(hostdata, 0, sizeof(struct NCR_700_Host_Parameters));
--			if(request_region(region, 64, "NCR_D700") == NULL) {
--				printk(KERN_ERR "NCR D700: Failed to reserve IO region 0x%x\n", region);
--				kfree(hostdata);
--				continue;
--			}
--
--			/* Fill in the three required pieces of hostdata */
--			hostdata->base = region;
--			hostdata->differential = (((1<<i) & differential) != 0);
--			hostdata->clock = NCR_D700_CLOCK_MHZ;
--			/* and register the chip */
--			if((host = NCR_700_detect(tpnt, hostdata)) == NULL) {
--				kfree(hostdata);
--				release_region(host->base, 64);
--				continue;
--			}
--			host->irq = irq;
--			/* FIXME: Read this from SUS */
--			host->this_id = id_array[slot * 2 + i];
--			printk(KERN_NOTICE "NCR D700: SIOP%d, SCSI id is %d\n",
--			       i, host->this_id);
--			if(request_irq(irq, NCR_700_intr, SA_SHIRQ, "NCR_D700", host)) {
--				printk(KERN_ERR "NCR D700, channel %d: irq problem, detatching\n", i);
--				scsi_unregister(host);
--				NCR_700_release(host);
--				continue;
--			}
--			found++;
--			mca_set_adapter_name(slot, "NCR D700 SCSI Adapter (version " NCR_D700_VERSION ")");
-+		
-+		/* Fill in the three required pieces of hostdata */
-+		hostdata->base = region;
-+		hostdata->differential = (((1<<i) & differential) != 0);
-+		hostdata->clock = NCR_D700_CLOCK_MHZ;
-+		/* and register the chip */
-+		if((host = NCR_700_detect(info->tpnt, hostdata)) == NULL) {
-+			kfree(hostdata);
-+			release_region(host->base, 64);
-+			continue;
- 		}
-+		host->irq = irq;
-+		/* FIXME: Read this from SUS */
-+		host->this_id = id_array[slot * 2 + i];
-+		printk(KERN_NOTICE "NCR D700: SIOP%d, SCSI id is %d\n",
-+		       i, host->this_id);
-+		if(request_irq(irq, NCR_700_intr, SA_SHIRQ, "NCR_D700", host)) {
-+			printk(KERN_ERR "NCR D700, channel %d: irq problem, detatching\n", i);
-+			scsi_unregister(host);
-+			NCR_700_release(host);
-+			continue;
-+		}
-+		scsi_set_device(host, dev);
-+		found++;
-+	}
-+	info->found += found;
-+
-+	if(found) {
-+		mca_device_set_claim(mca_dev, 1);
-+		strncpy(dev->name, "NCR_D700", sizeof(dev->name));
+ 	}
+-	if (from_length > to_length)
+-		 printk(KERN_WARNING "%s: %s string '%s' is too long\n",
+-			__FUNCTION__, name, from);
+ }
+ 
+ /**
+@@ -1667,10 +1664,10 @@
+ 		return -ENOMEM;
  	}
  
--	return found;
-+	return found? 0 : -ENODEV;
- }
+-	scsi_strcpy_devinfo("vendor", devinfo->vendor, sizeof(devinfo->vendor),
+-			    vendor, compatible);
+-	scsi_strcpy_devinfo("model", devinfo->model, sizeof(devinfo->model),
+-			    model, compatible);
++	scsi_strcpy_devinfo(devinfo->vendor, sizeof(devinfo->vendor), vendor,
++			    compatible);
++	scsi_strcpy_devinfo(devinfo->model, sizeof(devinfo->model), model,
++			    compatible);
  
+ 	if (strflags)
+ 		devinfo->flags = simple_strtoul(strflags, NULL, 0);
+@@ -1753,7 +1750,7 @@
  
-@@ -323,7 +333,38 @@
- 	return 1;
- }
- 
-+static short NCR_D700_id_table[] = { NCR_D700_MCA_ID, 0 };
-+
-+struct mca_driver NCR_D700_driver = {
-+	.id_table = NCR_D700_id_table,
-+	.driver = {
-+		.name = "NCR_D700",
-+		.bus = &mca_bus_type,
-+		.probe = NCR_D700_probe,
-+	},
-+};
-+		
-+
-+STATIC int __init
-+D700_detect(Scsi_Host_Template *tpnt)
-+{
-+	struct NCR_700_info info;
-+
-+	if(!MCA_bus)
-+		return 0;
-+
-+#ifdef MODULE
-+	if(NCR_D700)
-+		param_setup(NCR_D700);
-+#endif
-+	info.tpnt = tpnt;
-+	info.found = 0;
-+	NCR_D700_driver.driver_data = &info;
-+	mca_register_driver(&NCR_D700_driver);
- 
-+	return info.found;
-+}
-+	
- static Scsi_Host_Template driver_template = NCR_D700_SCSI;
- 
- #include "scsi_module.c"
-diff -Nru a/include/linux/mca.h b/include/linux/mca.h
---- a/include/linux/mca.h	Thu Nov 21 14:44:50 2002
-+++ b/include/linux/mca.h	Thu Nov 21 14:44:50 2002
-@@ -94,6 +94,7 @@
- 
- struct mca_driver {
- 	const short		*id_table;
-+	void			*driver_data;
- 	struct device_driver	driver;
+ 	if (scsi_dev_info_list_add_str(dev_list) == -ENOMEM)
+ 		return;
+-	for (i = 0; scsi_static_device_list[i].vendor != NULL; i++)
++	for (i = 0; scsi_static_device_list[i].vendor[0] != '\0'; i++)
+ 		if (scsi_dev_info_list_add(1 /* compatibile */,
+ 			   scsi_static_device_list[i].vendor,
+ 			   scsi_static_device_list[i].model,
+===== drivers/scsi/scsi.h 1.48 vs edited =====
+--- 1.48/drivers/scsi/scsi.h	Thu Nov 21 07:51:33 2002
++++ edited/drivers/scsi/scsi.h	Thu Nov 21 13:31:26 2002
+@@ -531,9 +531,9 @@
+  * dev_info: for the black/white list in the old scsi_static_device_list
+  */
+ struct dev_info {
+-	char *vendor;
+-	char *model;
+-	char *revision;	/* revision known to be bad, unused */
++	char vendor[8];
++	char model[16];
++	char revision[4];	/* revision known to be bad, unused */
+ 	unsigned flags;
  };
- #define to_mca_driver(mdriver) container_of(mdriver, struct mca_driver, driver)
-@@ -119,6 +120,11 @@
- extern enum MCA_AdapterStatus mca_device_status(struct mca_device *mca_dev);
  
- extern struct bus_type mca_bus_type;
-+
-+static inline void mca_register_driver(struct mca_driver *drv)
-+{
-+	driver_register(&drv->driver);
-+}
+===== drivers/scsi/scsi_scan.c 1.41 vs edited =====
+--- 1.41/drivers/scsi/scsi_scan.c	Thu Nov 21 01:01:56 2002
++++ edited/drivers/scsi/scsi_scan.c	Thu Nov 21 13:28:06 2002
+@@ -100,7 +100,7 @@
+ 	{"SONY", "CD-ROM CDU-541", "4.3d", BLIST_NOLUN},
+ 	{"SONY", "CD-ROM CDU-55S", "1.0i", BLIST_NOLUN},
+ 	{"SONY", "CD-ROM CDU-561", "1.7x", BLIST_NOLUN},
+-	{"SONY", "CD-ROM CDU-8012", NULL, BLIST_NOLUN},
++	{"SONY", "CD-ROM CDU-8012", "", BLIST_NOLUN},
+ 	{"TANDBERG", "TDC 3600", "U07", BLIST_NOLUN},	/* locks up */
+ 	{"TEAC", "CD-R55S", "1.0H", BLIST_NOLUN},	/* locks up */
+ 	/*
+@@ -127,61 +127,61 @@
+ 	{"YAMAHA", "CRW8424S", "1.0", BLIST_NOLUN},	/* locks up */
+ 	{"YAMAHA", "CRW6416S", "1.0c", BLIST_NOLUN},	/* locks up */
+ 	{"MITSUMI", "CD-R CR-2201CS", "6119", BLIST_NOLUN},	/* locks up */
+-	{"RELISYS", "Scorpio", NULL, BLIST_NOLUN},	/* responds to all lun */
++	{"RELISYS", "Scorpio", "", BLIST_NOLUN},	/* responds to all lun */
+ 	{"MICROTEK", "ScanMaker II", "5.61", BLIST_NOLUN},	/* responds to all lun */
  
- /* for now, include the legacy API */
- #include <linux/mca-legacy.h>
+ 	/*
+ 	 * Other types of devices that have special flags.
+ 	 */
+-	{"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
++	{"SONY", "CD-ROM CDU-8001", "", BLIST_BORKEN},
+ 	{"TEXEL", "CD-ROM", "1.06", BLIST_BORKEN},
+-	{"IOMEGA", "Io20S         *F", NULL, BLIST_KEY},
+-	{"INSITE", "Floptical   F*8I", NULL, BLIST_KEY},
+-	{"INSITE", "I325VM", NULL, BLIST_KEY},
++	{"IOMEGA", "Io20S         *F", "", BLIST_KEY},
++	{"INSITE", "Floptical   F*8I", "", BLIST_KEY},
++	{"INSITE", "I325VM", "", BLIST_KEY},
+ 	{"LASOUND", "CDX7405", "3.10", BLIST_MAX5LUN | BLIST_SINGLELUN},
+-	{"MICROP", "4110", NULL, BLIST_NOTQ},
+-	{"NRC", "MBR-7", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+-	{"NRC", "MBR-7.4", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+-	{"REGAL", "CDC-4X", NULL, BLIST_MAX5LUN | BLIST_SINGLELUN},
+-	{"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+-	{"NAKAMICH", "MJ-5.16S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+-	{"PIONEER", "CD-ROM DRM-600", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+-	{"PIONEER", "CD-ROM DRM-602X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+-	{"PIONEER", "CD-ROM DRM-604X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+-	{"EMULEX", "MD21/S2     ESDI", NULL, BLIST_SINGLELUN},
+-	{"CANON", "IPUBJD", NULL, BLIST_SPARSELUN},
+-	{"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
+-	{"DEC", "HSG80", NULL, BLIST_FORCELUN},
+-	{"COMPAQ", "LOGICAL VOLUME", NULL, BLIST_FORCELUN},
+-	{"COMPAQ", "CR3500", NULL, BLIST_FORCELUN},
+-	{"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+-	{"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
++	{"MICROP", "4110", "", BLIST_NOTQ},
++	{"NRC", "MBR-7", "", BLIST_FORCELUN | BLIST_SINGLELUN},
++	{"NRC", "MBR-7.4", "", BLIST_FORCELUN | BLIST_SINGLELUN},
++	{"REGAL", "CDC-4X", "", BLIST_MAX5LUN | BLIST_SINGLELUN},
++	{"NAKAMICH", "MJ-4.8S", "", BLIST_FORCELUN | BLIST_SINGLELUN},
++	{"NAKAMICH", "MJ-5.16S", "", BLIST_FORCELUN | BLIST_SINGLELUN},
++	{"PIONEER", "CD-ROM DRM-600", "", BLIST_FORCELUN | BLIST_SINGLELUN},
++	{"PIONEER", "CD-ROM DRM-602X", "", BLIST_FORCELUN | BLIST_SINGLELUN},
++	{"PIONEER", "CD-ROM DRM-604X", "", BLIST_FORCELUN | BLIST_SINGLELUN},
++	{"EMULEX", "MD21/S2     ESDI", "", BLIST_SINGLELUN},
++	{"CANON", "IPUBJD", "", BLIST_SPARSELUN},
++	{"nCipher", "Fastness Crypto", "", BLIST_FORCELUN},
++	{"DEC", "HSG80", "", BLIST_FORCELUN},
++	{"COMPAQ", "LOGICAL VOLUME", "", BLIST_FORCELUN},
++	{"COMPAQ", "CR3500", "", BLIST_FORCELUN},
++	{"NEC", "PD-1 ODX654P", "", BLIST_FORCELUN | BLIST_SINGLELUN},
++	{"MATSHITA", "PD-1", "", BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"iomega", "jaz 1GB", "J.86", BLIST_NOTQ | BLIST_NOLUN},
+-	{"TOSHIBA", "CDROM", NULL, BLIST_ISROM},
+-	{"TOSHIBA", "CD-ROM", NULL, BLIST_ISROM},
+-	{"MegaRAID", "LD", NULL, BLIST_FORCELUN},
+-	{"DGC", "RAID", NULL, BLIST_SPARSELUN},	/* Dell PV 650F, storage on LUN 0 */
+-	{"DGC", "DISK", NULL, BLIST_SPARSELUN},	/* Dell PV 650F, no storage on LUN 0 */
+-	{"DELL", "PV660F", NULL, BLIST_SPARSELUN},
+-	{"DELL", "PV660F   PSEUDO", NULL, BLIST_SPARSELUN},
+-	{"DELL", "PSEUDO DEVICE .", NULL, BLIST_SPARSELUN},	/* Dell PV 530F */
+-	{"DELL", "PV530F", NULL, BLIST_SPARSELUN},
+-	{"EMC", "SYMMETRIX", NULL, BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_FORCELUN},
+-	{"HP", "A6189A", NULL, BLIST_SPARSELUN | BLIST_LARGELUN},	/* HP VA7400 */
+-	{"CMD", "CRA-7280", NULL, BLIST_SPARSELUN},	/* CMD RAID Controller */
+-	{"CNSI", "G7324", NULL, BLIST_SPARSELUN},	/* Chaparral G7324 RAID */
+-	{"CNSi", "G8324", NULL, BLIST_SPARSELUN},	/* Chaparral G8324 RAID */
+-	{"Zzyzx", "RocketStor 500S", NULL, BLIST_SPARSELUN},
+-	{"Zzyzx", "RocketStor 2000", NULL, BLIST_SPARSELUN},
+-	{"SONY", "TSL", NULL, BLIST_FORCELUN},		/* DDS3 & DDS4 autoloaders */
+-	{"DELL", "PERCRAID", NULL, BLIST_FORCELUN},
+-	{"HP", "NetRAID-4M", NULL, BLIST_FORCELUN},
+-	{"ADAPTEC", "AACRAID", NULL, BLIST_FORCELUN},
+-	{"ADAPTEC", "Adaptec 5400S", NULL, BLIST_FORCELUN},
+-	{"COMPAQ", "MSA1000", NULL, BLIST_FORCELUN},
+-	{"HP", "C1557A", NULL, BLIST_FORCELUN},
+-	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
+-	{ NULL, NULL, NULL, 0 },
++	{"TOSHIBA", "CDROM", "", BLIST_ISROM},
++	{"TOSHIBA", "CD-ROM", "", BLIST_ISROM},
++	{"MegaRAID", "LD", "", BLIST_FORCELUN},
++	{"DGC", "RAID", "", BLIST_SPARSELUN},	/* Dell PV 650F, storage on LUN 0 */
++	{"DGC", "DISK", "", BLIST_SPARSELUN},	/* Dell PV 650F, no storage on LUN 0 */
++	{"DELL", "PV660F", "", BLIST_SPARSELUN},
++	{"DELL", "PV660F   PSEUDO", "", BLIST_SPARSELUN},
++	{"DELL", "PSEUDO DEVICE .", "", BLIST_SPARSELUN},	/* Dell PV 530F */
++	{"DELL", "PV530F", "", BLIST_SPARSELUN},
++	{"EMC", "SYMMETRIX", "", BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_FORCELUN},
++	{"HP", "A6189A", "", BLIST_SPARSELUN | BLIST_LARGELUN},	/* HP VA7400 */
++	{"CMD", "CRA-7280", "", BLIST_SPARSELUN},	/* CMD RAID Controller */
++	{"CNSI", "G7324", "", BLIST_SPARSELUN},	/* Chaparral G7324 RAID */
++	{"CNSi", "G8324", "", BLIST_SPARSELUN},	/* Chaparral G8324 RAID */
++	{"Zzyzx", "RocketStor 500S", "", BLIST_SPARSELUN},
++	{"Zzyzx", "RocketStor 2000", "", BLIST_SPARSELUN},
++	{"SONY", "TSL", "", BLIST_FORCELUN},		/* DDS3 & DDS4 autoloaders */
++	{"DELL", "PERCRAID", "", BLIST_FORCELUN},
++	{"HP", "NetRAID-4M", "", BLIST_FORCELUN},
++	{"ADAPTEC", "AACRAID", "", BLIST_FORCELUN},
++	{"ADAPTEC", "Adaptec 5400S", "", BLIST_FORCELUN},
++	{"COMPAQ", "MSA1000", "", BLIST_FORCELUN},
++	{"HP", "C1557A", "", BLIST_FORCELUN},
++	{"IBM", "AuSaV1S2", "", BLIST_FORCELUN},
++	{ "", "", "", 0 },
+ };
+ 
+ #define ALLOC_FAILURE_MSG	KERN_ERR "%s: Allocation failure during" \
 
---==_Exmh_-11824017980--
-
-
+-- Patrick Mansfield
