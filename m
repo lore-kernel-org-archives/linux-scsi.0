@@ -1,38 +1,35 @@
-From: "Zhao, Forrest" <forrest.zhao@intel.com>
-Subject: RE: One question about SCSI device hotplug
-Date: Wed, 2 Mar 2005 13:33:05 +0800
-Message-ID: <8126E4F969BA254AB43EA03C59F44E84018500DC@pdsmsx404>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [PATCH 0/3] Fix 3ware irq handling
+Date: Wed, 02 Mar 2005 02:18:39 -0500
+Message-ID: <422568CF.3060307@pobox.com>
+References: <20050224015859.55191.qmail@web40910.mail.yahoo.com> <421D3D33.9060707@pobox.com> <20050226193255.GA6256@ime.usp.br> <4220D9DE.10904@pobox.com> <42234279.6030004@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Received: from fmr19.intel.com ([134.134.136.18]:11976 "EHLO
-	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
-	id S262184AbVCBFev convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2005 00:34:51 -0500
-Content-class: urn:content-classes:message
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:48349 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S262208AbVCBHS4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Mar 2005 02:18:56 -0500
+In-Reply-To: <42234279.6030004@rtr.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@dell.com>
-Cc: James.Smart@Emulex.Com, matthew@wil.cx, linux-scsi@vger.kernel.org, "Caushik, Ramesh" <ramesh.caushik@intel.com>, sdake@mvista.com
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>, linuxraid@amcc.com
+Cc: Mark Lord <liml@rtr.ca>
 
-<Exactly.  Some controllers know, and assert events up to their LLDD.
-<Jame's Emulex driver apparently does, perhaps this holds true for all
-<FC devices.
+Mark Lord wrote:
+>  >"irq XX: nobody cared" is a screaming interrupt situation, which could 
+> have 1001 causes.
+> 
+> Speaking of which.  The 3ware drivers appear to have a bug
+> in their handling of this.  They *always* report "handled=1"
+> from their interrupt routines, regardless of whether it was
+> their hardware or not that was signalling for attention.
 
-<Some firmwares (LSI megaraid for sure, Adaptec SCSI I believe) don't.
+Thanks for pointing this out, Mark.
 
-Thank you, Matt. Then I have another question:
-As we know SCSI mid-layer issue a command to LLDD by 
-host->hostt->queuecommand(cmd, scsi_done); and in the meantime a 
-timer is set. When the timer expires, SCSI mid-layer know the 
-execution of command has failed.
-My question is: when SCSI device is surprise-removed, if SCSI mid-layer
-issue a command to this removed device, will mid-layer has to wait 
-a timeout before it can know the execution of command failed? Or is
-there
-any other mechanism that LLDD can notify mid-layer that execution of
-command failed without waiting for a timeout?
+What follows is a patch series to clean this up:
 
-Thanks,
-Forrest
+patch 1: only report IRQ_HANDLED when needed
+patch 2: remove bogus "my irq == my irq" test
+patch 3: fix indentation, after patch #2's change
+
