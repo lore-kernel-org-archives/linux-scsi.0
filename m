@@ -1,314 +1,39 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: [PATCH] tmscsim: 64-bit cleanup
-Date: Wed, 19 May 2004 21:50:16 +0200 (CEST)
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: Re: What factors limit the SCSI I/O request size?
+Date: Wed, 19 May 2004 13:30:33 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0405192135160.6790-200000@poirot.grange>
-References: <1084912724.2101.44.camel@mulgrave>
+Message-ID: <OF6F1CA3C2.88C29D01-ON85256E99.0070455A-88256E99.0070B22C@us.ibm.com>
+References: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAANoIxZIFzbEaqwjJgytz2AeKAAAAQAAAAtCTpDJFaLE2uBc3buWekQgEAAAAA@cisco.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-843186566-1084995906=:6790"
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.net ([213.165.64.20]:24027 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S264519AbUESTyD (ORCPT
+Received: from e3.ny.us.ibm.com ([32.97.182.103]:16858 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S264531AbUESUbD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 May 2004 15:54:03 -0400
-In-Reply-To: <1084912724.2101.44.camel@mulgrave>
-Content-ID: <Pine.LNX.4.44.0405192145200.6790@poirot.grange>
+	Wed, 19 May 2004 16:31:03 -0400
+In-Reply-To: <!~!UENERkVCMDkAAQACAAAAAAAAAAAAAAAAABgAAAAAAAAANoIxZIFzbEaqwjJgytz2AeKAAAAQAAAAtCTpDJFaLE2uBc3buWekQgEAAAAA@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: "Surekha.PC" <surekhap@cisco.com>
+Cc: 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
+
+>By tuning sg_table_size
+>and max_sectors setting in scsi_host temple following was the
+>SCSI I/O request size being sent per command.
+>
+>Sg_table_size            max_sectors          SCSI I/O size
+>   64                       256                   128k
+>  128                       256                   128k
+>   64                      1024                   256k
+>  128                      1024                   512k
+> 
+> I would like to know on what basis the SCSI I/O request size per
+>command is determined. What are the other factors apart from
+>sg_table_size and max_sectors which can limit the I/O size?
+
+I'm not sure what the relationship between the table and the question is; 
+are you implying that there is something other than sg_table_size and 
+max_sectors that affects the "SCSI I/O size" column in your experiment? 
+Because the numbers there conform exactly to the limits imposed by 
+sg_table_size and max_sectors (with a sector size of .5K and an sg entry 
+covering one page = 4K).
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-  Send mail to mime@docserver.cac.washington.edu for more info.
-
----1463811839-843186566-1084995906=:6790
-Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
-Content-ID: <Pine.LNX.4.44.0405192145201.6790@poirot.grange>
-
-On 18 May 2004, James Bottomley wrote:
-
-> OK, roll up for me what you'd currently like applied to the driver;
-> anything that's less than solid, I'd rather mature in the -mm tree for a
-> while.
-
-Ok, here comes the first one. I chose this one because it fixes an actual
-bug in the driver. This bug was (partially) introduced by myself when
-porting to 2.6. Partly the reason was that I disliked using
-function-like macros as lvalues:
-
-sg_dma_address(x) = ...
-sg_dma_len(x) = ...
-
-[OT] wouldn't it be better to introduce some macros like
-set_sg_dma_{address|len}(x, y)?
-
-A part of the original patch has already been merged (s/UINT/ULONG/), so,
-the actual version is re-diffed against 2.6.6-bk6 and re-tested (on a
-plain Pentium).
-
-Also updates the driver-version, printed on startup.
-
-Please, apply.
-
-Christoph, next I would like to see your patches applied. Do you want to
-re-submit them yourself, or should I do it for you?
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
-
-
----1463811839-843186566-1084995906=:6790
-Content-Type: TEXT/PLAIN; CHARSET=US-ASCII; NAME="tmscsim-64-2.6.6.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.44.0405192145060.6790@poirot.grange>
-Content-Description: 
-Content-Disposition: ATTACHMENT; FILENAME="tmscsim-64-2.6.6.patch"
-
-ZGlmZiAtdSBsaW51eC0yLjYuMy9kcml2ZXJzL3Njc2kvdG1zY3NpbS5jIGxp
-
-bnV4LTIuNi4zLmhhcmRsaW5rL2RyaXZlcnMvc2NzaS90bXNjc2ltLmMNCi0t
-
-LSBsaW51eC0yLjYuMy9kcml2ZXJzL3Njc2kvdG1zY3NpbS5jCUZyaSBNYXIg
-
-MTIgMjI6MjI6MTEgMjAwNA0KKysrIGxpbnV4LTIuNi4zLmhhcmRsaW5rL2Ry
-
-aXZlcnMvc2NzaS90bXNjc2ltLmMJVHVlIEFwciAxMyAyMjo1MDowNSAyMDA0
-
-DQpAQCAtMTY4LDYgKzE2OCw3IEBADQogICoJMi4xYSAgMDMvMTEvMjkgIEdM
-
-LCBLRwlJbml0aWFsIGZpeGluZyBmb3IgMi42LiBDb252ZXJ0IHRvCSoNCiAg
-
-KgkJCQl1c2UgdGhlIGN1cnJlbnQgUENJLW1hcHBpbmcgQVBJLCB1cGRhdGUJ
-
-Kg0KICAqCQkJCWNvbW1hbmQtcXVldWluZy4JCQkqDQorICoJMi4xYiAgMDQv
-
-MDQvMTMgIEdMCUZpeCBmb3IgNjQtYml0IHBsYXRmb3JtcwkJKg0KICAqKioq
-
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-
-KioqKioqKioqKioqKioqKioqKioqKi8NCiANCiAvKiBVbmNvbW1lbnQgU0Ff
-
-SU5URVJSVVBULCBpZiB0aGUgZHJpdmVyIHJlZnVzZXMgdG8gc2hhcmUgaXRz
-
-IElSUSB3aXRoIG90aGVyIGRldmljZXMgKi8NCkBAIC0xMDIyLDcgKzEwMjMs
-
-NyBAQA0KIAkJCXBjaV9tYXBfcGFnZShwZGV2LCB2aXJ0X3RvX3BhZ2UocGNt
-
-ZC0+c2Vuc2VfYnVmZmVyKSwNCiAJCQkJICAgICAodW5zaWduZWQgbG9uZylw
-
-Y21kLT5zZW5zZV9idWZmZXIgJiB+UEFHRV9NQVNLLCBzaXplb2YocGNtZC0+
-
-c2Vuc2VfYnVmZmVyKSwNCiAJCQkJICAgICBETUFfRlJPTV9ERVZJQ0UpOw0K
-
-LQkJcFNSQi0+U2VnbWVudHgubGVuZ3RoID0gc2l6ZW9mKHBjbWQtPnNlbnNl
-
-X2J1ZmZlcik7DQorCQlzZ19kbWFfbGVuKCZwU1JCLT5TZWdtZW50eCkgPSBz
-
-aXplb2YocGNtZC0+c2Vuc2VfYnVmZmVyKTsNCiAJCXBTUkItPlNHY291bnQg
-
-PSAxOw0KIAkJcFNSQi0+cFNlZ21lbnRMaXN0ID0gKFBTR0wpICZwU1JCLT5T
-
-ZWdtZW50eDsNCiAJCURFQlVHMShwcmludGsoIiVzKCk6IE1hcHBlZCBzZW5z
-
-ZSBidWZmZXIgJXAgYXQgJXhcbiIsIF9fRlVOQ1RJT05fXywgcGNtZC0+c2Vu
-
-c2VfYnVmZmVyLCBjbWRwLT5zYXZlZF9kbWFfaGFuZGxlKSk7DQpAQCAtMTA0
-
-Myw3ICsxMDQ0LDcgQEANCiAJCQkJICAgICAodW5zaWduZWQgbG9uZylwY21k
-
-LT5yZXF1ZXN0X2J1ZmZlciAmIH5QQUdFX01BU0ssDQogCQkJCSAgICAgcGNt
-
-ZC0+cmVxdWVzdF9idWZmbGVuLCBzY3NpX3RvX3BjaV9kbWFfZGlyKHBjbWQt
-
-PnNjX2RhdGFfZGlyZWN0aW9uKSk7DQogCQkvKiBUT0RPOiBlcnJvciBoYW5k
-
-bGluZyAqLw0KLQkJcFNSQi0+U2VnbWVudHgubGVuZ3RoID0gcGNtZC0+cmVx
-
-dWVzdF9idWZmbGVuOw0KKwkJc2dfZG1hX2xlbigmcFNSQi0+U2VnbWVudHgp
-
-ID0gcGNtZC0+cmVxdWVzdF9idWZmbGVuOw0KIAkJcFNSQi0+U0djb3VudCA9
-
-IDE7DQogCQlwU1JCLT5wU2VnbWVudExpc3QgPSAoUFNHTCkgJnBTUkItPlNl
-
-Z21lbnR4Ow0KIAkJREVCVUcxKHByaW50aygiJXMoKTogTWFwcGVkIHJlcXVl
-
-c3QgYnVmZmVyICVwIGF0ICV4XG4iLCBfX0ZVTkNUSU9OX18sIHBjbWQtPnJl
-
-cXVlc3RfYnVmZmVyLCBjbWRwLT5zYXZlZF9kbWFfaGFuZGxlKSk7DQpAQCAt
-
-MTEzMSw3ICsxMTMyLDcgQEANCiAJaWYgKCFwY21kKSB7IGRjMzkwX0ZyZWVf
-
-aW5zZXJ0IChwQUNCLCBwU1JCKTsgcmV0dXJuOyB9IC8qIHNob3VsZCBub3Qg
-
-aGFwcGVuICovDQogCXBEQ0IgPSBkYzM5MF9maW5kRENCIChwQUNCLCBwY21k
-
-LT5kZXZpY2UtPmlkLCBwY21kLT5kZXZpY2UtPmx1bik7DQogCWlmICghcERD
-
-QikgDQotCXsgDQorCXsNCiAJCWRjMzkwX0ZyZWVfaW5zZXJ0IChwQUNCLCBw
-
-U1JCKTsNCiAJCXByaW50ayAoS0VSTl9FUlIgIkRDMzkwOiBDb21tYW5kIGlu
-
-IHF1ZXVlIHRvIG5vbi1leGlzdGluZyBkZXZpY2UhXG4iKTsNCiAJCXBjbWQt
-
-PnJlc3VsdCA9IE1LX1JFUyhEUklWRVJfRVJST1IsRElEX0VSUk9SLDAsMCk7
-
-DQpAQCAtMTE4MCw3ICsxMTgxLDcgQEANCiAgICAgLyogQXNzdW1lIEJBRF9U
-
-QVJHRVQ7IHdpbGwgYmUgY2xlYXJlZCBsYXRlciAqLw0KICAgICBjbWQtPnJl
-
-c3VsdCA9IERJRF9CQURfVEFSR0VUIDw8IDE2Ow0KICAgIA0KLSAgICAvKiBU
-
-T0RPOiBDaGFuZ2UgdGhlIHBvbGljeTogQWx3YXkgYWNjZXB0IFRFU1RfVU5J
-
-VF9SRUFEWSBvciBJTlFVSVJZIA0KKyAgICAvKiBUT0RPOiBDaGFuZ2UgdGhl
-
-IHBvbGljeTogQWx3YXlzIGFjY2VwdCBURVNUX1VOSVRfUkVBRFkgb3IgSU5R
-
-VUlSWSANCiAgICAgICogY29tbWFuZHMgYW5kIGFsbG9jIGEgRENCIGZvciB0
-
-aGUgZGV2aWNlIGlmIG5vdCB5ZXQgdGhlcmUuIERDQiB3aWxsDQogICAgICAq
-
-IGJlIHJlbW92ZWQgaW4gZGMzOTBfU1JCZG9uZSBpZiBTRUxfVElNRU9VVCAq
-
-Lw0KIA0KQEAgLTE3NjcsNyArMTc2OCw3IEBADQogICAgIFBEQ0IgcERDQiwg
-
-cERDQjI7DQogDQogICAgIHBEQ0IgPSBrbWFsbG9jIChzaXplb2YoREMzOTBf
-
-RENCKSwgR0ZQX0FUT01JQyk7DQotICAgIERDQkRFQlVHKHByaW50ayAoS0VS
-
-Tl9JTkZPICJEQzM5MDogYWxsb2MgbWVtIGZvciBEQ0IgKElEICVpLCBMVU4g
-
-JWkpOiAlcFxuIglcDQorICAgIERDQkRFQlVHKHByaW50ayAoS0VSTl9JTkZP
-
-ICJEQzM5MDogYWxsb2MgbWVtIGZvciBEQ0IgKElEICVpLCBMVU4gJWkpOiAl
-
-cFxuIiwJXA0KIAkJICAgICBpZCwgbHVuLCBwRENCKSk7DQogIA0KICAgICAq
-
-cHBEQ0IgPSBwRENCOw0KQEAgLTIyMjksMTAgKzIyMzAsMTMgQEANCiAgICAg
-
-aWYgKCBQQ0lfUFJFU0VOVCApDQogCXdoaWxlIChQQ0lfRklORF9ERVZJQ0Ug
-
-KFBDSV9WRU5ET1JfSURfQU1ELCBQQ0lfREVWSUNFX0lEX0FNRDUzQzk3NCkp
-
-DQogCXsNCi0jaWYgTElOVVhfVkVSU0lPTl9DT0RFID4gS0VSTkVMX1ZFUlNJ
-
-T04oMiwzLDMwKQ0KIAkgICAgaWYgKHBjaV9lbmFibGVfZGV2aWNlIChwZGV2
-
-KSkNCiAJCWNvbnRpbnVlOw0KLSNlbmRpZg0KKw0KKwkgICAgaWYgKHBjaV9z
-
-ZXRfZG1hX21hc2socGRldiwgMHhmZmZmZmZmZikpIHsNCisJCSAgICBwcmlu
-
-dGsoS0VSTl9FUlIgIkRDMzkwKCVpKTogTm8gc3VpdGFibGUgRE1BIGF2YWls
-
-YWJsZS5cbiIsIGRjMzkwX2FkYXB0ZXJDbnQpOw0KKwkJICAgIGNvbnRpbnVl
-
-Ow0KKwkgICAgfQ0KIAkgICAgUENJX0dFVF9JT19BTkRfSVJROw0KIAkgICAg
-
-REVCVUcwKHByaW50ayhLRVJOX0lORk8gIkRDMzkwKCVpKTogSU9fUE9SVD0l
-
-MDR4LElSUT0leFxuIiwgZGMzOTBfYWRhcHRlckNudCwgKFVJTlQpIGlvX3Bv
-
-cnQsIGlycSkpOw0KIA0KZGlmZiAtdSBsaW51eC0yLjYuMy9kcml2ZXJzL3Nj
-
-c2kvc2NzaWlvbS5jIGxpbnV4LTIuNi4zLmhhcmRsaW5rL2RyaXZlcnMvc2Nz
-
-aS9zY3NpaW9tLmMNCi0tLSBsaW51eC0yLjYuMy9kcml2ZXJzL3Njc2kvc2Nz
-
-aWlvbS5jCUZyaSBNYXIgMTIgMjI6MjI6MTAgMjAwNA0KKysrIGxpbnV4LTIu
-
-Ni4zLmhhcmRsaW5rL2RyaXZlcnMvc2NzaS9zY3NpaW9tLmMJVHVlIEFwciAx
-
-MyAyMjo0NjoxOSAyMDA0DQpAQCAtNTIxLDcgKzUyMSw3IEBADQogICAgIHsN
-
-CiAJICAgIERDMzkwX3dyaXRlOCAoU2NzaUNtZCwgQ0xFQVJfRklGT19DTUQp
-
-Ow0KIAkgICAgREMzOTBfd3JpdGU4IChETUFfQ21kLCBSRUFEX0RJUkVDVElP
-
-TitETUFfSURMRV9DTUQpOyAvKiB8IERNQV9JTlQgKi8NCi0gICAgfQkgICAg
-
-DQorICAgIH0NCiB9DQogDQogc3RhdGljIHZvaWQNCkBAIC03NDAsOSArNzQw
-
-LDkgQEANCiAJcHNnbCA9IHBTUkItPnBTZWdtZW50TGlzdDsNCiAJLy9kYzM5
-
-MF9wY2lfc3luYyhwU1JCKTsNCiANCi0Jd2hpbGUgKHBTUkItPlRvdGFsWGZl
-
-cnJlZExlbiArIChVTE9ORykgcHNnbC0+bGVuZ3RoIDwgcFNSQi0+U2F2ZWRf
-
-UHRyKQ0KKwl3aGlsZSAocFNSQi0+VG90YWxYZmVycmVkTGVuICsgKFVMT05H
-
-KSBzZ19kbWFfbGVuKHBzZ2wpIDwgcFNSQi0+U2F2ZWRfUHRyKQ0KIAl7DQot
-
-CSAgICBwU1JCLT5Ub3RhbFhmZXJyZWRMZW4gKz0gKFVMT05HKSBwc2dsLT5s
-
-ZW5ndGg7DQorCSAgICBwU1JCLT5Ub3RhbFhmZXJyZWRMZW4gKz0gKFVMT05H
-
-KSBzZ19kbWFfbGVuKHBzZ2wpOw0KIAkgICAgcFNSQi0+U0dJbmRleCsrOw0K
-
-IAkgICAgaWYoIHBTUkItPlNHSW5kZXggPCBwU1JCLT5TR2NvdW50ICkNCiAJ
-
-ICAgIHsNCkBAIC03NjIsNyArNzYyLDcgQEANCiAgICAgfSBlbHNlIGlmKHBj
-
-bWQtPnJlcXVlc3RfYnVmZmVyKSB7DQogCS8vZGMzOTBfcGNpX3N5bmMocFNS
-
-Qik7DQogDQotCXBTUkItPlNlZ21lbnR4Lmxlbmd0aCA9IHBjbWQtPnJlcXVl
-
-c3RfYnVmZmxlbiAtIHBTUkItPlNhdmVkX1B0cjsNCisJc2dfZG1hX2xlbigm
-
-cFNSQi0+U2VnbWVudHgpID0gcGNtZC0+cmVxdWVzdF9idWZmbGVuIC0gcFNS
-
-Qi0+U2F2ZWRfUHRyOw0KIAlwU1JCLT5TR2NvdW50ID0gMTsNCiAJcFNSQi0+
-
-cFNlZ21lbnRMaXN0ID0gKFBTR0wpICZwU1JCLT5TZWdtZW50eDsNCiAgICAg
-
-fSBlbHNlIHsNCkBAIC04ODUsNiArODg1LDggQEANCiAJaWYgKHBEQ0IpIHBy
-
-aW50ayAoS0VSTl9FUlIgIkRDMzkwOiBwU1JCID09IHBUbXBTUkIhIChUYWdR
-
-IEVycm9yPykgKCUwMmktJWkpXG4iLA0KIAkJCSAgcERDQi0+VGFyZ2V0SUQs
-
-IHBEQ0ItPlRhcmdldExVTik7DQogCWVsc2UgcHJpbnRrIChLRVJOX0VSUiAi
-
-REMzOTA6IHBTUkIgPT0gcFRtcFNSQiEgKFRhZ1EgRXJyb3I/KSAoRENCIDAh
-
-KVxuIik7DQorDQorCXBTUkItPnBTUkJEQ0IgPSBwRENCOw0KIAlkYzM5MF9F
-
-bmFibGVNc2dPdXRfQWJvcnQgKHBBQ0IsIHBTUkIpOw0KIAlpZiAocERDQikg
-
-cERDQi0+RENCRmxhZyB8PSBBQk9SVF9ERVY7DQogCXJldHVybjsNCkBAIC0x
-
-NDY2LDcgKzE0NjgsNyBAQA0KIAkJcHRyMiA9IHBTUkItPnBTZWdtZW50TGlz
-
-dDsNCiAJCWZvciggaT1wU1JCLT5TR0luZGV4OyBpIDwgYnZhbDsgaSsrKQ0K
-
-IAkJew0KLQkJICAgIHN3bHZhbCArPSBwdHIyLT5sZW5ndGg7DQorCQkgICAg
-
-c3dsdmFsICs9IHNnX2RtYV9sZW4ocHRyMik7DQogCQkgICAgcHRyMisrOw0K
-
-IAkJfQ0KIAkJUkVNT1ZBQkxFREVCVUcocHJpbnRrKEtFUk5fSU5GTyAiWGZl
-
-cnJlZExlbj0lMDh4LE5vdFhmZXJMZW49JTA4eFxuIixcDQpkaWZmIC11IGxp
-
-bnV4LTIuNi4zL2RyaXZlcnMvc2NzaS9kYzM5MC5oIGxpbnV4LTIuNi4zLmhh
-
-cmRsaW5rL2RyaXZlcnMvc2NzaS9kYzM5MC5oDQotLS0gbGludXgtMi42LjMv
-
-ZHJpdmVycy9zY3NpL2RjMzkwLmgJRnJpIE1hciAxMiAyMjoyMjoxMCAyMDA0
-
-DQorKysgbGludXgtMi42LjMuaGFyZGxpbmsvZHJpdmVycy9zY3NpL2RjMzkw
-
-LmgJVHVlIEFwciAxMyAyMjo1MDoyNiAyMDA0DQpAQCAtMTksNyArMTksNyBA
-
-QA0KICNlbmRpZg0KIA0KICNkZWZpbmUgREMzOTBfQkFOTkVSICJUZWtyYW0g
-
-REMzOTAvQU01M0M5NzQiDQotI2RlZmluZSBEQzM5MF9WRVJTSU9OICIyLjBm
-
-IDIwMDAtMTItMjAiDQorI2RlZmluZSBEQzM5MF9WRVJTSU9OICIyLjFiIDIw
-
-MDQtMDQtMTMiDQogDQogLyogV2UgZG9uJ3QgaGF2ZSBlaF9hYm9ydF9oYW5k
-
-bGVyLCBlaF9kZXZpY2VfcmVzZXRfaGFuZGxlciwgDQogICogZWhfYnVzX3Jl
-
-c2V0X2hhbmRsZXIsIGVoX2hvc3RfcmVzZXRfaGFuZGxlciB5ZXQhIA0K
----1463811839-843186566-1084995906=:6790--
