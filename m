@@ -1,83 +1,82 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [usb-storage] unsolicited sense in 2.6.0-test5 usb-storage.ko
-Date: Wed, 10 Sep 2003 14:52:52 -0700
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [linux-usb-devel] [2.6-test] Bug in usb-storage or scsi?
+Date: 10 Sep 2003 15:07:08 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030910145252.F13649@one-eyed-alien.net>
-References: <Pine.LNX.4.44L0.0309101700230.1579-100000@ida.rowland.org> <1063229049.6245.12.camel@patehci2>
+Message-ID: <1063228028.6151.1.camel@patehci2>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="4VrXvz3cwkc87Wze"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:16396 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S265807AbTIJVxF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Sep 2003 17:53:05 -0400
-Content-Disposition: inline
-In-Reply-To: <1063229049.6245.12.camel@patehci2>; from p.lavarre@ieee.org on Wed, Sep 10, 2003 at 03:24:09PM -0600
+Received: from email-out1.iomega.com ([147.178.1.82]:24209 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S265726AbTIJV1b
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Sep 2003 17:27:31 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: stern@rowland.harvard.edu, usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org
+To: stern@rowland.harvard.edu
+Cc: mdharm-usb@one-eyed-alien.net, usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org
+
+I see Google didn't thread my first try properly, sorry.  Here I am
+again with an edited subject line.
+
+-----Forwarded Message-----
+
+From: Pat LaVarre <p.lavarre@ieee.org>
+To: stern@rowland.harvard.edu
+Cc: mdharm-usb@one-eyed-alien.net, usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org
+Subject: Re: [usb-storage] Re: [linux-usb-devel] [2.6-test] Bug in usb-storage or scsi?
+Date: 10 Sep 2003 12:16:31 -0600
 
 
---4VrXvz3cwkc87Wze
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> What do the SCSI folk have to say about it?
 
-On Wed, Sep 10, 2003 at 03:24:09PM -0600, Pat LaVarre wrote:
->=20
-> > The reason for the unsolicited REQUEST-SENSE ...
->=20
-> Help, lost me.
->=20
-> I'm thinking usb-storage auto sense should always and only follow
-> bCSWStatus =3D x01 Failed.  I'm thinking unsolicited auto sense should
-> occur only if the layers above request such an abuse - never
-> automagically.
->=20
-> I'm thinking not injecting unsolicited auto sense is a part of the
-> unwritten specification that "everyone knows" helps hosts get along with
-> devices.
->=20
-> No?  Where have I gone wrong?
+Anyone?
 
-Experience tells us that this is a flawed algorithm.
+> > for 2.6.0 ... drivers/scsi/sd.c ...
+> > sd_read_cache_type ...
+> > Get rid of (or #ifdef out) most ...
+>
+> Is there any feeling about how to handle these
+> ongoing problems with the mode-sense cache
+> page?
 
-> > Since sgp_dd asked for a 64-byte
-> > READ-CAPACITY, it gets what it deserves.
->=20
-> Ah, here we educate me.
->=20
-> I should prepare and forward a patch to correct sgp_dd?
->=20
-> We the community now broadly accept this rule?  We say apps own the job
-> of keeping the bus "on the thin diagonal" i.e. asking for precisely the
-> expected count of data bytes?
+Yes, much.
 
-Yes.
+Maybe more feeling if you remind/teach me what breaks if we don't fetch
+page 8 re Cache.  First I imagine automounters mount read-only disks rw,
+and then the write cache gets errors while flushing.  I wonder what else
+breaks.  Maybe thruput varies for devices that do or do not bother to
+claim they have write cache.
 
-Matt
+Maybe more feeling if you can say how in/accurate page 8 re Cache
+commonly is.  For example, I know of no clear & broadly adopted standard
+that requires a device to declare write-behind or background defect map
+updates as a form of write cache.
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+> There doesn't seem to be any general solution
+> that can work with all USB storage devices.
 
-Somebody call an exorcist!
-					-- Dust Puppy
-User Friendly, 5/16/1998
+I understand you to be saying we can settle for an sd solution, we don't
+mind if the sd heuristic we discover then doesn't apply to pdt x05
+dvd/cd.
 
---4VrXvz3cwkc87Wze
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+> some hang when asked to read just the page
+> header.
+> ...
+> some hang when asked to read just part of the
+> page;
+> ...
+> Some hang when asked to read the entire page;
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
+Device folk ship bugs, aye, same as host folk.
 
-iD8DBQE/X500IjReC7bSPZARAmEXAJsEiJ/nTTHZ0AE2qs+ewtFgs2X22ACfeXqY
-EFT0Ozb4ZGFy66Rcr3CcyIw=
-=x7cM
------END PGP SIGNATURE-----
+Are not two of these three failures disproportionately common?
 
---4VrXvz3cwkc87Wze--
+Me, I would expect asking anything but what Windows asks would fail most
+often.  Is that not so?  Do we know what Windows asks?  Do we know
+if/how Win ME/ 2K/ XP differ here?  Have we matched CBWCB and
+dCBWDataTransferLength in every bit?
+
+Pat LaVarre
+
+
+
