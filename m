@@ -1,59 +1,78 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [RFC] support for sysfs string based properties for SCSI (1/3)
-Date: 05 May 2003 19:05:52 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1052179553.1888.461.camel@mulgrave>
-References: <1051989099.2036.7.camel@mulgrave>
-	<1051989565.2036.14.camel@mulgrave> <20030505170202.GA1296@kroah.com>
-	<1052154516.1888.33.camel@mulgrave>  <20030505171745.GA1477@kroah.com>
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [RFC] scsi host sysfs support again [0/4]
+Date: Mon, 5 May 2003 18:05:21 -0700
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20030506010521.GB3852@beaverton.ibm.com>
+References: <20030505083315.GB8416@beaverton.ibm.com> <20030505093833.A13506@infradead.org> <20030505094818.GH8416@beaverton.ibm.com> <20030505111735.A16914@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20030505171745.GA1477@kroah.com>
-To: Greg KH <greg@kroah.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Patrick Mochel <mochel@osdl.org>, Mike Anderson <andmike@us.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e33.co.us.ibm.com ([32.97.110.131]:6899 "EHLO e33.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262232AbTEFAuy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2003 20:50:54 -0400
+Content-Disposition: inline
+In-Reply-To: <20030505111735.A16914@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2003-05-05 at 12:17, Greg KH wrote:
-> On Mon, May 05, 2003 at 12:08:35PM -0500, James Bottomley wrote:
-> > Nothing prevents users from doing it the callback way.  However,
-> > callbacks aren't a scaleable interface for properties that have to be
-> > shared and overridden.
+Christoph Hellwig [hch@infradead.org] wrote:
+> On Mon, May 05, 2003 at 02:48:18AM -0700, Mike Anderson wrote:
+> > While scsi_remove_host cannot imply a scsi_set_host_offline unless we
+> > change the previous definition. We indicated that scsi_set_host_offline
+> > may cancel commands in flight which implys some sync point.
 > 
-> I don't understand the "shared and overridden" aspect.  Do you mean a
-> default attribute for all types of SCSI devices, with the ability for an
-> individual device to override the attribute with it's own values if it
-> wants to?  That still seems doable within the driver model today,
-> without having to rely on bus specific functions.
+> Yes.
+>
 
-Yes, but the problem is how to communicate the override between the HBA
-driver and SCSI. The override is required because changing some
-properties may require changes at many levels.  The queue_depth in the
-example I gave is the obvious one:
+I guess I should have phrased a better question. Does the yes mean we need to
+change the previous definition presented for scsi_set_host_offline.
 
-- the device needs to make sure it has internal resources for the
-revised queue depth.  It also has to implement the change.
-- the mid-layer needs to do the adjustment
-- As does the block layer (I didn't implement this one in my patch).
+> Actually what I think must happen is that scsi_unregister will do
+> nothing unless the refcount reaches zero.  It should also be renamed
+> to scsi_put_host to make this more explicit.
+> 
 
-The interface obviously belongs in the SCSI API, but one API entry per
-property causes the interface to explode and also makes it quite
-difficult to add new ones, so we need a generic get/set property
-interface; however, then we need to know what property, hence the
-strings.
+Well scsi_proc_host_rm will need to be done through some action prior to
+the completion of the drivers "remove" or "storage_disconnect (usb)"
+functions.
 
-> Hm, this is _really_ calling for what Pat calls "attributes".  Take a
-> look at the ones in the class model, and let me know if those would work
-> for you for devices.  If so, I'll be glad to add them, which should help
-> you out here.
+> Then we'd have:
+> 
+> 	scsi_alloc_host
+> 		- allocate storage for struct Scsi_Host, some
+> 		  basic initalization.  refcount set to 1;
 
-Well, I analysed the class interface.  It currently won't do what we
-need, but it might be able to if it supported an inheritance, so there
-would be a device class which could then be extended by the drivers to
-override the properties they need.  However, isn't this type of
-inheritance going to be a real pain using function pointers, and if we
-only support overrides of show/store, it's probably simpler just to
-support the strings based interface.
+I am using sysfs ref counting and increment the ref count on the Scsi_Host
+through device_register and device_get. The scsi_get/put_host wrapper
+would call device_get/put.
 
-James
+> 	scsi_get_host
+> 		- get a reference to an existing struct Scsi_Host
+> 	scsi_put_host
+> 		- decrement usecount of an existing struct Scsi_Host,
+> 		  free it if this was the last reference
+
+The sysfs model splits the registering / unregistering so that is why I
+am unregistering in scsi_remove_host, but may not call the free until
+someone calls the final put.
+
+> 	scsi_add_host
+> 		- register host with the scsi midlayer
+
+This is where I am registering the Scsi_Host struct device as we know
+the parent by this point. On return the ref count on Scsi_Host should be
+at least 1.
+
+> 	scsi_remove_host
+> 		- unregister host with the scsi midlayer, force all
+> 		  I/O to fail from now on and never call back into
+> 		  the driver.
+
+This is where I am unregistering the Scsi_Host struct device.
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
