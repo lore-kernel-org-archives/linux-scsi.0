@@ -1,128 +1,64 @@
-From: Chuck Ebbert <76306.1226@compuserve.com>
-Subject: [Patch 2.6] sd.c spinup messages
-Date: Wed, 9 Jun 2004 19:48:27 -0400
+From: 'Christoph Hellwig' <hch@infradead.org>
+Subject: Re: [PATCH] dead code and missing statics in lpfc
+Date: Thu, 10 Jun 2004 12:17:46 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200406091950_MC3-1-8463-F129@compuserve.com>
+Message-ID: <20040610111746.GB1140@infradead.org>
+References: <3356669BBE90C448AD4645C843E2BF28034F947B@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	 charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from siaag2ac.compuserve.com ([149.174.40.133]:54217 "EHLO
-	siaag2ac.compuserve.com") by vger.kernel.org with ESMTP
-	id S266195AbUFIXvb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Jun 2004 19:51:31 -0400
-Received: (from mailgate@localhost)
-	by siaag2ac.compuserve.com (8.12.11/8.12.7/SUN-2.15) id i59NpVPv012215
-	for linux-scsi@vger.kernel.org; Wed, 9 Jun 2004 19:51:31 -0400 (EDT)
+Received: from [213.146.154.40] ([213.146.154.40]:7572 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S263295AbUFJLRs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Jun 2004 07:17:48 -0400
 Content-Disposition: inline
+In-Reply-To: <3356669BBE90C448AD4645C843E2BF28034F947B@xbl.ma.emulex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: "Smart, James" <James.Smart@Emulex.Com>
+Cc: linux-scsi@vger.kernel.org
 
-With an empty Iomega USB Powered Zip 250 drive and kernel 2.6.6,
-I get this in the syslog on bootup:
+On Wed, Jun 09, 2004 at 07:08:55AM -0400, Smart, James wrote:
+> So...
+> 
+> I agree that symbols such as this are not desired, but... If this is the
+> stance of the linux-scsi group - it says:
+> 
+> - For vendors such as ourselves, the driver that we put through extensive
+> qualification and testing - real, repeated, extended run time on many
+> platforms, distributions, and in many different configurations - will NEVER
+> be the same driver that is ultimately shipped with the kernel. Use of the
+> kernel-supplied driver will ALWAYS be a calculated risk.
+> 
+> - This implies that - for any production system wanting support - you are
+> MANDATING that the user replace the kernel-supplied driver with the vendor's
+> driver. 
 
-Jun  9 14:38:42 d2 kernel: usb 1-1: new full speed USB device using address 2
-Jun  9 14:38:42 d2 kernel: scsi1 : SCSI emulation for USB Mass Storage devices
-Jun  9 14:38:42 d2 kernel:   Vendor: IOMEGA    Model: ZIP 250           Rev: 61.T
-Jun  9 14:38:42 d2 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 02
-Jun  9 14:38:42 d2 kernel: sda: Spinning up disk....<6>EXT3 FS on hde3, internal journal
-Jun  9 14:38:42 d2 kernel: Adding 524152k swap on /dev/hdg2.  Priority:-1 extents:1
-Jun  9 14:38:42 d2 kernel: Adding 524152k swap on /dev/hde2.  Priority:-2 extents:1
-Jun  9 14:38:42 d2 kernel: .<5>Attached scsi removable disk sda at scsi1, channel 0, id 0, lun 0
-Jun  9 14:38:42 d2 kernel: Attached scsi generic sg1 at scsi1, channel 0, id 0, lun 0,  type 0
-Jun  9 14:38:42 d2 kernel: kjournald starting.  Commit interval 5 seconds
+Well, ba strategy for Emulex than and you can be sure any kerneldeveloper
+will not recommend Emulex hardware for such a braindead policy then.  Given
+the code quality of the Emulex driver it's pretty obvious that youre QA tests
+didn't find some of the most obvious bugs.  Anyway, another good example for
+my talk on Saturday ;-)
 
-Code in sd.c:sd_spinup_disk is looping and calling printk(".") while
-waiting for the disk to spin up.  Then it detects media not present
-and the function just exits, leaving an incomplete line in the buffer.
-Meanwhile other messages get mixed in.
+> - And lastly, although not as important, you are dictating that, for a
+> kernel-level entity, there is never an opportunity for them to extend their
+> product set by providing extra add-in or helper modules. This limitation is
+> reasonable for kernel protection - but it pushes the user, who wants the
+> features, back to the vendor's replacement driver.
 
-I fixed it so it prints only whole-line messages and emits a
-media-not-present message if it printed a spinup message earlier:
+Exactly that's what we're doing.  Opensource your ibjection module and
+integrate it with the driver release an everything is fine.
 
-Jun  9 16:42:06 d2 kernel: usb 1-1: new full speed USB device using address 2
-Jun  9 16:42:06 d2 kernel: scsi1 : SCSI emulation for USB Mass Storage devices
-Jun  9 16:42:06 d2 kernel:   Vendor: IOMEGA    Model: ZIP 250           Rev: 61.T
-Jun  9 16:42:06 d2 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 02
-Jun  9 16:42:06 d2 kernel: sda: Spinning up disk...
-Jun  9 16:42:06 d2 kernel: EXT3 FS on hde3, internal journal
-Jun  9 16:42:06 d2 kernel: Adding 524152k swap on /dev/hdg2.  Priority:-1 extents:1
-Jun  9 16:42:06 d2 kernel: Adding 524152k swap on /dev/hde2.  Priority:-2 extents:1
-Jun  9 16:42:06 d2 kernel: sda: No media present
-Jun  9 16:42:06 d2 kernel: Attached scsi removable disk sda at scsi1, channel 0, id 0, lun 0
-Jun  9 16:42:06 d2 kernel: Attached scsi generic sg1 at scsi1, channel 0, id 0, lun 0,  type 0
-Jun  9 16:42:06 d2 kernel: kjournald starting.  Commit interval 5 seconds
+> - Ultimately, the byproduct of the above is, you are also focusing the
+> vendor away from the base kernel. Any effort to extend the driver, it's
+> feature set, etc - regardless of whether those features/extensions would be
+> good for the kernel or scsi subsystem overall, will be focused solely on the
+> mandated replacement driver. The kernel-supplied driver becomes a "put in
+> the least effort necessary" choice.
 
-And with media present:
+Well, bad luck.  With that stance from Emulex we'd better stop any work on
+getting it included if you're not interested in it beeing a 1st class citicen.
 
-Jun  9 17:52:46 d2 kernel: usb 1-1: new full speed USB device using address 2
-Jun  9 17:52:46 d2 kernel: scsi1 : SCSI emulation for USB Mass Storage devices
-Jun  9 17:52:46 d2 kernel:   Vendor: IOMEGA    Model: ZIP 250           Rev: 61.T
-Jun  9 17:52:46 d2 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 02
-Jun  9 17:52:46 d2 kernel: sda: Spinning up disk...
-Jun  9 17:52:46 d2 kernel: EXT3 FS on hde3, internal journal
-Jun  9 17:52:46 d2 kernel: Adding 524152k swap on /dev/hdg2.  Priority:-1 extents:1
-Jun  9 17:52:46 d2 kernel: Adding 524152k swap on /dev/hde2.  Priority:-2 extents:1
-Jun  9 17:52:46 d2 kernel: kjournald starting.  Commit interval 5 seconds
-((( Snip 15 lines of ext3 mount messages )))
-Jun  9 17:52:46 d2 kernel: sda: Drive ready
-Jun  9 17:52:46 d2 kernel: SCSI device sda: 196608 512-byte hdwr sectors (101 MB)
-Jun  9 17:52:46 d2 kernel: sda: assuming Write Enabled
-Jun  9 17:52:46 d2 kernel: sda: assuming drive cache: write through
-Jun  9 17:52:46 d2 kernel:  sda: sda4
-Jun  9 17:52:46 d2 kernel: Attached scsi removable disk sda at scsi1, channel 0, id 0, lun 0
-Jun  9 17:52:46 d2 kernel: Attached scsi generic sg1 at scsi1, channel 0, id 0, lun 0,  type 0
 
-Patch:
-
---- 266.0/drivers/scsi/sd.c     2004-06-09 15:26:49.000000000 -0400
-+++ 266.1/drivers/scsi/sd.c     2004-06-09 16:37:21.000000000 -0400
-@@ -847,8 +847,11 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
-                 * any media in it, don't bother with any of the rest of
-                 * this crap.
-                 */
--               if (media_not_present(sdkp, SRpnt))
-+               if (media_not_present(sdkp, SRpnt)) {
-+                       if (spintime)
-+                               printk(KERN_NOTICE "%s: No media present\n", diskname);
-                        return;
-+               }
- 
-                if ((driver_byte(the_result) & DRIVER_SENSE) == 0) {
-                        /* no sense, TUR either succeeded or failed
-@@ -880,7 +883,7 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
-                } else if (SRpnt->sr_sense_buffer[2] == NOT_READY) {
-                        unsigned long time1;
-                        if (!spintime) {
--                               printk(KERN_NOTICE "%s: Spinning up disk...",
-+                               printk(KERN_NOTICE "%s: Spinning up disk...\n",
-                                       diskname);
-                                cmd[0] = START_STOP;
-                                cmd[1] = 1;     /* Return immediately */
-@@ -903,7 +906,6 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
-                                current->state = TASK_UNINTERRUPTIBLE;
-                                time1 = schedule_timeout(time1);
-                        } while(time1);
--                       printk(".");
-                } else {
-                        /* we don't understand the sense code, so it's
-                         * probably pointless to loop */
-@@ -917,12 +919,10 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
-        } while (spintime &&
-                 time_after(spintime_value + 100 * HZ, jiffies));
- 
--       if (spintime) {
--               if (scsi_status_is_good(the_result))
--                       printk("ready\n");
--               else
--                       printk("not responding...\n");
--       }
-+       if (spintime)
-+               printk(KERN_NOTICE "%s: Drive %s\n", diskname,
-+                      scsi_status_is_good(the_result) ? "ready" : "not responding!");
-+
- }
- 
- /*
-
+What you're missing is that the Linux kernel can very well live without a
+Emulex driver, but it will hurt Emulex if it's not properly supported by
+Linux.
