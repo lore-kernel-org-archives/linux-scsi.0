@@ -1,60 +1,59 @@
 From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [patch 2.5] ips queue depths
-Date: Mon, 21 Oct 2002 00:28:01 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021021072801.GA3197@beaverton.ibm.com>
-References: <A3B9245C291EEF4785A24A1DBE8D852B0376BC@rtpexc01.adaptec.com> <20021015194705.GD4391@redhat.com>
+Subject: [PATCH] scsi_error device offline fix
+Date: Mon, 21 Oct 2002 00:37:18 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20021021073718.GB3197@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20021015194705.GD4391@redhat.com>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Jeffery, David" <David_Jeffery@adaptec.com>, 'Dave Hansen' <haveblue@us.ibm.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-Doug Ledford [dledford@redhat.com] wrote:
->     ha = IPS_HA(SDptr->host);
-> -   min = ha->max_cmds / 4;
-> -   if (min < 8)
-> -      min = ha->max_cmds - 1;
-> -   scsi_adjust_queue_depth(SDptr, MSG_ORDERED_TAG, min);
-> +   if (SDptr->tagged_supported) {
-> +      min = ha->max_cmds / 2;
-> +      if (min <= 16)
-> +         min = ha->max_cmds - 1;
-> +      scsi_adjust_queue_depth(SDptr, MSG_ORDERED_TAG, min);
-> +   }
->     return 0;
->  }
->  
+This patch corrects a problem in scsi error handling.
 
-Doug,
-	Sorry I did not get on to checking your version of this patch
-	sooner.
+When a device is offlined indicated by a message like ...Device offlined
+- not ready...
 
-I did check 2.5.44 which includes your patched version of ips.c. I am
-seeing only a queue depth of 1.
+the command return status was not being updated with a failure status if
+the IO was a timeout.
 
-The reason is that the SERVERAID disks are virutal and the inquiry data
-they send back does is generated in the driver. The inq data does not
-have the CmdQue bit set which results in tagged_supported not being set.
+I tested the patch on system with ips, aic, and qlogic fc adapters, but
+was unable to generate a satisfactory device offline test case.
 
-Either the slave_attached code will need to change or the driver will
-need to start setting CmdQue.
-
-Output for ServeRAID:
-PQual=0, Device type=0, RMB=0, ANSI version=2, [full version=0x02]
-AERC=0, TrmTsk=0, NormACA=0, HiSUP=0, Resp data format=2, SCCS=0
-BQue=0, EncServ=0, MultiP=0, MChngr=0, ACKREQQ=0, Addr16=1
-RelAdr=0, WBus16=1, Sync=1, Linked=0, TranDis=0, CmdQue=0
-length=36 (0x24)
-Vendor identification: IBM
-Product identification: SERVERAID
-Product revision level: 1.00
-
+I did test this fix on uml with scsi_debug and generated a device
+offline condition with verified this fix was working correctly.
 
 -andmike
 --
 Michael Anderson
 andmike@us.ibm.com
 
+ scsi_error.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
+------
+
+===== drivers/scsi/scsi_error.c 1.18 vs edited =====
+--- 1.18/drivers/scsi/scsi_error.c	Thu Oct 17 10:52:39 2002
++++ edited/drivers/scsi/scsi_error.c	Sat Oct 19 15:24:06 2002
+@@ -1145,14 +1145,18 @@
+ 		if (!scsi_eh_eflags_chk(scmd, SCSI_EH_CMD_ERR))
+ 			continue;
+ 
+-		printk(KERN_INFO "%s: Device offlined - not"
++		printk(KERN_INFO "scsi: Device offlined - not"
+ 				" ready or command retry failed"
+ 				" after error recovery: host"
+ 				" %d channel %d id %d lun %d\n",
+-				__FUNCTION__, shost->host_no,
++				shost->host_no,
+ 				scmd->device->channel,
+ 				scmd->device->id,
+ 				scmd->device->lun);
++
++		if (scsi_eh_eflags_chk(scmd, SCSI_EH_CMD_TIMEOUT))
++			scmd->result |= (DRIVER_TIMEOUT << 24);
++
+ 		scmd->device->online = FALSE;
+ 		scsi_eh_finish_cmd(scmd, shost);
+ 	}
