@@ -1,70 +1,41 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] fix cdrom mt rainier probe
-Date: Fri, 16 Jul 2004 19:51:18 +0200
+From: "Frank Borich" <Frank_Borich@us.xyratex.com>
+Subject: Scsi midlayer question
+Date: Fri, 16 Jul 2004 10:55:29 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040716175118.GG11255@suse.de>
-References: <20040716160224.GA2402@suse.de> <1089994751.4844.5.camel@patibmrh9>
+Message-ID: <47F3C2BE74738E4683574107469DFA204CC4FA@XYUSEX01.xyus.xyratex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:57809 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S266565AbUGPRwh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jul 2004 13:52:37 -0400
-Content-Disposition: inline
-In-Reply-To: <1089994751.4844.5.camel@patibmrh9>
+Received: from xyratexus11.xyratex.com ([65.203.33.11]:13555 "EHLO
+	XYUSEX01.xyus.xyratex.com") by vger.kernel.org with ESMTP
+	id S266560AbUGPRzc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jul 2004 13:55:32 -0400
+Content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Jul 16 2004, Pat LaVarre wrote:
-> Jens A:
-> 
-> > Have you tested it works as expected as well, with
-> > rw and ro media?
-> 
-> Ouch, yes, please, never assume I've tested unless I say so explicitly.
-> 
-> So far I've just seen the expected, with one rewritable and one
-> read-only disc, in a pair of USB and PATAPI drives:
-> 
-> $ sudo plscsi /dev/scd0 /dev/hdd
-> export PLSCSI=/dev/scd0       // B Iomega   RRD              DB76
-> export PLSCSI=/dev/hdd        // @ Iomega   RRD              74.B
-> $
-> $ sudo blockdev --getro /dev/scd0 /dev/hdd
-> 0
-> 0
-> $
-> $ sudo dd of=/dev/scd0 bs=64K seek=0 count=1 if=/dev/zero
-> dd: opening `/dev/scd0': Read-only file system
-> $ sudo dd of=/dev/hdd bs=64K seek=0 count=1 if=/dev/zero
-> 1+0 records in
-> 1+0 records out
-> $
-> $ # swap discs
-> $
-> $ sudo dd of=/dev/scd0 bs=64K seek=0 count=1 if=/dev/zero
-> 1+0 records in
-> 1+0 records out
-> $ sudo dd of=/dev/hdd bs=64K seek=0 count=1 if=/dev/zero
-> dd: opening `/dev/hdd': Read-only file system
-> $
+I can see from a fibre channel trace that my 1 MB I/O transfers are
+getting cut up into little chunks.
+Is there any options that can be set when loading the scsi mid layer as
+a module that will improve
+io performance or prevent this breakdown for the sg,sd, or even raw
+drivers.  I am not a driver developer 
+so please excuse my ignorance here.   Any info or points in the right
+direction would be greatly apprecited.
+I am using the 2.4.20 kernel.  
+ 
+Thanks.
+ 
+Franco Borich
 
-Looks good, thanks.
-
-> > looks perfect!
-> 
-> Excellent, I conclude I have understood correctly.
-
-You have.
-
-> > Have you tested ...
-> 
-> I trust you will tell me if I can help further.
-
-I'll start by forwarding this patch, so it at least will work in 2.6.8.
-
--- 
-Jens Axboe
+Frank Borich
+------------------------------------------------------------------
+Xyratex Inc.
+Systems Engineer
+Direct 630 654 6089
+Fax 630 325 2513
+e-mail frank_borich@us.xyratex.com
+ 
 
