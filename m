@@ -1,57 +1,64 @@
-From: Berkley Shands <berkley@cs.wustl.edu>
-Subject: Re: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple map/unmaps
-Date: Wed, 7 Jan 2004 10:33:08 -0600 (CST)
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: [PATCH] 2.6.1-rc2 - MPT Fusion driver 3.00.00 update
+Date: Wed, 7 Jan 2004 17:09:44 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200401071633.i07GX8U0000021336@mudpuddle.cs.wustl.edu>
+Message-ID: <20040107170944.GI17182@parcelfarce.linux.theplanet.co.uk>
+References: <3FFB4E0F.704@lsil.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cliff.cse.wustl.edu ([128.252.166.5]:41150 "EHLO
-	cliff.cse.wustl.edu") by vger.kernel.org with ESMTP id S266272AbUAGQdX
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:32938 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S266248AbUAGRJu
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Jan 2004 11:33:23 -0500
+	Wed, 7 Jan 2004 12:09:50 -0500
+Content-Disposition: inline
+In-Reply-To: <3FFB4E0F.704@lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: berkley@cs.wustl.edu, davem@redhat.com
-Cc: gibbs@scsiguy.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Eric Moore <emoore@lsil.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@steeleye.com
 
-	Here is a somewhat more robust (and trivial) fix for the sg iommu
-problem on the x86_64. Still does not correct the sg list modification logic though :-)
+On Tue, Jan 06, 2004 at 05:08:47PM -0700, Eric Moore wrote:
+> +static struct pci_device_id mptbase_pci_table[] = {
+> +    {
+> +        .vendor        = PCI_VENDOR_ID_LSI_LOGIC,
+> +        .device        = PCI_DEVICE_ID_LSI_FC909,
+> +        .subvendor    = PCI_ANY_ID,
+> +        .subdevice    = PCI_ANY_ID,
+> +        .class        = PCI_CLASS_SERIAL_FIBER << 8,
+> +        .class_mask    = 0xFFFF00,
+> +        .driver_data    = DEVT_INDEX_MPT
+> +    },
 
---- /raid0/kernels/linux/arch/x86_64/kernel/pci-gart.c  2004-01-05 10:16:11.000000000 -0600
-+++ pci-gart.c  2004-01-07 10:14:47.000000000 -0600
-@@ -446,6 +446,16 @@
-                return 0;
-        out = 0;
-        start = 0;
-+
-+       /* see if we are recovering from an error */
-+
-+       if (sg[0].oldlength) {
-+               printk(KERN_WARNING "Recovering sg list for %s\n", dev->slot_name);
-+               for (i = 0; i < nents; i++) {
-+                       sg[i].length = sg[i].oldlength;
-+                       }
-+               }
-+
-        for (i = 0; i < nents; i++) {
-                struct scatterlist *s = &sg[i];
-                dma_addr_t addr = page_to_phys(s->page) + s->offset;
-@@ -453,6 +463,7 @@
-                BUG_ON(s->length == 0); 
- 
-                size += s->length; 
-+               s->oldlength = s->length;
- 
-                /* Handle the previous not yet processed entries */
-                if (i > start) {
+This is all pretty verbose.  The normal style for device drivers is:
 
---- /raid0/kernels/linux/include/asm-x86_64/scatterlist.h       2003-12-17 20:59:39.000000000 -0600
-+++ scatterlist.h       2004-01-07 10:01:06.000000000 -0600
-@@ -5,6 +5,7 @@
-     struct page                *page;
-     unsigned int       offset;
-     unsigned int       length;
-+    unsigned int       oldlength;
-     dma_addr_t         dma_address;
- };
+static struct pci_device_id mptbase_pci_table[] = {
+	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC909,
+		PCI_ANY_ID, PCI_ANY_ID, 0, 0, DEVT_INDEX_MPT },
+	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC929,
+		PCI_ANY_ID, PCI_ANY_ID, 0, 0, DEVT_INDEX_MPT },
+	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC919,
+		PCI_ANY_ID, PCI_ANY_ID, 0, 0, DEVT_INDEX_MPT },
+	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC929X,
+		PCI_ANY_ID, PCI_ANY_ID, 0, 0, DEVT_INDEX_MPT },
+	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC919X,
+		PCI_ANY_ID, PCI_ANY_ID, 0, 0, DEVT_INDEX_MPT },
+	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C1030,
+		PCI_ANY_ID, PCI_ANY_ID, 0, 0, DEVT_INDEX_MPT },
+	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C1035,
+		PCI_ANY_ID, PCI_ANY_ID, 0, 0, DEVT_INDEX_MPT },
+	{ }
+}
 
+Although since you don't make any use of DEVT_INDEX_MPT, you can drop the last
+three entries and simply write:
 
-berkley
+	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C1035,
+		PCI_ANY_ID, PCI_ANY_ID },
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
