@@ -1,34 +1,42 @@
-From: Dmitry Torokhov <dtor_core@ameritech.net>
-Subject: Re: 100% repeatable way to send firewire out to lunch permanently on 2.6.8.1
-Date: Sun, 24 Oct 2004 12:22:50 -0500
+From: Bjarne Thomsen <bjarne.thomsen@get2net.dk>
+Subject: Re: cp from SATA to SCSI freeze
+Date: Sun, 24 Oct 2004 19:49:53 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200410241222.50426.dtor_core@ameritech.net>
-References: <Pine.LNX.4.44.0409050434540.8779-100000@sasami.anime.net> <20041024150051.GA21922@suse.de> <1098631356.10824.33.camel@mulgrave>
+Message-ID: <1098640193.2541.21.camel@tycho.astronomy.dk>
+References: <1098612795.11032.20.camel@tycho.astronomy.dk>
+	 <clg24h$ep$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp812.mail.sc5.yahoo.com ([66.163.170.82]:27316 "HELO
-	smtp812.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S261543AbUJXRWz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Oct 2004 13:22:55 -0400
-In-Reply-To: <1098631356.10824.33.camel@mulgrave>
-Content-Disposition: inline
+Received: from fitch2.uni2.net ([130.227.52.105]:28606 "EHLO fitch2.uni2.net")
+	by vger.kernel.org with ESMTP id S261569AbUJXRtz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Oct 2004 13:49:55 -0400
+Received: from [192.168.1.102] (83.72.33.52.ip.tele2adsl.dk [83.72.33.52])
+	by fitch2.uni2.net (8.12.6/8.11.6) with ESMTP id i9OHnrgQ012597
+	for <linux-scsi@vger.kernel.org>; Sun, 24 Oct 2004 19:49:53 +0200
+In-Reply-To: <clg24h$ep$1@sea.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux1394-devel@lists.sourceforge.net
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Olaf Hering <olh@suse.de>, Dan Hollis <goemon@anime.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>, bcollins@debian.org
+To: linux-scsi@vger.kernel.org
 
-On Sunday 24 October 2004 10:22 am, James Bottomley wrote:
-> The trace doesn't show any error handler activity at all.  Are there no
-> messages in the log about offlining the device?  If not, it sounds like
-> there's a problem somewhere in the firewire system.
+On Sun, 2004-10-24 at 13:02, Marc Bevand wrote:
+> On 2004-10-24, Bjarne Thomsen <bjarne.thomsen@get2net.dk> wrote:
+> |  Is there something that I can to to locate the
+> |  problem?
 > 
+> When it freezes, do you see some kernel messages displayed on
+> the console ?
+No message of any kind.
+> 
+> Also, how many SATA disks and how many SCSI disks are involved ?
+2 SCSI disks on the same 29160 controller.
+> Are you using software RAID ?
+No software raid.
 
-The thing is that the hang is happening only with CD/DVD devices (sr_mod)
-and not with hard drives (sd_mod) and as far as I can tell SBP2 does not
-differentiate betweeh an HD and a CD so I think there is something going
-on in sr_mod code.
+ -- Bjarne
 
 -- 
-Dmitry
+Bjarne Thomsen <bjarne.thomsen@get2net.dk>
+Institute of Physics & Astronomy
+
