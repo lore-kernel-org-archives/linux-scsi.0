@@ -1,32 +1,102 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: Fusion-MPT much faster as module
-Date: Tue, 22 Mar 2005 13:37:10 +0100
-Message-ID: <1111495030.7096.71.camel@laptopd505.fenrus.org>
-References: <200503221029.j2MATNg12775@unix-os.sc.intel.com>
-	 <1111488742.7096.61.camel@laptopd505.fenrus.org>
-	 <20050322122801.GI3982@stusta.de>
+From: "Sergey S. Kostyliov" <rathamahata@ehouse.ru>
+Subject: Re: 2.6.10 devfs oops without devfs mounted at all
+Date: Tue, 22 Mar 2005 15:40:24 +0300
+Message-ID: <200503221540.25308.rathamahata@ehouse.ru>
+References: <200502082013.50959.rathamahata@ehouse.ru> <200502101312.03026.rathamahata@ehouse.ru> <20050321140809.2612121d.akpm@osdl.org>
+Reply-To: "Sergey S. Kostyliov" <rathamahata@ehouse.ru>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Received: from pentafluge.infradead.org ([213.146.154.40]:25788 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261173AbVCVMh1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Mar 2005 07:37:27 -0500
-In-Reply-To: <20050322122801.GI3982@stusta.de>
+Received: from village.ehouse.ru ([193.111.92.18]:52997 "EHLO mail.ehouse.ru")
+	by vger.kernel.org with ESMTP id S261189AbVCVMkh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Mar 2005 07:40:37 -0500
+In-Reply-To: <20050321140809.2612121d.akpm@osdl.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: "Chen, Kenneth W" <kenneth.w.chen@intel.com>, 'Holger Kiehl' <Holger.Kiehl@dwd.de>, Andrew Morton <akpm@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, "Moore, Eric  Dean" <emoore@lsil.com>
+To: admin@list.net.ru
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
+On Tuesday 22 March 2005 01:08, Andrew Morton wrote:
+> 
+> Sergey, I'm assuming this is a bug in the megaraid driver.
+Sorry for a slow response.
+> 
+> Can you confirm that it's still happening in 2.6.12-rc1?
+Unfortunately I'm not shure I remember well the exact sequence
+of operations I performed in ncurses based megaraid utility
+(megamgr) to reproduce oops two a month ago.
+
+If my memory (about the exact sequence) is correct I could not
+reproduce this problem with 2.6.11. Will try 2.6.12-rc*
+at the end of the week (this is a production server).
+
+Thank you!
 
 > 
-> And there are places where it's actually useful:
+> "Sergey S. Kostyliov" <rathamahata@ehouse.ru> wrote:
+> >
+> > On Thursday 10 February 2005 12:49, Sergey S. Kostyliov wrote:
+> > > On Thursday 10 February 2005 03:36, Andrew Morton wrote:
+> > > > "Sergey S. Kostyliov" <rathamahata@ehouse.ru> wrote:
+> > > > >
+> > > > > Here is an oops I've just get on my smp system:
+> > > > > 
+> > > > > Unable to handle kernel NULL pointer dereference at virtual address 0000001c
+> > > > >  printing eip:
+> > > > > c01afe5b
+> > > > > *pde = 00000000
+> > > > > Oops: 0000 [#1]
+> > > > > PREEMPT SMP
+> > > > > Modules linked in: ipt_REJECT ipt_state ip_conntrack iptable_filter
+> > > > > CPU:    2
+> > > > > EIP:    0060:[<c01afe5b>]    Not tainted VLI
+> > > > > EFLAGS: 00010286   (2.6.10)
+> > > > > EIP is at devfsd_close+0x1b/0xc8
+> > > > > eax: f7440a00   ebx: 00000000   ecx: c01afe40   edx: ed395280
+> > > > > esi: 00000000   edi: f7f17800   ebp: f74f96c8   esp: cdc70f84
+> > > > > ds: 007b   es: 007b   ss: 0068
+> > > > > Process megamgr.bin (pid: 12844, threadinfo=cdc70000 task=dd81e520)
+> > > > > Stack: ed395280 ed395280 00000000 f7f17800 c0150c76 ee9e87f8 ed395280 00000000
+> > > > >        f1985c80 cdc70000 c014f50f 00000003 00000003 080caa60 00000000 c01024df
+> > > > >        00000003 080cc700 bfffe4f8 080caa60 00000000 bfffe4fc 00000006 0000007b
+> > > > > Call Trace:
+> > > > >  [<c0150c76>] __fput+0x106/0x120
+> > > > >  [<c014f50f>] filp_close+0x4f/0x80
+> > > > >  [<c01024df>] syscall_call+0x7/0xb
+> > > > 
+> > > > Can you work out what file is being closed?  One way of doing that would be
+> > > > to work out how megamgr.bin is being invoked and to then run it by hand:
+> > > > 
+> > > >  strace -f -o log megamgr.bin <args>
+> > > > 
+> > > > and we can then use the strace output to work out the pathname of the
+> > > > offending file.
+> > > 
+> > > rathamahata@terror rathamahata $ grep 'open(' mg.log
+> > > 5255  open("/usr/share/terminfo/l/linux", O_RDONLY) = 3
+> > > 5255  open("/dev/megadev0", O_RDONLY)   = 3
+> > > rathamahata@terror rathamahata $
+> > Sorry, I forgot this part:
+> > rathamahata@terror rathamahata $ grep 'close(' mg.log
+> > 5255  close(3)                          = 0
+> > rathamahata@terror rathamahata $
+> > 
+> > > 
+> > > I guess it's /dev/megadev0 (manually created character device)
+> > > 
+> > > rathamahata@terror rathamahata $ ls -la /dev/megadev0
+> > > crw-r--r--  1 root root 253, 0 Feb  8 16:26 /dev/megadev0
+> > > rathamahata@terror rathamahata 
+> > > 
+> > 
+> > -- 
+> > Sergey S. Kostyliov <rathamahata@ehouse.ru>
+> > Jabber ID: rathamahata@jabber.org
 > 
->   #if defined(CONFIG_FOO) || (defined(MODULE) && defined(CONFIG_FOO_MODULE))
-> 
-> is a good way to express that driver bar can use functionality of driver 
-> foo if it's available.
 
-a good way? I'd disagree with that :)
-
-
+-- 
+Sergey S. Kostyliov <rathamahata@ehouse.ru>
+Jabber ID: rathamahata@jabber.org
