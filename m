@@ -1,85 +1,122 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: Mike Anderson <andmike@us.ibm.com>
 Subject: Re: [RFC] Multi-path IO in 2.5/2.6 ?
-Date: Tue, 10 Sep 2002 09:20:15 -0700
+Date: Tue, 10 Sep 2002 09:27:31 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020910092015.B7765@eng2.beaverton.ibm.com>
-References: <patmans@us.ibm.com> <200209091734.g89HY5p11796@localhost.localdomain> <20020909170847.A24352@eng2.beaverton.ibm.com> <10209100055.ZM65139@classic.engr.sgi.com> <20020910130427.GP2992@marowsky-bree.de>
+Message-ID: <20020910162731.GA1249@beaverton.ibm.com>
+References: <20020909095652.A21245@eng2.beaverton.ibm.com> <200209091734.g89HY5p11796@localhost.localdomain> <20020909184026.GD1334@beaverton.ibm.com> <20020910130201.GO2992@marowsky-bree.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020910130427.GP2992@marowsky-bree.de>; from lmb@suse.de on Tue, Sep 10, 2002 at 03:04:27PM +0200
+Content-Disposition: inline
+In-Reply-To: <20020910130201.GO2992@marowsky-bree.de>
 List-Id: linux-scsi@vger.kernel.org
 To: Lars Marowsky-Bree <lmb@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Patrick Mansfield <patmans@us.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Sep 10, 2002 at 03:04:27PM +0200, Lars Marowsky-Bree wrote:
-> On 2002-09-10T00:55:58,
->    Jeremy Higdon <jeremy@classic.engr.sgi.com> said:
->=20
-> > Is there any plan to do something for hardware RAIDs in which two d=
-ifferent
-> > RAID controllers can get to the same logical unit, but you pay a pe=
-rformance
-> > penalty when you access the lun via both controllers?=20
->=20
-> This is implemented in the md multipath patch in 2.4; it distinguishe=
-s between
-> "active" and "spare" paths.
->=20
-> The LVM1 patch also does this by having priorities for each path and =
-only
-> going to the next priority group if all paths in the current one have=
- failed,
-> which IMHO is slightly over the top but there is always someone who m=
-ight need
-> it ;-)
->=20
-> This functionality is a generic requirement IMHO.
->=20
->=20
-> Sincerely,
->     Lars Marowsky-Br=E9e <lmb@suse.de>
+Lars Marowsky-Bree [lmb@suse.de] wrote:
+> On 2002-09-09T11:40:26,
+>    Mike Anderson <andmike@us.ibm.com> said:
+> 
+> > When you get into networking I believe we may get into path failover
+> > capability that is already implemented by the network stack. So the
+> > paths may not be visible to the block layer.
+> 
+> It depends. The block layer might need knowledge of the different paths for
+> load balancing.
+> 
+> > The utility does transcend SCSI, but transport / device specific
+> > characteristics may make "true" generic implementations difficult.
+> 
+> I disagree. What makes "generic" implementations difficult is the absolutely
+> mediocre error reporting and handling from the lower layers.
+> 
 
-The current scsi multi-path has a default setting of "last path used", =
-so
-that it will always work with such controllers (I refer to such control=
-lers
-as fail-over devices). You have to modify the config, or boot with a
-flag to get round-robin path selection. Right now, all paths will start
-out on the same adapter (initiator), this is bad if you have more than
-a few arrays attached to and adapter.
+Where working on it. I have done a mid scsi_error cleanup patch for 2.5
+so that we can better view where we are at currently. Hopefully soon we
+can do some actual useful improvements.
 
-I was planning on implementing something similiar to what you describe=20
-for LVM1, with path weighting. Yes, it seems a bit heavy, but if there
-are only two weights or priorities, it looks just like your active/spar=
-e
-code, and is a bit more flexible.
+My main point on the previous comment though was that some transports may
+decide not to expose there paths (i.e. the may manage them at the
+transport layer) and the block layer would be unable to attach to
+individual paths.
 
-=46iguring out what ports are active or spare is not easy, and varies
-from array to array. This is a (another) good canidate for user level
-probing/configuration. I will likely probably hard-code device
-personallity information into the kernel for now, and hopefully in
-2.7 we could move SCSI to user level probe/scan/configure.
+The second point I was trying to make is that if you look at most
+multi-path solutions across different operating systems once they have
+failover capability and move to support more performant / advanced
+multi-path solutions they need specific attributes of the device or
+path. These attributes have sometimes been called personalities. 
 
-I have heard that some arrays at one time had a small penalty for
-switching controllers, and it was best to use the last path used,
-but it was still OK to use both at the same time (cache warmth). I
-was trying to think of a way to allow good load balancing in such
-cases, but didn't come up with a good solution. Like use last path
-used selection, and once a path is too "busy" move to another path
-- but then all devices might switch at the same time; some hearistics
-or timing could probably be added to avoid such problems. The code
-allows for path selection in a single function, so it should not
-be difficult to add more complex path selection.
+Examples of these personalities are path usage models (failover,
+transparent failover, active load balancing), ports per controller
+config,  platform memory latency (NUMA), cache characteristics, special
+error decoding for device events, etc.
 
-I have also put NUMA path selection into the latest code. I've tested
-it with 2.5.32, and a bunch of NUMA + NUMAQ patches on IBM/Sequent
-NUMAQ systems.
+I mention a few in these in this document.
+http://www-124.ibm.com/storageio/multipath/scsi-multipath/docs/index.html
 
--- Patrick Mansfield
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+These personalities could be acquired at any level of the IO stack, but
+involve some API if we want to try and get as close as possible to
+"generic".
+
+> With multipathing, you want the lower level to hand you the error
+> _immediately_ if there is some way it could be related to a path failure and
+> no automatic retries should take place - so you can immediately mark the path
+> as faulty and go to another. 
+> 
+
+Agreed, In a past O/S we worked hard to have our error policy structure
+so that transports worried about transport errors and devices worried
+about device errors. If a transport received a completion of an IO its
+job was done (we did have some edge case and heuristics to stop paths
+from cycling from disabled to enabled)
+
+> However, on a "access beyond end of device" or a clear read error, failing a
+> path is a rather stupid idea, but instead the error should go up immediately.
+> 
+
+Agreed, each layer should only deal with error in there domain.
+
+> This will need to be sorted regardless of the layer it is implemented in.
+> 
+> How far has this been already addressed in 2.5 ?
+
+See previous comment.
+
+> 
+> > > > For sd, this means if you have n paths to each SCSI device, you are
+> > > > limited to whatever limit sd has divided by n, right now 128 / n.
+> > > > Having four paths to a device is very reasonable, limiting us to 32
+> > > > devices, but with the overhead of 128 devices. 
+> > > 
+> > > I really don't expect this to be true in 2.6.
+> > > 
+> > While the device space may be increased in 2.6 you are still consuming
+> > extra resources, but we do this in other places also.
+> 
+> For user-space reprobing of failed paths, it may be vital to expose the
+> physical paths too. Then "reprobing" could be as simple as
+> 
+> 	dd if=/dev/physical/path of=/dev/null count=1 && enable_path_again
+> 
+> I dislike reprobing in kernel space, in particular using live requests as
+> the LVM1 patch by IBM does it.
+> 
+
+
+In the current mid-mp patch the paths are exposed through the proc
+interface and can be activated / state changed through a echo command. 
+
+While live requests are sometimes viewed as a bad things to activate a
+path very small IO sizes in optical networks a unreliable in
+determining anything but completely dead paths. The size of the payload
+is important.
+
+I believe the difference in views here is what to expose and what
+size/type of structure represents each piece of the nexus (b:c:t:l).
+
+-Mike
+
+-- 
+Michael Anderson
+andmike@us.ibm.com
+
