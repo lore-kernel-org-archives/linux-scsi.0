@@ -1,68 +1,48 @@
-From: Patrick Mochel <mochel@osdl.org>
-Subject: Re: [PATCH] driverfs scsi for 2.5.24
-Date: Fri, 5 Jul 2002 11:50:50 -0700 (PDT)
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: ide-scsi data transfer residuals
+Date: Fri, 05 Jul 2002 22:10:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0207051132340.8496-100000@geena.pdx.osdl.net>
-References: <3D24FA36.72553709@torque.net>
+Message-ID: <ag5ji3$s5q$2@main.gmane.org>
+References: <000301c2242d$596450f0$e0019d89@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3D24FA36.72553709@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, sullivan <sullivan@austin.ibm.com>, Martin Dalecki <dalecki@evision-ventures.com>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: tonyb@cybernetics.com
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-
-> So will partitions only be visible in the "class" subtree?
-> I still want to see an example of what disks (and their
-> partitions) will look like in the "class" subtree.
-
-Do you need partitions visible from driverfs at all? They are simply
-logical entities on the physical device. What do they get in driverfs,
-direcetories? (Sorry, I still haven't looked at the patch; I don't
-actually have any SCSI devices any more. But, I will look at it soon. I 
-promise.) 
-
-> Patrick Mochel's 3rd July class.txt file gave a networking example:
-> 	/devices/class/net/eth
-> 	/devices/class/net/eth/eth1
-> 	/devices/class/net/eth/eth1/physical  # symlink
-> 	/devices/class/net/eth/eth0
-> 	/devices/class/net/eth/eth0/physical
-> So "net" is the class and "eth" is the subclass under which
-> there is an enumeration. Given a "disk" class does it have
-> any subclasses? [Answering "scsi" and "ata" would probably not 
-> be politically correct.]
-
-I wouldn't think that you would need subclasses for disks. You may have 
-multiple interfaces for each disk (there's a few recent messages on lkml 
-about this), but that's another story. 
-
-> > LUNs are probably still usefully numeric, but it would be nice to use the
-> > filesystem hierarchy to represent the SCSI-3 LUN hierarchy.
+Tony Battersby wrote:
 > 
-> Patrick Mansfield seemed uncomfortable about foregoing
-> the existing numeric luns. So perhaps we could keep the
-> existing:
-> 	uint32_t lun;
-> and add
-> 	uint8_t lu_id[8];
+> Hello,
+> 
+> I am using the scsi-generic and ide-scsi drivers together for low-level
+> access to an IDE tape drive (vanilla 2.4.17).  I noticed that the data
+> transfer residual in sg_io_hdr_t { int resid; } is always zero.  I assume
+> that the residual calculation is just a missing feature from the ide-scsi
+> driver.  Does anyone know how hard it is to add it?
 
-Out of curiosity, why do you guys use types and not u32, u8, etc? 
+Tony,
+Support for the residual count is optional. A inaccurate
+survey shows these adapter drivers support it:
+  advansys
+  aha152x
+  aic7xxx_old  (but not the newer aic7xxx)
+  dc395x_trm
+  scsiiom
+  sym53c8xx
+  sym53c8xx_2
 
-> > The key to using driverfs efficiently is to remember that it simply exposes to
-> > the user how the SCSI subsystem sees the device tree.  Therefore, once we have
-> > the simplest useful device tree inside SCSI, that will be the way the user
-> > sees it as well.
-...
-> >From an OO perspective, "struct device" is a base class from
-> which Scsi_Device and Scsi_Host are derived while
-> "struct device_driver" is a base class from which
-> Scsi_Device_Template and Scsi_Host_Template are derived.
-> Patrick Mochel's documents seem to be explaning a virtual
-> destructor mechanism as well.
+I do not know how the ide-scsi driver would get the information.
+However here is the calculation it should do:
+  Scsi_Cmnd::resid = Scsi_Cmnd::bufflen - <actual_bytes_transferred>
 
-Yes. Both statements are right on. You SCSI guys are so good.
+Of the drivers that support "resid" most given a scatter
+gather list will use the sum of the element lengths instead
+of bufflen. Unfortunately that sum can be larger the bufflen 
+due to padding and alignment requirements of the most backward
+DMA engines out there (I was burnt by the aha1542 ISA card).
+IOW HBA driver writers, please use bufflen. Perhaps the CAM
+name of "dxfer_len" would be clearer for this field.
 
-	-pat
-
+Doug Gilbert
