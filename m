@@ -1,65 +1,61 @@
-From: Badari Pulavarty <pbadari@us.ibm.com>
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Subject: Re: [BUG] x86_64 pci_map_sg modifies sg list - fails multiple map/unmaps
-Date: Mon, 5 Jan 2004 11:41:52 -0800
+Date: Mon, 05 Jan 2004 13:04:01 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200401051141.52236.pbadari@us.ibm.com>
-References: <2938942704.1073325455@aslan.btc.adaptec.com>
+Message-ID: <2997092704.1073333041@aslan.btc.adaptec.com>
+References: <2938942704.1073325455@aslan.btc.adaptec.com> <m3brpi41q0.fsf@averell.firstfloor.org>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.102]:30367 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S265343AbUAEUAQ convert rfc822-to-8bit
+Received: from magic-mail.adaptec.com ([216.52.22.10]:31883 "EHLO
+	magic.adaptec.com") by vger.kernel.org with ESMTP id S265338AbUAET6W
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Jan 2004 15:00:16 -0500
-In-Reply-To: <2938942704.1073325455@aslan.btc.adaptec.com>
+	Mon, 5 Jan 2004 14:58:22 -0500
+In-Reply-To: <m3brpi41q0.fsf@averell.firstfloor.org>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>, Kernel Mailinglist <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
-Cc: Berkley Shands <berkley@cs.wustl.edu>
+To: Andi Kleen <ak@muc.de>
+Cc: linux-kernel@vger.kernel.org, davem@redhat.com, linux-scsi@vger.kernel.org
 
-On Monday 05 January 2004 09:57 am, Justin T. Gibbs wrote:
-> Berkley Shands recently tripped over this problem.  The 2.6.X pci_map_sg
-> code for x86_64 modifies the passed in S/G list to compact it for mapping
-> by the GART.  This modification is not reversed when pci_unmap_sg is
-> called.  In the case of a retried SCSI command, this causes any attempt
-> to map the command a second time to fail with a BUG assertion since the
-> nseg parameter passed into the second map call is state.  nseg comes from
-> the "use_sg" field in the SCSI command structure which is never touched
-> by the HBA drivers invoking pci_map_sg.
->
-> DMA-API.txt doesn't seem to cover this issue.  Should the low-level DMA
-> code restore the S/G list to its original state on unmap or should the
-> SCSI HBA drivers be changed to update "use_sg" with the segment count
-> reported by the pci_map_sg() API?  If the latter, this seems to contradict
-> the mandate in DMA-API that the nseg parameter passed into the unmap call
-> be the same as that passed into the map call.  Most of the kernel assumes
-> that an S/G list can be mapped an unmapped multiple times using the same
-> arguments.  This doesn't seem to me to be an unreasonable expectation.
+> "Justin T. Gibbs" <gibbs@scsiguy.com> writes:
+> 
+>> Berkley Shands recently tripped over this problem.  The 2.6.X pci_map_sg
+>> code for x86_64 modifies the passed in S/G list to compact it for mapping
+>> by the GART.  This modification is not reversed when pci_unmap_sg is
+>> called.  In the case of a retried SCSI command, this causes any attempt
+> 
+> Qlogic has the same bug.
 
-Hi,
+Which bug is this?  Not updating use_sg, or mapping the command the
+second time when it is retried?  If the latter, I don't think this is an
+HBA bug.  The HBA driver doesn't know that the command has been mapped in
+the past, so it will blindly map/unmap it again.
 
-I ran into the same thing a month ago. I talked to Andi Kleen about this.
-He seems to think that, it is okay to modify the sg-list in pci_map_sg().
-pci_unmap_sg() can't restore it back, since we lost lot of information.
-One option is to recreate entire sg-list in case of a retry. I used a patch 
-similar to following to do this. Is this acceptable ?
+...
 
-Thanks,
-Badari
+>> DMA-API.txt doesn't seem to cover this issue.
+> 
+> It does actually, but not very clearly. I've suggested changes of wording
+> recently to make this more clear, but it hasn't gotten in.
 
---- scsi_lib.c  2004-01-04 19:53:56.000000000 -0800
-+++ scsi_lib.c.new      2004-01-04 19:57:35.000000000 -0800
-@@ -308,6 +308,13 @@ void scsi_setup_cmd_retry(struct scsi_cm
-        cmd->cmd_len = cmd->old_cmd_len;
-        cmd->sc_data_direction = cmd->sc_old_data_direction;
-        cmd->underflow = cmd->old_underflow;
-+       if (cmd->use_sg) {
-+               struct request     *req = cmd->request;
-+               int count;
-+
-+               count = blk_rq_map_sg(req->q, req, cmd->request_buffer);
-+               BUG_ON(count != cmd->use_sg);
-+       }
- }
+Can you point to the section of the document you believe applies?
 
+> You should never remap an already mapped sg list.
+
+But the sg list is no longer mapped.  The HBA driver did call pci_unmap_sg
+on it.  Did you mean to say, "Never map an sg list again that has been
+mapped in the past"?
+
+> Either reuse the already mapped list or keep a copy of the original list
+> around. First is better because the later may have problems with the page
+> reference counts.
+
+The mid-layer doesn't map the list.  The HBA drivers do.  So you're saying
+that either the mid-layer or the HBA drivers need to copy the list so it
+can be restored just in case the command will be retried?
+
+--
+Justin
 
