@@ -1,108 +1,82 @@
-From: Steven Dake <sdake@mvista.com>
-Subject: Re: New model for managing dev_t's for partitionable block devices
-Date: Wed, 29 Jan 2003 09:45:38 -0700
+From: Mark Haverkamp <markh@osdl.org>
+Subject: RE: 2.5.59-dcl2
+Date: 29 Jan 2003 09:02:05 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E380532.2010900@mvista.com>
-References: <OFD9CDB238.908E6C3C-ON87256CBD.00070A30-88256CBD.00095D4B@us.ibm.com>
+Message-ID: <1043859725.9873.4.camel@markh1.pdx.osdl.net>
+References: <20BF5713E14D5B48AA289F72BD372D680211AA4F@AUSXMPC122.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <OFD9CDB238.908E6C3C-ON87256CBD.00070A30-88256CBD.00095D4B@us.ibm.com>
+In-Reply-To: <20BF5713E14D5B48AA289F72BD372D680211AA4F@AUSXMPC122.aus.amer.dell.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bryan Henderson <hbryan@us.ibm.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Douglas Gilbert <dougg@torque.net>, Christoph Hellwig <hch@infradead.org>, Joel Becker <Joel.Becker@oracle.com>, Kurt Garloff <kurt@garloff.de>, linux-kernel@kernel.vger.org, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Matt_Domsch@Dell.com
+Cc: andmike@us.ibm.com, linux-scsi@vger.kernel.org, atulm@lsil.com
 
+On Tue, 2003-01-28 at 21:35, Matt_Domsch@Dell.com wrote:
+> > From: Mark Haverkamp [mailto:markh@osdl.org]
+> > I sent a bug report the the kernel bugzilla a while ago. It 
+> > got assigned
+> > to someone at IBM by default.  This is a problem we have been having
+> > between our megaraid cards and an IBM enclosure for some time.  I get
+> > around it by disabling report luns in my kernel configuration.  
+> > 
+> > Could you take a look at the bug and let me know if I've 
+> > included enough
+> > information to make sense.  I included debug output for the 
+> > 1.18 and 2.0 driver.
+> > 
+> > http://bugme.osdl.org/show_bug.cgi?id=183
+> > 
+> > or
+> > 
+> > http://bugzilla.kernel.org/show_bug.cgi?id=183
+> 
+> Mark, your description in the bug appears accurate.  Here's what happens:
+> 
+> 1) REPORT_LUNS is sent to the IBM enclosure, command times out.
+> 2) scsi_unjam_host() runs, trying the error handlers...
+> 3) megaraid abort handler, then the reset handler called (3 times), none of
+> which do anything at all because the command has already been issued to the
+> firmware, and the card itself isn't getting reset.  Both those routines
+> return failure.
+> 4) so scsi_unjam_host() offlines the device
+> 5) scsi_decide_disposition() sees device is offline and returns success,
+> freeing the command for future use again.
+> 6) command eventually completes and the mega_rundoneq() calls
+> cmd->scsi_done() on it, but cmd has been filled with 0x5a's so it Oopses.
+> 
+> 
+> The scsi mid-layer shouldn't free a command that hasn't actually been
+> aborted/reset because it *could* come back from the firmware after the
+> timeout has expired, and the driver has a reference to it (need
+> refcounting...)  This could potentially lead to an exhaustion of the command
+> pool though, if a command *never* comes back.
+> 
+> How long does it take for the IBM enclosure to return REPORT LUNS?  Since
+> this works on aic7xxx within the timeout period, I'm guessing the megaraid
+> firmware takes a long time to deal with it since it's a pass-through device.
 
+I'm not sure how long the report luns takes on the megaraid card.  As an
+experiment I made the timeout about 30 seconds and the command still
+timed out.  Is there a chance that the response is getting lost in the
+adapter and doesn't get returned to the driver until another command is
+issued that does complete?
 
-Bryan Henderson wrote:
-
->
->
->  
->
->>the device
->>mapper code could be used to provide partition devices in another
->>major/group of majors.
->>    
->>
->
->If I understand what you're saying, this has been discussed before.  I
->don't know what the device mapper code is, but it's actually quite elegant
->if it is a regular device driver that derives multiple logical disk drives
->from a single physical one in the same way that the md device driver
->derives a single logical disk drive from multiple physical ones.  The
->layering is cleaner that way.
->  
->
-this is exactly how lvm works.
-
->The last time I remember this discussed, it was as a solution to the
->problem of a device driver presuming to access at initialization time a
->partition map that didn't really exist.  I don't remember the details, but
->this particular device wasn't ready to handle data reads until some time
->after initialization.  You ought to be able to initialize a device that you
->plan to use only as a raw device without Linux attempting to make
->partitions on it.
->
->As I recall, there weren't any fundamental objections to this.
->
->  
->
->>partitions could be dynamically allocated out of the minor list
->>    
->>
->
->Doesn't this exacerbate the Linux SCSI drive name binding problem?  It's
->bad enough that when you remove your /dev/sda and reboot, your /dev/sdc
->becomes /dev/sdb.  With this, it sounds like when you delete a partition on
->/dev/sda, your partitions on /dev/sdb change names.
->  
->
-This is a problem with hotswap of course, and shouldn't be solved by the 
-kernel putting the same device always in the same major/minor.  A 
-userspace application should query the OS and build the device nodes 
-based upon scsi serial number, FC port WWN, or access path 
-(host/channel/id/lun).  The current "MAKEDEV" works fine for people with 
-and ide disk and cdrom, but for real systems with lots of disks and 
-hotswap capabilities, static naming just doesn't work (as you have 
-said).  :)  Devfs solves the naming problem by using access path 
-automatically within the OS.  Downside of this methodology is that 
-access permissions are not persistent between reboots (which is one 
-significant limitation of devfs).  There is a utility called scsidev 
-which does the above of building device nodes based upon serial number 
-instead of dumb /dev/sda.
-
->  
->
->>As an example, Lets assume we want 4096 total disks with 16384 total
->>partitions (4 partitions per disk, where it is likely to be less):
->>    
->>
->
->We should keep in mind that as a practical matter, someone with 4096
->physical disks is unlikely to be partitioning at all.  Partitions are for
->the poor person who has only a handful of physical disks and wants to
->divide his data into more pieces than that.  Also note that if you have
->4096 "physical" devices, they probably aren't very physical at all --
->there's some subsystem on the other end of the SCSI link that carves
->variable-size devices out of a pool of storage.  Hence, even less reason
->for Linux to partition them.
->
->
->  
->
-I agree using partitions is unlikely with large amounts of disks. 
- Someone should be using LVM to manage those disks if they have a large 
-amount.  Unfortunately even though no partitions are needed, 4096 disks 
-still require 16 dev_t minors for each device.  This is a significant 
-waste of space.  The user could hack their kernel to remove the 
-partitions entirely, which someone has already designed a patch to do. 
- This isn't general purpose enough to be useable by the linux user. 
- What is needed is a compromise, described above, limiting the number of 
-partitions to some sane amount, but allowing significantly more disks 
-for the power user.
-
-Thanks for your comments.
--steve
+> 
+> I believe there is a way to issue an adapter reset command to the megaraid
+> firmware, though neither driver series 1.18 or 2.00 do so presently.
+> Copying Atul for insight as to what effects this would have on the
+> controller and commands in flight...
+> 
+> Thanks,
+> Matt
+> 
+> --
+> Matt Domsch
+> Sr. Software Engineer, Lead Engineer, Architect
+> Dell Linux Solutions www.dell.com/linux
+> Linux on Dell mailing lists @ http://lists.us.dell.com
+-- 
+Mark Haverkamp <markh@osdl.org>
 
