@@ -1,50 +1,61 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH/RFT] mode sense madness always use page 8
-Date: 31 Oct 2003 13:47:26 -0700
+From: Denis Zaitsev <zzz@anda.ru>
+Subject: [PATCH TRIVIAL] Compile error in 2.4.22 without PCI
+Date: Sat, 1 Nov 2003 02:29:38 +0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1067633246.5742.49.camel@patrh9>
-References: <Pine.LNX.4.44L0.0310301457300.1440-100000@ida.rowland.org>
+Message-ID: <20031101022938.A17535@natasha.ward.six>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:22668 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S263545AbTJaUrw
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Oct 2003 15:47:52 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0310301457300.1440-100000@ida.rowland.org>
+Received: from [212.57.164.72] ([212.57.164.72]:50442 "EHLO mail.ward.six")
+	by vger.kernel.org with ESMTP id S263598AbTJaVaG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Oct 2003 16:30:06 -0500
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: stern@rowland.harvard.edu
-Cc: patmans@us.ibm.com, ronald@kuetemeier.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, james.bottomley@steeleye.com
+To: marcelo.tosatti@cyclades.com, gibbs@scsiguy.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> > > I am very doubtful that this will work, or rather that it will work with
-> > > all devices.  I've seen _lots_ of reports of USB devices that can't handle
-> > > page 8, with all sorts of combinations of values for len attempted.
-> > 
-> > Are we confident that back then we tried the Win value for len?
-> > 
-> > Are we confident the Win value is x1C = header + optional block
-> > descriptor + page?
-> 
-> Not at all.  You mentioned that it might be because you had seen it in a 
-> trace posted not long ago.  But I think that was a trace from a Linux 
-> host, not a Windows host.  Anyway, as you can see from Ronald's most 
-> recent test, using that request didn't work with his device.
+I have these warnings when I'm compiling 2.4.22 for a 486 EISA system:
 
-I'm still struggling to reconcile your history of pain with mine.
+aic7xxx_osm.c: In function `ahc_softc_comp':
+aic7xxx_osm.c:1560: warning: implicit declaration of function `ahc_get_pci_bus'
+aic7xxx_osm.c:1568: warning: implicit declaration of function `ahc_get_pci_slot'
 
-I find this particular statement slightly too broad to include me.
+And then the make finishes with an error, because these functions
+really exist only if the PCI support is turned on.
 
-I agree we know Ronald's CB device choked over what we gave it.  I don't
-yet know if Ronald's device didn't like bits of the CDB, bits of the CDB
-length, both, or something else.
-
-> I don't know what Windows does.  I've heard rumors that it determines 
-> whether the drive is writable by actually trying to write a block and 
-> checking to see if the write worked.
-
-Me too.
-
-Pat LaVarre
+The patch below fixes this.  And the same patch fits for the 2.6
+kernels.  Please, apply it.
 
 
+--- drivers/scsi/aic7xxx/aic7xxx_osm.c.orig	2003-09-15 01:56:14.000000000 +0600
++++ drivers/scsi/aic7xxx/aic7xxx_osm.c	2003-10-15 00:23:37.000000000 +0600
+@@ -1552,6 +1552,7 @@ ahc_softc_comp(struct ahc_softc *lahc, s
+ 
+ 	/* Still equal.  Sort by BIOS address, ioport, or bus/slot/func. */
+ 	switch (rvalue) {
++#ifdef CONFIG_PCI
+ 	case AHC_PCI:
+ 	{
+ 		char primary_channel;
+@@ -1584,6 +1585,8 @@ ahc_softc_comp(struct ahc_softc *lahc, s
+ 			value = 1;
+ 		break;
+ 	}
++#endif
++#ifdef CONFIG_EISA
+ 	case AHC_EISA:
+ 		if ((rahc->flags & AHC_BIOS_ENABLED) != 0) {
+ 			value = rahc->platform_data->bios_address
+@@ -1593,6 +1596,7 @@ ahc_softc_comp(struct ahc_softc *lahc, s
+ 			      - lahc->bsh.ioport; 
+ 		}
+ 		break;
++#endif
+ 	default:
+ 		panic("ahc_softc_sort: invalid bus type");
+ 	}
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
