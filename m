@@ -1,58 +1,53 @@
-From: "Mukker, Atul" <Atulm@lsil.com>
-Subject: RE: Problem with megaraid and PERC3/dc on a poweredge 6450
-Date: Fri, 7 Jan 2005 08:59:22 -0500
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57058C02C5@exa-atlanta>
+From: Lukasz Kosewski <lkosewsk@nit.ca>
+Subject: Re: SCSI aic7xxx driver: Initialization Failure over a kdump reboot
+Date: Fri, 07 Jan 2005 09:55:36 -0500
+Message-ID: <41DEA2E8.8030701@nit.ca>
+References: <1105014959.2688.296.camel@2fwv946.in.ibm.com>	<1105013524.4468.3.camel@laptopd505.fenrus.org> <20050106195043.4b77c63e.akpm@osdl.org> <41DE15C7.6030102@nit.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:55449 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261415AbVAGN71 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Jan 2005 08:59:27 -0500
+Received: from tomts22-srv.bellnexxia.net ([209.226.175.184]:741 "EHLO
+	tomts22-srv.bellnexxia.net") by vger.kernel.org with ESMTP
+	id S261430AbVAGOfp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Jan 2005 09:35:45 -0500
+In-Reply-To: <41DE15C7.6030102@nit.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Stefan Berder' <sbe@oleane.net>, "Mukker, Atul" <Atulm@lsil.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: Arjan van de Ven <arjan@infradead.org>, vgoyal@in.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Can you upgrade to the latest FW on both controllers and re-test?
+Lukasz Kosewski wrote:
+> Andrew Morton wrote:
+> 
+>>> looks like the following is happening:
+>>> the controller wants to send an irq (probably from previous life)
+>>> then suddenly the driver gets loaded
+>>> * which registers an irq handler
+>>> * which does pci_enable_device()
+>>> and .. the irq goes through. the irq handler just is not yet 
+>>> expecting this irq, so
+>>> returns "uh dunno not mine"
+>>> the kernel then decides to disable the irq on the apic level
+>>> and then the driver DOES need an irq during init
+>>> ... which never happens.
+>>>
+>>
+>>
+>> yes, that's exactly what e100 was doing on my laptop last month.  Fixed
+>> that by arranging for the NIC to be reset before the call to
+>> pci_set_master().
 
+After reading this again when I /wasn't/ semi-comatose, I retract my 
+statement insofar as it wouldn't help you (but I think it's still rather 
+necessary) :)
 
--Atul Mukker=20
+The system did exactly what I'm talking about (which it didn't do for 
+me, possibly because the board/processor didn't support APIC).  I guess 
+my question to you is:  do you have other devices sharing this 
+interrupt?  In other words, are you /sure/ that it's the adaptec 
+controller which is setting the interrupt line high?
 
-> -----Original Message-----
-> From: Stefan Berder [mailto:sbe@oleane.net]=20
-> Sent: Friday, January 07, 2005 3:48 AM
-> To: Mukker, Atul
-> Cc: 'linux-scsi@vger.kernel.org'
-> Subject: Re: Problem with megaraid and PERC3/dc on a poweredge 6450
->=20
-> On Thu, 6 Jan 2005 14:31:14 -0500
-> "Mukker, Atul" <Atulm@lsil.com> wrote:
->=20
-> > The target 15/Channel 1 on your first controller ( bus=20
-> 5:slot 0:func=20
-> > 0, fw version:[1.57] bios version:[3.13]) seems to be behaving=20
-> > erratically. Can you tell me what kind of device you have on this=20
-> > address?
-> In fact there shouldn't be anything there ...
-> on the channel 0 I go 2 SCSI disks and on the channel 1 I got=20
-> a 13 SCSI disks bay, so the target 15 should be empty ...
->=20
-> > Also, why do you have two versions of the FW on your controllers?
-> I was wondering too, this box is an old one that was no more=20
-> used. The firmwares were like that at the begnining. It was=20
-> my next task to upgrade the FW too the same version.
->=20
-> --=20
->  #=3D- Stefan Berder                  tel : 6 14 80        -=3D#
->  #=3D- Ing=E9nieur syst=E8me et r=E9seau          01 53 95 14 80 -=3D=
-#
->  #=3D- TRANSPAC / DO-DAE-ADMG        mail : sbe@oleane.net -=3D#
->  #=3D- /(bb|[^b]{2})/      stefan.berder@francetelecom.com -=3D#
->=20
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Luke Kosewski
+Human Cannonball
+Net Integration Technologies
