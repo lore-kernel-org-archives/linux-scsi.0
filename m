@@ -1,50 +1,36 @@
-From: Brad Boyer <flar@allandria.com>
-Subject: Re: mac_scsi / mac_NC5380
-Date: Sun, 23 Nov 2003 10:54:33 -0800
+From: Nir Livni <nirl@cyber-ark.com>
+Subject: How to build a RedHat driver disk (fusion mpt)
+Date: Sun, 23 Nov 2003 22:26:53 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031123185433.GA2230@pants.nu>
-References: <20031122114135.GA8147@lst.de>
+Message-ID: <006101c3b200$21e7f660$9bfeda51@pinguin>
+Reply-To: Nir Livni <nir.livni@cyber-ark.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adsl-216-102-214-42.dsl.snfc21.pacbell.net ([216.102.214.42]:16388
-	"EHLO cynthia.pants.nu") by vger.kernel.org with ESMTP
-	id S263389AbTKWSyg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Nov 2003 13:54:36 -0500
-Content-Disposition: inline
-In-Reply-To: <20031122114135.GA8147@lst.de>
+Received: from mxout1.netvision.net.il ([194.90.9.20]:55278 "EHLO
+	mxout1.netvision.net.il") by vger.kernel.org with ESMTP
+	id S263439AbTKWUNk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 23 Nov 2003 15:13:40 -0500
+Received: from pinguin ([81.218.254.155]) by mxout1.netvision.net.il
+ (iPlanet Messaging Server 5.2 HotFix 1.14 (built Mar 18 2003))
+ with ESMTPA id <0HOT00J2XMURW8@mxout1.netvision.net.il> for
+ linux-scsi@vger.kernel.org; Sun, 23 Nov 2003 22:13:39 +0200 (IST)
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-m68k@lists.linux-m68k.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, Nov 22, 2003 at 12:41:35PM +0100, Christoph Hellwig wrote:
-> In mailine mac_scsi uses the generic NC5380 core, not the slightly
-> modified copy mac_NC5380.c that someone created for it long time
-> ago.  Is it actually working that way in some tree?  I'd love to
-> get rid of mac_NC5380 if possible so we're down three from four
-> slightly differrent "generic" NC5380 drivers.
+Hi all,
 
-I had it working in the 2.2.x tree with the standard NCR5380.[ch]
-for PIO, but I was trying to get DMA working (for the IIfx) and
-had to make a lot of changes to properly support DMA. I never
-got the interrupt handling fixed, so I'm not sure if I actually
-fixed all of it. It didn't used to compile when configured to
-use REAL_DMA.
+I am trying to install RedHat Advanced Server 2.1 Developer Edition on my
+Dell PowerEdge 1750, who needs the fusion mpt scsi driver.
 
-In fact, the 2.2 tree I have only has two different versions of
-the core 5380 support. The atari version has to add some hooks
-in odd places to make their DMA engine happy.
+Unfortunately, I could not find any driver disk for this kernel
+(2.4.9-e.5smp).
+This version is not supported by RedHat.
 
-None of the trees I have checked out (2.2, 2.4, 2.6) actually
-seem to use mac_NCR5380.c, even if it is there, but 2.4 was
-never really supported for mac68k.
+I would like to know how can I build a driver disk for this kernel, using
+the driver sources I downloaded from LSI Logic site.
 
-> If someone looked into porting the other drivers to main generic
-> one that would of course be cool, especially as it got some major
-> work from Alan lately and does proper looking, error handling, etc..
-
-I'll try to look at mac_scsi again, but my list is pretty long now.
-
-	Brad Boyer
-	flar@allandria.com
+Thanks,
+Nir
 
