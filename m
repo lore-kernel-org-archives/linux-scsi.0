@@ -1,54 +1,46 @@
-From: "Martin Peschke3" <MPESCHKE@de.ibm.com>
+From: Eddie Williams <Eddie.Williams@steeleye.com>
 Subject: Re: [RFC] Persistent naming of scsi devices
-Date: Mon, 8 Apr 2002 21:18:06 +0200
+Date: Mon, 8 Apr 2002 16:18:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF8B2F3581.590066BE-ONC1256B95.0068B28C@de.ibm.com>
+Message-ID: <200204082020.QAA06773@hancock.sc.steeleye.com>
+References: <20020408091844.L7333@austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Received: (from root@localhost)
+	by hancock.sc.steeleye.com (8.9.3/8.9.3) id QAA06957
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Apr 2002 16:20:31 -0400
+In-Reply-To: <20020408091844.L7333@austin.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: mjacob@feral.com, Oliver Neukum <oliver@neukum.org>, Christoph Hellwig <hch@infradead.org>, sullivan <sullivan@austin.ibm.com>, linux-scsi@vger.kernel.org
+To: sullivan@austin.ibm.com, linux-scsi@vger.kernel.org
 
-
-
-> mjacob@feral.com said:
-> > Then let's use WWPN/WWNS and/or drive serial #'s to do UUIDs for
-> > devices.
+On Monday 08 April 2002 11:18 am, sullivan wrote:
+> I have been working on a prototype to allow the persistent naming of scsi
+> devices across boots. The prototype attempts to address the namespace
+> slippage that occurs when names are assigned based on discovery order or
+> topology, and a hardware configuration change occurs. It does this by
+> assigning names based on the characteristics of the device.
 >
-> That's what the persistent binding proposal that started all this use=
-s.
-> However, these strings are incredibly long at best and (in spite of w=
-hat
-the
-> SCSI spec says) sometimes include non-printing characters, so you don=
-'t
-> necessarily want to be passing them on the command line.
->
-> James
-
-That's true of course for Fibre Channel WWNs (64 bit).
-Such identifiers might be shorter (or longer)
-depending on the considered interface.
-What could be used for good old parallel attachments?
-
-I would suggest to circumvent problems with non-printing
-characters by means of hexadecimal notation
-(e.g. 0x5007890000a11753 representing a WWN).
+> The prototype and more detailed info can be found at:
+> http://oss.software.ibm.com/devreg/
 
 
-Mit freundlichen Gr=FC=DFen / with kind regards
+Looks good.  As your README acknowledges one problem is that not all devices 
+support the pages 0x80 and 0x83.
 
-Martin Peschke
+A quick scan of the code looks like you will work well with the "good" 
+devices.  :-)
 
-IBM Deutschland Entwicklung GmbH
-Linux for eServer Development
-Phone: +49-(0)7031-16-2349
+Several cases you might want to consider for "bad" devices:
+- devices that don't support 0x00 and return standard inquiry data instead!
+- devices that don't support 0x00 but do support 0x80
+
+For the first case you can snoop the return data from 0x00 to see if it looks 
+"good" versus looks like standard inquiry.
+
+For the second case if 0x00 fails go ahead and try 0x80 anyway.
+
+Eddie
 
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
