@@ -1,49 +1,31 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: [2.5 patch] remove an unused function from wd7000.c
-Date: Sun, 22 Jun 2003 02:05:38 +0200
+From: Linus Torvalds <torvalds@transmeta.com>
+Subject: Re: PATCH; make sr.c respect use_10_for_ms
+Date: Sat, 21 Jun 2003 17:07:48 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030622000538.GM23337@fs.tum.de>
+Message-ID: <Pine.LNX.4.44.0306211706390.1980-100000@home.transmeta.com>
+References: <20030621165920.F2811@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:29928 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S264461AbTFUXvg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 21 Jun 2003 19:51:36 -0400
-Content-Disposition: inline
+Received: from neon-gw-l3.transmeta.com ([63.209.4.196]:23056 "EHLO
+	neon-gw.transmeta.com") by vger.kernel.org with ESMTP
+	id S264674AbTFUXyE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 21 Jun 2003 19:54:04 -0400
+In-Reply-To: <20030621165920.F2811@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, trivial@rustcorp.com.au
+To: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>
 
-The patch below removes an unused function from drivers/scsi/wd7000.c .
 
-I've tested the compilation with 2.5.72-mm2.
+On Sat, 21 Jun 2003, Matthew Dharm wrote:
+>
+> This patch makes sr.c respect the use_10_for_ms flag.
 
-cu
-Adrian
+Ouch.
 
---- linux-2.5.72-mm2/drivers/scsi/wd7000.c.old	2003-06-22 01:07:59.000000000 +0200
-+++ linux-2.5.72-mm2/drivers/scsi/wd7000.c	2003-06-22 01:08:34.000000000 +0200
-@@ -1605,22 +1605,6 @@
- }
- 
- /*
-- *  I have absolutely NO idea how to do an abort with the WD7000...
-- */
--static int wd7000_abort(Scsi_Cmnd * SCpnt)
--{
--	Adapter *host = (Adapter *) SCpnt->device->host->hostdata;
--
--	if (inb(host->iobase + ASC_STAT) & INT_IM) {
--		printk("wd7000_abort: lost interrupt\n");
--		wd7000_intr_handle(host->irq, NULL, NULL);
--		return FAILED;
--	}
--	return FAILED;
--}
--
--
--/*
-  *  I also have no idea how to do a reset...
-  */
- 
+Is there some SCSI person out there that would be willing to make sr.c 
+look a bit more like sd.c in this respect? This is a bit hacky, I think, 
+but I guess the sr.c layout forces that..
+
+		Linus
+
