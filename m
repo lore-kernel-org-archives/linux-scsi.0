@@ -1,168 +1,111 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fix up NCR5380 private data
-Date: Fri, 6 Feb 2004 17:00:46 +0100
+From: Phil Carinhas <pac@fortuitous.com>
+Subject: System freeze when accessing st.ko and /dev/st0
+Date: Fri, 6 Feb 2004 13:42:25 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040206160046.GB4786@lst.de>
+Message-ID: <20040206194225.GA27385@mail.fortuitous.com>
+Reply-To: pac@fortuitous.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:5829 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S265535AbUBFQAu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Feb 2004 11:00:50 -0500
+Received: from flamingo.mail.pas.earthlink.net ([207.217.120.232]:9183 "EHLO
+	flamingo.mail.pas.earthlink.net") by vger.kernel.org with ESMTP
+	id S265684AbUBFTm1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Feb 2004 14:42:27 -0500
+Received: from user-0vvdck9.cable.mindspring.com ([63.246.178.137] helo=mail.fortuitous.com)
+	by flamingo.mail.pas.earthlink.net with esmtp (Exim 3.33 #1)
+	id 1ApBru-0006JL-00
+	for linux-scsi@vger.kernel.org; Fri, 06 Feb 2004 11:42:26 -0800
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Use the private data passed to request_irq instead of looping over all
-controllers.  The patch was ACKed by Alan a while ago.
+ System Freeze
 
-Note that the patch only looks so huge because of the two leves of
-indentation removed by the tiny chage.
+When I tried to access the tape drive via 'tar tvfz /dev/st0'
+the system froze: Here is the call trace:
 
---- 1.23/drivers/scsi/NCR5380.c	Sun Sep 28 02:38:22 2003
-+++ edited/drivers/scsi/NCR5380.c	Wed Feb  4 04:58:00 2004
-@@ -1326,81 +1326,71 @@
- static irqreturn_t NCR5380_intr(int irq, void *dev_id, struct pt_regs *regs) 
- {
- 	NCR5380_local_declare();
--	struct Scsi_Host *instance;
-+	struct Scsi_Host *instance = (struct Scsi_Host *)dev_id;
-+	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
- 	int done;
- 	unsigned char basr;
--	struct NCR5380_hostdata *hostdata;
--	int handled = 0;
- 
- 	dprintk(NDEBUG_INTR, ("scsi : NCR5380 irq %d triggered\n", irq));
- 
- 	do {
- 		done = 1;
--		/* The instance list is constant while the driver is
--		   loaded */
--		for (hostdata = first_host; hostdata != NULL; hostdata = hostdata->next)
--		{
--			instance = hostdata->host;
--			if (instance->irq == irq) {
--				handled = 1;
--				spin_lock_irq(instance->host_lock);
--				/* Look for pending interrupts */
--				NCR5380_setup(instance);
--				basr = NCR5380_read(BUS_AND_STATUS_REG);
--				/* XXX dispatch to appropriate routine if found and done=0 */
--				if (basr & BASR_IRQ) {
--					NCR5380_dprint(NDEBUG_INTR, instance);
--					if ((NCR5380_read(STATUS_REG) & (SR_SEL | SR_IO)) == (SR_SEL | SR_IO)) {
--						done = 0;
--						dprintk(NDEBUG_INTR, ("scsi%d : SEL interrupt\n", instance->host_no));
--						NCR5380_reselect(instance);
--						(void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
--					} else if (basr & BASR_PARITY_ERROR) {
--						dprintk(NDEBUG_INTR, ("scsi%d : PARITY interrupt\n", instance->host_no));
--						(void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
--					} else if ((NCR5380_read(STATUS_REG) & SR_RST) == SR_RST) {
--						dprintk(NDEBUG_INTR, ("scsi%d : RESET interrupt\n", instance->host_no));
--						(void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
--					} else {
-+		spin_lock_irq(instance->host_lock);
-+		/* Look for pending interrupts */
-+		NCR5380_setup(instance);
-+		basr = NCR5380_read(BUS_AND_STATUS_REG);
-+		/* XXX dispatch to appropriate routine if found and done=0 */
-+		if (basr & BASR_IRQ) {
-+			NCR5380_dprint(NDEBUG_INTR, instance);
-+			if ((NCR5380_read(STATUS_REG) & (SR_SEL | SR_IO)) == (SR_SEL | SR_IO)) {
-+				done = 0;
-+				dprintk(NDEBUG_INTR, ("scsi%d : SEL interrupt\n", instance->host_no));
-+				NCR5380_reselect(instance);
-+				(void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-+			} else if (basr & BASR_PARITY_ERROR) {
-+				dprintk(NDEBUG_INTR, ("scsi%d : PARITY interrupt\n", instance->host_no));
-+				(void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-+			} else if ((NCR5380_read(STATUS_REG) & SR_RST) == SR_RST) {
-+				dprintk(NDEBUG_INTR, ("scsi%d : RESET interrupt\n", instance->host_no));
-+				(void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-+			} else {
- #if defined(REAL_DMA)
--						/*
--						 * We should only get PHASE MISMATCH and EOP interrupts
--						 * if we have DMA enabled, so do a sanity check based on
--						 * the current setting of the MODE register.
--						 */
--
--						if ((NCR5380_read(MODE_REG) & MR_DMA) && ((basr & BASR_END_DMA_TRANSFER) || !(basr & BASR_PHASE_MATCH))) {
--							int transfered;
--
--							if (!hostdata->connected)
--								panic("scsi%d : received end of DMA interrupt with no connected cmd\n", instance->hostno);
--
--							transfered = (hostdata->dmalen - NCR5380_dma_residual(instance));
--							hostdata->connected->SCp.this_residual -= transferred;
--							hostdata->connected->SCp.ptr += transferred;
--							hostdata->dmalen = 0;
-+				/*
-+				 * We should only get PHASE MISMATCH and EOP interrupts
-+				 * if we have DMA enabled, so do a sanity check based on
-+				 * the current setting of the MODE register.
-+				 */
-+
-+				if ((NCR5380_read(MODE_REG) & MR_DMA) && ((basr & BASR_END_DMA_TRANSFER) || !(basr & BASR_PHASE_MATCH))) {
-+					int transfered;
-+
-+					if (!hostdata->connected)
-+						panic("scsi%d : received end of DMA interrupt with no connected cmd\n", instance->hostno);
-+
-+					transfered = (hostdata->dmalen - NCR5380_dma_residual(instance));
-+					hostdata->connected->SCp.this_residual -= transferred;
-+					hostdata->connected->SCp.ptr += transferred;
-+					hostdata->dmalen = 0;
- 
--							(void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-+					(void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
- 							
--							/* FIXME: we need to poll briefly then defer a workqueue task ! */
--							NCR5380_poll_politely(hostdata, BUS_AND_STATUS_REG, BASR_ACK, 0, 2*HZ);
-+					/* FIXME: we need to poll briefly then defer a workqueue task ! */
-+					NCR5380_poll_politely(hostdata, BUS_AND_STATUS_REG, BASR_ACK, 0, 2*HZ);
- 
--							NCR5380_write(MODE_REG, MR_BASE);
--							NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
--						}
-+					NCR5380_write(MODE_REG, MR_BASE);
-+					NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-+				}
- #else
--						dprintk(NDEBUG_INTR, ("scsi : unknown interrupt, BASR 0x%X, MR 0x%X, SR 0x%x\n", basr, NCR5380_read(MODE_REG), NCR5380_read(STATUS_REG)));
--						(void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-+				dprintk(NDEBUG_INTR, ("scsi : unknown interrupt, BASR 0x%X, MR 0x%X, SR 0x%x\n", basr, NCR5380_read(MODE_REG), NCR5380_read(STATUS_REG)));
-+				(void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
- #endif
--					}
--				}	/* if BASR_IRQ */
--				spin_unlock_irq(instance->host_lock);
--				if(!done)
--					schedule_work(&hostdata->coroutine);
--			}	/* if (instance->irq == irq) */
--		}
-+			}
-+		}	/* if BASR_IRQ */
-+		spin_unlock_irq(instance->host_lock);
-+		if(!done)
-+			schedule_work(&hostdata->coroutine);
- 	} while (!done);
--	return IRQ_RETVAL(handled);
-+	return IRQ_HANDLED;
- }
- 
- #endif 
---- 1.25/drivers/scsi/g_NCR5380.c	Thu Jan 15 16:23:42 2004
-+++ edited/drivers/scsi/g_NCR5380.c	Wed Feb  4 05:06:38 2004
-@@ -450,7 +450,7 @@
- 			instance->irq = NCR5380_probe_irq(instance, 0xffff);
- 
- 		if (instance->irq != SCSI_IRQ_NONE)
--			if (request_irq(instance->irq, generic_NCR5380_intr, SA_INTERRUPT, "NCR5380", NULL)) {
-+			if (request_irq(instance->irq, generic_NCR5380_intr, SA_INTERRUPT, "NCR5380", instance)) {
- 				printk(KERN_WARNING "scsi%d : IRQ%d not free, interrupts disabled\n", instance->host_no, instance->irq);
- 				instance->irq = SCSI_IRQ_NONE;
- 			}
+ -------- CALL TRACE from /var/log/messages
+Feb  6 12:25:48 taren kernel: st: Version 20031228, fixed bufsize 32768, s/g segs 256
+Feb  6 12:25:48 taren kernel: Attached scsi tape st0 at scsi1, channel 0, id 6, lun 0
+Feb  6 12:25:48 taren kernel: st0: try direct i/o: yes, max page reachable by HBA268435455
+Feb  6 12:32:22 taren kernel: st: Unloaded.
+Feb  6 12:32:46 taren kernel: Badness in kobject_get at lib/kobject.c:431
+Feb  6 12:32:46 taren kernel: Call Trace:
+Feb  6 12:32:46 taren kernel:  [<c0274e50>] kobject_get+0x50/0x60
+Feb  6 12:32:46 taren kernel:  [<c015c0c9>] cdev_get+0x39/0x80
+Feb  6 12:32:46 taren kernel:  [<c015bf9f>] exact_lock+0xf/0x20
+Feb  6 12:32:46 taren kernel:  [<c029a135>] kobj_lookup+0xf5/0x1a0
+Feb  6 12:32:46 taren kernel:  [<c015bf80>] exact_match+0x0/0x10
+Feb  6 12:32:46 taren kernel:  [<c015be73>] chrdev_open+0x143/0x1c0
+Feb  6 12:32:46 taren kernel:  [<c0151c70>] dentry_open+0x130/0x1e0
+Feb  6 12:32:46 taren kernel:  [<c0151b38>] filp_open+0x68/0x70
+Feb  6 12:32:46 taren kernel:  [<c0151f8b>] sys_open+0x5b/0x90
+Feb  6 12:32:46 taren kernel:  [<c01090af>] syscall_call+0x7/0xb
+Feb  6 12:32:46 taren kernel: 
+Feb  6 12:32:46 taren kernel:  printing eip:
+Feb  6 12:32:46 taren kernel: c015beda
+Feb  6 12:32:46 taren kernel: Oops: 0002 [#1]
+Feb  6 12:32:46 taren kernel: CPU:    1
+Feb  6 12:32:46 taren kernel: EIP:    0060:[<c015beda>]    Not tainted
+Feb  6 12:32:46 taren kernel: EFLAGS: 00010246
+Feb  6 12:32:46 taren kernel: EIP is at chrdev_open+0x1aa/0x1c0
+Feb  6 12:32:46 taren kernel: eax: 00000000   ebx: e7b57120   ecx: e7b5715c   edx: f713bd2c
+Feb  6 12:32:46 taren kernel: esi: 00000000   edi: 00000000   ebp: f713bc10   esp: d29bbf20
+Feb  6 12:32:46 taren kernel: ds: 007b   es: 007b   ss: 0068
+Feb  6 12:32:46 taren kernel: Process mt (pid: 5807, threadinfo=d29ba000 task=d6fb6670)
+Feb  6 12:32:46 taren kernel: Stack: f7fe2c00 00900000 d29bbf2c 00000000 dccb73a0f713bc10 ffffffe9 f7fe6760 
+Feb  6 12:32:46 taren kernel:        c0151c70 f713bc10 dccb73a0 00000000 bffffdc4ef414000 d29ba000 c0151b38 
+Feb  6 12:32:46 taren kernel:        f714eb60 f7fe6760 00000000 d29bbf70 f714eb60f7fe6760 fffffff4 ef414000 
+Feb  6 12:32:46 taren kernel: Call Trace:
+Feb  6 12:32:46 taren kernel:  [<c0151c70>] dentry_open+0x130/0x1e0
+Feb  6 12:32:46 taren kernel:  [<c0151b38>] filp_open+0x68/0x70
+Feb  6 12:32:46 taren kernel:  [<c0151f8b>] sys_open+0x5b/0x90
+Feb  6 12:32:46 taren kernel:  [<c01090af>] syscall_call+0x7/0xb
+Feb  6 12:32:46 taren kernel: 
+Feb  6 12:32:46 taren kernel: Code: 89 50 04 89 4a 04 e9 87 fe ff ff 8d 74 26 00 8d bc 27 00 00 
+
+Here are system specs:
+PIII Copermine dual cpu
+Both Megaraid and sym53c compiled monolithic.
+st is the only module on the system.
+
+ ====
+cat /proc/scsi/scsi 
+Attached devices:
+Host: scsi1 Channel: 00 Id: 06 Lun: 00
+  Vendor: HP       Model: C1537A           Rev: L907
+  Type:   Sequential-Access                ANSI SCSI revision: 02
+Host: scsi2 Channel: 00 Id: 00 Lun: 00
+  Vendor: MegaRAID Model: LD0 RAID1 17500R Rev:   F 
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+Host: scsi2 Channel: 00 Id: 01 Lun: 00
+  Vendor: MegaRAID Model: LD1 RAID1  8677R Rev:   F 
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+Host: scsi2 Channel: 04 Id: 05 Lun: 00
+  Vendor: HP       Model: SAFTE; U160/M BP Rev: 1020
+  Type:   Processor                        ANSI SCSI revision: 02
+ ====
+cat /proc/scsi/sym53c8xx/*
+Chip sym53c896, device id 0xb, revision id 0x6
+At PCI address 0000:02:06.0, IRQ 24
+Min. period factor 10, Wide SCSI BUS
+Max. started commands 510, max. commands per LUN 64
+Chip sym53c896, device id 0xb, revision id 0x6
+At PCI address 0000:02:06.1, IRQ 25
+Min. period factor 10, Wide SCSI BUS
+Max. started commands 510, max. commands per LUN 64
+
+ ========
+  Question: will compiling st into the kernel monolithically
+  change this result?
+  
+  If possible, please reply to my email address below. If not,
+  thanks for looking at this.
+
+-Phil Carinhas
+--
+ .--------------------------------------------------------.
+ | Dr. Philip A. Carinhas       | pac(at)fortuitous.com   |
+ | Fortuitous Technologies Inc. | http://fortuitous.com   |
+ | Linux Consulting & Training  | Tel : 1-512-218-9561    |
+ `--------------------------------------------------------'
