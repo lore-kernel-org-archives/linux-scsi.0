@@ -1,52 +1,26 @@
-From: Matthew Jacob <mjacob@feral.com>
-Subject: Re: [PATCH + RFC] Beginning of some updates to scsi mid layer
-Date: Mon, 1 Jul 2002 12:08:03 -0700 (PDT)
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: driverfs is not for everything! (was:  [PATCH] /proc/scsi/map )
+Date: Mon, 1 Jul 2002 04:41:49 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.BSF.4.21.0207011205340.62375-100000@beppo>
-References: <20020701225037.E3271-100000@localhost.my.domain>
-Reply-To: mjacob@feral.com
+Message-ID: <20020701024147.GF829@elf.ucw.cz>
+References: <59885C5E3098D511AD690002A5072D3C02AB7F53@orsmsx111.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020701225037.E3271-100000@localhost.my.domain>
+Content-Disposition: inline
+In-Reply-To: <59885C5E3098D511AD690002A5072D3C02AB7F53@orsmsx111.jf.intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: =?ISO-8859-1?Q?G=E9rard_Roudier?= <groudier@free.fr>
-Cc: Jeremy Higdon <jeremy@classic.engr.sgi.com>, Doug Ledford <dledford@redhat.com>, Martin Peschke3 <MPESCHKE@de.ibm.com>, Pete Zaitcev <zaitcev@redhat.com>, linux-scsi@vger.kernel.org
+To: "Grover, Andrew" <andrew.grover@intel.com>
+Cc: 'David Brownell' <david-b@pacbell.net>, 'Nick Bellinger' <nickb@attheoffice.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Patrick Mochel <mochel@osdl.org>
 
+Hi!
 
-> 
-> 
-> On Fri, 28 Jun 2002, Matthew Jacob wrote:
-> 
-> > FWIW, Bob Snively (on T10 commitee) has always claimed that the correct
-> > response to QUEUE FULL is immediate command resubmission (i.e., *don't* wait
-> > for a command to complete (the QFULL may have resulted from commands being
-> > processed for *another* initiator), and *don't* a period of time for things to
-> > 'get better').
-> >
-> > I'm not sure  agree with this 100%, but he might have a point.
-> 
-> My favorite retry handling algorithm looks like this:
-> 
-> 1) Retry immediately,
-> 2) If still fails, retry after some minimal delay T,
-> 3) If still fails, retry after delay 2T,
-> 4) If still fails, retry after delay 4T,
-> *) and so on ... until some maximum value for the delay.
-> 
-> Even with T being very short, you will never flood. OTOH, a transient
-> condition that lasts X will be recovered in not more than 2X.
-> 
-> BTW, it isn't implemented in the sym drivers, but I use to use such
-> algorithm when kind of blind retrying is to be implemented.
+> If a device can be accessed by multiple machines concurrently, it should not
+> be in driverfs.
 
-Yes, exponential backoff is good in a lot of cases. BTW- this is something I
-want to put into cam_periph_error for FreeBSD- I want to make the retry after
-selection timeout also have exponential delays up to retry count.
-
-In private mail with Doug && Pete, I managed to put myself into an untenable
-position. The problem here is that we don't have end-to-end flow control, so
-we have to *guess* when it might be good to try again. 
-
-
-
+You can access scsi disk from 2 machines simultaneously. Its just not
+a common case. I believe we still want scsi in driverfs ;-).
+									Pavel
+-- 
+(about SSSCA) "I don't say this lightly.  However, I really think that the U.S.
+no longer is classifiable as a democracy, but rather as a plutocracy." --hpa
