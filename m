@@ -1,32 +1,48 @@
-From: Willem Riede <wrlk@riede.org>
-Subject: Re: [PATCH] get rid of ->finish method for highlevel drivers
-Date: Thu, 24 Oct 2002 20:02:48 -0400
+From: "Scott Murray" <scottm@somanetworks.com>
+Subject: Re: [PATCH] [RFC] Advanced TCA SCSI Disk Hotswap
+Date: Thu, 24 Oct 2002 20:18:19 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021025000248.GH17575@linnie.riede.org>
-References: <dledford@redhat.com> <200210231416.g9NEGoI01976@localhost.localdomain> <20021023171335.B17312@lst.de> <20021024232026.GF17575@linnie.riede.org> <20021025003652.A5864@infradead.org>
-Reply-To: wrlk@riede.org
+Message-ID: <Pine.LNX.4.33.0210241956460.10937-100000@rancor.yyz.somanetworks.com>
+References: <20021024232258.GA26093@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021025003652.A5864@infradead.org>; from hch@infradead.org on Thu, Oct 24, 2002 at 19:36:52 -0400
+In-Reply-To: <20021024232258.GA26093@kroah.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: "Randy.Dunlap" <rddunlap@osdl.org>, Steven Dake <sdake@mvista.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 2002.10.24 19:36 Christoph Hellwig wrote:
-> On Thu, Oct 24, 2002 at 07:20:26PM -0400, Willem Riede wrote:
-> > > Well, I'm working on removing ->init.  With the patch posted yersterday
-> > > only sg.c and osst.c are left implementing it.
-> > >
-> > Ermm, osst (which I maintain) works the same as st in this respect.
-> > I didn't notice any changes to st.c in that patch. What am I missing?
-> 
-> st in 2.5 doesn't have ->init and ->finish anymore.  Time for a resync? :)
-> 
-Obviously. I'll do that. I have to admit I've kind of ignored 2.5.x to
-let it stabilize before spending effort on keeping osst up to date,
-but it looks like it's time to make up for lost time...
+On Thu, 24 Oct 2002, Greg KH wrote:
 
-Thanks, Willem Riede.
+> On Thu, Oct 24, 2002 at 07:00:23PM -0400, Scott Murray wrote:
+> >
+> > I've not implemented it yet, but I'm pretty sure I can detect surprise
+> > extractions in my cPCI driver.  The only thing holding me back at the
+> > moment is that there's no clear way to report this status change via
+> > pcihpfs without doing something a bit funky like reporting "-1" in the
+> > "adapter" node.
+>
+> Why would you need to report anything other than if the card is present
+> or not?  What would a "supprise" removal cause you to do differently?
+
+Thinking about it a bit more, my idea to use -1 is indeed unnecessary,
+since userspace code can check if the adapter node changes to 0 before
+it itself writes a 0 to it.  If multiple users/software play around with
+the nodes at the same time, they'll get what's coming to them...
+
+> Hm, well I guess we should be extra careful in trying to shut down any
+> driver bound to that card...
+
+Yeah, as Steven mentions in his reply, Linux drivers don't handle this
+well at the moment.
+
+Scott
+
+
+-- 
+Scott Murray
+SOMA Networks, Inc.
+Toronto, Ontario
+e-mail: scottm@somanetworks.com
+
+
