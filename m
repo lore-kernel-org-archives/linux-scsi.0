@@ -1,355 +1,586 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: [PATCH] tmscsim: remove legacy and void code
-Date: Thu, 20 May 2004 23:28:00 +0200 (CEST)
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: CDC_RAM for lk 2.4, PATCH proposed
+Date: 20 May 2004 16:01:40 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0405202319130.1990-200000@poirot.grange>
+Message-ID: <1085090500.3822.20.camel@patibmrh9>
+References: <20040519081534.GE30348@suse.de><1084981551.3082.80.camel@patib
+	mrh9>  <20040520080622.GF1952@suse.de>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-1464582574-1085088480=:1990"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imap.gmx.net ([213.165.64.20]:60847 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S265277AbUETV3B (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 May 2004 17:29:01 -0400
+Received: from email-out2.iomega.com ([147.178.1.83]:7116 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S265264AbUETWBz
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 May 2004 18:01:55 -0400
+In-Reply-To: <20040520080622.GF1952@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-scsi@vger.kernel.org, John McKell <McKellj@iomega.com>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-  Send mail to mime@docserver.cac.washington.edu for more info.
+Jens A:
 
----1463811839-1464582574-1085088480=:1990
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+> 2.4.26 patch should apply to 2.4.27-pre3 as well, I think.
+> But it doesn't hurt to check.
 
-This one is purely cosmetic - it removes legacy (pre 2.4) and some void
-(e.g. #defined as nothing locks) code. So, it doesn't affect the resulting
-object file.
+In short:
 
-Please, apply.
+Yes, it applies.
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+> 2.4.26 patch should apply to 2.4.27-pre3 as well, I think.
+> But it doesn't hurt to check.
+
+At length ...
+
+John McKell's 2.4.26 patch still applies clean.  I see:
+
+$ cd linux-2.4.27-pre3/
+$ patch --dry-run -p1 <http://marc.theaimsgroup.com/?l=linux-scsi&m=...
+patching file include/linux/cdrom.h
+patching file drivers/ide/ide-cd.h
+patching file drivers/ide/ide-cd.c
+patching file drivers/scsi/sr.c
+patching file drivers/cdrom/cdrom.c
+$
+
+Also I include a copy inline below for your convenience.
+
+Also I will install & reboot & look for trouble.
+
+diff confirms for me the patch inline of this post matches what John
+McKell posted, except for the trivial difference of folder names & dates
+and the substantive difference that I did comment out the per-open
+printk:
+
+- + printk("cdrom: %s opening for WRITE\n", current->comm);
++ + /* printk("cdrom: %s opening for WRITE\n", current->comm); */
+
+> > I fear to answer fully, because I see I have a history of answering in
+> > ways that make you lose interest.
+> 
+> Sorry you feel that way. It's not loss of interesting, mainly juggling
+> other tasks.
+
+Thanks for finding the time to correct my interpretation.
+
+Sorry I did not understand.
+
+I see you volunteering, I'm trying to discover how I the newbie can help
+more than I hurt.
+
+> > I believe 2.4.18 patch actually makes `mount -w` work there by way of
+> > "see all DVD/CD drives as DVD-RAM/ DVD-ROM compatible".
+> 
+> But that's not what the patch does at all. The patch simply says "If we
+> succeeded in retriving the mode capability page, ignore what it says and
+> flag the drive as dvd-rom/ram capable" which is clearly bogus.
+
+To newbie me, this is not clearly bogus, sorry.
+
+1)
+
+I see my 2.4.18 patch makes `mount -w` work, by way of breaking `cat
+/proc/sys/dev/cdrom/info`.
+
+mount matters more to me than proc.
+
+Besides, the breakage is small.  I'm not falsely claiming that a DVD-RAM
+disc is present.  I'm only falsely claiming that a DVD-RAM disc could be
+present.  Software that branches visibly on which kind of disc might
+someday be present looks very nearly bogus to me.
+
+2)
+
+I see my 2.4.18 patch is extremely short and simple.
+
+Simplicity in the patch matters more to me the further I step back from
+the latest available at kernel.org.
+
+Pat LaVarre
+
+diff -Nurp linux-2.4.27-pre3/include/linux/cdrom.h linux-2.4.27-pre3-pel/include/linux/cdrom.h
+--- linux-2.4.27-pre3/include/linux/cdrom.h	2001-11-22 12:47:04.000000000 -0700
++++ linux-2.4.27-pre3-pel/include/linux/cdrom.h	2004-05-20 15:39:26.573524352 -0600
+@@ -5,7 +5,8 @@
+  *               1994, 1995   Eberhard Moenkeberg, emoenke@gwdg.de
+  *               1996         David van Leeuwen, david@tm.tno.nl
+  *               1997, 1998   Erik Andersen, andersee@debian.org
+- *               1998-2000    Jens Axboe, axboe@suse.de
++ *               1998-2004    Jens Axboe, axboe@suse.de
++ *               2004         Iomega Corp
+  */
+  
+ #ifndef	_LINUX_CDROM_H
+@@ -387,6 +388,7 @@ struct cdrom_generic_command
+ #define CDC_DVD			0x8000	/* drive is a DVD */
+ #define CDC_DVD_R		0x10000	/* drive can write DVD-R */
+ #define CDC_DVD_RAM		0x20000	/* drive can write DVD-RAM */
++#define CDC_RAM			0x100000 /* ok to open WRITE */
+ 
+ /* drive status possibilities returned by CDROM_DRIVE_STATUS ioctl */
+ #define CDS_NO_INFO		0	/* if not implemented */
+@@ -714,16 +716,43 @@ struct request_sense {
+ 	__u8 asb[46];
+ };
+ 
+-#ifdef __KERNEL__
+-#include <linux/devfs_fs_kernel.h>
++/*
++ * feature profile
++ */
++#define CDF_RWRT	0x0020
++#define CDF_HWDM	0x0024
+ 
+-struct cdrom_write_settings {
+-	unsigned char fpacket;		/* fixed/variable packets */
+-	unsigned long packet_size;	/* write out this number of packets */
+-	unsigned long nwa;		/* next writeable address */
+-	unsigned char writeable;	/* cdrom is writeable */
++/* cf. mmc4r02g.pdf 5.3.10 Random Writable Feature (0020h) pg 197 of 635 */
++struct rwrt_feature_desc {
++	__u16 feature_code;
++#if defined(__BIG_ENDIAN_BITFIELD)
++	__u8 reserved1		: 2;
++	__u8 feature_version	: 4;
++	__u8 persistent		: 1;
++	__u8 curr		: 1;
++#elif defined(__LITTLE_ENDIAN_BITFIELD)
++	__u8 curr		: 1;
++	__u8 persistent		: 1;
++	__u8 feature_version	: 4;
++	__u8 reserved1		: 2;
++#endif
++	__u8 add_len;
++	__u32 last_lba;
++	__u32 block_size;
++	__u16 blocking;
++#if defined(__BIG_ENDIAN_BITFIELD)
++	__u8 reserved2		: 7;
++	__u8 page_present	: 1;
++#elif defined(__LITTLE_ENDIAN_BITFIELD)
++	__u8 page_present	: 1;
++	__u8 reserved2		: 7;
++#endif
++	__u8 reserved3;
+ };
+ 
++#ifdef __KERNEL__
++#include <linux/devfs_fs_kernel.h>
++
+ /* Uniform cdrom data structures for cdrom.c */
+ struct cdrom_device_info {
+ 	struct cdrom_device_ops  *ops;  /* link to device_ops */
+@@ -744,7 +773,6 @@ struct cdrom_device_info {
+ /* per-device flags */
+         __u8 sanyo_slot		: 2;	/* Sanyo 3 CD changer support */
+         __u8 reserved		: 6;	/* not used yet */
+-	struct cdrom_write_settings write;
+ };
+ 
+ struct cdrom_device_ops {
+@@ -1053,6 +1081,17 @@ typedef struct {
+ 	__u8 reserved3;
+ } rpc_state_t;
+ 
+-#endif  /* End of kernel only stuff */ 
++struct feature_header {
++	__u32 data_len;
++	__u8 reserved1;
++	__u8 reserved2;
++	__u16 curr_profile;
++};
++
++extern int cdrom_get_disc_info(kdev_t dev, disc_information *di);
++extern int cdrom_get_track_info(kdev_t dev, __u16 track, __u8 type,
++				track_information *ti);
++extern int cdrom_is_random_writable(struct cdrom_device_info *cdi, int *write);
++#endif /* __KERNEL__ */
+ 
+ #endif  /* _LINUX_CDROM_H */
+diff -Nurp linux-2.4.27-pre3/drivers/ide/ide-cd.h linux-2.4.27-pre3-pel/drivers/ide/ide-cd.h
+--- linux-2.4.27-pre3/drivers/ide/ide-cd.h	2003-06-13 08:51:33.000000000 -0600
++++ linux-2.4.27-pre3-pel/drivers/ide/ide-cd.h	2004-05-20 15:39:26.589521920 -0600
+@@ -2,7 +2,8 @@
+  *  linux/drivers/ide/ide_cd.h
+  *
+  *  Copyright (C) 1996-98  Erik Andersen
+- *  Copyright (C) 1998-2000 Jens Axboe
++ *  Copyright (C) 1998-2004 Jens Axboe
++ *  Copyright (C) 2004 Iomega Corp
+  */
+ #ifndef _IDE_CD_H
+ #define _IDE_CD_H
+@@ -75,6 +76,7 @@ struct ide_cd_config_flags {
+ 	__u8 dvd		: 1; /* Drive is a DVD-ROM */
+ 	__u8 dvd_r		: 1; /* Drive can write DVD-R */
+ 	__u8 dvd_ram		: 1; /* Drive can write DVD-RAM */
++	__u8 ram		: 1; /* generic WRITE (dvd-ram/mrw) */
+ 	__u8 test_write		: 1; /* Drive can fake writes */
+ 	__u8 supp_disc_present	: 1; /* Changer can report exact contents
+ 					of slots. */
+diff -Nurp linux-2.4.27-pre3/drivers/ide/ide-cd.c linux-2.4.27-pre3-pel/drivers/ide/ide-cd.c
+--- linux-2.4.27-pre3/drivers/ide/ide-cd.c	2003-11-28 11:26:20.000000000 -0700
++++ linux-2.4.27-pre3-pel/drivers/ide/ide-cd.c	2004-05-20 15:39:26.614518120 -0600
+@@ -3,7 +3,8 @@
+  *
+  * Copyright (C) 1994, 1995, 1996  scott snyder  <snyder@fnald0.fnal.gov>
+  * Copyright (C) 1996-1998  Erik Andersen <andersee@debian.org>
+- * Copyright (C) 1998-2000  Jens Axboe <axboe@suse.de>
++ * Copyright (C) 1998-2004  Jens Axboe <axboe@suse.de>
++ * Copyright (C) 2004 Iomega Corp
+  *
+  * May be copied or modified under the terms of the GNU General Public
+  * License.  See linux/COPYING for more information.
+@@ -2683,7 +2684,7 @@ static struct cdrom_device_ops ide_cdrom
+ 				CDC_MEDIA_CHANGED | CDC_PLAY_AUDIO | CDC_RESET |
+ 				CDC_IOCTLS | CDC_DRIVE_STATUS | CDC_CD_R |
+ 				CDC_CD_RW | CDC_DVD | CDC_DVD_R| CDC_DVD_RAM |
+-				CDC_GENERIC_PACKET,
++				CDC_GENERIC_PACKET | CDC_RAM,
+ 	generic_packet:		ide_cdrom_packet,
+ };
+ 
+@@ -2718,6 +2719,8 @@ static int ide_cdrom_register (ide_drive
+ 		devinfo->mask |= CDC_PLAY_AUDIO;
+ 	if (!CDROM_CONFIG_FLAGS(drive)->close_tray)
+ 		devinfo->mask |= CDC_CLOSE_TRAY;
++	if (!CDROM_CONFIG_FLAGS(drive)->ram)
++		devinfo->mask |= CDC_RAM;
+ 
+ 	devinfo->de = devfs_register(drive->de, "cd", DEVFS_FL_DEFAULT,
+ 				     HWIF(drive)->major, minor,
+@@ -2766,7 +2769,7 @@ int ide_cdrom_probe_capabilities (ide_dr
+ 	struct cdrom_info *info = drive->driver_data;
+ 	struct cdrom_device_info *cdi = &info->devinfo;
+ 	struct atapi_capabilities_page cap;
+-	int nslots = 1;
++	int nslots = 1, ram_write = 0;
+ 
+ 	if (CDROM_CONFIG_FLAGS(drive)->nec260) {
+ 		CDROM_CONFIG_FLAGS(drive)->no_eject = 0;                       
+@@ -2776,7 +2779,9 @@ int ide_cdrom_probe_capabilities (ide_dr
+ 
+ 	if (ide_cdrom_get_capabilities(drive, &cap))
+ 		return 0;
+-
++	cdrom_is_random_writable(cdi, &ram_write);
++	if (ram_write) 
++		CDROM_CONFIG_FLAGS(drive)->ram = 1;
+ 	if (cap.lock == 0)
+ 		CDROM_CONFIG_FLAGS(drive)->no_doorlock = 1;
+ 	if (cap.eject)
+@@ -2789,8 +2794,10 @@ int ide_cdrom_probe_capabilities (ide_dr
+ 		CDROM_CONFIG_FLAGS(drive)->test_write = 1;
+ 	if (cap.dvd_ram_read || cap.dvd_r_read || cap.dvd_rom)
+ 		CDROM_CONFIG_FLAGS(drive)->dvd = 1;
+-	if (cap.dvd_ram_write)
++	if (cap.dvd_ram_write) {
+ 		CDROM_CONFIG_FLAGS(drive)->dvd_ram = 1;
++		CDROM_CONFIG_FLAGS(drive)->ram = 1;
++	}
+ 	if (cap.dvd_r_write)
+ 		CDROM_CONFIG_FLAGS(drive)->dvd_r = 1;
+ 	if (cap.audio_play)
+@@ -3000,7 +3007,8 @@ int ide_cdrom_setup (ide_drive_t *drive)
+ 
+ 	nslots = ide_cdrom_probe_capabilities (drive);
+ 
+-	if (CDROM_CONFIG_FLAGS(drive)->dvd_ram)
++	if ((CDROM_CONFIG_FLAGS(drive)->dvd_ram) ||
++	    (CDROM_CONFIG_FLAGS(drive)->ram))
+ 		set_device_ro(MKDEV(HWIF(drive)->major, minor), 0);
+ 
+ #if 0
+diff -Nurp linux-2.4.27-pre3/drivers/scsi/sr.c linux-2.4.27-pre3-pel/drivers/scsi/sr.c
+--- linux-2.4.27-pre3/drivers/scsi/sr.c	2003-06-13 08:51:36.000000000 -0600
++++ linux-2.4.27-pre3-pel/drivers/scsi/sr.c	2004-05-20 15:39:26.615517968 -0600
+@@ -1,6 +1,7 @@
+ /*
+  *  sr.c Copyright (C) 1992 David Giller
+  *           Copyright (C) 1993, 1994, 1995, 1999 Eric Youngdale
++ *       Copyright (C) 2004 Iomega Corp
+  *
+  *  adapted from:
+  *      sd.c Copyright (C) 1992 Drew Eckhardt
+@@ -128,7 +129,7 @@ static struct cdrom_device_ops sr_dops =
+ 				CDC_MEDIA_CHANGED | CDC_PLAY_AUDIO |
+ 				CDC_RESET | CDC_IOCTLS | CDC_DRIVE_STATUS |
+ 				CDC_CD_R | CDC_CD_RW | CDC_DVD | CDC_DVD_R |
+-				CDC_DVD_RAM | CDC_GENERIC_PACKET,
++				CDC_DVD_RAM | CDC_GENERIC_PACKET | CDC_RAM,
+ 	generic_packet:		sr_packet,
+ };
+ 
+@@ -693,7 +694,7 @@ void get_capabilities(int i)
+ {
+ 	unsigned char cmd[6];
+ 	unsigned char *buffer;
+-	int rc, n;
++	int rc, n, ram_write=0;
+ 
+ 	static char *loadmech[] =
+ 	{
+@@ -731,6 +732,11 @@ void get_capabilities(int i)
+ 		printk("sr%i: scsi-1 drive\n", i);
+ 		return;
+ 	}
++	if (cdrom_is_random_writable(&scsi_CDs[i].cdi, &ram_write))
++		scsi_CDs[i].cdi.mask |= CDC_RAM;
++	if (!ram_write)
++		scsi_CDs[i].cdi.mask |= CDC_RAM;
++
+ 	n = buffer[3] + 4;
+ 	scsi_CDs[i].cdi.speed = ((buffer[n + 8] << 8) + buffer[n + 9]) / 176;
+ 	scsi_CDs[i].readcd_known = 1;
+@@ -754,8 +760,6 @@ void get_capabilities(int i)
+ 	if ((buffer[n + 3] & 0x20) == 0) {
+ 		/* can't write DVD-RAM media */
+ 		scsi_CDs[i].cdi.mask |= CDC_DVD_RAM;
+-	} else {
+-		scsi_CDs[i].device->writeable = 1;
+ 	}
+ 	if ((buffer[n + 3] & 0x10) == 0)
+ 		/* can't write DVD-R media */
+@@ -780,6 +784,13 @@ void get_capabilities(int i)
+ 	/*else    I don't think it can close its tray
+ 	   scsi_CDs[i].cdi.mask |= CDC_CLOSE_TRAY; */
+ 
++	/*
++	 * if DVD-RAM of MRW-W, we are randomly writeable
++	 */
++	if ((scsi_CDs[i].cdi.mask & (CDC_DVD_RAM | CDC_RAM)) !=
++	    (CDC_DVD_RAM | CDC_RAM))
++		scsi_CDs[i].device->writeable = 1;
++
+ 	scsi_free(buffer, 512);
+ }
+ 
+diff -Nurp linux-2.4.27-pre3/drivers/cdrom/cdrom.c linux-2.4.27-pre3-pel/drivers/cdrom/cdrom.c
+--- linux-2.4.27-pre3/drivers/cdrom/cdrom.c	2003-11-28 11:26:20.000000000 -0700
++++ linux-2.4.27-pre3-pel/drivers/cdrom/cdrom.c	2004-05-20 15:39:26.632515384 -0600
+@@ -1,7 +1,8 @@
+ /* linux/drivers/cdrom/cdrom.c. 
+    Copyright (c) 1996, 1997 David A. van Leeuwen.
+    Copyright (c) 1997, 1998 Erik Andersen <andersee@debian.org>
+-   Copyright (c) 1998, 1999 Jens Axboe <axboe@image.dk>
++   Copyright (c) 1998-2004 Jens Axboe <axboe@image.dk>
++   Copyright (c) 2004, Iomega Corp.
+ 
+    May be copied or modified under the terms of the GNU General Public
+    License.  See linux/COPYING for more information.
+@@ -447,6 +448,112 @@ struct cdrom_device_info *cdrom_find_dev
+ 	return cdi;
+ }
+ 
++int cdrom_get_random_writable(struct cdrom_device_info *cdi,
++			      struct rwrt_feature_desc *rfd)
++{
++	struct cdrom_generic_command cgc;
++	char buffer[24];
++	struct feature_header *fh;
++	int ret;
++
++	init_cdrom_command(&cgc, buffer, sizeof(buffer), CGC_DATA_READ);
++
++	cgc.cmd[0] = GPCMD_GET_CONFIGURATION;	/* often 0x46 */
++	cgc.cmd[3] = CDF_RWRT;			/* often 0x0020 */
++	cgc.cmd[8] = sizeof(buffer);		/* often 0x18 */
++	cgc.quiet = 1;
++
++	if ((ret = cdi->ops->generic_packet(cdi, &cgc)))
++		return ret;
++
++	fh = (struct feature_header *)&buffer[0];
++	if (be32_to_cpu(fh->data_len) >= (sizeof(struct feature_header)+
++					  sizeof(struct rwrt_feature_desc)))
++		memcpy(rfd, &buffer[sizeof(struct feature_header)],
++		       sizeof (*rfd));
++	else
++		memset(rfd, 0, sizeof(*rfd));
++
++	return 0;
++}
++
++int cdrom_has_defect_mgt(struct cdrom_device_info *cdi)
++{
++	struct cdrom_generic_command cgc;
++	char buffer[16];
++	struct feature_header *fh;
++	__u16 *feature_code;
++	int ret;
++
++	init_cdrom_command(&cgc, buffer, sizeof(buffer), CGC_DATA_READ);
++
++	cgc.cmd[0] = GPCMD_GET_CONFIGURATION;	/* often 0x46 */
++	cgc.cmd[3] = CDF_HWDM;			/* often 0x0024 */
++	cgc.cmd[8] = sizeof(buffer);		/* often 0x10 */
++	cgc.quiet = 1;
++
++	if ((ret = cdi->ops->generic_packet(cdi, &cgc)))
++		return ret;
++
++	fh = (struct feature_header *)&buffer[0];
++	ret = 1;
++	if (be32_to_cpu(fh->data_len) >= (sizeof(struct feature_header)+8)) {
++		feature_code = (__u16 *)&buffer[sizeof(struct feature_header)];
++		if (CDF_HWDM == be16_to_cpu(*feature_code))
++			ret = 0;
++	}
++	return ret;
++}
++
++
++int cdrom_is_random_writable(struct cdrom_device_info *cdi, int *write)
++{
++	struct rwrt_feature_desc rfd;
++	int ret;
++
++	*write = 0;
++
++	if ((ret = cdrom_get_random_writable(cdi, &rfd)))
++		return ret;
++
++	if (CDF_RWRT == be16_to_cpu(rfd.feature_code))
++		*write = 1;
++
++	return 0;
++}
++
++static int cdrom_ram_open_write(struct cdrom_device_info *cdi)
++{
++	struct rwrt_feature_desc rfd;
++	int ret;
++
++	if ((ret = cdrom_has_defect_mgt(cdi)))
++		return ret;
++	else
++		if ((ret = cdrom_get_random_writable(cdi, &rfd)))
++			return ret;
++		else if (CDF_RWRT == be16_to_cpu(rfd.feature_code))
++			ret = !rfd.curr;
++
++	cdinfo(CD_OPEN, "can open for random write\n");
++	return ret;
++}
++
++/*
++ * returns 0 for ok to open write, non-0 to disallow
++ */
++static int cdrom_open_write(struct cdrom_device_info *cdi)
++{
++	int ret;
++	if (CDROM_CAN(CDC_RAM) &&
++	    !CDROM_CAN(CDC_CD_R|CDC_CD_RW|CDC_DVD|CDC_DVD_R)) 
++		ret = cdrom_ram_open_write(cdi);
++	else
++		ret = 1;
++
++	return ret;
++}
++
+ /* We use the open-option O_NONBLOCK to indicate that the
+  * purpose of opening is only for subsequent ioctl() calls; no device
+  * integrity checks are performed.
+@@ -465,8 +572,15 @@ int cdrom_open(struct inode *ip, struct 
+ 	if ((cdi = cdrom_find_device(dev)) == NULL)
+ 		return -ENODEV;
+ 
+-	if ((fp->f_mode & FMODE_WRITE) && !CDROM_CAN(CDC_DVD_RAM))
+-		return -EROFS;
++	cdi->use_count++;
++	ret = -EROFS;
++	if (fp->f_mode & FMODE_WRITE) {
++		/* printk("cdrom: %s opening for WRITE\n", current->comm); */
++		if (!CDROM_CAN(CDC_RAM))
++			goto out;
++		if (cdrom_open_write(cdi))
++			goto out;
++	}
+ 
+ 	/* if this was a O_NONBLOCK open and we should honor the flags,
+ 	 * do a quick open without drive/disc integrity checks. */
+@@ -475,12 +589,13 @@ int cdrom_open(struct inode *ip, struct 
+ 	else
+ 		ret = open_for_data(cdi);
+ 
+-	if (!ret) cdi->use_count++;
+-
+ 	cdinfo(CD_OPEN, "Use count for \"/dev/%s\" now %d\n", cdi->name, cdi->use_count);
+ 	/* Do this on open.  Don't wait for mount, because they might
+ 	    not be mounting, but opening with O_NONBLOCK */
+ 	check_disk_change(dev);
++out:
++	if (ret)
++		cdi->use_count--;
+ 	return ret;
+ }
+ 
+@@ -657,15 +772,14 @@ int cdrom_release(struct inode *ip, stru
+ 
+ 	cdinfo(CD_CLOSE, "entering cdrom_release\n"); 
+ 
+-	if (cdi->use_count > 0)
+-		cdi->use_count--;
+-	if (cdi->use_count == 0)
++	if (!--cdi->use_count) {
+ 		cdinfo(CD_CLOSE, "Use count for \"/dev/%s\" now zero\n", cdi->name);
+-	if (cdi->use_count == 0 &&
+-	    cdo->capability & CDC_LOCK && !keeplocked) {
+-		cdinfo(CD_CLOSE, "Unlocking door!\n");
+-		cdo->lock_door(cdi, 0);
++		if ((cdo->capability & CDC_LOCK) && !keeplocked) {
++			cdinfo(CD_CLOSE, "Unlocking door!\n");
++			cdo->lock_door(cdi, 0);
++		}
+ 	}
++
+ 	opened_for_data = !(cdi->options & CDO_USE_FFLAGS) ||
+ 		!(fp && fp->f_flags & O_NONBLOCK);
+ 	cdo->release(cdi);
+@@ -1909,10 +2023,24 @@ static int cdrom_do_cmd(struct cdrom_dev
+ 		}
+ 	}
+ 
++	/*
++	 * queue command and wait for it to complete
++	 */
+ 	ret = cdi->ops->generic_packet(cdi, cgc);
+-	__copy_to_user(usense, cgc->sense, sizeof(*usense));
++
++	/*
++	 * always copy back sense, command need not have failed for it to
++	 * contain useful info
++	 */
++	if (usense)
++		__copy_to_user(usense, cgc->sense, sizeof(*usense));
++
++	/*
++	 * this really needs to be modified to copy back good bytes
++	 */
+ 	if (!ret && cgc->data_direction == CGC_DATA_READ)
+ 		__copy_to_user(ubuf, cgc->buffer, cgc->buflen);
++
+ 	if (cgc->data_direction == CGC_DATA_READ ||
+ 	    cgc->data_direction == CGC_DATA_WRITE) {
+ 		kfree(cgc->buffer);
+@@ -2392,6 +2520,7 @@ EXPORT_SYMBOL(cdrom_mode_select);
+ EXPORT_SYMBOL(cdrom_mode_sense);
+ EXPORT_SYMBOL(init_cdrom_command);
+ EXPORT_SYMBOL(cdrom_find_device);
++EXPORT_SYMBOL(cdrom_is_random_writable);
+ 
+ #ifdef CONFIG_SYSCTL
+ 
+@@ -2488,6 +2617,10 @@ int cdrom_sysctl_info(ctl_table *ctl, in
+ 	for (cdi=topCdromPtr;cdi!=NULL;cdi=cdi->next)
+ 	    pos += sprintf(info+pos, "\t%d", CDROM_CAN(CDC_DVD_RAM) != 0);
+ 
++	pos += sprintf(info+pos, "\nCan write RAM:\t");
++	for (cdi=topCdromPtr;cdi!=NULL;cdi=cdi->next)
++	    pos += sprintf(info+pos, "\t%d", CDROM_CAN(CDC_RAM) != 0);
++
+ 	strcpy(info+pos,"\n\n");
+ 		
+         return proc_dostring(ctl, write, filp, buffer, lenp);
 
 
----1463811839-1464582574-1085088480=:1990
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name="tmscsim-remove-legacy-void_code.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.44.0405202328000.1990@poirot.grange>
-Content-Description: 
-Content-Disposition: attachment; filename="tmscsim-remove-legacy-void_code.patch"
-
-ZGlmZiAtdSBhL2RyaXZlcnMvc2NzaS9zY3NpaW9tLmMgYi9kcml2ZXJzL3Nj
-c2kvc2NzaWlvbS5jDQotLS0gYS9kcml2ZXJzL3Njc2kvc2NzaWlvbS5jCVdl
-ZCBNYXkgMTkgMjM6MTQ6NDAgMjAwNA0KKysrIGIvZHJpdmVycy9zY3NpL3Nj
-c2lpb20uYwlUaHUgTWF5IDIwIDIzOjA5OjEyIDIwMDQNCkBAIC0yMjcsNyAr
-MjI3LDcgQEANCiAjaWYgRE1BX0lOVA0KICAgICBVQ0hBUiAgZHN0YXR1czsN
-CiAjZW5kaWYNCi0gICAgREMzOTBfQUZMQUdTIERDMzkwX0lGTEFHUzsgLy9E
-QzM5MF9ERkxBR1MNCisgICAgREMzOTBfSUZMQUdTOw0KIA0KICAgICBwQUNC
-ID0gKFBBQ0IpZGV2X2lkOw0KICAgICBmb3IgKHBBQ0IyID0gZGMzOTBfcEFD
-Ql9zdGFydDsgKHBBQ0IyICYmIHBBQ0IyICE9IHBBQ0IpOyBwQUNCMiA9IHBB
-Q0IyLT5wTmV4dEFDQik7DQpAQCAtMjM3LDI2ICsyMzcsMjEgQEANCiAJcmV0
-dXJuIElSUV9OT05FOw0KICAgICB9DQogICAgIA0KLSAgICAvL0RDMzkwX0xP
-Q0tfRFJWOw0KLQ0KICAgICBzc3RhdHVzID0gREMzOTBfcmVhZDggKFNjc2lf
-U3RhdHVzKTsNCiAgICAgaWYoICEoc3N0YXR1cyAmIElOVEVSUlVQVCkgKQ0K
-LQl7IC8qREMzOTBfVU5MT0NLX0RSVjsqLyByZXR1cm4gSVJRX05PTkU7IH07
-DQorCXJldHVybiBJUlFfTk9ORTsNCiANCiAgICAgREVCVUcxKHByaW50ayAo
-S0VSTl9ERUJVRyAic3N0YXR1cz0lMDJ4LCIsIHNzdGF0dXMpKTsNCiANCiAj
-aWYgRE1BX0lOVA0KICAgICBEQzM5MF9MT0NLX0lPKHBBQ0ItPnBTY3NpSG9z
-dCk7DQotICAgIERDMzkwX0xPQ0tfQUNCOw0KICAgICBkc3RhdHVzID0gZGMz
-OTBfZG1hX2ludHIgKHBBQ0IpOw0KLSAgICBEQzM5MF9VTkxPQ0tfQUNCOw0K
-ICAgICBEQzM5MF9VTkxPQ0tfSU8ocEFDQi0+cFNjc2lIb3N0KTsNCiANCiAg
-ICAgREVCVUcxKHByaW50ayAoS0VSTl9ERUJVRyAiZHN0YXR1cz0lMDJ4LCIs
-IGRzdGF0dXMpKTsNCiAgICAgaWYgKCEgKGRzdGF0dXMgJiBTQ1NJX0lOVEVS
-UlVQVCkpDQogICAgICAgew0KIAlERUJVRzAocHJpbnRrIChLRVJOX1dBUk5J
-TkcgIkRDMzkwIEludCB3L28gU0NTSSBhY3Rpb25zIChvbmx5IERNQT8pXG4i
-KSk7DQotCS8vREMzOTBfVU5MT0NLX0RSVjsNCiAJcmV0dXJuIElSUV9OT05F
-Ow0KICAgICAgIH07DQogI2Vsc2UNCkBAIC0yNjYsOCArMjYxLDYgQEANCiAj
-ZW5kaWYNCiANCiAgICAgREMzOTBfTE9DS19JTyhwQUNCLT5wU2NzaUhvc3Qp
-Ow0KLSAgICBEQzM5MF9MT0NLX0FDQjsNCi0gICAgLy9EQzM5MF9VTkxPQ0tf
-RFJWX05JOyAvKiBBbGxvdyBfb3RoZXJfIENQVXMgdG8gcHJvY2VzcyBJUlEg
-KHVzZWZ1bCBmb3Igc2hhcmVkIElSUXMpICovDQogDQogICAgIGlzdGF0ZSA9
-IERDMzkwX3JlYWQ4IChJbnRlcm5fU3RhdGUpOw0KICAgICBpc3RhdHVzID0g
-REMzOTBfcmVhZDggKElOVF9TdGF0dXMpOyAvKiBUaGlzIGNsZWFycyBTY3Np
-X1N0YXR1cywgSW50ZXJuX1N0YXRlIGFuZCBJTlRfU3RhdHVzICEgKi8NCkBA
-IC0zMzksMTAgKzMzMiw3IEBADQogICAgIH0NCiANCiAgdW5sb2NrOg0KLSAg
-ICAvL0RDMzkwX0xPQ0tfRFJWX05JOw0KLSAgICBEQzM5MF9VTkxPQ0tfQUNC
-Ow0KICAgICBEQzM5MF9VTkxPQ0tfSU8ocEFDQi0+cFNjc2lIb3N0KTsNCi0g
-ICAgLy9EQzM5MF9VTkxPQ0tfRFJWOyAvKiBSZXN0b3JlIGluaXRpYWwgZmxh
-Z3MgKi8NCiAgICAgcmV0dXJuIElSUV9IQU5ETEVEOw0KIH0NCiANCkBAIC0x
-NjIwLDE4ICsxNjEwLDE0IEBADQogCSAgcEFDQi0+c2Nhbl9kZXZpY2VzID0g
-MDsNCiAgICAgIH07DQogDQotI2lmIExJTlVYX1ZFUlNJT05fQ09ERSA+IEtF
-Uk5FTF9WRVJTSU9OKDIsMywzMCkNCiAgICAgcGNtZC0+cmVzaWQgPSBwY21k
-LT5yZXF1ZXN0X2J1ZmZsZW4gLSBwU1JCLT5Ub3RhbFhmZXJyZWRMZW47DQot
-I2VuZGlmDQogDQogICAgIGlmICghRENCX3JlbW92ZWQpIGRjMzkwX0dvaW5n
-X3JlbW92ZSAocERDQiwgcFNSQik7DQogICAgIC8qIEFkZCB0byBmcmVlIGxp
-c3QgKi8NCiAgICAgZGMzOTBfRnJlZV9pbnNlcnQgKHBBQ0IsIHBTUkIpOw0K
-IA0KICAgICBERUJVRzAocHJpbnRrIChLRVJOX0RFQlVHICJEQzM5MDogU1JC
-ZG9uZTogZG9uZSBwaWQgJWxpXG4iLCBwY21kLT5waWQpKTsNCi0gICAgREMz
-OTBfVU5MT0NLX0FDQl9OSTsNCiAgICAgcGNtZC0+c2NzaV9kb25lIChwY21k
-KTsNCi0gICAgREMzOTBfTE9DS19BQ0JfTkk7DQogDQogICAgIGRjMzkwX1dh
-aXRpbmdfcHJvY2VzcyAocEFDQik7DQogICAgIHJldHVybjsNCkBAIC0xNjY4
-LDkgKzE2NTQsNyBAQA0KIC8qCSAgICBSZWxlYXNlU1JCKCBwRENCLCBwU1JC
-ICk7ICovDQogDQogCSAgICBERUJVRzAocHJpbnRrIChLRVJOX0RFQlVHICJE
-QzM5MDogRG9pbmdTUkJfRG9uZTogZG9uZSBwaWQgJWxpXG4iLCBwY21kLT5w
-aWQpKTsNCi0JICAgIERDMzkwX1VOTE9DS19BQ0JfTkk7DQogCSAgICBwY21k
-LT5zY3NpX2RvbmUoIHBjbWQgKTsNCi0JICAgIERDMzkwX0xPQ0tfQUNCX05J
-Ow0KICNlbmRpZgkNCiAJICAgIHBzcmIgID0gcHNyYjI7DQogCX0NCmRpZmYg
-LXUgYS9kcml2ZXJzL3Njc2kvdG1zY3NpbS5jIGIvZHJpdmVycy9zY3NpL3Rt
-c2NzaW0uYw0KLS0tIGEvZHJpdmVycy9zY3NpL3Rtc2NzaW0uYwlUaHUgTWF5
-IDIwIDIxOjQwOjM5IDIwMDQNCisrKyBiL2RyaXZlcnMvc2NzaS90bXNjc2lt
-LmMJVGh1IE1heSAyMCAyMzowOTowNCAyMDA0DQpAQCAtMjY0LDE2ICsyNjQs
-MTAgQEANCiAgKiB1bmRlZiAgOiB0cmFkaXRpb25hbCBzYXZlX2ZsYWdzOyBj
-bGk7IHJlc3RvcmVfZmxhZ3M7DQogICovDQogDQotI2lmIExJTlVYX1ZFUlNJ
-T05fQ09ERSA+PSBLRVJORUxfVkVSU0lPTigyLDEsMzApDQotIyBpbmNsdWRl
-IDxsaW51eC9pbml0Lmg+DQotI2lmIExJTlVYX1ZFUlNJT05fQ09ERSA+PSBL
-RVJORUxfVkVSU0lPTigyLDMsMzApDQotIyBpbmNsdWRlIDxsaW51eC9zcGlu
-bG9jay5oPg0KLSNlbHNlDQotIyBpbmNsdWRlIDxhc20vc3BpbmxvY2suaD4N
-Ci0jZW5kaWYNCi0jZW5kaWYNCisjaW5jbHVkZSA8bGludXgvaW5pdC5oPg0K
-KyNpbmNsdWRlIDxsaW51eC9zcGlubG9jay5oPg0KIA0KLSNpZiBMSU5VWF9W
-RVJTSU9OX0NPREUgPj0gS0VSTkVMX1ZFUlNJT04oMiwzLDk5KSAmJiBkZWZp
-bmVkKE1PRFVMRSkNCisjaWYgZGVmaW5lZChNT0RVTEUpDQogc3RhdGljIHN0
-cnVjdCBwY2lfZGV2aWNlX2lkIHRtc2NzaW1fcGNpX3RibFtdID0gew0KIAl7
-DQogCQkudmVuZG9yCQk9IFBDSV9WRU5ET1JfSURfQU1ELA0KQEAgLTI4Nyw5
-ICsyODEsNyBAQA0KICNlbmRpZg0KIAkNCiAjZGVmaW5lIFVTRV9TUElOTE9D
-S1MgMQ0KLSNkZWZpbmUgTkVXX1BDSSAxDQogDQotI2RlZmluZSBEQzM5MF9B
-RkxBR1MgDQogI2RlZmluZSBEQzM5MF9JRkxBR1MgdW5zaWduZWQgbG9uZyBp
-ZmxhZ3MNCiAjZGVmaW5lIERDMzkwX0RGTEFHUyB1bnNpZ25lZCBsb25nIGRm
-bGFncw0KIHNwaW5sb2NrX3QgZGMzOTBfZHJ2bG9jayA9IFNQSU5fTE9DS19V
-TkxPQ0tFRDsNCkBAIC0yOTksMTEgKzI5MSw2IEBADQogI2RlZmluZSBEQzM5
-MF9VTkxPQ0tfRFJWIHNwaW5fdW5sb2NrX2lycXJlc3RvcmUgKCZkYzM5MF9k
-cnZsb2NrLCBkZmxhZ3MpDQogI2RlZmluZSBEQzM5MF9MT0NLX0RSVl9OSSBz
-cGluX2xvY2sgKCZkYzM5MF9kcnZsb2NrKQ0KICNkZWZpbmUgREMzOTBfVU5M
-T0NLX0RSVl9OSSBzcGluX3VubG9jayAoJmRjMzkwX2RydmxvY2spDQotI2Rl
-ZmluZSBEQzM5MF9MT0NLX0FDQiAvKiBEQzM5MF9MT0NLX0lPICovDQotI2Rl
-ZmluZSBEQzM5MF9VTkxPQ0tfQUNCIC8qIERDMzkwX1VOTE9DS19JTyAqLw0K
-LSNkZWZpbmUgREMzOTBfTE9DS19BQ0JfTkkgLyogc3Bpbl9sb2NrICgmKHBB
-Q0ItPmxvY2spKSAqLw0KLSNkZWZpbmUgREMzOTBfVU5MT0NLX0FDQl9OSSAv
-KiBzcGluX3VubG9jayAoJihwQUNCLT5sb2NrKSkgKi8NCi0jZGVmaW5lIERD
-MzkwX0xPQ0tBX0lOSVQgLyogREMzOTBfTE9DS0FfSU5JVCAqLw0KIA0KIC8q
-IFRoZXNlIG1hY3JvcyBhcmUgdXNlZCBmb3IgdW5pZm9ybSBhY2Nlc3MgdG8g
-Mi4wLnggYW5kIDIuMS54IFBDSSBjb25maWcgc3BhY2UqLw0KIA0KQEAgLTM2
-NSwxMCArMzUyLDYgQEANCiBzdGF0aWMgaW50IERDMzkwX3JlbGVhc2Uoc3Ry
-dWN0IFNjc2lfSG9zdCAqaG9zdCk7DQogc3RhdGljIGludCBkYzM5MF9zaHV0
-ZG93biAoc3RydWN0IFNjc2lfSG9zdCAqaG9zdCk7DQogDQotDQotLy9zdGF0
-aWMgUFNIVAlkYzM5MF9wU0hUX3N0YXJ0ID0gTlVMTDsNCi0vL3N0YXRpYyBQ
-U0gJZGMzOTBfcFNIX3N0YXJ0ID0gTlVMTDsNCi0vL3N0YXRpYyBQU0gJZGMz
-OTBfcFNIX2N1cnJlbnQgPSBOVUxMOw0KIHN0YXRpYyBQQUNCCWRjMzkwX3BB
-Q0Jfc3RhcnQ9IE5VTEw7DQogc3RhdGljIFBBQ0IJZGMzOTBfcEFDQl9jdXJy
-ZW50ID0gTlVMTDsNCiBzdGF0aWMgVUxPTkcJZGMzOTBfbGFzdGFib3J0ZWRw
-aWQgPSAwOw0KQEAgLTM3OCwxMiArMzYxLDkgQEANCiAvKiBTdGFydHVwIHZh
-bHVlcywgdG8gYmUgb3ZlcnJpZGVuIG9uIHRoZSBjb21tYW5kbGluZSAqLw0K
-IGludCB0bXNjc2ltW10gPSB7LTIsIC0yLCAtMiwgLTIsIC0yLCAtMn07DQog
-DQotIyBpZiBkZWZpbmVkKE1PRFVMRSkgJiYgTElOVVhfVkVSU0lPTl9DT0RF
-ID49IEtFUk5FTF9WRVJTSU9OKDIsMSwzMCkNCisjaWYgZGVmaW5lZChNT0RV
-TEUpDQogTU9EVUxFX1BBUk0odG1zY3NpbSwgIjEtNmkiKTsNCiBNT0RVTEVf
-UEFSTV9ERVNDKHRtc2NzaW0sICJIb3N0IFNDU0kgSUQsIFNwZWVkICgwPTEw
-TUh6KSwgRGV2aWNlIEZsYWdzLCBBZGFwdGVyIEZsYWdzLCBNYXggVGFncyAo
-bG9nMih0YWdzKS0xKSwgRGVsYXlSZXNldCAocykiKTsNCi0jIGVuZGlmDQot
-DQotI2lmIGRlZmluZWQoTU9EVUxFKSAmJiBMSU5VWF9WRVJTSU9OX0NPREUg
-Pj0gS0VSTkVMX1ZFUlNJT04oMiwxLDMwKQ0KIE1PRFVMRV9BVVRIT1IoIkMu
-TC4gSHVhbmcgLyBLdXJ0IEdhcmxvZmYiKTsNCiBNT0RVTEVfREVTQ1JJUFRJ
-T04oIlNDU0kgaG9zdCBhZGFwdGVyIGRyaXZlciBmb3IgVGVrcmFtIERDMzkw
-IGFuZCBvdGhlciBBTUQ1M0M5NzRBIGJhc2VkIFBDSSBTQ1NJIGFkYXB0ZXJz
-Iik7DQogTU9EVUxFX0xJQ0VOU0UoIkdQTCIpOw0KQEAgLTQ1MiwxMyArNDMy
-LDYgQEANCiBVQ0hBUiAgZGMzOTBfY2xvY2tfcGVyaW9kMVtdID0gezQsIDUs
-IDYsIDcsIDgsIDEwLCAxMywgMjB9Ow0KIFVDSEFSICBkYzM5MF9jbG9ja19z
-cGVlZFtdID0gezEwMCw4MCw2Nyw1Nyw1MCwgNDAsIDMxLCAyMH07DQogDQot
-I2lmIExJTlVYX1ZFUlNJT05fQ09ERSA8IEtFUk5FTF9WRVJTSU9OKDIsMywz
-MCkNCi1zdHJ1Y3QgcHJvY19kaXJfZW50cnkJREMzOTBfcHJvY19zY3NpX3Rt
-c2NzaW0gPXsNCi0gICAgICAgUFJPQ19TQ1NJX0RDMzkwVCwgNyAsInRtc2Nz
-aW0iLA0KLSAgICAgICBTX0lGRElSIHwgU19JUlVHTyB8IFNfSVhVR08sIDIN
-Ci0gICAgICAgfTsNCi0jZW5kaWYNCi0NCiAvKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioNCiAgKiBGdW5jdGlvbnMgZm9yIGFjY2VzcyB0byBEQzM5MCBF
-RVBST00NCiAgKiBhbmQgc29tZSB0byBlbXVsYXRlIGl0DQpAQCAtNTUzLDcg
-KzUyNiw2IEBADQogLyogT3ZlcnJpZGUgZGVmYXVsdHMgb24gY21kbGluZToN
-CiAgKiB0bXNjc2ltOiBBZGFwdElELCBNYXhTcGVlZCAoSW5kZXgpLCBEZXZN
-b2RlIChCaXRtYXBwZWQpLCBBZGFwdE1vZGUgKEJpdG1hcHBlZCkNCiAgKi8N
-Ci0jaWYgTElOVVhfVkVSU0lPTl9DT0RFID4gS0VSTkVMX1ZFUlNJT04oMiwz
-LDEzKQ0KIGludCBfX2luaXQgZGMzOTBfc2V0dXAgKGNoYXIgKnN0cikNCiB7
-CQ0KIAlpbnQgaW50c1s4XTsNCkBAIC01NzQsMjQgKzU0Niw2IEBADQogX19z
-ZXR1cCgidG1zY3NpbT0iLCBkYzM5MF9zZXR1cCk7DQogI2VuZGlmDQogDQot
-I2Vsc2UNCi12b2lkIF9faW5pdCBkYzM5MF9zZXR1cCAoY2hhciAqc3RyLCBp
-bnQgKmludHMpDQotew0KLQlpbnQgaSwgaW07DQotCWltID0gaW50c1swXTsN
-Ci0JaWYgKGltID4gNikNCi0Jew0KLQkJcHJpbnRrIChLRVJOX05PVElDRSAi
-REMzOTA6IGlnbm9yZSBleHRyYSBwYXJhbXMhXG4iKTsNCi0JCWltID0gNjsN
-Ci0JfQ0KLQlmb3IgKGkgPSAwOyBpIDwgaW07IGkrKykNCi0JCXRtc2NzaW1b
-aV0gPSBpbnRzW2krMV07DQotCS8qIGRjMzkwX2NoZWNrcGFyYW1zICgpOyAq
-Lw0KLX0NCi0jZW5kaWYNCi0NCi0NCi0NCiBzdGF0aWMgdm9pZCBfX2luaXQg
-ZGMzOTBfRUVwcm9tT3V0REkoIFBERVZERUNMLCBQVUNIQVIgcmVndmFsLCBV
-Q0hBUiBDYXJyeSApDQogew0KICAgICBVQ0hBUiBidmFsOw0KQEAgLTg2NCwx
-NiArODE4LDYgQEANCiAJZGMzOTBfR29pbmdfYXBwZW5kIChwRENCLCBwU1JC
-KTsNCiB9DQogDQotLyogMi4wIHRpbWVyIGNvbXBhdGliaWxpdHkgKi8NCi0j
-aWYgTElOVVhfVkVSU0lPTl9DT0RFIDwgS0VSTkVMX1ZFUlNJT04oMiwxLDMw
-KQ0KLSBzdGF0aWMgaW5saW5lIGludCB0aW1lcl9wZW5kaW5nKHN0cnVjdCB0
-aW1lcl9saXN0ICogdGltZXIpDQotIHsNCi0JcmV0dXJuIHRpbWVyLT5wcmV2
-ICE9IE5VTEw7DQotIH0NCi0gI2RlZmluZSB0aW1lX2FmdGVyKGEsYikgICAg
-ICAgICAoKGxvbmcpKGIpIC0gKGxvbmcpKGEpIDwgMCkNCi0gI2RlZmluZSB0
-aW1lX2JlZm9yZShhLGIpICAgICAgICB0aW1lX2FmdGVyKGIsYSkNCi0jZW5k
-aWYNCi0NCiB2b2lkIERDMzkwX3dhaXRpbmdfdGltZWRfb3V0ICh1bnNpZ25l
-ZCBsb25nIHB0cik7DQogLyogU2V0cyB0aGUgdGltZXIgdG8gd2FrZSB1cyB1
-cCAqLw0KIHN0YXRpYyB2b2lkIGRjMzkwX3dhaXRpbmdfdGltZXIgKFBBQ0Ig
-cEFDQiwgdW5zaWduZWQgbG9uZyB0bykNCkBAIC05MzEsMTIgKzg3NSw5IEBA
-DQogew0KIAlQQUNCIHBBQ0IgPSAoUEFDQilwdHI7DQogCURDMzkwX0lGTEFH
-UzsNCi0JREMzOTBfQUZMQUdTOw0KIAlERUJVRzAocHJpbnRrICgiREMzOTA6
-IERlYnVnOiBXYWl0aW5nIHF1ZXVlIHdva2VuIHVwIGJ5IHRpbWVyIVxuIikp
-Ow0KIAlEQzM5MF9MT0NLX0lPKHBBQ0ItPnBTY3NpSG9zdCk7DQotCURDMzkw
-X0xPQ0tfQUNCOw0KIAlkYzM5MF9XYWl0aW5nX3Byb2Nlc3MgKHBBQ0IpOw0K
-LQlEQzM5MF9VTkxPQ0tfQUNCOw0KIAlEQzM5MF9VTkxPQ0tfSU8ocEFDQi0+
-cFNjc2lIb3N0KTsNCiB9DQogDQpAQCAtMTExMCwxNSArMTA1MSwxMSBAQA0K
-ICAgICBQRENCICAgcERDQjsNCiAgICAgUFNSQiAgIHBTUkI7DQogICAgIFBB
-Q0IgICBwQUNCID0gKFBBQ0IpIGNtZC0+ZGV2aWNlLT5ob3N0LT5ob3N0ZGF0
-YTsNCi0gICAgREMzOTBfQUZMQUdTOw0KLQ0KIA0KICAgICBERUJVRzAoLyog
-IGlmKHBBQ0ItPnNjYW5fZGV2aWNlcykgKi8JXA0KIAlwcmludGsoS0VSTl9J
-TkZPICJEQzM5MDogUXVldWUgQ21kPSUwMngsVGd0PSVkLExVTj0lZCAocGlk
-PSVsaSksIGJ1ZmZlcj0lcFxuIixcDQogCSAgICAgICBjbWQtPmNtbmRbMF0s
-Y21kLT5kZXZpY2UtPmlkLGNtZC0+ZGV2aWNlLT5sdW4sY21kLT5waWQsIGNt
-ZC0+YnVmZmVyKSk7DQogDQotICAgIERDMzkwX0xPQ0tfQUNCOw0KLQ0KICAg
-ICAvKiBUT0RPOiBDaGFuZ2UgdGhlIHBvbGljeTogQWx3YXlzIGFjY2VwdCBU
-RVNUX1VOSVRfUkVBRFkgb3IgSU5RVUlSWSANCiAgICAgICogY29tbWFuZHMg
-YW5kIGFsbG9jIGEgRENCIGZvciB0aGUgZGV2aWNlIGlmIG5vdCB5ZXQgdGhl
-cmUuIERDQiB3aWxsDQogICAgICAqIGJlIHJlbW92ZWQgaW4gZGMzOTBfU1JC
-ZG9uZSBpZiBTRUxfVElNRU9VVCAqLw0KQEAgLTExNzUsMTUgKzExMTIsMTIg
-QEANCiAgICAgfSBlbHNlDQogCSAgICBkYzM5MF9TZW5kU1JCKHBBQ0IsIHBT
-UkIpOw0KIA0KLSAgICBEQzM5MF9VTkxPQ0tfQUNCOw0KICAgICBERUJVRzEo
-cHJpbnRrIChLRVJOX0RFQlVHICIgLi4uIGNvbW1hbmQgKHBpZCAlbGkpIHF1
-ZXVlZCBzdWNjZXNzZnVsbHkuXG4iLCBjbWQtPnBpZCkpOw0KICAgICByZXR1
-cm4oMCk7DQogDQogIHJlcXVldWU6DQotICAgIERDMzkwX1VOTE9DS19BQ0I7
-DQogICAgIHJldHVybiAxOw0KICBmYWlsOg0KLSAgICBEQzM5MF9VTkxPQ0tf
-QUNCOw0KICAgICBjbWQtPnJlc3VsdCA9IERJRF9CQURfVEFSR0VUIDw8IDE2
-Ow0KICAgICBkb25lKGNtZCk7DQogICAgIHJldHVybiAwOw0KQEAgLTEzODYs
-OSArMTMyMCw2IEBADQogICAgIGludCAgIHN0YXR1czsNCiAgICAgLy9VTE9O
-RyBzYmFjOw0KICAgICBQQUNCICBwQUNCID0gKFBBQ0IpIGNtZC0+ZGV2aWNl
-LT5ob3N0LT5ob3N0ZGF0YTsNCi0gICAgREMzOTBfQUZMQUdTOw0KLQ0KLSAg
-ICBEQzM5MF9MT0NLX0FDQjsNCiANCiAgICAgcHJpbnRrICgiREMzOTA6IEFi
-b3J0IGNvbW1hbmQgKHBpZCAlbGksIERldmljZSAlMDJpLSUwMmkpXG4iLA0K
-IAkgICAgY21kLT5waWQsIGNtZC0+ZGV2aWNlLT5pZCwgY21kLT5kZXZpY2Ut
-Pmx1bik7DQpAQCAtMTUwNSw3ICsxNDM2LDYgQEANCiAgICAgfQ0KICNlbmRp
-Zg0KICAgICBkYzM5MF9sYXN0YWJvcnRlZHBpZCA9IGNtZC0+cGlkOw0KLSAg
-ICBEQzM5MF9VTkxPQ0tfQUNCOw0KICAgICAvL2RvX0RDMzkwX0ludGVycnVw
-dCAocEFDQi0+SVJRTGV2ZWwsIDAsIDApOw0KICNpZm5kZWYgVVNFX05FV19F
-SAkNCiAgICAgaWYgKHN0YXR1cyA9PSBTQ1NJX0FCT1JUX1NVQ0NFU1MpIGNt
-ZC0+c2NzaV9kb25lKGNtZCk7DQpAQCAtMTU5MiwxMSArMTUyMiw5IEBADQog
-ew0KICAgICBVQ0hBUiAgIGJ2YWw7DQogICAgIFBBQ0IgICAgcEFDQiA9IChQ
-QUNCKSBjbWQtPmRldmljZS0+aG9zdC0+aG9zdGRhdGE7DQotICAgIERDMzkw
-X0FGTEFHUzsNCiANCiAgICAgcHJpbnRrKEtFUk5fSU5GTyAiREMzOTA6IFJF
-U0VUIC4uLiAiKTsNCiANCi0gICAgREMzOTBfTE9DS19BQ0I7DQogICAgIGlm
-ICh0aW1lcl9wZW5kaW5nICgmcEFDQi0+V2FpdGluZ19UaW1lcikpIGRlbF90
-aW1lciAoJnBBQ0ItPldhaXRpbmdfVGltZXIpOw0KICAgICBidmFsID0gREMz
-OTBfcmVhZDggKEN0cmxSZWcxKTsNCiAgICAgYnZhbCB8PSBESVNfSU5UX09O
-X1NDU0lfUlNUOw0KQEAgLTE2MjUsNyArMTU1Myw2IEBADQogICAgIGRjMzkw
-X1dhaXRpbmdfcHJvY2VzcyggcEFDQiApOw0KIA0KICAgICBwcmludGsoImRv
-bmVcbiIpOw0KLSAgICBEQzM5MF9VTkxPQ0tfQUNCOw0KICAgICByZXR1cm4o
-IFNDU0lfUkVTRVRfU1VDQ0VTUyApOw0KIH0NCiANCkBAIC0xNzkyLDcgKzE3
-MTksNiBAQA0KIHsNCiAgICAgUEFDQiAgICBwQUNCOw0KICAgICBVQ0hBUiAg
-IGk7DQotICAgIERDMzkwX0FGTEFHUzsNCiANCiAgICAgcHNoLT5jYW5fcXVl
-dWUgPSBNQVhfQ01EX1FVRVVFOw0KICAgICBwc2gtPmNtZF9wZXJfbHVuID0g
-TUFYX0NNRF9QRVJfTFVOOw0KQEAgLTE4MDAsMTEgKzE3MjYsNyBAQA0KICAg
-ICBwc2gtPmlvX3BvcnQgPSBpb19wb3J0Ow0KICAgICBwc2gtPm5faW9fcG9y
-dCA9IDB4ODA7DQogICAgIHBzaC0+aXJxID0gSXJxOw0KLSNpZiBMSU5VWF9W
-RVJTSU9OX0NPREUgPiBLRVJORUxfVkVSU0lPTigyLDMsNTApDQogICAgIHBz
-aC0+YmFzZSA9IGlvX3BvcnQ7DQotI2Vsc2UNCi0gICAgcHNoLT5iYXNlID0g
-KGNoYXIqKWlvX3BvcnQ7DQotI2VuZGlmCQ0KICAgICBwc2gtPnVuaXF1ZV9p
-ZCA9IGlvX3BvcnQ7DQogICAgIHBzaC0+ZG1hX2NoYW5uZWwgPSAtMTsNCiAg
-ICAgcHNoLT5sYXN0X3Jlc2V0ID0gamlmZmllczsNCkBAIC0xOTU4LDggKzE4
-ODAsNyBAQA0KIHsNCiAgICAgUFNIICAgcHNoOw0KICAgICBQQUNCICBwQUNC
-Ow0KLSAgICBEQzM5MF9BRkxBR1M7DQotICAgIA0KKw0KICAgICBpZiAoZGMz
-OTBfQ2hlY2tFRXByb21DaGVja1N1bSAoUERFViwgaW5kZXgpKQ0KICAgICB7
-DQogCWludCBzcGVlZDsNCkBAIC0xOTg1LDIxICsxOTA2LDYgQEANCiAJDQog
-ICAgIHNjc2lfc2V0X2RldmljZShwc2gsICZwZGV2LT5kZXYpOw0KICAgICBw
-QUNCID0gKFBBQ0IpIHBzaC0+aG9zdGRhdGE7DQotICAgIERDMzkwX0xPQ0tB
-X0lOSVQ7DQotICAgIERDMzkwX0xPQ0tfQUNCOw0KLQ0KLSNpZiAwDQotICAg
-IGlmKCAhZGMzOTBfcFNIX3N0YXJ0ICkNCi0gICAgew0KLSAgICAgICAgZGMz
-OTBfcFNIX3N0YXJ0ID0gcHNoOw0KLSAgICAgICAgZGMzOTBfcFNIX2N1cnJl
-bnQgPSBwc2g7DQotICAgIH0NCi0gICAgZWxzZQ0KLSAgICB7DQotICAgICAg
-ICBkYzM5MF9wU0hfY3VycmVudC0+bmV4dCA9IHBzaDsNCi0gICAgICAgIGRj
-MzkwX3BTSF9jdXJyZW50ID0gcHNoOw0KLSAgICB9DQotI2VuZGlmDQogDQog
-ICAgIERFQlVHMChwcmludGsoS0VSTl9JTkZPICJEQzM5MDogcFNIID0gJTh4
-LCBJbmRleCAlMDJpXG4iLCAoVUlOVCkgcHNoLCBpbmRleCkpOw0KIA0KQEAg
-LTIwMTMsNTkgKzE5MTksMTUgQEANCiAJCSAgICAgIChVSU5UKSBwQUNCLCAo
-VUlOVCkgcEFDQi0+RENCbWFwLCAoVUlOVCkgcEFDQi0+U1JCX2FycmF5KSk7
-DQogCURFQlVHMChwcmludGsoIkRDMzkwOiBBQ0Igc2l6ZT0gJTR4LCBEQ0Ig
-c2l6ZT0gJTR4LCBTUkIgc2l6ZT0gJTR4XG4iLFwNCiAJCSAgICAgIHNpemVv
-ZihEQzM5MF9BQ0IpLCBzaXplb2YoREMzOTBfRENCKSwgc2l6ZW9mKERDMzkw
-X1NSQikgKSk7DQotDQotCURDMzkwX1VOTE9DS19BQ0I7DQogICAgICAgICBy
-ZXR1cm4gKDApOw0KICAgICB9DQogICAgIGVsc2UNCiAgICAgew0KLQkvL2Rj
-MzkwX3BTSF9zdGFydCA9IE5VTEw7DQogCXNjc2lfdW5yZWdpc3RlciggcHNo
-ICk7DQotCURDMzkwX1VOTE9DS19BQ0I7DQogCXJldHVybiggLTEgKTsNCiAg
-ICAgfQ0KIH0NCiANCi0NCi0vKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioN
-Ci0gKiBGdW5jdGlvbiA6IGludCBEQzM5MF9kZXRlY3QoU2NzaV9Ib3N0X1Rl
-bXBsYXRlICpwc2h0KQ0KLSAqDQotICogUHVycG9zZSA6IGRldGVjdHMgYW5k
-IGluaXRpYWxpemVzIEFNRDUzQzk3NCBTQ1NJIGNoaXBzDQotICoJICAgICB0
-aGF0IHdlcmUgYXV0b3Byb2JlZCwgb3ZlcnJpZGRlbiBvbiB0aGUgTElMTyBj
-b21tYW5kIGxpbmUsDQotICoJICAgICBvciBzcGVjaWZpZWQgYXQgY29tcGls
-ZSB0aW1lLg0KLSAqDQotICogSW5wdXRzIDogcHNodCAtIHRlbXBsYXRlIGZv
-ciB0aGlzIFNDU0kgYWRhcHRlcg0KLSAqDQotICogUmV0dXJucyA6IG51bWJl
-ciBvZiBob3N0IGFkYXB0ZXJzIGRldGVjdGVkDQotICoNCi0gKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKioqKioqKioqKioqKiovDQotDQotI2lmbmRlZiBORVdfUENJDQotLyog
-QWNjLiB0byBQQ0kgMi4xIHNwZWMgaXQncyB1cCB0byB0aGUgZHJpdmVyIHRv
-IGVuYWJsZSBCdXMgbWFzdGVyaW5nOg0KLSAqIFdlIHVzZSBwY2lfc2V0X21h
-c3RlciAoKSBmb3IgMi4xLnggYW5kIHRoaXMgZnVuYyBmb3IgMi4wLng6CSov
-DQotc3RhdGljIHZvaWQgX19pbml0IGRjMzkwX3NldF9tYXN0ZXIgKFBERVZE
-RUNMKQ0KLXsNCi0JVVNIT1JUIGNtZDsNCi0JVUNIQVIgbGF0Ow0KLQkNCi0J
-UENJX1JFQURfQ09ORklHX1dPUkQgKFBERVYsIFBDSV9DT01NQU5ELCAmY21k
-KTsNCi0JDQotICAgICAgICBpZiAoISAoY21kICYgUENJX0NPTU1BTkRfTUFT
-VEVSKSkgewkNCi0JCXByaW50aygiUENJOiBFbmFibGluZyBidXMgbWFzdGVy
-aW5nIGZvciBkZXZpY2UgJTAyeDolMDJ4XG4iLA0KLQkJICAgICAgIFBDSV9C
-VVNfREVWKTsNCi0JCWNtZCB8PSBQQ0lfQ09NTUFORF9NQVNURVI7DQotCQlQ
-Q0lfV1JJVEVfQ09ORklHX1dPUkQoUERFViwgUENJX0NPTU1BTkQsIGNtZCk7
-DQotCX0NCi0JUENJX1JFQURfQ09ORklHX0JZVEUgKFBERVYsIFBDSV9MQVRF
-TkNZX1RJTUVSLCAmbGF0KTsNCi0JaWYgKGxhdCA8IDE2IC8qIHx8IGxhdCA9
-PSAyNTUgKi8pIHsNCi0JCXByaW50aygiUENJOiBTZXR0aW5nIGxhdGVuY3kg
-dGltZXIgb2YgZGV2aWNlICUwMng6JTAyeCBmcm9tICVpIHRvIDY0XG4iLA0K
-LQkJICAgICAgIFBDSV9CVVNfREVWLCBsYXQpOw0KLQkJUENJX1dSSVRFX0NP
-TkZJR19CWVRFKFBERVYsIFBDSV9MQVRFTkNZX1RJTUVSLCA2NCk7DQotCX0N
-Ci0JDQotfQ0KLSNlbmRpZiAvKiAhIE5FV19QQ0kgKi8NCi0NCiBzdGF0aWMg
-dm9pZCBfX2luaXQgZGMzOTBfc2V0X3BjaV9jZmcgKFBERVZERUNMKQ0KIHsN
-CiAJVVNIT1JUIGNtZDsNCkBAIC0yMDc0LDcgKzE5MzYsNiBAQA0KIAlQQ0lf
-V1JJVEVfQ09ORklHX1dPUkQgKFBERVYsIFBDSV9DT01NQU5ELCBjbWQpOw0K
-IAlQQ0lfV1JJVEVfQ09ORklHX1dPUkQgKFBERVYsIFBDSV9TVEFUVVMsIChQ
-Q0lfU1RBVFVTX1NJR19TWVNURU1fRVJST1IgfCBQQ0lfU1RBVFVTX0RFVEVD
-VEVEX1BBUklUWSkpOw0KIH0NCi0JDQogDQogaW50IF9faW5pdCBEQzM5MF9k
-ZXRlY3QgKFNjc2lfSG9zdF9UZW1wbGF0ZSAqcHNodCkNCiB7DQpAQCAtMjA4
-Miw3ICsxOTQzLDYgQEANCiAgICAgVUNIQVIgICBpcnE7DQogICAgIFVMT05H
-ICAgaW9fcG9ydDsNCiANCi0gICAgLy9kYzM5MF9wU0hUX3N0YXJ0ID0gcHNo
-dDsNCiAgICAgZGMzOTBfcEFDQl9zdGFydCA9IE5VTEw7DQogDQogICAgIGlm
-ICggUENJX1BSRVNFTlQgKQ0KQEAgLTIxMDksMTEgKzE5NjksOCBAQA0KIAlw
-cmludGsgKEtFUk5fRVJSICJEQzM5MDogTm8gUENJIEJJT1MgZm91bmQhXG4i
-KTsNCiAgICANCiAgICAgaWYgKGRjMzkwX2FkYXB0ZXJDbnQpDQotI2lmIExJ
-TlVYX1ZFUlNJT05fQ09ERSA+PSBLRVJORUxfVkVSU0lPTigyLDMsMzApDQog
-CXBzaHQtPnByb2NfbmFtZSA9ICJ0bXNjc2ltIjsNCi0jZWxzZQ0KLQlwc2h0
-LT5wcm9jX2RpciA9ICZEQzM5MF9wcm9jX3Njc2lfdG1zY3NpbTsNCi0jZW5k
-aWYNCisNCiAgICAgcHJpbnRrKEtFUk5fSU5GTyAiREMzOTA6ICVpIGFkYXB0
-ZXJzIGZvdW5kXG4iLCBkYzM5MF9hZGFwdGVyQ250KTsNCiAgICAgcmV0dXJu
-KCBkYzM5MF9hZGFwdGVyQ250ICk7DQogfQ0KQEAgLTIxNTIsNyArMjAwOSw2
-IEBADQogICBjaGFyICpwb3MgPSBidWZmZXI7DQogICBQQUNCIHBBQ0I7DQog
-ICBQRENCIHBEQ0I7DQotICBEQzM5MF9BRkxBR1M7DQogDQogICBwQUNCID0g
-ZGMzOTBfcEFDQl9zdGFydDsNCiANCkBAIC0yMTcxLDggKzIwMjcsNiBAQA0K
-ICAgU1BSSU5URigiVGVrcmFtIERDMzkwL0FNNTNDOTc0IFBDSSBTQ1NJIEhv
-c3QgQWRhcHRlciwgIik7DQogICBTUFJJTlRGKCJEcml2ZXIgVmVyc2lvbiAl
-c1xuIiwgREMzOTBfVkVSU0lPTik7DQogDQotICBEQzM5MF9MT0NLX0FDQjsN
-Ci0NCiAgIFNQUklOVEYoIlNDU0kgSG9zdCBOciAlaSwgIiwgc2hwbnQtPmhv
-c3Rfbm8pOw0KICAgU1BSSU5URigiJXMgQWRhcHRlciBOciAlaVxuIiwgZGMz
-OTBfYWRhcG5hbWUsIHBBQ0ItPkFkYXB0ZXJJbmRleCk7DQogICBTUFJJTlRG
-KCJJT1BvcnRCYXNlIDB4JTA0eCwgIiwgcEFDQi0+SU9Qb3J0QmFzZSk7DQpA
-QCAtMjI1NCw4ICsyMTA4LDYgQEANCiAgICAgU1BSSU5URigiXG4iKTsNCiAj
-ZW5kaWYNCiAgIA0KLQ0KLSAgREMzOTBfVU5MT0NLX0FDQjsNCiAgICpzdGFy
-dCA9IGJ1ZmZlciArIG9mZnNldDsNCiANCiAgIGlmIChwb3MgLSBidWZmZXIg
-PCBvZmZzZXQpDQpAQCAtMjMxOCwxMSArMjE3MCwxMCBAQA0KIA0KIGludCBE
-QzM5MF9yZWxlYXNlIChzdHJ1Y3QgU2NzaV9Ib3N0ICpob3N0KQ0KIHsNCi0g
-ICAgREMzOTBfQUZMQUdTIERDMzkwX0lGTEFHUzsNCisgICAgREMzOTBfSUZM
-QUdTOw0KICAgICBQQUNCIHBBQ0IgPSAoUEFDQikoaG9zdC0+aG9zdGRhdGEp
-Ow0KIA0KICAgICBEQzM5MF9MT0NLX0lPKGhvc3QpOw0KLSAgICBEQzM5MF9M
-T0NLX0FDQjsNCiANCiAgICAgLyogVE8gRE86IFdlIHNob3VsZCBjaGVjayBm
-b3Igb3V0c3RhbmRpbmcgY29tbWFuZHMgZmlyc3QuICovDQogICAgIGRjMzkw
-X3NodXRkb3duIChob3N0KTsNCkBAIC0yMzM1LDcgKzIxODYsNiBAQA0KIA0K
-ICAgICByZWxlYXNlX3JlZ2lvbihob3N0LT5pb19wb3J0LGhvc3QtPm5faW9f
-cG9ydCk7DQogICAgIGRjMzkwX2ZyZWVEQ0JzIChob3N0KTsNCi0gICAgREMz
-OTBfVU5MT0NLX0FDQjsNCiAgICAgREMzOTBfVU5MT0NLX0lPKGhvc3QpOw0K
-ICAgICBzY3NpX3VucmVnaXN0ZXIoaG9zdCk7DQogICAgIHJldHVybiggMSAp
-Ow0K
----1463811839-1464582574-1085088480=:1990--
