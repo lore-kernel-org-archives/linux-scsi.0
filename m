@@ -1,109 +1,80 @@
-From: David Brownell <david-b@pacbell.net>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: usb-strage not working in the latest kernel 2.4
-Date: Mon, 08 Sep 2003 09:04:43 -0700
+Date: Mon, 8 Sep 2003 15:42:29 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F5CA89B.8060003@pacbell.net>
-References: <200309070128.KAA28169@toshiba.co.jp>
+Message-ID: <Pine.LNX.4.44L0.0309081523200.665-100000@ida.rowland.org>
+References: <3F5CA89B.8060003@pacbell.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mta4.rcsntx.swbell.net ([151.164.30.28]:30627 "EHLO
-	mta4.rcsntx.swbell.net") by vger.kernel.org with ESMTP
-	id S262573AbTIHP7V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Sep 2003 11:59:21 -0400
-In-Reply-To: <200309070128.KAA28169@toshiba.co.jp>
+Received: from ida.rowland.org ([192.131.102.52]:3076 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S263525AbTIHTmf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Sep 2003 15:42:35 -0400
+In-Reply-To: <3F5CA89B.8060003@pacbell.net>
 List-Id: linux-scsi@vger.kernel.org
-To: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
-Cc: Alan Stern <stern@rowland.harvard.edu>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, "Tomita, Haruo" <htomita@pcs.pc.ome.toshiba.co.jp>
+To: David Brownell <david-b@pacbell.net>
+Cc: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, "Tomita, Haruo" <htomita@pcs.pc.ome.toshiba.co.jp>
 
-Tomita, Haruo wrote:
-> It is because it is hard to generate an error in testing
-> two simultaneously. When testing simultaneously,
-> much time is required by the time it generates an error.
+On Mon, 8 Sep 2003, David Brownell wrote:
 
-This is basically a good thing:  the root causes are
-getting fixed one by one, so it needs more time before
-one of the remaining problems appears.
-
-Of course, that means it's harder to find/fix whatever
-problem you're hitting ... :(
-
-
-
-> The reason is not known.
+> > It seems that a device does not answer in the case of kernel 2.4.
+> > However, when operating by kernel 2.6 and two or more devices
+> > are connected simultaneously, it operates. 
+> > I cannot think the error of a device.
 > 
-> Haruo> 1. Bulk command transfer result=-104
+> I'd almost agree, except that the device stops responding;
+> and seems to stop responding to anything except (cases I've
+> seen) that it'll accept more OUT packets ... maybe treating
+> them as data to write to the disk (one hypothesis).
 > 
-> [skip]
-> 
-> Alan> This was the same sort of pattern we saw before.  No data was 
-> Alan> transferred from the drive, and the command timed out
-> > and was aborted.
-> 
-> I am also looking at this pattern repeatedly.
+> When a device stops responding, it's hard to think the
+> problem is anything other than with the device.  (Though
+> I still don't see where the storage class-specific reset
+> gets sent by usb-storage, maybe that'd clean up better.)
 
-Some sort of USB-level trace would be very useful here,
-such as from a CATC capture.
+The reset was sent three times.  Twice in response to command aborts and
+once at the express request of the SCSI layer.  You can see it in the
+logs:
 
+usb-storage: *** thread awakened.
+usb-storage: Command READ_10 (10 bytes)
+usb-storage: 28 00 00 01 ce 22 00 00 3f 00 00 00
+usb-storage: Bulk command S 0x43425355 T 0x93534f Trg 0 LUN 0 L 129024 F 128 CL 12
+usb-storage: command_abort() called
+usb-storage: Bulk command transfer result=-104
+usb-storage: -- transport indicates command was aborted
 
-> It seems that a device does not answer in the case of kernel 2.4.
-> However, when operating by kernel 2.6 and two or more devices
-> are connected simultaneously, it operates. 
-> I cannot think the error of a device.
+Here's one:
+usb-storage: Bulk reset requested
+usb_control/bulk_msg: timeout
+usb-storage: Bulk soft reset failed -110
+usb-storage: scsi command aborted
+usb-storage: *** thread sleeping.
+usb-storage: queuecommand() called
+usb-storage: *** thread awakened.
+usb-storage: Command TEST_UNIT_READY (6 bytes)
+usb-storage: 00 00 00 00 00 00 00 00 3f 00 00 00
+usb-storage: Bulk command S 0x43425355 T 0x935350 Trg 0 LUN 0 L 0 F 0 CL 12
+usb-storage: Bulk command transfer result=0
+usb-storage: Attempting to get CSW...
+usb-storage: command_abort() called
+usb-storage: -- transport indicates command was aborted
 
-I'd almost agree, except that the device stops responding;
-and seems to stop responding to anything except (cases I've
-seen) that it'll accept more OUT packets ... maybe treating
-them as data to write to the disk (one hypothesis).
+Here's another:
+usb-storage: Bulk reset requested
+usb_control/bulk_msg: timeout
+usb-storage: Bulk soft reset failed -110
+usb-storage: scsi command aborted
+usb-storage: *** thread sleeping.
 
-When a device stops responding, it's hard to think the
-problem is anything other than with the device.  (Though
-I still don't see where the storage class-specific reset
-gets sent by usb-storage, maybe that'd clean up better.)
+Here's the third:
+usb-storage: device_reset() called
+usb-storage: Bulk reset requested
+usb_control/bulk_msg: timeout
+usb-storage: Bulk soft reset failed -110
 
+Those "Bulk reset requested" messages refer to the class-specific device 
+reset command, not a clear-halt for a bulk pipe.
 
-What's curious is that "two or more devices connected"
-behavior.  Are they both doing I/O at the same time?
-Having a second active device would change a few things:
-
-  - The EHCI controller will switch between endpoints,
-    doing some transfers from one device then the next.
-
-    A second active device means longer gaps between
-    packets going to the device ... so if one of those
-    devices can't handle continuous streaming of high
-    speed packets, it may lock up except when that
-    second device increases those gaps.
-
-    Yes, we DO seem to have started seeing such storage
-    adapters.  Ones from GeneSys appear to have that
-    problem with fast EHCI controllers, like the one in
-    NForce2 (which can issue two or more back-to-back
-    transfers using the "park" mechanism).
-
-  - Since usb-storage on 2.4 doesn't stream usb-storage
-    transfers (64 writes of one page, vs one big write
-    of 64 pages), the EHCI controller spends lots of
-    time unlinking bulk endpoints (QHs) from its i/o
-    queue and linking them right back again.
-
-    The VIA chips have been very sensitive, even buggy,
-    in how they handle this logic.  I've been unable to
-    convince myself the current EHCI driver has a bug in
-    this area -- though maybe it's possible someone else
-    would have better luck finding one.
-
-    If this is a factor, then you should be able to
-    change the behavior by increasing EHCI_SHRINK_JIFFIES
-    (top of ehci-hcd.c), maybe to HZ/100 or so.  I know
-    that increasing that from zero was a big win in some
-    VT6202 (stability) and VT8235 (performance on 2.4)
-    testing, but the other EHCI silicon didn't much care.
-
-That's about all the insight I have to share on this
-at the moment.
-
-- Dave
-
+Alan Stern
 
