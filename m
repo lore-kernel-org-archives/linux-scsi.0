@@ -1,119 +1,91 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: [BK PATCH] SCSI updates for 2.6.6
-Date: Mon, 17 May 2004 21:52:42 +0200
+From: 'Christoph Hellwig' <hch@infradead.org>
+Subject: Re: [(re)Announce] Emulex LightPulse Device Driver
+Date: Tue, 18 May 2004 10:58:35 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040517195241.GA4747@tpkurt.garloff.de>
-References: <1084229974.1763.512.camel@mulgrave> <20040511123441.GL4828@tpkurt.garloff.de> <1084282961.1886.8.camel@mulgrave>
+Message-ID: <20040518105835.A8461@infradead.org>
+References: <3356669BBE90C448AD4645C843E2BF28034F9368@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="YZ5djTAD1cGYuMQK"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:52944 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S263089AbUEQXG0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 May 2004 19:06:26 -0400
-Content-Disposition: inline
-In-Reply-To: <1084282961.1886.8.camel@mulgrave>
-List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
-
-
---YZ5djTAD1cGYuMQK
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from phoenix.infradead.org ([213.86.99.234]:46092 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S262438AbUERJ6i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 May 2004 05:58:38 -0400
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <3356669BBE90C448AD4645C843E2BF28034F9368@xbl.ma.emulex.com>; from James.Smart@Emulex.Com on Mon, May 17, 2004 at 05:25:26PM -0400
+List-Id: linux-scsi@vger.kernel.org
+To: "Smart, James" <James.Smart@Emulex.Com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi James,
+On Mon, May 17, 2004 at 05:25:26PM -0400, Smart, James wrote:
+> We could embed the timer into the associated object. This is mainly an
+> approach issue - it was just a simplistic choice to track the timers via the
+> hba object. Given the amount of code churn changing this would incur, I'm
+> inclined to ask why, other than for style and approach, must this be
+> changed?
 
-sorry for the late response.
+Because it makes the code extremly hard to read and performing worse by
+all the allocations/dealloctions.  In addition you have a nice use after
+free opportunity because you use del_timer (instead of del_timer_sync)
+before freeing it.  And when you have to look through all callers to check
+whether they're allowed to sleep you could just fix it.
 
-On Tue, May 11, 2004 at 08:42:41AM -0500, James Bottomley wrote:
-> On Tue, 2004-05-11 at 07:34, Kurt Garloff wrote:
-> > Should I resubmit the other SCSI scanning/blacklist patches or are they
-> > queued? Or rejected?
->=20
-> I thought' I'd put in all the necessary ones, what's missing?
+> > You have a structure type lpfcDRVR_t but just a single global instance
+> > of it.  Aka the data structure is just obsfucation and each 
+> > member should
+> > be a driver-wide variable of it's own.
+> 
+> Ok - so I can see just killing the structure and making it's elements
+> globals. But, is this all you are asking ?
 
-(0) scsi-log-unlikely
-    Add unlikely to SCSI_CHECK_LOGGING() macro
-(1) scsi-scan-deprecate-forcelun
-    Mark BLIST_FORCELUN as deprecated; it should not be used.
-    Don't discourage CONFIG_SCSI_MULTI_LUN so strongly.
-    (Actually I believe it should always be switched on and=20
-     people with completely broken hardware should get it=20
-     blacklisted rather than "black"listing perfectly working
-     devices. max_luns=3D1 can still be used to override it, but,
-     for some reason there was no agreement about this on LSML,
-     so I agreed on merging the patch as is ...)
-(2) scsi-scan-blist_replun
-    Introduce blacklist flags BLIST_NOREPORTLUN and BLIST_REPORTLUN2,
-    so the use of REPORT_LUNS can turned off by passing dev_flags
-    for a device or by default_dev_flags globally. The other flag
-    allows to explicitly ask the kernel to try REPORT_LUNS on SCSI-2
-    devices as well (normally it only uses it for SCSI-3 devices)
-    if the host adapter does support more than 8 LUNs. This is=20
-    mostly for RAIDs that are connected via FC (which supports more=20
-    than 8 LUNs unlike SPI) that report as SCSI-2, so this flag can
-    often be turned on. Just look at all the devices with=20
-    BLIST_SPARSELUN | BLIST_LARGELUN. Could all be nuked on the long
-    term ...
-    The CONFIG_SCSI_REPORT_LUNS option is killed by this patch.
-(3) scsi-scan-no-offl-pq-notcon
-    Don't set devices to offline if the Periph Qual is non-zero.
-    Instead don't connect to them from highlevel drivers except
-    for sg.
-(4) scsi-scan-inq-timeout
-    Make the inquiry timeout configurable by boot/module parameter;
-    there are some sick devices out there who need >20s to recover
-    from a bus reset; we obviously don't want to bump the default
-    to 25s because of that sickness.
+Yes.
 
+> The elements are just a linked
+> list of the per-hba structures. You aren't recommending that we make arrays
+> of the per-hba structures are you ? 
 
-Only patch 3 can be found in 2.6.6.
+No arrays please.  In fact the per-hba item lists should go away completely
+later on aswell, except for things like memory pools a driver shouldn't have
+global state.
 
+> > It's really awkward to follow.  See qla1280.c to see how to 
+> > use 2.6-style
+> > probe/release calls in a 2.4ish enviroment.  Been there, done that.
+> 
+> Ok - so why is this a significant issue ?
 
-Patch 0 should be a no-brainer.
-It allows vendors to enable CONFIG_SCSI_LOGGING
-without incurring possibly mispredicted branches.
+It's not really significant for probe, it just makes the code a lot easier
+to follow and it's how all proper modern drivers are written.  Remember that
+with submitting a driver on mainline you place a burden on us folks doing
+work on the subsystem as we now have to fix up all drivers for global
+changes.
 
-Patch 1 should go in; so we announce that the insanity of blacklisting
-perfectly fine SCSI devices will stop at some point in the future (2.7.)
+> > Dito.  Note that this one is especially awkward because of 
+> > the brainded
+> > pass index instead of object calling convention.
+> 
+> It is a little awkward, with the only difference whether the base structure
+> is found in the lpfc_pci_release routine or not. Still doesn't seem a
+> significant issue.
 
-Patch 2 should go in; a config option is only useful for people
-compiling their own kernels, i.e. developers. Thus there should be the
-possibility to influence the use of REPORT_LUNS at boot or runtime.=20
-Meanwhile the conflicting BLIST_MS_192_BYTES_FOR_3F has been defined,=20
-which is less than optimal. The patch would need to be rediffed and=20
-non-conflicting constants be used.
+The indexing issue is really significant because a proper scsi driver
+should have index->object lookups anywhere (see above statement about
+lack of global state)
 
-Patch 4 should go in; it allows users to work around sick SCSI devices
-without needing to create crazy defaults.
+> > Still doesn't say why they can't be global.  You'd need to uncomment
+> > mempool_resize in mm/mempool.c for that, though.
+> 
+> Also doesn't say they need to be global. Again - what's the significant
+> issue ? Seems to be just a style - whether things are done on a per-instance
+> basis or on a global basis. As the size requirements for this pool is based
+> on the number of instances - per-hba pools scales with far less effort when
+> more adapters are present. Growing/shrinking the pool each time an instance
+> attaches/detaches actually makes the global pool implementation more
+> complex. Coding for a global vs per-hba pool is roughly identical - the only
+> difference being whether the data structure is anchored globally or in the
+> per-hba structure.  And if you've already got per-hba pool code (the pre-dma
+> mapped pools), making the pool global seems to just add code.
 
+It's wasting a mempool object per hba.  But this issue isn't really important,
+so if you want leave it as-is.
 
-All of these patches live in the SUSE Enterprise kernel and were
-introduced because there was a need for them when supporting customers.
-
-All patches have been discussed extensively on LSML and were changed
-until opposition vanished.
-
-If wanted, I can rediff and resubmit.
-
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-SUSE LINUX AG, Nuernberg, DE                        Director SUSE Labs
-
---YZ5djTAD1cGYuMQK
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFAqRgJxmLh6hyYd04RAlNBAKCus7Ltr49TLbAiwmktNXyFoYDxxQCeN35m
-pEwyvsZmEam2H2lFqPMioZA=
-=Msym
------END PGP SIGNATURE-----
-
---YZ5djTAD1cGYuMQK--
