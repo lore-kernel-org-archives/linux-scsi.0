@@ -1,59 +1,40 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: PATCH [17/18] qla2xxx: Bus reset handler fixes
-Date: Mon, 21 Jun 2004 23:01:03 -0700
+Subject: PATCH [18/18] qla2xxx: Update driver version
+Date: Mon, 21 Jun 2004 23:01:48 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040622060103.GA8531@linux.local.home>
+Message-ID: <20040622060148.GA8538@linux.local.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-02-qfe0.socal.rr.com ([66.75.162.134]:7562 "EHLO
-	ms-smtp-02-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S266610AbUFVF5T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Jun 2004 01:57:19 -0400
+Received: from ms-smtp-01-qfe0.socal.rr.com ([66.75.162.133]:42677 "EHLO
+	ms-smtp-01-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S266612AbUFVF6E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Jun 2004 01:58:04 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 
 ChangeSet
-  1.1853 04/06/21 15:34:37 andrew.vasquez@apc.qlogic.com +1 -0
-  Fix incorrect return-code check in bus-reset error handler.
+  1.1854 04/06/21 15:35:33 andrew.vasquez@apc.qlogic.com +1 -0
+  Update version number to 8.00.00b14-k.
 
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
- drivers/scsi/qla2xxx/qla_os.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_version.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff -Nru a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
---- a/drivers/scsi/qla2xxx/qla_os.c	2004-06-21 15:40:37 -07:00
-+++ b/drivers/scsi/qla2xxx/qla_os.c	2004-06-21 15:40:37 -07:00
-@@ -147,7 +147,7 @@
- static int qla2xxx_eh_device_reset(struct scsi_cmnd *);
- static int qla2xxx_eh_bus_reset(struct scsi_cmnd *);
- static int qla2xxx_eh_host_reset(struct scsi_cmnd *);
--static uint8_t qla2x00_loop_reset(scsi_qla_host_t *ha);
-+static int qla2x00_loop_reset(scsi_qla_host_t *ha);
- static int qla2x00_device_reset(scsi_qla_host_t *, fc_port_t *);
+diff -Nru a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
+--- a/drivers/scsi/qla2xxx/qla_version.h	2004-06-21 15:40:53 -07:00
++++ b/drivers/scsi/qla2xxx/qla_version.h	2004-06-21 15:40:53 -07:00
+@@ -19,9 +19,9 @@
+ /*
+  * Driver version 
+  */
+-#define QLA2XXX_VERSION      "8.00.00b12-k"
++#define QLA2XXX_VERSION      "8.00.00b14-k"
  
- static int qla2x00_proc_info(struct Scsi_Host *, char *, char **,
-@@ -1568,7 +1568,7 @@
- 	}
- 
- 	if (qla2x00_wait_for_loop_ready(ha) == QLA_SUCCESS) {
--		if (qla2x00_loop_reset(ha)) 
-+		if (qla2x00_loop_reset(ha) == QLA_SUCCESS) 
- 			rval = SUCCESS;
- 	}
- 
-@@ -1683,10 +1683,10 @@
- * Returns:
- *      0 = success
- */
--static uint8_t
-+static int
- qla2x00_loop_reset(scsi_qla_host_t *ha)
- {
--	uint8_t  status = QLA_SUCCESS;
-+	int status = QLA_SUCCESS;
- 	uint16_t t;
- 	os_tgt_t        *tq;
- 
+ #define QLA_DRIVER_MAJOR_VER	8
+ #define QLA_DRIVER_MINOR_VER	0
+ #define QLA_DRIVER_PATCH_VER	0
+-#define QLA_DRIVER_BETA_VER	12
++#define QLA_DRIVER_BETA_VER	14
