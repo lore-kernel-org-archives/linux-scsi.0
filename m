@@ -1,33 +1,56 @@
-From: Andries Brouwer <Andries.Brouwer@cwi.nl>
-Subject: Re: [usb-storage] Time to allow MODE SENSE for USB disk-type storage devices?
-Date: Mon, 8 Mar 2004 21:13:29 +0100
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [usb-storage] Time to allow MODE SENSE for USB
+	disk-typestorage de vices?
+Date: 08 Mar 2004 14:16:11 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040308201328.GA13708@apps.cwi.nl>
+Message-ID: <1078780571.18148.11.camel@patibmrh9>
 References: <Pine.LNX.4.44L0.0403081046190.1187-100000@ida.rowland.org>
+	 <1078768520.2341.54.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.cwi.nl ([192.16.191.8]:16854 "EHLO hera.cwi.nl")
-	by vger.kernel.org with ESMTP id S261184AbUCHUOa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Mar 2004 15:14:30 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0403081046190.1187-100000@ida.rowland.org>
+Received: from email-out2.iomega.com ([147.178.1.83]:14293 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S261220AbUCHVST
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Mar 2004 16:18:19 -0500
+In-Reply-To: <1078768520.2341.54.camel@patibmrh9>
 List-Id: linux-scsi@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Patrick Mansfield <patmans@us.ibm.com>, USB Storage List <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
+Cc: USB Storage List <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, Mar 08, 2004 at 11:05:38AM -0500, Alan Stern wrote:
+> > On a related note,
 
-> Maybe it's time to think about improving the situation with MODE SENSE for 
-> USB devices.  I don't know that page 0x08 is particularly crucial for USB 
-> devices, but page 0x3f (for the write-protect setting) certainly would be 
-> good to have.
+I wish I weren't hijacking your thread, but ...
 
-Just to be sure: 0x3f is not the code for some particular page,
-but for all available pages.
+> > we've run across reports from several users
+> > indicating that their USB devices die when handed a PREVENT-ALLOW
+> > MEDIUM REMOVAL command, even though they set the Removable-Medium flag
+> > in their INQUIRY data.  Could there be a device flag that would cause
+> > the sd driver to avoid these commands?
+> 
+> I hear op x1E Prevent/ Allow appears in Windows bus traces.
+> 
+> I wonder what cbw [or] sequence [of cbw's]
+> avoids killing such devices for Windows.
 
-The write-protect setting is found (if it is found) in the header,
-so it does not matter what page(s) we ask for, as long as we get
-at least one header.
+I have NOT yet learned to trace all Linux cdb's, but ...
 
-Andries
+I happen to have an Atapi bus analyser connected just now ...
+
+I see a Linux 2.6.4-rc2 host polling an Atapi RMB PDT x05 DVD/CD device
+every two seconds with two -y "00 00:00:00 00 00" Test Unit Ready and
+then one -y "1E 00:00:00 00 00" Allow.
+
+This leads me to wonder if Linux is polling RMB PDT x00 with x1E Allow?
+
+And if so, why???
+
+Also does the USB dCBWDataLength for Linux x1E Allow differ from
+Windows, since the Atapi BCL is, ugh, the zero that assumes Hn = Dn,
+rather than the xFFFF and xFFFE Atapi BCL's said to be more massively
+distributed.
+
+Pat LaVarre
+
+
