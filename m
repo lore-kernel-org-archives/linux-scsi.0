@@ -1,48 +1,52 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: [dm-devel] [multipath] SCSI device capacity mess
-Date: Thu, 28 Oct 2004 20:21:54 +0200
+From: Mark Haverkamp <markh@osdl.org>
+Subject: Re: [patch] 2.6.10-rc1: SCSI aacraid warning
+Date: Fri, 29 Oct 2004 08:13:02 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041028182154.GY32712@marowsky-bree.de>
-References: <1098833278.4914.24.camel@zezette> <20041027081713.GC32712@marowsky-bree.de> <1098903759.12464.32.camel@zezette> <1098914250.1588.1.camel@mulgrave> <20041028113728.GT32712@marowsky-bree.de> <20041028181436.GA18874@beaverton.ibm.com>
+Message-ID: <1099062782.13961.5.camel@markh1.pdx.osdl.net>
+References: <Pine.LNX.4.58.0410221431180.2101@ppc970.osdl.org>
+	 <20041029143712.GM6677@stusta.de>
+	 <1099061134.13961.2.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.in-addr.de ([212.8.193.158]:61931 "EHLO mx.in-addr.de")
-	by vger.kernel.org with ESMTP id S263359AbUJ2Omg (ORCPT
+Received: from fire.osdl.org ([65.172.181.4]:49841 "EHLO fire-1.osdl.org")
+	by vger.kernel.org with ESMTP id S263344AbUJ2PQQ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Oct 2004 10:42:36 -0400
-Content-Disposition: inline
-In-Reply-To: <20041028181436.GA18874@beaverton.ibm.com>
+	Fri, 29 Oct 2004 11:16:16 -0400
+In-Reply-To: <1099061134.13961.2.camel@markh1.pdx.osdl.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: device-mapper development <dm-devel@redhat.com>, christophe varoqui <christophe.varoqui@free.fr>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Linus Torvalds <torvalds@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 2004-10-28T11:14:36, Patrick Mansfield <patmans@us.ibm.com> wrote:
+On Fri, 2004-10-29 at 07:45 -0700, Mark Haverkamp wrote:
+> On Fri, 2004-10-29 at 16:37 +0200, Adrian Bunk wrote:
+> > On Fri, Oct 22, 2004 at 03:05:13PM -0700, Linus Torvalds wrote:
+> > >...
+> > > Summary of changes from v2.6.9 to v2.6.10-rc1
+> > > ============================================
+> > >...
+> > > Mark Haverkamp:
+> > >...
+> > >   o aacraid: dynamic dev update
+> > >...
+> > 
+> > 
+> > This causes the following warning with a recent gcc:
+> > 
+[ ... ]
+> Sorry about that, I have it fixed in my working version.  I must have
+> forgotten to add it to the patch.
 
-> > Can't we do a test-unit-ready before trying to read and then just n=
-ot
-> > read the partition table w/o so much noise?
-> We already issue a TUR in sd_spinup_disk() prior to the READ CAPACITY=
- and
-> partition reads.
 
-I'm just saying we should stop on the first failed command (TUR) and no=
-t
-retry to read all 64 sectors regardless. I can live with one error per
-passive path, but 64 really kills the logs.
+Actually looking back,  I did fix this in a recent patch that 
+I sent to James titled
+
+"[PATCH] 2.6.9 aacraid: Support ROMB RAID/SCSI mode" on October 21.
+
+Mark.
 
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
+-- 
+Mark Haverkamp <markh@osdl.org>
 
---=20
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX AG - A Novell company
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
