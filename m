@@ -1,29 +1,34 @@
-From: Eric Sproul <esproul@ntelos.net>
-Subject: non-x86 tools for GDT HA's?
-Date: Mon, 29 Mar 2004 12:47:37 -0500
+From: "Justin T. Gibbs" <Justin_Gibbs@adaptec.com>
+Subject: Re: [PATCH] 2.4.X Avoid excessive recursion when setting device offline
+Date: Mon, 29 Mar 2004 10:52:29 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1080582457.16047.2.camel@thunderbolt.oss.ntelos.net>
+Message-ID: <417630000.1080582749@aslan.btc.adaptec.com>
+References: <387680000.1080580020@aslan.btc.adaptec.com> 	<1080581208.3570.10.camel@laptop.fenrus.com> <1080582471.2142.13.camel@mulgrave>
+Reply-To: "Justin T. Gibbs" <Justin_Gibbs@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailrtr01.ntelos.net ([216.12.0.101]:65159 "EHLO
-	mailrtr01.ntelos.net") by vger.kernel.org with ESMTP
-	id S263045AbUC2Rrk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Mar 2004 12:47:40 -0500
-Received: from thunderbolt.oss.ntelos.net (thunderbolt.oss.ntelos.net [216.12.8.195])
-	by mailrtr01.ntelos.net (8.11.7/8.11.7) with ESMTP id i2THlcr06272
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Mar 2004 12:47:38 -0500
+Received: from magic.adaptec.com ([216.52.22.17]:51937 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S263067AbUC2Rwc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Mar 2004 12:52:32 -0500
+In-Reply-To: <1080582471.2142.13.camel@mulgrave>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Arjan van de Ven <arjanv@redhat.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-All,
-After getting a GDT card (Intel SRCU31) working under PA-RISC, I was
-disappointed to see that Intel only provides x86 binary management tools
-for these cards.  This renders them useless on any other platform.
+> Yes, this patch is in 2.4.25 already.  I seem to recall that's why it
+> was applied several years ago (to prevent recursion), but it's too long
+> ago for me to remember (or even bitkeeper, since it's also in scsi_lib.c
+> version 1.1).
+> 
+> Exactly which version of 2.4 is exhibiting this problem?
 
-Does anyone know of open source management tools for GDT-based adapters?
+I was looking at RHEL3.  Sorry for the noise on the lists.
+Arjan.  Please refer to bugzilla 119334.
 
-Thanks,
-Eric
+--
+Justin
 
