@@ -1,71 +1,85 @@
-From: Oliver Feiler <kiza@gmx.net>
-Subject: Re: "Reliable" faulty SCSI device for testing
-Date: Tue, 1 Jun 2004 00:04:57 +0200
+From: hodri meydan <harbiciyiz@hotmail.com>
+Subject: =?utf-7?q?YA_S=DDZ=DDN_HORTUMCULARA_NE_DEMEL=DD=3F_SAYIN_BAKAN!?=
+Date: Tue, 01 Jun 2004 06:44:35 +0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200406010005.07121.kiza@gmx.net>
-References: <200405311420.45288.kiza@gmx.net>
+Message-ID: <200406010343.i513hAao005922@zeus.kernel.org>
+Reply-To: harbiciyiz@hotmail.com
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1;
-  boundary="Boundary-02=_Sw6uA1H7qx5spg0";
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="eee1c273-c58d-4690-a278-bae38c397e15"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from maximus.kcore.de ([213.133.102.235]:10402 "EHLO
-	maximus.kcore.de") by vger.kernel.org with ESMTP id S264809AbUEaWCd
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 May 2004 18:02:33 -0400
-In-Reply-To: <200405311420.45288.kiza@gmx.net>
+Received: from zeus.kernel.org ([204.152.189.113]:47500 "EHLO zeus.kernel.org")
+	by vger.kernel.org with ESMTP id S264876AbUFADnw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 May 2004 23:43:52 -0400
+Received: from hotmail60.com ([212.175.38.94])
+	by zeus.kernel.org (8.12.11/8.11.6) with SMTP id i513hAao005922
+	for <linux-scsi@vger.kernel.org>; Mon, 31 May 2004 20:43:50 -0700
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
 
---Boundary-02=_Sw6uA1H7qx5spg0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+This is a multi-part message in MIME format
+--eee1c273-c58d-4690-a278-bae38c397e15
+Content-Type: text/plain; charset=utf-7
 Content-Transfer-Encoding: quoted-printable
-Content-Description: signed data
-Content-Disposition: inline
 
-Ok, I found someone. No more "I'd be interested" mails please. :)
-
-
-On Monday 31 May 2004 14:20, Oliver Feiler wrote:
-> Hi,
->
-> the subject might sound a bit stupid, but I couldn't come up with a better
-> one. I'm not sure if there is a need for such a thing mentioned in this
-> mail. If not, please don't flame me too hard. ;)
->
-> I have a DVD-RAM drive (Panasonic LF-D101) that has seen the end of its
-> days. The device will stop working anywhere within 15-30 mins of operation
-> and lock up until you power cycle the box. Some device drivers handle this
-> gracefully, some don't like it very much.
->
-> I don't know how error handling is tested by the developers, I know there
-> are special devices that can simulate various failures, but I guess they
-> could be quite expensive. So my question is if there is anyone who would
-> have a use for this drive? If yes I'd be willing to send it, preferably to
-> some in Germany (Europe, rest of the world).
->
-> 	Oliver
-
-=2D-=20
-Oliver Feiler  -  http://kiza.kcore.de/
-
---Boundary-02=_Sw6uA1H7qx5spg0
-Content-Type: application/pgp-signature
-Content-Description: signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (GNU/Linux)
-
-iD8DBQBAu6wSOpifZVYdT9IRAkMJAKDOhXF1IBJEBTdMk/7Dzo9VpsPTMACg+3E2
-5nF/Hyp2Uo/3L9eQvvKUKi0=
-=vELg
------END PGP SIGNATURE-----
-
---Boundary-02=_Sw6uA1H7qx5spg0--
+Merhaba.
+Bant dan yay=FDnlanan TEKE TEK' de program=FDnda Say=FDn ekonomiden sorumlu =
+bakan, Tasarruf Sigorta Fonuna devredilen bat=FDk banka sahiplerine ve bu =
+bankalar=FDn alacakl=FD oldu=F0u ki=FEilere hi=E7bir ayr=FDm yap=FDlmadan =
+devletin mal=FDn=FD hortumlayanlardan hesap sorulacakt=FDr, kimseye farkl=FD =
+ve imtiyazl=FD muamele yoktur demektedir.
+Peki, say=FDn bakan a=E7=FDklas=FDn o zaman;
+AKP genel merkezine 6 adet Clio sembol ve Fort Transit T280 arac=FD kiralad=FD=
+klar=FD VER=DD B=DDL=DD=DE=DDM
+1-Tasarruf Mevduat=FD Sigorta Fonuna devredilen bat=FDk bankalardan olan S=FC=
+merbank'a ORNAS bilgisayar olarak, bor=E7lu olan ve hakk=FDnda g=FDyabi =
+tutuklama karar=FD olan Azmi ORKUN' nun hala haz=FDrda annesi, karde=FEi ve =
+eni=FEtelerinin =FCzerine kay=FDtl=FD olup, kira s=F6zle=FEmesinin yap=FD=
+lmas=FDndan sadece 10 g=FCn =F6nce Veri bili=FEim =FEirketinin =FEirket i=FE=
+tigal alan=FDna eklenmi=FE ve o g=FCne kadar hi=E7bir =FEekilde kiralama i=FE=
+i yapmam=FD=FE bu ki=FEilere parti kanal=FDyla ara=E7 kiralamas=FD 3 y=FDll=FD=
+k yap=FDlmam=FD=FE m=FDd=FDr.
+2- Hala haz=FDrda =C7etin Eme=E7 Bulvar=FD 2.cad. No.12/8 adresinde, s=F6z=FC=
+m ona aranan Azmi Orkun,   Devlete olan bor=E7lar=FDn=FD ka=E7=FDrmak i=E7in =
+9 ay =F6nceye kadar yeni =FEafak gazetesinin de Ankara Temsilcili=F0inin =
+bulundu=F0u binay=FD Albayraklara yada yak=FDnlar=FDna devretmemi=FE midir?
+3.AKP nin bu veri bili=FEim le yapt=FD=F0=FD ara=E7 kiralama i=FEi s=F6zle=FE=
+mesinde, imzas=FD bulunan, partiye s=F6z=FCm ona teklif veren ABDULLAH G=DC=
+ND=DCZ, (me=FEhur M=FCsl=FCm G=FCnd=FCz=FCn =F6z ye=F0eni,) hangi vas=FDfla =
+veri bili=FEim ad=FDna, AKP'yle bu s=F6zle=FEmeyi imzalam=FD=FEt=FDr.
+Bu s=F6zle=FEmeler hangi bankalara verilip =F6z sermayesi olmayan, 2 arac=FDn =
+finans bank(yada Pamukbank) 2 arac=FDn =FEeker bank,2 arac=FDnda i=FE =
+bankas=FDndan kimlerin kefaletiyle ve yedi eminli=F0iyle al=FDn=FDp Ankara =
+Neziro=F0lu otomobile kimlerin kredi =E7ekerek =F6dedi=F0i, bu kadar aczi yet =
+i=E7inde olan bu =FEirkete bu i=FElerin neden ve kimler kollanarak yap=FDld=FD=
+=F0=FDn=FD sormak gerekir 
+4-AKP i=E7inde Say=FDn Erdo=F0an'a ba=F0l=FD medya Tan=FDt=FDmda =E7al=FD=FE=
+an =DDbrahim Bayram kanal=FDyla, parti i=E7ine sokulan Abdullah G=FCnd=FCz'=FC=
+ Egemen Ba=F0=FD=FE ba=FEta olmak =FCzere, her kap=FDy=FD a=E7mak i=E7in, =
+yukarda bahsedilen ve i=FEi Bilgisayar sat=FD=FE=FD olan VER=DD B=DDL=DD=DE=DD=
+M, sonradan VER=DD RENT A CAR, VER=DD MOB=DDLYA DEKORASYON, gibi, Serkan =
+Akg=FCn, =D6zg=FCr Bakar, Abdullah G=FCnd=FCz, L=FCtfi G=FCnd=FCz gibi 1 =
+seneye kadar =F6nce a=E7l=FDktan nefesleri kokan bu =FEah=FDslar, devlete =
+borcundan dolay=FD yaz=FDhane de delikten bakmadan kap=FD a=E7amayan bu ki=FE=
+iler acaba bug=FCn AKP taraf=FDndan ni=E7in korunup, =E7e=FEitli i=FElerle =
+ba=F0lant=FD kurdurularak sizce devlet bir =FEekilde hortumlat=FDlm=FDyor mu? =
+Bu ki=FEilerin ba=FEta uyu=FEturucuyla ve ge=E7mi=FElerindeki karanl=FDk i=FE=
+lere bak=FDlmadan devlet b=FCy=FCklerinin bu kadar yak=FDnlar=FDnda cirit =
+atmas=FD acaba sizden olduklar=FD i=E7in midir?
+5-23 EV 698 plakal=FD Ba=FEbakanl=FDk =D6zel Arac=FDd=FDr Kart=FD bulunan =
+ara=E7 kime ni=E7in, ne ama=E7la =E7=FDkart=FDlarak verilmi=FEtir.
+Say=FDn Bakan, sizin hortumcunuz, sizin adamlar=FDn=FDz=FDn i=FEbitiricili=F0=
+i konu oldu mu?
+Bakal=FDm ne diyecek siniz. =C7=FCnk=FC bu =FEah=FDslar=FD ve yapt=FDklar=FD =
+i=FEleri gene Tan=FDt=FDm ve Medyadan sorumlu Say=FDn Murat Mercan beye tam 1 =
+seneye yak=FDn bir zaman =F6nce t=FCm yapt=FDklar=FDn=FD ve ne =FEekilde bir =
+=E7eteyle parti i=E7ine s=FDzd=FDklar=FDn=FD bildirdim, ama sizin olan=FD =
+size bildirmi=FEim me=F0er.
+NOT: Bu bilgilerin yani partiyle yap=FDlm=FD=FE alt=FDnda Abdullah G=FCnd=FCz =
+imzal=FD 3 y=FDll=FDk ara=E7 kira s=F6zle=FEmesi, 23 EV 698 plakal=FD araca =
+=E7=FDkart=FDlm=FD=FE Ba=FEbakanl=FDk =D6zel Arac=FDd=FDr kart=FD ve bunlar=FD=
+n t=FCm pis i=FElerine ait bilgi elimde mevcut olup Mail adresime d=F6n=FC=
+ld=FC=F0=FCnde ilgililere fakslanabilir.   
+--eee1c273-c58d-4690-a278-bae38c397e15--
 
