@@ -1,49 +1,101 @@
 From: Patrick Mochel <mochel@osdl.org>
 Subject: Re: [PATCH] declare and export scsi_bus_type
-Date: Thu, 12 Dec 2002 10:00:03 -0600 (CST)
+Date: Thu, 12 Dec 2002 10:16:40 -0600 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0212120951150.976-100000@localhost.localdomain>
-References: <20021212091203.A21539@infradead.org>
+Message-ID: <Pine.LNX.4.33.0212121006520.976-100000@localhost.localdomain>
+References: <200212121358.gBCDw2b01977@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20021212091203.A21539@infradead.org>
+In-Reply-To: <200212121358.gBCDw2b01977@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Matt Domsch <Matt_Domsch@Dell.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Matt Domsch <Matt_Domsch@Dell.com>, linux-scsi@vger.kernel.org
 
 
-> On Wed, Dec 11, 2002 at 07:46:22PM -0600, Matt Domsch wrote:
-> > Below please find a patch, written by Pat Mochel, to declare and export
-> > scsi_bus_type.  My EDD code requires this to be exported in order to walk
-> > the list of SCSI devices to match what BIOS discovered.
+Didn't see this before I replied.. 
+
+On Thu, 12 Dec 2002, James Bottomley wrote:
+
+> hch@infradead.org said:
+> > I'm very unhappy with exporting random parts of the scsi midlayer.  In
+> > what way do you need it?  How does your code work with modular scsi? 
 > 
-> I'm very unhappy with exporting random parts of the scsi midlayer.  In
-> what way do you need it?  How does your code work with modular scsi?
+> Convention tends to be that these bus types are exported.  That's certainly 
+> true for pci and mca.
+> 
+> However, perhaps we should have a better way of finding them than by direct 
+> export of the symbol.  Since each bus is required to have a unique name, and 
+> the sysfs system has an internal list of bus_types, we could have a function 
+> which takes the name and returns a pointer to the bus_type if it exists?
 
-It's a not a random piece. It's a symbolic representation of the scsi bus 
-type. It is designed to be exported for modular and optional components to 
-use. 
+Yes, the following patch should work. There are two caveats, AFAICT
 
-EDD is a perfect example of this. It parses the firmware and obtains data
-about the installed hard disks. It needs to associate the physical
-hardware with the firmware data. So, it iterates over the SCSI (and soon 
-IDE, I believe) drives, searching for a match. It uses scsi_bus_type 
-because it uses the helper
+- Making sure that we have a consistent name. This could resolved by adding 
+  something like
 
-int bus_for_each_dev(struct bus_type * bus, struct device * start, void * data,
-                     int (*fn)(struct device *, void *));
+  #define SCSI_BUS_NAME "scsi"
 
-Exporting the bus type keeps EDD at a good level of abstraction: it is 
-ia32-specific, so it can remain in arch/i386/ in a single source file, and 
-out of drivers/scsi/ and drivers/ide/. Instead of splitting the 
-functionality between those three places. 
+  to include/scsi.h/scsi.h..
 
-The bus type is accessible anyway, via the driver mdoel core. A piece of
-code can iterate over the registered bus types and find the one named
-'scsi', so it's by no means inaccessible. On the other hand, I can export
-a call 'find_bus()' to search the bus-space for a bus with a certain name, 
-but that is much less efficient that dereferencing an explicit pointer. 
+- Accessing a bus type is O(n) rather that O(1). OTOH, it's not peformance 
+  critical code, and there can't be very many bus types registered at once, 
+  so it shouldn't be noticable. 
+
 
 	-pat
+
+===== drivers/base/bus.c 1.27 vs edited =====
+--- 1.27/drivers/base/bus.c	Thu Dec  5 22:33:28 2002
++++ edited/drivers/base/bus.c	Thu Dec 12 10:09:32 2002
+@@ -466,6 +466,29 @@
+ 	}
+ }
+ 
++
++/**
++ *	find_bus - search for a bus type by name.
++ *	@name:	name of the bus.
++ */
++
++struct bus_type * find_bus(const char * name)
++{
++	struct list_head * entry;
++	struct bus_type * ret = NULL;
++
++	down_read(&bus_subsys.rwsem);
++	list_for_each(entry,&bus_subsys.list) {
++		struct bus_type * b = list_entry(entry,struct bus_type,subsys.kobj.entry);
++		if (!strncmp(b->subsys.kobj.name,name,KOBJ_NAME_LEN)) {
++			ret = b;
++			break;
++		}
++	}
++	up_read(&bus_subsys.rwsem);
++	return ret;
++}
++
+ struct bus_type * get_bus(struct bus_type * bus)
+ {
+ 	return bus ? container_of(subsys_get(&bus->subsys),struct bus_type,subsys) : NULL;
+@@ -537,6 +560,7 @@
+ EXPORT_SYMBOL(bus_remove_device);
+ EXPORT_SYMBOL(bus_register);
+ EXPORT_SYMBOL(bus_unregister);
++EXPORT_SYMBOL(find_bus);
+ EXPORT_SYMBOL(get_bus);
+ EXPORT_SYMBOL(put_bus);
+ 
+===== include/linux/device.h 1.68 vs edited =====
+--- 1.68/include/linux/device.h	Tue Dec  3 12:40:21 2002
++++ edited/include/linux/device.h	Thu Dec 12 10:09:23 2002
+@@ -81,6 +81,8 @@
+ extern int bus_register(struct bus_type * bus);
+ extern void bus_unregister(struct bus_type * bus);
+ 
++extern struct bus_type * find_bus(const char * name);
++
+ extern struct bus_type * get_bus(struct bus_type * bus);
+ extern void put_bus(struct bus_type * bus);
+ 
 
