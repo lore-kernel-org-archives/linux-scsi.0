@@ -1,18 +1,26 @@
 From: Tobias Klauser <tklauser@nuerscht.ch>
-Subject: [PATCH 06/19] drivers/scsi/aic7xxx/aic7xxx_osm: Use the DMA_{64,32}BIT_MASK constants
-Date: Sun, 20 Feb 2005 18:00:35 +0100
-Message-ID: <20050220170035.GG14375@helium.tklauser.home>
+Subject: [KJ] [PATCH 07/19] drivers/scsi/atp870u: Use the DMA_{64,
+	32}BIT_MASK constants
+Date: Sun, 20 Feb 2005 18:01:37 +0100
+Message-ID: <20050220170137.GH14375@helium.tklauser.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from server3.hostpoint.ch ([217.26.52.13]:28423 "EHLO
-	server3.hostpoint.ch") by vger.kernel.org with ESMTP
-	id S261877AbVBTQ7t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Feb 2005 11:59:49 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: multipart/mixed; boundary="===============52433070444343077=="
+List-Unsubscribe: <http://lists.osdl.org/mailman/listinfo/kernel-janitors>,
+	<mailto:kernel-janitors-request@lists.osdl.org?subject=unsubscribe>
+List-Archive: <http://lists.osdl.org/pipermail/kernel-janitors>
+List-Post: <mailto:kernel-janitors@lists.osdl.org>
+List-Help: <mailto:kernel-janitors-request@lists.osdl.org?subject=help>
+List-Subscribe: <http://lists.osdl.org/mailman/listinfo/kernel-janitors>,
+	<mailto:kernel-janitors-request@lists.osdl.org?subject=subscribe>
+Sender: kernel-janitors-bounces@lists.osdl.org
+Errors-To: kernel-janitors-bounces@lists.osdl.org
 To: kernel-janitors@lists.osdl.org
 Cc: linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+
+--===============52433070444343077==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
 Hello,
 
@@ -22,14 +30,27 @@ See http://marc.theaimsgroup.com/?t=108001993000001&r=1&w=2 for details
 
 Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
 
---- linux-2.6.11-rc4.orig/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-02-13 17:13:06.000000000 +0100
-+++ linux-2.6.11-rc4/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-02-16 21:07:01.000000000 +0100
-@@ -1361,7 +1361,7 @@ ahc_dmamem_alloc(struct ahc_softc *ahc, 
- 	 * our dma mask when doing allocations.
- 	 */
- 	if (ahc->dev_softc != NULL)
--		if (pci_set_dma_mask(ahc->dev_softc, 0xFFFFFFFF)) {
-+		if (pci_set_dma_mask(ahc->dev_softc, DMA_32BIT_MASK)) {
- 			printk(KERN_WARNING "aic7xxx: No suitable DMA available.\n");
- 			kfree(map);
- 			return (ENODEV);
+--- linux-2.6.11-rc4.orig/drivers/scsi/atp870u.c	2005-02-13 17:13:07.000000000 +0100
++++ linux-2.6.11-rc4/drivers/scsi/atp870u.c	2005-02-16 21:29:57.000000000 +0100
+@@ -2287,7 +2287,7 @@ static int atp870u_probe(struct pci_dev 
+ 	if (pci_enable_device(dev))
+ 		return -EIO;
+ 
+-	if (pci_set_dma_mask(dev, 0xFFFFFFFFUL)) {
++	if (pci_set_dma_mask(dev, DMA_32BIT_MASK)) {
+ 		printk(KERN_ERR "atp870u: 32bit DMA mask required but not available.\n");
+ 		return -EIO;
+ 	}
+
+--===============52433070444343077==
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+
+_______________________________________________
+Kernel-janitors mailing list
+Kernel-janitors@lists.osdl.org
+http://lists.osdl.org/mailman/listinfo/kernel-janitors
+
+--===============52433070444343077==--
