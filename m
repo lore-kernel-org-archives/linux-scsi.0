@@ -1,662 +1,79 @@
-From: Sancho Dauskardt <sancho@dauskardt.de>
-Subject: Re: Multiple CDRW's on one bus blocking each other
-Date: Thu, 02 May 2002 23:17:15 +0200
+From: Joerg Wendland <wendland@scan-plus.de>
+Subject: mysterious qlogicfc effects
+Date: Fri, 3 May 2002 00:01:53 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <5.0.2.1.2.20020502221132.03224090@pop.puretec.de>
-References: <5.0.2.1.2.20020502145414.0354c230@pop.puretec.de>
- <5.0.2.1.2.20020502145414.0354c230@pop.puretec.de>
+Message-ID: <20020502220153.GA13889@morpheus.ulm.scan-plus.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="HlL+5n6rz5pIUxbD"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020502092726.A14365@eng2.beaverton.ibm.com>
+Received: from joerg by morpheus.ulm.scan-plus.de with local (Exim 3.35 #1 (Debian))
+	id 173Oe9-000468-00
+	for <linux-scsi@vger.kernel.org>; Fri, 03 May 2002 00:01:53 +0200
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
-
-At 09:27 02.05.02 -0700, Patrick Mansfield wrote:
->Have you tried using scsi logging? That might give a better idea of what
->is happening in linux scsi layers.
-
-Great idea, thanks. Luckly my disks were on a ide bus, so no logging problems.
+To: linux-scsi@vger.kernel.org
 
 
-In the mean time I've tried following different scenarios:
-a) 3 CDRW on a NCR53c800 --> exactly the same as the adaptec (tray opens 
-are independant, tray closes are 'serialized')
-b) 2 CDROM's on ONE IDE bus via ide-scsi --> tray opens AND closes are 
-serialized !
+--HlL+5n6rz5pIUxbD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I'll stick with the IDE setup for now.
+Hi SCSI folks,
+I have got an qlogic QLA2200 controller attached to a FC-net. I am trying
+to use an attached RAID but the qlogicfc (stock 2.4.18) driver only recogni=
+zes=20
+it when I build it as a module, load it, unload it and load it for a second=
+=20
+time. When I load it once or when I compile it into the kernel, I get only a
 
-Following different software approaches tried:
-- 'eject & eject -t'
-- ioctl CDROMEJECT & ioctl CDROMCLOSETRAY on /dev/srX
-- ioctl CDROM_SEND_PACKET with GPCMD_START_STOP_UNIT, as sr_ioctl.c / 
-sr_tray_move does.
-   As one would guess, all behave the same.
+> qlogicfc0: link is not up
 
+and about 50 lines saying:
 
+> resize_dma_pool: unknown device type 31
+(that my come from some 'unknown' scsi devices with type 0x1f on the fc-net)
 
-Now if i'm reading the logs correctly, it not the START STOP UNIT (0x1b) 
-command that's causing the problems, but more the PREVENT ALLOW MEDIUM 
-REMOVAL command...
+and I have no chance accessing the RAID. First I though that could be a
+timeout problem, so I backported the patch from alan@lxorguk.ukuu.org.uk
+in 2.4.19-pre5. That and playing around with the patched waiting loop didn't
+help anything. The hub (a vixel 2100) reports the port connected to the
+controller is up and in the correct loop but I cannot access the RAID.
 
-Where's this delay coming from / did the timer fire / were are we sleeping ???
-         May  2 21:23:00 ice kernel: Leaving scsi_do_req()
-                  -- here --
-         May  2 21:23:06 ice kernel: Clearing timer for command cff33400 1
+Any objections to this? I searched the list archives and google but could
+not find any answer.
 
+Any help appreciated, thanks in advance,
 
-Just a nother silly idea: could it be possible, that the problem is 
-triggered somwhere down in the VFS - i.e. that the VFA locks the bus while 
-trying to detect the new media ??
+  Joerg
 
+PS: my machine config
+dual athlon 1800MP with 2GB RAM
+qlogic qla2200
+stock kernel 2.4.18 with builtin qlogicfc driver with and without firmware
 
-btw. he '--sda-- blabla' crap was just an idea in 
-scsi_block_when_processing_errors()..
+--=20
+| Joerg Wendland (system management)    | Debian certified GNU/Linux Develo=
+per |
+| Scan-Plus GmbH                        |                fon +49-731-92013-=
+0   |
+| Moerikestrasse 5, 89077 Ulm, Germany  |                fax +49-731-92013-=
+290 |
+| PGP-key: 51CF8417 (FP: 79C0 7671 AFC7 315E 657A  F318 57A3 7FBD 51CF 8417=
+)   |
 
-- sda
+--HlL+5n6rz5pIUxbD
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-the logs: (2x tray loading on one ide bus)
---------
-May  2 21:22:59 ice kernel:  --sda-- about to block target 0/0/0 --sda--
-May  2 21:22:59 ice kernel:  --sda-- blocking target 0/0/0 done --sda--
-May  2 21:22:59 ice kernel: Open returning 1
-May  2 21:22:59 ice kernel: Trying ioctl with scsi command 0
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 0, 
-buffer =00000000, bufflen = 0, done = c01dc0c8, timeout = 1000, retries = 5)
-May  2 21:22:59 ice kernel: command : 00  00  00  00  00  00
-May  2 21:22:59 ice kernel: Activating command for device 0 (1)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 1000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = 00000000,
-May  2 21:22:59 ice kernel: bufflen = 0, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel:  --sda-- about to block target 1/0/0 --sda--
-May  2 21:22:59 ice kernel:  --sda-- blocking target 1/0/0 done --sda--
-May  2 21:22:59 ice kernel: Open returning 1
-May  2 21:22:59 ice kernel: Trying ioctl with scsi command 0
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 1, 
-buffer =00000000, bufflen = 0, done = c01dc0c8, timeout = 1000, retries = 5)
-May  2 21:22:59 ice kernel: command : 00  00  00  00  00  00
-May  2 21:22:59 ice kernel: Activating command for device 1 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 1000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = 00000000,
-May  2 21:22:59 ice kernel: bufflen = 0, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 1000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = 00000000,
-May  2 21:22:59 ice kernel: bufflen = 0, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 1000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = 00000000,
-May  2 21:22:59 ice kernel: bufflen = 0, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Deactivating command for device 1 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel: Ioctl returned  0x28000000
-May  2 21:22:59 ice kernel: IOCTL Releasing command
-May  2 21:22:59 ice kernel:  --sda-- about to block target 1/0/0 --sda--
-May  2 21:22:59 ice kernel:  --sda-- blocking target 1/0/0 done --sda--
-May  2 21:22:59 ice kernel: Open returning 1
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 1, 
-buffer =c0356000, bufflen = 12, done = c01dc0c8, timeout = 3000, retries = 3)
-May  2 21:22:59 ice kernel: command : 43  00  00  00  00  00  00  00  0c  40
-May  2 21:22:59 ice kernel: Activating command for device 1 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = c0356000,
-May  2 21:22:59 ice kernel: bufflen = 12, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Deactivating command for device 0 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel: Ioctl returned  0x28000000
-May  2 21:22:59 ice kernel: IOCTL Releasing command
-May  2 21:22:59 ice kernel:  --sda-- about to block target 0/0/0 --sda--
-May  2 21:22:59 ice kernel:  --sda-- blocking target 0/0/0 done --sda--
-May  2 21:22:59 ice kernel: Open returning 1
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 0, 
-buffer =c0356200, bufflen = 12, done = c01dc0c8, timeout = 3000, retries = 3)
-May  2 21:22:59 ice kernel: command : 43  00  00  00  00  00  00  00  0c  40
-May  2 21:22:59 ice kernel: Activating command for device 0 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = c0356200,
-May  2 21:22:59 ice kernel: bufflen = 12, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = c0356000,
-May  2 21:22:59 ice kernel: bufflen = 12, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Deactivating command for device 1 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel:  --sda-- about to block target 1/0/0 --sda--
-May  2 21:22:59 ice kernel:  --sda-- blocking target 1/0/0 done --sda--
-May  2 21:22:59 ice kernel: Open returning 1
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 1, 
-buffer =cbf79e14, bufflen = 12, done = c01dc0c8, timeout = 3000, retries = 3)
-May  2 21:22:59 ice kernel: command : 43  00  00  00  00  00  00  00  0c  00
-May  2 21:22:59 ice kernel: Activating command for device 1 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = cbf79e14,
-May  2 21:22:59 ice kernel: bufflen = 12, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = c0356200,
-May  2 21:22:59 ice kernel: bufflen = 12, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Deactivating command for device 0 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel:  --sda-- about to block target 0/0/0 --sda--
-May  2 21:22:59 ice kernel:  --sda-- blocking target 0/0/0 done --sda--
-May  2 21:22:59 ice kernel: Open returning 1
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 0, 
-buffer =cbfd5e14, bufflen = 12, done = c01dc0c8, timeout = 3000, retries = 3)
-May  2 21:22:59 ice kernel: command : 43  00  00  00  00  00  00  00  0c  00
-May  2 21:22:59 ice kernel: Activating command for device 0 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = cbfd5e14,
-May  2 21:22:59 ice kernel: bufflen = 12, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = cbf79e14,
-May  2 21:22:59 ice kernel: bufflen = 12, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Deactivating command for device 1 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel: VFS: Disk change detected on device sr(11,1)
-May  2 21:22:59 ice kernel:  --sda-- about to block target 1/0/0 --sda--
-May  2 21:22:59 ice kernel:  --sda-- blocking target 1/0/0 done --sda--
-May  2 21:22:59 ice kernel: Open returning 1
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 1, 
-buffer =c0356000, bufflen = 8, done = c01dc0c8, timeout = 3000, retries = 3)
-May  2 21:22:59 ice kernel: command : 25  00  00  00  00  00  00  00  00  00
-May  2 21:22:59 ice kernel: Activating command for device 1 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = c0356000,
-May  2 21:22:59 ice kernel: bufflen = 8, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = cbfd5e14,
-May  2 21:22:59 ice kernel: bufflen = 12, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = c0356000,
-May  2 21:22:59 ice kernel: bufflen = 8, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Deactivating command for device 0 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel: VFS: Disk change detected on device sr(11,0)
-May  2 21:22:59 ice kernel:  --sda-- about to block target 0/0/0 --sda--
-May  2 21:22:59 ice kernel:  --sda-- blocking target 0/0/0 done --sda--
-May  2 21:22:59 ice kernel: Open returning 1
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 0, 
-buffer =c0356200, bufflen = 8, done = c01dc0c8, timeout = 3000, retries = 3)
-May  2 21:22:59 ice kernel: command : 25  00  00  00  00  00  00  00  00  00
-May  2 21:22:59 ice kernel: Activating command for device 0 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = c0356200,
-May  2 21:22:59 ice kernel: bufflen = 8, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Deactivating command for device 1 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 1, 
-buffer =c0356000, bufflen = 8, done = c01dc0c8, timeout = 3000, retries = 3)
-May  2 21:22:59 ice kernel: command : 25  00  00  00  00  00  00  00  00  00
-May  2 21:22:59 ice kernel: Activating command for device 1 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = c0356000,
-May  2 21:22:59 ice kernel: bufflen = 8, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = c0356200,
-May  2 21:22:59 ice kernel: bufflen = 8, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Deactivating command for device 0 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 0, 
-buffer =c0356200, bufflen = 8, done = c01dc0c8, timeout = 3000, retries = 3)
-May  2 21:22:59 ice kernel: command : 25  00  00  00  00  00  00  00  00  00
-May  2 21:22:59 ice kernel: Activating command for device 0 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = c0356200,
-May  2 21:22:59 ice kernel: bufflen = 8, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = c0356000,
-May  2 21:22:59 ice kernel: bufflen = 8, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Deactivating command for device 1 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 1, 
-buffer =c0356000, bufflen = 8, done = c01dc0c8, timeout = 3000, retries = 3)
-May  2 21:22:59 ice kernel: command : 25  00  00  00  00  00  00  00  00  00
-May  2 21:22:59 ice kernel: Activating command for device 1 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = c0356000,
-May  2 21:22:59 ice kernel: bufflen = 8, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = c0356200,
-May  2 21:22:59 ice kernel: bufflen = 8, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Deactivating command for device 0 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 0, 
-buffer =c0356200, bufflen = 8, done = c01dc0c8, timeout = 3000, retries = 3)
-May  2 21:22:59 ice kernel: command : 25  00  00  00  00  00  00  00  00  00
-May  2 21:22:59 ice kernel: Activating command for device 0 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = c0356200,
-May  2 21:22:59 ice kernel: bufflen = 8, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = c0356000,
-May  2 21:22:59 ice kernel: bufflen = 8, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Deactivating command for device 1 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel:  --sda-- about to block target 1/0/0 --sda--
-May  2 21:22:59 ice kernel:  --sda-- blocking target 1/0/0 done --sda--
-May  2 21:22:59 ice kernel: Open returning 1
-May  2 21:22:59 ice kernel: Trying ioctl with scsi command 0
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 1, 
-buffer =00000000, bufflen = 0, done = c01dc0c8, timeout = 1000, retries = 5)
-May  2 21:22:59 ice kernel: command : 00  00  00  00  00  00
-May  2 21:22:59 ice kernel: Activating command for device 1 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 1000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = 00000000,
-May  2 21:22:59 ice kernel: bufflen = 0, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = c0356200,
-May  2 21:22:59 ice kernel: bufflen = 8, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Deactivating command for device 0 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel:  --sda-- about to block target 0/0/0 --sda--
-May  2 21:22:59 ice kernel:  --sda-- blocking target 0/0/0 done --sda--
-May  2 21:22:59 ice kernel: Open returning 1
-May  2 21:22:59 ice kernel: Trying ioctl with scsi command 0
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 0, 
-buffer =00000000, bufflen = 0, done = c01dc0c8, timeout = 1000, retries = 5)
-May  2 21:22:59 ice kernel: command : 00  00  00  00  00  00
-May  2 21:22:59 ice kernel: Activating command for device 0 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 1000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = 00000000,
-May  2 21:22:59 ice kernel: bufflen = 0, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 1000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = 00000000,
-May  2 21:22:59 ice kernel: bufflen = 0, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Deactivating command for device 1 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel: Ioctl returned  0x28000000
-May  2 21:22:59 ice kernel: IOCTL Releasing command
-May  2 21:22:59 ice kernel:  --sda-- about to block target 1/0/0 --sda--
-May  2 21:22:59 ice kernel:  --sda-- blocking target 1/0/0 done --sda--
-May  2 21:22:59 ice kernel: Open returning 1
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 1, 
-buffer =c0356000, bufflen = 12, done = c01dc0c8, timeout = 3000, retries = 3)
-May  2 21:22:59 ice kernel: command : 43  00  00  00  00  00  00  00  0c  40
-May  2 21:22:59 ice kernel: Activating command for device 1 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = c0356000,
-May  2 21:22:59 ice kernel: bufflen = 12, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 1000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = 00000000,
-May  2 21:22:59 ice kernel: bufflen = 0, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Deactivating command for device 0 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel: Ioctl returned  0x28000000
-May  2 21:22:59 ice kernel: IOCTL Releasing command
-May  2 21:22:59 ice kernel:  --sda-- about to block target 0/0/0 --sda--
-May  2 21:22:59 ice kernel:  --sda-- blocking target 0/0/0 done --sda--
-May  2 21:22:59 ice kernel: Open returning 1
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 0, 
-buffer =c0356200, bufflen = 12, done = c01dc0c8, timeout = 3000, retries = 3)
-May  2 21:22:59 ice kernel: command : 43  00  00  00  00  00  00  00  0c  40
-May  2 21:22:59 ice kernel: Activating command for device 0 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = c0356200,
-May  2 21:22:59 ice kernel: bufflen = 12, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = c0356000,
-May  2 21:22:59 ice kernel: bufflen = 12, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Deactivating command for device 1 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel:  --sda-- about to block target 1/0/0 --sda--
-May  2 21:22:59 ice kernel:  --sda-- blocking target 1/0/0 done --sda--
-May  2 21:22:59 ice kernel: Open returning 1
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 1, 
-buffer =cbf79e24, bufflen = 12, done = c01dc0c8, timeout = 3000, retries = 3)
-May  2 21:22:59 ice kernel: command : 43  00  00  00  00  00  00  00  0c  00
-May  2 21:22:59 ice kernel: Activating command for device 1 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = cbf79e24,
-May  2 21:22:59 ice kernel: bufflen = 12, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = c0356200,
-May  2 21:22:59 ice kernel: bufflen = 12, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Deactivating command for device 0 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel:  --sda-- about to block target 0/0/0 --sda--
-May  2 21:22:59 ice kernel:  --sda-- blocking target 0/0/0 done --sda--
-May  2 21:22:59 ice kernel: Open returning 1
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 0, 
-buffer =cbfd5e24, bufflen = 12, done = c01dc0c8, timeout = 3000, retries = 3)
-May  2 21:22:59 ice kernel: command : 43  00  00  00  00  00  00  00  0c  00
-May  2 21:22:59 ice kernel: Activating command for device 0 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = cbfd5e24,
-May  2 21:22:59 ice kernel: bufflen = 12, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = cbf79e24,
-May  2 21:22:59 ice kernel: bufflen = 12, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:22:59 ice kernel: Deactivating command for device 1 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel: VFS: Disk change detected on device sr(11,1)
-May  2 21:22:59 ice kernel:  --sda-- about to block target 1/0/0 --sda--
-May  2 21:22:59 ice kernel:  --sda-- blocking target 1/0/0 done --sda--
-May  2 21:22:59 ice kernel: Open returning 1
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 1, 
-buffer =00000000, bufflen = 0, done = c01dc0c8, timeout = 3000, retries = 3)
-May  2 21:22:59 ice kernel: command : 1b  00  00  00  03  00
-May  2 21:22:59 ice kernel: Activating command for device 1 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff2ba00 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = 00000000,
-May  2 21:22:59 ice kernel: bufflen = 0, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 50 (c01e22e0)
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = cbfd5e24,
-May  2 21:22:59 ice kernel: bufflen = 12, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Clearing timer for command cff33400 1
-May  2 21:22:59 ice kernel: Deactivating command for device 0 (active=1, 
-failed=0)
-May  2 21:22:59 ice kernel: VFS: Disk change detected on device sr(11,0)
-May  2 21:22:59 ice kernel:  --sda-- about to block target 0/0/0 --sda--
-May  2 21:22:59 ice kernel:  --sda-- blocking target 0/0/0 done --sda--
-May  2 21:22:59 ice kernel: Open returning 1
-May  2 21:22:59 ice kernel: scsi_do_req (host = 0, channel = 0 target = 0, 
-buffer =00000000, bufflen = 0, done = c01dc0c8, timeout = 3000, retries = 3)
-May  2 21:22:59 ice kernel: command : 1b  00  00  00  03  00
-May  2 21:22:59 ice kernel: Activating command for device 0 (2)
-May  2 21:22:59 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:22:59 ice kernel: Adding timer for command cff33400 at 3000 
-(c01e22e0)
-May  2 21:22:59 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = 00000000,
-May  2 21:22:59 ice kernel: bufflen = 0, done = c01dc0c8)
-May  2 21:22:59 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:22:59 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:22:59 ice kernel: Leaving scsi_do_req()
-May  2 21:23:00 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:23:00 ice kernel: Deactivating command for device 1 (active=1, 
-failed=0)
-May  2 21:23:00 ice kernel:  --sda-- about to block target 1/0/0 --sda--
-May  2 21:23:00 ice kernel:  --sda-- blocking target 1/0/0 done --sda--
-May  2 21:23:00 ice kernel: Open returning 1
-May  2 21:23:00 ice kernel: Trying ioctl with scsi command 30
-May  2 21:23:00 ice kernel: scsi_do_req (host = 0, channel = 0 target = 1, 
-buffer =00000000, bufflen = 0, done = c01dc0c8, timeout = 1000, retries = 5)
-May  2 21:23:00 ice kernel: command : 1e  00  00  00  00  00
-May  2 21:23:00 ice kernel: Activating command for device 1 (2)
-May  2 21:23:00 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:23:00 ice kernel: Adding timer for command cff2ba00 at 1000 
-(c01e22e0)
-May  2 21:23:00 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = 00000000,
-May  2 21:23:00 ice kernel: bufflen = 0, done = c01dc0c8)
-May  2 21:23:00 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:23:00 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:23:00 ice kernel: Leaving scsi_do_req()
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
 
-May  2 21:23:06 ice kernel: Clearing timer for command cff33400 1
-May  2 21:23:06 ice kernel: Deactivating command for device 0 (active=1, 
-failed=0)
-May  2 21:23:06 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:23:06 ice kernel: Adding timer for command cff2ba00 at 50 (c01e22e0)
-May  2 21:23:06 ice kernel: Adding timer for command cff2ba00 at 1000 
-(c01e22e0)
-May  2 21:23:06 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 1, command = cff2ba58, buffer = 00000000,
-May  2 21:23:06 ice kernel: bufflen = 0, done = c01dc0c8)
-May  2 21:23:06 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:23:06 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:23:06 ice kernel:  --sda-- about to block target 0/0/0 --sda--
-May  2 21:23:06 ice kernel:  --sda-- blocking target 0/0/0 done --sda--
-May  2 21:23:06 ice kernel: Open returning 1
-May  2 21:23:06 ice kernel: Trying ioctl with scsi command 30
-May  2 21:23:06 ice kernel: scsi_do_req (host = 0, channel = 0 target = 0, 
-buffer =00000000, bufflen = 0, done = c01dc0c8, timeout = 1000, retries = 5)
-May  2 21:23:06 ice kernel: command : 1e  00  00  00  00  00
-May  2 21:23:06 ice kernel: Activating command for device 0 (2)
-May  2 21:23:06 ice kernel: Leaving scsi_init_cmd_from_req()
-May  2 21:23:06 ice kernel: Adding timer for command cff33400 at 1000 
-(c01e22e0)
-May  2 21:23:06 ice kernel: scsi_dispatch_cmnd (host = 0, channel = 0, 
-target = 0, command = cff33458, buffer = 00000000,
-May  2 21:23:06 ice kernel: bufflen = 0, done = c01dc0c8)
-May  2 21:23:06 ice kernel: queuecommand : routine at c01e7bfc
-May  2 21:23:06 ice kernel: leaving scsi_dispatch_cmnd()
-May  2 21:23:06 ice kernel: Leaving scsi_do_req()
-May  2 21:23:06 ice kernel: Clearing timer for command cff2ba00 1
-May  2 21:23:06 ice kernel: Deactivating command for device 1 (active=1, 
-failed=0)
-May  2 21:23:06 ice kernel: Ioctl returned  0x28000000
-May  2 21:23:06 ice kernel: IOCTL Releasing command
-May  2 21:23:06 ice kernel: Clearing timer for command cff33400 1
-May  2 21:23:06 ice kernel: Deactivating command for device 0 (active=0, 
-failed=0)
-May  2 21:23:06 ice kernel: Ioctl returned  0x0
-May  2 21:23:06 ice kernel: IOCTL Releasing command
+iD8DBQE80bdRV6N/vVHPhBcRAnpDAJ0UXjbnYP1zReW/VEoMnkBljNqnCgCgjfa+
+fVkODdtsTppWCDBoBWAdnG8=
+=xm4H
+-----END PGP SIGNATURE-----
 
+--HlL+5n6rz5pIUxbD--
