@@ -1,40 +1,32 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [ANNOUNCE] MPT Fusion driver 3.02.06 update
-Date: Tue, 26 Oct 2004 18:15:25 +0100
+From: James.Smart@Emulex.Com
+Subject: RE: [ANNOUNCE] MPT Fusion driver 3.02.06 update
+Date: Tue, 26 Oct 2004 13:20:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041026171525.GA15153@infradead.org>
-References: <0E3FA95632D6D047BA649F95DAB60E57053AF0CB@exa-atlanta>
+Message-ID: <0B1E13B586976742A7599D71A6AC733C02F234@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([81.187.226.98]:53005 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S261339AbUJZRQL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Oct 2004 13:16:11 -0400
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57053AF0CB@exa-atlanta>
+Received: from emulex.emulex.com ([138.239.112.1]:20726 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S261345AbUJZRVW convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Oct 2004 13:21:22 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Emoore@lsil.com>
-Cc: Christoph Hellwig <hch@infradead.org>, jeremy@sgi.com, linux-scsi@vger.kernel.org
+To: Emoore@lsil.com, hch@infradead.org, jeremy@sgi.com
+Cc: linux-scsi@vger.kernel.org
 
-> > hooks it needs (e.g. the sas device list)
-> > 
+> The failures to compiled in 2.6.10-rc is due to someone changing
+> the defines in scsi_transport_fc.h.
 > 
-> We have to ship with these IOCTLS. Are there any compromise?
-> Sounds like you shot down my backup idea; e.g putting this code into 
-> seperate file which isn't provided for inclusion, but can be recompiled 
-> to link into mptctl?  I don't think we time to pursue your the idea of 
-> re-invent everything into the sas-transport layer.
+> 2.6.9				2.6.10-rc				
+> ---------			---------
+> fc_port_id			fc_starget_port_id
+> fc_node_name		fc_starget_node_name
+> fc_port_name		fc_starget_port_name
 
-No way.  This is similar to the hbaapi situation with qlogic and emulex.
-If you had worked with us early on on an API like I told you multiple times
-we'd have something sane now.
+Then you haven't been paying attention to linux-scsi. As part of Emulex's desire to move upstream, and commonize FC information, the transport got corrected so that the 3 attributes are target based rather than sdev based. See the following patch (http://marc.theaimsgroup.com/?l=linux-scsi&m=109663907926965&w=2). This became part of 2.6.9-bk1/2.6.10-rc. Also - I've proposed more attributes to the host to better align with FC HBAAPI management infrastructures - see the following patches: http://marc.theaimsgroup.com/?l=linux-scsi&m=109776541400698&w=2; http://marc.theaimsgroup.com/?l=linux-scsi&m=109776541525816&w=2; http://marc.theaimsgroup.com/?l=linux-scsi&m=109813309907129&w=2.
 
-Btw, what part of HP badly wants this?  I'm sure Grant and Matthew
-could explain them internally what a bad idea this is.
+There are still more attributes coming, as the target/remote port attributes get expanded. Now that I know you're support the FC transport, I'll involve you in the discussions.
 
->
-> Jeremy Higdon asked me to add this, not SuSE.
-
-Jeremy, can you make sure SuSE has an uptodate transport attribute
-implementation ?
+-- James
