@@ -1,35 +1,39 @@
-From: Joachim Feise <jfeise@ics.uci.edu>
-Subject: Re: PROBLEM: 2.6.3 hangs when writing to scsi-dvd
-Date: Mon, 23 Feb 2004 23:18:36 -0800 (PST)
+From: Kai Makisara <Kai.Makisara@metla.fi>
+Subject: Re: [BK PATCH] SCSI update for 2.6.3
+Date: Tue, 24 Feb 2004 09:30:01 +0200 (EET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58L0.0402232309220.1571@pv105234.reshsg.uci.edu>
-References: <403512B8.2060403@ics.uci.edu> <4036867C.60803@ics.uci.edu>
- <Pine.LNX.4.58.0402231329480.1749@kai.makisara.local> <20040223132634.GD32010@suse.de>
- <Pine.LNX.4.58.0402231615270.1749@kai.makisara.local> <20040223142531.GF32010@suse.de>
+Message-ID: <Pine.LNX.4.58.0402240919490.1129@spektro.metla.fi>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=iso-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pv105234.reshsg.uci.edu ([128.195.105.234]:18948 "HELO
-	pv105234.reshsg.uci.edu") by vger.kernel.org with SMTP
-	id S262194AbUBXHSp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2004 02:18:45 -0500
-In-Reply-To: <20040223142531.GF32010@suse.de>
+Received: from bambu.metla.fi ([128.214.53.7]:48011 "EHLO bambu.metla.fi")
+	by vger.kernel.org with ESMTP id S262194AbUBXHaQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Feb 2004 02:30:16 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org, Michael Guntsche <mike@it-loops.com>, Andrew Morton <akpm@osdl.org>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Frank Pieczynski <pieczy@web.de>
+To: Linus Torvalds <torvalds@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, kai.makisara@kolumbus.fi
 
-On Mon, 23 Feb 2004, Jens Axboe wrote:
-
-> On Mon, Feb 23 2004, Kai Makisara wrote:
-> > Now it is slightly tested: it works with my SCSI tape test program. Since
-> > the program only does an inquiry, I tried it with the SCSI system disk
-> > without problems. Unfortunately, I don't have access to a SCSI CDROM now.
+On Tue, 24 Feb 2004, Linus Torvalds wrote:
+>On Mon, 23 Feb 2004, James Bottomley wrote:
+>>
+>> Kai M=E4kisara:
+>> o Sysfs class support for SCSI tapes
 >
-> Great, that's promising (code like this tends to either break at first
-> access, or work :-). Thanks for testing.
+>Has this been checked for correctness, or will Al flame me to a crisp =
+for
+>accepting it? Pls verify..
 
-I tried it with my SCSI DVD. Writing to and reading from DVD+RW
-works fine.
-Thanks for the fix.
+It is using the class_simple interface Greg KH said can be used without
+changes to driver's lifetime rules. If this is not true, then I have to
+rework the patch. The code was posted to linux-scsi on Feb 5 but I woul=
+d
+not count on any serious review being done there.
 
--Joe
+	Kai
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
