@@ -1,79 +1,50 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: [PATCH] allow drivers to hook into watchdog timeout
-Date: Wed, 11 Feb 2004 17:15:10 -0700
+From: Paul Wagland <paul@kungfoocoder.org>
+Subject: Megaraid driver updates and kernel 2.6.2
+Date: Thu, 12 Feb 2004 11:27:59 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3156030000.1076544910@aslan.btc.adaptec.com>
-References: <20040120132052.GA6740@lst.de>		<2432440000.1076430858@aslan.btc.adaptec.com		>	<1076431366.1804.24.camel@mulgrave>		<2472850000.1076435243@aslan.btc.ada	ptec.com>	<1076438507.2165.38.camel@mulgrave>	<2520610000.1076442259@aslan.btc.adaptec.com>	<1076443541.2080.56.camel@mulgrave> 	<2549730000.1076444817@aslan.btc.adaptec.com> <1076527539.1737.83.camel@mulgrave>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Message-ID: <1076581679.1875.4533.camel@paulw-desktop.allshare.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:51922 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S266294AbUBLAIc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Feb 2004 19:08:32 -0500
-In-Reply-To: <1076527539.1737.83.camel@mulgrave>
-Content-Disposition: inline
+Received: from smtp-out2.xs4all.nl ([194.109.24.12]:62725 "EHLO
+	smtp-out2.xs4all.nl") by vger.kernel.org with ESMTP id S264300AbUBLK2M
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Feb 2004 05:28:12 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: atulm@lsil.com
 
-> On Tue, 2004-02-10 at 15:26, Justin T. Gibbs wrote:
->> > So if I give you an error code for this, like DID_REQEUEUE, you'll
->> > eliminate the driver queueing from your queucommand and from your done
->> > processing?
->> 
->> If I can freeze at per-device granularity and testing of the BUSY and
->> QUEUE_FULL paths in the mid-layer pan out, I believe the answer is yes.
-> 
-> I believe we have everything that you need with regard to BUSY and
-> QUEUE_FULL.
-> 
-> It looks like a device_blocked interface won't be too much work, I'll
-> look at coding one up.
+Hi all,
 
-Okay.
+I recently purchased myself a LSI MegaRAID SATA 6 card, and have so far
+been relatively happy, with a few "minor" gripes. The primary gripe is
+that the card will sometimes lock up under heavy load, while doing
+background synchronisations/rebuilds.
 
->> > No, they won't.  DID_RESET doesn't count against the retry count (the
->> > only things that affect the retry count are conditions that go through
->> > the maybe_retry label in scsi_device_disposition()).
->> 
->> This is only true if the peripheral driver calls scsi_io_completion().
->> The SG driver, for instance, does not.
-> 
-> But that's by design.  The application using SG_IO receives the error
-> code directly and is in control of deciding to retry.
+As far as I understand, the LSI megaraid 2.00.4 driver includes changes
+that should fix this problem[1], and the driver has been updated to
+2.10.1 for the 2.4.x kernel.
 
-That's fine if the application has good information to go on.  Most
-of the comments in the SCSI layer indicate that DID_RESET means that
-a bus reset event happened, not that the LLD wanted to unconditionally
-retry a command that has never seen the transport.
+Further, because of major structural changes in the 2.6.1 timeframe, it
+is not easy to forward port the 2.10.1 driver to the 2.6.x kernel tree.
+[2]
 
->> That reminds me.  Reported bus/target resets do not cause a
->> bus/device-settle delay.  This is another one of the workarounds
->> in my driver.
-> 
-> That's correct.  The interface is really designed to report that
-> something happened.  Since we may not know the actual timing of the
-> reported event, the philosophy is that is't better queue and retry
-> (while correctly processing the NOT_READY) than to impose an arbitrary
-> delay.
-> 
-> The rule is that the mid-layer only delays for events it initiated.
+Anyway, I have been going through and trying to sort out some of these
+changes, and am making some headway. My question, is how should I
+present these patches? Should I just send it to this list (linux-scsi),
+or should I just send them to LSI (Atul Mukker) and then get them to
+forward the patches on when they are happy? Further, should I try to
+"pull" the driver up through the versions, or just send through patches
+for "logical" chunks in whatever order I get through them?
 
-Well, this breaks lots of devices like external RAID controllers that
-need at least a few hundred ms bus settle delay before they will handle
-a new command.  This controllers often initiate the bus reset when they
-do a module failover or shutdown (e.g. upgrading one of the two controllers
-in a redundant controller).  Without a bus settle delay, these devices
-are taken offline by the mid-layer.
+Or is someone else already working on this, and I don't need to
+anything? :-)
 
-You have to enforce the delay regardless of where the reset event comes
-from.  The devices on the bus don't care who reset the bus, and their
-behavior doesn't differ when Linux does the reset or some third party
-does.
+Thanks for your inputs,
+Paul Wagland
 
---
-Justin
+[1]
+ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-2.10.1/changelog.megaraid2
+[2] http://www.ussg.iu.edu/hypermail/linux/kernel/0401.1/1697.html
 
