@@ -1,27 +1,38 @@
-From: Oktay Akbal <oktay.akbal@s-tec.de>
-Subject: Re: qlogic failover multipath
-Date: Sat, 7 Sep 2002 08:28:34 +0200 (CEST)
+From: "Angel GrefurT" <lez_jew5@yahoo.com>
+Subject: hi
+Date: Sat, 7 Sep 2002 13:30:12 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0209070822250.21784-100000@omega.s-tec.de>
-References: <20020906153437.GA2164@beaverton.ibm.com>
+Message-ID: <2391.81615547768$1031394492@news.gmane.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020906153437.GA2164@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
 
-On Fri, 6 Sep 2002, Mike Anderson wrote:
+http://lizaclub.da.ru
+http://lol.to/bbs.php?bbs=shakira   <<< VIP
 
-> You can edit the qla_settings.h file and set MPIO_SUPPORT to 1 or I
-> believe if you use the qla2x00src-v6.1b5-fo archive that this should
-> already be set to 1.
+Today Sally.
 
-Thank you, I will try at Monday. It is set to 0 in b5.
-But my archive is named: qla2x00src-v6.1b5.tgz
--fo seems to come only from enabling MPIO ?
+NOT NEED CREDI CARD - 
 
-Oktay Akbal
+PARTY 1. VIDEO  16MB
+PARTY 2. VIDEO http://pluginaccess.com/?w=preview&type=exe 3MB  <<< try now
+PARTY 3. VIDEO  22MB
+PARTY 4. VIDEO 33MB
+PARTY 5. VIDEO  49MB
+PARTY 6. VIDEO  154MB
+
+Modem/ISDN Users: This archive features hundreds
+ of movies therefore the movie previews on this page 
+may take a bit of time to load for you, however please 
+be patient, it will definitely be worth the wait.
+
+%100 FREE 
+Rus-SexServer
+
+
+
 
 
