@@ -1,42 +1,115 @@
-From: "'Patrick Mansfield'" <patmans@us.ibm.com>
-Subject: Re: suspending I/Os to a device
-Date: Mon, 26 Apr 2004 14:26:05 -0700
+From: "Moore, Eric Dean" <Emoore@lsil.com>
+Subject: [PATCH 2.4 ] MPT Fusion driver 2.05.16 update
+Date: Mon, 26 Apr 2004 17:59:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040426142605.A6383@beaverton.ibm.com>
-References: <8D43EFD7CCBDB24980134BE078C227E704E37A88@xcm.emulex.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570442CB4F@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.103]:13507 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S263585AbUDZV01 (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:10390 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S263609AbUDZV7w (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Apr 2004 17:26:27 -0400
-Content-Disposition: inline
-In-Reply-To: <8D43EFD7CCBDB24980134BE078C227E704E37A88@xcm.emulex.com>; from Jon.Infante@Emulex.Com on Mon, Apr 26, 2004 at 10:12:18AM -0700
+	Mon, 26 Apr 2004 17:59:52 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Infante, Jon" <Jon.Infante@Emulex.Com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: marcelo.tosatti@cyclades.com
 
-On Mon, Apr 26, 2004 at 10:12:18AM -0700, Infante, Jon wrote:
-> 
-> So it may be better to make this a hotplug feature since it is not
-> necessarily FC specific? When the FC driver gets a LIP or RSCN event, there
-> is potential for a device to be removed, or a new device added. In addition
-> to add / remove if there was a suspended state the device could put in,
-> assuming it would transition to added or removed shortly afterwards, that
-> would also meet the requirements for FC.
+This is an update for the MPT Fusion drivers 2.4 kernel.
 
-I didn't mean to imply use of hotplug, just that the feature might be
-useful for transports other than FCP.
+This is mpt version is 2.05.16  The attached patch is made
+against 2.05.11.03 driver found in 2.4.25 kernel or later.
 
-If it were hotplug based that would be really nice, but currently linux
-scsi can't handle moving a device to a different port. Generally, we can't
-change the host/chan/id/lun for a given scsi_device, instead you must
-remove and add the device (either physically if the hardware notices
-the addition and removal, or manually via scsi sysfs interfaces).
 
-Current hotplug could handle the addition of a new target (or LUN), we've
-discussed this before. If the adapter generates a hotplug event for a new
-target, user code could scan the new target.
+----------------------------------------------------------------
 
--- Patrick Mansfield
+Changelog for 2.05.16, Release Date: March 17, 2004
+
+(1) SDTR/WDTR Disallow bits were not being set
+in Device Configuration Page 1 for SEP devices.
+(2) Increase the timeout in RAID Action Request
+from 2 to 10 seconds.  Under stress conditions, the
+QUIESCE_PHYS_IO action request was taking longer 
+than 2 seconds timeout to complete, thus resulting
+in the driver going into a host bus reset.
+(3) Replace sys_ioctl with our own defined function
+compat_mptctl_ioctl. This removes the warning messages.
+
+--------------------------------------------------
+
+
+Changelog for 2.05.15, Release Date: March 16, 2004
+
+(1) Processing of an IOCStatus of 
+MPI_IOCSTATUS_SCSI_RESIDUAL_MISMATCH was changed to
+allow the OS SCSI layer to retry the command.
+(2) Firmware upload and downloadboot was 
+simplified to match the algorithms in the MPI 1.2 spec.
+
+--------------------------------------------------
+
+
+Changelog for 2.05.14, Release Date: March 8, 2004
+
+(1) Search IOCPage3 for Id being a physical drive
+of a volume.  If so, don't include its information in 
+Ioctl TargetInfo data.
+(2) Default to QAS before checking for QAS capable
+in inquiry data.  This allows Ultra320 drives to
+operate with QAS in SuSE systems.
+
+--------------------------------------------------
+
+Changelog for 2.05.13, Release Date: Feb 20, 2004
+
+(1) Read IOCPage2 and IOCPage3 on each Ioctl 
+TargetInfo request.  Prevents stale data from being 
+used if volume is changed while the driver is operational
+(via Ioctl interface).
+(2) Extend time to at least 5 seconds for Doorbell
+Interrupt and Ack checks.
+(3) Allow Check Conditions to take precedence over
+data length checks in DATA_UNDERRUN error processing.
+
+--------------------------------------------------
+
+Changelog for 2.05.12, Release Date: Feb 6, 2004
+
+
+(1) The driver now supports the FC929XL.  
+(2) The driver now supports I2C requirements. 
+Toolbox message generation and processing has been 
+added to IOCTL processing.
+(3) Rpm and DUD files are now available for 
+Redhat 3.0 on ia64 machines.
+(4) Added code to check for QAS enabled or disabled 
+in SCSI Port Page 0.  Ultra 320 negotiations will reflect 
+the QAS setting in SCSI Port Page 0.
+(5) Added code to obtain IOC Page 2 data in order to 
+provide Volume data in Target Info Data returned by an IOCTL
+request.
+(6) Fixed Target Info code to prevent overrunning the 
+data buffer length provided by the application.  Also fixed 
+that code to include checking for the last id on the IOC.
+(7) Added code in the data underrun response processing
+ to return an error code if no data was transferred.
+(9) Added code to properly set each device's queue_depth
+ for Fibre Channel devices.
+(10) Fixed code to allow Ioctl operation on ia64 machines.
+(11) Performance enhancements were made.
+
+
+You can download full source as well as the patches for this 
+driver at:
+ftp://ftp.lsil.com/HostAdapterDrivers/linux/FiberChannel/2.05.16
+
+
+Eric Moore
+Staff Engineer
+Standard Storage Products Division
+LSI Logic Corporation
+4420 Arrowswest Drive
+Colorado Springs, CO 80907
+Tel: (719) 533-7056
+Email: emoore@lsil.com
+Web: http://www.lsilogic.com/
