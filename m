@@ -1,90 +1,148 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] kill obsolete typedefs and wrappers from tmscsim
-Date: Fri, 25 Jun 2004 21:42:47 +0200 (CEST)
+From: "Edwards, Scott (MED, Kelly IT Resouces)" <James.Edwards@med.ge.com>
+Subject: PATCH for disabling write cache on SATA drives
+Date: Fri, 25 Jun 2004 18:21:24 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60.0406252022400.3953@poirot.grange>
-References: <20040624081510.GA7950@lst.de> <Pine.LNX.4.60.0406242247500.4258@poirot.grange>
- <20040625095022.GA28822@lst.de>
+Message-ID: <1F6D1D1660975A4887628A011443A1BC07734BF9@uswaumsx13medge.med.ge.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.de ([213.165.64.20]:53697 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S265537AbUFYTup (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Jun 2004 15:50:45 -0400
-In-Reply-To: <20040625095022.GA28822@lst.de>
+Received: from ext-nj2gw-2.online-age.net ([216.35.73.164]:44993 "EHLO
+	ext-nj2gw-2.online-age.net") by vger.kernel.org with ESMTP
+	id S266347AbUFYXV1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Jun 2004 19:21:27 -0400
+Received: from int-nj2gw-5.online-age.net (int-nj2gw-5 [3.159.236.69])
+	by ext-nj2gw-2.online-age.net (8.12.9/8.12.9/990426-RLH) with ESMTP id i5PNLPNM007124
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Jun 2004 19:21:26 -0400 (EDT)
+Received: from uswaumsxb1medge.med.ge.com (localhost [127.0.0.1])
+	by int-nj2gw-5.online-age.net (8.12.9/8.12.8/990426-RLH) with ESMTP id i5PNLOTa010508
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Jun 2004 19:21:25 -0400 (EDT)
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On Fri, 25 Jun 2004, Christoph Hellwig wrote:
 
-> On Fri, Jun 25, 2004 at 12:44:56AM +0200, Guennadi Liakhovetski wrote:
->> Why don't we remove all UCHAR / USHORT / UINT / ULONG... types altogether?
->
-> One thing at a time, the patch is already huge enough.
-
-Well, I thought, it was inconsistent to leave UCHAR, removing PUCHAR, thus 
-allowing
- 	UCHAR c;
- 	u8 *pc = &c;
-and, since we are already at it...
-
->> PUCHAR == (UCHAR*), and you replace PUCHAR with (u8*), although it is not
->> obvious, that UCHAR == u8... I know, many scsi (at least) drivers use
->> them, and each of them defines them itself, but... As well as all those
->> PACB, PSRB, PDCB,...
->
-> That'll happen sooner or later :)
-
-So, why not now?:-)
-
->>> -    ptr = (PSCSI_INQDATA) (pcmd->request_buffer);
->>> -    if( pcmd->use_sg )
->>> -	ptr = (PSCSI_INQDATA) (page_address(((PSGL) ptr)->page) + ((PSGL)
->>> ptr)->offset);
->>> +    if (pcmd->use_sg) {
->>> +	    ptr2 = (struct scatterlist *) ptr;
->>> +	    ptr = (PSCSI_INQDATA) (page_address(ptr2->page) + ptr2->offset);
->>> +    } else
->>> +	    ptr = (PSCSI_INQDATA) (pcmd->request_buffer);
->>>
->>>    DEBUG0(printk (" SRBdone (%02x,%08x), SRB %p, pid %li\n", status,
->>>    pcmd->result,\
->>> 		pSRB, pcmd->pid));
->>
->> This seems a typo (ptr uninitialised).
->
-> Indeed, thanks.  I wonder why gcc didn't spit a warning.
-
-Mine did (3.3.2). Otherwise, how would I find it?:-)
-
->> Attaching a new, extended, and, hopefully, fixed version of your patch.
->> Please, have a look. I think, it is better to push all this cleanup as a
->> single patch, even though it looks horribly big... It compiles, will
->> run-test tomorrow (well, already today, but in about 20 hours).
->
-> We hsould probably call the types dc390_acb and dc390_dcb instead of the
-> shouting names?  Or maybe even better dc390_hba and dc390_lun so the
-> names are descriptive?
-
-Sure, that's easy!:-) I kept capitals initially, because all functions are 
-called like FindDCB, DoingSRB_Done, etc. But if we rename dc390_dcb into 
-dc390_lun, we would have to rename all respective functions, but that's 
-a bit too much, I think. So, is it ok to just "smallify" the types, going 
-the Middle Way?:-) If you don't object, I'll send tomorrow a new version 
-of the patch with the only chenge: s/dc390_ACB/dc390_acb/g, 
-s/dc390_DCB/dc390_dcb/g, s/dc390_SRB/dc390_srb/g.
-
-Do you want to rediff your 3rd patch yourself or should I do it? 
-Essentially, as you know, up to now the "old" EH code was used by tmscsim. 
-Switching to the "new" one seems a pretty essential change. Is there a way 
-I could test it a bit? I can now boot and run from IDE, loading tmscsim as 
-a module, to which I have a disk and a CD-ROM connected. How can I 
-exercise eh-paths a bit without destroying the hardware?:-)
+I don't know if this is useful for anyone or if anyone even cares, but just
+in case someone does, this is the patch I made to disable the write cache on
+the Serial ATA drives.  It doesn't make the write cache controllable from
+the user level, it just ALWAYS disables it.  (I tried to make one that could
+be sent via an ioctl, but there were far too many things that I didn't
+understand and it didn't work.)  Since I have never done this before I don't
+know if there is some protocol that I missed, if so I'm sorry.  If there are
+glaring stupid mistakes (very likely) please let me know.
 
 Thanks
-Guennadi
----
-Guennadi Liakhovetski
+  -Scott
+
+
+diff -ru linux-2.6.7/drivers/scsi/libata-core.c
+linux-2.6.7-dwc/drivers/scsi/libata-core.c
+--- linux-2.6.7/drivers/scsi/libata-core.c	2004-06-15
+23:18:38.000000000 -0600
++++ linux-2.6.7-dwc/drivers/scsi/libata-core.c	2004-06-25
+16:39:16.000000000 -0600
+@@ -55,6 +55,7 @@
+ static void ata_host_set_udma(struct ata_port *ap);
+ static void ata_dev_set_pio(struct ata_port *ap, unsigned int device);
+ static void ata_dev_set_udma(struct ata_port *ap, unsigned int device);
++static void ata_dev_disable_wcache(struct ata_port *ap, unsigned int
+device);
+ static void ata_set_mode(struct ata_port *ap);
+ static int ata_qc_issue_prot(struct ata_queued_cmd *qc);
+ 
+@@ -1111,14 +1112,20 @@
+ 			dev->n_sectors = ata_id_u32(dev, 60);
+ 		}
+ 
++		if (dev->id[85] & (1 << 5)) {
++			dev->flags |= ATA_DFLAG_WCACHE;
++		}
++
+ 		ap->host->max_cmd_len = 16;
+ 
+ 		/* print device info to dmesg */
+-		printk(KERN_INFO "ata%u: dev %u ATA, max %s, %Lu
+sectors:%s\n",
++		printk(KERN_INFO 
++		       "ata%u: dev %u ATA, max %s, %Lu sectors:%s,
+wcache:%s\n",
+ 		       ap->id, device,
+ 		       ata_udma_string(udma_modes),
+ 		       (unsigned long long)dev->n_sectors,
+-		       dev->flags & ATA_DFLAG_LBA48 ? " lba48" : "");
++		       dev->flags & ATA_DFLAG_LBA48 ? " lba48" : "",
++		       dev->flags & ATA_DFLAG_WCACHE ? "on" : "off");
+ 	}
+ 
+ 	/* ATAPI-specific feature tests */
+@@ -1297,6 +1304,12 @@
+ 		ata_dev_set_udma(ap, 1);
+ 	}
+ 
++	if (ap->device[0]->flags & ATA_DFLAG_WCACHE)
++		ata_dev_disable_wcache(ap, 0);
++
++	if (ap->device[1]->flags & ATA_DFLAG_WCACHE)
++		ata_dev_disable_wcache(ap, 1);
++
+ 	if (ap->flags & ATA_FLAG_PORT_DISABLED)
+ 		return;
+ 
+@@ -1680,6 +1693,43 @@
+ 	ap->ops->port_disable(ap);
+ }
+ 
++static void ata_dev_disable_wcache(struct ata_port *ap, unsigned int
+device)
++{
++	struct ata_taskfile tf;
++
++	struct ata_device *dev = &ap->device[device];
++
++	if (!ata_dev_present(dev) || (ap->flags & ATA_FLAG_PORT_DISABLED))
++		return;
++
++	printk(KERN_INFO "disable write cache on dev: %u\n", device);
++
++	/* set up set-features taskfile */
++	DPRINTK("set features - disable write cache\n");
++	ata_tf_init(ap, &tf, dev->devno);
++	tf.ctl |= ATA_NIEN;
++	tf.command = ATA_CMD_SET_FEATURES;
++	tf.feature = SETFEATURES_XFER;
++	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	tf.protocol = ATA_PROT_NODATA;
++	tf.nsect = DISABLE_WRITE_CACHE;
++
++	/* do bus reset */
++	ata_tf_to_host(ap, &tf);
++
++	/* crazy ATAPI devices... */
++	if (dev->class == ATA_DEV_ATAPI)
++		msleep(150);
++
++	ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT);
++
++	ata_irq_on(ap);	/* re-enable interrupts */
++
++	ata_wait_idle(ap);
++
++	DPRINTK("EXIT\n");
++}
++
+ /**
+  *	ata_dev_set_xfermode - Issue SET FEATURES - XFER MODE command
+  *	@ap: Port associated with device @dev
+diff -ru linux-2.6.7/include/linux/ata.h linux-2.6.7-dwc/include/linux/ata.h
+--- linux-2.6.7/include/linux/ata.h	2004-06-15 23:19:36.000000000 -0600
++++ linux-2.6.7-dwc/include/linux/ata.h	2004-06-25 16:19:14.000000000 -0600
+@@ -133,6 +133,8 @@
+ 	XFER_UDMA_0		= 0x40,
+ 	XFER_PIO_4		= 0x0C,
+ 	XFER_PIO_3		= 0x0B,
++	ENABLE_WRITE_CACHE      = 0x02,
++	DISABLE_WRITE_CACHE     = 0x82,
+ 
+ 	/* ATAPI stuff */
+ 	ATAPI_PKT_DMA		= (1 << 0),
+
 
