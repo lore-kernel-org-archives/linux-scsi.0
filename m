@@ -1,59 +1,38 @@
-From: Michael Pavlovsky <billy@comnet.technion.ac.il>
-Subject: scsi-core API
-Date: Sat, 27 Mar 2004 13:21:50 +0200
+From: John Bradford <john@grabjohn.com>
+Subject: Re: Binary-only firmware covered by the GPL?
+Date: Sat, 27 Mar 2004 09:19:49 GMT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <406563CE.60702@comnet.technion.ac.il>
-Reply-To: billy@comnet.technion.ac.il
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <200403270919.i2R9JnP7000500@81-2-122-30.bradfords.org.uk>
+References: <E1B6Izr-0002Ai-00@r063144.stusta.swh.mhn.de>
+ <20040325082949.GA3376@gondor.apana.org.au>
+ <20040325220803.GZ16746@fs.tum.de>
+ <40635DD9.8090809@pobox.com>
+ <20040326003339.GD25059@parcelfarce.linux.theplanet.co.uk>
+ <81ptb0wh45.wl@omega.webmasters.gr.jp>
+ <4063EFA5.5070001@stesmi.com>
+ <200403260912.i2Q9CdLU000531@81-2-122-30.bradfords.org.uk>
+ <87brmjaevc.fsf@toncho.dhh.gt.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailgw4.technion.ac.il ([132.68.238.37]:33943 "EHLO
-	mailgw4.technion.ac.il") by vger.kernel.org with ESMTP
-	id S261684AbUC0LWD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Mar 2004 06:22:03 -0500
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by mailgw4.technion.ac.il (Postfix) with ESMTP id D734DF8173
-	for <linux-scsi@vger.kernel.org>; Sat, 27 Mar 2004 13:22:01 +0200 (IST)
-	(envelope-from billy@comnet.technion.ac.il)
-Received: from mailgw4.technion.ac.il ([127.0.0.1])
- by localhost (mailgw4.technion.ac.il [127.0.0.1]) (amavisd-new, port 10024)
- with LMTP id 08084-01-27 for <linux-scsi@vger.kernel.org>;
- Sat, 27 Mar 2004 13:22:01 +0200 (IST)
-Received: from t2.technion.ac.il (t2.technion.ac.il [132.68.0.102])
-	by mailgw4.technion.ac.il (Postfix) with ESMTP id 3D8B0F8172
-	for <linux-scsi@vger.kernel.org>; Sat, 27 Mar 2004 13:22:01 +0200 (IST)
-	(envelope-from billy@comnet.technion.ac.il)
-Received: from localhost (localhost [127.0.0.1])
-	by t2.technion.ac.il (Postfix) with ESMTP id 9096F1957
-	for <linux-scsi@vger.kernel.org>; Sat, 27 Mar 2004 13:24:46 +0200 (IST)
-Received: from t2.technion.ac.il ([127.0.0.1])
- by localhost (t2.technion.ac.il [127.0.0.1]) (amavisd-new, port 10024)
- with LMTP id 17286-01-29 for <linux-scsi@vger.kernel.org>;
- Sat, 27 Mar 2004 13:24:45 +0200 (IST)
-Received: from comnet.technion.ac.il (unknown [132.68.52.75])
-	by t2.technion.ac.il (Postfix) with ESMTP id 2894917C6
-	for <linux-scsi@vger.kernel.org>; Sat, 27 Mar 2004 13:24:45 +0200 (IST)
+Received: from 81-2-122-30.bradfords.org.uk ([81.2.122.30]:1920 "EHLO
+	81-2-122-30.bradfords.org.uk") by vger.kernel.org with ESMTP
+	id S261725AbUC0NTw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Mar 2004 08:19:52 -0500
+In-Reply-To: <87brmjaevc.fsf@toncho.dhh.gt.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI <linux-scsi@vger.kernel.org>
+To: John Hasler <john@dhh.gt.org>, 239952@bugs.debian.org, debian-devel@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Quote from John Hasler <john@dhh.gt.org>:
+> John Bradford writes:
+> > Then why didn't the original programmer leave a patch space to allow for
+> > such modifications?  Surely that could be considered part of the
+> > 'preferred form'.
+> 
+> It would be the 'preferred form' if and only if it's the form in which he
+> wrote it, patch space or no.
 
-Hi,
-~    I would appriciate if someone could explain how to use scsi core api.
-Where can I find additional information regarding scsi-core API
-towards /*higher* /layers
-in kernels 2.4.* and 2.6.*
+But does 'preferred form' == 'the form it was written in' necessarily
+apply for things like assembler?  My example about leaving a patch
+space wasn't really serious, I was just using it to demonstrate that
+point.
 
-Thank you
-~    Michael
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFAZWPO2jmE3YlBX+cRAhjKAJ45rheVJI3xxGElEcCjiCSwvI0GlQCg5Rs+
-uWEfr235BlwrDrWiQrjZE7k=
-=M1E3
------END PGP SIGNATURE-----
-
+John.
