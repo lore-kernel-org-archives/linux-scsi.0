@@ -1,28 +1,65 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [Patch] QLogic qla2x00 driver fixes
-Date: Fri, 25 Feb 2005 12:09:20 -0500
-Message-ID: <421F5BC0.50809@adaptec.com>
-References: <1109305293.27139.216.camel@compaq-rhel4.xsintricity.com>	 <1109318231.6290.27.camel@laptopd505.fenrus.org>	 <421EE410.7020603@pobox.com> <1109332659.27139.224.camel@compaq-rhel4.xsintricity.com>
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: [PATCH 2.4.30-pre1] aic7xxx: don't reset chip on pause]
+Date: Fri, 25 Feb 2005 12:01:05 -0600
+Message-ID: <20050225180105.GA13880@lists.us.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from magic.adaptec.com ([216.52.22.17]:24458 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262753AbVBYRJ0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Feb 2005 12:09:26 -0500
-In-Reply-To: <1109332659.27139.224.camel@compaq-rhel4.xsintricity.com>
+Content-Type: text/plain; charset=us-ascii
+Received: from linux.us.dell.com ([143.166.224.162]:2458 "EHLO
+	lists.us.dell.com") by vger.kernel.org with ESMTP id S262767AbVBYSBI
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Feb 2005 13:01:08 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Arjan van de Ven <arjan@infradead.org>, linux-scsi mailing list <linux-scsi@vger.kernel.org>
+To: marcelo.tosatti@cyclades.com
+Cc: linux-scsi@vger.kernel.org
 
-On 02/25/05 06:57, Doug Ledford wrote:
-> struct is silly.  Just use what's available, reliable, always
-> initialized, and intended for you to use (cmd->use_sg) instead of trying
-> to use a roughly duplicate item from a different abstraction layer that
-> isn't always involved in commands sent to a low level driver (request-
+(resend)
+Patch below taken from RHEL3 Update 4 kernel 2.4.21-27.EL, fixes a bug
+in the aic79xx and aic7xxx drivers, where upon trying to pause the
+controller chip, it is accidentally hard-reset.  This causes PCI
+Parity errors to appear on Dell PowerEdge 4600 servers as the inb()
+immediately after accidental reset receives corrupted data.
 
-Yes, I agree.
+Patch was submitted by Justin Gibbs many moons ago, but never applied
+to mainline 2.4.  It's in mainlin 2.6.  Marcelo, please apply.
 
-	Luben
+Signed-off-by: Matt Domsch <Matt_Domsch@dell.com>
+
+-- 
+Matt Domsch
+Software Architect
+Dell Linux Solutions linux.dell.com & www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
+
+diff -urNp --exclude-from=/home/mdomsch/excludes --minimal ./aic79xx_pci.c /home/mdomsch/kernels/linux-2.4.21-27.EL/drivers/scsi/aic7xxx/aic79xx_pci.c
+--- ./aic79xx_pci.c	Fri Feb 18 14:38:22 2005
++++ linux/drivers/scsi/aic7xxx/aic79xx_pci.c	Wed Dec  1 20:49:28 2004
+@@ -451,8 +457,10 @@ ahd_pci_test_register_access(struct ahd_
+ 	 * or read prefetching could be initiated by the
+ 	 * CPU or host bridge.  Our device does not support
+ 	 * either, so look for data corruption and/or flaged
+-	 * PCI errors.
++	 * PCI errors.  First pause without causing another
++	 * chip reset.
+ 	 */
++	hcntrl &= ~CHIPRST;
+ 	ahd_outb(ahd, HCNTRL, hcntrl|PAUSE);
+ 	while (ahd_is_paused(ahd) == 0)
+ 		;
+diff -urNp --exclude-from=/home/mdomsch/excludes --minimal ./aic7xxx_pci.c /home/mdomsch/kernels/linux-2.4.21-27.EL/drivers/scsi/aic7xxx/aic7xxx_pci.c
+--- ./aic7xxx_pci.c	Fri Feb 18 14:38:22 2005
++++ /home/mdomsch/kernels/linux-2.4.21-27.EL/drivers/scsi/aic7xxx/aic7xxx_pci.c	Wed Dec  1 20:49:28 2004
+@@ -1284,8 +1284,10 @@ ahc_pci_test_register_access(struct ahc_
+ 	 * or read prefetching could be initiated by the
+ 	 * CPU or host bridge.  Our device does not support
+ 	 * either, so look for data corruption and/or flagged
+-	 * PCI errors.
++	 * PCI errors.  First pause without causing another
++	 * chip reset.
+ 	 */
++	hcntrl &= ~CHIPRST;
+ 	ahc_outb(ahc, HCNTRL, hcntrl|PAUSE);
+ 	while (ahc_is_paused(ahc) == 0)
+ 		;
 
