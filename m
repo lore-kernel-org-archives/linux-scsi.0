@@ -1,62 +1,48 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] 2.6 aacraid: remove aac_handle_aif
-Date: Wed, 8 Dec 2004 14:06:13 -0500
-Message-ID: <60807403EABEB443939A5A7AA8A7458B7F508C@otce2k01.adaptec.com>
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: How to add/drop SCSI drives from within the driver?
+Date: Wed, 8 Dec 2004 14:25:54 -0500
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57057A1A2B@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:31450 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261317AbULHTGY convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Dec 2004 14:06:24 -0500
-content-class: urn:content-classes:message
+Received: from mail0.lsil.com ([147.145.40.20]:2242 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261332AbULHTeV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Dec 2004 14:34:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tom Coughlan <coughlan@redhat.com>, linux-scsi@vger.kernel.org
-Cc: alan@redhat.com, markh@osdl.org
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Cc: 'Matt Domsch' <Matt_Domsch@Dell.com>, "'brking@us.ibm.com'" <brking@us.ibm.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
 
-As Tom noted, this patch is a result of a committee. I guess it would be
-superfluous for these committee members to state `I like it' on the list
-to 'vote' for its acceptance?
+> The real way I'd like to handle this is via hotplug.  The 
+> hotplug event would transmit the HCTL in the environment.  
+> Whether the drive actually gets incorporated into the system 
+> and where is user policy, so it's appropriate that it should 
+> be in userland.
+Hmm, is it possible for applications to create hotplug events? If it is,
+this could a good idea as matter of system policies. Regardless, our
+management applications interfaces with the firmware in terms of logical
+drive numbers. Driver converts this number to the scsi host, bus, target etc
+during all interactions with kernel. In order for applications to actually
+notify kernel about arrival or removal of logical drives (hotplug event or
+sysfs), it has to know the corresponding mapping used by driver, while
+registering or would be registering, the device in question.
 
-:-)
+Since the mapping is private to the driver, it only can tell to application,
+for a give logical driver *number* the corresponding scsi address
 
-Sincerely -- Mark Salyzyn
+> > Removing a drive:- There is no sane way for the application 
+> to map out 
+> > drives to /dev/sd<x>. If application has a way of knowing 
+> the HCTL of 
+> > a deleted drive, then using that HCTL, it can match the 
+> corresponding 
+> > SCSI device name (/dev/sd<x>) and use sysfs to remove that drive.
+> 
+> Since The sysfs device name contains H:C:T:L surely you can 
+> just do a find on /sys?
 
------Original Message-----
-From: Tom Coughlan [mailto:coughlan@redhat.com] 
-Sent: Wednesday, December 08, 2004 11:12 AM
-To: linux-scsi@vger.kernel.org
-Cc: alan@redhat.com; markh@osdl.org; Salyzyn, Mark
-Subject: [PATCH] 2.6 aacraid: remove aac_handle_aif
+Again, there is no way for applications to relate H:C:T:L with a logical
+drive number. This information must come from the driver.
 
-When aac_command_thread detects an adapter event (AifCmdDriverNotify or
-AifCmdEventNotify) it calls aac_handle_aif. This routine sets a flag,
-calls fib_adapter_complete, and returns. The bad news is that after the
-return, aac_command_thread continues to process the command and calls
-fib_adapter_complete again.   
-
-Under some circumstances this causes the driver to take the device
-offline. In my case, it happens with a Dell CERC SATA with a RAID 5 in
-the "building" state:
-
-aacraid: Host adapter reset request. SCSI hang ?
-aacraid: Host adapter appears dead
-scsi: Device offlined - not ready after error recovery: host 0 channel 0
-id 0 lun 0
-SCSI error : <0 0 0 0> return code = 0x6000000
-end_request: I/O error, dev sda, sector 976537592
-
-Mark Salyzyn says the intent is for aac_handle_aif to perform some
-plug-n-play actions based on the adapter event, and return, leaving the
-command completion to the caller. 
-
-The attached patch solves the problem by removing aac_handle_aif
-entirely, since it is wrong, and there is currently no code in the
-driver to actually do anything with these events.
-
-Thanks to Alan, Mark S., and Mark H. for looking this over.
-
-Tom
+Thanks
+-Atul Mukker
