@@ -1,52 +1,57 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: SCSI kobject unregistration ordering problem
-Date: Mon, 13 Oct 2003 16:01:49 -0700
+From: Denis Zaitsev <zzz@anda.ru>
+Subject: [PATCH TRIVIAL] Compile error in 2.4.22 without PCI
+Date: Wed, 15 Oct 2003 00:30:36 +0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031013230149.GA1956@beaverton.ibm.com>
-References: <20031013151254.521d882e.akpm@osdl.org>
+Message-ID: <20031015003036.A10226@natasha.ward.six>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:45269 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S262074AbTJMW5k
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Oct 2003 18:57:40 -0400
+Received: from [212.57.164.72] ([212.57.164.72]:39686 "EHLO mail.ward.six")
+	by vger.kernel.org with ESMTP id S262745AbTJNScN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Oct 2003 14:32:13 -0400
 Content-Disposition: inline
-In-Reply-To: <20031013151254.521d882e.akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, Patrick Mochel <mochel@osdl.org>, Greg KH <greg@kroah.com>, Andrey Borzenkov <arvidjaar@mail.ru>, viro@parcelfarce.linux.theplanet.co.uk
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-Andrew Morton [akpm@osdl.org] wrote:
-> 
-> Guys,
-> 
-> I have the below patch queued, but Greg and Pat don't like it because
-> 
-> > > For one, the fact a parent is unregistered before its children violates
-> > > the intended semantics of the interface. #$^!@#$ SCSI. They know this, and
-> > > they should not be doing it.
-> >
-> > Exactly, that's why I do not want this patch applied.  The SCSI people
-> > have said they would fix this problem, as they should.  Let's not paper
-> > over the issue with this kobject patch.
-> 
-> So it looks like SCSI needs fixing.  Could someone please take care of this?
-> Thanks.
-> 
+I have these warnings when I'm compiling 2.4.22 for a 486 EISA system:
 
-I will get back on this. As I previously stated in the thread below the
-patch makes the problem go away, but is not the right fix for the "real"
-problem. The issues of the delayed call to device_del causes other get /
-put issues for changes Christoph is trying to do. I thought there was a
-need for another release function in the block layer for cases of
-surprise disconnect, but I will get more current data by changing a view
-to not delay the call to device_del.
+aic7xxx_osm.c: In function `ahc_softc_comp':
+aic7xxx_osm.c:1560: warning: implicit declaration of function `ahc_get_pci_bus'
+aic7xxx_osm.c:1568: warning: implicit declaration of function `ahc_get_pci_slot'
 
-http://marc.theaimsgroup.com/?l=linux-kernel&m=106401215205983&w=2
+And then the make finishes with an error, because these functions
+really exist only if the PCI support is turned on.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+The patch below fixes this.  And the same patch fits for the 2.6
+kernels.  Please, apply it.
 
+
+--- drivers/scsi/aic7xxx/aic7xxx_osm.c.orig	2003-09-15 01:56:14.000000000 +0600
++++ drivers/scsi/aic7xxx/aic7xxx_osm.c	2003-10-15 00:23:37.000000000 +0600
+@@ -1552,6 +1552,7 @@ ahc_softc_comp(struct ahc_softc *lahc, s
+ 
+ 	/* Still equal.  Sort by BIOS address, ioport, or bus/slot/func. */
+ 	switch (rvalue) {
++#ifdef CONFIG_PCI
+ 	case AHC_PCI:
+ 	{
+ 		char primary_channel;
+@@ -1584,6 +1585,8 @@ ahc_softc_comp(struct ahc_softc *lahc, s
+ 			value = 1;
+ 		break;
+ 	}
++#endif
++#ifdef CONFIG_EISA
+ 	case AHC_EISA:
+ 		if ((rahc->flags & AHC_BIOS_ENABLED) != 0) {
+ 			value = rahc->platform_data->bios_address
+@@ -1593,6 +1596,7 @@ ahc_softc_comp(struct ahc_softc *lahc, s
+ 			      - lahc->bsh.ioport; 
+ 		}
+ 		break;
++#endif
+ 	default:
+ 		panic("ahc_softc_sort: invalid bus type");
+ 	}
