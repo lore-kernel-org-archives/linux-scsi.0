@@ -1,77 +1,81 @@
-From: rct@gherkin.frus.com (Bob Tracy)
-Subject: [PATCH] sym53c500_cs driver update
-Date: Thu, 28 Oct 2004 21:33:49 -0500 (CDT)
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] scsi/qla2xxx/qla_rscn.c: remove unused functions
+Date: Fri, 29 Oct 2004 01:21:01 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041029023349.B9C9DDBDB@gherkin.frus.com>
+Message-ID: <20041028232101.GH3207@stusta.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=ELM77940869-6914-0_
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; x-action=pgp-signed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gherkin.frus.com ([192.158.254.49]:59790 "EHLO gherkin.frus.com")
-	by vger.kernel.org with ESMTP id S263105AbUJ2Cdx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Oct 2004 22:33:53 -0400
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:51218 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S263076AbUJ1XVd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Oct 2004 19:21:33 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+The patch below removes two unused functions from 
+drivers/scsi/qla2xxx/qla_rscn.c
 
 
---ELM77940869-6914-0_
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=US-ASCII
+diffstat output:
+ drivers/scsi/qla2xxx/qla_rscn.c |   26 --------------------------
+ 1 files changed, 26 deletions(-)
 
-(Previously posted to linux-kernel with copy to Christoph).
 
-The attached minor patch to linux/drivers/scsi/pcmcia/sym53c500_cs.c
-allows interrupt sharing, which is evidently a "must have" feature for
-at least G4 PowerBooks (ppc architecture).  The other user of the New
-Media Bus Toaster reports that his powerbook consistently assigns the
-yenta CardBus controller IRQ to whatever card he inserts.
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-Applies to version 0.9b of the sym53c500_cs driver, as included with
-the 2.6.9 kernel.
-
-Signed-off-by: Bob Tracy <rct@frus.com>
-
--- 
------------------------------------------------------------------------
-Bob Tracy                   WTO + WIPO = DMCA? http://www.anti-dmca.org
-rct@frus.com
------------------------------------------------------------------------
-
---ELM77940869-6914-0_
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: attachment; filename=patch09_sym53c500
-
---- linux/drivers/scsi/pcmcia/sym53c500_cs.c.orig	Wed Jul  7 07:24:21 2004
-+++ linux/drivers/scsi/pcmcia/sym53c500_cs.c	Wed Oct 27 22:21:20 2004
-@@ -85,7 +85,7 @@
- module_param(pc_debug, int, 0);
- #define DEBUG(n, args...) if (pc_debug>(n)) printk(KERN_DEBUG args)
- static char *version =
--"sym53c500_cs.c 0.9b 2004/05/10 (Bob Tracy)";
-+"sym53c500_cs.c 0.9c 2004/10/27 (Bob Tracy)";
- #else
- #define DEBUG(n, args...)
- #endif
-@@ -95,7 +95,7 @@
- /* Parameters that can be set with 'insmod' */
+- --- linux-2.6.10-rc1-mm1-full/drivers/scsi/qla2xxx/qla_rscn.c.old	2004-10-28 23:26:04.000000000 +0200
++++ linux-2.6.10-rc1-mm1-full/drivers/scsi/qla2xxx/qla_rscn.c	2004-10-28 23:26:32.000000000 +0200
+@@ -47,8 +47,6 @@
+ /* Local Prototypes. */
+ static inline uint32_t qla2x00_to_handle(uint16_t, uint16_t, uint16_t);
+ static inline uint16_t qla2x00_handle_to_idx(uint32_t);
+- -static inline uint16_t qla2x00_handle_to_iter(uint32_t);
+- -static inline uint16_t qla2x00_handle_to_type(uint32_t);
+ static inline uint32_t qla2x00_iodesc_to_handle(struct io_descriptor *);
+ static inline struct io_descriptor *qla2x00_handle_to_iodesc(scsi_qla_host_t *,
+     uint32_t);
+@@ -130,30 +128,6 @@
+ }
  
- /* Bit map of interrupts to choose from */
--static unsigned int irq_mask = 0xdeb8;	/* 3, 6, 7, 9-12, 14, 15 */
-+static unsigned int irq_mask = 0xdeb8;	/* 3-5, 7, 9-12, 14, 15 */
- static int irq_list[4] = { -1 };
- static int num_irqs = 1;
- 
-@@ -830,7 +830,7 @@
- 	data = (struct sym53c500_data *)host->hostdata;
- 
- 	if (irq_level > 0) {
--		if (request_irq(irq_level, SYM53C500_intr, 0, "SYM53C500", host)) {
-+		if (request_irq(irq_level, SYM53C500_intr, SA_SHIRQ, "SYM53C500", host)) {
- 			printk("SYM53C500: unable to allocate IRQ %d\n", irq_level);
- 			goto err_free_scsi;
- 		}
+ /**
+- - * qla2x00_handle_to_type() - Retrive the descriptor type for a given handle.
+- - * @handle: descriptor handle
+- - *
+- - * Returns the descriptor type specified by the @handle.
+- - */
+- -static inline uint16_t
+- -qla2x00_handle_to_type(uint32_t handle)
+- -{
+- -	return ((uint16_t)(((handle) >> HDL_TYPE_SHIFT) & HDL_TYPE_MASK));
+- -}
+- -
+- -/**
+- - * qla2x00_handle_to_iter() - Retrive the rolling signature for a given handle.
+- - * @handle: descriptor handle
+- - *
+- - * Returns the signature specified by the @handle.
+- - */
+- -static inline uint16_t
+- -qla2x00_handle_to_iter(uint32_t handle)
+- -{
+- -	return ((uint16_t)(((handle) >> HDL_ITER_SHIFT) & HDL_ITER_MASK));
+- -}
+- -
+- -/**
+  * qla2x00_iodesc_to_handle() - Convert an IO descriptor to a unique handle.
+  * @iodesc: io descriptor
+  *
 
---ELM77940869-6914-0_--
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.6 (GNU/Linux)
+
+iD8DBQFBgX7dmfzqmE8StAARAgxaAJ9Dfe3RvoSoRrTNJJxpxPtJrQtOoACgpNAf
+HL/CEy6+CDimbi/8xQdU+pI=
+=dSBj
+-----END PGP SIGNATURE-----
