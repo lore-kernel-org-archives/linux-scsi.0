@@ -1,45 +1,29 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: Mike Anderson <andmike@us.ibm.com>
 Subject: Re: [PATCH] [RFC] Advanced TCA SCSI Disk Hotswap
-Date: Thu, 24 Oct 2002 15:32:40 -0700
+Date: Thu, 24 Oct 2002 15:36:03 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021024153240.A18890@eng2.beaverton.ibm.com>
+Message-ID: <20021024223603.GF1563@beaverton.ibm.com>
 References: <3DB7436E.9060100@mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3DB7436E.9060100@mvista.com>; from sdake@mvista.com on Wed, Oct 23, 2002 at 05:48:46PM -0700
+Content-Disposition: inline
+In-Reply-To: <3DB7436E.9060100@mvista.com>
 List-Id: linux-scsi@vger.kernel.org
 To: Steven Dake <sdake@mvista.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Wed, Oct 23, 2002 at 05:48:46PM -0700, Steven Dake wrote:
-> linux-scsi,
-> 
-> 
-
-> diff -uNr linux-2.5.44-qla/drivers/scsi/scsi_error.c linux-2.5.44-scsi-hotswap/drivers/scsi/scsi_error.c
-> --- linux-2.5.44-qla/drivers/scsi/scsi_error.c	Fri Oct 18 21:01:07 2002
-> +++ linux-2.5.44-scsi-hotswap/drivers/scsi/scsi_error.c	Wed Oct 23 11:48:20 2002
-
-> @@ -962,6 +970,8 @@
->  
->  	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Trying BDR\n", __FUNCTION__));
->  
-> +	spin_lock (&shost->host_queue_lock);
+Steven Dake [sdake@mvista.com] wrote:
+> +static char scsi_hotswap_insert_by_scsi_id_usage[] = {
+> +	"Usage: echo \"[host] [channel] [lun] [id]\" > insert_by_scsi_id\n"
+> +};
 > +
->  	for (sdev = shost->host_queue; sdev; sdev = sdev->next) {
->  		for (scmd = sc_todo; scmd; scmd = scmd->bh_next)
->  			if ((scmd->device == sdev) &&
-> @@ -985,6 +995,7 @@
->  							scsi_eh_finish_cmd(scmd, shost);
->  					}
->  	}
-> +	spin_unlock (&shost->host_queue_lock);
->  
->  	return shost->host_failed;
->  }
 
-The bus device reset functions are allowed sleep, so you cannot hold a lock
-while calling them.
+Why is the interface lun id istead of id lun.
+The same for lun wwn instead of wwn lun.
 
--- Patrick Mansfield
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
