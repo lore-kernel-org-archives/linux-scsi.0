@@ -1,61 +1,49 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: [PATCH] 5/6: scsi_inq_timeout
-Date: Tue, 20 Apr 2004 13:34:14 +0200
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] i2o_block Fix, possible CFQ elevator problem?
+Date: Tue, 20 Apr 2004 13:34:29 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040420113414.GF4356@tpkurt.garloff.de>
-References: <20040418185957.GH4868@tpkurt.garloff.de> <20040418202109.C3393@infradead.org> <20040418221610.GN4868@tpkurt.garloff.de> <20040419094106.A31555@beaverton.ibm.com>
+Message-ID: <20040420113429.GL25806@suse.de>
+References: <408471E2.8060201@redhat.com> <40848159.7090605@togami.com> <20040420070805.GC25806@suse.de> <4084D83D.8060405@redhat.com> <20040420080325.GD25806@suse.de> <4084E671.4090509@redhat.com> <20040420090523.GE25806@suse.de> <40850143.1090709@redhat.com> <20040420105622.GK25806@suse.de> <40850987.1080603@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="SO98HVl1bnMOfKZd"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:29833 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S262650AbUDTLeU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Apr 2004 07:34:20 -0400
-Content-Disposition: inline
-In-Reply-To: <20040419094106.A31555@beaverton.ibm.com>
-List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
-
-
---SO98HVl1bnMOfKZd
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:54928 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262424AbUDTLeh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Apr 2004 07:34:37 -0400
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <40850987.1080603@redhat.com>
+List-Id: linux-scsi@vger.kernel.org
+To: Warren Togami <wtogami@redhat.com>
+Cc: Markus Lidel <Markus.Lidel@shadowconnect.com>, Arjan van de Ven <arjanv@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@redhat.com>
 
-On Mon, Apr 19, 2004 at 09:41:06AM -0700, Patrick Mansfield wrote:
-> Why not increase it for all cases? And/or make it a config value?=20
+On Tue, Apr 20 2004, Warren Togami wrote:
+> Jens Axboe wrote:
+> >>>
+> >>>Repeat the tests that made it crash. The last patch I sent should work
+> >>>for you, at least until the real issue is found.
+> >>>
+> >>
+> >>Tested your patch, it indeed does seem to keep the system stable.  If I 
+> >>am understanding it right, the patch disables merging in the case where 
+> >>it would have caused a BUG condition?  (Less efficiency.)
+> >
+> >
+> 
+> Bad news... much later during the test the system locked up.  During 
+> this test we did not use "sync" but just let all four bonnie++'s run.
+> 
+> http://togami.com/~warren/archive/2004/i2o_cfq_quad_bonnie3.txt
+> ----------- [cut here ] --------- [please bite here ] ---------
+> Kernel BUG at cfq_iosched:404
+> invalid operand: 0000 [1] SMP
 
-Config value is stpuid. I made it a boot parameter.
+Sorry about that, that's actually expected when we know this bug
+exists. You need to move the cfq_remove_merge_hints(q, crq) before the
+BUG_ON(q->last_merge == rq) check, or (better) just remove it
+completely. There's no way that q->last_merge could be set to this
+request after cfq_remove_merge_hints() was called.
 
-> It won't slow down functioning hardware, just the cases where we get no
-> response.
+-- 
+Jens Axboe
 
-True, you should get selection timeouts there.
-(Or the equivalent on non SPI transports.)
-
-Still, 5s is already quite long; I would dislike the kernel needing
-25s to recognize a broken device, just because somebody had built
-screwed up hardware.
-
-I'll drop the arch specific default.
-
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
-SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
-
---SO98HVl1bnMOfKZd
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFAhQq2xmLh6hyYd04RAvgUAJwMYw6x/cAZ4jaCjelk1UKs3oD7zACgngLz
-+ulrL3dOX3IN6r3+1Gc0M8M=
-=DbaQ
------END PGP SIGNATURE-----
-
---SO98HVl1bnMOfKZd--
