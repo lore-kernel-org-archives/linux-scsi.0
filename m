@@ -1,60 +1,156 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: dc395x patch: failure notice (fwd)
-Date: Tue, 22 Feb 2005 07:48:52 +0100 (CET)
-Message-ID: <Pine.LNX.4.60.0502220747020.3470@poirot.grange>
+From: Yokota Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+Subject: [PATCH 1/13] nsp32, nsp_cs driver update
+Date: Tue, 22 Feb 2005 16:02:41 +0900 (JST)
+Message-ID: <20050222.160241.74686073.yokota@netlab.is.tsukuba.ac.jp>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from mail.gmx.net ([213.165.64.20]:35261 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S262214AbVBVGtj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Feb 2005 01:49:39 -0500
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Received: from pixy-gw.netlab.cs.tsukuba.ac.jp ([130.158.83.98]:34574 "HELO
+	pixy.netlab.cs.tsukuba.ac.jp") by vger.kernel.org with SMTP
+	id S262221AbVBVHC4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Feb 2005 02:02:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, lenehan@twibble.org
+To: linux-scsi@vger.kernel.org
 
-Jamie, mail to you bounced:
+ Hi.
 
----------- Forwarded message ----------
-Date: 21 Feb 2005 22:28:46 -0000
-From: MAILER-DAEMON@mail.gmx.net
-To: g.liakhovetski@gmx.de
-Subject: failure notice
+ "nsp32" and "nsp_cs" driver is updated.
+And here is patch file for kernel 2.6.10
 
-Hi. This is the qmail-send program at mail.gmx.net.
-I'm afraid I wasn't able to deliver your message to the following addresses.
-This is a permanent error; I've given up. Sorry it didn't work out.
+ You can also get these patchs in one big file.
+http://www.netlab.is.tsukuba.ac.jp/~yokota/archive/linux-2.6.10-nsp20050222.diff.bz2
 
-<lenehan@twibble.org>:
-202.173.155.197_does_not_like_recipient./Remote_host_said:_554_<pop.gmx.de[213.165.64.20]>:_Client_host_rejected:_See_http://twibble.org/Policy/excessivespam/Giving_up_on_202.173.155.197./
-
---- Below this line is a copy of the message.
-
-Return-Path: <g.liakhovetski@gmx.de>
-Received: (qmail invoked by alias); 21 Feb 2005 22:28:39 -0000
-Received: from dialin-212-144-033-049.arcor-ip.net (EHLO poirot.grange) (212.144.33.49)
-  by mail.gmx.net (mp014) with SMTP; 21 Feb 2005 23:28:39 +0100
-X-Authenticated: #20450766
-Received: from lyakh (helo=localhost)
-	by poirot.grange with local-esmtp (Exim 3.35 #1 (Debian))
-	id 1D3LcN-00021y-00; Mon, 21 Feb 2005 23:01:27 +0100
-Date: Mon, 21 Feb 2005 23:01:27 +0100 (CET)
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-To: Jamie Lenehan <lenehan@twibble.org>
-cc: linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] dc395x fix memory mapping (was Re: dc395x: can't write
- to tape)
-In-Reply-To: <Pine.LNX.4.60.0502062309570.5347@poirot.grange>
-Message-ID: <Pine.LNX.4.60.0502212258460.5642@poirot.grange>
-References: <200501060518.25782.andrex@alumni.utexas.net>
- <Pine.LNX.4.60.0501062138580.7568@poirot.grange> <20050109053342.GA5799@twibble.org>
- <Pine.LNX.4.60.0501091238010.3910@poirot.grange> <20050109125116.GA6293@twibble.org>
- <Pine.LNX.4.60.0501222356400.5769@poirot.grange> <Pine.LNX.4.60.0502062309570.5347@poirot.grange>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-X-Y-GMX-Trusted: 0
-X-GMX-Antivirus: 0 (no virus found)
-
-Regards
-Guennadi
----
-Guennadi Liakhovetski
+--- linux-2.6.10/Documentation/scsi/NinjaSCSI.txt	2004-10-19 06:54:55.000000000 +0900
++++ linux-2.6.10-nsp/Documentation/scsi/NinjaSCSI.txt	1970-01-01 09:00:00.000000000 +0900
+@@ -1,130 +0,0 @@
+-
+-         WorkBiT NinjaSCSI-3/32Bi driver for Linux
+-
+-1. Comment
+- This is Workbit corp.'s(http://www.workbit.co.jp/) NinjaSCSI-3
+-(http://www.workbit.co.jp/ts/z_nj3r.html) and NinjaSCSI-32Bi
+-(http://www.workbit.co.jp/ts/z_njsc32bi.html) PCMCIA card driver module
+-for Linux.
+-
+-2. My Linux environment
+-Linux kernel: 2.4.7 / 2.2.19
+-pcmcia-cs:    3.1.27
+-gcc:          gcc-2.95.4
+-PC card:      I-O data PCSC-F (NinjaSCSI-3)
+-              I-O data CBSC-II in 16 bit mode (NinjaSCSI-32Bi)
+-SCSI device:  I-O data CDPS-PX24 (CD-ROM drive)
+-              Media Intelligent MMO-640GT (Optical disk drive)
+-
+-3. Install
+-[1] Check your PC card is true "NinjaSCSI-3" card.
+-    If you installed pcmcia-cs already, pcmcia reports your card as UNKNOWN
+-    card, and write ["WBT", "NinjaSCSI-3", "R1.0"] or some other string to
+-    your console or log file.
+-    You can also use "cardctl" program (this program is in pcmcia-cs source
+-    code) to get more info.
+-
+-# cat /var/log/messgaes
+-...
+-Jan  2 03:45:06 lindberg cardmgr[78]: unsupported card in socket 1
+-Jan  2 03:45:06 lindberg cardmgr[78]:   product info: "WBT", "NinjaSCSI-3", "R1.0"
+-...
+-# cardctl ident
+-Socket 0:
+-  no product info available
+-Socket 1:
+-  product info: "IO DATA", "CBSC16       ", "1"
+-
+-
+-[2] Get Linux kernel source, and extract it to /usr/src.
+-    Because NinjaSCSI driver requiers some SCSI header files in Linux kernel
+-    source.
+-    I recomend rebuilding your kernel. This eliminate some versioning problem.
+-$ cd /usr/src
+-$ tar -zxvf linux-x.x.x.tar.gz
+-$ cd linux
+-$ make config
+-...
+-
+-[3] If you use this driver with Kernel 2.2, Unpack pcmcia-cs in some directory
+-    and make & install. This driver requies pcmcia-cs header file.
+-$ cd /usr/src
+-$ tar zxvf cs-pcmcia-cs-3.x.x.tar.gz
+-...
+-
+-[4] Extract this driver's archive somewhere, and edit Makefile, then do make.
+-$ tar -zxvf nsp_cs-x.x.tar.gz
+-$ cd nsp_cs-x.x
+-$ emacs Makefile
+-...
+-$ make
+-
+-[5] Copy nsp_cs.o to suitable plase, like /lib/modules/<Kernel version>/pcmcia/ .
+-
+-[6] Add these lines to /etc/pcmcia/config .
+-    If you yse pcmcia-cs-3.1.8 or later, we can use "nsp_cs.conf" file.
+-    So, you don't need to edit file. Just copy to /etc/pcmcia/ .
+-
+--------------------------------------
+-device "nsp_cs"
+-  class "scsi" module "nsp_cs"
+-
+-card "WorkBit NinjaSCSI-3"
+-  version "WBT", "NinjaSCSI-3", "R1.0"
+-  bind "nsp_cs"
+-
+-card "WorkBit NinjaSCSI-32Bi (16bit)"
+-  version "WORKBIT", "UltraNinja-16", "1"
+-  bind "nsp_cs"
+-
+-# OEM
+-card "WorkBit NinjaSCSI-32Bi (16bit) / IO-DATA"
+-  version "IO DATA", "CBSC16       ", "1"
+-  bind "nsp_cs"
+-
+-# OEM
+-card "WorkBit NinjaSCSI-32Bi (16bit) / KME-1"
+-  version "KME    ", "SCSI-CARD-001", "1"
+-  bind "nsp_cs"
+-card "WorkBit NinjaSCSI-32Bi (16bit) / KME-2"
+-  version "KME    ", "SCSI-CARD-002", "1"
+-  bind "nsp_cs"
+-card "WorkBit NinjaSCSI-32Bi (16bit) / KME-3"
+-  version "KME    ", "SCSI-CARD-003", "1"
+-  bind "nsp_cs"
+-card "WorkBit NinjaSCSI-32Bi (16bit) / KME-4"
+-  version "KME    ", "SCSI-CARD-004", "1"
+-  bind "nsp_cs"
+--------------------------------------
+-
+-[7] Start (or restart) pcmcia-cs.
+-# /etc/rc.d/rc.pcmcia start        (BSD style)
+-or
+-# /etc/init.d/pcmcia start         (SYSV style)
+-
+-
+-4. History
+-See README.nin_cs .
+-
+-5. Caution
+- If you eject card when doing some operation for your SCSI device or suspend
+-your computer, you encount some *BAD* error like disk crash.
+- It works good when I using this driver right way. But I'm not guarantee
+-your data. Please backup your data when you use this driver.
+-
+-6. Known Bugs
+- In 2.4 kernel, you can't use 640MB Optical disk. This error comes from
+-high level SCSI driver.
+-
+-7. Testing
+- Please send me some reports(bug reports etc..) of this software.
+-When you send report, please tell me these or more.
+-	card name
+-	kernel version
+-	your SCSI device name(hard drive, CD-ROM, etc...)
+-
+-8. Copyright
+- See GPL.
+-
+-
+-2001/08/08 yokota@netlab.is.tsukuba.ac.jp <YOKOTA Hiroshi>
