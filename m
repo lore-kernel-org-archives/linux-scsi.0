@@ -1,42 +1,37 @@
-From: Anton Blanchard <anton@samba.org>
-Subject: Re: PATCH: Further aacraid work
-Date: Fri, 18 Jun 2004 01:11:53 +1000
+From: "Juan Carlos Ocasio" <jcocasio@bordercomm.com>
+Subject: Megaraid Driver on RedHat 6.2 Perc 4/Di
+Date: Thu, 17 Jun 2004 09:22:24 -0600 (MDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040617151153.GA30514@krispykreme>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189FD2402C@otce2k03.adaptec.com>
+Message-ID: <1424.65.90.94.23.1087485744.squirrel@webmail.bordercomm.com>
+Reply-To: jcocasio@bordercomm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:26846 "EHLO ozlabs.org")
-	by vger.kernel.org with ESMTP id S266545AbUFQPQ5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2004 11:16:57 -0400
-Content-Disposition: inline
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189FD2402C@otce2k03.adaptec.com>
+Received: from [216.84.87.133] ([216.84.87.133]:19398 "EHLO
+	mail.bordercomm.com") by vger.kernel.org with ESMTP id S266555AbUFQPWI
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Jun 2004 11:22:08 -0400
+Received: from mail.bordercomm.com (localhost.localdomain [127.0.0.1])
+	by mail.bordercomm.com (8.12.8/8.12.8) with ESMTP id i5HFMOrh007424
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Jun 2004 09:22:24 -0600
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Alan Cox <alan@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
- 
-> This would not be such an issue if Linux provided large SG elements
-> rather than the fubar descending page order ones they issue today. If
-> this could be fixed, I'd not even be interested in the optimization of
-> the SG.
+Gentlemen,
 
-Please divert some of your anger towards your manufacturer of dodgy
-hardware. Any sane hardware with an IOMMU handles this just fine.
-eg on ppc64 running a disk test:
+     I am new to this list and would like to ask a question...
+I have a Dell 1750 with the Perc 4/di raid card.  Due to the fact that I
+must use RedHat 6.2 for the application this server is intended for, I
+need to find a solution for this soon.  I have downloaded the megaraid
+drivers from LSI, but keep getting errors on the compile...and I know the
+lowest driver I can use is 1.18f I believe.  Does any one have the
+drivers/driver diskette for RH6.2?  If not...I'm in a super bind and am
+willing to fork over a couple of bucks to whomever is willing to compile
+these drivers for me...
 
-sg size    in        out
-1           3      47569
-2           0       2591
-3           0       1123
-4           0        447
-5           0        429
-...
-62       5095          0
-64      47061          0
+Many thanks,
 
-The IOMMU is taking 62-64 entry SG lists and producing 1-5 entry lists.
+Juan Carlos Ocasio
 
-Anton
+
