@@ -1,42 +1,32 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] BUG when removing USB flash drive
-Date: Fri, 14 May 2004 11:12:34 -0400 (EDT)
+From: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+Subject: Re: Oops on alpha with 2.6.6 while loading aic7xxx driver
+Date: Fri, 14 May 2004 19:47:49 +0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0405141105060.4524-100000@ida.rowland.org>
-References: <20040514053623.GD3819@us.ibm.com>
+Message-ID: <20040514194749.A31100@jurassic.park.msu.ru>
+References: <20040513194511.GA18200@localhost>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:7684 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S261505AbUENPMf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 May 2004 11:12:35 -0400
-In-Reply-To: <20040514053623.GD3819@us.ibm.com>
+Received: from jurassic.park.msu.ru ([195.208.223.243]:60841 "EHLO
+	jurassic.park.msu.ru") by vger.kernel.org with ESMTP
+	id S261568AbUENPsL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 May 2004 11:48:11 -0400
+Content-Disposition: inline
+In-Reply-To: <20040513194511.GA18200@localhost>; from mchouque@online.fr on Thu, May 13, 2004 at 03:45:11PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Alberto Bertogli <albertogli@telpin.com.ar>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Mathieu Chouquet-Stringer <mchouque@online.fr>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Andrew Morton <akpm@osdl.org>
 
-On Thu, 13 May 2004, Mike Anderson wrote:
+On Thu, May 13, 2004 at 03:45:11PM -0400, Mathieu Chouquet-Stringer wrote:
+> I just freshly compiled 2.6.6 using gcc 3.4.0 (built as a cross-compiler on
+> i386) and the kernel oopses when it loads the module for the Adaptec scsi
+> card. As a side note, it works when the driver is built-in.
 
-> The LLDD queuecommand should not be called after the return of
-> scsi_remove_host (unless we have a bug). The LLDD should not free its
-> resources until the release function is called on the struct device
-> passed in during the scsi_add_host call.
+Yes, I see oopses with some other modules compiled with native
+gcc-3.4.0 as well. No such problems with gcc-3.3.3.
 
-Ah.  We have a problem here, because usb-storage doesn't own that struct 
-device.  It is owned by the USB core, and usb-storage has no way to know 
-when its release function has been called.
+At the moment I can suggest that gcc-3.4.0 generates some new types
+of relocations and the kernel module loader doesn't handle them properly.
+I'll try to figure out what's wrong there, but it will take some time.
 
-Even worse, the release function may never be called at all.  The device
-itself may still exist and be attached to the system even though the
-usb-storage driver has been unbound from it.
-
-There must be many other LLDDs with the same problem.  Any driver that 
-manages a PCI host controller, for example.  The struct device it receives 
-from the PCI layer isn't owned by the LLDD, yet that's what it must pass 
-to scsi_add_host().
-
-How should we handle this?
-
-Alan Stern
-
+Ivan.
