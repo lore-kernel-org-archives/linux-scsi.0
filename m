@@ -1,66 +1,44 @@
-From: "Jeffery, David" <David_Jeffery@adaptec.com>
-Subject: [patch 2.5] ips queue depths
-Date: Tue, 15 Oct 2002 14:55:46 -0400
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [PATCH] SCSI hotplug support
+Date: Tue, 15 Oct 2002 15:13:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A3B9245C291EEF4785A24A1DBE8D852B0376BC@rtpexc01.adaptec.com>
+Message-ID: <20021015191330.GC4391@redhat.com>
+References: <andersen@codepoet.org> <20021014203749.GA24904@codepoet.org> <200210142107.g9EL7IX04354@localhost.localdomain> <20021014215416.GB25941@codepoet.org> <20021014222515.GD1274@redhat.com> <20021015052521.GA1967@codepoet.org> <20021015182247.GA4391@redhat.com> <20021015184535.GA16401@codepoet.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_000_01C2747C.784DDA50"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20021015184535.GA16401@codepoet.org>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Dave Hansen' <haveblue@us.ibm.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Erik Andersen <andersen@codepoet.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-This message is in MIME format. Since your mail reader does not understand
-this format, some or all of this message may not be legible.
+On Tue, Oct 15, 2002 at 12:45:35PM -0600, Erik Andersen wrote:
+> On Tue Oct 15, 2002 at 02:22:47PM -0400, Doug Ledford wrote:
+> > On Mon, Oct 14, 2002 at 11:25:22PM -0600, Erik Andersen wrote:
+> > > 
+> > > It is called from within the insmod's context.
+> > 
+> > So it's called by what module then?  And what happens if we have a user 
+> > add a hard drive and it gets the module loaded and then attaches the 
+> > drive, then we attach another drive sometime later, and this time hotplug 
+> > doesn't do anything because the right module is already loaded?  How does 
+> > the drive get added then?  Am I missing something?
+> 
+> Oops.  I spoke wrongly....  It is called from within
+> /sbin/hotplug's context.
 
-------_=_NextPart_000_01C2747C.784DDA50
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Then what the sam hell has all this crap been for!?!?  We've been saying 
+all along "Add the device from hotplug instead of kernel module", and now 
+you tell us that it's already happening from hotplug's context?  If it's 
+already happening from hotplug's context, then why not just do the 
+fprintf(); that I put in one of my emails and be done with it?  And what 
+about the scenario I asked about in my last email regarding a second disc 
+and the situation where no module needs loaded?  How is that handled?
 
-Dave,
-
-Here's a patch that should restore the queue depths to what they were before
-the
-queue depths change was merged in.  Hopefully this well restore your lost
-performance.  If I don't hear or find anything bad about it, it will be
-going
-to Linus shortly.
-
-And thanks goes to Mike Anderson for his initial version.  That made writing
-this patch all the easier.
-
-David Jeffery
-
-
-------_=_NextPart_000_01C2747C.784DDA50
-Content-Type: application/octet-stream;
-	name="ips2.5.42.patch"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="ips2.5.42.patch"
-
---- linux-2.5.42/drivers/scsi/ips.c	Tue Oct 15 14:34:16 2002=0A=
-+++ linux-2.5.42_new/drivers/scsi/ips.c	Tue Oct 15 14:24:13 2002=0A=
-@@ -1877,12 +1877,16 @@=0A=
- {=0A=
-    ips_ha_t    *ha;=0A=
-    int          min;=0A=
-+   int          depth;=0A=
- =0A=
-    ha =3D IPS_HA(SDptr->host);=0A=
-    min =3D ha->max_cmds / 4;=0A=
--   if (min < 8)=0A=
--      min =3D ha->max_cmds - 1;=0A=
--   scsi_adjust_queue_depth(SDptr, MSG_ORDERED_TAG, min);=0A=
-+   if((SDptr->type =3D=3D TYPE_DISK) && ha->enq->ucLogDriveCount){=0A=
-+      depth =3D (ha->max_cmds - 1) / ha->enq->ucLogDriveCount;=0A=
-+      depth =3D max(min, depth);=0A=
-+   } else=0A=
-+      depth =3D 2;=0A=
-+   scsi_adjust_queue_depth(SDptr, MSG_SIMPLE_TAG, depth);=0A=
-    return 0;=0A=
- }=0A=
- =0A=
-
-------_=_NextPart_000_01C2747C.784DDA50--
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
