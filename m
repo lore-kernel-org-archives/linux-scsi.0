@@ -1,43 +1,25 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: 2.5.48 modules problem
-Date: Tue, 19 Nov 2002 10:40:43 +1100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DD97A7B.60200@torque.net>
-References: <200211182217.gAIMHi904571@localhost.localdomain>
-Reply-To: dougg@torque.net
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Why /dev/sdc1 doesn't show up...
+Date: 19 Nov 2002 00:32:39 +0000
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1037665959.9625.0.camel@irongate.swansea.linux.org.uk>
+References: <20021118235221.637162C456@lists.samba.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20021118235221.637162C456@lists.samba.org>
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Alexander Viro <viro@math.psu.edu>, Doug Ledford <dledford@redhat.com>, Linux Scsi Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@transmeta.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
 
-J.E.J. Bottomley wrote:
-> dougg@torque.net said:
+On Mon, 2002-11-18 at 23:49, Rusty Russell wrote:
+> In message <Pine.GSO.4.21.0211180403440.23400-100000@steklov.math.psu.edu> you 
+> write:
+> > Not really.  For case in question (block devices) there is only one path
+> > and I'd rather keep it that way, thank you very much.
 > 
->>Can't see other reports on this in the lists **. When I upgraded to lk
->>2.5.48, my kernel can't load modules. modprobe and friends all fail
->>with:
->>   QM_MODULES: Function not implemented 
-> 
-> 
-> The entire method the kernel uses to construct and load modules changed in 
-> 2.5.48.  You need Rusty's new module loader routines:
-> 
-> http://www.kernel.org/pub/linux/kernel/people/rusty/module-init-tools-0.7.tar.g
-> z
+> See other posting.  This is a fundamental design decision, and it's
+> not changing.  Sorry.
 
-James,
-Thanks. I made some progress. Hope Rusty is going to write
-some documentation, man pages, update the Changes file, etc.
-
-The new modprobe doesn't seem to pass parameters (options)
-properly, at least that is what I'm seeing with scsi_debug.
-
-Enough other things are broken with 2.5.48 to force me back
-to lk 2.4.18 .
-
-Doug Gilbert
-
-
+So is the block layer one, and it was fundamentally designed first 8)
