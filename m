@@ -1,42 +1,28 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] wd33c93 updates
-Date: 24 Feb 2003 14:17:50 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: drop scsi_register_blocked_host() in 2.5?
+Date: Mon, 24 Feb 2003 20:17:40 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1046114271.1720.22.camel@mulgrave>
-References: <20030223153007.A9377@lst.de>
-	<1046101213.2288.5.camel@mulgrave>  <200302242007.15878.oliver@neukum.name>
+Message-ID: <20030224201740.A13910@infradead.org>
+References: <70652A801D9E0C469C28A0F8BCF49CF9012EBD27@itmi1mx2.corp.emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id LAA27844
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Feb 2003 11:17:55 -0800
-In-Reply-To: <200302242007.15878.oliver@neukum.name>
+Content-Disposition: inline
+In-Reply-To: <70652A801D9E0C469C28A0F8BCF49CF9012EBD27@itmi1mx2.corp.emc.com>; from Ballabio_Dario@emc.com on Mon, Feb 24, 2003 at 03:32:09AM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.name>
-Cc: Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Ballabio_Dario@emc.com
+Cc: hch@infradead.org, dougg@torque.net, linux-scsi@vger.kernel.org
 
-On Mon, 2003-02-24 at 14:07, Oliver Neukum wrote:
-> Am Montag, 24. Februar 2003 16:40 schrieb James Bottomley:
-> > On Sun, 2003-02-23 at 09:30, Christoph Hellwig wrote:
-> > > The PC98 folks have some updates in their tree to make the generic
-> > > wd33c93 driver usable in PIO mode, but unfortunately the way they do it
-> > > (include a header specific to their lowlevel driver in wd33c93.c
-> > > conditionally) is rather ugly.
-> >
-> > OK much as I dislike looking at driver clean ups, this one stood out.
-> > We don't need each driver to get the command direction by parsing, the
-> > mid-layer now does it for you.
-> 
-> Hi,
-> 
-> in all cases? And in which kernel versions?
+On Mon, Feb 24, 2003 at 03:32:09AM -0500, Ballabio_Dario@emc.com wrote:
+> This means giving up forever to support multiple isa scsi hba's.
+> The aim of these routines (left unimplemented by Eric during the 2.3
+> development cycle)
+> was to allow multiple isa hba working at the same time, but being active
+> one at a time. If you try to do heavy i/o on a system with multiple u14-34f
+> or isa eata boards (I have not tested aha1542 but it is probably the same)
+> it crashes immediately due to data corruption at the isa bus level.
+> Using a 2.2 kernel the same system works perfectly.
 
-Well, definitely all of 2.5 and most of 2.4.  I think it was done early
-on in 2.3 actually as part of the Eric Youngdale clean ups, but I don't
-have the exact version to hand.
-
-James
-
+The stubs won't help you to reach that goal.  Feel free to bring them back
+once you have an actual implementation.
 
