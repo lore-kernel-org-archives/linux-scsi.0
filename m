@@ -1,41 +1,57 @@
-From: Ricky Beam <jfbeam@bluetronic.net>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] Format Unit can take many hours
-Date: Tue, 11 May 2004 10:01:55 -0400 (EDT)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.33.0405110952380.14297-100000@sweetums.bluetronic.net>
-References: <20040511114936.GI4828@tpkurt.garloff.de>
+Date: Tue, 11 May 2004 12:10:17 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <40A0FAE9.90900@pobox.com>
+References: <20040511114936.GI4828@tpkurt.garloff.de> <20040511122037.GG1906@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sweetums.bluetronic.net ([24.199.150.42]:23200 "EHLO
-	sweetums.bluetronic.net") by vger.kernel.org with ESMTP
-	id S264738AbUEKOGi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 May 2004 10:06:38 -0400
-In-Reply-To: <20040511114936.GI4828@tpkurt.garloff.de>
-Content-ID: <Pine.GSO.4.33.0405110952382.14297@sweetums.bluetronic.net>
-Content-Disposition: INLINE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org-S264810AbUEKQKk@vger.kernel.org>
+In-Reply-To: <20040511122037.GG1906@suse.de>
+To: Jens Axboe <axboe@suse.de>
+Cc: Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
 
-On Tue, 11 May 2004, Kurt Garloff wrote:
->the timeout for FORMAT_UNIT should be much longer; I've seen 8hrs
->already (75Gig). I've increased the timeout from 2hrs to 12hrs.
+Jens Axboe wrote:
+> On Tue, May 11 2004, Kurt Garloff wrote:
+> 
+>>Hi,
+>>
+>>the timeout for FORMAT_UNIT should be much longer; I've seen 8hrs
+>>already (75Gig). I've increased the timeout from 2hrs to 12hrs.
+>>
+>>Regards,
+>>-- 
+>>Kurt Garloff  <garloff@suse.de>                            Cologne, DE 
+>>SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
+> 
+> 
+>>--- linux-2.6.5.orig/drivers/scsi/scsi_ioctl.c	2004-04-04 05:38:20.000000000 +0200
+>>+++ linux-2.6.5/drivers/scsi/scsi_ioctl.c	2004-05-11 08:59:12.837421215 +0200
+>>@@ -26,12 +26,12 @@
+>> #include "scsi_logging.h"
+>> 
+>> #define NORMAL_RETRIES			5
+>>-#define IOCTL_NORMAL_TIMEOUT			(10 * HZ)
+>>-#define FORMAT_UNIT_TIMEOUT		(2 * 60 * 60 * HZ)
+>>+#define IOCTL_NORMAL_TIMEOUT		(10 * HZ)
+>>+#define FORMAT_UNIT_TIMEOUT		(12 * 60 * 60 * HZ)
+>> #define START_STOP_TIMEOUT		(60 * HZ)
+>> #define MOVE_MEDIUM_TIMEOUT		(5 * 60 * HZ)
+>> #define READ_ELEMENT_STATUS_TIMEOUT	(5 * 60 * HZ)
+>>-#define READ_DEFECT_DATA_TIMEOUT	(60 * HZ )  /* ZIP-250 on parallel port takes as long! */
+>>+#define READ_DEFECT_DATA_TIMEOUT	(60 * HZ)  /* ZIP-250 on parallel port takes as long! */
+>> 
+>> #define MAX_BUF PAGE_SIZE
+> 
+> 
+> block/scsi_ioctl.c should likely receive similar treatment then.
 
-If you execute a FORMAT_UNIT properly, the timeout is irrelevant.  Set the
-IMMED bit so the command returns as soon as the drive begins processing it.
-Send TEST_UNIT_READY to check the progress.  I'll have to consult the
-spec, but I think support for Immed is required.
 
-That's how my (now 8 year old) tool for formating scsi devices (zip, jaz,
-hard disks, tapes, etc.) has always worked. [No, it is not published code.
-If the script kiddies want to low-level your hard drive, they're gonna have
-to learn how to do it themselves.]
+This timeout is dependent on media size, I should think...
 
---Ricky
+Is there any reason to think that this timeout will _not_ be continually 
+patched in the future, as larger and larger sizes are used?
 
-PS: That even works under Solaris where one does not have the source code
-    to change the command timeouts.
-
-
+	Jeff
