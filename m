@@ -1,34 +1,61 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Thu, 13 Nov 2003 14:54:23 +0000
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [usb-storage] Re: [PATCH] fix Sony USB mass storage - pass
+	larger receive buffer
+Date: 13 Nov 2003 09:21:36 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031113145423.GI10058@parcelfarce.linux.theplanet.co.uk>
-References: <20031027153932.A16679@infradead.org> <008d01c3a9f2$a56e60c0$8f074d0a@apac.cisco.com>
+Message-ID: <1068740496.13580.5.camel@patrh9>
+References: <Pine.LNX.4.44L0.0311130950090.843-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:59624 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S264321AbTKMPZV
+Received: from email-out2.iomega.com ([147.178.1.83]:34517 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264331AbTKMQWQ
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Nov 2003 10:25:21 -0500
-Content-Disposition: inline
-In-Reply-To: <008d01c3a9f2$a56e60c0$8f074d0a@apac.cisco.com>
+	Thu, 13 Nov 2003 11:22:16 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0311130950090.843-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Sachin Mhatre (smhatre)" <smhatre@cisco.com>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, linux-scsi@vger.kernel.org, davmyers@cisco.com
+To: stern@rowland.harvard.edu
+Cc: mdharm-scsi@one-eyed-alien.net, patmans@us.ibm.com, james.bottomley@steeleye.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, ronald@kuetemeier.com, dmitrik@users.sourceforge.net, idan@idanso.dyndns.org
 
-On Thu, Nov 13, 2003 at 08:00:11PM +0530, Sachin Mhatre (smhatre) wrote:
-> 	We need the md5 and crc functions from the user level as well as
-> from the kernel. The crypto API and the CRC32 kernel  library functions
-> can solve the problem of md5 and crc computation in the kernel. But its
-> not possible to use these APIs from the user level. One way could be to
-> use system calls. But wouldn't that make the code cumbersome?
+> > I'm starting to think that this may be the best solution --
+> > blacklist all MODE_SENSE[_10] commands from all Direct-Access
+> > devices.
+> 
+> I was just going to suggest that myself -- or rather, blacklist all 
+> MODE-SENSE(x) commands from all USB disk-type devices.
 
-Uhm, your user code is free to do whatever it likes, including using
-its own md5 routines instead of the ones in libssl.  But the kernel code
-should use the kernel facilities.
+We may as well fix SCSI over IDE and SCSI over 1394/FireWire/iLink at
+the same time we fix SCSI over USB, yes?
 
--- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
+> Is there any strong reason not to do this?
+
+Have we yet begun to experiment with disks that we can write protect?
+
+> Bear in mind that Windows apparently does not use these commands.
+
+Rather, Windows either does not use the variations in these commands
+that we have tried or else uses a different variation of reset that
+works.
+
+We could blacklist just USB MSC CBI/CB, for example, thus fixing the
+Sony without making connections, especially SG_IO connections, to USB
+MSC BBB more opaque.
+
+> I don't see how not knowing the true read-write status or caching type
+> will hurt anything.
+
+Anybody know why Jens Axboe so vehemently rejected my suggestion that
+that we teach cdrom.ko and sr_mod.ko to pass writes thru to all PDT x05
+DVD/CD?
+
+> (And the read-write status can be adjusted, if necessary, when a WRITE
+> command fails with Medium Error: Write Protected sense.)
+
+Aye.  But will the layers above cope well with such a late error?  I've
+seen dmesg spew when playing with mounting udf.ko writable on top of a
+read-only disc.
+
+Pat LaVarre
+
+
