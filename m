@@ -1,52 +1,49 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH] update scsi_eh_get_sense commentary
-Date: Wed, 25 Aug 2004 09:52:40 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] BKL removal for EH thread startup
+Date: Wed, 25 Aug 2004 18:39:32 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <412C99A8.3060508@adaptec.com>
-References: <20040824213827.GA27904@lst.de>
+Message-ID: <20040825163932.GA12679@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:64413 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S267473AbUHYNwn (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:28861 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S268120AbUHYQjg (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Aug 2004 09:52:43 -0400
-In-Reply-To: <20040824213827.GA27904@lst.de>
+	Wed, 25 Aug 2004 12:39:36 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-Very good!
+We don't need the BKL anymore for thread startup.
 
-Christoph Hellwig wrote:
-> 
-> --- 1.79/drivers/scsi/scsi_error.c      2004-06-19 16:47:16 +02:00
-> +++ edited/drivers/scsi/scsi_error.c    2004-08-24 13:38:13 +02:00
-> @@ -643,15 +643,13 @@
->   * Notes:
->   *    This has the unfortunate side effect that if a shost adapter does
->   *    not automatically request sense information, that we end up shutting
-> - *    it down before we request it.  All shosts should be doing this
-> - *    anyways, so for now all I have to say is tough noogies if you end up
-> - *    in here.  On second thought, this is probably a good idea.  We
-> - *    *really* want to give authors an incentive to automatically request
-> - *    this.
-> + *    it down before we request it.
->   *
-> - *    In 2.5 this capability will be going away.
-> + *    All drivers should request sense information internally these days,
-> + *    so for now all I have to say is tough noogies if you end up in here.
->   *
-> - *    Really?  --hch
-> + *    XXX: Long term this code should go away, but that needs an audit of
-> + *         all LLDDs first.
->   **/
->  static int scsi_eh_get_sense(struct list_head *work_q,
->                              struct list_head *done_q)
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
 
+===== drivers/scsi/scsi_error.c 1.79 vs edited =====
+--- 1.79/drivers/scsi/scsi_error.c	2004-06-19 16:47:16 +02:00
++++ edited/drivers/scsi/scsi_error.c	2004-08-25 18:18:31 +02:00
+@@ -22,7 +22,6 @@
+ #include <linux/kernel.h>
+ #include <linux/interrupt.h>
+ #include <linux/blkdev.h>
+-#include <linux/smp_lock.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_dbg.h>
+@@ -1639,8 +1638,6 @@
+ 	int rtn;
+ 	DECLARE_MUTEX_LOCKED(sem);
+ 
+-	lock_kernel();
+-
+ 	/*
+ 	 *    Flush resources
+ 	 */
+@@ -1651,8 +1648,6 @@
+ 
+ 	shost->eh_wait = &sem;
+ 	shost->ehandler = current;
+-
+-	unlock_kernel();
+ 
+ 	/*
+ 	 * Wake up the thread that created us.
