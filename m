@@ -1,51 +1,40 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: sbp2 driver in 2.5.72
-Date: Wed, 18 Jun 2003 22:46:20 +1000
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] scsi_mid_low_api.txt in lk 2.5.72+
+Date: Wed, 18 Jun 2003 19:30:23 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EF05F1C.6050001@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <20030618193023.A30835@infradead.org>
+References: <3EF05D16.1060101@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:50951 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S265060AbTFRMcl
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Jun 2003 08:32:41 -0400
-Received: from torque.net (d-242-38.stlucia.uq.net.au [203.101.242.38])
-	by bunyip.cc.uq.edu.au (8.12.9/8.12.9) with ESMTP id h5ICkZhp031273
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jun 2003 22:46:36 +1000 (GMT+1000)
+Received: from carisma.slowglass.com ([195.224.96.167]:50188 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S265424AbTFRSQ3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Jun 2003 14:16:29 -0400
+Content-Disposition: inline
+In-Reply-To: <3EF05D16.1060101@torque.net>; from dougg@torque.net on Wed, Jun 18, 2003 at 10:37:42PM +1000
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: linux-scsi@vger.kernel.org
 
-It works on my hardware in 2.5.72 but when the sbp2 module
-is loaded, there is a 20 second delay followed by this in
-/var/log/messages:
-   ieee1394: sbp2: Error logging into SBP-2 device -
-                   login timed-out
-It immediately retries the login which works and then
-all is well. Additionally the sbp2 driver doesn't like
-the CONFIG_DEBUG_SPINLOCK_SLEEP option set in the kernel
-build. Perhaps a spinlock is being held during that 20
-second delay.
+On Wed, Jun 18, 2003 at 10:37:42PM +1000, Douglas Gilbert wrote:
+> It anticipates various patches that Christoph has sent to
+> this list being accepted. These include:
+>    - addition of scsi_host_alloc()
+>    - renaming of struct SHT to struct scsi_host_template
 
+This seems to be in now.  I'll also send you another update
+once the header reorgansization is finished.
 
- From dmesg:
-ohci1394_0: SelfID received, but NodeID invalid (probably new bus reset 
-occurred): 0800FFC0
-ieee1394: Node added: ID:BUS[0-00:1023]  GUID[00043b000000071d]
-ieee1394: Node 00:1023 changed to 01:1023
-scsi2 : SCSI emulation for IEEE-1394 SBP-2 Devices
-ieee1394: sbp2: Error logging into SBP-2 device - login timed-out
-ieee1394: sbp2: Logged into SBP-2 device
-ieee1394: sbp2: Node[00:1023]: Max speed [S400] - Max payload [2048]
-   Vendor: QUANTUM   Model: FIREBALL ST3.2A   Rev:
-   Type:   Direct-Access                      ANSI SCSI revision: 06
-SCSI device sdb: 6306048 512-byte hdwr sectors (3229 MB)
-sdb: cache data unavailable
-sdb: assuming drive cache: write through
-  sdb: sdb1 sdb2
-Attached scsi disk sdb at scsi2, channel 0, id 0, lun 0
+> Idea: perhaps scsi_add_host() could have an extra argument
+> to inhibit the scsi device scan (or alternatively a new field
+> in struct scsi_host_template and struct Scsi_Host). Then
+> LLDs that know about their devices hot (un)plugging can use
+> scsi_add_device() and scsi_remove_device() at their leisure.
+> [Actually ieee1394/sbp2.c is already doing this ...]
 
-Doug Gilbert
+I though about this already but maybe the cleaner interface
+would be to remove the call to scsi_scan_host from scsi_add_host
+and let drivers that want it do it themselves.  (and the same
+for scsi_forget_host in scsi_remove_host)
 
