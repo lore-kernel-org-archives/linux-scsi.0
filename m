@@ -1,38 +1,67 @@
 From: Andrew Vasquez <praka@users.sourceforge.net>
-Subject: Re: [bug]
-Date: Thu, 4 Mar 2004 21:54:31 -0800
+Subject: Re: Weird SCSI error, can anyone interpret?
+Date: Thu, 4 Mar 2004 22:07:48 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040305055431.GB9315@praka.local.home>
-References: <40426118.6000904@free.fr> <1078181191.1804.82.camel@mulgrave> <4043C172.1060800@free.fr>
+Message-ID: <20040305060748.GC9315@praka.local.home>
+References: <4046AB54.9010909@backtobasicsmgmt.com>
+Reply-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-03-qfe0.socal.rr.com ([66.75.162.135]:59839 "EHLO
-	ms-smtp-03-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S262221AbUCEGPS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2004 01:15:18 -0500
+Received: from ms-smtp-02-qfe0.socal.rr.com ([66.75.162.134]:51374 "EHLO
+	ms-smtp-02-eri0.socal.rr.com") by vger.kernel.org with ESMTP
+	id S261877AbUCEG2f convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2004 01:28:35 -0500
 Content-Disposition: inline
-In-Reply-To: <4043C172.1060800@free.fr>
+In-Reply-To: <4046AB54.9010909@backtobasicsmgmt.com>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: christophe varoqui <christophe.varoqui@free.fr>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: kpfleming@backtobasicsmgmt.com, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On Tue, 02 Mar 2004, christophe varoqui wrote:
-> mm, digging this, I traced the bug to an sg_inq in my userspace code :
-> do_inq(fd, 0, 1, 0x83, buff, 64, 1);
+On Wed, 03 Mar 2004, Kevin P. Fleming wrote:
+> I've got a client with a server running 2.6.3-rc2, using a QLogic 
+> ISP2100 connected to a CMD FC-to-SCSI RAID controller. On Saturday 
+> morning, the system lost access to the RAID array, with thousands of 
+> messages like these in the log:
 > 
-> seting the size of the buff to a higher value (#define MX_ALLOC_LEN 255) 
-> mutes the oops. Dunno what happened, it worked with size = 64 until 
-> recently.
-> 
-> For completeness, the bug triggered at modprobe qla2200 because my code 
-> got exec'ed by scsi hotplug events.
-> 
+> Feb 28 03:15:46 alpha kernel: SCSI error : <2 0 0 0> return code = 0x20000
+> Feb 28 03:15:46 alpha kernel: end_request: I/O error, dev sdc, sector 
+> 278362544
 
-Have you had any luck isolating the problem? I'd just like to know if
-I need to peek any further into troubleshooting this as a qla2x00
-problem.  
+Before the deluge of I/O error messages, does the messages file
+contain any useful bits of information, i.e. the driver posting
+messages about link failures, devices going away, etc.  
 
-Thanks,
+> Restarting the Linux system did not help; 
+>
+
+Did the driver not recognize the RAID box on the loop?
+
+> power cycling the RAID array did help.
+
+Now that's interesting...
+
+> I'd like to get some clue as to whether this points to a 
+> problem with the RAID controller, the FC host adapter, or the kernel's 
+> QLogic driver.
+>
+
+Well given the information that was presented, I'd say it seems rather
+suspicious that the RAID- box needed a power-cycle to be restored into
+functioning state.  What type of I/O patterns were being run to the
+RAID box?  How many concurrent commands were being queued?
+
+Could you enable some additional debug in the driver and rerun your
+test?   Set DEBUG_QLA2100 to 1 in qla_settings.h and define
+QL_DEBUG_LEVEL_2 in qla_dbg.h.  Recompile the driver, then run your
+test.  If a failure occurs, send me the resultant /var/log/messages
+file and the output of the following command:
+
+	# cat /proc/scsi/qla2xxx/* 
+
+This should provide some clues as to what's occuring on the loop.
+
+Regards,
 Andrew Vasquez
+QLogic Corporation
