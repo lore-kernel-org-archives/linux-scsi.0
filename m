@@ -1,47 +1,48 @@
-From: Andrew R Reid <andrew@cpplating.com.au>
-Subject: Re: Problems with DLT tape drive.
-Date: Wed, 29 May 2002 09:31:39 +1000 (EST)
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: sym53c8xx: 'echo "scsi dump 1" > /proc/scsi/scsi' generates an oops
+Date: Wed, 29 May 2002 10:44:51 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <ad148q$hlh$2@main.gmane.org>
-References: <20020528153728.C14543@redhat.com>
+Message-ID: <20020529104451.A5229@eng2.beaverton.ibm.com>
+References: <200205272332.g4RNWgi22980@bach.leonora.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020528153728.C14543@redhat.com>
+In-Reply-To: <200205272332.g4RNWgi22980@bach.leonora.org>; from vladimir@acm.org on Mon, May 27, 2002 at 04:32:42PM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: linux-tape@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Vladimir G. Ivanovic" <vladimir@acm.org>
+Cc: linux-scsi@vger.kernel.org
 
-Thank you Doug.
-
-I did what you sugessted and it works fine.  I will reconfigure my scsi
-busses so that all the 25 pin scsi devices are on the same controller with
-no other devices.
-
-I suppose the reason I was having problems is that there is no termination
-on the pins that arn't used in the 25 pin cables.  Should have thought of
-that myself!
-
-> For testing purposes you could install a terminator on the tape drive, 
-> leaving the scanner and zip drive disconnected long enough to reboot the 
-> machine and try a backup.  The SCSI bus layout you list is somewhat 
-> questionable as far as reliability is concerned, and this test should 
-> eliminate a lot of the possible variances that could result in bus errors.  
-> Another option is to configure the BIOS on the 2930 card to only allow 
-> async transfers to the tape drive.  That can help with bus errors on 
-> questionable busses.
+On Mon, May 27, 2002 at 04:32:42PM -0700, Vladimir G. Ivanovic wrote:
+> The command 
 > 
-> -- 
->   Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
->          Red Hat, Inc. 
->          1801 Varsity Dr.
->          Raleigh, NC 27606
+>     echo "scsi dump 1" > /proc/scsi/scsi
+> 
+> generated an oops (syslog entries appended) on my SMP machine running a
+> 2.4.18 custom kernel derived from Red Hat's 2.4.18-4 kernel. My SCSI
+> controller is an sym53c1010-33, and its driver is
+> sym53c8xx-1.7.3c-20010512. 
+> 
+> Is this (1) operator error, (2) a high/mid/low-level SCSI problem, or
+> (3) some other kind of kernel problem that should be reported on the
+> linux-kernel list?
+> 
+> If some more information is needed, please let me know.
+> 
+> Thanks. 
+> 
+> --- Vladimir
+> 
+> P.S. I know, if it hurts, don't do that. ;-)
 
-Andrew Reid			C.P.Plating
-Technical Sales Manager		P O Box 1335	   --------- /---    /---\
-C. P. Plating Pty Ltd		222a Macathur Ave   ------- /       /    /
-Mob:    +61 4 1474 9943		EAGLE FARM 4009      ----- /       /----/
-Direct: +61 7 3260 3260		AUSTRALIA	      --- /       /
-e-mail: andrew@cpplating.com.au	Phn: +61 7 3268 3044   - |---- o /   o
-				Fax: +61 7 3268 3433
+It's a mid layer SCSI bug, it improperly references the queue:
 
+	queue_head = &blk_dev[i].request_queue.queue_head;
+
+It should really be something like:
+
+	queue_head = SDpnt->request_queue;
+
+Better yet the code should be deleted, as it is also dumping all queues for
+each Scsi_Device. The code is gone in the current 2.5.x.
+
+-- Patrick Mansfield
