@@ -1,57 +1,74 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [PATCH] scsi-misc-2.5 remove scsi_scan.c EVPD code
-Date: Mon, 5 May 2003 09:57:39 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030505165739.GD1567@beaverton.ibm.com>
-References: <UTC200304250047.h3P0lhl03517.aeb@smtp.cwi.nl> <3EB619A4.5090407@torque.net> <1052144231.1888.10.camel@mulgrave> <20030505155210.GB1567@beaverton.ibm.com> <1052151252.1888.15.camel@mulgrave>
+Date: 05 May 2003 11:59:10 -0500
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Message-ID: <1052153952.1816.22.camel@mulgrave>
+References: <UTC200304250047.h3P0lhl03517.aeb@smtp.cwi.nl>
+	<3EB619A4.5090407@torque.net>  <20030505093834.B7831@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:30862 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S263737AbTEEQnk
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 May 2003 12:43:40 -0400
-Content-Disposition: inline
-In-Reply-To: <1052151252.1888.15.camel@mulgrave>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+In-Reply-To: <20030505093834.B7831@beaverton.ibm.com>
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Douglas Gilbert <dougg@torque.net>, Andries.Brouwer@cwi.nl, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, mdharm-scsi@one-eyed-alien.net
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: dougg@torque.net, Andries.Brouwer@cwi.nl, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-usb-devel@lists.sourceforge.net, mdharm-scsi@one-eyed-alien.net, Patrick Mansfield <patmans@us.ibm.com>
 
-James Bottomley [James.Bottomley@steeleye.com] wrote:
-> On Mon, 2003-05-05 at 10:52, Mike Anderson wrote:
-> > James Bottomley [James.Bottomley@steeleye.com] wrote:
-> > Mutability should not depend on how a uuid is set. It should depend on
-> > what can change it.
+On Mon, 2003-05-05 at 11:38, Patrick Mansfield wrote:
+> As James said, we can get the uid from user space. This implies we need sg
+> (or an equivalent solution).
 > 
-> I think the sysfs write API is sufficient, so it has to be a rw-r-r file
-> to allow root to write it on hotplug.
-> 
-> > Why block?
-> 
-> It's the largest available useful subset other than device itself.
-> 
-> > If you obtain a scsi_device uuid it should not be written in to a block
-> > device attribute it should be attached to the struct device representing
-> > the scsi device. If the attribute name is consistent "uuid" than cat
-> > ".../device/uuid" will function the same.
-> 
-> by that argument, capacity, which is a property of the SCSI sd device
-> should be stored in the SCSI device.  It isn't, since it's a global
-> block device property, it's stored in the gendisk.
-> 
-> Unique identifiers are a property of SCSI devices, but they're not an
-> exclusive property.
+> If the id is required before any actual use of the device, we (sometimes?
+> always?) need initramfs.
 
-Yes I agree they are not exclusive to SCSI, but the same can be said of
-the block argument. Block is large set, but is not the whole set of
-possible uuid producing nodes. 
+initramfs is only needed to find the root device.  All others can be
+located later (although when depends on how the hotplug vs coldplug
+issues are sorted out)
 
-We could add it as a device default attribute (dev_default_attrs), but
-it would produce the extra overhead like power does today for nodes that
-have no uuid.
+> There is a problem with trying to use sg before sg is attached - not sure
+> how we can handle this. If sg could be opened generically and attached to
+> any nexus (i.e. scsi_device) via ioctl, we could use it not only for id's,
+> but for general user level scanning. Or maybe we can wait until after sg
+> is attached to get id's.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+You can now send SCSI commands directly to sd via the ioctl.
 
+> We still have problems with potentially locking up some devices, and we
+> will need some sort of black/white list for VPD usage, this would also
+> have been needed for an in kernel implementation; [for user space] you
+> would not need a kernel change to fix a problem (modify the black/white
+> list or other such code to prevent a VPD from being sent to a particular
+> device).
+
+Yes.
+
+> Plus, many of the devices do not return unique id's, even when VPD pages
+> are supported (especially I'm told USB) - we need a white list or other
+> such mechanism to tell us that id's are actually unique.
+
+That's one of the reasons for moving itt: he heuristics are pretty
+complex given the strange things devices seem to call "unique" (I can
+even see devices where it's "get the label from the first available
+fs").
+
+James
+
+
+
+
+-------------------------------------------------------
+This sf.net email is sponsored by:ThinkGeek
+Welcome to geek heaven.
+http://thinkgeek.com/sf
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
