@@ -1,71 +1,95 @@
-From: "Ely, Paul" <Paul.Ely@Emulex.Com>
-Subject: RE: suspending I/Os to a device
-Date: Fri, 23 Jul 2004 09:26:24 -0400
+From: Tom Oehser <tom@toms.net>
+Subject: RE: megaraid doesn't detect when bios jumper is off...
+Date: Fri, 23 Jul 2004 10:00:38 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3356669BBE90C448AD4645C843E2BF28025AB7A1@xbl.ma.emulex.com>
+Message-ID: <Pine.LNX.4.58.0407230959350.1703@jupiter.toms.net>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BC8A4@EXA-ATLANTA.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:3250 "EHLO emulex.emulex.com")
-	by vger.kernel.org with ESMTP id S267576AbUGWN0z (ORCPT
+Received: from Jupiter.Toms.NET ([64.32.223.162]:61073 "EHLO jupiter.toms.net")
+	by vger.kernel.org with ESMTP id S267732AbUGWOAq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Jul 2004 09:26:55 -0400
+	Fri, 23 Jul 2004 10:00:46 -0400
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC8A4@EXA-ATLANTA.se.lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Nathan Bryant' <nbryant@optonline.net>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, "Smart, James" <James.Smart@Emulex.Com>, 'James Bottomley' <James.Bottomley@steeleye.com>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>
+To: "Mukker, Atul" <Atulm@lsil.com>
+Cc: linux-scsi@vger.kernel.org
 
-Nathan,
 
-This proposal is specific to those scsi lld's that
-manage storage devices that have to gracefully deal
-with devices temporarily disappearing and reappearing -
-such as Fibre Channel device drivers - but could have 
-other applications such as iSCSI lld's or 
+With the 2.20.1.0 driver it still doesn't find the card...
 
-This proposal is not intended to deal with PCI 
-power management.  Additionally, the existing
-scsi_device_quiesce and resume functions and
-device state are insufficient for this feature because 
-for device suspend, the scsi lld does not want the midlayer
-to have special's access to the scsi lld and in
-particular retries.
+-Tom
 
-HTH,
+On Thu, 22 Jul 2004, Mukker, Atul wrote:
 
-Paul
-
-> -----Original Message-----
-> From: Nathan Bryant [mailto:nbryant@optonline.net]
-> Sent: Friday, July 23, 2004 12:36 AM
-> To: Ely, Paul
-> Cc: 'Christoph Hellwig'; Smart, James; 'James Bottomley'; Linux SCSI
-> Reflector
-> Subject: Re: suspending I/Os to a device
-> 
-> 
-> Ely, Paul wrote:
-> 
-> >All,
+> Date: Thu, 22 Jul 2004 11:50:09 -0400
+> From: "Mukker, Atul" <Atulm@lsil.com>
+> To: 'Tom Oehser' <tom@Toms.NET>, "Mukker, Atul" <Atulm@lsil.com>
+> Cc: linux-scsi@vger.kernel.org
+> Subject: RE: megaraid doesn't detect when bios jumper is off...
+>
+> Try the 2.10.1.0 driver from
+> ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-2.20.1.0/
+>
+> -Atul Mukker
+>
+> > -----Original Message-----
+> > From: Tom Oehser [mailto:tom@Toms.NET]
+> > Sent: Thursday, July 22, 2004 11:41 AM
+> > To: Mukker, Atul
+> > Cc: linux-scsi@vger.kernel.org
+> > Subject: RE: megaraid doesn't detect when bios jumper is off...
 > >
 > >
-> >The following patch provides an implementation of
-> >the proposal contained in this mail thread.  The
-> >patch does not provide a complete solution such
-> >as:
-> >	nodevice tmo handling by the scsi midlayer
-> >	scsi_device structure member for nodevice tmo
-> >	handling of SDEV_SUSPEND state by midlayer
 > >
-> >Subsequent patches to address remaining implementation.
+> > 2.6.7 stock megaraid.c driver. -Tom
 > >
-> I'm a little late to the party. Is this intended to 
-> facilitate the PCI 
-> power management (queue quiesce) issues that were discussed 
-> this week? 
-> Will it be sufficient to "just call" these from pcidev->suspend(), 
-> pcidev->resume()?
-> 
-> Duh, like thanks and stuff. I think.
-> Nathan
-> 
+> > On Thu, 22 Jul 2004, Mukker, Atul wrote:
+> >
+> > > Date: Thu, 22 Jul 2004 10:24:35 -0400
+> > > From: "Mukker, Atul" <Atulm@lsil.com>
+> > > To: 'Tom Oehser' <tom@toms.net>, linux-scsi@vger.kernel.org
+> > > Subject: RE: megaraid doesn't detect when bios jumper is off...
+> > >
+> > > It would be helpful to know the driver and kernel version as well.
+> > >
+> > > -Atul Mukker
+> > >
+> > > > -----Original Message-----
+> > > > From: Tom Oehser [mailto:tom@toms.net]
+> > > > Sent: Wednesday, July 21, 2004 10:36 PM
+> > > > To: linux-scsi@vger.kernel.org
+> > > > Subject: megaraid doesn't detect when bios jumper is off...
+> > > >
+> > > >
+> > > >
+> > > > Hi, I have a MegaRAID SATA 150-6, which is in the same box as a
+> > > > Mylex AcceleRaid-250 which is the boot drive.  The motherboard
+> > > > doesn't give a way to control boot priority between scsi cards,
+> > > > so I set the bios-disable jumper on the MegaRAID card, so that
+> > > > it will boot the Mylex, which works fine...
+> > > >
+> > > > BUT, the MegaRAID driver isn't detecting the MegaRAID when its
+> > > > boot bios is disabled!  I can't find a way to get the driver to
+> > > > find it and enable it...  And the BIOS setup of the MegaRAID is
+> > > > not seeming to have a way to tell it not to try to boot...
+> > > >
+> > > > So, if I enable the bios jumper on the MegaRAID, it tries to boot
+> > > > from it (which fails miserably, as it isn't a boot drive), and if
+> > > > I disable the bios jumper on the MegaRAID, it doesn't try to boot
+> > > > it, but then the Linux driver doesn't enable it, either!
+> > > >
+> > > > Help?
+> > > >
+> > > > -Tom
+> > > >
+> > > > -
+> > > > To unsubscribe from this list: send the line "unsubscribe
+> > > > linux-scsi" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > >
+> > >
+> >
+>
