@@ -1,115 +1,104 @@
 From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
 Subject: Re: inquiry in scsi_scan.c
-Date: Sat, 4 Jan 2003 16:41:13 -0800
+Date: Sat, 4 Jan 2003 16:45:31 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030104164113.A27421@one-eyed-alien.net>
-References: <UTC200301040307.h0437pY06513.aeb@smtp.cwi.nl>
+Message-ID: <20030104164531.B27421@one-eyed-alien.net>
+References: <UTC200301040021.h040LB128544.aeb@smtp.cwi.nl> <20030103170404.D4315@one-eyed-alien.net> <20030103184458.A19314@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="T4sUOijqQbZv57TR"
+	protocol="application/pgp-signature"; boundary="JYK4vJDZwFMowpUq"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <UTC200301040307.h0437pY06513.aeb@smtp.cwi.nl>; from Andries.Brouwer@cwi.nl on Sat, Jan 04, 2003 at 04:07:51AM +0100
+In-Reply-To: <20030103184458.A19314@beaverton.ibm.com>; from patmans@us.ibm.com on Fri, Jan 03, 2003 at 06:44:58PM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Andries.Brouwer@cwi.nl, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
---T4sUOijqQbZv57TR
+--JYK4vJDZwFMowpUq
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Instead of fixing this in usb-storage, I think I would rather make
-scsi_scan.c just assume a minimum of 36.
+Actually, we ask for 36 and get 36, but the field in the response which is
+supposed to tell us how much there is total is zeroed out, instead of
+having a real value.
 
-Or, put another way, if the first request indicates less than 36, why
-should we do a second request?  We already have all the data...
+All we need to do is recognize when that field indicates less than 36
+bytes, and then stop asking for anything else.  Either (a) the device is
+lying, in which case our original INQUIRY is fine, or (b) the device really
+has less than 36 bytes, which means that we already have all the data.
 
 Matt
 
-On Sat, Jan 04, 2003 at 04:07:51AM +0100, Andries.Brouwer@cwi.nl wrote:
-> Matthew Dharm writes:
+On Fri, Jan 03, 2003 at 06:44:58PM -0800, Patrick Mansfield wrote:
+> On Fri, Jan 03, 2003 at 05:04:04PM -0800, Matthew Dharm wrote:
+> > Actually, 5 isn't minimal... it's sub-minimal.  That's an error in the
+> > INQUIRY data.  The minimum (by spec) is 36 bytes.
+> >=20
+> > There should probably be a sanity check to never ask for INQUIRY less t=
+han
+> > 36 bytes.  I thought there used to be such a thing....
+> >=20
+> > Matt
 >=20
-> > There should probably be a sanity check to never ask for INQUIRY
-> > less than 36 bytes.  I thought there used to be such a thing....
+> Well we do ask for 36, but in Andries case only got back 5.
 >=20
-> As Doug also points out, we ask for 36, but there is no
-> guarantee that we get what we ask for.
+> The zero fill is a good solution and matches what the device should do if=
+ it
+> can't get all of the INQUIRY data.
 >=20
-> > Actually, 5 isn't minimal... it's sub-minimal.
-> > That's an error in the INQUIRY data/
-> > The minimum (by spec) is 36 bytes.
+> There should be a warning output, in case other bad things happen, and so
+> people know they have a borken device, and maybe a comment like:
 >=20
-> No. Quoting:
+>         /*
+>          * If the response length is less than 36 the rest of the INQUIRY
+> 	 * is zero filled.
+> 	 *
+> 	 * etc.
+>          */
 >=20
-> "The INQUIRY data (Table 7-9) contains a five byte header,
-> followed by the vendor unique parameters, if any."
-> (SCSI-1 standard)
+> >=20
+> > On Sat, Jan 04, 2003 at 01:21:11AM +0100, Andries.Brouwer@cwi.nl wrote:
+> > > Got a new USB device and noticed some scsi silliness while playing wi=
+th it.
+> > >=20
+> > > A bug in scsi_scan.c is
+> > >=20
+> > >         sdev->inquiry =3D kmalloc(sdev->inquiry_len, GFP_ATOMIC);
+> > >         memcpy(sdev->inquiry, inq_result, sdev->inquiry_len);
+> > >         sdev->vendor =3D (char *) (sdev->inquiry + 8);
+> > >         sdev->model =3D (char *) (sdev->inquiry + 16);
+> > >         sdev->rev =3D (char *) (sdev->inquiry + 32);
+> > >=20
+> > > since it happens that inquiry_len is short (in my case it is 5)
+> > > and the vendor/model/rev pointers are wild.
+> > > Catting /proc/scsi/scsi now yields random garbage.
 >=20
-> So, as long as we are willing to support SCSI-1 devices,
-> we must accept that the INQUIRY data can be as short as this.
-> And in fact all our other code is careful - look at
-> print_inquiry() how before looking at a byte we check
-> whether it really there.
+> > > I made a patch but hesitated between a small patch and a larger one.
+> > > Why do we have this malloced inquiry field? As far as I can see
+> > > nobody uses it. And the comment in scsi_add_lun() advises us
+> > > not to save the inquiry, precisely what we did until recently.
+> > > So, should this change from 2.5.11 be reverted?
 >=20
+> The INQUIRY was saved so that users could avoid sending a long INQUIRY to
+> a borken device and hang it, and just send an ioctl to retrieve it, but no
+> ioctl was ever added.
 >=20
-> On the other hand, my case was not an ancient SCSI-1 device,
-> it was a brand new USB device. So, I have the SCSI host in hand.
-> Looking at what happens:
+> Rather than not saving it, we should just get the INQUIRY again (and
+> implicitly overwrite vendor/model/rev) after spin up or if we get a unit
+> attention with additional sense code of INQUIRY DATA HAS CHANGED; this
+> would probably break somehow for some devices (changing the INQUIRY after
+> a spin up is not out of spec), and is hard to handle with our current
+> scanning (scsi_scan.c sends the INQUIRY, but sd.c has the spin up code),
+> as per comments in scsi_probe_lun.
 >=20
-> usb-storage: usb_stor_bulk_transfer_buf(): xfer 36 bytes
->  00 80 00 00 00 00 00 00 4F 45 49 2D 55 53 42 20
->  53 6D 61 72 74 4D 65 64 69 61 20 20 20 20 20 20
->  32 2E 30 35
-> usb-storage: Status code 0; transferred 36/36
-> usb-storage: Fixing INQUIRY data to show SCSI rev 2 - was 0
-> usb-storage: Fixing INQUIRY data to show length 36 - was 0
->=20
-> and all is fine.
->=20
-> Instead of the old garbage I now see:
-> % cat /proc/scsi/scsi
-> ...
-> Host: scsi2 Channel: 00 Id: 00 Lun: 00
->   Vendor: OEI-USB  Model: SmartMedia       Rev: 2.05
->   Type:   Direct-Access                    ANSI SCSI revision: 02
-> ...
->=20
->=20
-> Conclusion:
-> (i) scsi_scan.c has to be careful about INQUIRY lengths,
-> and some patch is required for devices that return a short length.
-> (ii) usb-storage knows the transport length, and can fix it
-> in case it is (5+)0. For example, in protocol.c:fix_inquiry_data():
->=20
-> static void fix_inquiry_data(Scsi_Cmnd *srb)
-> {
->         unsigned char *data_ptr;
->=20
->         /* verify that it's an INQUIRY command */
->         if (srb->cmnd[0] !=3D INQUIRY)
->                 return;
->=20
->         data_ptr =3D find_data_location(srb);
->=20
->         if ((data_ptr[2] & 7) !=3D 2) {
->                 US_DEBUGP("Fixing INQUIRY data to show SCSI rev 2 - was %=
-d\n",
->                           data_ptr[2] & 7);
->=20
->                 /* Change the SCSI revision number */
->                 data_ptr[2] =3D (data_ptr[2] & ~7) | 2;
->         }
->=20
->         if (data_ptr[4] =3D=3D 0) {
->                 US_DEBUGP("Fixing INQUIRY data to show length 36 - was 0\=
-n");
->                 data_ptr[4] =3D 36 - 5;
->         }
-> }
->=20
-> Andries
+> -- Patrick Mansfield
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
 --=20
 Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
@@ -120,7 +109,7 @@ It was a new hope.
 					-- Dust Puppy
 User Friendly, 12/25/1998
 
---T4sUOijqQbZv57TR
+--JYK4vJDZwFMowpUq
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
@@ -128,9 +117,9 @@ Content-Disposition: inline
 Version: GnuPG v1.0.6 (GNU/Linux)
 Comment: For info see http://www.gnupg.org
 
-iD8DBQE+F38oIjReC7bSPZARAj1aAKCc2LKTC4nMrbdwbOSfhGsZRlrIigCeOjY0
-YvwqPvuKLkSvjVufE0mqsbE=
-=WpOo
+iD8DBQE+F4ArIjReC7bSPZARAhvBAJ0RuF2le/aXz1Ux/DHoyrK9NWKGEQCfVmFM
+i2lRyiFeFccp+kP1kG0jPF0=
+=FBSE
 -----END PGP SIGNATURE-----
 
---T4sUOijqQbZv57TR--
+--JYK4vJDZwFMowpUq--
