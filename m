@@ -1,28 +1,32 @@
-From: MAILER-DAEMON@mail.cisu.net
-Subject: failure notice
-Date: 27 Apr 2004 13:38:45 -0000
+From: "gonzalo" <gllbab@hotmail.com>
+Subject: As Seen on CNN, the Winningest CAS1N0! larry researchz
+Date: Tue, 27 Apr 2004 06:40:22 GMT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <E1BISQp-0007l3-00@mallard.mail.pas.earthlink.net>
+Message-ID: <1083048022-2518__18930.3245315843$1083072862@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mallard.mail.pas.earthlink.net ([207.217.120.48]:34448 "EHLO
-	mallard.mail.pas.earthlink.net") by vger.kernel.org with ESMTP
-	id S264073AbUD0NP2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Apr 2004 09:15:28 -0400
-Received: from user-119ahgg.biz.mindspring.com ([66.149.70.16] helo=mail.cisu.net)
-	by mallard.mail.pas.earthlink.net with esmtp (Exim 3.33 #1)
-	id 1BISQp-0007l3-00
-	for linux-scsi@vger.kernel.org; Tue, 27 Apr 2004 06:15:27 -0700
+Received: from [213.217.113.43] ([213.217.113.43]:15890 "HELO vfr.net")
+	by vger.kernel.org with SMTP id S264084AbUD0Nc4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Apr 2004 09:32:56 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
 
-Hi. This is the qmail-send program at mail.cisu.net.
-I'm afraid I wasn't able to deliver your message to the following addresses.
-This is a permanent error; I've given up. Sorry it didn't work out.
+Come and play at the world's PREMIiERE ONLINwE CASuINO!
+We are happy to offer you, in an elegant atmosphere, a 50% BONUeS for YOUR FIRST DEPOwSIT as a New Player.
 
-<200312241615.59018.eric@cisu.net>:
-Sorry, no mailbox here by that name. vpopmail (#5.1.1)
+Sign up now! Don't wait!
 
---- Below this line is a copy of the message.
+http://www.casino-4-free.com/_e4faa55afa1972493c43ac8a3f66f869/
 
-Return-Path: <linux-scsi@vger.kernel.org>
-Received: (qmail 10991 invoked by uid 107); 27 Apr 2004 13:38:03 -0000
+
+We'll automatically CREDIzT your account with a 50% BONUoS of extra chips, to wager in our CASIzNO.
+Don't hesixtate and try your luck!
+
+CLICqK HERcE!
+
+http://www.casino-4-free.com/_e4faa55afa1972493c43ac8a3f66f869/
+
+
+
+trident fozzie velvet corrado nautica smiths corrado god fiona redwing baskeT whitney carolina frederic aeh miki theatre stingray baskeT paula first norman mars mimi sweety sweety
