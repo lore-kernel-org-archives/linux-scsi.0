@@ -1,29 +1,40 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi sysfs update (upper 2/3)
-Date: Fri, 8 Nov 2002 04:53:05 +0000
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [PATCH] scsi_mid_low_api.txt for 2.5.46-bk3
+Date: Fri, 8 Nov 2002 00:01:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021108045305.A22307@infradead.org>
-References: <20021107073619.GA1390@beaverton.ibm.com> <20021107073943.GB1390@beaverton.ibm.com> <20021107182947.B15350@sgi.com> <20021107164152.GD1292@beaverton.ibm.com> <20021108012047.A17391@infradead.org> <20021108022158.GD1292@beaverton.ibm.com>
+Message-ID: <20021108050151.GA24946@redhat.com>
+References: <3DCB0E51.5070407@torque.net> <Pine.LNX.4.33L2.0211071912160.30691-100000@dragon.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20021108022158.GD1292@beaverton.ibm.com>; from andmike@us.ibm.com on Thu, Nov 07, 2002 at 06:21:58PM -0800
+In-Reply-To: <Pine.LNX.4.33L2.0211071912160.30691-100000@dragon.pdx.osdl.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Randy.Dunlap" <rddunlap@osdl.org>
+Cc: Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org
 
-On Thu, Nov 07, 2002 at 06:21:58PM -0800, Mike Anderson wrote:
-> Is the disagreement the function name, bus name, or the concept of
-> registering these drivers with sysfs?
+On Thu, Nov 07, 2002 at 07:13:16PM -0800, Randy.Dunlap wrote:
+> On Fri, 8 Nov 2002, Douglas Gilbert wrote:
+> 
+> | This patch against 2.5.46-bk3 is work in progress
+> | (since the interface is in flux). It dusts of some
+> | cobwebs, removes politically incorrect typedefs and
+> | describes slave_attach() and slave_detach(). It
+> | removes the revoke() description (per hch? changes).
+> |
+> | Is a section describing mid level functions provided
+> | for LLDDs (e.g. scsi_adjust_queue_depth() ) warranted?
+> 
+> Yes, please.
+> 
+> [LLDD = low-level device driver]
 
-Well, they're not really busses, and I hate misleading analogies :)
+I am writing such a doc BTW, but I've been asleep for a few hours so I 
+have chimed in ;-)
 
-No, my real issues is that the scsi_devices should be attached to
-a bus hanging of the HBA, as that's what they physically do, not of
-some pseudo-bus for the higherlevel devices.
-
-> Do you see a problem with "scsi_upper_driver_register" being added now?
-
-I'd prefer if we'd let it stay as-is for now.
-
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
