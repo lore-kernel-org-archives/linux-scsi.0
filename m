@@ -1,57 +1,52 @@
-From: Andre Tomt <andre@tomt.net>
-Subject: Re: [ANNOUNCE]: megaraid driver version 2.20.0.rc2
-Date: Fri, 28 May 2004 10:58:24 +0200
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] sdd scsi-ml event wq
+Date: Fri, 28 May 2004 02:07:03 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40B6FF30.4040308@tomt.net>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC694@exa-atlanta>
+Message-ID: <40B70137.70106@cs.wisc.edu>
+References: <40B6F16B.6070909@cs.wisc.edu> <1085732140.2782.14.camel@laptop.fenrus.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050003090705050805080709"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.skjellin.no ([80.239.42.66]:46237 "HELO mail.skjellin.no")
-	by vger.kernel.org with SMTP id S262370AbUE1I6Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 May 2004 04:58:25 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC694@exa-atlanta>
-List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, 'Marcelo Tosatti' <marcelo.tosatti@cyclades.com>, 'Matthew Wilcox' <willy@debian.org>, 'Arjan van de Ven' <arjanv@redhat.com>, 'Christoph Hellwig' <hch@infradead.org>, "'matt_domsch@dell.com'" <matt_domsch@dell.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'paul@wagland.net'" <paul@wagland.net>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, "Prabhakaran, Rajesh" <rajeshpr@lsil.com>, "Jose, Manoj" <Manojj@lsil.com>
-
-This is a multi-part message in MIME format.
---------------050003090705050805080709
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
-
-Mukker, Atul wrote:
-> The patch for lk 2.6.6 and the driver is available at
-> 
-> ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-2.20.0.rc2/
-
-2.6.6 patch is missing vital drivers/scsi/Makefile part.
-
--- 
-Cheers,
-André Tomt
-
---------------050003090705050805080709
-Content-Type: text/x-diff;
- name="31_scsidrv_megaraid-2.20.0.rc2-missing-makefile-bit.patch"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="31_scsidrv_megaraid-2.20.0.rc2-missing-makefile-bit.patch"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:34569 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S265970AbUE1JHM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 May 2004 05:07:12 -0400
+In-Reply-To: <1085732140.2782.14.camel@laptop.fenrus.com>
+List-Id: linux-scsi@vger.kernel.org
+To: arjanv@redhat.com
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-diff -Naur linux-2.6.7-rc1-bk4-s1/drivers/scsi/Makefile linux-2.6.7-rc1-bk4-s1-1/drivers/scsi/Makefile
---- linux-2.6.7-rc1-bk4-s1/drivers/scsi/Makefile	2004-05-28 04:07:43.000000000 +0200
-+++ linux-2.6.7-rc1-bk4-s1-1/drivers/scsi/Makefile	2004-05-28 07:57:52.000000000 +0200
-@@ -96,7 +96,8 @@
- obj-$(CONFIG_SCSI_EATA)		+= eata.o
- obj-$(CONFIG_SCSI_DC395x)	+= dc395x.o
- obj-$(CONFIG_SCSI_DC390T)	+= tmscsim.o
--obj-$(CONFIG_SCSI_MEGARAID)	+= megaraid.o
-+obj-$(CONFIG_MEGARAID_LEGACY)	+= megaraid.o
-+obj-$(CONFIG_MEGARAID_NEWGEN)	+= megaraid/
- obj-$(CONFIG_SCSI_ACARD)	+= atp870u.o
- obj-$(CONFIG_SCSI_SUNESP)	+= esp.o
- obj-$(CONFIG_SCSI_GDTH)		+= gdth.o
+Arjan van de Ven wrote:
+> On Fri, 2004-05-28 at 09:59, Mike Christie wrote:
+> 
+>>The attached patch just adds a scsi-ml work queue to handle all
+>>events. It also converts the transport_scsi_fc class to use it,
+>>so drivers using that class do not have to worry about calling
+>>the event functions from a process context.
+> 
+> 
+> question: it seems you allow only a limited number of outstanding
+> events, fair enough. 
 
---------------050003090705050805080709--
+I am not sure I know what you mean. You are referring to when memory
+allocations fail, right?
+
+However, how are users of this API supposed to
+> handle failure? I see you pass the error nicely all the way down, yet I
+> don't quite understand how a driver (the consumer of the API) is
+> supposed to handle failure. Queue the event itself? Sounds ugly/wrong to
+> me. I'm just wondering if the cleanup you propose doesn't just mean that
+> the uglyness gets pushed to correct users of the API.. which isn't quite
+> a nett win (under the assumption that there are more than one users of a
+> subsystem function)
+
+I agree with you, and I do not have a good answer. When the system is failing
+memory allocations it is difficult to do a lot of things. I was thinking that
+in such an extreme situation that it would be acceptable for events to fail.
+Would it be better to have the API set a timer and retry at a later time? I was
+thinking you could end up with a long backlog of events that may be worthless
+by the time the system can allocate memory - which is why I put in the
+mempool (I know that they are not magic and will fail too though). I am open
+to ideas.
+
