@@ -1,32 +1,42 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: linux-2.6.0-test11 [BUG] -- scsi_add/remove_device - out of memory
-Date: Wed, 10 Dec 2003 15:09:49 +0000
+From: "Scott M. Ferris" <sferris@acm.org>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Wed, 10 Dec 2003 10:50:42 -0600 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031210150949.A2855@infradead.org>
-References: <OFE5F05878.12C1E995-ONC1256DF8.004D7413-C1256DF8.004E538F@de.ibm.com>
+Message-ID: <20031210165042.ABC605DC7E@bambi.visi.com>
+References: <200312102031.04680.krmurthy@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:5893 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263584AbTLJPJ4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Dec 2003 10:09:56 -0500
-Content-Disposition: inline
-In-Reply-To: <OFE5F05878.12C1E995-ONC1256DF8.004D7413-C1256DF8.004E538F@de.ibm.com>; from Heiko.Carstens@de.ibm.com on Wed, Dec 10, 2003 at 03:14:19PM +0100
+Received: from conn.mc.mpls.visi.com ([208.42.156.2]:22686 "EHLO
+	conn.mc.mpls.visi.com") by vger.kernel.org with ESMTP
+	id S263758AbTLJQuo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Dec 2003 11:50:44 -0500
+In-Reply-To: <200312102031.04680.krmurthy@cisco.com> from "N.C.Krishna Murthy"
+ at "Dec 10, 2003 08:31:04 pm"
 List-Id: linux-scsi@vger.kernel.org
-To: Heiko Carstens <Heiko.Carstens@de.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: "N.C.Krishna Murthy" <krmurthy@cisco.com>
+Cc: "Scott M. Ferris" <sferris@acm.org>, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, davmyers@cisco.com
 
-On Wed, Dec 10, 2003 at 03:14:19PM +0100, Heiko Carstens wrote:
-> >Sounds there's a scsi_device_put missing somewherein your driver..
+N.C.Krishna Murthy wrote:
+>
+> Hi,
+> 	We do not need scsi_scan_host_selected()  for lun masking.
 > 
-> Why should I be supposed to issue a scsi_device_put or scsi_device_get in 
-> my
-> device driver?
+> In the current code, after establishing a session with an iSCSI target we 
+> a)issue report luns to find out what luns exist on the target.
+> b)Configure each lun using scsi_add_device.
+> To accomplish a),  we use iscsi_do_cmnd(). 
+> Linux scsi folks had suggested that we could use the "report lun based"
+> probing infrastructure that exists in the 2.6 kernel instead of duplicating 
+> the same in our driver. We need scsi_scan_host_selected() function to utilize 
+> the same. As of now (2.6.0-test11) the function is not exported.
+> 
 
-scsi_remove_device just marks the device deleted, the memory is only freed
-after the final scsi_device_put.  That might be the one your driver issues
-after it's completly done with the device or for example the one when the last
-sysfs file referring to the device is closed.  Lifetime of structscsi_device
-is not under control of the driver.
+The point people are trying to make is that the low-level driver
+should not be doing either a or b.  When an iSCSI target is added,
+tell hotplug, and let it initiate a scan of that target through sysfs.
 
+-- 
+Scott M. Ferris,
+sferris@acm.org 
