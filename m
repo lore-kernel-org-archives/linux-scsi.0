@@ -1,42 +1,58 @@
-From: jg9600@sohu.com
-Subject: (unknown)
-Date: Sat, 6 Mar 2004 17:22:40 +0800
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [PATCH]:Amended:Allow random write for PDT 5 profile 2
+	Removable Disk
+Date: 06 Mar 2004 10:16:46 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <S261629AbUCFJWl/20040306092242Z+66@vger.kernel.org>
-Reply-To: jg9600@163.com
-Content-Type: text/plain;charset="GB2312"
+Message-ID: <1078593406.2006.4.camel@patibmrh9>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [221.12.119.38] ([221.12.119.38]:49159 "ehlo sohu.com")
-	by vger.kernel.org with ESMTP id S261629AbUCFJWl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Mar 2004 04:22:41 -0500
+Received: from email-out1.iomega.com ([147.178.1.82]:24020 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S261692AbUCFRSy
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 6 Mar 2004 12:18:54 -0500
+Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
+	by email.iomega.com (Postfix) with ESMTP id 81B811910
+	for <linux-scsi@vger.kernel.org>; Sat,  6 Mar 2004 10:18:53 -0700 (MST)
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: mckellj@iomega.com
+Cc: linux-scsi@vger.kernel.org
 
-Welcome to Shaoxing Paojiang Industrial Zone---
-the largest development zone in Zhejiang province, China
+> queued it for 2.6.4-pre
 
-Dear Sir or Madam,
-Firstly, we would like to express our warmly regards!
-Shaoxing is a city of historic heritage, a tourist-friendly city, an investor-friendly city and an economic powerhouse. Shaoxing is an old city with a culture formation of more than 4,000 years and a city has history of 2,500 years and is renowned as "a museum without wall". Shaoxing city is famous for its attractive tourism and is famed as the town of water, bridges, rice wine, Chinese calligraphy and historical celebrities.
-Shaoxing Paojiang Industrial Zone (SPIZ) is one of the largest development zones in China, a new & modernized, high-tech oriented industrial city and one of the four component areas in Shaoxing. By the year 2020, SPIZ will cover 60 square kilometer with a population of 0.2 million. SPIZ has Foreign Investment Park, IT Park, Bio-engineering Pharmaceutical Park, Traditional Industries Upgrading Section and Central Commercial & Residential Section under construction. SPIZ focuses on developing new high-tech industries such as IT, biology & pharmaceutical, food & beverage and encourages the innovation and upgrading of light textile. Till now, 180 industrial projects with planned investment USD 20 billion have been approved.
-SPIZ is characterized for its own three advantages as follows:        
-I. Geographic location:
-SPIZ is located in the Yangtze River Delta, which is the most Dynamic area and has the strongest purchasing power .Located near Shaoxing entrance of Shanghai-Hangzhou-Ningbo Expressway, SPIZ enjoys a favorable geographical position by land, water and air. It is only 200 km from Shanghai and 20 km from Hangzhou International Airport. In the zone, civil facilities have been set up in the first-phase construction area of 60 square kilometer, and basic infrastructures including water, electricity, steam gas, road, telecom, and sewage disposal will meet the demands of various kinds of investment projects. Comprehensive public service facilities as schools, hospitals, and banks are also available.
-II. Preferential policies:
-  As a coastal economically dynamic area, Shaoxing city will provide a lot of preferential policies for SPIZ's investors as follows: (1) Preferential policy for land: For the foreign-invested enterprises, the price for using land is USD 9-18 per sqm. (2) Financial aid: For the foreign-invested enterprises, the local portion of the tax (include VAT and income tax)will be totally refunded in the first two years and 50% refunded from the 3rd to 5th years; For the enterprises with actual investment above USD 3 million, the local part of the tax will be totally refunded in the first five years and 50% refunded from the 6th to 10th years. (3) Remitting or reduction of charges: SPIZ Administrative Committee shall insist on the policy of "no fee required excluding taxes" for all the solely foreign ventures settled in the zone, namely, the fee shall be totally remitted or paid by the committee ex
- cept the taxes to the central and provincial governments.
-III. Preferential service:
-  As a branch of Shaoxing Municipal People's Government, SPIZ Administrative Committee directly carries out the management function of the local government. The Administrative Committee has an investment service center and offers qualified and efficient service for the investors sincerely.
-"No nationalities for capitals, no boundary for markets", we sincerely welcome you to visit and invest in Shaoxing Paojiang Industrial Zone.
-"Choosing Paojiang is just choosing great hope, investing in Paojiang is just investing the future."
-Best wishes and regards!
-Contact:  Philip Jin
-Address:  International investment&Cooperation Bureau
-Shaoxing Paojiang Industrial Zone, PRC
-Telephone:  0086 575 8132209
-Fax:        0086 575 8030150
-Website:     www.paojiang.com
-E-mail:     jg9600@163.com
-Postcode:     312071
+Absent from 2.6.4-rc2, I think.
+
+Perhaps if I knew what -pre meant that would be no surprise to me.
+
+http://marc.theaimsgroup.com/?l=linux-scsi&s=random+write+pdt+5
+does not yet enlighten me further, but I observe lk refusing to let Me
+write:
+
+$ uname -msrv
+Linux 2.6.4-rc2 #1 SMP Sat Mar 6 09:58:43 MST 2004 i686
+$
+$ grep CDF_ include/linux/cdrom.h
+#define CDF_MRW         0x28
+$ grep -i HWDM include/linux/cdrom.h
+$
+$ sudo rrd scan
+/dev/scd0 is Iomega RRD 06.3 rw
+/dev/hdc is Iomega RRD 06.3 rw
+$
+$ sudo dd of=/dev/null if=/dev/scd0 bs=64K seek=0 skip=0 count=1
+1+0 records in
+1+0 records out
+$ sudo dd of=/dev/null if=/dev/hdc bs=64K seek=0 skip=0 count=1
+1+0 records in
+1+0 records out
+$
+$ sudo dd of=/dev/scd0 if=/dev/zero bs=64K seek=0 skip=0 count=1
+dd: opening `/dev/scd0': Read-only file system
+$ sudo dd of=/dev/hdc if=/dev/zero bs=64K seek=0 skip=0 count=1
+dd: opening `/dev/hdc': Read-only file system
+$
+
+Pat LaVarre
 
 
