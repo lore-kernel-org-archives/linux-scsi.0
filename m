@@ -1,28 +1,35 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] cciss: handler scsi_add_host failure
-Date: Wed, 5 Jan 2005 21:24:23 +0100
-Message-ID: <20050105202423.GA7043@lst.de>
-References: <D4CFB69C345C394284E4B78B876C1CF107DC016C@cceexc23.americas.cpqcorp.net>
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: Re: [PATCH] Re: Oops on megaraid.
+Date: Wed, 5 Jan 2005 17:33:20 -0500
+Message-ID: <20050105223320.GA7622@animx.eu.org>
+References: <20050105174752.GA6859@animx.eu.org> <20050105180457.GK26051@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:37077 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S262589AbVAEUYc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2005 15:24:32 -0500
+Received: from animx.eu.org ([216.98.75.249]:11668 "EHLO animx.eu.org")
+	by vger.kernel.org with ESMTP id S262587AbVAEWYZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2005 17:24:25 -0500
 Content-Disposition: inline
-In-Reply-To: <D4CFB69C345C394284E4B78B876C1CF107DC016C@cceexc23.americas.cpqcorp.net>
+In-Reply-To: <20050105180457.GK26051@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Miller, Mike (OS Dev)" <mike.miller@hp.com>
-Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, Jan 05, 2005 at 02:22:22PM -0600, Miller, Mike (OS Dev) wrote:
-> > From: Christoph Hellwig [mailto:hch@lst.de]
-> > 
-> > Mike, is this patch okay?
+Al Viro wrote:
+> Someone's removing non-empty directory in procfs.  Let's see...
+> Indeed.
+> #ifdef CONFIG_PROC_FS
+>         remove_proc_entry("megaraid", &proc_root);
+> #endif
 > 
-> Christoph,
-> BTW, I meant to say thanks.
+>         pci_unregister_driver(&megaraid_pci_driver);
+> so we remove /proc/megaraid and then procees to remove controllers found
+> by driver.  Each of those has a subdirectory in /proc/megaraid...
+> 
+> Fix is trivial:
 
-You're welcome :)
+Cool, thanks.
 
+-- 
+ Lab tests show that use of micro$oft causes cancer in lab animals
