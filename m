@@ -1,101 +1,119 @@
-From: Michel Briand <michelbriand@free.fr>
-Subject: Re: ide cd writer problem with sg
-Date: Mon, 05 Aug 2002 13:53:44 +0200
+From: Suparna Bhattacharya <suparna@in.ibm.com>
+Subject: Re: [PATCH] Bio Traversal Changes
+Date: Mon, 5 Aug 2002 18:08:48 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <6841.11640225655$1028549301@news.gmane.org>
-References: <3D447677.9070309@localhost.> <3D44A2E9.DB32586E@torque.net>
+Message-ID: <20020805180848.A2223@in.ibm.com>
+References: <suparna@in.ibm.com> <200208021348.g72Dm7q03058@localhost.localdomain>
+Reply-To: suparna@in.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200208021348.g72Dm7q03058@localhost.localdomain>; from James.Bottomley@steeleye.com on Fri, Aug 02, 2002 at 08:48:06AM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@kernel.org, B.Zolnierkiewicz@elka.pw.edu.pl, akpm@zip.com.au
 
-I run in a new test.
-Excuses me, and thank you for your patience.
+On Fri, Aug 02, 2002 at 08:48:06AM -0500, James Bottomley wrote:
+> The SCSI changes (small that they are) look reasonable.
+> 
+> This does look like it exposes an existing problem in the tag/barrier 
+> approach, though.
+> 
+> The bio can be split by making multiple requests over segements of the bio, 
+> correct?  If this is a BIO_RW_BARRIER, then each of these requests will be a 
 
-I've theses modules loaded :
-sr_mod                 11800   0
-sg                     24036   0  (autoclean)
-sd_mod                  9980   0  (autoclean) (unused)
-isofs                  24864   0  (autoclean)
-inflate_fs             17984   0  (autoclean) [isofs]
-vfat                    9436   0  (autoclean)
-fat                    29400   0  (autoclean) [vfat]
-cdrom                  28736   0  [sr_mod]
-ide-scsi                7648   0
-scsi_mod               49804   4  (autoclean) [sr_mod sg sd_mod ide-scs=
-i]
-via82cxxx_audio        18432   1  (autoclean)
-ac97_codec              9632   0  (autoclean) [via82cxxx_audio]
-uart401                 6144   0  (autoclean) [via82cxxx_audio]
-sound                  53580   0  (autoclean) [via82cxxx_audio uart401]
-soundcore               3364   5  (autoclean) [via82cxxx_audio sound]
-n_hdlc                  6112   1  (autoclean)
-ppp_synctty             4832   1  (autoclean)
-NVdriver              821184  14  (autoclean)
-joydev                  6816   0  (unused)
-input                   3168   0  [joydev]
-ipt_TCPMSS              2336   1  (autoclean)
-ipt_TOS                 1024  22  (autoclean)
-ipt_MASQUERADE          1216   1  (autoclean)
-ipt_state                608  77  (autoclean)
-ipt_LOG                 3136 127  (autoclean)
-ip_nat_ftp              2944   0  (unused)
-ip_conntrack_ftp        3200   0  (unused)
-ppp_generic            15848   3  (autoclean) [ppp_synctty]
-slhc                    4624   0  (autoclean) [ppp_generic]
-ne2k-pci                5056   1
-8390                    5952   0  [ne2k-pci]
-ipt_REJECT              2880   3  (autoclean)
-iptable_mangle          2144   1  (autoclean)
-iptable_nat            12852   2  (autoclean) [ipt_MASQUERADE ip_nat_ft=
-p]
-ip_conntrack           13036   3  (autoclean) [ipt_MASQUERADE ipt_state=
-=20
-ip_nat_ftp ip_conntrack_ftp iptable_nat]
-iptable_filter          1760   1  (autoclean)
-ip_tables              10560  11  [ipt_TCPMSS ipt_TOS ipt_MASQUERADE=20
-ipt_state ipt_LOG ipt_REJECT iptable_mangle iptable_nat iptable_filter]
-usb-uhci               21508   0  (unused)
-usbcore                48992   1  [usb-uhci]
+It doesn't quite go as far as multiple requests in the full sense
+of what a struct request represents.
 
-And I run the command :
-bubus:/media # mount /dev/scd0 /media/cdrom -t iso9660
-mount : P=E9riph=E9rique de bloc/dev/scd0 est prot=E9g=E9 en =E9criture=
-=2E Montage=20
-en lecture seule.
-mount: N'est pas un r=E9pertoire
+All it allows at the moment is the ability for a driver to setup 
+a command that involves multiple sequential transfers to complete 
+a single request where each transfer covers a chunk of data for 
+a portion of the request. Variations like:
 
-And this is the output of tail -f /var/log/messages :
-Aug  5 13:50:55 bubus kernel: SCSI cdrom error : host 0 channel 0 id 0=20
-lun 0 return code =3D 28000000
-Aug  5 13:50:55 bubus kernel: Current sd0b:00: sns =3D 70  4
-Aug  5 13:50:55 bubus kernel: ASC=3D 8 ASCQ=3D 3
-Aug  5 13:50:55 bubus kernel: Raw sense data:0x70 0x00 0x04 0x00 0x00=20
-0x00 0x00 0x0a 0x00 0x00 0x00 0x00 0x08 0x03 0x00 0x00 0x00 0x00
-Aug  5 13:50:55 bubus kernel:  I/O error: dev 0b:00, sector 80
-Aug  5 13:50:55 bubus kernel: ISOFS: unable to read i-node block
+	setup command
+	process_that_request_first - chunk 1
+	[interrupt, status check]
+	end_that_request_first	- chunk1
+	process_that_request_first - chunk 2
+	[interrupt, status check]
+	end_that_request_first - chunk 2
 
-Note that before I do a modprobe sr_mod I received another error=20
-message, and when I loaded it, I see in logs :
-Aug  5 13:38:34 bubus kernel: Attached scsi CD-ROM sr0 at scsi0, channe=
-l=20
-0, id 0, lun 0
-Aug  5 13:38:34 bubus kernel: sr0: scsi3-mmc drive: 40x/40x writer cd/r=
-w=20
-xa/form2 cdda tray
-Aug  5 13:38:34 bubus kernel: Uniform CD-ROM driver Revision: 3.12
-Aug  5 13:38:42 bubus kernel: VFS: Disk change detected on device sr(11=
-,0)
+or
 
-What do you think of this mess ?
-Thank you for your help, again ;-)
+	setup command
+	process_that_request_first - chunk 1
+	process_that_request_first - chunk 2
+	process_that_request_first - chunk 3
+	..
+	end_that_request_first - chunk 1 + 2 + 3
 
-Michel
+There is only one call to ->request_fn for the entire request, and
+the drivers manages things underneath. The chunks are expected to
+complete sequentially. In the situation where the request is
+restarted in the event of an error (say), the submission pointers
+are rolled back to the last (successfully) completed point
+before issuing the request again.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Right now I do not know what kind of use there could be for this
+in the context of SCSI in general (in IDE, as I had mentioned 
+before, PIO commands, especially multi-count writes follow such
+a pattern). You would probably be in a better position to
+do so, and suggestions to improve this in that regard are very
+welcome indeed. Which is why it is harder for me to decide if the 
+situation you suggest could arise with SCSI, since its not clear
+whether such pieces/sub-requests are generated in that case.
+
+</ramble>
+I must say that I initially did think that this could be 
+extended to the more generic case which you probably are 
+referring to and that such an approach could take away the need 
+to split bios in certain cases (i.e. when the i/o is destined for 
+a single queue). Later it appeared that trying to cover 
+the case where each of these pieces gets queued up and might 
+complete out of order (requiring a tag to correlate things on 
+completion), would most likely boil down to trying to maintain 
+all the state that struct request does today. 
+
+You might recall the discussion with Niels at the kernel 
+summit about the alternate possibility of having two request 
+structs pointing to the same bio, now that we track submission 
+state separately. In this case, though, as completion state is 
+still indicated in the bio, it could get a little inelegant 
+to handle in the context of remembering partial completion 
+state for two requests simultaneously. Whether partial 
+completion at a granularity of less than one bio makes sense, 
+however, is another question that discussions with 
+Barthlomiej has brought up.
+
+At the same time, if we can afford to allocate a fresh
+request struct, then probably allocating a bio (possibly from 
+a pool associated with the queue) may not sound all that bad.
+</ramble>
+
+
+> REQ_BARRIER.  However, in the SCSI paradigm where we translate REQ_BARRIER to 
+> ordered tag, each of the requests will get a new ordered tag as it comes back 
+> around through end_that_request_first, potentially allowing other tags to be 
+> inserted in between these, which would be incorrect, since other bios would be 
+> inserted in between the segments of this one, thus violating the barrier.
+> 
+> Is the above correct?  If it is, I may have finally found a use for linked 
+> scsi tasks (gives you the ability to have one tag cover multiple commands).
+
+Would be nice (for me) to understand this in more detail. 
+There might be some possibilities.
+Any pointers that I can look up to get a clearer idea ?
+
+Does completion notification happen only when all the commands 
+covered by a single tag complete ? Otherwise, what is the ordering 
+amongst the multiple commands in question (do they complete in 
+serial order as well) ?
+
+Regards
+Suparna
+
+> 
+> James
+> 
+> 
