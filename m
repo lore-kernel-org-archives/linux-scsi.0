@@ -1,54 +1,26 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] don't set underflow for REQ_BLOCK_PC
-Date: Wed, 24 Sep 2003 14:27:50 +0200
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [TRIVIAL] fix parallel builds for aic7xxx]
+Date: Wed, 24 Sep 2003 13:36:23 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030924122750.GC15415@suse.de>
-References: <20030922125009.A3244@beaverton.ibm.com>
+Message-ID: <20030924133623.A14318@infradead.org>
+References: <20030924032922.BE68C2C21F@lists.samba.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:51429 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261284AbTIXM1y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Sep 2003 08:27:54 -0400
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:22277 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S261290AbTIXMg1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Sep 2003 08:36:27 -0400
 Content-Disposition: inline
-In-Reply-To: <20030922125009.A3244@beaverton.ibm.com>
+In-Reply-To: <20030924032922.BE68C2C21F@lists.samba.org>; from trivial@rustcorp.com.au on Wed, Sep 24, 2003 at 12:56:01PM +1000
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: Rusty Trivial Russell <trivial@rustcorp.com.au>
+Cc: Justin Gibbs <gibbs@btc.adaptec.com>, Kai Germaschewski <kai@tp1.ruhr-uni-bochum.de>, linux-scsi@vger.kernel.org, axboe@suse.de, John Cherry <cherry@osdl.org>
 
-On Mon, Sep 22 2003, Patrick Mansfield wrote:
-> I got underflow warnings and failures when sending an INQUIRY page 0x83
-> via the SG_IO REQ_BLOCK_PC interface.
-> 
-> The underflow field should only be set if we know for certain the size of
-> the data being transfered, so fix this by leaving it at zero for scsi
-> REQ_BLOCK_PC cases.
-> 
-> diff -uprN -X /home/patman/dontdiff bl-25/drivers/scsi/sd.c bl-25-sd_underflow-fix/drivers/scsi/sd.c
-> --- bl-25/drivers/scsi/sd.c	Mon Sep  8 14:50:56 2003
-> +++ bl-25-sd_underflow-fix/drivers/scsi/sd.c	Tue Sep 16 16:58:14 2003
-> @@ -174,7 +174,6 @@ static int sd_init_command(struct scsi_c
->  			timeout = rq->timeout;
->  
->  		SCpnt->transfersize = rq->data_len;
-> -		SCpnt->underflow = rq->data_len;
->  		goto queue;
->  	}
->  
-> diff -uprN -X /home/patman/dontdiff bl-25/drivers/scsi/sr.c bl-25-sd_underflow-fix/drivers/scsi/sr.c
-> --- bl-25/drivers/scsi/sr.c	Mon Sep  8 14:50:56 2003
-> +++ bl-25-sd_underflow-fix/drivers/scsi/sr.c	Tue Sep 16 16:58:27 2003
-> @@ -301,7 +301,6 @@ static int sr_init_command(struct scsi_c
->  			timeout = rq->timeout;
->  
->  		SCpnt->transfersize = rq->data_len;
-> -		SCpnt->underflow = rq->data_len;
->  		goto queue;
->  	}
+On Wed, Sep 24, 2003 at 12:56:01PM +1000, Rusty Trivial Russell wrote:
+> [ Sorry, did you guys end up with consensus on this?  Should I forward
+>   or drop?  Thanks, Rusty ]
 
-Agree, looks fine.
+Please forward.  Wait.. linux-scsi already is the right list :)
 
--- 
-Jens Axboe
 
