@@ -1,82 +1,59 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: devices with more than one node
-Date: Tue, 13 Jan 2004 15:01:47 -0800
-Sender: linux-hotplug-devel-admin@lists.sourceforge.net
-Message-ID: <20040113150147.A9902@beaverton.ibm.com>
-References: <20040113193842.GA29887@suse.de> <20040113194631.GA3818@kroah.com> <20040113211122.GA28100@suse.de> <20040113212058.GA2595@kroah.com>
+From: Willem Riede <wrlk@riede.org>
+Subject: Re: sense buffer not cleaned when retrying failed command by the eh
+Date: Tue, 13 Jan 2004 17:56:09 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20040113225609.GE4339@linnie.riede.org>
+References: <40028A1A.2030609@il.marvell.com> <20040113002656.GW4339@linnie.riede.org> <20040113074048.GA1280@beaverton.ibm.com>
+Reply-To: wrlk@riede.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-hotplug-devel-admin@lists.sourceforge.net>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rwcrmhc11.comcast.net ([204.127.198.35]:3502 "EHLO
+	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
+	id S265848AbUAMW4R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Jan 2004 17:56:17 -0500
+Received: from linnie.riede.org (localhost.localdomain [127.0.0.1])
+	by linnie.riede.org (8.12.10/8.12.10) with ESMTP id i0DMuAEM018505
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Jan 2004 17:56:12 -0500
 Content-Disposition: inline
-In-Reply-To: <20040113212058.GA2595@kroah.com>; from greg@kroah.com on Tue, Jan 13, 2004 at 01:20:58PM -0800
-Errors-To: linux-hotplug-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
-To: Greg KH <greg@kroah.com>
-Cc: Olaf Hering <olh@suse.de>, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+In-Reply-To: <20040113074048.GA1280@beaverton.ibm.com> (from andmike@us.ibm.com on Tue, Jan 13, 2004 at 02:40:48 -0500)
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Jan 13, 2004 at 01:20:58PM -0800, Greg KH wrote:
-> On Tue, Jan 13, 2004 at 10:11:22PM +0100, Olaf Hering wrote:
-> >  On Tue, Jan 13, Greg KH wrote:
-> > > On Tue, Jan 13, 2004 at 08:38:42PM +0100, Olaf Hering wrote:
-> > > > inputdevices have also an event node attached.
-> > > 
-> > > Yes, and you get two different hotplug events, and udev just works,
-> > > right?  (this is with the kernel patches I sent out last week...)
+On 2004.01.13 02:40, Mike Anderson wrote:
+> Willem Riede [wrlk@riede.org] wrote:
+> > On 2004.01.12 06:50, Saeed Bishara wrote:
+> > What about in the 2.6 kernel:
 > > 
-> > I tried the -mm tree, and /proc/bus/input/devices differs indeed. Havent
-> > tried to feed udev with the data.
-> 
-> Look at /sys/class/input in the -mm kernel.  I didn't do anything with
-> the /proc/bus/input stuff.
-> 
-> > > > Maybe I miss the obvious, but how do I match scsi as example? Not that
-> > > > sg provides a sg 'dev' entry today, but an external PROGRAM could not
-> > > > provide an relative symlink to sgN.
-> > > 
-> > > scsi needs to create a scsi_generic class (or some such name) and have
-> > > it contain the sg information.  It should not be in the cdev directory
-> > > like it currently is (that's badly broken and should have never made it
-> > > in...)  That sg class can contain the symlink back to the device that it
-> > > is associated with.
-> > > 
-> > > Does this help?
+> > --- drivers/scsi/scsi_lib.c.orig	2004-01-12 18:40:28.000000000 -0500
+> > +++ drivers/scsi/scsi_lib.c	2004-01-12 18:50:22.000000000 -0500
+> > @@ -302,6 +302,7 @@
+> >  void scsi_setup_cmd_retry(struct scsi_cmnd *cmd)
+> >  {
+> >  	memcpy(cmd->cmnd, cmd->data_cmnd, sizeof(cmd->data_cmnd));
+> > +	memset(cmd->sense_buffer, 0, sizeof(cmd->sense_buffer));
+> >  	cmd->request_buffer = cmd->buffer;
+> >  	cmd->request_bufflen = cmd->bufflen;
+> >  	cmd->use_sg = cmd->old_use_sg;
 > > 
-> > Yes. Do you have a patch for that? Or should the scsi people do it?
 > 
-> The scsi people should do it :)
-> 
-> But if pushed hard enough, I guess I could do it...
-> I do need to make cdev disappear from the sysfs tree entirely anyway...
-> 
-> If only I had more time.  Anyone else want to do this?
-> 
-> thanks,
-> 
-> greg k-h
+> In the 2.6 kernel this is cleared in scsi_retry_command. 
 
-Don't forget to let the scsi people know ;-) cc-ing linux-scsi
+So it is. But scsi_retry_command is not called by the error handler --
+not referenced from scsi_error.c at all. And the memset to zero could
+trivially be dropped from scsi_retry_command.
 
-st also needs changes.
+>                                                          The other
+> callers of scsi_setup_cmd_retry do not want the sense_buffer cleared as
+> it has been set prior to calling scsi_setup_cmd_retry. 
+              ^^^
+Set? To what? Is there any case where the sense buffer is supposed to 
+reflect anything else than the result of the retry once it is completed?
 
-Did anyone figure out how udev should handle the one tape device requiring
-multiple minors (for open/close with/without rewind)? It really is a
-single device requiring multiple dev entries.
+If there is, I would not consider that good programming practice...
+If there isn't, then clearing the sense buffer before the retry is
+perfectly OK.
 
-For scsi_id support with udev, st needs to support SG_IO, AFAIUI it can
-use similiar code as found in sd.c and sr.c.
+Regards, Willem Riede.
 
--- Patrick Mansfield
-
-
--------------------------------------------------------
-This SF.net email is sponsored by: Perforce Software.
-Perforce is the Fast Software Configuration Management System offering
-advanced branching capabilities and atomic changes on 50+ platforms.
-Free Eval! http://www.perforce.com/perforce/loadprog.html
