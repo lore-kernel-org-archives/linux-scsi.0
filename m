@@ -1,60 +1,47 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] Fix up scsi_test_unit_ready() to work correctly with
- CD-ROMs
-Date: Fri, 10 Sep 2004 14:03:28 +1000
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] tmscsim: remove internal waiting queue (draft)
+Date: Fri, 10 Sep 2004 14:29:53 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <41412790.70705@torque.net>
-References: <1094738299.1837.2.camel@mulgrave>
-Reply-To: dougg@torque.net
+Message-ID: <20040910142953.A24592@infradead.org>
+References: <Pine.LNX.4.60.0409040041030.5266@poirot.grange> <20040904141104.A15311@infradead.org> <Pine.LNX.4.60.0409062353100.7448@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from borg.st.net.au ([65.23.158.22]:45738 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S268000AbUIJEE2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Sep 2004 00:04:28 -0400
-In-Reply-To: <1094738299.1837.2.camel@mulgrave>
+Received: from imladris.demon.co.uk ([193.237.130.41]:16137 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S267408AbUIJNaB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Sep 2004 09:30:01 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.60.0409062353100.7448@poirot.grange>; from g.liakhovetski@gmx.de on Tue, Sep 07, 2004 at 12:12:11AM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, Kurt Garloff <garloff@suse.de>, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> Olaf Hering noticed that SG_IO was no-longer working correctly on some
-> CD-ROMS.  The reason is a change in behaviour induced by switching to
-> the new scsi_test_unit_ready() API.
+On Tue, Sep 07, 2004 at 12:12:11AM +0200, Guennadi Liakhovetski wrote:
+> Moving further in the order of patch submission:-)
 > 
-> Apparently the CD-ROM special case needs to ignore both UNIT_ATTENTION
-> and NOT_READY for removable media.
+> On Sat, 4 Sep 2004, Christoph Hellwig wrote:
 > 
-> James
+> > On Sat, Sep 04, 2004 at 12:48:01AM +0200, Guennadi Liakhovetski wrote:
+> >> Hello
+> >>
+> >> The attached patch __attempts__ to remove the internal "waiting" (issue)
+> >> queue, in favour of using the scsi mid-layer command queuing.
+> >>
+> >> I may very well imaging, that it is not perfeect, __please__, comment.
+> >>
+> >> I did test it (what a surprise for such a trivial patch:-)), it worked, I
+> >> even managed to hit that /* Arbitration lost but Reselection won */ case
+> >> several times under load, although, I still don't undresrtand how this
+> >> happens and what this means. An explanation would be appreciated.
+> >
+> > This one is definitly too complicated for just a quick look :)
+> > You'd make the review easier by splitting it up a little or at least
+> > remove the gratious reformating from this patch.
 > 
-> ===== drivers/scsi/scsi_lib.c 1.133 vs edited =====
-> --- 1.133/drivers/scsi/scsi_lib.c	Tue Sep  7 16:48:51 2004
-> +++ edited/drivers/scsi/scsi_lib.c	Wed Sep  8 22:22:27 2004
-> @@ -1585,11 +1585,12 @@
->  	if (!sreq)
->  		return -ENOMEM;
->  
-> -		sreq->sr_data_direction = DMA_NONE;
-> -        scsi_wait_req(sreq, cmd, NULL, 0, timeout, retries);
-> +	sreq->sr_data_direction = DMA_NONE;
-> +	scsi_wait_req(sreq, cmd, NULL, 0, timeout, retries);
->  
->  	if ((driver_byte(sreq->sr_result) & DRIVER_SENSE) &&
-> -	    (sreq->sr_sense_buffer[2] & 0x0f) == UNIT_ATTENTION &&
-> +	    ((sreq->sr_sense_buffer[2] & 0x0f) == UNIT_ATTENTION ||
-> +	     (sreq->sr_sense_buffer[2] & 0x0f) == NOT_READY) &&
+> In the attached patch I removed all the reformatting. Applies on the top 
+> of the latest version of the bug #2139 fix (using the global black-list).
 
-James,
-Is the "descriptor" sense data patch which Christoph and I
-worked on likely to be accepted?
-
-That way awkward and descriptor format unfriendly code like:
-   sreq->sr_sense_buffer[2] & 0x0f) == UNIT_ATTENTION
-
-could be replaced with something like (after a little overhead):
-   sshd.sense_key == UNIT_ATTENTION
-
-Doug Gilbert
+Looks good to me.  The only nitpick is that you opencode a freelist insert
+in ->queuecommand instead of using dc390_Free_insert.
 
