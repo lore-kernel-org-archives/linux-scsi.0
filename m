@@ -1,35 +1,50 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH] SCSI midlayer power management
-Date: Thu, 12 Aug 2004 20:38:03 +1000
+Date: 12 Aug 2004 08:48:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1092307081.26432.0.camel@gaston>
+Message-ID: <1092314892.1755.5.camel@mulgrave>
 References: <4119611D.60401@optonline.net>
-	 <20040811080935.GA26098@elf.ucw.cz> <411A1B72.1010302@optonline.net>
-	 <1092231462.2087.3.camel@mulgrave> <1092267400.2136.24.camel@gaston>
-	 <20040812074520.GE29466@elf.ucw.cz>
+	<20040811080935.GA26098@elf.ucw.cz>  <411A1B72.1010302@optonline.net>
+	<1092231462.2087.3.camel@mulgrave>  <1092267400.2136.24.camel@gaston>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:7657 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S268504AbUHLKn1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Aug 2004 06:43:27 -0400
-In-Reply-To: <20040812074520.GE29466@elf.ucw.cz>
+Received: from stat16.steeleye.com ([209.192.50.48]:27600 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S268551AbUHLMsY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Aug 2004 08:48:24 -0400
+In-Reply-To: <1092267400.2136.24.camel@gaston>
 List-Id: linux-scsi@vger.kernel.org
-To: Pavel Machek <pavel@suse.cz>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Nathan Bryant <nbryant@optonline.net>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Nathan Bryant <nbryant@optonline.net>, Pavel Machek <pavel@ucw.cz>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
+On Wed, 2004-08-11 at 19:36, Benjamin Herrenschmidt wrote:
+> Some hosts will continuously DMA to memory iirc.. I remember having a
+> problem with 53c8xx on some macs when transitionning from MacOS to Linux
+> because of that.
 
-> Hmm, and it can not be handled by "just remember why you were
-> suspended", because it is one suspend, two resumes...
+I think you're thinking of the scripts engine?  on pre 53c875 chips,
+yes, this is true.  The on-board processor is executing instructions
+from host memory.  However, this is read only in quiescent (waiting for
+host connect or target reconnect) mode, so shouldn't be a problem for
+suspend.  On the 875 and later, we host the scripts in on-chip memory so
+they shouldn't be troubling main memory when idling.
+
+> We need to properly quisce the host, but that's a per host driver thing
+> and shouldn't be too difficult.
 > 
-> Yes, I agree that argument will be usefull. Just who does all the
-> driver updating? ;-).
+> Regarding suspend-to-disk, it's fairly easy for the sd driver not to
+> spin down the disk for S4 (only for S3). However, we will still probably
+> do at least a bus reset when waking up...
 
-At this point, no driver cares, so it's just a matter of fixing the
-prototypes, I'll leave that to somebody more familiar with sed :)
+Why?  We don't do a bus reset on boot, why should we need to do one on
+resume?  For FC, the equivalent, a LIP Reset can be rather nasty on a
+SAN and should be avoided.
 
-Ben.
+The slight problem is probably going to be knowing that we may need to
+spin up devices (for internal ones) before resuming operation.
+
+James
 
 
