@@ -1,66 +1,68 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: aic7xxx broken in 2.5.53/54 ?
-Date: Mon, 06 Jan 2003 09:16:53 -0700
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [linux-usb-devel] Re: inquiry in scsi_scan.c
+Date: Mon, 06 Jan 2003 11:43:57 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <274040000.1041869813@aslan.scsiguy.com>
-References: <20030103101618.GB8582@in.ibm.com>
- <596830816.1041606846@aslan.scsiguy.com> <20030106073204.GA1875@in.ibm.com>
+Message-ID: <3E19B24D.1080500@splentec.com>
+References: <Pine.LNX.4.33L2.0301060956210.740-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20030106073204.GA1875@in.ibm.com>
-Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: dipankar@in.ibm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Andries.Brouwer@cwi.nl, mdharm-kernel@one-eyed-alien.net, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 
-> Hi Justin,
+Alan Stern wrote:
 > 
-> On Fri, Jan 03, 2003 at 08:14:06AM -0700, Justin T. Gibbs wrote:
->> > Looks like the aic7xxx driver in 2.5.53 and 54 are broken on my
->> > hardware.
->> 
->> It looks like the driver recovers fine.
+>>The SCSI code has no means of knowing the actual length transferred,
+>>so has no choice but to believe the length byte in the reply.
+>>But the USB code does the transferring itself, and knows precisely
+>>how many bytes were transferred. If 36 bytes were transferred and
+>>the additional length byte is 0, indicating a length of 5, then the
+>>USB code can fix the response and change the additional length byte
+>>to 31, indicating a length of 36. That way the SCSI code knows that
+>>not 5 but 36 bytes are valid, and it gets actual vendor and model strings.
 > 
-> Not for long. It dies shortly afterwards.
-
-In what fashion?
-
->> > aic7xxx: PCI Device 0:1:0 failed memory mapped test.  Using PIO.
->> > Uhhuh. NMI received for unknown reason 25 on CPU 0.
->> 
->> SERR must be enabled by your BIOS.  I will change the driver so
->> that, should the memory mapped I/O test fail, an SERR (and thus an
->> NMI) is not generated.
 > 
-> I guess having to use PIO with aic7xxx is bad. MMIO failure is
-> what we need to investigate.
+> I'm not familiar with the details of the SCSI code you are referring to,
+> but usb-storage does make available the actual transfer length.  All the
+> transport routine paths set the resid field of the Scsi_Cmnd structure
+> properly.  With this information, there should be no difficulty in
+> determining how many bytes were transferred.  (Maybe the setting doesn't
+> percolate up to the particular code you mention -- and maybe other host
+> adapter drivers don't set resid correctly so you cannot rely on its value.
+> I don't know what other problems might crop up.)
 
-The only way that I know how to investigate these issues is
-with a PCI bus analyzer.  We're in the process of going through
-all of the systems we have in our lab to see which ones fail and
-why, but I certainly don't have one of every failing system on
-the planet. 8-)
+In this most recent case reported, this looks very similar to
+overflow residual, but not quite the same. I.e. *more* data is
+actually immediately available (in the buffer) than *we requested* or can
+find out by other means (i.e. checking the ADDITIONAL LENGTH field).
 
->> Just out of curiosity, do you have any strange PCI options enabled
->> in your BIOS?  I remeber seeing memory mapped I/O failures on this
->> ServerWorks chipset under FreeBSD in the past, but an updated BIOS
->> resolved the issue for the affected users.  It seemed that the BIOS
->> incorrectly placed the Adaptec controller in a prefetchable region.
->> 
-> 
-> I didn't change anything in that box since it was delivered to me. FYI
-> it is an IBM x250. Would it help if I can get a PCI space dump and mtrr 
-> dump ? FWIW, the older driver works fine. Does the older driver use 
-> only PIO ?
+But if we requested 36 and the transport provided 36 then the
+residual should be 0 (set by the transport). Had we requested 5 and the
+transport provided 36 then the residual should be 31, but there's no way
+of reporting this residual, since it is an *overflow* residual, and from
+the comments therein, cmd->resid is *only underflow* residual.
 
-It would be good to know the chipset on the motherboard.  As to why
-the old driver worked, for 6.X.X drivers, you may have just been lucky.
-For 5.X.X drivers, they perform a read after every register write to
-"manually" prevent any byte-merging.  These reads are actually more
-expensive than just using PIO.  Neither of these older drivers included
-a test to try and catch fishy behavior.
+Thus, *if* the cmd->resid field is set properly, then something like this,
+in SCSI Core, might suffice:
 
---
-Justin
+</Disclaimer: this is NOT actual C code, but should be descriptive enough/>
+
+	int bytes_requested = <whatever>;
+	int bytes_got, additional_len;
+	...
+	</ok, we got response from INQUIRY/>
+
+	additional_len = buffer[4];
+	bytes_got = max(bytes_requested - cmd->resid, 0);
+
+	</now use bytes_got exclusively and ignore additional_len/>
+	...
+	</do assignments and whatever, and just before we're done print
+	a nice warning message if bytes_got != additional_len+5 />
+
+-- 
+Luben
+
+
