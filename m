@@ -1,33 +1,43 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: PATCH: (as284) Add BLIST_INQUIRY_36 to existing blacklist USB entries
-Date: Wed, 19 May 2004 15:36:42 -0700
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: [TRIVIAL] [TRIVIAL 2.6] drivers_scsi_pcmcia_nsp_cs.c: kill
+	duplicate #include
+Date: Thu, 20 May 2004 17:08:03 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040519153642.A23286@beaverton.ibm.com>
-References: <20040518123306.A12344@beaverton.ibm.com> <Pine.LNX.4.44L0.0405181709180.933-100000@ida.rowland.org>
+Message-ID: <1085036465.24931.149.camel@bach>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.132]:60146 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S264670AbUESWgw
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 May 2004 18:36:52 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0405181709180.933-100000@ida.rowland.org>; from stern@rowland.harvard.edu on Tue, May 18, 2004 at 05:12:07PM -0400
+Received: from ozlabs.org ([203.10.76.45]:3725 "EHLO ozlabs.org")
+	by vger.kernel.org with ESMTP id S265023AbUETHIh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 May 2004 03:08:37 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, linux-scsi@vger.kernel.org, axboe@suse.de
 
-On Tue, May 18, 2004 at 05:12:07PM -0400, Alan Stern wrote:
-> This is a report of an earlier message that may not have gotten through...
-> 
-> > While I'm at it, this patch is needed to prevent existing blacklist 
-> > entries from overriding the BLIST_INQUIRY_36 flag for various USB devices.
-> > 
-> > Alan Stern
+ From:  a.othieno@bluewin.ch (Arthur Othieno)
 
-Alan -
+---
+  Hi,
+  
+  >From scripts/checkincludes.pl:
+  
+    ./drivers/scsi/pcmcia/nsp_cs.c: linux/module.h is included more than once.
+ 
 
-How is it being overridden? I don't see usb storage setting
-BLIST_INQUIRY_36.
+--- trivial-2.6.6-bk6/drivers/scsi/pcmcia/nsp_cs.c.orig	2004-05-20 15:59:34.000000000 +1000
++++ trivial-2.6.6-bk6/drivers/scsi/pcmcia/nsp_cs.c	2004-05-20 15:59:34.000000000 +1000
+@@ -38,7 +38,6 @@
+ #include <linux/ioport.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+-#include <linux/module.h>
+ #include <linux/major.h>
+ #include <linux/blkdev.h>
+ #include <linux/stat.h>
+-- 
+  What is this? http://www.kernel.org/pub/linux/kernel/people/rusty/trivial/
+  Don't blame me: the Monkey is driving
+  File: a.othieno@bluewin.ch (Arthur Othieno): [TRIVIAL 2.6] drivers_scsi_pcmcia_nsp_cs.c: kill duplicate #include
 
--- Patrick Mansfield
