@@ -1,74 +1,89 @@
 From: "Hironobu Ishii" <ishii.hironobu@jp.fujitsu.com>
-Subject: [PATCH] message fix of scsi_mod.
-Date: Wed, 31 Mar 2004 21:31:36 +0900
+Subject: [PATCH] Adding device name to messages from sr.c
+Date: Wed, 31 Mar 2004 21:30:43 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <040a01c4171c$4ead2630$2987110a@lsd.css.fujitsu.com>
+Message-ID: <040901c4171c$4e4870f0$2987110a@lsd.css.fujitsu.com>
 Reply-To: "Hironobu Ishii" <ishii.hironobu@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-2022-jp"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:23207 "EHLO
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:28327 "EHLO
 	fgwmail6.fujitsu.co.jp") by vger.kernel.org with ESMTP
-	id S261931AbUCaMdZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Mar 2004 07:33:25 -0500
+	id S261932AbUCaMdg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Mar 2004 07:33:36 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Jens Axboe <axboe@suse.de>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi James,
+Hi Jens,
 
-This patch:
-    - fixes a message it does not tell us the error device.
-    - fixes weird messages from scsi_sysfs.c
-
+sr.c has some messages that does not tell us the error device.
+This patch adds device name to such messages.
 This is a patch for linux-2.6.5-rc3.
 
 Please apply!
 
 Thanks,
-Hironobu Ishii.
+Hironobu Ishii
 
-diff -urN linux-2.6.5-rc3/drivers/scsi/scsi_scan.c linux-2.6.5-rc3-work/drivers/scsi/scsi_scan.c
---- linux-2.6.5-rc3/drivers/scsi/scsi_scan.c 2004-03-30 19:02:47.000000000 +0900
-+++ linux-2.6.5-rc3-work/drivers/scsi/scsi_scan.c 2004-03-31 19:12:37.195529071 +0900
-@@ -403,10 +403,12 @@
-    /* if the longer inquiry has failed, flag the device
-     * as only accepting 36 byte inquiries and retry the
-     * 36 byte inquiry */
--   printk(KERN_INFO "scsi scan: %d byte inquiry failed"
--          " with code %d.  Consider BLIST_INQUIRY_36 for"
--          " this device\n", possible_inq_resp_len,
--          sreq->sr_result);
-+   printk(KERN_INFO "scsi scan: <%d:%d:%d:%d>: "
-+          "%d byte inquiry failed with code %d.  "
-+          "Consider BLIST_INQUIRY_36 for this device\n",
-+          sdev->host->host_no, sdev->channel,
-+          sdev->id, sdev->lun,
-+          possible_inq_resp_len, sreq->sr_result);
-    *bflags = BLIST_INQUIRY_36;
-    goto repeat_inquiry;
-   }
-diff -urN linux-2.6.5-rc3/drivers/scsi/scsi_sysfs.c linux-2.6.5-rc3-work/drivers/scsi/scsi_sysfs.c
---- linux-2.6.5-rc3/drivers/scsi/scsi_sysfs.c 2004-03-30 19:02:47.000000000 +0900
-+++ linux-2.6.5-rc3-work/drivers/scsi/scsi_sysfs.c 2004-03-31 19:20:15.990455170 +0900
-@@ -358,13 +358,15 @@
- 
-  error = device_add(&sdev->sdev_gendev);
-  if (error) {
--  printk(KERN_INFO "error 1\n");
-+  printk(KERN_INFO "scsi_sysfs: device_add() failed on <%d:%d:%d:%d>\n",
-+   sdev->host->host_no, sdev->channel, sdev->id, sdev->lun );
-   return error;
+
+diff -urN linux-2.6.5-rc3/drivers/scsi/sr.c linux-2.6.5-rc3-work/drivers/scsi/sr.c
+--- linux-2.6.5-rc3/drivers/scsi/sr.c 2004-03-30 19:02:47.000000000 +0900
++++ linux-2.6.5-rc3-work/drivers/scsi/sr.c 2004-03-30 20:39:16.000000000 +0900
+@@ -321,11 +321,13 @@
+   if (!in_interrupt())
+    sr_set_blocklength(cd, 2048);
+   else
+-   printk("sr: can't switch blocksize: in interrupt\n");
++   printk("%s: can't switch blocksize: in interrupt\n",
++    cd->cdi.name);
   }
  
-  error = class_device_add(&sdev->sdev_classdev);
-  if (error) {
--  printk(KERN_INFO "error 2\n");
-+  printk(KERN_INFO "scsi_sysfs: class_device_add failed on <%d:%d:%d:%d>\n",
-+   sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
-   goto clean_device;
+  if (s_size != 512 && s_size != 1024 && s_size != 2048) {
+-  printk("sr: bad sector size %d\n", s_size);
++  printk("%s: bad sector size %d\n", 
++   cd->cdi.name, s_size);
+   return 0;
   }
-  /* take a reference for the sdev_classdev; this is
+ 
+@@ -349,7 +351,8 @@
+    size += sg[i].length;
+ 
+   if (size != SCpnt->request_bufflen && SCpnt->use_sg) {
+-   printk(KERN_ERR "sr: mismatch count %d, bytes %d\n",
++   printk(KERN_ERR "%s: mismatch count %d, bytes %d\n",
++     cd->cdi.name,
+      size, SCpnt->request_bufflen);
+    if (SCpnt->request_bufflen > size)
+     SCpnt->request_bufflen = SCpnt->bufflen = size;
+@@ -361,7 +364,7 @@
+   */
+  if (((unsigned int)SCpnt->request->sector % (s_size >> 9)) ||
+      (SCpnt->request_bufflen % s_size)) {
+-  printk("sr: unaligned transfer\n");
++  printk("%s: unaligned transfer\n", cd->cdi.name);
+   return 0;
+  }
+ 
+@@ -724,15 +727,15 @@
+  /* allocate a request for the TEST_UNIT_READY */
+  SRpnt = scsi_allocate_request(cd->device, GFP_KERNEL);
+  if (!SRpnt) {
+-  printk(KERN_WARNING "(get_capabilities:) Request allocation "
+-         "failure.\n");
++  printk(KERN_WARNING "%s: (get_capabilities:) Request allocation "
++   "failure.\n", cd->cdi.name);
+   return;
+  }
+ 
+  /* allocate transfer buffer */
+  buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
+  if (!buffer) {
+-  printk(KERN_ERR "sr: out of memory.\n");
++  printk(KERN_ERR "%s: out of memory.\n", cd->cdi.name);
+   scsi_release_request(SRpnt);
+   return;
+  }
 
