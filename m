@@ -1,113 +1,72 @@
-From: Martin Hicks <mort@bork.org>
-Subject: Re: [PATCH] Fix error path when adding sysfs attributes
-Date: Fri, 16 Jan 2004 15:52:23 -0500
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Problem with an USB Stick and kernel 2.6.1
+Date: Fri, 16 Jan 2004 15:53:18 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040116205223.GY27591@localhost>
-References: <20040116192801.GT27591@localhost> <20040116194839.GA1053@beaverton.ibm.com> <20040116203325.GX27591@localhost>
+Message-ID: <Pine.LNX.4.44L0.0401161551300.843-100000@ida.rowland.org>
+References: <20040116165559.GB2686@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="C94crkcyjafcjHxo"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from galileo.bork.org ([66.11.174.156]:9624 "HELO galileo.bork.org")
-	by vger.kernel.org with SMTP id S265553AbUAPUwY (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:38660 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S265648AbUAPUxT (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jan 2004 15:52:24 -0500
-Content-Disposition: inline
-In-Reply-To: <20040116203325.GX27591@localhost>
+	Fri, 16 Jan 2004 15:53:19 -0500
+In-Reply-To: <20040116165559.GB2686@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org, Mike Anderson <andmike@us.ibm.com>
+To: Florian Lohoff <flo@rfc822.org>, Alexander Motzkau <a.motzkau@web.de>, Mike Anderson <andmike@us.ibm.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
 
+On Fri, 16 Jan 2004, Mike Anderson wrote:
 
---C94crkcyjafcjHxo
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-
-
-On Fri, Jan 16, 2004 at 03:33:25PM -0500, Martin Hicks wrote:
-> 
-> 
-> On Fri, Jan 16, 2004 at 11:48:39AM -0800, Mike Anderson wrote:
-> > While we are cleaning there appears to also be an extra return on line
-> > 364 after a goto. It might be good to include this change in the patch.
+> Alan Stern [stern@rowland.harvard.edu] wrote:
+> > 
+> > Seeing no sense key, usb-storage returns 0 indicating the command
+> > succeeded.  But scsi_finish_command() sees that valid sense data is
+> > present and sets the driver_byte to DRIVER_SENSE.
+> > 
+> > > SCSI error : <1 0 0 0> return code = 0x8000000
+> > > Current sda: sense key No Sense
+> > 
+> > This causes scsi_io_completion() to call scsi_end_request() with uptodate 
+> > = 0 and results in this error:
+> > 
+> > > end_request: I/O error, dev sda, sector 32
+> > > FAT: unable to read boot sector
+> > 
+> > How should we handle this?  Should we zero out sense_buffer[0] when 
+> > auto-sense shows sense key = NO_SENSE?
 > > 
 > 
-> Good idea.  Here's an updated patch that fixes the original bugs, the
-> extra "return" and a bit of whitespace.
-> 
+> I would think the upper level driver should handle this. We decode
+> RECOVERED_ERROR in sd. sd could just handle NO_SENSE the same with /
+> without the print_sense. I noticed that st and osst under some
+> circumstances look at the NO_SENSE case (the tape people will need to
+> comment as this looks like a EOM workaround) so it would seem incorrect
+> for the LLDD as a general policy to say it received no sense when it
+> did.
 
-And now the patch...
+Florian and Alexander, does this patch fix your problem?  Mike, how does 
+it look to you?
 
-mh
+Alan Stern
 
--- 
-Martin Hicks || mort@bork.org || PGP/GnuPG: 0x4C7F2BEE
 
---C94crkcyjafcjHxo
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="scsi-sysfs-add-attribute-fix-2.diff"
+===== sd.c 1.59 vs edited =====
+--- 1.59/drivers/scsi/sd.c	Fri Oct 24 14:53:37 2003
++++ edited/drivers/scsi/sd.c	Fri Jan 16 15:49:48 2004
+@@ -730,6 +730,14 @@
+ 			 * hard error.
+ 			 */
+ 			print_sense("sd", SCpnt);
++			/* FALLS THROUGH */
++
++		case NO_SENSE:
++			/*
++			 * The low-level driver got the sense data but
++			 * everything was all right.  Don't treat this
++			 * an an error.
++			 */
+ 			SCpnt->result = 0;
+ 			SCpnt->sense_buffer[0] = 0x0;
+ 			good_sectors = this_count;
 
-# This is a BitKeeper generated patch for the following project:
-# Project Name: Linux kernel tree
-# This patch format is intended for GNU patch command version 2.5 or higher.
-# This patch includes the following deltas:
-#	           ChangeSet	1.1521  -> 1.1522 
-#	drivers/scsi/scsi_sysfs.c	1.38    -> 1.39   
-#
-# The following is the BitKeeper ChangeSet Log
-# --------------------------------------------
-# 04/01/16	mort@green.i.bork.org	1.1522
-# Stop adding sysfs attributes after we call scsi_remove_device()
-# when we encounter an error.  Also a small whitespace cleanup
-# and removing a useless "return".
-# --------------------------------------------
-#
-diff -Nru a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
---- a/drivers/scsi/scsi_sysfs.c	Fri Jan 16 15:24:41 2004
-+++ b/drivers/scsi/scsi_sysfs.c	Fri Jan 16 15:24:41 2004
-@@ -361,7 +361,6 @@
- 	if (error) {
- 		printk(KERN_INFO "error 2\n");
- 		goto clean_device;
--		return error;
- 	}
- 
- 	get_device(&sdev->sdev_gendev);
-@@ -370,8 +369,10 @@
- 		for (i = 0; sdev->host->hostt->sdev_attrs[i]; i++) {
- 			error = attr_add(&sdev->sdev_gendev,
- 					sdev->host->hostt->sdev_attrs[i]);
--			if (error)
-+			if (error) {
- 				scsi_remove_device(sdev);
-+				goto out;
-+			}
- 		}
- 	}
- 	
-@@ -380,11 +381,14 @@
- 					scsi_sysfs_sdev_attrs[i])) {
- 			error = device_create_file(&sdev->sdev_gendev,
- 					scsi_sysfs_sdev_attrs[i]);
--			if (error)
-+			if (error) {
- 				scsi_remove_device(sdev);
-+				goto out;
-+			}
- 		}
- 	}
- 
-+ out:
- 	return error;
- 
- clean_device:
-@@ -394,7 +398,6 @@
- 	put_device(&sdev->sdev_gendev);
- 
- 	return error;
--
- }
- 
- /**
-
---C94crkcyjafcjHxo--
