@@ -1,33 +1,89 @@
-From: "Caushik, Ramesh" <ramesh.caushik@intel.com>
-Subject: Problems with updated firmware for qla2xxx driver.
-Date: Tue, 23 Mar 2004 11:47:52 -0800
+From: <ttwillman@penguincomputing.com>
+Subject: RE: megaraid on opteron w/ 8G RAM
+Date: Tue, 23 Mar 2004 12:52:54 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <EA4DC661A6353747A2E5C0DE8792DDDE0351BCF5@orsmsx404.jf.intel.com>
+Message-ID: <34994.64.243.132.186.1080075174.squirrel@imap.penguincomputing.com>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BC460@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmr05.intel.com ([134.134.136.6]:26030 "EHLO
-	hermes.jf.intel.com") by vger.kernel.org with ESMTP id S262784AbUCWTsV convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Mar 2004 14:48:21 -0500
-Received: from talaria.jf.intel.com (talaria.jf.intel.com [10.7.209.7])
-	by hermes.jf.intel.com (8.12.9-20030918-01/8.12.9/d: major-outer.mc,v 1.15 2004/01/30 18:16:28 root Exp $) with ESMTP id i2NJqKkS024572
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Mar 2004 19:52:22 GMT
-Received: from orsmsxvs040.jf.intel.com (orsmsxvs040.jf.intel.com [192.168.65.206])
-	by talaria.jf.intel.com (8.12.9-20030918-01/8.12.9/d: major-inner.mc,v 1.10 2004/03/01 19:21:36 root Exp $) with SMTP id i2NJedgZ007698
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Mar 2004 19:41:16 GMT
-Received: from orsmsx332.amr.corp.intel.com ([192.168.65.60])
- by orsmsxvs040.jf.intel.com (SAVSMTP 3.1.2.35) with SMTP id M2004032311475202682
- for <linux-scsi@vger.kernel.org>; Tue, 23 Mar 2004 11:47:52 -0800
-Content-Class: urn:content-classes:message
+Received: from littleblue.penguincomputing.com ([64.243.132.187]:16526 "EHLO
+	hermes.penguincomputing.com") by vger.kernel.org with ESMTP
+	id S262810AbUCWUpe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Mar 2004 15:45:34 -0500
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC460@exa-atlanta.se.lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Atulm@lsil.com
+Cc: error27@email.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi,
-	I am trying to run the latest qla2xxx driver with the patches from <ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.00.00b11k/> on an Intel AdvancedTCA SBC  which has an onboard dual port QLogic ISP2312 controller. When I insmod the driver the adapter is found and the driver tries to "init" the firmware and fails. It looks like this is due to the  firmware in driver versions > 8.00.00b8. The same driver works fine if  I copy the qla2300_fw.c file from an earlier version (8.00.00b8) found in the stock 2.6.2 kernel. Has anybody else noticed this on other ISP2312 based adapters. Appreciate any help resolving this issue. 
-Ramesh.    
+I'm continuing the work on this system; Dan or I will try to get a serial
+console hooked up soon (I'm working on system mostly remotely,
+unfortunately).
+
+What I've found so far:
+
+it doesn't appear to be so much a problem with the megaraid driver
+specifically; appears to be related more to the x86_64 code.  I've found
+that kernel 2.4.25 from kernel.org works fine *if* mem=8128 is passed;
+which would appear to me to be an issue with pci memory allocation. 
+However RHEL3's 2.4.21-4ELsmp and 2.4.21-9.0.1ELsmp kernels do not work. 
+I've also applied MTRR patches and some minor other fixups to no avail so
+far.  I have not tried to apply ACPI/APIC patches yet to the RHEL kernels.
+
+The driver stops after sending the first enquiry command to the card;
+waits in a tight while loop polling for a response from the card with
+interrupts disabled.
 
 
-"Views expressed are mine, and not those of Intel Corporation" 
+kernel.org ker
+
+> What is the megaraid2 driver version? Can you inline the panic messages?
+>
+> -Atul Mukker
+>
+> -----Original Message-----
+> From: dan carpenter [mailto:error27@email.com]
+> Sent: Wednesday, March 10, 2004 9:19 PM
+> To: linux-kernel@vger.kernel.org
+> Cc: linux-scsi@vger.kernel.org
+> Subject: megaraid on opteron w/ 8G RAM
+>
+>
+> I'm using the megaraid 1.19.6 driver on RedHat Work Station
+> x86_64.  It works great with only 4 gigs of RAM installed,
+> but it locks up when I load the module with 8 gigs of RAM
+> installed.  It generally locks up in the issue_scb_block()
+> but it's not always consistent about which line it locks
+> up on within that function.
+>
+> On the default Suse Linux Enterprise Server 8 the module
+> loads but after around 5 hours of running drive tests the
+> drives stop responding.
+>
+> I also tried the megaraid2 module and that kernel panics
+> when the module is loaded.
+>
+> I'm using an arima motherboard with the 1.84 BIOS.
+>
+> Is this a known issue?  Has anyone been able to make a
+> similar config work?
+>
+> regards,
+> dan carpenter
+> --
+> ___________________________________________________________
+> Sign-up for Ads Free at Mail.com
+> http://promo.mail.com/adsfreejump.htm
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel"
+> in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+
+
 
