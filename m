@@ -1,51 +1,43 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Aic7xxx v6.2.22 and Aic79xx v1.3.0Alpha2 Released
-Date: Tue, 10 Dec 2002 13:14:11 +0000
+Subject: Re: Warning: about not setting max_sectors
+Date: Tue, 10 Dec 2002 13:23:48 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021210131411.A30930@infradead.org>
-References: <203630000.1039477998@aslan.btc.adaptec.com> <20021210001256.A9363@infradead.org> <244760000.1039480419@aslan.btc.adaptec.com>
+Message-ID: <20021210132348.A31628@infradead.org>
+References: <200212091455.gB9Etg601956@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <244760000.1039480419@aslan.btc.adaptec.com>; from gibbs@scsiguy.com on Mon, Dec 09, 2002 at 05:33:40PM -0700
+In-Reply-To: <200212091455.gB9Etg601956@localhost.localdomain>; from James.Bottomley@steeleye.com on Mon, Dec 09, 2002 at 08:55:41AM -0600
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: linux-scsi@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Marcelo Tosatti <marcelo@conectiva.com.br>, Linus Torvalds <torvalds@transmeta.com>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Dec 09, 2002 at 05:33:40PM -0700, Justin T. Gibbs wrote:
-> I don't see why they are necessary.  The usual reasons for patches are:
+On Mon, Dec 09, 2002 at 08:55:41AM -0600, James Bottomley wrote:
+> For some reason, the SCSI core is now warning about drivers which don't set 
+> max_sectors.
 > 
-> 1) To review the changes
->    With the exception of Doug Ledford, I doubt that many others bother
->    to understand how the aic7xxx drivers work
-
-Even if I don't unserstand all of the aic7xxx driver I do understand the linux
-scsi midlayer and DDI interface.
-
+> Just for the record, we have two parameters in the template:
 > 
-> 2) To avoid conflicts with other developers
->    Who else is maintaining this driver?  Except for a few minor changes
->    to the SCSI Makefile and Kconfig/Config.in file, all of the changes
->    are contained within the aic7xxx directory.
-
-Even if not many people are working on aic7xx directly the scsi midlayer
-and the linux DDI are changing.  I.e. your tarball that I downloaded
-yetserday doesn't seem to deal with Doug's slave_* changes yet.
-
-Similarly I am working on making aic7xxx exploit the PCI driver API
-properly and use scsi_add_host/scsi_remove_host to properly support
-hotplugging.  Having the diffs to look at makes merging a lot easier.
-
+> sg_tablesize which determines the maximum number of scatter gather entries the 
+> host can have (corresponds to max_phys_segments in the block layer), and
 > 
-> Of course, I'll happily generate patches against whatever kernel versions
-> the power that be want me to if it will help a driver update to occur.
+> max_sectors, which imposes a maximum overall transfer length (corresponds to 
+> max_sectors in the block queue).
+> 
+> The comments over max_sectors list it as optional (if unset, we set it to the 
+> scsi equivalent of machine infinity---well, actually 1024, or 512Mb for usual 
+> blocks).
+> 
+> The reason it's unset on so many drivers is that usually, they have no 
+> absolute transfer limit, so they're just bounded by the number of entries in 
+> the scatter-gather list.
+> 
+> I can't see a reason to force every driver suddenly to have an arbitrary 
+> max_sectors, so if no-one objects, I'll pull out the warning.
 
-I'll have a box with three aic7xxx of different types and a hotplug pci
-controller at work and I'd like to help integrating both your updates and
-my hotplug pci changes (which I'll send you and linux-scsi for review one
-done of course) into mainline.
+I added this intentionally.  The default is set in scsi_register_host
+which is an obsolete interface.  This warning reminds driver writers to set
+the value explicitly, with scsi_add_host & friends they won't get a default
+anymore.
 
-For 2.4 the APIs are stable so Alan and Marcelo should just grab it.  Of
-course they prefer patches for applying because that's how linux development
-works.. :)
