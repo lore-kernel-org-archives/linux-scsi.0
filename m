@@ -1,31 +1,31 @@
-From: Linda Lee <lindaclee2002@yahoo.com>
-Subject: linux SCSI PGR
-Date: Tue, 11 Feb 2003 11:07:22 -0800 (PST)
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [PATCH / RFC] scsi_error handler update. (1/4)
+Date: Tue, 11 Feb 2003 15:14:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030211190722.19576.qmail@web14608.mail.yahoo.com>
+Message-ID: <3E49598F.80409@splentec.com>
+References: <20030211081351.GA1368@beaverton.ibm.com> <3E492992.90502@splentec.com> <20030211172256.GC3164@beaverton.ibm.com> <3E494977.1070706@splentec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-I looked through some Linux websites and I know the
-Linux supports SCSI device.   But, I couldn't find any
-information on the SCSI-3 persistent group reservation
-that Linux SCSI device supports.  Is there any 
-equivalent of Solaris SCSI-2 (persistent group
-reservations emulation) and 
-SCSI-3 (persistent group reservations) on Linux?
+Luben Tuikov wrote:
+ >
+ > 1. Is it possible that when a command times out, or when the application
+ > client sends ABORT_TASK TMF (future), the eh thread wakes up and calls the driver's
+ > abort function, without actually shutting down queueing or any other workings
+ > of the host/driver/device?  Then let the LLDD cancel this command, all the while
+ > the rest of the things can go on.
 
-                 
+Yeah, the host_lock...
 
-Thanks,
+I'm not very fond of grabbing a spin lock calling a fn which may sleep
+and then releasing the lock...
 
-Linda
+-- 
+Luben
 
 
-
-__________________________________________________
-Do you Yahoo!?
-Yahoo! Shopping - Send Flowers for Valentine's Day
-http://shopping.yahoo.com
