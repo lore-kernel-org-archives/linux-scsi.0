@@ -1,64 +1,44 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: [PATCH] allow drivers to hook into watchdog timeout
-Date: Tue, 10 Feb 2004 13:26:57 -0700
+From: Andries Brouwer <aebr@win.tue.nl>
+Subject: Re: lots and lots of disks again
+Date: Tue, 10 Feb 2004 21:10:02 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <2549730000.1076444817@aslan.btc.adaptec.com>
-References: <20040120132052.GA6740@lst.de>		<2432440000.1076430858@aslan.btc.adaptec.com	>	<1076431366.1804.24.camel@mulgrave>		<2472850000.1076435243@aslan.btc.adaptec.com>	<1076438507.2165.38.camel@mulgrave> 	<2520610000.1076442259@aslan.btc.adaptec.com> <1076443541.2080.56.camel@mulgrave>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Message-ID: <20040210211002.A1534@pclin040.win.tue.nl>
+References: <20040204024512.5bf68428.akpm@osdl.org> <20040210110417.GB4010@tpkurt.garloff.de> <20040210112658.GC4010@tpkurt.garloff.de> <20040210133932.A3870@infradead.org> <20040210154751.GH4010@tpkurt.garloff.de> <20040210155203.A5238@infradead.org> <20040210160803.GL4010@tpkurt.garloff.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:52707 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S264477AbUBJUUT (ORCPT
+Received: from mailhost.tue.nl ([131.155.2.7]:39432 "EHLO mailhost.tue.nl")
+	by vger.kernel.org with ESMTP id S265478AbUBJUKQ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Feb 2004 15:20:19 -0500
-In-Reply-To: <1076443541.2080.56.camel@mulgrave>
+	Tue, 10 Feb 2004 15:10:16 -0500
 Content-Disposition: inline
+In-Reply-To: <20040210160803.GL4010@tpkurt.garloff.de>; from garloff@suse.de on Tue, Feb 10, 2004 at 05:08:03PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Kurt Garloff <garloff@suse.de>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, Badari Pulavarty <pbadari@us.ibm.com>, Matthew Wilcox <willy@debian.org>, James Bottomley <James.Bottomley@steeleye.com>
 
-> On Tue, 2004-02-10 at 14:44, Justin T. Gibbs wrote:
->> > If you need to stall a command after you've accepted it by returning
->> > zero from queuecommand, you return it to the mid-layer with status
->> > either BUSY or QUEUE_FULL.
->> 
->> BUSY and QUEUE_FULL status have particular meanings when associated
->> with an SCSI peripheral.  Using them for this purpose will only confuse
->> the mid-layer into taking unwarranted action, like trying to throttle
->> the queue depth.  The times that I want to use this have nothing to
->> do with BUSY or QUEUE_FULL in their SCSI sense.
-> 
-> So if I give you an error code for this, like DID_REQEUEUE, you'll
-> eliminate the driver queueing from your queucommand and from your done
-> processing?
+Kurt Garloff writes:
 
-If I can freeze at per-device granularity and testing of the BUSY and
-QUEUE_FULL paths in the mid-layer pan out, I believe the answer is yes.
++/* Major / minor to disk mapping, from Matthew Wilcox, corrected
++ * (mail to linux-scsi@vger.kernel.org from 2003-10-16)
++ *
++ *       major     p2    disc2   disc  p1
++ *   |............|..|..........|....|....| <- dev_t
++ *    31        20    17       8 7  4 3  0
++ *
++ * We allow 64 partitions per disk, by adding two more bits.
++ * Inside a major, we have 16k disks, however mapped non-
++ * contiguously. The first 16 disks are for major0, the next
++ * ones with major1, ... Disk 256 is for major0 again, disk 272
++ * for major1, ...
++ * We can't currently use the partitions beyond 16, as the
++ * genhd infrastructure expects contiguous minors.
++ */
 
->> They will only be issued up to their command retry count which may be zero
->> for certain commands.  This may also confuse the peripheral or mid-layer
->> drivers into believing that a unit attention condition is expected and
->> should be ignored.  The commands that were affected by the recovery action
->> should be marked accordingly, but marking the commands that are still waiting
->> on the sidelines is the equivalent of a drive-by-shooting.
-> 
-> No, they won't.  DID_RESET doesn't count against the retry count (the
-> only things that affect the retry count are conditions that go through
-> the maybe_retry label in scsi_device_disposition()).
+It is true that the first step needed is some agreement on
+how to assign device numbers to disks and their partitions.
 
-This is only true if the peripheral driver calls scsi_io_completion().
-The SG driver, for instance, does not.
+The above suggestion is really ugly, however.
+I can hardly imagine that we would like to start such crap
+while still in the design phase.
 
-> It will not cause any unit attention exception processing.  That only
-> happens if the error handler knows it reset something, or the driver
-> reports that it is resetting something.
-
-That reminds me.  Reported bus/target resets do not cause a
-bus/device-settle delay.  This is another one of the workarounds
-in my driver.
-
---
-Justin
-
+Andries
