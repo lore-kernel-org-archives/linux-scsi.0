@@ -1,79 +1,61 @@
-From: rct@gherkin.frus.com (Bob Tracy)
-Subject: [PATCH] sym53c500_cs driver update
-Date: Fri, 26 Nov 2004 22:50:11 -0600 (CST)
-Message-ID: <20041127045011.F0214DBDB@gherkin.frus.com>
+From: Nicola Ricciarelli <ricciare@aliceposta.it>
+Subject: AHA1505 and 2.6.9 kernel
+Date: Sat, 27 Nov 2004 09:23:54 +0100
+Message-ID: <1101543834.3587.63.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=ELM781191431-21099-0_
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gherkin.frus.com ([192.158.254.49]:21457 "EHLO gherkin.frus.com")
-	by vger.kernel.org with ESMTP id S262294AbUK0EuQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Nov 2004 23:50:16 -0500
+Received: from vsmtp1alice.tin.it ([212.216.176.144]:45007 "EHLO
+	vsmtp1alice.tin.it") by vger.kernel.org with ESMTP id S261156AbUK0IZZ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Nov 2004 03:25:25 -0500
+Received: from host112-166.pool80180.interbusiness.it (80.180.166.112) by vsmtp1alice.tin.it (7.0.027)
+        id 414EFB8400486343 for linux-scsi@vger.kernel.org; Sat, 27 Nov 2004 09:25:25 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: torvalds@osdl.org, hch@infradead.org, James.Bottomley@steeleye.com
+To: linux-scsi@vger.kernel.org
+
+I've a very old SCSI controller, ADAPTEC AHA1505, I use it just to
+control an Epson GT5500 scanner. I know .. very old controller ^_* but
+sufficient for a scanner. I've selected hardware jumpers of the
+controller so it has I/O= 0x140 and IRQ=9  (the only one free IRQ using
+windows .. IRQ=11 it has a conflict with ethernet card). The scanner has
+ID=2.
 
 
---ELM781191431-21099-0_
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=US-ASCII
+* Adding    aha152x=0x140,9,2  in grub.conf nothing occurs
+* Adding    aha152x=0x140,9    in grub.conf nothing occurs
+* Adding    options aha152x aha152x=0x140,9,2  in /etc/modprobe.conf
+and typing   modprobe aha152x nothing occurs
+* Adding    options aha152x aha152x=0x140,9    in /etc/modprobe.conf
+and typing   modprobe aha152x nothing occurs
 
-(Previously posted a month ago to linux-kernel and linux-scsi with
-copies to James Bottomley and Christoph Hellwig.  No feedback received.
-Would like to see this included in 2.6.10.  Thanks!)
+all times it says:
+ 
 
-The attached minor patch to linux/drivers/scsi/pcmcia/sym53c500_cs.c
-allows interrupt sharing, which is evidently a "must have" feature for
-at least G4 PowerBooks (ppc architecture).  The other user of the New
-Media Bus Toaster reports that his powerbook consistently assigns the
-yenta CardBus controller IRQ to whatever card he inserts.
+Nov 27 09:22:03 localhost kernel: aha152x: BIOS test: passed, 1
+controller(s) configured
+Nov 27 09:22:05 localhost kernel: aha152x: resetting bus...
+Nov 27 09:22:05 localhost kernel: aha152x3: vital data: rev=1, io=0x140
+(0x140/0x140), irq
+=9, scsiid=7, reconnect=enabled, parity=enabled, synchronous=disabled,
+delay=1000, extende
+d translation=disabled
+Nov 27 09:22:05 localhost kernel: aha152x3: trying software interrupt,
+lost.
+Nov 27 09:22:05 localhost kernel: aha152x3: irq 9 possibly wrong.
+Please verify.
 
-Applies to version 0.9b of the sym53c500_cs driver, as included with
-the 2.6.9 kernel.
 
-Signed-off-by: Bob Tracy <rct@frus.com>
+
+Nicola
+ 
+
+PS:  I was missing a couple of infos: I'm using Fedora Core 2 distro and
+kernel 2.6.9-1.6_FC2 (but I'm going to recompile the 2.6.9 kernel +
+patch 2.6.10-rc2).
 
 -- 
------------------------------------------------------------------------
-Bob Tracy                   WTO + WIPO = DMCA? http://www.anti-dmca.org
-rct@frus.com
------------------------------------------------------------------------
+Nicola Ricciarelli <ricciare@aliceposta.it>
 
---ELM781191431-21099-0_
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: attachment; filename=patch09_sym53c500
-
---- linux/drivers/scsi/pcmcia/sym53c500_cs.c.orig	Wed Jul  7 07:24:21 2004
-+++ linux/drivers/scsi/pcmcia/sym53c500_cs.c	Wed Oct 27 22:21:20 2004
-@@ -85,7 +85,7 @@
- module_param(pc_debug, int, 0);
- #define DEBUG(n, args...) if (pc_debug>(n)) printk(KERN_DEBUG args)
- static char *version =
--"sym53c500_cs.c 0.9b 2004/05/10 (Bob Tracy)";
-+"sym53c500_cs.c 0.9c 2004/10/27 (Bob Tracy)";
- #else
- #define DEBUG(n, args...)
- #endif
-@@ -95,7 +95,7 @@
- /* Parameters that can be set with 'insmod' */
- 
- /* Bit map of interrupts to choose from */
--static unsigned int irq_mask = 0xdeb8;	/* 3, 6, 7, 9-12, 14, 15 */
-+static unsigned int irq_mask = 0xdeb8;	/* 3-5, 7, 9-12, 14, 15 */
- static int irq_list[4] = { -1 };
- static int num_irqs = 1;
- 
-@@ -830,7 +830,7 @@
- 	data = (struct sym53c500_data *)host->hostdata;
- 
- 	if (irq_level > 0) {
--		if (request_irq(irq_level, SYM53C500_intr, 0, "SYM53C500", host)) {
-+		if (request_irq(irq_level, SYM53C500_intr, SA_SHIRQ, "SYM53C500", host)) {
- 			printk("SYM53C500: unable to allocate IRQ %d\n", irq_level);
- 			goto err_free_scsi;
- 		}
-
---ELM781191431-21099-0_--
