@@ -1,34 +1,110 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH scsi-misc-2.6 08/08] scsi: fix hot unplug sequence
-Date: Fri, 25 Mar 2005 16:49:10 -0600
-Message-ID: <1111790950.5692.63.camel@mulgrave>
-References: <20050323021335.960F95F8@htj.dyndns.org>
-	 <20050323021335.4682C732@htj.dyndns.org>
-	 <1111550882.5520.93.camel@mulgrave> <4240F5A9.80205@gmail.com>
-	 <20050323071920.GJ24105@suse.de> <1111591213.5441.19.camel@mulgrave>
-	 <20050323152550.GB16149@suse.de> <1111711558.5612.52.camel@mulgrave>
-	 <20050325031511.GA22114@htj.dyndns.org> <1111726965.5612.62.camel@mulgrave>
-	 <20050325053842.GA24499@htj.dyndns.org> <1111778388.5692.38.camel@mulgrave>
-	  <4244860E.5090800@gmail.com>
+From: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Subject: RE: The latest megaraid_mbox 2.20.4.5 is hung
+Date: Sat, 26 Mar 2005 11:58:59 +0900
+Message-ID: <BF571719A4041A478005EF3F08EA6DF0D25235@pcsmail03.pcs.pc.ome.toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Received: from stat16.steeleye.com ([209.192.50.48]:22441 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261845AbVCYWtU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Mar 2005 17:49:20 -0500
-In-Reply-To: <4244860E.5090800@gmail.com>
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C531B0.208744D3"
+Received: from inet-tsb5.toshiba.co.jp ([202.33.96.24]:60397 "EHLO
+	inet-tsb5.toshiba.co.jp") by vger.kernel.org with ESMTP
+	id S261924AbVCZDDD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Mar 2005 22:03:03 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: "Ju, Seokmann" <sju@lsil.com>
+Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, linux-scsi@vger.kernel.org, "Mukker, Atul" <Atulm@lsil.com>, "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
 
-On Sat, 2005-03-26 at 06:43 +0900, Tejun Heo wrote:
->  1. Allocate scsi_request and request (two are linked)
+This is a multi-part message in MIME format.
 
-This can't be done because the scsi_cmnd's are allocated specially (slab
-with reserve pool).
+------_=_NextPart_001_01C531B0.208744D3
+Content-Type: text/plain;
+	charset="iso-2022-jp"
+Content-Transfer-Encoding: 7bit
 
-James
+Hi Seokmann,
 
+When failing in megaraid_queue_command(), 
+is not scsi_cmnd(io request) lost?
+I think that I fix this issue. Please check the code.
+(See attached file: linux-2.6.12-rc1-megaraid-queuecommand-error-midlayer-retry-fix.patch)
 
+The patching order is:
+   - linux-2.6.12-rc1-megaraid-isr-quiescent-race-fix.patch
+   - linux-2.6.12-rc1-megaraid-outstanding_cmds-atomic.patch
+   - linux-2.6.12-rc1-megaraid-queuecommand-error-midlayer-retry-fix.patch
+
+BTW, Are the max number of commands that
+FW is treatable at the same time 128?
+For the megaraid2 driver, it was 127.
+Which is correct?
+
+I continue the driver's debugging further. 
+Thanks
+--
+Haruo
+
+------_=_NextPart_001_01C531B0.208744D3
+Content-Type: application/octet-stream;
+	name="linux-2.6.12-rc1-megaraid-queuecommand-error-midlayer-retry-fix.patch"
+Content-Transfer-Encoding: base64
+Content-Description: linux-2.6.12-rc1-megaraid-queuecommand-error-midlayer-retry-fix.patch
+Content-Disposition: attachment;
+	filename="linux-2.6.12-rc1-megaraid-queuecommand-error-midlayer-retry-fix.patch"
+
+ZGlmZiAtdXJOIGxpbnV4LTIuNi4xMi1yYzEub3JpZy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVn
+YXJhaWRfbWJveC5jIGxpbnV4LTIuNi4xMi1yYzEvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2Fy
+YWlkX21ib3guYwotLS0gbGludXgtMi42LjEyLXJjMS5vcmlnL2RyaXZlcnMvc2NzaS9tZWdhcmFp
+ZC9tZWdhcmFpZF9tYm94LmMJMjAwNS0wMy0yNSAxOTowMzowMS4wMDAwMDAwMDAgKzA5MDAKKysr
+IGxpbnV4LTIuNi4xMi1yYzEvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX21ib3guYwky
+MDA1LTAzLTI2IDExOjUwOjA5LjIwMTgzOTk2MCArMDkwMApAQCAtMTEzLDcgKzExMyw3IEBACiBz
+dGF0aWMgaW50IG1lZ2FyYWlkX3F1ZXVlX2NvbW1hbmQoc3RydWN0IHNjc2lfY21uZCAqLAogCQl2
+b2lkICgqKShzdHJ1Y3Qgc2NzaV9jbW5kICopKTsKIHN0YXRpYyBzY2JfdCAqbWVnYXJhaWRfbWJv
+eF9idWlsZF9jbWQoYWRhcHRlcl90ICosIHN0cnVjdCBzY3NpX2NtbmQgKiwgaW50ICopOwotc3Rh
+dGljIHZvaWQgbWVnYXJhaWRfbWJveF9ydW5wZW5kcShhZGFwdGVyX3QgKiwgc2NiX3QgKik7Citz
+dGF0aWMgdm9pZCBtZWdhcmFpZF9tYm94X3J1bnBlbmRxKGFkYXB0ZXJfdCAqLCBzY2JfdCAqLCBp
+bnQgKik7CiBzdGF0aWMgdm9pZCBtZWdhcmFpZF9tYm94X3ByZXBhcmVfcHRocnUoYWRhcHRlcl90
+ICosIHNjYl90ICosCiAJCXN0cnVjdCBzY3NpX2NtbmQgKik7CiBzdGF0aWMgdm9pZCBtZWdhcmFp
+ZF9tYm94X3ByZXBhcmVfZXB0aHJ1KGFkYXB0ZXJfdCAqLCBzY2JfdCAqLApAQCAtMTY3MiwxOSAr
+MTY3MiwyOCBAQAogCSAqLwogCWlmX2J1c3kJPSAwOwogCXNjYgk9IG1lZ2FyYWlkX21ib3hfYnVp
+bGRfY21kKGFkYXB0ZXIsIHNjcCwgJmlmX2J1c3kpOworCWlmICghc2NiKQorCQlnb3RvIGVycl9v
+dXQ7CiAKKwltZWdhcmFpZF9tYm94X3J1bnBlbmRxKGFkYXB0ZXIsIHNjYiwgJmlmX2J1c3kpOwor
+CWlmIChpZl9idXN5KQorCQlnb3RvIGVycl9vdXQ7CisKKwlzcGluX2xvY2soYWRhcHRlci0+aG9z
+dF9sb2NrKTsKKworCXJldHVybiBpZl9idXN5OworCitlcnJfb3V0OgogCWlmIChzY2IpIHsKLQkJ
+bWVnYXJhaWRfbWJveF9ydW5wZW5kcShhZGFwdGVyLCBzY2IpOworCQltZWdhcmFpZF9kZWFsbG9j
+X3NjYihhZGFwdGVyLCBzY2IpOwogCX0KIAogCXNwaW5fbG9jayhhZGFwdGVyLT5ob3N0X2xvY2sp
+OwogCi0JaWYgKCFzY2IpIHsJLy8gY29tbWFuZCBhbHJlYWR5IGNvbXBsZXRlZAotCQlkb25lKHNj
+cCk7Ci0JCXJldHVybiAwOwotCX0KKwkvLyBjb21tYW5kIGFscmVhZHkgY29tcGxldGVkCisJZG9u
+ZShzY3ApOwkKIAotCXJldHVybiBpZl9idXN5OworCXJldHVybiAwOwogfQogCiAKQEAgLTIwODEs
+NyArMjA5MCw3IEBACiAgKiBuZXh0IFNDQiBpcyBhdCB0aGUgaGVhZCBub3cuCiAgKi8KIHN0YXRp
+YyB2b2lkCi1tZWdhcmFpZF9tYm94X3J1bnBlbmRxKGFkYXB0ZXJfdCAqYWRhcHRlciwgc2NiX3Qg
+KnNjYl9xKQorbWVnYXJhaWRfbWJveF9ydW5wZW5kcShhZGFwdGVyX3QgKmFkYXB0ZXIsIHNjYl90
+ICpzY2JfcSwgaW50ICpidXN5KQogewogCXNjYl90CQkJKnNjYjsKIAl1bnNpZ25lZCBsb25nCQlm
+bGFnczsKQEAgLTIwOTYsNiArMjEwNSwxMyBAQAogCS8vIGlmIHRoZSBhZGFwdGVyIGluIG5vdCBp
+biBxdWllc2NlbnQgbW9kZSwgcG9zdCB0aGUgY29tbWFuZHMgdG8gRlcKIAlpZiAoYXRvbWljX3Jl
+YWQoJmFkYXB0ZXItPnF1aWVzY2VudCkpIHsKIAkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZShQRU5E
+SU5HX0xJU1RfTE9DSyhhZGFwdGVyKSwgZmxhZ3MpOworCisJCS8vIHJldHJ5IHNjc2kgbWlkbGF5
+ZXIKKwkJaWYgKHNjYl9xKQorCQkJc2NiX3EtPnNjcC0+cmVzdWx0ID0gKERJRF9TT0ZUX0VSUk9S
+IDw8IDE2KTsKKwkJCQorCQkqYnVzeSA9IDE7CisKIAkJcmV0dXJuOwogCX0KIApAQCAtMjM2OCwx
+MiArMjM4NCwxMyBAQAogewogCWFkYXB0ZXJfdAkqYWRhcHRlciA9IGRldnA7CiAJaW50CQloYW5k
+bGVkOworCWludAkJaWZfYnVzeSA9IDA7CQogCiAJaGFuZGxlZCA9IG1lZ2FyYWlkX2Fja19zZXF1
+ZW5jZShhZGFwdGVyKTsKIAogCS8qIExvb3AgdGhyb3VnaCBhbnkgcGVuZGluZyByZXF1ZXN0cyAq
+LwogCWlmICghYXRvbWljX3JlYWQoJmFkYXB0ZXItPnF1aWVzY2VudCkpIHsKLQkJbWVnYXJhaWRf
+bWJveF9ydW5wZW5kcShhZGFwdGVyLCBOVUxMKTsKKwkJbWVnYXJhaWRfbWJveF9ydW5wZW5kcShh
+ZGFwdGVyLCBOVUxMLCAmaWZfYnVzeSk7CiAJfQogCiAJcmV0dXJuIElSUV9SRVRWQUwoaGFuZGxl
+ZCk7CkBAIC0zNzYyLDYgKzM3NzksNyBAQAogCXNjYl90CQkJKnNjYjsKIAltYm94X2NjYl90CQkq
+Y2NiOwogCXVuc2lnbmVkIGxvbmcJCWZsYWdzOworCWludAkJCWlmX2J1c3kgPSAwOwogCiAJLy8g
+ZGV0YWNoIG9uZSBzY2IgZnJvbSBmcmVlIHBvb2wKIAlzcGluX2xvY2tfaXJxc2F2ZShVU0VSX0ZS
+RUVfTElTVF9MT0NLKGFkYXB0ZXIpLCBmbGFncyk7CkBAIC0zODMzLDggKzM4NTEsOSBAQAogCX0K
+IAogCS8vIHB1dCB0aGUgY29tbWFuZCBvbiB0aGUgcGVuZGluZyBsaXN0IGFuZCBleGVjdXRlCi0J
+bWVnYXJhaWRfbWJveF9ydW5wZW5kcShhZGFwdGVyLCBzY2IpOworCW1lZ2FyYWlkX21ib3hfcnVu
+cGVuZHEoYWRhcHRlciwgc2NiLCAmaWZfYnVzeSk7CiAKKwkvLyBYWFg6IHN1Y2Nlc3MgPwogCXJl
+dHVybiAwOwogfQogCkBAIC0zODgxLDYgKzM5MDAsNyBAQAogCW1ib3g2NF90CQkqbWJveDY0Owog
+CXVpbnQ4X3QJCQkqcmF3X21ib3g7CiAJdW5zaWduZWQgbG9uZwkJZmxhZ3M7CisJaW50CQkJaWZf
+YnVzeSA9IDA7CiAKIAlraW9jCQkJPSAodWlvY190ICopc2NiLT5ncDsKIAlraW9jLT5zdGF0dXMJ
+CT0gMDsKQEAgLTM5MDUsNyArMzkyNSw3IEBACiAKIAkJYXRvbWljX2RlYygmYWRhcHRlci0+cXVp
+ZXNjZW50KTsKIAotCQltZWdhcmFpZF9tYm94X3J1bnBlbmRxKGFkYXB0ZXIsIE5VTEwpOworCQlt
+ZWdhcmFpZF9tYm94X3J1bnBlbmRxKGFkYXB0ZXIsIE5VTEwsICZpZl9idXN5KTsKIAl9CiAKIAlr
+aW9jLT5kb25lKGtpb2MpOwo=
+
+------_=_NextPart_001_01C531B0.208744D3--
