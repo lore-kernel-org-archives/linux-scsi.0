@@ -1,39 +1,30 @@
-From: Kernel The <erforschen_linux@yahoo.com>
-Subject: RAW I/O
-Date: Mon, 28 Jun 2004 22:34:46 -0700 (PDT)
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: PATCH: Fix assorted dma_addr_t typing errors in ipr driver
+Date: Tue, 29 Jun 2004 04:20:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040629053446.73235.qmail@web90102.mail.scd.yahoo.com>
+Message-ID: <20040629082041.GA19267@havoc.gtf.org>
+References: <20040628140721.GA10393@devserv.devel.redhat.com> <40E05F43.7040602@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web90102.mail.scd.yahoo.com ([66.218.94.73]:59741 "HELO
-	web90102.mail.scd.yahoo.com") by vger.kernel.org with SMTP
-	id S263826AbUF2Fer (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jun 2004 01:34:47 -0400
+Received: from havoc.gtf.org ([216.162.42.101]:34231 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S265534AbUF2IV3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jun 2004 04:21:29 -0400
+Content-Disposition: inline
+In-Reply-To: <40E05F43.7040602@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Brian King <brking@us.ibm.com>
+Cc: Alan Cox <alan@redhat.com>, linux-scsi@vger.kernel.org
 
-Hi,
+On Mon, Jun 28, 2004 at 01:11:15PM -0500, Brian King wrote:
+> Alan Cox wrote:
+> >(Not cc the author since the authors email address seems to be an IBM state
+> > secret.. 8))
+> 
+> Yep. I buried it in the MODULE_AUTHOR macro;) I'll add it to the comment 
+> block at the start of the driver on the next driver update as well, as I 
+> assume that is where you were looking for it.
 
-I have written a RAM disk driver and I want to write
-the data to a backup disk/partition while unloading
-the driver.
+MAINTAINERS file...
 
-I want to do RAW I/O to a disk/partition from my ram
-disk driver. How I can achieve this?
-
-alloc_kiovec(..), map_user_kiobuf(...) and
-brw_kiovec(...) functions can be used for this? But
-these function map user space into kernel space
-memory, but in my driver I will be having only kernel
-space memory.
-
-Thanks in advance!
-Erforschen
-
-
-		
-__________________________________
-Do you Yahoo!?
-Yahoo! Mail - 50x more storage than other providers!
-http://promotions.yahoo.com/new_mail
