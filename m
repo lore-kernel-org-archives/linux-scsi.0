@@ -1,63 +1,103 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: Patches for SCSI scanning
-Date: Tue, 20 Apr 2004 10:44:08 -0700
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Re: Help - sd vs. sg Devices, and Low-level Driver.
+Date: Tue, 20 Apr 2004 10:56:17 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040420104408.B8602@beaverton.ibm.com>
-References: <20040418185751.GC4868@tpkurt.garloff.de> <1082330192.1969.37.camel@mulgrave> <20040420115419.GG4356@tpkurt.garloff.de> <1082471881.1804.34.camel@mulgrave> <20040420092650.A7749@beaverton.ibm.com> <20040420164238.GT4356@tpkurt.garloff.de>
+Message-ID: <20040420175617.GB2726@one-eyed-alien.net>
+References: <519672568F040C41B6FAC21ADF51B18FEFB3@mailnode1.commstor.crossroads.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="VrqPEDrXMn8OVzN4"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.101]:24514 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S263348AbUDTRoz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Apr 2004 13:44:55 -0400
+Received: from multivac.one-eyed-alien.net ([64.169.228.101]:15530 "EHLO
+	multivac.one-eyed-alien.net") by vger.kernel.org with ESMTP
+	id S263354AbUDTR41 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Apr 2004 13:56:27 -0400
 Content-Disposition: inline
-In-Reply-To: <20040420164238.GT4356@tpkurt.garloff.de>; from garloff@suse.de on Tue, Apr 20, 2004 at 06:42:38PM +0200
+In-Reply-To: <519672568F040C41B6FAC21ADF51B18FEFB3@mailnode1.commstor.crossroads.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Lee Xing <lxing@Crossroads.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Apr 20, 2004 at 06:42:38PM +0200, Kurt Garloff wrote:
-> Hi Patrick,
-> 
-> On Tue, Apr 20, 2004 at 09:26:51AM -0700, Patrick Mansfield wrote:
-> > On Tue, Apr 20, 2004 at 09:38:00AM -0500, James Bottomley wrote:
-> > > Yes, sounds reasonable.  We can do it all with the boot flags now.
-> > 
-> > max_scsi_luns should default to zero to avoid devices that should be black
-> > listed as single lun.
-> 
-> I strongly disagree.
 
-There were some posts in the past by either Alan or Doug L on this, I
-can't find them. Redhat ships with CONFIG_SCSI_MULTI_LUN not set.
+--VrqPEDrXMn8OVzN4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> The target should be to blacklist broken devices not working ones. 
+On Tue, Apr 20, 2004 at 11:31:32AM -0500, Lee Xing wrote:
+> I really appreciate the information and your help.  It makes sense and
+> helps a lot!
+>=20
+> Follow up questions:
+>=20
+> Q1:
+> Can we say:
+> - if the "Peripheral device type" (bit 0-4 of byte 0) of INQUIRY data is
+> Direct-access device (00h), then this device will be presented as a sd
+> device, and
+> - if the "Peripheral device type" of INQUIRY data is Scanner device
+> (06h), then this device will be presented as a sg device.
 
-I agree that is where we would like to be, but that can break current usage.
+No, this is incorrect.
 
-> Devices that have multiple LUNs are not, devices that have only one but
-> report severals are.
-> 
-> With max_scsi_luns=1, we would need to "black"list every single multi lun
-> device. I very much dislike that idea.
+First, 'sg' is not specific to SCANNER devices.  It is the 'generic'
+interface, which is compatible for ALL device types.  Thus, the sg driver
+will attach to any device.  Note that sg can be attached to a device at the
+same time as another driver (sg, sr, st, osst, etc.) is attached.
 
-Not individually, just boot with max_scsi_luns=128 or whatever as is done
-today for redhat, or boot with default_dev_flags=0x040 (BLIST_SPARSELUN).
+'sg' is used to communicate with scanners because sg provides an interface
+which user-level programs can use to communicate with devices.
 
-> Fortunately, distributors don't do this.
+> Q2:
+> Sounds like the low-level driver just passes the INQUIRY data received
+> from the physical device to the mid-level driver.  The mid-level driver
+> then picks up a right upper-level driver (sd, sg, sr or st) depending on
+> the "Peripheral device type" field of INQUIRY data.  The physical device
+> is presented as the type of the upper-level driver being used.  Is it
+> right?
 
-Suse doesn't, Redhat does, I don't know about others.
+This is _basically_ correct.
 
-> > So how can you remove those and maintain compatibilty? The removal should
-> > wait for 2.7.
-> 
-> Expecting your multi lun devices to work with max_scsi_luns=1 is just
-> wrong. max_scsi_luns should not default to 1.
-> Anyways, BLIST_SPARSELUN will have the side-effect of also working
-> around that misconfiguration.
+> Q3:
+> Suppose the physical device is a FC disk but we (low-level driver) still
+> want to present it as a sg device (because sg can support up to 256
+> physical devices while sd can only support 128).  Can low-level driver
+> fool the SCSI sub-system by sending it a fake "Peripheral device type"
+> such as Scanner device (06h)?  Are there any potential problems by doing
+> this?  If I remember right, all types of SCSI devices are accessible via
+> the sg driver, right?
 
-Again that is not compatible with the current 2.6.x code, users with
-non-black listed single lun devices will get failures if we default to
-max_scsi_luns > 1.
+First, see my above comments -- sg will attach to anything, regardless of
+PDT code.
 
--- Patrick Mansfield
+Also, while sg will attach to the device, you can't use block-operations on
+an sg device.  That is, programs like 'mount', 'dd', etc. will not function
+on a sg device.  This is likely not what you want to do.
+
+My understanding is that there are patches available to make sg support a
+large number of disks.
+
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+I could always suspend a few hundred accounts and watch what happens.
+					-- Tanya
+User Friendly, 7/31/1998
+
+--VrqPEDrXMn8OVzN4
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQFAhWRBIjReC7bSPZARAgCQAKCRAxJqG8FWwsETXc0pkp3CDiH8IQCfdh4D
++BGUJOM6c92CNp2aSyyPMLk=
+=sdQg
+-----END PGP SIGNATURE-----
+
+--VrqPEDrXMn8OVzN4--
