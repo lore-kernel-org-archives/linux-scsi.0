@@ -1,48 +1,65 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] QStor SATA/RAID driver for 2.6.9-rc3
-Date: 08 Oct 2004 11:01:34 -0500
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Fusion-MPT with 53C1030 and no flash?
+Date: Fri, 8 Oct 2004 12:56:48 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1097251299.1928.56.camel@mulgrave>
-References: <4161A06D.8010601@rtr.ca>	<416547B6.5080505@rtr.ca>	<20041007150709.B12688@i
-	nfradead.org>	<4165624C.5060405@rtr.ca>	<416565DB.4050006@pobox.com>	<4165A4
-	5D.2090200@rtr.ca>	<4165A766.1040104@pobox.com>	<4165A85D.7080704@rtr.ca>	<4
-	165AB1B.8000204@pobox.com>	<4165ACF8.8060208@rtr.ca>
-		<20041007221537.A17712@infradead.org>	<1097241583.2412.15.camel@mulgrave>
-	<4166AF2F.6070904@rtr.ca> <1097249266.1678.40.camel@mulgrave>
-	<4166B37D.8030701@rtr.ca>
+Message-ID: <20041008195648.GA5719@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="J2SCkAp4GZ/dPZZf"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:3017 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S270053AbUJHQBp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Oct 2004 12:01:45 -0400
-In-Reply-To: <4166B37D.8030701@rtr.ca>
+Received: from multivac.one-eyed-alien.net ([64.169.228.101]:20623 "EHLO
+	multivac.one-eyed-alien.net") by vger.kernel.org with ESMTP
+	id S263664AbUJHT4t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Oct 2004 15:56:49 -0400
+Received: from multivac.one-eyed-alien.net (localhost.localdomain [127.0.0.1])
+	by multivac.one-eyed-alien.net (8.12.8/8.12.8) with ESMTP id i98Jum8o006843
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 8 Oct 2004 12:56:48 -0700
+Received: (from mdharm@localhost)
+	by multivac.one-eyed-alien.net (8.12.8/8.12.8/Submit) id i98Jum5I006841
+	for linux-scsi@vger.kernel.org; Fri, 8 Oct 2004 12:56:48 -0700
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lsml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
-
-On Fri, 2004-10-08 at 10:34, Mark Lord wrote:
-> If those locks are not needed, the scsi.c maintainer really should
-> nuke'em.
-
-I think you can safely assume he has more important things to do.
-
-> > Really, I suppose, libata should provide the interfaces for doing this
-> > work for emulated commands.
-> 
-> Well, after this driver submission work is done with,
-> that's next on my list.  Right now libata doesn't have
-> the right interface for easy sharing of such functions.
-
-Not emulating an INQUIRY properly via SG_IO isn't acceptable since it's
-a mandatory command.
-
-libata does all this correctly.  I strongly suggest you find a way to
-share the code rather than trying to reinvent it yourself.  But anyway,
-if you want to know how it should work, look in libata-scsi.c
-
-James
+To: Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
+--J2SCkAp4GZ/dPZZf
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Has anyone ever used an LSI 53C1030 chip WITHOUT attached flash?
+
+As I read the technical docs, it's possible... but it requires a driver
+which can download the firmware to the ARM processor.  It looks like the
+current 2.6.x driver can't do that.
+
+In fact, I can't seem to locate a suitable firmware image anywhere...
+
+Does anyone have any experience in this area they could share?
+
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+S:  Another stupid question?
+G:  There's no such thing as a stupid question, only stupid people.
+					-- Stef and Greg
+User Friendly, 7/15/1998
+
+--J2SCkAp4GZ/dPZZf
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQFBZvEAIjReC7bSPZARAkDIAJ9rdnDfeE8catn1zQ246qse6fxu2wCgudjF
+PnDgs5WsrKtUrbckiwXGf9A=
+=4xT2
+-----END PGP SIGNATURE-----
+
+--J2SCkAp4GZ/dPZZf--
