@@ -1,88 +1,83 @@
 From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [usb-storage] Re: [PATCH] fix Sony USB mass storage - pass
-	larger receive buffer
-Date: 13 Nov 2003 18:54:16 -0700
+Subject: Re: [usb-storage] Re: [PATCH] fix Sony USB mass storage -
+	pass	larger receive buffer
+Date: 13 Nov 2003 19:02:22 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1068774856.2851.259.camel@patrh9>
+Message-ID: <1068775342.2851.307.camel@patrh9>
 References: <Pine.LNX.4.44L0.0311131638320.949-100000@ida.rowland.org>
-	 <1068766632.2851.142.camel@patrh9>
-	 <20031113162401.A29775@beaverton.ibm.com>
+	 <1068767049.2851.166.camel@patrh9>
+	 <1068768796.3fb41e1c8d075@webmail.netregistry.net>
+	 <20031113171300.F30194@one-eyed-alien.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:7584 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264485AbTKNByt
+Received: from email-out2.iomega.com ([147.178.1.83]:11426 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264484AbTKNCCy
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Nov 2003 20:54:49 -0500
-In-Reply-To: <20031113162401.A29775@beaverton.ibm.com>
+	Thu, 13 Nov 2003 21:02:54 -0500
+In-Reply-To: <20031113171300.F30194@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: patmans@us.ibm.com
-Cc: stern@rowland.harvard.edu, mdharm-scsi@one-eyed-alien.net, james.bottomley@steeleye.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, ronald@kuetemeier.com, dmitrik@users.sourceforge.net, idan@idanso.dyndns.org
-
-> > From: Patrick Mansfield ...
-> > For removable media, we try once when found
-> > (sd_probe calls sd_revalidate_disk), and
-> > generally on each open of the device as follows:
-
-Prompt & incisive, thank you.
+To: mdharm-scsi@one-eyed-alien.net
+Cc: usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org, ronald@kuetemeier.com, idan@idanso.dyndns.org, dmitrik@users.sourceforge.net, stern@rowland.harvard.edu, patmans@us.ibm.com, james.bottomley@steeleye.com
 
 > From: Matthew Dharm ...
-> ... I think we're basically at a point where
-> the only problematic command is MODE_SENSE and
-> MODE_SENSE_10, so I say blacklisting them from
-> USB devices should be fine.
+> How about:
+> 	* Define an absolute bare minimum safe
+>         subset of SCSI commands and use only
+>         those commands when communicating with
+>         a USB device
+> ...
+> a varient of blacklisting ... I like ...
 
-Lost me sorry help?
+Yes please, me too.
 
-If we eat those commands, how then can write-protect work in Linux for
-that rare case of an actually compliant device with a write-protectab;e
-disk (like the device firmware I remember shipping myself 1994..2003)?
+> From: Matthew Dharm ...
+> I suggested something like this a while ago --
+> if the emulated flag was set, certain commands
+> were not sent.  Linus didn't like that, but I
+> think he objected more to the 'emulated' flag
+> than anything else.
 
-> > If we check after the open for a write failure
-> > to read only media, we cannot keep the same
-> > open semantics (return EROFS on open).
+Urgh.  What am I missing?
 
-Without mode sense, we will see the open for write pass thru, and we
-will have to teach the fs (ext3, fat, fat32, udf, ...) to recover
-gracefully from a late write error, yes?
+Minimum mostly safe subset works better.  Right?
 
-> > From: Patrick Mansfield ...
-> > I don't have any sd removable read only
-> > media.
+Not just with SCSI over USB.  So likewise with SCSI over IDE (aka ATAPI)
+and SCSI over 1394/ FireWire/ iLink (aka SBP2 Normative Annex B). 
+Right?
 
-Want an Iomega Zip drive and disk shipped to you?
+I'm hoping we will discover for PDT x00 HDD/Flash the minimum mostly
+safe subset includes such as that (transcribed-by-hand from CATC USB
+Advisor) trace of Win XP SP1 once upon a time with a particular sample
+device while disc absent:
 
-(I can't arrange that easily, but if I try it might happen someday,
-especially if you're precisely the next person who asks me and not the
-person after that.)
+> -i xC0 -y "1A 00:1C:00 C0 00" // Mode Sense (6)
+> -i xC0 -y "1A 00:3F:00 C0 00" // Mode Sense (6)
+> -i x0C -y "1A 00:00:00 0C 00" // Mode Sense (6)
+> -i x0C -y "1A 00:3F:00 0C 00" // Mode Sense (6)
 
-(You have no Iomega Zip disk already, yes?  I ask just because you can't
-see the write-protect tab on a Zip disk unless you disassemble the disk
-and use an electron microscope, so you might not know how to flip it.)
+I'm not sure how Win translates to MMC op x5A GPCMD_MODE_SENSE_10 from
+the SPC op x1A MODE_SENSE 6 of Win SCSI.
 
-> > If you want to test with your read only
-> > media, just use the dev flags:
-> > echo "vendor:model:0x4000" > /proc/scsi/device_info 
-> > Then add your device, see if it comes back
-> > as writable, and try to mount or write it,
-> > and compare without the above (you can't
-> > remove device_info entry without rebooting
-> > or rmmod-ing scsi).
+To be sure we'd have to trace something other than an x 08 06 50 device
+(= Mass Storage, Transparent SCSI, BBB)
 
-Will do, again I thank you for explaining.
+I'm thinking I remember seeing the length either doesn't change or else
+adds four to account for the growth to 8 byte header from 4 byte header
+i.e. either:
 
-My first guess is that in bash syntax for me we mean to take $vendor and
-$model from op x12 Inquiry data, vendor = bytes[x8:F], model =
-bytes[x10:1F], so for me:
+-p -i xC0 -y "5A 00 1C:00:00:00 00 00:C0 00 00:00" // Mode Sense (10)
+-p -i xC0 -y "5A 00 3F:00:00:00 00 00:C0 00 00:00" // Mode Sense (10)
+-p -i x0C -y "5A 00 00:00:00:00 00 00:0C 00 00:00" // Mode Sense (10)
+-p -i x0C -y "5A 00 3F:00:00:00 00 00:0C 00 00:00" // Mode Sense (10)
 
-vendor = "IOMEGA   "
-model = "ZIP 250          "
-echo "$vendor:$model:0x4000" > /proc/scsi/device_info 
+or else:
 
-Results you describe for allowing open to write of unwritable disk sound
-to me like results I've seen in cdrom/ sr/ ide-cd land.  I will try sd
-and report back.
+-p -i xC4 -y "5A 00 1C:00:00:00 00 00:C4 00 00:00" // Mode Sense (10)
+-p -i xC4 -y "5A 00 3F:00:00:00 00 00:C4 00 00:00" // Mode Sense (10)
+-p -i x10 -y "5A 00 00:00:00:00 00 00:10 00 00:00" // Mode Sense (10)
+-p -i x10 -y "5A 00 3F:00:00:00 00 00:10 00 00:00" // Mode Sense (10)
 
 Pat LaVarre
 
