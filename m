@@ -1,56 +1,90 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [PATCH]: Flexible timeout infrastructure
-Date: Tue, 15 Jun 2004 15:52:54 -0400
+Date: 15 Jun 2004 14:54:43 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40CF5396.1030303@adaptec.com>
-References: <40CF0F9F.4050902@adaptec.com> <1087313492.1796.37.camel@mulgrave> <20040615181536.GA12611@us.ibm.com> <40CF4207.9050108@adaptec.com> <20040615192045.GA13704@us.ibm.com>
+Message-ID: <1087329285.2048.94.camel@mulgrave>
+References: <40CF0F9F.4050902@adaptec.com>
+	<1087313492.1796.37.camel@mulgrave>  <40CF4A15.9060005@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:7560 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S265890AbUFOTw4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jun 2004 15:52:56 -0400
-In-Reply-To: <20040615192045.GA13704@us.ibm.com>
+Received: from stat1.steeleye.com ([65.114.3.130]:729 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S265900AbUFOTys (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Jun 2004 15:54:48 -0400
+In-Reply-To: <40CF4A15.9060005@adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-> In the patch as is you overload the eh_cmd_timed_out template function
+On Tue, 2004-06-15 at 14:12, Luben Tuikov wrote:
+> > But what this basically does is force any implementor of
+> > eh_cmd_timed_out to handle all timers themselves.  Given that a large
+> > number of driver writers who try to do this get it wrong (mostly around
+> > del_timer() and del_timer_sync()), I don't think this is such a good
+> > idea.
+> 
+> True, it is not a good idea for all LLDD to use this interface.
+> But a few capable LLDD exist who can make use of it (including
+> non-native interconnect subsystems).
+> 
+> Also we can include a comment in there that in order to use
+> this interface the driver has to <funny quote here>. ;-)
 
-But this method doesn't exist. How can I be overloading it?
+Really, no.  An "experts only" interface is asking for trouble.  A major
+point about cleaning up the SCSI API is to encourage better driver
+writing by making it difficult to user the API incorrectly.
 
-> to mean the LLDD wants to try to handle timed out commands plus start /
-> restart / stop the timers. This would appear to limit the interface to
-> the LLDD doing both operations which should be separate decisions?
+> > Since we also already have the ability to modify the command times in
+> > slave configure, is it really necessary to encourage the alteration of
+> > SCSI timers in this way?
+> 
+> Keywords: optional, non-intrusive patch.  It merely adds an alternative
+> to capable only drivers.  This patch DOES NOT modify SCSI Core.
+> 
+> I'm not talking about an overhaul of SCSI Core here, just an optional
+> method which a capable driver could use.  It has no effect to the rest
+> of SCSI Core or LLDDs.
 
-I don't understand what you mean here.
- 
-> Also in the comments for the patch you mention that the LLDD may decide
-> to resubmit the IO which I assume is why you would want to have control
-> of the timers, but wouldn't the LLDD need to also consult if the IO
-> should be resubmitted which propagates these tests and could result in
-> inconsistent policy.
+I'm less interested in the amount of perturbation to the mid-layer than
+I am in getting the API right.  I've really heard no arguments that
+persuade me that turning over timer management to the LLDs is a good
+thing to do.
 
-But the LLDD *does* know if the IO is to resubmitted, it doesn't have to
-consult anyone.  Hint: targets are *passive*, and thus the stipuations in SAM.
+What the argument has centered around is the fact that LLDs wish to do
+operations to effect error recovery on their own.
 
-That is, if IO is NOT to be continued, then SCSI Core should call
-a TMF, ABORT TASK or ABORT TASK SET, via eh_abort_handler(<cmd>).
-(Yes, the eh interface doesn't do 1:1 TMF mapping.)
+The original proposal (by Christoph) was a simple notify that error
+recovery was about to happen.
 
-This is how SCSI Core communicates with LLDD, it's not the case that
-LLDD asks SCSI Core each and every time for each and every decision.
-First it's not by spec, and second it is unattainable both due to
-the hardware reasons mentioned by Doug and I and due to the
-recovery quirks.
+In the ensuing discussion there have been various changes to this
+suggested, which seem to provide a framework for the solution:
 
-I really don't see why this is such a big deal when SCSI Core
-and LLDDs are unaffected.  It is just an _optional_ method
-and will do good for SCSI Core. I promise. ;-)
+1. Timer handling would still all be done in the mid-layer
 
--- 
-Luben
+2. Any driver supplying the notify function would have it called on
+timer expiry.
+
+3. The LLD communicates what action it wishes to be taken based on the
+return value from the notify.  I suggest 3 possible return actions:
+
+a. Do nothing and continue with error handling
+
+b. I fixed the problem, complete the command immediately and proceed as
+though nothing went wrong.
+
+c. I need more time, reset the timer and notify me again when it fails.
+
+For (c), I propose that we use the same timeout period, but increment
+the retry count (and do this up to allowed retries plus one [so that
+no-retry commands have one crack at being recovered by the LLD]) when
+retries are exhausted, normal error handling would proceed on timer
+expiry leading to certain failure of the command since it would be
+ineligible to be retried.
+
+what additional features do you need beyond this proposal?
+
+James
 
 
