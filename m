@@ -1,52 +1,38 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: rescan bug on 2.5.70 ?
-Date: Fri, 30 May 2003 17:45:42 -0700
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: LDM scsi upper level updates and scsihosts parm
+Date: Fri, 30 May 2003 18:08:45 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030530174542.A13763@beaverton.ibm.com>
-References: <3ED7C847.3090203@mvista.com>
+Message-ID: <20030531010844.GA25468@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:55737 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S264088AbTEaAgS
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 May 2003 20:36:18 -0400
+Received: from e35.co.us.ibm.com ([32.97.110.133]:8389 "EHLO e35.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S264094AbTEaAwg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 May 2003 20:52:36 -0400
+Received: from westrelay01.boulder.ibm.com (westrelay01.boulder.ibm.com [9.17.195.10])
+	by e35.co.us.ibm.com (8.12.9/8.12.2) with ESMTP id h4V15uuT254006
+	for <linux-scsi@vger.kernel.org>; Fri, 30 May 2003 21:05:56 -0400
+Received: from dyn9-47-17-195 (DYN318097.beaverton.ibm.com [9.47.17.142])
+	by westrelay01.boulder.ibm.com (8.12.9/NCO/VER6.5) with ESMTP id h4V15uve178784
+	for <linux-scsi@vger.kernel.org>; Fri, 30 May 2003 19:05:56 -0600
 Content-Disposition: inline
-In-Reply-To: <3ED7C847.3090203@mvista.com>; from sdake@mvista.com on Fri, May 30, 2003 at 02:08:23PM -0700
 List-Id: linux-scsi@vger.kernel.org
-To: Steven Dake <sdake@mvista.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, May 30, 2003 at 02:08:23PM -0700, Steven Dake wrote:
-> Folks,
-> 
-> I attempted
-> echo "1" > rescan within a device in the scsi sysfs tree on 2.5.70.
-> 
-> The kernel repeatadly printed out the SDA device information.  The 
-> system was still usable, but it appeared the rescan code was stuck in a 
-> loop which dumped printks continuously.  Only way out was a reset.
-> 
-> Anyone else seen this behavior ?
+The sysfs changes to allow the upper level to bind through the driver
+model interfaces breaks the usage of the scsihosts parm. I did not
+notice this the other day as I was running with one built-in driver and
+many modules.
 
-Yes, I tried it out, and hit the same thing. The user program (not sure
-what C code) is retrying the write, since we return 0. You can kill the
-program, though I couldn't ^C/intr the echo, I killed it from another
-terminal.
+I know there are issues with using scsihosts today (i.e., does not
+work if you come in after the upper levels have inited).
 
-Trivial patch against current scsi-misc-2.5:
+Are we going to remove the scsihosts parm or do we need a solution for
+this?
 
-===== drivers/scsi/scsi_sysfs.c 1.21 vs edited =====
---- 1.21/drivers/scsi/scsi_sysfs.c	Mon May 26 08:45:44 2003
-+++ edited/drivers/scsi/scsi_sysfs.c	Sat May 31 00:04:45 2003
-@@ -204,7 +204,7 @@
- store_rescan_field (struct device *dev, const char *buf, size_t count) 
- {
- 	scsi_rescan_device(dev);
--	return 0;
-+	return count;
- }
- 
- static DEVICE_ATTR(rescan, S_IRUGO | S_IWUSR, show_rescan_field, store_rescan_field)
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
--- Patrick Mansfield
