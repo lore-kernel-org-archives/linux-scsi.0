@@ -1,57 +1,83 @@
-From: Ricky Beam <jfbeam@bluetronic.net>
-Subject: Re: QLogic (qla2100 / qlogicfc)
-Date: Wed, 10 Mar 2004 09:48:57 -0500 (EST)
+From: "Moore, Eric Dean" <Emoore@lsil.com>
+Subject: RE: [PATCH] fusion/mptscsih init/exit sections
+Date: Wed, 10 Mar 2004 09:52:46 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.33.0403100941460.28488-100000@sweetums.bluetronic.net>
-References: <20040310053950.GA25105@praka.local.home>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57040DABAC@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sweetums.bluetronic.net ([24.199.150.42]:29169 "EHLO
-	sweetums.bluetronic.net") by vger.kernel.org with ESMTP
-	id S262649AbUCJOve (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Mar 2004 09:51:34 -0500
-In-Reply-To: <20040310053950.GA25105@praka.local.home>
+Received: from mail0.lsil.com ([147.145.40.20]:23538 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S262637AbUCJOwy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Mar 2004 09:52:54 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>
+To: "Randy.Dunlap" <rddunlap@osdl.org>, scsi <linux-scsi@vger.kernel.org>
+Cc: jejb <james.bottomley@steeleye.com>
 
-On Tue, 9 Mar 2004, Andrew Vasquez wrote:
->Yes, but even before the timeouts occur, there appear to be some
->questionable events occuring with the firmware:
->
->	qla2100 0000:06:03.0: ISP System Error - mbx1=18d1h mbx2=ch mbx3=11h.
->	qla2100 0000:06:03.0: Failed to dump firmware (256)!!!
->	qla2x00: DPC handler waking up
->	scsi(0): DPC handler
->	scsi(0): dpc: sched qla2x00_abort_isp ha = f71481d4
->	qla2100 0000:06:03.0: Performing ISP error recovery - ha= f71481d4.
+Randy - This fix has already been applied in the mpt drivers
+for version 3.00.04 and 3.01.00 drivers, which are are in
+the queue for the 2.6.5 kernel
 
-That only happened once and did recover.  The console output doesn't have
-timestamps; the system error occured about 20min before the dropped command.
+3.00.04 drivers location:
+ftp://ftp.lsil.com/HostAdapterDrivers/linux/FiberChannel/2.6-patches/3.00.04
 
->The ISP2100 has not been a supported chip for some time now, but, I'll
->see if I can get some information from the firmware group regarding
->the events that led-up to this system-error.
-
-That may be, but it's still one of the most widely deployed FC cards on the
-market. (however, LSI's fusion MPT has a growing following.)
-
->I've also been gathering a short-dozen or so patches that I was
->planning on forwarding to linux-scsi towards the end of the week.
->When I get in tomorrow, I'd like to forward you a couple of them for
->some additional testing, if you don't mind?
-
-Fire away.  The system is still running i/o benchmarks (1mil 6G files takes
-awhile)
-
->I appreciate your initiative in enabling some of the debug settings of
->the driver and posting the resultant messages, it certainly makes
->troubleshooting problems a bit easier.
-
-Note, minicom.cap-1 isn't there. :-) I turned on a little too much debugging
-and left it on for an entire array resync.
-
---Ricky
+3.01.00 drivers location:
+ftp://ftp.lsil.com/HostAdapterDrivers/linux/FiberChannel/2.6-patches/3.01.00
 
 
+
+On Tuesday, March 09, 2004 11:02 PM, Randy.Dunlap wrote:
+> 
+> V: linux-264-rc2
+> D: mptscsih_remove() can be called during init, for error handling;
+> 
+> diffstat:=
+>  drivers/message/fusion/mptscsih.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> 
+> diff -Naurp ./drivers/message/fusion/mptscsih.c~mptscsi_init 
+> ./drivers/message/fusion/mptscsih.c
+> --- ./drivers/message/fusion/mptscsih.c~mptscsi_init	
+> 2004-03-06 20:57:05.000000000 -0800
+> +++ ./drivers/message/fusion/mptscsih.c	2004-03-07 
+> 16:16:54.000000000 -0800
+> @@ -201,7 +201,7 @@ static int  __init   mptscsih_init  (voi
+>  static void __exit   mptscsih_exit  (void);
+>  
+>  static int  __devinit mptscsih_probe (struct pci_dev *, 
+> const struct pci_device_id *);
+> -static void __devexit mptscsih_remove(struct pci_dev *);
+> +static void mptscsih_remove(struct pci_dev *);
+>  static void mptscsih_shutdown(struct device *);
+>  #ifdef CONFIG_PM
+>  static int mptscsih_suspend(struct pci_dev *pdev, u32 state);
+> @@ -1718,7 +1718,7 @@ mptscsih_probe_failed:
+>   *
+>   *
+>   */
+> -static void __devexit
+> +static void
+>  mptscsih_remove(struct pci_dev *pdev)
+>  {
+>  	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
+> @@ -1920,7 +1920,7 @@ mptscsih_resume(struct pci_dev *pdev)
+>  
+>  static struct mpt_pci_driver mptscsih_driver = {
+>  	.probe		= mptscsih_probe,
+> -	.remove		= __devexit_p(mptscsih_remove),
+> +	.remove		= mptscsih_remove,
+>  	.shutdown	= mptscsih_shutdown,
+>  #ifdef CONFIG_PM
+>  	.suspend	= mptscsih_suspend,
+> 
+> 
+> --
+> ~Randy
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
