@@ -1,46 +1,46 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Wed, 29 Oct 2003 13:45:57 +0000
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] SCSI: limit mode sense usage
+Date: Wed, 29 Oct 2003 09:49:19 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031029134557.A17523@infradead.org>
-References: <20031027153932.A16679@infradead.org> <018b01c39e1f$e013bab0$a0074d0a@apac.cisco.com>
+Message-ID: <Pine.LNX.4.44L0.0310290947010.874-100000@ida.rowland.org>
+References: <1067381663.11029.16.camel@patehci2>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:33295 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S262069AbTJ2Np6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Oct 2003 08:45:58 -0500
-Content-Disposition: inline
-In-Reply-To: <018b01c39e1f$e013bab0$a0074d0a@apac.cisco.com>; from surekhap@cisco.com on Wed, Oct 29, 2003 at 06:53:43PM +0530
+Received: from ida.rowland.org ([192.131.102.52]:1540 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S261569AbTJ2OtU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Oct 2003 09:49:20 -0500
+In-Reply-To: <1067381663.11029.16.camel@patehci2>
 List-Id: linux-scsi@vger.kernel.org
-To: "Surekha.PC" <surekhap@cisco.com>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, linux-scsi@vger.kernel.org, davmyers@cisco.com
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: ronald@kuetemeier.com, patmans@us.ibm.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net
 
-On Wed, Oct 29, 2003 at 06:53:43PM +0530, Surekha.PC wrote:
-> 
-> Hi,
-> 
->  I have interspersed my answers below for 2 of your comments.
-> 
-> >	- kill the is_root_disk special casing.  drivers can't know
-> >	what the root disks is, there might not even be a single one.
-> 
-> This flag is needed for our iSCSI network boot implementation to check
-> if we are booted on iSCSI disk. This is used while trying to shutdown
-> the iSCSI service.
+On 28 Oct 2003, Pat LaVarre wrote:
 
-What if the root device changes (pivot_root syscall, namespaces)?  You need
-to find a way to do what you want without having knowledge about beeing
-a root device in the LLDD - there might not be a single root device and it
-could change all the time.
+>   There now in -test9 I think I see:
+> 
+> We guess writable if need be, but we prefer to settle for:
+> 
+> sdkp->write_prot = ((data.device_specific & 0x80) != 0);
+> 
+> after the first command that works in the sequence:
+> 
+> sd_do_mode_sense(..., 0x3F, ..., 4, ...);
+> sd_do_mode_sense(..., 0, buffer, 4, ...);
+> sd_do_mode_sense(..., 0x3F, buffer, 255, ...);
+> 
+> I mean to suggest, ahead of these more creative (i.e. less friendly)
+> alternatives, in order to fetch that bit of header, we try a command
+> that more closely resembles the commands of the Talk Like Windows set,
+> e.g.:
+> 
+> sd_do_mode_sense(..., 0x08, ..., 4, ...);
 
-> This is again needed for network boot. The n/w driver and iSCSI driver
-> are loaded during early boot. Since the n/w interface is not setup at
-> that time, we need to bring up the interface through this call in iSCSI
-> driver.
+There's an excellent reason for _not_ doing this, at least as far as 
+usb-storage is concerned.  Namely, many USB Mass Storage devices die when 
+they receive MODE-SENSE(10) for page x08 but handle page x3F perfectly 
+well.  Ronald's device is a rather unusual exception.
 
-That's bogus.  Look at the ip autoconfig code used by rootnfs and reuse
-that instead of creating such bogus hacks.  A driver has no business dealing
-with the network configuration.
+Alan Stern
 
