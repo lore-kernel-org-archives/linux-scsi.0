@@ -1,38 +1,124 @@
-From: Maurice Volaski <mvolaski@aecom.yu.edu>
-Subject: Why is the kernel complaining about large SCSI LUNs
-Date: Fri, 7 Jan 2005 11:07:09 -0500
-Message-ID: <a06100533be0463eff562@[129.98.90.227]>
+From: Vivek Goyal <vgoyal@in.ibm.com>
+Subject: Re: SCSI aic7xxx driver: Initialization Failure over a kdump reboot
+Date: 07 Jan 2005 22:22:38 +0530
+Message-ID: <1105116758.2688.447.camel@2fwv946.in.ibm.com>
+References: <1105014959.2688.296.camel@2fwv946.in.ibm.com>
+	 <1105013524.4468.3.camel@laptopd505.fenrus.org>
+	 <20050106195043.4b77c63e.akpm@osdl.org> <41DE15C7.6030102@nit.ca>
+	 <41DEA2E8.8030701@nit.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii" ; format="flowed"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailgw.aecom.yu.edu ([129.98.1.16]:52972 "EHLO
-	mailgw.aecom.yu.edu") by vger.kernel.org with ESMTP id S261477AbVAGQG4
+Received: from e31.co.us.ibm.com ([32.97.110.129]:20944 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S261480AbVAGQI5
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Jan 2005 11:06:56 -0500
-Received: from mailvx.aecom.yu.edu (mailvx.aecom.yu.edu [129.98.1.17])
-	by mailgw.aecom.yu.edu (8.12.11/8.12.11) with SMTP id j07G6qsM029066
-	for <linux-scsi@vger.kernel.org>; Fri, 7 Jan 2005 11:06:52 -0500
-Received: from post.aecom.yu.edu ([129.98.1.126])
- by mailvx.aecom.yu.edu (SAVSMTP 3.1.1.32) with SMTP id M2005010711065121164
- for <linux-scsi@vger.kernel.org>; Fri, 07 Jan 2005 11:06:51 -0500
-Received: from [129.98.90.227] (usseinstein.aecom.yu.edu [129.98.90.227])
-	by post.aecom.yu.edu (8.11.7p1+Sun/8.11.7) with ESMTP id j07G6p302155
-	for <linux-scsi@vger.kernel.org>; Fri, 7 Jan 2005 11:06:51 -0500 (EST)
+	Fri, 7 Jan 2005 11:08:57 -0500
+In-Reply-To: <41DEA2E8.8030701@nit.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Lukasz Kosewski <lkosewsk@nit.ca>
+Cc: Andrew Morton <akpm@osdl.org>, Arjan van de Ven <arjan@infradead.org>, lkml <linux-kernel@vger.kernel.org>, linux scsi <linux-scsi@vger.kernel.org>, dipankar sarma <dipankar@in.ibm.com>, linux-os@analogic.com, "Eric W. Biederman" <ebiederm@xmission.com>
 
-I am running kernel 2.6.9 on an Opteron box with an LSI 320 card and 
-am seeing the following message repeatedly in dmesg:
+On Fri, 2005-01-07 at 20:25, Lukasz Kosewski wrote:
+> Lukasz Kosewski wrote:
+> > Andrew Morton wrote:
+> > 
+> >>> looks like the following is happening:
+> >>> the controller wants to send an irq (probably from previous life)
+> >>> then suddenly the driver gets loaded
+> >>> * which registers an irq handler
+> >>> * which does pci_enable_device()
+> >>> and .. the irq goes through. the irq handler just is not yet 
+> >>> expecting this irq, so
+> >>> returns "uh dunno not mine"
+> >>> the kernel then decides to disable the irq on the apic level
+> >>> and then the driver DOES need an irq during init
+> >>> ... which never happens.
+> >>>
 
-scsi: host 1 channel 0 id 0 lun 0x5a5a5a5a5a5a5a5a has a LUN larger 
-than currently supported.
+Well, in last 4-5 trials I did not see this problem. Everything is same
+except we had just opened the box once to checkout few things.
 
-Is this just cosmetic or there is a bug somewhere? It appears that 
-scsi_scan.c has logic where this message is actually valid, but how 
-can that be?
--- 
+Probably "noirqdebug" boot time parameter can be a stop gap solution
+over a kdump boot, which will make sure irq is not disabled even if
+unhandled interrupts are there. Assuming driver will be able to
+initialize after this and hence undesired interrupt generation shall be
+stopped.
 
-Maurice Volaski, mvolaski@aecom.yu.edu
-Computing Support, Rose F. Kennedy Center
-Albert Einstein College of Medicine of Yeshiva University
+> >>
+> >>
+> >> yes, that's exactly what e100 was doing on my laptop last month.  Fixed
+> >> that by arranging for the NIC to be reset before the call to
+> >> pci_set_master().
+> 
+> After reading this again when I /wasn't/ semi-comatose, I retract my 
+> statement insofar as it wouldn't help you (but I think it's still rather 
+> necessary) :)
+> 
+> The system did exactly what I'm talking about (which it didn't do for 
+> me, possibly because the board/processor didn't support APIC).  I guess 
+> my question to you is:  do you have other devices sharing this 
+> interrupt?  In other words, are you /sure/ that it's the adaptec 
+> controller which is setting the interrupt line high?
+
+I am not sure about this. Following are two contradictory observations.
+
+1. Remove the adaptec controller support and everything works fine. It
+might mean that it was adapted controller only which was generating
+spurious interrupts.
+
+2. There are two more SCSI Controllers in the system and first one is
+managing all the six hard disks in the system.
+
+05:07.0 SCSI storage controller: LSI Logic / Symbios Logic 53c1030 (rev
+07)
+05:07.1 SCSI storage controller: LSI Logic / Symbios Logic 53c1030 (rev
+07)
+
+These also could be potential source of interrupts as after a successful
+reboot with kdump, these also are sharing irq 9.
+
+Following is a snapshot of /proc/interrupts over a kdump boot with
+"noirqdebug"
+
+           CPU0       CPU1
+  0:     109474          0          XT-PIC  timer
+  1:          8          0          XT-PIC  i8042
+  2:          0          0          XT-PIC  cascade
+  4:        385          0          XT-PIC  serial
+  8:          1          0          XT-PIC  rtc
+  9:      25588          0          XT-PIC  aic7xxx, ioc0, ioc1
+ 12:        100          0          XT-PIC  i8042
+ 14:         19          0          XT-PIC  ide0
+
+
+
+In normal boot, I don't see any other device connected to irq 9. (I am
+not sure if this irq number can change over reboot)
+
+Following is a snapshot of /proc/interrupts over a normal boot.
+
+           CPU0       CPU1
+  0:      95314          0    IO-APIC-edge  timer
+  1:          9          0    IO-APIC-edge  i8042
+  2:          0          0          XT-PIC  cascade
+  4:        498          0    IO-APIC-edge  serial
+  8:          2          0    IO-APIC-edge  rtc
+ 12:        100          0    IO-APIC-edge  i8042
+ 14:         20          0    IO-APIC-edge  ide0
+ 18:       1155          0   IO-APIC-level  eth0
+ 24:         30          0   IO-APIC-level  aic7xxx
+ 27:       1946          0   IO-APIC-level  ioc0
+ 28:         29          0   IO-APIC-level  ioc1
+NMI:          0          0
+LOC:      94835      96567
+ERR:          0
+MIS:          0
+
+
+Does that conclude anything that who is/was the potential source?
+
+Vivek
+
+
