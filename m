@@ -1,44 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] tmscsim: INQUIRY always only untagged
-Date: 05 Sep 2004 18:22:27 -0400
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: [RFC] exposing the sdev_target in sysfs
+Date: Mon, 6 Sep 2004 02:58:36 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1094422949.10977.15.camel@mulgrave>
-References: <Pine.LNX.4.60.0409040033310.5266@poirot.grange>
-	<20040904140102.A15247@infradead.org>
-	<Pine.LNX.4.60.0409050022570.3092@poirot.grange>
-	<20040904233835.A18659@infradead.org>
-	<Pine.LNX.4.60.0409051654460.3039@poirot.grange>
-	<1094398979.10977.9.camel@mulgrave>  <20040905173134.A31521@infradead.org>
+Message-ID: <20040906015836.GX642@parcelfarce.linux.theplanet.co.uk>
+References: <1094254851.1712.28.camel@mulgrave> <41394901.3050804@us.ibm.com> <1094306082.1924.0.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:48358 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S267298AbUIEWWe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 5 Sep 2004 18:22:34 -0400
-In-Reply-To: <20040905173134.A31521@infradead.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:31723 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S267393AbUIFB6k
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 5 Sep 2004 21:58:40 -0400
+Content-Disposition: inline
+In-Reply-To: <1094306082.1924.0.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Mike Christie <mikenc@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sun, 2004-09-05 at 12:31, Christoph Hellwig wrote:
-> Umm yes.  But lets get the driver no oops first and then move forward.
-> There's still a lot of work to do on the driver.
+On Sat, Sep 04, 2004 at 09:54:40AM -0400, James Bottomley wrote:
+> On Sat, 2004-09-04 at 00:48, Mike Christie wrote:
+> > device_add calls kobject_add which can sleep.
+> 
+> Yes, I'll move it outside the lock.
+> 
+> I suppose I should add a comment somewhere about our critical dependence
+> on sequential LUN scanning as well just in case someone tries to
+> parallelise it.
 
-Well, OK.  I agree to putting a palliative fix in, since what I
-suggested will probably take more thought, but I don't think this one is
-actually it.  Mixing tagged and untagged commands is illegal under the
-SCSI spec.  Simply untagging the INQUIRY command may work to fix this
-particular bug, but I bet it will introduce others when a scsi utility
-sends an INQUIRY down to an in-use device.
+sequential on a given bus, rather than globally, right?  There's no
+problem with scanning different busses simultanously, is there?
 
-I think perhaps the correct palliative fix is simply to list this device
-(whatever it is, it's not listed in the bug report) as BLIST_NOTQ, then
-the problem won't arise (and of course, tmscsim would have actually to
-use the mid-layer black list rather than its own much shorter internal
-list).
-
-James
-
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
