@@ -1,43 +1,309 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] 6/7 add and use a per-scsi_device queue_lock
-Date: 25 Mar 2003 15:20:32 -0600
+From: Luben Tuikov <luben@splentec.com>
+Subject: Re: [PATCH] 7/7 fix single_lun code for per-scsi_device queue_lock
+Date: Tue, 25 Mar 2003 16:23:41 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1048627234.2883.156.camel@mulgrave>
-References: <20030324175337.A14957@beaverton.ibm.com>
-	<20030324175422.A14996@beaverton.ibm.com>
-	<20030324180227.A15047@beaverton.ibm.com>
-	<20030324180247.B15047@beaverton.ibm.com>
-	<20030324180304.C15047@beaverton.ibm.com>
-	<20030324180325.D15047@beaverton.ibm.com>
-	<20030324180341.E15047@beaverton.ibm.com>
+Message-ID: <3E80C8DD.4060803@splentec.com>
+References: <20030324175337.A14957@beaverton.ibm.com> <20030324175422.A14996@beaverton.ibm.com> <20030324180227.A15047@beaverton.ibm.com> <20030324180247.B15047@beaverton.ibm.com> <20030324180304.C15047@beaverton.ibm.com> <20030324180325.D15047@beaverton.ibm.com> <20030324180341.E15047@beaverton.ibm.com> <20030324180404.F15047@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20030324180341.E15047@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2003-03-24 at 20:03, Patrick Mansfield wrote:
-> Add and use a per scsi_device queue_lock.
+Patrick Mansfield wrote:
+> Fix single_lun code for per-scsi_device queue_lock
+> 
+> diff -purN -X /home/patman/dontdiff lksplit-25/drivers/scsi/scsi.h sl_lksplit-25/drivers/scsi/scsi.h
+> --- lksplit-25/drivers/scsi/scsi.h	Mon Mar 24 12:15:10 2003
+> +++ sl_lksplit-25/drivers/scsi/scsi.h	Mon Mar 24 12:15:26 2003
+> @@ -531,6 +531,15 @@ extern struct list_head scsi_dev_info_li
+>  extern int scsi_dev_info_list_add_str(char *);
+>  
+>  /*
+> + * scsi_target: representation of a scsi target, for now, this is only
+> + * used for single_lun devices.
+> + */
+> +struct scsi_target {
+> +	unsigned int starget_busy;
+> +	unsigned int starget_refcnt;
+> +};
 
-In doing this, you're introducing a locking heirarchy, which would need
-to be documented.  If you need both the host and queue locks, which do
-you take first?  The code implies that it's queue_lock and then
-host_lock, which is a bit counter intuitive and leads to awful problems
-for your starved_list: the host_lock is actually protecting the starved
-list, so the way you currently have it, you have to drop the host lock
-to acquire the queue_lock to run the block queue.  Unfortunately, doing
-this could lead to the device being readded when running the queue. 
-Thus, the queue_next_request can spin removing and adding the device to
-the starved list---probably working from a copy of the starved list will
-help with this.
+Yes ok, but let's do it right.
+First, I abhore all this letter playing to devise
+names like: starget_busy and starget_refcnt.
 
-I'd also like to see avoidance of the locking hierarchy where possible. 
-i.e. in the scsi_request_fn for instance, can we move the actions that
-need the host_lock outside the queue_lock?
+starget_busy could be an atomic_t which is equal
+to the sum of all LU's pending_q_counts, i.e.
+it better, else we're losing commands, and also
+with a different name (more descriptive).
+Something like active_cmds, or active_cmd_count,
+but NOT ``..._cnt''!
 
-James
+Also, moving all the necessary variables into scsi_target, like
+say single_lun to be renamed single_lu.
 
+Also having a list of devices:
+
+	struct list_head lu_list;
+
+etc, etc.
+
+
+> +
+> +/*
+>   *  The scsi_device struct contains what we know about each given scsi
+>   *  device.
+>   *
+> @@ -588,6 +597,7 @@ struct scsi_device {
+>  	unsigned char current_tag;	/* current tag */
+>  //	unsigned char sync_min_period;	/* Not less than this period */
+>  //	unsigned char sync_max_offset;	/* Not greater than this offset */
+> +	struct scsi_target      *sdev_target;   /* used only for single_lun */
+
+
+Should probably be used for all devices.  Let's do it right.
+
+
+>  	unsigned online:1;
+>  	unsigned writeable:1;
+> diff -purN -X /home/patman/dontdiff lksplit-25/drivers/scsi/scsi_lib.c sl_lksplit-25/drivers/scsi/scsi_lib.c
+> --- lksplit-25/drivers/scsi/scsi_lib.c	Mon Mar 24 12:15:10 2003
+> +++ sl_lksplit-25/drivers/scsi/scsi_lib.c	Mon Mar 24 12:15:26 2003
+> @@ -327,46 +327,36 @@ void scsi_setup_cmd_retry(struct scsi_cm
+>  }
+>  
+>  /*
+> - * Called for single_lun devices. The target associated with current_sdev can
+> - * only handle one active command at a time. Scan through all of the luns
+> - * on the same target as current_sdev, return 1 if any are active.
+> - */
+> -static int scsi_single_lun_check(struct scsi_device *current_sdev)
+> -{
+> -	struct scsi_device *sdev;
+> -
+> -	list_for_each_entry(sdev, &current_sdev->same_target_siblings,
+> -			    same_target_siblings)
+> -		if (sdev->device_busy)
+> -			return 1;
+> -	return 0;
+> -}
+> -
+> -/*
+> - * Called for single_lun devices on IO completion. If no requests
+> - * outstanding for current_sdev, call __blk_run_queue for the next
+> - * scsi_device on the same target that has requests.
+> + * Called for single_lun devices on IO completion. Clear starget_busy, and
+> + * Call __blk_run_queue for all the scsi_devices on the target - including
+> + * current_sdev first.
+>   *
+>   * Called with *no* scsi locks held.
+>   */
+> -static void scsi_single_lun_run(struct scsi_device *current_sdev,
+> -				 struct request_queue *q)
+> +static void scsi_single_lun_run(struct scsi_device *current_sdev)
+>  {
+>  	struct scsi_device *sdev;
+> -	struct Scsi_Host *shost;
+> +	unsigned int flags, flags2;
+>  
+> -	shost = current_sdev->host;
+> -	if (blk_queue_empty(q) && current_sdev->device_busy == 0 &&
+> -	    !shost->host_blocked && !shost->host_self_blocked &&
+> -	    !((shost->can_queue > 0) &&
+> -	      (shost->host_busy >= shost->can_queue)))
+> -		list_for_each_entry(sdev, &current_sdev->same_target_siblings,
+> -				    same_target_siblings)
+> -			if (!sdev->device_blocked &&
+> -			    !blk_queue_empty(sdev->request_queue)) {
+> -				__blk_run_queue(sdev->request_queue);
+> -				break;
+> -			}
+> +	spin_lock_irqsave(current_sdev->request_queue->queue_lock, flags2);
+> +	spin_lock_irqsave(current_sdev->host->host_lock, flags);
+
+No, you do NOT need flags and flags2.  Look at other kernel code
+to see how this is done.  scsi_put_command() gives
+an example of doing double locks and irq state -- it's a nice one.
+
+So, things to remember:
+
+1. spin_lock_irqsave(...., flags);
+    spin_lock(...);
+
+    critical section;
+
+    spin_unlock(...);
+    spin_unlock_irqrestore(..., flags);
+
+2. If you're obtaining locks sequentially like this,
+    e.g:
+
+	grab L1
+	glab L2
+
+	critical section
+
+	release L2
+	release L1
+
+you MUST absolutely mention this somewhere with boldface red
+letters comment that the queue lock is always obtained FIRST
+and the host lock SECOND (and, trivially, released in opposite
+order).
+
+Else someone trying to obtain both locks in opposite order, L2 and
+then L1, will lock up the system.
+
+
+> +	WARN_ON(!current_sdev->sdev_target->starget_busy);
+> +	if (current_sdev->device_busy == 0)
+> +		current_sdev->sdev_target->starget_busy = 0;
+> +	spin_unlock_irqrestore(current_sdev->host->host_lock, flags);
+
+Do not need flags here as mentioned above.
+
+> +
+> +	/*
+> +	 * Call __blk_run_queue for all LUNs on the target, starting with
+> +	 * current_sdev.
+> +	 */
+> +	__blk_run_queue(current_sdev->request_queue);
+> +	spin_unlock_irqrestore(current_sdev->request_queue->queue_lock, flags2);
+
+Now if you make device_busy an atomic_t type, then you DO not
+need these double locking acrobatics.
+
+> +	list_for_each_entry(sdev, &current_sdev->same_target_siblings,
+> +			    same_target_siblings) {
+> +		spin_lock_irqsave(sdev->request_queue->queue_lock, flags2);
+> +		__blk_run_queue(sdev->request_queue);
+> +		spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags2);
+> +	}
+>  }
+>  
+>  /*
+> @@ -438,7 +428,7 @@ void scsi_queue_next_request(request_que
+>  	sdev = q->queuedata;
+>  
+>  	if (sdev->single_lun)
+> -		scsi_single_lun_run(sdev, q);
+> +		scsi_single_lun_run(sdev);
+>  
+>  	shost = sdev->host;
+>  	spin_lock_irqsave(shost->host_lock, flags);
+> @@ -1166,7 +1156,8 @@ static void scsi_request_fn(request_queu
+>  		if (scsi_check_shost(q, shost, sdev))
+>  			goto after_host_lock;
+>  
+> -		if (sdev->single_lun && scsi_single_lun_check(sdev))
+> +		if (sdev->single_lun && !sdev->device_busy &&
+> +		    sdev->sdev_target->starget_busy)
+>  			goto after_host_lock;
+>  
+>  		/*
+> @@ -1204,6 +1195,9 @@ static void scsi_request_fn(request_queu
+>  		if (!(blk_queue_tagged(q) && (blk_queue_start_tag(q, req) == 0)))
+>  			blkdev_dequeue_request(req);
+>  	
+> +		if (sdev->single_lun)
+> +			sdev->sdev_target->starget_busy = 1;
+> +
+>  		shost->host_busy++;
+>  		spin_unlock_irqrestore(shost->host_lock, flags);
+>  
+> diff -purN -X /home/patman/dontdiff lksplit-25/drivers/scsi/scsi_scan.c sl_lksplit-25/drivers/scsi/scsi_scan.c
+> --- lksplit-25/drivers/scsi/scsi_scan.c	Mon Mar 24 12:15:10 2003
+> +++ sl_lksplit-25/drivers/scsi/scsi_scan.c	Mon Mar 24 12:15:26 2003
+> @@ -478,6 +478,8 @@ out:
+>   **/
+>  static void scsi_free_sdev(struct scsi_device *sdev)
+>  {
+> +	unsigned int flags;
+> +
+>  	list_del(&sdev->siblings);
+>  	list_del(&sdev->same_target_siblings);
+>  
+> @@ -487,6 +489,14 @@ static void scsi_free_sdev(struct scsi_d
+>  		sdev->host->hostt->slave_destroy(sdev);
+>  	if (sdev->inquiry)
+>  		kfree(sdev->inquiry);
+> +	if (sdev->single_lun) {
+> +		spin_lock_irqsave(sdev->host->host_lock, flags);
+> +		sdev->sdev_target->starget_refcnt--;
+> +		if (sdev->sdev_target->starget_refcnt == 0)
+> +			kfree(sdev->sdev_target);
+
+
+Have you seen ``atomic_dec_and_test()''?
+
+
+> +		spin_unlock_irqrestore(sdev->host->host_lock, flags);
+> +	}
+> +
+>  	kfree(sdev);
+>  }
+>  
+> @@ -1122,6 +1132,10 @@ static void scsi_probe_lun(Scsi_Request 
+>  static int scsi_add_lun(Scsi_Device *sdev, Scsi_Request *sreq,
+>  		char *inq_result, int *bflags)
+>  {
+> +	struct scsi_device *sdev_sibling;
+> +	struct scsi_target *starget;
+> +	unsigned int flags;
+> +
+>  	/*
+>  	 * XXX do not save the inquiry, since it can change underneath us,
+>  	 * save just vendor/model/rev.
+> @@ -1243,10 +1257,38 @@ static int scsi_add_lun(Scsi_Device *sde
+>  
+>  	/*
+>  	 * If we need to allow I/O to only one of the luns attached to
+> -	 * this target id at a time, then we set this flag.
+> +	 * this target id at a time set single_lun, and allocate or modify
+> +	 * sdev_target.
+>  	 */
+> -	if (*bflags & BLIST_SINGLELUN)
+> +	if (*bflags & BLIST_SINGLELUN) {
+>  		sdev->single_lun = 1;
+> +		spin_lock_irqsave(sdev->host->host_lock, flags);
+> +		starget = NULL;
+> +		/*
+> +		 * Search for an existing target for this sdev.
+> +		 */
+> +		list_for_each_entry(sdev_sibling, &sdev->same_target_siblings,
+> +				    same_target_siblings) {
+> +			if (sdev_sibling->sdev_target != NULL) {
+> +				starget = sdev_sibling->sdev_target;
+> +				break;
+> +			}
+> +		}
+> +		if (!starget) {
+> +			starget = kmalloc(sizeof(*starget), GFP_KERNEL);
+> +			if (!starget) {
+> +				printk(ALLOC_FAILURE_MSG, __FUNCTION__);
+> +				spin_unlock_irqrestore(sdev->host->host_lock,
+> +						       flags);
+> +				return SCSI_SCAN_NO_RESPONSE;
+> +			}
+> +			starget->starget_refcnt = 0;
+> +			starget->starget_busy = 0;
+> +		}
+> +		starget->starget_refcnt++;
+> +		sdev->sdev_target = starget;
+> +		spin_unlock_irqrestore(sdev->host->host_lock, flags);
+> +	}
+>  
+>  	/* if the device needs this changing, it may do so in the detect
+>  	 * function */
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+Luben Tuikov, Senior Software Engineer, Splentec Ltd.
+Bus: +1-905-707-1954x112, 9-5 EDT. Fax: +1-905-707-1974.
 
