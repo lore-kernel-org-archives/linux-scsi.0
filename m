@@ -1,40 +1,99 @@
-From: "Rajat  Jain, Noida" <rajatj@noida.hcltech.com>
-Subject: When & how is the SCSI strategy routine called?
-Date: Tue, 22 Mar 2005 22:35:58 +0530
-Message-ID: <267988DEACEC5A4D86D5FCD780313FBB05FA9B2E@exch-03.noida.hcltech.com>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: Symbios PCI error recovery [Was: Re: [PATCH/RFC] ppc64: EEH +
+ SCSI recovery (IPR only)]
+Date: Tue, 22 Mar 2005 11:38:36 -0600
+Message-ID: <4240581C.1000906@us.ibm.com>
+References: <20050223002409.GA10909@austin.ibm.com>
+	<20050223174356.GH13081@kroah.com>
+	<1109207532.5384.32.camel@gaston>
+	<20050224013137.GF2088@austin.ibm.com>
+	<20050226063609.GC7036@colo.lackof.org>
+	<20050321231028.GV498@austin.ibm.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, kernel-newbies@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <20050321231028.GV498@austin.ibm.com>
+List-Unsubscribe: <https://ozlabs.org/cgi-bin/mailman/listinfo/linuxppc64-dev>,
+	<mailto:linuxppc64-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc64-dev>
+List-Post: <mailto:linuxppc64-dev@ozlabs.org>
+List-Help: <mailto:linuxppc64-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/cgi-bin/mailman/listinfo/linuxppc64-dev>,
+	<mailto:linuxppc64-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc64-dev-bounces@ozlabs.org
+Errors-To: linuxppc64-dev-bounces@ozlabs.org
+To: Linas Vepstas <linas@austin.ibm.com>
+Cc: linuxppc64-dev@ozlabs.org, Grant Grundler <grundler@parisc-linux.org>, linux-scsi@vger.kernel.org, matthew@wil.cx
 List-Id: linux-scsi@vger.kernel.org
 
+Linas Vepstas wrote:
+> Hi,
+> 
+> There has been a running thread for a while on several mailing lists 
+> concerning PCI bus error recovery.  Very breifly, some architectures
+> have PCI error recovery mechanisms built into them (e.g. IBM PowerPC,
+> also new PCI-Express chips from Intel (and other vendors) and possibly
+> pa-risc and others).  
+> 
+> I've been trying to prototype  error recovery.  I currently have
+> ethernet and the IPR scsi driver working, but I am having trouble with 
+> the symbios driver.  I need help/advice ... 
+> 
+> On Fri, Feb 25, 2005 at 11:36:09PM -0700, Grant Grundler was heard to remark:
+> 
+>>On Wed, Feb 23, 2005 at 07:31:37PM -0600, Linas Vepstas wrote:
+>>
+>>>I also want to do the symbios driver...
+>>
+>>FYI, Mathew Wilcox maintains the sym2 driver in cvs.parisc-linux.org.
+> 
+> 
+> 
+> My current hardware will halt all i/o to/from the symbios controller
+> upon detection of a PCI error.  The recovery proceedure that I am
+> currently using is to call system firmware (aka 'bios') to raise
+> and then lower the #RST pci signal line for 1/4 second, then wait 2
+> seconds for the  PCI bus to settle, then restore the PCI config space
+> registers (BARs, interrupt line, etc) to what they used to be. Then,
+> I call sym_start_up() in an attempt to get the symbios card working
+> again.  And that's where I get stuck ... 
+> 
+> My assumption is that after the #RST, that the symbios card will sit
+> there, dumb and stupid, with no scripts running.  But sometimes I find 
+> that the card has done something to make the PCI error hardware trip
+> again.  Typically, this means that the card attempted to DMA to some
+> address that its not allowed to touch, or raised #SERR or possibly 
+> #PERR (I can't tell which). 
+
+What config registers are you restoring? Is it possible symbios does not
+like something in your config restore?
+
+Another possiblity is that asserting PCI reset is not cleanly resetting
+the card. Does PCI reset force BIST to be run on these cards? You could
+try to manually run BIST on the card after the PCI reset to see if that
+helps, or you could try power cycling the slot instead of using PCI reset.
+
+-Brian
+
+> 
+> Sometimes, I get the PCI error while the card is sitting there idly
+> after the #RST, but more often, I get the error in sym_chip_reset(),
+> immediately after the   OUTB (nc_istat, SRST);
+> 
+> Any clue what this is about? Am I missing something? I'm rather
+> perplexed at this point, any clues/hints/suggestions are welcome.
+> 
+> --linas
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 
-Hi list,
-
-Tracing the kernel 2.6.8 code I found that scsi_mod maintains separate
-request queues for each SCSI device. It uses the block layer queuing
-facility to do this. What I could not find out was that once a request is
-queued into a queue (for a particular device), WHEN and HOW is the strategy
-routine "scsi_request_fn()" called ?
-
-All I could find on the net was that "The kernel calls the strategy routine
-when ever it believes that it is appropriate to invoke it."
-
-Please help ... Any pointers will be highly appreciated.
-
-TIA,
-
-Rajat
-
-
-Disclaimer: 
-
-This message and any attachment(s) contained here are information that is
-confidential,proprietary to HCL Technologies and its customers, privileged
-or otherwise protected by law.The information is solely intended for the
-individual or the entity it is addressed to. If you are not the intended
-recipient of this message, you are not authorized to read, forward,
-print,retain, copy or disseminate this message or any part of it. If you
-have received this e-mail in error, please notify the sender immediately by
-return e-mail and delete it from your computer.
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
