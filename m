@@ -1,217 +1,129 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] avoiding obsolete scsi APIs in dc395
-Date: Mon, 21 Jun 2004 00:08:30 +0200
+From: "tester7 A." <benew666@hotmail.com>
+Subject: RE: QLA2300, Infortrand and LBD?
+Date: Mon, 21 Jun 2004 10:24:55 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040620220830.GA21014@lst.de>
-References: <20040606123908.GA30885@lst.de> <20040620160442.GA17201@lst.de> <20040620220510.GA17079@twibble.org>
+Message-ID: <BAY22-F18XkYgxWLR2O00004ca6@hotmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:40130 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S265958AbUFTWIm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Jun 2004 18:08:42 -0400
-Content-Disposition: inline
-In-Reply-To: <20040620220510.GA17079@twibble.org>
+Received: from bay22-f18.bay22.hotmail.com ([64.4.16.68]:1035 "EHLO
+	hotmail.com") by vger.kernel.org with ESMTP id S265517AbUFUBXO
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Jun 2004 21:23:14 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Jamie Lenehan <lenehan@twibble.org>, jejb@steeleye.com
+To: bugzilla@watkins-home.com
 Cc: linux-scsi@vger.kernel.org
 
-On Mon, Jun 21, 2004 at 08:05:10AM +1000, Jamie Lenehan wrote:
-> On Sun, Jun 20, 2004 at 06:04:42PM +0200, Christoph Hellwig wrote:
-> > On Sun, Jun 06, 2004 at 02:39:08PM +0200, Christoph Hellwig wrote:
-> > > replace obsolete typedefs and scsi_to_pci_dma_dir, use proper includes
-> > > and re-order includes correctly.
-> > 
-> > ping?
-> 
-> Sorry for the delay - I've been working away from home with no net
-> access (new job, no notebook yet).
-> 
-> Patch is fine thanks.
-> 
-> Do you want this applied now or do you want me to send it in with my
-> next set of patches? Either way is fine by me.
+LVM is not an option for  me, because I will not do volume management for 
+this 3.5TB.
 
-It's probably easier to just merge it now.  James, here's the patch
-again:
+Thanks.
 
 
---- 1.33/drivers/scsi/dc395x.c	2004-05-12 17:46:20 +02:00
-+++ edited/drivers/scsi/dc395x.c	2004-06-06 14:27:30 +02:00
-@@ -51,16 +51,20 @@
- #include <linux/delay.h>
- #include <linux/ctype.h>
- #include <linux/blkdev.h>
--#include <asm/io.h>
--#include "scsi.h"
--#include <scsi/scsi_host.h>
--#include "dc395x.h"
--#include <scsi/scsicam.h>	/* needed for scsicam_bios_param */
- #include <linux/interrupt.h>
- #include <linux/init.h>
- #include <linux/spinlock.h>
- #include <linux/pci.h>
- #include <linux/list.h>
-+#include <asm/io.h>
-+
-+#include <scsi/scsi.h>
-+#include <scsi/scsicam.h>	/* needed for scsicam_bios_param */
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_host.h>
-+
-+#include "dc395x.h"
- 
- #define DC395X_NAME	"dc395x"
- #define DC395X_BANNER	"Tekram DC395(U/UW/F), DC315(U) - ASIC TRM-S1040"
-@@ -222,7 +226,7 @@
- struct ScsiReqBlk {
- 	struct list_head list;		/* next/prev ptrs for srb lists */
- 	struct DeviceCtlBlk *dcb;
--	Scsi_Cmnd *cmd;
-+	struct scsi_cmnd *cmd;
- 
- 	struct SGentry *segment_x;	/* Linear array of hw sg entries (up to 64 entries) */
- 	u32 sg_bus_addr;	        /* Bus address of sg list (ie, of segment_x) */
-@@ -372,10 +376,10 @@
- static void reselect(struct AdapterCtlBlk *acb);
- static u8 start_scsi(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		struct ScsiReqBlk *srb);
--static void build_srb(Scsi_Cmnd *cmd, struct DeviceCtlBlk *dcb,
-+static void build_srb(struct scsi_cmnd *cmd, struct DeviceCtlBlk *dcb,
- 		struct ScsiReqBlk *srb);
- static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_code,
--		Scsi_Cmnd *cmd, u8 force);
-+		struct scsi_cmnd *cmd, u8 force);
- static void scsi_reset_detect(struct AdapterCtlBlk *acb);
- static void pci_unmap_srb(struct AdapterCtlBlk *acb, struct ScsiReqBlk *srb);
- static void pci_unmap_srb_sense(struct AdapterCtlBlk *acb,
-@@ -738,7 +742,7 @@
- 
- 
- /* Find cmd in SRB list */
--inline static struct ScsiReqBlk *find_cmd(Scsi_Cmnd *cmd, 
-+inline static struct ScsiReqBlk *find_cmd(struct scsi_cmnd *cmd, 
- 		struct list_head *head)
- {
- 	struct ScsiReqBlk *i;
-@@ -973,10 +977,10 @@
- 
- 
- /* Prepare SRB for being sent to Device DCB w/ command *cmd */
--static void build_srb(Scsi_Cmnd *cmd, struct DeviceCtlBlk *dcb,
-+static void build_srb(struct scsi_cmnd *cmd, struct DeviceCtlBlk *dcb,
- 		struct ScsiReqBlk *srb)
- {
--	int dir = scsi_to_pci_dma_dir(cmd->sc_data_direction);
-+	enum dma_data_direction dir = cmd->sc_data_direction;
- 	dprintkdbg(DBG_0, "build_srb: (pid#%li) <%02i-%i>\n",
- 		cmd->pid, dcb->target_id, dcb->target_lun);
- 
-@@ -1089,7 +1093,7 @@
-  *        and is expected to be held on return.
-  *
-  **/
--static int dc395x_queue_command(Scsi_Cmnd *cmd, void (*done)(Scsi_Cmnd *))
-+static int dc395x_queue_command(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
- {
- 	struct DeviceCtlBlk *dcb;
- 	struct ScsiReqBlk *srb;
-@@ -1304,7 +1308,7 @@
-  * @cmd - some command for this host (for fetching hooks)
-  * Returns: SUCCESS (0x2002) on success, else FAILED (0x2003).
-  */
--static int dc395x_eh_bus_reset(Scsi_Cmnd *cmd)
-+static int dc395x_eh_bus_reset(struct scsi_cmnd *cmd)
- {
- 	struct AdapterCtlBlk *acb =
- 		(struct AdapterCtlBlk *)cmd->device->host->hostdata;
-@@ -1356,7 +1360,7 @@
-  * @cmd - command to be aborted
-  * Returns: SUCCESS (0x2002) on success, else FAILED (0x2003).
-  */
--static int dc395x_eh_abort(Scsi_Cmnd *cmd)
-+static int dc395x_eh_abort(struct scsi_cmnd *cmd)
- {
- 	/*
- 	 * Look into our command queues: If it has not been sent already,
-@@ -1939,7 +1943,7 @@
- {
- 	u8 idx;
- 	struct scatterlist *sg;
--	Scsi_Cmnd *cmd = srb->cmd;
-+	struct scsi_cmnd *cmd = srb->cmd;
- 	int segment = cmd->use_sg;
- 	u32 xferred = srb->total_xfer_length - left; /* bytes transfered */
- 	struct SGentry *psge = srb->segment_x + srb->sg_index;
-@@ -3249,8 +3253,8 @@
- /* unmap mapped pci regions from SRB */
- static void pci_unmap_srb(struct AdapterCtlBlk *acb, struct ScsiReqBlk *srb)
- {
--	Scsi_Cmnd *cmd = srb->cmd;
--	int dir = scsi_to_pci_dma_dir(cmd->sc_data_direction);
-+	struct scsi_cmnd *cmd = srb->cmd;
-+	enum dma_data_direction dir = cmd->sc_data_direction;
- 	if (cmd->use_sg && dir != PCI_DMA_NONE) {
- 		/* unmap DC395x SG list */
- 		dprintkdbg(DBG_SG, "pci_unmap_srb: list=%08x(%05x)\n",
-@@ -3301,11 +3305,10 @@
- 		struct ScsiReqBlk *srb)
- {
- 	u8 tempcnt, status;
--	Scsi_Cmnd *cmd = srb->cmd;
-+	struct scsi_cmnd *cmd = srb->cmd;
- 	struct ScsiInqData *ptr;
--	int dir;
-+	enum dma_data_direction dir = cmd->sc_data_direction;
- 
--	dir = scsi_to_pci_dma_dir(cmd->sc_data_direction);
- 	if (cmd->use_sg) {
- 		struct scatterlist* sg = (struct scatterlist *)cmd->request_buffer;
- 		ptr = (struct ScsiInqData *)(page_address(sg->page) + sg->offset);
-@@ -3510,7 +3513,7 @@
- 
- /* abort all cmds in our queues */
- static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_flag,
--		Scsi_Cmnd *cmd, u8 force)
-+		struct scsi_cmnd *cmd, u8 force)
- {
- 	struct DeviceCtlBlk *dcb;
- 	dprintkl(KERN_INFO, "doing_srb_done: pids ");
-@@ -3518,14 +3521,14 @@
- 	list_for_each_entry(dcb, &acb->dcb_list, list) {
- 		struct ScsiReqBlk *srb;
- 		struct ScsiReqBlk *tmp;
--		Scsi_Cmnd *p;
-+		struct scsi_cmnd *p;
- 
- 		list_for_each_entry_safe(srb, tmp, &dcb->srb_going_list, list) {
-+			enum dma_data_direction dir;
- 			int result;
--			int dir;
- 
- 			p = srb->cmd;
--			dir = scsi_to_pci_dma_dir(p->sc_data_direction);
-+			dir = p->sc_data_direction;
- 			result = MK_RES(0, did_flag, 0, 0);
- 			printk("G:%li(%02i-%i) ", p->pid,
- 			       p->device->id, p->device->lun);
-@@ -3665,7 +3668,7 @@
- static void request_sense(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		struct ScsiReqBlk *srb)
- {
--	Scsi_Cmnd *cmd = srb->cmd;
-+	struct scsi_cmnd *cmd = srb->cmd;
- 	dprintkdbg(DBG_1, "request_sense: (pid#%li) <%02i-%i>\n",
- 		cmd->pid, cmd->device->id, cmd->device->lun);
- 
-@@ -4738,7 +4741,7 @@
- }
- 
- 
--static Scsi_Host_Template dc395x_driver_template = {
-+static struct scsi_host_template dc395x_driver_template = {
- 	.module                 = THIS_MODULE,
- 	.proc_name              = DC395X_NAME,
- 	.proc_info              = dc395x_proc_info,
+>From: "Guy" <bugzilla@watkins-home.com>
+>To: "'tester7 A.'" <benew666@hotmail.com>
+>Subject: RE: QLA2300, Infortrand and LBD?
+>Date: Sun, 20 Jun 2004 21:03:44 -0400
+>
+>I am not a driver god, so I don't know.  There may be a 2T limit that can't
+>be crossed.  What about using LVM?
+>
+>Send your request back to the list.  Someone should answer, this seems like
+>a real good question, or a bug!
+>
+>Guy
+>
+>-----Original Message-----
+>From: tester7 A. [mailto:benew666@hotmail.com]
+>Sent: Sunday, June 20, 2004 8:43 PM
+>To: bugzilla@watkins-home.com
+>Subject: RE: QLA2300, Infortrand and LBD?
+>
+>Yes. if I split it, it works. But I do not want to use Software RAID0 for
+>them.
+>Is there any way to make the kernel recognize the whole volume?
+>
+>
+> >From: "Guy" <bugzilla@watkins-home.com>
+> >To: "'tester7 A.'" <benew666@hotmail.com>
+> >Subject: RE: QLA2300, Infortrand and LBD?
+> >Date: Sun, 20 Jun 2004 12:04:05 -0400
+> >
+> >If you can split your ARRAY into 2 logical disks of 1.75TB each, it may
+> >work.
+> >
+> >-----Original Message-----
+> >From: linux-scsi-owner@vger.kernel.org
+> >[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of tester7 A.
+> >Sent: Sunday, June 20, 2004 4:43 AM
+> >To: linux-scsi@vger.kernel.org
+> >Cc: tech@storageone.co.kr
+> >Subject: QLA2300, Infortrand and LBD?
+> >
+> >Hi,
+> >
+> >I am using Kernel 2.6.7 and I want to use the Large Block Device for the
+> >3.5TB Infortrend FC-Sata RAID.
+> >
+> >My H/W is QLA2300, Infortrend A16F-G1A2 FC-SATA RAID, and a Intel Xeon 
+>SMP
+> >box.
+> >
+> >I also turned on the "LBD support" in the kernel config.
+> >
+> >But the kernel recognize only 1.5TB out of 3.5TB, even though it is one
+> >volume with 3.5TB.
+> >
+> >qla2300 0000:03:09.0: Found an ISP2300, irq 27, iobase 0xf8c5c000
+> >qla2300 0000:03:09.0: Configuring PCI space...
+> >qla2300 0000:03:09.0: Configure NVRAM parameters...
+> >qla2300 0000:03:09.0: Verifying loaded RISC code...
+> >qla2300 0000:03:09.0: Waiting for LIP to complete...
+> >qla2300 0000:03:09.0: LIP reset occured (f8f7).
+> >qla2300 0000:03:09.0: LIP occured (f8f7).
+> >qla2300 0000:03:09.0: LOOP UP detected (2 Gbps).
+> >qla2300 0000:03:09.0: Topology - (Loop), Host Loop address 0x0
+> >scsi3 : qla2xxx
+> >qla2300 0000:03:09.0:
+> >QLogic Fibre Channel HBA Driver: 8.00.00b12-k
+> >   QLogic QLA2310 -
+> >   ISP2300: PCI-X (66 MHz) @ 0000:03:09.0 hdma-, host#=3, fw=3.02.28 IPX
+> >   Vendor: IFT       Model: A16F-G1A2         Rev: 334B
+> >   Type:   Direct-Access                      ANSI SCSI revision: 03
+> >qla2300 0000:03:09.0: scsi(3:0:0:0): Enabled tagged queuing, queue depth
+> >32.
+> >SCSI device sdc: 3022966784 512-byte hdwr sectors (1547759 MB)
+> >SCSI device sdc: drive cache: write through
+> >sdc: sdc1
+> >Attached scsi disk sdc at scsi3, channel 0, id 0, lun 0
+> >
+> >Do I need to do something about qla2300 driver or else, in order to make
+> >the
+> >
+> >kernel recognize 3.5TB?
+> >
+> >Please help me. Any help will be appreciated.
+> >
+> >Thanks in advance.
+> >
+> >_________________________________________________________________
+> >MSN Toolbar provides one-click access to Hotmail from any Web page - FREE
+> >download! http://toolbar.msn.click-url.com/go/onm00200413ave/direct/01/
+> >
+> >-
+> >To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> >the body of a message to majordomo@vger.kernel.org
+> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> >
+>
+>_________________________________________________________________
+>STOP MORE SPAM with the new MSN 8 and get 2 months FREE*
+>http://join.msn.com/?page=features/junkmail
+>
+>
+
+_________________________________________________________________
+Tired of spam? Get advanced junk mail protection with MSN 8. 
+http://join.msn.com/?page=features/junkmail
+
