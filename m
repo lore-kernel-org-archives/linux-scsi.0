@@ -1,82 +1,113 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] SCSI 53c700.c: make NCR_700_intr static (fwd)
-Date: Wed, 24 Nov 2004 19:46:49 +0100
-Message-ID: <20041124184649.GF19873@stusta.de>
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: [ANNOUNCE] multipath-tools-0.3.8
+Date: Thu, 25 Nov 2004 15:55:41 +0100
+Message-ID: <1101394541.5820.71.camel@zezette>
+References: <1096071849.4466.31.camel@zezette>
+	 <1097054573.4163b96d1262c@imp5-q.free.fr>
+	 <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette>
+	 <1098269169.417641f18a234@imp1-q.free.fr>
+	 <1098656088.9350.88.camel@zezette>
+	 <1098785191.417e21a7a7c28@imp1-q.free.fr>
+	 <1099328918.5525.10.camel@zezette>  <1100214617.10251.92.camel@zezette>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262964AbUKYErC@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-hotplug-devel-admin@lists.sourceforge.net>
+In-Reply-To: <1100214617.10251.92.camel@zezette>
+Sender: linux-hotplug-devel-admin@lists.sourceforge.net
+Errors-To: linux-hotplug-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
+To: device-mapper development <dm-devel@redhat.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+Hello,
 
-The patch forwarded below still applies and compiles against 
-2.6.10-rc2-mm3.
+here goes multipath-tools-0.3.8
 
-Please apply or comment of it's incorrect.
+This is just getting too big a ChangeLog.
+This release was lighly tested, expect some glitches. Let's call that a
+developer release.
+
+Warning, there are config file synthax changes :
+* in the callouts declarations (item 1)
+* new keyword : prio_callout in the device block
+
+The path_priority example is getting usable.
+
+A new "-F" command line flag, to flush all multipath maps.
+
+You will need 2.6.10-rc*-udm for this release : the map synthax is
+updated but still not the logic to avoid map reloads.
+
+Full ChangeLog for the release :
+
+	* [priority] teach multipath to read callout keywords
+	  formatted as /sbin/scsi_id -g -u -s /block/%n
+	  Apply one substitutions out of :
+		* %n : blockdev basename (ie sdb)
+		* %d : blockdev major:minor string (ie 8:16)
+	  update sample config files
+	* [priority] fix find_controler(). Now works, verified
+	  on IBM T200 at OSDL (thanks again, Dave). Add to the
+	  main build process
+	* [multipath] add a controler specific "prio_callout"
+	  keyword. Noticed by Ake
+	* [multipath] normalize the debug ouput
+	* [multipath] add select_getuid(). De-spaghetti
+	  devinfo() thanks to that helper.
+	* [libmultipath] add VECTOR_LAST_SLOT macro.
+	  multipath/dict.h now use it heavily.
+	* [multipath] policies selectors speedup and cleanup
+	  (pgpolicy, features, hwhandler, selector)
+	* [multipath] new "flush" command flag
+	* [libmultipath] add dm_type() and dm_flush_maps()
+	* [multipath] move dm_get_map() to libmultipath
+	* [multipath] rename iopolicy to pgpolicy everywhere.
+	  Dual terminology was getting confusing.
+	* [multipath] assemble_map() to always set next_pg to 1
+	  for now.
+	* [multipath] update config file to show new keywords.
+	  Add an IBM array tested at OSDL.
+	* [multipath] fork select_iopolicy() from setup_map()
+	* [multipath] introduce select_features() and 
+	  select_hwhandler(). Should merge select_* one day ...
+	* [multipath] add features and hardware_handler keywords
+	  and use them in the map setup
+	* [build] make clean really clean. Noticed by Dave Olien,
+	  OSDL
+	* [multipath] group_by_serial bugfix
+	* [multipath] dm_addmap() return value fix. Now multipath
+	  really creates the maps
+	* [multipath] try dm_log_init_verbose() instead of dup()
+	  + close() to silence libdevmapper (Ake at umu)
+	* [libcheckers] remove checkpath() wrapper, obsoleted by
+	  the "fd in context" changes
+	* [multipathd] let pathcheckers allocate their context.
+	  No more over or unneeded allocation.  Suggested by Lars,
+	  Suse
+	* [multipathd] store the pathcheckers fd in their context.
+	  No more open / close on each check. Suggested by Lars,
+	  Suse
+
+As usual, doc and download at :
+http://christophe.varoqui.free.fr/
+
+regards,
+-- 
+christophe varoqui <christophe.varoqui@free.fr>
 
 
 
------ Forwarded message from Adrian Bunk <bunk@stusta.de> -----
 
-Date: Mon, 15 Nov 2004 02:47:13 +0100
-From: Adrian Bunk <bunk@stusta.de>
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
-Subject: [2.6 patch] SCSI 53c700.c: make NCR_700_intr static
-
-NCR_700_intr is EXPORT_SYMBOL'e but has no external users.
-
-Is the patch below correct or is future external usage planned?
-
-
-diffstat output:
- drivers/scsi/53c700.c |    4 ++--
- drivers/scsi/53c700.h |    1 -
- 2 files changed, 2 insertions(+), 3 deletions(-)
-
-
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
---- linux-2.6.10-rc1-mm5-full/drivers/scsi/53c700.h.old	2004-11-13 16:05:17.000000000 +0100
-+++ linux-2.6.10-rc1-mm5-full/drivers/scsi/53c700.h	2004-11-13 16:19:50.000000000 +0100
-@@ -63,7 +63,6 @@
- 		struct NCR_700_Host_Parameters *, struct device *,
- 		unsigned long, u8);
- int NCR_700_release(struct Scsi_Host *host);
--irqreturn_t NCR_700_intr(int, void *, struct pt_regs *);
- 
- 
- enum NCR_700_Host_State {
---- linux-2.6.10-rc1-mm5-full/drivers/scsi/53c700.c.old	2004-11-13 16:19:58.000000000 +0100
-+++ linux-2.6.10-rc1-mm5-full/drivers/scsi/53c700.c	2004-11-13 16:22:42.000000000 +0100
-@@ -167,6 +167,7 @@
- #include "53c700_d.h"
- 
- 
-+STATIC irqreturn_t NCR_700_intr(int irq, void *dev_id, struct pt_regs *regs);
- STATIC int NCR_700_queuecommand(struct scsi_cmnd *, void (*done)(struct scsi_cmnd *));
- STATIC int NCR_700_abort(struct scsi_cmnd * SCpnt);
- STATIC int NCR_700_bus_reset(struct scsi_cmnd * SCpnt);
-@@ -1486,7 +1487,7 @@
- 	return 1;
- }
- 
--irqreturn_t
-+STATIC irqreturn_t
- NCR_700_intr(int irq, void *dev_id, struct pt_regs *regs)
- {
- 	struct Scsi_Host *host = (struct Scsi_Host *)dev_id;
-@@ -2148,7 +2149,6 @@
- 
- EXPORT_SYMBOL(NCR_700_detect);
- EXPORT_SYMBOL(NCR_700_release);
--EXPORT_SYMBOL(NCR_700_intr);
- 
- static struct spi_function_template NCR_700_transport_functions =  {
- 	.set_period	= NCR_700_set_period,
-
-
------ End forwarded message -----
+-------------------------------------------------------
+SF email is sponsored by - The IT Product Guide
+Read honest & candid reviews on hundreds of IT Products from real users.
+Discover which products truly live up to the hype. Start reading now. 
+http://productguide.itmanagersjournal.com/
