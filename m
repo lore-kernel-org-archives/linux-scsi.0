@@ -1,52 +1,55 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] Format Unit can take many hours
-Date: Tue, 11 May 2004 14:20:38 +0200
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: [BK PATCH] SCSI updates for 2.6.6
+Date: Tue, 11 May 2004 14:34:41 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040511122037.GG1906@suse.de>
-References: <20040511114936.GI4828@tpkurt.garloff.de>
+Message-ID: <20040511123441.GL4828@tpkurt.garloff.de>
+References: <1084229974.1763.512.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="A2x6GFCQWVc4i5ud"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:46538 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S263232AbUEKMUj (ORCPT
+Received: from ns.suse.de ([195.135.220.2]:34698 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S264106AbUEKMeq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 May 2004 08:20:39 -0400
+	Tue, 11 May 2004 08:34:46 -0400
 Content-Disposition: inline
-In-Reply-To: <20040511114936.GI4828@tpkurt.garloff.de>
+In-Reply-To: <1084229974.1763.512.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Tue, May 11 2004, Kurt Garloff wrote:
-> Hi,
-> 
-> the timeout for FORMAT_UNIT should be much longer; I've seen 8hrs
-> already (75Gig). I've increased the timeout from 2hrs to 12hrs.
-> 
-> Regards,
-> -- 
-> Kurt Garloff  <garloff@suse.de>                            Cologne, DE 
-> SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
 
-> --- linux-2.6.5.orig/drivers/scsi/scsi_ioctl.c	2004-04-04 05:38:20.000000000 +0200
-> +++ linux-2.6.5/drivers/scsi/scsi_ioctl.c	2004-05-11 08:59:12.837421215 +0200
-> @@ -26,12 +26,12 @@
->  #include "scsi_logging.h"
->  
->  #define NORMAL_RETRIES			5
-> -#define IOCTL_NORMAL_TIMEOUT			(10 * HZ)
-> -#define FORMAT_UNIT_TIMEOUT		(2 * 60 * 60 * HZ)
-> +#define IOCTL_NORMAL_TIMEOUT		(10 * HZ)
-> +#define FORMAT_UNIT_TIMEOUT		(12 * 60 * 60 * HZ)
->  #define START_STOP_TIMEOUT		(60 * HZ)
->  #define MOVE_MEDIUM_TIMEOUT		(5 * 60 * HZ)
->  #define READ_ELEMENT_STATUS_TIMEOUT	(5 * 60 * HZ)
-> -#define READ_DEFECT_DATA_TIMEOUT	(60 * HZ )  /* ZIP-250 on parallel port takes as long! */
-> +#define READ_DEFECT_DATA_TIMEOUT	(60 * HZ)  /* ZIP-250 on parallel port takes as long! */
->  
->  #define MAX_BUF PAGE_SIZE
+--A2x6GFCQWVc4i5ud
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-block/scsi_ioctl.c should likely receive similar treatment then.
+Hi James,
 
--- 
-Jens Axboe
+On Mon, May 10, 2004 at 05:59:31PM -0500, James Bottomley wrote:
+> This is the latest set of assorted fixes, plus one new driver: the IBM
+> Power Raid (ipr).
+> Kurt Garloff:
+>   o scsi: don't attach device if PQ indicates not connected
 
+Should I resubmit the other SCSI scanning/blacklist patches or are they
+queued? Or rejected?
+
+Regards,
+--=20
+Kurt Garloff  <garloff@suse.de>                            Cologne, DE=20
+SUSE LINUX AG, Nuernberg, DE                          SUSE Labs (Head)
+
+--A2x6GFCQWVc4i5ud
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFAoMhhxmLh6hyYd04RAuETAJ48exSUifdwAgNrNvkGh9fsACMefgCfSCTI
+GQAQ3OdfYt64DPj7ORF9GmA=
+=ve1i
+-----END PGP SIGNATURE-----
+
+--A2x6GFCQWVc4i5ud--
