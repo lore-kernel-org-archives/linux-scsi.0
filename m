@@ -1,56 +1,125 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [RFC] SCSI Hotplug for lk 2.5
-Date: Fri, 2 Aug 2002 18:27:54 -0700
+From: Mukul Kotwani <mkotwani@yahoo.com>
+Subject: Re: Performance
+Date: Sat, 3 Aug 2002 01:26:34 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020802182753.A18281@eng2.beaverton.ibm.com>
-References: <3D49BCDB.392ACAA4@torque.net>
+Message-ID: <20020803082634.90562.qmail@web14003.mail.yahoo.com>
+References: <Pine.LNX.4.33L2.0208021602570.14068-100000@dragon.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3D49BCDB.392ACAA4@torque.net>; from dougg@torque.net on Thu, Aug 01, 2002 at 06:57:31PM -0400
+In-Reply-To: <Pine.LNX.4.33L2.0208021602570.14068-100000@dragon.pdx.osdl.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: linux-scsi@vger.kernel.org
+To: "Randy.Dunlap" <rddunlap@osdl.org>
+Cc: Craig Tierney <ctierney@hpti.com>, linux-scsi@vger.kernel.org
 
-On Thu, Aug 01, 2002 at 06:57:31PM -0400, Douglas Gilbert wrote:
->                  SCSI Hotplug for lk 2.5
+Where is PgMeter available? I dont see a binary or
+source for it anywhere! Can you please point me to
+where it is avilable?
 
-Douglas -
+IoMeter source is available on sourceforge.net. I
+compiled the dynamo for Linux from there.You can
+spcify the IP of the machine which will run the GUI as
+a command line param to the dynamo as in: 
 
-I'm still trying to figure out what events we might need for user versus
-kernel scanning or some combination. I'm re-reading James original OLS
-paper about user scanning, and I've been thinking about how to scan from
-user level. It might be best to do work on user level scanning after we
-have better driverfs support, and always have initrd. 
+dynamo IPaddressOfMachineRunningIoMeter
 
-I've been trying to re-code scsi_scan.c with user level scanning in mind
-(not such a big deal, since we already have proc scanning), especially
-so that we can scan a single target, rather than a single LUN via the
-proc interface. We probably need a target hotplug event, this would be best
-handled by adding a device_register() for each target; this is not so easy
-for multi-path, since target id's can be different for the same target 
-(even if the linux scsi id was the FC ID), so it would be easier to just
-generate a hotplug event that could kick off scanning.
+Run the dynamo on the Linux machine as specified
+above, the GUI(Iometer.exe itself!)  on the Windows
+machine, and they should establish a connection. Once
+the GUI and the dynamo are up and connected, you will
+see disks on your Linux machine on the GUI running on
+Windows, and can run tests as you normally do!
 
-I haven't done anything with the device_list[] (in terms of hotplug or
-moving it to user space).
+--- "Randy.Dunlap" <rddunlap@osdl.org> wrote:
+> On Fri, 2 Aug 2002, Mukul Kotwani wrote:
+> 
+> | Running IOMeter against the Qlogic with IBM 15kRPM
+> | JBODS, Im getting:
+> |
+> | 1) For 512 byte 100%random reads, I get *just* 260
+> | IOPs per sec.On Windows with IOMeter, I get about
+> 7000
+> | foir the same config.
+> |
+> | 2) For 512k 100%sequential reads, I see 30MB per
+> sec.
+> | Windows gives 85MB/sec
+> |
+> | I see the similar performance with my driver on
+> Linux.
+> | I dont know whyit is so low, cannot be that low as
+> | compared to windws, a few MB/sec or a few hundred
+> IOPs
+> | per sec difference is OK, but this difference is
+> TOO
+> | huge. I tried a bunch of diff host template
+> params,
+> | but doesnt seem to make a difference.
+> |
+> | Has anyone dont any testing with IOMeter? Or is
+> there
+> | any other toold I can use to test IOPs/througput?
+> 
+> Hi,
+> 
+> I'm not familiar with people using iometer with
+> Linux.
+> How does someone do that?
+> I thought that it was a Windows client app.
+> 
+> A few people do use pgmeter (an iometer clean-room
+> replacement) on Linux.  SGI and IBM presented a
+> paper
+> at USENIX just a few weeks ago in which pgmeter was
+> used.
+> (pgmeter.sf.net).
+> 
+> Also, iozone can measure IOs/second or throughput.
+> www.iozone.org
+> 
+> ~Randy
+> 
+> | Thanks,
+> | Mukul
+> |
+> | --- Craig Tierney <ctierney@hpti.com> wrote:
+> | > For the Qlogic 2200F I am able to push 100 MB/s
+> for
+> | > reads and writes using multiple threads to a
+> | > filesystem
+> | > that is striped across mutliple host ports on
+> the
+> | > SAN.  Backend RAID is a
+> | > Data Direct Networks SAN.  For a single thread
+> to a
+> | > ext3 filesystem
+> | > and 2.4.18, I get about 70 MB/s for reads and
+> | > writes.
+> | >
+> | > I have no Iops/sec numbers.
+> | >
+> | > Craig
+> | >
+> | >
+> | > > Hello!
+> | > > Does anyone have any performace numbers of a
+> | > Qlogic
+> | > > HBA? No of IOps/sec Max MBs /sec?
+> | > >
+> | > > Thanks!
+> | > > M
+> | > >
+> __________________________________________________
+> | > --
+> | > Craig Tierney (ctierney@hpti.com)
+> | > -
+> 
+> -- 
+> ~Randy
+> 
 
-> Here are five categories of SCSI events that are candidates for
-> hotplug alerts:
-> 	1) scsi (lower level) driver addition or removal
-> 	2) scsi host (initiator) addition or removal
-> 	3) scsi device (target/lun) addition or removal
-> 	4) removable media addition or removal
-> 	5) unit attention or "asynchronous event notification"
-> I believe hotplug alerts for 2) and 3) are required; for 1)
-> is questionable and for 4) + 5) would be "nice to have".
 
-My understanding is that driverfs will automatically generate hotplug
-events on each device_register() call. These have been added to scsi,
-so the two main events are already handled, and we need not make other
-changes.
-
-Multi-path will also hook into driverfs, and driverfs would then
-generate hotplug events for them.
-
--- Patrick Mansfield
+__________________________________________________
+Do You Yahoo!?
+Yahoo! Health - Feel better, live better
+http://health.yahoo.com
