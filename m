@@ -1,74 +1,68 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: Phil Dibowitz <phil@ipom.com>
 Subject: Re: 2.6.0-test8: scsi_sysfs.c still not detaching properly
-Date: Sun, 19 Oct 2003 17:15:35 -0700
+Date: Sun, 19 Oct 2003 17:49:43 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031019171535.A16583@beaverton.ibm.com>
+Message-ID: <3F933127.1030204@ipom.com>
 References: <3F92E2F0.2090003@ipom.com>
+ <20031019171535.A16583@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed;
+ boundary=------------enig4D702B8ABC4DA3BDCB06A65E;
+ protocol="application/pgp-signature"; micalg=pgp-sha1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:33002 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S262337AbTJTAQK
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 19 Oct 2003 20:16:10 -0400
-Content-Disposition: inline
-In-Reply-To: <3F92E2F0.2090003@ipom.com>; from phil@ipom.com on Sun, Oct 19, 2003 at 12:16:00PM -0700
+Received: from postal.usc.edu ([128.125.253.6]:34204 "EHLO postal.usc.edu")
+	by vger.kernel.org with ESMTP id S262372AbTJTAtt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 19 Oct 2003 20:49:49 -0400
+Received: from ipom.com (dsl81-phil3.usc.edu [128.125.81.146])
+ by postal.usc.edu
+ (iPlanet Messaging Server 5.2 HotFix 1.21 (built Sep  8 2003))
+ with ESMTPS id <0HN100HJ96AZU3@postal.usc.edu> for linux-scsi@vger.kernel.org;
+ Sun, 19 Oct 2003 17:49:48 -0700 (PDT)
+In-reply-to: <20031019171535.A16583@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Phil Dibowitz <phil@ipom.com>
+To: Patrick Mansfield <patmans@us.ibm.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Sun, Oct 19, 2003 at 12:16:00PM -0700, Phil Dibowitz wrote:
-> I'm experiencing a bug similar to the one referenced here:
-> 
-> http://sourceforge.net/mailarchive/message.php?msg_id=6252693
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig4D702B8ABC4DA3BDCB06A65E
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-That page gives me "Message Not Found".
+Patrick Mansfield wrote:
+> Can you delete it prior to physical removal via the sysfs attribute (echo
+> foo > /sysfs/bus/scsi/devices/1:0:0:0/delete)? If that doesn't work, you
+> might be running an older kernel.
+> 
+> Is the device umounted (not open) when you disconnect it? If not, try
+> Mike's recent patch (or try his patch anyway). But I would expect to see
+> an oops or other odd behaviour in that case.
 
-> But the patch in that thread has been applied to 2.6.0-test8, which I'm 
-> running, and I'm still having the same problem - albeit with a different 
-> device.
+Well, this is embarassing, but it appears I didn't properly test this 
+after my -test8 upgrade, because it actually works quite well.
 
-> The device in question is a Digital Camera (Casio Exilim) that uses the 
-> usb-storage driver. Basically device files do not get unallocated upon 
-> disconnect, and thus successive connections get different device files 
-> associated with them.
-> 
-> When attached, I get the following (and it attaches to sda1):
-> 
-> Oct 19 12:12:20 rider kernel: hub 1-0:1.0: new USB device on port 2, 
-> assigned address 3
-> Oct 19 12:12:20 rider kernel: scsi1 : SCSI emulation for USB Mass 
-> Storage devices
-> Oct 19 12:12:20 rider kernel:   Vendor: Casio     Model: QV 
-> DigitalCamera  Rev: 5010
-> Oct 19 12:12:20 rider kernel:   Type:   Direct-Access 
->     ANSI SCSI revision: 02
-> Oct 19 12:12:21 rider scsi.agent[9314]: how to add device type= at 
-> /devices/pci0000:00/0000:00:07.2/usb1/1-2/1-2:1.0/host1/1:0:0:0 ??
-> Oct 19 12:12:21 rider kernel: SCSI device sda: 20208 512-byte hdwr 
-> sectors (10 MB)
-> Oct 19 12:12:21 rider kernel: sda: Write Protect is off
-> Oct 19 12:12:21 rider kernel: sda: cache data unavailable
-> Oct 19 12:12:21 rider kernel:  sda: sda1
-> Oct 19 12:12:21 rider kernel: Attached scsi removable disk sda at scsi1, 
-> channel 0, id 0, lun 0
-> 
-> 
-> When unattached, I get:
-> 
-> Oct 19 12:13:14 rider kernel: usb 1-2: USB disconnect, address 3
-> 
-> 
-> And the next time I attach, it attaches to sdb1.
-> 
-> Any help would be greatly appreciated.
+Sorry about that.
+-- 
+Phil Dibowitz                             phil@ipom.com
+Freeware and Technical Pages              Insanity Palace of Metallica
+http://www.phildev.net/                   http://www.ipom.com/
 
-Can you delete it prior to physical removal via the sysfs attribute (echo
-foo > /sysfs/bus/scsi/devices/1:0:0:0/delete)? If that doesn't work, you
-might be running an older kernel.
+"They that can give up essential liberty to obtain a little temporary
+safety deserve neither liberty nor safety."
+  - Benjamin Franklin, 1759
 
-Is the device umounted (not open) when you disconnect it? If not, try
-Mike's recent patch (or try his patch anyway). But I would expect to see
-an oops or other odd behaviour in that case.
 
--- Patrick Mansfield
+--------------enig4D702B8ABC4DA3BDCB06A65E
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+Comment: Using GnuPG with Debian - http://enigmail.mozdev.org
+
+iD8DBQE/kzEnN5XoxaHnMrsRAqNsAJ4r2kWpdXNx43dWCKvBXawBRSY8vACfawIF
+wfzlUvtGG0YHVcEPsuRVS3o=
+=ux5w
+-----END PGP SIGNATURE-----
+
+--------------enig4D702B8ABC4DA3BDCB06A65E--
+
