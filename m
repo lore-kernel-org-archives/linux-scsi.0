@@ -1,192 +1,220 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fix the aacraid merge a bit more
-Date: Thu, 8 May 2003 21:03:42 +0200
+Subject: [PATCH] scsi_report_device_reset
+Date: Thu, 8 May 2003 21:05:41 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030508210341.A28294@lst.de>
+Message-ID: <20030508210541.C28294@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.181.86]:37647 "EHLO verein.lst.de")
-	by vger.kernel.org with ESMTP id S261968AbTEHSvH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2003 14:51:07 -0400
+Received: from verein.lst.de ([212.34.181.86]:39439 "EHLO verein.lst.de")
+	by vger.kernel.org with ESMTP id S262008AbTEHSxH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 May 2003 14:53:07 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
+aic7xxx/79xx wants a variant of scsi_report_bus_reset that operates
+only on a single device.  Implement it to get rid of shost->my_devices
+traversals in drivers.  (and move both to scsi_error.c)
 
---- 1.13/drivers/scsi/aacraid/aachba.c	Wed May  7 18:16:33 2003
-+++ edited/drivers/scsi/aacraid/aachba.c	Thu May  8 18:24:16 2003
-@@ -33,7 +33,6 @@
- #include <linux/completion.h>
- #include <asm/semaphore.h>
- #include <asm/uaccess.h>
--#define MAJOR_NR SCSI_DISK0_MAJOR	/* For DEVICE_NR() */
- #include <linux/blk.h>
- #include "scsi.h"
- #include "hosts.h"
-@@ -967,9 +966,7 @@
- 		memset(inq_data_ptr, 0, sizeof (struct inquiry_data));
+
+--- 1.62/drivers/scsi/hosts.h	Wed May  7 10:25:40 2003
++++ edited/drivers/scsi/hosts.h	Thu May  8 18:24:14 2003
+@@ -514,6 +514,7 @@
+ extern void scsi_unblock_requests(struct Scsi_Host *);
+ extern void scsi_block_requests(struct Scsi_Host *);
+ extern void scsi_report_bus_reset(struct Scsi_Host *, int);
++extern void scsi_report_device_reset(struct Scsi_Host *, int, int);
  
- 		inq_data_ptr->inqd_ver = 2;	/* claim compliance to SCSI-2 */
-- 		if(!strstr(UTS_RELEASE,"BOOT")){  // If this is not a RH driver disk kernel
--			inq_data_ptr->inqd_dtq = 0x80;	/* set RMB bit to one indicating that the medium is removable */
--		}
-+		inq_data_ptr->inqd_dtq = 0x80;	/* set RMB bit to one indicating that the medium is removable */
- 		inq_data_ptr->inqd_rdf = 2;	/* A response data format value of two indicates that the data shall be in the format specified in SCSI-2 */
- 		inq_data_ptr->inqd_len = 31;
- 		/*Format for "pad2" is  RelAdr | WBus32 | WBus16 |  Sync  | Linked |Reserved| CmdQue | SftRe */
---- 1.6/drivers/scsi/aacraid/aacraid.h	Wed May  7 22:18:41 2003
-+++ edited/drivers/scsi/aacraid/aacraid.h	Thu May  8 18:24:16 2003
-@@ -1,7 +1,6 @@
- //#define dprintk(x) printk x
- #define dprintk(x)
- 
--#include "compat.h"
- /*------------------------------------------------------------------------------
-  *              D E F I N E S
-  *----------------------------------------------------------------------------*/
-@@ -1461,12 +1460,8 @@
-  */
- static inline u32 cap_to_cyls(sector_t capacity, u32 divisor)
+ static inline void scsi_assign_lock(struct Scsi_Host *shost, spinlock_t *lock)
  {
--#ifdef CONFIG_LBD
--	do_div(capacity, divisor);
--#else
--	capacity /= divisor;
--#endif
--	return (u32) capacity;
-+	sector_div(capacity, divisor);
-+	return (u32)capacity;
+--- 1.52/drivers/scsi/scsi_error.c	Wed Apr 30 18:09:21 2003
++++ edited/drivers/scsi/scsi_error.c	Thu May  8 19:14:27 2003
+@@ -1624,6 +1624,74 @@
+ 	complete_and_exit(shost->eh_notify, 0);
  }
  
- const char *aac_driverinfo(struct Scsi_Host *);
---- 1.1/drivers/scsi/aacraid/compat.h	Wed May  7 22:08:36 2003
-+++ edited/drivers/scsi/aacraid/compat.h	Thu May  8 18:24:16 2003
-@@ -1,114 +0,0 @@
--/*
-- *	Adaptec AAC series RAID controller driver
-- *	(c) Copyright 2001 Red Hat Inc.	<alan@redhat.com>
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2, or (at your option)
-- * any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; see the file COPYING.  If not, write to
-- * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
-- *
-- */
--/*
-- * This file is for backwards compatibility with older kernel versions
-- */
--#include <linux/version.h>
--#if LINUX_VERSION_CODE  < KERNEL_VERSION(2,4,11)   
--#include <linux/blk.h>
--static inline unsigned int block_size(kdev_t dev)
--{
--	int retval = BLOCK_SIZE;
--	int major = MAJOR(dev);
--
--	if (blksize_size[major]) {
--		int minor = MINOR(dev);
--		if (blksize_size[major][minor])
--			retval = blksize_size[major][minor];
--	}
--	return retval;
--}
--#endif
--
--#if LINUX_VERSION_CODE  <= KERNEL_VERSION(2,4,7)   
--
--#ifndef COMPLETION_INITIALIZER
--
--#include <linux/wait.h>
--
--struct completion {
--	unsigned int done;
--	wait_queue_head_t wait;
--};
--#define COMPLETION_INITIALIZER(work) \
--	{ 0, __WAIT_QUEUE_HEAD_INITIALIZER((work).wait) }
--
--#define DECLARE_COMPLETION(work) \
--	struct completion work = COMPLETION_INITIALIZER(work)
--#define INIT_COMPLETION(x)	((x).done = 0)
--
--static inline void init_completion(struct completion *x)
--{
--	x->done = 0;
--	init_waitqueue_head(&x->wait);
--}
--#endif
--
--#ifndef complete_and_exit
--static inline void complete_and_exit(struct completion *comp, long code)
--{
--	/*
--	if (comp)
--		complete(comp);
--	
--	do_exit(code);
--	*/
--}
--#endif
--
--#endif
--
--#if LINUX_VERSION_CODE  <= KERNEL_VERSION(2,4,2)   
--
--static inline void scsi_set_pci_device(struct Scsi_Host *SHpnt,
--                                       struct pci_dev *pdev)
--{
--//	SHpnt->pci_dev = pdev;
--}
--
--static inline void wait_for_completion(struct completion *x)
--{
--	spin_lock_irq(&x->wait.lock);
--	if (!x->done) {
--		DECLARE_WAITQUEUE(wait, current);
--
--		wait.flags |= WQ_FLAG_EXCLUSIVE;
--		__add_wait_queue_tail(&x->wait, &wait);
--		do {
--			__set_current_state(TASK_UNINTERRUPTIBLE);
--			spin_unlock_irq(&x->wait.lock);
--			schedule();
--			spin_lock_irq(&x->wait.lock);
--		} while (!x->done);
--		__remove_wait_queue(&x->wait, &wait);
--	}
--	x->done--;
--	spin_unlock_irq(&x->wait.lock);
--}
--
--static inline int pci_set_dma_mask(struct pci_dev *dev, dma_addr_t mask)
--{
--    dev->dma_mask = mask;
--
--    return 0;
--}
--
--#endif
--    
---- 1.17/drivers/scsi/aacraid/linit.c	Wed May  7 22:18:41 2003
-+++ edited/drivers/scsi/aacraid/linit.c	Thu May  8 18:24:16 2003
-@@ -62,9 +62,7 @@
++/*
++ * Function:    scsi_report_bus_reset()
++ *
++ * Purpose:     Utility function used by low-level drivers to report that
++ *		they have observed a bus reset on the bus being handled.
++ *
++ * Arguments:   shost       - Host in question
++ *		channel     - channel on which reset was observed.
++ *
++ * Returns:     Nothing
++ *
++ * Lock status: No locks are assumed held.
++ *
++ * Notes:       This only needs to be called if the reset is one which
++ *		originates from an unknown location.  Resets originated
++ *		by the mid-level itself don't need to call this, but there
++ *		should be no harm.
++ *
++ *		The main purpose of this is to make sure that a CHECK_CONDITION
++ *		is properly treated.
++ */
++void scsi_report_bus_reset(struct Scsi_Host *shost, int channel)
++{
++	struct scsi_device *sdev;
++
++	list_for_each_entry(sdev, &shost->my_devices, siblings) {
++		if (channel == sdev->channel) {
++			sdev->was_reset = 1;
++			sdev->expecting_cc_ua = 1;
++		}
++	}
++}
++
++/*
++ * Function:    scsi_report_device_reset()
++ *
++ * Purpose:     Utility function used by low-level drivers to report that
++ *		they have observed a device reset on the device being handled.
++ *
++ * Arguments:   shost       - Host in question
++ *		channel     - channel on which reset was observed
++ *		target	    - target on which reset was observed
++ *
++ * Returns:     Nothing
++ *
++ * Lock status: No locks are assumed held.
++ *
++ * Notes:       This only needs to be called if the reset is one which
++ *		originates from an unknown location.  Resets originated
++ *		by the mid-level itself don't need to call this, but there
++ *		should be no harm.
++ *
++ *		The main purpose of this is to make sure that a CHECK_CONDITION
++ *		is properly treated.
++ */
++void scsi_report_device_reset(struct Scsi_Host *shost, int channel, int target)
++{
++	struct scsi_device *sdev;
++
++	list_for_each_entry(sdev, &shost->my_devices, siblings) {
++		if (channel == sdev->channel &&
++		    target == sdev->id) {
++			sdev->was_reset = 1;
++			sdev->expecting_cc_ua = 1;
++		}
++	}
++}
++
+ static void
+ scsi_reset_provider_done_command(struct scsi_cmnd *scmd)
+ {
+--- 1.89/drivers/scsi/scsi_lib.c	Wed Apr 30 18:09:21 2003
++++ edited/drivers/scsi/scsi_lib.c	Thu May  8 19:14:09 2003
+@@ -1313,39 +1313,6 @@
+ 	scsi_run_host_queues(shost);
+ }
  
- MODULE_AUTHOR("Red Hat Inc and Adaptec");
- MODULE_DESCRIPTION("Supports Dell PERC2, 2/Si, 3/Si, 3/Di, Adaptec Advanced Raid Products, and HP NetRAID-4M devices. http://domsch.com/linux/ or http://linux.adaptec.com");
--#if LINUX_VERSION_CODE  > KERNEL_VERSION(2,4,7)   
- MODULE_LICENSE("GPL");
+-/*
+- * Function:    scsi_report_bus_reset()
+- *
+- * Purpose:     Utility function used by low-level drivers to report that
+- *		they have observed a bus reset on the bus being handled.
+- *
+- * Arguments:   shost       - Host in question
+- *		channel     - channel on which reset was observed.
+- *
+- * Returns:     Nothing
+- *
+- * Lock status: No locks are assumed held.
+- *
+- * Notes:       This only needs to be called if the reset is one which
+- *		originates from an unknown location.  Resets originated
+- *		by the mid-level itself don't need to call this, but there
+- *		should be no harm.
+- *
+- *		The main purpose of this is to make sure that a CHECK_CONDITION
+- *		is properly treated.
+- */
+-void scsi_report_bus_reset(struct Scsi_Host *shost, int channel)
+-{
+-	struct scsi_device *sdev;
+-
+-	list_for_each_entry(sdev, &shost->my_devices, siblings) {
+-		if (channel == sdev->channel) {
+-			sdev->was_reset = 1;
+-			sdev->expecting_cc_ua = 1;
+-		}
+-	}
+-}
+-
+ int __init scsi_init_queue(void)
+ {
+ 	int i;
+--- 1.35/drivers/scsi/scsi_syms.c	Wed May  7 10:24:01 2003
++++ edited/drivers/scsi/scsi_syms.c	Thu May  8 18:24:15 2003
+@@ -65,6 +65,7 @@
+ EXPORT_SYMBOL(scsi_put_command);
+ 
+ EXPORT_SYMBOL(scsi_report_bus_reset);
++EXPORT_SYMBOL(scsi_report_device_reset);
+ EXPORT_SYMBOL(scsi_block_requests);
+ EXPORT_SYMBOL(scsi_unblock_requests);
+ EXPORT_SYMBOL(scsi_adjust_queue_depth);
+--- 1.41/drivers/scsi/aic7xxx/aic79xx_osm.c	Tue May  6 14:22:53 2003
++++ edited/drivers/scsi/aic7xxx/aic79xx_osm.c	Thu May  8 18:24:16 2003
+@@ -4404,22 +4404,19 @@
+ 	}
+         case AC_SENT_BDR:
+ 	{
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
++		WARN_ON(lun != CAM_LUN_WILDCARD);
++		scsi_report_device_reset(ahd->platform_data->host,
++					 channel - 'A', target);
++#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
+ 		Scsi_Device *scsi_dev;
+ 
+ 		/*
+ 		 * Find the SCSI device associated with this
+ 		 * request and indicate that a UA is expected.
+-		 * XXX This should really be handled by the mid-layer.
+ 		 */
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
+-		list_for_each_entry(scsi_dev,
+-				    &ahd->platform_data->host->my_devices,
+-				    siblings) {
+-#else
+ 		for (scsi_dev = ahd->platform_data->host->host_queue;
+ 		     scsi_dev != NULL; scsi_dev = scsi_dev->next) {
 -#endif
- MODULE_PARM(nondasd, "i");
- MODULE_PARM_DESC(nondasd, "Control scanning of hba for nondasd devices. 0=off, 1=on");
- MODULE_PARM(paemode, "i");
+ 			if (channel - 'A' == scsi_dev->channel
+ 			 && target == scsi_dev->id
+ 			 && (lun == CAM_LUN_WILDCARD
+--- 1.33/drivers/scsi/aic7xxx/aic7xxx_osm.c	Tue May  6 14:22:55 2003
++++ edited/drivers/scsi/aic7xxx/aic7xxx_osm.c	Thu May  8 18:24:16 2003
+@@ -4086,22 +4086,19 @@
+ 	}
+         case AC_SENT_BDR:
+ 	{
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
++		WARN_ON(lun != CAM_LUN_WILDCARD);
++		scsi_report_device_reset(ahc->platform_data->host,
++					 channel - 'A', target);
++#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
+ 		Scsi_Device *scsi_dev;
+ 
+ 		/*
+ 		 * Find the SCSI device associated with this
+ 		 * request and indicate that a UA is expected.
+-		 * XXX This should really be handled by the mid-layer.
+ 		 */
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
+-		list_for_each_entry(scsi_dev,
+-				    &ahc->platform_data->host->my_devices,
+-				    siblings) {
+-#else
+ 		for (scsi_dev = ahc->platform_data->host->host_queue;
+ 		     scsi_dev != NULL; scsi_dev = scsi_dev->next) {
+-#endif
+ 			if (channel - 'A' == scsi_dev->channel
+ 			 && target == scsi_dev->id
+ 			 && (lun == CAM_LUN_WILDCARD
