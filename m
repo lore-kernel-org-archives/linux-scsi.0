@@ -1,96 +1,54 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: bytes/CDB of SCSI pass thru grossly limited maybe
-Date: Mon, 23 Aug 2004 20:17:15 +0200
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: Incorrect response to SK/ASC/ASCQ = x 02/04/01 (becoming ready)
+Date: Mon, 23 Aug 2004 14:29:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040823181715.GA24499@suse.de>
-References: <20040731141240.GE23697@suse.de> <1092678938.4235.37.camel@patlinux.iomegacorp.com> <20040823154648.GB2301@suse.de> <20040823170827.GC24089@suse.de> <E04775E6-F529-11D8-BFA2-00039398BB5E@ieee.org>
+Message-ID: <412A3772.2000900@adaptec.com>
+References: <Pine.LNX.4.44L0.0408221154220.15992-100000@netrider.rowland.org> <412A08D9.7020502@adaptec.com> <412A15B8.2050909@optonline.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:54742 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S266491AbUHWSRU (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:62913 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S266509AbUHWS3K (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Aug 2004 14:17:20 -0400
-Content-Disposition: inline
-In-Reply-To: <E04775E6-F529-11D8-BFA2-00039398BB5E@ieee.org>
+	Mon, 23 Aug 2004 14:29:10 -0400
+In-Reply-To: <412A15B8.2050909@optonline.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-scsi@vger.kernel.org
+To: Nathan Bryant <nbryant@optonline.net>
+Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>, "Mike R." <turbanator1@verizon.net>
 
-On Mon, Aug 23 2004, Pat LaVarre wrote:
-> Jens A:
-> 
-> >What you can shove into the cdb is of lesser interest than the fact 
-> >that
-> >ATAPI itself cannot do more than
-> 
-> Yes.
-> 
-> >the request_queue structure in blkdev.h, you'll find such things as:
-> >
-> >        unsigned short          max_sectors;
-> >        unsigned short          max_phys_segments;
-> >        unsigned short          max_hw_segments;
-> >        unsigned int            max_segment_size;
-> >
-> >which are set by the driver and limit how big a request you can submit
-> >through SG_IO.
-> 
-> I will return to study this further.
-> 
-> Sorry I still do not yet immediately understand precisely who is 
-> limiting what.
-> 
-> I do not see how these 16 and 32 bit limits correspond to a 128 KiB 
-> limit on how many bytes of data may accompany a CDB.  Instead I see:
-> 
-> (1 << (4 + 16)) is 1 Mi.
-> (1 << (9 + 16)) is 32 Mi.
-> (1 << (11 + 16)) is 128 Mi.
-> 
-> (1 << 9) is 0.5 Ki, often = B/LBA of HDD
-> (1 << 11) is 2 Ki, often = B/LBA of DVD/CD.
-> (1 << 12) is 4 Ki, often = B/page of x86 virtual memory
-> (1 << 16) is 64 Ki.
-> (1 << 32) is 4 Ti.
-> 
-> No 128 Ki anywhere.
-> 
-> >What you can shove into the cdb is of lesser interest than the fact 
-> >that
-> >ATAPI itself cannot do more than 128KiB _per command_.
-> 
-> Possibly I have misunderstood what is "ATAPI itself"?
-> 
-> The PIO and DMA I know in PATAPI do not limit data bytes per command.  
-> Even PIO limits only data bytes per DRQ, not per command.
-> 
-> I think PATAPI itself is the standard launched by SFF 8020i that 
-> appears now at ANSI/ NCITS t13.org.  I see that standard as a transport 
-> for SCSI over IDE, with no definite limit on data per command, though 
-> arguably the UDMA CRC may grow less reliable if the host and device 
-> neglect to cooperate to insert such CRC often into the data.
-> 
-> I see PATAPI does limit max bytes of CDB, to 16 (x10) else to 12 (xC), 
-> by neglecting to enumerate any other CDB-containing packet lengths for 
-> the op xA1 "IDENTIFY" data to request.
+> Maybe the solution, then, instead of blocking, is to do something
+> similar to quiesce, wherein we block normal user-initiated medium access
+> but allow special requests. (?)
 
-Sorry my clowning around, I'm too ATA damaged. You can play with bigger
-transfers with something ala this applied, will allow you to pass in <=
-512KiB/command.
+Yes, something like that.
 
-===== drivers/ide/ide-cd.c 1.89 vs edited =====
---- 1.89/drivers/ide/ide-cd.c	2004-08-13 02:03:53 +02:00
-+++ edited/drivers/ide/ide-cd.c	2004-08-23 20:15:52 +02:00
-@@ -3138,6 +3138,7 @@
+> Not sure what an HOQ task attribute command is. Where in the t10.org
+> specs should I look for a definition of that?
+
+"Head Of Queue", cf., E.g. SAM-3r13, section 8.
  
- 	blk_queue_prep_rq(drive->queue, ide_cdrom_prep_fn);
- 	blk_queue_dma_alignment(drive->queue, 31);
-+	blk_queue_max_sectors(drive->queue, 1024);
- 	drive->queue->unplug_delay = (1 * HZ) / 1000;
- 	if (!drive->queue->unplug_delay)
- 		drive->queue->unplug_delay = 1;
+> How would this interact with tagged command queueing? We don't want to
+> attempt to queue other commands while START STOP UNIT is pending at the
+> device. We don't want to disable disconnects, either, otherwise the bus
+> would be blocked while waiting for START STOP UNIT, correct?
 
--- 
-Jens Axboe
+What would happen when you have SSU with IMMED=0 pending at the device
+server and you send another task with say SIMPLE task attribute? ;-)
+ 
+> Maybe this is a SCSI-novice question, but, does disconnection require
+> tagged commands? Is the Linux midlayer smart enough to know that some
+> kinds of commands need to block others until they complete?
+
+Not sure I completely understand the questions, but I don't think
+SCSI Core keeps an image of the deivice server's queues.  It may
+keep a state (send/don't send) given recently sent commands, but
+not as delicatly as a device server.
+
+		Luben
+
+
+
+
+
 
