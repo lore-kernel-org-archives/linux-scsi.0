@@ -1,73 +1,124 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Wide negotiation fails with 80->68 LVD adapter?
-Date: Sat, 26 Oct 2002 12:00:59 -0400
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: possible use-after-free in 2.5.44 scsi changes
+Date: Sat, 26 Oct 2002 19:50:25 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021026160059.GA6058@redhat.com>
-References: <200210210514.g9L5ElYp006401@angle.badbox.com> <20021021163424.GE28914@redhat.com> <20021022032435.GA11986@angle.setup.org> <3DB4E275.BC760EDE@ix.netcom.com> <20021022161644.GA15234@angle.setup.org> <20021022170316.GA31085@redhat.com> <20021022221958.GA17112@angle.setup.org> <20021026145309.GA7695@angle.setup.org>
+Message-ID: <200210270050.g9R0oQe04795@localhost.localdomain>
+References: <axboe@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed ;
+	boundary="==_Exmh_19752686880"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021026145309.GA7695@angle.setup.org>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id RAA06869
+	for <linux-scsi@vger.kernel.org>; Sat, 26 Oct 2002 17:50:37 -0700
+In-Reply-To: Message from Jens Axboe <axboe@suse.de>
+   of "Sat, 26 Oct 2002 11:29:43 +0200." <20021026092943.GB14976@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Alexy Khrabrov <braver@pobox.com>
-Cc: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Badari Pulavarty <pbadari@us.ibm.com>, Andrew Morton <akpm@digeo.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin J. Bligh" <Martin.Bligh@us.ibm.com>, Doug Ledford <dledford@redhat.com>
 
-On Sat, Oct 26, 2002 at 10:53:09AM -0400, Alexy Khrabrov wrote:
-> 
-> So I reread the drive manual, which says that 
-> Barracuda 50 drives support ANSI SCSI, SCSI-2 and SCSI-3
-> (Fast-20 and Fast-40), which it says are the same
-> as Ultra-1 and Ultra-2 for Fast-20/40, respectively.
-> Mysteriously, Ultra2 is referred to as Ultra80 elsewhere,
-> so looks like Fast-40 _is_ 80?  If SCSI veterans could
-> clarify this, I'd see how 40=80...  Especially, given
-> aic7xxx says something about 80 (40 MHz) in parentheses...
+This is a multipart MIME message.
 
-You aren't paying attention to the units of measure.  The 40 in
-Ultra2/Fast40 is 40MHz (aka, 40 million cycles per second).  The SCSI bus
-itself is either narrow (8 bits) or wide (16 bits).  The speed rating you
-are referring to is in Mega*BYTES* per second.  So, to get the total
-speed, you multiply the frequency of data transfer (the MHz part) times
-how many bytes are transferred in each data transfer operation (aka, there
-are 8 bits per byte, so a narrow bus transfers exactly one byte of
-information in each transfer cycle, while a wide bus transfers 2 bytes of
-information in each cycle).  So, a Wide (16 bit, 2 byte) bus operating at
-40MHz transfer frequency is actually transferring data at a rate of 80
-MegaBytes of data per second.
+--==_Exmh_19752686880
+Content-Type: text/plain; charset=us-ascii
 
-> In all cases, seems that it's really the drive, Barracuda 50
-> family is Ultra2 <=> Ultra80 (right?) but I was able to
-> enable Wide Negotiation and set speed to 80, and aic7xxx v6.2.8
-> showed them registered at 80.  I'm just curious if I still could
-> kinda spin them up to 160 anyways...  :-)
+axboe@suse.de said:
+> Irk no, you cannot just clear valid information! This is _not_ a fix,
+> it's a hack.
 
-No.  A drive will *only* do what it is capable of doing, there is no
-margin there for overclocking (and in fact the negotiation protocol won't
-allow it, on most 80MByte/s drives if you set the Adaptec BIOS to
-160MByte/s, the card and drive will still end up at 80MByte/s anyway
-because the drive firmware and the controller driver have a message
-protocol that they follow to negotiate the best possible speed that both
-of them support and obviously if the drive only supports 80MByte/s
-transfers, then that's the best that both of them support, but in your
-case the drive appears to be locking up during the transfer speed
-negotiation phase which could be the fault of the linux scsi driver you
-are using or the fault of the drive firmware).
+> Use a different flag, or maybe use REQ_DONTPREP or similar. 
 
-> Hence, so far, both SCA<->68 LVD adapters worked as advertised.
-> I'm going to get a real 160 SCA drive and test it further.
-> In the same vein, if I do end up getting an Ultra 320 card,
-> and I will get an Adaptec one, what should I look for in the
-> drive to see if it's capable of supporting 320?
+OK, what about this.  It uses REQ_DONTPREP, and could be a precursor to moving 
+the SCSI subsystem to using the request prep function.
 
-The card and the drive *both* have to support 320 speeds, and you have to 
-have a driver for the 320 card.  Justin Gibbs has a driver for the adaptec 
-320 cards, but it isn't in all the stock linux kernels yet (I think it's 
-in 2.4.19 and later, and should be in the 2.5 kernel series pretty soon).
+James
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+
+--==_Exmh_19752686880
+Content-Type: text/plain ; name="tmp.diff"; charset=us-ascii
+Content-Description: tmp.diff
+Content-Disposition: attachment; filename="tmp.diff"
+
+# This is a BitKeeper generated patch for the following project:
+# Project Name: Linux kernel tree
+# This patch format is intended for GNU patch command version 2.5 or higher.
+# This patch includes the following deltas:
+#	           ChangeSet	1.823   -> 1.824  
+#	 drivers/scsi/scsi.h	1.30    -> 1.31   
+#	drivers/scsi/scsi_lib.c	1.36    -> 1.37   
+#	 drivers/scsi/scsi.c	1.50    -> 1.51   
+#
+# The following is the BitKeeper ChangeSet Log
+# --------------------------------------------
+# 02/10/26	jejb@mulgrave.(none)	1.824
+# [SCSI] fix memory etc. leak caused by double preparing requeued commands
+# --------------------------------------------
+#
+diff -Nru a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+--- a/drivers/scsi/scsi.c	Sat Oct 26 19:46:01 2002
++++ b/drivers/scsi/scsi.c	Sat Oct 26 19:46:01 2002
+@@ -658,7 +658,7 @@
+  * Notes:       This could be called either from an interrupt context or a
+  *              normal process context.
+  */
+-static int scsi_mlqueue_insert(Scsi_Cmnd * cmd, int reason)
++int scsi_mlqueue_insert(Scsi_Cmnd * cmd, int reason)
+ {
+ 	struct Scsi_Host *host = cmd->host;
+ 	unsigned long flags;
+diff -Nru a/drivers/scsi/scsi.h b/drivers/scsi/scsi.h
+--- a/drivers/scsi/scsi.h	Sat Oct 26 19:46:01 2002
++++ b/drivers/scsi/scsi.h	Sat Oct 26 19:46:01 2002
+@@ -480,6 +480,7 @@
+ 			void (*done) (struct scsi_cmnd *),
+ 			int timeout, int retries);
+ extern int scsi_dev_init(void);
++extern int scsi_mlqueue_insert(struct scsi_cmnd *, int);
+ 
+ /*
+  * Newer request-based interfaces.
+diff -Nru a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c	Sat Oct 26 19:46:01 2002
++++ b/drivers/scsi/scsi_lib.c	Sat Oct 26 19:46:01 2002
+@@ -1005,7 +1005,8 @@
+ 		req = NULL;
+ 		spin_unlock_irq(q->queue_lock);
+ 
+-		if (SCpnt->request->flags & (REQ_CMD | REQ_BLOCK_PC)) {
++		if (!(SCpnt->request->flags & REQ_DONTPREP)
++		    && (SCpnt->request->flags & (REQ_CMD | REQ_BLOCK_PC))) {
+ 			/*
+ 			 * This will do a couple of things:
+ 			 *  1) Fill in the actual SCSI command.
+@@ -1026,18 +1027,8 @@
+ 			 * required).
+ 			 */
+ 			if (!scsi_init_io(SCpnt)) {
++				scsi_mlqueue_insert(SCpnt, SCSI_MLQUEUE_DEVICE_BUSY);
+ 				spin_lock_irq(q->queue_lock);
+-				SHpnt->host_busy--;
+-				SDpnt->device_busy--;
+-				if (SDpnt->device_busy == 0) {
+-					SDpnt->starved = 1;
+-					SHpnt->some_device_starved = 1;
+-				}
+-				SCpnt->request->special = SCpnt;
+-				SCpnt->request->flags |= REQ_SPECIAL;
+-				if(blk_rq_tagged(SCpnt->request))
+-					blk_queue_end_tag(q, SCpnt->request);
+-				_elv_add_request(q, SCpnt->request, 0, 0);
+ 				break;
+ 			}
+ 
+@@ -1058,6 +1049,7 @@
+ 				continue;
+ 			}
+ 		}
++		SCpnt->request->flags |= REQ_DONTPREP;
+ 		/*
+ 		 * Finally, initialize any error handling parameters, and set up
+ 		 * the timers for timeouts.
+
+--==_Exmh_19752686880--
+
+
