@@ -1,46 +1,68 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: DAC960 + sym53c8xx conflict
-Date: Mon, 16 Aug 2004 12:20:34 +0100
+From: Olaf Hering <olh@suse.de>
+Subject: Re: recent sym2 breakage
+Date: Mon, 16 Aug 2004 13:37:05 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040816112034.GC28995@parcelfarce.linux.theplanet.co.uk>
-References: <1092628387.2548.14.camel@fs2>
+Message-ID: <20040816113705.GA6015@suse.de>
+References: <20040816000146.3f484151.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:5306 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S267543AbUHPLUf
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Aug 2004 07:20:35 -0400
+Received: from cantor.suse.de ([195.135.220.2]:48329 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S266806AbUHPLhz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Aug 2004 07:37:55 -0400
 Content-Disposition: inline
-In-Reply-To: <1092628387.2548.14.camel@fs2>
+In-Reply-To: <20040816000146.3f484151.akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Michael <mozstuff@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org, linuxppc64-dev@lists.linuxppc.org
 
-On Sun, Aug 15, 2004 at 10:53:07PM -0500, Michael wrote:
-> I've got a 4-processor Intel SC450NX-based system with motherboard
-> Sym53c896 dual controller driven a Mylex Acceleraid 200. The motherboard
-> also has a sym53c810a which drives a Sony SDT-9000 tape drive. This
-> combo has always worked well until I tried updating to a 2.6 kernel.
-> 
-> When I load 2.6 (tried 2.6. - 2.6.8-rc4 (mm tree too)) every works OK
-> until I load the sym53c8xx module. When that module is loaded all access
-> to the drives connected to the DAC960 vanishes. I get no errors and the
-> system is not locked up. Any attempt to access the disks on the DAC960
-> simply hangs.
-> 
-> Any ideas? I hacked teh sym driver to remove all support for the 896
-> chip, but it didn't.
+ On Mon, Aug 16, Andrew Morton wrote:
 
-On 2.4, did you get the message:
+>=20
+> So I'm putting together 2.6.8.1-mm1, which is bigger than Ben Hur and=
+ it
+> seems that someone broke the sym2 driver, on ppc64 at least.
+>=20
+> It runs OK, but a `halt -p' spits nasty messages, then hangs.
 
-        printf_info("%s: not initializing, driven by RAID controller.\n",
-                                            sym_name(device));
+sym2 is a bit flaky in 2.6.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Does the vanilla kernel work ok for you? You might need at least this
+patch in case of rtas errors:
+
+
+diff -purNX /suse/olh/kernel/kernel_exclude.txt linux-2.6.8.1.orig/arch=
+/ppc64/kernel/rtas.c linux-2.6.8.1-olh/arch/ppc64/kernel/rtas.c
+--- linux-2.6.8.1.orig/arch/ppc64/kernel/rtas.c	2004-08-14 12:54:50.000=
+000000 +0200
++++ linux-2.6.8.1-olh/arch/ppc64/kernel/rtas.c	2004-08-15 19:19:49.0000=
+00000 +0200
+@@ -31,6 +31,8 @@
+ #include <asm/delay.h>
+ #include <asm/uaccess.h>
+=20
++extern int mem_init_done;
++
+ struct flash_block_list_header rtas_firmware_flash_list =3D {0, NULL};
+=20
+ struct rtas_t rtas =3D {=20
+@@ -165,6 +167,7 @@ int rtas_call(int token, int nargs, int=20
+=20
+ 	/* Log the error in the unlikely case that there was one. */
+ 	if (unlikely(logit)) {
++		if (mem_init_done)
+ 		buff_copy =3D kmalloc(RTAS_ERROR_LOG_MAX, GFP_ATOMIC);
+ 		if (buff_copy) {
+ 			memcpy(buff_copy, rtas_err_buf, RTAS_ERROR_LOG_MAX);
+
+--=20
+USB is for mice, FireWire is for men!
+
+sUse lINUX ag, n=C3=9CRNBERG
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
