@@ -1,39 +1,52 @@
-From: James.Smart@Emulex.Com
-Subject: [Patch] Missing suspend state - Block to Offline
-Date: Tue, 16 Nov 2004 16:38:15 -0500
-Message-ID: <0B1E13B586976742A7599D71A6AC733C02F275@xbl3.ma.emulex.com>
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: [PATCH] aacraid: fix integer constant warning
+Date: Tue, 16 Nov 2004 15:13:31 -0800
+Message-ID: <419A899B.6010401@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+ boundary="------------030306090708000107090400"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:42456 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S261832AbUKPViV convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Nov 2004 16:38:21 -0500
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id iAGLcGni012197
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Nov 2004 13:38:17 -0800 (PST)
-content-class: urn:content-classes:message
+Received: from fire.osdl.org ([65.172.181.4]:11246 "EHLO fire-1.osdl.org")
+	by vger.kernel.org with ESMTP id S261897AbUKPX0S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Nov 2004 18:26:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-James,
+This is a multi-part message in MIME format.
+--------------030306090708000107090400
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The following got lost in the shuffle with the updated suspend patches. It allows a blocked->offline sdev state transition.
 
-Your patch: http://marc.theaimsgroup.com/?l=linux-scsi&m=109884146519503&w=2
-Original proposal: http://marc.theaimsgroup.com/?l=linux-scsi&m=109776477201239&w=2
+drivers/scsi/aacraid/aachba.c:1140: warning: integer constant is too 
+large for "long" type
 
--- James S
+diffstat:=
+  drivers/scsi/aacraid/aachba.c |    2 +-
+  1 files changed, 1 insertion(+), 1 deletion(-)
 
---- scsi_lib.c.2.6.10-rc2	2004-11-16 09:03:58.000000000 -0500
-+++ scsi_lib.c.NEW	2004-11-16 16:24:49.565051816 -0500
-@@ -1668,6 +1668,7 @@
- 		case SDEV_CREATED:
- 		case SDEV_RUNNING:
- 		case SDEV_QUIESCE:
-+		case SDEV_BLOCK:
- 			break;
- 		default:
- 			goto illegal;
+Signed-off-by: Randy Dunlap <rddunlap@osdl.org>
+
+--------------030306090708000107090400
+Content-Type: text/x-patch;
+ name="aachba_const.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="aachba_const.patch"
+
+diff -Naurp ./drivers/scsi/aacraid/aachba.c~aachba_const ./drivers/scsi/aacraid/aachba.c
+--- ./drivers/scsi/aacraid/aachba.c~aachba_const	2004-11-16 13:33:33.951988776 -0800
++++ ./drivers/scsi/aacraid/aachba.c	2004-11-16 14:27:58.464707408 -0800
+@@ -1137,7 +1137,7 @@ int aac_scsi_cmd(struct scsi_cmnd * scsi
+ 		char *cp;
+ 
+ 		dprintk((KERN_DEBUG "READ CAPACITY command.\n"));
+-		if (fsa_dev_ptr[cid].size <= 0x100000000)
++		if (fsa_dev_ptr[cid].size <= 0x100000000ULL)
+ 			capacity = fsa_dev_ptr[cid].size - 1;
+ 		else
+ 			capacity = (u32)-1;
+
+--------------030306090708000107090400--
