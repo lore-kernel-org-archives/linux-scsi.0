@@ -1,67 +1,95 @@
-From: Douglas Gilbert <dougg@torque.net>
+From: Mike Anderson <andmike@us.ibm.com>
 Subject: Re: [PATCH] scsi sysfs update (upper 2/3)
-Date: Fri, 08 Nov 2002 14:34:20 +1100
+Date: Thu, 7 Nov 2002 20:13:11 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DCB30BC.7040703@torque.net>
-References: <20021107073619.GA1390@beaverton.ibm.com> <20021107073943.GB1390@beaverton.ibm.com> <20021107182947.B15350@sgi.com> <20021107164152.GD1292@beaverton.ibm.com> <20021108012047.A17391@infradead.org> <20021108022158.GD1292@beaverton.ibm.com>
-Reply-To: dougg@torque.net
+Message-ID: <20021108041311.GE1292@beaverton.ibm.com>
+References: <20021107073619.GA1390@beaverton.ibm.com> <20021107073943.GB1390@beaverton.ibm.com> <20021107182947.B15350@sgi.com> <20021107164152.GD1292@beaverton.ibm.com> <20021108012047.A17391@infradead.org> <20021108022158.GD1292@beaverton.ibm.com> <3DCB30BC.7040703@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3DCB30BC.7040703@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
+To: Douglas Gilbert <dougg@torque.net>
 Cc: linux-scsi@vger.kernel.org
 
-Mike Anderson wrote:
-> Christoph Hellwig [hch@infradead.org] wrote:
+Douglas Gilbert [dougg@torque.net] wrote:
+> Mike,
+> I have put scsi_debug's parameters under /bus/scsi/drivers
+> and scsi_debug obviously isn't an upper layer driver. Also
+> I would be tempted to put mid level parameters there (if
+> there were any). Where else should driver parameters be
+> placed for drivers that have no association with any
+> other bus?
 > 
->>On Thu, Nov 07, 2002 at 08:41:52AM -0800, Mike Anderson wrote:
->>
->>>>>-	rc = scsi_register_device(&sd_template);
->>>>>+	rc = scsi_bus_driver_register(&sd_template);
->>>>
->>>>Umm, no.  We don't register a bus.  Just leave the name unchanged until
->>>>we there is some commonly agreed upon upper layer terminology.
->>>
->>>Well we are registering a driver with the device model scsi_bus (i.e a
->>>driver_register on scsi_bus_type).
->>
->>We register a scsi upperlayer driver with the midlayer, we don't care
->>about the implementation, and it's certainly not a bus.  I do btw
->>disagree strongly with using the device model bus type for upper level
->>drivers.  We have a bus in scsi, and that's the connection between the
->>HBA and the devices.  To make any sense out of the device model these
->>devices must be childs of the HBA.
->>
-> 
-> 
-> Is the disagreement the function name, bus name, or the concept of
-> registering these drivers with sysfs?
-> 
-> I know the model is not an exact fit, but if we want to use the sysfs
-> infrastructure all drivers must be associated with a bus. HBAs belong to
-> there parent bus. They can have associations which I added in this patch
-> to create a scsi-host class. We cannot create a bus under the HBA. All
-> buses are default set to a parent of bus_subsys.
-> 
-> The /bus/scsi is a logical bus (an aggregation of all scsi buses). The
-> upperlayer drivers are the only drivers that should show up under
-> /bus/scsi/drivers and the only drivers that can bind with scsi_devices.  
 
-Mike,
-I have put scsi_debug's parameters under /bus/scsi/drivers
-and scsi_debug obviously isn't an upper layer driver. Also
-I would be tempted to put mid level parameters there (if
-there were any). Where else should driver parameters be
-placed for drivers that have no association with any
-other bus?
+Putting driver related attributes under your driver is not wrong.  In
+the patch I sent out I created an artifical bus for scsi_debug. The bus
+looks similar to a PCI bus. It needs some extensions to allow for
+adding multiple adapters. This allows scsi_debug to more accurately
+simulate a pci or other bus adapter. It is also registering as a
+scsi-host class of drivers.
 
-There is also the conundrum of driver parameters for
-something like advansys that has one host on ISA, another
-on PCMCIA and a third on PCI (unlikely but possible).
+I have attached an out of an example tree below. I cut a lot of devices
+to make it fit, but you should still be able to see the layout.
 
-<snip/>
 
-Doug Gilbert
+> There is also the conundrum of driver parameters for
+> something like advansys that has one host on ISA, another
+> on PCMCIA and a third on PCI (unlikely but possible).
+
+This might be a better question for Patrick Mochel, but I believe there
+is nothing that would prevent the driver from registering multiple
+driver objects on each of the associated buses.
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
+.
+|-- bus
+|   |-- pci
+|   |   |-- devices
+|   |   |   |-- 01:03.0 -> ../../../devices/pci1/01:03.0
+|   |   |   |-- 01:03.1 -> ../../../devices/pci1/01:03.1
+|   |   `-- drivers
+|   |       |-- aic7xxx
+|   |       |   |-- 01:03.0 -> ../../../../devices/pci1/01:03.0
+|   |       |   `-- 01:03.1 -> ../../../../devices/pci1/01:03.1
+|   |-- scsi
+|   |   |-- devices
+|   |   |   |-- 3:0:0:0 -> ../../../devices/pci1/01:03.1/3:0:0:0
+|   |   |   |-- 3:0:0:0:gen -> ../../../devices/pci1/01:03.1/3:0:0:0/3:0:0:0:gen
+|   |   |   |-- 3:0:4:0 -> ../../../devices/pci1/01:03.1/3:0:4:0
+|   |   |   |-- 3:0:4:0:gen -> ../../../devices/pci1/01:03.1/3:0:4:0/3:0:4:0:gen
+|   |   |   |-- 4:0:0:0 -> ../../../devices/scsi_dbg_fake/02:05.0/4:0:0:0
+|   |   |   |-- 4:0:0:0:gen -> ../../../devices/scsi_dbg_fake/02:05.0/4:0:0:0/4:0:0:0:gen
+|   |   `-- drivers
+|   |       |-- sd
+|   |       |   |-- 3:0:0:0 -> ../../../../devices/pci1/01:03.1/3:0:0:0
+|   |       |   |-- 3:0:4:0 -> ../../../../devices/pci1/01:03.1/3:0:4:0
+|   |       |   |-- 3:0:5:0 -> ../../../../devices/pci1/01:03.1/3:0:5:0
+|   |       |   |-- 4:0:0:0 -> ../../../../devices/scsi_dbg_fake/02:05.0/4:0:0:0
+|   |       |-- sg
+|   |       |   |-- 3:0:0:0:gen -> ../../../../devices/pci1/01:03.1/3:0:0:0/3:0:0:0:gen
+|   |       |   |-- 3:0:4:0:gen -> ../../../../devices/pci1/01:03.1/3:0:4:0/3:0:4:0:gen
+|   |       |   |-- 4:0:0:0:gen -> ../../../../devices/scsi_dbg_fake/02:05.0/4:0:0:0/4:0:0:0:gen
+|   |-- scsi_dbg_fake
+|   |   |-- devices
+|   |   |   `-- 02:05.0 -> ../../../devices/scsi_dbg_fake/02:05.0
+|   |   `-- drivers
+|   |       `-- scsi_debug
+|   |           `-- 02:05.0 -> ../../../../devices/scsi_dbg_fake/02:05.0
+|-- class
+|   `-- scsi-host
+|       |-- devices
+|       |   `-- 0 -> ../../../devices/scsi_dbg_fake/02:05.0
+|       `-- drivers
+|-- devices
+|   |-- scsi_dbg_fake
+|   |   `-- 02:05.0
+|   |       `-- 4:0:0:0
+|   |           |-- 4:0:0:0:gen
+|   |           `-- block -> ../../../../block/sdd
 
