@@ -1,31 +1,28 @@
-From: "Amit D. Chaudhary" <amit_c@comcast.net>
-Subject: Re: [PATCH] qla2xxx data transfer direction
-Date: Thu, 13 May 2004 14:51:40 -0700
+From: "Lee Xing" <lxing@Crossroads.com>
+Subject: A question on low-level driver document
+Date: Thu, 13 May 2004 18:47:05 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40A3EDEC.70502@comcast.net>
-References: <B179AE41C1147041AA1121F44614F0B0DD015B@AVEXCH02.qlogic.org>
+Message-ID: <519672568F040C41B6FAC21ADF51B18FEFF1@mailnode1.commstor.crossroads.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sccrmhc11.comcast.net ([204.127.202.55]:32766 "EHLO
-	sccrmhc11.comcast.net") by vger.kernel.org with ESMTP
-	id S265130AbUEMVxs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 May 2004 17:53:48 -0400
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0DD015B@AVEXCH02.qlogic.org>
+Received: from email.crossroads.com ([65.68.235.6]:42297 "HELO
+	email.crossroads.com") by vger.kernel.org with SMTP id S264505AbUEMXrJ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 May 2004 19:47:09 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>, tonyb@cybernetics.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+Hi,
+
+I could find <<SCSI mid_level - lower_lever driver interface>> for Linux kernel 2.6.  Is there a similar document for Linux 2.4?  The interface between mid_level and lower_level has quite a few changes from lk 2.4 to 2.6.
+
+I'm trying to find the call stack after a low-level driver is loaded.  For example, after low-level driver calls scsi_register(), what's next, and how SCSI disks are registered with mid-level.
+
+Thanks,
 
 
+Lee
 
-Andrew Vasquez wrote:
-
-> Thanks for the patch and your efforts at refining (fixing :) the
-> driver logic.  Neither the 6.x or 7.x series drivers (those for 2.4.x)
-> are integrated into the mainline kernels, so you don't necessarily
-> need to CC linux-scsi.  Just send either myself the patches and/or
-> support@qlogic.com -- and they will get properly routed.
-Actually I would recommend sending it to linux-scsi as it is 
-informational both from a user and educational point of view.
-
-Amit
