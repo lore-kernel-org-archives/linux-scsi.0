@@ -1,8 +1,8 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: PATCH for g_NCR5380, DTC3151 support
-Date: 02 Jan 2003 17:35:08 +0000
+Date: 02 Jan 2003 17:34:51 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1041528908.24809.11.camel@irongate.swansea.linux.org.uk>
+Message-ID: <1041528891.24830.10.camel@irongate.swansea.linux.org.uk>
 References: <200301020830.h028UPV20703@atle.abc.se>
 Mime-Version: 1.0
 Content-Type: text/plain
