@@ -1,26 +1,44 @@
-From: "David S. Miller" <davem@redhat.com>
-Subject: Re: drivers/scsi/Kconfig
-Date: Thu, 05 Jun 2003 01:05:55 -0700 (PDT)
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] make the SCSI mid-layer obey the device online flag
+Date: 05 Jun 2003 08:59:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030605.010555.118599760.davem@redhat.com>
-References: <20030530163817.GM28581@parcelfarce.linux.theplanet.co.uk>
-	<20030531043413.D4327@devserv.devel.redhat.com>
-	<20030604175020.GI28581@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <1054817958.1760.17.camel@mulgrave>
+References: <1054742495.1674.18.camel@mulgrave>
+	<20030604165146.GA1426@beaverton.ibm.com>
+	<1054754103.2360.8.camel@mulgrave>  <20030604173413.A9632@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pizda.ninka.net ([216.101.162.242]:16608 "EHLO pizda.ninka.net")
-	by vger.kernel.org with ESMTP id S264501AbTFEHyn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jun 2003 03:54:43 -0400
-In-Reply-To: <20030604175020.GI28581@parcelfarce.linux.theplanet.co.uk>
+Received: from nat9.steeleye.com ([65.114.3.137]:53766 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264660AbTFEMqB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Jun 2003 08:46:01 -0400
+In-Reply-To: <20030604173413.A9632@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: willy@debian.org
-Cc: zaitcev@redhat.com, sparclinux@vger.kernel.org, ultralinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Mike Anderson <andmike@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
 
-   From: Matthew Wilcox <willy@debian.org>
-   Date: Wed, 4 Jun 2003 18:50:20 +0100
+On Wed, 2003-06-04 at 20:34, Patrick Mansfield wrote:
+> I thought that USB sending a command after online cleared was likely the
+> last prepped request being sent. This can't be fixed within scsi_prep_fn,
+> since it will not be called for the last request after online is cleared.
+> 
+> So we might as well move all the checking of online into the
+> scsi_request_fn.
 
-   Comments from m68k or sparc64 people invited ...
+Not unless there's agreement that prepared commands need killing.  To do
+this in the simple fashion I outlined in the email (with the two
+conditions), the prep function is the correct place for the check.
 
-Looks ok.
+If the check is moved into the request function you have to worry about
+freeing the allocated structures and terminating it yourself, which adds
+unnecessary complexity.
+
+Since the LLD knows it must handle commands until the slave_destroy, I
+don't see a compelling reason to go to extraordinary lengths to prevent
+it from seeing them.
+
+James
+
+
