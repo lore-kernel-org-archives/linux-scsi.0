@@ -1,99 +1,40 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: Symbios PCI error recovery [Was: Re: [PATCH/RFC] ppc64: EEH +
- SCSI recovery (IPR only)]
-Date: Tue, 22 Mar 2005 11:38:36 -0600
-Message-ID: <4240581C.1000906@us.ibm.com>
-References: <20050223002409.GA10909@austin.ibm.com>
-	<20050223174356.GH13081@kroah.com>
-	<1109207532.5384.32.camel@gaston>
-	<20050224013137.GF2088@austin.ibm.com>
-	<20050226063609.GC7036@colo.lackof.org>
-	<20050321231028.GV498@austin.ibm.com>
-Reply-To: brking@us.ibm.com
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: adaptec 2120S software under RedHat 8.0 and FC2
+Date: Tue, 22 Mar 2005 12:43:50 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458BED2FA1@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <20050321231028.GV498@austin.ibm.com>
-List-Unsubscribe: <https://ozlabs.org/cgi-bin/mailman/listinfo/linuxppc64-dev>,
-	<mailto:linuxppc64-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc64-dev>
-List-Post: <mailto:linuxppc64-dev@ozlabs.org>
-List-Help: <mailto:linuxppc64-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/cgi-bin/mailman/listinfo/linuxppc64-dev>,
-	<mailto:linuxppc64-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc64-dev-bounces@ozlabs.org
-Errors-To: linuxppc64-dev-bounces@ozlabs.org
-To: Linas Vepstas <linas@austin.ibm.com>
-Cc: linuxppc64-dev@ozlabs.org, Grant Grundler <grundler@parisc-linux.org>, linux-scsi@vger.kernel.org, matthew@wil.cx
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Received: from magic.adaptec.com ([216.52.22.17]:21186 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261468AbVCVRn6 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Mar 2005 12:43:58 -0500
+content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ross Macintyre <raz@macs.hw.ac.uk>, Christoph Hellwig <hch@infradead.org>
+Cc: Mark Haverkamp <markh@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, matt_domsch@dell.com
 
-Linas Vepstas wrote:
-> Hi,
-> 
-> There has been a running thread for a while on several mailing lists 
-> concerning PCI bus error recovery.  Very breifly, some architectures
-> have PCI error recovery mechanisms built into them (e.g. IBM PowerPC,
-> also new PCI-Express chips from Intel (and other vendors) and possibly
-> pa-risc and others).  
-> 
-> I've been trying to prototype  error recovery.  I currently have
-> ethernet and the IPR scsi driver working, but I am having trouble with 
-> the symbios driver.  I need help/advice ... 
-> 
-> On Fri, Feb 25, 2005 at 11:36:09PM -0700, Grant Grundler was heard to remark:
-> 
->>On Wed, Feb 23, 2005 at 07:31:37PM -0600, Linas Vepstas wrote:
->>
->>>I also want to do the symbios driver...
->>
->>FYI, Mathew Wilcox maintains the sym2 driver in cvs.parisc-linux.org.
-> 
-> 
-> 
-> My current hardware will halt all i/o to/from the symbios controller
-> upon detection of a PCI error.  The recovery proceedure that I am
-> currently using is to call system firmware (aka 'bios') to raise
-> and then lower the #RST pci signal line for 1/4 second, then wait 2
-> seconds for the  PCI bus to settle, then restore the PCI config space
-> registers (BARs, interrupt line, etc) to what they used to be. Then,
-> I call sym_start_up() in an attempt to get the symbios card working
-> again.  And that's where I get stuck ... 
-> 
-> My assumption is that after the #RST, that the symbios card will sit
-> there, dumb and stupid, with no scripts running.  But sometimes I find 
-> that the card has done something to make the PCI error hardware trip
-> again.  Typically, this means that the card attempted to DMA to some
-> address that its not allowed to touch, or raised #SERR or possibly 
-> #PERR (I can't tell which). 
+Christoph Hellwig said:
+> We're not going to add new procfs handler for scsi HBA drivers.
 
-What config registers are you restoring? Is it possible symbios does not
-like something in your config restore?
+And that was the answer to the question, thanks for answering it. Isn't
+it nice to ask for guidance and get such direct answers?
 
-Another possiblity is that asserting PCI reset is not cleanly resetting
-the card. Does PCI reset force BIST to be run on these cards? You could
-try to manually run BIST on the card after the PCI reset to see if that
-helps, or you could try power cycling the slot instead of using PCI reset.
+Christoph Hellwig then goes on a tirade:
+> Unfortunately this problems shows once more that Adaptec managment
+doesn't
+> care the slightest bit for Linux and has the worst support of all RAID
+/
+> Storage vendors.  I can only advise OEMs and customers to stay far
+away
+> from Adaptec equipment if they want to use Linux.
 
--Brian
+No, this shows that you have no interest in supporting legacy
+applications and do not care for the struggling customers of Linux. I
+assure you, we care for Linux, the Customers of Linux and the OEMs that
+add Linux to their product support; and when one spreads this much
+*love* around, one must always compromise.
 
-> 
-> Sometimes, I get the PCI error while the card is sitting there idly
-> after the #RST, but more often, I get the error in sym_chip_reset(),
-> immediately after the   OUTB (nc_istat, SRST);
-> 
-> Any clue what this is about? Am I missing something? I'm rather
-> perplexed at this point, any clues/hints/suggestions are welcome.
-> 
-> --linas
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+Sincerely -- Mark Salyzyn
