@@ -1,36 +1,57 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
-Date: Wed, 15 Sep 2004 12:14:12 -0400
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: RE: Adding transport attributes to qla1280
+Date: Wed, 15 Sep 2004 09:55:24 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <41486A54.7070607@pobox.com>
-References: <414711AC.5030200@rtr.ca> <41471A84.4090200@pobox.com> <4147C38C.3000104@torque.net> <414839F0.20008@rtr.ca> <20040915125545.GE4111@suse.de> <20040915131311.GD642@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <B179AE41C1147041AA1121F44614F0B0DD04B7@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:30385 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S266725AbUIOQOa
+Received: from avexch02.qlogic.com ([198.70.193.200]:12993 "EHLO
+	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S266539AbUIOQ7s convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2004 12:14:30 -0400
-In-Reply-To: <20040915131311.GD642@parcelfarce.linux.theplanet.co.uk>
+	Wed, 15 Sep 2004 12:59:48 -0400
+Content-Class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: Jens Axboe <axboe@suse.de>, Mark Lord <lsml@rtr.ca>, dougg@torque.net, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Jeremy Higdon <jeremy@classic.engr.sgi.com>, Jes Sorensen <jes@wildopensource.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Matthew Wilcox wrote:
-> On Wed, Sep 15, 2004 at 02:55:46PM +0200, Jens Axboe wrote:
+
+On Wednesday, September 15, 2004 8:39 AM, James Bottomley wrote:
 > 
->>The remaining piece (well the biggest one at least) is a nice /dev/disk
->>abstraction. That's currently the biggest obstacle to nice generic block
->>drivers, not the infrastructure.
+> I've run into rather a nasty problem in the qla1280 drivers to do
+> with transport attributes.  My plan, if I can get settable
+> attributes to work, is to convert it over to the SPI transport class
+> and pull in domain validation for free. 
 > 
+> The problem is that the API in the driver for setting attributes:
+> qla1280_set_target_parameters() doesn't seem to work ... at least it
+> does apparently set the parameters using a qla1280 mailbox command,
+> and if I read them back again with the other command, it confirms
+> the setting.  However, the next attempt to access the device hangs
+> the entire system. 
 > 
-> I'll just take this opportunity to plug /dev/drive over /dev/disk.
+> My deduction from all of this is that the HBA is changing the
+> transfer settings on its side but not renegotiating those new
+> settings with the device.  However, without a bus analyser, I can't
+> be sure I'm correct.
+> 
 
+I'll ping locally for some information.
 
-I'll take this opportunity to recommend that posters avoid following 
-this sub-thread, for fear of distracting from the real technical issues....
+> So, since this entire HBA is one of the magic ones that runs in
+> proprietary firmware and has no documentation even for the mailbox
+> command interface, could someone who has access to the secret
+> documents look in them and tell me how I can do this?
+> 
+> Alternatively, actually releasing the specs for what are now at
+> least 4 year old chips would be a very nice gesture on the part of
+> Qlogic.
+> 
 
-	Jeff
+Christophe had expressed interest some time ago for QLogic SCSI specs.
+I've been trying to negotiate with locals here at QLogic for the
+specs. release.
 
-
+--
+AV
