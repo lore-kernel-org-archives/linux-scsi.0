@@ -1,88 +1,66 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: [usb-storage] ziptool
-Date: 14 Nov 2003 10:07:58 -0700
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Time to conclude the Sony USB mass storage thread
+Date: Fri, 14 Nov 2003 09:26:44 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1068829678.5539.28.camel@patrh9>
-References: <UTC200311140225.hAE2Pq515023.aeb@smtp.cwi.nl>
+Message-ID: <20031114092644.A2794@beaverton.ibm.com>
+References: <1068825146.2134.6.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:27776 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264548AbTKNRIh
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Nov 2003 12:08:37 -0500
-In-Reply-To: <UTC200311140225.hAE2Pq515023.aeb@smtp.cwi.nl>
+Received: from e5.ny.us.ibm.com ([32.97.182.105]:17033 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S264574AbTKNR07 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Nov 2003 12:26:59 -0500
+Content-Disposition: inline
+In-Reply-To: <1068825146.2134.6.camel@mulgrave>; from James.Bottomley@steeleye.com on Fri, Nov 14, 2003 at 09:52:24AM -0600
 List-Id: linux-scsi@vger.kernel.org
-To: andries.brouwer@cwi.nl
-Cc: usb-storage@one-eyed-alien.net, linux-scsi@vger.kernel.org, patmans@us.ibm.com, dmitrik@users.sourceforge.net, idan@idanso.dyndns.org, james.bottomley@steeleye.com, mdharm-scsi@one-eyed-alien.net, ronald@kuetemeier.com, stern@rowland.harvard.edu
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: usb-storage@one-eyed-alien.net, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdharm-scsi@one-eyed-alien.net
 
-> Subject: Re: [usb-storage] Re: [PATCH] fix Sony USB mass storage -
-pass larger receive buffer
-> ...
-> > I ask just because you can't see the write-protect tab on a Zip disk
-> > unless you use an electron microscope
-> > so you might not know how to flip it.
+On Fri, Nov 14, 2003 at 09:52:24AM -0600, James Bottomley wrote:
+> Since Patrick has already provided the mechanics for this, I suggest we
+> do this by setting the skip_ms_page_3f and skip_ms_page_8 globally in
+> the usb-storage slave configure routines.
 > 
-> You are not referring to things like "ziptool -ro" ?
+> If there are known good devices, it would probably be best to add them
+> to the USB special devices list to have these flags reset for the
+> capabilities.
+> 
+> The nice thing about this approach is that I don't have to do anything
+> in SCSI, and the control of the USB black/white list is entirely in the
+> USB subsystem.
+> 
+> Does this sound like a plan?
 
-Fruitful hint, thank you.  I find I now conjecture:
+It would be best to just use the BLIST flags setting in the host .flags,
+the following simple patch (only compile tested!) will not send any MODE
+SENSE to sd devices (SCSI direct access inquiry type 0, or optical
+memory/optical disks inquiry type 7).
 
-ziptool runs in Linux and makes an Iomega Zip disk writable or not.
+It also allows the setting to be overwritten for specific vendor + model
+via the scsi_devinfo/dev_flags code - so users or distributions can white
+list devices without modifying the kernel (devinfo settings have priority
+over shost->flags, see scsi_devinfo.c).
 
-ziptool wasn't known to me before now.  On first reading your concise
-reply I actually confused `ziptool -ro` with the unrelated `cd .. ;  zip
--r gccscsi.zip gccscsi/`.
+I did not give the flags very good names, for clarity:
 
-Since also I know Iomega Zip drives report PDT x00 HDD/Flash with RMB, I
-agree Linux folk who possess Iomega Zip drives & disks could try testing
-both rewritable and read-only disks in sd by way of ziptool.
+BLIST_MS_SKIP_PAGE_08 means for sd assume write through cache.
 
-I remain unlikely to try that approach soon myself, since I don't know
-that I have any easy way of discovering what else ziptool does to Linux,
-apart from actually toggling the write-protect tab inside an Iomega Zip
-disk.
+BLIST_MS_SKIP_PAGE_3F means for sd assume writable media.
 
-Pat LaVarre
+And we don't need any special code in a slave_configure or elsewhere to
+check if it is a direct access device.
 
-P.S. I reach my conclusion in Three steps.
-
-1)
-
-I remember "Andries E. Brouwer" kindly does appear in:
-
-http://www.google.com/search?q=link:members.aol.com/plscsi/
-
-2)
-
-I see I have no ziptool:
-
-$ cat /etc/redhat-release
-Red Hat Linux release 9 (Shrike)
-$
-$ man ziptool
-No manual entry for ziptool
-$
-$ which ziptool
-/usr/bin/which: no ziptool in (...)
-$
-
-3)
-
-I see others do have ziptool:
-
-http://www.google.com/search?q=ziptool
-
-today yields:
-
-http://freshmeat.net/projects/ziptool/?topic_id=136%2C861
-
-"ZIPTool is a set of tools for controlling IOMega JAZ and ZIP drives
-from Linux. It features locking and unlocking of media (with a
-password), ejecting, spinning down drives, mounting, and unmounting.
-
-Ignoring case, trailing blanks, leading blanks, and stuttered blanks, I
-match such strings as "Iomega Zip" and "IOMEGA  " "ZIP 250         " to
-the "IOMega ... ZIP" string I see here.
-
-
+diff -uprN -X /home/patman/dontdiff bl-25/drivers/usb/storage/scsiglue.c usb-ms-flags/drivers/usb/storage/scsiglue.c
+--- bl-25/drivers/usb/storage/scsiglue.c	Mon Oct 27 14:28:18 2003
++++ usb-ms-flags/drivers/usb/storage/scsiglue.c	Fri Nov 14 09:15:20 2003
+@@ -322,7 +322,8 @@ struct scsi_host_template usb_stor_host_
+ 	.emulated =			TRUE,
+ 
+ 	/* modify scsi_device bits on probe */
+-	.flags = (BLIST_MS_SKIP_PAGE_08 | BLIST_USE_10_BYTE_MS),
++	.flags = (BLIST_MS_SKIP_PAGE_08 | BLIST_MS_SKIP_PAGE_3F |
++		  BLIST_USE_10_BYTE_MS),
+ 
+ 	/* module management */
+ 	.module =			THIS_MODULE
