@@ -1,83 +1,34 @@
-From: "Jun'ichi Nomura" <jnomura@mtc.biglobe.ne.jp>
-Subject: Re: megaraid driver always fails to reset adapter
-Date: Tue, 01 Mar 2005 15:50:23 -0500
-Message-ID: <4224D58F.6060400@mtc.biglobe.ne.jp>
-References: <0E3FA95632D6D047BA649F95DAB60E570230CBE1@exa-atlanta>
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: Re: [ANNOUNCE] iSCSI enterprise target software
+Date: Tue, 1 Mar 2005 12:53:17 -0800
+Message-ID: <OF551AE89E.73361D54-ON88256FB7.00720071-88256FB7.0072B239@us.ibm.com>
+References: <1109702227.6293.137.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
-Content-Transfer-Encoding: 7bit
-Received: from mx1.redhat.com ([66.187.233.31]:52958 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S262072AbVCAUuk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 15:50:40 -0500
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570230CBE1@exa-atlanta>
+Content-Type: text/plain; charset="US-ASCII"
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:42643 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262072AbVCAUxA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 15:53:00 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e1.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j21KqxCl008535
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Mar 2005 15:52:59 -0500
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j21KqxT6225520
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Mar 2005 15:52:59 -0500
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j21KqwOS009434
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Mar 2005 15:52:59 -0500
+In-Reply-To: <1109702227.6293.137.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Cc: linux-scsi@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, iscsitarget-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-Hi,
-thanks for the info.
+>You want to *use* the kernel pagecache as much as you can.
 
-Adding one more 'F' to the loop counter works.
-i.e. 0xFFFFFF.
+No, I really don't.  Not always.  I can think of only 2 reasons to 
+maximize my use of the kernel pagecache: 1) saves me duplicating code; 2) 
+allows me to share resources (memory and disk bandwidth come to mind) with 
+others in the same Linux system fairly.  There are many cases where those 
+two benefits are outweighed by the benefits of using some other cache.  If 
+you're thinking of other benefits of using the pagecache, let's hear them.
 
-Just adding rmb() didn't solve the problem though it
-may decrease the necessary counter value.
-
-I don't know this value is ok for environments other than mine.
-
-Bagalkote, Sreenivas wrote:
-> Please try:
-> 
-> In mbox_post_sync_cmd_fast(...) replace
-> 
-> for (i = 0; i < 0xFFFFF; i++) {
-> 	if (mbox->numstatus != 0xFF) break;
-> }
-> 
-> with
-> 
-> for (i = 0; i < 0xFFFFF; i++) {
-> 	if (mbox->numstatus != 0xFF) break;
-> 	rmb();
-> } 
-> 
-> Additionally, increase the loop counter to a bigger value.
-> 
-> Thanks,
-> Sreenivas
-> LSI LOGIC Corporation 
-> 
-> 
->>-----Original Message-----
->>From: Jun'ichi Nomura [mailto:jnomura@mtc.biglobe.ne.jp] 
->>Sent: Tuesday, March 01, 2005 1:36 PM
->>To: linux-scsi@vger.kernel.org
->>Subject: megaraid driver always fails to reset adapter
->>
->>Hello,
->>
->>I found that the megaraid driver always fails to reset the
->>adapter with the following message:
->>   megaraid: resetting the host...
->>   megaraid mbox: reset sequence completed successfully
->>   megaraid: fast sync command timed out
->>   megaraid: reservation reset failed
->>when the "Cluster mode" of the adapter BIOS is enabled.
->>So, whenever the reset occurs, the adapter goes to
->>offline and just become unavailable.
->>
->>Is this a known problem?
->>
->>I tried 2.6.9 and 2.6.11-rc5 and the results were the same.
->>I used sg_reset to invoke reset artificially to test this.
->>
->>The problem doesn't occur if I disabled the "Cluster mode"
->>parameter in the adapter BIOS.
->>
->>I'm not sure how well the currenet megaraid driver supports
->>the "Cluster mode".
->>I appreciate if you have any idea.
->>
->>Thanks,
->>Jun'ichi Nomura
