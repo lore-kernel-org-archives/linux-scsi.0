@@ -1,34 +1,67 @@
-From: Stefan Smietanowski <stesmi@stesmi.com>
-Subject: Re: Binary-only firmware covered by the GPL?
-Date: Fri, 26 Mar 2004 09:53:57 +0100
+From: John Bradford <john@grabjohn.com>
+Subject: RE: Binary-only firmware covered by the GPL?
+Date: Fri, 26 Mar 2004 09:09:47 GMT
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4063EFA5.5070001@stesmi.com>
-References: <E1B6Izr-0002Ai-00@r063144.stusta.swh.mhn.de>	<20040325082949.GA3376@gondor.apana.org.au>	<20040325220803.GZ16746@fs.tum.de>	<40635DD9.8090809@pobox.com>	<20040326003339.GD25059@parcelfarce.linux.theplanet.co.uk> <81ptb0wh45.wl@omega.webmasters.gr.jp>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <200403260909.i2Q99lfP000507@81-2-122-30.bradfords.org.uk>
+References: <MDEHLPKNGKAHNMBLJOLKCEEOLEAA.davids@webmaster.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 1-2-2-1a.has.sth.bostream.se ([82.182.130.86]:5798 "EHLO
-	K-7.stesmi.com") by vger.kernel.org with ESMTP id S263974AbUCZIzU
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Mar 2004 03:55:20 -0500
-In-Reply-To: <81ptb0wh45.wl@omega.webmasters.gr.jp>
+Received: from 81-2-122-30.bradfords.org.uk ([81.2.122.30]:2944 "EHLO
+	81-2-122-30.bradfords.org.uk") by vger.kernel.org with ESMTP
+	id S263983AbUCZJHF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Mar 2004 04:07:05 -0500
+In-Reply-To: <MDEHLPKNGKAHNMBLJOLKCEEOLEAA.davids@webmaster.com>
 List-Id: linux-scsi@vger.kernel.org
-To: GOTO Masanori <gotom@debian.or.jp>
-Cc: Matthew Wilcox <willy@debian.org>, Jeff Garzik <jgarzik@pobox.com>, Adrian Bunk <bunk@fs.tum.de>, 239952@bugs.debian.org, debian-devel@lists.debian.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: David Schwartz <davids@webmaster.com>, debian-devel@lists.debian.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi GOTO.
+> 	What does it matter what it compiles under? The GPL is not Linux-specific.
 
-> But think about: why can we distribute assembler only code in linux
-> kernel?  It's near to binary form (objdump -d is your friend).
+Actually, it matters quite a lot.  If the firmware was written in
+assembler, and assembled with a non-free, proprietary compiler, which
+doesn't use standard assembley syntax, then maybe for people who are
+familiar with the CPU, and refuse to use proprietrary software, the
+machine code is the preferred form.
 
-It's not. The difference is that we can always insert another asm
-statement anywhere (of course changing the way the function works)
-and still have it assemble and unless we goofed up it'll still run.
-mov ax,ax for instance won't do a thing. We can insert that
-anywhere we wish without changing anything. The assembler will take
-care of any relative jumps and pointers but with a binary firmware,
-try to insert a byte into it (not CHANGE one, INSERT one), even
-if you know just insert a NOP somewhere - and see what happens.
+Note that the GPL refers to the preferred form for making
+_modifications_, not the preferred form for writing the code from
+scratch.
 
-// Stefan
+For example, suppose I made a simple wristwatch based on a Z80.  It's
+possible that I might write the original firmware in assembley, and
+assemble it on another machine, (although it's probably just as likely
+that I'd use a pen and paper, assemble it by hand).  However, if I
+found a bug some time later, or wanted to make any simple changes, I'd
+probably just disassemble the machine code and patch it manually.
+
+For highly embedded devices, the preferred form for making
+modifications doesn't necessarily mean the form it was originally
+written in.
+
+> 	If you don't have the preferred form of something for the purpose of making
+> modifications to it, then you can't give that to people, so you *CAN'T* GPL
+> it.
+
+Err, surely that only applies if your rights to the thing were
+already _granted_ to you under the GPL, and the 'preferred form' has
+already been established.
+
+For example, if I write a C program, and gives you the source under
+the GPL, the source is obviously the preferred form for making
+modifications.
+
+If, however, I write a C program, compile it, and put the binary and
+source in to the public domain, and years later all copies of the
+source have been lost, I don't see why somebody obtaining the binary,
+which has been placed in the public domain, couldn't disassemble it,
+read and understand it, add comments to the assembler source
+explaining how it works, and place the resulting work under the GPL.
+
+Another example - if I code something, the chances are that it won't
+have any indenting, and the variable names will either be arbitrary
+letters, or one or two letter abbreviations of the things they stand
+for.  That is my prefered form of making modifications to my own
+code.  If I then placed the code under the GPL, there is no
+requirement for me to indent it, just because the majority of
+developers would prefer that form for making modifications.
+
+John.
