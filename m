@@ -1,81 +1,71 @@
-From: linux@dragonhold.org
-Subject: [PATCH] qla1280.c patch against 2.6.9 to allow settings of Initiator ID
-Date: Fri, 5 Nov 2004 01:18:30 +0000
-Message-ID: <20041105011830.GG8974@dragonhold.org>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] 2.6 aacraid: rx check health function update
+Date: Fri, 5 Nov 2004 08:25:24 +0100
+Message-ID: <20041105072524.GD16649@suse.de>
+References: <1099613392.6249.16.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ramoth.dragonhold.org ([80.229.192.20]:20370 "EHLO
-	ramoth.dragonhold.org") by vger.kernel.org with ESMTP
-	id S262541AbUKEBSj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Nov 2004 20:18:39 -0500
+Received: from ns.virtualhost.dk ([195.184.98.160]:64190 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262653AbUKEHZ6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Nov 2004 02:25:58 -0500
 Content-Disposition: inline
+In-Reply-To: <1099613392.6249.16.camel@markh1.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
+To: Mark Haverkamp <markh@osdl.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-Possible Patch
-==============
+On Thu, Nov 04 2004, Mark Haverkamp wrote:
+> This patch updates the rx check health function.  My previous only
+> updated the rkt check health code.  This and the previous patch should
+> fix the kmalloc return checking bug:
+> 
+> http://bugme.osdl.org/show_bug.cgi?id=3699 
+> 
+> Signed-off-by: Mark Haverkamp <markh@osdl.org>
+> 
+> 
+> ===== drivers/scsi/aacraid/rx.c 1.12 vs edited =====
+> --- 1.12/drivers/scsi/aacraid/rx.c	2004-11-04 09:32:56 -08:00
+> +++ edited/drivers/scsi/aacraid/rx.c	2004-11-04 09:37:33 -08:00
+> @@ -274,7 +274,7 @@
+>   */
+>  static int aac_rx_check_health(struct aac_dev *dev)
+>  {
+> -	long status = rx_readl(dev, IndexRegs.Mailbox[7]);
+> +	u32 status = le32_to_cpu(rx_readl(dev, MUnit.OMRx[0]));
+>  
+>  	/*
+>  	 *	Check to see if the board failed any self tests.
+> @@ -285,29 +285,39 @@
+>  	 *	Check to see if the board panic'd.
+>  	 */
+>  	if (status & KERNEL_PANIC) {
+> -		char * buffer = kmalloc(512, GFP_KERNEL);
+> +		char * buffer;
+>  		struct POSTSTATUS {
+>  			u32 Post_Command;
+>  			u32 Post_Address;
+> -		} * post = kmalloc(sizeof(struct POSTSTATUS), GFP_KERNEL);
+> -		dma_addr_t paddr = pci_map_single(dev->pdev, post, sizeof(struct POSTSTATUS), 2);
+> -		dma_addr_t baddr = pci_map_single(dev->pdev, buffer, 512, 1);
+> -		u32 status = -1;
+> -		int ret = -2;
+> +		} * post;
+> +		dma_addr_t paddr, baddr;
+> +		int ret;
+> +
+> +		if ((status & 0xFF000000L) == 0xBC000000L)
+> +			return (status >> 16) & 0xFF;
+> +		buffer = pci_alloc_consistent(dev->pdev, 512, &baddr);
+> +		ret = -2;
+> +		if (buffer == NULL)
+> +			return ret;
 
-I've attached a patch to allow the SCSI Initiator ID in NVRAM to be over-ridden for these
-controllers.  It is a single ID passed when loaded as a module, allowing you to set all the
-controllers attached to your machine to the same specified SCSI ID.  I've tested it on my
-machine, but know of no-one else using these cards that is running linux.
+I don't think it's a good idea to return bad adapter health, because you
+have an allocation failure.
 
-I'm also not sure if this is the sort of thing that anyone other than me would be interested
-in, and I can't find a maintainer specifically for the qla1280 driver.  So please accept my
-apologies if this shouldn't have been sent to you.
+-- 
+Jens Axboe
 
-It's the first I've done, so I'm more than willing to listen to suggestions on how to
-improve the style and/or code.
-
-
-Thanks,
-
-Graham
-
-
-Signed-off-by:  Graham Wood <linux@dragonhold.org>
-
-
---- /usr/src/linux-2.6.9/drivers/scsi/qla1280.c.orig	2004-11-04 23:36:21.000000000 +0000
-+++ /usr/src/linux-2.6.9/drivers/scsi/qla1280.c	2004-11-05 01:01:18.000000000 +0000
-@@ -586,9 +586,12 @@ static void __qla1280_dump_buffer(char *
-  */
- #ifdef MODULE
- static char *qla1280;
-+int adapter_id=-1;
- 
- /* insmod qla1280 options=verbose" */
- MODULE_PARM(qla1280, "s");
-+MODULE_PARM(adapter_id, "i");
-+MODULE_PARM_DESC(adapter_id, "SCSI Initiator ID: -1 use NVRAM, 0-15 set)");
- #else
- __setup("qla1280=", qla1280_setup);
- #endif
-@@ -2494,8 +2497,24 @@ qla1280_config_bus(struct scsi_qla_host 
- 	/* Initiator ID. */
- 	ha->bus_settings[bus].id = nv->bus[bus].config_1.initiator_id;
- 	mb[0] = MBC_SET_INITIATOR_ID;
-+#ifdef MODULE
-+	if (adapter_id <0 || adapter_id>15) {
-+		if (adapter_id != -1) {
-+			printk(KERN_WARNING
-+				"qla1280 provided illegal adapter_id."
-+				"  Using NVRAM default\n");
-+		}
-+		mb[1] = bus ? ha->bus_settings[bus].id | BIT_7 :
-+			ha->bus_settings[bus].id;
-+	} else {
-+		mb[1] = bus ? adapter_id | BIT_7 :
-+			adapter_id;
-+	}
-+#else
- 	mb[1] = bus ? ha->bus_settings[bus].id | BIT_7 :
- 		ha->bus_settings[bus].id;
-+#endif
-+
- 	status = qla1280_mailbox_command(ha, BIT_1 | BIT_0, &mb[0]);
- 
- 	/* Reset Delay. */
