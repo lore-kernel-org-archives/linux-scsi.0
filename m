@@ -1,38 +1,54 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH/RFC 2/2] 3ware 9000 SATA-RAID driver
-Date: Sun, 23 May 2004 13:02:48 +0200
+From: Gene Heskett <gene.heskett@verizon.net>
+Subject: advansys problems
+Date: Sun, 23 May 2004 11:32:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040523110248.GB10790@lst.de>
-References: <HY4ODS03.B9L@hadar.amcc.com>
+Message-ID: <200405231132.59100.gene.heskett@verizon.net>
+Reply-To: gene.heskett@verizon.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:63638 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S262574AbUEWLCx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 May 2004 07:02:53 -0400
+Received: from out014pub.verizon.net ([206.46.170.46]:46286 "EHLO
+	out014.verizon.net") by vger.kernel.org with ESMTP id S263088AbUEWPdC
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 23 May 2004 11:33:02 -0400
+Received: from coyote.coyote.den ([151.205.56.33]) by out014.verizon.net
+          (InterMail vM.5.01.06.06 201-253-122-130-106-20030910) with ESMTP
+          id <20040523153300.CYZK5247.out014.verizon.net@coyote.coyote.den>
+          for <linux-scsi@vger.kernel.org>; Sun, 23 May 2004 10:33:00 -0500
 Content-Disposition: inline
-In-Reply-To: <HY4ODS03.B9L@hadar.amcc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Adam Radford <aradford@amcc.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-> +#include <linux/version.h>
+Greetings, I finally found this list.
 
-what do you need this one for?
+Running FC1, updated from RH8, kernel 2.6.6-mm5 ATM on an older 1.4Ghz 
+athlon.  Half a gig of ram.
 
-> +#define TW_VENDOR_ID (0x13C1)	/* 3ware */
-> +#define TW_DEVICE_ID_9000 (0x1002)  /* 9000 series controller */
+Pursuant to the msg that the advansys driver wasn't planned for 
+further updating, I figured I might as well play blind man and see if 
+I could extract enough debugging info to be usefull.  First, I 
+enabled scsi debugging in the kernel .config and rebuilt it before 
+last night amanda run.  That apparently made no actual diff as there 
+was nothing in the logs this morning after amanda shovled about 3.5 
+Gb of data out to tape last night.
 
-Should be in include/linux/pci_ids.h
- 
-> +/* Function prototypes */
-> +static int twa_aen_complete(TW_Device_Extension *tw_dev, int request_id);
-> +static int twa_aen_drain_queue(TW_Device_Extension *tw_dev, int check_reset);
-> +static void twa_aen_queue_event(TW_Device_Extension *tw_dev, TW_Command_Apache_Header *header);
+Unforch, the compile breaks when I uncomment the #define ADVANSYS_DBG 
+line, which I tried this morning.  At first I also had put a 
 
-please don't put prototypes into a header if they're used only in a
-single file.  try to reorder the .c file that additiona prototype
-declarations aren't needed as much as possible and put everything else
-in the .c file.
+#define asc_dbglvl 1
 
+in there, but that caused a compile breakage (a different one) also.
+
+So whats next?
+
+-- 
+Cheers, Gene
+"There are four boxes to be used in defense of liberty:
+ soap, ballot, jury, and ammo. Please use in that order."
+-Ed Howdershelt (Author)
+99.23% setiathome rank, not too shabby for a WV hillbilly
+Yahoo.com attorneys please note, additions to this message
+by Gene Heskett are:
+Copyright 2004 by Maurice Eugene Heskett, all rights reserved.
