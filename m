@@ -1,55 +1,98 @@
-From: Yum Rayan <yum.rayan@gmail.com>
-Subject: Re: [2.6 patch] drivers/scsi/sg.c: several against 2.6.12-rc1
-Date: Mon, 28 Mar 2005 20:46:14 -0800
-Message-ID: <df35dfeb05032820467ee1ad4c@mail.gmail.com>
-References: <4247D2DA.5010009@torque.net>
-Reply-To: Yum Rayan <yum.rayan@gmail.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [OOPS] 2.6.11 - NMI lockup with CFQ scheduler
+Date: Tue, 29 Mar 2005 14:03:11 +0200
+Message-ID: <20050329120311.GO16636@suse.de>
+References: <20050329115405.97559.qmail@web52909.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.200]:54286 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262177AbVC2EqP (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:17901 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262240AbVC2MDN (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Mar 2005 23:46:15 -0500
-Received: by wproxy.gmail.com with SMTP id 68so501095wri
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Mar 2005 20:46:14 -0800 (PST)
-In-Reply-To: <4247D2DA.5010009@torque.net>
+	Tue, 29 Mar 2005 07:03:13 -0500
+Content-Disposition: inline
+In-Reply-To: <20050329115405.97559.qmail@web52909.mail.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org, bunk@stusta.de, James.Bottomley@steeleye.com, rddunlap@osdl.org
+To: Chris Rankin <rankincj@yahoo.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-In the diff
+On Tue, Mar 29 2005, Chris Rankin wrote:
 
->+	if (old_hdr)
->+		kfree(old_hdr);
->+	return retval;
+(please don't top post)
 
-The check for NULL is not needed.
-
-Thanks,
-Rayan
-
-
-On Mon, 28 Mar 2005 19:48:10 +1000, Douglas Gilbert <dougg@torque.net> wrote:
-> The attachment combines the most recent patch from
-> Yum Rayan <yum.rayan@gmail.com> (to reduce sg stack
-> usage), Adrian Bunk <bunk@stusta.de> (to fix check
-> after use) and me (fix elapsed time calculation
-> (duration) on ia64 machines).
-> 
-> I have modified the patch from Yum Rayan so kmalloc()
-> in sg_read() is only called for the (rare) code paths
-> that need them.
-> 
-> Changelog:
->   - reduce stack usage in sg_ioctl() and sg_read()
->   - fix check after use in sg_mmap()
->   - hold duration internally in milliseconds and
->     check current time later than held time
-> 
-> Signed-off-by: Douglas Gilbert <dougg@torque.net>
-> 
-> 
+> --- Jens Axboe <axboe@suse.de> wrote:
+> > On Sun, Mar 27 2005, Chris Rankin wrote:
+> > > [gcc-3.4.3, Linux-2.6.11-SMP, Dual P4 Xeon with HT enabled]
+> > > 
+> > > Hi,
+> > > 
+> > > My Linux 2.6.11 box oopsed when I tried to logout. I have switched to using the anticipatory
+> > > scheduler instead.
+> > > 
+> > > Cheers,
+> > > Chris
+> > > 
+> > > NMI Watchdog detected LOCKUP on CPU1, eip c0275cc7, registers:
+> > > Modules linked in: snd_pcm_oss snd_mixer_oss snd_usb_audio snd_usb_lib snd_intel8x0
+> > snd_seq_oss
+> > > snd_seq_midi snd_emu10k1_synth snd_emu10k1 snd_ac97_codec snd_pcm snd_page_alloc
+> > snd_emux_synth
+> > > snd_seq_virmidi snd_rawmidi snd_seq_midi_event snd_seq_midi_emul snd_hwdep snd_util_mem
+> > snd_seq
+> > > snd_seq_device snd_rtctimer snd_timer snd nls_iso8859_1 nls_cp437 vfat fat usb_storage radeon
+> > drm
+> > > i2c_algo_bit emu10k1_gp gameport deflate zlib_deflate zlib_inflate twofish serpent aes_i586
+> > > blowfish des sha256 crypto_null af_key binfmt_misc eeprom i2c_sensor button processor psmouse
+> > > pcspkr p4_clockmod speedstep_lib usbserial lp nfsd exportfs md5 ipv6 sd_mod scsi_mod autofs
+> > nfs
+> > > lockd sunrpc af_packet ohci_hcd parport_pc parport e1000 video1394 raw1394 i2c_i801 i2c_core
+> > > ohci1394 ieee1394 ehci_hcd soundcore pwc videodev uhci_hcd usbcore intel_agp agpgart ide_cd
+> > cdrom
+> > > ext3 jbd
+> > > CPU:    1
+> > > EIP:    0060:[<c0275cc7>]    Not tainted VLI
+> > > EFLAGS: 00200086   (2.6.11) 
+> > > EIP is at _spin_lock+0x7/0xf
+> > > eax: f7b8b01c   ebx: f7c82b88   ecx: f7c82b94   edx: f6c33714
+> > > esi: eb68ad88   edi: f6c33708   ebp: f6c33714   esp: f5b32f70
+> > > ds: 007b   es: 007b   ss: 0068
+> > > Process nautilus (pid: 5757, threadinfo=f5b32000 task=f7518020)
+> > > Stack: c01f7f79 00200282 f76bda24 f6c323e4 f7518020 00000000 00000000 c01f1d0c 
+> > >        f5b32000 c011d7b3 00000001 00000000 b65ffa40 00000000 f5b32fac 00000000 
+> > >        00000000 00000000 f5b32000 c011d8d6 c0102e7f 00000000 b65ffbf0 b6640bf0 
+> > > Call Trace:
+> > >  [<c01f7f79>] cfq_exit_io_context+0x54/0xb3
+> > >  [<c01f1d0c>] exit_io_context+0x45/0x51
+> > >  [<c011d7b3>] do_exit+0x205/0x308
+> > >  [<c011d8d6>] next_thread+0x0/0xc
+> > >  [<c0102e7f>] syscall_call+0x7/0xb
+> > > Code: 05 e8 3a e6 ff ff c3 ba 00 f0 ff ff 21 e2 81 42 14 00 01 00 00 f0 81 28 00 00 00 01 74
+> > 05 e8
+> > > 1d e6 ff ff c3 f0 fe 08 79 09 f3 90 <80> 38 00 7e f9 eb f2 c3 f0 81 28 00 00 00 01 74 05 e8 ff
+> > e5
+> > > ff 
+> > > console shuts up ...
+> > 
+> > The queue was gone by the time the process exited. What type of storage
+> > do you have attached to the box? At least with SCSI, it has some
+> > problems in this area - it will glady free the scsi device structure
+> > (where the queue lock is located) while the queue reference count still
+> > hasn't dropped to zero.
 >
+> I have one IDE hard disc, but I was using a USB memory stick at one
+> point. (Notice the usb-storage and vfat modules in my list.) Could
+> that be the troublesome SCSI device?
+
+Yes, it probably is. What happens is that you insert the stick and do io
+against it, which sets up a process io context for that device. That
+context persists until the process exits (or later, if someone still
+holds a reference to it), but the queue_lock will be dead when you yank
+the usb device.
+
+It is quite a serious problem, not just for CFQ. SCSI referencing is
+badly broken there.
+
+-- 
+Jens Axboe
+
