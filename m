@@ -1,47 +1,65 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Mon, 24 Nov 2003 07:48:30 +0000
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031124074830.C29095@infradead.org>
-References: <20031027153932.A16679@infradead.org> <00c901c3b251$91016a30$a0074d0a@apac.cisco.com>
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [BUG 2.6.0-test10] SCSI update in CSET 1.1437.1.2 caused 'Badness'
+Date: Mon, 24 Nov 2003 00:09:19 -0800
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20031124080919.GA6969@beaverton.ibm.com>
+References: <50478.68.105.173.45.1069651886.squirrel@mail.mainstreetsoftworks.com> <20031123234919.72ae0316.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:56069 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263650AbTKXHsb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2003 02:48:31 -0500
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <00c901c3b251$91016a30$a0074d0a@apac.cisco.com>; from surekhap@cisco.com on Mon, Nov 24, 2003 at 11:39:48AM +0530
+In-Reply-To: <20031123234919.72ae0316.akpm@osdl.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: Brad House <brad_mssw@gentoo.org>, linux-kernel@vger.kernel.org, tony@vroon.org, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Surekha.PC" <surekhap@cisco.com>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Mon, Nov 24, 2003 at 11:39:48AM +0530, Surekha.PC wrote:
-> 
-> Hi,
-> 
-> >>  	- this comment indicates you don't want normal EH:
-> 
-> >> * check condition with no sense.  We need to avoid this, 
-> >> * since the Linux SCSI code could put the command in 
-> >> * SCSI_STATE_FAILED, which it's error recovery doesn't appear 
-> >> * to handle correctly, and even if it does, we're trying to 
-> >> * bypass all of the Linux error recovery code
-> >> * to avoid blocking all I/O to the HBA.  Fake some sense 
-> >> * data that gets a retry from Linux.
-> 
-> >	so don't use scsi_error.c and define your own
-> eh_strategy_handler method.
-> 
-> By implementing the iSCSI driver specific strategy_handler we will need
-> to duplicate most of the mid layer strategy handler logic only to
-> accommodate the above condition.
-> 
-> Is that justified ? Or is it ok, to fix the above case in scsi_error.c ?
+This patch in the linux-scsi archives should remove this badness
+warning.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=106940008217622&w=2
 
-I haven't followed the code closely, but the comment reads like scsi_error.c
-is mostly useless for you - if that were true I'd suggest using
-eh_strategy_handler, if on the other hand you can fix scsi_error.c easily
-it's better to use it.
+It should apply cleanly to test10. I am just updating my view now to
+test10 so I have not tested the patch on test10 yet.
 
+I did not have it refreshed in time from James to include it in his
+last update.
+
+Andrew Morton [akpm@osdl.org] wrote:
+> "Brad House" <brad_mssw@gentoo.org> wrote:
+> >
+> > A user noticed this oddness while using -test10 that he did
+> >  not see while using -test9.  This error does not seem to affect
+> >  anything. His e-mail is tony@vroon.org if you need more info
+> >  from him.
+> > 
+> >  Reverting CSET 1.1437.1.2 fixed his problem below:
+> >  http://linux.bkbits.net:8080/linux-2.5/patch@1.1437.1.2?nav=index.html|tags|ChangeSet@1.1350.1.2..|cset@1.1437.1.2
+> > 
+> > 
+> > 
+> >  scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.35
+> >          <Adaptec 29160 Ultra160 SCSI adapter>
+> >          aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+> > 
+> >  (scsi0:A:0): 160.000MB/s transfers (80.000MHz DT, offset 63, 16bit)
+> >  (scsi0:A:1): 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
+> >  (scsi0:A:2:0): refuses WIDE negotiation.  Using 8bit transfers
+> >  (scsi0:A:2): 20.000MB/s transfers (20.000MHz, offset 16)
+> >  (scsi0:A:4:0): refuses WIDE negotiation.  Using 8bit transfers
+> >  (scsi0:A:4): 20.000MB/s transfers (20.000MHz, offset 7)
+> >  Badness in kobject_get at lib/kobject.c:439
+> >  Call Trace:
+> >   [<c0238bad>] kobject_get+0x4d/0x50
+> >   [<c0291278>] get_device+0x18/0x30
+> >   [<c02d285c>] scsi_device_get+0x2c/0x80
+> >   [<c02d294e>] __scsi_iterate_devices+0x3e/0x70
+> >   [<c02d6409>] scsi_run_host_queues+0x19/0x50
+> >   [<c02f5f14>] ahc_linux_release_simq+0x94/0xd0
+> >   [<c02f2552>] ahc_linux_dv_thread+0x1e2/0x230
+> >   [<c02f2370>] ahc_linux_dv_thread+0x0/0x230
+> >   [<c01070a9>] kernel_thread_helper+0x5/0xc
+> 
+> Me too.  Also with aic7xxx.  
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
