@@ -1,36 +1,59 @@
-From: "Tim Wesemann" <timuel@voicenet.com>
-Subject: Re: Adaptec 2200S with aacraid won't do 64-bit
-Date: Tue, 22 Feb 2005 17:22:28 -0500
-Message-ID: <04c801c5192d$08655ad0$de0167cf@voicenet.com>
-References: <60807403EABEB443939A5A7AA8A7458BCDC69E@otce2k01.adaptec.com> <049d01c51928$7a83a040$de0167cf@voicenet.com> <20050222215541.GO28741@parcelfarce.linux.theplanet.co.uk>
+From: Greg KH <greg@kroah.com>
+Subject: Re: CSMI questions
+Date: Tue, 22 Feb 2005 15:14:50 -0800
+Message-ID: <20050222231450.GB10067@kroah.com>
+References: <20050222171656.GA5953@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
-Received: from mail08.voicenet.com ([207.103.0.34]:8849 "HELO
-	mail08.voicenet.com") by vger.kernel.org with SMTP id S261298AbVBVWWp
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Feb 2005 17:22:45 -0500
+Content-Type: text/plain; charset=us-ascii
+Received: from mail.kroah.org ([69.55.234.183]:11401 "EHLO perch.kroah.org")
+	by vger.kernel.org with ESMTP id S261340AbVBVXQH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Feb 2005 18:16:07 -0500
+Content-Disposition: inline
+In-Reply-To: <20050222171656.GA5953@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, linux-scsi@vger.kernel.org
+To: mikem <mikem@beardog.cca.cpqcorp.net>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> There's 64-bit *transfers* and 64-bit *addressing* ... but let's not
-> go into that; the problem isn't on the PCI bus, it's on the SCSI bus.
-> Even 32-bit, 33MHz PCI is capable of at least 80MB/s.
+On Tue, Feb 22, 2005 at 11:16:56AM -0600, mikem wrote:
+> All,
+> I hate to dredge this up again, but, when Eric Moore submitted changes for MPT
+> Fusion driver containing the CSMI ioctls it was rejected. There was talk on
+> the linux-scsi list about it being a horrible interface, among other things.
+> There were also comments about there being a Linux only approach. Personally,
+> I like that idea but it's not good from a business perspective. Especially
+> because HP, Dell, and others support more than one OS. Having a unique set of
+> management apps for each OS would be very cumbersome.
 
-That sounds fine, but when connecting the same exact cabling, etc. to the 
-on-board AIC-7902 or a 29320A and using a software RAID5, my writes max out 
-at around 130MB/s.
+Honestly, the kernel developers don't care about cross-OS platform
+management utilities from a business perspective.  :)
 
-Are there any more details, output, etc I could provide?
+> We've also been looking at how to use sysfs rather than ioctls.
 
-Thanks again for all the help...
+Good.
 
---
-Tim Wesemann
-Voicenet Systems Administration 
+> Some look reasonable, others seem to be restricted by sysfs itself. 
+> 1. only ASCII files are allowed
 
+With 1 value in that file.
+
+> 2. if multiple attributes are contained in one file, who parses out the data?
+
+multiple attributes are not allowed to be contained in a single file.
+
+> 3. one buffer of size (PAGE_SIZE) may not hold all of the data required
+
+You have a _single_ attribute that is bigger than PAGE_SIZE?  What is
+it?
+
+> I'd also like an (brief) explanation of why ioctls are so bad. I've seen the 
+> reasons of them never going away, etc. But from the beginning of time (UNIX)
+> ioctls have been the preferred method of user space/kernel communication.
+
+That's because there was no other method.  See the lkml archives for why
+ioctls are considered bad, I don't want to dredge it up again.
+
+Hope this helps,
+
+greg k-h
