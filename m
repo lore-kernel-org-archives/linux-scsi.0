@@ -1,21 +1,21 @@
 From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: [patch 5/8] mptfusion: command line parameters
-Date: Fri, 19 Nov 2004 08:38:47 -0700
-Message-ID: <91888D455306F94EBD4D168954A9457C5468AC@nacos172.co.lsil.com>
+Subject: [patch 1/8] mptfusion: delete MPTSCSIH_DBG_TIMEOUT
+Date: Fri, 19 Nov 2004 08:36:56 -0700
+Message-ID: <91888D455306F94EBD4D168954A9457C5468A4@nacos172.co.lsil.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_000_01C4CE4D.DC496E20"
+	boundary="----_=_NextPart_000_01C4CE4D.99EBFD40"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:30144 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261464AbUKSQMJ (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:28864 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261463AbUKSQMI (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Nov 2004 11:12:09 -0500
+	Fri, 19 Nov 2004 11:12:08 -0500
 Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id iAJGAUcq006801
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Nov 2004 08:10:30 -0800 (PST)
+	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id iAJGATcq006786
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Nov 2004 08:10:29 -0800 (PST)
 Received: from nacos172.ad.lsil.com (cos1.co.lsil.com [172.21.35.122])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id iAJGC70X030499
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Nov 2004 08:12:08 -0800
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id iAJGC7Ga030465
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Nov 2004 08:12:07 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -23,285 +23,319 @@ To: linux-scsi@vger.kernel.org
 This message is in MIME format. Since your mail reader does not understand
 this format, some or all of this message may not be legible.
 
-------_=_NextPart_000_01C4CE4D.DC496E20
+------_=_NextPart_000_01C4CE4D.99EBFD40
 Content-Type: text/plain;
 	charset="iso-8859-1"
 
-This cleans up the command line parameters
-with individual parameters and descriptions.
+This removes MPTSCSIH_DBG_TIMEOUT associated 
+code in the driver.
 
 Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
 
 
 
-
-
-------_=_NextPart_000_01C4CE4D.DC496E20
+------_=_NextPart_000_01C4CE4D.99EBFD40
 Content-Type: application/octet-stream;
-	name="mptfusion-5.patch"
+	name="mptfusion-1.patch"
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: attachment;
-	filename="mptfusion-5.patch"
+	filename="mptfusion-1.patch"
 
+diff -uarN b/drivers/message/fusion/mptbase.h =
+a/drivers/message/fusion/mptbase.h=0A=
+--- b/drivers/message/fusion/mptbase.h	2004-11-17 16:24:38.000000000 =
+-0700=0A=
++++ a/drivers/message/fusion/mptbase.h	2004-11-18 09:47:28.000000000 =
+-0700=0A=
+@@ -573,12 +573,6 @@=0A=
+ 	int			 eventTypes;	/* Event logging parameters */=0A=
+ 	int			 eventContext;	/* Next event context */=0A=
+ 	int			 eventLogSize;	/* Max number of cached events */=0A=
+-#ifdef MPTSCSIH_DBG_TIMEOUT=0A=
+-	int			timeout_hard;=0A=
+-	int			timeout_delta;=0A=
+-	int			timeout_cnt;=0A=
+-	int			timeout_maxcnt;=0A=
+-#endif=0A=
+ 	struct _mpt_ioctl_events *events;	/* pointer to event log */=0A=
+ 	u8			*cached_fw;	/* Pointer to FW */=0A=
+ 	dma_addr_t	 	cached_fw_dma;=0A=
 diff -uarN b/drivers/message/fusion/mptscsih.c =
 a/drivers/message/fusion/mptscsih.c=0A=
---- b/drivers/message/fusion/mptscsih.c	2004-11-18 12:56:39.000000000 =
+--- b/drivers/message/fusion/mptscsih.c	2004-11-17 16:24:38.000000000 =
 -0700=0A=
-+++ a/drivers/message/fusion/mptscsih.c	2004-11-18 14:54:27.000000000 =
++++ a/drivers/message/fusion/mptscsih.c	2004-11-18 09:46:54.000000000 =
 -0700=0A=
-@@ -96,10 +96,22 @@=0A=
- MODULE_DESCRIPTION(my_NAME);=0A=
- MODULE_LICENSE("GPL");=0A=
+@@ -250,10 +250,6 @@=0A=
+ static struct mptscsih_driver_setup=0A=
+ 	driver_setup =3D MPTSCSIH_DRIVER_SETUP;=0A=
  =0A=
--/* Set string for command line args from insmod */=0A=
- #ifdef MODULE=0A=
--char *mptscsih =3D NULL;=0A=
--module_param(mptscsih, charp, 0);=0A=
-+static int dv =3D MPTSCSIH_DOMAIN_VALIDATION;=0A=
-+module_param(dv, int, 0);=0A=
-+MODULE_PARM_DESC(dv, "DV Algorithm: enhanced =3D 1, basic =3D 0 =
-(default=3DMPTSCSIH_DOMAIN_VALIDATION=3D1)");=0A=
-+=0A=
-+static int width =3D MPTSCSIH_MAX_WIDTH;=0A=
-+module_param(width, int, 0);=0A=
-+MODULE_PARM_DESC(width, "Max Bus Width: wide =3D 1, narrow =3D 0 =
-(default=3DMPTSCSIH_MAX_WIDTH=3D1)");=0A=
-+=0A=
-+static ushort factor =3D MPTSCSIH_MIN_SYNC;=0A=
-+module_param(factor, ushort, 0);=0A=
-+MODULE_PARM_DESC(factor, "Min Sync Factor: =
-(default=3DMPTSCSIH_MIN_SYNC=3D0x08)");=0A=
-+=0A=
-+static int saf_te =3D MPTSCSIH_SAF_TE;=0A=
-+module_param(saf_te, int, 0);=0A=
-+MODULE_PARM_DESC(saf_te, "Force enabling SEP Processor: =
-(default=3DMPTSCSIH_SAF_TE=3D0)");=0A=
- #endif=0A=
- =0A=
- =
-/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D*/=0A=
-@@ -200,9 +212,6 @@=0A=
- static void	mptscsih_dv_parms(MPT_SCSI_HOST *hd, DVPARAMETERS *dv,void =
-*pPage);=0A=
- static void	mptscsih_fillbuf(char *buffer, int size, int index, int =
-width);=0A=
- #endif=0A=
--#ifdef MODULE=0A=
--static int	mptscsih_setup(char *str);=0A=
+-#ifdef MPTSCSIH_DBG_TIMEOUT=0A=
+-static struct scsi_cmnd *foo_to[8];=0A=
 -#endif=0A=
- /* module entry point */=0A=
- static int  __init   mptscsih_init  (void);=0A=
- static void __exit   mptscsih_exit  (void);=0A=
-@@ -245,11 +254,9 @@=0A=
- static int scandv_wait_done =3D 1;=0A=
- =0A=
- =0A=
--/* Driver default setup=0A=
-+/* Driver command line structure=0A=
-  */=0A=
--static struct mptscsih_driver_setup=0A=
--	driver_setup =3D MPTSCSIH_DRIVER_SETUP;=0A=
 -=0A=
-+static struct mptscsih_driver_setup driver_setup;=0A=
  static struct scsi_host_template driver_template;=0A=
  =0A=
  =
 /*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
 -=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
 -=3D-=3D*/=0A=
-@@ -1242,9 +1249,9 @@=0A=
- 		}=0A=
+@@ -653,27 +649,6 @@=0A=
+ 	pScsiReq =3D (SCSIIORequest_t *) mf;=0A=
+ 	pScsiReply =3D (SCSIIOReply_t *) mr;=0A=
  =0A=
- 		if (ioc->spi_data.minSyncFactor <=0A=
--		  driver_setup.min_sync_fac) {=0A=
-+		  driver_setup.min_sync_factor) {=0A=
- 			ioc->spi_data.minSyncFactor =3D=0A=
--			  driver_setup.min_sync_fac;=0A=
-+			  driver_setup.min_sync_factor;=0A=
- 		}=0A=
+-#ifdef MPTSCSIH_DBG_TIMEOUT=0A=
+-	if (ioc->timeout_cnt > 0) {=0A=
+-		int ii, left =3D 0;=0A=
+-=0A=
+-		for (ii=3D0; ii < 8; ii++) {=0A=
+-			if (sc =3D=3D foo_to[ii]) {=0A=
+-				printk(MYIOC_s_INFO_FMT "complete (%p, %ld)\n",=0A=
+-					ioc->name, sc, jiffies);=0A=
+-				foo_to[ii] =3D NULL;=0A=
+-			}=0A=
+-			if (foo_to[ii] !=3D NULL)=0A=
+-				left++;=0A=
+-		}=0A=
+-=0A=
+-		if (left =3D=3D 0) {=0A=
+-			ioc->timeout_maxcnt =3D 0;=0A=
+-			ioc->timeout_cnt =3D 0;=0A=
+-		}=0A=
+-	}=0A=
+-#endif=0A=
+-=0A=
+ 	if (pScsiReply =3D=3D NULL) {=0A=
+ 		/* special context reply handling */=0A=
+ 		;=0A=
+@@ -1259,14 +1234,6 @@=0A=
+ 	/* Moved Earlier Pam D */=0A=
+ 	/* ioc->sh =3D sh;	*/=0A=
  =0A=
- 		if (ioc->spi_data.minSyncFactor =3D=3D MPT_ASYNC) {=0A=
-@@ -1271,7 +1278,7 @@=0A=
- 			"dv %x width %x factor %x saf_te %x\n",=0A=
- 			ioc->name, driver_setup.dv,=0A=
- 			driver_setup.max_width,=0A=
--			driver_setup.min_sync_fac,=0A=
-+			driver_setup.min_sync_factor,=0A=
- 			driver_setup.saf_te));=0A=
- 	}=0A=
+-#ifdef MPTSCSIH_DBG_TIMEOUT=0A=
+-	ioc->timeout_hard =3D 0;=0A=
+-	ioc->timeout_delta =3D 30 * HZ;=0A=
+-	ioc->timeout_maxcnt =3D 0;=0A=
+-	ioc->timeout_cnt =3D 0;=0A=
+-	for (ii=3D0; ii < 8; ii++)=0A=
+-		foo_to[ii] =3D NULL;=0A=
+-#endif=0A=
+ 	if (hd->is_spi) {=0A=
+ 		/* Update with the driver setup=0A=
+ 		 * values.=0A=
+@@ -1676,129 +1643,6 @@=0A=
+ 	return ((info.pos > info.offset) ? info.pos - info.offset : 0);=0A=
+ }=0A=
  =0A=
-@@ -1489,9 +1496,15 @@=0A=
- 	}=0A=
- =0A=
- #ifdef MODULE=0A=
--	/* Evaluate the command line arguments, if any */=0A=
--	if (mptscsih)=0A=
--		mptscsih_setup(mptscsih);=0A=
-+	dinitprintk((KERN_INFO MYNAM=0A=
-+		": Command Line Args: dv=3D%d max_width=3D%d "=0A=
-+		"factor=3D0x%x saf_te=3D%d\n",=0A=
-+		dv, width, factor, saf_te));=0A=
-+=0A=
-+	driver_setup.dv =3D (dv) ? 1 : 0;=0A=
-+	driver_setup.max_width =3D (width) ? 1 : 0;=0A=
-+	driver_setup.min_sync_factor =3D factor;=0A=
-+	driver_setup.saf_te =3D (saf_te) ? 1 : 0;;=0A=
- #endif=0A=
- =0A=
- 	if(mpt_device_driver_register(&mptscsih_driver,=0A=
-@@ -2943,7 +2956,7 @@=0A=
- =0A=
- 		/* 4. Renegotiate to all devices, if SCSI=0A=
- 		 */=0A=
--		if (hd->ioc->bus_type =3D=3D SCSI) {=0A=
-+		if (ioc->bus_type =3D=3D SCSI) {=0A=
- 			dnegoprintk(("writeSDP1: ALL_IDS USE_NVRAM\n"));=0A=
- 			mptscsih_writeSDP1(hd, 0, 0, MPT_SCSICFG_ALL_IDS | =
-MPT_SCSICFG_USE_NVRAM);=0A=
- 		}=0A=
-@@ -6074,107 +6087,6 @@=0A=
- #endif /* ~MPTSCSIH_ENABLE_DOMAIN_VALIDATION */=0A=
- =0A=
+-#ifndef MPTSCSIH_DBG_TIMEOUT=0A=
+-static int mptscsih_user_command(MPT_ADAPTER *ioc, char *pbuf, int =
+len)=0A=
+-{=0A=
+-	/* Not yet implemented */=0A=
+-	return len;=0A=
+-}=0A=
+-#else=0A=
+-#define is_digit(c)	((c) >=3D '0' && (c) <=3D '9')=0A=
+-#define digit_to_bin(c)	((c) - '0')=0A=
+-#define is_space(c)	((c) =3D=3D ' ' || (c) =3D=3D '\t')=0A=
+-=0A=
+-#define UC_DBG_TIMEOUT		0x01=0A=
+-#define UC_DBG_HARDRESET	0x02=0A=
+-=0A=
+-static int skip_spaces(char *ptr, int len)=0A=
+-{=0A=
+-	int cnt, c;=0A=
+-=0A=
+-	for (cnt =3D len; cnt > 0 && (c =3D *ptr++) && is_space(c); cnt =
+--);=0A=
+-=0A=
+-	return (len - cnt);=0A=
+-}=0A=
+-=0A=
+-static int get_int_arg(char *ptr, int len, ulong *pv)=0A=
+-{=0A=
+-	int cnt, c;=0A=
+-	ulong	v;=0A=
+-	for (v =3D  0, cnt =3D len; cnt > 0 && (c=3D*ptr++) && is_digit(c); =
+cnt --) {=0A=
+-		v =3D (v * 10) + digit_to_bin(c);=0A=
+-	}=0A=
+-=0A=
+-	if (pv)=0A=
+-		*pv =3D v;=0A=
+-=0A=
+-	return (len - cnt);=0A=
+-}=0A=
+-=0A=
+-=0A=
+-static int is_keyword(char *ptr, int len, char *verb)=0A=
+-{=0A=
+-	int verb_len =3D strlen(verb);=0A=
+-=0A=
+-	if (len >=3D strlen(verb) && !memcmp(verb, ptr, verb_len))=0A=
+-		return verb_len;=0A=
+-	else=0A=
+-		return 0;=0A=
+-}=0A=
+-=0A=
+-#define SKIP_SPACES(min_spaces)						\=0A=
+-	if ((arg_len =3D skip_spaces(ptr,len)) < (min_spaces))		\=0A=
+-		return -EINVAL;						\=0A=
+-	ptr +=3D arg_len;							\=0A=
+-	len -=3D arg_len;=0A=
+-=0A=
+-#define GET_INT_ARG(v)							\=0A=
+-	if (!(arg_len =3D get_int_arg(ptr,len, &(v))))			\=0A=
+-		return -EINVAL;						\=0A=
+-	ptr +=3D arg_len;							\=0A=
+-	len -=3D arg_len;=0A=
+-=0A=
+-static int mptscsih_user_command(MPT_ADAPTER *ioc, char *buffer, int =
+length)=0A=
+-{=0A=
+-	char *ptr =3D buffer;=0A=
+-	char btmp[24];	/* REMOVE */=0A=
+-	int arg_len;=0A=
+-	int len	=3D length;=0A=
+-	int cmd;=0A=
+-	ulong number =3D 1;=0A=
+-	ulong delta =3D 10;=0A=
+-=0A=
+-	if ((len > 0) && (ptr[len -1] =3D=3D '\n'))=0A=
+-		--len;=0A=
+-=0A=
+-	if (len < 22) {=0A=
+-		strncpy(btmp, buffer, len);=0A=
+-		btmp[len+1]=3D'\0';=0A=
+-	} else {=0A=
+-		strncpy(btmp, buffer, 22);=0A=
+-		btmp[23]=3D'\0';=0A=
+-	}=0A=
+-	printk("user_command:  ioc %d, buffer %s, length %d\n",=0A=
+-			ioc->id, btmp, length);=0A=
+-=0A=
+-	if ((arg_len =3D is_keyword(ptr, len, "timeout")) !=3D 0)=0A=
+-		cmd =3D UC_DBG_TIMEOUT;=0A=
+-	else if ((arg_len =3D is_keyword(ptr, len, "hardreset")) !=3D 0)=0A=
+-		cmd =3D UC_DBG_HARDRESET;=0A=
+-	else=0A=
+-		return -EINVAL;=0A=
+-=0A=
+-	ptr +=3D arg_len;=0A=
+-	len -=3D arg_len;=0A=
+-=0A=
+-	switch(cmd) {=0A=
+-		case UC_DBG_TIMEOUT:=0A=
+-			SKIP_SPACES(1);=0A=
+-			GET_INT_ARG(number);=0A=
+-			SKIP_SPACES(1);=0A=
+-			GET_INT_ARG(delta);=0A=
+-			break;=0A=
+-	}=0A=
+-=0A=
+-	printk("user_command: cnt=3D%ld delta=3D%ld\n", number, delta);=0A=
+-=0A=
+-	if (len)=0A=
+-		return -EINVAL;=0A=
+-	else {=0A=
+-		if (cmd =3D=3D UC_DBG_HARDRESET) {=0A=
+-			ioc->timeout_hard =3D 1;=0A=
+-		} else if (cmd =3D=3D UC_DBG_TIMEOUT) {=0A=
+-			/* process this command ...=0A=
+-			 */=0A=
+-			ioc->timeout_maxcnt =3D 0;=0A=
+-			ioc->timeout_delta =3D delta < 2 ? 2 : delta;=0A=
+-			ioc->timeout_cnt =3D 0;=0A=
+-			ioc->timeout_maxcnt =3D number < 8 ? number: 8;=0A=
+-		}=0A=
+-	}=0A=
+-	/* Not yet implemented */=0A=
+-	return length;=0A=
+-}=0A=
+-#endif=0A=
+-=0A=
  =
 /*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
 -=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
 -=3D-=3D*/=0A=
--/* Commandline Parsing routines and defines.=0A=
-- *=0A=
-- * insmod format:=0A=
-- *	insmod mptscsih mptscsih=3D"width:1 dv:n factor:0x09 saf-te:1"=0A=
-- *  boot format:=0A=
-- *	mptscsih=3Dwidth:1,dv:n,factor:0x8,saf-te:1=0A=
-- *=0A=
-- */=0A=
--#ifdef MODULE=0A=
--#define	ARG_SEP	' '=0A=
--#else=0A=
--#define	ARG_SEP	','=0A=
--#endif=0A=
+ /**=0A=
+  *	mptscsih_proc_info - Return information about MPT adapter=0A=
+@@ -1812,7 +1656,7 @@=0A=
+  * 	hostno: scsi host number=0A=
+  *	func:   if write =3D 1; if read =3D 0=0A=
+  */=0A=
+-static int =0A=
++static int=0A=
+ mptscsih_proc_info(struct Scsi_Host *host, char *buffer, char **start, =
+off_t offset,=0A=
+ 			int length, int func)=0A=
+ {=0A=
+@@ -1821,7 +1665,9 @@=0A=
+ 	int size =3D 0;=0A=
+ =0A=
+ 	if (func) {=0A=
+-		size =3D mptscsih_user_command(ioc, buffer, length);=0A=
++		/* =0A=
++		 * write is not supported =0A=
++		 */=0A=
+ 	} else {=0A=
+ 		if (start)=0A=
+ 			*start =3D buffer;=0A=
+@@ -1832,7 +1678,6 @@=0A=
+ 	return size;=0A=
+ }=0A=
+ =0A=
 -=0A=
--#ifdef MODULE=0A=
--static char setup_token[] __initdata =3D=0A=
--	"dv:"=0A=
--	"width:"=0A=
--	"factor:"=0A=
--	"saf-te:"=0A=
--       ;	/* DO NOT REMOVE THIS ';' */=0A=
--#endif=0A=
--       =0A=
--#define OPT_DV			1=0A=
--#define OPT_MAX_WIDTH		2=0A=
--#define OPT_MIN_SYNC_FACTOR	3=0A=
--#define OPT_SAF_TE		4=0A=
--=0A=
--/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
-*/=0A=
--#ifdef MODULE=0A=
--static int=0A=
--get_setup_token(char *p)=0A=
--{=0A=
--	char *cur =3D setup_token;=0A=
--	char *pc;=0A=
--	int i =3D 0;=0A=
--=0A=
--	while (cur !=3D NULL && (pc =3D strchr(cur, ':')) !=3D NULL) {=0A=
--		++pc;=0A=
--		++i;=0A=
--		if (!strncmp(p, cur, pc - cur))=0A=
--			return i;=0A=
--		cur =3D pc;=0A=
--	}=0A=
--	return 0;=0A=
--}=0A=
--=0A=
--/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
-*/=0A=
--static int=0A=
--mptscsih_setup(char *str)=0A=
--{=0A=
--	char *cur =3D str;=0A=
--	char *pc, *pv;=0A=
--	unsigned long val;=0A=
--	int  c;=0A=
--=0A=
--	while (cur !=3D NULL && (pc =3D strchr(cur, ':')) !=3D NULL) {=0A=
--		char *pe;=0A=
--=0A=
--		val =3D 0;=0A=
--		pv =3D pc;=0A=
--		c =3D *++pv;=0A=
--=0A=
--		if	(c =3D=3D 'n')=0A=
--			val =3D 0;=0A=
--		else if	(c =3D=3D 'y')=0A=
--			val =3D 1;=0A=
--		else=0A=
--			val =3D (int) simple_strtoul(pv, &pe, 0);=0A=
--=0A=
--		printk("Found Token: %s, value %x\n", cur, (int)val);=0A=
--		switch (get_setup_token(cur)) {=0A=
--		case OPT_DV:=0A=
--			driver_setup.dv =3D val;=0A=
--			break;=0A=
--=0A=
--		case OPT_MAX_WIDTH:=0A=
--			driver_setup.max_width =3D val;=0A=
--			break;=0A=
--=0A=
--		case OPT_MIN_SYNC_FACTOR:=0A=
--			driver_setup.min_sync_fac =3D val;=0A=
--			break;=0A=
--=0A=
--		case OPT_SAF_TE:=0A=
--			driver_setup.saf_te =3D val;=0A=
--			break;=0A=
--=0A=
--		default:=0A=
--			printk("mptscsih_setup: unexpected boot option '%.*s' ignored\n", =
-(int)(pc-cur+1), cur);=0A=
--			break;=0A=
--		}=0A=
--=0A=
--		if ((cur =3D strchr(cur, ARG_SEP)) !=3D NULL)=0A=
--			++cur;=0A=
--	}=0A=
--	return 1;=0A=
--}=0A=
--#endif=0A=
--/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+ =
+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
 -=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
 -=3D-=3D*/=0A=
--=0A=
+ #define ADD_INDEX_LOG(req_ent)	do { } while(0)=0A=
  =0A=
- module_init(mptscsih_init);=0A=
- module_exit(mptscsih_exit);=0A=
-diff -uarN b/drivers/message/fusion/mptscsih.h =
-a/drivers/message/fusion/mptscsih.h=0A=
---- b/drivers/message/fusion/mptscsih.h	2004-11-17 16:24:38.000000000 =
--0700=0A=
-+++ a/drivers/message/fusion/mptscsih.h	2004-11-18 12:10:00.000000000 =
--0700=0A=
-@@ -95,17 +95,8 @@=0A=
- {=0A=
-         u8      dv;=0A=
-         u8      max_width;=0A=
--        u8      min_sync_fac;=0A=
-+        u8      min_sync_factor;=0A=
-         u8      saf_te;=0A=
- };=0A=
+@@ -2022,18 +1867,6 @@=0A=
+ 			}=0A=
+ 		}=0A=
  =0A=
+-#ifdef MPTSCSIH_DBG_TIMEOUT=0A=
+-		if (hd->ioc->timeout_cnt < hd->ioc->timeout_maxcnt) {=0A=
+-			foo_to[hd->ioc->timeout_cnt] =3D SCpnt;=0A=
+-			hd->ioc->timeout_cnt++;=0A=
+-			//mod_timer(&SCpnt->eh_timeout, jiffies + =
+hd->ioc->timeout_delta);=0A=
+-			issueCmd =3D 0;=0A=
+-			printk(MYIOC_s_WARN_FMT=0A=
+-				"to pendingQ: (sc=3D%p, mf=3D%p, time=3D%ld)\n",=0A=
+-				hd->ioc->name, SCpnt, mf, jiffies);=0A=
+-		}=0A=
+-#endif=0A=
 -=0A=
--#define MPTSCSIH_DRIVER_SETUP                   \=0A=
--{                                               \=0A=
--        MPTSCSIH_DOMAIN_VALIDATION,             \=0A=
--        MPTSCSIH_MAX_WIDTH,                     \=0A=
--        MPTSCSIH_MIN_SYNC,                      \=0A=
--        MPTSCSIH_SAF_TE,                        \=0A=
--}=0A=
+ 		if (issueCmd) {=0A=
+ 			mpt_put_msg_frame(ScsiDoneCtx, hd->ioc, mf);=0A=
+ 			dmfprintk((MYIOC_s_INFO_FMT "Issued SCSI cmd (%p) mf=3D%p =
+idx=3D%d\n",=0A=
+@@ -2216,11 +2049,6 @@=0A=
+ 		}=0A=
+ 	}=0A=
+ =0A=
+-#ifdef MPTSCSIH_DBG_TIMEOUT=0A=
+-	if (hd->ioc->timeout_hard)=0A=
+-		rc =3D 1;=0A=
+-#endif=0A=
 -=0A=
- #endif=0A=
+ 	/* Only fall through to the HRH if this is a bus reset=0A=
+ 	 */=0A=
+ 	if ((type =3D=3D MPI_SCSITASKMGMT_TASKTYPE_RESET_BUS) && (rc ||=0A=
+@@ -3125,10 +2953,6 @@=0A=
+ 			mpt_free_msg_frame(ioc, hd->tmPtr);=0A=
+ 		}=0A=
+ =0A=
+-#ifdef MPTSCSIH_DBG_TIMEOUT=0A=
+-		ioc->timeout_hard =3D 0;=0A=
+-#endif=0A=
+-=0A=
+ 		dtmprintk((MYIOC_s_WARN_FMT "Pre-Reset complete.\n", ioc->name));=0A=
+ =0A=
+ 	} else {=0A=
 
-------_=_NextPart_000_01C4CE4D.DC496E20--
+------_=_NextPart_000_01C4CE4D.99EBFD40--
