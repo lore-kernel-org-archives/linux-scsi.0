@@ -1,76 +1,101 @@
-From: "Kai OM" <epimetreus@fastmail.fm>
-Subject: Re: Bug: SCSI driver hangs in 2.6.6 and 2.6.7
-Date: Tue, 29 Jun 2004 21:54:41 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1088560481.30217.199438553@webmail.messagingengine.com>
-References: <7411.1088552814@www56.gmx.net>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: PATCH for disabling write cache on SATA drives
+Date: Tue, 29 Jun 2004 23:03:16 -0400
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <40E22D74.4000600@pobox.com>
+References: <1F6D1D1660975A4887628A011443A1BC07734C05@uswaumsx13medge.med.ge.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:63451 "EHLO
-	out2.smtp.messagingengine.com") by vger.kernel.org with ESMTP
-	id S266188AbUF3Byn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jun 2004 21:54:43 -0400
-Content-Disposition: inline
-In-Reply-To: <7411.1088552814@www56.gmx.net>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1F6D1D1660975A4887628A011443A1BC07734C05@uswaumsx13medge.med.ge.com>
+To: "Edwards, Scott (MED, Kelly IT Resouces)" <James.Edwards@med.ge.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org, "'sedwards@xmission.com'" <sedwards@xmission.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Greve <thomas.greve@gmx.de>
-Cc: linux-scsi@vger.kernel.org
 
-The particular issue I'm having appears not to be a compiler issue; it's
-happened when compiled using several versions of GCC, unless it's a
-problem occuring in a range of versions of GCC.
+Edwards, Scott (MED, Kelly IT Resouces) wrote:
+> On Monday, June 28, 2004 at 6:12 PM, Jeff Garzik wrote:
+> 
+> 
+>>On Fri, Jun 25, 2004 at 06:21:24PM -0500, Edwards, Scott (MED, Kelly
+> 
+> IT Resouces) wrote:
+> 
+>>>I don't know if this is useful for anyone or if anyone even cares,
+> 
+> but just
+> 
+>>>in case someone does, this is the patch I made to disable the write
+> 
+> cache on
+> 
+>>>the Serial ATA drives.  It doesn't make the write cache controllable
+> 
+> from
+> 
+>>>the user level, it just ALWAYS disables it.  (I tried to make one
+> 
+> that could
+> 
+>>>be sent via an ioctl, but there were far too many things that I
+> 
+> didn't
+> 
+>>>understand and it didn't work.)  Since I have never done this before
+> 
+> I don't
+> 
+>>>know if there is some protocol that I missed, if so I'm sorry.  If
+> 
+> there are
+> 
+>>>glaring stupid mistakes (very likely) please let me know.
+>>
+>>In principle your patch is fine, but I would really like to find a
+>>better way of allowing the user to do this.
+>>
+>>My immediate guess would be to use the standard SCSI method of
+> 
+> disabling
+> 
+>>write cache, and have that initiate wbcache disable on the SATA side.
+>>
+>>Long term, this would be augmented by an "ATA passthru" opcode or
+> 
+> ioctl.
+> 
+>>	Jeff
+> 
+> 
+> I first tried to make a real scsi ioctl command in libata-scsi.c, so I
+> could just use the scsiinfo program to disable the write cache.  I  made
+> a xlat_mode_select command but it didn't work and management didn't want
+> me
+> spending more time trying to figure it out.  And really for it to work
+> correctly there would have to be a xlat_mode_sense because now it is
+> just 
+> simulated (in ata_scsi_simulate).
+> 
+> I'm willing to work on it on my own time as soon as I get a SATA drive, 
+> if someone would be willing to advise me on how to send the ATA commands
+> to the drive (I think this is where it failed before).
 
-My drive should be running in 32 bit synch, as well, but the newer
-driver seems to force it into asynch.
+Basically, it involves the translation of MODE SELECT, something I've 
+been meaning to add, but is low priority.  If you wanted to work on 
+that, that would be quite useful.
 
-I can't infer a lot about this issue, since I'm not a programmer or SCSI
-expert, but I can observe and correlate.
+The following is a proposal for translating ATA to SCSI:
+http://www.t10.org/ftp/t10/document.04/04-196r0.pdf
 
-Another person I know of has this issue as well, appended are links to
-some log files of his.
+In that proposal, it describes the use of MODE SELECT Caching Mode Page 
+(8h).
 
-http://ronmon.shacknet.nu/configs/scsi_boot_error
+Note that, in addition to actually issuing the SET FEATURES command, to 
+disable/enable writeback caching, you must update libata's internal copy 
+of the IDENTIFY DEVICE page.  This involves either re-issuing IDENTIFY 
+DEVICE (difficult), or simply updating the 'enabled' bit in the 
+internally cached data (easy).
 
-http://ronmon.shacknet.nu/configs/dmesg_good-2.6.7-rc3
+	Jeff
 
-http://ronmon.shacknet.nu/phpsysinfo/
-
-http://ronmon.shacknet.nu/configs/lspci-vvx
-
------ Original message -----
-From: "Thomas Greve" <thomas.greve@gmx.de>
-To: "Kai OM" <epimetreus@fastmail.fm>
-Date: Wed, 30 Jun 2004 01:46:54 +0200 (MEST)
-Subject: Bug: SCSI driver hangs in 2.6.6 and 2.6.7
-
-Hi Kai.
-
-I encountered the same problem here, the kernel being caught in an
-endless
-loop during domain validation in scsi_transport_spi.c:spi_dv_retrain().
-
-Interesting enough, this happens only while validating the 2nd of my two
-hard disks (IBM DPSS-318350N on a Dawi Control sym80c875 host adapter).
-
-The mm patches seem to contain a fix for this; since i did not get any
-"dropping back" error messages after patching the file, this might as
-well
-be an optimisation problem with gcc 3.3.3.
-
-After applying that patch, i got my kernel booting again, but the driver
-reports / configures the hard disk as "asynchronous", what i suspect
-might
-be an unnecessary bottle neck:
-
-<6>scsi(0:0:2:0): Beginning Domain Validation
-<6>sym0:2: wide asynchronous.
-<6>sym0:2: FAST-20 WIDE SCSI 40.0 MB/s ST (50.0 ns, offset 16)
-<6>scsi(0:0:2:0): Ending Domain Validation
-
-Hope this helps,
-
--- 
-- Thomas
 
