@@ -1,90 +1,55 @@
-From: Gerhard Schneider <gs@ilsb.tuwien.ac.at>
-Subject: Re: 2.6.10-rc4 tape slow after switch Fusion MPT to Megaraid
-Date: Wed, 02 Mar 2005 12:42:15 +0100
-Message-ID: <1109763735.3666.81.camel@ilfb02.ilsb.tuwien.ac.at>
-References: <1109159088.5896.36.camel@ilfb02.ilsb.tuwien.ac.at>
-	 <Pine.LNX.4.61.0502242246420.9332@kai.makisara.local>
-	 <1109323141.5896.124.camel@ilfb02.ilsb.tuwien.ac.at>
-	 <Pine.LNX.4.61.0502272239580.17367@kai.makisara.local>
-	 <1109759428.3666.77.camel@ilfb02.ilsb.tuwien.ac.at>
+From: Olaf Hering <olh@suse.de>
+Subject: Re: [linux-usb-devel] 2.6.11-rc3-bk5, oops in scsi_try_bus_reset
+Date: Wed, 2 Mar 2005 15:34:13 +0100
+Message-ID: <20050302143413.GA26585@suse.de>
+References: <20050217183927.GA8073@suse.de> <Pine.LNX.4.44L0.0502171453170.1383-100000@ida.rowland.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UnEA80VO2IB1qUXmeebx"
-Received: from gh-gw1.ilsb.tuwien.ac.at ([128.130.23.14]:60353 "EHLO
-	gh-gw1.ilsb.tuwien.ac.at") by vger.kernel.org with ESMTP
-	id S262281AbVCBLms (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Mar 2005 06:42:48 -0500
-In-Reply-To: <1109759428.3666.77.camel@ilfb02.ilsb.tuwien.ac.at>
+Content-Type: text/plain; charset=utf-8
+Received: from news.suse.de ([195.135.220.2]:31198 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S262303AbVCBOeP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2005 09:34:15 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0502171453170.1383-100000@ida.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: scsi <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 
+ On Thu, Feb 17, Alan Stern wrote:
 
---=-UnEA80VO2IB1qUXmeebx
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Thu, 17 Feb 2005, Olaf Hering wrote:
+> 
+> >  On Mon, Feb 14, Alan Stern wrote:
+> > 
+> > > https://lists.one-eyed-alien.net/pipermail/usb-storage/2004-November/001201.html
+> > 
+> > Alan,
+> > 
+> > this patch seems to fix the crashes. Is it ready for production use, or
+> > should I wait for a differnt patch?
+> 
+> It hasn't been tested very much.  (Would you like to be a beta tester? :-)  
+> Right now I'm in the middle of cleaning it up and submitting it to Matt
+> Dharm for official inclusion.
 
-On Wed, 2005-03-02 at 11:30 +0100, Gerhard Schneider wrote:
-> On Sun, 2005-02-27 at 22:46 +0200, Kai Makisara wrote:
->=20
-> >=20
-> > This shows that your application is not using very large block size (3=20
-> > pages, 10 kB?). You might get better throughput with larger block size =
-(32=20
-> > kB or 64 kB is usually large enough). If the Megaraid command processin=
-g=20
-> > speed is not fast enough, this might explain the problem (not probable =
-but=20
-> > I can't see any probable problems ;-)
-> >=20
->=20
-> After different tries (I had problems w/ my backup schedule - ever tried
-> to back up 600 GB with 2.6MB/s? :-)
->=20
-> Tape block sizes between 10k and a few MB don't make any difference
->=20
-> For better understanding I did the tests with
->=20
-> dd if=3D/dev/zero of=3D/dev/nst0 bs=3D1M     and different mt setblk
->=20
-> No chance to go above 2.6 MB/s
->=20
+When a device is plugged in, rmmod sd_mod fails, does that work for you?
+sda is already unregistered, but rmmod is stuck like that:
 
-Moved the tape drive to another machine w/Fusion chipset, but w/o
-Megaraid controller. Absolutely the same software.
+rmmod         D 000F4240     0 11501  11114                     (NOTLB)
+d7a03f1c 00000086 db8b95a0 000f4240 00000000 0001e848 a4c98fc0 000f4236
+       c03b58c8 df666560 df6666b4 e0dbc36c df666560 00000246 e0dbc374 c02cfcbe
+       00000001 df666560 c01171a0 e0dbc374 e0dbc374 c0165981 e0dbc37c e0dfdd40
+Call Trace:
+ [<c02cfcbe>] __down+0x6e/0xd0
+ [<c01171a0>] default_wake_function+0x0/0x10
+ [<c0165981>] dput+0x21/0x180
+ [<c02cfe23>] __down_failed+0x7/0xc
+ [<c01d0430>] kobject_release+0x0/0x10
+ [<c02354e0>] .text.lock.driver+0x8/0x18
+ [<e0dba25d>] exit_sd+0x1d/0x46 [sd_mod]
+ [<c012ccf4>] sys_delete_module+0x154/0x170
+ [<c0151397>] vfs_write+0xa7/0x110
+ [<c01514ac>] sys_write+0x3c/0x70
+ [<c0102c49>] sysenter_past_esp+0x52/0x79
 
-dd if=3D/dev/zero of=3D/dev/nst0 bs=3D1M count=3D1000
-1000+0 records in
-1000+0 records out
-1048576000 bytes transferred in 24.597061 seconds (42630134 bytes/sec)
-
-That's the transfer rate the tape drive is able when receiving bullshit
-(/dev/zero).
-
-It's a megaraid issue (not a tape issue..)
-
-                                             GS
-
-changing all backup scripts to the new machine
---=20
-Gerhard Schneider
-Institute of Lightweight Design and          e-Mail:gs@ilsb.tuwien.ac.at
-Structural Biomechanics (E317)               Tel.:   +43 1 58801 31716
-Vienna University of Technology / Austria    Fax:    +43 1 58801 31799
-A-1040 Wien, Gusshausstrasse 27-29    http://www.ilsb.tuwien.ac.at/~gs/
-
-
---=-UnEA80VO2IB1qUXmeebx
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.5 (GNU/Linux)
-
-iD8DBQBCJaaXE6e53f4wQG4RAvVoAKDsSZauo68wAce/snibNE1llbCS6QCgv9S8
-TKpYHl8zFsEsJpvcQPtzHjs=
-=0EKC
------END PGP SIGNATURE-----
-
---=-UnEA80VO2IB1qUXmeebx--
 
