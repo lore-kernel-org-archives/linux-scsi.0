@@ -1,62 +1,34 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [usb-storage] Re: [PATCH] SCSI: limit mode sense usage
-Date: Tue, 28 Oct 2003 17:49:48 -0500 (EST)
+From: Mike Christie <mikenc@us.ibm.com>
+Subject: Re: [PATCH] [v2] aha152x cmnd->device oops
+Date: Tue, 28 Oct 2003 14:50:28 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0310281737350.6912-100000@ida.rowland.org>
-References: <1067376788.1056.5.camel@ronald.kuetemeier.com>
+Message-ID: <3F9EF2B4.9030708@us.ibm.com>
+References: <20031027155713.GA28140@lst.de>	<20031027160101.76d5291b.rddunlap@osdl.org>	<20031028090600.GA7370@lst.de> <20031028124536.3ce82c23.rddunlap@osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:30724 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S261798AbTJ1Wtt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Oct 2003 17:49:49 -0500
-In-Reply-To: <1067376788.1056.5.camel@ronald.kuetemeier.com>
+Received: from e31.co.us.ibm.com ([32.97.110.129]:60664 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S261775AbTJ1Wux
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Oct 2003 17:50:53 -0500
+In-Reply-To: <20031028124536.3ce82c23.rddunlap@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Ronald Kuetemeier <ronald@kuetemeier.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@one-eyed-alien.net>
+To: "Randy.Dunlap" <rddunlap@osdl.org>
+Cc: Christoph Hellwig <hch@lst.de>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, fischer@norbit.de
 
-On Tue, 28 Oct 2003, Ronald Kuetemeier wrote:
+Hi Randy,
 
-> Ah, now that makes sense, should have looked at the code ...
-> Fixed it with a *.debug to messages.
-> Anyhow,quick test.
-> 1st. (which works and is now in my rc.local): mount successes 
-> echo "Sony:Sony DSC:0x4000" > /proc/scsi/device_info
-> into succ-usb_messages.txt.
-> 
-> 2nd. tried to mount without success, i.e error
-> after reboot and no rc.local entry
-> into err-usb_messages.txt
-> echo "Sony:Sony DSC:0x0000" > /proc/scsi/device_inf
-> didn't do the trick.
-> 
-> Hope this helps,
-> Ronald
+>  			if(!(DONE_SC->SCp.Status & not_issued)) {
+> -				Scsi_Cmnd *cmnd = kmalloc(sizeof(Scsi_Cmnd), GFP_ATOMIC);
+> +				Scsi_Cmnd *cmnd = scsi_get_command(DONE_SC->device, GFP_ATOMIC);
 
-All right.  The logs make it clear.
+Do you need to add a scsi_put_command to balance this get when the 
+command completes?
 
-Your device doesn't like the MODE-SENSE(10) for page 3F.  But instead of 
-reporting a normal error code, it tries to send an overlong packet (i.e., 
-longer than the host asked for).  Of course this is an error, and the SCSI 
-code retries several times, eventually giving up.  Oddly enough, the 
-device then returns an Invalid Command status for the _next_ command, 
-which is an innocuous TEST-UNIT-READY.  I don't understand that.
+> +					cmnd->device          = ptr->device;
 
-Anyway, the SCSI layer recognizes that something is wrong.  But for some
-unknown reason it goes right back to the beginning of the probe sequence,
-starting with another TEST-UNIT-READY, READ-CAPACITY, and moving on.  
-Naturally enough, when it reaches the MODE-SENSE(10) again the same
-problem reoccurs.  Patrick, do you know why the sd initialization code is
-doing this?
+Don't even need this now. scsi_get_command will set the device for you.
 
-Even the successful logfile had an odd feature.  The sd driver knew enough
-to skip both the page 3F and the page 8 MODE-SENSE(10) calls.  But then it
-went ahead and issued MODE-SENSE(6) for page 8!  Fortunately this worked
-(or rather, failed cleanly enough) for things to progress okay.  Patrick,
-can you explain that too?
-
-Alan Stern
-
-
+Mike
 
