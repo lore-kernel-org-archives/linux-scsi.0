@@ -1,83 +1,46 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: usb storage traces
-Date: 05 Dec 2003 09:11:07 -0700
+From: Brian King <brking@us.ibm.com>
+Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
+Date: Fri, 05 Dec 2003 11:03:32 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1070640667.12411.32.camel@patibmrh9>
-References: <Pine.LNX.4.44L0.0312051049040.850-100000@ida.rowland.org>
+Message-ID: <3FD0BA64.5080807@us.ibm.com>
+References: <200310231734.10263.krmurthy@cisco.com>	<200312011740.09693.krmurthy@cisco.com> <1070292174.2007.14.camel@mulgrave>	<200312041800.55663.krmurthy@cisco.com> <1070594036.1603.34.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:40444 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264265AbTLEQLS
+Received: from e32.co.us.ibm.com ([32.97.110.130]:60803 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S264245AbTLEREV
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Dec 2003 11:11:18 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0312051049040.850-100000@ida.rowland.org>
+	Fri, 5 Dec 2003 12:04:21 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-scsi@vger.kernel.org, Patrick Mansfield <patmans@us.ibm.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Alex Sanks <alex@netchip.com>, Julian Back <jback@mpc-data.co.uk>, David Brownell <david-b@pacbell.net>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: "N.C.Krishna Murthy" <krmurthy@cisco.com>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, davmyers@cisco.com
 
-> > What is FSG?
-> ...
-> ... File-backed Storage Gadget.  
-> It's a driver for a Linux-based USB _device_ (as opposed to _host_) that 
-> emulates a USB Mass Storage device, using a file or block device as 
-> backing storage in somewhat the same manner as the loop driver.
-> ... Unfortunately, ...
+James Bottomley wrote:
+>>If the generic infrastructure which you mentioned does not exist now and in 
+>>case there is a plan to do one such thing is there any framework for that?
+>>Wouldn't that require a kernel API which is capable of both 
+>>"adding new luns" and "deleting luns which no longer exist"?
+> 
+> 
+> Well, a hotplug event feeds certain information into the environment
+> when it triggers the call.  All we really need is a wrapper in SCSI to
+> add the SCSI information to the environment and trigger the event in a
+> generic fashion.
+> 
 
-Wow, our lead FSG developer has no Linux USB _device_.
 
-Ouch.  Some sponsor with money should fix that.
+This would be wonderful. I am currently writing a LLD and was going to 
+use the scsi_add_device and scsi_remove_device interfaces to add/remove 
+devices as the devices show up and disappear at runtime, but this was 
+going to require me to go through a bit of complexity using a workqueue 
+to do it at task level. If a LLD had interfaces to do this that could be 
+called at interrupt context these interfaces would be much easier to use.
 
-> ...
 
-Mostly I'm writing to mention, recently one of the semi-private
-usb-storage ancestors of this thread also gave me:
 
-http://www.linux-usb.org/gadget/
-
-explained as follows.
-
-Pat LaVarre
-
------Forwarded Message-----
-Subject: Re: [usb-storage] g_file_storage logs for Windows hosts
-Date: 04 Dec 2003 15:59:45 -0700
-
-Pat LaVarre wrote:
-
-> What I lack is (a) free time and (b) a tutorial I can rapidly
-> assimilate for how I fetch and deploy current fsg to h/w I own.
-
-See www.linux-usb.org/gadget for the bare info.  Clone kernel from BK
-(or just pull into your own repository), configure your kernel, build
-and install with the file storage gadget; "modprobe g_file_storage ..."
-as shown on that page.  That assumes you have appropriate hardware.
-
-> Possibly the only appropriate hardware I have is a once-free-with-msdn
-> "ViewSonic" "Pocket PC V37".  On that, Windows --> Settings --> System
-> --> About reports "Intel PXA255" "36.45 MB".
-
-Hardware that will run ... FSG code includes 2.4 or 2.6 systems
-running Linux is less common than generic PCs or USB disks:
-
-  - PXA 2xx hardware, which tends to be semi-custom.  www.handhelds.org
-    is a good source of info.  (They don't list that ViewSonic, and
-    focus on iPaqs even though Zaurii run Linux too.)
-
-  - PCI-based hardware with a net2280 (www.netchip.com); simplest as
-    a PCI card in a generic PC.  (This is the high speed option.)
-
-  - PCI-based hardware with a Toshiba TC86c001 chip, includes some
-    MIPS systems; a PCI card version needs a 3.3V slot.
-
-  - ... can probably say something about the SuperH hardware
-    that runs it; this support is 2.4-only for now.
-
-I understand there are drivers for some other device-side USB
-controllers which are in development, or otherwise not widely
-circulated.  Such as some other NetChip hardware, Cypress SX2, some
-other ARM-based SOCs, and more.
-...
-
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
 
