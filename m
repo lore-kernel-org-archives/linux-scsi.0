@@ -1,40 +1,40 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Unable to set hostid in sym53c8xx module
-Date: Wed, 20 Oct 2004 12:22:29 +0100
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Fw: oops in kernel 2.6.9
+Date: 20 Oct 2004 08:32:38 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041020112229.GS16153@parcelfarce.linux.theplanet.co.uk>
-References: <7AAD212492598A4A92463C3F5D34C54F19512B@ccd3.CC.de>
+Message-ID: <1098279164.2002.7.camel@mulgrave>
+References: <20041019175146.15889e11.akpm@osdl.org>
+	<20041020064255.GB8755@suse.de>  <20041019234857.7ddf5bc7.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:32958 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S269917AbUJTLWg
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Oct 2004 07:22:36 -0400
-Content-Disposition: inline
-In-Reply-To: <7AAD212492598A4A92463C3F5D34C54F19512B@ccd3.CC.de>
+Received: from stat16.steeleye.com ([209.192.50.48]:49337 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S270009AbUJTNc5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Oct 2004 09:32:57 -0400
+In-Reply-To: <20041019234857.7ddf5bc7.akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Heinzmann, Robert" <Heinzmann@cc-dresden.de>
-Cc: Reinhold Fischer <news4reini123@aon.at>, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Jens Axboe <axboe@suse.de>, nickpiggin@yahoo.com.au, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Oct 20, 2004 at 11:01:00AM +0200, Heinzmann, Robert wrote:
-> Reinhold, 
+On Wed, 2004-10-20 at 01:48, Andrew Morton wrote:
+> Jens Axboe <axboe@suse.de> wrote:
+> >
+> > On Tue, Oct 19 2004, Andrew Morton wrote:
+> > > 
+> > > oy.
+> > 
+> > Looks like a SCSI issue, it probably killed the queue before the io
+> > scheduler was entered again.
 > 
-> > Do you know, if it is fixed in 2.6.9?
-> I'm not shure, probably not (there where some other fixes too). Afaik
-> 2.6.10 will include a fixed sym2 driver
-> (http://marc.theaimsgroup.com/?l=linux-scsi&m=109742499223501&w=2).
-> Maybe the fix in the thread mentioned in the last mail helps (just as a
-> workaround). It worked for me.
+> Better add linux-scsi to cc then...
 
-It is not fixed in 2.6.9.  The 2.1.18m not-yet-released version of the
-driver switches to the new module_param method of specifying parameters,
-I'll send that out soonish.
+The SCSI half of the fix for this is in bk latest (that was adding a
+refcount to the device as soon as the command is issued).  I'm not sure
+about the usb-storage piece (not exciting the error handler by ignoring
+commands when the device is unplugged).
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+James
+
+
