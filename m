@@ -1,23 +1,40 @@
-From: "Mukker, Atul" <atulm@lsil.com>
-Subject: unique entry points for all driver hosts
-Date: Mon, 12 May 2003 18:41:50 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E570185F192@EXA-ATLANTA.se.lsil.com>
+From: Xose Vazquez Perez <xose@wanadoo.es>
+Subject: Re: [ANNOUNCE] QLogic FC Driver for Linux kernel 2.5 available.
+Date: Tue, 13 May 2003 00:38:47 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <3EC02277.3020003@wanadoo.es>
+References: <3EC017E1.3050507@wanadoo.es> <1052777037.3629.15.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, "Mukker, Atul" <Atulm@lsil.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp5.wanadoo.es ([62.37.236.237]:18626 "EHLO smtp.wanadoo.es")
+	by vger.kernel.org with ESMTP id S262850AbTELWZq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 May 2003 18:25:46 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, jes@wildopensource.com
 
-Why doesn't mid-layer allow LLDs to specify separate entry points to various
-hosts attached to the same driver. Like some other entries in the Scsi Host
-Template, entry points should also  allowed to be overridden.
+James Bottomley wrote:
 
+> Does that mean "no"?
 
-Thanks
+:-?
 
--Atul Mukker
-Storage Systems
-LSI Logic Corporation
+> There is little chance that a 2001 driver will compile in 2.5, let alone
+> run.  Also, I can't find a driver for the ISP1020/1040---unless it's
+> hiding somewhere.
+
+difficult, qlogic ftp/http has a very bad index service and not all
+files are at http://download.qlogic.com/index.txt
+
+but I think that they only have 3 LiNUX drivers:
+- qla2x00 with official support
+- qla1x160 obsolete
+- qla4xxx for iSCSI QLA4000
+
+regards,
+-- 
+Galiza nin perdoa nin esquence. Governo demision!
+
