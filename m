@@ -1,67 +1,36 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [2.6 patch] SCSI: possible cleanups
-Date: Tue, 01 Mar 2005 18:14:22 +1000
-Message-ID: <4224245E.6090503@torque.net>
-References: <20050228213159.GO4021@stusta.de>
-Reply-To: dougg@torque.net
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [ANNOUNCE] iSCSI enterprise target software
+Date: Tue, 01 Mar 2005 09:40:38 +0100
+Message-ID: <1109666441.6293.62.camel@laptopd505.fenrus.org>
+References: <20050301161951K.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Received: from borg.st.net.au ([65.23.158.22]:59847 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S261380AbVCAINd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2005 03:13:33 -0500
-In-Reply-To: <20050228213159.GO4021@stusta.de>
+Received: from pentafluge.infradead.org ([213.146.154.40]:2439 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261600AbVCAIkp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Mar 2005 03:40:45 -0500
+In-Reply-To: <20050301161951K.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, iscsitarget-devel@lists.sourceforge.net
 
-Adrian Bunk wrote:
-> Before I'm getting flamed to death:
+On Tue, 2005-03-01 at 16:19 +0900, FUJITA Tomonori wrote:
 
-Adrian,
-I have a few comments below.
+> The user-space daemon handles authentication and the kernel threads
+> take care of network and disk I/O requests from initiators by using
+> the VFS interface. The kernel-space code is not intrusive. It doesn't
+> touch other parts of the kernel. The code is already stable and
+> usable. More than 130 people currently subscribe to the project's
+> mailing list. The developers aim for inclusion into the mainline
+> kernel.
 
-> This patch contains possible cleanups. If parts of this patch conflict 
-> with pending changes these parts of my patch have to be dropped.
-> 
-> This patch contains the following possible cleanups:
-> - make needlessly global code static
-> - remove or #if 0 the following unused functions:
->   - scsi.h: print_driverbyte
->   - scsi.h: print_hostbyte
+> Could you please review the code? Any comments are greatly
+> appreciated.
+> -
 
-The names of the above are too general so they should go
-as soon as practical.
+can you explain why the target has to be inside the kernel and can't be
+a pure userspace daemon ?
 
->   - constants.c: scsi_print_hostbyte
->   - constants.c: scsi_print_driverbyte
-
-I'm a bit surprised nothing else is using the above two.
-
->   - scsi_scan.c: scsi_scan_single_target
-> - remove the following unneeded EXPORT_SYMBOL's:
->   - constants.c: __scsi_print_sense
->   - hosts.c: scsi_host_lookup
->   - scsi.c: scsi_device_cancel
->   - scsi_error.c: scsi_normalize_sense
-
-I introduced scsi_normalize_sense() recently, Christoph H.
-proposed it should be static but Luben Tuikov (aic7xxx
-maintainer) said he wished to use it in the future.
-Hence it was left global.
-
->   - scsi_error.c: scsi_sense_desc_find
-
-A pending patch on st from Kai M. will be using
-scsi_sense_desc_find(). I presume others will be using
-it in the future (e.g. SAT returns ATA status via
-a sense data descriptor with no corresponding fixed
-format representation).
-
->   - scsi_lib.c: scsi_device_resume
->   - scsi_scan.c: scsi_rescan_device
->   - scsi_scan.c: scsi_scan_single_target
-
-Doug Gilbert
 
