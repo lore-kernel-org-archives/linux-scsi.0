@@ -1,78 +1,26 @@
-From: Domenico Andreoli <cavok@libero.it>
-Subject: Re: reiser4 and megaraid problems with debian 2.6.5
-Date: Wed, 14 Apr 2004 11:05:47 +0200
+From: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Subject: RE: megaraid: ABORTING problem
+Date: Wed, 14 Apr 2004 18:18:18 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040414090547.GB13578@raptus.homelinux.org>
-References: <36927C82-8DE0-11D8-A41D-000A95CD704C@wagland.net>
+Message-ID: <7076215DFAA4574099E5CD59FE42226204673D39@pcssrv42.pcs.pc.ome.toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="shift_jis"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.libero.it ([193.70.192.52]:22923 "EHLO smtp2.libero.it")
-	by vger.kernel.org with ESMTP id S263987AbUDNJFy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Apr 2004 05:05:54 -0400
-Content-Disposition: inline
-In-Reply-To: <36927C82-8DE0-11D8-A41D-000A95CD704C@wagland.net>
+Received: from inet-tsb.toshiba.co.jp ([202.33.96.40]:9151 "EHLO
+	inet-tsb.toshiba.co.jp") by vger.kernel.org with ESMTP
+	id S263725AbUDNJTA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Apr 2004 05:19:00 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Wagland <paul@wagland.net>
-Cc: Linux mailing list SCSI <linux-scsi@vger.kernel.org>, Linux mailing list kernel <linux-kernel@vger.kernel.org>, Hans Reiser <reiser@namesys.com>, Atul Mukker <atulm@lsil.com>, reiserfs-list@namesys.com
+To: "Mukker, Atul" <Atulm@lsil.com>, 'Paul Wagland' <paul@kungfoocoder.org>
+Cc: Linux SCSI mailing list <linux-scsi@vger.kernel.org>, "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
 
-[ bringing this also on reiserfs ml, a great place for this kind
-  of posts.  this is also the reason of the full quoting. sorry ]
+> The new drivers have the new error handling, so your server 
+> should still be
+> operative if commands start to abort.
 
-On Wed, Apr 14, 2004 at 08:51:53AM +0200, Paul Wagland wrote:
-> Hi all,
- 
-hi Paul,
-
-> I would like to report on a problem that I am having. I am just testing 
-> out the new megaraid unified driver, and have been doing some baseline 
-> testing with bonnie++.
-> 
-> My problem is that, although reiserfs, ext2, jfs and xfs all work, 
-> reiser4 fails with the following error:
-> ---
-> Can't write block.
-> Bonnie: drastic I/O error (write(2)): No such file or directory
-> ---
-> 
-> I am using the debian prepared kernel with the debian reiser4 patch. I 
-> made a cursory examination of the patch, and it appears to correlate 
-> fairly closely with the patch from the namesys site.
- 
-of course it is correlated to that of namesys! i have no skills at all
-to invent reiser4 :))
-
-you forgot to specify version of the patch you are talking about,
-currently debian provides two versions. anyway i suppose you are talking
-about version 20040326-2, aren't you?
-
-> Given that this works with reiserfs, ext2, jfs and xfs it would appear 
-> to be a reiser4 problem, however ext3 also fails, though with a 
-> different error, it claims that the disk is full, but it is trying to 
-> write a 2 1GB files onto a 2.5GB filesystem, so it should have enough 
-> room, and indeed it did even work two or three times out of about 10 
-> runs (lots of timing :-). This implies that it might be a megaraid 
-> problem. As you can tell, I really have no idea ;-)
-> 
-> I will try playing around tonight with an official kernel and the 
-> official reiser4 patch to see if that makes any difference, but would 
-> just like to raise this potential problem sooner rather than later.
- 
-latest reiser4 snapshot provided a patch which applied cleanly on
-2.6.5-rc2 but not to 2.6.5. i had to modify it as suggested on the
-reiserfs ml. if you look at the debian package's changelog you can find
-the reference to that thread.
-
-> If I can help debug this situation (I am probably the only person 
-> trying this combination :-) please let me know how I should go about 
-> it.
-
-i'm sorry but i can't help further.
-
-cheers
-domenico
-
------[ Domenico Andreoli, aka cavok
- --[ http://filibusta.crema.unimi.it/~cavok/gpgkey.asc
-   ---[ 3A0F 2F80 F79C 678A 8936  4FEE 0677 9033 A20E BC50
+Please teach me how to build
+the latest unified driver(2.20.B1) by 2.6.5.
+Is there any update patch from 2.00.3 to 2.20.B1?
+--
+Haruo
