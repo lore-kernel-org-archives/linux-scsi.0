@@ -1,50 +1,50 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: BUG: SCSI INQUIRY thru SCSI_IOCTL_SEND_COMMAND returns no errno for disconnected device
-Date: Fri, 1 Oct 2004 09:31:31 -0700
+From: James.Smart@Emulex.Com
+Subject: RE: [PATCH] [Update #2] suspending I/Os to a device
+Date: Fri, 1 Oct 2004 12:21:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041001163131.GA23156@beaverton.ibm.com>
-References: <ac71172a04093012437c353f83@mail.gmail.com>
+Message-ID: <0B1E13B586976742A7599D71A6AC733C086627@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.102]:31738 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S264443AbUJAQbx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Oct 2004 12:31:53 -0400
-Content-Disposition: inline
-In-Reply-To: <ac71172a04093012437c353f83@mail.gmail.com>
+Received: from emulex.emulex.com ([138.239.112.1]:50874 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S264503AbUJAQVk convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Oct 2004 12:21:40 -0400
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Lan Tran <transter@gmail.com>, Jens Axboe <axboe@suse.de>
-Cc: linux-scsi@vger.kernel.org, johntsai@us.ibm.com, tranlan@us.ibm.com
+To: James.Smart@Emulex.Com, patmans@us.ibm.com
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, hch@infradead.org, andmike@us.ibm.com, mort@wildopensource.com, andrew.vasquez@qlogic.com
 
-On Thu, Sep 30, 2004 at 12:43:47PM -0700, Lan Tran wrote:
-> We have a SAN system set up, where our host is connected to IBM ESS
-> storage and SVC storage. When we disconnect ALL FC cables between the
-> host and storage devices, and then send a SCSI INQUIRY using the
-> SCSI_IOCTL_SEND_COMMAND ioctl to the
-> sd devices, the ioctl does not return with a failure code. Instead, it
-> returns with a zero-length buffer.
+I should expand a little further...
+
+I view them as having a different use:
+
+scsi_xxblock_requests - used for very short duration stalls where hardware/driver is in a short transitory state (request queues are temporarily full, etc).
+
+fc_host_xxblock - used for long durations of I/O stoppage (on the order of 30 seconds ?). I/O is stopped while a link may be jittering, cable accidentally kicked out and reinserted, etc.
+
+-- James
+
+
+> -----Original Message-----
+> From: Smart, James 
+> Sent: Friday, October 01, 2004 12:15 PM
+> To: 'Patrick Mansfield'
+> Cc: James.Bottomley@SteelEye.com; linux-scsi@vger.kernel.org;
+> hch@infradead.org; andmike@us.ibm.com; mort@wildopensource.com;
+> andrew.vasquez@qlogic.com
+> Subject: RE: [PATCH] [Update #2] suspending I/Os to a device
 > 
-> Is there a reason why we would get a zeroed-length buffer instead of
-> an error return code?
-
-SCSI_IOCTL_SEND_COMMAND is deprecated, you should be using SG_IO instead.
-
-There was a bug with SG_IO, it does not correctly set all of the status
-bytes, a patch has been submitted a few times, Mike C's patch
-fixed problems compared to ones I posted earlier, this patch:
-
-	http://marc.theaimsgroup.com/?l=linux-scsi&m=108617935710955&w=2
-
-It looks like SCSI_IOCTL_SEND_COMMAND has a similiar issue, in that it
-only checks the low byte of the results, so for example a DID_NO_CONNECT
-returned by the qlogic or emulex driver would be ignored.
-
-See drivers/block/scsi_ioctl.c near the end of sg_scsi_ioctl, this:
-
-	err = rq->errors & 0xff;        /* only 8 bit SCSI status */
-
-Compare that to code in drivers/scsi/scsi_ioctl.c near the end of
-scsi_ioctl_send_command, where the entire result is checked, not just the
-SCSI byte.
-
--- Patrick Mansfield
+> 
+> The difference is, the fc functions:
+> - Changes the actual sdev state to indicate a "blocked" state 
+>  (you can see it in sysfs, etc)
+> - Starts a timer that will automatically unblock the sdev w/o 
+> lld intervention
+> 
+> -- james
+> 
+> > What is the difference between these new fc_host_block/unblock and
+> > the current scsi_block/unblock_requests?
+> 
