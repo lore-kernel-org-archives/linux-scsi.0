@@ -1,28 +1,29 @@
-From: Matthias Jaenichen <mj2@percomp.de>
-Subject: RE: SCSI IO Errors
-Date: Wed, 10 Sep 2003 17:47:20 +0200
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: RE: usb-strage not working in the latest kernel 2.4
+Date: Wed, 10 Sep 2003 11:46:43 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4.3.2.7.2.20030910173600.02f0c800@127.0.0.1>
-References: <4.3.2.7.2.20030909183554.035b77c0@127.0.0.1>
+Message-ID: <Pine.LNX.4.44L0.0309101146020.905-100000@ida.rowland.org>
+References: <200309100742.QAA15260@toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gateway.percomp.de ([192.88.4.5]:1169 "HELO gateway.percomp.de")
-	by vger.kernel.org with SMTP id S265128AbTIJPve (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:10756 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S265097AbTIJPqo (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Sep 2003 11:51:34 -0400
-In-Reply-To: <4.3.2.7.2.20030909183554.035b77c0@127.0.0.1>
+	Wed, 10 Sep 2003 11:46:44 -0400
+In-Reply-To: <200309100742.QAA15260@toshiba.co.jp>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, David Brownell <david-b@pacbell.net>, "Tomita, Haruo" <htomita@pcs.pc.ome.toshiba.co.jp>
 
-At 18:36 09.09.03 +0200, Matthias Jaenichen wrote:
->>, and the max tagged command queue is 253.
->
->where did you get that from? I have a log entry saying 49!!
+On Wed, 10 Sep 2003, Tomita, Haruo wrote:
 
-changed that to 32 in the .config
+> Using ioctl (fd, USBDEVFS_RESET, 0), I tested reset. 
+> usb-storage of USB2.0 was successful.
+> When FDD was used in the case of USB1.1, 
+> mount became impossible after reset.
 
-but still no change.
+What do you mean?  What does the log show?
 
-Reg
+Alan Stern
 
