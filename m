@@ -1,159 +1,533 @@
-From: Gene Heskett <gene.heskett@verizon.net>
-Subject: more oddities in test3, was advansys failures, now various
-Date: Sat, 9 Aug 2003 21:27:07 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200308092127.07750.gene.heskett@verizon.net>
-Reply-To: gene.heskett@verizon.net
+From: "haruo tomita" <haruo.tomita@toshiba.co.jp>
+Subject: [PATCH] megaraid2 driver for the kernel2.4.22
+Date: Sun, 10 Aug 2003 11:09:51 +0900
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <200308100210.LAA06917@toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Janitors <kernel-janitor-discuss@lists.sourceforge.net>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from inet-tsb.toshiba.co.jp ([202.33.96.40]:18075 "EHLO
+	inet-tsb.toshiba.co.jp") by vger.kernel.org with ESMTP
+	id S275457AbTHJCKX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 9 Aug 2003 22:10:23 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: linux-megaraid-devel@dell.com, linux-scsi@vger.kernel.org
+Cc: Matt_Domsch@dell.com, Atulm@lsil.com, sreenib@lsil.com, alan@redhat.com, haruo.tomita@toshiba.co.jp
 
-Greetings;
+Dear All,
 
-I logged into a second console, and used vim to keep a log of what I 
-was doing, this time managing without locking up the machine.
-Here is that log:
-----------------------------
-[root@coyote root]# modprobe advansys
-  Vendor: ARCHIVE   Model: Python 28849-XXX  Rev: 4.CM
-  Type:   Sequential-Access                  ANSI SCSI revision: 02
-Attached scsi tape st0 at scsi1, channel 0, id 1, lun 0
-st0: try direct i/o: yes, max page reachable by HBA 131056
-Attached scsi generic sg0 at scsi1, channel 0, id 1, lun 0,  type 1
-  Vendor: ARCHIVE   Model: Python 28849-XXX  Rev: 4.CM
-  Type:   Medium Changer                     ANSI SCSI revision: 02
-Attached scsi generic sg1 at scsi1, channel 0, id 1, lun 1,  type 8
-advansys: advansys_reset: board 0: SCSI bus reset started...
-advansys: advansys_reset: board 0: SCSI bus reset successful.
-[root@coyote root]#
+This patch is for using a megaraid2 driver(v2.00.7) by the kernel 2.4.22-rc2-ac1.
+Alan, Please apply in this patch by the next ac release.
 
-It took about 45 seconds to get that prompt back.
+Regars,
+Haruo
 
-Ok, now some fooling around
-[root@coyote root]# mt -f /dev/nst0 status
-/dev/nst0: Input/output error
+diff -Nru linux-2.4.22-rc2-ac1/drivers/scsi/megaraid2.c linux-2.4.22-rc2-ac1-mr7/drivers/scsi/megaraid2.c
+--- linux-2.4.22-rc2-ac1/drivers/scsi/megaraid2.c  2003-08-10 10:36:08.000000000 +0900
++++ linux-2.4.22-rc2-ac1-mr7/drivers/scsi/megaraid2.c   2003-08-10 10:39:53.000000000 +0900
+@@ -14,7 +14,7 @@
+  *    - speed-ups (list handling fixes, issued_list, optimizations.)
+  *    - lots of cleanups.
+  *
+- * Version : v2.00.5 (Apr 24, 2003) - Atul Mukker <Atul.Mukker@lsil.com>
++ * Version : v2.00.7 (Aug 01, 2003) - Atul Mukker <Atul.Mukker@lsil.com>
+  *
+  * Description: Linux device driver for LSI Logic MegaRAID controller
+  *
+@@ -73,7 +73,9 @@
 
-It took it at least 30 seconds to report this,
- as if it was out in lala land for a while
-The drive had not loaded a tape (its a changer)
-so I manually loaded the first one.
+ static int hba_count;
+ static adapter_t *hba_soft_state[MAX_CONTROLLERS];
++#ifdef CONFIG_PROC_FS
+ static struct proc_dir_entry *mega_proc_dir_entry;
++#endif
 
-[root@coyote root]# mt -f /dev/nst0 status
-st0: Block limits 1 - 16777215 bytes.
-SCSI 2 tape drive:
-File number=0, block number=0, partition=0.
-Tape block size 512 bytes. Density code 0x24 (DDS-2).
-Soft error count since last status=0
-General status bits on (41010000):
- BOT ONLINE IM_REP_EN
+ static struct notifier_block mega_notifier = {
+     .notifier_call = megaraid_reboot_notify
+@@ -255,6 +257,16 @@
 
-It took at least 30 seconds to return the above
+     while((pdev = pci_find_device(pci_vendor, pci_device, pdev))) {
 
-[root@coyote root]# mt -f /dev/nst0 status
-SCSI 2 tape drive:
-File number=0, block number=0, partition=0.
-Tape block size 512 bytes. Density code 0x24 (DDS-2).
-Soft error count since last status=0
-General status bits on (41010000):
- BOT ONLINE IM_REP_EN
++         // reset flags for all controllers in this class
++         did_ioremap_f = 0;
++         did_req_region_f = 0;
++         did_scsi_reg_f = 0;
++         got_ipdev_f = 0;
++         alloc_int_buf_f = 0;
++         alloc_scb_f = 0;
++         got_irq_f = 0;
++         did_setup_mbox_f = 0;
++
+          if(pci_enable_device (pdev)) continue;
 
-and another 15 seconds to return the above.
-I run at a 32k blocksize, so next is to
-reset st to that.
+          pci_bus = pdev->bus->number;
+@@ -290,6 +302,7 @@
+          if( subsysvid && (subsysvid != AMI_SUBSYS_VID) &&
+                    (subsysvid != DELL_SUBSYS_VID) &&
+                    (subsysvid != HP_SUBSYS_VID) &&
++                   (subsysvid != INTEL_SUBSYS_VID) &&
+                    (subsysvid != LSI_SUBSYS_VID) ) continue;
 
-[root@coyote root]#mt -f /dev/nst0 setblk 32768
 
-which took 10 seconds or more to return, almost
-like its a random thing.
+@@ -382,6 +395,8 @@
+          adapter->flag = flag;
+          spin_lock_init(&adapter->lock);
 
-It IS random, because the console return is blocked
-UNTIL I MOVE THE MOUSE!
++         adapter->host_lock = &io_request_lock;
++
+          host->cmd_per_lun = max_cmd_per_lun;
+          host->max_sectors = max_sectors_per_io;
 
-If I issue these commands, and immediately move the 
-mouse, then the prompt return is as instant as I can
-get to the mouse and move it.  WTF?
+@@ -1624,7 +1639,7 @@
+     /*
+      * Increment the pending queue counter
+      */
+-    atomic_inc(&adapter->pend_cmds);
++    atomic_inc((atomic_t *)&adapter->pend_cmds);
 
-Just for grins, and keeping the mouse in motion:
-[root@coyote root]# rmmod advansys
-[root@coyote root]# modprobe advansys
-  Vendor: ARCHIVE   Model: Python 28849-XXX  Rev: 4.CM
-  Type:   Sequential-Access                  ANSI SCSI revision: 02
-Attached scsi tape st0 at scsi2, channel 0, id 1, lun 0
-st0: try direct i/o: yes, max page reachable by HBA 131056
-Attached scsi generic sg0 at scsi2, channel 0, id 1, lun 0,  type 1
-  Vendor: ARCHIVE   Model: Python 28849-XXX  Rev: 4.CM
-  Type:   Medium Changer                     ANSI SCSI revision: 02
-Attached scsi generic sg1 at scsi2, channel 0, id 1, lun 1,  type 8
-[root@coyote root]#
-And I got my prompt back in about the time it takes to do a
-complete, scan all luns, scsi bus scan, 5 seconds or so.
--------------------------------
+     switch (mbox->cmd) {
+     case MEGA_MBOXCMD_LREAD64:
+@@ -1709,6 +1724,9 @@
 
-Ok, I'll bite, what the heck has the console mouse (non x, nvidia 
-isn't working) got to do with this?  Hummmm, I wonder if x would work 
-if I kept the mouse in motion after doing the startx?  According to 
-the XFree86.2.6.log, it stops here:
+          mbox->numstatus = 0xFF;
 
-[root@coyote root]# tail -n3 /var/log/XFree86.2.6.log
-        [29] 0  0x000003c0 - 0x000003df (0x20) IS[B](OprU)
-(II) NVIDIA(0): AGP 4X successfully initialized
-(II) NVIDIA(0): Setting mode "1600x1200/60Hz"
-[root@coyote root]#
++         while((volatile u8)mbox->status == 0xFF)
++              cpu_relax();
++
+          while( (volatile u8)mbox->poll != 0x77 )
+               cpu_relax();
 
-But for this 2.4.22-rc2 boot, it continues on a bit:
+@@ -1758,7 +1776,7 @@
+     unsigned long  flags;
 
-[root@coyote root]# tail -n32 /var/log/XFree86.0.log
-(II) NVIDIA(0): AGP 4X successfully initialized
-(II) NVIDIA(0): Setting mode "1600x1200/60Hz"
-(II) NVIDIA(0): Using the NVIDIA 2D acceleration architecture
-(==) NVIDIA(0): Backing store disabled
-(==) NVIDIA(0): Silken mouse enabled
-(II) Loading extension NV-GLX
-(II) Loading extension NV-CONTROL
-Symbol __glXActiveScreens from module 
-/usr/X11R6/lib/modules/extensions/libdri.a is unresolved!
-Symbol __glXActiveScreens from module 
-/usr/X11R6/lib/modules/extensions/libdri.a is unresolved!
-(II) Initializing built-in extension MIT-SHM
-(II) Initializing built-in extension XInputExtension
-(II) Initializing built-in extension XTEST
-(II) Initializing built-in extension XKEYBOARD
-(II) Initializing built-in extension LBX
-(II) Initializing built-in extension XC-APPGROUP
-(II) Initializing built-in extension SECURITY
-(II) Initializing built-in extension XINERAMA
-(II) Initializing built-in extension XFree86-Bigfont
-(II) Initializing built-in extension RENDER
-(II) [GLX]: Initializing GLX extension
-(**) Option "Protocol" "IMPS/2"
-(**) Mouse0: Protocol: "IMPS/2"
-(**) Option "CorePointer"
-(**) Mouse0: Core Pointer
-(**) Option "Device" "/dev/mouse"
-(**) Option "Emulate3Buttons" "no"
-(**) Option "ZAxisMapping" "4 5"
-(**) Mouse0: ZAxisMapping: buttons 4 and 5
-(**) Mouse0: Buttons: 5
-(II) Keyboard "Keyboard0" handled by legacy driver
-(II) XINPUT: Adding extended input device "Mouse0" (type: MOUSE)
-(II) XINPUT: Adding extended input device "NVIDIA Event Handler" 
-(type: Other)
-[root@coyote root]#
-----------------
-let me also join the chorus complaining about the keyboard repeat, its 
-very easy to get ddddd for a single press of the key.  But I suspect 
-thats probably not an issue once X is running?
 
--- 
-Cheers, Gene
-AMD K6-III@500mhz 320M
-Athlon1600XP@1400mhz  512M
-99.27% setiathome rank, not too shabby for a WV hillbilly
-Yahoo.com attornies please note, additions to this message
-by Gene Heskett are:
-Copyright 2003 by Maurice Eugene Heskett, all rights reserved.
+-    spin_lock_irqsave(&adapter->lock, flags);
++    spin_lock_irqsave(adapter->host_lock, flags);
+
+     megaraid_iombox_ack_sequence(adapter);
+
+@@ -1767,7 +1785,7 @@
+          mega_runpendq(adapter);
+     }
+
+-    spin_unlock_irqrestore(&adapter->lock, flags);
++    spin_unlock_irqrestore(adapter->host_lock, flags);
+
+     return;
+ }
+@@ -1804,12 +1822,13 @@
+               cpu_relax();
+          adapter->mbox->numstatus = 0xFF;
+
+-         status = adapter->mbox->status;
++         while((status = (volatile u8)adapter->mbox->status) == 0xFF)
++              cpu_relax();
+
+          /*
+           * decrement the pending queue counter
+           */
+-         atomic_sub(nstatus, &adapter->pend_cmds);
++         atomic_sub(nstatus, (atomic_t *)&adapter->pend_cmds);
+
+          memcpy(completed, (void *)adapter->mbox->completed, nstatus);
+
+@@ -1839,7 +1858,7 @@
+     unsigned long  flags;
+
+
+-    spin_lock_irqsave(&adapter->lock, flags);
++    spin_lock_irqsave(adapter->host_lock, flags);
+
+     megaraid_memmbox_ack_sequence(adapter);
+
+@@ -1848,7 +1867,7 @@
+          mega_runpendq(adapter);
+     }
+
+-    spin_unlock_irqrestore(&adapter->lock, flags);
++    spin_unlock_irqrestore(adapter->host_lock, flags);
+
+     return;
+ }
+@@ -1883,17 +1902,18 @@
+          }
+          WROUTDOOR(adapter, 0x10001234);
+
+-         while((nstatus = adapter->mbox->numstatus) == 0xFF) {
++         while((nstatus = (volatile u8)adapter->mbox->numstatus)
++                   == 0xFF)
+               cpu_relax();
+-         }
+          adapter->mbox->numstatus = 0xFF;
+
+-         status = adapter->mbox->status;
++         while((status = (volatile u8)adapter->mbox->status) == 0xFF)
++              cpu_relax();
+
+          /*
+           * decrement the pending queue counter
+           */
+-         atomic_sub(nstatus, &adapter->pend_cmds);
++         atomic_sub(nstatus, (atomic_t *)&adapter->pend_cmds);
+
+          memcpy(completed, (void *)adapter->mbox->completed, nstatus);
+
+@@ -2395,7 +2415,9 @@
+     adapter_t *adapter;
+     mbox_t    *mbox;
+     u_char    raw_mbox[16];
++#ifdef CONFIG_PROC_FS
+     char buf[12] = { 0 };
++#endif
+
+     adapter = (adapter_t *)host->hostdata;
+     mbox = (mbox_t *)raw_mbox;
+@@ -2597,7 +2619,7 @@
+
+     adapter = (adapter_t *)scp->host->hostdata;
+
+-    ASSERT( spin_is_locked(&adapter->lock) );
++    ASSERT( spin_is_locked(adapter->host_lock) );
+
+     printk("megaraid: aborting-%ld cmd=%x <c=%d t=%d l=%d>\n",
+          scp->serial_number, scp->cmnd[0], scp->channel, scp->target,
+@@ -2640,8 +2662,7 @@
+      * completed by the firmware
+      */
+     iter = 0;
+-    while( !list_empty(&adapter->pending_list) ) {
+-
++    while( atomic_read(&adapter->pend_cmds) > 0 ) {
+          /*
+           * Perform the ack sequence, since interrupts are not
+           * available right now!
+@@ -2694,7 +2715,7 @@
+
+     adapter = (adapter_t *)cmd->host->hostdata;
+
+-    ASSERT( spin_is_locked(&adapter->lock) );
++    ASSERT( spin_is_locked(adapter->host_lock) );
+
+     printk("megaraid: reset-%ld cmd=%x <c=%d t=%d l=%d>\n",
+          cmd->serial_number, cmd->cmnd[0], cmd->channel, cmd->target,
+@@ -2705,7 +2726,7 @@
+     mc.cmd = MEGA_CLUSTER_CMD;
+     mc.opcode = MEGA_RESET_RESERVATIONS;
+
+-    spin_unlock_irq(&adapter->lock);
++    spin_unlock_irq(adapter->host_lock);
+     if( mega_internal_command(adapter, LOCK_INT, &mc, NULL) != 0 ) {
+          printk(KERN_WARNING
+                    "megaraid: reservation reset failed.\n");
+@@ -2713,7 +2734,7 @@
+     else {
+          printk(KERN_INFO "megaraid: reservation reset.\n");
+     }
+-    spin_lock_irq(&adapter->lock);
++    spin_lock_irq(adapter->host_lock);
+ #endif
+
+     /*
+@@ -2721,8 +2742,7 @@
+      * firmware
+      */
+     iter = 0;
+-    while( !list_empty(&adapter->pending_list) ) {
+-
++    while( atomic_read(&adapter->pend_cmds) > 0 ) {
+          /*
+           * Perform the ack sequence, since interrupts are not
+           * available right now!
+@@ -3564,6 +3584,7 @@
+     u32  array_sz;
+     int  len = 0;
+     int  i;
++    u8   span8_flag = 1;
+
+     pdev = adapter->ipdev;
+
+@@ -3585,6 +3606,7 @@
+     memset(&mc, 0, sizeof(megacmd_t));
+
+     if( adapter->flag & BOARD_40LD ) {
++
+          array_sz = sizeof(disk_array_40ld);
+
+          rdrv_state = ((mega_inquiry3 *)inquiry)->ldrv_state;
+@@ -3592,7 +3614,12 @@
+          num_ldrv = ((mega_inquiry3 *)inquiry)->num_ldrv;
+     }
+     else {
+-         array_sz = sizeof(disk_array_8ld);
++         /*
++          * 'array_sz' is either the size of diskarray_span4_t or the
++          * size of disk_array_span8_t. We use span8_t's size because
++          * it is bigger of the two.
++          */
++         array_sz = sizeof( diskarray_span8_t );
+
+          rdrv_state = ((mraid_ext_inquiry *)inquiry)->
+               raid_inq.logdrv_info.ldrv_state;
+@@ -3632,10 +3659,17 @@
+
+     }
+     else {
++         /*
++          * Try 8-Span "read config" command
++          */
+          mc.cmd = NEW_READ_CONFIG_8LD;
+
+          if( mega_internal_command(adapter, LOCK_INT, &mc, NULL) ) {
+
++              /*
++               * 8-Span command failed; try 4-Span command
++               */
++              span8_flag = 0;
+               mc.cmd = READ_CONFIG_8LD;
+
+               if( mega_internal_command(adapter, LOCK_INT, &mc,
+@@ -3662,8 +3696,14 @@
+               &((disk_array_40ld *)disk_array)->ldrv[i].lparam;
+          }
+          else {
+-              lparam =
+-              &((disk_array_8ld *)disk_array)->ldrv[i].lparam;
++              if( span8_flag ) {
++                   lparam = (logdrv_param*) &((diskarray_span8_t*)
++                             (disk_array))->log_drv[i];
++              }
++              else {
++                   lparam = (logdrv_param*) &((diskarray_span4_t*)
++                             (disk_array))->log_drv[i];
++              }
+          }
+
+          /*
+@@ -4705,7 +4745,7 @@
+
+     mbox = (mbox_t *)raw_mbox;
+
+-    memset(mbox, 0, sizeof(mbox));
++    memset(mbox, 0, 16);
+
+     memset((void *)adapter->mega_buffer, 0, MEGA_BUFFER_SIZE);
+
+@@ -4738,7 +4778,7 @@
+
+     mbox = (mbox_t *)raw_mbox;
+
+-    memset(mbox, 0, sizeof(mbox));
++    memset(mbox, 0, 16);
+
+     /*
+      * issue command to find out what channels are raid/scsi
+@@ -4859,7 +4899,7 @@
+
+     mbox = (mbox_t *)raw_mbox;
+
+-    memset(mbox, 0, sizeof(mbox));
++    memset(mbox, 0, 16);
+
+     /*
+      * issue command
+@@ -4888,7 +4928,7 @@
+
+     mbox = (mbox_t *)raw_mbox;
+
+-    memset(mbox, 0, sizeof (mbox));
++    memset(mbox, 0, 16);
+     /*
+      * issue command to find out if controller supports extended CDBs.
+      */
+@@ -4917,7 +4957,7 @@
+     scb_t *scb;
+     int rval;
+
+-    ASSERT( !spin_is_locked(&adapter->lock) );
++    ASSERT( !spin_is_locked(adapter->host_lock) );
+
+     /*
+      * Stop sending commands to the controller, queue them internally.
+@@ -4937,7 +4977,7 @@
+     rval = mega_do_del_logdrv(adapter, logdrv);
+
+
+-    spin_lock_irqsave(&adapter->lock, flags);
++    spin_lock_irqsave(adapter->host_lock, flags);
+
+     /*
+      * If delete operation was successful, add 0x80 to the logical drive
+@@ -4956,7 +4996,7 @@
+
+     mega_runpendq(adapter);
+
+-    spin_unlock_irqrestore(&adapter->lock, flags);
++    spin_unlock_irqrestore(adapter->host_lock, flags);
+
+     return rval;
+ }
+@@ -5318,6 +5358,7 @@
+
+
+
++#ifdef CONFIG_PROC_FS
+ /**
+  * mega_adapinq()
+  * @adapter - pointer to our soft state
+@@ -5440,6 +5481,7 @@
+
+     return rval;
+ }
++#endif   // #ifdef CONFIG_PROC_FS
+
+
+ /**
+@@ -5504,11 +5546,11 @@
+     /*
+      * Get the lock only if the caller has not acquired it already
+      */
+-    if( ls == LOCK_INT ) spin_lock_irqsave(&adapter->lock, flags);
++    if( ls == LOCK_INT ) spin_lock_irqsave(adapter->host_lock, flags);
+
+     megaraid_queue(scmd, mega_internal_done);
+
+-    if( ls == LOCK_INT ) spin_unlock_irqrestore(&adapter->lock, flags);
++    if( ls == LOCK_INT ) spin_unlock_irqrestore(adapter->host_lock, flags);
+
+     /*
+      * Wait till this command finishes. Do not use
+diff -Nru linux-2.4.22-rc2-ac1/drivers/scsi/megaraid2.h linux-2.4.22-rc2-ac1-mr7/drivers/scsi/megaraid2.h
+--- linux-2.4.22-rc2-ac1/drivers/scsi/megaraid2.h  2003-08-10 10:36:08.000000000 +0900
++++ linux-2.4.22-rc2-ac1-mr7/drivers/scsi/megaraid2.h   2003-08-10 10:39:53.000000000 +0900
+@@ -6,7 +6,7 @@
+
+
+ #define MEGARAID_VERSION     \
+-    "v2.00.5 (Release Date: Thu Apr 24 14:06:55 EDT 2003)\n"
++    "v2.00.7 (Release Date: Fri Aug  1 11:01:11 EDT 2003)\n"
+
+ /*
+  * Driver features - change the values to enable or disable features in the
+@@ -83,6 +83,7 @@
+ #define DELL_SUBSYS_VID           0x1028
+ #define  HP_SUBSYS_VID            0x103C
+ #define LSI_SUBSYS_VID            0x1000
++#define INTEL_SUBSYS_VID          0x8086
+
+ #define HBA_SIGNATURE                   0x3344
+ #define HBA_SIGNATURE_471         0xCCCC
+@@ -509,6 +510,70 @@
+     phys_drv  pdrv[MAX_PHYSICAL_DRIVES];
+ }__attribute__ ((packed)) disk_array_8ld;
+
++/*
++ *    FW Definitions & Data Structures for 8LD 4-Span and 8-Span Controllers
++ */
++#define  MAX_STRIPES    8
++#define SPAN4_DEPTH     4
++#define SPAN8_DEPTH     8
++#define MAX_PHYDRVS     5 * 16    /* 5 Channels * 16 Targets */
++
++typedef struct  {
++    unsigned char  channel;
++    unsigned char  target;
++}__attribute__ ((packed)) device_t;
++
++typedef struct {
++    unsigned long  start_blk;
++    unsigned long  total_blks;
++    device_t  device[ MAX_STRIPES ];
++}__attribute__ ((packed)) span_t;
++
++typedef struct {
++    unsigned char  type;
++    unsigned char  curr_status;
++    unsigned char  tag_depth;
++    unsigned char  resvd1;
++    unsigned long  size;
++}__attribute__ ((packed)) phydrv_t;
++
++typedef struct {
++    unsigned char  span_depth;
++    unsigned char  raid;
++    unsigned char  read_ahead;    /* 0=No rdahead,1=RDAHEAD,2=adaptive */
++    unsigned char  stripe_sz;
++    unsigned char  status;
++    unsigned char  write_policy;  /* 0=wrthru,1=wrbak */
++    unsigned char  direct_io;     /* 1=directio,0=cached */
++    unsigned char  no_stripes;
++    span_t         span[ SPAN4_DEPTH ];
++}__attribute__ ((packed)) ld_span4_t;
++
++typedef struct {
++    unsigned char  span_depth;
++    unsigned char  raid;
++    unsigned char  read_ahead;    /* 0=No rdahead,1=RDAHEAD,2=adaptive */
++    unsigned char  stripe_sz;
++    unsigned char  status;
++    unsigned char  write_policy;  /* 0=wrthru,1=wrbak */
++    unsigned char  direct_io;     /* 1=directio,0=cached */
++    unsigned char  no_stripes;
++    span_t         span[ SPAN8_DEPTH ];
++}__attribute__ ((packed)) ld_span8_t;
++
++typedef struct {
++    unsigned char  no_log_drives;
++    unsigned char  pad[3];
++    ld_span4_t     log_drv[ MAX_LOGICAL_DRIVES_8LD ];
++    phydrv_t  phys_drv[ MAX_PHYDRVS ];
++}__attribute__ ((packed)) diskarray_span4_t;
++
++typedef struct {
++    unsigned char  no_log_drives;
++    unsigned char  pad[3];
++    ld_span8_t     log_drv[ MAX_LOGICAL_DRIVES_8LD ];
++    phydrv_t  phys_drv[ MAX_PHYDRVS ];
++}__attribute__ ((packed)) diskarray_span8_t;
+
+ /*
+  * User ioctl structure.
+@@ -847,8 +912,8 @@
+     u8        max_cmds;
+     scb_t          *scb_list;
+
+-    atomic_t  pend_cmds;     /* maintain a counter for pending
+-                           commands in firmware */
++    volatile atomic_t   pend_cmds;      /* maintain a counter for
++                             pending commands in firmware */
+
+ #if MEGA_HAVE_STATS
+     u32  nreads[MAX_LOGICAL_DRIVES_40LD];
+@@ -899,6 +964,7 @@
+                            sending requests to the hba till
+                            delete operation is completed */
+     spinlock_t     lock;
++    spinlock_t     *host_lock;    // pointer to appropriate lock
+
+     u8   logdrv_chan[MAX_CHANNELS+NVIRT_CHAN]; /* logical drive are on
+                                   what channels. */
+@@ -1049,7 +1115,6 @@
+ static int megaraid_abort(Scsi_Cmnd *);
+ static int megaraid_reset(Scsi_Cmnd *);
+ static int megaraid_biosparam (Disk *, kdev_t, int *);
+-static int mega_print_inquiry(char *, char *);
+
+ static int mega_build_sglist (adapter_t *adapter, scb_t *scb,
+                     u32 *buffer, u32 *length);
+@@ -1092,12 +1157,13 @@
+ static int proc_rdrv_30(char *, char **, off_t, int, int *, void *);
+ static int proc_rdrv_40(char *, char **, off_t, int, int *, void *);
+ static int proc_rdrv(adapter_t *, char *, int, int);
+-#endif
+
+ static int mega_adapinq(adapter_t *, dma_addr_t);
+ static int mega_internal_dev_inquiry(adapter_t *, u8, u8, dma_addr_t);
+ static inline caddr_t mega_allocate_inquiry(dma_addr_t *, struct pci_dev *);
+ static inline void mega_free_inquiry(caddr_t, dma_addr_t, struct pci_dev *);
++static int mega_print_inquiry(char *, char *);
++#endif
+
+ static int mega_support_ext_cdb(adapter_t *);
+ static mega_passthru* mega_prepare_passthru(adapter_t *, scb_t *,
+
+
