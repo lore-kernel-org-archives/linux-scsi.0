@@ -1,64 +1,67 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Fw: PROBLEM: Linux V. 2.6.3 panics with "Buffers at physical address >16Mb used for aha1542" at boot time
-Date: Fri, 20 Feb 2004 09:38:08 +0100
+From: Paul Wagland <paul@kungfoocoder.org>
+Subject: Re: [PATCH][BUGFIX] : Megaraid patch for 2.6 1/5
+Date: Fri, 20 Feb 2004 09:55:11 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040220083808.GA11822@suse.de>
-References: <20040218171212.0eb6618a.akpm@osdl.org> <1077243517.2164.61.camel@mulgrave> <1077265837.1297.9.camel@felicia>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <7D98D0B5-6382-11D8-B07A-000A95CD704C@kungfoocoder.org>
+References: <1077242738.12567.76.camel@morsel.kungfoocoder.org> <403596D8.8020509@pobox.com>
+Mime-Version: 1.0 (Apple Message framework v612)
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-34-175863389"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:34220 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S267733AbUBTIiO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Feb 2004 03:38:14 -0500
-Content-Disposition: inline
-In-Reply-To: <1077265837.1297.9.camel@felicia>
+Received: from smtp-out1.xs4all.nl ([194.109.24.11]:36108 "EHLO
+	smtp-out1.xs4all.nl") by vger.kernel.org with ESMTP id S267744AbUBTIz3
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Feb 2004 03:55:29 -0500
+In-Reply-To: <403596D8.8020509@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Dr. Ernst Molitor" <molitor@uni-bonn.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: atulm@lsil.com, akpm@osdl.org, Linux kernel mailing list <linux-kernel@vger.kernel.org>, James.Bottomley@HansenPartnership.com, torvalds@osdl.org, Linux SCSI mailing list <linux-scsi@vger.kernel.org>
 
-On Fri, Feb 20 2004, Dr. Ernst Molitor wrote:
-> Dear James Bottomley, 
-> 
-> thank you very much for looking into the problem I have seen. 
-> 
-> Following to your kind suggestion, I have commented out the two "panic
-> (... Buffers and physical address > 16Mb ...)" lines in the aha1542.c
-> source and added "BUG();"-lines in their places. Booting the kernel
-> built afterwards resulted in a bunch of messages; I haven't been able to
-> read the first lines; this is what I could copy:
-> 
-> [<c02ee972>] scsi_request_fn+0x1c2/0x310
-> [<c02aa35d>] __elv_add_request+0x2d/0x50
-> [<c02aca14>] blk_insert_request+0x84/0xc0
-> [<c02ed679>] scsi_insert_special_req+0x39/0x40
-> [<c02ed8a9>] scsi_wait_req+0x69/0xb0
-> [<c02ed7c0>] scsi_wait_done+0x0/0x80
-> [<c0319980>] sr_do_ioctl+0x90/0x290
-> [<c0319735>] sr_packet+0x25/0x40
-> [<c0320262>] cdrom_is_mrw+0x52/0x80
-> [<c03194b0>] get_capabilities+0x1d0/0x430
-> [<c023d87f>] sprintf+0x1f/0x30
-> [<c0318fd1>] sr_probe+0x1f/0x30
-> [<c02a736d>] bus_match+0x3d/0x70
-> [<c02a74ac>] driver_attach+0x5c/0xa0
-> [<c02a77c6>] bus_add_driver+0xa6/0xc0
-> [<c05422ff>] init_sr+0x2f/0x40
-> [<c05289db>] do_initcalls+0x2b/0xa0
-> [<c01317d2>] init_workqueues+0x12/0x29
-> [<c01050ec>] init+0x4c/0x150
-> [<c01050a0>] init+0x0/0x150
-> [<c010719d>] kernel_thread_helper+0x5/0x18
->  
-> Code: 0f 0b 3e 00 c2 5a 43 c0 89 ec 5d c3 8d 76 00 8d bc 28 00 00
-> <0>Kernel panic: Attempted to kill init!
-> 
-> Please don't hesitate to contact me if I can be of any further help in
-> this matter.
 
-Hmm... James, sr_do_ioctl() used to do bouncing for private commands,
-any reason it doesn't do that anymore?
+--Apple-Mail-34-175863389
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 
--- 
-Jens Axboe
+
+On Feb 20, 2004, at 6:10, Jeff Garzik wrote:
+
+> Patches 1-5 look OK to me.
+>
+> If you are attempting to follow LSI's megaraid (in 2.4 only, sigh), 
+> patch #4 may wind up causing you grief in the future.  Hopefully Atul 
+> will pick it up, though :)
+
+Thanks for looking them over! Patch 4 should not actually cause a 
+problem, since this is actually one of the bigger changes introduced in 
+the 2.00.9 patch. I think it was 2.00.9 anyway, just guessing from the 
+changelogs, in any case it is definitely one of the "more widespread" 
+changes between 2.00.3 and 2.10.1, which is the current 2.4 driver. The 
+bigger problem is probably going to be patch 5, and the follow ons from 
+it, since that factors out more common code between the /proc and /sys 
+filesystems, which also results in smaller "common chunks" between the 
+two drivers.
+
+My plan at the moment is to pull forward all of the changes from the 
+2.10.1 driver, and then to go back and add more sysfs support on top of 
+what is there now.
+
+Cheers,
+Paul
+
+--Apple-Mail-34-175863389
+content-type: application/pgp-signature; x-mac-type=70674453;
+	name=PGP.sig
+content-description: This is a digitally signed message part
+content-disposition: inline; filename=PGP.sig
+content-transfer-encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (Darwin)
+
+iD8DBQFANct2tch0EvEFvxURAjHyAKC/fEzMWFajDwLBIVCU2VpdAXt2OgCfY03N
+W8lmgZvV+UN45x7Z5rQqMiw=
+=movj
+-----END PGP SIGNATURE-----
+
+--Apple-Mail-34-175863389--
 
