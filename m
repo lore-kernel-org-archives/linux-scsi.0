@@ -1,345 +1,46 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: [PATCH, 2.6] tmscsim - no internal command-queuing
-Date: Sat, 31 Jan 2004 00:23:48 +0100 (CET)
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [dm-devel] Re: Is there a grand plan for FC failover?
+Date: Sat, 31 Jan 2004 10:30:37 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0401310015520.8401-200000@poirot.grange>
+Message-ID: <20040131093037.GR11683@suse.de>
+References: <401521A7.5030808@thekelleys.org.uk> <1075131446.2290.29.camel@mulgrave> <20040128100236.D11527@vienna.EGENERA.COM> <1075309052.2254.6.camel@mulgrave> <20040128130040.E11527@vienna.EGENERA.COM> <20040128124756.A7232@beaverton.ibm.com> <1075328066.2534.10.camel@mulgrave> <20040128165534.A9202@beaverton.ibm.com> <20040130194826.GC31596@reti>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-572387749-1075504858=:8401"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imap.gmx.net ([213.165.64.20]:134 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S264368AbUA3XYa (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:40618 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S264278AbUAaJbK (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jan 2004 18:24:30 -0500
-Content-ID: <Pine.LNX.4.44.0401310022070.8401@poirot.grange>
+	Sat, 31 Jan 2004 04:31:10 -0500
+Content-Disposition: inline
+In-Reply-To: <20040130194826.GC31596@reti>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Kurt Garloff <kurt@garloff.de>
+To: Joe Thornber <thornber@redhat.com>
+Cc: dm-devel@sistina.com, James Bottomley <James.Bottomley@steeleye.com>, "Philip R. Auld" <pauld@egenera.com>, Simon Kelley <simon@thekelleys.org.uk>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+On Fri, Jan 30 2004, Joe Thornber wrote:
+> On Wed, Jan 28, 2004 at 04:55:34PM -0800, Patrick Mansfield wrote:
+> > > We had the "where does the elevator go" discussion at the OLS bof.  I
+> > > think I heard agreement that the current situation of between dm and
+> > > block is suboptimal and that we'd like a true coalescing elevator above
+> > > dm with a vestigial one for the mid-layer to use for queueing below.  I
+> > > think this is a requirement for dm multipath to work well, but it's not
+> > > a requirement for it actually to work.
+> > 
+> > If the performance is bad enough, it doesn't matter if it works.
+> 
+> It would be great to get some benchmarks to back up these arguments.
+> eg, performance of dm mpath with a simple round robin selector,
+> compared to a scsi layer implementation.  Lifting the elevator (or
+> lowering dm) is a big piece of work that I wont even consider unless
+> there is very good reason; the reason probably needs to be broader
+> than just multipath too.  Even if we did decide to do this, it won't
+> happen in 2.6.
+
+I suspect the problem really isn't that huge in 2.6, since most
+performance file systems are using mpage or building their own big
+bio's. So in a sense, some of the merging already does happen above dm
+(and the io scheduler).
+
+-- 
+Jens Axboe
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-  Send mail to mime@docserver.cac.washington.edu for more info.
-
----1463811839-572387749-1075504858=:8401
-Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
-Content-ID: <Pine.LNX.4.44.0401310022071.8401@poirot.grange>
-
-Hi
-
-The attached patch removes the internal command-queuing in tmscsim. The
-driver still works:-) Don't know though if this is quite correct. Please,
-comment. Goes on the top of my yesterday's patch.
-
-Guennadi
----
-Guennadi Liakhovetski
-
-
----1463811839-572387749-1075504858=:8401
-Content-Type: TEXT/PLAIN; NAME="tmscsim-20040131-no_internal_queue.diff"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.44.0401310020580.8401@poirot.grange>
-Content-Description: 
-Content-Disposition: ATTACHMENT; FILENAME="tmscsim-20040131-no_internal_queue.diff"
-
-ZGlmZiAtdXIgYS9kcml2ZXJzL3Njc2kvdG1zY3NpbS5jIGIvZHJpdmVycy9z
-
-Y3NpL3Rtc2NzaW0uYw0KLS0tIGEvZHJpdmVycy9zY3NpL3Rtc2NzaW0uYwlU
-
-aHUgSmFuIDI5IDIxOjQ1OjE1IDIwMDQNCisrKyBiL2RyaXZlcnMvc2NzaS90
-
-bXNjc2ltLmMJRnJpIEphbiAzMCAyMzo1OTo1MyAyMDA0DQpAQCAtNzIyLDM3
-
-ICs3MjIsNiBAQA0KICAgICByZXR1cm4gcTsNCiB9DQogI2VuZGlmDQotICAg
-
-IA0KLQ0KLS8qIEFwcGVuZCB0byBRdWVyeSBMaXN0ICovDQotc3RhdGljIHZv
-
-aWQgZGMzOTBfUXVlcnlfYXBwZW5kKCBQU0NTSUNNRCBjbWQsIFBBQ0IgcEFD
-
-QiApDQotew0KLQlkYzM5MF9jbWRfc2NwX3QgKmNtZHEgPSAoZGMzOTBfY21k
-
-X3NjcF90ICopJmNtZC0+U0NwOw0KLQ0KLQlERUJVRzAocHJpbnRrICgiREMz
-
-OTA6IEFwcGVuZCBjbWQgJWxpIHRvIFF1ZXJ5XG4iLCBjbWQtPnBpZCkpOw0K
-
-LQ0KLQlsaXN0X2FkZF90YWlsKCZjbWRxLT5saXN0LCAmcEFDQi0+Y21kcSk7
-
-DQotCXBBQ0ItPlF1ZXJ5Q250Kys7DQotCXBBQ0ItPkNtZE91dE9mU1JCKys7
-
-DQotfQ0KLQ0KLQ0KLS8qIFJldHVybiBuZXh0IGNtZCBmcm9tIFF1ZXJ5IGxp
-
-c3QgKi8NCi1zdGF0aWMgUFNDU0lDTUQgZGMzOTBfUXVlcnlfZ2V0ICggUEFD
-
-QiBwQUNCICkNCi17DQotCVBTQ1NJQ01EICBwY21kOw0KLQlkYzM5MF9jbWRf
-
-c2NwX3QgKmNtZHE7DQotCWlmIChsaXN0X2VtcHR5KCZwQUNCLT5jbWRxKSkN
-
-Ci0JCXJldHVybiBOVUxMOw0KLQ0KLQlwY21kID0gKFBTQ1NJQ01EKSBsaXN0
-
-X2VudHJ5KHBBQ0ItPmNtZHEubmV4dCwgc3RydWN0IHNjc2lfY21uZF9saXN0
-
-LCBzY3AubGlzdCk7DQotCURFQlVHMChwcmludGsgKCJEQzM5MDogR2V0IGNt
-
-ZCAlbGkgZnJvbSBRdWVyeVxuIiwgcGNtZC0+cGlkKSk7DQotCWNtZHEgPSAo
-
-ZGMzOTBfY21kX3NjcF90ICopJnBjbWQtPlNDcDsNCi0JbGlzdF9kZWwoJmNt
-
-ZHEtPmxpc3QpOw0KLQlwQUNCLT5RdWVyeUNudC0tOw0KLQlyZXR1cm4gcGNt
-
-ZDsNCi19DQotDQogDQogLyogUmV0dXJuIG5leHQgZnJlZSBTUkIgKi8NCiBz
-
-dGF0aWMgX19pbmxpbmVfXyBQU1JCIGRjMzkwX0ZyZWVfZ2V0ICggUEFDQiBw
-
-QUNCICkNCkBAIC0xMDc0LDM4ICsxMDQzLDYgQEANCiAgICAgLyogS0c6IGRl
-
-ZmVycmVkIFBDSSBtYXBwaW5nIHRvIGRjMzkwX1N0YXJ0U0NTSSAqLw0KIH0N
-
-CiANCi0vKiBQdXQgY21uZCBmcm9tIFF1ZXJ5IHRvIFdhaXRpbmcgbGlzdCBh
-
-bmQgc2VuZCBuZXh0IFdhaXRpbmcgY21uZCAqLw0KLXN0YXRpYyB2b2lkIGRj
-
-MzkwX1F1ZXJ5X3RvX1dhaXRpbmcgKFBBQ0IgcEFDQikNCi17DQotICAgIFNj
-
-c2lfQ21uZCAqcGNtZDsNCi0gICAgUFNSQiAgIHBTUkI7DQotICAgIFBEQ0Ig
-
-ICBwRENCOw0KLQ0KLSAgICBpZiggcEFDQi0+QUNCRmxhZyAmIChSRVNFVF9E
-
-RVRFQ1QrUkVTRVRfRE9ORStSRVNFVF9ERVYpICkNCi0JcmV0dXJuOw0KLQ0K
-
-LSAgICB3aGlsZSAocEFDQi0+UXVlcnlDbnQpDQotICAgIHsNCi0JcFNSQiA9
-
-IGRjMzkwX0ZyZWVfZ2V0ICggcEFDQiApOw0KLQlpZiAoIXBTUkIpIHJldHVy
-
-bjsNCi0JcGNtZCA9IGRjMzkwX1F1ZXJ5X2dldCAoIHBBQ0IgKTsNCi0JaWYg
-
-KCFwY21kKSB7IGRjMzkwX0ZyZWVfaW5zZXJ0IChwQUNCLCBwU1JCKTsgcmV0
-
-dXJuOyB9IC8qIHNob3VsZCBub3QgaGFwcGVuICovDQotCXBEQ0IgPSBkYzM5
-
-MF9maW5kRENCIChwQUNCLCBwY21kLT5kZXZpY2UtPmlkLCBwY21kLT5kZXZp
-
-Y2UtPmx1bik7DQotCWlmICghcERDQikgDQotCXsgDQotCQlkYzM5MF9GcmVl
-
-X2luc2VydCAocEFDQiwgcFNSQik7DQotCQlwcmludGsgKEtFUk5fRVJSICJE
-
-QzM5MDogQ29tbWFuZCBpbiBxdWV1ZSB0byBub24tZXhpc3RpbmcgZGV2aWNl
-
-IVxuIik7DQotCQlwY21kLT5yZXN1bHQgPSBNS19SRVMoRFJJVkVSX0VSUk9S
-
-LERJRF9FUlJPUiwwLDApOw0KLQkJREMzOTBfVU5MT0NLX0FDQl9OSTsNCi0J
-
-CXBjbWQtPmRvbmUgKHBjbWQpOw0KLQkJREMzOTBfTE9DS19BQ0JfTkk7DQot
-
-CQlyZXR1cm47DQotCX0NCi0JZGMzOTBfQnVpbGRTUkIgKHBjbWQsIHBEQ0Is
-
-IHBTUkIpOw0KLQlkYzM5MF9XYWl0aW5nX2FwcGVuZCAoIHBEQ0IsIHBTUkIg
-
-KTsNCi0gICAgfQ0KLX0NCi0NCiAvKioqKioqKioqKioqKioqKioqKioqKioq
-
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-
-KioNCiAgKiBGdW5jdGlvbiA6IHN0YXRpYyBpbnQgREMzOTBfcXVldWVfY29t
-
-bWFuZCAoU2NzaV9DbW5kICpjbWQsDQogICoJCQkJCSAgICAgICB2b2lkICgq
-
-ZG9uZSkoU2NzaV9DbW5kICopKQ0KQEAgLTEyMTQsMjAgKzExNTEsMTIgQEAN
-
-CiAgICAgcEFDQi0+Q21kcysrOw0KICAgICBjbWQtPnNjc2lfZG9uZSA9IGRv
-
-bmU7DQogICAgIGNtZC0+cmVzdWx0ID0gMDsNCi0JDQotICAgIGRjMzkwX1F1
-
-ZXJ5X3RvX1dhaXRpbmcgKHBBQ0IpOw0KLQ0KLSAgICBpZiggcEFDQi0+UXVl
-
-cnlDbnQgKSAvKiBVbnNlbnQgY29tbWFuZHMgPyAqLw0KLSAgICB7DQotCURF
-
-QlVHMChwcmludGsgKCJEQzM5MDogUXVlcnlDbnQgIT0gMFxuIikpOw0KLQlk
-
-YzM5MF9RdWVyeV9hcHBlbmQgKCBjbWQsIHBBQ0IgKTsNCi0JZGMzOTBfV2Fp
-
-dGluZ19wcm9jZXNzIChwQUNCKTsNCi0gICAgfQ0KLSAgICBlbHNlIGlmIChw
-
-RENCLT5wV2FpdGluZ1NSQikNCisgICAgaWYgKHBEQ0ItPnBXYWl0aW5nU1JC
-
-KQ0KICAgICB7DQogIAlwU1JCID0gZGMzOTBfRnJlZV9nZXQgKCBwQUNCICk7
-
-DQogCURFQlVHMChpZiAoIXBTUkIpIHByaW50ayAoIkRDMzkwOiBObyBmcmVl
-
-IFNSQiBidXQgV2FpdGluZ1xuIik7IGVsc2UgcHJpbnRrICgiREMzOTA6IEZy
-
-ZWUgU1JCIHcvIFdhaXRpbmdcbiIpKTsNCi0JaWYgKCFwU1JCKSBkYzM5MF9R
-
-dWVyeV9hcHBlbmQgKGNtZCwgcEFDQik7DQorCWlmICghcFNSQikNCisJICAg
-
-IHJldHVybiAxOw0KIAllbHNlIA0KIAkgIHsNCiAJICAgIGRjMzkwX0J1aWxk
-
-U1JCIChjbWQsIHBEQ0IsIHBTUkIpOw0KQEAgLTEyNDEsOCArMTE3MCw4IEBA
-
-DQogCURFQlVHMChpZiAoIXBTUkIpIHByaW50ayAoIkRDMzkwOiBObyBmcmVl
-
-IFNSQiB3L28gV2FpdGluZ1xuIik7IGVsc2UgcHJpbnRrICgiREMzOTA6IEZy
-
-ZWUgU1JCIHcvbyBXYWl0aW5nXG4iKSk7DQogCWlmICghcFNSQikNCiAJew0K
-
-LQkgICAgZGMzOTBfUXVlcnlfYXBwZW5kIChjbWQsIHBBQ0IpOw0KIAkgICAg
-
-ZGMzOTBfV2FpdGluZ19wcm9jZXNzIChwQUNCKTsNCisJICAgIHJldHVybiAx
-
-Ow0KIAl9DQogCWVsc2UgDQogCXsNCkBAIC0xNDYwLDIxICsxMzg5LDYgQEAN
-
-CiAgICAgcHJpbnRrICgiREMzOTA6IEFib3J0IGNvbW1hbmQgKHBpZCAlbGks
-
-IERldmljZSAlMDJpLSUwMmkpXG4iLA0KIAkgICAgY21kLT5waWQsIGNtZC0+
-
-ZGV2aWNlLT5pZCwgY21kLT5kZXZpY2UtPmx1bik7DQogDQotICAgIC8qIEZp
-
-cnN0IHNjYW4gUXVlcnkgbGlzdCAqLw0KLSAgICBpZiggcEFDQi0+UXVlcnlD
-
-bnQgKQ0KLSAgICB7DQotCXN0cnVjdCBzY3NpX2NtbmRfbGlzdCAqdCwgKnBj
-
-bWRfbDsNCi0JbGlzdF9mb3JfZWFjaF9lbnRyeV9zYWZlKHBjbWRfbCwgdCwg
-
-JnBBQ0ItPmNtZHEsIHNjcC5saXN0KQ0KLQkJaWYoIChzdHJ1Y3Qgc2NzaV9j
-
-bW5kKilwY21kX2wgPT0gY21kICkNCi0JCXsNCi0JCQkvKiBGb3VuZDogRGVx
-
-dWV1ZSAqLw0KLQkJCWxpc3RfZGVsKCZwY21kX2wtPnNjcC5saXN0KTsNCi0J
-
-CQlwQUNCLT5RdWVyeUNudC0tOw0KLQkJCXN0YXR1cyA9IFNDU0lfQUJPUlRf
-
-U1VDQ0VTUzsNCi0JCQlnb3RvICBBQk9fWDsNCi0JCX0NCi0gICAgfQ0KLQkN
-
-CiAgICAgcERDQiA9IGRjMzkwX2ZpbmREQ0IgKHBBQ0IsIGNtZC0+ZGV2aWNl
-
-LT5pZCwgY21kLT5kZXZpY2UtPmx1bik7DQogICAgIGlmKCAhcERDQiApIGdv
-
-dG8gIE5PVF9SVU47DQogDQpAQCAtMTkyOCw4ICsxODQyLDYgQEANCiAgICAg
-
-cEFDQi0+cEFjdGl2ZURDQiA9IE5VTEw7DQogICAgIHBBQ0ItPnBGcmVlU1JC
-
-ID0gcEFDQi0+U1JCX2FycmF5Ow0KICAgICBwQUNCLT5TUkJDb3VudCA9IE1B
-
-WF9TUkJfQ05UOw0KLSAgICBwQUNCLT5RdWVyeUNudCA9IDA7DQotICAgIElO
-
-SVRfTElTVF9IRUFEKCZwQUNCLT5jbWRxKTsNCiAgICAgcEFDQi0+QWRhcHRl
-
-ckluZGV4ID0gaW5kZXg7DQogICAgIHBBQ0ItPnN0YXR1cyA9IDA7DQogICAg
-
-IHBzaC0+dGhpc19pZCA9IGRjMzkwX2VlcHJvbUJ1ZltpbmRleF1bRUVfQURB
-
-UFRfU0NTSV9JRF07DQpAQCAtMjcyNyw3ICsyNjM5LDYgQEANCiB7DQogICBp
-
-bnQgZGV2LCBzcGQsIHNwZDE7DQogICBjaGFyICpwb3MgPSBidWZmZXI7DQot
-
-ICBzdHJ1Y3Qgc2NzaV9jbW5kX2xpc3QgKmNsOw0KICAgUEFDQiBwQUNCOw0K
-
-ICAgUERDQiBwRENCOw0KICAgREMzOTBfQUZMQUdTOw0KQEAgLTI3OTgsOSAr
-
-MjcwOSw2IEBADQogICAgICAgU1BSSU5URiAoIiAgICAgICUwMmlcbiIsIHBE
-
-Q0ItPk1heENvbW1hbmQpOw0KICAgICAgIHBEQ0IgPSBwRENCLT5wTmV4dERD
-
-QjsNCiAgICAgIH0NCi0gICAgU1BSSU5URiAoIkNvbW1hbmRzIGluIFF1ZXVl
-
-czogUXVlcnk6ICVsaToiLCBwQUNCLT5RdWVyeUNudCk7DQotICAgIGxpc3Rf
-
-Zm9yX2VhY2hfZW50cnkoY2wsICZwQUNCLT5jbWRxLCBzY3AubGlzdCkNCi0J
-
-U1BSSU5URiAoIiAlbGkiLCAoKHN0cnVjdCBzY3NpX2NtbmQqKWNsKS0+cGlk
-
-KTsNCiAgICAgaWYgKHRpbWVyX3BlbmRpbmcoJnBBQ0ItPldhaXRpbmdfVGlt
-
-ZXIpKSBTUFJJTlRGICgiV2FpdGluZyBxdWV1ZSB0aW1lciBydW5uaW5nXG4i
-
-KTsNCiAgICAgZWxzZSBTUFJJTlRGICgiXG4iKTsNCiAgICAgcERDQiA9IHBB
-
-Q0ItPnBMaW5rRENCOw0KZGlmZiAtdXIgYS9kcml2ZXJzL3Njc2kvdG1zY3Np
-
-bS5oIGIvZHJpdmVycy9zY3NpL3Rtc2NzaW0uaA0KLS0tIGEvZHJpdmVycy9z
-
-Y3NpL3Rtc2NzaW0uaAlNb24gTm92IDI0IDIzOjQ3OjI5IDIwMDMNCisrKyBi
-
-L2RyaXZlcnMvc2NzaS90bXNjc2ltLmgJU2F0IEphbiAzMSAwMDowNDo1NyAy
-
-MDA0DQpAQCAtMjE0LDE2ICsyMTQsMTIgQEANCiBQU1JCCQlwVG1wU1JCOw0K
-
-IA0KIC8qIDB4MmM6ICovDQotVUxPTkcJCVF1ZXJ5Q250Ow0KLXN0cnVjdCBs
-
-aXN0X2hlYWQJY21kcTsNCi0NCi0vKiAweDM4OiAqLw0KIFVDSEFSCQltc2dp
-
-bjEyM1s0XTsNCiBVQ0hBUgkJRENCbWFwW01BWF9TQ1NJX0lEXTsNCiBVQ0hB
-
-UgkJQ29ubmVjdGVkOw0KIFVDSEFSCQlwYWQ7DQogDQotLyogMHgzYzogKi8N
-
-CisvKiAweDMwOiAqLw0KICNpZiBkZWZpbmVkKFVTRV9TUElOTE9DS1MpICYm
-
-IFVTRV9TUElOTE9DS1MgPiAxICYmIChkZWZpbmVkKENPTkZJR19TTVApIHx8
-
-IERFQlVHX1NQSU5MT0NLUyA+IDApDQogc3BpbmxvY2tfdAlsb2NrOw0KICNl
-
-bmRpZg0KQEAgLTIzNCwyMCArMjMwLDIwIEBADQogVUNIQVIJCUlnbm9yZV9J
-
-UlE7CS8qIE5vdCB1c2VkICovDQogDQogUERFVkRFQ0wxOwkJCS8qIFBvaW50
-
-ZXIgdG8gUENJIGNmZy4gc3BhY2UgKi8NCi0vKiAweDRjLzB4NDg6ICovDQor
-
-LyogMHg0MC8weDNjOiAqLw0KIFVMT05HCQlDbWRzOw0KIFVJTlQJCVNlbExv
-
-c3Q7DQogVUlOVAkJU2VsQ29ubjsNCiBVSU5UCQlDbWRJblE7DQogVUlOVAkJ
-
-Q21kT3V0T2ZTUkI7DQogCQ0KLS8qIDB4NjAvMHg1YzogKi8NCisvKiAweDU0
-
-LzB4NTA6ICovDQogc3RydWN0IHRpbWVyX2xpc3QJV2FpdGluZ19UaW1lcjsN
-
-Ci0vKiAweDc0LzB4NzA6ICovDQorLyogMHg2OC8weDY0OiAqLw0KIERDMzkw
-
-X1NSQglUbXBTUkI7DQotLyogMHhkOC8weGQ0OiAqLw0KKy8qIDB4Y2MvMHhj
-
-ODogKi8NCiBEQzM5MF9TUkIJU1JCX2FycmF5W01BWF9TUkJfQ05UXTsgCS8q
-
-IDUwIFNSQnMgKi8NCi0vKiAweGZiMC8weGZhYzogKi8NCisvKiAweGZhNC8w
-
-eGZhMDogKi8NCiB9Ow0KIA0KIHR5cGVkZWYgIHN0cnVjdCAgX0FDQgkgREMz
-
-OTBfQUNCLCAqUEFDQjsNCkBAIC00MDYsMTUgKzQwMiw4IEBADQogICoJU0lT
-
-QyBxdWVyeSBxdWV1ZQ0KICAqLw0KIHR5cGVkZWYgc3RydWN0IHsNCi0Jc3Ry
-
-dWN0IGxpc3RfaGVhZAlsaXN0Ow0KIAlkbWFfYWRkcl90CQlzYXZlZF9kbWFf
-
-aGFuZGxlOw0KIH0gZGMzOTBfY21kX3NjcF90Ow0KLQ0KLXN0cnVjdCBzY3Np
-
-X2NtbmRfbGlzdA0KLXsNCi0JY2hhciBkdW1teVtvZmZzZXRvZihzdHJ1Y3Qg
-
-c2NzaV9jbW5kLCBTQ3ApXTsNCi0JZGMzOTBfY21kX3NjcF90IHNjcDsNCi19
-
-Ow0KIA0KIC8qDQogKiogIElucXVpcnkgRGF0YSBmb3JtYXQNCmRpZmYgLXVy
-
-IGEvZHJpdmVycy9zY3NpL3Njc2lpb20uYyBsaW51eC0yLjYuMS9kcml2ZXJz
-
-L3Njc2kvc2NzaWlvbS5jDQotLS0gYS9kcml2ZXJzL3Njc2kvc2NzaWlvbS5j
-
-CVNhdCBOb3YgMjkgMjI6Mjg6MjUgMjAwMw0KKysrIGIvZHJpdmVycy9zY3Np
-
-L3Njc2lpb20uYwlTYXQgSmFuIDMxIDAwOjA1OjQ1IDIwMDQNCkBAIC0xMTUw
-
-LDcgKzExNTAsNiBAQA0KIAkgICAgcFNSQiA9IHBzcmI7DQogCX0NCiAJcERD
-
-Qi0+cEdvaW5nU1JCID0gMDsNCi0JZGMzOTBfUXVlcnlfdG9fV2FpdGluZyAo
-
-cEFDQik7DQogCWRjMzkwX1dhaXRpbmdfcHJvY2VzcyAocEFDQik7DQogICAg
-
-IH0NCiAgICAgZWxzZQ0KQEAgLTE2MzAsNyArMTYyOSw2IEBADQogICAgIHBj
-
-bWQtPnNjc2lfZG9uZSAocGNtZCk7DQogICAgIERDMzkwX0xPQ0tfQUNCX05J
-
-Ow0KIA0KLSAgICBkYzM5MF9RdWVyeV90b19XYWl0aW5nIChwQUNCKTsNCiAg
-
-ICAgZGMzOTBfV2FpdGluZ19wcm9jZXNzIChwQUNCKTsNCiAgICAgcmV0dXJu
-
-Ow0KIH0NCkBAIC0xNjc3LDcgKzE2NzUsNiBAQA0KIAlwZGNiLT5UYWdNYXNr
-
-ID0gMDsNCiAJcGRjYiA9IHBkY2ItPnBOZXh0RENCOw0KICAgICB9IHdoaWxl
-
-KCBwZGNiICE9IHBEQ0IgKTsNCi0gICAgZGMzOTBfUXVlcnlfdG9fV2FpdGlu
-
-ZyAocEFDQik7DQogfQ0KIA0KIA0K
----1463811839-572387749-1075504858=:8401--
