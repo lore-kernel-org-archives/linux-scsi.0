@@ -1,78 +1,44 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 07/13] scsi: move error handling out of scsi_init_io() into scsi_prep_fn()
-Date: Thu, 31 Mar 2005 18:08:25 +0900 (KST)
-Message-ID: <20050331090647.79DF3B09@htj.dyndns.org>
-References: <20050331090647.FEDC3964@htj.dyndns.org>
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261212AbVCaJUP@vger.kernel.org>
-In-Reply-To: <20050331090647.FEDC3964@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@steeleye.com, axboe@suse.de
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH scsi-misc-2.6 04/13] scsi: remove meaningless volatile qualifiers from structure definitions
+Date: Thu, 31 Mar 2005 11:11:45 +0100
+Message-ID: <20050331101145.GA13842@infradead.org>
+References: <20050331090647.FEDC3964@htj.dyndns.org> <20050331090647.57213FBA@htj.dyndns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:3043 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261234AbVCaKLt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Mar 2005 05:11:49 -0500
+Content-Disposition: inline
+In-Reply-To: <20050331090647.57213FBA@htj.dyndns.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: James.Bottomley@steeleye.com, axboe@suse.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-07_scsi_consolidate_prep_fn_error_handling.patch
+On Thu, Mar 31, 2005 at 06:08:10PM +0900, Tejun Heo wrote:
+>  	struct list_head    siblings;   /* list of all devices on this host */
+>  	struct list_head    same_target_siblings; /* just the devices sharing same target id */
+>  
+> -	volatile unsigned short device_busy;	/* commands actually active on low-level */
+> +	unsigned short device_busy;	/* commands actually active on
+> +					 * low-level. protected by sdev_lock. */
 
-	When scsi_init_io() returns BLKPREP_DEFER or BLKPREP_KILL,
-	it's supposed to free resources itself.  This patch
-	consolidates defer and kill handling into scsi_prep_fn().
-	This fixes a queue stall bug which occurred when sgtable
-	allocation failed and device_busy == 0.
+You should probably switch it to just unsigned.  The other 16bit are wasted
+due to alignment anyway, and some architectures produce better code for 32bit
+accesses.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+> -	volatile unsigned short host_busy;   /* commands actually active on low-level */
+> -	volatile unsigned short host_failed; /* commands that failed. */
+> +
+> +	/*
+> +	 * The following two fields are protected with host_lock;
+> +	 * however, eh routines can safely access during eh processing
+> +	 * without acquiring the lock.
+> +	 */
+> +	unsigned short host_busy;	   /* commands actually active on low-level */
+> +	unsigned short host_failed;	   /* commands that failed. */
 
- scsi_lib.c |   23 ++++++++++++-----------
- 1 files changed, 12 insertions(+), 11 deletions(-)
+Here it would actually increase the struct size but might make sense anyway.
 
-Index: scsi-export/drivers/scsi/scsi_lib.c
-===================================================================
---- scsi-export.orig/drivers/scsi/scsi_lib.c	2005-03-31 18:06:21.000000000 +0900
-+++ scsi-export/drivers/scsi/scsi_lib.c	2005-03-31 18:06:21.000000000 +0900
-@@ -960,9 +960,6 @@ static int scsi_init_io(struct scsi_cmnd
- 	printk(KERN_ERR "req nr_sec %lu, cur_nr_sec %u\n", req->nr_sectors,
- 			req->current_nr_sectors);
- 
--	/* release the command and kill it */
--	scsi_release_buffers(cmd);
--	scsi_put_command(cmd);
- 	return BLKPREP_KILL;
- }
- 
-@@ -1130,18 +1127,17 @@ static int scsi_prep_fn(struct request_q
- 		 * required).
- 		 */
- 		ret = scsi_init_io(cmd);
--		if (ret)	/* BLKPREP_KILL return also releases the command */
--			return ret;
--		
-+		if (ret == BLKPREP_DEFER)
-+			goto defer;
-+		else if (ret == BLKPREP_KILL)
-+			goto kill;
-+
- 		/*
- 		 * Initialize the actual SCSI command for this request.
- 		 */
- 		drv = *(struct scsi_driver **)req->rq_disk->private_data;
--		if (unlikely(!drv->init_command(cmd))) {
--			scsi_release_buffers(cmd);
--			scsi_put_command(cmd);
--			return BLKPREP_KILL;
--		}
-+		if (unlikely(!drv->init_command(cmd)))
-+			goto kill;
- 	}
- 
- 	/*
-@@ -1157,6 +1153,11 @@ static int scsi_prep_fn(struct request_q
- 	if (sdev->device_busy == 0)
- 		blk_plug_device(q);
- 	return BLKPREP_DEFER;
-+
-+ kill:
-+	scsi_release_buffers(cmd);
-+	scsi_put_command(cmd);
-+	return BLKPREP_KILL;
- }
- 
- /*
