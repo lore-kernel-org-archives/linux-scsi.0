@@ -1,128 +1,72 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: /proc/scsi/map
-Date: Mon, 17 Jun 2002 13:35:34 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [linux-usb-devel] Re: /proc/scsi/map
+Date: Mon, 17 Jun 2002 15:25:02 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020617133534.A10174@eng2.beaverton.ibm.com>
-References: <20020615133606.GC11016@gum01m.etpnet.phys.tue.nl>
+Message-ID: <aelhf4$n6n$2@main.gmane.org>
+References: <patmans@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020615133606.GC11016@gum01m.etpnet.phys.tue.nl>; from garloff@suse.de on Sat, Jun 15, 2002 at 03:36:06PM +0200
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id NAA27879
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Jun 2002 13:25:13 -0700
+In-Reply-To: Message from Patrick Mansfield <patmans@us.ibm.com>
+   of "Mon, 17 Jun 2002 12:07:06 PDT." <20020617120706.A16275@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>, Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Oliver Neukum <oliver@neukum.name>, David Brownell <david-b@pacbell.net>, Andries.Brouwer@cwi.nl, garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sancho@dauskardt.de, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dougg@torque.net
 
-On Sat, Jun 15, 2002 at 03:36:06PM +0200, Kurt Garloff wrote:
-> Life would be easier if the scsi subsystem would just report which SCSI
-> device (uniquely identified by the controller,bus,target,unit tuple) belongs
-> to which high-level device. The information is available in the kernel.
+patmans@us.ibm.com said:
+> Yes, legacy or broken devices need vendor specific code to get a
+> unique serial number or uid, but it is not clear to me that putting
+> the code in user space is better or worse than kernel space. Maybe we
+> need to see some implementations. 
 
-I prefer we refer to the tuple as host, channel, id, lun (H, C, I, L), so
-as to more closely match /proc/scsi/scsi, /proc/scsi/sg, and attached
-messages:
+For me the advantage of doing this in user space is that we can use simple 
+scripting to handle all the exceptions (and actually, allowing easy 
+reconfiguration of the exceptions), but I agree, a reference implementation 
+would be a useful demonstration.
 
-[root@elm3a50 root]# cat /proc/scsi/scsi | head -4
-Attached devices: 
-Host: scsi0 Channel: 00 Id: 00 Lun: 00
-  Vendor: IBM-PSG  Model: ST318203LC    !# Rev: B222
-  Type:   Direct-Access                    ANSI SCSI revision: 02
+> What happens at boot time? Do we now need special stripped copies of
+> user space get-id commands to boot from scsi (for use with initrd)? Do
+> we just wait until the system is booted before getting/setting the
+> ID's? 
 
-root # cat /proc/scsi/sg/device_hdr  /proc/scsi/sg/devices | head -2
-host    chan    id      lun     type    opens   qdepth  busy    online
-0       0       0       0       0       4       253     0       1
+That depends on whether you really need the unique id at boot or not.  The 
+boot code is really only looking for the root filesystem, which can be found 
+by fs label, so there may not be a need to put all this in initrd.  However, 
+if we have to it would go in as part of the diet{libc, hotplug} stuff.
 
-Attached messages are of the form:
+If you don't put it in initrd, then you have an init script that runs to scan 
+all the existing devices and configure them accordingly.
 
-Attached scsi disk sdn at scsi2, channel 0, id 2, lun 0
+> If I build without sg or /proc, should SCSI ID's still be available? 
 
-> Attached patch does this:
-> garloff@pckurt:/raid5/Kernel/src $ cat /proc/scsi/map 
-> # C,B,T,U       Type    onl     sg_nm   sg_dev  nm      dev(hex)
-> 0,0,00,00       0x05    1       sg0     c:15:00 sr0     b:0b:00
-> 1,0,01,00       0x05    1       sg1     c:15:01 sr1     b:0b:01
-> 1,0,02,00       0x01    1       sg2     c:15:02 osst0   c:ce:00
-> 1,0,03,00       0x05    1       sg3     c:15:03 sr2     b:0b:02
-> 1,0,05,00       0x00    1       sg4     c:15:04 sda     b:08:00
-> 1,0,09,00       0x00    1       sg5     c:15:05 sdb     b:08:10
-> 2,0,01,00       0x05    1       sg6     c:15:06 sr3     b:0b:03
-> 2,0,02,00       0x01    1       sg7     c:15:07 osst1   c:ce:01
-> 2,0,03,00       0x05    1       sg8     c:15:08 sr4     b:0b:04
-> 2,0,05,00       0x00    1       sg9     c:15:09 sdc     b:08:20
-> 2,0,09,00       0x00    1       sg10    c:15:0a sdd     b:08:30
-> 3,0,10,00       0x00    1       sg11    c:15:0b sde     b:08:40
-> 3,0,12,00       0x00    1       sg12    c:15:0c sdf     b:08:50
+Without /proc, depending on how you do the sg<->sd mapping, possibly.  Without 
+sg, no since I'd use that to formulate the SCSI cdb to get the ID.
 
-Why not treat each upper layer driver the same? Type is already
-in /proc/scsi/scsi, or implied by the upper level drivers attached.
-Online should really be part of /proc/scsi/scsi.
+> How can I efficiently handle multi-path code without overallocating N
+> Scsi_Devices (where N is the number of paths to each Scsi_Device)? 
 
-Then, each line is a path followed by a list of upper level devices.
-This would also simplify the code, although the ordering of the upper
-level devices becomes link or module load order dependent.
+Since this is a one time configuration, is overallocation such a bad thing 
+(particularly as the allocator is moving towards a much more dynamic model in 
+2.5)?  You can allow the normal stuff to run and then trigger multi-path 
+configuration adds as you see the same unique ID come in for different devices.
 
-And similiar to sg (someone commented on parsing '^#'), have a _hdr
-entry; something like:
+> For kernel implementations, we could add a special entry in the
+> device_list or have a new list mapping vendor+product to a get-the-id
+> function. 
 
-$ cat /proc/scsi/map_hdr /proc/scsi/map
+device_list is what first got me thinking down this path:  I keep running into 
+customer problems that boil down to XXX linux distribution doesn't find all 
+the LUNS on my array.  The obvious answer is "that's because it isn't in 
+device_list".  Now, I could solve the problem by giving the customer a kernel 
+patch adding the device, but this runs into problems with inexpert users, or 
+enterprise customers who won't deviate from the "standard" kernel.  Being 
+lazy, the solution I ultimately adopted was to send them an init script that 
+recognised the array from it's inquiry strings and used scsi-add-single-device 
+to probe its LUNs.
 
-H:C:I:L      online  type:name:block/char:maj:min
-00:00:00:00     1       sg:sg0:c:15:00      sr:sr0:b:0b:00
-01:00:01:00     1       sg:sg1:c:15:01      sr:sr1:b:0b:01
-01:00:02:00     1       sg:sg2:c:15:02      osst:osst0:c:ce:00
-02:00:09:00     1       sg:sg3:c:15:03      sd:sdd:b:08:30
-
-Or:
-
-H:C:I:L      online  type:enumeration:block/char:maj:min
-00:00:00:00     1      sg:0:c:15:00      sr:0:b:0b:00
-01:00:01:00     1      sg:1:c:15:01      sr:1:b:0b:01
-01:00:02:00     1      sg:2:c:15:02      osst:0:c:ce:00
-02:00:09:00     1      sg:3:c:15:03      sd:d:b:08:30
+James
 
 
-> A patch for 2.5 should be done as well, if the design is OK, of course.
-> 
-
-IMO, we should use driverfs for this in 2.5. Mike Sullivan's scsi driverfs
-patch currently ends up with a driverfs layout (showing one Scsi_Device
-with two partitions, sg and sd attached) like this:
-
-[root@elm3a50 devices]# tree ./root/pci1/01\:06.0/scsi2/2\:0\:2\:0/
-./root/pci1/01:06.0/scsi2/2:0:2:0/
-|-- 2:0:2:0:disc
-|   |-- kdev
-|   |-- name
-|   |-- power
-|   `-- type
-|-- 2:0:2:0:gen
-|   |-- kdev
-|   |-- name
-|   |-- power
-|   `-- type
-|-- 2:0:2:0:p1
-|   |-- kdev
-|   |-- name
-|   |-- power
-|   `-- type
-|-- 2:0:2:0:p2
-|   |-- kdev
-|   |-- name
-|   |-- power
-|   `-- type
-|-- name
-|-- power
-`-- type
-
-Right now, the name is storing an ID; the ID is retrieved in the kernel (using
-page 0x80 or page 0x83 or the path). For example disc has:
-
-[root@elm3a50 2:0:2:0:disc]# pwd
-/devices/root/pci1/01:06.0/scsi2/2:0:2:0/2:0:2:0:disc
-[root@elm3a50 2:0:2:0:disc]# ls  
-kdev  name  power  type
-[root@elm3a50 2:0:2:0:disc]# cat *
-8d0
-U20000020371719e8disc
-0
-BLK
-
--- Patrick Mansfield
