@@ -1,64 +1,123 @@
-From: Luben Tuikov <tluben@rogers.com>
-Subject: Re: Patch: change the serial_number for error-handler commands
-Date: Thu, 22 May 2003 01:47:58 -0400
+From: Eddie Williams <Eddie.Williams@steeleye.com>
+Subject: Patch:  allow devices to restrict start on add
+Date: Thu, 22 May 2003 11:40:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3ECC648E.4030103@rogers.com>
-References: <3ECA9D46.7010301@rogers.com> <Pine.LNX.4.44L0.0305202110520.4914-100000@netrider.rowland.org> <20030521180308.GD1116@beaverton.ibm.com> <3ECBD122.3090702@rogers.com> <20030521202809.GA1791@beaverton.ibm.com> <3ECBEB8D.4030008@rogers.com> <20030521161544.A24646@beaverton.ibm.com>
+Message-ID: <200305221140.59633.Eddie.Williams@Steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: Multipart/Mixed;
+  boundary="------------Boundary-00=_BWOASVXHDLI8WM4GPW6D"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep02-mail.bloor.is.net.cable.rogers.com ([66.185.86.72]:24334
-	"EHLO fep02-mail.bloor.is.net.cable.rogers.com") by vger.kernel.org
-	with ESMTP id S262321AbTEVFe4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 May 2003 01:34:56 -0400
-In-Reply-To: <20030521161544.A24646@beaverton.ibm.com>
+Received: from nat9.steeleye.com ([65.114.3.137]:24071 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261969AbTEVPgN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 May 2003 11:36:13 -0400
+Received: from aslan (aslan.sc.steeleye.com [172.17.6.51])
+	by hancock.sc.steeleye.com (8.11.6/linuxconf) with ESMTP id h4MFnHI01745
+	for <linux-scsi@vger.kernel.org>; Thu, 22 May 2003 11:49:17 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Mike Anderson <andmike@us.ibm.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Patrick Mansfield wrote:
-> 
-> My less than $.02:
-> 
-> As far as the code goes, it does not matter whether we store the current
-> or next value in shost->serial_number,
 
-I was _just_ mentioning what is normally done in implementations of some
-transports... (but actually they need to store the next, but it seems
-we'll not use this ability in SCSI Core, so yes, it doesn't really matter...)
+--------------Boundary-00=_BWOASVXHDLI8WM4GPW6D
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-> so we ought to use the simpler code
-> (Mike's version).
 
-You mean Eric's version -- this was in SCSI Core _before_ you two
-started paid work on SCSI Core.
+When a SCSI disk is added and it returns a NOT READY the SD driver is=20
+automatically sending a START_UNIT command to spin the device up.  While =
+this=20
+may be the desired behavior for many if not most devices not all devices=20
+either want or need this.  The attached patch provides a mechanism via th=
+e=20
+device_list that allows a device to be defined to disable the automatic s=
+tart=20
+being issued on an add.
 
->  And (x += 2)++ won't compile.
+The patch also modifies the device_list for several devices that would pr=
+efer=20
+to not have the start command issued.=20
 
-Aaaah, I've mentioned this before several times, which is
-my usual disclaimer: the only C code which I send to
-linux scsi is in a patch.  Anything else, doesn't matter
-how C-like it is, if it is in text, is just that: C-like.
+Eddie Williams
+--------------Boundary-00=_BWOASVXHDLI8WM4GPW6D
+Content-Type: text/x-diff;
+  charset="us-ascii";
+  name="nostart.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="nostart.diff"
 
-I'm just trying to convey an idea.
+diff -Nru linux-2.5.69/drivers/scsi.notready/scsi.h linux-2.5.69/drivers/scsi/scsi.h
+--- linux-2.5.69/drivers/scsi.notready/scsi.h	Thu May  8 15:20:18 2003
++++ linux-2.5.69/drivers/scsi/scsi.h	Thu May  8 15:26:44 2003
+@@ -612,6 +612,7 @@
+ 	unsigned remap:1;	/* support remapping  */
+ //	unsigned sync:1;	/* Sync transfer state, managed by host */
+ //	unsigned wide:1;	/* WIDE transfer state, managed by host */
++	unsigned no_start_on_add:1;	/* do not issue start on add */
+ 
+ 	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
+ 
+diff -Nru linux-2.5.69/drivers/scsi.notready/scsi_scan.c linux-2.5.69/drivers/scsi/scsi_scan.c
+--- linux-2.5.69/drivers/scsi.notready/scsi_scan.c	Thu May  8 15:20:18 2003
++++ linux-2.5.69/drivers/scsi/scsi_scan.c	Thu May  8 15:26:44 2003
+@@ -52,6 +52,7 @@
+ #define BLIST_LARGELUN		0x200	/* LUNs past 7 on a SCSI-2 device */
+ #define BLIST_INQUIRY_36	0x400	/* override additional length field */
+ #define BLIST_INQUIRY_58	0x800	/* ... for broken inquiry responses */
++#define BLIST_NOSTARTONADD	0x1000	/* do not do automatic start on add */
+ 
+ /*
+  * scsi_static_device_list: deprecated list of devices that require
+@@ -152,7 +153,7 @@
+ 	{"EMULEX", "MD21/S2     ESDI", NULL, BLIST_SINGLELUN},
+ 	{"CANON", "IPUBJD", NULL, BLIST_SPARSELUN},
+ 	{"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
+-	{"DEC", "HSG80", NULL, BLIST_FORCELUN},
++	{"DEC", "HSG80", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+ 	{"COMPAQ", "LOGICAL VOLUME", NULL, BLIST_FORCELUN},
+ 	{"COMPAQ", "CR3500", NULL, BLIST_FORCELUN},
+ 	{"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+@@ -180,7 +181,10 @@
+ 	{"HP", "NetRAID-4M", NULL, BLIST_FORCELUN},
+ 	{"ADAPTEC", "AACRAID", NULL, BLIST_FORCELUN},
+ 	{"ADAPTEC", "Adaptec 5400S", NULL, BLIST_FORCELUN},
+-	{"COMPAQ", "MSA1000", NULL, BLIST_FORCELUN},
++	{"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
++	{"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
++	{"COMPAQ", "HSV110", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
++	{"HP", "HSV100", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+ 	{"HP", "C1557A", NULL, BLIST_FORCELUN},
+ 	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
+ 	{"FSC", "CentricStor", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+@@ -804,6 +808,13 @@
+ 	 */
+ 	if ((*bflags & BLIST_BORKEN) == 0)
+ 		sdev->borken = 0;
++
++	/*
++	 * Some devices may not want to have a start command automatically
++	 * issued when a device is added.
++	 */
++	if (*bflags & BLIST_NOSTARTONADD)
++		sdev->no_start_on_add = 1;
+ 
+ 	/*
+ 	 * If we need to allow I/O to only one of the luns attached to
+diff -Nru linux-2.5.69/drivers/scsi.notready/sd.c linux-2.5.69/drivers/scsi/sd.c
+--- linux-2.5.69/drivers/scsi.notready/sd.c	Thu May  8 15:20:18 2003
++++ linux-2.5.69/drivers/scsi/sd.c	Thu May  8 15:26:44 2003
+@@ -852,7 +852,10 @@
+ 			break;
+ 		}
+ 					
+-					
++		/* The device does not want the automatic start to be issued. */
++		if (sdkp->device->no_start_on_add) {
++			break;
++		}
+ 
+ 		/*
+ 		 * If manual intervention is required, or this is an
 
-Actually I _did_ set up a running verion of this as a patch today
-but I never sent it -- too much politics, I got discouraged and
-saw absolutely _no_ point.
-
-> Per naming: "get" is already overloaded and implies a put. We have code
-> like scsi_get_cmd that allocates and returns a pointer/value, and then
-> various scsi and other kernel get/put functions that take a pointer and
-> increment or decrement ref counters. cmdsn is a rather cryptic
-> abbreviation that my brain can't easily parse.
-> 
-> I suggest scsi_serial_number(host) or scsi_cmdsn(host).
-
-I personally am getting tired of those
-	scsi_this_is_a_long_name_for_a_trivial_function()
-function names in scsi so I'd go for the second.
-
--- 
-Luben
+--------------Boundary-00=_BWOASVXHDLI8WM4GPW6D--
 
