@@ -1,308 +1,150 @@
-From: Matthew Galgoci <mgalgoci@redhat.com>
-Subject: Patch for dynamically added adapters
-Date: Thu, 28 Aug 2003 18:05:09 -0400 (EDT)
+From: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Subject: usb-starge not working in the latest kernel 2.4
+Date: Fri, 29 Aug 2003 10:42:01 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0308281803140.15010-100000@lacrosse.corp.redhat.com>
+Message-ID: <200308290143.KAA00294@toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="shift_jis"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pix-525-pool.redhat.com ([66.187.233.200]:61848 "EHLO
-	lacrosse.corp.redhat.com") by vger.kernel.org with ESMTP
-	id S264379AbTH1WFQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Aug 2003 18:05:16 -0400
-Received: from localhost (mgalgoci@localhost)
-	by lacrosse.corp.redhat.com (8.11.6/8.9.3) with ESMTP id h7SM59v10502
-	for <linux-scsi@vger.kernel.org>; Thu, 28 Aug 2003 18:05:09 -0400
+Received: from inet-tsb.toshiba.co.jp ([202.33.96.40]:25545 "EHLO
+	inet-tsb.toshiba.co.jp") by vger.kernel.org with ESMTP
+	id S263893AbTH2BnY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Aug 2003 21:43:24 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, David Brownell <david-b@pacbell.net>, "Tomita, Haruo" <htomita@pcs.pc.ome.toshiba.co.jp>
 
+Dear Alan,
 
-Hi Folks,
+I've tested usb-storage with the 2.6.0-test2-bk2 kernel version,
+It seems that 2.6 kernel version is stable. 
+However, 2.4 version is unstable.
 
-This patch is derived largely and mostly from the following work by Erik Andersen <andersen@codepoet.org>
-and the original patch is here: http://linux1394.org/patches/scsi_add_rem.diff
+The host  controller mPD270100 of NEC and VT6202 of VIA.
+When it tested in a high speed multihub, it operated about two weeks. 
+However, it became the following errors when the number of devices was one.
+I think that it is not failure of a device.
+Is it the problem of error handling?
 
-I basically added smp locking to what appeared to be critical code paths, and did a minor simplification or
-two. The reason I did this is because the only alternative to automatic registration of firewire block
-devices is 1) manual device registation via echo foo > /proc/scsi/scsi or 2) http://linux1394.org/faq.html#hotplug
+This error was generated in the latest kernel 2.4.22.
 
-I'd rather not have a shell script frobbing for scsi devices ;(
-
-Anyhow, please review this, I'd be interested in feedback.
+usb-storage: usb_stor_transfer_partial(): xfer 2048 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 2048/2048
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: Bulk data transfer result 0x0
+usb-storage: Attempting to get CSW...
+usb-storage: Bulk status result = 0
+usb-storage: Bulk status Sig 0x53425355 T 0x7862f6 R 0 Stat 0x0
+usb-storage: scsi cmd done, result=0x0
+usb-storage: *** thread sleeping.
+usb-storage: queuecommand() called
+usb-storage: *** thread awakened.
+usb-storage: Command READ_10 (10 bytes)
+usb-storage: 28 00 00 02 e5 23 00 00 01 00 00 00
+usb-storage: Bulk command S 0x43425355 T 0x7862f7 Trg 0 LUN 0 L 2048 F 128 CL 12
+usb-storage: Bulk command transfer result=0
+usb-storage: usb_stor_transfer_partial(): xfer 2048 bytes
+usb-storage: usb_stor_bulk_msg() returned 0 xferred 2048/2048
+usb-storage: usb_stor_transfer_partial(): transfer complete
+usb-storage: Bulk data transfer result 0x0
+usb-storage: Attempting to get CSW...
+usb-storage: Bulk status result = 0
+usb-storage: Bulk status Sig 0x53425355 T 0x7862f7 R 0 Stat 0x0
+usb-storage: scsi cmd done, result=0x0
+usb-storage: *** thread sleeping.
+usb-storage: queuecommand() called
+usb-storage: *** thread awakened.
+usb-storage: Command READ_10 (10 bytes)
+usb-storage: 28 00 00 02 e5 24 00 00 3f 00 00 00
+usb-storage: Bulk command S 0x43425355 T 0x7862f8 Trg 0 LUN 0 L 129024 F 128 CL 12
+usb-storage: command_abort() called
+usb-storage: Bulk command transfer result=-104
+usb-storage: -- transport indicates command was aborted
+usb-storage: Bulk reset requested
+usb_control/bulk_msg: timeout
+usb-storage: Bulk soft reset failed -110
+usb-storage: scsi command aborted
+usb-storage: *** thread sleeping.
+usb-storage: queuecommand() called
+usb-storage: *** thread awakened.
+usb-storage: Command TEST_UNIT_READY (6 bytes)
+usb-storage: 00 00 00 00 00 00 00 00 3f 00 00 00
+usb-storage: Bulk command S 0x43425355 T 0x7862f9 Trg 0 LUN 0 L 0 F 0 CL 12
+usb-storage: Bulk command transfer result=0
+usb-storage: Attempting to get CSW...
+usb-storage: command_abort() called
+usb-storage: -- transport indicates command was aborted
+usb-storage: Bulk reset requested
+usb_control/bulk_msg: timeout
+usb-storage: Bulk soft reset failed -110
+usb-storage: scsi command aborted
+usb-storage: *** thread sleeping.
+usb-storage: device_reset() called
+usb-storage: Bulk reset requested
+usb_control/bulk_msg: timeout
+usb-storage: Bulk soft reset failed -110
+usb-storage: bus_reset() called
+hub.c: port 1, portstatus 511, change 0, 480 Mb/s
+hub.c: port 1 of hub 1 not reset yet, waiting 10ms
+hub.c: port 1, portstatus 511, change 0, 480 Mb/s
+hub.c: port 1 of hub 1 not reset yet, waiting 10ms
+ehci_hcd 00:0c.2: port 1 high speed
+ehci_hcd 00:0c.2: GetStatus port 1 status 001005 POWER sig=se0  PE CONNECT
+hub.c: port 1, portstatus 503, change 10, 480 Mb/s
+ehci_hcd 00:0c.2: devpath 1 ep0out 3strikes
+hub.c: USB device not accepting new address (error=-71)
+ehci_hcd 00:0c.2: GetStatus port 1 status 001803 POWER sig=j  CSC CONNECT
+hub.c: port 1, portstatus 501, change 1, 480 Mb/s
+hub.c: port 1 connection change
+hub.c: port 1, portstatus 501, change 1, 480 Mb/s
+usb.c: USB disconnect on device 00:0c.2-1 address 2
+usb-storage: storage_disconnect() called
+usb-storage: -- releasing main URB
+usb-storage: -- usb_unlink_urb() returned -19
+usb.c: kusbd: /sbin/hotplug remove 2
+ehci_hcd 00:0c.2: free_config 1 devnum 2
+hub.c: port 1, portstatus 501, change 0, 480 Mb/s
+hub.c: port 1, portstatus 501, change 0, 480 Mb/s
+hub.c: port 1, portstatus 501, change 0, 480 Mb/s
+hub.c: port 1, portstatus 501, change 0, 480 Mb/s
+hub.c: port 1, portstatus 511, change 0, 480 Mb/s
+hub.c: port 1 of hub 1 not reset yet, waiting 10ms
+hub.c: port 1, portstatus 511, change 0, 480 Mb/s
+hub.c: port 1 of hub 1 not reset yet, waiting 10ms
+ehci_hcd 00:0c.2: port 1 high speed
+ehci_hcd 00:0c.2: GetStatus port 1 status 001005 POWER sig=se0  PE CONNECT
+hub.c: port 1, portstatus 503, change 10, 480 Mb/s
+hub.c: new USB device 00:0c.2-1, assigned address 3
+usb.c: kmalloc IF dfe6d960, numif 1
+usb.c: new device strings: Mfr=73, Product=87, SerialNumber=107
+usb.c: USB device number 3 default language ID 0x409
+Manufacturer: Plextor Corp.
+Product: USB Storage Adapter
+SerialNumber: 11100E000052487C
+usb-storage: act_altsettting is 0
+usb-storage: id_index calculated to be: 92
+usb-storage: Array length appears to be: 98
+usb-storage: USB Mass Storage device detected
+usb-storage: Endpoints: In: 0xdfe641f4 Out: 0xdfe641e0 Int: 0xdfe64208 (Period 9)
+usb-storage: Found existing GUID 093b001211100e000052487c
+WARNING: USB Mass Storage data integrity not assured
+USB Mass Storage device found at 3
+usb.c: usb-storage driver claimed interface dfe6d960
+usb.c: kusbd: /sbin/hotplug add 3
+hub.c: port 2, portstatus 100, change 0, 12 Mb/s
+hub.c: port 3, portstatus 100, change 0, 12 Mb/s
+hub.c: port 4, portstatus 100, change 0, 12 Mb/s
+usb-storage: host_reset() requested but not implemented
+scsi: device set offline - command error recover failed: host 0 channel 0 id 0 lun 0
+SCSI cdrom error : host 0 channel 0 id 0 lun 0 return code = 6050000
+ I/O error: dev 0b:00, sector 758928
+ I/O error: dev 0b:00, sector 758932
+ I/O error: dev 0b:00, sector 759180
+ I/O error: dev 0b:00, sector 758928
+ 
+P.S.
+Please teach me how to analyze the root cause of this isseu.
 
 Regards,
-
-Matthew Galgoci
-
-
-diff -urN linux-2.4.22-rc2-ac3.orig/drivers/ieee1394/sbp2.c linux-2.4.22-rc2-ac3/drivers/ieee1394/sbp2.c
---- linux-2.4.22-rc2-ac3.orig/drivers/ieee1394/sbp2.c	2003-08-17 10:44:12.000000000 +0000
-+++ linux-2.4.22-rc2-ac3/drivers/ieee1394/sbp2.c	2003-08-18 19:20:38.000000000 +0000
-@@ -231,7 +231,7 @@
-  * enable this define to make use of it. This provides better hotplug
-  * support. The mentioned patch is not part of the kernel proper though,
-  * because it is considered somewhat of a hack. */
--//#define SBP2_USE_SCSI_ADDREM_HACK
-+#define SBP2_USE_SCSI_ADDREM_HACK
- 
- 
- /*
-diff -urN linux-2.4.22-rc2-ac3.orig/drivers/scsi/hosts.h linux-2.4.22-rc2-ac3/drivers/scsi/hosts.h
---- linux-2.4.22-rc2-ac3.orig/drivers/scsi/hosts.h	2003-08-17 15:02:20.000000000 +0000
-+++ linux-2.4.22-rc2-ac3/drivers/scsi/hosts.h	2003-08-19 02:07:18.000000000 +0000
-@@ -535,6 +535,13 @@
- int scsi_register_device(struct Scsi_Device_Template * sdpnt);
- void scsi_deregister_device(struct Scsi_Device_Template * tpnt);
- 
-+/* Support for hot plugging and unplugging devices -- safe for 
-+ * ieee1394 or USB devices, but probably not for normal SCSI... */
-+extern int scsi_add_single_device(struct Scsi_Host *shpnt, 
-+	int channel, int id, int lun);
-+extern int scsi_remove_single_device(struct Scsi_Host *shpnt, 
-+	int channel, int id, int lun);
-+
- /* These are used by loadable modules */
- extern int scsi_register_module(int, void *);
- extern int scsi_unregister_module(int, void *);
-diff -urN linux-2.4.22-rc2-ac3.orig/drivers/scsi/scsi.c linux-2.4.22-rc2-ac3/drivers/scsi/scsi.c
---- linux-2.4.22-rc2-ac3.orig/drivers/scsi/scsi.c	2003-08-17 10:44:53.000000000 +0000
-+++ linux-2.4.22-rc2-ac3/drivers/scsi/scsi.c	2003-08-19 02:31:31.000000000 +0000
-@@ -1559,6 +1559,109 @@
-     }
- }
- 
-+/* Support for plugging/unplugging SCSI devices.  This feature is
-+ * probably unsafe for standard SCSI devices, but is perfectly
-+ * normal for things like ieee1394 or USB drives since these
-+ * busses are designed for hotplugging.  Use at your own risk.... */
-+int scsi_add_single_device(struct Scsi_Host *shpnt, 
-+	int channel, int id, int lun)
-+{
-+	Scsi_Device *scd;
-+	unsigned long flags;
-+
-+	/* Do a bit of sanity checking */
-+	if (shpnt==NULL) {
-+		return -ENXIO;
-+	}
-+
-+	/* Check if they asked us to add an already existing device.
-+	 * If so, ignore their misguided efforts. */
-+	spin_lock_irqsave(&device_request_lock, flags);
-+	for (scd = shpnt->host_queue; scd; scd = scd->next) {
-+		if ((scd->channel == channel && scd->id == id && scd->lun == lun)) {
-+			break;
-+		}
-+	}
-+	spin_unlock_irqrestore(&device_request_lock, flags);
-+
-+	if (scd) {
-+		return -ENOSYS;
-+	}
-+
-+	scan_scsis(shpnt, 1, channel, id, lun);
-+	return 0;
-+}
-+
-+/* Support for plugging/unplugging SCSI devices.  This feature is
-+ * probably unsafe for standard SCSI devices, but is perfectly
-+ * normal for things like ieee1394 or USB drives since these
-+ * busses are designed for hotplugging.  Use at your own risk.... */
-+int scsi_remove_single_device(struct Scsi_Host *shpnt, 
-+	int channel, int id, int lun)
-+{
-+	Scsi_Device *scd;
-+	struct Scsi_Device_Template *SDTpnt;
-+	unsigned long flags;
-+
-+	/* Do a bit of sanity checking */
-+	if (shpnt==NULL) {
-+		return  -ENODEV;
-+	}
-+
-+	/* Make sure the specified device is in fact present */
-+	spin_lock_irqsave(&device_request_lock, flags);
-+	for (scd = shpnt->host_queue; scd; scd = scd->next) {
-+		if ((scd->channel == channel && scd->id == id && scd->lun == lun)) {
-+			break;
-+		}
-+	}
-+	spin_unlock_irqrestore(&device_request_lock, flags);
-+
-+	if (scd==NULL) {
-+		return -ENODEV;
-+	}
-+
-+	/* See if the specified device is busy */
-+	if (scd->access_count) {
-+		return -EBUSY;
-+	}
-+
-+	spin_lock_irqsave(&device_request_lock, flags);
-+
-+	SDTpnt = scsi_devicelist;
-+	while (SDTpnt != NULL) {
-+		if (SDTpnt->detach)
-+			(*SDTpnt->detach) (scd);
-+		SDTpnt = SDTpnt->next;
-+	}
-+
-+	if (scd->attached == 0) {
-+		/* Nobody is using this device, so we
-+		 * can now free all command structures.  */
-+		if (shpnt->hostt->revoke)
-+			shpnt->hostt->revoke(scd);
-+		devfs_unregister (scd->de);
-+		scsi_release_commandblocks(scd);
-+
-+		/* Now we can remove the device structure */
-+		if (scd->next != NULL)
-+			scd->next->prev = scd->prev;
-+
-+		if (scd->prev != NULL)
-+			scd->prev->next = scd->next;
-+
-+		if (shpnt->host_queue == scd) {
-+			shpnt->host_queue = scd->next;
-+		}
-+		blk_cleanup_queue(&scd->request_queue);
-+		kfree((char *) scd);
-+	}
-+
-+	spin_unlock_irqrestore(&device_request_lock, flags);
-+
-+	return 0;
-+}
-+
- #ifdef CONFIG_PROC_FS
- static int scsi_proc_info(char *buffer, char **start, off_t offset, int length)
- {
-@@ -1611,8 +1714,6 @@
- static int proc_scsi_gen_write(struct file * file, const char * buf,
-                               unsigned long length, void *data)
- {
--	struct Scsi_Device_Template *SDTpnt;
--	Scsi_Device *scd;
- 	struct Scsi_Host *HBA_ptr;
- 	char *p;
- 	int host, channel, id, lun;
-@@ -1751,33 +1852,11 @@
- 				break;
- 			}
- 		}
--		err = -ENXIO;
--		if (!HBA_ptr)
--			goto out;
--
--		for (scd = HBA_ptr->host_queue; scd; scd = scd->next) {
--			if ((scd->channel == channel
--			     && scd->id == id
--			     && scd->lun == lun)) {
--				break;
--			}
--		}
--
--		err = -ENOSYS;
--		if (scd)
--			goto out;	/* We do not yet support unplugging */
--
--		scan_scsis(HBA_ptr, 1, channel, id, lun);
--
--		/* FIXME (DB) This assumes that the queue_depth routines can be used
--		   in this context as well, while they were all designed to be
--		   called only once after the detect routine. (DB) */
--		/* queue_depth routine moved to inside scan_scsis(,1,,,) so
--		   it is called before build_commandblocks() */
--
--		err = length;
-+		if ((err=scsi_add_single_device(HBA_ptr, channel, id, lun))==0)
-+		    err = length;
- 		goto out;
- 	}
-+
- 	/*
- 	 * Usage: echo "scsi remove-single-device 0 1 2 3" >/proc/scsi/scsi
- 	 * with  "0 1 2 3" replaced by your "Host Channel Id Lun".
-@@ -1803,58 +1882,7 @@
- 				break;
- 			}
- 		}
--		err = -ENODEV;
--		if (!HBA_ptr)
--			goto out;
--
--		for (scd = HBA_ptr->host_queue; scd; scd = scd->next) {
--			if ((scd->channel == channel
--			     && scd->id == id
--			     && scd->lun == lun)) {
--				break;
--			}
--		}
--
--		if (scd == NULL)
--			goto out;	/* there is no such device attached */
--
--		err = -EBUSY;
--		if (scd->access_count)
--			goto out;
--
--		SDTpnt = scsi_devicelist;
--		while (SDTpnt != NULL) {
--			if (SDTpnt->detach)
--				(*SDTpnt->detach) (scd);
--			SDTpnt = SDTpnt->next;
--		}
--
--		if (scd->attached == 0) {
--			/*
--			 * Nobody is using this device any more.
--			 * Free all of the command structures.
--			 */
--                        if (HBA_ptr->hostt->revoke)
--                                HBA_ptr->hostt->revoke(scd);
--			devfs_unregister (scd->de);
--			scsi_release_commandblocks(scd);
--
--			/* Now we can remove the device structure */
--			if (scd->next != NULL)
--				scd->next->prev = scd->prev;
--
--			if (scd->prev != NULL)
--				scd->prev->next = scd->next;
--
--			if (HBA_ptr->host_queue == scd) {
--				HBA_ptr->host_queue = scd->next;
--			}
--			blk_cleanup_queue(&scd->request_queue);
--			kfree((char *) scd);
--		} else {
--			goto out;
--		}
--		err = 0;
-+		err=scsi_remove_single_device(HBA_ptr, channel, id, lun);
- 	}
- out:
- 	
-diff -urN linux-2.4.22-rc2-ac3.orig/drivers/scsi/scsi_syms.c linux-2.4.22-rc2-ac3/drivers/scsi/scsi_syms.c
---- linux-2.4.22-rc2-ac3.orig/drivers/scsi/scsi_syms.c	2002-08-03 00:39:44.000000000 +0000
-+++ linux-2.4.22-rc2-ac3/drivers/scsi/scsi_syms.c	2003-08-18 23:59:25.000000000 +0000
-@@ -103,3 +103,9 @@
- extern int scsi_delete_timer(Scsi_Cmnd *);
- EXPORT_SYMBOL(scsi_add_timer);
- EXPORT_SYMBOL(scsi_delete_timer);
-+
-+/* Support for hot plugging and unplugging devices -- safe for 
-+ * ieee1394 or USB devices, but probably not for normal SCSI... */
-+EXPORT_SYMBOL_GPL(scsi_add_single_device);
-+EXPORT_SYMBOL_GPL(scsi_remove_single_device);
-+
-
-
-
--- 
-
-Matthew Galgoci		"Dirty deeds, done dirt cheap"
-System Administrator
-Red Hat, Inc
-919.754.3700 x44155
-
+Haruo
