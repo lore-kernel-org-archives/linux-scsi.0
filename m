@@ -1,100 +1,103 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [usb-storage] Re: 2 PATCHES: fix request_tranferlength
-Date: Mon, 29 Jul 2002 00:01:24 +0300 (EEST)
+From: Andrea Arcangeli <andrea@suse.de>
+Subject: Re: [PATCH] sd varyio fix
+Date: Mon, 29 Jul 2002 00:28:33 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0207282349430.1970-100000@kai.makisara.local>
-References: <20020728123126.B12344@one-eyed-alien.net>
+Message-ID: <20020728222833.GB1201@dualathlon.random>
+References: <20020715221604.GA10274@nbkurt.etpnet.phys.tue.nl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20020728123126.B12344@one-eyed-alien.net>
+Content-Disposition: inline
+In-Reply-To: <20020715221604.GA10274@nbkurt.etpnet.phys.tue.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Cc: linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net
+To: Kurt Garloff <garloff@suse.de>, Marcelo Tosatti <marcelo@conectiva.com.br>, Linux SCSI list <linux-scsi@vger.kernel.org>, Dave Jones <davej@suse.de>
 
-On Sun, 28 Jul 2002, Matthew Dharm wrote:
+On Tue, Jul 16, 2002 at 12:16:04AM +0200, Kurt Garloff wrote:
+> Hi Marcelo,
+> 
+> another one: The bit shift for vary io in the sd driver was wrong.
+> I don't know whether it has much impact, but it should be fixed anyway.
+> 
+> Patch against 2.4.19rc1 attached.
+> 
+> Regards,
+> -- 
+> Kurt Garloff                   <kurt@garloff.de>         [Eindhoven, NL]
+> Physics: Plasma simulations    <K.Garloff@TUE.NL>     [TU Eindhoven, NL]
+> Linux: SCSI, Security          <garloff@suse.de>    [SuSE Nuernberg, DE]
+>  (See mail header or public key servers for PGP2 and GPG public keys.)
 
-> On Sun, Jul 28, 2002 at 01:22:40PM +0300, Kai Makisara wrote:
-...
-> The case of 'return short data' is a common one (INQUIRY, MODE_SENSE, etc.)
-> and so is well handled.
->
-Good. I just get worried when someone talks about the originator knowing
-the length of the returned data :-)
+> --- drivers/scsi/sd.c.orig	Wed Jun 12 11:39:47 2002
+> +++ drivers/scsi/sd.c	Tue Jul 16 00:12:40 2002
+> @@ -1345,7 +1345,7 @@
+>  	if (SDp->host->hostt->can_do_varyio) {
+>  		if (blkdev_varyio[SD_DISK_MAJOR(i)] == NULL) {
+>  			blkdev_varyio[SD_DISK_MAJOR(i)] = 
+> -				sd_varyio + ((i / SCSI_DISKS_PER_MAJOR) >> 8);
+> +				sd_varyio + ((i / SCSI_DISKS_PER_MAJOR) << 8);
+>  		}
+>  		memset(blkdev_varyio[SD_DISK_MAJOR(i)] + (devnum << 4), 1, 16);
+>  	}
 
-...
-> > The current interface is a little messy. The function scsi_do_req has the
-> > following signature:
-> >
-> > void scsi_do_req(Scsi_Request * SRpnt, const void *cmnd,
-> >               void *buffer, unsigned bufflen, void (*done) (Scsi_Cmnd *),
-> >                  int timeout, int retries)
->
-> Agreed.  Why half of these parameters aren't in the Scsi_Request structure
-> is beyond me.
->
-I like using parameters because they explicitly show what the function
-needs. Passing the values in a subset of fields in a structure is somewhat
-obscure. However, in this case I agree that everything can't be passed as
-parameters.
+I avoided to check this scsi part of the varyio patch when I merged it
+so it's not surprising we have problems there. This isn't so nice
+because it can enable rawio on devices that doesn't explicitly say that
+varyio is supported by them. This part of the code is horrible and
+impossible to understand without full context of the scsi band aid over
+band aid so this is a second reason I'm not so surprised we bugs there.
 
-> > Another interpretation (which I have used) is that the bufflen parameter
-> > is always the length of the buffer _used in this transfer_. Whether the
-> > buffer is contiguous or defined using scatter/gather list is determined by
-> > SRpnt->sr_use_sg. (The lower level drivers don't have to know the actual
-> > length of the buffer as long as it is long enough.)
->
-> This is the interpretation I use in usb-storage.  Experimentally, it seems
-> to be correct.
->
-The st driver up to 2.5.27 has mostly violated these assumptions when
-scatter/gather is used. The newest version sets the segment lengths sum up
-to the transfer length. However, this is a byproduct of a future
-enhancement.
+For istance this doesn't make any sense to me:
 
-> > The second interpretation has the transfer length in exactly one place. In
-> > the first interpretation a complicated logic (or a new structure member)
-> > is needed to get the transfer length. Do we need this or should we just
-> > enforce the second interpretation (maybe change the name bufflen to
-> > maxtransfer or something like that)?
-> >
-> > (If the new structure member dxfer_len is useful to lower level drivers, I
-> > don't oppose adding it to Scsi_Request as long as it is set in
-> > scsi_do_req. What I am opposing is to make the callers responsible for
-> > redundant specifications.)
->
-> Do you see from my explanation why dxfer_len is not redundant to any other
-> fields?  One more example to try to make it clear...
->
-> One code path in scsi_scan.c sends an INQUIRY with cmd[4] = xff.  This is a
-> command to transfer (up to) 255 bytes.  The bufflen passed is 512.
->
-My interpretation is that bufflen in the call should be 255 in this case.
-Using 512 is a bug. Is it useful for the lower levels to know how much
-excess space the caller has reserved? If it is, I take back my suggestion.
+@@ -1268,6 +1277,8 @@ static int sd_detect(Scsi_Device * SDp)
+ 	return 1;
+ }
+ 
++#define SD_DISK_MAJOR(i)	SD_MAJOR((i) >> 4)
++
+ static int sd_attach(Scsi_Device * SDp)
+ {
+         unsigned int devnum;
 
-I think we both agree that the information in dxfer_len must be passed.
-The difference is that you suggest adding a new field to Scsi_Request
-whereas I suggest clarifying the meaning of the existing bufflen
-parameter.
+Why doesn't SD_DISK_MAJOR match SD_MAJOR and there is this magic
+hardcoded ">> 4" of difference. why the SD_MAJOR is different from the
+SD_DISK_MAJOR? The major is only one thing, you cannot shift it right of
+4.
 
-Whatever the result will be, I hope someone writes down the rules. (It is
-also a good way to see if the definition is simple or complex :-)
-
-> I can hear the objection "Why doesn't usb-storage inspect the command to
-> determine the length?".  This is, in fact, what we do now.  It only works
-> _most_ of the time, not all of the time.  Vendor-specifc commands are
-> screwed.  Several opcodes have different meaning depending on what type of
-> device they are sent to, so we're screwed there.  Commands which specify
-> length in terms of "number of blocks" also screw us up, because we don't
-> know what the block size is.
->
-You don't hear the objection from me. I can just add a couple more:
-- the new commands the standard defines during time
-- why have the complicated parsing when the caller knows the address for
-free
-
-	Kai
+I'm not going to spend time learning this horror code myself, I'm busy
+with other things at the moment, so I would appreciate if somebody with
+prior knowledge  on this code could explain the above nosense with a few
+words and I'd rely on somebody who just studied it and that confirms me
+that the above is completely correct, I'm not very confortable by only
+applying the above << 8, I don't see why it's not using the same logic
+as:
 
 
+	for (i = 0; i < N_USED_SD_MAJORS; i++) {
+		blksize_size[SD_MAJOR(i)] = sd_blocksizes + i * (SCSI_DISKS_PER_MAJOR << 4);
+		hardsect_size[SD_MAJOR(i)] = sd_hardsizes + i * (SCSI_DISKS_PER_MAJOR << 4);
+		max_sectors[SD_MAJOR(i)] = sd_max_sectors + i * (SCSI_DISKS_PER_MAJOR << 4);
+	}
 
+
+infact I would be much more confortable if the initialization of the
+[SD_MAJOR] arrays would be done over there rather than at sd_attach time.
+the sd_attach should only memset/memclear the array. Furthmore I don't
+see any memset back to zero at sd_detach and that's another potentail
+runtime breakage as severe as the current bug (actually more severe
+since it can trigger with only one device at time).
+
+So I would appreciate a full audit of the scsi part of the varyio patch
+with some explanations of those bits of the scsi code (i.e.
+SD_DISK_MAJOR semantics).
+
+If nobody can explain why the above is fully correct (including the
+sd_detach that should memset the array back to zero and that I don't
+see) I guess I will rewrite the sd.c thing sanely so that those >> 4  << 8
+devnum << 4, memset(16) hardcoded numbers goes all away from the scsi
+code so that there will be a chance for a non full time scsi developer
+to read that code without spending some hour to reverse engeneer the
+implicit dependencies.
+
+Comments?
+
+Andrea
