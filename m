@@ -1,39 +1,61 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] Re: AMD 53c974 SCSI driver in 2.6
-Date: Mon, 17 Nov 2003 01:03:17 +0100 (CET)
+From: Agri <agri@desnol.ru>
+Subject: scsi and dma
+Date: Mon, 17 Nov 2003 06:17:47 +0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0311170054040.2228-100000@poirot.grange>
-References: <Pine.LNX.4.44.0311152233110.2142-100000@poirot.grange>
+Message-ID: <20031117061747.6cb07084.agri@desnol.ru>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:65415 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S263215AbTKQAFS (ORCPT
+Received: from desnol.ru ([217.150.58.74]:19717 "EHLO desnol.ru")
+	by vger.kernel.org with ESMTP id S263294AbTKQDRt (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 16 Nov 2003 19:05:18 -0500
-In-Reply-To: <Pine.LNX.4.44.0311152233110.2142-100000@poirot.grange>
+	Sun, 16 Nov 2003 22:17:49 -0500
 List-Id: linux-scsi@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, garloff@suse.de, gl@dsa-ac.de
+To: linux-scsi@vger.kernel.org, ipslinux@adaptec.com
 
-On Sat, 15 Nov 2003, Guennadi Liakhovetski wrote:
+Hello
 
-> several first commands seem to complete fine, but then I get an Oops,
-> because dma_map_page is called with direction == DMA_NONE. Below is
+RAID bus controller: IBM Netfinity ServeRAID controller (ips.o driver)
+is installed in my box.
 
-Ok, I found where the data_direction is set to DMA_NONE, but I still don't
-understand why, and how this is supposed to work. So, in
-sd_revalidate_disk() sr_data_direction is initialised by
-scsi_allocate_request() to DMA_BIDIRECTIONAL:
-                sreq->sr_data_direction = DMA_BIDIRECTIONAL;
-, but already in sd_spinup_disk() it is reset to DMA_NONE:
-                        SRpnt->sr_data_direction = DMA_NONE;
-I haven't found yet how sr_data_direction gets copied to sc_data_direction
-(so far it only looks like struct scsi_cmnd is just overlayd on struct
-scsi_request, but I may be wrong there... Or is it really so?
+I have trouble with high cpu load during io operations.
+Also sound playing delays and breaks during io with that controller.
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+How to fix it?
 
+Linux version 2.4.23-rc1
+
+
+06:08:19#/> lspci -s 00:11.0 -v
+00:11.0 RAID bus controller: IBM Netfinity ServeRAID controller
+        Subsystem: IBM: Unknown device 020e
+        Flags: bus master, 66Mhz, slow devsel, latency 32, IRQ 11
+        Memory at d9400000 (32-bit, prefetchable) [size=8K]
+        Expansion ROM at <unassigned> [disabled] [size=32K]
+        Capabilities: [80] Power Management version 2
+
+
+06:16:48#/> cat /proc/scsi/ips/1 
+
+IBM ServeRAID General Information:
+
+        Controller Type                   : ServeRAID 4Lx
+        Memory region                     : 0xd9400000 (8192 bytes)
+        Shared memory address             : 0xd0a76000
+        IRQ number                        : 11
+        BIOS Version                      : 4.84.01
+        Firmware Version                  : 4.84.01
+        Boot Block Version                : 4.84.01
+        Driver Version                    : 6.10.24 
+        Driver Build                      : 1250
+        Max Physical Devices              : 15
+        Max Active Commands               : 32
+        Current Queued Commands           : 0
+        Current Active Commands           : 0
+        Current Queued PT Commands        : 0
+        Current Active PT Commands        : 0
+
+
+Agri
 
