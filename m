@@ -1,39 +1,105 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] 2.6.9-rc4mm1:badness in drivers/scsi/scsi_lib.c
-Date: Thu, 21 Oct 2004 10:41:35 -0400 (EDT)
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0410211039420.2736-100000@ida.rowland.org>
-References: <Pine.GSO.4.58.0410211123290.5705@boromir>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: PROBLEM: kernel crashes on RAID1 drive error
+Date: Thu, 21 Oct 2004 16:02:37 +0200
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <20041021140236.GO10531@suse.de>
+References: <8FA83ADB-22E4-11D9-AC9C-0003934F6348@aol.com> <20041021084514.GY10531@suse.de> <4177BF22.7060208@steeleye.com> <20041021135557.GN10531@suse.de> <4177C13C.10007@steeleye.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:10500 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S270715AbUJUOlk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Oct 2004 10:41:40 -0400
-In-Reply-To: <Pine.GSO.4.58.0410211123290.5705@boromir>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4177C13C.10007@steeleye.com>
+To: Paul Clements <paul.clements@steeleye.com>
+Cc: Mark Rustad <MRustad@aol.com>, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mateusz.Blaszczyk@nask.pl
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, USB development list <linux-usb-devel@lists.sourceforge.net>
 
-On Thu, 21 Oct 2004 Mateusz.Blaszczyk@nask.pl wrote:
-
-> > > After successful write on USB DVD-R writer (HP-200j), system oops's when unpluging USB device.
-> > > Same thing with 2.6.9-rc2mm1.
+On Thu, Oct 21 2004, Paul Clements wrote:
+> Jens Axboe wrote:
+> >On Thu, Oct 21 2004, Paul Clements wrote:
 > >
-> > Try applying this patch:
+> >>Jens Axboe wrote:
+> >>
+> >>>On Wed, Oct 20 2004, Mark Rustad wrote:
+> >>>
+> >>>
+> >>>>Folks,
+> >>>>
+> >>>>I have been having trouble with kernel crashes resulting from RAID1 
+> >>>>component device failures. I have been testing the robustness of an 
+> >>>>embedded system and have been using a drive that is known to fail after 
+> >>>>a time under load. When this device returns a media error, I always 
+> >>>>wind up with either a kernel hang or reboot. In this environment, each 
+> >>>>drive has four partitions, each of which is part of a RAID1 with its 
+> >>>>partner on the other device. Swap is on md2 so even it should be 
+> >>>>robust.
+> >>>>
+> >>>>I have gotten this result with the SuSE standard i386 smp kernels 
+> >>>>2.6.5-7.97 and 2.6.5-7.108. I also get these failures with the 
+> >>>>kernel.org kernels 2.6.8.1, 2.6.9-rc4 and 2.6.9.
+> >>>>
+> >>>>The hardware setup is a two cpu Nacona with an Adaptec 7902 SCSI 
+> >>>>controller with two Seagate drives on a SAF-TE bus. I run three or four 
+> >>>>dd commands copying /dev/md0 to /dev/null to provide the activity that 
+> >>>>stimulates the failure.
+> >>>>
+> >>>>I suspect that something is going wrong in the retry of the failed I/O 
+> >>>>operations, but I'm really not familiar with any of this area of the 
+> >>>>kernel at all.
+> >>>>
+> >>>>In one failure, I get the following messages from kernel 2.6.9:
+> >>>>
+> >>>>raid1: Disk failure on sdb1, disabling device.
+> >>>>raid1: sdb1: rescheduling sector 176
+> >>>>raid1: sda1: redirecting sector 176 to another mirror
+> >>>>raid1: sdb1: rescheduling sector 184
+> >>>>raid1: sda1: redirecting sector 184 to another mirror
+> >>>>Incorrect number of segments after building list
+> >>>>counted 2, received 1
+> >>>>req nr_sec 0, cur_nr_sec 7
+> >>>
+> >>>
+> >>>This should be fixed by this patch, can you test it?
+> >>
+> >>There may well be two problems here, but the original problem you're 
+> >>seeing (infinite read retries, and failures) is due to a bug in raid1. 
+> >>Basically the bio handling on read error retry was not quite right. Neil 
+> >>Brown just posted the patch to correct this a couple of days ago:
+> >>
+> >>http://marc.theaimsgroup.com/?l=linux-raid&m=109824318202358&w=2
+> >>
+> >>Please try that. (If you need a patch that applies to SUSE 2.6.5, I also 
+> >>have a version of the patch which should apply to that).
 > >
-> > http://marc.theaimsgroup.com/?l=linux-usb-devel&m=109744234829347&q=raw
+> >
+> >Is 2.6.9 not uptodate wrt those raid1 patches?!
 > 
-> Patch applied.
-> I have done the tests at still no good.
-> I connected and disconnected the writer a couple of times. WHen I didn't
-> read/write on the CD there is no OOPS when disconnecting. But after reading CD
-> there was OOPS when disconnecting. See below. Decoded OOPS - see more below.
+> Unfortunately, no. This latest problem (the one he's reporting) is not 
+> fixed in mainline. I discovered the problem a month or so ago while 
+> testing with SLES 9. I posted a patch and Neil expanded on it (to 
+> include raid10, which is now in mainline, and also suffers from the same 
+> problem). Neil just posted the patch two days ago to linux-raid, so I 
+> expect it's in -mm now.
 
-Can you turn on the usb-storage verbose debugging option in the kernel 
-configuration and then try running your test over again?  Be sure also to 
-set up /etc/syslog.conf to capture debug-level kernel messages.
+Irk, that's too bad. So we are now looking at probably a month before
+mainline has a stable release with that fixed too :/
 
-Alan Stern
+> >>Please be aware that there are several other bugs in the SUSE 2.6.5-7.97 
+> >>kernel in md and raid1 (basically it's a matter of that kernel being 
+> >>somewhat behind mainline, where most of these bugs are now fixed). I've 
+> >>sent several patches to SUSE to fix these issues, that hopefully will 
+> >>get into their SP1 release that should be forthcoming soon...
+> >
+> >
+> >-97 is the release kernel, -111 is the current update kernel. And it has
+> >those raid1 issues fixed already, at least the ones that are known. The
+> >scsi segment issue is not, however.
+> 
+> Thanks. Good to know that. -111 is currently available to customers? We 
+> may recommend that our customers use that, rather than patching -97 
+> ourselves.
+
+Yes it is, it's generally available through the online updates.
+
+-- 
+Jens Axboe
 
