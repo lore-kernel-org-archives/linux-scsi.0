@@ -1,40 +1,47 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [SUBJECT CHANGE]: megaraid unified driver version 2.20.0.0-al
- pha1
-Date: Thu, 26 Feb 2004 02:49:04 -0500
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: Re: [PATCH] 2.6.3 qla2xxx driver -- use readX_relaxed
+Date: Thu, 26 Feb 2004 09:52:30 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <403DA4F0.6060109@pobox.com>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC3EA@exa-atlanta.se.lsil.com> <20040226074317.GC32246@devserv.devel.redhat.com>
+Message-ID: <1077785550.4443.0.camel@laptop.fenrus.com>
+References: <20040226040535.GA559454@sgi.com>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jLAfBIZPTcrDKeRkEdKk"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:3300 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262719AbUBZHtT
+Received: from node-d-1fcf.a2000.nl ([62.195.31.207]:44160 "EHLO
+	laptop.fenrus.com") by vger.kernel.org with ESMTP id S262747AbUBZIwx
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Feb 2004 02:49:19 -0500
-In-Reply-To: <20040226074317.GC32246@devserv.devel.redhat.com>
+	Thu, 26 Feb 2004 03:52:53 -0500
+In-Reply-To: <20040226040535.GA559454@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjanv@redhat.com>
-Cc: "Mukker, Atul" <Atulm@lsil.com>, 'Matt Domsch' <Matt_Domsch@dell.com>, 'Christoph Hellwig' <hch@infradead.org>, 'James Bottomley' <James.Bottomley@SteelEye.com>, 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-
-Arjan van de Ven wrote:
-> BTW it would be really nice if the various raid controller drivers could
-> come up with a joint common IOCTL api since it seems every raid controller
-> driver right now has a largely overlapping but yet different set of ioctls.
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: linux-scsi@vger.kernel.org, jbarnes@cthulhu.engr.sgi.com
 
 
-Well.....   we should be moving away from ioctls for this.
+--=-jLAfBIZPTcrDKeRkEdKk
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-For addressing raid arrays, inject REQ_SPECIAL requests directly into 
-the request_queue.
+On Thu, 2004-02-26 at 05:05, Jeremy Higdon wrote:
+> I'm submitting a patch for comment and consideration.  The relaxed read
+> interface was added a few weeks back, and this patch lets the qla2xxx dri=
+ver
+> take advantage of it.
 
-For addressing elements above raid array level (such as when creating 
-new arrays, etc.) there should be a character device that talks to the 
-host driver.
-
-And please let's not bring that godawful SNIA API into the kernel ;-)
-
-	Jeff
+please tell me we don't have to pee all over the drivers to add this
+everywhere now;(
 
 
+--=-jLAfBIZPTcrDKeRkEdKk
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+
+iD8DBQBAPbPOxULwo51rQBIRAgPCAJ4jqx7Hza6wX8D+/olO+6nZS/+vaACeIgK/
+PUEMNec67ZIKpW2I7cDWSeY=
+=hAds
+-----END PGP SIGNATURE-----
+
+--=-jLAfBIZPTcrDKeRkEdKk--
