@@ -1,21 +1,32 @@
-From: finesttools@netzero.net
-Subject: Make your windows disappear!
-Date: Wed, 19 Jun 2002 06:36:27 -0400
+From: Tom Coughlan <coughlan@redhat.com>
+Subject: Re: [PATCH][RFC] Driverfs support for SCSI devices (updated)
+Date: Wed, 19 Jun 2002 10:13:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020619103623Z317838-22020+7121@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Message-ID: <3D1091A6.D6E5A9EB@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
+To: sullivan@austin.ibm.com, linux-scsi@vger.kernel.org
 
-Cleaning windows can be a hassle - getting them streak-free and perfectly clean can be 
-almost impossible without the right cleaner.
+Hello Mike,
 
-If you would like to receive more information about how to make your home and automotive
-glass and mirrors so clean they become almost invisible, please REPLY to this email and
-enter "glass cleaner" in the SUBJECT line - make sure it's the SUBJECT line otherwise our
-system will not recognize your request!
+Just one point on your scanning of Inquiry page 83.  As you know,
+the page may contain many Identifiers.  Each Identifier has an
+Association field.  This field indicates whether the Identifier is
+associated with the logical unit, or with a port that is used to
+access the logical unit.  You should only use an identifier that is
+associated with the logical unit.
 
-If you are not interested in these products please accept our apologies for this intrusion. To stop
-further emails from us, please reply to this email and enter "remove" in the subject line.
+I don't think may vendors are putting port identifiers in Page 83,
+so this may not be a big deal, but I'm worried that if they do, the
+FC port IDs will show up as Type 3 Identifiers, and we will
+incorrectly select a port ID instead of the Logical Unit ID.
 
-Thank you.
+Thanks.
+
+-- 
+Tom Coughlan
+Red Hat
+978-692-3113 ext. 23209
