@@ -1,34 +1,32 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] 2.5.31 scsi_error.c cleanup
-Date: Thu, 22 Aug 2002 13:10:48 -0700
+From: Gary_Lerhaupt@Dell.com
+Subject: Determining the UUID of a USB storage device
+Date: Thu, 22 Aug 2002 17:19:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020822201048.GD1336@beaverton.ibm.com>
-References: <20020822163439.GA1336@beaverton.ibm.com> <200208221711.g7MHBFU03459@localhost.localdomain>
+Message-ID: <20BF5713E14D5B48AA289F72BD372D6812BB32@AUSXMPC122.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+ charset=iso-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200208221711.g7MHBFU03459@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-James Bottomley [James.Bottomley@SteelEye.com] wrote:
-> Ah, OK.  I missed that in the logic flow.  Does it perhaps make sense to move 
-> the offline into its own nicely named function?  It might add to the initial 
-> readability of scsi_unjam_host.  I see it was problematic because the offline 
-> loop is bound up inside the host loop.
-> 
-> James
+I am attempting to glean some sort of a unique identifier from a USB storage
+device.  As it should, the storage shows up as a SCSI disk in
+/proc/partitions and subsequent SCSI inquiries sent to it return a page 80
+serial number.  However, it is apparent that this serial number is actually
+the serial number of my ZIO! smartmedia reader and not of the actual card in
+the reader.
 
-On early versions of the patch I had off-lining in its own function, but
-moved it into scsi_eh_bus_host_reset for some forgotten reason. I will
-re-roll the patch with a offline function as I agree it will improve the
-readability of scsi_unjam_host.
+Similarly, I am attempting to do the same thing with a firewire/IDE hard
+drive reader.  This also is presented as a SCSI disk and again, the serial #
+that I come up with is coming from the drive reader and not from the actual
+disk.  I know if I were to install this IDE drive directly, I'd be able to
+get the serial# from /proc/ide/hd#/identify, but obviously this is not so
+easy to get to when attached the SCSI/firewire way.
 
--Mike
+Any thoughts?  Is it possible to tunnel through the SCSI stuff to get to the
+real serial numbers that I'm looking for?
 
--- 
-Michael Anderson
-andmike@us.ibm.com
+Gary Lerhaupt
 
