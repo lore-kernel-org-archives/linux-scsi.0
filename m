@@ -1,74 +1,97 @@
-From: Samuel Flory <sflory@rackable.com>
-Subject: Re: Serial ATA (SATA) for Linux status report
-Date: Wed, 03 Dec 2003 16:59:25 -0800
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: PROBLEM: 2.6.0-test9: SCSI mid layer tells a lie.
+Date: Wed, 3 Dec 2003 18:05:08 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FCE86ED.8070601@rackable.com>
-References: <20031203204445.GA26987@gtf.org> <1070494030.15415.111.camel@slurv.pasop.tomt.net> <3FCE737C.1080105@pobox.com>
+Message-ID: <20031204020508.GB1775@beaverton.ibm.com>
+References: <0E3FA95632D6D047BA649F95DAB60E57037F83D5@exa-atlanta.se.lsil.com> <200312032348.AA02824@fukuchi.jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 64-60-248-67.cust.telepacific.net ([64.60.248.67]:7387 "EHLO
-	mx.rackable.com") by vger.kernel.org with ESMTP id S262787AbTLDA7v
+Received: from e33.co.us.ibm.com ([32.97.110.131]:14052 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S263024AbTLDCAO
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Dec 2003 19:59:51 -0500
-In-Reply-To: <3FCE737C.1080105@pobox.com>
+	Wed, 3 Dec 2003 21:00:14 -0500
+Content-Disposition: inline
+In-Reply-To: <200312032348.AA02824@fukuchi.jp.fujitsu.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Andre Tomt <lkml@tomt.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
+Cc: "Moore, Eric Dean" <emoore@lsil.com>, Hironobu Ishii <ishii.hironobu@jp.fujitsu.com>, linux-scsi <linux-scsi@vger.kernel.org>, mpt_linux_developer@lsil.com
 
-Jeff Garzik wrote:
-> Andre Tomt wrote:
+Masao Fukuchi [fukuchi.masao@jp.fujitsu.com] wrote:
 > 
->> On Wed, 2003-12-03 at 21:44, Jeff Garzik wrote:
->>
->>> Intel ICH5
->>> ----------
->>> Summary:  No TCQ.  Looks like a PATA controller, but with a few added,
->>> non-standard SATA port controls.
+> I also tested with kernel 2.6.0-test11 + mpt fusion 2.05.00.05 driver,
+> but the problem didn't solve.
+> I think the problem is in the retry sequence of mid layer not mpt driver.
+> At the last retry sequence, bus reset finished with success but mid layer
+> didn't retry read command again and returned to application with success 
+> status.
 > 
-> 
->> One question - with "including hotplug", does that mean some set hotplug
->> standard? Reason I'm asking is, we have a few servers from SuperMicro,
->> with a ICH5R S-ATA controller that claims it's supporting hotplug, but
->> hotplug is not in your ICH5-summary.
-> 
-> 
-> Alas, there is no hotplug support in the ICH5 or ICH5-R SATA hardware.
-> 
-> One could argue there is "coldplug" support in that hardware -- disable 
-> the entire interface, including any active devices, then re-enable and 
-> re-scan -- but it's a bit of a hack.  If there's enough demand, I could 
-> write some code for that.  It would involve something like
-> 
->     # /sbin/sata off
->     { plug in or remove a device }
->     # /sbin/sata on
-> 
-> You really, really, really don't want to actually unplug a SATA drive 
-> while it's active, on ICH5 hardware.
->
 
-   In theroy the scsi driver allows you kill a drive, and do rescan by 
-echoing to /proc/scsi.scsi.  I know it worked under 2.4 with sca drive 
-on a hotswap backplane.  This was over a year ago.  So it may have been 
-broken.
+In reviewing the error handler with Patrick it looks like there is a bug
+in scsi_eh_flush_done_q when scmd->allowed has been exceeded and the
+command error was a timeout.
 
-scsi.c:
-  * Usage: echo "scsi add-single-device 0 1 2 3" >/proc/scsi/scsi
-          * with  "0 1 2 3" replaced by your "Host Channel Id Lun".
+The patch below may help, but I only have compile / boot tested it.
+Could you test this on your error and see if it helps.
+
+If it does not help. Turning on scsi logging for error recovery would
+provide more info.
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
+DESC
+This patch fixes a bug in scsi_eh_flush_done_q when the allowed count has
+been exceeded and the command errored for a timeout. The bug is that the
+result will be left at zero and the command finished.
+
+Thu Dec  4 01:42:46 UTC 2003
+EDESC
 
 
-         /*
-          * Usage: echo "scsi remove-single-device 0 1 2 3" >/proc/scsi/scsi
-          * with  "0 1 2 3" replaced by your "Host Channel Id Lun".
-          *
+ drivers/scsi/scsi_error.c |   27 ++++++++++++---------------
+ 1 files changed, 12 insertions(+), 15 deletions(-)
 
-PS-  Yes I know says it isn't for hotswap, and that it's prebeta.  This 
-comment dates back to at least 2.2.  It's worked for least 4 years.
--- 
-There is no such thing as obsolete hardware.
-Merely hardware that other people don't want.
-(The Second Rule of Hardware Acquisition)
-Sam Flory  <sflory@rackable.com>
+diff -puN drivers/scsi/scsi_error.c~scsi_error_retry drivers/scsi/scsi_error.c
+--- 2.6/drivers/scsi/scsi_error.c~scsi_error_retry	Wed Dec  3 16:36:35 2003
++++ 2.6-andmike/drivers/scsi/scsi_error.c	Wed Dec  3 16:43:02 2003
+@@ -1421,23 +1421,20 @@ static void scsi_eh_flush_done_q(struct 
+ 	list_for_each_safe(lh, lh_sf, done_q) {
+ 		scmd = list_entry(lh, struct scsi_cmnd, eh_entry);
+ 		list_del_init(lh);
+-		if (!scmd->device->online) {
+-			 scmd->result |= (DRIVER_TIMEOUT << 24);
+-		} else {
+-			if (++scmd->retries < scmd->allowed) {
+-				SCSI_LOG_ERROR_RECOVERY(3,
+-					printk("%s: flush retry"
+-					       " cmd: %p\n",
+-						  current->comm,
+-						  scmd));
++		if (scmd->device->online && 
++		    	(++scmd->retries < scmd->allowed)) {
++			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: flush"
++							  " retry cmd: %p\n",
++							  current->comm,
++							  scmd));
+ 				scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY);
+-				continue;
+-			}
++		} else {
++			scmd->result |= (DRIVER_TIMEOUT << 24);
++			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: flush finish"
++							" cmd: %p\n",
++							current->comm, scmd));
++			scsi_finish_command(scmd);
+ 		}
+-		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: flush finish"
+-				       " cmd: %p\n",
+-					  current->comm, scmd));
+-		scsi_finish_command(scmd);
+ 	}
+ }
+ 
 
+_
