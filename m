@@ -1,53 +1,33 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: sym53c8xx driver hangs
-Date: Fri, 18 Feb 2005 12:15:56 +0000
-Message-ID: <20050218121556.GY29917@parcelfarce.linux.theplanet.co.uk>
-References: <4214BD90.7030002@ludd.luth.se> <20050218051916.GX29917@parcelfarce.linux.theplanet.co.uk> <4215BDFF.6040703@ludd.luth.se>
+From: Linux Christoph Hellwig <hch@infradead.org>
+Subject: Re: About ARECA RAID driver for Linux i386/x86-64
+Date: Fri, 18 Feb 2005 16:10:21 +0000
+Message-ID: <20050218161021.GA21802@infradead.org>
+References: <000801c514c7$04ec0030$9300a8c0@erich2003>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:8880 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261332AbVBRMP6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Feb 2005 07:15:58 -0500
+Content-Type: text/plain; charset=us-ascii
+Received: from pentafluge.infradead.org ([213.146.154.40]:8872 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261390AbVBRQK3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Feb 2005 11:10:29 -0500
 Content-Disposition: inline
-In-Reply-To: <4215BDFF.6040703@ludd.luth.se>
+In-Reply-To: <000801c514c7$04ec0030$9300a8c0@erich2003>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roger =?iso-8859-1?Q?H=E5kansson?= <hson@ludd.luth.se>
-Cc: linux-scsi@vger.kernel.org
+To: erich <erich@areca.com.tw>
+Cc: Linux Andrew Morton <akpm@osdl.org>, Linux James Bottomley <James.Bottomley@SteelEye.com>, Linux Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org
 
-On Fri, Feb 18, 2005 at 11:05:51AM +0100, Roger H=E5kansson wrote:
-> Matthew Wilcox wrote:
-> >Yeah, I don't think any existing patch will help you. =20
->=20
-> Actually I got it to work when I applied the patch frage schnell post=
-ed=20
-> jan.20 (http://marc.theaimsgroup.com/?l=3Dlinux-scsi&m=3D110624183606=
-642)
+On Thu, Feb 17, 2005 at 04:02:25PM +0800, erich wrote:
+> Hi,Andrew Morton
+> 
+> I had clean up "arcmsr" for linux kernel 2.6.10.
+> May be it looks more cleanly  than old version.
 
-Oh.  I think I'm confused as to which version of sym2 is in which versi=
-on
-of Linus' tree.  The same line in my development tree reads:
+Sorry, but I don't see that much of a difference ;-)
 
-        if ((goal->options & PPR_OPT_MASK) || (goal->period < 0xa)) {
-
-Does it still work if you use that?  The problem with Frage Schnell's
-patch is that it won't try to negotiate U160 speeds; it'll be capped
-at U80.
-
---=20
-"Next the statesmen will invent cheap lies, putting the blame upon=20
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refu=
-se
-to examine any refutations of them; and thus he will by and by convince=
-=20
-himself that the war is just, and will thank God for the better sleep=20
-he enjoys after this process of grotesque self-deception." -- Mark Twai=
-n
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To get the driver into a shape where we can actually
+start a review, do run the shell script scripts/Lindent
+from the kernel tree over the driver, and please kill
+all your SHOUTING typedefs for kernel types.  After
+that compare it with the file Documentation/CodingStyle,
+also in the kernel tree and try to fix up whatever seems
+to not match up.
