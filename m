@@ -1,63 +1,41 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [PATCH 1/3] 2.6.0 aacraid driver update
-Date: Tue, 7 Oct 2003 22:39:12 +0100
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: max GiB written per boot
+Date: Tue, 7 Oct 2003 15:12:25 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031007213912.GD10906@parcelfarce.linux.theplanet.co.uk>
-References: <1065475266.17021.75.camel@markh1.pdx.osdl.net> <3F81E4D8.20904@pobox.com> <1065561492.29117.46.camel@markh1.pdx.osdl.net>
+Message-ID: <20031007151225.0a65dcb7.rddunlap@osdl.org>
+References: <1064271322.4797.9.camel@patehci2>
+	<1064847281.24854.2.camel@patehci2>
+	<1064850600.25057.7.camel@patehci2>
+	<20030929164654.GS15415@suse.de>
+	<1064855570.3184.3.camel@patehci2>
+	<1064865746.4262.63.camel@patehci2>
+	<1065460336.10804.1.camel@patehci2>
+	<1065474044.6835.44.camel@patehci2>
+	<1065484077.2899.1.camel@patehci2>
+	<20031007055714.GO972@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:43430 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262913AbTJGVjO
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Oct 2003 17:39:14 -0400
-Content-Disposition: inline
-In-Reply-To: <1065561492.29117.46.camel@markh1.pdx.osdl.net>
+Received: from fw.osdl.org ([65.172.181.6]:53985 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S262930AbTJGWVJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Oct 2003 18:21:09 -0400
+In-Reply-To: <20031007055714.GO972@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: Jens Axboe <axboe@suse.de>
+Cc: p.lavarre@ieee.org, linux-scsi@vger.kernel.org
 
-On Tue, Oct 07, 2003 at 02:18:12PM -0700, Mark Haverkamp wrote:
-> > > -		pci_unmap_single(dev->pdev, (dma_addr_t)(ulong)scsicmd->SCp.ptr,
-> > > +		pci_unmap_single(dev->pdev, (dma_addr_t)(unsigned long)scsicmd->SCp.ptr,
-> > >  				 scsicmd->request_bufflen,
-> > >  				 scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
+On Tue, 7 Oct 2003 07:57:14 +0200 Jens Axboe <axboe@suse.de> wrote:
 
-> I checked out this casting today.  The function takes a dma_addr_t as
-> the argument.  You can't just pass the pointer in as is because:
-> 
-> drivers/scsi/aacraid/aachba.c:690: warning: passing arg 2 of `pci_unmap_single'
-> makes integer from pointer without a cast
-> 
-> If you just cast the pointer to dma_addr_t you get:
-> 
-> drivers/scsi/aacraid/aachba.c:688: warning: cast from pointer to integer of different size
-> 
-> If you just cast to unsigned long, as in the code below, there aren't any warnings, but
-> the wrong type is being passed to the function.  So, I think that both the casts are
-> needed.
+| > 
+| > Having hdc=ide-scsi matter I think is a clue.
+| > 
+| > I don't yet know if this apparent correlation will hold up or not.
+| 
+| Yeah, ide-scsi is broken so you probably shouldn't be using it.
 
-Oops, that's not true.  Try it out yourself.
+Is there any sense in trying to repair it?
+I could spend some time on it...
 
-int foo(short bar);
-
-int baz(void)
-{
-	return foo(0x12345678);
-}
-
-will truncate the argument to foo to 0x5678 before calling it by
-implicitly casting to a short.  So we can do just fine with:
-
--		pci_unmap_single(dev->pdev, (dma_addr_t)(ulong)scsicmd->SCp.ptr,
-+		pci_unmap_single(dev->pdev, (unsigned long)scsicmd->SCp.ptr,
- 				 scsicmd->request_bufflen,
- 				 scsi_to_pci_dma_dir(scsicmd->sc_data_direction));
-
-Now that all that casting is out of the way, we can see this driver isn't
-highmem-safe as it's storing a dma_addr_t in a pointer ... yuck.
-
--- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
+--
+~Randy
