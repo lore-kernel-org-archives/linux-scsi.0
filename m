@@ -1,71 +1,94 @@
-From: David Chaw <david.chaw@gmail.com>
-Subject: Re: [ANNOUNCE] Adaptec SAS/SATA device driver [0/27]
-Date: Thu, 17 Feb 2005 15:33:53 -0800
-Message-ID: <73edde4605021715335275c27@mail.gmail.com>
-References: <4214D5B1.1060701@adaptec.com> <1108673824.5507.32.camel@mulgrave>
-	 <4215093C.3010702@adaptec.com>
-Reply-To: David Chaw <david.chaw@gmail.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH as468] Retry supposedly "unrecoverable" hardware errors
+Date: Fri, 18 Feb 2005 10:49:53 +1000
+Message-ID: <42153BB1.4050303@torque.net>
+References: <Pine.LNX.4.44L0.0502161144170.6418-100000@ida.rowland.org>	 <42141D3D.9080800@torque.net> <1108653107.5507.3.camel@mulgrave>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from wproxy.gmail.com ([64.233.184.206]:18879 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261242AbVBQXd5 (ORCPT
+Received: from borg.st.net.au ([65.23.158.22]:32976 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261277AbVBRAtS (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Feb 2005 18:33:57 -0500
-Received: by wproxy.gmail.com with SMTP id 68so435845wra
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2005 15:33:53 -0800 (PST)
-In-Reply-To: <4215093C.3010702@adaptec.com>
+	Thu, 17 Feb 2005 19:49:18 -0500
+In-Reply-To: <1108653107.5507.3.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Martin Peschke <mpeschke@de.ibm.com>, Radovan Garabik <garabik@kassiopeia.juls.savba.sk>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi all,
+James Bottomley wrote:
+> On Thu, 2005-02-17 at 14:27 +1000, Douglas Gilbert wrote:
+> 
+>>Recent SPC-3 and SBC-2 drafts treat the sense keys of
+>>MEDIUM ERROR and HARDWARE ERROR in a similar way.
+>>Both can return an "info" field which has the same
+>>meaning (lba of first failure). The distinction is that
+>>MEDIUM ERROR is a little more precise (at least for
+>>magnetic rotating media) **. For flash ram the distinction
+>>is moot.
+> 
+> 
+> My copy of SPC-3 (r21d) still defined HARDWARE ERROR in Table 27 as
+> 
+> HARDWARE ERROR: Indicates that the device server detected a non-
+> recoverable hardware failure
+> (e.g., controller failure, device failure, or parity error) while
+> performing the command or during a self
+> test.
+> 
+> which looks pretty non-retryable to me ... where does it say that the
+> error might be retryable?
 
-Thanks for the all responses for this driver.
-I really appreciate the comments / suggestions.
-We definetely looking to making changes in the next few weeks.
+James,
+The definition of MEDIUM ERROR from the same table:
+"Indicates that the command terminated with a non-recoverable
+error condition that may have been caused by a flaw in the
+medium or an error in the recorded data. This sense key may
+also be returned if the device server is unable to
+distinguish between a flaw in the medium and a specific
+hardware failure (i.e. sense key 4h)". Sense key "4h" is
+HARDWARE ERROR.
 
-Thanks again,
+I interpret that as SPC-3 saying MEDIUM ERROR and
+HARDWARE ERROR may both report non-recoverable errors.
+Also note that MEDIUM ERROR, HARDWARE ERROR and RECOVERED
+ERROR can return an "actual retry count" in their additional
+sense data.
 
-david
+SBC-2 (rev 16) makes little distinction between
+the two sense keys for "unrecovered read errors": table 4 shows
+either can be used. It also says on page 19: "When
+an unrecovered read error is reported the information field
+of the sense data shall contain the LBA of the unrecovered
+logical block."
+
+Nothing that I can see links an "unrecovered (read) error" with
+the application client retrying the same command in either draft.
+If "actual retry count" is > 1 in the sense key specific field
+then that implies the device has already tried several times.
+
+SSC-3 (for tape drives) also allows MEDIUM ERROR or HARDWARE ERROR
+to indicate an unrecovered read error (rev 1c, table 2). For tape
+drives, retrying the same command is probably not appropriate. [I
+note that st and sg set their 'max_retries' to 0 to inhibit this.]
+MMC-5 only mentions the HARDWARE ERROR sense key for a self
+diagnostic failure.
+
+This analysis leads me to question why retries are instigated
+from the mid level and not the sd driver (and perhaps sr driver
+as well). If so, sd should not instigate retries if the device
+indicates a reasonable number of retries have already taken
+place, unless it can change some other factor or is instructed by
+some parameter to sd.
 
 
-On Thu, 17 Feb 2005 16:14:36 -0500, Luben Tuikov
-<luben_tuikov@adaptec.com> wrote:
-> On 02/17/05 15:57, James Bottomley wrote:
-> > Well, the initial reaction is yuk.
-> >
-> > Just from a brief glance over the files, the code is full of obfuscation
-> > and unnecessary compatibility gunk which needs removing.
-> >
-> > It's also full of the same queueing junk that I asked be taken out of
-> > the aic7xxx driver.
-> 
-> Thank you for all the comments guys!
-> 
-> > Then we get to the architectural stuff, which should really have been
-> > discussed before you wrote the driver, not after
-> 
-> Just for the record: I did *not* write this driver!  I was merely given
-> it to present it to the community.
-> 
-> > - We need a SAS and a PHY transport class.  Three of your files are to
-> > do domain discover and should actually be part of the SAS transport
-> > class.  In fact, it looks like a large amount of the code should be in
-> > the various transport classes.
-> 
-> I absolutely agree.
-> 
-> > - The SATA pieces should use libata instead of trying to reinvent what
-> > already exists.
-> 
-> I agree here as well.
-> 
-> Thanks for all the comments guys!
->        Luben
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+As Alan Stern points out, my patch fails the reality
+test. The device in question obviously required a retry when
+it returned a HARDWARE ERROR sense key (but perhaps the
+reason was not an unrecovered error or it was not reported
+properly).
+
+Doug Gilbert
+
+
