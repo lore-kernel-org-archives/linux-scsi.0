@@ -1,102 +1,124 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] complain about missing host template initializations
-Date: Sat, 30 Nov 2002 01:03:47 +0100
+From: Eric GAUDET <eric@rti-zone.org>
+Subject: 2.4.20 scsi problem
+Date: Sun, 01 Dec 2002 22:58:45 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021130010347.A14052@lst.de>
+Message-ID: <XFMail.20021201225845.eric@rti-zone.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
+To: groudier@free.fr, axboe@suse.de
 Cc: linux-scsi@vger.kernel.org
 
-Currently scsi_register_host silently fixes up missing initializations
-of max_sectors and release.  Add some printks complaining about this
-so we can get rid of it sooner or later.
+Dear sir,
 
+I'm writing to you since you're in the linux kernel maintainers list as=
+ the
+SCSI and block device subsystem guys.
+I'm not sure you guys are really maintainers anymore, so I take the ris=
+k of
+cc-ing the mailing list.
 
---- 1.38/drivers/scsi/hosts.c	Thu Nov 28 02:02:19 2002
-+++ edited/drivers/scsi/hosts.c	Fri Nov 29 23:56:41 2002
-@@ -171,14 +171,14 @@
- }
- 
- /**
-- * scsi_host_generic_release - default release function for hosts
-+ * scsi_host_legacy_release - default release function for hosts
-  * @shost: 
-  * 
-  * Description:
-  * 	This is the default case for the release function.  Its completely
-  *	useless for anything but old ISA adapters
-  **/
--static void scsi_host_legacy_release(struct Scsi_Host *shost)
-+static int scsi_host_legacy_release(struct Scsi_Host *shost)
- {
- 	if (shost->irq)
- 		free_irq(shost->irq, NULL);
-@@ -186,6 +186,8 @@
- 		free_dma(shost->dma_channel);
- 	if (shost->io_port && shost->n_io_port)
- 		release_region(shost->io_port, shost->n_io_port);
-+
-+	return 0;
- }
- 
- static int scsi_remove_legacy_host(struct Scsi_Host *shost)
-@@ -193,14 +195,8 @@
- 	int error;
- 
- 	error = scsi_remove_host(shost);
--	if (error)
--		return error;
+I just downloaded linux kernel 2.4.20 sources and compiled them to upgr=
+ade from
+2.4.18.
+
+I'm seeing a problem with the scsi subsystem: there is no block-major-8=
+ device
+registered. I am using a laptop with scsi-pcmcia adapter, and usb-stora=
+ge scsi
+emulation, but no low-level driver. I can use my usb cdrom drive (sr de=
+vice
+used by usb-storage).
+But, after inserting my pcmcia adapter or pluging in my usb-storage dev=
+ive, I
+cannot mount the disk (/dev/sda1 in my case) as I used to with 2.4.18.
+The only error message is:
+modprobe: modprobe: Can't locate module block-major-8
+
+Here's the information I think is relevant to the problem. If you need =
+more,
+please let me know.
+
+My configuration file shows the following:
+#
+# SCSI support
+#
+CONFIG_SCSI=3Dy
+#
+# SCSI support type (disk, tape, CD-ROM)
+#
+CONFIG_BLK_DEV_SD=3Dy
+CONFIG_SD_EXTRA_DEVS=3D40
+# CONFIG_CHR_DEV_ST is not set
+# CONFIG_CHR_DEV_OSST is not set
+CONFIG_BLK_DEV_SR=3Dy
+# CONFIG_BLK_DEV_SR_VENDOR is not set
+CONFIG_SR_EXTRA_DEVS=3D4
+CONFIG_CHR_DEV_SG=3Dm  =20
+#
+# Some SCSI devices (e.g. CD jukebox) support multiple LUNs
+#
+CONFIG_SCSI_DEBUG_QUEUES=3Dy
+CONFIG_SCSI_MULTI_LUN=3Dy
+CONFIG_SCSI_CONSTANTS=3Dy
+CONFIG_SCSI_LOGGING=3Dy
+#
+# SCSI low-level drivers
+#
+(none set)
+
+A cat /proc/devices gives me:
+Block devices:
+  2 fd
+  3 ide0
+  7 loop
+ 11 sr
+ 43 nbd
+
+A lsmod:
+Module                  Size  Used by    Not tainted
+sg                     28796   0  (unused)
+usb-storage            22968   0=20
+
+Dmesg gives:
+=2E..
+SCSI subsystem driver Revision: 1.00
+kmod: failed to exec /sbin/modprobe -s -k scsi_hostadapter, errno =3D 2
+kmod: failed to exec /sbin/modprobe -s -k scsi_hostadapter, errno =3D 2
+Linux Kernel Card Services 3.1.22
+  options:  [pci] [cardbus] [pm]
+=2E..
+
+A cat /proc/scsi/scsi gives me;
+Attached devices:=20
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+  Vendor: PHILIPS  Model: PCRW406          Rev: I2,2
+  Type:   CD-ROM                           ANSI SCSI revision: 02
+
+When pluging my usb-storage hard drive, it=B4s recognized by usb-storag=
+e just
+fine and shows as scsi1.
+
+Compiling sd as a module instead of in the kernel does not seem to chan=
+ge
+anything. Nor compiling with a scsi low-level driver. It seems that I n=
+eed an
+actual scsi device at boot time in order to see block device 8 (not tes=
+ted, I
+don=B4t have such a device)
+
+Thanks,
+-----------------------------------------------------------------------=
 -
--	if (shost->hostt->release)
-+	if (!error)
- 		(*shost->hostt->release)(shost);
--	else
--		scsi_host_legacy_release(shost);
+Eric GAUDET <eric@rti-zone.org>
+Le 01-Dec-2002 a 18:32:24
+-----------------------------------------------------------------------=
 -
- 	return 0;
- }
- 
-@@ -487,27 +483,22 @@
- {
- 	struct Scsi_Host *shost;
- 
--	/*
--	 * Check no detect routine.
--	 */
--	if (!shost_tp->detect)
--		return 1;
-+	BUG_ON(!shost_tp->detect);
- 
--	/* If max_sectors isn't set, default to max */
--	if (!shost_tp->max_sectors)
-+	if (!shost_tp->max_sectors) {
-+		printk(KERN_WARNING
-+		    "scsi HBA driver %s didn't set max_sectors, "
-+		    "please fix the template", shost_tp->name);
- 		shost_tp->max_sectors = 1024;
-+	}
- 
--	/*
--	 * The detect routine must carefully spinunlock/spinlock if it
--	 * enables interrupts, since all interrupt handlers do spinlock as
--	 * well.
--	 */
-+	if (!shost_tp->release) {
-+		printk(KERN_WARNING
-+		    "scsi HBA driver %s didn't set a release method, "
-+		    "please fix the template", shost_tp->name);
-+		shost_tp->release = &scsi_host_legacy_release;
-+	}
- 
--	/*
--	 * detect should do its own locking
--	 * FIXME present is now set is scsi_register which breaks manual
--	 * registration code below.
--	 */
- 	shost_tp->detect(shost_tp);
- 	if (!shost_tp->present)
- 		return 0;
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
