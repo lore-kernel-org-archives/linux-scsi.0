@@ -1,58 +1,43 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] QStor SATA/RAID driver for 2.6.9-rc3
-Date: Thu, 7 Oct 2004 22:15:37 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20041007221537.A17712@infradead.org>
-References: <4161A06D.8010601@rtr.ca> <416547B6.5080505@rtr.ca> <20041007150709.B12688@infradead.org> <4165624C.5060405@rtr.ca> <416565DB.4050006@pobox.com> <4165A45D.2090200@rtr.ca> <4165A766.1040104@pobox.com> <4165A85D.7080704@rtr.ca> <4165AB1B.8000204@pobox.com> <4165ACF8.8060208@rtr.ca>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH] sym53c8xx module parameter passing not working (2.5.6)
+Date: Fri, 08 Oct 2004 12:29:16 +1000
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1097202556.9363.16.camel@localhost.localdomain>
+References: <7AAD212492598A4A92463C3F5D34C54F194EDC@ccd3.CC.de>
+	 <20041001162939.A4215@infradead.org>
+	 <20041001165555.GF16153@parcelfarce.linux.theplanet.co.uk>
+	 <20041008013029.GM16153@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S267798AbUJGVVU@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4165ACF8.8060208@rtr.ca>; from lkml@rtr.ca on Thu, Oct 07, 2004 at 04:54:16PM -0400
-To: Mark Lord <lkml@rtr.ca>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Mark Lord <lsml@rtr.ca>, Christoph Hellwig <hch@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ozlabs.org ([203.10.76.45]:62935 "EHLO ozlabs.org")
+	by vger.kernel.org with ESMTP id S267521AbUJHC3U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2004 22:29:20 -0400
+In-Reply-To: <20041008013029.GM16153@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Christoph Hellwig <hch@infradead.org>, "Heinzmann, Robert" <Heinzmann@cc-dresden.de>, linux-scsi@vger.kernel.org
 
-> So, skipping the EXPORTs for now, how do you guys
-> feel about the driver ?
+On Fri, 2004-10-08 at 11:30, Matthew Wilcox wrote:
+> On Fri, Oct 01, 2004 at 05:55:55PM +0100, Matthew Wilcox wrote:
+> to allow people to switch over.  But when I try this, I get:
+> 
+> sym53c8xx: Unknown parameter `hostid'
+> sym53c8xx: Ignoring new-style parameters in presence of obsolete ones
+> 
+> It'd be nice to be able to use either for a while.  Rusty, is there any
+> chance of allowing this?
 
- - please kill the #ifndef SERVICE_ACTION_IN section
- - please use <scsi/scsi.h> sense data ifdefs instead of adding your ow=
-n
- - please kill your scsi_to_pci_dma_dirusage, it's been obsoleted for a=
- reason
- - please remove DRPINTK in favour of pr_debug from <linux/kernel.h>
- - please remov=E6 the global host list, not just the exports for it
- - dito for qs_notify
- - code like
- +       if (dev->raid) {
- +               memset(dev->raid, 0, sizeof(struct qs_raid));
- +               kfree(dev->raid);
- +       }
-   is totally bogus, you defeat the slab poisoning with that
- - qs_alloc duplicates kcalloc
- - the !dev case in qs_scsi_queuecomman can't happen
- - no need for the case in sc->host_scribble =3D (void *)(dev->uhba);
- - never mess with eh_timeout from inside a driver
- - please don't implemente the HDIO_ ioctls, Jeff said this can
-   be done via SG_IO
- - if ->info return a static string you can just store it into ->name
- - please don't discard the exact error returned from
-   pci_enable_device(pdev)
- - never call scsi_set_device() in a new driver, scsi_add_host does tha=
-t for
-   you
- - never use scsi_assign_lock in a new driver, the midlayer already has
-   a per-host lock for you
- - please use the kernel/kthread.c interface for your kernel thread
- - never cast your ioregs before iounmap.
- - in fact it looks like you want to run sparse over the driver and
-   fix up everything it found - at least __iomem annotations are missin=
-g
- - please don't use set_fs(KERNEL_DS), split up the underlying code for
-   user and kernel buffers
+Well, it'd never be neat.  I'd rather encourage migration: in 2.6.10 I
+will start my jihad on MODULE_PARM, ideally finished before 2.6.11. 
 
-This was just a quick 5 minute review, I'll give it a deeper look once =
-I get a
-little bit more time.
+It's usually better that someone who knows the code does the transition
+(you can often do better than a naive substitution), so my first step
+might be to clean up Linus' compile, then make MODULE_PARM warn, to
+encourage people to help.
+
+Rusty.
+-- 
+Anyone who quotes me in their signature is an idiot -- Rusty Russell
+
