@@ -1,68 +1,132 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Maximum_transfer_size and SCSI request buffer size parameters
-Date: Thu, 24 Jul 2003 17:35:05 +0200
+From: Thomas Beutin <tyrone@laokoon.IN-Berlin.DE>
+Subject: Re: AIC7902 lockups on Intel SMP (Re: HD somtimes hanging)
+Date: Thu, 24 Jul 2003 17:44:51 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030724153505.GC1063@suse.de>
-References: <Pine.LNX.4.44L0.0307241035140.720-100000@ida.rowland.org>
+Message-ID: <20030724174451.B14635@laokoon.bug.net>
+References: <20030724151233.E9280@laokoon.bug.net> <1059057411.6798.30.camel@carwash.duncangibb.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:24718 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S271691AbTGXP1K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Jul 2003 11:27:10 -0400
+Received: from hirsch.in-berlin.de ([192.109.42.6]:27071 "EHLO
+	hirsch.in-berlin.de") by vger.kernel.org with ESMTP id S271692AbTGXP35
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Jul 2003 11:29:57 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0307241035140.720-100000@ida.rowland.org>
+In-Reply-To: <1059057411.6798.30.camel@carwash.duncangibb.com>; from duncangibb@uk.dmgworldmedia.com on Thu, Jul 24, 2003 at 03:36:51PM +0100
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@one-eyed-alien.net>, Harald Dunkel <harri@synopsys.COM>
+To: Duncan Gibb <duncangibb@uk.dmgworldmedia.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Jul 24 2003, Alan Stern wrote:
-> I'm trying to solve the problem of a user whose USB disk drive crashes
-> when it is asked to write 512K bytes in a single command.  A good way to
-> solve this problem would be to have a maximum_transfer_size field as part 
-> of the scsi_device structure.  Is it worthwhile adding such a feature?
+Hi Duncan,
 
-First of all, you don't mention what kernel version you are talking
-about...
+On Thu, Jul 24, 2003 at 03:36:51PM +0100, Duncan Gibb wrote:
+[...]
+> Just before I read your post, I built a 2.4.21-bk17 kernel in the hope
+> that this would have been fixed some time in the last couple of months. 
+> I'm not really in to running experimental kernels, so usually I won't
+> stray further than the -ac series.
 
-Anyways, the feature is already there. It's called max_sectors, and it's
-even in the host template for you to set. That handles block layer
-requests, at least.
+what ist the Your version of the aic79xx driver in the 2.4.21-bk17
+kernel?
 
-> In sd.c and sr.c, scmd->request_bufflen is the number of bytes to
-> transfer.  Both files use the variable this_count to compute the number
-> of sectors, stored in the command's CDB.  this_count is based on
-> request_bufflen, but the values can disagree.  For example, if READ(6)  
-> is used and request_bufflen corresponds to more than 255 sectors, 
-> this_count will be reduced to 255.
+----- BEGIN ------
+# cat /proc/scsi/aic79xx/0 
+Adaptec AIC79xx driver version: 1.3.0
+aic7902: Ultra320 Wide Channel A, SCSI Id=7, PCI 33 or 66Mhz, 512 SCBs
 
-That is in purpose, for cases like that you have to only do a part of
-the entire request.
+Serial EEPROM:
+0x17c8 0x17c8 0x17c8 0x17c8 0x17c8 0x17c8 0x17c8 0x17c8 
+0x17c8 0x17c8 0x17c8 0x17c8 0x17c8 0x17c8 0x17c8 0x17c8 
+0x08f4 0x0146 0x2807 0x0010 0xffff 0xffff 0xffff 0xffff 
+0xffff 0xffff 0xffff 0xffff 0xffff 0xffff 0x0410 0xb2d7 
 
-> Furthermore, sr.c goes to the trouble of adding up the lengths of all the
-> scatter-gather blocks, and if the total disagrees with request_bufflen it
-> sets request_bufflen equal to the total -- but it does this after storing
-> this_count in the CDB.
+Channel A Target 0 Negotiation Settings
+	User: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+	Goal: 160.000MB/s transfers (80.000MHz DT, 16bit)
+	Curr: 160.000MB/s transfers (80.000MHz DT, 16bit)
+	Transmission Errors 0
+	Channel A Target 0 Lun 0 Settings
+		Commands Queued 48814
+		Commands Active 0
+		Command Openings 1
+		Max Tagged Openings 0
+		Device Queue Frozen Count 0
+Channel A Target 1 Negotiation Settings
+	User: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+	Goal: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+	Curr: 3.300MB/s transfers
+	Transmission Errors 0
+	Channel A Target 1 Lun 0 Settings
+		Commands Queued 963579
+		Commands Active 0
+		Command Openings 32
+		Max Tagged Openings 32
+		Device Queue Frozen Count 0
+Channel A Target 2 Negotiation Settings
+	User: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+	Goal: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+	Curr: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+	Transmission Errors 1
+	Channel A Target 2 Lun 0 Settings
+		Commands Queued 412536
+		Commands Active 0
+		Command Openings 32
+		Max Tagged Openings 32
+		Device Queue Frozen Count 0
+Channel A Target 3 Negotiation Settings
+	User: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+Channel A Target 4 Negotiation Settings
+	User: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+Channel A Target 5 Negotiation Settings
+	User: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+Channel A Target 6 Negotiation Settings
+	User: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+	Goal: 3.300MB/s transfers
+	Curr: 3.300MB/s transfers
+	Transmission Errors 0
+	Channel A Target 6 Lun 0 Settings
+		Commands Queued 1
+		Commands Active 0
+		Command Openings 1
+		Max Tagged Openings 0
+		Device Queue Frozen Count 0
+Channel A Target 7 Negotiation Settings
+	User: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+Channel A Target 8 Negotiation Settings
+	User: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+Channel A Target 9 Negotiation Settings
+	User: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+Channel A Target 10 Negotiation Settings
+	User: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+Channel A Target 11 Negotiation Settings
+	User: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+Channel A Target 12 Negotiation Settings
+	User: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+Channel A Target 13 Negotiation Settings
+	User: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+Channel A Target 14 Negotiation Settings
+	User: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+Channel A Target 15 Negotiation Settings
+	User: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
+----- END ------
 
-It's a bug if they differ, that's why there's a printk there. Might be a
-good idea to make that a harder error, though.
 
-> A related issue is that in both sd.c and sr.c, the rw_intr() routine
-> identifies the number of sectors correctly transferred as scmd->bufflen
-> (if no error occurred).  Normally bufflen is initialized equal to
-> request_bufflen.  But if this_count has been altered, the number of
-> sectors will be different from bufflen.
+(Especially the current transfer rate on Channel A Target 1 is
+somewhat less than expected.)
 
-The device will not transfer more data than what it is told from the
-cdb. Aren't you getting a completed byte count from your hardware? Or
-are you blindly assuming the device transferred what you initially told
-you?
+Maybe there is a new driver by Justin Gibbs, but i didn't found
+anything for the 2.4.21 kernel in
+http://people.freebsd.org/~gibbs/linux/SRC/
 
-> If nobody objects, I will work on a patch to fix these problems.
+Do You think the problem goes away by using a non SMP kernel?
+(I have no problem to compile a new kernel, but the machine
+is in a server room and i have to make an appointment with
+the security guards to enter the room where the server is,
+so i don't want to reboot this beast sitting 30 minutes
+away from it...)
 
-Well..
-
+Greetings from Berlin,
+-tb
 -- 
-Jens Axboe
-
+Thomas Beutin                             tb@laokoon.IN-Berlin.DE
+Beam me up, Scotty. There is no intelligent live down in Redmond.
