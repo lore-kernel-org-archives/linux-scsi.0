@@ -1,75 +1,101 @@
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [RFTesters] Re: [PATCH] refactor tmscsim inititalization code
-Date: Fri, 17 Sep 2004 21:05:01 +0200 (CEST)
+Subject: Re: [PATCH] refactor tmscsim inititalization code
+Date: Fri, 17 Sep 2004 21:49:38 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60.0409172052230.31193@poirot.grange>
-References: <20040904130235.GA20552@lst.de> <Pine.LNX.4.60.0409071040120.2966@poirot.grange>
- <20040910133254.GB32530@lst.de>
+Message-ID: <Pine.LNX.4.60.0409172136450.31193@poirot.grange>
+References: <20040904130235.GA20552@lst.de> <Pine.LNX.4.60.0409071812550.21209@poirot.grange>
+ <20040912113727.GA32682@lst.de>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imap.gmx.net ([213.165.64.20]:65225 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S268961AbUIQTuY (ORCPT
+Received: from mail.gmx.net ([213.165.64.20]:14468 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S268957AbUIQTuW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Sep 2004 15:50:24 -0400
-In-Reply-To: <20040910133254.GB32530@lst.de>
+	Fri, 17 Sep 2004 15:50:22 -0400
+In-Reply-To: <20040912113727.GA32682@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-scsi@vger.kernel.org
 
-Hi
+On Sun, 12 Sep 2004, Christoph Hellwig wrote:
 
-Sorry for a delay - was away for a week.
-
-On Fri, 10 Sep 2004, Christoph Hellwig wrote:
-
->> 1) My big problem with this patch is, that I don't have any AM53C7974
->> based hardware with EEPROM, and you re-write the EEPROM handling
->> functions. Although, it does look like you just inlined some of them and
->> removed redundant code. Do you have the hardware to test it? If not - I
->> guess, we'd have to ask for volunteers to test it. Your patch is a bit
->> less than trivial:-) If nobody volunteers, well, I'll have to try to prove
->> the equivalence myself:-)
->
-> I'll do a new patch with that part excluded (and ontop of all the
-> patches currently pending for tmscsim)
-
-Ok, now, that the patch has been applied, and, as Christoph informed me, 
-it would be difficult (impossible?) to undo it, we have to fix it. I'll 
-explain my doubts separately as a reply to another Christoph's email. Or 
-would it still be possible to get a patch in, reverting the EEPROM rework?
-
->> 2) I just realised - we have 2 possibilities to pass parameters to
->> tmscsim, if it is compiled into the kernel - with tmscsim.tmscsim=...
->> and with tmscsim=... I guess, breaking scripts by removing one of them now
->> wouldn't be good... But we could put a warning printk() in dc390_setup
->> "Deprecated! Use tmscsim.tmscsim=... This will be removed real soon
->> now!\n" should we?
->
-> I think we should deprecated both and use an easy to understand
-> module_param-based interface.
-
-Right, this is what is used ATM:
-
-module_param_array(tmscsim, int, tmscsim_paramnum, 0);
-
-, and this is where tmscsim.tmscsim=... comes from. Similar to 
-scsi_mod.scsi_logging_level, etc. What I meant is, that removing 
-dc390_setup might break people's setups.
-
->> 3) There's a typo:
->>
+> On Tue, Sep 07, 2004 at 06:29:41PM +0200, Guennadi Liakhovetski wrote:
 >>> +static void __devinit dc390_eeprom_prepare_read(struct pci_dev *pdev, u8
 >>> cd)
+>>> {
+>>> +	u8 carryFlag = 1, j = 0x80, i, bval, regval;
+>>>
+>>> +	for (i = 0; i < 9; i++) {
+>>> +		if (carryFlag) {
+>>> +			bval = 0x40;
+>>> +			regval = 0x80;
+>>> +
+>>> +			pci_write_config_byte(pdev, regval, bval);
+>>> +		} else {
+>>> +			bval = 0;
+>>> +			regval = 0xc0;
 >>
->> should be
+>> 			^^^^^^^^^^^^^^
 >>
->>> +static void __devinit dc390_eeprom_prepare_read(struct pci_dev *pdev, u8
->>> cmd)
+>> Where does this come from? The old code seems to always write to 0x80,
+>> IIUC. I'll look further.
 >
-> thanks.
+>
+> The 0xc0 is set in dc390_EnDisableCE when the first argument is
+> ENABLE_CE.
+>
+> That happens just before the dc390_Prepare call in dc390_ReadEEprom
+> which is the only caller of dc390_EEpromOutDI.
 
-Thanks to Andrew for fixing this.
+Right, but:
+
+static void __devinit dc390_Prepare(struct pci_dev *pdev, u8 *regval, u8 EEpromCmd)
+{
+     u8 i,j;
+     u8 carryFlag;
+
+     carryFlag = 1;
+     j = 0x80;
+     for(i=0; i<9; i++)
+     {
+         dc390_EEpromOutDI(pdev, regval, carryFlag);
+         carryFlag = (EEpromCmd & j) ? 1 : 0;
+         j >>= 1;
+     }
+}
+
+So, EEpromOutDI is always called for the first time with carryFlag == 1. 
+In EEpronOutDI:
+
+static void __devinit dc390_EEpromOutDI(struct pci_dev *pdev, u8 *regval, 
+u8 Carry)
+{
+     u8 bval;
+
+     bval = 0;
+     if(Carry)
+     {
+         bval = 0x40;
+         *regval = 0x80;
+         pci_write_config_byte(pdev, *regval, bval);
+     }
+     udelay(160);
+     bval |= 0x80;
+     pci_write_config_byte(pdev, *regval, bval);
+     udelay(160);
+     bval = 0;
+     pci_write_config_byte(pdev, *regval, bval);
+     udelay(160);
+}
+
+*regval will be immediately set to 0x80 and never set to anything else. 
+Your "else" clause seems simply not to be there. Am I still missing 
+anything?
+
+As for me rediffing my patches against the current BK - I'll try to do 
+that (after we figure out what to do with your last patch). It won't be 
+very easy - I am not using BK. It would be a pain over a 56kbps link:-) 
+So, it'll take some time.
 
 Thanks
 Guennadi
