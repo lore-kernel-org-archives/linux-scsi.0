@@ -1,43 +1,32 @@
-From: Bjorn Helgaas <bjorn_helgaas@hp.com>
-Subject: sym53c8xx duplicate device detection
-Date: Thu, 25 Jul 2002 13:29:22 -0600
+From: Luben Tuikov <luben@splentec.com>
+Subject: scsi_scan.c
+Date: Thu, 25 Jul 2002 16:42:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200207251329.22563.bjorn_helgaas@hp.com>
+Message-ID: <3D40629A.5EE2D7B2@splentec.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from splentec.com (canoe.splentec.com [209.47.35.250])
+	by pepsi.splentec.com (8.11.6/8.11.0) with ESMTP id g6PKg0s12926
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Jul 2002 16:42:00 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: groudier@free.fr
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hello,
+What is the status of scsi_scan.c in 2.4.latest
+and in 2.5.latest (28)?
 
-sym53c8xx.c contains the following code, apparently to work around
-a problem with some HP boxes:
+I thought that Patric Mansfield's version would be
+used? It looks to me (2.5.28) that some mixture
+of old and new (P.M.) code is used. (Judging by
+the the use of the old ``if (SDpnt != oldSDpnt) ...''
+along with the new scsi_scan_target() by P.M.)
 
-                /* Some HW as the HP LH4 may report twice PCI devices */
-                for (i = 0; i < count ; i++) {
-                        if (devtbl[i].slot.bus       == PciBusNumber(pcidev) && 
-                            devtbl[i].slot.device_fn == PciDeviceFn(pcidev))
-                                break;
-                }
-                if (i != count) /* Ignore this device if we already have it */
-                        continue;
+Currently select_queue_depths() gets quite confused
+setting the queue depths unless extended effort
+is used on SDpnt to see that it is the ``next''
+device to be later scanned... (going through the devices)
 
-I'm working on a box with multiple PCI segments, i.e., there are
-several PCI domains, each with its own range of 0-255 bus numbers.
-So if we put an adapter at 10:00.0 on segment 0, and another at
-10:00.0 on segment 1, the driver ignores the second because it
-has the same bus and device/fn as the first.
-
-So I'm interested in specifics about this problem so I can think
-about possibilities for fixing my segment problem without
-reintroducing an LH4 problem.  For instance, maybe we can
-change the architecture-specific PCI code to deal with the
-"multiple devices" problem for ALL drivers, not just sym53c8xx.
+???
 -- 
-Bjorn Helgaas - bjorn_helgaas at hp.com
-Linux Systems Operation R&D
-Hewlett-Packard Company
+Luben
