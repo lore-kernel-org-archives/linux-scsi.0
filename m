@@ -1,38 +1,28 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] 2.5 scsi-misc-2.5 remove scsi_host_hn_list
-Date: Wed, 13 Nov 2002 00:25:30 +0000
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Linux v2.5.47
+Date: 13 Nov 2002 01:03:52 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021113002530.A684@infradead.org>
-References: <20021112104759.A21739@eng2.beaverton.ibm.com> <20021112122431.A23657@eng2.beaverton.ibm.com>
+Message-ID: <1037149432.10083.32.camel@irongate.swansea.linux.org.uk>
+References: <Pine.LNX.4.44.0211101944030.17742-100000@penguin.transmeta.com>
+	<20021113002222.B323@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021112122431.A23657@eng2.beaverton.ibm.com>; from patmans@us.ibm.com on Tue, Nov 12, 2002 at 12:24:31PM -0800
+In-Reply-To: <20021113002222.B323@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Linus Torvalds <torvalds@transmeta.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-> +MODULE_PARM(scsihosts, "s");
-> +MODULE_PARM_DESC(scsihosts, "scsihosts=driver1,driver2,driver3");
-> +#ifndef MODULE
-> +int __init scsi_setup(char *str)
-> +{
-> +	scsihosts = str;
-> +	return 1;
-> +}
-> +
-> +__setup("scsihosts=", scsi_setup);
-> +#endif
+On Wed, 2002-11-13 at 00:22, Christoph Hellwig wrote:
+> 	[do basic setup]
+> 	sdev = scsi_register();
+> 	[do more setup]
+> 	return scsi_add_host();
+> 
+> Similarly a new routine, scsi_remove_host exist to call at the end
+> of the remove routine.
 
-With rusty's new module loader this is probably obsolete :P
-
-> -void __exit scsi_host_hn_release()
-> +void __init scsi_host_hn_init(void)
-
-What about calling this scsi_host_init()?  That way we can stuff in any
-other initialization private to hosts.c if needed without having a
-misleading name.
-
-Otherwise the patch looks really nice.
+Very very nice. One question - what are the rules for the
+scsi_remove_host callback with regards to a hotplug ? 
 
