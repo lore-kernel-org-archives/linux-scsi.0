@@ -1,45 +1,32 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: smp dead lock of io_request_lock/queue_lock patch
-Date: Mon, 12 Jan 2004 11:05:39 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1073923538.3114.278.camel@compaq.xsintricity.com>
-References: <OF2581AA2D.BFD408D2-ONC1256E19.004BE052-C1256E19.004E1561@de.ibm.com>
-	 <20040112141330.GH24638@suse.de>
-	 <1073920110.3114.268.camel@compaq.xsintricity.com>
-	 <1073921054.2186.16.camel@mulgrave>  <20040112154345.GE1255@suse.de>
-	 <1073922773.3114.275.camel@compaq.xsintricity.com>
-	 <1073923459.2186.23.camel@mulgrave>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [patch] qla1280 compile fix for CONFIG_HOTPLUG in 2.6
+Date: Mon, 12 Jan 2004 19:37:56 +0000
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20040112193756.A6991@infradead.org>
+References: <16386.38762.670634.620111@gargle.gargle.HOWL> <20040112151018.A3222@infradead.org> <yq0k73xci67.fsf@wildopensource.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <1073923459.2186.23.camel@mulgrave>
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Jens Axboe <axboe@suse.de>, Martin Peschke3 <MPESCHKE@de.ibm.com>, Arjan Van de Ven <arjanv@redhat.com>, Peter Yao <peter@exavio.com.cn>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi mailing list <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from phoenix.infradead.org ([213.86.99.234]:47119 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S265594AbUALTiA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jan 2004 14:38:00 -0500
+Content-Disposition: inline
+In-Reply-To: <yq0k73xci67.fsf@wildopensource.com>; from jes@wildopensource.com on Mon, Jan 12, 2004 at 10:15:12AM -0500
 List-Id: linux-scsi@vger.kernel.org
+To: Jes Sorensen <jes@wildopensource.com>
+Cc: akpm@osdl.org, linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com
 
-On Mon, 2004-01-12 at 11:04, James Bottomley wrote:
-> On Mon, 2004-01-12 at 10:52, Doug Ledford wrote:
-> > Well, the scsi-dledford-2.4 tree is intended to be someplace I can put
-> > all the stuff I'm having to carry forward in our kernels, so that's
-> > distinctly different than a driver update only tree.  I could do that
-> > separately and I have no problem doing that.
+On Mon, Jan 12, 2004 at 10:15:12AM -0500, Jes Sorensen wrote:
+> Christoph> That patch is crap.  The ifdefs are gone in -mm and that's
+> Christoph> the way to go.  We have __devexit and __devexitp to take
+> Christoph> care of that.
 > 
-> I'll take that as a "yes" then ;-)
-> 
-> Thanks for doing this, beacuse I really wasn't looking forward to trying
-> to sort it all out.
+> If that works in 2.4 fine - send me a patch please.
 
-No problem.  I'll set up a tree later today and start watching for 2.4
-driver updates.
+the __devexit does not work in 2.4 due to the scsi layer function calling
+qla1280_remove_one not beeing __devexit, but we already #define it away
+in qla1280.c when we're compiling in 2.4.  The patch to just remove the
+ifdefs already is in Andrew's patch, I think Adrian sent it you when
+he found that issue, too (?)
 
-> I trust your judgement about this, so it sounds like we have the
-> beginnings of a good working model for 2.4
-
-Cool.  I'm good with that.
-
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc.
-         1801 Varsity Dr.
-         Raleigh, NC 27606
