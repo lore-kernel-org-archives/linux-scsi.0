@@ -1,32 +1,28 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: [PATCH] Add proper module ID tables to Adaptec aic7[9x]xx drivers
-Date: Thu, 07 Oct 2004 23:12:12 +0400
+From: Dave Hansen <haveblue@us.ibm.com>
+Subject: 2.6.9-rc3-mm3 fails to detect aic7xxx
+Date: Thu, 07 Oct 2004 12:40:19 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4165950C.509@tls.msk.ru>
-References: <linux.scsi.20040621161047.GD16453@master.mivlgu.local> <41644BD5.7030807@tls.msk.ru> <20041006202543.GA22794@wotan.suse.de> <4165862E.1040904@adaptec.com>
+Message-ID: <1097178019.24355.39.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hobbit.corpit.ru ([81.13.94.6]:29537 "EHLO hobbit.corpit.ru")
-	by vger.kernel.org with ESMTP id S267808AbUJGTMO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2004 15:12:14 -0400
-In-Reply-To: <4165862E.1040904@adaptec.com>
+Received: from e3.ny.us.ibm.com ([32.97.182.103]:9451 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S267961AbUJGTka (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2004 15:40:30 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Luben Tuikov wrote:
-> Andi Kleen wrote:
-> 
-[]
->> Luben, can you just do a proper pci_id table please? You probably
->> know the requirements best.
-> 
-> Yes, no problem. (It'd be tricky but I'll try to augment it properly.)
+I just booted 2.6.9-rc3-mm3 and got the good ol' 
 
-Christoph Hellwig already did that, it seems --
-see his post to linux-scsi dated Sep-12,
-http://marc.theaimsgroup.com/?m=109500574722283
+VFS: Cannot open root device "sda2" or unknown-block(0,0)
+Please append a correct "root=" boot option
+Kernel panic - not syncing: VFS: Unable to mount root fs on
+unknown-block(0,0)
 
-/mjt
+backing out bk-scsi.patch seems to fix it.  I believe this worked in
+2.6.9-rc3-mm2.
+
+-- Dave
+
