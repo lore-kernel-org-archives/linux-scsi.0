@@ -1,229 +1,68 @@
-From: Yokota Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
-Subject: [PATCH 13/13] nsp32, nsp_cs driver update
-Date: Tue, 22 Feb 2005 16:14:21 +0900 (JST)
-Message-ID: <20050222.161421.21865168.yokota@netlab.is.tsukuba.ac.jp>
+From: "Euro-Transfer" <info@eurotransfer-de.info>
+Subject: Angebot
+Date: Tue, 22 Feb 2005 12:37:04 +0100 (CET)
+Message-ID: <20050222113704.97BCD14023C@eurotransfer-de.info>
+Reply-To: info@eurotransfer-de.info
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Received: from pixy-gw.netlab.cs.tsukuba.ac.jp ([130.158.83.98]:55566 "HELO
-	pixy.netlab.cs.tsukuba.ac.jp") by vger.kernel.org with SMTP
-	id S262235AbVBVHOX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Feb 2005 02:14:23 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Received: from gateway.auto-gielda.pl ([80.55.218.218]:53264 "EHLO
+	eurotransfer-de.info") by vger.kernel.org with ESMTP
+	id S262300AbVBVNQ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Feb 2005 08:16:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-
---- linux-2.6.10/drivers/scsi/pcmcia/nsp_message.c	2004-10-19 06:53:46.000000000 +0900
-+++ linux-2.6.10-nsp/drivers/scsi/pcmcia/nsp_message.c	2004-08-15 09:23:57.000000000 +0900
-@@ -1,19 +1,129 @@
- /*==========================================================================
-   NinjaSCSI-3 message handler
--      By: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
-+      By: YOKOTA Hiroshi <yokota<at>netlab.is.tsukuba.ac.jp>
- 
-    This software may be used and distributed according to the terms of
-    the GNU General Public License.
-  */
- 
--/* $Id: nsp_message.c,v 1.6 2003/07/26 14:21:09 elca Exp $ */
-+/* $Id: nsp_message.c,v 1.12 2004/08/15 00:23:57 elca Exp $ */
- 
--static void nsp_message_in(Scsi_Cmnd *SCpnt)
-+
-+/*
-+ * IDENTIFY Message
-+ */
-+static void nsp_build_identify(const Scsi_Cmnd *SCpnt)
-+{
-+	nsp_hw_data *data = (nsp_hw_data *)SCpnt->device->host->hostdata;
-+	int          pos  = data->MsgOutLen;
-+
-+	data->MsgOutBuffer[pos] = IDENTIFY(TRUE, SCpnt->device->lun); pos++;
-+	data->MsgOutLen = pos;
-+}
-+
-+/*
-+ * SDTR Message Routine
-+ */
-+static void nsp_build_sdtr(const Scsi_Cmnd *SCpnt,
-+				  unsigned char period,
-+				  unsigned char offset)
-+{
-+	nsp_hw_data *data = (nsp_hw_data *)SCpnt->device->host->hostdata;
-+	int          pos  = data->MsgOutLen;
-+
-+	data->MsgOutBuffer[pos] = EXTENDED_MESSAGE;  pos++;
-+	data->MsgOutBuffer[pos] = EXTENDED_SDTR_LEN; pos++;
-+	data->MsgOutBuffer[pos] = EXTENDED_SDTR;     pos++;
-+	data->MsgOutBuffer[pos] = period;            pos++;
-+	data->MsgOutBuffer[pos] = offset;            pos++;
-+
-+	data->MsgOutLen = pos;
-+}
-+
-+/*
-+ * No Operation Message
-+ */
-+static void nsp_build_nop(const Scsi_Cmnd *SCpnt)
- {
--	unsigned int  base = SCpnt->device->host->io_port;
-+	nsp_hw_data *data = (nsp_hw_data *)SCpnt->device->host->hostdata;
-+	int          pos  = data->MsgOutLen;
-+
-+	if (pos != 0) {
-+		nsp_msg(KERN_WARNING,
-+			"Some messages are already contained!");
-+		return;
-+	}
-+
-+	data->MsgOutBuffer[pos] = NOP; pos++;
-+	data->MsgOutLen = pos;
-+}
-+
-+
-+/*
-+ * transfer SCSI message
-+ */
-+static int nsp_xfer(const Scsi_Cmnd *SCpnt, int phase)
-+{
-+	const unsigned int base = SCpnt->device->host->io_port;
-+	nsp_hw_data   *data = (nsp_hw_data *)SCpnt->device->host->hostdata;
-+	unsigned char *buf;
-+	int	       ptr, ret;
-+	size_t         len;
-+
-+	//nsp_dbg(NSP_DEBUG_DATA_IO, "in");
-+
-+	if (phase & BUSMON_IO) {
-+		len = min(sizeof(data->MsgInBuffer), data->MsgInLen);
-+		buf = data->MsgInBuffer;
-+	} else {
-+		len = min(sizeof(data->MsgOutBuffer), data->MsgOutLen);
-+		buf = data->MsgOutBuffer;
-+	}
-+
-+	for (ptr = 0; len > 0; len--, ptr++) {
-+		int sig;
-+
-+		sig = nsp_expect_signal(SCpnt, phase, BUSMON_REQ);
-+		if (sig <= 0) {
-+			nsp_msg(KERN_DEBUG, "xfer quit");
-+			ret = 0;
-+			goto out;
-+		}
-+
-+		/* if last byte, negate ATN */
-+		if (len == 1 && SCpnt->SCp.phase == PH_MSG_OUT) {
-+			nsp_index_write(base, SCSIBUSCTRL, AUTODIRECTION | ACKENB);
-+		}
-+
-+		/* read & write message */
-+		if (phase & BUSMON_IO) {
-+			nsp_dbg(NSP_DEBUG_DATA_IO, "read msg");
-+			buf[ptr] = nsp_index_read(base, SCSIDATAWITHACK);
-+		} else {
-+			nsp_dbg(NSP_DEBUG_DATA_IO, "write msg");
-+			nsp_index_write(base, SCSIDATAWITHACK, buf[ptr]);
-+		}
-+		nsp_negate_signal(SCpnt, BUSMON_ACK, "xfer<ack>");
-+
-+	}
-+	ret = 1;
-+
-+ out:
-+	if (phase & BUSMON_IO) {
-+		data->MsgInLen = len;
-+	} else {
-+		data->MsgOutLen = len;
-+	}
-+
-+	return ret;
-+}
-+
-+static void nsp_message_in(const Scsi_Cmnd *SCpnt)
-+{
-+	const unsigned int base = SCpnt->device->host->io_port;
- 	nsp_hw_data  *data = (nsp_hw_data *)SCpnt->device->host->hostdata;
--	unsigned char data_reg, control_reg;
--	int           ret, len;
-+	int           sig = 1;
-+	size_t        len = 0;
- 
- 	/*
- 	 * XXX: NSP QUIRK
-@@ -21,11 +131,11 @@
- 	 * therefore we should poll the scsi phase here to catch 
- 	 * the next "msg in" if exists (no scsi phase changes).
- 	 */
--	ret = 16;
--	len = 0;
- 
- 	nsp_dbg(NSP_DEBUG_MSGINOCCUR, "msgin loop");
- 	do {
-+		unsigned char data_reg, control_reg;
-+
- 		/* read data */
- 		data_reg = nsp_index_read(base, SCSIDATAIN);
- 
-@@ -35,7 +145,7 @@
- 		nsp_index_write(base, SCSIBUSCTRL, control_reg);
- 		nsp_negate_signal(SCpnt, BUSMON_REQ, "msgin<REQ>");
- 
--		data->MsgBuffer[len] = data_reg; len++;
-+		data->MsgInBuffer[len] = data_reg; len++;
- 
- 		/* deassert ACK */
- 		control_reg =  nsp_index_read(base, SCSIBUSCTRL);
-@@ -43,18 +153,17 @@
- 		nsp_index_write(base, SCSIBUSCTRL, control_reg);
- 
- 		/* catch a next signal */
--		ret = nsp_expect_signal(SCpnt, BUSPHASE_MESSAGE_IN, BUSMON_REQ);
--	} while (ret > 0 && MSGBUF_SIZE > len);
+Sehr geehrte Damen und Herren, =0D
+=0D
+unser Sonderangebot ist an allen , die neue Klienten =0D
+gewinnen m=F6chten, den Kundenkreis erweitern sowie =0D
+erfolgreiche Werbeaktionen durchf=FChren wollen, gerichtet !!!=0D
+=0D
+=0D
+Wir bieten Ihnen Datenbanken mit E-Mail-Adressen nicht nur deutscher =0D
+sondern auch britischer, oesterreichischer und anderer Unternehmen an, =
+=0D
+die Hunderttausende von Eintr=E4gen enthalten. =0D
+Die Datenbanken sind nach Branchen und Subbranchen gegliedert. =0D
+Der Versand von Angeboten per E-Mail ist eine der preisg=FCnstigsten, =0D
+wirkungsvollsten und schnellsten Werbeformen, dank derer Sie neue =0D
+K=E4ufer f=FCr Ihre Produkte und Dienstleistungen gewinnen k=F6nnen. =0D
+Die speziell f=FCr unsere Kunden erstellte Software -FastMailing =0D
+2.1.1 erm=F6glicht den Massenversand von Angeboten. =0D
+Dank dieser Versandmethode sind Sie imstande innerhalb von wenigen Stun=
+den=0D
+hunderttausende von Empf=E4ngern mit Ihrem Angebot bekanntmachen!=0D
+Besuchen Sie unsere Webseite - http://www.eurotransfer.co.uk und =FCber=
+zeugen =0D
+Sie sich selbst.  Speziell f=FCr Sie haben wir attraktive Preispakete =0D
+vorbereitet. Unser Sonderangebot ist zeitlich begrenzt weil dauert nur =
+bis zum =0D
+10.M=E4rz!  Verpassen Sie es nicht! =0D
+=0D
+Weitere Informationen erhalten Sie unter: kontakt@eurotransfer.co.uk=0D
+=0D
+http://www.eurotransfer.co.uk=0D
+oder =0D
+http://www.eurotransfer-de.info=0D
+=0D
+=0D
+Mit Erfolgsw=FCnschen verbleibt  =0D
+Ihr EuroTransfer - Team =0D
+=0D
+=0D
+=0D
+=0D
+=0D
+=46alls Sie kein Interesse an Produkten der Firma EuroTransfer haben, u=
+nd =0D
+m=F6chten keine weitere Informationen =FCber sie bekommen, klicken Sie =
+nur =0D
+an unterstehenden Link: http://www.eurotransfer.co.uk/unsubscribe.php -=
+ wo Sie =0D
+Ihre E-mail Adresse aus unserem Datenbank l=F6schen k=F6nnen.
 -
--	data->MsgLen = len;
-+		sig = nsp_expect_signal(SCpnt, BUSPHASE_MESSAGE_IN, BUSMON_REQ);
-+	} while (sig > 0 && sizeof(data->MsgInBuffer) > len);
- 
-+	data->MsgInLen = len;
- }
- 
--static void nsp_message_out(Scsi_Cmnd *SCpnt)
-+static void nsp_message_out(const Scsi_Cmnd *SCpnt)
- {
--	nsp_hw_data *data = (nsp_hw_data *)SCpnt->device->host->hostdata;
--	int ret = 1;
--	int len = data->MsgLen;
-+	const nsp_hw_data *data = (nsp_hw_data *)SCpnt->device->host->hostdata;
-+	int sig = 1;
-+	int tmp;
- 
- 	/*
- 	 * XXX: NSP QUIRK
-@@ -63,15 +172,21 @@
- 	 * the next "msg out" if exists (no scsi phase changes).
- 	 */
- 
-+	if (data->MsgOutLen == 0) {
-+		nsp_build_nop(SCpnt);
-+	}
-+
- 	nsp_dbg(NSP_DEBUG_MSGOUTOCCUR, "msgout loop");
- 	do {
--		if (nsp_xfer(SCpnt, BUSPHASE_MESSAGE_OUT)) {
--			nsp_msg(KERN_DEBUG, "msgout: xfer short");
-+		tmp = nsp_xfer(SCpnt, BUSPHASE_MESSAGE_OUT);
-+
-+		if (tmp == 0) {
-+			nsp_msg(KERN_DEBUG, "msgout: xfer short, tmp=%d, len=%d", tmp, data->MsgOutLen);
- 		}
- 
- 		/* catch a next signal */
--		ret = nsp_expect_signal(SCpnt, BUSPHASE_MESSAGE_OUT, BUSMON_REQ);
--	} while (ret > 0 && len-- > 0);
-+		sig = nsp_expect_signal(SCpnt, BUSPHASE_MESSAGE_OUT, BUSMON_REQ);
-+	} while (sig > 0 && data->MsgOutLen > 0);
- 
- }
- 
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
