@@ -1,148 +1,201 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Sun, 16 Feb 2003 13:18:35 -0800
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: [PATCH] scsi/pcmcia compile fix
+Date: Sun, 16 Feb 2003 18:25:53 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030216131835.B23422@one-eyed-alien.net>
-References: <200301232339.40892.oliver@neukum.name> <20030123152554.F12788@one-eyed-alien.net> <20030124214831.GA28812@redhat.com> <20030124152540.B27859@one-eyed-alien.net> <20030125000529.GE28812@redhat.com> <20030124164553.C27859@one-eyed-alien.net> <20030125010729.GG28812@redhat.com> <20030202101317.A26796@one-eyed-alien.net> <20030202120628.A28024@one-eyed-alien.net> <20030203171726.GA1583@beaverton.ibm.com>
+Message-ID: <20030217022553.GA5334@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="tjCHc7DPkfUGtrlw"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030203171726.GA1583@beaverton.ibm.com>; from andmike@us.ibm.com on Mon, Feb 03, 2003 at 09:17:26AM -0800
-List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Oliver Neukum <oliver@neukum.name>, Luben Tuikov <luben@splentec.com>, Alan Stern <stern@rowland.harvard.edu>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
-
-
---tjCHc7DPkfUGtrlw
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from westrelay01.boulder.ibm.com (westrelay01.boulder.ibm.com [9.17.194.22])
+	by e31.co.us.ibm.com (8.12.7/8.12.2) with ESMTP id h1H2O8MP007932
+	for <linux-scsi@vger.kernel.org>; Sun, 16 Feb 2003 21:24:08 -0500
+Received: from hmsbounty (sig-9-65-17-206.mts.ibm.com [9.65.17.206])
+	by westrelay01.boulder.ibm.com (8.12.3/NCO/VER6.5) with ESMTP id h1H2O7sH104788
+	for <linux-scsi@vger.kernel.org>; Sun, 16 Feb 2003 19:24:07 -0700
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Any updates on this?  I saw some patches, but they don't seem to be in my
-tree (the usb tree, which is synced from Linus' tree).
+This is a compile fix for bug:
+http://bugme.osdl.org/show_bug.cgi?id=360
 
-People are starting to reports OOPSes to me because of this being
-missing....
+This patch is against scsi-misc-2.5.
 
-Matt
+Testing: Compile only
 
-On Mon, Feb 03, 2003 at 09:17:26AM -0800, Mike Anderson wrote:
-> Sorry Matthew I got side tracked on some issues for the last week. The
-> scsi_set_device_offline(); function has not been added to any of James
-> linux-scsi trees. You could add a ifndef in your code until we get the
-> interface in the tree.=20
->=20
-> Would scsi_set_device_offline() do more than sdev->online =3D 0? It
-> depends on the state of the device at the calling of the function.
->=20
-> I currently have scsi_set_device_offline() trying to do the following:
-> 	1.) set device offline and mark host in_recovery.
-> 	2.) mark all outstanding commands to be canceled and wake up
-> 	error handler.
-> 	3.) flush the request queue.
-> 	4.) Once device is really offline send hotplug event.
->=20
-> (2) needs some changes in the error handler which are needed in other
-> cases. This the large part of the change, but it is not directly part of
-> your request.
->=20
-> (3) need a cleaner way to flush request specials off the queue . It
-> would also be nice if there was a method to stop the incoming side of the
-> request queue.
->=20
-> (4) need export of do_hotplug interface or a method to generate a call
-> to it for an offline event.
->=20
-> I am working on these changes pretty much in order.
->=20
-> Doug suggested a scsi_schedule_host_removal(), but I thought we could
-> just change scsi_remove_host() to handle this task unless there is a
-> side effect that all callers would not want???.
->=20
-> -andmike
->=20
-> Matthew Dharm [mdharm-scsi@one-eyed-alien.net] wrote:
-> > Willem Riede <wrlk@riede.org> suggested to me that I simply set
-> > sdev->online =3D 0 for scsi_set_device_offline()
-> >=20
-> > Any reason that isn't good enough?
-> >=20
-> > On Sun, Feb 02, 2003 at 10:13:17AM -0800, Matthew Dharm wrote:
-> > > So, was any of this ever implemented?  As far as I can tell, the requ=
-ired
-> > > changes were:
-> > >=20
-> > > (o) addition of scsi_schedule_host_removal() (possibly optional)
-> > > (o) implementation of scsi_set_device_offline() (possibly optional)
-> > > (o) change the behavior of the 'hotplug initialization model' to call=
- my
-> > > release function
-> > >=20
-> > > Matt
-> > > > then call the set_scsi_device_offline(), then send back any outstan=
-ding
-> > > > commands via scsi_done(), then possibly call the
-> > > > scsi_schedule_host_removal() if Mike adds that function.  Then retu=
-rn. =20
-> > > > Don't to anything else.  Take all the remaining code you would norm=
-ally
-> > > > run at this point and put it into a function in your source called
-> > > > usb_release() and in your Scsi_Host_Template struct that you pass t=
-o the
-> > > > scsi layer, init the release pointer with the address of your
-> > > > usb_release() routine.  That way, the scsi layer can do what it's b=
-est at,
-> > > > taking care of the clean up details we've been talking about, and w=
-hen
-> > > > it's all done, it will call your usb_release() routine with a single
-> > > > argument of the host struct you are wanting released.  At that poin=
-t, you
-> > > > can do all the freeing you would have done in that khubd loop (at l=
-east I
-> > > > think that's the context you are doing the freeing from now) and kn=
-ow for
-> > > > a fact that not only are you freeing everything, but so is the scsi=
- mid
-> > > > layer.  I think this will solve all the issues you've had, because =
-this
-> > > > *won't* leak, it won't block your other actions, and it lets the sc=
-si
-> > > > subsystem clean up properly.
->=20
->=20
-> -andmike
-> --
-> Michael Anderson
-> andmike@us.ibm.com
->=20
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+ aha152x_stub.c |    2 +-
+ nsp_cs.c       |   40 ++++++++++++++++++++--------------------
+ nsp_message.c  |    2 +-
+ 3 files changed, 22 insertions(+), 22 deletions(-)
+------
 
-My mother not mind to die for stoppink Windows NT!  She is rememberink=20
-Stalin!
-					-- Pitr
-User Friendly, 9/6/1998
-
---tjCHc7DPkfUGtrlw
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE+UAArIjReC7bSPZARAvM6AKDM21uX24dI/ikJwOw1zYP1hP+xVgCfe6gR
-j2FOA3+acrmVbvoQeDfe/EU=
-=DYya
------END PGP SIGNATURE-----
-
---tjCHc7DPkfUGtrlw--
+===== drivers/scsi/pcmcia/aha152x_stub.c 1.11 vs edited =====
+--- 1.11/drivers/scsi/pcmcia/aha152x_stub.c	Mon Feb  3 23:47:00 2003
++++ edited/drivers/scsi/pcmcia/aha152x_stub.c	Sun Feb 16 13:23:48 2003
+@@ -408,7 +408,7 @@
+ 	if (link->state & DEV_CONFIG) {
+ 	    Scsi_Cmnd tmp;
+ 	    CardServices(RequestConfiguration, link->handle, &link->conf);
+-	    tmp.host = info->host;
++	    tmp.device->host = info->host;
+ 	    aha152x_host_reset(&tmp);
+ 	}
+ 	break;
+===== drivers/scsi/pcmcia/nsp_cs.c 1.15 vs edited =====
+--- 1.15/drivers/scsi/pcmcia/nsp_cs.c	Fri Jan  3 05:17:04 2003
++++ edited/drivers/scsi/pcmcia/nsp_cs.c	Sun Feb 16 13:30:27 2003
+@@ -325,9 +325,9 @@
+ static unsigned int nsphw_start_selection(Scsi_Cmnd   *SCpnt,
+ 					  nsp_hw_data *data)
+ {
+-	unsigned int  host_id	 = SCpnt->host->this_id;
+-	unsigned int  base	 = SCpnt->host->io_port;
+-	unsigned char target	 = SCpnt->target;
++	unsigned int  host_id	 = SCpnt->device->host->this_id;
++	unsigned int  base	 = SCpnt->device->host->io_port;
++	unsigned char target	 = SCpnt->device->id;
+ 	int	      time_out;
+ 	unsigned char phase, arbit;
+ 
+@@ -405,7 +405,7 @@
+  */
+ static int nsp_msg(Scsi_Cmnd *SCpnt, nsp_hw_data *data)
+ {
+-	unsigned char	       target = SCpnt->target;
++	unsigned char	       target = SCpnt->device->id;
+ //	unsigned char	       lun    = SCpnt->lun;
+ 	sync_data	      *sync   = &(data->Sync[target]);
+ 	struct nsp_sync_table *sync_table;
+@@ -462,7 +462,7 @@
+  */
+ static void nsp_start_timer(Scsi_Cmnd *SCpnt, nsp_hw_data *data, int time)
+ {
+-	unsigned int base = SCpnt->host->io_port;
++	unsigned int base = SCpnt->device->host->io_port;
+ 
+ 	//DEBUG(0, "%s: in SCpnt=0x%p, time=%d\n", __FUNCTION__, SCpnt, time);
+ 	data->TimerCount = time;
+@@ -474,7 +474,7 @@
+  */
+ static int nsp_negate_signal(Scsi_Cmnd *SCpnt, unsigned char mask, char *str)
+ {
+-	unsigned int  base = SCpnt->host->io_port;
++	unsigned int  base = SCpnt->device->host->io_port;
+ 	unsigned char reg;
+ 	int	      time_out;
+ 
+@@ -503,7 +503,7 @@
+ 			     unsigned char  current_phase,
+ 			     unsigned char  mask)
+ {
+-	unsigned int  base	 = SCpnt->host->io_port;
++	unsigned int  base	 = SCpnt->device->host->io_port;
+ 	int	      time_out;
+ 	unsigned char phase, i_src;
+ 
+@@ -536,7 +536,7 @@
+  */
+ static int nsp_xfer(Scsi_Cmnd *SCpnt, nsp_hw_data *data, int phase)
+ {
+-	unsigned int  base = SCpnt->host->io_port;
++	unsigned int  base = SCpnt->device->host->io_port;
+ 	char	     *buf  = data->MsgBuffer;
+ 	int	      len  = MIN(MSGBUF_SIZE, data->MsgLen);
+ 	int	      ptr;
+@@ -606,7 +606,7 @@
+  */
+ static int nsp_reselected(Scsi_Cmnd *SCpnt, nsp_hw_data *data)
+ {
+-	unsigned int  base = SCpnt->host->io_port;
++	unsigned int  base = SCpnt->device->host->io_port;
+ 	unsigned char reg;
+ 
+ 	//DEBUG(0, "%s:\n", __FUNCTION__);
+@@ -626,7 +626,7 @@
+  */
+ static int nsp_fifo_count(Scsi_Cmnd *SCpnt)
+ {
+-	unsigned int base = SCpnt->host->io_port;
++	unsigned int base = SCpnt->device->host->io_port;
+ 	unsigned int count;
+ 	unsigned int l, m, h, dummy;
+ 
+@@ -653,8 +653,8 @@
+  */
+ static void nsp_pio_read(Scsi_Cmnd *SCpnt, nsp_hw_data *data)
+ {
+-	unsigned int  base      = SCpnt->host->io_port;
+-	unsigned long mmio_base = SCpnt->host->base;
++	unsigned int  base      = SCpnt->device->host->io_port;
++	unsigned long mmio_base = SCpnt->device->host->base;
+ 	long	      time_out;
+ 	int	      ocount, res;
+ 	unsigned char stat, fifo_stat;
+@@ -746,8 +746,8 @@
+  */
+ static void nsp_pio_write(Scsi_Cmnd *SCpnt, nsp_hw_data *data)
+ {
+-	unsigned int  base     = SCpnt->host->io_port;
+-	unsigned long mmio_base = SCpnt->host->base;
++	unsigned int  base     = SCpnt->device->host->io_port;
++	unsigned long mmio_base = SCpnt->device->host->base;
+ 	int	      time_out;
+ 	int           ocount, res;
+ 	unsigned char stat;
+@@ -838,8 +838,8 @@
+  */
+ static int nsp_nexus(Scsi_Cmnd *SCpnt, nsp_hw_data *data)
+ {
+-	unsigned int   base   = SCpnt->host->io_port;
+-	unsigned char  target = SCpnt->target;
++	unsigned int   base   = SCpnt->device->host->io_port;
++	unsigned char  target = SCpnt->device->id;
+ //	unsigned char  lun    = SCpnt->lun;
+ 	sync_data     *sync   = &(data->Sync[target]);
+ 
+@@ -944,8 +944,8 @@
+ 		return;
+ 	} else {
+ 		tmpSC    = data->CurrentSC;
+-		target   = tmpSC->target;
+-		lun      = tmpSC->lun;
++		target   = tmpSC->device->id;
++		lun      = tmpSC->device->lun;
+ 		sync_neg = &(data->Sync[target].SyncNegotiation);
+ 	}
+ 
+@@ -1425,7 +1425,7 @@
+ static int nsp_eh_bus_reset(Scsi_Cmnd *SCpnt)
+ {
+ 	nsp_hw_data *data = &nsp_data;
+-	unsigned int base = SCpnt->host->io_port;
++	unsigned int base = SCpnt->device->host->io_port;
+ 	int	     i;
+ 
+ 	DEBUG(0, "%s: SCpnt=0x%p base=0x%x\n", __FUNCTION__, SCpnt, base);
+@@ -1960,7 +1960,7 @@
+ 		}
+ 		info->stop = 0;
+ 
+-		tmp.host = info->host;
++		tmp.device->host = info->host;
+ 		nsp_eh_host_reset(&tmp);
+ 		nsp_eh_bus_reset(&tmp);
+ 
+===== drivers/scsi/pcmcia/nsp_message.c 1.5 vs edited =====
+--- 1.5/drivers/scsi/pcmcia/nsp_message.c	Tue Nov  5 15:47:26 2002
++++ edited/drivers/scsi/pcmcia/nsp_message.c	Sun Feb 16 13:31:58 2003
+@@ -10,7 +10,7 @@
+ 
+ static void nsp_message_in(Scsi_Cmnd *SCpnt, nsp_hw_data *data)
+ {
+-	unsigned int  base = SCpnt->host->io_port;
++	unsigned int  base = SCpnt->device->host->io_port;
+ 	unsigned char data_reg, control_reg;
+ 	int           ret, len;
+ 
