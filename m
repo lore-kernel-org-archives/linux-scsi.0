@@ -1,48 +1,64 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: sym53c8xx_2 oops in lk 2.5.69-bk14
-Date: Thu, 22 May 2003 12:17:19 +1000
+From: Luben Tuikov <tluben@rogers.com>
+Subject: Re: Patch: change the serial_number for error-handler commands
+Date: Thu, 22 May 2003 01:47:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3ECC332F.1080404@torque.net>
-References: <3ECAFCC1.40402@torque.net> <20030521091918.A21010@beaverton.ibm.com>
-Reply-To: dougg@torque.net
+Message-ID: <3ECC648E.4030103@rogers.com>
+References: <3ECA9D46.7010301@rogers.com> <Pine.LNX.4.44L0.0305202110520.4914-100000@netrider.rowland.org> <20030521180308.GD1116@beaverton.ibm.com> <3ECBD122.3090702@rogers.com> <20030521202809.GA1791@beaverton.ibm.com> <3ECBEB8D.4030008@rogers.com> <20030521161544.A24646@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:60681 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S262454AbTEVCDW
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 May 2003 22:03:22 -0400
-In-Reply-To: <20030521091918.A21010@beaverton.ibm.com>
+Received: from fep02-mail.bloor.is.net.cable.rogers.com ([66.185.86.72]:24334
+	"EHLO fep02-mail.bloor.is.net.cable.rogers.com") by vger.kernel.org
+	with ESMTP id S262321AbTEVFe4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 May 2003 01:34:56 -0400
+In-Reply-To: <20030521161544.A24646@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+Cc: Mike Anderson <andmike@us.ibm.com>, linux-scsi@vger.kernel.org
 
 Patrick Mansfield wrote:
-> On Wed, May 21, 2003 at 02:12:49PM +1000, Douglas Gilbert wrote:
 > 
->>This oops in the sym53c8xx may have been recently
->>introduced since I run rescan-scsi-bus.sh reasonably
->>often. It locked my system solid, scrolled the useful
->>part of the oops off the screen and put nothing in
->>the log. Handwritten notes:
+> My less than $.02:
 > 
-> 
-> The scsi_host_hn_get is not doing a scsi_host_get, so any scsi_host_put
-> that follows can break things - for example causing the scsi_host to
-> disappear out from under us. See the scsi_proc.c usage.
-> 
-> Christoph's "give ->proc_info a struct Scsi_Host * parameter" patch got
-> rid of a lot of them (and is in scsi-miscs-2.5), but not in scsi_proc.c.
-> 
-> Looks like scsi_host_hn_get should always call scsi_host_get, but
-> scsi_find_host_by_num really has to change to use driver model iterators
-> (so its locking protection matches scsi_host_get), I assume this is a WIP
-> for Christoph or Mike but for now you could use a patch like this
-> (untested, on top of scsi-misc-2.5 or Christoph's changes):
+> As far as the code goes, it does not matter whether we store the current
+> or next value in shost->serial_number,
 
-Patrick,
-Thanks, that patch fixed the problem I reported.
+I was _just_ mentioning what is normally done in implementations of some
+transports... (but actually they need to store the next, but it seems
+we'll not use this ability in SCSI Core, so yes, it doesn't really matter...)
 
-Doug Gilbert
+> so we ought to use the simpler code
+> (Mike's version).
+
+You mean Eric's version -- this was in SCSI Core _before_ you two
+started paid work on SCSI Core.
+
+>  And (x += 2)++ won't compile.
+
+Aaaah, I've mentioned this before several times, which is
+my usual disclaimer: the only C code which I send to
+linux scsi is in a patch.  Anything else, doesn't matter
+how C-like it is, if it is in text, is just that: C-like.
+
+I'm just trying to convey an idea.
+
+Actually I _did_ set up a running verion of this as a patch today
+but I never sent it -- too much politics, I got discouraged and
+saw absolutely _no_ point.
+
+> Per naming: "get" is already overloaded and implies a put. We have code
+> like scsi_get_cmd that allocates and returns a pointer/value, and then
+> various scsi and other kernel get/put functions that take a pointer and
+> increment or decrement ref counters. cmdsn is a rather cryptic
+> abbreviation that my brain can't easily parse.
+> 
+> I suggest scsi_serial_number(host) or scsi_cmdsn(host).
+
+I personally am getting tired of those
+	scsi_this_is_a_long_name_for_a_trivial_function()
+function names in scsi so I'd go for the second.
+
+-- 
+Luben
 
