@@ -1,41 +1,54 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [RFC][PATCH] move dma_mask into struct device
-Date: Fri, 15 Nov 2002 16:19:14 -0800
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20021116001914.GA3153@beaverton.ibm.com>
-References: <200211152034.gAFKYC404219@localhost.localdomain>
+From: "Adam J. Richter" <adam@yggdrasil.com>
+Subject: Patch: linux-2.5.47/drivers/scsi/megaraid.c set pcidev.dma_mask directly
+Date: Sat, 16 Nov 2002 06:29:44 -0800
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20021116062944.A18441@baldur.yggdrasil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Type: multipart/mixed; boundary="OXfL5xGRrasGEqWY"
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200211152034.gAFKYC404219@localhost.localdomain>
-To: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, grundler@dsl2.external.hp.com, willy@debian.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, atulm@lsil.com, johnsom@home.com, kgb@knm.org.pl
 
-J.E.J. Bottomley [James.Bottomley@steeleye.com] wrote:
 
-> ===== drivers/pci/probe.c 1.17 vs edited =====
-> --- 1.17/drivers/pci/probe.c	Fri Nov  1 12:33:02 2002
-> +++ edited/drivers/pci/probe.c	Fri Nov 15 14:00:46 2002
-> @@ -449,6 +449,7 @@
->  	/* now put in global tree */
->  	strcpy(dev->dev.name,dev->name);
->  	strcpy(dev->dev.bus_id,dev->slot_name);
-> +	dev->dev->dma_mask = &dev->dma_mask;
+--OXfL5xGRrasGEqWY
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-I got a compile error here. This should be.
-	dev->dev.dma_mask = &dev->dma_mask;
+        linux-2.5.47/drivers/scsi/megaraid.c directly sets
+pci_dev->dma_mask instead of calling pci_set_dma_mask.
+pci_dev.dma_mask may be moved soon (probably to
+pci_dev.device.dma_mask).  So, applying this patch will reduce or
+eliminate the need to change this code when that happens, and it will
+be one less change to maintain between 2.4 and 2.5+ kernels.
 
-I did not have a current bk handy on the lab machine, but I ran it on
-a 2.5.47 view with a few offset warnings.
+        If these changes look OK, then I would appreciate it if the
+appropriate maintainers (Atul, James?) would shepherd this patch to
+Linus or let me know if there is something more I should do.
 
-The machine is a 2x pci systems with the following drivers loaded:
-	aic7xxx, ips, qlogicisp.
+-- 
+Adam J. Richter     __     ______________   575 Oroville Road
+adam@yggdrasil.com     \ /                  Milpitas, California 95035
++1 408 309-6081         | g g d r a s i l   United States of America
+                         "Free Software For The Rest Of Us."
 
-It just booted and ran a little IO.
+--OXfL5xGRrasGEqWY
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="diffs.megaraid"
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+--- linux-2.5.47/drivers/scsi/megaraid.c	2002-11-10 19:28:01.000000000 -0800
++++ linux/drivers/scsi/megaraid.c	2002-11-16 05:54:00.000000000 -0800
+@@ -3150,9 +3173,9 @@
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+ 		if ((megaCfg->flag & BOARD_64BIT) && BITS_PER_LONG == 64)
+ #ifdef __LP64__
+-			pdev->dma_mask = 0xffffffffffffffff;
++			pci_set_dma_mask(pdev, 0xffffffffffffffff);
+ #else
+-			pdev->dma_mask = 0xffffffff;
++			pci_set_dma_mask(pdev, 0xffffffff);
+ #endif
+ #endif
+ 		continue;
+
+--OXfL5xGRrasGEqWY--
