@@ -1,109 +1,99 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: [PATCH 3/3] scsi_forget_host - rename scsi_forget_host to scsi_unscan_host
-Date: Fri, 11 Jun 2004 21:24:21 -0700
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: [PATCH] fusion update to current APIs
+Date: Fri, 11 Jun 2004 22:13:53 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040612042421.GD21105@us.ibm.com>
-References: <20040612041930.GA21105@us.ibm.com> <20040612042106.GB21105@us.ibm.com> <20040612042232.GC21105@us.ibm.com>
+Message-ID: <20040612051353.GA152829@sgi.com>
+References: <20040531115229.GA16143@lst.de> <20040612003608.GA152454@sgi.com> <20040612034518.GN24864@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:64933 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S264637AbUFLEYI
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Jun 2004 00:24:08 -0400
-Received: from westrelay05.boulder.ibm.com (westrelay05.boulder.ibm.com [9.17.193.33])
-	by e35.co.us.ibm.com (8.12.10/8.12.2) with ESMTP id i5C4O7qF603086
-	for <linux-scsi@vger.kernel.org>; Sat, 12 Jun 2004 00:24:07 -0400
-Received: from hmsbounty.us.ibm.com (sig-9-49-143-70.mts.ibm.com [9.49.143.70])
-	by westrelay05.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id i5C4O6vM267726
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Jun 2004 22:24:06 -0600
+Received: from mtvcafw.sgi.com ([192.48.171.6]:7592 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S264642AbUFLFPE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Jun 2004 01:15:04 -0400
 Content-Disposition: inline
-In-Reply-To: <20040612042232.GC21105@us.ibm.com>
+In-Reply-To: <20040612034518.GN24864@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: Christoph Hellwig <hch@lst.de>, Emoore@lsil.com, linux-scsi@vger.kernel.org
 
-DESC
-scsi_forget_host - rename scsi_forget_host to scsi_unscan_host
+On Sat, Jun 12, 2004 at 04:45:18AM +0100, Matthew Wilcox wrote:
+> On Fri, Jun 11, 2004 at 05:36:08PM -0700, Jeremy Higdon wrote:
+> > Christoph, the midlayer gets it wrong sometimes.
+> 
+> ... then the midlayer needs to get fixed rather than have all this code
+> duplicated in a million different drivers with subtly different bugs in
+> each one.
 
-This patch changes the name of the newly export scsi_forget_host function
-to scsi_unscan_host. The scsi_unscan_host function name appears to create
-a more symmetric LLDD interface
-scsi_add_host
-scsi_scan_host
-...
-scsi_unscan_host
-scsi_remove_host
+That makes sense to me.  In fact, I think we could just fix it in sg.
+It's only a problem with the older sg interfaces that don't specify
+a direction.
 
-Signed-off-by: Mike Anderson <andmike@us.ibm.com>
-EDESC
+To review, the problem is that many sg1 and sg2 apps don't tightly
+trim the reply length.  Thus, even though they're issuing a Write
+command, they will set the reply length to a value greater than
+SZ_SG_HEADER.
+
+so in sg_write(), hp->dxfer_direction gets set to SG_DXFER_TO_FROM_DEV:
+	if (input_size > 0)
+                hp->dxfer_direction = (old_hdr.reply_len > SZ_SG_HEADER) ?
+                    SG_DXFER_TO_FROM_DEV : SG_DXFER_TO_DEV;
+        else
+                hp->dxfer_direction = (mxsize > 0) ? SG_DXFER_FROM_DEV : SG_DXFER_NONE;
+
+then in sg_common_write, the data direction of the SCSI request is
+set to SCSI_DATA_READ:
+        switch (hp->dxfer_direction) {
+        case SG_DXFER_TO_FROM_DEV:
+        case SG_DXFER_FROM_DEV:
+                SRpnt->sr_data_direction = SCSI_DATA_READ;
+                break;
+        case SG_DXFER_TO_DEV:
+                SRpnt->sr_data_direction = SCSI_DATA_WRITE;
+                break;
+        case SG_DXFER_UNKNOWN:
+                SRpnt->sr_data_direction = SCSI_DATA_UNKNOWN;
+                break;
+        default:
+                SRpnt->sr_data_direction = SCSI_DATA_NONE;
+                break;
+        }
 
 
- patched-2.6-andmike/drivers/scsi/hosts.c      |    2 +-
- patched-2.6-andmike/drivers/scsi/scsi_debug.c |    2 +-
- patched-2.6-andmike/drivers/scsi/scsi_scan.c  |    2 +-
- patched-2.6-andmike/drivers/scsi/scsi_syms.c  |    2 +-
- patched-2.6-andmike/include/scsi/scsi_host.h  |    2 +-
- 5 files changed, 5 insertions(+), 5 deletions(-)
+Then when the host driver sends the Write command to the disk with the
+data direction set the other way, you usually get a SCSI bus reset.
 
-diff -puN drivers/scsi/scsi_syms.c~scsi_unscan_host drivers/scsi/scsi_syms.c
---- patched-2.6/drivers/scsi/scsi_syms.c~scsi_unscan_host	Sat Jun 12 00:47:46 2004
-+++ patched-2.6-andmike/drivers/scsi/scsi_syms.c	Sat Jun 12 00:47:46 2004
-@@ -36,7 +36,7 @@ EXPORT_SYMBOL(scsi_register_interface);
- EXPORT_SYMBOL(scsi_host_alloc);
- EXPORT_SYMBOL(scsi_add_host);
- EXPORT_SYMBOL(scsi_scan_host);
--EXPORT_SYMBOL(scsi_forget_host);
-+EXPORT_SYMBOL(scsi_unscan_host);
- EXPORT_SYMBOL(scsi_remove_host);
- EXPORT_SYMBOL(scsi_host_get);
- EXPORT_SYMBOL(scsi_host_put);
-diff -puN include/scsi/scsi_host.h~scsi_unscan_host include/scsi/scsi_host.h
---- patched-2.6/include/scsi/scsi_host.h~scsi_unscan_host	Sat Jun 12 00:47:46 2004
-+++ patched-2.6-andmike/include/scsi/scsi_host.h	Sat Jun 12 00:47:46 2004
-@@ -501,7 +501,7 @@ struct Scsi_Host {
- extern struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *, int);
- extern int scsi_add_host(struct Scsi_Host *, struct device *);
- extern void scsi_scan_host(struct Scsi_Host *);
--extern void scsi_forget_host(struct Scsi_Host *);
-+extern void scsi_unscan_host(struct Scsi_Host *);
- extern void scsi_remove_host(struct Scsi_Host *);
- extern struct Scsi_Host *scsi_host_get(struct Scsi_Host *);
- extern void scsi_host_put(struct Scsi_Host *t);
-diff -puN drivers/scsi/scsi_debug.c~scsi_unscan_host drivers/scsi/scsi_debug.c
---- patched-2.6/drivers/scsi/scsi_debug.c~scsi_unscan_host	Sat Jun 12 00:47:46 2004
-+++ patched-2.6-andmike/drivers/scsi/scsi_debug.c	Sat Jun 12 00:47:46 2004
-@@ -1725,7 +1725,7 @@ static int sdebug_driver_remove(struct d
- 		return -ENODEV;
- 	}
- 
--	scsi_forget_host(sdbg_host->shost);
-+	scsi_unscan_host(sdbg_host->shost);
-         scsi_remove_host(sdbg_host->shost);
- 
-         list_for_each_safe(lh, lh_sf, &sdbg_host->dev_info_list) {
-diff -puN drivers/scsi/scsi_scan.c~scsi_unscan_host drivers/scsi/scsi_scan.c
---- patched-2.6/drivers/scsi/scsi_scan.c~scsi_unscan_host	Sat Jun 12 00:47:46 2004
-+++ patched-2.6-andmike/drivers/scsi/scsi_scan.c	Sat Jun 12 00:47:46 2004
-@@ -1259,7 +1259,7 @@ void scsi_scan_host(struct Scsi_Host *sh
- 				SCAN_WILD_CARD, 0);
+So we should probably put the direction interpretation in sg_write() near
+the bottom just before calling sg_common_write().
+
+Something like this, where sg_direction() does what the host drivers
+are currently doing.  I haven't actually tried this yet, but I can
+code something up and give it a whirl if folks would like (I'm a little
+short on time tonight :-).
+
+===== drivers/scsi/sg.c 1.90 vs edited =====
+--- 1.90/drivers/scsi/sg.c	Sat May 29 10:57:23 2004
++++ edited/drivers/scsi/sg.c	Fri Jun 11 22:11:20 2004
+@@ -552,11 +552,6 @@
+ 	hp->cmd_len = (unsigned char) cmd_size;
+ 	hp->iovec_count = 0;
+ 	hp->mx_sb_len = 0;
+-	if (input_size > 0)
+-		hp->dxfer_direction = (old_hdr.reply_len > SZ_SG_HEADER) ?
+-		    SG_DXFER_TO_FROM_DEV : SG_DXFER_TO_DEV;
+-	else
+-		hp->dxfer_direction = (mxsize > 0) ? SG_DXFER_FROM_DEV : SG_DXFER_NONE;
+ 	hp->dxfer_len = mxsize;
+ 	hp->dxferp = (char __user *)buf + cmd_size;
+ 	hp->sbp = NULL;
+@@ -566,6 +561,7 @@
+ 	hp->usr_ptr = NULL;
+ 	if (__copy_from_user(cmnd, buf, cmd_size))
+ 		return -EFAULT;
++	hp->dxfer_direction = sg_direction(cmnd);
+ 	k = sg_common_write(sfp, srp, cmnd, sfp->timeout, blocking);
+ 	return (k < 0) ? k : count;
  }
- 
--void scsi_forget_host(struct Scsi_Host *shost)
-+void scsi_unscan_host(struct Scsi_Host *shost)
- {
- 	struct scsi_device *sdev, *tmp;
- 	unsigned long flags;
-diff -puN drivers/scsi/hosts.c~scsi_unscan_host drivers/scsi/hosts.c
---- patched-2.6/drivers/scsi/hosts.c~scsi_unscan_host	Sat Jun 12 00:47:46 2004
-+++ patched-2.6-andmike/drivers/scsi/hosts.c	Sat Jun 12 00:47:46 2004
-@@ -79,7 +79,7 @@ void scsi_remove_host(struct Scsi_Host *
- {
- 	scsi_host_cancel(shost, 0);
- 	scsi_proc_host_rm(shost);
--	scsi_forget_host(shost);
-+	scsi_unscan_host(shost);
- 
- 	set_bit(SHOST_DEL, &shost->shost_state);
- 
 
-_
+
+jeremy
