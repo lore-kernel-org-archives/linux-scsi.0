@@ -1,44 +1,26 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] sd_many done right (1/5)
-Date: Fri, 26 Jul 2002 16:28:58 -0700
+From: Luben Tuikov <luben@splentec.com>
+Subject: sense buffer length for REQUEST SENSE?
+Date: Fri, 26 Jul 2002 23:03:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020726232858.GB24008@kroah.com>
-References: <20020726154533.GD19721@nbkurt.etpnet.phys.tue.nl> <Pine.GSO.4.21.0207261245070.21586-100000@weyl.math.psu.edu> <20020726165411.GI19721@nbkurt.etpnet.phys.tue.nl>
+Message-ID: <3D420D77.A4633D9C@splentec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020726165411.GI19721@nbkurt.etpnet.phys.tue.nl>
+Received: from splentec.com (canoe.splentec.com [209.47.35.250])
+	by pepsi.splentec.com (8.11.6/8.11.0) with ESMTP id g6R33Is21463
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Jul 2002 23:03:18 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, Jul 26, 2002 at 06:54:11PM +0200, Kurt Garloff wrote:
-> Hi Al,
-> 
-> On Fri, Jul 26, 2002 at 12:45:41PM -0400, Alexander Viro wrote:
-> > On Fri, 26 Jul 2002, Kurt Garloff wrote:
-> > > The patches are all available at
-> > > http://www.suse.de/~garloff/linux/scsi-many/
-> > 
-> > As long as you realize that it won't go in 2.5 in that form...
-> 
-> The sd parts can and should be ported to 2.5, I think.
-> The /proc/scsi/scsi extensions and other stuff I wrote to support it, 
-> won't be needed, as we have driverfs in 2.5.
-> And, of course, the device number management will be solved in a more
-> general way, but I do not yet see how. 
+The sense buffer size is 64 bytes.
 
-Why that's quite simple (with apologies to South Park) :
-	1) finish the driver model code and banish devfs to a corner of
-	the kernel where it will not do any harm.
-	2) {silence}
-	3) Purely dynamic major and minors now work.
+According to SAM-3, to make sure that that an application
+client has gotten all the sense data the sense buffer
+should be 252 bytes.
 
-:)
+How safe am I to actually set the allocation length
+to 252 bytes? (in terms of borken hardware devices, etc.)
 
-It will happen, eventually.  Most of us are busy laying the groundwork
-right now...
-
-thanks,
-
-greg k-h
+-- 
+Luben
