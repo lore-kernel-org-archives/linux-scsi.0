@@ -1,72 +1,61 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] allow drivers to hook into watchdog timeout
-Date: 10 Feb 2004 11:42:42 -0500
+From: Dave Boutcher <sleddog@us.ibm.com>
+Subject: Re: [PATCH] ibmvscsi driver (private)
+Date: Tue, 10 Feb 2004 10:47:23 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1076431366.1804.24.camel@mulgrave>
-References: <20040120132052.GA6740@lst.de>
-	<2432440000.1076430858@aslan.btc.adaptec.com>
+Message-ID: <opr25x89jjl6e53g@us.ibm.com>
+References: <opr232htwdl6e53g@us.ibm.com> <1076363704.1804.48.camel@mulgrave>  <opr25llojql6e53g@us.ibm.com> <1076428747.1804.11.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:28384 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S265984AbUBJQm6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Feb 2004 11:42:58 -0500
-In-Reply-To: <2432440000.1076430858@aslan.btc.adaptec.com>
+Received: from e2.ny.us.ibm.com ([32.97.182.102]:6574 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S265933AbUBJQrZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Feb 2004 11:47:25 -0500
+In-Reply-To: <1076428747.1804.11.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2004-02-10 at 11:34, Justin T. Gibbs wrote:
-> o When should the timer start?  If the HBA controls the timer, the timer
->   can be started only once the command is actually issued to the end device.
->   The watchdog is supposed to ensure that the transport/device doesn't
->   lockup, so the timer should only cover this period.  The mid-layer
->   can't have this precision.  This is even more crucial for drivers that
->   must temporarily hold back I/O to handle a topology change, LIP, or
->   other transport specific event that the mid-layer is unaware of.
+On 10 Feb 2004 10:59:06 -0500, James Bottomley 
+<James.Bottomley@SteelEye.com> wrote:
+> But the question still remains: why not use nbd?  That can project the
+> block devices over any transport from one node to another.  A good
+> reason might be that you need more capability than nbd provides (it
+> doesn't support handoff of ioctls for instance).
 
-There was a change between 2.4 and 2.6 to address this.  It was the
-concept of eliminating driver queues entirely and using the block layer
-queueing facilities.  Thus, a 2.6 queuecommand should either issue the
-command or return it to the mid-layer for requeueing.
+The two main reasons are (a) not requiring a TCP/IP stack and associated 
+configuration, and (b) the desire to support any SCSI device, including 
+writable optical devices, tape, etc.  The goal is to put a RedHat/SuSE CD 
+in the (perhaps virtual) CD driver and do a normal install to a (virtual) 
+disk.
 
-I know that "issue the command" means queue in the device internal issue
-queue for quite a few devices.  However, the time to traverse this queue
-should be as short as possible.  The driver is free to watchdog the HW
-issue queue to make sure it operates.
+> Secondly, even if you do this in the SCSI stack, why not follow the nbd
+> approach: that's client partly at user level and party in kernel with
+> server purely at user level.  You could still do the rdma handoff in the
+> client, and we'd have something that could be network encapsulated as
+> well.
+For the client side, I'm not sure I see a good reason for pushing up to 
+user level.  With Christoph's comments, the code is getting even simpler 
+than before and there is no RDMA on the client side.  For the server side, 
+I think that will be part of the discussion.
 
-If you're spending seconds in the HW issue queue, there's something
-wrong in the way the queue is working.
+Converging this with other network protocols is probably only interesting 
+if/when there are other RDMA interfaces.
 
-The bottom line is that the elimination of software queueing in drivers
-should have dispensed with the need to modify the mid-layer timers.
+> Your server code is this, isn't it:
+>
+> http://source.scl.ameslab.gov:14690//linux-2.4/anno/drivers/scsi/ibmvscsis.c@1.3?nav=index.htmlsrc/|src/drivers|src/drivers/scsi
+>
+> Well, yes, there will be a huge fight over that.  You are essentially
+> only doing what nbd does, since you expect to attach any block device
+> and translate the SCSI commands internally.
 
-> o When should the timer be stopped?  On command completion, of course,
->   but there are other, transport specific, times when the timer may need
->   to be stopped prematurely or given a completely different value than
->   what was originally given.  For example, on transports that do not
->   provide error/sense data with every completion, the HBA may have to
->   issue another command, without the knowledge of the mid-layer, to
->   retrieve this data.  Since the original command has already completed,
->   the original timer should not be running.  A new timer, tailored to
->   the characteristics of retrieving sense data should be running instead.
->   If the old timer is left running and expires, which command timed out?
->   The original command or the request sense command?  The HBA knows,
->   but the mid-layer does not.
+Yup, that's the server code.  It's not as pretty as I would like.  When I 
+post it I am going to be very open minded about tearing it up and starting 
+over.
 
-commands are stopped as soon as the device acks.  scsi_done() is
-designed to be called from interrupt level.  This can be done with or
-without the lock since it uses a per cpu queue.
+Thanks for the comments, by the way.
 
-scsi_done stops the timer immediately.  Command processing is deferred
-until the scsi softirq.
-
-As far as ACA emulation goes, perhaps you're right, it is time to remove
-that from the drivers as well and place it up in the mid-layer.  That
-way we'd have better knowledge of the request sense timings.
-
-James 
-
-
+Dave B
