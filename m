@@ -1,44 +1,38 @@
 From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [PATCH] CDC_WR
-Date: 13 Nov 2003 15:47:10 -0700
+Subject: Re: [usb-storage] Re: [PATCH] fix Sony USB mass storage - pass
+	larger receive buffer
+Date: 13 Nov 2003 16:40:52 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1068763630.2851.56.camel@patrh9>
-References: <1068479926.2313.7.camel@patrh9>
-	 <1068485442.4495.25.camel@patrh9>  <1068589440.5909.33.camel@patrh9>
-	 <1068762936.2851.50.camel@patrh9>
+Message-ID: <1068766852.2851.155.camel@patrh9>
+References: <Pine.LNX.4.44L0.0311131702560.949-100000@ida.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:62346 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S264455AbTKMWrp
+Received: from email-out2.iomega.com ([147.178.1.83]:1425 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264468AbTKMXlZ
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Nov 2003 17:47:45 -0500
-Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
-	by email.iomega.com (Postfix) with ESMTP id 4CCCA1A42
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Nov 2003 15:47:42 -0700 (MST)
-In-Reply-To: <1068762936.2851.50.camel@patrh9>
+	Thu, 13 Nov 2003 18:41:25 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0311131702560.949-100000@ida.rowland.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: stern@rowland.harvard.edu
+Cc: mdharm-scsi@one-eyed-alien.net, patmans@us.ibm.com, james.bottomley@steeleye.com, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, ronald@kuetemeier.com, dmitrik@users.sourceforge.net, idan@idanso.dyndns.org
 
-Calling all MMC gurus ...
+> > Anybody able to clue me in quickly as to why classifying a device as
+> > writable or not, rather than a disc, can ever be meaningful?
+> 
+> The notion makes sense for tape drives as well.
 
-> > > Slanderous or not, also I hear:
+Re write-protect, personally I know only of discs that have
+write-protect tabs.
 
-8)
+Are we saying some SCSI drives have write-protect switches also?  Only
+tape drives or also the disk drives of sd and the disc drives of cdrom/
+sr/ ide-cd?
 
-In Japanese we have:
-
-http://pc.watch.impress.co.jp/docs/2003/0401/hitachi.htm
-
-I'm told this says LG-Hitachi makes a drive that supports all three of
-the dominant three kinds of discs: DVD-RAM and DVD-RW and DVD+RW.
-
-In 2.6.0-test9 cdrom.ko, that drive will appear writable via mode page
-x2A Capabilities by saying DVD-RAM disc could appear, no matter if the
-inserted disc is DVD+RW i.e. not very rewritable-in-place.
-
-Ouch.
+Are we saying for some reason that we prefer detecting the write-protect
+of such a drive once at plug in rather than again after each disc
+insertion?  For what reason?
 
 Pat LaVarre
 
