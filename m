@@ -1,43 +1,44 @@
-From: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
+From: "Adam J. Richter" <adam@yggdrasil.com>
 Subject: Re: [PATCH] get rid of ->detect for upper layer drivers
-Date: Thu, 07 Nov 2002 13:08:45 -0500
+Date: Thu, 7 Nov 2002 10:30:08 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200211071808.gA7I8jf04237@localhost.localdomain>
-References: <adam@yggdrasil.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <200211071830.KAA30039@adam.yggdrasil.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id KAA23804
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Nov 2002 10:08:50 -0800
-In-Reply-To: Message from "Adam J. Richter" <adam@yggdrasil.com>
-   of "Thu, 07 Nov 2002 09:47:45 PST." <200211071747.JAA29988@adam.yggdrasil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Adam J. Richter" <adam@yggdrasil.com>
-Cc: andmike@us.ibm.com, hch@lst.de, linux-scsi@vger.kernel.org
+To: hch@lst.de
+Cc: andmike@us.ibm.com, linux-scsi@vger.kernel.org
 
-adam@yggdrasil.com said:
-> 	I would prefer bus_type.match because it slightly reduces the
-> overhead of another patch that I posted to the generic device code:
-> two fields in struct device_driver for having the generic device layer
-> do the initial kmalloc and dma_alloc_consistent for the device (and do
-> the failure if these allocations fail).  This can greatly reduce the
-> number of rarely tested error branches (e.g., alloc_disk failure in
-> st.c does not free buffer) because of the number of drivers that can
-> be cleaned up a bit by it: hundreds of drivers, thousands of lines of
-> code. 
+	I'd like to respond to the claim that bus_type.match()
+is inherently racy, as in the current PCI, USB and SCSI code.
 
-This worries me: dma_alloc_consistent will always fail on fully incoherent 
-architectures (like some PA-RISC ones), then you have to fall back to doing 
-the writeback, invalidates in the driver (which we can't abstract out because 
-the only the driver knows the sync points).  You can't really treat 
-dma_alloc_consistent failure as anything other than an indication that you 
-have to use a different dma access method.
+	Bear in mind that I have to catch a plane shortly and will
+have uncertain internet access for the next ten days.
 
-Since dma_alloc_consistent cannot properly fail on an x86 (unless 
-__get_free_pages does), do we really want to clutter up the main line with 
-lots of fallbacks that would be useless on the predominant architecture?
+	Regardless of whether you have a separate bus.match() routine
+or you have the attach routine make that decision, a hot unplug can
+occur at any time (or at least a request for one if you have an
+architecture where the computer has to give the user permission to
+remove the device).  So you need to have some locking to ensure that
+the device address (e.g., SCSI unit number) that you are talking to
+will not be reallocated by a subsequent hot plug event until the
+software is ready to release it.  So, while routines like match() and
+attach() may not have a guarantee that the device is still there, they
+do have a guarantee that their efforts to communicate with the device
+will fail in an orderly manner if it is not there.
 
-James
+	Also, if SCSI hot unplugging is a scheme where the user has to
+wait for permission from the computer, then a simple way to achieve
+what I described in the previous paragarph would be to allocate some
+kind of mutex around the call to device_register in scsi_add_lun.
+Even without bus.match(), the individual device.attach() functions
+would have to do this kind of locking or have it done for them further
+up the call chain.  Probably some larger section of code would be
+bracketed that way, perhaps further up the call chain than
+scsi_add_lun.
+
+Adam J. Richter     __     ______________   575 Oroville Road
+adam@yggdrasil.com     \ /                  Milpitas, California 95035
++1 408 309-6081         | g g d r a s i l   United States of America
+                         "Free Software For The Rest Of Us."
 
 
