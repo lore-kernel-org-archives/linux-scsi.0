@@ -1,60 +1,38 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] scsi-misc-2.5 fix repeat_inquiry bflags setting
-Date: Wed, 23 Apr 2003 11:16:40 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] proper replacements for ->proc_info
+Date: 23 Apr 2003 15:29:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030423111640.A14690@beaverton.ibm.com>
+Message-ID: <1051126145.1970.7.camel@mulgrave>
+References: <20030423212157.A18850@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 216-99-218-173.dsl.aracnet.com ([216.99.218.173]:23293 "EHLO
-	dyn9-47-17-132.beaverton.ibm.com") by vger.kernel.org with ESMTP
-	id S264210AbTDWSIS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Apr 2003 14:08:18 -0400
-Content-Disposition: inline
+Received: from nat9.steeleye.com ([65.114.3.137]:45061 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S264606AbTDWTRK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Apr 2003 15:17:10 -0400
+In-Reply-To: <20030423212157.A18850@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James -
+On Wed, 2003-04-23 at 15:21, Christoph Hellwig wrote:
+> Two new host template methods:
+> 
+>      int (* show_info)(struct Scsi_Host *, struct seq_file *);
+>      int (* store_info)(struct Scsi_Host *, const char *, size_t);
 
-The new printk for BLIST_INQUIRY_36 is getting a warning, and the
-repeat_inquiry code is not quite right, since we reset *bflags after
-getting the first INQUIRY.
 
-Get rid of the warning, change the or-ing of the bflags settings, and get
-rid of an extraneous BUG_ON.
+Well, this does look good, but by extension we could use something like
+this as a generic way to ship information to and from sysfs as well.
 
-===== drivers/scsi/scsi_scan.c 1.78 vs edited =====
---- 1.78/drivers/scsi/scsi_scan.c	Mon Apr 21 12:20:25 2003
-+++ edited/drivers/scsi/scsi_scan.c	Wed Apr 23 10:22:53 2003
-@@ -1001,6 +1001,7 @@
- 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
- 	int possible_inq_resp_len;
- 
-+	*bflags = 0;
-  repeat_inquiry:
- 	SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: INQUIRY to host %d"
- 			" channel %d id %d lun %d\n", sdev->host->host_no,
-@@ -1041,8 +1042,7 @@
- 	 * bit fields in Scsi_Device, so bflags need not be passed as an
- 	 * argument.
- 	 */
--	BUG_ON(bflags == NULL);
--	*bflags = scsi_get_device_flags(&inq_result[8], &inq_result[16]);
-+	*bflags |= scsi_get_device_flags(&inq_result[8], &inq_result[16]);
- 
- 	possible_inq_resp_len = (unsigned char) inq_result[4] + 5;
- 	if (BLIST_INQUIRY_36 & *bflags)
-@@ -1072,8 +1072,11 @@
- 			/* if the longer inquiry has failed, flag the device
- 			 * as only accepting 36 byte inquiries and retry the
- 			 * 36 byte inquiry */
--			printk(KERN_INFO "scsi scan: %d byte inquiry failed with code %d.  Consider BLIST_INQUIRY_36 for this device\n", sreq->sr_result);
--			*bflags |= BLIST_INQUIRY_36;
-+			printk(KERN_INFO "scsi scan: %d byte inquiry failed"
-+			       " with code %d.  Consider BLIST_INQUIRY_36 for"
-+			       " this device\n", possible_inq_resp_len,
-+			       sreq->sr_result);
-+			*bflags = BLIST_INQUIRY_36;
- 			goto repeat_inquiry;
- 		}
- 
+How about adding a "char *property" qualifier?  If it's null you just
+dump the whole lot (for /proc) but if it has a value, it's that specific
+property from sysfs.
+
+James
+
+
+
+
