@@ -1,78 +1,45 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Disk Errors
-Date: Wed, 02 Feb 2005 13:55:15 +1000
-Message-ID: <42004F23.10009@torque.net>
-References: <60807403EABEB443939A5A7AA8A7458BB5232F@otce2k01.adaptec.com>
-Reply-To: dougg@torque.net
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: Disk Errors
+Date: Wed, 2 Feb 2005 09:12:57 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458BBD5E44@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from borg.st.net.au ([65.23.158.22]:59024 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S262257AbVBBDzC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Feb 2005 22:55:02 -0500
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458BB5232F@otce2k01.adaptec.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Received: from magic.adaptec.com ([216.52.22.17]:58842 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262658AbVBBONA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Feb 2005 09:13:00 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+To: dougg@torque.net
 Cc: Bryan Henderson <hbryan@us.ibm.com>, Kit Gerrits <kit@gerritsacc.nl>, linux-scsi@vger.kernel.org
 
-Salyzyn, Mark wrote:
-> An unrecoverable medium error is typically `corrected' when a write to
-> the block occurs. RAID cards will use the redundancy to calculate the
-> data and write it back to the offending drive for instance.
-> 
-> Otherwise, for none-redundant stores, bad media is as good as anything
-> to remind one that the data is gone ;->
-> 
-> Sincerely -- Mark Salyzyn
+From: Douglas Gilbert [mailto:dougg@torque.net] writes:
+> All may not be lost. If a medium error occurs and the ASC and
+> ASCQ imply the sector could be read but
+> failed ECC then the READ LONG SCSI command should fetch the
+> block (plus ECC and other data). For example a Fujitsu MAM3184
+> returns 576 bytes. It is probably too much to expect that all
+> the damage will be in the last 64 bytes.
 
-All may not be lost. If a medium error occurs and the ASC and
-ASCQ imply the sector could be read but
-failed ECC then the READ LONG SCSI command should fetch the
-block (plus ECC and other data). For example a Fujitsu MAM3184
-returns 576 bytes. It is probably too much to expect that all
-the damage will be in the last 64 bytes.
+However, the drive has taken whatever action it could to reconstruct the
+data, the failure to report the block for a standard read means that the
+data is in fact `lost'. The data+ECC combination must be in a state
+where there are more bits of damage than the error correction can deal
+with; 64 bytes of ECC deals with single bit errors thus we know that we
+have more than 1 bit of damage to the disk. We could have 4096 bits of
+damage in the worst case :-) and never know that fact.
 
-As Mark pointed out, if /dev/sda is a virtual disk then it is
-unlikely that the READ LONG SCSI command will be supported.
+If I wanted in desperation to recover whatever data I could, this would
+be grand, but as it stands, from the Linux File System Driver
+perspective, it would be dangerous to accept this block as anything more
+than it is.
 
-sg3_utils has a sg_read_long utility. "Long" blocks can
-be written to the media with the sg_write_long utility
-which was introduced mainly for testing (e.g. creating
-"artificial" medium errors).
+If the data is of the form to permit some loss, for example video, audio
+content or an error correcting stream of data, someone can make a case
+where READ_LONG is an appropriate action to take to help fill in missing
+content. 
 
-
-BTW I noticed that the block layer reads "around" a medium
-error. Say 8 KB is being read and a medium error occurs
-(and the info field is set to the lba of the first failure)
-then several small reads are done to reconstruct as much
-of the original 8 KB as possible (probably with a block of
-zeroes corresponding to the medium error).
-
-Doug Gilbert
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Bryan Henderson
-> Sent: Tuesday, February 01, 2005 1:01 PM
-> To: dougg@torque.net
-> Cc: Kit Gerrits; linux-scsi@vger.kernel.org
-> Subject: Re: Disk Errors
-> 
-> 
->>So there are two situations in which damaged blocks remain
->>accessible:
->>   1) unrecoverable medium errors
->>...
-> 
-> 
-> What's the rationale behind leaving a damaged block accessible in the
-> case 
-> of an unrecoverable medium error?  A possibility that someone might 
-> actually be able to recover the data?
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+A fun thought ...
