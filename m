@@ -1,38 +1,82 @@
-From: Matthias Andree <ma@dt.e-technik.uni-dortmund.de>
-Subject: Re: cpio problems with SCSI tape drive
-Date: Thu, 27 May 2004 14:27:24 +0200
+From: Erik Mouw <erik@harddisk-recovery.com>
+Subject: Re: Help - looking for a Linux SCSI testing utility
+Date: Thu, 27 May 2004 16:40:20 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m3n03um4wj.fsf@merlin.emma.line.org>
-References: <200405270617.i4R6HBB08441@www.watkins-home.com>
+Message-ID: <20040527144020.GE10466@harddisk-recovery.com>
+References: <1F6D1D1660975A4887628A011443A1BC0305E3CF@uswaumsx13medge.med.ge.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from krusty.dt.e-technik.Uni-Dortmund.DE ([129.217.163.1]:57786 "EHLO
-	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
-	id S262060AbUE0M11 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 May 2004 08:27:27 -0400
-In-Reply-To: <200405270617.i4R6HBB08441@www.watkins-home.com>
-	(bugzilla@watkins-home.com's message of "Thu, 27 May 2004 02:17:05
-	-0400")
+Received: from users.linvision.com ([62.58.92.114]:38603 "HELO bitwizard.nl")
+	by vger.kernel.org with SMTP id S264584AbUE0OkV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 May 2004 10:40:21 -0400
+Content-Disposition: inline
+In-Reply-To: <1F6D1D1660975A4887628A011443A1BC0305E3CF@uswaumsx13medge.med.ge.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
+To: "Edwards, Scott (MED, Kelly IT Resouces)" <James.Edwards@med.ge.com>
 Cc: linux-scsi@vger.kernel.org
 
-"Guy" <bugzilla@watkins-home.com> writes:
+On Wed, May 26, 2004 at 03:24:49PM -0500, Edwards, Scott (MED, Kelly IT Resouces) wrote:
+> I have written (mostly copied from other stuff) a little program to just
+> turn off the write cache.  (I have included the source below.)  But
+> without being able to read the results of the identify I can't tell if
+> it actually works or not.  I have tried writing a program myself that
+> just sends the (0xEC) command, but all I get back is 70 00 05 00 00 00
+> 00 06 00 00 00 00 20 00 00 00 which I'm guessing are the sense bytes?
+> (Excuse my ignorance the last time I messed with this stuff it was
+> called SASI instead of SCSI.)
 
-> Maybe a clue:  While cpio is waiting for me to type the "device/file name"
-> the tape drive is busy.  From another shell/window I tried to list the
-> contents of another tape.  I could not, I got this error: "/dev/nst0: Device
-> or resource busy".
+FWIW, scsiinfo can be used to turn off the write cache.
 
-Try using lsof to find out who uses the device.
+Human readable format:
 
-Might be that cpio just holds the device open so nothing gets in the
-way. You can also try to attach strace to cpio as soon as it requests
-the 2nd tape (strace -p 12345, where 12345 is cpio's process ID) and see
-what it does and where it fails.
+  dagobert:~# scsiinfo -c /dev/sda 
+
+  Data from Caching Page
+  ----------------------
+  Write Cache                        1
+  Read Cache                         1
+  Prefetch units                     0
+  Demand Read Retention Priority     0
+  Demand Write Retention Priority    0
+  Disable Pre-fetch Transfer Length  65535
+  Minimum Pre-fetch                  0
+  Maximum Pre-fetch                  65535
+  Maximum Pre-fetch Ceiling          65535
+
+
+Compressed format:
+
+  dagobert:~# scsiinfo -cX /dev/sda
+  1 1 0 0 0 65535 0 65535 65535 
+
+Now paste that line and change the first 1 into a 0:
+
+  dagobert:~# scsiinfo -cXR /dev/sda 0 1 0 0 0 65535 0 65535 65535 
+
+Read back the information in human readable format:
+
+  dagobert:~# scsiinfo -c /dev/sda
+
+  Data from Caching Page
+  ----------------------
+  Write Cache                        0
+  Read Cache                         1
+  Prefetch units                     0
+  Demand Read Retention Priority     0
+  Demand Write Retention Priority    0
+  Disable Pre-fetch Transfer Length  65535
+  Minimum Pre-fetch                  0
+  Maximum Pre-fetch                  65535
+  Maximum Pre-fetch Ceiling          65535
+
+The scsiinfo utility can be found in the "scsitools" package (on Debian
+systems, but I suppose it's called the same in other distros).
+
+
+Erik
 
 -- 
-Matthias Andree
-
-Encrypted mail welcome: my GnuPG key ID is 0x052E7D95
++-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
+| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
