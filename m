@@ -1,24 +1,42 @@
-From: Fabien Salvi <fabien@cri74.org>
-Subject: (RAID controller) Unified way to get alarms
-Date: Tue, 02 Mar 2004 10:05:38 +0100
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: (RAID controller) Unified way to get alarms
+Date: Tue, 2 Mar 2004 09:37:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40444E62.2070705@cri74.org>
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F38D237@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aravis.cur-archamps.fr ([195.202.0.99]:62441 "EHLO
-	aravis.cur-archamps.fr") by vger.kernel.org with ESMTP
-	id S261515AbUCBJFP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Mar 2004 04:05:15 -0500
-Received: from pc00 (pc00.cri.cur-archamps.fr [10.10.10.11])
-	by aravis.cur-archamps.fr (Postfix) with ESMTP id 1E61111F0E
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Mar 2004 10:05:13 +0100 (CET)
-Received: from cri74.org (pc00 [127.0.0.1])
-	by pc00 (Postfix) with ESMTP id 84F561EFBA
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Mar 2004 10:05:38 +0100 (CET)
+Received: from magic.adaptec.com ([216.52.22.17]:36320 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261658AbUCBOhd convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Mar 2004 09:37:33 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
+To: Fabien Salvi <fabien@cri74.org>, linux-scsi@vger.kernel.org
+
+Unification would be nice, especially when internationalization is
+required.
+
+Currently syslogd does not support utf-8z and converts some of the
+characters into escape sequences. The fix is simple, the path is long
+...
+
+/proc/ is being shunned in any case, I'd drop that one like a rock.
+
+Drivers have no access to system language environment, so the
+translation for internationalization definitely lives in the application
+world.
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Fabien Salvi
+Sent: Tuesday, March 02, 2004 4:06 AM
 To: linux-scsi@vger.kernel.org
+Subject: (RAID controller) Unified way to get alarms
 
 Hello,
 
@@ -39,7 +57,8 @@ send different messages
 
 
 Unlike proprietary OS with proprietary (manufacter) driver, we have the 
-ability under linux and with opensource drivers to use an unified way to 
+ability under linux and with opensource drivers to use an unified way to
+
 get warning and alarms from a RAID controller.
 
 Why don't use it ?
@@ -49,3 +68,7 @@ per driver...
 
 -- 
 Fabien SALVI
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
