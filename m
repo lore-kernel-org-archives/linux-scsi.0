@@ -1,87 +1,305 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: status_byte() and SAM TASK_ABORTED
-Date: Thu, 16 Dec 2004 10:32:33 -0800
-Message-ID: <20041216183233.GB2722@us.ibm.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] SCSI aic7xxx: kill kernel 2.2 #ifdef's (fwd)
+Date: Thu, 16 Dec 2004 23:18:02 +0100
+Message-ID: <20041216221802.GT12937@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.132]:19882 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S261974AbULPSdD
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Dec 2004 13:33:03 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e34.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id iBGIX2DP533188
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Dec 2004 13:33:02 -0500
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id iBGIX2Vt222352
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Dec 2004 11:33:02 -0700
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id iBGIX1A0011670
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Dec 2004 11:33:01 -0700
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:54533 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S262045AbULPWSI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Dec 2004 17:18:08 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: garloff@suse.de, dledford@redhat.com
+To: Andrew Morton <akpm@osdl.org>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Recently the old issue of the status_byte() macro masking off a
-TASK_ABORTED status was brought to my attention by Martin Peschke and
-Maxim Shchetynin.
+The patch forwarded below still applies and compiles against 
+2.6.10-rc3-mm1.
 
-For context here are some old discussions on this issue.
-http://marc.theaimsgroup.com/?t=105601234500006&r=1&w=2
-http://marc.theaimsgroup.com/?t=105609933000005&r=1&w=2
-http://marc.theaimsgroup.com/?t=105304284100002&r=1&w=2
-http://marc.theaimsgroup.com/?t=102225346500001&r=1&w=2
-
-Kurt refreshed a patch for 2.6 that increases the mask value for the
-status_byte macro (provided below). While this stops TASK_ABORTED falling
-into the GOOD case statement in scsi_decide_disposition without adding
-TASK_ABORTED to the case statement we will start up the error handler on
-this command which is probably not what we want.
-
-It was mentioned that masking off the TASK_ABORTED as we do now could lead
-to a DI issue, but in experimentation with a hacked scsi_debug to return
-TASK_ABORTED I did not see good status for blk IO through sd. In code
-review it would appear there possibly could be an issue sg_io passing
-good_status back to a user.
-
-Example out with hacked scsi_debug fo blk IO through sd:
-scsi_debug: cmd 28 00 00 00 12 00 00 02 00 00
-scsi_debug: ... <5 0 0 0> non-zero result=0x40
-SCSI error : <5 0 0 0> return code = 0x40
-end_request: I/O error, dev sdd, sector 4608
-Buffer I/O error on device sdd, logical block 576
-
-If not this patch it would seem that we should adopt some solution to not
-ignore TASK_ABORTED.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Please apply.
 
 
---- linux-2.6.8/include/scsi/scsi.h.orig	2004-11-29 13:32:39.000000000 +0100
-+++ linux-2.6.8/include/scsi/scsi.h	2004-12-15 23:33:35.563661314 +0100
-@@ -169,8 +169,10 @@
- #define RESERVATION_CONFLICT 0x0c
- #define COMMAND_TERMINATED   0x11
- #define QUEUE_FULL           0x14
-+#define ACA_ACTIVE           0x18
-+#define TASK_ABORTED         0x20
+----- Forwarded message from Adrian Bunk <bunk@stusta.de> -----
+
+Date:	Sat, 23 Oct 2004 18:32:20 +0200
+From: Adrian Bunk <bunk@stusta.de>
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [2.6 patch] SCSI aic7xxx: kill kernel 2.2 #ifdef's
+
+
+The patch below kills kernel 2.2 #ifdef's from the SCSI aic7xxx driver.
+
+
+diffstat output:
+ drivers/scsi/aic7xxx/aic7770_osm.c     |   12 ---
+ drivers/scsi/aic7xxx/aic7xxx_osm.h     |    2 
+ drivers/scsi/aic7xxx/aic7xxx_osm_pci.c |   91 -------------------------
+ drivers/scsi/aic7xxx/aic7xxx_pci.c     |    4 -
+ 4 files changed, 2 insertions(+), 107 deletions(-)
+
+
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+--- linux-2.6.9-mm1-full/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c.old	2004-10-23 18:16:44.000000000 +0200
++++ linux-2.6.9-mm1-full/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	2004-10-23 18:23:01.000000000 +0200
+@@ -42,12 +42,6 @@
+ #include "aic7xxx_osm.h"
+ #include "aic7xxx_pci.h"
  
--#define STATUS_MASK          0x3e
-+#define STATUS_MASK          0xfe
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+-struct pci_device_id
+-{
+-};
+-#endif
+-
+ static int	ahc_linux_pci_dev_probe(struct pci_dev *pdev,
+ 					const struct pci_device_id *ent);
+ static int	ahc_linux_pci_reserve_io_region(struct ahc_softc *ahc,
+@@ -55,7 +49,6 @@
+ static int	ahc_linux_pci_reserve_mem_region(struct ahc_softc *ahc,
+ 						 u_long *bus_addr,
+ 						 uint8_t __iomem **maddr);
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+ static void	ahc_linux_pci_dev_remove(struct pci_dev *pdev);
  
- /*
-  *  SENSE KEYS
-@@ -348,7 +350,7 @@
-  *      host_byte   = set by low-level driver to indicate status.
-  *      driver_byte = set by mid-level.
-  */
--#define status_byte(result) (((result) >> 1) & 0x1f)
-+#define status_byte(result) (((result) >> 1) & 0x7f)
- #define msg_byte(result)    (((result) >> 8) & 0xff)
- #define host_byte(result)   (((result) >> 16) & 0xff)
- #define driver_byte(result) (((result) >> 24) & 0xff)
+ /* Define the macro locally since it's different for different class of chips.
+@@ -169,7 +162,6 @@
+ 	} else
+ 		ahc_list_unlock(&l);
+ }
+-#endif /* !LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0) */
+ 
+ static int
+ ahc_linux_pci_dev_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -219,7 +211,6 @@
+ 	ahc = ahc_alloc(NULL, name);
+ 	if (ahc == NULL)
+ 		return (-ENOMEM);
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+ 	if (pci_enable_device(pdev)) {
+ 		ahc_free(ahc);
+ 		return (-ENODEV);
+@@ -239,14 +230,12 @@
+ 		}
+ 		ahc->platform_data->hw_dma_mask = 0xFFFFFFFF;
+ 	}
+-#endif
+ 	ahc->dev_softc = pci;
+ 	error = ahc_pci_config(ahc, entry);
+ 	if (error != 0) {
+ 		ahc_free(ahc);
+ 		return (-error);
+ 	}
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+ 	pci_set_drvdata(pdev, ahc);
+ 	if (aic7xxx_detect_complete) {
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
+@@ -257,39 +246,14 @@
+ 		return (-ENODEV);
+ #endif
+ 	}
+-#endif
+ 	return (0);
+ }
+ 
+ int
+ ahc_linux_pci_init(void)
+ {
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+ 	/* Translate error or zero return into zero or one */
+ 	return pci_module_init(&aic7xxx_pci_driver) ? 0 : 1;
+-#else
+-	struct pci_dev *pdev;
+-	u_int class;
+-	int found;
+-
+-	/* If we don't have a PCI bus, we can't find any adapters. */
+-	if (pci_present() == 0)
+-		return (0);
+-
+-	found = 0;
+-	pdev = NULL;
+-	class = PCI_CLASS_STORAGE_SCSI << 8;
+-	while ((pdev = pci_find_class(class, pdev)) != NULL) {
+-		ahc_dev_softc_t pci;
+-		int error;
+-
+-		pci = pdev;
+-		error = ahc_linux_pci_dev_probe(pdev, /*pci_devid*/NULL);
+-		if (error == 0)
+-			found++;
+-	}
+-	return (found);
+-#endif
+ }
+ 
+ void
+@@ -304,22 +268,11 @@
+ 	if (aic7xxx_allow_memio == 0)
+ 		return (ENOMEM);
+ 
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
+ 	*base = pci_resource_start(ahc->dev_softc, 0);
+-#else
+-	*base = ahc_pci_read_config(ahc->dev_softc, PCIR_MAPS, 4);
+-	*base &= PCI_BASE_ADDRESS_IO_MASK;
+-#endif
+ 	if (*base == 0)
+ 		return (ENOMEM);
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+-	if (check_region(*base, 256) != 0)
+-		return (ENOMEM);
+-	request_region(*base, 256, "aic7xxx");
+-#else
+ 	if (request_region(*base, 256, "aic7xxx") == 0)
+ 		return (ENOMEM);
+-#endif
+ 	return (0);
+ }
+ 
+@@ -335,17 +288,13 @@
+ 	start = pci_resource_start(ahc->dev_softc, 1);
+ 	if (start != 0) {
+ 		*bus_addr = start;
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+ 		if (request_mem_region(start, 0x1000, "aic7xxx") == 0)
+ 			error = ENOMEM;
+-#endif
+ 		if (error == 0) {
+ 			*maddr = ioremap_nocache(start, 256);
+ 			if (*maddr == NULL) {
+ 				error = ENOMEM;
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+ 				release_mem_region(start, 0x1000);
+-#endif
+ 			}
+ 		}
+ 	} else
+@@ -388,10 +337,8 @@
+ 			       ahc_get_pci_slot(ahc->dev_softc),
+ 			       ahc_get_pci_function(ahc->dev_softc));
+ 			iounmap(maddr);
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+ 			release_mem_region(ahc->platform_data->mem_busaddr,
+ 					   0x1000);
+-#endif
+ 			ahc->bsh.maddr = NULL;
+ 			maddr = NULL;
+ 		} else
+@@ -441,41 +388,3 @@
+ 	return (-error);
+ }
+ 
+-void
+-ahc_power_state_change(struct ahc_softc *ahc, ahc_power_state new_state)
+-{
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+-	pci_set_power_state(ahc->dev_softc, new_state);
+-#else
+-	uint32_t cap;
+-	u_int cap_offset;
+-
+-	/*
+-	 * Traverse the capability list looking for
+-	 * the power management capability.
+-	 */
+-	cap = 0;
+-	cap_offset = ahc_pci_read_config(ahc->dev_softc,
+-					 PCIR_CAP_PTR, /*bytes*/1);
+-	while (cap_offset != 0) {
+-
+-		cap = ahc_pci_read_config(ahc->dev_softc,
+-					  cap_offset, /*bytes*/4);
+-		if ((cap & 0xFF) == 1
+-		 && ((cap >> 16) & 0x3) > 0) {
+-			uint32_t pm_control;
+-
+-			pm_control = ahc_pci_read_config(ahc->dev_softc,
+-							 cap_offset + 4,
+-							 /*bytes*/4);
+-			pm_control &= ~0x3;
+-			pm_control |= new_state;
+-			ahc_pci_write_config(ahc->dev_softc,
+-					     cap_offset + 4,
+-					     pm_control, /*bytes*/2);
+-			break;
+-		}
+-		cap_offset = (cap >> 8) & 0xFF;
+-	}
+-#endif 
+-}
+--- linux-2.6.9-mm1-full/drivers/scsi/aic7xxx/aic7xxx_osm.h.old	2004-10-23 18:19:48.000000000 +0200
++++ linux-2.6.9-mm1-full/drivers/scsi/aic7xxx/aic7xxx_osm.h	2004-10-23 18:20:20.000000000 +0200
+@@ -831,8 +831,6 @@
+ 
+ /******************************* PCI Routines *********************************/
+ #ifdef CONFIG_PCI
+-void			 ahc_power_state_change(struct ahc_softc *ahc,
+-						ahc_power_state new_state);
+ int			 ahc_linux_pci_init(void);
+ void			 ahc_linux_pci_exit(void);
+ int			 ahc_pci_map_registers(struct ahc_softc *ahc);
+--- linux-2.6.9-mm1-full/drivers/scsi/aic7xxx/aic7770_osm.c.old	2004-10-23 18:24:17.000000000 +0200
++++ linux-2.6.9-mm1-full/drivers/scsi/aic7xxx/aic7770_osm.c	2004-10-23 18:24:48.000000000 +0200
+@@ -125,14 +125,8 @@
+ 		uint32_t eisa_id;
+ 		size_t	 id_size;
+ 
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+-		if (check_region(eisaBase, AHC_EISA_IOSIZE) != 0)
+-			continue;
+-		request_region(eisaBase, AHC_EISA_IOSIZE, "aic7xxx");
+-#else
+ 		if (request_region(eisaBase, AHC_EISA_IOSIZE, "aic7xxx") == 0)
+ 			continue;
+-#endif
+ 
+ 		eisa_id = 0;
+ 		id_size = sizeof(eisa_id);
+@@ -207,14 +201,8 @@
+ 	/*
+ 	 * Lock out other contenders for our i/o space.
+ 	 */
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+-	if (check_region(port, AHC_EISA_IOSIZE) != 0)
+-		return (ENOMEM);
+-	request_region(port, AHC_EISA_IOSIZE, "aic7xxx");
+-#else
+ 	if (request_region(port, AHC_EISA_IOSIZE, "aic7xxx") == 0)
+ 		return (ENOMEM);
+-#endif
+ 	ahc->tag = BUS_SPACE_PIO;
+ 	ahc->bsh.ioport = port;
+ 	return (0);
+--- linux-2.6.9-mm1-full/drivers/scsi/aic7xxx/aic7xxx_pci.c.old	2004-10-23 18:20:38.000000000 +0200
++++ linux-2.6.9-mm1-full/drivers/scsi/aic7xxx/aic7xxx_pci.c	2004-10-23 18:22:15.000000000 +0200
+@@ -721,7 +721,7 @@
+ 	ahc->chip |= AHC_PCI;
+ 	ahc->description = entry->name;
+ 
+-	ahc_power_state_change(ahc, AHC_POWER_STATE_D0);
++	pci_set_power_state(ahc->dev_softc, AHC_POWER_STATE_D0);
+ 
+ 	error = ahc_pci_map_registers(ahc);
+ 	if (error != 0)
+@@ -2016,7 +2016,7 @@
+ ahc_pci_resume(struct ahc_softc *ahc)
+ {
+ 
+-	ahc_power_state_change(ahc, AHC_POWER_STATE_D0);
++	pci_set_power_state(ahc->dev_softc, AHC_POWER_STATE_D0);
+ 
+ 	/*
+ 	 * We assume that the OS has restored our register
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
+
+----- End forwarded message -----
+
