@@ -1,74 +1,159 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: printk the cdb's that interest me
-Date: Tue, 23 Sep 2003 09:52:48 -0700
+From: Ruud Linders <rkmp@xs4all.nl>
+Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
+Date: Tue, 23 Sep 2003 19:47:04 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030923095248.A9896@beaverton.ibm.com>
-References: <1064331642.10473.23.camel@patehci2>
+Message-ID: <3F708718.4050401@xs4all.nl>
+References: <Pine.LNX.4.44.0309221250470.1673-100000@home.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:4090 "EHLO e32.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262094AbTIWQxZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Sep 2003 12:53:25 -0400
-Content-Disposition: inline
-In-Reply-To: <1064331642.10473.23.camel@patehci2>; from p.lavarre@ieee.org on Tue, Sep 23, 2003 at 09:40:42AM -0600
+Received: from node-c-7b4b.a2000.nl ([62.194.123.75]:2688 "EHLO
+	wsprwl.xs4all.nl") by vger.kernel.org with ESMTP id S262130AbTIWRrH
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Sep 2003 13:47:07 -0400
+In-Reply-To: <Pine.LNX.4.44.0309221250470.1673-100000@home.osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Patrick Mansfield <patmans@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, Andries.Brouwer@cwi.nl
 
-On Tue, Sep 23, 2003 at 09:40:42AM -0600, Pat LaVarre wrote:
+
+
+I tried the patch but it doesn't work for me using an USB-2 Memory stick
+"DiskonKey" on an USB-2 port (with uhci_hcd & ehci_hcd loaded).
+
+After a 3 minute time-out I get
+     "SCSI device sda: drive cache: write through"
+and the device starts working just fine.
+
+Unloading the ehci_hcd module doesn't make any difference.
+Only when ripping out the whole mode-sense call it works immediately :-)
+so it appears the device is just unhappy about the sd_do_mode_sense.
+
+_
+Regards,
+	Ruud Linders
+
+Linus Torvalds wrote:
+> On 22 Sep 2003, James Bottomley wrote:
 > 
-> Can I somehow easily trace only all the scsi cdb's that fail?
+>>I think we could try 4 bytes for this (even to avoid wide residue
+>>problems) and see how it goes.
 > 
-> How about a patch to trace only the cdb's that fail between the sk asc =
-> x 6 28 GoneReady of disc insertion and the sk asc = x 2 3A DiskAbsent?
 > 
-> I'm guessing I have to reach down into usb-storage, ide-cd, ide-scsi
-> etc. to find a line of code thru which all cdb's pass.  I see
-> CONFIG_USB_STORAGE_DEBUG=y gives me all cdb's and so much more besides
-> that often I run with =n.  I want only cdb's that interest me to
-> distract me from my other printk.
-
-I have never found the SCSI_LOG_ stuff to be very useful when trying to
-track all cdb's, the output is not well formatted, and is inconsistent.
-The split of upper/middle/lower (UL/ML/LL) in the logging is not very
-useful.
-
-All scsi core cdb's are sent via the host->queuecommand, there are only
-two callers of it (in 2.6).
-
-Ignoring the non-auto sense request and TUR in scsi_error.c, all the scsi
-core cdb's sent to the LLDD go out via scsi_dispatch_cmd, and come back
-via scsi_softirq.
-
-cdb logging should dump the host/chan/id/lun and at least the opcode: on
-send in scsi_dispatch_cmd or before shost->queuecommand is called; and on
-completion in scsi_decide_disposition, or in scsi_softirq, and maybe in
-scsi_error.c in two places. Plus the result + possible sense data on
-completion.
-
-You could then add debug code to turn on/off the cdb logging for certain
-conditions, like your sense key/asc.
-
-Of course cdb's that do not make it to the LLDD would not be logged.
-
-> lost page write due to I/O error on sr1
-> SCSI error : <2 0 0 0> return code = 0x10000
-> end_request: I/O error, dev sr1, sector 54044096
-> Buffer I/O error on device sr1, logical block 6755512
+> How about just trusting the size (and as far as I can tell from the SCSI 
+> specs, the size is the size _without_ the header and block descriptors), 
+> and capping it at 20?
 > 
-> 1) I think I get these for less than all interesting errors.
+> If the device reports a size that is smaller than the required one (3), we 
+> just fail the request - instead of doing a small read and then making 
+> decisions on data that isn't even there, like we used to do!
 > 
-> In particular, I think I don't see not-retried unit attentions reported
-> this way, even though unit attentions change such things as the
-> 2.6.0-test4 /proc/sys/dev/cdrom/info
+> (The old code would use the "size" as the read length argument, which
+> really looks fundamentally wrong. At the very least it should add in the
+> header length etc).
 > 
-> 2) I have no confident idea of what the cdb was, and zero idea of what
-> the auto-sensed sk asc ascq info was.
+> Can people try this attached patch? It looks bigger than it is - in order 
+> to do sane error handling for the "size is too small" case I re-organized 
+> the thing a bit. The real change is just
+> 
+>  - capping size at 20 (real value) instead of 128 (random crud)
+>  - properly add in the header and block descriptor sizes
+> 
+> Comments?
+> 
+> 			Linus
+> 
+> -----
+> ===== drivers/scsi/sd.c 1.134 vs edited =====
+> --- 1.134/drivers/scsi/sd.c	Wed Jun 25 04:47:26 2003
+> +++ edited/drivers/scsi/sd.c	Mon Sep 22 12:42:32 2003
+> @@ -1108,14 +1108,26 @@
+>  	/* cautiously ask */
+>  	res = sd_do_mode_sense(SRpnt, dbd, modepage, buffer, 4, &data);
+>  
+> -	if (scsi_status_is_good(res)) {
+> -		/* that went OK, now ask for the proper length */
+> -		len = data.length;
+> -		if (len > 128)
+> -			len = 128;
+> -		res = sd_do_mode_sense(SRpnt, dbd, modepage, buffer,
+> -				       len, &data);
+> -	}
+> +	if (!scsi_status_is_good(res))
+> +		goto bad_sense;
+> +
+> +	/* that went OK, now ask for the proper length */
+> +	len = data.length;
+> +
+> +	/*
+> +	 * We're only interested in the first three bytes, actually.
+> +	 * But the data cache page is defined for the first 20.
+> +	 */
+> +	if (len < 3)
+> +		goto bad_sense;
+> +	if (len > 20)
+> +		len = 20;
+> +
+> +	/* Take headers and block descriptors into account */
+> +	len += data.header_length + data.block_descriptor_length;
+> +
+> +	/* Get the data */
+> +	res = sd_do_mode_sense(SRpnt, dbd, modepage, buffer, len, &data);
+>  
+>  	if (scsi_status_is_good(res)) {
+>  		const char *types[] = {
+> @@ -1133,23 +1145,26 @@
+>  
+>  		printk(KERN_NOTICE "SCSI device %s: drive cache: %s\n",
+>  		       diskname, types[ct]);
+> +
+> +		return;
+> +	}
+> +
+> +bad_sense:
+> +	if ((SRpnt->sr_sense_buffer[0] & 0x70) == 0x70
+> +	     && (SRpnt->sr_sense_buffer[2] & 0x0f) == ILLEGAL_REQUEST
+> +	     /* ASC 0x24 ASCQ 0x00: Invalid field in CDB */
+> +	     && SRpnt->sr_sense_buffer[12] == 0x24
+> +	     && SRpnt->sr_sense_buffer[13] == 0x00) {
+> +		printk(KERN_NOTICE "%s: cache data unavailable\n",
+> +		       diskname);
+>  	} else {
+> -		if ((SRpnt->sr_sense_buffer[0] & 0x70) == 0x70
+> -		     && (SRpnt->sr_sense_buffer[2] & 0x0f) == ILLEGAL_REQUEST
+> -		     /* ASC 0x24 ASCQ 0x00: Invalid field in CDB */
+> -		     && SRpnt->sr_sense_buffer[12] == 0x24
+> -		     && SRpnt->sr_sense_buffer[13] == 0x00) {
+> -			printk(KERN_NOTICE "%s: cache data unavailable\n",
+> -			       diskname);
+> -		} else {
+> -			printk(KERN_ERR "%s: asking for cache data failed\n",
+> -			       diskname);
+> -		}
+> -		printk(KERN_ERR "%s: assuming drive cache: write through\n",
+> +		printk(KERN_ERR "%s: asking for cache data failed\n",
+>  		       diskname);
+> -		sdkp->WCE = 0;
+> -		sdkp->RCD = 0;
+>  	}
+> +	printk(KERN_ERR "%s: assuming drive cache: write through\n",
+> +	       diskname);
+> +	sdkp->WCE = 0;
+> +	sdkp->RCD = 0;
+>  }
+>  
+>  /**
+> 
+> 
+> 
+> -------------------------------------------------------
+> This sf.net email is sponsored by:ThinkGeek
+> Welcome to geek heaven.
+> http://thinkgeek.com/sf
+> _______________________________________________
+> linux-usb-devel@lists.sourceforge.net
+> To unsubscribe, use the last form field at:
+> https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+> 
 
-It got a DID_NO_CONNECT (host busy 0x01), so there should be no sense
-data. Or do you mean what was the sense data was for an IO before the
-failed one?
-
--- Patrick Mansfield
