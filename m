@@ -1,66 +1,61 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: problems with scsi disk, scsi generic, and compact flash reader
-Date: Fri, 10 Oct 2003 15:35:33 +1000
+Subject: Re: unloading scsi debug module gives errors in logs
+Date: Fri, 10 Oct 2003 15:47:59 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F864525.3040009@torque.net>
-References: <3F860227.3040909@sympatico.ca>
+Message-ID: <3F86480F.1080801@torque.net>
+References: <3F860CF2.8010105@sympatico.ca>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.triode.net.au ([202.147.124.1]:42706 "EHLO
-	iggy.triode.net.au") by vger.kernel.org with ESMTP id S262419AbTJJFgZ
+Received: from ns1.triode.net.au ([202.147.124.1]:41427 "EHLO
+	iggy.triode.net.au") by vger.kernel.org with ESMTP id S262440AbTJJFsu
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Oct 2003 01:36:25 -0400
-In-Reply-To: <3F860227.3040909@sympatico.ca>
+	Fri, 10 Oct 2003 01:48:50 -0400
+In-Reply-To: <3F860CF2.8010105@sympatico.ca>
 List-Id: linux-scsi@vger.kernel.org
 To: Chris Friesen <chris_friesen@sympatico.ca>
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 Chris Friesen wrote:
 > 
-> I have a 2.6.0-test6 kernel with the jumpshot card reader.  I can
-> compile the generic scsi driver no problem, and when I insert the flash
-> card I get the following log entry:
+> Seen on 2.6.0-test6:
 > 
-> Oct  9 20:33:30 doug kernel: hub 2-1:1.0: new USB device on port 2,
-> assigned address 4
-> Oct  9 20:33:30 doug kernel: scsi1 : SCSI emulation for USB Mass Storage
-> devices
-> Oct  9 20:33:30 doug kernel:   Vendor: Lexar     Model: Jumpshot USB CF
->   Rev: 0001
-> Oct  9 20:33:30 doug kernel:   Type:   Direct-Access
->   ANSI SCSI revision: 02
-> Oct  9 20:33:30 doug kernel: Attached scsi generic sg1 at scsi1, channel
-> 0, id 0, lun 0,  type 0
-> 
-> 
-> When I try and load the sd_mod module, that terminal just simply freezes
-> and I can't break out.  Similarly, if I compile scsi disk support right
-> into the kernel, it sits forever at boot time. 
+> Oct  9 21:22:25 doug kernel: SCSI device sda: 16384 512-byte hdwr 
+> sectors (8 MB)
+> Oct  9 21:22:25 doug kernel: SCSI device sda: drive cache: write back
+> Oct  9 21:22:25 doug kernel:  sda: unknown partition table
+> Oct  9 21:22:25 doug kernel: Attached scsi disk sda at scsi1, channel 0, 
+> id 0, lun 0
+> Oct  9 21:22:53 doug kernel: FAT: bogus number of reserved sectors
+> Oct  9 21:22:53 doug kernel: VFS: Can't find a valid FAT filesystem on 
+> dev sda.
+> Oct  9 21:24:42 doug kernel: Device 'pseudo_0' does not have a release() 
+> function, it is broken and must be fixed.
+> Oct  9 21:24:42 doug kernel: Badness in device_release at 
+> drivers/base/core.c:85
+> Oct  9 21:24:42 doug kernel: Call Trace:
+> Oct  9 21:24:42 doug kernel:  [device_release+68/80] 
+> device_release+0x44/0x50
+> Oct  9 21:24:42 doug kernel:  [kobject_cleanup+67/96] 
+> kobject_cleanup+0x43/0x60
+> Oct  9 21:24:42 doug kernel:  [kobject_put+20/32] kobject_put+0x14/0x20
+> Oct  9 21:24:42 doug kernel:  [put_device+13/32] put_device+0xd/0x20
+> Oct  9 21:24:42 doug kernel:  [device_unregister+17/32] 
+> device_unregister+0x11/0x20
+> Oct  9 21:24:42 doug kernel:  [__crc_generic_file_llseek+338540/1261671] 
+> scsi_debug_exit+0x3b/0x4b [scsi_debug]
+> Oct  9 21:24:42 doug kernel:  [sys_delete_module+301/336] 
+> sys_delete_module+0x12d/0x150
+> Oct  9 21:24:42 doug kernel:  [sys_munmap+55/96] sys_munmap+0x37/0x60
+> Oct  9 21:24:42 doug kernel:  [syscall_call+7/11] syscall_call+0x7/0xb
 
 Chris,
-The compact flash probably doesn't like a MODE SENSE
-command it is being sent by the sd driver. When sd is
-a module then if your other (pseudo) terminals are alive
-after 'modprobe sd_mod' locks up then perhaps you could
-try 'ps -eo cmd,wchan' on another terminal and report
-the result for that modprobe.
-
-Some patches went into sd recently (and more are being discussed)
-to lower the MODE SENSE traffic during sd initialization. There
-is a very wide range of devices that use the scsi command set
-and there is no easy way to know during scan/initialization
-how well a device will handle some commands (scsi_level ??).
-
-Another thing you could do is fetch sg3_utils from
-http://www.torque.net/sg and report the result of
-'sg_modes -a /dev/sg1'. That will report the MODE SENSE
-commands the device claims to support. [BTW Run 'sg_modes'
-before you try to 'modprobe sd_mod'.]
+I have posted a patch to fix that on the linux-scsi list
+titled: "[PATCH] scsi_debug lk 2.6.0t6". See:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=106561848728156&w=2
 
 Doug Gilbert
-
 
 
