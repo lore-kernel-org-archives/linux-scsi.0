@@ -1,47 +1,69 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [BUG] linux-2.6.0-test9: slave_destroy called too early
-Date: Tue, 11 Nov 2003 08:44:21 -0800
+From: "Martin Peschke3" <MPESCHKE@de.ibm.com>
+Subject: Re: LUN Masking
+Date: Tue, 11 Nov 2003 17:34:51 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031111164421.GB2259@beaverton.ibm.com>
-References: <200311111145.49009.heiko.carstens@de.ibm.com>
+Message-ID: <OFE3359D75.071B4F24-ONC1256DDB.0059E139-C1256DDB.005B800E@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:15332 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S263632AbTKKQkD
+Received: from mtagate2.de.ibm.com ([195.212.29.151]:38081 "EHLO
+	mtagate2.de.ibm.com") by vger.kernel.org with ESMTP id S263646AbTKKQgd convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Nov 2003 11:40:03 -0500
-Received: from westrelay01.boulder.ibm.com (westrelay01.boulder.ibm.com [9.17.195.10])
-	by e32.co.us.ibm.com (8.12.10/8.12.2) with ESMTP id hABGe2kF171778
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2003 11:40:02 -0500
-Content-Disposition: inline
-In-Reply-To: <200311111145.49009.heiko.carstens@de.ibm.com>
+	Tue, 11 Nov 2003 11:36:33 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
+To: Burn Alting <burn@comptex.com.au>
 Cc: linux-scsi@vger.kernel.org
 
-Heiko Carstens [heiko.carstens@de.ibm.com] wrote:
-> Hi,
-> 
-> in linux-2.6.0-test9 there seems to be a bug in scsi_remove_device: each time
-> I try to remove a scsi disk the sd driver fails to synchronize the SCSI cache.
-> Reason for this is that the slave_destroy function of the LLD gets called
-> before sd_shutdown of the sd driver gets called.
-> I would suggest the patch below. Please apply or let me know that this is the
-> wrong thing to do.
-> 
+Hi,
 
-The patch I previously posted would give the same effect. You can find
-it in the archives.
-http://marc.theaimsgroup.com/?l=linux-scsi&m=106810957502435&w=2
+has this been incorporated into SCSI standard drafts?
+However, here is some information about how it is done for an IBM box:
+http://www.storage.ibm.com/disk/ess/support/essfcwp.pdf
 
-I will repost the patch with a update based on the feedback I received
-on the previous thread (inline the scsi_free_sdev function).  This
-updated patch will look very similiar to the sequence you have in your
-patch.
+Mit freundlichen Gr=FC=DFen / with kind regards
 
--andmike
+Martin Peschke
+
+IBM Deutschland Entwicklung GmbH
+Linux for eServer Development
+Phone: +49-(0)7031-16-2349
+
+
+Burn Alting <burn@comptex.com.au>@vger.kernel.org on 10/11/2003 23:42:3=
+3
+
+Sent by:    linux-scsi-owner@vger.kernel.org
+
+
+To:    linux-scsi@vger.kernel.org
+cc:
+Subject:    LUN Masking
+
+
+Hi,
+
+Does anyone know of a reference to LUN Masking - in particular its
+implementation specifications?
+
+I've googled without success.
+
+
+Thanks in Advance
 --
-Michael Anderson
-andmike@us.ibm.com
+Burn Alting <burn@comptex.com.au>
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
