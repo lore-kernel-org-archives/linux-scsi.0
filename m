@@ -1,136 +1,73 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Convert i2o to compat_ioctl
-Date: Thu, 31 Mar 2005 20:41:18 +0100
-Message-ID: <20050331194118.GA24242@infradead.org>
-References: <20050118112455.GK43344@muc.de>
+From: Linas Vepstas <linas@austin.ibm.com>
+Subject: Re: Symbios PCI error recovery [Was: Re: [PATCH/RFC] ppc64: EEH +
+	SCSI recovery (IPR only)]
+Date: Thu, 31 Mar 2005 14:06:22 -0600
+Message-ID: <20050331200622.GG15596@austin.ibm.com>
+References: <20050223002409.GA10909@austin.ibm.com>
+	<20050223174356.GH13081@kroah.com>
+	<1109207532.5384.32.camel@gaston>
+	<20050224013137.GF2088@austin.ibm.com>
+	<20050226063609.GC7036@colo.lackof.org>
+	<20050321231028.GV498@austin.ibm.com>
+	<20050322175728.GE12675@colo.lackof.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:29568 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261657AbVCaTl3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Mar 2005 14:41:29 -0500
+Return-path: <linuxppc64-dev-bounces@ozlabs.org>
 Content-Disposition: inline
-In-Reply-To: <20050118112455.GK43344@muc.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20050322175728.GE12675@colo.lackof.org>
+List-Unsubscribe: <https://ozlabs.org/cgi-bin/mailman/listinfo/linuxppc64-dev>,
+	<mailto:linuxppc64-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc64-dev>
+List-Post: <mailto:linuxppc64-dev@ozlabs.org>
+List-Help: <mailto:linuxppc64-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/cgi-bin/mailman/listinfo/linuxppc64-dev>,
+	<mailto:linuxppc64-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc64-dev-bounces@ozlabs.org
+Errors-To: linuxppc64-dev-bounces@ozlabs.org
+To: Grant Grundler <grundler@parisc-linux.org>
+Cc: linuxppc64-dev@ozlabs.org, linux-scsi@vger.kernel.org, matthew@wil.cx
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@muc.de>
-Cc: James.Bottomley@HansenPartnership.com, Markus.Lidel@shadowconnect.com, linux-scsi@vger.kernel.org
 
-Markus, is this patch actually okay?  I just talked to Andi about the
-ioctl32 issues and he told me about this patch.
+Hmm,
 
-On Tue, Jan 18, 2005 at 12:24:55PM +0100, Andi Kleen wrote:
-> Convert I2O to new compat_ioctl entry points
+Got distracted by other issues, so I'm answering a week late...
+
+On Tue, Mar 22, 2005 at 10:57:28AM -0700, Grant Grundler was heard to remark:
+> On Mon, Mar 21, 2005 at 05:10:28PM -0600, Linas Vepstas wrote:
+> > My current hardware will halt all i/o to/from the symbios controller
+> > upon detection of a PCI error.  The recovery proceedure that I am
+> > currently using is to call system firmware (aka 'bios') to raise
+> > and then lower the #RST pci signal line for 1/4 second, then wait 2
+> > seconds for the  PCI bus to settle, then restore the PCI config space
+> > registers (BARs, interrupt line, etc) to what they used to be. Then,
+> > I call sym_start_up() in an attempt to get the symbios card working
+> > again.  And that's where I get stuck ... 
 > 
-> Also broken design in its compat handlers - CONFIG_COMPAT doesn't 
-> mean that there should be no native ioctls.
+> Does this process cause a SCSI bus reset?
+
+Don't get a chance to get that far.  Have to bring up the PCI interfaces
+first, before any scsi command can be issued.
+
+> BTW, when did sym2 get a chance to cleanup "pending" requests?
+
+Yes, the sym2 driver has mechanisms for that.
+
+> You want everything moved back to the "queued" state or failed
+> (flush pending IO so upper layers can retry if they want).
+
+Upper layer is the linux block device; my understanding is that it does
+not retry, nor do the filesystems above that.  Passing errors upwards
+seems to be pretty darned fatal.  My goal is to limit retries to the
+driver.
+
+> > Sometimes, I get the PCI error while the card is sitting there idly
+> > after the #RST, but more often, I get the error in sym_chip_reset(),
+> > immediately after the   OUTB (nc_istat, SRST);
 > 
-> Signed-off-by: Andi Kleen <ak@muc.de>
-> 
-> diff -u linux-2.6.11-rc1-bk4/drivers/message/i2o/i2o_config.c-o linux-2.6.11-rc1-bk4/drivers/message/i2o/i2o_config.c
-> --- linux-2.6.11-rc1-bk4/drivers/message/i2o/i2o_config.c-o	2005-01-17 10:39:40.000000000 +0100
-> +++ linux-2.6.11-rc1-bk4/drivers/message/i2o/i2o_config.c	2005-01-18 06:27:24.000000000 +0100
-> @@ -54,6 +54,9 @@
->  
->  extern int i2o_parm_issue(struct i2o_device *, int, void *, int, void *, int);
->  
-> +static int i2o_cfg_ioctl(struct inode *inode, struct file *fp, unsigned int cmd,
-> +			 unsigned long arg);
-> +
->  static spinlock_t i2o_config_lock;
->  
->  #define MODINC(x,y) ((x) = ((x) + 1) % (y))
-> @@ -538,8 +541,7 @@
->  }
->  
->  #ifdef CONFIG_COMPAT
-> -static int i2o_cfg_passthru32(unsigned fd, unsigned cmnd, unsigned long arg,
-> -			      struct file *file)
-> +static int i2o_cfg_passthru32(struct file *file, unsigned cmnd, unsigned long arg)
->  {
->  	struct i2o_cmd_passthru32 __user *cmd;
->  	struct i2o_controller *c;
-> @@ -752,7 +754,26 @@
->  	return rcode;
->  }
->  
-> -#else
-> +static long compat_i2o_cfg_ioctl(struct file *file, unsigned cmd, unsigned long arg)
-> +{
-> +	int ret;
-> +	lock_kernel();		
-> +	switch (cmd) { 
-> +	case I2OGETIOPS:
-> +		ret = i2o_cfg_ioctl(NULL, file, cmd, arg);
-> +		break;
-> +	case I2OPASSTHRU32:
-> +		ret = i2o_cfg_passthru32(file, cmd, arg);
-> +		break;
-> +	default:
-> +		ret = -ENOIOCTLCMD;
-> +		break;
-> +	}
-> +	unlock_kernel();
-> +	return ret;
-> +}
-> +
-> +#endif
->  
->  static int i2o_cfg_passthru(unsigned long arg)
->  {
-> @@ -958,7 +979,6 @@
->  	kfree(reply);
->  	return rcode;
->  }
-> -#endif
->  
->  /*
->   * IOCTL Handler
-> @@ -1013,11 +1033,9 @@
->  		ret = i2o_cfg_evt_get(arg, fp);
->  		break;
->  
-> -#ifndef CONFIG_COMPAT
->  	case I2OPASSTHRU:
->  		ret = i2o_cfg_passthru(arg);
->  		break;
-> -#endif
->  
->  	default:
->  		osm_debug("unknown ioctl called!\n");
-> @@ -1105,6 +1123,9 @@
->  	.owner = THIS_MODULE,
->  	.llseek = no_llseek,
->  	.ioctl = i2o_cfg_ioctl,
-> +#ifdef CONFIG_COMPAT
-> +	.compat_ioctl = compat_i2o_cfg_ioctl,
-> +#endif
->  	.open = cfg_open,
->  	.release = cfg_release,
->  	.fasync = cfg_fasync,
-> @@ -1134,19 +1155,11 @@
->  		misc_deregister(&i2o_miscdev);
->  		return -EBUSY;
->  	}
-> -#ifdef CONFIG_COMPAT
-> -	register_ioctl32_conversion(I2OPASSTHRU32, i2o_cfg_passthru32);
-> -	register_ioctl32_conversion(I2OGETIOPS, (void *)sys_ioctl);
-> -#endif
->  	return 0;
->  }
->  
->  static void i2o_config_exit(void)
->  {
-> -#ifdef CONFIG_COMPAT
-> -	unregister_ioctl32_conversion(I2OPASSTHRU32);
-> -	unregister_ioctl32_conversion(I2OGETIOPS);
-> -#endif
->  	misc_deregister(&i2o_miscdev);
->  	i2o_driver_unregister(&i2o_config_driver);
->  }
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
+> Oh? Is this the driver trying to issue SCSI Reset?
+
+No I am trying to reinitialize the scsi card after the pci bus has been
+reset.  This has nothing to do with scsi bus resets, as far as I know
+... 
+
+--linas
