@@ -1,36 +1,34 @@
-From: Jes Sorensen <jes@wildopensource.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [ANNOUNCE] QLogic FC Driver for Linux kernel 2.5 available.
-Date: 12 May 2003 18:02:43 -0400
+Date: 12 May 2003 17:03:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m3llxbsu0s.fsf@trained-monkey.org>
+Message-ID: <1052777037.3629.15.camel@mulgrave>
 References: <3EC017E1.3050507@wanadoo.es>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from trained-monkey.org ([209.217.122.11]:25611 "EHLO
-	trained-monkey.org") by vger.kernel.org with ESMTP id S262323AbTELVt6
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 May 2003 17:49:58 -0400
+Received: from nat9.steeleye.com ([65.114.3.137]:12037 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262294AbTELVvT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 May 2003 17:51:19 -0400
 In-Reply-To: <3EC017E1.3050507@wanadoo.es>
 List-Id: linux-scsi@vger.kernel.org
 To: Xose Vazquez Perez <xose@wanadoo.es>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James.Bottomley@steeleye.com
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, jes@wildopensource.com
 
->>>>> "Xose" == Xose Vazquez Perez <xose@wanadoo.es> writes:
+On Mon, 2003-05-12 at 16:53, Xose Vazquez Perez wrote:
+> you have here latest drivers/firmware:
 
-Xose> Jes Sorensen wrote:
->> I very strongly support that idea, right now all the changes I have
->> made to the qla1280 driver have pretty much been done in the dark.
+Does that mean "no"?
 
-Xose> you have here latest drivers/firmware:
+>  - latest: 3.12 August 17, 2000 http://download.qlogic.com/drivers/2206/qla1x160src-3.12.tgz
+>  - beta: 3.23  January 12, 2001 http://download.qlogic.com/drivers/2209/qla1x160src-3.23Beta.tgz
 
-Xose>  - latest: 3.12 August 17, 2000
-Xose> http://download.qlogic.com/drivers/2206/qla1x160src-3.12.tgz -
-Xose> beta: 3.23 January 12, 2001
-Xose> http://download.qlogic.com/drivers/2209/qla1x160src-3.23Beta.tgz
+There is little chance that a 2001 driver will compile in 2.5, let alone
+run.  Also, I can't find a driver for the ISP1020/1040---unless it's
+hiding somewhere.
 
-Sorry but those drivers are old, totally obsolete and contain a lot of
-bugs. As I mentioned previously, I have spent quite a lot of time
-trying to update and improve the qla1280 driver.
+James
 
-Jes
+
