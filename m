@@ -1,34 +1,23 @@
-From: Andries Brouwer <aebr@win.tue.nl>
-Subject: Re: Determining the UUID of a USB storage device
-Date: Fri, 23 Aug 2002 10:45:44 +0200
+From: Kerim Doo <bhvviecgy@aol.com>
+Subject: =?ISO-8859-1?Q?Ar=FEiv?= =?ISO-8859-1?Q?haz=FDr?=
+Date: Fri, 23 Aug 2002 20:10:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020823084544.GA5649@win.tue.nl>
-References: <20BF5713E14D5B48AA289F72BD372D6812BB32@AUSXMPC122.aus.amer.dell.com> <20020822162640.E17378@one-eyed-alien.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <obbaymfmmpyj@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020822162640.E17378@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Gary_Lerhaupt@dell.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-
-> > I am attempting to glean some sort of a unique identifier from a USB storage
-> > device.  As it should, the storage shows up as a SCSI disk in
-> > /proc/partitions and subsequent SCSI inquiries sent to it return a page 80
-> > serial number.  However, it is apparent that this serial number is actually
-> > the serial number of my ZIO! smartmedia reader and not of the actual card in
-> > the reader.
-
-My SmartMedia code will report on whether a card serial number is supported.
-I think the command to actually read a card serial number is secret.
-
-See e.g. sddr09_read_deviceID() and sddr09_get_cardinfo() in sddr09.c.
-
-        /* Byte 2 is code to signal availability of 128-bit ID */
-        if (deviceID[2] == 0xa5) {
-                sprintf(blurbtxt + strlen(blurbtxt),
-                        ", 128-bit ID");
-        }
-
-Andries
+DQpUck1lbG9kaSwgS/1y/WsgbGlua2xpIOdhbP3+bWF5YW4gdmUgYmlydGVrIG1wMyD8IGlu
+ZGlyaXJrZW4gYmlsZSBpbnNhbmxhcv0ga2FocmVkZW4gc/Z6ZGUgbXAzIHNpdGVsZXJpbmUg
+YWx0ZXJuYXRpZiANCm9sYXJhayBzaXpsZXIgaedpbiD2emVubGUgaGF6/XJsYW5t/f50/XIu
+IEhlciB5Yf50YW4gaGVyIGtlc2ltZGVuIG38emlrc2V2ZXJlIGhpdGFwIGVkZWJpbG1layBp
+52luIHRhc2FybGFubf3+IDEzIEdCIA0KbP1rIGRldiBNcDMgbGlzdGVzaXlsZSBz/W79Zv1u
+ZGEgcmFraXBzaXogb2xhY2FrIP5la2lsZGUgZG9uYXT9bG39/iB2ZSBzaXogbfx6aWtzZXZl
+cmxlcmluIGhpem1ldGluZSBzdW51bG11/nR1ci4gDQpodHRwOi8vd3d3LnRybWVsb2RpLmNv
+bSBhZHJlc2luZGVraSBkZXYgYXL+aXZpbWl6ZGUgc2l6aSBiZWtsZXllbiBlbiBzZXZkafBp
+bml6IHNhbmF05/1sYXL9biBlbiBzZXZkafBpbml6IA0K/mFya/1sYXL9bv0gYmlya2HnIGRh
+a2lrYSBp52luZGUgYmlsZ2lzYXlhcv1u/XphIGluZGlyaW4gdmUga2V5aWZsZSBkaW5sZW1l
+eWUgYmH+bGF5/W4uIA0KDQrdeWkgRfBsZW5jZWxlci4uIA0KaHR0cDovL3d3dy50cm1lbG9k
+aS5jb20NCg0KDQoNCg0K
