@@ -1,32 +1,97 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: How to add/drop SCSI drives from within the driver?
-Date: Thu, 16 Dec 2004 14:41:34 +0000
-Message-ID: <1103208085.21806.1.camel@localhost.localdomain>
-References: <60807403EABEB443939A5A7AA8A7458B7F5071@otce2k01.adaptec.com>
-	 <1102536081.4218.0.camel@localhost.localdomain>
-	 <20041215072453.GB17274@lists.us.dell.com>
-	 <1103136559.5232.1.camel@mulgrave>
-	 <20041215213001.GA9284@lists.us.dell.com>
-	 <1103190852.4136.12.camel@laptopd505.fenrus.org>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: drivers/block/scsi_ioctl problem
+Date: Thu, 16 Dec 2004 10:31:45 -0600
+Message-ID: <41C1B871.2010504@us.ibm.com>
+References: <41BF7C18.9090303@us.ibm.com> <20041215071852.GM3157@suse.de> <41C08CD5.10309@us.ibm.com> <41C0BE3E.3060003@us.ibm.com> <20041216063218.GA22982@suse.de>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261414AbULPPuJ@vger.kernel.org>
-In-Reply-To: <1103190852.4136.12.camel@laptopd505.fenrus.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Matt Domsch <Matt_Domsch@dell.com>, James Bottomley <James.Bottomley@SteelEye.com>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, brking@us.ibm.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, bunk@fs.tum.de, Andrew Morton <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e32.co.us.ibm.com ([32.97.110.130]:18612 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S261397AbULPQbu
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Dec 2004 11:31:50 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e32.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id iBGGVkFJ541998
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Dec 2004 11:31:46 -0500
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id iBGGVkBw420766
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Dec 2004 09:31:46 -0700
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id iBGGVjGi005675
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Dec 2004 09:31:46 -0700
+In-Reply-To: <20041216063218.GA22982@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Iau, 2004-12-16 at 09:54, Arjan van de Ven wrote:
-> I'm strongly against adding this. The reason for that is that once an
-> ioctl is added, it realistically will and can never go away.
-> LSI is free to have their own fork and give that to dell; but they
-> should and could have known that it wasn't going to fly. (same I guess
-> for adaptec ioctls). The companies who then commit to some schedule
-> realize they take a huge risk, but that is no reason to foul up the
-> kernel more. 
+Jens Axboe wrote:
+> On Wed, Dec 15 2004, Brian King wrote:
+> 
+>>Brian King wrote:
+>>
+>>>>It was added to be able to find out which opcode was rejected and thus
+>>>>caused an application malfunction. It dumps the specific opcode only
+>>>>once, is that such a huge problem?
+>>>
+>>>
+>>>Ok. I didn't realize that it was only dumped once. That's not as bad. I 
+>>>guess it might be better if it were only dumped if the op actually failed.
+>>
+>>How about something like this...
+> 
+> 
+>>Currently if an SG_IO ioctl is issued to a block device with an
+>>unknown opcode, an error is logged. This error is logged regardless
+>>the device successfully processes the command or not. This results in
+>>an error getting logged for each unknown opcode ever issued. This patch
+>>changes this policy and only prints the unknown opcode if the command
+>>fails.
+> 
+> 
+> How about just moving it after the CAP_SYS_RAWIO check, so that it only
+> logs for commands we explicitly reject? The purpose of the opcode dump
+> is not to log failed commands (the app should do that itself), but
+> mainly why a specific opcode was _not_ sent to the drive. This is
+> something you cannot always directly gauge, unless you have the source
+> for the app. And even then you have to dig :-)
 
-I agree. I'd like to see an agreed standard interface for dropping and
-managing physical volumes and drives, as well as a standard interface
-for dropping/managing logical volumes.
+I guess that would make more sense. Patch looks good.
+
+Thanks
+
+-Brian
+
+> 
+> ===== drivers/block/scsi_ioctl.c 1.62 vs edited =====
+> --- 1.62/drivers/block/scsi_ioctl.c	2004-11-20 01:50:56 +01:00
+> +++ edited/drivers/block/scsi_ioctl.c	2004-12-16 07:30:39 +01:00
+> @@ -199,14 +199,14 @@
+>  			return 0;
+>  	}
+>  
+> +	/* And root can do any command.. */
+> +	if (capable(CAP_SYS_RAWIO))
+> +		return 0;
+> +
+>  	if (!(type & CMD_WARNED)) {
+>  		cmd_type[cmd[0]] = CMD_WARNED;
+>  		printk(KERN_WARNING "scsi: unknown opcode 0x%02x\n", cmd[0]);
+>  	}
+> -
+> -	/* And root can do any command.. */
+> -	if (capable(CAP_SYS_RAWIO))
+> -		return 0;
+>  
+>  	/* Otherwise fail it with an "Operation not permitted" */
+>  	return -EPERM;
+> 
+> 
+
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
