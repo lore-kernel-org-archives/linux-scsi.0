@@ -1,52 +1,96 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] REPORT LUN scan even if no storage is available on LUN 0
-Date: Fri, 14 Jan 2005 08:28:15 -0800
-Message-ID: <20050114162815.GA32162@us.ibm.com>
-References: <20041210123333.GD685@bogon.ms20.nix> <20041213222206.GA18893@us.ibm.com> <20050110164200.GA8655@bogon.ms20.nix> <20050111181500.GA9046@us.ibm.com> <20050113124032.GB5701@bogon.ms20.nix> <20050114000115.GA13676@us.ibm.com> <20050114093200.GB5724@bogon.ms20.nix>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Fw: ACARD SCSI driver update for Linux kernel v2.6
+Date: Fri, 14 Jan 2005 17:44:57 +0000
+Message-ID: <20050114174457.GL30982@parcelfarce.linux.theplanet.co.uk>
+References: <01f501c4fa20$3db731d0$6200a8c0@jameshsu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:5031 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262019AbVANQ2z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Jan 2005 11:28:55 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e1.ny.us.ibm.com (8.12.10/8.12.10) with ESMTP id j0EGStRK024711
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Jan 2005 11:28:55 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j0EGSt8u235912
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Jan 2005 11:28:55 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j0EGStQb026896
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Jan 2005 11:28:55 -0500
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:2982 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261153AbVANRpK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Jan 2005 12:45:10 -0500
 Content-Disposition: inline
-In-Reply-To: <20050114093200.GB5724@bogon.ms20.nix>
+In-Reply-To: <01f501c4fa20$3db731d0$6200a8c0@jameshsu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guido Guenther <agx@sigxcpu.org>
-Cc: linux-scsi@vger.kernel.org
+To: jameshsu <jameshsu@mail.acard.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, James.Bottomley@SteelEye.com, Christoph Hellwig <hch@infradead.org>, Jason Wu <jason_wu@acard.com>, EdwardLian <edwardlian@mail.acard.com>, linux-scsi@vger.kernel.org
 
-On Fri, Jan 14, 2005 at 10:32:00AM +0100, Guido Guenther wrote:
-> On Thu, Jan 13, 2005 at 04:01:15PM -0800, Patrick Mansfield wrote:
-> > On Thu, Jan 13, 2005 at 01:40:32PM +0100, Guido Guenther wrote:
-> > 
-> > > > Can you turn on some scsi logging, and send that?
-> > > Sure. I tried scsi_logging_level=... on the kernel command line but it
-> > > didn't show anything, did I miss something obvious?
-> > > /proc/sys/dev/scsi/logging_level was still zero afterwards.
-> > 
-> > It is a sysctl variable, so you can set it after you are booted, per my
-> > other email (and still below), and man sysctl.
-> Yes I saw that, I was just wondering why scsi_logging_level doesn't work
-> also it's a module option in scsi.c.
+On Fri, Jan 14, 2005 at 06:03:02PM +0800, jameshsu wrote:
+> We, Acard, total understand what you suggest. (including advise from
+> Christoph, James B. and Alan.)
+> Therefore, we modify the internal code to create this patch file from kernel
+> v2.6.10.
+> However, as you see this is the smallest patch files which could be
+> generated. (Sorry, unable to meet your expetation)
+> The reason is : this driver could supports ATP870 as well as mutiples of
+> Acard's chipsets. (this includes ATP880(AEC67160) & ATP885(AEC67162)). This
+> is why the patch files is huge than what you expected.
+> We did not make any change for ATP870(AEC6712) on this rev.. Besides, we
+> reverse following codes according to all of your suggestions. Please review
+> and let me know if this is feasible.  Welcome to any of question you may
+> have.
+> Thanks for your help!
 
-In-kernel module params have to be prefixed by the module name, like:
+The change to pci.ids needs to be handled through pciids.sourceforge.net
 
-	scsi_mod.scsi_logging_level=0x2400
+----
 
-AFAIR if the param name is unknown, the kernel outputs a warning.
+I really don't like the:
++               atp_dev.ioport[0] = base_io + 0x80;
++               atp_dev.ioport[1] = base_io + 0xc0;
 
-Note that most (all?) of the other scsi params have the "scsi_" removed,
-though the variable name does not, like max_scsi_luns is set via max_luns.
+Just record base_io in your atp_dev.  I don't like the way this patch
+turns everything into a 2-d array ... surely there has to be a better
+way to do it than this?
 
--- Patrick Mansfield
+----
+
++               if (dev->dev_id == ATP885_DEVID) {
++                       tmpcip += 2;
++                       outb(0x06, tmpcip);
++                       tmpcip -= 2;
+
+would be much better written as:
+
+		if (dev->dev_id == ATP885_DEVID)
+			outb(0x06, tmpcip+2);
+
+(hmm, this seems to be common coding style throughout the driver ...)
+
+----
+
+-       if (pci_set_dma_mask(dev, 0xFFFFFFFFUL)) {
+-               printk(KERN_ERR "atp870u: 32bit DMA mask required but not availa
+ble.\n");
+-               return -EIO;
+-       }
++        if (!pci_set_dma_mask(pdev, 0xFFFFFFUL)) {
++                printk(KERN_INFO "atp870u: use 32bit DMA mask.\n");
++        } else {
++                printk(KERN_ERR "atp870u: DMA mask required but not available.\
+n");
++                return -EIO;
++        }
+
+You've actually set a 24-bit DMA mask there.  Should use the symbolic
+constant DMA_32BIT_MASK anyway.
+
+----
+
++       { PCI_DEVICE(PCI_VENDOR_ID_ARTOP, ATP885_DEVID)                   },
+
+Please use the PCI_DEVICE_ID_ name instead
+
+----
+
+
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
