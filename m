@@ -1,84 +1,74 @@
-From: Andrew Morton <akpm@digeo.com>
-Subject: Re: illegal context for sleeping ... rmmod ide-cd + ide-scsi
-Date: Mon, 5 May 2003 02:01:04 -0700
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [RFC] scsi host sysfs support again [0/4]
+Date: Mon, 05 May 2003 19:40:24 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030505020104.0abc66ba.akpm@digeo.com>
-References: <3EB62347.8020109@torque.net>
+Message-ID: <3EB63188.3080703@torque.net>
+References: <20030505083315.GB8416@beaverton.ibm.com> <20030505093833.A13506@infradead.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [12.47.58.20] ([12.47.58.20]:33913 "EHLO pao-ex01.pao.digeo.com")
-	by vger.kernel.org with ESMTP id S262105AbTEEIrD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 May 2003 04:47:03 -0400
-In-Reply-To: <3EB62347.8020109@torque.net>
+Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:2053 "EHLO
+	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S262119AbTEEJZV
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 May 2003 05:25:21 -0400
+In-Reply-To: <20030505093833.A13506@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-Douglas Gilbert <dougg@torque.net> wrote:
->
-> In lk 2.5.69 (and in 68) both the ide-cd and ide-scsi
-> modules generate a "sleeping function called from illegal
-> context" stack trace when removed.
+Christoph Hellwig wrote:
+> On Mon, May 05, 2003 at 01:33:15AM -0700, Mike Anderson wrote:
 > 
-> After "rmmod ide-cd" this appears:
->   Debug: sleeping function called from illegal context
->          at include/asm/semaphore.h:119
->   Call Trace:
->    [<c011dcec>] __might_sleep+0x5c/0x70
+>>Current Known Issues:
+>>	- Current users of scsi_remove_host will need to have there
+>>	  cleanup reordered to support the restoration of the call to the
+>>	  Scsi_Host_Template release.
+> 
+> 
+> That's not going to fly.  Most ->remove calls are surprise removals
+> and thus scsi_remove_host must implcy a scsi_set_host_offline and never
+> call into the LLDD again.  It can thusly free it's resources nicely
+> after it called scsi_remove_host.  struct Scsi_Host itself needs
+> refcounting, but as soon as scsi_remove_host is called it must be gone
+> as far as the driver is concerned.  Your approch would imply we could
+> imply we could get a scsi release callback long after the pci/whatever
+> ->remove is called which is a very bad thing.
 
-ide_unregister_subdriver() does spin_lock_irqsave(&ide_lock), then
-calls auto_remove_settings(), which does down(&ide_setting_sem);
+I assume Mike was talking about this change:
 
-A simple fix might be:
+[HBA REMOVAL old]
+LLD                   mid level
+---                   ---------
+scsi_remove_host()  -----+
+                          |
+                     slave_destroy()
+                     slave_destroy()
+                     slave_destroy()
+scsi_unregister()  -->
 
-diff -puN drivers/ide/ide.c~ide_setting_sem-fix drivers/ide/ide.c
---- 25/drivers/ide/ide.c~ide_setting_sem-fix	2003-05-05 01:59:01.000000000 -0700
-+++ 25-akpm/drivers/ide/ide.c	2003-05-05 02:00:21.000000000 -0700
-@@ -1131,13 +1131,12 @@ ide_settings_t *ide_find_setting_by_name
-  *
-  *	Automatically remove all the driver specific settings for this
-  *	drive. This function may sleep and must not be called from IRQ
-- *	context. Takes the settings_lock
-+ *	context. The caller must hold ide_setting_sem.
-  */
-  
- static void auto_remove_settings (ide_drive_t *drive)
- {
- 	ide_settings_t *setting;
--	down(&ide_setting_sem);
- repeat:
- 	setting = drive->settings;
- 	while (setting) {
-@@ -1147,7 +1146,6 @@ repeat:
- 		}
- 		setting = setting->next;
- 	}
--	up(&ide_setting_sem);
- }
- 
- /**
-@@ -2350,9 +2348,11 @@ int ide_unregister_subdriver (ide_drive_
- {
- 	unsigned long flags;
- 	
-+	down(&ide_setting_sem);
- 	spin_lock_irqsave(&ide_lock, flags);
- 	if (drive->usage || drive->driver == &idedefault_driver || DRIVER(drive)->busy) {
- 		spin_unlock_irqrestore(&ide_lock, flags);
-+		up(&ide_setting_sem);
- 		return 1;
- 	}
- #if defined(CONFIG_BLK_DEV_IDEPNP) && defined(CONFIG_PNP) && defined(MODULE)
-@@ -2363,6 +2363,7 @@ int ide_unregister_subdriver (ide_drive_
- 	ide_remove_proc_entries(drive->proc, generic_subdriver_entries);
- #endif
- 	auto_remove_settings(drive);
-+	up(&ide_setting_sem);
- 	drive->driver = &idedefault_driver;
- 	setup_driver_defaults(drive);
- 	spin_unlock_irqrestore(&ide_lock, flags);
+to this:
 
-_
+[HBA REMOVAL new]
+LLD                      mid level                 LLD
+---                      ---------                 ---
+scsi_remove_host() ---------+
+                             |
+                      slave_destroy()
+                      slave_destroy()
+                         release()     -->     scsi_unregister()
+
+In the new model there is nothing left to do after
+scsi_remove_host() has finished since everything happened
+during that call. The the LLD is re-entered to cleanup
+up any HBA specific device resources (slave_destroy()).
+Finally the LLD is re-entered by the release().
+
+Also module unloads (should) use the ->remove
+method as well. Does the LLD need to know
+whether a HBA removal is hot or not?
+
+Doug Gilbert
+
 
