@@ -1,29 +1,35 @@
-From: "Tony Battersby" <tonyb@cybernetics.com>
-Subject: RE: aic7xxx driver schedules() while holding spinlock
-Date: Thu, 3 Jul 2003 16:42:16 -0400
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: scsi_forget_host() and scsi_remove_device()
+Date: Thu, 3 Jul 2003 17:02:22 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <001b01c341a3$97af0410$e0019d89@cybernetics.com>
-References: <Pine.LNX.4.44L0.0307031618140.779-100000@ida.rowland.org>
-Reply-To: <tonyb@cybernetics.com>
+Message-ID: <Pine.LNX.4.44L0.0307031650370.779-100000@ida.rowland.org>
+References: <20030627110259.A3751@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cyborg.cybernetics.com ([206.246.200.18]:8965 "EHLO
-	cybernetics.com") by vger.kernel.org with ESMTP id S265367AbTGCU1p
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jul 2003 16:27:45 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0307031618140.779-100000@ida.rowland.org>
+Received: from ida.rowland.org ([192.131.102.52]:5892 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S264312AbTGCUrz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jul 2003 16:47:55 -0400
+In-Reply-To: <20030627110259.A3751@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Alan Stern' <stern@rowland.harvard.edu>
-Cc: 'SCSI development list' <linux-scsi@vger.kernel.org>
+To: Mike Anderson <andmike@us.ibm.com>, Christoph Hellwig <hch@infradead.org>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-While on the subject, a while ago I discovered that sym53c8xx_2 in 2.4.x
-holds a spinlock (io_request_lock) while calling ioremap() and
-iounmap(), which can lead to deadlock on certain hardware.  If anyone is
-doing a driver audit, it might be worth checking for this in other
-drivers too.
+There's a real problem about the way scsi_forget_host() calls
+scsi_remove_device() for each device on the host's bus.  The problem is
+that scsi_remove_device() unregisters the device in sysfs, which unbinds
+the device's driver.  This happens immediately, without waiting for the
+reference count to be 0.  So if the device is open (mounted, for example)  
+when the host is unplugged, the filesystem will have a dangling reference
+to the unbound driver.  Of course this will most likely cause a segfault
+when the user attempts to unmount the device.
 
-Anthony J. Battersby
-Cybernetics
+I don't know what the right way is to attack this problem, or what you're
+planning to do about it.  One approach would be somehow to prevent any new
+references to the device from being created while waiting for all the
+existing references to go away.  But that doesn't seem feasible.
+
+How are you going to address this problem?
+
+Alan Stern
 
