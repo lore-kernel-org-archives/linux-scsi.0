@@ -1,42 +1,54 @@
-From: Anton Blanchard <anton@samba.org>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: PATCH [5/15] qla2xxx:  SG tablesize update
-Date: Mon, 15 Mar 2004 02:18:09 +1100
+Date: 14 Mar 2004 10:31:15 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040314151809.GG19737@krispykreme>
-References: <20040314082444.GA3416@linux.local.home> <1079275768.2022.1.camel@mulgrave> <20040314145142.GL6955@suse.de> <1079276396.2022.8.camel@mulgrave>
+Message-ID: <1079278279.2022.34.camel@mulgrave>
+References: <20040314082444.GA3416@linux.local.home>
+	<1079275768.2022.1.camel@mulgrave> <20040314145142.GL6955@suse.de>
+	<1079276396.2022.8.camel@mulgrave>  <20040314151809.GG19737@krispykreme>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dp.samba.org ([66.70.73.150]:7893 "EHLO lists.samba.org")
-	by vger.kernel.org with ESMTP id S263363AbUCNPU1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Mar 2004 10:20:27 -0500
-Content-Disposition: inline
-In-Reply-To: <1079276396.2022.8.camel@mulgrave>
+Received: from stat1.steeleye.com ([65.114.3.130]:9874 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263376AbUCNPbb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Mar 2004 10:31:31 -0500
+In-Reply-To: <20040314151809.GG19737@krispykreme>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
+To: Anton Blanchard <anton@samba.org>
 Cc: Jens Axboe <axboe@suse.de>, Andrew Vasquez <andrew.vasquez@qlogic.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
- 
-> Actually, to be fair, I think he means the qlogic request queue, not the
-> block one.
-> 
-> The Qla chips are rather weird in that they have a single issue queue
-> (whose size you can vary) but whose entry formats are fixed.  If I
-> remember correctly, an initial command can have 4 SG elements, but a
-> follow on entry can have 7 (not sure of the figures).  But anyway, large
-> SG commands end up having to find multiple entries in this queue (and
-> being a single issue queue for the entire card, it has to be mutexed
-> while you search).  The more resources you need, the more difficult the
-> search and the more contention you generate on the resource mutex.
+On Sun, 2004-03-14 at 10:18, Anton Blanchard wrote:
+> With 2.6.3 on a ppc64 box connected to a shark with 8 LUNs I could
+> easily consume all the request slots on the card. At this point we spent
+> > 50% of the cpu bouncing into qla2x00_start_scsi, doing a pci_map_sg
+> realising it wont fit and doing a pci_unmap_sg.
 
-With 2.6.3 on a ppc64 box connected to a shark with 8 LUNs I could
-easily consume all the request slots on the card. At this point we spent
-> 50% of the cpu bouncing into qla2x00_start_scsi, doing a pci_map_sg
-realising it wont fit and doing a pci_unmap_sg.
+Well, since the pool is fixed size, can't the driver do some rule of
+thumb check before it actually gets to the map_sg (perhaps even
+pre-reserve the slots before mapping)?
 
-As Andrew points out, the driver shouldnt be doing this constant
-map/unmap stuff, but is there some way for a scsi device driver to tell
-the layers above it to temporarily leave it alone?
+> As Andrew points out, the driver shouldnt be doing this constant
+> map/unmap stuff, but is there some way for a scsi device driver to tell
+> the layers above it to temporarily leave it alone?
 
-Anton
+Mappings can be very limited in certain machines.  I really don't think
+we want precious mapping resources sitting in an issue queue in the
+mid-layer just because the qla driver couldn't manage them efficiently.
+
+The layering rules say that the driver is responsible for getting the
+IOMMU resources with dma_map_sg before it places the I/O in-flight and
+should free them ASAP after the I/O returns.
+
+All drivers have to manage their issue slots efficiently.  It really
+sounds like the root cause of this problem is mapping too early.
+
+If you think you don't know how many resource slots you'll need, that's
+in scsi_cmnd->request->nr_hw_segments (give or take, this is always
+guaranteed to be at or over the actual number dma_map_sg eventually
+returns).  So: fix the qlogic mapping routines.
+
+James
+
+
