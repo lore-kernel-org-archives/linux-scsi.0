@@ -1,78 +1,40 @@
-From: Markus Lidel <Markus.Lidel@shadowconnect.com>
-Subject: Re: Request for moving Sg_request into sg.h
-Date: Tue, 08 Mar 2005 13:10:56 +0100
-Message-ID: <422D9650.8070701@shadowconnect.com>
-References: <422D771E.6070104@shadowconnect.com> <422D912F.6020505@torque.net>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [RFC] adding per scsi-host workqueues for defered processing
+Date: Tue, 08 Mar 2005 08:11:36 -0500
+Message-ID: <422DA488.2050007@adaptec.com>
+References: <0B1E13B586976742A7599D71A6AC733C12ECDC@xbl3.ma.emulex.com> <20050308070010.GE5141@plap.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Received: from s0003.shadowconnect.net ([213.239.201.226]:59841 "EHLO
-	mail.shadowconnect.com") by vger.kernel.org with ESMTP
-	id S262019AbVCHMLR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Mar 2005 07:11:17 -0500
-In-Reply-To: <422D912F.6020505@torque.net>
+Received: from magic.adaptec.com ([216.52.22.17]:31455 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262045AbVCHNLm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2005 08:11:42 -0500
+In-Reply-To: <20050308070010.GE5141@plap.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
 
-Hello,
+On 03/08/05 02:00, Andrew Vasquez wrote:
+> There were some background tasks I shelved until the remote-ports
+> stuff settled down which I thought could use the deferred processing
+> thread:
+> 
+> * Initiate LIP -- several customers have asked for this ability as
+>   several topological configurations isolate disruptive FC events.
+> * Initiate LLDD rescan (i.e. ports (fibre channel), devices (iSCSI),
+>   etc.)
+> 
+> I had originally envisioned these functions residing in the transport.
 
-Douglas Gilbert wrote:
-> Markus Lidel wrote:
->> i wanted to ask if it is possible to put the typedef "Sg_request" into 
->> sg.h?
-> A surprising question. I would have though Sg_request was
-> private to the sg driver but ...
+Yes, I agree.  Domain (target, topology, etc) discovery should be
+"part" of the transport class.
 
-Yep i know it's not the best way, but the only way to get some data from 
-an application to the driver beside the SCSI command itself... Of course 
-it could be also solved by using separate sg devices, but on an I2O 
-controller with two harddisks and a RAID-1 this would be 16 sg devices...
+What I'm thinking of is that the LLDD would register a known
+trasport class with the SCSI Core at/after registering a host
+template and then would call something with a name like
+"start_scsi" which would do whatever necessary for the domain
+(SAS, FC, iSCSI, etc) before scanning for targets.  Of course
+for some domains no additional work is needed.
 
-> It is possible. Seems as though "#if __KERNEL__" conditional
-> blocks are still acceptable in kernel headers and scsi/sg,h
-> already has such a block.
-> If Sg_request moved to sg.h then that would require Sg_scatter_hold
-> to move as well.
-
-Hmmm your're right... Probably a new header file would be better suited 
-because only kernel drivers need access to Sg_request at all...
-
->> The reason i'm asking is, i need to pass data through SG_IO from an 
->> application to the driver. At the moment the problem is solved by 
->> copying code of the SG_IO driver into i2o_config (the passthru 
->> function). I'm working on removing the passthru function and instead 
->> using the SG_IO interface, but therefore i need to pass some 
->> additional data to the driver. I could use the use the "flags" and 
->> "usr_ptr" fields in sg_io_hdr_t, but i need to get access to them 
->> through "Sg_request".
->> Any comments appreciated.
-> Let's see what the style police say :-)
-
-Of course if there is a better way, i would be glad to hear about it :-D
-
-But because nobody else seems to need access to sg_io_hdr_t from within 
-the driver it's probably the easiest way...
-
-Thanks for your help...
-
-
-
-Best regards,
-
-
-Markus Lidel
-------------------------------------------
-Markus Lidel (Senior IT Consultant)
-
-Shadow Connect GmbH
-Carl-Reisch-Weg 12
-D-86381 Krumbach
-Germany
-
-Phone:  +49 82 82/99 51-0
-Fax:    +49 82 82/99 51-11
-
-E-Mail: Markus.Lidel@shadowconnect.com
-URL:    http://www.shadowconnect.com
+	Luben
