@@ -1,78 +1,61 @@
-From: "Admin" <Personnel@selu.com.ar>
-Subject: Attention All School Staff, Personnel, and Students:
-Date: Tue, 16 Dec 03 23:52:26 GMT
+From: "James Daniel" <jdaniel@dakotacom.net>
+Subject: Initio 9100u -- Mike Christie's 2.6.0-test11 Patch -- Kernel Errors
+Date: Wed, 17 Dec 2003 02:05:09 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <i-8a--eb2-m-8$$p-1o3$$$-3-e-w71__17010.2662792944$1071615746@0nmp.czes>
+Message-ID: <000501c3c47c$dfc05ae0$0200000a@nightsky>
 Mime-Version: 1.0
-Content-Type: multipart/alternative;
-	boundary=".E71._4._4.D5E7DC.CF_A40"
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 200-207-42-59.dsl.telesp.net.br ([200.207.42.59]:15891 "HELO
-	200-207-42-59.dsl.telesp.net.br") by vger.kernel.org with SMTP
-	id S264142AbTLPWyA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Dec 2003 17:54:00 -0500
+Received: from breaker.dakotacom.net ([66.192.152.146]:53928 "EHLO
+	breaker.dakotacom.net") by vger.kernel.org with ESMTP
+	id S264229AbTLQJFF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Dec 2003 04:05:05 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-fsdevel@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Mike Christie <mikenc@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>
 
-This is a multi-part message in MIME format.
+First off..
+Mike, thank you for your work on this driver. James, thank you for pointing
+out the patch.
 
---.E71._4._4.D5E7DC.CF_A40
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I finally had time to take the server down and recompile with vga mode
+selection support.. so, with 80x60, the entire scsi setup stays on the
+screen at the time of panic.. here we go:
 
-Attention All School Staff, Personnel, and Students:
+i91u: PCI Base=0xEC00, IRQ=12, BIOS=0xC8000, SCSI ID=7
+i91u: Reset SCSI Bus ...
+ERROR: SCSI host `INI9100U' has no error handling
+ERROR: This is not a safe way to run your SCSI host
+ERROR: The error handling must be added to this driver
+Call Trace:
+ [<c029cfd1>] scsi_host_alloc+0x291/0x2a0
+ [<c029cff1>] scsi_register+0x11/0x60
+ [<c02a4ed1>] i91u_detect+0x1d1/0x3c0
+ [<c0290e28>] ide_register_driver+0xe8/0x120
+ [<c03628b3>] init_this_scsi_driver+0x53/0x100
+ [<c035276c>] do_initcalls+0x2c/0xa0
+ [<c01050ed>] init+0x2d/0x140
+ [<c01050c0>] init+0x0/0x140
+ [<c0107329>] kernel_thread_helper+0x5/0x1c
 
-You Must Respond By 5 P.M. Thursday, December 18, 2003
+It then goes on to ID the drive correctly, and loads the sd driver, which
+again IDs the drive correctly.. and we get:
 
-Through a special arrangement, Avtech Direct is offering a limited
-allotment of BRAND NEW, top of-the-line, name-brand desktop computers
-at 50% off MSRP to all Teachers, Students, Faculty, and  Staff who
-respond to this message before 5 P.M., Wednesday, December 3, 2003
+SCSI device  sda: 17783240 512-byte hdwr sectors (9105 MB)
+SCSI device sda: drive cache: write back
+/dev/scsi/host0/bus0/target1/lun0: unknown partition table
+Attached scsi disk sda at scsi0, channel 0, id 1, lun 0
 
-All desktop computers are brand-new packed in their original boxes,
-and come with a full manufacturer's warranty plus
-a 100% satisfaction guarantee.
+which results in the end:
 
-These professional grade Desktops are fully equipped with 2004
-next generation technology, making these the best performing
-computers money can buy.
+VFS: Cannot open root device "801" or sda1
+Please append a correct "root=" boot option
+kernel panic: VFS: Unable to mount root fs on sda1
 
-Avtech Direct is offering these feature rich, top performing
-Desktops with the latest Intel technology at an amazing price
-to all Teachers, and Students, Faculty and Staff who call:
+Hope this helps in the debugging.. as you may guess, the whole box works
+absolutely fine under 2.4.23...
 
-    1-800-884-9510 by 5 P.M. Thursday, December 18, 2003
-
-The fast and powerful AT-2400 series Desktop features: 
-
-      * Intel 2.0Ghz Processor for amazing speed and performance
-      * 128MB DDR RAM,  Upgradeable to 1024
-      * 20 GB UDMA Hard Drive, Upgradeable to 80 GB
-      * 52X CD-Rom Drive, Upgradeable to DVD/CDRW 
-      * 1.44 Floppy disk drive
-      * Next Generation Technology
-      * ATI Premium video and sound
-      * Full Connectivity with Fax modem/Lan/IEE 1394/USB 2.0
-      * Soft Touch Keyboard and scroll mouse
-      * Internet Ready
-      * Network Ready
-      * 1 Year parts and labor warranty
-      * Priority customer service and tech support
-
-MSRP $699 ........................................ Your Cost $347
-
-How to qualify:
-
-  1. You must be a Teacher, Student or School Staff Member
-  2. All desktop computers will be available on a
-     first come first serve basis.
-  3. You must call 1-800-884-9510 by 5 P.M. Thursday, December 18, 2003
-     and we will hold the desktops you request on will call. 
-  4. You are not obligated in any way.
-  5. 100% Satisfaction Guaranteed.
-   
-   
-Call Avtech Direct
-1-800-884-9510 before 5 P.M. Thursday, December 18, 2003
---.E71._4._4.D5E7DC.CF_A40--
+- James Daniel
 
