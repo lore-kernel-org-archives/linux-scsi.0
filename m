@@ -1,50 +1,55 @@
-From: Paul Wagland <paul@kungfoocoder.org>
-Subject: Re: megaraid /proc under kernel 2.6.2
-Date: Mon, 16 Feb 2004 09:33:57 +0100
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: Re: A few issues with aic7xxx driver (2 problems, 5 servers
+	affected)
+Date: Mon, 16 Feb 2004 10:46:04 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1076920436.2022.13.camel@morsel.kungfoocoder.org>
-References: <1076884890.2943.265.camel@morsel.kungfoocoder.org>
-	 <40302342.10806@pobox.com>
+Message-ID: <1076924764.4441.1.camel@laptop.fenrus.com>
+References: <200402160217.VAA29761@m1.name2host.com>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-S1+oUiDFQpByzvCaI/oS"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out3.xs4all.nl ([194.109.24.13]:18702 "EHLO
-	smtp-out3.xs4all.nl") by vger.kernel.org with ESMTP id S265433AbUBPIeX
+Received: from node-d-1fcf.a2000.nl ([62.195.31.207]:27008 "EHLO
+	laptop.fenrus.com") by vger.kernel.org with ESMTP id S265444AbUBPJqL
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Feb 2004 03:34:23 -0500
-In-Reply-To: <40302342.10806@pobox.com>
+	Mon, 16 Feb 2004 04:46:11 -0500
+In-Reply-To: <200402160217.VAA29761@m1.name2host.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux SCSI mailing list <linux-scsi@vger.kernel.org>
+To: Adam <adam@luchjenbroers.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2004-02-16 at 02:56, Jeff Garzik wrote:
-> Paul Wagland wrote:
-> > 
-> > However, the /proc/megaraid directory is no longer populated, and I am
-> > not quite sure why.
-> 
-> 
-> Maybe I can address the issue another way :)
-> 
-> We are moving away from procfs...  so may I suggest taking this 
-> opportunity to consider what procfs outputs, and a better way to provide 
-> that to userspace.  Perhaps this information is already duplicated in 
-> sysfs...
 
-I think you miss the point... I was looking at _decreasing_ the amount
-of work I had to do! :-)
+--=-S1+oUiDFQpByzvCaI/oS
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Anyway, this sysfs stuff is something for me to look at, but at the
-moment there are no attributes being exported via sysfs, I am currently
-reading up on the lwn.net articles about it... I will try to submit a
-patch to add some of this stuff later this week.
+On Mon, 2004-02-16 at 03:17, Adam wrote:
+> There are 2 seperate problems, affecting 5 different servers that I am
+> trying to solve.
+>=20
+> All servers are Redhat 7.2
+>=20
+> Problem 1:
+> All 3 affected servers are running kernel 2.4.9-31
 
-However, for at least edification purposes, I would still like to know
-why the proc directory is not working. It appears to me that a static
-global variable is not being read somehow?!? I sent a second e-mail
-through about that though.
 
-Thanks for the input,
-Paul
+dude you're scaring me. Do you have any idea how many security issues
+that kernel has (and are fixed in later kernels)? How about updating to
+the lastest and last kernel RH released for 7.2 ? It has so many
+bugfixes all over the place that there is a very reasonable probability
+that any bug (including yours) is already fixed
 
+
+--=-S1+oUiDFQpByzvCaI/oS
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+
+iD8DBQBAMJFcxULwo51rQBIRArReAKCYcrrjulxQcBGlMcgkNG/yLvC1DgCdG6Zp
+SvOAVbSi3iaV1o+g0HeXzs0=
+=3+7e
+-----END PGP SIGNATURE-----
+
+--=-S1+oUiDFQpByzvCaI/oS--
