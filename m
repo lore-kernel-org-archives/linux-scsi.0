@@ -1,20 +1,41 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
+From: berthiaume_wayne@emc.com
 Subject: RE: scsi write barriers (ordered tags)?
-Date: Wed, 5 Feb 2003 13:31:27 -0800
+Date: Wed, 5 Feb 2003 16:57:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A5974D8E5F98D511BB910002A50A66470580D5EB@hdsmsx103.hd.intel.com>
+Message-ID: <93F527C91A6ED411AFE10050040665D0049C0681@corpusmx1.us.dg.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from talaria.fm.intel.com (talaria.fm.intel.com [10.1.192.39])
-	by hermes.fm.intel.com (8.11.6/8.11.6/d: outer.mc,v 1.51 2002/09/23 20:43:23 dmccart Exp $) with ESMTP id h15LPgQ12225
-	for <linux-scsi@vger.kernel.org>; Wed, 5 Feb 2003 21:25:42 GMT
-Received: from fmsmsxvs041.fm.intel.com (fmsmsxvs041.fm.intel.com [132.233.42.126])
-	by talaria.fm.intel.com (8.11.6/8.11.6/d: inner.mc,v 1.28 2003/01/13 19:44:39 dmccart Exp $) with SMTP id h15LUNv15674
-	for <linux-scsi@vger.kernel.org>; Wed, 5 Feb 2003 21:30:24 GMT
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@steeleye.com>, jordan.breeding@attbi.com
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: andrew.r.cress@intel.com
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, jordan.breeding@attbi.com
+
+	Andrew, I'd have to dispute your reported finding. I have been
+testing lk 2.4.19, reiserfs, with IDE drives both with write cache enabled
+and disabled, and  with and without write barrier patch on file sizes from
+4kB to 100MB. All files are fsync()'d to the drives, and with write cache
+enabled provided vast improvements in system performance. Further, by using
+the write barrier patch, when compared with write cache enabled and no write
+barrier patch, only a slight degradation in system performance was
+encountered. 
+	Now I can't speak for SCSI and how effective it would be, but there
+is a definite improvement in the IDE world.
+Regards,
+Wayne
+
+email:       Berthiaume_Wayne@emc.com
+
+"One man can make a difference, and every man should try."  - JFK
+
+
+-----Original Message-----
+From: Cress, Andrew R [mailto:andrew.r.cress@intel.com]
+Sent: Wednesday, February 05, 2003 4:31 PM
+To: 'James Bottomley'; jordan.breeding@attbi.com
+Cc: SCSI Mailing List
+Subject: RE: scsi write barriers (ordered tags)?
+
 
 Jordan,
 
@@ -48,3 +69,7 @@ slowdown).
 
 James
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
