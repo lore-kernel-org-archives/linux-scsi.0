@@ -1,56 +1,71 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [BK PATCH] SCSI update for 2.6.3
-Date: Tue, 24 Feb 2004 10:15:12 -0800
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040224101512.A19617@beaverton.ibm.com>
-References: <Pine.LNX.4.58.0402240919490.1129@spektro.metla.fi> <20040224170412.GA31268@kroah.com> <1077642529.1804.170.camel@mulgrave> <20040224171629.GA31369@kroah.com>
+From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Subject: Re: [2.4.25] scsi29160 card-aic7xxx, HP Ultrium 230 tape read/write
+ failure
+Date: Tue, 24 Feb 2004 17:34:06 -0300 (BRT)
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.58L.0402241729080.23951@logos.cnet>
+References: <20040224154208.1602.qmail@web41203.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20040224171629.GA31369@kroah.com>; from greg@kroah.com on Tue, Feb 24, 2004 at 09:16:29AM -0800
-To: Greg KH <greg@kroah.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Kai Makisara <Kai.Makisara@metla.fi>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, kai.makisara@kolumbus.fi
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from intra.cyclades.com ([64.186.161.6]:53390 "EHLO
+	intra.cyclades.com") by vger.kernel.org with ESMTP id S262406AbUBXThR
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Feb 2004 14:37:17 -0500
+In-Reply-To: <20040224154208.1602.qmail@web41203.mail.yahoo.com>
 List-Id: linux-scsi@vger.kernel.org
+To: Jin Suh <jinssuh@yahoo.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Feb 24, 2004 at 09:16:29AM -0800, Greg KH wrote:
 
-> 
-> Can you print out the sysfs tree this patch creates?
-> 
-> What's that "tape" symlink for?  Does it go from the scsi device in
-> /sys/devices/... to the class device?  Or the other way around?
-> 
-> Other than that question, the patch looks sane to me.
 
-Current 2.6 kernel default names are of the form: st[0-9]m[0-3][n]
+On Tue, 24 Feb 2004, Jin Suh wrote:
 
-Current /dev naming is of the form: [n]st[0-9][alm]
+> Hello,
+>
+> I recently upgraded my kernel to 2.4.25. I have a strange error using 2.4.25
+> with Ultrium 230 tape drive. I wrote 4gb data unto the tape and read back to
+> verify md5sum value. It died when it read around 1.3gb data from tape saying
+> following:
+>
+> (scsi0:A:3:0): parity error detected in Data-in phase. SEQADDR(0x84)
+> SCSIRATE(0x98)
+> (scsi0:A:3:0): Unexpected busfree in Message-out phase
+> SEQADDR == 0x16b
+> st0: Error 70000 (sugg. bt 0x0, driver bt 0x0, host bt 0x7).
+> st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
+> st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
+> st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
+> st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
+> st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
+> st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
+> st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
+> st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
+> st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
+> st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
+> st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
+> ........
+>
+> When I tried to read it again using:
+> dd if=/dev/st0 bs=1024 conv=noerror,sync | md5sum
+>
+> I got the following:
+> st0: Error 10000 (sugg. bt 0x0, driver bt 0x0, host bt 0x1).
+> dd: opening '/dev/st0': Input/Output error
+>
+> I tested the same thing unto the HP Exabyte and HP SuperStore DAT24. Both
+> worked without problems. But it happened on the HP Ultrium 230 tape drive.
+> Everything used to work fine with 2.4.20 kernel before. Is there any patch for
+> 2.4.25? Do you have any idea?
 
-Should the st kernel names be changed to map to current /dev names?
+Hi Jin,
 
-For udev, even with that we need differing pre and postfix values wrapped
-around a peristent name.
+CCing linux-scsi to get more input.
 
-Here's /dev and /udev (for a dlt tape drive):
+I dont have much clues unfortunately -- reading the SCSI error messages it
+looks like a parity error.
 
-[elm3a49 Documentation]$ ls -l /udev/*st0* | sort -k 5
-crw-------    1 root     root       9,   0 Feb 24 17:47 /udev/st0m0
-crw-------    1 root     root       9,  32 Feb 24 17:47 /udev/st0m1
-crw-------    1 root     root       9,  64 Feb 24 17:47 /udev/st0m2
-crw-------    1 root     root       9,  96 Feb 24 17:47 /udev/st0m3
-crw-------    1 root     root       9, 128 Feb 24 17:47 /udev/st0m0n
-crw-------    1 root     root       9, 160 Feb 24 17:47 /udev/st0m1n
-crw-------    1 root     root       9, 192 Feb 24 17:47 /udev/st0m2n
-crw-------    1 root     root       9, 224 Feb 24 17:47 /udev/st0m3n
-[elm3a49 Documentation]$ ls -l /dev/*st0* | sort -k 5
-crw-rw----    1 root     tape       9,   0 Nov 14 14:34 /dev/st0
-crw-rw----    1 root     tape       9,  32 Nov 14 14:34 /dev/st0l
-crw-rw----    1 root     tape       9,  64 Nov 14 14:34 /dev/st0m
-crw-rw----    1 root     tape       9,  96 Nov 14 14:34 /dev/st0a
-crw-rw----    1 root     tape       9, 128 Nov 14 14:34 /dev/nst0
-crw-rw----    1 root     tape       9, 160 Nov 14 14:34 /dev/nst0l
-crw-rw----    1 root     tape       9, 192 Nov 14 14:34 /dev/nst0m
-crw-rw----    1 root     tape       9, 224 Nov 14 14:34 /dev/nst0a
+Can you try 2.4.20 again? Find out where this problem started.
 
--- Patrick Mansfield
+It might be a physical drive problem too which was not failing when you
+ran 2.4.20.
