@@ -1,70 +1,99 @@
-From: "Smart, James" <James.Smart@Emulex.Com>
-Subject: RE: [PATCH] dead code and missing statics in lpfc
-Date: Wed, 9 Jun 2004 07:08:55 -0400
+From: Mark Watts <m.watts@eris.qinetiq.com>
+Subject: Re: aacraid does not work on dual opteron box - 2.6.7-rc2
+Date: Wed, 9 Jun 2004 12:50:25 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3356669BBE90C448AD4645C843E2BF28034F947B@xbl.ma.emulex.com>
+Message-ID: <200406091250.25860.m.watts@eris.qinetiq.com>
+References: <20040609083142.GB23062@szafa>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: Text/Plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:39933 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S265727AbUFILJI
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Jun 2004 07:09:08 -0400
+Received: from mail.eris.qinetiq.com ([128.98.1.1]:61029 "HELO
+	mail.eris.qinetiq.com") by vger.kernel.org with SMTP
+	id S265740AbUFILx1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jun 2004 07:53:27 -0400
+In-Reply-To: <20040609083142.GB23062@szafa>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: 'Christoph Hellwig' <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Sergiusz Pawlowicz <ser@gnu.org>, linux-scsi@vger.kernel.org
 
-So...
-
-I agree that symbols such as this are not desired, but... If this is the
-stance of the linux-scsi group - it says:
-
-- For vendors such as ourselves, the driver that we put through extensive
-qualification and testing - real, repeated, extended run time on many
-platforms, distributions, and in many different configurations - will NEVER
-be the same driver that is ultimately shipped with the kernel. Use of the
-kernel-supplied driver will ALWAYS be a calculated risk.
-
-- This implies that - for any production system wanting support - you are
-MANDATING that the user replace the kernel-supplied driver with the vendor's
-driver. 
-
-- And lastly, although not as important, you are dictating that, for a
-kernel-level entity, there is never an opportunity for them to extend their
-product set by providing extra add-in or helper modules. This limitation is
-reasonable for kernel protection - but it pushes the user, who wants the
-features, back to the vendor's replacement driver.
-
-- Ultimately, the byproduct of the above is, you are also focusing the
-vendor away from the base kernel. Any effort to extend the driver, it's
-feature set, etc - regardless of whether those features/extensions would be
-good for the kernel or scsi subsystem overall, will be focused solely on the
-mandated replacement driver. The kernel-supplied driver becomes a "put in
-the least effort necessary" choice.
-
-I know that I'm a bit strong in the statements above - but it is the reality
-we are facing when trying to support Linux. This grinds me, as our desire is
-to be 100% behind the kernel-supplied driver and it's community, not to be
-doing replacement kits that just circumvent things.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
 
--- James
+> Hello linux friends,
+> sorry for bothering you, but  current aacraid still does not
+> work properly on  my fresh dual opteron box  & Adaptec 2120S
+> RAID controler. It hungs  always after modprobing sd_mod and
+> disk access try.
+>
+
+<snip>
+
+Not sure if this helps but I'm running a Dual Opteron 248 with 2 (two) Adaptec 
+AAR-2410SA cards in PCI-X slots on a Tyan S2885 board.
 
 
+# uname -a
+Linux localhost 2.6.3-7mdk-p3-smp-64GB #1 SMP Wed Mar 17 15:34:39 CET 2004 
+i686 unknown unknown GNU/Linux
 
-> -----Original Message-----
-> From: 'Christoph Hellwig' [mailto:hch@infradead.org]
-> Sent: Wednesday, June 09, 2004 4:56 AM
-> To: Smart, James
-> Cc: linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH] dead code and missing statics in lpfc
-> 
-> <snip...>
-> 
-> In either case exported symbols in the driver and dead 
-> symbols are completely
-> uninteresting for a kernel submission, so make sure you get 
-> rid of them
-> before you try to submit the driver.
-> 
+Red Hat/Adaptec aacraid driver (1.1.2-lk1 Mar 17 2004)
+AAC0: kernel 4.1.4 build 5934
+AAC0: monitor 4.1.4 build 5934
+AAC0: bios 4.1.0 build 5934
+AAC0: serial ba7127fafaf001
+scsi0 : aacraid
+  Vendor: ADAPTEC   Model: AAR-2410SA RAID5  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+AAC1: kernel 4.1.4 build 5934
+AAC1: monitor 4.1.4 build 5934
+AAC1: bios 4.1.0 build 5934
+AAC1: serial bab51afafaf001
+scsi1 : aacraid
+  Vendor: ADAPTEC   Model: AAR-2410SA Mirro  Rev: V1.0
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+SCSI device sda: 216790272 512-byte hdwr sectors (110997 MB)
+sda: Write Protect is off
+sda: Mode Sense: 03 00 00 00
+SCSI device sda: drive cache: write through
+ /dev/scsi/host0/bus0/target0/lun0: p1
+Attached scsi removable disk sda at scsi0, channel 0, id 0, lun 0
+SCSI device sdb: 72263424 512-byte hdwr sectors (36999 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 03 00 00 00
+SCSI device sdb: drive cache: write through
+ /dev/scsi/host1/bus0/target0/lun0: p1 p2 < p5 p6 >
+Attached scsi removable disk sdb at scsi1, channel 0, id 0, lun 0
+
+AAC0 is a 4x36GB raid5 array with WD Raptor SATA drives
+AAC1 is a 2x36GB raid1 mirror with the same drives
+
+- From lsmod:
+
+sd_mod                 18592  6
+aacraid                45248  4
+scsi_mod              121552  2 sd_mod,aacraid
+
+# uptime
+ 13:55:38 up 22 days, 21:47,  1 user,  load average: 0.00, 0.00, 0.00
+
+This is a Mandrake 10.0 Official system.
+
+Mark.
+
+- -- 
+Mark Watts
+Senior Systems Engineer
+QinetiQ Trusted Information Management
+Trusted Solutions and Services group
+GPG Public Key ID: 455420ED
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFAxvmBBn4EFUVUIO0RAobNAJ9VrbE2/gBxonNEw0kOyAGgXaU0+gCgimxx
+gci7EWybhvIRmaStjcS5FLI=
+=LyFx
+-----END PGP SIGNATURE-----
