@@ -1,37 +1,49 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] SG_IO ioctl in block layer against lk 2.5.55
-Date: Fri, 10 Jan 2003 14:06:22 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030110130622.GL841@suse.de>
-References: <3E1EB08D.5060105@torque.net>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: sd_read_cache_type
+Date: Fri, 10 Jan 2003 10:14:11 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200301101514.h0AFEBc03067@localhost.localdomain>
+References: <UTC200301101308.h0AD8r021919.aeb@smtp.cwi.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3E1EB08D.5060105@torque.net>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: Message from Andries.Brouwer@cwi.nl
+   of "Fri, 10 Jan 2003 14:08:53 +0100." <UTC200301101308.h0AD8r021919.aeb@smtp.cwi.nl>
+To: Andries.Brouwer@cwi.nl
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org
 
-On Fri, Jan 10 2003, Douglas Gilbert wrote:
-> The attachment modifies the SG_IO ioctl that is in
-> the block layer to:
->   - convey the SCSI status value back via the sg_io_hdr
->     structure
->   - in the event of CHECK CONDITION, convey the sense
->     buffer back via the sg_io_hdr structure
->   - set "output" fields in sg_io_hdr structure to sane
->     values
->   - modify the errno behaviour to be more like the
->     SCSI generic driver's SG_IO ioctl
-> 
-> This patch was presented around lk 2.5.51 but fell between
-> the cracks. The only modification is to take account of
-> the changes to scsi/scsi_lib.c since then.
+Andries.Brouwer@cwi.nl said:
+> Will look a bit more at the details later. For now a question: this
+> call does a MODE_SENSE with the DBD (disable block descriptors) bit
+> set. Is there a reason for that? Wouldn't the same code work in the
+> same way without that bit? 
 
-Doug,
+The reason was just least line of resistance.  The code doesn't use the block 
+descriptors, so there's no need to ask for them.  The code is written to skip 
+over the block descriptors, just in case the device returns them, so setting 
+DBD to zero should have no practical effect.
 
-Patch looks good to me, please feel free to send it to Linus.
+Andries.Brouwer@cwi.nl said:
+> And the reason I ask is that we already have sd_do_mode_sense6(), so
+> part of sd_read_cache_type() can be simply replaced by a call of
+> sd_do_mode_sense6(), but the latter needs an extra parameter if DBD is
+> really needed.
 
--- 
-Jens Axboe
+I agree with replacing the functionality with this call.  On general 
+principle, the DBD bit (and any other missing pieces) should be added to 
+mode_sense6 just to make it as useful as possible (and, I suppose, the call 
+should be moved into scsi_lib since more than just sd could make use of it).
 
+> And a second question: sd_read_cache_type() is called also when no
+> medium is present. Objections against only calling when media are
+> present?
+
+Well, the cache is pretty often part of the permanent assembly, not part of 
+the removable medium, so I think it should still be called for removable 
+media. That begs the question, of course, what should the cache type be---it 
+strikes me as rather unsafe to have a removable RW medium with a write back 
+cache?  I suppose at the very least we should to a SYNCHRONIZE on ejection if 
+it's write back?
+
+James
