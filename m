@@ -1,42 +1,32 @@
-From: Luben Tuikov <luben@splentec.com>
-Subject: Re: [PATCH] SCSI Core patches
-Date: Wed, 15 Jan 2003 12:40:13 -0500
+From: Shanker Balan <shanu@exocore.com>
+Subject: Re: Seagate Cheetah: Firmware, Bugs, Compatibility?
+Date: Thu, 16 Jan 2003 11:02:10 +0530
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E259CFD.8010305@splentec.com>
-References: <MPESCHKE@de.ibm.com> <OFD72246CF.E2385102-ONC1256CAF.0050D1E1@de.ibm.com> <200301151552.h0FFqp402401@localhost.localdomain> <20030115171233.GC1910@beaverton.ibm.com>
+Message-ID: <20030116053210.GB817@exocore.com>
+References: <A5974D8E5F98D511BB910002A50A66470580D4F1@hdsmsx103.hd.intel.com> <Pine.LNX.4.44.0301072238580.3021-100000@uplift.swm.pp.se> <20030108081513.GA1217@exocore.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20030108081513.GA1217@exocore.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Martin Peschke3 <MPESCHKE@de.ibm.com>, patmans@us.ibm.com, linux-scsi@vger.kernel.org
+To: Linux-SCSI <linux-scsi@vger.kernel.org>
 
-Mike Anderson wrote:
- >
-> object. A transport specific lib could contain common routines
-> which the LLDD could use or provide there own ops.
+Hello:
 
-Uuuuh, I think that this will be too bulky for its purpose.
+Shanker Balan wrote,
+> I am having problems flashing the drive. I get an "-2" error with
+> sgdskfl.
+> 
+> Error -2 is a "-2 means that the SCSI request returned a check condition
+> (sense error)" from the UserGuide.
 
-All we want is to present the target port/device name/identifier,
-aka ``target ID'', and the LUN.  Both of those are fairly simple
-and trivial to implement.
+Ok, I tracked down the problem - the firmware image was corrupted! :-D
 
-I do not think that the LLDD should be burdened with more callbacks
-for this.  This makes it too messy and too complicated for no reason.
-
-As was suggested before by someone, and I concurred, SCSI Core can
-do translations for old and dumb drivers, but newer LLDD, would
-accept an actual LUN (64 bits), and an actual target identifier.
-
-I.e. the LLDD shouldn't know what hit them.
-
-Latest news is that SPI is completely going away from SPC-3 and SAM-3
-which would make it more worthwhile to get this going.
+-- Shanu
+http://shankerbalan.com/
 
 -- 
-Luben
-
-
-
+Coincidence, n.:
+	You weren't paying attention to the other half of what was
+going on.
