@@ -1,61 +1,90 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] Re: USB storage problems on OHCI..
-Date: Mon, 22 Sep 2003 10:25:28 -0400 (EDT)
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: max GiB written per boot
+Date: 22 Sep 2003 08:52:45 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0309221001090.1697-100000@ida.rowland.org>
-References: <20030922004943.E32009@one-eyed-alien.net>
+Message-ID: <1064242365.13428.6.camel@patehci2>
+References: <Pine.LNX.4.44L0.0309101219190.905-100000@ida.rowland.org>
+	 <1063217791.3669.43.camel@patehci2>  <1063219776.3669.72.camel@patehci2>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:5892 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S263158AbTIVOZ3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Sep 2003 10:25:29 -0400
-In-Reply-To: <20030922004943.E32009@one-eyed-alien.net>
+Received: from email-out1.iomega.com ([147.178.1.82]:18924 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S263170AbTIVOwH
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Sep 2003 10:52:07 -0400
+Received: from royntex01.iomegacorp.com (unknown [147.178.90.120])
+	by email.iomega.com (Postfix) with ESMTP id 579E51909
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2003 08:52:06 -0600 (MDT)
+In-Reply-To: <1063219776.3669.72.camel@patehci2>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
-Cc: Linus Torvalds <torvalds@osdl.org>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-This problem has been cropping up with many, many USB storage devices.  
-They just don't handle MODE-SENSE page 8 correctly.  Some devices are okay
-with a 128-byte transfer and others aren't.  Some are okay with a 64-byte
-transfer and others aren't.  Some are okay transferring the actual size of
-the page (as given in the header) and others aren't.  Some are okay
-transferring the minimum amount we actually need (12 bytes IIRC) and
-others aren't.
 
-Although it may not directly address all the problems that Linus observed,
-a solution has been floating around in the linux-scsi and usb-storage
-development lists.  It looks to me like it's ready to be merged, although
-no one has done so yet.  Basically, it amounts to a per-device flag that
-can be inherited by default from the host template or set/cleared
-specifically by the host driver, rather like the flag for using 10-byte
-READ/WRITE commands.  The flag tells sd.c not to ask for page 8 but to
-assume a write-through cache.  The patch is in
+> ... always ... an oops ... Must be fixed.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=106366112221507&w=2
+Here's another "kernel NULL pointer dereference", for we of linux-scsi
+to fix, again brought to us courtesy the [usb-storage] mailing list  ...
 
-At the moment, this MODE-SENSE page 8 is probably the most severe 
-outstanding problem with the usb-storage driver.  I'm all in favor of the 
-patch being adopted (hint, hint...).
+Specifically I tried trivially repeating writes in 2.6.0-test5:
 
-I've been assuming that the "babble" problem arises because the device
-either tries to send more than 128 bytes of mode-sense data or because it
-tries to send the data and the subsequent 13-byte status in the same
-packet.  Whether or not this would be detected as an error depends on the
-maxpacket size, which depends on the speed of the USB bus.  (Maybe the
-device even tries to send an over-sized packet.)  Of course, it's always
-possible that reading page 8 just triggers a bug in the device firmware,
-and from then on it's all over.
+date ; sync
+date ; dd of=/dev/scd1 if=/dev/zero bs=1M
+date ; sync
+...
 
-On Mon, 22 Sep 2003, Matthew Dharm wrote:
+Two days and five hours later, my 77th write completed normally:
+dd: writing `/dev/scd1': No space left on device
 
-> You say this worked with UHCI 'some time ago'?  Perhaps that was before all
-> this mode page 8 stuff got settled?
+But five minutes after that, my 78th write and all my following writes
+completed abnormally:
+dd: opening `/dev/scd1': No such device or address
 
-The MODE-SENSE page 8 stuff was added sometime during the 2.5 development 
-cycle.  Before it was put in, quite likely the device would have worked 
-fine with UHCI.
+Some hours after that I collected the following `tail` of a `dmesg`:
 
-Alan Stern
+Then I rebooted.
+
+Pat LaVarre
+
+...
+lost page write due to I/O error on sr1
+SCSI error : <2 0 0 0> return code = 0x10000
+end_request: I/O error, dev sr1, sector 54044664
+Buffer I/O error on device sr1, logical block 6755583
+lost page write due to I/O error on sr1
+Unable to handle kernel NULL pointer dereference at virtual address
+00000000
+ printing eip:
+c01e818f
+*pde = 00000000
+Oops: 0000 [#1]
+CPU:    0
+EIP:    0060:[<c01e818f>]    Not tainted
+EFLAGS: 00010282
+EIP is at get_kobj_path_length+0x19/0x30
+eax: 00000000   ebx: 00000000   ecx: ffffffff   edx: cb0eaef4
+esi: 00000015   edi: 00000000   ebp: c9eb5e88   esp: c9eb5e7c
+ds: 007b   es: 007b   ss: 0068
+Process dd (pid: 29851, threadinfo=c9eb4000 task=de3dace0)
+Stack: c9eb4000 000000a5 d2c1b900 c9eb5ed0 c01e834f c03f5b60 c17149ac
+000000a5 
+       d2c1b880 c1714800 c9eb5eb8 cddfb400 d2c1b880 cddfb419 c03ba0a0
+c0383d13 
+       00000000 c1714988 c17149ac d36778ac c1714800 c9eb5ee8 c01e881d
+c037dfa5 
+Call Trace:
+ [<c01e834f>] kset_hotplug+0x15e/0x2b0
+ [<c01e881d>] kobject_del+0x66/0x6d
+ [<c02470fc>] device_del+0x72/0x98
+ [<c027b92a>] scsi_device_put+0xc9/0xe7
+ [<df9088d6>] cdrom_release+0x8c/0x105 [cdrom]
+ [<c0164fb6>] blkdev_put+0x1df/0x20b
+ [<c015d0c3>] __fput+0x123/0x135
+ [<c015b79b>] filp_close+0x57/0x81
+ [<c015b846>] sys_close+0x81/0xc7
+ [<c010b409>] sysenter_past_esp+0x52/0x71
+
+Code: f2 ae f7 d1 49 8b 52 24 8d 74 31 01 85 d2 75 e7 5b 89 f0 5e 
+ <6>usb 1-2: USB disconnect, address 5
+
 
