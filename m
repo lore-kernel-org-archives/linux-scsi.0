@@ -1,53 +1,102 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [patch for playing] 2.5.65 patch to support > 256 disks
-Date: Thu, 27 Mar 2003 10:18:54 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030327091854.GY30908@suse.de>
-References: <200303211056.04060.pbadari@us.ibm.com> <3E8047C7.4070009@cyberone.com.au> <20030325123502.GW2371@suse.de> <200303261629.34868.pbadari@us.ibm.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] update qlogic and fdomain drivers to use pcmcia_register_driver
+Date: Thu, 27 Mar 2003 16:05:35 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20030327160535.B10288@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200303261629.34868.pbadari@us.ibm.com>
-To: Badari Pulavarty <pbadari@us.ibm.com>
-Cc: Nick Piggin <piggin@cyberone.com.au>, Andrew Morton <akpm@digeo.com>, dougg@torque.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Mar 26 2003, Badari Pulavarty wrote:
-> On Tuesday 25 March 2003 04:35 am, Jens Axboe wrote:
-> 
-> > Only testing will tell, so yes you are very welcome to give it a shot.
-> > Let me release a known working version first :)
-> 
-> Jens,
-> 
->  I  found whats using 32MB out of 8192-byte slab.
-> 
-> size-8192       before:10 after:4012 diff:4002 size:8192 incr:32784384
-> 
-> It is deadline_init():
-> 
->         dd->hash = kmalloc(sizeof(struct list_head)*DL_HASH_ENTRIES,GFP_KERNEL);
-> 
-> It is creating 8K hash table for each queue. Since we have 4000 queues,
 
-Yes
-
-> it used 32MB. I wonder why the current code needs 1024 hash buckets, 
-
-Hmm actually that's a leftover from when we played with bigger queue
-sizes, I inadvertently forgot to change it back when pushing the rbtree
-deadline update to Linus. It used to be 256. We can shrink this to 2^7
-or 2^8 instead, which will then only eat 1-2K.
-
-> when maximum requests are only 256. And also, since you are making
-> request allocation dynamic, can you change this too ? Any issues here ?
-
-No real issues to shrinking it, bigger problem if we move to larger
-queues. With the rq-dyn-alloc patch, we can make the max number of
-requests ceiling a lot higher and then the hash needs to be bigger too.
-But for now, 256 entry should be a good default and suffice for the
-future, I'll push that change.
-
--- 
-Jens Axboe
+--- 1.13/drivers/scsi/pcmcia/fdomain_stub.c	Thu Feb 27 12:35:58 2003
++++ edited/drivers/scsi/pcmcia/fdomain_stub.c	Sun Mar 23 22:34:13 2003
+@@ -379,26 +379,27 @@
+     return 0;
+ } /* fdomain_event */
+ 
+-/*====================================================================*/
++static struct pcmcia_driver fdomain_cs_driver = {
++	.owner		= THIS_MODULE,
++	.drv		= {
++		.name	= "fdomain_cs",
++	},
++	.attach		= fdomain_attach,
++	.detach		= fdomain_detach,
++};
+ 
+-static int __init init_fdomain_cs(void) {
+-    servinfo_t serv;
+-    DEBUG(0, "%s\n", version);
+-    CardServices(GetCardServicesInfo, &serv);
+-    if (serv.Revision != CS_RELEASE_CODE) {
+-	printk(KERN_NOTICE "fdomain_cs: Card Services release "
+-	       "does not match!\n");
+-	return -1;
+-    }
+-    register_pccard_driver(&dev_info, &fdomain_attach, &fdomain_detach);
+-    return 0;
++static int __init init_fdomain_cs(void)
++{
++	return pcmcia_register_driver(&fdomain_cs_driver);
+ }
+ 
+-static void __exit exit_fdomain_cs(void) {
+-    DEBUG(0, "fdomain_cs: unloading\n");
+-    unregister_pccard_driver(&dev_info);
+-    while (dev_list != NULL)
+-	fdomain_detach(dev_list);
++static void __exit exit_fdomain_cs(void)
++{
++	pcmcia_unregister_driver(&fdomain_cs_driver);
++
++	/* XXX: this really needs to move into generic code.. */
++	while (dev_list != NULL)
++		fdomain_detach(dev_list);
+ }
+ 
+ module_init(init_fdomain_cs);
+--- 1.12/drivers/scsi/pcmcia/qlogic_stub.c	Thu Feb 27 12:12:48 2003
++++ edited/drivers/scsi/pcmcia/qlogic_stub.c	Sun Mar 23 22:30:18 2003
+@@ -397,25 +397,26 @@
+ 	return 0;
+ }				/* qlogic_event */
+ 
+-/*====================================================================*/
++
++static struct pcmcia_driver qlogic_cs_driver = {
++	.owner		= THIS_MODULE,
++	.drv		= {
++		.name	= "qlogic_cs",
++	},
++	.attach		= qlogic_attach,
++	.detach		= qlogic_detach,
++};
+ 
+ static int __init init_qlogic_cs(void)
+ {
+-	servinfo_t serv;
+-	DEBUG(0, "%s\n", version);
+-	CardServices(GetCardServicesInfo, &serv);
+-	if (serv.Revision != CS_RELEASE_CODE) {
+-		printk(KERN_NOTICE "qlogic_cs: Card Services release " "does not match!\n");
+-		return -1;
+-	}
+-	register_pccard_driver(&dev_info, &qlogic_attach, &qlogic_detach);
+-	return 0;
++	return pcmcia_register_driver(&qlogic_cs_driver);
+ }
+ 
+ static void __exit exit_qlogic_cs(void)
+ {
+-	DEBUG(0, "qlogic_cs: unloading\n");
+-	unregister_pccard_driver(&dev_info);
++	pcmcia_unregister_driver(&qlogic_cs_driver);
++
++	/* XXX: this really needs to move into generic code.. */
+ 	while (dev_list != NULL)
+ 		qlogic_detach(dev_list);
+ }
