@@ -1,37 +1,55 @@
 From: Adrian Bunk <bunk@fs.tum.de>
-Subject: Re: [2.4 patch] Fix IRQ_NONE clash in SCSI drivers
-Date: Wed, 3 Sep 2003 15:24:52 +0200
+Subject: 2.6.0-test4-mm5: SCSI imm driver doesn't compile
+Date: Wed, 3 Sep 2003 19:02:56 +0200
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030903132452.GX23729@fs.tum.de>
-References: <Pine.LNX.4.55L.0308271449170.23236@freak.distro.conectiva> <20030902184436.GO23729@fs.tum.de> <200309031048.53818.m.c.p@wolk-project.de>
+Message-ID: <20030903170256.GA18025@fs.tum.de>
+References: <20030902231812.03fae13f.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200309031048.53818.m.c.p@wolk-project.de>
-To: Marc-Christian Petersen <m.c.p@wolk-project.de>
-Cc: Marcelo Tosatti <marcelo@conectiva.com.br>, Arnaldo Carvalho de Melo <acme@conectiva.com.br>, lkml <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
+In-Reply-To: <20030902231812.03fae13f.akpm@osdl.org>
+To: Andrew Morton <akpm@osdl.org>, Arnaldo Carvalho de Melo <acme@conectiva.com.br>
+Cc: linux-kernel@vger.kernel.org, campbell@torque.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Sep 03, 2003 at 10:48:53AM +0200, Marc-Christian Petersen wrote:
-> On Tuesday 02 September 2003 20:44, Adrian Bunk wrote:
-> 
-> Hi Adrian,
-> 
-> > This change added an (empty) IRQ_NONE #define to interrupt.h.
-> > Several scsi drivers are already using an IRQ_NONE.  Rename that to
-> > SCSI_IRQ_NONE (a similar change was done in 2.5 by Andrew Morton several
-> > months ago).
-> 
-> right, but you forgot one header :-) ... Attached is a patch.
+The following compile error (tested with gcc 2.95) seems to come from 
+Linus' tree:
 
-Uups, I fixed it but forgot to include it in the patch.
+<--  snip  -->
 
-Thanks for noticing it!
+...
+  CC [M]  drivers/scsi/imm.o
+In file included from drivers/scsi/imm.c:55:
+drivers/scsi/imm.h:105: duplicate array index in initializer
+drivers/scsi/imm.h:105: (near initialization for `IMM_MODE_STRING')
+make[2]: *** [drivers/scsi/imm.o] Error 1
 
-> Marcelo, please apply this too.
-> 
-> ciao, Marc
+<--  snip  -->
+
+The problem is the following code in imm.h (with 
+CONFIG_SCSI_IZIP_EPP16 enabled):
+
+<--  snip  -->
+
+...
+static char *IMM_MODE_STRING[] =
+{
+        [IMM_AUTODETECT] = "Autodetect",
+        [IMM_NIBBLE]     = "SPP",
+        [IMM_PS2]        = "PS/2",
+        [IMM_EPP_8]      = "EPP 8 bit",
+        [IMM_EPP_16]     = "EPP 16 bit",
+#ifdef CONFIG_SCSI_IZIP_EPP16
+        [IMM_EPP_16]     = "EPP 16 bit",
+#else
+        [IMM_EPP_32]     = "EPP 32 bit",
+#endif
+        [IMM_UNKNOWN]    = "Unknown",
+};
+...
+
+<--  snip  -->
 
 cu
 Adrian
