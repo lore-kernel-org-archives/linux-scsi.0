@@ -1,60 +1,75 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
 Subject: Re: scsi_forget_host() and scsi_remove_device()
-Date: Sat, 5 Jul 2003 10:11:18 -0400 (EDT)
+Date: Sat, 5 Jul 2003 09:25:44 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0307050959020.16984-100000@netrider.rowland.org>
-References: <20030704125444.B17588@one-eyed-alien.net>
+Message-ID: <20030705092544.A27540@one-eyed-alien.net>
+References: <20030704125444.B17588@one-eyed-alien.net> <Pine.LNX.4.44L0.0307050959020.16984-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-md5;
+	protocol="application/pgp-signature"; boundary="82I3+IH0IqGh5yIs"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:1799 "HELO
-	netrider.rowland.org") by vger.kernel.org with SMTP id S266353AbTGEN4s
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 5 Jul 2003 09:56:48 -0400
-In-Reply-To: <20030704125444.B17588@one-eyed-alien.net>
+Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:15116 "EHLO
+	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
+	id S266387AbTGEQLR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 5 Jul 2003 12:11:17 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0307050959020.16984-100000@netrider.rowland.org>; from stern@rowland.harvard.edu on Sat, Jul 05, 2003 at 10:11:18AM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+To: Alan Stern <stern@rowland.harvard.edu>
 Cc: Mike Anderson <andmike@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Fri, 4 Jul 2003, Matthew Dharm wrote:
 
-> On Fri, Jul 04, 2003 at 03:36:55PM -0400, Alan Stern wrote:
-> > Finally a segmentation violation occurs when __scsi_get_command() tries to
-> > access dev->host->cmd_pool->gfp_mask.  Not surprising since the host
-> > structure is gone.
-> 
-> This could still be our (usb-storage) problem.
-> 
-> We're not supposed to release the host structures until after ->release is
-> called.  I think we're violating that right now.
+--82I3+IH0IqGh5yIs
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Although that used to be true, it's not true any longer.  The SCSI 
-midlayer interface changed very recently, and ->release is no longer 
-called for hot-pluggable hosts.  See 
-Documentation/scsi/scsi_mid_low_api.txt in 2.5.74.
+On Sat, Jul 05, 2003 at 10:11:18AM -0400, Alan Stern wrote:
+> On Fri, 4 Jul 2003, Matthew Dharm wrote:
+>=20
+> > On Fri, Jul 04, 2003 at 03:36:55PM -0400, Alan Stern wrote:
+> > > Finally a segmentation violation occurs when __scsi_get_command() tri=
+es to
+> > > access dev->host->cmd_pool->gfp_mask.  Not surprising since the host
+> > > structure is gone.
+> >=20
+> > This could still be our (usb-storage) problem.
+> >=20
+> > We're not supposed to release the host structures until after ->release=
+ is
+> > called.  I think we're violating that right now.
+>=20
+> Although that used to be true, it's not true any longer.  The SCSI=20
+> midlayer interface changed very recently, and ->release is no longer=20
+> called for hot-pluggable hosts.  See=20
+> Documentation/scsi/scsi_mid_low_api.txt in 2.5.74.
 
-> Add a little bit of debugging (a stub ->release() function that printk's)
-> and see if the mid-layer really thinks that everything should have been
-> freed already.
+Oh.  Well, that's convenient then.  One less thing for me to worry about
+for this weekend. :)
 
-Not necessary.  Furthermore, it has been true for a while that the host 
-structure is not deallocated when the driver calls scsi_unregister() -- or 
-now scsi_host_put() -- but rather when its reference count goes to 0.  
-This is a good example of the sort of thing that Christoph Hellwig says 
-the driver shouldn't even be aware of, it should be completely internal to 
-the SCSI core.
+Matt
 
-In any case, this particular problem isn't a result of deallocating the 
-host too early; it's a result of trying to access the host (and maybe 
-other related characteristics) of a device that is offline.  Now, I'm not 
-familiar with the plans for completing the integration of the SCSI 
-subsystem with the driver model -- maybe the host _isn't_ supposed to be 
-deallocated until all the device structures have been freed first.  In 
-that case, the problem would be that the device is failing to maintain a 
-reference to the host structure.  Regardless, it will be solved when the 
-driver model integration is completed; I think it's definitely _not_ a 
-failing of usb-storage.
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
 
-Alan Stern
+It's not that hard.  No matter what the problem is, tell the customer=20
+to reinstall Windows.
+					-- Nurse
+User Friendly, 3/22/1998
 
+--82I3+IH0IqGh5yIs
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
+
+iD8DBQE/BvwIIjReC7bSPZARApfSAKC8ElKNGyC6yjz3d93zU3mg66xPUgCfSOXK
+SXK9jwUdC2FbIJQQhfNSex4=
+=uDeM
+-----END PGP SIGNATURE-----
+
+--82I3+IH0IqGh5yIs--
