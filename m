@@ -1,320 +1,431 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: [PATCH] buslogic: use EH, remove some dup. docs
-Date: Mon, 24 Nov 2003 13:46:28 -0800
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: TMSCSIM [2.6] (was: Re: [PATCH] Re: AMD 53c974 SCSI driver in
+ 2.6)
+Date: Mon, 24 Nov 2003 23:33:45 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031124134628.7e827bcb.rddunlap@osdl.org>
+Message-ID: <Pine.LNX.4.44.0311242331460.2874-101000@poirot.grange>
+References: <Pine.LNX.4.44.0311242223130.2874-200000@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-1784673104-1069713225=:2874"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:5356 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S261152AbTKXVwZ (ORCPT
+Received: from imap.gmx.net ([213.165.64.20]:10477 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261598AbTKXW7E (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Nov 2003 16:52:25 -0500
+	Mon, 24 Nov 2003 17:59:04 -0500
+Received: from lyakh (helo=localhost)
+	by poirot.grange with local-esmtp (Exim 3.35 #1 (Debian))
+	id 1AOPH7-000302-00
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Nov 2003 23:33:45 +0100
+In-Reply-To: <Pine.LNX.4.44.0311242223130.2874-200000@poirot.grange>
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: jejb <james.bottomley@steeleye.com>
+
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
+
+---1463811839-1784673104-1069713225=:2874
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+
+Didn't pass uncompressed through - bigger than 100K? Attaching compressed.
+
+On Mon, 24 Nov 2003, Guennadi Liakhovetski wrote:
+
+> Ghm, here's the patch. But I decided not to compress it, just send it as
+> attachment, instead of inlining it - after all, this is how it should be
+> done, isn't it?:-)
+>
+> And - now it includes one more fix - replaced deprecated check_region()
+> with request_region() - noticed by Ishikawa, Chiaki.
+
+Guennadi
+---
+Guennadi Liakhovetski
 
 
-[resending this one]
+---1463811839-1784673104-1069713225=:2874
+Content-Type: APPLICATION/octet-stream; name="tmscsim.diff-20031124.bz2"
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.LNX.4.44.0311242333450.2874@poirot.grange>
+Content-Description: 
+Content-Disposition: attachment; filename="tmscsim.diff-20031124.bz2"
 
-Hi,
-
-I think that this is ready to merge.
-Please apply to 2.6.0-testX-current.
-
-Thanks,
---
-~Randy
-
-
-patch_name:	buslogic_ehupdate_v3.patch
-patch_version:	2003-10-02.14:10:32
-author:		Randy.Dunlap <rddunlap@osdl.org>
-description:	update BusLogic driver to use current SCSI
-		  error handling model;
-		remove duplicate doc comments -- use
-		  Documentation/scsi/BusLogic.txt only;
-product:	Linux
-product_versions: 2.6.0-test6
-diffstat:	=
- Documentation/scsi/BusLogic.txt |    2
- drivers/scsi/BusLogic.c         |  229 ++--------------------------------------
- 2 files changed, 16 insertions(+), 215 deletions(-)
-
-
-diff -Naurp ./drivers/scsi/BusLogic.c~ehupdate ./drivers/scsi/BusLogic.c
---- ./drivers/scsi/BusLogic.c~ehupdate	2003-09-27 17:51:04.000000000 -0700
-+++ ./drivers/scsi/BusLogic.c	2003-10-02 14:07:03.000000000 -0700
-@@ -3462,6 +3462,18 @@ static boolean BusLogic_WriteOutgoingMai
-   return false;
- }
- 
-+/* Error Handling (EH) support */
-+
-+static int BusLogic_host_reset(Scsi_Cmnd *SCpnt)
-+{
-+	BusLogic_HostAdapter_T *HostAdapter =
-+		(BusLogic_HostAdapter_T *) SCpnt->device->host->hostdata;
-+
-+	/* printk("BusLogic_host_reset\n"); */
-+	HostAdapter->HostAdapterExternalReset = 1;
-+	BusLogic_ResetHostAdapter(HostAdapter, NULL, 0);
-+	return SUCCESS;
-+}
- 
- /*
-   BusLogic_QueueCommand creates a CCB for Command and places it into an
-@@ -4589,220 +4601,8 @@ static boolean BusLogic_ParseKeyword(cha
-   adapters whereas the remaining options apply individually only to the
-   selected host adapter.
- 
--  The BusLogic Driver Probing Options comprise the following:
--
--  IO:<integer>
--
--    The "IO:" option specifies an ISA I/O Address to be probed for a non-PCI
--    MultiMaster Host Adapter.  If neither "IO:" nor "NoProbeISA" options are
--    specified, then the standard list of BusLogic MultiMaster ISA I/O Addresses
--    will be probed (0x330, 0x334, 0x230, 0x234, 0x130, and 0x134).  Multiple
--    "IO:" options may be specified to precisely determine the I/O Addresses to
--    be probed, but the probe order will always follow the standard list.
--
--  NoProbe
--
--    The "NoProbe" option disables all probing and therefore no BusLogic Host
--    Adapters will be detected.
--
--  NoProbeISA
--
--    The "NoProbeISA" option disables probing of the standard BusLogic ISA I/O
--    Addresses and therefore only PCI MultiMaster and FlashPoint Host Adapters
--    will be detected.
--
--  NoProbePCI
--
--    The "NoProbePCI" options disables the interrogation of PCI Configuration
--    Space and therefore only ISA Multimaster Host Adapters will be detected, as
--    well as PCI Multimaster Host Adapters that have their ISA Compatible I/O
--    Port set to "Primary" or "Alternate".
--
--  NoSortPCI
--
--    The "NoSortPCI" option forces PCI MultiMaster Host Adapters to be
--    enumerated in the order provided by the PCI BIOS, ignoring any setting of
--    the AutoSCSI "Use Bus And Device # For PCI Scanning Seq." option.
--
--  MultiMasterFirst
--
--    The "MultiMasterFirst" option forces MultiMaster Host Adapters to be probed
--    before FlashPoint Host Adapters.  By default, if both FlashPoint and PCI
--    MultiMaster Host Adapters are present, this driver will probe for
--    FlashPoint Host Adapters first unless the BIOS primary disk is controlled
--    by the first PCI MultiMaster Host Adapter, in which case MultiMaster Host
--    Adapters will be probed first.
--
--  FlashPointFirst
--
--    The "FlashPointFirst" option forces FlashPoint Host Adapters to be probed
--    before MultiMaster Host Adapters.
--
--  The BusLogic Driver Tagged Queuing Options allow for explicitly specifying
--  the Queue Depth and whether Tagged Queuing is permitted for each Target
--  Device (assuming that the Target Device supports Tagged Queuing).  The Queue
--  Depth is the number of SCSI Commands that are allowed to be concurrently
--  presented for execution (either to the Host Adapter or Target Device).  Note
--  that explicitly enabling Tagged Queuing may lead to problems; the option to
--  enable or disable Tagged Queuing is provided primarily to allow disabling
--  Tagged Queuing on Target Devices that do not implement it correctly.  The
--  following options are available:
--
--  QueueDepth:<integer>
--
--    The "QueueDepth:" or QD:" option specifies the Queue Depth to use for all
--    Target Devices that support Tagged Queuing, as well as the maximum Queue
--    Depth for devices that do not support Tagged Queuing.  If no Queue Depth
--    option is provided, the Queue Depth will be determined automatically based
--    on the Host Adapter's Total Queue Depth and the number, type, speed, and
--    capabilities of the detected Target Devices.  For Host Adapters that
--    require ISA Bounce Buffers, the Queue Depth is automatically set by default
--    to BusLogic_TaggedQueueDepthBB or BusLogic_UntaggedQueueDepthBB to avoid
--    excessive preallocation of DMA Bounce Buffer memory.  Target Devices that
--    do not support Tagged Queuing always have their Queue Depth set to
--    BusLogic_UntaggedQueueDepth or BusLogic_UntaggedQueueDepthBB, unless a
--    lower Queue Depth option is provided.  A Queue Depth of 1 automatically
--    disables Tagged Queuing.
--
--  QueueDepth:[<integer>,<integer>...]
--
--    The "QueueDepth:[...]" or "QD:[...]" option specifies the Queue Depth
--    individually for each Target Device.  If an <integer> is omitted, the
--    associated Target Device will have its Queue Depth selected automatically.
--
--  TaggedQueuing:Default
--
--    The "TaggedQueuing:Default" or "TQ:Default" option permits Tagged Queuing
--    based on the firmware version of the BusLogic Host Adapter and based on
--    whether the Queue Depth allows queuing multiple commands.
--
--  TaggedQueuing:Enable
--
--    The "TaggedQueuing:Enable" or "TQ:Enable" option enables Tagged Queuing for
--    all Target Devices on this Host Adapter, overriding any limitation that
--    would otherwise be imposed based on the Host Adapter firmware version.
--
--  TaggedQueuing:Disable
--
--    The "TaggedQueuing:Disable" or "TQ:Disable" option disables Tagged Queuing
--    for all Target Devices on this Host Adapter.
--
--  TaggedQueuing:<Target-Spec>
--
--    The "TaggedQueuing:<Target-Spec>" or "TQ:<Target-Spec>" option controls
--    Tagged Queuing individually for each Target Device.  <Target-Spec> is a
--    sequence of "Y", "N", and "X" characters.  "Y" enables Tagged Queuing, "N"
--    disables Tagged Queuing, and "X" accepts the default based on the firmware
--    version.  The first character refers to Target Device 0, the second to
--    Target Device 1, and so on; if the sequence of "Y", "N", and "X" characters
--    does not cover all the Target Devices, unspecified characters are assumed
--    to be "X".
--
--  The BusLogic Driver Error Recovery Option allows for explicitly specifying
--  the Error Recovery action to be performed when BusLogic_ResetCommand is
--  called due to a SCSI Command failing to complete successfully.  The following
--  options are available:
--
--  ErrorRecovery:Default
--
--    The "ErrorRecovery:Default" or "ER:Default" option selects between the Hard
--    Reset and Bus Device Reset options based on the recommendation of the SCSI
--    Subsystem.
--
--  ErrorRecovery:HardReset
--
--    The "ErrorRecovery:HardReset" or "ER:HardReset" option will initiate a Host
--    Adapter Hard Reset which also causes a SCSI Bus Reset.
--
--  ErrorRecovery:BusDeviceReset
--
--    The "ErrorRecovery:BusDeviceReset" or "ER:BusDeviceReset" option will send
--    a Bus Device Reset message to the individual Target Device causing the
--    error.  If Error Recovery is again initiated for this Target Device and no
--    SCSI Command to this Target Device has completed successfully since the Bus
--    Device Reset message was sent, then a Hard Reset will be attempted.
--
--  ErrorRecovery:None
--
--    The "ErrorRecovery:None" or "ER:None" option suppresses Error Recovery.
--    This option should only be selected if a SCSI Bus Reset or Bus Device Reset
--    will cause the Target Device or a critical operation to suffer a complete
--    and unrecoverable failure.
--
--  ErrorRecovery:<Target-Spec>
--
--    The "ErrorRecovery:<Target-Spec>" or "ER:<Target-Spec>" option controls
--    Error Recovery individually for each Target Device.  <Target-Spec> is a
--    sequence of "D", "H", "B", and "N" characters.  "D" selects Default, "H"
--    selects Hard Reset, "B" selects Bus Device Reset, and "N" selects None.
--    The first character refers to Target Device 0, the second to Target Device
--    1, and so on; if the sequence of "D", "H", "B", and "N" characters does not
--    cover all the possible Target Devices, unspecified characters are assumed
--    to be "D".
--
--  The BusLogic Driver Miscellaneous Options comprise the following:
--
--  BusSettleTime:<seconds>
--
--    The "BusSettleTime:" or "BST:" option specifies the Bus Settle Time in
--    seconds.  The Bus Settle Time is the amount of time to wait between a Host
--    Adapter Hard Reset which initiates a SCSI Bus Reset and issuing any SCSI
--    Commands.  If unspecified, it defaults to BusLogic_DefaultBusSettleTime.
--
--  InhibitTargetInquiry
--
--    The "InhibitTargetInquiry" option inhibits the execution of an Inquire
--    Target Devices or Inquire Installed Devices command on MultiMaster Host
--    Adapters.  This may be necessary with some older Target Devices that do not
--    respond correctly when Logical Units above 0 are addressed.
--
--  The BusLogic Driver Debugging Options comprise the following:
--
--  TraceProbe
--
--    The "TraceProbe" option enables tracing of Host Adapter Probing.
--
--  TraceHardwareReset
--
--    The "TraceHardwareReset" option enables tracing of Host Adapter Hardware
--    Reset.
--
--  TraceConfiguration
--
--    The "TraceConfiguration" option enables tracing of Host Adapter
--    Configuration.
--
--  TraceErrors
--
--    The "TraceErrors" option enables tracing of SCSI Commands that return an
--    error from the Target Device.  The CDB and Sense Data will be printed for
--    each SCSI Command that fails.
--
--  Debug
--
--    The "Debug" option enables all debugging options.
--
--  The following examples demonstrate setting the Queue Depth for Target Devices
--  1 and 2 on the first host adapter to 7 and 15, the Queue Depth for all Target
--  Devices on the second host adapter to 31, and the Bus Settle Time on the
--  second host adapter to 30 seconds.
--
--  Linux Kernel Command Line:
--
--    linux BusLogic=QueueDepth:[,7,15];QueueDepth:31,BusSettleTime:30
--
--  LILO Linux Boot Loader (in /etc/lilo.conf):
--
--    append = "BusLogic=QueueDepth:[,7,15];QueueDepth:31,BusSettleTime:30"
--
--  INSMOD Loadable Kernel Module Installation Facility:
--
--    insmod BusLogic.o \
--	'BusLogic="QueueDepth:[,7,15];QueueDepth:31,BusSettleTime:30"'
--
--  NOTE: Module Utilities 2.1.71 or later is required for correct parsing
--	of driver options containing commas.
--
-+  The BusLogic Driver Probing Options are described in
-+  <file:Documentation/scsi/BusLogic.txt>.
- */
- 
- static int __init BusLogic_ParseDriverOptions(char *OptionsString)
-@@ -5126,6 +4926,7 @@ static SCSI_Host_Template_T driver_templ
- 	.queuecommand		= BusLogic_QueueCommand,
- 	.slave_configure	= BusLogic_SlaveConfigure,
- 	.bios_param		= BusLogic_BIOSDiskParameters,
-+	.eh_host_reset_handler	= BusLogic_host_reset,
- 	.unchecked_isa_dma	= 1,
- 	.max_sectors		= 128,
- 	.use_clustering		= ENABLE_CLUSTERING,
-diff -Naurp ./drivers/scsi/BusLogic.h~ehupdate ./drivers/scsi/BusLogic.h
-diff -Naurp ./Documentation/scsi/BusLogic.txt~ehupdate ./Documentation/scsi/BusLogic.txt
---- ./Documentation/scsi/BusLogic.txt~ehupdate	2003-09-27 17:50:15.000000000 -0700
-+++ ./Documentation/scsi/BusLogic.txt	2003-10-01 12:15:33.000000000 -0700
-@@ -577,7 +577,7 @@ LILO Linux Boot Loader (in /etc/lilo.con
- INSMOD Loadable Kernel Module Installation Facility:
- 
-   insmod BusLogic.o \
--      'BusLogic_Options="QueueDepth:[,7,15];QueueDepth:31,BusSettleTime:30"'
-+      'BusLogic="QueueDepth:[,7,15];QueueDepth:31,BusSettleTime:30"'
- 
- NOTE: Module Utilities 2.1.71 or later is required for correct parsing
-       of driver options containing commas.
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---
-~Randy
-MOTD:  Always include version info.
+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
+---1463811839-1784673104-1069713225=:2874--
