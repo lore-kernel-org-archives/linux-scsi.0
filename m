@@ -1,42 +1,40 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: fusion problems on 64bit hosts
-Date: Sat, 25 Sep 2004 15:57:14 +0200
+From: Greg KH <greg@kroah.com>
+Subject: Re: [RFC] put symbolic links between drivers and modules in the sysfs tree
+Date: Sat, 25 Sep 2004 09:46:21 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040925135714.GA19990@lst.de>
+Message-ID: <20040925164621.GA9098@kroah.com>
+References: <1095701390.2016.34.camel@mulgrave> <20040925073819.GT23987@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:51686 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S269341AbUIYN5V (ORCPT
+Received: from mail.kroah.org ([69.55.234.183]:36552 "EHLO perch.kroah.org")
+	by vger.kernel.org with ESMTP id S269217AbUIYQsK (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Sep 2004 09:57:21 -0400
+	Sat, 25 Sep 2004 12:48:10 -0400
 Content-Disposition: inline
+In-Reply-To: <20040925073819.GT23987@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Emoore@lsil.com
-Cc: linux-scsi@vger.kernel.org
+To: viro@parcelfarce.linux.theplanet.co.uk
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Rusty Russell <rusty@rustcorp.com.au>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-compiling fusion on ppc64 gives:
+On Sat, Sep 25, 2004 at 08:38:19AM +0100, viro@parcelfarce.linux.theplanet.co.uk wrote:
+> On Mon, Sep 20, 2004 at 01:29:44PM -0400, James Bottomley wrote:
+> > This functionality is essential for us to work out which drivers are
+> > supplied by which modules.  We use this in turn to work out which
+> > modules are necessary to find the root device (and hence what
+> > initrd/initramfs needs to insert).
+> 
+> So what will your userland code do when you run it on a system with
+> non-modular kernel currently running?
+> 
+> IOW, that's a fundamentally broken interface - you really want the same
+> information regardless of modular vs. built-in.
 
-drivers/message/fusion/mptbase.c: In function `mpt_interrupt':
-drivers/message/fusion/mptbase.c:360: warning: cast to pointer from integer of different size
-drivers/message/fusion/mptbase.c:384: warning: cast to pointer from integer of different size
-drivers/message/fusion/mptlan.c: In function `lan_reply':
-drivers/message/fusion/mptlan.c:214: warning: cast from pointer to integer of different size
+I agree, and Rusty has some pending patches that provide that
+information for all drivers built into the system.  When they are
+merged, this symlink will be created for those also (with a bit of
+tweaking, but it will happen.)
 
-This is because of:
+thanks,
 
-#if defined(__alpha__) || defined(__sparc_v9__) || defined(__ia64__) || defined(__x86_64__)
-#define CAST_U32_TO_PTR(x)      ((void *)(u64)x)
-#define CAST_PTR_TO_U32(x)      ((u32)(u64)x)
-#else
-#define CAST_U32_TO_PTR(x)      ((void *)x)
-#define CAST_PTR_TO_U32(x)      ((u32)x)
-#endif
-
-which shuts the warning up on some 64bit architectures but doesn't solve
-the problem.  You're trying to keep a 64bit pointer in a 32bit hardware
-register which can't work on 64bit architectures (the code if for the
-networking and target modules that few people use)
-
-The right fix is to only store a 32bit lookup key for some datastructure
-in the register and use it as lookup key in the intr handler.
+greg k-h
