@@ -1,80 +1,34 @@
-From: rct@gherkin.frus.com (Bob Tracy)
-Subject: Re: [PATCH] sym53c500_cs PCMCIA SCSI driver (new)
-Date: Fri, 16 Apr 2004 09:17:20 -0500 (CDT)
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: RE: Attributes
+Date: 16 Apr 2004 09:26:22 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040416141720.746ABDBEE@gherkin.frus.com>
-References: <20040416130548.B5080@infradead.org>
+Message-ID: <1082125583.2357.6.camel@mulgrave>
+References: <3356669BBE90C448AD4645C843E2BF2802C01698@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gherkin.frus.com ([192.158.254.49]:45958 "EHLO gherkin.frus.com")
-	by vger.kernel.org with ESMTP id S263191AbUDPORX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Apr 2004 10:17:23 -0400
-In-Reply-To: <20040416130548.B5080@infradead.org> "from Christoph Hellwig at
- Apr 16, 2004 01:05:48 pm"
+Received: from stat1.steeleye.com ([65.114.3.130]:62938 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263204AbUDPO0a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Apr 2004 10:26:30 -0400
+In-Reply-To: <3356669BBE90C448AD4645C843E2BF2802C01698@xbl.ma.emulex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Smart, James" <James.Smart@Emulex.com>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig wrote:
-> I've given it a short spin and here's a bunch of comments:
+nOn Fri, 2004-04-16 at 08:55, Smart, James wrote:
+> Think of something as simple as telling a specific instance what link
+> topology type to initialize as. With the idea that you want to have this
+> value persist through reboots of the system - and where the boot disk may be
+> on that instance.  In all the questions I've thrown about - the only
+> mechanism that appears to also handle boot is to hardcode it in the driver
+> and recompile the driver for the persistence.
 
-Thank you for taking the time and trouble to review it.
+But this isn't a persistent property of the driver, is it?  It's a
+property the user wants to set up and have loaded each time.  That can
+easily be accommodated via a user daemon and sysfs attributes.
 
->  - the split into three source files is supserflous, one file should do it
+James
 
-Given that the driver currently supports only PCMCIA implementations,
-I agree.  My thinking was if someone comes up with a host adapter that
-isn't PCMCIA, the SYM53C500.c file is to the sym53c500_cs driver what
-the qlogicfas.c file is to the qlogic_cs driver, that is, core functions
-that could support multiple types of host adapters.  The logic to
-handle the different types of adapters isn't there, and I don't know
-that it ever will be (else, it's probable that someone would have
-written the Linux driver long before now).  However, after baring my
-ignorance to the world and saying I was unaware of non-PCMCIA
-implementations, I found a FreeBSD driver for the NCR 53c500.  Never
-say "never," I guess...  Your opinion counts for much, but you're the
-only person I've heard from.  Is there a consensus I should forget
-about the non-PCMCIA cases?
 
->  - please don't use host.h or scsi.h from drivers/scsi/.  The defintions
->    not present in include/scsi/ are deprecated and shall not be used (the
->    most prominent example in your driver are the Scsi_<Foo> typedefs that
->    have been replaced by struct scsi_foo
-
-I caught that in the coding style guidelines (and in the mentioned
-include files), and will fix for the next submission.
-
->  - the driver doesn't even try to deal with multiple HBAs
-
-Guilty as charged.  Functionally, there's nothing in the driver I
-submitted that wasn't in the original.  Suggestions welcome...  Which
-of the existing PCMCIA SCSI drivers do a proper job of handling
-multiple host adapters in your opinion?  I'll try to adapt that code to
-fit this driver.  If I have to "roll my own" from scratch, I'm probably
-in over my head.
-
->  - your detection logic could be streamlined a little, e.g. the request/release
->    resource mess
-
-I'll see what I can do.
-
-Although I touched on it above, by way of apology/explanation, the goal
-for the initial port was to replicate the functionality I already had in
-older kernel versions.  It appears I faithfully replicated the
-deficiencies of the old driver as well :-).  Again, thank you for the
-feedback.
-
-Anyone else have input before I act on the recommendations I've been
-given?  Unless I hear otherwise, I'll start work on the code
-consolidation and removal of dependencies on deprecated include files.
-The detection logic and handling multiple HBAs will take a bit more
-effort...
-
--- 
------------------------------------------------------------------------
-Bob Tracy                   WTO + WIPO = DMCA? http://www.anti-dmca.org
-rct@frus.com
------------------------------------------------------------------------
