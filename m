@@ -1,33 +1,100 @@
-From: Dan Carpenter <error27@gmail.com>
-Subject: aacraid drops offline w/ opteron and 16G of RAM (2.6.9)
-Date: Tue, 7 Dec 2004 10:59:14 -0800
-Message-ID: <a63d67fe0412071059323f0900@mail.gmail.com>
-Reply-To: Dan Carpenter <error27@gmail.com>
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: How to add/drop SCSI drives from within the driver?
+Date: Wed, 8 Dec 2004 09:55:01 -0500
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57057A1988@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261229AbULHO2V@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261248AbULHPIB@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, dackerman@penguincomputing.com
+To: 'Matt Domsch' <Matt_Domsch@dell.com>, "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Cc: "'brking@us.ibm.com'" <brking@us.ibm.com>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'bunk@fs.tum.de'" <bunk@fs.tum.de>, 'Andrew Morton' <akpm@osdl.org>, "Ju, Seokmann" <sju@lsil.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Mukker, Atul" <Atulm@lsil.com>
 List-Id: linux-scsi@vger.kernel.org
 
-I'm using an Adaptec 2200S RAID card in an opteron system.  It works fine 
-if I use 12G of RAM but if I have 16G it drops offline under stress (bonnie++ 
-etc).  Basically it's as if the whole array has been removed.
+ 
+> devices projected on channels N+1..M.  It now projects them 
+> as physical devices on channels 0..N (N=number of physical 
+> channels on the controller {1,2,4} so far), and the logical 
+> drives all on channel N+1.
+It makes more sense to export the devices (non-disk, ROMB) on the physical
+channel at their actual address. That the reason virtual driver were pushed
+out to virtual channel
 
-I first saw this problem under the suse9.1 2.6.5 kernel but the
-problem is still
-there under the 2.6.9 kernel as well.
+> 
+> Please don't typedef structs, especially not one that's 32 
+> bytes long.   
+> 
+> > +	uint32_t	host_no;
+> 
+> __u32 is the preferred type when sharing such with userspace.
+Yes, typedefs are evil. Is there are good reason to prefer __u32 since
+driver conventionally uses uint32_t. The latter definition is available to
+userspace as well, right?
 
-I've tested the hardware, and this has happenned on 2 seperate systems so
-it's not a hardware component problem.
+> 
+> > +	uint32_t	channel;
+> > +	uint32_t	scsi_id;
+> > +	uint32_t	lun;
+> > +	uint32_t	ld;
+> > +	uint32_t	reserved[3];
+> 
+> Why pad this out?
+Not pad, possible future expansion of the definition of this packet.
 
-Based on history with different RAID cards, I tried turning off node interleave
-and harddware IOMMU on the Arima motherboard, but that hasn't made a 
-difference.
+> 
+> > +} ld_device_address_t;
+> 
+> I would also suggest __attribute__((packed)) since you're 
+> sharing with userspace just to ensure you can never get it 
+> grown by the compiler (it shouldn't be, but just to be safe).
+Yes
 
-Has anyone seen this problem before?
+> 
+> Also, as I believe you intend to add some form of INQUIRY 
+> Page 81 unique ID to your firmware sets at some point, 
+> perhaps this is the logical place to export such information 
+> too.  This would then match SCSI_IOCTL_GET_IDLUN in concept.  
 
-regards,
-dan carpenter
+The scsi megaraid stack does not have unique identifiers for the logical
+drives, and when it happens for future FW, it may not be 32-bits. But you
+are right, we should accommodate for this eventuality.
+
+
+> >  	adapter_t *adapter;
+> > +	ld_device_address_t* lda;
+> 
+> this will be struct ld_device_address *lda of course.
+Yes
+
+> 
+> > +		if ((lda->ld < 0) || (lda->ld > 
+> MAX_LOGICAL_DRIVES_40LD)) {
+> 
+> It's a __u32, it can't be < 0 (and the compiler should have 
+You are right, only the latter check is valid
+
+
+> warned at that).  Why MAX_LOGICAL_DRIVES_40LD and not 
+> MAX_LOGICAL_DRIVES_64LD (which strangely is defined as 65) 
+> which is used elsewhere in the driver for such mapping?
+For megaraid_mbox, the max limit is 40LD, 64LD is defined in the
+mega_common.h, which will be valid for other stacks. 
+
+> 
+> > +		lda->scsi_id	= (lda->ld < adapter->init_id) ? 
+> > +						lda->ld : lda->ld + 1;
+> 
+> Ahh, you project an initiator onto the logical drive channel, 
+> at init_id, yes?  That wasn't obvious to me at first, is it 
+> necessary to do so?  There's no real SCSI bus contention 
+> issue, and you can't address the initiator directly.  (again, 
+> the driver does this today, and such a change would need to 
+> be reflected in this routine
+Unfortunately, the mid-layer does not allow initiator id per bus, for
+multi-bus devices like megaraid. Since, we have to reserve initiator id for
+physical channels, it carries over to virtual channel as well.
+
+This also explains why MAX_LOGICAL_DRIVES_64LD is defined as (64+1)!, since
+we lose one spot for initiator id.
+
+Thanks
+-Atul Mukker
