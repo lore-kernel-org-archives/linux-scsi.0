@@ -1,62 +1,31 @@
-From: claplant@pubnix.org
-Subject: Problem with LF-D100 / LF-D101N Reading CD's
-Date: Tue, 8 Feb 2005 00:38:20 -0600 (CST)
-Message-ID: <Pine.GSO.4.05.10502080018410.18327-100000@emdub.pubnix.org>
+From: "Alexander Stohr" <alexander.stohr@gmx.de>
+Subject: Re: return value warnings about scsi_add_host, anything in progre ss?
+Date: Tue, 8 Feb 2005 12:13:52 +0100
+Message-ID: <009301c50dcf$4f446180$8511050a@alexs>
+References: <0E3FA95632D6D047BA649F95DAB60E570366267A@exa-atlanta> <20050207161022.GZ20386@parcelfarce.linux.theplanet.co.uk> <20050207162914.GA20386@parcelfarce.linux.theplanet.co.uk> <001e01c50d44$da125960$8511050a@alexs> <20050207185759.GC20386@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from pubnix.org ([169.207.167.57]:7153 "EHLO pubnix.org")
-	by vger.kernel.org with ESMTP id S261475AbVBHGm5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2005 01:42:57 -0500
-Received: from localhost (claplant@localhost)
-	by pubnix.org (8.9.1/8.12.2) with ESMTP id AAA09763
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Feb 2005 00:38:20 -0600 (CST)
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Received: from pop.gmx.de ([213.165.64.20]:64656 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261513AbVBHLNk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Feb 2005 06:13:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-Hello,
+Matthew Wilcox wrote:
+> I think you misunderstood my point.  megaraid does not produce a warning
+> about a missing return check when I compile it with gcc-3.4.  Does it
+> warn for you?  If not, why did you include it in the list?
 
-I am having a problem with an LF-D101N DVD-RAM drive. 
+I grepped the whole source tree and discared the locations where
+in the very same line the return value got obviousely used for something.
+I am not sure right now why megaraid got into the list.
+The listing was meant as a summary information where
+the described sitatuion might be present as well.
+I agree, i should have checked the lines in front of the statement
+for every single location, to avoid any false positives. I didnt do that.
 
-Host: scsi0 Channel: 00 Id: 02 Lun: 00
-  Vendor: MATSHITA Model: PD-2 LF-D100     Rev: A123
-  Type:   CD-ROM                           ANSI SCSI revision: 02
-
-LF-D101N written on the drive.
-
-If it is empty or has any media except dvd-ram media, I get the following:
-
-Feb  7 19:46:33 music kernel: sr2: CDROM (ioctl) error, command: Test Unit
-Ready 00 00 00 00 00 Feb  7 19:46:33 music kernel: Current sr: sense key
-Hardware Error
-Feb  7 19:46:33 music kernel: Additional sense: Tracking servo failure Feb
-7 19:46:33 music kernel: sr2: CDROM (ioctl) error, command: Test Unit
-Ready 00 00 00 00 00 Feb  7 19:46:33 music kernel: Current sr: sense key
-Hardware Error
-Feb  7 19:46:33 music kernel: Additional sense: Tracking servo failure 
- 
-sr0: CDROM (ioctl) error, command: Test Unit Ready 00 00 00 00 00
-Current sr: sense key Hardware Error
-Additional sense: Id CRC or ECC error
-
-This repeats about once a second.
-
-Once I put in a DVD-RAM:
-
-Feb  7 22:09:13 music kernel: UDF-fs INFO UDF 0.9.8.1 (2004/29/09)
-Mounting volume 'OSSTORAGE4254B', timestamp 2004/10/22 11:49 (1e20)
-
-It mounts fine.
-
-I have six of these drives that all act the same, so I am quite sure they
-are not all bad.
-
-I am running 2.6.10-1.760_FC3smp though the results were the same w/ a 2.4
-kernel under RHEL3. 
-
-Any help or ideas would be apreciated.
-
-Thanks,
-
--chris
-
+-Alex.
