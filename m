@@ -1,47 +1,36 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Handling erroneous READ CAPACITY response in sd.c
-Date: Fri, 29 Oct 2004 12:46:06 -0400 (EDT)
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: Re: [dm-devel] [multipath] SCSI device capacity mess
+Date: Fri, 29 Oct 2004 09:48:30 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44L0.0410291245050.2411-100000@ida.rowland.org>
-References: <4182520B.3060701@micro.ee.nthu.edu.tw>
+Message-ID: <OF0FDEA552.68780C37-ON88256F3C.005B8D98-88256F3C.005C6A0F@us.ibm.com>
+References: <20041029141217.GC32712@marowsky-bree.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ida.rowland.org ([192.131.102.52]:4868 "HELO ida.rowland.org")
-	by vger.kernel.org with SMTP id S263426AbUJ2QqG (ORCPT
+Received: from e1.ny.us.ibm.com ([32.97.182.101]:49860 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S263358AbUJ2QtD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Oct 2004 12:46:06 -0400
-In-Reply-To: <4182520B.3060701@micro.ee.nthu.edu.tw>
+	Fri, 29 Oct 2004 12:49:03 -0400
+In-Reply-To: <20041029141217.GC32712@marowsky-bree.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Darsen <darsen@micro.ee.nthu.edu.tw>
-Cc: Eero Volotinen <eero@ping-viini.org>, Adriaan Penning <a.penning@luon.net>, Andries Brouwer <aebr@win.tue.nl>, Luben Tuikov <luben_tuikov@adaptec.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Lars Marowsky-Bree <lmb@suse.de>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, 29 Oct 2004, Darsen wrote:
+>EMC at least partially calls said
+>world-wide unique identifier the "LUN's WWN" though.
 
-> I tested the patch on 2.6.9 and everything works fine.
-> There are some error messages, but I believe they already existed before 
-> the patch was applied :)
-> 
-> -------------<dmsg part 1>-----------
-> 
-> usb-storage: usb_stor_bulk_transfer_buf: xfer 13 bytes
-> usb-storage: Status code 0; transferred 13/13
-> usb-storage: -- transfer complete
-> usb-storage: Bulk status result = 0
-> usb-storage: Bulk Status S 0x53425355 T 0x12f R 0 Stat 0x0
-> usb-storage: scsi cmd done, result=0x0
-> usb-storage: *** thread sleeping.
-> sda : odd number of sectors reported, decreasing by one.
-> SCSI device sda: 251904 512-byte hdwr sectors (129 MB)
-> sda: assuming Write Enabled
-> sda: assuming drive cache: write through
-> usb-storage: queuecommand called
-> usb-storage: *** thread awakened.
-> usb-storage: Command TEST_UNIT_READY (6 bytes)
+I'm not surprised.  We all know how common it is to call a logical unit 
+(LU) a LUN, and I've also seen the made-up "LUN ID" (and of course the 
+truly ridiculous "LUN number," loved by all those people who key their PIN 
+number into the ATM machine).
 
-This looks very good.  Thanks for doing the test.
+>And if we are nitpicking, it's EVPD. ;-)
 
-And yes, those other error messages are completely normal.
+Oh, we're definitely nitpicking, but EVPD is the abbreviation for the 
+"Enable Vital Product Data" bit in an Inquiry CDB that tells the target 
+you're asking for the Vital Product Data (VPD).  At least that's how the 
+SCSI standard uses it.  Maybe EMC has its own terminology here too.
 
-Alan Stern
-
+--
+Bryan Henderson                          IBM Almaden Research Center
+San Jose CA                              Filesystems
