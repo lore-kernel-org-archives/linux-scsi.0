@@ -1,55 +1,91 @@
-From: "Mukker, Atul" <Atulm@lsil.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: RE: [PATCH][BUGFIX] : megaraid patch for 2.10.1 (irq disable bug
-	 fix)
-Date: Tue, 24 Feb 2004 11:04:21 -0500
+	fix)
+Date: 24 Feb 2004 10:47:11 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC3DA@exa-atlanta.se.lsil.com>
+Message-ID: <1077641233.1804.145.camel@mulgrave>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BC3DA@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:6344 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S262191AbUBXQEg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Feb 2004 11:04:36 -0500
+Received: from stat1.steeleye.com ([65.114.3.130]:9918 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262292AbUBXQr0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Feb 2004 11:47:26 -0500
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC3DA@exa-atlanta.se.lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@SteelEye.com>, 'Arjan van de Ven' <arjanv@redhat.com>
-Cc: 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: "Mukker, Atul" <Atulm@lsil.com>
+Cc: 'Arjan van de Ven' <arjanv@redhat.com>, 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
+On Tue, 2004-02-24 at 10:04, Mukker, Atul wrote:
+> Wow! That's a lot of no-no. But we'll let the code speak for itself. The
+> major driving force behind the unified design is support for MPT raid
+> controllers and also a single code base, with a very small footprint patch -
+> if at all required, to support various kernels.
+
+I didn't say "no".  I'm just warning you that you've chosen a hard road
+to hoe, particularly with the limited life of 2.4.
+
+> In this driver, the base kernel is assumed to be a lk 2.6.x with appropriate
+> APIs added for lk 2.4.x.
 > 
-> I really don't think this will be such a good idea since you don't
-> currently have a unified driver.  2.4 is approaching end of 
-> life as far
-> as major driver updates go and the 2.6 APIs are quite a bit 
-> different. 
-> You'll find it's a lot of work for a driver that will carry 
-> you at most
-> six months before the distributions all switch to 2.6 and you find the
-> 2.4 compatibility layer to be more of a hindrance than a help.
+> I recommend reading the concise design document, mraid_hotplug.doc, which
+> explains the overall layout of the driver and some design concerns. This
+> document is part of the driver package.
 
-Wow! That's a lot of no-no. But we'll let the code speak for itself. The
-major driving force behind the unified design is support for MPT raid
-controllers and also a single code base, with a very small footprint patch -
-if at all required, to support various kernels.
+OK, I read it.
 
-In this driver, the base kernel is assumed to be a lk 2.6.x with appropriate
-APIs added for lk 2.4.x.
+This is worrying:
 
-I recommend reading the concise design document, mraid_hotplug.doc, which
-explains the overall layout of the driver and some design concerns. This
-document is part of the driver package.
+"Even though the use of pure hotplug APIs is very appealing, I want to
+propose
+some deviation from this approach. If drivers rely on the PCI framework
+to
+discover adapters, we lose flexibility of registering controllers in a
+particular order with the operating system."
 
-Obviously we are open to all suggestions and ready to modify the code if
-there is a general feeling in that direction. Also, this driver would
-required to sit in a directory because of a split in files
+Anything relying on discovery ordering in 2.6 is broken.
 
-The driver package is available in usual location, too big to be inlined :-)
-ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-unified-2.20.0.0.02.24
-.2004-alpha1/
+And so is this:
+
+"An important MegaRAID feature is to be able to boot from any logical
+drive on
+any controller. Since persistent device naming is not prevalent in Linux
+world
+as of this writing, the order in which the devices are discovered is
+very
+important. We would like to continue to give users flexibility to
+designate
+any logical drive on any controller as the boot drive. As long as the
+BIOS on
+this controller is enabled, and only on this one :-), the chosen disk
+would be
+exported to the OS before any other disk."
+
+If you require this functionality in 2.6, you should look at plugging
+into the udev infrastructure.
+
+> Obviously we are open to all suggestions and ready to modify the code if
+> there is a general feeling in that direction. Also, this driver would
+> required to sit in a directory because of a split in files
+
+Well, I cast a brief glance over it, the #ifdef structure is horrible
+(and basically a product of trying to support 2.4).
+
+This is unacceptable:
+
+#if defined (__x86_64__)
+		/*
+		 * Register the 32-bit ioctl conversion
+		 */
+		register_ioctl32_conversion(MEGAIOCCMD, sys_ioctl)
+#endif
+
+The best thing to do would be to design the API to be 32/64 agnostic,
+but if you can't do that, at least use the CONFIG_COMPAT infrastructure
+that already exists.
+
+James
 
 
-Enjoy!
-
-Best Regards
--Atul Mukker
-LSI Logic Corporation
