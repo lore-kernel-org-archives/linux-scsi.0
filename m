@@ -1,176 +1,94 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH] sym53c8xx_2 pci_remove cleanup
-Date: Fri, 10 Oct 2003 13:05:42 -0500
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: writable mmc profiles actually are writable
+Date: 10 Oct 2003 14:36:49 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F86F4F6.2000302@us.ibm.com>
-References: <3F847EEB.4060306@us.ibm.com> <20031010113636.GX27861@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <1065818209.7434.11.camel@patehci2>
+References: <20031006182510.GG972@suse.de>
+	 <1065469831.5185.44.camel@patehci2> <20031006203816.GJ972@suse.de>
+	 <1065473899.6835.41.camel@patehci2> <1065478448.2361.1.camel@patehci2>
+	 <1065484607.2899.7.camel@patehci2> <20031007053858.GL972@suse.de>
+	 <20031006234543.A11937@one-eyed-alien.net> <20031007064829.GQ972@suse.de>
+	 <20031007000018.B11937@one-eyed-alien.net>  <20031007070404.GU972@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:31140 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S262762AbTJJSFs
+Received: from email-out1.iomega.com ([147.178.1.82]:39653 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S263151AbTJJUhh
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Oct 2003 14:05:48 -0400
+	Fri, 10 Oct 2003 16:37:37 -0400
+In-Reply-To: <20031007070404.GU972@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: axboe@suse.de
+Cc: mdharm-scsi@one-eyed-alien.net, linux-scsi@vger.kernel.org
 
-Looks good. I loaded it on a machine and it works fine for me. I tried 
-both hot plug and insmod/rmmod.
+> From: Jens Axboe ...
+> Please add the GET_CONFIGURATION stuff to cdrom.c
+> instead so it works with ide-cd as well ...
 
--Brian
+Help!  I do not know Where to add this code.
 
+Tell me again where is the one place I can patch to add discovery of
+more capability in both sr and ide-cd devices?
 
-Matthew Wilcox wrote:
-> On Wed, Oct 08, 2003 at 04:17:31PM -0500, Brian King wrote:
-> 
->>This is a patch to the sym2 driver to properly cleanup midlayer 
->>resources both on module unload and pci hot remove.
-> 
-> 
-> Here's the patch I currently have in my tree for doing the same thing.
-> I wanted to test it, but I don't have any machines that don't have their
-> root on it ... and so far I've failed to set up NFSroot on any of them.
-> 
-> I'm not sure whether it applies to the public tree or not, but it also
-> handles scsi_add_host() failure.  If it doesn't apply to your tree, let
-> me know and I'll send you the latest version.
-> 
-> Index: drivers/scsi/sym53c8xx_2/sym_glue.c
-> ===================================================================
-> RCS file: /var/cvs/linux-2.6/drivers/scsi/sym53c8xx_2/sym_glue.c,v
-> retrieving revision 1.34
-> diff -u -p -r1.34 sym_glue.c
-> --- drivers/scsi/sym53c8xx_2/sym_glue.c	21 Sep 2003 04:45:52 -0000	1.34
-> +++ drivers/scsi/sym53c8xx_2/sym_glue.c	6 Oct 2003 12:09:08 -0000
-> @@ -1630,8 +1630,8 @@ out_err32:
->   *  If all is OK, install interrupt handling and
->   *  start the timer daemon.
->   */
-> -static int __devinit 
-> -sym_attach (struct scsi_host_template *tpnt, int unit, struct sym_device *dev)
-> +static struct Scsi_Host * __devinit sym_attach(struct scsi_host_template *tpnt,
-> +		int unit, struct sym_device *dev)
->  {
->  	struct host_data *host_data;
->  	struct sym_hcb *np = NULL;
-> @@ -1821,13 +1821,7 @@ sym_attach (struct scsi_host_template *t
->  
->  	spin_unlock_irqrestore(instance->host_lock, flags);
->  
-> -	/*
-> -	 *  Now let the generic SCSI driver
-> -	 *  look for the SCSI devices on the bus ..
-> -	 */
-> -	scsi_add_host(instance, &dev->pdev->dev); /* XXX: handle failure */
-> -	scsi_scan_host(instance);
-> -	return 0;
-> +	return instance;
->  
->   reset_failed:
->  	printf_err("%s: FATAL ERROR: CHECK SCSI BUS - CABLES, "
-> @@ -1835,13 +1829,13 @@ sym_attach (struct scsi_host_template *t
->  	spin_unlock_irqrestore(instance->host_lock, flags);
->   attach_failed:
->  	if (!instance)
-> -		return -1;
-> +		return NULL;
->  	printf_info("%s: giving up ...\n", sym_name(np));
->  	if (np)
->  		sym_free_resources(np);
->  	scsi_host_put(instance);
->  
-> -	return -1;
-> +	return NULL;
->   }
->  
->  
-> @@ -2180,12 +2174,9 @@ sym53c8xx_pci_init(struct pci_dev *pdev,
->  
->  
->  /*
-> - *  Linux release module stuff.
-> - *
->   *  Called before unloading the module.
->   *  Detach the host.
->   *  We have to free resources and halt the NCR chip.
-> - *
->   */
->  static int __devexit sym_detach(struct sym_hcb *np)
->  {
-> @@ -2194,18 +2185,15 @@ static int __devexit sym_detach(struct s
->  	del_timer_sync(&np->s.timer);
->  
->  	/*
-> -	 *  Reset NCR chip.
-> -	 *  We should use sym_soft_reset(), but we donnot want to do 
-> -	 *  so, since we may not be safe if interrupts occur.
-> +	 * Reset NCR chip.
-> +	 * We should use sym_soft_reset(), but we don't want to do 
-> +	 * so, since we may not be safe if interrupts occur.
->  	 */
->  	printk("%s: resetting chip\n", sym_name(np));
->  	OUTB (nc_istat, SRST);
->  	UDELAY (10);
->  	OUTB (nc_istat, 0);
->  
-> -	/*
-> -	 *  Free host resources
-> -	 */
->  	sym_free_resources(np);
->  
->  	return 1;
-> @@ -2314,6 +2302,7 @@ static int __devinit sym2_probe(struct p
->  {
->  	struct sym_device sym_dev;
->  	struct sym_nvram nvram;
-> +	struct Scsi_Host *instance;
->  
->  	memset(&sym_dev, 0, sizeof(sym_dev));
->  	memset(&nvram, 0, sizeof(nvram));
-> @@ -2332,12 +2321,20 @@ static int __devinit sym2_probe(struct p
->  
->  	sym_get_nvram(&sym_dev, &nvram);
->  
-> -	if (sym_attach(&sym2_template, attach_count, &sym_dev))
-> +	instance = sym_attach(&sym2_template, attach_count, &sym_dev);
-> +	if (!instance)
->  		goto free;
->  
-> +	if (scsi_add_host(instance, &pdev->dev))
-> +		goto detach;
-> +	scsi_scan_host(instance);
-> +
->  	attach_count++;
-> +
->  	return 0;
->  
-> + detach:
-> +	sym_detach(pci_get_drvdata(pdev));
->   free:
->  	pci_release_regions(pdev);
->   disable:
-> @@ -2347,7 +2344,13 @@ static int __devinit sym2_probe(struct p
->  
->  static void __devexit sym2_remove(struct pci_dev *pdev)
->  {
-> -	sym_detach(pci_get_drvdata(pdev));
-> +	struct sym_hcb *np = pci_get_drvdata(pdev);
-> +	struct Scsi_Host *host = np->s.host;
-> +
-> +	scsi_remove_host(host);
-> +	scsi_host_put(host);
-> +
-> +	sym_detach(np);
->  
->  	pci_release_regions(pdev);
->  	pci_disable_device(pdev);
-> 
+Closer study now again seemingly tells me that ide-cd and sr
+independently work to try the op x5A Mode Sense of page x2A Capabilities
+and not op x46 Get Configuration.
 
+On this point do we agree?
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+drivers/ide/ide.cd ide_cdrom_get_capabilities speaks thru
+drivers/cdrom/cdrom.c cdrom_mode_sense, aye.
+
+drivers/scsi/sr.c get_capabilities speaks instead thru
+drivers/scsi/scsi_lib.c scsi_mode_sense.
+
+printk tells me with a usb-storage.ko drive I get as far as 'dd: opening
+`/dev/scd0': Read-only file system' without cdrom.c cdrom_mode_sense
+ever being called.  With an ide-cd.ko driver, I do see cdrom_mode_sense
+called.  The ide-cd command is -x 5A 00 2A:00:00:00 00 00:18 00 -i x18,
+rather than the less polite -x 5A 00 2A:00:00:00 00 00:80 00 -i x80 of
+sr.
+
+Does a place exist in drivers/cdrom where I can insert code to run after
+ide-cd and sr finish their op x5A Mode Sense?
+
+Have I misunderstood your request?  Did you actually mean to tell me to
+go so far as to move the op x5A Mode Sense out of ide-cd and out of sr
+and into cdrom?  If indeed I should move those out, to where should I
+move them?
+
+> The ->generic_packet() hook and
+> cdrom_generic_command was invented to solve
+> this code duplication.
+
+Found, thank you:
+
+I see cdrom.c cdrom_mode_sense speaks thru cdo->generic_packet.
+
+I see include/linux/cdrom.h defines a struct cdrom_generic_command that
+field-for-field matches other simplifications of scsi/sg.h sg_io_hdr
+that appear on the web, such as my own plscsi and gccscsi.
+
+> [op x46] GPCMD_GET_CONFIGURATION already exists.
+
+Found, thank you.
+
+Also op x5A GPCMD_MODE_SENSE_10 and page x2A GPMODE_CAPABILITIES_PAGE in
+ide-cd.
+
+Also op x5A MODE_SENSE_10 and anonymous x2a in sr.
+
+> make DVD-RAM drives set CDC_MMC_RW as well
+> and only check for that at open.
+
+This part I still think I understand how to do.
+
+> why then some things only work if you have ide-cd
+> loaded, or if you use ide-scsi and sr ... a bad idea.
+
+Aye.
+
+Pat LaVarre
+
 
