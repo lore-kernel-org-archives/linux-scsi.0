@@ -1,82 +1,78 @@
-From: Rock Gordon <rockgordon@yahoo.com>
-Subject: RE: WWN on FC LUN targets
-Date: Wed, 28 Jul 2004 08:46:14 -0700 (PDT)
+From: "Ely, Paul" <Paul.Ely@Emulex.Com>
+Subject: RE: suspending I/Os to a device
+Date: Wed, 28 Jul 2004 12:19:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040728154614.53413.qmail@web41406.mail.yahoo.com>
-References: <82C736F456CA3E4EA3D0DC6CC31AA5CB011B05D3@esply09.cnt.ad.cnt.com>
+Message-ID: <3356669BBE90C448AD4645C843E2BF28025AB7BF@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web41406.mail.yahoo.com ([66.218.93.72]:33198 "HELO
-	web41406.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S267242AbUG1PqP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Jul 2004 11:46:15 -0400
-In-Reply-To: <82C736F456CA3E4EA3D0DC6CC31AA5CB011B05D3@esply09.cnt.ad.cnt.com>
+Received: from emulex.emulex.com ([138.239.112.1]:39406 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S267269AbUG1QT3
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Jul 2004 12:19:29 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "David Peterson (Eng)" <david_peterson@cnt.com>, Bryan Henderson <hbryan@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
-
-Hello everyone, thanks for your replies.
-
-If I wasn't clear in my earlier posting - let me throw
-in some additional clues. The need is to be able to
-identifiy logical units (which I refer to as LUNs)
-uniquely, no matter where they are and to whichever FC
-network they might end up getting connected to at any
-given point in time. Each of them will have a
-filesystem on it - however this filesystem is served
-to the outside world by NFSD (or any other we pick
-later on). The issue is that the NFSD serves only
-particular filesystems - and they need a unique and
-portable way to identify them.
-
-Hence anything that is not portable or not unique
-world-wide is suspect. I feel the SCSI device ID falls
-in this category.
-
-My network layout is simple - RAID5 JBODs connected
-directly to FC switches; and no sub-partitioning done
-on the storage JBODs so there's only one LUN on each
-of them.
-
-So if a WWWN is indeed assigned to a single SCSI LUN,
-can it be found out from any such SCSI LUN connected
-to an FC network through any programming interface? I
-was looking at drivers/scsi/cpqioctl.c (and got it to
-compile after making some changes) - but it apparently
-the ioctl does not work for some reason.
-
-A brute force approach would be to write some unique
-identifier in a file on the filesystem and to mount
-all connected filesystems readonly to read off the
-unique numbers from that file. However not only is
-this approach not scalable; it also won't work in case
-of an mkfs.
-
-Yet another approach would be to record the
-host/bus/target/lun of each logical unit. However this
-might not work in case of a re-arrangement of the
-network or even re-seating HBAs inside the servers
-themselves; am I right?
-
->
-> If supported by the device, use the Device
-> Identification VPD page
-> (0x83) to identify the Logical Unit. See SPC-3.
-> The preferred identifier type is NAA (which is a
-> Worldwide_Name). Annex
-> D in FCP-2/FCP-3 may also be of assistance to you.
->
-
-Thanks David, I guess more reading to be done on my
-side :)
-
-Regards,
-Rocky
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, "Smart, James" <James.Smart@Emulex.Com>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>
 
 
-		
-__________________________________
-Do you Yahoo!?
-Yahoo! Mail - 50x more storage than other providers!
-http://promotions.yahoo.com/new_mail
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
+> Sent: Wednesday, July 28, 2004 10:42 AM
+> To: Ely, Paul
+> Cc: 'Christoph Hellwig'; Smart, James; Linux SCSI Reflector
+> Subject: RE: suspending I/Os to a device
+> 
+> 
+> On Mon, 2004-07-26 at 15:11, Ely, Paul wrote: 
+> > I think the sysfs implementation for the nodevice_tmo
+> > attribute needs to be rethought.
+> > 
+> > The nodevice_tmo really is a scsi device-specific attribute
+> > and although it could apply to Fibre Channel, iSCSI,
+> > or usb-connected storage, defining it in the scsi_transport_fc.c/h
+> > files doesn't really work since:
+> > 	1. The midlayer doesn't interface with the transport
+> > 	   interface directly.
+> > 	2. Each transport type would need to replicate the
+> > 	   transport_fc at least for the nodevice_tmo.
+> > 	3. Implementing this is messy.
+> 
+> Surely not if the implementation is done in scsi_lib.c?  The 
+> idea being
+> that you provide the storage area in the transport attributes but the
+> routines for handling it are all in scsi_lib so any transport 
+> that needs
+> it can hook in easily and transports that don't care don't bother and
+> don't waste the storage space.
+> 
+> This concept applies to a few other attributes we might do, 
+> which is why
+> I'm interested in seeing how it could work.
+> 
+OK.  I can work the implementation some more.  I was concerned about
+imparting transport-specific knowledge in the scsi midlayer with a
+dereference of the transportt pointer, but can certainly work on some
+access functions.  I plan on releasing another patch this week with the
+error handling and state handling in the midlayer making the patch
+pretty complete - I think.
+
+> > I am working on a modification to move the nodevice_timeout
+> > value and timeout error handler into the scsi_device structure
+> > since it really is a scsi device attribute that needs to be
+> > managed by the midlayer.
+> 
+> It's a device attribute, but since it's use should be optional I'm not
+> convinced it needs to be in every SCSI device.
+> 
+
+I agree with this and is why I drove it into scsi_transport_fc.c 
+initially.  
+
+> James
+> 
+> 
+
+Thanks,
+
+Paul
