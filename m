@@ -1,155 +1,84 @@
-From: James.Smart@Emulex.Com
-Subject: [Patch] Add transport destructors
-Date: Wed, 27 Oct 2004 20:10:37 -0400
+From: Andrew Morton <akpm@osdl.org>
+Subject: Fw: [Bugme-new] [Bug 3651] New: dell poweredge 4600 aacraid PERC
+ 3/Di Container goes offline
+Date: Thu, 28 Oct 2004 00:53:02 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0B1E13B586976742A7599D71A6AC733C0867E7@xbl3.ma.emulex.com>
+Message-ID: <20041028005302.753a2d52.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C4BC82.8D23B2D8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:2724 "EHLO emulex.emulex.com")
-	by vger.kernel.org with ESMTP id S262684AbUJ1AKj (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:28872 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S262813AbUJ1HzC (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Oct 2004 20:10:39 -0400
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id i9S0AcgI017312
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Oct 2004 17:10:38 -0700 (PDT)
-content-class: urn:content-classes:message
+	Thu, 28 Oct 2004 03:55:02 -0400
+Received: from bix (build.pdx.osdl.net [172.20.1.2])
+	by mail.osdl.org (8.11.6/8.11.6) with SMTP id i9S7t1912981
+	for <linux-scsi@vger.kernel.org>; Thu, 28 Oct 2004 00:55:01 -0700
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
-
-------_=_NextPart_001_01C4BC82.8D23B2D8
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-
-Per James's patch earlier today - on updating the fc_transport_class to =
-use a workqueue - this patch addresses the following statement:
-
->There's still a race here in that the timer may still be ticking when
->the device is destroyed ... To fix this, I think we may need to
->introduce a destroy callback to the transport class.
-
-This patch adds host/target/sdev destructor functions to the transport =
-template. The FC transport is updated to utilize them to cancel any =
-outstanding timer. It slightly rearranges the slave_xxx functions so the =
-transport is always involved prior to the LLDD.
-
--- James S.
 
 
-------_=_NextPart_001_01C4BC82.8D23B2D8
-Content-Type: application/octet-stream;
-	name="xport_destructors.patch"
-Content-Transfer-Encoding: base64
-Content-Description: xport_destructors.patch
-Content-Disposition: attachment;
-	filename="xport_destructors.patch"
+Begin forwarded message:
 
-ZGlmZiAtdU5yIGxpbnV4LTIuNi45LkJvdHQxL2luY2x1ZGUvc2NzaS9zY3NpX3RyYW5zcG9ydC5o
-IGxpbnV4LTIuNi45LkJvdHQxLnBhdGNoL2luY2x1ZGUvc2NzaS9zY3NpX3RyYW5zcG9ydC5oCi0t
-LSBsaW51eC0yLjYuOS5Cb3R0MS9pbmNsdWRlL3Njc2kvc2NzaV90cmFuc3BvcnQuaAkyMDA0LTEw
-LTI3IDE3OjE2OjMzLjgyMDE0NjY0MCAtMDQwMAorKysgbGludXgtMi42LjkuQm90dDEucGF0Y2gv
-aW5jbHVkZS9zY3NpL3Njc2lfdHJhbnNwb3J0LmgJMjAwNC0xMC0yNyAxNzoxNjozMy44NDYxNDI2
-ODggLTA0MDAKQEAgLTQwLDYgKzQwLDExIEBACiAJaW50ICgqdGFyZ2V0X3NldHVwKShzdHJ1Y3Qg
-c2NzaV90YXJnZXQgKik7CiAJaW50ICgqaG9zdF9zZXR1cCkoc3RydWN0IFNjc2lfSG9zdCAqKTsK
-IAorCS8qIERlc3RydWN0b3IgZnVuY3Rpb25zICovCisJdm9pZCAoKmRldmljZV9kZXN0cm95KShz
-dHJ1Y3Qgc2NzaV9kZXZpY2UgKik7CisJdm9pZCAoKnRhcmdldF9kZXN0cm95KShzdHJ1Y3Qgc2Nz
-aV90YXJnZXQgKik7CisJdm9pZCAoKmhvc3RfZGVzdHJveSkoc3RydWN0IFNjc2lfSG9zdCAqKTsK
-KwogCS8qIFRoZSBzaXplIG9mIHRoZSBzcGVjaWZpYyB0cmFuc3BvcnQgYXR0cmlidXRlIHN0cnVj
-dHVyZSAoYQogCSAqIHNwYWNlIG9mIHRoaXMgc2l6ZSB3aWxsIGJlIGxlZnQgYXQgdGhlIGVuZCBv
-ZiB0aGUKIAkgKiBzY3NpXyogc3RydWN0dXJlICovCmRpZmYgLXVOciBsaW51eC0yLjYuOS5Cb3R0
-MS9kcml2ZXJzL3Njc2kvaG9zdHMuYyBsaW51eC0yLjYuOS5Cb3R0MS5wYXRjaC9kcml2ZXJzL3Nj
-c2kvaG9zdHMuYwotLS0gbGludXgtMi42LjkuQm90dDEvZHJpdmVycy9zY3NpL2hvc3RzLmMJMjAw
-NC0xMC0yNyAxNzoxNjozMy41NDExODkwNDggLTA0MDAKKysrIGxpbnV4LTIuNi45LkJvdHQxLnBh
-dGNoL2RyaXZlcnMvc2NzaS9ob3N0cy5jCTIwMDQtMTAtMjcgMTc6MTY6MzMuNjI4MTc1ODI0IC0w
-NDAwCkBAIC04MSw2ICs4MSw4IEBACiAKIAlzZXRfYml0KFNIT1NUX0RFTCwgJnNob3N0LT5zaG9z
-dF9zdGF0ZSk7CiAKKwlpZiAoc2hvc3QtPnRyYW5zcG9ydHQtPmhvc3RfZGVzdHJveSkKKwkJc2hv
-c3QtPnRyYW5zcG9ydHQtPmhvc3RfZGVzdHJveShzaG9zdCk7CiAJY2xhc3NfZGV2aWNlX3VucmVn
-aXN0ZXIoJnNob3N0LT5zaG9zdF9jbGFzc2Rldik7CiAJaWYgKHNob3N0LT50cmFuc3BvcnRfY2xh
-c3NkZXYuY2xhc3MpCiAJCWNsYXNzX2RldmljZV91bnJlZ2lzdGVyKCZzaG9zdC0+dHJhbnNwb3J0
-X2NsYXNzZGV2KTsKQEAgLTEzNSwxMSArMTM3LDE0IEBACiAKIAllcnJvciA9IHNjc2lfc3lzZnNf
-YWRkX2hvc3Qoc2hvc3QpOwogCWlmIChlcnJvcikKLQkJZ290byBvdXRfZGVsX2NsYXNzZGV2Owor
-CQlnb3RvIG91dF9kZXN0cm95X2hvc3Q7CiAKIAlzY3NpX3Byb2NfaG9zdF9hZGQoc2hvc3QpOwog
-CXJldHVybiBlcnJvcjsKIAorIG91dF9kZXN0cm95X2hvc3Q6CisJaWYgKHNob3N0LT50cmFuc3Bv
-cnR0LT5ob3N0X2Rlc3Ryb3kpCisJCXNob3N0LT50cmFuc3BvcnR0LT5ob3N0X2Rlc3Ryb3koc2hv
-c3QpOwogIG91dF9kZWxfY2xhc3NkZXY6CiAJY2xhc3NfZGV2aWNlX2RlbCgmc2hvc3QtPnNob3N0
-X2NsYXNzZGV2KTsKICBvdXRfZGVsX2dlbmRldjoKZGlmZiAtdU5yIGxpbnV4LTIuNi45LkJvdHQx
-L2RyaXZlcnMvc2NzaS9zY3NpX3NjYW4uYyBsaW51eC0yLjYuOS5Cb3R0MS5wYXRjaC9kcml2ZXJz
-L3Njc2kvc2NzaV9zY2FuLmMKLS0tIGxpbnV4LTIuNi45LkJvdHQxL2RyaXZlcnMvc2NzaS9zY3Np
-X3NjYW4uYwkyMDA0LTEwLTI3IDE3OjE2OjMzLjcyMzE2MTM4NCAtMDQwMAorKysgbGludXgtMi42
-LjkuQm90dDEucGF0Y2gvZHJpdmVycy9zY3NpL3Njc2lfc2Nhbi5jCTIwMDQtMTAtMjcgMTc6MTY6
-MzMuNzU0MTU2NjcyIC0wNDAwCkBAIC0yNTMsNiArMjUzLDExIEBACiAJc2Rldi0+cmVxdWVzdF9x
-dWV1ZS0+cXVldWVkYXRhID0gc2RldjsKIAlzY3NpX2FkanVzdF9xdWV1ZV9kZXB0aChzZGV2LCAw
-LCBzZGV2LT5ob3N0LT5jbWRfcGVyX2x1bik7CiAKKwlpZiAoc2hvc3QtPnRyYW5zcG9ydHQtPmRl
-dmljZV9zZXR1cCkgeworCQlpZiAoc2hvc3QtPnRyYW5zcG9ydHQtPmRldmljZV9zZXR1cChzZGV2
-KSkKKwkJCWdvdG8gb3V0X2ZyZWVfcXVldWU7CisJfQorCiAJaWYgKHNob3N0LT5ob3N0dC0+c2xh
-dmVfYWxsb2MpIHsKIAkJcmV0ID0gc2hvc3QtPmhvc3R0LT5zbGF2ZV9hbGxvYyhzZGV2KTsKIAkJ
-aWYgKHJldCkgewpAQCAtMjYyLDE1ICsyNjcsMTAgQEAKIAkJCSAqLwogCQkJaWYgKHJldCA9PSAt
-RU5YSU8pCiAJCQkJZGlzcGxheV9mYWlsdXJlX21zZyA9IDA7Ci0JCQlnb3RvIG91dF9mcmVlX3F1
-ZXVlOworCQkJZ290byBvdXRfZGV2aWNlX2Rlc3Ryb3k7CiAJCX0KIAl9CiAKLQlpZiAoc2hvc3Qt
-PnRyYW5zcG9ydHQtPmRldmljZV9zZXR1cCkgewotCQlpZiAoc2hvc3QtPnRyYW5zcG9ydHQtPmRl
-dmljZV9zZXR1cChzZGV2KSkKLQkJCWdvdG8gb3V0X2NsZWFudXBfc2xhdmU7Ci0JfQotCiAJaWYg
-KGdldF9kZXZpY2UoJnNkZXYtPmhvc3QtPnNob3N0X2dlbmRldikgPT0gTlVMTCB8fAogCSAgICBz
-Y3NpX3N5c2ZzX2RldmljZV9pbml0aWFsaXplKHNkZXYpICE9IDApCiAJCWdvdG8gb3V0X2NsZWFu
-dXBfc2xhdmU7CkBAIC0yOTEsNiArMjkxLDkgQEAKIG91dF9jbGVhbnVwX3NsYXZlOgogCWlmIChz
-aG9zdC0+aG9zdHQtPnNsYXZlX2Rlc3Ryb3kpCiAJCXNob3N0LT5ob3N0dC0+c2xhdmVfZGVzdHJv
-eShzZGV2KTsKK291dF9kZXZpY2VfZGVzdHJveToKKwlpZiAoc2hvc3QtPnRyYW5zcG9ydHQtPmRl
-dmljZV9kZXN0cm95KQorCQlzaG9zdC0+dHJhbnNwb3J0dC0+ZGV2aWNlX2Rlc3Ryb3koc2Rldik7
-CiBvdXRfZnJlZV9xdWV1ZToKIAlzY3NpX2ZyZWVfcXVldWUoc2Rldi0+cmVxdWVzdF9xdWV1ZSk7
-CiBvdXRfZnJlZV9kZXY6CkBAIC03NDIsNiArNzQ1LDggQEAKIAl9IGVsc2UgewogCQlpZiAoc2Rl
-di0+aG9zdC0+aG9zdHQtPnNsYXZlX2Rlc3Ryb3kpCiAJCQlzZGV2LT5ob3N0LT5ob3N0dC0+c2xh
-dmVfZGVzdHJveShzZGV2KTsKKwkJaWYgKHNkZXYtPmhvc3QtPnRyYW5zcG9ydHQtPmRldmljZV9k
-ZXN0cm95KQorCQkJc2Rldi0+aG9zdC0+dHJhbnNwb3J0dC0+ZGV2aWNlX2Rlc3Ryb3koc2Rldik7
-CiAJCXB1dF9kZXZpY2UoJnNkZXYtPnNkZXZfZ2VuZGV2KTsKIAl9CiAgb3V0OgpAQCAtMTMwMCw1
-ICsxMzA1LDcgQEAKIAogCWlmIChzZGV2LT5ob3N0LT5ob3N0dC0+c2xhdmVfZGVzdHJveSkKIAkJ
-c2Rldi0+aG9zdC0+aG9zdHQtPnNsYXZlX2Rlc3Ryb3koc2Rldik7CisJaWYgKHNkZXYtPmhvc3Qt
-PnRyYW5zcG9ydHQtPmRldmljZV9kZXN0cm95KQorCQlzZGV2LT5ob3N0LT50cmFuc3BvcnR0LT5k
-ZXZpY2VfZGVzdHJveShzZGV2KTsKIAlwdXRfZGV2aWNlKCZzZGV2LT5zZGV2X2dlbmRldik7CiB9
-CmRpZmYgLXVOciBsaW51eC0yLjYuOS5Cb3R0MS9kcml2ZXJzL3Njc2kvc2NzaV9zeXNmcy5jIGxp
-bnV4LTIuNi45LkJvdHQxLnBhdGNoL2RyaXZlcnMvc2NzaS9zY3NpX3N5c2ZzLmMKLS0tIGxpbnV4
-LTIuNi45LkJvdHQxL2RyaXZlcnMvc2NzaS9zY3NpX3N5c2ZzLmMJMjAwNC0xMC0yNyAxNzoxNjoz
-My42NzQxNjg4MzIgLTA0MDAKKysrIGxpbnV4LTIuNi45LkJvdHQxLnBhdGNoL2RyaXZlcnMvc2Nz
-aS9zY3NpX3N5c2ZzLmMJMjAwNC0xMC0yNyAxNzoxNjozMy43MDExNjQ3MjggLTA0MDAKQEAgLTE2
-OSw3ICsxNjksMTAgQEAKIAogCWlmIChkZWxldGUpIHsKIAkJc3RydWN0IHNjc2lfdGFyZ2V0ICpz
-dGFyZ2V0ID0gdG9fc2NzaV90YXJnZXQocGFyZW50KTsKKwkJc3RydWN0IFNjc2lfSG9zdCAqc2hv
-c3QgPSBkZXZfdG9fc2hvc3Qoc3RhcmdldC0+ZGV2LnBhcmVudCk7CiAJCWlmICghc3RhcmdldC0+
-Y3JlYXRlKSB7CisJCQlpZiAoc2hvc3QtPnRyYW5zcG9ydHQtPnRhcmdldF9kZXN0cm95KQorCQkJ
-CXNob3N0LT50cmFuc3BvcnR0LT50YXJnZXRfZGVzdHJveShzdGFyZ2V0KTsKIAkJCWRldmljZV9k
-ZWwocGFyZW50KTsKIAkJCWlmIChzdGFyZ2V0LT50cmFuc3BvcnRfY2xhc3NkZXYuY2xhc3MpCiAJ
-CQkJY2xhc3NfZGV2aWNlX3VucmVnaXN0ZXIoJnN0YXJnZXQtPnRyYW5zcG9ydF9jbGFzc2Rldik7
-CkBAIC02MDEsNiArNjA0LDggQEAKIAlzY3NpX2RldmljZV9zZXRfc3RhdGUoc2RldiwgU0RFVl9E
-RUwpOwogCWlmIChzZGV2LT5ob3N0LT5ob3N0dC0+c2xhdmVfZGVzdHJveSkKIAkJc2Rldi0+aG9z
-dC0+aG9zdHQtPnNsYXZlX2Rlc3Ryb3koc2Rldik7CisJaWYgKHNkZXYtPmhvc3QtPnRyYW5zcG9y
-dHQtPmRldmljZV9kZXN0cm95KQorCQlzZGV2LT5ob3N0LT50cmFuc3BvcnR0LT5kZXZpY2VfZGVz
-dHJveShzZGV2KTsKIAlwdXRfZGV2aWNlKCZzZGV2LT5zZGV2X2dlbmRldik7CiAKIG91dDoKZGlm
-ZiAtdU5yIGxpbnV4LTIuNi45LkJvdHQxL2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9mYy5j
-IGxpbnV4LTIuNi45LkJvdHQxLnBhdGNoL2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9mYy5j
-Ci0tLSBsaW51eC0yLjYuOS5Cb3R0MS9kcml2ZXJzL3Njc2kvc2NzaV90cmFuc3BvcnRfZmMuYwky
-MDA0LTEwLTI3IDE3OjE2OjMzLjQ4MjE5ODAxNiAtMDQwMAorKysgbGludXgtMi42LjkuQm90dDEu
-cGF0Y2gvZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNwb3J0X2ZjLmMJMjAwNC0xMC0yNyAxNzo0Mjo0
-MS42NDM4MDEyMTYgLTA0MDAKQEAgLTk0LDYgKzk0LDEzIEBACiAJcmV0dXJuIDA7CiB9CiAKK3N0
-YXRpYyB2b2lkIGZjX2Rlc3Ryb3lfc3RhcmdldChzdHJ1Y3Qgc2NzaV90YXJnZXQgKnN0YXJnZXQp
-Cit7CisJLyogU3RvcCB0aGUgdGFyZ2V0IHRpbWVyICovCisJaWYgKGNhbmNlbF9kZWxheWVkX3dv
-cmsoJmZjX3N0YXJnZXRfZGV2X2xvc3Nfd29yayhzdGFyZ2V0KSkpCisJCWZsdXNoX3NjaGVkdWxl
-ZF93b3JrKCk7Cit9CisKIHN0YXRpYyBpbnQgZmNfc2V0dXBfaG9zdF90cmFuc3BvcnRfYXR0cnMo
-c3RydWN0IFNjc2lfSG9zdCAqc2hvc3QpCiB7CiAJLyogCkBAIC0xMDcsNiArMTE0LDEzIEBACiAJ
-cmV0dXJuIDA7CiB9CiAKK3N0YXRpYyB2b2lkIGZjX2Rlc3Ryb3lfaG9zdChzdHJ1Y3QgU2NzaV9I
-b3N0ICpzaG9zdCkKK3sKKwkvKiBTdG9wIHRoZSBob3N0IHRpbWVyICovCisJaWYgKGNhbmNlbF9k
-ZWxheWVkX3dvcmsoJmZjX2hvc3RfbGlua19kb3duX3dvcmsoc2hvc3QpKSkKKwkJZmx1c2hfc2No
-ZWR1bGVkX3dvcmsoKTsKK30KKwogc3RhdGljIHZvaWQgdHJhbnNwb3J0X2NsYXNzX3JlbGVhc2Uo
-c3RydWN0IGNsYXNzX2RldmljZSAqY2xhc3NfZGV2KQogewogCXN0cnVjdCBzY3NpX3RhcmdldCAq
-c3RhcmdldCA9IHRyYW5zcG9ydF9jbGFzc190b19zdGFyZ2V0KGNsYXNzX2Rldik7CkBAIC0yODEs
-MTEgKzI5NSwxMyBAQAogCWktPnQudGFyZ2V0X2F0dHJzID0gJmktPnN0YXJnZXRfYXR0cnNbMF07
-CiAJaS0+dC50YXJnZXRfY2xhc3MgPSAmZmNfdHJhbnNwb3J0X2NsYXNzOwogCWktPnQudGFyZ2V0
-X3NldHVwID0gJmZjX3NldHVwX3N0YXJnZXRfdHJhbnNwb3J0X2F0dHJzOworCWktPnQudGFyZ2V0
-X2Rlc3Ryb3kgPSAmZmNfZGVzdHJveV9zdGFyZ2V0OwogCWktPnQudGFyZ2V0X3NpemUgPSBzaXpl
-b2Yoc3RydWN0IGZjX3N0YXJnZXRfYXR0cnMpOwogCiAJaS0+dC5ob3N0X2F0dHJzID0gJmktPmhv
-c3RfYXR0cnNbMF07CiAJaS0+dC5ob3N0X2NsYXNzID0gJmZjX2hvc3RfY2xhc3M7CiAJaS0+dC5o
-b3N0X3NldHVwID0gJmZjX3NldHVwX2hvc3RfdHJhbnNwb3J0X2F0dHJzOworCWktPnQuaG9zdF9k
-ZXN0cm95ID0gJmZjX2Rlc3Ryb3lfaG9zdDsKIAlpLT50Lmhvc3Rfc2l6ZSA9IHNpemVvZihzdHJ1
-Y3QgZmNfaG9zdF9hdHRycyk7CiAJaS0+ZiA9IGZ0OwogCg==
+Date: Thu, 28 Oct 2004 00:50:31 -0700
+From: bugme-daemon@osdl.org
+To: bugme-new@lists.osdl.org
+Subject: [Bugme-new] [Bug 3651] New: dell poweredge 4600 aacraid PERC 3/Di Container goes offline
 
-------_=_NextPart_001_01C4BC82.8D23B2D8--
+
+http://bugme.osdl.org/show_bug.cgi?id=3651
+
+           Summary: dell poweredge 4600 aacraid PERC 3/Di Container goes
+                    offline
+    Kernel Version: 2.6.10-rc1, 2.6.9, 2.6.8, 2.6.7, 2.6.6
+            Status: NEW
+          Severity: high
+             Owner: andmike@us.ibm.com
+         Submitter: oliver.polterauer@ewave.at
+                CC: oliver.polterauer@ewave.at
+
+
+Distribution: Debian Sarge
+Hardware Environment: Dell Poweredge 4600, 5 Disks each 146GB in a Raid 5 in 
+one container, 8 GB RAM, Dual Xenon 2GHz. The Perc 3/Di Controller is on 
+Firmware version 2.80 Build 6092
+Software Environment: aacraid
+Problem Description: 
+The Container on the PERC 3/Di Controller goes offline on heavy I/O Load with 
+the following error message:
+
+SCSI:0 (0:0): rejecting I/O to offline device
+Buffer I/O error due to I/O error on sda8
+
+Steps to reproduce:
+
+I am using bonnie++ to produce I/O load on the only Volume on the Perc 3/Di 
+Controller with the following parameters bonnie++ -d /var/lib/postgres/test -s 
+16000 -n 150 -r 8000 -u nobody:nogroup
+
+my partition table:
+
+/dev/sda1 --> /boot (80mb)
+/dev/sda2 --> swap (16 GB)
+/dev/sda3 --> /root (4 GB)
+/dev/sda5 --> /home (4 GB)
+/dev/sda6 --> /tmp (1 GB)
+/dev/sda7 --> /var (8 GB)
+/dev/sda8 --> /var/lib/postgres (502 GB)
+
+Filesystem ext3
+kernel is a non modular plain vanilla kernel source (no patches)
+
+I have turned on remote syslog to our syslog server, but it did not log any 
+more errormessages as stated above. The error messages above are printed only 
+on the console
+
+
+Best regards,
+
+Oliver
+
+------- You are receiving this mail because: -------
+You are on the CC list for the bug, or are watching someone who is.
