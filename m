@@ -1,39 +1,37 @@
-From: Daniel Patton <djp101@ecs.soton.ac.uk>
-Subject: Newbie: multiple initiator contention resolution?
-Date: Thu, 01 Apr 2004 19:48:23 +0100
+From: Jin Suh <jinssuh@yahoo.com>
+Subject: [2.4.25] framebuffer with ATI Rage XL desktop and ATI Rage latpop screen not readable
+Date: Thu, 1 Apr 2004 12:24:40 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <406C63F7.3060009@ecs.soton.ac.uk>
+Message-ID: <20040401202440.8351.qmail@web41210.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mta3.sucs.soton.ac.uk ([152.78.128.142]:62946 "EHLO
-	mta3.sucs.soton.ac.uk") by vger.kernel.org with ESMTP
-	id S263040AbUDASte (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Apr 2004 13:49:34 -0500
-Received: from ecs.soton.ac.uk (du-036-0174.claranet.co.uk [212.126.131.174] (may be forged))
-	(authenticated bits=0)
-	by mta3.sucs.soton.ac.uk (8.12.10/8.12.10) with ESMTP id i31Imcme023974
-	for <linux-scsi@vger.kernel.org>; Thu, 1 Apr 2004 19:48:52 +0100
+Received: from web41210.mail.yahoo.com ([66.218.93.43]:20332 "HELO
+	web41210.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S263146AbUDAUYl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Apr 2004 15:24:41 -0500
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hello all,
+I am using 2.4.25 (same thing happened with 2.4.26-rc1) with framebuffer. I
+enabled the followings:
 
-I'm an undergraduate at a UK university, and I'm very much a newbie to 
-kernel development, so my apologies in advance if my questions sound 
-daft or have been answered before, etc.
+ATI Mach64 display support
+Mach64 GX support
+Mach64 CT/VT/GT/LT support 
+Mach64 generic LCD support 
+ATI Radeon display support 
+ATI Rage128 display support 
 
-I'm doing a project on something which involves writing a LLD for a 
-"fake" disk, similar to scsi_debug.  However, the LLD may loaded on 
-multiple hosts, and they all see the same fake disk.  Does the sd driver 
-have any kind of built-in contention resolution mechanism for such 
-multiple initiator setups?  That is, if I mount a partition on my fake 
-disk simultaneously on more than one host, how do I stop the filesystem 
-from getting corrupted?
+With those, my screen gets blank (ATI Rage XL) and my laptop (ATI Rage mobility
+P/M AGP 2X) get not readable. I had no problems with 2.4.20. Do you have any
+idea?
 
-Many thanks in advance.
+Thanks,
+Jin
 
-Dan Patton
-djp101@ecs.soton.ac.uk
 
+__________________________________
+Do you Yahoo!?
+Yahoo! Small Business $15K Web Design Giveaway 
+http://promotions.yahoo.com/design_giveaway/
