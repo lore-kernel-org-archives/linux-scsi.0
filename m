@@ -1,139 +1,131 @@
-From: "christophe.varoqui" <christophe.varoqui@free.fr>
-Subject: Re: Removing the qlogicfc driver
-Date: Fri, 16 Jan 2004 23:18:06 +0100
+From: Muli Ben-Yehuda <mulix@mulix.org>
+Subject: Re: [RFC] IBM Power RAID driver (ipr)
+Date: Sat, 17 Jan 2004 01:01:19 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200401162318.06392.christophe.varoqui@free.fr>
+Message-ID: <20040116230118.GP734@actcom.co.il>
+References: <40085EDA.4010802@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="aIbcA3MSwnGacr4f"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp6.wanadoo.fr ([193.252.22.25]:33705 "EHLO
-	mwinf0602.wanadoo.fr") by vger.kernel.org with ESMTP
-	id S265877AbUAPWSJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jan 2004 17:18:09 -0500
-Received: from 192.168.1.2 (AAmiens-106-1-4-53.w80-11.abo.wanadoo.fr [80.11.231.53])
-	by mwinf0602.wanadoo.fr (SMTP Server) with ESMTP id B89B75400248
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Jan 2004 23:18:07 +0100 (CET)
+Received: from smtp2.actcom.co.il ([192.114.47.15]:34726 "EHLO
+	smtp2.actcom.co.il") by vger.kernel.org with ESMTP id S265975AbUAPXB3
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Jan 2004 18:01:29 -0500
 Content-Disposition: inline
+In-Reply-To: <40085EDA.4010802@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-Hello,
-
-I report that I can't see no LUN with the qla2xxx+qla2200 driver whereas the 
-qlogicfc driver works fine (well until it BUGs :)
-
-The LUNs are in StorageWorks EVA5000 & EMA8000 arrays.
-The HBAs are 2 PCI qlogic 2200, latest bios.
-Intel x86 arch.
-The switchs are Brocade SilkWorm 8 ports 2 Gb/s
-
-with qlogicfc :
-xa-s03:~# multipath -v -d
-600508b4000156d700012000000b0000 (0 0 1 1) /dev/sda [HSV110 (C)COMPAQ]
-600508b4000156c30001200000210000 (0 0 1 2) /dev/sdb [HSV110 (C)COMPAQ]
-60001fe1000bdad0000903507109004b (0 0 3 1) /dev/sdc [HSG80           ]
-60001fe1000bdad000090371312100bf (0 0 3 2) /dev/sdd [HSG80           ]
-60001fe1000bdad000090371312100c2 (0 0 3 3) /dev/sde [HSG80           ]
-60001fe1000bdad00009037131210067 (0 0 4 1) /dev/sdf [HSG80           ]
-60001fe1000bdad000090371312100b3 (0 0 4 2) /dev/sdg [HSG80           ]
-60001fe1000bdad00009035071090024 (0 0 4 3) /dev/sdh [HSG80           ]
-600508b4000156d700012000000b0000 (0 0 5 1) /dev/sdi [HSV110 (C)COMPAQ]
-600508b4000156c30001200000210000 (0 0 5 2) /dev/sdj [HSV110 (C)COMPAQ]
-600508b4000156d700012000000b0000 (1 0 1 1) /dev/sdk [HSV110 (C)COMPAQ]
-600508b4000156c30001200000210000 (1 0 1 2) /dev/sdl [HSV110 (C)COMPAQ]
-600508b4000156d700012000000b0000 (1 0 3 1) /dev/sdm [HSV110 (C)COMPAQ]
-600508b4000156c30001200000210000 (1 0 3 2) /dev/sdn [HSV110 (C)COMPAQ]
-
-with qla2200 beta* : nothing
+To: Brian King <brking@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
 
-Some debug info (let me know if I can provide more) :
----
-kernel release :
-2.6.0 + udm2 patchset (ie mm2 + devmapper stuff)
+--aIbcA3MSwnGacr4f
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-compilation cookie as reported by modinfo :
-2.6.0-mm2 SMP PENTIUM4 gcc-3.3
----
-kernel log :
-QLogic Fibre Channel HBA Driver (f89c7000)
-qla2200 0000:03:01.0: Found an ISP2200, irq 20, iobase 0xf8844000
-qla2200 0000:03:01.0: Configuring PCI space...
-qla2200 0000:03:01.0: Configure NVRAM parameters...
-qla2200 0000:03:01.0: Verifying loaded RISC code...
-qla2200 0000:03:01.0: Waiting for LIP to complete...
-qla2200 0000:03:01.0: LOOP UP detected (1 Gbps).
-qla2200 0000:03:01.0: Topology - (F_Port), Host Loop address 0xffff
-scsi2 : qla2xxx
-qla2200 0000:03:01.0:
- QLogic Fibre Channel HBA Driver: 8.00.00b9
-  QLogic QLA22xx -
-  ISP2200: PCI (66 MHz) @ 0000:03:01.0 hdma-, host#=2, fw=2.02.06 TP
-qla2200 0000:06:01.0: Found an ISP2200, irq 24, iobase 0xf8846000
-qla2200 0000:06:01.0: Configuring PCI space...
-qla2200 0000:06:01.0: Configure NVRAM parameters...
-qla2200 0000:06:01.0: Verifying loaded RISC code...
-qla2200 0000:06:01.0: Waiting for LIP to complete...
-qla2200 0000:06:01.0: LIP reset occured (f7f7).
-qla2200 0000:06:01.0: LOOP UP detected (1 Gbps).
-qla2200 0000:06:01.0: Topology - (F_Port), Host Loop address 0xffff
-scsi3 : qla2xxx
-qla2200 0000:06:01.0:
- QLogic Fibre Channel HBA Driver: 8.00.00b9
-  QLogic QLA22xx -
-  ISP2200: PCI (66 MHz) @ 0000:06:01.0 hdma-, host#=3, fw=2.02.06 TP
----
-xa-s03:~# cat /proc/scsi/qla2xxx/2
-QLogic PCI to Fibre Channel Host Adapter for QLA22xx:
-        Firmware version 2.02.06 TP, Driver version 8.00.00b9
-Entry address = f89c7000
-ISP: ISP2200, Serial# C23881
-Request Queue = 0x367c0000, Response Queue = 0x379ca000
-Request Queue count = 1024, Response Queue count = 64
-Total number of active commands = 0
-Total number of interrupts = 29196
-    Device queue depth = 0x10
-Number of free request entries = 1023
-Number of mailbox timeouts = 0
-Number of ISP aborts = 0
-Number of loop resyncs = 0
-Number of retries for empty slots = 0
-Number of reqs in pending_q= 0, retry_q= 0, done_q= 0, scsi_retry_q= 0
-Host adapter:loop state = <READY>, flags = 0x1c83
-Dpc flags = 0x0
-MBX flags = 0x0
-Link down Timeout = 000
-Port down retry = 008
-Login retry count = 008
-Commands retried with dropped frame(s) = 0
-Product ID = 4953 5020 2020 0001
+On Fri, Jan 16, 2004 at 03:59:54PM -0600, Brian King wrote:
+
+> http://www-124.ibm.com/storageio/ipr/patch-2.6.1-ipr-2.0.0-1.gz
+
+Hi, I took a look and I have some comments / questions. I will try to
+go over all of it in the next few days, but here's what I went over so
+far:=20
+
+> +static int ipr_unsafe =3D 1;		/* xxx set to 0 for ship */
+
+Should it be set to 0 or to 1 for inclusion in the kernel? any driver
+that is first included is considered experimental, so just how unsafe
+is ipr_unsafe?
+
+> +module_param_named(unsafe, ipr_unsafe, int, 0);
+> +MODULE_PARM_DESC(unsafe, "Do not use!");
+
+Same question, I guess, and if you decide to keep it, please add a
+more descriptive MODULE_PARM_DESC string...=20
+
+> +static void ipr_sleep_no_lock(signed long delay)
+> +{
+> +	DECLARE_WAIT_QUEUE_HEAD(internal_wait);
+> +
+> +	sleep_on_timeout(&internal_wait, (delay * HZ) / 1000);
+> +	return;
+
+just a nitpick, but the Linux coding style says no 'return' from void
+functions.=20
+
+>+static void ipr_sleep(struct ipr_ioa_cfg *ioa_cfg, signed long delay)
+> +{
+> +	spin_unlock_irq(ioa_cfg->host->host_lock);
+> +	ipr_sleep_no_lock(delay);
+> +	spin_lock_irq(ioa_cfg->host->host_lock);
+
+Hmpf... it's called from ipr_diagnostic_ioctl(), which does
+spin_lock_irqsave()
+ipr_sleep()
+spin_unlock_irqrestore()
+
+So I guess you really do intend to enable interrupts before going to
+sleep? it's somewhat fragile... also, is the dropping and
+reacquisition of the lock safe here (in the sense that none of the
+data the lock is protecting that we care about can change while the
+lock is not held?)
+
+Same questions wrt ipr_interruptible_sleep_on(), which does the same
+thing. By the way, ipr_dump_ioctl does not check the return value from
+ipr_interruptible_sleep_on(). If this is intentional, perhaps call it
+using (void)ipr_interruptible_sleep_on()?
+
+> +static void ipr_block_requests(struct ipr_ioa_cfg *ioa_cfg)
+> +{
+> +	ENTER;
+> +
+> +	if (0 =3D=3D ioa_cfg->block_host_ops++) {
+> +	   ioa_cfg->allow_cmds =3D 0;
+
+This is racy unless a lock is held. I think a lock is held here in all
+callers of this function, but a comment to that effect would be nice
+before the function. This also applies to every other function which
+either must be called with a lock taken, or modifies the "locking
+status" - takes a lock which is released elsewhere, enables interrupts
+unconditionally, etc.=20
+
++static void ipr_unblock_requests(struct ipr_ioa_cfg *ioa_cfg)
++{
++	ENTER;
++
++	if (0 =3D=3D --ioa_cfg->block_host_ops) {
++	   ioa_cfg->allow_cmds =3D 1;
++	   spin_unlock_irq(ioa_cfg->host->host_lock);
++	   scsi_unblock_requests(ioa_cfg->host);
++	   spin_lock_irq(ioa_cfg->host->host_lock);
+
+Eeek! What happens if on another CPU a call comes in that does
+ipr_block_requests() after the lock is released and before it is taken
+again?
+
+That's as far as I got, for now.=20
+
+Cheers,=20
+Muli=20
+--=20
+Muli Ben-Yehuda
+http://www.mulix.org | http://mulix.livejournal.com/
+
+"the nucleus of linux oscillates my world" - gccbot@#offtopic
 
 
-SCSI Device Information:
-scsi-qla0-adapter-node=200000e08b03896a;
-scsi-qla0-adapter-port=210000e08b03896a;
+--aIbcA3MSwnGacr4f
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-SCSI LUN Information:
-(Id:Lun)  * - indicates lun is not registered with the OS.
-xa-s03:~#
----
-lspci -vvv exerpt :
-06:01.0 SCSI storage controller: QLogic Corp. QLA2200 (rev 05)
-        Subsystem: QLogic Corp. QLA2200
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr+ 
-Stepping- SERR+ FastB2B-
-        Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR-
-        Latency: 64 (16000ns min), Cache Line Size: 0x20 (128 bytes)
-        Interrupt: pin A routed to IRQ 24
-        Region 0: I/O ports at 5000 [size=256]
-        Region 1: Memory at f7ff0000 (32-bit, non-prefetchable) [size=4K]
-        Expansion ROM at <unassigned> [disabled] [size=128K]
-        Capabilities: [44] Power Management version 1
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA 
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
 
+iD8DBQFACG0+KRs727/VN8sRAqZAAJ4wiZz+Aut8ttKS1YywHSocRy4JDgCgq2an
+6Pm6QGySdoxz1b6uXaiiyZM=
+=xdx0
+-----END PGP SIGNATURE-----
 
+--aIbcA3MSwnGacr4f--
