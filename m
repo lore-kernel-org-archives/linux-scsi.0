@@ -1,55 +1,44 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: building SCSI CDB over FC
-Date: Fri, 8 Nov 2002 18:12:44 -0500
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] SCSI on non-ISA systems
+Date: Fri, 8 Nov 2002 16:50:11 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021108231244.GI26518@redhat.com>
-References: <F10FGcbNZOBPr0ebmeG00001ecf@hotmail.com>
+Message-ID: <20021109005011.GC1040@beaverton.ibm.com>
+References: <20021108135742.A22790@flint.arm.linux.org.uk> <Pine.GSO.4.21.0211081522050.23267-100000@vervain.sonytel.be> <20021108144234.A24114@flint.arm.linux.org.uk> <1036772421.16651.10.camel@irongate.swansea.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <F10FGcbNZOBPr0ebmeG00001ecf@hotmail.com>
+In-Reply-To: <1036772421.16651.10.camel@irongate.swansea.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: shankar krishna <kshan01@hotmail.com>
-Cc: aksumit@india.hp.com, linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Russell King <rmk@arm.linux.org.uk>, Geert Uytterhoeven <geert@linux-m68k.org>, Linux Kernel Development <linux-kernel@vger.kernel.org>, Rusty Trivial Russell <trivial@rustcorp.com.au>, linux-scsi@vger.kernel.org
 
-On Fri, Nov 08, 2002 at 02:03:16PM -0700, shankar krishna wrote:
-> Sumit:
-> You are correct. I sent the
-> following command to send the
-> CDB. It did send correctly.
+Alan Cox [alan@lxorguk.ukuu.org.uk] wrote:
+> On Fri, 2002-11-08 at 14:42, Russell King wrote:
+> > Probably the correct answer is to get everyone to use an explicit release
+> > function and just kill scsi_host_generic_release() entirely.
+> > 
+> > However, I'm sure other people will have differing views on that.
 > 
-> if (ioctl(sd_fd,SCSI_IOCTL_SEND_COMMAND,&cdb_buf))
-> {
-> /* ERROR */
-> }
+> There are three things I'd like to do in that area
 > 
-> where cdb_buf is of type Scsi_Ioctl_Command.
-> 
-> DGilbert:
-> "
-> Notes:
-> The SCSI command length is determined by examining the 1st byte of the 
-> given command [1] . There is no way to override this.
-> "
-> 
-> The above claim that 1st octet should be the length
-> of CDB is not true...In the analyser I could see
-> that "if I sent the length of CDB it is sending
-> it as OPCODE" which essentially is the first byte.
-> 
-> You may want to correct it in the
-> document(www.torque.net/sg) that you
-> told me. It was very useful.
+> 1.	Make a release function mandatory (and I'm happy to paste it into the
+> old scsi drivers)
 
-I believe you are mis-interpreting the documentation.  The first byte of 
-the command is the opcode, and with scsi_ioctl_send_command the code reads 
-the opcode and looks it up in a table to determine the length of the scsi 
-command, and that length is the length that can't be over-ridden.
+This sounds good to get rid of this function. My list of drivers having
+detect functions shows only 16 of 103 would need the addition of a
+release function.
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+There is already a check for detect at the top of the scsi_register_host
+function. When release is added a printk would also be nice to indicate
+lack of these required functions. Douglas Gilbert is starting to work on
+updating the api document so we can change the required field to yes if
+the driver is using the scsi_register_host / scsi_unregister_host
+interface and not-required if it using Christoph's newer scsi_add_host /
+scsi_remove_host.
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
