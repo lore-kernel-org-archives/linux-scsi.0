@@ -1,80 +1,62 @@
 From: "Moore, Eric Dean" <Emoore@lsil.com>
-Subject: RE: [PATCH] fusion/mptscsih init/exit sections
-Date: Wed, 10 Mar 2004 09:52:46 -0500
+Subject: RE: [PATCH 2.6 ] MPT Fusion driver 3.01.00 update
+Date: Wed, 10 Mar 2004 09:55:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57040DABAC@exa-atlanta.se.lsil.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57040DABAE@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:23538 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S262637AbUCJOwy (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:4339 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S262256AbUCJOzQ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Mar 2004 09:52:54 -0500
+	Wed, 10 Mar 2004 09:55:16 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rddunlap@osdl.org>, scsi <linux-scsi@vger.kernel.org>
-Cc: jejb <james.bottomley@steeleye.com>
+To: Andreas Jellinghaus <aj@leogic.com>, linux-scsi@vger.kernel.org
 
-Randy - This fix has already been applied in the mpt drivers
-for version 3.00.04 and 3.01.00 drivers, which are are in
-the queue for the 2.6.5 kernel
+I'm working on a fix for this. I should be
+releasing sometime later this week.
+The problem is one of the drives is running
+at async narrow speeds. This only affects
+RAID volumes.
 
-3.00.04 drivers location:
-ftp://ftp.lsil.com/HostAdapterDrivers/linux/FiberChannel/2.6-patches/3.00.04
-
-3.01.00 drivers location:
-ftp://ftp.lsil.com/HostAdapterDrivers/linux/FiberChannel/2.6-patches/3.01.00
+Eric Moore
 
 
-
-On Tuesday, March 09, 2004 11:02 PM, Randy.Dunlap wrote:
+On Tuesday, March 09, 2004 11:14 AM, Andreas Jellinghaus wrote:
 > 
-> V: linux-264-rc2
-> D: mptscsih_remove() can be called during init, for error handling;
+> Hi Eric,
 > 
-> diffstat:=
->  drivers/message/fusion/mptscsih.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
+> we are trying
+> Fusion MPT base driver 3.00.02
+> Copyright (c) 1999-2003 LSI Logic Corporation
+> mptbase: Initiating ioc0 bringup
+> ioc0: 53C1030: Capabilities={Initiator}
+> Fusion MPT SCSI Host driver 3.00.02
+> scsi0 : ioc0: LSI53C1030, FwRev=01030a00h, Ports=1, MaxQ=222, IRQ=26
+>   Vendor: LSILOGIC  Model: 1030 IM       IM  Rev: 1000
+>   Type:   Direct-Access                      ANSI SCSI revision: 02
+> SCSI device sda: 143376384 512-byte hdwr sectors (73409 MB)
+> SCSI device sda: drive cache: write back
+>  sda: sda1 sda2 sda3 sda4
+> Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+> Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
+>   Vendor: IBM       Model: 25P3495a S320  1  Rev: 1   
+>   Type:   Processor                          ANSI SCSI revision: 02
+> Attached scsi generic sg1 at scsi0, channel 0, id 8, lun 0,  type 3
 > 
+> as well as the 3.01.00 version on amd64 dual opteron machines
+> on mainboards with amd chipset and two ibm 60Gb disks connected.
 > 
-> diff -Naurp ./drivers/message/fusion/mptscsih.c~mptscsi_init 
-> ./drivers/message/fusion/mptscsih.c
-> --- ./drivers/message/fusion/mptscsih.c~mptscsi_init	
-> 2004-03-06 20:57:05.000000000 -0800
-> +++ ./drivers/message/fusion/mptscsih.c	2004-03-07 
-> 16:16:54.000000000 -0800
-> @@ -201,7 +201,7 @@ static int  __init   mptscsih_init  (voi
->  static void __exit   mptscsih_exit  (void);
->  
->  static int  __devinit mptscsih_probe (struct pci_dev *, 
-> const struct pci_device_id *);
-> -static void __devexit mptscsih_remove(struct pci_dev *);
-> +static void mptscsih_remove(struct pci_dev *);
->  static void mptscsih_shutdown(struct device *);
->  #ifdef CONFIG_PM
->  static int mptscsih_suspend(struct pci_dev *pdev, u32 state);
-> @@ -1718,7 +1718,7 @@ mptscsih_probe_failed:
->   *
->   *
->   */
-> -static void __devexit
-> +static void
->  mptscsih_remove(struct pci_dev *pdev)
->  {
->  	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
-> @@ -1920,7 +1920,7 @@ mptscsih_resume(struct pci_dev *pdev)
->  
->  static struct mpt_pci_driver mptscsih_driver = {
->  	.probe		= mptscsih_probe,
-> -	.remove		= __devexit_p(mptscsih_remove),
-> +	.remove		= mptscsih_remove,
->  	.shutdown	= mptscsih_shutdown,
->  #ifdef CONFIG_PM
->  	.suspend	= mptscsih_suspend,
+> our problem: terrible speed when writing.
+> we used dbench for benchmarking under linux 2.6.3
+> and we get 1-2 mb/s :-(
 > 
+> Any idea how to solve this issue?
+> Thanks for your help.
 > 
-> --
-> ~Randy
+> Regards, Andreas
+> 
 > -
 > To unsubscribe from this list: send the line "unsubscribe 
 > linux-scsi" in
