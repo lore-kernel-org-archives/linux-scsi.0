@@ -1,87 +1,44 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: Retry scsi_mode_sense if UNIT ATTENTION occurs
-Date: Wed, 30 Jul 2003 12:10:36 -0700
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: How to write a transparent SCSI bridge?
+Date: Wed, 30 Jul 2003 15:31:16 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030730121036.B30339@one-eyed-alien.net>
-References: <1059520994.2298.263.camel@mulgrave> <Pine.LNX.4.44L0.0307301008460.2868-100000@ida.rowland.org>
+Message-ID: <Pine.LNX.4.44L0.0307301522300.2990-100000@ida.rowland.org>
+References: <20030730121310.C30339@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="IrhDeMKUP4DT/M7F"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:53778 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S273301AbTG3TKt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jul 2003 15:10:49 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0307301008460.2868-100000@ida.rowland.org>; from stern@rowland.harvard.edu on Wed, Jul 30, 2003 at 10:09:23AM -0400
+Received: from ida.rowland.org ([192.131.102.52]:28932 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S273385AbTG3TbR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jul 2003 15:31:17 -0400
+In-Reply-To: <20030730121310.C30339@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Jens Axboe <axboe@suse.de>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
+On Wed, 30 Jul 2003, Matthew Dharm wrote:
 
---IrhDeMKUP4DT/M7F
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> On Wed, Jul 30, 2003 at 10:38:38AM -0400, Alan Stern wrote:
+> > What I have in mind is something that would receive CDBs and data over a 
+> > USB link and would forward them to a standard SCSI device (or more 
+> > accurately, a host adapter driver), and relay the replies back.
+> 
+> CDBs?  Just the command bytes, then?  Why not send more of the struct
+> scsi_cmd?
 
-On Wed, Jul 30, 2003 at 10:09:23AM -0400, Alan Stern wrote:
-> On 29 Jul 2003, James Bottomley wrote:
->=20
-> > On Mon, 2003-07-28 at 10:10, Alan Stern wrote:
-> > > Jens:
-> > >=20
-> > > This patch changes the scsi_mode_sense() routine to retry up to a tot=
-al of=20
-> > > 3 times if a command fails with a UNIT ATTENTION sense key value.
-> > >=20
-> > > Without this change, sr.c does not properly read the capabilities mod=
-e=20
-> > > page for a just-powered-up cdrom drive -- it gives up upon receiving =
-a=20
-> > > Device Reset Occurred code.
-> > >=20
-> > > The patch looks lengthy, but most of it just changes the indentation=
-=20
-> > > level.
-> >=20
-> > Actually, this isn't really the correct place for it.  The problem
-> > occurs in sr not sd because sd already does an initial TUR to clear the
-> > unit attention.
-> >=20
-> > Before OLS got in the way and I got submerged in writing presentations,
-> > I had some patches that Matt Dharm was testing out to add the TUR to the
-> > initial sr code.
-> >=20
-> > I'll pick that up (...er, when I get caught back up at work).
->=20
-> Okay, that ought to take care of it just as well.
+I have in mind writing a USB Mass Storage gadget (i.e., slave device)
+driver.  The gadget only receives the CDB, not the entire scsi_cmnd.  When 
+acting as a transparent bridge, the gadget would somehow have to 
+reconstitute a SCSI request and send it to the actual device driver.
 
-I had been wondering what ever happened to that... James, I presume you
-still have my last set of data, regarding my CD-RW initialization?
+> > 	3. I know very little about how the block layer works.  Somehow my 
+> > driver would have to insert its requests into the appropriate queue.
+> 
+> The loopback driver does this -- you might want to see how it does it.
 
-Matt
+The loop driver forwards filesystem read/write requests to block drivers,
+not SCSI commands to host adapter drivers.  But maybe a similar approach
+would work; I'll have to check it out.
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+Alan Stern
 
-G:  Let me guess, you started on the 'net with AOL, right?
-C:  WOW! d00d! U r leet!
-					-- Greg and Customer=20
-User Friendly, 2/12/1999
-
---IrhDeMKUP4DT/M7F
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE/KBgsIjReC7bSPZARArAtAKCCR0gYInPW+AshWUL+rqzc2VGPLQCgtUkA
-WS5jSLu3aZAUf6LrOfD2gbw=
-=kmnf
------END PGP SIGNATURE-----
-
---IrhDeMKUP4DT/M7F--
