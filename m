@@ -1,42 +1,33 @@
-From: Willem Riede <wrlk@riede.org>
-Subject: Re: [BUG - 2.5.56] bad: scheduling while atomic
-Date: Sat, 11 Jan 2003 13:45:04 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] allow NULL dev argument to scsi_add_host
+Date: Sat, 11 Jan 2003 20:33:17 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030111184504.GX1378@linnie.riede.org>
-References: <003d01c2b95d$e7a6a370$2101a8c0@witbe> <200301110949.48169.akpm@digeo.com>
-Reply-To: wrlk@riede.org
+Message-ID: <20030111203317.A25836@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200301110949.48169.akpm@digeo.com>; from akpm@digeo.com on Sat, Jan 11, 2003 at 12:49:48 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@digeo.com>
-Cc: Paul Rolland <rol@as2917.net>, linux-kernel@vger.kernel.orgrol@as2917.net, linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On 2003.01.11 12:49 Andrew Morton wrote:
-> On Sat January 11 2003 02:40, Paul Rolland wrote:
-> >
-> > Hello,
-> >
-> > Trying 2.5.56 this morning, I ended up with the trace included below.
-> > To get that, I simply added a
-> > "hdd=ide-scsi"
-[snip]
-> > ide-scsi: abort called for 21
-> > bad: scheduling while atomic!
-[snip]
-> Well this backtrace is not the reason why ide-scsi fails to work - it is
-> being triggered as a consequence of the I/O failure.
-> 
-> This trace is due to the following bug:
-> 
-> scsi_try_to_abort_cmd() takes spin_lock_irqsave(scmd->host->host_lock, flags);
-> then it calls ide_scsi_abort()
-> ide_scsi_abort() calls scsi_sleep(), still inside ->host_lock.
-> 
-That would be my mistake. scmd->host->host_lock doesn't need to be held during
-the sleep. I'll come up with a patch.
+We need scsi_add_host sometimes without having a struct device (i.e.
+eisa/vlb drivers, ieee1394 storage), so handle that case gracefully.
 
-Thanks, Willem Riede.
+
+--- 1.41/drivers/scsi/hosts.c	Mon Dec 16 10:59:41 2002
++++ edited/drivers/scsi/hosts.c	Sat Jan 11 19:06:56 2003
+@@ -314,9 +314,10 @@
+  **/
+ int scsi_add_host(struct Scsi_Host *shost, struct device *dev)
+ {
+-	dev->class_data = shost;
+-	shost->host_gendev = dev;
+-
++	if (dev) {
++		dev->class_data = shost;
++		shost->host_gendev = dev;
++	}
+ 	return __scsi_add_host(shost);
+ }
+ 
