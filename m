@@ -1,47 +1,70 @@
-From: Kurt Garloff <garloff@suse.de>
-Subject: Re: Patch for 256 disks in 2.4
-Date: Mon, 22 Jul 2002 23:12:52 +0200
+From: Mukul Kotwani <mkotwani@yahoo.com>
+Subject: Enhanced error handling
+Date: Mon, 22 Jul 2002 20:16:32 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <30049.1388225511$1027372683@news.gmane.org>
-References: <20020720195729.C20953@devserv.devel.redhat.com> <20020722170840.GB19587@nbkurt.etpnet.phys.tue.nl> <20020722164856.D19904@devserv.devel.redhat.com> <20020722215700.A12813@infradead.org>
+Message-ID: <20020723031633.44218.qmail@web14008.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="wmhq21yAGFMoSpeN"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020722215700.A12813@infradead.org>
-List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Pete Zaitcev <zaitcev@redhat.com>, Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, Linux kernel list <linux-kernel@vger.kernel.org>
-
-
---wmhq21yAGFMoSpeN
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Jul 22, 2002 at 09:57:00PM +0100, Christoph Hellwig wrote:
-> I might be stupid, but it looks to me like we want both the new majors
-> and the kernel structs dynamically allocated when they get actually used..
+Hello!
+After reading a bunch about the new error handling
+code, I have a few
+questions.
 
-Sure. The sd dynamic major allocation uses the registered block majors firs=
-t.
+I am a low level HBA driver, and the abort handler is
+called while the
+io request lock is held. An abort might be completed
+immediately (
+might need to send out an ABORT frame  and wait for
+its completion)
+and therefore might be completed asynchronously. So I
+might need to
+sleep in the abort thread, because from what I read,
+it indicated that once the abort call returns, we
+cannot call scsi_done. So the best thing would be to
+wait for the abort to complete.
 
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
-GPG key: See mail header, key servers         Linux kernel development
-SuSE Linux AG, Nuernberg, DE                            SCSI, Security
+So my question is:
+If interrupts are disabled when the error handler
+thread is called,
+and I have to sleep, how do I re-enable interrupts ,
+because the abort
+completion is via an interrupt! Ditto with bus reset,
+device reset
+etc. How do I get a completion at all? Timer
+interrupts are also
+disabled on a UP system so how does someone get a
+completion at all??
+If I have to re-enable interrupts in the error handler
+by calling
+irqrestore, I need the flags , and the low level
+driver does not have
+access to the flags at all. Looking at some sample
+SCSI drivers,they
+seem to be queuing up the abort and returning SUCCESS.
+But there is a
+problem there..the mid layer thinks the IO is done and
+freed. Say we
+reported as 20 the maximum commands we support,
+wouldnt the mid layer
+send 20 commands down( obviously if it had 20..) ,
+when actually the
+low level driver should be getting 19 because the
+abort of the IO
+might not have completed? Either my understanding is
+totally wrong, or
+this model seems to be somewhat broken. Can someone
+please shed some
+light on this issue?
 
---wmhq21yAGFMoSpeN
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+Thanks!
+Mukul
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.7 (GNU/Linux)
 
-iD8DBQE9PHVTxmLh6hyYd04RAlZ+AJ0dmx0gx/KarV3JXhiZ229Dp4kYugCgy/DF
-Dm83CXjG8zbSVJxMoZjvaF4=
-=5RTx
------END PGP SIGNATURE-----
-
---wmhq21yAGFMoSpeN--
+__________________________________________________
+Do You Yahoo!?
+Yahoo! Health - Feel better, live better
+http://health.yahoo.com
