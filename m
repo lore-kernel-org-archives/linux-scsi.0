@@ -1,56 +1,28 @@
-From: Kurt Garloff <garloff@suse.de>
+From: Bryan Henderson <hbryan@us.ibm.com>
 Subject: Re: Fwd: 32bit dev_t
-Date: Tue, 28 Jan 2003 16:19:46 +0100
+Date: Tue, 28 Jan 2003 08:33:00 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030128151946.GH3267@E2.suse.de>
-References: <3E2DC21D.9010204@torque.net> <20030123183131.GA2126@nbkurt.garloff.de> <20030123221805.A2468@infradead.org> <20030124182952.GF20972@ca-server1.us.oracle.com> <20030127225125.A13617@infradead.org> <1043752867.1328.10.camel@dhcp22.swansea.linux.org.uk> <20030128112840.A27734@infradead.org>
+Message-ID: <OF6219FB58.D7DE4198-ON87256CBC.0059CD9E-88256CBC.005B0ABA@us.ibm.com>
+References: <1043752867.1328.10.camel@dhcp22.swansea.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="a8sldprk+5E/pDEv"
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030128112840.A27734@infradead.org>
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.194.23])
+	by e31.co.us.ibm.com (8.12.2/8.12.2) with ESMTP id h0SGY8cb060036
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Jan 2003 11:34:09 -0500
+Received: from d03nm031.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.193.82])
+	by westrelay02.boulder.ibm.com (8.12.3/NCO/VER6.4) with ESMTP id h0SGXxD2216154
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Jan 2003 09:33:59 -0700
+In-Reply-To: <1043752867.1328.10.camel@dhcp22.swansea.linux.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Joel Becker <Joel.Becker@oracle.com>, Douglas Gilbert <dougg@torque.net>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
---a8sldprk+5E/pDEv
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-Hi,
 
-On Tue, Jan 28, 2003 at 11:28:40AM +0000, Christoph Hellwig wrote:
-> On Tue, Jan 28, 2003 at 11:21:07AM +0000, Alan Cox wrote:
-> > Which leaves the non trivial change of figuring out a usable security
-> > model when doing that. I've yet to see one
->=20
-> That's why I didn't implement it.  Ask the SuSE folks, they already ship
-> the dynamic majors for sd hack in their 2.4-based tree.
 
-You're supposed to use scsidev to create the device nodes beyond the
-256 standard ones. It handles permissions. Based on CBTU addresses (or
-optionally aliases that you may define using the serial no or WWID),
-not the detection order.
+This has probably been discussed to death somewhere, but I missed it:  Why
+are people with hundreds of disks messing around with piles of major
+numbers and eliminating disk partitioning instead of just using devfs?
+Doesn't that make dev_t pretty much irrelevant?
 
-Regards,
---=20
-Kurt Garloff  <garloff@suse.de>                          Eindhoven, NL
-GPG key: See mail header, key servers                 SuSE Labs (Head)
-SuSE Linux AG, Nuernberg, DE                            SCSI, Security
-
---a8sldprk+5E/pDEv
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQE+Np+SxmLh6hyYd04RAjcIAKCfkVtQny79Int7ecaInUn6elvolQCfTeJS
-rCwdAxvHH+BdtsjPJBFVLsQ=
-=yBH5
------END PGP SIGNATURE-----
-
---a8sldprk+5E/pDEv--
