@@ -1,56 +1,53 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Andries Brouwer <aebr@win.tue.nl>
 Subject: Re: use_10_for_ms revisited?
-Date: Sun, 29 Jun 2003 03:27:38 -0400
+Date: Sun, 29 Jun 2003 12:22:22 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EFE94EA.7030909@pobox.com>
-References: <3EFE8784.4000101@pobox.com> <20030628233824.H26995@one-eyed-alien.net> <3EFE8B7B.2000109@pobox.com> <20030628235413.I26995@one-eyed-alien.net>
+Message-ID: <20030629102222.GA14962@win.tue.nl>
+References: <3EFE8784.4000101@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:32647 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S265591AbTF2HNb
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 Jun 2003 03:13:31 -0400
-In-Reply-To: <20030628235413.I26995@one-eyed-alien.net>
+Received: from kweetal.tue.nl ([131.155.3.6]:17162 "EHLO kweetal.tue.nl")
+	by vger.kernel.org with ESMTP id S265596AbTF2KIF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 29 Jun 2003 06:08:05 -0400
+Content-Disposition: inline
+In-Reply-To: <3EFE8784.4000101@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-scsi@vger.kernel.org
 
-Matthew Dharm wrote:
-> I'm somewhat concerned that, just as we're finding something that works,
-> we're going to go off in another direction.
+On Sun, Jun 29, 2003 at 02:30:28AM -0400, Jeff Garzik wrote:
+
+> I was reading the specs just now, and I see that the inquiry page 
+> defines how ATAPI and USB devices indicate they are compliant with MMC-4.
 > 
-> I certainly wouldn't mind removing the code that manipulates the SCSI
-> revision number.
+> And, MMC-4 does not define read/write/modesen/modesel 6-byte commands at 
+> all.
+> 
+> My conclusion is that we should notice up front when MMC-4 is supported, 
+> and simply adhere to the spec by always sending 10-byte commands for 
+> that device.  I do not think that translation of 6-to-10 byte commands 
+> is answer, which is what happens now.  Our SCSI layer (sr.c, etc.) 
+> should, IMO, be compliant with MMC-4 and simply send the right commands.
+> 
+> This also implies that use_10_for_ms simply need not exist -- "first try 
+> 10 byte commands for this device" is false...  for some devices we 
+> should be unconditionally sending 10 byte commands, no ifs, ands, or buts :)
+> 
+> I'll see if I can work up a patch, if noone objects...
 
-I'm talking about code in the scsi core that does stuff like ("if 
-scsi_level <= 2" ...), which is wrong for MMC, where version==0 is a 
-valid value on modern atapi and usb devices.
+Jeff, let me object.
 
+You are an optimist - it is as if I hear Andre, who has just read
+the latest ATA draft.
 
-> But, the 6-to-10 conversion code (at least for USB) is all about to go
-> away, once we settle on how sr.c (and friends) should handle use_10_for_ms
-> -- so one of your reasons to change all this is already moot.
+The firmware of existing devices is not magically updated when
+a new draft standard is released. So reading yesterdays version
+gives very little information on the real world.
 
-Not really, see below.
-
-
-> I guess, in part, I'm hesitant to rely on fields in the INQUIRY data that
-> nobody has checked to verify that they are actually useful.  Most USB
-> devices are made on ultra-low testing, and commonly have bad bits in any
-> field that isn't used by Windows or MacOS.
-
-MMC-4 is the culmination of the stuff that's in the field now.
-
-Really, sr wants to know "are you mmc-compliant?"
-
-If the answer is yes, it should only use MMC-defined commands (mode 
-sense 10, etc.).
-
-use_10_for_ms is a subset of that.
-
-	Jeff
+Andries
 
 
+[And no, none of my USB devices announces MMC-4 compliance.]
 
