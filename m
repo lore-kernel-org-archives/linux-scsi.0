@@ -1,57 +1,64 @@
 From: Patrick Mochel <mochel@osdl.org>
 Subject: Re: [PATCH] /proc/scsi/map
-Date: Tue, 25 Jun 2002 09:05:01 -0700 (PDT)
+Date: Tue, 25 Jun 2002 09:33:01 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0206250824590.8496-100000@geena.pdx.osdl.net>
-References: <Pine.LNX.4.44.0206211616510.16808-100000@waste.org>
+Message-ID: <Pine.LNX.4.33.0206250920150.8496-100000@geena.pdx.osdl.net>
+References: <3D14B2CF.90002@pacbell.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0206211616510.16808-100000@waste.org>
+In-Reply-To: <3D14B2CF.90002@pacbell.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Xymoron <oxymoron@waste.org>
-Cc: Linux kernel list <linux-kernel@vger.kernel.org>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: David Brownell <david-b@pacbell.net>
+Cc: Nick Bellinger <nickb@attheoffice.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
-On Fri, 21 Jun 2002, Oliver Xymoron wrote:
+On Sat, 22 Jun 2002, David Brownell wrote:
 
-> On Thu, 20 Jun 2002, Patrick Mochel wrote:
+> > On the other hand there is the obvious fact that an iSCSI initiator
+> > driver is not attached to a bus, and assuming /root/iSCSI.target/disk1
+> > etc, is out of the question.  There is a real need for a solution to
+> > handle virtual devices (as stated your previous message) that are not
+> > assoicated with any physical connectors.  
 > 
-> > > But it was entierly behind me how to fit this
-> > > in to the sheme other sd@4,0:h,raw
-> > > OS-es are using. And finally how would one fit this in to the
-> > > partitioning shemes? For the system aprtitions are simply
-> > > block devices hanging off the corresponding block device.
-> >
-> > Partitions are purely logical entities on a physical disk. They have no
-> > presence in the physical device tree.
+> There are those who see the IP stack as a kind of logical bus ... :)
+> It's just not tied any specific hardware interface; it's "multipathed" in
+> some sense. Linking it to an eth0 entry in $DRIVERFS/root/pci0/00:10.0
+> would be wrong, since it can also be accessed through eth2.
+
+It's not wrong, it's just makes life interesting when you want 
+accurately represent the presence of the device via both paths, or you 
+want to deal with the removal or power management of the bridge device. 
+That problem needs to be addressed; soon. 
+
+> Why shouldn't there be a $DRIVERFS/net/ipv4@10.42.135.99/... style
+> hookup for iSCSI devices?  Using whatever physical addressing the
+> kernel uses there, which I assume wouldn't necessarily be restricted
+> to ipv4.  (And not exposing physical network topology -- routing! --
+> in driverfs.)
+
+You can very well use driverfs to expose those attributes, and is one of 
+the things that we've been discussing at the kernel summit. driverfs will 
+take over the world. But, I still think the device is best represented as 
+a child of the phsysical network device. 
+
+> On a related topic ... if driverfs is going to be providing a nice unique
+> ID for the controller ($DRIVERFS/root/pci0/00:02.0/02:0f.0/03:07.0 for
+> Linus' behind-two-bridges case), why are people talking as if the SCSI
+> layer's arbitrary "controller number" should still be getting pushed as
+> part of user visible names?
 > 
-> As I raised elsewhere in this thread, the distinction between physical and
-> logical is troubling. Consider iSCSI, (aka SCSI-over-IP). It's analogous
-> to SCSI-over-Fibre Channel, except that rather than using an embedded FC
-> stack, it's using the kernel's IP stack. But it's every bit as much a SCSI
-> disk/tape/whatever as a local device. Ergo, it ought to show up in the
-> device tree so that it can be discovered in the same way. But where?
+> That is, I'd sure hope the standard policy for assigning driverfs names
+> would avoid _all_ IDs that are derived from enumeration order.  Otherwise
+> it'll be hard to store those names for (re)use by user mode tools.
 
-An iSCSI device is a physical device; it just doesn't reside on the local 
-system. We should represent the device in some physical form, since the 
-logical class mappings do/will assume a mapping to a physical device. 
+The bus_id of the device is intended to represent the bus-specific ID of 
+the device, and is the name of the driverfs directory. 
 
-These devices are essentially children of the network via which they're 
-attached. When devices are discovered, I'm assuming you can derive the 
-network device through which you're communicating, so you can get enforce 
-the ancestral relationship. 
-
-You want the ancestral relationship for several reasons. You'd wouldn't 
-power down such a device on PM transitions or during shutdown, but you 
-would stop I/O transactions. The drivers for these devices should recogize 
-it's a remote device and handlethis. And, if you were to remove the bridge 
-device (the network card, etc), you want the devices behind it and their 
-logical mappings to go away gracefully.
-
-Mulitpath devices, which you could easily have with multiple routes to the 
-same IP address, are another issue that must be addressed. It hasn't yet, 
-but we're getting closer...
+The name should user-friendly. It shouldn't be a unique name. Use 
+something nice and pretty. If people need/want a UUID, add it to the 
+bus-specific or type-specific structure, and export it via driverfs. It 
+will eventually make it to the generic structure.
 
 	-pat
 
