@@ -1,47 +1,52 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [RFC] adding per scsi-host workqueues for defered processing
-Date: Mon, 7 Mar 2005 23:10:22 -0800
-Message-ID: <20050308071022.GF5141@plap.qlogic.org>
-References: <0B1E13B586976742A7599D71A6AC733C12ECD6@xbl3.ma.emulex.com>
+From: Markus Lidel <Markus.Lidel@shadowconnect.com>
+Subject: Request for moving Sg_request into sg.h
+Date: Tue, 08 Mar 2005 10:57:50 +0100
+Message-ID: <422D771E.6070104@shadowconnect.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from avexch01.qlogic.com ([198.70.193.200]:21691 "EHLO
-	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S261842AbVCHHJv
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Mar 2005 02:09:51 -0500
-Content-Disposition: inline
-In-Reply-To: <0B1E13B586976742A7599D71A6AC733C12ECD6@xbl3.ma.emulex.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from s0003.shadowconnect.net ([213.239.201.226]:9146 "EHLO
+	mail.shadowconnect.com") by vger.kernel.org with ESMTP
+	id S261951AbVCHJ6H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Mar 2005 04:58:07 -0500
+Received: from pd952319f.dip.t-dialin.net ([217.82.49.159] helo=[192.168.1.52])
+	by mail.shadowconnect.com with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.43)
+	id 1D8bTa-0007nU-Fm
+	for linux-scsi@vger.kernel.org; Tue, 08 Mar 2005 10:58:06 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sat, 05 Mar 2005, James.Smart@Emulex.Com wrote:
+Hello,
 
-> I've attached a revised patch.
-> 
-> One other note:
-> >		scsi_scan_target(&rport->dev, rport->channel,
-> >			rport->scsi_target_id, SCAN_WILD_CARD, 0);
-> 
-> The rescan flag should be 1, not 0. If 0, all kinds of bad things can
-> happen as of the 2nd scan request.
-> 
+i wanted to ask if it is possible to put the typedef "Sg_request" into sg.h?
 
-Unless I'm reading the code incorrectly, we should be safe (only by
-possessing some internal knowledge of the mid-layer) passing 0 in
-these contexts:
+The reason i'm asking is, i need to pass data through SG_IO from an 
+application to the driver. At the moment the problem is solved by copying 
+code of the SG_IO driver into i2o_config (the passthru function). I'm 
+working on removing the passthru function and instead using the SG_IO 
+interface, but therefore i need to pass some additional data to the 
+driver. I could use the use the "flags" and "usr_ptr" fields in 
+sg_io_hdr_t, but i need to get access to them through "Sg_request".
 
-* role change to target -- no previous devices (let alone
-  scsi-targets) should be hanging off the rport.
-* during creation, an rport is newly created with fc_rport_create().
-* during creation, an rport was found in the fc_host_rport_bindings'
-  list.  Again, any attached scsi-devices would have been torn-down
-  prior to the rport being originally placed in the list.
-* during an unblock call, where the rport's scsi-devices have already
-  been torn down since the link-down-tmo had already expired.
+Any comments appreciated.
 
-But, I suppose in general it's best to play it safe.
 
---
-AV
+Best regards,
+
+
+Markus Lidel
+------------------------------------------
+Markus Lidel (Senior IT Consultant)
+
+Shadow Connect GmbH
+Carl-Reisch-Weg 12
+D-86381 Krumbach
+Germany
+
+Phone:  +49 82 82/99 51-0
+Fax:    +49 82 82/99 51-11
+
+E-Mail: Markus.Lidel@shadowconnect.com
+URL:    http://www.shadowconnect.com
