@@ -1,84 +1,69 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: Summary of the Multi-Path BOF at OLS and future directions
-Date: Thu, 7 Aug 2003 09:38:14 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030807073814.GB12862@marowsky-bree.de>
-References: <1060042082.1985.53.camel@fuzzy> <20030805171416.A7963@beaverton.ibm.com> <1060201601.25773.30.camel@persist.az.mvista.com>
+From: Gene Heskett <gene.heskett@verizon.net>
+Subject: advansys driver vs 2.6 breakage
+Date: Thu, 7 Aug 2003 04:22:41 -0400
+Sender: kernel-janitor-discuss-admin@lists.sourceforge.net
+Message-ID: <200308070422.41412.gene.heskett@verizon.net>
+Reply-To: gene.heskett@verizon.net
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="3lcZGd9BuhuYXNfi"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.in-addr.de ([212.8.193.158]:43733 "EHLO mx.in-addr.de")
-	by vger.kernel.org with ESMTP id S275202AbTHGHi2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Aug 2003 03:38:28 -0400
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-janitor-discuss-admin@lists.sourceforge.net>
 Content-Disposition: inline
-In-Reply-To: <1060201601.25773.30.camel@persist.az.mvista.com>
+Errors-To: kernel-janitor-discuss-admin@lists.sourceforge.net
+List-Help: <mailto:kernel-janitor-discuss-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:kernel-janitor-discuss@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/kernel-janitor-discuss>,
+	<mailto:kernel-janitor-discuss-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/kernel-janitor-discuss>,
+	<mailto:kernel-janitor-discuss-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=kernel-janitor-discuss>
+To: bfrey@turbolinux.com.cn
+Cc: linux-scsi@vger.kernel.org, Janitors <kernel-janitor-discuss@lists.sourceforge.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Steven Dake <sdake@mvista.com>, Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org
+
+Greetings Bob;
+
+The advansys.c driver appears to have been broken by a change in the 
+check_region() define in include/linux/ioports.h
+
+The symptoms are:  on initing the module during bootup, or during a 
+later insmod if built as a module, it gets into a bus reset loop and 
+hangs the machine, requireing a hardware reset after reporting 
+success on the second bus reset.
+
+I had some success by replacing the two calls to check_region with 
+request_region, in that the bus resets were gone and it did find my 
+tape drive and its robot just fine.
+
+However, others seemed to think it also needed a balancing call to 
+release_region(), but that brought back the bus resets AND it 
+couldn't find the tape drive or robot during the init, so I was back 
+to square one minus 2 steps.
+
+As you are probably 100x more famiiar with this code than I'll ever 
+be, can you find the time to look it over again, making it compatible 
+with 2.6.0-test2-mm2?
+
+This is, FWIW, not the only code that is apparently broken by that 
+ioports.h header redefinition.
+
+I'm getting messages from other modules squawking about the 
+__deprecated status of "check_region" during the compile too.
+
+-- 
+Cheers, Gene
+AMD K6-III@500mhz 320M
+Athlon1600XP@1400mhz  512M
+99.27% setiathome rank, not too shabby for a WV hillbilly
+Yahoo.com attornies please note, additions to this message
+by Gene Heskett are:
+Copyright 2003 by Maurice Eugene Heskett, all rights reserved.
 
 
---3lcZGd9BuhuYXNfi
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On 2003-08-06T13:26:41,
-   Steven Dake <sdake@mvista.com> said:
-
-> There are problems with multipath in the md driver, specifically how to
-> manage partitions.  Each partition requires a seperate multipath.=20
-
-This is indeed a deficiency, but it all depends on how the DM device is
-setup. You can also setup the DM for the physical device and then the
-partitions on top of the DM, either using the partition code in the
-kernel or, better, using user-space discovery and creating appropriate
-DM devices to match the partitions.
-
-> Changing partition sizes is quite difficult after multipaths are setup.=
-=20
-> One could argue that partitions should be managed by device mapper, but
-> unfortunately all firmware doesn't know about device mapper devices,
-> requiring the use of partitions.
-
-Whether DM manages partitions or not is unrelated to whether firmware
-knows about them; firmware depends on how the metadata is represented on
-disk, not how (and where, whether 'in kernel' or DM) Linux choses to
-interpret it.
-
-> Also most people don't want to mess with device mapper.
-
-Tough ;-)
-
-> I like the idea of a generic queueing interface for block commands
-> integrated with multipathing as it solves the partitioning problem quite
-> nicely.
-
-This would of course also be nice.
-
-Sorry for getting into the discussion so late on the list here. I really
-managed to miss it. I wonder how ever I did that...
-
-
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
-
---=20
-SuSE Labs - Research & Development, SuSE Linux AG
- =20
-"If anything can go wrong, it will." "Chance favors the prepared (mind)."
-  -- Capt. Edward A. Murphy            -- Louis Pasteur
-
---3lcZGd9BuhuYXNfi
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.7 (GNU/Linux)
-
-iD8DBQE/MgHmudf3XQV4S2cRAtI5AJ4vtm/KCpzuDWhi85SAm8l3Q76nxgCfWKew
-v/LiAJbFvuCwkd/I8BuhyyU=
-=+6mO
------END PGP SIGNATURE-----
-
---3lcZGd9BuhuYXNfi--
+-------------------------------------------------------
+This SF.Net email sponsored by: Free pre-built ASP.NET sites including
+Data Reports, E-commerce, Portals, and Forums are available now.
+Download today and enter to win an XBOX or Visual Studio .NET.
+http://aspnet.click-url.com/go/psa00100003ave/direct;at.aspnet_072303_01/01
