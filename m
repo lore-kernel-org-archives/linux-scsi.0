@@ -1,55 +1,44 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH] update sd to use kref and fix open/release race
-Date: 21 Apr 2004 15:10:51 -0400
+Subject: RE: Transport affected timeouts...
+Date: 21 Apr 2004 15:20:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1082568881.1728.22.camel@mulgrave>
-References: <1081518779.2203.29.camel@mulgrave>
-	<20040413171208.GA2550@us.ibm.com>
+Message-ID: <1082575283.2583.6.camel@mulgrave>
+References: <3356669BBE90C448AD4645C843E2BF2802C016CE@xbl.ma.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:20141 "EHLO
+Received: from stat1.steeleye.com ([65.114.3.130]:57517 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263646AbUDUTL2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Apr 2004 15:11:28 -0400
-In-Reply-To: <20040413171208.GA2550@us.ibm.com>
+	id S263634AbUDUTVy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Apr 2004 15:21:54 -0400
+In-Reply-To: <3356669BBE90C448AD4645C843E2BF2802C016CE@xbl.ma.emulex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, greg@kroah.com
+To: "Smart, James" <James.Smart@Emulex.com>
+Cc: Linux SCSI Reflector <linux-scsi@vger.kernel.org>
 
-On Tue, 2004-04-13 at 12:12, Mike Anderson wrote:
-> Did we decide through the thread on this issue that we will not allow a
-> rmmod to happen anymore unless you manually delete the children devices
-> off the host? In using scsi_debug I am not able to rmmod until I delete
-> all the children (i.e. sd's).
+On Wed, 2004-04-21 at 12:53, Smart, James wrote:
+> Where do we go from here ?   
+> 
+> What we are doing in our driver is the following:
+> - Cancel the mid-layer timeout
+> - Set timeout to (cmd->timeout_per_command/HZ) + hba_offset
+> - Start timer based on new timeout value
 
-Well, I don't think anything was decided.  However, it's a consequence
-of the compound reference strategy because now we hold a scsi_device for
-the life of the ULD object.
+Well, this is unacceptable.  Only the mid layer should be mucking with
+mid-layer timers.
 
-> The parent child hierarchy should be held in place through kobject_add /
-> kobject_get of the parent so I would believe that the extra
-> scsi_device_get should not be needed.
+> Where hba_offset is: (2 * R_A_TOV) + administrative increment (default 0)
+> Where R_A_TOV is the fabric-reported timeout. R_A_TOV is at least a round
+> trip time, plus 2 times max delivery delay time within the fabric. (default
+> 10 seconds).  This value can change based on fabric reconfiguration or
+> plugging the adapter into a differnet fabric.
 
-In the ULD?  It's just simpler to do it that way.
+I'm still not clear on what you're trying to achieve.
 
-The slight problem in all this is that the module refcounting model is
-different from the device one (in modules, you can't send a deletion
-(rmmod) unless your "ref" count is zero).
-
-The best fix would be to move the module model over to the device model.
-So you can rmmod at any point, removal triggers the appropriate
-scsi_remove_device etc calls and the rmmod command hangs around until
-it's safe to remove the module ... for SCSI we could do this before the
-device references are dropped because there's a point where we can
-guarantee no more commands will be sent to the host adapter.
-
-To conform to the existing model, we can simply move the scsi_device_get
-and scsi_device_put under the semaphore in the ULD get and put
-routines.  This adds some assymmetry because now the put in sd_remove()
-can't be the uld wrappered put, it would have to be a direct kref put
-(with the semaphore), but it's doable.
+the scsi_host_self_blocked interface was created with reconfig events in
+mind...it still won't stop in-progress timers, but I've been considering
+adding that feature for things like FC lip events.
 
 James
 
