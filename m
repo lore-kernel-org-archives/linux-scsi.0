@@ -1,49 +1,56 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: SCSI QLA not working on latest *-mm SN2
-Date: Tue, 21 Sep 2004 14:44:34 -0700
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: Using scsi_cmd->request->nr_hw_segments within a LLDD...
+Date: Tue, 21 Sep 2004 14:55:34 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040921214434.GH146363@sgi.com>
-References: <B179AE41C1147041AA1121F44614F0B0DD04E5@AVEXCH02.qlogic.org>
+Message-ID: <B179AE41C1147041AA1121F44614F0B0012AD913@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:61635 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S268082AbUIUVos (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Sep 2004 17:44:48 -0400
-Content-Disposition: inline
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0DD04E5@AVEXCH02.qlogic.org>
+Received: from avexch01.qlogic.com ([198.70.193.200]:6728 "EHLO
+	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S268086AbUIUVzf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Sep 2004 17:55:35 -0400
+Content-Class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@SteelEye.com>, Jesse Barnes <jbarnes@engr.sgi.com>, Grant Grundler <grundler@parisc-linux.org>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, Sep 21, 2004 at 02:22:48PM -0700, Andrew Vasquez wrote:
-> On Tuesday, September 21, 2004 2:06 PM, Jeremy Higdon wrote:
-> > On Tue, Sep 21, 2004 at 01:50:02PM -0700, Andrew Vasquez wrote:
-> > > The only requirement after reception of a soft-reset request (by PIO
-> > > or MMIO) by the RISC is for the driver to wait 16 PCI clocks before
-> > > issuing another request.  The problem of course is determining when
-> > > to start timing within the driver.
-> > 
-> > So I think that we just wait for some reasonable worst case time for
-> > the write to complete.  We can't really do anything else.
-> >
-> 
-> That seems to be the case.
->  
-> > Are these resets done as part of error recovery?  I.e., do we have
-> > to be concerned about long the write will take on a busy system?
-> > 
-> 
-> Just during initialization (qla2x00_chip_diag() and qla2x00_setup_chip())
-> and after a firmware dump (qla_dbg.c -- which requires a full 
-> re-initialization to recover).  If the driver is in the process of
-> performing a firmware-dump, the RISC has already been paused and nothing
-> is executing within the firmware.
-> 
-> --
-> Andrew
 
-Well then 10us should be plenty of time.  Maybe 20 just to be extra sure.
+All,
 
-jeremy
+Back in March the qla2xxx driver began to use the value in
+cmd->request->nr_hw_segments as a guestimate during the calucation of
+the number of driver-request-queue entries that would be needed to
+fullfill a given command-request.  Here's an URL to thread which
+prompted the change:
+
+	http://marc.theaimsgroup.com/?l=linux-scsi&m=107940832718154&w=2
+
+Recently we've had a number of problem reports which appear to
+indicate that the value specified within the variable is
+un-initialized and/or set to some bogus value.
+
+Here's the relevant code the driver uses in qla2x00_start_scsi():
+
+	/* Calculate the number of request entries needed. */
+	req_cnt = (ha->calc_request_entries)(cmd->request->nr_hw_segments);
+	if (ha->req_q_cnt < (req_cnt + 2)) {
+		cnt = RD_REG_WORD_RELAXED(ISP_REQ_Q_OUT(ha, reg));
+		if (ha->req_ring_index < cnt)
+			ha->req_q_cnt = cnt - ha->req_ring_index;
+		else
+			ha->req_q_cnt = ha->request_q_length -
+			    (ha->req_ring_index - cnt);
+	}
+	if (ha->req_q_cnt < (req_cnt + 2))
+		goto queuing_error;
+
+The 'req_cnt' derived value in several instances is greater than 4000.
+
+So, can an LLDD depend on the value being set to a proper value
+during all I/O submission paths -- BIO as well as IOCTL?
+
+If not, then what should a device driver writer use as an alternative?
+
+Regards,
+Andrew Vasquez
