@@ -1,30 +1,64 @@
-From: Bryan Henderson <hbryan@us.ibm.com>
+From: raray@jam.rr.com
 Subject: Re: SCSI HBA in wrong order
-Date: Fri, 9 Jul 2004 10:40:41 -0700
+Date: Fri, 9 Jul 2004 13:04:00 -0500 (CDT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <OF6EBED15C.7C0610C9-ON88256ECC.00609EC2-88256ECC.00611D8B@us.ibm.com>
-References: <20040709164359.GF5889@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <Pine.LNX.4.58.0407091257500.16287@rray1.jam.rr.com>
+References: <Pine.LNX.4.58.0407091027580.12759@rray1.jam.rr.com>
+ <20040709164359.GF5889@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.106]:23029 "EHLO e6.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S265119AbUGIRky (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2004 13:40:54 -0400
+Received: from ms-smtp-02.texas.rr.com ([24.93.47.41]:56732 "EHLO
+	ms-smtp-02-eri0.texas.rr.com") by vger.kernel.org with ESMTP
+	id S265144AbUGISEE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Jul 2004 14:04:04 -0400
 In-Reply-To: <20040709164359.GF5889@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
 To: Matthew Wilcox <willy@debian.org>
-Cc: linux-scsi@vger.kernel.org, raray@jam.rr.com
+Cc: linux-scsi@vger.kernel.org
 
->> I upgraded one server to Fedora Core 2 with 2.6.6 kernel.
->> Now Linux assigns the built in HBAs as scsi2 and scsi3 and assigns the
->> LSIU40HVD as scsi0 and scsi1.
->> This really screws things up.
+I apologize if it sounded like I was complaining.
+My intent was to ask for help.
+I'm using the 2.6.6 kernel I downloaded from www.kernel.org.
+I believe the built in HBA is using the aic7xxx module and the LSIU40HVD
+is using the sym53c8xx module.
+Can you explain how to force modules to be loaded in a certain order?
+
+Thanks
+Richard Ray
+
+On Fri, 9 Jul 2004, Matthew Wilcox wrote:
+
+> On Fri, Jul 09, 2004 at 10:29:34AM -0500, raray@jam.rr.com wrote:
+> > I have 3 Compaq Proliant ML370 servers with RedHat 9.0 and 2.4.23 kernel.
+> > Each of these machines has an optical jukebox with 6 drives attached.
+> > The 2 internal SCSI drives are attached to the HBA built into the system
+> > board.
+> > The jukebox is attached to a LSIU40HVD HBA.
+> > Linux assigns the built in HBAs as scsi0 and scsi1 and assigns the
+> > LSIU40HVD as scsi2 and scsi3.
+> > I upgraded one server to Fedora Core 2 with 2.6.6 kernel.
+> > Now Linux assigns the built in HBAs as scsi2 and scsi3 and assigns the
+> > LSIU40HVD as scsi0 and scsi1.
+> > This really screws things up. Anybody got any ideas how to fix this?
 >
->There is no way to fix this. 
-
-It's worth mentioning that the broader problem -- that of things getting 
-really screwed up by such a reversal -- can be fixed by using another way, 
-such as udev, instead of the Linux host number to identify the devices. 
-Which is why this "unfixable" problem has been accepted.
-
-
+> There is no way to fix this.  Supporting hotplug means that the sym2
+> driver is told about the HBAs in PCI bus scan order.  I assume all your
+> HBAs are driven by the sym2 driver?  If not, you could load the modules
+> in the other order to get the internal HBAs before the external HBAs.
+>
+> In any case, this is a Red Hat kernel, you should be complaining to them,
+> not here.
+>
+> --
+> "Next the statesmen will invent cheap lies, putting the blame upon
+> the nation that is attacked, and every man will be glad of those
+> conscience-soothing falsities, and will diligently study them, and refuse
+> to examine any refutations of them; and thus he will by and by convince
+> himself that the war is just, and will thank God for the better sleep
+> he enjoys after this process of grotesque self-deception." -- Mark Twain
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
