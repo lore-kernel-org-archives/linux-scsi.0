@@ -1,44 +1,36 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [TRIVIAL] [2.5 patch] remove an unused function from NCR53c406a.c
-Date: Tue, 08 Jul 2003 11:27:45 +1000
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] pull scsi_scan_host out of scsi_add_host
+Date: Tue, 8 Jul 2003 01:03:35 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030708034706.C1ABF2C244@lists.samba.org>
-References: <1057586204.1812.2.camel@mulgrave>
+Message-ID: <20030708080334.GA2451@beaverton.ibm.com>
+References: <20030707143056.GA1177@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dp.samba.org ([66.70.73.150]:27327 "EHLO lists.samba.org")
-	by vger.kernel.org with ESMTP id S266881AbTGHDcb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jul 2003 23:32:31 -0400
-In-reply-to: Your message of "07 Jul 2003 08:56:42 EST."
-             <1057586204.1812.2.camel@mulgrave>
+Received: from e31.co.us.ibm.com ([32.97.110.129]:26278 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S266913AbTGHHqt
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Jul 2003 03:46:49 -0400
+Content-Disposition: inline
+In-Reply-To: <20030707143056.GA1177@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>, Adrian Bunk <bunk@fs.tum.de>
+To: Christoph Hellwig <hch@lst.de>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-In message <1057586204.1812.2.camel@mulgrave> you write:
-> On Mon, 2003-07-07 at 02:46, Rusty Trivial Russell wrote:
-> > From:  Adrian Bunk <bunk@fs.tum.de>
-> > 
-> >   The patch below removes an unused function from 
-> >   drivers/scsi/NCR53c406a.c .
-> >    
-> >   I've tested the compilation with 2.5.72-mm2.
+Christoph Hellwig [hch@lst.de] wrote:
+> As Douglas mentioned on this list a while ago there's hardware these
+> days where we don't want to automatically perform an initial bus scan
+> in scsi_add_host.  Currently we only have ieee1394 in the tree but
+> I can imagine more uses like iscsi or certain fc setups.
 > 
-> Rusty, I'm not going to remove this immediately.
-> 
-> It's the old polling interface for the chip.  It was unplumbed when the
-> ->command() API was removed, but these chips were strangely connected to
-> soundblaster cards and may need to operate in no-interrupt mode (in
-> which case we'll need to ressurect it).  I'm just waiting to see if
-> anyone complains that their sound card attached CDROM no-longer works.
+> This patch removes the call to scsi_scan_host from scsi_add_host
+> and moves it into the drivers that want in.
 
-Thanks for taking the time to explain, James.  From the other patches
-Adrian sent, I think he was on a warning hunt.
+Would we want to make a symmetric interface and pull the
+unscan out of scsi_remove_host also?
 
-I'll turn off re-transmit on this patch, so if it gets applied later
-Adrian will get a closure mail, otherwise I'll dredge it up again late
-in the 2.6-pre stuff.
-
-Thanks!
-Rusty.
+-andmike
 --
-  Anyone who quotes me in their sig is an idiot. -- Rusty Russell.
+Michael Anderson
+andmike@us.ibm.com
+
