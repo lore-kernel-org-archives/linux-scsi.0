@@ -1,56 +1,60 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] Add compat_ioctl to mptctl
-Date: Wed, 19 Jan 2005 11:25:42 -0700
-Message-ID: <91888D455306F94EBD4D168954A9457CEAA513@nacos172.co.lsil.com>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH] drop some attibutes from the FC transport class
+Date: Wed, 19 Jan 2005 12:38:31 -0600
+Message-ID: <41EEA927.7070602@us.ibm.com>
+References: <20050119171357.GA16136@lst.de> <20050119172106.GB32702@kroah.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:4589 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261827AbVASS0I (ORCPT
+Received: from e31.co.us.ibm.com ([32.97.110.129]:2022 "EHLO e31.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261836AbVASSii (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Jan 2005 13:26:08 -0500
+	Wed, 19 Jan 2005 13:38:38 -0500
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
+	by e31.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j0JIcXm4245772
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Jan 2005 13:38:33 -0500
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay05.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j0JIcWlE263462
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Jan 2005 11:38:32 -0700
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id j0JIcWua015532
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Jan 2005 11:38:32 -0700
+In-Reply-To: <20050119172106.GB32702@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@muc.de>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
 
-On Tuesday, January 18, 2005 4:22 AM, Andi Kleen wrote:
+Greg KH wrote:
+> On Wed, Jan 19, 2005 at 06:13:57PM +0100, Christoph Hellwig wrote:
 > 
-> Convert mptctl driver to new compat_ioctl entry point.
+>>I think the hardware_version, firmware_version, rom_version and
+>>driver_version don't belong into the FC transport class, there's
+>>nothign specific to FC or even SCSI specific in them.
 > 
-> Only compile tested.
 > 
-> Signed-off-by: Andi Kleen <ak@muc.de>
+> Then put them in the individual driver (not the driver_version one
+> though, that belongs as a MODULE_VERSION() paramater).
 > 
+> 
+>>If you want these attributes talk to Greg about fiding a place in
+>>the common driver model code for them.
+> 
+> 
+> No, they don't belong there either, sorry :)
 
-This doesn't compile. Andi - Pls fix, resend, and
-I will test.
+How about at an attribute on the pci object? I currently have a driver 
+private firmware version in the ipr driver as a scsi_host class 
+attribute. Not sure how many other drivers will end up doing similar. 
+Might be nice to have a common way to export this information to 
+userspace. Or we can always wait for more users before we do something 
+like this...
 
-Three issues are:
+-Brian
 
-(1) incompatible number of paramters being passed 
-when calling __mptctl_ioctl; look at line 649
-(2) definition of unlocked_ioctl is three parameters, however
-mptctl_ioctl is having four paramters; line 2686
-(3) compat_mptctl_ioctl - is passing NULL pointer to mptctl_ioctl,
-this will panic in __mptctl_ioctl; look at line 2820, then line 566
-
-Here is output of compiling:
-
-emoore-test5:/usr/src/linux-2.6.11-rc1-bk7 # make modules
-  CHK     include/linux/version.h
-make[1]: `arch/x86_64/kernel/asm-offsets.s' is up to date.
-  CC [M]  drivers/message/fusion/mptctl.o
-drivers/message/fusion/mptctl.c: In function `mptctl_ioctl':
-drivers/message/fusion/mptctl.c:649: warning: passing arg 1 of
-`__mptctl_ioctl' from incompatible pointer type
-drivers/message/fusion/mptctl.c:649: warning: passing arg 2 of
-`__mptctl_ioctl' makes integer from pointer without a cast
-drivers/message/fusion/mptctl.c:649: error: too many arguments to function
-`__mptctl_ioctl'
-drivers/message/fusion/mptctl.c: At top level:
-drivers/message/fusion/mptctl.c:2686: warning: initialization from
-incompatible pointer type
-make[3]: *** [drivers/message/fusion/mptctl.o] Error 1
-make[2]: *** [drivers/message/fusion] Error 2
-make[1]: *** [drivers/message] Error 2
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
