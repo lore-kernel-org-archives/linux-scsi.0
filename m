@@ -1,81 +1,138 @@
-From: Doug Ledford <dledford@redhat.com>
+From: Luben Tuikov <luben@splentec.com>
 Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Fri, 24 Jan 2003 20:07:29 -0500
+Date: Fri, 24 Jan 2003 20:24:00 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030125010729.GG28812@redhat.com>
-References: <Pine.LNX.4.44L0.0301211546410.6926-100000@ida.rowland.org> <200301232159.28656.oliver@neukum.name> <20030123213423.GA26415@redhat.com> <200301232339.40892.oliver@neukum.name> <20030123152554.F12788@one-eyed-alien.net> <20030124214831.GA28812@redhat.com> <20030124152540.B27859@one-eyed-alien.net> <20030125000529.GE28812@redhat.com> <20030124164553.C27859@one-eyed-alien.net>
+Message-ID: <3E31E730.20903@splentec.com>
+References: <Pine.LNX.4.44L0.0301211546410.6926-100000@ida.rowland.org> <200301232159.28656.oliver@neukum.name> <20030123213423.GA26415@redhat.com> <200301232339.40892.oliver@neukum.name> <20030123152554.F12788@one-eyed-alien.net> <20030124214831.GA28812@redhat.com> <20030124152540.B27859@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030124164553.C27859@one-eyed-alien.net>
+In-Reply-To: <20030124152540.B27859@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.name>, Luben Tuikov <luben@splentec.com>, Alan Stern <stern@rowland.harvard.edu>, David Brownell <david-b@pacbell.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Cc: Oliver Neukum <oliver@neukum.name>, Alan Stern <stern@rowland.harvard.edu>, David Brownell <david-b@pacbell.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-On Fri, Jan 24, 2003 at 04:45:53PM -0800, Matthew Dharm wrote:
-> Ah... the sweet feeling of progress.
-
-Indeed ;-)
-
-> Driver limit.  I added support for queueing, but the queue is fixed at size
-> 1.  It's an improvement for the future.
-
-OK.  Just curious.
-
-> > No!  Remember, command completion is delayed!  We have a tasklet that 
-> > processes your now complete command, and with that processing comes 
-> > marking the device unbusy, which is also required for 4 to work.  That's 
-> > why I was suggesting waking up the error handler thread and letting it 
-> > finish this process off.  The error handler thread has the luxury of being 
-> > able to wait for the command completion to happen, and in my opinion it's 
-> > a slightly better place to do the work of cleaning out the request queue.
+Matthew Dharm wrote:
+> So, if I read this correctly, you're saying that the correct sequence is:
 > 
-> Okay... so what do I do if it fails?  Sleep for a while and try again
-> later?  Wait on a flag somewhere?
+> (1) get disconnect notification from USB
+> (2) Call scsi_set_device_offline() (must hold host lock for this)
+> (3) call scsi_done() for all command in queue (max: 1)
 
-Well, the better option is what I think we are working on.  Instead of
-trying to remove the host completely, just unhook it from the USB stuff,
-then call the set_scsi_device_offline(), then send back any outstanding
-commands via scsi_done(), then possibly call the
-scsi_schedule_host_removal() if Mike adds that function.  Then return.  
-Don't to anything else.  Take all the remaining code you would normally
-run at this point and put it into a function in your source called
-usb_release() and in your Scsi_Host_Template struct that you pass to the
-scsi layer, init the release pointer with the address of your
-usb_release() routine.  That way, the scsi layer can do what it's best at,
-taking care of the clean up details we've been talking about, and when
-it's all done, it will call your usb_release() routine with a single
-argument of the host struct you are wanting released.  At that point, you
-can do all the freeing you would have done in that khubd loop (at least I
-think that's the context you are doing the freeing from now) and know for
-a fact that not only are you freeing everything, but so is the scsi mid
-layer.  I think this will solve all the issues you've had, because this
-*won't* leak, it won't block your other actions, and it lets the scsi
-subsystem clean up properly.
+Right.  LLDD does (2) and (3), though, *and let's decide on this scsi ppl*
+I'd rather (3) be initiated by SCSI Core, e.g. in recovery code.
 
-> > > Async is fine with me, but up until this e-mail,
-> > > all I've seen is people arguing over what the sequence is, and theoretical
-> > > issues of what users should and should not do.  And I also think that a
-> > > large number of hotplugable hosts are going to replicate a whole bunch of
-> > > code to do (2)+(3)+(4) in one, synchronous burst.
-> > 
-> > Which would be wrong BTW.  If you can support multiple devices behind a 
-> > bridge then you can't put (2)+(3)+(4) together in one burst.  That's why 
-> > they aren't that way now.
+> (4) Call scsi_remove_host(), which should now work because no commands are
+> outstanding
+> (5) Call scsi_unregister()
+
+This is tricky.  I'd rather SCSI Core do those things.  I.e. when there
+are no devices left, then SCSI Core could probably initiate the removal
+of the host, just as it does for devices with slave_alloc().  Please
+ppl, read Doug's original email *carefullly*, especially those who are
+implementing this now (Mike?).
+
+(You may decide to go over your queue and error them out, but the
+error recovery thread should call your eh_abort() method -- this
+is a more consistent way of doing this and you'd have *less*
+code duplication in LLDD.)
+
+The whole point is that when shared data is involved, i.e. hosts,
+commands, devices, LLDD can tell SCSI Core what it (LLDD) wants
+to be done eventually, (by, say telling scsi core about the unplug
+event by calling scsi_set_device_offline()), and then when SCSI Core
+decides that it is safe to do so, it will *remove* the device(s)
+and/(or) host(s), the former by calling slave_destroy(), and the
+latter by the release() method.
+
+Please note, that a LLDD cannot ``run'' SCSI Core, and this is what
+you've been inclined to do in all your emails.
+
+For this I'm inclined to include in SHT/host, a host_volatile:1 flag
+to mean whether the host is to be removed when there's no devices;
+1 to mean that it is to be removed when # dev = 0, 0 to mean that
+the host stays.
+
+Some hosts may decide to stay even if there's no devices attached,
+e.g. FC/SAN hosts. (since a device may come up any moment now, or
+that the host has been authenticated and connected to a target
+whos luns got pulled out at this moment in time -- and there's no
+point in removing the host and then initiating a whole new
+session/authenication/etc.)
+
+USB Storage hosts will have .host_volatile = 1.
+ 
+> And we're done, all structures can be freed.
+
+SCSI Core will tell you when you're done, when your
+release() method is called -- when SCSI Core decides
+to do it.
+
+>  And, as I understand it, the
+> following is true:
 > 
-> Hrm... I can see your point if we're talking about hotplugging an
-> individual device, but I don't see how (2)+(3)+(4) isn't what we want for
-> hotplugging an entire host.
+> (a) once (2) is done, no more commands will be queued
 
-The numbers are gone from the email now so it's hard to reference, but I 
-think I was commenting on the fact that if you have a true host device, 
-then you might well be doing (2)+(3)*(number of devices behind 
-bridge)+(4) or something like that.
+Ok, SCSI Core can take care of this.
 
+> (b) once (3) is done, (4) is guaranteed to work
+
+You shouldn't care of this -- your driver methods will get called.
+You shouldn't know about how the layer above you implements it -- this
+is the whole point of separating SCSI Core and LLDD as different
+subsystems.
+
+> (c) there is nothing the user can do to make this sequence take a long time
+
+Right.
+ 
+> Tho, this does leave me with a couple of questions:
+> 
+> (i) Doesn't scsi_set_device_offline() work on devices, not hosts?  How do I
+> map from my host to my device list?
+
+Doug answered this -- but it's even easier when you have one device per host.
+
+> (ii) Do I need to call scsi_set_device_offline() for each device?  I
+> presume 'yes'.
+
+Mostly it would depend on USB.  Is it a normal host with several real
+devices and just one of them is going away?  Or is it a bridge itself
+which is going away and you must force unplug all device? I can imagine
+this either way, though my knowledge of USB is limited. :-)
+
+SCSI ppl: the transport may not be USB so let's not generalize if new
+code is going into SCSI Core.
+
+
+> (iii) What should I shove into the status field of the scsi command before
+> I scsi_done() it?
+
+DID_ERROR or DID_BAD_TARGET, since the device is gone.
+ 
+> Oh, and as for my being a 'prick'.... my big problem is that the documented
+> interface is synchronous.  Async is fine with me, but up until this e-mail,
+> all I've seen is people arguing over what the sequence is, and theoretical
+> issues of what users should and should not do.
+
+Most of the things said were of interest and concern to SCSI ppl too.
+
+>  And I also think that a
+> large number of hotplugable hosts are going to replicate a whole bunch of
+> code to do (2)+(3)+(4) in one, synchronous burst.
+
+No, not quite -- those will be called by SCSI Core, depending on the
+host.  Things may work differently for a host connected to a SAN, don't
+you think?
+
+For this reason we cannot lump up (2), (3) and (4).  They'll be separated
+and SCSI Core will drive things up.
 
 -- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+Luben
+
+
+
+
+
