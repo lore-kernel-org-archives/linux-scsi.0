@@ -1,29 +1,30 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: fdisk on scsi disks in 2.5.21
-Date: Wed, 12 Jun 2002 08:19:25 -0400
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: problem with SCSI tape/linux
+Date: Wed, 12 Jun 2002 12:25:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3D073C4D.3AAB1EED@torque.net>
-References: <UTC200206111251.g5BCpDN18038.aeb@smtp.cwi.nl>
+Message-ID: <20020612122559.B3946@redhat.com>
+References: <Pine.LNX.4.44.0206121403160.26529-100000@shire.zend.office>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0206121403160.26529-100000@shire.zend.office>; from stas@zend.com on Wed, Jun 12, 2002 at 02:03:36PM +0300
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Stanislav Malyshev <stas@zend.com>
+Cc: linux-scsi@vger.kernel.org
 
-Andries.Brouwer@cwi.nl wrote:
-> 
-> > One head, one cylinder and lots of sectors??
-> 
-> > Is my fdisk (from RH 7.2) too old?
-> 
-> No, it is too modified.
-> Get a vanilla fdisk from a recent util-linux,
-> and probably all will be fine.
- 
-Andries,
-Thanks. Confirming that the fdisk in util-linux-2.11r
-works fine.
+On Wed, Jun 12, 2002 at 02:03:36PM +0300, Stanislav Malyshev wrote:
+> Jun 12 12:24:53 cheese kernel: st0: Error with sense data: [valid=0] Info 
+> fld=0x0, Current st09:00: sense key Aborted Command
+> Jun 12 12:24:53 cheese kernel: Additional sense indicates Data phase error
 
-Doug Gilbert
+Sounds like either a bad cable or bad termination.  I would get a new 
+cable and double check the connector on the tape drive to make sure there 
+aren't any bent pins.  Also double check that your termination is correct.
+
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc. 
+         1801 Varsity Dr.
+         Raleigh, NC 27606
+  
