@@ -1,31 +1,38 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: [BK PATCH] bug fixes for scsi for linux-2.6.3-rc1
-Date: 08 Feb 2004 11:39:51 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1076258392.2055.9.camel@mulgrave>
+Date: 08 Feb 2004 12:01:55 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1076259717.2055.11.camel@mulgrave>
 References: <1076256895.2055.6.camel@mulgrave>
 	<20040208161911.GF24334@parcelfarce.linux.theplanet.co.uk>
+	<1076258392.2055.9.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20040208161911.GF24334@parcelfarce.linux.theplanet.co.uk>
-To: Matthew Wilcox <willy@debian.org>
-Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat1.steeleye.com ([65.114.3.130]:52894 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263861AbUBHRCC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 8 Feb 2004 12:02:02 -0500
+In-Reply-To: <1076258392.2055.9.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Matthew Wilcox <willy@debian.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sun, 2004-02-08 at 11:19, Matthew Wilcox wrote:
-> Wasn't the mptscsih_exit problem already fixed by:
+On Sun, 2004-02-08 at 11:39, James Bottomley wrote:
+> Hmm, missed that.
 > 
-> http://linux.bkbits.net:8080/linux-2.5/patch@1.1500.2.166?nav=index.html|ChangeSet@-3d|cset@1.1500.2.166
+> That would make the safest course of action to leave that in, and redo
+> the true fix after 2.6.3 is released.
 > 
-> (went in via akpm 48 hours ago)
+> Hang on, I'll redo the scsi-for-linus-2.6 tree.
 
-Hmm, missed that.
+OK, I've reconstituted
 
-That would make the safest course of action to leave that in, and redo
-the true fix after 2.6.3 is released.
+bk://linux-scsi.bkbits.net/scsi-for-linus-2.6
 
-Hang on, I'll redo the scsi-for-linus-2.6 tree.
+without that patch.
 
 James
+
+
