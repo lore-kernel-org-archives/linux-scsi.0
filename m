@@ -1,29 +1,34 @@
 From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] SCSI megaraid_mm.c: make some code static
-Date: Mon, 15 Nov 2004 03:14:57 +0100
-Message-ID: <20041115021457.GQ2249@stusta.de>
+Subject: [2.6 patch] SCSI: fdomain.c: make a struct static
+Date: Mon, 15 Nov 2004 02:59:58 +0100
+Message-ID: <20041115015958.GI2249@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261439AbUKODvH@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:7694 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S261415AbUKOCMn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Nov 2004 21:12:43 -0500
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: faith@cs.unc.edu
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The patch below makes some needlessly global code static.
+The patch below makes a needlessly global struct static.
 
 
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
---- linux-2.6.10-rc1-mm5-full/drivers/scsi/megaraid/megaraid_mm.c.old	2004-11-13 22:43:49.000000000 +0100
-+++ linux-2.6.10-rc1-mm5-full/drivers/scsi/megaraid/megaraid_mm.c	2004-11-13 22:43:58.000000000 +0100
-@@ -65,7 +65,7 @@
- static int adapters_count_g;
- static struct list_head adapters_list_g;
+--- linux-2.6.10-rc1-mm5-full/drivers/scsi/fdomain.c.old	2004-11-13 21:03:26.000000000 +0100
++++ linux-2.6.10-rc1-mm5-full/drivers/scsi/fdomain.c	2004-11-13 21:03:45.000000000 +0100
+@@ -458,7 +458,7 @@
  
--wait_queue_head_t wait_q;
-+static wait_queue_head_t wait_q;
+ */
  
- static struct file_operations lsi_fops = {
- 	.open	= mraid_mm_open,
+-struct signature {
++static struct signature {
+    const char *signature;
+    int  sig_offset;
+    int  sig_length;
+
