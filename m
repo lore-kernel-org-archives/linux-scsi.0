@@ -1,31 +1,33 @@
-From: Jens Axboe <axboe@suse.de>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: possible use-after-free in 2.5.44 scsi changes
-Date: Sun, 27 Oct 2002 22:20:35 +0100
+Date: Sun, 27 Oct 2002 15:37:32 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021027212035.GM3966@suse.de>
-References: <20021026092943.GB14976@suse.de> <200210270050.g9R0oQe04795@localhost.localdomain>
+Message-ID: <200210272137.g9RLbW413689@localhost.localdomain>
+References: <axboe@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200210270050.g9R0oQe04795@localhost.localdomain>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id NAA31694
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Oct 2002 13:37:42 -0800
+In-Reply-To: Message from Jens Axboe <axboe@suse.de>
+   of "Sun, 27 Oct 2002 22:20:35 +0100." <20021027212035.GM3966@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Badari Pulavarty <pbadari@us.ibm.com>, Andrew Morton <akpm@digeo.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin J. Bligh" <Martin.Bligh@us.ibm.com>, Doug Ledford <dledford@redhat.com>
+To: Jens Axboe <axboe@suse.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Badari Pulavarty <pbadari@us.ibm.com>, Andrew Morton <akpm@digeo.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Martin J. Bligh" <Martin.Bligh@us.ibm.com>, Doug Ledford <dledford@redhat.com>
 
-On Sat, Oct 26 2002, James Bottomley wrote:
-> axboe@suse.de said:
-> > Irk no, you cannot just clear valid information! This is _not_ a fix,
-> > it's a hack.
-> 
-> > Use a different flag, or maybe use REQ_DONTPREP or similar. 
-> 
-> OK, what about this.  It uses REQ_DONTPREP, and could be a precursor
-> to moving the SCSI subsystem to using the request prep function.
+axboe@suse.de said:
+> Sure that would suffice, but lets just move to the prep approach right
+> away. First just the global one, later we can do one per device type. 
 
-Sure that would suffice, but lets just move to the prep approach right
-away. First just the global one, later we can do one per device type.
+OK, will do.  SCSI currently needs the ability to bail on a request 
+preparation in such a way that the request will get re-queued for preparation 
+(out of command blocks or other resource shortage), which I believe you're 
+working on.
 
--- 
-Jens Axboe
+The per device type is more tricky because SCSI can have more than one upper 
+level driver driving the device queue.
+
+James
+
 
