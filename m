@@ -1,73 +1,166 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: [PATCH] (was Re: [Q] scsi_adjust_queue_depth(SDp, 0, SDp->host->cmd_per_lun);
- needed?)
-Date: Wed, 13 Oct 2004 22:04:25 +0200 (CEST)
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: [PATCH] Fix sleeping while holding a lock on host removal and on
+ killing the DV thread
+Date: Wed, 13 Oct 2004 16:23:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60.0410132200090.3426@poirot.grange>
-References: <Pine.LNX.4.60.0407252205240.5555@poirot.grange>
+Message-ID: <416D8EBA.7060904@adaptec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.de ([213.165.64.20]:12270 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S269811AbUJMUG3 (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:36814 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S269806AbUJMUXe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Oct 2004 16:06:29 -0400
-In-Reply-To: <Pine.LNX.4.60.0407252205240.5555@poirot.grange>
+	Wed, 13 Oct 2004 16:23:34 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org, linux@advansys.com
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 
-On Sun, 25 Jul 2004, Guennadi Liakhovetski wrote:
+Fix sleeping while holding a lock on host removal and on
+killing the DV thread.
 
-> A question: are calls like the one in
-> 
-> 53c700.c::
-> 	NCR_700_slave_configure()
-> 		scsi_adjust_queue_depth(SDp, 0, SDp->host->cmd_per_lun);
-> 
-> really needed? Isn't the call in
+Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
 
-Ok, I'll (try to) assume they aren't:
+# This is a BitKeeper generated diff -Nru style patch.
+#
+# ChangeSet
+#   2004/10/13 15:55:49-04:00 luben@lion.adaptec.com
+#   Fix sleeping while holding a lock on host removal and
+#   on killing the DV thread.
+#
+# drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
+#   2004/10/13 15:55:36-04:00 luben@lion.adaptec.com +4 -2
+#   Fix sleeping while holding a lock on host removal.
+#
+# drivers/scsi/aic7xxx/aic7xxx_osm.c
+#   2004/10/13 15:55:35-04:00 luben@lion.adaptec.com +0 -3
+#   Fix sleeping while holding a lock on killing the DV thread.
+#
+# drivers/scsi/aic7xxx/aic7xxx_core.c
+#   2004/10/13 15:55:35-04:00 luben@lion.adaptec.com +0 -1
+#   Fix sleeping while holding a lock on host removal.
+#
+# drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+#   2004/10/13 15:55:35-04:00 luben@lion.adaptec.com +4 -2
+#   Fix sleeping while holding a lock on host removal.
+#
+# drivers/scsi/aic7xxx/aic79xx_osm.c
+#   2004/10/13 15:55:35-04:00 luben@lion.adaptec.com +1 -3
+#   Fix sleeping while holding a lock on killing the DV thread.
+#
+# drivers/scsi/aic7xxx/aic79xx_core.c
+#   2004/10/13 15:55:35-04:00 luben@lion.adaptec.com +0 -1
+#   Fix sleeping while holding a lock on host removal.
+#
+diff -Nru a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c	2004-10-13 15:58:23 -04:00
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c	2004-10-13 15:58:23 -04:00
+@@ -5270,7 +5270,6 @@
+  	default:
+  	case 5:
+  		ahd_shutdown(ahd);
+-		TAILQ_REMOVE(&ahd_tailq, ahd, links);
+  		/* FALLTHROUGH */
+  	case 4:
+  		ahd_dmamap_unload(ahd, ahd->shared_data_dmat,
+diff -Nru a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-10-13 15:58:23 -04:00
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-10-13 15:58:23 -04:00
+@@ -5032,7 +5032,6 @@
+  ahd_linux_exit(void)
+  {
+  	struct ahd_softc *ahd;
+-	u_long l;
 
-diff -u -r1.1.1.3 advansys.c
---- a/drivers/scsi/advansys.c	17 Aug 2004 20:34:48
-+++ b/drivers/scsi/advansys.c	13 Oct 2004 19:44:32
-@@ -6131,8 +6131,6 @@
- 	    scsi_adjust_queue_depth(device, MSG_ORDERED_TAG,
-                 boardp->dvc_var.adv_dvc_var.max_dvc_qng);
-         }
--    } else {
--	scsi_adjust_queue_depth(device, 0, device->host->cmd_per_lun);
-     }
-     ASC_DBG4(1, "advansys_slave_configure: device 0x%lx, boardp 0x%lx, id %d, depth %d\n",
-             (ulong) device, (ulong) boardp, device->id, device->queue_depth);
-diff -u -r1.1.1.4 53c700.c
---- a/drivers/scsi/53c700.c	17 Aug 2004 20:34:46
-+++ b/drivers/scsi/53c700.c	13 Oct 2004 19:48:19
-@@ -2052,9 +2052,6 @@
- 	/* to do here: allocate memory; build a queue_full list */
- 	if(SDp->tagged_supported) {
- 		/* do TCQ stuff here */
--	} else {
--		/* initialise to default depth */
--		scsi_adjust_queue_depth(SDp, 0, SDp->host->cmd_per_lun);
- 	}
- 	if(hostdata->fast) {
- 		/* Find the correct offset and period via domain validation */
-diff -u -r1.1.1.4 aic7xxx_old.c
---- a/drivers/scsi/aic7xxx_old.c	17 Aug 2004 20:34:41
-+++ b/drivers/scsi/aic7xxx_old.c	13 Oct 2004 19:56:07
-@@ -6722,7 +6722,6 @@
-             p->host_no, device->channel, device->id,
-             device->lun, device->host->cmd_per_lun);
-     }
--    scsi_adjust_queue_depth(device, 0, device->host->cmd_per_lun);
-   }
-   return;
- }
+  	/*
+  	 * Shutdown DV threads before going into the SCSI mid-layer.
+@@ -5040,12 +5039,11 @@
+  	 * kernel so that waiting for our DV threads to exit leads
+  	 * to deadlock.
+  	 */
+-	ahd_list_lock(&l);
+  	TAILQ_FOREACH(ahd, &ahd_tailq, links) {
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+  		ahd_linux_kill_dv_thread(ahd);
+  	}
+-	ahd_list_unlock(&l);
++
+  #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+  	/*
+  	 * In 2.4 we have to unregister from the PCI core _after_
+diff -Nru a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c	2004-10-13 15:58:23 -04:00
++++ b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c	2004-10-13 15:58:23 -04:00
+@@ -105,12 +105,14 @@
+  	if (ahd != NULL) {
+  		u_long s;
+
++		TAILQ_REMOVE(&ahd_tailq, ahd, links);
++		ahd_list_unlock(&l);
+  		ahd_lock(ahd, &s);
+  		ahd_intr_enable(ahd, FALSE);
+  		ahd_unlock(ahd, &s);
+  		ahd_free(ahd);
+-	}
+-	ahd_list_unlock(&l);
++	} else
++		ahd_list_unlock(&l);
+  }
+
+  static int
+diff -Nru a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c	2004-10-13 15:58:23 -04:00
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c	2004-10-13 15:58:23 -04:00
+@@ -3973,7 +3973,6 @@
+  	default:
+  	case 5:
+  		ahc_shutdown(ahc);
+-		TAILQ_REMOVE(&ahc_tailq, ahc, links);
+  		/* FALLTHROUGH */
+  	case 4:
+  		ahc_dmamap_unload(ahc, ahc->shared_data_dmat,
+diff -Nru a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-10-13 15:58:23 -04:00
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-10-13 15:58:23 -04:00
+@@ -5033,7 +5033,6 @@
+  ahc_linux_exit(void)
+  {
+  	struct ahc_softc *ahc;
+-	u_long l;
+
+  	/*
+  	 * Shutdown DV threads before going into the SCSI mid-layer.
+@@ -5041,12 +5040,10 @@
+  	 * kernel so that waiting for our DV threads to exit leads
+  	 * to deadlock.
+  	 */
+-	ahc_list_lock(&l);
+  	TAILQ_FOREACH(ahc, &ahc_tailq, links) {
+
+  		ahc_linux_kill_dv_thread(ahc);
+  	}
+-	ahc_list_unlock(&l);
+
+  #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+  	/*
+diff -Nru a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	2004-10-13 15:58:23 -04:00
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	2004-10-13 15:58:23 -04:00
+@@ -160,12 +160,14 @@
+  	if (ahc != NULL) {
+  		u_long s;
+
++		TAILQ_REMOVE(&ahc_tailq, ahc, links);
++		ahc_list_unlock(&l);
+  		ahc_lock(ahc, &s);
+  		ahc_intr_enable(ahc, FALSE);
+  		ahc_unlock(ahc, &s);
+  		ahc_free(ahc);
+-	}
+-	ahc_list_unlock(&l);
++	} else
++		ahc_list_unlock(&l);
+  }
+  #endif /* !LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0) */
+
 
