@@ -1,113 +1,52 @@
-From: brking@us.ibm.com
-Subject: [PATCH 1/1]
-Date: Wed, 27 Oct 2004 14:49:16 -0500
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: Re: [dm-devel] [multipath] SCSI device capacity mess
+Date: Wed, 27 Oct 2004 22:19:06 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200410271949.i9RJnHxZ276788@d01relay02.pok.ibm.com>
+Message-ID: <1098908346.12464.44.camel@zezette>
+References: <1098833278.4914.24.camel@zezette>
+	 <20041027081713.GC32712@marowsky-bree.de>
+	 <1098903759.12464.32.camel@zezette>
+	 <1098905875.4472.92.camel@gator.sc.steeleye.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.103]:56055 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262597AbUJ0Ttx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Oct 2004 15:49:53 -0400
+Received: from smtp4.wanadoo.fr ([193.252.22.27]:13639 "EHLO
+	mwinf0401.wanadoo.fr") by vger.kernel.org with ESMTP
+	id S262677AbUJ0UTJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Oct 2004 16:19:09 -0400
+In-Reply-To: <1098905875.4472.92.camel@gator.sc.steeleye.com>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, brking@us.ibm.com
+To: Eddie Williams <Eddie.Williams@Steeleye.com>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 
-This looks to have dropped through the cracks. Please apply.
+> Switching LUNs from one path to another is not a fast process and if
+> this happens during periods of heaving IO periods, significant thrashing
+> can result.
+> 
+> I think if we want to play at the Enterprise level where there are many
+> servers connected up to large arrays I don't think it is a good idea to
+> knowingly cause disruptions to others on the SAN.  Causing LUNs to
+> switch from one path to another is such a behavior.
+> 
+I certainly don't militate for the NOSTARTONADD flag removal for all
+devices. I just consider it annoying for the HSG80 / HSV* family
+controlers :
 
-The following patch fixes a race condition in sg of sg_cmd_done racing
-with sg_release. I've seen this bug hit several times on test machines
-and the following patch fixes it. The race is that if srp->done is set
-and the waiting thread gets a spurious wakeup immediately afterwards,
-then the waiting thread can end up executing and completing, then getting
-closed, freeing sfp before the wake_up_interruptible is called, which
-then will result in an oops. The oops is fixed by locking around the
-setting srp->done to 1 and the wake_up, and also locking around the
-checking of srp->done, which guarantees that the wake_up_interruptible
-will always occur before the sleeping thread gets a chance to run.
+- Either they are in failover mode and there is no bouncing possible, so
+start_stop is harmless
 
-Signed-off-by: Brian King <brking@us.ibm.com>
----
+- Either they are in multibus mode, then not sending start_stop before
+READ CAPA lead to cmd failure and wrong size stored. Hence ghosts path
+are ununsable even when they come up. [Here, I shamely hide the
+device-mapper hooks on path activation could work]
 
- linux-2.6.10-rc1-bk6-bjking1/drivers/scsi/sg.c |   23 ++++++++++++++++++++---
- 1 files changed, 20 insertions(+), 3 deletions(-)
+- Either way, these controler families are *not* high-end devices,
+whatever the criteria (capacity, throughput, cache, alarming, ...). The
+whole ghost-path notion being the best evidence.
 
-diff -puN drivers/scsi/sg.c~sg_cmd_done_oops_again drivers/scsi/sg.c
---- linux-2.6.10-rc1-bk6/drivers/scsi/sg.c~sg_cmd_done_oops_again	2004-10-27 14:47:51.000000000 -0500
-+++ linux-2.6.10-rc1-bk6-bjking1/drivers/scsi/sg.c	2004-10-27 14:47:51.000000000 -0500
-@@ -735,6 +735,18 @@ sg_common_write(Sg_fd * sfp, Sg_request 
- }
- 
- static int
-+sg_srp_done(Sg_request *srp, Sg_fd *sfp)
-+{
-+	unsigned long iflags;
-+	int done;
-+
-+	read_lock_irqsave(&sfp->rq_list_lock, iflags);
-+	done = srp->done;
-+	read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-+	return done;
-+}
-+
-+static int
- sg_ioctl(struct inode *inode, struct file *filp,
- 	 unsigned int cmd_in, unsigned long arg)
- {
-@@ -773,7 +785,7 @@ sg_ioctl(struct inode *inode, struct fil
- 			while (1) {
- 				result = 0;	/* following macro to beat race condition */
- 				__wait_event_interruptible(sfp->read_wait,
--					(sdp->detached || sfp->closed || srp->done),
-+					(sdp->detached || sfp->closed || sg_srp_done(srp, sfp)),
- 							   result);
- 				if (sdp->detached)
- 					return -ENODEV;
-@@ -784,7 +796,9 @@ sg_ioctl(struct inode *inode, struct fil
- 				srp->orphan = 1;
- 				return result;	/* -ERESTARTSYS because signal hit process */
- 			}
-+			write_lock_irqsave(&sfp->rq_list_lock, iflags);
- 			srp->done = 2;
-+			write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
- 			result = sg_new_read(sfp, p, SZ_SG_IO_HDR, srp);
- 			return (result < 0) ? result : 0;
- 		}
-@@ -1227,6 +1241,7 @@ sg_cmd_done(Scsi_Cmnd * SCpnt)
- 	Sg_device *sdp = NULL;
- 	Sg_fd *sfp;
- 	Sg_request *srp = NULL;
-+	unsigned long iflags;
- 
- 	if (SCpnt && (SRpnt = SCpnt->sc_request))
- 		srp = (Sg_request *) SRpnt->upper_private_data;
-@@ -1315,8 +1330,10 @@ sg_cmd_done(Scsi_Cmnd * SCpnt)
- 	if (sfp && srp) {
- 		/* Now wake up any sg_read() that is waiting for this packet. */
- 		kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
-+		write_lock_irqsave(&sfp->rq_list_lock, iflags);
- 		srp->done = 1;
- 		wake_up_interruptible(&sfp->read_wait);
-+		write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
- 	}
- }
- 
-@@ -1510,7 +1527,7 @@ sg_remove(struct class_device *cl_dev)
- 				tsfp = sfp->nextfp;
- 				for (srp = sfp->headrp; srp; srp = tsrp) {
- 					tsrp = srp->nextrp;
--					if (sfp->closed || (0 == srp->done))
-+					if (sfp->closed || (0 == sg_srp_done(srp, sfp)))
- 						sg_finish_rem_req(srp);
- 				}
- 				if (sfp->closed) {
-@@ -2492,7 +2509,7 @@ sg_remove_sfp(Sg_device * sdp, Sg_fd * s
- 
- 	for (srp = sfp->headrp; srp; srp = tsrp) {
- 		tsrp = srp->nextrp;
--		if (srp->done)
-+		if (sg_srp_done(srp, sfp))
- 			sg_finish_rem_req(srp);
- 		else
- 			++dirty;
-_
+regards,
+-- 
+christophe varoqui <christophe.varoqui@free.fr>
+
