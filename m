@@ -1,48 +1,44 @@
-From: Nishanth Aravamudan <nacc@us.ibm.com>
-Subject: Re: [patch 08/10]  scsi/dpt_i2o: replace 	schedule_timeout()withmsleep_interruptible()
-Date: Fri, 22 Oct 2004 16:22:25 -0700
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] scsi_debug  v 1.75 for lk 2.6.9-bk4
+Date: Sat, 23 Oct 2004 15:27:54 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041022232225.GA18906@us.ibm.com>
-References: <60807403EABEB443939A5A7AA8A7458B40B611@otce2k01.adaptec.com>
+Message-ID: <4179EBDA.1090205@torque.net>
+References: <4179B89B.8030207@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.105]:14331 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S269210AbUJVXWN (ORCPT
+Received: from borg.st.net.au ([65.23.158.22]:32182 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S267702AbUJWF2j (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Oct 2004 19:22:13 -0400
-Content-Disposition: inline
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458B40B611@otce2k01.adaptec.com>
+	Sat, 23 Oct 2004 01:28:39 -0400
+In-Reply-To: <4179B89B.8030207@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, janitor@sternwelten.at, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: nacc@us.ibm.com
 
-On Thu, Oct 21, 2004 at 10:11:31AM -0400, Salyzyn, Mark wrote:
-> I have to speak in absence of the original author, but I believe the
-> decision to conditionalize the unlock was because this routine is called
-> at init time and at run time.
+Douglas Gilbert wrote:
+> This gzipped patch is against lk 2.6.9-bk4 which is
+> after the lk 2.6.9 release and includes James's "[BK
+> PATCH] SCSI updates for 2.6.9" omnibus patch.
 > 
-> I did not notice the `stutter' of the two schedule_timeout's. Eeeeek!!!
-> (My scientific replacement for bogus). Thanks for shaking the cobwebs.
+> The changelog is with respect to version 1.74 found
+> in James's post lk 2.6.9 patch. The scsi_debug.[hc] files
+> can be found in the sdebug175.tgz tarball at
+> http://www.torque.net/sg/sdebug26.html
 > 
-> The second schedule_timeout needs to be *removed*, it does not belong
-> there at all!
+> Nishanth, perhaps you could test this version and report
+> if it works and if the data transfers still seem slow.
+> 
+> Changelog:
+>     - fix highmem data transfers
+>          - fix kunmap_atomic() argument
+>          - disable clustering
+>     - allow every_nth < 0 for error continuously once
+>       count is reached
+>     - minor sense buffer handling cleanup
 
-Please find below a patch which does exactly this.
+The patch applies and works against lk 2.6.10-rc1 as well.
 
-Description: Removes a schedule_timeout() from adpt_i2o_post_wait() whch
-Mark Salyzyn requested be removed.
-
-Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
-
-
---- 2.6.9-bk7-vanilla/drivers/scsi/dpt_i2o.c	2004-10-22 10:41:29.000000000 -0700
-+++ 2.6.9-bk7/drivers/scsi/dpt_i2o.c	2004-10-22 15:22:53.000000000 -0700
-@@ -1179,7 +1179,6 @@ static int adpt_i2o_post_wait(adpt_hba* 
- 				// dangerous.
- 				status = -ETIME;
- 			}
--			schedule_timeout(timeout*HZ);
- 		}
- 		if(pHba->host)
- 			spin_lock_irq(pHba->host->host_lock);
+Doug Gilbert
