@@ -1,52 +1,79 @@
-From: Chris Worley <cworley@lnxi.com>
-Subject: Re: SCSI Timeout issue w/ QLA2460
-Date: 26 Sep 2003 12:55:40 -0600
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1064602538.9216.43217.camel@localhost.localdomain>
-References: <B179AE41C1147041AA1121F44614F0B060ED2E@AVEXCH02.qlogic.org>
+From: Steven Dake <sdake@mvista.com>
+Subject: Re: kernel BUG using multipath on 2.6.0-test5
+Date: Fri, 26 Sep 2003 13:14:09 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1064607249.4779.1.camel@persist.az.mvista.com>
+References: <1064541435.4763.51.camel@persist.az.mvista.com>
+	 <20030926121703.GG24824@parcelfarce.linux.theplanet.co.uk>
+	 <20030926122646.GA15415@suse.de>
+Reply-To: sdake@mvista.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [208.177.141.226] ([208.177.141.226]:27449 "EHLO
-	localhost.lnxi.com") by vger.kernel.org with ESMTP id S261592AbTIZS6e
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Sep 2003 14:58:34 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by localhost.lnxi.com (8.11.6/8.11.6) with ESMTP id h8QItfM02449
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2003 12:55:41 -0600
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B060ED2E@AVEXCH02.qlogic.org>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20030926122646.GA15415@suse.de>
+To: Jens Axboe <axboe@suse.de>
+Cc: Matthew Wilcox <willy@debian.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Andrew,
-
-The tarball from Qlogic was labeled:
-
-  qla2x00-v6.01.00-dist.tgz 
-
-It's the full-height, PCI-X, 133MHz, single port, 2340 (I think). 
-Sorry.
-
-Thanks,
-
-Chris
-On Fri, 2003-09-26 at 12:36, Andrew Vasquez wrote:
-> Chris,
+On Fri, 2003-09-26 at 05:26, Jens Axboe wrote: 
+> On Fri, Sep 26 2003, Matthew Wilcox wrote:
+> > On Thu, Sep 25, 2003 at 06:57:15PM -0700, Steven Dake wrote:
+> > > kernel BUG at drivers/scsi/scsi_lib.c:544!
+> > 
+> >         BUG_ON(!cmd->use_sg);
+> > 
+> > >  [<c01f631d>] scsi_init_io+0x7a/0x13d
+> > 
+> > static int scsi_init_io(struct scsi_cmnd *cmd)
+> >         struct request     *req = cmd->request;
+> >         cmd->use_sg = req->nr_phys_segments;
+> >         sgpnt = scsi_alloc_sgtable(cmd, GFP_ATOMIC);
+> > 
+> > >  [<c01f6455>] scsi_prep_fn+0x75/0x171
+> > 
+> > static int scsi_prep_fn(struct request_queue *q, struct request *req)
+> >         struct scsi_cmnd *cmd;
+> >         cmd->request = req;
+> >         ret = scsi_init_io(cmd);
+> > 
+> > .. this is getting outside my area of confidence.  Ask axboe why we might
+> > get a zero nr_phys_segments request passed in.
 > 
-> > Background: 2.4.21 korg kernel w/ Qlogic 2460 HBA and Qlogic's
-> > driver (modified for 4096 scatter-gather list size).  Eight servers
-> > are directly connected to a DDN S2A8000 SAN (dual controler, eight
-> > FC ports, 2GB file system), no FC switch.  
+> Looks like an mp bug. I'd suggest adding something ala
 > 
-> Just a couple of questions:
+> 	if (!rq->nr_phys_segments || !rq->nr_hw_segments) {
+> 		blk_dump_rq_flags(req, "scsi_init_io");
+> 		return BLKPREP_KILL;
+> 	}
 > 
-> 	o Which driver version are you refering to?  We'll need to
-> 	  enable some debugging.
+> inside the first
 > 
-> 	o QLogic doesn't have a 2460 card (perhaps it was just a
-> 	  typo).  What type of card do you have (2340/2342)?
+> 	} else if (req->flags & (REQ_CMD | REQ_BLOCK_PC)) {
 > 
-> Regards,
-> Andrew Vasquez
+> drivers/scsi/scsi_lib.c:scsi_prep_fn(). That will show the state of such
+> a buggy request. I'm pretty sure this is an mp bug though.
 
+scsi_prep_fn: dev sdd: flags = REQ_CMD REQ_STARTED
+sector 0, nr/cnr 8/8
+bio c2694708, biotail c2694708, buffer f76dc000, data 00000000, len 0
+multipath: IO failure on sdd, disabling IO path.
+        Operation continuing on 1 IO paths.
+multipath: sdd: rescheduling sector 8
+MULTIPATH conf printout:
+-- wd:1 rd:2
+disk0, o:0, dev:sdd
+disk1, o:1, dev:sdb
+MULTIPATH conf printout:
+-- wd:1 rd:2
+disk1, o:1, dev:sdb
+multipath: sdd: redirecting sector 0 to another IO path
+scsi_prep_fn: dev sdb: flags = REQ_CMD REQ_STARTED
+sector 0, nr/cnr 0/8
+bio c2694708, biotail c2694708, buffer f76dc000, data 00000000, len 0
+
+I assume a length of zero is wrong...  I'll trace up the stack and see
+where the bad data gets into the request.
+
+Thanks for the pointer...
+-steve  
