@@ -1,8 +1,8 @@
 From: Paul Blazejowski <paulb@blazebox.homeip.net>
 Subject: Re: Badness in device_release at drivers/base/core.c:84
-Date: Wed, 06 Aug 2003 12:55:55 -0400
+Date: Wed, 06 Aug 2003 12:58:27 -0400
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1060188955.887.3.camel@blaze.homeip.net>
+Message-ID: <1060189107.887.7.camel@blaze.homeip.net>
 References: <20030801182207.GA3759@blazebox.homeip.net>
 	 <20030801144455.450d8e52.akpm@osdl.org>
 	 <20030803015510.GB4696@blazebox.homeip.net>
@@ -15,95 +15,100 @@ References: <20030801182207.GA3759@blazebox.homeip.net>
 	 <1060021614.889.6.camel@blaze.homeip.net>
 	 <1352160000.1060025773@aslan.btc.adaptec.com>
 	 <5793.199.181.174.146.1060050091.squirrel@www.blazebox.homeip.net>
-	 <3F2F84D2.8000202@nospam.com>
+	 <3F2F84D2.8000202@nospam.com>  <3F2FD6ED.1005BB2C@yk.rim.or.jp>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TK340b1uLg/3LuHCo1Ra"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UI8KmLaumDnifGFywzx/"
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <3F2F84D2.8000202@nospam.com>
-To: wb <dead_email@nospam.com>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, Patrick Mansfield <patmans@us.ibm.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <3F2FD6ED.1005BB2C@yk.rim.or.jp>
+To: Ishikawa <ishikawa@yk.rim.or.jp>
+Cc: wb <dead_email@nospam.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Patrick Mansfield <patmans@us.ibm.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
---=-TK340b1uLg/3LuHCo1Ra
+--=-UI8KmLaumDnifGFywzx/
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2003-08-05 at 06:20, wb wrote:
+On Tue, 2003-08-05 at 12:10, Ishikawa wrote:
+> (Sorry this is not strictly related to SCSI, but I could not help it.)
+>=20
+> Regarding the use of a program from uucp suite
+> for console output capture,
+> we can use C-Kermit as well.
+>=20
+> >   Your need a NULL modem serial cable available
+> >   from any computer store.
 > >=20
-> > I'll look into serial console and try to set it up.Do i need extra
-> > hardware or cables to run serial console? any poniters or setup
-> > suggestions would be welcome as i never used serial consoles before.
-> > Regards,
+> > Install uucp - I use on the HOST :
 > >=20
-> > Paul
-> > -
+> > uucp-1.06.1-33.7.2.
 >=20
->   Your need a NULL modem serial cable available
->   from any computer store.
+> Or you can use C-Kermit.
+> See
 >=20
-> Install uucp - I use on the HOST :
+>    http://www.columbia.edu/kermit/ckermit.html
 >=20
-> uucp-1.06.1-33.7.2.
+> for details. There are precompiled packages.
 >=20
-> Also , LILO is broken on some machines and ignores
-> serial input so make sure you use at least
+> >  ... [omission ] ...
 >=20
-> lilo-21.6-71
+> > 5. Start uucp on the HOST:
+> >=20
+> >      cu -l /dev/ttyS0 -s 9600
 >=20
-> On the TARGET
+>        kermit
+>        set line /dev/ttyS0
+>        set speed 9600
+>        connect
+> =20
+> and you can issue other commands.
+>         set [space] ?
+> will print all the available options at that point.
+> (You can log the interaction into a file by issueing
+> a command to kermit, too, but using script and then run kermit
+> inside the scripted session might be easier.)
+> (Generally speaking hitting ? somewhere on the kermit command line
+> prints usable options/setting/keywords, and so
+> you can learn the basics very quickly.)
+> You can set up a startup file that sets
+> the device name, speed, parity, data size, etc. and
+> so you don't have to type all the command every time.
 >=20
-> 1. Connect the serial ports together ( COM1->COM1 ) with
->     the serial cable .
+> While I agree cu might work well for one shot job,
+> running a full terminal emulator like C-Kermit
+> helps us in the long term.
 >=20
-> 2. Modify LILO to use serial line on the TARGET
->     add to lilo.conf:
->        append=3D"console=3DttyS0,9600n8  console=3Dtty0 "
->        serial=3D0,9600N8
+> Just thought to let you know a full-featured terminal
+> emulator is available under linux.
 >=20
->     Run lilo
+> > John Donnelly AT HP DOT com
 >=20
-> 3. Add to /etc/inittab on the HOST
+> Is the succinct and to the point steps
+> part of a widely available document?
 >=20
->        S0:s12345:respawn:/sbin/agetty 9600 ttyS0
->=20
-> 4. To see ALL THE CONSOLE MESSAGES during boot on the TARGET
->=20
->     mv /dev/console /dev/console.org
->     ln  /dev/ttyS0 /dev/console
->=20
-> 5. Start uucp on the HOST:
->=20
->      cu -l /dev/ttyS0 -s 9600
->=20
-> 6. Boot your target
->=20
-> ///
->=20
-> John Donnelly AT HP DOT com
+> I wish I knew this a few years ago.
 >=20
 
-John,
+Kermit was very helpful but due to my inexperience i was not able to get
+the log due to Linux's box resetting of /dev/ttyS0 when booting, i would
+get disconnect...
 
-I appreciate your writing short and sweet howto :-).
+Thanks a lot for suggesting ckermit.
 
-I was able to get it going from FreeBSD 5.1 box with cu -l /dev/ttyd0
-2&<1 > log to my Linux machine.
-
-Thank you for helping.
+Regards,
 
 Paul B.
 
---=-TK340b1uLg/3LuHCo1Ra
+--=-UI8KmLaumDnifGFywzx/
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.2 (GNU/Linux)
 
-iD8DBQA/MTMbIymMQsXoRDARAqycAJ9AnaoHxwqVzQN7UHdEs1gom4kfVgCfTeqA
-lCRHDXnINmQK4Yn99dCV1cg=
-=bPyK
+iD8DBQA/MTOzIymMQsXoRDARAjQnAJ9c9la2CcB70InHqvPpmxa7lBv2mwCfe//v
+vslfgeNVtfUstBVhgb310ss=
+=qNTU
 -----END PGP SIGNATURE-----
 
---=-TK340b1uLg/3LuHCo1Ra--
+--=-UI8KmLaumDnifGFywzx/--
