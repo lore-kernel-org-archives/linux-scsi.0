@@ -1,32 +1,39 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH 2.4.30-pre3] x86_64: pci_alloc_consistent() match 2.6
-	implementation
-Date: Sat, 19 Mar 2005 07:09:45 +0100
-Message-ID: <1111212585.6291.41.camel@laptopd505.fenrus.org>
-References: <20050318212344.GC26112@lists.us.dell.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Received: from pentafluge.infradead.org ([213.146.154.40]:24736 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S262415AbVCSGJv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Mar 2005 01:09:51 -0500
-In-Reply-To: <20050318212344.GC26112@lists.us.dell.com>
+From: domen@coderock.org
+Subject: [patch 1/1] drivers/scsi/lasi700.c: Use the DMA_32BIT_MASK constant
+Date: Sat, 19 Mar 2005 14:19:32 +0100
+Message-ID: <20050319131932.9CBD01ECA8@trashy.coderock.org>
+Received: from coderock.org ([193.77.147.115]:44168 "EHLO trashy.coderock.org")
+	by vger.kernel.org with ESMTP id S262545AbVCSNTj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Mar 2005 08:19:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@dell.com>
-Cc: ak@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-
-On Fri, 2005-03-18 at 15:23 -0600, Matt Domsch wrote:
-> For review and comment.
-> 
-> On x86_64 systems with no IOMMU and with >4GB RAM (in fact, whenever
-> there are any pages mapped above 4GB), pci_alloc_consistent() falls
-> back to using ZONE_DMA for all allocations, even if the device's
-> dma_mask could have supported using memory from other zones.  Problems
-> can be seen when other ZONE_DMA users (SWIOTLB, scsi_malloc()) consume
-> all of ZONE_DMA, leaving none left for pci_alloc_consistent() use.
-
-scsi_malloc no longer uses ZONE_DMA nowadays....
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, domen@coderock.org, tklauser@nuerscht.ch
 
 
+
+Use the DMA_32BIT_MASK constants from dma-mapping.h
+when calling dma_set_mask().
+
+Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
+Signed-off-by: Domen Puncer <domen@coderock.org>
+---
+
+
+ kj-domen/drivers/scsi/lasi700.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
+
+diff -puN drivers/scsi/lasi700.c~dma_mask-drivers_scsi_lasi700 drivers/scsi/lasi700.c
+--- kj/drivers/scsi/lasi700.c~dma_mask-drivers_scsi_lasi700	2005-03-18 20:05:40.000000000 +0100
++++ kj-domen/drivers/scsi/lasi700.c	2005-03-18 20:05:40.000000000 +0100
+@@ -111,7 +111,7 @@ lasi700_probe(struct parisc_device *dev)
+ 	memset(hostdata, 0, sizeof(struct NCR_700_Host_Parameters));
+ 
+ 	hostdata->dev = &dev->dev;
+-	dma_set_mask(&dev->dev, 0xffffffffUL);
++	dma_set_mask(&dev->dev, DMA_32BIT_MASK);
+ 	hostdata->base = base;
+ 	hostdata->differential = 0;
+ 
+_
