@@ -1,54 +1,68 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: cleanup of sd driver in lk2.5
-Date: Sun, 14 Apr 2002 10:32:41 -0500
+From: Marvin Stodolsky <stodolsk@rcn.com>
+Subject: PROBLEM:drivers/scsi: In function `sdebug_scatg2virt
+Date: Sat, 13 Apr 2002 21:26:02 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200204141532.g3EFWfk09653@localhost.localdomain>
-References: <dougg@torque.net>
+Message-ID: <3CB8E8BA.5855149E@rcn.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: Message from Douglas Gilbert <dougg@torque.net>
-   of "Thu, 04 Apr 2002 23:48:10 EST." <3CAD2C8A.595DC7A5@torque.net>
+Received: from 66-44-2-122.s630.apx1.lnh.md.dialup.rcn.com ([66.44.2.122] helo=rcn.com)
+	by smtp02.mrf.mail.rcn.net with esmtp (Exim 3.33 #10)
+	id 16wo8u-0005wV-00
+	for linux-scsi@vger.kernel.org; Sun, 14 Apr 2002 13:50:25 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: linux-scsi@vger.kernel.org
 
-dougg@torque.net said:
-> I noticed that James Bottomley has a BK archive. Perhaps this driver
-> could be put in there so others can hack it. There are lots more
-> things I would like to do/fix with this driver. 
+[1.]  scsi_debug.c:521: structure has no member named `address' 
+[2.]  Compile with 2.5.7 sources fails within:
+/usr/bin/make -C scsi modules
+make[3]: Entering directory `/usr/src/Lnx/linux-2.5.7/drivers/scsi'
+at subsection:
+ gcc -D__KERNEL__ -I/usr/src/Lnx/linux-2.5.7/include -Wall
+-Wstrict-prototypes -Wno-trigraphs -O2 -fomit-frame-pointer
+-fno-strict-aliasing -fno-common -pipe -mpreferred-stack-boundary=2
+-march=i686 -DMODULE -DMODVERSIONS -include
+/usr/src/Lnx/linux-2.5.7/include/linux/modversions.h 
+-DKBUILD_BASENAME=scsi_debug  -c -o scsi_debug.o scsi_debug.c
+scsi_debug.c: In function `sdebug_scatg2virt':
+scsi_debug.c:521: structure has no member named `address'
+scsi_debug.c:526: warning: control  reaches end of non-void function
+make[3]: *** [scsi_debug.o] Error 1
+make[3]: Leaving directory `/usr/src/Lnx/linux-2.5.7/drivers/scsi'
+make[2]: *** [_modsubdir_scsi] Error 2
+make[2]: Leaving directory `/usr/src/Lnx/linux-2.5.7/drivers'
+make[1]: *** [_mod_drivers] Error 2
+make[1]: Leaving directory `/usr/
 
-I think a bitkeeper tree would be a very good idea.  Unfortunately, it can't 
-be mine since it sits behind a firewall.  However, the Bitmover project will 
-give us a publicly accessible one on bkbits.net.
+3) using 
+gcc --version 2.95.4
+GNU Make version 3.79.
+GNU ld version 2.12.90.0.1 20020307 Debian/GNU Linux
+Compiling under a 2.4.18 kernel
+=========
+ grep -v not /usr/src/linux/.config , SCSI section
+#
+# SCSI support
+#
+CONFIG_SCSI=m
 
-If no one else volunteers, I'll set up a linux-scsi.bkbits.net for us.  Does 
-anyone have any specific thoughts on the layout of the subprojects?  For 
-bitkeeper to be useful, you should have as many sub-projects as there are 
-lines of development in the tree.  The incredibly rough split I thought of 
-would be:
+#
+# SCSI support type (disk, tape, CD-ROM)
+#
+CONFIG_BLK_DEV_SD=m
+CONFIG_SD_EXTRA_DEVS=40
+CONFIG_CHR_DEV_SG=m
 
-scsi-midlayer - any changes to the midlayer alone
+#
+# Some SCSI devices (e.g. CD jukebox) support multiple LUNs
+#
+CONFIG_SCSI_MULTI_LUN=y
+CONFIG_SCSI_CONSTANTS=y
+CONFIG_SCSI_LOGGING=y
 
-sd, st, sg - obvious
-
-drivers - most drivers are single .c and .h files that don't change very much, 
-so splitting them out only makes sense if they're being updated on a regular 
-basis
-
-<evolving drivers> - need more input on this one, which drivers need separate 
-sub-projects, the sub projects can be owned by the various driver maintainers?
-
-misc - everything else.
-
-This can be refined later on, but it is useful to get the split reasonably 
-correct first time around.
-
-Administering a bkbits.net tree is quite a bit different from looking after 
-your own bitkeeper tree, so if anyone else has experience in this area, now 
-would be a good time to volunteer.
-
-James
-
-
+#
+# SCSI low-level drivers
+#
+CONFIG_SCSI_DEBUG=m
 
