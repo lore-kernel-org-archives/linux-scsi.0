@@ -1,84 +1,88 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: Hot swapping SCSI drives
-Date: Mon, 3 Feb 2003 08:48:07 -0800
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
+Date: Mon, 3 Feb 2003 09:17:26 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <A5974D8E5F98D511BB910002A50A66470580D5CD@hdsmsx103.hd.intel.com>
+Message-ID: <20030203171726.GA1583@beaverton.ibm.com>
+References: <20030123213423.GA26415@redhat.com> <200301232339.40892.oliver@neukum.name> <20030123152554.F12788@one-eyed-alien.net> <20030124214831.GA28812@redhat.com> <20030124152540.B27859@one-eyed-alien.net> <20030125000529.GE28812@redhat.com> <20030124164553.C27859@one-eyed-alien.net> <20030125010729.GG28812@redhat.com> <20030202101317.A26796@one-eyed-alien.net> <20030202120628.A28024@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from petasus.hd.intel.com (petasus.hd.intel.com [10.127.45.3])
-	by hermes.hd.intel.com (8.11.6/8.11.6/d: outer.mc,v 1.51 2002/09/23 20:43:23 dmccart Exp $) with ESMTP id h13GhHv12776
-	for <linux-scsi@vger.kernel.org>; Mon, 3 Feb 2003 16:43:17 GMT
-Received: from fmsmsxv040-1.fm.intel.com (fmsmsxvs040.fm.intel.com [132.233.42.124])
-	by petasus.hd.intel.com (8.11.6/8.11.6/d: inner.mc,v 1.28 2003/01/13 19:44:39 dmccart Exp $) with SMTP id h13GfpY04580
-	for <linux-scsi@vger.kernel.org>; Mon, 3 Feb 2003 16:41:51 GMT
+Content-Disposition: inline
+In-Reply-To: <20030202120628.A28024@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Brad Stockdale' <bradsprt@greenepa.net>, linux-scsi@vger.kernel.org
+To: Oliver Neukum <oliver@neukum.name>, Luben Tuikov <luben@splentec.com>, Alan Stern <stern@rowland.harvard.edu>, David Brownell <david-b@pacbell.net>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Brad,
+Sorry Matthew I got side tracked on some issues for the last week. The
+scsi_set_device_offline(); function has not been added to any of James
+linux-scsi trees. You could add a ifndef in your code until we get the
+interface in the tree. 
 
-You shouldn't have any trouble.  The adapter is fine, and apparently the
-disk drives are SCA connector for hotplug.  
+Would scsi_set_device_offline() do more than sdev->online = 0? It
+depends on the state of the device at the calling of the function.
 
-There may be a temporary glitch on the SCSI bus if a disk is hot-inserted,
-which can show up as either a SCSI parity error or SCSI overrun error, but
-the aic7xxx 6.2.20+ driver should handle that ok.  You may want/need to do
-the remove-/add-single-device functions also.
+I currently have scsi_set_device_offline() trying to do the following:
+	1.) set device offline and mark host in_recovery.
+	2.) mark all outstanding commands to be canceled and wake up
+	error handler.
+	3.) flush the request queue.
+	4.) Once device is really offline send hotplug event.
 
-Andy
+(2) needs some changes in the error handler which are needed in other
+cases. This the large part of the change, but it is not directly part of
+your request.
 
------Original Message-----
-From: Brad Stockdale [mailto:bradsprt@greenepa.net] 
-Sent: Friday, January 31, 2003 9:25 PM
-To: linux-scsi@vger.kernel.org
-Subject: Re: Hot swapping SCSI drives
+(3) need a cleaner way to flush request specials off the queue . It
+would also be nice if there was a method to stop the incoming side of the
+request queue.
+
+(4) need export of do_hotplug interface or a method to generate a call
+to it for an offline event.
+
+I am working on these changes pretty much in order.
+
+Doug suggested a scsi_schedule_host_removal(), but I thought we could
+just change scsi_remove_host() to handle this task unless there is a
+side effect that all callers would not want???.
+
+-andmike
+
+Matthew Dharm [mdharm-scsi@one-eyed-alien.net] wrote:
+> Willem Riede <wrlk@riede.org> suggested to me that I simply set
+> sdev->online = 0 for scsi_set_device_offline()
+> 
+> Any reason that isn't good enough?
+> 
+> On Sun, Feb 02, 2003 at 10:13:17AM -0800, Matthew Dharm wrote:
+> > So, was any of this ever implemented?  As far as I can tell, the required
+> > changes were:
+> > 
+> > (o) addition of scsi_schedule_host_removal() (possibly optional)
+> > (o) implementation of scsi_set_device_offline() (possibly optional)
+> > (o) change the behavior of the 'hotplug initialization model' to call my
+> > release function
+> > 
+> > Matt
+> > > then call the set_scsi_device_offline(), then send back any outstanding
+> > > commands via scsi_done(), then possibly call the
+> > > scsi_schedule_host_removal() if Mike adds that function.  Then return.  
+> > > Don't to anything else.  Take all the remaining code you would normally
+> > > run at this point and put it into a function in your source called
+> > > usb_release() and in your Scsi_Host_Template struct that you pass to the
+> > > scsi layer, init the release pointer with the address of your
+> > > usb_release() routine.  That way, the scsi layer can do what it's best at,
+> > > taking care of the clean up details we've been talking about, and when
+> > > it's all done, it will call your usb_release() routine with a single
+> > > argument of the host struct you are wanting released.  At that point, you
+> > > can do all the freeing you would have done in that khubd loop (at least I
+> > > think that's the context you are doing the freeing from now) and know for
+> > > a fact that not only are you freeing everything, but so is the scsi mid
+> > > layer.  I think this will solve all the issues you've had, because this
+> > > *won't* leak, it won't block your other actions, and it lets the scsi
+> > > subsystem clean up properly.
 
 
-Hello all,
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
-    I've poked around for info about hot-swapping SCSI drives under linux, 
-and the only real info I found was "It may work if you have the right 
-hardware, or it may fry your controller and/or hard drive."
-
-    This doesn't give me warm and fuzzies... So I thought I'd check with 
-the guru's before I tried to yank the drive out of my still-breathing 
-computer...
-
-    The pertinent information about my system configuration is as follows:
-
-	o Running linux kernel 2.4.20
-	o Has an Adaptec 2940W card for my SCSI subsystem
-	o Have a SCSI drive in a nice removable enclosure -- I forget
-exactly
-	  what brand, but it cost around $200.00 -- not one of the cheapie
-	  plastic units.
-	o SCSI hard drive is an IBM 9.1 gigabyte.
-	o Have one other device on the SCSI bus -- an external DDS4 HP
-	  DAT drive.
-	o SCSI HD is connected to internal 68 pin connector
-	o HP DAT is connected to external connector...
-	o The SCSI hard drive I would like to yank does not contain any
-	  filesystem that my box can't live without... I can unmount it
-	  and not cause any problems...
-
-    I found some information about the scsiadd utility, but I am a bit 
-leary to use it, since I already am doing funky stuff with this particular 
-drive. It has XFS as the file system, and the whole drive is taken up by a 
-BestCrypt container. scsiadd says its possible to lose data, so I have a 
-feeling its doubly risky since I am doing some non-standard things on the 
-drive.
-
-    Anyone have any experience hot-swapping drives on an Adaptec 2940?
-
-    If the 2940 is not capable of handling the use/abuse of hot-swapping, 
-can anyone recommend a card that would handle it alright? Preferrably an 
-Adaptec since I have had a lot of good luck with them, but if I need to 
-look at another company for hot-swap capable cards, I will take a look...
-
-Thanks,
-Brad
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
