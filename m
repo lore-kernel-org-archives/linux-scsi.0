@@ -1,57 +1,59 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [RFC] Make the SCSI mempool allocations variable
-Date: Wed, 10 Mar 2004 02:07:40 -0800
+From: Andreas Jellinghaus <aj@leogic.com>
+Subject: Re: [PATCH 2.6 ] MPT Fusion driver 3.01.00 update
+Date: Tue, 09 Mar 2004 19:13:45 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040310100740.GA619810@sgi.com>
-References: <1078858977.1756.40.camel@mulgrave>
+Message-ID: <pan.2004.03.09.18.13.44.518204@leogic.com>
+References: <0E3FA95632D6D047BA649F95DAB60E57040DA96B@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtvcafw.sgi.com ([192.48.171.6]:23407 "EHLO zok.sgi.com")
-	by vger.kernel.org with ESMTP id S262565AbUCJKIg (ORCPT
+Received: from main.gmane.org ([80.91.224.249]:191 "EHLO main.gmane.org")
+	by vger.kernel.org with ESMTP id S262562AbUCJKKH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Mar 2004 05:08:36 -0500
-Content-Disposition: inline
-In-Reply-To: <1078858977.1756.40.camel@mulgrave>
+	Wed, 10 Mar 2004 05:10:07 -0500
+Received: from root by main.gmane.org with local (Exim 3.35 #1 (Debian))
+	id 1B10f8-0000cm-00
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Mar 2004 11:10:06 +0100
+Received: from 62.245.182.10 ([62.245.182.10])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Mar 2004 11:10:06 +0100
+Received: from aj by 62.245.182.10 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Mar 2004 11:10:06 +0100
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: mpm@waste.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Tue, Mar 09, 2004 at 02:02:55PM -0500, James Bottomley wrote:
-> Based on Jeremy's request to increase max_phys_segments, this is the way
-> to do it (SCSI_MAX_PHYS_SEGMENTS) is the value that gets set as the
-> queue's max_phys_segments.
-> 
-> I have to say that when I tried raising it to 256 and hammering a 10GB
-> ext2 filesystem, I still didn't generate any >128 segment requests, so
-> I'm dubious that raising it has any benefit at all, but feel free to try
-> it and publish the figures.
-> 
-> I did wonder if lowering it might help improve the memory footprint for
-> some embedded systems, so I set it up to be lowered as far as 32.
-> 
-> James
+Hi Eric,
 
+we are trying
+Fusion MPT base driver 3.00.02
+Copyright (c) 1999-2003 LSI Logic Corporation
+mptbase: Initiating ioc0 bringup
+ioc0: 53C1030: Capabilities={Initiator}
+Fusion MPT SCSI Host driver 3.00.02
+scsi0 : ioc0: LSI53C1030, FwRev=01030a00h, Ports=1, MaxQ=222, IRQ=26
+  Vendor: LSILOGIC  Model: 1030 IM       IM  Rev: 1000
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+SCSI device sda: 143376384 512-byte hdwr sectors (73409 MB)
+SCSI device sda: drive cache: write back
+ sda: sda1 sda2 sda3 sda4
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
+  Vendor: IBM       Model: 25P3495a S320  1  Rev: 1   
+  Type:   Processor                          ANSI SCSI revision: 02
+Attached scsi generic sg1 at scsi0, channel 0, id 8, lun 0,  type 3
 
-I got a chance to try this tonight and can report excellent results.
-I modified the qla2xxx driver to have an sg_tablesize of 256 (default
-is SG_ALL, which is 0xFF).  I also modified SCSI_MAX_PHYS_SEGMENTS to
-256.
+as well as the 3.01.00 version on amd64 dual opteron machines
+on mainboards with amd chipset and two ibm 60Gb disks connected.
 
-I first tried direct I/O to the block device and found that the max
-I/O size increased to 4MB from 2MB.  I then built an XFS filesystem and
-tried direct I/O to it, and found the same results.
+our problem: terrible speed when writing.
+we used dbench for benchmarking under linux 2.6.3
+and we get 1-2 mb/s :-(
 
-Believe it or not, there are some h/w RAIDs in which you can get a
-significant performance benefit by increasing I/O size to 4MB from
-2MB.  I don't have one immediately available to post MB/s numbers,
-but you can trust me ('cause I can trust those who told me) :-)
+Any idea how to solve this issue?
+Thanks for your help.
 
-So I heartily approve of this change.
+Regards, Andreas
 
-Are you thinking of making SCSI_MAX_PHYS_SEGMENTS a config variable?
-Or would you increase it to 256 by default?
-
-Thanks for doing this,
-
-jeremy
