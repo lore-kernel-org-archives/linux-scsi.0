@@ -1,38 +1,39 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
 Subject: Re: linux-2.6.0-test11 [BUG] -- scsi_add/remove_device - out of memory
-Date: Wed, 10 Dec 2003 14:02:23 +0000
+Date: Wed, 10 Dec 2003 15:18:35 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031210140223.A1832@infradead.org>
-References: <200312101012.17027.heiko.carstens@de.ibm.com>
+Message-ID: <200312101518.35450.heiko.carstens@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:33028 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S263537AbTLJOCZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Dec 2003 09:02:25 -0500
-Content-Disposition: inline
-In-Reply-To: <200312101012.17027.heiko.carstens@de.ibm.com>; from heiko.carstens@de.ibm.com on Wed, Dec 10, 2003 at 10:12:17AM +0100
+Received: from mtagate6.de.ibm.com ([195.212.29.155]:23218 "EHLO
+	mtagate6.de.ibm.com") by vger.kernel.org with ESMTP id S262914AbTLJOSv convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Dec 2003 09:18:51 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-scsi@vger.kernel.org
 
-On Wed, Dec 10, 2003 at 10:12:17AM +0100, Heiko Carstens wrote:
-> Hello all,
-> 
-> it looks to me as if the SCSI stack has a memory leak. If I have the following
-> endless loop in our ZFCP LLD we end up within a very short time in an out
-> of memory situation (tested on an S390 virtual machine with 128MB):
-> 
-> while(1) {
->         scsi_add_device(...)
->         scsi_remove_device(...);
-> }
-> 
-> It takes only about 40 iterations to reach the out of memory situation.
-> The device that gets added and removed does respond to Inquiry commands.
-> Since I'm not sure what are the pending fixes for the SCSI stack I'm wondering
-> if this is a known bug.
+Hi, 
 
-Sounds there's a scsi_device_put missing somewherein your driver..
+>> while(1) {
+>>         scsi_add_device(...)
+>>         scsi_remove_device(...);
+>> }
+>> 
+>> It takes only about 40 iterations to reach the out of memory situation.
+>> The device that gets added and removed does respond to Inquiry commands.
+>> Since I'm not sure what are the pending fixes for the SCSI stack I'm
+>> wondering if this is a known bug. 
+>
+>Sounds there's a scsi_device_put missing somewherein your driver..
+
+Why should I be supposed to issue a scsi_device_put or scsi_device_get in my
+device driver?
+Actually the scsi_add_device call will call my provided slave_alloc function 
+and hands over a struct scsi_device pointer which should be valid until 
+scsi_destroy will be called. Which is done when I call scsi_remove_device.
+Currently I don't use any scsi_device_get or scsi_device_put functions. 
 
