@@ -1,90 +1,86 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [PATCH] fix Sony USB mass storage - pass larger receive buffer
-Date: Wed, 12 Nov 2003 17:56:27 -0800
+From: Mark Lobo <ntdeveloper2002@yahoo.com>
+Subject: Re: AIO for SG
+Date: Wed, 12 Nov 2003 18:58:25 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031112175627.B10818@one-eyed-alien.net>
-References: <20031112155029.A20986@beaverton.ibm.com> <20031112160921.A10818@one-eyed-alien.net> <20031112161310.A21175@beaverton.ibm.com> <20031112164405.A21268@beaverton.ibm.com>
+Message-ID: <20031113025825.83532.qmail@web9507.mail.yahoo.com>
+References: <3FADF9BA.3050802@torque.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="7iMSBzlTiPOCCT2k"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:22788 "EHLO
-	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S261892AbTKMB4b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Nov 2003 20:56:31 -0500
-Content-Disposition: inline
-In-Reply-To: <20031112164405.A21268@beaverton.ibm.com>; from patmans@us.ibm.com on Wed, Nov 12, 2003 at 04:44:05PM -0800
-List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, usb-storage@one-eyed-alien.net, ronald@kuetemeier.com, dmitrik@users.sourceforge.net, idan@idanso.dyndns.org
-
-
---7iMSBzlTiPOCCT2k
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web9507.mail.yahoo.com ([216.136.129.21]:35685 "HELO
+	web9507.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S262108AbTKMC6Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Nov 2003 21:58:25 -0500
+In-Reply-To: <3FADF9BA.3050802@torque.net>
+List-Id: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Nov 12, 2003 at 04:44:05PM -0800, Patrick Mansfield wrote:
-> On Wed, Nov 12, 2003 at 04:13:10PM -0800, Patrick Mansfield wrote:
-> > On Wed, Nov 12, 2003 at 04:09:21PM -0800, Matthew Dharm wrote:
-> > > On Wed, Nov 12, 2003 at 03:50:29PM -0800, Patrick Mansfield wrote:
-> > > > James - can you please apply? This should not affect other devices =
-since
-> > > > we are not changing the requested length, just the size of the rece=
-ive
-> > > > buffer.
-> > >=20
-> > > This is a terrible idea.
-> > >=20
-> > > There is a large number of devices which choke if those two values do=
- not
-> > > match.
-> >=20
-> > This is what we do in 2.4 - does USB fix it up for 2.4?
-> >=20
-> > Oh well.
->=20
-> I think see the 2.4 fixups - it looks like it sets the buffer cmd_len to
-> 12, but is (for usb_stor_ufi_command?) setting MODE SENSE 10 to a 8 byte
-> length (cmd[8] =3D 8).
+Douglas,
+Thanks, I will definitely try it out.
 
-Basically, yes.  It's tweaked in a couple of places in 2.4, including some
-awful heuristics....
+I had one question about the aio calls though. I was
+looking through the kernel sources after applying the
+patch, and then looked at the examples you have
+provided. How does the io_setcallback work? The kiocb
+and the aiocb structure had no way to specify a
+callback function in the kernel/usermode. What exactly
+does aio_complete do and how is the callback done?
+Atleast until SG, there was no way of calling back,
+didnt look anywhere else.How does it work from the
+kernel?
 
-> Can we use a minium buffer length of 12 for any requests of less than 13
-> bytes?
+TIA
+Mark
 
-You can try.... I don't know if it will work.
+--- Douglas Gilbert <dougg@torque.net> wrote:
+> Mark Lobo wrote:
+> > Guys,
+> > Is there a patch available which adds the aio
+> > interface to SG? (aio_read, aio_complete etc) 
+> 
+> Mark,
+> I have ported the aio support from lk 2.5.69 to my
+> latest
+> version of sg which I sent to this list a few days
+> ago.
+> 
+> The 2 attachments:
+>    1) incremental against my patch a few days ago.
+> This makes
+>       it simpler to see the changes associated with
+> aio
+>    2) against the version of sg found in lk
+> 2.6.0-test9 (so
+>       it includes my cdev and seqfile patches)
+> 
+> The sg3_utils-1.05 package found at
+> http://www.torque.net/sg
+> has a file called sg_simple_aio.c ** in its
+> "examples" directory.
+> You need libaio to link it. Links ok with
+> libaio-0.3.92 but
+> libaio-0.3.93 gives undefines (seems to be related
+> to i64, ppc
+> etc support added in 0.3.93, strange).
+> 
+> ** beware of the "sleep(3)" before read() [best
+> remove it].
+> 
+> Doug Gibert
+> 
+> 
 
-> Else, I give up on any other methods, and we should add them to the static
-> black list as BLIST_MS_SKIP_PAGE_3F (skip_ms_page_3f) and probably
-> BLIST_MS_SKIP_PAGE_08 just to be safe.
+> ATTACHMENT part 2 application/x-gzip
+name=sg_aio_260t9dpg.diff.gz
 
-I'm starting to think that this may be the best solution -- blacklist all
-MODE_SENSE[_10] commands from all Direct-Access devices.
 
-Matt
+> ATTACHMENT part 3 application/x-gzip
+name=sg_aio_260t9.diff.gz
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
 
-Why am I talking to a toilet brush?
-					-- CEO
-User Friendly, 4/30/1998
 
---7iMSBzlTiPOCCT2k
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQE/suTLIjReC7bSPZARAqEjAJ9hPShEnKTxaoc8hQeOVATJzBT6xQCcDMpK
-D13tmX3zqd9X5JaA39zGqfU=
-=D7fv
------END PGP SIGNATURE-----
-
---7iMSBzlTiPOCCT2k--
+__________________________________
+Do you Yahoo!?
+Protect your identity with Yahoo! Mail AddressGuard
+http://antispam.yahoo.com/whatsnewfree
