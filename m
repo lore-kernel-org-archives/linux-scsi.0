@@ -1,74 +1,89 @@
-From: Douglas Gilbert <dougg@torque.net>
+From: Andries.Brouwer@cwi.nl
 Subject: Re: inquiry in scsi_scan.c
-Date: Sat, 04 Jan 2003 13:14:40 +1100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E164390.4040305@torque.net>
-References: <UTC200301040021.h040LB128544.aeb@smtp.cwi.nl> <20030103170404.D4315@one-eyed-alien.net>
-Reply-To: dougg@torque.net
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Date: Sat, 4 Jan 2003 04:07:51 +0100 (MET)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <UTC200301040307.h0437pY06513.aeb@smtp.cwi.nl>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: Andries.Brouwer@cwi.nl, mdharm-kernel@one-eyed-alien.net
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-Cc: Andries.Brouwer@cwi.nl, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Matthew Dharm wrote:
-> Actually, 5 isn't minimal... it's sub-minimal.  That's an error in the
-> INQUIRY data.  The minimum (by spec) is 36 bytes.
-> 
-> There should probably be a sanity check to never ask for INQUIRY less than
-> 36 bytes.  I thought there used to be such a thing....
+Matthew Dharm writes:
 
-Matt,
-The scan code does a 36 byte INQUIRY first and then does
-a second INQUIRY if the response indicates more (than 36
-bytes) is available. In this case _less_ than 36 bytes
-was supplied. So either the scsi scan code or usb-storage **
-needs to make some pro forma vendor, model and rev strings.
+> There should probably be a sanity check to never ask for INQUIRY
+> less than 36 bytes.  I thought there used to be such a thing....
 
-We found previously that doing a longer INQUIRY (254
-or 255 bytes) locked up some [arguably broken] usb devices.
-Hence we switched to the twin INQUIRY strategy. Evidentally
-FreeBSD does the same thing.
+As Doug also points out, we ask for 36, but there is no
+guarantee that we get what we ask for.
 
-Throwing away such broken devices is not an option I guess.
-What does that device look like under Windows?
+> Actually, 5 isn't minimal... it's sub-minimal.
+> That's an error in the INQUIRY data/
+> The minimum (by spec) is 36 bytes.
+
+No. Quoting:
+
+"The INQUIRY data (Table 7-9) contains a five byte header,
+followed by the vendor unique parameters, if any."
+(SCSI-1 standard)
+
+So, as long as we are willing to support SCSI-1 devices,
+we must accept that the INQUIRY data can be as short as this.
+And in fact all our other code is careful - look at
+print_inquiry() how before looking at a byte we check
+whether it really there.
 
 
-** Assuming the usb device in question is using usb-storage,
-shouldn't it make sure at least 36 (valid) bytes of response
-data is supplied by an INQUIRY? Andrew Morton had to do this
-(perhaps at a lower level in the usb stack) to make some device
-he had play with the scsi subsystem.
+On the other hand, my case was not an ancient SCSI-1 device,
+it was a brand new USB device. So, I have the SCSI host in hand.
+Looking at what happens:
 
-Doug Gilbert
+usb-storage: usb_stor_bulk_transfer_buf(): xfer 36 bytes
+ 00 80 00 00 00 00 00 00 4F 45 49 2D 55 53 42 20
+ 53 6D 61 72 74 4D 65 64 69 61 20 20 20 20 20 20
+ 32 2E 30 35
+usb-storage: Status code 0; transferred 36/36
+usb-storage: Fixing INQUIRY data to show SCSI rev 2 - was 0
+usb-storage: Fixing INQUIRY data to show length 36 - was 0
 
-> On Sat, Jan 04, 2003 at 01:21:11AM +0100, Andries.Brouwer@cwi.nl wrote:
-> 
->>Got a new USB device and noticed some scsi silliness while playing with it.
->>
->>A bug in scsi_scan.c is
->>
->>        sdev->inquiry = kmalloc(sdev->inquiry_len, GFP_ATOMIC);
->>        memcpy(sdev->inquiry, inq_result, sdev->inquiry_len);
->>        sdev->vendor = (char *) (sdev->inquiry + 8);
->>        sdev->model = (char *) (sdev->inquiry + 16);
->>        sdev->rev = (char *) (sdev->inquiry + 32);
->>
->>since it happens that inquiry_len is short (in my case it is 5)
->>and the vendor/model/rev pointers are wild.
->>Catting /proc/scsi/scsi now yields random garbage.
->>
->>I made a patch but hesitated between a small patch and a larger one.
->>Why do we have this malloced inquiry field? As far as I can see
->>nobody uses it. And the comment in scsi_add_lun() advises us
->>not to save the inquiry, precisely what we did until recently.
->>So, should this change from 2.5.11 be reverted?
->>
->>Andries
->>
->>
->>[My present scsi_scan.c differes quite a lot from a stock one.
->>Already fixed the scsi_check_id_size() some time ago.
+and all is fine.
 
+Instead of the old garbage I now see:
+% cat /proc/scsi/scsi
+...
+Host: scsi2 Channel: 00 Id: 00 Lun: 00
+  Vendor: OEI-USB  Model: SmartMedia       Rev: 2.05
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+...
+
+
+Conclusion:
+(i) scsi_scan.c has to be careful about INQUIRY lengths,
+and some patch is required for devices that return a short length.
+(ii) usb-storage knows the transport length, and can fix it
+in case it is (5+)0. For example, in protocol.c:fix_inquiry_data():
+
+static void fix_inquiry_data(Scsi_Cmnd *srb)
+{
+        unsigned char *data_ptr;
+
+        /* verify that it's an INQUIRY command */
+        if (srb->cmnd[0] != INQUIRY)
+                return;
+
+        data_ptr = find_data_location(srb);
+
+        if ((data_ptr[2] & 7) != 2) {
+                US_DEBUGP("Fixing INQUIRY data to show SCSI rev 2 - was %d\n",
+                          data_ptr[2] & 7);
+
+                /* Change the SCSI revision number */
+                data_ptr[2] = (data_ptr[2] & ~7) | 2;
+        }
+
+        if (data_ptr[4] == 0) {
+                US_DEBUGP("Fixing INQUIRY data to show length 36 - was 0\n");
+                data_ptr[4] = 36 - 5;
+        }
+}
+
+Andries
