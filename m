@@ -1,56 +1,62 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] add spi attributes to qla1280
-Date: Wed, 11 Aug 2004 08:11:18 +0100
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH] SCSI midlayer power management
+Date: Wed, 11 Aug 2004 10:09:36 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040811081118.A26256@infradead.org>
-References: <20040810230552.GA26569@sgi.com>
+Message-ID: <20040811080935.GA26098@elf.ucw.cz>
+References: <4119611D.60401@optonline.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imladris.demon.co.uk ([193.237.130.41]:26894 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S267850AbUHKHLU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Aug 2004 03:11:20 -0400
+Received: from gprs214-124.eurotel.cz ([160.218.214.124]:10368 "EHLO
+	amd.ucw.cz") by vger.kernel.org with ESMTP id S267984AbUHKINF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Aug 2004 04:13:05 -0400
 Content-Disposition: inline
-In-Reply-To: <20040810230552.GA26569@sgi.com>; from jeremy@sgi.com on Tue, Aug 10, 2004 at 04:05:52PM -0700
+In-Reply-To: <4119611D.60401@optonline.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: linux-scsi@vger.kernel.org
+To: Nathan Bryant <nbryant@optonline.net>
+Cc: 'James Bottomley' <James.Bottomley@steeleye.com>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>, jgarzik@pobox.com
 
-> +	if (ha->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP12160 ||
-> +	    ha->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP10160)
-> +		is1x160 = 1;
-> +	else
-> +		is1x160 = 0;
+Hi!
 
-The driver in James' tree has most of my 1040-support patches merged,
-sp please use the apporpinquate IS_ISP* macros like the rest of the drivers
-does, and please handle the 1040 aswell in that code.
+> This proposed patch implements enough power-management support within
+> the SCSI midlayer to get ACPI S3 working on my system. Changes as follows:
+> 
+> * Add generic_scsi_{suspend,resume} methods to scsi.c
+> * Add suspend and resume callbacks to the scsi_driver structure, and
+> implement those callbacks in sd.c
+> * In sd.c, we call sd_shutdown on suspend, in order to synchronize the
+> write-back cache.
+> * In sd.c, we call sd_rescan from sd_resume in order to ensure that
+> drives have spun up and avoid passing not ready errors back to the block
+> layer.
+> * In generic_scsi_suspend, we call scsi_device_quiesce before calling
+> the scsi_driver suspend callback. We resume from quiesce state in
+> reverse order in generic_scsi_resume.
+> 
+> ACPI S1 and S4/swsusp are untested, but I think there should be no
+> regressions with S1. To do S1 properly, we probably need to tell the
+> drive to spin down, and I don't know what the SCSI command is for
+> that... For S4, the call to scsi_device_quiesce might pose a problem for
+> the subsequent state dump to disk. But I'm not sure swsusp ever worked
+> for SCSI.
 
-> +static struct scsi_transport_template *qla1280_transport_template = NULL;
+swsusp will then resume disk and write the image, that should not be a
+problem. Is it guaranteed that after generic_scsi_suspend() no DMA is
+going on?
 
-No need to initialize to NULL here.
+Anyway, you should try swsusp, preferably on some IDE notebook first
+and prefereably -mm one, to get feel how it works. It should be
+possible/easy to make it work with SCSI...
 
->  static int __devinit
->  qla1280_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
->  {
-> @@ -4758,6 +4778,7 @@
->  	host->max_id = MAX_TARGETS;
->  	host->max_sectors = 1024;
->  	host->unique_id = host->host_no;
-> +	host->transportt = qla1280_transport_template;
->  
->  #if LINUX_VERSION_CODE < 0x020545
->  	host->select_queue_depths = qla1280_select_queue_depth;
-> @@ -4890,6 +4911,12 @@
->  	.remove		= __devexit_p(qla1280_remove_one),
->  };
->  
-> +static struct spi_function_template qla1280_transport_functions = {
-> +	.show_period = 1,
-> +	.show_offset = 1,
-> +};
+> This might help SATA drives, too, but I seem to remember that the SATA
+> layer doesn't properly emulate the SYNCHRONIZE_CACHE command.
+> 
+> Comments, anybody? Can this be applied upstream? I think it's a step in
+> the right direction.
 
-Any chance you could declare this just below the host template?  that keeps
-the code better organized.
-
+Looks good to me.
+								Pavel
+-- 
+People were complaining that M$ turns users into beta-testers...
+...jr ghea gurz vagb qrirybcref, naq gurl frrz gb yvxr vg gung jnl!
