@@ -1,28 +1,21 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [TRIVIAL] [2.5 patch] remove an unused function from wd7000.c
-Date: Thu, 4 Sep 2003 08:27:14 +0100
+Subject: Re: Problems with higher SCSI LUN's with SLES8
+Date: Thu, 4 Sep 2003 09:14:41 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030904082714.B26801@infradead.org>
-References: <20030904033018.C07B42C10E@lists.samba.org>
+Message-ID: <20030904091441.A27552@infradead.org>
+References: <A00BBCF927F25E4A9D5F6EE1380CDEF2CC88@hedwig.ysl.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:19717 "EHLO
+Received: from pub234.cambridge.redhat.com ([213.86.99.234]:11014 "EHLO
 	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S264793AbTIDH1S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Sep 2003 03:27:18 -0400
+	id S264795AbTIDIOm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Sep 2003 04:14:42 -0400
 Content-Disposition: inline
-In-Reply-To: <20030904033018.C07B42C10E@lists.samba.org>; from trivial@rustcorp.com.au on Thu, Sep 04, 2003 at 01:12:12PM +1000
+In-Reply-To: <A00BBCF927F25E4A9D5F6EE1380CDEF2CC88@hedwig.ysl.nl>; from GvZuylen@ysl.nl on Thu, Sep 04, 2003 at 09:48:24AM +0200
 List-Id: linux-scsi@vger.kernel.org
-To: Rusty Trivial Russell <trivial@rustcorp.com.au>
-Cc: John Boyd <boyd@cis.ohio-state.edu>, Miroslav Zagorac <zaga@fly.cc.fer.hr>, linux-scsi@vger.kernel.org, axboe@suse.de
+To: "Zuylen, G. van" <GvZuylen@ysl.nl>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On Thu, Sep 04, 2003 at 01:12:12PM +1000, Rusty Trivial Russell wrote:
-> From:  Adrian Bunk <bunk@fs.tum.de>
-> 
->   The patch below removes an unused function from drivers/scsi/wd7000.c .
->   
->   I've tested the compilation with 2.5.72-mm2.
-
-Alan said he wanted to keep this for some reason.  Maybe #if 0 it out?
-
+SLES and (RH AS & co) use edtremly patched kernels so the only persons
+that can help you are the SuSE/RH support departments, sorry.
