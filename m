@@ -1,34 +1,42 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [linux-iscsi-devel] [question] deferred sense
-Date: Wed, 5 Jan 2005 22:58:06 +0000
-Message-ID: <20050105225806.GF27371@parcelfarce.linux.theplanet.co.uk>
-References: <60807403EABEB443939A5A7AA8A7458B9B94AF@otce2k01.adaptec.com> <1104961917.3883.4.camel@mulgrave>
+From: Jesper Juhl <juhl-lkml@dif.dk>
+Subject: Re: [PATCH][RFC] clean out old cruft from FD MCS driver
+Date: Thu, 6 Jan 2005 00:18:49 +0100 (CET)
+Message-ID: <Pine.LNX.4.61.0501060015100.3492@dragon.hygekrogen.localhost>
+References: <Pine.LNX.4.61.0501032350040.3529@dragon.hygekrogen.localhost>
+ <20050104030717.GQ18080@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:38630 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S262641AbVAEW6I
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Jan 2005 17:58:08 -0500
-Content-Disposition: inline
-In-Reply-To: <1104961917.3883.4.camel@mulgrave>
+Received: from mail.dif.dk ([193.138.115.101]:38083 "EHLO mail.dif.dk")
+	by vger.kernel.org with ESMTP id S262640AbVAEXH0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2005 18:07:26 -0500
+In-Reply-To: <20050104030717.GQ18080@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Jesper Juhl <juhl-lkml@dif.dk>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, ZP Gu <zpg@castle.net>
 
-On Wed, Jan 05, 2005 at 04:51:57PM -0500, James Bottomley wrote:
-> I suggest you publish the API to linux-scsi and linux-ide since we'd be
-> the primary implementers.  The fs changes should go to the relevant fs
-> lists (probably cc linux-kernel) and we'll be glad to look them over.
+On Tue, 4 Jan 2005, Matthew Wilcox wrote:
 
-linux-fsdevel (@vger) would probably be the right place to get feedback
-from filesystem authors.
+> On Tue, Jan 04, 2005 at 12:11:27AM +0100, Jesper Juhl wrote:
+> > At this point I got the feeling that this driver had been left to rot and 
+> > I desided to see if there was more cruft in there that we might as well 
+> > get rid of, and indeed there is.
+> 
+> Yup.  There's a lot of cruft in that driver.  I really don't like the
+> look of fd_mcs_intr() -- trying to deduce whether or not there's a data phase
+> out based on the command byte?  urgh.
+> 
+> There's a somehat better-maintained driver -- fdomain.c.  It'd be great
+> if someone could make fdomain.c support the MCA cards -- and even the PCMCIA
+> cards without having the separate fdomain_stub.c.
+
+That would be even better, but until that happens why not apply the patch 
+I submitted (assuming it is actually OK) in its current form? That at 
+least would clean out some of the cruft (and kill a warning) so there's 
+less to sift through for someone reading the driver later.
 
 -- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Jesper
+
+
