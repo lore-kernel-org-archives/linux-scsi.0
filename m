@@ -1,30 +1,31 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: [patch] sym53c8xx_2 uses SYM_MEM_CLUSTER_SHIFT before its #define'd
-Date: Sat, 7 Feb 2004 20:45:32 +0000
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040207204532.GA24334@parcelfarce.linux.theplanet.co.uk>
-References: <20040207203058.GA7388@fs.tum.de>
+From: Jes Sorensen <jes@wildopensource.com>
+Subject: Re: [PATCH] prepare qla1280 drivers for ISP1020/1040 support
+Date: 08 Feb 2004 03:19:11 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <yq08yje9e68.fsf@wildopensource.com>
+References: <20040206155632.GA4679@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20040207203058.GA7388@fs.tum.de>
-To: Adrian Bunk <bunk@fs.tum.de>
-Cc: matthew@wil.cx, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from jaguar.mkp.net ([192.139.46.146]:16611 "EHLO jaguar.mkp.net")
+	by vger.kernel.org with ESMTP id S263107AbUBHITP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Feb 2004 03:19:15 -0500
+In-Reply-To: <20040206155632.GA4679@lst.de>
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, Feb 07, 2004 at 09:30:58PM +0100, Adrian Bunk wrote:
-> This seems to be a bug:
-> SYM_MEM_CLUSTER_SIZE is used before it's #define'd.
-> 
-> The patch below fixes this issue.
+>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-Thanks, I've taken this patch too.
+Christoph> I thought it might be a good idea to not dump a huge patch
+Christoph> with all my restructuring at you when I'm done, so here's
+Christoph> the bits of the 1040 support I'm already comfortable with
+Christoph> and that make sense to merge.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Christoph,
+
+Just a quick note, don't change data types for the sake of changing
+them. Ie. the uint8_t->u8 etc. changes are not acceptable.
+
+Cheers,
+Jes
