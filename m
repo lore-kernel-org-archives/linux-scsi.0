@@ -1,48 +1,45 @@
-From: Arjan van de Ven <arjanv@redhat.com>
-Subject: Re: [PATCH] 4/6: scsi_allow_ghost_devices
-Date: Mon, 19 Apr 2004 09:34:02 +0200
+From: mgide1@yahoo.com.tw
+Subject: EMBROIDERED POLICE , FIRE,  MILITARY , SPORTS , CLUBS  PATCHES & EMBLEMS
+Date: Mon, 19 Apr 2004 04:41:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1082360042.4691.3.camel@laptop.fenrus.com>
-References: <20040418185950.GG4868@tpkurt.garloff.de>
-	 <20040418202022.B3393@infradead.org>
-Reply-To: arjanv@redhat.com
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FNS4Omq+nxhnwZA5nzoA"
+Message-ID: <J4S6U__42188.9890138575$1082364155@sky.seed.net.tw>
+Content-Type: text/plain;
+Content-Transfer-Encoding: Quoted-Printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:20099 "EHLO mx2.redhat.com")
-	by vger.kernel.org with ESMTP id S263614AbUDSHeX (ORCPT
+Received: from 218-34-33-5.cm.dynamic.apol.com.tw ([218.34.33.5]:37235 "HELO
+	chang") by vger.kernel.org with SMTP id S264197AbUDSIl4 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Apr 2004 03:34:23 -0400
-In-Reply-To: <20040418202022.B3393@infradead.org>
+	Mon, 19 Apr 2004 04:41:56 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>
+To: Dear@vger.kernel.org, Sirs@vger.kernel.org, 040419-D-nfN@vger.kernel.org
 
+CUSTOM EMBROIDERED EMBLEMS and PATCHES
 
---=-FNS4Omq+nxhnwZA5nzoA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Founded in 1931, we have been specializing in the manufacture of Bullion embroideries and computer embroideries for more than 70 years.
 
+In Taiwan, we are the sole company that was an approved supplier for U.S. Navy Exchange In Taiwan from 1960s to 1973.
 
-> I'm very unhappy with that.  Could you explain why EMC needs this?
-> And even if we have to work around it I'd rather use the blacklist mechan=
-ism
-> for this.
+Our products are listed as follows:
 
-they allow the admin to config the box without a lun 0....
-I 100% agree it's blacklist material.
+Police patches, Armed forces patches, Lions Club International badges, Rotary International badges, Junior Chamber of Commerce badges, golf club badges, art designs, Buddhist-image embroideries, wedding photograph embroideries, portrait embroideries, and a variety of 3D raised embroideries and popular embroideries.
 
---=-FNS4Omq+nxhnwZA5nzoA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+We offer wholesale and retail services. Welcome to place us orders!
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
+Welcome to contact us (please don't reply the mail directly, as the box for returned mails will be deleted). Please send your mail to mei926@ms32.hinet.net.  
 
-iD8DBQBAg4DpxULwo51rQBIRAl5KAJ0agkaGQTuExL6xdq00nPdao38uKgCeNh6B
-vP9+GIcrGq4AmmQTWfNltCc=
-=yyKt
------END PGP SIGNATURE-----
+We have many sorts of products on our website if you want to see our products please click the following e-mail address we will send you our URL index link.  mei926@ms32.hinet.net=3Fsubject=3DURL-Index-Link
 
---=-FNS4Omq+nxhnwZA5nzoA--
+We sincerely apologize for any inconvenience that this mail may cause to you! 
+
+If you don't want to receive this mail any more, please tell us your email address by sending a mail using the following address:
+
+masaru26@ms69.hinet.net=3Fsubject=3D0404019d-new-405067
+
+Very truly yours,
+Chang Wen-sheng
+MEI LUNG HANDICRAFTS CO., LTD
+No.2, LANE 6 CHENG TE ROAD SEC.4, TAIPEI TAIWAN
+TEL:886-2-2886-4629 2885-8538  FAX:2886-8598
+E-mail: mei926@ms32.hinet.net
+
 
