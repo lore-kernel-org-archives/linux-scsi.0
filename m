@@ -1,64 +1,79 @@
-From: Peter Abrahamsen <peidran@u.washington.edu>
-Subject: PERC 3/Di broken 2.6.6-mm5 -> 2.6.7-rc1-mm1
-Date: Mon, 28 Jun 2004 15:56:01 -0700
+From: Markus Lidel <Markus.Lidel@shadowconnect.com>
+Subject: Request for comment on new I2O driver
+Date: Tue, 29 Jun 2004 01:21:30 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040628225601.GA8439@hugo.amandrai.net>
-Reply-To: peidran@u.washington.edu
+Message-ID: <40E0A7FA.4050208@shadowconnect.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cn8.ischool.washington.edu ([128.208.131.228]:17030 "EHLO
-	amandrai.net") by vger.kernel.org with ESMTP id S265270AbUF1Wzy
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Jun 2004 18:55:54 -0400
-Received: from peidran by amandrai.net with local (Exim 4.33)
-	id 1Bf52f-0002Gz-HA
-	for linux-scsi@vger.kernel.org; Mon, 28 Jun 2004 15:56:01 -0700
-Content-Disposition: inline
+Received: from [213.239.201.226] ([213.239.201.226]:18883 "EHLO
+	mail.shadowconnect.com") by vger.kernel.org with ESMTP
+	id S265163AbUF1Xax (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Jun 2004 19:30:53 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Good day,
+Hello,
 
-This seemed like the most proper place to report this; please let me know if
-it is not.
+in the last few weeks i've partly rewritten the I2O subsystem to better 
+suite the 2.6 kernel (sysfs support, PCI probing, dynamically allocated 
+request queues and gendisks for block devices, ...). Although i'm not 
+finished, it would be nice if someone could comment about it.
 
-I have a production DELL PowerEdge 2650 (PERC 3/Di) which I just tried to
-upgrade from 2.4.23 to 2.6.7. I had 48 hours to back up a lot of data, do
-the kernel upgrade, upgrade packages, and swap some filesystems to XFS, and
-restore, so I was only able to get limited information about the problems I
-encountered. Here's what I was able to find:
+Because the patch is 500K large, it's better to view the sources online:
 
-Environment: 2x 2.2 GHZ XEON (HT) processors, 2GB phys RAM, 5x 73 GB Quantum
-drives in RAID 5 and split into two logical drives. The latest BIOS and
-firmwares from DELL.
+http://i2o.shadowconnect.com/svn/repos/kernel/trunk/drivers/message/i2o/
 
-- Vanilla 2.6.* boots, but either does not recognize the controller, or does
-not recognize the drives. It's hard to tell, because the keyboard was also
-unresponsive, so I couldn't scroll up. If I had had more time, I should have
-used serial console.
+Login: anonymous
+without a password.
 
-- 2.6.4-mm1, copied from another production 2650 works great.
+The i2o_*.c files are still "old", so please skip those :-)
 
-- 2.6.6-mm5 also works fine. It looks like the last -mm kernel before major
-aacraid changes were introduced in 2.6.7-rc1-mm1.
+Any advices/comments would be appreciated, but escpecially interesting 
+for me would be:
 
-- 2.6.7-mm3 boots, but hangs on the aacraid driver. It's possible I just
-didn't give it long enough (maybe a minute?). I don't think the keyboard
-worked then, either (what's with that?).
+- sysfs
+   * Is the way it is done okay?
+   * Is there something important missing?
+   * In the PCI probing function the device struct from pci_dev is simply
+     copied to the device struct from I2O controller. Is this okay, or is
+     there a better way to do it?
 
-So, the system's back up running 2.6.6-mm5. I don't have any experimental
-systems at the moment, unfortunately, but I thought I'd give this heads-up
-that aacraid seems broken recently.
+- interrupt handling
+   * are 4 (or maybe more) function calls inside an interrupt bearable
+   * could / should the interrupt handler put incomming data in a
+     workqueue?
 
-BTW, when I read that some new patch was committed, where was it committed
-to? Is there a cvs/svn/bk repository somewhere?
+- workqueue
+   * i've implemented a workqueue for event handling for each driver
+     (e. g. block device, tape device, ...). Is this to expensive?
 
-Thanks,
+- file split
+   * i've split the huge i2o_core into 7 smaller ones. Is there a problem
+     with it?
 
-Peter
+- kmalloc/mempool in request queue prep function
+   * i've used a kmalloc in the request queue prep. The scsi layer uses a
+     mempool for it. At the moment the driver only need 47k memory. But
+     is it better to pre-allocate the memory in this case?
 
--- 
-Peter Abrahamsen, Seattle, Washington, USA
-Systems Administrator,
-University of Washington Information School
+Thank you very much for any advice/comment in advance.
+
+
+Best regards,
+
+Markus Lidel
+------------------------------------------
+Markus Lidel (Senior IT Consultant)
+
+Shadow Connect GmbH
+Carl-Reisch-Weg 12
+D-86381 Krumbach
+Germany
+
+Phone:  +49 82 82/99 51-0
+Fax:    +49 82 82/99 51-11
+
+E-Mail: Markus.Lidel@shadowconnect.com
+URL:    http://www.shadowconnect.com
