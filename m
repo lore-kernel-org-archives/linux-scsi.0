@@ -1,103 +1,192 @@
-From: Andre Hedrick <andre@pyxtechnologies.com>
-Subject: Re: [ANNOUNCE] iSCSI Initiator Core Stack v1.6.1.20
-Date: Mon, 28 Feb 2005 00:22:57 -0800 (PST)
-Message-ID: <Pine.LNX.4.10.10502280017280.7295-100000@master.linux-ide.org>
-References: <42221568.6080508@netapp.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [2.6 patch] drivers/scsi/aacraid/: cleanups
+Date: Mon, 28 Feb 2005 07:26:12 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458BD63B1E@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from astound-64-85-224-245.ca.astound.net ([64.85.224.245]:46353
-	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
-	id S261512AbVB1IZF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Feb 2005 03:25:05 -0500
-In-Reply-To: <42221568.6080508@netapp.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Received: from magic.adaptec.com ([216.52.22.17]:9900 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261459AbVB1M0Q convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Feb 2005 07:26:16 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Wysochanski <davidw@netapp.com>
-Cc: AJ Lewis <alewis@redhat.com>, linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
+I approve this, please apply to kernel.org branch.
 
-Hi Dave,
+Second time this has been submitted, been integrated since November 24th
+in 1.1.5-2370 of the Adaptec Branch of the driver.
 
-If the NetAPP target is misconfigured, why would it even allow any unknown
-initiator to go beyond discovery session?  It appears that a
-semi-successful lun scan has happened or am mis reading the report?
+Sincerely -- Mark Salyzyn
 
-If I read deeper into your comments, does the target support ACL's?
-If yes, then how did any access to the target by an unauthorized initiator
-happen?
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Adrian Bunk
+Sent: Saturday, February 26, 2005 7:54 PM
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [2.6 patch] drivers/scsi/aacraid/: cleanups
 
-Also would you be kind enough to reveal what device class 31 is to conform
-to under scsi?
+This patch contains the following cleanups:
+- make needlessly global functions static
+- commsup.c: remove the unused global function aac_consumer_avail
 
-Cheers,
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-Andre
+---
 
-On Sun, 27 Feb 2005, Dave Wysochanski wrote:
+ drivers/scsi/aacraid/aachba.c   |   10 +++++-----
+ drivers/scsi/aacraid/aacraid.h  |    2 --
+ drivers/scsi/aacraid/commctrl.c |    4 ++--
+ drivers/scsi/aacraid/comminit.c |    2 +-
+ drivers/scsi/aacraid/commsup.c  |    7 +------
+ drivers/scsi/aacraid/linit.c    |    2 +-
+ drivers/scsi/aacraid/sa.c       |    2 +-
+ 7 files changed, 11 insertions(+), 18 deletions(-)
 
-> AJ Lewis wrote:
-> 
-> > "Nicholas A. Bellinger" <nick@pyxtechnologies.com> writes:
-> >
-> > > The following is the first public release of the PyX Technologies iSCSI
-> > > Initiator Core Stack v1.6.1.20 for Linux 2.6.11-rc4.  This is a full
-> > > featured iSCSI Initiator stack that is capable of mulitplexing coast to
-> > > coast across multiple independant backbone providers using various
-> > > network transports _TODAY_.  This is the first release of the core 
-> > stack
-> > > and assoicated userspace tools, the accompanying authentication daemon
-> > > will be released shortly.
-> >
-> > Very cool - glad you're releasing this. I've gotten this setup and
-> > running, but I can't seem to talk to my iscsi target.  The initiator
-> > detects it, but it can't recognize the type:
-> >
-> > iCHANNEL[0] - No defined iSCSI Authentication Methods, skipping 
-> > SecurityNegotiation phase.
-> > iCHANNEL[0] - iSCSI login successful on CID: 0 to 192.168.44.19:3260,2
-> > iCHANNEL[0] - Incremented iSCSI connection count to 1 to node: 
-> > iqn.1992-08.com.netapp:sn.33615311
-> > iCHANNEL[0] - Established iSCSI session to node: 
-> > iqn.1992-08.com.netapp:sn.33615311
-> > iSCSI Core Stack[1] - Incremented number of active iSCSI sessions to 1.
-> > scsi: unknown device type 31
-> >   Vendor: NETAPP    Model: LUN               Rev: 0.2
-> >   Type:   Unknown                            ANSI SCSI revision: 04
-> >
-> > Any ideas on why this wouldn't be working?  Is there a configuration
-> > step I'm missing?
-> >
-> Make sure the initiator name is in the igroup on the filer for
-> any luns that you want mapped to the intiator.
-> 
-> I think what you're seeing is not a real LUN, but the config LUN
-> or something like that, probably the result of the initiator name
-> not being in the igroup (see "igroup add" command on the filer).
-> 
-> > Also, are you planning on updating the docs for the user tools at all?
-> > There are several steps missing in the current README, and the man
-> > page lists some parameters incorrectly and misses other entirely.
-> >
-> > I'm looking forward to getting this working.
-> > -- 
-> > AJ Lewis                                   Voice:  612-638-0500
-> > Red Hat Inc.                               E-Mail: alewis@redhat.com
-> > 720 Washington Ave. SE, Suite 200
-> > Minneapolis, MN 55414
-> >   
-> > Current GPG fingerprint = D9F8 EDCE 4242 855F A03D  9B63 F50C 54A8 
-> > 578C 8715
-> > Grab the key at: http://people.redhat.com/alewis/gpg.html or one of the
-> > many keyservers out there...
-> >
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+--- linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/aachba.c.old
+2005-02-27 01:05:38.000000000 +0100
++++ linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/aachba.c
+2005-02-27 01:06:18.000000000 +0100
+@@ -560,10 +560,10 @@
+ 	inqstrcpy ("V1.0", str->prl);
+ }
+ 
+-void set_sense(u8 *sense_buf, u8 sense_key, u8 sense_code,
+-		    u8 a_sense_code, u8 incorrect_length,
+-		    u8 bit_pointer, u16 field_pointer,
+-		    u32 residue)
++static void set_sense(u8 *sense_buf, u8 sense_key, u8 sense_code,
++		      u8 a_sense_code, u8 incorrect_length,
++		      u8 bit_pointer, u16 field_pointer,
++		      u32 residue)
+ {
+ 	sense_buf[0] = 0xF0;	/* Sense data valid, err code 70h
+(current error) */
+ 	sense_buf[1] = 0;	/* Segment number, always zero */
+@@ -807,7 +807,7 @@
+ 	aac_io_done(scsicmd);
+ }
+ 
+-int aac_read(struct scsi_cmnd * scsicmd, int cid)
++static int aac_read(struct scsi_cmnd * scsicmd, int cid)
+ {
+ 	u32 lba;
+ 	u32 count;
+--- linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/commctrl.c.old
+2005-02-27 01:06:31.000000000 +0100
++++ linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/commctrl.c
+2005-02-27 01:07:03.000000000 +0100
+@@ -403,7 +403,7 @@
+  *
+  */
+ 
+-int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
++static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
+ {
+ 	struct fib* srbfib;
+ 	int status;
+@@ -621,7 +621,7 @@
+ };
+ 
+ 
+-int aac_get_pci_info(struct aac_dev* dev, void __user *arg)
++static int aac_get_pci_info(struct aac_dev* dev, void __user *arg)
+ {
+         struct aac_pci_info pci_info;
+ 
+--- linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/comminit.c.old
+2005-02-27 01:07:25.000000000 +0100
++++ linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/comminit.c
+2005-02-27 01:07:34.000000000 +0100
+@@ -204,7 +204,7 @@
+  *		0 - If there were errors initing. This is a fatal error.
+  */
+  
+-int aac_comm_init(struct aac_dev * dev)
++static int aac_comm_init(struct aac_dev * dev)
+ {
+ 	unsigned long hdrsize = (sizeof(u32) * NUMBER_OF_COMM_QUEUES) *
+2;
+ 	unsigned long queuesize = sizeof(struct aac_entry) *
+TOTAL_QUEUE_ENTRIES;
+--- linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/aacraid.h.old
+2005-02-27 01:04:59.000000000 +0100
++++ linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/aacraid.h
+2005-02-27 01:09:03.000000000 +0100
+@@ -1595,11 +1595,9 @@
+ void fib_map_free(struct aac_dev *dev);
+ void fib_free(struct fib * context);
+ void fib_init(struct fib * context);
+-void fib_dealloc(struct fib * context);
+ void aac_printf(struct aac_dev *dev, u32 val);
+ int fib_send(u16 command, struct fib * context, unsigned long size, int
+priority, int wait, int reply, fib_callback callback, void *ctxt);
+ int aac_consumer_get(struct aac_dev * dev, struct aac_queue * q, struct
+aac_entry **entry);
+-int aac_consumer_avail(struct aac_dev * dev, struct aac_queue * q);
+ void aac_consumer_free(struct aac_dev * dev, struct aac_queue * q, u32
+qnum);
+ int fib_complete(struct fib * context);
+ #define fib_data(fibctx) ((void *)(fibctx)->hw_fib->data)
+--- linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/commsup.c.old
+2005-02-27 01:08:23.000000000 +0100
++++ linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/commsup.c
+2005-02-27 01:09:11.000000000 +0100
+@@ -210,7 +210,7 @@
+  *	caller.
+  */
+  
+-void fib_dealloc(struct fib * fibptr)
++static void fib_dealloc(struct fib * fibptr)
+ {
+ 	struct hw_fib *hw_fib = fibptr->hw_fib;
+ 	if(hw_fib->header.StructType != FIB_MAGIC) 
+@@ -566,11 +566,6 @@
+ 	return(status);
+ }
+ 
+-int aac_consumer_avail(struct aac_dev *dev, struct aac_queue * q)
+-{
+-	return (le32_to_cpu(*q->headers.producer) !=
+le32_to_cpu(*q->headers.consumer));
+-}
+-
+ 
+ /**
+  *	aac_consumer_free	-	free consumer entry
+--- linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/linit.c.old
+2005-02-27 01:09:30.000000000 +0100
++++ linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/linit.c
+2005-02-27 01:09:38.000000000 +0100
+@@ -215,7 +215,7 @@
+  *	Returns a static string describing the device in question
+  */
+ 
+-const char *aac_info(struct Scsi_Host *shost)
++static const char *aac_info(struct Scsi_Host *shost)
+ {
+ 	struct aac_dev *dev = (struct aac_dev *)shost->hostdata;
+ 	return aac_drivers[dev->cardtype].name;
+--- linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/sa.c.old
+2005-02-27 01:09:56.000000000 +0100
++++ linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/sa.c	2005-02-27
+01:10:05.000000000 +0100
+@@ -89,7 +89,7 @@
+  *	Notify the adapter of an event
+  */
+  
+-void aac_sa_notify_adapter(struct aac_dev *dev, u32 event)
++static void aac_sa_notify_adapter(struct aac_dev *dev, u32 event)
+ {
+ 	switch (event) {
+ 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
