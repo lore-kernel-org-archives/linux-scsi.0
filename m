@@ -1,360 +1,393 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: [PATCH] Make SPI transport attributes mutable
-Date: 07 Mar 2004 15:16:02 -0500
+Subject: [PATCH] implement settable transport attributes for 53c700
+Date: 07 Mar 2004 15:24:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1078690563.2080.36.camel@mulgrave>
+Message-ID: <1078691050.2080.45.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:4030 "EHLO
+Received: from stat1.steeleye.com ([65.114.3.130]:20414 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262317AbUCGUQJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 7 Mar 2004 15:16:09 -0500
+	id S262328AbUCGUYM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 7 Mar 2004 15:24:12 -0500
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/linuxconf) with ESMTP id i27KORa16288
+	for <linux-scsi@vger.kernel.org>; Sun, 7 Mar 2004 15:24:27 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Hicks <mort@wildopensource.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-This adds the final missing piece to the transport attributes:  A
-published API by which they can be set and retrieved (SPI attributes
-only).  The sysfs field only appears writeable if the driver supplied a
-set method in the attribute template, so unsettable attributes show up
-as read only.
+The 53c700 is a nice driver, being narrow and only going up to FAST-10,
+it only allows control of the offset and period.
 
-The consequence now is that the spi transport attribute class is no
-longer a simple exported structure: the driver has to attach to the spi
-transport class at module initialisation.
+This patch moves the internal storage of the offset and period to the
+transport class and adds methods to set them (there's no need for a get
+method since the value in the transport class is exactly what the driver
+believes the transport agreement to be).
 
-This is the type of thing I'd like to see us doing for the FC ioctls in
-the FC transport class (obviously, there's one drawback in that the
-classes are per-device at the moment, but expanding that to be per-host
-as well should be farily trivial).
+You can see how this type of use of the transport class is supposed to
+work: the driver now has init and exit routines attaching and releasing
+the transport class (that's the reason for the Makefile perturbation
+because it has to init before its users).  The correct attributes are
+set up in slave_configure() for negotiation and we now export the period
+and offset setting functions.
 
 James
 
-===== drivers/scsi/scsi_transport_spi.c 1.2 vs edited =====
---- 1.2/drivers/scsi/scsi_transport_spi.c	Fri Mar  5 12:43:30 2004
-+++ edited/drivers/scsi/scsi_transport_spi.c	Sun Mar  7 14:06:44 2004
-@@ -26,6 +26,41 @@
+===== drivers/scsi/53c700.c 1.46 vs edited =====
+--- 1.46/drivers/scsi/53c700.c	Mon Feb 23 15:07:38 2004
++++ edited/drivers/scsi/53c700.c	Sun Mar  7 13:53:59 2004
+@@ -137,6 +137,9 @@
+ #include "scsi.h"
+ #include "hosts.h"
  
- static void transport_class_release(struct class_device *class_dev);
- 
-+#define SPI_NUM_ATTRS 10	/* increase this if you add attributes */
++#include <scsi/scsi_transport.h>
++#include <scsi/scsi_transport_spi.h>
 +
-+struct spi_internal {
-+	struct scsi_transport_template t;
-+	struct spi_function_template *f;
-+	/* The actual attributes */
-+	struct class_device_attribute private_attrs[SPI_NUM_ATTRS];
-+	/* The array of null terminated pointers to attributes 
-+	 * needed by scsi_sysfs.c */
-+	struct class_device_attribute *attrs[SPI_NUM_ATTRS + 1];
-+};
+ #include "53c700.h"
+ 
+ /* NOTE: For 64 bit drivers there are points in the code where we use
+@@ -173,6 +176,8 @@
+ 
+ STATIC struct device_attribute *NCR_700_dev_attrs[];
+ 
++STATIC struct scsi_transport_template *NCR_700_transport_template = NULL;
 +
-+#define to_spi_internal(tmpl)	container_of(tmpl, struct spi_internal, t)
-+
-+static const char *const ppr_to_ns[] = {
-+	/* The PPR values 0-6 are reserved, fill them in when
-+	 * the committee defines them */
-+	NULL,			/* 0x00 */
-+	NULL,			/* 0x01 */
-+	NULL,			/* 0x02 */
-+	NULL,			/* 0x03 */
-+	NULL,			/* 0x04 */
-+	NULL,			/* 0x05 */
-+	NULL,			/* 0x06 */
-+	"3.125",		/* 0x07 */
-+	"6.25",			/* 0x08 */
-+	"12.5",			/* 0x09 */
-+	"25",			/* 0x0a */
-+	"30.3",			/* 0x0b */
-+	"50",			/* 0x0c */
-+};
-+/* The PPR values at which you calculate the period in ns by multiplying
-+ * by 4 */
-+#define SPI_STATIC_PPR	0x0c
-+
- struct class spi_transport_class = {
- 	.name = "spi_transport",
- 	.release = transport_class_release,
-@@ -63,19 +98,40 @@
- 	put_device(&sdev->sdev_gendev);
- }
- 
--#define spi_transport_show_function(field, format_string)			\
--static ssize_t									\
--show_spi_transport_##field (struct class_device *cdev, char *buf)		\
--{										\
--	struct scsi_device *sdev = transport_class_to_sdev(cdev);		\
--	struct spi_transport_attrs *tp;						\
--	tp = (struct spi_transport_attrs *)&sdev->transport_data;		\
--	return snprintf(buf, 20, format_string, tp->field);			\
-+#define spi_transport_show_function(field, format_string)		\
-+									\
-+static ssize_t								\
-+show_spi_transport_##field(struct class_device *cdev, char *buf)	\
-+{									\
-+	struct scsi_device *sdev = transport_class_to_sdev(cdev);	\
-+	struct spi_transport_attrs *tp;					\
-+	struct spi_internal *i = to_spi_internal(sdev->host->transportt); \
-+	tp = (struct spi_transport_attrs *)&sdev->transport_data;	\
-+	if(i->f->get_##field)						\
-+		i->f->get_##field(sdev);				\
-+	return snprintf(buf, 20, format_string, tp->field);		\
- }
- 
--#define spi_transport_rd_attr(field, format_string)				\
--	spi_transport_show_function(field, format_string)			\
--static CLASS_DEVICE_ATTR( field, S_IRUGO, show_spi_transport_##field, NULL)
-+#define spi_transport_store_function(field, format_string)		\
-+static ssize_t								\
-+store_spi_transport_##field(struct class_device *cdev, const char *buf, \
-+			    size_t count)				\
-+{									\
-+	int val;							\
-+	struct scsi_device *sdev = transport_class_to_sdev(cdev);	\
-+	struct spi_internal *i = to_spi_internal(sdev->host->transportt); \
-+									\
-+	val = simple_strtoul(buf, NULL, 0);				\
-+	i->f->set_##field(sdev, val);					\
-+	return count;							\
-+}
-+
-+#define spi_transport_rd_attr(field, format_string)			\
-+	spi_transport_show_function(field, format_string)		\
-+	spi_transport_store_function(field, format_string)		\
-+static CLASS_DEVICE_ATTR(field, S_IRUGO | S_IWUSR,			\
-+			 show_spi_transport_##field,			\
-+			 store_spi_transport_##field)
- 
- /* The Parallel SCSI Tranport Attributes: */
- spi_transport_rd_attr(offset, "%d\n");
-@@ -95,72 +151,148 @@
- {
- 	struct scsi_device *sdev = transport_class_to_sdev(cdev);
- 	struct spi_transport_attrs *tp;
--	char *str;
-+	const char *str;
-+	struct spi_internal *i = to_spi_internal(sdev->host->transportt);
- 
- 	tp = (struct spi_transport_attrs *)&sdev->transport_data;
- 
-+	if(i->f->get_period)
-+		i->f->get_period(sdev);
-+
- 	switch(tp->period) {
--	case 0x00 ... 0x06:
--		str =  "reserved";
--		break;
- 
--	case 0x07:
--		str = "3.125";
-+	case 0x07 ... SPI_STATIC_PPR:
-+		str = ppr_to_ns[tp->period];
-+		if(!str)
-+			str = "reserved";
- 		break;
- 
--	case 0x08:
--		str = "6.25";
--		break;
- 
--	case 0x09:
--		str = "12.5";
--		break;
-+	case (SPI_STATIC_PPR+1) ... 0xff:
-+		return sprintf(buf, "%d\n", tp->period * 4);
- 
--	case 0x0a:
--		str = "25";
--		break;
-+	default:
-+		str = "unknown";
-+	}
-+	return sprintf(buf, "%s\n", str);
-+}
-+
-+static ssize_t
-+store_spi_transport_period(struct class_device *cdev, const char *buf,
-+			    size_t count)
-+{
-+	struct scsi_device *sdev = transport_class_to_sdev(cdev);
-+	struct spi_internal *i = to_spi_internal(sdev->host->transportt);
-+	int j, period = -1;
-+
-+	for(j = 0; j < SPI_STATIC_PPR; j++) {
-+		int len;
-+
-+		if(ppr_to_ns[j] == NULL)
-+			continue;
- 
--	case 0x0b:
--		str = "30.3";
-+		len = strlen(ppr_to_ns[j]);
-+
-+		if(strncmp(ppr_to_ns[j], buf, len) != 0)
-+			continue;
-+
-+		if(buf[len] != '\n')
-+			continue;
-+		
-+		period = j;
- 		break;
-+	}
- 
--	case 0x0c:
--		str = "50";
-+	if(period == -1) {
-+		 int val = simple_strtoul(buf, NULL, 0);
- 
--	case 0x0d ... 0xff:
--		return sprintf(buf, "%d\n", tp->period * 4);
-+		 
-+		 if(val >= (SPI_STATIC_PPR + 1)*4)
-+			  period = val/4;
- 
--	default:
--		str = "unknown";
- 	}
--	return sprintf(buf, "%s\n", str);
-+
-+	if(period == -1 || period > 0xff)
-+		 return -EINVAL;
-+
-+	i->f->set_period(sdev, period);
-+
-+	return count;
- }
-+	
- 
--static CLASS_DEVICE_ATTR(period, S_IRUGO, show_spi_transport_period, NULL);
-+	
-+		 
- 
-
--struct class_device_attribute *spi_transport_attrs[] = {
--	&class_device_attr_period,
--	&class_device_attr_offset,
--	&class_device_attr_width,
--	&class_device_attr_iu,
--	&class_device_attr_dt,
--	&class_device_attr_qas,
--	&class_device_attr_wr_flow,
--	&class_device_attr_rd_strm,
--	&class_device_attr_rti,
--	&class_device_attr_pcomp_en,
--	NULL
--};
-+static CLASS_DEVICE_ATTR(period, S_IRUGO | S_IWUSR, 
-+			 show_spi_transport_period,
-+			 store_spi_transport_period);
-+
- 
- struct scsi_transport_template spi_transport_template = {
--	.attrs = spi_transport_attrs,
- 	.class = &spi_transport_class,
- 	.setup = &spi_setup_transport_attrs,
- 	.cleanup = NULL,
- 	.size = sizeof(struct spi_transport_attrs) - sizeof(unsigned long),
+ static char *NCR_700_phase[] = {
+ 	"",
+ 	"after selection",
+@@ -236,6 +241,53 @@
+ 	NCR_700_MAX_OFFSET
  };
--EXPORT_SYMBOL(spi_transport_template);
-+
-+#define SETUP_ATTRIBUTE(field)						\
-+	i->private_attrs[count] = class_device_attr_##field;		\
-+	if(!i->f->set_##field) {					\
-+		i->private_attrs[count].attr.mode = S_IRUGO;		\
-+		i->private_attrs[count].store = NULL;			\
-+	}								\
-+	i->attrs[count] = &i->private_attrs[count];			\
-+	count++
-+
-+struct scsi_transport_template *
-+spi_attach_transport(struct spi_function_template *ft)
-+{
-+	struct spi_internal *i = kmalloc(sizeof(struct spi_internal),
-+					 GFP_KERNEL);
-+	int count = 0;
-+	if(!i)
-+		return NULL;
-+
-+	memset(i, 0, sizeof(struct spi_internal));
-+
-+
-+	i->t.attrs = &i->attrs[0];
-+	i->t.class = &spi_transport_class;
-+	i->t.setup = &spi_setup_transport_attrs;
-+	i->t.size = sizeof(struct spi_transport_attrs) - sizeof(unsigned long);
-+	i->f = ft;
-+
-+	SETUP_ATTRIBUTE(period);
-+	SETUP_ATTRIBUTE(offset);
-+	SETUP_ATTRIBUTE(width);
-+	SETUP_ATTRIBUTE(iu);
-+	SETUP_ATTRIBUTE(dt);
-+	SETUP_ATTRIBUTE(qas);
-+	SETUP_ATTRIBUTE(wr_flow);
-+	SETUP_ATTRIBUTE(rd_strm);
-+	SETUP_ATTRIBUTE(rti);
-+	SETUP_ATTRIBUTE(pcomp_en);
-+
-+	/* if you add an attribute but forget to increase SPI_NUM_ATTRS
-+	 * this bug will trigger */
-+	BUG_ON(count != SPI_NUM_ATTRS);
-+
-+	i->attrs[count] = NULL;
-+
-+	return &i->t;
-+}
-+EXPORT_SYMBOL(spi_attach_transport);
-+
-+void spi_release_transport(struct scsi_transport_template *t)
-+{
-+	struct spi_internal *i = to_spi_internal(t);
-+
-+	kfree(i);
-+}
-+EXPORT_SYMBOL(spi_release_transport);
-+
  
- MODULE_AUTHOR("Martin Hicks");
- MODULE_DESCRIPTION("SPI Transport Attributes");
-===== include/scsi/scsi_transport_spi.h 1.2 vs edited =====
---- 1.2/include/scsi/scsi_transport_spi.h	Fri Mar  5 12:17:53 2004
-+++ edited/include/scsi/scsi_transport_spi.h	Sun Mar  7 12:29:10 2004
-@@ -48,6 +48,32 @@
- #define spi_rd_strm(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->rd_strm)
- #define spi_rti(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->rti)
- #define spi_pcomp_en(x)	(((struct spi_transport_attrs *)&(x)->transport_data)->pcomp_en)
--extern struct scsi_transport_template spi_transport_template;
++/* This translates the SDTR message offset and period to a value
++ * which can be loaded into the SXFER_REG.
++ *
++ * NOTE: According to SCSI-2, the true transfer period (in ns) is
++ *       actually four times this period value */
++static inline __u8
++NCR_700_offset_period_to_sxfer(struct NCR_700_Host_Parameters *hostdata,
++			       __u8 offset, __u8 period)
++{
++	int XFERP;
 +
-+/* The functions by which the transport class and the driver communicate */
-+struct spi_function_template {
-+	void	(*get_period)(struct scsi_device *);
-+	void	(*set_period)(struct scsi_device *, int);
-+	void	(*get_offset)(struct scsi_device *);
-+	void	(*set_offset)(struct scsi_device *, int);
-+	void	(*get_width)(struct scsi_device *);
-+	void	(*set_width)(struct scsi_device *, int);
-+	void	(*get_iu)(struct scsi_device *);
-+	void	(*set_iu)(struct scsi_device *, int);
-+	void	(*get_dt)(struct scsi_device *);
-+	void	(*set_dt)(struct scsi_device *, int);
-+	void	(*get_qas)(struct scsi_device *);
-+	void	(*set_qas)(struct scsi_device *, int);
-+	void	(*get_wr_flow)(struct scsi_device *);
-+	void	(*set_wr_flow)(struct scsi_device *, int);
-+	void	(*get_rd_strm)(struct scsi_device *);
-+	void	(*set_rd_strm)(struct scsi_device *, int);
-+	void	(*get_rti)(struct scsi_device *);
-+	void	(*set_rti)(struct scsi_device *, int);
-+	void	(*get_pcomp_en)(struct scsi_device *);
-+	void	(*set_pcomp_en)(struct scsi_device *, int);
++	__u8 min_xferp = (hostdata->chip710
++			  ? NCR_710_MIN_XFERP : NCR_700_MIN_XFERP);
++	__u8 max_offset = (hostdata->chip710
++			   ? NCR_710_MAX_OFFSET : NCR_700_MAX_OFFSET);
++
++	if(offset == 0)
++		return 0;
++
++	if(period < hostdata->min_period) {
++		printk(KERN_WARNING "53c700: Period %dns is less than this chip's minimum, setting to %d\n", period*4, NCR_700_SDTR_msg[3]*4);
++		period = hostdata->min_period;
++	}
++	XFERP = (period*4 * hostdata->sync_clock)/1000 - 4;
++	if(offset > max_offset) {
++		printk(KERN_WARNING "53c700: Offset %d exceeds chip maximum, setting to %d\n",
++		       offset, max_offset);
++		offset = max_offset;
++	}
++	if(XFERP < min_xferp) {
++		printk(KERN_WARNING "53c700: XFERP %d is less than minium, setting to %d\n",
++		       XFERP,  min_xferp);
++		XFERP =  min_xferp;
++	}
++	return (offset & 0x0f) | (XFERP & 0x07)<<4;
++}
++
++static inline __u8
++NCR_700_get_SXFER(Scsi_Device *SDp)
++{
++	struct NCR_700_Host_Parameters *hostdata = 
++		(struct NCR_700_Host_Parameters *)SDp->host->hostdata[0];
++
++	return NCR_700_offset_period_to_sxfer(hostdata, spi_offset(SDp),
++					      spi_period(SDp));
++}
++
+ struct Scsi_Host *
+ NCR_700_detect(Scsi_Host_Template *tpnt,
+ 	       struct NCR_700_Host_Parameters *hostdata)
+@@ -326,6 +378,8 @@
+ 	hostdata->cmd = NULL;
+ 	host->max_id = 7;
+ 	host->max_lun = NCR_700_MAX_LUNS;
++	BUG_ON(NCR_700_transport_template == NULL);
++	host->transportt = NCR_700_transport_template;
+ 	host->unique_id = hostdata->base;
+ 	host->base = hostdata->base;
+ 	hostdata->eh_complete = NULL;
+@@ -520,40 +574,6 @@
+ 	hostdata->cmd = NULL;
+ }
+ 
+-/* This translates the SDTR message offset and period to a value
+- * which can be loaded into the SXFER_REG.
+- *
+- * NOTE: According to SCSI-2, the true transfer period (in ns) is
+- *       actually four times this period value */
+-STATIC inline __u8
+-NCR_700_offset_period_to_sxfer(struct NCR_700_Host_Parameters *hostdata,
+-			       __u8 offset, __u8 period)
+-{
+-	int XFERP;
+-	__u8 min_xferp = (hostdata->chip710
+-			  ? NCR_710_MIN_XFERP : NCR_700_MIN_XFERP);
+-	__u8 max_offset = (hostdata->chip710
+-			   ? NCR_710_MAX_OFFSET : NCR_700_MAX_OFFSET);
+-	/* NOTE: NCR_700_SDTR_msg[3] contains our offer of the minimum
+-	 * period.  It is set in NCR_700_chip_setup() */
+-	if(period < NCR_700_SDTR_msg[3]) {
+-		printk(KERN_WARNING "53c700: Period %dns is less than this chip's minimum, setting to %d\n", period*4, NCR_700_SDTR_msg[3]*4);
+-		period = NCR_700_SDTR_msg[3];
+-	}
+-	XFERP = (period*4 * hostdata->sync_clock)/1000 - 4;
+-	if(offset > max_offset) {
+-		printk(KERN_WARNING "53c700: Offset %d exceeds chip maximum, setting to %d\n",
+-		       offset, max_offset);
+-		offset = max_offset;
+-	}
+-	if(XFERP < min_xferp) {
+-		printk(KERN_WARNING "53c700: XFERP %d is less than minium, setting to %d\n",
+-		       XFERP,  min_xferp);
+-		XFERP =  min_xferp;
+-	}
+-	return (offset & 0x0f) | (XFERP & 0x07)<<4;
+-}
+-
+ STATIC inline void
+ NCR_700_unmap(struct NCR_700_Host_Parameters *hostdata, Scsi_Cmnd *SCp,
+ 	      struct NCR_700_command_slot *slot)
+@@ -724,11 +744,9 @@
+ 	 * exact details of this calculation which is based on a
+ 	 * setting of the SXFER register */
+ 	min_period = 1000*(4+min_xferp)/(4*hostdata->sync_clock);
+-	if(min_period > NCR_700_MIN_PERIOD) {
+-		NCR_700_SDTR_msg[3] = min_period;
+-	}
+-	if(hostdata->chip710)
+-		NCR_700_SDTR_msg[4] = NCR_710_MAX_OFFSET;
++	hostdata->min_period = NCR_700_MIN_PERIOD;
++	if(min_period > NCR_700_MIN_PERIOD)
++		hostdata->min_period = min_period;
+ }
+ 
+ STATIC void
+@@ -777,20 +795,25 @@
+ 		if(SCp != NULL && NCR_700_is_flag_set(SCp->device, NCR_700_DEV_BEGIN_SYNC_NEGOTIATION)) {
+ 			__u8 period = hostdata->msgin[3];
+ 			__u8 offset = hostdata->msgin[4];
+-			__u8 sxfer;
+ 
+-			if(offset != 0 && period != 0)
+-				sxfer = NCR_700_offset_period_to_sxfer(hostdata, offset, period);
+-			else 
+-				sxfer = 0;
++			if(offset == 0 || period == 0) {
++				offset = 0;
++				period = 0;
++			}
+ 			
+-			if(sxfer != NCR_700_get_SXFER(SCp->device)) {
+-				printk(KERN_INFO "scsi%d: (%d:%d) Synchronous at offset %d, period %dns\n",
+-				       host->host_no, pun, lun,
+-				       offset, period*4);
+-				
+-				NCR_700_set_SXFER(SCp->device, sxfer);
++			if(NCR_700_is_flag_set(SCp->device, NCR_700_DEV_PRINT_SYNC_NEGOTIATION)) {
++				if(spi_offset(SCp->device) != 0)
++					printk(KERN_INFO "scsi%d: (%d:%d) Synchronous at offset %d, period %dns\n",
++					       host->host_no, pun, lun,
++					       offset, period*4);
++				else
++					printk(KERN_INFO "scsi%d: (%d:%d) Asynchronous\n",
++					       host->host_no, pun, lun);
++				NCR_700_clear_flag(SCp->device, NCR_700_DEV_PRINT_SYNC_NEGOTIATION);
+ 			}
++				
++			spi_offset(SCp->device) = offset;
++			spi_period(SCp->device) = period;
+ 			
+ 
+ 			NCR_700_set_flag(SCp->device, NCR_700_DEV_NEGOTIATED_SYNC);
+@@ -870,7 +893,7 @@
+ 	case A_REJECT_MSG:
+ 		if(SCp != NULL && NCR_700_is_flag_set(SCp->device, NCR_700_DEV_BEGIN_SYNC_NEGOTIATION)) {
+ 			/* Rejected our sync negotiation attempt */
+-			NCR_700_set_SXFER(SCp->device, 0);
++			spi_period(SCp->device) = spi_offset(SCp->device) = 0;
+ 			NCR_700_set_flag(SCp->device, NCR_700_DEV_NEGOTIATED_SYNC);
+ 			NCR_700_clear_flag(SCp->device, NCR_700_DEV_BEGIN_SYNC_NEGOTIATION);
+ 		} else if(SCp != NULL && NCR_700_is_flag_set(SCp->device, NCR_700_DEV_BEGIN_TAG_QUEUEING)) {
+@@ -1396,6 +1419,8 @@
+ 	   NCR_700_is_flag_clear(SCp->device, NCR_700_DEV_NEGOTIATED_SYNC)) {
+ 		memcpy(&hostdata->msgout[count], NCR_700_SDTR_msg,
+ 		       sizeof(NCR_700_SDTR_msg));
++		hostdata->msgout[count+3] = spi_period(SCp->device);
++		hostdata->msgout[count+4] = spi_offset(SCp->device);
+ 		count += sizeof(NCR_700_SDTR_msg);
+ 		NCR_700_set_flag(SCp->device, NCR_700_DEV_BEGIN_SYNC_NEGOTIATION);
+ 	}
+@@ -1967,9 +1992,51 @@
+ 	return SUCCESS;
+ }
+ 
++STATIC void
++NCR_700_set_period(struct scsi_device *SDp, int period)
++{
++	struct NCR_700_Host_Parameters *hostdata = 
++		(struct NCR_700_Host_Parameters *)SDp->host->hostdata[0];
++	
++	if(!hostdata->fast || period < hostdata->min_period)
++		return;
++
++	spi_period(SDp) = period;
++	NCR_700_clear_flag(SDp, NCR_700_DEV_NEGOTIATED_SYNC);
++	NCR_700_clear_flag(SDp, NCR_700_DEV_BEGIN_SYNC_NEGOTIATION);
++	NCR_700_set_flag(SDp, NCR_700_DEV_PRINT_SYNC_NEGOTIATION);
++}
++
++STATIC void
++NCR_700_set_offset(struct scsi_device *SDp, int offset)
++{
++	struct NCR_700_Host_Parameters *hostdata = 
++		(struct NCR_700_Host_Parameters *)SDp->host->hostdata[0];
++	
++	if(!hostdata->fast ||
++	   offset > (hostdata->chip710
++		     ? NCR_710_MAX_OFFSET : NCR_700_MAX_OFFSET))
++		return;
++
++	/* if we're currently async, make sure the period is reasonable */
++	if(spi_offset(SDp) == 0 && (spi_period(SDp) < hostdata->min_period ||
++				    spi_period(SDp) > 0xff))
++		spi_period(SDp) = hostdata->min_period;
++
++	spi_offset(SDp) = offset;
++	NCR_700_clear_flag(SDp, NCR_700_DEV_NEGOTIATED_SYNC);
++	NCR_700_clear_flag(SDp, NCR_700_DEV_BEGIN_SYNC_NEGOTIATION);
++	NCR_700_set_flag(SDp, NCR_700_DEV_PRINT_SYNC_NEGOTIATION);
++}
++
++
++
+ STATIC int
+ NCR_700_slave_configure(Scsi_Device *SDp)
+ {
++	struct NCR_700_Host_Parameters *hostdata = 
++		(struct NCR_700_Host_Parameters *)SDp->host->hostdata[0];
++
+ 	/* to do here: allocate memory; build a queue_full list */
+ 	if(SDp->tagged_supported) {
+ 		/* do TCQ stuff here */
+@@ -1977,6 +2044,11 @@
+ 		/* initialise to default depth */
+ 		scsi_adjust_queue_depth(SDp, 0, SDp->host->cmd_per_lun);
+ 	}
++	if(hostdata->fast) {
++		NCR_700_set_period(SDp, hostdata->min_period);
++		NCR_700_set_offset(SDp, hostdata->chip710
++				   ? NCR_710_MAX_OFFSET : NCR_700_MAX_OFFSET);
++	}
+ 	return 0;
+ }
+ 
+@@ -2033,3 +2105,25 @@
+ EXPORT_SYMBOL(NCR_700_detect);
+ EXPORT_SYMBOL(NCR_700_release);
+ EXPORT_SYMBOL(NCR_700_intr);
++
++static struct spi_function_template NCR_700_transport_functions =  {
++	.set_period = NCR_700_set_period,
++	.set_offset = NCR_700_set_offset,
 +};
 +
-+struct scsi_transport_template *spi_attach_transport(struct spi_function_template *);
-+void spi_release_transport(struct scsi_transport_template *);
++static int __init NCR_700_init(void)
++{
++	NCR_700_transport_template = spi_attach_transport(&NCR_700_transport_functions);
++	if(!NCR_700_transport_template)
++		return -ENODEV;
++	return 0;
++}
++
++static void __exit NCR_700_exit(void)
++{
++	spi_release_transport(NCR_700_transport_template);
++}
++
++module_init(NCR_700_init);
++module_exit(NCR_700_exit);
++
+===== drivers/scsi/53c700.h 1.15 vs edited =====
+--- 1.15/drivers/scsi/53c700.h	Mon Feb 23 15:07:38 2004
++++ edited/drivers/scsi/53c700.h	Sun Mar  7 12:29:07 2004
+@@ -99,19 +99,9 @@
+ #define NCR_700_DEV_NEGOTIATED_SYNC	(1<<16)
+ #define NCR_700_DEV_BEGIN_SYNC_NEGOTIATION	(1<<17)
+ #define NCR_700_DEV_BEGIN_TAG_QUEUEING	(1<<18)
+-#define NCR_700_DEV_TAG_STARVATION_WARNED (1<<19)
++#define NCR_700_DEV_PRINT_SYNC_NEGOTIATION (1<<19)
  
- #endif /* SCSI_TRANSPORT_SPI_H */
-
-
+ static inline void
+-NCR_700_set_SXFER(Scsi_Device *SDp, __u8 sxfer)
+-{
+-	SDp->hostdata = (void *)(((long)SDp->hostdata & 0xffffff00) |
+-				(sxfer & 0xff));
+-}
+-static inline __u8 NCR_700_get_SXFER(Scsi_Device *SDp)
+-{
+-	return (((unsigned long)SDp->hostdata) & 0xff);
+-}
+-static inline void
+ NCR_700_set_depth(Scsi_Device *SDp, __u8 depth)
+ {
+ 	long l = (long)SDp->hostdata;
+@@ -215,6 +205,7 @@
+ 	__u8	tag_negotiated;
+ 	__u8	rev;
+ 	__u8	reselection_id;
++	__u8	min_period;
+ 
+ 	/* Free list, singly linked by ITL_forw elements */
+ 	struct NCR_700_command_slot *free_list;
+@@ -438,6 +429,7 @@
+ 		       #symbol, A_##symbol##_used[i], val)); \
+ 	} \
+ }
++
+ 
+ static inline __u8
+ NCR_700_mem_readb(struct Scsi_Host *host, __u32 reg)
+===== drivers/scsi/Makefile 1.55 vs edited =====
+--- 1.55/drivers/scsi/Makefile	Thu Mar  4 16:29:02 2004
++++ edited/drivers/scsi/Makefile	Sun Mar  7 12:29:08 2004
+@@ -49,7 +49,7 @@
+ obj-$(CONFIG_SUN3_SCSI)		+= sun3_scsi.o  sun3_scsi_vme.o
+ obj-$(CONFIG_MVME16x_SCSI)	+= mvme16x.o	53c7xx.o
+ obj-$(CONFIG_BVME6000_SCSI)	+= bvme6000.o	53c7xx.o
+-obj-$(CONFIG_SCSI_SIM710)	+= sim710.o	53c700.o
++obj-$(CONFIG_SCSI_SIM710)	+= 53c700.o	sim710.o
+ obj-$(CONFIG_SCSI_ADVANSYS)	+= advansys.o
+ obj-$(CONFIG_SCSI_PCI2000)	+= pci2000.o
+ obj-$(CONFIG_SCSI_PCI2220I)	+= pci2220i.o
+@@ -72,7 +72,7 @@
+ obj-$(CONFIG_SCSI_GENERIC_NCR5380) += g_NCR5380.o
+ obj-$(CONFIG_SCSI_GENERIC_NCR5380_MMIO) += g_NCR5380_mmio.o
+ obj-$(CONFIG_SCSI_NCR53C406A)	+= NCR53c406a.o
+-obj-$(CONFIG_SCSI_NCR_D700)	+= NCR_D700.o 53c700.o
++obj-$(CONFIG_SCSI_NCR_D700)	+= 53c700.o NCR_D700.o
+ obj-$(CONFIG_SCSI_NCR_Q720)	+= NCR_Q720_mod.o
+ obj-$(CONFIG_SCSI_SYM53C416)	+= sym53c416.o
+ obj-$(CONFIG_SCSI_QLOGIC_FAS)	+= qlogicfas.o
+@@ -115,7 +115,7 @@
+ obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
+ obj-$(CONFIG_SCSI_FCAL)		+= fcal.o
+ obj-$(CONFIG_SCSI_CPQFCTS)	+= cpqfc.o
+-obj-$(CONFIG_SCSI_LASI700)	+= lasi700.o 53c700.o
++obj-$(CONFIG_SCSI_LASI700)	+= 53c700.o lasi700.o
+ obj-$(CONFIG_SCSI_NSP32)	+= nsp32.o
+ obj-$(CONFIG_SCSI_SATA_SVW)	+= libata.o sata_svw.o
+ obj-$(CONFIG_SCSI_ATA_PIIX)	+= libata.o ata_piix.o
 
