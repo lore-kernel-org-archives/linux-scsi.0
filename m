@@ -1,32 +1,28 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: dpt_i2o in 2.6.0_test*
-Date: Mon, 11 Aug 2003 19:49:47 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030811194947.A5859@infradead.org>
-References: <20030809211706.A1938@infradead.org> <Pine.GSO.4.33.0308111442040.7750-100000@sweetums.bluetronic.net>
+From: Rahul Karnik <rahul@genebrew.com>
+Subject: Re: Linux [2.6.0-test3/mm1] aic7xxx problems.
+Date: Mon, 11 Aug 2003 15:42:28 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <3F37F1A4.2030404@genebrew.com>
+References: <1060543928.887.19.camel@blaze.homeip.net>	 <2425882704.1060622541@aslan.btc.adaptec.com> <1060623576.2826.9.camel@blaze.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pub234.cambridge.redhat.com ([213.86.99.234]:272 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S273018AbTHKStw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Aug 2003 14:49:52 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.GSO.4.33.0308111442040.7750-100000@sweetums.bluetronic.net>; from jfbeam@bluetronic.net on Mon, Aug 11, 2003 at 02:44:32PM -0400
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <1060623576.2826.9.camel@blaze.homeip.net>
+To: Paul Blazejowski <paulb@blazebox.homeip.net>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ricky Beam <jfbeam@bluetronic.net>
-Cc: Christoph Hellwig <hch@infradead.org>, "Alexandru N. Barloiu" <slak@dale.ro>, linux-scsi@vger.kernel.org
 
-On Mon, Aug 11, 2003 at 02:44:32PM -0400, Ricky Beam wrote:
-> On Sat, 9 Aug 2003, Christoph Hellwig wrote:
-> >According to Alan the fix is to use the i2o_scsi driver instead.
-> 
-> Doing so removes support for DPT's RAID management software.
-> 
-> Start screaming at Adaptec to update their stinking driver!
+Paul Blazejowski wrote:
 
-Or port their managment software to the generic i2o driver.  Once
-someone did that we should probably completly kill off dpt_i2o - it's
-really pointless to have a vendor driver if there's a class driver
-already.  And given certain issues we have with vendor driver quality..
+> Is this due to my mainboard (nforce2),cpu,ACPI,devfs,sysfs...or all
+> these together?
 
+NForce2 + ACPI IRQ routing is a work in progress. Try turning off ACPI 
+for the time being and see if it helps.
+
+Thanks,
+Rahul
+-- 
+Rahul Karnik
+rahul@genebrew.com
