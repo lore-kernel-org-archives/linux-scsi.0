@@ -1,37 +1,30 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: Heiko Carstens <Heiko.Carstens@de.ibm.com>
 Subject: Re: Calling sd_shutdown when in state SDEV_DEL
-Date: Wed, 24 Mar 2004 09:04:52 -0800
+Date: Wed, 24 Mar 2004 17:28:14 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040324170452.GB1679@beaverton.ibm.com>
-References: <200403241603.23269.heiko.carstens@de.ibm.com> <1080142505.2706.25.camel@mulgrave>
+Message-ID: <OFBF4BB3D4.D3E1B9A6-ONC1256E61.005A3D8C-C1256E61.005AAB6E@de.ibm.com>
+References: <1080142505.2706.25.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:10426 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S263775AbUCXRF1
+Received: from mtagate3.de.ibm.com ([195.212.29.152]:23704 "EHLO
+	mtagate3.de.ibm.com") by vger.kernel.org with ESMTP id S263789AbUCXR2K
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Mar 2004 12:05:27 -0500
-Content-Disposition: inline
+	Wed, 24 Mar 2004 12:28:10 -0500
 In-Reply-To: <1080142505.2706.25.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Heiko Carstens <heiko.carstens@de.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org
 
-James Bottomley [James.Bottomley@steeleye.com] wrote:
+> > upon scsi_remove_device the sd driver tries to send out a 
+SYNCHRONIZE_CACHE
+> > command (sd_shutdown) which is not possible because the sdev_state for 
+the
+> > device in question is already SDEV_DEL.
 > How about the attached instead.  That forces every deleted device to go
 > through CANCEL (uncompiled, but you can test it...)
-> 
 
-Why setting CANCEL on the device? Future plans for the CANCEL state?
-You are setting the state to cancel, but not going through
-scsi_device_cancel as you want IO to still flow.
+Your patch works fine for me. Are you going to apply that one?
 
-While this will solve the problem for removing a single device, this
-same error will show up when you remove a host unless you remove all
-devices first through the sysfs interface. Is this ok?
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Heiko
 
