@@ -1,34 +1,52 @@
-From: Andi Kleen <ak@muc.de>
-Subject: Re: Disk Errors
-Date: Thu, 03 Feb 2005 09:18:21 +0100
-Message-ID: <m1sm4eukdu.fsf@muc.de>
-References: <60807403EABEB443939A5A7AA8A7458BBD5E44@otce2k01.adaptec.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: About ARECA RAID driver for Linux i386/x86-64
+Date: Thu, 03 Feb 2005 11:05:32 +0100
+Message-ID: <1107425132.4278.99.camel@laptopd505.fenrus.org>
+References: <001001c508d9$d97a17f0$9300a8c0@erich2003>
+	 <20050202180817.47db64c2.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Received: from one.firstfloor.org ([213.235.205.2]:15335 "EHLO
-	one.firstfloor.org") by vger.kernel.org with ESMTP id S262787AbVBCISY
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Feb 2005 03:18:24 -0500
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458BBD5E44@otce2k01.adaptec.com> (Mark
- Salyzyn's message of "Wed, 2 Feb 2005 09:12:57 -0500")
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from canuck.infradead.org ([205.233.218.70]:1295 "EHLO
+	canuck.infradead.org") by vger.kernel.org with ESMTP
+	id S262705AbVBCKFl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Feb 2005 05:05:41 -0500
+In-Reply-To: <20050202180817.47db64c2.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Bryan Henderson <hbryan@us.ibm.com>, Kit Gerrits <kit@gerritsacc.nl>, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: erich <erich@areca.com.tw>, linux-scsi@vger.kernel.org
 
-"Salyzyn, Mark" <mark_salyzyn@adaptec.com> writes:
->
-> If the data is of the form to permit some loss, for example video, audio
-> content or an error correcting stream of data, someone can make a case
-> where READ_LONG is an appropriate action to take to help fill in missing
-> content. 
->
-> A fun thought ...
+On Wed, 2005-02-02 at 18:08 -0800, Andrew Morton wrote:
+> "erich" <erich@areca.com.tw> wrote:
+> >
+> > I have contact with Andrew Morton about ARECA RAID Linux scsi driver release
+> >  issue.
+> >  I hope this package is as look like a Linux driver.
+> 
+> No, it doesn't look anything like a Linux driver :(
+> 
+> I fed the patch through scripts/Lindent.  There's a copy at
+> http://www.zip.com.au/~akpm/linux/patches/stuff/areca-raid-linux-scsi-driver.patch.
+>  I'll include it -mm kernels.
+> 
+> >From a very quick look, I'd say that the driver needs quite a bit of work:
+
+It is nice to see vendors submitting drivers for their hardware; this
+one does need some more work though to look like a linux driver
+
+more work items:
+* needs to use list.h lists not open coded ones
+* uses wrong locking for the scsi layer (eg ->done should be called  
+  without locks)
+* ULONG and simliar typedefs.. does this driver come from windows ?
+  typedef uint32_t ULONG, *PULONG;
+  is just not a good idea.
+* lots and lots of ifdefs that are done wrongly; eg if you need to do
+   version ifdefs.. do them right ;(
+example: 
+arcmsr_doInterrupt()
+is ifdefd needlessly/wrongly
 
 
-It's an interesting idea. How about adding a sysfs attribute for
-the device that says "tolerate some errors". Default to off of course.
-I guess a lot of people would value such an option while recovering
-their disks.
 
--Andi
