@@ -1,34 +1,42 @@
-From: Matthew Wilcox <willy@debian.org>
+From: Andreas Schwab <schwab@suse.de>
 Subject: Re: Symbios 53C8XX broken on ia64?
-Date: Wed, 24 Mar 2004 01:50:43 +0000
-Sender: linux-ia64-owner@vger.kernel.org
-Message-ID: <20040324015043.GE25059@parcelfarce.linux.theplanet.co.uk>
-References: <je3c80ph2o.fsf@sykes.suse.de> <1080060468.2091.28.camel@patsy.fc.hp.com> <jeisgvxh2j.fsf@sykes.suse.de>
+Date: Wed, 24 Mar 2004 10:12:23 +0100
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <je8yhq622w.fsf@sykes.suse.de>
+References: <je3c80ph2o.fsf@sykes.suse.de>
+	<1080060468.2091.28.camel@patsy.fc.hp.com>
+	<jeisgvxh2j.fsf@sykes.suse.de>
+	<20040324015043.GE25059@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ia64-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <jeisgvxh2j.fsf@sykes.suse.de>
-To: Andreas Schwab <schwab@suse.de>
-Cc: Alex Williamson <alex.williamson@hp.com>, linux-ia64 <linux-ia64@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.suse.de ([195.135.220.2]:53717 "EHLO Cantor.suse.de")
+	by vger.kernel.org with ESMTP id S261691AbUCXJM0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Mar 2004 04:12:26 -0500
+In-Reply-To: <20040324015043.GE25059@parcelfarce.linux.theplanet.co.uk> (Matthew
+ Wilcox's message of "Wed, 24 Mar 2004 01:50:43 +0000")
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: Alex Williamson <alex.williamson@hp.com>, linux-ia64 <linux-ia64@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Wed, Mar 24, 2004 at 12:46:28AM +0100, Andreas Schwab wrote:
-> I can't confirm, still fails for me.  I see sym2_init called, but never
-> sym2_probe.  This is with an Everest (rx5670).
+Matthew Wilcox <willy@debian.org> writes:
 
-I just booted on an rx5670 and it works fine.
+> However, I think I may have an idea ... what do you get in the line
+> that reports the SAL version?
 
-However, I think I may have an idea ... what do you get in the line
-that reports the SAL version?  I wonder if you have prototype firmware
-that's reporting a bogus version or revision?  I just debugged a problem
-on a prototype that was using SAl 3.2 calls to access PCI config space,
-so it looked like there were no PCI devices available.
+SAL 0.20: HP version 3.20
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Andreas.
+
+--=20
+Andreas Schwab, SuSE Labs, schwab@suse.de
+SuSE Linux AG, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
+Key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
+"And now for something completely different."
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
