@@ -1,21 +1,53 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH][RELEASE] megaraid 2.10.2 Driver
-Date: Mon, 22 Mar 2004 18:07:55 -0500
+From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Subject: RE: [PATCH][RELEASE] megaraid 2.10.2 Driver
+Date: Mon, 22 Mar 2004 19:02:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <405F71CB.7000902@pobox.com>
-References: <0E3FA95632D6D047BA649F95DAB60E570230C77A@exa-atlanta.se.lsil.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230C77B@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:32152 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261451AbUCVXIT
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Mar 2004 18:08:19 -0500
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570230C77A@exa-atlanta.se.lsil.com>
+Received: from mail0.lsil.com ([147.145.40.20]:64415 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261669AbUCWADP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Mar 2004 19:03:15 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+To: 'Jeff Garzik' <jgarzik@pobox.com>
 Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+
+Jeff,
+
+>>For upstream, this should just be CONFIG_COMPAT I presume.
+
+For 2.6 kernels, this would be just CONFIG_COMPAT. Or have I
+misunderstood your comment?
+
+>>I don't see how this construct will work in all cases.  Hence my 
+>>CONFIG_COMPAT command above.
+
+We saw the need for ioctl compatibility in __x86_64__ cases so far.
+What other cases will this not work in?
+
+>>Bug -- always set dma mask.  Do not conditionally _not_ call 
+>>pci_set_dma_mask(), for the 64-bit case.
+
+The code does not __not__ call pci_set_dma_mask() conditionally.
+It is always calling with either 64-bit or 32-bit mask.
+
+>>ummmm what???    uxferaddr is u32.  why are you casting it to a pointer?
+
+Both copy_to_user and copy_from_user take pointers, don't they?
+
+Thank you,
+Sreenivas
+
+-----Original Message-----
+From: Jeff Garzik [mailto:jgarzik@pobox.com]
+Sent: Monday, March 22, 2004 6:08 PM
+To: Bagalkote, Sreenivas
+Cc: 'linux-kernel@vger.kernel.org'; 'linux-scsi@vger.kernel.org'
+Subject: Re: [PATCH][RELEASE] megaraid 2.10.2 Driver
+
 
 Bagalkote, Sreenivas wrote:
 > Hello,
@@ -147,7 +179,8 @@ this can be removed.
 > +#define LSI_CONFIG_COMPAT
 > +#endif
 > +#ifdef LSI_CONFIG_COMPAT
-> +static int megadev_compat_ioctl(unsigned int, unsigned int, unsigned long,
+> +static int megadev_compat_ioctl(unsigned int, unsigned int, unsigned
+long,
 > +	struct file *);
 > +#endif
 
@@ -155,6 +188,5 @@ I don't see how this construct will work in all cases.  Hence my
 CONFIG_COMPAT command above.
 
 	Jeff
-
 
 
