@@ -1,187 +1,232 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH] instrument ide-scsi in 2.5.68
-Date: Thu, 01 May 2003 23:02:11 +1000
+From: "Justin T. Gibbs" <gibbs@btc.adaptec.com>
+Subject: Aic7xxx and Aic79xx Driver Updates
+Date: Thu, 01 May 2003 16:28:12 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3EB11AD3.2070503@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <1866260000.1051828092@aslan.btc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020600090803020305080007"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:18445 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S261243AbTEAMru
+Received: from magic-mail.adaptec.com ([208.236.45.100]:5608 "EHLO
+	magic.adaptec.com") by vger.kernel.org with ESMTP id S262713AbTEAWQF
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 May 2003 08:47:50 -0400
+	Thu, 1 May 2003 18:16:05 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: alan@lxorguk.ukuu.org.uk
+Cc: linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@transmeta.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Marcelo Tosatti <marcelo@conectiva.com.br>
 
-This is a multi-part message in MIME format.
---------------020600090803020305080007
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Folks,
 
-Alan Cox said last week that the ide-scsi driver was
-500th on his list to fix for 2.6 . To help him, if
-he hasn't already fixed it, this patch includes:
+I've just uploaded version 1.3.8 of the aic79xx driver and version 
+6.2.33 of the aic7xxx driver.  Both are available for 2.4.X and
+2.5.X kernels in either bk send format or as a tarball from here:
 
-   - instrument driver with 2 parameters (as examples)
-       - ide-scsi.debug + ide-scsi.suppress_reset
-         [kernel load time]
-       - debug + suppress_reset [module load time]
-       - debug + suppress_reset [sysfs: read/write
-         in /sys/bus/ide/drivers/ide-scsi directory]
-   - downgrade (simple) tag queuing to no tag queuing
-     [set some other things to more conservative values]
-   - add scsi_host::release() method
-   - make provision for 16 byte SCSI commands
-   - cleanup printk()s
+http://people.FreeBSD.org/~gibbs/linux/SRC/
 
-Many people (on the linux kernel list) have reported problems
-with this driver and ATAPI burners. I only have an ATAPI
-reader and can't get it to fail. If someone has a repeatable
-failure perhaps they could set "debug=3" and send the relevant
-part of /var/log/messages to this list or me.
+RPMs and DUDs for various distributions are also available:
 
-Doug Gilbert
+http://people.FreeBSD.org/~gibbs/linux/DUD/aic7xxx/
+http://people.FreeBSD.org/~gibbs/linux/DUD/aic79xx/
+http://people.FreeBSD.org/~gibbs/linux/RPM/aic7xxx/
+http://people.FreeBSD.org/~gibbs/linux/RPM/aic79xx/
 
---------------020600090803020305080007
-Content-Type: application/x-gzip;
- name="ide-scsi_2568.diff.gz"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="ide-scsi_2568.diff.gz"
+BK changes relative to top of the 2.5.X tree are listed below.
 
-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
---------------020600090803020305080007--
+--
+Justin
+
+ChangeSet
+  1.1118.33.8 03/05/01 11:06:21 gibbs@overdrive.btc.adaptec.com +3 -0
+  Aic7xxx Driver Update (6.2.33)
+   o Correct MODULE_INFO string.
+   o Bump version number.
+
+ChangeSet
+  1.1118.33.7 03/05/01 11:04:13 gibbs@overdrive.btc.adaptec.com +2 -0
+  Update Aic79xx and Aic7xxx Documenation
+
+ChangeSet
+  1.1118.33.6 03/05/01 11:00:31 gibbs@overdrive.btc.adaptec.com +5 -0
+  Aic79xx Driver Update (version 1.3.8)
+   o Correct a few BE processor bugs
+   o Print an additional diagnostic during recovery processing
+
+ChangeSet
+  1.1118.33.5 03/04/24 15:12:48 gibbs@overdrive.btc.adaptec.com +7 -0
+  Aic7xxx and Aic79xx Driver Updates
+   o Adapt to new IRQ handler declaration/behavior for 2.5.X
+
+ChangeSet
+  1.1118.33.4 03/04/24 15:10:16 gibbs@overdrive.btc.adaptec.com +2 -0
+  Aic79xx and Aic7xxx driver Update
+   o Fix build on 2.5.X
+
+ChangeSet
+  1.1118.33.3 03/04/24 13:30:58 gibbs@overdrive.btc.adaptec.com +2 -0
+  Merge http://linux.bkbits.net/linux-2.5
+  into overdrive.btc.adaptec.com:/usr/home/gibbs/bk/linux-2.5
+
+ChangeSet
+  1.971.94.14 03/04/24 13:23:49 gibbs@overdrive.btc.adaptec.com +4 -0
+  aic7xxx_osm.h, aic7xxx_osm.c, aic79xx_osm.h, aic79xx_osm.c:
+    Remove pre-2.2.X kernel support. 
+
+ChangeSet
+  1.971.94.13 03/04/24 12:46:43 gibbs@overdrive.btc.adaptec.com +8 -0
+  Aic79xx Driver Upate
+   o Switch to handling bad SCSI status as a sequencer interrupt
+     instead of having the kernel proccess these failures via
+     the completion queue.  This is done because:
+  
+      - The old scheme required us to pause the sequencer and clear
+        critical sections for each SCB.  It seems that these pause
+        actions, if coincident with a sequencer FIFO interrupt, would
+        result in a FIFO interrupt getting lost or directing to the
+        wrong FIFO.  This caused hangs when the driver was stressed
+        under high "queue full" loads.
+      - The completion code assumed that it was always called with
+        the sequencer running.  This may not be the case in timeout
+        processing where completions occur manually via
+        ahd_pause_and_flushwork().
+      - With this scheme, the extra expense of clearing critical
+        sections is avoided since the sequencer will only self pause
+        once all pending selections have cleared and it is not in
+        a critical section.
+
+ChangeSet
+  1.971.94.12 03/04/24 12:36:46 gibbs@overdrive.btc.adaptec.com +1 -0
+  Aic79xx Driver Update
+   o Revert ahd_pause_and_flushwork() behavior so that ENSELO can
+     be cleared.  This makes ahd_pause_and_flushwork() more effective
+     when the bus is hung.
+
+ChangeSet
+  1.971.94.11 03/04/24 12:24:31 gibbs@overdrive.btc.adaptec.com +1 -0
+  Aic79xx Driver Update
+   o Correct "Unexpected PKT Busfree" error observed under high
+     tag loads.
+
+ChangeSet
+  1.971.94.10 03/04/24 12:15:47 gibbs@overdrive.btc.adaptec.com +7 -0
+  Aic79xx Driver Update
+   o Perform a few firmware optimizations
+   o Correct the packetized status handler so that
+     it can handle CRC errors during status data packets.
+
+ChangeSet
+  1.971.94.9 03/04/24 12:10:40 gibbs@overdrive.btc.adaptec.com +2 -0
+  Aic7xxx Driver Update
+   o Auto disable PCI parity error reporting after 10 parity errors
+     are observed.  The user is given a loud warning message telling
+     them that eiter a device plugged into their motherboard or their
+     motherboard is not very healthy.
+
+ChangeSet
+  1.971.94.8 03/04/24 12:07:37 gibbs@overdrive.btc.adaptec.com +4 -0
+  Aic7xxx and Aic79xx Driver Updates
+   o Correct type safty of option parsing logic
+   o Make option toggling work correctly
+   o Add "probe_eisa_vlb" as an alias for the "no_probe" option so
+     that there is a clearly defined name associated with the command
+     line feature that allows eisa_vlb probes to be enabled/disabled
+     in the aic7xxx driver.
+   o PCI parity error checking defaults to being enabled.
+
+ChangeSet
+  1.971.94.7 03/04/24 11:53:55 gibbs@overdrive.btc.adaptec.com +2 -0
+  Aic7xxx and Aic79xx driver Update
+   o Fix style nits.
+
+ChangeSet
+  1.971.94.6 03/04/24 11:49:01 gibbs@overdrive.btc.adaptec.com +2 -0
+  Aic7xxx and Aic79xx driver updates
+   o Remove extra complexity and code duplication in processing
+     the completeq now that the completeq can be run while holding
+     both the ah?_lock and the done_lock.
+
+ChangeSet
+  1.971.94.5 03/04/24 11:46:55 gibbs@overdrive.btc.adaptec.com +2 -0
+  Aic7xxx and Aic79xx driver updates
+   o Work around peculiarities in the scan_scsis routines
+     that could, due to having duplicate devices on our
+     host's device list, cause tagged queing to be disabled
+     for devices added via /proc.
+
+ChangeSet
+  1.971.94.4 03/04/24 11:42:36 gibbs@overdrive.btc.adaptec.com +2 -0
+  Aic7xxx and Aic79xx Driver Update
+   o Correct channel information in our /proc output.
+
+ChangeSet
+  1.971.94.3 03/04/24 11:24:15 gibbs@overdrive.btc.adaptec.com +6 -0
+  Aic7xxx and Aic79xx driver Update
+  o Avoid pre-2.5.X mid-layer deadlock due to SCSI malloc fragmentation
+  
+  For pre-2.5.X kernels, attempt to calculate a safe value
+  for our S/G list length.  In these kernels, the midlayer
+  allocates an S/G array dynamically when a command is issued
+  using SCSI malloc.  This list, which is in an OS dependent
+  format that must later be copied to our private S/G list, is
+  sized to house just the number of segments needed for the
+  current transfer.  Since the code that sizes the SCSI malloc
+  pool does not take into consideration fragmentation of the
+  pool, executing transactions numbering just a fraction of our
+  concurrent transaction limit with list lengths aproaching
+  AH?_NSEG in length will quickly depleat the SCSI malloc pool
+  of usable space.
+  
+  Unfortunately, the mid-layer does not properly handle this
+  scsi malloc failure.  In kernels prior to 2.4.20, should
+  the device that experienced the malloc failure be idle and
+  never have any new I/O initiated (block queue is not "kicked"),
+  the process will hang indefinitely.  In 2.4.20 and beyond,
+  the disk experiencing the failure is marked as a "starved
+  device", but this only helps if I/O is initiated to or completes
+  on that HBA.  If the failure was induced by another HBA, and
+  no other I/O is pending on the HBA and no new transactions are
+  queued, we are still succeptible to the hang.  (Also note that
+  many 2.4.X kernels do not properly lock the "some_device_starved"
+  and "device_starved" fields calling into question their overall
+  effectiveness).
+  
+  By sizing our S/G list to avoid SCSI malloc pool fragmentation,
+  we will hopefully avoid this deadlock at least for configurations
+  where our own HBAs are the only ones using the SCSI subsystem.
+
+ChangeSet
+  1.971.94.2 03/04/09 18:12:31 gibbs@overdrive.btc.adaptec.com +1 -0
+  Aic79xx Driver Update
+   o Correct failed-wait recovery code so that the controller's registers
+     will not be accessed without pausing the controller first.
+
+ChangeSet
+  1.971.94.1 03/04/09 13:07:08 gibbs@overdrive.btc.adaptec.com +1 -0
+  Merge http://linux.bkbits.net/linux-2.5
+  into overdrive.btc.adaptec.com:/usr/home/gibbs/bk/linux-2.5
+
+ChangeSet
+  1.971.37.4 03/04/09 13:01:11 gibbs@overdrive.btc.adaptec.com +4 -0
+  Aic7xxx Driver Update (version 6.2.32)
+   o Perform an audit on use of del_timer() and switch to del_timer_sync()
+     where appropriate.
+   o Remove the reboot notifier hook which is unused in 2.5.X.
+   o Correct some driver unload bugs.
+
+ChangeSet
+  1.971.37.3 03/04/09 12:52:07 gibbs@overdrive.btc.adaptec.com +3 -0
+  Aic79xx Driver Update (version 1.3.6)
+   o Correct bus hang on SE->LVD/LVD->SE tranceiver changes
+   o Close a race condition in handling bad scsi status that could
+     allow the driver to modify the waiting for selection queue while
+     selections were enabled.
+   o Perform an audit on use of del_timer() and switch to del_timer_sync()
+     where appropriate.
+   o Remove the reboot notifier hook which is unused in 2.5.X.
+   o Correct some driver unload bugs.
+
+ChangeSet
+  1.971.37.2 03/04/09 11:56:15 gibbs@overdrive.btc.adaptec.com +2 -0
+  Change the callback argument for aic brace option parsing to u_long
+  to avoid casting problems with different architectures.
 
