@@ -1,44 +1,62 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: [PATCH] sym53c8xx module parameter passing not working (2.5.6)
-Date: Fri, 1 Oct 2004 14:28:37 -0700
+From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Subject: RE: [PATCH]: megaraid 2.20.4: Fixes a data corruption bug
+Date: Fri, 1 Oct 2004 17:39:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041001142837.6b2d0031.rddunlap@osdl.org>
-References: <7AAD212492598A4A92463C3F5D34C54F194EDC@ccd3.CC.de>
-	<20041001211136.GN16153@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570230C987@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.osdl.org ([65.172.181.6]:9682 "EHLO mail.osdl.org")
-	by vger.kernel.org with ESMTP id S266603AbUJAVfc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Oct 2004 17:35:32 -0400
-In-Reply-To: <20041001211136.GN16153@parcelfarce.linux.theplanet.co.uk>
+Received: from mail0.lsil.com ([147.145.40.20]:33757 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S266756AbUJAVji (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Oct 2004 17:39:38 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Heinzmann@cc-dresden.de, linux-scsi@vger.kernel.org
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>, "Mukker, Atul" <Atulm@lsil.com>
+Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "Ju, Seokmann" <sju@lsil.com>
 
-On Fri, 1 Oct 2004 22:11:36 +0100 Matthew Wilcox wrote:
+Understood. Thank you. I verified that module loads fine even without
+CONFIG_COMPAT.
 
-| On Fri, Oct 01, 2004 at 05:26:21PM +0200, Heinzmann, Robert wrote:
-| > The 2.6 version of sym53c8xx_2 did not read the module command line parameter properly. 
-| > This was due to a missing call to sym53c8xx_setup().
-| 
-| I don't understand, actually.
-| 
-| #ifndef MODULE
-| __setup("sym53c8xx=", sym53c8xx_setup);
-| #endif
-| 
-| should cause sym53c8xx_setup to be called.
+Thanks,
+Sreenivas
 
-It should for the non-loadable-module case.  I think that Robert
-is saying that it doesn't work for the loadable-module case.
-I.e., these lines aren't doing what is expected:
-
-#ifdef	MODULE
-char *sym53c8xx;	/* command line passed by insmod */
-MODULE_PARM(sym53c8xx, "s");
-#endif
-
--- 
-~Randy
+>-----Original Message-----
+>From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
+>Sent: Friday, October 01, 2004 4:58 PM
+>To: Bagalkote, Sreenivas
+>Cc: Mukker, Atul; 'linux-kernel@vger.kernel.org';
+>'linux-scsi@vger.kernel.org'; 'bunk@fs.tum.de'; 'Andrew Morton';
+>'Matt_Domsch@dell.com'; Ju, Seokmann
+>Subject: RE: [PATCH]: megaraid 2.20.4: Fixes a data corruption bug
+>
+>
+>On Fri, 2004-10-01 at 16:08, Bagalkote, Sreenivas wrote:
+>> The submitted previous version of megaraid (2.20.3.1) had 
+>> register_ioctl32_conversion & unregister_ioctl32_conversion 
+>> defined to empty statements if CONFIG_COMPAT was _not_
+>> defined.
+>
+>I know that.  However, when the empty statements were added to
+>ioctl32.h, those had to be taken out of the megaraid driver.  That's
+>this patch in the scsi-misc-2.6 tree:
+>
+> [PATCH] megaraid warning fix
+>  
+>  The ioctl32 conversion registration stubs are in ioctl32.h now.
+>  
+>  Signed-off-by: Andrew Morton <akpm@osdl.org>
+>
+>> But I think the preferred way was to have the occurances of 
+>> (un)register_ioctl32_conversion in the code surrounded by 
+>> #ifdef CONFIG_COMPAT ... #endif directly. In the kernel source
+>> only register_ioctl32_conversion has these #ifdef .. #endif. The
+>> unregister_ioctl32_conversion doesn't.
+>
+>The current preferred way is to use the empty definitions in
+>linux/ioctl32.h which means there's no necessity for adding the #ifdef
+>CONFIG_COMPAT.  The correct thing is to remove the #ifdef CONFIG_COMPAT
+>from around the register_ioctl32... part.
+>
+>James
+>
+>
