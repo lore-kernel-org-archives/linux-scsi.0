@@ -1,43 +1,37 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Transport Attributes -- attempt#2
-Date: 08 Jan 2004 09:11:26 -0500
+From: "Thomas Graham" <lkthomas@sml.dyndns.org>
+Subject: out of topic question about harddisk...
+Date: Thu, 8 Jan 2004 23:08:01 +0800 (HKT)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1073571086.2741.5.camel@mulgrave>
-References: <20040107185420.GA30627@localhost>
-	<20040108131717.A9700@infradead.org>  <20040108140155.GD30627@localhost>
+Message-ID: <1428.192.168.0.97.1073574481.squirrel@sml.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:28882 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S264927AbUAHOLd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jan 2004 09:11:33 -0500
-In-Reply-To: <20040108140155.GD30627@localhost>
+Received: from 203186022064.ctinets.com ([203.186.22.64]:7554 "EHLO
+	sml.dyndns.org") by vger.kernel.org with ESMTP id S265100AbUAHPAu
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Jan 2004 10:00:50 -0500
+Received: from localhost (unknown [127.0.0.1])
+	by sml.dyndns.org (Postfix) with ESMTP id 51CB278B95
+	for <linux-scsi@vger.kernel.org>; Thu,  8 Jan 2004 23:08:43 +0800 (HKT)
+Received: from sml.dyndns.org ([127.0.0.1])
+ by localhost (sml.dyndns.org [127.0.0.1]) (amavisd-new, port 10024)
+ with ESMTP id 00513-04 for <linux-scsi@vger.kernel.org>;
+ Thu,  8 Jan 2004 23:08:01 +0800 (HKT)
+Received: from sml.dyndns.org (203186022064.ctinets.com [203.186.22.64])
+	by sml.dyndns.org (Postfix) with SMTP id 3A8BA78A7A
+	for <linux-scsi@vger.kernel.org>; Thu,  8 Jan 2004 23:08:01 +0800 (HKT)
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Hicks <mort@wildopensource.com>
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2004-01-08 at 09:01, Martin Hicks wrote:
-> > >> Out of curiosity:  Why do we need _another_ classdev.  Can't you
-> > >> reuse the current one?
-> 
-> It guess we could re-use the scsi_device classdev.  This would mean that
-> all the attribute files would show up in /sys/class/scsi_device/w:x:y:z.
-> We would have to export an attribute called "transport" to tell which
-> transport the device is using.  I'm agreeable to this solution.  I don't
-> much like having an fc_transport and pscsi_transport directory in
-> /sys/class.
-
-I disagree with this.  We put attributes that apply to all devices in
-scsi_device classdev.  We're implementing a separate transport interface
-here, so it really does need its own class_device, otherwise separating
-it from scsi_sysfs and allowing arbitrary transport class creation will
-become a real pain.
-
-A class is supposed to represent a device interface, and the transport
-class does just that for transport attributes.
-
-James
+hey all, I am pretty new in this list, and this is my first time to buy
+and use SCSI HD, anyone could suggest a brand of HD? IBM, Maxtor or
+seagate? I got a ultra160 SCSI card but no HD, I want to hear some
+feedback from actual U160 user, Thanks
 
 
+-- 
+HK Celtic Orchestra leader and coordanator: Thomas Graham Lau
+Phone number: 852-93239670    (24hours a day, 7days a week non-stop phone)
+Web site: http://sml.dyndns.org
+Email: lkthomas@sml.dyndns.org
