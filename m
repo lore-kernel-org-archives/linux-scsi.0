@@ -1,91 +1,43 @@
-From: Naveen Burmi <naveenb@cisco.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
 Subject: Re: Request for review of Linux iSCSI driver version 4.0.0.1
-Date: Mon, 1 Dec 2003 19:38:40 +0530
+Date: 01 Dec 2003 09:22:53 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <03120119384002.08627@naveenb-lnx.cisco.com>
-References: <03120118001300.08627@naveenb-lnx.cisco.com>
-Reply-To: naveenb@cisco.com
+Message-ID: <1070292174.2007.14.camel@mulgrave>
+References: <200310231734.10263.krmurthy@cisco.com>
+	<03111920183201.15831@naveenb-lnx.cisco.com>
+	<20031119144809.A13541@infradead.org>
+	<200312011740.09693.krmurthy@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-3-in.cisco.com ([171.71.176.72]:65165 "EHLO
-	sj-iport-3.cisco.com") by vger.kernel.org with ESMTP
-	id S262868AbTLAOGI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Dec 2003 09:06:08 -0500
-In-Reply-To: <03120118001300.08627@naveenb-lnx.cisco.com>
+Received: from nat9.steeleye.com ([65.114.3.137]:25092 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262848AbTLAPXj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Dec 2003 10:23:39 -0500
+In-Reply-To: <200312011740.09693.krmurthy@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org
-Cc: linux-scsi@vger.kernel.org
+To: Krishna Murthy <krmurthy@cisco.com>
+Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, davmyers@cisco.com
 
+On Mon, 2003-12-01 at 06:10, Krishna Murthy wrote:
+> Hi,
+> 	We could use probing code from mid layer provided 
+> scsi_scan_host_selected is exported. 
+> 
+> 	iscsi driver does probe for devices at two places
+> a)Once after session establishment.
+> b)Whenever an iSCSI async message indicates a change in
+> "REPORTED LUNS DATA". (addition/deletion of luns on the target) 
 
-Following is a simpler explanation:
+This sounds like an async event which could be handled by the hotplug
+system.  Would there be a problem with simply transmitting this to a
+user level utility and having it trigger the rescan through the exported
+sysfs interfaces?
 
-iSCSI driver computes checksum on the buffer cache data, pointed to by 
-sglist. It passes the checksum and list of data buffers to TCP layer for 
-transmission to the iSCSI target. On very rare occasions data present in the 
-buffer gets corrupted, after iSCSI driver gives the computed checksum and 
-list of data buffers to TCP layers. At the iSCSI target side checksum is 
-again calculated and compared with checksum sent along with data by iSCSI 
-driver. iSCSI target detects data crc error in case of corrupted data.
+We could do with a generic infrastructure within SCSI for generating
+these events, anyway, if you want to go that route...
 
-Since the data buffers(present in buffer cache) has got corrupted even if 
-iSCSI initiator driver re-tries to send data and computed checksum to target 
-and if target's checksum matches with the initiator ckecksum, the garbled 
-data gets written on to the disk(scsi target).
+James
 
-To prevent writing garbled data onto disk(scsi target) iSCSI driver copies 
-the buffer cache data into locally allocated buffers, computes the checksum 
-and give the list of locally allocated buffers to the TCP layer  for 
-transmission of data to iSCSI target.
-
-Thanks,
-Naveen.
-
-
-On Monday 01 December 2003 06:00 pm, Naveen Burmi wrote:
-> Christoph,
->
-> You have following review comment for linux-iscsi driver:
-> "the explanation of  PREVENT_DATA_CORRUPTION does'nt make sense".
->
-> Following is the explanation of the requirement of 
-> "PREVENT_DATA_CORRUPTION":
->
-> In linux kernel there is a rare occurrence of data corruption. This data
-> can be buffer cache data as well as raw I/O data. Don't know the actual
-> root cause of the problem, but the fix that we put under macro
-> "PREVENT_DATA_CORRUPTION" is capable of resolving this problem.
->
-> Following is the scenario where we have observed this problem (still
-> persist in test9, 2.6 linux kernel):
->
-> On iSCSI target, 5428-2, upon detecting the CRC data error by the QlogicFC
-> card it generates  the sense data with sense key as HARDWARE ERROR
-> and Additional sense data as LOGICAL UNIT COMMUNICATION FAILURE.
-> Upon receving this sense data iSCSI initiator driver is not retrying this
-> command and failing the command to the upper layers of SCSI subsystem.
-> But linux SCSI subsystem does not perform any error recovery for this kind
-> of sense data.
->
-> Following is the fix:
-> 1) Protecting the original buffer cache and raw I/O data from getting
-> garbled. This is acheived by copying the incoming I/O buffer temporarily
-> in an internal buffer and then sending the copied data down to TCP.
->
-> 2) Before failing the scsi command to upper SCSI layers, iSCSI driver
-> is retrying the scsi command upon receiving the sense data with sense key
-> as HARDWARE ERROR.
->
->
-> Are you aware of this issue OR any related issue?
->
-> Thanks,
-> Naveen.
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
