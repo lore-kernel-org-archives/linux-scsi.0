@@ -1,102 +1,52 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [PATCH] if PQ == 1 don't clear online or allow upper level probes
-Date: Fri, 6 Jun 2003 10:00:03 -0700
+From: Ishikawa <ishikawa@yk.rim.or.jp>
+Subject: Re: [PATCH] kill scsihosts= boot parameter
+Date: Sat, 07 Jun 2003 02:05:49 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030606100003.A31327@beaverton.ibm.com>
+Message-ID: <3EE0C9ED.2D0EEE89@yk.rim.or.jp>
+References: <20030606075954.GB18838@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-2022-jp
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.105]:5569 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262028AbTFFQub (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jun 2003 12:50:31 -0400
-Content-Disposition: inline
+Received: from pl051.nas911.n-yokohama.nttpc.ne.jp ([210.139.98.51]:24004 "EHLO
+	standard.erephon") by vger.kernel.org with ESMTP id S262033AbTFFQwm
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Jun 2003 12:52:42 -0400
+Received: from yk.rim.or.jp (really [127.0.0.1]) by yk.rim.or.jp
+	via smail with esmtp
+	id <m19OKfF-000H35C@standard.erephon> (Debian Smail3.2.0.114)
+	for <linux-scsi@vger.kernel.org>; Sat, 7 Jun 2003 02:06:05 +0900 (JST)
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>
 
-Similiar to a patch Mike A sent out a long time ago:
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=99837483305810&w=2
+RE scshihosts=driver1,driver2,driver3...
 
-And AFAIR similiar to what redhat does based on Doug L's patch:
+Are we really sure we want to remove this?
+There non-disk devices, say,  CDROMs and tapes, which
+can't be handled by fs label and
+I had a feeling that the userland tools that looks
+at the physical connecivity might not be
+so well standardized (or made available on every major distribution.).
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=98462326621762&w=2
+Am I wrong about the latter (userland tools)?
 
-Don't clear online based on the peripheral qualifier value.
+I am afraid
+that I will have to tweak a few system administration scripts 
+if this feature is gone.
+(I don't know why this works on a PC I manage well.)
 
-Don't allow upper drivers (except for the sg class) to probe/attach to a
-scsi_device that has a PQ of 1. sg can still be flooded with devices with
-PQ of 1, but not sd.
+> This feature is seriously racy, and doesn't work under many
+> circumstances.  As we have proper ways to find devices by their
+> their locical naming (UUID, fs label) or physical connectivity
+> (scsidev, sysfs) it shouldn't be nessecary anymore.
+> 
 
-===== drivers/scsi/scsi_scan.c 1.86 vs edited =====
---- 1.86/drivers/scsi/scsi_scan.c	Sat Jun  7 09:02:08 2003
-+++ edited/drivers/scsi/scsi_scan.c	Sat Jun  7 11:07:11 2003
-@@ -545,28 +545,6 @@
- 
- 	print_inquiry(inq_result);
- 
--	/*
--	 * For a peripheral qualifier (PQ) value of 1 (001b), the SCSI
--	 * spec says: The device server is capable of supporting the
--	 * specified peripheral device type on this logical unit. However,
--	 * the physical device is not currently connected to this logical
--	 * unit.
--	 *
--	 * The above is vague, as it implies that we could treat 001 and
--	 * 011 the same. Stay compatible with previous code, and create a
--	 * Scsi_Device for a PQ of 1
--	 *
--	 * XXX Save the PQ field let the upper layers figure out if they
--	 * want to attach or not to this device, do not set online FALSE;
--	 * otherwise, offline devices still get an sd allocated, and they
--	 * use up an sd slot.
--	 */
--	if (((inq_result[0] >> 5) & 7) == 1) {
--		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: peripheral"
--				" qualifier of 1, device offlined\n"));
--		sdev->online = FALSE;
--	}
--
- 	sdev->removable = (0x80 & inq_result[1]) >> 7;
- 	sdev->lockable = sdev->removable;
- 	sdev->soft_reset = (inq_result[7] & 1) && ((inq_result[3] & 7) == 2);
-===== drivers/scsi/scsi_sysfs.c 1.22 vs edited =====
---- 1.22/drivers/scsi/scsi_sysfs.c	Thu Jun  5 11:52:51 2003
-+++ edited/drivers/scsi/scsi_sysfs.c	Sat Jun  7 11:15:06 2003
-@@ -15,6 +15,7 @@
- #include "hosts.h"
- 
- #include "scsi_priv.h"
-+#include "scsi_logging.h"
- 
- /*
-  * shost_show_function: macro to create an attr function that can be used to
-@@ -65,7 +66,28 @@
- /* all probing is done in the individual ->probe routines */
- static int scsi_bus_match(struct device *dev, struct device_driver *gendrv)
- {
--	return 1;
-+	struct scsi_device *sdev;
-+
-+	sdev = to_scsi_device(dev);
-+	/*
-+	 * For a peripheral qualifier (PQ) value of 1 (001b), the SCSI
-+	 * spec says: The device server is capable of supporting the
-+	 * specified peripheral device type on this logical unit. However,
-+	 * the physical device is not currently connected to this logical
-+	 * unit.
-+	 *
-+	 * The above is vague, as it implies that we could treat 001 and
-+	 * 011 the same. Stay compatible with previous code, and create a
-+	 * scsi_device for a PQ of 1, but do not allow any upper level
-+	 * drivers to attach (this excludes the sg class interface).
-+	 */
-+	if (((sdev->inquiry[0] >> 5) & 7) == 1) {
-+		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "%s: peripheral"
-+				" qualifier of 1, no upper drivers probed\n",
-+				__FUNCTION__));
-+		return 0;
-+	} else
-+		return 1;
- }
- 
- struct bus_type scsi_bus_type = {
+
+-- 
+int main(void){int j=2003;/*(c)2003 cishikawa. */
+char t[] ="<CI> @abcdefghijklmnopqrstuvwxyz.,\n\"";
+char *i ="g>qtCIuqivb,gCwe\np@.ietCIuqi\"tqkvv is>dnamz";
+while(*i)((j+=strchr(t,*i++)-(int)t),(j%=sizeof t-1),
+(putchar(t[j])));return 0;}/* under GPL */
