@@ -1,66 +1,36 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH 2.4.30-pre3] scsi_mod: add max_dma_memory and use_zone_normal params
-Date: Fri, 18 Mar 2005 14:50:24 -0500
-Message-ID: <60807403EABEB443939A5A7AA8A7458BED2A89@otce2k01.adaptec.com>
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: [PATCH 2.4.30-pre3] x86_64: pci_alloc_consistent() match 2.6 implementation
+Date: Fri, 18 Mar 2005 15:23:44 -0600
+Message-ID: <20050318212344.GC26112@lists.us.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Received: from magic.adaptec.com ([216.52.22.17]:17794 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262081AbVCRTu1 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Mar 2005 14:50:27 -0500
-content-class: urn:content-classes:message
+Content-Type: text/plain; charset=us-ascii
+Received: from ausc60ps301.us.dell.com ([143.166.148.206]:57905 "EHLO
+	ausc60ps301.us.dell.com") by vger.kernel.org with ESMTP
+	id S261368AbVCRVXr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Mar 2005 16:23:47 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@dell.com>, linux-scsi@vger.kernel.org
-
-This is all done to work around a bug in the kernel dealing with
-ZONE_DMA. I applaud the fix, but so many drivers need to be rewritten to
-first try taking memory from the general pool, then dropping back to the
-DMA pool if not matching the dma_mask.
-
-Sincerely -- Mark Salyzyn
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Matt Domsch
-Sent: Friday, March 18, 2005 2:19 PM
-To: linux-scsi@vger.kernel.org
-Subject: [PATCH 2.4.30-pre3] scsi_mod: add max_dma_memory and
-use_zone_normal params
+To: ak@suse.de, linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
 For review and comment.
-Patch adds two new module parameters to scsi_mod:
 
-max_dma_memory=, maximum DMA pool size, in MB (default=32 -> 32MB)
-makes the hard-coded limit for the DMA pool size be adjustable.  This
+On x86_64 systems with no IOMMU and with >4GB RAM (in fact, whenever
+there are any pages mapped above 4GB), pci_alloc_consistent() falls
+back to using ZONE_DMA for all allocations, even if the device's
+dma_mask could have supported using memory from other zones.  Problems
+can be seen when other ZONE_DMA users (SWIOTLB, scsi_malloc()) consume
+all of ZONE_DMA, leaving none left for pci_alloc_consistent() use.
+
+Patch below makes pci_alloc_consistent() for the nommu case (EM64T
+processors) match the 2.6 implementation of dma_alloc_coherent(), with
+the exception that this continues to use GFP_ATOMIC.
 
 Signed-off-by: Matt Domsch <Matt_Domsch@dell.com>
-is necessary for systems with large numbers of disks seen (i.e. ~112
-LUNs on a SAN as seen by a FC controller), where the size of the
-scsi_malloc() pool would consume all of ZONE_DMA, leaving none for
-other users.  This lets a system admin set a limit on how much memory
-to use for the scsi_malloc() pool.  If set too low, fewer outstanding
-commands can be issued at once, so it's only a performance issue.
-
-use_zone_normal=, 1 if scsi_malloc() can safely use ZONE_NORMAL
-instead of ZONE_DMA By default, scsi_malloc() uses ZONE_DMA memory.
-On x86 and x86_64, ZONE_DMA is only 16MB, though if you've got a lot
-of disks, it could try to consume all of that.  This lets
-scsi_malloc() use ZONE_NORMAL instead of ZONE_DMA, which of course is
-only safe if all your SCSI controllers are 64-bit-address-capable
-(most high-end cards today are).  This flag lets you have lots more
-memory available to scsi_malloc() than would be available if it were
-forced to use only ZONE_DMA, and frees up the space it would otherwise
-have consumed from ZONE_DMA for other users.
-
-Tested lightly on x86_64 on EM64T systems with 8GB RAM and up to 112
-LUNs visible (14x8 paths, 28x4 paths, ...)
 
 Thanks,
 Matt
-
 
 -- 
 Matt Domsch
@@ -68,76 +38,42 @@ Software Architect
 Dell Linux Solutions linux.dell.com & www.dell.com/linux
 Linux on Dell mailing lists @ http://lists.us.dell.com
 
-===== drivers/scsi/scsi_dma.c 1.2 vs edited =====
---- 1.2/drivers/scsi/scsi_dma.c	2002-02-05 08:10:27 -06:00
-+++ edited/drivers/scsi/scsi_dma.c	2005-03-18 11:31:11 -06:00
-@@ -46,6 +46,29 @@ unsigned int scsi_dma_free_sectors = 0;
- unsigned int scsi_need_isa_buffer = 0;
- static unsigned char **dma_malloc_pages = NULL;
+--- linux-2.4/arch/x86_64/kernel/pci-nommu.c	Fri Feb 25 13:01:44 2005
++++ linux-2.4/arch/x86_64/kernel/pci-nommu.c	Fri Feb 25 06:56:55 2005
+@@ -13,18 +13,28 @@ void *pci_alloc_consistent(struct pci_de
+ 			   dma_addr_t *dma_handle)
+ {
+ 	void *ret;
++	u64 mask;
++	int order = get_order(size);
+ 	int gfp = GFP_ATOMIC;
+-	
+-	if (hwdev == NULL ||
+-	    end_pfn > (hwdev->dma_mask>>PAGE_SHIFT) ||  /* XXX */
+-	    (u32)hwdev->dma_mask < 0xffffffff)
+-		gfp |= GFP_DMA;
+-	ret = (void *)__get_free_pages(gfp, get_order(size));
  
-+static unsigned int max_dma_memory = 32; /* 32MB */
-+MODULE_PARM(max_dma_memory, "l");
-+MODULE_PARM_DESC(max_dma_memory, "maximum DMA pool size, in MB
-(default=32 -> 32MB)");
+-	if (ret != NULL) {
+-		memset(ret, 0, size);
++	if (hwdev)
++		mask = hwdev->dma_mask;
++	else
++		mask = 0xffffffffULL;
 +
-+
-+/* This flag is unsafe under these conditions:
-+ * - you've got a <64-bit addressable SCSI controller, >4GB RAM, and an
-architecture where ZONE_NORMAL
-+ *   extends above 4GB (any 64-bit architecture)
-+ * or
-+ * - you've got an old ISA card with host->unchecked_isa_dma=1
-+ *
-+ * This implies that it is really safe only with 64-bit addressable
-SCSI controllers
-+ */
-+static unsigned int use_zone_normal;
-+MODULE_PARM(use_zone_normal, "i");
-+MODULE_PARM_DESC(use_zone_normal, "1 if scsi_malloc() can safely use
-ZONE_NORMAL instead of ZONE_DMA");
-+
-+static inline unsigned int dma_gfp_flags()
-+{
-+	return use_zone_normal ? GFP_ATOMIC : GFP_ATOMIC | GFP_DMA;
-+}
-+
-+
- /*
-  * Function:    scsi_malloc
-  *
-@@ -287,7 +310,7 @@ void scsi_resize_dma_pool(void)
- #endif
++	for (;;) {
++		ret = (void *)__get_free_pages(gfp, order);
++		if (ret == NULL)
++			return NULL;
+ 		*dma_handle = virt_to_bus(ret);
++		if ((*dma_handle & ~mask) == 0)
++			break;
++		free_pages((unsigned long)ret, order);
++		if (gfp & GFP_DMA)
++			return NULL;
++		gfp |= GFP_DMA;
+ 	}
++	memset(ret, 0, size);
+ 	return ret;
+ }
  
- 	/* limit DMA memory to 32MB: */
--	new_dma_sectors = (new_dma_sectors + 15) & 0xfff0;
-+ 	new_dma_sectors = min(new_dma_sectors + 15, (max_dma_memory *
-1024 * 2)) & 0xfffffff0;
- 
- 	/*
- 	 * We never shrink the buffers - this leads to
-@@ -330,7 +353,7 @@ void scsi_resize_dma_pool(void)
- 			for (i = dma_sectors / SECTORS_PER_PAGE;
- 			   i < new_dma_sectors / SECTORS_PER_PAGE; i++)
-{
- 				new_dma_malloc_pages[i] = (unsigned char
-*)
--				    __get_free_pages(GFP_ATOMIC |
-GFP_DMA, 0);
-+				    __get_free_pages(dma_gfp_flags(),
-0);
- 				if (!new_dma_malloc_pages[i])
- 					break;
- 			}
-@@ -430,7 +453,7 @@ int scsi_init_minimal_dma_pool(void)
- 		if (dma_malloc_pages) {
-                         memset(dma_malloc_pages, 0, size);
- 			dma_malloc_pages[0] = (unsigned char *)
--			    __get_free_pages(GFP_ATOMIC | GFP_DMA, 0);
-+			    __get_free_pages(dma_gfp_flags(), 0);
- 			if (dma_malloc_pages[0])
- 				has_space = 1;
- 		}
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
