@@ -1,37 +1,119 @@
-From: "Lee Xing" <lxing@Crossroads.com>
-Subject: Help - why mid-layer does not scan LUNs?
-Date: Fri, 18 Jun 2004 16:10:23 -0500
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH 1/3] ipr abort hang fix
+Date: Fri, 18 Jun 2004 16:17:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <519672568F040C41B6FAC21ADF51B18FF039@mailnode1.commstor.crossroads.com>
+Message-ID: <40D35BE1.9020509@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+ boundary="------------030304070706020708050104"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email.crossroads.com ([65.68.235.6]:8215 "HELO
-	email.crossroads.com") by vger.kernel.org with SMTP id S264500AbUFRVKY convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jun 2004 17:10:24 -0400
-content-class: urn:content-classes:message
+Received: from e4.ny.us.ibm.com ([32.97.182.104]:18685 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S264500AbUFRVRb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Jun 2004 17:17:31 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
-
-Can some one please tell me why mid-layer doesn't scan LUNs but just Buses and Targets in lk 2.4?  
-
-The default max_channel, max_id and max_lun defined in mid-layer are 0, 8 and 8 respectively.  I use scsi_debug low-level driver to check which B:T:L mid-layer scans, but find it only scans 0:0:0, 0:1:0, 0:2:0...  Why it doesn't scan 0:0:1, 0:0:2...?
-
-I have taken out:
-
-	if ((target > driver_template.this_id) || (SCpnt->lun != 0))
-		return schedule_resp(SCpnt, NULL, done, DID_NO_CONNECT << 16, 0);
-
-from scsi_debug_queuecommand(...) of scsi_debug driver, but mid-layer still does not scan LUNs.
-
-I would appreciate it if some one could tell me what I missed.
-
-Thanks,
+This is a multi-part message in MIME format.
+--------------030304070706020708050104
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
 
-Lee
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
+
+--------------030304070706020708050104
+Content-Type: text/plain;
+ name="ipr_abort_hang.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ipr_abort_hang.patch"
+
+
+The following patch fixes a hang that occurs when an abort
+is issued by the midlayer. The hang is the result of overriding
+a field in the union of the ipr_cmd struct. It is fixed by moving
+this pointer outside of the union, since it is not mutually exclusive
+with the other fields in the union.
+
+
+---
+
+ linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.c |   15 ++++++++-------
+ linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.h |    2 +-
+ 2 files changed, 9 insertions(+), 8 deletions(-)
+
+diff -puN drivers/scsi/ipr.c~ipr_abort_hang drivers/scsi/ipr.c
+--- linux-2.6.7-rc2/drivers/scsi/ipr.c~ipr_abort_hang	2004-06-07 11:21:15.000000000 -0500
++++ linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.c	2004-06-07 11:21:15.000000000 -0500
+@@ -448,6 +448,7 @@ static void ipr_init_ipr_cmnd(struct ipr
+ {
+ 	ipr_reinit_ipr_cmnd(ipr_cmd);
+ 	ipr_cmd->u.scratch = 0;
++	ipr_cmd->sibling = NULL;
+ 	init_timer(&ipr_cmd->timer);
+ }
+ 
+@@ -676,8 +677,8 @@ static void ipr_do_req(struct ipr_cmnd *
+  **/
+ static void ipr_internal_cmd_done(struct ipr_cmnd *ipr_cmd)
+ {
+-	if (ipr_cmd->u.sibling)
+-		ipr_cmd->u.sibling = NULL;
++	if (ipr_cmd->sibling)
++		ipr_cmd->sibling = NULL;
+ 	else
+ 		complete(&ipr_cmd->completion);
+ }
+@@ -3015,10 +3016,10 @@ static void ipr_bus_reset_done(struct ip
+ 	 * If abort has not completed, indicate the reset has, else call the
+ 	 * abort's done function to wake the sleeping eh thread
+ 	 */
+-	if (ipr_cmd->u.sibling->u.sibling)
+-		ipr_cmd->u.sibling->u.sibling = NULL;
++	if (ipr_cmd->sibling->sibling)
++		ipr_cmd->sibling->sibling = NULL;
+ 	else
+-		ipr_cmd->u.sibling->done(ipr_cmd->u.sibling);
++		ipr_cmd->sibling->done(ipr_cmd->sibling);
+ 
+ 	list_add_tail(&ipr_cmd->queue, &ioa_cfg->free_q);
+ 	LEAVE;
+@@ -3051,8 +3052,8 @@ static void ipr_abort_timeout(struct ipr
+ 
+ 	ipr_sdev_err(ipr_cmd->u.sdev, "Abort timed out. Resetting bus\n");
+ 	reset_cmd = ipr_get_free_ipr_cmnd(ioa_cfg);
+-	ipr_cmd->u.sibling = reset_cmd;
+-	reset_cmd->u.sibling = ipr_cmd;
++	ipr_cmd->sibling = reset_cmd;
++	reset_cmd->sibling = ipr_cmd;
+ 	reset_cmd->ioarcb.res_handle = ipr_cmd->ioarcb.res_handle;
+ 	cmd_pkt = &reset_cmd->ioarcb.cmd_pkt;
+ 	cmd_pkt->request_type = IPR_RQTYPE_IOACMD;
+diff -puN drivers/scsi/ipr.h~ipr_abort_hang drivers/scsi/ipr.h
+--- linux-2.6.7-rc2/drivers/scsi/ipr.h~ipr_abort_hang	2004-06-07 11:21:15.000000000 -0500
++++ linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.h	2004-06-07 11:21:15.000000000 -0500
+@@ -932,13 +932,13 @@ struct ipr_cmnd {
+ 	dma_addr_t sense_buffer_dma;
+ 	unsigned short dma_use_sg;
+ 	dma_addr_t dma_handle;
++	struct ipr_cmnd *sibling;
+ 	union {
+ 		enum ipr_shutdown_type shutdown_type;
+ 		struct ipr_hostrcb *hostrcb;
+ 		unsigned long time_left;
+ 		unsigned long scratch;
+ 		struct ipr_resource_entry *res;
+-		struct ipr_cmnd *sibling;
+ 		struct scsi_device *sdev;
+ 	} u;
+ 
+
+_
+
+--------------030304070706020708050104--
 
