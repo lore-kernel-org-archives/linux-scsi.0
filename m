@@ -1,61 +1,39 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: Jesse Barnes <jbarnes@engr.sgi.com>
 Subject: Re: SCSI QLA not working on latest *-mm SN2
-Date: Tue, 21 Sep 2004 19:04:58 +0100
+Date: Tue, 21 Sep 2004 14:09:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040921180458.GF11446@parcelfarce.linux.theplanet.co.uk>
-References: <B179AE41C1147041AA1121F44614F0B0DD04DD@AVEXCH02.qlogic.org>
+Message-ID: <200409211409.11095.jbarnes@engr.sgi.com>
+References: <20040917183029.GW642@parcelfarce.linux.theplanet.co.uk> <200409211346.58267.jbarnes@engr.sgi.com> <1095789421.2467.414.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:45254 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S267918AbUIUSFA
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Sep 2004 14:05:00 -0400
+Received: from omx3-ext.sgi.com ([192.48.171.20]:25510 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S267968AbUIUSJi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Sep 2004 14:09:38 -0400
+In-Reply-To: <1095789421.2467.414.camel@mulgrave>
 Content-Disposition: inline
-In-Reply-To: <B179AE41C1147041AA1121F44614F0B0DD04DD@AVEXCH02.qlogic.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@SteelEye.com>, Jesse Barnes <jbarnes@engr.sgi.com>, Grant Grundler <grundler@parisc-linux.org>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Matthew Wilcox <willy@debian.org>, Grant Grundler <grundler@parisc-linux.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, pj@sgi.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdr@cthulhu.engr.sgi.com, jeremy@cthulhu.engr.sgi.com, djh@cthulhu.engr.sgi.com, Andrew Morton <akpm@osdl.org>
 
-On Tue, Sep 21, 2004 at 10:33:36AM -0700, Andrew Vasquez wrote:
-> Hmm...adding more confusion to the mix.  I apologize -- my reply was
-> not written correctly, yes, the config-read will flush any pending
-> writes.  But, the same problem persists -- the RISC will still stop
-> responding to requests (config or MMIO) during the soft-reset -- 
-> potentially resulting in a MAC (as seen by SGI).
-> 
-> The 'safe' solution (as suggested by the hw people) was to use PIO to
-> issue the soft-reset, then udelay().  
+On Tuesday, September 21, 2004 1:56 pm, James Bottomley wrote:
+> Really, I don't think this is a good idea.  If there were a way to
+> produce an api that was just ioflush(struct device *) then yes, since it
+> would reduce confusion.  However, since all your API does is hide the
+> fact that you're doing a MMIO read then the proposed API provides no
+> relief from the fact that the driver writer needs to understand
+> posting...all it does is add one extra function for them to misuse or
+> get confused about.
 
-Even that's not safe ;-(
-This snippet is from pci 2.3 (section 3.2.5.2) but there's substantially
-similar wording in pci 2.2:
+Agreed.  I'll rename it, fix the io_ordering.txt doc to only describe I/O 
+ordering issues, and resubmit it solely as a performance improvement API.
 
-  Host bus bridges are permitted to post I/O write transactions that
-  originate on the host bus and complete on a PCI bus segment when they
-  follow the ordering rules described in this specification and do not
-  cause a deadlock. This means that when a host bus bridge posts an I/O
-  write transaction that originated on the host bus, it must provide a
-  deadlock free environment when the transaction completes on PCI. The
-  transaction will complete on the destination PCI bus before completing
-  on the originating PCI bus.
+Grant, you say that I/O writes can't possibly arrive out of order if issued 
+from different CPUs on any machines you're aware of?  If not, it may be that 
+the API will only benefit SGI machines.
 
-  Since memory write transactions may be posted in bridges anywhere
-  in the system, and I/O writes may be posted in the host bus bridge,
-  a master cannot automatically tell when its write transaction completes
-  at the final destination. For a device driver to guarantee that a write
-  has completed at the actual target (and not at an intermediate bridge),
-  it must complete a read to the same device that the write targeted. The
-  read (memory or I/O) forces all bridges between the originating master
-  and the actual target to flush all posted data before allowing the
-  read to complete. For additional details on device drivers, refer to
-  Section 6.5. Refer to Section 3.10., item 6, for other cases where a
-  read is necessary.
-
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Thanks,
+Jesse
