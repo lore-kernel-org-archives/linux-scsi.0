@@ -1,45 +1,42 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH] st.c for GET_IDLUN 2.6.6-rc2
-Date: Mon, 26 Apr 2004 19:12:55 +0300 (EEST)
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: suspending I/Os to a device
+Date: Mon, 26 Apr 2004 09:40:21 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0404261858140.24847@kai.makisara.local>
-References: <408B798B.50005@torque.net> <Pine.LNX.4.58.0404251153530.17534@kai.makisara.local>
- <408C5C72.4020301@torque.net>
+Message-ID: <20040426094021.A3442@beaverton.ibm.com>
+References: <8D43EFD7CCBDB24980134BE078C227E704E37A82@xcm.emulex.com> <1082762917.1615.17.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep02-0.kolumbus.fi ([193.229.0.44]:19709 "EHLO
-	fep02-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S263032AbUDZQNI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Apr 2004 12:13:08 -0400
-In-Reply-To: <408C5C72.4020301@torque.net>
+Received: from e32.co.us.ibm.com ([32.97.110.130]:33171 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S263032AbUDZQk5
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Apr 2004 12:40:57 -0400
+Content-Disposition: inline
+In-Reply-To: <1082762917.1615.17.camel@mulgrave>; from James.Bottomley@steeleye.com on Fri, Apr 23, 2004 at 07:28:30PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: osst@riede.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: "Infante, Jon" <Jon.Infante@Emulex.Com>, Linux SCSI Reflector <linux-scsi@vger.kernel.org>
 
-On Mon, 26 Apr 2004, Douglas Gilbert wrote:
+On Fri, Apr 23, 2004 at 07:28:30PM -0400, James Bottomley wrote:
 
-> Kai Makisara wrote:
-....
-> > 2. Reversing the order of calls in st so that scsi_ioctl is called first 
-> > and if it returns -ENOTTY, then scsi_cmd_ioctl is called. This would 
-> > require changing scsi_ioctl to return -ENOTTY for commands not being 
-> > handled but would be othewise a logical solution: first try SCSI specific 
-> > implementation of the ioctl, if it does not exist, then try the block 
-> > layer version (Linux block layer, not Unix block layer ;-).
+> Actually, there is no interface because no-one has had any prior
+> requirements for this.
 > 
-> This solution looks cleaner.
-> 
-I looked at the necessary changes a little more carefully and I think
-your solution is better from the practical point of view. The problem in  
-my solution is to make sure that scsi_ioctl() returns -ENOTTY in case it 
-does not implement the ioctl. This is easy except for the default case:
+> This is effectively a FC specific thing, and I believe you know because
+> you get a lip event telling you the target has gone, so it sounds like
+> the ideal thing to handle in the FC transport class (since it would
+> apply to all FC HBAs) The target reconnect timeout would then be a
+> transport class property and we'd start failing I/Os when it expired.  I
+> would guess there needs to be an additional state in the device state
+> model like SUSPEND (QUIESCE doesn't quite fit because it allows the
+> pending queue to drain and the error handler to operate), but we can
+> accomodate that.
 
-                if (sdev->host->hostt->ioctl)
-                        return sdev->host->hostt->ioctl(sdev, cmd, arg);
+Attaching your USB or firewire device to another port is not much
+different.
 
-where any kind of code can be found ;-) It is safer to leave this as the
-last resort.
+We should someday allow removal and re-attachment of any disk, or the
+replacement of the transport (like hotplug pci card, or the cables),
+without having to close or unmount the disk.
 
--- 
-Kai
+-- Patrick Mansfield
