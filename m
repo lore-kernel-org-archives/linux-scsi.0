@@ -1,53 +1,55 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [usb-storage] mode sense blacklist how
-Date: Thu, 20 Nov 2003 09:34:19 +1000
+From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
+Subject: RE: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
+Date: Wed, 19 Nov 2003 15:38:30 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3FBBFDFB.9010406@torque.net>
-References: <Pine.LNX.4.44L0.0311131638320.949-100000@ida.rowland.org>	 <1068767049.2851.166.camel@patrh9>	 <1068768796.3fb41e1c8d075@webmail.netregistry.net>	 <1068775834.2851.321.camel@patrh9>	 <20031113181945.I30194@one-eyed-alien.net>	 <1068777510.2851.359.camel@patrh9>	 <1068779468.3fb447ccc6e60@webmail.netregistry.net>	 <1068838908.2852.34.camel@patrh9>	 <1069246502.3fbb6826955dd@webmail.netregistry.net> <1069261377.2867.37.camel@patrh9>
-Reply-To: dougg@torque.net
+Message-ID: <B179AE41C1147041AA1121F44614F0B060ED76@AVEXCH02.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bunyip.cc.uq.edu.au ([130.102.2.1]:3590 "EHLO
-	bunyip.cc.uq.edu.au") by vger.kernel.org with ESMTP id S264198AbTKSXeq
+Received: from [198.70.193.2] ([198.70.193.2]:49014 "EHLO AVEXCH01.qlogic.org")
+	by vger.kernel.org with ESMTP id S264199AbTKSXiZ convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Nov 2003 18:34:46 -0500
-In-Reply-To: <1069261377.2867.37.camel@patrh9>
+	Wed, 19 Nov 2003 18:38:25 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Pat LaVarre <p.lavarre@ieee.org>
-Cc: dmitrik@users.sourceforge.net, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: Jes Sorensen <jes@wildopensource.com>, Linux-SCSI <linux-scsi@vger.kernel.org>, jeremy@sgi.com, jbarnes@sgi.com
 
-Pat LaVarre wrote:
-> Apologies in advance for each reboot these experiments force on you.
+Matthew,
+
+> On Wed, Nov 19, 2003 at 03:03:09PM -0800, Andrew Vasquez wrote:
+> > > I suggest doing something similar for all architectures that do
+> > > not provide x86 BIOS emulation.
+> > 
+> > I don't believe this is going to be a safe route.  QLogic does
+> > offer other methods to modify NVRAM parameters besides the BIOS
+> > utility, a GUI (SANsurfer) as well as a command-line tool
+> > (SANblade CLI) - the 64bit versions are available here:
+> > 
+> > 	
+> http://www.qlogic.com/support/os_detail.asp?productid=256&osid=65
 > 
+> Where are the PA-RISC versions?  Where are the Alpha versions?
+> Where are the Sparc versions?  This just isn't a workable solution
+> for many people.  
+
+True, but we are talking about two different things here, and perhaps
+I didn't make that clear in the previous email, the driver doesn't
+require BIOS to exist in order to read NVRAM, NVRAM doesn't depend on
+a BIOS (or EFI).  Therefore, disabling the read of NVRAM based on an
+architecture's ability to provide x86 BIOS emulation does not make
+sense.
+
+> PCI cards really are supposed to work on all architectures.
 > 
->> MODE SENSE (10): plscsi hangs and sits there in 
->> usb_stor_bulk_transfer_buf until the device is 
->> physically unplugged. kill -9 has no effect.
-> 
-> 
-> Yes why `kill -9` has no effect on SG_IO in progress remains an open
-> question here at linux-scsi.
 
-The SG_IO ioctl is implemented in 2 places (in lk 2.6):
-    a) block/scsi_ioctl.c [for block devices]
-    b) sg.c [for sg devices]
+And they do (at least the QLogic ones).  The reason I referenced the
+utilities in the first place was because the BIOS utility simply allows
+you to configure NVRAM parameters.
 
-In case b) the SG_IO ioctl is interruptible between the point
-of command submission and the response arriving. [When testing
-with lk 2.4 I found there were out-of-resource situations which
-would block interminably prior to command submission, but I
-doubt this is what you are seeing.] It is worth noting that
-coping with orphaned SCSI responses from user killed processes
-requires a lot of logic in the sg driver.
+Hope this (confus...) helps...
 
-I suspect in case a) the user cannot interrupt the sg_io()'s
-invocation of blk_do_rq(). Perhaps someone could enlighten me
-(and I could document it).
-
-Further it looks like the SCSI_IOCTL_SEND_COMMAND is not
-interruptible either. See scsi_wait_req() in scsi_lib.c .
-
-Doug Gilbert
-
+Regards,
+Andrew Vasquez
+QLogic Corporation
