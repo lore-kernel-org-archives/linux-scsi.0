@@ -1,48 +1,30 @@
-From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Subject: Re: [PATCH][RELEASE] megaraid 2.10.2 Driver
-Date: Wed, 24 Mar 2004 17:39:15 -0300
+From: "Lee Xing" <lxing@Crossroads.com>
+Subject: Help - interface between Linux SCSI mid-level driver and lower-level driver
+Date: Wed, 24 Mar 2004 14:12:43 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040324203915.GH5551@logos.cnet>
-References: <0E3FA95632D6D047BA649F95DAB60E570230C77B@exa-atlanta.se.lsil.com> <20040323004543.GP25059@parcelfarce.linux.theplanet.co.uk> <20040323062708.A29405@infradead.org> <20040323133035.GU25059@parcelfarce.linux.theplanet.co.uk> <20040324061553.GA13681@logos.cnet>
+Message-ID: <519672568F040C41B6FAC21ADF51B18FF7C8@mailnode1.commstor.crossroads.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([63.209.29.2]:18318 "EHLO hera.kernel.org")
-	by vger.kernel.org with ESMTP id S263163AbUCXTji (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Mar 2004 14:39:38 -0500
-Content-Disposition: inline
-In-Reply-To: <20040324061553.GA13681@logos.cnet>
+Received: from 65-68-235-6.ded.swbell.net ([65.68.235.6]:7094 "HELO
+	email.crossroads.com") by vger.kernel.org with SMTP id S261179AbUCXUMo convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Mar 2004 15:12:44 -0500
+content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: Christoph Hellwig <hch@infradead.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, 'Jeff Garzik' <jgarzik@pobox.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-> On Tue, Mar 23, 2004 at 01:30:35PM +0000, Matthew Wilcox wrote:
-> > On Tue, Mar 23, 2004 at 06:27:08AM +0000, Christoph Hellwig wrote:
-> > > On Tue, Mar 23, 2004 at 12:45:43AM +0000, Matthew Wilcox wrote:
-> > > > I don't think you understand how CONFIG_COMPAT works.  x86-64 defines it
-> > > > when it wants it:
-> > > 
-> > > But not in 2.4, and this is a 2.4-only patch..
-> > 
-> > It is?  I didn't see that mentioned anywhere.
-> > 
-> > Anyway, it's wrong to define LSI_CONFIG_COMPAT based solely on __x86_64__.
-> > You'd also need to check IA32_EMULATION.  Really, it would be simpler
-> > to add CONFIG_COMPAT to 2.4.
+Hi,
 
-I think is ok to use such XXX_CONFIG_COMPAT and #ifdef the register_ioctl calls 
-around it in the driver. Acceptable for 2.4. Comments?  
+I'm not SCSI driver expert.  Sorry for asking simple questions here.  Your help would be appreciated.
 
-I think you are right about checking for IA32_EMULATION too. 
+We are working on a new prototype that uses a FC HBA on Linux.  Our FC driver detects the physical FC disks as SCSI devices and reports them to a higher_layer (not Linux SCSI mid-level driver) in Linux kernel.  Now, we need to create another layer that sits in between the existing higher_layer and Linux SCSI mid-level driver, and to register the detected FC/SCSI devices as Linux sd/sg devices.
 
-Does SPARC also define it?
+My question is what are the interface functions in SCSI mid-level driver we can invoke to register the detected FC/SCSI devices as Linux sg/sd devices.  Sample code and documents would be a great help.
 
-The MPT fusion driver currently does:
+Thanks,
 
-#if (defined(__sparc__) && defined(__sparc_v9__)) || defined(__x86_64__)
-#define MPT_CONFIG_COMPAT
-#endif
 
-Sreenivas: about the megaraid2 update, please work on the commentaries by Jeff.
+L.
 
