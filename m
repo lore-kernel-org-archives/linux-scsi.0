@@ -1,58 +1,131 @@
-From: "Frank Borich" <Frank_Borich@us.xyratex.com>
-Subject: [PATCH] 2.4.26 add devices to scsi_scan.c's blacklist
-Date: Thu, 15 Apr 2004 07:40:49 -0700
+From: "Moore, Eric Dean" <Emoore@lsil.com>
+Subject: RE: [RFC][PATCH]SCSI signal(I/O) failure causes no response
+Date: Thu, 15 Apr 2004 10:51:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <47F3C2BE74738E4683574107469DFA203B961C@XYUSEX01.xyus.xyratex.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570442C2AC@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C422F7.A543803C"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xyratexus19.xyratex.com ([65.203.33.19]:61219 "EHLO
-	XYUSEX01.xyus.xyratex.com") by vger.kernel.org with ESMTP
-	id S264114AbUDOOkz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Apr 2004 10:40:55 -0400
-Content-class: urn:content-classes:message
-List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-
-This is a multi-part message in MIME format.
-
-------_=_NextPart_001_01C422F7.A543803C
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	charset="iso-8859-1"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:8877 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S264250AbUDOOvT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Apr 2004 10:51:19 -0400
+List-Id: linux-scsi@vger.kernel.org
+To: Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi,
-Apologies for the late submission to 2.4.26-rc2. =20
-This patch sets BLIST_SPARSELUN and BLIST_FORCELUN flags for=20
-Xyratex 4200 for 2.4.26. =20
+Which IOCSTATUS is returned when reproducing 
+this issue that provides infinite loop?
 
-Thanks,
-Frank Borich
-------------------------------------------------------------------
-Systems Engineer
-Direct 630 654 6089
-Fax 630 325 2513
-e-mail frank_borich@us.xyratex.com
-=20
+Here are the meanings of IOCSTATUS from the manual:
+
+MPI_IOCSTATUS_SCSI_TASK_TERMINATED - A SCSI Task Management request
+has terminated I/O.
+
+MPI_IOCSTATUS_SCSI_IOC_TERMINATED - A IOC has terminated the SCSI I/O.
+This is typically an abort or bus reset initiated by the IOC.
+
+MPI_IOCSTATUS_SCSI_EXT_TERMINATED - An external source has terminated the 
+SCSI I/O. This is typically a bus reset from another initiator.
+
+MPI_IOCSTATUS_SCSI_PROTOCAL_ERROR - An unrecoverable bus protocal error
+has terminated the SCSI I/O.
 
 
-------_=_NextPart_001_01C422F7.A543803C
-Content-Type: application/octet-stream;
-	name="XYR4200.patch"
-Content-Transfer-Encoding: base64
-Content-Description: XYR4200.patch
-Content-Disposition: attachment;
-	filename="XYR4200.patch"
 
-LS0tIHNjc2lfc2Nhbi5jLm9sZAkyMDA0LTA0LTE0IDA5OjQ5OjM2LjAwMDAwMDAwMCAtMDUwMAor
-Kysgc2NzaV9zY2FuLmMJMjAwNC0wNC0xNCAwOTo1NToxOS4wMDAwMDAwMDAgLTA1MDAKQEAgLTIw
-OCw3ICsyMDgsOSBAQAogCXsiU01TQyIsICJVU0IgMiBIUyIsICIqIiwgQkxJU1RfU1BBUlNFTFVO
-IHwgQkxJU1RfTEFSR0VMVU59LCAKIAl7IlhZUkFURVgiLCAiUlMiLCAiKiIsIEJMSVNUX1NQQVJT
-RUxVTiB8IEJMSVNUX0xBUkdFTFVOfSwKIAl7Ik5FQyIsICJpU3RvcmFnZSIsICIqIiwgQkxJU1Rf
-U1BBUlNFTFVOIHwgQkxJU1RfTEFSR0VMVU4gfCBCTElTVF9GT1JDRUxVTn0sCi0KKwl7Ilh5cmF0
-ZXgiLCAiNDIwMCIsICIqIiwgQkxJU1RfU1BBUlNFTFVOIHwgQkxJU1RfRk9SQ0VMVU59LAorCXsi
-Q05TaSIsICJKIiwgIioiLCBCTElTVF9TUEFSU0VMVU4gfCBCTElTVF9GT1JDRUxVTn0sCisJCiAJ
-LyoKIAkgKiBNdXN0IGJlIGF0IGVuZCBvZiBsaXN0Li4uCiAJICovCg==
+On Wednesday, April 14, 2004 11:24 PM, Masao Fukuchi wrote:
 
-------_=_NextPart_001_01C422F7.A543803C--
+> 
+> 
+> I saw following IOC status by my test tool.
+>  MPI_IOCSTATUS_SCSI_TASK_TERMINATED
+>  MPI_IOCSTATUS_SCSI_IOC_TERMINATED
+> 
+> But for these IOC status, I saw some kind of error like another
+> IOC status or timeout just before(or after) the above IOC
+> status.
+> 
+> I think the SCSI_PROTOROL_ERROR has a some different meaning from
+> others.
+> 
+> Masao Fukuchi
+> 
+> Moore, Eric Dean wrote:
+> >For this particular issue, Mr Masao Fukuchi has a
+> >scsi bus test analyzer, in which he set the C/D signal 
+> >to low during read operation.  The MPT firmware
+> >returned MPI_IOCSTATUS_SCSI_PROTOCAL_ERROR, which from
+> >the mpt manual means " An unrecoverable bus protocal error
+> >as terminated the SCSI I/O" and the driver will 
+> >return DID_RESET.
+> >
+> >Here are some of the other cases which return
+> >DID_RESET, however I doubt were returned with 
+> >Mr Masao Fukuchi's test anaylzer:
+> >
+> >MPI_IOCSTATUS_SCSI_TASK_TERMINATED
+> >MPI_IOCSTATUS_SCSI_IOC_TERMINATED
+> >MPI_IOCSTATUS_SCSI_EXT_TERMINATED
+> >
+> >
+> >
+> >On Wednesday, April 14, 2004 9:28 AM, James Bottomley wrote:
+> >
+> >> 
+> >> 
+> >> On Tue, 2004-04-13 at 20:07, Masao Fukuchi wrote:
+> >> > 1.Fusion MPT driver issues read command to its firmware.
+> >> >   (our server has LSI53C1030 as SCSI adapter)
+> >> >   Then the firmware returns protocol error for the command.
+> >> >   Fusion MPT driver makes DID_RESET status by protocol error 
+> >> >   and sends it to SCSI midlayer.
+> >> > 
+> >> > 2.SCSI midlayer analyzes the status from LLD.
+> >> >   SCSI midlayer schedules command retry because the 
+> status is just
+> >> >   DID_RESET status.
+> >> >   (When the status has DID_RESET plus some sense code, the retry
+> >> >    sequence depends on the sense code. But when the 
+> status has only
+> >> >    DID_RESET, SCSI midlayer schedules command retry)
+> >> > 
+> >> > Sequence 1. and 2. are repeated infinitely and it causes no 
+> >> response.
+> >> > 
+> >> > To prevent this problem, I proposed Eric Moore to change 
+> >> the DID_RESET
+> >> > status to DID_SOFT_ERROR in fusion MPT driver.
+> >> > But he suggested me to change SCSI midlayer to prevent 
+> >> infinite loop.
+> >> 
+> >> Well, there clearly is a problem, because we can't retry no-rety
+> >> commands that return DID_RESET (like tape commands or fastfail).
+> >> 
+> >> However, DID_RESET is supposed to be returned for events 
+> where it was
+> >> determined that the command was lost because the bus or 
+> >> device was reset
+> >> (either as part of error handling or because an external 
+> entity issued
+> >> the reset).  Since these events, if they originate 
+> externally, can be
+> >> beyond the control of the device, making retryable 
+> commands subject to
+> >> the retry limit would be asking for unnecessary I/O errors 
+> because of
+> >> something we couldn't do anything about.
+> >> 
+> >> Why is the LSI driver returning DID_RESET for the problem 
+> (i.e. is it
+> >> some type of external bus reset, or is something else going on)?
+> >> 
+> >> James
+> >> 
+> >> 
+> >-
+> >To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> >the body of a message to majordomo@vger.kernel.org
+> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
