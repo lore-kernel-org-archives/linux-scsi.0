@@ -1,74 +1,35 @@
-From: lynx@aston.ac.uk
-Subject: new O E M software
-Date: Mon, 09 Aug 2004 00:31:44 +0000
+From: "Govindan, Thiru" <GovinT@LOUISVILLE.STORTEK.COM>
+Subject: FW:  Re. Allocation of scatter gather table in __init_io
+Date: Mon, 9 Aug 2004 13:50:20 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <6LK16ICDDIK7FDAF@aston.ac.uk>
-References: <2IGB2946495H13AD@vger.kernel.org>
+Message-ID: <E5A17223DA27AB4DABB18A5955F4235545CFCE@EXCHVS1.louisville.stortek.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 24-105-205-238.cm.mhcable.com ([24.105.205.238]:11024 "HELO
-	herhobbies.com") by vger.kernel.org with SMTP id S265027AbUHIAeD
+Received: from sherman.stortek.com ([129.80.22.146]:3924 "EHLO
+	sherman.stortek.com") by vger.kernel.org with ESMTP id S265978AbUHIEu3
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 8 Aug 2004 20:34:03 -0400
-In-Reply-To: <2IGB2946495H13AD@vger.kernel.org>
+	Mon, 9 Aug 2004 00:50:29 -0400
+Received: from sherman.stortek.com (localhost [127.0.0.1])
+	by sherman.stortek.com (8.12.10/8.12.0) with ESMTP id i794oSZ1003153
+	for <linux-scsi@vger.kernel.org>; Sun, 8 Aug 2004 22:50:28 -0600 (MDT)
+Received: from ap-jpto-msg02.pacificrim.stortek.com (AP-JPTO-MSG02.stortek.com [129.191.235.69])
+	by sherman.stortek.com (8.12.10/8.12.0) with ESMTP id i794oRsk003149
+	for <linux-scsi@vger.kernel.org>; Sun, 8 Aug 2004 22:50:28 -0600 (MDT)
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-scsi <linux-scsi@vger.kernel.org>
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-O E M (Original Equipment Manufacturer) software includes all essential
-components of Microsoft Retail products excluding support from Microsoft.
-Retail version comes in a fancy box, O E M does not. You will receive
-installation CDs only (no original retail packing).
-Although O E M software does not come with a box or a manual, it is the
-typical and actual software, no trial or demo versions.
+Hi,
+    I'm running into an issue that seems to be caused by __init_io() in
+scsi_merge.c. Apparently __init_io() is allocating the scatter gather list
+before even merging the segments in the queue. In my case the request
+nr_segments  has a value of 2 and the scatter gather table is allocated for
+2 entries. But  then the logic merges the 2 segments into 1 and fills in one
+entry, my HBA driver complains that one entry is invalid and panics. Can you
+clarify how this works, I suppose getting mergeable segments in a request is
+common and hence __init_io() must allocate the table after having at least
+identified how may segments are really there. 
 
-http://www.lookoo.biz/
+Is this a known issue and is there a patch that fixes this?
 
-RedHat Linux 9.0
-Retail price: $79.99
-Our low Price: $60.00
-You Save: $19.99
-
-Adobe Photoshop CS V 8.0 PC
-Retail price: $609.99
-Our low Price: $80.00
-You Save: $529.99
-
-Adobe Pagemaker V 7.0 PC
-Retail price: $599.95
-Our low Price: $80.00
-You Save: $519.95
-   
-Adobe Illustrator CS V 11.0 PC
-Retail price: $599.95
-Our low Price: $80.00
-You Save: $519.95
-
-CorelDraw Graphics Suite V 12 PC
-Retail price: $349.95
-Our low Price: $100.00
-You Save: $249.95
-   
-Microsoft SQL Server 2000
-Retail price: $1450.00
-Our low Price: $90.00
-You Save: $1360.00
-
-Microsoft Office XP Professional
-Retail price: $499.95
-Our low Price: $100.00
-You Save: $399.95
-
-Microsoft Windows 2000 Professional
-Retail price: $320.00
-Our low Price: $50.00
-You Save: $270.00
- 
-Symantec Norton Antivirus 2004 Professional
-Retail price: $69.95
-Our low Price: $15.00
-You Save: $54.95
-
-or site is http://www.lookoo.biz/
-
+Govindan
