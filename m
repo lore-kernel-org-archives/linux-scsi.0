@@ -1,104 +1,86 @@
-From: "B. D. Elliott" <bde@nwlink.com>
-Subject: Re: scsi_add_device() broken? (was Re: SBP2 hotplug doesn't update /proc/partitions)
-Date: Thu, 12 Jun 2003 21:38:51 -0700
+From: Josef =?iso-8859-1?Q?M=F6llers?=
+	<josef.moellers@fujitsu-siemens.com>
+Subject: REPORT LUNS
+Date: Fri, 13 Jun 2003 16:04:48 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030613041751.016216ABFD@smtp4.pacifier.net>
-References: <1054770509.1198.79.camel@torrey.et.myrio.com> <3EDE870C.1EFA566C@digeo.com> <1054838369.1737.11.camel@torrey.et.myrio.com> <20030605175412.GF625@phunnypharm.org> <1054858724.3519.19.camel@torrey.et.myrio.com> <20030606025721.GJ625@phunnypharm.org> <1055446080.3480.291.camel@torrey.et.myrio.com> <20030612195243.GV4695@phunnypharm.org> <20030613024044.GA499@hopper.phunnypharm.org>
+Message-ID: <3EE9DA00.A429F83F@fujitsu-siemens.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------7B6CFB07DD5B16D77E9CAAA9"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp4.pacifier.net ([64.255.237.174]:11730 "EHLO
-	smtp4.pacifier.net") by vger.kernel.org with ESMTP id S265125AbTFMEZK
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jun 2003 00:25:10 -0400
-Content-Disposition: inline
-In-Reply-To: <20030613024044.GA499@hopper.phunnypharm.org>
+Received: from plim.fujitsu-siemens.com ([217.115.66.8]:25146 "EHLO
+	plim.fujitsu-siemens.com") by vger.kernel.org with ESMTP
+	id S265396AbTFMNsx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jun 2003 09:48:53 -0400
+Received: from trulli.pdb.fsc.net (this.is.a.RFC1918.address [172.25.96.53] (may be forged))
+	by plim.fujitsu-siemens.com (8.11.3/8.11.3) with ESMTP id h5DE2dF27255
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Jun 2003 16:02:39 +0200
+Received: from fujitsu-siemens.com (bounty.pdb.fsc.net [172.25.187.68])
+	by trulli.pdb.fsc.net (8.11.6/8.11.6) with ESMTP id h5DE2dg15243
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Jun 2003 16:02:39 +0200
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-On Thu, Jun 12, 2003 at 10:40:44PM -0400, Ben Collins wrote:
-> On Thu, Jun 12, 2003 at 03:52:43PM -0400, Ben Collins wrote:
-> > On Thu, Jun 12, 2003 at 12:28:00PM -0700, Torrey Hoffman wrote:
-> > > I am now running 2.5.70-bk15, and with slab debugging turned off SBP2
-> > > mostly works.  However, I just had an interesting glitch show up.
-> > > 
-> > > I plugged in a 120 GB drive which had two VFAT partitions, mounted them,
-> > > copied some data to them, unmounted them, and unplugged the drive.  
-> > > That worked perfectly. (This was the first use of SBP2 after booting.)
-> > > 
-> > > Then I plugged in a 250 GB drive with a single reiserfs partition.  The
-> > > SBP2 driver detected the drive correctly, but the kernel's idea of what
-> > > partitions are available was not updated.  
-> > > 
-> > > /proc/partitions still has the old, stale data from the 120 GB drive and
-> > > looks like this: (skipping my hda partitions)
-> > 
-> > Sounds like the scsi layer is keeping stale info. I'd say this is
-> > suspiciously similar to what's causing your oops in your later email.
-> > Track down where the stale info comes from, and I think you'll find the
-> > cause of both your problems.
-> 
-> scsi0 : SCSI emulation for IEEE-1394 SBP-2 Devices
-> ieee1394: sbp2: Query logins to SBP-2 device successful
-> ieee1394: sbp2: Maximum concurrent logins supported: 1
-> ieee1394: sbp2: Number of active logins: 0
-> ieee1394: sbp2: Logged into SBP-2 device
-> ieee1394: sbp2: Node[02:1023]: Max speed [S400] - Max payload [2048]
->   Vendor: FireWire  Model:  1394 Disk Drive  Rev: G603
->   Type:   Direct-Access                      ANSI SCSI revision: 02
-> SCSI device sda: 240121728 512-byte hdwr sectors (122942 MB)
-> sda: cache data unavailable
-> sda: assuming drive cache: write through
->  sda: unknown partition table
-> devfs_mk_dir: invalid argument.<5>Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+This is a multi-part message in MIME format.
+--------------7B6CFB07DD5B16D77E9CAAA9
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-This particular error occurs because the scsi/host*/bus*/target*/lun* path
-hasn't yet been set up in scsi_add_lun before calling scsi_device_register.
-This also occurs for usb disk registration.  (I don't know why this doesn't
-happen for devices that register at boot time.)  Moving the call to
-scsi_device_register (at scsi_scan.c:622) after the sprintf appears to fix
-both the usb and ieee1934 problems.
+Hi,
 
-> Note, the "unknown partition table" is ok for me, because I am using a
-> whole-disk filesystem. However, the devfs_mk_dir() error is suspicious.
-> Note, I use devfs. 2.5.69+bk (just before 2.6.70) things worked fine.
-> Now, /dev/sda is not being created. Nothing in /dev/scsi/ either, but:
-> 
-> hopper:~# cat /proc/scsi/sbp2/0
-> Host scsi0             : SBP-2 IEEE-1394 (ohci1394)
-> Driver version         : $Rev: 942 $ Ben Collins <bcollins@debian.org>
+Wile trying to figure out how to ignore non-existing LUNs on RAID
+devices, I have fallen across an error in scsilun_to_int() where it
+doesn't behave as the comment suggests and a problematic piece of code
+in scsi_report_lun_scan().
 
-A side note here:  The "$Rev: 942..." message is marked as __devinitdata
-which causes an oops on sparc64 when attempting the above "cat", as the
-mapping for that data is apparently deleted after module initialization.
+Patch is included.
 
-> Module options         :
->   max_speed            : S400
->   max_sectors          : 255
->   serialize_io         : no
->   exclusive_login      : no
-> 
-> Attached devices       :
->   [Channel: 00, Id: 00, Lun: 00]  Direct-Access     FireWire  1394 Disk Drive
-> 
-> 
-> Also, /sys/bus/scsi/devices/0:0:0:0 exists, with a block link to sda.
-> 
-> I suspect this is a problem where scsi_add_device() is not doing all the
-> stuff it needs to (does anything besides ieee1394 use scsi_add_device
-> and scsi_remove_device?).
-> 
-> 
-> -- 
-> Debian     - http://www.debian.org/
-> Linux 1394 - http://www.linux1394.org/
-> Subversion - http://subversion.tigris.org/
-> Deqo       - http://www.deqo.com/
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+-- =
 
--- 
-B. D. Elliott   bde@nwlink.com
+Josef M=F6llers (Pinguinpfleger bei FSC)
+	If failure had no penalty success would not be a prize
+						-- T.  Pratchett
+--------------7B6CFB07DD5B16D77E9CAAA9
+Content-Type: text/plain; charset=us-ascii;
+ name="patch-2.5.70a"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch-2.5.70a"
+
+--- linux-2.5.70/drivers/scsi/scsi_scan.c	2003-05-27 03:00:46.000000000 +0200
++++ linux-2.5.70a/drivers/scsi/scsi_scan.c	2003-06-13 15:54:22.000000000 +0200
+@@ -884,8 +884,8 @@
+ 
+ 	lun = 0;
+ 	for (i = 0; i < sizeof(lun); i += 2)
+-		lun = lun | (((scsilun->scsi_lun[i] << 8) |
+-			      scsilun->scsi_lun[i + 1]) << (i * 8));
++		lun = lun | (((scsilun->scsi_lun[i] & 0x3f) << (i * 8 + 1)) |
++			      ((scsilun->scsi_lun[i + 1]) << (i * 8)));
+ 	return lun;
+ }
+ 
+@@ -1027,13 +1027,18 @@
+ 	 * the header, so start at 1 and go up to and including num_luns.
+ 	 */
+ 	for (lunp = &lun_data[1]; lunp <= &lun_data[num_luns]; lunp++) {
++		int j;
++
+ 		lun = scsilun_to_int(lunp);
+ 
+ 		/*
+ 		 * Check if the unused part of lunp is non-zero, and so
+ 		 * does not fit in lun.
+ 		 */
+-		if (memcmp(&lunp->scsi_lun[sizeof(lun)], "\0\0\0\0", 4)) {
++		for (j = sizeof(lun); j < sizeof(struct scsi_lun); j++)
++		    if (lunp->scsi_lun[j] != 0)
++			break;
++		if (j < sizeof(struct scsi_lun)) {
+ 			int i;
+ 
+ 			/*
+
+
+--------------7B6CFB07DD5B16D77E9CAAA9--
+
