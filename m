@@ -1,37 +1,52 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: scsi Target card and scsi Initiator card
-Date: Thu, 07 Oct 2004 11:38:00 +0400
+From: "Magnus Naeslund(w)" <mag@fbab.net>
+Subject: ServeRAID SCSI device write-back
+Date: Thu, 7 Oct 2004 11:08:12 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4164F258.9090508@vlnb.net>
-References: <017e01c4ab91$510a3e90$1610a8c0@spsoft.com> <4163DDC6.3030102@vlnb.net> <017901c4ac30$cde21510$1610a8c0@spsoft.com>
+Message-ID: <64015.129.178.88.68.1097140092.squirrel@129.178.88.68>
+Reply-To: mag@fbab.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.rol.ru ([194.67.21.9]:16072 "EHLO smtp.rol.ru")
-	by vger.kernel.org with ESMTP id S267323AbUJGHhx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2004 03:37:53 -0400
-Received: from asplinux.ru ([195.133.213.194]:12795 "EHLO vlnb.net" smtp-auth:
-	"vlnb@online.ru" TLS-CIPHER: "DHE-RSA-AES256-SHA keybits 256/256 version
-	TLSv1/SSLv3" TLS-PEER-CN1: <none>) by gnome08.net.rol.ru with ESMTP
-	id S4255130AbUJGHhv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Oct 2004 11:37:51 +0400
-In-Reply-To: <017901c4ac30$cde21510$1610a8c0@spsoft.com>
+Received: from spectre.fbab.net ([212.214.165.139]:32129 "HELO mail2.fbab.net")
+	by vger.kernel.org with SMTP id S267358AbUJGJIO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2004 05:08:14 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Nikhil Dharashivkar <dharashivkar.nikhil@spsoftindia.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Nikhil Dharashivkar wrote:
-> Hi,
->      Actually our setup of hardware is : There is one board . On that we
-> have one target mode card (LSI) and more than one initiator cards.
->        First thing I have to do is I should able to export all LUNS or
-> target devices connected to initiator card through this target mode card.
->       For that how should i think to develop software layer . Is there
-> already implemeted code ?
+I have this ServeRAID 6 card that has a batterybacked writecache.
+When i look in the IBM supplied manager interface i see that the _logical_
+drive/partition has write-back enabled.
+When i issue scsiinfo -c /dev/sda on the 2.6 system i get:
 
-Take a look on SCSI target mid-level (SCST) on 
-http://scst.sourceforge.net. You just need to develop small target 
-add-on to the LSI's initiator driver as it was done for Qlogic cards.
+ Data from Caching Page
+ ----------------------
+ Write Cache                        0
+ Read Cache                         1
+ Prefetch units                     0
+ Demand Read Retention Priority     0
+ Demand Write Retention Priority    0
+ Disable Pre-fetch Transfer Length  2060
+ Minimum Pre-fetch                  0
+ Maximum Pre-fetch                  0
+ Maximum Pre-fetch Ceiling          0
 
-Vlad
+So it looks like the write cache isn't used?
+As i understand it, it should be safe for me to turn on write cache when
+it's batterybacked, right?
+Since it's a RAID card presenting itself as a scsi card, i'm not so sure
+if the write-back is internally handled (just returning immediatly if
+queue isn't full) or if i should turn this on the linux side for it to
+take advantage of the cache.
+
+I appreciate any enlightening answers, I just don't want to toast my data :)
+
+Please CC any replies me, as i'm using my webmail account right now.
+
+Regards,
+Magnus Naeslund
+
+-- 
+no .sig
+
+
