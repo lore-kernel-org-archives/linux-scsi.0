@@ -1,64 +1,50 @@
-From: gl@dsa-ac.de
-Subject: Re: [PATCH] dc395x: Fix support for highmem
-Date: Mon, 21 Mar 2005 12:00:36 +0100 (CET)
-Message-ID: <Pine.LNX.4.56.0503211147420.20956@pcgl.dsa-ac.de>
-References: <20050321075531.GC23911@suse.de> <7044.1111398919@www16.gmx.net>
- <Pine.LNX.4.56.0503211111290.20956@pcgl.dsa-ac.de> <20050321104419.GH23911@suse.de>
+From: "Nicholas A. Bellinger" <nick@pyxtechnologies.com>
+Subject: [ANNOUNCE] iSCSI Initiator Core Stack v1.6.1.23 for 2.6.12-rc1
+Date: Mon, 21 Mar 2005 04:01:44 -0800
+Message-ID: <1111406504.13496.79.camel@haakon>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from mail.dsa-ac.de ([62.112.80.99]:34061 "EHLO mail.dsa-ac.de")
-	by vger.kernel.org with ESMTP id S261750AbVCULD1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2005 06:03:27 -0500
-In-Reply-To: <20050321104419.GH23911@suse.de>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Received: from smtp818.mail.sc5.yahoo.com ([66.163.170.4]:44470 "HELO
+	smtp818.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S261759AbVCUMHU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Mar 2005 07:07:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+To: iscsi-initiator-core-announce <iscsi-initiator-core-announce@iscsi-initiator-core.org>, iscsi-initiator-core-devel <iscsi-initiator-core-devel@iscsi-initiator-core.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 21 Mar 2005, Jens Axboe wrote:
+The following is v1.6.1.23 of the iSCSI Initiator Core Stack for
+2.6.12-rc1.  This release adds support for iSCSI Authentication with
+v2.2 of iscsi-initiator-core-tools.  This release also fixes issues with
+underflow/residual counts that have been reported by various iSCSi
+Target vendors.  If any iSCSI target vendors have been waiting for a
+release to test with, this is that release.
 
-> On Mon, Mar 21 2005, gl@dsa-ac.de wrote:
-> > On Mon, 21 Mar 2005, Jens Axboe wrote:
-> >
-> > > easily doable. I made a suggestion earlier in the thread, you need to do
-> > > something ala
-> > >
-> > >         sg_map_each_entry(sglist, entries, sg, ouput_ptr, flags) {
-> > >                 /* transfer sg_virt_len(sg) to/from output_ptr */
-> > >         }
-> > >
-> > > that maps each entry successively.
-> >
-> > Well, I don't know how and when other drivers use / need this mapping, in
-> > dc395x and tmscsim you just occasionally need to transfer a couple of
-> > bytes per PIO, so, it would be a waste to map each sg-entry? If other
->
-> So you start at the entry you need, and break after handling the ones
-> you need to handle. Either pass in a start offset, or just pass in
-> sglist+offset.
+We are getting very close to a stable 1.6.2.0 release.  I urge everyone
+who even has the slightest interest in iSCSI SAN Topography to test this
+one out.
 
-Yeah, you could do that. I just wanted to automate finding the needed
-sg-entry and offset within based on the number of bytes processed.  Well,
-not a big deal, but if many will have to do this calculation, maybe worth
-defining at least a macro / inline?
+http://www.kernel.org/pub/linux/kernel/people/nab/iscsi-initiator-core/iscsi-initiator-core-1.6.1.23-2.6.12-rc1.patch.bz2
 
-> > drivers do always need all, shouldn't we then define 2 APIs - for a single
-> > mapping and for all. Also, I think, at least am53c974 (tmscsim) does
-> > sg-processing only semi-automatically, that is you get interrupts and do
-> > some stuff for each element. So, mapping all sg-entries each time is not
-> > needed, and you cannot kmap them atomically if you want to keep them
-> > mapped all the time. In your proposed API, when would you unmap them?
->
-> The loop handles the mapping and unmapping for you.
+A huge thanks go out to following people for contributing to this
+release:
 
-Sorry, still don't understand - how do you want to "break" then?
+Ming Zhang
+Eddy Quicksall
+David Wysochanski
+Mike Christie
+AJ Lewis
+Bryan Black
+Sig Lange
 
-Thanks
-Guennadi
----------------------------------
-Guennadi Liakhovetski, Ph.D.
-DSA Daten- und Systemtechnik GmbH
-Pascalstr. 28
-D-52076 Aachen
-Germany
+We are always looking for more users and freedback! Everyone is welcome
+to join the lists at http://iscsi-initiator-core.org
+
+Thanks!
+
+-- 
+Nicholas A. Bellinger <nick@pyxtechnologies.com>
+Chief Architect, PyX Technologies, Inc
+http://iscsi-initiator-core.org
+
