@@ -1,30 +1,38 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] some more entries for the largelun list
-Date: Thu, 27 Mar 2003 16:07:44 +0100
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] scsi_set_host_offline (resend)
+Date: 27 Mar 2003 09:42:39 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030327160744.C10288@lst.de>
+Message-ID: <1048779761.1789.21.camel@mulgrave>
+References: <20030325100704.GC3868@beaverton.ibm.com>
+	<1048613872.2070.12.camel@mulgrave>
+	<20030325184530.GA1202@beaverton.ibm.com>
+	<1048618939.1790.29.camel@mulgrave>
+	<20030325232920.GB2692@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20030325232920.GB2692@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: mochel@osdl.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+On Tue, 2003-03-25 at 17:29, Mike Anderson wrote:
+> I thought we where looking at a solution for all traversals of the list?
+> There are currently ~52 refs to my_devices, while some traversals can be
+> evalutated and possibly removed there maybe valid ones that happen
+> without user context.
+
+Sorry, I was thinking both short and long term.
+
+Short term, it's probably easiest for the firewire stuff to access the
+offline and removal functions from user land hotplug scripts (so they
+don't actually need the in-kernel hook).
+
+Long term we do need to see if we can go to a nice refcounted model for
+all 50 odd list traversals.  At least auditing them to see if we can use
+a semaphore everywhere.
+
+James
 
 
---- 1.65/drivers/scsi/scsi_scan.c	Mon Mar 10 09:23:23 2003
-+++ edited/drivers/scsi/scsi_scan.c	Fri Mar 21 21:14:13 2003
-@@ -191,6 +191,13 @@
- 	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"SUN", "T300", "*", BLIST_SPARSELUN},
- 	{"SUN", "T4", "*", BLIST_SPARSELUN},
-+	{"SGI", "RAID3", "*", BLIST_SPARSELUN},
-+	{"SGI", "RAID5", "*", BLIST_SPARSELUN},
-+	{"SGI", "TP9100", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"SGI", "TP9300", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"SGI", "TP9400", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"SGI", "TP9500", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"MYLEX", "DACARMRB", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{ NULL, NULL, NULL, 0 },
- };
- 
