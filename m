@@ -1,71 +1,42 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [usb-storage] Re: iRiver H100 series and usb-storage issues
-Date: 07 Jun 2004 16:27:44 -0600
+From: Brian Auld <bauld@lefthandnetworks.com>
+Subject: P-OUT clear service action hanging
+Date: Mon, 07 Jun 2004 17:23:52 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1086647263.3137.134.camel@patibmrh9>
-References: <Pine.LNX.4.44L0.0406071616200.666-100000@ida.rowland.org><87y8m
-	zukwk.fsf@ceramic.fifi.org>
+Message-ID: <40C4F908.80403@lefthandnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out2.iomega.com ([147.178.1.83]:30114 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S265099AbUFGW1x
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Jun 2004 18:27:53 -0400
-In-Reply-To: <87y8mzukwk.fsf@ceramic.fifi.org>
+Received: from mail.lefthandnetworks.com ([207.174.0.250]:63623 "EHLO
+	mail.lefthandnetworks.com") by vger.kernel.org with ESMTP
+	id S265126AbUFGX2T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Jun 2004 19:28:19 -0400
+Received: from lefthandnetworks.com (unknown [10.0.11.117])
+	by mail.lefthandnetworks.com (Postfix) with ESMTP id B5F8D37E54
+	for <linux-scsi@vger.kernel.org>; Mon,  7 Jun 2004 17:28:18 -0600 (MDT)
 List-Id: linux-scsi@vger.kernel.org
-To: Philippe Troin <phil@fifi.org>
-Cc: linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@steeleye.com>
+To: linux-scsi@vger.kernel.org
 
-Philippe T:
+I'm running passthrough commands to a LUN on an MSA1000. My host is 
+running RH9. I'm using the sg driver provided with this distribution 
+using the SG_IO option to send the passthrough commands.
 
-> I was pointing out I am mostly clueless
-> w.r.t. USB.  ... what about:
-> 
->   usb-storage: usb_stor_transfer_partial(): xfer 512 bytes
->   usb-storage: usb_stor_bulk_msg() returned 0 xferred 0/512
->   usb-storage: Bulk data transfer result 0x1
->   usb-storage: Attempting to get CSW...
->                ^^^^^^^^^^^^^^^^^^^^^^^^
->   usb-storage: clearing endpoint halt for pipe 0xc0011e80
->   usb-storage: usb_stor_clear_halt: result=0
->   usb-storage: Attempting to get CSW (2nd try)...
->                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->   usb-storage: Bulk status result = 0
->   usb-storage: Bulk status Sig 0x53425355 T 0x945 R 512 Stat 0x0
->   usb-storage: -- unexpectedly short transfer
->   usb-storage: Issuing auto-REQUEST_SENSE
+I have a previously established reservation that I'm trying to clear. 
+I'm following the directions in the spec for clearing a a persistent 
+reservation - specifically, section 5.5.3.6.5 of SPC-2:
 
-Knowing only SCSI over USB, not Linux or USB, I'd guess ...
+(1) My P-OUT command has a service action set to CLEAR 03h.
+(2) In my 24 bytes of data transferred to the target with the command, 
+only the reservation
+      key field is set to a non-zero value. This value is of course the 
+previously registered reservation key.
 
-This is a completely ordinary trace of two popular design choices made
-by this SCSI over USB device.  First, this device chose to copy less
-than the expected count of bytes in.  Second, this device chose to
-STALL, rather than copying the bytes in and trusting the host to notice
-nonzero dCSWDataResidue.
+When I execute this command, my driver hangs until it times out and 
+returns with an error.
 
-What's ironic here is that the Linux USB layer understands entirely that
-the STALL redundantly with the "CSW" "R 512" means "unexpectedly short
-transfer" ... but we're told the layers above don't get it, all the
-same.
+Any ideas or history with the MSA1000 that makes it not cooperate well 
+with P-IN/P-OUT commands?
 
-The op x03 "REQUEST SENSE" here is inappropriate - it is unsolicited -
-the "CSW" "Stat" was not x01 AutoSenseMe, it was x00 Passed, expressed
-here as "Stat 0x0".
-
-I'm thinking usb-storage has to remove that inappropriate "REQUEST
-SENSE", else usb-storage cannot be passing correct status back up?
-
-usb-storage cannot correctly say that it autosensed SK ASC ASCQ zero,
-because usb-storage only fetched unsolicited sense, not auto sense. 
-usb-storage cannot say it saw a failure without sense, because
-usb-storage did think it auto sensed.
-
-Yes?
-
-But after all that, maybe sd still will ignore the error and miscompare?
-
-Pat LaVarre
-
+Thanks,
+Brian
 
