@@ -1,33 +1,36 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Warning - running *really* short on DMA buffers while doingfiletransfers
-Date: Mon, 30 Sep 2002 20:13:07 -0400
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] first cut at fixing unable to requeue with no outstanding
+ commands
+Date: Mon, 30 Sep 2002 20:38:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20021001001307.GJ25340@redhat.com>
-References: <Pine.BSF.4.21.0209271417260.22542-100000@beppo> <200209272123.g8RLNAi21161@localhost.localdomain> <20020927220826.GE1366@beaverton.ibm.com> <20021001000711.GI25340@redhat.com>
+Message-ID: <200210010038.g910cnB31623@localhost.localdomain>
+References: <andmike@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021001000711.GI25340@redhat.com>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id RAA23910
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Sep 2002 17:38:53 -0700
+Received: from localhost.localdomain (sshppp-200.mtv1.steeleye.com [172.16.1.200])
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) with ESMTP id RAA23821
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Sep 2002 17:38:51 -0700
+Received: from mulgrave (jejb@localhost)
+	by localhost.localdomain (8.11.6/linuxconf) with ESMTP id g910cnB31623
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Sep 2002 20:38:49 -0400
+In-Reply-To: Message from Mike Anderson <andmike@us.ibm.com>
+   of "Mon, 30 Sep 2002 16:28:11 PDT." <20020930232811.GA1372@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Sep 30, 2002 at 08:07:11PM -0400, Doug Ledford wrote:
-> On Fri, Sep 27, 2002 at 03:08:26PM -0700, Mike Anderson wrote:
-> > I thought there was discussion previously on mid-layer queue
-> > adjustments during the (? attach patch ?) but I am having trouble
-> > finding it.
-> 
-> That's because I didn't release it (hell, now I'm having a hard time 
-> finding it).
+andmike@us.ibm.com said:
+> Are we guaranteed that blk_run_queues will be called for all types of
+> I/O? 
 
-Whew!!  Found it.  I'll update it to a current kernel and send it out so 
-people can see what I did.
+Pretty much, it looks like.  It's mainly triggered by I/O stuff in fs, 
+including the buffer functions, so I think the assumption that we will be 
+called eventually is good.
+
+James
 
 
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc. 
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-  
+
