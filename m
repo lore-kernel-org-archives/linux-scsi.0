@@ -1,33 +1,43 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH] sg version 3.5.28 for lk 2.5.64
-Date: Tue, 11 Mar 2003 09:37:38 -0800
+Date: Tue, 11 Mar 2003 20:09:27 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030311173738.GB1209@beaverton.ibm.com>
-References: <3E6B405B.3010509@torque.net> <20030311142836.A22992@infradead.org>
+Message-ID: <20030311200927.A967@lst.de>
+References: <3E6B405B.3010509@torque.net> <20030311142836.A22992@infradead.org> <20030311081838.A9661@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20030311142836.A22992@infradead.org>
+In-Reply-To: <20030311081838.A9661@beaverton.ibm.com>; from patmans@us.ibm.com on Tue, Mar 11, 2003 at 08:18:38AM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
 Cc: Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org
 
-Christoph Hellwig [hch@infradead.org] wrote:
-> On Sun, Mar 09, 2003 at 11:23:39PM +1000, Douglas Gilbert wrote:
-> > ** Christoph moved the host listing functionality into
-> >     a more central sysfs position (i.e. not dependent on
-> >     sg). However scsi_debug is the only LLD that I can
-> >     get to post any "host" info under the new arrangement.
-> 
-> Hmm, it works for me with aic7xxx (that's how I tested it).
+On Tue, Mar 11, 2003 at 08:18:38AM -0800, Patrick Mansfield wrote:
+> Is there a patch for putting the aic or all scsi_hosts into the
+> shost_devclass class, like scsi_debug.c does for itself?
 
-Was this a test patch to aic7xxx in your local view? A cscope of the
-tree does not show aic setting devclass. I only see scsi_debug and the
-acorn drivers.
+You're right!  This is the snipplet I missed when sending out the
+aic7xxx hotplug changes (+ the same for aic79xx):
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
 
+--- 1.7/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	Wed Feb 26 18:14:16 2003
++++ edited/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	Tue Mar 11 19:13:02 2003
+@@ -75,10 +75,13 @@
+ MODULE_DEVICE_TABLE(pci, ahc_linux_pci_id_table);
+ 
+ struct pci_driver aic7xxx_pci_driver = {
+-	name:		"aic7xxx",
+-	probe:		ahc_linux_pci_dev_probe,
+-	remove:		ahc_linux_pci_dev_remove,
+-	id_table:	ahc_linux_pci_id_table
++	.name		= "aic7xxx",
++	.probe		= ahc_linux_pci_dev_probe,
++	.remove		= ahc_linux_pci_dev_remove,
++	.id_table	= ahc_linux_pci_id_table,
++	.driver		= {
++		.devclass	= &shost_devclass,
++	},
+ };
+ 
+ static void
