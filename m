@@ -1,52 +1,45 @@
-From: Adrian Bunk <bunk@fs.tum.de>
-Subject: 2.6.1-rc1: SCSI: `TIMEOUT' redefined
-Date: Tue, 6 Jan 2004 19:33:25 +0100
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: Notify about errors during initialization
+Date: Tue, 6 Jan 2004 11:04:52 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040106183325.GJ11523@fs.tum.de>
-References: <Pine.LNX.4.58.0312310033110.30995@home.osdl.org>
+Message-ID: <20040106190452.GB2119@beaverton.ibm.com>
+References: <20040105021047.GD30408@one-eyed-alien.net> <Pine.LNX.4.44L0.0401051659180.604-100000@ida.rowland.org> <20040105221302.A7678@infradead.org> <20040105233221.GC1936@beaverton.ibm.com> <20040106161731.A17858@infradead.org> <20040106091538.A10957@beaverton.ibm.com> <20040106171843.A18507@infradead.org> <20040106180814.GA2119@beaverton.ibm.com> <20040106180832.A19009@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:30699 "HELO
-	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
-	id S264902AbUAFSde (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Jan 2004 13:33:34 -0500
+Received: from e32.co.us.ibm.com ([32.97.110.130]:41983 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S264604AbUAFTBG
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jan 2004 14:01:06 -0500
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58.0312310033110.30995@home.osdl.org>
+In-Reply-To: <20040106180832.A19009@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: patmans@ibm.com, neuffer@goofy.zdv.uni-mainz.de, a.arnold@kfa-juelich.de
-Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, USB Storage List <usb-storage@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, Dec 31, 2003 at 12:36:49AM -0800, Linus Torvalds wrote:
->...
-> Summary of changes from v2.6.0 to v2.6.1-rc1
-> ============================================
->...
-> Patrick Mansfield:
->   o consolidate and log scsi command on send and completion
->...
+Christoph Hellwig [hch@infradead.org] wrote:
+> On Tue, Jan 06, 2004 at 10:08:14AM -0800, Mike Anderson wrote:
+> > > Because some drivers (like the ieee1394) don't want scanning to happen.
+> > > They can easily chose that by not sending a scan event.
+> > > 
+> > 
+> > Couldn't the user space also set the policy to scan or not scan? It
+> > would seem that user space would be more flexible and not need a new
+> > api (Just do not call scsi_scan_host).
+> 
+> For ieee1394 scanning doesn't make any sense, so I don't see why it should
+> scan at all.
+> 
+> And I don't understand that API argument at all.  With my suggestion
+> scsi_scan_host would be changed to send the hotplug even - not change in
+> API at all.
 
-This adds a #define TIMEOUT to scsi.h conflicting with a different 
-TIMEOUT #define in drivers/scsi/eata_generic.h:
+ok, I was reading two replies back when you mentioned
+"scsi_scan_host_parallel". I re-read the last reply and see that
+scsi_scan_host would just send a scan event. 
 
-<--  snip  -->
-
-...
-  CC      drivers/scsi/eata_pio.o
-In file included from drivers/scsi/eata_pio.c:69:
-drivers/scsi/eata_generic.h:84: warning: `TIMEOUT' redefined
-include/scsi/scsi.h:305: warning: this is the location of the previous definition
-...
-
-<--  snip  -->
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
