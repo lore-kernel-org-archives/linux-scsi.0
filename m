@@ -1,161 +1,142 @@
-From: Xose Vazquez Perez <xose@wanadoo.es>
-Subject: [summary] state of scsi drivers
-Date: Thu, 15 Jan 2004 00:45:56 +0100
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Transport Attributes -- attempt#3
+Date: Wed, 14 Jan 2004 15:58:48 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4005D4B4.1000705@wanadoo.es>
+Message-ID: <20040114155848.A28421@beaverton.ibm.com>
+References: <20040107185420.GA30627@localhost> <20040108131717.A9700@infradead.org> <20040114181241.GK27591@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp12.eresmas.com ([62.81.235.112]:44522 "EHLO
-	smtp12.eresmas.com") by vger.kernel.org with ESMTP id S266447AbUANXrp
+Received: from e32.co.us.ibm.com ([32.97.110.130]:45517 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S266502AbUANX7c
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jan 2004 18:47:45 -0500
+	Wed, 14 Jan 2004 18:59:32 -0500
+Content-Disposition: inline
+In-Reply-To: <20040114181241.GK27591@localhost>; from mort@wildopensource.com on Wed, Jan 14, 2004 at 01:12:41PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Martin Hicks <mort@wildopensource.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-        * unofficial 2.4 LiNUX kernel SCSI/RAID drivers list *
+On Wed, Jan 14, 2004 at 01:12:41PM -0500, Martin Hicks wrote:
+> 
+> Hi,
+> 
+> Here is round#3 of the patch.  I think I've addressed all of the points
+> that were brought up by Christoph last time.
 
-                        <xose@wanadoo.es>
+Nice, I can now easily see LUN to port mappings, though I don't easily get
+port to LUN mapping.
 
-                         linux-2.4.25-pre4+BK
-                     Thu Jan 15 00:27:20 CET 2004
+> diff -Nru a/drivers/scsi/scsi_syms.c b/drivers/scsi/scsi_syms.c
+> --- a/drivers/scsi/scsi_syms.c	Wed Jan 14 12:59:11 2004
+> +++ b/drivers/scsi/scsi_syms.c	Wed Jan 14 12:59:11 2004
+> @@ -21,6 +21,8 @@
+>  #include <scsi/scsi_driver.h>
+>  #include <scsi/scsi_host.h>
+>  #include <scsi/scsi_ioctl.h>
+> +#include <scsi/scsi_transport_spi.h>
+> +#include <scsi/scsi_transport_fc.h>
+>  #include <scsi/scsicam.h>
+>  #include "scsi.h"
+>  
+> @@ -107,3 +109,10 @@
+>   */
+>  EXPORT_SYMBOL(scsi_add_timer);
+>  EXPORT_SYMBOL(scsi_delete_timer);
+> +
+> +#ifdef CONFIG_SCSI_SPI_ATTRS
+> +EXPORT_SYMBOL(spi_transport_template);
+> +#endif
+> +#ifdef CONFIG_SCSI_FC_ATTRS
+> +EXPORT_SYMBOL(fc_transport_template);
+> +#endif
 
+Can you move these exports to their respective source files? scsi_syms.c
+should go away someday. And then we touch one less scsi core file.
 
-x features:
-    64_bit_SG block_device_driver highmem_io hot-plug vary_io
+> diff -Nru a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> --- a/drivers/scsi/scsi_sysfs.c	Wed Jan 14 12:59:11 2004
+> +++ b/drivers/scsi/scsi_sysfs.c	Wed Jan 14 12:59:11 2004
+> @@ -13,6 +13,9 @@
+>  #include <linux/device.h>
+>  
+>  #include <scsi/scsi_host.h>
+> +#include <scsi/scsi_transport.h>
+> +#include <scsi/scsi_transport_spi.h>
+> +#include <scsi/scsi_transport_fc.h>
+>  #include "scsi.h"
+>  
+>  #include "scsi_priv.h"
+> @@ -162,13 +165,31 @@
+>  	int error;
+>  
+>  	error = bus_register(&scsi_bus_type);
+> -	if (!error) {
+> -		error = class_register(&sdev_class);
+> -		if (error)
+> -			bus_unregister(&scsi_bus_type);
+> -	}
+> +	if (error)
+> +		return error;
+>  
+> +	error = class_register(&sdev_class);
+> +	if (error)
+> +		goto undo_bus;
+> +
+> +	error = scsi_spi_transport_init();
+> +	if (error)
+> +		goto undo_sdev;
+> +
+> +	error = scsi_fc_transport_init();
+> +	if (error)
+> +		goto undo_all;
+> +
+> + out:
+>  	return error;
+> +
+> + undo_all:
+> +	scsi_spi_transport_exit();
+> + undo_sdev:
+> +	class_unregister(&sdev_class);
+> + undo_bus:
+> +	bus_unregister(&scsi_bus_type);
+> +	goto out;
 
-o aacraid
-   manufacturer: ADAPTEC
-   kernel: 1.1.2 (15 May 2003)
-   latest: 1.1.4 (23 Dec 2003)
-   arch: i386 ia64 x86_64 alpha (sparc not confirmed, but expected)
-   features: 64_bit_SG highmem_io vary_io
-   maintainer: <Mark_Salyzyn*AT*adaptec.com> <aacraid*AT*adaptec.com>
-   url: http://linux.adaptec.com
-        http://linux.dell.com/raid.shtml#aacraid
-   ml: http://lists.us.dell.com/mailman/listinfo/linux-aacraid-devel
+What happened to making the transports their own module? Then their init
+code can register their class, and we don't need to modify any scsi core
+files if a new transport file is added.
 
-o aic7xxx/aic79xx
-   manufacturer: ADAPTEC
-   kernel: 6.2.36/1.3.10 (03 Jun 2003)
-   latest: 6.3.4 /2.0.5  (22 Dec 2003)
-   arch: i386 ia64 powerpc
-   features: highmem_io vary_io
-   maintainer: kernel nobody - vendor <gibbs*AT*scsiguy.com>
-   url: http://people.freebsd.org/~gibbs/linux/SRC/
-   ml: http://lists.freebsd.org/mailman/listinfo/aic7xxx
+Or, do a lazy init in the setup functions based on a static (and use a
+semaphore to prevent races). That would also keep empty class
+fc_transport and spi_transport directories from showing up for the most
+scsi users (those with only usb mass storage devices).
 
-o cciss
-   manufacturer: HP
-   kernel: 2.4.50
-   latest: 2.4.50
-   arch: i386
-   features: block_device_driver highmem_io vary_io
-   maintainer: <mike.miller*AT*hp.com> <arrays*AT*hp.com>
-   url: http://sf.net/projects/cciss/
+> +/* the FiberChannel Tranport Attributes: */
+> +fc_transport_rd_attr_cast(node_name, "0x%llx\n", unsigned long long);
+> +fc_transport_rd_attr_cast(port_name, "0x%llx\n", unsigned long long);
+> +fc_transport_rd_attr(port_id, "0x%x\n");
 
-o DAC960
-   manufacturer: LSI Logic
-   kernel: 2.4.11 (11 Oct 2001)
-   latest: 2.4.20 (01 May 2003)
-   arch: i386 ia64 alpha
-   features: block_device_driver highmem_io
-   maintainer: <dmo*AT*osdl.org>
-   url: http://www.osdl.org/archive/dmo/DAC960/
-        http://www.dandelion.com/Linux/DAC960.html
+These are all per target attributes (are all fc level attributes?).
 
-o dpt_i2o
-   manufacturer: ADAPTEC
-   kernel: 2.4.5 (25 Jul 2001)
-   latest: 2.5.0 (11 Sep 2003)
-   arch: i386 ia64 alpha sparc x86_64
-   features: 64_bit_SG highmem_io
-   maintainer: <Mark_Salyzyn*AT*adaptec.com>
-   url: http://linux.adaptec.com
+Does that matter? I think it's ok , though someday we should have a target
+representation. 
 
-o emulex
-   manufacturer: EMULEX
-   kernel: -
-   latest: 1.23a
-   arch: i386 ia64 ppc
-   features:
-   maintainer: vendor <tech.support*AT*emulex.com>
-   url: http://www.emulex.com/ts/docfc/linuxos.shtml
+Example:
 
-o feral_isp
-   manufacturer: QLOGIC
-   kernel: -
-   latest: Linux Platform 2.1 Common Core Code 2.7 (13 Nov 2003)
-   arch: i386 alpha sparc powerpc
-   features:
-   maintainer: external <mjacob*AT*feral.com>
-   url: http://www.feral.com/isp.html
+[elm3b79 scsi]$ cat /sys/class/fc_transport/11\:0\:0\:*/port_name | head -4
+0x200400a0b80b17a4
+0x200400a0b80b17a4
+0x200400a0b80b17a4
+0x200400a0b80b17a4
+[elm3b79 scsi]$ cat /sys/class/fc_transport/11\:0\:0\:*/port_id | head -4
+0x210a13
+0x210a13
+0x210a13
+0x210a13
+[elm3b79 scsi]$ cat /sys/class/fc_transport/11\:0\:0\:*/node_name | head -4
+0x200400a0b80b17a3
+0x200400a0b80b17a3
+0x200400a0b80b17a3
+0x200400a0b80b17a3
 
-o fusion
-   manufacturer: LSI Logic
-   kernel: 2.05.05+ (14 Apr 2003)
-   latest: 2.05.11  (09 Jan 2004)
-   arch: i386 alpha sparc ia64 x86_64
-   features: highmem_io vary_io
-   maintainer: <emoore*AT*lsil.com> <mpt_linux_developer*AT*lsil.com>
-   url: ftp://ftp.lsil.com/HostAdapterDrivers/linux/Fusion-MPT/
-
-o gdth
-   manufacturer: ADAPTEC
-   kernel: 2.05  (03 Oct 2002)
-   latest: 2.06a (04 Aug 2003)
-   arch: i386 alpha ia64
-   features:
-   maintainer: <achim_leubner*AT*adaptec.com>
-   url: http://www.icp-vortex.com/english/download/rz_neu/linux/linux_e.htm
-
-o ips
-   manufacturer: ADAPTEC
-   kernel: 6.10.24
-   latest: 6.10.24
-   arch: i386 ia64 x86_64
-   features: highmem_io
-   maintainer: <david_jeffery*AT*adaptec.com> <jack_hammer*AT*adaptec.com>
-               <ipslinux*AT*adaptec.com>
-
-o megaraid
-   manufacturer: LSI Logic
-   kernel: v1.18k/v2.00.9 (Sep 04, 2003)
-   latest: v1.18k/v2.10.1 (Dec 03, 2003)
-   arch: i386
-   features: highmem_io vary_io
-   maintainer: <atulm*AT*lsil.com>
-   url: ftp://ftp.lsil.com/pub/linux-megaraid/
-        http://linux.dell.com/raid.shtml#megaraid
-
-o qla1280
-   manufacturer: QLOGIC
-   kernel: 3.23.37
-   latest: 3.23.37
-   arch: i386 alpha
-   features:
-   maintainer: <jes*AT*wildopensource.com>
-
-o qla2x00
-   manufacturer: QLOGIC
-   kernel: -
-   latest: 6.06.10   (06 Oct 2003)
-   beta:   8.00.00b9 (13 Jan 2004)
-   arch: i386
-   features:
-   maintainer: vendor <andrew.vasquez*AT*qlogic.com>
-   url: http://www.qlogic.com/support/product_resources.asp?id=339
-        http://sf.net/projects/linux-qla2xxx/
-
-o sym53c8xx_2
-   manufacturer: LSI Logic
-   kernel: 2.1.17a     (Dec 01 2001)
-   latest: 2.1.19-pre3 (Nov 23 2002)
-   arch: i386 alpha sparc powerpc ia64
-   features:
-   maintainer: nobody
-   url: http://www.tux.org/pub/tux/roudier/drivers/linux/stable/
-
-# EOT
-
+-- Patrick Mansfield
