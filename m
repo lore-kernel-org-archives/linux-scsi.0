@@ -1,45 +1,42 @@
-From: Jes Sorensen <jes@wildopensource.com>
-Subject: Re: qla1280 compile problems
-Date: 05 Aug 2003 08:40:03 -0400
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [Patch] dont block device on QUEUE_FULL for last command
+Date: Tue, 05 Aug 2003 09:08:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m31xw0wa58.fsf@trained-monkey.org>
-References: <20030805121813.GA24647@lst.de>
+Message-ID: <3F2FAC35.3060509@pobox.com>
+References: <OF9404399C.2F79915F-ONC1256D79.00285DC0@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from trained-monkey.org ([209.217.122.11]:5392 "EHLO
-	trained-monkey.org") by vger.kernel.org with ESMTP id S272726AbTHEMkL
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:10438 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S272739AbTHENIR
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Aug 2003 08:40:11 -0400
-In-Reply-To: <20030805121813.GA24647@lst.de>
+	Tue, 5 Aug 2003 09:08:17 -0400
+In-Reply-To: <OF9404399C.2F79915F-ONC1256D79.00285DC0@de.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: Andreas Herrmann <AHERRMAN@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
->>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+Andreas Herrmann wrote:
+>         Jeff Garzik <jgarzik@pobox.com>
+>>For most cases you _should_ block until another command is completed, at
+>>the very least.  Retrying the command immediately is _exactly_ the
+>>situation one wishes to avoid, when returning a QUEUE_FULL result!
 
-Christoph> The qla1280 update still has some issues, mostly because it
-Christoph> backs out all the 2.5 changes applied to the driver in the
-Christoph> last months, also it doesn't work on ia64 because the IA64
-Christoph> generic build references sn2-specific symbols that don't
-Christoph> exist in that build.
+>         ... until another command is completed ...
+> 
+> ... which will never happen, because there was a QUEUE_FULL for the
+> last command for the device.  The device will be blocked. No further
+> commands are sent. Bad luck?
 
-Christoph,
+No; if driver does not complete (i.e. error out) commands in a timely 
+manner, that's a driver bug.
 
-Which version of the driver are you testing and what kernel? I tried
-it out fairly recently on 2.5.x (2.5.59 or so) and it compiled without
-any problems.
+Thus, the queue should stay blocked until another command is completed, 
+because, not completing a command would be wrong :)
 
-Christoph> Jes, can you look at the 2.5 changes that went in after
-Christoph> your last merge and make the SN2 vchan workaround a config
-Christoph> option?
+	Jeff
 
-I will take a look at building it against the latest 2.6.0-test
-kernel. However, I am not going to make the vchan workaround a new
-config option, it doesn't make any sense as it's already protected by
-CONFIG_IA64_SGI_SN2 || CONFIG_IA64_GENERIC. The appropriate patches
-for that have already been pushed for 2.4 and Jesse is about to push
-them out for 2.5.
 
-Cheers,
-Jes
+
+
