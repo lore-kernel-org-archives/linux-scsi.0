@@ -1,141 +1,86 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] ibmvscsi driver - sixth version
-Date: Wed, 31 Mar 2004 17:02:02 -0500
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] improvement of fastfail operation
+Date: Thu, 1 Apr 2004 00:04:17 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <406B3FDA.9010507@pobox.com>
-References: <opr3u0ffo7l6e53g@us.ibm.com> <20040225134518.A4238@infradead.org>  <opr3xta6gbl6e53g@us.ibm.com> <1079027038.2820.57.camel@mulgrave> <opr5qwiyw4l6e53g@us.ibm.com>
+Message-ID: <20040331220416.GQ24370@suse.de>
+References: <1080696593.2075.120.camel@mulgrave> <Pine.LNX.4.44.0403302108550.7851-200000@dyn319701.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:2766 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261684AbUCaWCS
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Mar 2004 17:02:18 -0500
-In-Reply-To: <opr5qwiyw4l6e53g@us.ibm.com>
+Received: from ns.virtualhost.dk ([195.184.98.160]:13763 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261802AbUCaWFu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Mar 2004 17:05:50 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0403302108550.7851-200000@dyn319701.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Boutcher <sleddog@us.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
+To: Mike Christie <mikenc@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Dave Boutcher wrote:
-> James,
+On Tue, Mar 30 2004, Mike Christie wrote:
+> On 30 Mar 2004, James Bottomley wrote:
 > 
-> Here is the next version of the ibmvscsi lldd.  I know you were waiting 
-> for the fix that correctly checks for errors on the dma_map_foo calls, 
-> which is included.  The other functional changes are to implement 
-> device_reset, and to surface a bunch of adapter attributes through 
-> shost_attrs.
+> > On Mon, 2004-03-29 at 07:17, Masao Fukuchi wrote:
+> > > By the way, how about item 1.
+> > > I think this is bug and we need to validate fastfail for command timeout.
+> > > If you agree with this, please put it into official patch.
+> > > (See attached patch)
+> > 
+> > Well, the patch doesn't apply, but I put an equivalent in the tree.
+> > 
+> > > Next, I tested the fastfail recovery using Kernel 2.6.4.
+> > > But the command didn't complete forever.
+> > > Then I installed following Mike Christie's patch and it worked fine.
+> > >  http://marc.theaimsgroup.com/?l=linux-scsi&m=107904932710899&w=2
+> > > Please put it into official patch.
+> > 
+> > This patch is obviously wrong on its face.  It completes the request
+> > without regard to any leftovers.
+> > 
+> > There's clearly a problem somewhere in the completion path for commands
+> > that run out of retries, but whatever it is, this patch only covers it
+> > up it doesn't solve the root problem.
+> > 
 > 
-> This driver has been under test for the last couple of months, and is 
-> scheduled to ship in a couple of distributions shortly.  There are a few 
-> bug fixes included in this patch as well, mostly in the area of abort 
-> processing and correctly handling edge conditions (freeing buffers in 
-> error paths etc.)
+> This patch
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=107904932710899&w=2
+> is correct wrt how the block layer uses hard_nr_sectors ;)
 > 
-> Comments always welcomed.  I would like to get this upstream if I can, 
-> since the linux distributors are complaining slightly that it is not.
+> The blkdev.h comments state that hard_nr_sectors is the number
+> of sectors left to be completed. This is managed by the block layer
+> for drivers like SCSI when end_that_request_* calls
+> __end_that_request_first which for partial completions calls
+> blk_recalc_rq_sectors. This function updates hard_nr_sectors
+> by the completed number of bytes, so by scsi_end_request doing this:
+> 
+>  if (end_that_request_chunk(req, uptodate, bytes)) {
+>         int leftover = (req->hard_nr_sectors << 9) - bytes;
+> 
+> we end up with "bytes" getting subtracted twice and the final
+> bio not getting completed.
 
-Comments:
+Yeah, that's the buggy bit. Ater calling end_that_request_chunk(), that
+should just read
 
-1) Would be nice to eliminate  module options for commands-per-lun, 
-max-requests etc. and actually have the driver figure out the real 
-needs.  One or two options could fall into the "performance tuning" 
-category, and stay, but the others are really dependent on the 
-underlying configuration and underlying limits.
+	int leftover = req->hard_nr_sectors << 9;
 
-2) why is one-descriptor a special case in map_sg_data()?  You proceed 
-to do the same thing in a loop, right below that...  AFAICS you can just 
-use the loop, and clamp the number of scatterlist elements to one.
+which iirc is what your patch did, it was correct.
 
-3) in the following code...
+> I know we went through that already. It is just to update
+> Masao/linux-scsi.
+> 
+> I had sent the attached patch to Jens (cc'd him)
+> that modifies how blk_recalc_rq_sectors uses hard_nr_sectors,
+> but I think it might break some other drivers that expect the
+> hard_nr_sectors to be updated as the request is completed.
 
-+	if ((evt_struct->crq.format == VIOSRP_SRP_FORMAT) &&
-+	    (atomic_dec_if_positive(&hostdata->request_limit) < 0)) {
-+		printk("ibmvscsi: Warning, request_limit exceeded\n");
-+		unmap_cmd_data(&evt_struct->evt->srp.cmd, hostdata->dev);
-+		ibmvscsi_free_event_struct(&hostdata->pool, evt_struct);
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+	}
+Yeah that doesn't work... hard_* values are really just to make sure
+that the non-hard values are sane after block driver messes with the
+other ones. So consider hard_* internal block stuff.
 
-is the code prepared to deal with hostdata->request_limit being negative?
+So the new patch you sent with this mail is no good. Your previous one
+should be adopted ;-)
 
-4) style: don't bother with unneeded brackets...
-
-+	if (!evt_struct) {
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+	}
-+
-
-5) two issues with your abort handler...
-
-+	spin_unlock_irq(hostdata->host->host_lock);
-+	wait_for_completion(&evt->comp);
-+	spin_lock_irq(hostdata->host->host_lock);
-
-5a) are there recursion or deadlock issues, when you release the lock 
-like this?
-
-5b) IMO unconditional spin_{un}lock_irq() is unwise...  the 
-->eh_abort_handler() saved the flags, so you might be restoring things 
-to an incorrect state.
-
-Since you're already inside spin_lock_irqsave(), and #5a is not an 
-issue, just use spin_unlock() and spin_lock().
-
-6) ditto ibmvscsi_eh_device_reset_handler
-
-7) style: the names of many of the structures defined by this driver are 
-IN ALL CAPS AND SHOUTING :)  Structs should not be in all caps.
-
-8) purge_requests() locking looks bogus.  It is safe to complete a SCSI 
-command inside the host lock.
-
-9) ibmvscsi_do_host_config() continues, after a DMA mapping error
-
-10) what the heck is this???  do some people not know they are running 
-Linux???
-
-+static ssize_t show_host_os_type(struct class_device *class_dev, char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(class_dev);
-+	struct ibmvscsi_host_data *hostdata =
-+	    (struct ibmvscsi_host_data *)shost->hostdata;
-+	int len;
-+
-+	len = snprintf(buf, PAGE_SIZE, "%d\n", hostdata->madapter_info.os_type);
-+	return len;
-+}
-+
-+static struct class_device_attribute ibmvscsi_host_os_type = {
-+	.attr = {
-+		 .name = "os_type",
-+		 .mode = S_IRUGO,
-+		 },
-+	.show = show_host_os_type,
-+};
-+
-
-
-11) I'm not sure ".emulated = 1" is correct, since you are really 
-talking SCSI.  But this is arguable, as is the value of 'emulated' flag 
-itself...
-
-
-12) in ibmvscsi_probe(), you want to use TASK_UNINTERRUPTIBLE here:
-
-+			set_current_state(TASK_INTERRUPTIBLE);
-+			schedule_timeout(5);
-
-13) in the code pasted in #12, you should pass a value calculated using 
-the 'HZ' constant.
-
-14) why are you faking a PCI bus?  The following is very, very wrong:
-
-+static struct pci_dev iseries_vscsi_dev = {
-+	.dev.bus = &pci_bus_type,
-+	.dev.bus_id = "vscsi",
-+	.dev.release = noop_release
-
-Did I mention "very" wrong?  :)
-
+-- 
+Jens Axboe
 
