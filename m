@@ -1,42 +1,61 @@
-From: Matthew Jacob <mjacob@feral.com>
-Subject: Re: [PATCH] Ghost devices being reported with AIC7XXX version 6.2.6
-Date: Thu, 31 Oct 2002 10:28:00 -0800 (PST)
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: possible use-after-free in 2.5.44 scsi changes
+Date: Thu, 31 Oct 2002 19:46:39 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.BSF.4.21.0210311027500.23076-100000@beppo>
-References: <798370000.1036087399@aslan.btc.adaptec.com>
-Reply-To: mjacob@feral.com
+Message-ID: <20021031184639.GA21263@suse.de>
+References: <OFEC523B9C.2F14772C-ON88256C63.00626B8B@boulder.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <798370000.1036087399@aslan.btc.adaptec.com>
+Content-Disposition: inline
+In-Reply-To: <OFEC523B9C.2F14772C-ON88256C63.00626B8B@boulder.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: Mike Brown <mbrown@emc.com>, bferjul@emc.com, jkrasner@emc.com, conway_heather@emc.com, linux-scsi@vger.kernel.org
+To: Badari Pulavarty <badari@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-
-
-> > Justin can you change AHC_NUM_LUNS to 32 or suggest an alternative fix?
+On Thu, Oct 31 2002, Badari Pulavarty wrote:
 > 
-> The aic7xxx driver is not at fault and so should not be changed.
-> The aic7xxx driver really does support all 64 luns.  In my opinion,
-> there are three problems here:
 > 
-> 1) The Symetrix should treat a non-zero LUNTAR bit as an invalid
->    selection.  This would prevent these higher luns from showing up
->    as valid devices.
+> > Badari, I'm not so sure that Merlin's and your bug are the same. Is
+> > yours solved by the patch I sent out earlier? AFAICT, that should fix
+> > the segment miscounting.
 > 
-> 2) Linux should never use more than 5 bits of lun for a device that
->    reports itself as SCSI-2.  If the lun is larger than what will
->    fit in 3 bits, byte 1 of the CDB should not be altered even if
->    the device is SCSI2.
+> Jens,
 > 
-> 3) Linux should be using the Report Luns command to determine how
->    many luns are on a device and at what locations.  This might
->    even allow you to never probe more than 8 luns on a SCSI 2
->    device unless they support this command.  Does the Symetrix support
->    it?  Going beyond 8 luns on a SCSI2 device is really a hack
->    otherwise.
+> Yes. Your patch did fix my problem. But still I think BIOVEC_VIRT_MERGEABLE
 
-Absolutely.
+Great
 
+> () is not doing
+> the correct thing for x86. (It is returning FALSE for everything).
+
+It's supposed to :-)
+
+> #define BIOVEC_VIRT_MERGEABLE(vec1, vec2)       \
+>         ((((bvec_to_phys((vec1)) + (vec1)->bv_len) | bvec_to_phys((vec2)))
+> & (BIO_VMERGE_BOUNDARY -1)) == 0)
+> 
+> I think BIO_VMERGE_BOUNDARY should be set to "1" instead of "0" for the
+> archs where this is not needed.
+> That will force it to return TRUE always.
+
+Why should it? We will always be creating a new hardware segment. I
+think the logic is cleaner with my patch, in fact I think it was wrong
+before. The cluster check is for a plain physical contig segment. We
+can't do any sort of funky remapping tricks to make two non-contig pages
+appear as one sg segment, so BIOVEC_VIRT_MERGEABLE is supposed to always
+return false. But it's not supposed to hinder physical segment
+clustering as it did before.
+
+> And also, I was wondering for x86, where do we check to see if the
+> IO/segment crossing 4GB boundary.
+> (something similar to 2.4 BH_PHYS_4G()). Don't we need this for drivers
+> which  can't handle
+> IO crossing 4GB boundary ?
+
+BIO_SEG_BOUNDARY and BIOVEC_SEG_BOUNDARY checks for that, see
+blk_queue_segment_boundary(). Default is 0xffffffff.
+
+-- 
+Jens Axboe
 
