@@ -1,74 +1,35 @@
-From: webster@lexmark.com
-Subject: PERC4/DC (LSI Megaraid) on PowerEdge 2850
-Date: Wed, 8 Dec 2004 20:42:08 -0500
-Message-ID: <OF23E563E1.76C3D391-ON85256F65.0008ED88-85256F65.000985D1@lexmark.com>
+From: Troy Klein <res1uo0c@verizon.net>
+Subject: Megaraid corruption?
+Date: Wed, 08 Dec 2004 18:17:45 -0800
+Message-ID: <1102558665.31354.22.camel@TroysLinux.verari.com>
+Reply-To: res1uo0c@verizon.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sw1.lexmark.com ([192.146.101.70]:55308 "EHLO sw1.lexmark.com")
-	by vger.kernel.org with ESMTP id S261397AbULIBir (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Dec 2004 20:38:47 -0500
+Received: from out011pub.verizon.net ([206.46.170.135]:14817 "EHLO
+	out011.verizon.net") by vger.kernel.org with ESMTP id S261431AbULICRr
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Dec 2004 21:17:47 -0500
+Received: from TroysLinux.verari.com ([216.9.37.88]) by out011.verizon.net
+          (InterMail vM.5.01.06.06 201-253-122-130-106-20030910) with ESMTP
+          id <20041209021746.KTDZ1380.out011.verizon.net@TroysLinux.verari.com>
+          for <linux-scsi@vger.kernel.org>; Wed, 8 Dec 2004 20:17:46 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-poweredge@dell.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This issue turned out to be a faulty PERC4/DC .
+I am attempting to find out why I am having data corruption problems on
+my megaraid2 driver and not on megaraid.  The system is a 32-bit Xeon
+with a LSI 150-6 SATA controller running Redhat EL 3.0AS.  When I am
+running megaraid I can write data, read data, and modify data and get NO
+corruption.  With megaraid2 I get data corruption with tar, rsync, and
+scp.
 
+Can anyone help?
 
-________________________________________________________________________________________________
-
-Hello.
-I am trying to use a Dell PERC4/DC RAID controller in a Dell PowerEdge 
-2850 with SUSE Linux .
-
-Every time I try to copy files to a partition on this controller, after 
-~10GB, I start receiving this in syslog:
-
-Dec  6 20:25:14 tasker0 kernel: megaraid: aborting-484304 cmd=2a <c=2 t=1 
-l=0>
-Dec  6 20:25:14 tasker0 kernel: megaraid abort: 484304:115[255:1], fw 
-owner
-Dec  6 20:25:14 tasker0 kernel: megaraid: aborting-484307 cmd=2a <c=2 t=0 
-l=0>
-Dec  6 20:25:14 tasker0 kernel: megaraid abort: 484307:46[255:0], fw owner
-.
-.
-.
-Dec  6 20:28:14 tasker0 kernel: megaraid: aborting-484438 cmd=2a <c=2 t=1 
-l=0>
-Dec  6 20:28:14 tasker0 kernel: megaraid abort: 484438[255:1], driver 
-owner
-Dec  6 20:28:14 tasker0 kernel: megaraid: reseting the host...
-Dec  6 20:28:14 tasker0 kernel: megaraid: 71 outstanding commands. Max 
-wait 180 sec
-Dec  6 20:28:14 tasker0 kernel: megaraid mbox: Wait for 71 commands to 
-complete:180
-Dec  6 20:28:14 tasker0 kernel: 3>scsi2 (1:0): rejecting I/O to offline 
-device
-Dec  6 20:28:14 tasker0 kernel: scsi2 (0:0): rejecting I/O to offline 
-device
-Dec  6 20:28:14 tasker0 kernel: scsi2 (1:0): rejecting I/O to offline 
-device
-Dec  6 20:28:14 tasker0 kernel: scsi2 (1:0): rejecting I/O to offline 
-device
-Dec  6 20:28:14 tasker0 kernel: SCSI error : <2 2 0 0> return code = 
-0x6000000
-Dec  6 20:28:14 tasker0 kernel: end_request: I/O error, dev sdf, sector 
-1064044038
-Dec  6 20:28:14 tasker0 kernel: scsi2 (0:0): rejecting I/O to offline 
-device
-Dec  6 20:28:14 tasker0 kernel: SCSI error : <2 2 0 0> return code = 
-0x6000000
-Dec  6 20:28:14 tasker0 kernel: end_request: I/O error, dev sdf, sector 
-1064043910
-.
-.
-.
+Troy Perplexed
 
 
 
-Any advice?
-
-Thanks.
 
