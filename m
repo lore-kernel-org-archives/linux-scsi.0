@@ -1,71 +1,35 @@
-From: Andre Hedrick <andre@linux-ide.org>
-Subject: RE: Pb between an UltraTrak SX8000 and an Adaptec 29160
-Date: Mon, 18 Nov 2002 12:07:14 -0800 (PST)
+From: "J.E.J. Bottomley" <James.Bottomley@steeleye.com>
+Subject: Re: 2.5.48 modules problem
+Date: Mon, 18 Nov 2002 16:17:44 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.10.10211181205060.2779-100000@master.linux-ide.org>
-References: <000501c28f02$934b3000$13e2cf82@darkwolf>
+Message-ID: <200211182217.gAIMHi904571@localhost.localdomain>
+References: <dougg@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <000501c28f02$934b3000$13e2cf82@darkwolf>
+Received: (from root@localhost)
+	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id OAA22155
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Nov 2002 14:17:48 -0800
+In-Reply-To: Message from Douglas Gilbert <dougg@torque.net>
+   of "Tue, 19 Nov 2002 08:58:14 +1100." <3DD96276.5050005@torque.net>
 List-Id: linux-scsi@vger.kernel.org
-To: didier <didier@ece.gatech.edu>
-Cc: "'Justin T. Gibbs'" <gibbs@scsiguy.com>, linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
+dougg@torque.net said:
+> Can't see other reports on this in the lists **. When I upgraded to lk
+> 2.5.48, my kernel can't load modules. modprobe and friends all fail
+> with:
+>    QM_MODULES: Function not implemented 
 
-Didier,
+The entire method the kernel uses to construct and load modules changed in 
+2.5.48.  You need Rusty's new module loader routines:
 
-I am waiting to close a contract to fix the problems w/ Promise products,
-and yes I have the contract but have not signed the agreement to do the
-work.  The issue is how they do their i2o v/s scsi.
+http://www.kernel.org/pub/linux/kernel/people/rusty/module-init-tools-0.7.tar.g
+z
 
-Cheers,
+For the record, I still can't get quite a few modules to load even with this.
 
-Andre Hedrick
-LAD Storage Consulting Group
+James
 
-On Mon, 18 Nov 2002, didier wrote:
-
-> 
-> 
-> The UltraTrak was updated to the latest available firmware
-> before connected to the server.
-> 
-> I e-mailed promise tech-support last week but did not get
-> any answer so far.
-> 
-> On a different note, who should I contact regarding the display
-> bug:
-> 
-> Nov 14 11:04:35 dagdhasrv kernel: (scsi0:A:0): 160.000MB/s transfers
-> (80.000MHz DT, offset 62, 16bit)
-> Nov 14 11:04:35 dagdhasrv kernel: SCSI device sda: -1951217920 512-byte
-> hdwr sectors (100488 MB)
->                                                    ^^^^^^^^^^^
-> Nov 14 11:04:35 dagdhasrv kernel: Partition check: 
-> Nov 14 11:04:35 dagdhasrv kernel:  sda: sda1
-> 
-> Thanks again, Didier.
-> 
-> > > I have just connected a brand new UltraTrak SX8000
-> > > (from Promise with 8 x 200GB IDE drives) to an
-> > > adaptec 29160. The UltraTrak SX8000 is connected
-> > > via a brand new LVD cable (1meter).
-> > >
-> > > While everything seems fine, I am getting a bunch of
-> > >
-> > > (scsi0:A:0:0): parity error detected in Data-out phase. 
-> > SEQADDR(0x56)
-> > > SCSIRATE(0xc2)
-> > >         No terminal CRC packet recevied
-> > 
-> > I've never seen false positives from this diagnostic.  It 
-> > looks like your Promise device is not properly implementing 
-> > DT transfers.  Is there a firmware update for the device?
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
 
