@@ -1,38 +1,54 @@
-From: "Lee Xing" <lxing@Crossroads.com>
-Subject: Help - max_channel, max_id and max_lun
-Date: Tue, 1 Jun 2004 13:21:43 -0500
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: 2.6.6 + Adaptec I2O
+Date: Tue, 1 Jun 2004 14:27:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <519672568F040C41B6FAC21ADF51B18FF016@mailnode1.commstor.crossroads.com>
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189FAD513D@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email.crossroads.com ([65.68.235.6]:4123 "HELO
-	email.crossroads.com") by vger.kernel.org with SMTP id S265107AbUFASVo convert rfc822-to-8bit
+Received: from magic.adaptec.com ([216.52.22.17]:440 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S265099AbUFAS1p convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Jun 2004 14:21:44 -0400
+	Tue, 1 Jun 2004 14:27:45 -0400
 content-class: urn:content-classes:message
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andi Kleen <ak@muc.de>
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+It's not the driver that needs to know, it's an information box on the
+RAID applications that need to know via a management ioctl (see the
+public domain raidutil tool for the cli variant). It's the `dptsig' tool
+that reads the binary and provides version and processor type the binary
+is compiled for.
 
-In scsi_register( ) defined in hosts.c of lk 2.4, it says:
+Sincerely -- Mark Salyzyn
 
-    /* These three are default values which can be overridden */
-    retval->max_channel = 0; 
-    retval->max_id = 8;      
-    retval->max_lun = 8;
+-----Original Message-----
+From: Andi Kleen [mailto:ak@muc.de] 
+Sent: Tuesday, June 01, 2004 2:21 PM
+To: Salyzyn, Mark
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: 2.6.6 + Adaptec I2O
 
-Just wondering where is the right place to modify max_channel, max_id and max_lun in a low-level driver?
+"Salyzyn, Mark" <mark_salyzyn@adaptec.com> writes:
 
-After low-level driver invokes scsi_register(Scsi_Host_Template *, int), we can get a pointer to Scsi_Host that contains max_channel, max_id and max_lun.  However, I can't see how these numbers take effect if we modify them after scsi_register( ) returns.  I assume we need to pass those numbers to mid-layer when invoking scsi_register( ), but Scsi_Host_Template doesn't contain those three numbers.
+> PROC_SEXIUM was reserved by our application software group when we
+added
+> PROC_PENTIUM. PROC_SEXIUM was simply a `followon' processor of a
+> different feather. The dptsig.h file actually is shared with (many)
+> other sources, so it carries an impact.
+>
+> Branching this file, notwithstanding ... sooo ... if it is to change,
+> maybe it should be set to PROC_EM64T ...
 
-The reason I want to modify those three numbers is that I need scan_scsis( ) defined in scsi_scan.c of lk2.4 to scan certain numbers of buses, targets and luns I choose.
+Better call it PROC_X86_64 then. That's the standard name for the 
+architecture on Linux.
 
-Thanks,
+What is this used for anyways? I'm not really sure why a driver should
+know about the CPU type. How about just dropping it?
 
-
-Lee
+-Andi
 
 
