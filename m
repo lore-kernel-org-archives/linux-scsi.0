@@ -1,31 +1,109 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: sg driver and Fedora Core 2
-Date: Sun, 30 May 2004 06:41:45 -0400
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] tmscsim: Store pDCB in device->hostdata
+Date: Sun, 30 May 2004 23:01:31 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040530104145.GA3172@devserv.devel.redhat.com>
-References: <40B74725.90403@torque.net> <20040528172535.GD13961@devserv.devel.redhat.com> <1085846125.2101.29.camel@mulgrave> <20040529155744.GA32621@devserv.devel.redhat.com> <1085846840.2103.47.camel@mulgrave> <20040529162912.GA5922@devserv.devel.redhat.com> <1085849399.2004.101.camel@mulgrave> <40B8C81E.3050106@pobox.com> <20040529172916.GD18613@suse.de> <40B9B95A.40304@torque.net>
+Message-ID: <Pine.LNX.4.44.0405302256520.14244-200000@poirot.grange>
+References: <20040523103729.GA23804@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811839-2019421630-1085950891=:14244"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:32385 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S262103AbUE3Km0 (ORCPT
+Received: from mail.gmx.de ([213.165.64.20]:4227 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S264396AbUE3VCN (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 May 2004 06:42:26 -0400
-Content-Disposition: inline
-In-Reply-To: <40B9B95A.40304@torque.net>
+	Sun, 30 May 2004 17:02:13 -0400
+In-Reply-To: <20040523103729.GA23804@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Jens Axboe <axboe@suse.de>, Jeff Garzik <jgarzik@pobox.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>, Alan Cox <alan@redhat.com>, Arjan van de Ven <arjanv@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-On Sun, May 30, 2004 at 08:37:14PM +1000, Douglas Gilbert wrote:
-> configuring the SAS domain. Expanders are SAS devices but
-> not SCSI devices (i.e. they are neither initiators nor
-> targets ***). It seems obvious that the management of a SAS
-> domain should be done from the user space. Only those
-> expanders and devices directly attached to a SAS Host Bus
-> Adapter should automatically be visible.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
 
-Is there any reason that the SAS domain should in itself be a character
-device file. I've always thought of it as a network and anticipated
-a network layer interface for such things. That might just be my background
-however.
+---1463811839-2019421630-1085950891=:14244
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+
+On Sun, 23 May 2004, Christoph Hellwig wrote:
+
+> The other thing is that most calls to dc390_findDCB could probably be
+> replaced with stroing the pDCB in scsi_device->hostdata on slave_alloc,
+> but that could aswell be done in an incremental patch.
+
+Done in the attached patch. Tested as usual and a bit harder.
+
+BTW, just managed to re-organise my test-system to allow modular tmscsim.
+Tested - works too.
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
+
+
+---1463811839-2019421630-1085950891=:14244
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name="tmscsim-find_dcb.patch"
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.LNX.4.44.0405302301310.14244@poirot.grange>
+Content-Description: 
+Content-Disposition: attachment; filename="tmscsim-find_dcb.patch"
+
+ZGlmZiAtLWV4Y2x1ZGU9Q1ZTIC11ciBhL2RyaXZlcnMvc2NzaS90bXNjc2lt
+LmMgYi9kcml2ZXJzL3Njc2kvdG1zY3NpbS5jDQotLS0gYS9kcml2ZXJzL3Nj
+c2kvdG1zY3NpbS5jCVNhdCBNYXkgMjkgMjI6MzM6MzAgMjAwNA0KKysrIGIv
+ZHJpdmVycy9zY3NpL3Rtc2NzaW0uYwlGcmkgTWF5IDI4IDIzOjE3OjE3IDIw
+MDQNCkBAIC0xMDQyLDcgKzEwNDIsNyBAQA0KIA0KIHN0YXRpYyBpbnQgREMz
+OTBfcXVldWVfY29tbWFuZCAoU2NzaV9DbW5kICpjbWQsIHZvaWQgKCogZG9u
+ZSkoU2NzaV9DbW5kICopKQ0KIHsNCi0gICAgUERDQiAgIHBEQ0I7DQorICAg
+IFBEQ0IgICBwRENCID0gKFBEQ0IpIGNtZC0+ZGV2aWNlLT5ob3N0ZGF0YTsN
+CiAgICAgUFNSQiAgIHBTUkI7DQogICAgIFBBQ0IgICBwQUNCID0gKFBBQ0Ip
+IGNtZC0+ZGV2aWNlLT5ob3N0LT5ob3N0ZGF0YTsNCiANCkBAIC0xMDU5LDgg
+KzEwNTksNiBAQA0KIAlnb3RvIGZhaWw7DQogICAgIH0NCiANCi0gICAgcERD
+QiA9IGRjMzkwX2ZpbmREQ0IgKHBBQ0IsIGNtZC0+ZGV2aWNlLT5pZCwgY21k
+LT5kZXZpY2UtPmx1bik7DQotDQogICAgIC8qIFNob3VsZCBpdCBiZTogQlVH
+X09OKCFwRENCKTsgPyAqLw0KIA0KICAgICBpZiAoIXBEQ0IpDQpAQCAtMTI4
+Niw3ICsxMjg0LDcgQEANCiANCiBzdGF0aWMgaW50IERDMzkwX2Fib3J0IChT
+Y3NpX0NtbmQgKmNtZCkNCiB7DQotICAgIFBEQ0IgIHBEQ0I7DQorICAgIFBE
+Q0IgIHBEQ0IgPSAoUERDQikgY21kLT5kZXZpY2UtPmhvc3RkYXRhOw0KICAg
+ICBQU1JCICBwU1JCLCBwc3JiOw0KICAgICBVSU5UICBjb3VudCwgaTsNCiAg
+ICAgaW50ICAgc3RhdHVzOw0KQEAgLTEyOTYsNyArMTI5NCw2IEBADQogICAg
+IHByaW50ayAoIkRDMzkwOiBBYm9ydCBjb21tYW5kIChwaWQgJWxpLCBEZXZp
+Y2UgJTAyaS0lMDJpKVxuIiwNCiAJICAgIGNtZC0+cGlkLCBjbWQtPmRldmlj
+ZS0+aWQsIGNtZC0+ZGV2aWNlLT5sdW4pOw0KIA0KLSAgICBwRENCID0gZGMz
+OTBfZmluZERDQiAocEFDQiwgY21kLT5kZXZpY2UtPmlkLCBjbWQtPmRldmlj
+ZS0+bHVuKTsNCiAgICAgaWYoICFwRENCICkgZ290byAgTk9UX1JVTjsNCiAN
+CiAgICAgLyogQWRkZWQgOTgvMDcvMDIgS0cgKi8NCkBAIC0xOTA5LDYgKzE5
+MDYsNyBAQA0KIAlQQUNCIHBBQ0IgPSAoUEFDQikgc2NzaV9kZXZpY2UtPmhv
+c3QtPmhvc3RkYXRhOw0KIAlkYzM5MF9pbml0RENCKHBBQ0IsICZwRENCLCBz
+Y3NpX2RldmljZS0+aWQsIHNjc2lfZGV2aWNlLT5sdW4pOw0KIAlpZiAocERD
+QiAhPSBOVUxMKSB7DQorCQlzY3NpX2RldmljZS0+aG9zdGRhdGEgPSBwRENC
+Ow0KIAkJcEFDQi0+c2Nhbl9kZXZpY2VzID0gMTsNCiAJCXJldHVybiAwOw0K
+IAl9DQpAQCAtMTkyNCw3ICsxOTIyLDcgQEANCiBzdGF0aWMgdm9pZCBkYzM5
+MF9zbGF2ZV9kZXN0cm95KHN0cnVjdCBzY3NpX2RldmljZSAqc2NzaV9kZXZp
+Y2UpDQogew0KIAlQQUNCIHBBQ0IgPSAoUEFDQikgc2NzaV9kZXZpY2UtPmhv
+c3QtPmhvc3RkYXRhOw0KLQlQRENCIHBEQ0IgPSBkYzM5MF9maW5kRENCIChw
+QUNCLCBzY3NpX2RldmljZS0+aWQsIHNjc2lfZGV2aWNlLT5sdW4pOzsNCisJ
+UERDQiBwRENCID0gKFBEQ0IpIHNjc2lfZGV2aWNlLT5ob3N0ZGF0YTsNCiAJ
+cEFDQi0+c2Nhbl9kZXZpY2VzID0gMDsNCiAJaWYgKHBEQ0IgIT0gTlVMTCkN
+CiAJCWRjMzkwX3JlbW92ZV9kZXYocEFDQiwgcERDQik7DQpAQCAtMTk3OCw3
+ICsxOTc2LDcgQEANCiAJaWYgKCFzY3NpX2hvc3QpDQogCQlnb3RvIG5vbWVt
+Ow0KIA0KLQlwQUNCID0gKFBBQ0Ipc2NzaV9ob3N0LT5ob3N0ZGF0YTsNCisJ
+cEFDQiA9IChQQUNCKSBzY3NpX2hvc3QtPmhvc3RkYXRhOw0KIA0KIAlpZiAo
+ZGMzOTBfaW5pdChzY3NpX2hvc3QsIGlvX3BvcnQsIGlycSwgZGV2LCBkYzM5
+MF9hZGFwdGVyQ250KSkgew0KIAkJcmV0ID0gLUVCVVNZOw0KQEAgLTIxODAs
+NyArMjE3OCw3IEBADQogc3RhdGljIGludCBkYzM5MF9zaHV0ZG93biAoc3Ry
+dWN0IFNjc2lfSG9zdCAqaG9zdCkNCiB7DQogICAgIFVDSEFSICAgIGJ2YWw7
+DQotICAgIFBBQ0IgcEFDQiA9IChQQUNCKShob3N0LT5ob3N0ZGF0YSk7DQor
+ICAgIFBBQ0IgcEFDQiA9IChQQUNCKSBob3N0LT5ob3N0ZGF0YTsNCiAgICAN
+CiAvKiAgcEFDQi0+c29mdF9yZXNldChob3N0KTsgKi8NCiANCkBAIC0yMjAw
+LDcgKzIxOTgsNyBAQA0KIHN0YXRpYyB2b2lkIGRjMzkwX2ZyZWVEQ0JzIChz
+dHJ1Y3QgU2NzaV9Ib3N0ICpob3N0KQ0KIHsNCiAgICAgUERDQiBwRENCLCBu
+RENCOw0KLSAgICBQQUNCIHBBQ0IgPSAoUEFDQikoaG9zdC0+aG9zdGRhdGEp
+Ow0KKyAgICBQQUNCIHBBQ0IgPSAoUEFDQikgaG9zdC0+aG9zdGRhdGE7DQog
+ICAgIA0KICAgICBwRENCID0gcEFDQi0+cExpbmtEQ0I7DQogICAgIGlmICgh
+cERDQikgcmV0dXJuOw0KQEAgLTIyMTksNyArMjIxNyw3IEBADQogc3RhdGlj
+IGludCBEQzM5MF9yZWxlYXNlIChzdHJ1Y3QgU2NzaV9Ib3N0ICpob3N0KQ0K
+IHsNCiAgICAgREMzOTBfSUZMQUdTOw0KLSAgICBQQUNCIHBBQ0IgPSAoUEFD
+QikoaG9zdC0+aG9zdGRhdGEpOw0KKyAgICBQQUNCIHBBQ0IgPSAoUEFDQikg
+aG9zdC0+aG9zdGRhdGE7DQogDQogICAgIERDMzkwX0xPQ0tfSU8oaG9zdCk7
+DQogDQo=
+---1463811839-2019421630-1085950891=:14244--
