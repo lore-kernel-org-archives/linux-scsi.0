@@ -1,89 +1,66 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: [Emulex] Ready for next round...
-Date: Fri, 18 Jun 2004 21:58:56 +0100
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: CDC_RAM for lk 2.4, PATCH proposed
+Date: 18 Jun 2004 15:42:51 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040618205856.GB27095@infradead.org>
-References: <3356669BBE90C448AD4645C843E2BF28034F9530@xbl.ma.emulex.com>
+Message-ID: <1087594970.3793.48.camel@patibmrh9>
+References: <20040604152422.GE1946@suse.de><1086362855.16914.5.camel@patibmr
+	h9>  <20040604153627.GF1946@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [213.146.154.40] ([213.146.154.40]:32196 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S263664AbUFRU7B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jun 2004 16:59:01 -0400
-Content-Disposition: inline
-In-Reply-To: <3356669BBE90C448AD4645C843E2BF28034F9530@xbl.ma.emulex.com>
+Received: from email-out1.iomega.com ([147.178.1.82]:6807 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264881AbUFRVnI
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Jun 2004 17:43:08 -0400
+Received: from royntex01.iomegacorp.com (edison [10.1.1.82])
+	by email.iomega.com (Postfix) with ESMTP id 1C2CB1B9C
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Jun 2004 15:43:03 -0600 (MDT)
+In-Reply-To: <20040604153627.GF1946@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: "Smart, James" <James.Smart@Emulex.Com>
-Cc: Linux SCSI Reflector <linux-scsi@vger.kernel.org>
+To: John McKell <McKellj@iomega.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Jun 18, 2004 at 03:56:37PM -0400, Smart, James wrote:
-> Why compile it in ? The view on how an attribute can be dynamically updated
-> is either via modules.conf or a utility that runs post module load. Given
-> the large adapter count and the number of attributes - it's too much for
-> modules.conf.
+Thanks again to everyone.
 
-In what way?  If there's a bug in module-init-tools or the kernel paramter
-parsing please report it and we'll fix it.
+2.4.27-pre6 here now of rewritable RMB MMC UDF looks better than 2.6.6,
+indeed as good as 2.6.7.
 
-> Why the character parameters ? It becomes clear rapidly. Previously, we had
-> integer arrays, but as we didn't want to cap the number of adapters that can
-> be supported, nor require huge numbers of elements to be dealt with (a set
-> per adapter),
+Pat LaVarre
 
-Capping the numbers you can pass paramters for is fine, we do it all over
-the place.  Please don't try to be artifically different from other drivers,
-that's the last thing we want.
+-----
+http://www.kernel.org/pub/linux/kernel/v2.4/testing/patch-2.4.27.log
+Summary of changes ... to v2.4.27-pre6
+...
+Jens Axboe:
+  o DVD-RW write support
+  o cdrom hardware defect mgt header length
+...
+Summary of changes from v2.4.26 ...
+...
+-----
 
-> lpfc_cfgparm.h: for the most part, it's a structured way to manage the
-> attributes. Contains min/max so that we can verify the user didn't
-> inadvertantly screw up a setting, as well as knowing what to fall back to in
-> case they did. A couple of the elements, such as the strings, are largely
-> unnecessary, but could be useful for log messages.  One thing we will change
-> - this huge array is currently copied per instance right now. It will be
-> changes so that there is only 1 master array containing the boundaries, and
-> the current values will be the only thing kept per instance.
+$ uname -r
+2.4.27-pre6
+$
+$ sudo mkudffs /dev/scd0
+...
+$ sudo mount /dev/scd0 /mnt/scd0
+$ mount | grep scd0
+/dev/scd0 on /mnt/scd0 type udf (rw)
+$ sudo umount /dev/scd0
+$
+$ sudo rrd scan
+/dev/scd0 is Iomega RRD 74.B rw
+$
+$ sudo eject /dev/scd0
+$
+$ sudo mount -r /dev/scd0 /mnt/scd0
+$ ls -l /mnt/scd0
+total 20
+-rw-rw-rw-    1 4294967295 4294967295       25 Jun 17 14:01 Autorun.inf
+-rw-rw-rw-    1 4294967295 4294967295    18902 Feb  5 08:35 REV.ico
+$ sudo umount /dev/scd0
+$
 
-Which then would obsolete most of that mess.  I'm looking forward to that
-change.
-
-> Since this isn't acceptable, here's what our approach is:
-> - Were seeing if the need for >1 arg is really needed. If so, we'll axe this
-> part of the structure.
-
-Currently clk_data is always (at least where I checked) embedded into another
-structure.  Instead of losing all type checking by using that intermediate
-structure continaining void pointers just add pointers to the addition data
-object directly to the structure.
-
-> - We're removing the safety list. We shouldn't need it anyway as normal data
-> structure teardown should handle it.
-> If both happen, the structure will be gone.
-
-It's actually not a safetyguard.  It's your excuse for beeing sloppy with
-object lifetimes in respect to timers.  For the normal case where one
-timer is used with one callback only that is:
-
- - init_timer, setting of callback and data on object creation
- - add_timer the first time a timer is fired off and mod_timer if it's
-   running or you don't know
- - del_timer_sync on object destruction
-
-> > > - dito for lpfc_sysfs_info_show, in short all your sysfs 
-> > work is completely
-> > >   wrong, also you seem to use driver attributes instead of 
-> > scsi device/host
-> > >   attributes.  why?
-> > 
-> > You're still attaching all the attributes yourself.  Please use the
-> > scsi-provided host/device attributes instead.
-> 
-> Ok. The way I interpret this comment: the sysfs implementation (mechanics)
-> is ok. The per adapter attributes are ok, with the exception of where they
-> overlap with scsi attributes (such as lun skip and queue depths).  I agree -
-> we'll remove the overlaps. This was old history..
-
-Not only.  You should please use the shost_attrs and sdev_attrs fields
-in struct scsi_host_template for all your attributes, please look at
-the 53c700 or ipr drivers for examples.
 
