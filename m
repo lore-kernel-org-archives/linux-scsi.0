@@ -1,69 +1,59 @@
-From: "Lee Xing" <lxing@Crossroads.com>
-Subject: RE: A question on Linux SCSI low-level driver
-Date: Tue, 18 May 2004 17:27:03 -0500
+From: Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
+Subject: Re: [PATCH] scsi_timeout_mod
+Date: Wed, 19 May 2004 09:46:51 +0900
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <519672568F040C41B6FAC21ADF51B18FEFF8@mailnode1.commstor.crossroads.com>
+Message-ID: <200405190046.AA03256@fukuchi.jp.fujitsu.com>
+References: <409669AB.7030207@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email.crossroads.com ([65.68.235.6]:26111 "HELO
-	email.crossroads.com") by vger.kernel.org with SMTP id S263665AbUERW1E convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 May 2004 18:27:04 -0400
-content-class: urn:content-classes:message
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:46041 "EHLO
+	fgwmail6.fujitsu.co.jp") by vger.kernel.org with ESMTP
+	id S263743AbUESArO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 May 2004 20:47:14 -0400
+Received: from m2.gw.fujitsu.co.jp ([10.0.50.72]) by fgwmail6.fujitsu.co.jp (8.12.10/Fujitsu Gateway)
+	id i4J0lC6M020235 for <linux-scsi@vger.kernel.org>; Wed, 19 May 2004 09:47:12 +0900
+	(envelope-from fukuchi.masao@jp.fujitsu.com)
+Received: from s7.gw.fujitsu.co.jp by m2.gw.fujitsu.co.jp (8.12.10/Fujitsu Domain Master)
+	id i4J0lC7u026110 for <linux-scsi@vger.kernel.org>; Wed, 19 May 2004 09:47:12 +0900
+	(envelope-from fukuchi.masao@jp.fujitsu.com)
+Received: from fjmail502.fjmail.jp.fujitsu.com (fjmail502-0.fjmail.jp.fujitsu.com [10.59.80.98]) by s7.gw.fujitsu.co.jp (8.12.11)
+	id i4J0lBe0017919 for <linux-scsi@vger.kernel.org>; Wed, 19 May 2004 09:47:11 +0900
+	(envelope-from fukuchi.masao@jp.fujitsu.com)
+Received: from fukuchi.jp.fujitsu.com
+ (fjscan503-0.fjmail.jp.fujitsu.com [10.59.80.124])
+ by fjmail502.fjmail.jp.fujitsu.com
+ (Sun Internet Mail Server sims.4.0.2001.07.26.11.50.p9)
+ with SMTP id <0HXX002HRRIMEB@fjmail502.fjmail.jp.fujitsu.com> for
+ linux-scsi@vger.kernel.org; Wed, 19 May 2004 09:47:11 +0900 (JST)
+In-reply-to: <409669AB.7030207@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: Brian King <brking@us.ibm.com>
+Cc: Linux SCSI Reflector <linux-scsi@vger.kernel.org>
 
-Thanks for the information.  scsi_debug is very helpful for me.
+Hi Brian,
 
-Two questions on scsi_debug/low-level driver:
+I had a chance to use pseudo-I/O system, I tested your patch and
+it worked fine.
+First, I set the value of timeout to 10 seconds.
+Then I accessed the device which doesn't respond to the command.
+10 seconds later, scsi midlayer detected timeout and issued abort
+task message.
 
-- Has anyone ever created a patch for scsi_debug to support ioctl calls in lk 2.4?  If not, is it possible for some one to kindly create it or a template/part of it?
-
-- Do SCSI passthrough ioctl calls sent to both sd and sg devices share/use the same ioctl routine defined in scsi_debug/low-level driver?  In other words, ioctl routine defined in scsi_debug/low-level drivers can not tell and do not care from which type of device (sd or sg) the SCSI passthrough call comes in, correct?
+Since we consider the early change of broken device/path, this patch
+is very useful.
 
 Thanks,
+Masao Fukuchi
 
-
-Lee
-
-
------Original Message-----
-From: Douglas Gilbert [mailto:dougg@torque.net]
-Sent: Saturday, May 08, 2004 9:11 PM
-To: Lee Xing
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: A question on Linux SCSI low-level driver
-
-
-Lee Xing wrote:
-> Hi,
-> 
-> We are trying to write a low-level driver (no need for a perfect one at this time, just need to register the disks and do some simple I/Os).  I would sincerely appreciate it if some one could give me
-some information/suggestions/hints.
-> 
-> This low-level driver has indirect (via other layers) information on physical disks, so it can only provide mid-level driver with bus number, target number and lun number of the disks.  It will convert
-SCSI passthrough commands coming from the mid-level driver and send the converted command packages to the disks (again, via other layers).  It also sends the responses coming from physical disks (via other
-layers) back to the mid-level driver.  The "other layers" are SCSI-ready and can handle
-SCSI cmds/responses well.
-> 
-> My questions are: 
-> 
-> - is it (i.e. registering the disks with mid-level driver and doing some
->   simple I/Os) doable if this low-level driver only provides mid-level with
->   bus/target/lun numbers (without any hardware-related information)?
-
-Lee,
-See the scsi_debug driver (either in the lk 2.4 or lk 2.6
-series). It is a scsi subsystem LLD that is basically a
-ram disk so there is no "hardware" information to exchange
-with the mid level.
-
-Doug Gilbert
-
-> - what can be the potential problems (if nay)?
-> 
-> Best Regards,
-
+Brian King wrote:
+>The following patch replaces the sd_timeout_mod patch I submitted earlier.
+>I renamed the field to simply "timeout" and exposed in in sysfs.
+>
+>
+>
+>
+>-- 
+>Brian King
+>eServer Storage I/O
+>IBM Linux Technology Center
