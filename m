@@ -1,94 +1,190 @@
-From: Matt Gulick <gulickconsulting@direcway.com>
-Subject: Re: bug 2400
-Date: Thu, 08 Apr 2004 14:44:03 -0500
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: sym2 probs in bk-scsi tree
+Date: Thu, 8 Apr 2004 13:35:02 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1081453443.4777.5.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.0404081430000.961-100000@ida.rowland.org>
-Reply-To: gulickconsulting@direcway.com
+Message-ID: <20040408133502.71f38ecf.akpm@osdl.org>
+References: <20040407231820.66dd76cd.akpm@osdl.org>
+	<20040408145700.GB18329@parcelfarce.linux.theplanet.co.uk>
+	<1081443560.2165.329.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from a34-mta01.direcpc.com ([66.82.4.90]:57896 "EHLO
-	a34-mta01.direcway.com") by vger.kernel.org with ESMTP
-	id S262316AbUDHToX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Apr 2004 15:44:23 -0400
-Received: from [40.0.0.57] (dpc6935101125.direcpc.com [69.35.101.125])
- by a34-mta01.direcway.com
- (iPlanet Messaging Server 5.2 HotFix 1.12 (built Feb 13 2003))
- with ESMTP id <0HVV00891ATHUF@a34-mta01.direcway.com> for
- linux-scsi@vger.kernel.org; Thu, 08 Apr 2004 15:44:22 -0400 (EDT)
-In-reply-to: <Pine.LNX.4.44L0.0404081430000.961-100000@ida.rowland.org>
+Received: from fw.osdl.org ([65.172.181.6]:51913 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S262424AbUDHUfR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2004 16:35:17 -0400
+In-Reply-To: <1081443560.2165.329.camel@mulgrave>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, Mike Anderson <andmike@us.ibm.com>, Andrew Morton <akpm@osdl.org>, greg@kroah.com, Jens Axboe <axboe@suse.de>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: willy@debian.org, linux-scsi@vger.kernel.org
 
-On Thu, 2004-04-08 at 13:33, Alan Stern wrote:
-> On Thu, 8 Apr 2004, Matt Gulick wrote:
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
+>
+> On Thu, 2004-04-08 at 09:57, Matthew Wilcox wrote:
+> > They certainly are scary.  What is device 15 on this scsi bus?  This
+> > looks like domain validation being applied to a device that can't do it
+> > to me.  Did I get that right, James?
 > 
-> > OK, Silly question or maybe not.
-> > 
-> > When writing drivers for MacOS ( 7-9 & X) and Windose (98 - XP) and
-> when
-> > I architected the USB 2.0 stack at Adaptec for 98SE, ME & 2k, we
-> solved
-> > this issue with a simple heart beat task.
-> > 
-> > Every so often (1-3 seconds) any device that was at risk of removal
-> > would receive a TEST UNIT READY cdb.
-> > 
-> > Using the model of 1394, USB, ... being treated as a device with no
-> > media inserted (like a CD drive is treated), then you can query the
-> > device for media availability.
-> > 
-> > Using the USB model of 7 tiers of devices and most hubs having 4
-> ports
-> > (7 port hubs are just two 4 port hubs internally connected) you can
-> have
-> > way more than 15 SCSI ID's.  By treating each USB as having its own
-> ID
-> > (EHCI USB chips typically have three USB identities of 1 EHCI and 2
-> OHCI
-> > interfaces) and the devices on that bus that are mass storage class
-> > devices using SBP-2 or SBP-3 would be a LUN on that device.
-> > 
-> > By treating each bus as a virtual device, the main struct can be
-> static
-> > with LUN children added or removed as needed.
-> > 
-> > Any thoughts on this?
-> > 
-> > Matt
+> OK, try the attached, it should predicate DV on what we already know
+> from the inquiry data.
 > 
-> I think you're talking about a different problem.  Sending heartbeats 
-> solves the problem of detecting media availability and device 
-> availability.  It doesn't solve the problem we're discussing here,
-> which 
-> is how to tear down the device driver stack without causing any
-> errors, 
-> particularly if the user tries to access the device while the stack is
-> being deconstructed.
+> James
 > 
-> Alan Stern
+> ===== drivers/scsi/scsi_transport_spi.c 1.9 vs edited =====
+> --- 1.9/drivers/scsi/scsi_transport_spi.c	Thu Apr  8 08:39:09 2004
+> +++ edited/drivers/scsi/scsi_transport_spi.c	Thu Apr  8 12:35:07 2004
+> @@ -490,7 +490,7 @@
+>  	}
+>  
+>  	/* test width */
+> -	if (i->f->set_width) {
+> +	if (i->f->set_width && sdev->wdtr) {
+>  		i->f->set_width(sdev, 1);
+>  
+>  		if (!spi_dv_device_compare_inquiry(sreq, buffer,
+> @@ -502,6 +502,10 @@
+>  	}
+>  
+>  	if (!i->f->set_period)
+> +		return;
+> +
+> +	/* device can't handle synchronous */
+> +	if(!sdev->ppr && !sdev->sdtr)
+>  		return;
+>  
+>  	/* now set up to the maximum */
 
-True.  This only mitigates the need for the SCSI subsystem from having
-to release device structures that might be used for logical SCSI Bus
-housekeeping.
+Yup, that makes the pauses and scary messages go away, thanks.
 
-I will have to dig into the Linux architecture model for SCSI to put
-this in Linux form vs what is done elsewhere.
+fwiw, here's the scsi-related part of dmesg:
 
-I'll be back.  ;-)
-
-Matt
-
-
-----------------------------------------
-Matt Gulick
-Sr. Staff Engineer
-Adaptec, Inc.
-gulickconsulting@direcway.com
-matt_gulick@adaptec.com
-(715) 426-0884
+sym0: <1010-66> rev 0x1 at pci 0000:41:01.0 irq 103
+sym0: No NVRAM, ID 7, Fast-80, LVD, parity checking
+sym0: SCSI BUS has been reset.
+scsi0 : sym-2.1.18j
+DEV: registering device: ID = 'host0'
+CLASS: registering class device: ID = 'host0'
+class_hotplug - name = host0
+  Vendor: IBM       Model: IC35L036UCD210-0  Rev: S5BS
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+sym0:8:0: tagged command queuing enabled, command queue depth 16.
+scsi(0:0:8:0): Beginning Domain Validation
+sym0:8: wide asynchronous.
+sym0:8: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
+scsi(0:0:8:0): Ending Domain Validation
+DEV: registering device: ID = '0:0:8:0'
+bus scsi: add device 0:0:8:0
+CLASS: registering class device: ID = '0:0:8:0'
+class_hotplug - name = 0:0:8:0
+CLASS: registering class device: ID = '0:0:8:0'
+class_hotplug - name = 0:0:8:0
+  Vendor: IBM       Model: IC35L036UCD210-0  Rev: S5BS
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+sym0:9:0: tagged command queuing enabled, command queue depth 16.
+scsi(0:0:9:0): Beginning Domain Validation
+sym0:9: wide asynchronous.
+sym0:9: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
+scsi(0:0:9:0): Ending Domain Validation
+DEV: registering device: ID = '0:0:9:0'
+bus scsi: add device 0:0:9:0
+CLASS: registering class device: ID = '0:0:9:0'
+class_hotplug - name = 0:0:9:0
+CLASS: registering class device: ID = '0:0:9:0'
+class_hotplug - name = 0:0:9:0
+  Vendor: IBM       Model: IC35L036UCD210-0  Rev: S5BS
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+sym0:10:0: tagged command queuing enabled, command queue depth 16.
+scsi(0:0:10:0): Beginning Domain Validation
+sym0:10: wide asynchronous.
+sym0:10: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
+scsi(0:0:10:0): Ending Domain Validation
+DEV: registering device: ID = '0:0:10:0'
+bus scsi: add device 0:0:10:0
+CLASS: registering class device: ID = '0:0:10:0'
+class_hotplug - name = 0:0:10:0
+CLASS: registering class device: ID = '0:0:10:0'
+class_hotplug - name = 0:0:10:0
+  Vendor: IBM       Model: IC35L036UCD210-0  Rev: S5BS
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+sym0:11:0: tagged command queuing enabled, command queue depth 16.
+scsi(0:0:11:0): Beginning Domain Validation
+sym0:11: wide asynchronous.
+sym0:11: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
+scsi(0:0:11:0): Ending Domain Validation
+DEV: registering device: ID = '0:0:11:0'
+bus scsi: add device 0:0:11:0
+CLASS: registering class device: ID = '0:0:11:0'
+class_hotplug - name = 0:0:11:0
+CLASS: registering class device: ID = '0:0:11:0'
+class_hotplug - name = 0:0:11:0
+  Vendor: IBM       Model: HSBPD4E  PU3SCSI  Rev: 0013
+  Type:   Enclosure                          ANSI SCSI revision: 02
+scsi(0:0:15:0): Beginning Domain Validation
+sym0:15:0:phase change 6-7 6@28050390 resid=4.
+scsi(0:0:15:0): Ending Domain Validation
+DEV: registering device: ID = '0:0:15:0'
+bus scsi: add device 0:0:15:0
+CLASS: registering class device: ID = '0:0:15:0'
+class_hotplug - name = 0:0:15:0
+CLASS: registering class device: ID = '0:0:15:0'
+class_hotplug - name = 0:0:15:0
+bound device '0000:41:01.0' to driver 'sym53c8xx'
+PCI: Enabling device: (0000:41:01.1), cmd 143
+sym1: <1010-66> rev 0x1 at pci 0000:41:01.1 irq 104
+sym1: No NVRAM, ID 7, Fast-80, LVD, parity checking
+sym1: SCSI BUS has been reset.
+scsi1 : sym-2.1.18j
+DEV: registering device: ID = 'host1'
+CLASS: registering class device: ID = 'host1'
+class_hotplug - name = host1
+bound device '0000:41:01.1' to driver 'sym53c8xx'
+PCI: Enabling device: (0001:21:01.0), cmd 143
+sym2: <875> rev 0x3 at pci 0001:21:01.0 irq 117
+sym2: No NVRAM, ID 7, Fast-20, SE, parity checking
+sym2: SCSI BUS has been reset.
+scsi2 : sym-2.1.18j
+DEV: registering device: ID = 'host2'
+CLASS: registering class device: ID = 'host2'
+...
+device class 'scsi_tape': registering
+bus scsi: add driver st
+bus scsi: add driver sd
+SCSI device sda: 71096640 512-byte hdwr sectors (36401 MB)
+SCSI device sda: drive cache: write through
+ sda: sda1 sda2 sda3 sda4 < sda5 >
+Attached scsi disk sda at scsi0, channel 0, id 8, lun 0
+bound device '0:0:8:0' to driver 'sd'
+SCSI device sdb: 71096640 512-byte hdwr sectors (36401 MB)
+SCSI device sdb: drive cache: write through
+ sdb: sdb1 < sdb5 >
+Attached scsi disk sdb at scsi0, channel 0, id 9, lun 0
+bound device '0:0:9:0' to driver 'sd'
+SCSI device sdc: 71096640 512-byte hdwr sectors (36401 MB)
+SCSI device sdc: drive cache: write through
+ sdc: sdc1 < sdc5 >
+Attached scsi disk sdc at scsi0, channel 0, id 10, lun 0
+bound device '0:0:10:0' to driver 'sd'
+SCSI device sdd: 71096640 512-byte hdwr sectors (36401 MB)
+SCSI device sdd: drive cache: write through
+ sdd: sdd1 sdd2 sdd3 sdd4 < sdd5 >
+Attached scsi disk sdd at scsi0, channel 0, id 11, lun 0
+bound device '0:0:11:0' to driver 'sd'
+bus scsi: add driver sr
+device class 'scsi_generic': registering
+CLASS: registering class device: ID = 'sg0'
+class_hotplug - name = sg0
+Attached scsi generic sg0 at scsi0, channel 0, id 8, lun 0,  type 0
+CLASS: registering class device: ID = 'sg1'
+class_hotplug - name = sg1
+Attached scsi generic sg1 at scsi0, channel 0, id 9, lun 0,  type 0
+CLASS: registering class device: ID = 'sg2'
+class_hotplug - name = sg2
+Attached scsi generic sg2 at scsi0, channel 0, id 10, lun 0,  type 0
+CLASS: registering class device: ID = 'sg3'
+class_hotplug - name = sg3
+Attached scsi generic sg3 at scsi0, channel 0, id 11, lun 0,  type 0
+CLASS: registering class device: ID = 'sg4'
+class_hotplug - name = sg4
+Attached scsi generic sg4 at scsi0, channel 0, id 15, lun 0,  type 13
 
 
