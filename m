@@ -1,91 +1,96 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: PATCH [10/15] qla2xxx: Use readX_relaxed
-Date: Thu, 6 May 2004 22:56:15 -0700
+Subject: PATCH [11/15] qla2xxx: /proc fixes
+Date: Thu, 6 May 2004 22:57:00 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040507055615.GA4943@linux.local.home>
+Message-ID: <20040507055700.GA4953@linux.local.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-02-qfe0.socal.rr.com ([66.75.162.134]:29427 "EHLO
+Received: from ms-smtp-02-qfe0.socal.rr.com ([66.75.162.134]:54516 "EHLO
 	ms-smtp-02-eri0.socal.rr.com") by vger.kernel.org with ESMTP
-	id S263185AbUEGFyb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 May 2004 01:54:31 -0400
+	id S262217AbUEGFzU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 May 2004 01:55:20 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 
 ChangeSet
-  1.1931 04/04/30 14:32:56 andrew.vasquez@apc.qlogic.com +3 -0
-  Jeremy Higdon <jeremy () sgi ! com>:
+  1.1932 04/04/30 15:06:20 andrew.vasquez@apc.qlogic.com +1 -0
+  /proc file updates:
   
-  	For those to whom this is new (it was discussed on linux-kernel
-  	and linux-ia64 I believe), normal PCI register reads imply that
-  	PCI DMA writes that occured prior to the PCI MMR (memory mapped
-  	register) read (on the PCI bus) will be reflected in system
-  	memory once the MMR read is complete.
+  	o Address 'unaligned access' message on ia64 platorms
+  	  while displaying bit-field flags.
   
-  	On our platforms, we can speed up the MMR read significantly if
-  	that ordering requirement is "relaxed".
+  	o Iterate through the the OS target array to display 
+  	  target ID bindings.
   
-  	So I attempted to find the common register reads that don't
-  	have a need for this ordering so that I could make them use
-  	this faster read.
+ drivers/scsi/qla2xxx/qla_os.c |   30 ++++++++++++------------------
+ 1 files changed, 12 insertions(+), 18 deletions(-)
 
- drivers/scsi/qla2xxx/qla_def.h  |    3 +++
- drivers/scsi/qla2xxx/qla_iocb.c |    6 +++---
- drivers/scsi/qla2xxx/qla_isr.c  |    2 +-
- 3 files changed, 7 insertions(+), 4 deletions(-)
-
-diff -Nru a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
---- a/drivers/scsi/qla2xxx/qla_def.h	Mon May  3 15:15:38 2004
-+++ b/drivers/scsi/qla2xxx/qla_def.h	Mon May  3 15:15:38 2004
-@@ -154,6 +154,9 @@
- #define RD_REG_BYTE(addr)		readb(addr)
- #define RD_REG_WORD(addr)		readw(addr)
- #define RD_REG_DWORD(addr)		readl(addr)
-+#define RD_REG_BYTE_RELAXED(addr)	readb_relaxed(addr)
-+#define RD_REG_WORD_RELAXED(addr)	readw_relaxed(addr)
-+#define RD_REG_DWORD_RELAXED(addr)	readl_relaxed(addr)
- #define WRT_REG_BYTE(addr, data)	writeb(data,addr)
- #define WRT_REG_WORD(addr, data)	writew(data,addr)
- #define WRT_REG_DWORD(addr, data)	writel(data,addr)
-diff -Nru a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
---- a/drivers/scsi/qla2xxx/qla_iocb.c	Mon May  3 15:15:38 2004
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c	Mon May  3 15:15:38 2004
-@@ -390,7 +390,7 @@
+diff -Nru a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+--- a/drivers/scsi/qla2xxx/qla_os.c	Mon May  3 15:15:57 2004
++++ b/drivers/scsi/qla2xxx/qla_os.c	Mon May  3 15:15:57 2004
+@@ -2322,18 +2322,17 @@
+     char **start, off_t offset, int length, int inout)
+ {
+ 	struct info_str	info;
+-	int		i;
+ 	int             retval = -EINVAL;
+ 	os_lun_t	*up;
+-	fc_port_t	*fcport;
++	os_tgt_t	*tq;
+ 	unsigned int	t, l;
+ 	uint32_t        tmp_sn;
+-	unsigned long   *flags;
++	uint32_t	*flags;
+ 	uint8_t		*loop_state;
+ 	int	found;
+ 	scsi_qla_host_t *ha;
+ 	char fw_info[30];
+-
++ 
+ 	DEBUG3(printk(KERN_INFO
+ 	    "Entering proc_info buff_in=%p, offset=0x%lx, length=0x%x\n",
+ 	    buffer, offset, length);)
+@@ -2437,7 +2436,7 @@
+ 	    ha->done_q_cnt, ha->scsi_retry_q_cnt);
  
- 	if (ha->req_q_cnt < (sp->req_cnt + 2)) {
- 		/* Calculate number of free request entries */
--		cnt = RD_REG_WORD(ISP_REQ_Q_OUT(ha, reg));
-+		cnt = RD_REG_WORD_RELAXED(ISP_REQ_Q_OUT(ha, reg));
- 		if (ha->req_ring_index < cnt)
- 			ha->req_q_cnt = cnt - ha->req_ring_index;
- 		else
-@@ -499,7 +499,7 @@
  
- 	/* Set chip new ring index. */
- 	WRT_REG_WORD(ISP_REQ_Q_IN(ha, reg), ha->req_ring_index);
--	RD_REG_WORD(ISP_REQ_Q_IN(ha, reg));	/* PCI Posting. */
-+	RD_REG_WORD_RELAXED(ISP_REQ_Q_IN(ha, reg));	/* PCI Posting. */
+-	flags = (unsigned long *) &ha->flags;
++	flags = (uint32_t *) &ha->flags;
  
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 	return (QLA_SUCCESS);
-@@ -748,5 +748,5 @@
+ 	if (atomic_read(&ha->loop_state) == LOOP_DOWN) {
+ 		loop_state = "DOWN";
+@@ -2511,24 +2510,19 @@
+ 	    ha->init_cb->port_name[7]);
  
- 	/* Set chip new ring index. */
- 	WRT_REG_WORD(ISP_REQ_Q_IN(ha, reg), ha->req_ring_index);
--	RD_REG_WORD(ISP_REQ_Q_IN(ha, reg));	/* PCI Posting. */
-+	RD_REG_WORD_RELAXED(ISP_REQ_Q_IN(ha, reg));	/* PCI Posting. */
- }
-diff -Nru a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
---- a/drivers/scsi/qla2xxx/qla_isr.c	Mon May  3 15:15:38 2004
-+++ b/drivers/scsi/qla2xxx/qla_isr.c	Mon May  3 15:15:38 2004
-@@ -165,7 +165,7 @@
- 				break;
- 			}
- 			WRT_REG_WORD(&reg->hccr, HCCR_CLR_RISC_INT);
--			RD_REG_WORD(&reg->hccr);
-+			RD_REG_WORD_RELAXED(&reg->hccr);
- 		}
+ 	/* Print out device port names */
+-	i = 0;
+- 	list_for_each_entry(fcport, &ha->fcports, list) {
+-		if (fcport->port_type != FCT_TARGET)
++	for (t = 0; t < MAX_FIBRE_DEVICES; t++) {
++		if ((tq = TGT_Q(ha, t)) == NULL)
+ 			continue;
+ 
+ 		copy_info(&info,
+ 		    "scsi-qla%d-target-%d="
+-		    "%02x%02x%02x%02x%02x%02x%02x%02x:%02x%02x%02x;\n",
+-		    (int)ha->instance, i,
+-		    fcport->port_name[0], fcport->port_name[1],
+-		    fcport->port_name[2], fcport->port_name[3],
+-		    fcport->port_name[4], fcport->port_name[5],
+-		    fcport->port_name[6], fcport->port_name[7],
+-		    fcport->d_id.b.domain, fcport->d_id.b.area,
+-		    fcport->d_id.b.al_pa);
+-		i++;
++		    "%02x%02x%02x%02x%02x%02x%02x%02x;\n",
++		    (int)ha->instance, t,
++		    tq->port_name[0], tq->port_name[1],
++		    tq->port_name[2], tq->port_name[3],
++		    tq->port_name[4], tq->port_name[5],
++		    tq->port_name[6], tq->port_name[7]);
  	}
- 
+-
+ 	copy_info(&info, "\nSCSI LUN Information:\n");
+ 	copy_info(&info,
+ 	    "(Id:Lun)  * - indicates lun is not registered with the OS.\n");
