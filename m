@@ -1,63 +1,59 @@
-From: Matthew Wilcox <willy@debian.org>
-Subject: Re: -test4 detects scsi hdds in another order than -test2 does
-Date: Fri, 29 Aug 2003 19:06:28 +0100
+From: Samuel Flory <sflory@rackable.com>
+Subject: Re: libata update posted (was Re: VIA Serial ATA chipset)
+Date: Fri, 29 Aug 2003 11:09:34 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030829180628.GB22294@parcelfarce.linux.theplanet.co.uk>
-References: <m33cfm19ar.fsf@bzzz.home.net> <3F4E4605.6040706@wmich.edu> <m3vfshrola.fsf@bzzz.home.net> <3F4F7129.1050506@wmich.edu> <m3vfsgpj8b.fsf@bzzz.home.net> <20030829091135.559a121f.akpm@osdl.org> <m3d6eopfvt.fsf_-_@bzzz.home.net>
+Message-ID: <3F4F96DE.7030603@rackable.com>
+References: <20030813074535.C3AB427AC8@mail.medav.de> <3F4F6863.4080400@pobox.com> <3F4F8BA7.1080002@rackable.com> <3F4F949B.6030900@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:21436 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S261940AbTH2SGa
+Received: from 64-60-248-67.cust.telepacific.net ([64.60.248.67]:50837 "EHLO
+	mx.rackable.com") by vger.kernel.org with ESMTP id S261657AbTH2SP5
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Aug 2003 14:06:30 -0400
-Content-Disposition: inline
-In-Reply-To: <m3d6eopfvt.fsf_-_@bzzz.home.net>
+	Fri, 29 Aug 2003 14:15:57 -0400
+In-Reply-To: <3F4F949B.6030900@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alex Tomas <bzzz@tmi.comex.ru>
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, Aug 29, 2003 at 08:50:30PM +0400, Alex Tomas wrote:
+Jeff Garzik wrote:
 
-Yes, we discussed this on IRC ... output trimmed (and reversed) for
-easier comparison
+> Samuel Flory wrote:
+>
+>> Jeff Garzik wrote:
+>>
+>>> Changes:
+>>> * continue work towards fully async taskfile API:  you call 
+>>> submit_tf(), and later on, your callback is called when the taskfile 
+>>> completes or times out.   async taskfile API is required for ATAPI 
+>>> and supporting more advanced host controllers like Promise or AHCI 
+>>> (SATA2).
+>>> * some cleanups
+>>
+>
+>>   I'm guessing there is no support for Promise yet?
+>
+>
+> Not yet.  Once I finish the item mentioned above, "async taskfile 
+> API", Promise support will appear quite rapidly.
+>
+>
+>> PS-  The driver works great on the silcon image chipset.  (Once I 
+>> realized that my Seagate drive needed newer firmware.)
+>
+>
+> Um... libata doesn't support Silicon Image yet?
+>
 
-> output for -test2:
-> sym0: <1010-33> rev 0x1 on pci bus 1 device 6 function 1 irq 28
-> sym1: <1010-33> rev 0x1 on pci bus 1 device 6 function 0 irq 29
-> sym2: <1010-33> rev 0x1 on pci bus 1 device 3 function 1 irq 24
-> sym3: <1010-33> rev 0x1 on pci bus 1 device 3 function 0 irq 23
-> Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-> Attached scsi disk sdb at scsi1, channel 0, id 0, lun 0
-> Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
-> Attached scsi generic sg1 at scsi1, channel 0, id 0, lun 0,  type 0
 
-> output for -test4:
-> sym0: <1010-33> rev 0x1 on pci bus 1 device 3 function 0 irq 23
-> sym1: <1010-33> rev 0x1 on pci bus 1 device 3 function 1 irq 24
-> sym2: <1010-33> rev 0x1 on pci bus 1 device 6 function 0 irq 29
-> sym3: <1010-33> rev 0x1 on pci bus 1 device 6 function 1 irq 28
-> Attached scsi disk sda at scsi2, channel 0, id 0, lun 0
-> Attached scsi disk sdb at scsi3, channel 0, id 0, lun 0
-> Attached scsi generic sg0 at scsi2, channel 0, id 0, lun 0,  type 0
-> Attached scsi generic sg1 at scsi3, channel 0, id 0, lun 0,  type 0
-
-In -test4, the sym2 driver has been converted to the pci_driver
-API.  That means that the cards are now detected and probed one
-after another rather than having the driver search through the pci
-list, find the cards in a strange order, then whack them with the
-contents of whichever NVRAM is determined to have highest priority
-(which causes all kinds of strange behaviour).
-
-In -test2, somehow the cards are discovered in reverse order.  This must
-be due to NVRAM as your cards are all of the same type.  So can you try
-clearing the NVRAM or configuring the cards to be in the opposite order?
-That should make -test2 discover the cards in the same order as -test4.
-
-I assumed everyone who used scsi on Linux was used to the cards appearing
-in random order ...
+  The Intel PIIX/ICH support in the ac kernel seems to work on all my 
+onboard  Silicon Image controllers.  I think that's only your ata-scsi 
+work, however.
 
 -- 
-"It's not Hollywood.  War is real, war is primarily not about defeat or
-victory, it is about death.  I've seen thousands and thousands of dead bodies.
-Do you think I want to have an academic debate on this subject?" -- Robert Fisk
+Once you have their hardware. Never give it back.
+(The First Rule of Hardware Acquisition)
+Sam Flory  <sflory@rackable.com>
+
+
