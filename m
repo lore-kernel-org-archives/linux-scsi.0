@@ -1,163 +1,92 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH+RFC] sg: char_devs + seq_file lk2.6.0t6
-Date: Tue, 07 Oct 2003 20:35:18 +1000
+Subject: [PATCH] scsi_debug lk 2.6.0t6
+Date: Tue, 07 Oct 2003 21:00:31 +1000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F8296E6.9060302@torque.net>
+Message-ID: <3F829CCF.3020104@torque.net>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------090201020704080406040407"
+ boundary="------------010306080203060907010001"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.triode.net.au ([202.147.124.1]:65426 "EHLO
-	iggy.triode.net.au") by vger.kernel.org with ESMTP id S262094AbTJGKgJ
+Received: from ns1.triode.net.au ([202.147.124.1]:13717 "EHLO
+	iggy.triode.net.au") by vger.kernel.org with ESMTP id S262127AbTJGLBV
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Oct 2003 06:36:09 -0400
-Received: from torque.net (dm1-2.triode.net.au [202.147.125.2])
-	by iggy.triode.net.au (8.12.8/8.12.7) with ESMTP id h97AZCP8004575
-	for <linux-scsi@vger.kernel.org>; Tue, 7 Oct 2003 20:35:14 +1000
+	Tue, 7 Oct 2003 07:01:21 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: andmike@us.ibm.com
 
 This is a multi-part message in MIME format.
---------------090201020704080406040407
+--------------010306080203060907010001
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Changes to scsi generic (sg) driver [gzipped patch against
-lk 2.6.0-test6]:
-     - add "struct cdev" [char_devs] objects to increase
-       maximum number of sg devices from 256 to 8192
-     - use seq_file interface for /proc/scsi/sg/*
-       pseudo files
+This small patch adds a "release" method to the "pseudo_0"
+device to stop the noise when the scsi_debug module is
+loaded.
 
-The first change re-introduces sg devices into sysfs.
-Each sg device has a directory (currently empty)
-with a name of the form: "/sys/cdev/major/sg<n>". When I tried
-adding 280 scsi "devices" with scsi_debug all the expected
-sg directories appeared (sg0..sg279). However sd registered
-the first 256 "disks" (up to /dev/sdiv) and failed thereafter
-with error "-16" (is anybody working on extending sd's
-disk and partition range?).
+Another annoyance that I was unable to get to the bottom
+of was during "rmmod scsi_debug" **:
+   Synchronizing SCSI cache for disk sda: <4>FAILED
+     status = 0, message = 00, host = 1, driver = 00
+That is a DID_NO_CONNECT error. So the LLD host is
+being shut down before the sd driver gets a chance to
+send through a SYNCHRONIZE CACHE command. If the user
+instigates a rmmod (as distinct from the hardware
+saying the host/device is gone), shouldn't a window
+be left open for such a flushing type command. This
+problem seems to have appeared recently.
 
-Would it be possible to put a symbolic link in the
-/sys/cdev/major/sg<n> directory to the corresponding
-sysfs scsi device (and vice versa)?
+
+** "echo -1 > add_host" in scsi_debug's driver directory
+    (i.e. remove a host) also causes the same error so the
+    problem is not perculiar to rmmod.
 
 Doug Gilbert
 
---------------090201020704080406040407
-Content-Type: application/x-gzip;
- name="sg260t6.diff.gz"
-Content-Transfer-Encoding: base64
+--------------010306080203060907010001
+Content-Type: text/plain;
+ name="scsi_debug260t6.diff"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="sg260t6.diff.gz"
+ filename="scsi_debug260t6.diff"
 
-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
---------------090201020704080406040407--
+--- linux/drivers/scsi/scsi_debug.c	2003-09-28 14:25:06.000000000 +1000
++++ linux/drivers/scsi/scsi_debug.c260t6dpg	2003-10-07 17:04:51.000000000 +1000
+@@ -55,7 +55,7 @@
+ #include "scsi_logging.h"
+ #include "scsi_debug.h"
+ 
+-static const char * scsi_debug_version_str = "Version: 1.70 (20030507)";
++static const char * scsi_debug_version_str = "Version: 1.71 (20031007)";
+ 
+ /* Additional Sense Code (ASC) used */
+ #define NO_ADDED_SENSE 0x0
+@@ -1541,7 +1541,7 @@
+         }
+ 
+ 	if (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts) {
+-		printk(KERN_INFO "scsi_debug: ... built %d host(s)\n",
++		printk(KERN_INFO "scsi_debug_init: built %d host(s)\n",
+ 		       scsi_debug_add_host);
+ 	}
+ 	return 0;
+@@ -1565,8 +1565,15 @@
+ device_initcall(scsi_debug_init);
+ module_exit(scsi_debug_exit);
+ 
++void pseudo_0_release(struct device * dev)
++{
++	if (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts)
++		printk(KERN_INFO "scsi_debug: pseudo_0_release() called\n");
++}
++
+ static struct device pseudo_primary = {
+ 	.bus_id		= "pseudo_0",
++	.release	= pseudo_0_release,
+ };
+ 
+ static int pseudo_lld_bus_match(struct device *dev, 
+
+--------------010306080203060907010001--
 
