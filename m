@@ -1,65 +1,40 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [patch for playing] 2.5.65 patch to support > 256 disks
-Date: Tue, 25 Mar 2003 13:35:02 +0100
+From: Srihari Vijayaraghavan <harisri@bigpond.com>
+Subject: Re: 2.5.65 and cciss
+Date: Wed, 26 Mar 2003 00:15:59 +1100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030325123502.GW2371@suse.de>
-References: <200303211056.04060.pbadari@us.ibm.com> <3E7C4251.4010406@torque.net> <20030322030419.1451f00b.akpm@digeo.com> <3E7C4D05.2030500@torque.net> <20030322040550.0b8baeec.akpm@digeo.com> <20030325105629.GS2371@suse.de> <3E803FDF.1070401@cyberone.com.au> <20030325120121.GV2371@suse.de> <3E8047C7.4070009@cyberone.com.au>
+Message-ID: <200303260015.59925.harisri@bigpond.com>
+References: <20030321024743.GA2267@zuul.cca.cpqcorp.net> <200303242238.11095.harisri@bigpond.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3E8047C7.4070009@cyberone.com.au>
+In-Reply-To: <200303242238.11095.harisri@bigpond.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Nick Piggin <piggin@cyberone.com.au>
-Cc: Andrew Morton <akpm@digeo.com>, dougg@torque.net, pbadari@us.ibm.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: steve.cameron@hp.com
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Mar 25 2003, Nick Piggin wrote:
-> Jens Axboe wrote:
-> 
-> >On Tue, Mar 25 2003, Nick Piggin wrote:
-> >
-> >>
-> >>Nice Jens. Very good in theory but I haven't looked at the
-> >>code too much yet.
-> >>
-> >>Would it be possible to have all queues allocate out of
-> >>the one global pool of free requests. This way you could
-> >>have a big minimum (say 128) and a big maximum
-> >>(say min(Mbytes, spindles).
-> >>
-> >
-> >Well not really, as far as I can see we _need_ a pool per queue. Imagine
-> >a bio handed to raid, needs to be split to 6 different queues. But our
-> >minimum is 4, deadlock possibility. It could probably be made to work,
-> >however I greatly prefer a per-queue reserve.
-> >
-> OK yeah you are right there. In light of your comment below
-> I'm happy with that. I was mostly worried about queues being
-> restricted to a small maximum.
+Hello Steve,
 
-Understandable, we'll make max tunable.
+On Monday 24 March 2003 22:38, Srihari Vijayaraghavan wrote:
+> ...
+> ACPI: RSDP (v000 COMPAQ                     ) @ 0x000f4f70
+> ACPI: RSDT (v001 COMPAQ P29      00000.00002) @ 0x3fffa000
+> ACPI: FADT (v001 COMPAQ P29      00000.00002) @ 0x3fffa040
+> ACPI: MADT (v001 COMPAQ 00000083 00000.00002) @ 0x3fffa100
+> ACPI: SPCR (v001 COMPAQ SPCRRBSU 00000.00001) @ 0x3fffa1c0
+> ACPI: DSDT (v001 COMPAQ     DSDT 00000.00001) @ 0x00000000
+> ACPI: BIOS passes blacklist
+> ACPI: Local APIC address 0xfee00000
+> ACPI: LAPIC (acpi_id[0x00] lapic_id[0x00] enabled)
 
-> >>This way memory usage is decoupled from the number of
-> >>queues, and busy spindles could make use of more
-> >>available free requests.
-> >>
-> >>Oh and the max value can easily be runtime tunable, right?
-> >>
-> >
-> >Sure. However, they don't really mean _anything_. Max is just some
-> >random number to prevent one queue going nuts, and could be completely
-> >removed if the vm works perfectly. Beyond some limit there's little
-> >benefit to doing that, though. But MAX could be runtime tunable. Min is
-> >basically just to make sure we don't kill ourselves, I don't see any
-> >point in making that runtime tunable. It's not really a tunable.
-> >
-> OK thats good then. I would like to see max removed, however perhaps
-> the VM isn't up to that yet. I'll be testing this when your code
-> solidifies!
+Same issue even without ACPI support being enabled in the computer. I just 
+wanted just to be sure ACPI isn't causing the trouble.
 
-Only testing will tell, so yes you are very welcome to give it a shot.
-Let me release a known working version first :)
-
+In a couple of days time I will have a chance to test it on 2.5.66 (or 
+whatever is the latest on that day and hour :-), it's very nice to see 2.5.x 
+is moving along very nice and very fast toward 2.6)
 -- 
-Jens Axboe
+Hari
+harisri@bigpond.com
+
 
