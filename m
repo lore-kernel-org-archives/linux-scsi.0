@@ -1,122 +1,59 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] kill scsi_cmnd.flags
-Date: Sat, 20 Sep 2003 10:36:39 +0200
+Subject: [PATCH] kill use_blk_tcq template flag
+Date: Sat, 20 Sep 2003 10:34:59 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030920083639.GE20301@lst.de>
+Message-ID: <20030920083459.GD20301@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([212.34.189.10]:46829 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S261762AbTITIgm (ORCPT
+Received: from verein.lst.de ([212.34.189.10]:43757 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S261746AbTITIfC (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 Sep 2003 04:36:42 -0400
+	Sat, 20 Sep 2003 04:35:02 -0400
 Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: linux-scsi@vger.kernel.org
 
-This was only used by the old error handling, the new code uses .eh_state
-and .eh_eflags instead.
+The flag isn't checked ever as drivers using the block layer tcq
+code do so by themselves, without any interaction to the scsi midlayer.
 
 
-diff -Nru a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
---- a/drivers/scsi/scsi.c	Sat Sep 20 09:36:20 2003
-+++ b/drivers/scsi/scsi.c	Sat Sep 20 09:36:20 2003
-@@ -497,7 +497,6 @@
- 	cmd->serial_number_at_timeout = 0;
- 	cmd->bufflen = sreq->sr_bufflen;
- 	cmd->buffer = sreq->sr_buffer;
--	cmd->flags = 0;
- 	cmd->retries = 0;
- 	cmd->allowed = sreq->sr_allowed;
- 	cmd->done = sreq->sr_done;
-diff -Nru a/drivers/scsi/scsi.h b/drivers/scsi/scsi.h
---- a/drivers/scsi/scsi.h	Sat Sep 20 09:36:20 2003
-+++ b/drivers/scsi/scsi.h	Sat Sep 20 09:36:20 2003
-@@ -124,27 +124,6 @@
- #define SCSI_2          3
- #define SCSI_3          4
+diff -Nru a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+--- a/drivers/scsi/53c700.c	Sat Sep 20 09:35:53 2003
++++ b/drivers/scsi/53c700.c	Sat Sep 20 09:35:53 2003
+@@ -281,7 +281,6 @@
+ 	tpnt->use_clustering = DISABLE_CLUSTERING;
+ 	tpnt->slave_configure = NCR_700_slave_configure;
+ 	tpnt->slave_destroy = NCR_700_slave_destroy;
+-	tpnt->use_blk_tcq = 1;
+ 	
+ 	if(tpnt->name == NULL)
+ 		tpnt->name = "53c700";
+diff -Nru a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+--- a/drivers/scsi/hosts.c	Sat Sep 20 09:35:53 2003
++++ b/drivers/scsi/hosts.c	Sat Sep 20 09:35:53 2003
+@@ -236,7 +236,6 @@
+ 	shost->cmd_per_lun = sht->cmd_per_lun;
+ 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+ 	shost->use_clustering = sht->use_clustering;
+-	shost->use_blk_tcq = sht->use_blk_tcq;
  
--/*
-- *  Every SCSI command starts with a one byte OP-code.
-- *  The next byte's high three bits are the LUN of the
-- *  device.  Any multi-byte quantities are stored high byte
-- *  first, and may have a 5 bit MSB in the same byte
-- *  as the LUN.
-- */
--
--/*
-- *  As the scsi do command functions are intelligent, and may need to
-- *  redo a command, we need to keep track of the last command
-- *  executed on each one.
-- */
--
--#define WAS_RESET       0x01
--#define WAS_TIMEDOUT    0x02
--#define WAS_SENSE       0x04
--#define IS_RESETTING    0x08
--#define IS_ABORTING     0x10
--#define ASKED_FOR_SENSE 0x20
--#define SYNC_RESET      0x40
- 
- struct Scsi_Host;
- struct scsi_cmnd;
-diff -Nru a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
---- a/drivers/scsi/scsi_error.c	Sat Sep 20 09:36:20 2003
-+++ b/drivers/scsi/scsi_error.c	Sat Sep 20 09:36:20 2003
-@@ -323,17 +323,6 @@
- 	 * that would indicate what we need to do.
+ 	if (sht->max_host_blocked)
+ 		shost->max_host_blocked = sht->max_host_blocked;
+diff -Nru a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+--- a/include/scsi/scsi_host.h	Sat Sep 20 09:35:53 2003
++++ b/include/scsi/scsi_host.h	Sat Sep 20 09:35:53 2003
+@@ -312,12 +312,6 @@
  	 */
- 	if (host_byte(scmd->result) == DID_RESET) {
--		if (scmd->flags & IS_RESETTING) {
--			/*
--			 * ok, this is normal.  we don't know whether in fact
--			 * the command in question really needs to be rerun
--			 * or not - if this was the original data command then
--			 * the answer is yes, otherwise we just flag it as
--			 * SUCCESS.
--			 */
--			scmd->flags &= ~IS_RESETTING;
--			return NEEDS_RETRY;
--		}
- 		/*
- 		 * rats.  we are already in the error handler, so we now
- 		 * get to try and figure out what to do next.  if the sense
-@@ -1217,14 +1206,6 @@
- 			return FAILED;
- 		}
- 	case DID_RESET:
--		/*
--		 * in the normal case where we haven't initiated a reset,
--		 * this is a failure.
--		 */
--		if (scmd->flags & IS_RESETTING) {
--			scmd->flags &= ~IS_RESETTING;
--			goto maybe_retry;
--		}
- 		return SUCCESS;
- 	default:
- 		return FAILED;
-diff -Nru a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c	Sat Sep 20 09:36:20 2003
-+++ b/drivers/scsi/scsi_lib.c	Sat Sep 20 09:36:20 2003
-@@ -260,7 +260,6 @@
- 	cmd->owner = SCSI_OWNER_MIDLEVEL;
- 	cmd->serial_number = 0;
- 	cmd->serial_number_at_timeout = 0;
--	cmd->flags = 0;
- 	cmd->abort_reason = 0;
+ 	unsigned emulated:1;
  
- 	memset(cmd->sense_buffer, 0, sizeof cmd->sense_buffer);
-diff -Nru a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
---- a/include/scsi/scsi_cmnd.h	Sat Sep 20 09:36:20 2003
-+++ b/include/scsi/scsi_cmnd.h	Sat Sep 20 09:36:20 2003
-@@ -118,8 +118,6 @@
- 						 * received on original command 
- 						 * (auto-sense) */
- 
--	unsigned flags;
+-	/* 
+-	 * True if the driver wishes to use the generic block layer
+-	 * tag queueing functions
+-	 */
+-	unsigned use_blk_tcq:1;
 -
- 	/* Low-level done function - can be used by low-level driver to point
- 	 *        to completion function.  Not used by mid/upper level code. */
- 	void (*scsi_done) (struct scsi_cmnd *);
+ 	/*
+ 	 * Countdown for host blocking with no commands outstanding
+ 	 */
