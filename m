@@ -1,53 +1,79 @@
-From: Jes Sorensen <jes@wildopensource.com>
-Subject: Re: qla1280 compile problems
-Date: 05 Aug 2003 08:54:41 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <m3wudsuuwe.fsf@trained-monkey.org>
-References: <20030805121813.GA24647@lst.de>
-	<m31xw0wa58.fsf@trained-monkey.org> <20030805124904.GA25181@lst.de>
+From: Ishikawa <ishikawa@yk.rim.or.jp>
+Subject: Re: Badness in device_release at drivers/base/core.c:84
+Date: Wed, 06 Aug 2003 01:10:21 +0900
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <3F2FD6ED.1005BB2C@yk.rim.or.jp>
+References: <20030801182207.GA3759@blazebox.homeip.net>	    <20030801144455.450d8e52.akpm@osdl.org>	    <20030803015510.GB4696@blazebox.homeip.net>	    <20030802190737.3c41d4d8.akpm@osdl.org>	    <20030803214755.GA1010@blazebox.homeip.net>	    <20030803145211.29eb5e7c.akpm@osdl.org>	    <20030803222313.GA1090@blazebox.homeip.net>	    <20030803223115.GA1132@blazebox.homeip.net>	    <20030804093035.A24860@beaverton.ibm.com>    <1060021614.889.6.camel@blaze.homeip.net>    <1352160000.1060025773@aslan.btc.adaptec.com> <5793.199.181.174.146.1060050091.squirrel@www.blazebox.homeip.net> <3F2F84D2.8000202@nospam.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from trained-monkey.org ([209.217.122.11]:9744 "EHLO
-	trained-monkey.org") by vger.kernel.org with ESMTP id S272749AbTHEMys
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Aug 2003 08:54:48 -0400
-In-Reply-To: <20030805124904.GA25181@lst.de>
+Content-Type: text/plain; charset=iso-2022-jp
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: wb <dead_email@nospam.com>
+Cc: Paul Blazejowski <paulb@blazebox.homeip.net>, "Justin T. Gibbs" <gibbs@scsiguy.com>, Patrick Mansfield <patmans@us.ibm.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
->>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+(Sorry this is not strictly related to SCSI, but I could not help it.)
 
-Christoph> On Tue, Aug 05, 2003 at 08:40:03AM -0400, Jes Sorensen
-Christoph> wrote:
->> Which version of the driver are you testing and what kernel? I
->> tried it out fairly recently on 2.5.x (2.5.59 or so) and it
->> compiled without any problems.
+Regarding the use of a program from uucp suite
+for console output capture,
+we can use C-Kermit as well.
 
-Christoph> That's Jame's latest scsi-misc-2.5 tree, i.e. Linus' tree
-Christoph> from four days ago plus lots of scsi-related chanhges
-Christoph> including qla 3.23.34.
+>   Your need a NULL modem serial cable available
+>   from any computer store.
+> 
+> Install uucp - I use on the HOST :
+> 
+> uucp-1.06.1-33.7.2.
 
-Ok, will take a look at this.
+Or you can use C-Kermit.
+See
 
-Christoph> It does make sense.  Your punishing all ia64 users for SN2
-Christoph> breakage although 95% (or probably more) of the IA64 boxens
-Christoph> won't ever need it.
+   http://www.columbia.edu/kermit/ckermit.html
 
-Punishing? thats why you have the option to compile the kernel as
-CONFIG_IA64_HP_ZX1 or CONFIG_IA64_DIG. The point of the generic kernel
-is that it will boot on all boxes, thats why this feature is only
-enabled for generic kernels or sn2 specific. Second, the 'cost' of
-this is a test and a branch and even on sn2 it just flips a
-bit. Hardly comparable to the cost of loading the address into the
-device.
+for details. There are precompiled packages.
 
-Christoph> And no, so far SN2 isn't part of the generic IA64 build in
-Christoph> either 2.4 or 2.5 although it's hopefully going to happen
-Christoph> soon for 2.5.
+>  ... [omission ] ...
 
-I'll check what the status is, if it prevents current kernels from
-building I'll of course take it out for now.
+> 5. Start uucp on the HOST:
+> 
+>      cu -l /dev/ttyS0 -s 9600
 
-Jes
+       kermit
+       set line /dev/ttyS0
+       set speed 9600
+       connect
+ 
+and you can issue other commands.
+        set [space] ?
+will print all the available options at that point.
+(You can log the interaction into a file by issueing
+a command to kermit, too, but using script and then run kermit
+inside the scripted session might be easier.)
+(Generally speaking hitting ? somewhere on the kermit command line
+prints usable options/setting/keywords, and so
+you can learn the basics very quickly.)
+You can set up a startup file that sets
+the device name, speed, parity, data size, etc. and
+so you don't have to type all the command every time.
+
+While I agree cu might work well for one shot job,
+running a full terminal emulator like C-Kermit
+helps us in the long term.
+
+Just thought to let you know a full-featured terminal
+emulator is available under linux.
+
+> John Donnelly AT HP DOT com
+
+Is the succinct and to the point steps
+part of a widely available document?
+
+I wish I knew this a few years ago.
+
+
+-- 
+int main(void){int j=2003;/*(c)2003 cishikawa. */
+char t[] ="<CI> @abcdefghijklmnopqrstuvwxyz.,\n\"";
+char *i ="g>qtCIuqivb,gCwe\np@.ietCIuqi\"tqkvv is>dnamz";
+while(*i)((j+=strchr(t,*i++)-(int)t),(j%=sizeof t-1),
+(putchar(t[j])));return 0;}/* under GPL */
