@@ -1,40 +1,27 @@
-From: Andrew Schulman <andrex@alumni.utexas.net>
-Subject: Re: dc395x: can't write to tape
-Date: Wed, 12 Jan 2005 03:58:20 -0500
-Message-ID: <200501120358.20963.andrex@alumni.utexas.net>
-References: <200501060518.25782.andrex@alumni.utexas.net> <200501111019.06281.andrex@alumni.utexas.net> <Pine.LNX.4.60.0501112252560.11812@poirot.grange>
+From: "frage schnell" <frage.schnell@gmx.de>
+Subject: sym53c8xx_2 make scsitap slow
+Date: Wed, 12 Jan 2005 12:15:15 +0100 (MET)
+Message-ID: <15050.1105528515@www34.gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rwcrmhc11.comcast.net ([204.127.198.35]:25237 "EHLO
-	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
-	id S261302AbVALI6X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Jan 2005 03:58:23 -0500
-In-Reply-To: <Pine.LNX.4.60.0501112252560.11812@poirot.grange>
-Content-Disposition: inline
+Received: from pop.gmx.de ([213.165.64.20]:3499 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261272AbVALLPQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Jan 2005 06:15:16 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: linux-scsi@vger.kernel.org, Jamie Lenehan <lenehan@twibble.org>
+To: linux-scsi@vger.kernel.org
 
-> > Okay, I finally got to this.  Rebooted with mem=900M.  Unfortunately tar
-> > fails as before:
-> >
-> > tar: /dev/st0: Wrote only 0 of 10240 bytes
-> > tar: Error is not recoverable: exiting now
->
-> I didn't expect disabling highmem to fix _this_ error. But do you still
-> see the "dc395x: sg_update_list: sg_to_virt failed" message with 900M?
-> Perhaps, the most interesting test would be with my patch...
+I used a HP ulrium storage on a tekteam DC-390U2B with kernel 2.6.5 and
+modul sym53c8xx 
+  tar writs with 11MB/s to the tape
+with new kernel 2.6.8 or 2.6.10
+   tar writs with 3MB/s to the tape
 
-OK.  Yes, with mem=900M, the 'sg_to_virt failed' messages all went away.  Will 
-test the patch when I can.
+wath have I to to to get the same speed with the new kennel 
 
-> ...well, could you just keep the log for now, maybe we'll have a look at
-> it later, I'd just first try to fix the highmem problem, before trying to
-> figure out what's going on with your tape drive. BTW, when it worked, you
-> already had 1G RAM in the PC, right?
-
-Right.
+-- 
++++ Sparen Sie mit GMX DSL +++ http://www.gmx.net/de/go/dsl
+AKTION für Wechsler: DSL-Tarife ab 3,99 EUR/Monat + Startguthaben
