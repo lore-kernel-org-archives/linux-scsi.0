@@ -1,99 +1,121 @@
-From: Thomas =?iso-8859-1?Q?Lang=E5s?= <tlan@stud.ntnu.no>
-Subject: Re: Linux Kernel 2.4.18 and 2.4.19 problems
-Date: Sun, 21 Jul 2002 04:46:33 +0200
+From: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Subject: 2 PATCHES: fix request_tranferlength
+Date: Sun, 21 Jul 2002 15:15:23 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020721024633.GA22280@stud.ntnu.no>
-References: <20020719192607.GA13880@stud.ntnu.no> <20020719140416.A25577@eng2.beaverton.ibm.com>
-Reply-To: linux-kernel@vger.kernel.org
+Message-ID: <20020721151523.D1909@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-md5;
+	protocol="application/pgp-signature"; boundary="TeJTyD9hb8KJN2Jy"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20020719140416.A25577@eng2.beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-
-Patrick Mansfield:
-> Also, cat /proc/scsi/scsi and /proc/scsi/qla*/[0-9] and see what they show.
-
-test3:~# cat /proc/scsi/scsi 
-Attached devices: 
-Host: scsi0 Channel: 00 Id: 00 Lun: 00
-  Vendor: DELL     Model: PERCRAID Mirror  Rev: 0001
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 03 Lun: 00
-  Vendor: CNSi     Model: G7324            Rev: L400
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-
-test3:~# cat /proc/scsi/qla2200/1 
-QLogic PCI to Fibre Channel Host Adapter for ISP2100/ISP2200/ISP2200A:
-        Firmware version:  2.01.35, Driver version 5.31.RH1
-Entry address = f8955060
-HBA: QLA2200 , Serial# B50409
-Request Queue = 0x36300000, Response Queue = 0x36ddc000
-Request Queue count= 512, Response Queue count= 64
-Number of pending commands = 0x0
-Number of queued commands = 0x0
-Number of free request entries = 494
-Number of mailbox timeouts = 0
-Number of ISP aborts = 0
-Number of loop resyncs = 0
-Number of retries for empty slots = 0
-Number of reqs in retry_q = 0
-Number of reqs in done_q = 0
-Number of pending in_q reqs = 0
-Host adapter: state = UP, flags= 0x20a0837
+To: Linux SCSI list <linux-scsi@vger.kernel.org>
+Cc: USB Storage List <usb-storage@one-eyed-alien.net>
 
 
-SCSI Device Information:
-scsi-qla0-adapter-node=200000e08b02894b;
-scsi-qla0-adapter-port=210000e08b02894b;
-scsi-qla0-port-0=1000005013d01808:2000005013d01808;
-scsi-qla0-port-1=1000005013d016d3:2000005013d016d3;
-scsi-qla0-port-2=1000005013d0158d:2000005013d0158d;
-scsi-qla0-port-3=1000005013d0154b:2000005013d0154b;
+--TeJTyD9hb8KJN2Jy
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-SCSI LUN Information:
-(Id:Lun)
-( 3: 0): Total reqs 12, Pending 0, Queued 0, full 0, flags 0x0, 0:0:82,
+These two BK patches fix two instances where a command is issued with an
+incorrect transfer length.  The first is in the probing code... the section
+where we make the second INQUIRY request for the full INQUIRY data.  The
+second is in sd.c where the MODE_SENSE request is issued.
 
-test3:~# cat /proc/scsi/qla2200/2 
-QLogic PCI to Fibre Channel Host Adapter for ISP2100/ISP2200/ISP2200A:
-        Firmware version:  2.01.35, Driver version 5.31.RH1
-Entry address = f8955060
-HBA: QLA2200 , Serial# B50405
-Request Queue = 0x362e0000, Response Queue = 0x36d86000
-Request Queue count= 512, Response Queue count= 64
-Number of pending commands = 0x0
-Number of queued commands = 0x0
-Number of free request entries = 508
-Number of mailbox timeouts = 0
-Number of ISP aborts = 0
-Number of loop resyncs = 0
-Number of retries for empty slots = 0
-Number of reqs in retry_q = 0
-Number of reqs in done_q = 0
-Number of pending in_q reqs = 0
-Host adapter: state = UP, flags= 0x20a0837
+Both of these patches are requred to allow usb-storage devices to work
+properly.  As a side-effect, this should reduce problems for all 'emulated
+scsi' systems (ide-scsi, sbp2, etc).
+
+Is there someone in particular I should send them to?  In the USB world,
+all patches go to Greg K-H... what's the procedure here in SCSI land?
+
+Matt
+
+# This is a BitKeeper generated patch for the following project:
+# Project Name: greg k-h's linux 2.5 USB kernel tree
+# This patch format is intended for GNU patch command version 2.5 or higher.
+# This patch includes the following deltas:
+#	           ChangeSet	1.594   -> 1.595 =20
+#	drivers/scsi/scsi_scan.c	1.9     -> 1.10  =20
+#
+# The following is the BitKeeper ChangeSet Log
+# --------------------------------------------
+# 02/07/20	mdharm@zen.san.one-eyed-alien.net	1.595
+# Fixed one of the INQUIRY commands used for probing SCSI devices.  This
+# badly-formed command was trapped by the usb-storage driver BUG_ON() which
+# is designed to stop command with a badly formed transfer_length field.
+# --------------------------------------------
+#
+diff -Nru a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+--- a/drivers/scsi/scsi_scan.c	Sun Jul 21 00:55:37 2002
++++ b/drivers/scsi/scsi_scan.c	Sun Jul 21 00:55:37 2002
+@@ -717,7 +717,7 @@
+=20
+ 		scsi_wait_req (SRpnt, (void *) scsi_cmd,
+ 			  (void *) scsi_result,
+-			  256, SCSI_TIMEOUT+4*HZ, 3);
++			  scsi_cmd[4], SCSI_TIMEOUT+4*HZ, 3);
+ 		/* assume successful */
+ 	}
+ 	SDpnt->inquiry_len =3D possible_inq_resp_len;
 
 
-SCSI Device Information:
-scsi-qla1-adapter-node=200000e08b02854b;
-scsi-qla1-adapter-port=210000e08b02854b;
-scsi-qla1-port-0=1000005013d01808:2000005013d01808;
-scsi-qla1-port-1=1000005013d016d3:2000005013d016d3;
-scsi-qla1-port-2=1000005013d0158d:2000005013d0158d;
-scsi-qla1-port-3=1000005013d0154b:2000005013d0154b;
+# This is a BitKeeper generated patch for the following project:
+# Project Name: greg k-h's linux 2.5 USB kernel tree
+# This patch format is intended for GNU patch command version 2.5 or higher.
+# This patch includes the following deltas:
+#	           ChangeSet	1.595   -> 1.596 =20
+#	   drivers/scsi/sd.c	1.22    -> 1.23  =20
+#
+# The following is the BitKeeper ChangeSet Log
+# --------------------------------------------
+# 02/07/20	greg@kroah.com	1.7.2.39
+# patch-2.5.27
+# --------------------------------------------
+# 02/07/20	greg@kroah.com	1.561.1.124
+# Merge kroah.com:/home/linux/linux/linux-2.5
+# into kroah.com:/home/linux/linux/tmp/linux-2.5
+# --------------------------------------------
+# 02/07/20	mdharm@zen.san.one-eyed-alien.net	1.596
+# Modified the MODE_SENSE write-protect test in sd.c to issue a SCSI request
+# with the request_bufflen the same size as the MODE_SENSE command being
+# issued requests.
+# --------------------------------------------
+#
+diff -Nru a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+--- a/drivers/scsi/sd.c	Sun Jul 21 00:55:44 2002
++++ b/drivers/scsi/sd.c	Sun Jul 21 00:55:44 2002
+@@ -1102,7 +1102,7 @@
+ 	SRpnt->sr_data_direction =3D SCSI_DATA_READ;
+=20
+ 	scsi_wait_req(SRpnt, (void *) cmd, (void *) buffer,
+-		      512, SD_TIMEOUT, MAX_RETRIES);
++		      255, SD_TIMEOUT, MAX_RETRIES);
+=20
+ 	the_result =3D SRpnt->sr_result;
+=20
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
 
-SCSI LUN Information:
-(Id:Lun)
+C:  Like the Furby?
+DP: He gives me the creeps.  Think the SPCA will take him?
+					-- Cobb and Dust Puppy
+User Friendly, 1/2/1999
 
+--TeJTyD9hb8KJN2Jy
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-Both controllers should find a disk now, really, but they don't.
-Swapping to a newer version of the driver (6.0beta or 6.1beta)
-will make it find one drive on each HBA, I'll do that tomorrow
-along with logging stuff.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
 
--- 
-Thomas
+iD8DBQE9OzJ6IjReC7bSPZARAnp8AJ4i6lK5dJnjF50iSH5NCyieNBSwHwCg1m1x
+8raQpUBv38jkvZY9hDXxQf0=
+=YrWZ
+-----END PGP SIGNATURE-----
+
+--TeJTyD9hb8KJN2Jy--
