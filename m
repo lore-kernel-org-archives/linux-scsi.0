@@ -1,216 +1,218 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] dc395x fix memory mapping (was Re: dc395x: can't write
- to tape)
-Date: Mon, 21 Feb 2005 23:01:27 +0100 (CET)
-Message-ID: <Pine.LNX.4.60.0502212258460.5642@poirot.grange>
-References: <200501060518.25782.andrex@alumni.utexas.net>
- <Pine.LNX.4.60.0501062138580.7568@poirot.grange> <20050109053342.GA5799@twibble.org>
- <Pine.LNX.4.60.0501091238010.3910@poirot.grange> <20050109125116.GA6293@twibble.org>
- <Pine.LNX.4.60.0501222356400.5769@poirot.grange> <Pine.LNX.4.60.0502062309570.5347@poirot.grange>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [RFC] adding per scsi-host workqueues for defered processing
+Date: Mon, 21 Feb 2005 16:09:37 -0800
+Message-ID: <20050222000937.GA7338@plap.qlogic.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Received: from mail.gmx.de ([213.165.64.20]:25760 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S262160AbVBUW2q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Feb 2005 17:28:46 -0500
-In-Reply-To: <Pine.LNX.4.60.0502062309570.5347@poirot.grange>
+Content-Type: text/plain; charset=us-ascii
+Received: from avexch02.qlogic.com ([198.70.193.200]:51641 "EHLO
+	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S262185AbVBVAJM
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Feb 2005 19:09:12 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jamie Lenehan <lenehan@twibble.org>
-Cc: linux-scsi@vger.kernel.org
+To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sun, 6 Feb 2005, Guennadi Liakhovetski wrote:
+Following discussions which resulted from the:
 
-> Two weeks since I posted this patch - ping...
+[RFC] target code updates to support scanned targets
+http://marc.theaimsgroup.com/?l=linux-scsi&m=110850749515984&w=2
 
-...and another two weeks since you, Jamie, replied to me privately. Just 
-wanted to say, it would be good to get this bug fixed for the post-2.6.11 
-SCSI patch.
+thread, the overall consensus seems to be that transport-classes
+should support a 'true-hotplug' mechanism of device discovery and
+removal (this involves both registration and lun-scanning).  In order
+to facilitate this ability and to not constrain the LLDD from the
+typical restrictions of the storage scanning process:
 
-Regards
-Guennadi
-> 
-> On Sun, 23 Jan 2005, Guennadi Liakhovetski wrote:
-> 
-> > On Sun, 9 Jan 2005, Jamie Lenehan wrote:
-> > 
-> > > On Sun, Jan 09, 2005 at 12:42:26PM +0100, Guennadi Liakhovetski wrote:
-> > > [...]
-> > > > I could try to improve the highmem situation / sg-handling. Or do you plan 
-> > > > to do it, Jamie?
-> > > 
-> > > It's on my list of things to do, but I doubt I'll have any time to do
-> > > anything about in the next few months. So if you have the time and
-> > > desire please go ahead! I'll can test any changes you make (with a
-> > > CD-R/W, tape-drive and HDD), although it may take me a week or two to
-> > > get around to it.
-> > 
-> > Ok, less than 2 weeks and here comes the first attempt. It removes 
-> > page_to_virt and maps sg lists dynamically. Please, review, test. Slightly 
-> > tested here - without highmem.
-> > 
-> > Thanks
-> > Guennadi
-> > ---
-> > Guennadi Liakhovetski
-> > 
-> > Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-> > 
-> > diff -u a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-> > --- a/drivers/scsi/dc395x.c	17 Nov 2004 21:04:51
-> > +++ b/drivers/scsi/dc395x.c	22 Jan 2005 22:55:45
-> > @@ -182,7 +182,7 @@
-> >   * cross a page boundy.
-> >   */
-> >  #define SEGMENTX_LEN	(sizeof(struct SGentry)*DC395x_MAX_SG_LISTENTRY)
-> > -
-> > +#define VIRTX_LEN	(sizeof(void *) * DC395x_MAX_SG_LISTENTRY)
-> >  
-> >  struct SGentry {
-> >  	u32 address;		/* bus! address */
-> > @@ -234,6 +234,7 @@
-> >  	u8 sg_count;			/* No of HW sg entries for this request */
-> >  	u8 sg_index;			/* Index of HW sg entry for this request */
-> >  	u32 total_xfer_length;		/* Total number of bytes remaining to be transfered */
-> > +	void **virt_map;
-> >  	unsigned char *virt_addr;	/* Virtual address of current transfer position */
-> >  
-> >  	/*
-> > @@ -1020,14 +1021,14 @@
-> >  			reqlen, cmd->request_buffer, cmd->use_sg,
-> >  			srb->sg_count);
-> >  
-> > -		srb->virt_addr = page_address(sl->page);
-> >  		for (i = 0; i < srb->sg_count; i++) {
-> > -			u32 busaddr = (u32)sg_dma_address(&sl[i]);
-> > -			u32 seglen = (u32)sl[i].length;
-> > -			sgp[i].address = busaddr;
-> > +			u32 seglen = (u32)sg_dma_len(sl + i);
-> > +			sgp[i].address = (u32)sg_dma_address(sl + i);
-> >  			sgp[i].length = seglen;
-> >  			srb->total_xfer_length += seglen;
-> > +			srb->virt_map[i] = kmap(sl[i].page);
-> >  		}
-> > +		srb->virt_addr = srb->virt_map[0];
-> >  		sgp += srb->sg_count - 1;
-> >  
-> >  		/*
-> > @@ -1964,6 +1965,7 @@
-> >  	int segment = cmd->use_sg;
-> >  	u32 xferred = srb->total_xfer_length - left; /* bytes transfered */
-> >  	struct SGentry *psge = srb->segment_x + srb->sg_index;
-> > +	void **virt = srb->virt_map;
-> >  
-> >  	dprintkdbg(DBG_0,
-> >  		"sg_update_list: Transfered %i of %i bytes, %i remain\n",
-> > @@ -2003,16 +2005,16 @@
-> >  
-> >  	/* We have to walk the scatterlist to find it */
-> >  	sg = (struct scatterlist *)cmd->request_buffer;
-> > +	idx = 0;
-> >  	while (segment--) {
-> >  		unsigned long mask =
-> >  		    ~((unsigned long)sg->length - 1) & PAGE_MASK;
-> >  		if ((sg_dma_address(sg) & mask) == (psge->address & mask)) {
-> > -			srb->virt_addr = (page_address(sg->page)
-> > -					   + psge->address -
-> > -					   (psge->address & PAGE_MASK));
-> > +			srb->virt_addr = virt[idx] + (psge->address & ~PAGE_MASK);
-> >  			return;
-> >  		}
-> >  		++sg;
-> > +		++idx;
-> >  	}
-> >  
-> >  	dprintkl(KERN_ERR, "sg_update_list: sg_to_virt failed\n");
-> > @@ -2138,7 +2140,7 @@
-> >  				DC395x_read32(acb, TRM_S1040_DMA_CXCNT));
-> >  		}
-> >  		/*
-> > -		 * calculate all the residue data that not yet tranfered
-> > +		 * calculate all the residue data that not yet transfered
-> >  		 * SCSI transfer counter + left in SCSI FIFO data
-> >  		 *
-> >  		 * .....TRM_S1040_SCSI_COUNTER (24bits)
-> > @@ -3256,6 +3258,7 @@
-> >  	struct scsi_cmnd *cmd = srb->cmd;
-> >  	enum dma_data_direction dir = cmd->sc_data_direction;
-> >  	if (cmd->use_sg && dir != PCI_DMA_NONE) {
-> > +		int i;
-> >  		/* unmap DC395x SG list */
-> >  		dprintkdbg(DBG_SG, "pci_unmap_srb: list=%08x(%05x)\n",
-> >  			srb->sg_bus_addr, SEGMENTX_LEN);
-> > @@ -3265,6 +3268,8 @@
-> >  		dprintkdbg(DBG_SG, "pci_unmap_srb: segs=%i buffer=%p\n",
-> >  			cmd->use_sg, cmd->request_buffer);
-> >  		/* unmap the sg segments */
-> > +		for (i = 0; i < srb->sg_count; i++)
-> > +			kunmap(virt_to_page(srb->virt_map[i]));
-> >  		pci_unmap_sg(acb->dev,
-> >  			     (struct scatterlist *)cmd->request_buffer,
-> >  			     cmd->use_sg, dir);
-> > @@ -3311,7 +3316,7 @@
-> >  
-> >  	if (cmd->use_sg) {
-> >  		struct scatterlist* sg = (struct scatterlist *)cmd->request_buffer;
-> > -		ptr = (struct ScsiInqData *)(page_address(sg->page) + sg->offset);
-> > +		ptr = (struct ScsiInqData *)(srb->virt_map[0] + sg->offset);
-> >  	} else {
-> >  		ptr = (struct ScsiInqData *)(cmd->request_buffer);
-> >  	}
-> > @@ -4246,8 +4251,9 @@
-> >  	const unsigned srbs_per_page = PAGE_SIZE/SEGMENTX_LEN;
-> >  
-> >  	for (i = 0; i < DC395x_MAX_SRB_CNT; i += srbs_per_page)
-> > -		if (acb->srb_array[i].segment_x)
-> > -			kfree(acb->srb_array[i].segment_x);
-> > +		kfree(acb->srb_array[i].segment_x);
-> > +
-> > +	vfree(acb->srb_array[0].virt_map);
-> >  }
-> >  
-> >  
-> > @@ -4263,9 +4269,12 @@
-> >  	int srb_idx = 0;
-> >  	unsigned i = 0;
-> >  	struct SGentry *ptr;
-> > +	void **virt_array;
-> >  
-> > -	for (i = 0; i < DC395x_MAX_SRB_CNT; i++)
-> > +	for (i = 0; i < DC395x_MAX_SRB_CNT; i++) {
-> >  		acb->srb_array[i].segment_x = NULL;
-> > +		acb->srb_array[i].virt_map = NULL;
-> > +	}
-> >  
-> >  	dprintkdbg(DBG_1, "Allocate %i pages for SG tables\n", pages);
-> >  	while (pages--) {
-> > @@ -4286,6 +4295,19 @@
-> >  		    ptr + (i * DC395x_MAX_SG_LISTENTRY);
-> >  	else
-> >  		dprintkl(KERN_DEBUG, "No space for tmsrb SG table reserved?!\n");
-> > +
-> > +	virt_array = vmalloc((DC395x_MAX_SRB_CNT + 1) * DC395x_MAX_SG_LISTENTRY * sizeof(void*));
-> > +
-> > +	if (!virt_array) {
-> > +		adapter_sg_tables_free(acb);
-> > +		return 1;
-> > +	}
-> > +
-> > +	for (i = 0; i < DC395x_MAX_SRB_CNT + 1; i++) {
-> > +		acb->srb_array[i].virt_map = virt_array;
-> > +		virt_array += DC395x_MAX_SG_LISTENTRY;
-> > +	}
-> > +
-> >  	return 0;
-> >  }
-> >  
-> > 
-> 
-> ---
-> Guennadi Liakhovetski
-> 
-> 
+* must be done from process context -- depending on transport type,
+  discovery can occur from a non-process context
+* potentially _long_ scan times -- even if discovery is done from a
+  'sleeping' capable context, halting a LLDD for discovery purposes
+  is typically undesirable.
 
----
-Guennadi Liakhovetski
+I'd like to propose the addition of a per-Scsi_Host work-queue to
+manage these scanning as well as any other (relevant)
+lower-level-driver differed requests.
 
+The attached patch adds:
+
+1) a new scsi-host template member 'create_work_queue' which when set
+   will create a single-threaded (the per-CPU option seemed too
+   heavyweight) work-queue.
+2) an exported helper function scsi_queue_work() to queue the work to
+   the scsi-host work-queue.
+
+the interface was kept flexible -- queuing of a work_struct object
+rather than adding small wrapper functions to perform distinct
+operations (i.e. scsi_scan_target_deferred(...), etc) so that any
+'deferred' action could be requested by a transport-class or LLDD.
+
+Example usage:
+
+  scsi_transport_fc.h:
+
+	struct fc_rport {
+		...
+	
+		struct work_struct scan_work;
+	} __attribute__((aligned(sizeof(unsigned long))));
+
+  scsi_transport_fc.c:
+
+	...	
+	static void fc_scan_rport_work(void *data)
+	{
+		struct fc_rport *rport = (struct fc_rport *)data;
+
+		scsi_scan_target(&rport->dev, rport->channel,
+			rport->scsi_target_id, SCAN_WILD_CARD, 0);
+	}	
+
+	struct fc_rport *
+	fc_create_rport(struct Scsi_Host *shost, int channel,
+		struct fc_rport_identifiers  *ids)
+	{
+		...
+		INIT_WORK(&rport->scan_work,
+			fc_scan_rport_work, rport);
+		...
+
+	
+	void
+	fc_remote_port_unblock(struct fc_rport *rport)
+	{
+		struct Scsi_Host *shost = rport_to_shost(rport);
+		...
+		if (rport->port_state == FC_PORTSTATE_OFFLINE)
+			/* Initiate a full rescan, as all
+			 * scsi_target objects have been previously
+			 * torn-down. */
+			scsi_queue_work(shost, &rport->scan_work);
+		else
+			scsi_target_unblock(&rport->dev);
+
+Anyway, comments?
+
+--
+Andrew Vasquez
+
+===== drivers/scsi/hosts.c 1.107 vs edited =====
+--- 1.107/drivers/scsi/hosts.c	2005-01-18 11:15:06 -08:00
++++ edited/drivers/scsi/hosts.c	2005-02-21 15:10:38 -08:00
+@@ -160,6 +160,9 @@ static void scsi_host_dev_release(struct
+ 		shost->eh_notify = NULL;
+ 	}
+ 
++	if (shost->create_work_queue)
++		destroy_workqueue(shost->work_q);
++
+ 	scsi_proc_hostdir_rm(shost->hostt);
+ 	scsi_destroy_command_freelist(shost);
+ 	kfree(shost->shost_data);
+@@ -247,6 +250,7 @@ struct Scsi_Host *scsi_host_alloc(struct
+ 	shost->cmd_per_lun = sht->cmd_per_lun;
+ 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+ 	shost->use_clustering = sht->use_clustering;
++	shost->create_work_queue = sht->create_work_queue;
+ 
+ 	if (sht->max_host_blocked)
+ 		shost->max_host_blocked = sht->max_host_blocked;
+@@ -285,16 +289,27 @@ struct Scsi_Host *scsi_host_alloc(struct
+ 	snprintf(shost->shost_classdev.class_id, BUS_ID_SIZE, "host%d",
+ 		  shost->host_no);
+ 
++	if (shost->create_work_queue) {
++		snprintf(shost->work_q_name, KOBJ_NAME_LEN, "scsi_wq_%d",
++			shost->host_no);
++		shost->work_q = create_singlethread_workqueue(
++			shost->work_q_name);
++		if (!shost->work_q)
++			goto fail_destroy_freelist;
++	}
++
+ 	shost->eh_notify = &complete;
+ 	rval = kernel_thread(scsi_error_handler, shost, 0);
+ 	if (rval < 0)
+-		goto fail_destroy_freelist;
++		goto fail_destroy_workqueue;
+ 	wait_for_completion(&complete);
+ 	shost->eh_notify = NULL;
+ 
+ 	scsi_proc_hostdir_add(shost->hostt);
+ 	return shost;
+ 
++ fail_destroy_workqueue:
++	destroy_workqueue(shost->work_q);
+  fail_destroy_freelist:
+ 	scsi_destroy_command_freelist(shost);
+  fail_kfree:
+@@ -392,3 +407,26 @@ int scsi_is_host_device(const struct dev
+ 	return dev->release == scsi_host_dev_release;
+ }
+ EXPORT_SYMBOL(scsi_is_host_device);
++
++/**
++ * scsi_queue_work - Queue work to the Scsi_Host workqueue.
++ * @shost:	Pointer to Scsi_Host.
++ * @work:	Work to queue for execution.
++ *
++ * Return value: 
++ * 	0 on success / != 0 for error
++ **/
++int scsi_queue_work(struct Scsi_Host *shost, struct work_struct *work)
++{
++	if (unlikely(!shost->create_work_queue)) {
++		printk(KERN_ERR
++			"ERROR: Scsi host '%s' attempted to queue scsi-work, "
++			"when no workqueue created.\n", shost->hostt->name);
++		dump_stack();
++
++		return -EINVAL;
++	}
++
++	return queue_work(shost->work_q, work);
++}
++EXPORT_SYMBOL_GPL(scsi_queue_work);
+===== include/scsi/scsi_host.h 1.26 vs edited =====
+--- 1.26/include/scsi/scsi_host.h	2005-01-19 08:01:21 -08:00
++++ edited/include/scsi/scsi_host.h	2005-02-21 12:13:32 -08:00
+@@ -4,6 +4,7 @@
+ #include <linux/device.h>
+ #include <linux/list.h>
+ #include <linux/types.h>
++#include <linux/workqueue.h>
+ 
+ struct block_device;
+ struct module;
+@@ -363,6 +364,11 @@ struct scsi_host_template {
+ 	unsigned skip_settle_delay:1;
+ 
+ 	/*
++	 * True if a work-queue should be created for shost processing.
++	 */
++	unsigned create_work_queue:1;
++
++	/*
+ 	 * Countdown for host blocking with no commands outstanding
+ 	 */
+ 	unsigned int max_host_blocked;
+@@ -501,6 +507,11 @@ struct Scsi_Host {
+ 	 */
+ 	unsigned reverse_ordering:1;
+ 
++	unsigned create_work_queue:1;
++
++	char work_q_name[KOBJ_NAME_LEN];
++	struct workqueue_struct *work_q;
++
+ 	/*
+ 	 * Host has rejected a command because it was busy.
+ 	 */
+@@ -598,6 +609,7 @@ extern void scsi_free_host_dev(struct sc
+ extern struct scsi_device *scsi_get_host_dev(struct Scsi_Host *);
+ int scsi_is_host_device(const struct device *);
+ 
++extern int scsi_queue_work(struct Scsi_Host *, struct work_struct *);
+ 
+ /* legacy interfaces */
+ extern struct Scsi_Host *scsi_register(struct scsi_host_template *, int);
