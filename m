@@ -1,23 +1,58 @@
-From: Greg KH <greg@kroah.com>
+From: Phil Stracchino <alaric@babcom.com>
 Subject: Re: [linux-usb-devel] Feiya 5-in-1 Card Reader
-Date: Wed, 4 Sep 2002 17:10:08 -0700
+Date: Wed, 4 Sep 2002 21:11:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020905001008.GA8947@kroah.com>
-References: <UTC200208312329.g7VNTwF11470.aeb@smtp.cwi.nl>
+Message-ID: <20020905011133.GA921@babylon5.babcom.com>
+References: <UTC200209042256.g84Mu0w15389.aeb@smtp.cwi.nl> <20020904161042.O13478@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="PNTmBPCT7hxwcZjr"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <UTC200208312329.g7VNTwF11470.aeb@smtp.cwi.nl>
+In-Reply-To: <20020904161042.O13478@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, mdharm-usb@one-eyed-alien.net
+To: Andries.Brouwer@cwi.nl, greg@kroah.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 
-On Sun, Sep 01, 2002 at 01:29:58AM +0200, Andries.Brouwer@cwi.nl wrote:
-> 
-> Without the patch the kernel crashes, or insmod usb-storage hangs.
-> With the patch the CF part of the device works perfectly.
 
-Applied, thanks.
+--PNTmBPCT7hxwcZjr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-greg k-h
+On Wed, Sep 04, 2002 at 04:10:42PM -0700, Matthew Dharm wrote:
+> The MODE_SENSE bit is fine by me.  But it's a SCSI change, so I'm not the
+> person to ask.  The fix to sddr09.c for that seems reasonable, but you put
+> it all together and I haven't had time to split it up.  Of course, I fully
+> expect the changes to MODE_SENSE in the SCSI layer to break other USB
+> devices, but there is only one way to find out....
+
+Speaking of sddr09 devices (of which I possess one), what's the current
+state of support for the sddr09?  Last I knew, at the time when I finally
+got mine working, the sddr09 was only supported read-only, since there
+were not-fully-understood issues that resulted in filesystem corruption=20
+if you tried to write to it.  Currently, the driver will still allow me
+to mount it only as a read-only filesystem.  Can write support for the
+sddr09 be expected any time soon?
+
+
+--=20
+  *********  Fight Back!  It may not be just YOUR life at risk.  *********
+  phil stracchino   ::   alaric@babcom.com   ::   halmayne@sourceforge.net
+    unix ronin     ::::   renaissance man   ::::   mystic zen biker geek
+     2000 CBR929RR, 1991 VFR750F3 (foully murdered), 1986 VF500F (sold)
+       Linux Now! ...because friends don't let friends use Microsoft.
+
+--PNTmBPCT7hxwcZjr
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
+
+iD8DBQE9dq9F0DfOju+hMkkRAqGAAKDVmy2Cne8CZjaNnG5UKl0NHrLJFQCgsrwJ
+ALmY9bMRA9+atF2fo4LpOnU=
+=SjO0
+-----END PGP SIGNATURE-----
+
+--PNTmBPCT7hxwcZjr--
