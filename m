@@ -1,54 +1,42 @@
-From: Andries Brouwer <aebr@win.tue.nl>
-Subject: Re: [PATCH] 2.6.2, Partition support for SCSI CDROM...
-Date: Wed, 25 Feb 2004 11:19:44 +0100
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: [SUBJECT CHANGE]: megaraid unified driver version 2.20.0.0-alpha1
+Date: Wed, 25 Feb 2004 12:58:10 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040225101944.GB3832@pclin040.win.tue.nl>
-References: <40396134.6030906@realitydiluted.com> <20040222190047.01f6f024.akpm@osdl.org> <40396E8F.4050307@realitydiluted.com> <20040224061130.GC503530@sgi.com> <403B8108.6080606@realitydiluted.com> <20040224170906.GQ25779@parcelfarce.linux.theplanet.co.uk>
+Message-ID: <20040225125810.GT25779@parcelfarce.linux.theplanet.co.uk>
+References: <0E3FA95632D6D047BA649F95DAB60E57033BC3E2@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kweetal.tue.nl ([131.155.3.6]:59409 "EHLO kweetal.tue.nl")
-	by vger.kernel.org with ESMTP id S261235AbUBYKTt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Feb 2004 05:19:49 -0500
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:65177 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S261309AbUBYM6Q
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Feb 2004 07:58:16 -0500
 Content-Disposition: inline
-In-Reply-To: <20040224170906.GQ25779@parcelfarce.linux.theplanet.co.uk>
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57033BC3E2@exa-atlanta.se.lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: "Steven J. Hill" <sjhill@realitydiluted.com>, Jeremy Higdon <jeremy@sgi.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Mukker, Atul" <Atulm@lsil.com>
+Cc: 'Arjan van de Ven' <arjanv@redhat.com>, 'Christoph Hellwig' <hch@infradead.org>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'matt_domsch@dell.com'" <matt_domsch@dell.com>, 'Paul Wagland' <paul@wagland.net>, Matthew Wilcox <willy@debian.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On Tue, Feb 24, 2004 at 05:09:06PM +0000, Matthew Wilcox wrote:
-> On Tue, Feb 24, 2004 at 11:51:20AM -0500, Steven J. Hill wrote:
+On Tue, Feb 24, 2004 at 07:34:01PM -0500, Mukker, Atul wrote:
+> 6.	Single code to support *all* x86-32, IA64, and x86-64 platforms
 
-> > + *    sr0 - first CDROM, whole disk
-> > + *    sr1 - first CDROM, first partition
-> > + *
-> > + *    [...]
-> > + *
-> > + *    sr16 - first CDROM, sixteenth partition
-> > + *    sr17 - second CDROM, whole disk
-> > + *    sr18 - second CDROM, first partition
-> 
-> Umm... no.  I suspect you mean:
-> 
-> sr15 - first CDROM, fifteenth partition
-> sr16 - second CDROM, whole disk
-> sr17 - second CDROM, first partition
-> 
-> But what a bad idea for device names.  Why not
-> 
-> sr0 whole disc
-> sr0a ... sr0o partitions
-> sr1, sr1a ... sr1o
-> 
-> It's probably too late to be consistent with discs and call them
-> sra, sra1, ... sra15
-> srb, srb1, ... srb15
+No.  Megaraid is a PCI card.  Therefore this one codebase should support
+*all* PCI-capable architectures, not just these three.  Nobody's requiring
+that you test on all the weird and wonderful architectures out there, just
+that you don't do things like
 
-It is standard convention to use numerical suffixes to refer
-to partitions, with a 'p' separator in case the full device
-has a name ending in a digit.
+#if defined(__x86_64__) || defined(__ia64__)
+#endif
 
-So: sr0p1, ..., sr0p15, sr1p1, ...
+when you really mean
 
-Andries
+#ifdef CONFIG_COMPAT
+#endif
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
