@@ -1,57 +1,44 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: PATCH 2.6.11-rc4 rename IOMAPPED config option
-Date: Sun, 20 Feb 2005 20:11:58 -0500
-Message-ID: <4219355E.1000807@pobox.com>
-References: <20050221010758.GC30800@colo.lackof.org>
+Date: Mon, 21 Feb 2005 02:02:21 +0000
+Message-ID: <20050221020221.GA28741@parcelfarce.linux.theplanet.co.uk>
+References: <20050221010758.GC30800@colo.lackof.org> <4219355E.1000807@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:14000 "EHLO
+Content-Type: text/plain; charset=us-ascii
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:1463 "EHLO
 	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261176AbVBUBMN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Feb 2005 20:12:13 -0500
-In-Reply-To: <20050221010758.GC30800@colo.lackof.org>
+	id S261197AbVBUCCZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Feb 2005 21:02:25 -0500
+Content-Disposition: inline
+In-Reply-To: <4219355E.1000807@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: willy@parisc-linux.org, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Grant Grundler <grundler@parisc-linux.org>, willy@parisc-linux.org, linux-scsi@vger.kernel.org
 
-Grant Grundler wrote:
-> --- drivers/scsi/Kconfig	3 Feb 2005 11:44:46 -0000	1.32
-> +++ drivers/scsi/Kconfig	21 Feb 2005 00:46:18 -0000
+On Sun, Feb 20, 2005 at 08:11:58PM -0500, Jeff Garzik wrote:
+> Patch doesn't apply with -p1.
 
-Patch doesn't apply with -p1.
+Doesn't matter; I can cope with both.
 
+> >--- drivers/scsi/sym53c8xx_2/sym_glue.c	20 Feb 2005 23:49:27 -0000 
+> >1.84
+> 
+> This file does not include <linux/config.h>.
 
+Doesn't need to -- sym_glue.h does.
 
-> --- drivers/scsi/sym53c8xx_2/sym_glue.c	20 Feb 2005 23:49:27 -0000	1.84
-> +++ drivers/scsi/sym53c8xx_2/sym_glue.c	21 Feb 2005 00:46:18 -0000
-> @@ -1915,7 +1915,7 @@ sym_init_device(struct pci_dev *pdev, st
->  	i = pci_get_base_address(pdev, 1, &device->s.base);
->  	pci_get_base_address(pdev, i, &device->s.base_2);
->  
-> -#ifdef CONFIG_SCSI_SYM53C8XX_IOMAPPED
-> +#ifndef CONFIG_SCSI_SYM53C8XX_USE_MMIO
->  	device->s.ioaddr = pci_iomap(pdev, 0, pci_resource_len(pdev, 0));
->  #else
->  	device->s.ioaddr = pci_iomap(pdev, 1, pci_resource_len(pdev, 1));
+> >--- drivers/scsi/sym53c8xx_2/sym_hipd.c	16 Feb 2005 20:54:02 -0000 
+> >1.48
+> 
+> ditto
 
-This file does not include <linux/config.h>.
+ditto.
 
-
-> Index: drivers/scsi/sym53c8xx_2/sym_hipd.c
-> ===================================================================
-> RCS file: /var/cvs/linux-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.c,v
-> retrieving revision 1.48
-> diff -u -p -r1.48 sym_hipd.c
-> --- drivers/scsi/sym53c8xx_2/sym_hipd.c	16 Feb 2005 20:54:02 -0000	1.48
-> +++ drivers/scsi/sym53c8xx_2/sym_hipd.c	21 Feb 2005 00:46:18 -0000
-> @@ -1044,7 +1044,7 @@ static int sym_prepare_setting(struct sy
->   *
->   *  Has to be called with interrupts disabled.
->   */
-> -#ifndef SYM_CONF_IOMAPPED
-> +#ifdef CONFIG_SCSI_SYM53C8XX_USE_MMIO
-
-ditto
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
