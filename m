@@ -1,48 +1,55 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH][RELEASE]: megaraid unified driver version 2.20.0.B1
-Date: Fri, 16 Apr 2004 14:30:38 -0400
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: [ANNOUNCE][RELEASE]: megaraid unified driver version 2.20.0.B
+	1
+Date: Fri, 16 Apr 2004 15:12:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4080264E.2040506@pobox.com>
-References: <0E3FA95632D6D047BA649F95DAB60E570230C7DB@exa-atlanta.se.lsil.com> <40801F5D.7030100@pobox.com> <408024CA.8000401@us.ibm.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC53D@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:34747 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263540AbUDPSax
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Apr 2004 14:30:53 -0400
-In-Reply-To: <408024CA.8000401@us.ibm.com>
+Received: from mail0.lsil.com ([147.145.40.20]:30142 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261631AbUDPTNR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Apr 2004 15:13:17 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'Matt_Domsch@dell.com'" <Matt_Domsch@dell.com>, "'paul@kungfoocoder.org'" <paul@kungfoocoder.org>, "Mukker, Atul" <Atulm@lsil.com>, "'James.Bottomley@SteelEye.com'" <James.Bottomley@SteelEye.com>, "'arjanv@redhat.com'" <arjanv@redhat.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
+To: 'Christoph Hellwig' <hch@infradead.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Cc: "'jgarzik@pobox.com'" <jgarzik@pobox.com>, "'Matt_Domsch@dell.com'" <Matt_Domsch@dell.com>, "'paul@kungfoocoder.org'" <paul@kungfoocoder.org>, "'James.Bottomley@SteelEye.com'" <James.Bottomley@SteelEye.com>, "'arjanv@redhat.com'" <arjanv@redhat.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 
-Brian King wrote:
-> Jeff Garzik wrote:
+> kdep.h:
+>  - mraid_scsi_host_alloc/mraid_scsi_host_dealloc should go away, just
+>    define scsi_host_alloc/scsi_host_put wrappers for 2.4.
+>  - mraid_scsi_set_pdev should go away, it's not needed in 2.6 at all
+>    because scsi_add_host does all the work and for 2.4 just use
+>    scsi_set_pci_device directly.
+>  - all the SCP2FOO defines should go away, the 2.6 variants 
+> work for 2.4
+>    aswell
+>  - mraid_set_host_lock should go, just use scsi_assign_lock and define
+>    it for 2.4.
+All of these taken and will be incorporated in B3, but not in B2 going out
+today
+
 > 
->> 6) Kill uses of "volatile".  _Most_ of the time, this indicates buggy 
->> code.  You should have the proper barriers in place:  mb(), wmb(), 
->> rmb(), barrier(), and cpu_relax().  This has been mentioned before :)
+> megaraid_clib.c:
+>   - why do you need the scb pool managment code at all?  You 
+> can dynamically
+>     allocate scbs in ->queuecommand
+Will do. Please see the follow up question below
+
+>   - can you explain the need for all the mraid_pci_blk_pool?  
+> I.e. why the
+>     generic dma pool routines don't work for megaraid
+We did not want to use pci_alloc_consistent because it would give one page
+even if we need 16 bytes (and we need a lot of these). Also, the
+pci_poo_create and pci_pool_alloc would fail on some setups - maybe because
+the driver requires lots of small chunks of DMAable buffers. So we decided
+to write wrapper functions over pci_alloc_consistent..
+
 > 
-> 
-> I'm not sure I totally agree with this statement. I took a quick look at 
-> the driver
-> and the volatile appears to be used to point to host memory that is 
-> modified
-> by the adapter. Correct me if I am wrong, but memory barriers will not 
-> accomplish
-> what the volatile will in this situation.
-
-
-You are wrong :)  Compare the underlying asm.
-
-Proper use of barriers tells the compiler when it cannot cache certain 
-loads and stores in registers.  'volatile' is an atomic bomb to the 
-compiler, killing many valid optimizations while (sometimes) hiding 
-bugs.  It almost always indicates that the programmer did not bother 
-thinking about when and where DMA memory needs to be accessed.
-
-	Jeff
-
-
-
+> all files:
+>   - please avoid using scsi.h and hosts.h from drivers/scsi 
+> in favour of
+>     the include/scsi/ headers, especially get rid of all the Scsi_Foo
+>     typedefs
+ok
