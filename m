@@ -1,28 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] aeventd logging application (Part 1)
-Date: Fri, 13 Feb 2004 23:04:51 +0000
+From: "Moore, Eric Dean" <Emoore@lsil.com>
+Subject: RE: mpt sets 64bit consistent mask yet requires mapping in same 4
+	 GB chunk?!?
+Date: Fri, 13 Feb 2004 18:23:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040213230451.C21467@infradead.org>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F2552B9@otce2k03.adaptec.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E5703EF9182@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from phoenix.infradead.org ([213.86.99.234]:57611 "EHLO
-	phoenix.infradead.org") by vger.kernel.org with ESMTP
-	id S267282AbUBMXEx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Feb 2004 18:04:53 -0500
-Content-Disposition: inline
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F2552B9@otce2k03.adaptec.com>; from mark_salyzyn@adaptec.com on Fri, Feb 13, 2004 at 05:40:43PM -0500
+Received: from mail0.lsil.com ([147.145.40.20]:40918 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S264353AbUBMXYK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Feb 2004 18:24:10 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Matthew Wilcox <willy@debian.org>, Bjorn Helgaas <bjorn.helgaas@hp.com>
+Cc: Jesse Barnes <jbarnes@sgi.com>, Alex Williamson <alex.williamson@hp.com>, jeremy@sgi.com, linux-scsi@vger.kernel.org, linux-ia64@vger.kernel.org
 
-On Fri, Feb 13, 2004 at 05:40:43PM -0500, Salyzyn, Mark wrote:
-> Excuse my (faked?) ignorance; I would like a good place to put this :-)
-> Any suggestions on a suitable release mechanism?
+I will investigate, and see what can be done.
+Thanks for your feedback.
+
+Eric
+
 > 
-> I will accept `on Adaptec media' ...
-
-Adaptec website with an url in the driver source?  I'm sure the distribution
-vendors will pick it up for their next releases.
-
+> 
+> On Fri, Feb 13, 2004 at 03:52:43PM -0700, Bjorn Helgaas wrote:
+> > > I think Alex's second suggestion would be the best--do a single
+> > > allocation rather than falling back to a 32 bit consistent mask.
+> > 
+> > But even with a single allocation, there's nothing to prevent it
+> > from crossing a 4GB boundary, is there?
+> 
+> Since we use buddy allocators everywhere, we'd need to be doing 8GB
+> allocations to cross a 4GB barrier.  Of course if we change 
+> allocators ...
+> 
+> -- 
+> "Next the statesmen will invent cheap lies, putting the blame upon 
+> the nation that is attacked, and every man will be glad of those
+> conscience-soothing falsities, and will diligently study 
+> them, and refuse
+> to examine any refutations of them; and thus he will by and 
+> by convince 
+> himself that the war is just, and will thank God for the better sleep 
+> he enjoys after this process of grotesque self-deception." -- 
+> Mark Twain
+> 
