@@ -1,104 +1,42 @@
-From: Bob Doyle <doyle@primenet.com>
-Subject: Re: Fw: [fyi] BusLogic module removal causes an oops, 2.6.3
-Date: Fri, 27 Feb 2004 21:49:14 -0700
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] Fix aic7xxx del_timer_sync() deadlock
+Date: Sat, 28 Feb 2004 10:25:12 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40401DCA.4EBEE85C@primenet.com>
-References: <20040222173815.2f08e469.akpm@osdl.org>
+Message-ID: <20040228092512.GD923@suse.de>
+References: <1077906383.2157.98.camel@mulgrave> <3462370000.1077909838@aslan.btc.adaptec.com> <403FFF86.90302@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------79E8A0F1747AA6FF81BE99FC"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.roc2.gblx.net ([64.215.96.101]:15829 "EHLO
-	smtp2.roc2.gblx.net") by vger.kernel.org with ESMTP id S263164AbUB1Et1
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Feb 2004 23:49:27 -0500
-List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, David Ford <david+challenge-response@blue-labs.org>
-Cc: linux-scsi@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------79E8A0F1747AA6FF81BE99FC
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:30175 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261158AbUB1JZZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 28 Feb 2004 04:25:25 -0500
+Content-Disposition: inline
+In-Reply-To: <403FFF86.90302@pobox.com>
+List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-David,
-
-Can you please retest with the following patch applied to 2.6.3?
-
-The patch is obvious enough but I unable test the BusLogic driver
-as a module right now.
-
-Regards,
-Bob.
-
-Andrew Morton wrote:
+On Fri, Feb 27 2004, Jeff Garzik wrote:
+> Justin T. Gibbs wrote:
+> >1) The mid-layer doesn't correctly handle this situation.  The mid-layer
+> >   uses blk_plug_device() to implement this behavior rather than
+> >   blk_stop_queue().  The leaves the implementation vulnerable to
+> >   any code that does a manual unplug (e.g. the SCSI scan code) or a
+> >   blk_run_queues() (e.g. MD) which can alter the duration of the delay.
 > 
-> Begin forwarded message:
 > 
-> Date: Sun, 22 Feb 2004 19:20:32 -0500
-> From: David Ford <david+challenge-response@blue-labs.org>
-> To: linux-kernel mailing list <linux-kernel@vger.kernel.org>
-> Subject: [fyi] BusLogic module removal causes an oops, 2.6.3
+> hum.
 > 
-> Unable to handle kernel paging request at virtual address e098f090
->  printing eip:
-> e098f090
-> *pde = 1ff70067
-> *pte = 00000000
-> Oops: 0000 [#1]
-> CPU:    0
-> EIP:    0060:[<e098f090>]    Tainted: PF
-> EFLAGS: 00210286
-> EIP is at 0xe098f090
-> eax: 0000001f   ebx: c06e01c4   ecx: 00009000   edx: dffef0c0
-> esi: 00000880   edi: c05dce38   ebp: 00000000   esp: d11f3f3c
-> ds: 007b   es: 007b   ss: 0068
-> Process rmmod (pid: 8235, threadinfo=d11f2000 task=d61fad40)
-> Stack: e0a30c8a c06e01c4 00009000 00000100 c06e01c4 e0a30cea c06e0000
-> e0a35440
->        c0138789 e0a35440 bffff798 0000003b 00000000 4c737542 6369676f
-> c014e900
->        d4b90280 d54d0180 d7b49680 40016000 40017000 40017000 d7b49680
-> d4b90280
-> Call Trace:
->  [<e0a30c8a>] BusLogic_ReleaseHostAdapter+0x4a/0x70 [BusLogic]
->  [<e0a30cea>] BusLogic_exit+0x3a/0x49 [BusLogic]
->  [<c0138789>] sys_delete_module+0x139/0x1b0
->  [<c014e900>] do_munmap+0x50/0x190
->  [<c0109335>] sysenter_past_esp+0x52/0x71
-> 
-> Code:  Bad EIP value.
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
---------------79E8A0F1747AA6FF81BE99FC
-Content-Type: text/plain; charset=us-ascii;
- name="BusLogic.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="BusLogic.patch"
+> Long term we definitely want to use blk_{start,stop}_queue().  I had to 
+> work on Jens for a little while before he was kind enough to add it :) 
+> so let's put it to use.
 
-diff -urN -X dontdiff linux-2.6.3/drivers/scsi/BusLogic.c linux-2.6.3.save/drivers/scsi/BusLogic.c
---- linux-2.6.3/drivers/scsi/BusLogic.c	Fri Feb 27 21:25:41 2004
-+++ linux-2.6.3.save/drivers/scsi/BusLogic.c	Fri Feb 27 21:09:15 2004
-@@ -189,7 +189,7 @@
-   registered BusLogic Host Adapters.
- */
- 
--static void __init BusLogic_UnregisterHostAdapter(struct BusLogic_HostAdapter *HostAdapter)
-+static void BusLogic_UnregisterHostAdapter(struct BusLogic_HostAdapter *HostAdapter)
- {
-   if (HostAdapter == BusLogic_FirstRegisteredHostAdapter)
-     {
-Binary files linux-2.6.3/drivers/scsi/core and linux-2.6.3.save/drivers/scsi/core differ
+The only nasty right now is that you cannot unconditionally call
+blk_stop_queue(), it requires a manual blk_start_queue() on io
+completion which will only happen if io is pending of course. I just got
+an idea on how to do that properly, I'll make sure it works in any case.
 
---------------79E8A0F1747AA6FF81BE99FC--
+-- 
+Jens Axboe
 
