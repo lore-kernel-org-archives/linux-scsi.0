@@ -1,28 +1,20 @@
-From: sullivan <sullivan@austin.ibm.com>
-Subject: [RFC] Persistent naming of scsi devices
-Date: Mon, 8 Apr 2002 09:18:44 -0600
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC] Persistent naming of scsi devices
+Date: Mon, 8 Apr 2002 16:04:45 +0100
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020408091844.L7333@austin.ibm.com>
-Reply-To: sullivan@austin.ibm.com
+Message-ID: <20020408160445.A25213@infradead.org>
+References: <20020408091844.L7333@austin.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: (from sullivan@localhost)
-	by ibm.com (8.11.6/8.11.6) id g38FIik31062
-	for linux-scsi@vger.kernel.org; Mon, 8 Apr 2002 09:18:44 -0600
 Content-Disposition: inline
+In-Reply-To: <20020408091844.L7333@austin.ibm.com>; from sullivan@austin.ibm.com on Mon, Apr 08, 2002 at 09:18:44AM -0600
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: sullivan <sullivan@austin.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-I have been working on a prototype to allow the persistent naming of scsi devices across boots. The prototype attempts to address the namespace slippage that occurs when names are assigned based on discovery order or topology, and a hardware configuration change occurs. It does this by assigning names based on the characteristics of the device.
+On Mon, Apr 08, 2002 at 09:18:44AM -0600, sullivan wrote:
+> I would welcome any thoughts, comments, or suggestions.
 
-The prototype and more detailed info can be found at:
-http://oss.software.ibm.com/devreg/
+What is the rationale for doing this?  I think we should rather get people
+to actually use the UUID= option to mount..
 
-The prototype utilizes 3 components:
-1. driverfs to collect and publish the characteristics of the device
-2. devfs to generate insertion and removal events
-3. devfsd library to handle the events, parse driverfs, and apply the naming logic.
-
-I am also currently working on a non devfs version that uses /sbin/hotplug as the event generation mechanism.
-
-I would welcome any thoughts, comments, or suggestions.
