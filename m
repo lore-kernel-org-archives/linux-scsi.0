@@ -1,44 +1,51 @@
-From: Jamie Lenehan <lenehan@twibble.org>
-Subject: dc395x updated for latest bk
-Date: Wed, 11 Jun 2003 18:00:39 +1000
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030611080039.GA2064@twibble.org>
+From: "David A. Lethe" <david@santools.com>
+Subject: Patch to scsi_scan.c to look for LUNs on XYRATEX RAID subsystems
+Date: Wed, 11 Jun 2003 08:58:56 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <11e901c33021$9a8928c0$6301a8c0@DLETHE>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from charon.twibble.org ([203.217.29.134]:5250 "EHLO
-	egwene.twibble.org") by vger.kernel.org with ESMTP id S264201AbTFKHrA
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Jun 2003 03:47:00 -0400
-Content-Disposition: inline
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: dc395x@twibble.org
 
-For anyone using this driver some changes have been included (pushed
-by Oliver) in the main bk tree. I've re-created all my outstanding
-patches against 2.5.70-bk9 and tested it against 2.5.70-bk9 and
-2.5.70-bk15.
+To all:
 
-Available in the usual place:
+This contains a patch that must be made to the scsi_scan.c file which
+instructs the O/S to scan
+for LUNS on XYRATEX family RAID subsystems.
 
-  http://twibble.org/dist/dc395x/
+I created the patch against the 2.4.20 kernel, but all things considered, I
+would like to get this single
+line of new text added to all 2.4 kernels, and all future kernels.
 
-No new changes have been added. It's too time consuming to rediff as
-things change so I'm waiting until all the existing changes get
-included before making any more changes.
+Note that I only tested against the "RS" string. This is by design, as we
+have 12 different productID strings
+depending on the RAID engine and enclosure model. Just testing against RS
+will work for us as well as save
+valuable CPU cycles and kernel space for all.
 
-The included changes were:
+Any questions, comments, concerns should be addressed to me,
+david_lethe@us.xyratex.com
+or david@santools.com
 
- 2.5.70-bk1 included the sharded IRQ crashing fix
-            (00-irq-crash-fix.patch) with some minor NULL/whitepsace
-            changes.
+Phone number: 972-618-2265
 
- 2.5.70-bk9 included the debugging cleanup (01-debug-cleanup.patch),
-            the module cleanup (02-module-cleanup.patch), some
-            changes from linux-scsi to the proc function (hch) and a
-            lot of unrelated white space and for/while conversions.
+P.S. Acknowledgement that this have been incorporated will be appreciated.
 
--- 
- Jamie Lenehan              Work Phone: +61 3 9843 8817
- lenehan@twibble.org        Work Email: jamie.lenehan@activcard.com.au
+
+
+========================================================
+--- linux-2.4/drivers/scsi/scsi_scan.c  2003-05-29 05:41:09.000000000 -0500
++++ linux/drivers/scsi/scsi_scan.c      2003-06-11 08:00:50.000000000 -0500
+@@ -194,6 +194,7 @@
+        {"SGI", "TP9400", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+        {"SGI", "TP9500", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+        {"MYLEX", "DACARMRB", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
++       {"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+
+        /*
+         * Must be at end of list...
