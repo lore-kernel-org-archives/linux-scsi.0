@@ -1,82 +1,75 @@
-From: James.Smart@Emulex.Com
-Subject: RE: [PATCH] updated: suspending I/Os to a device
-Date: Fri, 20 Aug 2004 09:24:34 -0400
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: Suspending SCSI devices and buses
+Date: Fri, 20 Aug 2004 09:35:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0B1E13B586976742A7599D71A6AC733C02D863@xbl3.ma.emulex.com>
+Message-ID: <4125FE3B.7070608@adaptec.com>
+References: <Pine.LNX.4.44L0.0408191647170.2106-100000@ida.rowland.org> <4125EEE4.50102@optonline.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:13798 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S266917AbUHTNYv convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Aug 2004 09:24:51 -0400
-content-class: urn:content-classes:message
+Received: from magic.adaptec.com ([216.52.22.17]:44478 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S267301AbUHTNf6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Aug 2004 09:35:58 -0400
+In-Reply-To: <4125EEE4.50102@optonline.net>
 List-Id: linux-scsi@vger.kernel.org
-To: andmike@us.ibm.com
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: Nathan Bryant <nbryant@optonline.net>
+Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Reasonable - as the list_for_each_entry over same_target_siblings is exactly what the LLDD is doing. We were following previous guidance. I'll let James make the call.
+Nathan Bryant wrote:
+> Alan Stern wrote:
+> 
+>  >Thanks.  Looking at your patch, I have a question.  It doesn't look like
+>  >the resume path is careful to check for Unit Attention with Power On or
+>  >Medium May Have Changed sense.  What happens if somebody changes the
+>  >medium while the drive is suspended?  Or am I missing something?
+>  >
+> You're not missing anything. :(
+> 
+> Thanks for the feedback, looks like you've found a real problem with the
+> patch: that is, due to the unconditonal spinup call on resume, we clear
+> any UNIT ATTENTION state before any of the upper layers ever see it, so
+> nobody will notice a possible media change.
 
--- james s
+If UA exists for the initiator port, commands other INQURY, REPORT LUNS
+and REPORT SENSE, get terminated and UA reported (CHECK CONDITION with
+sense data).  So spinup (TUR + START STOP UNIT) could report the media
+change (on TUR).
 
-> -----Original Message-----
-> From: Mike Anderson [mailto:andmike@us.ibm.com]
-> Sent: Friday, August 20, 2004 4:55 AM
-> To: Smart, James
-> Cc: James.Bottomley@SteelEye.com; linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH] updated: suspending I/Os to a device
 > 
+> Unfortunately, I think that the current media change detection code in
+> the Linux kernel can not distinguish power-on events from media change
+> events. I'm not sure doing so is even possible for SCSI devices.
+
+It would really depend on the device (if it kept state over power failures).
+But it is true that the code should be able to handle it.  (Also UAs could
+be queued by the device server--the code could use this.)
+
+> (Comments on that?) Proposed solutions:
 > 
-> James.Smart@Emulex.Com [James.Smart@Emulex.Com] wrote:
-> > All True...  and I'm not trying to belittle it.
-> > 
-> > The main things that sent me to the LLDD side were:
-> > 
-> > 1) The number of timers that had to be running. A single 
-> cable pull can be handled by 1 timer in the LLDD, which will 
-> always be there. If there's a timer per device - and the 
-> config (still small) has 4-8 arrays, each array with 256 LUNs 
-> - this is a 1k/2k timers vs 1 scenario. A single device 
-> disappearance (a target) is a 256 (or more) vs 1 scenario. 
-> Not only the amount of resources for the timers, but also the 
-> complexity of when all these timers fire and the same time 
-> and start spitting i/o - which is not necessarily coordinated 
-> with the LLDD state change. Makes for a lot of fun error 
-> handling. I'd rather deal with an LLDD that misses an unblock 
-> (easy to spot) vs the race conditions that could occur due to 
-> the last point. Granted, this should all work, but its in a 
-> location that is typically much harder to test and reproduce.
-> > 
+> Approach #1:
+> * Continue to do the unconditional spinup, but only for devices that are
+> already mounted.
+> This may miss some media change events, but if we really can't
+> distinguish power-on from media change, maybe that's somebody else's
+> problem if the device was already mounted. (Changing mounted media is
+> the user's fault.)
 > 
-> An option to consider is that what you want is target level suspend in
-> the mid layer. While the mid-layer does not have a target 
-> representation
-> equal to the lun representation (scsi_device) you get some 
-> target linkage
-> between the scsi_devs using same_target_siblings.
+> (Hmm, what about devices that are opened for read/write but not mounted?)
 > 
-> Just pass in the scsi_device as you where doing (maybe update the
-> function names to match the target suspend). Inside the function use a
-> list_for_each_entry over same_target_siblings to set the scsi_device
-> state to suspend. Then use a single timeout timer for each target.
-> 
-> If we want to have full symmetric interfaces to the LLDD for 
-> suspending
-> a target "siblings" or a lun "scsi_device" with protection for
-> calling already suspend objects we may need a little more 
-> locking around
-> the state changes or some other exclusion method.
-> 
-> It would be nice some day to have real target representation, but this
-> pseudo support we have now may address your needs.
-> 
-> I am little sleepy so maybe this idea is not as good as it seems
-> now as it would after a little sleep. YMMV
-> 
-> -andmike
-> --
-> Michael Anderson
-> andmike@us.ibm.com
-> 
-> 
+> Approach #2:
+> * Test for UNIT_ATTENTION before spinning up and report this as a media
+> change.
+> Safer, but may report "false positive" media change events if the device
+> was only powered down/up.
+
+UA can tell you when "removable medium may have changed" (SAM3r13, 5.9.7, b)
+and "LU inventory has been changed" (same, g).
+
+But it is true -- I can imagine media being changed without the device
+knowing it (old enclosure + power off + screw-driver :-) ).
+
+		Luben
+
+
