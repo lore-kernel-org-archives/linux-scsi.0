@@ -1,49 +1,86 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: Incorrect response to SK/ASC/ASCQ = x 02/04/01 (becoming ready)
-Date: 26 Aug 2004 11:38:08 -0400
+Date: Thu, 26 Aug 2004 09:21:28 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1093534695.1684.28.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0408221154220.15992-100000@netrider.rowland.org>
-	<1093217548.1727.367.camel@mulgrave>
-	<1093218968.3553.17.camel@swtf.comptex.com.au>
-	<1093275122.1776.52.camel@mulgrave>  <20040826025453.GA125799@sgi.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+Message-ID: <99D30EDE-F773-11D8-B3DA-00039398BB5E@ieee.org>
+Mime-Version: 1.0 (Apple Message framework v619)
+Content-Type: text/plain;
+	charset=US-ASCII;
+	format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:40331 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S269062AbUHZPi1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Aug 2004 11:38:27 -0400
-In-Reply-To: <20040826025453.GA125799@sgi.com>
+Received: from email-out1.iomega.com ([147.178.1.82]:60304 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S269043AbUHZPV2
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Aug 2004 11:21:28 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: Burn Alting <burn@goldweb.com.au>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2004-08-25 at 22:54, Jeremy Higdon wrote:
-> I believe that 02/04/01 should be treated like a Busy status.  The
-> semantics are slightly different, but the action taken by the
-> initiator is the same: wait a bit and then retry.
+ > > > the mid-layer assumes an operational device
+ > > > won't spontaneously spin down,
+ > ...
+ > What other conditions produce something like this?
 
-Well, that's dangerous.  BUSY is assumed always to be a transient
-condition, so it doesn't count against the retries, so if this thing
-never comes back, we'd loop forever there.
+Spontaneous park and then spontaneous spin down occur with some devices 
+if the host neglects to read or write thru the cache from the disc for 
+a long time, like whole seconds.
 
-The other thing about BUSY handling is that, for a device with no
-outstanding commands like this, we retry based on I/O pressure, so even
-if I increment the retry count time waited would depend on how much I/O
-pressure the system had.
+This policy reduces noise, power, and media wear.  Guarantees a gentle 
+park.  Etc.  Same device design rationale as ATA HDD power management.  
+Not disputed in the device world, I hear.
 
-> I have seen this key/asc/asq before and had to handle it that way.
-> I believe the device in question was a disk drive that had been
-> powered on recently.  Disks set to have a variable spinup delay
-> (based on ID, so that not all disks in a 16-drive box power up at
-> the same time and overstress a power supply) can return this code
-> up to a couple of minutes after power on.
+ > 02/04/01 = Not Ready, ...
+ > becoming ready.
+ > ...
+ > retries ... exhausted in ... a second, ...
 
-But that's a start of day thing, which would be handled by sd's TUR
-code.
+I vote we distinguish:
 
-James
+a) the spin-up implied by insert or power on,
+b) the spin down implied by eject, and
+c) other spin up and spin down.
 
+ > work around ... by [modprobe] after plugging the drive in...
+
+Our host should not rapidly retry and give up on any of these, sure.
+
+ > disable disconnects ...
+ > the bus would be blocked
+ > while waiting for START STOP UNIT ...
+
+SCSI over USB disables disconnects always, I know.
+
+I hear SCSI over IDE in practice disables disconnects almost always, 
+though t13.org publishes a theory of more capable devices.
+
+ > > 02/04/01 should be treated like a Busy status.
+ > ...
+ > a) the spin-up implied by insert or power on,
+
+Many devices use x 2 04 01 to mean a spin-up implied by insert or power 
+on.
+
+I hear x 2 04 01 had a pre-Windows history of meaning please rapidly 
+retry, but Windows support was so poor - including rapidly counted 
+retries - that those other uses of x 2 04 01 have migrate out of PC 
+peripheral device designs.
+
+ > b) the spin down implied by eject, and
+
+Many PDT x00 devices use x 2 04 00 to mean the spin down implied by 
+eject, many PDT x05 devices use x 2 3A.
+
+ > > > the mid-layer assumes an operational device
+ > > > won't spontaneously spin down,
+ > > ...
+ > > the 02/04/02 handling code
+ > ...
+ > c) other spin up and spin down.
+
+I see x 0 and x 2 04 00 and x 2 04 02 reported to mean a spontaneous 
+spin down.  I hear x 0 works well in Windows only if the auto spin up 
+completes in a few seconds.
+
+Pat LaVarre
 
