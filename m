@@ -1,47 +1,35 @@
 From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
 Subject: Re: PATCH; make sr.c respect use_10_for_ms
-Date: Sat, 21 Jun 2003 17:46:13 -0700
+Date: Sat, 21 Jun 2003 17:46:40 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030621174613.L2811@one-eyed-alien.net>
-References: <20030621173033.J2811@one-eyed-alien.net> <Pine.LNX.4.44.0306211735500.1980-100000@home.transmeta.com>
+Message-ID: <20030621174640.M2811@one-eyed-alien.net>
+References: <20030621165920.F2811@one-eyed-alien.net> <1056241551.1775.14.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="tv2SIFopg1r47n4a"
+	protocol="application/pgp-signature"; boundary="8c07nsHwQobhlezh"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:45329 "EHLO
+Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:48145 "EHLO
 	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S264932AbTFVAcK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 21 Jun 2003 20:32:10 -0400
+	id S264934AbTFVAci (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 21 Jun 2003 20:32:38 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0306211735500.1980-100000@home.transmeta.com>; from torvalds@transmeta.com on Sat, Jun 21, 2003 at 05:38:44PM -0700
+In-Reply-To: <1056241551.1775.14.camel@mulgrave>; from James.Bottomley@SteelEye.com on Sat, Jun 21, 2003 at 07:25:49PM -0500
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@transmeta.com>
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: torvalds@transmeta.com, Linux SCSI list <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>, USB Developers <linux-usb-devel@lists.sourceforge.net>
 
 
---tv2SIFopg1r47n4a
+--8c07nsHwQobhlezh
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, Jun 21, 2003 at 05:38:44PM -0700, Linus Torvalds wrote:
-> The basic idea stands, though: your code depends on global device state=
-=20
-> not to change between the creation of the command and the parsing of it.=
-=20
-> Which just isn't a good thing to do.
->=20
-> sd.c gets all of these things right (including re-transmission etc),=20
-> simply because of how it does things. Which is why I prefer the sd.c=20
-> approach over the simplistic patch. sd.c just looks a lot more robust.
->=20
-> (Maybe that one has bugs too, but they aren't immediately obvious).
+On Sat, Jun 21, 2003 at 07:25:49PM -0500, James Bottomley wrote:
+> What probably should happen is that the resetting of the flag should be
+> in scsi_io_completion (like it is for the use_10_for_rw flag), then the
+> retry and the flag reset would come for free.
 
-Okay, I can buy this.  I don't suppose you have someone you can sign-up to
-fix this mess?  I really want to get rid of all the mode-sense translation
-code in usb-storage.
-
-I'm just not qualified to put in what it's going to take to fix this.
+Since you seem to have a handle on this, can you fix it?
 
 Matt
 
@@ -50,12 +38,12 @@ Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
 net=20
 Maintainer, Linux USB Mass Storage Driver
 
-Now payink attention, please.  This is mouse.  Click-click. Easy to=20
-use, da? Now you try...
-					-- Pitr to Miranda
-User Friendly, 10/11/1998
+S:  Another stupid question?
+G:  There's no such thing as a stupid question, only stupid people.
+					-- Stef and Greg
+User Friendly, 7/15/1998
 
---tv2SIFopg1r47n4a
+--8c07nsHwQobhlezh
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
@@ -63,9 +51,9 @@ Content-Disposition: inline
 Version: GnuPG v1.0.6 (GNU/Linux)
 Comment: For info see http://www.gnupg.org
 
-iD8DBQE+9PxVIjReC7bSPZARAsC1AJ93ZjcQyUtriyaS4PWoI++l5PDQfwCfQWfm
-h3YtBhnSrW5+KJtE3LCezEU=
-=Qr0K
+iD8DBQE+9PxwIjReC7bSPZARAjl/AJ4pSGlYQcdxVYbkKer/A6ZH5IuTJQCgkRpv
+gHd+8QNvqNHAYeqO1Q3+KvM=
+=Kodb
 -----END PGP SIGNATURE-----
 
---tv2SIFopg1r47n4a--
+--8c07nsHwQobhlezh--
