@@ -1,44 +1,76 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: Re: aacraid, 2.4.26, adaptec 2810sa
-Date: Fri, 24 Sep 2004 16:02:14 -0700
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: [ANNOUNCE] multipath-tools-0.2.9
+Date: Sat, 25 Sep 2004 02:24:09 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1096066933.31620.67.camel@markh1.pdx.osdl.net>
-References: <20040924221450.GA18494@thebackrow.net>
+Message-ID: <1096071849.4466.31.camel@zezette>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:14808 "EHLO fire-1.osdl.org")
-	by vger.kernel.org with ESMTP id S269046AbUIXXCr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Sep 2004 19:02:47 -0400
-In-Reply-To: <20040924221450.GA18494@thebackrow.net>
+Received: from smtp10.wanadoo.fr ([193.252.22.21]:17130 "EHLO
+	mwinf1009.wanadoo.fr") by vger.kernel.org with ESMTP
+	id S269147AbUIYAYM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Sep 2004 20:24:12 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Will Lowe <harpo@thebackrow.net>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: dm-devel@redhat.com
+Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-On Fri, 2004-09-24 at 15:14, Will Lowe wrote:
-> I've got several Adaptec 2810SA SATA raid cards in use running Debian
-> Woody with a 2.4.26 kernel using the aacraid driver.  The boxes are
-> MySQL (4.1.1) servers with dual Xeon 2.8G cpus (hyperthreading is on)
-> and the filesystem is reiserfs.
-> 
-> At irregular intervals we get this:
-> 
-> Sep 24 13:59:45 cd-grapherdb02b kernel: aacraid: Host adapter reset request. SCSI hang ?
-> Sep 24 13:59:55 cd-grapherdb02b kernel: scsi: device set offline - command error recover failed: host 1 channel 0 id 0 lun 0
-> Sep 24 13:59:55 cd-grapherdb02b kernel: SCSI disk error : host 1 channel 0 id 0 lun 0 return code = 6000000
-> Sep 24 13:59:55 cd-grapherdb02b kernel:  I/O error: dev 08:11, sector 128
-> Sep 24 13:59:55 cd-grapherdb02b kernel:  I/O error: dev 08:11, sector 532385968
-> Sep 24 13:59:55 cd-grapherdb02b kernel: :11, sector 113398656
-> Sep 24 13:59:55 cd-grapherdb02b kernel:  I/O error: dev 08:11, sector 113400000
-> 
+Hello,
 
-I don't see that the 2.4 aacraid driver has the timeout recovery code
-like the 2.6 version does.  Mark Salyzyn at Adaptec may be able to point
-you at an aacraid driver for 2.4 that does have that code in it though.
+here goes multipath-tools-0.2.9
 
-Mark.
+The ChangeLog is pretty big this time : changes accumulated while
+waiting for scsi_id-0.6 and while background-battling with an IA64
+compilation glitch.
+
+In short :
+
+	* compiles on IA64
+	* implement the alias OSDL CGL preconisation
+	* more work on single path devices and JBOD handling
+
+Regression testing is even lighter than the previous release, because I
+temporarily lost access to my favorite SAN.
+
+Full ChangeLog for the release :
+
+        * [multipathd] finally tame the clone compilation glitch on IA64
+          move from sys_clone to __clone / __clone2
+        * [kpartx] rework from Stephan Bader, IBM :
+                * handle s390x arch
+                * endianness fixes
+                * push the partname string size to handle wwwids
+                * quieten implicit cast warnings
+        * [multipath] add an 'alias' multipath keyword for friendlier
+	  device
+          names. This was "asked" by OSDL' CGL board of secret reviewers
+        * [multipath] last pass with JBOD and parallel SCSI support :
+          hard-code scsi_id as a fallback when disk strings doesn't
+	  match any hwtable entry
+        * [multipath & multipathd] change the parser to not coalesce
+          consecutive spaces (Patrick Mansfield)
+        * [multipath] remove the [UN]: output prefix, so that stdout can
+	  be easily fed to a tool like dmsetup
+        * [multipathd] DEBUG=3 logs more readable/usefull
+        * [multipathd] add a multipath_tool config keyword
+        * [multipathd] move to execute_program() like multipath already
+          did
+        * [multipath] don't print the "no path" msg in quiet mode
+        * [multipathd] include linux/unistd.h for _syscall2
+          definition on RedHat systems. Remove superfluous
+          asm/unistd.h include
+        * [libsysfs] forked : last version uses mntent, which
+          klibc doesn't provide. That, plus the fact we use
+          only 1/3 of the lib, pushed me to freeze the version
+          and strip all unused stuff.
+        * [multipathd] prepare_namespace() cleanup : no more "multipath"
+          special casing since we push it to binvec vector, like the
+          other callouts detected in the config file.
+
+As usual, doc and download at :
+http://christophe.varoqui.free.fr/
+
+regards,
 -- 
-Mark Haverkamp <markh@osdl.org>
+christophe varoqui <christophe.varoqui@free.fr>
 
