@@ -1,65 +1,66 @@
-From: Go Taniguchi <go@turbolinux.co.jp>
-Subject: Re: 2.6.6-rc2-mm2 + Adaptec I2O
-Date: Tue, 27 Apr 2004 20:53:29 +0900
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: Re: MODULE_VERSION for scsi drivers
+Date: Tue, 27 Apr 2004 08:10:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <408E49B9.3090302@turbolinux.co.jp>
-References: <408DE95F.5010201@tequila.co.jp>	<20040426221814.490a0cfd.akpm@osdl.org>	<Pine.LNX.4.58.0404262223260.17702@dlang.diginsite.com>	<408DF117.4060309@tequila.co.jp>	<20040426230455.53406d74.akpm@osdl.org>	<408DFBEE.3080803@tequila.co.jp> <20040426232522.253594a2.akpm@osdl.org>
+Message-ID: <20040427131050.GA17777@lists.us.dell.com>
+References: <20040427040923.GA9901@lists.us.dell.com> <32805.4.5.45.142.1083039354.squirrel@www.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="T4sUOijqQbZv57TR"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.turbolinux.co.jp ([210.171.55.67]:37892 "EHLO
-	mail.turbolinux.co.jp") by vger.kernel.org with ESMTP
-	id S264022AbUD0Lxw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Apr 2004 07:53:52 -0400
-In-Reply-To: <20040426232522.253594a2.akpm@osdl.org>
+Received: from linux.us.dell.com ([143.166.224.162]:36770 "EHLO
+	lists.us.dell.com") by vger.kernel.org with ESMTP id S264066AbUD0NMt
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Apr 2004 09:12:49 -0400
+Content-Disposition: inline
+In-Reply-To: <32805.4.5.45.142.1083039354.squirrel@www.osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
-Cc: Clemens Schwaighofer <cs@tequila.co.jp>, dlang@digitalinsight.com, linux-kernel@vger.kernel.org
-
-Hi,
-
-Andrew Morton wrote:
-> Clemens Schwaighofer <cs@tequila.co.jp> wrote:
-> 
->>Andrew Morton wrote:
->> | Clemens Schwaighofer <cs@tequila.co.jp> wrote:
->> |
->> |> on this URL [http://www.smartcgi.com/?action=docs,kernel26-adaptec] you
->> |> can find a patch that I could successfully path again 2.6.5 (vanilla)
->> |> and compile successfully.
->> |
->> |
->> | hm.  Against 2.6.0.  Go, would you have time to send that patch in to the
->> | scsi team at linux-scsi@vger.kernel.org?
->>
->> yes,
->>
->> remark:
->>
->> ~ Originally this patch has been released by Go Taniguchi at
->> http://pkgcvs.turbolinux.co.jp/~go/patch-2.6/dpt_i2o.patch
->>
->> patch attached
-> 
-> 
-> Sorry, my question was directed to Go Taniguchi <go@turbolinux.co.jp> - Go
-> should submit the patch.
-
-Yea, I sent an mail to LKML in the end of last year regarding this issue.
-http://marc.theaimsgroup.com/?l=linux-kernel&m=107275564119915&w=2
-
-However, I think that Adaptec probably just re-make a new version of dpt_i2o.
-My patch may differ from the Adaptec policy.
-
-I thought that it may be good for someone need the driver before Adaptec 
-completed the driver. What's why I uploaded my patch onto web.
-
-The number of the access is over 1000 now after I counted it.
-
-Please merge to Andrew's tree if Adaptec does not mind.
-
-This is my patch same as send from Clemens.
-http://pkgcvs.turbolinux.co.jp/~go/patch-2.6/dpt_i2o.patch
+To: "Randy.Dunlap" <rddunlap@osdl.org>
+Cc: linux-scsi@vger.kernel.org
 
 
+--T4sUOijqQbZv57TR
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, Apr 26, 2004 at 09:15:54PM -0700, Randy.Dunlap wrote:
+> > Now that the MODULE_VERSION() macro is in 2.6, I'd love to see all
+> > modules implement it.
+>=20
+> What's the purpose of the
+> MODULE_VERSION(""):
+> instances?  (e.g.:)
+
+Per include/linux/module.h:
+  Using this automatically adds a checksum of the .c files and the
+  local headers to the end.  Use MODULE_VERSION("") if you want just
+  this.  Macro includes room for this.
+
+So for modules which don't appear to have their own versioning, we use
+the "" mechanism to simply generate the checksum for the file.  This
+still allows tools (ala DKMS eventually) to note if something in the
+module changed even if the version string didn't.
+
+Thanks,
+Matt
+
+--=20
+Matt Domsch
+Sr. Software Engineer, Lead Engineer
+Dell Linux Solutions linux.dell.com & www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
+
+--T4sUOijqQbZv57TR
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQFAjlvaIavu95Lw/AkRArshAJ9Cu84sQc0irWlmLH3BxhsHspPGUgCfddHS
+rQ7gNm47NBx1BTLxztwHHVY=
+=NZGK
+-----END PGP SIGNATURE-----
+
+--T4sUOijqQbZv57TR--
