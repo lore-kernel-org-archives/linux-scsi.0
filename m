@@ -1,68 +1,63 @@
 From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: (unknown)
-Date: Tue, 11 Jan 2005 11:17:21 -0500
-Message-ID: <60807403EABEB443939A5A7AA8A7458B9BA0BD@otce2k01.adaptec.com>
+Subject: pci.ids patch re-issued inline rather than as an attachment.
+Date: Tue, 11 Jan 2005 11:24:46 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458B9BA0CD@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C4F7F9.0765475C"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:50063 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262804AbVAKQRY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jan 2005 11:17:24 -0500
+Received: from magic.adaptec.com ([216.52.22.17]:43412 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262808AbVAKQYs convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Jan 2005 11:24:48 -0500
 content-class: urn:content-classes:message
-Subject: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: pci-ids@ucw.cz
 Cc: Mark Haverkamp <markh@osdl.org>, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
-
-------_=_NextPart_001_01C4F7F9.0765475C
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-This enclosed patch synchronized pci.ids with the new products in the
-aacraid driver.
+This patch synchronizes pci.ids with the new products in the aacraid
+driver.
 
 Signed-off-by: Mark Salyzyn <Mark_Salyzyn@adaptec.com>
 
-------_=_NextPart_001_01C4F7F9.0765475C
-Content-Type: application/octet-stream;
-	name="pci.ids.patch"
-Content-Transfer-Encoding: base64
-Content-Description: pci.ids.patch
-Content-Disposition: attachment;
-	filename="pci.ids.patch"
-
-VGhpcyBwYXRjaCBzeW5jaHJvbml6ZXMgcGNpLmlkcyB3aXRoIHRoZSBuZXcgcHJvZHVjdHMgaW4g
-dGhlIGFhY3JhaWQgZHJpdmVyLgoKU2lnbmVkLW9mZi1ieTogTWFyayBTYWx5enluIDxNYXJrX1Nh
-bHl6eW5AYWRhcHRlYy5jb20+CgpkaWZmIC11IC0tcmVjdXJzaXZlIGxpbnV4LTIuNi4xMC1yYzMt
-YmsxNC9kcml2ZXJzL3BjaS9wY2kuaWRzIGxpbnV4LTIuNi4xMC1uZXcvZHJpdmVycy9wY2kvcGNp
-LmlkcwotLS0gbGludXgtMi42LjEwLXJjMy1iazE0L2RyaXZlcnMvcGNpL3BjaS5pZHMJVHVlIE5v
-diAzMCAwNzo0NDoyMSAyMDA0CisrKyBsaW51eC0yLjYuMTAtbmV3L2RyaXZlcnMvcGNpL3BjaS5p
-ZHMJVHVlIEphbiAxMSAwNzoyNzowNCAyMDA1CkBAIC04NjMwLDYgKzg2MzAsOCBAQAogCQkwZTEx
-IDAyOTUgIFNBVEEgNkNoIChCZWFyY2F0KQogCQkxMDI4IDAyODcgIFBvd2VyRWRnZSBFeHBhbmRh
-YmxlIFJBSUQgQ29udHJvbGxlciAzMjAvREMKIAkJMTAyOCAwMjkxICBDRVJDIFNBVEEgUkFJRCAy
-IFBDSSBTQVRBIDZjaCAoRGVsbENvcnNhaXIpCisJCTEwM0MgMzIyNyAgQUFSLTI2MTBTQQorCQkx
-MDE0IDAyZjIgIFNlcnZlUkFJRCA4aQogCQkxN2FhIDAyODYgIExlZ2VuZCBTMjIwIChMZWdlbmQg
-Q3J1c2FkZXIpCiAJCTE3YWEgMDI4NyAgTGVnZW5kIFMyMzAgKExlZ2VuZCBWdWxjYW4pCiAJCTkw
-MDUgMDI4NSAgMjIwMFMgKFZ1bGNhbikKQEAgLTg2MzksMTIgKzg2NDEsMjUgQEAKIAkJOTAwNSAw
-Mjg5ICAzMjQwUyAoVG9ybmFkbykKIAkJOTAwNSAwMjhhICBBU1ItMjAyMFMgUENJLVggWkNSIChT
-a3loYXdrKQogCQk5MDA1IDAyOGIgIEFTUi0yMDIwUyBTTy1ESU1NIFBDSS1YIFpDUiAoVGVybWlu
-YXRvcikKKwkJOTAwNSAwMjhmICBBU1ItMjAyNVNBCiAJCTkwMDUgMDI5MCAgQUFSLTI0MTBTQSBQ
-Q0kgU0FUQSA0Y2ggKEphZ3VhciBJSSkKIAkJOTAwNSAwMjkyICBBQVItMjgxMFNBIFBDSSBTQVRB
-IDhjaCAoQ29yc2Fpci04KQogCQk5MDA1IDAyOTMgIEFBUi0yMTYxMFNBIFBDSSBTQVRBIDE2Y2gg
-KENvcnNhaXItMTYpCiAJCTkwMDUgMDI5NCAgRVNEIFNPLURJTU0gUENJLVggU0FUQSBaQ1IgKFBy
-b3dsZXIpCisJCTkwMDUgMDI5NiAgQVNSLTIyNDBTCisJCTkwMDUgMDI5NyAgQVNSLTQwMDVTQVMK
-KwkJOTAwNSAwMjk4ICBBU1ItNDAwMFNBUworCQk5MDA1IDAyOTkgIEFTUi00ODAwU0FTCisJCTkw
-MDUgMDI5YSAgQVNSLTQ4MDVTQVMKIAkwMjg2ICBBQUMtUkFJRCAoUm9ja2V0KQogCQk5MDA1IDAy
-OGMgIEFTUi0yMjMwUyArIEFTUi0yMjMwU0xQIFBDSS1YIChMYW5jZXIpCisJCTkwMDUgMDI4ZCAg
-QVNSLTIxMzBTCisJCTkwMDUgMDI5YiAgQVNSLTI4MjBTQQorCQk5MDA1IDAyOWMgIEFTUi0yNjIw
-U0EKKwkJOTAwNSAwMjlkICBBU1ItMjQyMFNBCisJCTkwMDUgMDI5ZSAgSUNQOTAyNFIwCisJCTkw
-MDUgMDI5ZiAgSUNQOTAxNFIwCisJCTkwMDUgMDgwMCAgQ2FsbGlzdG8KIAk4MDAwICBBU0MtMjkz
-MjBBIFUzMjAKIAk4MDBmICBBSUMtNzkwMSBVMzIwCiAJODAxMCAgQVNDLTM5MzIwIFUzMjAK
-
-------_=_NextPart_001_01C4F7F9.0765475C--
+diff -u --recursive linux-2.6.10-rc3-bk14/drivers/pci/pci.ids
+linux-2.6.10-new/drivers/pci/pci.ids
+--- linux-2.6.10-rc3-bk14/drivers/pci/pci.ids	Tue Nov 30 07:44:21 2004
++++ linux-2.6.10-new/drivers/pci/pci.ids	Tue Jan 11 07:27:04 2005
+@@ -8630,6 +8630,8 @@
+ 		0e11 0295  SATA 6Ch (Bearcat)
+ 		1028 0287  PowerEdge Expandable RAID Controller 320/DC
+ 		1028 0291  CERC SATA RAID 2 PCI SATA 6ch (DellCorsair)
++		103C 3227  AAR-2610SA
++		1014 02f2  ServeRAID 8i
+ 		17aa 0286  Legend S220 (Legend Crusader)
+ 		17aa 0287  Legend S230 (Legend Vulcan)
+ 		9005 0285  2200S (Vulcan)
+@@ -8639,12 +8641,25 @@
+ 		9005 0289  3240S (Tornado)
+ 		9005 028a  ASR-2020S PCI-X ZCR (Skyhawk)
+ 		9005 028b  ASR-2020S SO-DIMM PCI-X ZCR (Terminator)
++		9005 028f  ASR-2025SA
+ 		9005 0290  AAR-2410SA PCI SATA 4ch (Jaguar II)
+ 		9005 0292  AAR-2810SA PCI SATA 8ch (Corsair-8)
+ 		9005 0293  AAR-21610SA PCI SATA 16ch (Corsair-16)
+ 		9005 0294  ESD SO-DIMM PCI-X SATA ZCR (Prowler)
++		9005 0296  ASR-2240S
++		9005 0297  ASR-4005SAS
++		9005 0298  ASR-4000SAS
++		9005 0299  ASR-4800SAS
++		9005 029a  ASR-4805SAS
+ 	0286  AAC-RAID (Rocket)
+ 		9005 028c  ASR-2230S + ASR-2230SLP PCI-X (Lancer)
++		9005 028d  ASR-2130S
++		9005 029b  ASR-2820SA
++		9005 029c  ASR-2620SA
++		9005 029d  ASR-2420SA
++		9005 029e  ICP9024R0
++		9005 029f  ICP9014R0
++		9005 0800  Callisto
+ 	8000  ASC-29320A U320
+ 	800f  AIC-7901 U320
+ 	8010  ASC-39320 U320
