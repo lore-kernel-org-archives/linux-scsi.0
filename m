@@ -1,40 +1,31 @@
-From: Mark Lord <lkml@rtr.ca>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
-Date: Tue, 14 Sep 2004 13:51:28 -0400
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <41472FA0.2090108@rtr.ca>
-References: <41471163.10709@rtr.ca> <414723B0.1090600@pobox.com>
+Date: Tue, 14 Sep 2004 14:07:08 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20040914180708.GA20544@havoc.gtf.org>
+References: <41471163.10709@rtr.ca> <414723B0.1090600@pobox.com> <41472FA0.2090108@rtr.ca> <414730D9.3000003@pobox.com> <41473270.3070405@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <414723B0.1090600@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [69.28.190.101] ([69.28.190.101]:38622 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S269475AbUINSHM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Sep 2004 14:07:12 -0400
+Content-Disposition: inline
+In-Reply-To: <41473270.3070405@rtr.ca>
 List-Id: linux-scsi@vger.kernel.org
+To: Mark Lord <lkml@rtr.ca>
+Cc: linux-kernel@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 
- >In particular, releasing the lock and sleeping would be very wrong
- >in the ->queuecommand and error handling paths
- >(alas...  I would love to sleep in the fine-grained eh hooks)
+On Tue, Sep 14, 2004 at 02:03:28PM -0400, Mark Lord wrote:
+> Whatever this driver does, it has to be reasonably portable
+> back to early 2.4.xx kernels, so it cannot depend too much
+> upon newly (or to-be) implemented semantics in 2.6.xx.
 
-Mmm.. definitely no sleeps in queuecommand(), but sleeping seems
-necessary in host_reset_handler() -- the alternative is to just
-busywait inline.. which would really not be good.
+Feel free to examine libata's use of ->eh_strategy_handler
+in 2.4.x ;-)
 
-Isn't the protocol for the eh host_reset_handler() basically
-just "do the reset, and return whether it worked or not?".
-If so, the driver really has to hang around until the reset
-completes so that correct status can be returned.  This generally
-takes a couple of milliseconds in practice (measured it).
+	Jeff
 
-Is there a better way to do that?
 
-I really would prefer never to have to reset the drives,
-but when they have a queuing error, many of them simply
-won't talk to us again without a reset.  The driver avoids
-the reset as much as it can for other situations, though.
 
-Cheers
--- 
-Mark Lord
-(hdparm keeper & the original "Linux IDE Guy")
