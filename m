@@ -1,117 +1,37 @@
-From: Karen Shaeffer <shaeffer@neuralscape.com>
-Subject: dptiO hangs on boot
-Date: Fri, 30 Jul 2004 12:15:07 -0700
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: bytes/CDB of SCSI pass thru grossly limited maybe
+Date: 30 Jul 2004 17:04:12 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040730191507.GA678@synapse.neuralscape.com>
+Message-ID: <1091228652.6845.1.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from synapse.neuralscape.com ([198.144.200.82]:61572 "EHLO
-	neuralscape.com") by vger.kernel.org with ESMTP id S267801AbUG3TWO
+Received: from email-out1.iomega.com ([147.178.1.82]:53651 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S264531AbUG3XEq
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jul 2004 15:22:14 -0400
-Received: from shaeffer by neuralscape.com with local (Exim 4.12)
-	id 1BqcqR-0000Cf-00
-	for linux-scsi@vger.kernel.org; Fri, 30 Jul 2004 12:15:07 -0700
-Content-Disposition: inline
+	Fri, 30 Jul 2004 19:04:46 -0400
+Received: from royntex01.iomegacorp.com (edison [10.1.1.82])
+	by email.iomega.com (Postfix) with ESMTP id 5EB6F37EC
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Jul 2004 17:04:46 -0600 (MDT)
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hello,
+Offline a friend reports seeing bytes/CDB of Linux ioctl SG_IO grossly
+limited - like down below 0.000000128 GB/CDB for op x3B "WRITE BUFFER".
 
-The dpt_i2o driver hangs on boot. I am running the
-linux-2.6.8-rc2-bk7. Everything proceeds as expected,
-until md autodetects the RAID arrays, which hangs at
-the line,
+I'm writing now to give this audience the chance to comment.
 
-md: ... autorun DONE.
+Left to myself, I'll hope to work to reproduce that result, compare USB/
+PATAPI/ FireWire/ SATAPI, try the alternative of ioctl
+CDROM_SEND_PACKET, ... and report back here if/when I discover anything
+interesting.
 
-After a number of minutes, The driver reports,
+I remember seeing talk of tweaking the kernel to choke off the default
+kernel thruput whenever status/ command overhead is high, but before now
+I don't remember hearing of choking off SCSI pass thru as well.
 
-dptiO: Trying to Abort cmd=70
+Pat LaVarre
+http://linux-pel.blog-city.com/read/752705.htm
 
-And then the system hangs indefinitely.
 
-
-I include some information from the boot logs here:
-
-Jul 30 01:45:15 demo kernel: Detecting Adaptec I2O RAID controllers...
-Jul 30 01:45:15 demo kernel: Adaptec I2O RAID controller 0 irq=106
-Jul 30 01:45:15 demo kernel:      BAR0 f889a000 - size= 100000
-Jul 30 01:45:15 demo kernel:      BAR1 f899b000 - size= 1000000
-Jul 30 01:45:15 demo kernel: dpti: If you have a lot of devices this could take a few minutes.
-Jul 30 01:45:15 demo kernel: dpti0: Reading the hardware resource table.
-Jul 30 01:45:15 demo kernel: TID 008  Vendor: ADAPTEC      Device: AIC-7902 Rev: 00000001
-Jul 30 01:45:15 demo kernel: TID 009  Vendor: ADAPTEC      Device: AIC-7902 Rev: 00000001
-Jul 30 01:45:15 demo kernel: TID 528  Vendor: IBM     I    Device: IC35L036UCDY Rev: S27EE
-Jul 30 01:45:15 demo kernel: TID 516  Vendor: IFT     I    Device: IFT-7200 Rev: 0145
-Jul 30 01:45:15 demo kernel: scsi0 : Vendor: Adaptec  Model: 2010S FW:3B05
-Jul 30 01:45:15 demo kernel:   Vendor: IBM       Model: IC35L036UCDY10-0 Rev: S27E
-Jul 30 01:45:15 demo kernel:   Type:   Direct-Access ANSI SCSI revision: 03
-Jul 30 01:45:15 demo kernel:   Vendor: IFT       Model: IFT-7200 Rev: 0145
-Jul 30 01:45:15 demo kernel:   Type:   Direct-Access ANSI SCSI revision: 04
-....
-Jul 30 01:45:15 demo kernel: SCSI device sda: 71687323 512-byte hdwr sectors (36704 MB)
-Jul 30 01:45:15 demo kernel: SCSI device sda: drive cache: write back
-Jul 30 01:45:15 demo kernel:  sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 sda8 sda9 sda10 >
-Jul 30 01:45:15 demo kernel: Attached scsi disk sda at scsi0, channel 0, id 1, lun 0
-Jul 30 01:45:15 demo kernel: SCSI device sdb: 78183919 512-byte hdwr sectors (40030 MB)
-Jul 30 01:45:15 demo kernel: SCSI device sdb: drive cache: write through
-Jul 30 01:45:15 demo kernel:  sdb: sdb1 sdb2 sdb3 sdb4 < sdb5 sdb6 sdb7 sdb8 >
-Jul 30 01:45:15 demo kernel: Attached scsi disk sdb at scsi0, channel 1, id 0, lun 0
-Jul 30 01:45:15 demo kernel: Attached scsi generic sg0 at scsi0, channel 0, id 1, lun 0,  type 0
-Jul 30 01:45:15 demo kernel: Attached scsi generic sg1 at scsi0, channel 1, id 0, lun 0,  type 0
-Jul 30 01:45:15 demo kernel: I2O Core - (C) Copyright 1999 Red Hat Software
-Jul 30 01:45:15 demo kernel: I2O: Event thread created as pid 167
-Jul 30 01:45:15 demo kernel: i2o: Checking for PCI I2O controllers...
-Jul 30 01:45:15 demo kernel: I2O configuration manager v 0.04.
-Jul 30 01:45:15 demo kernel:   (C) Copyright 1999 Red Hat Software
-Jul 30 01:45:15 demo kernel: I2O Block Storage OSM v0.9
-Jul 30 01:45:15 demo kernel:    (c) Copyright 1999-2001 Red Hat Software.
-Jul 30 01:45:15 demo kernel: i2o_block: Checking for Boot device...
-Jul 30 01:45:15 demo kernel: i2o_block: Checking for I2O Block devices...
-Jul 30 01:45:15 demo kernel: i2o_scsi.c: Version 0.1.2
-Jul 30 01:45:15 demo kernel:   chain_pool: 0 bytes @ f7d8421c
-Jul 30 01:45:15 demo kernel:   (512 byte buffers X 4 can_queue X 0 i2o controllers)
-Jul 30 01:45:15 demo kernel: Fusion MPT base driver 3.01.03
-Jul 30 01:45:15 demo kernel: Copyright (c) 1999-2004 LSI Logic Corporation
-Jul 30 01:45:15 demo kernel: Fusion MPT SCSI Host driver 3.01.03
-Jul 30 01:45:15 demo kernel: Fusion MPT LAN driver 3.01.03
-......
-Jul 30 01:45:16 demo kernel: md: linear personality registered as nr 1
-Jul 30 01:45:16 demo kernel: md: raid0 personality registered as nr 2
-Jul 30 01:45:16 demo kernel: md: raid1 personality registered as nr 3
-Jul 30 01:45:16 demo kernel: md: raid5 personality registered as nr 4
-Jul 30 01:45:16 demo kernel: raid5: measuring checksumming speed
-Jul 30 01:45:16 demo kernel:    8regs     :  2352.000 MB/sec
-Jul 30 01:45:16 demo kernel:    8regs_prefetch:  2172.000 MB/sec
-Jul 30 01:45:16 demo kernel:    32regs    :  1480.000 MB/sec
-Jul 30 01:45:16 demo kernel:    32regs_prefetch:  1400.000 MB/sec
-Jul 30 01:45:16 demo kernel:    pIII_sse  :  2584.000 MB/sec
-Jul 30 01:45:16 demo kernel:    pII_mmx   :  3152.000 MB/sec
-Jul 30 01:45:16 demo kernel:    p5_mmx    :  3108.000 MB/sec
-Jul 30 01:45:16 demo kernel: raid5: using function: pIII_sse (2584.000 MB/sec)
-Jul 30 01:45:16 demo kernel: md: multipath personality registered as nr 7
-Jul 30 01:45:16 demo kernel: md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
-Jul 30 01:45:16 demo kernel: device-mapper: 4.1.0-ioctl (2003-12-10) initialised: dm@uk.sistina.com
-Jul 30 01:45:16 demo kernel: device-mapper: dm_multipath v0.2.0
-Jul 30 01:45:16 demo kernel: oprofile: using NMI interrupt.
-Jul 30 01:45:16 demo kernel: NET: Registered protocol family 2
-Jul 30 01:45:16 demo kernel: IP: routing cache hash table of 8192 buckets, 64Kbytes
-Jul 30 01:45:16 demo kernel: TCP: Hash tables configured (established 262144 bind 65536)
-Jul 30 01:45:16 demo kernel: NET: Registered protocol family 1
-Jul 30 01:45:16 demo kernel: NET: Registered protocol family 17
-Jul 30 01:45:16 demo kernel: ACPI: (supports S0 S1 S4 S5)
-Jul 30 01:45:16 demo kernel: BIOS EDD facility v0.13 2004-Mar-09, 6 devices found
-Jul 30 01:45:16 demo kernel: Please report your BIOS at http://linux.dell.com/edd/results.html
-Jul 30 01:45:16 demo kernel: md: Autodetecting RAID arrays.
-Jul 30 01:45:16 demo kernel: md: autorun ...
-Jul 30 01:45:16 demo kernel: md: ... autorun DONE.
-
-If I can provide any additional information, please let me know.
-Thanks,
-Karen
--- 
- Karen Shaeffer
- Neuralscape, Palo Alto, Ca. 94306
- shaeffer@neuralscape.com  http://www.neuralscape.com
