@@ -1,30 +1,58 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] scsi-misc-2.5 remove scsi_device list_lock
-Date: Fri, 25 Apr 2003 09:53:26 -0700
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [PATCH] scsi-misc-2.5 user per-device spare command
+Date: 25 Apr 2003 12:57:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030425095326.C8776@beaverton.ibm.com>
-References: <20030424100229.A32098@beaverton.ibm.com> <20030425111212.A28577@infradead.org> <20030425104745.GK1012@suse.de>
+Message-ID: <1051289862.1756.34.camel@mulgrave>
+References: <20030424100229.A32098@beaverton.ibm.com>
+	<20030424100317.A32134@beaverton.ibm.com>
+	<20030425111227.B28577@infradead.org>
+	<20030425093718.A8776@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 216-99-218-173.dsl.aracnet.com ([216.99.218.173]:9969 "EHLO
-	dyn9-47-17-132.beaverton.ibm.com") by vger.kernel.org with ESMTP
-	id S263381AbTDYQpG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Apr 2003 12:45:06 -0400
-Content-Disposition: inline
-In-Reply-To: <20030425104745.GK1012@suse.de>; from axboe@suse.de on Fri, Apr 25, 2003 at 12:47:46PM +0200
+Received: from nat9.steeleye.com ([65.114.3.137]:48133 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263387AbTDYQqN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Apr 2003 12:46:13 -0400
+In-Reply-To: <20030425093718.A8776@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, Apr 25, 2003 at 12:47:46PM +0200, Jens Axboe wrote:
+On Fri, 2003-04-25 at 12:37, Patrick Mansfield wrote:
+> Christoph -
+> 
+> On Fri, Apr 25, 2003 at 11:12:27AM +0100, Christoph Hellwig wrote:
+> > On Thu, Apr 24, 2003 at 10:03:17AM -0700, Patrick Mansfield wrote:
+> > > Patch against scsi-misc-2.5
+> > > 
+> > > Use a per-device spare command rather than a per-host spare.
+> > 
+> > Why?  This means we'll have a much bigger number of spare commands
+> > around.
+> 
+> So we are guaranteed to be able to have at least one IO in flight for all
+> devices. With a per-host spare, some device(s) might have to wait
+> (generally polling based on an interval dependent on whatever blk_plug_device
+> gives us) for a command to become available, and it is not clear what the
+> IO behaviour - especially for swap - will be in such cases.
 
-> Again... Besides, this alias _must_ only be used by the block layer.
-> Every other driver should use the real one.
+Yes, but we all agreed that we really only needed one guaranteed
+commmand for the system to make forward progress.  It could be argued
+that we only need one globally.  One per host seems a reasonable
+compromise.
 
-So we should never use queue_lock in the scsi code? 
+I don't really buy the in flight I/O argument because under normal
+circumstances the slab allocation will cope correctly.  The slab
+allocation only fails when we need to grow the slab *and* we're out of
+readily available pages, so the system tips into paging mode anyway and
+its throughput tanks.
 
-I wasn't sure which way to go, previous code used queue_lock in scsi queue
-related code (well almost everywhere) rather than host_lock.
+Just the act of pre-allocating a single command means that we pin a slab
+page and thus have at least a page full of commands to throw about even
+in an out of memory situation.
 
--- Patrick Mansfield
+James
+
+
