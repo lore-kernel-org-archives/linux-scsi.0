@@ -1,53 +1,53 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: aic7xxx & st: BUG at include/asm/dma-mapping.h:37
-Date: Fri, 8 Aug 2003 07:32:18 +0300 (EEST)
+From: Josef =?iso-8859-1?Q?M=F6llers?=
+	<josef.moellers@fujitsu-siemens.com>
+Subject: Re: Summary of the Multi-Path BOF at OLS and future directions
+Date: Fri, 08 Aug 2003 08:45:02 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0308080727490.4191@kai.makisara.local>
-References: <20030806231359.A28252@mail.kroptech.com>
- <Pine.LNX.4.56.0308072346560.1035@kai.makisara.local> <20030807201916.A1065@mail.kroptech.com>
+Message-ID: <3F3346EE.B98B35D2@fujitsu-siemens.com>
+References: <1060042082.1985.53.camel@fuzzy> <20030807172028.A13400@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep06-0.kolumbus.fi ([193.229.0.57]:65088 "EHLO
-	fep06-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S271196AbTHHEcV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Aug 2003 00:32:21 -0400
-In-Reply-To: <20030807201916.A1065@mail.kroptech.com>
+Received: from plam.fujitsu-siemens.com ([217.115.66.9]:61493 "EHLO
+	plam.fujitsu-siemens.com") by vger.kernel.org with ESMTP
+	id S271343AbTHHGoo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Aug 2003 02:44:44 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Adam Kropelin <akropel1@rochester.rr.com>
-Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org, gibbs@scsiguy.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, 7 Aug 2003, Adam Kropelin wrote:
+Christoph Hellwig wrote:
 
-> On Fri, Aug 08, 2003 at 12:00:56AM +0300, Kai Makisara wrote:
-...
-> My knowledge of the SCSI subsystem is weak, so forgive me if this is a
-> stupid question. If st knows the block size to be invalid, why does the
-> io ever get submitted at all? Perhaps the io gets issued and
-> completed, at which time st learns the block size was wrong, warns about
-> it, and somehow the next command thru the SCSI layer hoses up? I'm
-> really just grasping at straws here (as you can tell).
->
-The size of the next block on tape is not known until the block is read.
-The read is done and it returns 'check condition' and the sense data says
-what happens. st then logs this and returns error for the read. This is
-standard behavior for tapes.
-
-> > > kernel BUG at include/asm/dma-mapping.h:37!
+> > 4. Configuration of this solution would be extremely important.  Th=
+e
+> > idea here is to rely on the udev solution currently making its way =
+into
+> > the kernel and essentially have a vendor specific multi-path
+> > configuration as a udev plug-in.
 > >
-> > This comes from 'BUG_ON(direction == DMA_NONE)' in dma_map_sg(). I
-> > inserted a printk into st_do_scsi() in st.c to see if DMA_NONE is used for
-> > some command that should transfer data. No errors seen in these printk
-> > results.
->
-> I tried aic7xxx_old and hit the same BUG so Justin's driver would seem
-> to be exonerated. The new backtrace is below. The commonality is clearly
-> the st driver and the SCSI midlayer. Perhaps I'll try to verbosify
-> things a bit in that area and see what comes up.
->
-I will try to get my old Adaptec working tonight or during the weekend and
-see if I can reproduce the error. It seems to be dependent on the SCSI
-adapter.
+> > 5. Vendor value add for specific devices could be encoded both as
+> > configuration (udev) pieces and plug-ins to the upper layer multi-p=
+ath
+> > driver to activate any proprietary vendor specific configuration op=
+tions
+> > that may be needed for specific solutions.
+>=20
+> What are examples of such value add?
 
--- 
-Kai
+Some older EMC RAID boxes need a special "TRESPASS" command (implemente=
+d
+as a MODE SELECT) to switch the ownership of a LUN from one path
+("Storage Processor") to the other. The newer ones do this
+automatically, though.
+Without the TRESPASS, you'd see the LUN (INQUIRY), but you can't do
+anything with it, even a simple READ CAPACITY fails.
+--=20
+Josef M=F6llers (Pinguinpfleger bei FSC)
+	If failure had no penalty success would not be a prize
+						-- T.  Pratchett
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
