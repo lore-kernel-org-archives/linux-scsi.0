@@ -1,46 +1,36 @@
 From: Lars Marowsky-Bree <lmb@suse.de>
 Subject: Re: [dm-devel] [multipath] SCSI device capacity mess
-Date: Fri, 29 Oct 2004 16:12:17 +0200
+Date: Thu, 28 Oct 2004 20:21:54 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041029141217.GC32712@marowsky-bree.de>
-References: <20041027084202.GD32712@marowsky-bree.de> <OFBD60D8A7.8D9B83B6-ON85256F3A.00670D96-88256F3A.00677FF3@us.ibm.com>
+Message-ID: <20041028182154.GY32712@marowsky-bree.de>
+References: <1098833278.4914.24.camel@zezette> <20041027081713.GC32712@marowsky-bree.de> <1098903759.12464.32.camel@zezette> <1098914250.1588.1.camel@mulgrave> <20041028113728.GT32712@marowsky-bree.de> <20041028181436.GA18874@beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.in-addr.de ([212.8.193.158]:61419 "EHLO mx.in-addr.de")
-	by vger.kernel.org with ESMTP id S263356AbUJ2Ome (ORCPT
+Received: from gate.in-addr.de ([212.8.193.158]:61931 "EHLO mx.in-addr.de")
+	by vger.kernel.org with ESMTP id S263359AbUJ2Omg (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Oct 2004 10:42:34 -0400
+	Fri, 29 Oct 2004 10:42:36 -0400
 Content-Disposition: inline
-In-Reply-To: <OFBD60D8A7.8D9B83B6-ON85256F3A.00670D96-88256F3A.00677FF3@us.ibm.com>
+In-Reply-To: <20041028181436.GA18874@beaverton.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: linux-scsi-owner@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: device-mapper development <dm-devel@redhat.com>, christophe varoqui <christophe.varoqui@free.fr>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 2004-10-27T11:51:42, Bryan Henderson <hbryan@us.ibm.com> wrote:
+On 2004-10-28T11:14:36, Patrick Mansfield <patmans@us.ibm.com> wrote:
 
-> >In addition verifying the size and stuff it could also check that th=
-e
-> >paths really (still) point to the same device (by storing the LUN WW=
-N in
-> >the hw_handler context, for example)
->=20
-> Just to eliminate any ambiguity here, using terminology from the=20
-> standards:  A LUN is a logical unit number.  A WWN is a fibre channel=
- port=20
-> or node name.  There's no such thing as a LUN WWN.  I presume you mea=
-n to=20
-> check the logical unit device identifier, which is the world wide uni=
-que=20
-> and persistent identifier of a logical unit.  (That's what you get (a=
-mong=20
-> other things) from Page 0x83 of the SCSI VPD read from the LU).
+> > Can't we do a test-unit-ready before trying to read and then just n=
+ot
+> > read the partition table w/o so much noise?
+> We already issue a TUR in sd_spinup_disk() prior to the READ CAPACITY=
+ and
+> partition reads.
 
-Thanks for the clarification; EMC at least partially calls said
-world-wide unique identifier the "LUN's WWN" though. And if we are
-nitpicking, it's EVPD. ;-)
-
+I'm just saying we should stop on the first failed command (TUR) and no=
+t
+retry to read all 64 sectors regardless. I can live with one error per
+passive path, but 64 really kills the logs.
 
 
 Sincerely,
