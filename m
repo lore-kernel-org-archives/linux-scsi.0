@@ -1,37 +1,95 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: [usb-storage] Re: Can't eject jaz disk on 2.6
-Date: Mon, 29 Mar 2004 08:40:46 -0700
+From: "Justin T. Gibbs" <Justin_Gibbs@adaptec.com>
+Subject: [PATCH] 2.4.X Avoid excessive recursion when setting device offline
+Date: Mon, 29 Mar 2004 10:07:00 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <728F2ABA-8197-11D8-AECB-003065635034@ieee.org>
-References: <20040327075918.A2232@animx.eu.org><20040327224222.GA5203@one-ey
-	 ed-alien.net> <20040327180018.A4269@animx.eu.org><20040327225258.GB5203@on
-	e -eyed-alien.net> <20040327190746.A4500@animx.eu.org>
-Mime-Version: 1.0 (Apple Message framework v612)
-Content-Type: text/plain;
-	charset=US-ASCII;
-	format=flowed
+Message-ID: <387680000.1080580020@aslan.btc.adaptec.com>
+Reply-To: "Justin T. Gibbs" <Justin_Gibbs@adaptec.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email-out1.iomega.com ([147.178.1.82]:31409 "EHLO
-	email.iomega.com") by vger.kernel.org with ESMTP id S262983AbUC2PmU
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Mar 2004 10:42:20 -0500
-In-Reply-To: <20040327190746.A4500@animx.eu.org>
+Received: from magic.adaptec.com ([216.52.22.17]:51140 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S263003AbUC2RHC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Mar 2004 12:07:02 -0500
+Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id i2TH71W20726
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Mar 2004 09:07:01 -0800
+Received: from [10.100.253.70] (aslan.btc.adaptec.com [10.100.253.70])
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id i2TH71827988
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Mar 2004 09:07:01 -0800
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-Cc: Wakko Warner <wakko@animx.eu.org>, Linux SCSI list <linux-scsi@vger.kernel.org>, USB Storage List <usb-storage@lists.one-eyed-alien.net>
+To: linux-scsi@vger.kernel.org
 
-The SCSI jaz 1GB interpretation of ops x1B/ x1E matches the USB/ ATAPI 
-zip handling, as I mis/remember its 1995-11 release.  I'd love to hear 
-more concrete proof, if an apparent difference exists.
+How to reproduce: Queue up lots of I/O to a device.  Set that device
+		  offline.
 
-jaz 2GB could but should not differ from jaz 1GB: released from Iomega 
-San Jose rather than from Iomega Utah.  USB jaz could but should not 
-differ from SCSI 1GB: bridged to USB from SCSI by some third party, 
-perhaps then resold by Iomega.  PPT/ SCSI Bernoulli/ zip we know 
-differs from USB/ ATAPI zip/ jaz because the PPT/ SCSI zip design is 
-old enough to remind us that t10.org grew the pdt x 00/ 06/ 07 op x1B 
-definition incompatibly in SCSI-2, vs. the not-available-gratis SCSI-1.
+Result: The SCSI mid-layer blows out the kernel stack due to the inherent
+	recursion in its request function.  The repeating stack trace goes
+	something like:
 
-Pat LaVarre
+	scsi_request_fn
+	__scsi_end_request
+	scsi_release_command
+	scsi_queue_next_request
+	scsi_request_fn
+	...
+
+This patch prevents recursive calls through the scsi_request_fn
+for the same queue:
+
+===== scsi.h 1.9 vs edited =====
+--- 1.9/drivers/scsi/scsi.h	Wed Jun 25 17:34:08 2003
++++ edited/scsi.h	Sun Mar 28 13:50:35 2004
+@@ -609,6 +609,7 @@
+ 	unsigned starved:1;	/* unable to process commands because
+ 				   host busy */
+ 	unsigned no_start_on_add:1;	/* do not issue start on add */
++	unsigned running_request_fn:1;
+ 
+ 	// Flag to allow revalidate to succeed in sd_open
+ 	int allow_revalidate;
+===== scsi_lib.c 1.17 vs edited =====
+--- 1.17/drivers/scsi/scsi_lib.c	Fri Jul  4 11:12:45 2003
++++ edited/scsi_lib.c	Sun Mar 28 14:07:48 2004
+@@ -850,12 +850,20 @@
+ 	if (!SDpnt) {
+ 		panic("Missing device");
+ 	}
++
+ 	SHpnt = SDpnt->host;
+ 
+ 	/*
+ 	 * To start with, we keep looping until the queue is empty, or until
+-	 * the host is no longer able to accept any more requests.
++	 * the host is no longer able to accept any more requests.  We avoid
++	 * excessive recursion through the SCSI layer by recording that we
++	 * are running this queue and rejecting requests to run it again. This
++	 * avoids blowing out the stack when multiple commands are failed
++	 * during our loop.
+ 	 */
++	if (SDpnt->running_request_fn)
++		return;
++	SDpnt->running_request_fn = 1;
+ 	while (1 == 1) {
+ 		/*
+ 		 * Check this again - each time we loop through we will have
+@@ -863,7 +871,7 @@
+ 		 * we need to check to see if the queue is plugged or not.
+ 		 */
+ 		if (SHpnt->in_recovery || q->plugged)
+-			return;
++			break;
+ 
+ 		/*
+ 		 * If the device cannot accept another request, then quit.
+@@ -1099,6 +1107,7 @@
+ 		 */
+ 		spin_lock_irq(&io_request_lock);
+ 	}
++	SDpnt->running_request_fn = 0;
+ }
+ 
+ /*
 
