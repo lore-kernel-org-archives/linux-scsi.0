@@ -1,50 +1,35 @@
-From: Amit Patel <patelamitv@yahoo.com>
-Subject: scsi_report_lun_scan bug?
-Date: Mon, 17 Nov 2003 18:48:33 -0800 (PST)
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: scsi_report_lun_scan bug?
+Date: Tue, 18 Nov 2003 02:54:40 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031118024833.7619.qmail@web13006.mail.yahoo.com>
+Message-ID: <20031118025440.GH30485@parcelfarce.linux.theplanet.co.uk>
+References: <20031118024833.7619.qmail@web13006.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web13006.mail.yahoo.com ([216.136.174.16]:36104 "HELO
-	web13006.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S262283AbTKRCse (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Nov 2003 21:48:34 -0500
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:62119 "EHLO
+	www.linux.org.uk") by vger.kernel.org with ESMTP id S262310AbTKRCyp
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Nov 2003 21:54:45 -0500
+Content-Disposition: inline
+In-Reply-To: <20031118024833.7619.qmail@web13006.mail.yahoo.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Amit Patel <patelamitv@yahoo.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,
+On Mon, Nov 17, 2003 at 06:48:33PM -0800, Amit Patel wrote:
+> [root@Host200-w2k root]# diff
+> /cdrive/mm1/linux-2.6.0-test9/drivers/scsi/scsi_scan.c
+> /cdrive/mm3/linux-2.6.0-test9/drivers/scsi/scsi_scan.c
+> 902c902
+> <       char *data;
+> ---
+> >       unsigned char *data;
 
-I am using 2.6-test9-mm3. I noticed while doing
-scsi_report_lun_scan(scsi_scan.c:891) the data
-returned is assigned(scsi_scan.c:993) to signed char
-array which causes the reported number of luns to be
-huge while calculating num_luns to scan. Is there any
-particular reason to be data is signed or just a bug?
+Hi Amit.  Can you send diffs in unified format in the future, ie diff -u
+Thanks.
 
-I changed it to unsigned char and it seems to work
-fine. I have attached a diff of scsi_scan.c. Let me
-know if I am missing something.
-
-Thanks
-Amit
-
-[root@Host200-w2k root]# diff
-/cdrive/mm1/linux-2.6.0-test9/drivers/scsi/scsi_scan.c
-/cdrive/mm3/linux-2.6.0-test9/drivers/scsi/scsi_scan.c
-902c902
-<       char *data;
----
->       unsigned char *data;
-993c993
-<       data = (char *) lun_data->scsi_lun;
----
->       data = (unsigned char *) lun_data->scsi_lun;
-[root@Host200-w2k root]# 
- 
-
-__________________________________
-Do you Yahoo!?
-Protect your identity with Yahoo! Mail AddressGuard
-http://antispam.yahoo.com/whatsnewfree
+-- 
+"It's not Hollywood.  War is real, war is primarily not about defeat or
+victory, it is about death.  I've seen thousands and thousands of dead bodies.
+Do you think I want to have an academic debate on this subject?" -- Robert Fisk
