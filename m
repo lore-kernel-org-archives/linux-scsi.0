@@ -1,231 +1,356 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [patch 28/28] Sync up drivers/scsi/aic7xxx
-Date: Tue, 28 Sep 2004 09:07:58 -0400
+Subject: [patch 23/28] Sync up drivers/scsi/aic7xxx
+Date: Tue, 28 Sep 2004 09:07:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <4159622E.1090000@adaptec.com>
+Message-ID: <4159620E.5090202@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:50123 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S267783AbUI1NIG (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:36043 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S267772AbUI1NHf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Sep 2004 09:08:06 -0400
+	Tue, 28 Sep 2004 09:07:35 -0400
 Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id i8SD86W03436
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2004 06:08:06 -0700
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id i8SD7YW03307
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2004 06:07:34 -0700
 Received: from rtpe2k01.adaptec.com (rtpe2k01.adaptec.com [10.110.12.40])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id i8SD85m31423
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2004 06:08:05 -0700
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id i8SD7Xm31361
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2004 06:07:33 -0700
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Sync up drivers/scsi/aic7xxx/. (4074-4146)
+Sync up drivers/scsi/aic7xxx/. (2789-3367)
 
 Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
 
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7770_osm.c#20 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7770_osm.c ====
---- /tmp/tmp.28312.0	2004-09-27 16:29:42.047114560 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7770_osm.c	2004-09-03 11:46:36.000000000 -0400
-@@ -36,7 +36,7 @@
+==== //depot/aic7xxx/aic7xxx/aic79xx.c#239 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_core.c ====
+--- /tmp/tmp.27182.0	2004-09-27 13:36:04.580810160 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_core.c	2004-03-29 11:31:10.000000000 -0500
+@@ -37,7 +37,7 @@
    * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
    * POSSIBILITY OF SUCH DAMAGES.
    *
-- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7770_osm.c#20 $
-+ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7770_osm.c#21 $
+- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.c#239 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.c#242 $
    */
 
-  #include "aic7xxx_osm.h"
-@@ -179,10 +179,8 @@
-  		return (ENOMEM);
-  	strcpy(name, buf);
-  	ahc = ahc_alloc(&aic7xxx_driver_template, name);
--	if (ahc == NULL) {
--		free(name, M_DEVBUF);
-+	if (ahc == NULL)
-  		return (ENOMEM);
--	}
-  	ahc->dev_softc = dev;
-  	if (aic_set_dma_mask(ahc, 0xFFFFFFFF) != 0
-         /*|| aic_set_consistent_dma_mask(ahc, 0xFFFFFFFF) != 0 */) {
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.c#213 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.c ====
---- /tmp/tmp.28312.1	2004-09-27 16:29:43.002969248 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-09-03 13:59:54.000000000 -0400
+  #ifdef __linux__
+@@ -1621,19 +1621,21 @@
+  				       scbid);
+  			}
+  #endif
+-			/*
+-			 * Force a renegotiation with this target just in
+-			 * case the cable was pulled and will later be
+-			 * re-attached.  The target may forget its negotiation
+-			 * settings with us should it attempt to reselect
+-			 * during the interruption.  The target will not issue
+-			 * a unit attention in this case, so we must always
+-			 * renegotiate.
+-			 */
+  			ahd_scb_devinfo(ahd, &devinfo, scb);
+-			ahd_force_renegotiation(ahd, &devinfo);
+  			aic_set_transaction_status(scb, CAM_SEL_TIMEOUT);
+  			ahd_freeze_devq(ahd, scb);
++
++			/*
++			 * Cancel any pending transactions on the device
++			 * now that it seems to be missing.  This will
++			 * also revert us to async/narrow transfers until
++			 * we can renegotiate with the device.
++			 */
++			ahd_handle_devreset(ahd, &devinfo,
++					    CAM_LUN_WILDCARD,
++					    CAM_SEL_TIMEOUT,
++					    "Selection Timeout",
++					    /*verbose_level*/0);
+  		}
+  		ahd_outb(ahd, CLRINT, CLRSCSIINT);
+  		ahd_iocell_first_selection(ahd);
+@@ -5067,10 +5069,12 @@
+  	ahd_set_width(ahd, devinfo, MSG_EXT_WDTR_BUS_8_BIT,
+  		      AHD_TRANS_CUR, /*paused*/TRUE);
+  	ahd_set_syncrate(ahd, devinfo, /*period*/0, /*offset*/0,
+-			 /*ppr_options*/0, AHD_TRANS_CUR, /*paused*/TRUE);
++			 /*ppr_options*/0, AHD_TRANS_CUR,
++			 /*paused*/TRUE);
+  	
+-	ahd_send_async(ahd, devinfo->channel, devinfo->target,
+-		       lun, AC_SENT_BDR, NULL);
++	if (status != CAM_SEL_TIMEOUT)
++		ahd_send_async(ahd, devinfo->channel, devinfo->target,
++			       lun, AC_SENT_BDR, NULL);
+
+  	if (message != NULL
+  	 && (verbose_level <= bootverbose))
+@@ -7066,35 +7070,21 @@
+  	ahd_outw(ahd, KERNEL_QFREEZE_COUNT, ahd->qfreeze_cnt);
+  	ahd_outb(ahd, SEQ_FLAGS2, ahd_inb(ahd, SEQ_FLAGS2) | SELECTOUT_QFROZEN);
+  	do {
+-		struct scb *waiting_scb;
+
+  		ahd_unpause(ahd);
+  		/*
+  		 * Give the sequencer some time to service
+  		 * any active selections.
+  		 */
+-		aic_delay(200);
++		aic_delay(500);
+
+  		ahd_intr(ahd);
+  		ahd_pause(ahd);
+-		ahd_clear_critical_section(ahd);
+  		intstat = ahd_inb(ahd, INTSTAT);
+-		ahd_set_modes(ahd, AHD_MODE_SCSI, AHD_MODE_SCSI);
+-		if ((ahd_inb(ahd, SSTAT0) & (SELDO|SELINGO)) == 0)
+-			ahd_outb(ahd, SCSISEQ0,
+-				 ahd_inb(ahd, SCSISEQ0) & ~ENSELO);
+-		/*
+-		 * In the non-packetized case, the sequencer (for Rev A),
+-		 * relies on ENSELO remaining set after SELDO.  The hardware
+-		 * auto-clears ENSELO in the packetized case.
+-		 */
+-		waiting_scb = ahd_lookup_scb(ahd,
+-					     ahd_inw(ahd, WAITING_TID_HEAD));
+-		if (waiting_scb != NULL
+-		 && (waiting_scb->flags & SCB_PACKETIZED) == 0
+-		 && (ahd_inb(ahd, SSTAT0) & (SELDO|SELINGO)) != 0)
+-			ahd_outb(ahd, SCSISEQ0,
+-				 ahd_inb(ahd, SCSISEQ0) | ENSELO);
++		if ((intstat & INT_PEND) == 0) {
++			ahd_clear_critical_section(ahd);
++			intstat = ahd_inb(ahd, INTSTAT);
++		}
+  	} while (--maxloops
+  	      && (intstat != 0xFF || (ahd->features & AHD_REMOVABLE) == 0)
+  	      && ((intstat & INT_PEND) != 0
+==== //depot/aic7xxx/aic7xxx/aic79xx_inline.h#56 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_inline.h ====
+--- /tmp/tmp.27182.1	2004-09-27 13:36:04.735786600 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_inline.h	2004-03-18 16:16:43.000000000 -0500
+@@ -37,7 +37,7 @@
+   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+   * POSSIBILITY OF SUCH DAMAGES.
+   *
+- * $Id: //depot/aic7xxx/aic7xxx/aic79xx_inline.h#56 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic79xx_inline.h#57 $
+   *
+   * $FreeBSD$
+   */
+@@ -693,7 +693,7 @@
+  	 * Razor #528
+  	 */
+  	value = ahd_inb(ahd, offset);
+-	if ((ahd->flags & AHD_PCIX_SCBRAM_RD_BUG) != 0)
++	if ((ahd->bugs & AHD_PCIX_SCBRAM_RD_BUG) != 0)
+  		ahd_inb(ahd, MODE_PTR);
+  	return (value);
+  }
+==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.c#205 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.c ====
+--- /tmp/tmp.27182.2	2004-09-27 13:36:05.411683848 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.c	2004-03-16 23:57:55.000000000 -0500
 @@ -1,7 +1,7 @@
   /*
    * Adaptec AIC79xx device driver for Linux.
    *
-- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.c#213 $
-+ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.c#215 $
+- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.c#205 $
++ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.c#208 $
    *
    * --------------------------------------------------------------------------
    * Copyright (c) 1994-2000 Justin T. Gibbs.
-@@ -1102,7 +1102,7 @@
-  		       ahd_name(ahd));
-  		return (0);
-  	} else if ((dev->flags & AIC_DEV_UNCONFIGURED) != 0
--		&& cmd->device->type != -1) {
-+		&& cmd->device->type != (char) -1) {
-  		/*
-  		 * Configure devices that have already successfully
-  		 * completed an inquiry. This  handles the case of
-@@ -1669,6 +1669,8 @@
+@@ -459,14 +459,14 @@
+  "	seltime:<int>		Selection Timeout:\n"
+  "				(0/256ms,1/128ms,2/64ms,3/32ms)\n"
+  "\n"
+-"	Sample /etc/modules.conf line:\n"
++"	Sample module configuration line:\n"
+  "		Enable verbose logging\n"
+  "		Set tag depth on Controller 2/Target 2 to 10 tags\n"
+  "		Shorten the selection timeout to 128ms\n"
+  "\n"
+  "	options aic79xx 'aic79xx=verbose.tag_info:{{}.{}.{..10}}.seltime:1'\n"
+  "\n"
+-"	Sample /etc/modules.conf line:\n"
++"	Sample module configuration line:\n"
+  "		Change Read Streaming for Controller's 2 and 3\n"
+  "\n"
+  "	options aic79xx 'aic79xx=rd_strm:{..0xFFF0.0xC0F0}'");
+@@ -4534,7 +4534,7 @@
+  				continue;
 
-  	ahd = *(struct ahd_softc **)cmd->device->host->hostdata;
-  	recovery_cmd = malloc(sizeof(struct scsi_cmnd), M_DEVBUF, M_WAITOK);
-+	if (!recovery_cmd)
-+		return (FAILED);
-  	memset(recovery_cmd, 0, sizeof(struct scsi_cmnd));
-  	recovery_cmd->device = cmd->device;
-  	recovery_cmd->scsi_done = ahd_linux_dev_reset_complete;
-@@ -1684,10 +1686,12 @@
-  				   cmd->device->lun, /*alloc*/FALSE);
-  	if (dev == NULL) {
-  		ahd_entrypoint_unlock(ahd, &s);
-+		free(recovery_cmd, M_DEVBUF);
-  		return (FAILED);
-  	}
-  	if ((scb = ahd_get_scb(ahd, AHD_NEVER_COL_IDX)) == NULL) {
-  		ahd_entrypoint_unlock(ahd, &s);
-+		free(recovery_cmd, M_DEVBUF);
-  		return (FAILED);
-  	}
-  	tinfo = ahd_fetch_transinfo(ahd, 'A', ahd->our_id,
-@@ -3120,7 +3124,7 @@
-  				break;
-  			}
-  			if (status & SSQ_DELAY)
--				scsi_sleep(1 * HZ);
-+				ssleep(1);
-
-  			break;
-  		case SS_START:
-@@ -3290,7 +3294,7 @@
-  			}
-  			if (targ->dv_state_retry <= 10) {
-  				if ((status & (SSQ_DELAY_RANDOM|SSQ_DELAY))!= 0)
--					scsi_sleep(ahd->our_id*HZ/10);
-+					msleep(ahd->our_id*100);
-  				break;
-  			}
-  #ifdef AHD_DEBUG
-@@ -3334,7 +3338,7 @@
-  				targ->dv_state_retry--;
-  			} else if (targ->dv_state_retry < 60) {
-  				if ((status & SSQ_DELAY) != 0)
--					scsi_sleep(1 * HZ);
-+					ssleep(1);
-  			} else {
-  #ifdef AHD_DEBUG
-  				if (ahd_debug & AHD_SHOW_DV) {
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_reg.h#88 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_reg.h_shipped ====
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_reg_print.c#66 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped ====
---- /tmp/tmp.28312.2	2004-09-27 16:29:43.548886256 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped	2004-09-10 16:32:31.000000000 -0400
-@@ -2,8 +2,8 @@
-   * DO NOT EDIT - This file is automatically generated
-   *		 from the following source files:
+  			if (TAILQ_EMPTY(&cur_dev->busyq)
+-			 && dev->active == 0)
++			 && cur_dev->active == 0)
+  				ahd_linux_free_device(ahd, cur_dev);
+  		}
+  		if (AIC_DV_CMD(cmd) == FALSE)
+==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.h#157 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.h ====
+--- /tmp/tmp.27182.3	2004-09-27 13:36:05.445678680 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_osm.h	2004-03-07 17:06:23.000000000 -0500
+@@ -36,7 +36,7 @@
+   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+   * POSSIBILITY OF SUCH DAMAGES.
    *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#118 $
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#75 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#120 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#77 $
+- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.h#157 $
++ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.h#159 $
+   *
+   */
+  #ifndef _AIC79XX_LINUX_H_
+@@ -94,7 +94,7 @@
+  #include <linux/smp.h>
+  #endif
+
+-#define AIC79XX_DRIVER_VERSION "2.0.6"
++#define AIC79XX_DRIVER_VERSION "2.0.8"
+
+  /********************* Definitions Required by the Core ***********************/
+  /*
+==== //depot/aic7xxx/aic7xxx/aic79xx_pci.c#86 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_pci.c ====
+--- /tmp/tmp.27182.4	2004-09-27 13:36:05.591656488 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_pci.c	2004-03-07 17:05:41.000000000 -0500
+@@ -38,7 +38,7 @@
+   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+   * POSSIBILITY OF SUCH DAMAGES.
+   *
+- * $Id: //depot/aic7xxx/aic7xxx/aic79xx_pci.c#86 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic79xx_pci.c#87 $
    */
 
-  #include "aic79xx_osm.h"
-@@ -3382,6 +3382,7 @@
-  }
+  #ifdef __linux__
+@@ -200,7 +200,7 @@
+  	/* Generic chip probes for devices we don't know 'exactly' */
+  	{
+  		ID_AIC7901 & ID_9005_GENERIC_MASK,
+-		ID_DEV_VENDOR_MASK,
++		ID_9005_GENERIC_MASK,
+  		"Adaptec AIC7901 Ultra320 SCSI adapter",
+  		ahd_aic7901_setup
+  	},
+==== //depot/aic7xxx/aic7xxx/aic7xxx.c#150 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_core.c ====
+--- /tmp/tmp.27182.5	2004-09-27 13:36:06.540512240 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_core.c	2004-03-29 11:30:28.000000000 -0500
+@@ -37,7 +37,7 @@
+   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+   * POSSIBILITY OF SUCH DAMAGES.
+   *
+- * $Id: //depot/aic7xxx/aic7xxx/aic7xxx.c#150 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic7xxx.c#153 $
+   */
 
-  static ahd_reg_parse_entry_t SEQ_FLAGS2_parse_table[] = {
-+	{ "PENDING_MK_MESSAGE",	0x01, 0x01 },
-  	{ "TARGET_MSG_PENDING",	0x02, 0x02 },
-  	{ "SELECTOUT_QFROZEN",	0x04, 0x04 }
-  };
-@@ -3389,7 +3390,7 @@
-  int
-  ahd_seq_flags2_print(u_int regvalue, u_int *cur_col, u_int wrap)
-  {
--	return (ahd_print_register(SEQ_FLAGS2_parse_table, 2, "SEQ_FLAGS2",
-+	return (ahd_print_register(SEQ_FLAGS2_parse_table, 3, "SEQ_FLAGS2",
-  	    0x14d, regvalue, cur_col, wrap));
-  }
-
-@@ -3450,6 +3451,20 @@
-  }
-
-  int
-+ahd_mk_message_scb_print(u_int regvalue, u_int *cur_col, u_int wrap)
-+{
-+	return (ahd_print_register(NULL, 0, "MK_MESSAGE_SCB",
-+	    0x160, regvalue, cur_col, wrap));
-+}
+  #ifdef __linux__
+@@ -1187,19 +1187,20 @@
+  				       scb_index);
+  			}
+  #endif
+-			/*
+-			 * Force a renegotiation with this target just in
+-			 * case the cable was pulled and will later be
+-			 * re-attached.  The target may forget its negotiation
+-			 * settings with us should it attempt to reselect
+-			 * during the interruption.  The target will not issue
+-			 * a unit attention in this case, so we must always
+-			 * renegotiate.
+-			 */
+  			ahc_scb_devinfo(ahc, &devinfo, scb);
+-			ahc_force_renegotiation(ahc, &devinfo);
+  			aic_set_transaction_status(scb, CAM_SEL_TIMEOUT);
+  			ahc_freeze_devq(ahc, scb);
 +
-+int
-+ahd_mk_message_scsiid_print(u_int regvalue, u_int *cur_col, u_int wrap)
-+{
-+	return (ahd_print_register(NULL, 0, "MK_MESSAGE_SCSIID",
-+	    0x162, regvalue, cur_col, wrap));
-+}
-+
-+int
-  ahd_scb_base_print(u_int regvalue, u_int *cur_col, u_int wrap)
-  {
-  	return (ahd_print_register(NULL, 0, "SCB_BASE",
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_seq.h#89 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped ====
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#276 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.c ====
---- /tmp/tmp.28312.3	2004-09-27 16:29:44.331767240 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-09-03 13:38:02.000000000 -0400
++			/*
++			 * Cancel any pending transactions on the device
++			 * now that it seems to be missing.  This will
++			 * also revert us to async/narrow transfers until
++			 * we can renegotiate with the device.
++			 */
++			ahc_handle_devreset(ahc, &devinfo,
++					    CAM_SEL_TIMEOUT,
++					    "Selection Timeout",
++					    /*verbose_level*/0);
+  		}
+  		ahc_outb(ahc, CLRINT, CLRSCSIINT);
+  		ahc_restart(ahc);
+@@ -3776,8 +3777,9 @@
+  			 /*period*/0, /*offset*/0, /*ppr_options*/0,
+  			 AHC_TRANS_CUR, /*paused*/TRUE);
+  	
+-	ahc_send_async(ahc, devinfo->channel, devinfo->target,
+-		       CAM_LUN_WILDCARD, AC_SENT_BDR, NULL);
++	if (status != CAM_SEL_TIMEOUT)
++		ahc_send_async(ahc, devinfo->channel, devinfo->target,
++			       CAM_LUN_WILDCARD, AC_SENT_BDR, NULL);
+
+  	if (message != NULL
+  	 && (verbose_level <= bootverbose))
+@@ -5128,14 +5130,17 @@
+  			 * Give the sequencer some time to service
+  			 * any active selections.
+  			 */
+-			aic_delay(200);
++			aic_delay(500);
+  		}
+  		ahc_intr(ahc);
+  		ahc_pause(ahc);
+  		paused = TRUE;
+  		ahc_outb(ahc, SCSISEQ, ahc_inb(ahc, SCSISEQ) & ~ENSELO);
+-		ahc_clear_critical_section(ahc);
+  		intstat = ahc_inb(ahc, INTSTAT);
++		if ((intstat & INT_PEND) == 0) {
++			ahc_clear_critical_section(ahc);
++			intstat = ahc_inb(ahc, INTSTAT);
++		}
+  	} while (--maxloops
+  	      && (intstat != 0xFF || (ahc->features & AHC_REMOVABLE) == 0)
+  	      && ((intstat & INT_PEND) != 0
+==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#268 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.c ====
+--- /tmp/tmp.27182.6	2004-09-27 13:36:07.281399608 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.c	2004-03-16 23:45:31.000000000 -0500
 @@ -1,7 +1,7 @@
   /*
    * Adaptec AIC7xxx device driver for Linux.
    *
-- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#276 $
-+ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#277 $
+- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#268 $
++ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.c#270 $
    *
    * Copyright (c) 1994 John Aycock
    *   The University of Calgary Department of Computer Science.
-@@ -2794,7 +2794,7 @@
-  				break;
-  			}
-  			if (status & SSQ_DELAY)
--				scsi_sleep(1 * HZ);
-+				ssleep(1);
+@@ -477,7 +477,7 @@
+  "	seltime:<int>		Selection Timeout\n"
+  "				(0/256ms,1/128ms,2/64ms,3/32ms)\n"
+  "\n"
+-"	Sample /etc/modules.conf line:\n"
++"	Sample module configuration line:\n"
+  "		Toggle EISA/VLB probing\n"
+  "		Set tag depth on Controller 1/Target 1 to 10 tags\n"
+  "		Shorten the selection timeout to 128ms\n"
+@@ -4249,7 +4249,7 @@
+  				continue;
 
-  			break;
-  		case SS_START:
-@@ -2964,7 +2964,7 @@
-  			}
-  			if (targ->dv_state_retry <= 10) {
-  				if ((status & (SSQ_DELAY_RANDOM|SSQ_DELAY))!= 0)
--					scsi_sleep(ahc->our_id*HZ/10);
-+					msleep(ahc->our_id*100);
-  				break;
-  			}
-  #ifdef AHC_DEBUG
-@@ -3008,7 +3008,7 @@
-  				targ->dv_state_retry--;
-  			} else if (targ->dv_state_retry < 60) {
-  				if ((status & SSQ_DELAY) != 0)
--					scsi_sleep(1 * HZ);
-+					ssleep(1);
-  			} else {
-  #ifdef AHC_DEBUG
-  				if (ahc_debug & AHC_SHOW_DV) {
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_reg.h#30 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_reg.h_shipped ====
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_reg_print.c#16 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_reg_print.c_shipped ====
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_seq.h#31 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_seq.h_shipped ====
-==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aiclib.h#42 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aiclib.h ====
---- /tmp/tmp.28312.4	2004-09-27 16:29:44.762701728 -0400
-+++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aiclib.h	2004-09-03 14:20:36.000000000 -0400
-@@ -2341,4 +2341,9 @@
-          }
-  }
+  			if (TAILQ_EMPTY(&cur_dev->busyq)
+-			 && dev->active == 0)
++			 && cur_dev->active == 0)
+  				ahc_linux_free_device(ahc, cur_dev);
+  		}
+  		if (AIC_DV_CMD(cmd) == FALSE)
+==== //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.h#169 - /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.h ====
+--- /tmp/tmp.27182.7	2004-09-27 13:36:07.462372096 -0400
++++ /home/luben/projects/linux/2.6/linux-2.5/drivers/scsi/aic7xxx/aic7xxx_osm.h	2004-02-24 20:21:36.000000000 -0500
+@@ -53,7 +53,7 @@
+   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+   * POSSIBILITY OF SUCH DAMAGES.
+   *
+- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.h#169 $
++ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic7xxx_osm.h#170 $
+   *
+   */
+  #ifndef _AIC7XXX_LINUX_H_
+@@ -113,7 +113,7 @@
+  #include <linux/smp.h>
+  #endif
 
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,9)
-+#define ssleep(a)  scsi_sleep((a)*HZ)
-+#define msleep(a)  scsi_sleep((a))
-+#endif
-+
-  #endif /*_AICLIB_H */
+-#define AIC7XXX_DRIVER_VERSION "6.3.5"
++#define AIC7XXX_DRIVER_VERSION "6.3.6"
+
+  /********************* Definitions Required by the Core ***********************/
+  /*
 
 
