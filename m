@@ -1,34 +1,59 @@
-From: christophe.varoqui@free.fr
-Subject: oss emulex linux driver : error report
-Date: Thu, 18 Mar 2004 12:30:45 +0100
+From: "Smart, James" <James.Smart@Emulex.com>
+Subject: RE: oss emulex linux driver : error report
+Date: Thu, 18 Mar 2004 12:22:24 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1079609445.405988655230b@imp5-q.free.fr>
+Message-ID: <3356669BBE90C448AD4645C843E2BF2802C0154A@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from postfix4-1.free.fr ([213.228.0.62]:34743 "EHLO
-	postfix4-1.free.fr") by vger.kernel.org with ESMTP id S262528AbUCRLar
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Mar 2004 06:30:47 -0500
+Received: from emulex.emulex.com ([138.239.112.1]:2964 "EHLO emulex.emulex.com")
+	by vger.kernel.org with ESMTP id S262790AbUCRRWl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Mar 2004 12:22:41 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: james.smart@emulex.com
+To: "'christophe.varoqui@free.fr'" <christophe.varoqui@free.fr>
 Cc: linux-scsi@vger.kernel.org
 
-Hello,
+cvaroqui,
 
-I report a bad behaviour with a LP952 HBA :
-06:02.0 Fibre Channel: Emulex Corporation LP952 Fibre Channel Adapter (rev 01)
+We believe this to be an issue with outdated firmware. Old firmware required
+a special handshake that the current driver does not perform.  Please refer
+to http://www.emulex.com/ts/dds.html for obtaining the lastest firmware.
 
-Symptoms in dmesg when insmod lpfcdd.ko :
-Emulex LightPulse FC SCSI 2.10c
-lpfc 0000:06:02.0: 0:0442:INe:Adapter failed to init, mbxCmd x88 CONFIG_PORT,
-mbxStatus x12 Data: x0
-lpfc 0000:06:02.0: 0:0442:INe:Adapter failed to init, mbxCmd x88 CONFIG_PORT,
-mbxStatus x12 Data: x0
+Please contact me if you have any problems.
 
-The kernel is 2.6.3-mm1
+Thanks,
 
-regards,
-cvaroqui
--- 
+-- James S.
+
+
+> -----Original Message-----
+> From: christophe.varoqui@free.fr [mailto:christophe.varoqui@free.fr]
+> Sent: Thursday, March 18, 2004 6:31 AM
+> To: Smart, James
+> Cc: linux-scsi@vger.kernel.org
+> Subject: oss emulex linux driver : error report
+> 
+> 
+> Hello,
+> 
+> I report a bad behaviour with a LP952 HBA :
+> 06:02.0 Fibre Channel: Emulex Corporation LP952 Fibre Channel 
+> Adapter (rev 01)
+> 
+> Symptoms in dmesg when insmod lpfcdd.ko :
+> Emulex LightPulse FC SCSI 2.10c
+> lpfc 0000:06:02.0: 0:0442:INe:Adapter failed to init, mbxCmd 
+> x88 CONFIG_PORT,
+> mbxStatus x12 Data: x0
+> lpfc 0000:06:02.0: 0:0442:INe:Adapter failed to init, mbxCmd 
+> x88 CONFIG_PORT,
+> mbxStatus x12 Data: x0
+> 
+> The kernel is 2.6.3-mm1
+> 
+> regards,
+> cvaroqui
+> -- 
+> 
