@@ -1,110 +1,50 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: [announce] scsi_id release 0.2
-Date: Fri, 5 Dec 2003 15:18:10 -0800
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: sg_scan -i /dev/sg[0123] /dev/hd[abcd] /dev/scd[0123]
+Date: 05 Dec 2003 17:27:20 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031205151810.A8891@beaverton.ibm.com>
+Message-ID: <1070670440.3056.7.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:34504 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S264867AbTLEXSX
+Received: from email-out1.iomega.com ([147.178.1.82]:21651 "EHLO
+	email.iomega.com") by vger.kernel.org with ESMTP id S263868AbTLFA1f
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Dec 2003 18:18:23 -0500
-Content-Disposition: inline
+	Fri, 5 Dec 2003 19:27:35 -0500
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-Version 0.2 of scsi_id is available at:
+Doug G:
 
-http://www-124.ibm.com/storageio/scsi_id/scsi_id-0.2.tar.gz
+In lk 2.6 I wish sg_scan accepted a list of args e.g.
 
-scsi_id is a program to generate a SCSI unique identifier for a given SCSI
-device.
+$ lsmod | grep sg
+$
+$ sudo sg_scan -i /dev/sg[0123] /dev/hd[abcd] /dev/scd[0123]
+/dev/hdd: scsi0 channel=0 id=0 lun=0 [em]  type=5
+    Iomega    RRD               05.A [wide=0 sync=0 cmdq=0 sftre=0 pq=0x0]
+/dev/scd0: scsi0 channel=0 id=0 lun=0 [em]  type=5
+    Iomega    RRD               05.U [wide=0 sync=0 cmdq=0 sftre=0 pq=0x0]
+$
+$ lsmod | grep sg
+$ 
 
-It is primarily for use with udev callout config entries. It can also be
-used for automatic multi-path configuration or device mapper
-configuration.
+Tell me you will accept such a patch, and I might not be too lazy to write it.
 
-Requires:
+Pat LaVarre
 
-- Linux kernel 2.6
+P.S. I presume already you are aware of the gcc -Wall warning:
 
-- libsysfs 0.3.0
+$ cd sg3_utils-1.06/
+$ make
+gcc -g -O2 -Wall -W -D_REENTRANT -D_LARGEFILE64_SOURCE
+-D_FILE_OFFSET_BITS=64
+-c -o sg_dd.o sg_dd.c
+sg_dd.c: In function `siginfo_handler':
+sg_dd.c:138: warning: unused parameter `sig'
+...
 
-To use with udev, in short:
+P.P.S. Thanks again for giving http://www.torque.net/sg/ us via google.
 
-Run scsi_id to dump determine the id, for example, for sda, run:
 
-	/sbin/scsi_id -s /block/sda
-
-Take the resulting value (including white space) and use it as the ID in a
-udev CALLOUT entry, an example /etc/udev/udev.rules entry for one of
-my disk drives:
-
-CALLOUT, BUS="scsi", PROGRAM="/sbin/scsi_id", ID="200609487340c78ac", NAME="diskf1"
-
-Major changes since the last release:
-
-	- builds under udev and klibc (I'll post udev/Makefile changes I
-	  needed to get the build to work), does not build properly for
-	  udev without klibc because of sysfsutils include paths issue
-
-	- fix a bug with config file options parsing not allocating space
-
-	- added a man page
-
-Full list of changes:
-
-	* Add a man page.
-
-	* Set and use variables that might be passed down when
-	  built under udev (with or without klibc), don't set LDFLAGS or
-	  STRIP.
-
-	* scsi_id.c, scsi_id.h: Fix a bad bug - when parsing file options,
-	  no space was allocated for the creation of the new argv[]
-	  strings.
-
-	* scsi_id.c: Catch too long a line in the config file.
-
-	* scsi_id.h: Add u8 typedef to avoid ummm scsi.h kernel header
-	  problem when built with klibc.
-
-	* scsi_id.h: Add define of makedev() if built with klibc.
-
-	* scsi_id.c: reset optind to 1 since klibc does not work if it is
-	  reset to zero.
-
-	* scsi_id.c: remove fflush() as it is not needed, and is not
-	  supported by klibc.
-
-	* scsi_serial.c: Make the functions do_scsi_page0_inquiry and
-	  do_scsi_page80_inquiry static.
-
-	* scsi_id.c: Don't use syslog LOG_PID, as it is not supported by
-	  klibc.
-
-	* scsi_id.c, scsi_serial.c: Hack - change include path to libsysfs
-	  if built under klibc.
-
-	* Makefile: Use "override" for CFLAGS so we can pass CFLAGS values
-	  down when built with udev
-
-	* scsi_id.c, Makefile: Use SCSI_ID_VERSION instead of VERSION.
-
-	* scsi_id.c: Remove getopt_long (long option names), as there
-	  is no support for that in klibc.
-
-	* scsi_id.c: Patch from Brian King <brking@us.ibm.com>: check
-	  result of setting model, not vendor in per_dev_options.
-
-	* scsi_id.c, scsi_serial.c: Use new and correct path to libsysfs.h.
-
-	* scsi_id.h: Fix scsi_id.h so var args in macros works ok with
-	  older gcc.
-
-Please email me any questions, comments or patches.
-
-Thanks!
-
--- Patrick Mansfield
