@@ -1,57 +1,63 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: AIC7902 lockups on Intel SMP (Re: HD somtimes hanging)
-Date: Fri, 25 Jul 2003 06:51:55 -0700
+From: Mark Haverkamp <markh@osdl.org>
+Subject: Re: (PATCH) The megaraid driver v2.00.5 for kernel 2 .4.22-prex-ac1
+Date: 25 Jul 2003 07:28:29 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <E5DA6395B8F9614EB7A784D628184B200D9937@hdsmsx402.hd.intel.com>
+Message-ID: <1059143309.2756.5.camel@markh1.pdx.osdl.net>
+References: <200307250605.PAA11284@toshiba.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmr01.intel.com ([192.55.52.18]:717 "EHLO hermes.fm.intel.com")
-	by vger.kernel.org with ESMTP id S272064AbTGYNhJ (ORCPT
+Received: from fw.osdl.org ([65.172.181.6]:4288 "EHLO mail.osdl.org")
+	by vger.kernel.org with ESMTP id S272121AbTGYONl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Jul 2003 09:37:09 -0400
-Received: from petasus.fm.intel.com (petasus.fm.intel.com [10.1.192.37])
-	by hermes.fm.intel.com (8.11.6p2/8.11.6/d: outer.mc,v 1.66 2003/05/22 21:17:36 rfjohns1 Exp $) with ESMTP id h6PDl7002540
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2003 13:47:07 GMT
-Received: from fmsmsxv040-1.fm.intel.com (fmsmsxv040-1.fm.intel.com [132.233.48.108])
-	by petasus.fm.intel.com (8.11.6p2/8.11.6/d: inner.mc,v 1.35 2003/05/22 21:18:01 rfjohns1 Exp $) with SMTP id h6PDj3r00511
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2003 13:45:03 GMT
+	Fri, 25 Jul 2003 10:13:41 -0400
+In-Reply-To: <200307250605.PAA11284@toshiba.co.jp>
 List-Id: linux-scsi@vger.kernel.org
-To: "'Justin T. Gibbs'" <gibbs@scsiguy.com>, Thomas Beutin <tyrone@laokoon.IN-Berlin.DE>, Duncan Gibb <duncangibb@uk.dmgworldmedia.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Tomita, Haruo" <haruo.tomita@toshiba.co.jp>
+Cc: Matthew Wilcox <willy@debian.org>, Atul Mukker <atulm@lsil.com>, Matt Domsch <Matt_Domsch@Dell.com>, linux-megaraid-devel@Dell.com, linux-scsi <linux-scsi@vger.kernel.org>, "Tomita, Haruo" <htomita@pcs.pc.ome.toshiba.co.jp>
 
-Let me second the recommendation to upgrade the aic79xx driver version.
-I've seen packetizing problems with 1.3.0 that may apply here, but that was
-resolved in 1.3.2 and greater.
-
-Andy
-
------Original Message-----
-From: Justin T. Gibbs [mailto:gibbs@scsiguy.com] 
-Sent: Thursday, July 24, 2003 5:58 PM
-To: Thomas Beutin; Duncan Gibb
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: AIC7902 lockups on Intel SMP (Re: HD somtimes hanging)
-
-
-> (Especially the current transfer rate on Channel A Target 1 is
-> somewhat less than expected.)
+On Thu, 2003-07-24 at 23:04, Tomita, Haruo wrote:
+> Dear all, 
 > 
-> Maybe there is a new driver by Justin Gibbs, but i didn't found
-> anything for the 2.4.21 kernel in
-> http://people.freebsd.org/~gibbs/linux/SRC/
+> 	Many Thanks!!
+> 
+> Finally,  I created the patch of the megaraid driver v2.00.5
+> for kernel 2 .4.22-prex-ac1. Here is my patch codes.
+> 
+> Thanks again,
+> Haruo
 
-The 2.4 archive should work on just about any 2.4.X kernel.
-I would highly recoment upgrading from 1.3.0.
+I think that your mailer broke some of the long lines
 
-I'm still not clear on what your problem is.  Can you provide
-a full dmesg from the system and any diagnostic messages the
-driver generates?
 
---
-Justin
+> === patch-mr2005-0724 of megaraid v2.00.5 driver for kernel 2.4.22  ===
+> 
+> diff -Nru linux-2.4.22-pre6-ac1/drivers/scsi/megaraid2.c
+> linux-2.4.22-pre6-ac1-mr/drivers/scsi/megaraid2.c
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+These next two line got broken
+
+> --- linux-2.4.22-pre6-ac1/drivers/scsi/megaraid2.c	2003-07-24 10:27:17.
+> 000000000 +0900
+> +++ linux-2.4.22-pre6-ac1-mr/drivers/scsi/megaraid2.c	2003-07-24 12:38:36.
+> 000000000 +0900
+
+And some of the MODULE_PARM_DESC lines:
+
+
+here
+
+> +MODULE_PARM_DESC(max_commands, "Maximum number of commands which can be
+> issued to a single controller (default=MAX_COMMANDS=126)");
+
+
+and here
+
+>  MODULE_PARM_DESC(max_cmd_per_lun, "Maximum number of commands which can be
+> issued to a single LUN (default=DEF_CMD_PER_LUN=63)");
+
+
+-- 
+Mark Haverkamp <markh@osdl.org>
+
