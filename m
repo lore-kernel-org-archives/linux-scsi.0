@@ -1,24 +1,54 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH]  2.4.23-pre8 driver udpate for MPT Fusion (2.05.10)
-Date: 24 Oct 2003 11:20:59 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1067008859.2109.18.camel@mulgrave>
-References: <0E3FA95632D6D047BA649F95DAB60E57035A944F@exa-atlanta.se.lsil.com>
+From: "Moore, Eric Dean" <emoore@lsil.com>
+Subject: RE: [PATCH]  2.4.23-pre8 driver udpate for MPT Fusion (2.05.10)
+Date: Fri, 24 Oct 2003 12:22:43 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57035A9468@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57035A944F@exa-atlanta.se.lsil.com>
-To: "Moore, Eric Dean" <emoore@lsil.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:22401 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S262352AbTJXQW6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Oct 2003 12:22:58 -0400
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Fri, 2003-10-24 at 10:53, Moore, Eric Dean wrote:
-> Here's a patch for 2.4.23-pre8 kernel for MPT Fusion driver, coming from LSI
-> Logic.
+James: I'm clear on the policy, however the 2.05.00.03
+MPT driver in 2.6 kernel is *NOT* compatible with 
+what is shipping in 2.4 kernel which is 2.05.05+ driver.  
+The driver in 2.6 has had most of the backward compatibility
+stripped out, such as Old Error Handling, and many other changes
+to make it work with new kernel structures and functions, however
+doesn't make it backward compatible to 2.4 kernel.
+
+Our focus has been 2.4 kernel version of the driver as that is what
+is shipping in all Linux distributions, and our customers have been
+asking for RPM driver updates to the latest driver fix bugs and  
+enhancements for their shipping systems out in the field.  One major
+OEM player has requested we update Kernel.org as to reduce their
+dependency on LSI for RPM driver updates. I wish that these updates
+make their way into the 2.4 kernel.  I will begin porting these 
+changes over the driver in 2.6 immediately.  Also one thing is 
+that there have been change on Maintainership of this
+driver from Pam Delaney to myself and Larry Stephens, so things
+are about getting back to normal.
+
+Eric
+
+
+On Friday, October 24, 2003 9:21 AM, James Bottomley wrote:
 > 
-> This patch is large, so I have placed it on the LSI ftp site at:
-> ftp://ftp.lsil.com/HostAdapterDrivers/linux/Fusion-MPT/2.05.10/mptlinux-2.05
+> On Fri, 2003-10-24 at 10:53, Moore, Eric Dean wrote:
+> > Here's a patch for 2.4.23-pre8 kernel for MPT Fusion 
+> driver, coming from LSI
+> > Logic.
+> > 
+> > This patch is large, so I have placed it on the LSI ftp site at:
+> > 
+> ftp://ftp.lsil.com/HostAdapterDrivers/linux/Fusion-MPT/2.05.10
+/mptlinux-2.05
 > .10.patch
 > 
 > A new email address is setup for directing any MPT Fusion questions:
@@ -31,3 +61,4 @@ patches, I can queue them up for when the "bugfix only" freeze is
 relaxed.
 
 James
+
