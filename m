@@ -1,35 +1,42 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: Kill SCSI_BH
-Date: Sun, 16 Jun 2002 11:55:10 -0500
+From: David Brownell <david-b@pacbell.net>
+Subject: Re: [linux-usb-devel] Re: /proc/scsi/map
+Date: Sun, 16 Jun 2002 10:05:49 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200206161655.g5GGtA122913@localhost.localdomain>
-References: <willy@debian.org>
+Message-ID: <aeigls$orm$2@main.gmane.org>
+References: <UTC200206152154.g5FLsCI23053.aeb@smtp.cwi.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: (from root@localhost)
-	by pogo.mtv1.steeleye.com (8.9.3/8.9.3) id JAA18469
-	for <linux-scsi@vger.kernel.org>; Sun, 16 Jun 2002 09:55:15 -0700
-In-Reply-To: Message from Matthew Wilcox <willy@debian.org>
-   of "Sun, 16 Jun 2002 04:01:11 BST." <20020616040111.P9435@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@debian.org>
-Cc: linux-scsi@vger.kernel.org
+To: Andries.Brouwer@cwi.nl
+Cc: garloff@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sancho@dauskardt.de, linux-usb-devel@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net
 
-willy@debian.org said:
-> Andrew Morton kindly tested this patch for me and reports it works
-> fine. I'd expect the Enterprise people to be thrilled by this as it
-> increases scalability a touch (eg, SCSI handling is now not serialised
-> against the serial port). 
+Andries.Brouwer@cwi.nl wrote:
+>     Both usb-storage and iee1394-sbp2 know the GUID. It only needs to be 
+>     communicated..
+> 
+> The usb-storage GUID is just one random item of information.
+> One might wish for much more.
+> 
+> And: this information is already somewhere:
 
-It works fine for me on an 8-way box with SCSI root discs.  Go ahead and send 
-it to Linus as an obvious fix (given that the bottom half handlers are 
-supposed to be deprecated).  I've also stuck it in a public bitkeeper 
-repository at:
+For example, on the 2.5 kernels one might also wish for the physical
+path to the USB device in question ... what usb_make_path() returns.
+(Simple enough to backport this to 2.4, which some folk have wanted.)
 
-http://linux-scsi.bkbits.net/scsi-mid-layer-2.5
+It's a string like "usb-06:0f.1-3.2" indicating first that it's
+USB, then that it's the bus with name/serial "06:0f.1" (which in
+this case is a PCI function), then that it's connected to port 3 on
+the root hub, and port 2 on the hub connected there.  That's a
+stable name:  it won't change unless/until you re-cable things.
 
-James
+Right now all of the 2.5 USB network adapters with ethool support
+return those strings in the bus_info field, FWIW -- someone else
+on this thread mentioned the need to asssign network interface names
+based on physical location, and for USB (and likely PCI) that can
+be done already.
 
+- Dave
 
 
