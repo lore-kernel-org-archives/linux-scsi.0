@@ -1,381 +1,115 @@
-From: Grant Grundler <grundler@parisc-linux.org>
-Subject: Re: [BUG] modprobe qla2300 doesn't complete
-Date: Wed, 10 Mar 2004 15:12:41 -0700
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [usb-storage] Time to allow MODE SENSE for USB disk-type storag
+ edevices?
+Date: Wed, 10 Mar 2004 17:43:58 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040310221241.GA7903@colo.lackof.org>
-References: <20040305041850.GA9124@colo.lackof.org> <20040305071721.GA9684@praka.local.home> <20040305172147.GB17305@colo.lackof.org> <20040309164033.GA21648@praka.local.home>
+Message-ID: <Pine.LNX.4.44L0.0403101722270.962-100000@ida.rowland.org>
+References: <1078952324.5156.266.camel@patibmrh9>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from colo.lackof.org ([198.49.126.79]:22759 "EHLO colo.lackof.org")
-	by vger.kernel.org with ESMTP id S262905AbUCJWMp (ORCPT
+Received: from ida.rowland.org ([192.131.102.52]:14084 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S262658AbUCJWoC (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Mar 2004 17:12:45 -0500
-Content-Disposition: inline
-In-Reply-To: <20040309164033.GA21648@praka.local.home>
+	Wed, 10 Mar 2004 17:44:02 -0500
+In-Reply-To: <1078952324.5156.266.camel@patibmrh9>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <praka@users.sourceforge.net>, Grant Grundler <grundler@parisc-linux.org>, linux-scsi@vger.kernel.org
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: Andries Brouwer <Andries.Brouwer@cwi.nl>, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, Patrick Mansfield <patmans@us.ibm.com>
 
-On Tue, Mar 09, 2004 at 08:40:33AM -0800, Andrew Vasquez wrote:
-> Ok, the driver is being flodded with RSCNs from the switch due to the
-> JBOD hanging off of 0b10xx.  
+On 10 Mar 2004, Pat LaVarre wrote:
+
+> > > I hear Windows starts with page x08, not x3F.
+> > 
+> > That's not so.  Windows 2000 asks for page x1C, then page x3F.  Windows XP 
+> > does the same and then asks for page x08.
 > 
-> There are three places where the driver could fall into stuck case of
-> handling RSCNs.  The attached patch introduces behaviour consistent
-> with what we have for several of our other platform drivers.  The end
-> result is the will be 1) The driver will not hang during
-> init/post-init due to the stream of RSCNs.  2) The driver after init,
-> will *not* present any devices to the mid-layer due to the volatility
-> within the fabric.
+> Did we see Win fetch page x3F after finding page x1C?
 
-Still doesn't seem to make forward progress...console output appended.
-(cut/pasted...white space is probably mangled)
+More accurately, we see Win fetch page x3F after receiving an error trying 
+to fetch page x1C.  I believe I've seen it fetch page x3F after succeeding 
+in reading page x1C, but I no longer have those trace files on hand.
 
-And now the ssh sessions are "hung" (un responsive).
-So I can't reboot the box to 'clear' the error.
-We must be pretty close to a fix. :^)
+> > > SCSI Pass-Through Mode Sense Command May Crash the Computer
+> > > http://support.microsoft.com/?kbid=813908
+> > > 
+> > > suggests Talk-like-Windows excludes 4 bytes, by saying -i 4 -y "1A
+> > > xx:xx:xx 04 00" crashes the Win 2K kernel for much Atapi, just as -y "12
+> > > 00:00:00 00 00" crashes some lk for much Usb.
+> > 
+> > I don't think so.  That web page actually states that a bug in Windows' 
+> > atapi.sys storage port driver causes the crash and
+> 
+> Eh?  Why don't you "think so"?  What did I say that contradicts that
+> elaboration?
 
-thanks,
-grant
+The page doesn't say that reading 4 bytes crashes the kernel; it says that
+it _used_ to crash the kernel but the kernel has now been fixed.  Also, it
+is misleading to claim that the page implies Talk-Like-Windows excludes
+4-byte reads, since we already know that TLW means excluding everything
+but 192-byte reads (for USB devices).
 
-gsyprf3:/usr/src/linux-ia64-2.5# sync
-gsyprf3:/usr/src/linux-ia64-2.5# modprobe qla2300
-QLogic Fibre Channel HBA Driver (a000000200324d90)
-PCI: Found IRQ 66 for device 0000:80:01.0
-IOSAPIC: vector 66 -> CPU 0x0100, enabled
-qla2300 0000:80:01.0: Found an ISP2312, irq 66, iobase 0xc0000000c8041000
-qla2300 0000:80:01.0: Configuring PCI space...
-qla2300 0000:80:01.0: Configure NVRAM parameters...
-qla2300 0000:80:01.0: Verifying loaded RISC code...
-scsi(4): **** Load RISC code ****
-scsi(4): Verifying Checksum of loaded RISC code.
-scsi(4): Checksum OK, start firmware.
-scsi(4): Issue init firmware.
-scsi(4): Asynchronous LIP RESET (f7f7).
-qla2300 0000:80:01.0: LIP reset occured (f7f7).
-qla2300 0000:80:01.0: Waiting for LIP to complete...
-scsi(4): Asynchronous P2P MODE received.
-scsi(4): Asynchronous PORT UPDATE.
-scsi(4): Port database changed 0000 0004.
-scsi(4): Asynchronous LOOP UP (2 Gbps).
-qla2300 0000:80:01.0: LOOP UP detected (2 Gbps).
-scsi(4): Asynchronous PORT UPDATE ignored.
-scsi(4): F/W Ready - OK 
-scsi(4): fw_state=3 curr time=104c6bb1f.
-qla2300 0000:80:01.0: Topology - (F_Port), Host Loop address 0xffff
-scsi(4): Configure loop -- dpc flags =0x80040
-scsi(4): RSCN queue entry[0] = [00/000000].
-scsi(4): device_resync: rscn overflow.
-scsi(4): RFT_ID exiting normally.
-scsi(4): RFF_ID exiting normally.
-scsi(4): RNN_ID exiting normally.
-scsi(4): RSNN_NN exiting normally.
-scsi(4): GID_PT entry - nn 50060b00001cab39 pn 50060b00001e386f portid=0b10ce.
-scsi(4): GID_PT entry - nn 2000002037e35bb8 pn 2200002037e35bb8 portid=0b10d3.
-scsi(4): GID_PT entry - nn 2000002037e329dd pn 2200002037e329dd portid=0b10d4.
-scsi(4): GID_PT entry - nn 2000002037e33bd9 pn 2200002037e33bd9 portid=0b10d5.
-scsi(4): GID_PT entry - nn 20000004cfcf03a6 pn 22000004cfcf03a6 portid=0b10d6.
-scsi(4): GID_PT entry - nn 2000002037e33667 pn 2200002037e33667 portid=0b10d9.
-scsi(4): GID_PT entry - nn 2000002037d943bb pn 2200002037d943bb portid=0b10e1.
-scsi(4): GID_PT entry - nn 20000004cf87f539 pn 22000004cf87f539 portid=0b10e4.
-scsi(4): GID_PT entry - nn 20000004cfcf096b pn 22000004cfcf096b portid=0b10e8.
-scsi(4): GID_PT entry - nn 20000004cf87d81f pn 22000004cf87d81f portid=0b10ef.
-scsi(4): GID_PT entry - nn 20000004cf87d77d pn 22000004cf87d77d portid=0b189f.
-scsi(4): GID_PT entry - nn 20000004cf87d75a pn 22000004cf87d75a portid=0b18a3.
-scsi(4): GID_PT entry - nn 20000004cfcf02c4 pn 22000004cfcf02c4 portid=0b18a5.
-scsi(4): GID_PT entry - nn 20000004cfcf099a pn 22000004cfcf099a portid=0b18a6.
-scsi(4): GID_PT entry - nn 20000004cf87d7f6 pn 22000004cf87d7f6 portid=0b18a7.
-scsi(4): GID_PT entry - nn 20000004cf87f614 pn 22000004cf87f614 portid=0b18ac.
-scsi(4): GID_PT entry - nn 20000004cfcf0460 pn 22000004cfcf0460 portid=0b18ad.
-scsi(4): GID_PT entry - nn 20000004cfcf0407 pn 22000004cfcf0407 portid=0b18ae.
-scsi(4): GID_PT entry - nn 20000004cfcf02b1 pn 22000004cfcf02b1 portid=0b18b1.
-scsi(4): GID_PT entry - nn 20000004cfcf02b3 pn 22000004cfcf02b3 portid=0b18b2.
-scsi(4): GID_PT entry - nn 50060b00641cc28f pn 50060b00641cc28e portid=0b1e00.
-scsi(4): GID_PT entry - nn 50060b00641cc28d pn 50060b00641cc28c portid=0b1f00.
-scsi(4): device wrap (0b1f00)
-scsi(4): Trying Fabric Login w/loop id 0x0081 for port 0b10ce.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-qla2x00_mailbox_command(4): **** FAILED. mbx0=4005, mbx1=4, mbx2=7, cmd=6f ****
-qla2x00_login_fabric(4): failed=0 mb[0]=4005 mb[1]=4 mb[2]=7.
-scsi(4): Loop down counter running= 0 or Resync needed- dpc flags= 144
-qla2300 0000:80:01.0: Topology - (F_Port), Host Loop address 0xffff
-scsi(4): Configure loop -- dpc flags =0x80
-scsi(4): RSCN queue entry[0] = [01/0b1000].
-scsi(4): device_resync: rscn overflow.
-scsi(4): GID_PT entry - nn 50060b00001cab39 pn 50060b00001e386f portid=0b10ce.
-scsi(4): GID_PT entry - nn 2000002037e35bb8 pn 2200002037e35bb8 portid=0b10d3.
-scsi(4): GID_PT entry - nn 2000002037e329dd pn 2200002037e329dd portid=0b10d4.
-scsi(4): GID_PT entry - nn 2000002037e33bd9 pn 2200002037e33bd9 portid=0b10d5.
-scsi(4): GID_PT entry - nn 20000004cfcf03a6 pn 22000004cfcf03a6 portid=0b10d6.
-scsi(4): GID_PT entry - nn 2000002037e33667 pn 2200002037e33667 portid=0b10d9.
-scsi(4): GID_PT entry - nn 2000002037d943bb pn 2200002037d943bb portid=0b10e1.
-scsi(4): GID_PT entry - nn 20000004cf87f539 pn 22000004cf87f539 portid=0b10e4.
-scsi(4): GID_PT entry - nn 20000004cfcf096b pn 22000004cfcf096b portid=0b10e8.
-scsi(4): GID_PT entry - nn 20000004cf87d81f pn 22000004cf87d81f portid=0b10ef.
-scsi(4): GID_PT entry - nn 20000004cf87d77d pn 22000004cf87d77d portid=0b189f.
-scsi(4): GID_PT entry - nn 20000004cf87d75a pn 22000004cf87d75a portid=0b18a3.
-scsi(4): GID_PT entry - nn 20000004cfcf02c4 pn 22000004cfcf02c4 portid=0b18a5.
-scsi(4): GID_PT entry - nn 20000004cfcf099a pn 22000004cfcf099a portid=0b18a6.
-scsi(4): GID_PT entry - nn 20000004cf87d7f6 pn 22000004cf87d7f6 portid=0b18a7.
-scsi(4): GID_PT entry - nn 20000004cf87f614 pn 22000004cf87f614 portid=0b18ac.
-scsi(4): GID_PT entry - nn 20000004cfcf0460 pn 22000004cfcf0460 portid=0b18ad.
-scsi(4): GID_PT entry - nn 20000004cfcf0407 pn 22000004cfcf0407 portid=0b18ae.
-scsi(4): GID_PT entry - nn 20000004cfcf02b1 pn 22000004cfcf02b1 portid=0b18b1.
-scsi(4): GID_PT entry - nn 20000004cfcf02b3 pn 22000004cfcf02b3 portid=0b18b2.
-scsi(4): GID_PT entry - nn 50060b00641cc28f pn 50060b00641cc28e portid=0b1e00.
-scsi(4): GID_PT entry - nn 50060b00641cc28d pn 50060b00641cc28c portid=0b1f00.
-scsi(4): device wrap (0b1f00)
-scsi(4): Trying Fabric Login w/loop id 0x0081 for port 0b10ce.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-qla2x00_mailbox_command(4): **** FAILED. mbx0=4005, mbx1=4, mbx2=7, cmd=6f ****
-qla2x00_login_fabric(4): failed=0 mb[0]=4005 mb[1]=4 mb[2]=7.
-scsi(4): Loop down counter running= 0 or Resync needed- dpc flags= 144
-qla2300 0000:80:01.0: Topology - (F_Port), Host Loop address 0xffff
-scsi(4): Configure loop -- dpc flags =0x80
-scsi(4): RSCN queue entry[3] = [01/0b1000].
-scsi(4): device_resync: rscn overflow.
-scsi(4): GID_PT entry - nn 50060b00001cab39 pn 50060b00001e386f portid=0b10ce.
-scsi(4): GID_PT entry - nn 2000002037e35bb8 pn 2200002037e35bb8 portid=0b10d3.
-scsi(4): GID_PT entry - nn 2000002037e329dd pn 2200002037e329dd portid=0b10d4.
-scsi(4): GID_PT entry - nn 2000002037e33bd9 pn 2200002037e33bd9 portid=0b10d5.
-scsi(4): GID_PT entry - nn 20000004cfcf03a6 pn 22000004cfcf03a6 portid=0b10d6.
-scsi(4): GID_PT entry - nn 2000002037e33667 pn 2200002037e33667 portid=0b10d9.
-scsi(4): GID_PT entry - nn 2000002037d943bb pn 2200002037d943bb portid=0b10e1.
-scsi(4): GID_PT entry - nn 20000004cf87f539 pn 22000004cf87f539 portid=0b10e4.
-scsi(4): GID_PT entry - nn 20000004cfcf096b pn 22000004cfcf096b portid=0b10e8.
-scsi(4): GID_PT entry - nn 20000004cf87d81f pn 22000004cf87d81f portid=0b10ef.
-scsi(4): GID_PT entry - nn 20000004cf87d77d pn 22000004cf87d77d portid=0b189f.
-scsi(4): GID_PT entry - nn 20000004cf87d75a pn 22000004cf87d75a portid=0b18a3.
-scsi(4): GID_PT entry - nn 20000004cfcf02c4 pn 22000004cfcf02c4 portid=0b18a5.
-scsi(4): GID_PT entry - nn 20000004cfcf099a pn 22000004cfcf099a portid=0b18a6.
-scsi(4): GID_PT entry - nn 20000004cf87d7f6 pn 22000004cf87d7f6 portid=0b18a7.
-scsi(4): GID_PT entry - nn 20000004cf87f614 pn 22000004cf87f614 portid=0b18ac.
-scsi(4): GID_PT entry - nn 20000004cfcf0460 pn 22000004cfcf0460 portid=0b18ad.
-scsi(4): GID_PT entry - nn 20000004cfcf0407 pn 22000004cfcf0407 portid=0b18ae.
-scsi(4): GID_PT entry - nn 20000004cfcf02b1 pn 22000004cfcf02b1 portid=0b18b1.
-scsi(4): GID_PT entry - nn 20000004cfcf02b3 pn 22000004cfcf02b3 portid=0b18b2.
-scsi(4): GID_PT entry - nn 50060b00641cc28f pn 50060b00641cc28e portid=0b1e00.
-scsi(4): GID_PT entry - nn 50060b00641cc28d pn 50060b00641cc28c portid=0b1f00.
-scsi(4): device wrap (0b1f00)
-scsi(4): Trying Fabric Login w/loop id 0x0081 for port 0b10ce.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-qla2x00_mailbox_command(4): **** FAILED. mbx0=4005, mbx1=4, mbx2=7, cmd=6f ****
-qla2x00_login_fabric(4): failed=0 mb[0]=4005 mb[1]=4 mb[2]=7.
-scsi(4): Loop down counter running= 0 or Resync needed- dpc flags= 144
-qla2300 0000:80:01.0: Topology - (F_Port), Host Loop address 0xffff
-scsi(4): Configure loop -- dpc flags =0x80
-scsi(4): RSCN queue entry[7] = [01/0b1000].
-scsi(4): device_resync: rscn overflow.
-scsi(4): GID_PT entry - nn 50060b00001cab39 pn 50060b00001e386f portid=0b10ce.
-scsi(4): GID_PT entry - nn 2000002037e35bb8 pn 2200002037e35bb8 portid=0b10d3.
-scsi(4): GID_PT entry - nn 2000002037e329dd pn 2200002037e329dd portid=0b10d4.
-scsi(4): GID_PT entry - nn 2000002037e33bd9 pn 2200002037e33bd9 portid=0b10d5.
-scsi(4): GID_PT entry - nn 20000004cfcf03a6 pn 22000004cfcf03a6 portid=0b10d6.
-scsi(4): GID_PT entry - nn 2000002037e33667 pn 2200002037e33667 portid=0b10d9.
-scsi(4): GID_PT entry - nn 2000002037d943bb pn 2200002037d943bb portid=0b10e1.
-scsi(4): GID_PT entry - nn 20000004cf87f539 pn 22000004cf87f539 portid=0b10e4.
-scsi(4): GID_PT entry - nn 20000004cfcf096b pn 22000004cfcf096b portid=0b10e8.
-scsi(4): GID_PT entry - nn 20000004cf87d81f pn 22000004cf87d81f portid=0b10ef.
-scsi(4): GID_PT entry - nn 20000004cf87d77d pn 22000004cf87d77d portid=0b189f.
-scsi(4): GID_PT entry - nn 20000004cf87d75a pn 22000004cf87d75a portid=0b18a3.
-scsi(4): GID_PT entry - nn 20000004cfcf02c4 pn 22000004cfcf02c4 portid=0b18a5.
-scsi(4): GID_PT entry - nn 20000004cfcf099a pn 22000004cfcf099a portid=0b18a6.
-scsi(4): GID_PT entry - nn 20000004cf87d7f6 pn 22000004cf87d7f6 portid=0b18a7.
-scsi(4): GID_PT entry - nn 20000004cf87f614 pn 22000004cf87f614 portid=0b18ac.
-scsi(4): GID_PT entry - nn 20000004cfcf0460 pn 22000004cfcf0460 portid=0b18ad.
-scsi(4): GID_PT entry - nn 20000004cfcf0407 pn 22000004cfcf0407 portid=0b18ae.
-scsi(4): GID_PT entry - nn 20000004cfcf02b1 pn 22000004cfcf02b1 portid=0b18b1.
-scsi(4): GID_PT entry - nn 20000004cfcf02b3 pn 22000004cfcf02b3 portid=0b18b2.
-scsi(4): GID_PT entry - nn 50060b00641cc28f pn 50060b00641cc28e portid=0b1e00.
-scsi(4): GID_PT entry - nn 50060b00641cc28d pn 50060b00641cc28c portid=0b1f00.
-scsi(4): device wrap (0b1f00)
-scsi(4): Trying Fabric Login w/loop id 0x0081 for port 0b10ce.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-qla2x00_mailbox_command(4): **** FAILED. mbx0=4005, mbx1=4, mbx2=7, cmd=6f ****
-qla2x00_login_fabric(4): failed=0 mb[0]=4005 mb[1]=4 mb[2]=7.
-scsi(4): Loop down counter running= 0 or Resync needed- dpc flags= 144
-qla2300 0000:80:01.0: Topology - (F_Port), Host Loop address 0xffff
-scsi(4): Configure loop -- dpc flags =0x80
-scsi(4): RSCN queue entry[14] = [01/0b1000].
-scsi(4): device_resync: rscn overflow.
-scsi(4): GID_PT entry - nn 50060b00001cab39 pn 50060b00001e386f portid=0b10ce.
-scsi(4): GID_PT entry - nn 2000002037e35bb8 pn 2200002037e35bb8 portid=0b10d3.
-scsi(4): GID_PT entry - nn 2000002037e329dd pn 2200002037e329dd portid=0b10d4.
-scsi(4): GID_PT entry - nn 2000002037e33bd9 pn 2200002037e33bd9 portid=0b10d5.
-scsi(4): GID_PT entry - nn 20000004cfcf03a6 pn 22000004cfcf03a6 portid=0b10d6.
-scsi(4): GID_PT entry - nn 2000002037e33667 pn 2200002037e33667 portid=0b10d9.
-scsi(4): GID_PT entry - nn 2000002037d943bb pn 2200002037d943bb portid=0b10e1.
-scsi(4): GID_PT entry - nn 20000004cf87f539 pn 22000004cf87f539 portid=0b10e4.
-scsi(4): GID_PT entry - nn 20000004cfcf096b pn 22000004cfcf096b portid=0b10e8.
-scsi(4): GID_PT entry - nn 20000004cf87d81f pn 22000004cf87d81f portid=0b10ef.
-scsi(4): GID_PT entry - nn 20000004cf87d77d pn 22000004cf87d77d portid=0b189f.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): GID_PT entry - nn 20000004cf87d75a pn 22000004cf87d75a portid=0b18a3.
-scsi(4): GID_PT entry - nn 20000004cfcf02c4 pn 22000004cfcf02c4 portid=0b18a5.
-scsi(4): GID_PT entry - nn 20000004cfcf099a pn 22000004cfcf099a portid=0b18a6.
-scsi(4): GID_PT entry - nn 20000004cf87d7f6 pn 22000004cf87d7f6 portid=0b18a7.
-scsi(4): GID_PT entry - nn 20000004cf87f614 pn 22000004cf87f614 portid=0b18ac.
-scsi(4): GID_PT entry - nn 20000004cfcf0460 pn 22000004cfcf0460 portid=0b18ad.
-scsi(4): GID_PT entry - nn 20000004cfcf0407 pn 22000004cfcf0407 portid=0b18ae.
-scsi(4): GID_PT entry - nn 20000004cfcf02b1 pn 22000004cfcf02b1 portid=0b18b1.
-scsi(4): GID_PT entry - nn 20000004cfcf02b3 pn 22000004cfcf02b3 portid=0b18b2.
-scsi(4): GID_PT entry - nn 50060b00641cc28f pn 50060b00641cc28e portid=0b1e00.
-scsi(4): GID_PT entry - nn 50060b00641cc28d pn 50060b00641cc28c portid=0b1f00.
-scsi(4): Loop down counter running= 0 or Resync needed- dpc flags= 144
-qla2300 0000:80:01.0: Topology - (F_Port), Host Loop address 0xffff
-scsi(4): Configure loop -- dpc flags =0x80
-scsi(4): RSCN queue entry[23] = [01/0b1000].
-scsi(4): device_resync: rscn overflow.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): GID_PT entry - nn 50060b00001cab39 pn 50060b00001e386f portid=0b10ce.
-scsi(4): GID_PT entry - nn 2000002037e35bb8 pn 2200002037e35bb8 portid=0b10d3.
-scsi(4): GID_PT entry - nn 2000002037e329dd pn 2200002037e329dd portid=0b10d4.
-scsi(4): GID_PT entry - nn 2000002037e33bd9 pn 2200002037e33bd9 portid=0b10d5.
-scsi(4): GID_PT entry - nn 20000004cfcf03a6 pn 22000004cfcf03a6 portid=0b10d6.
-scsi(4): GID_PT entry - nn 2000002037e33667 pn 2200002037e33667 portid=0b10d9.
-scsi(4): GID_PT entry - nn 2000002037d943bb pn 2200002037d943bb portid=0b10e1.
-scsi(4): GID_PT entry - nn 20000004cf87f539 pn 22000004cf87f539 portid=0b10e4.
-scsi(4): GID_PT entry - nn 20000004cfcf096b pn 22000004cfcf096b portid=0b10e8.
-scsi(4): GID_PT entry - nn 20000004cf87d81f pn 22000004cf87d81f portid=0b10ef.
-scsi(4): GID_PT entry - nn 20000004cf87d77d pn 22000004cf87d77d portid=0b189f.
-scsi(4): GID_PT entry - nn 20000004cf87d75a pn 22000004cf87d75a portid=0b18a3.
-scsi(4): GID_PT entry - nn 20000004cfcf02c4 pn 22000004cfcf02c4 portid=0b18a5.
-scsi(4): GID_PT entry - nn 20000004cfcf099a pn 22000004cfcf099a portid=0b18a6.
-scsi(4): GID_PT entry - nn 20000004cf87d7f6 pn 22000004cf87d7f6 portid=0b18a7.
-scsi(4): GID_PT entry - nn 20000004cf87f614 pn 22000004cf87f614 portid=0b18ac.
-scsi(4): GID_PT entry - nn 20000004cfcf0460 pn 22000004cfcf0460 portid=0b18ad.
-scsi(4): GID_PT entry - nn 20000004cfcf0407 pn 22000004cfcf0407 portid=0b18ae.
-scsi(4): GID_PT entry - nn 20000004cfcf02b1 pn 22000004cfcf02b1 portid=0b18b1.
-scsi(4): GID_PT entry - nn 20000004cfcf02b3 pn 22000004cfcf02b3 portid=0b18b2.
-scsi(4): GID_PT entry - nn 50060b00641cc28f pn 50060b00641cc28e portid=0b1e00.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): GID_PT entry - nn 50060b00641cc28d pn 50060b00641cc28c portid=0b1f00.
-scsi(4): Loop down counter running= 0 or Resync needed- dpc flags= 144
-qla2300 0000:80:01.0: Topology - (F_Port), Host Loop address 0xffff
-scsi(4): Configure loop -- dpc flags =0x80
-scsi(4): RSCN queue entry[24] = [01/0b1000].
-scsi(4): device_resync: rscn overflow.
-scsi(4): GID_PT entry - nn 50060b00001cab39 pn 50060b00001e386f portid=0b10ce.
-scsi(4): GID_PT entry - nn 2000002037e35bb8 pn 2200002037e35bb8 portid=0b10d3.
-scsi(4): GID_PT entry - nn 2000002037e329dd pn 2200002037e329dd portid=0b10d4.
-scsi(4): GID_PT entry - nn 2000002037e33bd9 pn 2200002037e33bd9 portid=0b10d5.
-scsi(4): GID_PT entry - nn 20000004cfcf03a6 pn 22000004cfcf03a6 portid=0b10d6.
-scsi(4): GID_PT entry - nn 2000002037e33667 pn 2200002037e33667 portid=0b10d9.
-scsi(4): GID_PT entry - nn 2000002037d943bb pn 2200002037d943bb portid=0b10e1.
-scsi(4): GID_PT entry - nn 20000004cf87f539 pn 22000004cf87f539 portid=0b10e4.
-scsi(4): GID_PT entry - nn 20000004cfcf096b pn 22000004cfcf096b portid=0b10e8.
-scsi(4): GID_PT entry - nn 20000004cf87d81f pn 22000004cf87d81f portid=0b10ef.
-scsi(4): GID_PT entry - nn 20000004cf87d77d pn 22000004cf87d77d portid=0b189f.
-scsi(4): GID_PT entry - nn 20000004cf87d75a pn 22000004cf87d75a portid=0b18a3.
-scsi(4): GID_PT entry - nn 20000004cfcf02c4 pn 22000004cfcf02c4 portid=0b18a5.
-scsi(4): GID_PT entry - nn 20000004cfcf099a pn 22000004cfcf099a portid=0b18a6.
-scsi(4): GID_PT entry - nn 20000004cf87d7f6 pn 22000004cf87d7f6 portid=0b18a7.
-scsi(4): GID_PT entry - nn 20000004cf87f614 pn 22000004cf87f614 portid=0b18ac.
-scsi(4): GID_PT entry - nn 20000004cfcf0460 pn 22000004cfcf0460 portid=0b18ad.
-scsi(4): GID_PT entry - nn 20000004cfcf0407 pn 22000004cfcf0407 portid=0b18ae.
-scsi(4): GID_PT entry - nn 20000004cfcf02b1 pn 22000004cfcf02b1 portid=0b18b1.
-scsi(4): GID_PT entry - nn 20000004cfcf02b3 pn 22000004cfcf02b3 portid=0b18b2.
-scsi(4): GID_PT entry - nn 50060b00641cc28f pn 50060b00641cc28e portid=0b1e00.
-scsi(4): GID_PT entry - nn 50060b00641cc28d pn 50060b00641cc28c portid=0b1f00.
-scsi(4): device wrap (0b1f00)
-scsi(4): Trying Fabric Login w/loop id 0x0081 for port 0b10ce.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-qla2x00_mailbox_command(4): **** FAILED. mbx0=4005, mbx1=4, mbx2=7, cmd=6f ****
-qla2x00_login_fabric(4): failed=0 mb[0]=4005 mb[1]=4 mb[2]=7.
-scsi(4): Loop down counter running= 0 or Resync needed- dpc flags= 144
-qla2300 0000:80:01.0: Topology - (F_Port), Host Loop address 0xffff
-scsi(4): Configure loop -- dpc flags =0x80
-scsi(4): RSCN queue entry[26] = [01/0b1000].
-scsi(4): device_resync: rscn overflow.
-scsi(4): GID_PT entry - nn 50060b00001cab39 pn 50060b00001e386f portid=0b10ce.
-scsi(4): GID_PT entry - nn 2000002037e35bb8 pn 2200002037e35bb8 portid=0b10d3.
-scsi(4): GID_PT entry - nn 2000002037e329dd pn 2200002037e329dd portid=0b10d4.
-scsi(4): GID_PT entry - nn 2000002037e33bd9 pn 2200002037e33bd9 portid=0b10d5.
-scsi(4): GID_PT entry - nn 20000004cfcf03a6 pn 22000004cfcf03a6 portid=0b10d6.
-scsi(4): GID_PT entry - nn 2000002037e33667 pn 2200002037e33667 portid=0b10d9.
-scsi(4): GID_PT entry - nn 2000002037d943bb pn 2200002037d943bb portid=0b10e1.
-scsi(4): GID_PT entry - nn 20000004cf87f539 pn 22000004cf87f539 portid=0b10e4.
-scsi(4): GID_PT entry - nn 20000004cfcf096b pn 22000004cfcf096b portid=0b10e8.
-scsi(4): GID_PT entry - nn 20000004cf87d81f pn 22000004cf87d81f portid=0b10ef.
-scsi(4): GID_PT entry - nn 20000004cf87d77d pn 22000004cf87d77d portid=0b189f.
-scsi(4): GID_PT entry - nn 20000004cf87d75a pn 22000004cf87d75a portid=0b18a3.
-scsi(4): GID_PT entry - nn 20000004cfcf02c4 pn 22000004cfcf02c4 portid=0b18a5.
-scsi(4): GID_PT entry - nn 20000004cfcf099a pn 22000004cfcf099a portid=0b18a6.
-scsi(4): GID_PT entry - nn 20000004cf87d7f6 pn 22000004cf87d7f6 portid=0b18a7.
-scsi(4): GID_PT entry - nn 20000004cf87f614 pn 22000004cf87f614 portid=0b18ac.
-scsi(4): GID_PT entry - nn 20000004cfcf0460 pn 22000004cfcf0460 portid=0b18ad.
-scsi(4): GID_PT entry - nn 20000004cfcf0407 pn 22000004cfcf0407 portid=0b18ae.
-scsi(4): GID_PT entry - nn 20000004cfcf02b1 pn 22000004cfcf02b1 portid=0b18b1.
-scsi(4): GID_PT entry - nn 20000004cfcf02b3 pn 22000004cfcf02b3 portid=0b18b2.
-scsi(4): GID_PT entry - nn 50060b00641cc28f pn 50060b00641cc28e portid=0b1e00.
-scsi(4): GID_PT entry - nn 50060b00641cc28d pn 50060b00641cc28c portid=0b1f00.
-scsi(4): device wrap (0b1f00)
-scsi(4): Trying Fabric Login w/loop id 0x0081 for port 0b10ce.
-scsi(4): Asynchronous RSCR UPDATE.
-scsi(4): RSCN database changed -- 010b 1000.
-...
+> > an update is available to fix the problem.
+> 
+> Yes, but you mentioning this fact interests me greatly.
+> 
+> Can you concisely say why we care if an update is available for a
+> massively distributed Microsoft bug or no?  Personally I've never yet
+> understood why Microsoft bothered to write that Win 2K update. 
+> Microsoft already had shipped Win XP when it appeared.
+
+Shucks, some people might say that Win XP is an update for a massively 
+distributed Microsoft bug, i.e., Win 2000. :-)
+
+In any case, I don't care about that update.  It doesn't matter, since I'm 
+not claiming that we should or shouldn't use 4-byte reads in general.  All 
+I'm saying is that for USB devices, we should try using 192-byte MODE 
+SENSE transfers.
+
+> > So it's no longer relevant.
+> 
+> Eh?  Relevance I still see includes:
+> 
+> a) Talk-SCSI-like-Windows probably doesn't include -i 4 -x "1A xx xx xx
+> 04 00", even for the many significantly different test cases for which
+> we have not collected bus traces.
+> 
+> b) Device folk who test with net-disconnected labs full of gold Win 2K
+> are not sending -i 4 -x "1A xx xx xx 04 00" to their Atapi devices.
+> 
+> c) ...
+> 
+> Win 2K was and remains Massively Distributed, of course.
+
+It may be relevant to what you want (and maybe relevant to Patrick's 
+question) but it's not relevant to the main point of this thread.
+
+> > > Also some hosts hang when D < H.
+> > 
+> > Not USB hosts.
+> 
+> No lk ever?
+
+No current ones as far as I know.  Of course, there may be cases where it
+happens that I'm not aware of.  Bear in mind, software hangs can easily be
+fixed; hardware and firmware problems are much harder to deal with -- and
+there's no evidence of any such problems with them.
+
+> I know some hosts choke over the CSW stall that commonly distinguishes D
+> < H from D = H in BBB.  The detail of hang vs. fail doesn't always reach
+> me e.g. maybe I no longer accurately remember how lk rejected -y "12
+> 00:00:00 00 00" Inquiry for zero.
+
+That was a plain and simple bug in the usb-storage driver; it has since 
+been fixed.
+
+> > For PDT x00, Windows appears to use the same technique that we do: look at
+> > the header from a page x3F response.
+> 
+> Ah.  Maybe we can teach lk to properly distinguish my write-protected
+> PDT x00 disks.  Hmmm.
+
+That's what I hope to accomplish.
+
+Alan Stern
 
