@@ -1,69 +1,110 @@
-From: "Andrew Vasquez" <andrew.vasquez@qlogic.com>
-Subject: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b7).
-Date: Fri, 5 Dec 2003 12:52:31 -0800
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: [announce] scsi_id release 0.2
+Date: Fri, 5 Dec 2003 15:18:10 -0800
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <B179AE41C1147041AA1121F44614F0B0598D7F@AVEXCH02.qlogic.org>
+Message-ID: <20031205151810.A8891@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [198.70.193.2] ([198.70.193.2]:65357 "EHLO AVEXCH01.qlogic.org")
-	by vger.kernel.org with ESMTP id S264400AbTLEUwY convert rfc822-to-8bit
+Received: from e31.co.us.ibm.com ([32.97.110.129]:34504 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S264867AbTLEXSX
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Dec 2003 15:52:24 -0500
-content-class: urn:content-classes:message
+	Fri, 5 Dec 2003 18:18:23 -0500
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net
 
-All,
+Version 0.2 of scsi_id is available at:
 
-A new version of the 8.x series driver for Linux 2.6.x kernels has
-been uploaded to SourceForge:
+http://www-124.ibm.com/storageio/scsi_id/scsi_id-0.2.tar.gz
 
-	http://sourceforge.net/projects/linux-qla2xxx/
+scsi_id is a program to generate a SCSI unique identifier for a given SCSI
+device.
 
-Changes from previous release (8.00.00b6) include:
+It is primarily for use with udev callout config entries. It can also be
+used for automatic multi-path configuration or device mapper
+configuration.
 
-	o Merge several large patches from Christoph Hellwig:
-	  - split driver into a common qla2xxx.ko lib with light-weight
-	    ISP driver modules (qla2?xx.ko).
-	  - Failover code optional and split from main code.
-	o Merge several patches from Jes Sorensen:
-	  - IA64 allocations
-	  - PCI posting issues. 
-	o Clean-up slab-cache allocations (-> mempool).
-	o Fix GA_NXT portid preparation problem.
-	o NVRAM interface tool for all hardware platforms.
-	o Tar-ball extracts to qla2xxx-<version>/
+Requires:
 
-Review the revision notes for further details of the changes in
-8.00.00b7.
+- Linux kernel 2.6
 
-Some words regarding the NVRAM tool:
+- libsysfs 0.3.0
 
-	WARNINGS
-		EXTREME CARE MUST TO BE TAKEN WHEN CHANGING 
-		NVRAM CONTENTS, INCORRECT DATA MAY RENDER THE ADAPTER 
-		UNUSABLE TO THE POINT THAT THE OPERATING SYSTEM MAY 
-		NO LONGER FUNCTION.
+To use with udev, in short:
 
-	NOTES
-		Each NVRAM is has a unique port name for every adapter 
-		so the same data file generated from the NVRAM tool
-		cannot be used to load multiple adapters. Each adapter 
-		must have its NVRAM dumped then modified before loading. 
-		In the case of adapters that contain multiple ports each 
-		port has its own unique NVRAM and must be programmed 
-		separately.
+Run scsi_id to dump determine the id, for example, for sda, run:
 
-	Use of this tool is *STRONGLY* discouraged.  Most if not all 
-	useful NVRAM parameters have module_param overrides.  This tool
-	is meant only to assist users who use QLogic HBAs on platforms
-	with no GUI/CLI support.
+	/sbin/scsi_id -s /block/sda
 
-Finally, a large thanks goes out to Christoph for his persistence and
-efforts.
+Take the resulting value (including white space) and use it as the ID in a
+udev CALLOUT entry, an example /etc/udev/udev.rules entry for one of
+my disk drives:
 
-Regards,
-Andrew Vasquez
-QLogic Corporation
+CALLOUT, BUS="scsi", PROGRAM="/sbin/scsi_id", ID="200609487340c78ac", NAME="diskf1"
+
+Major changes since the last release:
+
+	- builds under udev and klibc (I'll post udev/Makefile changes I
+	  needed to get the build to work), does not build properly for
+	  udev without klibc because of sysfsutils include paths issue
+
+	- fix a bug with config file options parsing not allocating space
+
+	- added a man page
+
+Full list of changes:
+
+	* Add a man page.
+
+	* Set and use variables that might be passed down when
+	  built under udev (with or without klibc), don't set LDFLAGS or
+	  STRIP.
+
+	* scsi_id.c, scsi_id.h: Fix a bad bug - when parsing file options,
+	  no space was allocated for the creation of the new argv[]
+	  strings.
+
+	* scsi_id.c: Catch too long a line in the config file.
+
+	* scsi_id.h: Add u8 typedef to avoid ummm scsi.h kernel header
+	  problem when built with klibc.
+
+	* scsi_id.h: Add define of makedev() if built with klibc.
+
+	* scsi_id.c: reset optind to 1 since klibc does not work if it is
+	  reset to zero.
+
+	* scsi_id.c: remove fflush() as it is not needed, and is not
+	  supported by klibc.
+
+	* scsi_serial.c: Make the functions do_scsi_page0_inquiry and
+	  do_scsi_page80_inquiry static.
+
+	* scsi_id.c: Don't use syslog LOG_PID, as it is not supported by
+	  klibc.
+
+	* scsi_id.c, scsi_serial.c: Hack - change include path to libsysfs
+	  if built under klibc.
+
+	* Makefile: Use "override" for CFLAGS so we can pass CFLAGS values
+	  down when built with udev
+
+	* scsi_id.c, Makefile: Use SCSI_ID_VERSION instead of VERSION.
+
+	* scsi_id.c: Remove getopt_long (long option names), as there
+	  is no support for that in klibc.
+
+	* scsi_id.c: Patch from Brian King <brking@us.ibm.com>: check
+	  result of setting model, not vendor in per_dev_options.
+
+	* scsi_id.c, scsi_serial.c: Use new and correct path to libsysfs.h.
+
+	* scsi_id.h: Fix scsi_id.h so var args in macros works ok with
+	  older gcc.
+
+Please email me any questions, comments or patches.
+
+Thanks!
+
+-- Patrick Mansfield
