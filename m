@@ -1,41 +1,76 @@
-From: Jamie Lenehan <lenehan@twibble.org>
-Subject: Re: dc395x: CD writer causes endless "sg_to_virt failed" loop
-Date: Tue, 30 Mar 2004 13:51:15 +1000
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] 2.4.X Avoid excessive recursion when setting device offline
+Date: Tue, 30 Mar 2004 09:03:53 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040330035115.GA3680@twibble.org>
-References: <20040327161034.GA9963@twibble.org> <200403282303.02146.andrex@alumni.utexas.net>
+Message-ID: <20040330070353.GN24370@suse.de>
+References: <387680000.1080580020@aslan.btc.adaptec.com> <1080581208.3570.10.camel@laptop.fenrus.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tuon.twibble.org ([203.217.29.157]:60078 "EHLO tuon.twibble.org")
-	by vger.kernel.org with ESMTP id S262378AbUC3DvU (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:49115 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S263304AbUC3HEC (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Mar 2004 22:51:20 -0500
+	Tue, 30 Mar 2004 02:04:02 -0500
 Content-Disposition: inline
-In-Reply-To: <200403282303.02146.andrex@alumni.utexas.net>
+In-Reply-To: <1080581208.3570.10.camel@laptop.fenrus.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Schulman <andrex@alumni.utexas.net>
-Cc: linux-scsi@vger.kernel.org, dc395x@twibble.org
+To: Arjan van de Ven <arjanv@redhat.com>
+Cc: "Justin T. Gibbs" <Justin_Gibbs@adaptec.com>, linux-scsi@vger.kernel.org
 
-On Sun, Mar 28, 2004 at 11:03:02PM -0500, Andrew Schulman wrote:
-[...]
-> Tried it with 2.6.5-rc2.  Now 'modprobe dc395x' hangs (though without all of 
-> the 'sg_to_virt failed' messages) as the drive keeps spinning.  'reboot' also 
+On Mon, Mar 29 2004, Arjan van de Ven wrote:
+> On Mon, 2004-03-29 at 19:07, Justin T. Gibbs wrote:
+> > How to reproduce: Queue up lots of I/O to a device.  Set that device
+> > 		  offline.
+> > 
+> > Result: The SCSI mid-layer blows out the kernel stack due to the inherent
+> > 	recursion in its request function.  The repeating stack trace goes
+> > 	something like:
+> > 
+> > 	scsi_request_fn
+> > 	__scsi_end_request
+> > 	scsi_release_command
+> > 	scsi_queue_next_request
+> > 	scsi_request_fn
+> > 	...
+> > 
+> > This patch prevents recursive calls through the scsi_request_fn
+> > for the same queue:
+> 
+> won't this achieve the same ?
+> 
+> diff -urN Linux/drivers/scsi/scsi_lib.c linux/drivers/scsi/scsi_lib.c
+> --- Linux/drivers/scsi/scsi_lib.c       2002-10-03 16:50:07.000000000
+> +0200
+> +++ linux/drivers/scsi/scsi_lib.c       2002-10-03 17:33:20.000000000
+> +0200
+> @@ -442,7 +442,7 @@
+>          * This will goose the queue request function at the end, so we
+> don't
+>          * need to worry about launching another command.
+>          */
+> -       scsi_release_command(SCpnt);
+> +       __scsi_release_command(SCpnt);
+>   
+>         if( frequeue ) {
+>                 request_queue_t *q;
+> 
 
-Yeah, it's no longer getting to where you were having problems previously.
+> diff -urN Linux/drivers/scsi/scsi_lib.c linux/drivers/scsi/scsi_lib.c
+> --- Linux/drivers/scsi/scsi_lib.c	2002-10-03 16:50:07.000000000 +0200
+> +++ linux/drivers/scsi/scsi_lib.c	2002-10-03 17:33:20.000000000 +0200
+> @@ -442,7 +442,7 @@
+>  	 * This will goose the queue request function at the end, so we don't
+>  	 * need to worry about launching another command.
+>  	 */
+> -	scsi_release_command(SCpnt);
+> +	__scsi_release_command(SCpnt);
+>  
+>  	if( frequeue ) {
+>  		request_queue_t *q;
 
-> eventually hangs, and again I need to hit the case reset button to get back 
-> to normal.  syslog shows "Unable to handle kernel NULL pointer dereference"-- 
-> see excerpt below.  I'll try the debugging and send you a log soon.
-
-This is an unrelated problem. It's something to do with scsi tape sysfs
-support and it looks like a fix for this problem went in just after
-2.6.5-rc2 was released (patch-2.6.5-rc2-bk2.bz2).
-
-So you could wait for 2.6.5-rc3/2.6.5 to be released, upgrade to
-2.6.5-rc3-bkx (where bkx is a bk snapshot with x >=2), or go back to the
-kernel you were using previously but copy the drivers/scsi/dc395x.c and
-drivers/scsi/dc395x.h from the 2.6.5-rc2 kernel into it.
+That is better. If SCSI used blk_start_queue/stop_queue, it has
+recursion detection as well (only allowing one reenter).
 
 -- 
- Jamie Lenehan <lenehan@twibble.org>
+Jens Axboe
+
