@@ -1,49 +1,51 @@
-From: Mark Bellon <mbellon@mvista.com>
-Subject: Re: Qlogic driver hang
-Date: Thu, 02 Oct 2003 11:25:32 -0700
+From: Denis Zaitsev <zzz@anda.ru>
+Subject: [PATCH][TRIVIAL] (2.4.22) Allow aic7xxx_osm.c to be compiled without CONFIG_PCI
+Date: Fri, 3 Oct 2003 00:50:16 +0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3F7C6D9C.2000205@mvista.com>
-References: <B179AE41C1147041AA1121F44614F0B060ED34@AVEXCH02.qlogic.org>	 <1065109530.24236.6127.camel@localhost.localdomain> <1065118590.4779.158.camel@persist.az.mvista.com>
+Message-ID: <20031003005016.A8496@natasha.ward.six>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([12.44.186.158]:10224 "EHLO
-	av.mvista.com") by vger.kernel.org with ESMTP id S263431AbTJBSZf
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Oct 2003 14:25:35 -0400
-In-Reply-To: <1065118590.4779.158.camel@persist.az.mvista.com>
+Received: from 72.dom-sp.ru ([212.57.164.72]:36616 "EHLO mail.ward.six")
+	by vger.kernel.org with ESMTP id S262130AbTJBSu1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Oct 2003 14:50:27 -0400
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: sdake@mvista.com
-Cc: Chris Worley <cworley@lnxi.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, gibbs@scsiguy.com, dledford@redhat.com, marcelo@conectiva.com.br
 
->
->
->At one point some code was added to enable parity on the chip.  This may
->be the cause of the hang.  Try disabling parity checking in the driver.
->
->On Thu, 2003-10-02 at 08:45, Chris Worley wrote:
->  
->
->>In using the 6.06.00 version of the qlogic driver, the module load gets
->>to:
->>
->>	Verifying chip...      
->>
->>And hangs the system.  The older driver would print out:
->>
->>	Firmware version:  3.01.13, Driver version 6.01.00
->>
->>at this point.  Any ideas what I'm doing wrong?
->>    
->>
-There is a known problem in some hardware implementations of the 2312 
-and possibly other
-chips - parity errors in the firmware RAM will lock up a system. The 
-last time I looked the public driver did not have a configuration option 
-to do this. If it's not there let me know and I can dig the lines up for 
-you to try.
+This is the trivial #ifdef patch for CONFIG_PCI/EISA.  In my case it
+allows the Adaptec SCSI driver (the "new" one) to be compiled for
+non-PCI (EISA) system.  Else there are an <undefined symbol> errors.
+The 2.6 branch needs the same patch, as I understand.
 
-mark
+Please, apply it.  (I don't know who is the maintainer for now!)
 
 
+--- drivers/scsi/aic7xxx/aic7xxx_osm.c.orig	2003-09-15 01:56:14.000000000 +0600
++++ drivers/scsi/aic7xxx/aic7xxx_osm.c	2003-09-16 22:57:11.000000000 +0600
+@@ -1552,6 +1552,7 @@ ahc_softc_comp(struct ahc_softc *lahc, s
+ 
+ 	/* Still equal.  Sort by BIOS address, ioport, or bus/slot/func. */
+ 	switch (rvalue) {
++#ifdef CONFIG_PCI
+ 	case AHC_PCI:
+ 	{
+ 		char primary_channel;
+@@ -1584,6 +1585,8 @@ ahc_softc_comp(struct ahc_softc *lahc, s
+ 			value = 1;
+ 		break;
+ 	}
++#endif
++#ifdef CONFIG_EISA
+ 	case AHC_EISA:
+ 		if ((rahc->flags & AHC_BIOS_ENABLED) != 0) {
+ 			value = rahc->platform_data->bios_address
+@@ -1593,6 +1596,7 @@ ahc_softc_comp(struct ahc_softc *lahc, s
+ 			      - lahc->bsh.ioport; 
+ 		}
+ 		break;
++#endif
+ 	default:
+ 		panic("ahc_softc_sort: invalid bus type");
+ 	}
