@@ -1,50 +1,73 @@
-From: Michael Clark <michael@metaparadigm.com>
-Subject: Re: Enterprise patch needed - please help
-Date: Thu, 30 May 2002 12:46:28 +0800
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: [RFC] add transfer request length?
+Date: Wed, 29 May 2002 23:00:48 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3CF5AEA4.4050404@metaparadigm.com>
-References: <6BD67FFB937FD411A04F00D0B74FE87807C249F0@xrose06.rose.hp.com> <1022719300.4124.312.camel@irongate.swansea.linux.org.uk>
+Message-ID: <20020529230047.D26782@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-md5;
+	protocol="application/pgp-signature"; boundary="Km1U/tdNT/EmXiR1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: "HINCHMAN,PAUL (HP-Roseville,ex1)" <paul_hinchman@hp.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Linux SCSI list <linux-scsi@vger.kernel.org>
 
 
+--Km1U/tdNT/EmXiR1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On 05/30/02 08:41, Alan Cox wrote:
+I'd like to add another field to the Scsi_Cmnd structure.  At least, I
+think I need another field to accomplish what I want....
 
->On Thu, 2002-05-30 at 00:23, HINCHMAN,PAUL (HP-Roseville,ex1) wrote:
->  
->
->>negates support from whatever vendor (like SuSE and Red Hat).  So, an
->>"out-of-the-box" solution is desparately needed.  Linux won't go far in the
->>enterprise without fully enabled (and stress-tested) storage.  I'd like to
->>see this change to the 2.4.18+ kernels and beyond, I think it would probably
->>be simple. Any advice you folks could give me as to who to talk to and
->>escalate this issue would be great.  I'll provide more info to anyone who
->>thinks they can help.
->>    
->>
->
->What I am more curious about is why your storage system didn't get
->enumerating using the SCSI-3 report luns code path
->
+Right now, a low-level SCSI driver (i.e. HBA) can't actually tell in
+advance how much data will be moved by a command.  The driver can see the
+buffer and the buffer length, and can enforce that the transfer length does
+not exceed that buffer length, but we can't actually algorithmically
+determine the amount of data we expect to move....
 
-There was a bug regarding this a few revisions ago (2.4.17 it was fixed) 
-where
-even if the device reported SCSI-3, it still wouldn't scan past 8 luns. 
-This bug
-didn't exist in RedHat kernels.
+For example, imagine an INQUIRY for 36 bytes issued with a buffer for 256
+bytes.  This actually does happen.
 
-Also, some devices need a BLIST_SPARSELUN added in scsi_scan.c - even if 
-the device
-reports SCSI-3, the scanning code by defaults stops when it finds a lun 
-that doesn't
-respond. It is quite common with enterpise storage to have sparse 
-between luns.
+In this case, it's easy to figure out how much data is requested by reading
+the command.  However, block device commands talk in 'number of blocks',
+which is something that the HBAs shouldn't have to keep track of.
 
-~mc
+The worst device is the OnStream driver, which makes allocations in page
+sizes and then transfers a strange number of bytes (n * 4096 + 512 bytes).
 
+drivers/usb/storage/scsiglue.c has some code to try to figure out how much
+data should be transfered.  This is important for emulated SCSI devices
+(sbp2, usb, etc.).
+
+So, I'd like to add a field so that high-level drivers (sd, sr, sg, etc.)
+can tell us how many bytes they intend to move.  sg already collects this
+information, but the HBA can't see it.
+
+Comments?
+
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+Ye gods! I have feet??!
+					-- Dust Puppy
+User Friendly, 12/4/1997
+
+--Km1U/tdNT/EmXiR1
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
+
+iD8DBQE89cAPIjReC7bSPZARAoSQAJ9G514KjEOXmpYS8nlknX/JygVy1QCeOdnd
+2yt8SvDs2NV3yVk41XdFgOU=
+=ESku
+-----END PGP SIGNATURE-----
+
+--Km1U/tdNT/EmXiR1--
