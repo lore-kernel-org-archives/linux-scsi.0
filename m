@@ -1,22 +1,22 @@
 From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 1/3] ipr abort hang fix
-Date: Fri, 18 Jun 2004 16:17:21 -0500
+Subject: [PATCH 3/3] ipr bump version to 2.0.10
+Date: Fri, 18 Jun 2004 16:17:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40D35BE1.9020509@us.ibm.com>
+Message-ID: <40D35C03.20004@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------030304070706020708050104"
+ boundary="------------090909020909070003070101"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.104]:18685 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S264500AbUFRVRb (ORCPT
+Received: from e5.ny.us.ibm.com ([32.97.182.105]:53383 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S264518AbUFRVSA (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jun 2004 17:17:31 -0400
+	Fri, 18 Jun 2004 17:18:00 -0400
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------030304070706020708050104
+--------------090909020909070003070101
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 
@@ -26,94 +26,39 @@ Brian King
 eServer Storage I/O
 IBM Linux Technology Center
 
---------------030304070706020708050104
+--------------090909020909070003070101
 Content-Type: text/plain;
- name="ipr_abort_hang.patch"
+ name="ipr_driver_version_2_0_10.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="ipr_abort_hang.patch"
+ filename="ipr_driver_version_2_0_10.patch"
 
 
-The following patch fixes a hang that occurs when an abort
-is issued by the midlayer. The hang is the result of overriding
-a field in the union of the ipr_cmd struct. It is fixed by moving
-this pointer outside of the union, since it is not mutually exclusive
-with the other fields in the union.
+Bump driver version
+
 
 
 ---
 
- linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.c |   15 ++++++++-------
- linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.h |    2 +-
- 2 files changed, 9 insertions(+), 8 deletions(-)
+ linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/ipr.c~ipr_abort_hang drivers/scsi/ipr.c
---- linux-2.6.7-rc2/drivers/scsi/ipr.c~ipr_abort_hang	2004-06-07 11:21:15.000000000 -0500
-+++ linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.c	2004-06-07 11:21:15.000000000 -0500
-@@ -448,6 +448,7 @@ static void ipr_init_ipr_cmnd(struct ipr
- {
- 	ipr_reinit_ipr_cmnd(ipr_cmd);
- 	ipr_cmd->u.scratch = 0;
-+	ipr_cmd->sibling = NULL;
- 	init_timer(&ipr_cmd->timer);
- }
+diff -puN drivers/scsi/ipr.h~ipr_driver_version_2_0_10 drivers/scsi/ipr.h
+--- linux-2.6.7-rc2/drivers/scsi/ipr.h~ipr_driver_version_2_0_10	2004-06-07 17:11:31.000000000 -0500
++++ linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.h	2004-06-07 17:11:42.000000000 -0500
+@@ -36,8 +36,8 @@
+ /*
+  * Literals
+  */
+-#define IPR_DRIVER_VERSION "2.0.9"
+-#define IPR_DRIVER_DATE "(May 26, 2004)"
++#define IPR_DRIVER_VERSION "2.0.10"
++#define IPR_DRIVER_DATE "(June 7, 2004)"
  
-@@ -676,8 +677,8 @@ static void ipr_do_req(struct ipr_cmnd *
-  **/
- static void ipr_internal_cmd_done(struct ipr_cmnd *ipr_cmd)
- {
--	if (ipr_cmd->u.sibling)
--		ipr_cmd->u.sibling = NULL;
-+	if (ipr_cmd->sibling)
-+		ipr_cmd->sibling = NULL;
- 	else
- 		complete(&ipr_cmd->completion);
- }
-@@ -3015,10 +3016,10 @@ static void ipr_bus_reset_done(struct ip
- 	 * If abort has not completed, indicate the reset has, else call the
- 	 * abort's done function to wake the sleeping eh thread
- 	 */
--	if (ipr_cmd->u.sibling->u.sibling)
--		ipr_cmd->u.sibling->u.sibling = NULL;
-+	if (ipr_cmd->sibling->sibling)
-+		ipr_cmd->sibling->sibling = NULL;
- 	else
--		ipr_cmd->u.sibling->done(ipr_cmd->u.sibling);
-+		ipr_cmd->sibling->done(ipr_cmd->sibling);
- 
- 	list_add_tail(&ipr_cmd->queue, &ioa_cfg->free_q);
- 	LEAVE;
-@@ -3051,8 +3052,8 @@ static void ipr_abort_timeout(struct ipr
- 
- 	ipr_sdev_err(ipr_cmd->u.sdev, "Abort timed out. Resetting bus\n");
- 	reset_cmd = ipr_get_free_ipr_cmnd(ioa_cfg);
--	ipr_cmd->u.sibling = reset_cmd;
--	reset_cmd->u.sibling = ipr_cmd;
-+	ipr_cmd->sibling = reset_cmd;
-+	reset_cmd->sibling = ipr_cmd;
- 	reset_cmd->ioarcb.res_handle = ipr_cmd->ioarcb.res_handle;
- 	cmd_pkt = &reset_cmd->ioarcb.cmd_pkt;
- 	cmd_pkt->request_type = IPR_RQTYPE_IOACMD;
-diff -puN drivers/scsi/ipr.h~ipr_abort_hang drivers/scsi/ipr.h
---- linux-2.6.7-rc2/drivers/scsi/ipr.h~ipr_abort_hang	2004-06-07 11:21:15.000000000 -0500
-+++ linux-2.6.7-rc2-bjking1/drivers/scsi/ipr.h	2004-06-07 11:21:15.000000000 -0500
-@@ -932,13 +932,13 @@ struct ipr_cmnd {
- 	dma_addr_t sense_buffer_dma;
- 	unsigned short dma_use_sg;
- 	dma_addr_t dma_handle;
-+	struct ipr_cmnd *sibling;
- 	union {
- 		enum ipr_shutdown_type shutdown_type;
- 		struct ipr_hostrcb *hostrcb;
- 		unsigned long time_left;
- 		unsigned long scratch;
- 		struct ipr_resource_entry *res;
--		struct ipr_cmnd *sibling;
- 		struct scsi_device *sdev;
- 	} u;
- 
+ /*
+  * IPR_DBG_TRACE: Setting this to 1 will turn on some general function tracing
 
 _
 
---------------030304070706020708050104--
+--------------090909020909070003070101--
 
