@@ -1,28 +1,60 @@
-From: "Shaw, Marco" <marco.shaw@nbtel.nb.ca>
-Subject: Excluding unknown partition tables
-Date: Tue, 24 Sep 2002 08:40:39 -0300
+From: Alex <devel@qnet.ro>
+Subject: HOT SWAP feature is not working! Help!
+Date: Tue, 24 Sep 2002 15:20:06 +0300
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <C65F89D1AC0BB54B865127151A24DA780BAD5BAE@nbexchm2.aliant.icn>
+Message-ID: <200209241520.06841.devel@qnet.ro>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aruba ([198.164.225.65]) by ebony.nbnet.nb.ca
-          (Post.Office MTA v3.5.3 release 223 ID# 0-0U10L2S100V35)
-          with SMTP id ca for <linux-scsi@vger.kernel.org>;
-          Tue, 24 Sep 2002 08:37:24 -0300
+Received: from mail.masini.ro ([172.16.34.250])
+	by ns.crescendo.ro (8.11.2/8.11.2) with ESMTP id g8OCEjP27711
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2002 15:14:45 +0300
+Received: from rudolf (scalex.qnet.ro [172.16.31.37])
+	by mail.masini.ro (8.12.2/8.12.2) with ESMTP id g8OC1w4Z010421
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2002 15:01:58 +0300
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Can messages such as this "unknown partition table" entry in /var/log be somehow filtered:
+Hello linux experts,
 
-<...snip...>
-SCSI subsystem driver Revision: 1.00
-Red Hat/Adaptec aacraid driver, May  3 2002
-<...snip...>
-SCSI device sdb: 15360 512-byte hdwr sectors (8 MB)
- sdb: unknown partition table
-<...snip...>
+I hope if i come to the right place
 
-I'm wondering if it's possible to exclude certain devices from being scanned, and if it can be done without too much coding involved.
+I have a HP 4100 server with LSI 53c1010R SCSI controller. I use 
+RedHat7.3 os with default kernel 2.4.18-3. Also i have 3 scsi drives 
+36G Ultra3 firmware HP. All thins are ok till here.
 
-Marco
+I need some help to test HOT SWAP feature for this drives. I read some 
+documentation and i saw that HOT SWAP may work on linux if my driver for 
+scsi-controller support re-scanning the bus!
+
+[snip]
+Normal SCSI hardware is not hot-swappable either. It may however work. 
+If your SCSI driver supports re-scanning the bus, and removing and 
+appending devices, you may be able to hot-swap devices.
+[snip]
+
+I try to check if this feature works for me and don`t. If i remove any 
+scsi drive, this device remain in /proc until will be removed manually, 
+or using a script named rescan-scsi-bus.sh which i found it on google.
+
+I tried to obtain some additional info and i saw that for my 
+scsi-controller has 2 active drivers: one older named sym53cxx.o and 
+one newer named sym53cxx_2.o!
+I don`t have for the moment access to this computer but i remember that 
+on default installation, redhat assigned the old driver to my 
+scsi-controller.
+
+I want to know if i change the driver with this new one, i can use the 
+HOT SWAP feature!
+
+Are necessary additional settings to be made when i load the new driver 
+or on the system configuration?
+
+Any success story will be appreciated.
+
+Regards,
+
+Alex
+
