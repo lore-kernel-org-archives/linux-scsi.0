@@ -1,65 +1,36 @@
-From: "Moore, Eric Dean" <Emoore@lsil.com>
-Subject: RE: [PATCH 2.6 ] MPT Fusion driver 3.01.00 update
-Date: Wed, 10 Mar 2004 09:55:01 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57040DABAE@exa-atlanta.se.lsil.com>
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [Announce] Emulex LightPulse Device Driver
+Date: 10 Mar 2004 10:21:07 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1078932070.1807.34.camel@mulgrave>
+References: <3356669BBE90C448AD4645C843E2BF2802C014D7@xbl.ma.emulex.com>
+	<404ED33D.3070504@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:4339 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S262256AbUCJOzQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Mar 2004 09:55:16 -0500
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <404ED33D.3070504@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "Smart, James" <James.Smart@Emulex.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andreas Jellinghaus <aj@leogic.com>, linux-scsi@vger.kernel.org
 
-I'm working on a fix for this. I should be
-releasing sometime later this week.
-The problem is one of the drives is running
-at async narrow speeds. This only affects
-RAID volumes.
+On Wed, 2004-03-10 at 03:35, Jeff Garzik wrote:
+> Embark you shall, and let me join in the chorus of kudos for making the 
+> leap to open source.  :)
 
-Eric Moore
+Yes, I'll add my welcome to that.
 
+[...]
+> That should get you started ;-)
 
-On Tuesday, March 09, 2004 11:14 AM, Andreas Jellinghaus wrote:
-> 
-> Hi Eric,
-> 
-> we are trying
-> Fusion MPT base driver 3.00.02
-> Copyright (c) 1999-2003 LSI Logic Corporation
-> mptbase: Initiating ioc0 bringup
-> ioc0: 53C1030: Capabilities={Initiator}
-> Fusion MPT SCSI Host driver 3.00.02
-> scsi0 : ioc0: LSI53C1030, FwRev=01030a00h, Ports=1, MaxQ=222, IRQ=26
->   Vendor: LSILOGIC  Model: 1030 IM       IM  Rev: 1000
->   Type:   Direct-Access                      ANSI SCSI revision: 02
-> SCSI device sda: 143376384 512-byte hdwr sectors (73409 MB)
-> SCSI device sda: drive cache: write back
->  sda: sda1 sda2 sda3 sda4
-> Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-> Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
->   Vendor: IBM       Model: 25P3495a S320  1  Rev: 1   
->   Type:   Processor                          ANSI SCSI revision: 02
-> Attached scsi generic sg1 at scsi0, channel 0, id 8, lun 0,  type 3
-> 
-> as well as the 3.01.00 version on amd64 dual opteron machines
-> on mainboards with amd chipset and two ibm 60Gb disks connected.
-> 
-> our problem: terrible speed when writing.
-> we used dbench for benchmarking under linux 2.6.3
-> and we get 1-2 mb/s :-(
-> 
-> Any idea how to solve this issue?
-> Thanks for your help.
-> 
-> Regards, Andreas
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Actually, it would be my interpretation of the FAQ that most of this
+work is already intended (although Jeff gave specific instances than the
+generalities in the FAQ).
+
+There were many more places than this in the driver that caused me to go
+"good grief no".  However, it probably makes more sense if you work down
+your todo list and come back for a review when you're nearing the end of
+it.  That way you don't get boat loads of comments about things you were
+planning to fix anyway.
+
+James
