@@ -1,53 +1,49 @@
-From: "Lee Xing" <lxing@Crossroads.com>
-Subject: RE: Help - can Linux SCSI sub-system add newly-attached devices to/dev on the fly?
-Date: Thu, 20 May 2004 14:38:56 -0500
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: RE: Help - can Linux SCSI sub-system add newly-attached devices
+	to/dev on the fly?
+Date: Thu, 20 May 2004 22:01:06 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <519672568F040C41B6FAC21ADF51B18FEFFF@mailnode1.commstor.crossroads.com>
+Message-ID: <1085083266.2784.17.camel@laptop.fenrus.com>
+References: <519672568F040C41B6FAC21ADF51B18FEFFF@mailnode1.commstor.crossroads.com>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Qmy8ij4H106Ys4eeDMaC"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from email.crossroads.com ([65.68.235.6]:24003 "HELO
-	email.crossroads.com") by vger.kernel.org with SMTP id S265242AbUETTi7 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 May 2004 15:38:59 -0400
-content-class: urn:content-classes:message
+Received: from mx1.redhat.com ([66.187.233.31]:3485 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S265226AbUETUBQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 May 2004 16:01:16 -0400
+In-Reply-To: <519672568F040C41B6FAC21ADF51B18FEFFF@mailnode1.commstor.crossroads.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
-
-Thanks for the suggestions and information.  It helps a lot!
-
-We will be using lk 2.6 for sure, but at this time it seems lk 2.6 is still a moving target so we want to wait a while.  Your comments on dynamic addition/removal of devices may make us move to lk 2.6 earlier.
-
-The driver we are working on is a shim that sits in between Linux SCSI mid-layer and our existing modules, and you are right, iSCSI is one of the projects we are working on.
-
-We really appreciate the nice work every one contributes to Linux!
-
-Thanks,
+To: Lee Xing <lxing@Crossroads.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
 
-Lee
+--=-Qmy8ij4H106Ys4eeDMaC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
------Original Message-----
-From: Christoph Hellwig [mailto:hch@infradead.org]
-Sent: Thursday, May 20, 2004 1:08 PM
-To: Lee Xing
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: Help - can Linux SCSI sub-system add newly-attached
-devicesto/dev on the fly?
+> The driver we are working on is a shim that sits in between Linux SCSI mi=
+d-layer and our existing modules, and you are right, iSCSI is one of the pr=
+ojects we are working on.
+>=20
+> We really appreciate the nice work every one contributes to Linux!
 
+I assume that you will be contributing your work too ? (eg your module
+is going to be open source ?)
 
-> Does any one know if lk2.4 has **any other ways** low-level drivers can use to notify mid-layer the changes on the attached devices on the fly?
+--=-Qmy8ij4H106Ys4eeDMaC
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-No.  In 2.4.x even the /proc/scsi/scsi variant from userspace is a bug
-strictly speaking because any touching of the device list will be racy.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
 
-If you want my 2cent as one of the persons who rewrote large portions of
-the scsi midlayer during 2.6 in that area:  don't use 2.4.x for any product
-that requires dynamic addition/removal of any devices.
+iD8DBQBArQ6BxULwo51rQBIRAuYsAJ9CrJ07pl+Y0y1N15eVXum+peHlhgCdG9s1
+bUfjAHVAT9Jhik5Y3Ige1MI=
+=qRDo
+-----END PGP SIGNATURE-----
 
-Btw, what kind of driver are you working on?  Judging from your mails and
-the Crossroads websistes I guess it's yet another iSCSI initiator.  In that
-case helping one of the existing projects might make more sense..
+--=-Qmy8ij4H106Ys4eeDMaC--
+
