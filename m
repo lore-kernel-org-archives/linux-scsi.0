@@ -1,41 +1,52 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [RFC] IBM Power RAID driver (ipr)
-Date: Tue, 20 Jan 2004 09:18:51 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] allow drivers to hook into watchdog timeout
+Date: Tue, 20 Jan 2004 18:06:56 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040120171851.GB1628@beaverton.ibm.com>
-References: <40085EDA.4010802@us.ibm.com> <20040119183400.A4182@infradead.org> <400C3E70.9040702@us.ibm.com> <20040120133858.A15671@infradead.org> <400D5A28.1000301@us.ibm.com>
+Message-ID: <20040120180656.B18616@infradead.org>
+References: <20040120132052.GA6740@lst.de> <400D5E9F.8030802@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:21237 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S265634AbUATRP2
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jan 2004 12:15:28 -0500
+Received: from phoenix.infradead.org ([213.86.99.234]:19464 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S265583AbUATSHD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jan 2004 13:07:03 -0500
 Content-Disposition: inline
-In-Reply-To: <400D5A28.1000301@us.ibm.com>
+In-Reply-To: <400D5E9F.8030802@us.ibm.com>; from brking@us.ibm.com on Tue, Jan 20, 2004 at 11:00:15AM -0600
 List-Id: linux-scsi@vger.kernel.org
 To: Brian King <brking@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+Cc: James.Bottomley@steeleye.com, gibbs@scsiguy.com, linux-scsi@vger.kernel.org
 
-Brian King [brking@us.ibm.com] wrote:
-> >>>this should be handled by the midlayer per-device and per-host state 
-> >>>bits.
-> >>
-> >>I didn't realize a LLD was allowed to modify these.
-> >
-> >Not directly.  But we have function to e.g. set a device offline.
+On Tue, Jan 20, 2004 at 11:00:15AM -0600, Brian King wrote:
+> If we get rid of scsi_add_timer, could we have a scsi_mod_timer? In the 
+> ipr driver I submitted, I would like to be able to simply double the 
+> timeout value, I don't necessarily want to change the timeout policy. 
+> The adapter firmware is already timing each command, so I would like to 
+> use that as the primary timing mechanism if possible.
 > 
-> Not in 2.6.1. I think this was in, then removed at some point. Anyone 
-> know the story on why it was removed? Should we have a 
-> scsi_set_host_offline as well?
+> For normal SCSI devices under this adapter I could change the philosophy 
+> and not let the adapter time the commands, but for disk array devices, 
+> the timeout value for reads/writes is too short.
 
-We removed the interface through the interations of the state model for
-scsi_device / scsi_host. We where also overloading the online flag. If
-we are going to have LLDDs modify state we may want to close on issues
-of using test_bit or not and the locking around these functions.
+messing with the timer after it's setup sounds like the wrong way to do
+that to me.  Overriding the timeout in the host template or the device
+sounds like the better idea.  Given that there seem to be other adapters
+that need longer timeouts, I wonder whether we should look for a generic
+solution to this
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+> 
+> 
+> -- 
+> Brian King
+> eServer Storage I/O
+> IBM Linux Technology Center
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---end quoted text---
 
+-- 
+Christoph Hellwig <hch@lst.de>		-	Freelance Hacker
+Contact me for driver hacking and kernel development consulting
