@@ -1,37 +1,25 @@
-From: Andreas Schwab <schwab@suse.de>
-Subject: Symbios 53C8XX broken on ia64?
-Date: Tue, 23 Mar 2004 01:01:19 +0100
-Sender: linux-ia64-owner@vger.kernel.org
-Message-ID: <je3c80ph2o.fsf@sykes.suse.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH][RELEASE] megaraid 2.10.2 Driver
+Date: Tue, 23 Mar 2004 06:27:08 +0000
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20040323062708.A29405@infradead.org>
+References: <0E3FA95632D6D047BA649F95DAB60E570230C77B@exa-atlanta.se.lsil.com> <20040323004543.GP25059@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ia64-owner@vger.kernel.org>
-To: linux-ia64@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from phoenix.infradead.org ([213.86.99.234]:31493 "EHLO
+	phoenix.infradead.org") by vger.kernel.org with ESMTP
+	id S262063AbUCWG1X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Mar 2004 01:27:23 -0500
+Content-Disposition: inline
+In-Reply-To: <20040323004543.GP25059@parcelfarce.linux.theplanet.co.uk>; from willy@debian.org on Tue, Mar 23, 2004 at 12:45:43AM +0000
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@debian.org>
+Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, 'Jeff Garzik' <jgarzik@pobox.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-Has anyone been able to get the sym53c8xx_2 driver in 2.6.5-rc2 working=
- on
-HP zx1?  On the machines I tried it does not find any disks anymore.  T=
-his
-has been working fine with 2.6.3.
+On Tue, Mar 23, 2004 at 12:45:43AM +0000, Matthew Wilcox wrote:
+> I don't think you understand how CONFIG_COMPAT works.  x86-64 defines it
+> when it wants it:
 
-CONFIG_SCSI_SYM53C8XX_2=3Dm
-CONFIG_SCSI_SYM53C8XX_DMA_ADDRESSING_MODE=3D1
-CONFIG_SCSI_SYM53C8XX_DEFAULT_TAGS=3D16
-CONFIG_SCSI_SYM53C8XX_MAX_TAGS=3D64
-# CONFIG_SCSI_SYM53C8XX_IOMAPPED is not set
+But not in 2.4, and this is a 2.4-only patch..
 
-Andreas.
-
---=20
-Andreas Schwab, SuSE Labs, schwab@suse.de
-SuSE Linux AG, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
-Key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
-"And now for something completely different."
--
-To unsubscribe from this list: send the line "unsubscribe linux-ia64" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
