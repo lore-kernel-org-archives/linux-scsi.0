@@ -1,152 +1,40 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH] scsi_mid_low_api.txt for 2.5.46-bk3
-Date: Fri, 08 Nov 2002 12:07:29 +1100
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] scsi sysfs update (upper 2/3)
+Date: Fri, 8 Nov 2002 01:20:47 +0000
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3DCB0E51.5070407@torque.net>
-Reply-To: dougg@torque.net
+Message-ID: <20021108012047.A17391@infradead.org>
+References: <20021107073619.GA1390@beaverton.ibm.com> <20021107073943.GB1390@beaverton.ibm.com> <20021107182947.B15350@sgi.com> <20021107164152.GD1292@beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010505040009030203040000"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from torque.net (dm1-93.triode.net.au [202.147.125.93])
-	by iggy.triode.net.au (8.11.6/8.11.6) with ESMTP id gA818u230437
-	for <linux-scsi@vger.kernel.org>; Fri, 8 Nov 2002 12:08:57 +1100
+Content-Disposition: inline
+In-Reply-To: <20021107164152.GD1292@beaverton.ibm.com>; from andmike@us.ibm.com on Thu, Nov 07, 2002 at 08:41:52AM -0800
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------010505040009030203040000
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+On Thu, Nov 07, 2002 at 08:41:52AM -0800, Mike Anderson wrote:
+> > > -	rc = scsi_register_device(&sd_template);
+> > > +	rc = scsi_bus_driver_register(&sd_template);
+> > 
+> > Umm, no.  We don't register a bus.  Just leave the name unchanged until
+> > we there is some commonly agreed upon upper layer terminology.
+> 
+> Well we are registering a driver with the device model scsi_bus (i.e a
+> driver_register on scsi_bus_type).
 
-This patch against 2.5.46-bk3 is work in progress
-(since the interface is in flux). It dusts of some
-cobwebs, removes politically incorrect typedefs and
-describes slave_attach() and slave_detach(). It
-removes the revoke() description (per hch? changes).
+We register a scsi upperlayer driver with the midlayer, we don't care
+about the implementation, and it's certainly not a bus.  I do btw
+disagree strongly with using the device model bus type for upper level
+drivers.  We have a bus in scsi, and that's the connection between the
+HBA and the devices.  To make any sense out of the device model these
+devices must be childs of the HBA.
 
-Is a section describing mid level functions provided
-for LLDDs (e.g. scsi_adjust_queue_depth() )
-warranted?
+> Could we agree on terminology now as I believe scsi_register_device is
+> mis-leading for others reading the scsi code as it is a driver not a
+> device?
 
-Doug Gilbert
-
---------------010505040009030203040000
-Content-Type: application/x-gzip;
- name="scsi_mid_low_api_2546bk3.diff.gz"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="scsi_mid_low_api_2546bk3.diff.gz"
-
-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
---------------010505040009030203040000--
+The device terminology in scsi is misleading but it's used at least
+consistantly.  Feel free to submit a patch that changes it to upper
+or something like that once scsi settles down a bit before 2.6.
 
