@@ -1,50 +1,63 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Kill superfluos newline in dmesg output of aic7xxx
-Date: Fri, 25 Mar 2005 10:02:50 +0100
-Message-ID: <200503251002.51656.eike-kernel@sf-tec.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH as494] Add a scsi_device flag for RETRY_HWERROR
+Date: Fri, 25 Mar 2005 10:37:52 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0503251027070.1130-100000@ida.rowland.org>
+References: <4243498D.6070409@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Received: from mail.sf-mail.de ([62.27.20.61]:30849 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S261610AbVCYLa0 (ORCPT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from ida.rowland.org ([192.131.102.52]:3332 "HELO ida.rowland.org")
+	by vger.kernel.org with SMTP id S261671AbVCYPhx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Mar 2005 06:30:26 -0500
-Received: from dfue129.rz.uni-mannheim.de ([::ffff:134.155.18.129] HELO caliban.sf-tec.de)
-	by mail.sf-mail.de (Qsmtpd 0.3pre) with (RC4-MD5 encrypted) ESMTPS
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Mar 2005 12:30:24 +0100
-Content-Disposition: inline
+	Fri, 25 Mar 2005 10:37:53 -0500
+In-Reply-To: <4243498D.6070409@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Douglas Gilbert <dougg@torque.net>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Hi,
+On Fri, 25 Mar 2005, Douglas Gilbert wrote:
 
-my dmesg looks like this:
+> Alan Stern wrote:
+> > James:
+> > 
+> > It turns out that a bunch of USB-IDE converters make the mistake of
+> > returning SK = 04 (Hardware Error) whenever the IDE device signals any
+> > sort of error, without bothering to distinguish recoverable from
+> > non-recoverable errors. 
+> 
+> Alan,
+> The sense key of HARDWARE ERROR is a superset of MEDIUM ERROR.
+> SBC-2 treats them as synonymous. If it is a "real" medium
+> error then the LBA of the first (i.e. lowest address) bad
+> block should be placed in the "info" field and the "valid"
+> bit should be set. If this is done the block layer does
+> its job well.
 
-----
-scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
-        <Adaptec 2940A Ultra SCSI adapter>
-        aic7860: Single Channel A, SCSI Id=7, 3/253 SCBs
+I don't have a copy of SBC-2.  The (very old) document I do have and the 
+code in scsi_error.c both treat HARDWARE_ERROR as nonrecoverable and 
+MEDIUM_ERROR as recoverable.  So in a sense the patch does go some way 
+towards treating one as a superset of the other.
 
-(scsi0:A:0): 10.000MB/s transfers (10.000MHz, offset 15)
-  Vendor: SEAGATE   Model: ST318436LW        Rev: 0010
-----
+Were the errors in question "real" medium errors?  I don't know -- maybe 
+not.  There wasn't much information available.
 
-To avoid the empty line I think this patch is needed.
+> Also for both hardware and medium errors the "sense key
+> specific" field (if SKSV=1) reports the actual retry
+> count. The read/write retry count is set in the "read
+> write error recovery" mode page. Anyways if the disk
+> has already retried reading the bad block 64 times (say)
+> what is the point of the mid level retrying??
 
-Eike
+For the devices I've had to deal with, it's not obvious that the disk has
+already retried 64 times.  (And the error-recovery mode page may not exist
+either; remember these are slightly buggy USB adaptors trying to pretend
+that an IDE drive is a SCSI device.)  All I know for certain is that the
+first time the command was issued the we got back HARDWARE_ERROR and then
+on a retry the command succeeded.
 
-Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
+(The IBM drive that started this whole thing is a different story.  But 
+regardless, it's clear that having these patches helps with some devices 
+and doesn't hurt others.)
 
-diff -aupr linux-2.6.11/drivers/scsi/aic7xxx/aic7xxx_osm.c linux-2.6.12-rc1/drivers/scsi/aic7xxx/aic7xxx_osm.c
---- linux-2.6.11/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-03-02 08:37:48.000000000 +0100
-+++ linux-2.6.12-rc1/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-03-25 09:57:01.000000000 +0100
-@@ -932,7 +932,6 @@ ahc_linux_info(struct Scsi_Host *host)
- 	strcat(bp, "        ");
- 	ahc_controller_info(ahc, ahc_info);
- 	strcat(bp, ahc_info);
--	strcat(bp, "\n");
- 
- 	return (bp);
- }
+Alan Stern
+
