@@ -1,34 +1,44 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
-Date: Thu, 6 Nov 2003 18:58:13 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20031106175813.GQ437@suse.de>
-References: <B179AE41C1147041AA1121F44614F0B0598CE5@AVEXCH02.qlogic.org> <20031106171409.GN437@suse.de> <1068140592.5234.8.camel@laptop.fenrus.com> <20031106175032.GO437@suse.de> <20031106185511.C15403@devserv.devel.redhat.com>
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: RE: [ANNOUNCE] QLogic qla2xxx driver update available (v8.00.00b6).
+Date: Thu, 06 Nov 2003 18:59:55 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1068141595.5234.10.camel@laptop.fenrus.com>
+References: <B179AE41C1147041AA1121F44614F0B0598CE6@AVEXCH02.qlogic.org>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:27583 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S263785AbTKFR7B (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Nov 2003 12:59:01 -0500
-Content-Disposition: inline
-In-Reply-To: <20031106185511.C15403@devserv.devel.redhat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hTaqNPdIuC6MyHrxeaeO"
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <B179AE41C1147041AA1121F44614F0B0598CE6@AVEXCH02.qlogic.org>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjanv@redhat.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Mike Anderson <andmike@us.ibm.com>, Linux-Kernel <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
 
-On Thu, Nov 06 2003, Arjan van de Ven wrote:
-> 
-> On Thu, Nov 06, 2003 at 06:50:32PM +0100, Jens Axboe wrote:
-> > drive it is not). Now both 2.4 and 2.6 make that guarentee. The only
-> > argument for disabling clustering would be for 2.4 for CPU cycle
-> > reasons.
-> 
-> yep; on 2.4 it's rather visible in the profiles during some benchmark
-> test I did (like 5% of total CPU cycles)
 
-yeah so I gather, although 5% seems extremely excessive (512-byte raw
-io, on tons of disks?).
+--=-hTaqNPdIuC6MyHrxeaeO
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Jens Axboe
+On Thu, 2003-11-06 at 18:45, Andrew Vasquez wrote:
 
+> No.  We've had this IOWR problem since the inception of 5.x series
+> driver.  Software (SMS 3.0) has been built on top of the this IOCTL
+
+how about removing most if not all of these ioctls ?
+The scsi layer has a *generic* "send passthrough" mechanism already for
+example.
+
+
+
+--=-hTaqNPdIuC6MyHrxeaeO
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
+
+iD8DBQA/qowaxULwo51rQBIRAu6SAJ0eYuH+qU6ZO7NOuv3/6D6WLSPtbwCeNpa/
+Uk2Bx05M7abbBYJcwwPceQ4=
+=vBdR
+-----END PGP SIGNATURE-----
+
+--=-hTaqNPdIuC6MyHrxeaeO--
