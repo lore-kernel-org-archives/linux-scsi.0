@@ -1,32 +1,32 @@
-From: Luben Tuikov <luben@splentec.com>
+From: Oliver.Neukum@lrz.uni-muenchen.de
 Subject: Re: [linux-usb-devel] Re: [PATCH] USB changes for 2.5.58
-Date: Fri, 24 Jan 2003 17:03:56 -0500
+Date: Fri, 24 Jan 2003 23:23:41 +0100 (MET)
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <3E31B84C.8040106@splentec.com>
-References: <Pine.LNX.4.44L0.0301241649460.692-100000@ida.rowland.org>
+Message-ID: <Pine.SOL.4.44.0301242322110.24678-100000@sun1.lrz-muenchen.de>
+References: <3E318D5F.20200@splentec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <3E318D5F.20200@splentec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Oliver Neukum <oliver@neukum.name>, Doug Ledford <dledford@redhat.com>, David Brownell <david-b@pacbell.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben@splentec.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Oliver Neukum <oliver@neukum.name>, Doug Ledford <dledford@redhat.com>, David Brownell <david-b@pacbell.net>, Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Alan Stern wrote:
-> 
-> Apparently it can't.  I don't mean to say that this was the right thing to 
-> do; I just meant that this is what Matt's currently-proposed patch does.  
-> Personally, I'm not very familiar with the details of the SCSI subsystem, 
-> and I don't know what preconditions are required for calling the various 
-> API's.
+On Fri, 24 Jan 2003, Luben Tuikov wrote:
 
-Ok, no problem.
+> Alan Stern wrote:
+>  >
+> > Matt's current proposed patch has the USB LLDD calling
+> > scsi_unregister_host()  (because the device is respresented as an emulated
+>
+> A LLDD should and must *not* call scsi_unregister_host().  This brakes
+> all hierarchy.
 
-Doug just explained it very good in his most recent email.  Take heed in
-his words.  Everything he said is quite doable.
+What then is supposed to happen when you remove a PCMCIA host adapter or
+a SCSI to USB bridge or ... ?
+There must be a way to report that a host was unplugged.
 
--- 
-Luben
-
+	Regards
+		Oliver
 
 
