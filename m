@@ -1,173 +1,279 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 05/08] scsi: remove a timer race from scsi_queue_insert() and cleanup timer
-Date: Wed, 23 Mar 2005 11:14:44 +0900 (KST)
-Message-ID: <20050323021335.88C511CE@htj.dyndns.org>
-References: <20050323021335.960F95F8@htj.dyndns.org>
-Content-Type: text/plain; charset=US-ASCII
-Received: from rproxy.gmail.com ([64.233.170.198]:3979 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262716AbVCWCOt (ORCPT
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: [PATCH] Reduce stack usage in sg.c
+Date: Tue, 22 Mar 2005 19:56:05 -0800
+Message-ID: <4240E8D5.4080602@osdl.org>
+References: <df35dfeb05032200034d3ab10c@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Received: from fire.osdl.org ([65.172.181.4]:51923 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S262753AbVCWD4j (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Mar 2005 21:14:49 -0500
-Received: by rproxy.gmail.com with SMTP id j1so40546rnf
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2005 18:14:49 -0800 (PST)
-In-Reply-To: <20050323021335.960F95F8@htj.dyndns.org>
+	Tue, 22 Mar 2005 22:56:39 -0500
+In-Reply-To: <df35dfeb05032200034d3ab10c@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com, axboe@suse.de
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Yum Rayan <yum.rayan@gmail.com>
+Cc: linux-scsi@vger.kernel.org, dgilbert@interlog.com, james.bottomley@steeleye.com
 
-05_scsi_timer_cleanup.patch
+Yum Rayan wrote:
+> Attempt to reduce stack usage in sg.c.
+> 
+> Used checkstack.pl script to measure stack usage and noted follows:
+> 
+> Before patch:
+> sg_ioctl - 412
+> sg_read - 200
+> 
+> After patch:
+> sg_ioctl - 92
+> sg_read -  96
+> 
+> Thanks,
+> Rayan
+> 
+> Signed-off-by: Yum Rayan <yum.rayan@gmail.com>
 
-	scsi_queue_insert() has four callers.  Three callers call with
-	timer disabled and one (the second invocation in
-	scsi_dispatch_cmd()) calls with timer activated.
-	scsi_queue_insert() used to always call scsi_delete_timer()
-	and ignore the return value.  This results in race with timer
-	expiration.  Remove scsi_delete_timer() call from
-	scsi_queue_insert() and make the caller delete timer and check
-	the return value.
+Mostly looks OK to me.  However, I would rather see patches
+against the current -bk instead of 2.6.x.y.
+This one does not apply to 2.6.12-rc1-bk1.
+AFAIK, development is still primarily done against the linus-bk
+tree and not the x.y release tree.
 
-	While at it, as, once a scsi timer is added, it should expire
-	or be deleted before reused, make scsi_add_timer() strict
-	about timer reuses.  Now timer expiration function clears
-	->function and all timer deletion should go through
-	scsi_delete_timer().  Also, remove bogus ->eh_action tests
-	from scsi_eh_{done|times_out} functions.  The condition is
-	always true and the test is somewhat misleading.
+Hunk #1 FAILED at 335.
+Hunk #2 succeeded at 971 with fuzz 2 (offset -6 lines).
+Hunk #3 succeeded at 997 (offset -6 lines).
+1 out of 3 hunks FAILED -- saving rejects to file drivers/scsi/sg.c.rej
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
 
- aic7xxx/aic79xx_osm.c |    1 +
- aic7xxx/aic7xxx_osm.c |    1 +
- scsi.c                |    7 ++++---
- scsi_error.c          |   24 +++++++-----------------
- scsi_lib.c            |    6 ------
- 5 files changed, 13 insertions(+), 26 deletions(-)
+> diff -Nur linux-2.6.11.5.orig/drivers/scsi/sg.c linux-2.6.11.5/drivers/scsi/sg.c
+> --- linux-2.6.11.5.orig/drivers/scsi/sg.c	2005-03-18 22:34:56.000000000 -0800
+> +++ linux-2.6.11.5/drivers/scsi/sg.c	2005-03-21 23:48:52.000000000 -0800
+> @@ -335,109 +335,143 @@
+>  	Sg_fd *sfp;
+>  	Sg_request *srp;
+>  	int req_pack_id = -1;
+> -	struct sg_header old_hdr;
+> -	sg_io_hdr_t new_hdr;
+> +	struct sg_header *old_hdr;
+>  	sg_io_hdr_t *hp;
+> +	int retval = 0;
+> +	
+>  
+>  	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
+>  		return -ENXIO;
+>  	SCSI_LOG_TIMEOUT(3, printk("sg_read: %s, count=%d\n",
+>  				   sdp->disk->disk_name, (int) count));
+> -	if ((k = verify_area(VERIFY_WRITE, buf, count)))
+> -		return k;
+> +	old_hdr = kmalloc(SZ_SG_HEADER, GFP_KERNEL);
+> +	if (!old_hdr)
+> +		return -ENOMEM;
+> +	if ((k = verify_area(VERIFY_WRITE, buf, count))) {
+> +		retval = k;
+> +		goto free_old_hdr;
+> +	}
+>  	if (sfp->force_packid && (count >= SZ_SG_HEADER)) {
+> -		if (__copy_from_user(&old_hdr, buf, SZ_SG_HEADER))
+> -			return -EFAULT;
+> -		if (old_hdr.reply_len < 0) {
+> +		if (__copy_from_user(old_hdr, buf, SZ_SG_HEADER)){
+> +			retval = -EFAULT;
+> +			goto free_old_hdr;
+> +		}
+> +		if (old_hdr->reply_len < 0) {
+>  			if (count >= SZ_SG_IO_HDR) {
+> -				if (__copy_from_user
+> -				    (&new_hdr, buf, SZ_SG_IO_HDR))
+> -					return -EFAULT;
+> -				req_pack_id = new_hdr.pack_id;
+> +				sg_io_hdr_t *new_hdr;
+> +				new_hdr = kmalloc(SZ_SG_IO_HDR,	GFP_KERNEL);
+> +				if (!new_hdr) {
+> +					retval = -ENOMEM;
+> +					goto free_old_hdr;
+> +				}
+> +				retval = __copy_from_user(new_hdr, buf,
+> +								SZ_SG_IO_HDR);
+> +				req_pack_id = new_hdr->pack_id;
+> +				kfree(new_hdr);
+> +				if (retval) {
+> +					retval = -EFAULT;
+> +					goto free_old_hdr;
+> +				}
+>  			}
+>  		} else
+> -			req_pack_id = old_hdr.pack_id;
+> +			req_pack_id = old_hdr->pack_id;
+>  	}
+>  	srp = sg_get_rq_mark(sfp, req_pack_id);
+>  	if (!srp) {		/* now wait on packet to arrive */
+> -		if (sdp->detached)
+> -			return -ENODEV;
+> -		if (filp->f_flags & O_NONBLOCK)
+> -			return -EAGAIN;
+> +		if (sdp->detached) {
+> +			retval = -ENODEV;
+> +			goto free_old_hdr;
+> +		}
+> +		if (filp->f_flags & O_NONBLOCK) {
+> +			retval = -EAGAIN;
+> +			goto free_old_hdr;
+> +		}
 
-Index: scsi-export/drivers/scsi/aic7xxx/aic79xx_osm.c
-===================================================================
---- scsi-export.orig/drivers/scsi/aic7xxx/aic79xx_osm.c	2005-03-23 09:39:36.000000000 +0900
-+++ scsi-export/drivers/scsi/aic7xxx/aic79xx_osm.c	2005-03-23 09:40:10.000000000 +0900
-@@ -2725,6 +2725,7 @@ ahd_linux_dv_target(struct ahd_softc *ah
- 		/* Queue the command and wait for it to complete */
- 		/* Abuse eh_timeout in the scsi_cmnd struct for our purposes */
- 		init_timer(&cmd->eh_timeout);
-+		cmd->eh_timeout.function = NULL;
- #ifdef AHD_DEBUG
- 		if ((ahd_debug & AHD_SHOW_MESSAGES) != 0)
- 			/*
-Index: scsi-export/drivers/scsi/aic7xxx/aic7xxx_osm.c
-===================================================================
---- scsi-export.orig/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-03-23 09:39:36.000000000 +0900
-+++ scsi-export/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-03-23 09:40:10.000000000 +0900
-@@ -2409,6 +2409,7 @@ ahc_linux_dv_target(struct ahc_softc *ah
- 		/* Queue the command and wait for it to complete */
- 		/* Abuse eh_timeout in the scsi_cmnd struct for our purposes */
- 		init_timer(&cmd->eh_timeout);
-+		cmd->eh_timeout.function = NULL;
- #ifdef AHC_DEBUG
- 		if ((ahc_debug & AHC_SHOW_MESSAGES) != 0)
- 			/*
-Index: scsi-export/drivers/scsi/scsi.c
-===================================================================
---- scsi-export.orig/drivers/scsi/scsi.c	2005-03-23 09:40:09.000000000 +0900
-+++ scsi-export/drivers/scsi/scsi.c	2005-03-23 09:40:10.000000000 +0900
-@@ -639,9 +639,10 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
- 	spin_unlock_irqrestore(host->host_lock, flags);
- 	if (rtn) {
- 		atomic_inc(&cmd->device->iodone_cnt);
--		scsi_queue_insert(cmd,
--				(rtn == SCSI_MLQUEUE_DEVICE_BUSY) ?
--				 rtn : SCSI_MLQUEUE_HOST_BUSY);
-+		if (scsi_delete_timer(cmd))
-+			scsi_queue_insert(cmd,
-+					  (rtn == SCSI_MLQUEUE_DEVICE_BUSY) ?
-+					  rtn : SCSI_MLQUEUE_HOST_BUSY);
- 		SCSI_LOG_MLQUEUE(3,
- 		    printk("queuecommand : request rejected\n"));
- 	}
-Index: scsi-export/drivers/scsi/scsi_error.c
-===================================================================
---- scsi-export.orig/drivers/scsi/scsi_error.c	2005-03-23 09:40:10.000000000 +0900
-+++ scsi-export/drivers/scsi/scsi_error.c	2005-03-23 09:40:10.000000000 +0900
-@@ -107,14 +107,7 @@ int scsi_eh_scmd_add(struct scsi_cmnd *s
- void scsi_add_timer(struct scsi_cmnd *scmd, int timeout,
- 		    void (*complete)(struct scsi_cmnd *))
- {
--
--	/*
--	 * If the clock was already running for this command, then
--	 * first delete the timer.  The timer handling code gets rather
--	 * confused if we don't do this.
--	 */
--	if (scmd->eh_timeout.function)
--		del_timer(&scmd->eh_timeout);
-+	BUG_ON(scmd->eh_timeout.function);
- 
- 	scmd->eh_timeout.data = (unsigned long)scmd;
- 	scmd->eh_timeout.expires = jiffies + timeout;
-@@ -170,6 +163,9 @@ void scsi_times_out(struct scsi_cmnd *sc
- {
- 	scsi_log_completion(scmd, TIMEOUT_ERROR);
- 
-+	scmd->eh_timeout.data = (unsigned long)NULL;
-+	scmd->eh_timeout.function = NULL;
-+
- 	if (scmd->device->host->hostt->eh_timed_out)
- 		switch (scmd->device->host->hostt->eh_timed_out(scmd)) {
- 		case EH_HANDLED:
-@@ -442,9 +438,7 @@ static void scsi_eh_times_out(struct scs
- 	scsi_eh_eflags_set(scmd, SCSI_EH_REC_TIMEOUT);
- 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: scmd:%p\n", __FUNCTION__,
- 					  scmd));
--
--	if (scmd->device->host->eh_action)
--		up(scmd->device->host->eh_action);
-+	up(scmd->device->host->eh_action);
- }
- 
- /**
-@@ -459,15 +453,12 @@ static void scsi_eh_done(struct scsi_cmn
- 	 * way of stopping the timeout handler from running, so we must
- 	 * always defer to it.
- 	 */
--	if (del_timer(&scmd->eh_timeout)) {
-+	if (scsi_delete_timer(scmd)) {
- 		scmd->request->rq_status = RQ_SCSI_DONE;
- 		scmd->owner = SCSI_OWNER_ERROR_HANDLER;
--
- 		SCSI_LOG_ERROR_RECOVERY(3, printk("%s scmd: %p result: %x\n",
- 					   __FUNCTION__, scmd, scmd->result));
--
--		if (scmd->device->host->eh_action)
--			up(scmd->device->host->eh_action);
-+		up(scmd->device->host->eh_action);
- 	}
- }
- 
-@@ -1881,7 +1872,6 @@ scsi_reset_provider(struct scsi_device *
- 		rtn = FAILED;
- 	}
- 
--	scsi_delete_timer(scmd);
- 	scsi_next_command(scmd);
- 	return rtn;
- }
-Index: scsi-export/drivers/scsi/scsi_lib.c
-===================================================================
---- scsi-export.orig/drivers/scsi/scsi_lib.c	2005-03-23 09:40:09.000000000 +0900
-+++ scsi-export/drivers/scsi/scsi_lib.c	2005-03-23 09:40:10.000000000 +0900
-@@ -229,12 +229,6 @@ int scsi_queue_insert(struct scsi_cmnd *
- 		 printk("Inserting command %p into mlqueue\n", cmd));
- 
- 	/*
--	 * We are inserting the command into the ml queue.  First, we
--	 * cancel the timer, so it doesn't time out.
--	 */
--	scsi_delete_timer(cmd);
--
--	/*
- 	 * Next, set the appropriate busy bit for the device/host.
- 	 *
- 	 * If the host/device isn't busy, assume that something actually
+This patch section looks suspect to me:
+Notice that the second '+' sign begins an illegal construct,
+probably missing an 'if' line or 2.
+Or the '+' should be '-'.
 
+>  		while (1) {
+> -			res = 0;	/* following is a macro that beats race condition */
+> +			res = 0; /* following macro beats race condition */
+>  			__wait_event_interruptible(sfp->read_wait,
+> -				(sdp->detached || (srp = sg_get_rq_mark(sfp, req_pack_id))), 
+> -						   res);
+> -			if (sdp->detached)
+> -				return -ENODEV;
+> +				(sdp->detached ||
+> +				(srp = sg_get_rq_mark(sfp, req_pack_id))), 
+> +				 res);
+> +			if (sdp->detached) {
+> +				retval = -ENODEV;
+> +				goto free_old_hdr;
+> +			}
+>  			if (0 == res)
+>  				break;
+> -			return res;	/* -ERESTARTSYS because signal hit process */
+> +			retval = res; /* -ERESTARTSYS as signal hit process */
+> +			goto free_old_hdr;
+>  		}
+>  	}
+> -	if (srp->header.interface_id != '\0')
+> -		return sg_new_read(sfp, buf, count, srp);
+> +	if (srp->header.interface_id != '\0') {
+> +		retval = sg_new_read(sfp, buf, count, srp);
+> +		goto free_old_hdr;
+> +	}
+>  
+>  	hp = &srp->header;
+> -	memset(&old_hdr, 0, SZ_SG_HEADER);
+> -	old_hdr.reply_len = (int) hp->timeout;
+> -	old_hdr.pack_len = old_hdr.reply_len; /* very old, strange behaviour */
+> -	old_hdr.pack_id = hp->pack_id;
+> -	old_hdr.twelve_byte =
+> +	memset(old_hdr, 0, SZ_SG_HEADER);
+> +	old_hdr->reply_len = (int) hp->timeout;
+> +	old_hdr->pack_len = old_hdr->reply_len; /* old, strange behaviour */
+> +	old_hdr->pack_id = hp->pack_id;
+> +	old_hdr->twelve_byte =
+>  	    ((srp->data.cmd_opcode >= 0xc0) && (12 == hp->cmd_len)) ? 1 : 0;
+> -	old_hdr.target_status = hp->masked_status;
+> -	old_hdr.host_status = hp->host_status;
+> -	old_hdr.driver_status = hp->driver_status;
+> +	old_hdr->target_status = hp->masked_status;
+> +	old_hdr->host_status = hp->host_status;
+> +	old_hdr->driver_status = hp->driver_status;
+>  	if ((CHECK_CONDITION & hp->masked_status) ||
+>  	    (DRIVER_SENSE & hp->driver_status))
+> -		memcpy(old_hdr.sense_buffer, srp->sense_b,
+> -		       sizeof (old_hdr.sense_buffer));
+> +		memcpy(old_hdr->sense_buffer, srp->sense_b,
+> +		       sizeof (old_hdr->sense_buffer));
+>  	switch (hp->host_status) {
+>  	/* This setup of 'result' is for backward compatibility and is best
+>  	   ignored by the user who should use target, host + driver status */
+>  	case DID_OK:
+>  	case DID_PASSTHROUGH:
+>  	case DID_SOFT_ERROR:
+> -		old_hdr.result = 0;
+> +		old_hdr->result = 0;
+>  		break;
+>  	case DID_NO_CONNECT:
+>  	case DID_BUS_BUSY:
+>  	case DID_TIME_OUT:
+> -		old_hdr.result = EBUSY;
+> +		old_hdr->result = EBUSY;
+>  		break;
+>  	case DID_BAD_TARGET:
+>  	case DID_ABORT:
+>  	case DID_PARITY:
+>  	case DID_RESET:
+>  	case DID_BAD_INTR:
+> -		old_hdr.result = EIO;
+> +		old_hdr->result = EIO;
+>  		break;
+>  	case DID_ERROR:
+> -		old_hdr.result = (srp->sense_b[0] == 0 && 
+> +		old_hdr->result = (srp->sense_b[0] == 0 && 
+>  				  hp->masked_status == GOOD) ? 0 : EIO;
+>  		break;
+>  	default:
+> -		old_hdr.result = EIO;
+> +		old_hdr->result = EIO;
+>  		break;
+>  	}
+>  
+>  	/* Now copy the result back to the user buffer.  */
+>  	if (count >= SZ_SG_HEADER) {
+> -		if (__copy_to_user(buf, &old_hdr, SZ_SG_HEADER))
+> -			return -EFAULT;
+> +		if (__copy_to_user(buf, old_hdr, SZ_SG_HEADER)) {
+> +			retval = -EFAULT;
+> +			goto free_old_hdr;
+> +		}
+>  		buf += SZ_SG_HEADER;
+> -		if (count > old_hdr.reply_len)
+> -			count = old_hdr.reply_len;
+> +		if (count > old_hdr->reply_len)
+> +			count = old_hdr->reply_len;
+>  		if (count > SZ_SG_HEADER) {
+>  			if ((res =
+>  			     sg_read_oxfer(srp, buf, count - SZ_SG_HEADER)))
+> -				return -EFAULT;
+> +				retval = -EFAULT;
+> +				goto free_old_hdr;
+>  		}
+>  	} else
+> -		count = (old_hdr.result == 0) ? 0 : -EIO;
+> +		count = (old_hdr->result == 0) ? 0 : -EIO;
+>  	sg_finish_rem_req(srp);
+> -	return count;
+> +	retval = count;
+> +free_old_hdr:
+> +	kfree(old_hdr);
+> +	return retval;
+>  }
+>  
+>  static ssize_t
+> @@ -943,8 +977,11 @@
+>  		if (result)
+>  			return result;
+>  		else {
+> -			sg_req_info_t rinfo[SG_MAX_QUEUE];
+> -			Sg_request *srp;
+> +			sg_req_info_t *rinfo;
+> +			rinfo = kmalloc(SG_MAX_QUEUE * SZ_SG_REQ_INFO,
+> +								GFP_KERNEL);
+> +			if (!rinfo)
+> +				return -ENOMEM;
+>  			read_lock_irqsave(&sfp->rq_list_lock, iflags);
+>  			for (srp = sfp->headrp, val = 0; val < SG_MAX_QUEUE;
+>  			     ++val, srp = srp ? srp->nextrp : srp) {
+> @@ -966,8 +1003,11 @@
+>  				}
+>  			}
+>  			read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+> -			return (__copy_to_user(p, rinfo,
+> -			        SZ_SG_REQ_INFO * SG_MAX_QUEUE) ? -EFAULT : 0);
+> +			result = __copy_to_user(p, rinfo, SZ_SG_REQ_INFO *
+> +							SG_MAX_QUEUE);
+> +			result = result ? -EFAULT : 0;
+> +			kfree(rinfo);
+> +			return result;
+>  		}
+>  	case SG_EMULATED_HOST:
+>  		if (sdp->detached)
+> -
+
+-- 
+~Randy
