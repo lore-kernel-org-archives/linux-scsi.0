@@ -1,248 +1,78 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: dpt_i2o 2.5.0 2331 driver patch for 2.4.26
-Date: Thu, 20 May 2004 09:11:39 -0400
+From: Adrian Bunk <bunk@fs.tum.de>
+Subject: [patch] 2.4.27-pre3: SCSI ips compile error
+Date: Thu, 20 May 2004 15:46:04 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189FAD4ACD@otce2k03.adaptec.com>
+Message-ID: <20040520134604.GL24287@fs.tum.de>
+References: <20040518203039.GA9970@logos.cnet>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C43E6B.FCB13650"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:28347 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S265111AbUETNLm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 May 2004 09:11:42 -0400
-Content-Class: urn:content-classes:message
+Received: from hermes.fachschaften.tu-muenchen.de ([129.187.202.12]:56303 "HELO
+	hermes.fachschaften.tu-muenchen.de") by vger.kernel.org with SMTP
+	id S265146AbUETNqL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 May 2004 09:46:11 -0400
+Content-Disposition: inline
+In-Reply-To: <20040518203039.GA9970@logos.cnet>
 List-Id: linux-scsi@vger.kernel.org
-To: arjanv@redhat.com
-Cc: linux-scsi@vger.kernel.org
+To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, ipslinux@adaptec.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+On Tue, May 18, 2004 at 05:30:40PM -0300, Marcelo Tosatti wrote:
+>...
+> Summary of changes from v2.4.27-pre2 to v2.4.27-pre3
+> ============================================
+>...
+> Jack Hammer:
+>   o ServeRAID driver update to 7.00.15: sync with v2.6
+>...
 
-------_=_NextPart_001_01C43E6B.FCB13650
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+It was nice if people would actually test at least the compilation of
+their changes instead of blindly submitting the latest version of a
+driver...
 
-Arjan van de Ven [mailto:arjanv@redhat.com] writes:
-=20
->> I am looking for comments so as to improve the chances this driver
-can
->> be incorporated as both the 2.4 and the 2.6 dpt_i2o driver.
->do we still need this driver now that 2.6 I2O works with the hw ?
+<--  snip  -->
 
-The dpt_i2o driver continues to be maintained for the following reasons
-(in order of importance):
+...
+gcc -D__KERNEL__ 
+-I/home/bunk/linux/kernel-2.4/linux-2.4.27-pre3-full/include -Wall 
+-Wstrict-prototypes -Wno-trigraphs -O2 -fno-strict-aliasing -fno-common 
+-fomit-frame-pointer -pipe -mpreferred-stack-boundary=2 -march=athlon   
+-nostdinc -iwithprefix include -DKBUILD_BASENAME=ips  -c -o ips.o ips.c
+In file included from ips.c:180:
+ips.h:99: error: redefinition of `irqreturn_t'
+/home/bunk/linux/kernel-2.4/linux-2.4.27-pre3-full/include/linux/interrupt.h:16: 
+error: `irqreturn_t' previously declared here
+make[3]: *** [ips.o] Error 1
+make[3]: Leaving directory `/home/bunk/linux/kernel-2.4/linux-2.4.27-pre3-full/drivers/scsi'
 
-1) Zero Channel RAID (ASR-2000, ASR-2005, ASR-2010 & ASR-2015) is not
-yet supported in the I2O driver
-2) 64 bit SG elements are supported
-3) Requalification by OEMs is just not going to happen
-4) Some `management features' that admittedly have taken resistance for
-inclusion are considered necessary by our customers
-5) Management tool `scsi address' mappings are respected, and the driver
-better characterizes the SCSI paradigm that the adapter follows.
-6) Concerns by our OEM clients that we have control over dpt_i2o, but we
-do not have control over the I2O driver.
+<--  snip  -->
 
-#4 and up do not block switching to I2O completely, once #1 and #2 are
-dealt with; I am sure #3 (& #6) will remain as a `legacy concern' only.
-I reserve the right to discover other differences that create issue ;-/
-but I must go on record that I *support* the 2.6 I2O driver taking over
-support of these adapters.
 
-You are preaching to the choir, but I remain duty bound to continue
-maintaining the dpt_i2o driver.
+irqreturn_t was added to interrupt.h in 2.4.23, released nearly
+6 months (!) ago.
 
->(and please don't make combined 2.4 and 2.6 scsi drivers)
+Trivial fix below.
 
-I respect this. Adaptec has had considerably more success getting
-drivers committed and close to up-to-date that is maintained in 2.6 and
-is capable of being utilized in 2.4. This driver is not there yet as we
-have not converted it to use the pci_driver probe (see linit.c in the
-aacraid driver). My hopes are that the I2O driver comes up to speed to
-negate me taking this effort ...
+cu
+Adrian
 
-The enclosed script will 2.4ifi and 2.6ifi the driver (with build number
-in a .build file in a source directory). The result may be more
-palatable for the community, and easier for me to maintain be not
-branching the driver too much.
 
-Sincerely -- Mark Salyzyn
 
-------_=_NextPart_001_01C43E6B.FCB13650
-Content-Type: application/octet-stream;
-	name="release.sh"
-Content-Transfer-Encoding: base64
-Content-Description: release.sh
-Content-Disposition: attachment;
-	filename="release.sh"
-
-IyEgL2Jpbi9zaAojCXJlbGVhc2UgW2tlcm5lbHZlcnNpb25dIGRlc3RpbmF0aW9uCiMJCWtlcm5l
-bHZlcnNpb24gZWc6IDIuNC4yMAojCQlkZXN0aW5hdGlvbiBpcyBkaXJlY3Rvcnkgb3IgdGFyYmFs
-bC4KIwlQcmUtcHJvY2VzcyB0aGUgc291cmNlcyB0byBnZW5lcmF0ZSBPUyBzcGVjaWZpYyBmaWxl
-cy4KIwppZiBbIC1kIGRwdCBdIDsgdGhlbgoJUFJPRFVDVD1kcHRfaTJvCmVsc2UKCVBST0RVQ1Q9
-YWFjcmFpZApmaQprZXJuZWx2ZXJzaW9uPQpkZXN0aW5hdGlvbj0iL3RtcC8ke1BST0RVQ1R9LSVS
-RUxFQVNFJS50Z3oiCndoaWxlIFsgJCMgLWd0IDAgXSA7IGRvCgljYXNlICQxIGluCgkyLiopCWtl
-cm5lbHZlcnNpb249JDEgOzsKCS50Z3p8LnRhci5nenwudGJ6MnwudGFyLmJ6MikKCQlkZXN0aW5h
-dGlvbj0iJHtQUk9EVUNUfS0lUkVMRUFTRSUkMSIgOzsKCSovLnRnenwqLy50YXIuZ3p8Ki8udGJ6
-MnwqLy50YXIuYnoyKQoJCWRlc3RpbmF0aW9uPSJgZWNobyBcIiQxXCIgfCBzZWQgXCJzIy9bXi9d
-KlxcXCQjLyNcImAke1BST0RVQ1R9LSVSRUxFQVNFJWBiYXNlbmFtZSBcIiQxXCJgIiA7OwoJKikJ
-ZGVzdGluYXRpb249IiQxIiA7OwoJZXNhYwoJc2hpZnQKZG9uZQpWRVJTSU9OPQpSRVZJU0lPTj0K
-QlVJTEQ9CmlmIFsgLXMgLnZlcnNpb24gXSA7IHRoZW4KCS4gLnZlcnNpb24KZmkKaWYgWyAtcyAu
-YnVpbGQgXSA7IHRoZW4KCS4gLmJ1aWxkCmZpCmlmIFsgLXogIiR7VkVSU0lPTn0iIF0gOyB0aGVu
-CglWRVJTSU9OPSI/Lj8iCmZpCmlmIFsgLXogIiR7UkVWSVNJT059IiBdIDsgdGhlbgoJUkVWSVNJ
-T049Ij8iCmZpCmlmIFsgLXogIiR7QlVJTER9IiBdIDsgdGhlbgoJQlVJTEQ9Ij8/Pz8iCmZpCmlm
-IFsgLXogIiR7a2VybmVsdmVyc2lvbn0iIF0gOyB0aGVuCglkZXN0aW5hdGlvbj0iYGVjaG8gXCIk
-e2Rlc3RpbmF0aW9ufVwiIHwgc2VkIC1lIHMvJVZFUlNJT04lLyR7VkVSU0lPTn0uJHtSRVZJU0lP
-Tn0vIC1lIHMvJUJVSUxEJS8ke0JVSUxEfS8gLWUgcy8lUkVMRUFTRSUvJHtWRVJTSU9OfS4ke1JF
-VklTSU9OfS0ke0JVSUxEfS9gIgplbHNlCglkZXN0aW5hdGlvbj0iYGVjaG8gXCIke2Rlc3RpbmF0
-aW9ufVwiIHwgc2VkIC1lIHMvJVZFUlNJT04lLyR7VkVSU0lPTn0uJHtSRVZJU0lPTn0vIC1lIHMv
-JUJVSUxEJS8ke0JVSUxEfS8gLWUgcy8lUkVMRUFTRSUvJHtWRVJTSU9OfS4ke1JFVklTSU9OfS0k
-e0JVSUxEfS0ke2tlcm5lbHZlcnNpb259L2AiCmZpCmNhc2UgJHtkZXN0aW5hdGlvbn0gaW4KKi50
-Z3p8Ki50YXIuZ3p8Ki50YnoyfCoudGFyLmJ6MikgCWRlc3Q9L3RtcC9yZWxlYXNlJCQvJHtQUk9E
-VUNUfS8gOzsKKikJCQkJCWRlc3Q9IiR7ZGVzdGluYXRpb259IiA7Owplc2FjCmlmIFsgLWQgZHB0
-IF0gOyB0aGVuCglta2RpciAtcCAiJHtkZXN0fSIvZHB0CmVsc2UKCW1rZGlyIC1wICIke2Rlc3R9
-IgpmaQppZiBbICEgLWQgIiR7ZGVzdH0iIF0gOyB0aGVuCgllY2hvICJEZXN0aW5hdGlvbiAoJHtk
-ZXN0fSkgaXMgY3VyaW91cyIKCWV4aXQKZmkKZm9yIGkgaW4gW0EtWl0qICouW2NoXSBkcHQvKiA7
-IGRvCglpZiBbICEgLXMgIiRpIiBdIDsgdGhlbgoJCWNvbnRpbnVlCglmaQoJY2FzZSAkaSBpbgoJ
-YWFjcmFpZC5oKQoJCXNlZCAicy9cKCNbIAldKmRlZmluZVsgCV1BQUNfRFJJVkVSX0JVSUxEWyAJ
-XVwpLiovXDEke0JVSUxEfS8iIGFhY3JhaWQuaCA7OwoJKikKCQljYXQgJGkgOzsKCWVzYWMgfCBp
-ZiBbIC16ICIke2tlcm5lbHZlcnNpb259IiBdIDsgdGhlbgoJCWNhdCAtCgllbHNlCgkJdmVycz1g
-ZWNobyAke2tlcm5lbHZlcnNpb259IHwgc2VkIC1uICdzL15cKFswLTldWzAtOV0qXClcLlwoWzAt
-OV1bMC05XSpcKVwuXChbMC05XVswLTldKlwpLiovXDEvcCdgCgkJc3ViPWBlY2hvICR7a2VybmVs
-dmVyc2lvbn0gfCBzZWQgLW4gJ3MvXlwoWzAtOV1bMC05XSpcKVwuXChbMC05XVswLTldKlwpXC5c
-KFswLTldWzAtOV0qXCkuKi9cMi9wJ2AKCQlyZWw9YGVjaG8gJHtrZXJuZWx2ZXJzaW9ufSB8IHNl
-ZCAtbiAncy9eXChbMC05XVswLTldKlwpXC5cKFswLTldWzAtOV0qXClcLlwoWzAtOV1bMC05XSpc
-KS4qL1wzL3AnYAoJCUxJTlVYX1ZFUlNJT05fQ09ERT1gZXhwciAnKCcgJHt2ZXJzfSAnKicgNjU1
-MzYgJyknICsgJygnICR7c3VifSAnKicgMjU2ICcpJyArICR7cmVsfWAKCQllY2hvICJzL15cKFsg
-CV0qI1sgCV0qaWZcKW5kZWZbIAldKkxJTlVYX1ZFUlNJT05fQ09ERVsgCV0qL1wxICgxKS9nIiA+
-IiR7ZGVzdH0iLyRpLnNlZC4kJAoJCWVjaG8gIi9eWyAJXSojL3MvWyAJXSpMSU5VWF9WRVJTSU9O
-X0NPREVbIAldKi8ke0xJTlVYX1ZFUlNJT05fQ09ERX0vZyIgPj4iJHtkZXN0fSIvJGkuc2VkLiQk
-CgkJdGVlICIke2Rlc3R9Ii8kaS4kJCB8IGdyZXAgIl5bIAldKiNbIAldKmUqbCppZi4qWyAJPT48
-XUtFUk5FTF9WRVJTSU9OWyAJXSooWyAJXSpbMC05XVswLTldKlsgCV0qLFsgCV0qWzAtOV1bMC05
-XSpbIAldKixbIAldKlswLTldWzAtOV0qWyAJXSopIiB8IHRyICdLJyAnCicgfCBzZWQgLW4gJ3Mv
-LipFUk5FTF9WRVJTSU9OWyAJXSooWyAJXSpcKFswLTldWzAtOV0qXClbIAldKixbIAldKlwoWzAt
-OV1bMC05XSpcKVsgCV0qLFsgCV0qXChbMC05XVswLTldKlwpWyAJXSopLiovXDEgXDIgXDMvcCcg
-fCBzb3J0IC11IHwgd2hpbGUgcmVhZCB2ZXJzIHN1YiByZWwgOyBkbwoJCQlLRVJORUxfVkVSU0lP
-Tj1gZXhwciAnKCcgJHt2ZXJzfSAnKicgNjU1MzYgJyknICsgJygnICR7c3VifSAnKicgMjU2ICcp
-JyArICR7cmVsfWAKCQkJZWNobyAiL15bIAldKiMvcy9bIAldKktFUk5FTF9WRVJTSU9OWyAJXSoo
-WyAJXSoke3ZlcnN9WyAJXSosWyAJXSoke3N1Yn1bIAldKixbIAldKiR7cmVsfVsgCV0qKVsgCV0q
-LyR7S0VSTkVMX1ZFUlNJT059L2ciCgkJCWlmIFsgJHtMSU5VWF9WRVJTSU9OX0NPREV9IC1lcSAk
-e0tFUk5FTF9WRVJTSU9OfSBdIDsgdGhlbgoJCQkJZWNobyAiL15bIAldKiMvcy8oJHtMSU5VWF9W
-RVJTSU9OX0NPREV9PT0ke0tFUk5FTF9WRVJTSU9OfSkvKDEpL2ciCgkJCQllY2hvICIvXlsgCV0q
-Iy9zLygke0xJTlVYX1ZFUlNJT05fQ09ERX0hPSR7S0VSTkVMX1ZFUlNJT059KS8oMCkvZyIKCQkJ
-ZWxzZQoJCQkJZWNobyAiL15bIAldKiMvcy8oJHtMSU5VWF9WRVJTSU9OX0NPREV9PT0ke0tFUk5F
-TF9WRVJTSU9OfSkvKDApL2ciCgkJCQllY2hvICIvXlsgCV0qIy9zLygke0tFUk5FTF9WRVJTSU9O
-fT09JHtMSU5VWF9WRVJTSU9OX0NPREV9KS8oMCkvZyIKCQkJCWVjaG8gIi9eWyAJXSojL3MvKCR7
-TElOVVhfVkVSU0lPTl9DT0RFfSE9JHtLRVJORUxfVkVSU0lPTn0pLygxKS9nIgoJCQkJZWNobyAi
-L15bIAldKiMvcy8oJHtLRVJORUxfVkVSU0lPTn0hPSR7TElOVVhfVkVSU0lPTl9DT0RFfSkvKDEp
-L2ciCgkJCWZpCgkJCWlmIFsgJHtMSU5VWF9WRVJTSU9OX0NPREV9IC1ndCAke0tFUk5FTF9WRVJT
-SU9OfSBdIDsgdGhlbgoJCQkJZWNobyAiL15bIAldKiMvcy8oJHtMSU5VWF9WRVJTSU9OX0NPREV9
-PiR7S0VSTkVMX1ZFUlNJT059KS8oMSkvZyIKCQkJCWVjaG8gIi9eWyAJXSojL3MvKCR7S0VSTkVM
-X1ZFUlNJT059PCR7TElOVVhfVkVSU0lPTl9DT0RFfSkvKDEpL2ciCgkJCQllY2hvICIvXlsgCV0q
-Iy9zLygke0xJTlVYX1ZFUlNJT05fQ09ERX08PSR7S0VSTkVMX1ZFUlNJT059KS8oMCkvZyIKCQkJ
-CWVjaG8gIi9eWyAJXSojL3MvKCR7S0VSTkVMX1ZFUlNJT059Pj0ke0xJTlVYX1ZFUlNJT05fQ09E
-RX0pLygwKS9nIgoJCQllbHNlCgkJCQllY2hvICIvXlsgCV0qIy9zLygke0xJTlVYX1ZFUlNJT05f
-Q09ERX0+JHtLRVJORUxfVkVSU0lPTn0pLygwKS9nIgoJCQkJZWNobyAiL15bIAldKiMvcy8oJHtL
-RVJORUxfVkVSU0lPTn08JHtMSU5VWF9WRVJTSU9OX0NPREV9KS8oMCkvZyIKCQkJCWVjaG8gIi9e
-WyAJXSojL3MvKCR7TElOVVhfVkVSU0lPTl9DT0RFfTw9JHtLRVJORUxfVkVSU0lPTn0pLygxKS9n
-IgoJCQkJZWNobyAiL15bIAldKiMvcy8oJHtLRVJORUxfVkVSU0lPTn0+PSR7TElOVVhfVkVSU0lP
-Tl9DT0RFfSkvKDEpL2ciCgkJCWZpCgkJCWlmIFsgJHtMSU5VWF9WRVJTSU9OX0NPREV9IC1nZSAk
-e0tFUk5FTF9WRVJTSU9OfSBdIDsgdGhlbgoJCQkJZWNobyAiL15bIAldKiMvcy8oJHtMSU5VWF9W
-RVJTSU9OX0NPREV9Pj0ke0tFUk5FTF9WRVJTSU9OfSkvKDEpL2ciCgkJCQllY2hvICIvXlsgCV0q
-Iy9zLygke0tFUk5FTF9WRVJTSU9OfTw9JHtMSU5VWF9WRVJTSU9OX0NPREV9KS8oMSkvZyIKCQkJ
-CWVjaG8gIi9eWyAJXSojL3MvKCR7TElOVVhfVkVSU0lPTl9DT0RFfTwke0tFUk5FTF9WRVJTSU9O
-fSkvKDApL2ciCgkJCQllY2hvICIvXlsgCV0qIy9zLygke0tFUk5FTF9WRVJTSU9OfT4ke0xJTlVY
-X1ZFUlNJT05fQ09ERX0pLygwKS9nIgoJCQllbHNlCgkJCQllY2hvICIvXlsgCV0qIy9zLygke0xJ
-TlVYX1ZFUlNJT05fQ09ERX0+PSR7S0VSTkVMX1ZFUlNJT059KS8oMCkvZyIKCQkJCWVjaG8gIi9e
-WyAJXSojL3MvKCR7S0VSTkVMX1ZFUlNJT059PD0ke0xJTlVYX1ZFUlNJT05fQ09ERX0pLygwKS9n
-IgoJCQkJZWNobyAiL15bIAldKiMvcy8oJHtMSU5VWF9WRVJTSU9OX0NPREV9PCR7S0VSTkVMX1ZF
-UlNJT059KS8oMSkvZyIKCQkJCWVjaG8gIi9eWyAJXSojL3MvKCR7S0VSTkVMX1ZFUlNJT059PiR7
-TElOVVhfVkVSU0lPTl9DT0RFfSkvKDEpL2ciCgkJCWZpCgkJZG9uZSA+PiIke2Rlc3R9Ii8kaS5z
-ZWQuJCQKCQllY2hvICIvXlsgCV0qIy9zLygwKVsgCV0qfHxbIAldKi8vZyIgPj4iJHtkZXN0fSIv
-JGkuc2VkLiQkCgkJZWNobyAiL15bIAldKiMvcy9bIAldKnx8WyAJXSooMClbIAldKi8vZyIgPj4i
-JHtkZXN0fSIvJGkuc2VkLiQkCgkJZWNobyAiL15bIAldKiMvcy8oKDApWyAJXSomJlteKCldKihb
-XigpXSopKS8oMCkvZyIgPj4iJHtkZXN0fSIvJGkuc2VkLiQkCgkJZWNobyAiL15bIAldKiMvcy8o
-MSlbIAldKiYmWyAJXSovL2ciID4+IiR7ZGVzdH0iLyRpLnNlZC4kJAoJCWVjaG8gIi9eWyAJXSoj
-L3MvKCgxKVsgCV0qJiZbXigpXSooW14oKV0qKSkvKDEpL2ciID4+IiR7ZGVzdH0iLyRpLnNlZC4k
-JAoJCWVjaG8gIi9eWyAJXSojL3MvWyAJXSomJlsgCV0qKDEpWyAJXSovL2ciID4+IiR7ZGVzdH0i
-LyRpLnNlZC4kJAoJCWVjaG8gIi9eWyAJXSojL3MvKFsgCV0qKDApWyAJXSo/W146XSo6WyAJXSov
-KC9nIiA+PiIke2Rlc3R9Ii8kaS5zZWQuJCQKCQllY2hvICIvXlsgCV0qIy9zLyhbIAldKigxKVsg
-CV0qP1sgCV0qXChbXjpdKlwpWyAJXS4qKS8oXDEpL2ciID4+IiR7ZGVzdH0iLyRpLnNlZC4kJAoJ
-CWVjaG8gIi9eWyAJXSojL3MvKGRlZmluZWQoW0EtWjAtOV9dKl9ERUJVR19JTlNUUlVNRU5UX1tB
-LVowLTlfXSopKS8oMCkvZyIgPj4iJHtkZXN0fSIvJGkuc2VkLiQkCgkJZWNobyAiL15bIAldKiMv
-cy8oZGVmaW5lZChBQUNfRVhURU5ERURfVElNRU9VVCkpLygwKS9nIiA+PiIke2Rlc3R9Ii8kaS5z
-ZWQuJCQKCQllY2hvICIvXlsgCV0qIy9zLyhkZWZpbmVkKEZTQUNUTF9SRUdJU1RFUl9GSUJfU0VO
-RCkpLygwKS9nIiA+PiIke2Rlc3R9Ii8kaS5zZWQuJCQKCQllY2hvICJzL15cKFsgCV0qI1sgCV0q
-ZSpsKmlmWyAJXSgxKVwpWyAJXSp8fC4qL1wxLyIgPj4iJHtkZXN0fSIvJGkuc2VkLiQkCgkJZWNo
-byAicy9eXChbIAldKiNbIAldKmUqbCppZlsgCV1cKSgoMSlbIAldKnx8W14oXSopWyAJXSpcJC9c
-MSgxKS8iID4+IiR7ZGVzdH0iLyRpLnNlZC4kJAoJCWVjaG8gInMvXlwoWyAJXSojWyAJXSplKmwq
-aWZbIAldXCkoKDEpWyAJXSp8fFteKF0qKFteKV0qKVsgCV0qKVsgCV0qXCQvXDEoMSkvIiA+PiIk
-e2Rlc3R9Ii8kaS5zZWQuJCQKCQllY2hvICJzL15cKFsgCV0qI1sgCV0qZSpsKmlmWyAJXVwpKFte
-KF0qfHxbIAldKigxKSlbIAldKlwkL1wxKDEpLyIgPj4iJHtkZXN0fSIvJGkuc2VkLiQkCgkJZWNo
-byAicy9eXChbIAldKiNbIAldKmUqbCppZlsgCV1cKShbXihdKihbXildKilbIAldKnx8WyAJXSoo
-MSlbIAldKilbIAldKlwkL1wxKDEpLyIgPj4iJHtkZXN0fSIvJGkuc2VkLiQkCgkJZWNobyAicy9e
-XChbIAldKiNbIAldKmUqbCppZlsgCV0oMClcKVsgCV0qJiYuKi9cMS8iID4+IiR7ZGVzdH0iLyRp
-LnNlZC4kJAoJCWVjaG8gIi9eWyAJXSojL3MvKFwoKFswMV0pXCkpL1wxL2ciID4+IiR7ZGVzdH0i
-LyRpLnNlZC4kJAoJCWVjaG8gInMvXlwoWyAJXSojWyAJXSplKmwqaWZcKVsgCV0oMClbIAldKlwk
-L1wxIDAvIiA+PiIke2Rlc3R9Ii8kaS5zZWQuJCQKCQllY2hvICJzL15cKFsgCV0qI1sgCV0qZSps
-KmlmXClbIAldKDEpWyAJXSpcJC9cMSAxLyIgPj4iJHtkZXN0fSIvJGkuc2VkLiQkCgkJZWNobyAi
-cy9eXChbIAldKiNbIAldKmUqbCppZlwpWyAJXSgwKVsgCV0qXC9cKi4qXCpcL1sgCV0qL1wxIDAv
-IiA+PiIke2Rlc3R9Ii8kaS5zZWQuJCQKCQllY2hvICJzL15cKFsgCV0qI1sgCV0qZSpsKmlmXClb
-IAldKDEpWyAJXSpcL1wqLipcKlwvWyAJXSovXDEgMS8iID4+IiR7ZGVzdH0iLyRpLnNlZC4kJAoJ
-CWVjaG8gInMvXlwoWyAJXSojWyAJXSplKmwqaWZcKVsgCV0oMClbIAldKlwvXC8uKi9cMSAwLyIg
-Pj4iJHtkZXN0fSIvJGkuc2VkLiQkCgkJZWNobyAicy9eXChbIAldKiNbIAldKmUqbCppZlwpWyAJ
-XSgxKVsgCV0qXC9cLy4qL1wxIDEvIiA+PiIke2Rlc3R9Ii8kaS5zZWQuJCQKCQllY2hvICIvXlsg
-CV0qI1sgCV0qaW5jbHVkZVsgCV0qPGxpbnV4XC92ZXJzaW9uLmg+L2QiID4+IiR7ZGVzdH0iLyRp
-LnNlZC4kJAoJCSMgYWFjX3NwaW5fbG9jayBpcyBzcGVjaWFsIGluIGFhY2hiYS5jCgkJaWYgWyAi
-YWFjaGJhLmMiID09ICIkaSIgXSA7IHRoZW4KCQkJZWNobyAiL14jZGVmaW5lWyAJXSphYWNfc3Bp
-bl91Km4qbG9ja19pcnEvZCIgPj4iJHtkZXN0fSIvJGkuc2VkLiQkCgkJCWVjaG8gIi9eXC9cKlwq
-LyB7IiA+PiIke2Rlc3R9Ii8kaS5zZWQuJCQKCQkJZWNobyAiCU4iID4+IiR7ZGVzdH0iLyRpLnNl
-ZC4kJAoJCQllY2hvICIJL2xvY2tpbmcgcHJpbWl0aXZlcy8geyIgPj4iJHtkZXN0fSIvJGkuc2Vk
-LiQkCgkJCWVjaG8gIgkJTiIgPj4iJHtkZXN0fSIvJGkuc2VkLiQkCgkJCWVjaG8gIgkJTiIgPj4i
-JHtkZXN0fSIvJGkuc2VkLiQkCgkJCWVjaG8gIgkJcy9cL1wqLipcKlwvLy8iID4+IiR7ZGVzdH0i
-LyRpLnNlZC4kJAoJCQllY2hvICIJCS9eXCQvZCIgPj4iJHtkZXN0fSIvJGkuc2VkLiQkCgkJCWVj
-aG8gIgl9IiA+PiIke2Rlc3R9Ii8kaS5zZWQuJCQKCQkJZWNobyAifSIgPj4iJHtkZXN0fSIvJGku
-c2VkLiQkCgkJCSMgPj0gMi41LjAKCQkJaWYgWyAke0xJTlVYX1ZFUlNJT05fQ09ERX0gLWdlIDEz
-MjMzMiBdIDsgdGhlbgoJCQkJZWNobyAicy9eXChbXiNdLipcKWFhY19cKHNwaW5fdSpuKmxvY2tf
-aXJxW14oXSooXClcKFteLCldKlwpXChbLCldXCkvXDFcMlwzXDQvIiA+PiIke2Rlc3R9Ii8kaS5z
-ZWQuJCQKCQkJZWxzZQoJCQkJZWNobyAicy9eXChbXiNdLipcKWFhY19cKHNwaW5fdSpuKmxvY2tf
-aXJxW14oXSooXClcKFteLCldKlwpXChbLCldXCkvXDFcMlwmaW9fcmVxdWVzdF9sb2NrXDQvIiA+
-PiIke2Rlc3R9Ii8kaS5zZWQuJCQKCQkJZmkKCQlmaQoJCWVjaG8gIiNeLy8jZCIgPj4iJHtkZXN0
-fSIvJGkuc2VkLiQkCgkJc2VkIC1mICIke2Rlc3R9Ii8kaS5zZWQuJCQgIiR7ZGVzdH0iLyRpLiQk
-IHwgYXdrICdCRUdJTiB7CgkJCW5lc3Q9LTEKCQl9CgkJL15bIAldKiNbIAldKmlmWyAJXSowWyAJ
-XSokLyB7CgkJCWlmICggbmVzdCA+PSAwICkgewoJCQkJaWYgKCggc3RhdGVbbmVzdF0gPT0gMCAp
-IHx8ICggc3RhdGVbbmVzdF0gPT0gLTIgKSkgewoJCQkJCXN0YXRlWysrbmVzdF0gPSAtMgoJCQkJ
-CW5leHQKCQkJCX0KCQkJfQoJCQlzdGF0ZVsrK25lc3RdPTAKCQkJbmV4dAoJCX0KCQkvXlsgCV0q
-I1sgCV0qaWZbIAldKjFbIAldKiQvIHsKCQkJaWYgKCBuZXN0ID49IDAgKSB7CgkJCQlpZiAoKCBz
-dGF0ZVtuZXN0XSA9PSAwICkgfHwgKCBzdGF0ZVtuZXN0XSA9PSAtMiApKSB7CgkJCQkJc3RhdGVb
-KytuZXN0XSA9IC0yCgkJCQkJbmV4dAoJCQkJfQoJCQl9CgkJCXN0YXRlWysrbmVzdF09MQoJCQlu
-ZXh0CgkJfQoJCS9eWyAJXSojWyAJXSppZi8gewoJCQlpZiAoIG5lc3QgPj0gMCApIHsKCQkJCWlm
-ICgoIHN0YXRlW25lc3RdID09IDAgKSB8fCAoIHN0YXRlW25lc3RdID09IC0yICkpIHsKCQkJCQlz
-dGF0ZVsrK25lc3RdID0gLTIKCQkJCQluZXh0CgkJCQl9CgkJCX0KCQkJc3RhdGVbKytuZXN0XT0t
-MQoJCQlwcmludAoJCQluZXh0CgkJfQoJCS9eWyAJXSojWyAJXSplbGlmWyAJXSowWyAJXSokLyB7
-CgkJCWlmICggc3RhdGVbbmVzdF0gPT0gMSApIHsKCQkJCXN0YXRlW25lc3RdPS0yCgkJCX0gZWxz
-ZSBpZiAoIHN0YXRlW25lc3RdID09IC0xICkgewoJCQkJcHJpbnQKCQkJfSBlbHNlIGlmICggc3Rh
-dGVbbmVzdF0gIT0gLTIgKSB7CgkJCQlzdGF0ZVtuZXN0XT0wCgkJCX0KCQkJbmV4dAoJCX0KCQkv
-XlsgCV0qI1sgCV0qZWxpZlsgCV0qMVsgCV0qJC8gewoJCQlpZiAoIHN0YXRlW25lc3RdID09IDEg
-KSB7CgkJCQlzdGF0ZVtuZXN0XT0tMgoJCQl9IGVsc2UgaWYgKCBzdGF0ZVtuZXN0XSA9PSAtMSAp
-IHsKCQkJCXByaW50CgkJCX0gZWxzZSBpZiAoIHN0YXRlW25lc3RdICE9IC0yICkgewoJCQkJc3Rh
-dGVbbmVzdF09MQoJCQl9CgkJCW5leHQKCQl9CgkJL15bIAldKiNbIAldKmVsaWYvIHsKCQkJaWYg
-KCBzdGF0ZVtuZXN0XSA9PSAxICkgewoJCQkJc3RhdGVbbmVzdF09LTIKCQkJfSBlbHNlIGlmICgg
-c3RhdGVbbmVzdF0gPT0gMCApIHsKCQkJCXN0YXRlW25lc3RdPS0xCgkJCQlwcmludCBzdWIoImVs
-aWYiLCJpZiIpCgkJCX0gZWxzZSBpZiAoIHN0YXRlW25lc3RdID09IC0xICkgewoJCQkJcHJpbnQK
-CQkJfQoJCQluZXh0CgkJfQoJCS9eWyAJXSojWyAJXSplbHNlWyAJXSokLyB7CgkJCWlmICggc3Rh
-dGVbbmVzdF0gPT0gMSApIHsKCQkJCXN0YXRlW25lc3RdPS0yCgkJCX0gZWxzZSBpZiAoIHN0YXRl
-W25lc3RdID09IDAgKSB7CgkJCQlzdGF0ZVtuZXN0XT0xCgkJCX0gZWxzZSBpZiAoIHN0YXRlW25l
-c3RdID09IC0xICkgewoJCQkJcHJpbnQKCQkJfQoJCQluZXh0CgkJfQoJCS9eWyAJXSojWyAJXSpl
-bmRpZi8gewoJCQlpZiAoIHN0YXRlW25lc3RdID09IC0xICkgewoJCQkJcHJpbnQKCQkJfQoJCQkt
-LW5lc3QKCQkJbmV4dAoJCX0KCQkgewoJCQlpZiAoICggbmVzdCA8IDAgKSB8fCAoIHN0YXRlW25l
-c3RdID09IDEgKSB8fCAoIHN0YXRlW25lc3RdID09IC0xICkgKSB7CgkJCQlwcmludAoJCQl9CgkJ
-fScKCQlybSAtZiAiJHtkZXN0fSIvJGkuc2VkLiQkICIke2Rlc3R9Ii8kaS4kJAoJZmkgPiIke2Rl
-c3R9Ii8kaQpkb25lCmNhc2UgIiR7ZGVzdGluYXRpb259IiBpbgoqLnRnenwqLnRhci5neikKCSgg
-Y2QgL3RtcC9yZWxlYXNlJCQgOyB0YXIgY2YgLSAke1BST0RVQ1R9IHwgZ3ppcCAtOSA+IiR7ZGVz
-dGluYXRpb259IiApCglybSAtcmYgL3RtcC9yZWxlYXNlJCQgOzsKKi50YnoyfCoudGFyLmJ6MikK
-CSggY2QgL3RtcC9yZWxlYXNlJCQgOyB0YXIgY2YgLSAke1BST0RVQ1R9IHwgYnppcDIgPiIke2Rl
-c3RpbmF0aW9ufSIgKQoJcm0gLXJmIC90bXAvcmVsZWFzZSQkIDs7CiopCmVzYWMK
-
-------_=_NextPart_001_01C43E6B.FCB13650--
+--- linux-2.4.27-pre3-full/drivers/scsi/ips.h.old	2004-05-19 21:40:58.000000000 +0200
++++ linux-2.4.27-pre3-full/drivers/scsi/ips.h	2004-05-19 21:42:01.000000000 +0200
+@@ -95,11 +95,14 @@
+       #define scsi_set_pci_device(sh,dev) (0)
+    #endif
+ 
+-   #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
++   #if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,23)
+       typedef void irqreturn_t;
+       #define IRQ_NONE
+       #define IRQ_HANDLED
+       #define IRQ_RETVAL(x)
++   #endif
++
++   #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+       #define IPS_REGISTER_HOSTS(SHT)      scsi_register_module(MODULE_SCSI_HA,SHT)
+       #define IPS_UNREGISTER_HOSTS(SHT)    scsi_unregister_module(MODULE_SCSI_HA,SHT)
+       #define IPS_ADD_HOST(shost,device)
