@@ -1,73 +1,48 @@
-From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: [PATCH RFC 1/3] add fc transport events
-Date: 14 Jun 2004 10:28:53 -0400
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH 2/3] scsi_forget_host - scsi_debug usage
+Date: Mon, 14 Jun 2004 08:23:39 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1087223335.2118.18.camel@mulgrave>
-References: <40B597F5.2030501@cs.wisc.edu>	<1087088793.1730.19.camel@mulgrave>
-	<40CCBCCA.1040302@us.ibm.com> <1087166778.10940.23.camel@mulgrave>
-	<40CD0A27.5070504@torque.net>
+Message-ID: <20040614152339.GA3826@us.ibm.com>
+References: <20040612041930.GA21105@us.ibm.com> <20040612042106.GB21105@us.ibm.com> <20040612042232.GC21105@us.ibm.com> <20040614080632.GA7114@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat1.steeleye.com ([65.114.3.130]:34182 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263147AbUFNO3g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jun 2004 10:29:36 -0400
-In-Reply-To: <40CD0A27.5070504@torque.net>
+Received: from e34.co.us.ibm.com ([32.97.110.132]:44278 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S263154AbUFNPXl
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Jun 2004 11:23:41 -0400
+Content-Disposition: inline
+In-Reply-To: <20040614080632.GA7114@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Mike Christie <mikenc@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, 2004-06-13 at 22:15, Douglas Gilbert wrote:
-> There are 4 categories of "devices" that we might try
-> to address:
->    a) host (PCI side and SCSI transport side)
->    b) transport service delivery subsystem
->    c) target device server
->    d) logical unit
-
-a) is really two (which we currently have represented) with the bus side
-device and the host device.
-
-b,c and d are all scsi devices.
-
-> Only a, b + c are associated with the transport in question.
-> In category b could be FC switches and SAS expanders. In
-> category d could be sATA, SPI or SAS disks behind a FC
-> target. So the logical unit doesn't necessarily belong to
-> the same transport as the initiator (especially in iSCSI)
-> as noted above by James.
-
-The idea of the transport class is that it be invisible to the
-mid-layer.  The services it provides are either to the LLD or to the
-user (via sysfs).
-
-> So the end point of the transport is category c and according
-> to SPC-3 a target device server is addressed via "well known"
-> logical units (see section 8). [The standard requirement for a
-> device server to respond to lun==0 for INQUIRY and REPORT LUNS
-> is a related hack that allows a SCSI disk to double as a
-> target device server and a lu.]
+Christoph Hellwig [hch@infradead.org] wrote:
+> On Fri, Jun 11, 2004 at 09:22:32PM -0700, Mike Anderson wrote:
+> > DESC
+> > scsi_forget_host - scsi_debug usage
+> > 
+> > Use the export scsi_forget_host interface to remove child scsi devices
+> > from the scsi_host prior to removal.
 > 
-> Is our transport class design flexible enough for this level
-> of complexity?
+> Moving this into drivers sounds like a rather bad idea.  But with our
+> refcounting in place I wonder whether moving scsi_forget_host first in
+> scsi_remove_host wouldn't simply work.
 
-Well, in the SAM 4 level system:
+Why is this a bad idea? We allow the LLDD to control scanning through
+scsi_scan_host. We also have LLDDs calling scsi_remove_device directly
+which scsi_forget_host uses.
 
-1. Device specific command sets
-2. Shared command sets (all device types)
-3. SCSI transport protocols
-4. Interconnects
+The issue I was trying to address is there are callers that want to call
+scsi_remove_host during unexpected disconnect situations where they want
+to reduce more IO being sent to the LLDDs queuecommand. It should be the
+case that if a LLDD can handle unexpected disconnect that they already
+have code in there queuecommand to stop the flow of IO in these cases so
+your suggested change to scsi_remove_host may not negatively effect
+LLDDs.
 
-Our ULDs do 1, the mid-layer does 2 and I'm hoping to expand the
-transport classes into 3 and 4.
-
-Enumeration really isn't addressed by SAM, but we're already moving
-towards having enumeration done from user level (i.e. removing simple
-scanning from the mid-layer), so that should be easily able to do
-complex topology probes.
-
-James
-
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
