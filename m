@@ -1,45 +1,33 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: [PATCH] sd.c fixes applied incorectly to 2.4.19-preXX
-Date: Mon, 15 Apr 2002 15:13:37 -0600
+Date: Tue, 16 Apr 2002 07:58:20 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200204152113.g3FLDb982996@aslan.scsiguy.com>
-References: <200204152051.g3FKpOa25340@localhost.localdomain>
+Message-ID: <20020416055820.GF12608@suse.de>
+References: <200204152040.g3FKed982111@aslan.scsiguy.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: Your message of "Mon, 15 Apr 2002 15:51:24 CDT."
-             <200204152051.g3FKpOa25340@localhost.localdomain>
+Content-Disposition: inline
+In-Reply-To: <200204152040.g3FKed982111@aslan.scsiguy.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Cc: Marcelo Tosatti <marcelo@conectiva.com.br>, linux-scsi@vger.kernel.org, Alan Cox <alan@redhat.com>
 
->gibbs@scsiguy.com said:
->> Looking at the latest version of your tree via bitkeeper, it seems
->> that the wrong patch has been applied to sd.c.  In its current state,
->> the disk driver will fail to act upon any sense data returned by the
->> low level controller.  The following patch restores correct behavior. 
->
->Actually, this should be using the scsi_sense_valid() function call in 
->scsi_error.c, shouldn't it?  Especially since the criterion for valid sense is
+On Mon, Apr 15 2002, Justin T. Gibbs wrote:
+> Marcelo,
 > 
->merely that bit 7 be set with the error code (which can be either 0x70 or 
->0x71) in bits 0-6.
+> Looking at the latest version of your tree via bitkeeper, it
+> seems that the wrong patch has been applied to sd.c.  In its
+> current state, the disk driver will fail to act upon any sense
+> data returned by the low level controller.  The following patch
+> restores correct behavior.
 
-Well, if we really wanted to fix it correctly:
+Justin,
 
-1) All of the HBA drivers would set DRIVER_SENSE when sense data
-   is available.  Right now many do set it, but because some drivers
-   do not, the mid-layer doesn't trust it.
+Noticed this myself the other day... I don't think they were applied
+incorrectly, your 2.4.18 patch is buggy while your 2.4.17 version is
+quite ok.
 
-2) The mid-layer would look at DRIVER_SENSE before ever looking
-   in the sense buffer.  Currently, and HBA driver has to zero out
-   the first byte of the sense buffer to ensure the peripheral drivers
-   don't believe that sense is available when it really isn't (stale data
-   from previous sense retrieval).
+-- 
+Jens Axboe
 
-3) The peripheral drivers would understand how to deal with deferred errors.
-
-The check against 0xF0 is currently "correct" because the code in sd.c's
-rw_intr doesn't know how to deal with anything other than a current
-error (0x70 + valid bit).
-
---
-Justin
