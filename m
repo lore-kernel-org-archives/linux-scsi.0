@@ -1,74 +1,62 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: BUG: CD driver sends command during host removal
-Date: Wed, 29 Sep 2004 14:58:43 -0400
+From: Neil Horman <nhorman@redhat.com>
+Subject: Re: patch so cciss stats are collected in /proc/stat
+Date: Wed, 29 Sep 2004 15:08:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <415B05E3.10300@adaptec.com>
-References: <Pine.LNX.4.44L0.0409291239250.1167-100000@ida.rowland.org> 	<415AF8A6.2080705@adaptec.com> <1096481358.2123.74.camel@mulgrave>
+Message-ID: <415B0841.8010009@redhat.com>
+References: <20040929161345.GB22308@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:47784 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S266498AbUI2S7A (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:18120 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S267360AbUI2TJf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Sep 2004 14:59:00 -0400
-In-Reply-To: <1096481358.2123.74.camel@mulgrave>
+	Wed, 29 Sep 2004 15:09:35 -0400
+In-Reply-To: <20040929161345.GB22308@beardog.cca.cpqcorp.net>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>, Mohammed Sameer <uniball@gmx.net>, USB users list <linux-usb-users@lists.sourceforge.net>
+To: mike.miller@hp.com, mikem@beardog.cca.cpqcorp.net
+Cc: marcelo.tosatti@cyclades.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, brian.b@hp.com
 
-James Bottomley wrote:
-> On Wed, 2004-09-29 at 14:02, Luben Tuikov wrote:
+mike.miller@hp.com wrote:
+> Currently cciss statistics are not collected in /proc/stat. This patch
+> bumps DK_MAX_MAJOR to 111 to fix that. This has been a common complaint
+> by customers wishing to gather info about cciss devices.
+> Please consider this for inclusion. Applies to 2.4.28-pre3.
 > 
->>>According to Documentation/scsi/scsi_mid_low_api.txt, the only possible 
->>>error returns are SCSI_MLQUEUE_DEVICE_BUSY and SCSI_MLQUEUE_HOST_BUSY.  
->>>Neither is appropriate; should the second one be returned?
->>
->>I believe internally SCSI Core returns DID_ERROR.
+> Thanks,
+> mikem
+> -------------------------------------------------------------------------------
 > 
-> 
-> For a device that no-longer exists, DID_NO_CONNECT is probably the most
-> appropriately descriptive.
+> diff -burNp lx2428-pre1.orig/include/linux/kernel_stat.h lx2428-pre1/include/linux/kernel_stat.h
+> --- lx2428-pre1.orig/include/linux/kernel_stat.h	2004-08-23 15:41:43.640300000 -0500
+> +++ lx2428-pre1/include/linux/kernel_stat.h	2004-08-23 15:43:07.097613064 -0500
+> @@ -12,7 +12,7 @@
+>   * used by rstatd/perfmeter
+>   */
+>  
+> -#define DK_MAX_MAJOR 16
+> +#define DK_MAX_MAJOR 111
+>  #define DK_MAX_DISK 16
+>  
+>  struct kernel_stat {
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+The answer to this is to use the latest sysstat tools.  the latest 
+version of iostat, sar, etc draw information out of /proc/partitions 
+rather than out of /proc/stat.  Or are you using some other home rolled 
+tool in this case?
 
-Does this mean that scsi_device_cancel() should set the result
-code to DID_NO_CONNECT either?
+Neil
 
->>>>>This would involve a race, because it's possible for
->>>>>queuecommand to accept a command and then scsi_remove_host() to be called
->>>>>before the command is carried out.
-> 
-> 
-> Correct, scsi_remove_host() is asynchronous ... you can get requests
-> after calling it while the queue is halting ... you must error these.
-> 
-> 
->>>If the command belongs to the LLDD, why does scsi_remove_host do the
->>>following:
->>>
->>>	calls scsi_host_cancel,
->>>	which calls scsi_device_cancel_cb for each device,
->>>	which calls scsi_device_cancel,
->>>	which calls scsi_finish_command for each active command,
->>>	which passes the command back to the upper layer
->>>
->>>Either there's a bug in the host removal sequence, or else the LLDD 
->>>doesn't own any requests once scsi_remove_host has been called.
-> 
-> 
-> Right.  scsi_remove_host tells the mid-layer that it's OK to trash all
-> inflight commands because you removed all their users before calling
-> it.  It also tells us that you won't accept any future commands for this
-> host (because you'll error any attempt in queuecommand).
-
-Do you mean to say that when scsi_remove_host() is called,
-the LLDD must no own any commands?  This is good, it means
-that the LLDD plugged queuecommand(), did "recovery" of
-pending commands and is ready for slave_destroy().
-
-But does this also mean that scsi_device_cancel() (cancel_pending_io)
-is unnecessary in the scsi_remove_host() path as there's no
-outstanding IO to the host?
-
-	Luben
-
-
+-- 
+/***************************************************
+  *Neil Horman
+  *Software Engineer
+  *Red Hat, Inc.
+  *nhorman@redhat.com
+  *gpg keyid: 1024D / 0x92A74FA1
+  *http://pgp.mit.edu
+  ***************************************************/
