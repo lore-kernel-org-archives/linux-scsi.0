@@ -1,59 +1,69 @@
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-Subject: 2.6.1: media change check fails for busy unplugged device
-Date: Sun, 18 Jan 2004 21:41:12 +0300
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <200401182141.12468.arvidjaar@mail.ru>
+From: Craig Bradney <cbradney@zip.com.au>
+Subject: Re: Serial ATA (SATA) for Linux status report
+Date: Sun, 18 Jan 2004 21:33:34 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <1074458014.31271.20.camel@athlonxp.bradney.info>
+References: <20031203204445.GA26987@gtf.org>
+	 <200401181432.55736.adasi@kernel.pl>  <400AC9BA.1020103@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hueytecuilhuitl.mtu.ru ([195.34.32.123]:13835 "EHLO
-	hueymiccailhuitl.mtu.ru") by vger.kernel.org with ESMTP
-	id S263228AbUARTMQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Jan 2004 14:12:16 -0500
-Content-Disposition: inline
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-868gRDnrhTKLd+MqRA6Q"
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <400AC9BA.1020103@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Witold Krecicki <adasi@kernel.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-If we unplug busy device (consider mounted USB stick) media change check 
-always returns true (no media change happened). It happens because
 
-- device state is set to SDEV_DEL and scsi_prep_fn silently kills any request 
-including TEST_UNIT_READY sent by sd_media_changed without propagating any 
-information back to caller
+--=-868gRDnrhTKLd+MqRA6Q
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: quoted-printable
 
-- sdev->online still remains TRUE
+On Sun, 2004-01-18 at 19:00, Jeff Garzik wrote:
+> Witold Krecicki wrote:
+> > Dnia Wednesday 03 of December 2003 21:44, Jeff Garzik napisa=B3:
+> >=20
+> >>Editor's preface:  This is clearly a first draft, only covering the
+> >>basics.  In order for this document to be effective, I request that
+> >>users and developers send me (or post) their SATA driver questions and
+> >>issues.  I will do my best to address them here.
+> >>
+> >>
+> >>Serial ATA (SATA) for Linux
+> >>status report
+> >>Dec 3, 2003
+> >=20
+> > What about SMART capabilities? with sii3112 I had it, but with libata I=
+ cannot=20
+> > get any informations :/
+>=20
+>=20
+> Currently do not support random userland programs throwing random ATA=20
+> commands at us...  so no SMART support at present :)  It's coming, though=
+.
 
-so nothing ever tells sd_media_changed that device is gone.
 
-this effectively prevents supermount from noticing that it needs remount 
-subfs.
+On the note of SATA interfaced drives, is there a way to power them
+down?=20
 
-What is the right place to catch those deleted device? For now I add this as 
-part of supermount patch, but it looks too ugly (and in the wrong place):
+I have recently attached my spare PATA drive with a converter and use it
+just for backups (mount, rsync, umount). I have these configured through
+SCSI (/dev/sda) with the 3112 2.6.1 support. hdparm comlains the drive
+is SCSI... is there a similar command to power it down?
 
---- linux-2.6.1/drivers/scsi/sd.c       29 Dec 2003 17:20:12 -0000
-+++ linux-2.6.1/drivers/scsi/sd.c       18 Jan 2004 18:20:54 -0000
-@@ -620,6 +622,16 @@ static int sd_media_changed(struct gendi
-                 goto not_present;
+thanks
+Craig
 
-        /*
-+        * FIXME HACK
-+        * busy device that is unplugged is SDEV_DEL but online and ioctl
-+        * does not return any error. Oh well, it is likely layering
-+        * violation but for now it enables media checks for supermount
-+        */
-+
-+       if (sdp->sdev_state == SDEV_DEL)
-+               goto not_present;
-+
-+       /*
-         * For removable scsi disk we have to recognise the presence
-         * of a disk in the drive. This is kept in the struct scsi_disk
-         * struct and tested at open !  Daniel Roche (dan@lectra.fr)
- 
-TIA
+--=-868gRDnrhTKLd+MqRA6Q
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--andrey
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+
+iD8DBQBACu2ei+pIEYrr7mQRAu4/AJ9QApNr/BrkD3FD74ntH9ywozKC9gCeLZGF
+AMh9CIptcMcikyuMAPPHCZw=
+=Riov
+-----END PGP SIGNATURE-----
+
+--=-868gRDnrhTKLd+MqRA6Q--
 
