@@ -1,52 +1,107 @@
-From: Dave C Boutcher <sleddog@us.ibm.com>
-Subject: Re: [patch 2/4] ibmvscsi.c: limit size of I/O requests
-Date: Tue, 30 Nov 2004 09:29:16 -0600
-Message-ID: <20041130152916.GA7639@cs.umn.edu>
-References: <20041129203107.GB31011@cs.umn.edu> <20041130075457.GD10450@suse.de>
-Reply-To: boutcher@cs.umn.edu
+From: "Richard F. Rebel" <rrebel@whenu.com>
+Subject: Boot order of LSI MPT Fusion devices controllable?
+Date: Tue, 30 Nov 2004 12:20:24 -0500
+Message-ID: <1101835224.1779.1040.camel@rebel.corp.whenu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-M2vG0p2DEtGgu+Mks5dh"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.cs.umn.edu ([128.101.35.202]:51597 "EHLO mail.cs.umn.edu")
-	by vger.kernel.org with ESMTP id S262124AbUK3P3Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Nov 2004 10:29:24 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by augustus.cs.umn.edu (Postfix) with ESMTP id 5213E5C385
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2004 09:29:20 -0600 (CST)
-Received: from mail.cs.umn.edu ([127.0.0.1])
- by localhost (augustus [127.0.0.1]) (amavisd-new, port 10024) with LMTP
- id 03400-01 for <linux-scsi@vger.kernel.org>;
- Tue, 30 Nov 2004 09:29:18 -0600 (CST)
-Received: from tera.cs.umn.edu (tera.cs.umn.edu [128.101.35.163])
-	by mail.cs.umn.edu (Postfix) with ESMTP id 9AF915C37C
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2004 09:29:16 -0600 (CST)
-Content-Disposition: inline
-In-Reply-To: <20041130075457.GD10450@suse.de>
+Received: from garibaldi.swishmail.com ([209.10.110.70]:54030 "HELO
+	garibaldi.swishmail.com") by vger.kernel.org with SMTP
+	id S262206AbUK3RYX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Nov 2004 12:24:23 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-On Tue, Nov 30, 2004 at 08:54:58AM +0100, Jens Axboe wrote:
-> On Mon, Nov 29 2004, Dave C Boutcher wrote:
-> > Description: Limit the size of I/O requests sent by the 
-> > ibmvscsi adapter.  With better I/O scheduling (and thus larger
-> > requests) we were breaking some servers.
-> 
-> Nack, why can't you use /dev/block/xxx/queue/max_sectors_kb to control
-> this?
 
-The basic function of this patch is to set host->max_sectors based
-on information from the SCSI target.
+--=-M2vG0p2DEtGgu+Mks5dh
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-There is a default value because two of the existing target implementations
-(there are three) don't set the value.
 
-I confess to making the default value a module parameter because I
-took a SWAG at the correct value.  I COULD remove the module
-parameter part of this patch, though if someone actually cares enough
-about performance to tweak it, modprobe.conf seems like a nice place to
-set it.
+Hello,
 
--- 
-Dave Boutcher
+I am running mdk 10.0 with kernel 2.6.3-16 out of box on a dual opteron
+250 system.  The system has a LSI logic U320 controller with 7 internal
+disks on two channels.
+
+We are upgrading our system by adding an identical server and a small
+SAN so we can have an active passive failover cluster for MySQL.
+
+I purchased quad port 2gbps fc cards from LSI as I have been very happy
+with the performance of the SCSI cards we already own.  Upon install,
+dmesg shows:
+
+Fusion MPT base driver 3.00.03
+Copyright (c) 1999-2003 LSI Logic Corporation
+mptbase: Initiating ioc0 bringup
+ioc0: FC929X: Capabilities=3D{Initiator,Target,LAN}
+mptbase: Initiating ioc1 bringup
+ioc1: FC929X: Capabilities=3D{Initiator,Target,LAN}
+mptbase: Initiating ioc2 bringup
+ioc2: FC929X: Capabilities=3D{Initiator,Target,LAN}
+mptbase: Initiating ioc3 bringup
+ioc3: FC929X: Capabilities=3D{Initiator,Target,LAN}
+mptbase: Initiating ioc4 bringup
+ioc4: 53C1030: Capabilities=3D{Initiator}
+mptbase: Initiating ioc5 bringup
+ioc5: 53C1030: Capabilities=3D{Initiator}
+SCSI subsystem initialized
+Fusion MPT SCSI Host driver 3.00.03
+scsi0 : ioc0: LSIFC929X, FwRev=3D01010b00h, Ports=3D1, MaxQ=3D1023, IRQ=3D2=
+5
+scsi1 : ioc1: LSIFC929X, FwRev=3D01010b00h, Ports=3D1, MaxQ=3D1023, IRQ=3D2=
+6
+scsi2 : ioc2: LSIFC929X, FwRev=3D01010b00h, Ports=3D1, MaxQ=3D1023, IRQ=3D2=
+7
+scsi3 : ioc3: LSIFC929X, FwRev=3D01010b00h, Ports=3D1, MaxQ=3D1023, IRQ=3D2=
+4
+scsi4 : ioc4: LSI53C1030, FwRev=3D01013d00h, Ports=3D1, MaxQ=3D255, IRQ=3D2=
+9
+  Vendor: SEAGATE   Model: ST336753LC        Rev: 0006
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+  Vendor: SEAGATE   Model: ST336753LC        Rev: 0006
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+  Vendor: SEAGATE   Model: ST336753LC        Rev: 0006
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+  Vendor: SEAGATE   Model: ST336753LC        Rev: 0006
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+scsi5 : ioc5: LSI53C1030, FwRev=3D01013d00h, Ports=3D1, MaxQ=3D255, IRQ=3D3=
+0
+  Vendor: SEAGATE   Model: ST336753LC        Rev: 0006
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+  Vendor: SEAGATE   Model: ST336753LC        Rev: 0006
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+  Vendor: SEAGATE   Model: ST336753LC        Rev: 0006
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+
+Well, the difference is that the fiber channel card seems to boot first,
+and thus reorders the scsi bus.  If I attach the fiber channel cables to
+the switch (making all of our storage visible) and re-probe the scsi bus
+by hand using the /dev interface, access to the SAN is fine etc.  Upon
+reboot with the fc connected, my system panics because now the root
+drive is no longer where it thinks it should be (sda is now a device on
+the fiber channel switch fabric).
+
+Is there a way to control this process or to mitigate the problem?  I
+really need the system to boot properly off of local disk whether or not
+the fc is connected or the devices available.
+
+Thanks,
+
+Richard F. Rebel
+
+--=-M2vG0p2DEtGgu+Mks5dh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQBBrKvYx1ZaISfnBu0RAmEAAJ9WBo9vEmXMOYR6KkMVbFviCz2E5QCffx/5
+FerBPERUVL5rxn1dM+HaQkY=
+=kjha
+-----END PGP SIGNATURE-----
+
+--=-M2vG0p2DEtGgu+Mks5dh--
+
