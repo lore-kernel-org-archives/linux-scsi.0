@@ -1,56 +1,46 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Proposed changes to generic blk tag for use in SCSI (1/3)
-Date: Tue, 11 Jun 2002 07:50:14 +0200
+From: Martin Dalecki <dalecki@evision-ventures.com>
+Subject: Re: fdisk on scsi disks in 2.5.21
+Date: Tue, 11 Jun 2002 08:28:35 +0200
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020611055014.GA1117@suse.de>
-References: <200206110246.g5B2kia06902@localhost.localdomain>
+Message-ID: <ae45fr$s6u$2@main.gmane.org>
+References: <3D054432.88C5BE59@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200206110246.g5B2kia06902@localhost.localdomain>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Jun 10 2002, James Bottomley wrote:
-> The attached is what I needed in the generic block layer to get the SCSI 
-> subsystem using it for Tag Command Queueing.
+Douglas Gilbert wrote:
+> $ fdisk -l /dev/sda
 > 
-> The changes are basically
+> Disk /dev/sda: 1 heads, 35843670 sectors, 1 cylinders
+> Units = cylinders of 35843670 * 512 bytes
 > 
-> 1) I need a function to find the tagged request given the queue and the tag, 
-> which I've added as a function in the block layer
+>    Device Boot    Start       End    Blocks   Id  System
+> /dev/sda1   *         1         1     32098+  83  Linux
+> Partition 1 has different physical/logical beginnings (non-Linux?):
+>      phys=(0, 1, 1) logical=(0, 0, 64)
+> Partition 1 has different physical/logical endings:
+>      phys=(3, 254, 63) logical=(0, 0, 64260)
+> Partition 1 does not end on cylinder boundary:
+>      phys=(3, 254, 63) should be (3, 0, 35843670)
+> /dev/sda2             1         1    168682+  83  Linux
+> Partition 2 has different physical/logical beginnings (non-Linux?):
+>      phys=(4, 0, 1) logical=(0, 0, 64261)
+> Partition 2 has different physical/logical endings:
+>      phys=(24, 254, 63) logical=(0, 0, 401625)
+> Partition 2 does not end on cylinder boundary:
+>      phys=(24, 254, 63) should be (24, 0, 35843670)
+> ....
+> 
+> One head, one cylinder and lots of sectors??
+> I put some debug in drivers/scsi/scsicam.c and it doesn't
+> seem like it was called.
+> 
+> Is my fdisk (from RH 7.2) too old?
 
-Ehm it's already there, one could argue that it's pretty core
-functionality for this type of stuff :-). It's called
-blk_queue_get_tag(q, tag), and it's in blkdev.h. However, I agree that
-we should just move it into ll_rw_blk.c. That gets better documented as
-well. Could you redo that part?
-
-> 2) The SCSI queue will stall if it gets an untagged request in the stream, so 
-> once tagged queueing is enabled, all commands (including SPECIALS) must be 
-> tagged.  I altered the check in blk_queue_start_tag to permit this.
-
-I completely agree with this, blk_queue_start_tag() should not need to
-know about these things so just checking if the request is already
-marked tagged is fine with me. But please make that a warning, like
-
-	if (rq->flags & REQ_QUEUED) {
-		printk("blk_queue_start_tag: rq already tagged\n");
-		return 1;
-	}
-
-Also, you need to fix drivers/ide/tcq.c to make sure it doesn't call
-blk_queue_start_tag() for non REQ_CMD requests. Ah wait, I'll just
-change that. And also _please_ fix the comment about REQ_CMD and not
-just the code, it's doesn't stand anymore.
-
-> This is part of a set of three patches which provide a sample implementation 
-> of a SCSI driver using the generic TCQ code.
-
-Cool! Looking forward to reviewing it later today.
-
--- 
-Jens Axboe
+No please: Just please don't look at ide-scsi in 2.5.21
+without applying IDE  patch number 86.
 
