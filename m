@@ -1,13 +1,14 @@
-From: Andi Kleen <ak@suse.de>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [PATCH] Fix selection of command serial numbers and pids
-Date: Sun, 6 Feb 2005 20:51:41 +0100
-Message-ID: <20050206195141.GA24068@wotan.suse.de>
+Date: Sun, 6 Feb 2005 20:07:58 +0000
+Message-ID: <20050206200758.GU20386@parcelfarce.linux.theplanet.co.uk>
 References: <20050206194123.GF18245@wotan.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Received: from news.suse.de ([195.135.220.2]:4317 "EHLO Cantor.suse.de")
-	by vger.kernel.org with ESMTP id S261295AbVBFTvm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Feb 2005 14:51:42 -0500
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:30602 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261308AbVBFUIB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 6 Feb 2005 15:08:01 -0500
 Content-Disposition: inline
 In-Reply-To: <20050206194123.GF18245@wotan.suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -15,139 +16,56 @@ List-Id: linux-scsi@vger.kernel.org
 To: Andi Kleen <ak@suse.de>
 Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
+On Sun, Feb 06, 2005 at 08:41:23PM +0100, Andi Kleen wrote:
+> This patch fixes one of Christroph's fixme comments in the SCSI midlayer.
 
-[...]
+If we're going to start fixing problems that Christoph noted, this one seems
+obvious to me:
 
-Willy pointed out a bogus hunk in the original patch that should not
-have been there.  Retransmit with that removed. Also mark scsi_cmnd_serial
-inline.
+The static device_request_lock doesn't protect anything; remove it.
 
-This patch fixes one of Christroph's fixme comments in the SCSI midlayer.
+Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 
-The selection of the serial number and pid for commands was done
-by a global variable and not SMP safe. The race was not very
-serious because it was only used for error handling, but it's
-still better to fix it.
-
-I audited all the drivers and none seemed to use them 
-for anything interesting, so I just made it a per host counter
-protected by host lock.
-
-(in fact they could be probably removed because they only see
-to be used as a flag in exception handling and for debugging.
-The patch would be unfortunately quite big because a lot
-of driver printks use them) 
-
-This should be slight faster on SMP too because the cache line of
-the counter won't bounce around the machine. 
-
-
-diff -u linux-2.6.11rc3/drivers/scsi/scsi.c-SCSISER linux-2.6.11rc3/drivers/scsi/scsi.c
---- linux-2.6.11rc3/drivers/scsi/scsi.c-SCSISER	2005-02-04 09:13:14.000000000 +0100
-+++ linux-2.6.11rc3/drivers/scsi/scsi.c	2005-02-05 12:02:50.000000000 +0100
-@@ -88,12 +88,6 @@
- 				COMMAND_SIZE((cmd)->cmnd[0]) : (cmd)->cmd_len)
- 
- /*
-- * Data declarations.
-- */
--unsigned long scsi_pid;
--static unsigned long serial_number;
--
--/*
-  * Note - the initial logging level can be set here to log events at boot time.
-  * After the system is up, you may enable logging via the /proc interface.
+--- linux-2.6/drivers/scsi/scsi.c	2005-01-23 21:46:55.000000000 -0500
++++ scsi-2.6/drivers/scsi/scsi.c	2005-02-06 14:57:07.000000000 -0500
+@@ -920,12 +920,9 @@ EXPORT_SYMBOL(scsi_finish_command);
+  * 		the right thing depending on whether or not the device is
+  * 		currently active and whether or not it even has the
+  * 		command blocks built yet.
+- *
+- * XXX(hch):	What exactly is device_request_lock trying to protect?
   */
-@@ -510,6 +504,21 @@
+ void scsi_adjust_queue_depth(struct scsi_device *sdev, int tagged, int tags)
+ {
+-	static DEFINE_SPINLOCK(device_request_lock);
+ 	unsigned long flags;
+ 
+ 	/*
+@@ -934,8 +931,7 @@ void scsi_adjust_queue_depth(struct scsi
+ 	if (tags <= 0)
+ 		return;
+ 
+-	spin_lock_irqsave(&device_request_lock, flags);
+-	spin_lock(sdev->request_queue->queue_lock);
++	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
+ 
+ 	/* Check to see if the queue is managed by the block layer
+ 	 * if it is, and we fail to adjust the depth, exit */
+@@ -964,8 +960,7 @@ void scsi_adjust_queue_depth(struct scsi
+ 			break;
+ 	}
+  out:
+-	spin_unlock(sdev->request_queue->queue_lock);
+-	spin_unlock_irqrestore(&device_request_lock, flags);
++	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
  }
- #endif
+ EXPORT_SYMBOL(scsi_adjust_queue_depth);
  
-+/* 
-+ * Assign a serial number and pid to the request for error recovery
-+ * and debugging purposes.  Protected by the Host_Lock of host.
-+ */
-+static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd *cmd)
-+{
-+	cmd->serial_number = host->cmd_serial_number++;
-+	if (cmd->serial_number == 0) 
-+		cmd->serial_number = host->cmd_serial_number++;
-+	
-+	cmd->pid = host->cmd_pid++;
-+	if (cmd->pid == 0)
-+		cmd->pid = host->cmd_pid++;
-+}
-+
- /*
-  * Function:    scsi_dispatch_command
-  *
-@@ -556,13 +565,6 @@
- 		goto out;
- 	}
- 
--	/* Assign a unique nonzero serial_number. */
--	/* XXX(hch): this is racy */
--	if (++serial_number == 0)
--		serial_number = 1;
--	cmd->serial_number = serial_number;
--	cmd->pid = scsi_pid++;
--
- 	/* 
- 	 * If SCSI-2 or lower, store the LUN value in cmnd.
- 	 */
-@@ -593,6 +595,10 @@
- 		host->resetting = 0;
- 	}
- 
-+	/* 
-+	 * AK: unlikely race here: for some reason the timer could
-+	 * expire before the serial number is set up below.
-+	 */
- 	scsi_add_timer(cmd, cmd->timeout_per_command, scsi_times_out);
- 
- 	scsi_log_send(cmd);
-@@ -619,6 +625,8 @@
- 	}
- 
- 	spin_lock_irqsave(host->host_lock, flags);
-+	scsi_cmd_get_serial(host, cmd); 
-+
- 	if (unlikely(test_bit(SHOST_CANCEL, &host->shost_state))) {
- 		cmd->result = (DID_NO_CONNECT << 16);
- 		scsi_done(cmd);
-diff -u linux-2.6.11rc3/include/scsi/scsi_cmnd.h-SCSISER linux-2.6.11rc3/include/scsi/scsi_cmnd.h
---- linux-2.6.11rc3/include/scsi/scsi_cmnd.h-SCSISER	2004-05-10 09:44:25.000000000 +0200
-+++ linux-2.6.11rc3/include/scsi/scsi_cmnd.h	2005-02-05 09:28:31.000000000 +0100
-@@ -54,6 +54,7 @@
- 	 * completed and the SCSI Command structure has already being reused
- 	 * for another command, so that we can avoid incorrectly aborting or
- 	 * resetting the new command.
-+	 * The serial number is only unique per host.
- 	 */
- 	unsigned long serial_number;
- 	unsigned long serial_number_at_timeout;
-@@ -139,7 +140,7 @@
- 	int result;		/* Status code from lower level driver */
- 
- 	unsigned char tag;	/* SCSI-II queued command tag */
--	unsigned long pid;	/* Process ID, starts at 0 */
-+	unsigned long pid;	/* Process ID, starts at 0. Unique per host. */
- };
- 
- /*
-diff -u linux-2.6.11rc3/include/scsi/scsi_host.h-SCSISER linux-2.6.11rc3/include/scsi/scsi_host.h
---- linux-2.6.11rc3/include/scsi/scsi_host.h-SCSISER	2005-02-04 09:13:50.000000000 +0100
-+++ linux-2.6.11rc3/include/scsi/scsi_host.h	2005-02-05 12:02:17.000000000 +0100
-@@ -483,7 +483,12 @@
- 	short unsigned int sg_tablesize;
- 	short unsigned int max_sectors;
- 	unsigned long dma_boundary;
--
-+	/* 
-+	 * Used to assign serial numbers to the cmds.
-+	 * Protected by the host lock.
-+	 */
-+	unsigned long cmd_serial_number, cmd_pid; 
-+	
- 	unsigned unchecked_isa_dma:1;
- 	unsigned use_clustering:1;
- 	unsigned use_blk_tcq:1;
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
