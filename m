@@ -1,29 +1,36 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fix Scsi_Host leak in BusLogic
-Date: Tue, 14 Sep 2004 20:23:52 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040914182352.GA16223@lst.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] New QStor SATA/RAID Driver for 2.6.9-rc2
+Date: 14 Sep 2004 14:25:35 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <1095186343.2008.29.camel@mulgrave>
+References: <41471163.10709@rtr.ca>  <414723B0.1090600@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:43400 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S269653AbUINSXz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Sep 2004 14:23:55 -0400
-Content-Disposition: inline
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S269694AbUINSiG@vger.kernel.org>
+In-Reply-To: <414723B0.1090600@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mark Lord <lkml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@steeleye.com
-Cc: linux-scsi@vger.kernel.org
 
+On Tue, 2004-09-14 at 13:00, Jeff Garzik wrote:
+> 9) use of do_sleep paradigm is dubious:  you should instead try to keep 
+> your locked code regions as small as possible.  in general, this code 
+> has far too many unlock-doit-lock sections.
+> 
+> Experience has shown that too much unlock-doit-lock leads to bugs and 
+> increases the pain when analyzing your locking.
+> 
+> In particular, releasing the lock and sleeping would be very wrong in 
+> the ->queuecommand and error handling paths (alas...  I would love to 
+> sleep in the fine-grained eh hooks)
 
---- 1.33/drivers/scsi/BusLogic.c	2004-08-29 16:58:42 +02:00
-+++ edited/drivers/scsi/BusLogic.c	2004-09-14 22:11:49 +02:00
-@@ -2344,6 +2344,8 @@
- 	   Remove Host Adapter from the list of registered BusLogic Host Adapters.
- 	 */
- 	list_del(&HostAdapter->host_list);
-+
-+	scsi_host_put(Host);
- 	return 0;
- }
- 
+Actually, its only wrong in queuecommand because that can be called in
+softirq context.
+
+Sleeping in the eh paths is fine (as long as you drop the locks that the
+EH thread has uselessly taken for you).  Indeed it's often required
+since the return is supposed to tell the eh thread whether the action
+was successful or not.
+
+James
