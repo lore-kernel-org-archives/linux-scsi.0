@@ -1,32 +1,49 @@
 From: James Bottomley <James.Bottomley@steeleye.com>
-Subject: Re: scsi_free_sdev and slave destroy
-Date: 25 Nov 2003 09:23:23 -0600
+Subject: Re: LUN resizing
+Date: 25 Nov 2003 09:43:02 -0600
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1069773808.2061.6.camel@mulgrave>
-References: <200311252037.34015.krmurthy@cisco.com>
+Message-ID: <1069774983.2061.28.camel@mulgrave>
+References: <1069708054.26088.127.camel@lt-sv>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat9.steeleye.com ([65.114.3.137]:30471 "EHLO
+Received: from nat9.steeleye.com ([65.114.3.137]:59908 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262745AbTKYPXt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Nov 2003 10:23:49 -0500
-In-Reply-To: <200311252037.34015.krmurthy@cisco.com>
+	id S262750AbTKYPnL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Nov 2003 10:43:11 -0500
+In-Reply-To: <1069708054.26088.127.camel@lt-sv>
 List-Id: linux-scsi@vger.kernel.org
-To: Krishna Murthy <krmurthy@cisco.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, davmyers@cisco.com
+To: Stefan Voelkel <Stefan.Voelkel@millenux.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2003-11-25 at 09:07, Krishna Murthy wrote:
-> 		scsi_alloc_sdev
-> 		probe for the lun
-> 		If lun does not exist call scsi_free_sdev.
+On Tue, 2003-11-25 at 03:34, Stefan Voelkel wrote:
+> I have a Linux box connected to a Fibre SAN. Now I'd like to resize one
+> LUN and tell my Linux box what happened. In other words can I _live_
+> resize a SCSI disk?
 > 
-> scsi_alloc_sdev calls slave_alloc of the HBA driver where as 
-> scsi_free_sdev does not seem to call slave_destroy.
-> Please let me know if this is a bug or I am missing something.
+>         [ let's not talk about which filesystems are capable of live
+>         resizing :) ]
+>         
+>       * Is this possible at all, eg does the SCSI Standard include
+>         something to enable a device to tell the host about the changed
+>         geometry (SENSE DATA, ...) ?
 
-This is a current bug and is fixed in the latest scsi patch set.
+The pull command is READ_CAPACITY.  For pushing this information,
+there's nothing really standard, although some type of proprietary AEN
+could be adapted.
+
+>       * Is it possible with Linux, eg does the block layer/scsi layer
+>         support it? any problems with the partition code?
+>       * If there are problems, are they solveable, any plans on working
+>         on them or is already someone working on this?
+
+You simply do
+
+echo 1 > /sys/bus/scsi/<device>/rescan
+
+It will re-read the capacity and partition table (as long as the device
+is unmounted and none of the partitions open).
 
 James
 
