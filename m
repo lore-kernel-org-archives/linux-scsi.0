@@ -1,36 +1,63 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [ANNOUNCE][RELEASE]: megaraid unified driver version 2.20.0.B
- 1
-Date: Fri, 16 Apr 2004 15:34:43 -0400
+From: "Smart, James" <James.Smart@Emulex.com>
+Subject: RE: Transport affected timeouts...
+Date: Fri, 16 Apr 2004 15:39:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40803553.2030403@pobox.com>
-References: <0E3FA95632D6D047BA649F95DAB60E57033BC53D@exa-atlanta.se.lsil.com> <40803154.3070707@pobox.com>
+Message-ID: <3356669BBE90C448AD4645C843E2BF2802C016A7@xbl.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="ISO-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:36571 "EHLO
-	www.linux.org.uk") by vger.kernel.org with ESMTP id S263653AbUDPTfA
+Received: from emulex.emulex.com ([138.239.112.1]:48094 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S262434AbUDPTkB
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Apr 2004 15:35:00 -0400
-In-Reply-To: <40803154.3070707@pobox.com>
+	Fri, 16 Apr 2004 15:40:01 -0400
 List-Id: linux-scsi@vger.kernel.org
-To: "Mukker, Atul" <Atulm@lsil.com>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'Matt_Domsch@dell.com'" <Matt_Domsch@dell.com>, "'paul@kungfoocoder.org'" <paul@kungfoocoder.org>, "'James.Bottomley@SteelEye.com'" <James.Bottomley@SteelEye.com>, "'arjanv@redhat.com'" <arjanv@redhat.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>
+Cc: Linux SCSI Reflector <linux-scsi@vger.kernel.org>
 
-Jeff Garzik wrote:
-> If there is a static maximum of scbs for megaraid hardware, dynamically 
-> allocating scbs in ->queuecommand is a waste of time.
+I had looked at the patch.  I don't think it works as well as the
+incrementer. But it would be a start. We would need the st driver, and scsi
+generic to use it as well. It doesn't address the timeout changing post
+slave_configure. The other thing that bothers me is that it uses an explicit
+value. As per the thread, it would have been better to know what the
+original default was and just increment/double it - and there is the issue
+of different device types needing different defaults.
+
+-- james
+
+
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
+> Sent: Friday, April 16, 2004 3:24 PM
+> To: Smart, James
+> Cc: Linux SCSI Reflector
+> Subject: Re: Transport affected timeouts...
 > 
-> In my drivers, I pre-allocate driver-specific per-request structures -- 
-> just like the SCSI layer does ;-)
-
-Slight correction... it looks like SCSI dynamically allocates requests 
-these days.
-
-That doesn't change my core argument, however.
-
-	Jeff
-
-
-
+> 
+> On Fri, 2004-04-16 at 10:40, Smart, James wrote:
+> > One issue that we're wrestling with in our driver is 
+> timeout values. In the
+> > past, we've encountered large configurations where the 
+> timeouts from the
+> > midlayer are insufficient. In general - we'd like the scsi 
+> host to be able
+> > to add a transport/topology increment time to the base 
+> timeout values.  The
+> > methodology would have to be dynamic as it may change as 
+> link connectivity
+> > changes.
+> > 
+> > Obviously, an hba driver mucking with the timeout values 
+> handed to it is
+> > frowned upon. Is there a recommendation on how we should 
+> handle this ?
+> 
+> There's no currently agreed upon framework, but would
+> 
+> http://www-124.ibm.com/storageio/ipr/patch-2.6.5-sd_timeout_mod
+> 
+> Do for what you want?
+> 
+> James
+> 
+> 
