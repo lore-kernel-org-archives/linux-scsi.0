@@ -1,23 +1,31 @@
-From: "dan carpenter" <error27@email.com>
-Subject: megaraid on opteron w/ 8G RAM
-Date: Wed, 10 Mar 2004 21:18:47 -0500
+From: "Mukker, Atul" <Atulm@lsil.com>
+Subject: RE: megaraid on opteron w/ 8G RAM
+Date: Wed, 10 Mar 2004 21:44:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20040311021847.B02281D7244@ws3-3.us4.outblaze.com>
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57033BC460@exa-atlanta.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from webmail-outgoing.us4.outblaze.com ([205.158.62.67]:6318 "EHLO
-	webmail-outgoing.us4.outblaze.com") by vger.kernel.org with ESMTP
-	id S262941AbUCKCSs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Mar 2004 21:18:48 -0500
-Received: from wfilter.us4.outblaze.com (wfilter.us4.outblaze.com [205.158.62.180])
-	by webmail-outgoing.us4.outblaze.com (Postfix) with QMQP id CEFCF1801356
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Mar 2004 02:18:47 +0000 (GMT)
-Content-Disposition: inline
+Received: from mail0.lsil.com ([147.145.40.20]:26066 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S262961AbUCKCor (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Mar 2004 21:44:47 -0500
 List-Id: linux-scsi@vger.kernel.org
+To: 'dan carpenter' <error27@email.com>, linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+
+What is the megaraid2 driver version? Can you inline the panic messages?
+
+-Atul Mukker
+
+-----Original Message-----
+From: dan carpenter [mailto:error27@email.com]
+Sent: Wednesday, March 10, 2004 9:19 PM
 To: linux-kernel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
+Subject: megaraid on opteron w/ 8G RAM
+
 
 I'm using the megaraid 1.19.6 driver on RedHat Work Station 
 x86_64.  It works great with only 4 gigs of RAM installed, 
@@ -45,3 +53,7 @@ ___________________________________________________________
 Sign-up for Ads Free at Mail.com
 http://promo.mail.com/adsfreejump.htm
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
