@@ -1,42 +1,42 @@
-From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-Subject: Re: scsi mode sense broken again
-Date: Fri, 4 Jul 2003 12:52:17 -0700
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Re: scsi_forget_host() and scsi_remove_device()
+Date: Fri, 4 Jul 2003 12:54:45 -0700
 Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20030704125217.A17588@one-eyed-alien.net>
-References: <UTC200307032306.h63N6HQ26283.aeb@smtp.cwi.nl> <20030703171053.A3254@one-eyed-alien.net>
+Message-ID: <20030704125444.B17588@one-eyed-alien.net>
+References: <20030703221940.GA5983@beaverton.ibm.com> <Pine.LNX.4.44L0.0307041505110.22716-100000@netrider.rowland.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-md5;
-	protocol="application/pgp-signature"; boundary="7AUc2qLy4jB3hD7Z"
+	protocol="application/pgp-signature"; boundary="xgyAXRrhYN0wYx8y"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:65286 "EHLO
+Received: from ziggy.one-eyed-alien.net ([64.169.228.100]:3335 "EHLO
 	ziggy.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S266138AbTGDThv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Jul 2003 15:37:51 -0400
+	id S266149AbTGDTkT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Jul 2003 15:40:19 -0400
 Content-Disposition: inline
-In-Reply-To: <20030703171053.A3254@one-eyed-alien.net>; from mdharm-kernel@one-eyed-alien.net on Thu, Jul 03, 2003 at 05:10:53PM -0700
+In-Reply-To: <Pine.LNX.4.44L0.0307041505110.22716-100000@netrider.rowland.org>; from stern@rowland.harvard.edu on Fri, Jul 04, 2003 at 03:36:55PM -0400
 List-Id: linux-scsi@vger.kernel.org
-To: Andries.Brouwer@cwi.nl, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, torvalds@osdl.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Mike Anderson <andmike@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
 
---7AUc2qLy4jB3hD7Z
+--xgyAXRrhYN0wYx8y
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Jul 03, 2003 at 05:10:53PM -0700, Matthew Dharm wrote:
-> On Fri, Jul 04, 2003 at 01:06:17AM +0200, Andries.Brouwer@cwi.nl wrote:
-> > For me 2.5.72 works, 2.5.74 does not - no working ZIP drive.
-> > The cause is the recent fiddling of use_10 / do_mode_sense.
-> > If this is known and has a patch on the way all is well.
-> > Otherwise I can send a patch.
->=20
-> Really?  I expected bug reports for CD-ROM, but not for Direct Access
-> devices.  What's going bad?
+On Fri, Jul 04, 2003 at 03:36:55PM -0400, Alan Stern wrote:
+> Finally a segmentation violation occurs when __scsi_get_command() tries to
+> access dev->host->cmd_pool->gfp_mask.  Not surprising since the host
+> structure is gone.
 
-I just did some re-testing, and my self-powered Zip250 and Zip750 work.
-The 750 takes a few seconds to initialize, but nothing really bad.
+This could still be our (usb-storage) problem.
 
-What Zip do you have that doesn't work?
+We're not supposed to release the host structures until after ->release is
+called.  I think we're violating that right now.
+
+Add a little bit of debugging (a stub ->release() function that printk's)
+and see if the mid-layer really thinks that everything should have been
+freed already.
 
 Matt
 
@@ -45,11 +45,11 @@ Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
 net=20
 Maintainer, Linux USB Mass Storage Driver
 
-Somebody call an exorcist!
-					-- Dust Puppy
-User Friendly, 5/16/1998
+What, are you one of those Microsoft-bashing Linux freaks?
+					-- Customer to Greg
+User Friendly, 2/10/1999
 
---7AUc2qLy4jB3hD7Z
+--xgyAXRrhYN0wYx8y
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
@@ -57,9 +57,9 @@ Content-Disposition: inline
 Version: GnuPG v1.0.6 (GNU/Linux)
 Comment: For info see http://www.gnupg.org
 
-iD8DBQE/BdrxIjReC7bSPZARAjxLAJ983eLOdC83CGQBcNIInL+6jn1yAACfUvXO
-PE3KKICaMYcbBKmORDPl4bM=
-=YqmB
+iD8DBQE/BduEIjReC7bSPZARAhmZAJ44By4Wgai4BiVQGmJaCa2K/8WSOwCfRK9q
+mASvGAv8oa3tCmhuXqlbJWg=
+=2bFE
 -----END PGP SIGNATURE-----
 
---7AUc2qLy4jB3hD7Z--
+--xgyAXRrhYN0wYx8y--
