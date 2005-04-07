@@ -1,109 +1,169 @@
-From: Frederic TEMPORELLI <frederic.temporelli@bull.net>
-Subject: Re: proc_name in sysfs
-Date: Thu, 07 Apr 2005 08:35:16 +0200
-Message-ID: <4254D4A4.1000307@bull.net>
-References: <4253CA94.8000500@bull.net> <20050406183614.GA25370@us.ibm.com> <4254877B.4020607@torque.net>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [OOPS] 2.6.11 - NMI lockup with CFQ scheduler
+Date: Thu, 7 Apr 2005 08:49:35 +0200
+Message-ID: <20050407064934.GJ15165@suse.de>
+References: <20050329115405.97559.qmail@web52909.mail.yahoo.com> <20050329120311.GO16636@suse.de> <1112804840.5476.16.camel@mulgrave> <20050406175838.GC15165@suse.de> <1112811607.5555.15.camel@mulgrave> <20050406190838.GE15165@suse.de> <1112821799.5850.19.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ecfrec.frec.bull.fr ([129.183.4.8]:11479 "EHLO
-	ecfrec.frec.bull.fr") by vger.kernel.org with ESMTP id S261418AbVDGGf1 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Apr 2005 02:35:27 -0400
-In-Reply-To: <4254877B.4020607@torque.net>
+Received: from ns.virtualhost.dk ([195.184.98.160]:5250 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261604AbVDGGtm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2005 02:49:42 -0400
+Content-Disposition: inline
+In-Reply-To: <1112821799.5850.19.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: dougg@torque.net, Patrick Mansfield <patmans@us.ibm.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Chris Rankin <rankincj@yahoo.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi,
+On Wed, Apr 06 2005, James Bottomley wrote:
+> On Wed, 2005-04-06 at 21:08 +0200, Jens Axboe wrote:
+> > > I think the correct model for all of this is that the block driver
+> > > shouldn't care (or be tied to) the scsi one.  Thus, as long as SCSI can
+> > > reject requests from a queue whose device has been released (without
+> > > checking the device) then everything is fine as long as we sort out the
+> > > lock lifetime problem.
+> > 
+> > But you are tying it completely to the SCSI problem, since we have no
+> > locking problems of this sort elsewhere. At least the notified could
+> > potentially be used for something else. The lock is just hack number two
+> > to work around the problem.
+> 
+> Then help me understand the problem as you see it.
+> 
+> My current understanding is that these problems occur because we've
+> mixed data in two objects of different lifetimes.  So far, this is stack
+> independent.
 
+Correct.
 
-Sorry, no such "driver" directory in /sys/class/scsi_host/hostX/
-(checked: Emulex "lpfc" 8.0.24 and LSI "mptscsih" 3.01.18)
+> My proposal is to correct this by moving the data back to the correct
+> object, and make any object using it hold a reference, so this would
+> make the provider of the block request_fn hold a reference to the queue
+> and initialise the queue lock pointer with the lock currently in the
+> queue.  Drivers that still use a global lock would be unaffected.  This
 
-note: there's also a "proc_name" interface for LSI "mtpscsih", located =
-in=20
-/sys/class/scsi_host/hostX/, which is reporting "mptscsih" string.
+But this is the current requirement, as long as you use the queue you
+must hold a reference to it.
 
-Any other ideas ?
+> also means that any provider of a request_fn may expect to process (and
+> reject) requests for a period of time after blk_cleanup_queue().
+> Really, this refcounting is inherent in blk_init_queue(),
+> blk_cleanup_queue() so the only additional requirement is sanely
+> processing queue requests after you think it's been cleaned up.  This is
+> request_fn() provider independent, I think (providers who currently
+> don't violate the lifetime rules don't need fixing).
+> 
+> I claim that this proposal solves the current problem, and any other
+> ones we run across that occur because of data mixing.
 
-Best regards.
+The lock is just one piece, but I guess it is the only remaining after
+the ->request_fn switchover killing requests. So perhaps it is just
+easier to embed the lock to kill off that problem.
 
+What do you think of the attached, then? Allow NULL lock to be passed
+in, in which case we use the queue private lock (that no one should ever
+ever touch). It looks a little confusing that
+sdev->request_queue->queue_lock now protects some sdev structures, if
+you want we can retain ->sdev_lock but as a pointer to the queue lock
+instead.
 
-Douglas Gilbert a =E9crit :
-> Patrick Mansfield wrote:
->=20
->> On Wed, Apr 06, 2005 at 01:40:04PM +0200, Frederic TEMPORELLI wrote:
->>
->>
->>> 2/ now, how can we get the adapter module name from sysfs ?
->>
->>
->>
->> Why do you need it?
->>
->> Anyway, try lsscsi, it walks the sysfs tree:
->>
->> [elm3b79 patman]$ lsscsi  -H
->> [0]    qla1280
->> [1]    qla1280
->> [2]    qla2xxx
->> [3]    qla2xxx
->>
->> Or, script it:
->>
->> [elm3b79 tmp]$ more xx.sh
->> #! /bin/sh
->>
->> hdir=3D/sys/class/scsi_host
->>
->> for i in ${hdir}/host*
->> do
->>         host_dir=3D$(cd ${i}/device;/bin/pwd)
->>         driver_dir=3D$(cd ${host_dir}/../driver;/bin/pwd)
->>         module=3D$(basename ${driver_dir})
->>         # echo ${i} is in: ${host_dir}
->>         echo "${i} module (driver) is: ${module}"
->> done
->>
->> [elm3b79 tmp]$ sh ./xx.sh
->> /sys/class/scsi_host/host0 module (driver) is: qla1280
->> /sys/class/scsi_host/host1 module (driver) is: qla1280
->> /sys/class/scsi_host/host2 module (driver) is: qla2300
->> /sys/class/scsi_host/host3 module (driver) is: qla2300
->=20
->=20
-> Patrick,
-> lsscsi currently uses proc_name so it needs to be
-> changed to use the above logic (if LLDs are going
-> to stop populating proc_name).
->=20
-> It has been suggested that I extend lsscsi to show
-> transport info (as seen from the HBA) found in the
-> various *_transport directories in sysfs.
->=20
-> Also I have been thinking about ways to list less
-> tha all scsi devices. For example: "lsscsi 1:0:3:0"
-> to look at one device and "lsscsi 1:-" for all scsi
-> devices hanging off host1. I'm not sure whether
-> "lsscsi /dev/sda" is a good idea. Any suggestions?
->=20
-> Doug Gilbert
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
+> Your current patch tries to solve the problem by tying the two objects
+> together; unifying the lifetimes.  I agree this can be done (it was how
+> the sd/sr close race was fixed). But the current way the freeing
+> functions thread across the subsystems doesn't look nice and I don't
+> currently see a way to get the queue freed:  We free the queue on scsi
+> device release; if the queue holds a reference to the scsi_device, the
+> release function will never be called.  Our only other choice is to try
+> to free the queue on device_del instead, but that's too early, I think.
+
+Hmm yes, it probably doesn't work. Unless we properly embed the affected
+structures, I don't think it can work.
 
 
---=20
-=46rederic TEMPORELLI
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+===== drivers/block/ll_rw_blk.c 1.288 vs edited =====
+--- 1.288/drivers/block/ll_rw_blk.c	2005-03-31 12:47:54 +02:00
++++ edited/drivers/block/ll_rw_blk.c	2005-04-07 08:38:01 +02:00
+@@ -1714,6 +1711,15 @@ request_queue_t *blk_init_queue(request_
+ 	if (blk_init_free_list(q))
+ 		goto out_init;
+ 
++	/*
++	 * if caller didn't supply a lock, they get per-queue locking with
++	 * our embedded lock
++	 */
++	if (!lock) {
++		spin_lock_init(&q->__queue_lock);
++		lock = &q->__queue_lock;
++	}
++
+ 	q->request_fn		= rfn;
+ 	q->back_merge_fn       	= ll_back_merge_fn;
+ 	q->front_merge_fn      	= ll_front_merge_fn;
+===== drivers/scsi/scsi_lib.c 1.153 vs edited =====
+--- 1.153/drivers/scsi/scsi_lib.c	2005-03-30 21:49:45 +02:00
++++ edited/drivers/scsi/scsi_lib.c	2005-04-07 08:42:30 +02:00
+@@ -360,9 +360,9 @@ void scsi_device_unbusy(struct scsi_devi
+ 		     shost->host_failed))
+ 		scsi_eh_wakeup(shost);
+ 	spin_unlock(shost->host_lock);
+-	spin_lock(&sdev->sdev_lock);
++	spin_lock(sdev->request_queue->queue_lock);
+ 	sdev->device_busy--;
+-	spin_unlock_irqrestore(&sdev->sdev_lock, flags);
++	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
+ }
+ 
+ /*
+@@ -1425,7 +1425,7 @@ struct request_queue *scsi_alloc_queue(s
+ 	struct Scsi_Host *shost = sdev->host;
+ 	struct request_queue *q;
+ 
+-	q = blk_init_queue(scsi_request_fn, &sdev->sdev_lock);
++	q = blk_init_queue(scsi_request_fn, NULL);
+ 	if (!q)
+ 		return NULL;
+ 
+===== drivers/scsi/scsi_scan.c 1.143 vs edited =====
+--- 1.143/drivers/scsi/scsi_scan.c	2005-03-23 22:58:13 +01:00
++++ edited/drivers/scsi/scsi_scan.c	2005-04-07 08:40:53 +02:00
+@@ -249,7 +249,6 @@ static struct scsi_device *scsi_alloc_sd
+ 	 */
+ 	sdev->borken = 1;
+ 
+-	spin_lock_init(&sdev->sdev_lock);
+ 	sdev->request_queue = scsi_alloc_queue(sdev);
+ 	if (!sdev->request_queue) {
+ 		/* release fn is set up in scsi_sysfs_device_initialise, so
+===== include/linux/blkdev.h 1.162 vs edited =====
+--- 1.162/include/linux/blkdev.h	2005-03-29 03:42:37 +02:00
++++ edited/include/linux/blkdev.h	2005-04-07 08:36:06 +02:00
+@@ -355,8 +364,11 @@ struct request_queue
+ 	unsigned long		queue_flags;
+ 
+ 	/*
+-	 * protects queue structures from reentrancy
++	 * protects queue structures from reentrancy. ->__queue_lock should
++	 * _never_ be used directly, it is queue private. always use
++	 * ->queue_lock.
+ 	 */
++	spinlock_t		__queue_lock;
+ 	spinlock_t		*queue_lock;
+ 
+ 	/*
+===== include/scsi/scsi_device.h 1.33 vs edited =====
+--- 1.33/include/scsi/scsi_device.h	2005-03-23 22:58:05 +01:00
++++ edited/include/scsi/scsi_device.h	2005-04-07 08:41:09 +02:00
+@@ -44,7 +44,6 @@ struct scsi_device {
+ 	struct list_head    same_target_siblings; /* just the devices sharing same target id */
+ 
+ 	volatile unsigned short device_busy;	/* commands actually active on low-level */
+-	spinlock_t sdev_lock;           /* also the request queue_lock */
+ 	spinlock_t list_lock;
+ 	struct list_head cmd_list;	/* queue of in use SCSI Command structures */
+ 	struct list_head starved_entry;
+
+
+-- 
+Jens Axboe
+
