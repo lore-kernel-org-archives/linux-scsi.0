@@ -1,68 +1,74 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [OOPS] 2.6.11 - NMI lockup with CFQ scheduler
-Date: Wed, 06 Apr 2005 17:09:59 -0400
-Message-ID: <1112821799.5850.19.camel@mulgrave>
-References: <20050329115405.97559.qmail@web52909.mail.yahoo.com>
-	 <20050329120311.GO16636@suse.de> <1112804840.5476.16.camel@mulgrave>
-	 <20050406175838.GC15165@suse.de> <1112811607.5555.15.camel@mulgrave>
-	 <20050406190838.GE15165@suse.de>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: proc_name in sysfs
+Date: Thu, 07 Apr 2005 11:06:03 +1000
+Message-ID: <4254877B.4020607@torque.net>
+References: <4253CA94.8000500@bull.net> <20050406183614.GA25370@us.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:17051 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262320AbVDFVKJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Apr 2005 17:10:09 -0400
-In-Reply-To: <20050406190838.GE15165@suse.de>
+Received: from zorg.st.net.au ([203.16.233.9]:21676 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S262364AbVDGBKD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2005 21:10:03 -0400
+In-Reply-To: <20050406183614.GA25370@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Chris Rankin <rankincj@yahoo.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Frederic TEMPORELLI <frederic.temporelli@bull.net>, linux-scsi@vger.kernel.org
 
-On Wed, 2005-04-06 at 21:08 +0200, Jens Axboe wrote:
-> > I think the correct model for all of this is that the block driver
-> > shouldn't care (or be tied to) the scsi one.  Thus, as long as SCSI can
-> > reject requests from a queue whose device has been released (without
-> > checking the device) then everything is fine as long as we sort out the
-> > lock lifetime problem.
+Patrick Mansfield wrote:
+> On Wed, Apr 06, 2005 at 01:40:04PM +0200, Frederic TEMPORELLI wrote:
 > 
-> But you are tying it completely to the SCSI problem, since we have no
-> locking problems of this sort elsewhere. At least the notified could
-> potentially be used for something else. The lock is just hack number two
-> to work around the problem.
+> 
+>>2/ now, how can we get the adapter module name from sysfs ?
+> 
+> 
+> Why do you need it?
+> 
+> Anyway, try lsscsi, it walks the sysfs tree:
+> 
+> [elm3b79 patman]$ lsscsi  -H
+> [0]    qla1280
+> [1]    qla1280
+> [2]    qla2xxx
+> [3]    qla2xxx
+> 
+> Or, script it:
+> 
+> [elm3b79 tmp]$ more xx.sh
+> #! /bin/sh
+> 
+> hdir=/sys/class/scsi_host
+> 
+> for i in ${hdir}/host*
+> do
+>         host_dir=$(cd ${i}/device;/bin/pwd)
+>         driver_dir=$(cd ${host_dir}/../driver;/bin/pwd)
+>         module=$(basename ${driver_dir})
+>         # echo ${i} is in: ${host_dir}
+>         echo "${i} module (driver) is: ${module}"
+> done
+> 
+> [elm3b79 tmp]$ sh ./xx.sh
+> /sys/class/scsi_host/host0 module (driver) is: qla1280
+> /sys/class/scsi_host/host1 module (driver) is: qla1280
+> /sys/class/scsi_host/host2 module (driver) is: qla2300
+> /sys/class/scsi_host/host3 module (driver) is: qla2300
 
-Then help me understand the problem as you see it.
+Patrick,
+lsscsi currently uses proc_name so it needs to be
+changed to use the above logic (if LLDs are going
+to stop populating proc_name).
 
-My current understanding is that these problems occur because we've
-mixed data in two objects of different lifetimes.  So far, this is stack
-independent.
+It has been suggested that I extend lsscsi to show
+transport info (as seen from the HBA) found in the
+various *_transport directories in sysfs.
 
-My proposal is to correct this by moving the data back to the correct
-object, and make any object using it hold a reference, so this would
-make the provider of the block request_fn hold a reference to the queue
-and initialise the queue lock pointer with the lock currently in the
-queue.  Drivers that still use a global lock would be unaffected.  This
-also means that any provider of a request_fn may expect to process (and
-reject) requests for a period of time after blk_cleanup_queue().
-Really, this refcounting is inherent in blk_init_queue(),
-blk_cleanup_queue() so the only additional requirement is sanely
-processing queue requests after you think it's been cleaned up.  This is
-request_fn() provider independent, I think (providers who currently
-don't violate the lifetime rules don't need fixing).
+Also I have been thinking about ways to list less
+tha all scsi devices. For example: "lsscsi 1:0:3:0"
+to look at one device and "lsscsi 1:-" for all scsi
+devices hanging off host1. I'm not sure whether
+"lsscsi /dev/sda" is a good idea. Any suggestions?
 
-I claim that this proposal solves the current problem, and any other
-ones we run across that occur because of data mixing.
-
-Your current patch tries to solve the problem by tying the two objects
-together; unifying the lifetimes.  I agree this can be done (it was how
-the sd/sr close race was fixed). But the current way the freeing
-functions thread across the subsystems doesn't look nice and I don't
-currently see a way to get the queue freed:  We free the queue on scsi
-device release; if the queue holds a reference to the scsi_device, the
-release function will never be called.  Our only other choice is to try
-to free the queue on device_del instead, but that's too early, I think.
-
-James
-
-
+Doug Gilbert
