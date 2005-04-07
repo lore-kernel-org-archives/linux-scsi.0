@@ -1,32 +1,109 @@
-From: HOWARD_JONES <HOWARD_JONES@terra.es>
-Subject: we can work together
-Date: Thu, 07 Apr 2005 03:52:35 +0200
-Message-ID: <ff08d1032fc.1032fcff08d__28776.8649905503$1112838787$gmane$org@teleline.es>
-Reply-To: howardjones@katamail.com
+From: Frederic TEMPORELLI <frederic.temporelli@bull.net>
+Subject: Re: proc_name in sysfs
+Date: Thu, 07 Apr 2005 08:35:16 +0200
+Message-ID: <4254D4A4.1000307@bull.net>
+References: <4253CA94.8000500@bull.net> <20050406183614.GA25370@us.ibm.com> <4254877B.4020607@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 48.host.terra.es ([213.4.129.48]:36007 "EHLO tfdsmtp2.mail.isp")
-	by vger.kernel.org with ESMTP id S262379AbVDGByD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2005 21:54:03 -0400
-Content-Language: es
-Content-Disposition: inline
+Received: from ecfrec.frec.bull.fr ([129.183.4.8]:11479 "EHLO
+	ecfrec.frec.bull.fr") by vger.kernel.org with ESMTP id S261418AbVDGGf1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Apr 2005 02:35:27 -0400
+In-Reply-To: <4254877B.4020607@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: dougg@torque.net, Patrick Mansfield <patmans@us.ibm.com>
 
-Dear Sir,
-
-You will be surprise to see this message but I got your information
-through Spartanburg, area chamber of commerce USA.
-My name is Howard Jones, a Chief Auditor, during my last auditing in
-the United States of America with JPMORGANCHASE CO.in New York, we 
-realized
-the sum $35.5million owned by one Patric Zuma from Egypt who died
-during the terrorist attack of Sept.11,2001 in the world trade center.
-All efforts,which have been made to reach the relatives of Mr.Patric
-Zuma for the past two years, have not yielded any positive result. It
-was later gathered that Mr.Zuma|s divorced wife and only son died in
-the September 11 bombing of the World Trade center in New York the same
+Hi,
 
 
+Sorry, no such "driver" directory in /sys/class/scsi_host/hostX/
+(checked: Emulex "lpfc" 8.0.24 and LSI "mptscsih" 3.01.18)
+
+note: there's also a "proc_name" interface for LSI "mtpscsih", located =
+in=20
+/sys/class/scsi_host/hostX/, which is reporting "mptscsih" string.
+
+Any other ideas ?
+
+Best regards.
+
+
+Douglas Gilbert a =E9crit :
+> Patrick Mansfield wrote:
+>=20
+>> On Wed, Apr 06, 2005 at 01:40:04PM +0200, Frederic TEMPORELLI wrote:
+>>
+>>
+>>> 2/ now, how can we get the adapter module name from sysfs ?
+>>
+>>
+>>
+>> Why do you need it?
+>>
+>> Anyway, try lsscsi, it walks the sysfs tree:
+>>
+>> [elm3b79 patman]$ lsscsi  -H
+>> [0]    qla1280
+>> [1]    qla1280
+>> [2]    qla2xxx
+>> [3]    qla2xxx
+>>
+>> Or, script it:
+>>
+>> [elm3b79 tmp]$ more xx.sh
+>> #! /bin/sh
+>>
+>> hdir=3D/sys/class/scsi_host
+>>
+>> for i in ${hdir}/host*
+>> do
+>>         host_dir=3D$(cd ${i}/device;/bin/pwd)
+>>         driver_dir=3D$(cd ${host_dir}/../driver;/bin/pwd)
+>>         module=3D$(basename ${driver_dir})
+>>         # echo ${i} is in: ${host_dir}
+>>         echo "${i} module (driver) is: ${module}"
+>> done
+>>
+>> [elm3b79 tmp]$ sh ./xx.sh
+>> /sys/class/scsi_host/host0 module (driver) is: qla1280
+>> /sys/class/scsi_host/host1 module (driver) is: qla1280
+>> /sys/class/scsi_host/host2 module (driver) is: qla2300
+>> /sys/class/scsi_host/host3 module (driver) is: qla2300
+>=20
+>=20
+> Patrick,
+> lsscsi currently uses proc_name so it needs to be
+> changed to use the above logic (if LLDs are going
+> to stop populating proc_name).
+>=20
+> It has been suggested that I extend lsscsi to show
+> transport info (as seen from the HBA) found in the
+> various *_transport directories in sysfs.
+>=20
+> Also I have been thinking about ways to list less
+> tha all scsi devices. For example: "lsscsi 1:0:3:0"
+> to look at one device and "lsscsi 1:-" for all scsi
+> devices hanging off host1. I'm not sure whether
+> "lsscsi /dev/sda" is a good idea. Any suggestions?
+>=20
+> Doug Gilbert
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+
+
+--=20
+=46rederic TEMPORELLI
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
