@@ -1,134 +1,221 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: proc_name in sysfs
-Date: Thu, 07 Apr 2005 18:17:26 +1000
-Message-ID: <4254EC96.8070104@torque.net>
-References: <4253CA94.8000500@bull.net> <20050406183614.GA25370@us.ibm.com> <4254877B.4020607@torque.net> <4254D4A4.1000307@bull.net>
-Reply-To: dougg@torque.net
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] Use proper seq_file api for /proc/scsi/scsi
+Date: Thu, 07 Apr 2005 11:46:27 +0200
+Message-ID: <42550173.1040503@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+ boundary="------------030500070906010809030006"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:33666 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S262251AbVDGIVa convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Apr 2005 04:21:30 -0400
-In-Reply-To: <4254D4A4.1000307@bull.net>
+Received: from mx1.suse.de ([195.135.220.2]:58329 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S262408AbVDGJq2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2005 05:46:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Frederic TEMPORELLI <frederic.temporelli@bull.net>
-Cc: linux-scsi@vger.kernel.org, Patrick Mansfield <patmans@us.ibm.com>
+To: Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-=46rederic TEMPORELLI wrote:
-> Hi,
->=20
->=20
-> Sorry, no such "driver" directory in /sys/class/scsi_host/hostX/
-> (checked: Emulex "lpfc" 8.0.24 and LSI "mptscsih" 3.01.18)
+This is a multi-part message in MIME format.
+--------------030500070906010809030006
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8bit
 
-I may have missed the point here. Are you talking about
-Patrick's shell script? It sort of works for me. Example:
+Hi all,
 
-$ ./scan_hosts.sh
-/sys/class/scsi_host/host0 module (driver) is: mptbase
-/sys/class/scsi_host/host1 module (driver) is: mptbase
-/sys/class/scsi_host/host2 module (driver) is: mptbase
-/sys/class/scsi_host/host3 module (driver) is: mptbase
-/sys/class/scsi_host/host4 module (driver) is: qla2300
-/sys/class/scsi_host/host5 module (driver) is: qla2300
-$ lsscsi -H
-[0]    mptscsih
-[1]    mptscsih
-[2]    mptscsih
-[3]    mptscsih
-[4]    qla2xxx
-[5]    qla2xxx
+/proc/scsi/scsi currently has a very dumb implementation of the seq_file
+api which causes 'cat /proc/scsi/scsi' to return with -ENOMEM when a
+large amount of devices are connected.
 
-Note that the module name and the proc_name are different!
-It looks like Patrick's script gives the module name
-"closest" to the PCI bus while proc_name gives the
-"upper" lower level driver name :-)
+This patch impelements the proper seq_file interface which prints out
+all devices sequentially.
+The use of 'get_device()/put_device()' is interesting, as it relies on
+->show being called after a successful call to ->start / ->next.
+But the current seq_file implementation does it that way; and using
+->stop doesn't quite work as it's end up being called several times for
+no appearent reason.
 
-BTW "/bin/pwd" gives a different result to "pwd"
-in a bash shell just after a symlink has been
-followed.
+But I'm all ears for a better solution.
 
-Doug Gilbert
+Cheers,
 
-> note: there's also a "proc_name" interface for LSI "mtpscsih", locate=
-d=20
-> in /sys/class/scsi_host/hostX/, which is reporting "mptscsih" string.
->=20
-> Any other ideas ?
->=20
-> Best regards.
->=20
->=20
-> Douglas Gilbert a =E9crit :
->=20
->> Patrick Mansfield wrote:
->>
->>> On Wed, Apr 06, 2005 at 01:40:04PM +0200, Frederic TEMPORELLI wrote=
-:
->>>
->>>
->>>> 2/ now, how can we get the adapter module name from sysfs ?
->>>
->>>
->>>
->>>
->>> Why do you need it?
->>>
->>> Anyway, try lsscsi, it walks the sysfs tree:
->>>
->>> [elm3b79 patman]$ lsscsi  -H
->>> [0]    qla1280
->>> [1]    qla1280
->>> [2]    qla2xxx
->>> [3]    qla2xxx
->>>
->>> Or, script it:
->>>
->>> [elm3b79 tmp]$ more xx.sh
->>> #! /bin/sh
->>>
->>> hdir=3D/sys/class/scsi_host
->>>
->>> for i in ${hdir}/host*
->>> do
->>>         host_dir=3D$(cd ${i}/device;/bin/pwd)
->>>         driver_dir=3D$(cd ${host_dir}/../driver;/bin/pwd)
->>>         module=3D$(basename ${driver_dir})
->>>         # echo ${i} is in: ${host_dir}
->>>         echo "${i} module (driver) is: ${module}"
->>> done
->>>
->>> [elm3b79 tmp]$ sh ./xx.sh
->>> /sys/class/scsi_host/host0 module (driver) is: qla1280
->>> /sys/class/scsi_host/host1 module (driver) is: qla1280
->>> /sys/class/scsi_host/host2 module (driver) is: qla2300
->>> /sys/class/scsi_host/host3 module (driver) is: qla2300
->>
->>
->>
->> Patrick,
->> lsscsi currently uses proc_name so it needs to be
->> changed to use the above logic (if LLDs are going
->> to stop populating proc_name).
->>
->> It has been suggested that I extend lsscsi to show
->> transport info (as seen from the HBA) found in the
->> various *_transport directories in sysfs.
->>
->> Also I have been thinking about ways to list less
->> tha all scsi devices. For example: "lsscsi 1:0:3:0"
->> to look at one device and "lsscsi 1:-" for all scsi
->> devices hanging off host1. I'm not sure whether
->> "lsscsi /dev/sda" is a good idea. Any suggestions?
->>
->> Doug Gilbert
+Hannes
+-- 
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux AG				S390 & zSeries
+Maxfeldstraße 5				+49 911 74053 688
+90409 Nürnberg				http://www.suse.de
+
+--------------030500070906010809030006
+Content-Type: text/plain;
+ name="scsi-use-seq_file-for-proc.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi-use-seq_file-for-proc.patch"
+
+From: Hannes Reinecke <hare@suse.de>
+Subject: cat /proc/scsi/scsi crashes with 'out of memory'
+Reference: 75899
+
+'cat /proc/scsi/scsi' returns 'out of memory' when a large number of devices
+is connected. This is due to the use of the simple interface into seq_file
+which tries to allocate a buffer holding _all_ devices.
+
+This patch converts the proc interface to use the seq_file API properly.
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+
+--- linux-2.6.5/drivers/scsi/scsi_proc.c.orig	2004-04-04 05:36:17.000000000 +0200
++++ linux-2.6.5/drivers/scsi/scsi_proc.c	2005-04-07 11:08:16.877718912 +0200
+@@ -25,6 +25,7 @@
+ #include <linux/errno.h>
+ #include <linux/blkdev.h>
+ #include <linux/seq_file.h>
++#include <linux/list.h>
+ #include <asm/uaccess.h>
+ 
+ #include <scsi/scsi_host.h>
+@@ -141,10 +142,90 @@ void scsi_proc_host_rm(struct Scsi_Host 
+ 	remove_proc_entry(name, shost->hostt->proc_dir);
+ }
+ 
+-static int proc_print_scsidevice(struct device *dev, void *data)
++/*
++ * Simple selector for the next device in list.
++ * We take a reference on the current device to
++ * avoid it having vanished underneath us.
++ */
++static int proc_print_sdev_select( struct device *d, void *p)
++{
++	struct device **t = p;
++	struct list_head *l;
++
++	if (!*t) {
++		get_device(d);
++		*t = d;
++		return 1;
++	}
++
++	l = &((*t)->bus_list);
++	if (list_entry(l->next, struct device, bus_list) == d ) {
++		get_device(d);
++		*t = d;
++		return 1;
++	}
++
++	return 0;
++}
++
++/*
++ * seq_file interface
++ * The iterator is of type 'struct device *' and points to the
++ * current device. A reference to the current device is taken
++ * by the selector function above and must be dropped during
++ * the show function.
++ */
++static void *proc_print_sdev_start(struct seq_file *s, loff_t *pos)
++{
++	struct device *d = NULL;
++
++	if (*pos != 0)
++		return NULL;
++
++	seq_printf(s, "Attached devices:\n");
++
++	if ( bus_for_each_dev(&scsi_bus_type, NULL, &d,
++			      proc_print_sdev_select) > 0 )
++		return d;
++
++	return NULL;
++}
++
++/*
++ * fetch next device.
++ * We don't actually need the pos argument but seq_file is unhappy
++ * without it.
++ */
++static void *proc_print_sdev_next(struct seq_file *s, void *p, loff_t *pos)
++{
++	struct device *d = p;
++
++	(*pos)++;
++
++	if ( bus_for_each_dev(&scsi_bus_type, p, &d,
++			      proc_print_sdev_select) > 0 )
++		return d;
++
++	return NULL;
++}
++
++/*
++ * Stop device iteration.
++ * Nothing to be done here.
++ */
++static void proc_print_sdev_stop(struct seq_file *s, void *p)
++{
++	return;
++}
++
++/*
++ * Show selected device.
++ * We have to dereference the device here.
++ */
++static int proc_print_sdev_show(struct seq_file *s, void *p)
+ {
+-	struct scsi_device *sdev = to_scsi_device(dev);
+-	struct seq_file *s = data;
++	struct device *d = p;
++	struct scsi_device *sdev = to_scsi_device(d);
+ 	int i;
+ 
+ 	seq_printf(s,
+@@ -186,9 +267,18 @@ static int proc_print_scsidevice(struct 
+ 	else
+ 		seq_printf(s, "\n");
+ 
++	put_device(d);
++
+ 	return 0;
+ }
+ 
++struct seq_operations scsi_proc_print_op = {
++	.start	= proc_print_sdev_start,
++	.next	= proc_print_sdev_next,
++	.stop	= proc_print_sdev_stop,
++	.show	= proc_print_sdev_show
++};
++
+ static int scsi_add_single_device(uint host, uint channel, uint id, uint lun)
+ {
+ 	struct Scsi_Host *shost;
+@@ -283,20 +373,13 @@ static ssize_t proc_scsi_write(struct fi
+ 	return err;
+ }
+ 
+-static int proc_scsi_show(struct seq_file *s, void *p)
+-{
+-	seq_printf(s, "Attached devices:\n");
+-	bus_for_each_dev(&scsi_bus_type, NULL, s, proc_print_scsidevice);
+-	return 0;
+-}
 -
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ static int proc_scsi_open(struct inode *inode, struct file *file)
+ {
+ 	/*
+ 	 * We don't really needs this for the write case but it doesn't
+ 	 * harm either.
+ 	 */
+-	return single_open(file, proc_scsi_show, NULL);
++	return seq_open(file, &scsi_proc_print_op);
+ }
+ 
+ static struct file_operations proc_scsi_operations = {
+@@ -304,7 +387,7 @@ static struct file_operations proc_scsi_
+ 	.read		= seq_read,
+ 	.write		= proc_scsi_write,
+ 	.llseek		= seq_lseek,
+-	.release	= single_release,
++	.release	= seq_release,
+ };
+ 
+ int __init scsi_init_procfs(void)
+
+--------------030500070906010809030006--
