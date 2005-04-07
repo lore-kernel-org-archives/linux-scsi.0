@@ -1,67 +1,39 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: proc_name in sysfs
-Date: Thu, 7 Apr 2005 17:00:31 -0700
-Message-ID: <20050408000031.GA8300@us.ibm.com>
-References: <4253CA94.8000500@bull.net> <20050406183614.GA25370@us.ibm.com> <4254877B.4020607@torque.net>
+From: Jesse Barnes <jbarnes@engr.sgi.com>
+Subject: Re: iomapping a big endian area
+Date: Thu, 7 Apr 2005 16:57:53 -0700
+Message-ID: <200504071657.54172.jbarnes@engr.sgi.com>
+References: <1112475134.5786.29.camel@mulgrave> <20050404141616.GA10384@infradead.org> <1112624705.5813.19.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:42654 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262620AbVDHAAe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2005 20:00:34 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e1.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j3800Xbo029921
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Apr 2005 20:00:33 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j3800Xil115774
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Apr 2005 20:00:33 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j3800XOA012246
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Apr 2005 19:00:33 -0500
+Received: from omx2-ext.sgi.com ([192.48.171.19]:13540 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S262617AbVDHAAf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2005 20:00:35 -0400
+In-Reply-To: <1112624705.5813.19.camel@mulgrave>
 Content-Disposition: inline
-In-Reply-To: <4254877B.4020607@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Frederic TEMPORELLI <frederic.temporelli@bull.net>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, "David S. Miller" <davem@davemloft.net>, matthew@wil.cx, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>
 
-On Thu, Apr 07, 2005 at 11:06:03AM +1000, Douglas Gilbert wrote:
-> Patrick Mansfield wrote:
-> >On Wed, Apr 06, 2005 at 01:40:04PM +0200, Frederic TEMPORELLI wrote:
+On Monday, April 4, 2005 7:25 am, James Bottomley wrote:
+> On Mon, 2005-04-04 at 15:16 +0100, Christoph Hellwig wrote:
+> > The IOC4 device that provides IDE, serial ports and external interrupts
+> > on Altix systems has a big endian register layour, and the PCI-X bridge
+> > in those Altix systems can do the swapping if a special bit is set.
 > >
-> >
-> >>2/ now, how can we get the adapter module name from sysfs ?
-> >
-> >
-> >Why do you need it?
+> > In older kernels that bit was set from the driver through a special API,
+> > but it seems the firmware does that automatically now.
+>
+> We already have some unusual code in drivers to support other altix
+> design ... features ... do you regard this as something that's likely to
+> be replicated on other platforms, or is it more in the category of a one
+> off mistake that can be corrected in firmware?
 
+The whole line of altix pci bridges can do byteswapping, so it's more than 
+just one product that could benefit (however slightly).  Not sure about other 
+bridges though.
 
-> Patrick,
-> lsscsi currently uses proc_name so it needs to be
-> changed to use the above logic (if LLDs are going
-> to stop populating proc_name).
-
-Oops, I didn't notice, I had assumed it was using the sysfs layout.
-
-Yes, seems like it should use the sysfs driver info, proc_name is
-rather useless in sysfs context.
-
-> It has been suggested that I extend lsscsi to show
-> transport info (as seen from the HBA) found in the
-> various *_transport directories in sysfs.
-
-As an option that sounds nice.
-
-> Also I have been thinking about ways to list less
-> tha all scsi devices. For example: "lsscsi 1:0:3:0"
-> to look at one device and "lsscsi 1:-" for all scsi
-> devices hanging off host1. I'm not sure whether
-> "lsscsi /dev/sda" is a good idea. Any suggestions?
-
-Sounds good, but maybe not (directly) for /dev. udevinfo can supply that,
-it has a /dev to /sys mapping:
-
-[elm3b79 patman]$ udevinfo -q path -n /udev/mydisk-sdag
-/block/sdm
-
--- Patrick Mansfield
+Jesse
