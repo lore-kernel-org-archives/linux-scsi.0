@@ -1,40 +1,46 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: proc_name in sysfs
-Date: Thu, 7 Apr 2005 17:02:56 -0700
-Message-ID: <20050408000256.GB8300@us.ibm.com>
-References: <4253CA94.8000500@bull.net> <20050406183614.GA25370@us.ibm.com> <4254877B.4020607@torque.net> <4254D4A4.1000307@bull.net>
+Date: Fri, 8 Apr 2005 07:46:45 +0100
+Message-ID: <20050408064645.GA4860@infradead.org>
+References: <4253CA94.8000500@bull.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:49324 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262616AbVDHAC7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2005 20:02:59 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e3.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j3802xuX026264
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Apr 2005 20:02:59 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j3802xil064252
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Apr 2005 20:02:59 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j3802wwd016025
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Apr 2005 19:02:59 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:43956 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S262705AbVDHGqs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Apr 2005 02:46:48 -0400
 Content-Disposition: inline
-In-Reply-To: <4254D4A4.1000307@bull.net>
+In-Reply-To: <4253CA94.8000500@bull.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Frederic TEMPORELLI <frederic.temporelli@bull.net>
-Cc: linux-scsi@vger.kernel.org, dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Apr 07, 2005 at 08:35:16AM +0200, Frederic TEMPORELLI wrote:
-> Hi,
+On Wed, Apr 06, 2005 at 01:40:04PM +0200, Frederic TEMPORELLI wrote:
+> Hello,
 > 
 > 
-> Sorry, no such "driver" directory in /sys/class/scsi_host/hostX/
+> We are using HBAs modules names from "proc_name" interface in sysfs:
+> /sys/class/scsi_host/hostX/proc_name.
+> 
+> But with new Emulex drivers (8.0.21 and +), proc_name is reporting <NULL> 
+> (previous drivers were reporting "lpfc").
+> => In the driver code, .proc_name field from scsi_host_template structure 
+> is no more initialized.
+> James Smart told us that the "removal" of .proc_name field (not really 
+> removed, but no more initialized) was part of the /proc interfaces removal 
+> (suggested by scsi-linux feedback).
+> 
+> So:
+> 1/ now, what is the aim of proc_name interface (reporting "<NULL>") in 
+> sysfs ?
+> 2/ now, how can we get the adapter module name from sysfs ?
+> 
+> => I'm just thinking that .proc_name field has to be kept initialized 
+> and/or something has to be changed to replace the confusing "proc" prefix.
 
-Doug answered that.
+The real problem is that someone decided to export the proc_name in sysfs.
+It's supposed to be only procfs-specific but someone violated that rule.
 
-> >>Why do you need it?
-
-If you answer the above you might get better/other suggestions.
-
--- Patrick Mansfield
+Not sure how to proceed forward with this.
