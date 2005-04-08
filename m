@@ -1,59 +1,63 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: proc_name in sysfs
-Date: Fri, 08 Apr 2005 18:03:16 +1000
-Message-ID: <42563AC4.4050605@torque.net>
-References: <4253CA94.8000500@bull.net> <20050408064645.GA4860@infradead.org>
-Reply-To: dougg@torque.net
+From: Andreas Herrmann <aherrman@de.ibm.com>
+Subject: Proper handling of data underrun
+Date: Fri, 8 Apr 2005 10:37:02 +0200
+Message-ID: <20050408083702.GA6645@lion28.boeblingen.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:43183 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S262758AbVDHIHN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2005 04:07:13 -0400
-In-Reply-To: <20050408064645.GA4860@infradead.org>
+Received: from mtagate2.de.ibm.com ([195.212.29.151]:44207 "EHLO
+	mtagate2.de.ibm.com") by vger.kernel.org with ESMTP id S262705AbVDHKhg
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Apr 2005 06:37:36 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate2.de.ibm.com (8.12.10/8.12.10) with ESMTP id j38AbZ96159496
+	for <linux-scsi@vger.kernel.org>; Fri, 8 Apr 2005 10:37:35 GMT
+Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
+	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j38AbZZL220688
+	for <linux-scsi@vger.kernel.org>; Fri, 8 Apr 2005 12:37:35 +0200
+Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av02.megacenter.de.ibm.com (8.12.11/8.12.11) with ESMTP id j38AbZPG014131
+	for <linux-scsi@vger.kernel.org>; Fri, 8 Apr 2005 12:37:35 +0200
+Received: from lion28.boeblingen.de.ibm.com (lion28.boeblingen.de.ibm.com [9.152.242.26])
+	by d12av02.megacenter.de.ibm.com (8.12.11/8.12.11) with ESMTP id j38AbZTf014128
+	for <linux-scsi@vger.kernel.org>; Fri, 8 Apr 2005 12:37:35 +0200
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Frederic TEMPORELLI <frederic.temporelli@bull.net>, linux-scsi@vger.kernel.org
+To: Linux SCSI <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig wrote:
-> On Wed, Apr 06, 2005 at 01:40:04PM +0200, Frederic TEMPORELLI wrote:
-> 
->>Hello,
->>
->>
->>We are using HBAs modules names from "proc_name" interface in sysfs:
->>/sys/class/scsi_host/hostX/proc_name.
->>
->>But with new Emulex drivers (8.0.21 and +), proc_name is reporting <NULL> 
->>(previous drivers were reporting "lpfc").
->>=> In the driver code, .proc_name field from scsi_host_template structure 
->>is no more initialized.
->>James Smart told us that the "removal" of .proc_name field (not really 
->>removed, but no more initialized) was part of the /proc interfaces removal 
->>(suggested by scsi-linux feedback).
->>
->>So:
->>1/ now, what is the aim of proc_name interface (reporting "<NULL>") in 
->>sysfs ?
->>2/ now, how can we get the adapter module name from sysfs ?
->>
->>=> I'm just thinking that .proc_name field has to be kept initialized 
->>and/or something has to be changed to replace the confusing "proc" prefix.
-> 
-> 
-> The real problem is that someone decided to export the proc_name in sysfs.
-> It's supposed to be only procfs-specific but someone violated that rule.
+Hi,
 
-Forget the "proc_" part. It is effectively the lld_name.
+Documentation/scsi/scsi_mid_low_api.txt says:
 
-Allowing the LLD to name itself to the scsi subsystem
-makes sense, especially when the LLD is made up of several
-kernel modules. See my previous example comparing the
-output of lsscsi -H and scan_host.sh .
+    resid        - an LLD should set this signed integer to the ...
 
-> Not sure how to proceed forward with this.
+    <snip>
 
-Doug Gilbert
+    underflow    - LLD should place (DID_ERROR << 16) in 'result' if ...
 
+    <snip>
+
+ZFCP is setting resid and DID_ERROR if an underrun is indicated in the
+FCP-response.
+
+In some error situations it occurs that the storage box reports a BUSY
+or TASK_SET_FULL scsi state as well as data underrun in the
+FCP-response.
+
+Now zfcp sets DID_ERROR in host_byte as suggested in
+scsi_mid_low_api.txt. And the BUSY/TASK_SET_FULL state is returned in
+stauts_byte.
+
+Problem is:
+Due to the its fastfail-operation the scsi-stack won't do any
+retry for this kind of failed commands because DID_ERROR is
+evaluated before BUSY/TASK_SET_FULL.
+
+What is the proper handling of situations where the device reports a
+BUSY/TASK_SET_FULL and a data underrun?
+
+
+Regards,
+
+Andreas
