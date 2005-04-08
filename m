@@ -1,33 +1,34 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] aacraid 2.6: Address sparse warnings
-Date: Fri, 8 Apr 2005 08:13:51 +0100
-Message-ID: <20050408071351.GA5168@infradead.org>
-References: <1112884953.18191.0.camel@markh1.pdx.osdl.net>
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: [PATCH] Use proper seq_file api for /proc/scsi/scsi
+Date: Fri, 8 Apr 2005 00:23:46 -0700
+Message-ID: <20050408072345.GA1018765@sgi.com>
+References: <42550173.1040503@suse.de> <20050407103123.GB9586@infradead.org> <425517B3.2010702@suse.de> <20050407112412.GA12072@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:7349 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S262717AbVDHHNx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Apr 2005 03:13:53 -0400
+Received: from omx2-ext.sgi.com ([192.48.171.19]:42900 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S262728AbVDHHZw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2005 03:25:52 -0400
 Content-Disposition: inline
-In-Reply-To: <1112884953.18191.0.camel@markh1.pdx.osdl.net>
+In-Reply-To: <20050407112412.GA12072@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>, viro@parcelfarce.linux.theplanet.co.uk
+To: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-> +			u32 temp = le32_to_cpu(psg->sg[i-1].count) - 
-> +				(byte_count - scsicmd->request_bufflen);
-> +			psg->sg[i-1].count = cpu_to_le32(temp);
+On Thu, Apr 07, 2005 at 12:24:12PM +0100, Christoph Hellwig wrote:
+> On Thu, Apr 07, 2005 at 01:21:23PM +0200, Hannes Reinecke wrote:
+> > > /proc/scsi/scsi is deprecated and even only compiled in if
+> > > "legacy /proc/scsi/ support" is enabled.  Please move over to lssci which
+> > > is using sysfs ASAP.
+> > > 
+> > Ah. And that's enough reason for it not to work properly?
+> > Deprecated as it may be, but one could at least expect it to _work_.
+> 
+> It works for those setups that already worked with 2.4.x, aka only a few
+> luns.
 
-You really want {be,le}*_{add,sub} helpers.  I needed them on various
-occasions, too.  Al, what do you think about adding these helpers to a
-common header somewhere?
+Even if it's deprecated, wouldn't it be good to fix it as long as
+it's there, unless it hurts something else?  Or at least fix the
+out of memory error, even if it doesn't display all the luns?
 
-> +#define LE32_ALL_ONES ((__force __le32)0xffffffff)
-
-I don't like having this in an actual driver.  It might make sense to
-either have this in a common header or actually allowing to assign all
-ones to __l32*/__be* variables.  Al?
-
+jeremy
