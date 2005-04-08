@@ -1,34 +1,62 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [PATCH] Use proper seq_file api for /proc/scsi/scsi
-Date: Fri, 8 Apr 2005 00:23:46 -0700
-Message-ID: <20050408072345.GA1018765@sgi.com>
-References: <42550173.1040503@suse.de> <20050407103123.GB9586@infradead.org> <425517B3.2010702@suse.de> <20050407112412.GA12072@infradead.org>
+From: Frederic TEMPORELLI <frederic.temporelli@bull.net>
+Subject: Re: proc_name in sysfs
+Date: Fri, 08 Apr 2005 09:37:46 +0200
+Message-ID: <425634CA.8060603@bull.net>
+References: <4253CA94.8000500@bull.net> <20050406183614.GA25370@us.ibm.com> <4254877B.4020607@torque.net> <4254D4A4.1000307@bull.net> <20050408000256.GB8300@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:42900 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S262728AbVDHHZw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2005 03:25:52 -0400
-Content-Disposition: inline
-In-Reply-To: <20050407112412.GA12072@infradead.org>
+Received: from ecfrec.frec.bull.fr ([129.183.4.8]:35207 "EHLO
+	ecfrec.frec.bull.fr") by vger.kernel.org with ESMTP id S262727AbVDHHh7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Apr 2005 03:37:59 -0400
+In-Reply-To: <20050408000256.GB8300@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org, dougg@torque.net
 
-On Thu, Apr 07, 2005 at 12:24:12PM +0100, Christoph Hellwig wrote:
-> On Thu, Apr 07, 2005 at 01:21:23PM +0200, Hannes Reinecke wrote:
-> > > /proc/scsi/scsi is deprecated and even only compiled in if
-> > > "legacy /proc/scsi/ support" is enabled.  Please move over to lssci which
-> > > is using sysfs ASAP.
-> > > 
-> > Ah. And that's enough reason for it not to work properly?
-> > Deprecated as it may be, but one could at least expect it to _work_.
-> 
-> It works for those setups that already worked with 2.4.x, aka only a few
-> luns.
+Hi,
 
-Even if it's deprecated, wouldn't it be good to fix it as long as
-it's there, unless it hurts something else?  Or at least fix the
-out of memory error, even if it doesn't display all the luns?
+Patrick Mansfield a =E9crit :
+> On Thu, Apr 07, 2005 at 08:35:16AM +0200, Frederic TEMPORELLI wrote:
+>=20
+>>Hi,
+>>
+>>
+>>Sorry, no such "driver" directory in /sys/class/scsi_host/hostX/
+>=20
+>=20
+> Doug answered that.
+>=20
 
-jeremy
+thx, I've just try the script and it works...
+(mea culpa, I should have look in details to the symlinks)
+
+
+>=20
+>>>>Why do you need it?
+>=20
+>=20
+> If you answer the above you might get better/other suggestions.
+
+We already have scripts for getting HBAs informations, and these script=
+s are=20
+based on /sys/class/scsi_host/hostX/proc_name to define how to process=20
+informations (we don't care about WWPN when using U320 adapter).
+
+=3D> I'll change our scripts according to Doug's solution, this should =
+be fine.
+
+Thanks again...
+
+
+--=20
+=46rederic TEMPORELLI
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
