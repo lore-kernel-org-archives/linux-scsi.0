@@ -1,66 +1,36 @@
-From: Christophe Saout <christophe@saout.de>
-Subject: flush barriers and SCSI/3w-xxxx with latest 2.6 kernels
-Date: Fri, 08 Apr 2005 20:20:15 +0200
-Message-ID: <1112984415.2325.10.camel@leto.cs.pocnet.net>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] aacraid 2.6: Address sparse warnings
+Date: Fri, 8 Apr 2005 14:41:58 -0400
+Message-ID: <60807403EABEB443939A5A7AA8A7458B010A9E60@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FiGHs5SaeKwM/Zca+DFN"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from websrv2.werbeagentur-aufwind.de ([213.239.197.240]:50387 "EHLO
-	websrv2.werbeagentur-aufwind.de") by vger.kernel.org with ESMTP
-	id S262897AbVDHSU2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Apr 2005 14:20:28 -0400
+Received: from magic.adaptec.com ([216.52.22.17]:34187 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261850AbVDHSmC convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Apr 2005 14:42:02 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Jens Axboe <axboe@suse.de>, linuxraid@amcc.com
+To: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>, Christoph Hellwig <hch@infradead.org>
+Cc: Mark Haverkamp <markh@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
+Al Viro sez:
+> > > +#define LE32_ALL_ONES ((__force __le32)0xffffffff)
+> > I don't like having this in an actual driver.  It might make sense
+to
+> > either have this in a common header or actually allowing to assign
+all
+> > ones to __l32*/__be* variables.  Al?
+> It doesn't make sense, period.  Use cpu_to_le32(~0U) - calculations
+will
+> be done at compile time and it's self-documenting.  Definition above
+> is not more efficient or easier to type, so...
 
---=-FiGHs5SaeKwM/Zca+DFN
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+As long as this is guaranteed on all platforms to do the right thing ...
+paranoid about compiler optimizations. MarkH, this should be an easy
+regroup :-)
 
-Hi,
-
-I was just enabling flush barriers on machine using a 3ware controller
-(by adding barrier=3Dflush to the filesystem options) since this is
-working wonderfully here at home.
-
-But when the filesystems are mounted, the filesystems turns them off
-because they are unsupported:
-
-Apr  8 19:59:46 websrv2 reiserfs: disabling flush barriers on dm-3
-
-"cat /sys/block/sda/device/queue_type" said "none" instead of ordered.
-An "echo 254 > /sys/block/sda/device/queue_length" fixed this, but it
-seems that I can't enable this afterwards.
-
-I put back a simple tw_slave_configure method to the 3w-xxxx.c driver
-(that calls adjust_queue_depth) and now queue_type shows "ordered" from
-the beginning.
-
-But flush barriers are still not working. A quick peek at the code
-reveils that scsi_alloc_queue is called before slave_configure.
-scsi_alloc_queue calls blk_queue_ordered only there. It's reading
-another ordered_tag which is not set.
-
-Why is there an sdev->ordered_tags and another shost->ordered_tag.
-Should ordered_tag be set to 1 in driver_template or is this really not
-supported?
-
-I am missing something here?
-
-
---=-FiGHs5SaeKwM/Zca+DFN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQBCVstfZCYBcts5dM0RAo1pAJ94in9l59Tlb09QH17v4AWf1ON6kgCgpQP8
-9csxZ6cf3poQqjyxFGlIZqA=
-=PVDG
------END PGP SIGNATURE-----
-
---=-FiGHs5SaeKwM/Zca+DFN--
-
+Sincerely -- Mark Salyzyn
