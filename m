@@ -1,34 +1,31 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: [OOPS] 2.6.11 - NMI lockup with CFQ scheduler
-Date: Fri, 08 Apr 2005 09:04:09 -0400
-Message-ID: <1112965449.5838.9.camel@mulgrave>
-References: <20050406175838.GC15165@suse.de>
-	 <1112811607.5555.15.camel@mulgrave> <20050406190838.GE15165@suse.de>
-	 <1112821799.5850.19.camel@mulgrave> <20050407064934.GJ15165@suse.de>
-	 <1112879919.5842.3.camel@mulgrave> <20050407132205.GA16517@infradead.org>
-	 <1112880658.5842.10.camel@mulgrave> <20050407133222.GJ1847@suse.de>
-	 <1112881183.5842.13.camel@mulgrave>  <20050407144557.GK1847@suse.de>
+Date: Fri, 8 Apr 2005 15:09:10 +0200
+Message-ID: <20050408130909.GS22988@suse.de>
+References: <20050406190838.GE15165@suse.de> <1112821799.5850.19.camel@mulgrave> <20050407064934.GJ15165@suse.de> <1112879919.5842.3.camel@mulgrave> <20050407132205.GA16517@infradead.org> <1112880658.5842.10.camel@mulgrave> <20050407133222.GJ1847@suse.de> <1112881183.5842.13.camel@mulgrave> <20050407144557.GK1847@suse.de> <1112965449.5838.9.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:11702 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262808AbVDHNEW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Apr 2005 09:04:22 -0400
-In-Reply-To: <20050407144557.GK1847@suse.de>
+Received: from ns.virtualhost.dk ([195.184.98.160]:33960 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262820AbVDHNJU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2005 09:09:20 -0400
+Content-Disposition: inline
+In-Reply-To: <1112965449.5838.9.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: Christoph Hellwig <hch@infradead.org>, Chris Rankin <rankincj@yahoo.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, 2005-04-07 at 16:45 +0200, Jens Axboe wrote:
-> So clear ->request_queue instead.
+On Fri, Apr 08 2005, James Bottomley wrote:
+> On Thu, 2005-04-07 at 16:45 +0200, Jens Axboe wrote:
+> > So clear ->request_queue instead.
+> 
+> 
+> Will do.  Did you want me to look after your patch and add this, or do
+> you want to send it to Linus (after the purdah is over)?
 
+Just queue it with the rest of your changes, that is fine with me.
 
-Will do.  Did you want me to look after your patch and add this, or do
-you want to send it to Linus (after the purdah is over)?
-
-James
-
+-- 
+Jens Axboe
 
