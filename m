@@ -1,31 +1,25 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [OOPS] 2.6.11 - NMI lockup with CFQ scheduler
-Date: Fri, 8 Apr 2005 15:09:10 +0200
-Message-ID: <20050408130909.GS22988@suse.de>
-References: <20050406190838.GE15165@suse.de> <1112821799.5850.19.camel@mulgrave> <20050407064934.GJ15165@suse.de> <1112879919.5842.3.camel@mulgrave> <20050407132205.GA16517@infradead.org> <1112880658.5842.10.camel@mulgrave> <20050407133222.GJ1847@suse.de> <1112881183.5842.13.camel@mulgrave> <20050407144557.GK1847@suse.de> <1112965449.5838.9.camel@mulgrave>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Use proper seq_file api for /proc/scsi/scsi
+Date: Fri, 8 Apr 2005 15:27:11 +0100
+Message-ID: <20050408142711.GA11172@infradead.org>
+References: <42550173.1040503@suse.de> <20050407103123.GB9586@infradead.org> <425517B3.2010702@suse.de> <20050407112412.GA12072@infradead.org> <20050408072345.GA1018765@sgi.com> <20050408075643.GA5514@infradead.org> <20050408081011.GB1018765@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:33960 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262820AbVDHNJU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Apr 2005 09:09:20 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:38588 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S262829AbVDHO1O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Apr 2005 10:27:14 -0400
 Content-Disposition: inline
-In-Reply-To: <1112965449.5838.9.camel@mulgrave>
+In-Reply-To: <20050408081011.GB1018765@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Chris Rankin <rankincj@yahoo.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: Hannes Reinecke <hare@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, Apr 08 2005, James Bottomley wrote:
-> On Thu, 2005-04-07 at 16:45 +0200, Jens Axboe wrote:
-> > So clear ->request_queue instead.
-> 
-> 
-> Will do.  Did you want me to look after your patch and add this, or do
-> you want to send it to Linus (after the purdah is over)?
+On Fri, Apr 08, 2005 at 01:10:11AM -0700, Jeremy Higdon wrote:
+> Just as a sanity check, you meant "lsscsi" and not "lssci" in your original
+> reply, right?
 
-Just queue it with the rest of your changes, that is fine with me.
-
--- 
-Jens Axboe
+Yes.
 
