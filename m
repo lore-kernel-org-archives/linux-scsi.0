@@ -1,39 +1,40 @@
-From: Jesse Barnes <jbarnes@engr.sgi.com>
-Subject: Re: iomapping a big endian area
-Date: Thu, 7 Apr 2005 16:57:53 -0700
-Message-ID: <200504071657.54172.jbarnes@engr.sgi.com>
-References: <1112475134.5786.29.camel@mulgrave> <20050404141616.GA10384@infradead.org> <1112624705.5813.19.camel@mulgrave>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: proc_name in sysfs
+Date: Thu, 7 Apr 2005 17:02:56 -0700
+Message-ID: <20050408000256.GB8300@us.ibm.com>
+References: <4253CA94.8000500@bull.net> <20050406183614.GA25370@us.ibm.com> <4254877B.4020607@torque.net> <4254D4A4.1000307@bull.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:13540 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S262617AbVDHAAf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2005 20:00:35 -0400
-In-Reply-To: <1112624705.5813.19.camel@mulgrave>
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:49324 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262616AbVDHAC7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2005 20:02:59 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e3.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j3802xuX026264
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Apr 2005 20:02:59 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j3802xil064252
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Apr 2005 20:02:59 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j3802wwd016025
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Apr 2005 19:02:59 -0500
 Content-Disposition: inline
+In-Reply-To: <4254D4A4.1000307@bull.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, "David S. Miller" <davem@davemloft.net>, matthew@wil.cx, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>
+To: Frederic TEMPORELLI <frederic.temporelli@bull.net>
+Cc: linux-scsi@vger.kernel.org, dougg@torque.net
 
-On Monday, April 4, 2005 7:25 am, James Bottomley wrote:
-> On Mon, 2005-04-04 at 15:16 +0100, Christoph Hellwig wrote:
-> > The IOC4 device that provides IDE, serial ports and external interrupts
-> > on Altix systems has a big endian register layour, and the PCI-X bridge
-> > in those Altix systems can do the swapping if a special bit is set.
-> >
-> > In older kernels that bit was set from the driver through a special API,
-> > but it seems the firmware does that automatically now.
->
-> We already have some unusual code in drivers to support other altix
-> design ... features ... do you regard this as something that's likely to
-> be replicated on other platforms, or is it more in the category of a one
-> off mistake that can be corrected in firmware?
+On Thu, Apr 07, 2005 at 08:35:16AM +0200, Frederic TEMPORELLI wrote:
+> Hi,
+> 
+> 
+> Sorry, no such "driver" directory in /sys/class/scsi_host/hostX/
 
-The whole line of altix pci bridges can do byteswapping, so it's more than 
-just one product that could benefit (however slightly).  Not sure about other 
-bridges though.
+Doug answered that.
 
-Jesse
+> >>Why do you need it?
+
+If you answer the above you might get better/other suggestions.
+
+-- Patrick Mansfield
