@@ -1,92 +1,100 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH scsi-misc-2.6] scsi: scsi_send_eh_cmnd() cleanup
-Date: Sun, 10 Apr 2005 15:31:32 +0900
-Message-ID: <20050410063132.GB24158@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH scsi-misc-2.6 00/07] scsi: timer updates
+Date: Mon, 11 Apr 2005 03:45:06 +0900 (KST)
+Message-ID: <20050410184214.4AAD0992@htj.dyndns.org>
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.202]:10715 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261436AbVDJGbh (ORCPT
+Received: from wproxy.gmail.com ([64.233.184.196]:59946 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261557AbVDJSpT (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Apr 2005 02:31:37 -0400
-Received: by rproxy.gmail.com with SMTP id a41so1005739rng
-        for <linux-scsi@vger.kernel.org>; Sat, 09 Apr 2005 23:31:37 -0700 (PDT)
-Content-Disposition: inline
+	Sun, 10 Apr 2005 14:45:19 -0400
+Received: by wproxy.gmail.com with SMTP id 68so1362683wri
+        for <linux-scsi@vger.kernel.org>; Sun, 10 Apr 2005 11:45:12 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com, axboe@suse.de, Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
- Hello, James.
+ Hello, James, Jens and Christoph.
 
- This patch makes scsi_send_eh_cmnd() use sdev and shost instead of
-referencing them through scmd-> everytime.  Following timer cleanup
-patchset assumes this patch is applied.
+ This patchset removes misuses of scmd->eh_timeout and unexports SCSI
+timer interface such that no one can misuse it anymore.  #02 assumes
+that the preceding scsi_send_eh_cmnd() patch is applied.  Tested and
+worked for me.
 
+ The following bugs are fixed.
 
- Signed-off-by: Tejun Heo <htejun@gmail.com>
+ * Race condition between eh and normal completion path for eh_timer
+ * scsi_delete_timer() race in scsi_queue_insert()
 
+[ Start of patch descriptions ]
 
-Index: scsi-reqfn-export/drivers/scsi/scsi_error.c
-===================================================================
---- scsi-reqfn-export.orig/drivers/scsi/scsi_error.c	2005-04-10 15:20:09.000000000 +0900
-+++ scsi-reqfn-export/drivers/scsi/scsi_error.c	2005-04-10 15:25:21.000000000 +0900
-@@ -485,7 +485,8 @@ static void scsi_eh_done(struct scsi_cmn
-  **/
- static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, int timeout)
- {
--	struct Scsi_Host *host = scmd->device->host;
-+	struct scsi_device *sdev = scmd->device;
-+	struct Scsi_Host *shost = sdev->host;
- 	DECLARE_MUTEX_LOCKED(sem);
- 	unsigned long flags;
- 	int rtn = SUCCESS;
-@@ -496,27 +497,27 @@ static int scsi_send_eh_cmnd(struct scsi
- 	 */
- 	scmd->owner = SCSI_OWNER_LOWLEVEL;
- 
--	if (scmd->device->scsi_level <= SCSI_2)
-+	if (sdev->scsi_level <= SCSI_2)
- 		scmd->cmnd[1] = (scmd->cmnd[1] & 0x1f) |
--			(scmd->device->lun << 5 & 0xe0);
-+			(sdev->lun << 5 & 0xe0);
- 
- 	scsi_add_timer(scmd, timeout, scsi_eh_times_out);
- 
- 	/*
- 	 * set up the semaphore so we wait for the command to complete.
- 	 */
--	scmd->device->host->eh_action = &sem;
-+	shost->eh_action = &sem;
- 	scmd->request->rq_status = RQ_SCSI_BUSY;
- 
--	spin_lock_irqsave(scmd->device->host->host_lock, flags);
-+	spin_lock_irqsave(shost->host_lock, flags);
- 	scsi_log_send(scmd);
--	host->hostt->queuecommand(scmd, scsi_eh_done);
--	spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
-+	shost->hostt->queuecommand(scmd, scsi_eh_done);
-+	spin_unlock_irqrestore(shost->host_lock, flags);
- 
- 	down(&sem);
- 	scsi_log_completion(scmd, SUCCESS);
- 
--	scmd->device->host->eh_action = NULL;
-+	shost->eh_action = NULL;
- 
- 	/*
- 	 * see if timeout.  if so, tell the host to forget about it.
-@@ -536,10 +537,10 @@ static int scsi_send_eh_cmnd(struct scsi
- 		 * abort a timed out command or not.  not sure how
- 		 * we should treat them differently anyways.
- 		 */
--		spin_lock_irqsave(scmd->device->host->host_lock, flags);
--		if (scmd->device->host->hostt->eh_abort_handler)
--			scmd->device->host->hostt->eh_abort_handler(scmd);
--		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
-+		spin_lock_irqsave(shost->host_lock, flags);
-+		if (shost->hostt->eh_abort_handler)
-+			shost->hostt->eh_abort_handler(scmd);
-+		spin_unlock_irqrestore(shost->host_lock, flags);
- 			
- 		scmd->request->rq_status = RQ_SCSI_DONE;
- 		scmd->owner = SCSI_OWNER_ERROR_HANDLER;
+01_scsi_timer_update_aic7xxx.patch
+	: make aic7xxx use its own timer instead of scmd->eh_timeout
+
+	aic7xxx used scmd->eh_timeout in its dv routines.  This kind
+	of usage requires knowledge of and creates dependency into the
+	SCSI midlayer unnecessarily.  This patch makes aic7xxx driver
+	use its own timer instead of scmd->eh_timeout.
+	Suggested by Christoph Hellwig.
+
+02_scsi_timer_eh_timer_fix.patch
+	: make scsi_send_eh_cmnd use its own timer instead of scmd->eh_timeout
+
+	scmd->eh_timeout is used to resolve the race between command
+	completion and timeout.  However, during error handling,
+	scsi_send_eh_cmnd uses scmd->eh_timeout.  This creates a race
+	condition between eh and normal completion for a request which
+	has timed out and in the process of error handling.  If the
+	request completes while scmd->eh_timeout is being used by eh,
+	eh timeout is lost and the command will be handled by both eh
+	and completion path.  This patch fixes the race by making
+	scsi_send_eh_cmnd() use its own timer.
+
+03_scsi_timer_dispatch_race_fix.patch
+	: remove a timer race in scsi_queue_insert()
+
+	scsi_queue_insert() has four callers.  Three callers call with
+	timer disabled and one (the second invocation in
+	scsi_dispatch_cmd()) calls with timer activated.
+	scsi_queue_insert() used to always call scsi_delete_timer()
+	and ignore the return value.  This results in race with timer
+	expiration.  Remove scsi_delete_timer() call from
+	scsi_queue_insert() and make the caller delete timer and check
+	the return value.
+
+04_scsi_timer_remove_delete_timer_from_reset_provider.patch
+	: remove unnecessary scsi_delete_timer() call in scsi_reset_provider()
+
+	scsi_reset_provider() calls scsi_delete_timer() on exit which
+	isn't necessary.  Remove it.
+
+05_scsi_timer_unexport_timer_functions.patch
+	: unexport scsi_{add|delete}_timer()
+
+	SCSI cmd timer has specific synchronization/semantic
+	requirements and shouldn't be directly used outside SCSI
+	midlayer.  With aic7xxx driver updated, there's no user left.
+	This patch unexports scsi_{add|delete}_timer() routines and
+	also removes @complete argument from scsi_add_timer().  The
+	change makes the use of scsi_times_out() confined in
+	scsi_error.c, so move it upward such that no prototype is
+	needed and make it static.
+
+06_scsi_timer_update_api_doc.patch
+	: Delete scsi_{add|delete}_timer() from scsi_mid_low_api.txt
+
+	As scsi_{add|delete}_timer() got unexported, remove them from
+	the API doc.
+
+07_scsi_timer_strict_reuse.patch
+	: make reuse of SCSI cmd timer strict
+
+	SCSI cmd timer shouldn't be reused while it's active.  Make
+	sure that the unused condition is marked with
+	eh_timeout->function = NULL and BUG() active reuse path.
+
+[ End of patch descriptions ]
+
+ Thanks a lot.
+
