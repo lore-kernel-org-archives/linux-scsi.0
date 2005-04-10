@@ -1,192 +1,239 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 05/07] scsi: unexport scsi_{add|delete}_timer()
-Date: Mon, 11 Apr 2005 03:45:31 +0900 (KST)
-Message-ID: <20050410184214.B4CD5D43@htj.dyndns.org>
-References: <20050410184214.4AAD0992@htj.dyndns.org>
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261572AbVDJSzv@vger.kernel.org>
-In-Reply-To: <20050410184214.4AAD0992@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@steeleye.com, axboe@suse.de, Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] attach aic7xxx to the spi transport class.
+Date: Sun, 10 Apr 2005 13:58:27 -0500
+Message-ID: <1113159507.6737.10.camel@mulgrave>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:49366 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261584AbVDJS6g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Apr 2005 14:58:36 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-05_scsi_timer_unexport_timer_functions.patch
+This patch is the beginning of the long process to see if we can make
+this driver play better.
 
-	SCSI cmd timer has specific synchronization/semantic
-	requirements and shouldn't be directly used outside SCSI
-	midlayer.  With aic7xxx driver updated, there's no user left.
-	This patch unexports scsi_{add|delete}_timer() routines and
-	also removes @complete argument from scsi_add_timer().  The
-	change makes the use of scsi_times_out() confined in
-	scsi_error.c, so move it upward such that no prototype is
-	needed and make it static.
+The first step is simply to attach it to the transport class so you can
+view and set the transfer parameters.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+Next, I intend to plug it into the generic domain validation routines
+(thus killing the separate ahc dv thread)
 
- drivers/scsi/scsi.c       |    2 -
- drivers/scsi/scsi_error.c |   80 +++++++++++++++++++++-------------------------
- drivers/scsi/scsi_priv.h  |    3 +
- include/scsi/scsi_eh.h    |    3 -
- 4 files changed, 41 insertions(+), 47 deletions(-)
+Some time later will be killing the internal queueing, since really only
+the DV state machine uses it and finally plumbing it into the generic
+tag infrastructure.
 
-Index: scsi-reqfn-export/drivers/scsi/scsi.c
-===================================================================
---- scsi-reqfn-export.orig/drivers/scsi/scsi.c	2005-04-11 03:42:12.000000000 +0900
-+++ scsi-reqfn-export/drivers/scsi/scsi.c	2005-04-11 03:42:12.000000000 +0900
-@@ -600,7 +600,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
- 	 * AK: unlikely race here: for some reason the timer could
- 	 * expire before the serial number is set up below.
- 	 */
--	scsi_add_timer(cmd, cmd->timeout_per_command, scsi_times_out);
-+	scsi_add_timer(cmd, cmd->timeout_per_command);
+If anyone has a 79xx card and wants to play too, this should be a simple
+cut and paste, doing s/ahc_/ahd_/ in all my functions.  The 79xx will
+also need QAS, IU and all the other ultra320 transport properties ...
+
+James
+
+===== drivers/scsi/aic7xxx/aic7xxx_osm.c 1.63 vs edited =====
+--- 1.63/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-01-07 23:44:36 -06:00
++++ edited/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-04-10 13:36:07 -05:00
+@@ -122,6 +122,10 @@
+ #include "aic7xxx_osm.h"
+ #include "aic7xxx_inline.h"
+ #include <scsi/scsicam.h>
++#include <scsi/scsi_transport.h>
++#include <scsi/scsi_transport_spi.h>
++
++static struct scsi_transport_template *ahc_linux_transport_template = NULL;
  
- 	scsi_log_send(cmd);
+ /*
+  * Include aiclib.c as part of our
+@@ -1728,6 +1732,8 @@
+ 	ahc_linux_start_dv(ahc);
+ 	ahc_unlock(ahc, &s);
  
-Index: scsi-reqfn-export/drivers/scsi/scsi_error.c
-===================================================================
---- scsi-reqfn-export.orig/drivers/scsi/scsi_error.c	2005-04-11 03:42:12.000000000 +0900
-+++ scsi-reqfn-export/drivers/scsi/scsi_error.c	2005-04-11 03:42:12.000000000 +0900
-@@ -88,6 +88,42 @@ int scsi_eh_scmd_add(struct scsi_cmnd *s
- }
++	host->transportt = ahc_linux_transport_template;
++
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
+ 	scsi_add_host(host, (ahc->dev_softc ? &ahc->dev_softc->dev : NULL)); /* XXX handle failure */
+ 	scsi_scan_host(host);
+@@ -4990,13 +4996,169 @@
  
- /**
-+ * scsi_times_out - Timeout function for normal scsi commands.
-+ * @scmd:	Cmd that is timing out.
-+ *
-+ * Notes:
-+ *     We do not need to lock this.  There is the potential for a race
-+ *     only in that the normal completion handling might run, but if the
-+ *     normal completion function determines that the timer has already
-+ *     fired, then it mustn't do anything.
-+ **/
-+static void scsi_times_out(struct scsi_cmnd *scmd)
+ static void ahc_linux_exit(void);
+ 
++static void ahc_linux_get_period(struct scsi_target *starget)
 +{
-+	scsi_log_completion(scmd, TIMEOUT_ERROR);
-+
-+	if (scmd->device->host->hostt->eh_timed_out)
-+		switch (scmd->device->host->hostt->eh_timed_out(scmd)) {
-+		case EH_HANDLED:
-+			__scsi_done(scmd);
-+			return;
-+		case EH_RESET_TIMER:
-+			/* This allows a single retry even of a command
-+			 * with allowed == 0 */
-+			if (scmd->retries++ > scmd->allowed)
-+				break;
-+			scsi_add_timer(scmd, scmd->timeout_per_command);
-+			return;
-+		case EH_NOT_HANDLED:
-+			break;
-+		}
-+
-+	if (unlikely(!scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD))) {
-+		panic("Error handler thread not present at %p %p %s %d",
-+		      scmd, scmd->device->host, __FILE__, __LINE__);
-+	}
++	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct ahc_softc *ahc = *((struct ahc_softc **)shost->hostdata);
++	struct ahc_tmode_tstate *tstate;
++	struct ahc_initiator_tinfo *tinfo 
++		= ahc_fetch_transinfo(ahc,
++				      starget->channel + 'A',
++				      shost->this_id, starget->id, &tstate);
++	spi_period(starget) = tinfo->curr.period;
 +}
 +
-+/**
-  * scsi_add_timer - Start timeout timer for a single scsi command.
-  * @scmd:	scsi command that is about to start running.
-  * @timeout:	amount of time to allow this command to run.
-@@ -98,8 +134,7 @@ int scsi_eh_scmd_add(struct scsi_cmnd *s
-  *    has its own timer, and as it is added to the queue, we set up the
-  *    timer.  When the command completes, we cancel the timer.
-  **/
--void scsi_add_timer(struct scsi_cmnd *scmd, int timeout,
--		    void (*complete)(struct scsi_cmnd *))
-+void scsi_add_timer(struct scsi_cmnd *scmd, int timeout)
++static void ahc_linux_set_period(struct scsi_target *starget, int period)
++{
++	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct ahc_softc *ahc = *((struct ahc_softc **)shost->hostdata);
++	struct ahc_tmode_tstate *tstate;
++	struct ahc_initiator_tinfo *tinfo 
++		= ahc_fetch_transinfo(ahc,
++				      starget->channel + 'A',
++				      shost->this_id, starget->id, &tstate);
++	struct ahc_devinfo devinfo;
++	unsigned int ppr_options = tinfo->curr.ppr_options;
++	unsigned long flags;
++	struct ahc_syncrate *syncrate;
++
++	ahc_compile_devinfo(&devinfo, shost->this_id, starget->id, 0,
++			    starget->channel + 'A', ROLE_INITIATOR);
++	syncrate = ahc_find_syncrate(ahc, &period, &ppr_options, AHC_SYNCRATE_DT);
++	ahc_lock(ahc, &flags);
++	ahc_set_syncrate(ahc, &devinfo, syncrate, period, tinfo->curr.offset,
++			 ppr_options, AHC_TRANS_GOAL, FALSE);
++	ahc_unlock(ahc, &flags);
++}
++
++static void ahc_linux_get_offset(struct scsi_target *starget)
++{
++	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct ahc_softc *ahc = *((struct ahc_softc **)shost->hostdata);
++	struct ahc_tmode_tstate *tstate;
++	struct ahc_initiator_tinfo *tinfo 
++		= ahc_fetch_transinfo(ahc,
++				      starget->channel + 'A',
++				      shost->this_id, starget->id, &tstate);
++	spi_offset(starget) = tinfo->curr.offset;
++}
++
++static void ahc_linux_set_offset(struct scsi_target *starget, int offset)
++{
++	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct ahc_softc *ahc = *((struct ahc_softc **)shost->hostdata);
++	struct ahc_tmode_tstate *tstate;
++	struct ahc_initiator_tinfo *tinfo 
++		= ahc_fetch_transinfo(ahc,
++				      starget->channel + 'A',
++				      shost->this_id, starget->id, &tstate);
++	struct ahc_devinfo devinfo;
++	unsigned int ppr_options = tinfo->curr.ppr_options;
++	unsigned int period = tinfo->curr.period;
++	unsigned long flags;
++	struct ahc_syncrate *syncrate;
++
++	ahc_compile_devinfo(&devinfo, shost->this_id, starget->id, 0,
++			    starget->channel + 'A', ROLE_INITIATOR);
++	syncrate = ahc_find_syncrate(ahc, &period, &ppr_options, AHC_SYNCRATE_DT);
++	ahc_lock(ahc, &flags);
++	ahc_set_syncrate(ahc, &devinfo, syncrate, period, offset,
++			 ppr_options, AHC_TRANS_GOAL, FALSE);
++	ahc_unlock(ahc, &flags);
++}
++
++static void ahc_linux_get_width(struct scsi_target *starget)
++{
++	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct ahc_softc *ahc = *((struct ahc_softc **)shost->hostdata);
++	struct ahc_tmode_tstate *tstate;
++	struct ahc_initiator_tinfo *tinfo 
++		= ahc_fetch_transinfo(ahc,
++				      starget->channel + 'A',
++				      shost->this_id, starget->id, &tstate);
++	spi_width(starget) = tinfo->curr.width;
++}
++
++static void ahc_linux_set_width(struct scsi_target *starget, int width)
++{
++	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct ahc_softc *ahc = *((struct ahc_softc **)shost->hostdata);
++	struct ahc_devinfo devinfo;
++	unsigned long flags;
++
++	ahc_compile_devinfo(&devinfo, shost->this_id, starget->id, 0,
++			    starget->channel + 'A', ROLE_INITIATOR);
++	ahc_lock(ahc, &flags);
++	ahc_set_width(ahc, &devinfo, width, AHC_TRANS_GOAL, FALSE);
++	ahc_unlock(ahc, &flags);
++}
++
++static void ahc_linux_get_dt(struct scsi_target *starget)
++{
++	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct ahc_softc *ahc = *((struct ahc_softc **)shost->hostdata);
++	struct ahc_tmode_tstate *tstate;
++	struct ahc_initiator_tinfo *tinfo 
++		= ahc_fetch_transinfo(ahc,
++				      starget->channel + 'A',
++				      shost->this_id, starget->id, &tstate);
++	spi_dt(starget) = tinfo->curr.ppr_options & MSG_EXT_PPR_DT_REQ;
++}
++
++static void ahc_linux_set_dt(struct scsi_target *starget, int dt)
++{
++	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct ahc_softc *ahc = *((struct ahc_softc **)shost->hostdata);
++	struct ahc_tmode_tstate *tstate;
++	struct ahc_initiator_tinfo *tinfo 
++		= ahc_fetch_transinfo(ahc,
++				      starget->channel + 'A',
++				      shost->this_id, starget->id, &tstate);
++	struct ahc_devinfo devinfo;
++	unsigned int ppr_options = tinfo->curr.ppr_options
++		& ~MSG_EXT_PPR_DT_REQ;
++	unsigned int period = tinfo->curr.period;
++	unsigned long flags;
++	struct ahc_syncrate *syncrate;
++
++	ahc_compile_devinfo(&devinfo, shost->this_id, starget->id, 0,
++			    starget->channel + 'A', ROLE_INITIATOR);
++	syncrate = ahc_find_syncrate(ahc, &period, &ppr_options,
++				     dt ? AHC_SYNCRATE_DT : AHC_SYNCRATE_ULTRA2);
++	ahc_lock(ahc, &flags);
++	ahc_set_syncrate(ahc, &devinfo, syncrate, period, tinfo->curr.offset,
++			 ppr_options, AHC_TRANS_GOAL, FALSE);
++	ahc_unlock(ahc, &flags);
++}
++
++static struct spi_function_template ahc_linux_transport_functions = {
++	.get_offset	= ahc_linux_get_offset,
++	.set_offset	= ahc_linux_set_offset,
++	.show_offset	= 1,
++	.get_period	= ahc_linux_get_period,
++	.set_period	= ahc_linux_set_period,
++	.show_period	= 1,
++	.get_width	= ahc_linux_get_width,
++	.set_width	= ahc_linux_set_width,
++	.show_width	= 1,
++	.get_dt		= ahc_linux_get_dt,
++	.set_dt		= ahc_linux_set_dt,
++	.show_dt	= 1,
++};
++
++
++
+ static int __init
+ ahc_linux_init(void)
  {
- 
- 	/*
-@@ -112,7 +147,7 @@ void scsi_add_timer(struct scsi_cmnd *sc
- 
- 	scmd->eh_timeout.data = (unsigned long)scmd;
- 	scmd->eh_timeout.expires = jiffies + timeout;
--	scmd->eh_timeout.function = (void (*)(unsigned long)) complete;
-+	scmd->eh_timeout.function = (void (*)(unsigned long))scsi_times_out;
- 
- 	SCSI_LOG_ERROR_RECOVERY(5, printk("%s: scmd: %p, time:"
- 					  " %d, (%p)\n", __FUNCTION__,
-@@ -120,7 +155,6 @@ void scsi_add_timer(struct scsi_cmnd *sc
- 
- 	add_timer(&scmd->eh_timeout);
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
++	ahc_linux_transport_template = spi_attach_transport(&ahc_linux_transport_functions);
++	if (!ahc_linux_transport_template)
++		return -ENODEV;
+ 	int rc = ahc_linux_detect(&aic7xxx_driver_template);
+ 	if (rc)
+ 		return rc;
++	spi_release_transport(ahc_linux_transport_template);
+ 	ahc_linux_exit();
+ 	return -ENODEV;
+ #else
+@@ -5037,6 +5199,7 @@
+ #endif
+ 	ahc_linux_pci_exit();
+ 	ahc_linux_eisa_exit();
++	spi_release_transport(ahc_linux_transport_template);
  }
--EXPORT_SYMBOL(scsi_add_timer);
  
- /**
-  * scsi_delete_timer - Delete/cancel timer for a given function.
-@@ -148,44 +182,6 @@ int scsi_delete_timer(struct scsi_cmnd *
- 
- 	return rtn;
- }
--EXPORT_SYMBOL(scsi_delete_timer);
--
--/**
-- * scsi_times_out - Timeout function for normal scsi commands.
-- * @scmd:	Cmd that is timing out.
-- *
-- * Notes:
-- *     We do not need to lock this.  There is the potential for a race
-- *     only in that the normal completion handling might run, but if the
-- *     normal completion function determines that the timer has already
-- *     fired, then it mustn't do anything.
-- **/
--void scsi_times_out(struct scsi_cmnd *scmd)
--{
--	scsi_log_completion(scmd, TIMEOUT_ERROR);
--
--	if (scmd->device->host->hostt->eh_timed_out)
--		switch (scmd->device->host->hostt->eh_timed_out(scmd)) {
--		case EH_HANDLED:
--			__scsi_done(scmd);
--			return;
--		case EH_RESET_TIMER:
--			/* This allows a single retry even of a command
--			 * with allowed == 0 */
--			if (scmd->retries++ > scmd->allowed)
--				break;
--			scsi_add_timer(scmd, scmd->timeout_per_command,
--				       scsi_times_out);
--			return;
--		case EH_NOT_HANDLED:
--			break;
--		}
--
--	if (unlikely(!scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD))) {
--		panic("Error handler thread not present at %p %p %s %d",
--		      scmd, scmd->device->host, __FILE__, __LINE__);
--	}
--}
- 
- /**
-  * scsi_block_when_processing_errors - Prevent cmds from being queued.
-Index: scsi-reqfn-export/drivers/scsi/scsi_priv.h
-===================================================================
---- scsi-reqfn-export.orig/drivers/scsi/scsi_priv.h	2005-04-11 03:42:11.000000000 +0900
-+++ scsi-reqfn-export/drivers/scsi/scsi_priv.h	2005-04-11 03:42:12.000000000 +0900
-@@ -84,7 +84,8 @@ extern int __init scsi_init_devinfo(void
- extern void scsi_exit_devinfo(void);
- 
- /* scsi_error.c */
--extern void scsi_times_out(struct scsi_cmnd *cmd);
-+extern void scsi_add_timer(struct scsi_cmnd *scmd, int timeout);
-+extern int scsi_delete_timer(struct scsi_cmnd *scmd);
- extern int scsi_error_handler(void *host);
- extern int scsi_decide_disposition(struct scsi_cmnd *cmd);
- extern void scsi_eh_wakeup(struct Scsi_Host *shost);
-Index: scsi-reqfn-export/include/scsi/scsi_eh.h
-===================================================================
---- scsi-reqfn-export.orig/include/scsi/scsi_eh.h	2005-04-11 03:42:10.000000000 +0900
-+++ scsi-reqfn-export/include/scsi/scsi_eh.h	2005-04-11 03:42:12.000000000 +0900
-@@ -27,9 +27,6 @@ struct scsi_sense_hdr {		/* See SPC-3 se
- };
- 
- 
--extern void scsi_add_timer(struct scsi_cmnd *, int,
--		void (*)(struct scsi_cmnd *));
--extern int scsi_delete_timer(struct scsi_cmnd *);
- extern void scsi_report_bus_reset(struct Scsi_Host *, int);
- extern void scsi_report_device_reset(struct Scsi_Host *, int, int);
- extern int scsi_block_when_processing_errors(struct scsi_device *);
+ module_init(ahc_linux_init);
+
+
