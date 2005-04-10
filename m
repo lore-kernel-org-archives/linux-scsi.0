@@ -1,35 +1,33 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH] attach aic7xxx to the spi transport class.
-Date: Sun, 10 Apr 2005 20:05:21 +0100
-Message-ID: <20050410190521.GH8669@parcelfarce.linux.theplanet.co.uk>
+Date: Sun, 10 Apr 2005 14:17:50 -0500
+Message-ID: <1113160671.6737.15.camel@mulgrave>
 References: <1113159507.6737.10.camel@mulgrave>
+	 <20050410190521.GH8669@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:34504 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261577AbVDJTFX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Apr 2005 15:05:23 -0400
-Content-Disposition: inline
-In-Reply-To: <1113159507.6737.10.camel@mulgrave>
+Received: from stat16.steeleye.com ([209.192.50.48]:62166 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261576AbVDJTR7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Apr 2005 15:17:59 -0400
+In-Reply-To: <20050410190521.GH8669@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Matthew Wilcox <matthew@wil.cx>
 Cc: Luben Tuikov <luben_tuikov@adaptec.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sun, Apr 10, 2005 at 01:58:27PM -0500, James Bottomley wrote:
-> If anyone has a 79xx card and wants to play too, this should be a simple
-> cut and paste, doing s/ahc_/ahd_/ in all my functions.  The 79xx will
-> also need QAS, IU and all the other ultra320 transport properties ...
+On Sun, 2005-04-10 at 20:05 +0100, Matthew Wilcox wrote:
+> I thought QAS and IU were also U160 properties since the sym1010 supports
+> them.  We just haven't found any drives yet that're willing to negotiate
+> them ...
 
-I thought QAS and IU were also U160 properties since the sym1010 supports
-them.  We just haven't found any drives yet that're willing to negotiate
-them ...
+Theoretically, they are (and the 7xxx has support for them).  What I
+find is that even when I have ultra320 drives willing to do QAS and IU,
+they refuse to negotiate them except at u320 speeds ... I can put them
+in, I just don't know how useful they actually are.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+James
+
+
