@@ -1,77 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 03/07] scsi: remove a timer race in scsi_queue_insert()
-Date: Mon, 11 Apr 2005 03:45:21 +0900 (KST)
-Message-ID: <20050410184214.A47105CF@htj.dyndns.org>
-References: <20050410184214.4AAD0992@htj.dyndns.org>
-Content-Type: text/plain; charset=US-ASCII
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] attach aic7xxx to the spi transport class.
+Date: Sun, 10 Apr 2005 20:05:21 +0100
+Message-ID: <20050410190521.GH8669@parcelfarce.linux.theplanet.co.uk>
+References: <1113159507.6737.10.camel@mulgrave>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.202]:60270 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261568AbVDJSpa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Apr 2005 14:45:30 -0400
-Received: by rproxy.gmail.com with SMTP id j1so992975rnf
-        for <linux-scsi@vger.kernel.org>; Sun, 10 Apr 2005 11:45:26 -0700 (PDT)
-In-Reply-To: <20050410184214.4AAD0992@htj.dyndns.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:34504 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261577AbVDJTFX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Apr 2005 15:05:23 -0400
+Content-Disposition: inline
+In-Reply-To: <1113159507.6737.10.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com, axboe@suse.de, Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-03_scsi_timer_dispatch_race_fix.patch
+On Sun, Apr 10, 2005 at 01:58:27PM -0500, James Bottomley wrote:
+> If anyone has a 79xx card and wants to play too, this should be a simple
+> cut and paste, doing s/ahc_/ahd_/ in all my functions.  The 79xx will
+> also need QAS, IU and all the other ultra320 transport properties ...
 
-	scsi_queue_insert() has four callers.  Three callers call with
-	timer disabled and one (the second invocation in
-	scsi_dispatch_cmd()) calls with timer activated.
-	scsi_queue_insert() used to always call scsi_delete_timer()
-	and ignore the return value.  This results in race with timer
-	expiration.  Remove scsi_delete_timer() call from
-	scsi_queue_insert() and make the caller delete timer and check
-	the return value.
+I thought QAS and IU were also U160 properties since the sym1010 supports
+them.  We just haven't found any drives yet that're willing to negotiate
+them ...
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-
- scsi.c     |   10 ++++++----
- scsi_lib.c |    8 +-------
- 2 files changed, 7 insertions(+), 11 deletions(-)
-
-Index: scsi-reqfn-export/drivers/scsi/scsi.c
-===================================================================
---- scsi-reqfn-export.orig/drivers/scsi/scsi.c	2005-04-11 03:42:10.000000000 +0900
-+++ scsi-reqfn-export/drivers/scsi/scsi.c	2005-04-11 03:42:12.000000000 +0900
-@@ -638,10 +638,12 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
- 	}
- 	spin_unlock_irqrestore(host->host_lock, flags);
- 	if (rtn) {
--		atomic_inc(&cmd->device->iodone_cnt);
--		scsi_queue_insert(cmd,
--				(rtn == SCSI_MLQUEUE_DEVICE_BUSY) ?
--				 rtn : SCSI_MLQUEUE_HOST_BUSY);
-+		if (scsi_delete_timer(cmd)) {
-+			atomic_inc(&cmd->device->iodone_cnt);
-+			scsi_queue_insert(cmd,
-+					  (rtn == SCSI_MLQUEUE_DEVICE_BUSY) ?
-+					  rtn : SCSI_MLQUEUE_HOST_BUSY);
-+		}
- 		SCSI_LOG_MLQUEUE(3,
- 		    printk("queuecommand : request rejected\n"));
- 	}
-Index: scsi-reqfn-export/drivers/scsi/scsi_lib.c
-===================================================================
---- scsi-reqfn-export.orig/drivers/scsi/scsi_lib.c	2005-04-11 03:42:10.000000000 +0900
-+++ scsi-reqfn-export/drivers/scsi/scsi_lib.c	2005-04-11 03:42:12.000000000 +0900
-@@ -124,13 +124,7 @@ int scsi_queue_insert(struct scsi_cmnd *
- 		 printk("Inserting command %p into mlqueue\n", cmd));
- 
- 	/*
--	 * We are inserting the command into the ml queue.  First, we
--	 * cancel the timer, so it doesn't time out.
--	 */
--	scsi_delete_timer(cmd);
--
--	/*
--	 * Next, set the appropriate busy bit for the device/host.
-+	 * Set the appropriate busy bit for the device/host.
- 	 *
- 	 * If the host/device isn't busy, assume that something actually
- 	 * completed, and that we should be able to queue a command now.
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
