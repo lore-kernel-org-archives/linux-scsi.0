@@ -1,63 +1,80 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: [Bugme-new] [Bug 4474] New: ini9100u reports bad geoemtry
-Date: Mon, 11 Apr 2005 15:04:24 -0700
-Message-ID: <20050411150424.0168829a.akpm@osdl.org>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: Fw: [Bugme-new] [Bug 4473] New: QLogic 2100: SCSI timeouts, device resets, and crashes kernel
+Date: Mon, 11 Apr 2005 15:15:08 -0700
+Message-ID: <20050411221508.GH4449@plap.qlogic.org>
+References: <20050411135132.13b258dd.akpm@osdl.org> <20050411211829.GA822@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:52940 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261944AbVDKWHW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Apr 2005 18:07:22 -0400
+Received: from avexch02.qlogic.com ([198.70.193.200]:45392 "EHLO
+	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S261960AbVDKWPR
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Apr 2005 18:15:17 -0400
+Content-Disposition: inline
+In-Reply-To: <20050411211829.GA822@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: wagnerric@condor.cxo.cpqcorp.net
+To: gregsurbey@hotmail.com
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, Mike Anderson <andmike@us.ibm.com>
 
+On Mon, 11 Apr 2005, Mike Anderson wrote:
 
+> I will add the same comment to the bug.
+> 
+> Did this work on a previous version of the kernel? Just checking to
+> understand if your connectivity to the storage unit or the unit itself
+> could be an issue.
+> 
+> If appears we are receiving timeouts, but on abort the qla is indicating
+> that the IO has already been completed. We could have IOs that are taking
+> near max timeout and then the error handler races with the completion of
+> the IO.
+> 
+> A debug step you could try is to raise the default timeout from 30 to
+> something like 60 seconds to see if this effects the error. To do this
+> just echo "60" > /sys/block/sd${N}/device/timeout. Also you can run iostat
+> during your testing to see what you IO times / queue depths look like.
+> 
+> Andrew Vasquez may be able to add more info.
+> 
 
-Begin forwarded message:
+Greg,
 
-Date: Mon, 11 Apr 2005 14:48:32 -0700
-From: bugme-daemon@osdl.org
-To: bugme-new@lists.osdl.org
-Subject: [Bugme-new] [Bug 4474] New: ini9100u reports bad geoemtry
+The logs seem to indicate some (additional) problems with the ISP
+after the device-reset completes:
 
+	qla2100 0000:00:06.0: scsi(0:0:1:0): DEVICE RESET ISSUED.
+	qla2100 0000:00:06.0: scsi(0:0:1:0): DEVICE RESET SUCCEEDED.
+	qla2100 0000:00:06.0: ISP System Error - mbx1=7737h mbx2=dc5h mbx3=0h.
+	qla2100 0000:00:06.0: Firmware dump saved to temp buffer (0/dcec0000).
 
-http://bugme.osdl.org/show_bug.cgi?id=4474
+there is a small tool availble (qla_dmp.sh):
 
-           Summary: ini9100u reports bad geoemtry
-    Kernel Version: 2.6.10-1.770_FC3 SMP
-            Status: NEW
-          Severity: normal
-             Owner: andmike@us.ibm.com
-         Submitter: wagnerric@condor.cxo.cpqcorp.net
+ftp://ftp.qlogic.com/outgoing/linux/beta/8.x/test/qla_dmp.sh
 
+which I'd like you to use if the machine is still in a somewhat usable
+state and you see a message similar to the following:
 
-Distribution:Fedora Core 3
+	qla2100 0000:00:06.0: ISP System Error - mbx1=7737h mbx2=dc5h mbx3=0h.
+	qla2100 0000:00:06.0: Firmware dump saved to temp buffer (0/dcec0000).
 
-Hardware Environment:
-2xPent III/550, initio i9100u SCSI, 120GB WD IDE, 3x145GB Compaq SCSI drives
+Execute the following command:
 
-Software Environment:Fedora Core 3, latest updates via apt, kernel
-2.6.10-1.770_FC3 SMP
+	# ./qla_dmp.sh 0
 
-Problem Description:
-Using 3 identical Compaq 145GB SCSI drives with cleared (dd if=/dev/zero
-of=/dev/sd?...), run fdisk.  Each drive reports different and unrealistic
-geometries (i.e. one says 4 heads, 23 sectors, xxxx cyl.; another says 93 heads,
-...).  Tried with adaptec 2944UW, it says 255 heads, 63 sectors for all drives.
+The value passed to qla_dmp.sh should be the same as the first integer
+in the 'saved to temp buffer' string (in this example, 0).  If the
+operation was successful, a message like to following should be logged
+in the messages file.
 
+        Firmware dumped to file fw_dump_20041217_023222.txt
 
-Steps to reproduce:
-Clear MBR on the SCSI drives.
-Use initio i9100u and attempt to fdisk.  Drives report different and
-non-standard geometries.
-Re-run with adaptec card. All drives report same and sane geoemtries.
+compress the file (in this example):
 
-I'm not sure if the size of the drive (these are 145GB) factors in.  I was
-unable to test with smaller drives.
+        # bzip2 fw_dump_20041217_023222.txt
 
-------- You are receiving this mail because: -------
-You are on the CC list for the bug, or are watching someone who is.
+and forward over the compressed file in addition to the
+var/log/messages file.
+
+--
+av
