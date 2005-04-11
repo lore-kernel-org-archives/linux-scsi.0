@@ -1,44 +1,33 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH scsi-misc-2.6 03/04] scsi: make scsi_requeue_request() use blk_requeue_request()
-Date: Mon, 11 Apr 2005 13:44:19 +0100
-Message-ID: <20050411124419.GA13747@infradead.org>
-References: <20050411034451.B75F3870@htj.dyndns.org> <20050411034451.6204E57B@htj.dyndns.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: proc_name in sysfs
+Date: Mon, 11 Apr 2005 09:19:03 -0500
+Message-ID: <1113229144.5827.4.camel@mulgrave>
+References: <4253CA94.8000500@bull.net>
+	 <20050408064645.GA4860@infradead.org> <42563AC4.4050605@torque.net>
+	 <20050411115215.GB13154@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:32151 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261562AbVDKMoY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Apr 2005 08:44:24 -0400
-Content-Disposition: inline
-In-Reply-To: <20050411034451.6204E57B@htj.dyndns.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:15585 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261800AbVDKOUG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Apr 2005 10:20:06 -0400
+In-Reply-To: <20050411115215.GB13154@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: James.Bottomley@steeleye.com, axboe@suse.de, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Douglas Gilbert <dougg@torque.net>, Frederic TEMPORELLI <frederic.temporelli@bull.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-> +	cmd->request->flags |= REQ_SOFTBARRIER;
-> +
-> +	spin_lock_irqsave(q->queue_lock, flags);
-> +	blk_requeue_request(q, cmd->request);
-> +	spin_unlock_irqrestore(q->queue_lock, flags);
->  
->  	scsi_run_queue(q);
+On Mon, 2005-04-11 at 12:52 +0100, Christoph Hellwig wrote:
+> James once had a proposal where the scsi_host can link to the module in
+> sysfs, which is the right thing and needed for other things like mkinitrd
+> aswell.
 
-This exact code sequence is duplicated in the previous patch, maybe time
-for a
+The code is actually in.  Taking advantage of it is slightly more
+complex than I anticipated.  I'll dig out the patches I had for sym2 to
+do it.
 
-void scsi_requeue_request(struct request *rq)
-{
-	struct request_queue *q = rq->q;
-	unsigned long flags;
+James
 
-	rq->flags |= REQ_SOFTBARRIER;
-
-	spin_lock_irqsave(q->queue_lock, flags);
-	blk_requeue_request(q, rq);
-	spin_unlock_irqrestore(q->queue_lock, flags);
-  
-  	scsi_run_queue(q);
-}
 
