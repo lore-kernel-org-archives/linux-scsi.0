@@ -1,147 +1,91 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 04/04] scsi: remove requeue feature from blk_insert_request()
-Date: Mon, 11 Apr 2005 12:45:58 +0900 (KST)
-Message-ID: <20050411034451.9E89A385@htj.dyndns.org>
+Subject: Re: [PATCH scsi-misc-2.6 02/04] scsi: make scsi_queue_insert() use blk_requeue_request()
+Date: Mon, 11 Apr 2005 12:45:47 +0900 (KST)
+Message-ID: <20050411034451.A1163C31@htj.dyndns.org>
 References: <20050411034451.B75F3870@htj.dyndns.org>
 Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.196]:49780 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261687AbVDKDqD (ORCPT
+Received: from rproxy.gmail.com ([64.233.170.197]:40752 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261686AbVDKDpx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Apr 2005 23:46:03 -0400
-Received: by wproxy.gmail.com with SMTP id 68so2494790wra
-        for <linux-scsi@vger.kernel.org>; Sun, 10 Apr 2005 20:46:03 -0700 (PDT)
+	Sun, 10 Apr 2005 23:45:53 -0400
+Received: by rproxy.gmail.com with SMTP id a41so1147364rng
+        for <linux-scsi@vger.kernel.org>; Sun, 10 Apr 2005 20:45:52 -0700 (PDT)
 In-Reply-To: <20050411034451.B75F3870@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com, axboe@suse.de, Christoph Hellwig <hch@infradead.org>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-04_scsi_blk_insert_request_no_requeue.patch
+02_scsi_REQ_SPECIAL_semantic_scsi_queue_insert.patch
 
-	blk_insert_request() has a unobivous feature of requeuing a
-	request setting REQ_SPECIAL|REQ_SOFTBARRIER.  SCSI midlayer
-	was the only user and as previous patches removed the usage,
-	remove the feature from blk_insert_request().  Only special
-	requests should be queued with blk_insert_request().  All
-	requeueing should go through blk_requeue_request().
+	scsi_queue_insert() used to use blk_insert_request() for
+	requeueing requests.  This behavior depends on the unobvious
+	behavior of blk_insert_request() setting REQ_SPECIAL and
+	REQ_SOFTBARRIER when requeueing.  This patch makes
+	scsi_queue_insert() use blk_requeue_request() and explicitly
+	set REQ_SOFTBARRIER.  As REQ_SPECIAL now means special
+	requests, the flag is not set on requeue.
+
+	Note that scsi_queue_insert() now calls scsi_run_queue()
+	itself, and the prototype of the function is added right above
+	scsi_queue_insert().  This is temporary, as later requeue path
+	consolidation patchset removes scsi_queue_insert().  By adding
+	temporary prototype, we can do away with unnecessary changes.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
- drivers/block/ll_rw_blk.c |   20 ++++++--------------
- drivers/block/paride/pd.c |    2 +-
- drivers/block/sx8.c       |    4 ++--
- drivers/scsi/scsi_lib.c   |    2 +-
- include/linux/blkdev.h    |    2 +-
- 5 files changed, 11 insertions(+), 19 deletions(-)
+ scsi_lib.c |   24 ++++++++++++++----------
+ 1 files changed, 14 insertions(+), 10 deletions(-)
 
-Index: scsi-reqfn-export/drivers/block/ll_rw_blk.c
-===================================================================
---- scsi-reqfn-export.orig/drivers/block/ll_rw_blk.c	2005-04-11 12:25:15.000000000 +0900
-+++ scsi-reqfn-export/drivers/block/ll_rw_blk.c	2005-04-11 12:27:08.000000000 +0900
-@@ -2028,7 +2028,6 @@ EXPORT_SYMBOL(blk_requeue_request);
-  * @rq:		request to be inserted
-  * @at_head:	insert request at head or tail of queue
-  * @data:	private data
-- * @reinsert:	true if request it a reinsertion of previously processed one
-  *
-  * Description:
-  *    Many block devices need to execute commands asynchronously, so they don't
-@@ -2043,8 +2042,9 @@ EXPORT_SYMBOL(blk_requeue_request);
-  *    host that is unable to accept a particular command.
-  */
- void blk_insert_request(request_queue_t *q, struct request *rq,
--			int at_head, void *data, int reinsert)
-+			int at_head, void *data)
- {
-+	int where = at_head ? ELEVATOR_INSERT_FRONT : ELEVATOR_INSERT_BACK;
- 	unsigned long flags;
- 
- 	/*
-@@ -2061,20 +2061,12 @@ void blk_insert_request(request_queue_t 
- 	/*
- 	 * If command is tagged, release the tag
- 	 */
--	if (reinsert)
--		blk_requeue_request(q, rq);
--	else {
--		int where = ELEVATOR_INSERT_BACK;
-+	if (blk_rq_tagged(rq))
-+		blk_queue_end_tag(q, rq);
- 
--		if (at_head)
--			where = ELEVATOR_INSERT_FRONT;
-+	drive_stat_acct(rq, rq->nr_sectors, 1);
-+	__elv_add_request(q, rq, where, 0);
- 
--		if (blk_rq_tagged(rq))
--			blk_queue_end_tag(q, rq);
--
--		drive_stat_acct(rq, rq->nr_sectors, 1);
--		__elv_add_request(q, rq, where, 0);
--	}
- 	if (blk_queue_plugged(q))
- 		__generic_unplug_device(q);
- 	else
-Index: scsi-reqfn-export/drivers/block/paride/pd.c
-===================================================================
---- scsi-reqfn-export.orig/drivers/block/paride/pd.c	2005-04-11 12:25:15.000000000 +0900
-+++ scsi-reqfn-export/drivers/block/paride/pd.c	2005-04-11 12:27:08.000000000 +0900
-@@ -723,7 +723,7 @@ static int pd_special_command(struct pd_
- 	rq.ref_count = 1;
- 	rq.waiting = &wait;
- 	rq.end_io = blk_end_sync_rq;
--	blk_insert_request(disk->gd->queue, &rq, 0, func, 0);
-+	blk_insert_request(disk->gd->queue, &rq, 0, func);
- 	wait_for_completion(&wait);
- 	rq.waiting = NULL;
- 	if (rq.errors)
-Index: scsi-reqfn-export/drivers/block/sx8.c
-===================================================================
---- scsi-reqfn-export.orig/drivers/block/sx8.c	2005-04-11 12:25:15.000000000 +0900
-+++ scsi-reqfn-export/drivers/block/sx8.c	2005-04-11 12:27:08.000000000 +0900
-@@ -614,7 +614,7 @@ static int carm_array_info (struct carm_
- 	spin_unlock_irq(&host->lock);
- 
- 	DPRINTK("blk_insert_request, tag == %u\n", idx);
--	blk_insert_request(host->oob_q, crq->rq, 1, crq, 0);
-+	blk_insert_request(host->oob_q, crq->rq, 1, crq);
- 
- 	return 0;
- 
-@@ -653,7 +653,7 @@ static int carm_send_special (struct car
- 	crq->msg_bucket = (u32) rc;
- 
- 	DPRINTK("blk_insert_request, tag == %u\n", idx);
--	blk_insert_request(host->oob_q, crq->rq, 1, crq, 0);
-+	blk_insert_request(host->oob_q, crq->rq, 1, crq);
- 
- 	return 0;
- }
 Index: scsi-reqfn-export/drivers/scsi/scsi_lib.c
 ===================================================================
---- scsi-reqfn-export.orig/drivers/scsi/scsi_lib.c	2005-04-11 12:27:08.000000000 +0900
-+++ scsi-reqfn-export/drivers/scsi/scsi_lib.c	2005-04-11 12:27:08.000000000 +0900
-@@ -92,7 +92,7 @@ int scsi_insert_special_req(struct scsi_
- 	 */
- 	sreq->sr_request->flags &= ~REQ_DONTPREP;
- 	blk_insert_request(sreq->sr_device->request_queue, sreq->sr_request,
--		       	   at_head, sreq, 0);
-+		       	   at_head, sreq);
+--- scsi-reqfn-export.orig/drivers/scsi/scsi_lib.c	2005-04-11 12:27:07.000000000 +0900
++++ scsi-reqfn-export/drivers/scsi/scsi_lib.c	2005-04-11 12:27:07.000000000 +0900
+@@ -96,6 +96,8 @@ int scsi_insert_special_req(struct scsi_
  	return 0;
  }
  
-Index: scsi-reqfn-export/include/linux/blkdev.h
-===================================================================
---- scsi-reqfn-export.orig/include/linux/blkdev.h	2005-04-11 12:25:15.000000000 +0900
-+++ scsi-reqfn-export/include/linux/blkdev.h	2005-04-11 12:27:08.000000000 +0900
-@@ -541,7 +541,7 @@ extern void blk_end_sync_rq(struct reque
- extern void blk_attempt_remerge(request_queue_t *, struct request *);
- extern void __blk_attempt_remerge(request_queue_t *, struct request *);
- extern struct request *blk_get_request(request_queue_t *, int, int);
--extern void blk_insert_request(request_queue_t *, struct request *, int, void *, int);
-+extern void blk_insert_request(request_queue_t *, struct request *, int, void *);
- extern void blk_requeue_request(request_queue_t *, struct request *);
- extern void blk_plug_device(request_queue_t *);
- extern int blk_remove_plug(request_queue_t *);
++static void scsi_run_queue(struct request_queue *q);
++
+ /*
+  * Function:    scsi_queue_insert()
+  *
+@@ -119,6 +121,8 @@ int scsi_queue_insert(struct scsi_cmnd *
+ {
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	struct scsi_device *device = cmd->device;
++	struct request_queue *q = device->request_queue;
++	unsigned long flags;
+ 
+ 	SCSI_LOG_MLQUEUE(1,
+ 		 printk("Inserting command %p into mlqueue\n", cmd));
+@@ -154,17 +158,17 @@ int scsi_queue_insert(struct scsi_cmnd *
+ 	scsi_device_unbusy(device);
+ 
+ 	/*
+-	 * Insert this command at the head of the queue for it's device.
+-	 * It will go before all other commands that are already in the queue.
+-	 *
+-	 * NOTE: there is magic here about the way the queue is plugged if
+-	 * we have no outstanding commands.
+-	 * 
+-	 * Although this *doesn't* plug the queue, it does call the request
+-	 * function.  The SCSI request function detects the blocked condition
+-	 * and plugs the queue appropriately.
++	 * Requeue the command.  Turn on REQ_SOFTBARRIER to prevent
++	 * other requests from passing this request.
+ 	 */
+-	blk_insert_request(device->request_queue, cmd->request, 1, cmd, 1);
++	cmd->request->flags |= REQ_SOFTBARRIER;
++
++	spin_lock_irqsave(q->queue_lock, flags);
++	blk_requeue_request(q, cmd->request);
++	spin_unlock_irqrestore(q->queue_lock, flags);
++
++	scsi_run_queue(q);
++
+ 	return 0;
+ }
+ 
 
