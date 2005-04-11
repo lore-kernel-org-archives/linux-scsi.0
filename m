@@ -1,58 +1,114 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: increasing scsi_max_sg / max_segments for scsi writes/reads
-Date: Sun, 10 Apr 2005 18:41:56 -0700
-Message-ID: <20050410184156.3014a2ea.rddunlap@osdl.org>
-References: <20050410023552.2545.qmail@web54101.mail.yahoo.com>
-Mime-Version: 1.0
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH scsi-misc-2.6 00/04] scsi: clear REQ_SPECIAL/REQ_SOFTBARRIER usages
+Date: Mon, 11 Apr 2005 12:45:37 +0900 (KST)
+Message-ID: <20050411034451.B75F3870@htj.dyndns.org>
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:58086 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261306AbVDKBmE (ORCPT
+Received: from rproxy.gmail.com ([64.233.170.200]:1333 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261681AbVDKDpo (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Apr 2005 21:42:04 -0400
-In-Reply-To: <20050410023552.2545.qmail@web54101.mail.yahoo.com>
+	Sun, 10 Apr 2005 23:45:44 -0400
+Received: by rproxy.gmail.com with SMTP id j1so1043895rnf
+        for <linux-scsi@vger.kernel.org>; Sun, 10 Apr 2005 20:45:43 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sai narasimhamurthy <sai_narasi@yahoo.com>
+To: James.Bottomley@steeleye.com, axboe@suse.de, Christoph Hellwig <hch@infradead.org>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, 9 Apr 2005 19:35:52 -0700 (PDT) sai narasimhamurthy wrote:
+ Hello, James.
 
-| Hi, 
-| I had posted a question on increasing the scsi
-| read/write sectors  per command. I figured out some of
-| the things, but many questions still exist. 
-| 
-| I was wondering why the maximum writes I could get
-| from a single scsi write command could never exceed
-| 204 
-| 4096B  segments . I traced it to :  
-| 
-| static const int scsi_max_sg = PAGE_SIZE /
-| sizeof(struct scatterlist)
-| 
-| in scsi_merge.c .(which amounts to 204)  
-| 
-| Is this the limit of the maximum blocks we can
-| read/write through a single scsi command, atleast for
-| the given kernel (2.4.29) ? How can I increase
-| it??????
-| 
-| I am on a P3 Dell poweredgde 2400 . 
+ This patchset is split up of REQ_SPECIAL update patches (#01-02) of
+previous patchset posted on March 31.  Explicit setting of
+REQ_SOFTBARRIER in scsi_init_io() is added.
 
-Did you read the comment immediately above that
-calculation?
+ This patchset makes REQ_SPECIAL mean that the request is a special
+request and REQ_SOFTBARRIER setting explicit.
 
-/*
- * scsi_malloc() can only dish out items of PAGE_SIZE or less, so we cannot
- * build a request that requires an sg table allocation of more than that.
- */
+ Previously, REQ_SPECIAL duplicately meant the request has been
+prepp'ed by SCSI midlayer and/or the request is a special request.
+This left special requests handling in the midlayer subtley
+inconsistent.
 
-so scsi_malloc() would need some reworking to handle more.
+ Also, the setting of REQ_SPECIAL was done by the block layer using
+blk_insert_request() mostly but sometimes by the SCSI midlayer (when
+returning BLK_PREP_DEFER from scsi_prep_fn()).  blk_insert_request()
+was used for two different purposes.
 
-OTOH, it appears that this is all removed in 2.6.10++, so moving to
-2.6.recent is probably your best choice.
+ * enqueue special requests
+ * turn on REQ_SPECIAL|REQ_SOFTBARRIER and call blk_requeue_request().
 
----
-~Randy
+ The second somewhat unobvious feature of blk_insert_request() is used
+only by SCSI midlayer and SCSI midlayer depended on it to set
+REQ_SOFTBARRIER.  Unfortunately, when the SCSI midlayer sets
+REQ_SPECIAL explicitly (sg allocation failure path) it didn't set
+REQ_SOFTBARRIER, creating a *highly* unlikely but still existing dead
+lock condition caused by allowing reorder of a request which has its
+cmd allocated.  IMHO, this proves the subtlety of current situation.
+
+ This patch makes SCSI midlayer use blk_requeue_request() for
+reqeueuing and setting of REQ_SOFTBARRIER explicit.
+
+ To prevent more misuses, the last patch in this patchset remove
+requeue feature from blk_insert_request().  Requeueing should be done
+with blk_requeue_request() not blk_insert_request().
+
+
+[ Start of patch descriptions ]
+
+01_scsi_REQ_SPECIAL_semantic_scsi_init_io.patch
+	: replace REQ_SPECIAL with REQ_SOFTBARRIER in scsi_init_io()
+
+	scsi_init_io() used to set REQ_SPECIAL when it fails sg
+	allocation before requeueing the request by returning
+	BLKPREP_DEFER.  REQ_SPECIAL is being updated to mean special
+	requests and we need to set REQ_SOFTBARRIER for half-prepp'ed
+	requests.  So, replace REQ_SPECIAL with REQ_SOFTBARRIER.
+
+02_scsi_REQ_SPECIAL_semantic_scsi_queue_insert.patch
+	: make scsi_queue_insert() use blk_requeue_request()
+
+	scsi_queue_insert() used to use blk_insert_request() for
+	requeueing requests.  This behavior depends on the unobvious
+	behavior of blk_insert_request() setting REQ_SPECIAL and
+	REQ_SOFTBARRIER when requeueing.  This patch makes
+	scsi_queue_insert() use blk_requeue_request() and explicitly
+	set REQ_SOFTBARRIER.  As REQ_SPECIAL now means special
+	requests, the flag is not set on requeue.
+
+	Note that scsi_queue_insert() now calls scsi_run_queue()
+	itself, and the prototype of the function is added right above
+	scsi_queue_insert().  This is temporary, as later requeue path
+	consolidation patchset removes scsi_queue_insert().  By adding
+	temporary prototype, we can do away with unnecessary changes.
+
+03_scsi_REQ_SPECIAL_semantic_scsi_requeue_command.patch
+	: make scsi_requeue_request() use blk_requeue_request()
+
+	scsi_requeue_request() used to use blk_insert_request() for
+	requeueing requests.  This behavior depends on the unobvious
+	behavior of blk_insert_request() setting REQ_SPECIAL and
+	REQ_SOFTBARRIER when requeueing.  This patch makes
+	scsi_requeue_request() use blk_requeue_request() and
+	explicitly set REQ_SOFTBARRIER.  As REQ_SPECIAL now means
+	special requests, the flag is not set on requeue.
+
+04_scsi_blk_insert_request_no_requeue.patch
+	: remove requeue feature from blk_insert_request()
+
+	blk_insert_request() has a unobivous feature of requeuing a
+	request setting REQ_SPECIAL|REQ_SOFTBARRIER.  SCSI midlayer
+	was the only user and as previous patches removed the usage,
+	remove the feature from blk_insert_request().  Only special
+	requests should be queued with blk_insert_request().  All
+	requeueing should go through blk_requeue_request().
+
+[ End of patch descriptions ]
+
+
+ This patchset completes preparation for scsi_request_fn()
+reimplementation patchset.  As it seemed better to clear up requeue
+paths inside scsi_request_fn() first, requeue path consolidation
+patchset follows scsi_request_fn() reimplementation patchset.
+
+ Thanks a lot.
+
