@@ -1,42 +1,75 @@
-From: Matt Mackall <mpm@selenic.com>
-Subject: Re: [PATCH] compile out scsi_ioctl when no SCSI/IDE/etc. (take 3)
-Date: Mon, 11 Apr 2005 12:03:11 -0700
-Message-ID: <20050411190311.GT3174@waste.org>
-References: <1CFEB358338412458B21FAA0D78FE86D4F0D3B@rennsmail02.eu.thmulti.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Fw: [Bugme-new] [Bug 4473] New: QLogic 2100: SCSI timeouts, device
+ resets, and crashes kernel
+Date: Mon, 11 Apr 2005 13:51:32 -0700
+Message-ID: <20050411135132.13b258dd.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from waste.org ([216.27.176.166]:18893 "EHLO waste.org")
-	by vger.kernel.org with ESMTP id S261879AbVDKTDU (ORCPT
+Received: from fire.osdl.org ([65.172.181.4]:41905 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S261930AbVDKUvz (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Apr 2005 15:03:20 -0400
-Content-Disposition: inline
-In-Reply-To: <1CFEB358338412458B21FAA0D78FE86D4F0D3B@rennsmail02.eu.thmulti.com>
+	Mon, 11 Apr 2005 16:51:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fillod Stephane <stephane.fillod@thomson.net>
-Cc: linux-tiny@selenic.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: gregsurbey@hotmail.com
 
-On Mon, Apr 11, 2005 at 05:50:08PM +0200, Fillod Stephane wrote:
-> Hi Matt and everyone, 
-> 
-> I fixed again my previous patch (take2):
-> 
-> * CDROM_PKTCDVD draws dependency
-> 
-> * removing SCSI_IOCTL from displayed options,
->   as suggested by Milton Miller.
-> 
-> * rewrote ifdefs in the middle of ide.c functions as dummy function 
->   in header, as suggested by Matthew Wilcox.
-> 
-> 
-> Matt, how do we proceed from here? If the patch is to your liking,
-> can I hand it off to you, for eventual submission to Linus
-> or the SCSI team?
 
-Since this is already cc:ed to linux-scsi, hopefully they'll pick it
-up. But this current version looks good to me.
 
--- 
-Mathematics is the supreme nostalgia of our time.
+Begin forwarded message:
+
+Date: Mon, 11 Apr 2005 13:03:16 -0700
+From: bugme-daemon@osdl.org
+To: bugme-new@lists.osdl.org
+Subject: [Bugme-new] [Bug 4473] New: QLogic 2100: SCSI timeouts, device resets, and crashes kernel
+
+
+http://bugme.osdl.org/show_bug.cgi?id=4473
+
+           Summary: QLogic 2100: SCSI timeouts, device resets, and crashes
+                    kernel
+    Kernel Version: 2.6.10 2.6.11.6.6 2.6.11-gentoo-r5
+            Status: NEW
+          Severity: blocking
+             Owner: andmike@us.ibm.com
+         Submitter: gregsurbey@hotmail.com
+
+
+Distribution: Gentoo 2005.0
+Hardware Environment: Dell PowerEdge 600SC
+Configuration: md RAID-5 11 disks 1 spare 
+
+Card Description:
+QLogic PCI to Fibre Channel Host Adapter for QLA2100:
+        Firmware version 1.19.24 TP, Driver version 8.00.02b4-k
+ISP: ISP2100, Serial# A61828
+Request Queue = 0x1fce8000, Response Queue = 0x1fce2000
+Request Queue count = 128, Response Queue count = 64
+Total number of active commands = 0
+Total number of interrupts = 77339
+    Device queue depth = 0x10
+Number of free request entries = 59
+Number of mailbox timeouts = 0
+Number of ISP aborts = 0
+Number of loop resyncs = 0
+Number of retries for empty slots = 0
+Number of reqs in pending_q= 0, retry_q= 0, done_q= 0, scsi_retry_q= 0
+Host adapter:loop state = <READY>, flags = 0x1c93
+Dpc flags = 0x80000
+MBX flags = 0x0
+Link down Timeout = 000
+Port down retry = 030
+Login retry count = 030
+Commands retried with dropped frame(s) = 0
+Product ID = 4953 5020 2020 0001
+
+During the heavy use of md RAID reconstruction the card creates output in dmesg
+which I will attach to this bug report in my next post. 
+
+Steps to reproduce:
+Use a Qlogic 2100 card with the qla2xxx driver
+
+------- You are receiving this mail because: -------
+You are on the CC list for the bug, or are watching someone who is.
