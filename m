@@ -1,78 +1,55 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 03/07] scsi: replace scsi_queue_insert() usages with scsi_retry_command()
-Date: Tue, 12 Apr 2005 21:52:36 +0900 (KST)
-Message-ID: <20050412125219.D4AAB938@htj.dyndns.org>
+Subject: Re: [PATCH scsi-misc-2.6 05/07] scsi: move scsi_init_cmd_errh() from request_fn to prep_fn.
+Date: Tue, 12 Apr 2005 21:52:46 +0900 (KST)
+Message-ID: <20050412125219.D8DA0D54@htj.dyndns.org>
 References: <20050412125219.88E5C1F6@htj.dyndns.org>
 Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.201]:27458 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262431AbVDLMwq (ORCPT
+Received: from wproxy.gmail.com ([64.233.184.195]:39234 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262439AbVDLMwz (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Apr 2005 08:52:46 -0400
-Received: by rproxy.gmail.com with SMTP id a41so1506907rng
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2005 05:52:42 -0700 (PDT)
+	Tue, 12 Apr 2005 08:52:55 -0400
+Received: by wproxy.gmail.com with SMTP id 68so1876845wri
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2005 05:52:51 -0700 (PDT)
 In-Reply-To: <20050412125219.88E5C1F6@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com, axboe@suse.de, Christoph Hellwig <hch@infradead.org>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-03_scsi_requeue_use_scsi_retry_command_instead_of_scsi_queue_insert.patch
+05_scsi_requeue_move_init_cmd_errh.patch
 
-	There are two users of scsi_queue_insert() left now.  One in
-	scsi_softirq() and the other in scsi_eh_flush_done_q().  The
-	only additional functionality of scsi_queue_insert() used is
-	setting device_blocked on ADD_TO_MLQUEUE case in
-	scsi_softirq().
-
-	Open code device_blocked setting and replace
-	scsi_queue_insert() with scsi_retry_command() in both cases.
+	As now all non-reprepped requeue goes through
+	scsi_retry_command() which clears sense buffer, there's no
+	need to call scsi_init_cmd_errh() in scsi_request_fn().  Move
+	scsi_init_cmd_errh() to scsi_prep_fn().
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
- scsi.c       |    7 ++++---
- scsi_error.c |    2 +-
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ scsi_lib.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-Index: scsi-reqfn-export/drivers/scsi/scsi.c
+Index: scsi-reqfn-export/drivers/scsi/scsi_lib.c
 ===================================================================
---- scsi-reqfn-export.orig/drivers/scsi/scsi.c	2005-04-12 21:50:11.000000000 +0900
-+++ scsi-reqfn-export/drivers/scsi/scsi.c	2005-04-12 21:50:11.000000000 +0900
-@@ -638,6 +638,7 @@ static void scsi_softirq(struct softirq_
- 	while (!list_empty(&local_q)) {
- 		struct scsi_cmnd *cmd = list_entry(local_q.next,
- 						   struct scsi_cmnd, eh_entry);
-+		struct scsi_device *sdev = cmd->device;
- 		list_del_init(&cmd->eh_entry);
+--- scsi-reqfn-export.orig/drivers/scsi/scsi_lib.c	2005-04-12 21:50:11.000000000 +0900
++++ scsi-reqfn-export/drivers/scsi/scsi_lib.c	2005-04-12 21:50:12.000000000 +0900
+@@ -1051,6 +1051,8 @@ static int scsi_prep_fn(struct request_q
+ 	if (CDB_SIZE(cmd) > sdev->host->max_cmd_len)
+ 		goto kill;
  
- 		disposition = scsi_decide_disposition(cmd);
-@@ -646,12 +647,12 @@ static void scsi_softirq(struct softirq_
- 		case SUCCESS:
- 			scsi_finish_command(cmd);
- 			break;
-+		case ADD_TO_MLQUEUE:
-+			sdev->device_blocked = sdev->max_device_blocked;
-+			/* fall through */
- 		case NEEDS_RETRY:
- 			scsi_retry_command(cmd);
- 			break;
--		case ADD_TO_MLQUEUE:
--			scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
--			break;
- 		default:
- 			if (!scsi_eh_scmd_add(cmd, 0))
- 				scsi_finish_command(cmd);
-Index: scsi-reqfn-export/drivers/scsi/scsi_error.c
-===================================================================
---- scsi-reqfn-export.orig/drivers/scsi/scsi_error.c	2005-04-12 21:50:10.000000000 +0900
-+++ scsi-reqfn-export/drivers/scsi/scsi_error.c	2005-04-12 21:50:11.000000000 +0900
-@@ -1522,7 +1522,7 @@ static void scsi_eh_flush_done_q(struct 
- 							  " retry cmd: %p\n",
- 							  current->comm,
- 							  scmd));
--				scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY);
-+			scsi_retry_command(scmd);
- 		} else {
- 			if (!scmd->result)
- 				scmd->result |= (DRIVER_TIMEOUT << 24);
++	scsi_init_cmd_errh(cmd);
++
+ 	/* If SCSI-2 or lower, store the LUN value in cmnd. */
+ 	if (cmd->device->scsi_level <= SCSI_2)
+ 		cmd->cmnd[1] = (cmd->cmnd[1] & 0x1f) |
+@@ -1311,9 +1313,6 @@ static void scsi_request_fn(struct reque
+ 			target->starget_sdev_user = sdev;
+ 		}
+ 
+-		/* Once requeue path is cleaned up, init_cmd_errh can
+-		 * be moved to prep_fn() where it belongs. */
+-		scsi_init_cmd_errh(cmd);
+ 		shost->host_busy++;
+ 		scsi_log_send(cmd);
+ 		scsi_cmd_get_serial(shost, cmd);
 
