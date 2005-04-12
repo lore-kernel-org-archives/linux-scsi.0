@@ -1,133 +1,45 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH scsi-misc-2.6 00/04] scsi: scsi_request_fn() reimplementation
-Date: Tue, 12 Apr 2005 19:32:48 +0900 (KST)
-Message-ID: <20050412103128.69172FEB@htj.dyndns.org>
-Content-Type: text/plain; charset=US-ASCII
+From: akpm@osdl.org
+Subject: [patch 062/198] ahci: AHCI mode SATA patch for Intel ESB2
+Date: Tue, 12 Apr 2005 03:31:34 -0700
+Message-ID: <200504121031.j3CAVexS005372@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.192]:16348 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262233AbVDLKcy (ORCPT
+Received: from fire.osdl.org ([65.172.181.4]:40392 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S262153AbVDLKbq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Apr 2005 06:32:54 -0400
-Received: by wproxy.gmail.com with SMTP id 68so2902097wra
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2005 03:32:53 -0700 (PDT)
+	Tue, 12 Apr 2005 06:31:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com, axboe@suse.de, Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-
- Hello, guys.
-
- This patchset reimplements scsi_request_fn().  All prep's are moved
-into prep_fn and all state checking/issueing are moved into
-scsi_reqfn.  prep_fn() only terminates/defers unpreparable requests
-and all requests are terminated through scsi midlayer.
+To: torvalds@osdl.org
+Cc: linux-kernel@vger.kernel.org, akpm@osdl.org, jason.d.gaston@intel.com, Jason.d.gaston@intel.com, linux-scsi@vger.kernel.org
 
 
-[ Start of patch descriptions ]
+From: Jason Gaston <jason.d.gaston@intel.com>
 
-01_scsi_reqfn_consolidate_error_handling.patch
-	: consolidate error handling out of scsi_init_io() into scsi_prep_fn()
+This patch adds the Intel ESB2 DID's to the ahci.c file for AHCI mode SATA
+support.
 
-	This patch fixes a queue stall bug which occurred when sgtable
-	allocation failed and device_busy == 0.  When scsi_init_io()
-	returns BLKPREP_DEFER or BLKPREP_KILL, it's supposed to free
-	resources itself.  This patch consolidates defer and kill
-	handling into scsi_prep_fn().
+Signed-off-by: Jason Gaston <Jason.d.gaston@intel.com>
+Cc: <linux-scsi@vger.kernel.org>
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+---
 
-	Note that this patch doesn't consolidate state defer/kill
-	handlings in scsi_prep_fn().  They were omitted as all state
-	checks will be moved into scsi_reques_fn() by the following
-	reqfn_reimpl patch.
+ 25-akpm/drivers/scsi/ahci.c |    6 ++++++
+ 1 files changed, 6 insertions(+)
 
-	ret value checking was changed to switch() as in James's
-	patch.  Also, kill: comment is copied from James's patch.
-
-02_scsi_reqfn_move_preps_to_prep_fn.patch
-	: move request preps in other places into prep_fn()
-
-	Move request preparations scattered in scsi_request_fn() and
-	scsi_dispatch_cmd() into scsi_prep_fn()
-
-	* CDB_SIZE check in scsi_dispatch_cmd()
-	* SCSI-2 LUN preparation in scsi_dispatch_cmd()
-
-	No invalid request reaches scsi_request_fn() anymore.
-
-	Note that scsi_init_cmd_errh() is still left in
-	scsi_request_fn().  As all requeued requests need its sense
-	buffer and result value cleared, we can't move this to
-	prep_fn() yet.  This is moved into prep_fn in the following
-	requeue path consoildation patchset.
-
-03_scsi_reqfn_reimplementation.patch
-	: reimplement scsi_request_fn()
-
-	This patch rewrites scsi_request_fn().	scsi_dispatch_cmd() is
-	merged into scsi_request_fn().	Goals are
-
-	* Remove unnecessary operations (host_lock unlocking/locking,
-	  recursing into scsi_run_queue(), ...)
-	* Consolidate defer/kill paths.
-	* Be concise.
-
-	The following bugs are fixed.
-
-	* All killed requests now get fully prep'ed and pass through
-	  __scsi_done().  This is the only kill path.
-		- scsi_cmnd leak in offline-kill path removed
-		- unfinished request bug in
-		  scsi_dispatch_cmd():SDEV_DEL-kill path removed.
-		- commands are never terminated directly from blk
-		  layer unless they are invalid, so no need to supply
-		  req->end_io callback for special requests.
-	* Timer is added while holding host_lock, after all conditions
-	  are checked and serial number is assigned.  This guarantees
-	  that until host_lock is released, the scsi_cmnd pointed to
-	  by cmd isn't released.  That didn't hold in the original
-	  code and, theoretically, the original code could access
-	  already released cmd.
-	* For the same reason, if shost->hostt->queuecommand() fails,
-	  we try to delete the timer before releasing host_lock.
-
-	Other changes/notes
-
-	* host_lock is acquired and released only once.
-	  enter (qlocked) -> enter loop -> dev-prep -> switch to hlock -\
-			  ^---- switch to qlock <- issue <- host-prep <-/
-	* unnecessary if () on get_device() removed.
-	* loop on elv_next_request() instead of blk_queue_plugged().
-	  We now explicitly break out of loop when we plug and check if
-	  the queue has been plugged underneath us at the end of loop.
-	* All device/host state checks are done in this function and
-	  done only once while holding qlock/host_lock respectively.
-	* Requests which get deferred during dev-prep are never
-	  removed from request queue, so deferring is achieved by
-	  simply breaking out of the loop and returning.
-	* Failure of blk_queue_start_tag() on tagged queue is a BUG
-	  now.	This condition should have been catched by
-	  scsi_dev_queue_ready().
-	* req->special == NULL test removed.  This just can't happen,
-	  and even if it ever happens, scsi_request_fn() will
-	  deterministically oops.
-	* Requests which gets deferred during host-prep are requeued
-	  using blk_requeue_request().	This is the only requeue path.
-
-	Note that scsi_kill_requests() still terminates requests using
-	blk layer.  The path is circular-ref workaround and soon to be
-	replaced, so ignore it for now.
-
-04_scsi_reqfn_remove_wait_req_end_io.patch
-	: remove unnecessary scsi_wait_req_end_io()
-
-	As all requests are now terminated via scsi midlayer, we don't
-	need to set end_io for special reqs, remove it.
-
-	Note that scsi_kill_requests() still terminates requests using
-	blk layer.  The path is circular-ref workaround and soon to be
-	replaced, so ignore it for now.
-
-[ End of patch descriptions ]
-
-
- Thanks a lot.
-
+diff -puN drivers/scsi/ahci.c~ahci-ahci-mode-sata-patch-for-intel-esb2 drivers/scsi/ahci.c
+--- 25/drivers/scsi/ahci.c~ahci-ahci-mode-sata-patch-for-intel-esb2	2005-04-12 03:21:18.132380360 -0700
++++ 25-akpm/drivers/scsi/ahci.c	2005-04-12 03:21:18.135379904 -0700
+@@ -257,6 +257,12 @@ static struct pci_device_id ahci_pci_tbl
+ 	  board_ahci }, /* ICH7R */
+ 	{ PCI_VENDOR_ID_AL, 0x5288, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_ahci }, /* ULi M5288 */
++	{ PCI_VENDOR_ID_INTEL, 0x2681, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_ahci }, /* ESB2 */
++	{ PCI_VENDOR_ID_INTEL, 0x2682, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_ahci }, /* ESB2 */
++	{ PCI_VENDOR_ID_INTEL, 0x2683, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++	  board_ahci }, /* ESB2 */
+ 	{ }	/* terminate list */
+ };
+ 
+_
